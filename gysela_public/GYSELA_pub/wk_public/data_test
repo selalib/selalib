@@ -1,0 +1,114 @@
+&PARALLEL
+  Nbproc_r     = 2
+  Nbproc_theta = 1
+  Nbproc_mu    = 8
+  bloc_phi     = 2
+  Nbthread     = 2
+  transpose4D  = .false.,
+/
+
+&MESH
+  Nr             = 63
+  Ntheta         = 128
+  Nphi           = 32
+  Nvpar          = 15
+  Nmu            = 7
+  a              = 100.
+  rhomin         = 0.2
+  rhomax         = 0.8
+  Ltheta         = 6.283185307179586476925286766559005768394
+  Lphi           = 6.283185307179586476925286766559005768394
+  aspect_ratio   = 2.78
+  nb_vth0        = 6.
+  Lmu            = 7.
+  mumin          = 0.
+  integral_vperp = .false.,
+/
+
+&EQUIL
+  plasma_current = .true.
+  rbar_in_feq    = .true.
+  use_psibar     = .false.
+  Zi             = 1
+  tau0           = 1.
+  read_n0        = .false.
+  read_Te        = .false.
+  read_Ti        = .false.
+  read_q         = .false.
+  profile_choice = 1
+  rpeak          = 0.5
+  kappan         = 2.2
+  kappaTi        = 12.
+  kappaTe        = 12.
+  deltarn        = 5.
+  deltarTi       = 0.8
+  deltarTe       = 0.8
+  magnetic_shear = .true.
+  q0             = 1.
+  deltaq         = 2.78
+  alphaq         = 2.8
+  reversed_shear = .false.
+  qmin           = 1.5
+  qa             = 3.
+  rho_qmin       = 0.5
+  B_curvature    = .true.
+  epsilon        = 0.01
+  m              = 8
+  n              = 4
+  init_perturb   = 2
+  zonal_flow     = .true.
+  filter_choice  = 0
+  ExB_shear      = .false.
+  max_shear      = 0.01
+  rho_shear      = 0.5
+  deltar_shear   = 0.05,
+/
+
+  
+
+&ALGORITHM
+  leapfrog       = .true.
+  LF_average     = 2
+  hffilterfreq   = 0  
+  hffiltertype   = 0  
+  hffilterfref   = 0  
+  advec2Ddt      = 0.
+  reduceddt      = 0.
+  reducedbegin   = 800.
+  reducedend     = 4000.
+  deltat         = 5.
+  nbiter         = 4
+  diag_nbstep    = 2
+  refresh_nbstep = 2
+/
+
+
+&TEST
+  memory_test       = .false.
+  slab_geometry     = .false.
+  Rosenbluth_Hinton = .false.
+  m0n0_eq0          = .false.
+  single_m          = .false.
+  single_n          = .false.
+  solve_poiss       = .true.
+  coeff_pol         = 1.
+  RHS_only          = .false.
+  feq_choice        = 1
+  vpar0_option      = 3
+  Phi00BCr_Neumann  = .false.
+  hvpar_in_fperturb = .true.,
+/
+
+&OUTPUT
+  integration_CS    = .true.
+  diag_level        = 5
+  Phi3D_saving      = .true.
+  FMoments3D_saving = .true.
+  f5D_saving        = .false.
+  CalviExp_saving   = .false.
+  Phi3D_nbstep      = 2
+  FMoments3D_nbstep = 2
+  f5D_nbstep        = 4
+  CalviExp_nbstep   = 4
+  rst_saving        = .true.,
+/
