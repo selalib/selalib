@@ -1,0 +1,158 @@
+#!/bin/bash
+#PBS -N gysela5D
+#PBS -V
+#PBS -j oe
+#PBS -l walltime="12000"
+#PBS -l select=8:ncpus=8:ompthreads=8:mpiprocs=1
+
+set -vx
+cd /home/sipp/gipp/gdgirard/Ngysela5D_Bstar_public/wk_public/
+pwd
+DIR=$(dirname $PWD)
+echo " DIR = " $DIR
+RESDIR=$(basename $(dirname $PWD))
+echo " RESDIR = " $RESDIR
+SRCDIR=${DIR}"/src_public"
+echo " SRCDIR " $SRCDIR
+WRKDIR=${DIR}"/wk_public"
+echo " WRKCDIR " $WRKCDIR
+
+#****************************************************
+#  CREATION OF THE WORK DIRECTORY
+#****************************************************
+# create the work directory if it does not exist
+RESDIR=${WRKDIR}/RESULTS_A32_slab4D
+if [ ! -d ${RESDIR} ]
+then
+  mkdir -p ${RESDIR}
+fi
+
+#****************************************************
+# reading of the input file for n0, Te, Ti 
+#   and q if they exist 
+#****************************************************
+if [ "$read_n0" == '.true.' ]
+then
+   echo " => reading of the file " ${n0_filename}
+   if [ -e ${n0_filename} ]
+   then
+     cp ${n0_filename} ${RESDIR}/n0.dat
+   else
+     echo "The file " ${n0_filename} " does not exist"
+     exit
+   fi
+fi
+
+if [ "$read_Te" == '.true.' ]
+then
+   echo " => reading of the file " ${Te_filename}
+   if [ -e ${Te_filename} ]
+   then
+     cp ${Te_filename} ${RESDIR}/Te.dat
+   else
+     echo "The file " ${Te_filename} " does not exist"
+     exit
+   fi
+fi
+
+if [ "$read_Ti" == '.true.' ]
+then
+   echo " => reading of the file " ${Ti_filename}
+   if [ -e ${Ti_filename} ]
+   then
+     cp ${Ti_filename} ${RESDIR}/Ti.dat
+   else
+     echo "The file " ${Ti_filename} " does not exist"
+     exit
+   fi
+fi
+
+if [ "$read_q" == '.true.' ]
+then
+   echo " => reading of the file " ${q_filename}
+   if [ -e ${q_filename} ]
+   then
+     cp ${q_filename}  ${RESDIR}/safety_factor.dat
+   else
+     echo "The file " ${q_filename} " does not exist"
+     exit
+   fi
+fi
+
+#****************************************************
+#  CREATING OF THE DIRECTORIES FOR RESULTS_A32_slab4D SAVING
+#****************************************************
+CLDIR=conservation_laws
+RPROFDIR=rprof
+F2DDIR=f2D
+PHI2DDIR=Phi2D
+PHI3DDIR=Phi3D
+FM3DDIR=moment3D
+F5DDIR=f5D
+
+for DIR in  ${CLDIR} ${RPROFDIR} ${F2DDIR} ${PHI2DDIR} ${PHI3DDIR} ${FM3DDIR} ${F5DDIR}
+do
+if [ ! -d ${RESDIR}/${DIR} ]
+then
+  mkdir -p ${RESDIR}/${DIR}
+fi
+done 
+
+#****************************************************
+#  SCRIPT SUBMISSION
+#****************************************************
+cp A32_slab4D ${RESDIR}/DATA
+if [ ! -e ${RESDIR}/gysela.exe ]
+then
+   cp ${SRCDIR}/gysela.exe ${RESDIR}/gysela.exe 
+fi
+
+cd ${RESDIR}
+echo " RESDIR = " `pwd`
+
+file_list=file_list.out
+if [ ! -e ${file_list} ]
+then
+   nb_restart=-1
+else
+   nb_restart=$(head -n 1 ${file_list} | awk  '{print $NF}')
+fi
+
+# test if restart files exist
+# ------------------------------
+if [ "$nb_restart" -ge "0" ]
+then
+   if [ ! -e "gysela.rst.n0.fn.p00000.h5" ]
+   then
+      echo "The restart files do not exist"
+      exit  
+   fi
+fi  
+
+# test if nb_restart=NB_RESTART
+# ---------------------------
+if [ "$nb_restart" -ne "40" ]
+then
+   # run gysela.exe :
+   # ----------------
+   mpirun -np 8  -hostfile ${PBS_NODEFILE} ${RESDIR}/gysela.exe 1>> ${RESDIR}/gysela_log.out 2>> ${RESDIR}/gysela_res.err
+   status=$?
+   mv conservation_laws*.h5 ${CLDIR}
+   mv rprof_*.h5 ${RPROFDIR}
+   mv Phi2D*.h5 ${PHI2DDIR}
+   mv f2D*.h5 ${F2DDIR}
+   mv collision*.h5 ${COLLISIONDIR}
+   mv Phi_3D*.h5 ${PHI3DDIR}
+   mv J0M*_3D*.h5 ${FM3DDIR}
+   mv M2*_3D*.h5 ${FM3DDIR}
+   mv f5D*.h5 ${F5DDIR}
+
+   if [ "$status" -eq "0" ]
+   then
+      # new submission
+      # --------------
+      cd ${WRKDIR}
+      qsub gysela_A32_slab4D.job
+   fi
+fi
+
