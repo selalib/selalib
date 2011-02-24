@@ -45,6 +45,11 @@
   !
   ! SLL_CLEAR_ALLOCATE(a(1:1000,4:500), err)
   !
+  ! Any file that uses this include file will need to be compiled such that
+  ! there is no upper limit to the length of a source code line. In gfortran,
+  ! for instance, this behavior is obtained with the flag  
+  ! -ffree-line-length-none
+  !
   ! *************************************************************************
  
 use sll_memory
@@ -74,7 +79,7 @@ use sll_memory
   !    informing where was the call made.
   ! Thus, we are leaving the initialization of the memory or any other
   ! behavior, like more detailed logging, to other facilities built on top of
-  ! this basic allocator.
+  ! this basic allocator. 
   !
   ! SLL_ALLOCATE has virtually the same syntax as the native Fortran 
   ! 'allocate' function, except for the mandatory integer error variable that 

@@ -10,11 +10,11 @@ program memory_tester
   integer :: i, j, k
   real, dimension(:), pointer :: a=>null()
   real, dimension(:,:,:), pointer :: b=>null()
-  integer, dimension(:), pointer :: ai=>null()
+!  integer, dimension(:), pointer :: ai=>null()
 
   print *, "Memory allocator testing program"
 
-  print *, "allocataing something small... "
+  print *, "allocating something small... "
   SLL_CLEAR_ALLOCATE(b(1:4,1:3,1:2),err)
   print *, 'allocation successful.'
   print *, 'array just after allocation: '
@@ -22,18 +22,18 @@ program memory_tester
   print *, 'change the values of the elements...'
   forall(i=1:4, j=1:3, k=1:2) b(i,j,k) = 7 ! initialize manually...
   print *, b(:,:,:)
-  print *,'clear the array:'
+  print *,'clear the array with SLL_INIT_ARRAY():'
   SLL_INIT_ARRAY(b,0)
 
 ! turn the following on to test the deallocator
-#if 1 
+#if 0 
   print *, b(:,:,:)
-  print *, 'Deallocate an unitialized pointer'
+  print *, 'Deallocate an unitialized pointer (i.e. force a crash)'
   SLL_DEALLOCATE(a,err)
   print *, 'deallocation successful'
   write(*, '(a, l5)') 'Is the previous pointer associated?', associated(a)
 #endif
-  print *, 'Proceeding to break the allocator: '
+  print *, 'Proceeding to break the allocator by requesting a gazillion bytes: '
   SLL_ALLOCATE(b(1:10000,1:10000,1:10000), err)
 
   print *, selected_int_kind(12)
