@@ -50,12 +50,28 @@ are encouraged to make their own short-lived topic branches, that can be
 merged and then deleted when the work is done, much like the local workflow 
 that one uses with Git.
 
+The independent branch gysela-public, is meant to exist so that the CEA can 
+upload the public version of Gysela directly into its own branch. The mergings 
+of branches are supposed to flow always in the direction of: 
+
+                       devel ---> main ---> master
+
+and
+
+                       gysela-public ---> master
+
+Therefore, at any given moment, master should have the most comprehensive 
+collection of trusted files for the whole project. Anything below that 
+represents a sub-project and a given stage of development.
+
 Thus, the available branches are:
 master
+gysela-public
 prototype-main
 prototype-devel
 selalib-main
 selalib-devel
+
 
 Downloading the repository implies downloading all the project and all the 
 branches. Specifics as to how to deal with the branching model in Git are
