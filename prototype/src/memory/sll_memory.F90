@@ -30,7 +30,7 @@ contains
   ! a way to ensure that all arrays that are declared with this allocator
   ! would have that property.
 
-! I'll need a macro for every dimension... sucks!!
+! I'll need a macro for every dimension... damn!!
 #define TEST_MACRO(arry, lo, hi) \
   sll_allocate_int_1d(arry, lo, hi,"Memory allocation failure in file ".conc.__FILE__.conc.", line: ".conc. XSTRNG(__LINE__))
 
