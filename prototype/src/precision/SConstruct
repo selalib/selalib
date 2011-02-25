@@ -1,0 +1,6 @@
+# SCons file to build the test case for the memory allocator
+import os
+env = Environment(CC = 'gfortran', # CPPFLAGS = '-ffree-line-length-none', 
+                  CCFLAGS = '-W -Wall -pedantic -std=f95')
+src_files = Split('unit_test.F90 sll_working_precision.F90')
+env.Program(target='unit_test', source = src_files)
