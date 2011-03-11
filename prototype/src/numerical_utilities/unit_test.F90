@@ -14,7 +14,7 @@ program test_tridiag
   sll_int32 :: err
   sll_int32 :: status=0
   
-  min_n = 5
+  min_n = 3
   max_n = 100
   n_test = 10
   
@@ -58,10 +58,10 @@ program test_tridiag
            resid = resid + b(i)*b(i)
         end do
         resid = sqrt(resid/n)
-        write (*,'(a, i12, 20es20.10)') 'average value of residual ', n, resid
-        if( resid > 1.0e-10 ) then
+        write (*,'(a, i12, a, 20es20.10)') '     for tridiagonal system of size ', n, ' the average value of the residual per point is ', resid
+        if( resid > 1.0e-11 ) then
            status=1
-           write (*,'(a, i12, 20es20.10)') 'TOO HIGH residual value ', n, resid
+           write (*,'(a, i2, a, 20es20.10)') 'TOO HIGH residual value found for size ', n, ' :', resid
         end if
      end do
   end do
@@ -70,6 +70,7 @@ program test_tridiag
   SLL_DEALLOCATE(b,    err)
   SLL_DEALLOCATE(cts,  err)
   SLL_DEALLOCATE(ipiv, err)
+  print *, ' '
   if(status==0) then
      print *, 'setup/solve_tridiag: PASS'
   else
