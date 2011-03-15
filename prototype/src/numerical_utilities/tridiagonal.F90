@@ -1,30 +1,60 @@
 module sll_tridiagonal
-#include "../precision/sll_working_precision.h"
+#include "sll_working_precision.h"
 implicit none
 
 contains
 
-! careful with sideeffects here
+! careful with side-effects here
 #define SWP(a,b) swp=(a); a=(b); b=swp
 
   ! setup_cyclic_tridiag has been adapted from the C version written by
   ! Kevin Bowers for the Desmond molecular dynamics code.
   !
-  ! Original description:
+  ! For the Fortran implementation, we have adjusted the algorithm such that
+  ! it is compatible with the 1-based array indexing:
+  !
+  !       + a(2)    a(3)                                      a(1) +
+  !       | a(4)    a(5)    a(6)                                   |
+  !   A = |         a(7)    a(8)    a(9)                           |
+  !       |                         ...                            |
+  !       |                                a(3n-5) a(3n-4) a(3n-3) |
+  !       + a(3n)                                  a(3n-2) a(3n-1) +
+  ! 
+  ! Usage:
+  ! To solve a tridiagonal system, first:
+  ! 1. Assemble the matrix 'a' as a single array with the layout just 
+  !    described above.
+  ! 2. Use 'setup_cyclic_tridiag( a, n, cts, ipiv )' to factorize the system.
+  !    2.1 In 'setup_cyclic_tridag', a is the array to be factorized, stored 
+  !        with the layout shown above. 'n' is essentially the problem size.
+  !        cts and ipiv are respectively real and integer arrays of size 7*n 
+  !        and n that are needed to return factorization information. ipiv
+  !        is the usual 'pivot' array.
+  ! 3. To solve the system, make a call to 
+  !         'solve_cyclic_tridiag(cts, ipiv, b, n, x)'
+  !    Here, cts and ipiv are the ones returned by setup_cyclic_tridiag. The
+  !    function returns the solution to Ax = b, storing the results in 'x'.
+  !    In case that an 'in-place' computation is desired, it is acceptable to
+  !    make the call like: 
+  !          solve_cyclic_tridiag(cts, ipiv, b, n, b)
+  !
+  ! Implementation notes:
   ! **********************
-  ! "setup_cyclic_tridiag computes the LU factorization of a cylic
+  ! (Adapted) description for the C implementation:
+  !
+  ! setup_cyclic_tridiag computes the LU factorization of a cylic
   !  tridiagonal matrix specified in a band-diagonal representation.
   !  solve_cyclic_tridiag uses this factorization to solve of the
   !  system to solve the system Ax = b quickly and robustly.
   !
   !  Unambigously, the input tridiagonal system is specified by:
   !
-  !       + a[1]    a[2]                                      a[0] +
-  !       | a[3]    a[4]    a[5]                                   |
-  !   A = |         a[6]    a[7]    a[8]                           |
+  !       + a(2)    a(3)                                      a(1) +
+  !       | a(4)    a(5)    a(6)                                   |
+  !   A = |         a(7)    a(8)    a(9)                           |
   !       |                         ...                            |
-  !       |                                a[3n-6] a[3n-5] a[3n-4] |
-  !       + a[3n-1]                                a[3n-3] a[3n-2] +
+  !       |                                a(3n-5) a(3n-4) a(3n-3) |
+  !       + a(3n)                                  a(3n-2) a(3n-1) +
   ! 
   ! The LU factorization does partial (row) pivoting, so the
   ! factorization requires slightly more memory to hold than standard
@@ -32,19 +62,13 @@ contains
   ! The benefit is that this routine can accomodate systems that are
   ! not diagonally dominant.
   !
-  ! The output factorization is stored in "cts".  In general, all you
-  ! need to know about "cts" is that it is what you give to
-  ! solve_cyclic_tridiag. [NOTE: The present fortran implementation 
-  ! separates the array ipiv as an argument, due to the "issues" that 
-  ! Fortran has with interpreting data of one type as another type. The 
-  ! 'transfer' function does not accept pointer arguments and the 
-  ! workarounds are messy. Keep this in mind when reading this description
-  ! of the C code.]  However, for the masochistic, the final
-  ! factorization is stored in eight vectors of length n which are
-  ! packed into the vector cts in the order: d u v q r l m p.  (Note
-  ! that p is actually an integer vector of length n stored in the
-  ! location reserved for a 8th double vector of cts.)  The L and U
-  ! factors of A are built out of vectors and have the structure:
+  ! The output factorization is stored in "cts" and "ipiv" (the pivot
+  ! information).  In general, all you need to know about "cts" is that 
+  ! it is what you give to solve_cyclic_tridiag. However, for the 
+  ! masochistic, the final factorization is stored in seven vectors 
+  ! of length n which are packed into the vector cts in the order: 
+  ! d u v q r l m. The L and U factors of A are built out of vectors 
+  ! and have the structure:
   !
   !       + 1                               +
   !       | l0  1                           |
@@ -80,19 +104,6 @@ contains
   ! indistinguishable from zero as far as the computer can tell),
   ! this routine returns an error."
   !
-  ! ***********************
-  !
-  ! For the Fortran implementation, we have adjusted the algorithm such that
-  ! it is compatible with the 1-based array indexing:
-  !
-  !       + a(2)    a(3)                                      a(1) +
-  !       | a(4)    a(5)    a(6)                                   |
-  !   A = |         a(7)    a(8)    a(9)                           |
-  !       |                         ...                            |
-  !       |                                a(3n-5) a(3n-4) a(3n-3) |
-  !       + a(3n)                                  a(3n-2) a(3n-1) +
-  ! 
-  !
   ! *************************************************************************
 
 
@@ -101,7 +112,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
   sll_real64, dimension(:) :: a    ! 3*n size allocation
   sll_int32,  intent(in)   :: n    ! a is nXn
   sll_int32,  intent(out), dimension(1:n)           :: ipiv
-  sll_real64, intent(out), dimension(1:8*n), target :: cts  ! 7*n allocation
+  sll_real64, intent(out), dimension(1:7*n), target :: cts  ! 7*n allocation
 
   ! The following variables represent a scratch space where the local
   ! computations are made.
@@ -430,7 +441,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    ! the output of the function setup_cyclic_tridiag.  Note that the
    ! call:
    !
-   !  solve_cyclic_tridiag( cts, b, n, x )
+   !  solve_cyclic_tridiag( cts, ipiv, b, n, x )
    !
    ! is valid if you want run in-place and overwrite the right hand side
    ! with the solution. 
@@ -442,20 +453,22 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      ! ipiv:  n
      ! b:     n
 
-     sll_int32, intent(in)                 :: n    ! matrix size
-     sll_real64, target, dimension(1:7*n)  :: cts  ! 7*n size allocation
-     sll_int32, dimension(1:n), intent(in) :: ipiv
-     sll_real64, pointer       :: b(:)
-     sll_real64, pointer       :: x(:)    
-     sll_real64                :: swp
-     sll_int32                :: i
-     sll_real64, pointer :: d(:)
-     sll_real64, pointer :: u(:)
-     sll_real64, pointer :: v(:)
-     sll_real64, pointer :: q(:)
-     sll_real64, pointer :: r(:)
-     sll_real64, pointer :: l(:)
-     sll_real64, pointer :: m(:)
+     sll_int32,  intent(in)                 :: n    ! matrix size
+     sll_real64, dimension(1:7*n), target   :: cts  ! 7*n size allocation
+     sll_int32,  dimension(1:n), intent(in) :: ipiv
+     sll_real64, target                     :: b(n)
+     sll_real64, target                     :: x(n)  
+     sll_real64, pointer, dimension(:)                    :: bptr
+     sll_real64, pointer, dimension(:)                    :: xptr  
+     sll_real64                             :: swp
+     sll_int32                              :: i
+     sll_real64, pointer                    :: d(:)
+     sll_real64, pointer                    :: u(:)
+     sll_real64, pointer                    :: v(:)
+     sll_real64, pointer                    :: q(:)
+     sll_real64, pointer                    :: r(:)
+     sll_real64, pointer                    :: l(:)
+     sll_real64, pointer                    :: m(:)
 
      d => cts(    1:n  )
      u => cts(  n+1:2*n)
@@ -465,13 +478,17 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      l => cts(5*n+1:6*n)
      m => cts(6*n+1:7*n)
 
+     bptr =>b(1:n)
+     xptr =>x(1:n)
      ! FIX: ADD SOME ERROR CHECKING ON ARGUMENTS
-     if( .not. associated(x, target=b) ) then
+     if( .not. associated(xptr, target=bptr) ) then
         do i=1,n
            x(i) = b(i)
         end do
      end if
-
+     ! 'x' contains now the informatin in 'b', in case that it was given as 
+     ! a different array.
+     !
      ! Overwrite x with the solution of Ly = Pb
      do i=1,n-1
         SWP(x(i),x(ipiv(i)))
