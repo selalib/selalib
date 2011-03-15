@@ -5,8 +5,8 @@ program test_tridiag
   implicit none
   
   sll_real64, dimension(:), pointer :: a
-  sll_real64, dimension(:), pointer :: x
-  sll_real64, dimension(:), pointer :: b
+  sll_real64, allocatable, dimension(:) :: x
+  sll_real64, allocatable :: b(:)
   sll_real64, dimension(:), pointer :: cts
   sll_int32,  dimension(:), pointer  :: ipiv
   sll_real64 :: resid
@@ -66,8 +66,6 @@ program test_tridiag
      end do
   end do
   SLL_DEALLOCATE(a,    err)
-  SLL_DEALLOCATE(x,    err)
-  SLL_DEALLOCATE(b,    err)
   SLL_DEALLOCATE(cts,  err)
   SLL_DEALLOCATE(ipiv, err)
   print *, ' '
