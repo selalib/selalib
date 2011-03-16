@@ -2,26 +2,33 @@
 #define _assert_h_
 
   ! ************************************************************************
-  ! Unfortunately, fpp does not recognize the cpp directives # and ##. Some
+  ! Unfortunately, fpp does not recognize the cpp operators # and ##. Some
   ! compilers do, so we need this ugly workaround... and this only fixes
   ! the lack of #. ## is still a dream.
   !
   ! ************************************************************************
 
-#if (defined ( GFORTRAN ) || defined ( G95 ) || defined( PGI )
+#if (defined ( GFORTRAN ) || defined ( G95 ) || defined( PGI ))
 # define STRNG(x) "x"
 #else
 # define STRNG(x) #x
 #endif
-#define XSTRING(x) STRNG(x)
-#ifndef NDEBUG
-# define SLL_ASSERT(x, msg) if (.not. (x) ) \
-  call sll_assert( STRNG(x)//" assertion failed in file "//__FILE__//", line: "//XSTRNG(__LINE__)//".")
+
+#define DEBUG 1
+  ! The following is useless in fpp apparently. The workaround of using
+  ! double quotes does not allow to expand a macro for subsequent conversion
+  ! to a string. We leave this here as a testament to what would have been
+  ! nice to have.
+#define XSTRNG( x ) STRNG( x )
+
+#ifdef DEBUG
+# define SLL_ASSERT(x) if ( .not. (x) ) \
+  call sll_assert( STRNG(x), __FILE__, __LINE__ )
 #else
-# define SLL_ASSERT(x, msg) 
+# define SLL_ASSERT(x) 
 #endif
 
-use sll_assert
+use sll_assertion
 
 
 #endif

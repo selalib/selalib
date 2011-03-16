@@ -54,8 +54,8 @@
  
 use sll_memory
 
-#define SLL_ALLOCATE(arry_name_and_lims, error_var)   \
-  allocate(arry_name_and_lims, stat=error_var);       \
+#define SLL_ALLOCATE(array_name_and_lims, error_var)   \
+  allocate(array_name_and_lims, stat=error_var);      \
   call test_error_code(error_var, 'Memory allocation Failure.', __FILE__, __LINE__);
 
 #define SLL_DEALLOCATE(arry_name, error_var)  \

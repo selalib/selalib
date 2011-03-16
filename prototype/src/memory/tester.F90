@@ -1,6 +1,4 @@
-! What we require from the memory allocators is very little:
-! To allocate the memory and in case of failure, to provide information
-! about the call that failed.
+! unit test for the proposed memory allocator
 
 program memory_tester
 !  use sll_strings
@@ -24,10 +22,10 @@ program memory_tester
   print *, b(:,:,:)
   print *,'clear the array with SLL_INIT_ARRAY():'
   SLL_INIT_ARRAY(b,0)
-
-! turn the following on to test the deallocator
-#if 0 
+  print *, 'array after clearing:'
   print *, b(:,:,:)
+! turn the following on to test the deallocator
+#if 1 
   print *, 'Deallocate an unitialized pointer (i.e. force a crash)'
   SLL_DEALLOCATE(a,err)
   print *, 'deallocation successful'

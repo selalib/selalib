@@ -12,6 +12,5 @@ module sll_working_precision
   integer, parameter :: sll_i64 = kind(2_8**32)  ! 1.0d0 should be enough...
   integer, parameter :: sll_f32 = selected_real_kind(1,37)
   integer, parameter :: sll_f64 = selected_real_kind(1,99)
-contains
 
 end module sll_working_precision
