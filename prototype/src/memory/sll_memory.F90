@@ -23,6 +23,14 @@ contains
     end if
   end subroutine test_error_code
 
+
+
+
+
+
+
+
+
 #if 0
   ! Notice how the following macro could work for arrays of any dimension
   ! if the use of arbitrary array indexing were not necessary. Thus, if
