@@ -1,6 +1,7 @@
 program working_precision_tester
 #include "sll_working_precision.h"
   !  use, intrinsic :: ieee_arithmetic ! Why is this module not loading???
+  ! because gfortran is not standard compliant... 
   implicit none
  
   ! **************************************************************************
@@ -9,10 +10,12 @@ program working_precision_tester
   ! real kind parameter actually represents the number of bytes used for the
   ! storage of those numbers (4 & 8), we are done. The problem is that 
   ! according to the standard, that may not be the case (so the approach isn't 
-  ! portable); here we just gather information that might be useful in
+  ! fully portable); here we just gather information that might be useful in
   ! learning the floating point features of such systems, and this was also
   ! an excuse to see what Fortran allowed us to do in this domain, as this
-  ! will be useful for other purposes.
+  ! might be useful for other purposes. Unfortunately, gfortran does not
+  ! support some interesting ieee functionality that is supposed to be in a
+  ! standard-compliant implementation.
   !
   ! Presently this behaves more like a playground than an actual tester. This
   ! should improve a lot more.
@@ -30,7 +33,7 @@ program working_precision_tester
   sll_real32  :: stepf32
   sll_real32  :: f = z'7f7fffff'     ! largest IEEE-754 single prec float
   sll_real32  :: small = z'7f000001' ! smallest num with same binary exp as f
-  sll_real32  :: neglected = z'7effffff'
+  sll_real32  :: neglected =  z'72ffffff' ! 25-power of 2 orders less
   sll_real64  :: f2 = z'7fefffffffffffff' ! largest IEEE-754 double float
   sll_real64  :: small2 = z'7feffffffffffff1' 
 
@@ -97,7 +100,7 @@ program working_precision_tester
   write ( *, '("KIND number for default single precision is", I2)') kind(0.0)
   write ( *, '("KIND number for default double precision is", I2)') kind(0.0D0)
   write ( *, '("KIND number for 2147483647 (2^32-1) is", I2)') kind(2147483647)
-  write ( *, '("KIND number for 2147483648 (2^32) is", I2)')   kind(1_sll_i64)
+  write ( *, '("KIND number for 2147483648 (2^32) is", I2)')   kind(1_i64)
 
 contains
 
