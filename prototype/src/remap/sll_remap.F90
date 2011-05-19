@@ -8,11 +8,6 @@ module remapper
   
   ! The box types contain information on the index limits contained        
   ! in a given processor.
-
-  type box_1D
-     sll_int32 :: i_min, i_max
-  end type box_1D
-  
   type box_3D
      sll_int32 :: i_min, i_max
      sll_int32 :: j_min, j_max
@@ -37,12 +32,6 @@ module remapper
   ! The sll_layout types contain information on a collective and an
   ! array of boxes that describes the distribution of data among
   ! different nodes.
-
-  type layout_1D_t
-     type(sll_collective_t), pointer     :: collective
-     type(box_1D), dimension(:), pointer :: boxes
-  end type layout_1D_t
-
   type layout_3D_t
      type(sll_collective_t), pointer     :: collective
      type(box_3D), dimension(:), pointer :: boxes
@@ -66,18 +55,6 @@ module remapper
   !
   ! Coalesce with a macro. Note that regardless of the dimensionality of the
   ! data, the arrays are always linear. This implies manual packing/unpacking.
-  type remap_plan_1D_t
-     type(layout_1D_t), pointer              :: initial_layout
-     type(layout_1D_t), pointer              :: final_layout
-     integer, dimension(:), allocatable      :: send_displs
-     integer, dimension(:), allocatable      :: send_cnts
-     integer, dimension(:), allocatable      :: recv_displs
-     integer, dimension(:), allocatable      :: recv_cnts
-     type(box_1D), dimension(:), allocatable :: send_boxes
-     type(box_1D), dimension(:), allocatable :: recv_boxes
-     type(sll_collective_t), pointer         :: collective
-  end type remap_plan_1D_t
-
   type remap_plan_3D_t
      type(layout_3D_t), pointer              :: initial_layout
      type(layout_3D_t), pointer              :: final_layout
@@ -92,22 +69,20 @@ module remapper
      sll_int32, dimension(:), allocatable    :: recv_buffer
   end type remap_plan_3D_t
 
-
-
  interface get_layout_i_min
-     module procedure get_layout_1D_i_min, get_layout_3D_i_min
+     module procedure get_layout_3D_i_min
   end interface
 
   interface set_layout_i_min
-     module procedure set_layout_1D_i_min, set_layout_3D_i_min
+     module procedure set_layout_3D_i_min
   end interface
 
   interface get_layout_i_max
-     module procedure get_layout_1D_i_max, get_layout_3D_i_max
+     module procedure get_layout_3D_i_max
   end interface
 
   interface set_layout_i_max
-     module procedure set_layout_1D_i_max, set_layout_3D_i_max
+     module procedure set_layout_3D_i_max
   end interface
 
   interface get_layout_j_min
@@ -143,19 +118,22 @@ module remapper
   end interface
 
   interface get_layout_num_nodes
-     module procedure get_layout_1D_num_nodes, get_layout_3D_num_nodes
+     module procedure get_layout_3D_num_nodes
   end interface
 
   interface get_layout_box
-     module procedure get_layout_1D_box, get_layout_3D_box
+     module procedure get_layout_3D_box
   end interface
 
   interface sll_get_num_nodes
-     module procedure sll_get_num_nodes_1D, sll_get_num_nodes_3D
+     module procedure sll_get_num_nodes_3D
   end interface
 
 
-contains
+
+contains  !******************************************************************
+
+
 
   ! EXPERIMENTAL (in the Fortran context, that is)
   ! Here we explore how to address some code redundancies with a macro.
@@ -189,11 +167,9 @@ contains
     SLL_ALLOCATE( func_name%boxes(0:(n_nodes-1)), ierr )        \
   end function func_name
 
-NEW_LAYOUT_FUNCTION( new_layout_1D, layout_1D_t )
 NEW_LAYOUT_FUNCTION( new_layout_3D, layout_3D_t )
 NEW_LAYOUT_FUNCTION( new_layout_4D, layout_4D_t )
 NEW_LAYOUT_FUNCTION( new_layout_5D, layout_5D_t )
-
 
 #define NEW_DELETE_LAYOUT_FUNCTION( fname, layout_type )        \
   subroutine fname( layout );                                   \
@@ -204,11 +180,9 @@ NEW_LAYOUT_FUNCTION( new_layout_5D, layout_5D_t )
     SLL_DEALLOCATE( layout, ierr );                             \
   end subroutine fname
 
-NEW_DELETE_LAYOUT_FUNCTION( delete_layout_1D, layout_1D_t )
 NEW_DELETE_LAYOUT_FUNCTION( delete_layout_3D, layout_3D_t )
 NEW_DELETE_LAYOUT_FUNCTION( delete_layout_4D, layout_4D_t )
 NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
-
 
   ! Access functions for the boxes. This is really an overkill... On one hand,
   ! it is nice to hide everything behind access functions so that we 
@@ -217,26 +191,11 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   ! hand, the only thing there is to hide here is a pair of chained %'s...
   ! All these could be greatly reduced by a few one-line macros, but at least
   ! for now we choose the conventional approach.
-
-  function get_layout_1D_num_nodes( layout )
-    sll_int32                  :: get_layout_1D_num_nodes
-    type(layout_1D_t), pointer :: layout
-    get_layout_1D_num_nodes = sll_get_collective_size( layout%collective )
-  end function get_layout_1D_num_nodes
-
   function get_layout_3D_num_nodes( layout )
     sll_int32                  :: get_layout_3D_num_nodes
     type(layout_3D_t), pointer :: layout
     get_layout_3D_num_nodes = sll_get_collective_size( layout%collective )
   end function get_layout_3D_num_nodes
-
-  function get_layout_1D_box( layout, rank )
-    type(box_1D)               :: get_layout_1D_box
-    type(layout_1D_t), pointer :: layout
-    sll_int32, intent(in)      :: rank
-    SLL_ASSERT((rank.ge.0).and.(rank.le.(get_layout_1D_num_nodes(layout)-1)))
-    get_layout_1D_box = layout%boxes(rank)
-  end function get_layout_1D_box
 
   function get_layout_3D_box( layout, rank )
     type(box_3D)               :: get_layout_3D_box
@@ -252,7 +211,6 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   ! anyway. Would it make sense to prohibit the use of nested structures
   ! in a third-party library, like say FFTW or anything else? So why do we 
   ! prohibit this to ourselves? 
-
 #define MAKE_GET_LAYOUT_SLOT_FUNCTION( fname, datatype, slot )    \
   function fname( layout, rank );                                 \
     sll_int32                  :: fname;                          \
@@ -261,7 +219,6 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     fname = layout%boxes(rank)%slot;                              \
   end function fname
 
-
 #define MAKE_SET_LAYOUT_SLOT_FUNCTION( fname, datatype, slot )    \
   subroutine fname( layout, rank, val );                          \
     type(datatype), pointer    :: layout;                         \
@@ -269,14 +226,6 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     sll_int32, intent(in)      :: val;                            \
     layout%boxes(rank)%slot = val;                                \
   end subroutine fname
-
-  ! Use the macros for the 1D case, which will be deleted soon!
-
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_1D_i_min, layout_1D_t, i_min )
-  MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_1D_i_max, layout_1D_t, i_max )
-
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_1D_i_min, layout_1D_t, i_min )
-  MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_1D_i_max, layout_1D_t, i_max )
 
   ! We use the macros to write the set_ get_ functions for the 3D case as 
   ! well.
@@ -297,16 +246,6 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   ! Why should lims just give its collective nilly-willy? This is not 
   ! pretty but I have the suspicion that direct access of the collective 
   ! will be needed.
-  function get_layout_1D_collective( layout )
-    intrinsic                       :: associated
-    type(sll_collective_t), pointer :: get_layout_1D_collective
-    type(layout_1D_t), pointer      :: layout
-    if( .not. associated(layout) ) then
-       stop 'ERROR: uninitialized argument, get_layout_1D_collective()'
-    end if
-    get_layout_1D_collective => layout%collective
-  end function get_layout_1D_collective
-
   function get_layout_3D_collective( layout )
     intrinsic                       :: associated
     type(sll_collective_t), pointer :: get_layout_3D_collective
@@ -329,117 +268,16 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   ! Thus, while all processes make this call, the resulting plan will be
   ! different among the processes, but the plan will be consistent in terms 
   ! of which process is expecting what from whom.
-
-  function new_remap_plan_1D( initial, final )
-    intrinsic                       :: associated
-    type(remap_plan_1D_t), pointer  :: new_remap_plan_1D
-    type(layout_1D_t), pointer      :: initial
-    type(layout_1D_t), pointer      :: final
-    type(sll_collective_t), pointer :: col
-    type(box_1D)                    :: ibox, fbox, inters
-    sll_int32                       :: i, f          ! loop index
-    sll_int32                       :: my_rank
-    sll_int32                       :: col_size
-    sll_int32                       :: ierr
-    sll_int32                       :: disp_counter  ! displacements counter
-    sll_int32                       :: send_counter
-    sll_int32                       :: recv_counter
-
-    if( (.not. associated(initial)) .or. (.not. associated(final)) ) then
-       write (*,'(a)') &
-            'ERROR: un-initialized arguments given to sll_new_remap_plan_1D'
-       stop 'sll_new_remap_plan_1D'
-    end if
-    if( .not. associated(get_layout_1D_collective(initial),&
-         target=get_layout_1D_collective(final)) ) then
-       write (*,'(a)') &
-            'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'
-       stop 'new_remap_plan_1D'
-    end if
-
-    col => get_layout_1D_collective(initial)
-    my_rank  = sll_get_collective_rank( col )
-    col_size = sll_get_collective_size( col )
-
-    SLL_ALLOCATE( new_remap_plan_1D, ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_1D%send_displs(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_1D%send_cnts(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_1D%recv_displs(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_1D%recv_cnts(0:col_size-1), ierr )
-    ! Can't use CLEAR_ALLOCATE with types for which the '= 0' has not been
-    ! defined as an operator.
-    SLL_ALLOCATE( new_remap_plan_1D%send_boxes(0:col_size-1), ierr )
-    SLL_ALLOCATE( new_remap_plan_1D%recv_boxes(0:col_size-1), ierr )
-    new_remap_plan_1D%collective => get_layout_1D_collective(initial)
-    send_counter = 0
-    disp_counter = 0
-    ibox = get_layout_1D_box(initial, my_rank)
-
-    new_remap_plan_1D%initial_layout => initial
-    new_remap_plan_1D%final_layout   => final
-    ! Find what data to send.
-    do f = 0, col_size-1  ! loop over the final layout to look for
-                          ! box intersections.
-    fbox = get_layout_1D_box(final, f)
-       if( intersect_boxes_1D( ibox, fbox, inters ) ) then 
-          ! compute how many elements to send
-          send_counter                       = get_box_1D_i_max(inters) - &
-                                               get_box_1D_i_min(inters) + 1
-          new_remap_plan_1D%send_cnts(f)     = send_counter
-          new_remap_plan_1D%send_displs(f)   = disp_counter
-          disp_counter                       = disp_counter + send_counter
-          new_remap_plan_1D%send_boxes(f)    = inters
-       else ! if no intersection, there is no need to send anything.
-          new_remap_plan_1D%send_cnts(f)     = 0
-          new_remap_plan_1D%send_displs(f)   = disp_counter
-          new_remap_plan_1D%send_boxes(f)    = inters
-       end if
-       ! end if
-    end do
-
-    disp_counter = 0  
-! write (*,'(a, i4)') 'Displacement counter = ', disp_counter
-    ! Find what data to receive. Now we compare it with the target layout
-    ! for this node.
-    fbox = get_layout_1D_box(final, my_rank)
-    do i = 0, col_size-1  ! loop over the initial layout to look for box
-                          ! intersections.
-       ibox = get_layout_1D_box(initial,i)
-       if( intersect_boxes_1D( ibox, fbox, inters ) ) then
-          ! compute how many elements to receive
-          recv_counter =  get_box_1D_i_max(inters) - &
-                          get_box_1D_i_min(inters) + 1
-          new_remap_plan_1D%recv_cnts(i)   = recv_counter
-
-!write (*,'(a,i4,i4)') 'displacement counter in rank, node: ', my_rank, i
-!print *, disp_counter
-!call flush()
-
-             new_remap_plan_1D%recv_displs(i) = disp_counter
-             disp_counter                     = disp_counter + recv_counter
-             new_remap_plan_1D%recv_boxes(i)  = inters
-          else ! no intersection, don't expect to receive anything
-             new_remap_plan_1D%recv_cnts(i)   = 0
-             new_remap_plan_1D%recv_displs(i) = disp_counter
-             new_remap_plan_1D%recv_boxes(i)  = inters
-          end if
-      ! end if
-    end do
-!write (*,'(a,i4)') ' displacements from rank ', my_rank
-!print *, new_remap_plan_1D%recv_displs(:)
-!call flush
-  end function new_remap_plan_1D
-
+  !
   ! The remap plan stores the buffers where the data to be sent/received
   ! are kept. This raises the issue of type dependence. We want to make this
   ! facility as general as possible. Here we try the approach of having a
   ! single, standard format for data storage, i.e. an integer. This means
   ! that we would need to use the transfer() function to store and retrieve
-  ! data from the buffers, which is very inefficient. The alternative is to
-  ! have type-dependent plans...
-
+  ! data from the buffers, which is inefficient. The alternative is to
+  ! have type-dependent plans... 
   function new_remap_plan_3D( initial, final, int32_data_size )
-    intrinsic                       :: associated, ceiling
+    intrinsic                       :: associated
     type(remap_plan_3D_t), pointer  :: new_remap_plan_3D 
     type(layout_3D_t), pointer      :: initial
     type(layout_3D_t), pointer      :: final
@@ -534,24 +372,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     SLL_ALLOCATE(new_remap_plan_3D%recv_buffer(0:(acc*int32_data_size-1)),ierr)
   end function new_remap_plan_3D
 
-  function get_remap_1D_initial_layout( plan )
-    type(layout_1D_t), pointer      :: get_remap_1D_initial_layout
-    type(remap_plan_1D_t), pointer  :: plan
-    if( .not. associated( plan ) ) then
-       write (*,'(a)') 'not associated pointer argument'
-       stop 'get_remap_1D_initial_layout'
-    end if
-    get_remap_1D_initial_layout => plan%initial_layout
-  end function get_remap_1D_initial_layout
-
-  function get_remap_1D_final_layout( plan )
-    type(layout_1D_t), pointer      :: get_remap_1D_final_layout
-    type(remap_plan_1D_t), pointer  :: plan
-    ! FIXME: arg checking
-    get_remap_1D_final_layout => plan%final_layout
-  end function get_remap_1D_final_layout
-
- function get_remap_3D_initial_layout( plan )
+  function get_remap_3D_initial_layout( plan )
     type(layout_3D_t), pointer      :: get_remap_3D_initial_layout
     type(remap_plan_3D_t), pointer  :: plan
     if( .not. associated( plan ) ) then
@@ -593,6 +414,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   ! For apply_remap_1D_int(), we use this approach as a test case, even though
   ! it is not necessary since 'integer' is also a native MPI type.
 
+  ! FIXME: CHANGE THE NAME OF THIS SUBROUTINE
   subroutine convert_to_bytes( sz, ai, n, bi )
     sll_int32, intent(in)                :: sz   ! in bytes
     sll_int32, intent(in), dimension(:)  :: ai   ! array to convert
@@ -604,122 +426,11 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     end do
   end subroutine convert_to_bytes
 
-  subroutine apply_remap_1D_int( plan, data_in, data_out )
-    type(remap_plan_1D_t), pointer       :: plan
-    sll_int32, dimension(:), intent(in)  :: data_in
-    sll_int32, dimension(:), intent(out) :: data_out
-    sll_int32, dimension(:), allocatable, target :: sb       ! send buffer
-    sll_int32, dimension(:), pointer     :: sptr
-    sll_int32, dimension(:), allocatable :: rb       ! receive buffer
-    sll_int32, dimension(:), pointer     :: sdisp    ! send displacements
-    sll_int32, dimension(:), pointer     :: rdisp    ! receive displacements
-    sll_int32, dimension(:), pointer     :: scnts    ! send counts
-    sll_int32, dimension(:), pointer     :: rcnts    ! receive counts
-    type(sll_collective_t), pointer      :: col      ! collective
-    type(layout_1D_t), pointer           :: init_layout => NULL()
-    sll_int32                            :: i
-    sll_int32                            :: col_sz
-    sll_int64                            :: sacc = 0 ! send count accumulator
-    sll_int64                            :: racc = 0 ! receive count accum.
-    sll_int64                            :: send_sz  ! size of send buffer
-    sll_int64                            :: recv_sz  ! size of recv buffer
-    sll_int32                            :: ierr
-    sll_int32                            :: lo
-    sll_int32                            :: hi
-    type(box_1D)                         :: sbox
-    sll_int32                            :: j
-    sll_int32                            :: my_rank
-    sll_int32                            :: loc
-    sll_int32                            :: num
-    ! to load the MPI function and send bytes, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispb  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispb  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsb  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsb  ! receive counts
-
-    ! unpack the plan: There are inconsistencies here, one one hand we access
-    ! directly and on the other with access functions... standardize...
-    sdisp       => plan%send_displs
-    rdisp       => plan%recv_displs
-    scnts       => plan%send_cnts
-    rcnts       => plan%recv_cnts
-    col         => plan%collective
-    init_layout => get_remap_1D_initial_layout(plan)
-    my_rank     =  sll_get_collective_rank(col)
-
-    ! estimate the size of the send and receive buffers and allocate them
-    col_sz = sll_get_collective_size(col)
-    do i=0,col_sz-1
-       sacc = sacc + scnts(i)
-       racc = racc + rcnts(i)
-    end do
-
-    ! Send/Receive buffers are zero-indexed
-    SLL_ALLOCATE(sb(0:sacc-1),ierr)
-    SLL_ALLOCATE(rb(0:racc-1),ierr)
-
-    SLL_ALLOCATE(sdispb(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispb(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsb(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsb(0:col_sz-1), ierr)
-
-    ! Translate the amounts into bytes
-#if 1
-    call convert_to_bytes(BYTE_SIZEOF(data_in(1)), sdisp, col_sz, sdispb)
-    call convert_to_bytes(BYTE_SIZEOF(data_in(1)), rdisp, col_sz, rdispb)
-    call convert_to_bytes(BYTE_SIZEOF(data_in(1)), scnts, col_sz, scntsb)
-    call convert_to_bytes(BYTE_SIZEOF(data_in(1)), rcnts, col_sz, rcntsb)
-#endif
-write (*,'(a,i4)') 'parameters from rank ', my_rank
-print *, scntsb(:)
-print *, sdispb(:)
-print *, rcntsb(:)
-print *, rdispb(:)
-
-
-
-    ! load the send buffer
-    do i = 0, col_sz-1
-       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          ! get the information on the box to send, get the limits and
-          ! find out where in the buffer to start writing.
-          sbox = plan%send_boxes(i)
-          lo   = global_to_local_1D( init_layout, get_box_1D_i_min(sbox) )
-          hi   = global_to_local_1D( init_layout, get_box_1D_i_max(sbox) )
-          num  = scnts(i)
-          loc  = sdisp(i)
-          sptr => sb(loc:)
-          sptr(1:num) = data_in(lo:hi)
-       end if
-    end do
-
-       write (*,'(a,i4)') 'the send buffer in rank:', my_rank
-       print *, sb(0:(size(sb)-1))
-       call flush()
-
-       call sll_collective_all_to_allV_int( sb(:),       &
-                                            scntsb(0:col_sz-1), &
-                                            sdispb(0:col_sz-1), &
-                                            rb(:),       &
-                                            rcntsb(0:col_sz-1), &
-                                            rdispb(0:col_sz-1), col )
- write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
-       print *, rb(0:size(rb)-1)
-       call flush()
-
-       ! deallocate the buffers
-       SLL_DEALLOCATE_ARRAY(sb, ierr)
-       SLL_DEALLOCATE_ARRAY(rb, ierr)
-       
-     end subroutine apply_remap_1D_int
-
   ! **********************************************************************
   !
   !    Continue here with 3D, 4D and 5D access functions...
   !
   ! **********************************************************************
-
   subroutine apply_remap_3D_int( plan, data_in, data_out )
     intrinsic                                :: transfer
     type(remap_plan_3D_t), pointer           :: plan
@@ -732,7 +443,8 @@ print *, rdispb(:)
     sll_int32, dimension(:), pointer         :: scnts    ! send counts
     sll_int32, dimension(:), pointer         :: rcnts    ! receive counts
     type(sll_collective_t), pointer          :: col      ! collective
-    type(layout_3D_t), pointer               :: init_layout => NULL()
+    type(layout_3D_t), pointer               :: init_layout  => NULL()
+    type(layout_3D_t), pointer               :: final_layout => NULL()
     sll_int32                                :: id, jd, kd
     sll_int32                                :: i
     sll_int32                                :: col_sz
@@ -759,15 +471,16 @@ print *, rdispb(:)
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
-    sdisp       => plan%send_displs
-    rdisp       => plan%recv_displs
-    scnts       => plan%send_cnts
-    rcnts       => plan%recv_cnts
-    col         => plan%collective
-    init_layout => get_remap_3D_initial_layout(plan)
-    my_rank     =  sll_get_collective_rank(col)
-    sb          => plan%send_buffer
-    rb          => plan%recv_buffer
+    sdisp        => plan%send_displs
+    rdisp        => plan%recv_displs
+    scnts        => plan%send_cnts
+    rcnts        => plan%recv_cnts
+    col          => plan%collective
+    init_layout  => get_remap_3D_initial_layout(plan)
+    final_layout => get_remap_3D_final_layout(plan)
+    my_rank      =  sll_get_collective_rank(col)
+    sb           => plan%send_buffer
+    rb           => plan%recv_buffer
     
     SLL_ALLOCATE(sdispb(0:col_sz-1), ierr)
     SLL_ALLOCATE(rdispb(0:col_sz-1), ierr)
@@ -781,15 +494,15 @@ print *, rdispb(:)
     call convert_to_bytes(INT32_SIZEOF(data_in(1,1,1)), scnts, col_sz, scntsb)
     call convert_to_bytes(INT32_SIZEOF(data_in(1,1,1)), rcnts, col_sz, rcntsb)
 #endif
-
-#if 1
+    
+#if 0
     write (*,'(a,i4)') 'parameters from rank ', my_rank
     print *, scntsb(:)
     print *, sdispb(:)
     print *, rcntsb(:)
     print *, rdispb(:)
 #endif
-
+    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
     ! This step is obviously not needed for integers themselves. We put this
@@ -845,10 +558,37 @@ print *, rdispb(:)
     write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
     print *, rb(0:size(rb)-1)
     call flush()
-    
+    ! Unpack the plan into the outgoing buffer.
+    loc = 0  ! We load first from position 0 in the receive buffer.
+    do i = 0, col_sz-1
+       if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
+          if( loc .ne. rdispb(i) ) then
+             write (*,'(a,i4)') &
+                  'ERROR: discrepancy between rdispb(i) and index for i = ', i
+             stop 'unpacking error'
+          end if
+          ! get the information on the box to receive, get the limits, and 
+          ! convert to the local indices.
+          sbox = plan%recv_boxes(i)
+          loi = get_box_3D_i_min(sbox)
+          loj = get_box_3D_j_min(sbox)
+          lok = get_box_3D_k_min(sbox)
+          hii = get_box_3D_i_max(sbox)
+          hij = get_box_3D_j_max(sbox)
+          hik = get_box_3D_k_max(sbox)
+          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
+          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          do kd = local_lo(3), local_hi(3)
+             do jd = local_lo(2), local_hi(2)
+                do id = local_lo(1), local_hi(1)
+                   data_out(id,jd,kd) = transfer(rb(loc:),data_out(1,1,1))
+                   loc                = loc + int32_data_size
+                end do
+             end do
+          end do
+       end if
+    end do
   end subroutine apply_remap_3D_int
-
-
 
 #define MAKE_GET_BOX_SLOT_FUNCTION( fname, boxtype, slot )   \
   function fname( b );                                       \
@@ -857,9 +597,6 @@ print *, rdispb(:)
     fname = b%slot;                                          \
   end function fname
 
-  MAKE_GET_BOX_SLOT_FUNCTION( get_box_1D_i_min, box_1D, i_min )
-  MAKE_GET_BOX_SLOT_FUNCTION( get_box_1D_i_max, box_1D, i_max )
-
   MAKE_GET_BOX_SLOT_FUNCTION( get_box_3D_i_min, box_3D, i_min )
   MAKE_GET_BOX_SLOT_FUNCTION( get_box_3D_i_max, box_3D, i_max )
   MAKE_GET_BOX_SLOT_FUNCTION( get_box_3D_j_min, box_3D, j_min )
@@ -867,58 +604,11 @@ print *, rdispb(:)
   MAKE_GET_BOX_SLOT_FUNCTION( get_box_3D_k_min, box_3D, k_min )
   MAKE_GET_BOX_SLOT_FUNCTION( get_box_3D_k_max, box_3D, k_max )
 
-  function sll_get_num_nodes_1D( lims )
-    sll_int32                  :: sll_get_num_nodes_1D
-    type(layout_1D_t), pointer :: lims
-    sll_get_num_nodes_1D = sll_get_collective_size( lims%collective )
-  end function sll_get_num_nodes_1D
-
   function sll_get_num_nodes_3D( lims )
     sll_int32                  :: sll_get_num_nodes_3D
     type(layout_3D_t), pointer :: lims
     sll_get_num_nodes_3D = sll_get_collective_size( lims%collective )
   end function sll_get_num_nodes_3D
-
-
-
-
-  ! uniform_dist_1D() gives a two-element array, the first element is the
-  ! lowest index stored at the given node, and the second element is the
-  ! highest. For now this is to be considered a 'helper' function and is
-  ! thus not really a full member of this module. 
-  function uniform_dist_1D( proc, nelem, group_sz )
-    sll_int32, dimension(1:2) :: uniform_dist_1D
-    sll_int32, intent(in)     :: proc     ! process number
-    sll_int32, intent(in)     :: nelem    ! total number of elements
-    sll_int32, intent(in)     :: group_sz ! number of processes in group    
-    sll_int32                 :: nloc     ! local number of elements/process
-    nloc               = nelem/group_sz
-    uniform_dist_1D(1) = proc*nloc + 1
-    uniform_dist_1D(2) = (proc+1)*nloc
-  end function uniform_dist_1D
-
-
-
-  ! TENTATIVE... another helper function.
-  ! ugly implementation of an indexing which allows negative indices as well
-  ! as indices greater than the array size, always returning an index within
-  ! the array as if it were repeated indefinitely in both directions.
-  function circular_array_index( i, N )
-    intrinsic           :: modulo, abs
-    integer             :: circular_array_index
-    integer, intent(in) :: i
-    integer, intent(in) :: N ! array size
-    if( (i .ge. 1) .and. (i .le. N) ) then ! normal, in-bounds index
-       circular_array_index = i
-    else if ( i .gt. N ) then
-       circular_array_index = modulo(i,N) ! only works for i<2N
-    else if ( i .eq. 0 ) then
-       print *, '0 index given to circular array'
-       stop 'circular array: zero index'
-    else
-       circular_array_index = N - abs(i) + 1 ! only works for i > -2N
-    end if
-  end function circular_array_index
 
   ! It seems that it is essential to have functions that would convert
   ! indices from a local to a global indexing and back. For instance, if we
@@ -940,22 +630,6 @@ print *, rdispb(:)
   ! to have that global index in their domain. This second part, while it
   ! seems more useful, may be way too complicated (and would return multiple
   ! things). Thus here we go for the first option.
-  function local_to_global_1D( layout, i_local )
-    sll_int32                       :: local_to_global_1D
-    type(layout_1D_t), pointer      :: layout
-    sll_int32, intent(in)           :: i_local
-    type(sll_collective_t), pointer :: col
-    sll_int32                       :: my_rank
-    type(box_1D)                    :: box
-    ! FIXME: arg checking
-print *, 'entered here?'
-call flush()
-    col                => get_layout_1D_collective( layout )
-    my_rank            =  sll_get_collective_rank( col )
-    box                =  get_layout_1D_box( layout, my_rank )
-    local_to_global_1D =  get_box_1D_i_min(box) + i_local - 1
-  end function local_to_global_1D
-
   function local_to_global_3D( layout, triplet )
     sll_int32, dimension(1:3)             :: local_to_global_3D
     type(layout_3D_t), pointer            :: layout
@@ -977,31 +651,6 @@ call flush()
   ! value when the global index is not available locally does not backfire.
   ! If one decides to use an array with an indexing that contains -1, this 
   ! would be problematic.
-  function global_to_local_1D( layout, i_global )
-    intrinsic                       :: associated
-    sll_int32                       :: global_to_local_1D
-    type(layout_1D_t), pointer      :: layout
-    sll_int32, intent(in)           :: i_global
-    type(sll_collective_t), pointer :: col
-    sll_int32                       :: my_rank
-    type(box_1D)                    :: box
-    ! FIXME: some argument checking would be nice...
-    if( .not. associated(get_layout_1D_collective(layout)) ) then
-       write (*,'(a)') 'ERROR in global_to_local_1D(), not-associated col'
-       stop 'global_to_local_1D'
-    end if
-
-    col     => get_layout_1D_collective( layout )
-    my_rank =  sll_get_collective_rank( col )
-    box     =  get_layout_1D_box( layout, my_rank )
-    if( (i_global .ge. get_box_1D_i_min(box)) .and. &
-        (i_global .le. get_box_1D_i_max(box)) ) then  ! the index is present
-       global_to_local_1D = i_global - get_box_1D_i_min(box) + 1
-    else  ! the index is not present
-       global_to_local_1D = -1
-    end if
-  end function global_to_local_1D
-
   function global_to_local_3D( layout, gtuple )
     intrinsic                             :: associated
     sll_int32, dimension(1:3)             :: global_to_local_3D
@@ -1033,120 +682,6 @@ call flush()
     end if
   end function global_to_local_3D
 
-  ! compute_min_max_1D returns the a 2-element array, with the lower
-  ! and upper indices of the data, given a process and
-
-  function compute_min_max_1D( rank, total_size, col_size )
-    sll_int32, dimension(2) :: compute_min_max_1D
-    sll_int32, intent(in)   :: rank
-    sll_int32, intent(in)   :: total_size
-    sll_int32, intent(in)   :: col_size
-    sll_int32               :: local_size
-    sll_int32               :: lo
-    sll_int32               :: hi
-    local_size      = total_size/col_size
-    lo              = rank*local_size + 1 
-    hi              = local_size*(rank + 1)
-#if 1
-    if( (lo .lt. 1) .or. (lo .gt. total_size) ) then 
-       lo = circular_array_index( lo, total_size )
-    end if
-    if( (hi .lt. 1) .or. (hi .gt. total_size) ) then 
-       hi = circular_array_index( hi, 16 )
-    end if
-#endif
-    compute_min_max_1D(1) = lo
-    compute_min_max_1D(2) = hi
-  end function compute_min_max_1D
-  
-  function compute_min_max2( rank, total_size, col_size )
-    sll_int32, dimension(2) :: compute_min_max2
-    sll_int32, intent(in)   :: rank
-    sll_int32, intent(in)   :: total_size
-    sll_int32, intent(in)   :: col_size
-    sll_int32               :: local_size
-    sll_int32               :: lo
-    sll_int32               :: hi
-
-    local_size      = total_size/col_size
-    lo              = rank*local_size + 1 
-    hi              = local_size*(rank + 1)
-    if( rank .eq. 0 ) then
-       compute_min_max2(1) = lo
-       compute_min_max2(2) = hi + 1
-    else if( rank .eq. col_size - 1 ) then
-       compute_min_max2(1) = lo - 1
-       compute_min_max2(2) = hi 
-    else
-#if 0
-    if( (lo .lt. 1) .or. (lo .gt. total_size) ) then 
-       lo = circular_array_index( lo, total_size )
-    end if
-    if( (hi .lt. 1) .or. (hi .gt. total_size) ) then 
-       hi = circular_array_index( hi, 16 )
-    end if
-#endif
-    compute_min_max2(1) = lo - 1
-    compute_min_max2(2) = hi + 1
- end if
-end function compute_min_max2
-
-function compute_min_max3( rank, total_size, col_size )
-    sll_int32, dimension(2) :: compute_min_max3
-    sll_int32, intent(in)   :: rank
-    sll_int32, intent(in)   :: total_size
-    sll_int32, intent(in)   :: col_size
-    compute_min_max3(1) = 1
-    compute_min_max3(2) = 16
-  end function compute_min_max3
-
-  subroutine initialize_layout_1D( lims_func, total_sz, local_sz, layout )
-
-    interface
-
-       function lims_func( rank, total_size, col_size )
-         ! how to bring something like integer(kind=i32) back into scope here???
-         integer, dimension(2) :: lims_func
-         integer, intent(in)   :: rank
-         integer, intent(in)   :: total_size
-         integer, intent(in)   :: col_size
-       end function lims_func
-    end interface
-
-    type(layout_1D_t), pointer :: layout
-    sll_int32, intent(in)      :: total_sz
-    sll_int32, intent(in)      :: local_sz
-    sll_int32                  :: col_sz ! size of the collective
-    sll_int32                  :: i
-    sll_int32                  :: lo
-    sll_int32                  :: hi
-    sll_int32, dimension(1:2)  :: lh
-
-    col_sz  = sll_get_num_nodes(layout)
-    do i=0,col_sz-1
-       lh = lims_func( i, total_sz, col_sz )
-       lo = lh(1)
-       hi = lh(2)
-       call set_layout_1D_i_min( layout, i, lo )
-       call set_layout_1D_i_max( layout, i, hi )
-    end do
-   end subroutine initialize_layout_1D
-
-
-
-  subroutine sll_view_lims_1D( lims )
-    type(layout_1D_t), pointer :: lims
-    sll_int32                  :: i
-    sll_int32                  :: sz
-    sz = sll_get_num_nodes( lims )
-    print *, 'limits:'
-    do i=0,sz-1
-       write (*, '(i4, i4)') get_layout_1D_i_min( lims, i ), &
-                             get_layout_1D_i_max( lims, i )
-    end do
-    call flush()
-  end subroutine sll_view_lims_1D
-
   subroutine sll_view_lims_3D( lims )
     type(layout_3D_t), pointer :: lims
     sll_int32                  :: i
@@ -1165,50 +700,10 @@ function compute_min_max3( rank, total_size, col_size )
     call flush()
   end subroutine sll_view_lims_3D
 
-#if 0
-  function box_is_ordered( b )
-    logical
-#endif
-
-
-  ! the return value of intersect_boxes_1D() is 'logical' valued, and answers
+  ! the return value of intersect_boxes() is 'logical', and answers
   ! the question whether the boxes intersect or not. 'ans' is a box with
   ! the actual intersection between the argument boxes. In case that there
   ! is no intersection between the boxes the value [0,0] is returned. 
-  !
-  ! Here we introduce a complication, which is the possibility that a 'box'
-  ! wraps around the minimum and maximum indices of an array. Thus, for
-  ! an array 'a' indexed from 1 through N, we would be allowing an 
-  ! interval such as [a(N-2),a(3)]. 
-
- function intersect_boxes_1D( b1, b2, ans )
-    intrinsic                    :: min, max
-    logical                      :: intersect_boxes_1D
-    type(box_1D), intent(in)     :: b1, b2
-    type(box_1D), intent(out)    :: ans
-    sll_int32                    :: lo, hi
-    sll_int32                    :: lob1, hib1, lob2, hib2
-
-    lob1      = get_box_1D_i_min(b1) 
-    hib1      = get_box_1D_i_max(b1)
-    lob2      = get_box_1D_i_min(b2)
-    hib2      = get_box_1D_i_max(b2)
-
-    SLL_ASSERT( (lob1 .le. hib1) .and. (lob2 .le. hib2) )
-
-    lo = max(lob1, lob2)
-    hi = min(hib1, hib2)
-    if(lo .gt. hi) then ! there is no intersection
-       ans%i_min = 0
-       ans%i_max = 0
-       intersect_boxes_1D = .false.
-    else
-       ans%i_min = lo
-       ans%i_max = hi
-       intersect_boxes_1D = .true.
-    end if
-  end function intersect_boxes_1D
-
   function intersect_boxes_3D( b1, b2, ans )
     intrinsic                 :: min, max
     logical                   :: intersect_boxes_3D
@@ -1279,45 +774,6 @@ function compute_min_max3( rank, total_size, col_size )
     krange = get_box_3D_k_max(box) - get_box_3D_k_min(box) + 1
     count_elements_in_box_3D = irange*jrange*krange
   end function count_elements_in_box_3D
-
-
-  function boxes_equal_1D( b1, b2 )
-    logical :: boxes_equal_1D
-    type(box_1D), intent(in) :: b1, b2
-    if( (b1%i_min .eq. b2%i_min) .and. (b1%i_max .eq. b1%i_max) ) then
-       boxes_equal_1D = .true.
-    else
-       boxes_equal_1D = .false.
-    end if
-  end function boxes_equal_1D
-
-  subroutine view_box_1D( b )
-    type(box_1D), intent(in) :: b
-    write (*, '(a, i8, a, i8, a)') 'box limits = [', b%i_min, ', ', b%i_max, ']'
-  end subroutine view_box_1D
-
-  subroutine view_remap_plan_1D( plan )
-    type(remap_plan_1D_t), pointer  :: plan
-    sll_int32                       :: rank
-    sll_int32                       :: i
-    sll_int32                       :: col_size
-    rank     = sll_get_collective_rank(plan%collective)
-    col_size = sll_get_collective_size(plan%collective)
-
-    write (*,'(a i8)') 'From rank: ', rank
-    print *, plan%send_cnts(:)
-    print *, plan%send_displs(:)
-    print *, plan%recv_cnts(:)
-    print *, plan%recv_displs(:)
-    print *, 'boxes to send: '
-    do i=0,col_size-1
-       call view_box_1D(plan%send_boxes(i))
-    end do
-    print *, 'boxes to receive: '
-    do i=0,col_size-1
-       call view_box_1D(plan%recv_boxes(i))
-    end do
-  end subroutine view_remap_plan_1D
 
 
 end module remapper
