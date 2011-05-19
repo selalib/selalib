@@ -26,7 +26,6 @@ program remap_test
   integer                            :: local_sz_i 
   integer                            :: local_sz_j 
   integer                            :: local_sz_k 
-  integer                            :: total_size
   integer                            :: ierr
   integer                            :: myrank
   integer                            :: colsz        ! collective size
@@ -37,14 +36,10 @@ program remap_test
   integer                            :: node
   integer, dimension(1:3)            :: gcoords
   ! Remap stuff
-  type(layout_1D_t), pointer         :: conf_init
-  type(layout_1D_t), pointer         :: conf_final
-
   type(layout_3D_t), pointer         :: conf3_init
   type(layout_3D_t), pointer         :: conf3_final
 
 !  integer, dimension(:), allocatable :: sendbuf
-  integer, dimension(:), allocatable :: recvbuf
   type(remap_plan_3D_t), pointer     :: rmp3
 
   print *, ' '
@@ -130,46 +125,18 @@ program remap_test
         end do
      end do
   end do
-
- call sll_view_lims_3D( conf3_final )      
-
- rmp3 => new_remap_plan_3D( conf3_init, conf3_final, INT32_SIZEOF(a3(1,1,1)) )
- call apply_remap_3D_int( rmp3, a3, b3 )
- print *, 'Remap operation completed.'
- call flush()
-
-!  call initialize_layout_1D( compute_min_max_1D, total_size, 4, conf_init )
-
-  ! Initialize the data. This should be done using the info in the limits
-  ! object.
-!  do i=0,(local_sz-1)
-!     a(i+1) = myrank*local_sz + i + 1
-!  end do
-!  print *, a(:)
-  ! Create a different data distribution description
-
-!  call initialize_layout_1D( compute_min_max2, total_size,4,conf_final )
-!if(myrank .eq. 0) then
-!  call sll_view_lims_1D( conf_final )
-!endif
-
-
- ! if(myrank .eq. 1) then
-!     call view_remap_plan_1D( rmp )
-!  end if
-
-
-  ! Allocate the send and receive buffers. For now, try the full length of
-  ! the array.
-!  SLL_ALLOCATE(sendbuf(local_sz*colsz), ierr)
-!  SLL_ALLOCATE(recvbuf(local_sz*colsz), ierr)
-
-!  call apply_remap_1D_int( rmp, a, recvbuf )
-!  print *, 'Remap operation completed.'
-!  call flush()
-
-!  call delete_layout_1D( conf_init )
-!  call delete_layout_1D( conf_final )
+  
+  call sll_view_lims_3D( conf3_final )      
+  
+  rmp3 => new_remap_plan_3D( conf3_init, conf3_final, INT32_SIZEOF(a3(1,1,1)) )
+  call apply_remap_3D_int( rmp3, a3, b3 )
+  print *, 'Remap operation completed.'
+  write (*,'(a, i4)') 'the output data in rank: ', myrank
+  print *, b3(:,:,:)
+  call flush()
+  
+  call delete_layout_3D( conf3_init )
+  call delete_layout_3D( conf3_final )
 
   call sll_collective_barrier(sll_world_collective)
   call sll_halt_collective()
