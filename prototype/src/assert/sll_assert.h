@@ -8,13 +8,12 @@
   !
   ! ************************************************************************
 
-#if (defined ( GFORTRAN ) || defined ( G95 ) || defined( PGI ))
+#if (defined ( GFORTRAN ) || defined ( G95 ) || defined(MPIF90))
 # define STRNG(x) "x"
 #else
 # define STRNG(x) #x
 #endif
 
-#define DEBUG 1
   ! The following is useless in fpp apparently. The workaround of using
   ! double quotes does not allow to expand a macro for subsequent conversion
   ! to a string. We leave this here as a testament to what would have been

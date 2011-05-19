@@ -9,8 +9,10 @@ module sll_working_precision
 
   ! The intent is that i32 will hold values up to 2**32-1
   integer, parameter :: i32 = kind(0) 
-  integer, parameter :: i64 = kind(2_8**32)  ! 1.0d0 should be enough...
+  integer, parameter :: i64 = kind(2_8**32)  ! 1.0d0 should be specific enough
   integer, parameter :: f32 = selected_real_kind(1,37)
   integer, parameter :: f64 = selected_real_kind(1,99)
+
+
 
 end module sll_working_precision

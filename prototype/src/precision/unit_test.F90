@@ -1,6 +1,6 @@
 program working_precision_tester
 #include "sll_working_precision.h"
-  !  use, intrinsic :: ieee_arithmetic ! Why is this module not loading???
+  ! use, intrinsic :: ieee_arithmetic ! Why is this module not loading???
   ! because gfortran is not standard compliant... 
   implicit none
  
@@ -102,6 +102,9 @@ program working_precision_tester
   write ( *, '("KIND number for 2147483647 (2^32-1) is", I2)') kind(2147483647)
   write ( *, '("KIND number for 2147483648 (2^32) is", I2)')   kind(1_i64)
 
+  write ( *, '(a, i4)') 'selected_int_kind(0): ', selected_int_kind(0)
+  write ( *, '(a, i4)') 'size of sll_int64 is: ',  SLL_SIZEOF(i2)
+print *, bit_size(counter)
 contains
 
 end program working_precision_tester
