@@ -25,7 +25,7 @@ program memory_tester
   print *, 'array after clearing:'
   print *, b(:,:,:)
 ! turn the following on to test the deallocator
-#if 1 
+#if 0 
   print *, 'Deallocate an unitialized pointer (i.e. force a crash)'
   SLL_DEALLOCATE(a,err)
   print *, 'deallocation successful'
@@ -41,31 +41,5 @@ program memory_tester
   SLL_ALLOCATE(a(90000000000_8), err)
  
 
-#if 0  
-contains
-
-subroutine sll_allocate2(a_ptr, limits, descriptor)
-  intrinsic :: modulo, reshape
-  integer, parameter :: long_int = selected_int_kind(12)
-  real, dimension(:), pointer :: a_ptr
-  integer, dimension(:), intent(in) :: limits
-  character(len=*), intent(in) :: descriptor
-  integer :: err
-  integer :: num_dims
-  integer :: i
-  integer(kind=long_int) :: sz = 1
-  num_dims = size(limits)
-  if (modulo(num_dims,2) .ne. 0) then
-     stop 'inconsistent limits passed to sll_allocate'
-  end if
-  num_dims = num_dims/2
-  do i=1,num_dims
-     sz = sz*(limits(i+1)-limits(i))
-  end do
-  call sll_allocate(a_ptr, 1, sz, descriptor)
-!  call reshape(a_ptr, limits)
-end subroutine sll_allocate2
-
-#endif
 
 end program memory_tester
