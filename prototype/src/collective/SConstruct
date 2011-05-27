@@ -1,0 +1,34 @@
+# SCons file for the unit test of the tridiagonal setter/solver
+import os
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+env = Environment( F90 = 'mpif90',
+                   ENV = os.environ,
+                   F90PATH = ['../memory','../precision','../assert'],
+                   FORTRANMODDIRPREFIX= '-J', 
+                   LINK = 'mpif90',
+                   LIBPATH= ['.'],
+                   LIBS=['sll_memory','sll_precision','sll_assert'],
+                   F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', '-ffree-line-length-none'] )
+# -std=f95 I had to delete this because of mpif.h????????
+# add the -DDEBUG flag in the other scons files as this changed in the file
+
+#env.Replace(	
+#		F90FLAGS = OPT+' -fpp',
+#		FORTRANMODDIR = ZZZZZZ
+#env.Append(LIBS = ['nsl', 'socket'])
+
+env.Library('sll_memory',["../memory/sll_memory.F90"])
+env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+env.Library('sll_assert', ["../assert/sll_assert.F90"])
+env.Program('unit_test', ["unit_test.F90", "sll_collective.F90"])
+
+
+
