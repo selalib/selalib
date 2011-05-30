@@ -1,5 +1,5 @@
 
-# SCons file for the unit test of the tridiagonal setter/solver
+# SCons file for the unit test of the remapping utility
 import os
 import socket
 import distutils.util
