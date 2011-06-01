@@ -1,4 +1,5 @@
 module sll_misc_utils
+#include "sll_working_precision.h"
   implicit none
   intrinsic :: selected_int_kind
 
@@ -25,5 +26,20 @@ module sll_misc_utils
   ! need to be checked further.
 
   integer, parameter :: k1 = selected_int_kind(0)
+
+contains
+
+  function is_power_of_2( n )
+    intrinsic             :: not, iand
+    sll_int64, intent(in) :: n
+    logical               :: is_power_of_2
+    if( (n>0) .and. (0 .eq. (iand(n,(n-1)))) ) then
+       is_power_of_2 = .true.
+    else
+       is_power_of_2 = .false.
+    end if
+  end function is_power_of_2
+
+
 
 end module sll_misc_utils
