@@ -1,0 +1,798 @@
+\documentclass[]{report}   % list options between brackets
+\usepackage{amsmath, verbatim}    
+
+% user-defined commands here
+
+\begin{document}
+
+\title{Selalib Notes - DRAFT -}   
+\author{Edwin Chacon-Golcher}        
+\date{May, 2011}    
+\maketitle
+
+\begin{abstract}
+ This is a draft for a guide to the facilities offered by Selalib, the Semi-Lagrangian Library. It serves as a record for module descriptions, design decision, pending issues, etc., which are relevant for the development and improvement of the library. The main focus is the exposed API, thus the document also serves as a working document for the architectural specifications. More specific implementation details should be found in the comments within the source code. We may decide later to extract those either with an automatic system or in a developer's manual. At the time of writing this version of the draft, the library contains only a few modules in the lower levels and aims at having a minimalist structure. Of those capabilities that could be deemed interesting enough by the managers of GYSELA, the intent would be to incorporate them that code. In this sense, this library prototype can also be a testbed for ideas and suggestions that could eventually be absorbed into production code.
+
+
+\end{abstract}
+
+\chapter{Introduction}             % chapter 1
+Selalib is the \emph{Se}mi-\emph{La}grangian \emph{Li}brary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semi-lagrangian approach. The present version of the top-level types and interfaces is the same as discussed in Selalib's project meeting in January 2011. 
+
+Selalib is structured in layers. One can think about these layers as libraries in their own right. A given layer can use the capabilities offered by a lower layer through the exposed interface, but never from a higher level. The layer with the lowest level of abstraction presently contains basic utilities like memory allocators, assertions and basic numeric types. The second layer is composed of numerical and parallel utilities. The third and highest level of the library contains the semi-lagrangian methodology tools, types and methods. This manual will ultimately describe each of these layers.
+
+Most of the native types and operations provided by Selalib are prefixed by \verb+sll_+. In this way you can at least have an expectation of finding documentation (if a user) and a starting point of where to start looking if you wish to dive into some particular aspect of an implementation (if a developer). This is an early implementation, so the prefix to designate Selalib's features could change. It is also worth considering to eliminate the prefix for the lower layers of the library, as these are general/reusable components that could in principle be used in different projects. In such case, the \verb+sll_+ prefix would be reserved for the top-level layer that implements the specific semi-lagrangian functionality.
+
+The Selalib prototype is written in Fortran 95. There are some aspects of its implementation that may warrant some commentary as these aspects have an impact on how the library is used. For instance, the full library would be imported by the declaration:
+\begin{verbatim}
+#include "selalib.h"
+\end{verbatim}
+instead of the more Fortran-natural form:
+\begin{verbatim}
+use selalib
+\end{verbatim}
+The reason for this is that some features of the library are implemented as \emph{macros}. To the user of the library, it makes no difference whether some functionality is implemented in the form of a procedure or a macro, with the exception that presently, macro names are written in \verb+ALL-CAPS+ (but we could change this). The use of the macro is required to offer certain capabilities, like informative error messages. For a developer, the use of the macros is needed in many cases to reduce code redundancy. The need for the use of macros will hopefully be more understandable when the reader sees the behavior of calls to simple macros like \verb+SLL_ALLOCATE()+ or \verb+SLL_ASSERT()+.
+
+A macro is a pre-processor directive. Selalib uses only very simple macros that are handled by \emph{fpp}, the Fortran Pre-Processor. \emph{fpp}'s capabilities are very limited and one peculiarity of its output is that macros are expanded into a single long line, which can easily surpass the 132 character limit that Fortran systems have. For this reason alone, the compilation of Selalib requires the use of a compilation flag: \verb+-ffree-line-length-none+ (in \textbf{gfortran}) or its equivalent in another compiler. On a similar vein, some compilers require the extension \verb+.F90+ (as opposed to \verb+.f90+) in order to apply a preprocessing step. Thus, all files in Selalib use the \verb+.F90+ extension, and this is another reason that clients of this version of the library should as well.
+
+
+%\section{Introduction}     % section 1.1
+%\subsection{History}       % subsection 1.1.1
+
+\chapter{Low-Level Layer: Basic Utilities}           % chapter 2
+
+
+\section{Numeric Types}     % section 2.1
+\subsection{Description}
+As a \emph{convenience}, Selalib offers aliases to some of Fortran's basic numeric types. This is intended to:
+\begin{enumerate}
+\item concisely and uniformly make clear the intended precision of a given variable, 
+\item permit mixed precision representations when needed (for example, a developer could wish to represent a particular real number with a combination of a 32-bit integer and a 32-bit real instead of a single 64-bit real as is sometimes done in ultra-high performance software), 
+\item provide a centralized location to change the precision of a numerical representation program-wide, and
+\item save from the typing of a few characters.
+\end{enumerate}
+
+\subsection{Exposed Interface}         % subsection 2.1.1
+Selalib's numeric precision features are accessed through the following aliases:
+
+\vspace{+0.5cm}
+\begin{tabular}{l l}
+alias & shorthand for... \\
+\hline
+\verb+sll_int32+ & \verb+integer(kind=i32)+ \\
+\verb+sll_int64+ & \verb+integer(kind=i64)+ \\
+\verb+sll_real64+ & \verb+real(kind=f32)+ \\
+\verb+sll_real64+ & \verb+real(kind=f64)+ \\
+\verb+sll_int+  & \verb+integer(kind=user)+ \\
+\verb+sll_real+ & \verb+real(kind=user)+ \\
+\hline
+\end{tabular}
+\vspace{+0.5cm}
+
+
+Where the kind type parameters \verb+i32+, \verb+i64+, \verb+f32+ and \verb+f64+ have been defined to give a representation that is at least the denoted size for a given number. \verb+user+ is available for a flexible kind type parameter. These kind type parameters can also be used to specify the precision of numerical constants in the usual Fortran way, i.e. \verb+3.14159265_f32+.
+
+\subsection{Usage}
+The aliases are to be used like the native Fortran types that they are aliasing:
+
+\begin{verbatim}
+     sll_real64 :: my_pi
+     sll_real64 :: theta
+     sll_int32  :: i
+     sll_int32  :: N
+     sll_real64, dimension(:), allocatable :: w
+     ! allocate w ...
+     my_pi = 3.1415926535897932384626433_f64
+     theta = 2.0*my_pi/real(N,f64)
+     do i=1,N/2
+          w(i) = exp((0.0,1.0_f64)*theta*real(i,f64))
+     end do
+\end{verbatim}
+
+\subsection{Status}
+Unit-tested.
+
+\section{Memory Allocator}
+\subsection{Description}
+Selalib's memory allocators are simple wrappers around Fortran's native allocators. We ask very little from these allocators:
+\begin{enumerate}
+\item to allocate memory, 
+\item to initialize it if requested (only for Fortran-native types), 
+\item to deallocate memory, and 
+\item to fail with as descriptive a message as possible.
+\end{enumerate}
+
+\subsection{Exposed Interface}
+The interface to these allocators follows very closely the interface of Fortran's \verb+allocate()+ and \verb+deallocate()+ functions. The user may decide to allocate arrays or pointers of any type, and up to the same number of dimensions as permitted by a given Fortran implementation. The exposed macros are:
+
+\begin{verbatim}
+     SLL_ALLOCATE( array_and_lims, ierr )
+\end{verbatim}
+This is the basic memory allocator with the same syntax as Fortran's native \verb+allocate()+ but with a required integer error parameter. Any type and dimension can be given as an argument.
+
+\begin{verbatim}
+     SLL_CLEAR_ALLOCATE( array_and_lims, ierr )
+\end{verbatim}
+Same behavior as \verb+SLL_ALLOCATE()+ but also initializes the allocated memory to zero. This works for Fortran native types only or for derived types for which an assignment operator ($= 0$) has been defined.
+\begin{verbatim}
+     SLL_DEALLOCATE( array_and_lims, ierr )
+\end{verbatim}
+Basic deallocator. It is a wrapper around Fortran's native \verb+deallocate()+ function but also nullifies the pointer given as an argument after deallocation.
+\begin{verbatim}
+     SLL_DEALLOCATE_ARRAY( array, ierr )
+\end{verbatim}
+The array deallocator differs from the previous in that it does not attempt to nullify the array name after the deallocation is complete. This and the previous macro could in principle be merged into one for simplification.
+\begin{verbatim}
+     SLL_INIT_ARRAY( array, val )
+\end{verbatim}
+While not really an allocator/deallocator, we expose this macro for convenience in initializing an array with a given constant value. For consistency, it may be decided to eliminate this from the interface.
+
+In contrast with the native \verb+allocate()+, Selalib's allocators require that the user provide an integer variable for error checking (\verb+ierr+).
+
+\subsection{Usage}
+
+\begin{verbatim}
+     integer :: err
+     real, dimension(:), allocatable :: a
+     real, dimension(:,:,:), pointer :: b=>null()
+
+     SLL_ALLOCATE( a(5000), err )
+     SLL_CLEAR_ALLOCATE( b(1:4,1:3,1:2), err)
+     SLL_INIT_ARRAY(b,0)
+\end{verbatim}
+
+When finding an error condition, the user is informed about the location of the failing call:
+
+\begin{verbatim}
+Memory allocation Failure. Triggered in FILE tester.F90, 
+in LINE:   35
+STOP ERROR: test_error_code(): exiting program
+\end{verbatim}
+
+\subsection{Status}
+Unit-tested.
+
+\section{Assertions}
+\subsection{Description}
+This is a very small but very useful capability that permits the developer to devise many sorts of defensive programming techniques. The simple idea is that of declaring a condition that is expected to be true, thus triggering a descriptive error if the condition is violated.
+
+\subsection{Exposed Interface}
+Wherever a specific condition needs to be asserted, simply write:
+\begin{verbatim}
+     SLL_ASSERT( logical_condition )
+\end{verbatim}
+Thus the condition to be checked must be cast in the form of a logical statement. Falseness of such statement would trigger an assertion error.
+
+The assertions can be used liberally since they are controlled by a \verb+-DEBUG+ flag at compilation time. Absence of this flag will delete all calls to \verb+SLL_ASSERT()+ from the code. Hence, assertion conditions can be used during a debugging or testing phase without increasing the overhead in production code.
+
+\subsection{Usage}
+An example may be the checking of in-range indices on a protected array:
+
+\begin{verbatim}
+     function get_val( a, i )
+          sll_int32 :: get_val
+          sll_int32, intent(in) :: i
+          sll_int32, dimension(:), intent(in) :: a
+          SLL_ASSERT( (i .ge. 1) .and. (i .le. size(a)) )
+          get_val = a(i)
+     end function get_val
+\end{verbatim}
+Which could produce a behavior such as:
+\begin{verbatim}
+$./unit_test
+     The size of a is: 1000
+     a(1) =    0
+     a(117) =    0
+     Here we ask for the value of a(1001):
+
+     (i .ge. 1) .and. (i .le. size(a)) : Assertion 
+     error triggered in file unit_test.F90 in line       25
+     STOP :  ASSERTION FAILURE
+\end{verbatim}
+Such way of stopping a program is much less uncomfortable than the sinking feeling one has when the program stops as in:
+\begin{verbatim}
+$ ./unit_test
+     Array values: 
+     The size of a is: 1000
+     a(1) =    0
+     a(117) =    0
+     Incident de segmentation (core dumped)
+\end{verbatim}
+which of course doesn't even need to happen at the moment of the first error.
+
+\subsection{Status}
+Unit tested.
+
+\chapter{Mid-Level Layer: Numerical and Parallel Utilities}
+
+\section{Tridiagonal System Solver}
+\subsection{Description}
+To solve systems of the form $Ax=b$, where $A$ is a tridiagonal matrix, Selalib offers a native, robust tridiagonal system solver. The present implementation contains only a serial version. The algorithm is based on an \emph{LU} factorization of a given matrix, with row pivoting. The tridiagonal matrix must be given as a single array, with a memory layout shown next.
+\begin{equation*}
+  \begin{bmatrix}
+    a(2) & a(3) &        &        &        &        &  a(1) \\
+    a(4) & a(5) & a(6)   &        &        &        &       \\
+         & a(7) & a(8)   & a(9)   &        &        &       \\
+         &      & \ddots & \ddots & \ddots &        &       \\
+         &      &        & \ddots & \ddots & \ddots &       \\
+         &      &        &        & a(3n-5)& a(3n-4)&a(3n-3)\\
+    a(3n)&      &        &        &        & a(3n-2)&a(3n-1)\\
+  \end{bmatrix}
+\end{equation*}
+
+\subsection{Exposed Interface}
+Factorization of the matrix $A$ is obtained through a call to the subroutine
+\begin{verbatim}
+     sll_setup_cyclic_tridiag( a, n, lu, ipiv )
+\end{verbatim}
+where \verb+a+ is the matrix to be factorized, \verb+n+ is the problem size (the number of unknowns), \verb+lu+ is a real array of size $7n$ where factorization information will be returned and \verb+ipiv+ is an integer array of length \verb+n+ on which pivoting information will be returned. From the perspective of the user, \verb+lu+ and \verb+ipiv+ are only arrays that \verb+sll_setup_cyclic_tridiag+ requires and do not need any further consideration.
+
+The solution of a tridiagonal system, once the original array $A$ has been factorized, is obtained through a call to 
+\begin{verbatim}
+     sll_solve_cyclic_tridiag( lu, ipiv, b, n, x )
+\end{verbatim}
+where \verb+lu+, \verb+ipiv+ are the arrays returned by \verb+sll_setup_cyclic_tridiag()+, \verb+b+ is the independent term in the original matrix equation, \verb+n+ is the system size and \verb+x+ is the array where the solution will be returned.
+  
+\subsection{Usage}
+The following code snippet is an example of the use of the tridiagonal solver.
+\begin{verbatim}
+     sll_int32 :: n = 1000
+     sll_int32 :: ierr
+     sll_real64, allocatable, dimension(:) :: lu
+     sll_int32,  allocatable, dimension(:) :: ipiv
+     sll_real64, allocatable, dimension(:) :: x
+
+     SLL_ALLOCATE( lu(7*n), ierr )
+     SLL_ALLOCATE( ipiv(n), ierr )
+     SLL_ALLOCATE( x(n), ierr )
+     
+     ! initialize a(:) with the proper coefficients here... and then:
+     
+     sll_setup_cyclic_tridiag( a, n, lu, ipiv )
+     sll_solve_cyclic_tridiag( lu, ipiv, b, n, x )
+     
+      SLL_DEALLOCATE_ARRAY( lu, ierr )
+      SLL_DEALLOCATE_ARRAY( ipiv, ierr )
+      SLL_DEALLOCATE_ARRAY( x, ierr )
+\end{verbatim}
+Note that if the last call had been made as in
+\begin{verbatim}
+     sll_solve_cyclic_tridiag( lu, ipiv, b, n, b )
+\end{verbatim}
+the system would have been solved in-place.
+
+\subsection{Status}
+Unit-tested.
+
+\begin{comment}
+
+\section{Splines}
+\subsection{Description}
+
+\subsection{Exposed Interface}
+Fundamental type:
+\begin{verbatim}
+     sll_spline_1d
+\end{verbatim}
+
+\subsection{Usage}
+\subsection{Status}
+In development. No testing done yet.
+
+\section{FFT}
+\subsection{Description}
+\subsection{Exposed Interface}
+\subsection{Usage}
+\subsection{Status}
+
+\end{comment}
+
+\section{Collective Communications}
+\subsection{Description}
+Selalib applies the principle of modularization throughout all levels of abstraction of the library and aims at keeping third-party library modules as what they are: separate library modules. Therefore, in its current design, even a library like MPI has a single point of entry to Selalib. The collective communications module is such point of entry. We focus thus on the functionality offered by MPI, assign wrappers to its most desirable functionalities and write wrappers around them. These are the functions that are actually used throughout the program.  This allows to adjust the exposed interfaces, do additional error-checking and would even permit to completely change the means to parallelize a code, by being able to replace MPI in a single file if this were ever needed.
+\subsection{Exposed Interface}
+Fundamental type:
+\begin{verbatim}
+     sll_collective_t
+\end{verbatim}
+Constructors, destructors and access functions:
+\begin{verbatim}
+     sll_new_collective( parent_col )
+     sll_delete_collective( col )
+\end{verbatim}	
+When the Selalib environment is activated, there exists, in exact analogy with \verb+MPI_COMM_WORLD+, a global named \verb+sll_world_collective+. At the beginning of a program execution, this is the only collective in existence. Further collectives can be created down the road. The above functions are responsible for the creation and destruction of such collectives. The following functions are used to access the values that a particular collective knows about.
+\begin{verbatim}
+     sll_get_collective_rank( col )
+     sll_get_collective_size( col )
+     sll_get_collective_color( col )
+     sll_get_collective_comm( col )
+\end{verbatim}
+Since the wrapped library requires initialization, so does \verb+sll_collective+. To start and end the parallel environment, the user needs to call the functions:
+\begin{verbatim}
+     sll_boot_collective( )
+     sll_halt_collective( )
+\end{verbatim}
+These functions would not be exposed at the top level, and would be hidden by a further call to something akin to \verb+boot_selalib+ and \verb+halt_selalib+.
+Finally, the wrappers around the standard \verb+MPI+ capabilities are presently exposed through the following generic functions:
+\begin{verbatim}
+     sll_collective_bcast( col, buffer, size, root )
+     sll_collective_gather( col, send_buf, send_sz, root, 
+                            rec_buf )
+     sll_collective_gatherv( col, send_buf, send_sz, recvcnts, 
+                             displs, root, recv_buf )
+     sll_collective_allgatherv( col, send_buf, send_sz, sizes, 
+                                displs, rec_buf )
+     sll_collective_scatter( col, send_buf, size, root, 
+                             rec_buf )
+     sll_collective_scatterv( col, send_buf, sizes, displs, 
+                              rec_szs, root, rec_buf )
+     sll_collective_all_reduce( col, send_buf, count, op, 
+                                rec_buf )
+\end{verbatim}
+which presently stand for specialized versions that operate on specific types. For instance:
+\begin{verbatim}
+     sll_collective_all_to_allv_real( send_buf, 
+                                      send_cnts, 
+                                      send_displs, 
+                                      recv_buf, 
+                                      recv_cnts, 
+                                      recv_displs, 
+                                      col )
+\end{verbatim}
+\subsection{Usage}
+\subsection{Status}
+Several core functionalities tested, but no comprehensive unit test done yet
+
+\section{Remapper}
+
+\subsection{Description}
+Written on top of \verb+sll_collective+, the remapper is a powerful facility that is capable of rearranging data in flexible and convenient ways in a parallel machine. It is meant to be a generalization of the `transposition', which users/developers of \emph{CALVI} team codes know and love. The main difference is is generality, as here we extend the idea to encompass something beyond a data transposition in 2D, to an operation that can be carried out in any number of dimensions. For instance, suppose that you start with a multidimensional array that has been domain decomposed and distributed among $N_p$ processors. The  layout of the data (that is, the description of what ranges of the data are contained in each processor) is specified by an instance of the type \verb+layout_XD_t+, (where \verb+X+ is the dimension of the data). The layout contains a notion of an $N_p$-sized collection of boxes, each box representing a contiguous chunk of the multidimensional array stored in each  node. If in the course of a computation, you wish to reconfigure the layout of the data (for example, if you wished to re-arrange data in a way that would permit launching serial algorithms locally in each node), then you would create and initialize a new layout descriptor with the target configuration (i.e.: you to define the box to be stored in each node). This is a conceptually simple but perhaps slightly verbose task. Then a call to the appropriate choice among:
+
+\begin{verbatim}
+     NEW_REMAPPER_PLAN_3D( initial_layout, 
+                           target_layout, 
+                           data_size_in_integer_sizes )
+     NEW_REMAPPER_PLAN_4D( initial_layout, 
+                           target_layout, 
+                           data_size_in_integer_sizes )	
+     NEW_REMAPPER_PLAN_5D( initial_layout, 
+     	                     target_layout, 
+                           data_size_in_integer_sizes )
+\end{verbatim}
+will yield an instance of the type \verb+remap_plan_3D_t+, or \verb+remap_plan_4D_t+ or \verb+remap_plan_5D+ , respectively, that will contain all the information necessary to actually carry out the data re-distribution. Finally, a call to 
+
+\begin{verbatim}
+     apply_remap_3D( plan, data_in, data_out )
+     apply_remap_4D( plan, data_in, data_out )
+     apply_remap_5D( plan, data_in, data_out )
+\end{verbatim}
+will actually redistribute \verb+data+ (as an out-of-place operation) according to \verb+plan+ in an optimized way\footnote{This is a very loaded comment. Some of the optimizations are carried out by the remapper, like the identification of the minimally-sized communicators to launch the exchanges, or the selection of the lower-level
+communications functions (alltoall vs. alltoallv, for instance). Other optimizations would need to be triggered externally, by passing proper compilation flags to the MPI facilities. This would be problem-dependent.}. 
+
+To appreciate the power of such facility, note that in principle, the construction of a (communications latency-limited) parallel quasi-neutral solver can be based exclusively on remapping operations. This is an important tool in any problem that would require global rearrangements of data. The remapper thus is able to present a single powerful abstraction that is general, reusable and completely hides most of the complications introduced by the data distribution. 
+
+\begin{comment}
+Each of these boxes is simply described by several pairs of limits:
+\begin{verbatim}
+[i_min, i_max], [j_min, j_max], [k_min, k_max], [l_min, l_max],
+\end{verbatim}    
+(and for a 5D case, also \verb+[m_min, m_max]+) that describe the indices of the $4D$ data contained in each processor.  
+\end{comment}
+
+
+\subsection{Exposed Interface}
+The remapper offers the following descriptor types for parallel data layout, differing from one another only in the dimensionality of the data described:
+
+\begin{verbatim}
+     layout_3D_t
+     layout_4D_t
+     layout_5D_t
+\end{verbatim}
+
+(Note that for the remapper, we have forgone the use of the \verb+sll_+ prefix. This is as an example of the likely policy that the low- and mid-level reusable utilities should not be prefixed, thus being instantly available for any other development. Eventually a decision needs to be made and the choice implemented uniformly throughout the library.) These types are each accompanied by their own constructors, destructors and accessors. Specifically, the constructors are:
+
+\begin{verbatim}
+     new_layout_3D( collective )
+     new_layout_4D( collective )
+     new_layout_5D( collective )
+\end{verbatim}
+
+Note that each layout descriptor needs to be allocated by providing an instance of \verb+sll_collective_t+. This can be understood by thinking of the data layout as being associated with a given group of processors (the collective) and a specification of the data boxes contained in each one. After calling any of the \verb+new_layout+ functions, the returned instance becomes associated to the given collective and enough memory is allocated (size of the collective) to hold the boxes specification.
+
+The destructors are:
+\begin{verbatim}
+     delete_layout_3D( layout )
+     delete_layout_4D( layout )
+     delete_layout_5D( layout )
+\end{verbatim}
+
+The access functions for the \verb+layout+ types are are always prefixed with the corresponding \verb+get_layout_XD+/\verb+set_layout_XD+ (where the '\verb+X+' denotes the dimensionality of the data), and they presuppose knowledge of the convention for ordering the indices as in \verb+i, j, k, l, m+, for the dimensions. Specifically, to get/set values inside the \verb+layout+ types we have available for 3D layouts:
+
+\begin{verbatim}
+     get_layout_3D_num_nodes( layout )
+     get_layout_3D_box( layout, rank )
+     
+     get_layout_3D_i_min( layout, rank )
+     get_layout_3D_i_max( layout, rank )
+     get_layout_3D_j_min( layout, rank )
+     get_layout_3D_j_max( layout, rank )
+     get_layout_3D_k_min( layout, rank )
+     get_layout_3D_k_max( layout, rank )
+     
+     set_layout_3D_i_min( layout, rank, val )
+     set_layout_3D_i_max( layout, rank, val )
+     set_layout_3D_j_min( layout, rank, val )
+     set_layout_3D_j_max( layout, rank, val )
+     set_layout_3D_k_min( layout, rank, val )
+     set_layout_3D_k_max( layout, rank, val )
+\end{verbatim}
+As a very inelegant convenience, the layout type allows direct access to its collective reference.     
+For 4D layouts:
+
+\begin{verbatim}
+     get_layout_4D_num_nodes( layout )
+     get_layout_4D_box( layout, rank )
+     
+     get_layout_4D_i_min( layout, rank )
+     get_layout_4D_i_max( layout, rank )
+     get_layout_4D_j_min( layout, rank )
+     get_layout_4D_j_max( layout, rank )
+     get_layout_4D_k_min( layout, rank )
+     get_layout_4D_k_max( layout, rank )
+     get_layout_4D_l_min( layout, rank )
+     get_layout_4D_l_max( layout, rank )
+     
+     set_layout_4D_i_min( layout, rank, val )
+     set_layout_4D_i_max( layout, rank, val )
+     set_layout_4D_j_min( layout, rank, val )
+     set_layout_4D_j_max( layout, rank, val )
+     set_layout_4D_k_min( layout, rank, val )
+     set_layout_4D_k_max( layout, rank, val )
+     set_layout_4D_l_min( layout, rank, val )
+     set_layout_4D_l_max( layout, rank, val )
+\end{verbatim}
+
+And for 5D layouts:
+
+\begin{verbatim}
+     get_layout_5D_num_nodes( layout )
+     get_layout_5D_box( layout, rank )
+     
+     get_layout_5D_i_min( layout, rank )
+     get_layout_5D_i_max( layout, rank )
+     get_layout_5D_j_min( layout, rank )
+     get_layout_5D_j_max( layout, rank )
+     get_layout_5D_k_min( layout, rank )
+     get_layout_5D_k_max( layout, rank )
+     get_layout_5D_l_min( layout, rank )
+     get_layout_5D_l_max( layout, rank )
+     get_layout_5D_m_min( layout, rank )
+     get_layout_5D_m_max( layout, rank )
+          
+     set_layout_5D_i_min( layout, rank, val )
+     set_layout_5D_i_max( layout, rank, val )
+     set_layout_5D_j_min( layout, rank, val )
+     set_layout_5D_j_max( layout, rank, val )
+     set_layout_5D_k_min( layout, rank, val )
+     set_layout_5D_k_max( layout, rank, val )
+     set_layout_5D_l_min( layout, rank, val )
+     set_layout_5D_l_max( layout, rank, val )
+     set_layout_5D_m_min( layout, rank, val )
+     set_layout_5D_m_max( layout, rank, val )
+\end{verbatim}
+
+The above functions define the interface that will allow you to declare and initialize the \verb+layout+ types as desired. This is where the work lies when using this module. Note that all the above functions could be coalesced into a set of functions of the type \verb+set_layout_X_XXX(layout, rank, val)+ if we choose to hide all the above functions behind a generic interface. The selection would be done automatically depending on the type of layout passed as an argument. 
+
+The type \verb+remap_plan+ exists also in multiple flavors, depending on the dimensionality of the data to be remapped:
+
+\begin{verbatim}
+     remap_plan_3D_t
+     remap_plan_4D_t
+     remap_plan_5D_t
+\end{verbatim}
+
+The \verb+remap_plan_t+ type stores the locations of the memory buffers that will be involved in the communications, the specification of the data that will be sent and received, as well as the collective within which the communications will take place. There are, however, declaration functions available. The choice depends on the dimensionality of the data:
+
+\begin{verbatim}
+     NEW_REMAPPER_PLAN_3D( initial_layout, 
+                           final_layout, 
+                           array_name )
+     NEW_REMAPPER_PLAN_4D( initial_layout, 
+                           final_layout, 
+                           array_name )
+     NEW_REMAPPER_PLAN_5D( initial_layout, 
+                           final_layout, 
+                           array_name )
+\end{verbatim}
+
+Finally, the way to execute the plan on a particular data set is through a call of the appropriate subroutine (here presented as generic interfaces)
+
+\begin{verbatim}
+     apply_remap_3D( plan, data_in, data_out )
+     apply_remap_4D( plan, data_in, data_out )
+     apply_remap_5D( plan, data_in, data_out )
+\end{verbatim}
+
+\subsection{Usage}
+
+While verbose, the best way to demonstrate the usage of the remapper is with a complete program. Below it, we examine the different statements.
+
+\begin{verbatim}
+1   program remap_test
+2     use sll_collective
+3   #include "sll_remap.h"
+4   #include "sll_memory.h"
+5   #include "sll_working_precision.h"
+6   #include "misc_utils.h"
+7     implicit none
+8
+9     ! Test of the 3D remapper takes a 3D array whose global 
+10    ! size Nx*Ny*Nz, distributed among pi*pj*pk processors.
+11    integer, dimension(:,:,:), allocatable :: a3
+12    integer, dimension(:,:,:), allocatable :: b3
+13 
+14    ! Take a 3D array of dimensions 8X8X1
+15    integer, parameter                 :: total_sz_i = 8
+16    integer, parameter                 :: total_sz_j = 8
+17    integer, parameter                 :: total_sz_k = 1
+18  
+19    ! the process mesh
+20    integer, parameter                 :: pi = 4
+21    integer, parameter                 :: pj = 4
+22    integer, parameter                 :: pk = 1
+23
+24    ! Split it in  16 processes, each with a local chunk 2X2X1
+25    integer                            :: local_sz_i 
+26    integer                            :: local_sz_j 
+27    integer                            :: local_sz_k 
+28    integer                            :: ierr
+29    integer                            :: myrank
+30    integer                            :: colsz  ! collective size
+31    integer                            :: i,j,k
+32    integer                            :: i_min, i_max
+33    integer                            :: j_min, j_max
+34    integer                            :: k_min, k_max
+35    integer                            :: node
+36    integer, dimension(1:3)            :: gcoords
+37  
+38    ! Remap variables
+39    type(layout_3D_t), pointer         :: conf3_init
+40    type(layout_3D_t), pointer         :: conf3_final
+41    type(remap_plan_3D_t), pointer     :: rmp3
+42
+43    ! Boot parallel layer
+44    call sll_boot_collective()
+45
+46    ! Initialize and allocate the variables.
+47    local_sz_i = total_sz_i/pi
+48    local_sz_j = total_sz_j/pj
+49    local_sz_k = total_sz_k/pk
+50    SLL_ALLOCATE(a3(1:local_sz_i,1:local_sz_j,1:local_sz_k), ierr)
+51    SLL_ALLOCATE(b3(1:local_sz_i,1:local_sz_j,1:local_sz_k), ierr)
+52    myrank    = sll_get_collective_rank(sll_world_collective)
+53    colsz     = sll_get_collective_size(sll_world_collective)
+54
+55    conf3_init     => new_layout_3D( sll_world_collective )
+56    conf3_final    => new_layout_3D( sll_world_collective )
+57    random_layout1 => new_layout_3D( sll_world_collective )
+58
+59    ! Initialize the layout
+60    do k=0, pk-1
+61       do j=0, pj-1
+62          do i=0, pi-1
+63             node = i+pi*(j+pj*k) ! linear index of node
+64             i_min = i*local_sz_i + 1
+65             i_max = i*local_sz_i + local_sz_i
+66             j_min = j*local_sz_j + 1
+67             j_max = j*local_sz_j + local_sz_j
+68             k_min = k*local_sz_k + 1
+69             k_max = k*local_sz_k + local_sz_k
+70             call set_layout_i_min( conf3_init, node, i_min )
+71             call set_layout_i_max( conf3_init, node, i_max )
+72             call set_layout_j_min( conf3_init, node, j_min )
+73             call set_layout_j_max( conf3_init, node, j_max )
+74             call set_layout_k_min( conf3_init, node, k_min )
+75             call set_layout_k_max( conf3_init, node, k_max )
+76          end do
+77       end do
+78    end do
+79      
+80    ! Initialize the data. We use the information in the layout.
+81    do k=1, local_sz_k
+82       do j=1, local_sz_j
+83          do i=1, local_sz_i
+84             gcoords =  local_to_global_3D( conf3_init, (/i,j,k/) )
+85             a3(i,j,k) = gcoords(1) + &
+86                  total_sz_i*((gcoords(2)-1) + &
+87                  total_sz_j*(gcoords(3)-1))
+88          end do
+89       end do
+90    end do
+91
+92    ! Initialize the final layout, in this case, just a 
+93    ! transposition
+94    do k=0, pk-1
+95       do j=0, pj-1
+96          do i=0, pi-1
+97             node = i+pi*(j+pj*k) ! linear index of node
+98             i_min = i*local_sz_i + 1
+99             i_max = i*local_sz_i + local_sz_i
+100            j_min = j*local_sz_j + 1
+101            j_max = j*local_sz_j + local_sz_j
+102            k_min = k*local_sz_k + 1
+103            k_max = k*local_sz_k + local_sz_k
+104            call set_layout_i_min( conf3_final, node, j_min )
+105            call set_layout_i_max( conf3_final, node, j_max )
+106            call set_layout_j_min( conf3_final, node, i_min )
+107            call set_layout_j_max( conf3_final, node, i_max )
+108            call set_layout_k_min( conf3_final, node, k_min )
+109            call set_layout_k_max( conf3_final, node, k_max )
+110         end do
+111      end do
+112   end do
+113  
+114   rmp3 => NEW_REMAPPER_PLAN_3D( conf3_init, conf3_final, a3 )
+115   call apply_remap_3D( rmp3, a3, b3 )
+116
+117   ! At this moment, b3 contains the expected output from the &
+118   ! remap operation.
+119  
+120   ! Delete the layouts  
+121   call delete_layout_3D( conf3_init )
+122   call delete_layout_3D( conf3_final )
+123
+124    call sll_halt_collective()
+125 
+126  end program remap_test
+
+\end{verbatim}
+
+\begin{description}
+\item[Lines 1 - 5:]
+Required preamble at the time of this writing. Eventually this will be replaced by a single statement to include the whole library. Presently, we include various headers individually, so bear in mind that this is not the way this will end up being. Line 3 specifically loads the remapper facility. Here it is brought as a header file as the NEW\_REMAPPER\_PLAN\_XD() is implemented as a macro.
+
+
+\item[Lines 9 - 12: ]
+For this example we allocate two 3D arrays for the input and output of the remap operation.
+
+\item[Lines 14 - 22: ]
+Definition of the array size from a global perspective. In other words, the array to be remapped is a $8*8*1$ array, to be distributed on a processor mesh of dimensions $4*4*1$. 
+
+\item[Lines 24 - 36]
+Miscellaneous integer variables that we will use.
+
+\item[Lines 38 - 41]
+Pointers to the initial and final layouts and the remap plan.
+
+\item[Line 44]
+Presently we boot from collective. Eventually this will be replaced by a call to something like \verb+boot_selalib()+ or something similar, where we declare and initialize anything we need in a single call.
+
+\item[Lines 46 - 57]
+Initialization of the variables.
+
+\item[Lines 59 - 78]
+This is where the actual work is when using the remapper. We need to initialize a layout, in this case the initial configuration. We use the access functions \verb+set_layout_x_xxx( )+ to populate the fields. Here we obviously take into account the geometry of our `process mesh' to find out the rank of the process that we are initializing.
+
+\item[Lines 80 - 90]
+We need to initialize the data, here we choose simply to assign the index of the array, considered as a 1D array. Note the use of the helper function \verb+local_to_global_3D( layout, triplet )+. We exploit the knowledge of the global layout of the data to find out the global indices of a local 3-tuple.
+
+\item[Lines 92 - 112]
+The other main part of the work, the initialization of the target layout. In this case, we chose a simple transposition, which is achieved by switching \verb+i+ and \verb+j+.
+
+\item[Lines 114 - 115]
+Here we allocate and initialize the remap plan, using the initial and final configurations as input. The third argument is passed to inform the remapper of the type of data to be passed. The call to \verb+apply_remap_3D()+ is a call to a generic function, hence, a type-dependent sub-function must have been defined to be able to successfully make this call. At the time of this writing, only single precision integers and double precision floats have been implemented. 
+
+\item[Line 116]
+Here we apply the plan. This function is type-dependent due to the input/output arrays. Please refer to the implementation notes for some commentary on our options with this interface.
+
+\item[Lines 122 - 125]
+Cleanup. The layouts need to be deleted to prevent memory leaks. 
+
+\end{description}
+
+\subsection{Implementation Notes}
+The biggest challenge with the remapper is to attain a desired level of genericity and to preserve the modularity of the library. These two problems are intimately related. Ideally, we should be able to apply a remap operation on data of any type, including user-derived types. Another requirement has been to confine a library like MPI to a single entry point into Selalib. This means that we do not want the MPI derived types to pollute the higher abstraction levels of the library: especially at the top level, we want to express our programs with the capabilities of the Fortran language alone.
+
+These requirements were solved in the prototype version of the remapper through the use of a single datatype to represent all other types of data at the moment of assembling the exchange buffers and launching the MPI calls. In our case, we have chosen to represent all data as `integers'. This means that the exchange buffers that are stored in the remap plans are integer arrays. Thus, the design decision in the prototype has been to choose flexibility and ease of change over execution speed. In contrast with the C language, the constant call to the \verb+transfer()+ function to store and retrieve data from the exchange buffers carries with it a possibly significant execution time penalty.
+
+The function \verb+NEW_REMAPPER_PLAN_XD()+ is by nature type-independent, as the design of the plan only depends on the layouts. However, it is also convenient to store the send/receive buffers in the plan, and the allocation of these buffers requires knowledge of the amount of memory required. This information is passed in the third argument. The macro will internally select an element of this array and determine its size in terms of the fundamental datatype being exchanged (i.e.: \verb+integer+). This way we now how much memory to allocate in the buffers.
+
+Another means to achieve the illusion of genericity are Fortran's built-in features in this regard. For example, we can have specialized \verb+apply_remap_3D()+ functions for the most commonly used datatypes, all hidden behind the same generic name. These specialized functions would not depend on the current choice of using a single type for the exchange buffers, eliminating any penalty that we are definitively paying at present, with the calls to the \verb+transfer()+ intrinsic function. This solution would mean writing redundant code, something that could be addressed with preprocessor macros, but this would not be a solution for eliminating the penalizations of the \verb+transfer()+ intrinsic when we are exchanging derived types. A solution that can exchange these arbitrary data while not requiring the use of the MPI derived types at the higher levels is yet to be found. It could be that the Fortran way to solve this problem would be to accept the invasion of MPI at the higher levels...
+
+\subsection{Status}
+
+In testing.
+
+
+\chapter{Top-Level Layer: Semi-Lagrangian Toolbox}
+
+\section{Quasi-Neutral Equation Solver}
+\subsection{Description}
+\subsection{Exposed Interface}
+Fundamental type: None. It is a function that operates on other top-level types. Function:
+\begin{verbatim}
+     sll_solve_quasi_neutral_equation( electron_T_profile_3D,
+                                       electron_n_profile_3D,
+                                       charge_density,
+                                       phi )
+\end{verbatim}
+\subsection{Usage}
+\subsection{Status}
+
+
+\section{Particle Distribution Function}
+\subsection{Description}
+\subsection{Exposed Interface}
+Fundamental type:
+\begin{verbatim}
+     sll_distribution_function_t
+\end{verbatim}
+All the fundamental types in the library are implemented as pointers. This choice has been made to ease the addition of Python bindings, in case that an even higher-level interface is desired some day.
+
+Constructor and destructor:
+\begin{verbatim}
+     sll_new_distribution_function( nr, ntheta, nphi, nvpar, mu )
+     sll_delete_distribution_function( f )
+\end{verbatim}
+The constructor essentially limits itself to allocating the memory for the type. An initialization step is required afterwards:
+\begin{verbatim}
+     sll_initialize_df( boundary_type_r, 
+                        boundary_type_vpar, 
+                        species_charge )
+\end{verbatim}
+The accessors that get/set a particular value of a distribution function on a node are defined as macros to be able to keep a single interface while not risking a penalization when used in critical loops. Other queries on this type are implemented as ordinary functions. (Need to define this better, for instance, if some query functions would operate on integer arguments and/or real coordinates.)
+\begin{verbatim}
+     SLL_GET_DF_VAL( i, j, k, l, df )
+     SLL_SET_DF_VAL( val, i, j, k, l, df )
+     sll_interpolate_df( r, theta, phi, vpar, mu )
+     sll_compute_derivative( f, r, theta, phi, vpar, mu )
+     sll_get_df_nr( df )
+     sll_get_df_nphi( df )
+     sll_get_df_ntheta( df )
+     sll_get_df_nvpar( df )
+     sll_get_df_mu( df )
+\end{verbatim}
+The type also offers the services:
+\begin{verbatim}
+     sll_compute_moments( df, ... )
+\end{verbatim}
+
+\subsection{Usage}
+\subsection{Status}
+
+\section{Advection Field}
+\subsection{Description}
+\subsection{Exposed Interface}
+Fundamental type:
+\begin{verbatim}
+     sll_advection_field_3D_t
+\end{verbatim}
+This implies that one of the options is to have multiple representations, for 3D, 2D, 1D. 
+\subsection{Usage}
+\subsection{Status}
+
+\section{Advection}
+\subsection{Description}
+\subsection{Exposed Interface}
+Fundamental type: None. This is a function that operates on multiple top-level types. Function:
+\begin{verbatim}
+     sll_advect( distribution_function, 
+     	           advection_field, 
+                 dt, 
+                 space_mesh
+                 scheme )
+\end{verbatim}
+Above, \verb+scheme+ is the functional parametrization of the various methods in use (PSM, BSL, ...) and for which we need a standardized interface. The above assumes that we can devise a standard functional interface.
+\subsection{Usage}
+\subsection{Status}
+
+\begin{comment}
+
+\begin{thebibliography}{9}
+  % type bibliography here
+\end{thebibliography}
+
+
+\end{comment}
+
+\end{document}
