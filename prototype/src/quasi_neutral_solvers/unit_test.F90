@@ -4,14 +4,14 @@ program test_qnefspl
   implicit none
 
 
-  type(qndata) :: qndat
+  type(qn_plan) :: qndat
   integer, parameter :: k=5  ! spline degree
   real(8), parameter :: eps=1.d-14
   real(8), parameter :: pi = 3.1415926535897931_8
   integer :: nr, ntheta ! number of points 
   real(8) :: dr, dtheta ! cell size
   real(8) :: rmin, rmax, Lr   ! computational domain in r
-  integer :: nmode, sec
+  integer :: nmode !, sec ! sec is not used
   real(8) :: err, ri, rg, ttg, cr, sr, st, coef, fij
   real(8), dimension(:), allocatable :: mth, kth
   real(8), dimension(:,:), allocatable :: mar, kar

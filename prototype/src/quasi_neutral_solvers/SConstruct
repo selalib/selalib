@@ -13,7 +13,7 @@ env = Environment(F90PATH = ['../memory','../precision'],
                   FORTRANMODDIRPREFIX = '-J',
                   LIBPATH = ['.'],
                   LIBS = ['sll_memory','sll_precision','lapack','dfftpack'],
-                  F90FLAGS = ['-g','-W','-Wall','-Werror','-fall-intrinsics','-std=f95','-DDEBUG','-ffree-line-length-none'])
+                  F90FLAGS = ['-g','-O2','-W','-Wall','-Werror','-fall-intrinsics','-std=f95','-DDEBUG','-ffree-line-length-none'])
 # The -fall-intrinsics flag is used to permit the use of the etime intrinsic, which is a GNU extension and not part of the F95 standard.
 
 env.Library('sll_memory',["../memory/sll_memory.F90"])

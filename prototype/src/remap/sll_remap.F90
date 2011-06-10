@@ -631,14 +631,13 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   ! Here we try an approach, standard in C but apparently unusual in Fortran.
   ! The idea is to always communicate the MPI_INTEGER datatype. The only extra
   ! step is to translate the arrays for counts and displacements in terms
-  ! of their byte-sizes. While we would still need a different 
+  ! of their integer-sizes. While we would still need a different 
   ! apply_remap_XD() function for every new type, at least this will not 
   ! affect the new_remap_plan() function.
   !
   ! For apply_remap_XD_int(), we use this approach as a test case, even though
   ! it is not necessary since 'integer' is also a native MPI type.
 
-  ! FIXME: CHANGE THE NAME OF THIS SUBROUTINE
   subroutine convert_into_integer_sizes( sz, ai, n, bi )
     sll_int32, intent(in)                :: sz   ! in integer-size
     sll_int32, intent(in), dimension(:)  :: ai   ! array to convert

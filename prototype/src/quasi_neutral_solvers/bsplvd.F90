@@ -72,7 +72,7 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
   integer ldummy
   integer m
   integer mhigh
-  real ( kind = 8 ) sum1
+!  real ( kind = 8 ) sum1  ! this one is not used...
   real ( kind = 8 ) t(left+k)
   real ( kind = 8 ) x
 
