@@ -1,18 +1,18 @@
 ! gfortran qnefspl.f90 bsplvd.f90 bsplvb.f90 test_qnefspl.f90 -llapack -ldfftpack
-program test_qnefspl
-  use qnefspl_module
+program test_quasi_neutral
+  use sll_quasi_neutral_solver
   implicit none
 
 
-  type(qn_plan) :: qndat
-  integer, parameter :: k=5  ! spline degree
-  real(8), parameter :: eps=1.d-14
-  real(8), parameter :: pi = 3.1415926535897931_8
-  integer :: nr, ntheta ! number of points 
-  real(8) :: dr, dtheta ! cell size
-  real(8) :: rmin, rmax, Lr   ! computational domain in r
-  integer :: nmode !, sec ! sec is not used
-  real(8) :: err, ri, rg, ttg, cr, sr, st, coef, fij
+  type(quasi_neutral_plan), pointer :: qndat
+  integer, parameter     :: k=5  ! spline degree
+  real(8), parameter     :: eps=1.d-14
+  real(8), parameter     :: pi = 3.1415926535897931_8
+  integer                :: nr, ntheta ! number of points 
+  real(8)                :: dr, dtheta ! cell size
+  real(8)                :: rmin, rmax, Lr   ! computational domain in r
+  integer                :: nmode !, sec ! sec is not used
+  real(8)                :: err, ri, rg, ttg, cr, sr, st, coef, fij
   real(8), dimension(:), allocatable :: mth, kth
   real(8), dimension(:,:), allocatable :: mar, kar
   real(8), dimension(:,:), allocatable :: Uex, U, C, F  ! Exact solution, solution spline coefficients and rhs of system
@@ -49,7 +49,7 @@ program test_qnefspl
      kth = (/10.6666666666666666666_8,-2.0_8,-3.2_8,-0.1333333333333333333_8/)
   endif
    ! call intialization routine
-  call new_qn(qndat, k, rmin, nr, ntheta, dr, dtheta)
+  qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
   ! check errors
   err = maxval(abs(qndat%mth-mth))
   if (err<eps) then
@@ -75,7 +75,7 @@ program test_qnefspl
   ntheta = 128
   dtheta = 2*pi/ntheta 
 
-  call new_qn(qndat, k, rmin, nr, ntheta, dr, dtheta)
+!  call new_qn(qndat, k, rmin, nr, ntheta, dr, dtheta)
   ! Allocation
   allocate(F(nr+k-1,ntheta))
   allocate(C(nr+k-1,ntheta))
@@ -143,7 +143,7 @@ program test_qnefspl
 
   write (7,*) F
   ! solve system
-  call solve2Dtensor(qndat,C,F)
+  call apply_quasi_neutral_solver_plan(qndat,F,C)
   t2 = etime(elapsed)
   print*, 'solve time', t2-t1
   t1=t2
