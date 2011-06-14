@@ -74,6 +74,7 @@ program test_quasi_neutral
   ntheta = 128
   dtheta = 2*pi/ntheta 
 
+qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
 !  call new_qn(qndat, k, rmin, nr, ntheta, dr, dtheta)
   ! Allocation
   allocate(F(nr+k-1,ntheta))
