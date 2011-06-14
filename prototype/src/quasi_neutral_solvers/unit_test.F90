@@ -3,7 +3,6 @@ program test_quasi_neutral
   use sll_quasi_neutral_solver
   implicit none
 
-
   type(quasi_neutral_plan), pointer :: qndat
   integer, parameter     :: k=5  ! spline degree
   real(8), parameter     :: eps=1.d-14
