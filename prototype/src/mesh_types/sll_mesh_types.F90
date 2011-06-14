@@ -38,7 +38,9 @@ contains
     SLL_ASSERT(zmax .ge. zmin)
     SLL_ASSERT(is_power_of_2(int(ncr,i64)))
     SLL_ASSERT(is_power_of_2(int(nctheta,i64)))
-    SLL_ASSERT(is_power_of_2(int(ncz,i64)))
+    ! The following permits to have a number of cells in z equal to 0, for
+    ! 2D tests. Something similar could be done for the other directions...
+    SLL_ASSERT((is_power_of_2(int(ncz,i64))) .or. (ncz .eq. 0))
 
     SLL_ALLOCATE(new_mesh_cylindrical_3D, ierr)
     new_mesh_cylindrical_3D%rmin        = rmin

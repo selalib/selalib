@@ -6,6 +6,8 @@
 module sll_quasi_neutral_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_mesh_types.h"
+use numeric_constants
   implicit none
 
   type quasi_neutral_plan
@@ -32,9 +34,11 @@ module sll_quasi_neutral_solver
 contains
 
 
-
-  function new_qn_plan(spline_degree, rmin, nr, ntheta, dr, dtheta)
-    type(quasi_neutral_plan), pointer :: new_qn_plan
+  ! FIXME: The name of this function should express the fact that this is the 
+  ! plan for a 3D mesh...
+  function new_qn_plan(spline_degree, rtz_mesh ) 
+    type(quasi_neutral_plan), pointer  :: new_qn_plan
+    type(mesh_cylindrical_3D), pointer :: rtz_mesh
     integer   :: spline_degree   ! degree of spline basis functions
     real(f64) :: rmin            ! Minimum value of r
     integer   :: nr, ntheta      ! dimensions in r and theta
@@ -52,6 +56,11 @@ contains
 
     SLL_ALLOCATE( new_qn_plan, ierr )
     ! set scalars in quasi_neutral_plan object
+    rmin                      = GET_MESH_RMIN(rtz_mesh)
+    nr                        = GET_MESH_NCR(rtz_mesh)+1 ! num of points
+    ntheta                    = GET_MESH_NCTHETA(rtz_mesh)
+    dr                        = GET_MESH_DELTA_R(rtz_mesh)
+    dtheta                    = GET_MESH_DELTA_THETA(rtz_mesh)
     new_qn_plan%spline_degree = spline_degree
     new_qn_plan%nr            = nr
     new_qn_plan%ntheta        = ntheta
@@ -256,7 +265,6 @@ contains
                          plan%nr + plan%spline_degree - 3) :: A 
     ! eigenvalues of circulant mass and stiffness matrix in theta direction 
     real(f64), dimension(plan%ntheta/2+1) :: valpm, valpk 
-    real(f64), parameter :: pi = 3.1415926535897931_f64
     real(f64), dimension(2*plan%ntheta+15) :: wsave  ! help array for FFTPACK
 
     ! intialize dffft
@@ -272,8 +280,10 @@ contains
        valpm(k) = plan%Mth(1)
        valpk(k) = plan%Kth(1)
        do i=2,plan%spline_degree+1
-          valpm(k) = valpm(k) + 2*plan%Mth(i)*cos(2*pi*(i-1)*(k-1)/plan%ntheta)
-          valpk(k) = valpk(k) + 2*plan%Kth(i)*cos(2*pi*(i-1)*(k-1)/plan%ntheta)
+          valpm(k) = valpm(k) + &
+                     2*plan%Mth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%ntheta)
+          valpk(k) = valpk(k) + &
+                     2*plan%Kth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%ntheta)
        end do
     end do
 

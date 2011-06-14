@@ -28,6 +28,12 @@ use sll_mesh_types
 ! compilation errors. This means that there are situations in which we want
 ! the semicolons to be part of the macro and others in which they are not.
 ! So much for consistency...
+!
+! At the same time, SLL_ASSERT is an exceptional case in which it is the only
+! macro that is meant to expand into nothing. All other macros could be 
+! written without the semicolons in their definition, thus maintaining some
+! resemblance of uniformity in the syntax.
+
 #define GET_MESH_VALUE( m,i,j,k )                                \
    SLL_ASSERT( (i .ge. 1) .and. (i .le. GET_MESH_NCR(m)+1))      \
    SLL_ASSERT( (j .ge. 1) .and. (j .le. GET_MESH_NCTHETA(m)+1))  \

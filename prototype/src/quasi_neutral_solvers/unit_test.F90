@@ -1,9 +1,11 @@
 ! gfortran qnefspl.f90 bsplvd.f90 bsplvb.f90 test_qnefspl.f90 -llapack -ldfftpack
 program test_quasi_neutral
   use sll_quasi_neutral_solver
+#include "sll_working_precision.h"
+#include "sll_mesh_types.h"
   implicit none
 
-  type(quasi_neutral_plan), pointer :: qndat
+  type(quasi_neutral_plan), pointer :: qn_plan
   integer, parameter     :: k=5  ! spline degree
   real(8), parameter     :: eps=1.d-14
   real(8), parameter     :: pi = 3.1415926535897931_8
@@ -18,6 +20,7 @@ program test_quasi_neutral
   integer :: i,j, ii, jj, jjj, ig, jg  ! loop indices
   real(8), dimension(k+1) :: biatr,biatth
   real :: etime, t1, t2, elapsed(2)  ! timing 
+  type(mesh_cylindrical_3D), pointer :: rtz_mesh
 
   print*, '----------------------------------------------------'
   print*, 'test spline QN solver. Spline degree = ',k
@@ -47,35 +50,31 @@ program test_quasi_neutral
      mth = (/0.029960317460317461_8, 0.014769345238095241_8, 0.0014880952380952384_8, 1.2400793650793656e-05_8/)
      kth = (/10.6666666666666666666_8,-2.0_8,-3.2_8,-0.1333333333333333333_8/)
   endif
-   ! call intialization routine
-  qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
-  ! check errors
-  err = maxval(abs(qndat%mth-mth))
-  if (err<eps) then
-     print*, 'degree=',k,', mth ok'
-  else
-     print*, 'test_qnefspl: problem with mth. Diff=',err 
-  endif
-  err = maxval(abs(qndat%kth-kth))
-  if (err<eps) then
-     print*, 'degree=',k,', kth ok'
-  else
-     print*, 'test_qnefspl: problem with kth. Diff=',err 
-  endif
-
   
   ! test solver
   !------------
-  nr = 128
+  nr = 129
   rmin = 0.2_8
   rmax = 1.0_8
   Lr = rmax-rmin
   dr= Lr/(nr-1)
   ntheta = 128
   dtheta = 2*pi/ntheta 
+  rtz_mesh => new_mesh_cylindrical_3D(rmin, rmax, 0.0_f64, 0.0_f64, nr-1, ntheta, 0)
+  qn_plan => new_qn_plan( k, rtz_mesh )
+  err = maxval(abs(qn_plan%mth-mth))
+  if (err<eps) then
+     print*, 'degree=',k,', mth ok'
+  else
+     print*, 'test_qnefspl: problem with mth. Diff=',err 
+  endif
+  err = maxval(abs(qn_plan%kth-kth))
+  if (err<eps) then
+     print*, 'degree=',k,', kth ok'
+  else
+     print*, 'test_qnefspl: problem with kth. Diff=',err 
+  endif
 
-qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
-!  call new_qn(qndat, k, rmin, nr, ntheta, dr, dtheta)
   ! Allocation
   allocate(F(nr+k-1,ntheta))
   allocate(C(nr+k-1,ntheta))
@@ -89,16 +88,16 @@ qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
              
   t1=etime(elapsed)
   do jg = 1, k+1
-     ttg =  0.5_8*dtheta*(qndat%xgauss(jg)+1.0_8)
-     call bsplvb(qndat%knotsth,k+1,1,ttg,k+1,biatth)
+     ttg =  0.5_8*dtheta*(qn_plan%xgauss(jg)+1.0_8)
+     call bsplvb(qn_plan%knotsth,k+1,1,ttg,k+1,biatth)
      do i = 0, Nr-2 ! loop on cells (Nr-1 cells for Nr points)
         ri = rmin+i*dr
         do ig= 1, k+1
-           rg = ri + 0.5_8*dr*(qndat%xgauss(ig)+1.0_8)  ! rescale Gauss points to be in interval [ri,ri+dr]
-           call bsplvb(qndat%knotsr,k+1,1,rg,k+1+i,biatr)  
+           rg = ri + 0.5_8*dr*(qn_plan%xgauss(ig)+1.0_8)  ! rescale Gauss points to be in interval [ri,ri+dr]
+           call bsplvb(qn_plan%knotsr,k+1,1,rg,k+1+i,biatr)  
            sr = sin(pi*(rg-rmin)/Lr)
            cr = cos(pi*(rg-rmin)/Lr)
-           coef = 0.25_8*dtheta*dr*qndat%wgauss(ig)*qndat%wgauss(jg)*rg 
+           coef = 0.25_8*dtheta*dr*qn_plan%wgauss(ig)*qn_plan%wgauss(jg)*rg 
            do j = 0, Ntheta-1              
               st = cos(nmode*(ttg+j*dtheta))   
               fij = (((nmode/rg)**2+(pi/Lr)**2)*sr - pi/(rg*Lr)*cr)*st
@@ -114,13 +113,13 @@ qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
   enddo
 !-------------
 !!$ do jg = 1, k+1
-!!$     ttg =  0.5_8*dtheta*(qndat%xgauss(jg)+1.0_8)
-!!$     call bsplvb(qndat%knotsth,k+1,1,ttg,k+1,biatth)
+!!$     ttg =  0.5_8*dtheta*(qn_plan%xgauss(jg)+1.0_8)
+!!$     call bsplvb(qn_plan%knotsth,k+1,1,ttg,k+1,biatth)
 !!$     do i = 0, Nr-2 ! loop on cells (Nr-1 cells for Nr points)
 !!$        ri = rmin+i*dr
 !!$        do ig= 1, k+1
-!!$           rg = ri + 0.5_8*dr*(qndat%xgauss(ig)+1.0_8)  ! rescale Gauss points to be in interval [ri,ri+dr]
-!!$           call bsplvb(qndat%knotsr,k+1,1,rg,k+1+i,biatr)  
+!!$           rg = ri + 0.5_8*dr*(qn_plan%xgauss(ig)+1.0_8)  ! rescale Gauss points to be in interval [ri,ri+dr]
+!!$           call bsplvb(qn_plan%knotsr,k+1,1,rg,k+1+i,biatr)  
 !!$           sr = sin(pi*(rg-rmin)/Lr)
 !!$           cr = cos(pi*(rg-rmin)/Lr)
 !!$           do ii = 0, k
@@ -128,7 +127,7 @@ qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
 !!$                 st = cos(nmode*(ttg+j*dtheta))        
 !!$                 do jj = 0, k            
 !!$                    F(i+ii+1,mod(j+jj,Ntheta)+1) = F(i+ii+1,mod(j+jj,Ntheta)+1) + &
-!!$                         0.25_8*dtheta*dr*qndat%wgauss(ig)*qndat%wgauss(jg)*biatr(ii+1)*biatth(jj+1)*rg &
+!!$                         0.25_8*dtheta*dr*qn_plan%wgauss(ig)*qn_plan%wgauss(jg)*biatr(ii+1)*biatth(jj+1)*rg &
 !!$                         *(((nmode/rg)**2+(pi/Lr)**2)*sr - pi/(rg*Lr)*cr)*st
 !!$                 enddo
 !!$              enddo
@@ -143,13 +142,13 @@ qndat => new_qn_plan( k, rmin, nr, ntheta, dr, dtheta )
 
   write (7,*) F
   ! solve system
-  call apply_quasi_neutral_solver_plan(qndat,F,C)
+  call apply_quasi_neutral_solver_plan(qn_plan,F,C)
   t2 = etime(elapsed)
   print*, 'solve time', t2-t1
   t1=t2
 
   ! compute solution at grid points from spline coefficients
-  call evalsplgrid(qndat,C,U)
+  call evalsplgrid(qn_plan,C,U)
   t2 = etime(elapsed)
   print*, 'eval time', t2-t1
   t1=t2
