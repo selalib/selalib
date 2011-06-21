@@ -1,6 +1,8 @@
 ! gfortran qnefspl.f90 bsplvd.f90 bsplvb.f90 test_qnefspl.f90 -llapack -ldfftpack
 program test_quasi_neutral
   use sll_quasi_neutral_solver
+  use sll_collective
+#include "sll_remap.h"
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
   implicit none
@@ -26,6 +28,8 @@ program test_quasi_neutral
   print*, 'test spline QN solver. Spline degree = ',k
   print*, '----------------------------------------------------'
 
+  ! Initialize parallel environment
+  call sll_boot_collective()
   ! Test intialisation
   ! Allocation
   nr = 10
@@ -159,12 +163,13 @@ program test_quasi_neutral
        Uex(i,j)= sin(pi*(i-1)*dr/Lr)*cos(nmode*(j-1)*dtheta)   
     enddo
  enddo
-
+ 
  print*, 'error=', maxval(abs(U-Uex))
-  
+ 
  write (8,*) U
+ 
+ !halt parallel environment
+ call sll_halt_collective()
+ print*, 'end of test'
 
-
-  print*, 'end of test'
-
-end program
+end program test_quasi_neutral
