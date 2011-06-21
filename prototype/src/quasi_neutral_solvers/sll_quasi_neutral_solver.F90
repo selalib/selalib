@@ -3,17 +3,27 @@
 !  arbitrary order spline finite elements
 !  Eric Sonnendrucker 2011-05-05
 !------------------------------------------------------------------------------
+
+! Some 'fake' input information that eventually must come from somewhere else:
+! These are the dimensions of the 'processor' mesh, i.e., the number of 
+! processors that contain the decomposed domain in each direction.
+#define NUMPX 1
+#define NUMPY 8
+#define NUMPZ 1
+
+
 module sll_quasi_neutral_solver
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
-use numeric_constants
+#include "sll_remap.h"
+  use numeric_constants
   implicit none
 
   type quasi_neutral_plan
      integer   :: spline_degree  ! degree of splines used by finite element 
                                  ! solver
-     integer   :: nr, ntheta     ! dimensions in r and theta
+     integer   :: npr, nptheta     ! number of points in r and theta
      real(f64) :: dr, dtheta     ! cell size in r and theta
      real(f64) :: rmin
      real(f64), dimension(:), pointer :: knotsr, knotsth  ! knot vectors for 
@@ -28,6 +38,8 @@ use numeric_constants
                                                           ! direction
      real(f64), dimension(:), pointer :: xgauss, wgauss   ! Gauss points and 
                                                           ! weights
+     type(remap_plan_3D_t), pointer :: sequential_theta
+     type(remap_plan_3D_t), pointer :: sequential_r
   end type quasi_neutral_plan
 
 
@@ -41,7 +53,7 @@ contains
     type(mesh_cylindrical_3D), pointer :: rtz_mesh
     integer   :: spline_degree   ! degree of spline basis functions
     real(f64) :: rmin            ! Minimum value of r
-    integer   :: nr, ntheta      ! dimensions in r and theta
+    integer   :: npr, nptheta      ! dimensions in r and theta
     real(f64) :: dr, dtheta      ! cell size in r and theta
 
     real(f64) :: rprof           ! r profile for Kar and Mar matrices
@@ -57,26 +69,26 @@ contains
     SLL_ALLOCATE( new_qn_plan, ierr )
     ! set scalars in quasi_neutral_plan object
     rmin                      = GET_MESH_RMIN(rtz_mesh)
-    nr                        = GET_MESH_NCR(rtz_mesh)+1 ! num of points
-    ntheta                    = GET_MESH_NCTHETA(rtz_mesh)
+    npr                        = GET_MESH_NCR(rtz_mesh)+1 ! num of points
+    nptheta                    = GET_MESH_NCTHETA(rtz_mesh)
     dr                        = GET_MESH_DELTA_R(rtz_mesh)
     dtheta                    = GET_MESH_DELTA_THETA(rtz_mesh)
     new_qn_plan%spline_degree = spline_degree
-    new_qn_plan%nr            = nr
-    new_qn_plan%ntheta        = ntheta
+    new_qn_plan%npr            = npr
+    new_qn_plan%nptheta        = nptheta
     new_qn_plan%dr            = dr
     new_qn_plan%dtheta        = dtheta
     new_qn_plan%rmin          = rmin
 
     ! allocate arrays
-    SLL_ALLOCATE(new_qn_plan%Kar(spline_degree+1,nr+spline_degree-1),ierr)
-    SLL_ALLOCATE(new_qn_plan%Mar(spline_degree+1,nr+spline_degree-1),ierr)
-    SLL_ALLOCATE(new_qn_plan%Mcr(spline_degree+1,nr+spline_degree-1),ierr)
+    SLL_ALLOCATE(new_qn_plan%Kar(spline_degree+1,npr+spline_degree-1),ierr)
+    SLL_ALLOCATE(new_qn_plan%Mar(spline_degree+1,npr+spline_degree-1),ierr)
+    SLL_ALLOCATE(new_qn_plan%Mcr(spline_degree+1,npr+spline_degree-1),ierr)
     SLL_ALLOCATE(new_qn_plan%Kth(spline_degree+1),ierr)
     SLL_ALLOCATE(new_qn_plan%Mth(spline_degree+1),ierr)
     SLL_ALLOCATE(new_qn_plan%xgauss(spline_degree+1),ierr)
     SLL_ALLOCATE(new_qn_plan%wgauss(spline_degree+1),ierr)
-    SLL_ALLOCATE(new_qn_plan%knotsr(nr+2*spline_degree),ierr) 
+    SLL_ALLOCATE(new_qn_plan%knotsr(npr+2*spline_degree),ierr) 
     SLL_ALLOCATE(new_qn_plan%knotsth(2*spline_degree+2),ierr)
 
     ! set Gauss points and weights
@@ -205,11 +217,11 @@ contains
        new_qn_plan%knotsr(i) = rmin
      enddo
     ti = rmin
-    do i = spline_degree + 2, Nr + spline_degree
+    do i = spline_degree + 2, Npr + spline_degree
        ti = ti+dr
        new_qn_plan%knotsr(i) = ti
      enddo
-    do i = Nr + spline_degree + 1, Nr + 2 * spline_degree
+    do i = Npr + spline_degree + 1, Npr + 2 * spline_degree
        new_qn_plan%knotsr(i) = ti
     enddo
     
@@ -218,7 +230,7 @@ contains
     new_qn_plan%Mcr(:,:) = 0.0
     new_qn_plan%Kar(:,:) = 0.0
     ! loop over cells
-    do i = 0, Nr-2
+    do i = 0, Npr-2
        ri = rmin + i*dr
        ! sum over Gauss points
        do ig = 1, spline_degree+1
@@ -262,72 +274,72 @@ contains
     integer :: info, i,k, nband
     ! banded matrix for problem in r :
     real(f64), dimension(plan%spline_degree+1, &
-                         plan%nr + plan%spline_degree - 3) :: A 
+                         plan%npr + plan%spline_degree - 3) :: A 
     ! eigenvalues of circulant mass and stiffness matrix in theta direction 
-    real(f64), dimension(plan%ntheta/2+1) :: valpm, valpk 
-    real(f64), dimension(2*plan%ntheta+15) :: wsave  ! help array for FFTPACK
+    real(f64), dimension(plan%nptheta/2+1) :: valpm, valpk 
+    real(f64), dimension(2*plan%nptheta+15) :: wsave  ! help array for FFTPACK
 
     ! intialize dffft
-    call dffti(plan%ntheta, wsave) 
+    call dffti(plan%nptheta, wsave) 
 
     ! forward FFT of lines of F with FFTPACK
-    do i=2,plan%nr+plan%spline_degree-2
-       call dfftf(plan%ntheta, F(i,:), wsave) 
+    do i=2,plan%npr+plan%spline_degree-2
+       call dfftf(plan%nptheta, F(i,:), wsave) 
     end do
 
     ! compute eigenvalues of circulant matrices
-    do k=1,plan%ntheta/2+1
+    do k=1,plan%nptheta/2+1
        valpm(k) = plan%Mth(1)
        valpk(k) = plan%Kth(1)
        do i=2,plan%spline_degree+1
           valpm(k) = valpm(k) + &
-                     2*plan%Mth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%ntheta)
+                     2*plan%Mth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%nptheta)
           valpk(k) = valpk(k) + &
-                     2*plan%Kth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%ntheta)
+                     2*plan%Kth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%nptheta)
        end do
     end do
 
     ! Banded solves in x direction
     nband = plan%spline_degree+1
     U(:,:) = F(:,:)  ! copy rhs into solution
-    A(:,:) = valpm(1)*(plan%Kar(:,2:plan%nr+plan%spline_degree-2) + &
-             plan%Mcr(:,2:plan%nr+plan%spline_degree-2)) + &
-             valpk(1)*plan%Mar(:,2:plan%nr+plan%spline_degree-2)
+    A(:,:) = valpm(1)*(plan%Kar(:,2:plan%npr+plan%spline_degree-2) + &
+             plan%Mcr(:,2:plan%npr+plan%spline_degree-2)) + &
+             valpk(1)*plan%Mar(:,2:plan%npr+plan%spline_degree-2)
    ! Cholesky factorisation of A
-    call DPBTRF( 'L', plan%nr+plan%spline_degree-3, nband-1, A, nband, info )
-    call DPBTRS( 'L', plan%nr+plan%spline_degree-3, nband-1, 1, A, nband, &
-         U(2:plan%nr+plan%spline_degree-2,1), plan%nr+plan%spline_degree-3, &
+    call DPBTRF( 'L', plan%npr+plan%spline_degree-3, nband-1, A, nband, info )
+    call DPBTRS( 'L', plan%npr+plan%spline_degree-3, nband-1, 1, A, nband, &
+         U(2:plan%npr+plan%spline_degree-2,1), plan%npr+plan%spline_degree-3, &
          info ) ! Solution
-    do k = 1, plan%ntheta/2-1
-       A(:,:) = valpm(k+1)*(plan%Kar(:,2:plan%nr+plan%spline_degree-2) + &
-            plan%Mcr(:,2:plan%nr+plan%spline_degree-2)) + &
-            valpk(k+1)*plan%Mar(:,2:plan%nr+plan%spline_degree-2)
+    do k = 1, plan%nptheta/2-1
+       A(:,:) = valpm(k+1)*(plan%Kar(:,2:plan%npr+plan%spline_degree-2) + &
+            plan%Mcr(:,2:plan%npr+plan%spline_degree-2)) + &
+            valpk(k+1)*plan%Mar(:,2:plan%npr+plan%spline_degree-2)
        ! Cholesky factorisation of A
-       call DPBTRF( 'L',plan%nr+plan%spline_degree-3, nband-1, A, nband, info ) 
-       call DPBTRS( 'L',plan%nr+plan%spline_degree-3, nband-1, 1, A, nband, &
-            U(2:plan%nr+plan%spline_degree-2,2*k), &
-            plan%nr+plan%spline_degree-3, info )
-       call DPBTRS( 'L', plan%nr+plan%spline_degree-3, nband-1, 1, A, nband,&
-            U(2:plan%nr+plan%spline_degree-2,2*k+1), &
-            plan%nr+plan%spline_degree-3, info )
+       call DPBTRF( 'L',plan%npr+plan%spline_degree-3, nband-1, A, nband, info ) 
+       call DPBTRS( 'L',plan%npr+plan%spline_degree-3, nband-1, 1, A, nband, &
+            U(2:plan%npr+plan%spline_degree-2,2*k), &
+            plan%npr+plan%spline_degree-3, info )
+       call DPBTRS( 'L', plan%npr+plan%spline_degree-3, nband-1, 1, A, nband,&
+            U(2:plan%npr+plan%spline_degree-2,2*k+1), &
+            plan%npr+plan%spline_degree-3, info )
     end do
     A(:,:) = &
-         valpm(plan%ntheta/2+1)*(plan%Kar(:,2:plan%nr+plan%spline_degree-2) + &
-         plan%Mcr(:,2:plan%nr+plan%spline_degree-2)) + &
-         valpk(plan%ntheta/2+1)*plan%Mar(:,2:plan%nr+plan%spline_degree-2) 
+         valpm(plan%nptheta/2+1)*(plan%Kar(:,2:plan%npr+plan%spline_degree-2) + &
+         plan%Mcr(:,2:plan%npr+plan%spline_degree-2)) + &
+         valpk(plan%nptheta/2+1)*plan%Mar(:,2:plan%npr+plan%spline_degree-2) 
     ! Cholesky factorisation of A
-    call DPBTRF( 'L', plan%nr+plan%spline_degree-3, nband-1, A, nband, info ) 
-    call DPBTRS( 'L', plan%nr+plan%spline_degree-3, nband-1, 1, A, nband, &
-         U(2:plan%nr+plan%spline_degree-2,plan%ntheta), &
-         plan%nr+plan%spline_degree-3, info ) ! Solution
+    call DPBTRF( 'L', plan%npr+plan%spline_degree-3, nband-1, A, nband, info ) 
+    call DPBTRS( 'L', plan%npr+plan%spline_degree-3, nband-1, 1, A, nband, &
+         U(2:plan%npr+plan%spline_degree-2,plan%nptheta), &
+         plan%npr+plan%spline_degree-3, info ) ! Solution
 
     ! backward FFT of lines of U with FFTPACK
     U(1,:) = 0.0 
-    U(plan%nr+plan%spline_degree-1,:) = 0.0
-    do i=1,plan%nr+plan%spline_degree-1
-       call dfftb(plan%ntheta, U(i,:), wsave) 
+    U(plan%npr+plan%spline_degree-1,:) = 0.0
+    do i=1,plan%npr+plan%spline_degree-1
+       call dfftb(plan%nptheta, U(i,:), wsave) 
     end do
-    U(:,:) = U(:,:)/plan%ntheta    ! normalization
+    U(:,:) = U(:,:)/plan%nptheta    ! normalization
   end subroutine apply_quasi_neutral_solver_plan
 
   subroutine evalsplgrid(plan,C,U)
@@ -346,15 +358,15 @@ contains
     ! uniform)
     call bsplvb(plan%knotsth,plan%spline_degree+1,1,0.0,plan%spline_degree+1,&
          biatth)
-    do i = 0, plan%nr-2
+    do i = 0, plan%npr-2
        do ii=0,plan%spline_degree
           r= plan%rmin + i*plan%dr
           call bsplvb(plan%knotsr,plan%spline_degree+1,1,r,&
                plan%spline_degree+1+i,biatr)
-          do j = 0, plan%ntheta-1
+          do j = 0, plan%nptheta-1
              do jj=0, plan%spline_degree              
                 U(i+1,j+1) = U(i+1,j+1) + &
-                     biatr(ii+1)*biatth(jj+1)*C(i+ii+1,mod(j+jj,plan%ntheta)+1)
+                     biatr(ii+1)*biatth(jj+1)*C(i+ii+1,mod(j+jj,plan%nptheta)+1)
              enddo
           enddo
        enddo
