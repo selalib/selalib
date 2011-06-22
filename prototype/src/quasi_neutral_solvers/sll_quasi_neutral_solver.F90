@@ -7,12 +7,12 @@
 ! Some 'fake' input information that eventually must come from somewhere else:
 ! These are the dimensions of the 'processor' mesh, i.e., the number of 
 ! processors that contain the decomposed domain in each direction.
-#define NUMPX 1
-#define NUMPY 8
-#define NUMPZ 1
-
+#define NUMP_THETA 1
+#define NUMP_R     8
+#define NUMP_Z     1
 
 module sll_quasi_neutral_solver
+  use sll_collective
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
@@ -48,12 +48,14 @@ contains
 
   ! FIXME: The name of this function should express the fact that this is the 
   ! plan for a 3D mesh...
+  ! Here we explore the idea of having all the information about the data
+  ! layouts and remap plans internally, without any exposure in the interface.
   function new_qn_plan(spline_degree, rtz_mesh ) 
     type(quasi_neutral_plan), pointer  :: new_qn_plan
     type(mesh_cylindrical_3D), pointer :: rtz_mesh
     integer   :: spline_degree   ! degree of spline basis functions
     real(f64) :: rmin            ! Minimum value of r
-    integer   :: npr, nptheta      ! dimensions in r and theta
+    integer   :: npr, nptheta    ! dimensions in r and theta
     real(f64) :: dr, dtheta      ! cell size in r and theta
 
     real(f64) :: rprof           ! r profile for Kar and Mar matrices
@@ -66,20 +68,53 @@ contains
     ! values of splines and derivatives at point x
     real(f64), dimension(spline_degree+1,2) :: dbiatx 
 
+    ! Explore defining the layout here
+    type(layout_3D_t), pointer :: sequential_r
+    type(layout_3D_t), pointer :: sequential_theta
+    sll_int32                  :: node
+    sll_int32                  :: local_r
+    sll_int32                  :: local_theta
+    sll_int32                  :: local_z
+    sll_int32                  :: i_min, i_max
+    sll_int32                  :: j_min, j_max
+    sll_int32                  :: k_min, k_max
+    sequential_r => new_layout_3D( sll_world_collective )
+    sequential_r => new_layout_3D( sll_world_collective )
+
+
     SLL_ALLOCATE( new_qn_plan, ierr )
     ! set scalars in quasi_neutral_plan object
     rmin                      = GET_MESH_RMIN(rtz_mesh)
-    npr                        = GET_MESH_NCR(rtz_mesh)+1 ! num of points
-    nptheta                    = GET_MESH_NCTHETA(rtz_mesh)
+    npr                       = GET_MESH_NCR(rtz_mesh)+1 ! num of points
+    nptheta                   = GET_MESH_NCTHETA(rtz_mesh)
     dr                        = GET_MESH_DELTA_R(rtz_mesh)
     dtheta                    = GET_MESH_DELTA_THETA(rtz_mesh)
     new_qn_plan%spline_degree = spline_degree
-    new_qn_plan%npr            = npr
-    new_qn_plan%nptheta        = nptheta
+    new_qn_plan%npr           = npr
+    new_qn_plan%nptheta       = nptheta
     new_qn_plan%dr            = dr
     new_qn_plan%dtheta        = dtheta
     new_qn_plan%rmin          = rmin
 
+
+    ! Initialize the layout
+    local_r     = npr/NUMP_R
+    local_theta = nptheta/NUMP_THETA
+    local_theta = npz/NUMP_Z
+
+    ! Loop over the "processor mesh" to assign the min/max limits in the 
+    ! layout.
+    do k=0, NUMPZ-1
+       do j=0, NUMPY-1
+          do i=0, NUMPX-1
+             node = i+NUMPX*(j+NUMPY*k)
+             i_min = i*local_r + 1
+             i_max = i*local_r + local_r
+             i_min = i*local_theta + 1
+             i_max = i*local_theta + local_theta
+             i_min = i*local_z + 1
+             i_max = i*local_z + local_z
+             ! POR AQUI!!!!
     ! allocate arrays
     SLL_ALLOCATE(new_qn_plan%Kar(spline_degree+1,npr+spline_degree-1),ierr)
     SLL_ALLOCATE(new_qn_plan%Mar(spline_degree+1,npr+spline_degree-1),ierr)
