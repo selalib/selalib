@@ -2,8 +2,8 @@ module sll_mesh_types
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use numeric_constants
-use sll_misc_utils   ! for is_power_of_2()
+  use numeric_constants
+  use sll_misc_utils                  ! for is_power_of_2()
   implicit none
 
   type mesh_cylindrical_3D

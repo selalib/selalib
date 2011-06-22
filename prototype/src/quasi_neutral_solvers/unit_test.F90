@@ -64,7 +64,13 @@ program test_quasi_neutral
   dr= Lr/(nr-1)
   ntheta = 128
   dtheta = 2*pi/ntheta 
-  rtz_mesh => new_mesh_cylindrical_3D(rmin, rmax, 0.0_f64, 0.0_f64, nr-1, ntheta, 0)
+  rtz_mesh => new_mesh_cylindrical_3D( rmin,    &
+                                       rmax,    &
+                                       0.0_f64, &
+                                       0.0_f64, &
+                                       nr-1,    &
+                                       ntheta,  &
+                                       0 )
   qn_plan => new_qn_plan( k, rtz_mesh )
   err = maxval(abs(qn_plan%mth-mth))
   if (err<eps) then
