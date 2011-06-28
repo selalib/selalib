@@ -22,7 +22,7 @@ module sll_splines
      sll_real64                        :: rdelta   ! reciprocal of delta
      sll_real64                        :: xmin
      sll_real64                        :: xmax
-     sll_int32                         :: type     ! natural, periodic
+     sll_int32                         :: bc_type  ! natural, periodic
      sll_real64, dimension(:), pointer :: data     ! data for the spline fit
      sll_real64, dimension(:), pointer :: c        ! the spline coefficients
   end type sll_spline_1D
@@ -34,8 +34,9 @@ contains  ! ****************************************************************
   ! if we are considering using F2003, the problem with the object macro is 
   ! that to expose this, we need to redefine these macros in the header file.
 #define PERIODIC_SPLINE 0
-#define NATURAL_SPLINE  1
-#define HERMITE_SPLINE  2
+#define HERMITE_SPLINE  1
+#define NATURAL_SPLINE  2
+
 
   function new_spline_1D( data, num_pts, xmin, xmax, bc_type )
     type(sll_spline_1D), pointer         :: new_spline_1D
@@ -284,7 +285,7 @@ contains  ! ****************************************************************
     cell = int(t0) + 1
     dx   = t0 - real(cell-1)
     cdx  = 1.0_f64 - dx
-    write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     if (cell .eq. 1) then
           cim1 = coeffs(num_points)
           ci   = coeffs(1)
