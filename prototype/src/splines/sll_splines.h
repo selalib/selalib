@@ -17,7 +17,8 @@
   ! ***************************************************************************
 
 #define PERIODIC_SPLINE   0_i32
-#define NATURAL_SPLINE    1_i32
+#define HERMITE_SPLINE    1_i32
+#define NATURAL_SPLINE    2_i32
 
 #define GET_SPLINE_DELTA(obj)    obj%delta
 #define GET_SPLINE_XMIN(obj)     obj%xmin

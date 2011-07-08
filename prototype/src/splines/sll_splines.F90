@@ -7,7 +7,7 @@ module sll_splines
 
   ! The sll_spline_1D provides the services:
   ! - sll_initialize_spline_1d( array, 
-  !                             n, 
+  !                             nc, 
   !                             xmin, 
   !                             xmax, 
   !                             boundary_cond, 
@@ -17,13 +17,15 @@ module sll_splines
   ! The type should be an 'enumeration' especially if we do things with 
   ! Fortran 2003
   type sll_spline_1D
-     sll_int32                         :: n_points ! size
+     sll_int32                         :: n_cells  ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
      sll_real64                        :: xmin
      sll_real64                        :: xmax
      sll_int32                         :: bc_type  ! natural, periodic
      sll_real64, dimension(:), pointer :: data     ! data for the spline fit
+     sll_real64, dimension(:), pointer :: d        ! scratch space D (L*D = F),
+                                                   ! refer to algorithm below
      sll_real64, dimension(:), pointer :: c        ! the spline coefficients
   end type sll_spline_1D
   
@@ -38,27 +40,33 @@ contains  ! ****************************************************************
 #define NATURAL_SPLINE  2
 
 
-  function new_spline_1D( data, num_pts, xmin, xmax, bc_type )
+  function new_spline_1D( data, num_cells, xmin, xmax, bc_type )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_real64, dimension(:), intent(in), target :: data
-    sll_int32,  intent(in)               :: num_pts
+    sll_int32,  intent(in)               :: num_cells
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
     sll_int32                            :: ierr
     SLL_ALLOCATE( new_spline_1D, ierr )
-    new_spline_1D%n_points = num_pts
-    new_spline_1D%xmin     = xmin
-    new_spline_1D%xmax     = xmax
-    new_spline_1D%delta    = (xmax - xmin)/real(num_pts-1,f64)
-    new_spline_1D%rdelta   = 1.0_f64/new_spline_1D%delta
-    new_spline_1D%data     => data
-    SLL_ALLOCATE( new_spline_1D%c(num_pts), ierr )
-    call compute_spline( data, num_pts, bc_type, new_spline_1D )
+    new_spline_1D%n_cells = num_cells
+    new_spline_1D%xmin    = xmin
+    new_spline_1D%xmax    = xmax
+    new_spline_1D%delta   = (xmax - xmin)/real(num_cells,f64)
+    new_spline_1D%rdelta  = 1.0_f64/new_spline_1D%delta
+    new_spline_1D%bc_type = bc_type
+    new_spline_1D%data    => data
+    SLL_ALLOCATE( new_spline_1D%d(num_cells),   ierr )
+    ! note how the indexing of the coefficients array includes the end-
+    ! points 0, num_cells+1, num_cells+2. These are meant to store the 
+    ! boundary condition specific data.
+    SLL_ALLOCATE( new_spline_1D%c(0:num_cells+2), ierr )
+    call compute_spline( data, num_cells, bc_type, new_spline_1D )
   end function new_spline_1D
 
   ! - data: the array whose data must be fit with the cubic spline.
-  ! - n: length of the data array that must be fit with the spline.
+  ! - nc: (number of cells; length of the data array that must be fit with 
+  !   the spline.
   ! - bc_type: an integer flag describing the type of boundary conditions 
   !   desired.
   ! - spline_obj: the spline object to be initialized.
@@ -134,9 +142,9 @@ contains  ! ****************************************************************
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
 
-  subroutine compute_spline( f, np, bc_type, spline )
+  subroutine compute_spline( f, nc, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    sll_int32,  intent(in)            :: np
+    sll_int32,  intent(in)            :: nc
     sll_int32,  intent(in)            :: bc_type
     type(sll_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer :: coeffs
@@ -146,40 +154,74 @@ contains  ! ****************************************************************
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
+    sll_real64, parameter             :: ralpha = sqrt(6.0_f64/sqrt(3.0_f64))
     sll_real64                        :: coeff_tmp   = 1.0_f64
     sll_real64                        :: d1
-    ! consider passing this as an argument or as a scratch space contained
-    ! in the spline object.
-    sll_real64, dimension(:), allocatable :: d
-    SLL_ALLOCATE(d(np), err)
-    coeffs     => spline%c
-
+    sll_real64, dimension(:), pointer :: d
+    d      => spline%d
+    coeffs => spline%c
+    ! Try to coalesce the following case statements, the current form can be
+    ! confusing and has unnecessary branching.
     ! Compute d(1):
 #define NUM_TERMS 27
-    ! we can check later how many points one will not even affect
-    ! the result in the accumulator
     d1 =  f(1)
-    do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, then only f(np) is considered.
-       coeff_tmp = coeff_tmp*(-b_a)
-       d1 = d1 + coeff_tmp*f(np-i)
-    end do
+    select case (bc_type)
+    case ( PERIODIC_SPLINE )
+       do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, only f(nc) is considered.
+          coeff_tmp = coeff_tmp*(-b_a)
+          d1 = d1 + coeff_tmp*f(nc-i)
+       end do
+    case ( HERMITE_SPLINE )
+       do i = 2, NUM_TERMS  ! if NUM_TERMS == 2, only f(2) is considered.
+          coeff_tmp = coeff_tmp*(-b_a)
+          d1 = d1 + coeff_tmp*f(i)
+       end do
+    end select
     ! Fill the d array with the intermediate result
     d(1) = d1*r_a
-    do i = 2,np
-       d(i) = r_a*(f(i) - b*d(i-1))
-    end do
+    select case (bc_type)
+    case ( PERIODIC_SPLINE )
+       do i = 2,nc
+          d(i) = r_a*(f(i) - b*d(i-1))
+       end do
+    case ( HERMITE_SPLINE )
+       do i = 2,nc-1
+          d(i) = r_a*(f(i) - b*d(i-1))
+       end do
+       d(nc) = ralpha*(0.5_f64*f(nc) - b*d(nc-1))
+    end select
     ! Compute the coefficients. Start with first term
-    d1        = d(np)
-    coeff_tmp = 1.0_f64
-    do i = 1, NUM_TERMS
-       coeff_tmp = coeff_tmp*(-b_a)
-       d1 = d1 + coeff_tmp*d(i)
-    end do
-    coeffs(np) = d1*r_a
-    ! rest of the coefficients:
-    do i = np-1, 1, -1
-       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
-    end do
+    select case (bc_type)
+    case ( PERIODIC_SPLINE )
+       d1        = d(nc)
+       coeff_tmp = 1.0_f64
+       do i = 1, NUM_TERMS
+          coeff_tmp = coeff_tmp*(-b_a)
+          d1 = d1 + coeff_tmp*d(i)
+       end do
+       coeffs(nc) = d1*r_a
+       ! rest of the coefficients:
+       do i = nc-1, 1, -1
+          coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+       end do
+    case ( HERMITE_SPLINE )
+       coeffs(nc) = ralpha*d(nc)
+       do i = nc-1, 1, -1
+          coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+       end do
+    end select
+    
+    select case (bc_type)
+    case ( PERIODIC_SPLINE )
+       coeffs(0)    = coeffs(nc)
+       coeffs(nc+1) = coeffs(1)
+       coeffs(nc+2) = coeffs(2)
+    case ( HERMITE_SPLINE )
+       coeffs(0)    = coeffs(2)
+       coeffs(nc+1) = coeffs(nc-1)
+       coeffs(nc+2) = coeffs(nc-2)
+    end select
+    
     SLL_DEALLOCATE_ARRAY( d, err )
   end subroutine compute_spline
 
@@ -266,7 +308,7 @@ contains  ! ****************************************************************
     sll_int32                         :: cell
     sll_real64                        :: dx
     sll_real64                        :: cdx  ! 1-dx
-    sll_real64                        :: t0
+    sll_real64                        :: t0   ! temp/scratch variables ...
     sll_real64                        :: t1
     sll_real64                        :: t2
     sll_real64                        :: t3
@@ -275,37 +317,37 @@ contains  ! ****************************************************************
     sll_real64                        :: ci   ! C_i
     sll_real64                        :: cip1 ! C_(i+1)
     sll_real64                        :: cip2 ! C_(i+2)
-    sll_int32                         :: num_points
+    sll_int32                         :: num_cells
     ! FIXME: arg checks here
-    num_points = spline%n_points
-    rh     = spline%rdelta
-    coeffs => spline%c
+    num_cells = spline%n_cells
+    rh        = spline%rdelta
+    coeffs    => spline%c
     ! find the cell and offset for x
-    t0   = x*rh
-    cell = int(t0) + 1
-    dx   = t0 - real(cell-1)
-    cdx  = 1.0_f64 - dx
+    t0        = x*rh
+    cell      = int(t0) + 1
+    dx        = t0 - real(cell-1)
+    cdx       = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
-    if (cell .eq. 1) then
-          cim1 = coeffs(num_points)
-          ci   = coeffs(1)
-          cip1 = coeffs(2)
-          cip2 = coeffs(3)
-       else if (cell .eq. (num_points-1)) then   ! last cell
-          cim1 = coeffs(cell-1)
-          ci   = coeffs(cell)
-          cip1 = coeffs(1)  ! last and first points are equal for perodic
-          cip2 = coeffs(2)       ! wraps around the end of the array
-       else
-          cim1 = coeffs(cell-1)
-          ci   = coeffs(cell)
-          cip1 = coeffs(cell+1)
-          cip2 = coeffs(cell+2)
-       end if
-    t1   = 3.0_f64*ci
-    t3   = 3.0_f64*cip1
-    t2   = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
-    t4   =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    cim1      = coeffs(cell-1)
+    ci        = coeffs(cell)
+    cip1      = coeffs(cell+1)
+    cip2      = coeffs(cell+2)
+    t1        = 3.0_f64*ci
+    t3        = 3.0_f64*cip1
+    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
     interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value
+
+  subroutine delete_spline_1D( spline )
+    type(sll_spline_1D), pointer :: spline
+    sll_int32                    :: ierr
+    ! Fixme: some error checking, whether the spline pointer is associated
+    ! for instance
+    SLL_ASSERT( associated(spline) )
+!    SLL_DEALLOCATE( spline%d, ierr )
+    SLL_DEALLOCATE( spline%c, ierr )
+    spline%data => null()
+    SLL_DEALLOCATE( spline, ierr )
+  end subroutine delete_spline_1D
 end module sll_splines
