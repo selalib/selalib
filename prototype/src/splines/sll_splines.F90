@@ -155,7 +155,7 @@ contains  ! ****************************************************************
     coeffs     => spline%c
 
     ! Compute d(1):
-#define NUM_TERMS 30
+#define NUM_TERMS 27
     ! we can check later how many points one will not even affect
     ! the result in the accumulator
     d1 =  f(1)
