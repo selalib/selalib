@@ -19,10 +19,10 @@ program spline_tester
 
   print *, 'Spline module unit tester'
   print *, 'allocate data array'
-  SLL_ALLOCATE(data(NC), err)
+  SLL_ALLOCATE(data(NC+1), err)
   
   print *, 'initialize data array'
-  do i=1,NC
+  do i=1,NC+1
     data(i) = sin((i-1)*sll_pi/real(NC,f64))
   end do
 !  print *, 'data: '
@@ -30,28 +30,41 @@ program spline_tester
   print *, 'proceed to allocate the spline...'
   sp1 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
 !  sp1 =>  new_spline_1D( data, NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
-!  sp2 =>  new_spline_1D( data, NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
-  sp2 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
+  sp2 =>  new_spline_1D( data, NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
+!  sp2 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
   
     print *, 'Contents of the spline 1:'
     print *, GET_SPLINE_DELTA(sp1)  
     print *, GET_SPLINE_XMIN(sp1)
     print *, GET_SPLINE_XMAX(sp1)
+    print *, sp1%delta
+    print *, sp1%rdelta
+    print *, sp1%bc_type
+    print *, sp1%c(:)
     print *, 'Contents of the spline 2:'
     print *, GET_SPLINE_DELTA(sp2)  
     print *, GET_SPLINE_XMIN(sp2)
     print *, GET_SPLINE_XMAX(sp2)
+    print *, sp2%delta
+    print *, sp2%rdelta
+    print *, sp2%bc_type
+    print *, sp2%c(:)
   print *, 'cumulative errors: '
+  print *, 'periodic case, NC points: '
   do i=1, NC
      accumulator1 = accumulator1 + abs(data(i) - &
           interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp1))
-     accumulator2 = accumulator2 + abs(data(i) - &
-          interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp2))
-     write (*,'(e20.12, e20.12)') accumulator1, accumulator2
-     !    print *, accumulator1
+
+     ! write (*,'(e20.12, e20.12)') accumulator1, accumulator2
+     print *, accumulator1
      !    print *, accumulator2
   end do
-
+  print *, 'hermite case, NC+1 points: '
+  do i=1, NC+1
+     accumulator2 = accumulator2 + abs(data(i) - &
+          interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp2))
+     print *, accumulator2
+  end do
   print *, 'Periodic case: '
   print *, 'average error at the nodes = '
   print *, accumulator1/real(NC,f64)

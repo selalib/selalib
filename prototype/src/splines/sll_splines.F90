@@ -37,9 +37,12 @@ contains  ! ****************************************************************
   ! that to expose this, we need to redefine these macros in the header file.
 #define PERIODIC_SPLINE 0
 #define HERMITE_SPLINE  1
-#define NATURAL_SPLINE  2
 
-
+  ! The number of points in the spline depends on the type of boundary
+  ! condition imposed:
+  ! PERIODIC: number of cells = NC, number of points = NC, the last point,
+  !           being the same as the first, is not stored.
+  ! HERMITE:  number of cells = NC, number of points = NC+1.
   function new_spline_1D( data, num_cells, xmin, xmax, bc_type )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_real64, dimension(:), intent(in), target :: data
@@ -48,6 +51,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
     sll_int32                            :: ierr
+    sll_int32                            :: num_points
     SLL_ALLOCATE( new_spline_1D, ierr )
     new_spline_1D%n_cells = num_cells
     new_spline_1D%xmin    = xmin
@@ -56,11 +60,22 @@ contains  ! ****************************************************************
     new_spline_1D%rdelta  = 1.0_f64/new_spline_1D%delta
     new_spline_1D%bc_type = bc_type
     new_spline_1D%data    => data
-    SLL_ALLOCATE( new_spline_1D%d(num_cells),   ierr )
+    select case (bc_type)
+    case (PERIODIC_SPLINE)
+       num_points = num_cells
+    case (HERMITE_SPLINE)
+       num_points = num_cells + 1
+    case default
+       ! FIXME, throw error
+       print *, 'new_spline_1D error: bc_type not recognized'
+    end select
+    SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
     ! note how the indexing of the coefficients array includes the end-
-    ! points 0, num_cells+1, num_cells+2. These are meant to store the 
-    ! boundary condition specific data.
-    SLL_ALLOCATE( new_spline_1D%c(0:num_cells+2), ierr )
+    ! points 0, num_cells+1, num_cells+2, num_cells+3. These are meant to 
+    ! store the boundary condition-specific data. The Hermite BC's contain
+    ! one extra point for the coefficients since this case includes the
+    ! last point.
+    SLL_ALLOCATE( new_spline_1D%c(0:num_cells+3), ierr )
     call compute_spline( data, num_cells, bc_type, new_spline_1D )
   end function new_spline_1D
 
@@ -114,9 +129,9 @@ contains  ! ****************************************************************
   !
   ! d1 =
   !
-  ! 1           b           b                       i  b  i
-  !---(f(x1) - ---f(xN) + (---)²*f(xN-1) + ... + (-1)(---) (f(xN-i+1)-bd(N-i)))
-  ! a           a           a                          a
+  ! 1           b           b  2                   i  b  i
+  !---(f(x1) - ---f(xN) + (---)*f(xN-1) + ... + (-1)(---) (f(xN-i+1)-bd(N-i)))
+  ! a           a           a                         a
   !
   ! The series converges (since a > b) and we can approximate the series
   ! by a partial sum:
@@ -155,7 +170,7 @@ contains  ! ****************************************************************
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
     sll_real64, parameter             :: ralpha = sqrt(6.0_f64/sqrt(3.0_f64))
-    sll_real64                        :: coeff_tmp   = 1.0_f64
+    sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64, dimension(:), pointer :: d
     d      => spline%d
@@ -165,6 +180,7 @@ contains  ! ****************************************************************
     ! Compute d(1):
 #define NUM_TERMS 27
     d1 =  f(1)
+    coeff_tmp = 1.0_f64
     select case (bc_type)
     case ( PERIODIC_SPLINE )
        do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, only f(nc) is considered.
@@ -185,10 +201,10 @@ contains  ! ****************************************************************
           d(i) = r_a*(f(i) - b*d(i-1))
        end do
     case ( HERMITE_SPLINE )
-       do i = 2,nc-1
+       do i = 2,nc
           d(i) = r_a*(f(i) - b*d(i-1))
        end do
-       d(nc) = ralpha*(0.5_f64*f(nc) - b*d(nc-1))
+       d(nc+1) = ralpha*(0.5_f64*f(nc+1) - b*d(nc))
     end select
     ! Compute the coefficients. Start with first term
     select case (bc_type)
@@ -205,8 +221,8 @@ contains  ! ****************************************************************
           coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
        end do
     case ( HERMITE_SPLINE )
-       coeffs(nc) = ralpha*d(nc)
-       do i = nc-1, 1, -1
+       coeffs(nc+1) = ralpha*d(nc+1)
+       do i = nc, 1, -1
           coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
        end do
     end select
@@ -218,8 +234,8 @@ contains  ! ****************************************************************
        coeffs(nc+2) = coeffs(2)
     case ( HERMITE_SPLINE )
        coeffs(0)    = coeffs(2)
-       coeffs(nc+1) = coeffs(nc-1)
-       coeffs(nc+2) = coeffs(nc-2)
+       coeffs(nc+2) = coeffs(nc)
+       coeffs(nc+3) = coeffs(nc-1)
     end select
     
     SLL_DEALLOCATE_ARRAY( d, err )
