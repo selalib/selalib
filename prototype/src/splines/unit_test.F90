@@ -16,6 +16,7 @@ program spline_tester
   type(sll_spline_1d), pointer :: sp2
   sll_real64, allocatable, dimension(:) :: data
   sll_real64 :: accumulator1, accumulator2
+
   accumulator1 = 0.0_f64
   accumulator2 = 0.0_f64
 
@@ -51,13 +52,11 @@ program spline_tester
     print *, sp2%c(:)
   print *, 'cumulative errors: '
   print *, 'periodic case, NC points: '
-  do i=1, NC
+  do i=1, NC+1
      accumulator1 = accumulator1 + abs(data(i) - &
           interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp1))
      print *, accumulator1
   end do
-  print *, 'difference at endpoints, 0 and NC+1:'
-  print *, interpolate_value(real(1,f64)*sll_pi/real(NC,f64),sp1) - interpolate_value(real(NC+1,f64)*sll_pi/real(NC,f64), sp1)
 
 
   print *, 'hermite case, NC+1 points: '
