@@ -5,44 +5,37 @@ module sll_splines
   use sll_tridiagonal
   implicit none
 
-  ! The sll_spline_1D provides the services:
-  ! - sll_initialize_spline_1d( array, 
-  !                             nc, 
-  !                             xmin, 
-  !                             xmax, 
-  !                             boundary_cond, 
-  !                             spline_obj )
-  ! - sll_delete_spline_1d(spline_ptr)
-  ! - 
-  ! The type should be an 'enumeration' especially if we do things with 
-  ! Fortran 2003
   type sll_spline_1D
      sll_int32                         :: n_cells  ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
      sll_real64                        :: xmin
      sll_real64                        :: xmax
-     sll_int32                         :: bc_type  ! natural, periodic
+     sll_int32                         :: bc_type  ! periodic, hermite
      sll_real64, dimension(:), pointer :: data     ! data for the spline fit
      sll_real64, dimension(:), pointer :: d        ! scratch space D (L*D = F),
-                                                   ! refer to algorithm below
+                                                   ! refer to algorithm below.
+                                                   ! Size depends on BC's.
      sll_real64, dimension(:), pointer :: c        ! the spline coefficients
   end type sll_spline_1D
-  
+
+  ! At all cost we want to avoid the use of obscure numeric flags to
+  ! induce some function behavior. Here we use a Fortran2003 feature, the
+  ! enumeration. It is thus possible to give descriptive names to flags,
+  ! instead of using some numeric code that one needs to look up somewhere.
+
+  enum, bind(C)
+     enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
+  end enum
   
 contains  ! ****************************************************************
 
-  ! Tentative, this should be done with some kind of enumeration, especially
-  ! if we are considering using F2003, the problem with the object macro is 
-  ! that to expose this, we need to redefine these macros in the header file.
-#define PERIODIC_SPLINE 0
-#define HERMITE_SPLINE  1
 
-  ! The number of points in the spline depends on the type of boundary
-  ! condition imposed:
-  ! PERIODIC: number of cells = NC, number of points = NC, the last point,
-  !           being the same as the first, is not stored.
-  ! HERMITE:  number of cells = NC, number of points = NC+1.
+  ! The array of spline coefficients has NC+4 elements. The extra elements
+  ! at the ends (i.e.: 0, NC+2, NC+3) store coefficients whose values are
+  ! determined by the type of boundary condition used. This is invisible
+  ! to the user, who should not be concerned with this implementation detail.
+
   function new_spline_1D( data, num_cells, xmin, xmax, bc_type )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_real64, dimension(:), intent(in), target :: data
@@ -72,11 +65,10 @@ contains  ! ****************************************************************
     SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
     ! note how the indexing of the coefficients array includes the end-
     ! points 0, num_cells+1, num_cells+2, num_cells+3. These are meant to 
-    ! store the boundary condition-specific data. The Hermite BC's contain
-    ! one extra point for the coefficients since this case includes the
-    ! last point.
+    ! store the boundary condition-specific data. The 'periodic' BC does
+    ! not use the num_cells+3 point.
     SLL_ALLOCATE( new_spline_1D%c(0:num_cells+3), ierr )
-    call compute_spline( data, num_cells, bc_type, new_spline_1D )
+    call compute_spline_1D( data, num_cells, bc_type, new_spline_1D )
   end function new_spline_1D
 
   ! - data: the array whose data must be fit with the cubic spline.
@@ -157,14 +149,73 @@ contains  ! ****************************************************************
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
 
-  subroutine compute_spline( f, nc, bc_type, spline )
+  subroutine compute_spline_1D( f, nc, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32,  intent(in)            :: nc
     sll_int32,  intent(in)            :: bc_type
     type(sll_spline_1D), pointer      :: spline
+
+    select case (bc_type)
+    case (PERIODIC_SPLINE)
+       call compute_spline_1D_periodic( f, nc, spline )
+    case (HERMITE_SPLINE)
+       call compute_spline_1D_hermite( f, nc, spline )
+    end select
+  end subroutine compute_spline_1D
+
+#define NUM_TERMS 27
+  subroutine compute_spline_1D_periodic( f, nc, spline )
+    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
+    sll_int32,  intent(in)            :: nc
+    type(sll_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: i
-    sll_int32                         :: err
+!    sll_int32                         :: err
+    sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
+    sll_real64, parameter             :: r_a = 1.0_f64/a
+    sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
+    sll_real64, parameter             :: b_a = b/a
+    sll_real64                        :: coeff_tmp
+    sll_real64                        :: d1
+    sll_real64, dimension(:), pointer :: d
+    d      => spline%d
+    coeffs => spline%c
+    ! Compute d(1):
+    d1 =  f(1)
+    coeff_tmp = 1.0_f64
+    do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, only f(nc) is considered.
+       coeff_tmp = coeff_tmp*(-b_a)
+       d1 = d1 + coeff_tmp*f(nc-i)
+    end do
+    ! Fill the d array with the intermediate result
+    d(1) = d1*r_a
+    do i = 2,nc
+       d(i) = r_a*(f(i) - b*d(i-1))
+    end do
+    ! Compute the coefficients. Start with first term
+    d1        = d(nc)
+    coeff_tmp = 1.0_f64
+    do i = 1, NUM_TERMS
+       coeff_tmp = coeff_tmp*(-b_a)
+       d1 = d1 + coeff_tmp*d(i)
+    end do
+    coeffs(nc) = d1*r_a
+    ! rest of the coefficients:
+    do i = nc-1, 1, -1
+       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+    end do
+    coeffs(0)    = coeffs(nc)
+    coeffs(nc+1) = coeffs(1)
+    coeffs(nc+2) = coeffs(2)
+    coeffs(nc+3) = coeffs(3)
+  end subroutine compute_spline_1D_periodic
+
+  subroutine compute_spline_1D_hermite( f, nc, spline )
+    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
+    sll_int32,  intent(in)            :: nc
+    type(sll_spline_1D), pointer      :: spline
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_int32                         :: i
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
@@ -175,71 +226,31 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: d
     d      => spline%d
     coeffs => spline%c
-    ! Try to coalesce the following case statements, the current form can be
-    ! confusing and has unnecessary branching.
     ! Compute d(1):
-#define NUM_TERMS 27
     d1 =  f(1)
     coeff_tmp = 1.0_f64
-    select case (bc_type)
-    case ( PERIODIC_SPLINE )
-       do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, only f(nc) is considered.
-          coeff_tmp = coeff_tmp*(-b_a)
-          d1 = d1 + coeff_tmp*f(nc-i)
-       end do
-    case ( HERMITE_SPLINE )
-       do i = 2, NUM_TERMS  ! if NUM_TERMS == 2, only f(2) is considered.
-          coeff_tmp = coeff_tmp*(-b_a)
-          d1 = d1 + coeff_tmp*f(i)
-       end do
-    end select
+    do i = 2, NUM_TERMS  ! if NUM_TERMS == 2, only f(2) is considered.
+       coeff_tmp = coeff_tmp*(-b_a)
+       d1 = d1 + coeff_tmp*f(i)
+    end do
     ! Fill the d array with the intermediate result
     d(1) = d1*r_a
-    select case (bc_type)
-    case ( PERIODIC_SPLINE )
-       do i = 2,nc
-          d(i) = r_a*(f(i) - b*d(i-1))
-       end do
-    case ( HERMITE_SPLINE )
-       do i = 2,nc
-          d(i) = r_a*(f(i) - b*d(i-1))
-       end do
-       d(nc+1) = ralpha*(0.5_f64*f(nc+1) - b*d(nc))
-    end select
+    do i = 2,nc
+       d(i) = r_a*(f(i) - b*d(i-1))
+    end do
+    d(nc+1) = ralpha*(0.5_f64*f(nc+1) - b*d(nc))
     ! Compute the coefficients. Start with first term
-    select case (bc_type)
-    case ( PERIODIC_SPLINE )
-       d1        = d(nc)
-       coeff_tmp = 1.0_f64
-       do i = 1, NUM_TERMS
-          coeff_tmp = coeff_tmp*(-b_a)
-          d1 = d1 + coeff_tmp*d(i)
-       end do
-       coeffs(nc) = d1*r_a
-       ! rest of the coefficients:
-       do i = nc-1, 1, -1
-          coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
-       end do
-    case ( HERMITE_SPLINE )
-       coeffs(nc+1) = ralpha*d(nc+1)
-       do i = nc, 1, -1
-          coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
-       end do
-    end select
-    
-    select case (bc_type)
-    case ( PERIODIC_SPLINE )
-       coeffs(0)    = coeffs(nc)
-       coeffs(nc+1) = coeffs(1)
-       coeffs(nc+2) = coeffs(2)
-    case ( HERMITE_SPLINE )
-       coeffs(0)    = coeffs(2)
-       coeffs(nc+2) = coeffs(nc)
-       coeffs(nc+3) = coeffs(nc-1)
-    end select
-    
-    SLL_DEALLOCATE_ARRAY( d, err )
-  end subroutine compute_spline
+    coeffs(nc+1) = ralpha*d(nc+1)
+    do i = nc, 1, -1
+       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+    end do
+    coeffs(0)    = coeffs(2)
+    coeffs(nc+2) = coeffs(nc)
+    coeffs(nc+3) = coeffs(nc-1)
+  end subroutine compute_spline_1D_hermite
+
+#undef NUM_TERMS
+
 
   ! Here we use the cubic B-spline centered at node 'i', supported on
   ! four cells, two on each side of node 'i':
@@ -361,7 +372,7 @@ contains  ! ****************************************************************
     ! Fixme: some error checking, whether the spline pointer is associated
     ! for instance
     SLL_ASSERT( associated(spline) )
-!    SLL_DEALLOCATE( spline%d, ierr )
+    SLL_DEALLOCATE( spline%d, ierr )
     SLL_DEALLOCATE( spline%c, ierr )
     spline%data => null()
     SLL_DEALLOCATE( spline, ierr )

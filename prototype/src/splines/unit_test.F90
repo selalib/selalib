@@ -1,11 +1,13 @@
 program spline_tester
 #include "sll_working_precision.h"
-#include "sll_splines.h"
+!#include "sll_splines.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+  use sll_splines
   use numeric_constants
   implicit none
   
+
 #define NC 32
 
   sll_int32 :: err
@@ -34,17 +36,15 @@ program spline_tester
 !  sp2 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
   
     print *, 'Contents of the spline 1:'
-    print *, GET_SPLINE_DELTA(sp1)  
-    print *, GET_SPLINE_XMIN(sp1)
-    print *, GET_SPLINE_XMAX(sp1)
+    print *, sp1%xmin
+    print *, sp1%xmax
     print *, sp1%delta
     print *, sp1%rdelta
     print *, sp1%bc_type
     print *, sp1%c(:)
     print *, 'Contents of the spline 2:'
-    print *, GET_SPLINE_DELTA(sp2)  
-    print *, GET_SPLINE_XMIN(sp2)
-    print *, GET_SPLINE_XMAX(sp2)
+    print *, sp2%xmin
+    print *, sp2%xmax
     print *, sp2%delta
     print *, sp2%rdelta
     print *, sp2%bc_type
@@ -54,11 +54,12 @@ program spline_tester
   do i=1, NC
      accumulator1 = accumulator1 + abs(data(i) - &
           interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp1))
-
-     ! write (*,'(e20.12, e20.12)') accumulator1, accumulator2
      print *, accumulator1
-     !    print *, accumulator2
   end do
+  print *, 'difference at endpoints, 0 and NC+1:'
+  print *, interpolate_value(real(1,f64)*sll_pi/real(NC,f64),sp1) - interpolate_value(real(NC+1,f64)*sll_pi/real(NC,f64), sp1)
+
+
   print *, 'hermite case, NC+1 points: '
   do i=1, NC+1
      accumulator2 = accumulator2 + abs(data(i) - &
