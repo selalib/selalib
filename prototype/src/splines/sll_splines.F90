@@ -30,6 +30,9 @@ module sll_splines
   
 contains  ! ****************************************************************
 
+  ! The following implementation embodies the algorithm described in
+  ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
+  ! a uniform grid" (unpublished).
 
   ! The array of spline coefficients has NC+4 elements. The extra elements
   ! at the ends (i.e.: 0, NC+2, NC+3) store coefficients whose values are
