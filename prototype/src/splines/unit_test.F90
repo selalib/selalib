@@ -1,6 +1,5 @@
 program spline_tester
 #include "sll_working_precision.h"
-!#include "sll_splines.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
   use sll_splines
@@ -28,28 +27,26 @@ program spline_tester
   do i=1,NC+1
     data(i) = sin((i-1)*sll_pi/real(NC,f64))
   end do
-!  print *, 'data: '
-!  print *, data(:)
+  !  print *, 'data: '
+  !  print *, data(:)
   print *, 'proceed to allocate the spline...'
   sp1 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
-!  sp1 =>  new_spline_1D( data, NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
-  sp2 =>  new_spline_1D( data, NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
-!  sp2 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
+  sp2 =>  new_spline_1D( data(1:(NC+1)), NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
   
-    print *, 'Contents of the spline 1:'
-    print *, sp1%xmin
-    print *, sp1%xmax
-    print *, sp1%delta
-    print *, sp1%rdelta
-    print *, sp1%bc_type
-    print *, sp1%c(:)
-    print *, 'Contents of the spline 2:'
-    print *, sp2%xmin
-    print *, sp2%xmax
-    print *, sp2%delta
-    print *, sp2%rdelta
-    print *, sp2%bc_type
-    print *, sp2%c(:)
+  print *, 'Contents of the spline 1:'
+  print *, sp1%xmin
+  print *, sp1%xmax
+  print *, sp1%delta
+  print *, sp1%rdelta
+  print *, sp1%bc_type
+  print *, sp1%c(:)
+  print *, 'Contents of the spline 2:'
+  print *, sp2%xmin
+  print *, sp2%xmax
+  print *, sp2%delta
+  print *, sp2%rdelta
+  print *, sp2%bc_type
+  print *, sp2%c(:)
   print *, 'cumulative errors: '
   print *, 'periodic case, NC points: '
   do i=1, NC+1

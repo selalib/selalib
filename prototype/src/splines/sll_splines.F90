@@ -330,7 +330,7 @@ contains  ! ****************************************************************
   ! as needed.
   function interpolate_value( x, spline )
     sll_real64                        :: interpolate_value
-    intrinsic                         :: int, real
+    intrinsic                         :: associated, int, real
     sll_real64, intent(in)            :: x
     type(sll_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer :: coeffs
@@ -348,6 +348,8 @@ contains  ! ****************************************************************
     sll_real64                        :: cip1 ! C_(i+1)
     sll_real64                        :: cip2 ! C_(i+2)
     sll_int32                         :: num_cells
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
     ! FIXME: arg checks here
     num_cells = spline%n_cells
     rh        = spline%rdelta
