@@ -7,7 +7,7 @@
 
 \title{Selalib Notes - DRAFT -}   
 \author{Edwin Chacon-Golcher}        
-\date{May, 2011}    
+\date{July, 2011}    
 \maketitle
 
 \begin{abstract}
@@ -17,7 +17,7 @@
 \end{abstract}
 
 \chapter{Introduction}             % chapter 1
-Selalib is the \emph{Se}mi-\emph{La}grangian \emph{Li}brary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semi-lagrangian approach. The present version of the top-level types and interfaces is the same as discussed in Selalib's project meeting in January 2011. 
+Selalib is the \emph{Se}mi-\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semi-lagrangian approach. The present version of the top-level types and interfaces is the same as discussed in Selalib's project meeting in January 2011. 
 
 Selalib is structured in layers. One can think about these layers as libraries in their own right. A given layer can use the capabilities offered by a lower layer through the exposed interface, but never from a higher level. The layer with the lowest level of abstraction presently contains basic utilities like memory allocators, assertions and basic numeric types. The second layer is composed of numerical and parallel utilities. The third and highest level of the library contains the semi-lagrangian methodology tools, types and methods. This manual will ultimately describe each of these layers.
 
@@ -65,6 +65,8 @@ alias & shorthand for... \\
 \verb+sll_real64+ & \verb+real(kind=f64)+ \\
 \verb+sll_int+  & \verb+integer(kind=user)+ \\
 \verb+sll_real+ & \verb+real(kind=user)+ \\
+\verb+sll_comp32+ & \verb+complex(kind=f32)+\\
+\verb+sll_comp64+ & \verb+complex(kind=f64)+\\
 \hline
 \end{tabular}
 \vspace{+0.5cm}
@@ -246,7 +248,8 @@ The following code snippet is an example of the use of the tridiagonal solver.
      SLL_ALLOCATE( ipiv(n), ierr )
      SLL_ALLOCATE( x(n), ierr )
      
-     ! initialize a(:) with the proper coefficients here... and then:
+     ! initialize a(:) with the proper coefficients here... 
+     and then:
      
      sll_setup_cyclic_tridiag( a, n, lu, ipiv )
      sll_solve_cyclic_tridiag( lu, ipiv, b, n, x )
@@ -264,28 +267,170 @@ the system would have been solved in-place.
 \subsection{Status}
 Unit-tested.
 
-\begin{comment}
 
 \section{Splines}
 \subsection{Description}
-
+The splines module provides capabilities for 1D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated is represented by a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data.
 \subsection{Exposed Interface}
 Fundamental type:
 \begin{verbatim}
      sll_spline_1d
 \end{verbatim}
+Like all the other fundamental types in Selalib, this type is declared as a pointer and only manipulated through the functions and subroutines described below. For more explicit examples, see the usage section.
+
+Available functions:
+\begin{verbatim}
+     new_spline_1D( data, num_cells, xmin, xmax, bc_type )
+\end{verbatim}
+\verb+new_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and its initialization. Hence the full creation of a spline is a two-step process. The first one is the declaration of the spline pointer, the second is its assignment through a call to the \verb+new_spline_1D()+ function. For details, see the usage section below. In this function:
+\begin{description}
+\item[data:] 
+The double precision floating point data array to be fitted.
+\item[num\_cells:] 
+The data array represents the values of a function at the nodes of a uniform 1D grid. \verb+num_cells+ represents the number of cells in this uniform grid. For periodic boundary conditions one may choose that the number of cells equals the number of data points in the array. In other words, for a data array with points indexed 1:NP, we can think that these data represent a grid with NP cells, and where the following point (NP+1) would be the same as point 1. In case of hermitian boundary conditions, a data array indexed 1:NP would correspond to a grid of size NP-1 cells, as both endpoints are included.
+\item[xmin:]
+Lower bound of the grid in which the data array is defined. In other words, if we think of the data array (indexed 1:NP) as the values of a discrete function \emph{f} defined over a sequence of $x_i$'s, then $x_1 = xmin$.
+\item[xmax:]
+Similarly to \verb+xmin+, \verb+xmax+ represents the maximum extent of the grid. Notice, however, that this is influenced by how one thinks of the data in the grid; for example, consider the case of periodic data defined over a grid of NC cells and indexed 1:NC (that is, the point NC+1 is the same as the point 1 and is not taken into account). In this case, $xmax = x_{NC+1}$. In such way that $xmin - xmax$ is really the period of the function. In the case of data indexed 1:NC+1, and hermitian boundary conditions, then $xmax = x_{NC+1}$, the location of the last point. 
+\item[bc\_type:]
+Descriptor of the type of boundary condition to be imposed in the spline. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+. These are really aliases to integer flags, but here we avoid the use of non-descriptive flags.
+\end{description}
+
+\begin{verbatim}
+     interpolate_value( x, spline )
+\end{verbatim}
+\verb+interpolate_value()+ returns the value of \emph{f(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and user-defined boundary conditions. Essentially, the spline object and the interpolate function create the illusion of having available a continuous function when originally, only discrete data were available.
+Available subroutines:
+\begin{verbatim}
+     compute_spline_1D( data, num_cells, bc_type, spline )
+\end{verbatim}
+\verb+compute_spline_1D()+ is responsible for actually computing the spline information (i.e.: the spline coefficients) when one does not wish to allocate a new object. This can be thought of a way to \emph{update} the spline coefficients of a given spline object. In this subroutine:
+\begin{description}
+\item[data:] 
+The double precision floating point data array to be fitted.
+\item[num\_cells:] 
+The number of cells of the grid that underlies the data array.
+\item[bc\_type:]
+Descriptor of the type of boundary condition to be imposed in the spline. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+. These are really aliases to integer flags, but here we avoid the use of non-descriptive flags.
+\item[spline:]
+A pointer to the spline object to be filled or updated.
+\end{description}
+
+\begin{verbatim}
+     compute_spline_1D_periodic( data, num_cells, spline )
+     compute_spline_1D_hermite ( data, num_cells, spline )
+\end{verbatim}
+These are subroutines are meant as an alternative interface to the services of \verb+compute_spline_1D()+, in which the required boundary condition is explicit in the name of the function. These functions are slightly faster in that the programmer is choosing the boundary condition, and thus a branch can be avoided in the former function.
+
+\begin{verbatim}
+     delete_spline_1D( spline )
+\end{verbatim}
+\verb+delete_spline_1D()+ is the spline destructor. Its use is important to avoid memory leaks. As usual, dummy arguments that refer to fundamental types (like spline) are pointers to such types.
+
 
 \subsection{Usage}
-\subsection{Status}
-In development. No testing done yet.
+The following example is an extract from the module's unit test.
+\begin{verbatim}
+1     program spline_tester
+2     #include "sll_working_precision.h"
+3     #include "sll_assert.h"
+4     #include "sll_memory.h"
+5       use sll_splines
+6       use numeric_constants
+7       implicit none
+8
+9     #define NC 32
+10
+11      sll_int32 :: err
+12      sll_int32 :: i
+13      type(sll_spline_1d), pointer :: sp1
+14      type(sll_spline_1d), pointer :: sp2
+15      sll_real64, allocatable, dimension(:) :: data
+16      sll_real64 :: accumulator1, accumulator2
+17
+18      accumulator1 = 0.0_f64
+19      accumulator2 = 0.0_f64
+20    
+21      SLL_ALLOCATE(data(NC+1), err)
+22 
+23      print *, 'initialize data array'
+24      do i=1,NC+1
+25        data(i) = sin((i-1)*sll_pi/real(NC,f64))
+26      end do
+27
+28      sp1 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
+29      sp2 =>  new_spline_1D( data(1:(NC+1)), NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
+30  
+31      print *, 'cumulative errors at nodes: '
+32      do i=1, NC+1
+33         accumulator1 = accumulator1 + abs(data(i) - &
+34              interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp1))
+35      end do
+36
+37      print *, 'hermite case: '
+38      do i=1, NC+1
+39         accumulator2 = accumulator2 + abs(data(i) - &
+40              interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp2))
+41      end do
+42      print *, 'Periodic case: '
+43      print *, 'average error at the nodes = '
+44      print *, accumulator1/real(NC,f64)
+45      call delete_spline_1D(sp1)
+46      if( accumulator1/real(NC,f64) < 1.0e-15 ) then 
+47         print *, 'PASSED TEST'
+48      else
+49         print *, 'FAILED TEST'
+50      end if
+51      print *, '**************************** '
+52      print *, 'Hermite case: '
+53      print *, 'average error at the nodes = '
+54      print *, accumulator2/real(NC,f64)
+55      call delete_spline_1D(sp2)
+56      if( accumulator2/real(NC,f64) < 1.0e-15 ) then 
+57         print *, 'PASSED TEST'
+58      else
+59         print *, 'FAILED TEST'
+60      end if
+61    end program spline_tester
+\end{verbatim}
 
+Here we do not go in detail over every line but only highlight those lines in which we interact with the splines module
+\begin{description}
+\item[Line 5:]
+Imports the spline module. The intent is to eventually not require this but to import a single module, say 'selalib' which will include all modules itself. For now, this is the way to include these individual capabilities.
+
+\item[Lines 13 - 14: ]
+Declaration of the spline pointers.
+
+\item[Lines 28 - 29:]
+Allocation and initialization of the splines. Note the \verb+=>+ pointer assignment syntax.
+
+\item[Lines 34, 40:]
+Value interpolation using the existing splines.
+
+\item[Lines 45, 55:]
+Destruction of spline objects.
+\end{description}
+
+In this example we do not show the use of the \verb+compute_spline_1D()+ functions. These are used though, albeit indirectly. For example, the initialization of a spline object uses the  \verb+compute_spline_1D()+ internally. We could have also at some point in the program made a direct call such as
+
+\begin{verbatim}
+     call compute_spline_1D( other_data, NC, PERIODIC_SPLINE, sp1 )
+\end{verbatim}
+and updated the contents of \verb+sp1+.
+
+\subsection{Status}
+Unit-tested.
+
+
+\begin{comment}
 \section{FFT}
 \subsection{Description}
 \subsection{Exposed Interface}
 \subsection{Usage}
 \subsection{Status}
-
 \end{comment}
+
 
 \section{Collective Communications}
 \subsection{Description}
