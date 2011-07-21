@@ -11,7 +11,7 @@
   ! and
   
 #define NUMP_X1    1
-#define NUMP_X2    8
+#define NUMP_X2    2
 #define NUMP_X3    1
   
   module sll_quasi_neutral_solver
@@ -43,8 +43,13 @@
                                                             ! direction
        real(f64), dimension(:), pointer :: xgauss, wgauss   ! Gauss points and 
                                                             ! weights
-       type(remap_plan_3D_t), pointer :: sequential_theta
-       type(remap_plan_3D_t), pointer :: sequential_r
+       ! The data is distributed in such a way that sequential 
+       ! algorithms can be used. The redistribution is made by the 
+       ! remapper utility. The QN plan includes the required information,
+       ! in terms of remap plans, to transform the data from one layout
+       ! to another.
+       type(remap_plan_3D_t), pointer :: seq_theta_to_seq_r
+       type(remap_plan_3D_t), pointer :: seq_r_to_seq_theta
     end type quasi_neutral_plan
     
     
@@ -97,7 +102,7 @@
       rmin                      = GET_MESH_RMIN(rtz_mesh)
       npr                       = GET_MESH_NCR(rtz_mesh)+1   ! num of points
       npt                       = GET_MESH_NCTHETA(rtz_mesh) ! periodic
-      npz                       = GET_MESH_NCZ(rtz_mesh)     ! periodic
+      npz                       = GET_MESH_NCZ(rtz_mesh)+1   ! num of points
       dr                        = GET_MESH_DELTA_R(rtz_mesh)
       dtheta                    = GET_MESH_DELTA_THETA(rtz_mesh)
       new_qn_plan%spline_degree = spline_degree
@@ -208,10 +213,16 @@
             end do
          end do
       end do
+#if 0
       print *, 'View limits. Sequential THETA'
       call sll_view_lims_3D(sequential_theta)
       print *, 'View limits. Sequential R'
       call sll_view_lims_3D(sequential_r)
+#endif
+      new_qn_plan%seq_theta_to_seq_r => &
+           NEW_REMAPPER_PLAN_3D(sequential_theta, sequential_r, rtz_mesh%data)
+      new_qn_plan%seq_r_to_seq_theta => &
+           NEW_REMAPPER_PLAN_3D(sequential_r, sequential_theta, rtz_mesh%data)
       ! POR AQUI!!!!
       ! allocate arrays
       SLL_ALLOCATE(new_qn_plan%Kar(spline_degree+1,npr+spline_degree-1),ierr)

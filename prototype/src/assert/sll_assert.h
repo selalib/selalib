@@ -26,8 +26,9 @@
     ! use this macro call within other macros. If the expansion yields 
     ! nothing (second case) then we don't want dangling semicolons...
 #ifdef DEBUG
-# define SLL_ASSERT(x) if ( .not. (x) ) \
-      call sll_assert( STRNG(x), __FILE__, __LINE__ );
+# define SLL_ASSERT(x) if ( .not. (x) ) then;          \
+      call sll_assert( STRNG(x), __FILE__, __LINE__ ); \
+   end if;
 #else
 # define SLL_ASSERT(x) 
 #endif
