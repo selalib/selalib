@@ -90,9 +90,12 @@ program test_quasi_neutral
   allocate(C(nr+k-1,ntheta))
   allocate(U(nr,ntheta))
   allocate(Uex(nr,ntheta))
-
+  ! Why is the initialization of the RHS outside of the QN solver? This
+  ! is intimately related with the chosen algorithm. The QN solver should 
+  ! only receive a 3D mesh with the charge density. Then the solver can do what
+  ! it wishes, build F, etc.
   ! initialize rhs
-  F(:,:) = 0.0
+  F(:,:) = 0.0   ! this should not be needed...
   nmode = 6
   ri = rmin
              
