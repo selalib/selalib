@@ -306,7 +306,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
             'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'
        stop 'new_remap_plan_3D'
     end if
-
+  
     col => get_layout_3D_collective(initial)
     my_rank  = sll_get_collective_rank( col )
     col_size = sll_get_collective_size( col )
@@ -324,7 +324,6 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     send_counter = 0
     disp_counter = 0
     ibox = get_layout_3D_box(initial, my_rank)
-
     new_remap_plan_3D%initial_layout => initial
     new_remap_plan_3D%final_layout   => final
     ! Find what data to send. 
@@ -1100,20 +1099,29 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     end if
   end function global_to_local_3D
 
-  subroutine sll_view_lims_3D( lims )
-    type(layout_3D_t), pointer :: lims
+  subroutine view_box_3D( b )
+    type(box_3D), intent(in) :: b
+    write(*,'(a,i4,a,i4,a,i4,a,i4,a,i4,a,i4,a)') &
+         '[  [', b%i_min,',', b%i_max,'], [', &
+                 b%j_min,',', b%j_max,'], [', &
+                 b%k_min,',', b%k_max,']  ]'
+  end subroutine view_box_3D
+
+  subroutine sll_view_lims_3D( layout )
+    type(layout_3D_t), pointer :: layout
     sll_int32                  :: i
     sll_int32                  :: sz
-    sz = sll_get_num_nodes( lims )
+    sz = sll_get_num_nodes( layout )
     print *, 'limits: '
     do i=0,sz-1
-       write(*,'(a,i4,a,i4,a,i4,a,i4,a,i4,a,i4,a)') &
-            '[  [', get_layout_i_min(lims,i),',',&
-                  get_layout_i_max(lims,i),'], [', &
-                  get_layout_j_min(lims,i),',',    &
-                  get_layout_j_max(lims,i),'], [', &
-                  get_layout_k_min(lims,i),',',    &
-                  get_layout_k_max(lims,i),']  ]'
+       call view_box_3D(get_layout_3D_box( layout, i ))
+!       write(*,'(a,i4,a,i4,a,i4,a,i4,a,i4,a,i4,a)') &
+!            '[  [', get_layout_i_min(lims,i),',',&
+!                  get_layout_i_max(lims,i),'], [', &
+!                  get_layout_j_min(lims,i),',',    &
+!                  get_layout_j_max(lims,i),'], [', &
+!                  get_layout_k_min(lims,i),',',    &
+!                  get_layout_k_max(lims,i),']  ]'
     end do
     call flush()
   end subroutine sll_view_lims_3D
