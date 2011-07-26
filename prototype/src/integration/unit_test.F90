@@ -8,10 +8,10 @@ program gauss_legendre_tester
   integer :: i
   do i=2,10
      write (*,'(a, i8, a, e20.12)') 'case n = ', i, ': ', &
-          gauss_legendre_integral_1D( test_func, 0.0_f64, sll_pi/2.0, i)
+          gauss_legendre_integrate_1D( test_func, 0.0_f64, sll_pi/2.0, i)
   end do
   print *, 'Exact value: '
-  print *,0.4674011002723395
+  write (*,'(e20.15)') 0.4674011002723395
 
 
 end program gauss_legendre_tester
