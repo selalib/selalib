@@ -16,6 +16,9 @@
 
 \end{abstract}
 
+
+\tableofcontents
+
 \chapter{Introduction}             % chapter 1
 Selalib is the \emph{Se}mi-\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semi-lagrangian approach. The present version of the top-level types and interfaces is the same as discussed in Selalib's project meeting in January 2011. 
 
@@ -75,6 +78,11 @@ alias & shorthand for... \\
 Where the kind type parameters \verb+i32+, \verb+i64+, \verb+f32+ and \verb+f64+ have been defined to give a representation that is at least the denoted size for a given number. \verb+user+ is available for a flexible kind type parameter. These kind type parameters can also be used to specify the precision of numerical constants in the usual Fortran way, i.e. \verb+3.14159265_f32+.
 
 \subsection{Usage}
+To use the module in a stand-alone way, use the line:
+\begin{verbatim}
+#include "sll_working_precision.h"
+\end{verbatim}
+
 The aliases are to be used like the native Fortran types that they are aliasing:
 
 \begin{verbatim}
@@ -133,6 +141,11 @@ In contrast with the native \verb+allocate()+, Selalib's allocators require that
 
 \subsection{Usage}
 
+To use the memory module in stand-alone fashion, use the line:
+\begin{verbatim}
+#include "sll_memory.h"
+\end{verbatim}
+An example of the use of the module is:
 \begin{verbatim}
      integer :: err
      real, dimension(:), allocatable :: a
@@ -168,6 +181,17 @@ Thus the condition to be checked must be cast in the form of a logical statement
 The assertions can be used liberally since they are controlled by a \verb+-DEBUG+ flag at compilation time. Absence of this flag will delete all calls to \verb+SLL_ASSERT()+ from the code. Hence, assertion conditions can be used during a debugging or testing phase without increasing the overhead in production code.
 
 \subsection{Usage}
+To use the \emph{assertions} module in a stand-alone way, use the line:
+\begin{verbatim}
+#include "sll_assert.h"
+\end{verbatim}
+However, all the following steps are necessary:
+
+\begin{enumerate}
+\item to make sure that the macros expand properly when using \textbf{gfortran}, include the compilation flag \verb+-DGFORTRAN+. This is to ensure that the assertion conditions can be properly converted into strings to be returned in case that an assertion is triggered,
+\item when using \textbf{gfortran}, use pass along the flag \verb+-ffree-line-length-none+ to prevent compilation error as some of the included macros may go beyond Fortrans 132 character limit,
+\item to activate the assertions, pass along the flag \verb+-DDEBUG+. If this flag is not present, the assertions will compile into nothing, which may be desirable after the code has been debugged.
+\end{enumerate}
 An example may be the checking of in-range indices on a protected array:
 
 \begin{verbatim}
@@ -236,6 +260,10 @@ The solution of a tridiagonal system, once the original array $A$ has been facto
 where \verb+lu+, \verb+ipiv+ are the arrays returned by \verb+sll_setup_cyclic_tridiag()+, \verb+b+ is the independent term in the original matrix equation, \verb+n+ is the system size and \verb+x+ is the array where the solution will be returned.
   
 \subsection{Usage}
+To use the module in a stand-alone way, include the line:
+\begin{verbatim}
+     use sll_tridiagonal
+\end{verbatim}
 The following code snippet is an example of the use of the tridiagonal solver.
 \begin{verbatim}
      sll_int32 :: n = 1000
@@ -329,6 +357,10 @@ These are subroutines are meant as an alternative interface to the services of \
 
 
 \subsection{Usage}
+To use the module in a stand-alone way, include the line:\
+\begin{verbatim}
+     use sll_splines
+\end{verbatim}
 The following example is an extract from the module's unit test.
 \begin{verbatim}
 1     program spline_tester
@@ -422,6 +454,52 @@ and updated the contents of \verb+sp1+.
 \subsection{Status}
 Unit-tested.
 
+\section{Gauss-Legendre Integrator}
+
+\subsection{Description}
+This is a low-level mathematical utility that applies the Gauss-Legendre method to compute numeric integrals.  This module aims at providing a single interface to the process of integrating a function on a given interval.
+
+\subsection{Exposed Interface}
+To integrate the function \verb+f(x)+ (real-valued and of a single, real-valued argument \verb+x+) over the interval $[a, b]$, the simplest way is through a function call such as:
+ \begin{verbatim}
+      gauss_legendre_integrate_1D(f, a, b, n)
+ \end{verbatim}
+In the function above, \verb+n+ represents the desired number of \emph{Gauss} points used in the calculation:
+\begin{equation}
+\int_{-1}^1f(x) \mathrm{d} x \approx \sum_{k=1}^n w_kf(x_k)
+\end{equation}
+
+Presently, the implementation accepts values of \verb+degree+ between $2$ and $10$ inclusively. The function \verb+gauss_legendre_integrate_1D+ internally does the proper scaling of the points to adjust the integral over the desired interval.
+
+The function \verb+gauss_legendre_integrate_1D+ is a generic interface and as such, it hides some alternative integrators, which are selected depending on the type of the passed arguments.  For instance, we have available the function
+\begin{verbatim}
+     gauss_legendre_integrate_interpolated_1D(f, spline, a, b, n)
+\end{verbatim} 
+which integrates a function represented by a spline object. The function \verb+f+ in this case is the spline interpolation function. It looks like this interface could be simplified and we could eliminate the first parameter and pass only the spline object. The only reason to leave the interpolation function as an argument is if we find some compelling reason to parametrize the interpolation function as well. 
+
+It will be necessary to implement other integrators for functions with a different signature, such as two- or three-parameter functions. It might also be necessary to distinguish between one-dimensional and two- or 3-dimensional integration. While this is not yet implemented, here we lay out some suggestions on how to proceed in such cases.
+
+For the class of integrals that are done in one-dimension, such as the above, the cleanest but somewhat more laborious approach appears to be to write a different integrator for every function signature that is needed. For instance, one may need to write specialized integrators for $f(x_1, x_2)$, $f(x_1, x_2, x_3)$ and so on, with the convention that the integral is carried out over, say, the first of the variables. The variables which are not integrated can be used as parameters. The alternative to this approach could be to write a single integrator that is able to receive multiple parameters, through the use of arrays or derived types, but the ugliness of this approach, and the need to basically write glue-code (pack/unpack the arrays or derived types with variables and parameters) every time one wants to integrate something are reasons to reject this approach.
+
+\subsection{Usage}
+As mentioned above, the name of the generic function that hides the specialized functions is \verb+gauss_legendre_integrate_1D+. The specialized functions can be individually called to avoid the overhead of the generic function call if desired. A one-dimensional function (user or Fortran) can be integrated by a call like:
+\begin{verbatim}
+     gauss_legendre_integral_1D( test_function, &
+                                 0.0_f64,       &
+                                 sll_pi/2.0,    &
+                                 4 )
+\end{verbatim}
+A function that is represented by an underlying spline object can be called like:
+\begin{verbatim}
+     gauss_legendre_integral_interpolated_1D( interpolate_value,&
+                                              sp1,              &
+                                              0.0_f64,          &
+                                              sll_pi,           &
+                                              4)
+\end{verbatim}
+where sp1 is a spline object. It should be decided if this last case is indeed that interface that is wished, or if something more simplified should be implemented intstead.
+\subsection{Status}
+Unit-tested.
 
 \begin{comment}
 \section{FFT}
@@ -485,6 +563,21 @@ which presently stand for specialized versions that operate on specific types. F
                                       col )
 \end{verbatim}
 \subsection{Usage}
+To use the module as stand-alone, include the line:
+\begin{verbatim}
+     use sll_collective
+\end{verbatim}
+Any use of the module's functionalities must be preceeded by calling
+\begin{verbatim}
+     call sll_boot_collective()
+\end{verbatim}
+and to "turn off" the parallel capabilities, one should finish by a call to:
+\begin{verbatim}
+     call sll_halt_collective()
+\end{verbatim}
+This \emph{booting} of the parallel environment needs to be done only once in a program.
+
+Some more specific examples are needed here...
 \subsection{Status}
 Several core functionalities tested, but no comprehensive unit test done yet
 
@@ -659,7 +752,10 @@ Finally, the way to execute the plan on a particular data set is through a call 
 \end{verbatim}
 
 \subsection{Usage}
-
+For use in stand-alone way, use the line:
+\begin{verbatim}
+#include "sll_remap.h"
+\end{verbatim}
 While verbose, the best way to demonstrate the usage of the remapper is with a complete program. Below it, we examine the different statements.
 
 \begin{verbatim}
