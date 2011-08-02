@@ -64,7 +64,13 @@ program test_quasi_neutral
   dr= Lr/(nr-1)
   ntheta = 128
   dtheta = 2*pi/ntheta 
-  rtz_mesh => new_mesh_cylindrical_3D(rmin, rmax, 0.0_f64, 0.0_f64, nr-1, ntheta, 0)
+  rtz_mesh => new_mesh_cylindrical_3D( rmin,    &
+                                       rmax,    &
+                                       0.0_f64, &
+                                       0.0_f64, &
+                                       nr-1,    &
+                                       ntheta,  &
+                                       0 )
   qn_plan => new_qn_plan( k, rtz_mesh )
   err = maxval(abs(qn_plan%mth-mth))
   if (err<eps) then
@@ -84,9 +90,12 @@ program test_quasi_neutral
   allocate(C(nr+k-1,ntheta))
   allocate(U(nr,ntheta))
   allocate(Uex(nr,ntheta))
-
+  ! Why is the initialization of the RHS outside of the QN solver? This
+  ! is intimately related with the chosen algorithm. The QN solver should 
+  ! only receive a 3D mesh with the charge density. Then the solver can do what
+  ! it wishes, build F, etc.
   ! initialize rhs
-  F(:,:) = 0.0
+  F(:,:) = 0.0   ! this should not be needed...
   nmode = 6
   ri = rmin
              
