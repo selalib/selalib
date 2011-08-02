@@ -2,7 +2,6 @@ module sll_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_tridiagonal
   implicit none
 
   type sll_spline_1D
