@@ -371,6 +371,73 @@ contains  ! ****************************************************************
     interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value
 
+  ! July 25, 2011: Tried to use the type-bound procedure approach
+  ! to write a one-parameter function like:
+  !
+  ! function interpolate_val( this, x)
+  !
+  ! which, being type-bound, could be called like:
+  !
+  ! spline_object%interpolate(x)
+  !
+  ! In principle, if the above would be recognized as the function signature
+  ! by the compiler, this could mean that the simple gauss_legendre-type 
+  ! integrator could be used to integrate the spline function.
+  ! This approach failed on various grounds:
+  ! gfortran still does not implement polymorphic types (class construct).
+  ! This is not a showstopper. However, upon implementing the type-bound
+  ! function and passing it to gauss_legendre_integral_1D(), I received an
+  ! error saying that the type-bound function was expected with arguments.
+  ! It could be that this can be fixed by setting the appropriate function
+  ! pointers, but at this moment I decided not to go through this and 
+  ! abandon this approach until it is truly important to have something like
+  ! this.
+  ! I leave this here for now but eventually this should be deleted.
+#if 0
+  function interpolate_val( this, x )
+    sll_real64                        :: interpolate_val
+    intrinsic                         :: associated, int, real
+    sll_real64, intent(in)            :: x
+    type(sll_spline_1D)               :: this ! class is not recognized...
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_real64                        :: rh   ! reciprocal of cell spacing
+    sll_int32                         :: cell
+    sll_real64                        :: dx
+    sll_real64                        :: cdx  ! 1-dx
+    sll_real64                        :: t0   ! temp/scratch variables ...
+    sll_real64                        :: t1
+    sll_real64                        :: t2
+    sll_real64                        :: t3
+    sll_real64                        :: t4
+    sll_real64                        :: cim1 ! C_(i-1)
+    sll_real64                        :: ci   ! C_i
+    sll_real64                        :: cip1 ! C_(i+1)
+    sll_real64                        :: cip2 ! C_(i+2)
+    sll_int32                         :: num_cells
+    SLL_ASSERT( (x .ge. this%xmin) .and. (x .le. this%xmax) )
+!    SLL_ASSERT( associated(this) )
+    ! FIXME: arg checks here
+    num_cells = this%n_cells
+    rh        = this%rdelta
+    coeffs    => this%c
+    ! find the cell and offset for x
+    t0        = x*rh
+    cell      = int(t0) + 1
+    dx        = t0 - real(cell-1)
+    cdx       = 1.0_f64 - dx
+    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    cim1      = coeffs(cell-1)
+    ci        = coeffs(cell)
+    cip1      = coeffs(cell+1)
+    cip2      = coeffs(cell+2)
+    t1        = 3.0_f64*ci
+    t3        = 3.0_f64*cip1
+    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    interpolate_val = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function interpolate_val
+#endif
+
   subroutine delete_spline_1D( spline )
     type(sll_spline_1D), pointer :: spline
     sll_int32                    :: ierr
