@@ -13,7 +13,7 @@ env = Environment(F90PATH = ['../memory','../precision','../assert','../utilitie
                   FORTRANMODDIRPREFIX= '-J', 
                   LIBPATH= ['.'],
                   LIBS=['sll_memory','sll_precision','sll_assert','sll_utilities', 'sll_constants'],
-                  F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f95', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+                  F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
 
 #env.Replace(	
 #		F90FLAGS = OPT+' -fpp',
@@ -25,4 +25,4 @@ env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
-env.Program('unit_test', ["unit_test.F90", "mesh_types.F90"])
+env.Program('unit_test', ["unit_test.F90", "sll_mesh_types.F90"])
