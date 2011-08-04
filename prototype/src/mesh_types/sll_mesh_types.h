@@ -2,7 +2,7 @@
 #define _mesh_types_h_
 
 #include "sll_assert.h"
-use sll_mesh_types
+  use sll_mesh_types
 ! Why this with macros? We explore hiding the access to an array behind a
 ! defined interface but at the same time we don't want to be penalized by
 ! function calls. Access functions like these are expected to live within
@@ -11,6 +11,23 @@ use sll_mesh_types
 ! represent any additional cost if the DEBUG flag is turned off.
 
 ! get macros
+#define GET_FIELD_X1_MIN( f )                f%descriptor%x1_min
+#define GET_FIELD_X1_MAX( f )                f%descriptor%x1_max
+#define GET_FIELD_NCELLS_X1( f )             f%descriptor%ncx1
+#define GET_FIELD_DELTA_X1( f )              f%descriptor%delta_x1
+
+! There are no SET_FIELD() macros since one is not supposed to set those 
+! values outside of the initialization.
+#define GET_FIELD_1D_VALUE_AT_I( f, index ) \
+     SLL_ASSERT( (index .ge. 1) .and. (index .le. f%descriptor%ncx1+1)) \
+     f%data(index)
+
+
+
+! The following macro should call some interpolation with splines or something
+#define GET_FIELD_1D_VALUE_AT_X( f, x )      
+#define SET_FIELD_1D_VALUE_AT_I( f, index, val )  f%data(index) = val
+
 #define GET_MESH_RMIN( m )        m%rmin
 #define GET_MESH_RMAX( m )        m%rmax
 #define GET_MESH_ZMIN( m )        m%zmin
