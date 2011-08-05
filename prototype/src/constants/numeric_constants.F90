@@ -1,5 +1,6 @@
 module numeric_constants
 #include "sll_working_precision.h"
+use sll_working_precision
   implicit none
 
 

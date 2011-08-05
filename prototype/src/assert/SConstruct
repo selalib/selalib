@@ -13,7 +13,7 @@ env = Environment(F90PATH = ['../memory','../precision'],
                   FORTRANMODDIRPREFIX= '-J', 
                   LIBPATH= ['.'],
                   LIBS=['sll_memory','sll_precision'],
-                  F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f95','-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+                  F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f2003','-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
 
 #env.Replace(	
 #		F90FLAGS = OPT+' -fpp',
