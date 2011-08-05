@@ -18,10 +18,13 @@
 
 ! There are no SET_FIELD() macros since one is not supposed to set those 
 ! values outside of the initialization.
-#define GET_FIELD_1D_VALUE_AT_I( f, index ) \
+#define FIELD_1D_AT_I( f, index ) \
      SLL_ASSERT( (index .ge. 1) .and. (index .le. f%descriptor%ncx1+1)) \
      f%data(index)
 
+! The intent of this macro is to pass all the data to functions that require it, eg FFT
+! It works for all types of fields
+#define FIELD_DATA(f)   f%data
 
 
 ! The following macro should call some interpolation with splines or something
