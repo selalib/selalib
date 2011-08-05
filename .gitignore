@@ -1,3 +1,5 @@
 *.[oa]
 *.mod
 *~
+.sconsign.dblite
+unit_test
