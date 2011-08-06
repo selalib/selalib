@@ -1,7 +1,7 @@
 module sll_misc_utils
 #include "sll_working_precision.h"
   implicit none
-  intrinsic :: selected_int_kind
+!  intrinsic :: selected_int_kind ! this line gives an error, why?
 
   ! Tentative implementation of a standard-compliant way to get the
   ! memory footprint of a variable. This is our yardstick...
@@ -25,7 +25,7 @@ module sll_misc_utils
   ! are needed to represent 'var'. The implications of this assumption
   ! need to be checked further.
 
-  integer, parameter :: k1 = selected_int_kind(0)
+  integer, parameter :: byte_size = selected_int_kind(0)
 
 contains
 
