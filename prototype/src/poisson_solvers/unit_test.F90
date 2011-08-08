@@ -29,17 +29,6 @@ use sll_poisson_1D_periodic
   ex       => new_field_1D_vec1( geomx )
   ex_exact => new_field_1D_vec1( geomx )
 
-!  sll_real64, dimension(:), pointer    :: rho  ! charge density
-!  sll_real64, dimension(:), pointer    :: ex ! electric field
-!  sll_real64, dimension(:), pointer    :: ex_exact ! exact electric field
-!    call new(geomx,x0,x1,nx,per,iflag)
-!  if (iflag.ne.0) stop 'erreur dans l initialisation de geomx'
-
-  ! allocation 
-!  SLL_ALLOCATE(rho(geomx%nx+2),iflag)
-!  SLL_ALLOCATE(ex(geomx%nx+2),iflag)
-!  SLL_ALLOCATE(ex_exact(geomx%nx),iflag)
-
   ! intialize Poisson solver
   call new(poiss1dp,ncx,iflag) 
 

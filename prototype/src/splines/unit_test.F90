@@ -39,9 +39,11 @@ program spline_tester
   !  print *, 'data: '
   !  print *, data(:)
   print *, 'proceed to allocate the spline...'
-  sp1 =>  new_spline_1D( data(1:NC), NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
-  sp2 =>  new_spline_1D( data(1:(NC+1)), NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
-  
+  sp1 =>  new_spline_1D( NC, 0.0_f64, sll_pi, PERIODIC_SPLINE )
+  call compute_spline_1D( data(1:NC), NC, PERIODIC_SPLINE, sp1 )
+  sp2 =>  new_spline_1D( NC, 0.0_f64, sll_pi, HERMITE_SPLINE )
+  call compute_spline_1D( data(1:NC+1), NC, HERMITE_SPLINE, sp2 )
+
   print *, 'Contents of the spline 1:'
   print *, sp1%xmin
   print *, sp1%xmax
