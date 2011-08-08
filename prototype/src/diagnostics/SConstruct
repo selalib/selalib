@@ -13,11 +13,11 @@ env = Environment(F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic',
                              '-std=f2003', '-ffree-line-length-none'],
                   CPPDEFINES=['GFORTRAN'],
                   F90PATH=['../precision','../memory','../assert',
-                           '../splines','../precision','/usr/local/include'],
-                  LIBPATH=['.','/usr/local/lib'],
+                           '../splines','../precision','/usr/local/include','/usr/local/hdf5/include'],
+                  LIBPATH=['.','/usr/local/lib', '/usr/local/hdf5/lib'],
                   LIBS=['sll_splines','sll_memory','sll_precision',
                         'sll_assertion','sll_constants','sll_integration',
-                        'sll_diagnostics','hdf5_fortran', 'hdf5'])
+                        'sll_diagnostics','hdf5_fortran', 'hdf5','z'])
 
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
@@ -25,8 +25,8 @@ env.Library('sll_memory',     ["../memory/sll_memory.F90"])
 env.Library('sll_splines',    ["../splines/sll_splines.F90"])
 env.Library('sll_integration',["../integration/gauss_legendre.F90"])
 env.Library('sll_constants',  ["../constants/numeric_constants.F90"])
-env.Library('sll_diagnostics',["sll_diagnostics.F90","write_xdmf_xml.c"])
-env.Program('unit_test', ["unit_test.F90"])
+env.Library('sll_diagnostics',["sll_diagnostics.F90"])
+env.Program('unit_test', ["unit_test.F90","write_xdmf_xml.c"])
 
 #sll_integration library requires  sll_splines module
 #sll_integration library depends on  sll_working_precision.h

@@ -38,9 +38,9 @@ contains  ! ****************************************************************
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
 
-  function new_spline_1D( data, num_cells, xmin, xmax, bc_type )
+  function new_spline_1D( num_cells, xmin, xmax, bc_type )
     type(sll_spline_1D), pointer         :: new_spline_1D
-    sll_real64, dimension(:), intent(in), target :: data
+    !sll_real64, dimension(:), intent(in), target :: data
     sll_int32,  intent(in)               :: num_cells
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -54,7 +54,7 @@ contains  ! ****************************************************************
     new_spline_1D%delta   = (xmax - xmin)/real(num_cells,f64)
     new_spline_1D%rdelta  = 1.0_f64/new_spline_1D%delta
     new_spline_1D%bc_type = bc_type
-    new_spline_1D%data    => data
+    !new_spline_1D%data    => data
     select case (bc_type)
     case (PERIODIC_SPLINE)
        num_points = num_cells
@@ -70,7 +70,7 @@ contains  ! ****************************************************************
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_cells+3 point.
     SLL_ALLOCATE( new_spline_1D%c(0:num_cells+3), ierr )
-    call compute_spline_1D( data, num_cells, bc_type, new_spline_1D )
+    !call compute_spline_1D( data, num_cells, bc_type, new_spline_1D )
   end function new_spline_1D
 
   ! - data: the array whose data must be fit with the cubic spline.

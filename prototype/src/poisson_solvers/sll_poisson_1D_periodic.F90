@@ -50,7 +50,11 @@ contains
     sll_int32                                 :: i, ik
     sll_int32                                 :: nxh1
     sll_real64                                :: mesh_length, kx0, kx, k2
-    !sll_real64, dimension(this%geomx%nx+1)   :: rhoaux
+
+    ! Check that ex and rho are both associated to the same mesh with the right number of cells 
+    ! that has been initialized in new_poisson1dp
+    SLL_ASSERT(associated(ex%descriptor,target=rho%descriptor))
+    SLL_ASSERT( GET_FIELD_NCELLS_X1( rho ) == this%ncx )
 
     ! copy rho into auxiliary array for fftpack
     this%rho(1:this%ncx+1) = FIELD_DATA(rho) 

@@ -1,0 +1,29 @@
+# SCons file for the unit test of the cylindrical mesh type
+import os
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+env = Environment(F90PATH = ['../memory','../precision','../assert','../utilities','../constants','../mesh_types',
+                             '../splines','../poisson_solvers'],
+                  FORTRANMODDIRPREFIX= '-J', 
+                  LIBPATH= ['.'],
+                  LIBS=['sll_memory','sll_precision','sll_assert','sll_utilities', 'sll_constants','sll_mesh_types',
+                        'sll_splines','sll_poisson_solvers'],
+                  F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+
+
+env.Library('sll_memory',["../memory/sll_memory.F90"])
+env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+env.Library('sll_assert', ["../assert/sll_assert.F90"])
+env.Library('sll_poisson_solvers',["../poisson_solvers/sll_poisson_1D_periodic.F90"])
+env.Library('sll_splines', ["../splines/sll_splines.F90"])
+env.Library('sll_constants', ["../constants/numeric_constants.F90"])
+env.Library('sll_utilities',["../utilities/misc_utils.F90"])
+env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90"])
+env.Program('unit_test', ["unit_test.F90", "sll_advection_field.F90"])
