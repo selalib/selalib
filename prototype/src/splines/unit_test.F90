@@ -19,7 +19,9 @@ program spline_tester
   sll_int32 :: i
   type(sll_spline_1d), pointer :: sp1
   type(sll_spline_1d), pointer :: sp2
+  sll_real64                   :: phase
   sll_real64, allocatable, dimension(:) :: data
+  sll_real64, allocatable, dimension(:) :: coordinates
   sll_real64, allocatable, dimension(:) :: out
   sll_real64 :: accumulator1, accumulator2, accumulator3, accumulator4
 
@@ -31,10 +33,12 @@ program spline_tester
   print *, 'allocate data array'
   SLL_ALLOCATE(data(NC+1), err)
   SLL_ALLOCATE(out(NC+1), err)
-  
-  print *, 'initialize data array'
+  SLL_ALLOCATE(coordinates(NC+1), err)
+  print *, 'initialize data and coordinates array'
   do i=1,NC+1
-    data(i) = sin((i-1)*sll_pi/real(NC,f64))
+     phase          = real(i-1,f64)*sll_pi/real(NC,f64)
+     data(i)        = sin(phase)
+     coordinates(i) = phase
   end do
   !  print *, 'data: '
   !  print *, data(:)
@@ -69,7 +73,7 @@ program spline_tester
           'point: ', i, ', cumulative err = ',accumulator1
   end do
   print *, 'interpolating the whole array:'
-  call interpolate_array_values(data, out, NC+1, sp1)
+  call interpolate_array_values(coordinates, out, NC+1, sp1)
   do i=1, NC+1
      accumulator3 = accumulator3 + abs(data(i) - out(i))
      write (*, '(a, i8, a, e20.12)') &
@@ -84,7 +88,7 @@ program spline_tester
      write (*, '(a, i8, a, e20.12)') &
           'point: ', i, ', cumulative err = ',accumulator2
   end do
-  call interpolate_array_values(data, out, NC+1, sp2)
+  call interpolate_array_values(coordinates, out, NC+1, sp2)
   do i=1, NC+1
      accumulator4 = accumulator4 + abs(data(i) - out(i))
      write (*, '(a, i8, a, e20.12)') &
