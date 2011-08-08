@@ -11,6 +11,7 @@ program unit_test
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: m2D_descriptor
   type(sll_distribution_function_2D_t), pointer :: dist_func
+  character(32)  :: name = 'ions'
 
   print*, 'checking initialization of distribution_function'
   nc_eta1 = 64
@@ -23,7 +24,7 @@ program unit_test
   geom => new_geometry_2D ()
   m2D_descriptor => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
        PERIODIC, eta2_min, eta2_max, nc_eta2, COMPACT, geom)
-  dist_func => sll_new_distribution_function_2D(m2D_descriptor)
+  dist_func => sll_new_distribution_function_2D(m2D_descriptor,name)
   delta_eta1 = get_df_delta_eta1 ( dist_func )
   delta_eta2 = get_df_delta_eta2 ( dist_func )
   call sll_init_distribution_function_2D( dist_func, LANDAU )
