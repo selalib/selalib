@@ -70,11 +70,11 @@ use sll_memory
   call test_error_code(error_var, 'Failed array deallocation: ', __FILE__, \
   __LINE__ ); 
 
-#define SLL_INIT_ARRAY(arry,val) arry = merge(val, 0, .true.);
+#define SLL_INIT_ARRAY(arry,val) arry = val;
 
 #define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
   SLL_ALLOCATE(arry_name_and_lims, error_var)             \
-  SLL_INIT_ARRAY(arry_name_and_lims, 0) 
+  SLL_INIT_ARRAY(arry_name_and_lims, 0.0) 
 
   ! **************************************************************************
   ! IMPLEMENTATION NOTES FOR sll_memory.h:

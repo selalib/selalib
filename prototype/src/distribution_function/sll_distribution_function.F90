@@ -5,13 +5,16 @@ module distribution_function
 #include "sll_mesh_types.h"
 
   use numeric_constants
+  use sll_misc_utils   ! for int2string
   use advection_field
   use sll_splines
   implicit none
 
   type sll_distribution_function_2D_t
      type(field_2D_vec1), pointer :: field
-     sll_real64 :: pcharge, pmass
+     sll_real64      :: pcharge, pmass
+     sll_int32       :: plot_counter
+     character(32)   :: name
   end type sll_distribution_function_2D_t
 
   enum, bind(C)
@@ -20,10 +23,11 @@ end enum
 
 contains
   ! intializes some 2D distribution_functions
-  function sll_new_distribution_function_2D( mesh_descriptor ) 
+  function sll_new_distribution_function_2D( mesh_descriptor, name ) 
     type(sll_distribution_function_2D_t), pointer :: &
          sll_new_distribution_function_2D
     type(mesh_descriptor_2D), pointer :: mesh_descriptor
+    character(32)   :: name
     sll_int32                         :: ierr
     SLL_ASSERT(associated(mesh_descriptor))
     SLL_ALLOCATE(sll_new_distribution_function_2D, ierr)
@@ -31,6 +35,8 @@ contains
          new_field_2D_vec1( mesh_descriptor )
     sll_new_distribution_function_2D%pcharge = 1.0_f64
     sll_new_distribution_function_2D%pmass = 1.0_f64
+    sll_new_distribution_function_2D%plot_counter = 0
+    sll_new_distribution_function_2D%name = name
   end function sll_new_distribution_function_2D
   subroutine sll_delete_distribution_function( f )
     type(sll_distribution_function_2D_t), pointer      :: f
@@ -90,10 +96,10 @@ contains
        eps=0.0_f64
        kx=2*sll_pi/(nc_eta1*delta_eta1)
        do i2 = 1, nc_eta2 + 1
-          vx = eta2_min + (i2-1) * delta_eta2
+          vx = eta2_min + (i2-0.5_f64) * delta_eta2
           v2 = vx*vx
           do i1 = 1, nc_eta1+1
-             x = eta1_min + (i1-1) * delta_eta1
+             x = eta1_min + (i1-0.5_f64) * delta_eta1
              x2 = x * x
              fval = ( 1 + eps * cos(kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*v2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
@@ -106,10 +112,10 @@ contains
        v0 = 2.4_f64
        kx = 2 * sll_pi / (nc_eta1 * delta_eta1)
        do i2 = 1, nc_eta2+1
-          vx = eta2_min + (i2-1) * delta_eta2
+          vx = eta2_min + (i2-0.5_f64) * delta_eta2
           v2 = vx*vx
           do i1=1, nc_eta1 + 1
-             x = eta1_min + (i1-1) * delta_eta1
+             x = eta1_min + (i1-0.5_f64) * delta_eta1
              x2 = x * x   
              fval=(1+eps*((cos(2*kx*x)+cos(3*kx*x))/1.2_f64+cos(kx*x)))* &
                   (1/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*(1+.5_f64*v2/(1-xi))*exp(-.5_f64*v2)
@@ -126,10 +132,10 @@ contains
        xoffset = 1.0
        vxoffset = 1.0
        do i2 = 1, nc_eta2 + 1
-          vx = eta2_min + (i2-1) * delta_eta2
+          vx = eta2_min + (i2-0.5_f64) * delta_eta2
           v2 = (vx - vxoffset )**2
           do i1 = 1, nc_eta1+1
-             x = eta1_min + (i1-1) * delta_eta1
+             x = eta1_min + (i1-0.5_f64) * delta_eta1
              x2 = (x - xoffset )**2
              fval = exp(-0.5_f64*(x2+v2))
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
@@ -140,7 +146,14 @@ contains
 
   subroutine write_distribution_function ( f )
     type(sll_distribution_function_2D_t), pointer      :: f
-    call write_field_2d_vec1 ( f%field )
+    character(len=4) :: counter
+    character(64) :: name
+    call int2string(f%plot_counter,counter)
+    name = trim(f%name)//counter
+!    print*,'write_distribution_function ', counter,' ', f%name, ' ', name
+!    print*, ' '
+    call write_field_2d_vec1 ( f%field, name )
+    f%plot_counter = f%plot_counter + 1
   end subroutine write_distribution_function
 
 

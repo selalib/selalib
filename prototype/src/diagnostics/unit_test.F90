@@ -38,10 +38,13 @@ program diagnostics_tester
   do j = 1, nv-1
      do i = 1, nx-1
         f(i,j) = i*sin(float(j-1))
+        f(i,j) = i*sin(float(j-1))
      end do
   end do
  
-  call write_fxv( f, x, v)
+  call write_vec1d( f, nx, nv, "vec1d", "mesh")
+  call write_vec2d( x, v, nx, nv, "vec2d", "mesh")
+  call write_mesh(x, v, nx, nv, "mesh")
 
   call write_hdf5_data()
 
