@@ -370,6 +370,56 @@ contains  ! ****************************************************************
     interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value
 
+  subroutine interpolate_array_values( a_in, a_out, n, spline )
+    intrinsic                               :: associated, int, real
+    sll_int32, intent(in)                   :: n
+    sll_real64, dimension(1:n), intent(in)  :: a_in
+    sll_real64, dimension(1:n), intent(out) :: a_out
+    type(sll_spline_1D), pointer            :: spline
+    sll_real64, dimension(:), pointer       :: coeffs
+    sll_real64                              :: rh   ! reciprocal of cell spacing
+    sll_int32                               :: cell
+    sll_real64                              :: dx
+    sll_real64                              :: cdx  ! 1-dx
+    sll_real64                              :: t0   ! temp/scratch variables ...
+    sll_real64                              :: t1
+    sll_real64                              :: t2
+    sll_real64                              :: t3
+    sll_real64                              :: t4
+    sll_real64                              :: cim1 ! C_(i-1)
+    sll_real64                              :: ci   ! C_i
+    sll_real64                              :: cip1 ! C_(i+1)
+    sll_real64                              :: cip2 ! C_(i+2)
+    sll_int32                               :: num_cells
+    sll_real64                              :: x
+    sll_int32                               :: i
+    SLL_ASSERT( associated(spline) )
+    ! FIXME: arg checks here
+    num_cells = spline%n_cells
+    rh        = spline%rdelta
+    coeffs    => spline%c
+    ! find the cell and offset for x
+    do i=1,n
+       x        = a_in(i)
+       SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+       t0       = x*rh
+       cell     = int(t0) + 1
+       dx       = t0 - real(cell-1)
+       cdx      = 1.0_f64 - dx
+       !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+       cim1     = coeffs(cell-1)
+       ci       = coeffs(cell)
+       cip1     = coeffs(cell+1)
+       cip2     = coeffs(cell+2)
+       t1       = 3.0_f64*ci
+       t3       = 3.0_f64*cip1
+       t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+       t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+       a_out(i) = (1.0_f64/6.0_f64)*(t2 + t4)
+    end do
+  end subroutine interpolate_array_values
+
+
   ! July 25, 2011: Tried to use the type-bound procedure approach
   ! to write a one-parameter function like:
   !

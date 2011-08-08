@@ -20,14 +20,17 @@ program spline_tester
   type(sll_spline_1d), pointer :: sp1
   type(sll_spline_1d), pointer :: sp2
   sll_real64, allocatable, dimension(:) :: data
-  sll_real64 :: accumulator1, accumulator2
+  sll_real64, allocatable, dimension(:) :: out
+  sll_real64 :: accumulator1, accumulator2, accumulator3, accumulator4
 
   accumulator1 = 0.0_f64
   accumulator2 = 0.0_f64
-
+  accumulator3 = 0.0_f64
+  accumulator4 = 0.0_f64
   print *, 'Spline module unit tester'
   print *, 'allocate data array'
   SLL_ALLOCATE(data(NC+1), err)
+  SLL_ALLOCATE(out(NC+1), err)
   
   print *, 'initialize data array'
   do i=1,NC+1
@@ -55,24 +58,43 @@ program spline_tester
   print *, sp2%c(:)
   print *, 'cumulative errors: '
   print *, 'periodic case, NC points: '
+  print *, 'interpolating individual values:'
   do i=1, NC+1
      accumulator1 = accumulator1 + abs(data(i) - &
           interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp1))
 !         sp1%interpolate(real(i-1,f64)*sll_pi/real(NC,f64)))
-     print *, accumulator1
+     write (*, '(a, i8, a, e20.12)') &
+          'point: ', i, ', cumulative err = ',accumulator1
   end do
-
+  print *, 'interpolating the whole array:'
+  call interpolate_array_values(data, out, NC+1, sp1)
+  do i=1, NC+1
+     accumulator3 = accumulator3 + abs(data(i) - out(i))
+     write (*, '(a, i8, a, e20.12)') &
+          'point: ', i, ', cumulative err = ',accumulator3
+  end do
 
   print *, 'hermite case, NC+1 points: '
   do i=1, NC+1
      accumulator2 = accumulator2 + abs(data(i) - &
           interpolate_value(real(i-1,f64)*sll_pi/real(NC,f64), sp2))
 !          sp2%interpolate(real(i-1,f64)*sll_pi/real(NC,f64)))
-     print *, accumulator2
+     write (*, '(a, i8, a, e20.12)') &
+          'point: ', i, ', cumulative err = ',accumulator2
   end do
+  call interpolate_array_values(data, out, NC+1, sp2)
+  do i=1, NC+1
+     accumulator4 = accumulator4 + abs(data(i) - out(i))
+     write (*, '(a, i8, a, e20.12)') &
+          'point: ', i, ', cumulative err = ',accumulator4
+  end do
+  print *, '----------------------------------------------------'
+  print *, 'RESULTS: '
   print *, 'Periodic case: '
-  print *, 'average error at the nodes = '
+  print *, 'average error at the nodes (single values) = '
   print *, accumulator1/real(NC,f64)
+  print *, 'average error at the nodes (whole array) = '
+  print *, accumulator3/real(NC,f64)
   write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
   write (*,'(a,f20.15)') &
        'interpolated        = ', interpolate_value( 0.0_f64,sp1)
@@ -88,7 +110,8 @@ program spline_tester
   print *, 'spline coefficients: '
   print *, sp1%c(:)
   call delete_spline_1D(sp1)
-  if( accumulator1/real(NC,f64) < 1.0e-15 ) then 
+  if( (accumulator1/real(NC,f64) < 1.0e-15) .and. &
+      (accumulator3/real(NC,f64) < 1.0e-15) ) then 
      print *, 'PASSED TEST'
   else
      print *, 'FAILED TEST'
@@ -106,7 +129,8 @@ program spline_tester
   print *, 'spline coefficients: '
   print *, sp2%c(:)
   call delete_spline_1D(sp2)
-  if( accumulator2/real(NC,f64) < 1.0e-15 ) then 
+  if( (accumulator2/real(NC,f64) < 1.0e-15) .and. &
+      (accumulator4/real(NC,f64) < 1.0e-15) ) then 
      print *, 'PASSED TEST'
   else
      print *, 'FAILED TEST'
