@@ -11,16 +11,25 @@
 ! represent any additional cost if the DEBUG flag is turned off.
 
 ! get macros
-#define GET_FIELD_X1_MIN( f )                f%descriptor%x1_min
-#define GET_FIELD_X1_MAX( f )                f%descriptor%x1_max
-#define GET_FIELD_NCELLS_X1( f )             f%descriptor%ncx1
-#define GET_FIELD_DELTA_X1( f )              f%descriptor%delta_x1
+#define GET_FIELD_ETA1_MIN( f )                f%descriptor%eta1_min
+#define GET_FIELD_ETA1_MAX( f )                f%descriptor%eta1_max
+#define GET_FIELD_NC_ETA1( f )             f%descriptor%nc_eta1
+#define GET_FIELD_DELTA_ETA1( f )              f%descriptor%delta_eta1
+#define GET_FIELD_ETA2_MIN( f )                f%descriptor%eta2_min
+#define GET_FIELD_ETA2_MAX( f )                f%descriptor%eta2_max
+#define GET_FIELD_NC_ETA2( f )             f%descriptor%nc_eta2
+#define GET_FIELD_DELTA_ETA2( f )              f%descriptor%delta_eta2
 
 ! There are no SET_FIELD() macros since one is not supposed to set those 
 ! values outside of the initialization.
 #define FIELD_1D_AT_I( f, index ) \
-     SLL_ASSERT( (index .ge. 1) .and. (index .le. f%descriptor%ncx1+1)) \
      f%data(index)
+#define FIELD_2D_AT_I( f, index1, index2 ) \
+     f%data(index1,index2)
+#define FIELD_2D_AT_I_V1( f, index1, index2 ) \
+     f%data(index1,index2)%v1
+#define FIELD_2D_AT_I_V2( f, index1, index2 ) \
+     f%data(index1,index2)%v2
 
 ! The intent of this macro is to pass all the data to functions that require it, eg FFT
 ! It works for all types of fields
