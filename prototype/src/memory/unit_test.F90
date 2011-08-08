@@ -8,6 +8,7 @@ program memory_tester
   integer :: i, j, k
   real, dimension(:), pointer :: a=>null()
   real, dimension(:,:,:), pointer :: b=>null()
+  real, dimension(:), allocatable :: c
 !  integer, dimension(:), pointer :: ai=>null()
 
   print *, "Memory allocator testing program"
@@ -24,6 +25,15 @@ program memory_tester
   SLL_INIT_ARRAY(b,0)
   print *, 'array after clearing:'
   print *, b(:,:,:)
+  print *, 'allocate and initialize to zero a large array'
+  SLL_CLEAR_ALLOCATE(c(100000000),err)
+  do i=1,size(c)
+     if (c(i) .ne. 0.0) then
+        print *, 'non zero value found in cleared array. ERROR!'
+        stop
+     end if
+  end do
+  print *, 'successful call to SLL_CLEAR_ALLOCATE'
 ! turn the following on to test the deallocator
 #if 0 
   print *, 'Deallocate an unitialized pointer (i.e. force a crash)'
