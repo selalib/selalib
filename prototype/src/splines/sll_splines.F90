@@ -180,6 +180,11 @@ contains  ! ****************************************************************
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64, dimension(:), pointer :: d
+ ! CHECK INPUT, nc is redundant, change interface
+    SLL_ASSERT(nc == spline%n_cells)
+    SLL_ASSERT(associated(spline))
+    SLL_ASSERT(size(f) >= spline%n_cells)
+    
     d      => spline%d
     coeffs => spline%c
     ! Compute d(1):
@@ -226,6 +231,8 @@ contains  ! ****************************************************************
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64, dimension(:), pointer :: d
+
+    ! CHECK INPUT, nc is redundant, change interface, see periodic
     d      => spline%d
     coeffs => spline%c
     ! Compute d(1):
@@ -402,7 +409,7 @@ contains  ! ****************************************************************
     do i=1,n
        x        = a_in(i)
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-       t0       = x*rh
+       t0       = (x-spline%xmin)*rh
        cell     = int(t0) + 1
        dx       = t0 - real(cell-1)
        cdx      = 1.0_f64 - dx
@@ -416,6 +423,7 @@ contains  ! ****************************************************************
        t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
        t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
        a_out(i) = (1.0_f64/6.0_f64)*(t2 + t4)
+       !print*,'interpolate_array_values', i, a_out(i)
     end do
   end subroutine interpolate_array_values
 

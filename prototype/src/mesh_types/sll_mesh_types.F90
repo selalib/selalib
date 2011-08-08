@@ -244,6 +244,29 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(f2Dv1, ierr)
   end subroutine delete_field_2D_vec1
 
+  function new_field_2D_vec2( mesh_descriptor )
+    type(field_2D_vec2), pointer      :: new_field_2D_vec2
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor
+    sll_int32                         :: ierr
+    SLL_ASSERT(associated(mesh_descriptor))
+    SLL_ALLOCATE(new_field_2D_vec2, ierr)
+    new_field_2D_vec2%descriptor => mesh_descriptor
+    SLL_ALLOCATE(new_field_2D_vec2%data(1:mesh_descriptor%nc_eta1+1,1:mesh_descriptor%nc_eta2+1),ierr)
+  end function new_field_2D_vec2
+
+  subroutine delete_field_2D_vec2( f2Dv2 )
+    type(field_2D_vec2), pointer :: f2Dv2
+    sll_int32                    :: ierr
+    if( .not. (associated(f2Dv2))) then
+       write (*,'(a)') 'ERROR: delete_field_1D_vec1(), not associated argument.'
+       STOP
+    end if
+    nullify(f2Dv2%descriptor)
+    SLL_DEALLOCATE(f2Dv2%data, ierr)
+    SLL_DEALLOCATE(f2Dv2, ierr)
+  end subroutine delete_field_2D_vec2
+
+
 !#define NEW_FIELD_CONSTRUCTOR_FUNCTION( func_name, descriptor_t, field_t )
 !  function func_name( mesh_descriptor )
 !    type(descriptor_t)
@@ -318,12 +341,13 @@ contains   ! *****************************************************************
        end do
        eta1 = eta1 + mesh%delta_eta1
     end do
-    ! missing the actual function to write the mesh in hdf5. Should come from diagnostics
+    call write_mesh(x1mesh, x2mesh, mesh%nc_eta1+1, mesh%nc_eta2+1, "mesh")
   end subroutine write_mesh_2D
 
   ! writes field along with mesh for the moment. The mesh part can be removed when it can be written separately
-  subroutine write_field_2D_vec1( f2Dv1 )
+  subroutine write_field_2D_vec1( f2Dv1, name )
     type(field_2D_vec1), pointer :: f2Dv1
+    character(64) :: name
 
     type(mesh_descriptor_2D), pointer :: mesh
     sll_real64, dimension(:,:), pointer :: x1mesh
@@ -337,18 +361,6 @@ contains   ! *****************************************************************
     ! create 2D mesh
     mesh => f2Dv1%descriptor
     SLL_ASSERT(associated(mesh))
-    SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    eta1 = mesh%eta1_min
-    do i1=1, mesh%nc_eta1+1
-       eta2 = mesh%eta2_min
-       do i2=1, mesh%nc_eta2+1
-          x1mesh(i1,i2) = mesh%geom%x1(eta1,eta2)
-          x2mesh(i1,i2) = mesh%geom%x2(eta1,eta2)
-          eta2 = eta2 + mesh%delta_eta2 
-       end do
-       eta1 = eta1 + mesh%delta_eta1
-    end do
-    call write_fxv(f2Dv1%data,x1mesh,x2mesh)
+    call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
   end subroutine write_field_2D_vec1
 end module sll_mesh_types

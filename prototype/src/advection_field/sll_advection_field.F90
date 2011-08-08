@@ -5,8 +5,7 @@ module advection_field
 #include "sll_mesh_types.h"
 
   use numeric_constants
-  use sll_poisson_1d_periodic
-  use sll_splines
+
   implicit none
 contains
  ! computes the solution of functional equation xi-xout = c*deltat*(b(xi)+a(xout))
@@ -28,13 +27,19 @@ contains
     sll_real64 :: alpha, alphabar, xmax, xi
 
     ! compute xmax of the grid
+    SLL_ASSERT(size(a)==ncx+1)
+    SLL_ASSERT(size(b)==ncx+1)
+    SLL_ASSERT(size(xout)==ncx+1)
+
     xmax = xmin + ncx * deltax
     do i = 1, ncx + 1
        xi = xmin + (i-1)*deltax  ! current grid point
        ! estimate the displacement alpha * deltax = xi - xout
        ! which will give the cell around the center of which a will be Taylor expanded
+       !print*, 's1', i, a(i), deltax, deltat
        alphabar = deltat / deltax * a(i)
        id = floor( -alphabar )  ! cell will be [i+id, i+id+1]
+       !print*, 's2', alphabar, id, a(i)
        ! handle boundary conditions
        if (bt == PERIODIC) then
           ileft = modulo(i+id-1,ncx)+1
@@ -45,13 +50,16 @@ contains
        else
           stop 'compute_flow_1D_backward : boundary_type not implemented' 
        end if
+       SLL_ASSERT((ileft>=1).and.(ileft<= ncx+1))
+       SLL_ASSERT((iright>=1).and.(iright<= ncx+1))
+       SLL_ASSERT( deltax + c * deltat * (a(iright) - a(ileft)) > 0.0 )
        ! compute xout using first order Taylor expansion of a to get linear equation for alpha
        alpha = c * deltat * (b(i) + a(ileft)*(1+id) - id * a(iright))/( deltax + c * deltat * (a(iright) - a(ileft)))
-       !print*,i,'alpha', alpha, id, ileft, iright, a(i), (i-1)*deltat / (1+deltat)
+       !print*,i,'alpha', alpha, id, ileft, iright, a(i), a(iright) - a(ileft), b(i)
        xout(i) = xi - alpha * deltax 
        ! handle boundary conditions
        if (bt == PERIODIC) then
-          xout(i) = modulo(xout(i),xmax-xmin) 
+          xout(i) = modulo(xout(i)-xmin,xmax-xmin) + xmin 
        else if (bt == COMPACT) then
           if (xout(i) < xmin ) then
              xout(i) = xmin   ! put particles on the left of the domain on the left boundary
@@ -61,8 +69,9 @@ contains
        else
           stop 'compute_flow_1D_backward : boundary_type not implemented' 
        end if
-
+       !print*, 'compute_flow_1D_backward' , xmin, xout(i),xmax
        SLL_ASSERT((xout(i) >= xmin ) .and. (xout(i) <= xmax)) 
+       
     end do
 
   end subroutine compute_flow_1D_backward
