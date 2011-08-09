@@ -59,7 +59,8 @@ contains
   NEW_ACCESS_FUNCTION(get_df_eta2_min,   sll_real64, eta2_min)
   NEW_ACCESS_FUNCTION(get_df_eta2_max,   sll_real64, eta2_max)
   NEW_ACCESS_FUNCTION(get_df_delta_eta2, sll_real64, delta_eta2)   
-
+  NEW_ACCESS_FUNCTION(get_df_boundary1_type, sll_int32, boundary1_type)
+  NEW_ACCESS_FUNCTION(get_df_boundary2_type, sll_int32, boundary2_type)
 #undef NEW_ACCESS_FUNCTION
 
   function sll_get_df_val( f, i, j )
