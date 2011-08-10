@@ -28,7 +28,7 @@ program unit_test
   eta1_max =  8.0_f64
   eta2_min = -8.0_f64
   eta2_max =  8.0_f64
-  geom => new_geometry_2D ('cartesian')
+  geom => new_geometry_2D ('sinprod')
   nc_eta1_coarse = 100
   nc_eta2_coarse = 100
   nc_eta1_fine = 200
@@ -46,16 +46,16 @@ program unit_test
   delta_eta1_fine   = get_df_delta_eta1 ( dist_func_fine )
   delta_eta2_fine   = get_df_delta_eta2 ( dist_func_fine )
 
-  x1_coarse => get_sll_df_x1 ( dist_func_coarse )
-  x2_coarse => get_sll_df_x2 ( dist_func_coarse )
-  x1_fine => get_sll_df_x1 ( dist_func_fine )
-  x2_fine => get_sll_df_x2 ( dist_func_fine )
+  x1_coarse => get_df_x1 ( dist_func_coarse )
+  x2_coarse => get_df_x2 ( dist_func_coarse )
+  x1_fine => get_df_x1 ( dist_func_fine )
+  x2_fine => get_df_x2 ( dist_func_fine )
   
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   call write_mesh_2D(fine_mesh)
   call write_distribution_function ( dist_func_fine )
 
-  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN, 'cell' )
 
   
   print*, 'checking advection of a Gaussian in a uniform field'
@@ -99,7 +99,7 @@ program unit_test
   print*, '    coarse mesh, 1st order splitting, 100 cells, 10 time steps. Error= ', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN, 'cell' )
   ! run CSL method using 20 time steps
   n_steps = 20
   deltat = 1.0_f64/n_steps
@@ -123,7 +123,7 @@ program unit_test
   print*, '    coarse mesh, 1st order splitting, 100 cells, 20 time steps. Error= ', error
   
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN, 'cell' )
   ! run CSL method using 10 time steps and second order splitting
   n_steps = 10
   deltat = 1.0_f64/n_steps
@@ -145,7 +145,7 @@ program unit_test
   print*, '    coarse mesh, 2nd order splitting, 100 cells, 10 time steps. Error= ', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN, 'cell' )
   ! run CSL method using 20 time steps and second order splitting
   n_steps = 20
   deltat = 1.0_f64/n_steps
@@ -182,7 +182,7 @@ program unit_test
   ! initialize CSL  
   csl_work => new_csl_workspace( dist_func_fine )
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method for 10 time steps
   n_steps = 10
   deltat = 1.0_f64/n_steps
@@ -206,7 +206,7 @@ program unit_test
   print*, '    fine mesh,   1st order splitting, 200 cells, 10 time steps. Error= ', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method using 20 time steps
   n_steps = 20
   deltat = 1.0_f64/n_steps
@@ -230,7 +230,7 @@ program unit_test
   print*, '    fine mesh,   1st order splitting, 200 cells, 20 time steps. Error= ', error
   
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method using 10 time steps and second order splitting
   n_steps = 10
   deltat = 1.0_f64/n_steps
@@ -252,7 +252,7 @@ program unit_test
   print*, '    fine mesh,   2nd order splitting, 200 cells, 10 time steps. Error= ', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method using 20 time steps and second order splitting
   n_steps = 20
   deltat = 1.0_f64/n_steps
@@ -289,7 +289,7 @@ program unit_test
   end do
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method
   n_steps = 10
   deltat = 0.5_f64*sll_pi/n_steps  ! do one quarter turn
@@ -313,7 +313,7 @@ program unit_test
   print*, '    fine mesh, 1st order splitting, 200 cells, 10 time steps,  Error=', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method
   n_steps = 20
   deltat = 0.5_f64*sll_pi/n_steps  ! do one quarter turn
@@ -336,7 +336,7 @@ program unit_test
   print*, '    fine mesh, 1st order splitting, 200 cells, 20 time steps,  Error=', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method
   n_steps = 10
   deltat = 0.5_f64*sll_pi/n_steps  ! do one quarter turn
@@ -360,7 +360,7 @@ program unit_test
   print*, '    fine mesh, 2nd order splitting, 200 cells, 10 time steps,  Error=', error
 
   ! reinitialize distribution function
-  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
+  call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method
   n_steps = 20
   deltat = 0.5_f64*sll_pi/n_steps  ! do one quarter turn

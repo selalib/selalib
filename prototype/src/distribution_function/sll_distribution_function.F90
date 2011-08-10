@@ -6,8 +6,6 @@ module distribution_function
 
   use numeric_constants
   use sll_misc_utils   ! for int2string
-  use advection_field
-  use sll_splines
   implicit none
 
   type sll_distribution_function_2D_t
@@ -63,22 +61,48 @@ contains
   NEW_ACCESS_FUNCTION(get_df_boundary2_type, sll_int32, boundary2_type)
 #undef NEW_ACCESS_FUNCTION
 
-  function get_sll_df_x1 ( f )
-    procedure(scalar_function_2D), pointer        :: get_sll_df_x1
+  function get_df_x1 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_x1
     type(sll_distribution_function_2D_t), pointer :: f
-!    sll_real64                                    :: eta1
-!    sll_real64                                    :: eta2
-    get_sll_df_x1 => f%field%descriptor%geom%x1
-  end function get_sll_df_x1
+    get_df_x1 => f%field%descriptor%geom%x1
+  end function get_df_x1
 
-  function get_sll_df_x2 ( f )
-    procedure(scalar_function_2D), pointer        :: get_sll_df_x2
+  function get_df_x2 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_x2
     type(sll_distribution_function_2D_t), pointer :: f
-!    sll_real64                                    :: eta1
-!    sll_real64                                    :: eta2
-    get_sll_df_x2 => f%field%descriptor%geom%x2
-  end function get_sll_df_x2
-  
+    get_df_x2 => f%field%descriptor%geom%x2
+  end function get_df_x2
+
+  function get_df_jac11 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_jac11
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac11 => f%field%descriptor%geom%Jacobian11
+  end function get_df_jac11
+
+  function get_df_jac12 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_jac12
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac12 => f%field%descriptor%geom%Jacobian12
+  end function get_df_jac12
+
+  function get_df_jac21 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_jac21
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac21 => f%field%descriptor%geom%Jacobian21
+  end function get_df_jac21
+
+  function get_df_jac22 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_jac22
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac22 => f%field%descriptor%geom%Jacobian22
+  end function get_df_jac22  
+
+  function get_df_jac ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_jac
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac => f%field%descriptor%geom%Jacobian
+  end function get_df_jac
+
 
   function sll_get_df_val( f, i, j )
     sll_real64 :: sll_get_df_val
@@ -94,11 +118,12 @@ contains
     f%field%data(i,j) = val
   end subroutine sll_set_df_val
 
-  subroutine sll_init_distribution_function_2D( dist_func_2D, test_case )
+  subroutine sll_init_distribution_function_2D( dist_func_2D, test_case, center )
     type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
     sll_int32  :: test_case
+    character(4) :: center   ! centering of dist_func_2D, one of ('node' or 'cell')
     ! local variables
-    procedure(scalar_function_2D), pointer :: x1, x2
+    procedure(scalar_function_2D), pointer :: x1, x2, jac
     sll_int32 :: nc_eta1, nc_eta2, i1, i2
     sll_real64 :: delta_eta1, delta_eta2,  eta1_min, eta2_min
     sll_real64 :: x, vx, xx, vv, eps, kx, xi, v0, fval, xoffset, voffset
@@ -111,8 +136,14 @@ contains
     nc_eta2 = get_df_nc_eta2( dist_func_2D ) 
     delta_eta2 = get_df_delta_eta2( dist_func_2D )
     eta2_min = get_df_eta2_min( dist_func_2D )
-    x1 => get_sll_df_x1 ( dist_func_2D )
-    x2 => get_sll_df_x2 ( dist_func_2D )
+    x1 => get_df_x1 ( dist_func_2D )
+    x2 => get_df_x2 ( dist_func_2D )
+    jac => get_df_jac ( dist_func_2D )
+
+    if (center=='cell') then ! half cell offset
+       eta1_min = eta1_min + 0.5_f64 * delta_eta1
+       eta2_min = eta2_min + 0.5_f64 * delta_eta2
+    end if
 
     select case (test_case)
     case (LANDAU)
@@ -152,16 +183,17 @@ contains
           end do
        end do
     case (GAUSSIAN)
-       xoffset = 1.0
-       voffset = 1.0
-       eta2 = eta2_min + 0.5_f64 * delta_eta2  ! cell midpoint
+       xoffset = 1.0_f64
+       voffset = 1.0_f64
+       eta2 = eta2_min
        do i2 = 1, nc_eta2 + 1
-          vv = (x2(eta1,eta2) - voffset )**2
-          eta1 = eta1_min + 0.5_f64 * delta_eta1  ! cell midpoint
+          eta1 = eta1_min
           do i1 = 1, nc_eta1+1            
              xx = (x1(eta1,eta2) - xoffset )**2
-             eta1 = eta1 +  delta_eta2
-             fval = exp(-0.5_f64*(xx+vv))
+             vv = (x2(eta1,eta2) - voffset )**2
+             eta1 = eta1 +  delta_eta1
+             ! store f * jac for conservative cell centered schemes
+             fval = exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
           end do
           eta2 = eta2 +  delta_eta2
@@ -175,8 +207,6 @@ contains
     character(64) :: name
     call int2string(f%plot_counter,counter)
     name = trim(f%name)//counter
-!    print*,'write_distribution_function ', counter,' ', f%name, ' ', name
-!    print*, ' '
     call write_field_2d_vec1 ( f%field, name )
     f%plot_counter = f%plot_counter + 1
   end subroutine write_distribution_function

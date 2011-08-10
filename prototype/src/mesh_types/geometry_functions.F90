@@ -41,7 +41,7 @@ contains
     identity_eta2 = x2
   end function identity_eta2
 
-  ! jacobian
+  ! jacobian maxtrix
   function identity_jac11 ( eta1, eta2 )
     sll_real64  :: identity_jac11
     sll_real64, intent(in)   :: eta1
@@ -70,7 +70,17 @@ contains
     identity_jac22 = 1.0_f64
   end function identity_jac22
 
+  ! jacobian ie determinant of jacobian matrix
+  function identity_jac ( eta1, eta2 )
+    sll_real64  :: identity_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    identity_jac = 1.0_f64
+  end function identity_jac
+
   ! polar coordinates (r = eta1, theta = eta2)
+  ! x1 = eta1 * cos (eta2)
+  ! x2 = eta1 * sin (eta2)
   !-------------------
   ! direct mapping
   function polar_x1 ( eta1, eta2 )
@@ -102,7 +112,7 @@ contains
     polar_eta2 = atan( x2 / x1 ) 
   end function polar_eta2
 
-  ! jacobian
+  ! jacobian matrix
   function polar_jac11 ( eta1, eta2 )
     sll_real64  :: polar_jac11
     sll_real64, intent(in)   :: eta1
@@ -130,6 +140,14 @@ contains
     sll_real64, intent(in)   :: eta2
     polar_jac22 = eta1 * cos ( eta2 )
   end function polar_jac22
+
+ ! jacobian ie determinant of jacobian matrix
+  function polar_jac ( eta1, eta2 )
+    sll_real64  :: polar_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    polar_jac = eta1
+  end function polar_jac
 
   ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula (102) p 2968)
   ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
@@ -170,32 +188,40 @@ contains
     sinprod_eta2 = x2
   end function sinprod_eta2
 
-  ! jacobian
+  ! jacobian matrix
   function sinprod_jac11 ( eta1, eta2 )
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac11 = 1.0_f64 + 0.1_f64 * 2*sll_pi * cos (eta1) * sin (eta2)
+    sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_pi * cos (eta1) * sin (eta2)
   end function sinprod_jac11
 
     function sinprod_jac12 ( eta1, eta2 )
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac12 = 0.1_f64 * 2*sll_pi * sin (eta1) * cos (eta2)
+    sinprod_jac12 = 0.2_f64 *sll_pi * sin (eta1) * cos (eta2)
   end function sinprod_jac12
 
   function sinprod_jac21 ( eta1, eta2 )
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac21 = 0.1_f64 * 2*sll_pi * cos (eta1) * sin (eta2)
+    sinprod_jac21 = 0.2_f64 * sll_pi * cos (eta1) * sin (eta2)
   end function sinprod_jac21
 
   function sinprod_jac22 ( eta1, eta2 )
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac22 = 1.0_f64 + 0.1_f64 * 2*sll_pi * sin (eta1) * cos (eta2)
+    sinprod_jac22 = 1.0_f64 + 0.2_f64 * sll_pi * sin (eta1) * cos (eta2)
   end function sinprod_jac22
+
+   ! jacobian ie determinant of jacobian matrix
+  function sinprod_jac ( eta1, eta2 )
+    sll_real64  :: sinprod_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (eta1+eta2) 
+  end function sinprod_jac
 end module geometry_functions
