@@ -37,6 +37,7 @@ module sll_mesh_types
      procedure(scalar_function_2D), pointer, nopass :: Jacobian12
      procedure(scalar_function_2D), pointer, nopass :: Jacobian21
      procedure(scalar_function_2D), pointer, nopass :: Jacobian22
+     procedure(scalar_function_2D), pointer, nopass :: Jacobian
   end type geometry_2D
 
   type mesh_descriptor_2D
@@ -141,6 +142,7 @@ contains   ! *****************************************************************
        new_geometry_2D%Jacobian12 => identity_jac12
        new_geometry_2D%Jacobian21 => identity_jac21
        new_geometry_2D%Jacobian22 => identity_jac22
+       new_geometry_2D%Jacobian => identity_jac
     ! polar coordinates
     else if (name(1:5) == 'polar') then
        new_geometry_2D%x1         => polar_x1
@@ -149,6 +151,7 @@ contains   ! *****************************************************************
        new_geometry_2D%Jacobian12 => polar_jac12
        new_geometry_2D%Jacobian21 => polar_jac21
        new_geometry_2D%Jacobian22 => polar_jac22
+       new_geometry_2D%Jacobian => polar_jac
     else if (name(1:7) == 'sinprod') then
        new_geometry_2D%x1         => sinprod_x1
        new_geometry_2D%x2         => sinprod_x2
@@ -156,6 +159,7 @@ contains   ! *****************************************************************
        new_geometry_2D%Jacobian12 => sinprod_jac12
        new_geometry_2D%Jacobian21 => sinprod_jac21
        new_geometry_2D%Jacobian22 => sinprod_jac22
+       new_geometry_2D%Jacobian => sinprod_jac
     else
        print*, 'new_geometry_2D: mapping ',name, ' is not implemented'
        stop
