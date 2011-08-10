@@ -63,6 +63,23 @@ contains
   NEW_ACCESS_FUNCTION(get_df_boundary2_type, sll_int32, boundary2_type)
 #undef NEW_ACCESS_FUNCTION
 
+  function get_sll_df_x1 ( f )
+    procedure(scalar_function_2D), pointer        :: get_sll_df_x1
+    type(sll_distribution_function_2D_t), pointer :: f
+!    sll_real64                                    :: eta1
+!    sll_real64                                    :: eta2
+    get_sll_df_x1 => f%field%descriptor%geom%x1
+  end function get_sll_df_x1
+
+  function get_sll_df_x2 ( f )
+    procedure(scalar_function_2D), pointer        :: get_sll_df_x2
+    type(sll_distribution_function_2D_t), pointer :: f
+!    sll_real64                                    :: eta1
+!    sll_real64                                    :: eta2
+    get_sll_df_x2 => f%field%descriptor%geom%x2
+  end function get_sll_df_x2
+  
+
   function sll_get_df_val( f, i, j )
     sll_real64 :: sll_get_df_val
     type(sll_distribution_function_2D_t), pointer      :: f
@@ -81,16 +98,21 @@ contains
     type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
     sll_int32  :: test_case
     ! local variables
+    procedure(scalar_function_2D), pointer :: x1, x2
     sll_int32 :: nc_eta1, nc_eta2, i1, i2
     sll_real64 :: delta_eta1, delta_eta2,  eta1_min, eta2_min
-    sll_real64 :: vx, x, x2, v2, eps, kx, xi, v0, fval, xoffset, vxoffset
-
+    sll_real64 :: x, vx, xx, vv, eps, kx, xi, v0, fval, xoffset, voffset
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    
     nc_eta1 = get_df_nc_eta1( dist_func_2D ) 
     delta_eta1 = get_df_delta_eta1( dist_func_2D )
     eta1_min = get_df_eta1_min( dist_func_2D )
     nc_eta2 = get_df_nc_eta2( dist_func_2D ) 
     delta_eta2 = get_df_delta_eta2( dist_func_2D )
     eta2_min = get_df_eta2_min( dist_func_2D )
+    x1 => get_sll_df_x1 ( dist_func_2D )
+    x2 => get_sll_df_x2 ( dist_func_2D )
 
     select case (test_case)
     case (LANDAU)
@@ -98,11 +120,11 @@ contains
        kx=2*sll_pi/(nc_eta1*delta_eta1)
        do i2 = 1, nc_eta2 + 1
           vx = eta2_min + (i2-0.5_f64) * delta_eta2
-          v2 = vx*vx
+          vv = vx*vx
           do i1 = 1, nc_eta1+1
              x = eta1_min + (i1-0.5_f64) * delta_eta1
-             x2 = x * x
-             fval = ( 1 + eps * cos(kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*v2)
+             xx = x * x
+             fval = ( 1 + eps * cos(kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*vv)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
           end do
        end do
@@ -114,33 +136,35 @@ contains
        kx = 2 * sll_pi / (nc_eta1 * delta_eta1)
        do i2 = 1, nc_eta2+1
           vx = eta2_min + (i2-0.5_f64) * delta_eta2
-          v2 = vx*vx
+          vv = vx*vx
           do i1=1, nc_eta1 + 1
              x = eta1_min + (i1-0.5_f64) * delta_eta1
-             x2 = x * x   
+             xx = x * x   
              fval=(1+eps*((cos(2*kx*x)+cos(3*kx*x))/1.2_f64+cos(kx*x)))* &
-                  (1/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*(1+.5_f64*v2/(1-xi))*exp(-.5_f64*v2)
+                  (1/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*(1+.5_f64*vv/(1-xi))*exp(-.5_f64*vv)
              ! fval=(1+eps*eps*cos(kx*x)+eps*cos(2*kx*x))*0.5_f64/sqrt(2*pi)*(exp(-.5_f64*(vx-v0)**2)+ exp(-.5_f64*(vx+v0)**2))
              ! fval=(1+eps*cos(kx*x))*0.5_f64/sqrt(2*pi)*(exp(-.5_f64*(vx-v0)**2)+ exp(-.5_f64*(vx+v0)**2))
              ! fval= 1/sqrt (2 * sll_pi) * ( 0.9_f64 * exp (-.5_f64 * vx * vx) + 0.2_f64 * &
              !  exp(-0.5_f64 * (vx - 4.5_f64)*(vx - 4.5_f64)/(0.5_f64 * 0.5_f64))) * (1. + 0.03_f64 * cos (0.3_f64 * x))
-             ! fval=(1+eps*cos(kx*x))*1/sqrt(2*pi)*exp(-.5_f64*v2)
-             ! fval=exp(-.5_f64*(x2+v2))
+             ! fval=(1+eps*cos(kx*x))*1/sqrt(2*pi)*exp(-.5_f64*vv)
+             ! fval=exp(-.5_f64*(xx+vv))
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
           end do
        end do
     case (GAUSSIAN)
        xoffset = 1.0
-       vxoffset = 1.0
+       voffset = 1.0
+       eta2 = eta2_min + 0.5_f64 * delta_eta2  ! cell midpoint
        do i2 = 1, nc_eta2 + 1
-          vx = eta2_min + (i2-0.5_f64) * delta_eta2
-          v2 = (vx - vxoffset )**2
-          do i1 = 1, nc_eta1+1
-             x = eta1_min + (i1-0.5_f64) * delta_eta1
-             x2 = (x - xoffset )**2
-             fval = exp(-0.5_f64*(x2+v2))
+          vv = (x2(eta1,eta2) - voffset )**2
+          eta1 = eta1_min + 0.5_f64 * delta_eta1  ! cell midpoint
+          do i1 = 1, nc_eta1+1            
+             xx = (x1(eta1,eta2) - xoffset )**2
+             eta1 = eta1 +  delta_eta2
+             fval = exp(-0.5_f64*(xx+vv))
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
           end do
+          eta2 = eta2 +  delta_eta2
        end do
     end select
   end subroutine sll_init_distribution_function_2D
