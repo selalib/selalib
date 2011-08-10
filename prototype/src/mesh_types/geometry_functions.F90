@@ -99,7 +99,7 @@ contains
     sll_real64  :: polar_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    polar_eta2 = atan( eta2 / eta1 ) 
+    polar_eta2 = atan( x2 / x1 ) 
   end function polar_eta2
 
   ! jacobian
@@ -114,7 +114,7 @@ contains
     sll_real64  :: polar_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    polar_jac12 = - eta1 * sin(theta)
+    polar_jac12 = - eta1 * sin( eta2)
   end function polar_jac12
 
   function polar_jac21 ( eta1, eta2 )
@@ -140,14 +140,14 @@ contains
     sll_real64  :: sinprod_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_x1 = eta1 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*pi*eta2)
+    sinprod_x1 = eta1 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
   end function sinprod_x1
 
   function sinprod_x2 ( eta1, eta2 )
     sll_real64  :: sinprod_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_x2 = eta2 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*pi*eta2)
+    sinprod_x2 = eta2 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
   end function sinprod_x2
 
   ! inverse mapping 

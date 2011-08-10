@@ -125,34 +125,40 @@ module sll_mesh_types
 contains   ! *****************************************************************
   
 
-  function new_geometry_2D ( x1, x2, jac11, jac12, jac21, jac22 )
-    intrinsic  :: present 
+  function new_geometry_2D ( name )
     type(geometry_2D), pointer  ::  new_geometry_2D
-    procedure(scalar_function_2D), pointer, optional :: x1
-    procedure(scalar_function_2D), pointer, optional :: x2
-    procedure(scalar_function_2D), pointer, optional :: jac11
-    procedure(scalar_function_2D), pointer, optional :: jac12
-    procedure(scalar_function_2D), pointer, optional :: jac21
-    procedure(scalar_function_2D), pointer, optional :: jac22
+    character(32)               :: name
 
     sll_int32  :: ierr
     
     SLL_ALLOCATE(new_geometry_2D,ierr)
-    if (present(x1) .and. present(x2) .and. present(jac11) .and. present(jac12) .and. present(jac21) &
-         .and. present(jac22)) then
-       new_geometry_2D%x1 => x1
-       new_geometry_2D%x2 => x2
-       new_geometry_2D%Jacobian11 => jac11
-       new_geometry_2D%Jacobian12 => jac12
-       new_geometry_2D%Jacobian21 => jac21
-       new_geometry_2D%Jacobian22 => jac22
+
+    ! cartesian coordinates correspond to identity mapping
+    if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
+       new_geometry_2D%x1         => identity_x1
+       new_geometry_2D%x2         => identity_x2
+       new_geometry_2D%Jacobian11 => identity_jac11
+       new_geometry_2D%Jacobian12 => identity_jac12
+       new_geometry_2D%Jacobian21 => identity_jac21
+       new_geometry_2D%Jacobian22 => identity_jac22
+    ! polar coordinates
+    else if (name(1:5) == 'polar') then
+       new_geometry_2D%x1         => polar_x1
+       new_geometry_2D%x2         => polar_x2
+       new_geometry_2D%Jacobian11 => polar_jac11
+       new_geometry_2D%Jacobian12 => polar_jac12
+       new_geometry_2D%Jacobian21 => polar_jac21
+       new_geometry_2D%Jacobian22 => polar_jac22
+    else if (name(1:7) == 'sinprod') then
+       new_geometry_2D%x1         => sinprod_x1
+       new_geometry_2D%x2         => sinprod_x2
+       new_geometry_2D%Jacobian11 => sinprod_jac11
+       new_geometry_2D%Jacobian12 => sinprod_jac12
+       new_geometry_2D%Jacobian21 => sinprod_jac21
+       new_geometry_2D%Jacobian22 => sinprod_jac22
     else
-       new_geometry_2D%x1 => default_x1
-       new_geometry_2D%x2 => default_x2
-       new_geometry_2D%Jacobian11 => default_jac11
-       new_geometry_2D%Jacobian12 => default_jac12
-       new_geometry_2D%Jacobian21 => default_jac21
-       new_geometry_2D%Jacobian22 => default_jac22
+       print*, 'new_geometry_2D: mapping ',name, ' is not implemented'
+       stop
     end if
   end function new_geometry_2D
 

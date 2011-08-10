@@ -27,7 +27,7 @@ program unit_test
   eta1_max =  8.0_f64
   eta2_min = -8.0_f64
   eta2_max =  8.0_f64
-  geom => new_geometry_2D ()
+  geom => new_geometry_2D ('cartesian')
   nc_eta1_coarse = 100
   nc_eta2_coarse = 100
   nc_eta1_fine = 200
