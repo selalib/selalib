@@ -13,7 +13,8 @@ program unit_test
   sll_real64 :: delta_eta1_coarse, delta_eta2_coarse
   sll_real64 :: delta_eta1_fine, delta_eta2_fine
   sll_int32 :: i1, i2, it, n_steps
-  sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, x, v, deltat, val, error 
+  sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, deltat, val, error 
+  procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: coarse_mesh
   type(mesh_descriptor_2D), pointer :: fine_mesh
@@ -44,12 +45,18 @@ program unit_test
   delta_eta2_coarse = get_df_delta_eta2 ( dist_func_coarse )
   delta_eta1_fine   = get_df_delta_eta1 ( dist_func_fine )
   delta_eta2_fine   = get_df_delta_eta2 ( dist_func_fine )
+
+  x1_coarse => get_sll_df_x1 ( dist_func_coarse )
+  x2_coarse => get_sll_df_x2 ( dist_func_coarse )
+  x1_fine => get_sll_df_x1 ( dist_func_fine )
+  x2_fine => get_sll_df_x2 ( dist_func_fine )
   
   call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN )
   call write_mesh_2D(fine_mesh)
   call write_distribution_function ( dist_func_fine )
 
   call sll_init_distribution_function_2D( dist_func_coarse, GAUSSIAN )
+
   
   print*, 'checking advection of a Gaussian in a uniform field'
   !    no splitting error. First and second order splitting should be same.
@@ -57,15 +64,15 @@ program unit_test
   
   ! define uniform field on coarse_mesh
   uniform_field => new_field_2D_vec2(coarse_mesh)
-  x = eta1_min 
+  eta1 = eta1_min 
   do i1 = 1, nc_eta1_coarse+1
-     v = eta2_min 
+     eta2 = eta2_min 
      do i2 = 1, nc_eta2_coarse+1
         FIELD_2D_AT_I_V1( uniform_field, i1, i2 ) = -1.0_f64
         FIELD_2D_AT_I_V2( uniform_field, i1, i2 ) = -1.0_f64
-        v = v + delta_eta2_coarse
+        eta2 = eta2 + delta_eta2_coarse
      end do
-     x = x + delta_eta1_coarse
+     eta1 = eta1 + delta_eta1_coarse
   end do
   ! initialize CSL  
   csl_work => new_csl_workspace( dist_func_coarse )
@@ -79,15 +86,15 @@ program unit_test
   end do   
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_coarse  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_coarse  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_coarse
-     v = eta2_min + 0.5_f64 * delta_eta2_coarse  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
         val = sll_get_df_val(dist_func_coarse, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_coarse
+        error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_coarse
      end do
-     x = x + delta_eta1_coarse
+     eta1 = eta1 + delta_eta1_coarse
   end do
   print*, '    coarse mesh, 1st order splitting, 100 cells, 10 time steps. Error= ', error
 
@@ -103,15 +110,15 @@ program unit_test
   end do   
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_coarse  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_coarse  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_coarse
-     v = eta2_min + 0.5_f64 * delta_eta2_coarse  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
         val = sll_get_df_val(dist_func_coarse, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_coarse
+        error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_coarse
      end do
-     x = x + delta_eta1_coarse
+     eta1 = eta1 + delta_eta1_coarse
   end do
   print*, '    coarse mesh, 1st order splitting, 100 cells, 20 time steps. Error= ', error
   
@@ -125,15 +132,15 @@ program unit_test
     end do
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_coarse  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_coarse  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_coarse
-     v = eta2_min + 0.5_f64 * delta_eta2_coarse  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
         val = sll_get_df_val(dist_func_coarse, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_coarse
+        error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_coarse
      end do
-     x = x + delta_eta1_coarse
+     eta1 = eta1 + delta_eta1_coarse
   end do
   print*, '    coarse mesh, 2nd order splitting, 100 cells, 10 time steps. Error= ', error
 
@@ -147,30 +154,30 @@ program unit_test
     end do
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_coarse  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_coarse  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_coarse
-     v = eta2_min + 0.5_f64 * delta_eta2_coarse  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
         val = sll_get_df_val(dist_func_coarse, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_coarse
+        error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_coarse
      end do
-     x = x + delta_eta1_coarse
+     eta1 = eta1 + delta_eta1_coarse
   end do
   print*, '    coarse mesh, 2nd order splitting, 100 cells, 20 time steps. Error= ', error
 
   ! define uniform field on fine_mesh
   call delete_field_2D_vec2(uniform_field)
   uniform_field => new_field_2D_vec2(fine_mesh)
-  x = eta1_min 
+  eta1 = eta1_min 
   do i1 = 1, nc_eta1_fine+1
-     v = eta2_min 
+     eta2 = eta2_min 
      do i2 = 1, nc_eta2_fine+1
         FIELD_2D_AT_I_V1( uniform_field, i1, i2 ) = -1.0_f64
         FIELD_2D_AT_I_V2( uniform_field, i1, i2 ) = -1.0_f64
-        v = v + delta_eta2_fine
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   ! initialize CSL  
   csl_work => new_csl_workspace( dist_func_fine )
@@ -186,15 +193,15 @@ program unit_test
   end do   
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh,   1st order splitting, 200 cells, 10 time steps. Error= ', error
 
@@ -210,15 +217,15 @@ program unit_test
   end do   
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh,   1st order splitting, 200 cells, 20 time steps. Error= ', error
   
@@ -232,15 +239,15 @@ program unit_test
     end do
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh,   2nd order splitting, 200 cells, 10 time steps. Error= ', error
 
@@ -254,15 +261,15 @@ program unit_test
     end do
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x**2+v**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh,   2nd order splitting, 200 cells, 20 time steps. Error= ', error
   print*, '    Conclusions: no splitting error, no time integration error, only interpolation error (4th order)'
@@ -270,15 +277,15 @@ program unit_test
   print*, 'checking advection in rotating field' 
   ! define rotating field
   rotating_field => new_field_2D_vec2(fine_mesh)
-  x = eta1_min 
+  eta1 = eta1_min 
   do i1 = 1, nc_eta1_fine+1
-     v = eta2_min 
+     eta2 = eta2_min 
      do i2 = 1, nc_eta2_fine+1
-        FIELD_2D_AT_I_V1( rotating_field, i1, i2 ) = v 
-        FIELD_2D_AT_I_V2( rotating_field, i1, i2 ) = -x 
-        v = v + delta_eta2_fine
+        FIELD_2D_AT_I_V1( rotating_field, i1, i2 ) = x2_fine(eta1,eta2) 
+        FIELD_2D_AT_I_V2( rotating_field, i1, i2 ) = -x1_fine(eta1,eta2) 
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
 
   ! reinitialize distribution function
@@ -292,15 +299,16 @@ program unit_test
   end do
   ! compute error after one quarter turn
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*((x-1.0_f64)**2+(v+1.0_f64)**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2 &
+             + (x2_fine(eta1,eta2)+1.0_f64)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh, 1st order splitting, 200 cells, 10 time steps,  Error=', error
 
@@ -314,15 +322,16 @@ program unit_test
   end do
   ! compute error after one quarter turn
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*((x-1.0_f64)**2+(v+1.0_f64)**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2 &
+             +(x2_fine(eta1,eta2)+1.0_f64)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh, 1st order splitting, 200 cells, 20 time steps,  Error=', error
 
@@ -337,15 +346,16 @@ program unit_test
   end do
   ! compute error after one turn
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*((x-1.0_f64)**2+(v+1.0_f64)**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2&
+             +(x2_fine(eta1,eta2)+1.0_f64)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh, 2nd order splitting, 200 cells, 10 time steps,  Error=', error
 
@@ -359,15 +369,16 @@ program unit_test
   end do
   ! compute error after one turn
   error = 0.0_f64
-  x = eta1_min + 0.5_f64 * delta_eta1_fine  ! x at midpoint of cell
+  eta1 = eta1_min + 0.5_f64 * delta_eta1_fine  ! eta1 at midpoint of cell
   do i1 = 1, nc_eta1_fine
-     v = eta2_min + 0.5_f64 * delta_eta2_fine  ! v at midpoint of cell
+     eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
         val = sll_get_df_val(dist_func_fine, i1, i2)
-        error = max (error, abs(val - exp(-0.5_f64*((x-1.0_f64)**2+(v+1.0_f64)**2))))
-        v = v + delta_eta2_fine
+        error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2 &
+             +(x2_fine(eta1,eta2)+1.0_f64)**2))))
+        eta2 = eta2 + delta_eta2_fine
      end do
-     x = x + delta_eta1_fine
+     eta1 = eta1 + delta_eta1_fine
   end do
   print*, '    fine mesh, 2nd order splitting, 200 cells, 20 time steps,  Error=', error
   print*, '    Conclusion. Time splitting error of right order dominates. '
