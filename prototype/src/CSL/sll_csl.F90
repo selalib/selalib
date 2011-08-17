@@ -10,11 +10,15 @@ module sll_csl
   use distribution_function
   implicit none
 
-type csl_workspace
-   type (sll_spline_1D), pointer :: spl_eta1
-   type (sll_spline_1D), pointer :: spl_eta2
-end type csl_workspace
+  type csl_workspace
+     type (sll_spline_1D), pointer :: spl_eta1
+     type (sll_spline_1D), pointer :: spl_eta2
+  end type csl_workspace
+
+
 contains
+  
+  
   function new_csl_workspace(dist_func_2D)
     type (csl_workspace), pointer :: new_csl_workspace
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D 
@@ -38,20 +42,27 @@ contains
     eta2_max   = get_df_eta2_max( dist_func_2D )
 
     ! initialize splines
-    new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1, eta1_min, eta1_max, PERIODIC_SPLINE )
-    new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2, eta2_min, eta2_max, HERMITE_SPLINE )    
+    new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1,          &
+                                                 eta1_min,         &
+                                                 eta1_max,         &
+                                                 PERIODIC_SPLINE )
+    new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2,          &
+                                                 eta2_min,         &
+                                                 eta2_max,         &
+                                                 HERMITE_SPLINE )    
   end function new_csl_workspace
 
-! the code between first and second order is very close. 
-! direction can be decoupled and should maybe be put in different subroutines
+  ! the code between first and second order is very close. 
+  ! direction can be decoupled and should maybe be put in different 
+  ! subroutines.
 
-! subroutine csl_first_order
-! Advances the distribution function on a time step deltat using a first order time split
-! conservative semi-Lagrangian scheme
+  ! subroutine csl_first_order
+  ! Advances the distribution function on a time step deltat using a first 
+  ! order time split conservative semi-Lagrangian scheme
   subroutine csl_first_order(csl_work, dist_func_2D, advfield, deltat)
-    type (csl_workspace), pointer :: csl_work
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  ! distribution function to be advanced
-    type (field_2D_vec2), pointer  :: advfield   ! advection_field
+    type (csl_workspace), pointer                   :: csl_work
+    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  
+    type (field_2D_vec2), pointer                   :: advfield
     sll_real64  ::  deltat  ! time step
 
     sll_int32  :: order 
@@ -82,7 +93,9 @@ contains
     ! order of scheme
     order = 1
 
-    ! parameter checking
+    ! parameter checking. We need to consider putting these checks on a more
+    ! permanent basis, with their corresponding if-statements, instead of
+    ! the assertions, which can be turned off.
     SLL_ASSERT(associated(csl_work))
     SLL_ASSERT(associated(dist_func_2D))
     SLL_ASSERT(associated(advfield))
@@ -125,13 +138,16 @@ contains
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary1_type == PERIODIC) then
-          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min) ! average of dist func along the line
+          ! average of dist func along the line:
+          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min) 
        else
           avg = 0.0_f64
        end if
        call advance_1D(primitive1, advfield_1D_1, zeros1, order, deltat, &
-            eta1_min, nc_eta1, delta_eta1, boundary1_type, csl_work%spl_eta1, eta1_out ) 
-       ! update average value of distribution function in cell using difference of primitives
+            eta1_min, nc_eta1, delta_eta1, boundary1_type, csl_work%spl_eta1, &
+            eta1_out ) 
+       ! update average value of distribution function in cell using 
+       ! difference of primitives
        do i1 = 1, nc_eta1 
           val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
@@ -150,14 +166,16 @@ contains
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary2_type == PERIODIC) then
-          avg = primitive2 ( nc_eta2+1 ) / (eta2_max - eta2_min) ! average of dist func along the line
+          ! average of dist func along the line
+          avg = primitive2 ( nc_eta2+1 ) / (eta2_max - eta2_min) 
        else
           avg = 0.0_f64
        end if
        call advance_1D( primitive2, advfield_1D_2, zeros2, order, deltat, &
                         eta2_min, nc_eta2, delta_eta2,          &
                         boundary2_type, csl_work%spl_eta2, eta2_out ) 
-       ! update average value of distribution function in cell using difference of primitives
+       ! update average value of distribution function in cell using 
+       ! difference of primitives
        do i2 = 1, nc_eta2 
           val = ( primitive2 ( i2+1 ) - primitive2 ( i2 ) ) / delta_eta2 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
@@ -166,15 +184,20 @@ contains
 
   end subroutine csl_first_order
 
-! subroutine csl_second_order
-! Advances the distribution function on a time step deltat using a second order time split (Strang splittin)
-! conservative semi-Lagrangian scheme
-  subroutine csl_second_order(csl_work, dist_func_2D, advfield_old, advfield_new, deltat)
+  ! subroutine csl_second_order
+  ! Advances the distribution function on a time step deltat using a second 
+  ! order time split (Strang splitting)
+  ! conservative semi-Lagrangian scheme
+  subroutine csl_second_order( csl_work,       &
+                               dist_func_2D,   &
+                               advfield_old,   &
+                               advfield_new,   &
+                               deltat )
     type (csl_workspace), pointer :: csl_work
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  ! distribution function to be advanced
-    type (field_2D_vec2), pointer  :: advfield_old   ! advection_field at time t
-    type (field_2D_vec2), pointer  :: advfield_new   ! advection_field at time t + deltat
-    sll_real64  ::  deltat  ! time step
+    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
+    type (field_2D_vec2), pointer  :: advfield_old   ! adv. field at (t)
+    type (field_2D_vec2), pointer  :: advfield_new   ! adv. field at (t+dt)
+    sll_real64  ::  deltat                           ! dt
 
     sll_int32  :: order 
     sll_real64, dimension(:), pointer  ::  advfield_1D_1_old
@@ -246,13 +269,24 @@ contains
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary1_type == PERIODIC) then
-          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min) ! average of dist func along the line
+          ! average of dist func along the line
+          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min)
        else
           avg = 0.0_f64
        end if
-       call advance_1D(primitive1, advfield_1D_1_old, advfield_1D_1_new, order, 0.5_f64*deltat, &
-            eta1_min, nc_eta1, delta_eta1, boundary1_type, csl_work%spl_eta1, eta1_out ) 
-       ! update average value of distribution function in cell using difference of primitives
+       call advance_1D( primitive1,        &
+                        advfield_1D_1_old, &
+                        advfield_1D_1_new, &
+                        order,             &
+                        0.5_f64*deltat,    &
+                        eta1_min,          &
+                        nc_eta1,           &
+                        delta_eta1,        &
+                        boundary1_type,    &
+                        csl_work%spl_eta1, &
+                        eta1_out ) 
+       ! update average value of distribution function in cell using 
+       ! difference of primitives
        do i1 = 1, nc_eta1 
           val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
@@ -273,17 +307,27 @@ contains
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary2_type == PERIODIC) then
-          avg = primitive2 ( nc_eta2+1 ) / (eta2_max - eta2_min) ! average of dist func along the line
+          ! average of dist func along the line
+          avg = primitive2 ( nc_eta2+1 ) / (eta2_max - eta2_min) 
        else
           avg = 0.0_f64
        end if
 
-       call advance_1D( primitive2, advfield_1D_2_old, advfield_1D_2_new, order, deltat, &
-                        eta2_min, nc_eta2, delta_eta2,          &
-                        boundary2_type, csl_work%spl_eta2, eta2_out ) 
-       ! update average value of distribution function in cell using difference of primitives
+       call advance_1D( primitive2,        &
+                        advfield_1D_2_old, &
+                        advfield_1D_2_new, &
+                        order,             &
+                        deltat,            &
+                        eta2_min,          &
+                        nc_eta2,           &
+                        delta_eta2,        &
+                        boundary2_type,    &
+                        csl_work%spl_eta2, &
+                        eta2_out ) 
+       ! update average value of distribution function in cell using 
+       ! difference of primitives
        do i2 = 1, nc_eta2 
-          val = ( primitive2 ( i2+1 ) - primitive2 ( i2 ) ) / delta_eta2 + avg
+          val = (primitive2(i2+1) - primitive2(i2))/delta_eta2 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
        end do
     end do
@@ -304,13 +348,24 @@ contains
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary1_type == PERIODIC) then
-          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min) ! average of dist func along the line
+          ! average of dist func along the line
+          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min)
        else
           avg = 0.0_f64
        end if
-       call advance_1D(primitive1, advfield_1D_1_old, advfield_1D_1_new, order, 0.5_f64*deltat, &
-            eta1_min, nc_eta1, delta_eta1, boundary1_type, csl_work%spl_eta1, eta1_out ) 
-       ! update average value of distribution function in cell using difference of primitives
+       call advance_1D( primitive1,        &
+                        advfield_1D_1_old, &
+                        advfield_1D_1_new, &
+                        order,             &
+                        0.5_f64*deltat,    &
+                        eta1_min,          &
+                        nc_eta1,           &
+                        delta_eta1,        &
+                        boundary1_type,    &
+                        csl_work%spl_eta1, &
+                        eta1_out ) 
+       ! update average value of distribution function in cell using 
+       ! difference of primitives
        do i1 = 1, nc_eta1 
           val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
@@ -319,8 +374,17 @@ contains
   end subroutine csl_second_order
 
 
-  subroutine advance_1D( primitive,  fieldn, fieldnp1, order, deltat, eta_min, nc_eta, & 
-       delta_eta, boundary_type, spline, eta_out)  
+  subroutine advance_1D( primitive,     &
+                         fieldn,        &
+                         fieldnp1,      &
+                         order,         &
+                         deltat,        &
+                         eta_min,       &
+                         nc_eta,        & 
+                         delta_eta,     &
+                         boundary_type, &
+                         spline,        &
+                         eta_out)  
     sll_real64, dimension(:), pointer, intent(inout) :: primitive
     sll_real64, dimension(:), pointer, intent(in)    :: fieldn
     sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
@@ -341,31 +405,49 @@ contains
 
     ! check array dimensions
     SLL_ASSERT(size(primitive) >= nc_eta+1)
-    SLL_ASSERT(size(fieldn) >= nc_eta+1)
-    SLL_ASSERT(size(fieldnp1) >= nc_eta+1)
+    SLL_ASSERT(size(fieldn)    >= nc_eta+1)
+    SLL_ASSERT(size(fieldnp1)  >= nc_eta+1)
     SLL_ASSERT(size(eta_out) >= nc_eta+1)
 
     select case (boundary_type)
     case (PERIODIC)
        eta_max = eta_min +  nc_eta * delta_eta 
-       avg = primitive ( nc_eta+1 ) / (eta_max - eta_min) ! average of dist func along the line
+       ! average of dist func along the line
+       avg = primitive ( nc_eta+1 ) / (eta_max - eta_min) 
        ! modify primitive so that it becomes periodic
        eta = eta_min
        do i = 2, nc_eta+1
           eta = eta + delta_eta
           primitive ( i ) = primitive ( i ) - avg * (eta-eta_min)
        end do
-       call implicit_ode( order, deltat, eta_min, nc_eta, delta_eta,  &
-                                      PERIODIC_ODE, eta_out, fieldn, fieldnp1 )
+       call implicit_ode( order,        &
+                          deltat,       &
+                          eta_min,      &
+                          nc_eta,       &
+                          delta_eta,    &
+                          PERIODIC_ODE, &
+                          eta_out,      &
+                          fieldn,       &
+                          fieldnp1 )
        call compute_spline_1D_periodic( primitive, nc_eta, spline )
        ! interpolate primitive at origin of characteritics
        call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
     case (COMPACT)
-       call implicit_ode( order, deltat, eta_min, nc_eta, delta_eta,  &
-                                      COMPACT_ODE, eta_out, fieldn, fieldnp1 ) 
+       call implicit_ode( order,       &
+                          deltat,      &
+                          eta_min,     &
+                          nc_eta,      &
+                          delta_eta,   &
+                          COMPACT_ODE, &
+                          eta_out,     &
+                          fieldn,      &
+                          fieldnp1 ) 
        call compute_spline_1D_hermite( primitive, nc_eta, spline )
        ! interpolate primitive at origin of characteritics
        call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
     end select
   end subroutine advance_1D
+
+
+
 end module sll_csl
