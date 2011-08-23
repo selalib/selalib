@@ -160,6 +160,14 @@ contains   ! *****************************************************************
        new_geometry_2D%Jacobian21 => sinprod_jac21
        new_geometry_2D%Jacobian22 => sinprod_jac22
        new_geometry_2D%Jacobian => sinprod_jac
+    else if (name(1:4) == 'test') then
+       new_geometry_2D%x1         => test_x1
+       new_geometry_2D%x2         => test_x2
+       new_geometry_2D%Jacobian11 => test_jac11
+       new_geometry_2D%Jacobian12 => test_jac12
+       new_geometry_2D%Jacobian21 => test_jac21
+       new_geometry_2D%Jacobian22 => test_jac22
+       new_geometry_2D%Jacobian => test_jac
     else
        print*, 'new_geometry_2D: mapping ',name, ' is not implemented'
        stop
@@ -354,10 +362,10 @@ contains   ! *****************************************************************
     call write_mesh(x1mesh, x2mesh, mesh%nc_eta1+1, mesh%nc_eta2+1, "mesh")
   end subroutine write_mesh_2D
 
-  ! writes field along with mesh for the moment. The mesh part can be removed when it can be written separately
-  subroutine write_field_2D_vec1( f2Dv1, name )
+  subroutine write_field_2D_vec1( f2Dv1, name, jacobian )
     type(field_2D_vec1), pointer :: f2Dv1
     character(64) :: name
+    logical, optional       :: jacobian   ! .true. if field data multiplied by jacobian is stored
 
     type(mesh_descriptor_2D), pointer :: mesh
     sll_real64, dimension(:,:), pointer :: x1mesh
@@ -367,10 +375,34 @@ contains   ! *****************************************************************
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_int32 :: ierr
-    
+
+    sll_real64, dimension(:,:), pointer :: val
+
     ! create 2D mesh
     mesh => f2Dv1%descriptor
     SLL_ASSERT(associated(mesh))
-    call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+
+    SLL_ALLOCATE(val(mesh%nc_eta1+1,mesh%nc_eta2 + 1), ierr)
+
+    if (.not.(present(jacobian))) then
+       call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+    else if (jacobian) then 
+       ! quantity multiplied by Jacobian is stored, need to divide by jacobian for
+       eta1 = mesh%eta1_min + 0.5_f64 * mesh%delta_eta1
+       do i1 = 1, mesh%nc_eta1
+          eta2 = mesh%eta2_min + 0.5_f64 * mesh%delta_eta2
+          do i2 = 1, mesh%nc_eta2
+             SLL_ASSERT( mesh%geom%Jacobian (eta1, eta2) > 0.0_f64 )
+             if (mesh%geom%Jacobian (eta1, eta2) > 1.0D-14) then 
+                val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian (eta1, eta2)
+             else 
+                val(i1,i2) = 0.0
+             end if
+             eta2 = eta2 + mesh%delta_eta2
+          end do
+          eta1 = eta1 + mesh%delta_eta1
+       end do
+       call write_vec1d(val,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+    end if
   end subroutine write_field_2D_vec1
 end module sll_mesh_types
