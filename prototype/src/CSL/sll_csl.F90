@@ -37,10 +37,23 @@ contains
     eta2_min   = get_df_eta2_min( dist_func_2D )
     eta2_max   = get_df_eta2_max( dist_func_2D )
 
-    ! initialize splines
+   ! initialize splines
     new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1, eta1_min, eta1_max, PERIODIC_SPLINE )
     new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2, eta2_min, eta2_max, HERMITE_SPLINE )    
   end function new_csl_workspace
+
+  subroutine delete_csl_workspace(csl_worksp)
+    type (csl_workspace), pointer :: csl_worksp
+    sll_int32   :: ierr
+
+    if( .not. (associated(csl_worksp))) then
+       write (*,'(a)') 'ERROR: delete_csl_workspace(), not associated argument.'
+       STOP
+    end if
+    nullify(csl_worksp%spl_eta1)
+    nullify(csl_worksp%spl_eta2)
+    SLL_DEALLOCATE(csl_worksp, ierr)
+  end subroutine delete_csl_workspace
 
 ! the code between first and second order is very close. 
 ! direction can be decoupled and should maybe be put in different subroutines
@@ -59,6 +72,8 @@ contains
     sll_real64, dimension(:), pointer  ::  advfield_1D_2
     sll_real64, dimension(:), pointer  ::  primitive1
     sll_real64, dimension(:), pointer  ::  primitive2
+    !sll_real64, dimension(:), pointer  ::  vol1
+    !sll_real64, dimension(:), pointer  ::  vol2
     sll_real64, dimension(:), pointer  ::  eta1_out 
     sll_real64, dimension(:), pointer  ::  eta2_out
     sll_real64, dimension(:), pointer  ::  zeros1
@@ -80,6 +95,7 @@ contains
     procedure(scalar_function_2D), pointer        :: jac12
     procedure(scalar_function_2D), pointer        :: jac21
     procedure(scalar_function_2D), pointer        :: jac22
+    procedure(scalar_function_2D), pointer        :: jac
     sll_real64 :: val
     sll_real64 :: avg
     sll_real64 :: eta1
@@ -108,6 +124,7 @@ contains
     jac12 = get_df_jac12( dist_func_2D )
     jac21 = get_df_jac21( dist_func_2D )
     jac22 = get_df_jac22( dist_func_2D )
+    jac = get_df_jac( dist_func_2D )
     
     ! allocation
     SLL_ALLOCATE(zeros1(nc_eta1+1),ierr)
@@ -118,15 +135,19 @@ contains
     SLL_ALLOCATE(primitive2(nc_eta2+1),ierr)
     SLL_ALLOCATE(eta1_out(nc_eta1+1),ierr)
     SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
+    !SLL_ALLOCATE(vol1(nc_eta1+1),ierr)
+    !SLL_ALLOCATE(vol2(nc_eta2+1),ierr)
+    
 
     zeros1(:) = 0.0_f64
     zeros2(:) = 0.0_f64
     
     ! advection along the first direction 
-    eta2 = eta2_min
+    eta2 = eta2_min + 0.5_f64*delta_eta2
     do i2=1, nc_eta2
-       eta1 = eta1_min
+       eta1 = eta1_min + 0.5_f64*delta_eta1
        primitive1 (1) = 0.0_f64  ! set primitive to 0 on left boundary 
+       !vol1(1) = 0.0_f64
        advfield_1D_1 ( 1 ) = jac11(eta1,eta2)*FIELD_2D_AT_I_V1( advfield, 1, i2 ) &
                            + jac12(eta1,eta2)*FIELD_2D_AT_I_V2( advfield, 1, i2 )
        do i1 = 2, nc_eta1+1
@@ -135,13 +156,17 @@ contains
           advfield_1D_1 ( i1 ) = jac11(eta1,eta2)*FIELD_2D_AT_I_V1( advfield, i1, i2 ) &
                                + jac12(eta1,eta2)*FIELD_2D_AT_I_V2( advfield, i1, i2 )
           ! compute primitive of distribution function along this line
-          primitive1 ( i1 ) = primitive1 ( i1-1 ) &
-               + abs(jac11(eta1,eta2)) * delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
+          primitive1 ( i1 ) = primitive1 ( i1-1 ) + delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
+          !vol1(i1) = vol1(i1-1) + jac(eta1,eta2) * delta_eta1
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary1_type == PERIODIC) then
           avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min) ! average of dist func along the line 
-          ! FORGOT JACOBIAN
+      !    eta1 = eta1_min
+      !    do i1 = 1, nc_eta1+1
+      !       primitive1(i1) = primitive1(i1) - eta1*avg
+      !       eta1 = eta1 + delta_eta1
+      !    end do
        else
           avg = 0.0_f64
        end if
@@ -149,27 +174,28 @@ contains
             eta1_min, nc_eta1, delta_eta1, boundary1_type, csl_work%spl_eta1, eta1_out ) 
        ! update average value of distribution function in cell using difference of primitives
        do i1 = 1, nc_eta1 
-          val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / (abs(jac11(eta1,eta2)) * delta_eta1) + avg
+          val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
+          !print*, 'CSL' , i1, i2, eta1, eta2, val
        end do
        eta2 = eta2 + delta_eta2
     end do
     ! advection along the second direction
-    eta1 = eta1_min 
+    eta1 = eta1_min + 0.5_f64*delta_eta1
     do i1=1, nc_eta1
-       eta2 = eta2_min
+       eta2 = eta2_min 
        primitive2 (1) = 0.0_f64  ! set primitive to 0 on left boundary 
-       advfield_1D_2(1) = jac21(eta1,eta2)*FIELD_2D_AT_I_V1( advfield, i1, 1 ) &
+       !vol2(1) = 0.0_f64
+       advfield_1D_2(1) =  jac21(eta1,eta2)*FIELD_2D_AT_I_V1( advfield, i1, 1 ) &
                                + jac22(eta1,eta2)*FIELD_2D_AT_I_V2( advfield, i1, 1 )
        do i2 = 2, nc_eta2+1
-          eta1 = eta1 + delta_eta1
+          eta2 = eta2 + delta_eta2
           ! extract subarray from advection field
-          advfield_1D_2(i2) = jac21(eta1,eta2)*FIELD_2D_AT_I_V1( advfield, i1, i2 ) &
+          advfield_1D_2(i2) =  jac21(eta1,eta2)*FIELD_2D_AT_I_V1( advfield, i1, i2 ) &
                                + jac22(eta1,eta2)*FIELD_2D_AT_I_V2( advfield, i1, i2 )
           ! compute primiti2e of distribution function along this line
-          primitive2 (i2) = primitive2 (i2-1) &
-               + abs(jac22(eta1,eta2)) * delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 )
-          eta2 = eta2 + delta_eta2
+          primitive2 (i2) = primitive2 (i2-1) + delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 )
+          !vol2(i2) = vol2(i2-1) + jac(eta1,eta2) * delta_eta2
        end do
        ! need to compute average for periodic boundary conditions
        if (boundary2_type == PERIODIC) then
@@ -182,9 +208,10 @@ contains
                         boundary2_type, csl_work%spl_eta2, eta2_out ) 
        ! update average value of distribution function in cell using difference of primitives
        do i2 = 1, nc_eta2 
-          val = ( primitive2 ( i2+1 ) - primitive2 ( i2 ) ) / (jac22(eta1,eta2)*delta_eta2) + avg
+          val = ( primitive2 ( i2+1 ) - primitive2 ( i2 ) ) / delta_eta2 + avg
           call sll_set_df_val( dist_func_2D, i1, i2, val )
        end do
+       eta1 = eta1 + delta_eta1
     end do
 
   end subroutine csl_first_order

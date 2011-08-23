@@ -191,10 +191,10 @@ contains
           do i1 = 1, nc_eta1+1            
              xx = (x1(eta1,eta2) - xoffset )**2
              vv = (x2(eta1,eta2) - voffset )**2
-             eta1 = eta1 +  delta_eta1
              ! store f * jac for conservative cell centered schemes
-             fval = exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
+             fval = jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
+             eta1 = eta1 +  delta_eta1
           end do
           eta2 = eta2 +  delta_eta2
        end do
@@ -205,9 +205,10 @@ contains
     type(sll_distribution_function_2D_t), pointer      :: f
     character(len=4) :: counter
     character(64) :: name
+    logical, parameter   :: jacobian = .true.
     call int2string(f%plot_counter,counter)
     name = trim(f%name)//counter
-    call write_field_2d_vec1 ( f%field, name )
+    call write_field_2d_vec1 ( f%field, name, jacobian )
     f%plot_counter = f%plot_counter + 1
   end subroutine write_distribution_function
 

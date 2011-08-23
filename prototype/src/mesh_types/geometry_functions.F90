@@ -3,6 +3,9 @@ module geometry_functions
 
 use numeric_constants
 implicit none
+
+sll_real64, parameter :: c1_test = 0.1_f64
+sll_real64, parameter :: c2_test = 0.0_f64
 contains
 !
 ! geometry functions should provide direct mapping, inverse mapping and jacobian
@@ -193,28 +196,28 @@ contains
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_pi * cos (eta1) * sin (eta2)
+    sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac11
 
     function sinprod_jac12 ( eta1, eta2 )
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac12 = 0.2_f64 *sll_pi * sin (eta1) * cos (eta2)
+    sinprod_jac12 = 0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
   end function sinprod_jac12
 
   function sinprod_jac21 ( eta1, eta2 )
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac21 = 0.2_f64 * sll_pi * cos (eta1) * sin (eta2)
+    sinprod_jac21 = 0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac21
 
   function sinprod_jac22 ( eta1, eta2 )
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac22 = 1.0_f64 + 0.2_f64 * sll_pi * sin (eta1) * cos (eta2)
+    sinprod_jac22 = 1.0_f64 + 0.2_f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -222,6 +225,82 @@ contains
     sll_real64  :: sinprod_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (eta1+eta2) 
+    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    sinprod_jac = (1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)) * &
+         (1.0_f64 + 0.2_f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)) - &
+         0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2) * &
+         0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+    
   end function sinprod_jac
+
+  ! test function
+  !-------------------
+  ! direct mapping
+  function test_x1 ( eta1, eta2 )
+    sll_real64  :: test_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_x1 = eta1 + c1_test * sin( 2.0_f64* sll_pi * eta1)
+  end function test_x1
+
+  function test_x2 ( eta1, eta2 )
+    sll_real64  :: test_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_x2 = eta2 + c2_test * sin( 2.0_f64* sll_pi * eta2)
+  end function test_x2
+
+  ! inverse mapping
+  function test_eta1 ( x1, x2 )
+    sll_real64  :: test_eta1
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    test_eta1 = x1 / c1_test
+  end function test_eta1
+
+  function test_eta2 ( x1, x2 )
+    sll_real64  :: test_eta2
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    test_eta2 = x2 / c2_test
+  end function test_eta2
+
+  ! inverse jacobian matrix
+  function test_jac11 ( eta1, eta2 )
+    sll_real64  :: test_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1))
+  end function test_jac11
+
+    function test_jac12 ( eta1, eta2 )
+    sll_real64  :: test_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_jac12 = 0.0_f64
+  end function test_jac12
+
+  function test_jac21 ( eta1, eta2 )
+    sll_real64  :: test_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_jac21 = 0.0_f64
+  end function test_jac21
+
+  function test_jac22 ( eta1, eta2 )
+    sll_real64  :: test_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+  end function test_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function test_jac ( eta1, eta2 )
+    sll_real64  :: test_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1)) * &
+         (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+  end function test_jac
 end module geometry_functions
+

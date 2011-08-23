@@ -73,7 +73,7 @@ contains
        else
           stop 'compute_flow_1D_backward : boundary_type not implemented' 
        end if
-       !print*, i, ileft, iright
+       !print*, i, ileft, iright, a(iright) - a(ileft),  deltax + c * deltat * (a(iright) - a(ileft))
        SLL_ASSERT((ileft>=1).and.(ileft<= ncx+1))
        SLL_ASSERT((iright>=1).and.(iright<= ncx+1))
        SLL_ASSERT( deltax + c * deltat * (a(iright) - a(ileft)) > 0.0 )
