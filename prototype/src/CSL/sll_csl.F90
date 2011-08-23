@@ -407,13 +407,13 @@ contains
        end do
        call implicit_ode( order, deltat, eta_min, nc_eta, delta_eta,  &
                                       PERIODIC_ODE, eta_out, fieldn, fieldnp1 )
-       call compute_spline_1D_periodic( primitive, nc_eta, spline )
+       call compute_spline_1D_periodic( primitive, spline )
        ! interpolate primitive at origin of characteritics
        call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
     case (COMPACT)
        call implicit_ode( order, deltat, eta_min, nc_eta, delta_eta,  &
                                       COMPACT_ODE, eta_out, fieldn, fieldnp1 ) 
-       call compute_spline_1D_hermite( primitive, nc_eta, spline )
+       call compute_spline_1D_hermite( primitive, spline )
        ! interpolate primitive at origin of characteritics
        call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
     end select
