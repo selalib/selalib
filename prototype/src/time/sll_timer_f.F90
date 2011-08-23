@@ -13,7 +13,7 @@ module sll_timer
   ! a mess will be unleashed...
   interface
      type(c_ptr) function reset_time_mark( mark ) &
-          bind(c, name='rset_time_mark_C')
+          bind(c, name='reset_time_mark_C')
        use iso_c_binding
        type(c_ptr), value :: mark
      end function reset_time_mark
