@@ -1,6 +1,7 @@
 program main
-  use sll_timer
-  use iso_c_binding
+#include "timer.h"
+!  use sll_timer
+!  use iso_c_binding
   implicit none
   integer(8) :: i, j,k
   ! etime stuff
@@ -10,7 +11,8 @@ program main
   real(c_double), dimension(:), allocatable :: dt
   real(c_double) :: acc
   real(c_double) :: min, max
-  type(c_ptr)    :: tmark
+  time_mark      :: tmark
+!  type(c_ptr)    :: tmark
 
   min =  50.0
   max = -50.0
@@ -18,10 +20,10 @@ program main
 #define ITERATIONS 10
 
   allocate(dt(ITERATIONS))
-  tmark = time_mark()
+  tmark = set_time_mark()
   print *, 'initialized time marker...'
   print *, 'is tmark associated?:', c_associated(tmark)
-  print *, 'printing tmark: ', tmark
+!  print *, 'printing tmark: ', tmark
   ! main testing loop 
   do i=1,ITERATIONS
      tmark = reset_time_mark(tmark)

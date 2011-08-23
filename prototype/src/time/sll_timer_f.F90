@@ -3,9 +3,9 @@ module sll_timer
   implicit none
 
   interface 
-     type(c_ptr) function time_mark() bind(c, name='set_time_mark_C')
+     type(c_ptr) function set_time_mark() bind(c, name='set_time_mark_C')
        use iso_c_binding
-     end function time_mark
+     end function set_time_mark
   end interface
 
   ! Note that the 'value' attribute is essential for this interface to work.
