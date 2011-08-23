@@ -7,7 +7,7 @@
 
 \title{Selalib Notes - DRAFT -}   
 \author{Edwin Chacon-Golcher}        
-\date{July, 2011}    
+\date{August, 2011}    
 \maketitle
 
 \begin{abstract}
@@ -261,7 +261,7 @@ Here is an example of the use of this module:
 1     program timer_test
 2     #include "timer.h"
 3     implicit none
-4     integer(8) :: i, j,k
+4     integer(8) :: i, j, k
 5     real(c_double), dimension(:), allocatable :: dt
 6     time_mark      :: tmark
 7
@@ -297,7 +297,7 @@ Sets the time marker with a current clock reading.
 We store the result of the timing operation.
 \end{description}
 
-Any number of time markers can be declared and set at different points. So this minimal interface should be sufficient for most needs.
+Any number of time markers can be declared and set at different points. So this minimal interface should be sufficient for most needs. An important point is that this module requires linking with the \emph{real time} system library, thus \verb+-lrt+ should appear as an instruction to the linker during the build.
 
 \subsection{Status}
 Unit-tested.
