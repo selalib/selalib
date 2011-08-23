@@ -29,6 +29,8 @@ contains
     sll_real64 :: eta1_max
     sll_real64 :: eta2_min
     sll_real64 :: eta2_max
+    sll_int32  :: boundary1_type
+    sll_int32  :: boundary2_type
 
     ! allocate pointer
     SLL_ALLOCATE(new_csl_workspace,ierr)
@@ -40,16 +42,39 @@ contains
     nc_eta2    = get_df_nc_eta2( dist_func_2D ) 
     eta2_min   = get_df_eta2_min( dist_func_2D )
     eta2_max   = get_df_eta2_max( dist_func_2D )
+    boundary1_type = get_df_boundary1_type( dist_func_2D )
+    boundary2_type = get_df_boundary2_type( dist_func_2D )
 
     ! initialize splines
-    new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1,          &
+    if (boundary1_type == PERIODIC) then
+       new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,          &
                                                  eta1_min,         &
                                                  eta1_max,         &
                                                  PERIODIC_SPLINE )
-    new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2,          &
+    else if (boundary1_type == COMPACT) then
+       new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,          &
+                                                 eta1_min,         &
+                                                 eta1_max,         &
+                                                 HERMITE_SPLINE )
+    else
+       print*, 'sll_csl.F90: new_csl_workspace. boundary1_type ', boundary1_type, ' not implemented'
+       stop
+    end if
+    if (boundary1_type == PERIODIC) then
+       new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                                  eta2_min,         &
                                                  eta2_max,         &
-                                                 HERMITE_SPLINE )    
+                                                 PERIODIC )  
+    else if (boundary2_type == COMPACT) then
+       new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
+                                                 eta2_min,         &
+                                                 eta2_max,         &
+                                                 HERMITE_SPLINE )   
+    else
+       print*, 'sll_csl.F90: new_csl_workspace. boundary2_type ', boundary2_type, ' not implemented'
+       stop
+    end if
+
   end function new_csl_workspace
 
   ! the code between first and second order is very close. 
