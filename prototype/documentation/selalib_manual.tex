@@ -238,7 +238,7 @@ Selalib has its own timing facility, capable of resolving time periods slightly 
 
 In a tentative way, presently we hide the fact that the timing utility is based on external \emph{C} functions and the \verb+iso_c_binding+ features of $f2003$. The module's capabilities are brought into the client code by the line:
 \begin{verbatim}
-#include "timer.h"
+#include "sll_timer.h"
 \end{verbatim}
 which defines the type \verb+time_mark+. Instances of this type can be used to store clock readings. The timing utility also allows to measure the time elapsed since a particular time mark was set. The available functions are:
 
