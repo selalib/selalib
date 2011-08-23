@@ -5,7 +5,7 @@ module sll_splines
   implicit none
 
   type sll_spline_1D
-     sll_int32                         :: n_cells  ! size
+     sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
      sll_real64                        :: xmin
@@ -15,7 +15,7 @@ module sll_splines
      sll_real64, dimension(:), pointer :: d        ! scratch space D (L*D = F),
                                                    ! refer to algorithm below.
                                                    ! Size depends on BC's.
-     sll_real64, dimension(:), pointer :: c        ! the spline coefficients
+     sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
   end type sll_spline_1D
 
   ! At all cost we want to avoid the use of obscure numeric flags to
@@ -27,54 +27,59 @@ module sll_splines
      enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
   end enum
   
+  interface delete
+     module procedure delete_spline_1D
+  end interface
+
 contains  ! ****************************************************************
 
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
 
-  ! The array of spline coefficients has NC+4 elements. The extra elements
-  ! at the ends (i.e.: 0, NC+2, NC+3) store coefficients whose values are
+  ! The array of spline coefficients has NP+3 elements. The extra elements
+  ! at the ends (i.e.: 0, NP+1, NP+2) store coefficients whose values are
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
 
-  function new_spline_1D( num_cells, xmin, xmax, bc_type )
+  function new_spline_1D( num_points, xmin, xmax, bc_type )
     type(sll_spline_1D), pointer         :: new_spline_1D
-    !sll_real64, dimension(:), intent(in), target :: data
-    sll_int32,  intent(in)               :: num_cells
+    sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
     sll_int32                            :: ierr
-    sll_int32                            :: num_points
     SLL_ALLOCATE( new_spline_1D, ierr )
-    new_spline_1D%n_cells = num_cells
-    new_spline_1D%xmin    = xmin
-    new_spline_1D%xmax    = xmax
-    new_spline_1D%delta   = (xmax - xmin)/real(num_cells,f64)
-    new_spline_1D%rdelta  = 1.0_f64/new_spline_1D%delta
-    new_spline_1D%bc_type = bc_type
-    !new_spline_1D%data    => data
-    select case (bc_type)
-    case (PERIODIC_SPLINE)
-       num_points = num_cells
-    case (HERMITE_SPLINE)
-       num_points = num_cells + 1
-    case default
-       ! FIXME, throw error
-       print *, 'new_spline_1D error: bc_type not recognized'
-    end select
+    new_spline_1D%n_points = num_points
+    new_spline_1D%xmin     = xmin
+    new_spline_1D%xmax     = xmax
+    new_spline_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
+    new_spline_1D%rdelta   = 1.0_f64/new_spline_1D%delta
+    new_spline_1D%bc_type  = bc_type
+    if( num_points .le. 0 ) then
+       print *, 'ERROR, new_spline_1D: Because of the algorithm used this function is meant to be used with arrays that are at least of size = 27'
+       STOP
+    end if
+    if( xmin .gt. xmax ) then
+       print *, 'ERROR, new_spline_1D: xmin is greater than xmax, this would cause all sorts of errors.'
+       STOP
+    end if
+    if( (bc_type .ne. PERIODIC_SPLINE) .and. &
+        (bc_type .ne. HERMITE_SPLINE) ) then
+       ! FIXME: Throw error
+       print *, 'ERROR, new_spline_1D(): unrecognized boundary type specified.'
+       STOP
+    end if
     SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
     ! note how the indexing of the coefficients array includes the end-
-    ! points 0, num_cells+1, num_cells+2, num_cells+3. These are meant to 
+    ! points 0, num_points, num_points+1, num_points+2. These are meant to 
     ! store the boundary condition-specific data. The 'periodic' BC does
-    ! not use the num_cells+3 point.
-    SLL_ALLOCATE( new_spline_1D%c(0:num_cells+3), ierr )
-    !call compute_spline_1D( data, num_cells, bc_type, new_spline_1D )
+    ! not use the num_points+2 point.
+    SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
   end function new_spline_1D
 
   ! - data: the array whose data must be fit with the cubic spline.
-  ! - nc: (number of cells; length of the data array that must be fit with 
+  ! - np: (number of points; length of the data array that must be fit with 
   !   the spline.
   ! - bc_type: an integer flag describing the type of boundary conditions 
   !   desired.
@@ -151,28 +156,34 @@ contains  ! ****************************************************************
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
 
-  subroutine compute_spline_1D( f, nc, bc_type, spline )
+  subroutine compute_spline_1D( f, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    sll_int32,  intent(in)            :: nc
-    sll_int32,  intent(in)            :: bc_type
-    type(sll_spline_1D), pointer      :: spline
-
+    sll_int32,  intent(in)               :: bc_type
+    type(sll_spline_1D), pointer         :: spline
+    ! Note that this function does no error checking and basically
+    ! outsources this task to the functions it is wrapping around.
+    ! This is so because those functions can be used independently
+    ! (if the user wants to avoid the overhead of calling this
+    ! wrapper function), so in any case, the error checking of
+    ! the arguments will be carried out at least once.
     select case (bc_type)
     case (PERIODIC_SPLINE)
-       call compute_spline_1D_periodic( f, nc, spline )
+       call compute_spline_1D_periodic( f, spline )
     case (HERMITE_SPLINE)
-       call compute_spline_1D_hermite( f, nc, spline )
+       call compute_spline_1D_hermite( f, spline )
+    case default
+       print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
+       STOP
     end select
   end subroutine compute_spline_1D
 
 #define NUM_TERMS 27
-  subroutine compute_spline_1D_periodic( f, nc, spline )
+  subroutine compute_spline_1D_periodic( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    sll_int32,  intent(in)            :: nc
-    type(sll_spline_1D), pointer      :: spline
-    sll_real64, dimension(:), pointer :: coeffs
+    type(sll_spline_1D), pointer         :: spline
+    sll_real64, dimension(:), pointer    :: coeffs
     sll_int32                         :: i
-!    sll_int32                         :: err
+    sll_int32                         :: np
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
@@ -180,49 +191,58 @@ contains  ! ****************************************************************
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64, dimension(:), pointer :: d
- ! CHECK INPUT, nc is redundant, change interface
-    SLL_ASSERT(nc == spline%n_cells)
-    SLL_ASSERT(associated(spline))
-    SLL_ASSERT(size(f) >= spline%n_cells)
-    
+
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_periodic(): uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( .not. (size(f) .ge. spline%n_points ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_periodic(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%n_points, ' . Passed size: ', size(f)
+       STOP
+    end if
+    np     =  spline%n_points
     d      => spline%d
-    coeffs => spline%c
+    coeffs => spline%coeffs
     ! Compute d(1):
     d1 =  f(1)
     coeff_tmp = 1.0_f64
     do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, only f(nc) is considered.
        coeff_tmp = coeff_tmp*(-b_a)
-       d1 = d1 + coeff_tmp*f(nc-i)
+       d1 = d1 + coeff_tmp*f(np-1-i)
     end do
     ! Fill the d array with the intermediate result
     d(1) = d1*r_a
-    do i = 2,nc
+    do i = 2,np-1
        d(i) = r_a*(f(i) - b*d(i-1))
     end do
     ! Compute the coefficients. Start with first term
-    d1        = d(nc)
+    d1        = d(np-1)
     coeff_tmp = 1.0_f64
     do i = 1, NUM_TERMS
        coeff_tmp = coeff_tmp*(-b_a)
        d1 = d1 + coeff_tmp*d(i)
     end do
-    coeffs(nc) = d1*r_a
+    coeffs(np-1) = d1*r_a
     ! rest of the coefficients:
-    do i = nc-1, 1, -1
+    do i = np-2, 1, -1
        coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
     end do
-    coeffs(0)    = coeffs(nc)
-    coeffs(nc+1) = coeffs(1)
-    coeffs(nc+2) = coeffs(2)
-    coeffs(nc+3) = coeffs(3)
+    coeffs(0)    = coeffs(np-1)
+    coeffs(np)   = coeffs(1)
+    coeffs(np+1) = coeffs(2)
+    coeffs(np+2) = coeffs(3)
   end subroutine compute_spline_1D_periodic
 
-  subroutine compute_spline_1D_hermite( f, nc, spline )
+  subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    sll_int32,  intent(in)            :: nc
     type(sll_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: i
+    sll_int32                         :: np
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
@@ -232,9 +252,21 @@ contains  ! ****************************************************************
     sll_real64                        :: d1
     sll_real64, dimension(:), pointer :: d
 
-    ! CHECK INPUT, nc is redundant, change interface, see periodic
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_hermite(): uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( .not. (size(f) .ge. spline%n_points ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_hermite(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%n_points, ' . Passed size: ', size(f)
+       STOP
+    end if
+    np     =  spline%n_points
     d      => spline%d
-    coeffs => spline%c
+    coeffs => spline%coeffs
     ! Compute d(1):
     d1 =  f(1)
     coeff_tmp = 1.0_f64
@@ -244,18 +276,18 @@ contains  ! ****************************************************************
     end do
     ! Fill the d array with the intermediate result
     d(1) = d1*r_a
-    do i = 2,nc
+    do i = 2,np-1
        d(i) = r_a*(f(i) - b*d(i-1))
     end do
-    d(nc+1) = ralpha*(0.5_f64*f(nc+1) - b*d(nc))
+    d(np) = ralpha*(0.5_f64*f(np) - b*d(np-1))
     ! Compute the coefficients. Start with first term
-    coeffs(nc+1) = ralpha*d(nc+1)
-    do i = nc, 1, -1
+    coeffs(np) = ralpha*d(np)
+    do i = np-1, 1, -1
        coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
     end do
     coeffs(0)    = coeffs(2)
-    coeffs(nc+2) = coeffs(nc)
-    coeffs(nc+3) = coeffs(nc-1)
+    coeffs(np+1) = coeffs(np-1)
+    coeffs(np+2) = coeffs(np-2)
   end subroutine compute_spline_1D_hermite
 
 #undef NUM_TERMS
@@ -354,12 +386,14 @@ contains  ! ****************************************************************
     sll_real64                        :: cip1 ! C_(i+1)
     sll_real64                        :: cip2 ! C_(i+2)
     sll_int32                         :: num_cells
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
     SLL_ASSERT( associated(spline) )
     ! FIXME: arg checks here
-    num_cells = spline%n_cells
+    num_cells = spline%n_points-1
     rh        = spline%rdelta
-    coeffs    => spline%c
+    coeffs    => spline%coeffs
     ! find the cell and offset for x
     t0        = x*rh
     cell      = int(t0) + 1
@@ -402,9 +436,9 @@ contains  ! ****************************************************************
     sll_int32                               :: i
     SLL_ASSERT( associated(spline) )
     ! FIXME: arg checks here
-    num_cells = spline%n_cells
+    num_cells = spline%n_points-1
     rh        = spline%rdelta
-    coeffs    => spline%c
+    coeffs    => spline%coeffs
     ! find the cell and offset for x
     do i=1,n
        x        = a_in(i)
@@ -504,7 +538,7 @@ contains  ! ****************************************************************
     ! for instance
     SLL_ASSERT( associated(spline) )
     SLL_DEALLOCATE( spline%d, ierr )
-    SLL_DEALLOCATE( spline%c, ierr )
+    SLL_DEALLOCATE( spline%coeffs, ierr )
     spline%data => null()
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_spline_1D
