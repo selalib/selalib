@@ -4,7 +4,7 @@
 #include "utils.h"
 
 /* eventually put these in their own proper place */
-#define STRING(x)      #x
+#define STRNG(x)       #x
 #define XSTRNG(x) STRNG(x)
 
 #define MALLOC(t,n)  ((t*)robust_malloc( sizeof(t)*(n),       \
