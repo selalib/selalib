@@ -229,6 +229,80 @@ which of course doesn't even need to happen at the moment of the first error.
 \subsection{Status}
 Unit tested.
 
+
+\section{Timing Utility}
+\subsection{Description}
+Selalib has its own timing facility, capable of resolving time periods slightly shorter than 2 $\mu s$. 
+
+\subsection{Exposed Interface}
+
+In a tentative way, presently we hide the fact that the timing utility is based on external \emph{C} functions and the \verb+iso_c_binding+ features of $f2003$. The module's capabilities are brought into the client code by the line:
+\begin{verbatim}
+#include "timer.h"
+\end{verbatim}
+which defines the type \verb+time_mark+. Instances of this type can be used to store clock readings. The timing utility also allows to measure the time elapsed since a particular time mark was set. The available functions are:
+
+\begin{verbatim}
+     set_time_mark()
+     reset_time_mark( time_mark )
+     time_elapsed_since( time_mark )
+\end{verbatim}
+
+\verb+set_time_mark()+ is a function with no arguments that returns an instance of the \verb+time_mark+ type, set to a clock reading done at the moment of the function call.
+
+\verb+reset_time_mark( time_mark )+ is also a function, and has essentially a redundant role to \verb+set_time_mark()+. It will take a time mark and return it updated with a new clock reading.
+
+\verb+time_elapsed_since( time_mark )+ is a function that takes a time mark as an argument and returns the time, \emph{in seconds} since the clock reading contained in the passed argument.
+
+\subsection{Usage}
+Here is an example of the use of this module:
+
+\begin{verbatim}
+1     program timer_test
+2     #include "timer.h"
+3     implicit none
+4     integer(8) :: i, j,k
+5     real(c_double), dimension(:), allocatable :: dt
+6     time_mark      :: tmark
+7
+8     #define ITERATIONS 1000
+9 
+10    allocate(dt(ITERATIONS))
+11
+12    do i=1,ITERATIONS
+13       tmark = reset_time_mark(tmark)
+14       do k=1,100000    ! Just a delay
+15          j = i * i - i
+16       end do
+17       dt(i) = time_elapsed_since(tmark) 
+18    end do
+19    ! print diagnostics here, averages, min, max, etc.
+\end{verbatim}
+
+In brief:
+\begin{description}
+\item[Line 2:]
+Imports the timer module. 
+
+\item[Line 5:]
+Here we define an array to store the results of the timing test. This array stores the return values of the function \verb+time_elapsed_since()+, which returns a double precision value (\verb+sll_real64+).
+
+\item[Line 6: ]
+Declaration of the time marker.
+
+\item[Lines 13:]
+Sets the time marker with a current clock reading.
+
+\item[Line 17:]
+We store the result of the timing operation.
+\end{description}
+
+Any number of time markers can be declared and set at different points. So this minimal interface should be sufficient for most needs.
+
+\subsection{Status}
+Unit-tested.
+
+
 \chapter{Mid-Level Layer: Numerical and Parallel Utilities}
 
 \section{Tridiagonal System Solver}
