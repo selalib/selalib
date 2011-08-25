@@ -56,9 +56,9 @@ contains  ! ****************************************************************
     new_spline_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
     new_spline_1D%rdelta   = 1.0_f64/new_spline_1D%delta
     new_spline_1D%bc_type  = bc_type
-    if( num_points .le. 0 ) then
-       print *, 'ERROR, new_spline_1D: Because of the algorithm used this function is meant to be used with arrays that are at least of size = 27'
-       STOP
+    if( num_points .le. 28 ) then
+       print *, 'ERROR, new_spline_1D: Because of the algorithm used, this function is meant to be used with arrays that are at least of size = 28'
+       STOP 'new_spline_1D()'
     end if
     if( xmin .gt. xmax ) then
        print *, 'ERROR, new_spline_1D: xmin is greater than xmax, this would cause all sorts of errors.'
@@ -68,7 +68,7 @@ contains  ! ****************************************************************
         (bc_type .ne. HERMITE_SPLINE) ) then
        ! FIXME: Throw error
        print *, 'ERROR, new_spline_1D(): unrecognized boundary type specified.'
-       STOP
+       STOP 'new_spline_1D()'
     end if
     SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
     ! note how the indexing of the coefficients array includes the end-
@@ -314,19 +314,19 @@ contains  ! ****************************************************************
   ! 
   ! S_(i-1)(x)  defined in [x_(i-2), x_(i-1)]:
   !
-  ! = - 1/(4h^3)*(x_(i-2)-x)^3
+  ! = - 1/(6h^3)*(x_(i-2)-x)^3
   !
   ! S_i(x)  defined in [x_(i-1), x_i]:
   !
-  ! = 1/(4h^3)*[3*(x_(i-1)-x)^3 + 3*h*(x_(i-1)-x)^2 - 3*h^2*(x_(i-1)-x) + h^3]
+  ! = 1/(6h^3)*[3*(x_(i-1)-x)^3 + 3*h*(x_(i-1)-x)^2 - 3*h^2*(x_(i-1)-x) + h^3]
   !
   ! S_(i+1)(x)  defined in [x_i, x_(i+1)]:
   !
-  ! = 1/(4h^3)*[3*(x-x_(i+1))^3 + 3*h*(x-x_(i+1))^2 - 3*h^2*(x-x_(i+1)) + h^3]
+  ! = 1/(6h^3)*[3*(x-x_(i+1))^3 + 3*h*(x-x_(i+1))^2 - 3*h^2*(x-x_(i+1)) + h^3]
   !
   ! S_(i+2)(x)  defined in [x_(i+1), x_(i+2)]:
   !
-  ! = - 1/(4h^3)*(x - x_(i+2))^3
+  ! = - 1/(6h^3)*(x - x_(i+2))^3
   !
   ! Thus any given point will have a value defined by the 4 contributions of
   ! the splines that are supported in the same interval as the point. 
@@ -340,7 +340,7 @@ contains  ! ****************************************************************
   !
   ! S(x) = C_(i-1)*S_(i+2) + C_i*S_(i+1) + C_(i+1)*S_i + C_(i+2)*S_(i-1)
   !
-  ! In normalized form, this can be written:
+  ! In normalized form (h=1), this can be written:
   !
   ! S(x) = 
   !
