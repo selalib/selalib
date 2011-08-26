@@ -1,5 +1,5 @@
 program main
-#include "timer.h"
+#include "sll_timer.h"
 !  use sll_timer
 !  use iso_c_binding
   implicit none
