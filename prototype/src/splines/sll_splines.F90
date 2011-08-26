@@ -16,6 +16,8 @@ module sll_splines
                                                    ! refer to algorithm below.
                                                    ! Size depends on BC's.
      sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
+     sll_real64                        :: slope_L  ! left slope, for Hermite
+     sll_real64                        :: slope_R  ! right slope, for Hermite
   end type sll_spline_1D
 
   ! At all cost we want to avoid the use of obscure numeric flags to
@@ -33,6 +35,33 @@ module sll_splines
 
 contains  ! ****************************************************************
 
+  ! The following could be changed to a direct access eventually, since it
+  ! is hard to conceive that the slopes would ever be anything different than
+  ! a double precision value at the top of the sll_spline_1D object. For now,
+  ! these are the only slots inside the spline that are meant to be modified
+  ! outside of the initialization or spline computation functions.
+
+  subroutine set_slope_left(spline, value)
+    type(sll_spline_1D), pointer :: spline
+    sll_real64, intent(in)       :: value
+    if( .not. associated(spline) ) then
+       print *, 'set_slope_left(): not associated spline objet passed.'
+       STOP
+    end if
+    spline%slope_l = value
+  end subroutine set_slope_left
+
+  subroutine set_slope_right(spline, value)
+    type(sll_spline_1D), pointer :: spline
+    sll_real64, intent(in)       :: value
+    if( .not. associated(spline) ) then
+       print *, 'set_slope_left(): not associated spline objet passed.'
+       STOP
+    end if
+    spline%slope_r = value
+  end subroutine set_slope_right
+
+
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
@@ -42,12 +71,14 @@ contains  ! ****************************************************************
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
 
-  function new_spline_1D( num_points, xmin, xmax, bc_type )
+  function new_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
+    sll_real64, intent(in), optional     :: sl
+    sll_real64, intent(in), optional     :: sr
     sll_int32                            :: ierr
     SLL_ALLOCATE( new_spline_1D, ierr )
     new_spline_1D%n_points = num_points
@@ -64,12 +95,34 @@ contains  ! ****************************************************************
        print *, 'ERROR, new_spline_1D: xmin is greater than xmax, this would cause all sorts of errors.'
        STOP
     end if
-    if( (bc_type .ne. PERIODIC_SPLINE) .and. &
-        (bc_type .ne. HERMITE_SPLINE) ) then
-       ! FIXME: Throw error
-       print *, 'ERROR, new_spline_1D(): unrecognized boundary type specified.'
-       STOP 'new_spline_1D()'
-    end if
+    ! Some more general error checking depending on the type of boundary
+    ! condition requested.
+    select case (bc_type)
+    case (PERIODIC_SPLINE)
+       if( present(sl) .or. present(sr) ) then
+          print *, 'new_spline_1D(): it is not allowed to specify the end slopes in the case of periodic boundary conditions. Exiting program...'
+          STOP 'new_spline_1D'
+       else
+          ! Assign some value, but this value should never be used in the
+          ! periodic case anyway.
+          new_spline_1D%slope_L = 0.0
+          new_spline_1D%slope_R = 0.0
+       end if
+    case (HERMITE_SPLINE)
+       if( present(sl) ) then
+          new_spline_1D%slope_L = sl
+       else
+          new_spline_1D%slope_L = 0.0  ! default left slope for Hermite case
+       end if
+       if( present(sr) ) then
+          new_spline_1D%slope_R = sr
+       else
+          new_spline_1D%slope_R = 0.0  ! default right slope for Hermite case
+       end if
+    case default
+       print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
+       STOP
+    end select
     SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
     ! note how the indexing of the coefficients array includes the end-
     ! points 0, num_points, num_points+1, num_points+2. These are meant to 
@@ -251,6 +304,11 @@ contains  ! ****************************************************************
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64, dimension(:), pointer :: d
+    sll_real64                        :: slope_l
+    sll_real64                        :: slope_r
+    sll_real64                        :: delta
+    sll_real64                        :: f1   ! to store modified value of f(1)
+    sll_real64                        :: fnp  ! for modified value of f(np)
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
@@ -264,30 +322,52 @@ contains  ! ****************************************************************
             spline%n_points, ' . Passed size: ', size(f)
        STOP
     end if
-    np     =  spline%n_points
-    d      => spline%d
-    coeffs => spline%coeffs
+    np      =  spline%n_points
+    d       => spline%d
+    coeffs  => spline%coeffs
+    slope_l = spline%slope_L
+    slope_r = spline%slope_R
+    delta   = spline%delta
+    ! For Hermitian boundary conditions with non-zero slope, we can use the
+    ! same algorithm than for the zero-slope case, with the difference that
+    ! we tweak the values of the source term, f, right at the endpoints.
+    !
+    ! This can be derived from the formula for S'(x_N), which yields 
+    !
+    !             S'(x_N) = 1/(2*h)*[-C_(N-1) + C_(N+1)]
+    !
+    ! For a slope = 0, this reduces to C_(N+1) = C_(N-1). For slope != 0, we
+    ! have an extra constant term (2*h*S') that we can absorb with the 
+    ! source term.
+    f1  = f(1) 
+    fnp = f(np) - delta * slope_r / 3.0_f64
+
     ! Compute d(1):
-    d1 =  f(1)
+    d1 =  f1
     coeff_tmp = 1.0_f64
+
+    ! Since we want to consider the case in which there is a given slope
+    ! at point 1, we assume that all points to the left of point 1 are
+    ! displaced linearly with an offset given by a line with the given slope.
+    ! This requires the subtraction of the  2*slope*delta*(i-1) term...
     do i = 2, NUM_TERMS  ! if NUM_TERMS == 2, only f(2) is considered.
        coeff_tmp = coeff_tmp*(-b_a)
-       d1 = d1 + coeff_tmp*f(i)
+       d1 = d1 + coeff_tmp*(f(i)-2.0*slope_l*delta*(i-1)) 
     end do
     ! Fill the d array with the intermediate result
     d(1) = d1*r_a
     do i = 2,np-1
        d(i) = r_a*(f(i) - b*d(i-1))
     end do
-    d(np) = ralpha*(0.5_f64*f(np) - b*d(np-1))
+    d(np) = ralpha*(0.5_f64*fnp - b*d(np-1))
     ! Compute the coefficients. Start with first term
     coeffs(np) = ralpha*d(np)
     do i = np-1, 1, -1
        coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
     end do
-    coeffs(0)    = coeffs(2)
-    coeffs(np+1) = coeffs(np-1)
-    coeffs(np+2) = coeffs(np-2)
+    coeffs(0)    = coeffs(2)    - 2.0 * delta * slope_l
+    coeffs(np+1) = coeffs(np-1) + 2.0 * delta * slope_r
+    coeffs(np+2) = 0.0 !coeffs(np-2)  ! not used
   end subroutine compute_spline_1D_hermite
 
 #undef NUM_TERMS
