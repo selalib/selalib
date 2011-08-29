@@ -11,6 +11,7 @@ module distribution_function
   type sll_distribution_function_2D_t
      type(field_2D_vec1), pointer :: field
      sll_real64      :: pcharge, pmass
+     sll_real64      :: average
      sll_int32       :: plot_counter
      character(32)   :: name
   end type sll_distribution_function_2D_t
@@ -129,6 +130,7 @@ contains
     sll_real64 :: x, vx, xx, vv, eps, kx, xi, v0, fval, xoffset, voffset
     sll_real64 :: eta1
     sll_real64 :: eta2
+    sll_real64 :: avg, avg_jac
     
     nc_eta1 = get_df_nc_eta1( dist_func_2D ) 
     delta_eta1 = get_df_delta_eta1( dist_func_2D )
@@ -185,14 +187,32 @@ contains
     case (GAUSSIAN)
        xoffset = 1.0_f64
        voffset = 1.0_f64
+       avg = 0.0_f64
+       avg_jac = 0.0_f64
        eta2 = eta2_min
-       do i2 = 1, nc_eta2 + 1
+       do i2 = 1, nc_eta2 
           eta1 = eta1_min
-          do i1 = 1, nc_eta1+1            
+          do i1 = 1, nc_eta1           
              xx = (x1(eta1,eta2) - xoffset )**2
              vv = (x2(eta1,eta2) - voffset )**2
              ! store f * jac for conservative cell centered schemes
-             fval = jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
+             fval =  jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
+             avg = avg + fval
+             avg_jac = avg_jac + jac(eta1,eta2)
+             call sll_set_df_val(dist_func_2D, i1, i2, fval)
+             eta1 = eta1 +  delta_eta1
+          end do
+          eta2 = eta2 +  delta_eta2
+       end do
+       print*, 'dist_func, averages ', avg*delta_eta1*delta_eta2, avg_jac*delta_eta1*delta_eta2
+       dist_func_2D%average = 0.0 !avg / avg_jac
+       ! subtract average from distribution function
+       avg = dist_func_2D%average
+       eta2 = eta2_min
+       do i2 = 1, nc_eta2 + 1
+          eta1 = eta1_min
+          do i1 = 1, nc_eta1+1
+             fval  =  sll_get_df_val( dist_func_2D, i1, i2 ) - avg * jac(eta1,eta2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
              eta1 = eta1 +  delta_eta1
           end do
@@ -208,7 +228,7 @@ contains
     logical, parameter   :: jacobian = .true.
     call int2string(f%plot_counter,counter)
     name = trim(f%name)//counter
-    call write_field_2d_vec1 ( f%field, name, jacobian )
+    call write_field_2d_vec1 ( f%field, name, jacobian, f%average )
     f%plot_counter = f%plot_counter + 1
   end subroutine write_distribution_function
 

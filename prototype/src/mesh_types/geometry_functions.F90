@@ -240,14 +240,15 @@ contains
     sll_real64  :: test_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_x1 = eta1 + c1_test * sin( 2.0_f64* sll_pi * eta1)
+    test_x1 = eta1 + c1_test * sin( 2.0_f64* sll_pi * eta1 )
+    !test_x1 = eta1**2
   end function test_x1
 
   function test_x2 ( eta1, eta2 )
     sll_real64  :: test_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_x2 = eta2 + c2_test * sin( 2.0_f64* sll_pi * eta2)
+    test_x2 = eta2 + c2_test * sin( 2.0_f64* sll_pi * eta2 )
   end function test_x2
 
   ! inverse mapping
@@ -301,6 +302,7 @@ contains
     sll_real64, intent(in)   :: eta2
     test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1)) * &
          (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+    !test_jac =  2 * eta1!
   end function test_jac
 end module geometry_functions
 

@@ -14,30 +14,31 @@ program unit_test
   sll_real64 :: delta_eta1_fine, delta_eta2_fine
   sll_int32 :: i1, i2, it, n_steps
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, deltat, val, error 
+  sll_real64 :: alpha1, alpha2
   procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: coarse_mesh
   type(mesh_descriptor_2D), pointer :: fine_mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func_coarse, dist_func_fine
-  type(field_2D_vec2), pointer :: rotating_field
-  type(field_2D_vec2), pointer :: uniform_field
+  type(field_2D_vec1), pointer :: rotating_field
+  type(field_2D_vec1), pointer :: uniform_field
   type(csl_workspace), pointer :: csl_work
   character(32),parameter  :: name = 'distribution_function'
 
-  eta1_min =  0.0_f64
+  eta1_min =  -0.0_f64
   eta1_max =  1.0_f64
-  eta2_min =  0.0_f64
-  eta2_max =  1.0_f64 ! 2*sll_pi ! 8.0_f64
+  eta2_min =  -0.0_f64
+  eta2_max =  1.0_f64 !2*sll_pi ! 8.0_f64
   geom => new_geometry_2D ('test')
   nc_eta1_coarse = 100
   nc_eta2_coarse = 100
-  nc_eta1_fine = 20
-  nc_eta2_fine = 20
+  nc_eta1_fine = 40
+  nc_eta2_fine = 40
   
   coarse_mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1_coarse, &
-       PERIODIC, eta2_min, eta2_max, nc_eta2_coarse, PERIODIC, geom)
+       COMPACT, eta2_min, eta2_max, nc_eta2_coarse, COMPACT, geom)
   fine_mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1_fine, &
-       PERIODIC, eta2_min, eta2_max, nc_eta2_fine, COMPACT, geom)
+       COMPACT, eta2_min, eta2_max, nc_eta2_fine, PERIODIC, geom)
   dist_func_coarse => sll_new_distribution_function_2D(coarse_mesh,name)
   dist_func_fine => sll_new_distribution_function_2D(fine_mesh,name)
 
@@ -64,14 +65,18 @@ program unit_test
   !    no splitting error. First and second order splitting should be same.
   !    only interpolation error
   
-  ! define uniform field on coarse_mesh
-  uniform_field => new_field_2D_vec2(coarse_mesh)
+  ! define uniform field on coarse_mesh (using stream function)
+  uniform_field => new_field_2D_vec1(coarse_mesh)
+  ! components of field
+  alpha1 = 1.0_f64
+  alpha2 = 1.0_f64
   eta1 = eta1_min 
   do i1 = 1, nc_eta1_coarse+1
      eta2 = eta2_min 
      do i2 = 1, nc_eta2_coarse+1
-        FIELD_2D_AT_I_V1( uniform_field, i1, i2 ) = -1.0_f64
-        FIELD_2D_AT_I_V2( uniform_field, i1, i2 ) = -1.0_f64
+        !FIELD_2D_AT_I_V1( uniform_field, i1, i2 ) = -1.0_f64
+        !FIELD_2D_AT_I_V2( uniform_field, i1, i2 ) = -1.0_f64
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) = alpha1 * x2_coarse(eta1,eta2) - alpha2 * x1_coarse(eta1,eta2)
         eta2 = eta2 + delta_eta2_coarse
      end do
      eta1 = eta1 + delta_eta1_coarse
@@ -169,29 +174,33 @@ program unit_test
 !!$  print*, '    coarse mesh, 2nd order splitting, 100 cells, 20 time steps. Error= ', error
 !!$
   ! define uniform field on fine_mesh
-  call delete_field_2D_vec2(uniform_field)
-  uniform_field => new_field_2D_vec2(fine_mesh)
+  call delete_field_2D_vec1(uniform_field)
+  uniform_field => new_field_2D_vec1(fine_mesh)
+  alpha1 = -1.0_f64
+  alpha2 = -0.0_f64
   eta1 = eta1_min 
   do i1 = 1, nc_eta1_fine+1
      eta2 = eta2_min 
      do i2 = 1, nc_eta2_fine+1
-        FIELD_2D_AT_I_V1( uniform_field, i1, i2 ) = -1.0_f64
-        FIELD_2D_AT_I_V2( uniform_field, i1, i2 ) = -0.0_f64
+        !FIELD_2D_AT_I_V1( uniform_field, i1, i2 ) = -1.0_f64
+        !FIELD_2D_AT_I_V2( uniform_field, i1, i2 ) = -0.0_f64
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) = alpha1 * x2_fine(eta1,eta2) - alpha2 * x1_fine(eta1,eta2)
         eta2 = eta2 + delta_eta2_fine
      end do
      eta1 = eta1 + delta_eta1_fine
   end do
   ! reinitialize CSL  
-  call delete_csl_workspace( csl_work )
+  !call delete_csl_workspace( csl_work )
   csl_work => new_csl_workspace( dist_func_fine )
   print*, 'working now on fine mesh'
 
   ! reinitialize distribution function
   call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   ! run CSL method for 10 time steps
-  n_steps = 10
-  !deltat = 1.0_f64/n_steps
-  deltat = 0.01_f64
+  n_steps = 20
+  deltat = 0.1_f64/n_steps
+  !deltat = 0.001_f64
+  print*, 'deltat=', deltat, 'delta_eta1=',delta_eta1_fine, 'delta_eta2=',delta_eta2_fine
     do it = 1, n_steps
        print*, 'iter=', it
      call csl_first_order(csl_work, dist_func_fine, uniform_field, deltat)

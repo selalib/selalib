@@ -362,10 +362,11 @@ contains   ! *****************************************************************
     call write_mesh(x1mesh, x2mesh, mesh%nc_eta1+1, mesh%nc_eta2+1, "mesh")
   end subroutine write_mesh_2D
 
-  subroutine write_field_2D_vec1( f2Dv1, name, jacobian )
+  subroutine write_field_2D_vec1( f2Dv1, name, jacobian, average )
     type(field_2D_vec1), pointer :: f2Dv1
     character(64) :: name
     logical, optional       :: jacobian   ! .true. if field data multiplied by jacobian is stored
+    sll_real64, optional    :: average    ! average value to add to field
 
     type(mesh_descriptor_2D), pointer :: mesh
     sll_real64, dimension(:,:), pointer :: x1mesh
@@ -374,6 +375,7 @@ contains   ! *****************************************************************
     sll_int32  :: i2
     sll_real64 :: eta1
     sll_real64 :: eta2
+    sll_real64 :: avg
     sll_int32 :: ierr
 
     sll_real64, dimension(:,:), pointer :: val
@@ -383,6 +385,12 @@ contains   ! *****************************************************************
     SLL_ASSERT(associated(mesh))
 
     SLL_ALLOCATE(val(mesh%nc_eta1+1,mesh%nc_eta2 + 1), ierr)
+
+    if (present(average)) then
+       avg = average
+    else
+       avg = 0.0_f64
+    end if
 
     if (.not.(present(jacobian))) then
        call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
@@ -394,7 +402,7 @@ contains   ! *****************************************************************
           do i2 = 1, mesh%nc_eta2
              SLL_ASSERT( mesh%geom%Jacobian (eta1, eta2) > 0.0_f64 )
              if (mesh%geom%Jacobian (eta1, eta2) > 1.0D-14) then 
-                val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian (eta1, eta2)
+                val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian (eta1, eta2) + avg
              else 
                 val(i1,i2) = 0.0
              end if
