@@ -13,7 +13,7 @@ program spline_tester
   implicit none
   
 
-#define NP 5000
+#define NP 33
 
   sll_int32 :: err
   sll_int32 :: i
@@ -37,7 +37,7 @@ program spline_tester
   print *, 'initialize data and coordinates array'
   do i=1,NP
      phase          = real(i-1,f64)*sll_pi/real(NP-1,f64)
-     data(i)        = sin(phase)
+     data(i)        = 2.0*(sin(phase) + 2.5 + cos(phase))
      coordinates(i) = phase
   end do
   !  print *, 'data: '
@@ -45,7 +45,7 @@ program spline_tester
   print *, 'proceed to allocate the spline...'
   sp1 =>  new_spline_1D( NP, 0.0_f64, sll_pi, PERIODIC_SPLINE )
   call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
-  sp2 =>  new_spline_1D( NP, 0.0_f64, sll_pi, HERMITE_SPLINE )
+  sp2 =>  new_spline_1D( NP, 0.0_f64, sll_pi, HERMITE_SPLINE, 2.0_f64,-2.0_f64 )
   call compute_spline_1D( data, HERMITE_SPLINE, sp2 )
 
   print *, 'Contents of the spline 1:'
@@ -67,18 +67,21 @@ program spline_tester
   print *, sp2%coeffs(:)
 #endif
   print *, 'cumulative errors: '
-  print *, 'periodic case, NP points: '
-  print *, 'interpolating individual values:'
-  do i=1, NP
+  print *, 'periodic case, NP-1 points: '
+  print *, 'interpolating individual values from 1 to NP-1:'
+  do i=1, NP-1
      accumulator1 = accumulator1 + abs(data(i) - &
           interpolate_value(real(i-1,f64)*sll_pi/real(NP-1,f64), sp1))
 !         sp1%interpolate(real(i-1,f64)*sll_pi/real(NC,f64)))
      write (*, '(a, i8, a, e20.12)') &
           'point: ', i, ', cumulative err = ',accumulator1
   end do
+  print *, 'checking periodicity:'
+  print *, 'difference between values at points 1 and NP: ', &
+       abs(data(1) - interpolate_value(sll_pi,sp1))
   print *, 'interpolating the whole array:'
-  call interpolate_array_values(coordinates, out, NP, sp1)
-  do i=1, NP
+  call interpolate_array_values(coordinates, out, NP-1, sp1)
+  do i=1, NP-1
      accumulator3 = accumulator3 + abs(data(i) - out(i))
      write (*, '(a, i8, a, e20.12)') &
           'point: ', i, ', cumulative err = ',accumulator3
@@ -108,7 +111,8 @@ program spline_tester
   write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
   write (*,'(a,f20.15)') &
        'interpolated        = ', interpolate_value( 0.0_f64,sp1)
-  write (*,'(a,f20.15)')   'original data(NC/4) = ', data((NP-1)/4+1)
+
+  write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4)
   write (*,'(a,f20.15)') &
        'interpolated        = ', interpolate_value( sll_pi/4.0,sp1)
 
@@ -142,6 +146,12 @@ program spline_tester
 #if PRINT_SPLINE_COEFFS
   print *, sp2%coeffs(:)
 #endif
+
+  print *, 'check the slopes, hermite case, first and last points: '
+  print *, 'first point: ', (interpolate_value(0.0001_f64, sp2) - interpolate_value(0.0_f64, sp2))/0.0001, '  Expected value: 2.0'
+  print *, 'last point: ', (interpolate_value(sll_pi, sp2) - interpolate_value(sll_pi-0.0001_f64,sp2))/0.0001, '  Expected value: -2.0'
+
+
   call delete(sp2)
   if( (accumulator2/real(NP,f64) < 1.0e-15) .and. &
       (accumulator4/real(NP,f64) < 1.0e-15) ) then 

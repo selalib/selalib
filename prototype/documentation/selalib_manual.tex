@@ -7,7 +7,7 @@
 
 \title{Selalib Notes - DRAFT -}   
 \author{Edwin Chacon-Golcher}        
-\date{July, 2011}    
+\date{August, 2011}    
 \maketitle
 
 \begin{abstract}
@@ -238,7 +238,7 @@ Selalib has its own timing facility, capable of resolving time periods slightly 
 
 In a tentative way, presently we hide the fact that the timing utility is based on external \emph{C} functions and the \verb+iso_c_binding+ features of $f2003$. The module's capabilities are brought into the client code by the line:
 \begin{verbatim}
-#include "timer.h"
+#include "sll_timer.h"
 \end{verbatim}
 which defines the type \verb+time_mark+. Instances of this type can be used to store clock readings. The timing utility also allows to measure the time elapsed since a particular time mark was set. The available functions are:
 
@@ -261,7 +261,7 @@ Here is an example of the use of this module:
 1     program timer_test
 2     #include "timer.h"
 3     implicit none
-4     integer(8) :: i, j,k
+4     integer(8) :: i, j, k
 5     real(c_double), dimension(:), allocatable :: dt
 6     time_mark      :: tmark
 7
@@ -297,7 +297,7 @@ Sets the time marker with a current clock reading.
 We store the result of the timing operation.
 \end{description}
 
-Any number of time markers can be declared and set at different points. So this minimal interface should be sufficient for most needs.
+Any number of time markers can be declared and set at different points. So this minimal interface should be sufficient for most needs. An important point is that this module requires linking with the \emph{real time} system library, thus \verb+-lrt+ should appear as an instruction to the linker during the build.
 
 \subsection{Status}
 Unit-tested.
@@ -382,7 +382,14 @@ Like all the other fundamental types in Selalib, this type is declared as a poin
 
 Available functions:
 \begin{verbatim}
-     new_spline_1D( num_points, xmin, xmax, bc_type )
+     new_spline_1D( num_points, 
+                    xmin, 
+                    xmax, 
+                    bc_type, 
+                    slope_L, 
+                    slope_R )  
+     set_slope_left( spline_object, value )
+     set_slope_right(spline_object, value )
      compute_spline_1D( data, bc_type, spline_object )
      compute_spline_1D_periodic( data, spline_object )
      compute_spline_1D_hermite ( data, spline_object )
@@ -391,9 +398,11 @@ Available functions:
      interpolate_value( x, spline_object )
      interpolate_array_values( a_in, a_out, np, spline_object )
 \end{verbatim}
-\verb+new_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and doing some partial initialization of the object. Hence the full creation of a spline is a three-step process: the first one is the declaration of the spline pointer, the second is its assignment through a call to the \verb+new_spline_1D()+ function. The last step, which fully initializes the spline by computing all the coefficients is carried out by calling \verb+compute_spline_1D()+. This last call uses information inside the partially initialized spline object to finish the process. For details, see the usage section below. 
+\verb+new_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and doing some partial initialization of the object. Hence the full creation of a spline is a three-step process: the first one is the declaration of the spline pointer, the second is its assignment through a call to the \verb+new_spline_1D()+ function. The last step, which fully initializes the spline by computing all the coefficients is carried out by calling \verb+compute_spline_1D()+. This last call uses information inside the partially initialized spline object. For details, see the usage section below. 
 
-Note the presence of redundant subroutines. For instance, the subroutine \verb+compute_spline_1D()+, which computes the spline coefficients for a given data, is just a wrapper around the other specialized subroutines that specify the type of boundary conditions in their names. We leave both options until we decide which interface is preferable. This involves a tradeoff between a uniform call that specifies the type of boundary condition through an argument, and a specific subroutine call, more efficient, but less uniform\footnote{Presently, both interfaces coexist. We may decide to ultimately leave them both. The same happens in the case of the destructor functions.}. The \verb+compute_spline_1D()+ functions have to be called again any time that the underlying data changes or if the spline object is to be used with new data. 
+\verb+set_slope_left()+ and \verb+set_slope_right()+: These subroutines are offered in case that the user wants to modify the values of the slopes in a spline object before a call to any of the \verb+compute_spline_1D()+ subroutines. These subroutines would extract the boundary types and slopes (if any) from the spline object, so in case that the user wants to change these values after the initialization step, these are the subroutines to use.
+
+\verb+compute_spline_1D_xxx()+: Note the presence of redundant subroutines. For instance, the subroutine \verb+compute_spline_1D()+, which computes the spline coefficients for a given data, is just a wrapper around the other specialized subroutines that specify the type of boundary conditions in their names. We leave both options until we decide which interface is preferable. This involves a tradeoff between a uniform call that specifies the type of boundary condition through an argument, and a specific subroutine call, more efficient, but less uniform\footnote{Presently, both interfaces coexist. We may decide to ultimately leave them both. The same happens in the case of the destructor functions.}. The \verb+compute_spline_1D()+ functions have to be called again any time that the underlying data changes or if the spline object is to be used with new data. 
 
 \verb+interpolate_value()+ returns the value of \emph{f(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object used to interpolate. Essentially, the spline object, together with the \verb+interpolate_value()+ function create the illusion of having available a continuous function when originally, only discrete data were available.
 
@@ -413,6 +422,7 @@ Descriptor of the type of boundary condition to be imposed in the spline. Presen
 The double precision floating point data array to be fitted.
 \item[spline\_object:]
 The spline entity that is allocated and returned by the function \verb+new_spline_1D()+, initialized by the \verb+compute_spline()+ functions and deleted by the \verb+delete()+ functions.
+\item[slope\_L, slope\_R:] optional arguments, in the case of the hermitian boundary conditions, the user can define the value of the slope at either end of the domain. If not present, these values default to zero. As an example, a spline to fit the data representing the function $sin(x)$ between $0$ and $\pi$ would be called with slopes $1$ and $-1$.
 \item[a\_in:]
 Input array to be interpolated.
 \item[a\_out:]
@@ -464,42 +474,44 @@ The following example is an extract from the module's unit test.
 33      call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
 34      sp2 =>  new_spline_1D( NP, 0.0_f64,    &
 35	                            sll_pi,         &	
-36                             HERMITE_SPLINE )
-37      call compute_spline_1D_hermite( data, sp2 )
-38  
-39      print *, 'cumulative errors at nodes: '
-40      do i=1, NP
-41         val = real(i-1,f64)*sll_pi/real(NP-1,f64)
-42         accumulator1 = accumulator1 + abs(data(i) - &
-43                        interpolate_value(val, sp1))
-44      end do
-45
-46      print *, 'hermite case: '
-47      do i=1, NP
-48         val = real(i-1,f64)*sll_pi/real(NP-1,f64)
-49         accumulator2 = accumulator2 + abs(data(i) - &
-50                        interpolate_value(val, sp2))
-51      end do
-52      print *, 'Periodic case: '
-53      print *, 'average error at the nodes = '
-54      print *, accumulator1/real(NP,f64)
-55      call delete_spline_1D(sp1)
-56      if( accumulator1/real(NP,f64) < 1.0e-15 ) then 
-57         print *, 'PASSED TEST'
-58      else
-59         print *, 'FAILED TEST'
-60      end if
-61      print *, '**************************** '
-62      print *, 'Hermite case: '
-63      print *, 'average error at the nodes = '
-64      print *, accumulator2/real(NP,f64)
-65      call delete_spline_1D(sp2)
-66      if( accumulator2/real(NP,f64) < 1.0e-15 ) then 
-67         print *, 'PASSED TEST'
-68      else
-69         print *, 'FAILED TEST'
-70      end if
-71    end program spline_tester
+36                             HERMITE_SPLINE, 
+37                             1.0_f64, 
+38                            -1.0_f64 )
+39      call compute_spline_1D_hermite( data, sp2 )
+40  
+41      print *, 'cumulative errors at nodes: '
+42      do i=1, NP-1
+43         val = real(i-1,f64)*sll_pi/real(NP-1,f64)
+44         accumulator1 = accumulator1 + abs(data(i) - &
+45                        interpolate_value(val, sp1))
+46      end do
+47
+48      print *, 'hermite case: '
+49      do i=1, NP
+50         val = real(i-1,f64)*sll_pi/real(NP-1,f64)
+51         accumulator2 = accumulator2 + abs(data(i) - &
+52                        interpolate_value(val, sp2))
+53      end do
+54      print *, 'Periodic case: '
+55      print *, 'average error at the nodes = '
+56      print *, accumulator1/real(NP,f64)
+57      call delete_spline_1D(sp1)
+58      if( accumulator1/real(NP,f64) < 1.0e-15 ) then 
+59         print *, 'PASSED TEST'
+60      else
+61         print *, 'FAILED TEST'
+62      end if
+63      print *, '**************************** '
+64      print *, 'Hermite case: '
+65      print *, 'average error at the nodes = '
+66      print *, accumulator2/real(NP,f64)
+67      call delete_spline_1D(sp2)
+68      if( accumulator2/real(NP,f64) < 1.0e-15 ) then 
+69         print *, 'PASSED TEST'
+70      else
+71         print *, 'FAILED TEST'
+72      end if
+73    end program spline_tester
 \end{verbatim}
 
 Here we do not go in detail over every line but only highlight those lines in which we interact with the splines module
@@ -513,12 +525,12 @@ Declaration of the spline pointers.
 \item[Lines 29, 34:]
 Allocation and partial initialization of the splines. Note the \verb+=>+ pointer assignment syntax.
 
-\item[Lines 33, 37:]
-Full initialization of the splines with calculation of the spline coefficients. After this call the spline object becomes fully usable. Note that in the example we used both existing interfaces to call the initialization subroutine.
-\item[Lines 41, 48:]
+\item[Lines 33, 39:]
+Calculation of the spline coefficients. After this call the spline object becomes fully usable. Note that in the example we used both existing interfaces to call the initialization subroutine.
+\item[Lines 45, 52:]
 Value interpolation using the existing splines.
 
-\item[Lines 53, 63:]
+\item[Lines 57, 67:]
 Destruction of spline objects.
 \end{description}
 
