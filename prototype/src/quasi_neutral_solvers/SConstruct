@@ -11,20 +11,21 @@ print 'platform: ' + platform
 
 env = Environment(F90 = 'mpif90',
                   ENV = os.environ,
-                  F90PATH = ['../memory','../precision','../mesh_types','../assert','../utilities','../constants','../collective','../remap'],
+                  F90PATH = ['../memory','../precision','../mesh_types','../assert','../utilities','../constants','../collective','../remap','../time'],
                   FORTRANMODDIRPREFIX = '-J',
                   LINK = 'mpif90',
                   LIBPATH = ['.'],
-                  LIBS = ['sll_memory','sll_precision','sll_mesh_types', 'sll_assert', 'sll_utilities', 'sll_constants', 'lapack','dfftpack','sll_collective','sll_remap'],
-                  F90FLAGS = ['-g','-O2','-W','-Wall','-Werror','-fall-intrinsics','-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+                  LIBS = ['sll_memory','sll_precision','sll_mesh_types', 'sll_assert', 'sll_utilities', 'sll_constants', 'lapack','dfftpack','sll_collective','sll_remap','sll_timer','sll_diagnostics'],
+                  F90FLAGS = ['-g','-O2','-W','-Wall','-fall-intrinsics','-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
 # The -fall-intrinsics flag is used to permit the use of the etime intrinsic, which is a GNU extension and not part of the F95 standard.
-# -std=f95 I had to delete this because of mpif.h????????
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
-env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90"])
+env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_constants',["../constants/numeric_constants.F90"])
 env.Library('sll_remap', ["../remap/sll_remap.F90"])
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
+env.Library('sll_diagnostics',["../diagnostics/sll_diagnostics.F90"])
+env.Library('sll_timer', ["../time/sll_timer_f.F90","../time/sll_timer_c.c","../time/utils_functions.c"])
 env.Program('unit_test', ["unit_test.F90", "bsplvb.F90", "bsplvd.F90","sll_quasi_neutral_solver.F90"])

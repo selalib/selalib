@@ -22,20 +22,35 @@ program working_precision_tester
   !
   ! **************************************************************************
 
-  sll_int32   :: test_int1 = 0
-  sll_int32   :: test_int2 = 0
-  sll_int32   :: i =  z'7fffffff' !2147483647, largest 32-bit int
-  sll_int32   :: counter = 1
-  sll_int32   :: exponent = -127
+  sll_int32   :: test_int1
+  sll_int32   :: test_int2
+  sll_int32   :: i
+  sll_int32   :: counter
+  sll_int32   :: exponent
   sll_int64   :: i2
-  sll_real32  :: test_float = 0.0
-  sll_real32  :: ref_float = 0.0
+  sll_real32  :: test_float
+  sll_real32  :: ref_float
   sll_real32  :: stepf32
-  sll_real32  :: f = z'7f7fffff'     ! largest IEEE-754 single prec float
-  sll_real32  :: small = z'7f000001' ! smallest num with same binary exp as f
-  sll_real32  :: neglected =  z'72ffffff' ! 25-power of 2 orders less
-  sll_real64  :: f2 = z'7fefffffffffffff' ! largest IEEE-754 double float
-  sll_real64  :: small2 = z'7feffffffffffff1' 
+  sll_real32  :: f
+  sll_real32  :: small
+  sll_real32  :: neglected
+  sll_real64  :: f2
+  sll_real64  :: small2
+
+  test_int1  = 0
+  test_int2  = 0
+  i          = transfer(z'7fffffff',i)  !2147483647, largest 32-bit int
+  counter    = 1
+  exponent   = -127
+  test_float = 0.0
+  ref_float  = 0.0
+  f          = transfer(z'7f7fffff',f)
+  small      = transfer(z'7f000001',small) ! smallest num with same binary exp as f
+  neglected  = transfer(z'72ffffff',neglected) ! 25-power of 2 orders less
+  f2         = transfer(z'7fefffffffffffff',f2) ! largest IEEE-754 double float
+  small2     = transfer(z'7feffffffffffff1',small2) 
+
+
 
   print *, '*************************************'
   print *, 'Tester for the working precision module'
@@ -59,7 +74,7 @@ program working_precision_tester
   print *,
   print *, '*************************************'
   print *, 'Test the 32-bit float'
-  stepf32 = z'00000001' ! smallest positive normalized number
+  stepf32 = transfer(z'00000001',stepf32) ! smallest positive normalized number
   infinite_real: do
      test_float = test_float + stepf32
      if ( test_float .gt. ref_float ) then
@@ -72,7 +87,7 @@ program working_precision_tester
         exponent = exponent + 1 ! and move to the next exponent
         write (*, '(a, es20.12)') '  New step is ', stepf32
         counter = 1 ! reset the counter
-        write (*, '(a, z15)') ' Largest number thus far: ', test_float
+        write (*, '(a, es20.12)') ' Largest number thus far: ', test_float
         if ( test_float .eq. transfer(z'7F800000', test_float) ) then
            exit infinite_real
         end if
@@ -103,8 +118,6 @@ program working_precision_tester
   write ( *, '("KIND number for 2147483648 (2^32) is", I2)')   kind(1_i64)
 
   write ( *, '(a, i4)') 'selected_int_kind(0): ', selected_int_kind(0)
-  write ( *, '(a, i4)') 'size of sll_int64 is: ',  SLL_SIZEOF(i2)
 print *, bit_size(counter)
-contains
 
 end program working_precision_tester
