@@ -37,6 +37,7 @@ module sll_mesh_types
      procedure(scalar_function_2D), pointer, nopass :: Jacobian12
      procedure(scalar_function_2D), pointer, nopass :: Jacobian21
      procedure(scalar_function_2D), pointer, nopass :: Jacobian22
+     procedure(scalar_function_2D), pointer, nopass :: Jacobian
   end type geometry_2D
 
   type mesh_descriptor_2D
@@ -125,34 +126,51 @@ module sll_mesh_types
 contains   ! *****************************************************************
   
 
-  function new_geometry_2D ( x1, x2, jac11, jac12, jac21, jac22 )
-    intrinsic  :: present 
+  function new_geometry_2D ( name )
     type(geometry_2D), pointer  ::  new_geometry_2D
-    procedure(scalar_function_2D), pointer, optional :: x1
-    procedure(scalar_function_2D), pointer, optional :: x2
-    procedure(scalar_function_2D), pointer, optional :: jac11
-    procedure(scalar_function_2D), pointer, optional :: jac12
-    procedure(scalar_function_2D), pointer, optional :: jac21
-    procedure(scalar_function_2D), pointer, optional :: jac22
+    character(32)               :: name
 
     sll_int32  :: ierr
     
     SLL_ALLOCATE(new_geometry_2D,ierr)
-    if (present(x1) .and. present(x2) .and. present(jac11) .and. present(jac12) .and. present(jac21) &
-         .and. present(jac22)) then
-       new_geometry_2D%x1 => x1
-       new_geometry_2D%x2 => x2
-       new_geometry_2D%Jacobian11 => jac11
-       new_geometry_2D%Jacobian12 => jac12
-       new_geometry_2D%Jacobian21 => jac21
-       new_geometry_2D%Jacobian22 => jac22
+
+    ! cartesian coordinates correspond to identity mapping
+    if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
+       new_geometry_2D%x1         => identity_x1
+       new_geometry_2D%x2         => identity_x2
+       new_geometry_2D%Jacobian11 => identity_jac11
+       new_geometry_2D%Jacobian12 => identity_jac12
+       new_geometry_2D%Jacobian21 => identity_jac21
+       new_geometry_2D%Jacobian22 => identity_jac22
+       new_geometry_2D%Jacobian => identity_jac
+    ! polar coordinates
+    else if (name(1:5) == 'polar') then
+       new_geometry_2D%x1         => polar_x1
+       new_geometry_2D%x2         => polar_x2
+       new_geometry_2D%Jacobian11 => polar_jac11
+       new_geometry_2D%Jacobian12 => polar_jac12
+       new_geometry_2D%Jacobian21 => polar_jac21
+       new_geometry_2D%Jacobian22 => polar_jac22
+       new_geometry_2D%Jacobian => polar_jac
+    else if (name(1:7) == 'sinprod') then
+       new_geometry_2D%x1         => sinprod_x1
+       new_geometry_2D%x2         => sinprod_x2
+       new_geometry_2D%Jacobian11 => sinprod_jac11
+       new_geometry_2D%Jacobian12 => sinprod_jac12
+       new_geometry_2D%Jacobian21 => sinprod_jac21
+       new_geometry_2D%Jacobian22 => sinprod_jac22
+       new_geometry_2D%Jacobian => sinprod_jac
+    else if (name(1:4) == 'test') then
+       new_geometry_2D%x1         => test_x1
+       new_geometry_2D%x2         => test_x2
+       new_geometry_2D%Jacobian11 => test_jac11
+       new_geometry_2D%Jacobian12 => test_jac12
+       new_geometry_2D%Jacobian21 => test_jac21
+       new_geometry_2D%Jacobian22 => test_jac22
+       new_geometry_2D%Jacobian => test_jac
     else
-       new_geometry_2D%x1 => default_x1
-       new_geometry_2D%x2 => default_x2
-       new_geometry_2D%Jacobian11 => default_jac11
-       new_geometry_2D%Jacobian12 => default_jac12
-       new_geometry_2D%Jacobian21 => default_jac21
-       new_geometry_2D%Jacobian22 => default_jac22
+       print*, 'new_geometry_2D: mapping ',name, ' is not implemented'
+       stop
     end if
   end function new_geometry_2D
 
@@ -344,10 +362,11 @@ contains   ! *****************************************************************
     call write_mesh(x1mesh, x2mesh, mesh%nc_eta1+1, mesh%nc_eta2+1, "mesh")
   end subroutine write_mesh_2D
 
-  ! writes field along with mesh for the moment. The mesh part can be removed when it can be written separately
-  subroutine write_field_2D_vec1( f2Dv1, name )
+  subroutine write_field_2D_vec1( f2Dv1, name, jacobian, average )
     type(field_2D_vec1), pointer :: f2Dv1
     character(64) :: name
+    logical, optional       :: jacobian   ! .true. if field data multiplied by jacobian is stored
+    sll_real64, optional    :: average    ! average value to add to field
 
     type(mesh_descriptor_2D), pointer :: mesh
     sll_real64, dimension(:,:), pointer :: x1mesh
@@ -356,11 +375,42 @@ contains   ! *****************************************************************
     sll_int32  :: i2
     sll_real64 :: eta1
     sll_real64 :: eta2
+    sll_real64 :: avg
     sll_int32 :: ierr
-    
+
+    sll_real64, dimension(:,:), pointer :: val
+
     ! create 2D mesh
     mesh => f2Dv1%descriptor
     SLL_ASSERT(associated(mesh))
-    call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+
+    SLL_ALLOCATE(val(mesh%nc_eta1+1,mesh%nc_eta2 + 1), ierr)
+
+    if (present(average)) then
+       avg = average
+    else
+       avg = 0.0_f64
+    end if
+
+    if (.not.(present(jacobian))) then
+       call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+    else if (jacobian) then 
+       ! quantity multiplied by Jacobian is stored, need to divide by jacobian for
+       eta1 = mesh%eta1_min + 0.5_f64 * mesh%delta_eta1
+       do i1 = 1, mesh%nc_eta1
+          eta2 = mesh%eta2_min + 0.5_f64 * mesh%delta_eta2
+          do i2 = 1, mesh%nc_eta2
+             SLL_ASSERT( mesh%geom%Jacobian (eta1, eta2) > 0.0_f64 )
+             if (mesh%geom%Jacobian (eta1, eta2) > 1.0D-14) then 
+                val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian (eta1, eta2) + avg
+             else 
+                val(i1,i2) = 0.0
+             end if
+             eta2 = eta2 + mesh%delta_eta2
+          end do
+          eta1 = eta1 + mesh%delta_eta1
+       end do
+       call write_vec1d(val,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+    end if
   end subroutine write_field_2D_vec1
 end module sll_mesh_types
