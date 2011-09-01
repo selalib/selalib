@@ -74,6 +74,18 @@ contains
     get_df_x2 => f%field%descriptor%geom%x2
   end function get_df_x2
 
+  function get_df_eta1 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_eta1
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_eta1 => f%field%descriptor%geom%eta1
+  end function get_df_eta1
+
+  function get_df_eta2 ( f )
+    procedure(scalar_function_2D), pointer        :: get_df_eta2
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_eta2 => f%field%descriptor%geom%eta2
+  end function get_df_eta2
+
   function get_df_jac11 ( f )
     procedure(scalar_function_2D), pointer        :: get_df_jac11
     type(sll_distribution_function_2D_t), pointer :: f
@@ -185,8 +197,8 @@ contains
           end do
        end do
     case (GAUSSIAN)
-       xoffset = 1.0_f64
-       voffset = 1.0_f64
+       xoffset = 6.0_f64
+       voffset = 6.0_f64
        avg = 0.0_f64
        avg_jac = 0.0_f64
        eta2 = eta2_min
@@ -204,8 +216,8 @@ contains
           end do
           eta2 = eta2 +  delta_eta2
        end do
-       print*, 'dist_func, averages ', avg*delta_eta1*delta_eta2, avg_jac*delta_eta1*delta_eta2
-       dist_func_2D%average = 0.0 !avg / avg_jac
+       !print*, 'dist_func, averages ', avg*delta_eta1*delta_eta2, avg_jac*delta_eta1*delta_eta2
+       dist_func_2D%average = 0.0_f64 ! avg / avg_jac
        ! subtract average from distribution function
        avg = dist_func_2D%average
        eta2 = eta2_min
@@ -220,6 +232,91 @@ contains
        end do
     end select
   end subroutine sll_init_distribution_function_2D
+  
+    ! compute integral of f with respect to x2 (-> rho)
+    ! using a trapezoidal rule on a uniform grid of physical space
+  subroutine compute_rho(dist_func_2D,rho,npoints)
+    type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
+    type(field_1D_vec1), pointer                       :: rho 
+    sll_int32                                          :: npoints ! number of integration points
+
+    ! local variables
+    procedure(scalar_function_2D), pointer :: x1f
+    procedure(scalar_function_2D), pointer :: x2f
+    procedure(scalar_function_2D), pointer :: eta1f
+    procedure(scalar_function_2D), pointer :: eta2f
+    sll_int32 :: nc_eta1
+    sll_int32 :: nc_eta2
+    sll_int32 :: nc_rho
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: x1min_rho
+    sll_real64 :: delta_rho
+    sll_int32 :: i
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_real64 :: x2min
+    sll_real64 :: x2max
+    sll_real64 :: x1
+    sll_real64 :: x2
+    sll_real64 :: delta_int
+    sll_real64 :: sum
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+
+    ! get mesh data attached to f
+    nc_eta1 = get_df_nc_eta1( dist_func_2D ) 
+    delta_eta1 = get_df_delta_eta1( dist_func_2D )
+    eta1_min = get_df_eta1_min( dist_func_2D )
+    nc_eta2 = get_df_nc_eta2( dist_func_2D ) 
+    delta_eta2 = get_df_delta_eta2( dist_func_2D )
+    eta2_min = get_df_eta2_min( dist_func_2D )
+    x1f => get_df_x1 ( dist_func_2D )
+    x2f => get_df_x2 ( dist_func_2D )
+    eta1f => get_df_eta1 ( dist_func_2D )
+    eta2f => get_df_eta2 ( dist_func_2D )
+
+    ! get mesh data attached to rho
+    nc_rho = GET_FIELD_NC_ETA1( rho )
+    x1min_rho = GET_FIELD_ETA1_MIN( rho )
+    delta_rho = GET_FIELD_DELTA_ETA1( rho )
+
+    ! find minimal and maximal values of x2
+    x2min = x2f(1.0_f64,1.0_f64)
+    x2max = x2min
+    eta1 = eta1_min
+    do i1 = 1, nc_eta1 + 1
+       eta2 = eta2_min
+       do i2 = 1, nc_eta2 + 1
+          x2 = x2f(eta1,eta2)
+          if ( x2 >  x2max ) then
+             x2max = x2
+          else if ( x2 <  x2min ) then
+             x2min = x2
+          end if
+          eta2 = eta2 + delta_eta2
+       end do
+       eta1 = eta1 + delta_eta1
+    end do
+    ! set delta_int the subdivision step
+    delta_int = (x2max-x2min)/npoints
+    x1 = x1min_rho
+    do i1 = 1, nc_rho + 1
+       sum = 0.0_f64
+       x2 = x2min
+       do i2 = 1, npoints
+          sum = sum + FIELD_2D_AT_X( dist_func_2D, eta1f(x1, x2), eta2f(x1,x2) )
+          ! FIELD_2D_AT_X needs to be defined and implemented using linear or 2D cubic spline interpolation 
+          ! beware of case where eta1f and eta2f fall outside the grid (in this case 0 should be returned)
+          x2 = x2 + delta_int
+       end do
+       SET_FIELD_1D_VALUE_AT_I( rho, i1, delta_int * sum ) 
+       x1 = x1 + delta_rho 
+    end do
+
+  end subroutine compute_rho
 
   subroutine write_distribution_function ( f )
     type(sll_distribution_function_2D_t), pointer      :: f
