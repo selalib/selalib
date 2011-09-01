@@ -4,7 +4,7 @@ program unit_test
   use ode_solvers
   implicit none
   
-  sll_int32 :: i, ncells, ierr, order
+  sll_int32 :: i, ncells, ierr, order, nsubsteps
   sll_real64 :: xmin, xmax, deltax, deltat, x, error
   sll_real64, dimension(:), pointer :: a_n, a_np1, xout
 
@@ -51,7 +51,24 @@ program unit_test
      !print*, i, modulo(xmin+(i-1)*deltax - deltat, xmax-xmin), xout(i)
   end do
   print*,'     error=', error
-
+  ! test the ode dx / dt = x -> solution is x(t) = x(0) * exp(t)
+  x = xmin
+  do i = 1, ncells+1
+     a_n(i) = x
+     x = x + deltax
+  end do
+  print*, 'testing RK2:'
+  nsubsteps = 10  
+  call rk2( nsubsteps, deltat, xmin, ncells, deltax, PERIODIC_ODE, xout,  a_n ) 
+  ! compute error
+  error = 0.0_f64
+  x = xmin
+  do i = 1, ncells
+     error = max(error,abs(xmin+modulo(x*exp(deltat)-xmin, xmax-xmin)-xout(i)))
+     print*, i, x*exp(deltat), xout(i), abs(xmin+modulo(x*exp(deltat)-xmin, xmax-xmin)-xout(i))
+     x = x + deltax
+  end do
+  print*, '     error=', error
 
   print *, 'Successful, exiting program.'
   

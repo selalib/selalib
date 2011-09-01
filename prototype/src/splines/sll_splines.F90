@@ -522,6 +522,7 @@ contains  ! ****************************************************************
     ! find the cell and offset for x
     do i=1,n
        x        = a_in(i)
+       !print*, 'splines', x,  spline%xmin, spline%xmax
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh
        cell     = int(t0) + 1
@@ -585,6 +586,7 @@ contains  ! ****************************************************************
     sll_real64                        :: cip1 ! C_(i+1)
     sll_real64                        :: cip2 ! C_(i+2)
     sll_int32                         :: num_cells
+
     SLL_ASSERT( (x .ge. this%xmin) .and. (x .le. this%xmax) )
 !    SLL_ASSERT( associated(this) )
     ! FIXME: arg checks here
