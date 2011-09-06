@@ -13,6 +13,4 @@ module sll_working_precision
   integer, parameter :: f32 = selected_real_kind(1,37)
   integer, parameter :: f64 = selected_real_kind(1,99)
 
-
-
 end module sll_working_precision
