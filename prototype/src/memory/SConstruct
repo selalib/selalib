@@ -9,7 +9,10 @@ hostname = socket.gethostname()
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
-env = Environment( LIBPATH = ['.'], 
-                   F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f2003', '-DDEBUG', '-DGFORTRAN', '-ffree-line-length-none'] )
+env = Environment( ENV = os.environ,
+                   LIBPATH = ['.'], 
+                   F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f2003', 
+                               '-DDEBUG', '-DGFORTRAN', 
+                               '-ffree-line-length-none'] )
 src_files = Split('unit_test.F90 sll_memory.F90')
 env.Program(target='unit_test', source = src_files)
