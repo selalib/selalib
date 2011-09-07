@@ -9,7 +9,7 @@ hostname = socket.gethostname()
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
-env = Environment( ENV= {'FORTRANPATH' : os.environ['FORTRANPATH']},
+env = Environment( ENV=os.environ,
                    F90PATH = ['../memory','../precision','../assert','../utilities','../constants','../diagnostics'],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.'],
