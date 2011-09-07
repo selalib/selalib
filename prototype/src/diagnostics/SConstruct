@@ -9,13 +9,19 @@ hostname = socket.gethostname()
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
+
+# It would be nice if the location of the hdf5.mod module could be set in
+# a more general way, like in a catch-all environment variable like CPATH. That 
+# was not working so we are using the specific solution of HDF5INCLUDEPATH,
+# which is at least portable. But this requires the user to set this
+# variable in the environment.
+
 env = Environment( ENV = os.environ,
                    F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
                               '-std=f2003', '-ffree-line-length-none'],
                    CPPDEFINES=['GFORTRAN', 'DEBUG'],
-                   F90PATH=['../precision','../assert',
-                            os.environ['HDF5INCLUDEPATH']],
-                   LIBPATH=['.',os.environ['HDF5LIBPATH']],
+                   F90PATH=['../precision','../assert', os.environ['HDF5INCLUDEPATH']],
+                   LIBPATH=['.', os.environ['LD_LIBRARY_PATH']],
                    LIBS=[ 'sll_assertion', 'sll_precision', 'hdf5_fortran', 
                           'hdf5','z'])
 

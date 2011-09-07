@@ -9,15 +9,23 @@ hostname = socket.gethostname()
 print 'hostname: ' + hostname
 print 'platform: ' + platform
 
-env = Environment(F90 = 'mpif90',
-                  ENV = os.environ,
-                  F90PATH = ['../memory','../precision','../mesh_types','../assert','../utilities','../constants','../collective','../remap','../time'],
-                  FORTRANMODDIRPREFIX = '-J',
-                  LINK = 'mpif90',
-                  LIBPATH = ['.'],
-                  LIBS = ['sll_memory','sll_precision','sll_mesh_types', 'sll_assert', 'sll_utilities', 'sll_constants', 'lapack','dfftpack','sll_collective','sll_remap','sll_timer','sll_diagnostics'],
-                  F90FLAGS = ['-g','-O2','-W','-Wall','-fall-intrinsics','-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
-# The -fall-intrinsics flag is used to permit the use of the etime intrinsic, which is a GNU extension and not part of the F95 standard.
+env = Environment( ENV = os.environ,
+                   F90 = 'mpif90',
+                   F90PATH = ['../memory','../precision','../mesh_types',
+                              '../assert','../utilities','../constants',
+                              '../collective','../remap','../time'],
+                   FORTRANMODDIRPREFIX = '-J',
+                   LINK = 'mpif90',
+                   LIBPATH = ['.'],
+                   LIBS = ['sll_memory','sll_precision','sll_mesh_types', 
+                           'sll_assert', 'sll_utilities', 'sll_constants', 
+                           'lapack','dfftpack','sll_collective','sll_remap',
+                           'sll_timer','sll_diagnostics'],
+                   F90FLAGS = ['-g','-O2','-W','-Wall','-fall-intrinsics',
+                               '-DDEBUG','-DGFORTRAN',
+                               '-ffree-line-length-none'])
+# The -fall-intrinsics flag is used to permit the use of the etime intrinsic, 
+# which is a GNU extension and not part of the fortran standard.
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
