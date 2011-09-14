@@ -19,6 +19,15 @@ module ode_solvers
 
 contains
 
+  function f_one( eta )
+    use sll_working_precision
+    sll_real64 :: f_one
+    sll_real64, intent(in)  :: eta
+
+    f_one = 1.0_f64
+  end function f_one
+
+
   ! Computes the solution of functional equation 
   ! 
   !            xi-xout = c*deltat*(b(xi)+a(xout))
@@ -33,6 +42,8 @@ contains
   !
   ! In practise the first order method needs to be called in order to 
   ! compute b for the second order method
+  !
+  ! based on algorithm described in Crouseilles, Mehrenberger, Sonnendrucker, JCP 2010
   subroutine implicit_ode( order,  &
                            deltat, &
                            xmin,   &
@@ -54,8 +65,8 @@ contains
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
-    sll_int32  :: i, id, ileft, iright
-    sll_real64 :: alpha, alphabar, xmax, xi
+    sll_int32  :: i, id, ileft, iright, i0
+    sll_real64 :: xmax, xi, alpha
     sll_real64 :: c     ! real coefficient
     sll_real64, dimension(ncx+1), target     :: zeros   ! array if zeros
     sll_real64, dimension(:), pointer        :: b
@@ -86,35 +97,56 @@ contains
     SLL_ASSERT(size(xout)==ncx+1)
 
     xmax = xmin + ncx * deltax
+
+    ! localize cell [i0, i0+1] containing origin of characteristic ending at xmin
+    i = 1
+    if ( a(i) + b(i) > 0 ) then
+       ! search on the left
+       if (bt == PERIODIC_ODE) then
+          i0 = 0 
+          do while ( i0 + c*deltat/deltax*( a(modulo(i0-1,ncx)+1) + b(i) ) >= i  ) 
+             i0 = i0 - 1
+          end do
+       else if (bt == COMPACT_ODE) then
+          i0 = 1
+       else
+          stop 'implicit_ode : boundary_type not implemented' 
+       end if
+    else 
+       ! search on the right
+       i0 = 1 
+       do while ( i0 + c*deltat/deltax*( a(i0) + b(i) ) < i  ) 
+          i0 = i0 + 1
+       end do
+       i0 = i0 - 1
+    end if
+    
     do i = 1, ncx + 1
        xi = xmin + (i-1)*deltax  ! current grid point
-       ! estimate the displacement alpha * deltax = xi - xout
-       ! which will give the cell around the center of which a will be 
-       ! Taylor expanded
-       ! print*, 's1', i, a(i), deltax, deltat, bt
-       alphabar = deltat / deltax * a(i)
-       id = floor( -alphabar )  ! cell will be [i+id, i+id+1]
-       !print*, 's2', alphabar, id, a(i)
+       ! find cell which contains origin of characteristic
+       do while ( i0 + c*deltat/deltax*( a(modulo(i0-1,ncx)+1) + b(i) ) <= i )
+          i0 = i0 + 1
+       end do
+       i0 = i0 - 1
+       !print*,  'out ',i, i0, i0 + c*deltat/deltax*( a(modulo(i0-1,ncx)+1) + b(i) )
+       id = i - i0 
        ! handle boundary conditions
        if (bt == PERIODIC_ODE) then
-          ileft = modulo(i+id-1,ncx)+1
-          iright = modulo(i+id,ncx)+1
+          ileft = modulo(i0-1,ncx) + 1
+          iright = modulo(i0,ncx) + 1
        else if (bt == COMPACT_ODE) then
-          ileft = min(max(i+id,1),ncx+1)
-          iright = max(min(i+id+1,ncx+1),1)
+          ileft = min(max(i0,1),ncx+1)
+          iright = max(min(i0+1,ncx+1),1)
        else
-          stop 'compute_flow_1D_backward : boundary_type not implemented' 
+          stop 'implicit_ode : boundary_type not implemented' 
        end if
        !print*, i, ileft, iright, a(iright) - a(ileft),  deltax + c * deltat * (a(iright) - a(ileft))
        SLL_ASSERT((ileft>=1).and.(ileft<= ncx+1))
        SLL_ASSERT((iright>=1).and.(iright<= ncx+1))
        SLL_ASSERT( deltax + c * deltat * (a(iright) - a(ileft)) > 0.0 )
-       ! compute xout using first order Taylor expansion of a to get 
-       ! linear equation for alpha
-       alpha = c*deltat*(b(i) + a(ileft)*(1+id) - id*a(iright)) &
+       ! compute xout using linear interpolation of a 
+       alpha = c*deltat*(b(i) + (1-id)*a(ileft) + id*a(iright)) &
             /( deltax + c * deltat * (a(iright) - a(ileft)))
-       !print*,i,'alpha', alpha, id, ileft,iright,a(i),a(iright)-a(ileft), b(i)
-       !print*,i,'b ',b(i)
        xout(i) = xi - alpha * deltax 
        ! handle boundary conditions
        if (bt == PERIODIC_ODE) then
@@ -130,7 +162,9 @@ contains
        else
           stop 'implicit_ode : boundary_type not implemented' 
        end if
+
        SLL_ASSERT((xout(i) >= xmin ) .and. (xout(i) <= xmax)) 
+       !print*,'interv ', xmin + (ileft-1)*deltax , xout(i), xmin + ileft*deltax
     end do
   end subroutine implicit_ode
 
@@ -257,7 +291,7 @@ contains
                   bt,          &
                   eta_out,     &
                   a,           &
-                  mesh) 
+                  jac) 
     intrinsic  :: floor
     sll_int32  :: nsubsteps
     sll_real64 :: deltat   
@@ -268,13 +302,20 @@ contains
     ! solution for all initial conditions:
     sll_real64, dimension(:)                     :: eta_out   
     sll_real64, dimension(:)                     :: a     ! rhs of ode
-    type(mesh_descriptor_2D)                     :: mesh   
+    procedure(scalar_function_1D), pointer, optional  :: jac
     ! local variables
+    procedure(scalar_function_1D), pointer  :: jacobian
     sll_real64 :: eta_max
     sll_real64 :: eta_i, eta_k, eta_kp1
     sll_real64 :: deltatsub
-    sll_real64 :: a_n, a_np1, alpha
+    sll_real64 :: a_n, a_np1, alpha, k2
     sll_int32  :: i, id, isub
+
+    if (present(jac)) then
+       jacobian => jac 
+    else 
+       jacobian => f_one
+    end if
 
     SLL_ASSERT(size(a)==nc_eta+1)
     SLL_ASSERT(size(eta_out)==nc_eta+1)
@@ -284,7 +325,7 @@ contains
        eta_i = eta_min + (i-1)*delta_eta  ! current grid point
        ! loop over substeps
        eta_k = eta_i
-       a_n = a(i) / mesh%geom%Jacobian(eta_i,1.0_f64)
+       a_n = a(i) / jacobian(eta_i)
        deltatsub = deltat / nsubsteps
        do isub = 1, nsubsteps
           ! first stage
@@ -308,7 +349,7 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
-          a_np1 = a_np1 / mesh%geom%Jacobian(eta_kp1,1.0_f64)
+          a_np1 = a_np1 / jacobian(eta_kp1)
           ! compute cubic Lagrange interpolation of a at eta_k
           !a_np1 = -alpha*(alpha-1)*(alpha-2)/6 * a(id) + (alpha+1)*(alpha-1)*(alpha-2)/2 * a(id+1) &
           !     - (alpha+1)*alpha*(alpha-2)/2 * a(id+2) + (alpha+1)*alpha*(alpha-1)/6 * a(id+3) 
@@ -327,7 +368,15 @@ contains
           else
              stop 'sll_ode_solvers, rk2: boundary_type not implemented' 
           end if
-          !print*, i, eta_kp1
+          ! compute a_np1 at eta_kp1 for next substeps
+          ! localize cell [id, id+1] where eta_k is in 
+          id = floor( (eta_kp1-eta_min)/delta_eta ) 
+          alpha = (eta_kp1 - eta_min)/delta_eta - id 
+          ! compute linear interpolation of a at eta_k
+          a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
+          ! divide by jacobian of mesh
+          a_np1 = a_np1 / jacobian(eta_kp1)
+          ! update
           eta_k = eta_kp1
           a_n = a_np1
        end do
@@ -336,4 +385,154 @@ contains
        SLL_ASSERT((eta_out(i) >= eta_min ) .and. (eta_out(i) <= eta_max)) 
     end do
   end subroutine rk2
+
+  ! Classical fourth order Runge-Kutta ODE solver for an ode of the form
+  ! d eta/ dt = a(eta)
+  ! a is known only at grid points and linear interpolation is used in between
+    subroutine rk4( nsubsteps,   &
+                  deltat,      &
+                  eta_min,     &
+                  nc_eta,      &
+                  delta_eta,   &
+                  bt,          &
+                  eta_out,     &
+                  a,           &
+                  jac) 
+    intrinsic  :: floor
+    sll_int32  :: nsubsteps
+    sll_real64 :: deltat   
+    sll_real64 :: eta_min  
+    sll_int32  :: nc_eta   ! number of cells of uniform grid
+    sll_real64 :: delta_eta
+    sll_int32  :: bt    ! boundary_type
+    ! solution for all initial conditions:
+    sll_real64, dimension(:)                     :: eta_out   
+    sll_real64, dimension(:)                     :: a     ! rhs of ode
+    procedure(scalar_function_1D), pointer, optional  :: jac
+    ! local variables
+    procedure(scalar_function_1D), pointer  :: jacobian
+    sll_real64 :: eta_max
+    sll_real64 :: eta_i, eta_k, eta_kp1
+    sll_real64 :: deltatsub
+    sll_real64 :: a_n, a_np1, alpha, k2, k3, k4
+    sll_int32  :: i, id, isub
+
+    if (present(jac)) then
+       jacobian => jac 
+    else 
+       jacobian => f_one
+    end if
+
+    SLL_ASSERT(size(a)==nc_eta+1)
+    SLL_ASSERT(size(eta_out)==nc_eta+1)
+    ! compute eta_max of the grid
+    eta_max = eta_min + nc_eta * delta_eta
+    do i = 1, nc_eta + 1
+       eta_i = eta_min + (i-1)*delta_eta  ! current grid point
+       ! loop over substeps
+       eta_k = eta_i
+       a_n = a(i) / jacobian(eta_i)
+       deltatsub = deltat / nsubsteps
+       do isub = 1, nsubsteps
+          ! second stage
+          eta_kp1 = eta_k + 0.5_f64*deltatsub * a_n
+          ! handle boundary conditions         
+          if (bt == PERIODIC_ODE) then
+             eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
+          else if (bt == COMPACT_ODE) then
+             if (eta_kp1 < eta_min) then
+                eta_kp1 = eta_min
+             else if (eta_kp1 > eta_max) then
+                eta_kp1 = eta_max
+             end if
+          else
+             stop 'sll_ode_solvers, rk2: boundary_type not implemented' 
+          end if
+          ! localize cell [id, id+1] where eta_k is in 
+          id = floor( (eta_kp1-eta_min)/delta_eta ) 
+          alpha = (eta_kp1 - eta_min)/delta_eta - id 
+          ! compute linear interpolation of a at eta_k
+          k2 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
+          ! divide by jacobian of mesh
+          k2 = k2 / jacobian(eta_kp1)
+ 
+         ! third stage
+          eta_kp1 = eta_k + 0.5_f64*deltatsub * k2
+          ! handle boundary conditions         
+          if (bt == PERIODIC_ODE) then
+             eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
+          else if (bt == COMPACT_ODE) then
+             if (eta_kp1 < eta_min) then
+                eta_kp1 = eta_min
+             else if (eta_kp1 > eta_max) then
+                eta_kp1 = eta_max
+             end if
+          else
+             stop 'sll_ode_solvers, rk2: boundary_type not implemented' 
+          end if
+          ! localize cell [id, id+1] where eta_k is in 
+          id = floor( (eta_kp1-eta_min)/delta_eta ) 
+          alpha = (eta_kp1 - eta_min)/delta_eta - id 
+          ! compute linear interpolation of a at eta_k
+          k3 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
+          ! divide by jacobian of mesh
+          k3 = k3 / jacobian(eta_kp1)
+
+          ! fourth stage
+          eta_kp1 = eta_k + deltatsub * k3
+          ! handle boundary conditions         
+          if (bt == PERIODIC_ODE) then
+             eta_kp1 = eta_min + modulo(eta_kp1 - eta_min, eta_max - eta_min)
+          else if (bt == COMPACT_ODE) then
+             if (eta_kp1 < eta_min) then
+                eta_kp1 = eta_min
+             else if (eta_kp1 > eta_max) then
+                eta_kp1 = eta_max
+             end if
+          else
+             stop 'sll_ode_solvers, rk2: boundary_type not implemented' 
+          end if
+          ! localize cell [id, id+1] where eta_k is in 
+          id = floor( (eta_kp1-eta_min)/delta_eta ) 
+          alpha = (eta_kp1 - eta_min)/delta_eta - id 
+          ! compute linear interpolation of a at eta_k
+          k4 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
+          ! divide by jacobian of mesh
+          k4 = k4 / jacobian(eta_kp1)
+
+
+
+          ! compute solution of ode for current grid point 
+          eta_kp1 = eta_k + deltatsub/6.0_f64 * (a_n + 2.0_f64*(k2+k3) + k4)
+          ! handle boundary conditions      
+          !print*, i, eta_kp1, eta_min, eta_max
+          if (bt == PERIODIC_ODE) then
+             eta_kp1 = eta_min + modulo(eta_kp1  - eta_min, eta_max - eta_min)
+          else if (bt == COMPACT_ODE) then
+             if (eta_kp1 < eta_min) then
+                eta_kp1 = eta_min
+             else if (eta_kp1 > eta_max) then
+                eta_kp1 = eta_max
+             end if
+          else
+             stop 'sll_ode_solvers, rk2: boundary_type not implemented' 
+          end if
+          ! compute a_np1 at eta_kp1 for next substeps
+          ! localize cell [id, id+1] where eta_k is in 
+          id = floor( (eta_kp1-eta_min)/delta_eta ) 
+          alpha = (eta_kp1 - eta_min)/delta_eta - id 
+          ! compute linear interpolation of a at eta_k
+          a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
+          ! divide by jacobian of mesh
+          a_np1 = a_np1 / jacobian(eta_kp1)
+          ! update
+          eta_k = eta_kp1
+          a_n = a_np1
+       end do
+       eta_out(i) = eta_k
+
+       SLL_ASSERT((eta_out(i) >= eta_min ) .and. (eta_out(i) <= eta_max)) 
+    end do
+  end subroutine rk4
+
 end module ode_solvers

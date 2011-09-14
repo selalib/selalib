@@ -247,7 +247,7 @@ contains
           !                     + jac22(eta1,eta2)*FIELD_2D_AT_I_V2( advfield, i1, i2 )
           advfield_1D_2 ( i2 ) = (FIELD_2D_AT_I( advfield, i1, i2 ) - FIELD_2D_AT_I( advfield, i1+1, i2 )) / &
             ( delta_eta1 * jac(eta1,eta2) )
-          ! compute primiti2e of distribution function along this line
+          ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
                + delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 ) 
        end do
@@ -368,13 +368,6 @@ contains
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
                + delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
        end do
-       ! need to compute average for periodic boundary conditions
-       if (boundary1_type == PERIODIC) then
-          ! average of dist func along the line
-          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min)
-       else
-          avg = 0.0_f64
-       end if
        global_eta2 = eta2
        jacobian => jac_first_direction
        call advance_1D( primitive1,        &
@@ -392,7 +385,7 @@ contains
        ! update average value of distribution function in cell using 
        ! difference of primitives
        do i1 = 1, nc_eta1 
-          val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1 + avg
+          val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1
           call sll_set_df_val( dist_func_2D, i1, i2, val )
        end do
     eta2 = eta2 + delta_eta2
@@ -417,17 +410,10 @@ contains
                - FIELD_2D_AT_I( advfield_old, i1+1, i2 )) / ( delta_eta1 * jac(eta1,eta2) )
           advfield_1D_2_new ( i2 ) = (FIELD_2D_AT_I( advfield_new, i1, i2 ) &
                - FIELD_2D_AT_I( advfield_new, i1+1, i2 )) / ( delta_eta1 * jac(eta1,eta2) )
-          ! compute primiti2e of distribution function along this line
+          ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
                + delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 )
        end do
-       ! need to compute average for periodic boundary conditions
-       if (boundary2_type == PERIODIC) then
-          ! average of dist func along the line
-          avg = primitive2 ( nc_eta2+1 ) / (eta2_max - eta2_min) 
-       else
-          avg = 0.0_f64
-       end if
        global_eta1 = eta1
        jacobian => jac_second_direction
        call advance_1D( primitive2,        &
@@ -445,7 +431,7 @@ contains
        ! update average value of distribution function in cell using 
        ! difference of primitives
        do i2 = 1, nc_eta2 
-          val = (primitive2(i2+1) - primitive2(i2))/delta_eta2 + avg
+          val = (primitive2(i2+1) - primitive2(i2))/delta_eta2 
           call sll_set_df_val( dist_func_2D, i1, i2, val )
        end do
        eta1 = eta1 + delta_eta1
@@ -455,6 +441,7 @@ contains
     ! might be coded better
     eta2 = eta2_min + 0.5_f64*delta_eta2  ! at cell center in this direction
     do i2 = 1, nc_eta2
+       eta1 = eta1_min  ! at nodes
        primitive1 (1) = 0.0_f64  ! set primitive to 0 on left boundary 
        !advfield_1D_1_old ( 1 ) = FIELD_2D_AT_I_V1( advfield_old, 1, i2 )
        !advfield_1D_1_new ( 1 ) = FIELD_2D_AT_I_V1( advfield_new, 1, i2 )
@@ -475,13 +462,6 @@ contains
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
                + delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
        end do
-       ! need to compute average for periodic boundary conditions
-       if (boundary1_type == PERIODIC) then
-          ! average of dist func along the line
-          avg = primitive1 ( nc_eta1+1 ) / (eta1_max - eta1_min)
-       else
-          avg = 0.0_f64
-       end if
        global_eta2 = eta2
        jacobian => jac_first_direction
        call advance_1D( primitive1,        &
@@ -499,9 +479,10 @@ contains
        ! update average value of distribution function in cell using 
        ! difference of primitives
        do i1 = 1, nc_eta1 
-          val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1 + avg
+          val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1
           call sll_set_df_val( dist_func_2D, i1, i2, val )
        end do
+       eta2 = eta2 + delta_eta2
     end do
   end subroutine csl_second_order
 
