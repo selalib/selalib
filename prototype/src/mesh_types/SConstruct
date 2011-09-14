@@ -1,4 +1,4 @@
-# SCons file for the unit test of the cylindrical mesh type
+# SCons file for the unit test of the mesh type
 import os
 import socket
 import distutils.util
@@ -9,19 +9,14 @@ hostname = socket.gethostname()
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
-env = Environment(F90PATH = ['../memory','../precision','../assert','../utilities','../constants','../diagnostics'
-                             '/usr/local/include','/usr/local/hdf5/include'],
-                  FORTRANMODDIRPREFIX= '-J', 
-                  LIBPATH= ['.','/usr/local/lib','/usr/local/hdf5/lib'],
-                  LIBS=['sll_memory','sll_precision','sll_assert','sll_utilities', 'sll_constants','sll_diagnostics',
-                        'hdf5_fortran','hdf5','z'],
-                  F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+env = Environment( ENV=os.environ,
+                   F90PATH = ['../memory','../precision','../assert','../utilities','../constants','../diagnostics', os.environ['HDF5INCLUDEPATH']],
+                   FORTRANMODDIRPREFIX= '-J', 
+                   LIBPATH= ['.',os.environ['HDF5LIBPATH']],
+                   LIBS=['sll_memory','sll_precision','sll_assert','sll_utilities', 'sll_constants','sll_diagnostics', 'hdf5_fortran','hdf5','z'],
+                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
 
-#env.Replace(	
-#		F90FLAGS = OPT+' -fpp',
-#		FORTRANMODDIR = ZZZZZZ
-#env.Append(LIBS = ['nsl', 'socket'])
-
+#print 'CFLAGS: ' + CPATH
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])

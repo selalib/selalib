@@ -8,13 +8,17 @@ hostname = socket.gethostname()
 
 print 'hostname : ' + hostname
 print 'platform : ' + platform
-# WATCH OUT FOR THAT GFORTRAN VARIABLE
-env = Environment(ENV=os.environ,
-                  F90PATH= ['../memory','../precision','../assert', '../numerical_utilities','../constants'],
-                  FORTRANMODDIRPREFIX= '-fmod', 
-                  LIBPATH= ['.'],
-                  LIBS=['sll_memory','sll_precision','sll_assertion','sll_constants'],
-                  F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', '-std=f2003', '-ffree-line-length-none', '-DGFORTRAN'])
+
+env = Environment( ENV=os.environ,
+                   F90PATH= ['../memory','../precision','../assert', 
+                             '../numerical_utilities','../constants'],
+#                  FORTRANMODDIRPREFIX= '-fmod', 
+                   LIBPATH= ['.'],
+                   LIBS=['sll_constants','sll_memory','sll_precision',
+                         'sll_assertion'],
+                   F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
+                              '-std=f2003', '-ffree-line-length-none', 
+                              '-DGFORTRAN'])
 #print "GFORTRAN is :", env['GFORTRAN']
 #env.Replace(	
 #		F90FLAGS = OPT+' -fpp',
