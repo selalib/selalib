@@ -1,4 +1,4 @@
-# SCons file for the unit test of the spline module
+# SCons file for the unit test of the diagnostics
 import os
 import socket
 import distutils.util
@@ -8,30 +8,24 @@ hostname = socket.gethostname()
 
 print 'hostname : ' + hostname
 print 'platform : ' + platform
-# WATCH OUT FOR THAT GFORTRAN VARIABLE
-env = Environment(F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
-                             '-std=f2003', '-ffree-line-length-none'],
-                  CPPDEFINES=['GFORTRAN'],
-                  F90PATH=['../precision','../memory','../assert',
-                           '../splines','../precision','/usr/local/include','/usr/local/hdf5/include'],
-                  LIBPATH=['.','/usr/local/lib', '/usr/local/hdf5/lib'],
-                  LIBS=['sll_splines','sll_memory','sll_precision',
-                        'sll_assertion','sll_constants','sll_integration',
-                        'sll_diagnostics','hdf5_fortran', 'hdf5','z'])
+
+
+# It would be nice if the location of the hdf5.mod module could be set in
+# a more general way, like in a catch-all environment variable like CPATH. That 
+# was not working so we are using the specific solution of HDF5INCLUDEPATH,
+# which is at least portable. But this requires the user to set this
+# variable in the environment.
+
+env = Environment( ENV = os.environ,
+                   F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
+                              '-std=f2003', '-ffree-line-length-none'],
+                   CPPDEFINES=['GFORTRAN', 'DEBUG'],
+                   F90PATH=['../precision','../assert', os.environ['HDF5INCLUDEPATH']],
+                   LIBPATH=['.', os.environ['LD_LIBRARY_PATH']],
+                   LIBS=[ 'sll_assertion', 'sll_precision', 'hdf5_fortran', 
+                          'hdf5','z'])
 
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
-env.Library('sll_memory',     ["../memory/sll_memory.F90"])
-env.Library('sll_splines',    ["../splines/sll_splines.F90"])
-env.Library('sll_integration',["../integration/gauss_legendre.F90"])
-env.Library('sll_constants',  ["../constants/numeric_constants.F90"])
-env.Library('sll_diagnostics',["sll_diagnostics.F90"])
-env.Program('unit_test', ["unit_test.F90","write_xdmf_xml.c"])
+env.Program('unit_test', ["unit_test.F90","sll_diagnostics.F90","write_xdmf_xml.c"])
 
-#sll_integration library requires  sll_splines module
-#sll_integration library depends on  sll_working_precision.h
-#sll_integration library requires sll_working_precision module
-#sll_splines library depends on sll_memory.h
-#sll_splines library depends on sll_assert.h
-#sll_splines requires sll_memory module
-#sll_splines requires sll_working_precision module

@@ -9,13 +9,10 @@ hostname = socket.gethostname()
 print 'hostname: ' + hostname
 print 'platform: ' + platform
 
-env = Environment( GCCFLAGS = ['-g', '-W', '-Wall', '-pedantic', '-ansi'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-Wextra','-ffree-line-length-none', '-DGFORTRAN'],
+env = Environment( ENV = os.environ,
+                   GCCFLAGS = ['-g', '-W', '-Wall', '-pedantic', '-ansi'],
+                   F90FLAGS = ['-g', '-W', '-Wall', '-Wextra',
+                   '-ffree-line-length-none', '-DGFORTRAN'],
                    LIBS = ['rt'])
-
-#Object( 'sll_timer_c.o',['sll_timer_c.c'] )
-#Object( 'utils_functions.o', ['utils_functions.c'] )
-#Object( 'sll_timer_f.o', ['sll_timer_f.F90'] )
-#Object( 'unit_test.o', ['unit_test.F90'] )
 
 env.Program('unit_test',['sll_timer_c.c', 'utils_functions.c', 'sll_timer_f.F90', 'unit_test.F90'] )

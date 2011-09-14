@@ -1,12 +1,8 @@
 program diagnostics_tester
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_memory.h"
-
-  use sll_splines
-  use numeric_constants
   use sll_diagnostics
   implicit none
+
   sll_int32 :: nx, nv, i, j
   sll_real64, allocatable, dimension(:,:) :: x
   sll_real64, allocatable, dimension(:,:) :: v

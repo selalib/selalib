@@ -1,6 +1,17 @@
-# SCons file to build the test case for the memory allocator
+# SCons file to build the test case for the precision module
 import os
-env = Environment(CC = 'gfortran', # CPPFLAGS = '-ffree-line-length-none', 
-                  CCFLAGS = '-W -Wall -pedantic -std=f95')
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname()
+
+print 'hostname: ' + hostname
+print 'platform: ' + platform
+
+env = Environment( ENV = os.environ,
+                   F90PATH = ['../utilities'],
+                   LIBPATH = ['.'],
+                   F90FLAGS = ['-g', '-W', '-Wall', '-pedantic', '-std=f2003', '-ffree-line-length-none'] )
 src_files = Split('unit_test.F90 sll_working_precision.F90')
 env.Program(target='unit_test', source = src_files)

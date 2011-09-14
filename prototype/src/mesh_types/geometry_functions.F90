@@ -1,16 +1,17 @@
 module geometry_functions
 #include "sll_working_precision.h"
+  
+  use numeric_constants
+  implicit none
+  
+  sll_real64, parameter :: c1_test = 0.1_f64
+  sll_real64, parameter :: c2_test = 0.0_f64
 
-use numeric_constants
-implicit none
-
-sll_real64, parameter :: c1_test = 0.1_f64
-sll_real64, parameter :: c2_test = 0.0_f64
 contains
-!
-! geometry functions should provide direct mapping, inverse mapping and jacobian
-! all of these should be implement following the examples using a common name to identity
-! on specific mapping
+  
+  ! geometry functions should provide direct mapping, inverse mapping and 
+  ! jacobian all of these should be implement following the examples using 
+  ! a common name to identity on specific mapping
 
   ! identity function
   !-------------------
