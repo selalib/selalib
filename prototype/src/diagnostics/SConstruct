@@ -15,15 +15,24 @@ print 'platform : ' + platform
 # was not working so we are using the specific solution of HDF5INCLUDEPATH,
 # which is at least portable. But this requires the user to set this
 # variable in the environment.
+#
+#
+vars = Variables("../conf.py")
+vars.Add('HDF5INCPATH', 'hdf5 header files location','/usr/include')
+vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location','/usr/lib')
+vars.Add('HDF5LIBPATH', 'hdf5 library location','/usr/lib')
 
-env = Environment( ENV = os.environ,
-                   F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
+env = Environment( variables = vars,
+                   ENV = os.environ,
+                   F90FLAGS =['-cpp','-g', '-W', '-Wall', '-Wextra', '-pedantic', 
                               '-std=f2003', '-ffree-line-length-none'],
                    CPPDEFINES=['GFORTRAN', 'DEBUG'],
-                   F90PATH=['../precision','../assert', os.environ['HDF5INCLUDEPATH']],
-                   LIBPATH=['.', os.environ['LD_LIBRARY_PATH']],
-                   LIBS=[ 'sll_assertion', 'sll_precision', 'hdf5_fortran', 
-                          'hdf5','z'])
+                   F90PATH=['../memory','../precision','../assert','../mesh_types',
+                            '${HDF5INCPATH}'],
+                   LIBPATH=['../assert','../splines', '${HDF5LIBPATH}'],
+                   LIBS=['sll_assertion','hdf5_fortran', 'hdf5', 'z'])
+
+Help(vars.GenerateHelpText(env))
 
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
