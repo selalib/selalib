@@ -1,0 +1,51 @@
+REQUIRED COMPILER
+
+The prototype is exploratory and forward-looking in character. We have decided
+to test some additions to the Fortran language described in the Fortran 2003
+standard. This standard is the default one applied when a user decides to use
+gfortran, but not all of the features of the standard are supported. 
+For example, the use of procedure pointers inside derived types is not 
+recognized by gfortran in the versions previous to the 4.5 release. Hence, 
+when building with gfortran, we presently require at least version 4.5.
+
+This is a prototype, if this condition turned out to be too costly, we could
+re-implement the specific capabilities with external functions, but for the
+moment, we would like to see how far this approach can be taken.
+
+
+EXTERNAL LIBRARY DEPENDENCIES:
+
+The prototype presently depends on:
+- mpi
+- hdf5
+- lapack
+We want to offer a fine-grained control to the user in terms of the choice of
+which version of any of these libraries to use, in case that the user can't or
+does not wish to use the default options available in the system. 
+
+To offer this fine-grained control, we need to increase the complexity of the
+SConstruct files used to build the modules. To communicate this information 
+to SCons, we need to provide it through environment variables that the user 
+should define in the appropriate file (.bashrc, .tcshrc, or other).
+
+In other words, we intend to make the collection of SConstruct files 
+machine-independent and the user is responsible for setting up his environment
+in a way that the right location information is passed to SCons. Presently,
+the following environment variables should be set:
+
+
+BUILDING THE LIBRARY MODULES:
+
+After the first download of this repository, you will find a collection of 
+directories, each containing some source files that implement a module's
+capabilities. In addition to this each directory comes equipped with an 
+'SConstruct' file and an 'unit_test.F90'. To build the local unit test, just
+run: 'scons'.
+
+Presently, some modules and unit tests will depend on modules in other 
+directories. In these cases, one needs to run the 'scons' command in the
+local directory of the lower-level module, so that the object files become
+readable by the client module SConstruct.
+
+We are working to get this process automatized...
+
