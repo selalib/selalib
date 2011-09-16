@@ -5,7 +5,7 @@ import distutils.util
 
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
-
+print 'Building assertion module...'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 

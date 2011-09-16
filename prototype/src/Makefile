@@ -10,9 +10,9 @@ default:
 	(cd remap; scons)
 	(cd collective; scons CPATH='.' LPATH='.')
 	(cd timer; scons)
-	#(cd ode_solvers; scons)
-	#(cd distribution_function; scons)
-	#(cd mesh_types; scons)
+	(cd ode_solvers; scons)
+	(cd distribution_function; scons)
+	(cd mesh_types; scons)
 
 clean:
 	(cd memory; scons -c)

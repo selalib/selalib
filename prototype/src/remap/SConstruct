@@ -1,4 +1,3 @@
-
 # SCons file for the unit test of the remapping utility
 import os
 import socket
@@ -7,6 +6,7 @@ import distutils.util
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
 
+print 'Building the remap module...'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
