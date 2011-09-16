@@ -6,6 +6,7 @@ import distutils.util
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
 
+print 'Building HDF5 module...'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
@@ -24,11 +25,12 @@ vars.Add('HDF5LIBPATH', 'hdf5 library location','/usr/lib')
 
 env = Environment( variables = vars,
                    ENV = os.environ,
-                   F90FLAGS =['-cpp','-g', '-W', '-Wall', '-Wextra', '-pedantic', 
-                              '-std=f2003', '-ffree-line-length-none'],
+                   F90FLAGS =['-cpp','-g', '-W', '-Wall', '-Wextra', 
+                              '-pedantic', '-std=f2003', 
+                              '-ffree-line-length-none'],
                    CPPDEFINES=['GFORTRAN', 'DEBUG'],
-                   F90PATH=['../memory','../precision','../assert','../mesh_types',
-                            '${HDF5INCPATH}'],
+                   F90PATH=['../memory','../precision','../assert',
+                            '../mesh_types', '${HDF5INCPATH}'],
                    LIBPATH=['../assert','../splines', '${HDF5LIBPATH}'],
                    LIBS=['sll_assertion','hdf5_fortran', 'hdf5', 'z'])
 

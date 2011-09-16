@@ -8,10 +8,24 @@ For example, the use of procedure pointers inside derived types is not
 recognized by gfortran in the versions previous to the 4.5 release. Hence, 
 when building with gfortran, we presently require at least version 4.5.
 
-This is a prototype, if this condition turned out to be too costly, we could
-re-implement the specific capabilities with external functions, but for the
-moment, we would like to see how far this approach can be taken.
+This is a prototype, if this compiler requirement turned out to be too costly, 
+we could re-implement the specific capabilities with external functions, but 
+for the moment, we would like to see how far this approach can be taken.
 
+BUILDING THE LIBRARY MODULES
+
+Upon cloning the repository, you will see a collection of directories. Each
+directory contains at least a library module, an SConstruct file and a unit 
+test. You may go into any of these directories and run the 'scons' command
+to locally build the library module and the corresponding unit test. To avoid
+the need of building all of these modules manually, the top level of the 'src'
+directory includes a Makefile whose sole function is to go to each library
+directory in an appropriate order and run the 'scons' command. Effectively,
+this tests the build of the existing modules. You can run either 'make clean'
+or 'make' commands.
+
+Problems in building any of the modules should be related with how to 
+locate the right libraries for your system, as explained in the next section.
 
 EXTERNAL LIBRARY DEPENDENCIES:
 
@@ -19,33 +33,36 @@ The prototype presently depends on:
 - mpi
 - hdf5
 - lapack
+- glibc: for high-resolution timer capabilities. This may pose a problem in
+         systems that do not have a sufficiently recent version of glibc to
+         use the high-resolution timer.
+
 We want to offer a fine-grained control to the user in terms of the choice of
 which version of any of these libraries to use, in case that the user can't or
 does not wish to use the default options available in the system. 
 
-To offer this fine-grained control, we need to increase the complexity of the
-SConstruct files used to build the modules. To communicate this information 
-to SCons, we need to provide it through environment variables that the user 
-should define in the appropriate file (.bashrc, .tcshrc, or other).
+To offer this fine-grained control, we are presently exploring the option of
+passing variable information to the various SConstruct files through a single
+file: 
 
-In other words, we intend to make the collection of SConstruct files 
-machine-independent and the user is responsible for setting up his environment
-in a way that the right location information is passed to SCons. Presently,
-the following environment variables should be set:
+conf.py
 
+This file does not come included in the repository, though. We do provide a
+model for it, in the file: 
 
-BUILDING THE LIBRARY MODULES:
+conf_reference.py
 
-After the first download of this repository, you will find a collection of 
-directories, each containing some source files that implement a module's
-capabilities. In addition to this each directory comes equipped with an 
-'SConstruct' file and an 'unit_test.F90'. To build the local unit test, just
-run: 'scons'.
+So, to build the library, follow the next steps:
+1. Create a file named conf.py
+2. Copy into it the contents of conf_reference.py with the appropriate 
+   modifications to your system in terms of library locations.
+3. Run 'make' at the top level of the src directory to build the individual
+   modules and tests.
 
-Presently, some modules and unit tests will depend on modules in other 
-directories. In these cases, one needs to run the 'scons' command in the
-local directory of the lower-level module, so that the object files become
-readable by the client module SConstruct.
+Should this approach prove too cumbersome, we may decide on a different 
+technique, such as a more standard use of shell variables as a means to
+pass this information to scons.
 
-We are working to get this process automatized...
-
+Our intent is to make the collection of SConstruct files and their auxiliary
+files as machine-independent as possible. The user would thus be responsible 
+for setting up his environment with the use of the conf.py file.
