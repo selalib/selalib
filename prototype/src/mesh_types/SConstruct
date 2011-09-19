@@ -10,10 +10,9 @@ print 'hostname : ' + hostname
 print 'platform : ' + platform
 
 env = Environment( ENV=os.environ,
-                   F90PATH = ['../memory','../precision','../assert','../utilities','../constants','../diagnostics', os.environ['HDF5INCLUDEPATH']],
+                   F90PATH = ['../memory','../precision','../assert','../utilities','../constants','../diagnostics', os.environ['HDF5INCPATH']],
                    FORTRANMODDIRPREFIX= '-J', 
-                   LIBPATH= ['.',os.environ['HDF5LIBPATH'],
-                             os.environ['LD_LIBRARY_PATH']],
+                   LIBPATH= ['.',os.environ['HDF5LIBPATH']],
                    LIBS=['sll_memory','sll_precision','sll_assert','sll_utilities', 'sll_constants','sll_diagnostics', 'hdf5_fortran','hdf5','z'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
 
