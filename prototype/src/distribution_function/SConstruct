@@ -11,14 +11,14 @@ print 'platform : ' + platform
 
 env = Environment( ENV=os.environ,
                    F90PATH = ['../memory','../precision','../assert',
-                              '../utilities','../constants','../mesh_types',
-                              '../splines','../diagnostics',
+                              '../utilities','../constants', '../splines',
+                              '../diagnostics','../mesh_types',
                               os.environ['HDF5INCPATH']],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.', os.environ['HDF5LIBPATH']],
                    LIBS=['sll_memory','sll_precision','sll_assert',
-                         'sll_utilities', 'sll_constants','sll_mesh_types',
-                         'sll_diagnostics','hdf5_fortran','hdf5','z'],
+                         'sll_utilities', 'sll_constants', 'sll_diagnostics',
+                         'sll_mesh_types', 'hdf5_fortran','hdf5','z'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
                                '-DGFORTRAN','-ffree-line-length-none'])
 
