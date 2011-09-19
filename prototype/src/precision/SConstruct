@@ -9,7 +9,9 @@ print 'Building precision module...'
 print 'hostname: ' + hostname
 print 'platform: ' + platform
 
-env = Environment( ENV = os.environ,
+env = Environment( ENV = os.environ, #{'HDF5INCPATH' : os.environ['HDF5INCPATH'],
+#                          'HDF5MODPATH' : os.environ['HDF5MODPATH'],
+#                          'HDF5LIBPATH' : os.environ['HDF5LIBPATH']}, #os.environ,
                    F90PATH = ['../utilities'],
                    LIBPATH = ['.'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-pedantic', '-std=f2003', '-ffree-line-length-none'] )
