@@ -5,7 +5,7 @@ module geometry_functions
   implicit none
   
   sll_real64, parameter :: c1_test = 0.1_f64
-  sll_real64, parameter :: c2_test = 0.0_f64
+  sll_real64, parameter :: c2_test = 0.1_f64
 
 contains
   

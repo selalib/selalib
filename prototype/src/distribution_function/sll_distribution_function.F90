@@ -197,8 +197,8 @@ contains
           end do
        end do
     case (GAUSSIAN)
-       xoffset = 6.0_f64
-       voffset = 6.0_f64
+       xoffset = 1.0_f64
+       voffset = 1.0_f64
        avg = 0.0_f64
        avg_jac = 0.0_f64
        eta2 = eta2_min
@@ -208,7 +208,7 @@ contains
              xx = (x1(eta1,eta2) - xoffset )**2
              vv = (x2(eta1,eta2) - voffset )**2
              ! store f * jac for conservative cell centered schemes
-             fval =  jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
+             fval =  exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)!jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
              avg = avg + fval
              avg_jac = avg_jac + jac(eta1,eta2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
@@ -307,7 +307,7 @@ contains
        sum = 0.0_f64
        x2 = x2min
        do i2 = 1, npoints
-          sum = sum + FIELD_2D_AT_X( dist_func_2D, eta1f(x1, x2), eta2f(x1,x2) )
+          !sum = sum + FIELD_2D_AT_X( dist_func_2D, eta1f(x1, x2), eta2f(x1,x2) )
           ! FIELD_2D_AT_X needs to be defined and implemented using linear or 2D cubic spline interpolation 
           ! beware of case where eta1f and eta2f fall outside the grid (in this case 0 should be returned)
           x2 = x2 + delta_int
