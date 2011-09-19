@@ -33,6 +33,8 @@ module sll_mesh_types
   type geometry_2D
      procedure(scalar_function_2D), pointer, nopass :: x1
      procedure(scalar_function_2D), pointer, nopass :: x2
+     procedure(scalar_function_2D), pointer, nopass :: eta1
+     procedure(scalar_function_2D), pointer, nopass :: eta2
      procedure(scalar_function_2D), pointer, nopass :: Jacobian11
      procedure(scalar_function_2D), pointer, nopass :: Jacobian12
      procedure(scalar_function_2D), pointer, nopass :: Jacobian21
@@ -138,6 +140,8 @@ contains   ! *****************************************************************
     if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
        new_geometry_2D%x1         => identity_x1
        new_geometry_2D%x2         => identity_x2
+       new_geometry_2D%eta1       => identity_eta1
+       new_geometry_2D%eta2       => identity_eta2
        new_geometry_2D%Jacobian11 => identity_jac11
        new_geometry_2D%Jacobian12 => identity_jac12
        new_geometry_2D%Jacobian21 => identity_jac21
@@ -147,6 +151,8 @@ contains   ! *****************************************************************
     else if (name(1:5) == 'polar') then
        new_geometry_2D%x1         => polar_x1
        new_geometry_2D%x2         => polar_x2
+       new_geometry_2D%eta1       => polar_eta1
+       new_geometry_2D%eta2       => polar_eta2
        new_geometry_2D%Jacobian11 => polar_jac11
        new_geometry_2D%Jacobian12 => polar_jac12
        new_geometry_2D%Jacobian21 => polar_jac21
@@ -155,6 +161,8 @@ contains   ! *****************************************************************
     else if (name(1:7) == 'sinprod') then
        new_geometry_2D%x1         => sinprod_x1
        new_geometry_2D%x2         => sinprod_x2
+       new_geometry_2D%eta1       => sinprod_eta1
+       new_geometry_2D%eta2       => sinprod_eta2
        new_geometry_2D%Jacobian11 => sinprod_jac11
        new_geometry_2D%Jacobian12 => sinprod_jac12
        new_geometry_2D%Jacobian21 => sinprod_jac21
@@ -163,6 +171,8 @@ contains   ! *****************************************************************
     else if (name(1:4) == 'test') then
        new_geometry_2D%x1         => test_x1
        new_geometry_2D%x2         => test_x2
+       new_geometry_2D%eta1       => test_eta1
+       new_geometry_2D%eta2       => test_eta2
        new_geometry_2D%Jacobian11 => test_jac11
        new_geometry_2D%Jacobian12 => test_jac12
        new_geometry_2D%Jacobian21 => test_jac21
