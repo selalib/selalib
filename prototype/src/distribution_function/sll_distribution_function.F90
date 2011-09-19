@@ -3,11 +3,10 @@ module distribution_function
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
-
   use numeric_constants
   use sll_misc_utils   ! for int2string
   implicit none
-
+  
   type sll_distribution_function_2D_t
      type(field_2D_vec1), pointer :: field
      sll_real64      :: pcharge, pmass
@@ -17,8 +16,8 @@ module distribution_function
   end type sll_distribution_function_2D_t
 
   enum, bind(C)
-  enumerator :: LANDAU = 0, TWO_STREAM = 1, GAUSSIAN = 2
-end enum
+     enumerator :: LANDAU = 0, TWO_STREAM = 1, GAUSSIAN = 2
+  end enum
 
 contains
   ! intializes some 2D distribution_functions
@@ -37,12 +36,14 @@ contains
     sll_new_distribution_function_2D%plot_counter = 0
     sll_new_distribution_function_2D%name = name
   end function sll_new_distribution_function_2D
+
   subroutine sll_delete_distribution_function( f )
     type(sll_distribution_function_2D_t), pointer      :: f
     sll_int32 :: ierr
     call delete_field_2D_vec1(f%field)
     SLL_DEALLOCATE(f, ierr)
   end subroutine sll_delete_distribution_function
+
 #define NEW_ACCESS_FUNCTION( func_name, typ, slot ) \
   function func_name( f ) ; \
     typ :: func_name ;\

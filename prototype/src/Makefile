@@ -11,8 +11,9 @@ default:
 	(cd remap; scons)
 	(cd timer; scons)
 	(cd ode_solvers; scons)
-	(cd distribution_function; scons)
 	(cd mesh_types; scons)
+	(cd distribution_function; scons)
+
 
 clean:
 	(cd memory; scons -c)

@@ -41,27 +41,19 @@ We want to offer a fine-grained control to the user in terms of the choice of
 which version of any of these libraries to use, in case that the user can't or
 does not wish to use the default options available in the system. 
 
-To offer this fine-grained control, we are presently exploring the option of
-passing variable information to the various SConstruct files through a single
-file: 
+To offer this fine-grained control, we are presently configured the build
+process to use shell variables. Thus the user is responsible for going into
+.bashrc (or .tcshrc or some other) and define a few variables. Presently:
 
-conf.py
+HDF5INCPATH: directory where hdf5.h is located, 
+HDF5LIBPATH: directory where libhdf5.a is located, 
+HDF5MODPATH: directory where hdf5.mod is located
 
-This file does not come included in the repository, though. We do provide a
-model for it, in the file: 
+In .bashrc, this would be something like:
+export HDF5INCPATH=/usr/local/include
 
-conf_reference.py
-
-So, to build the library, follow the next steps:
-1. Create a file named conf.py
-2. Copy into it the contents of conf_reference.py with the appropriate 
-   modifications to your system in terms of library locations.
-3. Run 'make' at the top level of the src directory to build the individual
-   modules and tests.
-
-Should this approach prove too cumbersome, we may decide on a different 
-technique, such as a more standard use of shell variables as a means to
-pass this information to scons.
+In .tcshrc, this would be something like:
+setenv HDF5LIBPATH /usr/local/lib
 
 Our intent is to make the collection of SConstruct files and their auxiliary
 files as machine-independent as possible. The user would thus be responsible 
