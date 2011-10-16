@@ -1,9 +1,16 @@
+!> \brief  
+!> The splines module provides capabilities for 1D data interpolation with cubic B-splines
+!> and different boundary conditions
+!>
+!> (at the time of this writing: periodic, hermite). The data to be interpolated is represented by a 
+!> simple array.  The spline coefficients and other information are stored in a spline object, 
+!> which is also used to interpolate the fitted data.
+!> 
 module sll_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   implicit none
-
   type sll_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
@@ -28,7 +35,7 @@ module sll_splines
   enum, bind(C)
      enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
   end enum
-  
+ 
   interface delete
      module procedure delete_spline_1D
   end interface
@@ -41,8 +48,11 @@ contains  ! ****************************************************************
   ! these are the only slots inside the spline that are meant to be modified
   ! outside of the initialization or spline computation functions.
 
+  !> set_slope_left
+  !> \param[in] spline object
+  !> \param[in] value  set derivative on left hand side to value
   subroutine set_slope_left(spline, value)
-    type(sll_spline_1D), pointer :: spline
+    type(sll_spline_1D), pointer :: spline 
     sll_real64, intent(in)       :: value
     if( .not. associated(spline) ) then
        print *, 'set_slope_left(): not associated spline objet passed.'
@@ -51,8 +61,13 @@ contains  ! ****************************************************************
     spline%slope_l = value
   end subroutine set_slope_left
 
+  !> set slope on right hand side for hermite boundary conditions
+  !> \param[in] spline object
+  !> \param[in] value to which set the derivative on the right hand side
   subroutine set_slope_right(spline, value)
+
     type(sll_spline_1D), pointer :: spline
+ 
     sll_real64, intent(in)       :: value
     if( .not. associated(spline) ) then
        print *, 'set_slope_left(): not associated spline objet passed.'
@@ -71,6 +86,7 @@ contains  ! ****************************************************************
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
 
+!> create new spline object
   function new_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_int32,  intent(in)               :: num_points
@@ -208,7 +224,7 @@ contains  ! ****************************************************************
   ! And the rest of the terms, starting with C(N-1) and working backwards:
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
-
+!> compute spline coefficients
   subroutine compute_spline_1D( f, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32,  intent(in)               :: bc_type
@@ -231,6 +247,7 @@ contains  ! ****************************************************************
   end subroutine compute_spline_1D
 
 #define NUM_TERMS 27
+!> compute spline coefficients for periodic boundary conditions
   subroutine compute_spline_1D_periodic( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     type(sll_spline_1D), pointer         :: spline
@@ -289,7 +306,7 @@ contains  ! ****************************************************************
     coeffs(np+1) = coeffs(2)
     coeffs(np+2) = coeffs(3)
   end subroutine compute_spline_1D_periodic
-
+!> compute spline coefficients for hermite boundary conditions
   subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     type(sll_spline_1D), pointer      :: spline
@@ -446,6 +463,7 @@ contains  ! ****************************************************************
   ! 1/6*[C_i + 4*C_(i+1) + C_(i+2)]
   ! 
   ! as needed.
+!> get spline interpolate at point x
   function interpolate_value( x, spline )
     sll_real64                        :: interpolate_value
     intrinsic                         :: associated, int, real
@@ -491,6 +509,7 @@ contains  ! ****************************************************************
     interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value
 
+!> get spline interpolate at array of points
   subroutine interpolate_array_values( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
@@ -610,7 +629,7 @@ contains  ! ****************************************************************
     interpolate_val = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_val
 #endif
-
+!> delete spline_1D
   subroutine delete_spline_1D( spline )
     type(sll_spline_1D), pointer :: spline
     sll_int32                    :: ierr
