@@ -15,7 +15,7 @@ program unit_test
   sll_int32 :: i1, i2, it, n_steps
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, deltat, val, error, error1 
   sll_real64 :: alpha1, alpha2
-  procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine
+  procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: coarse_mesh
   type(mesh_descriptor_2D), pointer :: fine_mesh
@@ -29,7 +29,7 @@ program unit_test
   eta1_max =  8.0_f64
   eta2_min =  -8.0_f64
   eta2_max =  8.0_f64 !2*sll_pi ! 8.0_f64
-  geom => new_geometry_2D ('test')
+  geom => new_geometry_2D ('cartesian')
   nc_eta1_coarse = 100
   nc_eta2_coarse = 100
   nc_eta1_fine = 200
@@ -49,9 +49,11 @@ program unit_test
 
   x1_coarse => get_df_x1 ( dist_func_coarse )
   x2_coarse => get_df_x2 ( dist_func_coarse )
+  jac_coarse => get_df_jac ( dist_func_coarse )
   x1_fine => get_df_x1 ( dist_func_fine )
   x2_fine => get_df_x2 ( dist_func_fine )
-  
+  jac_fine => get_df_jac ( dist_func_fine )
+
   call sll_init_distribution_function_2D( dist_func_fine, GAUSSIAN, 'cell' )
   call write_mesh_2D(fine_mesh)
 
@@ -97,7 +99,7 @@ program unit_test
   do i1 = 1, nc_eta1_coarse
      eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
-        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac_coarse(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_coarse
      end do
@@ -121,7 +123,7 @@ program unit_test
   do i1 = 1, nc_eta1_coarse
      eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
-        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac_coarse(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_coarse
      end do
@@ -143,7 +145,7 @@ program unit_test
   do i1 = 1, nc_eta1_coarse
      eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
-        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac_coarse(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_coarse
      end do
@@ -165,7 +167,7 @@ program unit_test
   do i1 = 1, nc_eta1_coarse
      eta2 = eta2_min + 0.5_f64 * delta_eta2_coarse  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_coarse 
-        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_coarse, i1, i2) / jac_coarse(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_coarse(eta1,eta2)**2+x2_coarse(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_coarse
      end do
@@ -212,8 +214,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
-        !print*, i1, i2, eta1, eta2, val/jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_fine
      end do
@@ -237,7 +238,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_fine
      end do
@@ -259,7 +260,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_fine
      end do
@@ -281,7 +282,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*(x1_fine(eta1,eta2)**2+x2_fine(eta1,eta2)**2))))
         eta2 = eta2 + delta_eta2_fine
      end do
@@ -319,7 +320,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2 &
              + (x2_fine(eta1,eta2)+1.0_f64)**2))))
         eta2 = eta2 + delta_eta2_fine
@@ -343,7 +344,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2 &
              +(x2_fine(eta1,eta2)+1.0_f64)**2))))
         eta2 = eta2 + delta_eta2_fine
@@ -367,7 +368,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2&
              +(x2_fine(eta1,eta2)+1.0_f64)**2))))
         eta2 = eta2 + delta_eta2_fine
@@ -390,7 +391,7 @@ program unit_test
   do i1 = 1, nc_eta1_fine
      eta2 = eta2_min + 0.5_f64 * delta_eta2_fine  ! eta2 at midpoint of cell
      do i2 = 1, nc_eta2_fine 
-        val = sll_get_df_val(dist_func_fine, i1, i2) / jac(eta1,eta2)
+        val = sll_get_df_val(dist_func_fine, i1, i2) / jac_fine(eta1,eta2)
         error = max (error, abs(val - exp(-0.5_f64*((x1_fine(eta1,eta2)-1.0_f64)**2 &
              +(x2_fine(eta1,eta2)+1.0_f64)**2))))
         eta2 = eta2 + delta_eta2_fine
