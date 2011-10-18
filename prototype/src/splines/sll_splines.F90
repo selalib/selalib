@@ -20,6 +20,35 @@ module sll_splines
      sll_real64                        :: slope_R  ! right slope, for Hermite
   end type sll_spline_1D
 
+  ! Are x1 and x2 the coordinates that we should use? Or are eta1 and eta2
+  ! the more logical ones given that the splines live in an uniform mesh??
+  ! Need to define this and then be consistent throughout.
+  type sll_spline_2D
+     sll_int32                           :: num_pts_x1
+     sll_int32                           :: num_pts_x2
+     sll_real64                          :: x1_delta
+     sll_real64                          :: x1_rdelta
+     sll_real64                          :: x2_delta
+     sll_real64                          :: x2_rdelta
+     sll_real64                          :: x1_min
+     sll_real64                          :: x1_max
+     sll_real64                          :: x2_min
+     sll_real64                          :: x2_max
+     sll_int32                           :: x1_bc_type
+     sll_int32                           :: x2_bc_type
+     sll_real64, dimension(:,:), pointer :: data   ! data for the spline fit
+     sll_real64, dimension(:), pointer   :: d1     ! scratch space D (L*D = F),
+                                                   ! refer to algorithm below.
+                                                   ! Size depends on BC's.
+     sll_real64, dimension(:), pointer   :: d2     ! Second scratch space
+     sll_real64, dimension(:,:), pointer :: coeffs   ! the spline coefficients
+     sll_real64                          :: x1_min_slope  ! for Hermite BCs
+     sll_real64                          :: x1_max_slope  ! for Hermite BCs
+     sll_real64                          :: x2_min_slope  ! for Hermite BCs
+     sll_real64                          :: x2_max_slope  ! for Hermite BCs
+  end type sll_spline_2D
+
+
   ! At all cost we want to avoid the use of obscure numeric flags to
   ! induce some function behavior. Here we use a Fortran2003 feature, the
   ! enumeration. It is thus possible to give descriptive names to flags,
@@ -28,6 +57,8 @@ module sll_splines
   enum, bind(C)
      enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
   end enum
+
+
   
   interface delete
      module procedure delete_spline_1D
@@ -88,11 +119,14 @@ contains  ! ****************************************************************
     new_spline_1D%rdelta   = 1.0_f64/new_spline_1D%delta
     new_spline_1D%bc_type  = bc_type
     if( num_points .le. 28 ) then
-       print *, 'ERROR, new_spline_1D: Because of the algorithm used, this function is meant to be used with arrays that are at least of size = 28'
+       print *, 'ERROR, new_spline_1D: Because of the algorithm used, ', &
+            'this function is meant to be used with arrays that are at ', &
+            'least of size = 28'
        STOP 'new_spline_1D()'
     end if
     if( xmin .gt. xmax ) then
-       print *, 'ERROR, new_spline_1D: xmin is greater than xmax, this would cause all sorts of errors.'
+       print *, 'ERROR, new_spline_1D: xmin is greater than xmax, ', &
+            'this would cause all sorts of errors.'
        STOP
     end if
     ! Some more general error checking depending on the type of boundary
@@ -100,7 +134,9 @@ contains  ! ****************************************************************
     select case (bc_type)
     case (PERIODIC_SPLINE)
        if( present(sl) .or. present(sr) ) then
-          print *, 'new_spline_1D(): it is not allowed to specify the end slopes in the case of periodic boundary conditions. Exiting program...'
+          print *, 'new_spline_1D(): it is not allowed to specify the ',&
+               'end ifin the case of periodic boundary conditions. ', &
+               'Exiting program...'
           STOP 'new_spline_1D'
        else
           ! Assign some value, but this value should never be used in the
@@ -230,36 +266,29 @@ contains  ! ****************************************************************
     end select
   end subroutine compute_spline_1D
 
+
 #define NUM_TERMS 27
-  subroutine compute_spline_1D_periodic( f, spline )
-    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    type(sll_spline_1D), pointer         :: spline
-    sll_real64, dimension(:), pointer    :: coeffs
-    sll_int32                         :: i
-    sll_int32                         :: np
+  ! The following auxiliary functions:
+  ! compute_spline_1D_periodic_aux() 
+  ! compute_spline_1D_hermite_aux()
+  ! are the fundamental building blocks. These are meant to do the work
+  ! needed to compute the splines. Other functions are essentially 
+  ! wrappers around these.  Clients of these routines are responsible for 
+  ! all error-checking.
+  subroutine compute_spline_1D_periodic_aux( f, num_pts, d, coeffs )
+    sll_real64, dimension(:), pointer :: f
+    sll_int32, intent(in)             :: num_pts
+    sll_real64, dimension(:), pointer :: d
+    sll_real64, dimension(:), pointer :: coeffs
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
-    sll_real64, dimension(:), pointer :: d
-
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_1D_periodic(): uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
-    if( .not. (size(f) .ge. spline%n_points ) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_1D_periodic(): '
-       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
-            spline%n_points, ' . Passed size: ', size(f)
-       STOP
-    end if
-    np     =  spline%n_points
-    d      => spline%d
-    coeffs => spline%coeffs
+    sll_int32                         :: i
+    sll_int32                         :: np
+    np     =  num_pts
     ! Compute d(1):
     d1 =  f(1)
     coeff_tmp = 1.0_f64
@@ -288,11 +317,23 @@ contains  ! ****************************************************************
     coeffs(np)   = coeffs(1)
     coeffs(np+1) = coeffs(2)
     coeffs(np+2) = coeffs(3)
-  end subroutine compute_spline_1D_periodic
+  end subroutine compute_spline_1D_periodic_aux
 
-  subroutine compute_spline_1D_hermite( f, spline )
-    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    type(sll_spline_1D), pointer      :: spline
+  subroutine compute_spline_1D_hermite_aux( &
+    f,       &
+    num_pts, &
+    d,       &
+    slope_l, &
+    slope_r, &
+    delta,   &
+    coeffs )
+
+    sll_real64, dimension(:), pointer :: f
+    sll_int32, intent(in)             :: num_pts
+    sll_real64, dimension(:), pointer :: d
+    sll_real64, intent(in)            :: slope_l
+    sll_real64, intent(in)            :: slope_r
+    sll_real64, intent(in)            :: delta
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: i
     sll_int32                         :: np
@@ -303,31 +344,9 @@ contains  ! ****************************************************************
     sll_real64, parameter             :: ralpha = sqrt(6.0_f64/sqrt(3.0_f64))
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
-    sll_real64, dimension(:), pointer :: d
-    sll_real64                        :: slope_l
-    sll_real64                        :: slope_r
-    sll_real64                        :: delta
     sll_real64                        :: f1   ! to store modified value of f(1)
     sll_real64                        :: fnp  ! for modified value of f(np)
-
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_1D_hermite(): uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
-    if( .not. (size(f) .ge. spline%n_points ) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_1D_hermite(): '
-       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
-            spline%n_points, ' . Passed size: ', size(f)
-       STOP
-    end if
-    np      =  spline%n_points
-    d       => spline%d
-    coeffs  => spline%coeffs
-    slope_l = spline%slope_L
-    slope_r = spline%slope_R
-    delta   = spline%delta
+    np      =  num_pts
     ! For Hermitian boundary conditions with non-zero slope, we can use the
     ! same algorithm than for the zero-slope case, with the difference that
     ! we tweak the values of the source term, f, right at the endpoints.
@@ -368,9 +387,72 @@ contains  ! ****************************************************************
     coeffs(0)    = coeffs(2)    - 2.0 * delta * slope_l
     coeffs(np+1) = coeffs(np-1) + 2.0 * delta * slope_r
     coeffs(np+2) = 0.0 !coeffs(np-2)  ! not used
-  end subroutine compute_spline_1D_hermite
+  end subroutine compute_spline_1D_hermite_aux
 
-#undef NUM_TERMS
+
+  subroutine compute_spline_1D_periodic( f, spline )
+    sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
+    type(sll_spline_1D), pointer         :: spline
+    sll_real64, dimension(:), pointer    :: coeffs
+    sll_int32                         :: np
+    sll_real64, dimension(:), pointer :: d
+    sll_real64, dimension(:), pointer :: fp
+
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_periodic(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( .not. (size(f) .ge. spline%n_points ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_periodic(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%n_points, ' . Passed size: ', size(f)
+       STOP
+    end if
+    fp     => f
+    np     =  spline%n_points
+    d      => spline%d
+    coeffs => spline%coeffs
+    call compute_spline_1D_periodic_aux( fp, np, d, coeffs )
+  end subroutine compute_spline_1D_periodic
+
+
+
+   subroutine compute_spline_1D_hermite( f, spline )
+    sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
+    type(sll_spline_1D), pointer      :: spline
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_int32                         :: np
+    sll_real64, dimension(:), pointer :: fp
+    sll_real64, dimension(:), pointer :: d
+    sll_real64                        :: slope_l
+    sll_real64                        :: slope_r
+    sll_real64                        :: delta
+
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_hermite(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( .not. (size(f) .ge. spline%n_points ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_1D_hermite(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%n_points, ' . Passed size: ', size(f)
+       STOP
+    end if
+    fp      => f
+    np      =  spline%n_points
+    d       => spline%d
+    coeffs  => spline%coeffs
+    slope_l = spline%slope_L
+    slope_r = spline%slope_R
+    delta   = spline%delta
+    call compute_spline_1D_hermite_aux(fp,np,d, slope_l,slope_r, delta, coeffs)
+  end subroutine compute_spline_1D_hermite
 
 
   ! Here we use the cubic B-spline centered at node 'i', supported on
@@ -542,6 +624,52 @@ contains  ! ****************************************************************
     end do
   end subroutine interpolate_array_values
 
+  function interpolate_derivative( x, spline )
+    sll_real64                        :: interpolate_derivative
+    intrinsic                         :: associated, int, real
+    sll_real64, intent(in)            :: x
+    type(sll_spline_1D), pointer      :: spline
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_real64                        :: rh   ! reciprocal of cell spacing
+    sll_int32                         :: cell
+    sll_real64                        :: dx
+    sll_real64                        :: cdx  ! 1-dx
+    sll_real64                        :: t0   ! temp/scratch variables ...
+    sll_real64                        :: t1
+    sll_real64                        :: t2
+    sll_real64                        :: t3
+    sll_real64                        :: t4
+    sll_real64                        :: cim1 ! C_(i-1)
+    sll_real64                        :: ci   ! C_i
+    sll_real64                        :: cip1 ! C_(i+1)
+    sll_real64                        :: cip2 ! C_(i+2)
+    sll_int32                         :: num_cells
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
+    num_cells = spline%n_points-1
+    rh        = spline%rdelta
+    coeffs    => spline%coeffs
+    ! find the cell and offset for x
+    t0        = x*rh
+    cell      = int(t0) + 1
+    dx        = t0 - real(cell-1)
+    cdx       = 1.0_f64 - dx
+    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    cim1      = coeffs(cell-1)
+    ci        = coeffs(cell)
+    cip1      = coeffs(cell+1)
+    cip2      = coeffs(cell+2)
+    t1        = 3.0_f64*ci
+    t3        = 3.0_f64*cip1
+    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function interpolate_value
+
+
+
 
   ! July 25, 2011: Tried to use the type-bound procedure approach
   ! to write a one-parameter function like:
@@ -622,4 +750,236 @@ contains  ! ****************************************************************
     spline%data => null()
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_spline_1D
+
+  !-----------------------------------------------------------------------
+  ! Functions and subroutines for the 2D spline.
+  !
+  !----------------------------------------------------------------------
+
+  ! Provide an modification function for the values of the slopes at the
+  ! endpoints of the 2D spline. Note that there is full redundancy in these
+  ! routines. A single change in any of these should justify the creation of
+  ! a macro.
+  subroutine set_x1_min_slope(spline, value)
+    type(sll_spline_2D), pointer :: spline
+    sll_real64, intent(in)       :: value
+    if( .not. associated(spline) ) then
+       print *, 'set_x1_min_slope(): not associated spline objet passed.'
+       STOP
+    end if
+    spline%x1_min_slope = value
+  end subroutine set_x1_min_slope
+
+  subroutine set_x1_max_slope(spline, value)
+    type(sll_spline_2D), pointer :: spline
+    sll_real64, intent(in)       :: value
+    if( .not. associated(spline) ) then
+       print *, 'set_x1_max_slope(): not associated spline objet passed.'
+       STOP
+    end if
+    spline%x1_max_slope = value
+  end subroutine set_x1_max_slope
+
+  subroutine set_x2_min_slope(spline, value)
+    type(sll_spline_2D), pointer :: spline
+    sll_real64, intent(in)       :: value
+    if( .not. associated(spline) ) then
+       print *, 'set_x2_min_slope(): not associated spline objet passed.'
+       STOP
+    end if
+    spline%x2_min_slope = value
+  end subroutine set_x2_min_slope
+
+  subroutine set_x2_max_slope(spline, value)
+    type(sll_spline_2D), pointer :: spline
+    sll_real64, intent(in)       :: value
+    if( .not. associated(spline) ) then
+       print *, 'set_x2_max_slope(): not associated spline objet passed.'
+       STOP
+    end if
+    spline%x2_max_slope = value
+  end subroutine set_x2_max_slope
+
+  function new_spline_2D( &
+    num_pts_x1,   &
+    num_pts_x2,   &
+    x1_min,       &
+    x1_max,       &
+    x2_min,       &
+    x2_max,       &
+    x1_bc_type,   &
+    x2_bc_type,   &
+    x1_min_slope, &
+    x1_max_slope, &
+    x2_min_slope, &
+    x2_max_slope &
+    )
+
+    type(sll_spline_2D), pointer         :: new_spline_2D
+    sll_int32,  intent(in)               :: num_pts_x1
+    sll_int32,  intent(in)               :: num_pts_x2
+    sll_real64, intent(in)               :: x1_min
+    sll_real64, intent(in)               :: x1_max
+    sll_real64, intent(in)               :: x2_min
+    sll_real64, intent(in)               :: x2_max
+    sll_int32,  intent(in)               :: x1_bc_type
+    sll_int32,  intent(in)               :: x2_bc_type
+    sll_real64, intent(in), optional     :: x1_min_slope
+    sll_real64, intent(in), optional     :: x1_max_slope
+    sll_real64, intent(in), optional     :: x2_min_slope
+    sll_real64, intent(in), optional     :: x2_max_slope
+    sll_int32                            :: bc_selector
+    sll_int32                            :: ierr
+    SLL_ALLOCATE( new_spline_2D, ierr )
+    new_spline_2D%num_pts_x1 = num_pts_x1
+    new_spline_2D%num_pts_x2 = num_pts_x2
+    new_spline_2D%x1_min     = x1_min
+    new_spline_2D%x1_max     = x1_max
+    new_spline_2D%x2_min     = x2_min
+    new_spline_2D%x2_max     = x2_max
+    new_spline_2D%x1_delta   = (x1_max - x1_min)/real((num_pts_x1-1),f64)
+    new_spline_2D%x2_delta   = (x2_max - x2_min)/real((num_pts_x2-1),f64)
+    new_spline_2D%x1_rdelta  = 1.0_f64/new_spline_2D%x1_delta
+    new_spline_2D%x2_rdelta  = 1.0_f64/new_spline_2D%x2_delta
+    new_spline_2D%x1_bc_type = x1_bc_type
+    new_spline_2D%x2_bc_type = x2_bc_type
+    if( (num_pts_x1 .le. NUM_TERMS) .or. (num_pts_x2 .le. NUM_TERMS) ) then
+       print *, 'ERROR, new_spline_2D: Because of the algorithm used, this ', &
+       'function is meant to be used with arrays that are at least of size = 28'
+       STOP 'new_spline_2D()'
+    end if
+    if( (x1_min .gt. x1_max) .or. (x2_min .gt. x2_max) ) then
+       print *, 'ERROR, new_spline_1D: one of the xmin is greater than the ', &
+       'corresponding xmax, this would cause all sorts of errors.'
+       STOP
+    end if
+
+    ! Treat the bc_selector variable essentially like a bit field, to 
+    ! accumulate the information on the different boundary conditions
+    ! given. This scheme allows to add more types of boundary conditions
+    ! if necessary.
+    bc_selector = 0
+    if( x1_bc_type .eq. HERMITE_SPLINE ) then 
+       bc_selector = bc_selector + 1
+    else if ( x2_bc_type .eq. HERMITE_SPLINE ) then
+       bc_selector = bc_selector + 2
+    end if
+
+    select case (bc_selector)
+    case ( 0 ) 
+       ! both boundary condition types are periodic
+       if( &
+          present(x1_min_slope) .or. present(x1_max_slope) .or. &
+          present(x2_min_slope) .or. present(x2_max_slope) ) then
+
+          print *, 'new_spline_2D(): it is not allowed to specify the end', &
+               'slopes in the case of periodic boundary conditions.', &
+               'Exiting program...'
+          STOP 'new_spline_2D'
+       else
+          ! Assign some value, but this value should never be used in the
+          ! full periodic case anyway.
+          new_spline_2D%x1_min_slope = 0.0
+          new_spline_2D%x1_max_slope = 0.0
+          new_spline_2D%x2_min_slope = 0.0
+          new_spline_2D%x2_max_slope = 0.0
+       end if
+    case ( 1 ) 
+       ! Hermite condition in X1 and periodic in X2 
+       if( present(x2_min_slope) .or. present(x2_max_slope) ) then
+          print *, 'new_spline_2D(): it is not allowed to specify the end', &
+               'slopes in the case of periodic boundary conditions.', &
+               'Exiting program...'
+          STOP 'new_spline_2D'
+       end if
+       if ( present(x1_min_slope) ) then
+          ! need to check if the slopes are present, and to apply default 
+          ! values if not.
+          new_spline_2D%x1_min_slope = x1_min_slope
+       else
+          ! apply default value for the slope
+          new_spline_2D%x1_min_slope = 0.0
+       end if
+       if ( present(x1_max_slope) ) then
+          new_spline_2D%x1_max_slope = x1_max_slope
+       else
+          ! apply default value
+          new_spline_2D%x1_max_slope = 0.0
+       end if
+       new_spline_2D%x2_min_slope = 0.0
+       new_spline_2D%x2_max_slope = 0.0
+    case( 2 )
+       ! Periodic in X1 and Hermite in X2
+       if( present(x1_min_slope) .or. present(x1_max_slope) ) then
+          print *, 'new_spline_2D(): it is not allowed to specify the end', &
+               'slopes in the case of periodic boundary conditions.', &
+               'Exiting program...'
+          STOP 'new_spline_2D'
+       end if
+       if ( present(x2_min_slope) ) then
+          ! need to check if the slopes are present, and to apply default 
+          ! values if not.
+          new_spline_2D%x2_min_slope = x2_min_slope
+       else
+          ! apply default value for the slope
+          new_spline_2D%x2_min_slope = 0.0
+       end if
+       if ( present(x2_max_slope) ) then
+          new_spline_2D%x2_max_slope = x2_max_slope
+       else
+          ! apply default value
+          new_spline_2D%x2_max_slope = 0.0
+       end if
+       ! set the periodic conditions that will not be used
+       new_spline_2D%x1_min_slope = 0.0
+       new_spline_2D%x1_max_slope = 0.0
+    case( 3 )
+       ! Hermite conditions in both, X1 and X2
+       if ( present(x1_min_slope) ) then
+          ! need to check if the slopes are present, and to apply default 
+          ! values if not.
+          new_spline_2D%x1_min_slope = x1_min_slope
+       else
+          ! apply default value for the slope
+          new_spline_2D%x1_min_slope = 0.0
+       end if
+       if ( present(x1_max_slope) ) then
+          ! need to check if the slopes are present, and to apply default 
+          ! values if not.
+          new_spline_2D%x1_max_slope = x1_max_slope
+       else
+          ! apply default value for the slope
+          new_spline_2D%x1_max_slope = 0.0
+       end if
+       if ( present(x2_min_slope) ) then
+          ! need to check if the slopes are present, and to apply default 
+          ! values if not.
+          new_spline_2D%x2_min_slope = x2_min_slope
+       else
+          ! apply default value for the slope
+          new_spline_2D%x2_min_slope = 0.0
+       end if
+       if ( present(x2_max_slope) ) then
+          new_spline_2D%x2_max_slope = x2_max_slope
+       else
+          ! apply default value
+          new_spline_2D%x2_max_slope = 0.0
+       end if
+    case default
+       print *, 'ERROR: compute_spline_1D(): ', &
+            'did not recognize given boundary conditions.'
+       STOP
+    end select
+    SLL_ALLOCATE( new_spline_2D%d1(num_pts_x1),   ierr )
+    SLL_ALLOCATE( new_spline_2D%d2(num_pts_x2),   ierr )
+    ! Reminder: Fortran arrays are column-major ordered...
+    ! Note: The indexing of the coefficients array includes the end-
+    ! points 0, num_points, num_points+1, num_points+2. These are meant to 
+    ! store the boundary condition-specific data. The 'periodic' BC does
+    ! not use the num_points+2 point.
+    SLL_ALLOCATE( new_spline_2D%coeffs(0:num_pts_x1+2,0:num_pts_x2+2), ierr )
+  end function new_spline_2D
+
+#undef NUM_TERMS
 end module sll_splines
+
