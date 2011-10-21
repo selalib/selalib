@@ -36,6 +36,8 @@ module sll_splines
      sll_real64                          :: x2_max
      sll_int32                           :: x1_bc_type
      sll_int32                           :: x2_bc_type
+     sll_int32                           :: bc_mix_identifier
+     ! if data is not used, it should be deleted make a decision...
      sll_real64, dimension(:,:), pointer :: data   ! data for the spline fit
      sll_real64, dimension(:), pointer   :: d1     ! scratch space D (L*D = F),
                                                    ! refer to algorithm below.
@@ -61,7 +63,7 @@ module sll_splines
 
   
   interface delete
-     module procedure delete_spline_1D
+     module procedure delete_spline_1D, delete_spline_2D
   end interface
 
 contains  ! ****************************************************************
@@ -288,6 +290,10 @@ contains  ! ****************************************************************
     sll_real64                        :: d1
     sll_int32                         :: i
     sll_int32                         :: np
+    SLL_ASSERT( size(f) .ge. num_pts )
+    SLL_ASSERT( size(d) .ge. num_pts )
+    SLL_ASSERT( size(coeffs) .ge. num_pts )
+    SLL_ASSERT( (num_pts .ge. 0) .and. (num_pts .lt. NUM_TERMS))
     np     =  num_pts
     ! Compute d(1):
     d1 =  f(1)
@@ -633,12 +639,10 @@ contains  ! ****************************************************************
     sll_real64                        :: rh   ! reciprocal of cell spacing
     sll_int32                         :: cell
     sll_real64                        :: dx
-    sll_real64                        :: cdx  ! 1-dx
     sll_real64                        :: t0   ! temp/scratch variables ...
     sll_real64                        :: t1
     sll_real64                        :: t2
     sll_real64                        :: t3
-    sll_real64                        :: t4
     sll_real64                        :: cim1 ! C_(i-1)
     sll_real64                        :: ci   ! C_i
     sll_real64                        :: cip1 ! C_(i+1)
@@ -655,89 +659,16 @@ contains  ! ****************************************************************
     t0        = x*rh
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
-    cdx       = 1.0_f64 - dx
-    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     cim1      = coeffs(cell-1)
     ci        = coeffs(cell)
     cip1      = coeffs(cell+1)
     cip2      = coeffs(cell+2)
-    t1        = 3.0_f64*ci
-    t3        = 3.0_f64*cip1
-    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
-    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
-    interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
-  end function interpolate_value
-
-
-
-
-  ! July 25, 2011: Tried to use the type-bound procedure approach
-  ! to write a one-parameter function like:
-  !
-  ! function interpolate_val( this, x)
-  !
-  ! which, being type-bound, could be called like:
-  !
-  ! spline_object%interpolate(x)
-  !
-  ! In principle, if the above would be recognized as the function signature
-  ! by the compiler, this could mean that the simple gauss_legendre-type 
-  ! integrator could be used to integrate the spline function.
-  ! This approach failed on various grounds:
-  ! gfortran still does not implement polymorphic types (class construct).
-  ! This is not a showstopper. However, upon implementing the type-bound
-  ! function and passing it to gauss_legendre_integral_1D(), I received an
-  ! error saying that the type-bound function was expected with arguments.
-  ! It could be that this can be fixed by setting the appropriate function
-  ! pointers, but at this moment I decided not to go through this and 
-  ! abandon this approach until it is truly important to have something like
-  ! this.
-  ! I leave this here for now but eventually this should be deleted.
-#if 0
-  function interpolate_val( this, x )
-    sll_real64                        :: interpolate_val
-    intrinsic                         :: associated, int, real
-    sll_real64, intent(in)            :: x
-    type(sll_spline_1D)               :: this ! class is not recognized...
-    sll_real64, dimension(:), pointer :: coeffs
-    sll_real64                        :: rh   ! reciprocal of cell spacing
-    sll_int32                         :: cell
-    sll_real64                        :: dx
-    sll_real64                        :: cdx  ! 1-dx
-    sll_real64                        :: t0   ! temp/scratch variables ...
-    sll_real64                        :: t1
-    sll_real64                        :: t2
-    sll_real64                        :: t3
-    sll_real64                        :: t4
-    sll_real64                        :: cim1 ! C_(i-1)
-    sll_real64                        :: ci   ! C_i
-    sll_real64                        :: cip1 ! C_(i+1)
-    sll_real64                        :: cip2 ! C_(i+2)
-    sll_int32                         :: num_cells
-
-    SLL_ASSERT( (x .ge. this%xmin) .and. (x .le. this%xmax) )
-!    SLL_ASSERT( associated(this) )
-    ! FIXME: arg checks here
-    num_cells = this%n_cells
-    rh        = this%rdelta
-    coeffs    => this%c
-    ! find the cell and offset for x
-    t0        = x*rh
-    cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
-    cdx       = 1.0_f64 - dx
-    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
-    cim1      = coeffs(cell-1)
-    ci        = coeffs(cell)
-    cip1      = coeffs(cell+1)
-    cip2      = coeffs(cell+2)
-    t1        = 3.0_f64*ci
-    t3        = 3.0_f64*cip1
-    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
-    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
-    interpolate_val = (1.0_f64/6.0_f64)*(t2 + t4)
-  end function interpolate_val
-#endif
+    t1 = 2.0_f64*(cim1 - 2.0_f64*ci + cip1)
+    t2 = -cim1 + 3.0_f64*(ci - cip1) + cip2
+    t3 =  cip1 - cim1
+    interpolate_derivative = 0.5_f64*rh*(dx*(t1 + dx*t2) + t3)
+  end function interpolate_derivative
 
   subroutine delete_spline_1D( spline )
     type(sll_spline_1D), pointer :: spline
@@ -752,6 +683,7 @@ contains  ! ****************************************************************
   end subroutine delete_spline_1D
 
   !-----------------------------------------------------------------------
+  !
   ! Functions and subroutines for the 2D spline.
   !
   !----------------------------------------------------------------------
@@ -864,6 +796,7 @@ contains  ! ****************************************************************
     else if ( x2_bc_type .eq. HERMITE_SPLINE ) then
        bc_selector = bc_selector + 2
     end if
+    new_spline_2D%bc_mix_identifier = bc_selector
 
     select case (bc_selector)
     case ( 0 ) 
@@ -966,7 +899,7 @@ contains  ! ****************************************************************
           new_spline_2D%x2_max_slope = 0.0
        end if
     case default
-       print *, 'ERROR: compute_spline_1D(): ', &
+       print *, 'ERROR: new_spline_2D(): ', &
             'did not recognize given boundary conditions.'
        STOP
     end select
@@ -979,6 +912,127 @@ contains  ! ****************************************************************
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_2D%coeffs(0:num_pts_x1+2,0:num_pts_x2+2), ierr )
   end function new_spline_2D
+
+  subroutine compute_spline_2D_prdc_prdc( data, spline )
+    sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
+    type(sll_spline_2D), pointer         :: spline
+    sll_real64, dimension(:), pointer    :: coeffs
+    sll_int32                            :: npx1
+    sll_int32                            :: npx2
+    sll_real64, dimension(:), pointer    :: d1
+    sll_real64, dimension(:), pointer    :: d2
+    sll_real64, dimension(:), pointer    :: datap ! 1D data slice pointer
+    sll_int32                            :: i
+    sll_int32                            :: j
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( .not. (size(data,1) .ge. spline%num_pts_x1 ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%num_pts_x1, ' . Passed size: ', size(data,1)
+       STOP
+    end if
+    if( .not. (size(data,2) .ge. spline%num_pts_x2 ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%num_pts_x2, ' . Passed size: ', size(data,2)
+       STOP
+    end if
+print *, 'assigning local variables'
+    npx1   =  spline%num_pts_x1
+    npx2   =  spline%num_pts_x2
+    d1     => spline%d1
+    d2     => spline%d2
+
+    ! build splines along the x1 direction. Note: due to Fortran's 
+    ! column-major ordering, this involves long strides in memory.
+    do i=1,npx2
+       datap  => data(i,1:npx1)
+       coeffs => spline%coeffs(i,1:npx1+2)
+       call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
+    end do
+    ! build splines along the x2 direction. Note: due to Fortran's 
+    ! column-major ordering, this uses contiguous memory chunks.
+    do j=1,npx1
+       datap  => data(1:npx2,j)
+       coeffs => spline%coeffs(1:npx2+2,j)
+       call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
+    end do
+  end subroutine compute_spline_2D_prdc_prdc
+
+#if 0
+  function interpolate_value_2D( x1, x2, spline )
+    sll_real64                          :: interpolate_value_2D
+    intrinsic                           :: associated, int, real
+    sll_real64, intent(in)              :: x1
+    sll_real64, intent(in)              :: x2
+    type(sll_spline_2D), pointer        :: spline
+    sll_real64, dimension(:,:), pointer :: coeffs
+    sll_real64                          :: rh1   ! reciprocal of cell spacing
+    sll_real64                          :: rh2   ! reciprocal of cell spacing
+    sll_int32                           :: cell
+    sll_real64                          :: dx
+    sll_real64                          :: cdx  ! 1-dx
+    sll_real64                          :: t0   ! temp/scratch variables ...
+    sll_real64                          :: t1
+    sll_real64                          :: t2
+    sll_real64                          :: t3
+    sll_real64                          :: t4
+    sll_real64                          :: cim1 ! C_(i-1)
+    sll_real64                          :: ci   ! C_i
+    sll_real64                          :: cip1 ! C_(i+1)
+    sll_real64                          :: cip2 ! C_(i+2)
+    sll_int32                           :: num_cells
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
+    ! FIXME: arg checks here
+    num_cells = spline%n_points-1
+    rh        = spline%rdelta
+    coeffs    => spline%coeffs
+    ! find the cell and offset for x
+    t0        = x*rh
+    cell      = int(t0) + 1
+    dx        = t0 - real(cell-1)
+    cdx       = 1.0_f64 - dx
+    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    cim1      = coeffs(cell-1)
+    ci        = coeffs(cell)
+    cip1      = coeffs(cell+1)
+    cip2      = coeffs(cell+2)
+    t1        = 3.0_f64*ci
+    t3        = 3.0_f64*cip1
+    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function interpolate_value
+#endif
+
+
+  subroutine delete_spline_2D( spline )
+    type(sll_spline_2D), pointer :: spline
+    sll_int32                    :: ierr
+    ! Fixme: some error checking, whether the spline pointer is associated
+    ! for instance
+    if( .not. associated(spline) ) then
+       print *, 'delete_spline_2D(): passed spline is not associated'
+       STOP
+    end if
+!    SLL_ASSERT( associated(spline) )
+    SLL_DEALLOCATE( spline%d1, ierr )
+    SLL_DEALLOCATE( spline%d2, ierr )
+    SLL_DEALLOCATE( spline%coeffs, ierr )
+    spline%data => null()
+    SLL_DEALLOCATE( spline, ierr )
+  end subroutine delete_spline_2D
+
 
 #undef NUM_TERMS
 end module sll_splines
