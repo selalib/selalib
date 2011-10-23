@@ -53,7 +53,6 @@ vars.Add(PathVariable('RUNTIMEPATH', 'Runtime path','/opt/local/lib64'))
 vars.Add(PathVariable('HDF5INCPATH', 'hdf5 header files location','/opt/local/include'))
 vars.Add(PathVariable('HDF5MODPATH', 'fortran module hdf5.mod location','/opt/local/include'))
 vars.Add(PathVariable('HDF5LIBPATH', 'hdf5 library location','/opt/local/lib'))
-Help(vars.GenerateHelpText(env))
 
 env = Environment( 
        ENV = os.environ,
@@ -69,6 +68,8 @@ env = Environment(
        LINK = ['mpif90'],
        LIBPATH = ['.'],
        )
+
+Help(vars.GenerateHelpText(env))
 
 #Check if hdf5 is available
 conf = Configure(env)
