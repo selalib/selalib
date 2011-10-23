@@ -1,0 +1,96 @@
+import os
+import os.path
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+if hostname[:8] == "irma-hpc":
+   vars = Variables('config/irma-hpc')
+else:
+   vars = Variables('SLL_BUILD_VARIABLES')
+
+vars.Add('CCOMPILER', 'C compiler','mpicc')
+vars.Add('FCOMPILER', 'F90 compiler','mpif90')
+vars.Add(PathVariable('COMPILERDIR', 'Compilers bin path','/opt/local/bin'))
+vars.Add(PathVariable('RUNTIMEPATH', 'Runtime path','/opt/local/lib64'))
+vars.Add(PathVariable('HDF5INCPATH', 'hdf5 header files location','/opt/local/include'))
+vars.Add(PathVariable('HDF5MODPATH', 'fortran module hdf5.mod location','/opt/local/include'))
+vars.Add(PathVariable('HDF5LIBPATH', 'hdf5 library location','/opt/local/lib'))
+
+env = Environment( 
+       ENV = os.environ,
+       variables = vars,
+       CC = '${CCOMPILER}',
+       F90 = '${FCOMPILER}',
+       F90FLAGS = ['-cpp','-g', '-W', '-Wall', '-Wextra', '-pedantic', 
+                   '-ffree-line-length-none'],
+       F90PATH = ['../'+files for files in os.listdir('.') if os.path.isdir(files)],
+       CPPDEFINES = ['GFORTRAN', 'DEBUG', 'MPIF90'],
+       LINKFLAGS = ['-Wl,-rpath','-Wl,${HDF5LIBPATH}',
+                    '-Wl,-rpath','-Wl,${RUNTIMEPATH}'],
+       LINK = ['mpif90'],
+       LIBPATH = ['.'],
+       )
+
+conf = Configure(env)
+if conf.CheckLib('hdf5'):
+   print "HDF5 available"
+   env.Append(LIBPATH = ['${HDF5LIBPATH}'])
+   env.Append(F90PATH = ['${HDF5INCPATH}'])
+   env.Append(LIBS = ['hdf5_fortran','hdf5', 'z'])
+
+Help(vars.GenerateHelpText(env))
+
+env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
+
+Export('env')
+ff = os.popen('gfortran --version')
+ll = ff.readline()
+ff.close()
+gcc_version =ll[18:21]
+if float(gcc_version) < 4.5:
+   print 'gfortran version number '+gcc_version+' less than 4.5'
+   exit();
+
+sll_dirs = Split("""
+	memory
+	precision
+	assert
+	constants
+	utilities
+	diagnostics
+	splines
+        collective
+	remap
+	timer
+	ode_solvers
+	mesh_types
+	distribution_function
+""")
+
+ss=[]
+sllfiles = []
+for root,dirs,files in os.walk('.'):
+    for dir in dirs:
+       env.Append(F90PATH=dir)
+    for file in files :
+       if root[2:] in sll_dirs:
+	  ss.append('%s/%s'%(root[2:],file))
+	  if file[-4:] == '.F90' or file[-2:] == '.c':
+             if file[-13:-4] != 'unit_test':
+	        sllfiles.append('%s/%s'%(root[2:],file))
+
+env.Library('selalib', sllfiles)
+
+env.Append(LIBS=['selalib','rt'])
+
+for root,dirs,files in os.walk('.'):
+    for file in files:
+	if file[:13] == 'unit_test.F90' and root[2:] in sll_dirs:
+	      env.Program('%s/%s'%(root[2:],file))
+
