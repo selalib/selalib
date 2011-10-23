@@ -1,3 +1,35 @@
+#SConstruct file fro scons to build every unit_test program present in
+#directories list sll_dirs
+#The unit test program has to be named unit_test.F90
+#The script takes all F90 and C files present in the path to build the library selalib
+#The PATH variable is change to COMPILEDIR
+#HDF5 libraries flags are set with the SCons Variables module.
+#To change these variables use SLL_BUILD_VARIABLES  file
+#example
+#CCOMPILER='mpicc'
+#FCOMPILER='mpif90'
+#COMPILERDIR='/usr/local/bin'
+#RUNTIMEPATH='/usr/local/lib64'
+#HDF5INCPATH='/usr/local/include'
+#HDF5MODPATH='/usr/local/include'
+#HDF5LIBPATH='/usr/local/lib'
+
+#Add your directory here
+sll_dirs = Split(""" 	memory
+			precision
+			assert
+			constants
+			utilities
+			diagnostics
+			splines
+        		collective
+			remap
+			timer
+			ode_solvers
+			mesh_types
+			distribution_function
+""")
+
 import os
 import os.path
 import socket
@@ -10,7 +42,7 @@ print 'hostname : ' + hostname
 print 'platform : ' + platform
 
 if hostname[:8] == "irma-hpc":
-   vars = Variables('config/irma-hpc')
+   vars = Variables()
 else:
    vars = Variables('SLL_BUILD_VARIABLES')
 
@@ -21,6 +53,7 @@ vars.Add(PathVariable('RUNTIMEPATH', 'Runtime path','/opt/local/lib64'))
 vars.Add(PathVariable('HDF5INCPATH', 'hdf5 header files location','/opt/local/include'))
 vars.Add(PathVariable('HDF5MODPATH', 'fortran module hdf5.mod location','/opt/local/include'))
 vars.Add(PathVariable('HDF5LIBPATH', 'hdf5 library location','/opt/local/lib'))
+Help(vars.GenerateHelpText(env))
 
 env = Environment( 
        ENV = os.environ,
@@ -37,6 +70,7 @@ env = Environment(
        LIBPATH = ['.'],
        )
 
+#Check if hdf5 is available
 conf = Configure(env)
 if conf.CheckLib('hdf5'):
    print "HDF5 available"
@@ -44,10 +78,9 @@ if conf.CheckLib('hdf5'):
    env.Append(F90PATH = ['${HDF5INCPATH}'])
    env.Append(LIBS = ['hdf5_fortran','hdf5', 'z'])
 
-Help(vars.GenerateHelpText(env))
-
 env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
 
+#Check gcc and gfortran version
 Export('env')
 ff = os.popen('gfortran --version')
 ll = ff.readline()
@@ -57,21 +90,7 @@ if float(gcc_version) < 4.5:
    print 'gfortran version number '+gcc_version+' less than 4.5'
    exit();
 
-sll_dirs = Split("""
-	memory
-	precision
-	assert
-	constants
-	utilities
-	diagnostics
-	splines
-        collective
-	remap
-	timer
-	ode_solvers
-	mesh_types
-	distribution_function
-""")
+#Build the selalib library
 
 ss=[]
 sllfiles = []
@@ -87,10 +106,21 @@ for root,dirs,files in os.walk('.'):
 
 env.Library('selalib', sllfiles)
 
+#Build and run unit_test programs
+
 env.Append(LIBS=['selalib','rt'])
+
+def runUnitTest(env,target,source):
+   import subprocess
+   app = str(source[0].abspath)
+   if not subprocess.call(app):
+      open(str(target[0]),'w').write("PASSED\n")
 
 for root,dirs,files in os.walk('.'):
     for file in files:
 	if file[:13] == 'unit_test.F90' and root[2:] in sll_dirs:
-	      env.Program('%s/%s'%(root[2:],file))
+              test = '%s/%s'%(root[2:],file)
+	      env.Program(test)
+	      print test[:-4]
+              Command("unit_test in "+root[2:],test[:-4],runUnitTest)
 
