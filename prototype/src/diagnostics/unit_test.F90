@@ -60,7 +60,7 @@ contains
      real ,dimension(:), allocatable :: cells_values, nodes_values
 
      pi = 4. * atan(1.)
-     call write_xdmf_xml(nx, ny)
+     !call write_xdmf_xml(nx, ny)
 
      ! Create the coordinate data.
      allocate(x((nx+1)*(ny+1)))
