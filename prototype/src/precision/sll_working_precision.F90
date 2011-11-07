@@ -1,16 +1,38 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+!
+! MODULE: sll_working_precision
+!
+!> @author
+!> unknown author
+!
+! DESCRIPTION: 
+!> Define the kind type parameter for intern type data.
+!!
+!>From the Fortran Standard (2.4.1.1): "The kind type parameter indicates the decimal exponent range for the integer type (4.4.1), the decimal precision and exponent range for the real and complex types (4.4.2, 4.4.3), and the representation methods for the character and logical types (4.4.4, 4.4.5)."
+!!
+!>If you want to select the kind parameter n, you need to write \n
+!>REAL(KIND=n) :: variable or REAL*n :: variable \n
+!>You can also define the constant like this 23.455_n.
+!
+! REVISION HISTORY:
+! DD Mmm YYYY - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
+
 module sll_working_precision
   implicit none
   intrinsic :: kind, selected_real_kind
-  ! From the Fortran Standard (2.4.1.1): "The kind type parameter indicates 
-  ! the decimal exponent range for the integer type (4.4.1), the decimal 
-  ! precision and exponent range for the real and complex types 
-  ! (4.4.2, 4.4.3), and the representation methods for the character and 
-  ! logical types (4.4.4, 4.4.5)."
 
   ! The intent is that i32 will hold values up to 2**32-1
-  integer, parameter :: i32 = kind(0) 
-  integer, parameter :: i64 = kind(2_8**32)  ! 1.0d0 should be specific enough
+  !> i32 is the kind type for 32-bit integers
+  integer, parameter :: i32 = kind(0)
+  !> i64 is the kind type for 64-bit integers
+  integer, parameter :: i64 = kind(2_8**32) !i64=kind(1.0d0) should be specific enough
+  !> f32 is the kind type for 32-bit reals (simple precision)
   integer, parameter :: f32 = selected_real_kind(1,37)
+  !> f64 is the kind type for 64-bit reals (double precision)
   integer, parameter :: f64 = selected_real_kind(1,99)
 
 end module sll_working_precision
