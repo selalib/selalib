@@ -1,0 +1,127 @@
+#SConstruct file fro scons to build every unit_test program present in
+#directories list sll_dirs
+#The unit test program has to be named unit_test.F90
+#The script takes all F90 and C files present in the path to build the library selalib
+#The PATH variable is change to COMPILEDIR
+#HDF5 libraries flags are set with the SCons Variables module.
+#To change these variables use SLL_BUILD_VARIABLES  file
+#example
+#CCOMPILER='mpicc'
+#FCOMPILER='mpif90'
+#COMPILERDIR='/usr/local/bin'
+#RUNTIMEPATH='/usr/local/lib64'
+#HDF5INCPATH='/usr/local/include'
+#HDF5MODPATH='/usr/local/include'
+#HDF5LIBPATH='/usr/local/lib'
+
+#Add your directory here
+sll_dirs = Split(""" 	memory
+			precision
+			assert
+			constants
+			utilities
+			diagnostics
+			splines
+        		collective
+			remap
+			timer
+			ode_solvers
+			mesh_types
+			distribution_function
+""")
+
+import os
+import os.path
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+if hostname[:8] == "irma-hpc":
+   vars = Variables()
+else:
+   vars = Variables('SLL_BUILD_VARIABLES')
+
+vars.Add('CCOMPILER', 'C compiler','mpicc')
+vars.Add('FCOMPILER', 'F90 compiler','mpif90')
+vars.Add(PathVariable('COMPILERDIR', 'Compilers bin path','/opt/local/bin'))
+vars.Add(PathVariable('RUNTIMEPATH', 'Runtime path','/opt/local/lib64'))
+vars.Add(PathVariable('HDF5INCPATH', 'hdf5 header files location','/opt/local/include'))
+vars.Add(PathVariable('HDF5MODPATH', 'fortran module hdf5.mod location','/opt/local/include'))
+vars.Add(PathVariable('HDF5LIBPATH', 'hdf5 library location','/opt/local/lib'))
+
+env = Environment( 
+       ENV = os.environ,
+       variables = vars,
+       CC = '${CCOMPILER}',
+       F90 = '${FCOMPILER}',
+       F90FLAGS = ['-cpp','-g', '-W', '-Wall', '-Wextra', '-pedantic', 
+                   '-ffree-line-length-none'],
+       F90PATH = ['../'+files for files in os.listdir('.') if os.path.isdir(files)],
+       CPPDEFINES = ['GFORTRAN', 'DEBUG', 'MPIF90'],
+       LINKFLAGS = ['-Wl,-rpath','-Wl,${HDF5LIBPATH}',
+                    '-Wl,-rpath','-Wl,${RUNTIMEPATH}'],
+       LINK = ['mpif90'],
+       LIBPATH = ['.'],
+       )
+
+Help(vars.GenerateHelpText(env))
+
+#Check if hdf5 is available
+conf = Configure(env)
+if conf.CheckLib('hdf5'):
+   print "HDF5 available"
+   env.Append(LIBPATH = ['${HDF5LIBPATH}'])
+   env.Append(F90PATH = ['${HDF5INCPATH}'])
+   env.Append(LIBS = ['hdf5_fortran','hdf5', 'z'])
+
+env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
+
+#Check gcc and gfortran version
+Export('env')
+ff = os.popen('gfortran --version')
+ll = ff.readline()
+ff.close()
+gcc_version =ll[18:21]
+if float(gcc_version) < 4.5:
+   print 'gfortran version number '+gcc_version+' less than 4.5'
+   exit();
+
+#Build the selalib library
+
+ss=[]
+sllfiles = []
+for root,dirs,files in os.walk('.'):
+    for dir in dirs:
+       env.Append(F90PATH=dir)
+    for file in files :
+       if root[2:] in sll_dirs:
+	  ss.append('%s/%s'%(root[2:],file))
+	  if file[-4:] == '.F90' or file[-2:] == '.c':
+             if file[-13:-4] != 'unit_test':
+	        sllfiles.append('%s/%s'%(root[2:],file))
+
+env.Library('selalib', sllfiles)
+
+#Build and run unit_test programs
+
+env.Append(LIBS=['selalib','rt'])
+
+def runUnitTest(env,target,source):
+   import subprocess
+   app = str(source[0].abspath)
+   if not subprocess.call(app):
+      open(str(target[0]),'w').write("PASSED\n")
+
+for root,dirs,files in os.walk('.'):
+    for file in files:
+	if file[:13] == 'unit_test.F90' and root[2:] in sll_dirs:
+              test = '%s/%s'%(root[2:],file)
+	      env.Program(test)
+	      print test[:-4]
+              Command("unit_test in "+root[2:],test[:-4],runUnitTest)
+
