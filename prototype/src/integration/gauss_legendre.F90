@@ -1,3 +1,22 @@
+!------------------------------------------------------------------------------
+! Selalib
+!------------------------------------------------------------------------------
+!
+! MODULE: gauss_legendre_integration
+!
+!> @author
+!> Module Author Name and Affiliation
+!
+! DESCRIPTION: 
+!> This is a low-level mathematical utility that applies the Gauss-Legendre method to compute numeric integrals.
+!>
+!> This module aims at providing a single interface to the process of integrating a function on a given interval.
+!
+! REVISION HISTORY:
+! DD Mmm YYYY - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
+
 module gauss_legendre_integration
 #include "sll_working_precision.h"
   use sll_splines
@@ -121,16 +140,34 @@ contains
        print *, 'degree of integration not implemented. Exiting...';\
        stop;
 
-  
-  ! Gauss-Legendre Quadrature:
+  !---------------------------------------------------------------------------  
+  !> @author 
+  !> Routine Author Name and Affiliation.
   !
-  ! Integral(-1,1,f(x)) is approximated with Sum(k=1:n,w_k*f(x_k))
+  ! DESCRIPTION: 
+  !> Gauss-Legendre Quadrature.
+  !> @brief
+  !> To integrate the function f(x) (real-valued and of a single, real-valued argument x)
+  !> over the interval [a,b], we use the Gauss-Legendre formula 
+  !> \f[ \int_{-1}^1 f(x)dx \approx \sum_{k=1}^{n} w_k f(x_k) \f]
+  !> where n represents the desired number of Gauss points.
+  !>
+  !> the function maps the interval [-1,1] into the
+  !> arbitrary interval [a,b].
+  !>
+  !> To be considered is to split this function into degree-specific
+  !> functions to avoid the select statement.
   !
-  ! gauss_legendre_integral_1D() maps the interval [-1,1] into the
-  ! arbitrary interval [a,b].
+  ! REVISION HISTORY:
+  ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
   !
-  ! To be considered is to split this function into degree-specific
-  ! functions to avoid the select statement.
+  !> @param f the function to be integrated
+  !> @param[in] a left-bound of the definition interval of f  
+  !> @param[in] b right-bound of the definition interval of f 
+  !> @param[in] n the desired number of Gauss points
+  !> @return The value of the integral
+  !---------------------------------------------------------------------------
+
   function gauss_legendre_integral_1D( f, a, b, n )
     intrinsic                       :: sqrt
     sll_real64                      :: gauss_legendre_integral_1D
@@ -166,6 +203,29 @@ contains
   ! function. This would have a simpler interface. Although, there could be
   ! some advantages to have the interpolating function parametrized also, like
   ! in this case.
+  !---------------------------------------------------------------------------  
+  !> @author 
+  !> Routine Author Name and Affiliation.
+  !
+  ! DESCRIPTION:
+  !> Integrates a function represented by a spline object.
+  !> @brief
+  !> The function f in this case is the spline interpolation function.
+  !> It looks like this interface could be simplified and we could eliminate 
+  !> the first parameter and pass only the spline object.
+  !> The only reason to leave the interpolation function as an argument is if
+  !> we find some compelling reason to parametrize the interpolation function as well.
+  !
+  ! REVISION HISTORY:
+  ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+  !
+  !> @param f the spline interpolation function
+  !> @param spline a spline
+  !> @param[in] a left-bound of the definition interval of f  
+  !> @param[in] b right-bound of the definition interval of f 
+  !> @param[in] n the desired number of Gauss points
+  !> @return The value of the integral
+  !---------------------------------------------------------------------------
   function gauss_legendre_integral_interpolated_1D( f, spline, a, b, n )
     intrinsic                           :: sqrt
     sll_real64                       :: gauss_legendre_integral_interpolated_1D

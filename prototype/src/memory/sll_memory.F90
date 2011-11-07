@@ -1,8 +1,26 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+!
+! MODULE: sll_memory
+!
+!> @author
+!> Module Author Name and Affiliation
+!
+! DESCRIPTION: 
+!> Implements the error testing function and other related functionalities.
+!
+! REVISION HISTORY:
+! DD Mmm YYYY - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
+
 module sll_memory
   implicit none
   intrinsic :: merge
+
 ! Useful for 'alternative implementation'. Ignore for now.
-#if 0  
+#if 0
  interface sll_allocate
      module procedure sll_allocate_int_1d, sll_allocate_real_1d, &
           sll_allocate_complex_1d
@@ -10,6 +28,27 @@ module sll_memory
 #endif
 
 contains 
+
+   !---------------------------------------------------------------------------  
+   !> @author 
+   !> Routine Author Name.
+   !
+   ! DESCRIPTION: 
+   !> Test if there is an error and write it on the screen.
+   !! @brief
+   !! We assume that an error code is set to 0
+   !! if there is no problem at the function output.
+   !! Thus, we check the value of the error code and if it's different to 0,
+   !! the routine writes an error message on the screen. 
+   !
+   ! REVISION HISTORY:
+   ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+   !
+   !> @param[in] err_code the error code to be tested
+   !> @param[in] descriptor short description of the error
+   !> @param[in] file_name file name in which the error occurred
+   !> @param[in] line_number line number of the call
+   !---------------------------------------------------------------------------
 
   subroutine test_error_code(err_code, descriptor, file_name, line_number)
     integer                      :: err_code
