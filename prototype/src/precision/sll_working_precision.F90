@@ -9,18 +9,37 @@
 !
 ! DESCRIPTION: 
 !> Define the kind type parameter for intern type data.
-!!
-!>From the Fortran Standard (2.4.1.1): "The kind type parameter indicates the decimal exponent range for the integer type (4.4.1), the decimal precision and exponent range for the real and complex types (4.4.2, 4.4.3), and the representation methods for the character and logical types (4.4.4, 4.4.5)."
-!!
-!>If you want to select the kind parameter n, you need to write \n
-!>REAL(KIND=n) :: variable or REAL*n :: variable \n
-!>You can also define the constant like this 23.455_n.
+!> @brief
+!> If you want to select the kind parameter \a n, you need to write \n
+!> \code
+!> real(kind=n) :: var1
+!> real*n       :: var2 
+!> \endcode
+!> The two entries \a var1 and \a var2 are equivalents.
+!> You can also define the constant like this \s 23.455_n.
+!>
+!> <b> How to use this module: </b> \n
+!> ****************************
+!>
+!> First, call the module \a sll_woring_precision like that
+!> \code #include "sll_working_precision.h" \endcode
+!> Now, you can use the types:
+!> \code
+!> sll_int32  :: i        !integer simple precision
+!> sll_int64  :: N        !integer double precision
+!> sll_real32 :: theta    !real simple precision
+!> sll_real64 :: my_pi    !real double precision
+!>
+!> my_pi = 3.1415926535897932384626433_f64
+!> theta = 2.0*real(N,f32)
+!> \endcode
 !
 ! REVISION HISTORY:
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
+! From the Fortran Standard (2.4.1.1): "The kind type parameter indicates the decimal exponent range for the integer type (4.4.1), the decimal precision and exponent range for the real and complex types (4.4.2, 4.4.3), and the representation methods for the character and logical types (4.4.4, 4.4.5)."
 module sll_working_precision
   implicit none
   intrinsic :: kind, selected_real_kind
