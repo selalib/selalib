@@ -14,6 +14,7 @@
 !>
 !> <b> How to use it : </b> \n
 !> ****************
+!>
 !> Just add the line
 !> \code use numeric_constants \endcode
 !> and you have access to the constants defined in the module.
