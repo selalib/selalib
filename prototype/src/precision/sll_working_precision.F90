@@ -16,7 +16,7 @@
 !> real*n       :: var2 
 !> \endcode
 !> The two entries \a var1 and \a var2 are equivalents.
-!> You can also define the constant like this \s 23.455_n.
+!> You can also define the constant like this \a 23.455_n.
 !>
 !> <b> How to use this module: </b> \n
 !> ****************************
