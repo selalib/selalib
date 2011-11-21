@@ -27,7 +27,7 @@
 !> *****************************************
 !>
 !> Include the line
-@!> \code use sll_collective \endcode
+!> \code use sll_collective \endcode
 !> \warning Never put the line "use mpi"!
 !>
 !> Any use of the module's functionalities must be preceeded by calling
