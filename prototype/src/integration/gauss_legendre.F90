@@ -141,13 +141,12 @@ contains
        stop;
 
   !---------------------------------------------------------------------------  
-  !> @author 
+  !> @author
   !> Routine Author Name and Affiliation.
   !
   ! DESCRIPTION: 
-  !> Gauss-Legendre Quadrature.
-  !> @brief
-  !> To integrate the function f(x) (real-valued and of a single, real-valued argument x)
+  !> @brief Gauss-Legendre Quadrature.
+  !> @details To integrate the function f(x) (real-valued and of a single, real-valued argument x)
   !> over the interval [a,b], we use the Gauss-Legendre formula 
   !> \f[ \int_{-1}^1 f(x)dx \approx \sum_{k=1}^{n} w_k f(x_k) \f]
   !> where n represents the desired number of Gauss points.
@@ -208,9 +207,8 @@ contains
   !> Routine Author Name and Affiliation.
   !
   ! DESCRIPTION:
-  !> Integrates a function represented by a spline object.
-  !> @brief
-  !> The function f in this case is the spline interpolation function.
+  !> @brief Integrates a function represented by a spline object.
+  !> @details The function f in this case is the spline interpolation function.
   !> It looks like this interface could be simplified and we could eliminate 
   !> the first parameter and pass only the spline object.
   !> The only reason to leave the interpolation function as an argument is if
