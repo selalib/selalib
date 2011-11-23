@@ -1,3 +1,96 @@
+!------------------------------------------------------------------------------
+! Selalib
+!------------------------------------------------------------------------------
+!
+! MODULE: sll_collective
+!
+!> @author
+!> Module Author Name and Affiliation
+!
+! DESCRIPTION: 
+!> @brief Parallelizing facility.
+!>
+!> @details Selalib applies the principle of modularization throughout all levels of
+!> abstraction of the library and aims at keeping third-party library modules
+!> as what they are: separate library modules. Therefore, in its current design,
+!> even a library like MPI has a single point of entry to Selalib. The collective
+!> communications module is such point of entry. We focus thus on the functionality
+!> offered by MPI, assign wrappers to its most desirable functionalities and write
+!> wrappers around them. These are the functions that are actually used throughout
+!> the program.  This allows to adjust the exposed interfaces, do additional
+!> error-checking and would even permit to completely change the means to
+!> parallelize a code, by being able to replace MPI in a single file if this
+!> were ever needed.
+!>
+!> \remark MPI provides five types of collective data movement routines that
+!!         come in two variants: "simple" in which all communicated items are
+!!         the same size and "vector" where each item can be a different size.
+!!         The 'v' at the end indicates vector variant.
+!>
+!> <b> How to use the sll_collective module :</b> \n
+!> *****************************************
+!>
+!> Include the line
+!> \code use sll_collective \endcode
+!> \warning Never put the line "use mpi"!
+!>
+!> Any use of the module's functionalities must be preceeded by calling
+!> \code call sll_boot_collective() \endcode
+!> and to "turn off" the parallel capabilities, one should finish by a call to:
+!> \code call sll_halt_collective() \endcode
+!> \warning This \a booting of the parallel environment needs to be done <b> ONLY ONCE </b> in a program.
+!>
+!> \n
+!> \n
+!>
+!> <b> Comparaison with MPI module :</b> \n
+!> *****************************************
+!>
+!> <table border="1">
+!> <tr>
+!> <th>sll_collective</th>
+!> <th>MPI</th>
+!> </tr>
+!> <tr>
+!> <td>sll_world_collective</td>
+!> <td>MPI_COMM_WORLD</td>
+!> </tr>
+!> <tr>
+!> <td>sll_boot_collective()</td>
+!> <td>MPI_INIT(integer :: code)</td>
+!> </tr>
+!> <tr>
+!> <td>sll_halt_collective()</td>
+!> <td>MPI_FINALIZE(integer :: code)</td>
+!> </tr>
+!> <tr>
+!> <td>sll_get_collective_rank(type(sll_collective_t), pointer :: col )</td>
+!> <td>MPI_COMM_RANK(integer :: comm , integer :: rank , integer :: code)</td>
+!> </tr>
+!> <tr>
+!> <td>sll_get_collective_size(type(sll_collective_t), pointer :: col )</td>
+!> <td>MPI_COMM_SIZE(integer :: comm , integer :: size , integer :: code)</td>
+!> </tr>
+!> <tr>
+!> <td>sll_get_collective_color(type(sll_collective_t), pointer :: col )</td>
+!> <td></td>
+!> </tr>
+!> <tr>
+!> <td>sll_get_collective_comm(type(sll_collective_t), pointer :: col )</td>
+!> <td></td>
+!> </tr>
+!> <tr>
+!> <td>sll_collective_barrier(type(sll_collective_t), pointer :: col )</td>
+!> <td>MPI_BARRIER(integer :: comm ,integer :: code)</td>
+!> </tr>
+!> </table>
+!>
+!>
+! REVISION HISTORY:
+! DD Mmm YYYY - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
+
 ! ***************************************************************************
 ! sll_collective is a module that encapsulates our calls to the MPI library.
 ! Any module that wants to access distributed multiprocessing capabilities 
@@ -36,13 +129,17 @@ module sll_collective
   ! defined herein.
   !
   !***********************************************************************
+
+  !> @brief Wrapper around the communicator
   type sll_collective_t
-     type(sll_collective_t), pointer :: parent=>null()
-     sll_int32                       :: comm   ! communicator
-     sll_int32                       :: color
-     sll_int32                       :: key
-     sll_int32                       :: rank
-     sll_int32                       :: size
+     type(sll_collective_t), pointer :: parent=>null() !< Pointer to parent communicator
+     sll_int32                       :: comm   !< Communicator
+     !> Control of subset assignment. Processes with the same color 
+     !! are in the same new communicator
+     sll_int32                       :: color 
+     sll_int32                       :: key !< Control of rank assigment
+     sll_int32                       :: rank !< Rank of the process
+     sll_int32                       :: size !< Number of process
   end type sll_collective_t
 
   ! **********************************************************************
@@ -52,51 +149,72 @@ module sll_collective
   !
   ! **********************************************************************
 
-  type(sll_collective_t), pointer    :: sll_world_collective
+  !> The Communicator (The same role as MPI_COMM_WORLD)
+  type(sll_collective_t), pointer    :: sll_world_collective 
 
 
+  !> @brief Broadcasts a message from the process with rank
+  !>        "root" to all other processes of the communicator.
   interface sll_collective_bcast
+     !> @brief Broadcasts a message of real type from the process with 
+     !>        rank "root" to all other processes of the communicator.
      module procedure sll_collective_bcast_real
   end interface
   
-  
+  !> @brief Gathers together values from a group of processes.
   interface sll_collective_gather
+     !> @brief Gathers together values of real type from a group of processes.
      module procedure sll_collective_gather_real
   end interface
   
+  !> @brief Gathers data from all tasks and distribute the combined 
+  !!        data to all tasks.
   interface sll_collective_allgather
      module procedure sll_collective_allgather_int
   end interface
 
+  !> @brief Gathers data from all tasks and deliver the combined
+  !!        data to all tasks 
   interface sll_collective_allgatherv
      module procedure sll_collective_allgatherv_real
   end interface
 
+  !> @brief Gathers into specified locations from all processes in a group.
   interface sll_collective_gatherv
      module procedure sll_collective_gatherv_real
   end interface
   
+  !> @brief Sends data from one process to all other processes
+  !!        in a communicator.
   interface sll_collective_scatter
      module procedure sll_collective_scatter_real
   end interface
 
+  !> @brief Scatters a buffer in parts to all processes in a communicator.
   interface sll_collective_scatterv
      module procedure sll_collective_scatterv_real
   end interface
   
+  !> @brief Combines values from all processes and distributes
+  !!        the result back to all processes. 
   interface sll_collective_allreduce
      module procedure sll_collective_allreduce_real, &
                       sll_collective_allreduce_logical
   end interface
   
+  !> @brief Reduces values on all processes to a single value.
   interface sll_collective_reduce
      module procedure sll_collective_reduce_real
   end interface
 
+  !> @brief Sends data from all to all processes.
   interface sll_collective_alltoall
      module procedure sll_collective_alltoall_int
   end interface
 
+  !> @brief Sends data from all to all processes; each process may send a
+  !!        different amount of data and provide displacements for the
+  !!        input and output data.
   interface sll_collective_alltoallV
      module procedure sll_collective_alltoallV_int, &
                       sll_collective_alltoallV_real
@@ -105,6 +223,8 @@ module sll_collective
 contains !************************** Operations **************************
 
   ! First a couple of utilities for this module
+  !> @brief Checks if the pointer \a ptr is associated to an object.
+  !> @param[in] ptr pointer to \a sll_collective_t type
   subroutine sll_check_collective_ptr( ptr )
     type(sll_collective_t), pointer :: ptr
     if( .not. associated(ptr)) then
@@ -113,6 +233,13 @@ contains !************************** Operations **************************
     end if
   end subroutine sll_check_collective_ptr
 
+  !> @brief Checks the good execution of collective instruction.
+  !> @details Many functions of collective library returns an error code
+  !>          for verify the good execution.
+  !>          With this function you can check the code and print the
+  !>          message \a descriptor if you encountered an error.
+  !> @param[in] ierr error's code 
+  !> @param[in] descriptor message to print in error case
   subroutine sll_test_mpi_error( ierr, descriptor )
     sll_int32, intent(in)        :: ierr
     character(len=*), intent(in) :: descriptor
@@ -129,6 +256,7 @@ contains !************************** Operations **************************
   ! sll_boot_collective allocates and initializes the global variable 
   ! sll_world_collective and boots the MPI environment.
 
+  !> @brief Starts the paralell environment 
   subroutine sll_boot_collective( )
     sll_int32 :: ierr
     call MPI_Init(ierr)
@@ -142,6 +270,7 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, 'sll_boot_collective(): MPI_COMM_SIZE()')
   end subroutine sll_boot_collective
 
+  !> @brief Ends the paralell environment 
   subroutine sll_halt_collective( )
     sll_int32 :: ierr
     call MPI_BARRIER( MPI_COMM_WORLD, ierr )
@@ -173,6 +302,11 @@ contains !************************** Operations **************************
   ! - the values of color and key used for the splitting
   ! - the other fields, rank and size are pre-populated for convenience.
 
+  !> @brief Creates new (wrapper around) communicators based on colors and keys
+  !> @param parent a pointer to the parent collective from which it was split
+  !> @param[in] color the values of color used for the splitting
+  !> @param[in] key the values of key used for the splitting
+  !> @return a pointer to the new collective object
   function sll_new_collective( parent, color, key )
     type(sll_collective_t), pointer  :: parent
     sll_int32, intent(in)            :: color
@@ -195,13 +329,18 @@ contains !************************** Operations **************************
     call sll_test_mpi_error(ierr, 'sll_new_collective(): MPI_COMM_RANK()')
   end function sll_new_collective
 
+  !> @brief Marks the communicator object for deallocation
+  !> @param col a pointer to the collective object
   subroutine sll_delete_collective( col )
     type(sll_collective_t), pointer :: col
     sll_int32                       :: ierr
+    ! Why don't use MPI_COMM_FREE(col%comm,ierr)
     call sll_check_collective_ptr( col )
     SLL_DEALLOCATE( col, ierr )
   end subroutine sll_delete_collective
 
+  !> @brief Gets the id (integer) of the communicator
+  !> @param col Pointer to collective object
   function sll_get_collective_comm( col )
     type(sll_collective_t), pointer :: col
     sll_int32                       :: sll_get_collective_comm
@@ -209,13 +348,19 @@ contains !************************** Operations **************************
     sll_get_collective_comm = col%comm
   end function sll_get_collective_comm
 
-  function sll_get_collective_rank( col )
+ !> @brief Determines the rank of the calling process in the communicator
+ !> @param col Collective object
+ !> @return rank of the calling process in \a col
+ function sll_get_collective_rank( col )
     type(sll_collective_t), pointer :: col
     sll_int32                       :: sll_get_collective_rank
     call sll_check_collective_ptr( col )
     sll_get_collective_rank = col%rank
   end function sll_get_collective_rank
 
+ !> @brief Determines the color of the calling process in the communicator
+ !> @param col Collective object
+ !> @return color of the calling process in \a col
   function sll_get_collective_color( col )
     type(sll_collective_t), pointer :: col
     sll_int32                       :: sll_get_collective_color
@@ -223,6 +368,9 @@ contains !************************** Operations **************************
     sll_get_collective_color = col%color
   end function sll_get_collective_color
 
+ !> @brief Determines the size of the group associated with a communicator 
+ !> @param col Communicator
+ !> @return size of the group associated with \a col
   function sll_get_collective_size( col )
     type(sll_collective_t), pointer :: col
     sll_int32                       :: sll_get_collective_size
@@ -237,6 +385,9 @@ contains !************************** Operations **************************
     sll_get_collective_parent => col%parent
   end function sll_get_collective_parent
 
+  !> @brief Blocks until all processes in the communicator
+  !>        have reached this routine.
+  !> @param col Communicator
   subroutine sll_collective_barrier( col )
     type(sll_collective_t), pointer :: col
     sll_int32                         :: ierr
@@ -247,6 +398,12 @@ contains !************************** Operations **************************
 
 
   ! Start with something simple, like a buffer of 'real's...
+  !> @brief Broadcasts a message from the process with rank "root"
+  !>        to all other processes of the communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] buffer starting address of buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
   subroutine sll_collective_bcast_real( col, buffer, size, root )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: buffer ! what would change...
@@ -334,6 +491,13 @@ contains !************************** Operations **************************
          'sll_collective_allgatherv_real(): MPI_ALLGATHERV()' )
   end subroutine sll_collective_allgatherv_real
 
+  !> @brief Sends data from one process to all other processes
+  !>        in a communicator 
+  !> @param col Wrapper around the communicator
+  !> @param[in] send_buf address of send buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
+  !> @param[in] rec_buf address of receive buffer
   subroutine sll_collective_scatter_real( col, send_buf, size, root, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
