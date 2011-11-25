@@ -27,10 +27,10 @@ program unit_test
   geom => new_geometry_2D ('sinprod')
   m2D_descriptor => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
        PERIODIC, eta2_min, eta2_max, nc_eta2, COMPACT, geom)
-  dist_func => sll_new_distribution_function_2D(m2D_descriptor,name)
+  dist_func => sll_new_distribution_function_2D(m2D_descriptor,CELL_CENTERED_DF,name)
   delta_eta1 = get_df_delta_eta1 ( dist_func )
   delta_eta2 = get_df_delta_eta2 ( dist_func )
-  call sll_init_distribution_function_2D( dist_func, GAUSSIAN, 'cell' )
+  call sll_init_distribution_function_2D( dist_func, GAUSSIAN)
   call write_mesh_2D(m2D_descriptor)
   call write_distribution_function (dist_func) 
 
