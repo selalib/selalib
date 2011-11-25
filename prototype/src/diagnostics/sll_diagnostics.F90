@@ -87,7 +87,8 @@ end subroutine write_mesh_data_2d
 
 !> Write XDMF file for 3D mesh plot
 !> Data description is in the mesh_name.xmf file
-!> Coordinates of mesh nodes are in mesh_name-x1.bin and mesh_name-x1.bin
+!> Coordinates of mesh nodes are in mesh_name-x1.bin, mesh_name-x1.bin and
+!> mesh_name-x3.bin
 !>\param[in] mesh_name filename prefix for the mesh
 !>\param[in] x1 nodes coordinates  along direction 1
 !>\param[in] x2 nodes coordinates  along direction 2
@@ -117,7 +118,6 @@ SLL_ASSERT(size(x3,2) == nnodes_x2)
 SLL_ASSERT(size(x1,3) == nnodes_x3)
 SLL_ASSERT(size(x2,3) == nnodes_x3)
 SLL_ASSERT(size(x3,3) == nnodes_x3)
-
 
 call sll_xmf_file_create(trim(mesh_name)//".xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
@@ -160,6 +160,16 @@ call write_mesh_data_2d(mesh_name,x1,x2,nnodes_x1,nnodes_x2,error)
 
 end subroutine write_mesh
     
+!> Write XDMF file for vector 1d on 2d mesh with data in binary files
+!> Data description is in the field_prefix.xmf file
+!> Coordinates of mesh nodes are in mesh_name-x1.bin, mesh_name-x1.bin 
+!> Vector field data are in field_prefix-vec1_nodes.bin or field_prefix-vec1_cells.bin
+!>\param[in] Array with vector values
+!>\param[in] nnodes_x1 nodes number along direction 1
+!>\param[in] nnodes_x2 nodes number along direction 2
+!>\param[in] field_prefix filename prefix for the vector
+!>\param[in] mesh_name filename prefix for the mesh
+!>\param[in] icenter parameter to distinguish cells values or nodes values
 subroutine write_vec1d( vec_values, nnodes_x1, nnodes_x2, field_prefix, mesh_name, icenter)
 character(len=*), intent(in) :: field_prefix !prefix for field file
 character(len=*), intent(in) :: mesh_name !prefix for mesh file
@@ -262,6 +272,17 @@ end if
     
 end subroutine write_vec1d
   
+!> Write XDMF file for vector 2d on 2d mesh with data in binary files
+!> Data description is in the field_prefix.xmf file
+!> Coordinates of mesh nodes are in mesh_name-x1.bin, mesh_name-x1.bin
+!> Vector field data are in field_prefix-vec1_nodes.bin or field_prefix-vec1_cells.bin
+!>\param[in] vec_values_x1 Array with vector values
+!>\param[in] vec_values_x2 Array with vector values
+!>\param[in] nnodes_x1 nodes number along direction 1
+!>\param[in] nnodes_x2 nodes number along direction 2
+!>\param[in] field_prefix filename prefix for the vector
+!>\param[in] mesh_name filename prefix for the mesh
+!>\param[in] icenter parameter to distinguish cells values or nodes values
 subroutine write_vec2d( vec_values_x1, vec_values_x2,       &
                         nnodes_x1, nnodes_x2,               &
                         field_prefix, mesh_prefix, icenter)
@@ -306,14 +327,8 @@ call sll_xmf_file_create(trim(field_prefix)//".xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",nnodes_x2,nnodes_x1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
-"' NumberType='Float' Precision='8' Format='Binary'>"
-write(file_id,"(a)")trim(mesh_prefix)//"-x1.bin"
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
-"' NumberType='Float' Precision='8' Format='Binary'>"
-write(file_id,"(a)")trim(mesh_prefix)//"-x2.bin"
-write(file_id,"(a)")"</DataItem>"
+call sll_xmf_dataitem_2d(file_id, trim(mesh_prefix)//"-x1.bin", nnodes_x1, nnodes_x2)
+call sll_xmf_dataitem_2d(file_id, trim(mesh_prefix)//"-x2.bin", nnodes_x1, nnodes_x2)
 write(file_id,"(a)")"</Geometry>"
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
