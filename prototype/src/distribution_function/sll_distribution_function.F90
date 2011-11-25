@@ -12,20 +12,26 @@ module distribution_function
      sll_real64      :: pcharge, pmass
      sll_real64      :: average
      sll_int32       :: plot_counter
+     sll_int32       :: center
      character(32)   :: name
   end type sll_distribution_function_2D_t
 
   enum, bind(C)
      enumerator :: LANDAU = 0, TWO_STREAM = 1, GAUSSIAN = 2
   end enum
+  enum, bind(C)
+     enumerator :: NODE_CENTERED_DF = 0, CELL_CENTERED_DF = 1
+  end enum
 
 contains
   ! intializes some 2D distribution_functions
-  function sll_new_distribution_function_2D( mesh_descriptor, name ) 
+  function sll_new_distribution_function_2D( mesh_descriptor, center, name ) 
     type(sll_distribution_function_2D_t), pointer :: &
          sll_new_distribution_function_2D
     type(mesh_descriptor_2D), pointer :: mesh_descriptor
-    character(32)   :: name
+    sll_int32, intent(in)             :: center
+    character(len=*), intent(in)      :: name
+
     sll_int32                         :: ierr
     SLL_ASSERT(associated(mesh_descriptor))
     SLL_ALLOCATE(sll_new_distribution_function_2D, ierr)
@@ -34,6 +40,7 @@ contains
     sll_new_distribution_function_2D%pcharge = 1.0_f64
     sll_new_distribution_function_2D%pmass = 1.0_f64
     sll_new_distribution_function_2D%plot_counter = 0
+    sll_new_distribution_function_2D%center = center
     sll_new_distribution_function_2D%name = name
   end function sll_new_distribution_function_2D
 
@@ -132,10 +139,9 @@ contains
     f%field%data(i,j) = val
   end subroutine sll_set_df_val
 
-  subroutine sll_init_distribution_function_2D( dist_func_2D, test_case, center )
+  subroutine sll_init_distribution_function_2D( dist_func_2D, test_case)
     type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
     sll_int32  :: test_case
-    character(4) :: center   ! centering of dist_func_2D, one of ('node' or 'cell')
     ! local variables
     procedure(scalar_function_2D), pointer :: x1, x2, jac
     sll_int32 :: nc_eta1, nc_eta2, i1, i2
@@ -155,7 +161,7 @@ contains
     x2 => get_df_x2 ( dist_func_2D )
     jac => get_df_jac ( dist_func_2D )
 
-    if (center=='cell') then ! half cell offset
+    if (dist_func_2D%center==CELL_CENTERED_DF) then ! half cell offset
        eta1_min = eta1_min + 0.5_f64 * delta_eta1
        eta2_min = eta2_min + 0.5_f64 * delta_eta2
     end if
@@ -165,10 +171,10 @@ contains
        eps=0.0_f64
        kx=2*sll_pi/(nc_eta1*delta_eta1)
        do i2 = 1, nc_eta2 + 1
-          vx = eta2_min + (i2-0.5_f64) * delta_eta2
+          vx = eta2_min + (i2-1) * delta_eta2
           vv = vx*vx
           do i1 = 1, nc_eta1+1
-             x = eta1_min + (i1-0.5_f64) * delta_eta1
+             x = eta1_min + (i1-1) * delta_eta1
              xx = x * x
              fval = ( 1 + eps * cos(kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*vv)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
@@ -181,10 +187,10 @@ contains
        v0 = 2.4_f64
        kx = 2 * sll_pi / (nc_eta1 * delta_eta1)
        do i2 = 1, nc_eta2+1
-          vx = eta2_min + (i2-0.5_f64) * delta_eta2
+          vx = eta2_min + (i2-1) * delta_eta2
           vv = vx*vx
           do i1=1, nc_eta1 + 1
-             x = eta1_min + (i1-0.5_f64) * delta_eta1
+             x = eta1_min + (i1-1) * delta_eta1
              xx = x * x   
              fval=(1+eps*((cos(2*kx*x)+cos(3*kx*x))/1.2_f64+cos(kx*x)))* &
                   (1/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*(1+.5_f64*vv/(1-xi))*exp(-.5_f64*vv)

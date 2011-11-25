@@ -58,7 +58,7 @@ contains
     new_bsl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                                  eta2_min,         &
                                                  eta2_max,         &
-                                                 PERIODIC )  
+                                                 HERMITE_SPLINE )  
   end function new_bsl_workspace
 
   subroutine delete_bsl_workspace(bsl_worksp)

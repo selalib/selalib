@@ -37,7 +37,7 @@ program unit_test
   mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
           PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
 
-  dist_func => sll_new_distribution_function_2D(mesh, 'f')
+  dist_func => sll_new_distribution_function_2D(mesh, NODE_CENTERED_DF, 'f')
 
   delta_eta1 = get_df_delta_eta1 (dist_func)
   delta_eta2 = get_df_delta_eta2 (dist_func)
@@ -46,7 +46,7 @@ program unit_test
   x2 => get_df_x2 ( dist_func )
   
   call write_mesh_2D(mesh)
-  call sll_init_distribution_function_2D( dist_func, GAUSSIAN, 'node' )
+  call sll_init_distribution_function_2D( dist_func, GAUSSIAN)
   call write_distribution_function ( dist_func )
 
   Print*, 'checking advection of a Gaussian in a uniform field'
