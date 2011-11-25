@@ -10,6 +10,21 @@ print 'Building HDF5 module...'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
+if os.environ.has_key("HDF5INCPATH"):
+   print 'hdf5 header files are in %s ' %  os.environ['HDF5INCPATH']
+else:
+   os.environ['HDF5INCPATH'] = "/usr/local/include"
+
+if os.environ.has_key("HDF5MODPATH"):
+   print 'hdf5 mod files are in %s ' %  os.environ['HDF5MODPATH']
+else:
+   os.environ['HDF5MODPATH'] = "/usr/local/include"
+
+if os.environ.has_key("HDF5LIBPATH"):
+   print 'hdf5 library files are in %s ' %  os.environ['HDF5LIBPATH']
+else:
+   os.environ['HDF5LIBPATH'] = "/usr/local/lib"
+
 vars = Variables()
 vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
 vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location',os.environ['HDF5MODPATH'])
@@ -33,6 +48,8 @@ Help(vars.GenerateHelpText(env))
 conf = Configure(env)
 if not conf.CheckLib('hdf5'):
    print "HDF5 not available"
+   env.Append(CPPDEFINES=['NOHDF5'])
+   env.Replace(LIBS = SLLLIBS)
 
 env.Append(CPPDEFINES=['GFORTRAN', 'DEBUG'])
 
