@@ -372,11 +372,12 @@ contains   ! *****************************************************************
     call write_mesh(x1mesh, x2mesh, mesh%nc_eta1+1, mesh%nc_eta2+1, "mesh")
   end subroutine write_mesh_2D
 
-  subroutine write_field_2D_vec1( f2Dv1, name, jacobian, average )
+  subroutine write_field_2D_vec1( f2Dv1, name, jacobian, average, center )
     type(field_2D_vec1), pointer :: f2Dv1
     character(64) :: name
     logical, optional       :: jacobian   ! .true. if field data multiplied by jacobian is stored
     sll_real64, optional    :: average    ! average value to add to field
+    sll_int32, intent(in), optional     :: center     ! node or cell centered values
 
     type(mesh_descriptor_2D), pointer :: mesh
     sll_real64, dimension(:,:), pointer :: x1mesh
@@ -403,7 +404,7 @@ contains   ! *****************************************************************
     end if
 
     if (.not.(present(jacobian))) then
-       call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+       call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh",center)
     else if (jacobian) then 
        ! quantity multiplied by Jacobian is stored, need to divide by jacobian for
        eta1 = mesh%eta1_min + 0.5_f64 * mesh%delta_eta1
@@ -420,7 +421,7 @@ contains   ! *****************************************************************
           end do
           eta1 = eta1 + mesh%delta_eta1
        end do
-       call write_vec1d(val,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh")
+       call write_vec1d(val,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh",center)
     end if
   end subroutine write_field_2D_vec1
 end module sll_mesh_types

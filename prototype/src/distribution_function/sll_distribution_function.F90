@@ -332,7 +332,7 @@ contains
     logical, parameter   :: jacobian = .true.
     call int2string(f%plot_counter,counter)
     name = trim(f%name)//counter
-    call write_field_2d_vec1 ( f%field, name, jacobian, f%average )
+    call write_field_2d_vec1 ( f%field, name, jacobian, f%average, f%center )
     f%plot_counter = f%plot_counter + 1
   end subroutine write_distribution_function
 
