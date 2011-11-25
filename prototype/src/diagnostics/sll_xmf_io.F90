@@ -61,4 +61,15 @@ write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 end subroutine sll_xmf_grid_geometry_2d
 
+subroutine sll_xmf_dataitem_2d(file_id, filename, nnodes_x1, nnodes_x2)
+sll_int32, intent(in) :: file_id
+character(len=*), intent(in) :: filename
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
+"' NumberType='Float' Precision='8' Format='Binary'>"
+write(file_id,"(a)")trim(filename)
+write(file_id,"(a)")"</DataItem>"
+end subroutine sll_xmf_dataitem_2d
+
 end module sll_xmf_io
