@@ -130,7 +130,7 @@ contains   ! *****************************************************************
 
   function new_geometry_2D ( name )
     type(geometry_2D), pointer  ::  new_geometry_2D
-    character(32)               :: name
+    character(len=*)               :: name
 
     sll_int32  :: ierr
     
