@@ -1,14 +1,14 @@
 program diagnostics_tester
-#ifndef NODHF5
-use hdf5
-#endif
 
 #include "sll_working_precision.h"
 use sll_binary_io
-use sll_hdf5_io
 use sll_xmf_io
 use sll_diagnostics
 
+#ifndef NOHDF5
+use hdf5
+use sll_hdf5_io
+#endif
 implicit none
 
 sll_int32  :: nx, nv, i, j
