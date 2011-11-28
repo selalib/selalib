@@ -93,7 +93,74 @@ contains
   !> @param[out] ipiv an ineteger array of length n on wich pivoting information will be returned
   !> @param[out] cts a real array of size 7n where factorization information will be returned    
   !---------------------------------------------------------------------------  
-
+  !
+  ! Implementation notes:
+  ! **********************
+  ! (Adapted) description for the C implementation:
+  !
+  ! setup_cyclic_tridiag computes the LU factorization of a cylic
+  !  tridiagonal matrix specified in a band-diagonal representation.
+  !  solve_cyclic_tridiag uses this factorization to solve of the
+  !  system to solve the system Ax = b quickly and robustly.
+  !
+  !  Unambigously, the input tridiagonal system is specified by:
+  !
+  !       + a(2)    a(3)                                      a(1) +
+  !       | a(4)    a(5)    a(6)                                   |
+  !   A = |         a(7)    a(8)    a(9)                           |
+  !       |                         ...                            |
+  !       |                                a(3n-5) a(3n-4) a(3n-3) |
+  !       + a(3n)                                  a(3n-2) a(3n-1) +
+  ! 
+  ! The LU factorization does partial (row) pivoting, so the
+  ! factorization requires slightly more memory to hold than standard
+  ! non-pivoting tridiagonal (or cyclic tridiagonal) solution methods
+  ! The benefit is that this routine can accomodate systems that are
+  ! not diagonally dominant.
+  !
+  ! The output factorization is stored in "cts" and "ipiv" (the pivot
+  ! information).  In general, all you need to know about "cts" is that 
+  ! it is what you give to solve_cyclic_tridiag. However, for the 
+  ! masochistic, the final factorization is stored in seven vectors 
+  ! of length n which are packed into the vector cts in the order: 
+  ! d u v q r l m. The L and U factors of A are built out of vectors 
+  ! and have the structure:
+  !
+  !       + 1                               +
+  !       | l0  1                           |
+  !       |     l1  1                       |
+  !       |         ...                     |
+  !   L = |             ...                 |
+  !       |                 ln4 1           |
+  !       |                     ln3 1       |
+  !       + m0  m1  m2 ...  mn4 mn3 ln2 1   +
+  !
+  ! and:
+  !
+  !       + d0  u0  v0                          q0  r0  +
+  !       |     d1  u1  v1                      q1  r1  |
+  !       |         d2  u2  v2                  q2  r2  |
+  !       |             ...                     :   :   |
+  !   U = |                 ...                 :   :   |
+  !       |                     dn6 un6 vn6     qn6 rn6 |
+  !       |                         dn5 un5 vn5 qn5 rn5 |
+  !       |                             dn4 un4 vn4 rn4 |
+  !       |                                 dn3 un3 vn3 |
+  !       |                                     dn2 un2 |
+  !       +                                         dn1 +
+  !
+  ! Such that LU = PA. (The vector p describes the pivoting matrix.
+  ! p[i] = j indicates that in step i of the factorization, row i was
+  ! swapped with row j.  See Golub & van Loan. Matrix Computations.
+  ! Section 3.4.3 for more details.)  For the convenience of other
+  ! functions that use the output, the elements of d,l,m,u,v,q,r not
+  ! shown explicitly above are set to zero.
+  !
+  ! Note that if a zero pivot is encountered (i.e. the det(A) is
+  ! indistinguishable from zero as far as the computer can tell),
+  ! this routine returns an error."
+  !
+  ! *************************************************************************
 
 subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
   intrinsic :: abs
