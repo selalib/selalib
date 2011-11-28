@@ -4,7 +4,7 @@ module sll_mesh_types
 #include "sll_assert.h"
 
   use numeric_constants
-  use sll_misc_utils                  ! for is_power_of_2()
+  use sll_misc_utils                  ! for is_power_of_two()
   use sll_diagnostics
   use geometry_functions 
   implicit none
@@ -313,11 +313,11 @@ contains   ! *****************************************************************
 
     SLL_ASSERT(rmax .ge. rmin)
     SLL_ASSERT(zmax .ge. zmin)
-    SLL_ASSERT(is_power_of_2(int(ncr,i64)))
-    SLL_ASSERT(is_power_of_2(int(nctheta,i64)))
+    SLL_ASSERT(is_power_of_two(int(ncr,i64)))
+    SLL_ASSERT(is_power_of_two(int(nctheta,i64)))
     ! The following permits to have a number of cells in z equal to 0, for
     ! 2D tests. Something similar could be done for the other directions...
-    SLL_ASSERT((is_power_of_2(int(ncz,i64))) .or. (ncz .eq. 0))
+    SLL_ASSERT((is_power_of_two(int(ncz,i64))) .or. (ncz .eq. 0))
 
     SLL_ALLOCATE(new_mesh_cylindrical_3D, ierr)
     new_mesh_cylindrical_3D%rmin        = rmin
