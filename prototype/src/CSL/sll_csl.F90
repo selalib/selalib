@@ -70,7 +70,7 @@ contains
        new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                                  eta2_min,         &
                                                  eta2_max,         &
-                                                 PERIODIC )  
+                                                 PERIODIC_SPLINE )  
     else if (boundary2_type == COMPACT) then
        new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,     &
                                                  eta2_min,         &

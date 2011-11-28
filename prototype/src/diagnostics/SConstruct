@@ -10,30 +10,61 @@ print 'Building HDF5 module...'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
-#vars = Variables("../conf.py")
-#vars.Add('HDF5INCPATH', 'hdf5 header files location','/usr/include')
-#vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location','/usr/lib')
-#vars.Add('HDF5LIBPATH', 'hdf5 library location','/usr/lib')
+if os.environ.has_key("HDF5INCPATH"):
+   print 'hdf5 header files are in %s ' %  os.environ['HDF5INCPATH']
+else:
+   os.environ['HDF5INCPATH'] = "/usr/local/include"
 
-env = Environment( #variables = vars,
-                   ENV = os.environ, #{'HDF5INCPATH' : os.environ['HDF5INCPATH'],
-#                          'HDF5MODPATH' : os.environ['HDF5MODPATH'],
-#                          'HDF5LIBPATH' : os.environ['HDF5LIBPATH']},
-                   F90FLAGS =['-cpp','-g', '-W', '-Wall', '-Wextra', 
-                              '-pedantic', '-std=f2003', 
-                              '-ffree-line-length-none'],
-                   CPPDEFINES=['GFORTRAN', 'DEBUG'],
-                   F90PATH=['../precision','../assert',
-                            os.environ['HDF5INCPATH']],
-                   LIBPATH=['.', '../assert', '../precision',
-                            os.environ['HDF5LIBPATH'] ],
-                   LIBS=['sll_precision', 'sll_assertion', 'hdf5_fortran', 
-                         'hdf5', 'z'])
+if os.environ.has_key("HDF5MODPATH"):
+   print 'hdf5 mod files are in %s ' %  os.environ['HDF5MODPATH']
+else:
+   os.environ['HDF5MODPATH'] = "/usr/local/include"
 
-#Help(vars.GenerateHelpText(env))
+if os.environ.has_key("HDF5LIBPATH"):
+   print 'hdf5 library files are in %s ' %  os.environ['HDF5LIBPATH']
+else:
+   os.environ['HDF5LIBPATH'] = "/usr/local/lib"
+
+vars = Variables()
+vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
+vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location',os.environ['HDF5MODPATH'])
+vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
+
+SLLPATH = ['../assert','../precision']
+SLLLIBS = ['sll_precision','sll_assertion']
+
+env = Environment( variables  = vars,
+                   ENV        = os.environ, 
+                   F90FLAGS   = ['-cpp','-g','-W','-Wall','-Wextra', 
+                                 '-pedantic','-std=f2003', 
+                                 '-ffree-line-length-none'],
+                   F90PATH    = SLLPATH+['${HDF5INCPATH}','${HDF5INCPATH}'],
+                   LIBPATH    = ['.','${HDF5LIBPATH}'],
+                   LIBS       = SLLLIBS+['hdf5_fortran','hdf5','z'])
+
+Help(vars.GenerateHelpText(env))
+
+#Check if hdf5 is available
+conf = Configure(env)
+if not conf.CheckLib('hdf5'):
+   print "HDF5 not available"
+   env.Append(CPPDEFINES=['NOHDF5'])
+   env.Replace(LIBS = SLLLIBS)
+
+env.Append(CPPDEFINES=['GFORTRAN', 'DEBUG'])
+
+#env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
+
+#Check gcc and gfortran version
+Export('env')
+ff = os.popen('gfortran --version')
+ll = ff.readline()
+ff.close()
+gcc_version =ll[18:21]
+if float(gcc_version) < 4.5:
+   print 'gfortran version number '+gcc_version+' less than 4.5'
+   exit();
 
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
-env.Program('unit_test', ["unit_test.F90","sll_diagnostics.F90",
-                          "write_xdmf_xml.c"])
-
+env.Program('unit_test', ["unit_test.F90"]+Glob("sll_*.F90"))
