@@ -258,6 +258,218 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     get_layout_3D_collective => layout%collective
   end function get_layout_3D_collective
 
+  ! get_layout_3D_size() returns the size of the collective associated
+  ! with a given layout.
+  function get_layout_3D_size( layout )
+    intrinsic                  :: associated
+    sll_int32                  :: get_layout_3D_size
+    type(layout_3D_t), pointer :: layout
+    if( .not. associated(layout) ) then
+       STOP 'ERROR: not associated argument passed to get_layout_3D_size().'
+    end if
+    get_layout_3D_size = sll_get_collective_size( layout%collective )
+  end function get_layout_3D_size
+
+  ! Utility functions to help build layouts in 3D.
+
+  function linear_index_3D(npx1, npx2, i, j, k)
+    sll_int32, intent(in) :: npx1
+    sll_int32, intent(in) :: npx2
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_int32, intent(in) :: k
+    sll_int32 :: linear_index_3D
+    linear_index_3D = i + npx1*(j + npx2*k)
+  end function linear_index_3D
+
+
+
+  subroutine initialize_layout_with_distributed_3D_array( &
+    global_npx1, &  
+    global_npx2, &
+    global_npx3, &
+    num_proc_x1, &
+    num_proc_x2, &
+    num_proc_x3, &
+    layout_3D )
+    
+    ! layout_3D should have been allocated with new(), which means that
+    ! its memory is allocated in accordance with the size of collective.
+    ! This should be error-checked below for consistency.
+    sll_int32, intent(in) :: global_npx1
+    sll_int32, intent(in) :: global_npx2
+    sll_int32, intent(in) :: global_npx3
+    sll_int32, intent(in) :: num_proc_x1
+    sll_int32, intent(in) :: num_proc_x2
+    sll_int32, intent(in) :: num_proc_x3
+    type(layout_3D_t), pointer :: layout_3D
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: k
+    sll_int32 :: total_num_processors
+    sll_int32 :: node
+    sll_int32 :: collective_size
+    sll_int32 :: err
+!    sll_int32, dimension(0:1,0:num_proc_x1-1) :: intervals_x1
+!    sll_int32, dimension(0:1,0:num_proc_x2-1) :: intervals_x2
+!    sll_int32, dimension(0:1,0:num_proc_x3-1) :: intervals_x3
+    sll_int32, dimension(:,:), allocatable :: intervals_x1
+    sll_int32, dimension(:,:), allocatable :: intervals_x2
+    sll_int32, dimension(:,:), allocatable :: intervals_x3
+
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: k_min
+    sll_int32 :: k_max
+
+    if( &
+       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. is_power_of_two(int(num_proc_x2,i64)) .or. &
+       .not. is_power_of_two(int(num_proc_x3,i64)) ) then
+       print *, 'ERROR: distribute_3D_array() needs that the integers that',&
+            'describe the process mesh are powers of 2.'
+       STOP
+    end if
+
+    if( &
+       .not. (global_npx1 .gt. 0) .or. &
+       .not. (global_npx2 .gt. 0) .or. &
+       .not. (global_npx3 .gt. 0) ) then
+       print *, 'ERROR: distribute_3D_array() needs that the array dimensions',&
+            'be greater than zero.'
+       STOP
+    end if
+
+    ! FIXME: add further error checking, like a minimum number of points
+    ! needed given a processor number along a dimension. Also, num_proc_xi
+    ! should be different than zero.
+    SLL_ALLOCATE( intervals_x1(0:1,0:num_proc_x1-1), err )
+    SLL_ALLOCATE( intervals_x2(0:1,0:num_proc_x2-1), err )
+    SLL_ALLOCATE( intervals_x3(0:1,0:num_proc_x3-1), err )
+
+    ! Allocate the layout to be returned.    
+    total_num_processors = num_proc_x1*num_proc_x2*num_proc_x3
+    collective_size = get_layout_3D_size(layout_3D)
+    if( total_num_processors .ne. collective_size ) then
+       print *, 'requested size of the processor mesh is inconsistent with ', &
+            'the size of the collective.', 'number of processors = ', &
+            total_num_processors, ' collective size = ', collective_size
+       STOP
+    end if
+
+    ! Compute the arrays with the split index information along the different
+    ! dimensions.
+    intervals_x1(0:1,0:num_proc_x1-1) = &
+         split_array_indices( 1, global_npx1, num_proc_x1 )
+
+    intervals_x2(0:1,0:num_proc_x2-1) = &
+         split_array_indices( 1, global_npx2, num_proc_x2 )
+
+    intervals_x3(0:1,0:num_proc_x3-1) = &
+         split_array_indices( 1, global_npx3, num_proc_x3 )
+
+    ! Fill the layout array.
+    do k=0, num_proc_x3-1
+       do j=0, num_proc_x2-1
+          do i=0, num_proc_x1-1
+             node = linear_index_3D( num_proc_x1, num_proc_x2, i, j, k )
+             i_min = intervals_x1(0,i)
+             i_max = intervals_x1(1,i)
+             j_min = intervals_x2(0,j)
+             j_max = intervals_x2(1,j)
+             k_min = intervals_x3(0,k)
+             k_max = intervals_x3(1,k)
+             call set_layout_i_min( layout_3D, node, i_min )
+             call set_layout_i_max( layout_3D, node, i_max )
+             call set_layout_j_min( layout_3D, node, j_min )
+             call set_layout_j_max( layout_3D, node, j_max )
+             call set_layout_k_min( layout_3D, node, k_min )
+             call set_layout_k_max( layout_3D, node, k_max )
+          end do
+       end do
+    end do
+    SLL_DEALLOCATE_ARRAY( intervals_x1, err )
+    SLL_DEALLOCATE_ARRAY( intervals_x2, err )
+    SLL_DEALLOCATE_ARRAY( intervals_x3, err )
+   end subroutine initialize_layout_with_distributed_3D_array
+
+
+
+  function split_array_indices( min, max, num_intervals )
+    sll_int32, intent(in)                       :: num_intervals
+    sll_int32, dimension(0:1,0:num_intervals-1) :: split_array_indices
+    sll_int32, intent(in)                       :: min
+    sll_int32, intent(in)                       :: max
+    call split_array_indices_aux( &
+      split_array_indices, &
+      0, &
+      num_intervals, &
+      min, &
+      max, &
+      num_intervals )
+  end function split_array_indices
+
+  ! split_array_indices_aux() is an auxiliary function that splits a range
+  ! of indices described by 2 integers into a given number of intervals, the
+  ! function tries to partition the original interval equitably. 
+  recursive subroutine split_array_indices_aux( &
+    intervals_array, &
+    start_index, &
+    interval_segment_length, &
+    min, &
+    max, &
+    total_intervals )
+
+    sll_int32, intent(in) :: total_intervals
+    sll_int32, intent(in) :: start_index
+    sll_int32, intent(in) :: interval_segment_length
+    sll_int32, intent(inout), dimension(0:1,0:total_intervals-1) :: &
+         intervals_array
+    sll_int32, intent(in) :: min
+    sll_int32, intent(in) :: max
+    sll_int32 :: num_elems
+    sll_int32 :: new_min1
+    sll_int32 :: new_max1
+    sll_int32 :: new_min2
+    sll_int32 :: new_max2
+    if( interval_segment_length .eq. 1 ) then
+       ! terminate recursion by filling values for this interval
+       intervals_array(0,start_index) = min
+       intervals_array(1,start_index) = max
+    else
+       ! split this interval and launch new recursions
+       num_elems = max - min + 1
+       if( is_even(num_elems) ) then
+          new_min1 = min
+          new_max1 = min + (max-min+1)/2 - 1
+          new_min2 = new_max1 + 1
+          new_max2 = max
+       else
+          new_min1 = min
+          new_max1 = min + int((max-min+1)/2)
+          new_min2 = new_max1 + 1
+          new_max2 = max
+       end if
+       call split_array_indices_aux( &
+          intervals_array, &
+          start_index, &
+          interval_segment_length/2, &
+          new_min1, &
+          new_max1, &
+          total_intervals )
+       call split_array_indices_aux( &
+          intervals_array, &
+          start_index + interval_segment_length/2, &
+          interval_segment_length/2, &
+          new_min2,  &
+          new_max2,  &
+          total_intervals )
+    end if
+  end subroutine split_array_indices_aux
+
+
   ! The new_remap_plan() functions define the communication pattern in a 
   ! collective. From the perspective of an individual process, they examines
   ! the communication needs in a one-to-many and many-to-one sense. The
