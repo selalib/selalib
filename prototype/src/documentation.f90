@@ -2,7 +2,7 @@
 !>
 !> \section doc Documentation  
 !>
-!> For general installtion, compiling and running, see
+!> For general installation, compiling and running, see
 !> <A HREF="http://selalib.gforge.inria.fr/">selalib.gforge.inria.fr </A>.
 !>
 !> Don't forget to read the README file before launching the make command.

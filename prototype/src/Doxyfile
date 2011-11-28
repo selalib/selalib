@@ -1456,8 +1456,9 @@ PREDEFINED             = NEW_ACCESS_FUNCTION= \
 			 sll_real32=real(kind=i32) \
 			 sll_real64=real(kind=i64) \
 			 sll_comp32=complex(kind=f32) \
-			 sll_comp64=complex(kind=f64) 
-			 #SW(a,b)= swp=(a); a=(b); b=swp
+			 sll_comp64=complex(kind=f64)
+			 #SW(a,b)= swp=(a); a=(b); b=swp \
+                         #aa:=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
