@@ -181,7 +181,6 @@ sll_int32             :: ncells_x2
 
 sll_int32 :: file_id
 sll_int32 :: data_dims(2)
-character(len=3) :: coord_names(2)
 integer :: error
 logical :: flag
 integer, intent(in), optional :: icenter   ! centering ('node' or 'cell')
@@ -201,9 +200,6 @@ if (.not. present(icenter)) then
    call errout(6,"W","sll_diagnostics:write_vec1d","Default: cell centered value")
 end if
     
-coord_names(1) = "-x1"
-coord_names(2) = "-x2"
-
 call sll_xmf_file_create(trim(field_prefix)//".xmf",file_id,error)
 
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
@@ -229,7 +225,7 @@ if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
    write(file_id,"(a)")"<Attribute Name='NodesValues' AttributeType='Scalar' Center='Node'>"
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",data_dims(2),data_dims(1),              &
                         "' NumberType='Float' Precision='8' Format='Binary'>"
-   write(file_id,"(a)")field_prefix//"-vec1_nodes.bin"
+   write(file_id,"(a)")field_prefix//".bin"
    write(file_id,"(a)")"</DataItem>"
    write(file_id,"(a)")"</Attribute>"
 
@@ -241,7 +237,7 @@ else
    write(file_id,"(a)")"<Attribute Name='CellsValues' AttributeType='Scalar' Center='Cell'>"
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",data_dims(2),data_dims(1),             &
                         "' NumberType='Float' Precision='8' Format='Binary'>"
-   write(file_id,"(a)")field_prefix//"-vec1_cells.bin"
+   write(file_id,"(a)")field_prefix//".bin"
    write(file_id,"(a)")"</DataItem>"
    write(file_id,"(a)")"</Attribute>"
 
@@ -252,7 +248,7 @@ call sll_xmf_file_close(file_id,error)
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
 
-   call sll_binary_file_create(trim(field_prefix)//"-vec1_nodes.bin",file_id,error)
+   call sll_binary_file_create(trim(field_prefix)//".bin",file_id,error)
    SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(file_id,vec_values,error)
    SLL_ASSERT(error==0)
@@ -261,7 +257,7 @@ if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
 
 else
 
-   call sll_binary_file_create(trim(field_prefix)//"-vec1_cells.bin",file_id,error)
+   call sll_binary_file_create(trim(field_prefix)//".bin",file_id,error)
    SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(file_id,vec_values(1:ncells_x1,1:ncells_x2),error)
    SLL_ASSERT(error==0)
@@ -299,7 +295,6 @@ integer, intent(in), optional :: icenter   ! centering of field, one of ('node' 
 
 sll_int32        :: file_id
 sll_int32        :: data_dims(2)
-character(len=3) :: coord_names(2)
 sll_int32        :: error
 logical          :: flag
 
@@ -320,9 +315,6 @@ if (.not. present(icenter)) then
    call errout(6,"W","sll_diagnostics:write_vec2d","Default: cell centered value")
 end if
     
-coord_names(1) = "-x1"
-coord_names(2) = "-x2"
-
 call sll_xmf_file_create(trim(field_prefix)//".xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",nnodes_x2,nnodes_x1,"'/>"
@@ -336,11 +328,11 @@ if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
    data_dims(1) = nnodes_x1
    data_dims(2) = nnodes_x2
 
-   write(file_id,"(a)")"<Attribute Name='NodesValues-x1' AttributeType='Scalar' Center='Node'>"
-   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-nodes_x1.bin",nnodes_x1, nnodes_x2)
+   write(file_id,"(a)")"<Attribute Name='NodesValues1' AttributeType='Scalar' Center='Node'>"
+   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-x1.bin",nnodes_x1, nnodes_x2)
    write(file_id,"(a)")"</Attribute>"
-   write(file_id,"(a)")"<Attribute Name='NodesValues-x2' AttributeType='Scalar' Center='Node'>"
-   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-nodes_x2.bin",nnodes_x1, nnodes_x2)
+   write(file_id,"(a)")"<Attribute Name='NodesValues2' AttributeType='Scalar' Center='Node'>"
+   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-x2.bin",nnodes_x1, nnodes_x2)
    write(file_id,"(a)")"</Attribute>"
 
 else
@@ -348,11 +340,11 @@ else
    data_dims(1) = ncells_x1
    data_dims(2) = ncells_x2
 
-   write(file_id,"(a)")"<Attribute Name='CellsValues-x1' AttributeType='Scalar' Center='Cell'>"
-   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-cells_x1.bin",nnodes_x1, nnodes_x2)
+   write(file_id,"(a)")"<Attribute Name='CellsValues1' AttributeType='Scalar' Center='Cell'>"
+   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-x1.bin",ncells_x1, ncells_x2)
    write(file_id,"(a)")"</Attribute>"
-   write(file_id,"(a)")"<Attribute Name='CellsValues-x2' AttributeType='Scalar' Center='Cell'>"
-   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-cells_x2.bin",nnodes_x1, nnodes_x2)
+   write(file_id,"(a)")"<Attribute Name='CellsValues2' AttributeType='Scalar' Center='Cell'>"
+   call sll_xmf_dataitem_2d(file_id,trim(field_prefix)//"-x2.bin",ncells_x1, ncells_x2)
    write(file_id,"(a)")"</Attribute>"
 
 end if
@@ -362,14 +354,14 @@ call sll_xmf_file_close(file_id,error)
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
 
-   call sll_binary_file_create(trim(field_prefix)//"-nodes_x1.bin",file_id,error)
+   call sll_binary_file_create(trim(field_prefix)//"-x1.bin",file_id,error)
    SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(file_id,vec_values_x1,error)
    SLL_ASSERT(error==0)
    call sll_binary_file_close(file_id,error)
    SLL_ASSERT(error==0)
 
-   call sll_binary_file_create(trim(field_prefix)//"-nodes_x2.bin",file_id,error)
+   call sll_binary_file_create(trim(field_prefix)//"-x2.bin",file_id,error)
    SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(file_id,vec_values_x2,error)
    SLL_ASSERT(error==0)
@@ -378,14 +370,14 @@ if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
 
 else
 
-   call sll_binary_file_create(trim(field_prefix)//"-cells_x1.bin",file_id,error)
+   call sll_binary_file_create(trim(field_prefix)//"-x1.bin",file_id,error)
    SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(file_id,vec_values_x1(1:ncells_x1,1:ncells_x2),error)
    SLL_ASSERT(error==0)
    call sll_binary_file_close(file_id,error)
    SLL_ASSERT(error==0)
 
-   call sll_binary_file_create(trim(field_prefix)//"-cells_x2.bin",file_id,error)
+   call sll_binary_file_create(trim(field_prefix)//"-x2.bin",file_id,error)
    SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(file_id,vec_values_x2(1:ncells_x1,1:ncells_x2),error)
    SLL_ASSERT(error==0)
