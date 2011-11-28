@@ -33,6 +33,11 @@ program spline_tester
   sll_real64, allocatable, dimension(:,:) :: data_2d
 !  sll_real64, allocatable, dimension(:,:) :: coords_2d
 
+  ! for specific functions of spline values at a point
+  sll_real64, allocatable, dimension(:) :: knots
+  sll_real64, dimension(1:100)          :: spline_vals
+  sll_real64                            :: rnd
+  sll_real64                            :: reduction
 #define NPX1  65
 #define NPX2  129
 #define X1MIN 0.0_f64
@@ -230,5 +235,28 @@ program spline_tester
   print *, 'Deleting the 2D spline...'
   call delete(sp2d)
 #endif
+
+  print *, '********************************'
+  print *, 'spline values at points:'
+#define NUM_KNOTS 10
+#define SPLINE_DEGREE 3
+  SLL_ALLOCATE(knots(NUM_KNOTS),err)
+  knots(1) = 0.0
+  do i=2,NUM_KNOTS
+     call random_number(rnd)
+     knots(i) = knots(i-1) + rnd 
+  end do
+  print *, 'knots: '
+  print *, knots(:)
+  spline_vals(1:SPLINE_DEGREE+1) = b_splines_at_x(knots,SPLINE_DEGREE,5,3.3_f64)
+  print *, spline_vals(1:SPLINE_DEGREE+1)
+  reduction = 0.0
+
+  do i=1,SPLINE_DEGREE+1
+     reduction = reduction + spline_vals(i)
+  end do
+  print *, 'sum of spline values = ', reduction
+#undef NUM_KNOTS
+#undef SPLINE_DEGREE
   print *, 'END TEST'
 end program spline_tester
