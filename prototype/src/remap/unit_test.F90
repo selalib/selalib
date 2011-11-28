@@ -1,9 +1,10 @@
 program remap_test
-  use sll_collective
-#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
+ use sll_collective
+#include "sll_remap.h"
+
   implicit none
 
   ! THIS IS A VERY BASIC TEST AND SOMETHING TRULY SUPERIOR AND ROBUST NEEDS
