@@ -426,10 +426,12 @@ contains !************************** Operations **************************
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
-    sll_int32                            :: rec_count ! size of receive buf
+    !sll_int32                            :: rec_count ! size of receive buf
     ! FIXME: add some argument checking here
-    rec_count = send_sz*col%size
-    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, rec_count, &
+    !rec_count = send_sz*col%size
+    !Note that the 5th argument at the root indicates the number of items
+    !it receives from each task. It is not the total number of items received.
+    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, send_sz, &
          MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
@@ -506,10 +508,10 @@ contains !************************** Operations **************************
     sll_int32, intent(in)                :: root
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
     sll_int32                            :: ierr
-    sll_int32                            :: recvcount
+    !sll_int32                            :: recvcount
     ! FIXME: argument checking
-    recvcount = size/col%size
-    call MPI_SCATTER( send_buf, size, MPI_REAL, rec_buf, recvcount, &
+    ! recvcount = size/col%size
+    call MPI_SCATTER( send_buf, size, MPI_REAL, rec_buf, size, &
          MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_scatter_real(): MPI_SCATTER()' )
@@ -537,7 +539,7 @@ contains !************************** Operations **************************
     type(sll_collective_t), pointer       :: col
     sll_real32, dimension(:), intent(in)  :: send_buf ! what would change...
     sll_int32, intent(in)                 :: count
-    sll_real32, intent(in)                :: op
+    sll_int32, intent(in)                :: op
     sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
@@ -565,12 +567,29 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
   end subroutine sll_collective_allreduce_logical
 
+  subroutine sll_collective_reduce_int( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    sll_int32, dimension(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)               :: size
+    sll_int32, intent(in)               :: op
+    sll_int32, intent(in)                :: root_rank
+    sll_int32, dimension(:), intent(in) :: rec_buf  ! would also change
+    
+    sll_int32                            :: ierr
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_INTEGER, op, root_rank, &
+         col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_real(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_int
+
   subroutine sll_collective_reduce_real( col, send_buf, size, op, root_rank, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
-    sll_real32, intent(in)               :: size
-    sll_real32, intent(in)               :: op
+    sll_int32, intent(in)               :: size
+    sll_int32, intent(in)               :: op
     sll_int32, intent(in)                :: root_rank
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
     
@@ -582,6 +601,23 @@ contains !************************** Operations **************************
          'sll_collective_reduce_real(): MPI_REDUCE()' )
   end subroutine sll_collective_reduce_real
   
+  subroutine sll_collective_reduce_logical( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    LOGICAL, DIMENSION(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)               :: size
+    sll_int32, intent(in)               :: op
+    sll_int32, intent(in)                :: root_rank
+    LOGICAL, DIMENSION(:), intent(in) :: rec_buf  ! would also change
+    
+    sll_int32                            :: ierr
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_LOGICAL, op, root_rank, &
+         col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_real(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_logical
+
   subroutine sll_collective_alltoall_int( send_buf, send_count, &
                                           recv_count, recv_buf, col )
     sll_int32, dimension(:), intent(in)  :: send_buf
