@@ -305,7 +305,7 @@ contains  ! ****************************************************************
     SLL_ASSERT( size(f) .ge. num_pts )
     SLL_ASSERT( size(d) .ge. num_pts )
     SLL_ASSERT( size(coeffs) .ge. num_pts )
-    SLL_ASSERT( (num_pts .ge. 0) .and. (num_pts .lt. NUM_TERMS))
+    SLL_ASSERT( num_pts .gt. NUM_TERMS)
     np     =  num_pts
     ! Compute d(1):
     d1 =  f(1)

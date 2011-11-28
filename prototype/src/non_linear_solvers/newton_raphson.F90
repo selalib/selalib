@@ -71,7 +71,7 @@ contains
 
   !> @details
   !> Here we have to solve: \n
-  !> \f$ f(x_1,x_2,\cdots,x_n) = y \f$
+  !> \f$ f(x) = y \f$
   
   !> @param[in] x0         : initial (guessed) solution \n
   !> @param[in] f, y       : f - y is the zeroed function. f is an abstract function \n
