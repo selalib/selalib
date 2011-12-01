@@ -1,5 +1,6 @@
 program diagnostics_tester
 
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 use sll_binary_io
 use sll_xmf_io
@@ -9,6 +10,7 @@ use sll_diagnostics
 use hdf5
 use sll_hdf5_io
 #endif
+
 implicit none
 
 sll_int32  :: nx, nv, i, j
@@ -22,6 +24,7 @@ sll_int32 :: error
 
 #ifdef NOHDF5
 sll_int32 :: file_id
+sll_int32 :: data_dims(2)
 #else
 integer(hid_t)   :: file_id
 integer(hsize_t) :: data_dims(2)
@@ -31,11 +34,11 @@ character(len=2) :: coord_names(2)
 pi = 4.*atan(1.)
 
 nx = 32
-nv = 128
+nv = 64
 
 ! Create the coordinate data.
-allocate(x(nx,nv))
-allocate(v(nx,nv))
+SLL_ALLOCATE(x(nx,nv),error)
+SLL_ALLOCATE(v(nx,nv),error)
 
 do j = 1, nv
    vt = real(j-1)/(nv-1)
@@ -49,10 +52,9 @@ do j = 1, nv
 end do 
 
 ! Create the scalar data.
-allocate(f(nx,nv))
+SLL_ALLOCATE(f(nx,nv),error)
 do j = 1, nv
    do i = 1, nx
-      f(i,j) = i*sin(float(j-1))
       f(i,j) = i*sin(float(j-1))
    end do
 end do
@@ -60,25 +62,28 @@ end do
 call write_mesh(x,v,nx,nv,"mesh")
 
 !cells values
-call write_vec1d(f,nx,nv,"vec1d_on_cells","mesh")
-call write_vec2d(x,v,nx,nv,"vec2d_on_cells","mesh")
-
+call write_vec1d(f,nx,nv,"vec1d_on_cells","mesh",1)
 !nodes values
-call write_vec1d(f,nx,nv,"vec1d_on_nodes","mesh", 0)
-call write_vec2d(x,v,nx,nv,"vec2d_on_nodes","mesh", 0)
+call write_vec1d(f,nx,nv,"vec1d_on_nodes","mesh",0)
+
+!cells values
+call write_vec2d(x,v,nx,nv,"vec2d_on_cells","mesh",1)
+!nodes values
+call write_vec2d(x,v,nx,nv,"vec2d_on_nodes","mesh",0)
+
+#ifdef NOHDF5
 
 !Binary version
-
 call sll_binary_file_create("test-f.bin",file_id,error)
 call sll_binary_write_array_2d(file_id,f,error)
 call sll_binary_file_close(file_id,error)
 
 call sll_binary_file_create("test-x.bin",file_id,error)
-call sll_binary_write_array_2d(file_id,f,error)
+call sll_binary_write_array_2d(file_id,x,error)
 call sll_binary_file_close(file_id,error)
 
 call sll_binary_file_create("test-v.bin",file_id,error)
-call sll_binary_write_array_2d(file_id,f,error)
+call sll_binary_write_array_2d(file_id,v,error)
 call sll_binary_file_close(file_id,error)
 
 call sll_xmf_file_create("test.xmf",file_id,error)
@@ -86,32 +91,30 @@ write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i4,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",nv,nx,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 write(file_id,"(a,2i4,a)")"<DataItem Dimensions='",nv,nx,&
-                     "' NumberType='Float' Precision='8' Endian='Little' Format='Binary'>"
+                     "' NumberType='Float' Precision='8' Format='Binary'>"
 write(file_id,"(a)")"test-x.bin"
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a,2i4,a)")"<DataItem Dimensions='",nv,nx,&
-                     "' NumberType='Float' Precision='8' Endian='Little' Format='Binary'>"
+                     "' NumberType='Float' Precision='8' Format='Binary'>"
 write(file_id,"(a)")"test-v.bin"
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='NodesValues' AttributeType='Scalar' Center='Node'>"
 write(file_id,"(a,2i4,a)")"<DataItem Dimensions='",nv,nx,&
-                     "' NumberType='Float' Precision='8' Endian='Little' Format='Binary'>"
+                     "' NumberType='Float' Precision='8' Format='Binary'>"
 write(file_id,"(a)")"test-f.bin"
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
 write(file_id,"(a)")"</Grid>"
 call sll_xmf_file_close(file_id,error)
 
-!HDF5 version
+#else
 
-#ifndef NOHDF5
+data_dims(1) = nx
+data_dims(2) = nv
 
 coord_names(1) = "/x"
 coord_names(2) = "/v"
-    
-data_dims(1) = nx
-data_dims(2) = nv
 
 call sll_hdf5_file_create("test.h5",file_id,error)
 call sll_hdf5_write_array_2d(file_id,x,coord_names(1),error)
@@ -141,19 +144,28 @@ call sll_xmf_file_close(file_id,error)
 !ASCII version
 
 call sll_xmf_file_create("test_ascii.xmf",file_id,error)
-call sll_xmf_grid_geometry_2d(file_id, nx, nv)
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='", nx, nv &
-                    ,"' NumberType='Float' Precision='8' Format='XML'>"
+write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",nx,nv,"'/>"
+write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx,nv,"' NumberType='Float' Precision='8' Format='XML'>"
 do i = 1, nx
-   write(file_id,*)(x(i,j),j=1,nv)
+write(file_id,*)(x(i,j),j=1,nv)
 end do
 write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='", nx, nv &
-                    ,"' NumberType='Float' Precision='8' Format='XML'>"
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx,nv,"' NumberType='Float' Precision='8' Format='XML'>"
 do i = 1, nx
-   write(file_id,*)(v(i,j),j=1,nv)
+write(file_id,*)(v(i,j),j=1,nv)
 end do
 write(file_id,"(a)")"</DataItem>"
+write(file_id,"(a)")"</Geometry>"
+write(file_id,"(a)")"<Attribute Name='NodesValues' AttributeType='Scalar' Center='Node'>"
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx,nv,"' NumberType='Float' Precision='8' Format='XML'>"
+do i = 1, nx
+write(file_id,*)(f(i,j),j=1,nv)
+end do
+write(file_id,"(a)")"</DataItem>"
+write(file_id,"(a)")"</Attribute>"
+write(file_id,"(a)")"</Grid>"
 call sll_xmf_file_close(file_id,error)
 
 end program diagnostics_tester
