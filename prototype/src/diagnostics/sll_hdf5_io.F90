@@ -1,6 +1,6 @@
-#ifndef NOHDF5
-
 module sll_hdf5_io
+
+#ifndef NOHDF5
 use hdf5
 #include "sll_working_precision.h"
 
@@ -101,6 +101,7 @@ NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 !  ! HDF5 reading for an array 5D
 !  subroutine HDF5_array5D_reading(file_id,array5D,dsetname)
 
+#endif
+
 end module sll_hdf5_io
 
-#endif
