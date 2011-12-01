@@ -6,12 +6,11 @@
 !
 !> @author
 !> Pierre Navaro
+!>
 !
 ! DESCRIPTION: 
-!> Implements the functions to write xdmf file plotable by VisIt:
-!> - https://wci.llnl.gov/codes/visit/
-!> - http://www.xdmf.org/index.php/Main_Page
-!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
+!
+!> Implements the functions to write xdmf file plotable by VisIt
 !>
 !> @brief
 !> In <b> XDMF </b> (eXtensible Data Model and Format) the description of the data 
@@ -32,6 +31,11 @@
 !>
 !> Just use the module \a sll_diagnostics 
 !> \code use sll_diagnostics \endcode
+!>
+!> External links:
+!> - https://wci.llnl.gov/codes/visit/
+!> - http://www.xdmf.org/index.php/Main_Page
+!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 !
 ! REVISION HISTORY:
 ! DD Mmm YYYY - Initial Version
@@ -239,7 +243,7 @@ end subroutine write_mesh_data_3d
 !! \param[in] icenter parameter to distinguish cells (0) or nodes(1) centered values
 !!
 !! Example of a cartesian grid (xmin,xmax) x (vmin,vmax):
-!!<pre> 
+!!\verbatim
 !!program grid
 !!#include "sll_memory.h"
 !!use sll_diagnostics
@@ -258,7 +262,7 @@ end subroutine write_mesh_data_3d
 !!end do                                              
 !!call write_mesh(x,v,nx,nv,"mesh")
 !!end program
-!!</pre>
+!!\endverbatim
 !! A file <i>mesh.xmf</i> is created, readable by VisIt or Paraview. For non
 !!moving mesh, call it only one time, heavy data produced will be reused.
 !!
@@ -295,7 +299,7 @@ end subroutine write_mesh
 !! \param[in] icenter parameter to distinguish cells (0) or nodes (1) values
 !!
 !! Example of f(x,v) = xv on a cartesian grid (xmin,xmax) x (vmin,vmax):
-!!<pre> 
+!!\verbatim
 !!program grid
 !!#include "sll_memory.h"
 !!#include "sll_working_precision.h"
@@ -318,7 +322,7 @@ end subroutine write_mesh
 !!call write_mesh(x,v,nx,nv,"mesh")
 !!call write_vec1d(f,nx,nv,"f","mesh",0) !write cell centered values
 !!end program
-!!</pre>
+!!\endverbatim
 !! A file <i>f.xmf</i> is created, readable by VisIt or Paraview. 
 !!
 subroutine write_vec1d(vec_values,nnodes_x1,nnodes_x2,field_prefix,mesh_prefix,icenter)
@@ -457,7 +461,7 @@ end subroutine write_vec1d
 !! \param[in] icenter parameter to distinguish cells values or nodes values
 !!
 !! Example of f1(x,v) = xv , f2(x,v) = x+v on a cartesian grid (xmin,xmax) x (vmin,vmax):
-!!<pre> 
+!!\verbatim
 !!program grid
 !!#include "sll_memory.h"
 !!#include "sll_working_precision.h"
@@ -482,7 +486,7 @@ end subroutine write_vec1d
 !!call write_mesh(x,v,nx,nv,"mesh")
 !!call write_vec2d(f1,f2,nx,nv,"f","mesh",0) !write cell centered values
 !!end program
-!!</pre>
+!!\endverbatim
 !! A file <i>f.xmf</i> is created, readable by VisIt or Paraview. 
 !!
 subroutine write_vec2d( vec_values_x1, vec_values_x2,       &
