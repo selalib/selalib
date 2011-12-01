@@ -61,15 +61,46 @@ write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 end subroutine sll_xmf_grid_geometry_2d
 
-subroutine sll_xmf_dataitem_2d(file_id, filename, nnodes_x1, nnodes_x2)
+subroutine sll_xmf_dataitem_2d(file_id, filename, nnodes_x1, nnodes_x2, filetype)
+sll_int32, intent(in) :: file_id
+character(len=*), intent(in) :: filename
+character(len=*), intent(in) :: filetype
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
+"' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
+write(file_id,"(a)")trim(filename)
+write(file_id,"(a)")"</DataItem>"
+end subroutine sll_xmf_dataitem_2d
+
+
+subroutine sll_xmf_open_grid_2d(file_id, filename, nnodes_x1, nnodes_x2)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
 sll_int32, intent(in) :: nnodes_x1
 sll_int32, intent(in) :: nnodes_x2
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
-"' NumberType='Float' Precision='8' Format='Binary'>"
-write(file_id,"(a)")trim(filename)
-write(file_id,"(a)")"</DataItem>"
-end subroutine sll_xmf_dataitem_2d
+
+write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
+                          nnodes_x2,nnodes_x1,"'/>"
+write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
+
+#ifdef NOHDF5
+
+call sll_xmf_dataitem_2d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
+call sll_xmf_dataitem_2d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
+
+#else
+
+call sll_xmf_dataitem_2d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
+call sll_xmf_dataitem_2d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
+
+#endif
+
+write(file_id,"(a)")"</Geometry>"
+
+end subroutine sll_xmf_open_grid_2d
+
+
 
 end module sll_xmf_io
