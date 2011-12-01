@@ -485,9 +485,6 @@ end subroutine write_vec1d
 !!</pre>
 !! A file <i>f.xmf</i> is created, readable by VisIt or Paraview. 
 !!
-subroutine write_vec1d(vec_values,nnodes_x1,nnodes_x2,field_prefix,mesh_prefix,icenter)
-character(len=*), intent(in) :: field_prefix
-character(len=*), intent(in) :: mesh_prefix
 subroutine write_vec2d( vec_values_x1, vec_values_x2,       &
                         nnodes_x1, nnodes_x2,               &
                         field_prefix, mesh_prefix, icenter)
