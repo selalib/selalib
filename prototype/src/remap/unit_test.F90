@@ -25,7 +25,8 @@ program remap_test
   integer                                   :: npi
   integer                                   :: npj
   integer                                   :: npk
-  ! Split it in  16 processes, each with a local chunk local_sz_i*local_sz_j*local_sz_k
+  ! Split it in  16 processes, each with a local chunk 
+  ! local_sz_i*local_sz_j*local_sz_k
   integer                                   :: ierr
   integer                                   :: myrank
   sll_int64                                 :: colsz        ! collective size
@@ -42,71 +43,108 @@ program remap_test
   integer                                   :: i, j, k
   sll_int32, dimension(1:3)                 :: global_index
   
-  print *, ' '
-  print *, '--------------- REMAP test ---------------------'
-  print *, ' '
-  
+
   call flush()
   call sll_boot_collective()
+
   
   colsz = sll_get_collective_size(sll_world_collective)
   myrank = sll_get_collective_rank(sll_world_collective)
+
+  if( myrank .eq. 0) then
+     print *, ' '
+     print *, '--------------- REMAP test ---------------------'
+     print *, ' '
+     print *, 'Running a test on ', colsz, 'processes'
+  end if
+
   
-  if (is_power_of_two(colsz)) then     
-     do, i_test=1, nbtest
-
-        layout1  => new_layout_3D( sll_world_collective )        
-        call two_power_rand_factorization(colsz, npi, npj, npk)
-        call initialize_layout_with_distributed_3D_array( global_sz_i, global_sz_j, global_sz_k, &
-                                                          npi, npj, npk, layout1 )
-        
-        !call sll_view_lims_3D( layout1 )
-        
-        call get_local_sz( layout1, local_sz_i, local_sz_j, local_sz_k )        
-        SLL_ALLOCATE( local_array1(local_sz_i, local_sz_j, local_sz_k), ierr )
-
-        do k=1,local_sz_k
-           do j=1,local_sz_j 
-              do i=1,local_sz_i
-                 global_index =  local_to_global_3D( layout1, (/i, j, k/) )
-                 local_array1(i,j,k) = cos(1.*global_index(1)) * sin(1.*global_index(2)) * global_index(3)
-              enddo
-           enddo
+!  if (is_power_of_two(colsz)) then     
+!  do, i_test=1, nbtest
+  layout1  => new_layout_3D( sll_world_collective )        
+  call two_power_rand_factorization(colsz, npi, npj, npk)
+  
+  if( myrank .eq. 0) then
+     print *, 'for the initial configuration, '
+     print *, 'a total of ', colsz, ' processors is being split in a ', &
+          'processor mesh of dimensions: ', npi, npj, npk
+  end if
+  
+  call initialize_layout_with_distributed_3D_array( &
+       global_sz_i, &
+       global_sz_j, &
+       global_sz_k, &
+       npi, &
+       npj, &
+       npk, &
+       layout1 )
+  if( myrank .eq. 0 ) then   
+     print *, 'Printing layout1: '
+     call sll_view_lims_3D( layout1 )
+  end if
+  
+  call get_local_sz( layout1, local_sz_i, local_sz_j, local_sz_k )        
+  SLL_ALLOCATE( local_array1(local_sz_i, local_sz_j, local_sz_k), ierr )
+  
+  do k=1,local_sz_k
+     do j=1,local_sz_j 
+        do i=1,local_sz_i
+           global_index =  local_to_global_3D( layout1, (/i, j, k/) )
+           local_array1(i,j,k) = cos(1.*global_index(1)) * &
+                sin(1.*global_index(2)) * global_index(3)
         enddo
-
-        layout2  => new_layout_3D( sll_world_collective )
-        call two_power_rand_factorization(colsz, npi, npj, npk)
-        call initialize_layout_with_distributed_3D_array( global_sz_i, global_sz_j, global_sz_k, &
-                                                          npi, npj, npk, layout2 )
-        
-        !call sll_view_lims_3D( layout2 )      
-        
-
-        call get_local_sz( layout2, local_sz_i, local_sz_j, local_sz_k )
-        SLL_ALLOCATE( local_array2(local_sz_i, local_sz_j, local_sz_k), ierr )
-
-        rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)
-        call apply_remap_3D( rmp3, local_array1, local_array2 )
-
-        print*,'test2'
-        print *, 'Remap operation completed.'
-        call flush()
-        
-        call delete_layout_3D( layout1 )
-        call delete_layout_3D( layout2 )
-        
-        call sll_collective_barrier(sll_world_collective)
-        
-        SLL_DEALLOCATE_ARRAY(local_array1, ierr)
-        SLL_DEALLOCATE_ARRAY(local_array2, ierr)
-        
      enddo
-  else
-     print*, 'The number of processors must be a power of 2'
-  endif
+  enddo
+  
+  layout2  => new_layout_3D( sll_world_collective )
+  call two_power_rand_factorization(colsz, npi, npj, npk)
+
+  if( myrank .eq. 0) then
+     print *, 'for the target configuration, '
+     print *, 'a total of ', colsz, ' processors is being split in a ', &
+          'processor mesh of dimensions: ', npi, npj, npk
+  end if
+
+  call initialize_layout_with_distributed_3D_array( &
+       global_sz_i, &
+       global_sz_j, &
+       global_sz_k, &
+       npi, &
+       npj, &
+       npk, &
+       layout2 )
+        
+  if( myrank .eq. 0 ) then   
+     print *, 'Printing layout2: '
+     call sll_view_lims_3D( layout2 )
+  end if
+  
+  call get_local_sz( layout2, local_sz_i, local_sz_j, local_sz_k )
+  SLL_ALLOCATE( local_array2(local_sz_i, local_sz_j, local_sz_k), ierr )
+  
+  rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)
+  call apply_remap_3D( rmp3, local_array1, local_array2 )
+  
+  print *, 'Remap operation completed.'
+  call flush()
+  
+  call delete_layout_3D( layout1 )
+  call delete_layout_3D( layout2 )
+  
+  call sll_collective_barrier(sll_world_collective)
+  
+  SLL_DEALLOCATE_ARRAY(local_array1, ierr)
+  SLL_DEALLOCATE_ARRAY(local_array2, ierr)
+  
+!enddo
+ 
+
+! else
+ !    print*, 'The number of processors must be a power of 2'
+ ! endif
   
   call sll_halt_collective()
-  print *, 'TEST COMPLETE'
+  print *, 'Rank ', myrank, ': TEST COMPLETE'
   call flush()
 
 #if 0
@@ -118,8 +156,8 @@ program remap_test
 contains
 
   subroutine two_power_rand_factorization(n, n1, n2, n3)
-    sll_int64 :: n
-    integer ::n1, n2, n3
+    sll_int64, intent(in) :: n
+    integer, intent(out) ::n1, n2, n3
     integer   :: expo, expo1, expo2, expo3
     if (is_power_of_two(colsz)) then   
        expo = int(log(real(n))/log(2.))  
