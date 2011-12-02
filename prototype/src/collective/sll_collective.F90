@@ -569,8 +569,8 @@ contains !************************** Operations **************************
        rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
-    sll_real32, intent(in)               :: size
-    sll_real32, intent(in)               :: op
+    sll_int32, intent(in)               :: size
+    sll_int32, intent(in)               :: op
     sll_int32, intent(in)                :: root_rank
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
     

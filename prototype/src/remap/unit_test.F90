@@ -42,7 +42,7 @@ program remap_test
   integer                                   :: i_test
   integer                                   :: i, j, k
   sll_int32, dimension(1:3)                 :: global_index
-  
+  sll_real32   , dimension(1)               :: sum4test
 
   call flush()
   call sll_boot_collective()
@@ -124,7 +124,20 @@ program remap_test
   
   rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)
   call apply_remap_3D( rmp3, local_array1, local_array2 )
-  
+
+  do k=1,local_sz_k
+     do j=1,local_sz_j 
+        do i=1,local_sz_i
+           global_index =  local_to_global_3D( layout2, (/i, j, k/) )
+           local_array2(i,j,k) = local_array2(i,j,k) - cos(1.*global_index(1)) &
+                                 * sin(1.*global_index(2)) * global_index(3)
+        enddo
+     enddo
+  enddo
+
+  call sll_collective_reduce_real( sll_world_collective, (/ real(sum(abs(local_array2))) /), 1, &
+                                   MPI_SUM, 0, sum4test )
+
   print *, 'Remap operation completed.'
   call flush()
   
@@ -135,6 +148,18 @@ program remap_test
   
   SLL_DEALLOCATE_ARRAY(local_array1, ierr)
   SLL_DEALLOCATE_ARRAY(local_array2, ierr)
+
+  if (myrank==0) then
+     if (sum4test(1)==0.) then
+        print*, ' '
+        print*, ' "remap" unit test: PASS'
+        print*, ' '
+     else
+        print*, ' '
+        print*, '"remap" unit test: NOT PASS'
+        print*, ' '
+     endif
+  endif
   
 !enddo
  
@@ -144,8 +169,8 @@ program remap_test
  ! endif
   
   call sll_halt_collective()
-  print *, 'Rank ', myrank, ': TEST COMPLETE'
-  call flush()
+  !print *, 'Rank ', myrank, ': TEST COMPLETE'
+  !call flush()
 
 #if 0
   call split_interval_randomly(1000,4,limits)
