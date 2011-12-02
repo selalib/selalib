@@ -20,6 +20,7 @@ program spline_tester
   type(sll_spline_1d), pointer :: sp1
   type(sll_spline_1d), pointer :: sp2
   type(sll_spline_2d), pointer :: sp2d
+  sll_real64                   :: x
   sll_real64                   :: phase, phase_x1, phase_x2
   sll_real64, allocatable, dimension(:) :: data
 
@@ -46,8 +47,8 @@ program spline_tester
 #define X2MAX (4.0_f64*sll_pi)
 
 
-#define XMIN 0.0_f64
-#define XMAX (2.0_f64*sll_pi)
+#define XMIN (-sll_pi)
+#define XMAX ( sll_pi)
 
   accumulator1 = 0.0_f64
   accumulator2 = 0.0_f64
@@ -63,7 +64,7 @@ program spline_tester
   SLL_ALLOCATE(coordinates(NP), err)
   print *, 'initialize data and coordinates array'
   do i=1,NP
-     phase          = real(i-1,f64)*XMAX/real(NP-1,f64)
+     phase          = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
      data(i)        = 2.0*(sin(phase))
      deriv(i)       = 2.0*(cos(phase))
      coordinates(i) = phase
@@ -98,8 +99,8 @@ program spline_tester
   print *, 'periodic case, NP-1 points: '
   print *, 'interpolating individual values from 1 to NP-1:'
   do i=1, NP-1
-     accumulator1 = accumulator1 + abs(data(i) - &
-          interpolate_value(real(i-1,f64)*XMAX/real(NP-1,f64), sp1))
+     x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
+     accumulator1 = accumulator1 + abs(data(i) - interpolate_value(x, sp1))
 !         sp1%interpolate(real(i-1,f64)*sll_pi/real(NC,f64)))
 !     write (*, '(a, i8, a, e20.12)') &
 !          'point: ', i, ', cumulative err = ',accumulator1
@@ -117,8 +118,8 @@ program spline_tester
 
   print *, 'hermite case, NP points: '
   do i=1, NP
-     accumulator2 = accumulator2 + abs(data(i) - &
-          interpolate_value(real(i-1,f64)*XMAX/real(NP-1,f64), sp2))
+     x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
+     accumulator2 = accumulator2 + abs(data(i) - interpolate_value(x, sp2))
 !          sp2%interpolate(real(i-1,f64)*sll_pi/real(NC,f64)))
 !     write (*, '(a, i8, a, e20.12)') &
 !          'point: ', i, ', cumulative err = ',accumulator2
@@ -142,7 +143,7 @@ program spline_tester
 
   write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4)
   write (*,'(a,f20.15)') &
-       'interpolated        = ', interpolate_value( XMAX/4.0,sp1)
+       'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0+XMIN,sp1)
 
 
 #if TEST_INTEGRATION
