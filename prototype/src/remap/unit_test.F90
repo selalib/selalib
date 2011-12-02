@@ -43,6 +43,7 @@ program remap_test
   integer                                   :: i, j, k
   sll_int32, dimension(1:3)                 :: global_index
   sll_real32   , dimension(1)               :: sum4test
+  integer                                   :: ok
 
   call flush()
   call sll_boot_collective()
@@ -125,6 +126,9 @@ program remap_test
   rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)
   call apply_remap_3D( rmp3, local_array1, local_array2 )
 
+
+  ! Compute the difference between data contained in local_array2 and
+  ! expected data. This difference must be null in each point
   do k=1,local_sz_k
      do j=1,local_sz_j 
         do i=1,local_sz_i
@@ -135,8 +139,12 @@ program remap_test
      enddo
   enddo
 
-  call sll_collective_reduce_real( sll_world_collective, (/ real(sum(abs(local_array2))) /), 1, &
-                                   MPI_SUM, 0, sum4test )
+  ! As the difference described above is null in each point, the sum of the corresponding 
+  ! absolute values must be null. Each processor compute a local sum and all local sums are
+  ! finally added and the result is sent to processor 0 which will check if equal 0 to 
+  ! validate the test. (*)
+  call sll_collective_reduce_real( sll_world_collective, (/ real(sum(abs(local_array2))) /), &
+                                   1, MPI_SUM, 0, sum4test )
 
   print *, 'Remap operation completed.'
   call flush()
@@ -148,21 +156,23 @@ program remap_test
   
   SLL_DEALLOCATE_ARRAY(local_array1, ierr)
   SLL_DEALLOCATE_ARRAY(local_array2, ierr)
-
+  
+  ok = 1
   if (myrank==0) then
-     if (sum4test(1)==0.) then
-        print*, ' '
-        print*, ' "remap" unit test: PASS'
-        print*, ' '
-     else
-        print*, ' '
-        print*, '"remap" unit test: NOT PASS'
-        print*, ' '
+     if (sum4test(1)/=0.) then ! Refer to (*)
+        ok = 0 
      endif
   endif
   
 !enddo
  
+  if (myrank==0) then
+     if (ok==1) then
+        print*, '"remap" unit test: PASS'
+     else
+        print*, '"remap" unit test: NOT PASS'
+     endif
+  endif
 
 ! else
  !    print*, 'The number of processors must be a power of 2'
