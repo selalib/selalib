@@ -10,9 +10,10 @@
 !
 ! DESCRIPTION: 
 !
+!> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
 !>
-!> @brief
+!>@details
 !> In <b> XDMF </b> (eXtensible Data Model and Format) the description of the data 
 !> is separate from the values themselves. Light data is stored using XML, Heavy data 
 !> is stored using :
@@ -26,10 +27,9 @@
 !>
 !> in your SCons script
 !>
-!> <b> How to use this module: </b> \n
-!> ****************************
+!> <h2>How to use this module: </h2>
 !>
-!> Just use the module \a sll_diagnostics 
+!> <p> Just use the module \a sll_diagnostics 
 !> \code use sll_diagnostics \endcode
 !>
 !> External links:
@@ -87,27 +87,16 @@ SLL_ASSERT(size(x1,2) == nnodes_x2)
 SLL_ASSERT(size(x2,2) == nnodes_x2)
 
 call sll_xmf_file_create(trim(mesh_prefix)//".xmf",xmffile_id,error)
-write(xmffile_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(xmffile_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
-                     nnodes_x2,nnodes_x1,"'/>"
-write(xmffile_id,"(a)")"<Geometry GeometryType='X_Y'>"
-
+call sll_xmf_grid_geometry_2d(xmffile_id, trim(mesh_prefix), nnodes_x1, nnodes_x2)
 
 #ifdef NOHDF5
 
-call sll_binary_file_create(mesh_prefix//"-x1.bin",binfile_id,error)
-SLL_ASSERT(error==0)
-call sll_binary_write_array_2d(binfile_id,x1,error)
-SLL_ASSERT(error==0)
+call sll_binary_file_create(mesh_prefix//"-x1.bin",binfile_id,error); SLL_ASSERT(error==0)
+call sll_binary_write_array_2d(binfile_id,x1,error); SLL_ASSERT(error==0)
 call sll_binary_file_close(binfile_id,error)
-call sll_xmf_dataitem_2d(xmffile_id, trim(mesh_prefix)//"-x1.bin",nnodes_x1,nnodes_x2,"Binary")
-
-call sll_binary_file_create(mesh_prefix//"-x2.bin",binfile_id,error)
-SLL_ASSERT(error==0)
-call sll_binary_write_array_2d(binfile_id,x2,error)
-SLL_ASSERT(error==0)
-call sll_binary_file_close(binfile_id,error)
-call sll_xmf_dataitem_2d(xmffile_id, trim(mesh_prefix)//"-x2.bin",nnodes_x1,nnodes_x2,"Binary")
+call sll_binary_file_create(mesh_prefix//"-x2.bin",binfile_id,error); SLL_ASSERT(error==0)
+call sll_binary_write_array_2d(binfile_id,x2,error); SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 
 #else
 
@@ -116,7 +105,7 @@ SLL_ASSERT(error==0)
 
 coord_names(1) = "/x1"
 coord_names(2) = "/x2"
-    
+
 data_dims(1) = nnodes_x1
 data_dims(2) = nnodes_x2
 
@@ -124,18 +113,8 @@ call sll_hdf5_write_array_2d(hdffile_id,x1,coord_names(1),error); SLL_ASSERT(err
 call sll_hdf5_write_array_2d(hdffile_id,x2,coord_names(2),error); SLL_ASSERT(error==0)
 call sll_hdf5_file_close(hdffile_id, error);                      SLL_ASSERT(error==0)
 
-write(xmffile_id,"(a,2i5,a)")"<DataItem Dimensions='",data_dims(2),data_dims(1) &
-                    ,"' NumberType='Float' Precision='8' Format='HDF'>"
-write(xmffile_id,"(a)")trim(mesh_prefix)//".h5:"//coord_names(1)
-write(xmffile_id,"(a)")"</DataItem>"
-write(xmffile_id,"(a,2i5,a)")"<DataItem Dimensions='",data_dims(2),data_dims(1) &
-                    ,"' NumberType='Float' Precision='8' Format='HDF'>"
-write(xmffile_id,"(a)")trim(mesh_prefix)//".h5:"//coord_names(2)
-
 #endif
 
-write(xmffile_id,"(a)")"</Geometry>"
-write(xmffile_id,"(a)")"</Grid>"
 call sll_xmf_file_close(xmffile_id,error)
 
 end subroutine write_mesh_data_2d
@@ -150,9 +129,9 @@ sll_int32, intent(in) :: nnodes_x2
 sll_int32, intent(in) :: nnodes_x3
 sll_int32, intent(out):: error
 sll_int32 :: xmffile_id
-sll_int32 :: i
 
 #ifndef NOHDF5
+sll_int32 :: i
 character(len=3), dimension(3) :: coord_names
 integer(hsize_t), dimension(3) :: data_dims
 integer(hid_t)   :: hdffile_id
@@ -220,7 +199,6 @@ end do
 #endif
 
 write(xmffile_id,"(a)")"</Geometry>"
-write(xmffile_id,"(a)")"</Grid>"
 call sll_xmf_file_close(xmffile_id,error)
 
 end subroutine write_mesh_data_3d
@@ -336,12 +314,11 @@ sll_int32             :: ncells_x2
 
 #ifndef NOHDF5
 integer(hid_t)   :: hdffile_id
-integer(hsize_t) :: data_dims(2)
-character(len=3) :: coord_names(2)
+#else
+sll_int32 :: binfile_id
 #endif
 
 sll_int32 :: xmffile_id
-sll_int32 :: binfile_id
 
 integer :: error
 logical :: flag
@@ -364,48 +341,14 @@ end if
 
 call sll_xmf_file_create(trim(field_prefix)//".xmf",xmffile_id,error)
 
-write(xmffile_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(xmffile_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
-                          nnodes_x2,nnodes_x1,"'/>"
-write(xmffile_id,"(a)")"<Geometry GeometryType='X_Y'>"
-
-#ifdef NOHDF5
-
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
-
-#else
-
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
-
-#endif
-
-write(xmffile_id,"(a)")"</Geometry>"
+call sll_xmf_grid_geometry_2d(xmffile_id, trim(mesh_prefix), nnodes_x1, nnodes_x2)
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
-
-   write(xmffile_id,"(a)")"<Attribute Name='NodesValues' AttributeType='Scalar' Center='Node'>"
-#ifdef NOHDF5
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".bin",nnodes_x1,nnodes_x2,'Binary')
-#else
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-#endif
-   write(xmffile_id,"(a)")"</Attribute>"
-
+ call sll_xmf_field_2d(xmffile_id,'NodeValues',trim(field_prefix),nnodes_x1,nnodes_x2,'Node')
 else
-
-   write(xmffile_id,"(a)")"<Attribute Name='CellsValues' AttributeType='Scalar' Center='Cell'>"
-#ifdef NOHDF5
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".bin",ncells_x1,ncells_x2,'Binary')
-#else
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".h5:/x1",ncells_x1,ncells_x2,'HDF')
-#endif
-   write(xmffile_id,"(a)")"</Attribute>"
-
+ call sll_xmf_field_2d(xmffile_id,'CellValues',trim(field_prefix),ncells_x1,ncells_x2,'Cell')
 end if
 
-write(xmffile_id,"(a)")"</Grid>"
 call sll_xmf_file_close(xmffile_id,error)
 
 
@@ -414,10 +357,10 @@ call sll_xmf_file_close(xmffile_id,error)
 call sll_hdf5_file_create(trim(field_prefix)//".h5",hdffile_id,error)
 SLL_ASSERT(error==0)
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
-   call sll_hdf5_write_array_2d(hdffile_id,vec_values,"x1",error)
+   call sll_hdf5_write_array_2d(hdffile_id,vec_values,"NodeValues",error)
    SLL_ASSERT(error==0)
 else
-   call sll_hdf5_write_array_2d(hdffile_id,vec_values(1:ncells_x1,1:ncells_x2),"x1",error)
+   call sll_hdf5_write_array_2d(hdffile_id,vec_values(1:ncells_x1,1:ncells_x2),"CellValues",error)
    SLL_ASSERT(error==0)
 end if
 call sll_hdf5_file_close(hdffile_id,error)
@@ -426,11 +369,11 @@ SLL_ASSERT(error==0)
 #else
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
-   call sll_binary_file_create(trim(field_prefix)//".bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues.bin",binfile_id,error); SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(binfile_id,vec_values,error); SLL_ASSERT(error==0)
    call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 else
-   call sll_binary_file_create(trim(field_prefix)//".bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues.bin",binfile_id,error); SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(binfile_id,vec_values(1:ncells_x1,1:ncells_x2),error); SLL_ASSERT(error==0)
    call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 end if
@@ -531,92 +474,38 @@ if (.not. present(icenter)) then
 end if
     
 call sll_xmf_file_create(trim(field_prefix)//".xmf",xmffile_id,error)
-write(xmffile_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(xmffile_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",nnodes_x2,nnodes_x1,"'/>"
-write(xmffile_id,"(a)")"<Geometry GeometryType='X_Y'>"
 
-#ifdef NOHDF5
-
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
-
-#else
-
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-call sll_xmf_dataitem_2d(xmffile_id,trim(mesh_prefix)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
-
-#endif
-
-write(xmffile_id,"(a)")"</Geometry>"
+call sll_xmf_grid_geometry_2d(xmffile_id, trim(mesh_prefix), nnodes_x1, nnodes_x2)
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
-
-#ifndef NOHDF5
-
-   write(xmffile_id,"(a)")"<Attribute Name='NodesValues1' AttributeType='Scalar' Center='Node'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-   write(xmffile_id,"(a)")"</Attribute>"
-   write(xmffile_id,"(a)")"<Attribute Name='NodesValues2' AttributeType='Scalar' Center='Node'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
-   write(xmffile_id,"(a)")"</Attribute>"
-
-#else
-
-   write(xmffile_id,"(a)")"<Attribute Name='NodesValues1' AttributeType='Scalar' Center='Node'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
-   write(xmffile_id,"(a)")"</Attribute>"
-   write(xmffile_id,"(a)")"<Attribute Name='NodesValues2' AttributeType='Scalar' Center='Node'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
-   write(xmffile_id,"(a)")"</Attribute>"
-
-#endif
-
+   call sll_xmf_field_2d(xmffile_id,'NodeValues1',trim(field_prefix),nnodes_x1,nnodes_x2,'Node')
+   call sll_xmf_field_2d(xmffile_id,'NodeValues2',trim(field_prefix),nnodes_x1,nnodes_x2,'Node')
 else
-    
-#ifndef NOHDF5
-
-   write(xmffile_id,"(a)")"<Attribute Name='CellsValues1' AttributeType='Scalar' Center='Cell'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".h5:/x1",ncells_x1,ncells_x2,'HDF')
-   write(xmffile_id,"(a)")"</Attribute>"
-   write(xmffile_id,"(a)")"<Attribute Name='CellsValues2' AttributeType='Scalar' Center='Cell'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//".h5:/x2",ncells_x1,ncells_x2,'HDF')
-   write(xmffile_id,"(a)")"</Attribute>"
-    
-#else
-
-   write(xmffile_id,"(a)")"<Attribute Name='CellsValues1' AttributeType='Scalar' Center='Cell'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//"-x1.bin",ncells_x1,ncells_x2,'Binary')
-   write(xmffile_id,"(a)")"</Attribute>"
-   write(xmffile_id,"(a)")"<Attribute Name='CellsValues2' AttributeType='Scalar' Center='Cell'>"
-   call sll_xmf_dataitem_2d(xmffile_id,trim(field_prefix)//"-x2.bin",ncells_x1,ncells_x2,'Binary')
-   write(xmffile_id,"(a)")"</Attribute>"
-
-#endif
-
+   call sll_xmf_field_2d(xmffile_id,'CellValues1',trim(field_prefix),ncells_x1,ncells_x2,'Cell')
+   call sll_xmf_field_2d(xmffile_id,'CellValues2',trim(field_prefix),ncells_x1,ncells_x2,'Cell')
 end if
     
-write(xmffile_id,"(a)")"</Grid>"
 call sll_xmf_file_close(xmffile_id,error)
 
 #ifdef NOHDF5
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
 
-   call sll_binary_file_create(trim(field_prefix)//"-x1.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues1.bin",binfile_id,error); SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(binfile_id,vec_values_x1,error); SLL_ASSERT(error==0)
    call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 
-   call sll_binary_file_create(trim(field_prefix)//"-x2.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues2.bin",binfile_id,error); SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(binfile_id,vec_values_x2,error); SLL_ASSERT(error==0)
    call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 
 else
 
-   call sll_binary_file_create(trim(field_prefix)//"-x1.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues1.bin",binfile_id,error); SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(binfile_id,vec_values_x1(1:ncells_x1,1:ncells_x2),error); SLL_ASSERT(error==0)
    call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 
-   call sll_binary_file_create(trim(field_prefix)//"-x2.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues2.bin",binfile_id,error); SLL_ASSERT(error==0)
    call sll_binary_write_array_2d(binfile_id,vec_values_x2(1:ncells_x1,1:ncells_x2),error); SLL_ASSERT(error==0)
    call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 
@@ -629,13 +518,13 @@ SLL_ASSERT(error==0)
 
 if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
 
-   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x1,"/x1",error); SLL_ASSERT(error==0)
-   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x2,"/x2",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x1,"/NodeValues1",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x2,"/NodeValues2",error); SLL_ASSERT(error==0)
 
 else
 
-   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x1(1:ncells_x1,1:ncells_x2),"/x1",error); SLL_ASSERT(error==0)
-   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x2(1:ncells_x1,1:ncells_x2),"/x2",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x1(1:ncells_x1,1:ncells_x2),"/CellValues1",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_2d(hdffile_id,vec_values_x2(1:ncells_x1,1:ncells_x2),"/CellValues2",error); SLL_ASSERT(error==0)
 
 end if
 call sll_hdf5_file_close(hdffile_id,error); SLL_ASSERT(error==0)
