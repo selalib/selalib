@@ -24,7 +24,6 @@ sll_int32 :: error
 
 #ifdef NOHDF5
 sll_int32 :: file_id
-sll_int32 :: data_dims(2)
 #else
 integer(hid_t)   :: file_id
 integer(hsize_t) :: data_dims(2)
