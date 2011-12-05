@@ -583,7 +583,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
        end if
     end do
     SLL_ALLOCATE(new_remap_plan_3D%recv_buffer(0:(acc*int32_data_size-1)),ierr)
-    call optimize_remap_plan_3D(new_remap_plan_3D)
+ !   call optimize_remap_plan_3D(new_remap_plan_3D)
   end function new_remap_plan_3D
 
   ! The optimizer function is stand-alone. It may be used just
@@ -1083,6 +1083,8 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
     SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
     SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+    ! print *, 'from rank ', my_rank, 'loading parameters: ', sdisp, rdisp, &
+    ! scnts, rcnts
 
     ! Translate the amounts into integers
 #if 1
@@ -1096,12 +1098,13 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
          col_sz, rcntsi)
 #endif
     
-#if 0
+#if 1
     write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, scntsi(:)
-    print *, sdispi(:)
-    print *, rcntsi(:)
-    print *, rdispi(:)
+    print *, 'scntsi', scntsi(:)
+    print *, 'sdispi', sdispi(:)
+    print *, 'rcntsi', rcntsi(:)
+    print *, 'rdispi', rdispi(:)
+    call flush()
 #endif
     
     ! load the send buffer
@@ -1112,8 +1115,12 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
           if( loc .ne. sdispi(i) ) then
-             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdispi(i)
+             print *, 'ERROR DETECTED in process: ', my_rank
+             print *, 'apply_remap_3D_double() ERROR: ', &
+                  'discrepancy between displs(i) and the loading index for ',&
+                  'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
+             call flush()
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
