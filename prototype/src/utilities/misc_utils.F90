@@ -29,16 +29,28 @@ module sll_misc_utils
 
 contains
 
-  function is_power_of_2( n )
+  function is_power_of_two( n )
     intrinsic             :: not, iand
     sll_int64, intent(in) :: n
-    logical               :: is_power_of_2
+    logical               :: is_power_of_two
     if( (n>0) .and. (0 .eq. (iand(n,(n-1)))) ) then
-       is_power_of_2 = .true.
+       is_power_of_two = .true.
     else
-       is_power_of_2 = .false.
+       is_power_of_two = .false.
     end if
-  end function is_power_of_2
+  end function is_power_of_two
+
+  function is_even( n )
+    intrinsic             :: modulo    
+    sll_int32, intent(in) :: n
+    logical               :: is_even
+    if( modulo(n,2) .eq. 0 ) then
+       is_even = .true.
+    else
+       is_even = .false.
+    end if
+  end function is_even
+
 
   subroutine int2string( istep, cstep )
     integer, intent(in) :: istep
