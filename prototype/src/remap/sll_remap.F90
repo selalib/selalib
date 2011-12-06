@@ -1098,7 +1098,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
          col_sz, rcntsi)
 #endif
     
-#if 1
+#if 0
     write (*,'(a,i4)') 'parameters from rank ', my_rank
     print *, 'scntsi', scntsi(:)
     print *, 'sdispi', sdispi(:)
@@ -1153,11 +1153,12 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
           end do
        end if
     end do
-    
-!    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
-!    print *, sb(0:(size(sb)-1))
+    ! Comment the following when not debugging    
+ !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
+  !  print *, sb(0:(size(sb)-1))
+   ! call flush()
+!    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !    call flush()
- 
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scntsi(0:col_sz-1), &
