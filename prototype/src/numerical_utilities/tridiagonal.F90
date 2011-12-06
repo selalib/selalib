@@ -4,10 +4,8 @@
 !
 ! MODULE: sll_tridiagonal
 !
-!> @author
-!> Module Author Name and Affiliation
-!
-! DESCRIPTION: 
+! DESCRIPTION:
+!> @author Module Author Name and Affiliation
 !> @brief Tridiagonal system solver.
 !> @details To solve systems of the form Ax=b, where A is a tridiagonal matrix, Selalib 
 !! offers a native, robust tridiagonal system solver. The present implementation 
@@ -48,8 +46,7 @@
 ! REVISION HISTORY:
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
-
+!------------------------------------------------------------------------------ 
 module sll_tridiagonal
 #include "sll_working_precision.h"
 implicit none
@@ -59,18 +56,7 @@ contains
 ! careful with side-effects here
 #define SWP(a,b) swp=(a); a=(b); b=swp
 
-  !---------------------------------------------------------------------------  
-  ! DESCRIPTION: 
-  !> @brief Give the factorization of the matrix in argument.
-  !> @details setup_cyclic_tridiag has been adapted from the C version written by
-  !> Kevin Bowers for the Desmond molecular dynamics code.
-  !> For the Fortran implementation, we have adjusted the algorithm such that
-  !> it is compatible with the 1-based array indexing:
-  !>
-  !> @param a the matrix to be factorized
-  !> @param[in] n the problem size (A is nXn)     
-  !> @param[out] ipiv an ineteger array of length n on wich pivoting information will be returned
-  !> @param[out] cts a real array of size 7n where factorization information will be returned    
+  
   !---------------------------------------------------------------------------  
   !
   ! Implementation notes:
@@ -141,6 +127,18 @@ contains
   !
   ! *************************************************************************
 
+!---------------------------------------------------------------------------  
+! DESCRIPTION: 
+!> @brief Give the factorization of the matrix in argument.
+!> @details setup_cyclic_tridiag has been adapted from the C version written by
+!> Kevin Bowers for the Desmond molecular dynamics code.
+!> For the Fortran implementation, we have adjusted the algorithm such that
+!> it is compatible with the 1-based array indexing:
+!>
+!> @param a the matrix to be factorized
+!> @param[in] n the problem size (A is nXn)     
+!> @param[out] ipiv an ineteger array of length n on wich pivoting information will be returned
+!> @param[out] cts a real array of size 7n where factorization information will be returned 
 subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
   intrinsic :: abs
   sll_real64, dimension(:) :: a    ! 3*n size allocation
