@@ -29,7 +29,7 @@ program misc_utils_tester
   print *, 'Counting the amount of numbers that are a power of two between 1 and 2^31-1... (should be 31, powers 0 through 30, inclusive)'
   acc = 0
   do i=1,in64
-     if( is_power_of_2(i) ) then
+     if( is_power_of_two(i) ) then
         acc = acc+1
      end if
   end do
