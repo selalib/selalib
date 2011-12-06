@@ -71,9 +71,7 @@ program remap_test
      end if
      layout1  => new_layout_3D( sll_world_collective )        
 !     call two_power_rand_factorization(colsz, npi, npj, npk)
-!     call factorize_in_random_2powers( colsz, npi, npj )
-npi = 8
-npj = 4
+     call factorize_in_random_2powers( colsz, npi, npj )
      npk = 1 
 
      if( myrank .eq. 0) then
@@ -120,9 +118,7 @@ npj = 4
      
      layout2  => new_layout_3D( sll_world_collective )
 !     call two_power_rand_factorization(colsz, npi, npj, npk)
-!     call factorize_in_random_2powers(colsz, npi, npj)
-npi = 2
-npj = 16
+     call factorize_in_random_2powers(colsz, npi, npj)
      npk = 1    
      if( myrank .eq. 0) then
         print *, i_test, myrank, 'for the target configuration, '
