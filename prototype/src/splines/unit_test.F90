@@ -13,7 +13,7 @@ program spline_tester
   implicit none
   
 
-#define NP 128
+#define NP 512
 
   sll_int32 :: err
   sll_int32 :: i, j
@@ -74,7 +74,7 @@ program spline_tester
   print *, 'proceed to allocate the spline...'
   sp1 =>  new_spline_1D( NP, XMIN, XMAX, PERIODIC_SPLINE )
   call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
-  sp2 =>  new_spline_1D( NP, XMIN, XMAX, HERMITE_SPLINE, 2.0_f64, 2.0_f64 )
+  sp2 =>  new_spline_1D( NP, XMIN, XMAX, HERMITE_SPLINE, -2.0_f64, -2.0_f64 )
   call compute_spline_1D( data, HERMITE_SPLINE, sp2 )
 
   print *, 'Contents of the spline 1:'
@@ -101,9 +101,6 @@ program spline_tester
   do i=1, NP-1
      x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
      accumulator1 = accumulator1 + abs(data(i) - interpolate_value(x, sp1))
-!         sp1%interpolate(real(i-1,f64)*sll_pi/real(NC,f64)))
-!     write (*, '(a, i8, a, e20.12)') &
-!          'point: ', i, ', cumulative err = ',accumulator1
   end do
   print *, 'checking periodicity:'
   print *, 'difference between values at points 1 and NP: ', &
@@ -173,15 +170,15 @@ program spline_tester
        'interpolated        = ', interpolate_value( 0.0_f64,sp2)
   write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4+1)
   write (*,'(a,f20.15)') &
-       'interpolated        = ', interpolate_value( XMAX/4.0,sp2)
+       'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0,sp2)
   print *, 'spline coefficients: '
 #if PRINT_SPLINE_COEFFS
   print *, sp2%coeffs(:)
 #endif
 
   print *, 'check the slopes, hermite case, first and last points: '
-  print *, 'first point: ', (interpolate_value(0.0001_f64, sp2) - interpolate_value(0.0_f64, sp2))/0.0001, '  Expected value: 2.0'
-  print *, 'last point: ', (interpolate_value(sll_pi, sp2) - interpolate_value(XMAX-0.0001_f64,sp2))/0.0001, '  Expected value: 2.0'
+  print *, 'first point: ', (interpolate_value(XMIN+0.0001_f64, sp2) - interpolate_value(XMIN, sp2))/0.0001, '  Expected value= -2.0'
+  print *, 'last point: ', (interpolate_value(XMAX, sp2) - interpolate_value(XMAX-0.0001_f64,sp2))/0.0001, '  Expected value= -2.0'
 
 
 
@@ -195,7 +192,7 @@ program spline_tester
   print *, '---------------------------------------------'
   print *, 'DERIVATIVES TEST'
   do i=1, NP
-     phase          = real(i-1,f64)*XMAX/real(NP-1,f64)
+     phase          = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
      accumulator5 = accumulator5 + abs(deriv(i) - &
           interpolate_derivative(phase, sp1))
      accumulator6 = accumulator6 + abs(deriv(i) - &

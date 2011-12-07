@@ -11,7 +11,7 @@ module sll_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
   implicit none
-
+  
   type sll_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
@@ -67,7 +67,7 @@ module sll_splines
   enum, bind(C)
      enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
   end enum
- 
+  
   interface delete
      module procedure delete_spline_1D, delete_spline_2D
   end interface
@@ -79,7 +79,7 @@ contains  ! ****************************************************************
   ! a double precision value at the top of the sll_spline_1D object. For now,
   ! these are the only slots inside the spline that are meant to be modified
   ! outside of the initialization or spline computation functions.
-
+  
   !> set_slope_left
   !> \param[in] spline object
   !> \param[in] value  set derivative on left hand side to value
@@ -92,7 +92,7 @@ contains  ! ****************************************************************
     end if
     spline%slope_l = value
   end subroutine set_slope_left
-
+  
   !> set slope on right hand side for hermite boundary conditions
   !> \param[in] spline object
   !> \param[in] value to which set the derivative on the right hand side
@@ -105,18 +105,18 @@ contains  ! ****************************************************************
     end if
     spline%slope_r = value
   end subroutine set_slope_right
-
-
+  
+  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
-
+  
   ! The array of spline coefficients has NP+3 elements. The extra elements
   ! at the ends (i.e.: 0, NP+1, NP+2) store coefficients whose values are
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
-
-!> create new spline object
+  
+  !> create new spline object
   function new_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_int32,  intent(in)               :: num_points
@@ -181,7 +181,7 @@ contains  ! ****************************************************************
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
   end function new_spline_1D
-
+  
   ! - data: the array whose data must be fit with the cubic spline.
   ! - np: (number of points; length of the data array that must be fit with 
   !   the spline.
@@ -259,7 +259,7 @@ contains  ! ****************************************************************
   ! And the rest of the terms, starting with C(N-1) and working backwards:
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
-!> compute spline coefficients
+  !> compute spline coefficients
   subroutine compute_spline_1D( f, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32,  intent(in)               :: bc_type
@@ -438,7 +438,7 @@ contains  ! ****************************************************************
 
 
 
-   subroutine compute_spline_1D_hermite( f, spline )
+  subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
     type(sll_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer :: coeffs
@@ -549,13 +549,13 @@ contains  ! ****************************************************************
 
   ! interpolate_value_aux() is meant to be used as a private function. It
   ! aims at providing a reusable code to carry out interpolations in the
-  ! other module functions. This is why this function does no argument
-  ! checking. Arguments should be checked by the caller.
-  function interpolate_value_aux( x, xmin, num_pts, rh, coeffs )
+  ! other module functions (like higher dimensions). This is why this 
+  ! function does no argument checking. Arguments should be checked by 
+  ! the caller.
+  function interpolate_value_aux( x, xmin, rh, coeffs )
     sll_real64                        :: interpolate_value_aux
     sll_real64, intent(in)            :: x
     sll_real64, intent(in)            :: xmin
-    sll_int32, intent(in)             :: num_pts
     sll_real64, dimension(:), pointer :: coeffs
     sll_real64, intent(in)            :: rh   ! reciprocal of cell spacing
     sll_int32                         :: cell
@@ -575,7 +575,6 @@ contains  ! ****************************************************************
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     cdx       = 1.0_f64 - dx
-      write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     cim1      = coeffs(cell-1)
     ci        = coeffs(cell)
     cip1      = coeffs(cell+1)
@@ -586,8 +585,8 @@ contains  ! ****************************************************************
     t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
     interpolate_value_aux = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value_aux
-
-!> get spline interpolate at point x
+  
+  !> get spline interpolate at point x
   function interpolate_value( x, spline )
     sll_real64                        :: interpolate_value
     intrinsic                         :: associated, int, real
@@ -596,52 +595,17 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: coeffs
     sll_real64                        :: xmin
     sll_real64                        :: rh   ! reciprocal of cell spacing
-    sll_int32                         :: num_pts
-#if 1
-    sll_int32                         :: cell
-    sll_real64                        :: dx
-    sll_real64                        :: cdx  ! 1-dx
-    sll_real64                        :: t0   ! temp/scratch variables ...
-    sll_real64                        :: t1
-    sll_real64                        :: t2
-    sll_real64                        :: t3
-    sll_real64                        :: t4
-    sll_real64                        :: cim1 ! C_(i-1)
-    sll_real64                        :: ci   ! C_i
-    sll_real64                        :: cip1 ! C_(i+1)
-    sll_real64                        :: cip2 ! C_(i+2)
-    !sll_int32                         :: num_cells
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
     SLL_ASSERT( associated(spline) )
-    ! FIXME: arg checks here
-   ! num_cells = spline%n_points-1
     xmin = spline%xmin
-    num_pts   = spline%n_points
     rh        = spline%rdelta
-    coeffs    => spline%coeffs
-    ! find the cell and offset for x
-    t0        = (x-xmin)*rh
-    cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
-    cdx       = 1.0_f64 - dx
-    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
-    cim1      = coeffs(cell-1)
-    ci        = coeffs(cell)
-    cip1      = coeffs(cell+1)
-    cip2      = coeffs(cell+2)
-    t1        = 3.0_f64*ci
-    t3        = 3.0_f64*cip1
-    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
-    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
-    interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
-#endif
-!    xmin = spline%xmin
-!    interpolate_value = interpolate_value_aux( x, xmin, num_pts, rh, coeffs )
+    coeffs => spline%coeffs
+    interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
   end function interpolate_value
-
-!> get spline interpolate at array of points
+  
+  !> get spline interpolate at array of points
   subroutine interpolate_array_values( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
@@ -719,7 +683,7 @@ contains  ! ****************************************************************
     rh        = spline%rdelta
     coeffs    => spline%coeffs
     ! find the cell and offset for x
-    t0        = x*rh
+    t0        = (x-spline%xmin)*rh
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
