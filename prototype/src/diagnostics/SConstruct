@@ -48,6 +48,7 @@ for key, value in ARGLIST:
        env.Append(CPPDEFINES=cppvars)
 
 
+env.Append(CPPDEFINES=['NOHDF5'])
 #env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
 #env.PrependENVPath('PATH', '/opt/local/bin')
 
