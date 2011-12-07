@@ -31,3 +31,5 @@ env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Program('unit_test', ["unit_test.F90", "sll_collective.F90"])
+#env.Program('test', ["test.F90", "sll_collective.F90"])
+
