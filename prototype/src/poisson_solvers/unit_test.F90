@@ -9,25 +9,63 @@ program testPoisson
 use numeric_constants
 
 !use geometry1d_module
-use sll_poisson_1D_periodic
+!use sll_poisson_1D_periodic
 use sll_poisson_2D_periodic
 
 implicit none
 
-type (mesh_descriptor_1D), pointer    :: geomx ! 1D mesh
-type (poisson1dp)         :: poiss1dp !champ electrique
-type(field_1D_vec1), pointer :: ex, rho, ex_exact
+!PN!type (mesh_descriptor_1D), pointer    :: geomx ! 1D mesh
+!PN!type (poisson1dp)         :: poiss1dp !champ electrique
+!PN!type(field_1D_vec1), pointer :: ex, rho, ex_exact
+!PN!sll_int32   :: iflag, mode, i, ncx 
+!PN!sll_real64  :: xmin, xmax, dx
 
-sll_int32      :: iflag, mode, i, ncx 
-sll_real64     :: xmin, xmax, dx
-sll_real64     :: eta1_max, eta1_min, eta2_max, eta2_min
-sll_int32      :: nc_eta1, nc_eta2
-sll_real64     :: delta_eta1, delta_eta2
+sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
+sll_int32   :: nc_eta1, nc_eta2
+sll_int32   :: error
 
-type(geometry_2D), pointer :: geom
+type(geometry_2D),        pointer :: geom
 type(mesh_descriptor_2D), pointer :: mesh
-type(field_2D_vec2), pointer :: u, u_exact
-type(field_2D_vec1), pointer :: rhs
+type(poisson2dp)                  :: poiss2dp 
+type(field_2D_vec2),      pointer :: phi, phi_exact
+type(field_2D_vec1),      pointer :: rhs
+sll_int32                         :: i, j
+sll_real64                        :: x1, x2
+sll_int32                         :: mode
+
+eta1_min =  .0_f64; eta1_max =  2.0_f64*sll_pi
+eta2_min =  .0_f64; eta2_max =  2.0_f64*sll_pi
+
+geom => new_geometry_2D ('cartesian')
+
+nc_eta1 = 100; nc_eta2 = 100
+
+mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+        PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+
+call write_mesh_2D(mesh)
+
+rhs       => new_field_2D_vec1(mesh)
+phi       => new_field_2D_vec2(mesh)
+phi_exact => new_field_2D_vec2(mesh)
+
+call new(poiss2dp,rhs,nc_eta1,nc_eta2,error)
+
+mode = 7
+do i = 1, nc_eta1
+   do j = 1, nc_eta2
+      x1 = eta1_min+(i-1)*mesh%delta_eta1
+      x2 = eta2_min+(j-1)*mesh%delta_eta2
+      rhs%data(i,j) = -2_f64 * mode**3 * sin(mode*x1)*cos(mode*x2)
+      phi%data(i,j)%v1 = mode * sin(mode*x1)*cos(mode*x2)
+      phi%data(i,j)%v2 = mode * sin(mode*x1)*cos(mode*x2)
+   end do
+end do
+
+call write_vec1d(rhs%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rhs","mesh",0)
+call write_vec2d(phi%data%v1, phi%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi","mesh",0)
+
+call solve(poiss2dp,phi,rhs,error)
 
 !PN!
 !PN!!Solveur de Poisson1D, commente car ne parche pas
@@ -59,19 +97,6 @@ type(field_2D_vec1), pointer :: rhs
 !PN!print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
 
 
-eta1_min =  -8.0_f64; eta1_max =  8.0_f64
-eta2_min =  -8.0_f64; eta2_max =  8.0_f64 
-
-geom => new_geometry_2D ('cartesian')
-
-nc_eta1 = 100; nc_eta2 = 100
-
-mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
-        PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
-
-rhs     => new_field_2D_vec1(mesh)
-u       => new_field_2D_vec2(mesh)
-u_exact => new_field_2D_vec2(mesh)
 
 end program testPoisson
 
