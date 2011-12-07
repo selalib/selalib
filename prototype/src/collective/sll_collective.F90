@@ -204,7 +204,9 @@ module sll_collective
   
   !> @brief Reduces values on all processes to a single value.
   interface sll_collective_reduce
-     module procedure sll_collective_reduce_real
+     module procedure sll_collective_reduce_real, &
+                      sll_collective_reduce_int, &
+                      sll_collective_reduce_logical
   end interface
 
   !> @brief Sends data from all to all processes.
@@ -377,7 +379,10 @@ contains !************************** Operations **************************
     call sll_check_collective_ptr( col )
     sll_get_collective_size = col%size
   end function sll_get_collective_size
-
+ 
+ !> @brief Gets collective parent 
+ !> @param col Wrapper around the communicator
+ !> @return pointer to collective parent
   function sll_get_collective_parent( col )
     type(sll_collective_t), pointer :: col
     type(sll_collective_t), pointer :: sll_get_collective_parent
@@ -393,7 +398,8 @@ contains !************************** Operations **************************
     sll_int32                         :: ierr
     call sll_check_collective_ptr( col )
     call MPI_BARRIER( col%comm, ierr )
-    call sll_test_mpi_error( ierr, 'sll_collective_barrier(): MPI_BARRIER()' )
+    call sll_test_mpi_error( ierr, &
+                               'sll_collective_barrier(): MPI_BARRIER()' )
   end subroutine sll_collective_barrier
 
 
@@ -417,7 +423,12 @@ contains !************************** Operations **************************
 
 
   ! Consider joining the next 'gather' interfaces into a single one.
-
+  !> @brief Gathers together real values from a group of processes
+  !> @param[in] col Wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_sz number of elements in send buffer
+  !> @param[in] root rank of broadcast root
+  !> @param[out] rec_buf address of receive buffer
   subroutine sll_collective_gather_real( col, send_buf, send_sz, root, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
@@ -426,33 +437,57 @@ contains !************************** Operations **************************
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
-    sll_int32                            :: rec_count ! size of receive buf
+    !sll_int32                            :: rec_count ! size of receive buf
     ! FIXME: add some argument checking here
-    rec_count = send_sz*col%size
-    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, rec_count, &
+    !rec_count = send_sz*col%size
+    !Note that the 5th argument at the root indicates the number of items
+    !it receives from each task. It is not the total number of items received.
+    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, send_sz, &
          MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
   end subroutine sll_collective_gather_real
 
-
-  subroutine sll_collective_gatherv_real( col, send_buf, send_sz, &
+  !> @brief Gathers real values into specified locations from all processes in a group
+  !> @param[in] col Wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_count number of elements in send buffer
+  !> @param[in] recvcnts integer array (of length group size) containing 
+  !!            the number of elements that are received from each process 
+  !> @param[in] displs integer array. Entry i specifies the displacement 
+  !!            relative to rec_buf at which to place the incoming data from process i
+  !> @param[in] root rank of receiving process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_gatherv_real( col, send_buf, send_count, &
        recvcnts, displs, root, rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
-    sll_int32, intent(in)                :: send_sz
+    sll_int32, intent(in)                :: send_count
     sll_int32, dimension(:), intent(in)  :: recvcnts
     sll_int32, dimension(:), intent(in)  :: displs
-    sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
     ! FIXME: Argument checking
-    call MPI_GATHERV( send_buf, send_sz, MPI_REAL, rec_buf, recvcnts, &
+    ! displs, rec_buf and recvcnts significant only for root
+    if (col%rank .eq. root) then 
+      SLL_ASSERT( SIZE(recvcnts) .eq. col%size )
+      SLL_ASSERT( SIZE(displs) .eq. col%size )
+      SLL_ASSERT(SIZE(rec_buf) .eq. SUM(recvcnts))
+    endif
+    call MPI_GATHERV( send_buf, send_count, MPI_REAL,rec_buf,recvcnts,&
          displs, MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gatherv_real(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real
 
+  !> @brief Gathers integer data from all tasks and 
+  !!        distribute the combined data to all tasks
+  !> @param[in] col Wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_sz number of elements in send buffer
+  !> @param[out] rec_buf address of receive buffer
+  !> @param[in] recv_sz number of elements received from any process
   subroutine sll_collective_allgather_int( col, send_buf, send_sz, &
        recv_buf, recv_sz )
     type(sll_collective_t), pointer        :: col
@@ -475,17 +510,28 @@ contains !************************** Operations **************************
          'sll_collective_allgather_int(): MPI_BARRIER()' )
   end subroutine
 
-  subroutine sll_collective_allgatherv_real( col, send_buf, send_sz, &
-       sizes, displs, rec_buf )
+  !> @brief Gathers real data from all tasks and 
+  !!        deliver the combined data to all tasks
+  !> @param[in] col Wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_cnt number of elements in send buffer
+  !> @param[in] displs integer array. Entry i specifies the displacement
+  !> @param[in] rec_cnt integer array containing the number of elements 
+  !!            that are to be received from each process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_allgatherv_real( col, send_buf, send_cnt, &
+       rec_cnt, displs, rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
-    sll_int32, intent(in)                :: send_sz
-    sll_int32, dimension(:), intent(in)  :: sizes
+    sll_int32, intent(in)                :: send_cnt
+    sll_int32, dimension(:), intent(in)  :: rec_cnt
     sll_int32, dimension(:), intent(in)  :: displs
-    sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32                            :: ierr
     ! FIXME: argument checking
-    call MPI_ALLGATHERV( send_buf, send_sz, MPI_REAL, rec_buf, sizes, &
+    SLL_ASSERT(col%size .eq. SIZE(displs))
+    SLL_ASSERT(col%size .eq. SIZE(rec_cnt))
+    call MPI_ALLGATHERV( send_buf, send_cnt, MPI_REAL, rec_buf,rec_cnt,&
          displs, MPI_REAL, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_allgatherv_real(): MPI_ALLGATHERV()' )
@@ -495,49 +541,73 @@ contains !************************** Operations **************************
   !>        in a communicator 
   !> @param col Wrapper around the communicator
   !> @param[in] send_buf address of send buffer
-  !> @param[in] size number of entries in buffer
-  !> @param[in] root rank of broadcast root
+  !> @param[in] send_count number of elements sent to each process
+  !> @param[in] root rank of sending process
   !> @param[in] rec_buf address of receive buffer
-  subroutine sll_collective_scatter_real( col, send_buf, size, root, &
+  subroutine sll_collective_scatter_real( col, send_buf, send_count, root, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
-    sll_int32, intent(in)                :: size
+    sll_int32, intent(in)                :: send_count
     sll_int32, intent(in)                :: root
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
     sll_int32                            :: ierr
-    sll_int32                            :: recvcount
+    !sll_int32                            :: recvcount
     ! FIXME: argument checking
-    recvcount = size/col%size
-    call MPI_SCATTER( send_buf, size, MPI_REAL, rec_buf, recvcount, &
+    ! recvcount = size/col%size
+    !send_buf and send_count significant only at root
+    if(col%rank .eq. root) then
+      SLL_ASSERT( SIZE(send_buf) .eq. (send_count*(col%size)) )
+    endif
+    call MPI_SCATTER( send_buf, send_count, MPI_REAL, rec_buf, send_count, &
          MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_scatter_real(): MPI_SCATTER()' )
   end subroutine sll_collective_scatter_real
 
-  subroutine sll_collective_scatterv_real( col, send_buf, sizes, displs, &
-       rec_szs, root,rec_buf )
+  !> @brief Scatters a buffer in parts to all processes in a communicator
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_count integer array (of length group size) specifying
+  !>            the number of elements to send to each processor
+  !> @param[in] displs integer array (of length group size). Entry i 
+  !>            specifies the displacement (relative to sendbuf) from 
+  !>            which to take the outgoing data to process i
+  !> @param[in] recv_count number of elements in receive buffer
+  !> @param[in] root rank of sending process
+  !> @param[out] rec_buf starting address of receive buffer
+  subroutine sll_collective_scatterv_real( col, send_buf, send_count,&
+                                        displs,recv_count, root,rec_buf)
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
-    sll_int32, intent(in)                :: sizes
+    sll_int32, dimension(:), intent(in)  :: send_count
     sll_int32, dimension(:), intent(in)  :: displs
-    sll_int32, dimension(:), intent(in)  :: rec_szs
-    sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_int32, intent(in)                :: recv_count
+    sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
     ! FIXME: ARG CHECKING!
-    call MPI_SCATTERV( send_buf, sizes, displs, MPI_REAL, rec_buf, &
-         rec_szs, MPI_REAL, root, col%comm, ierr )
+    SLL_ASSERT( SIZE(send_count) .eq. col%size )
+    SLL_ASSERT( SIZE(displs) .eq. col%size )
+    call MPI_SCATTERV( send_buf, send_count, displs, MPI_REAL, rec_buf,&
+         recv_count, MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_scatterv_real(): MPI_SCATTERV()' )
   end subroutine sll_collective_scatterv_real
 
+  !> @brief Combines real values from all processes and 
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
   subroutine sll_collective_allreduce_real( col, send_buf, count, op, &
        rec_buf )
     type(sll_collective_t), pointer       :: col
     sll_real32, dimension(:), intent(in)  :: send_buf ! what would change...
     sll_int32, intent(in)                 :: count
-    sll_real32, intent(in)                :: op
+    sll_int32, intent(in)                :: op
     sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
@@ -547,7 +617,14 @@ contains !************************** Operations **************************
          'sll_collective_allreduce_real(): MPI_ALLREDUCE()' )
   end subroutine sll_collective_allreduce_real
 
-  subroutine sll_collective_allreduce_logical( col, send_buf, count, op, &
+  !> @brief Combines logical values from all processes and 
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+  subroutine sll_collective_allreduce_logical( col, send_buf, count,op,&
        rec_buf )
     type(sll_collective_t), pointer       :: col
     logical, dimension(:), intent(in)     :: send_buf ! what would change...
@@ -565,6 +642,37 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
   end subroutine sll_collective_allreduce_logical
 
+  !> @brief Reduces integer values on all processes to a single value
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_bu address of send buffer
+  !> @param[in] size number of elements in send buffer
+  !> @param[in] op reduce operation
+  !> @param[in] root_rank rank of root process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_reduce_int( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    sll_int32, dimension(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)               :: size
+    sll_int32, intent(in)               :: op
+    sll_int32, intent(in)                :: root_rank
+    sll_int32, dimension(:), intent(in) :: rec_buf  ! would also change
+    
+    sll_int32                            :: ierr
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_INTEGER, op, root_rank, &
+         col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_real(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_int
+
+  !> @brief Reduces real values on all processes to a single value
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_bu address of send buffer
+  !> @param[in] size number of elements in send buffer
+  !> @param[in] op reduce operation
+  !> @param[in] root_rank rank of root process
+  !> @param[out] rec_buf address of receive buffer
   subroutine sll_collective_reduce_real( col, send_buf, size, op, root_rank, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
@@ -582,6 +690,36 @@ contains !************************** Operations **************************
          'sll_collective_reduce_real(): MPI_REDUCE()' )
   end subroutine sll_collective_reduce_real
   
+  !> @brief Reduces logical values on all processes to a single value
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_bu address of send buffer
+  !> @param[in] size number of elements in send buffer
+  !> @param[in] op reduce operation
+  !> @param[in] root_rank rank of root process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_reduce_logical( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    LOGICAL, DIMENSION(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)               :: size
+    sll_int32, intent(in)               :: op
+    sll_int32, intent(in)                :: root_rank
+    LOGICAL, DIMENSION(:), intent(in) :: rec_buf  ! would also change
+    
+    sll_int32                            :: ierr
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_LOGICAL, op, root_rank, &
+         col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_real(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_logical
+
+  !> @brief Sends integer data from all to all processes
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_count number of elements to send to each process
+  !> @param[in] recv_count number of elements received from any process
+  !> @param[out] recv_buf address of receive buffer
+  !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoall_int( send_buf, send_count, &
                                           recv_count, recv_buf, col )
     sll_int32, dimension(:), intent(in)  :: send_buf
@@ -606,6 +744,24 @@ contains !************************** Operations **************************
 
   ! Explore making this effectively typeless... need a macro implementation;
   ! pointer arguments won't work...
+  !> @brief Sends real data from all to all processes; each process may send a
+  !!         different amount of data and provide displacements for the
+  !!         input and output data.
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_cnts integer array equal to the group size
+  !!                      specifying the number of elements to 
+  !!                      send to each processor
+  !> @param[in] send_displs integer array (of length group size). Entry j 
+  !!                        specifies the displacement (relative to send_buf)
+  !!                        from which to take the outgoing data destined for process j
+  !> @param[out] recv_buf address of receive buffer
+  !> @param[in] recv_cnts integer array equal to the group size specifying the 
+  !!                      maximum number of elements that can be received from
+  !!                      each processor
+  !> @param[in] recv_displs integer array (of length group size). Entry i specifies
+  !!                        the displacement (relative to recvbuf at which to place
+  !!                        the incoming data from process i
+  !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoallV_real( send_buf, send_cnts, &
                                             send_displs, &
                                             recv_buf, recv_cnts, &
@@ -613,7 +769,7 @@ contains !************************** Operations **************************
     sll_real32, dimension(:), intent(in) :: send_buf
     sll_int32,  dimension(:), intent(in) :: send_cnts
     sll_int32,  dimension(:), intent(in) :: send_displs
-    sll_real32, dimension(:), intent(in) :: recv_buf
+    sll_real32, dimension(:), intent(out) :: recv_buf
     sll_int32,  dimension(:), intent(in) :: recv_cnts
     sll_int32,  dimension(:), intent(in) :: recv_displs
     type(sll_collective_t), pointer      :: col
@@ -633,6 +789,24 @@ contains !************************** Operations **************************
          'sll_collective_alltoallV_real(): MPI_BARRIER()' )
   end subroutine sll_collective_alltoallV_real
 
+  !> @brief Sends integer data from all to all processes; each process may send a
+  !!         different amount of data and provide displacements for the
+  !!         input and output data.
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_cnts integer array equal to the group size
+  !!                      specifying the number of elements to 
+  !!                      send to each processor
+  !> @param[in] send_displs integer array (of length group size). Entry j 
+  !!                        specifies the displacement (relative to send_buf)
+  !!                        from which to take the outgoing data destined for process j
+  !> @param[out] recv_buf address of receive buffer
+  !> @param[in] recv_cnts integer array equal to the group size specifying the 
+  !!                      maximum number of elements that can be received from
+  !!                      each processor
+  !> @param[in] recv_displs integer array (of length group size). Entry i specifies
+  !!                        the displacement (relative to recvbuf at which to place
+  !!                        the incoming data from process i
+  !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoallV_int( send_buf, send_cnts, &
                                              send_displs, &
                                              recv_buf, recv_cnts, &
@@ -640,7 +814,7 @@ contains !************************** Operations **************************
     sll_int32, dimension(:), intent(in) :: send_buf
     sll_int32, dimension(:), intent(in) :: send_cnts
     sll_int32, dimension(:), intent(in) :: send_displs
-    sll_int32, dimension(:), intent(in) :: recv_buf
+    sll_int32, dimension(:), intent(out) :: recv_buf
     sll_int32, dimension(:), intent(in) :: recv_cnts
     sll_int32, dimension(:), intent(in) :: recv_displs
     type(sll_collective_t), pointer     :: col
@@ -658,5 +832,59 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
  end subroutine sll_collective_alltoallV_int
 
+
+  subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
+                                             recv_buf,col )
+    sll_int32, dimension(:), intent(in) :: send_buf
+    sll_int32, dimension(:), intent(in) :: send_cnts
+    sll_int32, allocatable, dimension(:), intent(out) :: recv_buf
+    sll_int32, allocatable, dimension(:) :: send_displs
+    sll_int32, allocatable, dimension(:) :: recv_cnts
+    sll_int32, allocatable, dimension(:) :: recv_displs
+    type(sll_collective_t), pointer     :: col
+    sll_int32                          :: ierr,size_comm,i,sendcnts_size
+    sendcnts_size = size(send_cnts)
+
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_int(): MPI_BARRIER()' )
+
+    size_comm = sll_get_collective_size(col)
+    SLL_ASSERT( sendcnts_size .eq. size_comm )
+      
+    ! Define RECV_CNTS
+    SLL_ALLOCATE(recv_cnts(size_comm),ierr)
+    call sll_collective_alltoall_int( send_cnts ,1 ,1, &
+                                   recv_cnts, col)
+
+    ! Define RECV_BUF
+    SLL_ALLOCATE(recv_buf(SUM(recv_cnts)),ierr)
+
+    ! Define SEND_DISPLS
+    SLL_ALLOCATE(send_displs(size_comm),ierr)
+    send_displs(1)=0
+    do i=2,size_comm
+      send_displs(i)=send_displs(i-1)+send_cnts(i-1)
+    enddo
+
+    ! Define RECV_DISPLS
+    SLL_ALLOCATE(recv_displs(size_comm),ierr)
+    recv_displs(1)=0
+    do i=2,size_comm
+      recv_displs(i)=recv_displs(i-1)+recv_cnts(i-1)
+    enddo
+
+    call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
+                        recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
+                        col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
+    call MPI_BARRIER( col%comm, ierr )
+    SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
+    SLL_DEALLOCATE_ARRAY(send_displs,ierr)
+    SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
+ end subroutine sll_collective_alltoallV_int_simple
 
 end module sll_collective
