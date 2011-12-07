@@ -10,19 +10,13 @@ print 'Building HDF5 module...'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
-if os.environ.has_key("HDF5INCPATH"):
-   print 'hdf5 header files are in %s ' %  os.environ['HDF5INCPATH']
-else:
+if not os.environ.has_key("HDF5INCPATH"):
    os.environ['HDF5INCPATH'] = "/usr/local/include"
 
-if os.environ.has_key("HDF5MODPATH"):
-   print 'hdf5 mod files are in %s ' %  os.environ['HDF5MODPATH']
-else:
+if not os.environ.has_key("HDF5MODPATH"):
    os.environ['HDF5MODPATH'] = "/usr/local/include"
 
-if os.environ.has_key("HDF5LIBPATH"):
-   print 'hdf5 library files are in %s ' %  os.environ['HDF5LIBPATH']
-else:
+if not os.environ.has_key("HDF5LIBPATH"):
    os.environ['HDF5LIBPATH'] = "/usr/local/lib"
 
 vars = Variables()
@@ -30,8 +24,8 @@ vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
 vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location',os.environ['HDF5MODPATH'])
 vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
 
-SLLPATH = ['../assert','../precision']
-SLLLIBS = ['sll_precision','sll_assertion']
+SLLPATH = ['../memory','../assert','../precision']
+SLLLIBS = ['sll_memory','sll_precision','sll_assertion']
 
 env = Environment( variables  = vars,
                    ENV        = os.environ, 
@@ -44,19 +38,20 @@ env = Environment( variables  = vars,
 
 Help(vars.GenerateHelpText(env))
 
-#Check if hdf5 is available
-conf = Configure(env)
-if not conf.CheckLib('hdf5'):
-   print "HDF5 not available"
-   env.Append(CPPDEFINES=['NOHDF5'])
-   env.Replace(LIBS = SLLLIBS)
 
 env.Append(CPPDEFINES=['GFORTRAN', 'DEBUG'])
 
+cppvars = []
+for key, value in ARGLIST:
+    if key == 'define':
+       cppvars.append(value)
+       env.Append(CPPDEFINES=cppvars)
+
+
 #env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
+#env.PrependENVPath('PATH', '/opt/local/bin')
 
 #Check gcc and gfortran version
-Export('env')
 ff = os.popen('gfortran --version')
 ll = ff.readline()
 ff.close()
@@ -65,6 +60,7 @@ if float(gcc_version) < 4.5:
    print 'gfortran version number '+gcc_version+' less than 4.5'
    exit();
 
+env.Library('sll_memory',  ["../memory/sll_memory.F90"])
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
 env.Program('unit_test', ["unit_test.F90"]+Glob("sll_*.F90"))
