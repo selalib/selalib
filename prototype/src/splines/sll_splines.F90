@@ -993,14 +993,13 @@ print *, 'assigning local variables'
 
   end subroutine compute_spline_2D_prdc_prdc
 
-#if 0
+
   function interpolate_value_2D( x1, x2, spline )
     sll_real64                          :: interpolate_value_2D
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
     type(sll_spline_2D), pointer        :: spline
-    sll_real64, dimension(:,:), pointer :: coeffs
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -1015,34 +1014,50 @@ print *, 'assigning local variables'
     sll_real64                          :: ci   ! C_i
     sll_real64                          :: cip1 ! C_(i+1)
     sll_real64                          :: cip2 ! C_(i+2)
-    sll_int32                           :: num_cells
+    sll_real64                          :: x1_min
+    sll_int32                           :: num_pts_x1
+    sll_int32                           :: num_pts_x2
+    sll_real64, dimension(:), pointer   :: coeffs_line_jm1
+    sll_real64, dimension(:), pointer   :: coeffs_line_j
+    sll_real64, dimension(:), pointer   :: coeffs_line_jp1
+    sll_real64, dimension(:), pointer   :: coeffs_line_jp2
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
     SLL_ASSERT( associated(spline) )
-
-    ! First, obtain 
-    num_cells = spline%n_points-1
-    rh        = spline%rdelta
-    coeffs    => spline%coeffs
-    ! find the cell and offset for x
-    t0        = x*rh
-    cell      = int(t0) + 1
-    dx        = t0 - real(cell-1)
-    cdx       = 1.0_f64 - dx
+    x1_min     = spline%x1_min
+    num_pts_x1 = spline%num_pts_x1
+    num_pts_x2 = spline%num_pts_x2
+    rh1        = spline%x1_rdelta
+    rh2        = spline%x2_rdelta
+    ! find the cell and offset for x2
+    t0         = x2*rh2
+    cell       = int(t0) + 1
+    dx         = t0 - real(cell-1)
+    cdx        = 1.0_f64 - dx
     !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
-    cim1      = coeffs(cell-1)
-    ci        = coeffs(cell)
-    cip1      = coeffs(cell+1)
-    cip2      = coeffs(cell+2)
+    ! interpolate the coefficients along the line of constant x1. These 
+    ! computations are independent from one another. A little problem is
+    ! the redundancy in the computation of the cell and offset along each
+    ! of the constant x2 lines, as this will be done by each call of 
+    ! interpolate_value_aux(). This suggests that the proper refactoring
+    ! of this function would have the cell and offset as arguments.
+    coeffs_line_jm1 => spline%coeffs(0:num_pts_x1+2, cell-1)
+    coeffs_line_j   => spline%coeffs(0:num_pts_x1+2, cell)
+    coeffs_line_jp1 => spline%coeffs(0:num_pts_x1+2, cell+1)
+    coeffs_line_jp2 => spline%coeffs(0:num_pts_x1+2, cell+2)
+    cim1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jm1)
+    ci        = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_j  )
+    cip1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jp1)
+    cip2      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jp2)
     t1        = 3.0_f64*ci
     t3        = 3.0_f64*cip1
     t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
     t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
-    interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
-  end function interpolate_value
-#endif
+    interpolate_value_2D = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function interpolate_value_2D
+
 
 
   subroutine delete_spline_2D( spline )
