@@ -8,7 +8,7 @@ program remap_test
   
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.
-  sll_real64, dimension(:,:,:), allocatable :: local_array1, local_array2
+  sll_real64, dimension(:,:,:), allocatable :: local_array1, local_array2, arrays_diff
   ! Take a 3D array of dimensions global_sz_i*global_sz_j*global_sz_k
   integer , parameter                       :: global_sz_i = 1024
   integer , parameter                       :: global_sz_j = 1024
@@ -40,7 +40,7 @@ program remap_test
   integer                                   :: i_test
   integer                                   :: i, j, k
   sll_int32, dimension(1:3)                 :: global_index
-  sll_real32   , dimension(1)               :: sum4test
+  sll_real32   , dimension(1)               :: prod4test
   integer                                   :: ok
 
   ! Boot parallel environment
@@ -63,6 +63,7 @@ program remap_test
      stop
   end if
 
+ok = 1
   do, i_test=1, nbtest
  !    call sll_collective_barrier(sll_world_collective)
      if( myrank .eq. 0 ) then
@@ -159,7 +160,9 @@ program remap_test
 
      call apply_remap_3D( rmp3, local_array1, local_array2 )
      print *, i_test, myrank, 'from rank: ', myrank, 'Completed remap'
-     call flush()     
+     call flush()    
+
+     SLL_ALLOCATE( arrays_diff(local_sz_i_final, local_sz_j_final, local_sz_k_final), ierr ) 
 
      ! compare results with expected data
      do k=1,local_sz_k_final
@@ -169,42 +172,37 @@ program remap_test
               gi = global_index(1)
               gj = global_index(2)
               gk = global_index(3)
-              local_array2(i,j,k) = local_array2(i,j,k) - &
+              arrays_diff(i,j,k) = local_array2(i,j,k) - &
               cos(1.0*gi)*sin(1.0*gj)*gk
+              if (arrays_diff(i,j,k)/=0.d0) then
+                 ok = 0
+                 print*, i_test, myrank, '"remap" unit test: FAIL'
+                 print*, 'in global index: (',gi, ',', gj, ',', gk, ')'
+                 print*, 'arrays_diff(',gi, ',', gj, ',', gk, ')=', arrays_diff(i,j,k)
+                 stop
+              endif
            end do
         end do
      end do
-     
-     !print *, 'from rank ', myrank, 'differences = ' ,local_array2(:,:,:)
+
+  ! As the difference described above is null in each point, the sum of the 
+  ! corresponding absolute values must be null. Each processor compute a local 
+  ! sum and all local sums are finally added and the result is sent to 
+  ! processor 0 which will check if equal 0 to validate the test. (*)
      call sll_collective_reduce_real( &
           sll_world_collective, &
-          (/ real(sum(abs(local_array2))) /), &
+          (/ real(ok) /), &
           1, &
-          MPI_SUM, &
+          MPI_PROD, &
           0, &
-          sum4test )
+          prod4test )
+
      if( myrank .eq. 0 ) then
-        print *, i_test, myrank, 'result of reduction = ', sum4test
+        print *, i_test, myrank, 'result of reduction = ', prod4test
      end if
 
      print *, i_test, myrank, 'rank: ', myrank, 'Remap operation completed.'
      call flush()
-  
-     if (myrank==0) then
-        if (sum4test(1)==0.) then
-           print*, ' '
-           print*, i_test, myrank, ' "remap" unit test: PASS'
-           print*, ' '
-        else
-           print*, ' '
-           print*, i_test, myrank, '"remap" unit test: FAIL'
-           print*, ' '
-        endif
-     endif
-     call delete_layout_3D( layout1 )
-     call delete_layout_3D( layout2 )
-     SLL_DEALLOCATE_ARRAY(local_array1, ierr)
-     SLL_DEALLOCATE_ARRAY(local_array2, ierr)
 
 !     call sll_collective_barrier(sll_world_collective)
      print *, i_test, myrank, 'Process ', myrank, ' finishing loop.'
@@ -218,59 +216,27 @@ program remap_test
      end if
      call flush() 
      call sll_collective_barrier(sll_world_collective)
- 
-  enddo
- 
-
-  call sll_collective_barrier(sll_world_collective)
-
-  ! As the difference described above is null in each point, the sum of the 
-  ! corresponding absolute values must be null. Each processor compute a local 
-  ! sum and all local sums are finally added and the result is sent to 
-  ! processor 0 which will check if equal 0 to validate the test. (*)
-  call sll_collective_reduce_real( &
-       sll_world_collective, &
-       (/ real(sum(abs(local_array2))) /), &
-       1, &
-       MPI_SUM, &
-       0, &
-       sum4test )
 
   print *, 'Remap operation completed.'
   call flush()
   
-  call delete_layout_3D( layout1 )
-  call delete_layout_3D( layout2 )
-  
   call sll_collective_barrier(sll_world_collective)
   
+  call delete_layout_3D( layout1 )
+  call delete_layout_3D( layout2 )
   SLL_DEALLOCATE_ARRAY(local_array1, ierr)
   SLL_DEALLOCATE_ARRAY(local_array2, ierr)
+  SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
   
-  ok = 1
-  if (myrank==0) then
-     if (sum4test(1)/=0.) then ! Refer to (*)
-        ok = 0 
-     endif
-  endif
-  
-!enddo
- 
-  if (myrank==0) then
-     if (ok==1) then
-        print*, '"remap" unit test: PASS'
-     else
-        print*, '"remap" unit test: NOT PASS'
-     endif
-  endif
+  enddo
 
-! else
- !    print*, 'The number of processors must be a power of 2'
- ! endif
+  if (myrank==0) then
+     if (prod4test(1)==1.) then
+        print*, '"remap" unit test: PASS'
+     endif
+  endif
   
   call sll_halt_collective()
-  !print *, 'Rank ', myrank, ': TEST COMPLETE'
-  !call flush()
 
 #if 0
   call split_interval_randomly(1000,4,limits)
