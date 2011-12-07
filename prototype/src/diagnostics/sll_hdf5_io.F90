@@ -1,6 +1,43 @@
-#ifndef NOHDF5
-
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+!
+! MODULE: sll_hdf5_io
+!
+!> @author
+!> Pierre Navaro
+!>
+!
+! DESCRIPTION: 
+!
+!> @brief
+!> Implements the functions to write hdf5 file to store heavy data
+!>
+!>@details
+!> With HDF5 you can store several datasets in a single file.
+!>
+!> If HDF5 is not installed you can build the library without it.
+!> This is control by the variable <code>NOHDF5</code>.
+!> HDF5 is set by default but il you prefer binary just add 
+!>
+!> <code> env.Append(CPPDEFINES=['NOHDF5']) </code>
+!>
+!> in your SCons script
+!>
+!> <h2>How to use this module: </h2>
+!>
+!> \code use sll_hdf5_io \endcode
+!>
+!> External links:
+!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
+!
+! REVISION HISTORY:
+! 05 12 2011 - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
 module sll_hdf5_io
+
+#ifndef NOHDF5
 use hdf5
 #include "sll_working_precision.h"
 
@@ -8,33 +45,33 @@ implicit none
 
 contains
   
-! Create HDF5 file 
+!> Create HDF5 file :
+!>    - Initialize fortran interface
+!>    - Create a new file using default properties
 subroutine sll_hdf5_file_create(filename,file_id,error)
 character(len=*) , intent(in)  :: filename  
 integer(hid_t)   , intent(out) :: file_id   
 integer,           intent(out) :: error
 
-! Initialize fortran interface
 call H5open_f(error)
-
-! Create a new file using default properties
 call H5Fcreate_f(filename,H5F_ACC_TRUNC_F,file_id,error)
+
 end subroutine sll_hdf5_file_create
 
-! Open HDF5 file 
+!> Open HDF5 file 
+!>    - Initialize fortran interface
+!>    - Open a HDF5 file
 subroutine sll_hdf5_file_open(filename,file_id,error)
 character(len=*) , intent(in)  :: filename  
 integer(hid_t)   , intent(out) :: file_id   
 integer,           intent(out) :: error
 
-! Initialize fortran interface
 call H5open_f(error)
-
-! Open the HDF5 file
 call H5Fopen_f(filename,H5F_ACC_RDONLY_F,file_id,error)
+
 end subroutine sll_hdf5_file_open
 
-! Close HDF5 file 
+!> Close HDF5 file 
 subroutine sll_hdf5_file_close(file_id,error)
 integer(hid_t), intent(in) :: file_id
 integer :: error
@@ -63,8 +100,22 @@ call H5Sclose_f(dataspace_id,error);                                            
 call H5Dclose_f(dataset_id,error);                                                  \
 end subroutine func_name
 
+!> Write a 1D array of float in double precision in a HDF5 file: 
+!>    - Create a dataspace with 1 dimension
+!>    - Write the dataset
+!>    - Close dataset and dataspace
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_1d, 1, array(:))
+
+!> Write a 2D array of float in double precision in a HDF5 file: 
+!>    - Create a dataspace with 2 dimensions
+!>    - Write the dataset
+!>    - Close dataset and dataspace
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_2d, 2, array(:,:))
+
+!> Write a 3D array of float in double precision in a HDF5 file: 
+!>    - Create a dataspace with 3 dimensions
+!>    - Write the dataset
+!>    - Close dataset and dataspace
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 
 !  ! HDF5 saving for an integer
@@ -101,6 +152,7 @@ NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 !  ! HDF5 reading for an array 5D
 !  subroutine HDF5_array5D_reading(file_id,array5D,dsetname)
 
+#endif
+
 end module sll_hdf5_io
 
-#endif
