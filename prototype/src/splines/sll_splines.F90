@@ -11,7 +11,7 @@ module sll_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
   implicit none
-
+  
   type sll_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
@@ -67,7 +67,7 @@ module sll_splines
   enum, bind(C)
      enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
   end enum
- 
+  
   interface delete
      module procedure delete_spline_1D, delete_spline_2D
   end interface
@@ -79,7 +79,7 @@ contains  ! ****************************************************************
   ! a double precision value at the top of the sll_spline_1D object. For now,
   ! these are the only slots inside the spline that are meant to be modified
   ! outside of the initialization or spline computation functions.
-
+  
   !> set_slope_left
   !> \param[in] spline object
   !> \param[in] value  set derivative on left hand side to value
@@ -92,7 +92,7 @@ contains  ! ****************************************************************
     end if
     spline%slope_l = value
   end subroutine set_slope_left
-
+  
   !> set slope on right hand side for hermite boundary conditions
   !> \param[in] spline object
   !> \param[in] value to which set the derivative on the right hand side
@@ -105,18 +105,18 @@ contains  ! ****************************************************************
     end if
     spline%slope_r = value
   end subroutine set_slope_right
-
-
+  
+  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
-
+  
   ! The array of spline coefficients has NP+3 elements. The extra elements
   ! at the ends (i.e.: 0, NP+1, NP+2) store coefficients whose values are
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
-
-!> create new spline object
+  
+  !> create new spline object
   function new_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_spline_1D), pointer         :: new_spline_1D
     sll_int32,  intent(in)               :: num_points
@@ -181,7 +181,7 @@ contains  ! ****************************************************************
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
   end function new_spline_1D
-
+  
   ! - data: the array whose data must be fit with the cubic spline.
   ! - np: (number of points; length of the data array that must be fit with 
   !   the spline.
@@ -259,7 +259,7 @@ contains  ! ****************************************************************
   ! And the rest of the terms, starting with C(N-1) and working backwards:
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
-!> compute spline coefficients
+  !> compute spline coefficients
   subroutine compute_spline_1D( f, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32,  intent(in)               :: bc_type
@@ -438,7 +438,7 @@ contains  ! ****************************************************************
 
 
 
-   subroutine compute_spline_1D_hermite( f, spline )
+  subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
     type(sll_spline_1D), pointer      :: spline
     sll_real64, dimension(:), pointer :: coeffs
@@ -546,14 +546,18 @@ contains  ! ****************************************************************
   ! 1/6*[C_i + 4*C_(i+1) + C_(i+2)]
   ! 
   ! as needed.
-!> get spline interpolate at point x
-  function interpolate_value( x, spline )
-    sll_real64                        :: interpolate_value
-    intrinsic                         :: associated, int, real
+
+  ! interpolate_value_aux() is meant to be used as a private function. It
+  ! aims at providing a reusable code to carry out interpolations in the
+  ! other module functions (like higher dimensions). This is why this 
+  ! function does no argument checking. Arguments should be checked by 
+  ! the caller.
+  function interpolate_value_aux( x, xmin, rh, coeffs )
+    sll_real64                        :: interpolate_value_aux
     sll_real64, intent(in)            :: x
-    type(sll_spline_1D), pointer      :: spline
+    sll_real64, intent(in)            :: xmin
     sll_real64, dimension(:), pointer :: coeffs
-    sll_real64                        :: rh   ! reciprocal of cell spacing
+    sll_real64, intent(in)            :: rh   ! reciprocal of cell spacing
     sll_int32                         :: cell
     sll_real64                        :: dx
     sll_real64                        :: cdx  ! 1-dx
@@ -566,21 +570,11 @@ contains  ! ****************************************************************
     sll_real64                        :: ci   ! C_i
     sll_real64                        :: cip1 ! C_(i+1)
     sll_real64                        :: cip2 ! C_(i+2)
-    sll_int32                         :: num_cells
-    ! We set these as assertions since we want the flexibility of turning
-    ! them off.
-    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-    SLL_ASSERT( associated(spline) )
-    ! FIXME: arg checks here
-    num_cells = spline%n_points-1
-    rh        = spline%rdelta
-    coeffs    => spline%coeffs
     ! find the cell and offset for x
-    t0        = x*rh
+    t0        = (x-xmin)*rh
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     cdx       = 1.0_f64 - dx
-    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
     cim1      = coeffs(cell-1)
     ci        = coeffs(cell)
     cip1      = coeffs(cell+1)
@@ -589,10 +583,29 @@ contains  ! ****************************************************************
     t3        = 3.0_f64*cip1
     t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
     t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
-    interpolate_value = (1.0_f64/6.0_f64)*(t2 + t4)
+    interpolate_value_aux = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function interpolate_value_aux
+  
+  !> get spline interpolate at point x
+  function interpolate_value( x, spline )
+    sll_real64                        :: interpolate_value
+    intrinsic                         :: associated, int, real
+    sll_real64, intent(in)            :: x
+    type(sll_spline_1D), pointer      :: spline
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_real64                        :: xmin
+    sll_real64                        :: rh   ! reciprocal of cell spacing
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
+    xmin = spline%xmin
+    rh        = spline%rdelta
+    coeffs => spline%coeffs
+    interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
   end function interpolate_value
-
-!> get spline interpolate at array of points
+  
+  !> get spline interpolate at array of points
   subroutine interpolate_array_values( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
@@ -670,7 +683,7 @@ contains  ! ****************************************************************
     rh        = spline%rdelta
     coeffs    => spline%coeffs
     ! find the cell and offset for x
-    t0        = x*rh
+    t0        = (x-spline%xmin)*rh
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
@@ -963,21 +976,21 @@ print *, 'assigning local variables'
     npx2   =  spline%num_pts_x2
     d1     => spline%d1
     d2     => spline%d2
-
-    ! build splines along the x1 direction. Note: due to Fortran's 
-    ! column-major ordering, this involves long strides in memory.
-    do i=1,npx2
-       datap  => data(i,1:npx1)
-       coeffs => spline%coeffs(i,1:npx1+2)
-       call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
-    end do
     ! build splines along the x2 direction. Note: due to Fortran's 
-    ! column-major ordering, this uses contiguous memory chunks.
+    ! column-major ordering, this uses long strides in memory.
     do j=1,npx1
        datap  => data(1:npx2,j)
        coeffs => spline%coeffs(1:npx2+2,j)
        call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
     end do
+    ! build splines along the x1 direction. Note: due to Fortran's 
+    ! column-major ordering, this involves short strides in memory.
+    do i=1,npx2
+       datap  => data(i,1:npx1)
+       coeffs => spline%coeffs(i,1:npx1+2)
+       call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
+    end do
+
   end subroutine compute_spline_2D_prdc_prdc
 
 #if 0
@@ -1005,9 +1018,11 @@ print *, 'assigning local variables'
     sll_int32                           :: num_cells
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
-    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
+    SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
     SLL_ASSERT( associated(spline) )
-    ! FIXME: arg checks here
+
+    ! First, obtain 
     num_cells = spline%n_points-1
     rh        = spline%rdelta
     coeffs    => spline%coeffs
