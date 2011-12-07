@@ -469,11 +469,12 @@ contains !************************** Operations **************************
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
     ! FIXME: Argument checking
+    call sll_check_collective_ptr( col )
     ! displs, rec_buf and recvcnts significant only for root
     if (col%rank .eq. root) then 
       SLL_ASSERT( SIZE(recvcnts) .eq. col%size )
       SLL_ASSERT( SIZE(displs) .eq. col%size )
-      SLL_ASSERT(SIZE(rec_buf) .eq. SUM(recvcnts))
+      SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
     endif
     call MPI_GATHERV( send_buf, send_count, MPI_REAL,rec_buf,recvcnts,&
          displs, MPI_REAL, root, col%comm, ierr )
