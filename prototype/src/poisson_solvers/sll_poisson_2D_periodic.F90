@@ -9,8 +9,10 @@ use fft1d_module
 
 implicit none
 private
+
 public :: new, free, solve
-type, public                           :: poisson2dp
+
+type, public :: poisson2dp
 sll_real64, dimension(:,:), pointer :: rhot, ext, eyt
 type(fft1dclass)                    :: fftx, ffty
 sll_int32                           :: ncx, ncy
@@ -30,19 +32,16 @@ end interface
 contains
 
 subroutine new_poisson2dp(this,rho,nx,ny,error)
-type(poisson2dp),intent(out) :: this
-sll_int32, intent(out)       :: error
-sll_int32, intent(in)        :: nx
-sll_int32, intent(in)        :: ny
-type(field_2D_vec1)          :: rho
-
+type(poisson2dp),intent(out)   :: this
+sll_int32, intent(out)         :: error
+sll_int32, intent(in)          :: nx
+sll_int32, intent(in)          :: ny
+type(field_2D_vec1),intent(in) :: rho
 
 sll_int32 :: nxh1, i, j
 
-!! indicateur d'erreur
-!iflag = 0
-!! on commence par utiliser la fonction rho(x,y)
-!this%transpose=.false.
+this%transpose=.false.
+
 !! on ne resout pas Poisson en parallele pour l'instant
 !this%jstartx = 1
 !this%jendx = geomx%ny
@@ -50,28 +49,17 @@ sll_int32 :: nxh1, i, j
 !! ATTENTION : les tableaux concernees par ce decoupage sont rhot,
 !! ext et eyt. Ce sont des complexes. Pour cette raison leur taille est
 !! la moitie de celle des tableaux reels correspondants.
-!nxh1 = geomx%nx/2
+nxh1 = nx/2
 !this%istartk = 1  ! cas sequentiel
 !this%iendk = nxh1+1 ! cas sequentiel
-!
-!!print*,'zones k ',this%istartk,this%iendk
-!!print*,'zones x ',this%jstartx,this%jendx
-!
-!! initialisation de la geometrie
-!this%geomx=geomx
-!! allocation memoire
-!SLL_ALLOCATE(this%rhot(this%geomx%ny,this%istartk:this%iendk),error)
-!if (ierr.ne.0) iflag=20
-!this%rhot=0.
-!SLL_ALLOCATE(this%ext(this%geomx%ny,this%istartk:this%iendk),error)
-!if (ierr.ne.0) iflag=30
-!this%ext=0.
-!SLL_ALLOCATE(this%eyt(this%geomx%ny,this%istartk:this%iendk),error)
-!if (ierr.ne.0) iflag=40
-!this%eyt=0.
-!! initialisation des fft (le nombre de points pris en compte est n)
-!call initfft(this%fftx, rho, this%geomx%nx)
-!call initfft(this%ffty, this%rhot, this%geomx%ny)
+
+SLL_ALLOCATE(this%rhot(ny,nxh1+1),error)
+SLL_ALLOCATE(this%ext(ny,nxh1+1),error)
+SLL_ALLOCATE(this%eyt(ny,nxh1+1),error)
+
+call initdoubfft(this%fftx, nx)
+call initdoubfft(this%ffty, ny)
+
 end subroutine new_poisson2dp
 
 subroutine free_poisson2dp(this)
@@ -79,11 +67,13 @@ type(poisson2dp),intent(out) :: this
 deallocate(this%rhot,this%ext,this%eyt)
 end subroutine free_poisson2dp
 
-subroutine solve_poisson2dp()
-!subroutine solve_poisson2dp(this,ex,ey,rho,nrj)
-!!$type(poisson2dp) :: this
-!!$real(wp), dimension(:,:) :: ex,ey,rho
-!!$real(wp), intent(out) :: nrj
+subroutine solve_poisson2dp(this,electric_field,charge_density,error)
+type(poisson2dp), intent(inout)  :: this
+type(field_2D_vec2), intent(out) :: electric_field
+type(field_2D_vec1), intent(in)  :: charge_density
+sll_real64                       :: energy
+sll_int32                        :: error
+
 !!$integer :: ik,jk,i,j ! indices de boucle
 !!$integer :: istart
 !!$real(wp) :: kx0,ky0, kx,ky, kx2, k2
