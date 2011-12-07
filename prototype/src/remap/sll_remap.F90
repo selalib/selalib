@@ -583,7 +583,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
        end if
     end do
     SLL_ALLOCATE(new_remap_plan_3D%recv_buffer(0:(acc*int32_data_size-1)),ierr)
- !   call optimize_remap_plan_3D(new_remap_plan_3D)
+    call optimize_remap_plan_3D(new_remap_plan_3D)
   end function new_remap_plan_3D
 
   ! The optimizer function is stand-alone. It may be used just
@@ -670,7 +670,8 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     sll_int32                            :: exchange_size
     logical, dimension(1:1)              :: is_uniform_local
     logical, dimension(1:1)              :: is_uniform_collective
-
+    sll_int32                            :: new_sdisp
+    sll_int32                            :: new_rdisp
     col         => plan%collective
     col_sz      = sll_get_collective_size( col )
     my_rank     = sll_get_collective_rank( col )
@@ -704,7 +705,8 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
                                       colors(0:col_sz-1), 1 )
        if(arrays_are_equal(colors, colors_copy, col_sz)) exit
     end do
-    ! The results can now be used as the color for a splitting operation.
+    ! The results can now be used as the color for a collective-splitting 
+    ! operation.
     new_collective => sll_new_collective( col, colors(my_rank), my_rank )
     new_col_sz     = sll_get_collective_size( new_collective )
     ! Allocate the new counters and displacements with the reduced 
@@ -718,14 +720,18 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     ! Compress the 'send' and 'receive' information
     new_i = 0
     my_color = colors(my_rank)
+    new_sdisp = 0
+    new_rdisp = 0
     do i=0,col_sz-1
        if( colors(i) .eq. my_color ) then
           new_send_counts(new_i) = send_counts(i)
-          new_send_displs(new_i) = send_displs(i)
+          new_send_displs(new_i) = new_sdisp
           new_send_boxes(new_i)  = plan%send_boxes(i)
+          new_sdisp              = new_sdisp + send_counts(i)
           new_recv_counts(new_i) = recv_counts(i)
-          new_recv_displs(new_i) = recv_displs(i)
+          new_recv_displs(new_i) = new_rdisp
           new_recv_boxes(new_i)  = plan%recv_boxes(i)
+          new_rdisp              = new_rdisp + recv_counts(i)
           new_i                  = new_i + 1
        end if
     end do
