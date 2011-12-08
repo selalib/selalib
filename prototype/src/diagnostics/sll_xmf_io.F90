@@ -23,6 +23,19 @@
 !> External links:
 !> - https://wci.llnl.gov/codes/visit/
 !> - http://www.xdmf.org/index.php/Main_Page
+!>
+!><h2> Example </h2>
+!>The call sequence to create an xdmf file is
+!>
+!><pre>
+!>
+!>call sll_xmf_file_create("example.xmf",xmffile_id,error)
+!>call sll_xmf_grid_geometry_2d(xmffile_id, "mesh", nnodes_x1, nnodes_x2)
+!>call sll_xmf_field_2d(xmffile_id,'NodeValues',"field",nnodes_x1,nnodes_x2,'Node')
+!>call sll_xmf_file_close(xmffile_id,error)
+!>
+!></pre>
+!>Don't forget to write heavy data in hdf5 file or binary file !
 !
 ! REVISION HISTORY:
 ! 05 12 2011 - Initial Version
