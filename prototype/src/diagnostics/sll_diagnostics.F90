@@ -42,12 +42,14 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_diagnostics
-use sll_ascii_io
-use sll_binary_io
-use sll_xmf_io
 #ifndef NOHDF5
+use hdf5
 use sll_hdf5_io
+#else
+use sll_binary_io
 #endif
+use sll_ascii_io
+use sll_xmf_io
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -62,14 +64,20 @@ end enum
 public write_vec1d, write_vec2d, write_mesh
 
 contains  
-
+!>Writes data for mesh plotting:
+!> \param[in] mesh_prefix filename prefix for the mesh
+!> \param[in] nodes coordinates  along direction 1
+!> \param[in] nodes coordinates  along direction 2
+!> \param[in] nodes number along direction 1
+!> \param[in] nodes number along direction 2
+!> \param[out] parameter that should be 0
 subroutine write_mesh_data_2d(mesh_prefix,x1,x2,nnodes_x1,nnodes_x2,error)
-character(len=*), intent(in) :: mesh_prefix    !> mesh_prefix filename prefix for the mesh
-sll_real64, dimension(:,:), intent(in) :: x1 !> nodes coordinates  along direction 1
-sll_real64, dimension(:,:), intent(in) :: x2 !> nodes coordinates  along direction 2
-sll_int32, intent(in)  :: nnodes_x1          !> nodes number along direction 1
-sll_int32, intent(in)  :: nnodes_x2          !> nodes number along direction 2
-sll_int32, intent(out) :: error              !> parameter that should be 0
+character(len=*), intent(in) :: mesh_prefix  
+sll_real64, dimension(:,:), intent(in) :: x1 
+sll_real64, dimension(:,:), intent(in) :: x2 
+sll_int32, intent(in)  :: nnodes_x1          
+sll_int32, intent(in)  :: nnodes_x2          
+sll_int32, intent(out) :: error              
 
 sll_int32 :: xmffile_id
 
