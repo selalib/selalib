@@ -1,6 +1,32 @@
+!> @file sll_timer.F90
+!> @namespace sll_timer
+!> @author samuel de santis samuel.desantis@math.unistra.fr
+!> @brief Timing facility
+!> @details <b> How to use-it </b>
+!>
+!> First, add the line
+!> @code use sll_timer @endcode
+!> declare a new time_mark pointer
+!> @code type(time_mark), pointer :: mark @endcode
+!> and allocate it
+!> @code mark => new_time_mark() @endcode
+!> @warning note that we use "=>" and not just "=".
+!> \a mark is a pointer!
+!>
+!> We can now use the functions
+!> @code
+!> real :: time                            (you can use 64-bits real)
+!> mark => start_time_mark(mark)
+!> time = time_elapsed_between(mark1,mark2)
+!> time = time_elapsed_since(mark)
+!> @endcode
+!> At the ending, you must free the mark with
+!> @code mark => delete_mark_time(mark) @endcode
+!> 
 module sll_timer
   implicit none
 
+  !> @brief type use for clock reading
   type time_mark
     integer(kind=selected_int_kind(10)) :: clocks_ticks !< number of clocks ticks
     integer(kind=selected_int_kind(10)) :: clocks_ticks_max !< the maximum value that clocks_ticks can reach
