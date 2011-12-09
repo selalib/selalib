@@ -7,7 +7,7 @@
 !>
 !> Don't forget to read the README file before launching the make command.
 !>
-!> \remark If you encountered a problem with doxygen please send me an email to samuel.de-santis@math.unistra.fr
+!> \remark If you encountered a problem with doxygen please send me an email to samuel.desantis@math.unistra.fr
 !>
 !> \section Description Description
 !>
