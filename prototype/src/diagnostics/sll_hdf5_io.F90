@@ -36,10 +36,10 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_hdf5_io
+#include "sll_working_precision.h"
 
 #ifndef NOHDF5
 use hdf5
-#include "sll_working_precision.h"
 
 implicit none
 
