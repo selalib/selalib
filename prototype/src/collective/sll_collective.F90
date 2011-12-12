@@ -830,7 +830,6 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
     call MPI_BARRIER( col%comm, ierr )
-   !write (*,'(a, i4)') 'results from rank: ', sll_get_collective_rank(col)
  end subroutine sll_collective_alltoallV_int
 
 
