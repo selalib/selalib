@@ -1052,7 +1052,13 @@ contains  ! ****************************************************************
        ! knowledge of its internals to use it properly). This should be 
        ! fixed.
        coeffs => spline%coeffs(i,1:npx2+2) ! POR AQUI fix next args
-       call compute_spline_1D_hermite_aux( datap, npx2, spline%d2, coeffs )
+       call compute_spline_1D_hermite_aux( &
+            datap, &
+            npx2, &
+            spline%x2_min_slope, &  ! por aqui
+spline%x2_max_slope, &
+            spline%d2, &
+            coeffs )
     end do
     ! build splines along the x1 direction. Note: due to Fortran's 
     ! column-major ordering, this involves short strides in memory.
