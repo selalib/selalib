@@ -1,10 +1,11 @@
 !> \brief  
-!> The splines module provides capabilities for 1D data interpolation with cubic B-splines
-!> and different boundary conditions
+!> The splines module provides capabilities for 1D data interpolation with 
+!> cubic B-splines and different boundary conditions
 !>
-!> (at the time of this writing: periodic, hermite). The data to be interpolated is represented by a 
-!> simple array.  The spline coefficients and other information are stored in a spline object, 
-!> which is also used to interpolate the fitted data.
+!> (at the time of this writing: periodic, hermite). The data to be 
+!> interpolated is represented by a simple array.  The spline coefficients 
+!> and other information are stored in a spline object, which is also used 
+!> to interpolate the fitted data.
 !> 
 module sll_splines
 #include "sll_working_precision.h"
@@ -1051,13 +1052,14 @@ contains  ! ****************************************************************
        ! this demonstrates that the _aux() function is broken. (We need 
        ! knowledge of its internals to use it properly). This should be 
        ! fixed.
-       coeffs => spline%coeffs(i,1:npx2+2) ! POR AQUI fix next args
+       coeffs => spline%coeffs(i,1:npx2+2) 
        call compute_spline_1D_hermite_aux( &
             datap, &
             npx2, &
-            spline%x2_min_slope, &  ! por aqui
-spline%x2_max_slope, &
             spline%d2, &
+            spline%x2_min_slope, &  
+            spline%x2_max_slope, &
+            spline%x2_delta, &
             coeffs )
     end do
     ! build splines along the x1 direction. Note: due to Fortran's 
@@ -1074,6 +1076,150 @@ spline%x2_max_slope, &
     end do
   end subroutine compute_spline_2D_hrmt_prdc
 
+  subroutine compute_spline_2D_prdc_hrmt( data, spline )
+    sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
+    type(sll_spline_2D), pointer         :: spline
+    sll_real64, dimension(:), pointer    :: coeffs
+    sll_int32                            :: npx1
+    sll_int32                            :: npx2
+    sll_real64, dimension(:), pointer    :: d1
+    sll_real64, dimension(:), pointer    :: d2
+    sll_real64, dimension(:), pointer    :: datap ! 1D data slice pointer
+    sll_int32                            :: i
+    sll_int32                            :: j
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%num_pts_x1, ' . Passed size: ', size(data,1)
+       STOP
+    end if
+    if( (size(data,2) .lt. spline%num_pts_x2 ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%num_pts_x2, ' . Passed size: ', size(data,2)
+       STOP
+    end if
+    npx1   =  spline%num_pts_x1
+    npx2   =  spline%num_pts_x2
+    d1     => spline%d1
+    d2     => spline%d2
+    ! build splines along the x2 direction. Note: due to Fortran's 
+    ! column-major ordering, this uses long strides in memory.
+    do i=1,npx1 
+       datap  => data(i,1:npx2)
+       ! Intentionally, we make coeffs point to the index 1 of the coefficients
+       ! array. coeffs(0) is still a valid call, which is what 
+       ! compute_spline_1D_periodic_aux() does. This is an ugly trick and
+       ! this demonstrates that the _aux() function is broken. (We need 
+       ! knowledge of its internals to use it properly). This should be 
+       ! fixed.
+       coeffs => spline%coeffs(i,1:npx2+2) 
+       call compute_spline_1D_periodic_aux( datap, npx2, spline%d2, coeffs )
+    end do
+    ! build splines along the x1 direction. Note: due to Fortran's 
+    ! column-major ordering, this involves short strides in memory.
+    ! Note that the data are the spline coefficients computed in the
+    ! previous step, so the array dimensions are slightly bigger than in
+    ! the original data.
+    do j=0,npx2+2  
+       datap  => spline%coeffs(1:npx1,j)
+       ! same trick regarding the starting point of this pointer. This is
+       ! not good.
+       coeffs => spline%coeffs(1:npx1+2,j)
+       call compute_spline_1D_hermite_aux( &
+            datap, &
+            npx1, &
+            spline%d1, &
+            spline%x1_min_slope, &  
+            spline%x1_max_slope, &
+            spline%x1_delta, &
+            coeffs )
+    end do
+  end subroutine compute_spline_2D_prdc_hrmt
+
+  subroutine compute_spline_2D_hrmt_hrmt( data, spline )
+    sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
+    type(sll_spline_2D), pointer         :: spline
+    sll_real64, dimension(:), pointer    :: coeffs
+    sll_int32                            :: npx1
+    sll_int32                            :: npx2
+    sll_real64, dimension(:), pointer    :: d1
+    sll_real64, dimension(:), pointer    :: d2
+    sll_real64, dimension(:), pointer    :: datap ! 1D data slice pointer
+    sll_int32                            :: i
+    sll_int32                            :: j
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%num_pts_x1, ' . Passed size: ', size(data,1)
+       STOP
+    end if
+    if( (size(data,2) .lt. spline%num_pts_x2 ) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
+            spline%num_pts_x2, ' . Passed size: ', size(data,2)
+       STOP
+    end if
+    npx1   =  spline%num_pts_x1
+    npx2   =  spline%num_pts_x2
+    d1     => spline%d1
+    d2     => spline%d2
+    ! build splines along the x2 direction. Note: due to Fortran's 
+    ! column-major ordering, this uses long strides in memory.
+    do i=1,npx1 
+       datap  => data(i,1:npx2)
+       ! Intentionally, we make coeffs point to the index 1 of the coefficients
+       ! array. coeffs(0) is still a valid call, which is what 
+       ! compute_spline_1D_periodic_aux() does. This is an ugly trick and
+       ! this demonstrates that the _aux() function is broken. (We need 
+       ! knowledge of its internals to use it properly). This should be 
+       ! fixed.
+       coeffs => spline%coeffs(i,1:npx2+2) 
+       call compute_spline_1D_hermite_aux( &
+            datap, &
+            npx2, &
+            spline%d2, &
+            spline%x2_min_slope, &  
+            spline%x2_max_slope, &
+            spline%x2_delta, &
+            coeffs )
+    end do
+    ! build splines along the x1 direction. Note: due to Fortran's 
+    ! column-major ordering, this involves short strides in memory.
+    ! Note that the data are the spline coefficients computed in the
+    ! previous step, so the array dimensions are slightly bigger than in
+    ! the original data.
+    do j=0,npx2+2  
+       datap  => spline%coeffs(1:npx1,j)
+       ! same trick regarding the starting point of this pointer. This is
+       ! not good.
+       coeffs => spline%coeffs(1:npx1+2,j)
+       call compute_spline_1D_hermite_aux( &
+            datap, &
+            npx1, &
+            spline%d1, &
+            spline%x1_min_slope, &  
+            spline%x1_max_slope, &
+            spline%x1_delta, &
+            coeffs )
+    end do
+  end subroutine compute_spline_2D_hrmt_hrmt
 
 
   function interpolate_value_2D( x1, x2, spline )
