@@ -121,7 +121,7 @@ contains
     sll_real64, dimension(0:n-1), intent(out) :: t
     sll_int32                                 :: k
     sll_real64                                :: theta
-    SLL_ASSERT(is_power_of_2(int(n,i64))) 
+    SLL_ASSERT(is_power_of_two(int(n,i64))) 
     theta   = 2.0*sll_pi/real(n)      ! basic angular interval
     ! By whatever means we use to compute the twiddles, some sanity
     ! checks are in order: 
@@ -155,7 +155,7 @@ contains
     integer                                :: j;                \
     integer                                :: k;                \
     data_type                              :: tmp;              \
-    SLL_ASSERT(is_power_of_2(int(n,i64)));                      \
+    SLL_ASSERT(is_power_of_two(int(n,i64)));                    \
     j = 0;                                                      \
     k = n;                                                      \
     do i=0,n-2;                                                 \
@@ -187,7 +187,7 @@ contains
     integer                                :: j
     integer                                :: k
     sll_real64, dimension(1:2)             :: tmp
-    SLL_ASSERT(is_power_of_2(int(num_pairs,i64)))
+    SLL_ASSERT(is_power_of_two(int(num_pairs,i64)))
     j = 0
     k = num_pairs
 #define ARRAY(i) a(2*(i):2*(i)+1)
@@ -245,7 +245,7 @@ contains
     sll_int32                               :: ierr
 
     n = size(data)
-    SLL_ASSERT(is_power_of_2(int(n,i64)))
+    SLL_ASSERT(is_power_of_two(int(n,i64)))
     SLL_ALLOCATE(twiddles(n/2),ierr)
     call compute_twiddles(n,twiddles) 
     call bit_reverse(n/2,twiddles) 
@@ -306,7 +306,7 @@ contains
     integer                                 :: n
     sll_int32                               :: ierr
     n = size(data) ! bad
-    SLL_ASSERT(is_power_of_2(int(n,i64)))
+    SLL_ASSERT(is_power_of_two(int(n,i64)))
     SLL_ALLOCATE(twiddles(n/2),ierr)
     call compute_twiddles(n,twiddles) 
     ! This algorithm uses the twiddles in natural order. The '1' 
@@ -567,7 +567,7 @@ contains
     sll_real64                                 :: omega_re
     sll_real64                                 :: omega_im
     sll_real64                                 :: s
-    SLL_ASSERT( is_power_of_2(int(n,i64)) )
+    SLL_ASSERT( is_power_of_two(int(n,i64)) )
     SLL_ASSERT( size(data) .ge. n )
     SLL_ASSERT( size(twiddles) .eq. n/2 )
     n_2 = n/2
