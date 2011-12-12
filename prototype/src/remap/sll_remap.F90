@@ -524,12 +524,14 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     col_size = sll_get_collective_size( col )
 
     SLL_ALLOCATE( new_remap_plan_3D, ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%send_displs(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%send_counts(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%recv_displs(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%recv_counts(0:col_size-1), ierr )
-    ! Can't use CLEAR_ALLOCATE with types for which the '= 0' has not been
-    ! defined as an operator.
+    SLL_ALLOCATE( new_remap_plan_3D%send_displs(0:col_size-1), ierr )
+    new_remap_plan_3D%send_displs(:) = 0
+    SLL_ALLOCATE( new_remap_plan_3D%send_counts(0:col_size-1), ierr )
+    new_remap_plan_3D%send_counts(:) = 0
+    SLL_ALLOCATE( new_remap_plan_3D%recv_displs(0:col_size-1), ierr )
+    new_remap_plan_3D%recv_displs(:) = 0
+    SLL_ALLOCATE( new_remap_plan_3D%recv_counts(0:col_size-1), ierr )
+    new_remap_plan_3D%recv_counts(:) = 0
     SLL_ALLOCATE( new_remap_plan_3D%send_boxes(0:col_size-1), ierr )
     SLL_ALLOCATE( new_remap_plan_3D%recv_boxes(0:col_size-1), ierr )
     new_remap_plan_3D%collective => get_layout_3D_collective(initial)
@@ -679,16 +681,24 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     send_displs => plan%send_displs
     recv_counts => plan%recv_counts
     recv_displs => plan%recv_displs
-    SLL_CLEAR_ALLOCATE( lowest_color(1), ierr ) ! awful, but I need an array.
-    SLL_CLEAR_ALLOCATE( colors(0:col_sz-1), ierr )
-    SLL_CLEAR_ALLOCATE( colors_copy(0:col_sz-1), ierr )
-
+    SLL_ALLOCATE( lowest_color(1), ierr ) ! awful, but I need an array.
+    lowest_color(1) = 0
+    SLL_ALLOCATE( colors(0:col_sz-1), ierr )
+    colors(:) = 0
+    SLL_ALLOCATE( colors_copy(0:col_sz-1), ierr )
+    colors_copy = 0
     ! FIRST LEVEL OF OPTIMIZATION: 
     ! Identify the sub-collectives in which the communication should 
     ! be divided.
     lowest_color(1) = my_rank  ! we want a starting point. This should not 
                                ! change for the lowest ranks in the 
                                ! sub-collectives.
+    call sll_collective_allgather( &
+       col, &
+       lowest_color(1:1), &
+       1, &
+       colors(0:col_sz-1), &
+       1 )
     do
        ! Load the copy
        colors_copy(0:col_sz-1) = colors(0:col_sz-1)
@@ -701,8 +711,22 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
                      ! my_rank
           end if
        end do
-       call sll_collective_allgather( col, lowest_color(1:1), 1, &
-                                      colors(0:col_sz-1), 1 )
+       ! Gather the information from all processes
+       call sll_collective_allgather( &
+            col, &
+            lowest_color(1:1), &
+            1, &
+            colors(0:col_sz-1), &
+            1 )
+       ! Check which is the color of the lowest rank with which this
+       ! process communicates, and reassign the color accordingly.
+       lowest_color(1) = colors(lowest_color(1))
+       call sll_collective_allgather( &
+            col, &
+            lowest_color(1:1), &
+            1, &
+            colors(0:col_sz-1), &
+            1 )
        if(arrays_are_equal(colors, colors_copy, col_sz)) exit
     end do
     ! The results can now be used as the color for a collective-splitting 
