@@ -31,20 +31,21 @@ program spline_tester
   sll_real64 :: accumulator5, accumulator6
 
   ! 2D stuff
+  sll_real64  :: acc_2D, x1, x2
   sll_real64, allocatable, dimension(:,:) :: data_2d
-!  sll_real64, allocatable, dimension(:,:) :: coords_2d
-
+  sll_real64, allocatable, dimension(:)   :: coordinates_i
+  sll_real64, allocatable, dimension(:)   :: coordinates_j
   ! for specific functions of spline values at a point
   sll_real64, allocatable, dimension(:) :: knots
   sll_real64, dimension(1:100)          :: spline_vals
   sll_real64                            :: rnd
   sll_real64                            :: reduction
-#define NPX1  65
-#define NPX2  129
-#define X1MIN 0.0_f64
-#define X1MAX (2.0_f64*sll_pi)
-#define X2MIN 0.0_f64
-#define X2MAX (4.0_f64*sll_pi)
+#define NPX1  1025
+#define NPX2  513
+#define X1MIN (-2.0_f64*sll_pi)
+#define X1MAX ( 2.0_f64*sll_pi)
+#define X2MIN (-sll_pi)
+#define X2MAX ( sll_pi)
 
 
 #define XMIN (-sll_pi)
@@ -216,19 +217,48 @@ program spline_tester
   print *, 'Test of the 2D spline: '
   SLL_ALLOCATE(data_2d(NPX1, NPX2), err)
   print *, 'Filling data:'
-  do i=1,NPX1
-     do j=1,NPX2
-        phase_x1 = real(i-1,f64)*X1MAX/real(NPX1-1,f64)
-        phase_x2 = real(j-1,f64)*X2MAX/real(NPX2-1,f64)
+
+  SLL_ALLOCATE(coordinates_i(NPX1),err)
+  SLL_ALLOCATE(coordinates_j(NPX2),err)
+
+  do i=1, NPX1
+     coordinates_i(i) = real(i-1,f64)*(X1MAX-X1MIN)/real(NPX1-1,f64)+X1MIN
+  end do
+
+  do j=1, NPX2
+     coordinates_j(j) = real(j-1,f64)*(X2MAX-X2MIN)/real(NPX2-1,f64)+X2MIN
+  end do
+
+  do j=1,NPX2
+     phase_x2 = coordinates_j(j)
+     do i=1,NPX1
+        phase_x1 = coordinates_i(i)
         data_2d(i,j) = sin(phase_x1)*sin(phase_x2)
      end do
   end do
   print *, 'Allocating 2D spline...'
 
-  sp2d => new_spline_2D(NPX1, NPX2, X1MIN, X1MAX, X2MIN, X2MAX, PERIODIC_SPLINE, PERIODIC_SPLINE)
+  sp2d => new_spline_2D( NPX1, NPX2, &
+                         X1MIN, X1MAX, &
+                         X2MIN, X2MAX, &
+                         PERIODIC_SPLINE, PERIODIC_SPLINE )
 
   print *, 'Computing the 2D spline...'
   call compute_spline_2D_prdc_prdc( data_2d, sp2d )
+  print *, 'Completed computing the 2d spline.'
+  print *, coordinates_i(1), coordinates_i(NPX1)
+  print *, coordinates_j(1), coordinates_j(NPX2)
+  acc_2D = 0.0
+  do j=1, NPX2
+     do i=1, NPX1
+        x1 = coordinates_i(i)
+        x2 = coordinates_j(j)
+        acc_2D = acc_2D + &
+             abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d))
+     end do
+  end do
+  print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
+       acc_2D/(NPX1*NPX2)
 #if 0
   print *, 'Deleting the 2D spline...'
   call delete(sp2d)
