@@ -374,7 +374,7 @@ contains   ! *****************************************************************
 
   subroutine write_field_2D_vec1( f2Dv1, name, jacobian, average, center )
     type(field_2D_vec1), pointer :: f2Dv1
-    character(64) :: name
+    character(len=*) :: name
     logical, optional       :: jacobian   ! .true. if field data multiplied by jacobian is stored
     sll_real64, optional    :: average    ! average value to add to field
     sll_int32, intent(in), optional     :: center     ! node or cell centered values
