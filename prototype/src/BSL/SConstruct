@@ -43,9 +43,9 @@ env = Environment( ENV = os.environ, variable = vars,
                    LIBS=['sll_memory','sll_precision','sll_assert',
                          'sll_utilities', 'sll_constants','sll_mesh_types',
                          'sll_splines','sll_ode_solvers',
-                         'sll_distribution_function','sll_diagnostics',
-                         'hdf5_fortran','hdf5','z'],
-                   CPPDEFINES=['NOHDF5'])
+                         'sll_distribution_function','sll_diagnostics'])
+
+env.Append(CPPDEFINES=['NOHDF5'])
 
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])

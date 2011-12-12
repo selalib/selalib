@@ -14,7 +14,8 @@ env = Environment(F90 = 'gfortran',
                   ENV = os.environ,
                   LIBPATH = ['.','../fftpack'],
                   LIBS = ['dfftpack','sll_memory','sll_precision','sll_assertion','sll_constants'],
-                  F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG', '-DGFORTRAN', '-ffree-line-length-none','-fbounds-check'] )
+                  F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-ffree-line-length-none','-fbounds-check'],
+                  CPPDEFINES=['DEBUG','GFORTRAN'] )
+   
 src_files = ['fftpack.f90', 'dfftpack.f']
 env.Library('dfftpack', src_files)
-

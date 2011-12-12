@@ -14,7 +14,7 @@ env = Environment( ENV=os.environ,
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.',os.environ['HDF5LIBPATH']],
                    LIBS=['sll_memory','sll_precision','sll_assert','sll_utilities', 'sll_constants','sll_diagnostics', 'hdf5_fortran','hdf5','z'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+                   F90FLAGS = ['-g', '-cpp', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
 
 #print 'CFLAGS: ' + CPATH
 env.Library('sll_memory',["../memory/sll_memory.F90"])
