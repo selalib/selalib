@@ -11,16 +11,16 @@ program remap_test
   integer, dimension(:,:,:), allocatable :: local_array1, local_array2, arrays_diff
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 1024
-  integer , parameter                       :: nj = 1024
-  integer , parameter                       :: nk = 1
+  integer , parameter                       :: ni = 512
+  integer , parameter                       :: nj = 512
+  integer , parameter                       :: nk = 256
   ! Local sizes
-  integer                                   :: local_sz_i_init
-  integer                                   :: local_sz_j_init
-  integer                                   :: local_sz_k_init
-  integer                                   :: local_sz_i_final
-  integer                                   :: local_sz_j_final
-  integer                                   :: local_sz_k_final
+  integer                                   :: loc_sz_i_init
+  integer                                   :: loc_sz_j_init
+  integer                                   :: loc_sz_k_init
+  integer                                   :: loc_sz_i_final
+  integer                                   :: loc_sz_j_final
+  integer                                   :: loc_sz_k_final
 
   ! the process mesh
   integer                                   :: npi
@@ -36,12 +36,13 @@ program remap_test
   type(remap_plan_3D_t), pointer            :: rmp3
 
   sll_real64                                :: rand_real
-  integer, parameter                        :: nbtest = 2
+  integer, parameter                        :: nbtest = 100
   integer                                   :: i_test
   integer                                   :: i, j, k
   sll_int32, dimension(1:3)                 :: global_index, g
   sll_real32   , dimension(1)               :: prod4test
   integer                                   :: ok
+
 
   ! Boot parallel environment
   call sll_boot_collective()
@@ -65,11 +66,16 @@ program remap_test
 
   ok = 1
   do, i_test=1, nbtest
- 
+     if( myrank .eq. 0 ) then
+        print *, 'Iteration ', i_test, ' of ', nbtest
+     end if
      layout1  => new_layout_3D( sll_world_collective )        
-!     call two_power_rand_factorization(colsz, npi, npj, npk)
-     call factorize_in_random_2powers( colsz, npi, npj )
-     npk = 1 
+     call two_power_rand_factorization(colsz, npi, npj, npk)
+!     call factorize_in_random_2powers( colsz, npi, npj )
+!     npk = 1 
+     if( myrank .eq. 0 ) then
+        print *, 'source configuration: ', npi, npj, npk
+     end if
 
      call initialize_layout_with_distributed_3D_array( &
           ni, &
@@ -82,16 +88,16 @@ program remap_test
      
      call compute_local_sizes( &
           layout1, &
-          local_sz_i_init, &
-          local_sz_j_init, &
-          local_sz_k_init )        
+          loc_sz_i_init, &
+          loc_sz_j_init, &
+          loc_sz_k_init )        
 
-     SLL_ALLOCATE( local_array1(local_sz_i_init, local_sz_j_init, local_sz_k_init), ierr )
+     SLL_ALLOCATE(local_array1(loc_sz_i_init,loc_sz_j_init,loc_sz_k_init),ierr)
  
      ! initialize the local data    
-     do k=1,local_sz_k_init
-        do j=1,local_sz_j_init 
-           do i=1,local_sz_i_init
+     do k=1,loc_sz_k_init
+        do j=1,loc_sz_j_init 
+           do i=1,loc_sz_i_init
               global_index =  local_to_global_3D( layout1, (/i, j, k/) )
               gi = global_index(1)
               gj = global_index(2)
@@ -102,9 +108,12 @@ program remap_test
      enddo
      
      layout2  => new_layout_3D( sll_world_collective )
-!     call two_power_rand_factorization(colsz, npi, npj, npk)
-     call factorize_in_random_2powers(colsz, npi, npj)
-     npk = 1    
+     call two_power_rand_factorization(colsz, npi, npj, npk)
+ !    call factorize_in_random_2powers(colsz, npi, npj)
+ !    npk = 1    
+     if( myrank .eq. 0 ) then
+        print *, 'target configuration: ', npi, npj, npk
+     end if
 
      call initialize_layout_with_distributed_3D_array( &
           ni, &
@@ -117,37 +126,48 @@ program remap_test
      
      call compute_local_sizes( &
           layout2, &
-          local_sz_i_final, &
-          local_sz_j_final, &
-          local_sz_k_final )
+          loc_sz_i_final, &
+          loc_sz_j_final, &
+          loc_sz_k_final )
 
-     SLL_ALLOCATE( local_array2(local_sz_i_final, local_sz_j_final, local_sz_k_final), ierr )
+     SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final, loc_sz_k_final), ierr )
     
      rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)     
 
      call apply_remap_3D( rmp3, local_array1, local_array2 ) 
 
-     SLL_ALLOCATE( arrays_diff(local_sz_i_final, local_sz_j_final, local_sz_k_final), ierr ) 
+     SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final),ierr ) 
 
      ! compare results with expected data
-     do k=1,local_sz_k_final
-        do j=1,local_sz_j_final 
-           do i=1,local_sz_i_final
+     do k=1,loc_sz_k_final
+        do j=1,loc_sz_j_final 
+           do i=1,loc_sz_i_final
               global_index =  local_to_global_3D( layout2, (/i, j, k/) )
               gi = global_index(1)
               gj = global_index(2)
               gk = global_index(3)
-              arrays_diff(i,j,k) = local_array2(i,j,k) - (gi + (gj-1)*ni + (gk-1)*ni*nj)
+              arrays_diff(i,j,k) = local_array2(i,j,k) - &
+                   (gi + (gj-1)*ni + (gk-1)*ni*nj)
               if (arrays_diff(i,j,k)/=0) then
                  ok = 0
                  print*, i_test, myrank, '"remap" unit test: FAIL'
+                 print *, 'local indices: ', '(', i, j, k, ')'
                  print*, 'in global indices: (',gi, ',', gj, ',', gk, ')'
-                 print*, 'local array1(',gi, ',', gj, ',', gk, ')=', local_array1(i,j,k)  
-                 print*, 'local array2(',gi, ',', gj, ',', gk, ')=', local_array2(i,j,k)
+                 print*, 'local array1(',gi, ',', gj, ',', gk, ')=', &
+                      local_array1(i,j,k)  
+                 print*, 'local array2(',gi, ',', gj, ',', gk, ')=', &
+                      local_array2(i,j,k)
                  g = theoretical_global_3D_indices(local_array2(i,j,k), ni, nj)
-                 print*, 'Theoretical indices: (',g(1), ',', g(2), ',', g(3), ')'
+                 print*, 'Theoretical indices: (',g(1), ',', g(2),',',g(3), ')'
+                 if(myrank .eq. 1) then
+                    print *, local_array2(:,:,:)
+                 end if
+
                  print *, i_test, myrank, 'Printing layout1: '
                  call sll_view_lims_3D( layout1 )
+                 print *, i_test, myrank, 'Printing layout2: '
+                 call sll_view_lims_3D( layout2 )
+
                  print*, 'program stopped'
                  stop
               end if
@@ -174,19 +194,14 @@ program remap_test
         call flush()
      end if
      call flush() 
+       
      call sll_collective_barrier(sll_world_collective)
-
-  print *, 'Remap operation completed.'
-  call flush()
   
-  call sll_collective_barrier(sll_world_collective)
-  
-  call delete_layout_3D( layout1 )
-  call delete_layout_3D( layout2 )
-  SLL_DEALLOCATE_ARRAY(local_array1, ierr)
-  SLL_DEALLOCATE_ARRAY(local_array2, ierr)
-  SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
-  
+     call delete_layout_3D( layout1 )
+     call delete_layout_3D( layout2 )
+     SLL_DEALLOCATE_ARRAY(local_array1, ierr)
+     SLL_DEALLOCATE_ARRAY(local_array2, ierr)
+     SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
   enddo
 
   if (myrank==0) then
@@ -206,17 +221,30 @@ program remap_test
 #endif
   
 contains
-
+  
   function theoretical_global_3D_indices(d, ni, nj)
     integer, dimension(1:3) :: theoretical_global_3D_indices
     integer, intent(in)      :: d, ni, nj
     integer                  :: q
-    theoretical_global_3D_indices(1) = mod(d,ni)
+#if 0
+    integer                  :: val
+    val = d/(ni*nj)
+    theoretical_global_3D_indices(3) = val
+    theoretical_global_3D_indices(2) = 
+    theoretical_global_3D_indices(1) = 
+#endif
+#if 1
+    if(mod(d,ni) /= 0) then
+       theoretical_global_3D_indices(1) = mod(d,ni)
+    else
+       theoretical_global_3D_indices(1) = ni
+    end if
     q = d/ni
     theoretical_global_3D_indices(2) = mod(q,nj) + 1
     theoretical_global_3D_indices(3) = q/nj + 1
-   end function theoretical_global_3D_indices
-
+#endif
+  end function theoretical_global_3D_indices
+  
   subroutine two_power_rand_factorization(n, n1, n2, n3)
     sll_int64, intent(in) :: n
     integer, intent(out) ::n1, n2, n3
@@ -254,11 +282,11 @@ contains
   end subroutine factorize_in_random_2powers
 
   
-  subroutine compute_local_sizes( layout, local_sz_i, local_sz_j, local_sz_k )
+  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
     type(layout_3D_t), pointer :: layout
-    sll_int32, intent(out) :: local_sz_i
-    sll_int32, intent(out) :: local_sz_j
-    sll_int32, intent(out) :: local_sz_k
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32, intent(out) :: loc_sz_k
     sll_int32 :: i_min
     sll_int32 :: i_max
     sll_int32 :: j_min
@@ -278,9 +306,9 @@ contains
     j_max = get_layout_3D_j_max( layout, my_rank )
     k_min = get_layout_3D_k_min( layout, my_rank )
     k_max = get_layout_3D_k_max( layout, my_rank )
-    local_sz_i = i_max - i_min + 1
-    local_sz_j = j_max - j_min + 1
-    local_sz_k = k_max - k_min + 1
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+    loc_sz_k = k_max - k_min + 1
   end subroutine compute_local_sizes
       
       subroutine split_interval_randomly(n, num_halvings, ans)
