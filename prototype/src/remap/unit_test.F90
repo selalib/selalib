@@ -8,7 +8,9 @@ program remap_test
   
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.
-  integer, dimension(:,:,:), allocatable :: local_array1, local_array2, arrays_diff
+  sll_real64, dimension(:,:,:), allocatable :: local_array1
+  sll_real64, dimension(:,:,:), allocatable :: local_array2
+  sll_real64, dimension(:,:,:), allocatable ::  arrays_diff
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
   integer , parameter                       :: ni = 512
@@ -157,7 +159,10 @@ program remap_test
                       local_array1(i,j,k)  
                  print*, 'local array2(',gi, ',', gj, ',', gk, ')=', &
                       local_array2(i,j,k)
-                 g = theoretical_global_3D_indices(local_array2(i,j,k), ni, nj)
+                 g = theoretical_global_3D_indices(&
+                      int(local_array2(i,j,k),i32),&
+                      ni, &
+                      nj)
                  print*, 'Theoretical indices: (',g(1), ',', g(2),',',g(3), ')'
                  if(myrank .eq. 1) then
                     print *, local_array2(:,:,:)
