@@ -66,45 +66,36 @@ type(poisson2dp),intent(out) :: this
 deallocate(this%rhot,this%ext,this%eyt)
 end subroutine free_poisson2dp
 
-subroutine solve_poisson2dp(this,ex,ey,rho,error)
+subroutine solve_poisson2dp(this,ex,ey,rho,phi,error)
 type(poisson2dp), intent(inout)  :: this
-sll_real64, dimension(:,:), intent(inout) :: ex, ey
 sll_real64, dimension(:,:), intent(in)  :: rho
-sll_int32                        :: error
-sll_int32                        :: nx
-sll_int32                        :: ny
-sll_real64                       :: dx
-sll_real64                       :: dy
-sll_real64                       :: kx0, kx, kx2
-sll_real64                       :: ky0, ky, ky2
-sll_int32                        :: ik, jk, i, j
-!sll_real64                       :: energy
+sll_real64, dimension(:,:), intent(out) :: ex, ey
+sll_real64, dimension(:,:), intent(out) :: phi
+sll_int32 , intent(out)                 :: error
+sll_int32                               :: nx,ny
+sll_real64                              :: dx,dy
+sll_real64                              :: kx0, kx, kx2
+sll_real64                              :: ky0, ky, ky2
+sll_int32                               :: ik, jk, i, j
 
 nx = this%mesh%nc_eta1 + 1
 ny = this%mesh%nc_eta2 + 1
 dx = this%mesh%delta_eta1
 dy = this%mesh%delta_eta2
 
-call fft(this%fftx,rho)
+phi = rho
+call fft(this%fftx,phi)
 
-! transposition de rho stockee dans rhot
 do j=1,ny
-
-   this%rhot(j,1) = dcmplx(rho(1,j),0.0)
-
+   this%rhot(j,1) = dcmplx(phi(1,j),0.0)
    do i=2, nx/2
-      this%rhot(j,i)=dcmplx(rho(2*i-2,j),rho(2*i-1,j))
+      this%rhot(j,i)=dcmplx(phi(2*i-2,j),phi(2*i-1,j))
    end do
-
-   this%rhot(j,nx/2+1) = dcmplx(rho(2*nx/2,j),0.0)
-
+   this%rhot(j,nx/2+1) = dcmplx(phi(2*nx/2,j),0.0)
 end do
 
-
-! faire une FFT dans la direction y de rhot
 call fft(this%ffty,this%rhot)
 
-! calcul de la transformee de Fourier de E a partir de celle de rho
 kx0=2._f64*sll_pi/(nx*dx)
 ky0=2._f64*sll_pi/(ny*dy)
 
@@ -126,7 +117,6 @@ do ik=1,nx/2+1
    do jk = 2, ny/2+1
       ky  = (jk-1)*ky0
       ky2 = kx2 +ky*ky
-
       this%ext(jk,ik)=-dcmplx(zero,kx/ky2)*this%rhot(jk,ik)
       this%eyt(jk,ik)=-dcmplx(zero,ky/ky2)*this%rhot(jk,ik)
       this%rhot(jk,ik)= this%rhot(jk,ik)/ky2
@@ -141,16 +131,15 @@ do ik=1,nx/2+1
    end do
 end do
 
-! faire une FFT inverse  dans la direction y de E
 call fftinv(this%ffty,this%ext)
 call fftinv(this%ffty,this%eyt)
-
-! transposition de E
+call fftinv(this%ffty,this%rhot)
 
 do j=1,ny
 
    ex(1,j)  = dble(this%ext(j,1))
    ey(1,j)  = dble(this%eyt(j,1))
+   phi(1,j)  = dble(this%rhot(j,1))
 
    do i=2,nx/2
 
@@ -160,19 +149,21 @@ do j=1,ny
       ey(2*i-2,j) = dble(this%eyt(j,i))
       ey(2*i-1,j) = dimag(this%eyt(j,i))
 
+      phi(2*i-2,j) = dble(this%rhot(j,i))
+      phi(2*i-1,j) = dimag(this%rhot(j,i))
+
    end do
 
    ex(nx,j) = dble(this%ext(j,nx/2+1))
    ey(nx,j) = dble(this%eyt(j,nx/2+1))
+   phi(nx,j) = dble(this%rhot(j,nx/2+1))
 
 end do
 
-! faire une FFT inverse  dans la direction x de E
 call fftinv(this%fftx,ex)
 call fftinv(this%fftx,ey)
+call fftinv(this%fftx,phi)
 
 end subroutine solve_poisson2dp
-
-
 
 end module sll_poisson_2D_periodic

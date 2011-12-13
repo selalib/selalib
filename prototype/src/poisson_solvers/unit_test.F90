@@ -28,7 +28,7 @@ type(poisson2dp)                  :: poisson_obj
 type(geometry_2D),        pointer :: geom
 type(mesh_descriptor_2D), pointer :: mesh
 type(field_2D_vec2),      pointer :: exy, exy_exact
-type(field_2D_vec1),      pointer :: rho
+type(field_2D_vec1),      pointer :: rho, phi
 sll_real64                        :: x1, x2
 sll_int32                         :: mode
 
@@ -47,12 +47,13 @@ mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
 call write_mesh_2D(mesh)
 
 rho       => new_field_2D_vec1(mesh)
+phi       => new_field_2D_vec1(mesh)
 exy       => new_field_2D_vec2(mesh)
 exy_exact => new_field_2D_vec2(mesh)
 
 call new(poisson_obj,rho%data,mesh,error)
 
-mode = 1
+mode = 2
 do i = 1, nc_eta1+1
    do j = 1, nc_eta2+1
       x1 = eta1_min+(i-1)*mesh%delta_eta1
@@ -72,7 +73,7 @@ exy_exact%data%v2 = exy%data%v2
 exy%data%v1 = 0.0
 exy%data%v2 = 0.0
 
-call solve(poisson_obj,exy%data%v1,exy%data%v2,rho%data,error)
+call solve(poisson_obj,exy%data%v1,exy%data%v2,rho%data,phi%data,error)
 
 call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho1","mesh",0)
 call write_vec2d(exy%data%v1, exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","mesh",0)
