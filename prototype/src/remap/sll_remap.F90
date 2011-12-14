@@ -524,12 +524,14 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     col_size = sll_get_collective_size( col )
 
     SLL_ALLOCATE( new_remap_plan_3D, ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%send_displs(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%send_counts(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%recv_displs(0:col_size-1), ierr )
-    SLL_CLEAR_ALLOCATE( new_remap_plan_3D%recv_counts(0:col_size-1), ierr )
-    ! Can't use CLEAR_ALLOCATE with types for which the '= 0' has not been
-    ! defined as an operator.
+    SLL_ALLOCATE( new_remap_plan_3D%send_displs(0:col_size-1), ierr )
+    new_remap_plan_3D%send_displs(:) = 0
+    SLL_ALLOCATE( new_remap_plan_3D%send_counts(0:col_size-1), ierr )
+    new_remap_plan_3D%send_counts(:) = 0
+    SLL_ALLOCATE( new_remap_plan_3D%recv_displs(0:col_size-1), ierr )
+    new_remap_plan_3D%recv_displs(:) = 0
+    SLL_ALLOCATE( new_remap_plan_3D%recv_counts(0:col_size-1), ierr )
+    new_remap_plan_3D%recv_counts(:) = 0
     SLL_ALLOCATE( new_remap_plan_3D%send_boxes(0:col_size-1), ierr )
     SLL_ALLOCATE( new_remap_plan_3D%recv_boxes(0:col_size-1), ierr )
     new_remap_plan_3D%collective => get_layout_3D_collective(initial)
@@ -670,7 +672,8 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     sll_int32                            :: exchange_size
     logical, dimension(1:1)              :: is_uniform_local
     logical, dimension(1:1)              :: is_uniform_collective
-
+    sll_int32                            :: new_sdisp
+    sll_int32                            :: new_rdisp
     col         => plan%collective
     col_sz      = sll_get_collective_size( col )
     my_rank     = sll_get_collective_rank( col )
@@ -678,16 +681,24 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     send_displs => plan%send_displs
     recv_counts => plan%recv_counts
     recv_displs => plan%recv_displs
-    SLL_CLEAR_ALLOCATE( lowest_color(1), ierr ) ! awful, but I need an array.
-    SLL_CLEAR_ALLOCATE( colors(0:col_sz-1), ierr )
-    SLL_CLEAR_ALLOCATE( colors_copy(0:col_sz-1), ierr )
-
+    SLL_ALLOCATE( lowest_color(1), ierr ) ! awful, but I need an array.
+    lowest_color(1) = 0
+    SLL_ALLOCATE( colors(0:col_sz-1), ierr )
+    colors(:) = 0
+    SLL_ALLOCATE( colors_copy(0:col_sz-1), ierr )
+    colors_copy = 0
     ! FIRST LEVEL OF OPTIMIZATION: 
     ! Identify the sub-collectives in which the communication should 
     ! be divided.
     lowest_color(1) = my_rank  ! we want a starting point. This should not 
                                ! change for the lowest ranks in the 
                                ! sub-collectives.
+    call sll_collective_allgather( &
+       col, &
+       lowest_color(1:1), &
+       1, &
+       colors(0:col_sz-1), &
+       1 )
     do
        ! Load the copy
        colors_copy(0:col_sz-1) = colors(0:col_sz-1)
@@ -700,11 +711,26 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
                      ! my_rank
           end if
        end do
-       call sll_collective_allgather( col, lowest_color(1:1), 1, &
-                                      colors(0:col_sz-1), 1 )
+       ! Gather the information from all processes
+       call sll_collective_allgather( &
+            col, &
+            lowest_color(1:1), &
+            1, &
+            colors(0:col_sz-1), &
+            1 )
+       ! Check which is the color of the lowest rank with which this
+       ! process communicates, and reassign the color accordingly.
+       lowest_color(1) = colors(lowest_color(1))
+       call sll_collective_allgather( &
+            col, &
+            lowest_color(1:1), &
+            1, &
+            colors(0:col_sz-1), &
+            1 )
        if(arrays_are_equal(colors, colors_copy, col_sz)) exit
     end do
-    ! The results can now be used as the color for a splitting operation.
+    ! The results can now be used as the color for a collective-splitting 
+    ! operation.
     new_collective => sll_new_collective( col, colors(my_rank), my_rank )
     new_col_sz     = sll_get_collective_size( new_collective )
     ! Allocate the new counters and displacements with the reduced 
@@ -718,14 +744,18 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     ! Compress the 'send' and 'receive' information
     new_i = 0
     my_color = colors(my_rank)
+    new_sdisp = 0
+    new_rdisp = 0
     do i=0,col_sz-1
        if( colors(i) .eq. my_color ) then
           new_send_counts(new_i) = send_counts(i)
-          new_send_displs(new_i) = send_displs(i)
+          new_send_displs(new_i) = new_sdisp
           new_send_boxes(new_i)  = plan%send_boxes(i)
+          new_sdisp              = new_sdisp + send_counts(i)
           new_recv_counts(new_i) = recv_counts(i)
-          new_recv_displs(new_i) = recv_displs(i)
+          new_recv_displs(new_i) = new_rdisp
           new_recv_boxes(new_i)  = plan%recv_boxes(i)
+          new_rdisp              = new_rdisp + recv_counts(i)
           new_i                  = new_i + 1
        end if
     end do
@@ -1083,6 +1113,8 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
     SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
     SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+    ! print *, 'from rank ', my_rank, 'loading parameters: ', sdisp, rdisp, &
+    ! scnts, rcnts
 
     ! Translate the amounts into integers
 #if 1
@@ -1098,10 +1130,11 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     
 #if 0
     write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, scntsi(:)
-    print *, sdispi(:)
-    print *, rcntsi(:)
-    print *, rdispi(:)
+    print *, 'scntsi', scntsi(:)
+    print *, 'sdispi', sdispi(:)
+    print *, 'rcntsi', rcntsi(:)
+    print *, 'rdispi', rdispi(:)
+    call flush()
 #endif
     
     ! load the send buffer
@@ -1112,8 +1145,12 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
           if( loc .ne. sdispi(i) ) then
-             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdispi(i)
+             print *, 'ERROR DETECTED in process: ', my_rank
+             print *, 'apply_remap_3D_double() ERROR: ', &
+                  'discrepancy between displs(i) and the loading index for ',&
+                  'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
+             call flush()
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -1146,11 +1183,12 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
           end do
        end if
     end do
-    
-!    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
-!    print *, sb(0:(size(sb)-1))
+    ! Comment the following when not debugging    
+ !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
+  !  print *, sb(0:(size(sb)-1))
+   ! call flush()
+!    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !    call flush()
- 
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scntsi(0:col_sz-1), &
