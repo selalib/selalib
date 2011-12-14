@@ -1,3 +1,5 @@
+!> \file sll_splines.F90
+!> \namespace sll_splines
 !> \brief  
 !> The splines module provides capabilities for 1D data interpolation with cubic B-splines
 !> and different boundary conditions
