@@ -34,12 +34,14 @@ env = Environment( variables  = vars,
                                  '-ffree-line-length-none'],
                    F90PATH    = SLLPATH+['${HDF5INCPATH}','${HDF5INCPATH}'],
                    LIBPATH    = ['.','${HDF5LIBPATH}'],
-                   LIBS       = SLLLIBS+['hdf5_fortran','hdf5','z'])
+                   LIBS       = SLLLIBS)
 
 Help(vars.GenerateHelpText(env))
 
 
 env.Append(CPPDEFINES=['GFORTRAN', 'DEBUG'])
+
+env.Append(LIBS = ['hdf5_fortran','hdf5','z'])
 
 cppvars = []
 for key, value in ARGLIST:
