@@ -19,7 +19,8 @@ env = Environment( ENV = os.environ,
                    LIBS = ['dfftpack','sll_memory','sll_precision',
                            'sll_assertion','sll_constants', 'sll_mesh_types',
                            'sll_diagnostics','sll_utilities'],
-                   F90FLAGS = ['-g', '-W', '-Wall','-ffree-line-length-none',
+                   F90FLAGS = ['-g', '-W', '-Wall','-std=f2003',
+                               '-ffree-line-length-none',
                                '-fbounds-check'] )
 
 src_files = ['sll_poisson_1D_periodic.F90', 'fft1d.f90', 'unit_test.F90',
