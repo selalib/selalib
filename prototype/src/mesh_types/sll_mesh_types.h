@@ -11,14 +11,15 @@
 ! represent any additional cost if the DEBUG flag is turned off.
 
 ! get macros
-#define GET_FIELD_ETA1_MIN( f )                f%descriptor%eta1_min
-#define GET_FIELD_ETA1_MAX( f )                f%descriptor%eta1_max
+#define GET_FIELD_MESH_DESCRIPTOR( f )     f%descriptor
+#define GET_FIELD_ETA1_MIN( f )            f%descriptor%eta1_min
+#define GET_FIELD_ETA1_MAX( f )            f%descriptor%eta1_max
 #define GET_FIELD_NC_ETA1( f )             f%descriptor%nc_eta1
-#define GET_FIELD_DELTA_ETA1( f )              f%descriptor%delta_eta1
-#define GET_FIELD_ETA2_MIN( f )                f%descriptor%eta2_min
-#define GET_FIELD_ETA2_MAX( f )                f%descriptor%eta2_max
+#define GET_FIELD_DELTA_ETA1( f )          f%descriptor%delta_eta1
+#define GET_FIELD_ETA2_MIN( f )            f%descriptor%eta2_min
+#define GET_FIELD_ETA2_MAX( f )            f%descriptor%eta2_max
 #define GET_FIELD_NC_ETA2( f )             f%descriptor%nc_eta2
-#define GET_FIELD_DELTA_ETA2( f )              f%descriptor%delta_eta2
+#define GET_FIELD_DELTA_ETA2( f )          f%descriptor%delta_eta2
 
 ! There are no SET_FIELD() macros since one is not supposed to set those 
 ! values outside of the initialization.
@@ -50,6 +51,10 @@
 #define GET_MESH_DELTA_R( m )     m%delta_r
 #define GET_MESH_DELTA_THETA( m ) m%delta_theta
 #define GET_MESH_DELTA_Z( m )     m%delta_z
+
+
+#define GET_MESH_NC_ETA1( m )     m%nc_eta1
+#define GET_MESH_NC_ETA2( m )     m%nc_eta2
 
 ! NOTE: if the DEBUG flag is not set, the assertions get expanded into nothing.
 ! For this reason, the semicolon has to be part of the macro expansion. If

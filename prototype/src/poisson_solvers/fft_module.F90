@@ -4,11 +4,14 @@ module fft_module
   type, public :: fftclass
      real, dimension(:), pointer ::  coefc, work, workc
      double precision, dimension(:), pointer :: coefd, workd, coefcd
- !    double complex, dimension(:), pointer :: coefcd
+ !    complex(8), dimension(:), pointer :: coefcd
      integer  :: n  ! number of samples in each sequence
   end type fftclass
-  interface initfft
-     module procedure initdoubfft,  initdoubcfft
+  interface initdfft
+     module procedure initdoubfft
+  end interface
+  interface initcfft
+     module procedure initdoubcfft
   end interface
   interface fft
      module procedure doubfft, doubcfft
@@ -17,9 +20,10 @@ module fft_module
      module procedure doubfftinv,  doubcfftinv
   end interface
 
-  public :: initfft, fft, fftinv
+  public :: initdfft, initcfft, fft, fftinv
   contains
 
+#if defined _SINE
     subroutine initdoubfft(this,f,l)
       type(fftclass) :: this
       double precision, dimension(:,:) :: f
@@ -27,22 +31,36 @@ module fft_module
       this%n = l 
       allocate(this%coefd(2*this%n+15))
       call dffti(this%n,this%coefd)
-#if defined _SINE
       allocate(this%coefd(2*this%n+15))	
       allocate(this%workd(this%n*size(f,2)))
       call vsinqi(this%n,this%coefd)
-#endif
     end subroutine initdoubfft
-
-
     subroutine initdoubcfft(this,f,l)
       type(fftclass) :: this
-      double complex, dimension(:,:) :: f
+      complex(8), dimension(:,:) :: f
       integer :: l 
       this%n = l
       allocate(this%coefcd(4*this%n+15))
       call zffti(this%n,this%coefcd)
     end subroutine initdoubcfft
+#else
+    subroutine initdoubfft(this,l)
+      type(fftclass) :: this
+      integer :: l 
+      this%n = l 
+      allocate(this%coefd(2*this%n+15))
+      call dffti(this%n,this%coefd)
+    end subroutine initdoubfft
+    subroutine initdoubcfft(this,l)
+      type(fftclass) :: this
+      integer :: l 
+      this%n = l
+      allocate(this%coefcd(4*this%n+15))
+      call zffti(this%n,this%coefcd)
+    end subroutine initdoubcfft
+#endif
+
+
 
     subroutine doubfft(this,array)
       type(fftclass) :: this
@@ -84,7 +102,7 @@ module fft_module
       type(fftclass) :: this
       integer, parameter :: sign = -1   ! we choose this for direct transform
       integer :: i, p, inc, lda
-      double complex, dimension(:,:) :: array
+      complex(8), dimension(:,:) :: array
 
       p = size(array,2)   ! number of 1d transforms
       inc = 1             ! all data are samples
@@ -131,7 +149,7 @@ module fft_module
       type(fftclass) :: this
       integer, parameter :: sign = 1   ! we choose this for inverse transform
       integer :: i, p, inc, lda
-      double complex, dimension(:,:) :: array
+      complex(8), dimension(:,:) :: array
 
       p = size(array,2)   ! number of 1d transforms
       inc = 1             ! all data are samples
