@@ -8,6 +8,7 @@ default:
 	(cd diagnostics; scons)
 	(cd non_linear_solvers; scons)
 	(cd splines; scons)
+	(cd fft; scons)
 	(cd collective; scons CPATH='.' LPATH='.')
 	(cd remap; scons)
 	(cd timer; scons)
@@ -17,13 +18,14 @@ default:
 
 
 clean:
+	(cd constants; scons -c)
+	(cd precision; scons -c)	
 	(cd memory; scons -c)
-	(cd precision; scons -c)
 	(cd assert; scons -c)
 	(cd non_linear_solvers; scons -c)
 	(cd splines; scons -c)
-	(cd constants; scons -c)
 	(cd utilities; scons -c)
+	(cd fft; scons -c)
 	(cd diagnostics; scons -c)
 	(cd integration; scons -c)
 	(cd remap; scons -c)
