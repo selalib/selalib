@@ -1,0 +1,15 @@
+{% extends "!layout.html" %}
+
+{% block relbar1 %}
+<link rel="shortcut icon" href="_static/favicon.ico">
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="{{ pathto('index') }}"><img src="{{ pathto("_static/logo2.png", 1) }}" border="0" alt="calvi"/></a>
+<a href="http://www.inria.fr"><img src="{{ pathto("_static/logo_calvi.png", 1) }}" border="0" alt="inria"/></a>
+<a href="http://www.inria.fr"><img src="{{ pathto("_static/inria_logo.jpg", 1) }}" border="0" alt="inria"/></a>
+</div>
+{{ super() }}
+{% endblock %}
+
+{# put the sidebar before the body #}
+{% block sidebar1 %}{{ sidebar() }}{% endblock %}
+{% block sidebar2 %}{% endblock %}
