@@ -14,10 +14,11 @@ env = Environment( F90 = 'mpif90',
                    ENV = os.environ,
                    F90PATH = ['../memory','../precision','../assert','../collective','../utilities'],
                    FORTRANMODDIRPREFIX= '-J', 
-                   LINK = 'mpif90',
+                   LINK = 'mpif90 ',
+                   LINKFLAGS = ['-fopenmp'],
                    LIBPATH= ['.'],
                    LIBS=['sll_memory','sll_precision','sll_collective','sll_assertions','sll_utilities'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', '-ffree-line-length-none'] )
+                   F90FLAGS = ['-fopenmp', '-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', '-ffree-line-length-none'] )
 # -std=f95 I had to delete this because of mpif.h????????
 
 #env.Replace(	
