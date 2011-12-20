@@ -6,36 +6,37 @@ program testPoisson
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
+#include "sll_poisson_solvers.h"
 use numeric_constants
 
+use sll_poisson_2D_periodic
 !use geometry1d_module
 !use sll_poisson_1D_periodic
-use sll_poisson_2D_periodic
 
 implicit none
 
-!PN!type (mesh_descriptor_1D), pointer    :: geomx ! 1D mesh
-!PN!type (poisson1dp)         :: poiss1dp !champ electrique
-!PN!type(field_1D_vec1), pointer :: ex, rho, ex_exact
-!PN!sll_int32   :: iflag, mode, i, ncx 
-!PN!sll_real64  :: xmin, xmax, dx
+!PN!type (mesh_descriptor_1D), pointer :: geomx ! 1D mesh
+!PN!type (poisson1dp)                  :: poisson_1d
+!PN!type (field_1D_vec1), pointer      :: ex, rho1d, ex_exact
+!PN!sll_int32   :: ncx, iflag 
+!PN!sll_real64  :: xmin, xmax
+!PN!sll_real64  :: dx
 
 sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
 sll_int32   :: nc_eta1, nc_eta2
 sll_int32   :: error
 
-type(poisson2dp)                  :: poisson_obj
-type(geometry_2D),        pointer :: geom
-type(mesh_descriptor_2D), pointer :: mesh
-type(field_2D_vec2),      pointer :: exy, exy_exact
-type(field_2D_vec1),      pointer :: rho, phi
-sll_real64                        :: x1, x2
-sll_int32                         :: mode
+type(poisson_2d_periodic), pointer :: poisson
+type(geometry_2D),         pointer :: geom
+type(mesh_descriptor_2D),  pointer :: mesh
+type(field_2D_vec2),       pointer :: exy, exy_exact
+type(field_2D_vec1),       pointer :: rho, phi
+sll_real64                         :: x1, x2
+sll_int32                          :: mode
+sll_int32                          :: i, j
 
-sll_int32                         :: i, j
-
-eta1_min =  .0_f64; eta1_max =  2.0_f64*sll_pi
-eta2_min =  .0_f64; eta2_max =  2.0_f64*sll_pi
+eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
+eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
 
 geom => new_geometry_2D ('cartesian')
 
@@ -51,7 +52,7 @@ phi       => new_field_2D_vec1(mesh)
 exy       => new_field_2D_vec2(mesh)
 exy_exact => new_field_2D_vec2(mesh)
 
-call new(poisson_obj,rho%data,mesh,error)
+poisson   => new_poisson_2d_periodic(mesh)
 
 mode = 2
 do i = 1, nc_eta1+1
@@ -63,17 +64,12 @@ do i = 1, nc_eta1+1
       exy%data(i,j)%v2 = -mode**2*sin(mode*x1)*sin(mode*x2)
    end do
 end do
-
 call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
 call write_vec2d(exy%data%v1, exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy0","mesh",0)
 
-exy_exact%data%v1 = exy%data%v1
-exy_exact%data%v2 = exy%data%v2
+FIELD_DATA(exy_exact) = FIELD_DATA(exy)
 
-exy%data%v1 = 0.0
-exy%data%v2 = 0.0
-
-call solve(poisson_obj,exy%data%v1,exy%data%v2,rho%data,phi%data,error)
+call solve(poisson,exy%data%v1,exy%data%v2,rho%data,phi%data,error)
 
 call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho1","mesh",0)
 call write_vec2d(exy%data%v1, exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","mesh",0)
@@ -81,7 +77,12 @@ call write_vec2d(exy%data%v1, exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","
 write(*,*) " Ex Error = " , maxval(abs(exy_exact%data%v1-exy%data%v1))
 write(*,*) " Ey Error = " , maxval(abs(exy_exact%data%v2-exy%data%v2))
 
-call free(poisson_obj)
+call delete(poisson)
+
+call delete_field_2D_vec1( rho )
+call delete_field_2D_vec1( phi )
+call delete_field_2D_vec2( exy )
+call delete_field_2D_vec2( exy_exact )
 
 !PN!
 !PN!!Solveur de Poisson1D, commente car ne parche pas
@@ -91,17 +92,15 @@ call free(poisson_obj)
 !PN!xmin = 0.0; xmax = 2*sll_pi;
 !PN!ncx = 128
 !PN!
-!PN!geomx    => new_mesh_descriptor_1D( xmin, xmax, ncx )
-!PN!rho      => new_field_1D_vec1( geomx )
+!PN!geomx    => new_mesh_descriptor_1D( xmin, xmax, ncx, PERIODIC )
+!PN!rho1d    => new_field_1D_vec1( geomx )
 !PN!ex       => new_field_1D_vec1( geomx )
 !PN!ex_exact => new_field_1D_vec1( geomx )
 !PN!
-!PN!! intialize Poisson solver
-!PN!call new(poiss1dp,ncx,iflag) 
+!PN!call new(poisson_1d,ncx,iflag) 
 !PN!
-!PN!! set rho
 !PN!mode = 7
-!PN!dx = GET_FIELD_DELTA_X1( rho )
+!PN!dx = geomx%delta_eta1
 !PN!do i=1,ncx+1
 !PN!   FIELD_1D_AT_I(rho,i) =  mode**2*sin(mode*(i-1)*dx)
 !PN!   FIELD_1D_AT_I(ex_exact,i) = -mode*cos(mode*(i-1)*dx)
