@@ -8,7 +8,7 @@ program remap_test
   
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.
-  integer, dimension(:,:,:), allocatable :: local_array1, local_array2, arrays_diff
+  integer, dimension(:,:,:), allocatable    :: local_array1, local_array2, arrays_diff
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
   integer , parameter                       :: ni = 512
@@ -36,10 +36,10 @@ program remap_test
   type(remap_plan_3D_t), pointer            :: rmp3
 
   sll_real64                                :: rand_real
-  integer, parameter                        :: nbtest = 100
+  integer, parameter                        :: nbtest = 1
   integer                                   :: i_test
   integer                                   :: i, j, k
-  sll_int32, dimension(1:3)                 :: global_index, g
+  sll_int32, dimension(3)                   :: global_indices, g
   sll_real32   , dimension(1)               :: prod4test
   integer                                   :: ok
 
@@ -98,10 +98,10 @@ program remap_test
      do k=1,loc_sz_k_init
         do j=1,loc_sz_j_init 
            do i=1,loc_sz_i_init
-              global_index =  local_to_global_3D( layout1, (/i, j, k/) )
-              gi = global_index(1)
-              gj = global_index(2)
-              gk = global_index(3)
+              global_indices =  local_to_global_3D( layout1, (/i, j, k/) )
+              gi = global_indices(1)
+              gj = global_indices(2)
+              gk = global_indices(3)
               local_array1(i,j,k) = gi + (gj-1)*ni + (gk-1)*ni*nj
            enddo
         enddo
@@ -123,6 +123,8 @@ program remap_test
           npj, &
           npk, &
           layout2 )
+
+     call reorganize_randomly(layout2)
      
      call compute_local_sizes( &
           layout2, &
@@ -142,10 +144,10 @@ program remap_test
      do k=1,loc_sz_k_final
         do j=1,loc_sz_j_final 
            do i=1,loc_sz_i_final
-              global_index =  local_to_global_3D( layout2, (/i, j, k/) )
-              gi = global_index(1)
-              gj = global_index(2)
-              gk = global_index(3)
+              global_indices =  local_to_global_3D( layout2, (/i, j, k/) )
+              gi = global_indices(1)
+              gj = global_indices(2)
+              gk = global_indices(3)
               arrays_diff(i,j,k) = local_array2(i,j,k) - &
                    (gi + (gj-1)*ni + (gk-1)*ni*nj)
               if (arrays_diff(i,j,k)/=0) then
@@ -207,8 +209,6 @@ program remap_test
   if (myrank==0) then
      if (prod4test(1)==1.) then
         print*, 'TEST PASSED'
-     else
-        print*, 'TEST FAILED'
      endif
   endif
   
@@ -221,6 +221,57 @@ program remap_test
 #endif
   
 contains
+
+  subroutine reorganize_randomly(layout_3D)
+    implicit none
+    type(layout_3D_t), pointer :: layout_3D
+    integer                    :: i, colsz, proc_n, proc_p
+    real                       :: rand_real
+    colsz = sll_get_num_nodes(layout_3D)
+    do i=1, colsz
+       call random_number(rand_real)
+       proc_n = int(rand_real*(colsz-1))
+       call random_number(rand_real)
+       proc_p = int(rand_real*(colsz-1))
+       call swap_box_3D(proc_n, proc_p, layout_3D)
+    enddo    
+  end subroutine reorganize_randomly
+
+  subroutine swap_box_3D(proc_n, proc_p, layout_3D)
+    implicit none
+    integer                    :: proc_n, proc_p
+    type(layout_3D_t), pointer :: layout_3D
+    integer                    :: i_min_n, i_max_n, j_min_n, j_max_n, &
+    k_min_n, k_max_n, i_min_p, i_max_p, j_min_p, j_max_p, k_min_p, k_max_p    
+    ! Get proc_n contents from layout_3D
+    i_min_n = get_layout_3D_i_min( layout_3D, proc_n )
+    i_max_n = get_layout_3D_i_max( layout_3D, proc_n )
+    j_min_n = get_layout_3D_j_min( layout_3D, proc_n )
+    j_max_n = get_layout_3D_j_max( layout_3D, proc_n )
+    k_min_n = get_layout_3D_k_min( layout_3D, proc_n )
+    k_max_n = get_layout_3D_k_max( layout_3D, proc_n )
+    ! Get proc_p contents from layout_3D
+    i_min_p = get_layout_3D_i_min( layout_3D, proc_p )
+    i_max_p = get_layout_3D_i_max( layout_3D, proc_p )
+    j_min_p = get_layout_3D_j_min( layout_3D, proc_p )
+    j_max_p = get_layout_3D_j_max( layout_3D, proc_p )
+    k_min_p = get_layout_3D_k_min( layout_3D, proc_p )
+    k_max_p = get_layout_3D_k_max( layout_3D, proc_p )
+    ! Set proc_n contents in layout_3D
+    call set_layout_3D_i_min( layout_3D, proc_n, i_min_p )
+    call set_layout_3D_i_max( layout_3D, proc_n, i_max_p)
+    call set_layout_3D_j_min( layout_3D, proc_n, j_min_p )
+    call set_layout_3D_j_max( layout_3D, proc_n, j_max_p )
+    call set_layout_3D_k_min( layout_3D, proc_n, k_min_p )
+    call set_layout_3D_k_max( layout_3D, proc_n, k_max_p )
+    ! Set proc_p contents in layout_3D
+    call set_layout_3D_i_min( layout_3D, proc_p, i_min_n )
+    call set_layout_3D_i_max( layout_3D, proc_p, i_max_n )
+    call set_layout_3D_j_min( layout_3D, proc_p, j_min_n )
+    call set_layout_3D_j_max( layout_3D, proc_p, j_max_n )
+    call set_layout_3D_k_min( layout_3D, proc_p, k_min_n )
+    call set_layout_3D_k_max( layout_3D, proc_p, k_max_n )   
+  end subroutine swap_box_3D
   
   function theoretical_global_3D_indices(d, ni, nj)
     integer, dimension(1:3) :: theoretical_global_3D_indices
