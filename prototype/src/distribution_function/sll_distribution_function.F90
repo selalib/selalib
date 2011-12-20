@@ -1,3 +1,36 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+!
+! MODULE: sll_distribution_function
+!
+!> @author
+!> - Eric
+!> - Michel
+!> - Pierre
+!>
+!
+! DESCRIPTION: 
+!
+!> @brief
+!> Implements the distribution function types
+!>
+!>@details
+!>
+!> This module depends on:
+!>    - memory
+!>    - precision
+!>    - assert
+!>    - utilities
+!>    - constants
+!>    - diagnostics
+!>    - splines
+!>    - mesh_types
+!
+! REVISION HISTORY:
+! DD Mmm YYYY - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
 module distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -7,14 +40,26 @@ module distribution_function
   use sll_misc_utils   ! for int2string
   implicit none
   
-  type sll_distribution_function_2D_t
-     type(field_2D_vec1), pointer :: field
-     sll_real64      :: pcharge, pmass
-     sll_real64      :: average
-     sll_int32       :: plot_counter
-     sll_int32       :: center
-     character(32)   :: name
-  end type sll_distribution_function_2D_t
+#define NEW_TYPE_FOR_DF(sll_distribution_function_nD_t, field_nD_vec1) \
+  type sll_distribution_function_nD_t;                            \
+     type(field_nD_vec1), pointer :: field;                       \
+     sll_real64      :: pmass;                                    \
+     sll_real64      :: pcharge;                                  \
+     sll_real64      :: average;                                  \
+     sll_int32       :: plot_counter;                             \
+     sll_int32       :: center;                                   \
+     character(32)   :: name;                                     \
+  end type sll_distribution_function_nD_t
+
+NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, field_2D_vec1)
+NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, field_4D_vec1)
+
+  interface write_distribution_function
+     module procedure write_distribution_function_2D, &
+                      write_distribution_function_4D
+  end interface
+
+#undef NEW_TYPE_FOR_DF
 
   enum, bind(C)
      enumerator :: LANDAU = 0, TWO_STREAM = 1, GAUSSIAN = 2
@@ -23,8 +68,9 @@ module distribution_function
      enumerator :: NODE_CENTERED_DF = 0, CELL_CENTERED_DF = 1
   end enum
 
+
 contains
-  ! intializes some 2D distribution_functions
+
   function sll_new_distribution_function_2D( mesh_descriptor, center, name ) 
     type(sll_distribution_function_2D_t), pointer :: &
          sll_new_distribution_function_2D
@@ -43,6 +89,32 @@ contains
     sll_new_distribution_function_2D%center = center
     sll_new_distribution_function_2D%name = name
   end function sll_new_distribution_function_2D
+
+  function sll_new_distribution_function_4D( mesh_descriptor_x,  &
+                                             mesh_descriptor_v,  &
+                                             center, name ) 
+
+    type(sll_distribution_function_4D_t), pointer :: &
+         sll_new_distribution_function_4D
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_x
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_v
+    sll_int32, intent(in)             :: center
+    character(len=*), intent(in)      :: name
+    sll_int32                         :: ierr
+    !
+    SLL_ASSERT(associated(mesh_descriptor_x))
+    SLL_ASSERT(associated(mesh_descriptor_v))
+    SLL_ALLOCATE(sll_new_distribution_function_4D, ierr)
+    sll_new_distribution_function_4D%field => &
+         new_field_4D_vec1( mesh_descriptor_x, mesh_descriptor_v )
+    sll_new_distribution_function_4D%pcharge = 1.0_f64
+    sll_new_distribution_function_4D%pmass = 1.0_f64
+    sll_new_distribution_function_4D%plot_counter = 0
+    sll_new_distribution_function_4D%center = center
+    sll_new_distribution_function_4D%name = name
+
+  end function sll_new_distribution_function_4D
+
 
   subroutine sll_delete_distribution_function( f )
     type(sll_distribution_function_2D_t), pointer      :: f
@@ -240,6 +312,57 @@ contains
     end select
   end subroutine sll_init_distribution_function_2D
   
+  subroutine sll_init_distribution_function_4D( dist_func_4D, test_case)
+
+    type(sll_distribution_function_4D_t), pointer :: dist_func_4D
+    sll_int32  :: test_case
+
+    sll_int32 :: nnode_x1, nnode_x2, nnode_v1, nnode_v2
+    sll_real64 :: delta_x1, delta_x2,  x1_min, x2_min
+    sll_real64 :: delta_v1, delta_v2,  v1_min, v2_min
+    sll_real64 :: x1, v1, x2, v2, eps, kx, ky, xi, vsq
+    sll_int32  :: ix, jx, iv, jv
+    
+    x1_min =   dist_func_4D%field%descriptor_x%eta1_min
+    nnode_x1 = dist_func_4D%field%descriptor_x%nc_eta1+1
+    delta_x1 = dist_func_4D%field%descriptor_x%delta_eta1
+
+    x2_min =   dist_func_4D%field%descriptor_x%eta2_min
+    nnode_x2 = dist_func_4D%field%descriptor_x%nc_eta2+1
+    delta_x2 = dist_func_4D%field%descriptor_x%delta_eta2
+
+    v1_min =   dist_func_4D%field%descriptor_v%eta1_min
+    nnode_v1 = dist_func_4D%field%descriptor_v%nc_eta1+1
+    delta_v1 = dist_func_4D%field%descriptor_v%delta_eta1
+
+    v2_min =   dist_func_4D%field%descriptor_v%eta2_min
+    nnode_v2 = dist_func_4D%field%descriptor_v%nc_eta2+1
+    delta_v2 = dist_func_4D%field%descriptor_v%delta_eta2
+
+    select case (test_case)
+    case (LANDAU)
+       xi  = 0.9
+       eps = 0.05
+       kx  = 2.0_f64*sll_pi/(nnode_x1*nnode_x2)
+       ky  = 2.0_f64*sll_pi/(nnode_v1*nnode_v2)
+       do jv=1, nnode_v2
+          v2 = v2_min+(jv-1)*delta_v2
+          do iv=1, nnode_v1
+             v1 = v1_min+(iv-1)*delta_v1
+             vsq = v1*v1+v2*v2
+             do jx=1, nnode_x2
+                x2=x2_min+(jx-1)*delta_x2
+                do ix=1, nnode_x1
+                   x1=x1_min+(ix-1)*delta_x1
+                   dist_func_4D%field%data(ix,jx,iv,jv)= &
+                      (1+eps*cos(kx*x1))*1/(2.*sll_pi)*exp(-.5*vsq)
+                end do
+             end do
+          end do
+       end do
+    end select
+  end subroutine sll_init_distribution_function_4D
+
     ! compute integral of f with respect to x2 (-> rho)
     ! using a trapezoidal rule on a uniform grid of physical space
   subroutine compute_rho(dist_func_2D,rho,npoints)
@@ -325,7 +448,7 @@ contains
 
   end subroutine compute_rho
 
-  subroutine write_distribution_function ( f )
+  subroutine write_distribution_function_2D ( f )
     type(sll_distribution_function_2D_t), pointer      :: f
     character(len=4) :: counter
     character(64) :: name
@@ -334,8 +457,46 @@ contains
     name = trim(f%name)//counter
     call write_field_2d_vec1 ( f%field, name, jacobian, f%average, f%center )
     f%plot_counter = f%plot_counter + 1
-  end subroutine write_distribution_function
+  end subroutine write_distribution_function_2D
 
 
+  subroutine write_distribution_function_4D ( f )
+    type(sll_distribution_function_4D_t), pointer      :: f
+    character(len=4) :: counter
+    character(64) :: name
+    type(mesh_descriptor_2D), pointer :: mesh_x
+    type(mesh_descriptor_2D), pointer :: mesh_v
+    sll_int32  :: nnode_x1, nnode_x2
+    sll_int32  :: nnode_v1, nnode_v2
+    sll_real64, dimension(:,:), pointer :: val
+    sll_int32  :: error
+    sll_int32  :: ix
+    sll_int32  :: jx
+
+    call int2string(f%plot_counter,counter)
+    name = trim(f%name)//counter
+
+    mesh_x => f%field%descriptor_x
+    mesh_v => f%field%descriptor_v
+
+    SLL_ASSERT(associated(mesh_x))
+    SLL_ASSERT(associated(mesh_v))
+
+    nnode_x1 = mesh_x%nc_eta1 + 1
+    nnode_x2 = mesh_x%nc_eta2 + 1
+    nnode_v1 = mesh_v%nc_eta1 + 1
+    nnode_v2 = mesh_v%nc_eta2 + 1
+
+    SLL_ALLOCATE(val(nnode_x1,nnode_x2), error)
+    do ix = 1, nnode_x1
+       do jx = 1, nnode_x2
+          val(ix,jx) = sum(f%field%data(ix,jx,:,:))
+       end do
+    end do
+
+    call write_vec1d(val,nnode_x1,nnode_x2,name,"mesh_x",f%center)
+    
+    f%plot_counter = f%plot_counter + 1
+  end subroutine write_distribution_function_4D
 
 end module distribution_function

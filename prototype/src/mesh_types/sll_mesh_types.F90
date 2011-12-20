@@ -1,3 +1,33 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+!
+! MODULE: sll_diagnostics
+!
+!> @author
+!> - Edwin
+!> - Pierre
+!>
+!
+! DESCRIPTION: 
+!
+!> @brief
+!> Implements the geometry and mesh descriptor types
+!>
+!>@details
+!>
+!> This module depends on:
+!>    - memory
+!>    - precision
+!>    - assert
+!>    - utilities
+!>    - constants
+!>    - diagnostics
+!
+! REVISION HISTORY:
+! DD Mmm YYYY - Initial Version
+! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+!------------------------------------------------------------------------------
 module sll_mesh_types
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -110,6 +140,14 @@ module sll_mesh_types
      type(mesh_descriptor_2D), pointer :: descriptor
      type(vec2), dimension(:,:), pointer :: data
   end type field_2D_vec2
+
+  !This type is defined only in splitted meshes case
+  type field_4D_vec1
+     !type(mesh_descriptor_4D), pointer :: descriptor
+     type(mesh_descriptor_2D), pointer :: descriptor_x
+     type(mesh_descriptor_2D), pointer :: descriptor_v
+     sll_real64, dimension(:,:,:,:), pointer :: data
+  end type field_4D_vec1
 
   type mesh_cylindrical_3D
      sll_real64 :: rmin
@@ -272,6 +310,32 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(f2Dv1, ierr)
   end subroutine delete_field_2D_vec1
 
+  function new_field_4D_vec1( mesh_descriptor_x, mesh_descriptor_v )
+    type(field_4D_vec1), pointer      :: new_field_4D_vec1
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_x
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_v
+    sll_int32                         :: ierr
+    SLL_ASSERT(associated(mesh_descriptor_x))
+    SLL_ASSERT(associated(mesh_descriptor_v))
+    SLL_ALLOCATE(new_field_4D_vec1, ierr)
+    new_field_4D_vec1%descriptor_x => mesh_descriptor_x
+    new_field_4D_vec1%descriptor_v => mesh_descriptor_v
+    SLL_ALLOCATE(new_field_4D_vec1%data(mesh_descriptor_x%nc_eta1+1, mesh_descriptor_x%nc_eta2+1,mesh_descriptor_v%nc_eta1+1, mesh_descriptor_v%nc_eta2+1),ierr)
+  end function new_field_4D_vec1
+
+  subroutine delete_field_4D_vec1( f4Dv1 )
+    type(field_4D_vec1), pointer :: f4Dv1
+    sll_int32                    :: ierr
+    if( .not. (associated(f4Dv1))) then
+       write (*,'(a)') 'ERROR: delete_field_4D_vec1(), not associated argument.'
+       STOP
+    end if
+    nullify(f4Dv1%descriptor_x)
+    nullify(f4Dv1%descriptor_v)
+    SLL_DEALLOCATE(f4Dv1%data, ierr)
+    SLL_DEALLOCATE(f4Dv1, ierr)
+  end subroutine delete_field_4D_vec1
+
   function new_field_2D_vec2( mesh_descriptor )
     type(field_2D_vec2), pointer      :: new_field_2D_vec2
     type(mesh_descriptor_2D), pointer :: mesh_descriptor
@@ -346,8 +410,9 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE( mesh, ierr )
   end subroutine delete_mesh_cylindrical_3D
 
-  subroutine write_mesh_2D (mesh)
+  subroutine write_mesh_2D(mesh,mesh_name)
     type(mesh_descriptor_2D), pointer :: mesh
+    character(len=*), intent(in), optional :: mesh_name
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
     sll_int32  :: i1
@@ -355,6 +420,7 @@ contains   ! *****************************************************************
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_int32 :: ierr
+
 
     ! create 2D mesh
     SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
@@ -369,7 +435,11 @@ contains   ! *****************************************************************
        end do
        eta1 = eta1 + mesh%delta_eta1
     end do
-    call write_mesh(x1mesh, x2mesh, mesh%nc_eta1+1, mesh%nc_eta2+1, "mesh")
+    if (present(mesh_name)) then
+       call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,trim(mesh_name))
+    else
+       call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,"mesh")
+    end if
   end subroutine write_mesh_2D
 
   subroutine write_field_2D_vec1( f2Dv1, name, jacobian, average, center )
