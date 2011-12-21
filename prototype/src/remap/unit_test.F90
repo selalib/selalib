@@ -8,7 +8,9 @@ program remap_test
   
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.
-  integer, dimension(:,:,:), allocatable    :: local_array1, local_array2, arrays_diff
+  integer, dimension(:,:,:), allocatable    :: local_array1
+  integer, dimension(:,:,:), allocatable    :: local_array2
+  integer, dimension(:,:,:), allocatable    :: arrays_diff
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
   integer , parameter                       :: ni = 512
@@ -36,7 +38,7 @@ program remap_test
   type(remap_plan_3D_t), pointer            :: rmp3
 
   sll_real64                                :: rand_real
-  integer, parameter                        :: nbtest = 1
+  integer, parameter                        :: nbtest = 25
   integer                                   :: i_test
   integer                                   :: i, j, k
   sll_int32, dimension(3)                   :: global_indices, g
@@ -66,6 +68,7 @@ program remap_test
 
   ok = 1
   do, i_test=1, nbtest
+     call flush()
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -139,7 +142,14 @@ program remap_test
      call apply_remap_3D( rmp3, local_array1, local_array2 ) 
 
      SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final),ierr ) 
-
+#if 0
+     if( myrank .eq. 0 ) then
+        print *, i_test, myrank, 'Printing layout1: '
+        call sll_view_lims_3D( layout1 )
+        print *, i_test, myrank, 'Printing layout2: '
+        call sll_view_lims_3D( layout2 )
+     end if
+#endif
      ! compare results with expected data
      do k=1,loc_sz_k_final
         do j=1,loc_sz_j_final 
@@ -153,17 +163,19 @@ program remap_test
               if (arrays_diff(i,j,k)/=0) then
                  ok = 0
                  print*, i_test, myrank, '"remap" unit test: FAIL'
-                 print *, 'local indices: ', '(', i, j, k, ')'
-                 print*, 'in global indices: (',gi, ',', gj, ',', gk, ')'
-                 print*, 'local array1(',gi, ',', gj, ',', gk, ')=', &
+                 print *, i_test, myrank, 'local indices: ', '(', i, j, k, ')'
+                 print *, 'global indices wrt target layout'
+                 print*, myrank, 'in global indices: (',gi,',', gj,',', gk,')'
+
+                 print*, myrank, 'local array1(',gi, ',', gj, ',', gk, ')=', &
                       local_array1(i,j,k)  
-                 print*, 'local array2(',gi, ',', gj, ',', gk, ')=', &
+                 print*, myrank, 'local array2(',gi, ',', gj, ',', gk, ')=', &
                       local_array2(i,j,k)
                  g = theoretical_global_3D_indices(local_array2(i,j,k), ni, nj)
                  print*, 'Theoretical indices: (',g(1), ',', g(2),',',g(3), ')'
-                 if(myrank .eq. 1) then
+            !     if(myrank .eq. 1) then
                     print *, local_array2(:,:,:)
-                 end if
+             !    end if
 
                  print *, i_test, myrank, 'Printing layout1: '
                  call sll_view_lims_3D( layout1 )
@@ -173,6 +185,7 @@ program remap_test
                  print*, 'program stopped'
                  stop
               end if
+              call flush()
            end do
         end do
      end do
@@ -228,7 +241,7 @@ contains
     integer                    :: i, colsz, proc_n, proc_p
     real                       :: rand_real
     colsz = sll_get_num_nodes(layout_3D)
-    do i=1, colsz
+    do i=0, colsz-1
        call random_number(rand_real)
        proc_n = int(rand_real*(colsz-1))
        call random_number(rand_real)
