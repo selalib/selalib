@@ -741,7 +741,7 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
 #endif
        if(arrays_are_equal(colors, colors_copy, col_sz)) exit
     end do
-#if 1
+#if 0
     if(my_rank .eq. 0) then
        print *, 'final colors array: ', colors(:) ! delete this
     end if
