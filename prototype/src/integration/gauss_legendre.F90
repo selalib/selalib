@@ -4,19 +4,15 @@
 !
 ! MODULE: gauss_legendre_integration
 !
-!> @author
-!> Module Author Name and Affiliation
-!
-! DESCRIPTION: 
-!> This is a low-level mathematical utility that applies the Gauss-Legendre method to compute numeric integrals.
-!>
-!> This module aims at providing a single interface to the process of integrating a function on a given interval.
+! DESCRIPTION:
+!> @author Module Author Name and Affiliation
+!> @brief This is a low-level mathematical utility that applies the Gauss-Legendre method to compute numeric integrals.
+!> @details This module aims at providing a single interface to the process of integrating a function on a given interval.
 !
 ! REVISION HISTORY:
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-
 module gauss_legendre_integration
 #include "sll_working_precision.h"
   use sll_splines
@@ -140,11 +136,9 @@ contains
        print *, 'degree of integration not implemented. Exiting...';\
        stop;
 
-  !---------------------------------------------------------------------------  
-  !> @author
-  !> Routine Author Name and Affiliation.
-  !
+  !---------------------------------------------------------------------------!
   ! DESCRIPTION: 
+  !> @author Routine Author Name and Affiliation.
   !> @brief Gauss-Legendre Quadrature.
   !> @details To integrate the function f(x) (real-valued and of a single, real-valued argument x)
   !> over the interval [a,b], we use the Gauss-Legendre formula 
@@ -166,7 +160,6 @@ contains
   !> @param[in] n the desired number of Gauss points
   !> @return The value of the integral
   !---------------------------------------------------------------------------
-
   function gauss_legendre_integral_1D( f, a, b, n )
     intrinsic                       :: sqrt
     sll_real64                      :: gauss_legendre_integral_1D

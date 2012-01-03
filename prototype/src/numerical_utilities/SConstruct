@@ -14,9 +14,9 @@ env = Environment( ENV = os.environ,
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.'],
                    LIBS=['sll_memory','sll_precision'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-Werror', '-std=f95', 
+                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f95', 
                                '-DDEBUG','-ffree-line-length-none'])
-
+                   #I've deleted the '-Werror' flag. De Santis S.
 #env.Replace(	
 #		F90FLAGS = OPT+' -fpp',
 #		FORTRANMODDIR = ZZZZZZ
@@ -25,6 +25,7 @@ env = Environment( ENV = os.environ,
 env.Library('sll_memory',    ["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Program('unit_test',     ["unit_test.F90", "tridiagonal.F90"])
+env.Program('example',     ["example.F90", "tridiagonal.F90"])
 
 
 

@@ -12,8 +12,8 @@ program newton_raphson_tester
   sll_int32  :: ok
   sll_int32  :: nb_cores 
   
-  nb_cores = 16! OMP_GET_NUM_PROCS ()
-  n_test = 10
+  nb_cores = 16!OMP_GET_NUM_PROCS ()
+  n_test = 1
   nb_functions = 7
   ok = 1 
   y = 0.d0
@@ -71,6 +71,7 @@ subroutine test_process(y, nb_functions, tolx, tolf, ok)
          print*, 'x =', x, 'f =', f(x)
          stop
       endif
+print*, 'x=',x
    enddo
    
  end subroutine test_process
