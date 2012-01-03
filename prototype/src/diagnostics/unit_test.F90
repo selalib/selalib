@@ -24,7 +24,6 @@ sll_int32 :: error
 
 #ifdef NOHDF5
 sll_int32 :: file_id
-sll_int32 :: data_dims(2)
 #else
 integer(hid_t)   :: file_id
 integer(hsize_t) :: data_dims(2)
@@ -87,25 +86,21 @@ call sll_binary_write_array_2d(file_id,v,error)
 call sll_binary_file_close(file_id,error)
 
 call sll_xmf_file_create("test.xmf",file_id,error)
-write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(file_id,"(a,2i4,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",nv,nx,"'/>"
-write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
-write(file_id,"(a,2i4,a)")"<DataItem Dimensions='",nv,nx,&
-                     "' NumberType='Float' Precision='8' Format='Binary'>"
-write(file_id,"(a)")"test-x.bin"
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a,2i4,a)")"<DataItem Dimensions='",nv,nx,&
-                     "' NumberType='Float' Precision='8' Format='Binary'>"
-write(file_id,"(a)")"test-v.bin"
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a)")"</Geometry>"
-write(file_id,"(a)")"<Attribute Name='NodesValues' AttributeType='Scalar' Center='Node'>"
-write(file_id,"(a,2i4,a)")"<DataItem Dimensions='",nv,nx,&
-                     "' NumberType='Float' Precision='8' Format='Binary'>"
-write(file_id,"(a)")"test-f.bin"
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a)")"</Attribute>"
-write(file_id,"(a)")"</Grid>"
+write(file_id,"(a)"      ) "<Grid Name='mesh' GridType='Uniform'>"
+write(file_id,"(a,2i5,a)") "<Topology TopologyType='2DSMesh' NumberOfElements='",nv,nx,"'/>"
+write(file_id,"(a)"      ) "<Geometry GeometryType='X_Y'>"
+write(file_id,"(a,2i5,a)") "<DataItem Dimensions='",nv,nx,"' NumberType='Float' Precision='8' Format='Binary'>"
+write(file_id,"(a)"      ) "test-x.bin"
+write(file_id,"(a)"      ) "</DataItem>"
+write(file_id,"(a,2i5,a)") "<DataItem Dimensions='",nv,nx,"' NumberType='Float' Precision='8' Format='Binary'>"
+write(file_id,"(a)"      ) "test-v.bin"
+write(file_id,"(a)"      ) "</DataItem>"
+write(file_id,"(a)"      ) "</Geometry>"
+write(file_id,"(a)"      ) "<Attribute Name='NodesValues' AttributeType='Scalar' Center='Node'>"
+write(file_id,"(a,2i5,a)") "<DataItem Dimensions='",nv,nx,"' NumberType='Float' Precision='8' Format='Binary'>"
+write(file_id,"(a)"      ) "test-f.bin"
+write(file_id,"(a)"      ) "</DataItem>"
+write(file_id,"(a)"      ) "</Attribute>"
 call sll_xmf_file_close(file_id,error)
 
 #else
@@ -136,7 +131,6 @@ write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",data_dims(2),data_dims(1) &
 write(file_id,"(a)")"test.h5:"//coord_names(2)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
-write(file_id,"(a)")"</Grid>"
 call sll_xmf_file_close(file_id,error)
 
 #endif
@@ -165,7 +159,6 @@ write(file_id,*)(f(i,j),j=1,nv)
 end do
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
-write(file_id,"(a)")"</Grid>"
 call sll_xmf_file_close(file_id,error)
 
 end program diagnostics_tester

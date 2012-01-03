@@ -5,7 +5,7 @@ module sll_poisson_1D_periodic
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
   use numeric_constants
-  use geometry1d_module
+ !PN use geometry1d_module
   use fft1d_module
 
   implicit none
@@ -27,6 +27,7 @@ module sll_poisson_1D_periodic
   end interface
 
 contains
+
   subroutine new_poisson1dp(this,ncx,iflag)
     type(poisson1dp),intent(out)             :: this
     sll_int32,intent(in)                     :: ncx
@@ -54,7 +55,7 @@ contains
     ! Check that ex and rho are both associated to the same mesh with the right number of cells 
     ! that has been initialized in new_poisson1dp
     SLL_ASSERT(associated(ex%descriptor,target=rho%descriptor))
-    SLL_ASSERT( GET_FIELD_NCELLS_X1( rho ) == this%ncx )
+    !PN SLL_ASSERT( GET_FIELD_NCELLS_X1( rho ) == this%ncx )
 
     ! copy rho into auxiliary array for fftpack
     this%rho(1:this%ncx+1) = FIELD_DATA(rho) 
@@ -63,7 +64,7 @@ contains
     call fft(this%fftx, this%rho)
 
     ! Calcul de la transformee de Fourier de E a partir de celle de rho
-    mesh_length = GET_FIELD_NCELLS_X1( rho ) * GET_FIELD_DELTA_X1( rho )
+    !PN mesh_length = GET_FIELD_NCELLS_X1( rho ) * GET_FIELD_DELTA_X1( rho )
     kx0=2*sll_pi/(mesh_length)
     nxh1 = (this%ncx-2)/2 
 
@@ -82,7 +83,7 @@ contains
     end do
 
     this%ex(this%ncx)= 0.          ! because Im(rho_n/2)=0
-    this%rho(this%ncx) = ((GET_FIELD_DELTA_X1( rho )/sll_pi)**2)*GET_FIELD_NCELLS_X1( rho )
+    !PN this%rho(this%ncx) = ((GET_FIELD_DELTA_X1( rho )/sll_pi)**2)*GET_FIELD_NCELLS_X1( rho )
 
  
     ! Faire une FFT inverse  dans la direction x de E
