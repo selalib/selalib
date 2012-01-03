@@ -1,236 +1,377 @@
 program remap_test
+  use sll_collective
+#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
- use sll_collective
-#include "sll_remap.h"
-
   implicit none
-
-  ! THIS IS A VERY BASIC TEST AND SOMETHING TRULY SUPERIOR AND ROBUST NEEDS
-  ! TO BE DONE BEFORE THE REMAPPER IS DEPLOYED.
-
-
+  
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.
-  integer, dimension(:,:,:), allocatable :: a3
-  integer, dimension(:,:,:), allocatable :: b3
-  sll_real64, dimension(:,:,:), allocatable :: ad3
-  sll_real64, dimension(:,:,:), allocatable :: bd3
-  ! Take a 3D array of dimensions 8X8X1
-  integer, parameter                 :: total_sz_i = 8
-  integer, parameter                 :: total_sz_j = 8
-  integer, parameter                 :: total_sz_k = 1
+  integer, dimension(:,:,:), allocatable :: local_array1, local_array2, arrays_diff
+  ! Take a 3D array of dimensions ni*nj*nk
+  ! ni, nj, nk: global sizes
+  integer , parameter                       :: ni = 512
+  integer , parameter                       :: nj = 512
+  integer , parameter                       :: nk = 256
+  ! Local sizes
+  integer                                   :: loc_sz_i_init
+  integer                                   :: loc_sz_j_init
+  integer                                   :: loc_sz_k_init
+  integer                                   :: loc_sz_i_final
+  integer                                   :: loc_sz_j_final
+  integer                                   :: loc_sz_k_final
+
   ! the process mesh
-  integer, parameter                 :: pi = 4
-  integer, parameter                 :: pj = 4
-  integer, parameter                 :: pk = 1
-
-  ! Split it in  16 processes, each with a local chunk 2X2X1
-  integer                            :: local_sz_i 
-  integer                            :: local_sz_j 
-  integer                            :: local_sz_k 
-  integer                            :: ierr
-  integer                            :: myrank
-  integer                            :: colsz        ! collective size
-  integer                            :: i,j,k
-  integer                            :: i_min, i_max
-  integer                            :: j_min, j_max
-  integer                            :: k_min, k_max
-  integer                            :: node
-  integer, dimension(1:3)            :: gcoords
+  integer                                   :: npi
+  integer                                   :: npj
+  integer                                   :: npk
+  sll_int32                                 :: gi, gj, gk
+  integer                                   :: ierr
+  integer                                   :: myrank
+  sll_int64                                 :: colsz        ! collective size
   ! Remap stuff
-  type(layout_3D_t), pointer         :: conf3_init
-  type(layout_3D_t), pointer         :: conf3_final
-  type(layout_3D_t), pointer         :: random_layout1
+  type(layout_3D_t), pointer                :: layout1
+  type(layout_3D_t), pointer                :: layout2
+  type(remap_plan_3D_t), pointer            :: rmp3
 
-  type(remap_plan_3D_t), pointer     :: rmp3
+  sll_real64                                :: rand_real
+  integer, parameter                        :: nbtest = 100
+  integer                                   :: i_test
+  integer                                   :: i, j, k
+  sll_int32, dimension(1:3)                 :: global_index, g
+  sll_real32   , dimension(1)               :: prod4test
+  integer                                   :: ok
 
-!  integer, dimension(:), pointer :: limits
 
-  print *, ' '
-  print *, '--------------- REMAP test ---------------------'
-  print *, ' '
-
-  call flush()
+  ! Boot parallel environment
   call sll_boot_collective()
-!  SLL_ALLOCATE( a(local_sz), ierr )
+!  end_result = .true.
+  colsz  = sll_get_collective_size(sll_world_collective)
+  myrank = sll_get_collective_rank(sll_world_collective)
 
-  local_sz_i = total_sz_i/pi
-  local_sz_j = total_sz_j/pj
-  local_sz_k = total_sz_k/pk
-  SLL_ALLOCATE( a3(1:local_sz_i,1:local_sz_j,1:local_sz_k), ierr )
-  SLL_ALLOCATE( b3(1:local_sz_i,1:local_sz_j,1:local_sz_k), ierr )
-  SLL_ALLOCATE( ad3(1:local_sz_i,1:local_sz_j,1:local_sz_k), ierr )
-  SLL_ALLOCATE( bd3(1:local_sz_i,1:local_sz_j,1:local_sz_k), ierr )
-  myrank    = sll_get_collective_rank(sll_world_collective)
-  colsz     = sll_get_collective_size(sll_world_collective)
+  if( myrank .eq. 0) then
+     print *, ' '
+     print *, '--------------- REMAP test ---------------------'
+     print *, ' '
+     print *, 'Running a test on ', colsz, 'processes'
+     call flush()
+  end if
 
-  conf3_init  => new_layout_3D( sll_world_collective )
-  conf3_final => new_layout_3D( sll_world_collective )
-  random_layout1 => new_layout_3D( sll_world_collective )
+  if (.not. is_power_of_two(colsz)) then     
+     print *, 'This test needs to run in a number of processes which is ',&
+          'a power of 2.'
+     stop
+  end if
 
-  do k=0, pk-1
-     do j=0, pj-1
-        do i=0, pi-1
-           node = i+pi*(j+pj*k) ! linear index of node
-           i_min = i*local_sz_i + 1
-           i_max = i*local_sz_i + local_sz_i
-           j_min = j*local_sz_j + 1
-           j_max = j*local_sz_j + local_sz_j
-           k_min = k*local_sz_k + 1
-           k_max = k*local_sz_k + local_sz_k
-           call set_layout_i_min( conf3_init, node, i_min )
-           call set_layout_i_max( conf3_init, node, i_max )
-           call set_layout_j_min( conf3_init, node, j_min )
-           call set_layout_j_max( conf3_init, node, j_max )
-           call set_layout_k_min( conf3_init, node, k_min )
-           call set_layout_k_max( conf3_init, node, k_max )
+  ok = 1
+  do, i_test=1, nbtest
+     if( myrank .eq. 0 ) then
+        print *, 'Iteration ', i_test, ' of ', nbtest
+     end if
+     layout1  => new_layout_3D( sll_world_collective )        
+     call two_power_rand_factorization(colsz, npi, npj, npk)
+!     call factorize_in_random_2powers( colsz, npi, npj )
+!     npk = 1 
+     if( myrank .eq. 0 ) then
+        print *, 'source configuration: ', npi, npj, npk
+     end if
+
+     call initialize_layout_with_distributed_3D_array( &
+          ni, &
+          nj, &
+          nk, &
+          npi, &
+          npj, &
+          npk, &
+          layout1 )
+     
+     call compute_local_sizes( &
+          layout1, &
+          loc_sz_i_init, &
+          loc_sz_j_init, &
+          loc_sz_k_init )        
+
+     SLL_ALLOCATE(local_array1(loc_sz_i_init,loc_sz_j_init,loc_sz_k_init),ierr)
+ 
+     ! initialize the local data    
+     do k=1,loc_sz_k_init
+        do j=1,loc_sz_j_init 
+           do i=1,loc_sz_i_init
+              global_index =  local_to_global_3D( layout1, (/i, j, k/) )
+              gi = global_index(1)
+              gj = global_index(2)
+              gk = global_index(3)
+              local_array1(i,j,k) = gi + (gj-1)*ni + (gk-1)*ni*nj
+           enddo
+        enddo
+     enddo
+     
+     layout2  => new_layout_3D( sll_world_collective )
+     call two_power_rand_factorization(colsz, npi, npj, npk)
+ !    call factorize_in_random_2powers(colsz, npi, npj)
+ !    npk = 1    
+     if( myrank .eq. 0 ) then
+        print *, 'target configuration: ', npi, npj, npk
+     end if
+
+     call initialize_layout_with_distributed_3D_array( &
+          ni, &
+          nj, &
+          nk, &
+          npi, &
+          npj, &
+          npk, &
+          layout2 )
+     
+     call compute_local_sizes( &
+          layout2, &
+          loc_sz_i_final, &
+          loc_sz_j_final, &
+          loc_sz_k_final )
+
+     SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final, loc_sz_k_final), ierr )
+    
+     rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)     
+
+     call apply_remap_3D( rmp3, local_array1, local_array2 ) 
+
+     SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final),ierr ) 
+
+     ! compare results with expected data
+     do k=1,loc_sz_k_final
+        do j=1,loc_sz_j_final 
+           do i=1,loc_sz_i_final
+              global_index =  local_to_global_3D( layout2, (/i, j, k/) )
+              gi = global_index(1)
+              gj = global_index(2)
+              gk = global_index(3)
+              arrays_diff(i,j,k) = local_array2(i,j,k) - &
+                   (gi + (gj-1)*ni + (gk-1)*ni*nj)
+              if (arrays_diff(i,j,k)/=0) then
+                 ok = 0
+                 print*, i_test, myrank, '"remap" unit test: FAIL'
+                 print *, 'local indices: ', '(', i, j, k, ')'
+                 print*, 'in global indices: (',gi, ',', gj, ',', gk, ')'
+                 print*, 'local array1(',gi, ',', gj, ',', gk, ')=', &
+                      local_array1(i,j,k)  
+                 print*, 'local array2(',gi, ',', gj, ',', gk, ')=', &
+                      local_array2(i,j,k)
+                 g = theoretical_global_3D_indices(local_array2(i,j,k), ni, nj)
+                 print*, 'Theoretical indices: (',g(1), ',', g(2),',',g(3), ')'
+                 if(myrank .eq. 1) then
+                    print *, local_array2(:,:,:)
+                 end if
+
+                 print *, i_test, myrank, 'Printing layout1: '
+                 call sll_view_lims_3D( layout1 )
+                 print *, i_test, myrank, 'Printing layout2: '
+                 call sll_view_lims_3D( layout2 )
+
+                 print*, 'program stopped'
+                 stop
+              end if
+           end do
         end do
      end do
-  end do
-      
 
+     ! As the difference described above is null in each point, the sum of the 
+     ! corresponding absolute values must be null. Each processor compute a local 
+     ! sum and all local sums are finally added and the result is sent to 
+     ! processor 0 which will check if equal 0 to validate the test. (*)
+     call sll_collective_reduce_real( &
+          sll_world_collective, &
+          (/ real(ok) /), &
+          1, &
+          MPI_PROD, &
+          0, &
+          prod4test )
 
-!  call sll_view_lims_3D( conf3_init )
-
-  ! Initialize the data. We use the information in the layout.
-  do k=1, local_sz_k
-     do j=1, local_sz_j
-        do i=1, local_sz_i
-           gcoords =  local_to_global_3D( conf3_init, (/i,j,k/) )
-!           write (*,'(a,i4)') 'gcoords in rank: ', myrank
-!           print *, gcoords(:)
-!           call flush()
-           a3(i,j,k) = gcoords(1) + &
-                total_sz_i*((gcoords(2)-1) + total_sz_j*(gcoords(3)-1))
-           ad3(i,j,k) = real(gcoords(1) + &
-                total_sz_i*((gcoords(2)-1) + total_sz_j*(gcoords(3)-1)),f64)
-        end do
-     end do
-  end do
-
-  write (*,'(a,i4)') 'From rank: ', myrank
-  print *, a3(:,:,:)
-  print *, ad3(:,:,:)
-  call flush()
-
-  ! Initialize the final layout, in this case, just a transposition
-  do k=0, pk-1
-     do j=0, pj-1
-        do i=0, pi-1
-           node = i+pi*(j+pj*k) ! linear index of node
-           i_min = i*local_sz_i + 1
-           i_max = i*local_sz_i + local_sz_i
-           j_min = j*local_sz_j + 1
-           j_max = j*local_sz_j + local_sz_j
-           k_min = k*local_sz_k + 1
-           k_max = k*local_sz_k + local_sz_k
-           call set_layout_i_min( conf3_final, node, j_min )
-           call set_layout_i_max( conf3_final, node, j_max )
-           call set_layout_j_min( conf3_final, node, i_min )
-           call set_layout_j_max( conf3_final, node, i_max )
-           call set_layout_k_min( conf3_final, node, k_min )
-           call set_layout_k_max( conf3_final, node, k_max )
-        end do
-     end do
-  end do
+     if( myrank .eq. 0) then
+        print *, ' '
+        print *, '-------------------------------------------'
+        print *, ' '
+        call flush()
+     end if
+     call flush() 
+       
+     call sll_collective_barrier(sll_world_collective)
   
-!  call sll_view_lims_3D( conf3_final )      
-  
+     call delete_layout_3D( layout1 )
+     call delete_layout_3D( layout2 )
+     SLL_DEALLOCATE_ARRAY(local_array1, ierr)
+     SLL_DEALLOCATE_ARRAY(local_array2, ierr)
+     SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
+  enddo
 
-  rmp3 => NEW_REMAPPER_PLAN_3D( conf3_init, conf3_final, ad3)!INT32_SIZEOF(a3(1,1,1)) )
-  call apply_remap_3D( rmp3, ad3, bd3 )
-  print *, 'Remap operation completed.'
-  write (*,'(a, i4)') 'the output data in rank: ', myrank
-  print *, bd3(:,:,:)
-  call flush()
+  if (myrank==0) then
+     if (prod4test(1)==1.) then
+        print*, 'TEST PASSED'
+     else
+        print*, 'TEST FAILED'
+     endif
+  endif
   
-  call delete_layout_3D( conf3_init )
-  call delete_layout_3D( conf3_final )
-
-  call sll_collective_barrier(sll_world_collective)
   call sll_halt_collective()
-  print *, 'TEST COMPLETE'
-  call flush()
-!do i=1,30
-!   call random_number(fpn)
-!print *,gaussian_dev()
-!end do
-  !SLL_ALLOCATE(limits(pi), ierr)
+
 #if 0
   call split_interval_randomly(1000,4,limits)
   print *, limits(:)
   call flush()
 #endif
-
-
+  
 contains
-
-  subroutine split_interval_randomly(n, num_halvings, ans)
-    integer, intent(in) :: n
-    integer, intent(in) :: num_halvings
-    integer, dimension(:), pointer :: ans
-    integer :: load_i = 1
-    integer :: ierr
-    SLL_ALLOCATE(ans(2*(2**num_halvings)),ierr)
-    call split_interval_randomly_aux( 1, n, 0, num_halvings, load_i, ans )
-  end subroutine split_interval_randomly
-
-  recursive subroutine split_interval_randomly_aux( lo, hi, gen, lim, loadi, ans )
-    intrinsic :: random_number
-    integer, intent(in)                :: lo
-    integer, intent(in)                :: hi
-    integer, intent(in)                :: gen ! splitting generation
-    integer, intent(in)                :: lim ! maximum number of splittings
-    integer :: mid
-!    real :: rand
-    integer, parameter                 :: spread = 25
-    ! dangerous... the following should be found in the enclosing scope...
-    integer, intent(inout) :: loadi
-    integer, dimension(:), pointer :: ans
-!    integer, dimension(:), intent(out) :: ans ! answer
-    if( (hi-lo).eq. 1 ) then
-       ans(loadi) = lo
-       ans(loadi+1) = hi
-       loadi = loadi + 2
- !      write (*,'(i8,i8)') lo, hi
-    else if (gen .eq. lim) then
-       ans(loadi) = lo
-       ans(loadi+1) = hi
-       loadi = loadi + 2
- !      write (*,'(i8,i8)') lo, hi
+  
+  function theoretical_global_3D_indices(d, ni, nj)
+    integer, dimension(1:3) :: theoretical_global_3D_indices
+    integer, intent(in)      :: d, ni, nj
+    integer                  :: q
+#if 0
+    integer                  :: val
+    val = d/(ni*nj)
+    theoretical_global_3D_indices(3) = val
+    theoretical_global_3D_indices(2) = 
+    theoretical_global_3D_indices(1) = 
+#endif
+#if 1
+    if(mod(d,ni) /= 0) then
+       theoretical_global_3D_indices(1) = mod(d,ni)
     else
-!       call random_number(rand)
-       ! decided to use the gaussian because the uniform deviate can give
-       ! a number very close to the 0 or one and such a small interval is
-       ! hard to subdivide. In such case one may end up with less intervals
-       ! and this is a problem since the number of processors is fixed from
-       ! the beginning.
-       mid = (hi+lo)/2 + gaussian_dev()*spread
-!       mid = int(rand*(hi-lo))+lo
-       call split_interval_randomly_aux( lo,   mid, gen+1, lim, loadi, ans )
-       call split_interval_randomly_aux( mid+1, hi, gen+1, lim, loadi, ans )
+       theoretical_global_3D_indices(1) = ni
     end if
-  end subroutine split_interval_randomly_aux
+    q = d/ni
+    theoretical_global_3D_indices(2) = mod(q,nj) + 1
+    theoretical_global_3D_indices(3) = q/nj + 1
+#endif
+  end function theoretical_global_3D_indices
+  
+  subroutine two_power_rand_factorization(n, n1, n2, n3)
+    sll_int64, intent(in) :: n
+    integer, intent(out) ::n1, n2, n3
+    integer   :: expo, expo1, expo2, expo3
+    if (.not.is_power_of_two(colsz)) then   
+       print*, 'The number of processors must be a power of 2'
+       stop
+    endif 
+    expo = int(log(real(n))/log(2.))  
+    call random_number(rand_real)
+    expo1 = int(rand_real*expo)
+    call random_number(rand_real)
+    expo2 = int(rand_real*(expo-expo1))
+    expo3 = expo - (expo1+expo2)
+    n1 = 2**expo1
+    n2 = 2**expo2
+    n3 = 2**expo3
+  end subroutine two_power_rand_factorization
 
-  function gaussian_dev()
-    intrinsic :: random_number
-    real :: gaussian_dev
-    real :: v1, v2
-    real :: ran1, ran2
-    real :: rsq
-    real :: fac
-    do
-       call random_number(ran1)
-       call random_number(ran2)
-       v1 = 2.0*ran1-1.0
-       v2 = 2.0*ran2-1.0
-       rsq = v1*v1 + v2*v2
-       if( (rsq .lt. 1.0) .and. (rsq .gt. 0.0) ) exit
-    end do
-    fac = sqrt(-2.0*log(rsq)/rsq)
-    gaussian_dev = v1*fac
-  end function gaussian_dev
+  subroutine factorize_in_random_2powers(n, n1, n2)
+    sll_int64, intent(in) :: n
+    integer, intent(out)  :: n1, n2
+    integer   :: expo, expo1, expo2
+    if (.not.is_power_of_two(colsz)) then   
+       print*, 'The number of processors must be a power of 2'
+       stop
+    endif
+    expo = int(log(real(n))/log(2.))  
+    call random_number(rand_real)
+    expo1 = int(rand_real*expo)
+    call random_number(rand_real)
+    expo2 = expo - expo1
+    n1 = 2**expo1
+    n2 = 2**expo2
+  end subroutine factorize_in_random_2powers
 
-end program remap_test
+  
+  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
+    type(layout_3D_t), pointer :: layout
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32, intent(out) :: loc_sz_k
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: k_min
+    sll_int32 :: k_max
+    sll_int32 :: my_rank
+    if( .not. associated(layout) ) then
+       print *, 'not-associated layout passed to new_distributed_mesh_3D'
+       print *, 'Exiting...'
+       STOP
+    end if
+    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
+    i_min = get_layout_3D_i_min( layout, my_rank )
+    i_max = get_layout_3D_i_max( layout, my_rank )
+    j_min = get_layout_3D_j_min( layout, my_rank )
+    j_max = get_layout_3D_j_max( layout, my_rank )
+    k_min = get_layout_3D_k_min( layout, my_rank )
+    k_max = get_layout_3D_k_max( layout, my_rank )
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+    loc_sz_k = k_max - k_min + 1
+  end subroutine compute_local_sizes
+      
+      subroutine split_interval_randomly(n, num_halvings, ans)
+        integer, intent(in) :: n
+        integer, intent(in) :: num_halvings
+        integer, dimension(:), pointer :: ans
+        integer :: load_i = 1
+        integer :: ierr
+        SLL_ALLOCATE(ans(2*(2**num_halvings)),ierr)
+        call split_interval_randomly_aux( 1, n, 0, num_halvings, load_i, ans )
+      end subroutine split_interval_randomly
+      
+      recursive subroutine split_interval_randomly_aux( lo, hi, gen, lim, loadi, ans )
+        intrinsic :: random_number
+        integer, intent(in)                :: lo
+        integer, intent(in)                :: hi
+        integer, intent(in)                :: gen ! splitting generation
+        integer, intent(in)                :: lim ! maximum number of splittings
+        integer :: mid
+        integer, parameter                 :: spread = 25
+        ! dangerous... the following should be found in the enclosing scope...
+        integer, intent(inout) :: loadi
+        integer, dimension(:), pointer :: ans
+        if( (hi-lo).eq. 1 ) then
+           ans(loadi) = lo
+           ans(loadi+1) = hi
+           loadi = loadi + 2
+        else if (gen .eq. lim) then
+           ans(loadi) = lo
+           ans(loadi+1) = hi
+           loadi = loadi + 2
+        else
+           ! call random_number(rand)
+           ! decided to use the gaussian because the uniform deviate can give
+           ! a number very close to the 0 or one and such a small interval is
+           ! hard to subdivide. In such case one may end up with less intervals
+           ! and this is a problem since the number of processors is fixed from
+           ! the beginning.
+           mid = (hi+lo)/2 + gaussian_dev()*spread
+           !       mid = int(rand*(hi-lo))+lo
+           call split_interval_randomly_aux( lo,   mid, gen+1, lim, loadi, ans )
+           call split_interval_randomly_aux( mid+1, hi, gen+1, lim, loadi, ans )
+        end if
+      end subroutine split_interval_randomly_aux
+      
+      function gaussian_dev()
+        intrinsic :: random_number
+        real :: gaussian_dev
+        real :: v1, v2
+        real :: ran1, ran2
+        real :: rsq
+        real :: fac
+        do
+           call random_number(ran1)
+           call random_number(ran2)
+           v1 = 2.0*ran1-1.0
+           v2 = 2.0*ran2-1.0
+           rsq = v1*v1 + v2*v2
+           if( (rsq .lt. 1.0) .and. (rsq .gt. 0.0) ) exit
+        end do
+        fac = sqrt(-2.0*log(rsq)/rsq)
+        gaussian_dev = v1*fac
+      end function gaussian_dev
+      
+    end program remap_test
+    

@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% set title = 'Home Page' %}
+{% block body %}
+<h1>SeLaLib</h1>
+<p><i>
+Bibliothèque modulaire pour la simulation du modèle gyrocinétique par une méthode semi-Lagrangienne.
+</i></p>
+<p>
+Dans le cadre de l'<a href="http://www-math.u-strasbg.fr/ae_fusion">action d'envergure nationale Fusion</a>, <a href="http://www-math.u-strasbg.fr/calvi/">l'EPI Calvi</a> développe en collaboration avec le CEA de Cadarache le code GYSELA de simulation gyrocinétique pour la simulation de la turbulence dans les plasmas de Tokamaks. Le développement et le test de nouvelles méthodes numériques se fait en général sur différents modèles simplifiés avant son intégration dans GYSELA. Aucune spécification n'est mise en oeuvre dans cet objectif, ce qui implique plusieurs réécritures du code avant l'intégration définitive, ce qui est un processus lourd et inefficace. SeLaLib est une API pour les composants numériques de base mise en oeuvre également dans GYSELA et un canevas parallèle unique permettant de rationaliser, de fiabiliser et de simplifier le travail de développement.
+</p>
+
+<p><i>
+Modular library for the gyrokinetic simulation model by a semi-Lagrangian method.
+</i>
+</p>
+<p>
+As part of <a href="http://www-math.u-strasbg.fr/ae_fusion">french action Fusion</a>, <a href="http://www-math.u-strasbg.fr/calvi/">Calvi INRIA projetct</a> developed in collaboration with CEA Cadarache GYSELA simulation code for gyrokinetic simulation of plasma turbulence in Tokamaks. Development and testing of new numerical methods is generally done on different simplified models before its integration into GYSELA. No specification is implemented for this aim, which involves several rewriting code lines before the final integration, which is cumbersome and inefficient. SeLaLib is an API for components of basic numerical implementation also in GYSELA, a framework for parallel single streamline built in order to improve reliability and simplify the work of development.
+</p>
+Sign in to the INRIA GForge and 
+<a href="http://lists.gforge.inria.fr/mailman/listinfo/selalib-devel">Subscribe to the developers list</a> 
+
+<h2>Documentation</h2>
+<table class="contentstable" align="center" style="margin-left: 30px"><tr>
+  <td width="50%">
+    <p class="biglink"><a class="biglink" href="{{ pathto("prototype") }}">Prototype</a><br/>
+    <span class="linkdescr">Get the prototype</span></p>
+<!--
+    <p class="biglink"><a class="biglink" href="{{ pathto("genindex") }}">Index</a><br/>
+    <span class="linkdescr">all fonctions, variables</span></p>
+-->
+  </td><td width="50%">
+    <p class="biglink"><a class="biglink" href="{{ pathto("contents") }}">Contents</a><br/>
+    <span class="linkdescr">for a complete overview</span></p>
+<!--
+    <p class="biglink"><a class="biglink" href="{{ pathto("guide") }}">User guide</a><br/>
+    <span class="linkdescr">quick access to all documented tools</span></p>
+-->
+  </td></tr>
+</table>
+
+
+{% endblock %}

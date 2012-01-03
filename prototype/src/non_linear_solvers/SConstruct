@@ -17,7 +17,7 @@ env = Environment( ENV=os.environ,
                    LIBS=['sll_memory','sll_precision', 'sll_assertion'],
                    F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
                               '-std=f2003', '-ffree-line-length-none', 
-                              '-DGFORTRAN'])
+                              '-DGFORTRAN -fopenmp'])
 #print "GFORTRAN is :", env['GFORTRAN']
 #env.Replace(	
 #		F90FLAGS = OPT+' -fpp',

@@ -4,15 +4,10 @@
 !
 ! MODULE: sll_tridiagonal
 !
-!> @file tridiagonal.F90
-!
-!> @author
-!> Module Author Name and Affiliation
-!
-! DESCRIPTION: 
-!> Tridiagonal system solver.
-!!
-!! To solve systems of the form Ax=b, where A is a tridiagonal matrix, Selalib 
+! DESCRIPTION:
+!> @author Module Author Name and Affiliation
+!> @brief Tridiagonal system solver.
+!> @details To solve systems of the form Ax=b, where A is a tridiagonal matrix, Selalib 
 !! offers a native, robust tridiagonal system solver. The present implementation 
 !! contains only a serial version.
 !! The algorith is based on an LU factorisation of a given matrix,
@@ -51,8 +46,7 @@
 ! REVISION HISTORY:
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
-
+!------------------------------------------------------------------------------ 
 module sll_tridiagonal
 #include "sll_working_precision.h"
 implicit none
@@ -62,36 +56,7 @@ contains
 ! careful with side-effects here
 #define SWP(a,b) swp=(a); a=(b); b=swp
 
-  !---------------------------------------------------------------------------  
-  !> @author 
-  !> Routine Author Name and Affiliation.
-  !
-  ! DESCRIPTION: 
-  !> Give the factorization of the matrix in argument.
-  !> @brief
-  !> setup_cyclic_tridiag has been adapted from the C version written by
-  !> Kevin Bowers for the Desmond molecular dynamics code.
-  !> For the Fortran implementation, we have adjusted the algorithm such that
-  !> it is compatible with the 1-based array indexing:
-  !>
-  !> \f[ A = \begin{bmatrix}
-  !! a(2) & a(3) & & & & & a(1)
-  !! \\ a(4) & a(5) & a(6) & & & &
-  !! \\ & a(7) & a(8) & a(9) & & &
-  !! \\ & & \ddots & \ddots & \ddots & &
-  !! \\ & & & \ddots & \ddots & \ddots &
-  !! \\ & & & & a(3n-5) & a(3n-4)&a(3n-3)
-  !! \\ a(3n)& & & & & a(3n-2) & a(3n-1)
-  !! \end{bmatrix} \f]
-  !>
-  !>
-  ! REVISION HISTORY:
-  ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-  !
-  !> @param a the matrix to be factorized
-  !> @param[in] n the problem size (A is nXn)     
-  !> @param[out] ipiv an ineteger array of length n on wich pivoting information will be returned
-  !> @param[out] cts a real array of size 7n where factorization information will be returned    
+  
   !---------------------------------------------------------------------------  
   !
   ! Implementation notes:
@@ -162,6 +127,18 @@ contains
   !
   ! *************************************************************************
 
+!---------------------------------------------------------------------------  
+! DESCRIPTION: 
+!> @brief Give the factorization of the matrix in argument.
+!> @details setup_cyclic_tridiag has been adapted from the C version written by
+!> Kevin Bowers for the Desmond molecular dynamics code.
+!> For the Fortran implementation, we have adjusted the algorithm such that
+!> it is compatible with the 1-based array indexing:
+!>
+!> @param a the matrix to be factorized
+!> @param[in] n the problem size (A is nXn)     
+!> @param[out] ipiv an ineteger array of length n on wich pivoting information will be returned
+!> @param[out] cts a real array of size 7n where factorization information will be returned 
 subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
   intrinsic :: abs
   sll_real64, dimension(:) :: a    ! 3*n size allocation
@@ -492,9 +469,8 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !> Routine Author Name and Affiliation.
    !
    ! DESCRIPTION: 
-   !> Solves tridiagonal system. 
-   !> @brief
-   !> Computes the solution of:
+   !> @brief Solves tridiagonal system. 
+   !> @details Computes the solution of:
    !>
    !> <center> <b> A x = b </b> </center>
    !> 
@@ -502,7 +478,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !> the output of the function setup_cyclic_tridiag.  Note that the
    !> call:
    !>
-   !>  solve_cyclic_tridiag( cts, ipiv, b, n, x )
+   !>  solve_cyclic_tridiag( cts, ipiv, b, n, b )
    !>
    !> is valid if you want run in-place and overwrite the right hand side
    !> with the solution. 
@@ -577,5 +553,21 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
                       q(i)*x(n-1) + r(i)*x(n) ))/d(i)
      end do
    end subroutine solve_cyclic_tridiag
+
+   !> @brief Solves the system ax=b
+   !> param[in] a Global matrix
+   !> param[in] b Second member
+   !> param[in] n Problem size (a is nxn)
+   !> param[out] x Solution vector
+   !SUBROUTINE solve_tridiag(a, b, n ,x)
+   ! sll_int32, intent(in)                   :: n
+   ! sll_real64, DIMENSION(n), intent(in)    :: a
+   ! sll_real64, DIMENSION(n), intent(inout) :: b
+   ! sll_real64, DIMENSION(1:7*n)            :: cts 
+   ! sll_int32,  DIMENSION(1:n)              :: ipiv
+   ! sll_real64, DIMENSION(:)                :: x
+   ! CALL setup_cyclic_tridiag( a, n, cts, ipiv )
+   ! CALL solve_cyclic_tridiag( cts, ipiv, b, n, x )
+   !END SUBROUTINE solve_tridiag
 
 end module sll_tridiagonal
