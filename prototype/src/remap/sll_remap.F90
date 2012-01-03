@@ -689,10 +689,19 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     colors_copy = 0
     ! FIRST LEVEL OF OPTIMIZATION: 
     ! Identify the sub-collectives in which the communication should 
-    ! be divided.
-    lowest_color(1) = my_rank  ! we want a starting point. This should not 
-                               ! change for the lowest ranks in the 
-                               ! sub-collectives.
+    ! be divided. The purpose is to subdivide the original communicator
+    ! into multiple communicators, each one minimally sized, but meeting
+    ! the condition that each process belongs to a single communicator.
+    ! In some situations, this could lead to cases in which two processes
+    ! can belong to a communicator even though they do not exchange data
+    ! amongst themselves directly, but need to exchange data with a
+    ! third process. Even this situation might still not be necessarily
+    ! slower, than having the split communicators, and here we have much
+    ! simpler code.
+
+    ! we want a starting point. This should not change for the lowest ranks 
+    ! in the sub-collectives.
+    lowest_color(1) = my_rank  
     call sll_collective_allgather( &
        col, &
        lowest_color(1:1), &
@@ -705,10 +714,9 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
        ! Find the lowest rank with which this process communicates
        do i=0,col_sz-1
           if( (send_counts(i) .ne. 0) .or. (recv_counts(i) .ne. 0) ) then
-             if( i .lt. lowest_color(1) ) then
-                lowest_color(1) = i
-             end if  ! else we don't do anything as lowest_color is already 
-                     ! my_rank
+             if( colors(i) .lt. lowest_color(1) ) then 
+                lowest_color(1) = colors(i) 
+             end if  ! else, nothing, as lowest_color is already my_rank
           end if
        end do
        ! Gather the information from all processes
@@ -718,17 +726,26 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
             1, &
             colors(0:col_sz-1), &
             1 )
+#if 0
+       print *, my_rank, 'colors intermediate: ', colors(:) ! delete this
        ! Check which is the color of the lowest rank with which this
        ! process communicates, and reassign the color accordingly.
        lowest_color(1) = colors(lowest_color(1))
+
        call sll_collective_allgather( &
             col, &
             lowest_color(1:1), &
             1, &
             colors(0:col_sz-1), &
             1 )
+#endif
        if(arrays_are_equal(colors, colors_copy, col_sz)) exit
     end do
+#if 0
+    if(my_rank .eq. 0) then
+       print *, 'final colors array: ', colors(:) ! delete this
+    end if
+#endif
     ! The results can now be used as the color for a collective-splitting 
     ! operation.
     new_collective => sll_new_collective( col, colors(my_rank), my_rank )
