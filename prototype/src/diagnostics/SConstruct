@@ -46,6 +46,7 @@ for key, value in ARGLIST:
     if key == 'define':
        cppvars.append(value)
        env.Append(CPPDEFINES=cppvars)
+       env.Replace(LIBS=SLLLIBS)
 
 
 #env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
