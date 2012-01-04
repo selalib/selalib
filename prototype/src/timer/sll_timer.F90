@@ -4,7 +4,6 @@
 !> @brief Timing facility
 !> @details <b> How to use-it </b>
 !>
-!> See sll_collective for more details about the members.
 !>
 !> First, add the line
 !> @code use sll_timer @endcode
