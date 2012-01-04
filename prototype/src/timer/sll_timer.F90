@@ -4,6 +4,7 @@
 !> @brief Timing facility
 !> @details <b> How to use-it </b>
 !>
+!>
 !> First, add the line
 !> @code use sll_timer @endcode
 !> declare a new time_mark pointer

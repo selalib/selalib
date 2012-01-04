@@ -1,10 +1,11 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-!
 ! MODULE: sll_tridiagonal
 !
 ! DESCRIPTION:
+!> @file tridiagonal.F90
+!> @namespace sll_tridiagonal
 !> @author Module Author Name and Affiliation
 !> @brief Tridiagonal system solver.
 !> @details To solve systems of the form Ax=b, where A is a tridiagonal matrix, Selalib 
@@ -128,12 +129,11 @@ contains
   ! *************************************************************************
 
 !---------------------------------------------------------------------------  
-! DESCRIPTION: 
 !> @brief Give the factorization of the matrix in argument.
-!> @details setup_cyclic_tridiag has been adapted from the C version written by
-!> Kevin Bowers for the Desmond molecular dynamics code.
-!> For the Fortran implementation, we have adjusted the algorithm such that
-!> it is compatible with the 1-based array indexing:
+!> @details setup_cyclic_tridiag has been adapted from the C version written
+!>          by Kevin Bowers for the Desmond molecular dynamics code.
+!>          For the Fortran implementation, we have adjusted the algorithm
+!>          such that it is compatible with the 1-based array indexing:
 !>
 !> @param a the matrix to be factorized
 !> @param[in] n the problem size (A is nXn)     
@@ -465,26 +465,21 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
 #undef aa
 
    !---------------------------------------------------------------------------  
-   !> @author 
-   !> Routine Author Name and Affiliation.
-   !
-   ! DESCRIPTION: 
+   !> @author Routine Author Name and Affiliation.
    !> @brief Solves tridiagonal system. 
    !> @details Computes the solution of:
    !>
-   !> <center> <b> A x = b </b> </center>
+   !>          <center> <b> A x = b </b> </center>
    !> 
-   !> For a cyclic tridiagonal matrix A. The matrix cts is filled with
-   !> the output of the function setup_cyclic_tridiag.  Note that the
-   !> call:
+   !>          For a cyclic tridiagonal matrix A. The matrix cts is filled with
+   !>          the output of the function setup_cyclic_tridiag.  Note that the
+   !>          call:
    !>
-   !>  solve_cyclic_tridiag( cts, ipiv, b, n, b )
+   !>          solve_cyclic_tridiag( cts, ipiv, b, n, b )
    !>
-   !> is valid if you want run in-place and overwrite the right hand side
-   !> with the solution. 
-   ! REVISION HISTORY:
-   ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-   !
+   !>          is valid if you want run in-place and overwrite the right hand side
+   !>          with the solution.
+   !>
    !> @param cts a real array of size 7n where factorization information will be returned
    !> @param[in] ipiv an ineteger array of length n on wich pivoting information will be returned
    !> @param b the second member of the equation
@@ -554,11 +549,11 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      end do
    end subroutine solve_cyclic_tridiag
 
-   !> @brief Solves the system ax=b
-   !> param[in] a Global matrix
-   !> param[in] b Second member
-   !> param[in] n Problem size (a is nxn)
-   !> param[out] x Solution vector
+   ! @brief Solves the system ax=b
+   ! param[in] a Global matrix
+   ! param[in] b Second member
+   ! param[in] n Problem size (a is nxn)
+   ! param[out] x Solution vector
    !SUBROUTINE solve_tridiag(a, b, n ,x)
    ! sll_int32, intent(in)                   :: n
    ! sll_real64, DIMENSION(n), intent(in)    :: a
