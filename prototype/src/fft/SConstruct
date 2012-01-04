@@ -3,7 +3,7 @@ import os
 import socket
 import distutils.util
 
-os.system("bash install.sh")
+#os.system("bash install.sh")
 os.system("rm -f conf.h")
 os.system("touch conf.h")
 #os.system("echo '! Generated automatically.  DO NOT EDIT!' >> conf.h")
@@ -12,8 +12,10 @@ fichier = open("conf.h", "w")
 fichier.write("! Generated automatically.  DO NOT EDIT!\n")
 
 TOTO = ''
+TOTOLIB = ''
 if os.path.exists("../fftw/fftw3.mod"):
    TOTO = 'FFTW3'
+   TOTOLIB = '../fftw/lib'
 else:
    fichier.write("#define _NOFFTW\n")
 
@@ -35,7 +37,7 @@ env = Environment( ENV = os.environ,
                    F90PATH = ['../memory','../precision','../assert',
                               '../utilities','../constants','../timer','../fftpack/','../fftw/'],
                    FORTRANMODDIRPREFIX= '-J', 
-                   LIBPATH= ['.','../timer','../fftpack','../fftw/lib'],
+                   LIBPATH= ['.','../timer','../fftpack',TOTOLIB],
                    LIBS=['sll_memory','sll_precision','sll_assertion',
                          'sll_misc','sll_constants','sll_timer',TATA,TOTO],
                    F90FLAGS = ['-g', '-W','-Wall','-DTEST_TIME', 
@@ -46,16 +48,14 @@ env = Environment( ENV = os.environ,
 # This is important especially when using SLL_ASSERT()
 #env.Append(LIBS = ['nsl', 'socket'])
 
-#env.Library('FFTW3',     ["../fftw/fftw.f03","../fftw/fftw-3.3/include/fftw3.f03"])
+#env.Library('FFTW3',        ["../fftw/fftw.f03","../fftw/fftw-3.3/include/fftw3.f03"])
+#env.Library('fftpack',      ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
 env.Library('sll_timer',     ["../timer/sll_timer.F90"])
-#env.Library('fftpack',       ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
 env.Library('sll_memory',    ["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion', ["../assert/sll_assert.F90"])
 env.Library('sll_misc',      ["../utilities/misc_utils.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
-#env.Library('sll_fft',       ["sll_fft.F90"])
 env.Program('unit_test',     ["unit_test.F90","sll_fft.F90"])
-env.Program('test',     ["test.F90","sll_fft.F90"])
 
 
