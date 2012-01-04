@@ -16,6 +16,11 @@ default:
 	(cd mesh_types; scons)
 	(cd distribution_function; scons)
 
+install_fftw:
+	(cd fftw; make)
+
+install_fftpack:
+	(cd fftpack; make)
 
 clean:
 	(cd constants; scons -c)
