@@ -19,23 +19,29 @@ module test_func_module
 
       function_test: select case(function_num)
         case(1)
-           f = x
-        case(2)
-           f = x**2
-        case(3)
-           f = exp(x)
-        case(4)
            f = cos(x)
-        case(5)
+        case(2)
            f = sin(x)
+        case(3)
+           f = cos(x) + sin(x)
+        case(4)
+           f = cos(x) * sin(x)
+        case(5)
+           f = exp( cos(x) )
         case(6)
-           f = exp(cos(x))
+           f = exp( sin(x) )
         case(7)
-           f = exp(sin(x))
+           f = exp(cos(x)) + exp( sin(x) )
         case(8)
-           f = cos(exp(x))
+           f = exp(cos(x)) * exp(sin(x))
         case(9)
-           f = sin(exp(x))
+           f = cos(sin(x))
+        case(10)
+           f = sin(cos(x))
+        case(11)
+           f = cos(x)**2
+        case(12)
+           f = sin(x)**2
         case default
            print*, 'Function not available'
            stop
@@ -56,23 +62,29 @@ module test_func_module
 
       function_test: select case(function_num)
         case(1)
-           fprime = 1.0_f64
-        case(2)
-           fprime = 2*x
-        case(3)
-           fprime = exp(x)
-        case(4)
            fprime = -sin(x)
-        case(5)
+        case(2)
            fprime = cos(x)
+        case(3)
+           fprime = cos(x) - sin(x)
+        case(4)
+           fprime = cos(2*x)
+        case(5)
+           fprime = -sin(x) * exp(cos(x))
         case(6)
-           fprime = -sin(x)*exp(cos(x))
+           fprime = cos(x) * exp(sin(x))
         case(7)
-           fprime = cos(x)*exp(sin(x))
+           fprime = cos(x)*exp(sin(x)) - sin(x)*exp(cos(x))
         case(8)
-           fprime = -sin(exp(x))*exp(x)
+           fprime = (cos(x)-sin(x))*exp(cos(x)+sin(x))
         case(9)
-           fprime = cos(exp(x))*exp(x)
+           fprime = -cos(x)*sin(sin(x))
+        case(10)
+           fprime = -sin(x)*cos(cos(x))
+        case(11)
+           fprime = -sin(2*x)
+        case(12)
+           fprime = sin(2*x)
         case default
            print*, 'Function not available'
            stop
