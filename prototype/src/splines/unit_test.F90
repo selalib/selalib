@@ -279,7 +279,7 @@ program spline_tester
         
         if (acc_2D/(NPX1*NPX2)>=1.e-14) then
            ok = 0
-           print*, 'i_test =', i_test
+           print*, '(i_test, j_test) = (', i_test, ',', j_test,')'
            print *, 'splines unit test stopped by periodic-periodic spline2d test failure'
            stop
         endif
