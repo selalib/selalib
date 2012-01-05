@@ -56,10 +56,6 @@ program spline_tester
   ok = 1
   do i_test=1,nbtest
      
-     open (unit=10, file='function_num.dat')
-     write (10,*) i_test
-     close(10)
-     
      accumulator1 = 0.0_f64
      accumulator2 = 0.0_f64
      accumulator3 = 0.0_f64
