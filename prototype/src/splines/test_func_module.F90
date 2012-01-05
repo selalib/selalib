@@ -7,15 +7,11 @@ module test_func_module
   contains
 
 
-    function f(x)
+    function f(x, function_num )
      
       sll_real64, intent(in) :: x
       sll_real64 ::  f
       sll_int32 :: function_num
-
-      open (unit=10, file='function_num.dat')
-         read (10,*) function_num
-      close(10)
 
       function_test: select case(function_num)
         case(1)
@@ -50,15 +46,11 @@ module test_func_module
     end function f
 
 
-    function fprime(x) 
+    function fprime(x, function_num ) 
      
       sll_real64, intent(in) :: x
       sll_real64 :: fprime
       sll_int32 :: function_num
-
-      open (unit=10, file='function_num.dat')
-         read (10,*) function_num
-      close(10)
 
       function_test: select case(function_num)
         case(1)

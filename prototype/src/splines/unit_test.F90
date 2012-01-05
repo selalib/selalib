@@ -16,7 +16,7 @@ program spline_tester
 #define NP 512
   
   sll_int32                              :: err, ok
-  sll_int32                              :: i, j, i_test
+  sll_int32                              :: i, j, i_test, j_test
   type(sll_spline_1d), pointer           :: sp1
   type(sll_spline_1d), pointer           :: sp2
   type(sll_spline_2d), pointer           :: sp2d
@@ -42,8 +42,8 @@ program spline_tester
   sll_real64                             :: reduction
   sll_int32, parameter                   :: nbtest = 12
   
-#define NPX1  65
-#define NPX2  33
+#define NPX1  1025
+#define NPX2  513
 #define X1MIN (-2.0_f64*sll_pi)
 #define X1MAX ( 2.0_f64*sll_pi)
 #define X2MIN (-sll_pi)
@@ -78,15 +78,15 @@ program spline_tester
      print *, 'initialize data and coordinates array'
      do i=1,NP
         phase          = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
-        data(i)        = f(phase)
-        deriv(i)       = fprime(phase)
+        data(i)        = f(phase, i_test)
+        deriv(i)       = fprime(phase, i_test)
         coordinates(i) = phase
      end do
      
      print *, 'proceed to allocate the spline...'
      sp1 =>  new_spline_1D( NP, XMIN, XMAX, PERIODIC_SPLINE )
      call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
-     sp2 =>  new_spline_1D( NP, XMIN, XMAX, HERMITE_SPLINE, fprime(XMIN), fprime(XMAX) )
+     sp2 =>  new_spline_1D( NP, XMIN, XMAX, HERMITE_SPLINE, fprime(XMIN, i_test), fprime(XMAX, i_test) )
      call compute_spline_1D( data, HERMITE_SPLINE, sp2 )
      
      print *, 'Contents of the spline 1:'
@@ -216,7 +216,7 @@ program spline_tester
      
      call delete_spline_1D(sp1)
      call delete_spline_1D(sp2)
-
+     
      SLL_DEALLOCATE_ARRAY(data, err)
      SLL_DEALLOCATE_ARRAY(deriv, err)
      SLL_DEALLOCATE_ARRAY(out, err)
@@ -226,75 +226,74 @@ program spline_tester
   
   print *, '***************************************************'
   print *, 'Test of the 2D spline: '
-
-  do i_test=1,nbtest
-     
-     open (unit=10, file='function_num.dat')
-     write (10,*) i_test
-     close(10)
-     
-     SLL_ALLOCATE(data_2d(NPX1, NPX2), err)
-     print *, 'Filling data:'
-     
-     SLL_ALLOCATE(coordinates_i(NPX1),err)
-     SLL_ALLOCATE(coordinates_j(NPX2),err)
-     
-     do i=1, NPX1
-        coordinates_i(i) = real(i-1,f64)*(X1MAX-X1MIN)/real(NPX1-1,f64)+X1MIN
-     end do
-     
-     do j=1, NPX2
-        coordinates_j(j) = real(j-1,f64)*(X2MAX-X2MIN)/real(NPX2-1,f64)+X2MIN
-     end do
-     
-     do j=1,NPX2
-        phase_x2 = coordinates_j(j)
-        do i=1,NPX1
-           phase_x1 = coordinates_i(i)
-           data_2d(i,j) = f(phase_x1)*f(phase_x2)
-        end do
-     end do
-     print *, 'Allocating 2D spline...'
-     
-     sp2d => new_spline_2D( NPX1, NPX2, &
-          X1MIN, X1MAX, &
-          X2MIN, X2MAX, &
-          PERIODIC_SPLINE, PERIODIC_SPLINE )
-     
-     print *, 'Computing the 2D spline...'
-     call compute_spline_2D_prdc_prdc( data_2d, sp2d )
-     print *, 'Completed computing the 2d spline.'
-     print *, coordinates_i(1), coordinates_i(NPX1)
-     print *, coordinates_j(1), coordinates_j(NPX2)
-     
-     acc_2D = 0.0
-     do j=1, NPX2
+  
+  do j_test=1,nbtest
+     do i_test=1,nbtest
+        
+        SLL_ALLOCATE(data_2d(NPX1, NPX2), err)
+        print *, 'Filling data:'
+        
+        SLL_ALLOCATE(coordinates_i(NPX1),err)
+        SLL_ALLOCATE(coordinates_j(NPX2),err)
+        
         do i=1, NPX1
-           x1 = coordinates_i(i)
-           x2 = coordinates_j(j)
-           acc_2D = acc_2D + &
-                abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d))
+           coordinates_i(i) = real(i-1,f64)*(X1MAX-X1MIN)/real(NPX1-1,f64)+X1MIN
         end do
-     end do
-     
-     print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
-          acc_2D/(NPX1*NPX2)
-     
-     if (acc_2D/(NPX1*NPX2)>=1.0e-15) then
-        ok = 0
-        print *, 'splines unit test stopped by periodic-periodic spline2d test failure'
-        stop
-     endif
-     
+        
+        do j=1, NPX2
+           coordinates_j(j) = real(j-1,f64)*(X2MAX-X2MIN)/real(NPX2-1,f64)+X2MIN
+        end do
+        
+        do j=1,NPX2
+           phase_x2 = coordinates_j(j)
+           do i=1,NPX1
+              phase_x1 = coordinates_i(i)
+              data_2d(i,j) = f(phase_x1, i_test)*f(phase_x2, j_test)
+           end do
+        end do
+        print *, 'Allocating 2D spline...'
+        
+        sp2d => new_spline_2D( NPX1, NPX2, &
+             X1MIN, X1MAX, &
+             X2MIN, X2MAX, &
+             PERIODIC_SPLINE, PERIODIC_SPLINE )
+        
+        print *, 'Computing the 2D spline...'
+        call compute_spline_2D_prdc_prdc( data_2d, sp2d )
+        print *, 'Completed computing the 2d spline.'
+        print *, coordinates_i(1), coordinates_i(NPX1)
+        print *, coordinates_j(1), coordinates_j(NPX2)
+        
+        acc_2D = 0.0
+        do j=1, NPX2
+           do i=1, NPX1
+              x1 = coordinates_i(i)
+              x2 = coordinates_j(j)
+              acc_2D = acc_2D + &
+                   abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d))
+           end do
+        end do
+        
+        print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
+             acc_2D/(NPX1*NPX2)
+        
+        if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+           ok = 0
+           print*, 'i_test =', i_test
+           print *, 'splines unit test stopped by periodic-periodic spline2d test failure'
+           stop
+        endif
+        
 #if 0
-     print *, 'Deleting the 2D spline...'
-     call delete(sp2d)
+        print *, 'Deleting the 2D spline...'
+        call delete(sp2d)
 #endif
-     
-     SLL_DEALLOCATE_ARRAY(data_2d, err)
-     SLL_DEALLOCATE_ARRAY(coordinates_i,err)
-     SLL_DEALLOCATE_ARRAY(coordinates_j,err)
-     
+        
+        SLL_DEALLOCATE_ARRAY(data_2d, err)
+        SLL_DEALLOCATE_ARRAY(coordinates_i,err)
+        SLL_DEALLOCATE_ARRAY(coordinates_j,err)
+        
+     enddo
   enddo
   
   print *, '********************************'
