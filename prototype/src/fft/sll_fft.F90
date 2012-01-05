@@ -29,6 +29,7 @@ module sll_fft
     sll_real64, dimension(:), pointer :: twiddles   ! twiddles factors real case 
     sll_real64, dimension(:), pointer :: twiddles_n ! twiddles factors real case 
     sll_real32, dimension(:), pointer :: wsave ! for use fftpack
+    sll_real64, dimension(:), pointer :: dwsave ! for use fftpack
     sll_int32                         :: mod !type of library used
   end type sll_fft_plan
 
@@ -81,7 +82,7 @@ contains
     type(sll_fft_plan), pointer     :: sll_new_fft
     sll_int32, intent(in)           :: n, data_type
     sll_int32, optional, intent(in) :: style
-    sll_int32                       :: ierr, s, mod
+    sll_int32                       :: ierr, s, mod, n_2
    
     ! By default style = 0
     if(present(style)) then
@@ -123,19 +124,25 @@ contains
     sll_new_fft%style = s
     sll_new_fft%data_type = data_type
     sll_new_fft%mod = mod
-    SLL_ALLOCATE(sll_new_fft%index(0:n-1),ierr)
-    SLL_ALLOCATE(sll_new_fft%mode(n),ierr)
+    !SLL_ALLOCATE(sll_new_fft%index(0:n-1),ierr)
+    !SLL_ALLOCATE(sll_new_fft%mode(n),ierr)
     !sll_new_fft%index => compute_index(n)
 
+    n_2 = n/2
     if(data_type .eq. FFT_COMPLEX) then
-      SLL_ALLOCATE(sll_new_fft%t(1:n/2),ierr)
+      SLL_ALLOCATE(sll_new_fft%t(1:n_2),ierr)
       call compute_twiddles(n,sll_new_fft%t)
-      call bit_reverse(n/2,sll_new_fft%t)
-    else
-      SLL_ALLOCATE(sll_new_fft%twiddles(0:n/2-1),ierr)
+      call bit_reverse(n_2,sll_new_fft%t)
+    else if(data_type .eq. FFT_REAL) then
+      SLL_ALLOCATE(sll_new_fft%twiddles(0:n_2-1),ierr)
       SLL_ALLOCATE(sll_new_fft%twiddles_n(0:n-1),ierr)
-      call compute_twiddles_real_array( sll_new_fft%N, sll_new_fft%twiddles_n )
-      call compute_twiddles_real_array( sll_new_fft%N/2, sll_new_fft%twiddles )
+      call compute_twiddles_real_array( n, sll_new_fft%twiddles_n )
+      call compute_twiddles_real_array( n_2, sll_new_fft%twiddles(0:n_2-1) )
+      call bit_reverse_in_pairs( n/4, sll_new_fft%twiddles(0:n_2-1))
+      !call bit_reverse_in_pairs( n_2/2, sll_new_fft%twiddles )
+      !call bit_reverse_in_pairs( n_2, sll_new_fft%twiddles_n )
+    else
+      stop 'Error in ==sll_new_fft== unknown data_type'
     endif
   end function sll_new_fft
 
@@ -180,6 +187,8 @@ contains
     sll_real64, dimension(0:fft_plan%N-1), intent(inout) :: in
     type(C_PTR) :: plan
 
+    if(direction .eq. FFT_INVERSE) &
+      stop 'Error in ==fftw_apply_fft_real64== no inverse method'
     plan = fftw_plan_r2r_1d(fft_plan%n,in,in,FFTW_R2HC,FFTW_ESTIMATE)
     call fftw_execute_r2r(plan, in, in)
     call fftw_destroy_plan(plan)
@@ -210,25 +219,40 @@ contains
       SLL_ALLOCATE(fftpack_new_fft%wsave(4*n + 15),ierr)
       call cffti(n, fftpack_new_fft%wsave)
     else
-      SLL_ALLOCATE(fftpack_new_fft%wsave(2*n + 15),ierr)
-      call rffti(n, fftpack_new_fft%wsave)
+      SLL_ALLOCATE(fftpack_new_fft%dwsave(2*n + 15),ierr)
+      !call rffti(n, fftpack_new_fft%wsave)
+      call dffti(n, fftpack_new_fft%dwsave)
     endif
   end function fftpack_new_fft
 
-  function fftpack_apply_fft_real(fft,data,direction)
-    type(sll_fft_plan), pointer             :: fftpack_apply_fft_real
+!  function fftpack_apply_fft_real(fft,data,direction)
+!    type(sll_fft_plan), pointer             :: fftpack_apply_fft_real
+!    type(sll_fft_plan), pointer, intent(in) :: fft
+!    sll_int32, intent(in)                   :: direction
+!    sll_real32, dimension(1:fft%N), intent(inout) :: data
+!    
+!    if( direction .eq. FFT_FORWARD) then  
+!      call rfftf(fft%N,data,fft%wsave)
+!    else
+!      call rfftb(fft%N,data,fft%wsave)
+!    endif
+!    fftpack_apply_fft_real => fft
+!  end function fftpack_apply_fft_real
+  
+  function fftpack_apply_fft_real64(fft,data,direction)
+    type(sll_fft_plan), pointer             :: fftpack_apply_fft_real64
     type(sll_fft_plan), pointer, intent(in) :: fft
     sll_int32, intent(in)                   :: direction
-    sll_real32, dimension(1:fft%N), intent(inout) :: data
+    sll_real64, dimension(1:fft%N), intent(inout) :: data
     
     if( direction .eq. FFT_FORWARD) then  
-      call rfftf(fft%N,data,fft%wsave)
+      call dfftf(fft%N,data,fft%dwsave)
     else
-      call rfftb(fft%N,data,fft%wsave)
+      call dfftb ( fft%N, data, fft%dwsave )
     endif
-    fftpack_apply_fft_real => fft
-  end function fftpack_apply_fft_real
-  
+    fftpack_apply_fft_real64 => fft
+  end function fftpack_apply_fft_real64
+
   function fftpack_apply_fft_complex32(fft,data,direction)
     type(sll_fft_plan), pointer             :: fftpack_apply_fft_complex32
     type(sll_fft_plan), pointer, intent(in) :: fft
@@ -273,12 +297,15 @@ contains
       sll_int32                                  :: ierr
 
       if( fft%mod .eq. FFTW_MOD ) then
-
+        !print *, 'nothing in delete fftw'
+        !return
       endif
 
       if( fft%mod .eq. FFTPACK_MOD ) then
-        if( associated(fft%wsave) ) &
-          SLL_DEALLOCATE(fft%wsave,ierr)
+        !if( associated(fft%wsave) ) &
+        !  SLL_DEALLOCATE(fft%wsave,ierr)
+        if( associated(fft%dwsave) ) &
+          SLL_DEALLOCATE(fft%dwsave,ierr)
       endif
 
       if( fft%mod .eq. 0 ) then
@@ -291,10 +318,10 @@ contains
         if( associated(fft%twiddles_n) ) &
           SLL_DEALLOCATE(fft%twiddles_n,ierr)
        endif
-        if( associated(fft%mode) ) &
-          SLL_DEALLOCATE(fft%mode,ierr)
-        if( associated(fft%index) ) &
-          SLL_DEALLOCATE(fft%index,ierr)      
+        !if( associated(fft%mode) ) &
+        !  SLL_DEALLOCATE(fft%mode,ierr)
+        !if( associated(fft%index) ) &
+        !  SLL_DEALLOCATE(fft%index,ierr)      
       endif
       
 
@@ -354,8 +381,6 @@ contains
     type(sll_fft_plan), pointer, intent(in) :: fft
     sll_int32, intent(in)                   :: direction
     sll_real64, dimension(0:fft%N-1), intent(inout) :: data
-    !sll_real64, dimension(0:fft%N/2-1) :: twiddles
-    !sll_real64, dimension(0:fft%N-1)   :: twiddles_n
     
     if( fft%mod .eq. FFTW_MOD) then
 #ifndef _NOFFTW
@@ -364,13 +389,16 @@ contains
 #else
       stop 'FFTW NOT INSTALLED'
 #endif
+    else if( fft%mod .eq. FFTPACK_MOD) then
+#ifndef _NOFFTPACK
+      sll_apply_fft_real64 => fftpack_apply_fft_real64(fft,data,direction)
+      return
+#else
+      stop 'FFTPACK NOT INSTALLED'
+#endif
     endif
 
-    !call compute_twiddles_real_array( fft%N, twiddles_n )
-    !call compute_twiddles_real_array( fft%N/2, twiddles )
     call real_data_fft_dit( data, fft%N, fft%twiddles, fft%twiddles_n, direction )
-
-    call bit_reverse_real(fft%N,data)
     sll_apply_fft_real64 => fft
   end function sll_apply_fft_real64
 
