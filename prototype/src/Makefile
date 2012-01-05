@@ -8,6 +8,7 @@ default:
 	(cd diagnostics; scons)
 	(cd non_linear_solvers; scons)
 	(cd splines; scons)
+        (cd fftpack; make)
 	(cd fft; scons)
 	(cd collective; scons CPATH='.' LPATH='.')
 	(cd remap; scons)

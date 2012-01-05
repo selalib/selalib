@@ -3,10 +3,13 @@ import os
 import socket
 import distutils.util
 
-#os.system("bash install.sh")
+# detection of fftw library doesn't work actually
+# so you can't use it!
+
+if not os.path.exists("../fftpack/fftpack.mod"):
+   os.system("cd ../fftpack ; make")
 os.system("rm -f conf.h")
 os.system("touch conf.h")
-#os.system("echo '! Generated automatically.  DO NOT EDIT!' >> conf.h")
 
 fichier = open("conf.h", "w")
 fichier.write("! Generated automatically.  DO NOT EDIT!\n")
@@ -57,5 +60,6 @@ env.Library('sll_assertion', ["../assert/sll_assert.F90"])
 env.Library('sll_misc',      ["../utilities/misc_utils.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Program('unit_test',     ["unit_test.F90","sll_fft.F90"])
+#env.Program('unit_test_original',     ["unit_test_original.F90","sll_fft.F90"])
 
 
