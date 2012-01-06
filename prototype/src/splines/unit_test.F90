@@ -19,7 +19,10 @@ program spline_tester
   sll_int32                              :: i, j, i_test, j_test
   type(sll_spline_1d), pointer           :: sp1
   type(sll_spline_1d), pointer           :: sp2
-  type(sll_spline_2d), pointer           :: sp2d
+  type(sll_spline_2d), pointer           :: sp2d_1
+  type(sll_spline_2d), pointer           :: sp2d_2
+  type(sll_spline_2d), pointer           :: sp2d_3
+  type(sll_spline_2d), pointer           :: sp2d_4
   sll_real64                             :: x
   sll_real64                             :: phase, phase_x1, phase_x2
   sll_real64, allocatable, dimension(:)  :: data
@@ -226,9 +229,7 @@ program spline_tester
   do j_test=1,nbtest
      do i_test=1,nbtest
         
-        SLL_ALLOCATE(data_2d(NPX1, NPX2), err)
-        print *, 'Filling data:'
-        
+        SLL_ALLOCATE(data_2d(NPX1, NPX2), err)        
         SLL_ALLOCATE(coordinates_i(NPX1),err)
         SLL_ALLOCATE(coordinates_j(NPX2),err)
         
@@ -247,43 +248,110 @@ program spline_tester
               data_2d(i,j) = f(phase_x1, i_test)*f(phase_x2, j_test)
            end do
         end do
-        print *, 'Allocating 2D spline...'
         
-        sp2d => new_spline_2D( NPX1, NPX2, &
+        ! Test the periodic-periodic spline2d 
+        sp2d_1 => new_spline_2D( NPX1, NPX2, &
              X1MIN, X1MAX, &
              X2MIN, X2MAX, &
              PERIODIC_SPLINE, PERIODIC_SPLINE )
-        
-        print *, 'Computing the 2D spline...'
-        call compute_spline_2D_prdc_prdc( data_2d, sp2d )
-        print *, 'Completed computing the 2d spline.'
-        print *, coordinates_i(1), coordinates_i(NPX1)
-        print *, coordinates_j(1), coordinates_j(NPX2)
-        
+        call compute_spline_2D_prdc_prdc( data_2d, sp2d_1 )
         acc_2D = 0.0
         do j=1, NPX2
            do i=1, NPX1
               x1 = coordinates_i(i)
               x2 = coordinates_j(j)
               acc_2D = acc_2D + &
-                   abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d))
+                   abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_1))
            end do
         end do
-        
-        print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
-             acc_2D/(NPX1*NPX2)
-        
         if (acc_2D/(NPX1*NPX2)>=1.e-14) then
            ok = 0
-           print*, '(i_test, j_test) = (', i_test, ',', j_test,')'
+           print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
+           print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
+             acc_2D/(NPX1*NPX2)
            print *, 'splines unit test stopped by periodic-periodic spline2d test failure'
            stop
         endif
+        ! Test the Hermite-periodic spline2d
+       sp2d_2 => new_spline_2D( NPX1, NPX2, &
+             X1MIN, X1MAX, &
+             X2MIN, X2MAX, &
+             HERMITE_SPLINE, PERIODIC_SPLINE, &
+             x1_min_slope = fprime(X1MIN, i_test), &
+             x1_max_slope = fprime(X1MAX, i_test) )
+        call compute_spline_2D_hrmt_prdc( data_2d, sp2d_2 )
+        acc_2D = 0.0
+        do j=1, NPX2
+           do i=1, NPX1
+              x1 = coordinates_i(i)
+              x2 = coordinates_j(j)
+              acc_2D = acc_2D + &
+                   abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_2))
+           end do
+        end do
+        if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+           ok = 0
+           print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
+           print *, 'Average cumulative error, spline2d, Hermite-periodic: ', &
+             acc_2D/(NPX1*NPX2)
+           print *, 'splines unit test stopped by Hermite-periodic spline2d test failure'
+           stop
+        endif
+        ! Test the periodic-Hermite spline2d
+        sp2d_3 => new_spline_2D( NPX1, NPX2, &
+             X1MIN, X1MAX, &
+             X2MIN, X2MAX, &
+             PERIODIC_SPLINE, HERMITE_SPLINE, &
+             x2_min_slope = fprime(X2MIN, i_test), &
+             x2_max_slope = fprime(X2MAX, i_test) )
+        call compute_spline_2D_prdc_hrmt( data_2d, sp2d_3 )
+        acc_2D = 0.0
+        do j=1, NPX2
+           do i=1, NPX1
+              x1 = coordinates_i(i)
+              x2 = coordinates_j(j)
+              acc_2D = acc_2D + &
+                   abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_3))
+           end do
+        end do
+        if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+           ok = 0
+           print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
+           print *, 'Average cumulative error, spline2d, periodic-Hermite: ', &
+             acc_2D/(NPX1*NPX2)
+           print *, 'splines unit test stopped by periodic-Hermite spline2d test failure'
+           stop
+        endif
+        ! Test the Hermite-Hermite spline2d
+        sp2d_4 => new_spline_2D( NPX1, NPX2, &
+             X1MIN, X1MAX, &
+             X2MIN, X2MAX, &
+             HERMITE_SPLINE, HERMITE_SPLINE,&
+             fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
+             fprime(X2MIN, i_test), fprime(X2MAX, i_test) )   
+        call compute_spline_2D_hrmt_hrmt( data_2d, sp2d_4 )
+        acc_2D = 0.0
+        do j=1, NPX2
+           do i=1, NPX1
+              x1 = coordinates_i(i)
+              x2 = coordinates_j(j)
+              acc_2D = acc_2D + &
+                   abs(data_2d(i,j) - interpolate_value_2D(x1,x2,sp2d_4))
+           end do
+        end do
+        if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+           ok = 0
+           print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
+           print *, 'Average cumulative error, spline2d, Hermite-Hermite: ', &
+             acc_2D/(NPX1*NPX2)
+           print *, 'splines unit test stopped by Hermite-Hermite spline2d test failure'
+           stop
+        endif
         
-#if 0
-        print *, 'Deleting the 2D spline...'
-        call delete(sp2d)
-#endif
+        call delete(sp2d_1)
+        call delete(sp2d_2)
+        call delete(sp2d_3)
+        call delete(sp2d_4)
         
         SLL_DEALLOCATE_ARRAY(data_2d, err)
         SLL_DEALLOCATE_ARRAY(coordinates_i,err)
