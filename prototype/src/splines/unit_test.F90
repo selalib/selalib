@@ -1,3 +1,17 @@
+
+!***********************************************************************************
+!
+! Selalib      
+! Module: unit_test.F90
+!
+!> @brief 
+!> sll_splines unit test
+!   
+!> @authors                    
+!> Aliou DIOUF (aliou.l.diouf@inria.fr), Eric Sonnendrücker (sonnen@math.unistra.fr)
+!                                  
+!************************************************************************************
+
 program spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -45,8 +59,8 @@ program spline_tester
   sll_real64                             :: reduction
   sll_int32, parameter                   :: nbtest = 12
   
-#define NPX1  1025
-#define NPX2  513
+#define NPX1  65
+#define NPX2  33
 #define X1MIN (-2.0_f64*sll_pi)
 #define X1MAX ( 2.0_f64*sll_pi)
 #define X2MIN (-sll_pi)
