@@ -2,7 +2,7 @@
 !***********************************************************************************
 !
 ! Selalib      
-! Module: newton_raphson  
+! Module: newton_raphson.F90  
 !   
 !> @author                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)

@@ -825,7 +825,8 @@ contains  ! ****************************************************************
     bc_selector = 0
     if( x1_bc_type .eq. HERMITE_SPLINE ) then 
        bc_selector = bc_selector + 1
-    else if ( x2_bc_type .eq. HERMITE_SPLINE ) then
+    end if
+    if ( x2_bc_type .eq. HERMITE_SPLINE ) then
        bc_selector = bc_selector + 2
     end if
     new_spline_2D%bc_mix_identifier = bc_selector
