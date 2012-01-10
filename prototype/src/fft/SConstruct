@@ -6,27 +6,33 @@ import distutils.util
 # detection of fftw library doesn't work actually
 # so you can't use it!
 
-if not os.path.exists("../fftpack/fftpack.mod"):
-   os.system("cd ../fftpack ; make")
+#if not os.path.exists("../fftpack/fftpack.mod"):
+#   os.system("cd ../fftpack ; make")
 os.system("rm -f conf.h")
 os.system("touch conf.h")
 
 fichier = open("conf.h", "w")
 fichier.write("! Generated automatically.  DO NOT EDIT!\n")
 
-TOTO = ''
-TOTOLIB = ''
-if os.path.exists("../fftw/fftw3.mod"):
-   TOTO = 'FFTW3'
-   TOTOLIB = '../fftw/lib'
-else:
-   fichier.write("#define _NOFFTW\n")
 
-TATA = ''
-if os.path.exists("../fftpack/fftpack.mod"):
-   TATA = 'fftpack'
-else:
-   fichier.write("#define _NOFFTPACK\n")
+FFTW_LIB_PATH = ''
+FFTW_INC_PATH = ''
+FFTW = ''
+if os.path.exists("/opt/local/lib/libfftw3.a") and os.path.exists("/opt/local/include/fftw3.f03"):
+  FFTW_LIB_PATH = '/opt/local/lib'
+  FFTW_INC_PATH = '/opt/local/include'
+  FFTW = 'fftw3'
+elif os.path.exists("/usr/local/lib/libfftw3.a") and os.path.exists("/usr/local/include/fftw3.f03"):
+  FFTW_LIB_PATH = '/usr/local/lib'
+  FFTW_INC_PATH = '/usr/local/include'
+  FFTW = 'fftw3'
+elif os.path.exists("../fftw/lib/libfftw3.a") and os.path.exists("../fftw/include/fftw3.f03"):
+  FFTW_LIB_PATH = '../fftw/lib'
+  FFTW_INC_PATH = '../fftw/include'
+  FFTW = 'fftw3'
+else :
+  fichier.write("#define _NOFFTPACK\n")
+
 
 fichier.close()
 
@@ -38,11 +44,11 @@ print 'platform : ' + platform
 
 env = Environment( ENV = os.environ,
                    F90PATH = ['../memory','../precision','../assert',
-                              '../utilities','../constants','../timer','../fftpack/','../fftw/'],
+                              '../utilities','../constants','../timer','../fftpack/',FFTW_INC_PATH],
                    FORTRANMODDIRPREFIX= '-J', 
-                   LIBPATH= ['.','../timer','../fftpack',TOTOLIB],
+                   LIBPATH= ['.','../timer','../fftpack',FFTW_LIB_PATH],
                    LIBS=['sll_memory','sll_precision','sll_assertion',
-                         'sll_misc','sll_constants','sll_timer',TATA,TOTO],
+                         'sll_misc','sll_constants','sll_timer','fftpack',FFTW],
                    F90FLAGS = ['-g', '-W','-Wall','-DTEST_TIME', 
                                '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
@@ -52,7 +58,7 @@ env = Environment( ENV = os.environ,
 #env.Append(LIBS = ['nsl', 'socket'])
 
 #env.Library('FFTW3',        ["../fftw/fftw.f03","../fftw/fftw-3.3/include/fftw3.f03"])
-#env.Library('fftpack',      ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
+env.Library('fftpack',       ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
 env.Library('sll_timer',     ["../timer/sll_timer.F90"])
 env.Library('sll_memory',    ["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
