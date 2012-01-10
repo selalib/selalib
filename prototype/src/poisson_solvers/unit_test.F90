@@ -26,11 +26,12 @@ sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
 sll_int32   :: nc_eta1, nc_eta2
 sll_int32   :: error
 
-type(poisson_2d_periodic), pointer :: poisson
+type(poisson_2d_periodic), pointer :: poisson_e_fields
+type(poisson_2d_periodic), pointer :: poisson_potential
 type(geometry_2D),         pointer :: geom
 type(mesh_descriptor_2D),  pointer :: mesh
 type(field_2D_vec2),       pointer :: exy, exy_exact
-type(field_2D_vec1),       pointer :: rho, phi
+type(field_2D_vec1),       pointer :: rho, phi, phi_exact
 sll_real64                         :: x1, x2
 sll_int32                          :: mode
 sll_int32                          :: i, j
@@ -49,38 +50,49 @@ call write_mesh_2D(mesh)
 
 rho       => new_field_2D_vec1(mesh)
 phi       => new_field_2D_vec1(mesh)
+phi_exact => new_field_2D_vec1(mesh)
 exy       => new_field_2D_vec2(mesh)
 exy_exact => new_field_2D_vec2(mesh)
 
-poisson   => new_poisson_2d_periodic(mesh)
+poisson_e_fields  => new_poisson_2d_periodic(exy)
+poisson_potential => new_poisson_2d_periodic(phi)
 
 mode = 2
 do i = 1, nc_eta1+1
    do j = 1, nc_eta2+1
       x1 = eta1_min+(i-1)*mesh%delta_eta1
       x2 = eta2_min+(j-1)*mesh%delta_eta2
+      phi%data(i,j) = mode * sin(mode*x1) * cos(mode*x2)
       rho%data(i,j) = -2_f64 * mode**3 * sin(mode*x1)*cos(mode*x2)
       exy%data(i,j)%v1 =  mode**2*cos(mode*x1)*cos(mode*x2)
       exy%data(i,j)%v2 = -mode**2*sin(mode*x1)*sin(mode*x2)
    end do
 end do
-call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
-call write_vec2d(exy%data%v1, exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy0","mesh",0)
+
+call write_vec1d(-phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi0","mesh",0)
+call write_vec1d( rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
+call write_vec2d( exy%data%v1,exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy0","mesh",0)
 
 FIELD_DATA(exy_exact) = FIELD_DATA(exy)
+FIELD_DATA(phi_exact) = FIELD_DATA(phi)
 
-call solve(poisson,exy%data%v1,exy%data%v2,rho%data,phi%data,error)
+call solve_poisson_2d_periodic(poisson_potential,phi%data,rho%data,error)
+call solve_poisson_2d_periodic(poisson_e_fields,exy,rho,error)
 
+call write_vec1d(phi_exact%data+phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi1","mesh",0)
 call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho1","mesh",0)
-call write_vec2d(exy%data%v1, exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","mesh",0)
+call write_vec2d(exy%data%v1,exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","mesh",0)
 
 write(*,*) " Ex Error = " , maxval(abs(exy_exact%data%v1-exy%data%v1))
 write(*,*) " Ey Error = " , maxval(abs(exy_exact%data%v2-exy%data%v2))
+write(*,*) " Po Error = " , maxval(abs(phi_exact%data+phi%data))
 
-call delete(poisson)
+call delete_poisson_2d_periodic(poisson_e_fields)
+call delete_poisson_2d_periodic(poisson_potential)
 
 call delete_field_2D_vec1( rho )
 call delete_field_2D_vec1( phi )
+call delete_field_2D_vec1( phi_exact )
 call delete_field_2D_vec2( exy )
 call delete_field_2D_vec2( exy_exact )
 
@@ -110,8 +122,6 @@ call delete_field_2D_vec2( exy_exact )
 !PN!     
 !PN!! check solution
 !PN!print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
-
-
 
 end program testPoisson
 
