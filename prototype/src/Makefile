@@ -8,7 +8,6 @@ default:
 	(cd diagnostics; scons)
 	(cd non_linear_solvers; scons)
 	(cd splines; scons)
-        (cd fftpack; make)
 	(cd fft; scons)
 	(cd collective; scons CPATH='.' LPATH='.')
 	(cd remap; scons)
@@ -16,12 +15,6 @@ default:
 	(cd ode_solvers; scons)
 	(cd mesh_types; scons)
 	(cd distribution_function; scons)
-
-install_fftw:
-	(cd fftw; make)
-
-install_fftpack:
-	(cd fftpack; make)
 
 clean:
 	(cd constants; scons -c)

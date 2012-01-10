@@ -1,17 +1,132 @@
+!------------------------------------------------------------------------------
+! SELALIB
+!------------------------------------------------------------------------------
+! MODULE: sll_fft
+!
+! DESCRIPTION:
+!> @file sll_fft.F90
+!> @namespace sll_fft
+!> @author EDWIN C. GOLCHER & SAMUEL DE SANTIS
+!> @brief Interface around fftpack, fftw and the interne selalib fft.
+!> @details 
+!>
+!> 
+!>
+!> \section how How to use sll_fft module?
+!>
+!> First, initialize the plan with sll_new_fft function
+!> \code plan => sll_new_fft(n,data_type,flags)\endcode
+!> You can call sll_new_fft without the flags argument
+!> \code plan => sll_new_fft(n,data_type)\endcode
+!> In this case, sll_apply_fft computes an unnormalized FFT.
+!> 
+!> data_type can take two values : FFT_COMPLEX or FFT_REAL.
+!> sll_fft module provides only 64bit fast fourier transform.
+!> 
+!> flags can take the values : FFT_NORMALIZE_FORWARD, FFT_NORMALIZE_INVERSE
+!> You can combine flags with "+", by example
+!> \code sll_new_fft(n,data_type,FFT_NORMALIZE_FORWARD + FFT_NORMALIZE_INVERSE) \endcode
+!> 
+!> Second, apply the fft on the data with sll_apply_fft
+!> \code plan => sll_apply_fft(plan,data,direction)\endcode
+!> 
+!>
+!> \warning the output of sll_apply_fft is only in-place way and it is scrambled.
+!!          Thus, if you want the mode k (i.e. X_k) you must call sll_get_mode(k).
+!!          If you want know which mode is in position i in array data call
+!!          sll_get_index(i)
+!>
+!> \section example Examples:
+!>
+!> For complexe data :
+!> \code
+!> sll_comp64, dimension(0,n-1) :: data    ! n is the size of the problem
+!> type(sll_fft_plan), pointer  :: plan
+!> sll_int32                    :: flags
+!> sll_int32                    :: direction
+!>
+!> ** INIT DATA **
+!>
+!> plan => sll_new_fft(n,FFT_COMPLEX,flags)
+!> plan => sll_apply_fft(plan,data,direction)
+!>
+!> plan => sll_delete_fft(plan)
+!> \endcode
+!>
+!> By example if, the input data is \f$(x_0,x_1,x_2,x_3)\f$ the output is \f$(X_0,X_2,X_1,X_3)\f$.
+!> Thus, sll_get_index(1) returns 2 (cause data[1]=X_2) and sll_get_mode(1) returns X_1.
+!> 
+!> 
+!> 
+!> For real data : 
+!> \code
+!> sll_real64, dimension(0,n-1) :: data    ! n is the size of the problem
+!> type(sll_fft_plan), pointer  :: plan
+!> sll_int32                    :: flags
+!> sll_int32                    :: direction
+!>
+!> ** INIT DATA **
+!>
+!> plan => sll_new_fft(n,FFT_REAL,flags)
+!> plan => sll_apply_fft(plan,data,direction)
+!>
+!> plan => sll_delete_fft(plan)
+!> \endcode
+!>
+! \warning let p = sll_get_index(i), if p is even data(i) is the real part of X_p, else if p is odd data(i) is the imaginary part of X_p
+!>
+!>
+!>
+!> \section what What sll_fft really computes
+!>
+!> The forward (FFT_FORWARD) DFT of a 1d complex array x of size n computes an array X, where:
+!>
+!> \f[ X_k = \sum_{i=0}^{n-1} x_i e^{-2\pi i j k/n}. \f]
+!>
+!> The backward (FFT_INVERSE) DFT computes:
+!>
+!> \f[ x_i = \sum_{k=0}^{n-1} X_k e^{2\pi k j i/n}. \f]
+!>
+!> For the real transform, we have
+!> \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
+!!     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
+!> which must be interpreted as the complex array
+!> \f[ \begin{pmatrix} r_0 &,& 0   \\ 
+!!                     r_1 &,& i_1 \\ 
+!!                     \vdots  & & \vdots    \\ 
+!!                     r_{n/2-1} &,& i_{n/2-1} \\ 
+!!                     r_{n/2} &,& 0 \\ 
+!!                     r_{n/2-1} &,& -i_{n/2-1} \\ 
+!!                     \vdots    & & \vdots    \\ 
+!!                     r_1 &,& -i_1 
+!! \end{pmatrix}\f] 
+!> \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
+!!          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
+!> 
+!>
+!------------------------------------------------------------------------------
+
 module sll_fft
   use numeric_constants
 #include "conf.h"
 #ifndef _NOFFTW
-  use FFTW3
+  !use FFTW3
+  use, intrinsic :: iso_c_binding
+  !include 'fftw3.f03'
 #endif
 #ifndef _NOFFTPACK
-  use fftpack
+  !use fftpack
 #endif
 #include "sll_working_precision.h"
 #include "misc_utils.h"  
 #include "sll_assert.h"
 #include "sll_memory.h"
   implicit none
+#ifndef _NOFFTW
+  !use FFTW3
+  !use, intrinsic :: iso_c_binding
+  include 'fftw3.f03'
+#endif
 
   ! Basic 1D FFT descriptor:
   ! - N: number of samples
@@ -61,7 +176,7 @@ module sll_fft
   end enum
 
   enum, bind(C)
-     enumerator :: FFTPACK_MOD = 100, FFTW_MOD = 1000000000
+     enumerator :: FFTPACK_MOD = 100, FFTW_MOD = 1000000000, SLLFFT_MOD = 0
   end enum
 
   interface bit_reverse
@@ -73,6 +188,9 @@ module sll_fft
     module procedure sll_apply_fft_complex32,  sll_apply_fft_real64, sll_apply_fft_complex64
   end interface
 
+  interface sll_get_mode
+    module procedure sll_get_mode_real, sll_get_mode_complex, sll_get_mode_complex32
+  end interface
 contains
 
   ! data_type = 0 for real
@@ -82,7 +200,7 @@ contains
     type(sll_fft_plan), pointer     :: sll_new_fft
     sll_int32, intent(in)           :: n, data_type
     sll_int32, optional, intent(in) :: style
-    sll_int32                       :: ierr, s, mod, n_2
+    sll_int32                       :: ierr, s, mod, n_2, i
    
     ! By default style = 0
     if(present(style)) then
@@ -94,11 +212,11 @@ contains
         mod = FFTW_MOD
       else
         s = style
-        mod = 0
+        mod = SLLFFT_MOD
       endif
     else
       s = 0
-      mod = 0
+      mod = SLLFFT_MOD
     endif
 
     if( mod .eq. FFTPACK_MOD ) then
@@ -125,15 +243,26 @@ contains
     sll_new_fft%data_type = data_type
     sll_new_fft%mod = mod
     !SLL_ALLOCATE(sll_new_fft%index(0:n-1),ierr)
-    !SLL_ALLOCATE(sll_new_fft%mode(n),ierr)
+
     !sll_new_fft%index => compute_index(n)
 
     n_2 = n/2
     if(data_type .eq. FFT_COMPLEX) then
+
+      SLL_ALLOCATE(sll_new_fft%mode(0:n-1),ierr)
+      do i=0,n-1
+        sll_new_fft%mode(i) = compute_mode(i,n)
+      enddo
+
       SLL_ALLOCATE(sll_new_fft%t(1:n_2),ierr)
       call compute_twiddles(n,sll_new_fft%t)
       call bit_reverse(n_2,sll_new_fft%t)
     else if(data_type .eq. FFT_REAL) then
+
+      !do i=0,n-1
+      !  sll_new_fft%mode(i) = sll_get_mode_real(i,n)
+      !enddo
+
       SLL_ALLOCATE(sll_new_fft%twiddles(0:n_2-1),ierr)
       SLL_ALLOCATE(sll_new_fft%twiddles_n(0:n-1),ierr)
       call compute_twiddles_real_array( n, sll_new_fft%twiddles_n )
@@ -145,6 +274,97 @@ contains
       stop 'Error in ==sll_new_fft== unknown data_type'
     endif
   end function sll_new_fft
+
+  function sll_get_mode_complex32(k,plan,data) result(mode)
+    sll_comp32                                :: mode
+    sll_int32, intent(in)                     :: k
+    type(sll_fft_plan)                        :: plan
+    sll_comp32, dimension(0:) , intent(in)    :: data
+    sll_int32                                 :: n_2, n
+  
+    n = plan%N
+    n_2 = n/2
+
+    SLL_ASSERT( (k .ge. 0) .and. (k .lt. n) )
+    SLL_ASSERT( size(data) .eq. n )
+   
+    if(plan%mod .eq. FFTW_MOD) then
+      mode = data(k)
+    else if(plan%mod .eq. FFTPACK_MOD) then
+      mode = data(k)
+    else if(plan%mod .eq. SLLFFT_MOD) then
+      mode = data(plan%mode(k))
+    endif
+  end function sll_get_mode_complex32
+  
+  function sll_get_mode_complex(k,plan,data) result(mode)
+    sll_comp64                                :: mode
+    sll_int32, intent(in)                     :: k
+    type(sll_fft_plan)                        :: plan
+    sll_comp64, dimension(0:) , intent(in)    :: data
+    sll_int32                                 :: n_2, n
+  
+    n = plan%N
+    n_2 = n/2
+
+    SLL_ASSERT( (k .ge. 0) .and. (k .lt. n) )
+    SLL_ASSERT( size(data) .eq. n )
+   
+    if(plan%mod .eq. FFTW_MOD) then
+      mode = data(k)
+    else if(plan%mod .eq. FFTPACK_MOD) then
+      mode = data(k)
+    else if(plan%mod .eq. SLLFFT_MOD) then
+      mode = data(plan%mode(k))
+    endif
+  end function sll_get_mode_complex
+
+  function sll_get_mode_real(k,plan,data) result(mode)
+    sll_comp64                                :: mode
+    sll_int32, intent(in)                     :: k
+    type(sll_fft_plan) , intent(in)           :: plan
+    sll_real64, dimension(0:) , intent(in) :: data
+    sll_int32                                 :: n_2, n
+   
+    n = plan%N
+    n_2 = n/2
+
+    SLL_ASSERT( (k .ge. 0) .and. (k .lt. n) )
+    SLL_ASSERT( size(data) .eq. n )
+
+
+    if(plan%mod .eq. FFTPACK_MOD) then
+      if( k .eq. 0 ) then
+        mode = CMPLX(data(0),0.d0)
+      else if( k .eq. n_2 ) then
+        mode = CMPLX(data(n-1),0.d0)
+      else if( k .gt. n_2 ) then
+        mode = CMPLX( data(2*(k-n_2)-1) , -data(2*(k-n_2)) )
+      else
+        mode = CMPLX( data(2*k-1) , data(2*k) )
+      endif
+    else if(plan%mod .eq. SLLFFT_MOD) then
+      if( k .eq. 0 ) then
+        mode = CMPLX(data(0),0.d0)
+      else if( k .eq. n_2 ) then
+        mode = CMPLX(data(1),0.d0)
+      else if( k .gt. n_2 ) then
+        mode = CMPLX( data(2*(k-n_2)) , -data(2*(k-n_2)+1) )
+      else
+        mode = CMPLX( data(2*k) , data(2*k+1) )
+      endif
+    else if(plan%mod .eq. FFTW_MOD) then
+      if( k .eq. 0 ) then
+        mode = CMPLX(data(0),0.d0)
+      else if( k .eq. n_2 ) then
+        mode = CMPLX(data(n_2),0.d0)
+      else if( k .gt. n_2 ) then
+        mode = CMPLX( data(k-n_2) , -data(n-k+n_2) )
+      else
+        mode = CMPLX( data(k) , data(n-k) )
+      endif
+    endif
+  end function sll_get_mode_real
 
 
 ! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
@@ -245,7 +465,7 @@ contains
     sll_int32, intent(in)                   :: direction
     sll_real64, dimension(1:fft%N), intent(inout) :: data
     
-    if( direction .eq. FFT_FORWARD) then  
+    if( direction .eq. FFT_FORWARD) then
       call dfftf(fft%N,data,fft%dwsave)
     else
       call dfftb ( fft%N, data, fft%dwsave )
@@ -273,22 +493,37 @@ contains
 #endif
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 
-  function compute_index(n)
-    sll_int32, dimension(:), pointer :: compute_index
-    sll_int32, allocatable, dimension(:) :: a
-    sll_int32 :: n, i, ierr
+  recursive function compute_mode(k,n) result(i)
+    sll_int32, intent(in)  :: k, n
+    sll_int32              :: i 
+    
+    if( k .eq. 0 ) then
+      i = 0 
+    else if( mod(k,2) .eq. 1 ) then
+      i = n/2 + compute_mode(k-1,n)
+    else
+      i = compute_mode(k/2,n/2)
+    endif
+  end function
+
+  function compute_index(n) result(ind)
+    sll_int32, intent(in)                    :: n
+    sll_int32, dimension(0:n-1)              :: ind
+    sll_int32, dimension(0:n-1)              :: a
+    sll_int32                                :: i
   
-    SLL_ALLOCATE(compute_index(0:n-1),ierr)
-    SLL_ALLOCATE(a(1:n),ierr)
+    !SLL_ALLOCATE(a(0:n-1),ierr)
+    !SLL_ALLOCATE(index(0:n-1),ierr)
     do i=0,n-1
-      a(i+1) = i
+      a(i) = i
     enddo
     call bit_reverse(n,a)
 
     do i=0,n-1 
-      compute_index(a(i+1)) = i
+      ind(a(i)) = i
     enddo 
-    SLL_DEALLOCATE_ARRAY(a,ierr)
+
+    !SLL_DEALLOCATE_ARRAY(a,ierr)
   end function compute_index
 
   function sll_delete_fft(fft)
@@ -302,14 +537,19 @@ contains
       endif
 
       if( fft%mod .eq. FFTPACK_MOD ) then
-        !if( associated(fft%wsave) ) &
-        !  SLL_DEALLOCATE(fft%wsave,ierr)
+       if( fft%data_type .eq. FFT_COMPLEX ) then
+        if( associated(fft%wsave) ) &
+          SLL_DEALLOCATE(fft%wsave,ierr)
+       else
         if( associated(fft%dwsave) ) &
           SLL_DEALLOCATE(fft%dwsave,ierr)
+       endif
       endif
 
-      if( fft%mod .eq. 0 ) then
+      if( fft%mod .eq. SLLFFT_MOD ) then
        if( fft%data_type .eq. FFT_COMPLEX ) then
+        if( associated(fft%mode) ) &
+          SLL_DEALLOCATE(fft%mode,ierr)
         if( associated(fft%t) ) &
           SLL_DEALLOCATE(fft%t,ierr)
        else
@@ -318,8 +558,6 @@ contains
         if( associated(fft%twiddles_n) ) &
           SLL_DEALLOCATE(fft%twiddles_n,ierr)
        endif
-        !if( associated(fft%mode) ) &
-        !  SLL_DEALLOCATE(fft%mode,ierr)
         !if( associated(fft%index) ) &
         !  SLL_DEALLOCATE(fft%index,ierr)      
       endif
@@ -349,7 +587,7 @@ contains
 
     call fft_dit_nr(data,fft%t,direction)
     sll_apply_fft_complex64 => fft
-    call bit_reverse_complex(fft%N,data)
+    !call bit_reverse_complex(fft%N,data)
   end function sll_apply_fft_complex64
 
   function sll_apply_fft_complex32(fft,data,direction)
@@ -439,7 +677,7 @@ contains
        print *, "ERROR: compute_twiddles(), array is of insufficient size."
        return
     else
-       theta   = 2.0*sll_pi/real(n)      ! basic angular interval
+       theta   = 2.d0*sll_pi/real(n,kind=f64)      ! basic angular interval
        ! By whatever means we use to compute the twiddles, some sanity
        ! checks are in order: 
        ! t(1)     = (1,0)
@@ -447,10 +685,10 @@ contains
        ! t(n/4+1) = (0,1)
        ! t(n/2+1) = (0,-1) ... but this one is not stored
        do k = 0,n/2-1
-          t(k+1) = exp((0.0,1.0)*theta*real(k))
+          t(k+1) = exp((0.d0,1.d0)*theta*real(k,kind=f64))
        end do
        ! might as well fix this by hand since the result isn't exact otherwise:
-       t(n/4+1) = (0.0,1.0)
+       t(n/4+1) = (0.d0,1.d0)
     end if
   end subroutine compute_twiddles
 
@@ -981,12 +1219,12 @@ contains
        omega_re           =  CREAL0(twiddles_n,i)
        omega_im           =  s*CIMAG0(twiddles_n,i) ! conjugated for FORWARD
        ! Compute tmp =  1/2*(H_i + H_(N/2-i)^*)
-       tmp_re             =  0.5*(hi_re + hn_2mi_re) 
-       tmp_im             =  0.5*(hi_im + hn_2mi_im)
+       tmp_re             =  0.5d0*(hi_re + hn_2mi_re) 
+       tmp_im             =  0.5d0*(hi_im + hn_2mi_im)
        ! Compute tmp2 = i/2*(H_n - H_(N/2-n)^*); the sign depends on the
        ! direction of the FFT.
-       tmp2_re            =  s*0.5*(hi_im - hn_2mi_im) 
-       tmp2_im            = -s*0.5*(hi_re - hn_2mi_re)
+       tmp2_re            =  s*0.5d0*(hi_im - hn_2mi_im) 
+       tmp2_im            = -s*0.5d0*(hi_re - hn_2mi_re)
        ! Multiply tmp2 by the twiddle factor and add to tmp.
        tmp3_re            =  tmp2_re*omega_re - tmp2_im*omega_im
        tmp3_im            =  tmp2_re*omega_im + tmp2_im*omega_re
@@ -1004,8 +1242,8 @@ contains
     else if ( sign .eq. FFT_INVERSE ) then
        ! Unpack the modes.
        tmp_re  = data(0)
-       data(0) = 0.5*(tmp_re + data(1))
-       data(1) = 0.5*(tmp_re - data(1))
+       data(0) = 0.5d0*(tmp_re + data(1))
+       data(1) = 0.5d0*(tmp_re - data(1))
        ! The following call has to change to refere to its natural wrapper...
        call fft_dit_nr_real_array_aux( data(0:n-1), &
                                        n_2,         &
