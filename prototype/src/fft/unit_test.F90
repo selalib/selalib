@@ -8,74 +8,70 @@ program unit_test
   
   
   sll_int32 :: i
-  sll_real64, allocatable, dimension(:)  :: dat, c
-  !sll_real64, allocatable, dimension(:)  :: in
+  sll_real64, allocatable, dimension(:)  :: dat
+  sll_real64, allocatable, dimension(:)  :: c
+  sll_real64, allocatable, dimension(:)  :: in
+  sll_comp64, allocatable, dimension(:)  :: diff
   type(time_mark), pointer :: mark 
   sll_real64 :: time
   sll_int32 :: s, n
   type(sll_fft_plan), pointer :: fft, fft3
- ! type(sll_fft_plan), pointer :: fft2  
+  type(sll_fft_plan), pointer :: fft2  
   mark => new_time_mark() 
-
-  do s=20,25
+  
+  do s=18,22
     n=2**s
     print *,'n=',n
     allocate(dat(0:n-1))
-    !allocate(in(0:n-1))
+    allocate(in(0:n-1))
     allocate(c(0:n-1))
+    allocate(diff(0:n-1))
 
-    dat(0) = 1.d0
-    c(0) = 1.d0
-    !in(0) = 1.d0
-    do i=1,n-1
-      dat(i) = 0.d0 !real(i,kind=f64)
-      c(i) = dat(i)
-      !in(i) = dat(i)
+    do i=0,n-1
+      dat(i) = f(i)
+      in(i) = f(i)
+      c(i) = f(i)
     enddo
 
-    mark => reset_time_mark(mark)
     fft => sll_new_fft(n,FFT_REAL)
-    time = time_elapsed_since(mark)
-    print *, 'SLL_FFT : initializing time : ',time
     mark => reset_time_mark(mark)
     fft => sll_apply_fft(fft,dat,FFT_FORWARD)
     time = time_elapsed_since(mark)
     print *, 'SLL_FFT : fft time : ',time
 
-    !mark => start_time_mark(mark)
-    !fft2 => sll_new_fft(n,FFT_REAL,FFTW_MOD)
-    !time = time_elapsed_since(mark)
-    !print *, 'FFTW : initializing time : ',time
-    !mark => reset_time_mark(mark)
-    !fft2 => sll_apply_fft(fft2,in,FFT_FORWARD)
-    !time = time_elapsed_since(mark)
-    !print *, 'FFTW : fft time : ',time
-
+#ifndef _NOFFTW
+    fft2 => sll_new_fft(n,FFT_REAL,FFTW_MOD)
     mark => reset_time_mark(mark)
-    fft3 => sll_new_fft(n,FFT_REAL,FFTPACK_MOD)
+    fft2 => sll_apply_fft(fft2,in,FFT_FORWARD)
     time = time_elapsed_since(mark)
-    print *, 'FFTPACK : initializing time : ',time
+    print *, 'FFTW : fft time : ',time
+#endif
+
+    fft3 => sll_new_fft(n,FFT_REAL,FFTPACK_MOD)
     mark => reset_time_mark(mark)
     fft3 => sll_apply_fft(fft3,c,FFT_FORWARD)
     time = time_elapsed_since(mark)
     print *, 'FFTPACK : fft time : ',time
 
-    dat = switch_halfcomplex_sll_to_fftw(n,dat)
-    c = switch_halfcomplex_fftpack_to_fftw(n,c)
-
     !open(4,file='dat.txt')
     !do i=0,n-1
-    !  write(4,*) dat(i) , in(i), c(i)!, r(i)
+    !  write(4,*) dat(i) , c(i)
     !enddo  
     !close(4)
 
-    !print *, MAXVAL(ABS(2*in-dat-c))
-    print *, MAXVAL(ABS(dat-c))
+    do i=0,n-1
+      diff(i) = abs(sll_get_mode(i,fft,dat) - sll_get_mode(i,fft2,in))
+    enddo
+    print *, MAXVAL( real(diff) ), MAXVAL( imag(diff) )
+
     deallocate(dat)
-    !deallocate(in)
+    deallocate(diff)
+    deallocate(in)
     deallocate(c)
-    fft => sll_delete_fft(fft)  
-    !fft2 => sll_delete_fft(fft2)  
+    fft => sll_delete_fft(fft)
+#ifndef _NOFFTW  
+    fft2 => sll_delete_fft(fft2)
+#endif  
     fft3 => sll_delete_fft(fft3)  
   enddo
  
@@ -142,4 +138,11 @@ contains
       switch_halfcomplex_fftpack_to_fftw(n-j) = t(i+1)
     enddo
   end function switch_halfcomplex_fftpack_to_fftw
+
+  function f(x) result(y)
+    sll_int32 :: x
+    sll_real64 :: y
+
+    y = cos(real(x,kind=f64))
+  end function
 end program unit_test
