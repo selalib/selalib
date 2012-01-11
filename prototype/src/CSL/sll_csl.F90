@@ -10,14 +10,15 @@ module sll_csl
 #include "sll_mesh_types.h"
 
   use numeric_constants
-  use sll_splines
+  !use sll_splines
+  use cubic_nonuniform_splines
   use ode_solvers
   use distribution_function
   implicit none
 
   type csl_workspace
-     type (sll_spline_1D), pointer :: spl_eta1
-     type (sll_spline_1D), pointer :: spl_eta2
+     type (cubic_nonunif_spline_1D), pointer :: spl_eta1
+     type (cubic_nonunif_spline_1D), pointer :: spl_eta2
   end type csl_workspace
 
 contains
@@ -53,29 +54,17 @@ contains
 
     ! initialize splines
     if (boundary1_type == PERIODIC) then
-       new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,          &
-                                                 eta1_min,         &
-                                                 eta1_max,         &
-                                                 PERIODIC_SPLINE )
+       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, PERIODIC_SPLINE)
     else if (boundary1_type == COMPACT) then
-       new_csl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,          &
-                                                 eta1_min,         &
-                                                 eta1_max,         &
-                                                 HERMITE_SPLINE )
+       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, HERMITE_SPLINE)
     else
        print*, 'sll_csl.F90: new_csl_workspace. boundary1_type ', boundary1_type, ' not implemented'
        stop
     end if
     if (boundary2_type == PERIODIC) then
-       new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
-                                                 eta2_min,         &
-                                                 eta2_max,         &
-                                                 PERIODIC_SPLINE )  
+       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, PERIODIC_SPLINE)
     else if (boundary2_type == COMPACT) then
-       new_csl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,     &
-                                                 eta2_min,         &
-                                                 eta2_max,         &
-                                                 HERMITE_SPLINE )   
+       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, HERMITE_SPLINE)  
     else
        print*, 'sll_csl.F90: new_csl_workspace. boundary2_type ', boundary2_type, ' not implemented'
        stop
@@ -166,6 +155,8 @@ contains
     sll_real64, dimension(:), pointer  ::  advfield_1D_1_new
     sll_real64, dimension(:), pointer  ::  primitive1
     sll_real64, dimension(:), pointer  ::  eta1_out 
+    sll_real64, dimension(:), pointer  ::  jacobian
+    procedure(scalar_function_2D), pointer  ::  df_jac
     
     sll_int32  :: i1
     sll_int32  :: i2
@@ -205,6 +196,9 @@ contains
     SLL_ALLOCATE(advfield_1D_1_new(nc_eta1+1),ierr)
     SLL_ALLOCATE(primitive1(nc_eta1+1),ierr)
     SLL_ALLOCATE(eta1_out(nc_eta1+1),ierr)
+    SLL_ALLOCATE(jacobian(nc_eta1+1),ierr)
+
+    df_jac => get_df_jac( dist_func_2D)
 
     ! advection along the first direction 
     eta2 = eta2_min + 0.5_f64*delta_eta2  ! at cell center in this direction
@@ -237,13 +231,14 @@ contains
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
                + delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
           eta1 = eta1 + delta_eta1
+          jacobian(i1) = df_jac( i1-1, i2 )
        end do
-       call advance_1D( primitive1,        &
+       call advance_1D_nonuniform( primitive1,        &
                         advfield_1D_1_old, &
                         advfield_1D_1_new, &
+                        jacobian,          &
                         order,             &
                         deltat,            &
-                        eta1_min,          &
                         nc_eta1,           &
                         delta_eta1,        &
                         boundary1_type,    &
@@ -287,6 +282,8 @@ contains
     sll_real64, dimension(:), pointer  ::  advfield_1D_2_new
     sll_real64, dimension(:), pointer  ::  primitive2
     sll_real64, dimension(:), pointer  ::  eta2_out
+    sll_real64, dimension(:,:), pointer  ::  df_jac
+    sll_real64, dimension(:), pointer  ::  jacobian
     sll_int32  :: i1
     sll_int32  :: i2
     sll_int32  :: ierr
@@ -325,6 +322,9 @@ contains
     SLL_ALLOCATE(advfield_1D_2_new(nc_eta2+1),ierr)
     SLL_ALLOCATE(primitive2(nc_eta2+1),ierr)
     SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
+    SLL_ALLOCATE(jacobian(nc_eta2+1),ierr)
+
+    df_jac = get_df_jac( dist_func_2D )
     
     ! advection along the second direction
     eta1 = eta1_min + 0.5_f64*delta_eta1 ! cell centered
@@ -357,13 +357,14 @@ contains
           ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
                + delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 )
+          jacobian(i2) = df_jac( i1, i2-1 )
        end do
-       call advance_1D( primitive2,        &
+       call advance_1D_nonuniform( primitive2,        &
                         advfield_1D_2_old, &
                         advfield_1D_2_new, &
+                        jacobian,          &
                         order,             &
                         deltat,            &
-                        eta2_min,          &
                         nc_eta2,           &
                         delta_eta2,        &
                         boundary2_type,    &
@@ -392,106 +393,109 @@ contains
   !> \param[in] boundary_type type of the boundary for spline interpolation (periodic or hermite implemented)
   !> \param[in] spline spline object (previously initialized)
   !> \param[out] eta_out origin of cells ending at grid points
-  subroutine advance_1D( primitive,     &
-                         fieldn,        &
-                         fieldnp1,      &
-                         order,         &
+  subroutine advance_1D_nonuniform( primitive,     &
+                                    fieldn,        &
+                                    fieldnp1,      &
+                                    jacobian,      &
+                                    order,         &
                          deltat,        &
-                         eta_min,       &
                          nc_eta,        & 
                          delta_eta,     &
                          boundary_type, &
                          spline,        &
-                         eta_out)  
+                         xi_out)  
     sll_real64, dimension(:), pointer, intent(inout) :: primitive
     sll_real64, dimension(:), pointer, intent(in)    :: fieldn
     sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
+    sll_real64, dimension(:), pointer, intent(in)    :: jacobian
+    sll_real64, dimension(:), allocatable            :: xi
     sll_int32, intent(in)                            :: order
     sll_real64, intent(in)                           :: deltat
-    sll_real64, intent(in)                           :: eta_min
     sll_int32, intent(in)                            :: nc_eta
     sll_real64, intent(in)                           :: delta_eta
     sll_int32, intent(in)                            :: boundary_type
-    type (sll_spline_1D), pointer           :: spline
-    sll_real64, dimension(:), intent(out)   :: eta_out
+    type (cubic_nonunif_spline_1D), pointer           :: spline
+    sll_real64, dimension(:), intent(out)   :: xi_out
     
     ! local variables
     sll_real64  :: avg
-    sll_real64  :: eta_max
-    sll_real64  :: eta
-    sll_real64  :: eta_new
+    sll_real64  :: xi_max
+    sll_real64  :: xi_new
     sll_real64  :: lperiod
     sll_int32   :: i
+    sll_int32   :: ierr
 
     ! check array dimensions
     SLL_ASSERT(size(primitive) >= nc_eta+1)
     SLL_ASSERT(size(fieldn)    >= nc_eta+1)
     SLL_ASSERT(size(fieldnp1)  >= nc_eta+1)
-    SLL_ASSERT(size(eta_out)   >= nc_eta+1)
+    SLL_ASSERT(size(xi_out)   >= nc_eta+1)
 
+    ! array allocation
+    SLL_ALLOCATE(xi(nc_eta+1),ierr)
+
+    ! compute xi (primitive of jacobian)
+    xi(1) = 0_f64  
+    do i = 2, nc_eta+1
+       xi(i) = xi(i-1) + jacobian(i)* delta_eta
+    end do
     select case (boundary_type)
     case (PERIODIC)
-       eta_max = eta_min + nc_eta * delta_eta 
        ! average of dist func along the line
-       avg = primitive ( nc_eta+1 ) / (eta_max - eta_min) 
+       avg = primitive ( nc_eta+1 ) / xi(nc_eta+1) 
        ! modify primitive so that it becomes periodic
-       eta = eta_min
        do i = 2, nc_eta+1
-          eta = eta + delta_eta
-          primitive ( i ) = primitive ( i ) - avg * (eta-eta_min)
+          primitive ( i ) = primitive ( i ) - avg * xi(i)
        end do
-       call implicit_ode( order,        &
-                          deltat,       &
-                          eta_min,      &
-                          nc_eta,       &
-                          delta_eta,    &
-                          PERIODIC_ODE, &
-                          eta_out,      &
-                          fieldn,       &
+       xi_max = xi(nc_eta + 1)
+       call implicit_ode_nouniform( order, &
+                          deltat,          &
+                          xi,              &
+                          nc_eta,          &
+                          PERIODIC_ODE,    &
+                          xi_out,          &
+                          fieldn,          &
                           fieldnp1 )
-       call compute_spline_1D_periodic( primitive, spline )
+       !call compute_spline_1D_periodic( primitive, spline )
+       call compute_spline_nonunif( primitive, spline, xi)
        ! interpolate primitive at origin of characteritics
-       call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
+       !call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
+       call interpolate_array_value_nonunif( xi_out, primitive, nc_eta+1, spline)
        ! come back to real primitive by adding average
-       if (eta_out(1) > eta_min + 0.5_f64*(eta_max-eta_min)) then
+       if (xi_out(1) > 0.5_f64*(xi_max)) then
           lperiod = -1.0_f64
        else
           lperiod = 0.0_f64
        end if
-       eta_new = eta_out(1) +  lperiod*(eta_max-eta_min)
-       primitive ( 1 ) = primitive ( 1 ) + avg * (eta_new-eta_min)
+       xi_new = xi_out(1) +  lperiod*xi_max
+       primitive ( 1 ) = primitive ( 1 ) + avg * xi_new
        !if ((eta_new > eta_max) .or. (eta_new <eta_min)) then
        !   print*, 1, eta_new, eta_out(1), primitive(1)
        !end if
-       eta = eta_min
        do i = 2, nc_eta+1
-          eta = eta_min + delta_eta
-          ! eta_out(i) is an increasing sequence because grid points cannot catch up with each other
           ! We need here to find the points where it has been modified by periodicity
-          if (eta_out(i) < eta_out(i-1)) then
+          if (xi_out(i) < xi_out(i-1)) then
              lperiod = lperiod + 1.0_f64
           end if
-          eta_new = eta_out(i) +  lperiod*(eta_max-eta_min)
-          primitive ( i ) = primitive ( i ) + avg * (eta_new-eta_min)
-          !if ((eta_new > eta_max) .or. (eta_new <eta_min)) then
-          !   print*, i, eta_new, eta_out(i), primitive(i)
-          !end if
+          xi_new = xi_out(i) +  lperiod*xi_max
+          primitive ( i ) = primitive ( i ) + avg * xi_new
        end do
 
     case (COMPACT)
-       call implicit_ode( order,       &
+       call implicit_ode_nonuniform( order,       &
                           deltat,      &
-                          eta_min,     &
+                          xi,     &
                           nc_eta,      &
-                          delta_eta,   &
                           COMPACT_ODE, &
-                          eta_out,     &
+                          xi_out,     &
                           fieldn,      &
                           fieldnp1 ) 
-       call compute_spline_1D_hermite( primitive, spline )
+       !call compute_spline_1D_hermite( primitive, spline )
+       call compute_spline_nonunif( primitive, spline, xi)
        ! interpolate primitive at origin of characteritics
-       call interpolate_array_values( eta_out, primitive, nc_eta+1, spline )
+       !call interpolate_array_values( xi_out, primitive, nc_eta+1, spline )
+       call interpolate_array_value_nonunif( xi_out, primitive, nc_eta+1, spline)
     end select
-  end subroutine advance_1D
+  end subroutine advance_1D_nonuniform
 
 end module sll_csl
