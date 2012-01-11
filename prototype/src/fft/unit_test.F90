@@ -8,141 +8,113 @@ program unit_test
   
   
   sll_int32 :: i
-  sll_real64, allocatable, dimension(:)  :: dat
-  sll_real64, allocatable, dimension(:)  :: c
-  sll_real64, allocatable, dimension(:)  :: in
-  sll_comp64, allocatable, dimension(:)  :: diff
+  sll_real64, allocatable, dimension(:)  :: copy_data_real, data_real_sll, data_real_w, data_real_pack
   type(time_mark), pointer :: mark 
-  sll_real64 :: time
+  sll_real64 :: time, val, phase, acc
   sll_int32 :: s, n
-  type(sll_fft_plan), pointer :: fft, fft3
-  type(sll_fft_plan), pointer :: fft2  
+  type(sll_fft_plan), pointer :: fft_plan, fftpack_plan, fftw_plan
   mark => new_time_mark() 
   
-  do s=18,22
+  do s=18,20
     n=2**s
     print *,'n=',n
-    allocate(dat(0:n-1))
-    allocate(in(0:n-1))
-    allocate(c(0:n-1))
-    allocate(diff(0:n-1))
+    allocate(copy_data_real(0:n-1))
+    allocate(data_real_w(0:n-1))
+    allocate(data_real_pack(0:n-1))
+    allocate(data_real_sll(0:n-1))
 
     do i=0,n-1
-      dat(i) = f(i)
-      in(i) = f(i)
-      c(i) = f(i)
+      phase             = 2.0*sll_pi*real(i)/real(n)
+      val               = test_func(phase)
+      data_real_w(i)    = val
+      data_real_pack(i) = val
+      data_real_sll(i)  = val
+      copy_data_real(i) = val
     enddo
-
-    fft => sll_new_fft(n,FFT_REAL)
+    
+    fft_plan => sll_new_fft(n,FFT_REAL,FFT_NORMALIZE_INVERSE)
     mark => reset_time_mark(mark)
-    fft => sll_apply_fft(fft,dat,FFT_FORWARD)
+    fft_plan => sll_apply_fft(fft_plan,data_real_sll,FFT_FORWARD)
     time = time_elapsed_since(mark)
     print *, 'SLL_FFT : fft time : ',time
+ 
+    fft_plan => sll_apply_fft(fft_plan,data_real_sll,FFT_INVERSE)
+    
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_sll(i))
+    enddo
+    print * ,'Averager error: ', acc/n
+    print * ,'Max error: ', MAXVAL(ABS(data_real_sll - copy_data_real))
+
 
 #ifndef _NOFFTW
-    fft2 => sll_new_fft(n,FFT_REAL,FFTW_MOD)
+
+    fftw_plan => sll_new_fft(n,FFT_REAL,FFTW_MOD + FFT_NORMALIZE_INVERSE)
     mark => reset_time_mark(mark)
-    fft2 => sll_apply_fft(fft2,in,FFT_FORWARD)
+    fftw_plan => sll_apply_fft(fftw_plan,data_real_w,FFT_FORWARD)
     time = time_elapsed_since(mark)
     print *, 'FFTW : fft time : ',time
+
+    fftw_plan => sll_apply_fft(fftw_plan,data_real_w,FFT_INVERSE)
+
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_w(i))
+    enddo
+    print * ,'Averager error: ', acc/n
+    print * ,'Max error: ', MAXVAL(ABS(data_real_w - copy_data_real))
+
+
 #endif
 
-    fft3 => sll_new_fft(n,FFT_REAL,FFTPACK_MOD)
+    fftpack_plan => sll_new_fft(n,FFT_REAL,FFTPACK_MOD + FFT_NORMALIZE_INVERSE)
     mark => reset_time_mark(mark)
-    fft3 => sll_apply_fft(fft3,c,FFT_FORWARD)
+    fftpack_plan => sll_apply_fft(fftpack_plan,data_real_pack,FFT_FORWARD)
     time = time_elapsed_since(mark)
     print *, 'FFTPACK : fft time : ',time
 
-    !open(4,file='dat.txt')
-    !do i=0,n-1
-    !  write(4,*) dat(i) , c(i)
-    !enddo  
-    !close(4)
+    fftpack_plan => sll_apply_fft(fftpack_plan,data_real_pack,FFT_INVERSE)
 
+    acc = 0.0_f64
     do i=0,n-1
-      diff(i) = abs(sll_get_mode(i,fft,dat) - sll_get_mode(i,fft2,in))
+      acc = acc + abs(copy_data_real(i) - data_real_pack(i))
     enddo
-    print *, MAXVAL( real(diff) ), MAXVAL( imag(diff) )
+    print * ,'Averager error: ', acc/n
+    print * ,'Max error: ', MAXVAL(ABS(data_real_pack - copy_data_real))
 
-    deallocate(dat)
-    deallocate(diff)
-    deallocate(in)
-    deallocate(c)
-    fft => sll_delete_fft(fft)
+
+    deallocate(copy_data_real)
+    deallocate(data_real_w)
+    deallocate(data_real_pack)
+    deallocate(data_real_sll)
+
+    fft_plan => sll_delete_fft(fft_plan)
 #ifndef _NOFFTW  
-    fft2 => sll_delete_fft(fft2)
+    fftw_plan => sll_delete_fft(fftw_plan)
 #endif  
-    fft3 => sll_delete_fft(fft3)  
+    fftpack_plan => sll_delete_fft(fftpack_plan)  
   enddo
  
 
 
 contains
-! for a real input we have a complex output of the form
-!      (   r_0 ,   0    )         # 0
-!      (   r_1 ,   i_1  )         # 1
-!      (   r_2 ,   i_2  )         # 2
-!         .         .
-!         .         .
-!         .         .
-! (  r_{n/2-1} ,  i_{n/2-1}  )
-! (  r_n/2     ,      0      )    # n/2
-! (  r_{n/2-1} ,  -i_{n/2-1} )
-! (  r_{n/2-2} ,  -i_{n/2-2} )
-!        .           .
-!        .           .
-!        .           .
-!     (   r_2  ,   -i_2 )
-!     (   r_1  ,   -i_1 )         # n/2 + n/2 - 1 = n - 1
-!
-!
-! the real output in FFTW have the form
-! [r_0,r_1,....,r_n/2,i_(n/2 - 1),...,i_1]
-!
-! the real output in SLL_FFT have the form
-! [r_0,r_n/2,r_1,i_1,r_2,i_2,..,i_(n/2 - 1),i_(n/2 - 1)]
-!
-! the real output in FFTPACK have the form
-! [r_0,,r_1,i_1,r_2,i_2,..,i_(n/2 - 1),i_(n/2 - 1),r_n/2]
-
-  function switch_halfcomplex_sll_to_fftw(n,t)
-    sll_real64, dimension(0:n-1)             :: switch_halfcomplex_sll_to_fftw
-    sll_int32, intent(in)                    :: n
-    sll_real64, dimension(0:n-1), intent(in) :: t
-    sll_int32 :: i,j
-
-    switch_halfcomplex_sll_to_fftw(0) = t(0)
-    switch_halfcomplex_sll_to_fftw(n/2) = t(1) 
-        
-    j=0
-    do i=2,n-2,2
-      j=j+1
-      switch_halfcomplex_sll_to_fftw(j) = t(i)
-      switch_halfcomplex_sll_to_fftw(n-j) = t(i+1)
-    enddo
-  end function switch_halfcomplex_sll_to_fftw
-
-  function switch_halfcomplex_fftpack_to_fftw(n,t)
-    sll_real64, dimension(0:n-1)             :: switch_halfcomplex_fftpack_to_fftw
-    sll_int32, intent(in)                    :: n
-    sll_real64, dimension(0:n-1), intent(in) :: t
-    sll_int32 :: i,j
-
-    switch_halfcomplex_fftpack_to_fftw(0) = t(0)
-    switch_halfcomplex_fftpack_to_fftw(n/2) = t(n-1) 
-        
-    j=0
-    do i=1,n-2,2
-      j=j+1
-      switch_halfcomplex_fftpack_to_fftw(j) = t(i)
-      switch_halfcomplex_fftpack_to_fftw(n-j) = t(i+1)
-    enddo
-  end function switch_halfcomplex_fftpack_to_fftw
 
   function f(x) result(y)
     sll_int32 :: x
     sll_real64 :: y
 
-    y = cos(real(x,kind=f64))
+    y = real(x,kind=f64)
   end function
+
+  function test_func(x)
+    sll_real64, intent(in) :: x
+    sll_real64 :: test_func
+    test_func = 1.0 + 1.0*cos(x) + 2.0*cos(2.0*x) + 3.0*cos(3.0*x) + &
+         4.0*cos(4.0*x) + 5.0*cos(5.0*x) + 6.0*cos(6.0*x) + 7.0*cos(7.0*x) + &
+         8.0*cos(8.0*x) + &
+         1.0*sin(x) + 2.0*sin(2.0*x) + 3.0*sin(3.0*x) + &
+         4.0*sin(4.0*x) + 5.0*sin(5.0*x) + 6.0*sin(6.0*x) + 7.0*sin(7.0*x) + &
+         8.0*sin(8.0*x) 
+  end function test_func
 end program unit_test
