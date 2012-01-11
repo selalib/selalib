@@ -91,14 +91,14 @@
 !> \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
 !!     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
 !> which must be interpreted as the complex array
-!> \f[ \begin{pmatrix} r_0 &,& 0   \\ 
-!!                     r_1 &,& i_1 \\ 
-!!                     \vdots  & & \vdots    \\ 
-!!                     r_{n/2-1} &,& i_{n/2-1} \\ 
-!!                     r_{n/2} &,& 0 \\ 
-!!                     r_{n/2-1} &,& -i_{n/2-1} \\ 
-!!                     \vdots    & & \vdots    \\ 
-!!                     r_1 &,& -i_1 
+!> \f[ \begin{pmatrix} r_0 &,& 0
+!!                     \\ r_1 &,& i_1
+!!                     \\ \vdots  & & \vdots 
+!!                     \\ r_{n/2-1} &,& i_{n/2-1}
+!!                     \\ r_{n/2} &,& 0
+!!                     \\ r_{n/2-1} &,& -i_{n/2-1}
+!!                     \\ \vdots    & & \vdots
+!!                     \\ r_1 &,& -i_1 
 !! \end{pmatrix}\f] 
 !> \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
 !!          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
@@ -146,6 +146,8 @@ module sll_fft
     sll_real32, dimension(:), pointer :: wsave ! for use fftpack
     sll_real64, dimension(:), pointer :: dwsave ! for use fftpack
     sll_int32                         :: mod !type of library used
+    sll_real64                        :: normalization_factor_forward = 1.0_f64
+    sll_real64                        :: normalization_factor_backward = 1.0_f64
   end type sll_fft_plan
 
   ! We choose the convention in which the direction of the FFT is determined
@@ -249,6 +251,17 @@ contains
     n_2 = n/2
     if(data_type .eq. FFT_COMPLEX) then
 
+      if( s .eq. 1 ) then
+        sll_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
+        sll_new_fft%normalization_factor_backward = 1.0_f64
+      else if( s .eq. 2 ) then
+        sll_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
+        sll_new_fft%normalization_factor_forward = 1.0_f64
+      else if( s .eq. 3 ) then
+        sll_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
+        sll_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
+      endif
+
       SLL_ALLOCATE(sll_new_fft%mode(0:n-1),ierr)
       do i=0,n-1
         sll_new_fft%mode(i) = compute_mode(i,n)
@@ -262,6 +275,17 @@ contains
       !do i=0,n-1
       !  sll_new_fft%mode(i) = sll_get_mode_real(i,n)
       !enddo
+
+      if( s .eq. 1 ) then
+        sll_new_fft%normalization_factor_forward = 2.0_f64/(real(n,kind=f64))
+        sll_new_fft%normalization_factor_backward = 1.0_f64
+      else if( s .eq. 2 ) then
+        sll_new_fft%normalization_factor_backward = 2.0_f64/(real(n,kind=f64))
+        sll_new_fft%normalization_factor_forward = 1.0_f64
+      else if( s .eq. 3 ) then
+        sll_new_fft%normalization_factor_forward = 2.0_f64/(real(n,kind=f64))
+        sll_new_fft%normalization_factor_backward = 2.0_f64/(real(n,kind=f64))
+      endif
 
       SLL_ALLOCATE(sll_new_fft%twiddles(0:n_2-1),ierr)
       SLL_ALLOCATE(sll_new_fft%twiddles_n(0:n-1),ierr)
@@ -294,6 +318,8 @@ contains
       mode = data(k)
     else if(plan%mod .eq. SLLFFT_MOD) then
       mode = data(plan%mode(k))
+    else
+      stop 'ERROR IN =SLL_GET_MODE_COMPLEX32= plan%mod invalid'
     endif
   end function sll_get_mode_complex32
   
@@ -316,6 +342,8 @@ contains
       mode = data(k)
     else if(plan%mod .eq. SLLFFT_MOD) then
       mode = data(plan%mode(k))
+    else
+      stop 'ERROR IN =SLL_GET_MODE_COMPLEX= plan%mod invalid'
     endif
   end function sll_get_mode_complex
 
@@ -335,34 +363,36 @@ contains
 
     if(plan%mod .eq. FFTPACK_MOD) then
       if( k .eq. 0 ) then
-        mode = CMPLX(data(0),0.d0)
+        mode = complex(data(0),0.0_f64)
       else if( k .eq. n_2 ) then
-        mode = CMPLX(data(n-1),0.d0)
+        mode = complex(data(n-1),0.0_f64)
       else if( k .gt. n_2 ) then
-        mode = CMPLX( data(2*(k-n_2)-1) , -data(2*(k-n_2)) )
+        mode = complex( data(2*(k-n_2)-1) , -data(2*(k-n_2)) )
       else
-        mode = CMPLX( data(2*k-1) , data(2*k) )
+        mode = complex( data(2*k-1) , data(2*k) )
       endif
     else if(plan%mod .eq. SLLFFT_MOD) then
       if( k .eq. 0 ) then
-        mode = CMPLX(data(0),0.d0)
+        mode = complex(data(0),0.0_f64)
       else if( k .eq. n_2 ) then
-        mode = CMPLX(data(1),0.d0)
+        mode = complex(data(1),0.0_f64)
       else if( k .gt. n_2 ) then
-        mode = CMPLX( data(2*(k-n_2)) , -data(2*(k-n_2)+1) )
+        mode = complex( data(2*(k-n_2)) , -data(2*(k-n_2)+1) )
       else
-        mode = CMPLX( data(2*k) , data(2*k+1) )
+        mode = complex( data(2*k) , data(2*k+1) )
       endif
     else if(plan%mod .eq. FFTW_MOD) then
       if( k .eq. 0 ) then
-        mode = CMPLX(data(0),0.d0)
+        mode = complex(data(0),0.0_f64)
       else if( k .eq. n_2 ) then
-        mode = CMPLX(data(n_2),0.d0)
+        mode = complex(data(n_2),0.0_f64)
       else if( k .gt. n_2 ) then
-        mode = CMPLX( data(k-n_2) , -data(n-k+n_2) )
+        mode = complex( data(k-n_2) , -data(n-k+n_2) )
       else
-        mode = CMPLX( data(k) , data(n-k) )
+        mode = complex( data(k) , data(n-k) )
       endif
+    else
+      stop 'ERROR IN =SLL_GET_MODE_REAL= plan%mod invalid'
     endif
   end function sll_get_mode_real
 
@@ -375,8 +405,8 @@ contains
     sll_int32, optional, intent(in) :: style
     sll_int32                       :: ierr, s
 
-    ! By default style = FFTW_ESTIMATE
-    s = FFTW_ESTIMATE
+    !
+    s = 0 !FFTW_ESTIMATE
     if(present(style)) s = style
 
     SLL_ALLOCATE(fftw_new_fft,ierr)
@@ -385,6 +415,16 @@ contains
     fftw_new_fft%style = s
     fftw_new_fft%data_type = data_type
     fftw_new_fft%mod = FFTW_MOD
+    if( s .eq. 1 ) then
+      fftw_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
+      fftw_new_fft%normalization_factor_backward = 1.0_f64
+    else if( s .eq. 2 ) then
+      fftw_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
+      fftw_new_fft%normalization_factor_forward = 1.0_f64
+    else if( s .eq. 3 ) then
+      fftw_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
+      fftw_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
+    endif
   end function fftw_new_fft
 
   function fftw_apply_fft_complex64(fft_plan,in,direction)
@@ -407,12 +447,21 @@ contains
     sll_real64, dimension(0:fft_plan%N-1), intent(inout) :: in
     type(C_PTR) :: plan
 
-    if(direction .eq. FFT_INVERSE) &
-      stop 'Error in ==fftw_apply_fft_real64== no inverse method'
-    plan = fftw_plan_r2r_1d(fft_plan%n,in,in,FFTW_R2HC,FFTW_ESTIMATE)
-    call fftw_execute_r2r(plan, in, in)
-    call fftw_destroy_plan(plan)
-    fftw_apply_fft_real64 => fft_plan
+    if(direction .eq. FFT_INVERSE) then
+      plan = fftw_plan_r2r_1d(fft_plan%n,in,in,FFTW_HC2R,FFTW_ESTIMATE)
+      call fftw_execute_r2r(plan,in, in)
+      call fftw_destroy_plan(plan)
+      in = fft_plan%normalization_factor_backward*in
+      fftw_apply_fft_real64 => fft_plan
+    else if( direction .eq. FFT_FORWARD ) then
+      plan = fftw_plan_r2r_1d(fft_plan%n,in,in,FFTW_R2HC,FFTW_ESTIMATE)
+      call fftw_execute_r2r(plan,in, in)
+      call fftw_destroy_plan(plan)
+      in = fft_plan%normalization_factor_forward*in
+      fftw_apply_fft_real64 => fft_plan
+    else
+      stop 'ERROR IN =FFTW_APPLY_FFT_REAL64= argument direction invalid'
+    endif
   end function fftw_apply_fft_real64
 #endif
 ! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
@@ -435,12 +484,23 @@ contains
     fftpack_new_fft%style = s
     fftpack_new_fft%mod = FFTPACK_MOD
     fftpack_new_fft%data_type = data_type
+
+    if( s .eq. 1 ) then
+      fftpack_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
+      fftpack_new_fft%normalization_factor_backward = 1.0_f64
+    else if( s .eq. 2 ) then
+      fftpack_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
+      fftpack_new_fft%normalization_factor_forward = 1.0_f64
+    else if( s .eq. 3 ) then
+      fftpack_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
+      fftpack_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
+    endif
+
     if(data_type .eq. FFT_COMPLEX) then
       SLL_ALLOCATE(fftpack_new_fft%wsave(4*n + 15),ierr)
       call cffti(n, fftpack_new_fft%wsave)
     else
       SLL_ALLOCATE(fftpack_new_fft%dwsave(2*n + 15),ierr)
-      !call rffti(n, fftpack_new_fft%wsave)
       call dffti(n, fftpack_new_fft%dwsave)
     endif
   end function fftpack_new_fft
@@ -466,8 +526,10 @@ contains
     sll_real64, dimension(1:fft%N), intent(inout) :: data
     
     if( direction .eq. FFT_FORWARD) then
+      data = data*fft%normalization_factor_forward
       call dfftf(fft%N,data,fft%dwsave)
-    else
+    else if( direction .eq. FFT_INVERSE) then
+      data = data*fft%normalization_factor_backward
       call dfftb ( fft%N, data, fft%dwsave )
     endif
     fftpack_apply_fft_real64 => fft
@@ -609,10 +671,14 @@ contains
 #else
       stop 'FFTW NOT INSTALLED'
 #endif
-    else if( fft%mod .eq. 0 ) then
+    else if( fft%mod .eq. SLLFFT_MOD ) then
       stop 'no 32bit version in SELALIB'
+    else
+      stop 'ERROR IN =SLL_APPLY_FFT_COMPLEX32= invalid fft%mod'
     endif
   end function sll_apply_fft_complex32
+
+
 
   function sll_apply_fft_real64(fft,data,direction)
     type(sll_fft_plan), pointer             :: sll_apply_fft_real64
@@ -634,6 +700,12 @@ contains
 #else
       stop 'FFTPACK NOT INSTALLED'
 #endif
+    endif
+
+    if( direction .eq. FFT_INVERSE ) then
+      data = data*fft%normalization_factor_backward
+    else if( direction .eq. FFT_FORWARD ) then 
+      data = data*fft%normalization_factor_forward
     endif
 
     call real_data_fft_dit( data, fft%N, fft%twiddles, fft%twiddles_n, direction )
@@ -677,7 +749,7 @@ contains
        print *, "ERROR: compute_twiddles(), array is of insufficient size."
        return
     else
-       theta   = 2.d0*sll_pi/real(n,kind=f64)      ! basic angular interval
+       theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
        ! By whatever means we use to compute the twiddles, some sanity
        ! checks are in order: 
        ! t(1)     = (1,0)
@@ -685,10 +757,10 @@ contains
        ! t(n/4+1) = (0,1)
        ! t(n/2+1) = (0,-1) ... but this one is not stored
        do k = 0,n/2-1
-          t(k+1) = exp((0.d0,1.d0)*theta*real(k,kind=f64))
+          t(k+1) = exp((0.0_f64,1.0_f64)*theta*real(k,kind=f64))
        end do
        ! might as well fix this by hand since the result isn't exact otherwise:
-       t(n/4+1) = (0.d0,1.d0)
+       t(n/4+1) = (0.0_f64,1.0_f64)
     end if
   end subroutine compute_twiddles
 
@@ -711,7 +783,7 @@ contains
     sll_int32                                 :: k
     sll_real64                                :: theta
     SLL_ASSERT(is_power_of_two(int(n,i64))) 
-    theta   = 2.0*sll_pi/real(n)      ! basic angular interval
+    theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
     ! By whatever means we use to compute the twiddles, some sanity
     ! checks are in order: 
     ! t(0)   = 1; t(1)      = 0
@@ -719,12 +791,22 @@ contains
     ! t(n/4) = (0,1)
     ! t(n/2) = (0,-1) ... but this one is not stored
     do k = 0,n/2-1
-       CREAL0(t,k) = cos(real(k)*theta)
-       CIMAG0(t,k) = sin(real(k)*theta)
+       CREAL0(t,k) = cos(real(k,kind=f64)*theta)
+       CIMAG0(t,k) = sin(real(k,kind=f64)*theta)
     end do
     ! might as well fix this by hand since the result isn't exact otherwise:
-    CREAL0(t,n/4) = 0.0
-    CIMAG0(t,n/4) = 1.0
+    CREAL0(t,0) = 1.0_f64
+    CIMAG0(t,0) = 0.0_f64
+
+    if( n >= 4 ) then
+    CREAL0(t,n/4) = 0.0_f64
+    CIMAG0(t,n/4) = 1.0_f64
+    endif
+
+    if( n >= 8 ) then
+    CREAL0(t,n/8) = sqrt(2.0_f64)/2.0_f64
+    CIMAG0(t,n/8) = sqrt(2.0_f64)/2.0_f64
+    endif
   end subroutine compute_twiddles_real_array
 
   !***************************************************************************
@@ -1192,6 +1274,8 @@ contains
        call bit_reverse_in_pairs( n_2, data(0:n-1) )
     else if (sign .eq. FFT_INVERSE) then
        s =  1.0_f64
+    else
+      stop 'ERROR IN =REAL_DATA_FFT_DIT= invalid argument sign'
     end if
     do i=1,n_2/2 ! the index 'i' corresponds to indexing H
        ! FFT_FORWARD case: We intend to mix the odd/even components that we 
@@ -1219,12 +1303,12 @@ contains
        omega_re           =  CREAL0(twiddles_n,i)
        omega_im           =  s*CIMAG0(twiddles_n,i) ! conjugated for FORWARD
        ! Compute tmp =  1/2*(H_i + H_(N/2-i)^*)
-       tmp_re             =  0.5d0*(hi_re + hn_2mi_re) 
-       tmp_im             =  0.5d0*(hi_im + hn_2mi_im)
+       tmp_re             =  0.5_f64*(hi_re + hn_2mi_re) 
+       tmp_im             =  0.5_f64*(hi_im + hn_2mi_im)
        ! Compute tmp2 = i/2*(H_n - H_(N/2-n)^*); the sign depends on the
        ! direction of the FFT.
-       tmp2_re            =  s*0.5d0*(hi_im - hn_2mi_im) 
-       tmp2_im            = -s*0.5d0*(hi_re - hn_2mi_re)
+       tmp2_re            =  s*0.5_f64*(hi_im - hn_2mi_im) 
+       tmp2_im            = -s*0.5_f64*(hi_re - hn_2mi_re)
        ! Multiply tmp2 by the twiddle factor and add to tmp.
        tmp3_re            =  tmp2_re*omega_re - tmp2_im*omega_im
        tmp3_im            =  tmp2_re*omega_im + tmp2_im*omega_re
@@ -1242,8 +1326,8 @@ contains
     else if ( sign .eq. FFT_INVERSE ) then
        ! Unpack the modes.
        tmp_re  = data(0)
-       data(0) = 0.5d0*(tmp_re + data(1))
-       data(1) = 0.5d0*(tmp_re - data(1))
+       data(0) = 0.5_f64*(tmp_re + data(1))
+       data(1) = 0.5_f64*(tmp_re - data(1))
        ! The following call has to change to refere to its natural wrapper...
        call fft_dit_nr_real_array_aux( data(0:n-1), &
                                        n_2,         &
