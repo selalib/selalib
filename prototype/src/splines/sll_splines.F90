@@ -1222,6 +1222,65 @@ contains  ! ****************************************************************
     end do
   end subroutine compute_spline_2D_hrmt_hrmt
 
+  subroutine compute_spline_2D( data, spline )
+    sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
+    type(sll_spline_2D), pointer         :: spline
+    sll_int32 :: bc1
+    sll_int32 :: bc2
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: compute_spline_2D(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+ 
+    bc1 = spline%x1_bc_type
+    bc2 = spline%x2_bc_type
+
+    ! Treat the bc_selector variable essentially like a bit field, to 
+    ! accumulate the information on the different boundary conditions
+    ! given. This scheme allows to add more types of boundary conditions
+    ! if necessary.
+    bc_selector = 0
+
+    ! We make every case explicit to facilitate adding more BC types in
+    ! the future.
+    if( bc1 .eq. PERIODIC_SPLINE ) then 
+       bc_selector = bc_selector + 1
+    end if
+
+    if( bc1 .eq. HERMITE_SPLINE ) then 
+       bc_selector = bc_selector + 2
+    end if
+
+    if( bc2 .eq. PERIODIC_SPLINE ) then 
+       bc_selector = bc_selector + 4
+    end if
+
+    if( bc2 .eq. HERMITE_SPLINE ) then
+       bc_selector = bc_selector + 8
+    end if
+    new_spline_2D%bc_mix_identifier = bc_selector
+
+    select case (bc_selector)
+       case ( 5 ) 
+          ! both boundary condition types are periodic
+          call compute_spline_2D_prdc_prdc( data, spline )
+       case ( 6 )
+          ! hermite in X1 and periodic in X2
+          call compute_spline_2D_hrmt_prdc( data, spline )
+       case ( 9 ) 
+          ! periodic condition in X1 and hermite in X2 
+          call compute_spline_2D_prdc_hrmt( data, spline )
+       case( 10 )
+          ! Hermite conditions in both, X1 and X2
+          call compute_spline_2D_hrmt_hrmt( data, spline )
+       case default
+          print *, 'ERROR: compute_spline_2D(): ', &
+            'did not recognize given boundary condition combination.'
+       STOP
+    end select
+  end subroutine compute_spline_2D
 
   function interpolate_value_2D( x1, x2, spline )
     sll_real64                          :: interpolate_value_2D
