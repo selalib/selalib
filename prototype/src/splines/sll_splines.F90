@@ -45,7 +45,6 @@ module sll_splines
      sll_real64                          :: x2_max
      sll_int32                           :: x1_bc_type
      sll_int32                           :: x2_bc_type
-     sll_int32                           :: bc_mix_identifier
      ! if data is not used, it should be deleted make a decision...
      sll_real64, dimension(:,:), pointer :: data   ! data for the spline fit
      sll_real64, dimension(:), pointer   :: d1     ! scratch space D (L*D = F),
@@ -823,16 +822,20 @@ contains  ! ****************************************************************
     ! given. This scheme allows to add more types of boundary conditions
     ! if necessary.
     bc_selector = 0
-    if( x1_bc_type .eq. HERMITE_SPLINE ) then 
+    if( x1_bc_type .eq. PERIODIC_SPLINE ) then 
        bc_selector = bc_selector + 1
     end if
-    if ( x2_bc_type .eq. HERMITE_SPLINE ) then
+    if( x1_bc_type .eq. HERMITE_SPLINE ) then
        bc_selector = bc_selector + 2
     end if
-    new_spline_2D%bc_mix_identifier = bc_selector
-
+    if( x2_bc_type .eq. PERIODIC_SPLINE ) then 
+       bc_selector = bc_selector + 4
+    end if
+    if( x2_bc_type .eq. HERMITE_SPLINE ) then
+       bc_selector = bc_selector + 8
+    end if
     select case (bc_selector)
-    case ( 0 ) 
+    case ( 5 ) 
        ! both boundary condition types are periodic
        if( &
           present(x1_min_slope) .or. present(x1_max_slope) .or. &
@@ -850,7 +853,7 @@ contains  ! ****************************************************************
           new_spline_2D%x2_min_slope = 0.0
           new_spline_2D%x2_max_slope = 0.0
        end if
-    case ( 1 ) 
+    case ( 6 ) 
        ! Hermite condition in X1 and periodic in X2 
        if( present(x2_min_slope) .or. present(x2_max_slope) ) then
           print *, 'new_spline_2D(): it is not allowed to specify the end', &
@@ -874,7 +877,7 @@ contains  ! ****************************************************************
        end if
        new_spline_2D%x2_min_slope = 0.0
        new_spline_2D%x2_max_slope = 0.0
-    case( 2 )
+    case( 9 )
        ! Periodic in X1 and Hermite in X2
        if( present(x1_min_slope) .or. present(x1_max_slope) ) then
           print *, 'new_spline_2D(): it is not allowed to specify the end', &
@@ -899,7 +902,7 @@ contains  ! ****************************************************************
        ! set the periodic conditions that will not be used
        new_spline_2D%x1_min_slope = 0.0
        new_spline_2D%x1_max_slope = 0.0
-    case( 3 )
+    case( 10 )
        ! Hermite conditions in both, X1 and X2
        if ( present(x1_min_slope) ) then
           ! need to check if the slopes are present, and to apply default 
@@ -1227,6 +1230,7 @@ contains  ! ****************************************************************
     type(sll_spline_2D), pointer         :: spline
     sll_int32 :: bc1
     sll_int32 :: bc2
+    sll_int32 :: bc_selector
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D(): ', &
@@ -1260,7 +1264,6 @@ contains  ! ****************************************************************
     if( bc2 .eq. HERMITE_SPLINE ) then
        bc_selector = bc_selector + 8
     end if
-    new_spline_2D%bc_mix_identifier = bc_selector
 
     select case (bc_selector)
        case ( 5 ) 
