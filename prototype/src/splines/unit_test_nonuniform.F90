@@ -15,21 +15,22 @@ program nonuniform_spline_tester
   sll_real64,dimension(:), pointer :: node_positions,f_per,f_hrmt,a_in,a_out_per,a_out_hrmt,sol_per,sol_hrmt
   sll_real64,dimension(:), pointer :: node_positions_tmp,fe,Xstar,fold
   type(cubic_nonunif_spline_1D), pointer :: spl_per, spl_hrmt  
-  sll_real64 :: x,val,sl,sr,xmin,xmax,dx,shift,dt,velocity,M,tmp,linf_err
+  sll_real64 :: x,val,sl,sr,xmin,xmax,dx,shift,dt,velocity,M,tmp,linf_err,nb_period
   sll_int32 :: testcase,meshcase,interpcase,nbstep,step
   
   N=16
-  n_array = 10000
+  n_array = 100
   
   
   !parameters
-  N=3
+  N=3200
   testcase=1
   meshcase=1
   interpcase=2
   dt=0.01_f64
   
   velocity=1e0_f64
+  nb_period=1.0_f64
 
   
   
@@ -184,8 +185,8 @@ program nonuniform_spline_tester
   xmin=node_positions(1)
   xmax=node_positions(N+1)
   dx=(xmax-xmin)/real(N,f64)
-  nbstep=int(100._f64*(xmax-xmin)/(dabs(velocity)*dt))
-
+  nbstep=int(nb_period*(xmax-xmin)/(dabs(velocity)*dt))
+  nbstep=1
   !initialization of f
   do i=0,N-1
     !f(i)=0.7_rk+sin(2._rk*M_PI*(Xmesh(i)+0.3))
@@ -266,7 +267,8 @@ program nonuniform_spline_tester
     if(linf_err.lt.(dabs(f_per(i)-fe(i)))) then
       linf_err = dabs(f_per(i)-fe(i))
     endif
-    print *,node_positions(i), f_per(i), fe(i)
+    !print *,node_positions(i), f_per(i), fe(i), f_per(i)-fe(i)
   enddo
-  print *,"#err=",linf_err
+  print *,"#err=",linf_err,nbstep
+  print *,"#M=",M
 end program nonuniform_spline_tester
