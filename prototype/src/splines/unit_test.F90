@@ -1,5 +1,5 @@
 
-!***********************************************************************************
+!*****************************************************************************
 !
 ! Selalib      
 ! Module: unit_test.F90
@@ -8,9 +8,11 @@
 !> sll_splines unit test
 !   
 !> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr), Eric Sonnendrücker (sonnen@math.unistra.fr)
+!> Aliou DIOUF (aliou.l.diouf@inria.fr), 
+!> Eric Sonnendrücker (sonnen@math.unistra.fr)
+!> Edwin Chacon-Golcher(chacongolcher@math.unistra.fr)
 !                                  
-!************************************************************************************
+!*****************************************************************************
 
 program spline_tester
 #include "sll_working_precision.h"
