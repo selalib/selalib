@@ -1,5 +1,20 @@
+
+!****************************************************
+!
+! Selalib      
+! Module: test_func_module.F90
+!
+!> @brief 
+!> Module of test functions for sll_splines unit test
+!   
+!> @authors                    
+!> Aliou DIOUF (aliou.l.diouf@inria.fr)
+!                                  
+!****************************************************
+
 module test_func_module
 #include "sll_working_precision.h"
+  use util_constants
 
 ! Test functions modules
 
@@ -10,8 +25,8 @@ module test_func_module
     function f(x, function_num )
      
       sll_real64, intent(in) :: x
-      sll_real64 ::  f
-      sll_int32 :: function_num
+      sll_real64             :: f
+      sll_int32              :: function_num
 
       function_test: select case(function_num)
         case(1)
@@ -39,8 +54,13 @@ module test_func_module
         case(12)
            f = sin(x)**2
         case default
-           print*, 'Function not available'
-           stop
+           if (x==real(function_num-13,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN .or. &
+               ! real(i-1-12,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN) then
+               x==real(function_num-13+NP,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN) then ! for periodic BC
+              f = 1.d0
+           else
+              f = 0.d0
+           endif
       end select function_test
 
     end function f
@@ -49,8 +69,8 @@ module test_func_module
     function fprime(x, function_num ) 
      
       sll_real64, intent(in) :: x
-      sll_real64 :: fprime
-      sll_int32 :: function_num
+      sll_real64             :: fprime
+      sll_int32              :: function_num
 
       function_test: select case(function_num)
         case(1)
@@ -78,8 +98,7 @@ module test_func_module
         case(12)
            fprime = sin(2*x)
         case default
-           print*, 'Function not available'
-           stop
+           fprime = 0.d0
       end select function_test
 
     end function fprime
