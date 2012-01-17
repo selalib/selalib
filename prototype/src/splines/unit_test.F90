@@ -61,6 +61,14 @@ program spline_tester
      call test_process_1d(i_test, ok)     
   enddo
 
+  print *, '***************************************************'
+  print *, 'Test of the 2D spline with impulse fonctions: '
+  do j_test=13,NPX2+12     
+     do i_test=13,NPX1+12
+        call test_process_2d(i_test, j_test, ok)
+     enddo
+  enddo
+
   print *, 'spline values at points:'
 
 #define NUM_KNOTS 10
