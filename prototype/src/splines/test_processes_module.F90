@@ -170,29 +170,30 @@ contains
        print *, 'splines unit test stopped by Hermite slpine1d test failure'
        stop
     end if
-     
-    print *, '---------------------------------------------'
-    print *, 'DERIVATIVES TEST'
-    do i=1, NP
-       phase = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
-       accumulator5 = accumulator5 + abs(deriv(i) - &
-            interpolate_derivative(phase, sp1))
-       accumulator6 = accumulator6 + abs(deriv(i) - &
-            interpolate_derivative(phase, sp2))
-    end do
+    if (i_test<=12) then 
+       print *, '---------------------------------------------'
+       print *, 'DERIVATIVES TEST'
+       do i=1, NP
+          phase = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
+          accumulator5 = accumulator5 + abs(deriv(i) - &
+                         interpolate_derivative(phase, sp1))
+          accumulator6 = accumulator6 + abs(deriv(i) - &
+                         interpolate_derivative(phase, sp2))
+       end do
     
-    if ( &
-         (accumulator5/real(NP,f64) > 1.0e-6) .or. &
-         (accumulator6/real(NP,f64) > 1.0e-6) ) then
-       ok = 0
-       print *, 'average error at the nodes (single values, periodic) = '
-       print *, accumulator5/real(NP,f64)
-       print *, 'average error at the nodes (single values, hermite) = '
-       print *, accumulator6/real(NP,f64)
-       print *, 'i_test =', i_test
-       print *, 'splines unit test stopped by DERIVATIVES TEST failure'
-       stop
-    end if
+       if ( &
+            (accumulator5/real(NP,f64) > 1.0e-6) .or. &
+            (accumulator6/real(NP,f64) > 1.0e-6) ) then
+          ok = 0
+          print *, 'average error at the nodes (single values, periodic) = '
+          print *, accumulator5/real(NP,f64)
+          print *, 'average error at the nodes (single values, hermite) = '
+          print *, accumulator6/real(NP,f64)
+          print *, 'i_test =', i_test
+          print *, 'splines unit test stopped by DERIVATIVES TEST failure'
+          stop
+       end if
+    endif
      
     call delete_spline_1D(sp1)
     call delete_spline_1D(sp2)

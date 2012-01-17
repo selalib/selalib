@@ -25,6 +25,7 @@ module test_func_module
     function f(x, function_num )
      
       sll_real64, intent(in) :: x
+      sll_real64             :: phase
       sll_real64             :: f
       sll_int32              :: function_num
 
@@ -54,13 +55,14 @@ module test_func_module
         case(12)
            f = sin(x)**2
         case default
-           if (x==real(function_num-13,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN .or. &
-               ! real(i-1-12,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN) then
-               x==real(function_num-13+NP,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN) then ! for periodic BC
+           phase = real(function_num-13,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
+                   !real(i-1-12,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN)
+           if ( abs(x-phase) < 1.0e-15 .or. abs(x-(phase+(XMAX-XMIN))) < 1.0e-15 ) then
               f = 1.d0
            else
               f = 0.d0
            endif
+
       end select function_test
 
     end function f
@@ -99,6 +101,8 @@ module test_func_module
            fprime = sin(2*x)
         case default
            fprime = 0.d0
+           ! This is just for fprime(XiMIN) and fprime(XiMAX)
+           ! We have not necessary fprime(x)=0 for all x
       end select function_test
 
     end function fprime
