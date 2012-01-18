@@ -31,7 +31,7 @@ elif os.path.exists("../fftw/lib/libfftw3.a") and os.path.exists("../fftw/includ
   FFTW_INC_PATH = '../fftw/include'
   FFTW = 'fftw3'
 else :
-  fichier.write("#define _NOFFTPACK\n")
+  fichier.write("#define _NOFFTW\n")
 
 
 fichier.close()
