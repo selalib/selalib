@@ -108,6 +108,7 @@
 
 module sll_fft
   use numeric_constants
+  use sll_timer
 #include "conf.h"
 #ifndef _NOFFTW
   !use FFTW3
@@ -193,6 +194,11 @@ module sll_fft
   interface sll_get_mode
     module procedure sll_get_mode_real, sll_get_mode_complex, sll_get_mode_complex32
   end interface
+
+  interface sll_get_index
+    module procedure sll_get_index_real
+  end interface
+
 contains
 
   ! data_type = 0 for real
@@ -347,6 +353,53 @@ contains
     endif
   end function sll_get_mode_complex
 
+function sll_get_index_real(k,plan) result(index)
+    sll_int32                                 :: index
+    sll_int32, intent(in)                     :: k
+    type(sll_fft_plan) , intent(in)           :: plan
+    sll_int32                                 :: n_2, n
+   
+    n = plan%N
+    n_2 = n/2
+
+    SLL_ASSERT( (k .ge. 0) .and. (k .lt. n) )
+
+    if(plan%mod .eq. FFTPACK_MOD) then
+      if( k .eq. 0 ) then
+        index = 0
+      else if( k .eq. n_2 ) then
+        index = n_2
+      !else if( k/2 .eq. (k+1)/2 ) then !k even
+      !  index = k/2
+      else
+        index = k
+      endif
+    else if(plan%mod .eq. SLLFFT_MOD) then
+      if( k .eq. 0 ) then
+        index = 0
+      else if( k .eq. 1 ) then
+        index = n_2
+      else if( k/2 .eq. (k+1)/2 ) then !k even
+        index = k/2
+      else
+        index = n - k/2
+      endif
+    else if(plan%mod .eq. FFTW_MOD) then
+      if( k .eq. 0 ) then
+        index = 0
+      else if( k .eq. n-1 ) then
+        index = n_2
+      else if( k/2 .eq. (k+1)/2 ) then !k even
+        index = n - k/2
+      else
+        index = k/2
+      endif
+    else
+      stop 'ERROR IN =SLL_GET_MODE_REAL= plan%mod invalid'
+    endif
+  end function sll_get_index_real
+
+
   function sll_get_mode_real(k,plan,data) result(mode)
     sll_comp64                                :: mode
     sll_int32, intent(in)                     :: k
@@ -444,8 +497,12 @@ contains
     type(sll_fft_plan), pointer                     :: fftw_apply_fft_real64
     type(sll_fft_plan), pointer, intent(in)         :: fft_plan
     integer, intent(in)                             :: direction
-    sll_real64, dimension(0:fft_plan%N-1), intent(inout) :: in
+    sll_real64, dimension(:), intent(inout)         :: in
     type(C_PTR) :: plan
+    type(time_mark), pointer :: mark
+    sll_real64 :: time
+
+    mark => new_time_mark()
 
     if(direction .eq. FFT_INVERSE) then
       plan = fftw_plan_r2r_1d(fft_plan%n,in,in,FFTW_HC2R,FFTW_ESTIMATE)
@@ -455,7 +512,10 @@ contains
       fftw_apply_fft_real64 => fft_plan
     else if( direction .eq. FFT_FORWARD ) then
       plan = fftw_plan_r2r_1d(fft_plan%n,in,in,FFTW_R2HC,FFTW_ESTIMATE)
+      !mark => reset_time_mark(mark)
       call fftw_execute_r2r(plan,in, in)
+      !time = time_elapsed_since(mark)
+      !print *, 'time : ', time
       call fftw_destroy_plan(plan)
       in = fft_plan%normalization_factor_forward*in
       fftw_apply_fft_real64 => fft_plan
