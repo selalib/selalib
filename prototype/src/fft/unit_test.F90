@@ -5,183 +5,143 @@ program unit_test
 
 #include "sll_working_precision.h"
   implicit none
- 
-!#define _NOFFTW 
   
   sll_int32 :: i
   sll_real64, allocatable, dimension(:)  :: copy_data_real, data_real_sll, data_real_w, data_real_pack
   type(time_mark), pointer :: mark 
-  sll_real64 :: time, val, phase, acc, time2, time3
-  sll_int32 :: s, n
+  sll_real64 :: val, phase, acc 
+  sll_int32 :: s, n, t
+  sll_real64, dimension(10) :: times
   type(sll_fft_plan), pointer :: fft_plan, fftpack_plan, fftw_plan
-  type(C_PTR) :: p, plan
-  real(C_DOUBLE), pointer :: a(:)
-  sll_real64, dimension(2**22) :: arr
-  sll_int32 :: ind
-  sll_comp64 :: mode
-  
-  p = fftw_alloc_real(int(2**20,C_SIZE_T))
-  call c_f_pointer(p,a,[2**20])
-
   mark => new_time_mark() 
-   
-  do s=20,20
+    
+
+  ! TEST FOR FFTPACK
+  open(1,file='fftpack.txt')
+  do s=10,20
+   do t=1,10
     n=2**s
-    print *,'n=',n
-    print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
     allocate(copy_data_real(0:n-1))
-    allocate(data_real_w(0:n-1))
     allocate(data_real_pack(0:n-1))
-    allocate(data_real_sll(0:n-1))
 
     do i=0,n-1
       phase             = 2.0*sll_pi*real(i)/real(n)
       val               = g(phase)
-      data_real_w(i)    = val
       data_real_pack(i) = val
-      data_real_sll(i)  = val
-      a(i+1)            = val
-      arr(i+1)          = val
       copy_data_real(i) = val
     enddo
-    
-    fft_plan => sll_new_fft(n,FFT_REAL,FFT_NORMALIZE_INVERSE)
+
+    fftpack_plan => fft_plan_r2r_1d(FFTPACK_MOD,n,data_real_pack,data_real_pack,FFT_FORWARD)
     mark => reset_time_mark(mark)
-    fft_plan => sll_apply_fft(fft_plan,data_real_sll,FFT_FORWARD)
-    time = time_elapsed_since(mark)
-    !print *, 'SLL_FFT : fft time : ',time
- 
-    fft_plan => sll_apply_fft(fft_plan,data_real_sll,FFT_INVERSE)
+    call fft_apply_r2r_1d(fftpack_plan,data_real_pack,data_real_pack)
+    times(t) = time_elapsed_since(mark)
+    fftpack_plan => fft_plan_r2r_1d(FFTPACK_MOD,n,data_real_pack,data_real_pack,FFT_INVERSE)
+    call fft_apply_r2r_1d(fftpack_plan,data_real_pack,data_real_pack)
 
-    mark => reset_time_mark(mark)    
-    do i=0,n-1
-      ind = sll_get_index(i,fft_plan)
-      mode = sll_get_mode(i,fft_plan,data_real_sll)
-    enddo 
-    time2 = time_elapsed_since(mark)
-    !print *, 'SLL_FFT : access time : ',time
-
-    acc = 0.0_f64
-    do i=0,n-1
-      acc = acc + abs(copy_data_real(i) - data_real_sll(i))
-    enddo
-    !print * ,'Averager error: ', acc/n
-    !print * ,'Max error: ', MAXVAL(ABS(data_real_sll - copy_data_real))
-    print *, '    SLL',time,time2,acc/n
-
-
-#ifndef _NOFFTW
-    fftw_plan => sll_new_fft(n,FFT_REAL,FFTW_MOD + FFT_NORMALIZE_INVERSE)
-    mark => reset_time_mark(mark)
-    fftw_plan => sll_apply_fft(fftw_plan,data_real_w,FFT_FORWARD)
-    time = time_elapsed_since(mark)
-    !print *, FFTW : fft time : ',time
-
-    fftw_plan => sll_apply_fft(fftw_plan,data_real_w,FFT_INVERSE)
-
-    mark => reset_time_mark(mark)    
-    do i=0,n-1
-      ind = sll_get_index(i,fftw_plan)
-      mode = sll_get_mode(i,fftw_plan,data_real_w)
-    enddo 
-    time2 = time_elapsed_since(mark)
-    !print *, 'FFTW_FFT : access time : ',time
-
-
-    acc = 0.0_f64
-    do i=0,n-1
-      acc = acc + abs(copy_data_real(i) - data_real_w(i))
-    enddo
-    !print * ,'Averager error: ', acc/n
-    !print * ,'Max error: ', MAXVAL(ABS(data_real_w - copy_data_real))
-    print *, '   FFTW',time,time2,acc/n
-#endif
-
-
-#define _NOFFTW
-#ifndef _NOFFTW
-    plan = fftw_plan_r2r_1d(n,arr,arr,FFTW_R2HC,FFTW_ESTIMATE + FFTW_UNALIGNED)
-    mark => reset_time_mark(mark)
-    call fftw_execute_r2r( plan , arr , arr )
-    time = time_elapsed_since(mark)
-    print *, 'FFTW : fft time : ',time
-
-    plan = fftw_plan_r2r_1d(n,arr,arr,FFTW_HC2R,FFTW_ESTIMATE)
-    call fftw_execute_r2r( plan , arr , arr )
-
-    acc = 0.0_f64
-    do i=0,n-1
-      arr(i+1) = arr(i+1)/n
-      acc = acc + abs(copy_data_real(i) - arr(i+1))
-    enddo
-    print * ,'Averager error: ', acc/n
-    !print * ,'Max error: ', MAXVAL(ABS(a - copy_data_real))
-#endif
-#undef _NOFFTW
-
-#ifndef _NOFFTW
-    plan = fftw_plan_r2r_1d(n,a,a,FFTW_R2HC,FFTW_ESTIMATE)
-    mark => reset_time_mark(mark)
-    call fftw_execute_r2r( plan , a , a )
-    time = time_elapsed_since(mark)
-    !print *, 'FFTW : fft time : ',time
-
-    plan = fftw_plan_r2r_1d(n,a,a,FFTW_HC2R,FFTW_ESTIMATE)
-    call fftw_execute_r2r( plan , a , a )
-
-    mark => reset_time_mark(mark)    
-    do i=0,n-1
-      ind = sll_get_index(i,fftw_plan)
-      mode = sll_get_mode(i,fftw_plan,a)
-    enddo
-    time2 = time_elapsed_since(mark)
-
-
-    acc = 0.0_f64
-    do i=0,n-1
-      a(i+1) = a(i+1)/n
-      acc = acc + abs(copy_data_real(i) - a(i+1))
-    enddo
-    !print * ,'Averager error: ', acc/n
-    !print * ,'Max error: ', MAXVAL(ABS(a - copy_data_real))
-    print *, 'FFTWOPT',time,time2,acc/n
-#endif
-
-    fftpack_plan => sll_new_fft(n,FFT_REAL,FFTPACK_MOD + FFT_NORMALIZE_INVERSE)
-    mark => reset_time_mark(mark)
-    fftpack_plan => sll_apply_fft(fftpack_plan,data_real_pack,FFT_FORWARD)
-    time = time_elapsed_since(mark)
-    !print *, 'FFTPACK : fft time : ',time
-
-    fftpack_plan => sll_apply_fft(fftpack_plan,data_real_pack,FFT_INVERSE)
-
-    mark => reset_time_mark(mark)    
-    do i=0,n-1
-      ind = sll_get_index(i,fftpack_plan)
-      mode = sll_get_mode(i,fftpack_plan,data_real_pack)
-    enddo 
-    time2 = time_elapsed_since(mark)
-    !print *, 'FFTPACK_FFT : access time : ',time
+    data_real_pack = data_real_pack/n
 
     acc = 0.0_f64
     do i=0,n-1
       acc = acc + abs(copy_data_real(i) - data_real_pack(i))
     enddo
-    !print * ,'Averager error: ', acc/n
-    !print * ,'Max error: ', MAXVAL(ABS(data_real_pack - copy_data_real))
-    print *, 'FFTPACK',time,time2,acc/n
+    !print *, 'FFTPACK',time,time, acc/n
+ 
+    deallocate(copy_data_real)
+    deallocate(data_real_pack)
+    call fft_delete_plan(fftpack_plan)
+   enddo
+  write(1,*) s,SUM(times)/10.0d0
+  enddo
+  close(1)
+  ! END TEST FFTACK
+
+
+
+  ! TEST FOR SELALIB FFT
+  open(2,file='sll.txt')
+  do s=10,20
+   do t=1,10
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_real(0:n-1))
+    allocate(data_real_sll(0:n-1))
+
+    do i=0,n-1
+      phase             = 2.0*sll_pi*real(i)/real(n)
+      val               = g(phase)
+      data_real_sll(i)  = val
+      copy_data_real(i) = val
+    enddo
+
+    fft_plan => fft_plan_r2r_1d(SLLFFT_MOD,n,data_real_sll,data_real_sll,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_r2r_1d(fft_plan,data_real_sll,data_real_sll)
+    times(t) = time_elapsed_since(mark)
+
+    fft_plan => fft_plan_r2r_1d(SLLFFT_MOD,n,data_real_sll,data_real_sll,FFT_INVERSE)
+    call fft_apply_r2r_1d(fft_plan,data_real_sll,data_real_sll)
+
+    data_real_sll = 2.0_f64*data_real_sll/n
+
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_sll(i))
+    enddo
+    !print *, ' SLLFFT',time,time, acc/n
+
+    deallocate(copy_data_real)
+    deallocate(data_real_sll)
+    call fft_delete_plan(fft_plan)
+   enddo
+   write(2,*) s,SUM(times)/10.0d0
+  enddo
+  close(2)
+! END SELALIB FFT
+
+#ifndef _NOFFTW
+  open(3,file='fftw.txt')
+  do s=10,20
+   do t=1,10
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_real(0:n-1))
+    allocate(data_real_w(0:n-1))
+
+    do i=0,n-1
+      phase             = 2.0*sll_pi*real(i)/real(n)
+      val               = g(phase)
+      data_real_w(i)    = val
+      copy_data_real(i) = val
+    enddo
+
+    fftw_plan => fft_plan_r2r_1d(FFTW_MOD,n,data_real_w,data_real_w,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_r2r_1d(fftw_plan,data_real_w,data_real_w)
+    times(t) = time_elapsed_since(mark)
+
+    fftw_plan => fft_plan_r2r_1d(FFTW_MOD,n,data_real_w,data_real_w,FFT_INVERSE)
+    call fft_apply_r2r_1d(fftw_plan,data_real_w,data_real_w)
+
+    data_real_w = data_real_w/n
+
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_w(i))
+    enddo
+    !print *, '   FFTW',time,time, acc/n
 
     deallocate(copy_data_real)
     deallocate(data_real_w)
-    deallocate(data_real_pack)
-    deallocate(data_real_sll)
-
-    fft_plan => sll_delete_fft(fft_plan)
-#ifndef _NOFFTW  
-    fftw_plan => sll_delete_fft(fftw_plan)
-#endif  
-    fftpack_plan => sll_delete_fft(fftpack_plan)  
+    call fft_delete_plan(fftw_plan)
+   enddo
+   write(3,*) s,SUM(times)/10.0d0
   enddo
+  close(3)
+#endif
 
 
 contains
