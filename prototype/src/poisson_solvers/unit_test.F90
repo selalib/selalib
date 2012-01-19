@@ -69,9 +69,9 @@ do i = 1, nc_eta1+1
    end do
 end do
 
-call write_vec1d(-phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi0","mesh",0)
-call write_vec1d( rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
-call write_vec2d( exy%data%v1,exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy0","mesh",0)
+call write_vec1d(phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi0","mesh",0)
+call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
+call write_vec2d(exy%data%v1,exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy0","mesh",0)
 
 FIELD_DATA(exy_exact) = FIELD_DATA(exy)
 FIELD_DATA(phi_exact) = FIELD_DATA(phi)
@@ -79,7 +79,7 @@ FIELD_DATA(phi_exact) = FIELD_DATA(phi)
 call solve_poisson_2d_periodic(poisson_potential,phi%data,rho%data,error)
 call solve_poisson_2d_periodic(poisson_e_fields,exy,rho,error)
 
-call write_vec1d(phi_exact%data+phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi1","mesh",0)
+call write_vec1d(phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi1","mesh",0)
 call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho1","mesh",0)
 call write_vec2d(exy%data%v1,exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","mesh",0)
 
