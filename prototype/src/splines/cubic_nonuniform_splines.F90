@@ -222,12 +222,15 @@ contains  ! ****************************************************************
     !fill a with mesh information
     do i=0,N-1
       !subdiagonal terms
-      a(3*i+1)=(node_pos(i+1)-node_pos(i))**2/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+1)-node_pos(i-2)))
+      a(3*i+1)=(node_pos(i+1)-node_pos(i))*(node_pos(i+1)-node_pos(i))/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+1)-node_pos(i-2)))
+      !a(3*i+1)=(node_pos(i+1)-node_pos(i))/(node_pos(i+1)-node_pos(i-1))*((node_pos(i+1)-node_pos(i))/(node_pos(i+1)-node_pos(i-2)))
       !overdiagonal terms
-      a(3*i+3)=(node_pos(i)-node_pos(i-1))**2/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+2)-node_pos(i-1)))      
+      !a(3*i+3)=(node_pos(i)-node_pos(i-1))*(node_pos(i)-node_pos(i-1))/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+2)-node_pos(i-1)))      
+      a(3*i+3)=(node_pos(i)-node_pos(i-1))/(node_pos(i+1)-node_pos(i-1))*((node_pos(i)-node_pos(i-1))/(node_pos(i+2)-node_pos(i-1)))      
       !diagonal terms
       a(3*i+2)=1.0_f64-a(3*i+1)-a(3*i+3)
     enddo
+
     !initialize the tridiagonal solver
     call setup_cyclic_tridiag (a, N, cts, ipiv)
         
@@ -279,9 +282,11 @@ contains  ! ****************************************************************
   subroutine compute_spline_nonunif_1D_periodic_aux( f, N, buf, ibuf, coeffs )
     sll_real64, dimension(:), pointer :: f,buf,coeffs
     sll_int32, intent(in) :: N
-    sll_real64, dimension(:), pointer :: cts
+    sll_real64, dimension(:), pointer :: cts!, a
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
+    !sll_real64 :: linf_err,tmp
     sll_int32 :: i
+    !a    => buf(1:3*N) 
     cts  => buf(3*N+1:10*N)
     ipiv => ibuf(1:N)
 
@@ -291,6 +296,14 @@ contains  ! ****************************************************************
     coeffs(N)  = coeffs(0)
     coeffs(N+1) = coeffs(1)
     
+    !linf_err=0._f64
+    !do i=1,N    
+    !  tmp=a(3*(i-1)+1)*coeffs(i-2)+a(3*(i-1)+2)*coeffs(i-1)+a(3*(i-1)+3)*coeffs(i)-f(i)
+    !  if(abs(tmp)>linf_err)then
+    !    linf_err=abs(tmp)
+    !  endif
+    !enddo
+    !print *,'error of compute_spline=',linf_err
   end subroutine compute_spline_nonunif_1D_periodic_aux
 
   subroutine compute_spline_nonunif_1D_hermite_aux( f, N, buf, ibuf, coeffs, lift )
