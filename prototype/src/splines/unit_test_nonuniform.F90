@@ -58,7 +58,7 @@ program nonuniform_spline_tester
   
   nb_test = 10000
   
-  N = 32
+  N = 64
   
   N_new = 15
   
