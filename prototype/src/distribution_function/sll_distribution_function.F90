@@ -196,6 +196,12 @@ contains
     get_df_jac => f%field%descriptor%geom%Jacobian
   end function get_df_jac
 
+  function get_df_jac_index ( f )
+    sll_real64, dimension(:,:) pointer        :: get_df_jac_index
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac => f%field%descriptor%geom%Jacobian_index
+  end function get_df_jac
+
 
   function sll_get_df_val( f, i, j )
     sll_real64 :: sll_get_df_val
