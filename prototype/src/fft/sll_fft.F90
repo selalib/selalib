@@ -138,15 +138,14 @@ module sll_fft
   type sll_fft_plan
     sll_int32 :: N
     sll_int32 :: style, flags
-    sll_int32 :: data_type
-    sll_int32,  dimension(:), pointer :: index
-    sll_int32,  dimension(:), pointer :: mode
-    sll_comp64, dimension(:), pointer :: t          ! twiddle factors complex case
-    sll_real64, dimension(:), pointer :: twiddles   ! twiddles factors real case 
-    sll_real64, dimension(:), pointer :: twiddles_n ! twiddles factors real case 
-    sll_real32, dimension(:), pointer :: wsave ! for use fftpack
-    sll_real64, dimension(:), pointer :: dwsave ! for use fftpack
-    sll_int32                         :: mod !type of library used
+    !sll_int32 :: data_type
+    sll_int32,  dimension(:), pointer :: index => null()
+    sll_int32,  dimension(:), pointer :: mode => null()
+    sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
+    sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
+    sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
+    sll_real64, dimension(:), pointer :: dwsave => null() ! for use fftpack
+    !sll_int32                         :: mod !type of library used
     sll_real64                        :: normalization_factor_forward = 1.0_f64
     sll_real64                        :: normalization_factor_backward = 1.0_f64
     sll_int32                         :: library
@@ -192,124 +191,13 @@ module sll_fft
                      bit_reverse_integer64
   end interface
 
-!  interface sll_apply_fft
-!    module procedure sll_apply_fft_complex32,  sll_apply_fft_real64, sll_apply_fft_complex64
-!  end interface
-
-!  interface sll_get_mode
-!    module procedure sll_get_mode_real, sll_get_mode_complex, sll_get_mode_complex32
-!  end interface
-
-!  interface sll_get_index
-!    module procedure sll_get_index_real
-!  end interface
-
   interface fftw_execute_fft
     module procedure fftw_apply_fft_re, fftw_apply_fft_real
   end interface
 
 contains
 
-
 #ifdef _CACA
-  ! data_type = 0 for real
-  !           = 1 for complexe
-  ! example of call sll_new_fft(N, FFT_NORMALIZE_FORWARD , FFT_COMPLEX)
-  function sll_new_fft(n,data_type,style)
-    type(sll_fft_plan), pointer     :: sll_new_fft
-    sll_int32, intent(in)           :: n, data_type
-    sll_int32, optional, intent(in) :: style
-    sll_int32                       :: ierr, s, mod, n_2, i
-   
-    ! By default style = 0
-    if(present(style)) then
-      if( (style>=FFTPACK_MOD) .and. (style<FFTW_MOD) ) then
-        s = style - FFTPACK_MOD
-        mod = FFTPACK_MOD
-      else if(style>=FFTW_MOD) then
-        s = style - FFTW_MOD
-        mod = FFTW_MOD
-      else
-        s = style
-        mod = SLLFFT_MOD
-      endif
-    else
-      s = 0
-      mod = SLLFFT_MOD
-    endif
-
-    if( mod .eq. FFTPACK_MOD ) then
-#ifndef _NOFFTPACK
-      sll_new_fft => fftpack_new_fft(n,data_type,s)
-      return
-#else
-  stop 'FFTPACK NOT INSTALLED ==sll_new_fft=='
-#endif
-    endif
-
-    if( mod .eq. FFTW_MOD ) then
-#ifndef _NOFFTW
-      sll_new_fft => fftw_new_fft(n,data_type,s)
-      return
-#else
-  stop 'FFTW NOT INSTALLED'
-#endif
-    endif
-
-    SLL_ALLOCATE(sll_new_fft,ierr)
-    sll_new_fft%N = n
-    sll_new_fft%style = s
-    sll_new_fft%data_type = data_type
-    sll_new_fft%mod = mod
-    !SLL_ALLOCATE(sll_new_fft%index(0:n-1),ierr)
-
-    !sll_new_fft%index => compute_index(n)
-
-    n_2 = n/2
-    if(data_type .eq. FFT_COMPLEX) then
-
-      if( s .eq. 1 ) then
-        sll_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
-        sll_new_fft%normalization_factor_backward = 1.0_f64
-      else if( s .eq. 2 ) then
-        sll_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
-        sll_new_fft%normalization_factor_forward = 1.0_f64
-      else if( s .eq. 3 ) then
-        sll_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
-        sll_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
-      endif
-
-      SLL_ALLOCATE(sll_new_fft%mode(0:n-1),ierr)
-      do i=0,n-1
-        sll_new_fft%mode(i) = compute_mode(i,n)
-      enddo
-
-      SLL_ALLOCATE(sll_new_fft%t(1:n_2),ierr)
-      call compute_twiddles(n,sll_new_fft%t)
-      call bit_reverse(n_2,sll_new_fft%t)
-    else if(data_type .eq. FFT_REAL) then
-
-      !do i=0,n-1
-      !  sll_new_fft%mode(i) = sll_get_mode_real(i,n)
-      !enddo
-
-      if( s .eq. 1 ) then
-        sll_new_fft%normalization_factor_forward = 2.0_f64/(real(n,kind=f64))
-        sll_new_fft%normalization_factor_backward = 1.0_f64
-      else if( s .eq. 2 ) then
-        sll_new_fft%normalization_factor_backward = 2.0_f64/(real(n,kind=f64))
-        sll_new_fft%normalization_factor_forward = 1.0_f64
-      else if( s .eq. 3 ) then
-        sll_new_fft%normalization_factor_forward = 2.0_f64/(real(n,kind=f64))
-        sll_new_fft%normalization_factor_backward = 2.0_f64/(real(n,kind=f64))
-      endif
-
-      !call bit_reverse_in_pairs( n_2/2, sll_new_fft%twiddles )
-      !call bit_reverse_in_pairs( n_2, sll_new_fft%twiddles_n )
-    else
-      stop 'Error in ==sll_new_fft== unknown data_type'
-    endif
-  end function sll_new_fft
 
   function sll_get_mode_complex32(k,plan,data) result(mode)
     sll_comp32                                :: mode
@@ -334,53 +222,68 @@ contains
       stop 'ERROR IN =SLL_GET_MODE_COMPLEX32= plan%mod invalid'
     endif
   end function sll_get_mode_complex32
-  
-  function sll_get_mode_complex(k,plan,data) result(mode)
+#endif
+
+  function sll_get_mode_complex_array(plan,data,k) result(mode)
     sll_comp64                                :: mode
     sll_int32, intent(in)                     :: k
     type(sll_fft_plan)                        :: plan
     sll_comp64, dimension(0:) , intent(in)    :: data
     sll_int32                                 :: n_2, n
   
+    !mode = data(0) 
+    !return
+
     n = plan%N
     n_2 = n/2
 
     SLL_ASSERT( (k .ge. 0) .and. (k .lt. n) )
     SLL_ASSERT( size(data) .eq. n )
    
-    if(plan%mod .eq. FFTW_MOD) then
+    if(plan%library .eq. FFTW_MOD) then
       mode = data(k)
-    else if(plan%mod .eq. FFTPACK_MOD) then
+    else if(plan%library .eq. FFTPACK_MOD) then
       mode = data(k)
-    else if(plan%mod .eq. SLLFFT_MOD) then
+    else if(plan%library .eq. SLLFFT_MOD) then
       mode = data(plan%mode(k))
     else
       stop 'ERROR IN =SLL_GET_MODE_COMPLEX= plan%mod invalid'
     endif
-  end function sll_get_mode_complex
+  end function sll_get_mode_complex_array
 
-function sll_get_index_real(k,plan) result(index)
+  function get(k)
+    sll_int32 :: k
+    sll_int32 :: get
+    get = k
+  end function
+ 
+  function sll_get_index_real_array(plan,k) result(index)
     sll_int32                                 :: index
     sll_int32, intent(in)                     :: k
     type(sll_fft_plan) , intent(in)           :: plan
     sll_int32                                 :: n_2, n
-   
+
+    index = k
+    return  
+ 
     n = plan%N
     n_2 = n/2
 
     SLL_ASSERT( (k .ge. 0) .and. (k .lt. n) )
 
-    if(plan%mod .eq. FFTPACK_MOD) then
+    if(plan%library .eq. FFTPACK_MOD) then
       if( k .eq. 0 ) then
         index = 0
       else if( k .eq. n_2 ) then
         index = n_2
       !else if( k/2 .eq. (k+1)/2 ) then !k even
       !  index = k/2
+      else if( k/2 .eq. (k+1)/2 ) then !k even
+        index = n - k/2
       else
-        index = k
+        index = (k+1)/2 
       endif
-    else if(plan%mod .eq. SLLFFT_MOD) then
+    else if(plan%library .eq. SLLFFT_MOD) then
       if( k .eq. 0 ) then
         index = 0
       else if( k .eq. 1 ) then
@@ -390,7 +293,7 @@ function sll_get_index_real(k,plan) result(index)
       else
         index = n - k/2
       endif
-    else if(plan%mod .eq. FFTW_MOD) then
+    else if(plan%library .eq. FFTW_MOD) then
       if( k .eq. 0 ) then
         index = 0
       else if( k .eq. n-1 ) then
@@ -403,10 +306,9 @@ function sll_get_index_real(k,plan) result(index)
     else
       stop 'ERROR IN =SLL_GET_MODE_REAL= plan%mod invalid'
     endif
-  end function sll_get_index_real
+  end function sll_get_index_real_array
 
-
-  function sll_get_mode_real(k,plan,data) result(mode)
+  function sll_get_mode_real_array(plan,data,k) result(mode)
     sll_comp64                                :: mode
     sll_int32, intent(in)                     :: k
     type(sll_fft_plan) , intent(in)           :: plan
@@ -420,49 +322,47 @@ function sll_get_index_real(k,plan) result(index)
     SLL_ASSERT( size(data) .eq. n )
 
 
-    if(plan%mod .eq. FFTPACK_MOD) then
+    if(plan%library .eq. FFTPACK_MOD) then
       if( k .eq. 0 ) then
         mode = complex(data(0),0.0_f64)
       else if( k .eq. n_2 ) then
         mode = complex(data(n-1),0.0_f64)
       else if( k .gt. n_2 ) then
-        mode = complex( data(2*(k-n_2)-1) , -data(2*(k-n_2)) )
+        mode = cmplx( data(2*(n-k)-1) , -data(2*(n-k)) ,kind=f64)
       else
         mode = complex( data(2*k-1) , data(2*k) )
       endif
-    else if(plan%mod .eq. SLLFFT_MOD) then
+    else if(plan%library .eq. SLLFFT_MOD) then
       if( k .eq. 0 ) then
         mode = complex(data(0),0.0_f64)
       else if( k .eq. n_2 ) then
         mode = complex(data(1),0.0_f64)
       else if( k .gt. n_2 ) then
-        mode = complex( data(2*(k-n_2)) , -data(2*(k-n_2)+1) )
+        mode = complex( data(2*(n-k)) , -data(2*(n-k)+1) )
       else
         mode = complex( data(2*k) , data(2*k+1) )
       endif
-    else if(plan%mod .eq. FFTW_MOD) then
+    else if(plan%library .eq. FFTW_MOD) then
       if( k .eq. 0 ) then
         mode = complex(data(0),0.0_f64)
       else if( k .eq. n_2 ) then
         mode = complex(data(n_2),0.0_f64)
       else if( k .gt. n_2 ) then
-        mode = complex( data(k-n_2) , -data(n-k+n_2) )
+        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
+        mode = complex( data(n-k) , -data(k) )
       else
         mode = complex( data(k) , data(n-k) )
       endif
     else
-      stop 'ERROR IN =SLL_GET_MODE_REAL= plan%mod invalid'
+      stop 'ERROR IN =SLL_GET_MODE_REAL= plan%library invalid'
     endif
-  end function sll_get_mode_real
-
-#endif
-
+  end function sll_get_mode_real_array
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-
+!If FFTW is available its the default library, otherwise its our version.
 #ifndef _NOFFTW
   function sll_new_plan_c2c_default_lib(size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: size_problem
@@ -471,7 +371,7 @@ function sll_get_index_real(k,plan) result(index)
     sll_int32, optional, intent(in)              :: flags
     type(sll_fft_plan), pointer                  :: plan
 
-    plan => sll_new_plan_c2c(FFTW_MOD,size_problem,array_in,array_out,direction,flags)
+    plan => fft_plan_c2c_1d(FFTW_MOD,size_problem,array_in,array_out,direction,flags)
   end function
 #else
  function sll_new_plan_c2c_default_lib(size_problem,array_in,array_out,direction,flags) result(plan)
@@ -481,11 +381,11 @@ function sll_get_index_real(k,plan) result(index)
     sll_int32, optional, intent(in)              :: flags
     type(sll_fft_plan), pointer                  :: plan
 
-    plan => sll_new_plan_c2c(SLLFFT_MOD,size_problem,array_in,array_out,direction,flags)
+    plan => fft_plan_c2c_1d(SLLFFT_MOD,size_problem,array_in,array_out,direction,flags)
   end function
 #endif
 
-  function sll_new_plan_c2c(library,size_problem,array_in,array_out,direction,flags) result(plan)
+  function fft_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
     sll_int32, intent(in)                        :: size_problem
     sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
@@ -493,10 +393,18 @@ function sll_get_index_real(k,plan) result(index)
     sll_int32, optional, intent(in)              :: flags
     type(sll_fft_plan), pointer                  :: plan
 
+#ifdef _NOFFTW
+    SLL_ASSERT(library .ne. FFTW_MOD)
+#endif
+
     if(library .eq. FFTW_MOD) then
       plan => fftw_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
     else if(library .eq. SLLFFT_MOD) then
       plan => sll_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
+    else if(library .eq. FFTPACK_MOD) then
+      plan => fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
+    else
+      stop 'ERROR in =fft_plan_c2c_1d= library unknown'
     endif
   end function
 
@@ -508,12 +416,18 @@ function sll_get_index_real(k,plan) result(index)
     sll_int32, optional, intent(in)              :: flags
     type(sll_fft_plan), pointer                  :: plan
 
+#ifdef _NOFFTW
+    SLL_ASSERT(library .ne. FFTW_MOD)
+#endif
+ 
     if(library .eq. FFTW_MOD) then
       plan => fftw_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags)
     else if(library .eq. SLLFFT_MOD) then
       plan => sll_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags)
     else if(library .eq. FFTPACK_MOD) then
       plan => fftpack_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags)
+    else
+      stop 'ERROR in =fft_plan_r2r_1d= library unknown'
     endif
   end function
 
@@ -530,15 +444,49 @@ function sll_get_index_real(k,plan) result(index)
     endif
   end subroutine
 
+  subroutine fft_apply_c2c_1d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer, intent(in)         :: plan
+    sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
+
+    if(plan%library .eq. FFTW_MOD) then
+      call fftw_apply_fft_complex(plan, array_in, array_out)
+    else if(plan%library .eq. SLLFFT_MOD) then
+      call sll_apply_fft_complex(plan, array_in, array_out)
+    else if(plan%library .eq. FFTPACK_MOD) then
+      call fftpack_apply_fft_complex(plan, array_in, array_out)
+    endif
+  end subroutine
+
+  !subroutine CFFTF(x)
+  ! sll_comp64, dimension(:) :: x
+  ! sll_int32 :: n
+  ! type(sll_fft_plan), pointer :: plan
+  !
+  ! n = size(x)
+  ! plan => fft_plan_c2c_1d(FFTW_MOD,n,x,x,FFT_FORWARD)
+  ! call fft_apply_c2c_1d(plan,x,x)
+  ! call fft_delete_plan(plan)
+  !end subroutine
+
   subroutine fft_delete_plan(plan)
     type(sll_fft_plan), pointer, intent(inout)         :: plan
      if(plan%library .eq. FFTW_MOD) then
       call fftw_destroy_plan(plan%fftw_plan)
     else if(plan%library .eq. SLLFFT_MOD) then
-      deallocate(plan%twiddles)
-      deallocate(plan%twiddles_n)
+      if(associated(plan%t)) then
+        deallocate(plan%t)
+        plan%t => null()
+      endif
+      if(associated(plan%twiddles)) then
+        deallocate(plan%twiddles)
+        plan%twiddles => null()
+      endif
+      if(associated(plan%twiddles_n)) then
+        deallocate(plan%twiddles_n)
+        plan%twiddles_n => null()
+      endif
     else if(plan%library .eq. FFTPACK_MOD) then
-      deallocate(plan%dwsave)
+      if(associated(plan%dwsave)) deallocate(plan%dwsave)
     endif
     plan%in_real => null()
     plan%out_real => null()
@@ -547,10 +495,11 @@ function sll_get_index_real(k,plan) result(index)
     plan => null()
   end subroutine
 
-! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
-! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
-! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
+
 #ifndef _NOFFTW
+! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
+! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
+! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
 ! COMPLEX
   function fftw_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
@@ -583,8 +532,6 @@ function sll_get_index_real(k,plan) result(index)
     sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
 
     call fftw_execute_dft(plan%fftw_plan, array_in, array_out)
-    !call fftw_destroy_plan(plan)
-    !fftw_apply_fft_complex64 => fft_plan
   end subroutine fftw_apply_fft_complex
 
   subroutine fftw_apply_fft_comp(plan)
@@ -636,113 +583,59 @@ function sll_get_index_real(k,plan) result(index)
     call fftw_execute_r2r(plan%fftw_plan,plan%in_real,plan%out_real)
   end subroutine
 ! END REAL
+! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
+! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
+! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
 #endif
-! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
-! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
-! FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW FFTW
 
 
-#ifdef _CACA
+
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
-#ifndef _NOFFTPACK
-  function fftpack_new_fft(n,data_type,style)
-    type(sll_fft_plan), pointer :: fftpack_new_fft
-    sll_int32, intent(in)       :: n, data_type
-    sll_int32, optional, intent(in) :: style
-    sll_int32                   :: ierr, s
-
-    ! By default style = 0
-    s = 0
-    if(present(style)) s = style
-       
-    SLL_ALLOCATE(fftpack_new_fft,ierr)
-  
-    fftpack_new_fft%N = n
-    fftpack_new_fft%style = s
-    fftpack_new_fft%mod = FFTPACK_MOD
-    fftpack_new_fft%data_type = data_type
-
-    if( s .eq. 1 ) then
-      fftpack_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
-      fftpack_new_fft%normalization_factor_backward = 1.0_f64
-    else if( s .eq. 2 ) then
-      fftpack_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
-      fftpack_new_fft%normalization_factor_forward = 1.0_f64
-    else if( s .eq. 3 ) then
-      fftpack_new_fft%normalization_factor_forward = 1.0_f64/(real(n,kind=f64))
-      fftpack_new_fft%normalization_factor_backward = 1.0_f64/(real(n,kind=f64))
-    endif
-
-    if(data_type .eq. FFT_COMPLEX) then
-      SLL_ALLOCATE(fftpack_new_fft%wsave(4*n + 15),ierr)
-      call cffti(n, fftpack_new_fft%wsave)
-    else
-      SLL_ALLOCATE(fftpack_new_fft%dwsave(2*n + 15),ierr)
-      call dffti(n, fftpack_new_fft%dwsave)
-    endif
-  end function fftpack_new_fft
-
-!  function fftpack_apply_fft_real(fft,data,direction)
-!    type(sll_fft_plan), pointer             :: fftpack_apply_fft_real
-!    type(sll_fft_plan), pointer, intent(in) :: fft
-!    sll_int32, intent(in)                   :: direction
-!    sll_real32, dimension(1:fft%N), intent(inout) :: data
-!    
-!    if( direction .eq. FFT_FORWARD) then  
-!      call rfftf(fft%N,data,fft%wsave)
-!    else
-!      call rfftb(fft%N,data,fft%wsave)
-!    endif
-!    fftpack_apply_fft_real => fft
-!  end function fftpack_apply_fft_real
-  
-  function fftpack_apply_fft_real64(fft,data,direction)
-    type(sll_fft_plan), pointer             :: fftpack_apply_fft_real64
-    type(sll_fft_plan), pointer, intent(in) :: fft
-    sll_int32, intent(in)                   :: direction
-    sll_real64, dimension(1:fft%N), intent(inout) :: data
+! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
+! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
+! COMPLEX
+  function fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
+    sll_int32, intent(in)                        :: library
+    sll_int32, intent(in)                        :: size_problem
+    sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
+    sll_int32, intent(in)                        :: direction
+    sll_int32, optional,  intent(in)             :: flags
+    type(sll_fft_plan), pointer                  :: plan
+ 
+    allocate(plan)
     
-    if( direction .eq. FFT_FORWARD) then
-      data = data*fft%normalization_factor_forward
-      call dfftf(fft%N,data,fft%dwsave)
-    else if( direction .eq. FFT_INVERSE) then
-      data = data*fft%normalization_factor_backward
-      call dfftb ( fft%N, data, fft%dwsave )
-    endif
-    fftpack_apply_fft_real64 => fft
-  end function fftpack_apply_fft_real64
-
-  function fftpack_apply_fft_complex32(fft,data,direction)
-    type(sll_fft_plan), pointer             :: fftpack_apply_fft_complex32
-    type(sll_fft_plan), pointer, intent(in) :: fft
-    sll_int32, intent(in)                   :: direction
-    sll_comp32, dimension(:), intent(inout) :: data
-    
-    if( direction .eq. FFT_FORWARD ) then  
-      call cfftf(fft%N,data,fft%wsave)
-    else if( direction .eq. FFT_INVERSE ) then
-      call cfftb(fft%N,data,fft%wsave)
+    plan%N = size_problem
+    if( present(flags)) then
+      plan%style = flags
     else
-      stop 'ERROR : direction ==fftpack_apply_fft_complex32=='
+      plan%style = 0
     endif
-    fftpack_apply_fft_complex32 => fft
-  end function fftpack_apply_fft_complex32
+    plan%library = library
+    plan%direction = direction
+    plan%in_comp => array_in
+    plan%out_comp => array_out
+    plan%in_real => null()
+    plan%out_real => null()
 
-#else
-#endif
-! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
-#endif
+    allocate(plan%dwsave(4*plan%N + 15))
+    call zffti(plan%N,plan%dwsave)
+  end function
 
+  subroutine fftpack_apply_fft_complex(plan,array_in,array_out)
+    type(sll_fft_plan), pointer, intent(in)         :: plan
+    sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
 
+    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
+       array_out = array_in
+    endif   
 
-
-
-
-
-! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
-! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
-! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
-
+    if( plan%direction .eq. FFT_FORWARD ) then
+      call zfftf( plan%N , array_out ,plan%dwsave )
+    else if( plan%direction .eq. FFT_INVERSE ) then
+      call zfftb( plan%N, array_out , plan%dwsave )
+    endif
+  end subroutine
+! END COMPLEX
 
 ! REAL
   function fftpack_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
@@ -776,6 +669,10 @@ function sll_get_index_real(k,plan) result(index)
     type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
 
+    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
+       array_out = array_in
+    endif   
+
     if( plan%direction .eq. FFT_FORWARD ) then
       call dfftf( plan%N , array_out ,plan%dwsave )
     else if( plan%direction .eq. FFT_INVERSE ) then
@@ -783,8 +680,6 @@ function sll_get_index_real(k,plan) result(index)
     endif
   end subroutine
 ! END REAL
-
-
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
@@ -831,129 +726,6 @@ function sll_get_index_real(k,plan) result(index)
     !SLL_DEALLOCATE_ARRAY(a,ierr)
   end function compute_index
 
-  function sll_delete_fft(fft)
-      type(sll_fft_plan), pointer                :: sll_delete_fft
-      type(sll_fft_plan), pointer, intent(inout) :: fft
-      sll_int32                                  :: ierr
-
-      if( fft%mod .eq. FFTW_MOD ) then
-        !print *, 'nothing in delete fftw'
-        !return
-      endif
-
-      if( fft%mod .eq. FFTPACK_MOD ) then
-       if( fft%data_type .eq. FFT_COMPLEX ) then
-        if( associated(fft%wsave) ) &
-          SLL_DEALLOCATE(fft%wsave,ierr)
-       else
-        if( associated(fft%dwsave) ) &
-          SLL_DEALLOCATE(fft%dwsave,ierr)
-       endif
-      endif
-
-      if( fft%mod .eq. SLLFFT_MOD ) then
-       if( fft%data_type .eq. FFT_COMPLEX ) then
-        if( associated(fft%mode) ) &
-          SLL_DEALLOCATE(fft%mode,ierr)
-        if( associated(fft%t) ) &
-          SLL_DEALLOCATE(fft%t,ierr)
-       else
-        if( associated(fft%twiddles) ) &
-          SLL_DEALLOCATE(fft%twiddles,ierr)
-        if( associated(fft%twiddles_n) ) &
-          SLL_DEALLOCATE(fft%twiddles_n,ierr)
-       endif
-        !if( associated(fft%index) ) &
-        !  SLL_DEALLOCATE(fft%index,ierr)      
-      endif
-      
-
-      SLL_DEALLOCATE(fft,ierr)
-      fft => NULL()
-      sll_delete_fft => NULL()
-  end function sll_delete_fft
-
-  function sll_apply_fft_complex64(fft,data,direction)
-    type(sll_fft_plan), pointer             :: sll_apply_fft_complex64
-    type(sll_fft_plan), pointer, intent(in) :: fft
-    sll_int32, intent(in)                   :: direction
-    sll_comp64, dimension(0:fft%N-1), intent(inout) :: data
-  
-    if( fft%mod .eq. FFTW_MOD ) then
-#ifndef _NOFFTW
-      sll_apply_fft_complex64 => fftw_apply_fft_complex64(fft,data,direction)
-      return
-#else
-       stop 'FFTW NOT INSTALLED'
-#endif
-    else if( fft%mod .eq. FFTPACK_MOD ) then
-      stop 'no 64 bit version in FFTPACK'
-    endif
-
-    call fft_dit_nr(data,fft%t,direction)
-    sll_apply_fft_complex64 => fft
-    !call bit_reverse_complex(fft%N,data)
-  end function sll_apply_fft_complex64
-
-  function sll_apply_fft_complex32(fft,data,direction)
-    type(sll_fft_plan), pointer             :: sll_apply_fft_complex32
-    type(sll_fft_plan), pointer, intent(in) :: fft
-    sll_int32, intent(in)                   :: direction
-    sll_comp32, dimension(0:fft%N-1), intent(inout) :: data
-   
-    if( fft%mod .eq. FFTPACK_MOD ) then
-#ifndef _NOFFTPACK
-      sll_apply_fft_complex32 => fftpack_apply_fft_complex32(fft,data,direction)
-      return
-#else
-      stop 'FFTPACK NOT INSTALLED'
-#endif
-    else if( fft%mod .eq. FFTW_MOD ) then
-#ifndef _NOFFTW
-      stop 'no 32bit version in FFTW'
-#else
-      stop 'FFTW NOT INSTALLED'
-#endif
-    else if( fft%mod .eq. SLLFFT_MOD ) then
-      stop 'no 32bit version in SELALIB'
-    else
-      stop 'ERROR IN =SLL_APPLY_FFT_COMPLEX32= invalid fft%mod'
-    endif
-  end function sll_apply_fft_complex32
-
-
-
-  function sll_apply_fft_real64(fft,data,direction)
-    type(sll_fft_plan), pointer             :: sll_apply_fft_real64
-    type(sll_fft_plan), pointer, intent(in) :: fft
-    sll_int32, intent(in)                   :: direction
-    sll_real64, dimension(0:fft%N-1), intent(inout) :: data
-    
-    if( fft%mod .eq. FFTW_MOD) then
-#ifndef _NOFFTW
-      sll_apply_fft_real64 => fftw_apply_fft_real64(fft,data,direction)
-      return
-#else
-      stop 'FFTW NOT INSTALLED'
-#endif
-    else if( fft%mod .eq. FFTPACK_MOD) then
-#ifndef _NOFFTPACK
-      sll_apply_fft_real64 => fftpack_apply_fft_real64(fft,data,direction)
-      return
-#else
-      stop 'FFTPACK NOT INSTALLED'
-#endif
-    endif
-
-    if( direction .eq. FFT_INVERSE ) then
-      data = data*fft%normalization_factor_backward
-    else if( direction .eq. FFT_FORWARD ) then 
-      data = data*fft%normalization_factor_forward
-    endif
-
-    call real_data_fft_dit( data, fft%N, fft%twiddles, fft%twiddles_n, direction )
-    sll_apply_fft_real64 => fft
-  end function sll_apply_fft_real64
 #endif
 
 
@@ -987,8 +759,24 @@ function sll_get_index_real(k,plan) result(index)
 
     allocate(plan%t(1:plan%N/2))
     call compute_twiddles(plan%N,plan%t)
+    if ( plan%direction == FFT_FORWARD ) then
+       plan%t = conjg(plan%t)
+    end if
     call bit_reverse(plan%N/2,plan%t)
   end function
+
+  subroutine sll_apply_fft_complex(plan,array_in,array_out)
+    type(sll_fft_plan), pointer, intent(in)         :: plan
+    sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
+
+    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
+       array_out = array_in
+    endif   
+    
+    call fft_dit_nr(array_out,plan%t,plan%direction)
+    call bit_reverse_complex(plan%N,array_out)
+  end subroutine
+
 ! END COMPLEX
 
 ! REAL
@@ -1014,17 +802,23 @@ function sll_get_index_real(k,plan) result(index)
     plan%out_real => array_out
     plan%in_comp => null()
     plan%out_comp => null()
-
     allocate(plan%twiddles(0:plan%N/2-1))
     allocate(plan%twiddles_n(0:plan%N-1))
     call compute_twiddles_real_array( plan%N, plan%twiddles_n )
     call compute_twiddles_real_array( plan%N/2, plan%twiddles(0:plan%N/2-1) )
+    if( plan%direction .eq. FFT_FORWARD ) then
+      call conjg_in_pairs(plan%N/2,plan%twiddles)
+    endif
     call bit_reverse_in_pairs( plan%N/4, plan%twiddles(0:plan%N/2-1))
   end function
 
   subroutine sll_apply_fft_real(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
+
+    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
+       array_out = array_in
+    endif
 
     call real_data_fft_dit( array_out, plan%N, plan%twiddles, plan%twiddles_n, plan%direction )
   end subroutine
@@ -1219,6 +1013,19 @@ function sll_get_index_real(k,plan) result(index)
     end do
   end subroutine bit_reverse_in_pairs
 #undef ARRAY
+
+  !Conjugate complex array that is represented by an array of reals.
+  subroutine conjg_in_pairs(n,array)
+    sll_real64, dimension(1:) :: array
+    sll_int32 :: n, i
+     
+    SLL_ASSERT( size(array) .eq. n )
+    
+    do i=2,n,2
+      array(i) = -array(i)
+    enddo
+  end subroutine
+
   ! *************************************************************************
   ! Decimation in time FFT, natural order input, bit-reversed output (=NR). 
   ! Size of the data must be a power of 2. Twiddle array must be in 
@@ -1273,22 +1080,25 @@ function sll_get_index_real(k,plan) result(index)
     ! It is more convenient when the twiddles are 0-indexed
     sll_comp64, dimension(0:), intent(in)           :: twiddles 
     integer, intent(in)                             :: twiddle_index
-    integer, intent(in)                             :: sign
+    integer, optional, intent(in)                   :: sign
     integer                                         :: half
     integer                                         :: j
     integer                                         :: t_index_new
     sll_comp64                                      :: omega
     sll_comp64                                      :: tmp
-
+ 
     half = ishft(size,-1) ! any evidence this is faster?
-    if ( sign == FFT_INVERSE ) then
-       omega = twiddles(twiddle_index)
-    else if ( sign == FFT_FORWARD ) then
-       omega = conjg(twiddles(twiddle_index))
-    end if
+    !if ( sign == FFT_INVERSE ) then
+    !   omega = twiddles(twiddle_index)
+    !else if ( sign == FFT_FORWARD ) then
+    !   omega = conjg(twiddles(twiddle_index))
+    !else
+    !   stop 'ERROR in =fft_dit_nr_aux= argument sign invalid'
+    !end if
+    omega = twiddles(twiddle_index)
     ! Do the butterflies for this stage
     do j=0,half-1
-       tmp          = dat(j+half)*omega
+       tmp         = dat(j+half)*omega
        dat(j+half) = dat(j) - tmp
        dat(j)      = dat(j) + tmp
     end do
@@ -1355,11 +1165,14 @@ function sll_get_index_real(k,plan) result(index)
     end if
     ! Do the butterflies for this stage
     do j=1,half
-       if ( sign == FFT_FORWARD ) then
-          omega = conjg(twiddles(jtwiddle))
-       else if ( sign == FFT_INVERSE ) then
-          omega = twiddles(jtwiddle)
-       end if
+       !if ( sign == FFT_FORWARD ) then
+       !   omega = conjg(twiddles(jtwiddle))
+       !else if ( sign == FFT_INVERSE ) then
+       !   omega = twiddles(jtwiddle)
+       !else
+       !  stop 'ERROR in =fft_dit_rn_aux= argument sign invalid'
+       !end if
+       omega = twiddles(jtwiddle)
        tmp          = data(j+half)*omega
        data(j+half) = data(j) - tmp
        data(j)      = data(j) + tmp
@@ -1412,13 +1225,17 @@ function sll_get_index_real(k,plan) result(index)
                                  ! in Fortran?
     ! select the value of the twiddle factor for this stage depending on 
     ! the direction of the transform
-    if ( sign == FFT_FORWARD ) then
-       omega_re =  CREAL0(twiddles, twiddle_index)
-       omega_im = -CIMAG0(twiddles, twiddle_index)
-    else if ( sign == FFT_INVERSE ) then
+    !if ( sign == FFT_FORWARD ) then
+    !   omega_re =  CREAL0(twiddles, twiddle_index)
+    !   omega_im = -CIMAG0(twiddles, twiddle_index)
+    !else if ( sign == FFT_INVERSE ) then
+    !   omega_re =  CREAL0(twiddles, twiddle_index)
+    !   omega_im =  CIMAG0(twiddles, twiddle_index)
+    !else
+    !   stop 'ERROR in =fft_dit_nr_real_array_aux= argument sign invalid'
+    !end if
        omega_re =  CREAL0(twiddles, twiddle_index)
        omega_im =  CIMAG0(twiddles, twiddle_index)
-    end if
     ! Do the butterflies for this stage
     do j=0,half-1
        ! multiply samples(j+half) and omega, store in tmp
@@ -1499,13 +1316,17 @@ function sll_get_index_real(k,plan) result(index)
     do j=1,half
        ! select the value of the twiddle factor for this stage depending on 
        ! the direction of the transform
-       if( sign == FFT_FORWARD ) then
-          omega_re =  CREAL1(twiddles, jtwiddle)
-          omega_im = -CIMAG1(twiddles, jtwiddle)
-       else if ( sign == FFT_INVERSE ) then
-          omega_re =  CREAL1(twiddles, jtwiddle)
-          omega_im =  CIMAG1(twiddles, jtwiddle)
-       end if
+       !if( sign == FFT_FORWARD ) then
+       !   omega_re =  CREAL1(twiddles, jtwiddle)
+       !   omega_im = -CIMAG1(twiddles, jtwiddle)
+       !else if ( sign == FFT_INVERSE ) then
+       !   omega_re =  CREAL1(twiddles, jtwiddle)
+       !   omega_im =  CIMAG1(twiddles, jtwiddle)
+       !else
+       !   stop 'ERROR in =fft_dit_rn_real_array_aux= argument sign invalid'
+       !end if
+       omega_re =  CREAL1(twiddles, jtwiddle)
+       omega_im =  CIMAG1(twiddles, jtwiddle)
        ! multiply data(j+half) and omega, store in tmp
        tmp_re = CREAL1(data,j+half)*omega_re - CIMAG1(data,j+half)*omega_im
        tmp_im = CREAL1(data,j+half)*omega_im + CIMAG1(data,j+half)*omega_re
