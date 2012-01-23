@@ -49,7 +49,7 @@ env = Environment( ENV = os.environ,
                    LIBPATH= ['.','../timer','../fftpack',FFTW_LIB_PATH],
                    LIBS=['sll_memory','sll_precision','sll_assertion',
                          'sll_misc','sll_constants','sll_timer','fftpack',FFTW],
-                   F90FLAGS = ['-g','-O3','-W','-Wall','-DTEST_TIME', 
+                   F90FLAGS = ['-g','-O2','-W','-Wall','-DTEST_TIME', 
                                '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
 #'-std=f2003',
