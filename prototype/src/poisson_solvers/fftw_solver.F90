@@ -57,8 +57,8 @@ do i = 1, nc_eta1+1
    end do
 end do
 
-call write_vec1d(-phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi0","mesh",0)
-call write_vec1d( rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
+call write_vec1d(phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi0","mesh",0)
+call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
 
 FIELD_DATA(phi_exact) = FIELD_DATA(phi)
 FIELD_DATA(phi) = 0.0
@@ -75,7 +75,7 @@ SLL_ALLOCATE(rhot(nx/2+1,ny), error)
 !call c_f_pointer(p, rhot, [nx/2+1,ny])
 
 fw = fftw_plan_dft_r2c_2d(ny, nx, rho%data(1:nx,1:ny), rhot, FFTW_ESTIMATE);
-bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, rho%data(1:nx,1:ny), FFTW_ESTIMATE)
+bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, phi%data(1:nx,1:ny), FFTW_ESTIMATE)
 
 call fftw_execute_dft_r2c(fw, rho%data(1:nx,1:ny), rhot)
 
