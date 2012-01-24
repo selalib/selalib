@@ -5,7 +5,7 @@ module sll_mesh_types_experimental
 #include "sll_assert.h"
   implicit none
 
-  ! Enumerators used inside the module and that are also available for
+  ! Enumerators used inside the module and that are also available for 
   ! clients.
   enum, bind(C)
      enumerator :: NODE_CENTERED_MESH = 0, CELL_CENTERED_MESH = 1
@@ -112,14 +112,12 @@ contains
   !
   ! -------------------------------------------------------------------------
 
-  ! new_mapping_2D() only allocates the memory for the object itself and
-  ! its internal arrays, but there is no initialization. A different routine
-  ! is needed for this.
-  function new_mapping_2D( npts1, npts2, map_type, x1, x2 )
+  ! new_mapping_2D() only allocates the memory for the object itself. The
+  ! initialization routines will allocate the memory of hte internal arrays.
+  function new_mapping_2D( map_type )
     type(mapping_2D), pointer  :: new_mapping_2D
-    sll_int32, intent(in)      :: npts1
-    sll_int32, intent(in)      :: npts2
     sll_int32, intent(in)      :: map_type
+! por aqui
     sll_real64, dimension(:,:), pointer, optional :: x1
     sll_real64, dimension(:,:), pointer, optional :: x2
     sll_int32                  :: ierr
@@ -189,14 +187,20 @@ contains
   ! x1 and x2 arrays, which may need to be filled out "by hand" if the
   ! user did not provide those arrays when calling new_mapping_2D.
   subroutine initialize_mapping_2D( &
+    npts1,    &
+    npts2,    &
     map,      &
     j11_func, &
     j12_func, &
     j21_func, &
     j22_func, &
+    x1_array, &
+    x2_array, &
     x1_func,  &
     x2_func )
 
+    sll_int32, intent(in)      :: npts1
+    sll_int32, intent(in)      :: npts2
     type(mapping_2D), pointer :: map
     procedure(two_arg_scalar_function)           :: j11_func
     procedure(two_arg_scalar_function)           :: j12_func
