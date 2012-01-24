@@ -26,7 +26,10 @@ env = Environment( ENV = os.environ,
 src_files = ['sll_poisson_1D_periodic.F90', 'fft1d.f90', 'unit_test.F90',
              'sll_poisson_2D_periodic.F90', 'fft_module.F90' ]
 
-env.Append(CPPDEFINES=['DEBUG','GFORTRAN','NOHDF5','_FFTPACK'])
+env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
+env.Append(F90PATH=[os.environ['HDF5INCPATH']])
+env.Append(LIBPATH=[os.environ['HDF5LIBPATH']])
+env.Append(LIBS=['hdf5_fortran','hdf5','z'])
 
 env.Library('sll_memory',     ["../memory/sll_memory.F90"])
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
@@ -39,13 +42,11 @@ env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 
 env.Program(target='unit_test', source = src_files)
 
-#Check if fftw is available
-conf = Configure(env)
-if conf.CheckLib('fftw3'):
-   env.Append(LIBS=['fftw3'])
-   env.Program('fft_solver.F90')
+env.Append(LIBS=['fftw3'])
+env.Program('fftw_solver.F90')
 
-#env.Append(FORTRANFLAGS='-fdefault-real-8')
-#env.Library('fish90',['fishpack/fish.F',Glob('fishpack/*.f')])
-#env.Append(LIBS='fish90')
-#env.Program('tfishpack.F90')
+env.Append(CPPDEFINES='G95')
+env.Append(FORTRANFLAGS='-fdefault-real-8')
+env.Library('fish90',['fishpack/fish.F',Glob('fishpack/*.f')])
+env.Append(LIBS='fish90')
+env.Program('thwscrt.F90')
