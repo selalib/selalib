@@ -1,3 +1,17 @@
+
+!*******************************************************************************************
+!
+! Selalib      
+! Module: unit_test.F90
+!
+!> @brief 
+!> remapper unit test
+!   
+!> @authors                    
+!> Aliou DIOUF (aliou.l.diouf@inria.fr), Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
+!                                  
+!********************************************************************************************
+
 program remap_test
   use sll_collective
 #include "sll_remap.h"
@@ -185,7 +199,7 @@ program remap_test
                  print *, i_test, myrank, 'Printing layout2: '
                  call sll_view_lims_3D( layout2 )
 
-                 print*, 'program stopped'
+                 print*, 'program stopped by failure'
                  stop
               end if
               call flush()
@@ -229,12 +243,6 @@ program remap_test
   endif
   
   call sll_halt_collective()
-
-#if 0
-  call split_interval_randomly(1000,4,limits)
-  print *, limits(:)
-  call flush()
-#endif
   
 contains
 
@@ -291,16 +299,8 @@ contains
   
   function theoretical_global_3D_indices(d, ni, nj)
     integer, dimension(1:3) :: theoretical_global_3D_indices
-    integer, intent(in)      :: d, ni, nj
-    integer                  :: q
-#if 0
-    integer                  :: val
-    val = d/(ni*nj)
-    theoretical_global_3D_indices(3) = val
-    theoretical_global_3D_indices(2) = 
-    theoretical_global_3D_indices(1) = 
-#endif
-#if 1
+    integer, intent(in)     :: d, ni, nj
+    integer                 :: q
     if(mod(d,ni) /= 0) then
        theoretical_global_3D_indices(1) = mod(d,ni)
     else
@@ -309,7 +309,6 @@ contains
     q = d/ni
     theoretical_global_3D_indices(2) = mod(q,nj) + 1
     theoretical_global_3D_indices(3) = q/nj + 1
-#endif
   end function theoretical_global_3D_indices
   
   subroutine two_power_rand_factorization(n, n1, n2, n3)
@@ -347,7 +346,6 @@ contains
     n1 = 2**expo1
     n2 = 2**expo2
   end subroutine factorize_in_random_2powers
-
   
   subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
     type(layout_3D_t), pointer :: layout
