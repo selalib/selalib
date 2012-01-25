@@ -1,3 +1,17 @@
+
+!***********************************************************************************
+!
+! Selalib      
+! Module: unit_test.F90
+!
+!> @brief 
+!> newton_raphson unit test
+!   
+!> @author                    
+!> Aliou DIOUF (aliou.l.diouf@inria.fr)
+!                                  
+!************************************************************************************
+
 program newton_raphson_tester 
 #include "sll_working_precision.h"
   use OMP_LIB

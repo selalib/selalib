@@ -53,8 +53,8 @@ use sll_xmf_io
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-
 implicit none
+
 
 private
 enum, bind(C)
@@ -65,12 +65,12 @@ public write_vec1d, write_vec2d, write_mesh
 
 contains  
 !>Writes data for mesh plotting:
-!> \param[in] mesh_prefix filename prefix for the mesh
-!> \param[in] nodes coordinates  along direction 1
-!> \param[in] nodes coordinates  along direction 2
-!> \param[in] nodes number along direction 1
-!> \param[in] nodes number along direction 2
-!> \param[out] parameter that should be 0
+!> \param[in] mesh_prefix is the filename prefix for the mesh
+!> \param[in] x1 is array with nodes coordinates  along direction 1
+!> \param[in] x2 is array with nodes coordinates  along direction 2
+!> \param[in] nnodes_x1 is the number of nodes number along direction 1
+!> \param[in] nnodes_x2 is the number of nodes number along direction 2
+!> \param[out] error is a parameter that should be 0
 subroutine write_mesh_data_2d(mesh_prefix,x1,x2,nnodes_x1,nnodes_x2,error)
 character(len=*), intent(in) :: mesh_prefix  
 sll_real64, dimension(:,:), intent(in) :: x1 
@@ -226,7 +226,6 @@ end subroutine write_mesh_data_3d
 !! \param[in] nnodes_x1 nodes number along direction 1
 !! \param[in] nnodes_x2 nodes number along direction 2
 !! \param[in] mesh_prefix filename prefix for the mesh
-!! \param[in] icenter parameter to distinguish cells (0) or nodes(1) centered values
 !!
 !! Example of a cartesian grid (xmin,xmax) x (vmin,vmax):
 !!\verbatim
