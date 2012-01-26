@@ -60,6 +60,11 @@ NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, field_4D_vec1)
                       write_distribution_function_4D
   end interface
 
+  interface compute_rho
+     module procedure compute_rho_2D, &
+                      compute_rho_4D
+  end interface
+
 #undef NEW_TYPE_FOR_DF
 
   enum, bind(C)
@@ -365,7 +370,7 @@ contains
 
     ! compute integral of f with respect to x2 (-> rho)
     ! using a trapezoidal rule on a uniform grid of physical space
-  subroutine compute_rho(dist_func_2D,rho,npoints)
+  subroutine compute_rho_2d(dist_func_2D,rho,npoints)
     type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
     type(field_1D_vec1), pointer                       :: rho 
     sll_int32                                          :: npoints ! number of integration points
@@ -446,7 +451,27 @@ contains
        x1 = x1 + delta_rho 
     end do
 
-  end subroutine compute_rho
+  end subroutine compute_rho_2d
+
+  subroutine compute_rho_4d(dist_func_4D,rho)
+    type(sll_distribution_function_4D_t), pointer      :: dist_func_4D
+    type(field_2D_vec1), pointer                       :: rho 
+    sll_int32                                          :: nc_eta1, nc_eta2
+    sll_int32                                          :: i, j 
+    sll_real64                                         :: delta_v1, delta_v2
+
+    nc_eta1  = dist_func_4D%field%descriptor_x%nc_eta1
+    nc_eta2  = dist_func_4D%field%descriptor_x%nc_eta2
+    delta_v1 = dist_func_4D%field%descriptor_v%delta_eta1
+    delta_v2 = dist_func_4D%field%descriptor_v%delta_eta2
+
+    do i = 1, nc_eta1 + 1
+       do j = 1, nc_eta2 + 1
+          rho%data(i,j) =  sum(dist_func_4D%field%data(i,j,:,:))*delta_v1*delta_v2
+       end do
+    end do
+
+  end subroutine compute_rho_4d
 
   subroutine write_distribution_function_2D ( f )
     type(sll_distribution_function_2D_t), pointer      :: f
