@@ -54,6 +54,7 @@ module distribution_function
 NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, field_2D_vec1)
 NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, field_4D_vec1)
 
+
   interface write_distribution_function
      module procedure write_distribution_function_2D, &
                       write_distribution_function_4D
@@ -67,7 +68,6 @@ NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, field_4D_vec1)
   enum, bind(C)
      enumerator :: NODE_CENTERED_DF = 0, CELL_CENTERED_DF = 1
   end enum
-
 
 contains
 
@@ -459,7 +459,6 @@ contains
     f%plot_counter = f%plot_counter + 1
   end subroutine write_distribution_function_2D
 
-
   subroutine write_distribution_function_4D ( f )
     type(sll_distribution_function_4D_t), pointer      :: f
     character(len=4) :: counter
@@ -497,6 +496,7 @@ contains
     call write_vec1d(val,nnode_x1,nnode_x2,name,"mesh_x",f%center)
     
     f%plot_counter = f%plot_counter + 1
+
   end subroutine write_distribution_function_4D
 
 end module distribution_function
