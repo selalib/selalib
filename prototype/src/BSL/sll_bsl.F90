@@ -18,6 +18,11 @@ end type bsl_workspace
 
 sll_real64 :: global_eta1, global_eta2
 
+interface new_bsl_workspace
+   module procedure new_bsl_workspace_2d
+   module procedure new_bsl_workspace_4d
+end interface
+
 !---------------------------------------
 
 contains
@@ -63,6 +68,46 @@ new_bsl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                              eta2_max,         &
                                              HERMITE_SPLINE )  
 end function new_bsl_workspace
+
+function new_bsl_workspace_4d(dist_func_4D)
+
+type (bsl_workspace), pointer :: new_bsl_workspace
+type (sll_distribution_function_4D_t), pointer  :: dist_func_4D 
+
+sll_int32  :: ierr
+sll_int32  :: nc_eta1
+sll_int32  :: nc_eta2
+sll_real64 :: eta1_min
+sll_real64 :: eta1_max
+sll_real64 :: eta2_min
+sll_real64 :: eta2_max
+sll_int32  :: boundary1_type
+sll_int32  :: boundary2_type
+
+! allocate pointer
+SLL_ALLOCATE(new_bsl_workspace,ierr)
+
+! get dimensions
+nc_eta1    = get_df_nc_eta1( dist_func_4D ) 
+eta1_min   = get_df_eta1_min( dist_func_4D )
+eta1_max   = get_df_eta1_max( dist_func_4D )
+nc_eta2    = get_df_nc_eta2( dist_func_4D ) 
+eta2_min   = get_df_eta2_min( dist_func_4D )
+eta2_max   = get_df_eta2_max( dist_func_4D )
+boundary1_type = get_df_boundary1_type( dist_func_4D )
+boundary2_type = get_df_boundary2_type( dist_func_4D )
+
+! initialize splines
+new_bsl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,        &
+                                             eta1_min,         &
+                                             eta1_max,         &
+                                             PERIODIC_SPLINE )
+
+new_bsl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
+                                             eta2_min,         &
+                                             eta2_max,         &
+                                             HERMITE_SPLINE )  
+end function new_bsl_workspace_4d
 
 subroutine delete_bsl_workspace(bsl_worksp)
 type (bsl_workspace), pointer :: bsl_worksp
