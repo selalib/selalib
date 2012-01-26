@@ -175,7 +175,7 @@ contains   ! *****************************************************************
     SLL_ALLOCATE(new_geometry_2D,ierr)
 
     ! cartesian coordinates correspond to identity mapping
-    if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
+    if ((trim(name)=='identity').or.(trim(name)=='cartesian')) then
        new_geometry_2D%x1         => identity_x1
        new_geometry_2D%x2         => identity_x2
        new_geometry_2D%eta1       => identity_eta1
