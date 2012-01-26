@@ -25,7 +25,7 @@ program unit_test
   type(sll_distribution_function_2D_t), pointer :: dist_func
 
   type(field_2D_vec1), pointer :: uniform_field
-  type(bsl_workspace), pointer :: bsl_work
+  type(bsl_workspace_2d), pointer :: bsl_work
 
   eta1_min =  -8.0_f64; eta1_max =  8.0_f64
   eta2_min =  -8.0_f64; eta2_max =  8.0_f64 

@@ -11,10 +11,15 @@ use distribution_function
 
 implicit none
 
-type bsl_workspace
+type bsl_workspace_2d
    type (sll_spline_1D), pointer :: spl_eta1
    type (sll_spline_1D), pointer :: spl_eta2
-end type bsl_workspace
+end type bsl_workspace_2d
+
+type bsl_workspace_4d
+   type (sll_spline_1D), pointer :: spl_eta1
+   type (sll_spline_1D), pointer :: spl_eta2
+end type bsl_workspace_4d
 
 sll_real64 :: global_eta1, global_eta2
 
@@ -23,15 +28,20 @@ interface new_bsl_workspace
    module procedure new_bsl_workspace_4d
 end interface
 
+interface bsl_second_order
+   module procedure bsl_second_order_2d
+   module procedure bsl_second_order_4d
+end interface
+
 !---------------------------------------
 
 contains
 
 !---------------------------------------
   
-function new_bsl_workspace(dist_func_2D)
+function new_bsl_workspace_2d(dist_func_2D)
 
-type (bsl_workspace), pointer :: new_bsl_workspace
+type (bsl_workspace_2d), pointer :: new_bsl_workspace_2d
 type (sll_distribution_function_2D_t), pointer  :: dist_func_2D 
 
 sll_int32  :: ierr
@@ -45,7 +55,7 @@ sll_int32  :: boundary1_type
 sll_int32  :: boundary2_type
 
 ! allocate pointer
-SLL_ALLOCATE(new_bsl_workspace,ierr)
+SLL_ALLOCATE(new_bsl_workspace_2d,ierr)
 
 ! get dimensions
 nc_eta1    = get_df_nc_eta1( dist_func_2D ) 
@@ -58,20 +68,20 @@ boundary1_type = get_df_boundary1_type( dist_func_2D )
 boundary2_type = get_df_boundary2_type( dist_func_2D )
 
 ! initialize splines
-new_bsl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,        &
+new_bsl_workspace_2d%spl_eta1 => new_spline_1D( nc_eta1+1,        &
                                              eta1_min,         &
                                              eta1_max,         &
                                              PERIODIC_SPLINE )
 
-new_bsl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
+new_bsl_workspace_2d%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                              eta2_min,         &
                                              eta2_max,         &
                                              HERMITE_SPLINE )  
-end function new_bsl_workspace
+end function new_bsl_workspace_2d
 
 function new_bsl_workspace_4d(dist_func_4D)
 
-type (bsl_workspace), pointer :: new_bsl_workspace
+type (bsl_workspace_4d), pointer :: new_bsl_workspace_4d
 type (sll_distribution_function_4D_t), pointer  :: dist_func_4D 
 
 sll_int32  :: ierr
@@ -85,32 +95,32 @@ sll_int32  :: boundary1_type
 sll_int32  :: boundary2_type
 
 ! allocate pointer
-SLL_ALLOCATE(new_bsl_workspace,ierr)
+SLL_ALLOCATE(new_bsl_workspace_4d,ierr)
 
 ! get dimensions
-nc_eta1    = get_df_nc_eta1( dist_func_4D ) 
-eta1_min   = get_df_eta1_min( dist_func_4D )
-eta1_max   = get_df_eta1_max( dist_func_4D )
-nc_eta2    = get_df_nc_eta2( dist_func_4D ) 
-eta2_min   = get_df_eta2_min( dist_func_4D )
-eta2_max   = get_df_eta2_max( dist_func_4D )
-boundary1_type = get_df_boundary1_type( dist_func_4D )
-boundary2_type = get_df_boundary2_type( dist_func_4D )
+nc_eta1    = dist_func_4D%field%descriptor_x%nc_eta1
+eta1_min   = dist_func_4D%field%descriptor_x%eta1_min
+eta1_max   = dist_func_4D%field%descriptor_x%eta1_max
+nc_eta2    = dist_func_4D%field%descriptor_x%nc_eta2
+eta2_min   = dist_func_4D%field%descriptor_x%eta2_min
+eta2_max   = dist_func_4D%field%descriptor_x%eta2_max
+boundary1_type = dist_func_4D%field%descriptor_x%boundary1_type
+boundary2_type = dist_func_4D%field%descriptor_x%boundary2_type
 
 ! initialize splines
-new_bsl_workspace%spl_eta1 => new_spline_1D( nc_eta1+1,        &
+new_bsl_workspace_4d%spl_eta1 => new_spline_1D( nc_eta1+1,        &
                                              eta1_min,         &
                                              eta1_max,         &
                                              PERIODIC_SPLINE )
 
-new_bsl_workspace%spl_eta2 => new_spline_1D( nc_eta2+1,        &
+new_bsl_workspace_4d%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                              eta2_min,         &
                                              eta2_max,         &
                                              HERMITE_SPLINE )  
 end function new_bsl_workspace_4d
 
 subroutine delete_bsl_workspace(bsl_worksp)
-type (bsl_workspace), pointer :: bsl_worksp
+type (bsl_workspace_2d), pointer :: bsl_worksp
 sll_int32   :: ierr
 
 if( .not. (associated(bsl_worksp))) then
@@ -126,16 +136,16 @@ end subroutine delete_bsl_workspace
 ! direction can be decoupled and should maybe be put in different 
 ! subroutines.
 
-! subroutine bsl_second_order
+! subroutine bsl_second_order_2d
 ! Advances the distribution function on a time step deltat using a second 
 ! order time split (Strang splitting)
 ! conservative semi-Lagrangian scheme
-subroutine bsl_second_order( bsl_work,       &
-                             dist_func_2D,   &
-                             advfield_old,   &
-                             advfield_new,   &
-                             deltat )
-type (bsl_workspace), pointer :: bsl_work
+subroutine bsl_second_order_2d( bsl_work,       &
+                                dist_func_2D,   &
+                                advfield_old,   &
+                                advfield_new,   &
+                                deltat )
+type (bsl_workspace_2d), pointer :: bsl_work
 type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
 type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
 type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
@@ -328,7 +338,24 @@ do ihalf = 1, 2
    end if
    
 end do
-end subroutine bsl_second_order
+end subroutine bsl_second_order_2d
+
+!> Advances the distribution function on a time step deltat using a second 
+!> order time split (Strang splitting)
+!> conservative semi-Lagrangian scheme
+subroutine bsl_second_order_4d( bsl_work,       &
+                                dist_func_4D,   &
+                                advfield_old,   &
+                                advfield_new,   &
+                                deltat )
+type (bsl_workspace_4d), pointer :: bsl_work
+type (sll_distribution_function_4D_t), pointer  :: dist_func_4D
+type (field_2D_vec2), pointer  :: advfield_old   ! adv. field at (t)
+type (field_2D_vec2), pointer  :: advfield_new   ! adv. field at (t+dt)
+sll_real64  ::  deltat                           ! dt
+
+end subroutine bsl_second_order_4d
+
 
 subroutine advance_1D( primitive,     &
                        fieldn,        &
