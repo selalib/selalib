@@ -65,6 +65,17 @@ NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, field_4D_vec1)
                       compute_rho_4D
   end interface
 
+
+  interface  sll_get_df_val
+  module procedure sll_get_df_val_2d
+  module procedure sll_get_df_val_4d
+  end interface
+
+  interface  sll_set_df_val
+  module procedure sll_set_df_val_2d
+  module procedure sll_set_df_val_4d
+  end interface
+
 #undef NEW_TYPE_FOR_DF
 
   enum, bind(C)
@@ -201,20 +212,33 @@ contains
     get_df_jac => f%field%descriptor%geom%Jacobian
   end function get_df_jac
 
-
-  function sll_get_df_val( f, i, j )
-    sll_real64 :: sll_get_df_val
+  function sll_get_df_val_2d( f, i, j )
+    sll_real64 :: sll_get_df_val_2d
     type(sll_distribution_function_2D_t), pointer      :: f
     sll_int32 :: i, j
-    sll_get_df_val = f%field%data(i,j)
-  end function sll_get_df_val
+    sll_get_df_val_2d = f%field%data(i,j)
+  end function sll_get_df_val_2d
 
-  subroutine sll_set_df_val( f, i, j, val )
+  subroutine sll_set_df_val_2d( f, i, j, val )
     type(sll_distribution_function_2D_t), pointer      :: f
     sll_int32 :: i, j
     sll_real64 :: val
     f%field%data(i,j) = val
-  end subroutine sll_set_df_val
+  end subroutine sll_set_df_val_2d
+
+  function sll_get_df_val_4d( f, i, j, k, l )
+    sll_real64 :: sll_get_df_val_4d
+    type(sll_distribution_function_4D_t), pointer      :: f
+    sll_int32 :: i, j, k, l
+    sll_get_df_val_4d = f%field%data(i,j,k,l)
+  end function sll_get_df_val_4d
+
+  subroutine sll_set_df_val_4d( f, i, j, k, l, val )
+    type(sll_distribution_function_4D_t), pointer      :: f
+    sll_int32 :: i, j, k, l
+    sll_real64 :: val
+    f%field%data(i,j,k,l) = val
+  end subroutine sll_set_df_val_4d
 
   subroutine sll_init_distribution_function_2D( dist_func_2D, test_case)
     type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
