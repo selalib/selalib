@@ -17,8 +17,6 @@ sll_int32  :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_int32  :: i_step, n_step
 sll_real64 :: eta1_min, eta1_max, eta2_min, eta2_max
 sll_real64 :: eta3_min, eta3_max, eta4_min, eta4_max
-sll_real64 :: eta1, eta2, eta3, eta4
-sll_int32  :: ix, jx, iv, jv
 
 type(geometry_2D), pointer :: geom_x, geom_v
 type(mesh_descriptor_2D), pointer :: mesh_x, mesh_v
@@ -30,7 +28,7 @@ sll_real64 :: delta_x1, delta_x2, delta_v1, delta_v2
 sll_real64 :: delta_t
 
 type(poisson_2d_periodic), pointer :: poisson
-type(field_2D_vec2),       pointer :: exy, exy_exact
+type(field_2D_vec2),       pointer :: exy_old, exy_new
 type(field_2D_vec1),       pointer :: rho
 sll_int32                          :: error
 character(len=4) :: counter
@@ -47,11 +45,11 @@ mesh_x => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
 
 call write_mesh_2D(mesh_x,"mesh_x")
 
-rho       => new_field_2D_vec1(mesh_x)
-exy       => new_field_2D_vec2(mesh_x)
-exy_exact => new_field_2D_vec2(mesh_x)
+rho     => new_field_2D_vec1(mesh_x)
+exy_old => new_field_2D_vec2(mesh_x)
+exy_new => new_field_2D_vec2(mesh_x)
 
-poisson   => new_poisson_2d_periodic(exy)
+poisson   => new_poisson_2d_periodic(exy_new)
 
 eta3_min = -6.0_f64; eta3_max =  6.0_f64 
 eta4_min = -6.0_f64; eta4_max =  6.0_f64 
@@ -86,20 +84,32 @@ bsl_work => new_bsl_workspace( dist_func)
 n_step = 10
 delta_t = 1.0_f64/n_step
 do i_step = 1, n_step
-   call bsl_second_order(bsl_work, dist_func, exy, exy, delta_t)
+
+
    call write_distribution_function(dist_func)
-   call compute_rho(dist_func, rho)
-   call write_vec1d(rho%data,mesh_x%nc_eta1+1,mesh_x%nc_eta2+1,"rho","mesh_x",0)
+
    call int2string(dist_func%plot_counter,counter)
-   call solve_poisson_2d_periodic(poisson,exy,rho,error)
-   call write_vec2d(exy%data%v1,exy%data%v2,mesh_x%nc_eta1+1, &
+
+   call compute_rho(dist_func, rho)
+
+   call write_vec1d(rho%data,mesh_x%nc_eta1+1,mesh_x%nc_eta2+1, &
+                    "rho"//counter,"mesh_x",0)
+
+   FIELD_DATA(exy_old) = FIELD_DATA(exy_new)
+
+   call solve_poisson_2d_periodic(poisson,exy_new,rho,error)
+
+   call write_vec2d(exy_new%data%v1,exy_new%data%v2,mesh_x%nc_eta1+1, &
                     mesh_x%nc_eta2+1,"exy"//counter,"mesh_x",0)
+
+   call bsl_second_order(bsl_work, dist_func, exy_old, exy_new, delta_t)
+
 end do
 
 call delete_poisson_2d_periodic(poisson)
 call delete_field_2D_vec1( rho )
-call delete_field_2D_vec2( exy )
-call delete_field_2D_vec2( exy_exact )
+call delete_field_2D_vec2( exy_old )
+call delete_field_2D_vec2( exy_new )
 print *, 'Successful, exiting program.'
   
 end program landau_dumping
