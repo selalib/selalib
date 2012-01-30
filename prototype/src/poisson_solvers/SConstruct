@@ -13,12 +13,13 @@ env = Environment( ENV = os.environ,
                    F90 = 'gfortran',
                    F90PATH= ['../memory','../precision','../assert', 
                              '../numerical_utilities','../constants',
-                             '../mesh_types','../diagnostics','sll_utilities'],
+                             '../mesh_types','../diagnostics','../utilities'],
 # fix the following: fftpack should be treated as any other local library.
                    LIBPATH = ['.','../fftpack'],
-                   LIBS = ['dfftpack','sll_memory','sll_precision',
-                           'sll_assertion','sll_constants', 'sll_mesh_types',
-                           'sll_diagnostics','sll_utilities'],
+                   LIBS = ['sll_memory','sll_precision','sll_mesh_types',
+                           'sll_assertion','sll_constants', 
+                           'sll_diagnostics','sll_utilities','dfftpack'],
+                   LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH']],
                    F90FLAGS = ['-g', '-W', '-Wall','-std=f2003',
                                '-ffree-line-length-none',
                                '-fbounds-check'] )
@@ -39,14 +40,13 @@ env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90",
                                "../mesh_types/geometry_functions.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
+env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
 
 env.Program(target='unit_test', source = src_files)
 
 env.Append(LIBS=['fftw3'])
 env.Program('fftw_solver.F90')
 
-env.Append(CPPDEFINES='G95')
-env.Append(FORTRANFLAGS='-fdefault-real-8')
-env.Library('fish90',['fishpack/fish.F',Glob('fishpack/*.f')])
-env.Append(LIBS='fish90')
-env.Program('thwscrt.F90')
+env.Append(LIBS=['fftw3_threads'])
+env.Program('poisson3d_with_fftw3.F90')
+
