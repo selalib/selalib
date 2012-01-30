@@ -65,6 +65,7 @@ interface new_poisson_2d_periodic
    module procedure new_poisson_2d_periodic_potential
 end interface
 
+
 !> Solve Poisson equation on 2D mesh with periodic 
 !> boundary conditions. 
 interface solve_poisson_2d_periodic
@@ -180,7 +181,7 @@ end function new_poisson_2d_periodic_e_fields
 subroutine delete_poisson_2d_periodic(this)
 
    type(poisson_2d_periodic),intent(out) :: this
-   deallocate(this%rhst)
+   !if (associated(this%rhst)) deallocate(this%rhst)
 
 end subroutine delete_poisson_2d_periodic
 
@@ -221,8 +222,8 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
 
    call wave_number_vectors(this)
 
-   this%ext = -cmplx(zero,this%kx/this%k2)*this%rhst
-   this%eyt = -cmplx(zero,this%ky/this%k2)*this%rhst
+   this%ext = -cmplx(zero,this%kx/this%k2,kind=f64)*this%rhst
+   this%eyt = -cmplx(zero,this%ky/this%k2,kind=f64)*this%rhst
 
    call fftinv(this%ffty,this%ext)
    call fftinv(this%ffty,this%eyt)
@@ -290,11 +291,11 @@ SLL_ASSERT((n2==size(comp_array,1)))
 SLL_ASSERT((size(comp_array,2)==n1/2+1))
 
 do j=1,n2
-   comp_array(j,1) = cmplx(real_array(1,j),0._f64)
+   comp_array(j,1) = cmplx(real_array(1,j),0._f64,kind=f64)
    do i=2, n1/2
-      comp_array(j,i) = cmplx(real_array(2*i-2,j),real_array(2*i-1,j))
+      comp_array(j,i) = cmplx(real_array(2*i-2,j),real_array(2*i-1,j),kind=f64)
    end do
-   comp_array(j,n1/2+1) = cmplx(real_array(n1,j),0._f64)
+   comp_array(j,n1/2+1) = cmplx(real_array(n1,j),0._f64,kind=f64)
 end do
 
 end subroutine transpose_r2c
