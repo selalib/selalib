@@ -29,7 +29,7 @@ SLLLIBS = ['sll_memory','sll_precision','sll_assertion']
 
 env = Environment( variables  = vars,
                    ENV        = os.environ, 
-                   F90FLAGS   = ['-cpp','-g','-W','-Wall','-Wextra', 
+                   F90FLAGS   = ['-cpp',
                                  '-pedantic','-std=f2003', 
                                  '-ffree-line-length-none'],
                    F90PATH    = SLLPATH+['${HDF5INCPATH}','${HDF5INCPATH}'],
