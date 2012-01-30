@@ -223,8 +223,10 @@ contains  ! ****************************************************************
     do i=0,N-1
       !subdiagonal terms
       a(3*i+1)=(node_pos(i+1)-node_pos(i))*(node_pos(i+1)-node_pos(i))/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+1)-node_pos(i-2)))
+      !a(3*i+1)=(node_pos(i+1)-node_pos(i))/(node_pos(i+1)-node_pos(i-1))*((node_pos(i+1)-node_pos(i))/(node_pos(i+1)-node_pos(i-2)))
       !overdiagonal terms
-      a(3*i+3)=(node_pos(i)-node_pos(i-1))*(node_pos(i)-node_pos(i-1))/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+2)-node_pos(i-1)))      
+      !a(3*i+3)=(node_pos(i)-node_pos(i-1))*(node_pos(i)-node_pos(i-1))/((node_pos(i+1)-node_pos(i-1))*(node_pos(i+2)-node_pos(i-1)))      
+      a(3*i+3)=(node_pos(i)-node_pos(i-1))/(node_pos(i+1)-node_pos(i-1))*((node_pos(i)-node_pos(i-1))/(node_pos(i+2)-node_pos(i-1)))      
       !diagonal terms
       a(3*i+2)=1.0_f64-a(3*i+1)-a(3*i+3)
     enddo
