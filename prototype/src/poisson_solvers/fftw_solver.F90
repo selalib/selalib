@@ -59,6 +59,7 @@ end do
 
 call write_vec1d(phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi0","mesh",0)
 call write_vec1d(rho%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"rho0","mesh",0)
+stop
 
 FIELD_DATA(phi_exact) = FIELD_DATA(phi)
 FIELD_DATA(phi) = 0.0
