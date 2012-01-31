@@ -9,6 +9,10 @@ hostname = socket.gethostname()
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
+vars = Variables()
+vars.Add('CPATH', 'dummy path','.')
+vars.Add('LPATH', 'dummy path','.')
+
 env = Environment( ENV = os.environ,
                    F90 = 'mpif90',
                    F90PATH= ['../memory','../precision','../assert', 
