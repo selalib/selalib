@@ -85,13 +85,17 @@ n_step = 10
 delta_t = 1.0_f64/n_step
 do i_step = 1, n_step
 
-
    call write_distribution_function(dist_func)
 
    call int2string(dist_func%plot_counter,counter)
 
+
+
+
+   !Compute charge density
    call compute_rho(dist_func, rho)
 
+   !Plot charge density
    call write_vec1d(rho%data,mesh_x%nc_eta1+1,mesh_x%nc_eta2+1, &
                     "rho"//counter,"mesh_x",0)
 
@@ -101,8 +105,6 @@ do i_step = 1, n_step
 
    call write_vec2d(exy_new%data%v1,exy_new%data%v2,mesh_x%nc_eta1+1, &
                     mesh_x%nc_eta2+1,"exy"//counter,"mesh_x",0)
-
-   call bsl_second_order(bsl_work, dist_func, exy_old, exy_new, delta_t)
 
 end do
 
