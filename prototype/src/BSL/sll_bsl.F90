@@ -19,6 +19,8 @@ end type bsl_workspace_2d
 type bsl_workspace_4d
    type (sll_spline_1D), pointer :: spl_eta1
    type (sll_spline_1D), pointer :: spl_eta2
+   type (sll_spline_1D), pointer :: spl_eta3
+   type (sll_spline_1D), pointer :: spl_eta4
 end type bsl_workspace_4d
 
 sll_real64 :: global_eta1, global_eta2
@@ -85,14 +87,11 @@ type (bsl_workspace_4d), pointer :: new_bsl_workspace_4d
 type (sll_distribution_function_4D_t), pointer  :: dist_func_4D 
 
 sll_int32  :: ierr
-sll_int32  :: nc_eta1
-sll_int32  :: nc_eta2
-sll_real64 :: eta1_min
-sll_real64 :: eta1_max
-sll_real64 :: eta2_min
-sll_real64 :: eta2_max
-sll_int32  :: boundary1_type
-sll_int32  :: boundary2_type
+sll_int32  :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
+sll_real64 :: eta1_min, eta1_max
+sll_real64 :: eta2_min, eta2_max
+sll_real64 :: eta3_min, eta3_max
+sll_real64 :: eta4_min, eta4_max
 
 ! allocate pointer
 SLL_ALLOCATE(new_bsl_workspace_4d,ierr)
@@ -104,8 +103,6 @@ eta1_max   = dist_func_4D%field%descriptor_x%eta1_max
 nc_eta2    = dist_func_4D%field%descriptor_x%nc_eta2
 eta2_min   = dist_func_4D%field%descriptor_x%eta2_min
 eta2_max   = dist_func_4D%field%descriptor_x%eta2_max
-boundary1_type = dist_func_4D%field%descriptor_x%boundary1_type
-boundary2_type = dist_func_4D%field%descriptor_x%boundary2_type
 
 ! initialize splines
 new_bsl_workspace_4d%spl_eta1 => new_spline_1D( nc_eta1+1,        &
@@ -116,6 +113,25 @@ new_bsl_workspace_4d%spl_eta1 => new_spline_1D( nc_eta1+1,        &
 new_bsl_workspace_4d%spl_eta2 => new_spline_1D( nc_eta2+1,        &
                                              eta2_min,         &
                                              eta2_max,         &
+                                             PERIODIC_SPLINE )  
+
+! get dimensions
+nc_eta3    = dist_func_4D%field%descriptor_v%nc_eta1
+eta3_min   = dist_func_4D%field%descriptor_v%eta1_min
+eta3_max   = dist_func_4D%field%descriptor_v%eta1_max
+nc_eta4    = dist_func_4D%field%descriptor_v%nc_eta2
+eta4_min   = dist_func_4D%field%descriptor_v%eta2_min
+eta4_max   = dist_func_4D%field%descriptor_v%eta2_max
+
+! initialize splines
+new_bsl_workspace_4d%spl_eta3 => new_spline_1D( nc_eta3+1,     &
+                                             eta3_min,         &
+                                             eta3_max,         &
+                                             HERMITE_SPLINE )
+
+new_bsl_workspace_4d%spl_eta4 => new_spline_1D( nc_eta4+1,     &
+                                             eta4_min,         &
+                                             eta4_max,         &
                                              HERMITE_SPLINE )  
 end function new_bsl_workspace_4d
 
