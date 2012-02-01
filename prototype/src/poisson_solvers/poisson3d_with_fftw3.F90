@@ -2,11 +2,11 @@ PROGRAM POISSON3D_WITH__FFTW3
 
   use sll_collective
 
-#include "sll_remap.h"
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
-  
+#include "sll_remap.h"
   IMPLICIT NONE
   
   sll_int32 :: I, J, K, MX, MY, MZ
