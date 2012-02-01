@@ -1,11 +1,12 @@
-# SCons file to build the test case for the memory allocator
+# SCons file to build the test case for the poisson solvers directory
 import os
 import socket
 import distutils.util
 
 platform = distutils.util.get_platform()
 hostname = socket.gethostname()
-
+print 'Building Poisson solvers... '
+print ' '
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
@@ -22,11 +23,12 @@ env = Environment( ENV = os.environ,
 # fix the following: fftpack should be treated as any other local library.
                    LINK = 'mpif90',
                    LIBPATH = ['.','../fftpack'],
-                   LIBS = ['sll_memory','sll_precision','sll_mesh_types',
-                           'sll_assertion','sll_constants', 
-                           'sll_diagnostics','dfftpack',
-                           'sll_collective','sll_utilities','sll_remap'],
-                   LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],'-fopenmp'],
+                   LIBS = ['sll_remap','sll_mesh_types', 'dfftpack',
+                           'sll_collective',
+                           'sll_diagnostics','sll_assertion','sll_utilities',
+                           'sll_constants','sll_precision','sll_memory'],
+                   LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
+                   '-fopenmp'],
                    F90FLAGS = ['-g', '-W', '-Wall','-std=f2003',
                                '-ffree-line-length-none',
                                '-fbounds-check'] )
@@ -36,6 +38,7 @@ src_files = ['sll_poisson_1D_periodic.F90', 'fft1d.f90', 'unit_test.F90',
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
 env.Append(F90PATH=[os.environ['HDF5INCPATH']])
+env.Append(F90PATH=[os.environ['FFTW3INCLUDE']])
 env.Append(LIBPATH=[os.environ['HDF5LIBPATH']])
 env.Append(LIBS=['hdf5_fortran','hdf5','z'])
 
@@ -54,8 +57,8 @@ env.Library('sll_remap', ["../remap/.F90"])
 env.Program(target='unit_test', source = src_files)
 
 env.Append(LIBS=['fftw3'])
-env.Program('fftw_solver.F90')
+env.Program('fftw_solver', source = src_files)
 
 env.Append(LIBS=['fftw3_threads'])
-env.Program('poisson3d_with_fftw3.F90')
+env.Program('poisson3d_with_fftw3', source = src_files)
 
