@@ -1,159 +1,159 @@
-PROGRAM POISSON3D_WITH__FFTW3_seq
+program poisson3d_with__fftw3_seq
   
-  IMPLICIT NONE
+  implicit none
   
-  INTEGER :: I, J, K, MX, MY, MZ, IERR
-  INTEGER :: NX, NY, NZ
-  INTEGER :: NCOUNT, T0, TN, ISTEP, NSTEP
-  INTEGER :: NTHREADS = 4
+  integer :: i, j, k, mx, my, mz, ierr
+  integer :: nx, ny, nz
+  integer :: ncount, t0, tn, istep, nstep
+  integer :: nthreads = 4
   
-  INTEGER(8) :: FORWARD, BACKWARD
+  integer(8) :: forward, backward
   
-  REAL(8) :: X, Y, Z, TBEGIN, TEND, ERR
-  REAL(8) :: DX, DY, DZ, TIME, DT, PI 
-  REAL(8) :: CX, CY, CZ, VPX, VPY, VPZ
+  real(8) :: x, y, z, tbegin, tend, err
+  real(8) :: dx, dy, dz, time, dt, pi 
+  real(8) :: cx, cy, cz, vpx, vpy, vpz
   
-  REAL(8), DIMENSION(:,:,:), ALLOCATABLE :: B, C, D
-  REAL(8), ALLOCATABLE :: U(:,:,:)
-  REAL(8), ALLOCATABLE :: F(:,:,:)
-  REAL(8), ALLOCATABLE :: G(:,:,:)
+  real(8), dimension(:,:,:), allocatable :: b, c, d
+  real(8), allocatable :: u(:,:,:)
+  real(8), allocatable :: f(:,:,:)
+  real(8), allocatable :: g(:,:,:)
   
   
-  NX = 130; NY = 130; NZ = 130
-  DX = 1d0 / NX ; DY = 1d0 / NY ; DZ = 1d0 / NZ
-  DT = 0.1; NSTEP = 10
-  PI = 4d0 * DATAN(1d0)
+  nx = 130; ny = 130; nz = 130
+  dx = 1d0 / nx ; dy = 1d0 / ny ; dz = 1d0 / nz
+  dt = 0.1; nstep = 10
+  pi = 4d0 * datan(1d0)
   
-  ALLOCATE(U(NX,NY,NZ)); U = 0.
-  ALLOCATE(F(NX,NY,NZ)); F = 0.
-  ALLOCATE(G(NX,NY,NZ)); G = 0.
+  allocate(u(nx,ny,nz)); u = 0.
+  allocate(f(nx,ny,nz)); f = 0.
+  allocate(g(nx,ny,nz)); g = 0.
   
-  CALL INIT_POISSON_FFTW(NX,NY,NZ)
-  CALL SYSTEM_CLOCK(COUNT=T0, COUNT_RATE=NCOUNT)
-  CALL CPU_TIME(TBEGIN)
+  call init_poisson_fftw(nx,ny,nz)
+  call system_clock(count=t0, count_rate=ncount)
+  call cpu_time(tbegin)
   
-  TIME = 0.0
-  DO ISTEP = 1, NSTEP !Loop over time
+  time = 0.0
+  do istep = 1, nstep !loop over time
      
-     DO K = 1, NZ
-        Z = (K-1)*DZ
-        DO J = 1, NY
-           Y = (J-1)*DY
-           DO I = 1, NX
-              X = (I-1)*DX
-              F(I,J,K) = 12.*PI*PI*SIN(2*PI*X)*SIN(2*PI*Y)*SIN(2*PI*Z)*COS(2*PI*TIME)
-              G(I,J,K) = SIN(2*PI*X)*SIN(2*PI*Y)*SIN(2*PI*Z)*COS(2*PI*TIME)
-           ENDDO
-        ENDDO
-     ENDDO
+     do k = 1, nz
+        z = (k-1)*dz
+        do j = 1, ny
+           y = (j-1)*dy
+           do i = 1, nx
+              x = (i-1)*dx
+              f(i,j,k) = 12.*pi*pi*sin(2*pi*x)*sin(2*pi*y)*sin(2*pi*z)*cos(2*pi*time)
+              g(i,j,k) = sin(2*pi*x)*sin(2*pi*y)*sin(2*pi*z)*cos(2*pi*time)
+           enddo
+        enddo
+     enddo
      
-     CALL SOLVE_POISSON_FFTW(U, F, NX, NY, NZ )
+     call solve_poisson_fftw(u, f, nx, ny, nz )
      
-     WRITE(*,'("ISTEP = ",I4," TIME = ",G15.5," NX,NY,NZ =",3I4)') &
-          ISTEP, TIME, NX, NY, NZ
+     write(*,'("istep = ",i4," time = ",g15.5," nx,ny,nz =",3i4)') &
+          istep, time, nx, ny, nz
      
-     ERR = MAXVAL(U-G)
-     PRINT  '(3X,"Norm(|ux - u_a|)               : ",2X,1PE10.3,//)', ERR
+     err = maxval(u-g)
+     print  '(3x,"norm(|ux - u_a|)               : ",2x,1pe10.3,//)', err
      
-     TIME = TIME+DT
+     time = time+dt
      
-  END DO !Next time step
+  end do !next time step
   
-  CALL FINALIZE_POISSON_FFTW()
+  call finalize_poisson_fftw()
   
-  CALL SYSTEM_CLOCK(COUNT=TN, COUNT_RATE=NCOUNT)
-  WRITE(*,"(' ELAPSED TIME ', G15.5, ' s')") (TN - T0)/FLOAT(NCOUNT)
-  CALL CPU_TIME(TEND)
-  WRITE(*,"(' CPU TIME ', G15.5, ' s')") TEND-TBEGIN
+  call system_clock(count=tn, count_rate=ncount)
+  write(*,"(' elapsed time ', g15.5, ' s')") (tn - t0)/float(ncount)
+  call cpu_time(tend)
+  write(*,"(' cpu time ', g15.5, ' s')") tend-tbegin
   
-CONTAINS
+contains
   
-  SUBROUTINE INIT_POISSON_FFTW(NX,NY,NZ)
+  subroutine init_poisson_fftw(nx,ny,nz)
 #include "fftw3.f"
-    INTEGER, INTENT(IN) :: NX,NY,NZ
+    integer, intent(in) :: nx,ny,nz
     
-    MX = NX-2; MY = NY-2; MZ = NZ-2
+    mx = nx-2; my = ny-2; mz = nz-2
     
-    CX = 1.0 / (DX*DX)
-    CY = 1.0 / (DY*DY)
-    CZ = 1.0 / (DZ*DZ)
+    cx = 1.0 / (dx*dx)
+    cy = 1.0 / (dy*dy)
+    cz = 1.0 / (dz*dz)
     
-    !RHS
-    ALLOCATE(B(MX,MY,MZ), D(MX,MY,MZ),C(MX,MY,MZ))
+    !rhs
+    allocate(b(mx,my,mz), d(mx,my,mz),c(mx,my,mz))
     
-    !Compute eigen values, build the matrix
-    DO K=1,MZ
-       DO J=1,MY
-          DO I=1,MX
-             VPX=1.0-COS(FLOAT(I)*PI/FLOAT(MX+1))
-             VPY=1.0-COS(FLOAT(J)*PI/FLOAT(MY+1))
-             VPZ=1.0-COS(FLOAT(K)*PI/FLOAT(MZ+1))
-             D(I,J,K)= 2.0 * (CZ*VPZ + CX*VPX + CY*VPY) &
-                  * (8*(MX+1)*(MY+1)*(MZ+1))
-          END DO
-       END DO
-    END DO
+    !compute eigen values, build the matrix
+    do k=1,mz
+       do j=1,my
+          do i=1,mx
+             vpx=1.0-cos(float(i)*pi/float(mx+1))
+             vpy=1.0-cos(float(j)*pi/float(my+1))
+             vpz=1.0-cos(float(k)*pi/float(mz+1))
+             d(i,j,k)= 2.0 * (cz*vpz + cx*vpx + cy*vpy) &
+                  * (8*(mx+1)*(my+1)*(mz+1))
+          end do
+       end do
+    end do
     
-    !Initialize FFTs
-    CALL DFFTW_INIT_THREADS(IERR)
-    IF (IERR == 0) STOP 'FFTW CAN''T USE THREADS'
-    CALL DFFTW_PLAN_WITH_NTHREADS(NTHREADS)
-    CALL DFFTW_PLAN_R2R_3D(FORWARD,MX,MY,MZ,C,B, &
-         FFTW_RODFT00, FFTW_RODFT00,FFTW_RODFT00,&
-         FFTW_PATIENT )
-    CALL DFFTW_PLAN_R2R_3D(BACKWARD,MX,MY,MZ,B,C, &
-         FFTW_RODFT00, FFTW_RODFT00,FFTW_RODFT00,&
-         FFTW_PATIENT )
+    !initialize ffts
+    call dfftw_init_threads(ierr)
+    if (ierr == 0) stop 'fftw can''t use threads'
+    call dfftw_plan_with_nthreads(nthreads)
+    call dfftw_plan_r2r_3d(forward,mx,my,mz,c,b, &
+         fftw_rodft00, fftw_rodft00,fftw_rodft00,&
+         fftw_patient )
+    call dfftw_plan_r2r_3d(backward,mx,my,mz,b,c, &
+         fftw_rodft00, fftw_rodft00,fftw_rodft00,&
+         fftw_patient )
     
-  END SUBROUTINE INIT_POISSON_FFTW
+  end subroutine init_poisson_fftw
   
-  SUBROUTINE SOLVE_POISSON_FFTW(PSI, RHS, NX, NY, NZ)
+  subroutine solve_poisson_fftw(psi, rhs, nx, ny, nz)
 #include "fftw3.f"
-    INTEGER, INTENT(IN)  :: NX, NY, NZ
-    REAL(8), INTENT(OUT) :: PSI(NX,NY,NZ)
-    REAL(8), INTENT(IN)  :: RHS(NX,NY,NZ)
+    integer, intent(in)  :: nx, ny, nz
+    real(8), intent(out) :: psi(nx,ny,nz)
+    real(8), intent(in)  :: rhs(nx,ny,nz)
     
-    !Boundary conditions
-    DO I=1,MX
-       DO J=1,MY
-          DO K = 1, MZ
-             C(I,J,K) = RHS(I+1,J+1,K+1)
-             IF ( I == 1) THEN
-                C(I,J,K) = C(I,J,K) + CX * PSI( 1,J+1,K+1)
-             ELSE IF (I == MX) THEN
-                C(I,J,K) = C(I,J,K) + CX * PSI(NX,J+1,K+1)
-             ELSE IF ( J == 1) THEN
-                C(I,J,K) = C(I,J,K) + CY * PSI( I+1,1,K+1)
-             ELSE IF (J == MY) THEN
-                C(I,J,K) = C(I,J,K) + CY * PSI(I+1,NY,K+1)
-             ELSE IF ( K == 1) THEN
-                C(I,J,K) = C(I,J,K) + CZ * PSI(I+1,J+1,1)
-             ELSE IF (K == MZ) THEN
-                C(I,J,K) = C(I,J,K) + CZ * PSI(I+1,J+1,NZ)
-             END IF
-          END DO
-       END DO
-    END DO
-!Forward FFT on the right hand side term
-    CALL DFFTW_EXECUTE_R2R(FORWARD,C,B)
+    !boundary conditions
+    do i=1,mx
+       do j=1,my
+          do k = 1, mz
+             c(i,j,k) = rhs(i+1,j+1,k+1)
+             if ( i == 1) then
+                c(i,j,k) = c(i,j,k) + cx * psi( 1,j+1,k+1)
+             else if (i == mx) then
+                c(i,j,k) = c(i,j,k) + cx * psi(nx,j+1,k+1)
+             else if ( j == 1) then
+                c(i,j,k) = c(i,j,k) + cy * psi( i+1,1,k+1)
+             else if (j == my) then
+                c(i,j,k) = c(i,j,k) + cy * psi(i+1,ny,k+1)
+             else if ( k == 1) then
+                c(i,j,k) = c(i,j,k) + cz * psi(i+1,j+1,1)
+             else if (k == mz) then
+                c(i,j,k) = c(i,j,k) + cz * psi(i+1,j+1,nz)
+             end if
+          end do
+       end do
+    end do
+!forward fft on the right hand side term
+    call dfftw_execute_r2r(forward,c,b)
     
-    B = B / D 
+    b = b / d 
     
-    !Backward FFT on the solution
-    CALL DFFTW_EXECUTE_R2R(BACKWARD,B,PSI(2:NX-1,2:NY-1,2:NZ-1))
+    !backward fft on the solution
+    call dfftw_execute_r2r(backward,b,psi(2:nx-1,2:ny-1,2:nz-1))
     
     
-    RETURN
+    return
     
-  END SUBROUTINE SOLVE_POISSON_FFTW
+  end subroutine solve_poisson_fftw
   
-  SUBROUTINE FINALIZE_POISSON_FFTW()
+  subroutine finalize_poisson_fftw()
 #include "fftw3.f"
     
-    CALL DFFTW_DESTROY_PLAN(FORWARD)
-    CALL DFFTW_DESTROY_PLAN(BACKWARD)
-    CALL DFFTW_CLEANUP_THREADS(IERR)
+    call dfftw_destroy_plan(forward)
+    call dfftw_destroy_plan(backward)
+    call dfftw_cleanup_threads(ierr)
     
-  END SUBROUTINE FINALIZE_POISSON_FFTW
+  end subroutine finalize_poisson_fftw
   
-END PROGRAM POISSON3D_WITH__FFTW3_seq
+end program poisson3d_with__fftw3_seq

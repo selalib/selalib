@@ -33,10 +33,8 @@ env = Environment( ENV = os.environ,
                                '-ffree-line-length-none',
                                '-fbounds-check'] )
 
-src_files = ['sll_poisson_1D_periodic.F90', 'fft1d.f90', 'unit_test.F90',
-             'sll_poisson_2D_periodic.F90', 'fft_module.F90' ]
 
-env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
+env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])
 env.Append(F90PATH=[os.environ['HDF5INCPATH']])
 env.Append(F90PATH=[os.environ['FFTW3INCLUDE']])
 env.Append(LIBPATH=[os.environ['HDF5LIBPATH']])
@@ -52,13 +50,19 @@ env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
-env.Library('sll_remap', ["../remap/.F90"])
+env.Library('sll_remap', ["../remap/sll_remap.F90"])
+env.Library('sll_collective', ["../collective/sll_collective.F90"])
 
-env.Program(target='unit_test', source = src_files)
+
+
+env.Program('unit_test',['sll_poisson_1D_periodic.F90', 
+                                'fft1d.f90', 'unit_test.F90',
+                                'sll_poisson_2D_periodic.F90', 
+                                'fft_module.F90' ])
 
 env.Append(LIBS=['fftw3'])
-env.Program('fftw_solver', source = src_files)
+env.Program('fftw_solver', source = ["fftw_solver.F90"])
 
 env.Append(LIBS=['fftw3_threads'])
-env.Program('poisson3d_with_fftw3', source = src_files)
-
+env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
+env.Program('poisson3d_with_fftw3_par', source = ["poisson3d_with_fftw3.F90"])
