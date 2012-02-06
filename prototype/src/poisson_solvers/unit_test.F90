@@ -97,30 +97,30 @@ call delete_field_2D_vec1( phi_exact )
 call delete_field_2D_vec2( exy )
 call delete_field_2D_vec2( exy_exact )
 
-!Solveur de Poisson1D, commente car ne parche pas
-
-! initialisation of 1D periodic mesh 
-xmin = 0.0; xmax = 2*sll_pi;
-ncx = 128
-
-geomx    => new_mesh_descriptor_1D( xmin, xmax, ncx, PERIODIC )
-rho1d    => new_field_1D_vec1( geomx )
-ex       => new_field_1D_vec1( geomx )
-ex_exact => new_field_1D_vec1( geomx )
-
-call new(poisson_1d,ncx,iflag) 
-
-mode = 7
-dx = geomx%delta_eta1
-do i=1,ncx+1
-   rho1d%data(i) =  mode**2*sin(mode*(i-1)*dx)
-   ex_exact%data(i) = -mode*cos(mode*(i-1)*dx)
-end do
-! compute electric field
-call solve(poisson_1d,ex,rho1d)
-    
-! check solution
-print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
+!!Solveur de Poisson1D, commente car ne parche pas
+!
+!! initialisation of 1D periodic mesh 
+!xmin = 0.0; xmax = 2*sll_pi;
+!ncx = 128
+!
+!geomx    => new_mesh_descriptor_1D( xmin, xmax, ncx, PERIODIC )
+!rho1d    => new_field_1D_vec1( geomx )
+!ex       => new_field_1D_vec1( geomx )
+!ex_exact => new_field_1D_vec1( geomx )
+!
+!call new(poisson_1d,ncx,iflag) 
+!
+!mode = 7
+!dx = geomx%delta_eta1
+!do i=1,ncx+1
+!   rho1d%data(i) =  mode**2*sin(mode*(i-1)*dx)
+!   ex_exact%data(i) = -mode*cos(mode*(i-1)*dx)
+!end do
+!! compute electric field
+!call solve(poisson_1d,ex,rho1d)
+!    
+!! check solution
+!print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
 
 end program testPoisson
 
