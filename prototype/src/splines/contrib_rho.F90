@@ -136,7 +136,7 @@ function compute_contrib_rho(integration_points,N_int1,N_int2,size_contrib,index
   
   if(s/=N_size)then
     print *,'s=',s,'N_size=',N_size
-    stop
+    !stop
   endif
   
   compute_contrib_rho = s
