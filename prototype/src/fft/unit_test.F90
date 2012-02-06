@@ -1,386 +1,582 @@
-program fft_test
+program unit_test
   use sll_fft
   use numeric_constants
+  use sll_timer
+
 #include "sll_working_precision.h"
   implicit none
+  
+  sll_int32 :: i, k
+  sll_real64, allocatable, dimension(:)  :: copy_data_real, data_real_sll, data_real_w, data_real_pack
+  sll_comp64, allocatable, dimension(:)  :: copy_data_comp, data_comp_sll, data_comp_w, data_comp_pack
+  type(time_mark), pointer :: mark 
+  sll_real64 :: val, phase, acc, acc2
+  type(sll_fft_plan), pointer :: fft_plan, fftpack_plan, fftw_plan
+  sll_comp64 :: diff,  mode
+  sll_int32 :: s, n, t, t_max, s_max, s_min
+  sll_real64, allocatable, dimension(:) :: times, times2, times3, accuracy
 
-#define CREAL(array, i) array(2*(i))
-#define CIMAG(array, i) array(2*(i)+1)
+  mark => new_time_mark() 
+ 
+#define _PRINT
+!#define _WRITE
+#define _TESTREALONLY
+#define _WRITEACCESS
 
-#define NC 4096
+  s_min = 15
+  s_max = 23
+  t_max = 5
 
-#define PRINT_ARRAYS 0
+  allocate(times(t_max))
+  allocate(times2(t_max))
+  allocate(times3(t_max))
+  allocate(accuracy(t_max))
 
-  sll_comp64, dimension(:), allocatable :: dat
-  sll_comp64, dimension(:), allocatable :: dat_copy
-  sll_comp64, dimension(:), allocatable :: tst
-  sll_comp64, dimension(:), allocatable :: data_complex
-  sll_comp64, dimension(:), allocatable :: data_complex_copy
-  sll_comp64, dimension(:), allocatable :: data_complex_n
-  sll_comp64, dimension(:), allocatable :: data_complex_n_copy
-  sll_real64, dimension(:), allocatable :: data_real
-  sll_real64, dimension(:), allocatable :: data_real_copy
-  sll_real64, dimension(:), allocatable :: data_real_copy2
-  sll_real64, dimension(:), allocatable :: nr_data
-  sll_real64, dimension(:), allocatable :: nr_data_copy
-  ! twiddles are named according to the size of the FFT that they are
-  ! meant to be used with.
-  sll_comp64, dimension(:), allocatable :: twiddles_c_n_2
-  sll_comp64, dimension(:), allocatable :: twiddles_c_n
-  sll_real64, dimension(:), allocatable :: twiddles_r_n_2
-  sll_real64, dimension(:), allocatable :: twiddles_r_n
-  sll_real64, dimension(:), allocatable :: tst2
-  sll_real64                            :: phase
-  sll_comp64                            :: tmp_c
-  sll_real64                            :: tmp_r
-  sll_real64                            :: tmp_i
-  sll_real64                            :: acc
-  sll_real64                            :: val
-  integer                            :: i
-
-#if TEST_TIME
-  sll_real32       :: tarray(1:2)
-  sll_real32       :: tresult
-#endif
-  ! caution: size of twiddles is half the size of the array whose fft is       
-  ! needed. This is a source of errors.
-
-  print *, 'Array size for tests: ', NC
-  allocate(tst(0:NC/2))
-  allocate(tst2(0:NC))
-  allocate(dat(0:NC-1))
-  allocate(dat_copy(0:NC-1))
-  allocate(data_real(0:NC-1))
-  allocate(data_real_copy(0:NC-1))
-  allocate(data_real_copy2(0:NC-1))
-  allocate(nr_data(0:NC-1))
-  allocate(nr_data_copy(0:NC-1))
-  allocate(data_complex(0:NC/2-1))
-  allocate(data_complex_copy(0:NC/2-1))
-  allocate(data_complex_n(0:NC-1))
-  allocate(data_complex_n_copy(0:NC-1))
-  allocate(twiddles_c_n(0:NC/2-1))
-  allocate(twiddles_c_n_2(0:NC/4-1))
-  allocate(twiddles_r_n_2(0:NC/2-1))! these are real arrays storing complex nums
-  allocate(twiddles_r_n(0:NC-1)) ! real array storing complex nums
-  call compute_twiddles(NC/2,twiddles_c_n_2(0:NC/2-1))
-  call compute_twiddles_real_array( NC/2, twiddles_r_n_2(0:NC-1) )
-  call compute_twiddles_real_array( NC, twiddles_r_n(0:NC-1) ) 
-  do i=0,NC-1
-     phase         = 2.0*sll_pi*real(i)/real(NC)
-     dat(i)        = test_func(phase)
-     data_real(i)  = test_func(phase)
-     nr_data(i)    = test_func(phase)
-  end do
-
-  print *, '0--------------------------------------------------------------'
-  print *, 'test of bit-reversing subroutines. Note: these only work when the arrays are of size 16' ! ... so don't dynamically allocate them...
-  tst(:) = (/(1000,0), (1001,0), (1010,0), (1011,0), (1100,0), (1101,0), (1110,0), (1111,0)/)
-#if PRINT_ARRAYS
-  print *, tst(:)
-#endif
-  tst2(:) = (/ 1000, 0, 1001, 0, 1010, 0, 1011, 0, 1100, 0, 1101, 0, 1110, 0, 1111, 0 /)
-
-  call bit_reverse_complex(NC/2,tst)
-#if PRINT_ARRAYS
-  print *, 'bit reversed:'
-  do i=0, size(tst)-1
-     print *, tst(i)
-  end do
-  print *, 'bit reversing in pairs test:'
-  print *, 'original:'
-  do i=0, size(tst2)/2-1
-     write (*,'(f10.0, f10.0)') tst2(2*i), tst2(2*i+1)
-  end do
-  print *, 'bit-reversed:'
-  call bit_reverse_in_pairs(size(tst2)/2,tst2)
-  do i=0, size(tst2)/2-1
-     write (*,'(f10.0, f10.0)') tst2(2*i), tst2(2*i+1)
-  end do
+#ifdef _PRINT
+  print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
 #endif
 
-  print *, '1--------------------------------------------------------------'
-  print *, 'Test complex FFT'
-  do i=0, NC/2-1
-     data_complex(i) = transfer(data_real(2*i:),data_complex(0))
-  end do
-  data_complex_copy(:) = data_complex(:)
+#ifndef _TESTREALONLY
+  ! TEST FOR FFTPACK
+  open(1,file='fftpackc.txt')
+  do s=s_min,s_max
+   do t=1,t_max
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_comp(0:n-1))
+    allocate(data_comp_pack(0:n-1))
 
-#if PRINT_ARRAYS
-  print *, 'complex data: '
-  do i=0, NC/2-1
-     print *, data_complex(i)
-  end do
+    do i=0,n-1
+      phase             = 2.0_f64*sll_pi*real(i,kind=f64)/real(n,kind=f64)
+      valc              = test_func_comp(phase)
+      data_comp_pack(i) = valc
+      copy_data_comp(i) = valc
+    enddo
+
+    fftpack_plan => fft_plan_c2c_1d(FFTPACK_MOD,n,data_comp_pack,data_comp_pack,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_c2c_1d(fftpack_plan,data_comp_pack,data_comp_pack)
+    times(t) = time_elapsed_since(mark)
+    fftpack_plan => fft_plan_c2c_1d(FFTPACK_MOD,n,data_comp_pack,data_comp_pack,FFT_INVERSE)
+    call fft_apply_c2c_1d(fftpack_plan,data_comp_pack,data_comp_pack)
+
+    data_comp_pack = data_comp_pack/real(n,kind=f64)
+
+    diff = cmplx(0.0_f64,0.0_f64,kind=f64)
+    do i=0,n-1
+      diff = diff + abs(copy_data_comp(i) - data_comp_pack(i))
+    enddo
+    accuracy(t) =  (real(diff) + imag(diff))/(2.0_f64*real(n,kind=f64))
+
+    ! Time access mode
+    mark => reset_time_mark(mark)    
+    do i=0,n-1
+      !k = i!sll_get_index_complex_array(fftpack_plan,i)
+      !mode = sll_get_mode_complex_array(fftpack_plan,data_comp_pack,0)
+      mode = data_comp_pack(i)
+    enddo
+    times2(t) = time_elapsed_since(mark)
+    print*,times2(t)
+
+    mark => reset_time_mark(mark)    
+    do i=0,n-1
+      mode = data_comp_pack(i)
+    enddo
+    times3(t) = time_elapsed_since(mark)
+    print*,times3(t)
+
+    deallocate(copy_data_comp)
+    deallocate(data_comp_pack)
+    call delete(fftpack_plan)
+   enddo
+#ifdef _PRINT
+  print *, 'FFTPACK',SUM(times)/real(t_max,kind=f64),&
+                    (SUM(times3)-SUM(times2))/real(t_max,kind=f64),&
+                     SUM(accuracy)/real(t_max,kind=f64)
 #endif
-
-  call bit_reverse( NC/4, twiddles_c_n_2(0:(NC/4-1)) )
-  call fft_dit_nr_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1), &
-                       0, FFT_FORWARD )
-#if PRINT_ARRAYS
-  print *, 'transformed complex array: '
-  do i=0, NC/2-1
-     print *, data_complex(i)
-  end do
+#ifdef _WRITE
+  write(1,*) s,SUM(times)/real(t_max,kind=f64)
 #endif
+  enddo
+  close(1)
+  ! END TEST FFTACK
 
-  print *, 'applying inverse transform: '
-  call bit_reverse( NC/4, twiddles_c_n_2(0:(NC/4-1)) )
-  call fft_dit_rn_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1), &
-       1, FFT_INVERSE )
-  data_complex(:)      = data_complex(:)*1.0/real(NC/2)
-  data_complex_copy(:) = data_complex_copy(:) - data_complex(:)
-  tmp_c = (0.0,0.0)
-  do i=0,size(data_complex_copy)-1
-     tmp_r = tmp_r + abs( real(data_complex_copy(i)))
-     tmp_i = tmp_i + abs(aimag(data_complex_copy(i)))
-  end do
-  tmp_r = tmp_r/size(data_complex_copy)
-  tmp_i = tmp_i/size(data_complex_copy)
-  print *, 'Average error: '
-  write (*,'(a,e20.12,a,e20.12)') 'real: ', tmp_r, '    imaginary: ', tmp_i
 
-#if PRINT_ARRAYS
-  print *, 'Difference with the original data: '
-  do i=0, NC/2-1
-     print *, data_complex_copy(i)
-  end do
+
+  ! TEST FOR SELALIB FFT
+  open(2,file='sllc.txt')
+  do s=s_min,s_max
+   do t=1,t_max
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_comp(0:n-1))
+    allocate(data_comp_sll(0:n-1))
+
+    do i=0,n-1
+      phase             = 2.0_f64*sll_pi*real(i,kind=f64)/real(n,kind=f64)
+      valc              = test_func_comp(phase)
+      data_comp_sll(i)  = valc
+      copy_data_comp(i) = valc
+    enddo
+
+    fft_plan => fft_plan_c2c_1d(SLLFFT_MOD,n,data_comp_sll,data_comp_sll,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_c2c_1d(fft_plan,data_comp_sll,data_comp_sll)
+    times(t) = time_elapsed_since(mark)
+
+    !call CFFTF(copy_data_comp)
+    !print *,'==>',copy_data_comp - data_comp_sll
+
+    fft_plan => fft_plan_c2c_1d(SLLFFT_MOD,n,data_comp_sll,data_comp_sll,FFT_INVERSE)
+    call fft_apply_c2c_1d(fft_plan,data_comp_sll,data_comp_sll)
+
+    data_comp_sll = data_comp_sll/real(n,kind=f64)
+
+    diff = cmplx(0.0_f64,0.0_f64,kind=f64)
+    do i=0,n-1
+      diff = diff + abs(copy_data_comp(i) - data_comp_sll(i))
+    enddo
+    accuracy(t) =  (real(diff) + imag(diff))/(2.0_f64*real(n,kind=f64))
+    deallocate(copy_data_comp)
+    deallocate(data_comp_sll)
+    call delete(fft_plan)
+   enddo
+#ifdef _PRINT
+  print *, ' SLLFFT',SUM(times)/real(t_max,kind=f64),0.d0, SUM(accuracy)/real(t_max,kind=f64)
 #endif
-
-  print *, '2-------------------------------------------------------------'
-  print *, 'Test of the complex array, represented by a real array:'
-  do i=0,NC-1
-     phase         = 2.0*sll_pi*real(i)/real(NC)
-     data_real(i)  = test_func(phase)
-  end do
-
-#if PRINT_ARRAYS
-  print *, 'Original real data (data_real):'
-  do i=0, NC/2-1
-     print *, data_real(2*i:2*i+1)
-  end do
+#ifdef _WRITE
+  write(2,*) s,SUM(times)/real(t_max,kind=f64)
 #endif
+  enddo
+  close(2)
+! END SELALIB FFT
 
-  data_real_copy(:) = data_real(:)
-  ! interpret data_real as a half-sized sequence of complex numbers:
-  do i=0, NC/2-1
-     data_complex(i) = transfer(data_real(2*i:),data_complex(0))
-  end do
-  data_complex_copy(:) = data_complex(:)
 
-#if PRINT_ARRAYS
-  print *, 'Original data, as complex, for comparison (data_complex):'
-  do i=0, NC/2-1
-     print *, data_complex(i)
-  end do
-  print *, 'transformed complex array, for comparison...'
+#ifndef _NOFFTW
+  open(3,file='fftwc.txt')
+  do s=s_min,s_max
+   do t=1,t_max
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_comp(0:n-1))
+    allocate(data_comp_w(0:n-1))
+
+    do i=0,n-1
+      phase             = 2.0_f64*sll_pi*real(i,kind=f64)/real(n,kind=f64)
+      valc              = test_func_comp(phase)
+      data_comp_w(i)    = valc
+      copy_data_comp(i) = valc
+    enddo
+
+    fftw_plan => fft_plan_c2c_1d(FFTW_MOD,n,data_comp_w,data_comp_w,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_c2c_1d(fftw_plan,data_comp_w,data_comp_w)
+    times(t) = time_elapsed_since(mark)
+
+    fftw_plan => fft_plan_c2c_1d(FFTW_MOD,n,data_comp_w,data_comp_w,FFT_INVERSE)
+    call fft_apply_c2c_1d(fftw_plan,data_comp_w,data_comp_w)
+
+    data_comp_w = data_comp_w/real(n,kind=f64)
+
+    diff = cmplx(0.0_f64,0.0_f64,kind=f64)
+    do i=0,n-1
+      diff = diff + abs(copy_data_comp(i) - data_comp_w(i))
+    enddo
+    accuracy(t) =  (real(diff) + imag(diff))/(2.0_f64*real(n,kind=f64))
+    deallocate(copy_data_comp)
+    deallocate(data_comp_w)
+    call delete(fftw_plan)
+   enddo
+#ifdef _PRINT
+  print *, '   FFTW',SUM(times)/real(t_max,kind=f64),0.d0, SUM(accuracy)/real(t_max,kind=f64)
 #endif
-
-  call compute_twiddles(NC/2,twiddles_c_n_2(0:NC/4-1))
-  call bit_reverse(NC/4, twiddles_c_n_2(0:NC/4-1))
-  call fft_dit_nr_aux( data_complex(0:NC/2-1),   &
-                       NC/2,                     &
-                       twiddles_c_n_2(0:NC/4-1), &
-                       0,                        &
-                       FFT_FORWARD )
-
-#if PRINT_ARRAYS
-  print *, 'transformed complex array: '
-  do i=0,NC/2-1
-     print *, data_complex(i)
-  end do
-
- ! call bit_reverse(NC/4, twiddles_c_n_2(0:NC/2-1)) ! natural order now
-  print *, 'complex twiddles:'
-  do i=0, NC/4-1
-     print *, twiddles_c_n_2(i)
-  end do
+#ifdef _WRITE
+   write(3,*) s,SUM(times)/real(t_max,kind=f64)
 #endif
-  print *, 'applying the inverse transform'
-  call bit_reverse(NC/4, twiddles_c_n_2(0:NC/4-1)) ! now in natural order
- ! call  fft_dit_nr_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1), 0, FFT_INVERSE )
-  call fft_dit_rn_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1),&
-                       1, FFT_INVERSE )
-  data_complex(:)      = data_complex(:)*1.0/real(NC/2)
-  data_complex_copy(:) = data_complex_copy(:) - data_complex(:)
-  tmp_c = (0.0,0.0)
-  tmp_r = 0.0
-  tmp_i = 0.0
-  do i=0,size(data_complex_copy)-1
-     tmp_r = tmp_r + abs( real(data_complex_copy(i)))
-     tmp_i = tmp_i + abs(aimag(data_complex_copy(i)))
-  end do
-  tmp_r = tmp_r/size(data_complex_copy)
-  tmp_i = tmp_i/size(data_complex_copy)
-  print *, 'Average error: '
-  write (*,'(a,e20.12,a,e20.12)') 'real: ', tmp_r, '    imaginary: ', tmp_i
-
-
-  print *, 'transformed real array: '
-  call compute_twiddles_real_array(NC/2, twiddles_r_n_2(0:NC/2-1))
-  call bit_reverse_in_pairs( NC/4, twiddles_r_n_2(0:NC-1))
-  call fft_dit_nr_real_array_aux( data_real(0:NC-1),      &
-                                  NC/2,                   &
-                                  twiddles_r_n_2(0:NC-1), &
-                                  0,                      &
-                                  FFT_FORWARD )
-
-#if PRINT_ARRAYS
-  do i=0, NC/2-1
-     write (*,'(f15.8, f15.8)') data_real(2*i), data_real(2*i+1)
-  end do
+  enddo
+  close(3)
 #endif
-
-  call bit_reverse_in_pairs( NC/4, twiddles_r_n_2(0:NC-1) )
-
-#if PRINT_ARRAYS
-  print *, 'twiddles represented by a real array:'
-  do i=0,NC/4-1
-     print *, twiddles_r_n_2(2*i:2*i+1)
-  end do
-#endif
-
-  print *, 'Entering the inverse real array: '
-  call fft_dit_rn_real_array_aux( data_real(0:NC-1),      &
-                                  NC/2,                   &
-                                  twiddles_r_n_2(0:NC-1), &
-                                  1,                      &
-                                  FFT_INVERSE )
-  data_real(:) = data_real(:)*2.0/real(NC)
-  acc = 0.0
-  do i=0,size(data_real)-1
-     acc = acc + abs(data_real(i) - data_real_copy(i))
-  end do
-
-#if PRINT_ARRAYS
-  print *, 'Difference with the original data: '
-  do i=0, NC-1
-     print *, (data_real(i) - data_real_copy(i))
-  end do
-#endif
-
-  write (*,'(a, e20.12)') 'Average error complex (as real) FFT case = ', acc/NC
-  print *, 'Finished test of complex array represented by real data.'
-
-  print *, '3---------------------------------------------------------------'
-
-  print *, 'Test of a real-valued FFT'
-  print *, 'For comparison, we run a complex-valued FFT in which the data is the same as the real data we intend to process in the real case.'
-  do i=0,NC-1
-     phase             = 2.0*sll_pi*real(i)/real(NC)
-     val               = test_func(phase)
-     data_real(i)      = val
-     data_real_copy(i) = val
-     data_complex_n(i) = val
-  end do
-
-#if PRINT_ARRAYS
-  print *, 'data to be transformed:'
-  print *, '     real data                            complex data'
-  print *, '___________________________________________________________________'
-  do i=0, NC-1
-     print *, data_real(i), data_complex_n(i)
-  end do
-#endif
-
-  call compute_twiddles(NC, twiddles_c_n(0:NC/2-1))
-  call bit_reverse(NC/2, twiddles_c_n(0:NC/2-1))
-  call fft_dit_nr_aux( data_complex_n(0:NC-1), &
-                       NC,                     &
-                       twiddles_c_n(0:NC/2-1), &
-                       0,                      &
-                       FFT_FORWARD )
-  print *, 'transformed complex array (in natural order): '
-  call bit_reverse(NC, data_complex_n(0:NC-1))
-
-#if PRINT_ARRAYS
-  do i=0,NC-1
-     print *, data_complex_n(i)
-  end do
-#endif
-
-  ! For the real-valued FFT we need two pairs of twiddles:
-  ! - one set to compute complex FFT's of size N/2,
-  ! - another set to glue the results of the complex FFT's into the
-  !   solution that we want.
-  call compute_twiddles_real_array(NC/2, twiddles_r_n_2(0:NC/2-1))
-  call bit_reverse_in_pairs( NC/4, twiddles_r_n_2(0:NC-1))
-  call compute_twiddles_real_array(NC, twiddles_r_n(0:NC-1))
-
-#if PRINT_ARRAYS
-  print *, 'long twiddles:'
-  do i=0, size(twiddles_r_n)/2-1
-     write (*, '( a, f15.8, a, f15.8, a)') '(', twiddles_r_n(2*i), ', ', &
-          twiddles_r_n(2*i+1),')'
-  end do
-#endif
-
-  print *, 'Entering the real data FFT function'
-
-#if TEST_TIME
-  print *, 'timing test:'
-  call ETIME(tarray, tresult)
-  print *, tresult
-  print *, tarray(1)
-  print *, tarray(2)
-#endif
-
-  call real_data_fft_dit( data_real,      &
-                          NC,             &
-                          twiddles_r_n_2, &
-                          twiddles_r_n,   &
-                          FFT_FORWARD )
-
-#if TEST_TIME
-  call ETIME(tarray, tresult)
-  print *, 'timing test'
-  print *, tresult
-  print *, tarray(1)
-  print *, tarray(2)
 #endif
 
 
 
-#if PRINT_ARRAYS
-  print *, 'After the real FFT:'
-  do i=0,NC/2-1
-     print *, data_real(2*i:2*i+1)
-  end do
+#define _NOFFTPACK
+#define _NOFFTW
+
+
+
+
+
+
+
+          !!!!!!!!!!!!!!!!!
+          ! TEST FOR REAL !
+          !!!!!!!!!!!!!!!!!
+
+
+
+
+
+
+
+
+#ifndef _NOFFTPACK
+  ! TEST FOR FFTPACK
+  open(4,file='fftpack.txt')
+  do s=s_min,s_max
+   do t=1,t_max
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_real(0:n-1))
+    allocate(data_real_pack(0:n-1))
+
+    do i=0,n-1
+      phase             = 2.0_f64*sll_pi*real(i,kind=f64)/real(n,kind=f64)
+      val               = test_func(phase)
+      data_real_pack(i) = val
+      copy_data_real(i) = val
+    enddo
+    fftpack_plan => fft_plan_r2r_1d(FFTPACK_MOD,n,data_real_pack,data_real_pack,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_r2r_1d(fftpack_plan,data_real_pack,data_real_pack)
+    times(t) = time_elapsed_since(mark)
+    fftpack_plan => fft_plan_r2r_1d(FFTPACK_MOD,n,data_real_pack,data_real_pack,FFT_INVERSE)
+    call fft_apply_r2r_1d(fftpack_plan,data_real_pack,data_real_pack)
+
+    data_real_pack = data_real_pack/real(n,kind=f64)
+
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_pack(i))
+    enddo
+    accuracy(t) = acc/real(n,kind=f64)
+
+    ! Time access mode
+    mark => reset_time_mark(mark)    
+    do i=0,n-1
+      !k = sll_get_index_real_array(fftpack_plan,i)
+      mode = sll_get_mode_real_array(fftpack_plan,data_real_pack,&
+                                     sll_get_index_real_array(fftpack_plan,i))
+    enddo
+    times2(t) = time_elapsed_since(mark)
+
+    mark => reset_time_mark(mark)
+    acc = 0.0_f64    
+    !mode k=0
+    mode = cmplx(data_real_pack(0),0.0_f64,kind=f64)
+    val =  ABS(mode)
+    acc = acc + val
+    !mode k=1 to k=n-2
+    do i=1,n-2
+      if(i .eq. (i+1)/2) then !i even
+        mode = cmplx(data_real_pack(i-1),-data_real_pack(i),kind=f64)
+        val =  ABS(mode)
+        acc = acc + val
+      else
+        mode = cmplx(data_real_pack(i),data_real_pack(i+1),kind=f64)
+        val =  ABS(mode)
+        acc = acc + val
+      endif
+    enddo
+    !mode k=n/2
+    mode = cmplx(data_real_pack(n-1),0.0_f64,kind=f64)
+    val =  ABS(mode)
+    acc = acc + val
+    times3(t) = time_elapsed_since(mark)
+
+    deallocate(copy_data_real)
+    deallocate(data_real_pack)
+    call delete(fftpack_plan)
+   enddo
+#ifdef _PRINT
+  print *, 'FFTPACK',SUM(times)/real(t_max,kind=f64),&
+                    (SUM(times3)-SUM(times2))/real(t_max,kind=f64),&
+                     SUM(accuracy)/real(t_max,kind=f64)
+#endif
+#ifdef _WRITE
+  write(4,*) s,SUM(times)/real(t_max,kind=f64)
+#endif
+  enddo
+  close(4)
+  ! END TEST FFTACK
 #endif
 
-  data_real(:) = data_real(:)*2.0/real(NC)
-  print *, 'Proceeding to invert the real transform...'
-  call real_data_fft_dit( data_real,      &
-                          NC,             &
-                          twiddles_r_n_2, &
-                          twiddles_r_n,   &
-                          FFT_INVERSE )
 
-  acc = 0.0
-  do i=0, NC-1
-     acc = acc + abs(data_real_copy(i) - data_real(i))
-  end do
-  print *, 'Averager error:', acc/NC  
 
-#if PRINT_ARRAYS
-  do i=0, NC-1
-     print *, abs(data_real_copy(i) - data_real(i))
-  end do
+
+
+
+
+
+
+
+#ifndef _NOFFTSLL
+#ifdef _WRITEACCESS
+    open(15,file='access_getmode.txt')
+    open(16,file='access_direct.txt')
+#endif
+  ! TEST FOR SELALIB FFT
+  open(5,file='sll.txt')
+  do s=s_min,s_max
+   do t=1,t_max
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_real(0:n-1))
+    allocate(data_real_sll(0:n-1))
+    
+    !Initialization
+    do i=0,n-1
+      phase             = 2.0_f64*sll_pi*real(i,kind=f64)/real(n,kind=f64)
+      val               = test_func(phase)
+      data_real_sll(i)  = val
+      copy_data_real(i) = val
+    enddo
+
+    !FFT FORWARD
+    fft_plan => fft_plan_r2r_1d(SLLFFT_MOD,n,data_real_sll,data_real_sll,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_r2r_1d(fft_plan,data_real_sll,data_real_sll)
+    times(t) = time_elapsed_since(mark)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    ! Time access mode
+    mark => reset_time_mark(mark)
+    acc = 0.0_f64    
+    do i=0,n-1
+      k = sll_get_index_real_array(fft_plan,i)
+      mode = sll_get_mode_real_array(fft_plan,data_real_sll,k)
+      val =  ABS(mode)
+      acc = acc + val
+    enddo
+    times2(t) = time_elapsed_since(mark)
+    !print *,'time with get_mode ==> ', times2
+    acc2 = acc
+
+    mark => reset_time_mark(mark)
+    acc = 0.0_f64    
+    !mode k=0
+    mode = cmplx(data_real_sll(0),0.0_f64,kind=f64)
+    val =  ABS(mode)
+    acc = acc + val
+    !mode k=n/2
+    mode = cmplx(data_real_sll(1),0.0_f64,kind=f64)
+    val =  ABS(mode)
+    acc = acc + val
+    !mode k=1 to k= n-1
+    do i=1,n/2-1
+        mode = cmplx(data_real_sll(2*i),data_real_sll(2*i+1),kind=f64)
+        val =  ABS(mode)
+        acc = acc + val
+        mode = cmplx(data_real_sll(2*i),-data_real_sll(2*i+1),kind=f64)
+        val =  ABS(mode)
+        acc = acc + val
+    enddo
+    times3(t) = time_elapsed_since(mark)
+    !print *,'time with direct access ==> ', times3
+
+    if( acc .ne. acc2 ) &
+      print*,'prob=',abs(acc-acc2)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    !FFT INVERSE
+    call delete(fft_plan)
+    fft_plan => fft_plan_r2r_1d(SLLFFT_MOD,n,data_real_sll,data_real_sll,FFT_INVERSE,FFT_NORMALIZE_INVERSE)
+    call fft_apply_r2r_1d(fft_plan,data_real_sll,data_real_sll)
+    !Normalization
+    !data_real_sll = 2.0_f64*data_real_sll/real(n,kind=f64)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    !ACCURATE
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_sll(i))
+    enddo
+    accuracy(t) =  acc/real(n,kind=f64)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
+    deallocate(copy_data_real)
+    deallocate(data_real_sll)
+    call delete(fft_plan)
+   enddo
+#ifdef _PRINT
+  print *, ' SLLFFT',SUM(times)/real(t_max,kind=f64),&
+                    (SUM(times3)-SUM(times2))/real(t_max,kind=f64),&
+                     SUM(accuracy)/real(t_max,kind=f64)
+#endif
+#ifdef _WRITEACCESS
+    write(15,*) n, SUM(times2)/real(t_max,kind=f64)
+    write(16,*) n, SUM(times3)/real(t_max,kind=f64)
+#endif
+#ifdef _WRITE
+  write(5,*) s,SUM(times)/real(t_max,kind=f64)
+#endif
+  enddo
+  close(5)
+! END SELALIB FFT
+#endif
+#ifdef _WRITEACCESS
+    close(15)
+    close(16)
 #endif
 
-  print *, 'REACHED END OF UNIT TEST'
+
+
+#ifndef _NOFFTW
+  open(7,file='fftw.txt')
+  do s=s_min,s_max
+   do t=1,t_max
+    n=2**s
+    !print *,'n=',n
+    !print *, 'LIB      TIME EXECUTION            TIME ACCESS MODE          AVERAGE ERROR'
+    allocate(copy_data_real(0:n-1))
+    allocate(data_real_w(0:n-1))
+    do i=0,n-1
+      phase             = 2.0_f64*sll_pi*real(i,kind=f64)/real(n,kind=f64)
+      val               = test_func(phase)
+      data_real_w(i)    = val
+      copy_data_real(i) = val
+    enddo
+
+    fftw_plan => fft_plan_r2r_1d(FFTW_MOD,n,data_real_w,data_real_w,FFT_FORWARD)
+    mark => reset_time_mark(mark)
+    call fft_apply_r2r_1d(fftw_plan,data_real_w,data_real_w)
+    times(t) = time_elapsed_since(mark)
+
+    fftw_plan => fft_plan_r2r_1d(FFTW_MOD,n,data_real_w,data_real_w,FFT_INVERSE)
+    call fft_apply_r2r_1d(fftw_plan,data_real_w,data_real_w)
+
+    data_real_w = data_real_w/real(n,kind=f64)
+
+    acc = 0.0_f64
+    do i=0,n-1
+      acc = acc + abs(copy_data_real(i) - data_real_w(i))
+    enddo
+    accuracy(t) =  acc/real(n,kind=f64)
+
+    ! Time access mode
+    mark => reset_time_mark(mark)    
+    do i=0,n-1
+      !k = sll_get_index_real_array(fftw_plan,i)
+      mode = sll_get_mode_real_array(fftw_plan,data_real_w,&
+                                     sll_get_index_real_array(fftw_plan,i))
+    enddo
+    times2(t) = time_elapsed_since(mark)
+
+    mark => reset_time_mark(mark)
+    acc = 0.0_f64    
+    !mode k=0
+    mode = cmplx(data_real_pack(0),0.0_f64,kind=f64)
+    val =  ABS(mode)
+    acc = acc + val
+    !mode k=1 to k=n/2-1
+    do i=1,n/2-1
+      mode = cmplx(data_real_w(i) , data_real_w(n-i),kind=f64)
+      val =  ABS(mode)
+      acc = acc + val
+    enddo
+    !mode k=n/2
+    mode = cmplx(data_real_pack(n-1),0.0_f64,kind=f64)
+    val =  ABS(mode)
+    acc = acc + val
+    !mode k=n/2+1 to k=n-1
+    do i=n/2+1,n-1
+      mode = cmplx(data_real_w(n-i) , -data_real_w(i),kind=f64)
+      val =  ABS(mode)
+      acc = acc + val
+    enddo
+    times3(t) = time_elapsed_since(mark)
+
+    deallocate(copy_data_real)
+    deallocate(data_real_w)
+    call delete(fftw_plan)
+   enddo
+#ifdef _PRINT
+  print *, '   FFTW',SUM(times)/real(t_max,kind=f64),&
+                    (SUM(times3)-SUM(times2))/real(t_max,kind=f64),&
+                     SUM(accuracy)/real(t_max,kind=f64)
+#endif
+#ifdef _WRITE
+  write(7,*) s,SUM(times)/real(t_max,kind=f64)
+#endif
+  enddo
+  close(7)
+#endif
+
+  deallocate(accuracy)
+  deallocate(times)
+  deallocate(times2)
+  deallocate(times3)
+
+#ifdef _PRINT
+#undef _PRINT
+#endif
+#ifdef _WRITE
+#undef _WRITE
+#endif
 
 contains
- 
+
+  function f(x) result(y)
+    sll_int32 :: x
+    sll_comp64 :: y
+
+    y = cmplx(real(x,kind=f64),0.0_f64,kind=f64)
+  end function
+
+  function g(x) result(y)
+    sll_real64 :: x
+    sll_real64 :: y
+
+    y = x
+  end function
+
   function test_func(x)
     sll_real64, intent(in) :: x
     sll_real64 :: test_func
-    test_func = 1.0 + 1.0*cos(x) + 2.0*cos(2.0*x) + 3.0*cos(3.0*x) + &
-         4.0*cos(4.0*x) + 5.0*cos(5.0*x) + 6.0*cos(6.0*x) + 7.0*cos(7.0*x) + &
-         8.0*cos(8.0*x) + &
-         1.0*sin(x) + 2.0*sin(2.0*x) + 3.0*sin(3.0*x) + &
-         4.0*sin(4.0*x) + 5.0*sin(5.0*x) + 6.0*sin(6.0*x) + 7.0*sin(7.0*x) + &
-         8.0*sin(8.0*x) 
+    test_func = 1.0_f64 + 1.0_f64*cos(x) + 2.0_f64*cos(2.0_f64*x) + 3.0_f64*cos(3.0_f64*x) + &
+         4.0_f64*cos(4.0_f64*x) + 5.0_f64*cos(5.0_f64*x) + 6.0_f64*cos(6.0_f64*x) + 7.0_f64*cos(7.0_f64*x) + &
+         8.0_f64*cos(8.0_f64*x) + &
+         1.0_f64*sin(x) + 2.0_f64*sin(2.0_f64*x) + 3.0_f64*sin(3.0_f64*x) + &
+         4.0_f64*sin(4.0_f64*x) + 5.0_f64*sin(5.0_f64*x) + 6.0_f64*sin(6.0_f64*x) + 7.0_f64*sin(7.0_f64*x) + &
+         8.0_f64*sin(8.0_f64*x) 
   end function test_func
 
-  
-end program fft_test
+  function test_func_comp(x)
+    sll_real64, intent(in) :: x
+    sll_comp64 :: test_func_comp
+    test_func_comp = cmplx(1.0_f64 + 1.0_f64*cos(x) + 2.0_f64*cos(2.0_f64*x) + 3.0_f64*cos(3.0_f64*x) + &
+         4.0_f64*cos(4.0_f64*x) + 5.0_f64*cos(5.0_f64*x) + 6.0_f64*cos(6.0_f64*x) + 7.0_f64*cos(7.0_f64*x) + &
+         8.0_f64*cos(8.0_f64*x) ,&
+         1.0_f64*sin(x) + 2.0_f64*sin(2.0_f64*x) + 3.0_f64*sin(3.0_f64*x) + &
+         4.0_f64*sin(4.0_f64*x) + 5.0_f64*sin(5.0_f64*x) + 6.0_f64*sin(6.0_f64*x) + 7.0_f64*sin(7.0_f64*x) + &
+         8.0_f64*sin(8.0_f64*x) , kind=f64)
+  end function test_func_comp
+
+  function getmode(plan,data,k) result(mode)
+    sll_comp64                                :: mode
+    sll_int32, intent(in)                     :: k
+    type(sll_fft_plan) , pointer              :: plan
+    sll_real64, dimension(0:) , intent(in)    :: data
+    sll_int32                                 :: n_2, n
+   
+    n = plan%N
+    n_2 = ishft(n,-1)
+
+      if( k .eq. 0 ) then
+        mode = complex(data(0),0.0_f64)
+      else if( k .eq. n_2 ) then
+        mode = complex(data(1),0.0_f64)
+      else if( k .gt. n_2 ) then
+        mode = complex( data(2*(n-k)) , -data(2*(n-k)+1) )
+      else
+        mode = complex( data(2*k) , data(2*k+1) )
+      endif
+      return
+  end function
+
+end program unit_test
