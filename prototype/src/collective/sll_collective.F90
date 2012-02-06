@@ -1,15 +1,13 @@
 !------------------------------------------------------------------------------
 ! Selalib
 !------------------------------------------------------------------------------
-!
 ! MODULE: sll_collective
 !
-!> @author
-!> Module Author Name and Affiliation
-!
-! DESCRIPTION: 
+! DESCRIPTION:
+!> @file sll_collective.F90
+!> @namespace sll_collective
+!> @author Module Author Name and Affiliation
 !> @brief Parallelizing facility.
-!>
 !> @details Selalib applies the principle of modularization throughout all levels of
 !> abstraction of the library and aims at keeping third-party library modules
 !> as what they are: separate library modules. Therefore, in its current design,
