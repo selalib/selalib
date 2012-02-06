@@ -51,6 +51,8 @@
 #define GET_MESH_DELTA_R( m )     m%delta_r
 #define GET_MESH_DELTA_THETA( m ) m%delta_theta
 #define GET_MESH_DELTA_Z( m )     m%delta_z
+#define GET_MESH_DELTA_ETA1( m )  m%delta_eta1
+#define GET_MESH_DELTA_ETA2( m )  m%delta_eta2
 
 
 #define GET_MESH_NC_ETA1( m )     m%nc_eta1
