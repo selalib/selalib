@@ -139,7 +139,7 @@ module sll_fft
   !           index (also on 1:N)
   ! - mode  : given an array index, return the corresponding wavenumber
   type sll_fft_plan
-    sll_int32 :: N
+    sll_int32 :: N,N2,N3
     sll_int32 :: style !, flags
     !sll_int32 :: data_type
     sll_int32,  dimension(:), pointer :: index => null()
@@ -184,7 +184,10 @@ module sll_fft
   ! may choose never to exercise.
 
   enum, bind(C)
-     enumerator :: FFT_FORWARD = -1, FFT_INVERSE = 1 
+     enumerator :: FFT_FORWARD = -1, FFT_INVERSE = 1, &
+                   FFT_FORWARD_X = -1, FFT_INVERSE_X = 1, &  
+                   FFT_FORWARD_Y = -2, FFT_INVERSE_Y = 2, & 
+                   FFT_FORWARD_Z = -3, FFT_INVERSE_Z = 3
   end enum
 
   enum, bind(C)
@@ -210,9 +213,12 @@ module sll_fft
   end interface
 
   interface apply_fft_c2c_1d
-    module procedure fft_apply_c2c_1d
+    module procedure fft_apply_c2c_1d, fft_apply_c2c_1d_3d 
   end interface
 
+  interface new_plan_c2c_1d
+    module procedure fft_new_c2c_1d_for_3d, fft_new_c2c_1d_for_1d 
+  end interface
 contains
 
 #ifndef _DEFAULTFFTLIB
@@ -426,8 +432,10 @@ contains
                  !!  COMPLEX TO COMPLEX  !!
                  !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
- function new_plan_c2c_1d(size_problem,array_in,array_out,direction,flags) result(plan)
+! ---------------------
+! - DEFAULT INTERFACE -
+! ---------------------
+ function fft_new_c2c_1d_for_1d(size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: size_problem
     sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
     sll_int32, intent(in)                        :: direction
@@ -437,7 +445,19 @@ contains
     plan => fft_plan_c2c_1d(_DEFAULTFFTLIB,size_problem,array_in,array_out,direction,flags)
   end function
 
+ function fft_new_c2c_1d_for_3d(NX,NY,NZ,array_in,array_out,direction,flags) result(plan)
+    sll_int32, intent(in)                            :: NX,NY,NZ
+    sll_comp64, dimension(:,:,:), target, intent(in) :: array_in, array_out
+    sll_int32, intent(in)                        :: direction
+    sll_int32, optional, intent(in)              :: flags
+    type(sll_fft_plan), pointer                  :: plan
 
+    plan => fft_plan_c2c_1d_for_3d(_DEFAULTFFTLIB,NX,NY,NZ,array_in,array_out,direction,flags)
+  end function
+
+! ---------------------
+! -  DEBUG INTERFACE  -
+! ---------------------
   function fft_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
     sll_int32, intent(in)                        :: size_problem
@@ -467,6 +487,38 @@ contains
     stop 'ERROR in =fft_plan_c2c_1d= library unknown'
   end function
 
+  function fft_plan_c2c_1d_for_3d(library,NX,NY,NZ,array_in,array_out,direction,flags) result(plan)
+    sll_int32, intent(in)                        :: library
+    sll_int32, intent(in)                        :: NX,NY,NZ
+    sll_comp64, dimension(:,:,:), target, intent(in) :: array_in, array_out
+    sll_int32, intent(in)                        :: direction
+    sll_int32, optional, intent(in)              :: flags
+    type(sll_fft_plan), pointer                  :: plan
+
+#ifndef _NOFFTW
+!    if(library .eq. FFTW_MOD) then
+!      plan => fftw_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
+!      return
+!    endif
+#endif
+#ifndef _NOFFTSLL
+    if(library .eq. SLLFFT_MOD) then
+      plan => sll_new_plan_c2c_1d_for_3d(library,NX,NY,NZ,array_in,array_out,direction,flags)
+      return
+    endif
+#endif
+#ifndef _NOFFTPACK
+!    if(library .eq. FFTPACK_MOD) then
+!      plan => fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
+!      return
+!    endif
+#endif
+    stop 'ERROR in =fft_plan_c2c_1d= library unknown'
+  end function
+
+! ---------------------
+! -       APPLY       -
+! ---------------------
   subroutine fft_apply_c2c_1d(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_comp64, dimension(0:), intent(inout)        :: array_in, array_out
@@ -485,10 +537,35 @@ contains
     if(plan%library .eq. FFTPACK_MOD) &
       call fftpack_apply_fft_complex(plan, array_in, array_out)
 #endif
-    if( plan%style .eq. FFT_NORMALIZE_INVERSE) &
+    if( plan%style .eq. FFT_NORMALIZE_INVERSE .and. plan%direction .eq. FFT_INVERSE ) &
+      array_out = factor*array_out
+    if( plan%style .eq. FFT_NORMALIZE_FORWARD .and. plan%direction .eq. FFT_FORWARD ) &
       array_out = factor*array_out
   end subroutine
 
+  subroutine fft_apply_c2c_1d_3d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer, intent(in)         :: plan
+    sll_comp64, dimension(0:,0:,0:), intent(inout)        :: array_in, array_out
+    sll_real64 :: factor
+    factor = 1.0_f64/real(plan%N,kind=f64)
+
+#ifndef _NOFFTW
+!    if(plan%library .eq. FFTW_MOD) &
+!      call fftw_apply_fft_complex(plan, array_in, array_out)
+#endif
+#ifndef _NOFFTSLL
+    if(plan%library .eq. SLLFFT_MOD) &
+      call sll_apply_fft_c2c_1d_for_3d(plan, array_in, array_out)
+#endif
+#ifndef _NOFFTPACK
+!    if(plan%library .eq. FFTPACK_MOD) &
+!      call fftpack_apply_fft_complex(plan, array_in, array_out)
+#endif
+!    if( plan%style .eq. FFT_NORMALIZE_INVERSE .and. plan%direction .eq. FFT_INVERSE ) &
+!      array_out = factor*array_out
+!    if( plan%style .eq. FFT_NORMALIZE_FORWARD .and. plan%direction .eq. FFT_FORWARD ) &
+!      array_out = factor*array_out
+  end subroutine
 
 
 
