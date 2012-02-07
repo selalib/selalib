@@ -14,9 +14,9 @@
     
     plan%N = size_problem
     if( present(flags)) then
-      plan%style = flags + FFTW_ESTIMATE
+      plan%style = flags + FFTW_ESTIMATE + FFTW_UNALIGNED
     else
-      plan%style = FFTW_ESTIMATE
+      plan%style = FFTW_ESTIMATE + FFTW_UNALIGNED
     endif
     plan%library = library
     plan%direction = direction
@@ -54,9 +54,9 @@
     
     plan%N = size_problem
     if( present(flags)) then
-      plan%style = flags + FFTW_ESTIMATE
+      plan%style = flags + FFTW_ESTIMATE + FFTW_UNALIGNED
     else
-      plan%style = FFTW_ESTIMATE
+      plan%style = FFTW_ESTIMATE + FFTW_UNALIGNED
     endif
     plan%library = library
     plan%direction = direction
