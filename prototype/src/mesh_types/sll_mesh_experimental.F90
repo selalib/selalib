@@ -1,8 +1,9 @@
-module sll_mesh_types_experimental
-  use sll_splines
+module sll_coordinate_transformation
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+  use sll_splines
   implicit none
 
   ! Enumerators used inside the module and that are also available for 
@@ -15,8 +16,24 @@ module sll_mesh_types_experimental
      enumerator :: ANALYTIC_MAP = 0, DISCRETE_MAP = 1
   end enum
 
+  ! Implementation note: The following enumerator decouples the description
+  ! of the boundary conditions for a coordinate transformation from the
+  ! analogous description that is needed for the underlying splines. In
+  ! other words: in the discrete case, to represent the x1(eta1,eta2) 
+  ! and x2(eta1,eta2) transformations AS IF these were continuous 
+  ! transformations, we need some underlying continuous representation, like
+  ! cubic splines. The specification of the splines needs the type of 
+  ! boundary conditions used, and thus, this information needs to be 
+  ! passed along through the interface of the map_2D. However, it would not
+  ! be good to pass the same enumerator that the spline module uses. This
+  ! would expose the information about the underlying representation and
+  ! would couple too strongly the dependence on the underlying splines
+  ! implementation. Hence the map type needs its own enumerator which,
+  ! within the module should be translated into the corresponding spline
+  ! boundary condition. 
+
   enum, bind(C)
-     enumerator :: PERIODIC_MESH_BC = 0, HERMITE_MESH_BC = 1
+     enumerator :: PERIODIC_MAP_BC = 0, HERMITE_MAP_BC = 1
   end enum
 
   ! Interface to represent the basic signature of all the mappings used
@@ -30,6 +47,16 @@ module sll_mesh_types_experimental
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
      end function two_arg_scalar_function
+  end interface
+
+  abstract interface
+     function two_arg_message_passing_func( map, eta1, eta2 )
+       use sll_working_precision
+       sll_real64 :: two_arg_message_passing_func
+       type(map_2D), pointer  :: map
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
+     end function two_arg_message_passing_func
   end interface
 
   ! Here we try to represent the Jacobian matrix an actual 2D array of
@@ -62,88 +89,121 @@ module sll_mesh_types_experimental
   !
   ! The transformation is also represented by the Jacobian matrix:
   !
-  !                   [   partial x1        partial x1    ]
-  !                   [ ---------------    -------------- ]
-  !                   [   partial eta1      partial eta2  ]
-  !    J(eta1,eta2) = [                                   ]
-  !                   [   partial x2        partial x2    ]
-  !                   [ ---------------    -------------- ]
-  !                   [   partial eta1      partial eta2  ]
+  !                   [   partial x1(eta1,eta2)     partial x1(eta1,eta2)    ]
+  !                   [ -----------------------    ------------------------- ]
+  !                   [      partial eta1              partial eta2          ]
+  !    J(eta1,eta2) = [                                                      ]
+  !                   [   partial x2(eta1,eta2)     partial x2(eta1,eta2)    ]
+  !                   [ -----------------------    ------------------------- ]
+  !                   [      partial eta1              partial eta2          ]
   !
   ! Which for convenience, can have its determinant pre-evaluated at a 
   ! collection of locations. The implementation below should provide this
   ! information in the 'jacobians' array.
-  type mapping_2D   
+  type map_2D   
      sll_int32  :: map_type        ! through functions or through data
      sll_int32  :: num_pts_1
      sll_int32  :: num_pts_2
-     sll_real64, dimension(:,:), pointer :: x1   ! x1 = x1(eta1,eta2)
-     sll_real64, dimension(:,:), pointer :: x2   ! x2 = x2(eta1,eta2)
+     sll_real64, dimension(:,:), pointer :: x1_node   ! x1 = x1(eta1,eta2)
+     sll_real64, dimension(:,:), pointer :: x2_node   ! x2 = x2(eta1,eta2)
+     sll_real64, dimension(:,:), pointer :: x1_cell   ! x1 = x1(eta1,eta2)
+     sll_real64, dimension(:,:), pointer :: x2_cell   ! x2 = x2(eta1,eta2)
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      sll_real64, dimension(:,:), pointer                    :: jacobians_n
      sll_real64, dimension(:,:), pointer                    :: jacobians_c
-  end type mapping_2D
+     type(sll_spline_2D), pointer                           :: x1_spline
+     type(sll_spline_2D), pointer                           :: x2_spline
+     procedure(two_arg_message_passing_func), pointer, pass :: jacobian_func
+  end type map_2D
 
   ! ---------------------------------------------------------------------
   !
-  !   TRANSFORMED MESHES: i.e. a mesh + coordinate transformation
+  !   MAPPED MESHES: i.e. a mesh + coordinate transformation
   !
   ! ---------------------------------------------------------------------
-  type mesh_2D_scalar
+  type mapped_mesh_2D_scalar
      sll_int32  :: boundary_type_1
      sll_int32  :: boundary_type_2
      sll_int32  :: mode            ! data defined on nodes or center of cells
      sll_real64, dimension(:,:), pointer :: data 
      type(sll_spline_2D), pointer        :: u_spline_2D  ! u is for uniform
-     type(mapping_2D), pointer           :: map
-  end type mesh_2D_scalar
+     type(map_2D), pointer           :: map
+  end type mapped_mesh_2D_scalar
 
   interface delete
-     module procedure delete_mesh_2D_scalar, delete_mapping_2D
+     module procedure delete_mesh_2D_scalar, delete_map_2D
   end interface
 
 contains
 
   ! -------------------------------------------------------------------------
   !
-  !         FUNCTIONS AND SUBROUTINES FOR THE MAPPING_2D TYPE.
+  !         FUNCTIONS AND SUBROUTINES FOR THE MAP_2D TYPE.
   !
   ! -------------------------------------------------------------------------
 
-  ! new_mapping_2D() only allocates the memory for the object itself. The
+  ! new_map_2D() only allocates the memory for the object itself. The
   ! initialization routines will allocate the memory of the internal arrays.
-  function new_mapping_2D( map_type )
-    type(mapping_2D), pointer  :: new_mapping_2D
-    sll_int32, intent(in)      :: map_type
-    sll_int32                  :: ierr
-    SLL_ALLOCATE( new_mapping_2D, ierr)
-    new_mapping_2D%map_type  = map_type
-  end function new_mapping_2D
+  function new_map_2D( map_type )
+    type(map_2D), pointer  :: new_map_2D
+    sll_int32, intent(in)  :: map_type
+    sll_int32              :: ierr
+    SLL_ALLOCATE( new_map_2D, ierr)
+    new_map_2D%map_type  = map_type
+  end function new_map_2D
 
-  ! Convenience function to compute jacobians of a 2D transformation.
+  ! Wrapper to compute the jacobian at the (eta1,eta2) point regardless
+  ! of the type of mapping, analytic or discrete. This is the public
+  ! interface to compute the continuous jacobian. This call could well be
+  ! converted into a macro call.
   function jacobian_2D( map, eta1, eta2 )
-    sll_real64                :: jacobian_2D
-    type(mapping_2D), pointer :: map
-    sll_real64                :: eta1
-    sll_real64                :: eta2
-    sll_real64                :: j11
-    sll_real64                :: j12
-    sll_real64                :: j21
-    sll_real64                :: j22
+    sll_real64            :: jacobian_2D
+    type(map_2D), pointer :: map
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    jacobian_2D = map%jacobian_f(eta1, eta2)
+  end function jacobian_2D
+
+  function jacobian_2D_analytic( map, eta1, eta2 )
+    sll_real64            :: jacobian_2D_analytic
+    type(map_2D), pointer :: map
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: j11
+    sll_real64            :: j12
+    sll_real64            :: j21
+    sll_real64            :: j22
     j11 = (map%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (map%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (map%j_matrix(2,1)%f( eta1, eta2 ))
     j22 = (map%j_matrix(2,2)%f( eta1, eta2 ))
-    jacobian_2D = j11*j22 - j12*j21
-  end function jacobian_2D
+    jacobian_2D_analytic = j11*j22 - j12*j21
+  end function jacobian_2D_analytic
 
-  ! initialize_mapping_2D() fills out the information that was not 
-  ! initialized by the new_mapping_2D, with the exception of the
-  ! x1 and x2 arrays, which may need to be filled out "by hand" if the
-  ! user did not provide those arrays when calling new_mapping_2D.
-  subroutine initialize_mapping_2D( &
+  function jacobian_2D_discrete( map, eta1, eta2 )
+    sll_real64            :: jacobian_2D_discrete
+    type(map_2D), pointer :: map
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: j11
+    sll_real64            :: j12
+    sll_real64            :: j21
+    sll_real64            :: j22
+    j11 = interpolate_x1_derivative_2D( eta1, eta2, map%x1_spline )
+    j12 = interpolate_x2_derivative_2D( eta1, eta2, map%x1_spline )
+    j21 = interpolate_x1_derivative_2D( eta1, eta2, map%x2_spline )
+    j22 = interpolate_x2_derivative_2D( eta1, eta2, map%x2_spline )
+    jacobian_2D_discrete = j11*j22 - j12*j21
+  end function jacobian_2D_discrete
+
+  ! initialize_map_2D() allocates all the memory needed by the 2D map. 
+  ! This interface is ending up very awkward because of the large amount of
+  ! optional parameters that it takes, much of this in account of the 
+  ! splines that it initializes, which take plenty of optional parameters
+  ! themselves. This is not desirable and should be reassessed critically.
+  subroutine initialize_map_2D( &
     map,            &
     npts1,          &
     npts2,          &
@@ -158,11 +218,23 @@ contains
     x1_node,        &
     x2_node,        &
     x1_cell,        &
-    x2_cell )
+    x2_cell,        &
+    eta1_bc_type_x1,   &
+    eta2_bc_type_x1,   &
+    eta1_min_slope_x1, &
+    eta1_max_slope_x1, &
+    eta2_min_slope_x1, &
+    eta2_max_slope_x1, &
+    eta1_bc_type_x2,   &
+    eta2_bc_type_x2,   &
+    eta1_min_slope_x2, &
+    eta1_max_slope_x2, &
+    eta2_min_slope_x2, &
+    eta2_max_slope_x2 )
 
-    type(mapping_2D), pointer  :: map
-    sll_int32, intent(in)      :: npts1
-    sll_int32, intent(in)      :: npts2
+    type(map_2D), pointer  :: map
+    sll_int32, intent(in)  :: npts1
+    sll_int32, intent(in)  :: npts2
     procedure(two_arg_scalar_function), optional  :: j11_func
     procedure(two_arg_scalar_function), optional  :: j12_func
     procedure(two_arg_scalar_function), optional  :: j21_func
@@ -175,13 +247,32 @@ contains
     sll_real64, dimension(:,:), optional          :: jacobians_cell
     sll_real64, dimension(:,:), optional          :: x1_cell
     sll_real64, dimension(:,:), optional          :: x2_cell
-    sll_int32  :: map_type
-    sll_real64 :: delta_1
-    sll_real64 :: delta_2
+    sll_int32, intent(in), optional               :: eta1_bc_type_x1
+    sll_int32, intent(in), optional               :: eta2_bc_type_x1
+    sll_real64, intent(in), optional              :: eta1_min_slope_x1
+    sll_real64, intent(in), optional              :: eta1_max_slope_x1
+    sll_real64, intent(in), optional              :: eta2_min_slope_x1
+    sll_real64, intent(in), optional              :: eta2_max_slope_x1
+    sll_int32, intent(in), optional               :: eta1_bc_type_x2
+    sll_int32, intent(in), optional               :: eta2_bc_type_x2
+    sll_real64, intent(in), optional              :: eta1_min_slope_x2
+    sll_real64, intent(in), optional              :: eta1_max_slope_x2
+    sll_real64, intent(in), optional              :: eta2_min_slope_x2
+    sll_real64, intent(in), optional              :: eta2_max_slope_x2
+
+
+    sll_int32  :: map_type ! enumerated constant-valued
+    sll_real64 :: delta_1  ! cell spacing in eta1 
+    sll_real64 :: delta_2  ! cell spacing in eta2 
     sll_real64 :: eta_1
     sll_real64 :: eta_2
     sll_int32  :: i
     sll_int32  :: j
+    sll_int32  :: x1_eta1_bc ! to translate the BC enumerators to the splines
+    sll_int32  :: x1_eta2_bc
+    sll_int32  :: x2_eta1_bc
+    sll_int32  :: x2_eta2_bc
+    sll_int32  :: ierr
     logical    :: x1n
     logical    :: x2n
     logical    :: jn
@@ -190,6 +281,11 @@ contains
     logical    :: jc
     logical    :: node_data_given
     logical    :: cell_data_given
+    logical    :: x1_eta1_bc_given
+    logical    :: x1_eta2_bc_given
+    logical    :: x2_eta1_bc_given
+    logical    :: x2_eta2_bc_given
+
 
     map_type = map%map_type
     x1n = present(x1_node)
@@ -198,6 +294,10 @@ contains
     x1c = present(x1_cell)
     x2c = present(x2_cell)
     jc  = present(jacobians_cell)
+    x1_eta1_given = present(eta1_bc_type_x1)
+    x1_eta2_given = present(eta2_bc_type_x1)
+    x2_eta1_given = present(eta1_bc_type_x2)
+    x2_eta2_given = present(eta2_bc_type_x2)
 
     ! Check argument consistency
     !
@@ -215,34 +315,46 @@ contains
     ! of the physical mesh (x1,x2), then the node arrays are required:
     ! jacobians_node, x1_node and x2_node.
     ! If the transformation is done on the points at the center of the cells
-    ! then those parameters are required: jacobians_cell, x1_cell, x2_cell.
+    ! then these parameters are also required: 
+    ! jacobians_cell, x1_cell, x2_cell.
     ! node and cell values are not mutually exclusive, thus all 6 parameters 
-    ! can be provided in the NUMERIC case.
+    ! can be provided in the NUMERIC case. It is up to the caller to make
+    ! sure that the data set is consistent.
 
     if(.not. associated(map)) then
-       print *, 'ERROR, initialize_mapping_2D(): passed map pointer was not ',&
+       print *, 'ERROR, initialize_map_2D(): passed map pointer was not ',&
             'associated.'
        STOP
     end if
 
-    select_case( map_type )
+    select case( map_type )
        case (ANALYTIC_MAP)
           if( (.not. present(j11_func)) .or. (.not. present(j12_func)) .or. &
               (.not. present(j21_func)) .or. (.not. present(j22_func)) ) then
-             print *, 'ERROR, initialize_mapping_2D(): ANALYTIC_MAPs ', &
+             print *, 'ERROR, initialize_map_2D(): ANALYTIC_MAPs ', &
                   'require all j11_func, j12_func, j21_func and j22_func ', &
                   'parameters.'
              STOP
           end if
           if( (.not. present(x1_func)) .or. (.not. present(x2_func)) ) then
-             print *, 'ERROR, initialize_mapping_2D(): ANALYTIC_MAPs ', &
+             print *, 'ERROR, initialize_map_2D(): ANALYTIC_MAPs ', &
                   'require x1_func and x2_func parameters.'
              STOP
           end if
           if( jn .or. jc .or.  x1n .or. x2n .or. x1c .or. x2c ) then
-             print *, 'ERROR, initialize_mapping_2D(): ANALYTIC_MAPs ', &
+             print *, 'ERROR, initialize_map_2D(): ANALYTIC_MAPs ', &
                   'do not need any of the parameters required by the ', &
                   'DISCRETE_MAPs'
+             STOP
+          end if
+          if( &
+             x1_eta1_given .or. x1_eta2_given .or. &
+             x2_eta1_given .or. x2_eta2_given ) then
+             print *, 'ERROR, initialize_map_2D(): ANALYTIC_MAPs ', &
+                  'do not need the specification of the boundary ', &
+                  'conditions for the x1 or x2 transformations.'
+             ! The following is a little drastic, after all, this info
+             ! would simply not be used. 
              STOP
           end if
        case (DISCRETE_MAP)
@@ -250,13 +362,13 @@ contains
           ! been passed.
           if( present(j11_func) .or. present(j12_func) .or. &
               present(j21_func) .or. present(j22_func) ) then
-             print *, 'ERROR, initialize_mapping_2D(): DISCRETE_MAPs ', &
+             print *, 'ERROR, initialize_map_2D(): DISCRETE_MAPs ', &
                   'do not need to be passed the elements of the jacobian ', &
                   'matrix. '
              STOP
           end if
           if( present(x1_func) .or. present(x2_func) ) then
-             print *, 'ERROR, initialize_mapping_2D(): DISCRETE_MAPs ', &
+             print *, 'ERROR, initialize_map_2D(): DISCRETE_MAPs ', &
                   'do not need x1_func and x2_func parameters.'
              STOP
           end if
@@ -279,7 +391,7 @@ contains
           ! 0. The node-based information of the transformation is the
           !    absolute minimum required.
           if( (.not. x1n) .or. (.not. x2n) ) then
-             print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP case: ', &
+             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
                   'the node-based information (x1 and x2 arrays) is ', &
                   'the minimum information required.'
              STOP
@@ -287,14 +399,14 @@ contains
           ! 1. If either of the (cell-based) x1 or x2 arrays is passed, 
           !    the other must also be.
           if( (x1c .and. (.not. x2c)) .or. ((.not. x1c) .and. x2c  ) ) then
-             print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP case: ', &
+             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
                'if either of the cell-based x1 or x2 arrays is passed, ', &
                'then the other must be passed as well.'
              STOP
           end if
           ! 2. Either or both pairs of x1 and x2 data must be present
           if( (.not.((x1n.and.x2n) .or. (x1c.and.x2c))) .eqv. .false. ) then
-             print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP case: ', &
+             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
                   'either both node-based arrays or both cell-based arrays ', &
                   'that represent the transformation must be present.'
              STOP
@@ -303,42 +415,52 @@ contains
           !    this be tied to what combination of node- or cell-based arrays
           !    are passed too?
           if( (jn .or. jc) .eqv. .false. ) then
-             print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP case: ', &
+             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
                   'Either the node- or cell-based jacobians must be passed.'
              STOP
           end if
           ! 4. Check that the discrete representation of the transformation is
           !    consistent with the size of the 2D array.
           if( &
-             (size(x1_node)(1) .lt. npts1) .or. &
-             (size(x1_node)(2) .lt. npts2) ) then
-             print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP case: ', &
+             (size(x1_node,1) .lt. npts1) .or. &
+             (size(x1_node,2) .lt. npts2) ) then
+             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
                   'the size of the x1_node or x2_node arrays is ', &
                   'inconsistent with the number of points declared, ', &
                   'npts1 or npts2.'
              STOP
           end if
-          if( jn .eqv. .true ) then
+          if( jn .eqv. .true. ) then
              if( &
-                (size(jacobians_node)(1) .lt. npts1 - 1 ) .or. &
-                (size(jacobians_node)(2) .lt. npts2 - 1 ) ) then
-                print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP ', &
+                (size(jacobians_node,1) .lt. npts1 - 1 ) .or. &
+                (size(jacobians_node,2) .lt. npts2 - 1 ) ) then
+                print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP ', &
                      'case: the size of the jacobians_node array is ', &
                      'inconsistent with the number of points declared, ', &
                      'npts1 or npts2.'
                 STOP
              end if
           end if
-          if( jc .eqv. .true ) then
+          if( jc .eqv. .true. ) then
              if( &
-                (size(jacobians_cell)(1) .lt. npts1 - 1 ) .or. &
-                (size(jacobians_cell)(2) .lt. npts2 - 1 ) ) then
-                print *, 'ERROR, initialize_mapping_2D(), DISCRETE_MAP ', &
+                (size(jacobians_cell,1) .lt. npts1 - 1 ) .or. &
+                (size(jacobians_cell,2) .lt. npts2 - 1 ) ) then
+                print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP ', &
                      'case: the size of the jacobians_cell arrays is ', &
                      'inconsistent with the number of points declared, ', &
                      'npts1 or npts2.'
                 STOP
              end if
+          end if
+          ! 5. The discrete case requires the user to specify all the 
+          !    boundary conditions for the x1 and x2 transformations.
+          if( &
+             (.not. x1_eta1_given) .or. (.not. x1_eta2_given) .or. &
+             (.not. x2_eta1_given) .or. (.not. x2_eta2_given) ) then
+             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP ', &
+                  'case: it is required to pass all the boundary condition ', &
+                  'specifications for the x1 and x2 transformations. '
+             STOP
           end if
           ! More cases for the argument consistency should be added here...
     end select
@@ -370,7 +492,7 @@ contains
           SLL_ALLOCATE(map%x1_cell(npts1-1, npts2-1), ierr)
           SLL_ALLOCATE(map%x2_cell(npts1-1, npts2-1), ierr)
           ! Fill the jacobian matrix
-          SLL_ALLOCATE(new_mapping_2D%j_matrix(2,2), ierr)
+          SLL_ALLOCATE(map%j_matrix(2,2), ierr)
           map%j_matrix(1,1)%f => j11_func
           map%j_matrix(1,2)%f => j12_func
           map%j_matrix(2,1)%f => j21_func
@@ -379,8 +501,8 @@ contains
           map%x1_func => x1_func
           map%x1_func => x2_func
           ! Allocate the arrays for precomputed jacobians.
-          SLL_ALLOCATE(new_mapping_2D%jacobians_n(npts1,npts2), ierr)
-          SLL_ALLOCATE(new_mapping_2D%jacobians_c(npts1-1, npts2-1), ierr)
+          SLL_ALLOCATE(map%jacobians_n(npts1,npts2), ierr)
+          SLL_ALLOCATE(map%jacobians_c(npts1-1, npts2-1), ierr)
           ! Fill out the jacobians for the points in the uniform mesh.
           delta_1 = 1.0_f64/(npts1 - 1)
           delta_2 = 1.0_f64/(npts2 - 1)
@@ -395,8 +517,8 @@ contains
              end do
           end do
           ! Fill the values at the mid-point of the cells
-          do j=0, npts_2 - 2
-             do i=0, npts_1 - 2
+          do j=0, npts2 - 2
+             do i=0, npts1 - 2
                 eta_1 = delta_1*(real(i,f64) + 0.5_f64)
                 eta_2 = delta_2*(real(j,f64) + 0.5_f64)
                 map%x1_cell(i+1,j+1) = x1_func(eta_1, eta_2)
@@ -415,6 +537,82 @@ contains
           SLL_ALLOCATE(map%x1_node(npts1,npts2), ierr)
           SLL_ALLOCATE(map%x2_node(npts1,npts2), ierr)
 
+          ! translate the enumerators from the map to the enumerators that
+          ! the splines recognize
+          select case ( eta1_bc_type_x1 )
+             case (PERIODIC_MAP_BC)
+                x1_eta1_bc = PERIODIC_SPLINE
+             case (HERMITE_MAP_BC)
+                x1_eta1_bc = HERMITE_SPLINE
+             case default
+                print *, 'ERROR, initialize_map_2D(): unrecognized ', &
+                     'boundary type for x1, eta1 direction.'
+                STOP
+          end select
+
+          select case ( eta2_bc_type_x1 )
+             case (PERIODIC_MAP_BC)
+                x1_eta2_bc = PERIODIC_SPLINE
+             case (HERMITE_MAP_BC)
+                x1_eta2_bc = HERMITE_SPLINE
+             case default
+                print *, 'ERROR, initialize_map_2D(): unrecognized ', &
+                     'boundary type for x1, eta2 direction.'
+                STOP
+          end select
+
+          select case ( eta1_bc_type_x2 )
+             case (PERIODIC_MAP_BC)
+                x2_eta1_bc = PERIODIC_SPLINE
+             case (HERMITE_MAP_BC)
+                x2_eta1_bc = HERMITE_SPLINE
+             case default
+                print *, 'ERROR, initialize_map_2D(): unrecognized ', &
+                     'boundary type for x2, eta1 direction.'
+                STOP
+          end select
+
+          select case ( eta2_bc_type_x2 )
+             case (PERIODIC_MAP_BC)
+                x2_eta2_bc = PERIODIC_SPLINE
+             case (HERMITE_MAP_BC)
+                x2_eta2_bc = HERMITE_SPLINE
+             case default
+                print *, 'ERROR, initialize_map_2D(): unrecognized ', &
+                     'boundary type for x2, eta2 direction.'
+                STOP
+          end select
+
+
+          ! allocate the splines for computing the jacobian terms
+          map%x1_spline => new_spline_2D( &
+               npts1, &
+               npts2, &
+               0.0_f64, & 
+               1.0_f64, &
+               0.0_f64, &
+               1.0_f64, &
+               x1_eta1_bc, &
+               x1_eta2_bc, &
+               eta1_min_slope_x1, &
+               eta1_max_slope_x1, &
+               eta2_min_slope_x1, &
+               eta2_max_slope_x1 )
+
+          map%x2_spline => new_spline_2D( &
+               npts1, &
+               npts2, &
+               0.0_f64, & 
+               1.0_f64, &
+               0.0_f64, &
+               1.0_f64, &
+               x2_eta1_bc, &
+               x2_eta1_bc, &
+               eta1_min_slope_x2, &
+               eta1_max_slope_x2, &
+               eta2_min_slope_x2, &
+               eta2_max_slope_x2 )
+
           ! initialize the local arrays. Note that since the map has its
           ! own copies, it owns this information locally and will destroy
           ! this information when the object is deleted. The caller is
@@ -427,57 +625,72 @@ contains
              end do
           end do
 
+          ! Compute the spline coefficients
+          call compute_spline_2D( map%x1, map%x1_spline )
+          call compute_spline_2D( map%x2, map%x2_spline )
+
+          ! copy the node-based jacobians if available
           if( jn .eqv. .true. ) then
              do j=1, npts2
                 do i=1, npts1
                    map%jacobians_n(i,j) = jacobians_node(i,j)
+                end do
              end do
-          end do
-
+          end if
+          ! copy the cell-based jacobians if available
           if( jc .eqv. .true. ) then
              do j=1, npts2 - 1
                 do i=1, npts1 - 1
                    map%jacobians_c(i,j) = jacobians_cell(i,j)
+                end do
              end do
-          end do
-
+          end if
+          ! copy the cell-based transformation arrays if available
           if( (x1c .and. x2c) .eqv. .true. ) then
              SLL_ALLOCATE(map%x1_cell(npts1-1, npts2-1), ierr)
              SLL_ALLOCATE(map%x2_cell(npts1-1, npts2-1), ierr)
-!por aqui
-             SLL_ALLOCATE(new_mapping_2D%x1(npts1,npts2), ierr)
-             SLL_ALLOCATE(new_mapping_2D%x2(npts1,npts2), ierr)
-             new_mapping_2D%x1_func => null()
-             new_mapping_2D%x2_func => null()
+             do j=1, npts2 - 1
+                do i=1, npts1 - 1
+                   map%x1_cell(i,j) = x1_cell(i,j)
+                   map%x2_cell(i,j) = x2_cell(i,j)
+                end do
+             end do
           end if
-    end select
+       end select
+  end subroutine initialize_map_2D
 
-  end subroutine initialize_mapping_2D
 
-
-  subroutine delete_mapping_2D( map )
-    type(mapping_2D), pointer :: map
-    sll_int32                 :: ierr
-    if( associated(map%x1) ) then
-       SLL_DEALLOCATE( map%x1, ierr )
+  subroutine delete_map_2D( map )
+    type(map_2D), pointer :: map
+    sll_int32             :: ierr
+    if( associated(map%x1_node) ) then
+       SLL_DEALLOCATE( map%x1_node, ierr )
     end if
-    if( associated(map%x2) ) then
-       SLL_DEALLOCATE( map%x2, ierr )
+    if( associated(map%x2_node) ) then
+       SLL_DEALLOCATE( map%x2_node, ierr )
+    end if
+    if( associated(map%x1_cell) ) then
+       SLL_DEALLOCATE( map%x1_cell, ierr )
+    end if
+    if( associated(map%x2_cell) ) then
+       SLL_DEALLOCATE( map%x2_cell, ierr )
     end if
     SLL_DEALLOCATE( map%j_matrix, ierr )
-    SLL_DEALLOCATE( map%jacobians_node, ierr )
-    SLL_DEALLOCATE( map%jacobians_cell, ierr )
+    SLL_DEALLOCATE( map%jacobians_n, ierr )
+    SLL_DEALLOCATE( map%jacobians_c, ierr )
+    call delete(map%x1_spline, ierr)
+    call delete(map%x2_spline, ierr)
     SLL_DEALLOCATE( map, ierr )
-  end subroutine delete_mapping_2D
+  end subroutine delete_map_2D
 
 
   ! Access functions for the mapping. These are an overkill and can be 
   ! changed by a macro, but for now, they are at least safer.
-  function get_map2d_x1( map, i, j )
-    sll_real64                :: get_map2d_x1
-    type(mapping_2D), pointer :: map
-    sll_int32, intent(in)     :: i
-    sll_int32, intent(in)     :: j
+  function map2d_x1_node( map, i, j )
+    sll_real64            :: map2d_x1_node
+    type(map_2D), pointer :: map
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
     sll_int32 :: num_pts_1
     sll_int32 :: num_pts_2
     SLL_ASSERT( associated(map) )
@@ -485,14 +698,44 @@ contains
     num_pts_2 = map%num_pts_2
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
-    get_map2d_x1 = map%x1(i,j)
-  end function get_map2d_x1
+    map2d_x1_node = map%x1_node(i,j)
+  end function map2d_x1_node
 
-  function get_map2d_x2( map, i, j )
-    sll_real64                :: get_map2d_x2
-    type(mapping_2D), pointer :: map
-    sll_int32, intent(in)     :: i
-    sll_int32, intent(in)     :: j
+  function map2d_x2_node( map, i, j )
+    sll_real64            :: map2d_x2_node
+    type(map_2D), pointer :: map
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    SLL_ASSERT( associated(map) )
+    num_pts_1 = map%num_pts_1
+    num_pts_2 = map%num_pts_2
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1 - 1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2 - 1) )
+    map2d_x2_node = map%x2_node(i,j)
+  end function map2d_x2_node
+
+  function map2d_x1_cell( map, i, j )
+    sll_real64            :: map2d_x1_cell
+    type(map_2D), pointer :: map
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    SLL_ASSERT( associated(map) )
+    num_pts_1 = map%num_pts_1
+    num_pts_2 = map%num_pts_2
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1 - 1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2 - 1) )
+    map2d_x1_cell = map%x1_cell(i,j)
+  end function map2d_x1_cell
+
+  function map2d_x2_cell( map, i, j )
+    sll_real64            :: map2d_x2_cell
+    type(map_2D), pointer :: map
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
     sll_int32 :: num_pts_1
     sll_int32 :: num_pts_2
     SLL_ASSERT( associated(map) )
@@ -500,45 +743,49 @@ contains
     num_pts_2 = map%num_pts_2
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
-    get_map2d_x2 = map%x2(i,j)
-  end function get_map2d_x2
-
-  subroutine set_map_j_matrix_elem( map, i, j, func )
-    type(mapping_2D), pointer          :: map
-    procedure(two_arg_scalar_function) :: func
-    sll_int32, intent(in)              :: i
-    sll_int32, intent(in)              :: j
-    SLL_ASSERT( associated(map) )
-    SLL_ASSERT( (i .ge. 1) .and. (i .le. 2) )
-    SLL_ASSERT( (j .ge. 1) .and. (j .le. 2) )
-    map%j_matrix(i,j)%f => func
-  end subroutine set_map_j_matrix_elem
+    map2d_x2_cell = map%x2_cell(i,j)
+  end function map2d_x2_cell
 
   function map_2d_jacobian_node( map, i, j )
-    sll_real64                  :: map_2d_jacobian_node
-    type(mapping_2D), pointer   :: map
-    sll_int32, intent(in)       :: i
-    sll_int32, intent(in)       :: j
-    get_map2d_jacobian = map%jacobians_node(i,j)
+    sll_real64              :: map_2d_jacobian_node
+    type(map_2D), pointer   :: map
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    SLL_ASSERT( associated(map) )
+    num_pts_1 = map%num_pts_1
+    num_pts_2 = map%num_pts_2
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
+    map_2d_jacobian_node = map%jacobians_n(i,j)
   end function map_2d_jacobian_node
 
   function map_2d_jacobian_cell( map, i, j )
-    sll_real64                  :: map_2d_jacobian_cell
-    type(mapping_2D), pointer   :: map
-    sll_int32, intent(in)       :: i
-    sll_int32, intent(in)       :: j
-    get_map2d_jacobian = map%jacobians_cell(i,j)
+    sll_real64              :: map_2d_jacobian_cell
+    type(map_2D), pointer   :: map
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32 :: num_cells_1
+    sll_int32 :: num_cells_2
+    SLL_ASSERT( associated(map) )
+    num_cells_1 = map%num_pts_1 - 1
+    num_cells_2 = map%num_pts_2 - 1
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_cells_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_cells_2) )
+    map_2d_jacobian_cell = map%jacobians_c(i,j)
   end function map_2d_jacobian_cell
 
 
   ! -------------------------------------------------------------------------
   !
-  !     FUNCTIONS AND SUBROUTINES FOR THE TRANSFORMED MESH_2D TYPE.
+  !     FUNCTIONS AND SUBROUTINES FOR THE MAPPED MESH_2D TYPE.
   !
   ! -------------------------------------------------------------------------
 
   ! The mesh_2D_scalar is basically data interpreted with the aid of a 
-  ! 2D coordinate map. Additionally, we need information on:
+  ! 2D coordinate transformation (the map_2D). Additionally, we need 
+  ! information on:
   ! mode: whether the mesh data is to be taken to represent values on nodes
   ! or centers of cells.
   ! bc_1 and bc_2: the boundary types to use when building the interpolants,
@@ -553,21 +800,21 @@ contains
     eta2_min_slope, &
     eta2_max_slope )
 
-    type(mesh_2D_scalar), pointer                :: new_mesh_2D_scalar
-    sll_int32, intent(in)                        :: mode
-    sll_int32, intent(in)                        :: bc_1
-    sll_int32, intent(in)                        :: bc_2
-    type(mapping_2D), pointer                    :: mapping
-    sll_real64, intent(in), optional             :: eta1_min_slope
-    sll_real64, intent(in), optional             :: eta1_max_slope
-    sll_real64, intent(in), optional             :: eta2_min_slope
-    sll_real64, intent(in), optional             :: eta2_max_slope
+    type(mapped_mesh_2D_scalar), pointer    :: new_mesh_2D_scalar
+    sll_int32, intent(in)            :: mode
+    sll_int32, intent(in)            :: bc_1
+    sll_int32, intent(in)            :: bc_2
+    type(map_2D), pointer            :: mapping
+    sll_real64, intent(in), optional :: eta1_min_slope
+    sll_real64, intent(in), optional :: eta1_max_slope
+    sll_real64, intent(in), optional :: eta2_min_slope
+    sll_real64, intent(in), optional :: eta2_max_slope
 
-    sll_int32                     :: num_pts_1
-    sll_int32                     :: num_pts_2
-    sll_int32                     :: ierr
-    sll_int32                     :: spline_bc_1
-    sll_int32                     :: spline_bc_2
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    sll_int32 :: ierr
+    sll_int32 :: spline_bc_1
+    sll_int32 :: spline_bc_2
 
     if( .not. associated(mapping) ) then
        print *, 'ERROR, new_mesh_2D_scalar: mapping given as argument is ', &
@@ -630,7 +877,7 @@ contains
   end function new_mesh_2D_scalar
 
   subroutine delete_mesh_2D_scalar( mesh )
-    type(mesh_2d_scalar), pointer :: mesh
+    type(mapped_mesh_2d_scalar), pointer :: mesh
     sll_int32                     :: ierr
     if( .not. associated(mesh) ) then
        print *, "ERROR, delete_mesh_2D_scalar(): mesh was not associated."
@@ -648,7 +895,7 @@ contains
   ! (like spline coefficients, if a cubic spline interpolation is used) that
   ! the mesh use.
   subroutine compute_mesh2D_interpolants( mesh )
-    type(mesh_2D_scalar), pointer :: mesh
+    type(mapped_mesh_2D_scalar), pointer :: mesh
     if( .not. associated(mesh) ) then
        print *, 'ERROR, compute_mesh2D_interpolants: mesh pointer argument ',&
             'was not associated.'
@@ -662,7 +909,7 @@ contains
   ! to the type of mesh and also concise... so maybe a convention is needed.
   function get_m2ds_node( mesh, i, j )
     sll_real64                    :: get_m2ds_node
-    type(mesh_2D_scalar), pointer :: mesh
+    type(mapped_mesh_2D_scalar), pointer :: mesh
     sll_int32, intent(in)         :: i
     sll_int32, intent(in)         :: j
     SLL_ASSERT( associated(mesh) )
@@ -672,7 +919,7 @@ contains
   ! Add here get_m2ds_val(mesh, x1, x2), this requires the nonuniform splines.
 
   subroutine set_m2ds_node( mesh, i, j, val )
-    type(mesh_2D_scalar), pointer :: mesh
+    type(mapped_mesh_2D_scalar), pointer :: mesh
     sll_int32, intent(in)         :: i
     sll_int32, intent(in)         :: j
     sll_real64, intent(in)        :: val
@@ -686,7 +933,7 @@ contains
   ! coordinates in the uniform coordinate system.
   function get_mesh2D_value( mesh, eta1, eta2 )
     sll_real64                    :: get_mesh2D_value
-    type(mesh_2D_scalar), pointer :: mesh
+    type(mapped_mesh_2D_scalar), pointer :: mesh
     sll_real64                    :: eta1
     sll_real64                    :: eta2
     get_mesh2D_value = interpolate_value_2D( eta1, eta2, mesh%u_spline_2D )
@@ -694,8 +941,8 @@ contains
 
   function mesh_2D_data( mesh )
     sll_real64, dimension(:,:), pointer :: mesh_2D_data
-    type(mesh_2D_scalar), pointer       :: mesh
+    type(mapped_mesh_2D_scalar), pointer       :: mesh
     mesh_2D_data => mesh%data
   end function mesh_2D_data
 
-end module sll_mesh_types_experimental
+end module sll_coordinate_transformation
