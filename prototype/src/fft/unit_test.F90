@@ -24,8 +24,8 @@ program unit_test
 #define _WRITEACCESS
 
   s_min = 15
-  s_max = 23
-  t_max = 5
+  s_max = 20
+  t_max = 1
 
   allocate(times(t_max))
   allocate(times2(t_max))
