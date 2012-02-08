@@ -2,7 +2,7 @@
 !*******************************************************************
 !
 ! Selalib      
-! Module: unit_test.F90
+! Module: poisson_3d_periodic.F90
 !
 !> @brief 
 !> 3D poisson solver with fftw3
@@ -14,15 +14,15 @@
 !                                  
 !*******************************************************************
 
-program poisson3d_with_fftw3
-use sll_collective
-  use sll_fft
+program poisson_3d
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_remap.h"
   
-  
+  use sll_collective
+  use sll_fft
 
   implicit none
   
@@ -92,7 +92,7 @@ use sll_collective
         enddo
      enddo
      
-     call solve_poisson(u, f, nx, ny, nz )
+     call solve_poisson_3d(u, f, nx, ny, nz )
      write(*,'("istep = ",i4," time = ",g15.5," nx,ny,nz =",3i4)') &
           istep, time, nx, ny, nz
      
@@ -114,11 +114,11 @@ use sll_collective
   
 contains
   
-  subroutine solve_poisson(psi, rhs, nx, ny, nz)
+  subroutine solve_poisson_3d(psi, rhs, nx, ny, nz)
 
-    sll_int32, intent(in)   :: nx, ny, nz
-    sll_real64, intent(out) :: psi(nx,ny,nz)
-    sll_real64, intent(in)  :: rhs(nx,ny,nz)
+    sll_int32, intent(in)                                  :: nx, ny, nz
+    sll_real64, intent(out), dimension(:,:,:), allocatable :: psi
+    sll_real64, intent(in)                                 :: rhs(nx,ny,nz)
 
     mx = nx-2; my = ny-2; mz = nz-2
     
@@ -163,10 +163,10 @@ contains
        end do
     end do
 
-    ! FFT in x-direction
+    ! FFTs in x-direction
     SLL_ALLOCATE(tmp1(mx/npx, my/npy, mz/npz), ierr)
     tmp1 = cmplx(c, 0_f64, kind=f64)
-    p => new_plan_c2c_1d( mx, tmp1(:,j,k), tmp1(:,j,k), FFT_FORWARD )
+    p => new_plan_c2c_1d( mx, tmp1(:,1,1), tmp1(:,1,1), FFT_FORWARD )
     do k=1,mz/npz
        do j=1,my/npy
           call apply_fft_c2c_1d( p, tmp1(:,j,k), tmp1(:,j,k) )
@@ -174,7 +174,7 @@ contains
     enddo
     call delete(p)
 
-    ! FFT in y-direction
+    ! FFTs in y-direction
     e1 = e/2
     e3 = e - e1
     npx = 2**e1
@@ -183,9 +183,9 @@ contains
     layout2  => new_layout_3d( sll_world_collective )
     call initialize_layout_with_distributed_3d_array( mx, my, mz, npx, npy, npz, layout2 )
     rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, tmp1)
-    SLL_ALLOCATE(tmp2(mx/npx, my, mz/npz), ierr)
+    SLL_ALLOCATE(tmp2(mx/npx, my/npy, mz/npz), ierr)
     call apply_remap_3d( rmp3, tmp1, tmp2 )
-    p => new_plan_c2c_1d( my, tmp2(:,j,k), tmp2(:,j,k), FFT_FORWARD )
+    p => new_plan_c2c_1d( my, tmp2(1,:,1), tmp2(1,:,1), FFT_FORWARD )
     do k=1,mz/npz
        do i=1,mx/npx
           call apply_fft_c2c_1d( p, tmp2(i,:,k), tmp2(i,:,k) )
@@ -194,7 +194,7 @@ contains
     call delete(p)
     SLL_DEALLOCATE_ARRAY(tmp1, ierr)
 
-    ! FFT in z-direction
+    ! FFTs in z-direction
     e1 = e/2
     e2 = e - e1
     npx = 2**e1
@@ -204,7 +204,7 @@ contains
     rmp3 => NEW_REMAPPER_PLAN_3D( layout2, layout1, tmp2)
     SLL_ALLOCATE(b(mx/npx, my/npy, mz/npz), ierr)
     call apply_remap_3d( rmp3, tmp2, b )
-    p => new_plan_c2c_1d( my, b(:,j,k), b(:,j,k), FFT_FORWARD )
+    p => new_plan_c2c_1d( mz, b(1,1,:), b(1,1,:), FFT_FORWARD )
     do j=1,my/npy
        do i=1,mx/npx
           call apply_fft_c2c_1d( p, b(i,j,:), b(i,j,:) )
@@ -213,7 +213,7 @@ contains
     call delete(p)
     SLL_DEALLOCATE_ARRAY(tmp2, ierr)
 
-    !compute eigen values, build the matrix   
+    !Compute eigen values, build the matrix   
     SLL_ALLOCATE(d(mx/npx, my/npy, mz/npz), ierr) 
     do k=1,mz/npz
        do j=1,my/npz
@@ -233,11 +233,59 @@ contains
     
     b = b / d
     
-    !backward fft on the solution
-   ! call dfftw_execute_r2r(backward,b,psi(2:nx-1,2:ny-1,2:nz-1))
+    ! Inverse FFT in z-direction
+    p => new_plan_c2c_1d( mz, b(1,1,:), b(1,1,:), FFT_INVERSE )
+    do j=1,my/npy
+       do i=1,mx/npx
+          call apply_fft_c2c_1d( p, b(i,j,:), b(i,j,:) )
+       enddo
+    enddo
+    call delete(p)
+
+    ! Inverse FFT in y-direction
+    e1 = e/2
+    e3 = e - e1
+    npx = 2**e1
+    npy = 1
+    npz = 2**e3
+    layout1  => new_layout_3d( sll_world_collective )
+    call initialize_layout_with_distributed_3d_array( mx, my, mz, npx, npy, npz, layout2 )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, b)
+    SLL_ALLOCATE(tmp2(mx/npx, my/npy, mz/npz), ierr)
+    call apply_remap_3d( rmp3, b, tmp2 )
+    p => new_plan_c2c_1d( my, tmp2(1,:,1), tmp2(1,:,1), FFT_INVERSE )
+    do k=1,mz/npz
+       do i=1,mx/npx
+          call apply_fft_c2c_1d( p, tmp2(i,:,k), tmp2(i,:,k) )
+       enddo
+    enddo
+    call delete(p)
+    SLL_DEALLOCATE_ARRAY(tmp1, ierr)
+
+    ! Inverse FFT in x-direction
+    e2 = e/2
+    e3 = e - e2
+    npx = 1
+    npy = 2**e2
+    npz = 2**e3
+    layout1  => new_layout_3d( sll_world_collective )
+    call initialize_layout_with_distributed_3d_array( mx, my, mz, npx, npy, npz, layout1 )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout2, layout1, tmp2)
+    call apply_remap_3d( rmp3, tmp2, b )
+    p => new_plan_c2c_1d( mx, b(:,1,1), b(:,1,1), FFT_INVERSE )
+    do k=1,mz/npz
+       do i=1,mx/npx
+          call apply_fft_c2c_1d( p, b(:,j,k), b(:,j,k) )
+       enddo
+    enddo
+    call delete(p)
+    SLL_DEALLOCATE_ARRAY(tmp1, ierr)
+
+    SLL_ALLOCATE(psi(mx/npx, my/npy, mz/npz), ierr)
+    psi = b
     
     return
     
-  end subroutine solve_poisson
+  end subroutine solve_poisson_3d
  
-end program poisson3d_with_fftw3
+end program poisson_3d
