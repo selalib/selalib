@@ -1,11 +1,15 @@
 module geometry_functions
 #include "sll_working_precision.h"
-  
+#include "sll_assert.h"
+
+  use sll_splines
   use numeric_constants
   implicit none
   
   sll_real64, parameter :: c1_test = 0.1_f64
   sll_real64, parameter :: c2_test = 0.1_f64
+
+  type(sll_spline_2D), pointer :: spl2D_x1, spl2D_x2 
 
 contains
   
@@ -305,5 +309,109 @@ contains
          (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
+
+  ! geometry functions are given through an array and cubic spline interpolation
+  !-------------------
+  ! initialize spline object
+  subroutine init_cubic_spline(x1_array,x2_array,bc1,bc2)
+    sll_real64, dimension(:,:) :: x1_array
+    sll_real64, dimension(:,:) :: x2_array
+    sll_int32 :: bc1, bc2
+    sll_int32 :: st1, st2
+    ! local variables
+    sll_int32 :: num_pts_x1, num_pts_x2
+    ! check that arrays x1_array and x2_array are of same size
+    SLL_ASSERT(size(x1_array,1) == size(x2_array,1))
+    SLL_ASSERT(size(x1_array,2) == size(x2_array,2))
+    num_pts_x1 = size(x1_array,1)
+    num_pts_x2 = size(x1_array,2)
+
+    ! define boundary conditions for splines
+    if (bc1 == 0) then
+       st1 = PERIODIC_SPLINE
+    elseif (bc1 == 1) then
+       st1 = HERMITE_SPLINE
+    endif
+    if (bc2 == 0) then
+       st2 = PERIODIC_SPLINE
+    elseif (bc2 == 1) then
+       st2 = HERMITE_SPLINE
+    endif
+
+    ! initialize 2D spline representation of x1 and x2
+    spl2D_x1 => new_spline_2D(num_pts_x1, num_pts_x2,  &
+    0.0_f64, 1.0_f64, 0.0_f64, 1.0_f64, st1, st2) 
+    call compute_spline_2D( x1_array, spl2D_x1 )
+    spl2D_x2 => new_spline_2D(num_pts_x1, num_pts_x2,  &
+    0.0_f64, 1.0_f64, 0.0_f64, 1.0_f64, st1, st2) 
+    call compute_spline_2D( x2_array, spl2D_x2 )
+
+  end subroutine init_cubic_spline
+  ! direct mapping
+  function cubic_spline_x1 ( eta1, eta2 )
+    sll_real64  :: cubic_spline_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_x1 = interpolate_value_2D( eta1, eta2, spl2D_x1 )
+  end function cubic_spline_x1
+
+  function cubic_spline_x2 ( eta1, eta2 )
+    sll_real64  :: cubic_spline_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_x2 = interpolate_value_2D( eta1, eta2, spl2D_x2 )
+  end function cubic_spline_x2
+
+  ! inverse mapping
+  function cubic_spline_eta1 ( x1, x2 )
+    sll_real64  :: cubic_spline_eta1
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    cubic_spline_eta1 = x1
+  end function cubic_spline_eta1
+
+  function cubic_spline_eta2 ( x1, x2 )
+    sll_real64  :: cubic_spline_eta2
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    cubic_spline_eta2 = x2
+  end function cubic_spline_eta2
+
+  ! jacobian maxtrix
+  function cubic_spline_jac11 ( eta1, eta2 )
+    sll_real64  :: cubic_spline_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_jac11 = 1.0_f64
+  end function cubic_spline_jac11
+
+    function cubic_spline_jac12 ( eta1, eta2 )
+    sll_real64  :: cubic_spline_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_jac12 = 0.0_f64
+  end function cubic_spline_jac12
+
+  function cubic_spline_jac21 ( eta1, eta2 )
+    sll_real64  :: cubic_spline_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_jac21 = 0.0_f64
+  end function cubic_spline_jac21
+
+  function cubic_spline_jac22 ( eta1, eta2 )
+    sll_real64  :: cubic_spline_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_jac22 = 1.0_f64
+  end function cubic_spline_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function cubic_spline_jac ( eta1, eta2 )
+    sll_real64  :: cubic_spline_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    cubic_spline_jac = 1.0_f64
+  end function cubic_spline_jac
 end module geometry_functions
 
