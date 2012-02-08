@@ -25,7 +25,7 @@ program unit_test_from_array
   type(field_2D_vec1), pointer :: uniform_field
   type(csl_workspace), pointer :: csl_work
   character(32), parameter  :: name = 'distribution_function'
-  logical, parameter :: read_from_file = .false.
+  logical, parameter :: read_from_file = .true.
 
   r_min = 0.1_f64
   r_max = 8.0_f64
@@ -95,8 +95,10 @@ program unit_test_from_array
        x1n_array, x2n_array, x1c_array, x2c_array, jac_array,COMPACT, PERIODIC)
 
 
-  mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
-       COMPACT, eta2_min, eta2_max, nc_eta2, COMPACT, geom)
+!  mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+!       COMPACT, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+  mesh => new_mesh_descriptor_2D(r_min, r_max, nc_eta1, &
+       COMPACT, 0.0_f64, 2*sll_pi, nc_eta2, PERIODIC, geom)
   dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
 
@@ -113,7 +115,7 @@ program unit_test_from_array
   uniform_field => new_field_2D_vec1(mesh)
   ! components of field
   alpha1 = -1.0_f64
-  alpha2 = -1.0_f64
+  alpha2 = 0.0_f64
   do i1 = 1, nc_eta1+1 
      do i2 = 1, nc_eta2+1
         FIELD_2D_AT_I( uniform_field, i1, i2 ) = alpha1 * x2n_array(i1,i2) &
@@ -123,12 +125,12 @@ program unit_test_from_array
   ! initialize CSL  
   csl_work => new_csl_workspace( dist_func )
   ! run CSL method for 10 time steps
-  n_steps = 10
-  deltat = 1.0_f64/n_steps
-  !deltat = 0.0_f64
+  n_steps = 25
+  deltat = 6.0_f64/n_steps
+  !deltat = 0.9_f64
   do it = 1, n_steps
-     call csl_first_order(csl_work, dist_func, uniform_field, deltat)
-     !call csl_second_order(csl_work, dist_func, rotating_field, rotating_field, deltat)
+     !call csl_first_order(csl_work, dist_func, uniform_field, deltat)
+     call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, deltat)
      call write_distribution_function ( dist_func )
   end do
   ! compute error when Gaussian arrives at center (t=1)
@@ -136,7 +138,10 @@ program unit_test_from_array
   do i1 = 1, nc_eta1
      do i2 = 1, nc_eta2
         val = sll_get_df_val(dist_func, i1, i2) / jac_array(i1,i2)
-        error = max (error, abs(val - exp(-0.5_f64*(x1c_array(i1,i2)**2+x2c_array(i1,i2)**2))))
+        !if (val > 1) then
+        !   print*, 'val ',val, i1,i2
+        !end if
+        error = max (error, abs(val - exp(-0.5_f64*((x1c_array(i1,i2)+3)**2+(x2c_array(i1,i2)-3)**2))))
      end do
   end do
   print*, ' 1st order splitting, 100 cells, 10 time steps. Error= ', error
@@ -161,14 +166,15 @@ program unit_test_from_array
   deltat = 0.5_f64*sll_pi/n_steps  ! do one quarter turn
   do it = 1, n_steps
      call csl_first_order(csl_work, dist_func, rotating_field, deltat)
+     !call write_distribution_function ( dist_func )
   end do
   ! compute error after one quarter turn
   error = 0.0_f64
   do i1 = 1, nc_eta1
      do i2 = 1, nc_eta2
         val = sll_get_df_val(dist_func, i1, i2) / jac_array(i1,i2)
-        error = max (error, abs(val - exp(-0.5_f64*((x1c_array(i1,i2)-1.0_f64)**2 &
-             + (x2c_array(i1,i2)+1.0_f64)**2))))
+        error = max (error, abs(val - exp(-0.5_f64*((x1c_array(i1,i2)-3.0_f64)**2 &
+             + (x2c_array(i1,i2)+3.0_f64)**2))))
      end do
   end do
   print*, '    fine mesh, 1st order splitting, 200 cells, 10 time steps,  Error=', error
