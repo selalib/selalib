@@ -1,0 +1,40 @@
+# SCons file for the unit test of the mesh type
+import os
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+env = Environment( ENV=os.environ,
+                   F90PATH = ['../memory',
+                              '../precision',
+                              '../assert',
+                              '../splines','../mesh_types'], 
+                   LIBPATH= ['.'],
+                   LIBS=[ 'geometry_funcs',
+                          'sll_memory',
+                          'sll_precision',
+                          'sll_assert',
+                          'sll_splines' ],
+                   F90FLAGS = ['-g','-cpp','-W','-Wall','-std=f2003',
+                               '-ffree-line-length-none'])
+
+env.Append(CPPDEFINES=['DEBUG','GFORTRAN','NOHDF5'])
+
+#env.Append(F90PATH=[os.environ['HDF5INCPATH']])
+#env.Append(LIBPATH=[os.environ['HDF5LIBPATH'])
+#env.Append(LIBS=['hdf5_fortran','hdf5','z'])
+
+env.Library('sll_memory',["../memory/sll_memory.F90"])
+env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+env.Library('sll_assert', ["../assert/sll_assert.F90"])
+env.Library('sll_splines', ["../splines/sll_splines.F90"])
+env.Library('geometry_funcs', ["../mesh_types/geometry_functions.F90"])
+env.Program('unit_test', ["unit_test.F90","sll_mappings.F90",
+                          "geometry_functions.F90"])
+
+
