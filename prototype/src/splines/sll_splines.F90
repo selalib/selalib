@@ -589,6 +589,8 @@ contains  ! ****************************************************************
     t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
     interpolate_value_aux = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value_aux
+
+
   
   !> get spline interpolate at point x
   function interpolate_value( x, spline )
@@ -661,13 +663,16 @@ contains  ! ****************************************************************
     end do
   end subroutine interpolate_array_values
 
-  function interpolate_derivative( x, spline )
-    sll_real64                        :: interpolate_derivative
-    intrinsic                         :: associated, int, real
+  ! interpolate_derivative_aux() is a private function aimed at abstracting
+  ! away the capability of computing the derivative at a point, given the
+  ! array of cubic spline coefficients.
+  function interpolate_derivative_aux( x, xmin, rh, coeffs )
+    sll_real64                        :: interpolate_derivative_aux
+    intrinsic                         :: int, real
     sll_real64, intent(in)            :: x
-    type(sll_spline_1D), pointer      :: spline
+    sll_real64, intent(in)            :: xmin
+    sll_real64, intent(in)            :: rh   ! reciprocal of cell spacing
     sll_real64, dimension(:), pointer :: coeffs
-    sll_real64                        :: rh   ! reciprocal of cell spacing
     sll_int32                         :: cell
     sll_real64                        :: dx
     sll_real64                        :: t0   ! temp/scratch variables ...
@@ -678,16 +683,9 @@ contains  ! ****************************************************************
     sll_real64                        :: ci   ! C_i
     sll_real64                        :: cip1 ! C_(i+1)
     sll_real64                        :: cip2 ! C_(i+2)
-    sll_int32                         :: num_cells
-    ! We set these as assertions since we want the flexibility of turning
-    ! them off.
-    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-    SLL_ASSERT( associated(spline) )
-    num_cells = spline%n_points-1
-    rh        = spline%rdelta
-    coeffs    => spline%coeffs
+
     ! find the cell and offset for x
-    t0        = (x-spline%xmin)*rh
+    t0        = (x-xmin)*rh
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
@@ -698,7 +696,23 @@ contains  ! ****************************************************************
     t1 = 2.0_f64*(cim1 - 2.0_f64*ci + cip1)
     t2 = -cim1 + 3.0_f64*(ci - cip1) + cip2
     t3 =  cip1 - cim1
-    interpolate_derivative = 0.5_f64*rh*(dx*(t1 + dx*t2) + t3)
+    interpolate_derivative_aux = 0.5_f64*rh*(dx*(t1 + dx*t2) + t3)
+  end function interpolate_derivative_aux
+
+
+  function interpolate_derivative( x, spline )
+    sll_real64                        :: interpolate_derivative
+    intrinsic                         :: associated, int, real
+    sll_real64, intent(in)            :: x
+    type(sll_spline_1D), pointer      :: spline
+
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
+
+    interpolate_derivative = &
+         interpolate_derivative_aux(x,spline%xmin,spline%rdelta,spline%coeffs)
   end function interpolate_derivative
 
   subroutine delete_spline_1D( spline )
@@ -1351,6 +1365,155 @@ contains  ! ****************************************************************
     interpolate_value_2D = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value_2D
 
+  ! interpolate_x1_derivative_2D(): given discrete data f(i,j) that are
+  ! described by a 2-dimensional cubic spline fit s(x1,x2), where the
+  ! continuous variables x1 and x2 are within the original limits of i and j
+  ! respectively, interpolate_x1_derivative() returns the value of
+  !
+  !         partial s
+  !       -------------
+  !         partial x1
+  !
+  ! evaluated at the point (x1,x2). (Sorry for the ambiguous use of x1)
+  function interpolate_x1_derivative_2D( x1, x2, spline )
+    sll_real64                          :: interpolate_x1_derivative_2D
+    intrinsic                           :: associated, int, real
+    sll_real64, intent(in)              :: x1
+    sll_real64, intent(in)              :: x2
+    type(sll_spline_2D), pointer        :: spline
+    sll_real64                          :: rh1   ! reciprocal of cell spacing
+    sll_real64                          :: rh2   ! reciprocal of cell spacing
+    sll_int32                           :: cell
+    sll_real64                          :: dx
+    sll_real64                          :: cdx  ! 1-dx
+    sll_real64                          :: t0   ! temp/scratch variables ...
+    sll_real64                          :: t1
+    sll_real64                          :: t2
+    sll_real64                          :: t3
+    sll_real64                          :: t4
+    sll_real64                          :: cim1 ! C_(i-1)
+    sll_real64                          :: ci   ! C_i
+    sll_real64                          :: cip1 ! C_(i+1)
+    sll_real64                          :: cip2 ! C_(i+2)
+    sll_real64                          :: x1_min
+    sll_real64                          :: x2_min
+    sll_int32                           :: num_pts_x1
+    sll_int32                           :: num_pts_x2
+    sll_real64, dimension(:), pointer   :: coeffs_line_jm1
+    sll_real64, dimension(:), pointer   :: coeffs_line_j
+    sll_real64, dimension(:), pointer   :: coeffs_line_jp1
+    sll_real64, dimension(:), pointer   :: coeffs_line_jp2
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
+    SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
+    SLL_ASSERT( associated(spline) )
+    x1_min     = spline%x1_min
+    x2_min     = spline%x2_min
+    num_pts_x1 = spline%num_pts_x1
+    num_pts_x2 = spline%num_pts_x2
+    rh1        = spline%x1_rdelta
+    rh2        = spline%x2_rdelta
+    ! find the cell and offset for x2
+    t0         = (x2-x2_min)*rh2
+    cell       = int(t0) + 1
+    dx         = t0 - real(cell-1)
+    cdx        = 1.0_f64 - dx
+    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    ! interpolate the coefficients along the line of constant x1. These 
+    ! computations are independent from one another. A little problem is
+    ! the redundancy in the computation of the cell and offset along each
+    ! of the constant x2 lines, as this will be done by each call of 
+    ! interpolate_value_aux(). This suggests that the proper refactoring
+    ! of this function would have the cell and offset as arguments.
+    coeffs_line_jm1 => spline%coeffs(1:num_pts_x1+2, cell-1)
+    coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
+    coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
+    coeffs_line_jp2 => spline%coeffs(1:num_pts_x1+2, cell+2)
+    cim1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jm1)
+    ci        = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_j  )
+    cip1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp1)
+    cip2      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp2)
+    t1        = 3.0_f64*ci
+    t3        = 3.0_f64*cip1
+    t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+    t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    interpolate_x1_derivative_2D = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function interpolate_x1_derivative_2D
+
+  ! interpolate_x2_derivative_2D(): given discrete data f(i,j) that are
+  ! described by a 2-dimensional cubic spline fit s(x1,x2), where the
+  ! continuous variables x1 and x2 are within the original limits of i and j
+  ! respectively, interpolate_x1_derivative() returns the value of
+  !
+  !         partial s
+  !       -------------
+  !         partial x2
+  !
+  ! evaluated at the point (x1,x2). (Sorry for the ambiguous use of x1)
+  function interpolate_x2_derivative_2D( x1, x2, spline )
+    sll_real64                          :: interpolate_x2_derivative_2D
+    intrinsic                           :: associated, int, real
+    sll_real64, intent(in)              :: x1
+    sll_real64, intent(in)              :: x2
+    type(sll_spline_2D), pointer        :: spline
+    sll_real64                          :: rh1   ! reciprocal of cell spacing
+    sll_real64                          :: rh2   ! reciprocal of cell spacing
+    sll_int32                           :: cell
+    sll_real64                          :: dx
+    sll_real64                          :: cdx  ! 1-dx
+    sll_real64                          :: t0   ! temp/scratch variables ...
+    sll_real64                          :: t1
+    sll_real64                          :: t2
+    sll_real64                          :: t3
+    sll_real64                          :: cim1 ! C_(i-1)
+    sll_real64                          :: ci   ! C_i
+    sll_real64                          :: cip1 ! C_(i+1)
+    sll_real64                          :: cip2 ! C_(i+2)
+    sll_real64                          :: x1_min
+    sll_real64                          :: x2_min
+    sll_int32                           :: num_pts_x1
+    sll_int32                           :: num_pts_x2
+    sll_real64, dimension(:), pointer   :: coeffs_line_jm1
+    sll_real64, dimension(:), pointer   :: coeffs_line_j
+    sll_real64, dimension(:), pointer   :: coeffs_line_jp1
+    sll_real64, dimension(:), pointer   :: coeffs_line_jp2
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
+    SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
+    SLL_ASSERT( associated(spline) )
+    x1_min     = spline%x1_min
+    x2_min     = spline%x2_min
+    num_pts_x1 = spline%num_pts_x1
+    num_pts_x2 = spline%num_pts_x2
+    rh1        = spline%x1_rdelta
+    rh2        = spline%x2_rdelta
+    ! find the cell and offset for x2
+    t0         = (x2-x2_min)*rh2
+    cell       = int(t0) + 1
+    dx         = t0 - real(cell-1)
+    cdx        = 1.0_f64 - dx
+    !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+    ! interpolate the coefficients along the line of constant x1. These 
+    ! computations are independent from one another. A little problem is
+    ! the redundancy in the computation of the cell and offset along each
+    ! of the constant x2 lines, as this will be done by each call of 
+    ! interpolate_value_aux(). This suggests that the proper refactoring
+    ! of this function would have the cell and offset as arguments.
+    coeffs_line_jm1 => spline%coeffs(1:num_pts_x1+2, cell-1)
+    coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
+    coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
+    coeffs_line_jp2 => spline%coeffs(1:num_pts_x1+2, cell+2)
+    cim1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jm1)
+    ci        = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_j  )
+    cip1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp1)
+    cip2      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp2)
+    t1 = 2.0_f64*(cim1 - 2.0_f64*ci + cip1)
+    t2 = -cim1 + 3.0_f64*(ci - cip1) + cip2
+    t3 =  cip1 - cim1
+    interpolate_x2_derivative_2D = 0.5_f64*rh2*(dx*(t1 + dx*t2) + t3)
+  end function interpolate_x2_derivative_2D
 
 
   subroutine delete_spline_2D( spline )
