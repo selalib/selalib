@@ -141,6 +141,11 @@ module sll_mesh_types
      type(vec2), dimension(:,:), pointer :: data
   end type field_2D_vec2
 
+  type field_2D_vec3
+     type(mesh_descriptor_2D), pointer :: descriptor
+     type(vec3), dimension(:,:), pointer :: data
+  end type field_2D_vec3
+
   !This type is defined only in splitted meshes case
   type field_4D_vec1
      !type(mesh_descriptor_4D), pointer :: descriptor
@@ -175,7 +180,7 @@ contains   ! *****************************************************************
     SLL_ALLOCATE(new_geometry_2D,ierr)
 
     ! cartesian coordinates correspond to identity mapping
-    if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
+    if ((trim(name)=='identity').or.(trim(name)=='cartesian')) then
        new_geometry_2D%x1         => identity_x1
        new_geometry_2D%x2         => identity_x2
        new_geometry_2D%eta1       => identity_eta1
@@ -350,7 +355,7 @@ contains   ! *****************************************************************
     type(field_2D_vec2), pointer :: f2Dv2
     sll_int32                    :: ierr
     if( .not. (associated(f2Dv2))) then
-       write (*,'(a)') 'ERROR: delete_field_1D_vec1(), not associated argument.'
+       write (*,'(a)') 'ERROR: delete_field_2D_vec2(), not associated argument.'
        STOP
     end if
     nullify(f2Dv2%descriptor)
@@ -358,6 +363,27 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(f2Dv2, ierr)
   end subroutine delete_field_2D_vec2
 
+  function new_field_2D_vec3( mesh_descriptor )
+    type(field_2D_vec3), pointer      :: new_field_2D_vec3
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor
+    sll_int32                         :: ierr
+    SLL_ASSERT(associated(mesh_descriptor))
+    SLL_ALLOCATE(new_field_2D_vec3, ierr)
+    new_field_2D_vec3%descriptor => mesh_descriptor
+    SLL_ALLOCATE(new_field_2D_vec3%data(1:mesh_descriptor%nc_eta1+1,1:mesh_descriptor%nc_eta2+1),ierr)
+  end function new_field_2D_vec3
+
+  subroutine delete_field_2D_vec3( f2Dv3 )
+    type(field_2D_vec3), pointer :: f2Dv3
+    sll_int32                    :: ierr
+    if( .not. (associated(f2Dv3))) then
+       write (*,'(a)') 'ERROR: delete_field_2D_vec3(), not associated argument.'
+       STOP
+    end if
+    nullify(f2Dv3%descriptor)
+    SLL_DEALLOCATE(f2Dv3%data, ierr)
+    SLL_DEALLOCATE(f2Dv3, ierr)
+  end subroutine delete_field_2D_vec3
 
 !#define NEW_FIELD_CONSTRUCTOR_FUNCTION( func_name, descriptor_t, field_t )
 !  function func_name( mesh_descriptor )

@@ -53,8 +53,8 @@ use sll_xmf_io
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-
 implicit none
+
 
 private
 enum, bind(C)
