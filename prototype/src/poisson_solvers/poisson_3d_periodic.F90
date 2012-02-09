@@ -282,7 +282,7 @@ contains
     SLL_DEALLOCATE_ARRAY(tmp1, ierr)
 
     SLL_ALLOCATE(psi(mx/npx, my/npy, mz/npz), ierr)
-    psi = b
+    psi = real(b, f64)
     
     return
     
