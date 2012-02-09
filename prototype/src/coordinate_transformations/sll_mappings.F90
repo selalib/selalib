@@ -36,36 +36,6 @@ module sll_coordinate_transformation
      enumerator :: PERIODIC_MAP_BC = 0, HERMITE_MAP_BC = 1
   end enum
 
-  ! Interface to represent the basic signature of all the mappings used
-  ! in the 2D case. Transformations should be of the form 
-  !                  x1 = x1(eta1, eta2)
-  !                  x2 = x2(eta1, eta2)
-  abstract interface
-     function two_arg_scalar_function( eta1, eta2 )
-       use sll_working_precision
-       sll_real64 :: two_arg_scalar_function
-       sll_real64, intent(in) :: eta1
-       sll_real64, intent(in) :: eta2
-     end function two_arg_scalar_function
-  end interface
-
-  abstract interface
-     function two_arg_message_passing_func( map, eta1, eta2 )
-       use sll_working_precision
-       sll_real64 :: two_arg_message_passing_func
-       type(map_2D), pointer  :: map
-       sll_real64, intent(in) :: eta1
-       sll_real64, intent(in) :: eta2
-     end function two_arg_message_passing_func
-  end interface
-
-  ! Here we try to represent the Jacobian matrix an actual 2D array of
-  ! functions. But since fortran does not allow arrays of pointers, here
-  ! we define a special type that can be used as an array element.
-  type jacobian_matrix_element
-     procedure(two_arg_scalar_function), pointer, nopass :: f
-  end type jacobian_matrix_element
-
   ! ---------------------------------------------------------------------
   !
   !                  MESH TRANSFORMATIONS: mapping
@@ -115,9 +85,41 @@ module sll_coordinate_transformation
      sll_real64, dimension(:,:), pointer                    :: jacobians_c
      type(sll_spline_2D), pointer                           :: x1_spline
      type(sll_spline_2D), pointer                           :: x2_spline
-     procedure(two_arg_message_passing_func), pointer, pass :: jacobian_func
+     procedure(two_arg_message_passing_func),pointer,nopass :: jacobian_func
   end type map_2D
 
+  ! Interface to represent the basic signature of all the mappings used
+  ! in the 2D case. Transformations should be of the form 
+  !                  x1 = x1(eta1, eta2)
+  !                  x2 = x2(eta1, eta2)
+  abstract interface
+     function two_arg_scalar_function( eta1, eta2 )
+       use sll_working_precision
+       sll_real64 :: two_arg_scalar_function
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
+     end function two_arg_scalar_function
+  end interface
+
+  abstract interface
+     function two_arg_message_passing_func( map, eta1, eta2 )
+       use sll_working_precision
+       import     :: map_2D
+       sll_real64 :: two_arg_message_passing_func
+       type(map_2D), pointer  :: map
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
+     end function two_arg_message_passing_func
+  end interface
+
+  ! Here we try to represent the Jacobian matrix an actual 2D array of
+  ! functions. But since fortran does not allow arrays of pointers, here
+  ! we define a special type that can be used as an array element.
+  type jacobian_matrix_element
+     procedure(two_arg_scalar_function), pointer, nopass :: f
+  end type jacobian_matrix_element
+
+#if 0
   ! ---------------------------------------------------------------------
   !
   !   MAPPED MESHES: i.e. a mesh + coordinate transformation
@@ -131,9 +133,10 @@ module sll_coordinate_transformation
      type(sll_spline_2D), pointer        :: u_spline_2D  ! u is for uniform
      type(map_2D), pointer           :: map
   end type mapped_mesh_2D_scalar
+#endif
 
   interface delete
-     module procedure delete_mesh_2D_scalar, delete_map_2D
+     module procedure delete_map_2D
   end interface
 
 contains
@@ -163,18 +166,23 @@ contains
     type(map_2D), pointer :: map
     sll_real64            :: eta1
     sll_real64            :: eta2
-    jacobian_2D = map%jacobian_f(eta1, eta2)
+    ! The following looks extremely ugly but one has to be aware that
+    ! in principle, the 'map' argument to jacobian_func could be a different
+    ! map than the host object. This is not entirely solved by changing
+    ! the atribute of the procedure pointer to pass(map), as we would have
+    ! the problem that we intend to pass a map pointer, not the map itself.
+    jacobian_2D = (map%jacobian_func(map, eta1, eta2))
   end function jacobian_2D
 
   function jacobian_2D_analytic( map, eta1, eta2 )
-    sll_real64            :: jacobian_2D_analytic
-    type(map_2D), pointer :: map
-    sll_real64            :: eta1
-    sll_real64            :: eta2
-    sll_real64            :: j11
-    sll_real64            :: j12
-    sll_real64            :: j21
-    sll_real64            :: j22
+    sll_real64             :: jacobian_2D_analytic
+    type(map_2D), pointer  :: map
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
     j11 = (map%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (map%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (map%j_matrix(2,1)%f( eta1, eta2 ))
@@ -183,14 +191,14 @@ contains
   end function jacobian_2D_analytic
 
   function jacobian_2D_discrete( map, eta1, eta2 )
-    sll_real64            :: jacobian_2D_discrete
-    type(map_2D), pointer :: map
-    sll_real64            :: eta1
-    sll_real64            :: eta2
-    sll_real64            :: j11
-    sll_real64            :: j12
-    sll_real64            :: j21
-    sll_real64            :: j22
+    sll_real64             :: jacobian_2D_discrete
+    type(map_2D), pointer  :: map
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
     j11 = interpolate_x1_derivative_2D( eta1, eta2, map%x1_spline )
     j12 = interpolate_x2_derivative_2D( eta1, eta2, map%x1_spline )
     j21 = interpolate_x1_derivative_2D( eta1, eta2, map%x2_spline )
@@ -203,6 +211,8 @@ contains
   ! optional parameters that it takes, much of this in account of the 
   ! splines that it initializes, which take plenty of optional parameters
   ! themselves. This is not desirable and should be reassessed critically.
+  !
+  ! We should offer the possibility to pass the jacobian function directly.
   subroutine initialize_map_2D( &
     map,            &
     npts1,          &
@@ -294,10 +304,10 @@ contains
     x1c = present(x1_cell)
     x2c = present(x2_cell)
     jc  = present(jacobians_cell)
-    x1_eta1_given = present(eta1_bc_type_x1)
-    x1_eta2_given = present(eta2_bc_type_x1)
-    x2_eta1_given = present(eta1_bc_type_x2)
-    x2_eta2_given = present(eta2_bc_type_x2)
+    x1_eta1_bc_given = present(eta1_bc_type_x1)
+    x1_eta2_bc_given = present(eta2_bc_type_x1)
+    x2_eta1_bc_given = present(eta1_bc_type_x2)
+    x2_eta2_bc_given = present(eta2_bc_type_x2)
 
     ! Check argument consistency
     !
@@ -348,8 +358,8 @@ contains
              STOP
           end if
           if( &
-             x1_eta1_given .or. x1_eta2_given .or. &
-             x2_eta1_given .or. x2_eta2_given ) then
+             x1_eta1_bc_given .or. x1_eta2_bc_given .or. &
+             x2_eta1_bc_given .or. x2_eta2_bc_given ) then
              print *, 'ERROR, initialize_map_2D(): ANALYTIC_MAPs ', &
                   'do not need the specification of the boundary ', &
                   'conditions for the x1 or x2 transformations.'
@@ -372,7 +382,7 @@ contains
                   'do not need x1_func and x2_func parameters.'
              STOP
           end if
-          if( jn .and. x1n .and. x2n ) then
+          if( x1n .and. x2n ) then
              node_data_given = .true.
           else
              node_data_given = .false.
@@ -404,22 +414,7 @@ contains
                'then the other must be passed as well.'
              STOP
           end if
-          ! 2. Either or both pairs of x1 and x2 data must be present
-          if( (.not.((x1n.and.x2n) .or. (x1c.and.x2c))) .eqv. .false. ) then
-             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
-                  'either both node-based arrays or both cell-based arrays ', &
-                  'that represent the transformation must be present.'
-             STOP
-          end if
-          ! 3. Either the node- or cell-based jacobians must be passed. Should
-          !    this be tied to what combination of node- or cell-based arrays
-          !    are passed too?
-          if( (jn .or. jc) .eqv. .false. ) then
-             print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP case: ', &
-                  'Either the node- or cell-based jacobians must be passed.'
-             STOP
-          end if
-          ! 4. Check that the discrete representation of the transformation is
+          ! 2. Check that the discrete representation of the transformation is
           !    consistent with the size of the 2D array.
           if( &
              (size(x1_node,1) .lt. npts1) .or. &
@@ -440,6 +435,17 @@ contains
                      'npts1 or npts2.'
                 STOP
              end if
+          else
+             if( &
+                (.not.x1_eta1_bc_given) .or. (.not.x1_eta2_bc_given) .or. &
+                (.not.x2_eta1_bc_given) .or. (.not.x2_eta2_bc_given)  ) then
+                print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP ', &
+                     'case: if discrete values for the jacobian are not ', &
+                     'provided, then the specification of what boundary ', &
+                     'conditions are wished for become necessary. i.e.: ', &
+                     'pass eta1_bc_type_x1, etc.'
+                STOP
+             end if
           end if
           if( jc .eqv. .true. ) then
              if( &
@@ -452,11 +458,11 @@ contains
                 STOP
              end if
           end if
-          ! 5. The discrete case requires the user to specify all the 
+          ! 3. The discrete case requires the user to specify all the 
           !    boundary conditions for the x1 and x2 transformations.
           if( &
-             (.not. x1_eta1_given) .or. (.not. x1_eta2_given) .or. &
-             (.not. x2_eta1_given) .or. (.not. x2_eta2_given) ) then
+             (.not. x1_eta1_bc_given) .or. (.not. x1_eta2_bc_given) .or. &
+             (.not. x2_eta1_bc_given) .or. (.not. x2_eta2_bc_given) ) then
              print *, 'ERROR, initialize_map_2D(), DISCRETE_MAP ', &
                   'case: it is required to pass all the boundary condition ', &
                   'specifications for the x1 and x2 transformations. '
@@ -467,6 +473,14 @@ contains
 
     map%num_pts_1 = npts1
     map%num_pts_2 = npts2
+
+    ! Allocate the arrays for precomputed jacobians.
+    SLL_ALLOCATE(map%jacobians_n(npts1,npts2), ierr)
+    SLL_ALLOCATE(map%jacobians_c(npts1-1, npts2-1), ierr)
+
+    ! Allocation for x1 and x2 at nodes, needed regardless of the type of map
+    SLL_ALLOCATE(map%x1_node(npts1,npts2), ierr)
+    SLL_ALLOCATE(map%x2_node(npts1,npts2), ierr)
 
     ! Start filling out the fields and allocating the object's memory.
     !
@@ -487,25 +501,30 @@ contains
     ! ANALYTIC) use the same logic to answer questions like x1_node(map, i, j).
     select case (map_type)
        case (ANALYTIC_MAP)
-          SLL_ALLOCATE(map%x1_node(npts1,npts2), ierr)
-          SLL_ALLOCATE(map%x2_node(npts1,npts2), ierr)
+  
           SLL_ALLOCATE(map%x1_cell(npts1-1, npts2-1), ierr)
           SLL_ALLOCATE(map%x2_cell(npts1-1, npts2-1), ierr)
+
           ! Fill the jacobian matrix
           SLL_ALLOCATE(map%j_matrix(2,2), ierr)
           map%j_matrix(1,1)%f => j11_func
           map%j_matrix(1,2)%f => j12_func
           map%j_matrix(2,1)%f => j21_func
           map%j_matrix(2,2)%f => j22_func
+          map%jacobian_func =>jacobian_2D_analytic
+
           ! Assign the transformation functions
           map%x1_func => x1_func
           map%x1_func => x2_func
+
           ! Allocate the arrays for precomputed jacobians.
           SLL_ALLOCATE(map%jacobians_n(npts1,npts2), ierr)
           SLL_ALLOCATE(map%jacobians_c(npts1-1, npts2-1), ierr)
+
           ! Fill out the jacobians for the points in the uniform mesh.
           delta_1 = 1.0_f64/(npts1 - 1)
           delta_2 = 1.0_f64/(npts2 - 1)
+
           ! Fill the values at the nodes
           do j=0, npts2 - 1
              do i=0, npts1 - 1
@@ -513,9 +532,10 @@ contains
                 eta_2 = real(j,f64)*delta_2
                 map%x1_node(i+1,j+1) = x1_func(eta_1, eta_2)
                 map%x2_node(i+1,j+1) = x2_func(eta_1, eta_2)
-                map%jacobians_n(i+1,j+1) = jacobian_2D( map, eta_1, eta_2 )
+                map%jacobians_n(i+1,j+1) = (map%jacobian_func(map,eta_1,eta_2))
              end do
           end do
+
           ! Fill the values at the mid-point of the cells
           do j=0, npts2 - 2
              do i=0, npts1 - 2
@@ -523,7 +543,7 @@ contains
                 eta_2 = delta_2*(real(j,f64) + 0.5_f64)
                 map%x1_cell(i+1,j+1) = x1_func(eta_1, eta_2)
                 map%x2_cell(i+1,j+1) = x2_func(eta_1, eta_2)
-                map%jacobians_c(i+1,j+1) = jacobian_2D( map, eta_2, eta_2 )
+                map%jacobians_c(i+1,j+1) = (map%jacobian_func(map,eta_1,eta_2))
              end do
           end do
 
@@ -537,8 +557,23 @@ contains
           SLL_ALLOCATE(map%x1_node(npts1,npts2), ierr)
           SLL_ALLOCATE(map%x2_node(npts1,npts2), ierr)
 
-          ! translate the enumerators from the map to the enumerators that
-          ! the splines recognize
+          ! initialize the local arrays. Note that since the map has its
+          ! own copies, it owns this information locally and will destroy
+          ! this information when the object is deleted. The caller is
+          ! thus responsible for deallocating the arrays that were passed as
+          ! arguments.
+          do j=1, npts2
+             do i=1, npts1
+                map%x1_node(i,j) = x1_node(i,j)
+                map%x2_node(i,j) = x2_node(i,j)
+             end do
+          end do
+
+          ! The data from the discrete transformation is used to build
+          ! the splines needed to compute the jacobian at any point.
+          !
+          ! First translate the enumerators from the map to the enumerators 
+          ! that the splines recognize.
           select case ( eta1_bc_type_x1 )
              case (PERIODIC_MAP_BC)
                 x1_eta1_bc = PERIODIC_SPLINE
@@ -583,7 +618,6 @@ contains
                 STOP
           end select
 
-
           ! allocate the splines for computing the jacobian terms
           map%x1_spline => new_spline_2D( &
                npts1, &
@@ -598,7 +632,7 @@ contains
                eta1_max_slope_x1, &
                eta2_min_slope_x1, &
                eta2_max_slope_x1 )
-
+          
           map%x2_spline => new_spline_2D( &
                npts1, &
                npts2, &
@@ -613,38 +647,40 @@ contains
                eta2_min_slope_x2, &
                eta2_max_slope_x2 )
 
-          ! initialize the local arrays. Note that since the map has its
-          ! own copies, it owns this information locally and will destroy
-          ! this information when the object is deleted. The caller is
-          ! thus responsible for deallocating the arrays that were passed as
-          ! arguments.
-          do j=1, npts2
-             do i=1, npts1
-                map%x1_node(i,j) = x1_node(i,j)
-                map%x2_node(i,j) = x2_node(i,j)
-             end do
-          end do
-
           ! Compute the spline coefficients
-          call compute_spline_2D( map%x1, map%x1_spline )
-          call compute_spline_2D( map%x2, map%x2_spline )
+          call compute_spline_2D( map%x1_node, map%x1_spline )
+          call compute_spline_2D( map%x2_node, map%x2_spline )
 
-          ! copy the node-based jacobians if available
+          ! Initialize the jacobian function with the right entity
+          map%jacobian_func =>jacobian_2D_discrete
+
+          ! The splines contain all the information to compute the
+          ! jacobians everywhere; however, here we explore assigning
+          ! the jacobians-at-the-nodes array with the values provided
+          ! by the user if available. If there are discrepancies between
+          ! the user-provided values and the predictions from the splines,
+          ! then this may itself be a way to look for errors.
+          !
+          ! Copy the values of the jacobians at the nodes is user given:
           if( jn .eqv. .true. ) then
              do j=1, npts2
                 do i=1, npts1
                    map%jacobians_n(i,j) = jacobians_node(i,j)
                 end do
              end do
-          end if
-          ! copy the cell-based jacobians if available
-          if( jc .eqv. .true. ) then
-             do j=1, npts2 - 1
-                do i=1, npts1 - 1
-                   map%jacobians_c(i,j) = jacobians_cell(i,j)
+          else
+
+         ! Fill the jacobian values at the nodes calculated from the splines
+             do j=0, npts2 - 1
+                do i=0, npts1 - 1
+                   eta_1 = real(i,f64)*delta_1
+                   eta_2 = real(j,f64)*delta_2
+                   map%jacobians_n(i+1,j+1) = &
+                        (map%jacobian_func(map,eta_1,eta_2)) 
                 end do
              end do
           end if
+
           ! copy the cell-based transformation arrays if available
           if( (x1c .and. x2c) .eqv. .true. ) then
              SLL_ALLOCATE(map%x1_cell(npts1-1, npts2-1), ierr)
@@ -656,6 +692,14 @@ contains
                 end do
              end do
           end if
+          ! copy the cell-based jacobians if available
+          if( jc .eqv. .true. ) then
+             do j=1, npts2 - 1
+                do i=1, npts1 - 1
+                   map%jacobians_c(i,j) = jacobians_cell(i,j)
+                end do
+             end do
+          end if
        end select
   end subroutine initialize_map_2D
 
@@ -663,6 +707,9 @@ contains
   subroutine delete_map_2D( map )
     type(map_2D), pointer :: map
     sll_int32             :: ierr
+    if( .not. associated(map) ) then
+       print *, 'ERROR, delete_map_2D: passed map pointer is not associated.'
+    end if
     if( associated(map%x1_node) ) then
        SLL_DEALLOCATE( map%x1_node, ierr )
     end if
@@ -675,11 +722,15 @@ contains
     if( associated(map%x2_cell) ) then
        SLL_DEALLOCATE( map%x2_cell, ierr )
     end if
-    SLL_DEALLOCATE( map%j_matrix, ierr )
+    if( associated(map%j_matrix) ) then
+       SLL_DEALLOCATE( map%j_matrix, ierr )
+    end if
     SLL_DEALLOCATE( map%jacobians_n, ierr )
     SLL_DEALLOCATE( map%jacobians_c, ierr )
-    call delete(map%x1_spline, ierr)
-    call delete(map%x2_spline, ierr)
+    if( map%map_type .eq. DISCRETE_MAP ) then
+       call delete(map%x1_spline)
+       call delete(map%x2_spline)
+    end if
     SLL_DEALLOCATE( map, ierr )
   end subroutine delete_map_2D
 
@@ -776,7 +827,7 @@ contains
     map_2d_jacobian_cell = map%jacobians_c(i,j)
   end function map_2d_jacobian_cell
 
-
+#if 0
   ! -------------------------------------------------------------------------
   !
   !     FUNCTIONS AND SUBROUTINES FOR THE MAPPED MESH_2D TYPE.
@@ -944,5 +995,5 @@ contains
     type(mapped_mesh_2D_scalar), pointer       :: mesh
     mesh_2D_data => mesh%data
   end function mesh_2D_data
-
+#endif
 end module sll_coordinate_transformation
