@@ -37,7 +37,7 @@ program spline_tester
   sll_real64                             :: rnd
   sll_real64                             :: reduction
   sll_int32, parameter                   :: nbtest = 12
-  
+  logical                                :: test_passed
   print *, 'Test of the 1D spline: '
   ok = 1
   do i_test=1,nbtest     
@@ -94,10 +94,30 @@ program spline_tester
   print *, 'sum of spline values = ', reduction
 #undef NUM_KNOTS
 #undef SPLINE_DEGREE
-  
+
+  ! The following tests are currently not included in determining the
+  ! value of the OK flag, this should be fixed. The OK flag should be a
+  ! logical variable...
+
+  call interpolator_tester_2d( &
+       coscos, &
+       msincos, &
+       interpolate_x1_derivative_2D, &
+       test_passed )
+
+  call interpolator_tester_2d( &
+       coscos, &
+       mcossin, &
+       interpolate_x2_derivative_2D, &
+       test_passed )
+
   if (ok==1) then
      print *, ' '
      print *, 'Splines unit test: PASS'
+     print *, ' '
+  else
+     print *, ' '
+     print *, 'Splines unit test: FAIL' ! YES BUT WHERE???!!!
      print *, ' '
   endif
   

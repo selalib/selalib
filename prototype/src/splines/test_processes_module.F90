@@ -21,6 +21,27 @@ module test_processes_module
   use util_constants
     use test_func_module
   implicit none
+
+  abstract interface
+     function fxy (x,y)
+       use sll_working_precision
+       sll_real64 :: fxy
+       sll_real64, intent(in) :: x
+       sll_real64, intent(in) :: y
+     end function fxy
+  end interface
+
+  abstract interface
+     function spline_interpolator(  x, y, spline )
+       use sll_working_precision
+       use sll_splines
+       sll_real64 :: spline_interpolator
+       sll_real64, intent(in) :: x
+       sll_real64, intent(in) :: y
+       type(sll_spline_2D), pointer :: spline
+     end function spline_interpolator
+  end interface
+
 contains
 
 
@@ -350,5 +371,88 @@ contains
     SLL_DEALLOCATE_ARRAY(coordinates_j,err)
 
   end subroutine test_process_2d
+
+  subroutine interpolator_tester_2d( &
+    func_2d, &            ! function to generate input data array
+    partial_x1, &         ! function to generate 'correct answer' array
+    interpolation_func, & ! function to test
+    test_passed )
+    
+    procedure(fxy)                          :: func_2d   
+    procedure(fxy)                          :: partial_x1 
+    procedure(spline_interpolator)          :: interpolation_func
+    logical, intent(out)                    :: test_passed
+    sll_real64, allocatable, dimension(:,:) :: data_in
+    sll_real64, allocatable, dimension(:,:) :: correct_data_out
+    sll_int32  :: ierr, i, j
+    sll_real64 :: h1, h2 ! cell spacings
+    sll_real64 :: x1, x2
+    sll_real64 :: acc, val
+    type(sll_spline_2d), pointer :: spline
+    sll_real64 :: average_error
+    h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
+    h2 = (X2MAX - X2MIN)/real(NPX2-1,f64)
+    acc = 0.0_f64
+
+    ! allocate arrays and initialize them
+    SLL_ALLOCATE(data_in(NPX1,NPX2),ierr)
+    SLL_ALLOCATE(correct_data_out(NPX1,NPX2), ierr)
+    do j=0,NPX2-1
+       do i=0,NPX1-1
+          x1 = X1MIN + real(i,f64)*h1 
+          x2 = X2MIN + real(j,f64)*h2
+          data_in(i+1,j+1) = func_2d(x1,x2)
+          correct_data_out(i+1,j+1) = partial_x1(x1,x2)
+       end do
+    end do
+
+    spline => new_spline_2D( &
+      NPX1, &
+      NPX2, &
+      X1MIN, &
+      X1MAX, &
+      X2MIN, &
+      X2MAX, &
+      PERIODIC_SPLINE, &
+      PERIODIC_SPLINE )
+
+    call compute_spline_2D(data_in,spline)
+
+    do j=0,NPX2-1
+       do i=0,NPX1-1
+          x1 = X1MIN + real(i,f64)*h1 
+          x2 = X2MIN + real(j,f64)*h2
+          val = interpolation_func(x1,x2,spline)
+          acc = acc + abs(val-correct_data_out(i+1,j+1))  
+!          print *, '(i,j) = ',i+1,j+1, 'correct value = ', &
+!               correct_data_out(i+1,j+1), '. Calculated = ', val     
+       end do
+    end do
+    average_error = acc/(real(NPX1*NPX2,f64))
+    print *, 'Average error = ', average_error
+    if( average_error .le. 1.0e-5 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+    end if
+  end subroutine interpolator_tester_2d
+
+  function coscos(x,y)
+    sll_real64 :: coscos
+    sll_real64, intent(in) :: x, y
+    coscos = cos(x)*cos(y)
+  end function coscos
+
+  function msincos(x,y)
+    sll_real64 :: msincos
+    sll_real64, intent(in) :: x, y
+    msincos = -cos(y)*sin(x)
+  end function msincos
+
+  function mcossin(x,y)
+    sll_real64 :: mcossin
+    sll_real64, intent(in) :: x, y
+    mcossin = -cos(x)*sin(y)
+  end function mcossin
 
 end module test_processes_module
