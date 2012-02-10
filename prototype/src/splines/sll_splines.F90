@@ -1505,10 +1505,10 @@ contains  ! ****************************************************************
     coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
     coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
     coeffs_line_jp2 => spline%coeffs(1:num_pts_x1+2, cell+2)
-    cim1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jm1)
-    ci        = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_j  )
-    cip1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp1)
-    cip2      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp2)
+    cim1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jm1)
+    ci        = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_j  )
+    cip1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jp1)
+    cip2      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jp2)
     t1 = 2.0_f64*(cim1 - 2.0_f64*ci + cip1)
     t2 = -cim1 + 3.0_f64*(ci - cip1) + cip2
     t3 =  cip1 - cim1
