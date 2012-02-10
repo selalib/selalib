@@ -203,6 +203,9 @@ contains
     j12 = interpolate_x2_derivative_2D( eta1, eta2, map%x1_spline )
     j21 = interpolate_x1_derivative_2D( eta1, eta2, map%x2_spline )
     j22 = interpolate_x2_derivative_2D( eta1, eta2, map%x2_spline )
+print *, 'jacobian_2D_discrete: '
+print *, j11, j12
+print *, j21, j22
     jacobian_2D_discrete = j11*j22 - j12*j21
   end function jacobian_2D_discrete
 
@@ -619,6 +622,7 @@ contains
           end select
 
           ! allocate the splines for computing the jacobian terms
+
           map%x1_spline => new_spline_2D( &
                npts1, &
                npts2, &
@@ -632,7 +636,7 @@ contains
                eta1_max_slope_x1, &
                eta2_min_slope_x1, &
                eta2_max_slope_x1 )
-          
+
           map%x2_spline => new_spline_2D( &
                npts1, &
                npts2, &
@@ -641,7 +645,7 @@ contains
                0.0_f64, &
                1.0_f64, &
                x2_eta1_bc, &
-               x2_eta1_bc, &
+               x2_eta2_bc, &
                eta1_min_slope_x2, &
                eta1_max_slope_x2, &
                eta2_min_slope_x2, &
