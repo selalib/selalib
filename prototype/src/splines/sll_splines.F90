@@ -856,7 +856,7 @@ contains  ! ****************************************************************
           present(x2_min_slope) .or. present(x2_max_slope) ) then
 
           print *, 'new_spline_2D(): it is not allowed to specify the end', &
-               'slopes in the case of periodic boundary conditions.', &
+               'slopes in the case of doubly periodic boundary conditions.', &
                'Exiting program...'
           STOP 'new_spline_2D'
        else
@@ -870,8 +870,9 @@ contains  ! ****************************************************************
     case ( 6 ) 
        ! Hermite condition in X1 and periodic in X2 
        if( present(x2_min_slope) .or. present(x2_max_slope) ) then
-          print *, 'new_spline_2D(): it is not allowed to specify the end', &
-               'slopes in the case of periodic boundary conditions.', &
+          print *, 'new_spline_2D(): hermite-periodic case, it is not ', &
+               'allowed to specify the end slopes in the case of periodic ', &
+               'boundary conditions.', &
                'Exiting program...'
           STOP 'new_spline_2D'
        end if
@@ -894,7 +895,8 @@ contains  ! ****************************************************************
     case( 9 )
        ! Periodic in X1 and Hermite in X2
        if( present(x1_min_slope) .or. present(x1_max_slope) ) then
-          print *, 'new_spline_2D(): it is not allowed to specify the end', &
+          print *, 'new_spline_2D(): periodic-hermite case, it is not ', &
+               'allowed to specify the end ', &
                'slopes in the case of periodic boundary conditions.', &
                'Exiting program...'
           STOP 'new_spline_2D'
