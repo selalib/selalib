@@ -233,7 +233,7 @@ contains
     
     b = b / d
     
-    ! Inverse FFT in z-direction
+    ! Inverse FFTs in z-direction
     p => new_plan_c2c_1d( mz, b(1,1,:), b(1,1,:), FFT_INVERSE )
     do j=1,my/npy
        do i=1,mx/npx
@@ -242,7 +242,7 @@ contains
     enddo
     call delete(p)
 
-    ! Inverse FFT in y-direction
+    ! Inverse FFTs in y-direction
     e1 = e/2
     e3 = e - e1
     npx = 2**e1
@@ -262,7 +262,7 @@ contains
     call delete(p)
     SLL_DEALLOCATE_ARRAY(tmp1, ierr)
 
-    ! Inverse FFT in x-direction
+    ! Inverse FFTs in x-direction
     e2 = e/2
     e3 = e - e2
     npx = 1
