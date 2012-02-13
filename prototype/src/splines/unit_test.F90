@@ -56,13 +56,13 @@ program spline_tester
 
   ! Test with impulse functions
   print *, '***************************************************'
-  print *, 'Test of the 1D spline with impulse fonctions: '
+  print *, 'Test of the 1D spline with impulse functions: '
   do i_test=13,NP+12     
      call test_process_1d(i_test, ok)     
   enddo
 
   print *, '***************************************************'
-  print *, 'Test of the 2D spline with impulse fonctions: '
+  print *, 'Test of the 2D spline with impulse functions: '
   do j_test=13,NPX2+12     
      do i_test=13,NPX1+12
         call test_process_2d(i_test, j_test, ok)
@@ -109,6 +109,14 @@ program spline_tester
        coscos, &
        mcossin, &
        interpolate_x2_derivative_2D, &
+       test_passed )
+
+
+
+  call test_2d_spline_hrmt_prdc( &
+       polar_x, &
+       deriv1_polar_x, &
+       deriv1_polar_x, &
        test_passed )
 
   if (ok==1) then

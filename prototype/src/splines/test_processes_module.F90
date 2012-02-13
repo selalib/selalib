@@ -19,7 +19,7 @@ module test_processes_module
   use sll_splines
   use numeric_constants
   use util_constants
-    use test_func_module
+  use test_func_module
   implicit none
 
   abstract interface
@@ -87,28 +87,15 @@ contains
     print *, 'proceed to allocate the spline...'
     sp1 =>  new_spline_1D( NP, XMIN, XMAX, PERIODIC_SPLINE )
     call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
-    sp2 =>  new_spline_1D( NP, XMIN, XMAX, HERMITE_SPLINE, fprime(XMIN, i_test), fprime(XMAX, i_test) )
+    sp2 =>  new_spline_1D( &
+         NP, &
+         XMIN, &
+         XMAX, &
+         HERMITE_SPLINE, &
+         fprime(XMIN, i_test), &
+         fprime(XMAX, i_test) )
     call compute_spline_1D( data, HERMITE_SPLINE, sp2 )
     
-    print *, 'Contents of the spline 1:'
-    print *, sp1%xmin
-    print *, sp1%xmax
-    print *, sp1%delta
-    print *, sp1%rdelta
-    print *, sp1%bc_type
-#if PRINT_SPLINE_COEFFS
-    print *, sp1%coeffs(:)
-#endif
-    print *, 'Contents of the spline 2:'
-    print *, sp2%xmin
-    print *, sp2%xmax
-    print *, sp2%delta
-    print *, sp2%rdelta
-    print *, sp2%bc_type
-#if PRINT_SPLINE_COEFFS
-    print *, sp2%coeffs(:)
-#endif
-     
     print *, 'cumulative errors: '
     print *, 'periodic case, NP-1 points: '
     print *, 'interpolating individual values from 1 to NP-1:'
@@ -150,19 +137,8 @@ contains
     write (*,'(a,f20.15)') &
          'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0+XMIN,sp1)
      
-     
-#if TEST_INTEGRATION
-    print *, 'integrating the periodic spline...'
-    print *, gauss_legendre_integrate_1D( interpolate_value, sp1, XMIN, XMAX,4)
-#endif
-     
-#if PRINT_SPLINE_COEFFS
-    print *, 'spline coefficients: '
-    print *, sp1%coeffs(:)
-#endif
-     
     if ( (accumulator1/real(NP,f64) >= 1.0e-15) .or. &
-          (accumulator3/real(NP,f64) >= 1.0e-15) ) then 
+         (accumulator3/real(NP,f64) >= 1.0e-15) ) then 
        ok = 0
        print*, 'i_test =', i_test
        print *, 'splines unit test stopped by periodic spline1d test failure'
@@ -180,9 +156,6 @@ contains
     write (*,'(a,f20.15)') &
          'interpolated        = ', interpolate_value( (XMAX-XMIN)/4.0,sp2)
      print *, 'spline coefficients: '
-#if PRINT_SPLINE_COEFFS
-    print *, sp2%coeffs(:)
-#endif
      
     if ( (accumulator2/real(NP,f64) >= 1.0e-15) .or. &
          (accumulator4/real(NP,f64) >= 1.0e-15) ) then
@@ -286,12 +259,13 @@ contains
        stop
     endif
     ! Test the Hermite-periodic spline2d
+    !print *, 'Testing hermite-periodic spline. Test 1'
     sp2d_2 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          HERMITE_SPLINE, PERIODIC_SPLINE, &
-         x1_min_slope = fprime(X1MIN, i_test), &
-         x1_max_slope = fprime(X1MAX, i_test) )
+         const_slope_x1_min = fprime(X1MIN, i_test), &
+         const_slope_x1_max = fprime(X1MAX, i_test) )
     call compute_spline_2D_hrmt_prdc( data_2d, sp2d_2 )
     acc_2D = 0.0
     do j=1, NPX2
@@ -315,8 +289,8 @@ contains
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          PERIODIC_SPLINE, HERMITE_SPLINE, &
-         x2_min_slope = fprime(X2MIN, j_test), &
-         x2_max_slope = fprime(X2MAX, j_test) )
+         const_slope_x2_min = fprime(X2MIN, j_test), &
+         const_slope_x2_max = fprime(X2MAX, j_test) )
     call compute_spline_2D_prdc_hrmt( data_2d, sp2d_3 )
     acc_2D = 0.0
     do j=1, NPX2
@@ -436,6 +410,100 @@ contains
        test_passed = .false.
     end if
   end subroutine interpolator_tester_2d
+
+  subroutine test_2d_spline_hrmt_prdc( &
+    transform_func, &
+    eta1_min_slope_func, &
+    eta1_max_slope_func, &
+    test_passed )
+ 
+    procedure(fxy) :: transform_func
+    procedure(fxy) :: eta1_min_slope_func
+    procedure(fxy) :: eta1_max_slope_func
+    logical, intent(out) :: test_passed
+
+    sll_int32 :: i, j, ierr
+    sll_real64, dimension(:,:), allocatable :: data
+    sll_real64, dimension(:), allocatable   :: eta1_min_slopes
+    sll_real64, dimension(:), allocatable   :: eta1_max_slopes
+    sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
+    type(sll_spline_2D), pointer :: spline
+
+    h1 = 1.0_f64/(NPX1-1)
+    h2 = 1.0_f64/(NPX2-1)
+    ! allocate and fill out the data
+    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1 = real(i,f64)*h1
+          data(i+1,j+1) = transform_func(eta1,eta2)
+       end do
+    end do
+
+    ! allocate and fill out the bc data
+    SLL_ALLOCATE(eta1_min_slopes(NPX2),ierr)
+    SLL_ALLOCATE(eta1_max_slopes(NPX2),ierr)
+    do j=0,NPX2-1
+       eta1 = 0.0_f64
+       eta2 = real(j,f64)*h2
+       eta1_min_slopes(j+1) = eta1_min_slope_func(eta1,eta2)
+       eta1_max_slopes(j+1) = eta1_max_slope_func(eta1,eta2)
+    end do
+
+    spline =>new_spline_2D( &
+         NPX1, &
+         NPX2, &
+         0.0_f64, &
+         1.0_f64, &
+         0.0_f64, &
+         1.0_f64, &
+         HERMITE_SPLINE, &
+         PERIODIC_SPLINE, &
+         x1_min_slopes=eta1_min_slopes, &
+         x1_max_slopes=eta1_max_slopes )
+
+    call compute_spline_2D_hrmt_prdc( data, spline )
+
+    ! compare results
+    acc = 0.0_f64
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1     = real(i,f64)*h1
+          val      = interpolate_value_2D( eta1, eta2, spline )
+          true_val = transform_func( eta1, eta2 )
+          acc      = acc + abs(true_val - val)
+          if(abs(true_val-val).gt.8.9e-3) then
+             print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
+                  true_val, val
+             !print *, spline%coeffs(NPX1,j-1:j+1)
+          end if
+       end do
+    end do
+    ave_err = acc/real(NPX1*NPX2,f64) 
+    print *, 'test_2d_spline_hrmt_prdc results. Average error = ', ave_err
+    if( ave_err .le. 1.0e-5 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+    end if
+    SLL_DEALLOCATE_ARRAY(data,ierr)
+    SLL_DEALLOCATE_ARRAY(eta1_min_slopes,ierr)
+    SLL_DEALLOCATE_ARRAY(eta1_max_slopes,ierr)
+  end subroutine test_2d_spline_hrmt_prdc
+
+  function polar_x( eta1, eta2 )
+    sll_real64 :: polar_x
+    sll_real64, intent(in) :: eta1, eta2
+    polar_x = (r1 + eta1*(r2-r1))*cos(2*sll_pi*eta2)
+  end function polar_x
+
+  function deriv1_polar_x( eta1, eta2 )
+    sll_real64 :: deriv1_polar_x
+    sll_real64, intent(in) :: eta1, eta2
+    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
+  end function deriv1_polar_x
 
   function coscos(x,y)
     sll_real64 :: coscos
