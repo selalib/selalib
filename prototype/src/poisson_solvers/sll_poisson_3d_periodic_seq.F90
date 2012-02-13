@@ -44,15 +44,18 @@ contains
 
   function new_poisson_3d_periodic_plan(array)
 
-    sll_comp64, dimension(:,:,:) :: array
+    sll_comp64, dimension(:,:,:)             :: array
     sll_int32                                :: nx, ny, nz
     type(sll_fft_plan), pointer              :: px, py, pz
     type(sll_fft_plan), pointer              :: px_inv, py_inv, pz_inv
     type (poisson_3d_periodic_plan), pointer :: new_poisson_3d_periodic_plan
+    sll_int32                                :: ierr
 
     nx = size(array,1)
     ny = size(array,2)
     nz = size(array,3)
+
+    SLL_ALLOCATE(new_poisson_3d_periodic_plan, ierr)
 
     new_poisson_3d_periodic_plan%nx = nx
     new_poisson_3d_periodic_plan%ny = ny
@@ -109,8 +112,14 @@ contains
     do k=1,nz
        do j=1,ny
           do i=1,nx
-             hat_phi(i,j,k) = hat_rho(i,j,k) / ( 4*sll_pi * &
-                  ( ((i-1)/nx)**2 + ((j-1)/ny)**2 + ((k-1)/nz)**2 ) )
+             if ( (i==0) .and. (j==1) .and. (k==1) ) then
+                hat_phi(i,j,k) = 0.d0
+             else
+                hat_phi(i,j,k) = hat_rho(i,j,k) / ( 4*sll_pi**2 * &
+                     ( real(i-1,f64)**2/real(nx,f64)**2 + &
+                       real(j-1,f64)**2/real(ny,f64)**2 + &
+                       real(k-1,f64)**2/real(nz,f64)**2 ) )
+             endif
           enddo
        enddo
     enddo
@@ -147,6 +156,7 @@ contains
   subroutine delete_poisson_3d_periodic_plan(plan)
 
     type (poisson_3d_periodic_plan), pointer :: plan
+    sll_int32                                :: ierr
 
     ! Fixme: some error checking, whether the poisson pointer is associated
     ! for instance
@@ -159,6 +169,8 @@ contains
     call delete(plan%px_inv)
     call delete(plan%py_inv)
     call delete(plan%pz_inv)
+
+    SLL_DEALLOCATE(plan, ierr)
 
   end subroutine delete_poisson_3d_periodic_plan
 
