@@ -112,7 +112,7 @@ contains
     do k=1,nz
        do j=1,ny
           do i=1,nx
-             if ( (i==0) .and. (j==1) .and. (k==1) ) then
+             if ( (i==1) .and. (j==1) .and. (k==1) ) then
                 hat_phi(i,j,k) = 0.d0
              else
                 hat_phi(i,j,k) = hat_rho(i,j,k) / ( 4*sll_pi**2 * &
