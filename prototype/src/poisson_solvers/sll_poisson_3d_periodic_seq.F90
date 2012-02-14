@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: Feb. 10, 2012
+!> Last modification: Feb. 14, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -103,7 +103,7 @@ contains
     enddo
 
     ! FFTs in z-direction
-    do j=1,nx
+    do j=1,ny
        do i=1,nx
           call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
@@ -116,18 +116,18 @@ contains
                 hat_phi(i,j,k) = 0.d0
              else
                 hat_phi(i,j,k) = hat_rho(i,j,k) / ( 4*sll_pi**2 * &
-                     ( real(i-1,f64)**2/real(nx,f64)**2 + &
-                       real(j-1,f64)**2/real(ny,f64)**2 + &
-                       real(k-1,f64)**2/real(nz,f64)**2 ) )
+                     ( real(i-1,f64)**2/nx**2 + &
+                       real(j-1,f64)**2/ny**2 + &
+                       real(k-1,f64)**2/nz**2 ) )
              endif
           enddo
        enddo
     enddo
 
     ! Inverse FFTs in z-direction
-    do j=1,nx
+    do j=1,ny
        do i=1,nx
-          call apply_fft_c2c_1d( plan%px_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
+          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
        enddo
     enddo
 
@@ -141,11 +141,11 @@ contains
     ! Inverse FFTs in x-direction
     do k=1,nz
        do j=1,ny
-          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
+          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
        enddo
     enddo
 
-    phi = real(hat_phi, f64)
+    phi = real(hat_phi, f64)/(nx*ny*nz) !Inverse FFTs are not normalized
 
     SLL_DEALLOCATE_ARRAY(hat_rho, ierr)
     SLL_DEALLOCATE_ARRAY(hat_phi, ierr)

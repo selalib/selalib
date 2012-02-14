@@ -158,11 +158,11 @@ contains
     dvarphi = 2*sll_pi/nvarphi
 
     do k=1,nvarphi
+       varphi = (k-1)*dvarphi
        do j=1,ntheta
+          theta = (j-1)*dtheta
           do i=1,nr
              r = rmin + (i-1)*dr
-             theta = (j-1)*dtheta
-             varphi = (k-1)*dvarphi
              phi_an(i,j,k) = cos( 2*sll_pi*(r-rmin)/(rmax-rmin) )*cos(theta)*sin(varphi)
              rho(i,j,k) = (2 + 4*sll_pi**2/(rmax-rmin)**2) * phi_an(i,j,k)
           enddo
@@ -181,6 +181,7 @@ contains
     else
        print*, 'Test stoppped by sll_poisson_3d_periodic_seq.F90 test'
        print*, 'Average error:', average_err
+       print*, 'dr*dtheta*dvarphi =', dr*dtheta*dvarphi
        stop
     endif
 
