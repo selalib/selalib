@@ -173,7 +173,7 @@ contains  ! ****************************************************************
           new_spline_1D%slope_R = 0.0  ! default right slope for Hermite case
        end if
     case default
-       print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
+       print *, 'ERROR: new_spline_1D(): not recognized boundary condition'
        STOP
     end select
     SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
@@ -1092,39 +1092,74 @@ contains  ! ****************************************************************
     npx2   =  spline%num_pts_x2
     d1     => spline%d1
     d2     => spline%d2
-    ! build splines along the x2 direction. Note: due to Fortran's 
-    ! column-major ordering, this uses long strides in memory.
+    ! build splines along the x2 direction (the periodic direction). 
+    ! Note: due to Fortran's column-major ordering, this uses long strides 
+    ! in memory.
     do i=1,npx1 
        datap  => data(i,1:npx2)
        ! Intentionally, we make coeffs point to the index 1 of the coefficients
-       ! array. coeffs(0) is still a valid call, which is what 
-       ! compute_spline_1D_periodic_aux() does. This is an ugly trick and
+       ! array. coeffs(0) is still a valid call, which happens inside
+       ! compute_spline_1D_periodic_aux(). This is an ugly trick and
        ! this demonstrates that the _aux() function is broken. (We need 
        ! knowledge of its internals to use it properly). This should be 
        ! fixed.
-       coeffs    => spline%coeffs(i,1:npx2+2) 
-       min_slope = spline%x1_min_slopes(i)
-       max_slope = spline%x1_max_slopes(i)
-       call compute_spline_1D_hermite_aux( &
-            datap, &
-            npx2, &
-            spline%d2, &
-            min_slope, &  
-            max_slope,       &
-            spline%x2_delta, &
-            coeffs )
+       coeffs    => spline%coeffs(i,1:npx2+2)
+       call compute_spline_1D_periodic_aux( datap, npx2, d2, coeffs )
     end do
-    ! build splines along the x1 direction. Note: due to Fortran's 
-    ! column-major ordering, this involves short strides in memory.
-    ! Note that the data are the spline coefficients computed in the
+    ! build splines along the x1 direction (the Hermite direction). 
+    ! Note: due to Fortran's column-major ordering, this involves short 
+    ! strides in memory.
+    !
+    ! Note also that the data are the spline coefficients computed in the
     ! previous step, so the array dimensions are slightly bigger than in
     ! the original data.
-    do j=0,npx2+2  
+
+    ! First, compute the spline coefficients along the lines (:,0) and
+    ! (:,npx2+1), using the appropriate boundary condition, in this case
+    ! the condition of periodicity.
+    datap => spline%coeffs(1:npx1,0)
+    coeffs => spline%coeffs(1:npx1+2,0)
+    min_slope = spline%x1_min_slopes(npx1-1)
+    max_slope = spline%x1_max_slopes(npx1-1)
+    call compute_spline_1D_hermite_aux( &
+         datap, &
+         npx1, &
+         spline%d1, &
+         min_slope, &  
+         max_slope,       &
+         spline%x1_delta, &
+         coeffs )
+
+    datap => spline%coeffs(1:npx1,npx2+1)
+    coeffs => spline%coeffs(1:npx1+2,npx2+1)
+    min_slope = spline%x1_min_slopes(2)
+    max_slope = spline%x1_max_slopes(2)
+    call compute_spline_1D_hermite_aux( &
+         datap, &
+         npx1, &
+         spline%d1, &
+         min_slope, &  
+         max_slope,       &
+         spline%x1_delta, &
+         coeffs )
+
+
+    do j=1,npx2  
        datap  => spline%coeffs(1:npx1,j)
        ! same trick regarding the starting point of this pointer. This is
        ! not good.
        coeffs => spline%coeffs(1:npx1+2,j)
-       call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
+       min_slope = spline%x1_min_slopes(j)
+       max_slope = spline%x1_max_slopes(j)
+       call compute_spline_1D_hermite_aux( &
+            datap, &
+            npx1, &
+            spline%d1, &
+            min_slope, &  
+            max_slope,       &
+            spline%x1_delta, &
+            coeffs )
+!       call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
     end do
   end subroutine compute_spline_2D_hrmt_prdc
 
@@ -1165,8 +1200,8 @@ contains  ! ****************************************************************
     npx2   =  spline%num_pts_x2
     d1     => spline%d1
     d2     => spline%d2
-    ! build splines along the x2 direction. Note: due to Fortran's 
-    ! column-major ordering, this uses long strides in memory.
+    ! build splines along the x2 direction (hermite direction). Note: due 
+    ! to Fortran's column-major ordering, this uses long strides in memory.
     do i=1,npx1 
        datap  => data(i,1:npx2)
        ! Intentionally, we make coeffs point to the index 1 of the coefficients
@@ -1175,29 +1210,29 @@ contains  ! ****************************************************************
        ! this demonstrates that the _aux() function is broken. (We need 
        ! knowledge of its internals to use it properly). This should be 
        ! fixed.
-       coeffs => spline%coeffs(i,1:npx2+2) 
-       call compute_spline_1D_periodic_aux( datap, npx2, spline%d2, coeffs )
+       coeffs => spline%coeffs(i,1:npx2+2)
+       min_slope = spline%x2_min_slopes(i)
+       max_slope = spline%x2_max_slopes(i)
+       call compute_spline_1D_hermite_aux( &
+            datap, &
+            npx2, &
+            spline%d2, &
+            min_slope, &
+            max_slope, &
+            spline%x2_delta, &
+            coeffs )
     end do
     ! build splines along the x1 direction. Note: due to Fortran's 
     ! column-major ordering, this involves short strides in memory.
     ! Note that the data are the spline coefficients computed in the
     ! previous step, so the array dimensions are slightly bigger than in
     ! the original data.
-    do j=0,npx2+2  
+    do j=0,npx2+1  
        datap  => spline%coeffs(1:npx1,j)
        ! same trick regarding the starting point of this pointer. This is
        ! not good.
        coeffs    => spline%coeffs(1:npx1+2,j)
-       min_slope = spline%x2_min_slopes(j)
-       max_slope = spline%x2_max_slopes(j)
-       call compute_spline_1D_hermite_aux( &
-            datap, &
-            npx1, &
-            spline%d1, &
-            min_slope, &  
-            max_slope, &
-            spline%x1_delta, &
-            coeffs )
+       call compute_spline_1D_periodic_aux( datap, npx1, spline%d1, coeffs )
     end do
   end subroutine compute_spline_2D_prdc_hrmt
 
@@ -1265,7 +1300,39 @@ contains  ! ****************************************************************
     ! Note that the data are the spline coefficients computed in the
     ! previous step, so the array dimensions are slightly bigger than in
     ! the original data.
-    do j=0,npx2+2  
+
+    ! First we compute out of the loop the splines for the coefficients 
+    ! in the (:,0) and (:,npx2+1) rows. TO DO THIS PROPERLY WE SHOULD
+    ! INTRODUCE AN ESTIMATE OF THE SLOPES, WHICH FOR THESE VALUES FALL 
+    ! OUT OF RANGE. Here we just "reflect" the values around the edge point.
+    ! ... it's better than nothing.
+    datap => spline%coeffs(1:npx1,0)
+    coeffs => spline%coeffs(1:npx1+2,0)
+    min_slope = spline%x1_min_slopes(2)
+    max_slope = spline%x1_max_slopes(2)
+    call compute_spline_1D_hermite_aux( &
+         datap, &
+         npx1, &
+         spline%d1, &
+         min_slope, &  
+         max_slope,       &
+         spline%x1_delta, &
+         coeffs )
+
+    datap => spline%coeffs(1:npx1,npx2+1)
+    coeffs => spline%coeffs(1:npx1+2,npx2+1)
+    min_slope = spline%x1_min_slopes(npx2-1)
+    max_slope = spline%x1_max_slopes(npx2-1)
+    call compute_spline_1D_hermite_aux( &
+         datap, &
+         npx1, &
+         spline%d1, &
+         min_slope, &  
+         max_slope,       &
+         spline%x1_delta, &
+         coeffs )
+
+    do j=1,npx2  
        datap  => spline%coeffs(1:npx1,j)
        ! same trick regarding the starting point of this pointer. This is
        ! not good.
@@ -1394,6 +1461,16 @@ contains  ! ****************************************************************
     ! of the constant x2 lines, as this will be done by each call of 
     ! interpolate_value_aux(). This suggests that the proper refactoring
     ! of this function would have the cell and offset as arguments.
+    ! A call to:
+    !
+    !   print *, 'limits: ', lbound(spline%coeffs)
+    !
+    ! shows that the limits of spline%coeffs are 0 0, as declared. These are
+    ! not reset to 1- since this array has not been passed explicitly as
+    ! an argument to the function. Here we are relying in a very ugly way
+    ! in the fact that some functions may actually need the 0-th value, like
+    ! interpolate_value_aux(). This is a dangerous and easily confusing
+    ! technique that should be abandoned as soon as a better idea is available.
     coeffs_line_jm1 => spline%coeffs(1:num_pts_x1+2, cell-1)
     coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
     coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
