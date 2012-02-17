@@ -15,17 +15,14 @@ program test_poisson_solvers
 
   implicit none
 
-  sll_int64  :: nr, ntheta, nvarphi
-  sll_real64 :: rmin, rmax
+  sll_int64 :: nx, ny, nz
 
-  nr = 16
-  ntheta = 16
-  nvarphi = 16
-  rmin = 1.d0
-  rmax = 10.d0
+  nx = 16
+  ny = 16
+  nz = 16
 
   call test_poisson_1d()
-  call test_sll_poisson_3d_periodic_seq(nr, ntheta, nvarphi, rmin, rmax)
+  call test_sll_poisson_3d_periodic_seq(nx, ny, nz)
 
 contains
 
@@ -33,12 +30,6 @@ contains
     !-------------------------------------------------------------------
     !  test 1D Poisson solver based on FFT
     !-------------------------------------------------------------------
-    type (mesh_descriptor_1D), pointer :: geomx ! 1D mesh
-    type (poisson1dp)                  :: poisson_1d
-    type (field_1D_vec1), pointer      :: ex, rho1d, ex_exact
-    sll_int32   :: ncx, iflag 
-    sll_real64  :: xmin, xmax
-    sll_real64  :: dx
     !PN!logical, parameter :: per = .true.
 
     sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
@@ -142,29 +133,28 @@ contains
 
   end subroutine test_poisson_1d
 
-  subroutine test_sll_poisson_3d_periodic_seq(nr, ntheta, nvarphi, rmin, rmax)
+  subroutine test_sll_poisson_3d_periodic_seq(nx, ny, nz)
 
-    sll_int64                                :: nr, ntheta, nvarphi
-    sll_real64                               :: rmin, rmax
-    sll_real64                               :: dr, dtheta, dvarphi
-    sll_real64                               :: r, theta, varphi
-    sll_real64, dimension(nr,ntheta,nvarphi) :: rho, phi_an, phi
+    sll_int64                                :: nx, ny, nz
+    sll_real64                               :: dx, dy, dz
+    sll_real64                               :: x, y, z
+    sll_real64, dimension(nx,ny,nz)          :: rho, phi_an, phi
     sll_int64                                :: i, j, k
     type (poisson_3d_periodic_plan), pointer :: plan
     sll_real64                               :: average_err
 
-    dr = (rmax-rmin)/nr
-    dtheta = 2*sll_pi/ntheta
-    dvarphi = 2*sll_pi/nvarphi
+    dx = 2*sll_pi/nx
+    dy = 2*sll_pi/ny
+    dz = 2*sll_pi/nz
 
-    do k=1,nvarphi
-       varphi = (k-1)*dvarphi
-       do j=1,ntheta
-          theta = (j-1)*dtheta
-          do i=1,nr
-             r = rmin + (i-1)*dr
-             phi_an(i,j,k) = cos( 2*sll_pi*(r-rmin)/(rmax-rmin) )*cos(theta)*sin(varphi)
-             rho(i,j,k) = (2 + 4*sll_pi**2/(rmax-rmin)**2) * phi_an(i,j,k)
+    do k=1,nz
+       z = (k-1)*dz
+       do j=1,ny
+          y = (j-1)*dy
+          do i=1,nx
+             x = (i-1)*dx
+             phi_an(i,j,k) = cos(x)*sin(y)*cos(z)
+             rho(i,j,k) = 3*phi_an(i,j,k)
           enddo
        enddo
     enddo
@@ -172,16 +162,16 @@ contains
     plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64))
     call solve_poisson_3d_periodic(plan, rho, phi)
     call delete_poisson_3d_periodic_plan(plan)
-print*,phi
-    average_err = sum( abs(phi_an-phi) ) / (nr*ntheta*nvarphi)
 
-    if (average_err <= dr*dtheta*dvarphi) then
+    average_err = sum( abs(phi_an-phi) ) / (nx*ny*nz)
+
+    if (average_err <= dx*dx*dy) then
        print*, 'sll_poisson_3d_periodic_seq.F90 test: PASS'
        print*, 'Average error:', average_err
     else
        print*, 'Test stoppped by sll_poisson_3d_periodic_seq.F90 test'
        print*, 'Average error:', average_err
-       print*, 'dr*dtheta*dvarphi =', dr*dtheta*dvarphi
+       print*, 'dx*dy*dz =', dx*dy*dz
        stop
     endif
 
