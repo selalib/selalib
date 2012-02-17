@@ -87,11 +87,11 @@ contains
     SLL_ALLOCATE(hat_rho(nx,ny,nz), ierr)
     SLL_ALLOCATE(hat_phi(nx,ny,nz), ierr)
 
-    ! FFTs in x-direction
+    ! FFTs in z-direction
     hat_rho = cmplx(rho, 0_f64, kind=f64)
-    do k=1,nz
-       do j=1,ny
-          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
+    do j=1,ny
+       do i=1,nx
+          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
     enddo
 
@@ -102,23 +102,24 @@ contains
        enddo
     enddo
 
-    ! FFTs in z-direction
-    do j=1,ny
-       do i=1,nx
-          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
+    ! FFTs in x-direction
+    do k=1,nz
+       do j=1,ny
+          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
     enddo
 
-    do k=1,nz
-       do j=1,ny
-          do i=1,nx
-             if ( (i==1) .and. (j==1) .and. (k==1) ) then
-                hat_phi(i,j,k) = 0.d0
+    hat_rho = hat_rho/(nx*ny*nz)
+
+    ! Compute hat_phi, phi = inv_fft(hat_phi)
+    do k=-nz/2,nz/2-1
+       do j=-ny/2,ny/2-1
+          do i=-nx/2,nx/2-1
+             if ( k==0 ) then
+                hat_phi(i+nx/2+1,j+ny/2+1,k+nz/2+1) = 0.d0
              else
-                hat_phi(i,j,k) = hat_rho(i,j,k) / ( 4*sll_pi**2 * &
-                     ( real(i-1,f64)**2/nx**2 + &
-                       real(j-1,f64)**2/ny**2 + &
-                       real(k-1,f64)**2/nz**2 ) )
+                hat_phi(i+nx/2+1,j+ny/2+1,k+nz/2+1) = hat_rho(i+nx/2+1,j+ny/2+1,k+nz/2+1) / ( &
+                  4*sll_pi**2*( (real(i,f64)/nx)**2 + (real(j,f64)/ny)**2 + (real(k,f64)/nz)**2 ) )
              endif
           enddo
        enddo
@@ -131,11 +132,19 @@ contains
        enddo
     enddo
 
+    do k=1,nz-1,2
+       hat_phi(:,:,k) = -hat_phi(:,:,k)
+    enddo
+
     ! Inverse FFTs in y-direction
     do k=1,nz
        do i=1,nx
           call apply_fft_c2c_1d( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
        enddo
+    enddo
+
+    do j=1,ny-1,2
+       hat_phi(:,j,:) = -hat_phi(:,j,:)
     enddo
 
     ! Inverse FFTs in x-direction
@@ -145,7 +154,11 @@ contains
        enddo
     enddo
 
-    phi = real(hat_phi, f64)/(nx*ny*nz) !Inverse FFTs are not normalized
+    do i=1,nx-1,2
+       hat_phi(i,:,:) = -hat_phi(i,:,:)
+    enddo
+
+    phi = real(hat_phi, f64) !Inverse FFTs are not normalized
 
     SLL_DEALLOCATE_ARRAY(hat_rho, ierr)
     SLL_DEALLOCATE_ARRAY(hat_phi, ierr)

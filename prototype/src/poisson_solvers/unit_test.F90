@@ -172,7 +172,7 @@ contains
     plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64))
     call solve_poisson_3d_periodic(plan, rho, phi)
     call delete_poisson_3d_periodic_plan(plan)
-
+print*,phi
     average_err = sum( abs(phi_an-phi) ) / (nr*ntheta*nvarphi)
 
     if (average_err <= dr*dtheta*dvarphi) then
