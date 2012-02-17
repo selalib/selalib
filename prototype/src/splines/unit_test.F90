@@ -19,10 +19,6 @@ program spline_tester
 #include "sll_assert.h"
 #include "sll_memory.h"
   
-#define TEST_INTEGRATION 0
-#if TEST_INTEGRATION
-  use gauss_legendre_integration
-#endif
 #define PRINT_SPLINE_COEFFS 0
   use sll_splines
   use numeric_constants
@@ -40,6 +36,8 @@ program spline_tester
   logical                                :: test_passed
   print *, 'Test of the 1D spline: '
   ok = 1
+
+#if 0
   do i_test=1,nbtest     
      call test_process_1d(i_test, ok)     
   enddo
@@ -69,7 +67,8 @@ program spline_tester
      enddo
   enddo
 
-  print *, 'spline values at points:'
+#endif
+
 
 #define NUM_KNOTS 10
 #define SPLINE_DEGREE 3
@@ -99,6 +98,8 @@ program spline_tester
   ! value of the OK flag, this should be fixed. The OK flag should be a
   ! logical variable...
 
+  call test_spline_1d_hrmt( line, 2.0_f64, 2.0_f64, test_passed )
+
   call interpolator_tester_2d( &
        coscos, &
        msincos, &
@@ -111,12 +112,22 @@ program spline_tester
        interpolate_x2_derivative_2D, &
        test_passed )
 
-
-
   call test_2d_spline_hrmt_prdc( &
        polar_x, &
        deriv1_polar_x, &
        deriv1_polar_x, &
+       test_passed )
+
+
+  print *, 'plane test case'
+  call test_2d_spline_hrmt_prdc( plane, plane_deriv, plane_deriv, test_passed )
+  call test_2d_spline_prdc_hrmt( plane2,plane2_deriv,plane2_deriv,test_passed )
+  call test_2d_spline_hrmt_hrmt( &
+       plane3, &
+       plane3_deriv_x, &
+       plane3_deriv_x, &
+       plane3_deriv_y, &
+       plane3_deriv_y, &
        test_passed )
 
   if (ok==1) then
