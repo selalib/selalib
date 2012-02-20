@@ -17,9 +17,9 @@ program test_poisson_solvers
 
   sll_int64 :: nx, ny, nz
 
-  nx = 16
-  ny = 16
-  nz = 16
+  nx = 4
+  ny = 4
+  nz = 2
 
   call test_poisson_1d()
   call test_sll_poisson_3d_periodic_seq(nx, ny, nz)
