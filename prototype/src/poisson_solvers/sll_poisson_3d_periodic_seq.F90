@@ -88,11 +88,18 @@ contains
     SLL_ALLOCATE(hat_phi(nx,ny,nz), ierr)
 
     ! FFTs in z-direction
+ call random_number(rho)
     hat_rho = cmplx(rho, 0_f64, kind=f64)
-    do j=1,ny
-       do i=1,nx
+print*, 'test1:',hat_rho(1,1,:)
+    do j=1,1!ny
+       do i=1,1!nx
           call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
+    enddo
+print*, 'test2',hat_rho(1,1,:)
+stop
+    do k=1,nz-1,2
+       hat_rho(:,:,k) = -hat_rho(:,:,k)
     enddo
 
     ! FFTs in y-direction
@@ -102,11 +109,18 @@ contains
        enddo
     enddo
 
+    do j=1,ny-1,2
+       hat_rho(:,j,:) = -hat_rho(:,j,:)
+    enddo
+
     ! FFTs in x-direction
     do k=1,nz
        do j=1,ny
           call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
+    enddo
+    do i=1,nx-1,2
+       hat_rho(i,:,:) = -hat_rho(i,:,:)
     enddo
 
     hat_rho = hat_rho/(nx*ny*nz)
@@ -131,7 +145,6 @@ contains
           call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
        enddo
     enddo
-
     do k=1,nz-1,2
        hat_phi(:,:,k) = -hat_phi(:,:,k)
     enddo
@@ -142,7 +155,6 @@ contains
           call apply_fft_c2c_1d( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
        enddo
     enddo
-
     do j=1,ny-1,2
        hat_phi(:,j,:) = -hat_phi(:,j,:)
     enddo
@@ -153,7 +165,6 @@ contains
           call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
        enddo
     enddo
-
     do i=1,nx-1,2
        hat_phi(i,:,:) = -hat_phi(i,:,:)
     enddo
