@@ -6,12 +6,14 @@ program unit_test
   implicit none
 
 #define NPTS1 32
-#define NPTS2 32
+#define NPTS2 64
 
   type(map_2D), pointer     :: map_a    ! analytic map
   type(map_2D), pointer     :: map_d    ! discrete map
   sll_real64, dimension(:,:), allocatable :: x1
   sll_real64, dimension(:,:), allocatable :: x2
+  sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
+  sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
   sll_real64, dimension(:,:), allocatable :: jacs
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, delta, delta2, acc, node, interp, jac_analyt
@@ -24,15 +26,30 @@ program unit_test
   print *, 'h2 = ', h2
   allocate(x1(NPTS1,NPTS2))
   allocate(x2(NPTS1,NPTS2))
+  allocate(x1_eta1_min(NPTS2))
+  allocate(x1_eta1_max(NPTS2))
+  allocate(x2_eta1_min(NPTS2))
+  allocate(x2_eta1_max(NPTS2))
+
   allocate(jacs(NPTS1,NPTS2))
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
-        x1(i+1,j+1)   = x1f(eta1,eta2) !eta1*cos(eta2)
-        x2(i+1,j+1)   = x2f(eta1,eta2) !eta1*sin(eta2)
+        x1(i+1,j+1)   = x1_polar_f(eta1,eta2) 
+        x2(i+1,j+1)   = x2_polar_f(eta1,eta2) 
         jacs(i+1,j+1) = eta1
      end do
+  end do
+
+  do j=0,NPTS2-1
+     eta1           = 0.0_f64
+     eta2           = real(j,f64)*h2
+     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
+     x2_eta1_min(j+1) = deriv_x2_polar_f_eta1(eta1,eta2)
+     eta1           = 1.0_f64
+     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
+     x2_eta1_max(j+1) = deriv_x2_polar_f_eta1(eta1,eta2)
   end do
 
   print *, '**********************************************************'
@@ -46,12 +63,12 @@ program unit_test
        map_a, &
        NPTS1, &
        NPTS2, &
-       x1_func=polar_x1, &
-       x2_func=polar_x2, &
-       j11_func=polar_jac11, &
-       j12_func=polar_jac12, &
-       j21_func=polar_jac21, &
-       j22_func=polar_jac22 )
+       x1_func=x1_polar_f, &
+       x2_func=x2_polar_f, &
+       j11_func=deriv_x1_polar_f_eta1, &
+       j12_func=deriv_x1_polar_f_eta2, &
+       j21_func=deriv_x2_polar_f_eta1, &
+       j22_func=deriv_x2_polar_f_eta2 )
   print *, 'initialized map'
 
   print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', jacobian_2d(map_a,0.5_f64,0.5_f64)
@@ -70,14 +87,14 @@ program unit_test
        x1_node=x1, &
        x2_node=x2, &
        jacobians_node=jacs, &
-       eta1_bc_type_x1=PERIODIC_MAP_BC, &
-       eta2_bc_type_x1=HERMITE_MAP_BC, &
-       eta1_bc_type_x2=PERIODIC_MAP_BC, &
-       eta2_bc_type_x2=HERMITE_MAP_BC, &
-       eta2_min_slope_x1=1.0_f64, &
-       eta2_max_slope_x1=cos(1.0_f64),&
-       eta2_min_slope_x2=0.0_f64, &
-       eta2_max_slope_x2=sin(1.0_f64) )
+       eta1_bc_type_x1=HERMITE_MAP_BC, &
+       eta2_bc_type_x1=PERIODIC_MAP_BC,&
+       eta1_bc_type_x2=HERMITE_MAP_BC, &
+       eta2_bc_type_x2=PERIODIC_MAP_BC,&
+       eta1_min_slopes_x1=x1_eta1_min, &
+       eta1_max_slopes_x1=x1_eta1_max, &
+       eta1_min_slopes_x2=x2_eta1_min, &
+       eta1_max_slopes_x2=x2_eta1_max )
 print *, 'x1: '
 print *, map_d%x1_node(:,:)
   print *, 'Compare the values of the jacobian at the nodes, resulting from ',&
@@ -106,20 +123,9 @@ print *, map_d%x1_node(:,:)
   call delete(map_d)
   print *, 'deleted maps'
   print *, 'reached end of unit test'
-
-contains
-
-  ! local polar functions
-  function x1f( r, theta )
-    sll_real64 :: x1f
-    sll_real64, intent(in) :: r, theta
-    x1f = r*cos(2.0_f64*sll_pi*theta)
-  end function x1f
-
-  function x2f( r, theta )
-    sll_real64 :: x2f
-    sll_real64, intent(in) :: r, theta
-    x2f = r*sin(2.0_f64*sll_pi*theta)
-  end function x2f
+  deallocate(x1_eta1_min)
+  deallocate(x1_eta1_max)
+  deallocate(x2_eta1_min)
+  deallocate(x2_eta1_max)
 
 end program unit_test
