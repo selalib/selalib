@@ -62,5 +62,10 @@ env.Library('sll_misc',         ["../utilities/misc_utils.F90"])
 env.Library('sll_constants',    ["../constants/numeric_constants.F90"])
 env.Library('sll_fft',          ["./sll_fft.F90"])
 
+<<<<<<< HEAD
 #env.Program('unit_test',        ["unit_test.F90"])
 env.Program('test',             ["test.F90"])
+=======
+env.Program('unit_test',        ["unit_test.F90"])
+#env.Program('test',             ["test.F90"])
+>>>>>>> e8a036de935442a029229e21120bc0f8561d4250
