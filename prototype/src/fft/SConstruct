@@ -48,7 +48,7 @@ env = Environment( ENV = os.environ,
                    LIBS=['sll_memory','sll_precision','sll_assertion','sll_diagnostics',
                          'sll_misc','sll_constants','sll_timer','fftpack','sll_mesh_types',FFTW,'hdf5','hdf5_fortran','z','sll_fft'],
                    F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
-                               '-DDEBUG','-DGFORTRAN','-D_DEFAULTFFTLIB=FFTW_MOD',
+                               '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
 
 env.Library('fftpack',          ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
