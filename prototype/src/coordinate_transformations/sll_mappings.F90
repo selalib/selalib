@@ -187,6 +187,9 @@ contains
     j12 = (map%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (map%j_matrix(2,1)%f( eta1, eta2 ))
     j22 = (map%j_matrix(2,2)%f( eta1, eta2 ))
+print *, 'jacobian_2D_analytic: '
+print *, j11, j12
+print *, j21, j22
     jacobian_2D_analytic = j11*j22 - j12*j21
   end function jacobian_2D_analytic
 
@@ -234,16 +237,24 @@ print *, j21, j22
     x2_cell,        &
     eta1_bc_type_x1,   &
     eta2_bc_type_x1,   &
-    eta1_min_slope_x1, &
-    eta1_max_slope_x1, &
-    eta2_min_slope_x1, &
-    eta2_max_slope_x1, &
+    const_eta1_min_slope_x1, &
+    const_eta1_max_slope_x1, &
+    const_eta2_min_slope_x1, &
+    const_eta2_max_slope_x1, &
+    eta1_min_slopes_x1, &
+    eta1_max_slopes_x1, &
+    eta2_min_slopes_x1, &
+    eta2_max_slopes_x1, &
     eta1_bc_type_x2,   &
     eta2_bc_type_x2,   &
-    eta1_min_slope_x2, &
-    eta1_max_slope_x2, &
-    eta2_min_slope_x2, &
-    eta2_max_slope_x2 )
+    const_eta1_min_slope_x2, &
+    const_eta1_max_slope_x2, &
+    const_eta2_min_slope_x2, &
+    const_eta2_max_slope_x2, &
+    eta1_min_slopes_x2, &
+    eta1_max_slopes_x2, &
+    eta2_min_slopes_x2, &
+    eta2_max_slopes_x2 )
 
     type(map_2D), pointer  :: map
     sll_int32, intent(in)  :: npts1
@@ -262,16 +273,24 @@ print *, j21, j22
     sll_real64, dimension(:,:), optional          :: x2_cell
     sll_int32, intent(in), optional               :: eta1_bc_type_x1
     sll_int32, intent(in), optional               :: eta2_bc_type_x1
-    sll_real64, intent(in), optional              :: eta1_min_slope_x1
-    sll_real64, intent(in), optional              :: eta1_max_slope_x1
-    sll_real64, intent(in), optional              :: eta2_min_slope_x1
-    sll_real64, intent(in), optional              :: eta2_max_slope_x1
+    sll_real64, intent(in), optional              :: const_eta1_min_slope_x1
+    sll_real64, intent(in), optional              :: const_eta1_max_slope_x1
+    sll_real64, intent(in), optional              :: const_eta2_min_slope_x1
+    sll_real64, intent(in), optional              :: const_eta2_max_slope_x1
+    sll_real64, dimension(:),intent(in), optional :: eta1_min_slopes_x1
+    sll_real64, dimension(:),intent(in), optional :: eta1_max_slopes_x1
+    sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes_x1
+    sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes_x1
     sll_int32, intent(in), optional               :: eta1_bc_type_x2
     sll_int32, intent(in), optional               :: eta2_bc_type_x2
-    sll_real64, intent(in), optional              :: eta1_min_slope_x2
-    sll_real64, intent(in), optional              :: eta1_max_slope_x2
-    sll_real64, intent(in), optional              :: eta2_min_slope_x2
-    sll_real64, intent(in), optional              :: eta2_max_slope_x2
+    sll_real64, intent(in), optional              :: const_eta1_min_slope_x2
+    sll_real64, intent(in), optional              :: const_eta1_max_slope_x2
+    sll_real64, intent(in), optional              :: const_eta2_min_slope_x2
+    sll_real64, intent(in), optional              :: const_eta2_max_slope_x2
+    sll_real64, dimension(:),intent(in), optional :: eta1_min_slopes_x2
+    sll_real64, dimension(:),intent(in), optional :: eta1_max_slopes_x2
+    sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes_x2
+    sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes_x2
 
 
     sll_int32  :: map_type ! enumerated constant-valued
@@ -326,7 +345,10 @@ print *, j21, j22
     ! DISCRETE_MAPs require only some of the parameters. If the mapping is
     ! defined from the nodes of the logical (eta1, eta2) mesh to the nodes
     ! of the physical mesh (x1,x2), then the node arrays are required:
-    ! jacobians_node, x1_node and x2_node.
+    ! jacobians_node, x1_node and x2_node. Optionally, other parameters can
+    ! be used to provide information on the type of boundary conditions,
+    ! like the type of boundary, the slopes if appropriate, etc.
+    !
     ! If the transformation is done on the points at the center of the cells
     ! then these parameters are also required: 
     ! jacobians_cell, x1_cell, x2_cell.
@@ -370,6 +392,29 @@ print *, j21, j22
              ! would simply not be used. 
              STOP
           end if
+          if( &
+             present(const_eta1_min_slope_x1) .or. &
+             present(const_eta1_max_slope_x1) .or. &
+             present(const_eta2_min_slope_x1) .or. &
+             present(const_eta2_max_slope_x1) .or. &
+             present(const_eta1_min_slope_x2) .or. &
+             present(const_eta1_max_slope_x2) .or. &
+             present(const_eta2_min_slope_x2) .or. &
+             present(const_eta2_max_slope_x2) .or. &
+             present(eta1_min_slopes_x1) .or. &
+             present(eta1_max_slopes_x1) .or. &
+             present(eta2_min_slopes_x1) .or. &
+             present(eta2_max_slopes_x1) .or. &
+             present(eta1_min_slopes_x2) .or. &
+             present(eta1_max_slopes_x2) .or. &
+             present(eta2_min_slopes_x2) .or. &
+             present(eta2_max_slopes_x2) ) then
+
+             print *, 'ERROR, initialize_map_2D(): ANALYTIC_MAPs ', &
+                  'do not need specification of the boundary conditions. '
+             STOP
+          end if
+
        case (DISCRETE_MAP)
           ! check that functions relevant to the ANALYTIC_MAP have not
           ! been passed.
@@ -632,10 +677,14 @@ print *, j21, j22
                1.0_f64, &
                x1_eta1_bc, &
                x1_eta2_bc, &
-               eta1_min_slope_x1, &
-               eta1_max_slope_x1, &
-               eta2_min_slope_x1, &
-               eta2_max_slope_x1 )
+               const_slope_x1_min=const_eta1_min_slope_x1, &
+               const_slope_x1_max=const_eta1_max_slope_x1, &
+               const_slope_x2_min=const_eta2_min_slope_x1, &
+               const_slope_x2_max=const_eta2_min_slope_x1, &
+               x1_min_slopes=eta1_min_slopes_x1, &
+               x1_max_slopes=eta1_max_slopes_x1, &
+               x2_min_slopes=eta2_min_slopes_x1, &
+               x2_max_slopes=eta2_max_slopes_x1 )
 
           map%x2_spline => new_spline_2D( &
                npts1, &
@@ -646,10 +695,14 @@ print *, j21, j22
                1.0_f64, &
                x2_eta1_bc, &
                x2_eta2_bc, &
-               eta1_min_slope_x2, &
-               eta1_max_slope_x2, &
-               eta2_min_slope_x2, &
-               eta2_max_slope_x2 )
+               const_slope_x1_min=const_eta1_min_slope_x2, &
+               const_slope_x1_max=const_eta1_max_slope_x2, &
+               const_slope_x2_min=const_eta2_min_slope_x2, &
+               const_slope_x2_max=const_eta2_min_slope_x2, &
+               x1_min_slopes=eta1_min_slopes_x2, &
+               x1_max_slopes=eta1_max_slopes_x2, &
+               x2_min_slopes=eta2_min_slopes_x2, &
+               x2_max_slopes=eta2_max_slopes_x2 )
 
           ! Compute the spline coefficients
           call compute_spline_2D( map%x1_node, map%x1_spline )
