@@ -45,8 +45,8 @@ env = Environment( ENV = os.environ,
                               '../utilities','../constants','../timer','../fftpack',FFTW_INC_PATH,HDF5_INC_PATH,'.'],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.','../fftpack',FFTW_LIB_PATH, HDF5_LIB_PATH],
-                   LIBS=['sll_memory','sll_precision','sll_assertion','sll_diagnostics',
-                         'sll_misc','sll_constants','sll_timer','fftpack','sll_mesh_types',FFTW,'hdf5','hdf5_fortran','z','sll_fft'],
+                   LIBS=['sll_fft','sll_memory','sll_precision','sll_assertion','sll_diagnostics',
+                         'sll_misc','sll_constants','sll_timer','fftpack','sll_mesh_types',FFTW,'hdf5','hdf5_fortran','z'],
                    F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
                                '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
@@ -64,4 +64,3 @@ env.Library('sll_fft',          ["./sll_fft.F90"])
 
 env.Program('unit_test',        ["unit_test.F90"])
 #env.Program('test',             ["test.F90"])
-
