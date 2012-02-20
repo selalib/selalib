@@ -9,8 +9,8 @@
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
-!> Eric Sonnendrücker (sonnen@math.unistra.fr)
-!> Edwin Chacon-Golcher(chacongolcher@math.unistra.fr)
+!> Eric SONNENDRÜCKER (sonnen@math.unistra.fr)
+!> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
 !*****************************************************************************
 
