@@ -42,13 +42,13 @@ print 'platform : ' + platform
 
 env = Environment( ENV = os.environ,
                    F90PATH = ['../memory','../precision','../assert','../mesh_types','../diagnostics',
-                              '../utilities','../constants','../timer','../fftpack',FFTW_INC_PATH,HDF5_INC_PATH],
+                              '../utilities','../constants','../timer','../fftpack',FFTW_INC_PATH,HDF5_INC_PATH,'.'],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.','../fftpack',FFTW_LIB_PATH, HDF5_LIB_PATH],
                    LIBS=['sll_memory','sll_precision','sll_assertion','sll_diagnostics',
-                         'sll_misc','sll_constants','sll_timer','fftpack','sll_mesh_types',FFTW,'hdf5','hdf5_fortran','z'],
+                         'sll_misc','sll_constants','sll_timer','fftpack','sll_mesh_types',FFTW,'hdf5','hdf5_fortran','z','sll_fft'],
                    F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
-                               '-DDEBUG','-DGFORTRAN',
+                               '-DDEBUG','-DGFORTRAN','-D_DEFAULTFFTLIB=FFTW_MOD',
                                '-ffree-line-length-none'])
 
 env.Library('fftpack',          ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
@@ -60,5 +60,7 @@ env.Library('sll_assertion',    ["../assert/sll_assert.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_misc',         ["../utilities/misc_utils.F90"])
 env.Library('sll_constants',    ["../constants/numeric_constants.F90"])
-env.Program('unit_test',        ["unit_test.F90","sll_fft.F90"])
-env.Program('test',        ["test.F90","sll_fft.F90"])
+env.Library('sll_fft',          ["./sll_fft.F90"])
+
+#env.Program('unit_test',        ["unit_test.F90"])
+env.Program('test',             ["test.F90"])
