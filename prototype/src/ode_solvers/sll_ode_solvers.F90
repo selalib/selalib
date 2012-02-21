@@ -187,27 +187,26 @@ contains
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
-    sll_int32  :: i, id, ileft, iright, i0
-    sll_real64 :: xmax, xi, xi0, yi0, y1, beta, eps
+    sll_int32  :: i, id, ileft, iright, i0, imax
+    sll_real64 :: xmax, xi, xi0, yi0, yi0p1, y1, x1, beta
     sll_real64 :: c     ! real coefficient
     sll_real64 :: period ! period of periodic domain
-    sll_real64, dimension(ncx+1), target     :: zeros   ! array if zeros
+    sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
     sll_real64, dimension(:), pointer        :: b
+    sll_real64, parameter                    :: eps = 1.0e-14  ! small real number
 
-    ! initialize eps
-    eps = 1.e-14
     ! initialize zeros
-    zeros = 0.0_f64
+    zeros(:) = 0.0_f64
     ! check order. The implementation with a 'select' construct permits
     ! to extend this solver to higher orders more conveniently.
     select case (order)
     case (1)
        c = 1.0_f64
-       b => zeros
+       b => zeros(1:ncx+1)
     case (2)
        c = 0.5_f64
        if (present(a_np1)) then
-          b => a_np1
+          b => a_np1(1:ncx+1)
        else
           stop 'implicit_ode: need field at time t_n+1 for higher order'
        end if
@@ -226,71 +225,80 @@ contains
     !-------------------------------------
     if (bt == PERIODIC_ODE) then
        period = xin(ncx+1)-xin(1)
+       x1 = xin(1)
        ! check that displacement is less than 1 period for first point
        ! localize cell [i0, i0+1] containing origin of characteristic ending at xin(1)
        ! we consider the mesh of the same period consisting of the points yi0 = xi0 + c*deltat*( a(i0) + b(i) )
-       i = 1
-       y1 = xin(1) + c*deltat*( a(1) + b(i) )
-       xi = xin(i)
-       if ( a(i) + b(i) > 0 ) then
-          ! go to other end of periodic domain and search on the left   
-          i0 = ncx
-          yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
-          do while ( yi0 > modulo(xi - y1, period) + y1) 
+       ! modulo n. If there was no periodicity the sequence would be strictly increasing
+       
+       ! we first look for i0 such that y(i0+1) < y(i0) due to periodicity
+       if ( a(1) + b(1) > 0 ) then
+          ! y(ncx+1) > x(1) in this case so we look backward  
+          i0 = ncx + 1
+          yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
+          i0 = ncx 
+          yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
+          !print*, '1', i0, yi0, x1, yi0p1, a(1) + b(1)
+          do while ( yi0p1 > yi0 ) 
              i0 = i0 - 1
-             yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
+             yi0p1 = yi0
+             yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
+             !print*, '1', i0, yi0, x1, yi0p1, a(1) + b(1)
           end do
        else 
           ! search on the right
-          i0 = 1 
-          yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
-          do while ( yi0 <= modulo(xi - y1, period) + y1)
+          i0 = 1
+          yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
+          yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(1) ) - x1, period) + x1
+          !print*, '21', i0, yi0, x1, yi0p1, a(1) + b(1)
+          do while (yi0p1 > yi0) 
              i0 = i0 + 1
-             yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
+             yi0 = yi0p1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(1) ) - x1, period) + x1
+             !print*, '22', i0, yi0, x1, yi0p1, a(1) + b(1)
           end do
-          i0 = i0 - 1
        end if
-       SLL_ASSERT((i0 >=1 ) .and. (i0 <= ncx))
+       imax = i0
+       !print*, i0, yi0, x1, yi0p1, a(1) + b(1)
+       if ((i0 < 1 ) .or. (i0 > ncx)) then ! yi0 is strictly increasing
+          i0 = 1
+          yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
+          yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(1) ) - x1, period) + x1
+       end if
        do i = 1, ncx
           xi = xin(i)  ! current grid point
           ! find cell which contains origin of characteristic
-          yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
-          !print*, y1, modulo(xi - y1, period) + y1, xin(ncx+1) + c*deltat*( a(ncx+1) + b(i) ), xi -y1
-          if ( yi0 <= modulo(xi - y1, period) + y1 ) then
-             i0 = i0 + 1
-             yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
-             do while ( (yi0  <= modulo(xi - y1, period) + y1) .and. (i0 < ncx+1) )
-                i0 = i0 + 1
-                yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
-                !print*, 'i0 ', i, i0, yi0, modulo(xi - y1, period) + y1
-             end do
-             i0 = i0 - 1
-          else 
-             do while ( (yi0 > modulo(xi - y1, period) + y1) .and. (i0 > 1))
-                i0 = i0 - 1
-                yi0 = xin(i0) + c*deltat*( a(i0) + b(i) )
-                !print*, 'i0 ', i, i0, yi0, xin(i0), xi, modulo(xi - y1, period) + y1
-             end do
-          end if
-          ileft = i0
-          iright = i0 + 1
-          !print*, i, ileft, iright
-          SLL_ASSERT((ileft>=1).and.(ileft<= ncx))
-          SLL_ASSERT((iright>=2).and.(iright<= ncx+1))
-          SLL_ASSERT( xin(ileft+1)-xin(ileft) + c * deltat * (a(iright) - a(ileft)) > 0.0 )
-          !SLL_ASSERT(xin(ileft) + c*deltat*( a(ileft) + b(i) ) - xin(i) <= 0.0_f64)
-          !SLL_ASSERT(xin(iright) + c*deltat*( a(iright) + b(i) ) - xin(i) >= 0.0_f64)
+          do while ( (yi0p1 < xi + eps))
+             i0 = modulo(i0,ncx) + 1
+             if (i0 == imax) then
+                yi0 = yi0p1
+                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                exit
+             else
+                yi0 = yi0p1
+                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             end if
+          end do
+           
+          SLL_ASSERT((i0>=1).and.(i0<= ncx))
           ! compute xout using linear interpolation of a 
-          beta = (xin(i)-xin(ileft)-c*deltat*(b(i) + a(ileft))) &
-               /( xin(ileft+1)-xin(ileft) + c * deltat * (a(iright) - a(ileft)))
-          xout(i) = xin(ileft) + beta * (xin(ileft+1)-xin(ileft)) 
+          if (yi0p1 > yi0) then 
+             beta = (xi - yi0)/(yi0p1 - yi0)
+          else if (xi >= yi0) then
+             beta = (xi - yi0)/(yi0p1 - yi0 + period)
+          else 
+             beta = (xi - yi0 + period)/(yi0p1 - yi0 + period)
+          end if
+          !print*, i, i0, yi0, xi, yi0p1, beta
+          SLL_ASSERT((beta>=-eps) .and. (beta < 1))
+          xout(i) = xin(i0) + beta * (xin(i0+1)-xin(i0))
           ! handle periodic boundary conditions
           xout(i) = modulo(xout(i)-xin(1),xin(ncx+1)-xin(1)) + xin(1) 
           SLL_ASSERT((xout(i) >= xin(1) ) .and. (xout(i) <= xin(ncx+1))) 
        end do
        ! due to periodicity, origin of last point is same as origin of first point
        xout(ncx+1) = xout(1)
-    else if (bt == COMPACT_ODE) then
+ else if (bt == COMPACT_ODE) then
        ! localize cell [i0, i0+1] containing origin of characteristic ending at xmin
        i = 1
        if ( a(i) + b(i) > 0 ) then
@@ -571,7 +579,7 @@ contains
   ! Classical fourth order Runge-Kutta ODE solver for an ode of the form
   ! d eta/ dt = a(eta)
   ! a is known only at grid points and linear interpolation is used in between
-    subroutine rk4( nsubsteps,   &
+    subroutine rk4( nsubsteps, &
                   deltat,      &
                   eta_min,     &
                   nc_eta,      &

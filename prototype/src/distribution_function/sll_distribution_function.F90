@@ -310,8 +310,8 @@ contains
           end do
        end do
     case (GAUSSIAN)
-       xoffset = 3._f64
-       voffset = 3._f64
+       xoffset = .5_f64
+       voffset = .5_f64
        avg = 0.0_f64
        avg_jac = 0.0_f64
        eta2 = eta2_min
@@ -322,7 +322,7 @@ contains
              vv = (x2c_at_i(i1,i2) - voffset )**2
              ! store f * jac for conservative cell centered schemes
              !fval =  exp(-0.5_f64*(xx+vv)) * jac_at_i(i1,i2)!jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
-             fval =  exp(-0.5_f64*(xx+vv)) * jac_at_i(i1,i2)
+             fval =  exp(-0.5_f64*(xx+vv)*40.) * jac_at_i(i1,i2)
              avg = avg + fval
              avg_jac = avg_jac + jac_at_i(i1,i2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
