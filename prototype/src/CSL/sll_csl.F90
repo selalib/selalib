@@ -249,6 +249,9 @@ contains
        do i1 = 1, nc_eta1 
           val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1
           call sll_set_df_val( dist_func_2D, i1, i2, val )
+          !if (val/df_jac_at_i(i1,i2)>1.) then
+          !   print*, 'val', i1,i2, val, primitive1(i1) , primitive1(i1+1), df_jac_at_i(i1,i2), delta_eta1
+          !end if
        end do
     eta2 = eta2 + delta_eta2
     end do
@@ -482,9 +485,9 @@ contains
        end if
        xi_new = xi_out(1) +  lperiod*xi_max
        primitive ( 1 ) = primitive ( 1 ) + avg * xi_new
-       if ((xi_new > xi_max) .or. (xi_new <xi(1))) then
-          print*, 1, xi_new, xi_out(1), primitive(1)
-       end if
+       !if ((xi_new > xi_max) .or. (xi_new <xi(1))) then
+       !   print*, 1, xi_new, xi_out(1), primitive(1)
+       !end if
        do i = 2, nc_eta+1
           ! We need here to find the points where it has been modified by periodicity
           if (xi_out(i) < xi_out(i-1)) then
@@ -510,8 +513,10 @@ contains
        !call compute_spline_1D_hermite( primitive, spline )
        call compute_spline_nonunif( primitive, spline, xi)
        ! interpolate primitive at origin of characteritics
-       !call interpolate_array_values( xi_out, primitive, nc_eta+1, spline )
        call interpolate_array_value_nonunif( xi_out, primitive, nc_eta+1, spline)
+       !do i = 2, nc_eta+1
+       !   print*, 'iii', i, xi(1), xi_out(i),xi(nc_eta+1), primitive(i), primitive(i-1)
+       !end do
     end select
   end subroutine advance_1D_nonuniform
 
