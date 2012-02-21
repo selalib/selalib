@@ -142,8 +142,8 @@ program unit_test_from_array
   ! initialize CSL  
   csl_work => new_csl_workspace( dist_func )
   ! run CSL method for 10 time steps
-  n_steps = 500
-  deltat = 6.0_f64/n_steps
+  n_steps = 100
+  deltat = 10.0_f64/n_steps
   !deltat = 0.4_f64
   do it = 1, n_steps
      !print*, 'iteration=',it
