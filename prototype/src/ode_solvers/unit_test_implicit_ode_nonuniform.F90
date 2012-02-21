@@ -96,30 +96,30 @@ program unit_test_implicit_ode_nonuniform
   print*,'testing constant field. ' 
   ! consider the ode dx/dt = a
   print*, '    advection to the right:'
-  a = 101.0_f64
-  a_n = a
-  a_np1 = a
+  a = 10.0_f64
+  a_n(:) = a
+  a_np1(:) = a 
   order = 2
   call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
      error = max(error, abs(modulo(x-a*deltat, xmax-xmin) - xout(i)))
-     !print*, i, x*exp(-deltat**2/2), xout(i)
+!     print*, i, abs(modulo(x-a*deltat, xmax-xmin)), xout(i)
   end do
   print*,'     error=', error
 
   print*, '    advection to the left:'
-  a = -112.0_f64
-  a_n = a
-  a_np1 = a
+  a = -512.0_f64
+  a_n(:) = a
+  a_np1(:) = a
   order = 2
   call implicit_ode_nonuniform( order, deltat, xin, ncells, PERIODIC_ODE, xout,  a_n, a_np1 ) 
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
      error = max(error, abs(modulo(x-a*deltat, xmax-xmin) - xout(i)))
-     !print*, i, x*exp(-deltat**2/2), xout(i)
+     !print*, i, abs(modulo(x-a*deltat, xmax-xmin) - xout(i))
   end do
   print*,'     error=', error
 
@@ -165,8 +165,7 @@ program unit_test_implicit_ode_nonuniform
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
-     !print*, i, x*exp(-deltat**2/2), xout(i)
+     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
   end do
   print*,'     error=', error
 
@@ -176,7 +175,7 @@ program unit_test_implicit_ode_nonuniform
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
-     error = max(error,abs(xmin+modulo(2*atan(tan(x/2)*exp(-deltat))-xmin, xmax-xmin)-xout(i)))
+     error = max(error,abs(2*atan(tan(x/2)*exp(-deltat))-xout(i)))
      !print*, i, 2*atan(tan(x/2)*exp(-deltat)), xout(i)
   end do
   print*,'     error=', error
