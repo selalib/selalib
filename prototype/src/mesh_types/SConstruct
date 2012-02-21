@@ -15,6 +15,7 @@ env = Environment( ENV=os.environ,
                               '../assert',
                               '../utilities',
                               '../constants',
+			      '../splines',
                               '../diagnostics'], 
                    LIBPATH= ['.'],
                    LIBS=['sll_memory',
@@ -22,6 +23,7 @@ env = Environment( ENV=os.environ,
                          'sll_assert',
                          'sll_utilities', 
                          'sll_constants',
+			 'sll_splines',
                          'sll_diagnostics'],
                    F90FLAGS = ['-g','-cpp','-W','-Wall','-std=f2003','-ffree-line-length-none'])
 
@@ -36,5 +38,6 @@ env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
+env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Program('sll_mesh_types', ["sll_mesh_types.F90","unit_test.F90","geometry_functions.F90"])
