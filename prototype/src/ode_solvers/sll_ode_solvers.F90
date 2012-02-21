@@ -224,49 +224,45 @@ contains
     ! case of periodic boundary conditions
     !-------------------------------------
     if (bt == PERIODIC_ODE) then
-       period = xin(ncx+1)-xin(1)
        x1 = xin(1)
-       ! check that displacement is less than 1 period for first point
-       ! localize cell [i0, i0+1] containing origin of characteristic ending at xin(1)
-       ! we consider the mesh of the same period consisting of the points yi0 = xi0 + c*deltat*( a(i0) + b(i) )
-       ! modulo n. If there was no periodicity the sequence would be strictly increasing
-       
-       ! we first look for i0 such that y(i0+1) < y(i0) due to periodicity
-       if ( a(1) + b(1) > 0 ) then
-          ! y(ncx+1) > x(1) in this case so we look backward  
-          i0 = ncx + 1
-          yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
-          i0 = ncx 
-          yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
-          !print*, '1', i0, yi0, x1, yi0p1, a(1) + b(1)
-          do while ( yi0p1 > yi0 ) 
-             i0 = i0 - 1
-             yi0p1 = yi0
-             yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
-             !print*, '1', i0, yi0, x1, yi0p1, a(1) + b(1)
-          end do
-       else 
-          ! search on the right
-          i0 = 1
-          yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
-          yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(1) ) - x1, period) + x1
-          !print*, '21', i0, yi0, x1, yi0p1, a(1) + b(1)
-          do while (yi0p1 > yi0) 
-             i0 = i0 + 1
-             yi0 = yi0p1
-             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(1) ) - x1, period) + x1
-             !print*, '22', i0, yi0, x1, yi0p1, a(1) + b(1)
-          end do
-       end if
-       imax = i0
-       !print*, i0, yi0, x1, yi0p1, a(1) + b(1)
-       if ((i0 < 1 ) .or. (i0 > ncx)) then ! yi0 is strictly increasing
-          i0 = 1
-          yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(1) ) - x1, period) + x1
-          yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(1) ) - x1, period) + x1
-       end if
+       period = xin(ncx+1)-x1
+
        do i = 1, ncx
           xi = xin(i)  ! current grid point
+          ! check that displacement is less than 1 period for first point
+          ! localize cell [i0, i0+1] containing origin of characteristic ending at xin(1)
+          ! we consider the mesh of the same period consisting of the points yi0 = xi0 + c*deltat*( a(i0) + b(i) )
+          ! modulo n. If there was no periodicity the sequence would be strictly increasing
+          ! we first look for i0 such that y(i0+1) < y(i0) due to periodicity
+          if ( a(1) + b(i) > 0 ) then
+             ! y(ncx+1) > x(1) in this case so we look backward 
+             i0 = ncx + 1
+             yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             i0 = ncx
+             yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             do while ( yi0p1 > yi0 ) 
+                i0 = i0 - 1
+                yi0p1 = yi0
+                yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             end do
+          else 
+             ! search on the right
+             i0 = 1
+             yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             do while (yi0p1 > yi0) 
+                i0 = i0 + 1
+                yi0 = yi0p1
+                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             end do
+          end if
+          
+          if ((i0 < 1 ) .or. (i0 > ncx)) then ! yi0 is strictly increasing
+             i0 = 1
+             yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+          end if
+          imax = i0
           ! find cell which contains origin of characteristic
           do while ( (yi0p1 < xi + eps))
              i0 = modulo(i0,ncx) + 1
@@ -279,7 +275,7 @@ contains
                 yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
              end if
           end do
-           
+
           SLL_ASSERT((i0>=1).and.(i0<= ncx))
           ! compute xout using linear interpolation of a 
           if (yi0p1 > yi0) then 
@@ -289,7 +285,7 @@ contains
           else 
              beta = (xi - yi0 + period)/(yi0p1 - yi0 + period)
           end if
-          !print*, i, i0, yi0, xi, yi0p1, beta
+          !print*, i, i0, yi0, xi, yi0p1, beta, period, x1
           SLL_ASSERT((beta>=-eps) .and. (beta < 1))
           xout(i) = xin(i0) + beta * (xin(i0+1)-xin(i0))
           ! handle periodic boundary conditions
@@ -298,7 +294,7 @@ contains
        end do
        ! due to periodicity, origin of last point is same as origin of first point
        xout(ncx+1) = xout(1)
- else if (bt == COMPACT_ODE) then
+    else if (bt == COMPACT_ODE) then
        ! localize cell [i0, i0+1] containing origin of characteristic ending at xmin
        i = 1
        if ( a(i) + b(i) > 0 ) then
@@ -354,7 +350,7 @@ contains
     else
        stop 'implicit_ode : boundary_type not implemented' 
     end if
-    
+
   end subroutine implicit_ode_nonuniform
 
 
