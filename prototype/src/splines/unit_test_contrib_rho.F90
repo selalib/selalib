@@ -38,24 +38,31 @@ program contrib_rho_tester
   sll_real64,dimension(:),pointer::x2_min_tab,x2_max_tab
   
   sll_int :: test_case
-  sll_real64 :: tmp
+  sll_real64 :: tmp,tmp2
   
   sll_real64,dimension(:), pointer :: node_positions_eta1,node_positions_eta2,f_eta1,f_eta2
   sll_real64,dimension(:), pointer :: node_positions_eta1_non_unif
   sll_real64,dimension(:,:), pointer :: f,coef
-  type(cubic_nonunif_spline_1D), pointer :: spl_eta1, spl_eta2 
-  sll_int :: err,f_case,N_eta1_non_unif,ii
-  sll_real64,dimension(:), pointer :: rho, rho_exact
+  type(cubic_nonunif_spline_1D), pointer :: spl_eta1, spl_eta2
+  sll_int :: err,f_case,N_eta1_non_unif,ii,N_phi,N_integ
+  sll_real64,dimension(:), pointer :: rho, rho_exact,rho_exact_grid
+  sll_real64,dimension(:), pointer :: phi
+  sll_real64,dimension(:,:), pointer :: integration_points_non_unif(:,:)
   sll_real64 :: eta_1,eta_2
-  sll_real64 :: h_min,h_max
-  
+  sll_real64 :: h_min,h_max,f_val,delta_f
+  sll_real64,dimension(:), pointer :: v_positions(:)
   sll_real64 :: L,mu,xi
   
-  sll_real64 :: M
+  sll_real64 :: M,phi_val,v_min,v_max,delta_v_before,delta_v_after,delta_h
   
+  sll_real64 :: f_min_after,f_max_after,f_min_before,f_max_before
+  
+  sll_int :: N_int2_before,N_int2_after,v_positions_case
   
 
   test_case=-1
+  v_positions_case = 2
+  
   mu=0.92_f64
   xi=0.90_f64
   L=14.71_f64
@@ -63,11 +70,19 @@ program contrib_rho_tester
   M = 1._f64
   
   f_case = 5
-  N_int1 = 32
-  N_int2 = 2000
+  N_int1 = 500
   
-  N_cells_eta1 = 160
-  N_cells_eta2 = 160
+  N_int2_before = 30
+  N_int2_after = 30
+  
+  
+  N_int2 = 2*N_int2_before+2*N_int2_after
+  
+  v_max = 10._f64
+  v_min = -v_max
+  
+  N_cells_eta1 = 24
+  N_cells_eta2 = 32
   
   N_store = N_cells_eta2 * N_int1 *5
   
@@ -112,6 +127,8 @@ program contrib_rho_tester
   SLL_ALLOCATE(coef(-1:N_cells_eta1+1,-1:N_cells_eta2+1), err)
   SLL_ALLOCATE(rho(N_int1+1), err)
   SLL_ALLOCATE(rho_exact(N_int1+1), err)
+  SLL_ALLOCATE(rho_exact_grid(2*N_int1+1), err)
+  SLL_ALLOCATE(integration_points_non_unif(2,N_int2+1), err)
 
   do i=1,N_cells_eta1+1
     node_positions_eta1(i)=real(i-1,f64)/real(N_cells_eta1,f64)
@@ -152,23 +169,394 @@ program contrib_rho_tester
 
   if(test_case==-1)then
     
-    open(unit=900,file='integration_points_store.dat')
-    !read(900,*) x1,x2
-    !x1_min = x1
-    !x1_max = x2
-    !do s=1,N_int1+1
-    !  read(900,*) i,x1
-    !  x2_max_tab(i) =x1
-    !  x2_min_tab(i) =-x1
+    
+    open(unit=900,file='phi.dat')
+      read(900,*) N_phi,L
+      SLL_ALLOCATE(phi(N_phi+1),err)
+      do j=1,N_phi+1
+        read(900,*) i,x1,x2
+        phi(i)=x1
+      enddo
+    close(900)
+    
+    ! compute rho on uniform mesh
+    
+
+    jj= N_phi/N_int1
+    if(jj==0)then
+      print *,'bad compatibility between N_phi=',N_phi,' and N_int1=',N_int1
+      print *,'N_phi/N_int1 should be a non zero integer'
+      stop
+    endif
+    if(jj*N_int1/=N_phi)then
+      print *,'bad compatibility between N_phi=',N_phi,' and N_int1=',N_int1
+      print *,'N_phi/N_int1 should be a non zero integer'
+      stop
+    endif
+    
+    
+    dx1 = (L/2._f64)/real(N_int1,f64)
+    dx2 = (v_max-v_min)/real(N_int2,f64)
+    do i=1,N_int1+1
+      phi_val=phi(1+(i-1)*jj)
+      x1=real(i-1)*dx1
+      rho(i)=0._f64
+      do j=1,N_int2+1
+        x2=v_min+real(j-1,f64)*dx2
+        eta_1 = phi_val+0.5_f64*x2*x2
+        tmp = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-M*eta_1)
+        rho(i)=rho(i)+tmp
+      enddo
+      rho(i) = rho(i)*dx2
+      eta_1=phi_val
+      rho_exact(i)=mu/(3._f64-2._f64*xi)*exp(-M*eta_1)*(2._f64*(1-xi+eta_1)/sqrt(M)+1._f64/(M*sqrt(M)))
+      rho_exact_grid(i)=rho_exact(i)
+    enddo
+    
+    tmp = 0._f64
+    open(unit=900,file='rho_exact.dat')    
+      do i=1,N_int1+1
+        x1=real(i-1)*dx1
+        write(900,*) x1,rho(i),rho_exact(i),rho_exact(i)-rho(i)
+        if(abs(rho_exact(i)-rho(i))>tmp)then
+          tmp = abs(rho_exact(i)-rho(i))
+        endif
+      enddo
+    close(900)
+    
+    print *,'# error of rho on uniform grid',N_int2,tmp
+    
+    !now, compute on non uniform mesh given by h values
+    delta_v_before = sqrt(4._f64*phi(N_phi+1))/real(N_int2_before,f64)
+    delta_v_after = (v_max-sqrt(4._f64*phi(N_phi+1)))/real(N_int2_after,f64)
+    
+    print *,'#delta_v=',delta_v_before,delta_v_after
+    
+    
+    !plot of fequil.dat
+    SLL_ALLOCATE(v_positions(N_int2+1),err)
+    
+    
+    h_max = xi
+    h_min = 0._f64
+    delta_h = (h_max-h_min)/real(N_int2_before,f64)
+    do j=1,N_int2_before+1
+      eta_1 = h_min+real(j-1,f64)*delta_h
+      v_positions(j) = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-eta_1)
+    enddo
+    
+    x1 = v_positions(2)-v_positions(1)
+    x2 = v_positions(2)-v_positions(1)
+     do j=1,N_int2_before
+      if(v_positions(j+1)-v_positions(j)<x1)then
+        x1 = v_positions(j+1)-v_positions(j)
+      endif
+      if(v_positions(j+1)-v_positions(j)>x2)then
+        x2 = v_positions(j+1)-v_positions(j)
+      endif
+    enddo
+      
+   print *,'# check for monotonicity of fequil before',x1,x2
+    
+    
+    
+    f_min_before = v_positions(1)
+    f_max_before = v_positions(N_int2_before+1)
+    open(unit=900,file='fequil_before.dat')    
+      do j=1,N_int2_before+1
+        eta_1 = h_min+real(j-1,f64)*delta_h
+        write(900,*) eta_1,v_positions(j)
+      enddo
+    close(900)
+
+
+
+
+    h_max = 0.5_f64*v_max*v_max
+    h_min = xi!phi(N_phi+1)
+    delta_h = (h_max-h_min)/real(N_int2_after,f64)
+    do j=1,N_int2_after+1
+      eta_1 = h_min+real(j-1,f64)*delta_h
+      v_positions(N_int2_before+j) = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-eta_1)
+    enddo
+
+    x1 = v_positions(N_int2_before+2)-v_positions(N_int2_before+1)
+    x2 = x1
+     do j=N_int2_before+1,N_int2_before+N_int2_after
+      if(v_positions(j+1)-v_positions(j)<x1)then
+        x1 = v_positions(j+1)-v_positions(j)
+      endif
+      if(v_positions(j+1)-v_positions(j)>x2)then
+        x2 = v_positions(j+1)-v_positions(j)
+      endif
+    enddo
+   
+   print *,'# check for monotonicity of fequil after',x1,x2
+
+    f_max_after = v_positions(N_int2_before+1)
+    f_min_after = v_positions(N_int2_before+N_int2_after+1)
+   
+   open(unit=900,file='fequil_after.dat')    
+     do j=1,N_int2_after+1
+        eta_1 = h_min+real(j-1,f64)*delta_h
+        write(900,*) eta_1,v_positions(N_int2_before+j)
+     enddo
+   close(900)
+
+  print *,'# fmin/fmax',f_min_before,f_max_before,f_max_after,f_min_after,f_max_before-f_max_after
+  
+  print *,'#phi',phi(N_phi+1),2._f64* f_max_before
+  
+  eta_1 = phi(N_phi+1)
+  tmp= mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-M*eta_1)
+  
+  !print *,'#f(phi(L/2))=',tmp
+  
+    open(unit=900,file='fequil.dat')    
+      h_max = xi
+      h_min = 0._f64
+      delta_h = (h_max-h_min)/real(N_int2_before,f64)      
+      do j=1,N_int2_before+1
+        eta_1 = h_min+real(j-1,f64)*delta_h
+        write(900,*) eta_1,v_positions(j)
+      enddo
+      h_max = 0.5_f64*v_max*v_max
+      h_min = xi!phi(N_phi+1)
+      delta_h = (h_max-h_min)/real(N_int2_after,f64)
+      do j=2,N_int2_after+1
+        eta_1 = h_min+real(j-1,f64)*delta_h
+        write(900,*) eta_1,v_positions(N_int2_before+j)
+      enddo
+    close(900)
+
+    !compute of level lines of f for v_positions
+    
+    !stop
+    v_positions = 0._f64
+
+    !N_int2_before = 2*N_int2_before
+    !N_int2_after = 2*N_int2_after
+
+    
+    delta_f = (f_max_before-f_min_before)/real(N_int2_before) 
+    eta_1 = 0._f64
+    do i=1,N_int2_before+1
+      f_val = f_min_before + real(i-1,f64)*delta_f
+       j=0
+       tmp=1._f64
+       do while ((abs(tmp).gt.1.e-15_f64).and.(j<=100))
+         if(eta_1<xi)then
+           tmp  = (mu/sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-eta_1)-f_val
+           tmp2 = (mu/sqrt(2._f64*sll_pi))*2._f64* (eta_1-xi )*exp(-eta_1)/(-3._f64 + 2._f64* xi)
+           !print*,c,f,fp, En(i) 
+           !alpha=1.d0/(1.d0-fp)
+           eta_1=eta_1-tmp/tmp2
+         else         
+           !eta_1=0
+           print *,'problem of eta_1 before',eta_1
+           stop
+         endif
+        j=j+1
+      enddo
+      if(j>=100)then
+        print *,'problem of convergence for Newton',eta_1,tmp,j,tmp2
+      endif
+      v_positions(i) = eta_1
+      !print *,i,eta_1
+    enddo
+    
+    
+    
+    
+    delta_f = (f_max_after-f_min_after)/real(N_int2_after) 
+    !eta_1 = 0._f64
+    eta_1 = 1.5*xi
+    do i=2,N_int2_after+1
+      f_val = f_max_after - real(i-1,f64)*delta_f
+       j=0
+       tmp=1._f64
+       do while ((abs(tmp).gt.1.e-15_f64).and.(j<=100))
+         if(eta_1>=xi-1.e-15)then
+           tmp  = (mu/sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-eta_1)-f_val
+           tmp2 = (mu/sqrt(2._f64*sll_pi))*2._f64* (eta_1-xi )*exp(-eta_1)/(-3._f64 + 2._f64* xi)
+           !print*,c,f,fp, En(i) 
+           !alpha=1.d0/(1.d0-fp)
+           eta_1=eta_1-tmp/tmp2
+         else
+           !eta_1=0
+           print *,'problem of eta_1 after',eta_1
+           stop
+         endif
+        j=j+1
+      enddo
+      if(j>=100)then
+        print *,'problem of convergence for Newton',eta_1,tmp,j,tmp2
+      endif
+      v_positions(i+N_int2_before) = eta_1
+      !print *,i,eta_1
+    enddo
+
+
+
+    open(unit=900,file='fequil_inverse.dat')    
+    do i=1,N_int2_before+N_int2_after+1
+      write(900,*) i,v_positions(i)
+    enddo
+    close(900)
+
+    dx1 = 0.5_f64*L/real(N_int1,f64)
+    jj= N_phi/N_int1
+    open(unit=900,file='h_lines.dat')    
+    do j=1,N_int2_before+N_int2_after+1
+      !eta_1=0.5_f64*v_positions(j)**2
+      eta_1=v_positions(j)
+      do i=1,N_int1+1
+        phi_val=phi(1+(i-1)*jj)
+        x1=real(i-1)*dx1
+        if(eta_1>=phi_val)then
+          x2=sqrt(2._f64*(eta_1-phi_val))
+          write(900,*) x1,x2
+        endif  
+      enddo
+    enddo
+    close(900)
+
+     
+    
+    !N_int2_before = N_int2_before/2
+    !N_int2_after = N_int2_after/2
+    
+    
+    !stop
+      tmp=sqrt(2._f64*v_positions(1))
+      do j=2,N_int2_before+N_int2_after+1
+        v_positions(N_int2/2+j)=sqrt(2._f64*v_positions(j))      
+      enddo
+      v_positions(N_int2/2+1)=tmp
+      do j=1,N_int2/2
+        v_positions(N_int2/2+1-j) = -v_positions(N_int2/2+1+j)
+      enddo
+    
+    !do j=1,N_int2+1
+    !  print *,j,v_positions(j)
     !enddo
+    
+    !print *,N_int2_before+N_int2_after+1+N_int2/2
+    !stop
+    if(v_positions_case==1)then
+      do j=1,N_int2_before+1
+        v_positions(N_int2/2+j)=(real(j,f64)-0.5_f64)*delta_v_before      
+      enddo
+      do j=1,N_int2_after
+        v_positions(N_int2/2+N_int2_before+1+j)=v_positions(N_int2/2+N_int2_before+1)+real(j,f64)*delta_v_after
+      enddo
+      do j=1,N_int2/2
+        v_positions(N_int2/2+1-j) = -v_positions(N_int2/2+1+j)
+      enddo
+    endif
+    
+    
+    !do i=1,N_int2+1
+    !  print *,i,v_positions(i)
+    !enddo
+    !print *,sqrt(2._f64*phi(N_phi+1))
+    !stop
+    do i=1,N_int1+1
+      phi_val=phi(1+(i-1)*jj)
+      x1=real(i-1)*dx1
+      N_integ=0
+      do j=1,N_int2+1
+        x2=v_positions(j)
+        !x2=v_min+real(j-1,f64)*dx2
+        eta_1 = 0.5_f64*x2*x2
+        if(eta_1>=phi_val)then
+          N_integ = N_integ+1
+          integration_points(1,N_integ,i) = eta_1
+          integration_points(2,N_integ,i) = x2
+          if(x2>=0) then
+            x2 = sqrt(2._f64*(eta_1-phi_val))
+          else
+            x2 = -sqrt(2._f64*(eta_1-phi_val))
+          endif
+          integration_points_non_unif(1,N_integ) = x2
+          integration_points_non_unif(2,N_integ) = &
+            &mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-M*eta_1)
+          
+          !print *,i,j,integration_points_non_unif(1,N_integ),integration_points_non_unif(2,N_integ)
+        else
+          x2=-1._f64
+        endif
+        !print *,i,j,eta_1,x2,phi_val
+        
+      enddo
+      !rho(i)= compute_non_unif_integral(integration_points_non_unif,N_integ)
+      !rho(i)= compute_non_unif_integral_spline_old(integration_points_non_unif,N_integ,10000)
+      !rho(i)= compute_non_unif_integral_spline(integration_points_non_unif,N_integ)
+      rho(i)= compute_non_unif_integral_gaussian(integration_points_non_unif,N_integ)
+      
+    enddo
+    tmp=0._f64
+    open(unit=900,file='rho_non_unif.dat')    
+      do i=1,N_int1+1
+        x1=real(i-1)*dx1
+        write(900,*) x1,rho(i),rho_exact(i),rho_exact(i)-rho(i)
+        if(abs(rho_exact(i)-rho(i))>tmp)then
+          tmp = abs(rho_exact(i)-rho(i))
+        endif
+      enddo
+    close(900)
+
+    print *,'# error of rho on non uniform grid',N_int2,tmp,abs(rho_exact(1)-rho(1))
+    
+    stop
+    
+    !now compute f on h grid
+    !jj= N_phi/N_cells_eta1
+    !if(jj==0)then
+    !  print *,'bad compatibility between N_phi=',N_phi,' and N_cells_eta1=',N_cells_eta1
+    !  print *,'N_phi/N_cells_eta1 should be a non zero integer'
+    !  stop
+    !endif
+    !if(jj*N_cells_eta1/=N_phi)then
+    !  print *,'bad compatibility between N_phi=',N_phi,' and N_cells_eta1=',N_cells_eta1
+    !  print *,'N_phi/N_cells_eta1 should be a non zero integer'
+    !  stop
+    !endif
+    
+    
+    open(unit=900,file='integration_points_store.dat')
+      read(900,*) N_int1_quarter,N_int2_quarter,h_min,h_max,N_eta1_non_unif
+    close(900)
+    
+    !tmp=dx2
+    
+    tmp=sqrt(2._f64*h_max)/real(N_cells_eta1,f64)
+    do i=1,N_cells_eta1+1
+      x2=real(i-1,f64)*tmp
+      eta_1=0.5_f64*x2*x2
+      do j=1,N_cells_eta2+1
+        f(i,j)=mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-M*eta_1)
+      enddo
+    enddo
+    
+   
+    
+    
+    !print *,'N_phi=',N_phi,'L=',L
+    
+    !do i=1,N_phi+1
+    !  print *,i,phi(i)
+    !enddo
+    
+    open(unit=900,file='integration_points_store.dat')
     read(900,*) N_int1_quarter,N_int2_quarter,h_min,h_max,N_eta1_non_unif
     
-    SLL_DEALLOCATE(integration_points,err)
-    SLL_DEALLOCATE(x2_max_tab,err)
-    SLL_DEALLOCATE(x2_min_tab,err)
-    SLL_DEALLOCATE(size_contrib_rho,err)
-    SLL_DEALLOCATE(rho, err)
-    SLL_DEALLOCATE(rho_exact, err)
+    SLL_DEALLOCATE_ARRAY(integration_points,err)
+    SLL_DEALLOCATE_ARRAY(x2_max_tab,err)
+    SLL_DEALLOCATE_ARRAY(x2_min_tab,err)
+    SLL_DEALLOCATE_ARRAY(size_contrib_rho,err)
+    SLL_DEALLOCATE_ARRAY(rho, err)
+    SLL_DEALLOCATE_ARRAY(rho_exact, err)
     
     N_int1 = 2*N_int1_quarter
     N_int2 = 2*N_int2_quarter
@@ -193,8 +581,10 @@ program contrib_rho_tester
       x2_min_tab(i) =-x1
     enddo
     
+    print *,'#x2_max:',x2_max_tab(1),x2_max_tab(N_int1_quarter+1)
+    
     if(N_eta1_non_unif>=0)then
-      SLL_ALLOCATE(node_positions_eta1_non_unif(N_eta1_non_unif),err)    
+      SLL_ALLOCATE(node_positions_eta1_non_unif(N_eta1_non_unif+1),err)    
     endif
     
     do s=1,N_eta1_non_unif+1
@@ -216,7 +606,7 @@ program contrib_rho_tester
     
     !print *,N_int1_quarter,N_int2_quarter
     
-    !stop
+    
     
     do i = 1,N_int1/2
       integration_points(1,N_int2+1,i)=integration_points(1,N_int2,i)
@@ -241,7 +631,8 @@ program contrib_rho_tester
       x2_min_tab(N_int1-s+2) =x2_min_tab(s)
       !print *,s,N_int1-s+1,x2_max_tab(s),x2_max_tab(N_int1-s+1)
     enddo
-
+    
+    
     ! A  ! C !  vmax 
     ! B  ! D !   0
     !0   L/2 L  vmin
@@ -281,6 +672,8 @@ program contrib_rho_tester
     !eta2_min = integration_points(2,1,1)
     !eta2_max = eta2_min
     ! normalization of integration points
+    
+
     integration_points(1,:,:) = (integration_points(1,:,:)-h_min)/(h_max-h_min)
     integration_points(2,:,:) = (integration_points(2,:,:))/(2.0_f64*sll_pi)
     
@@ -312,6 +705,7 @@ program contrib_rho_tester
     
     
     
+    
     print *,'#',eta1_min,eta1_max,eta2_min,eta2_max
     
     x2_max_tab(N_int1_quarter+1)=x2_max_tab(N_int1_quarter)
@@ -323,8 +717,6 @@ program contrib_rho_tester
     !print *,h_min,h_max
     
   endif
-
-    
 
   
   if(test_case==1)then
@@ -419,6 +811,8 @@ program contrib_rho_tester
     
   endif
 
+
+
   do j=1,N_cells_eta2+1
     do i=1,N_cells_eta1+1
       eta_1 = eta1_min+(eta1_max-eta1_min)*node_positions_eta1(i)
@@ -442,10 +836,11 @@ program contrib_rho_tester
         f(i,j) = exp(-10*eta_1**2)
       endif
       if(f_case==5) then
-        f(i,j) = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-M*eta_1)
+        f(i,j)=mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+eta_1/(1._f64-xi))*exp(-M*eta_1)       
       endif
     enddo
   enddo  
+  
   
   do j=1,N_cells_eta2+1
      f_eta1 = f(1:N_cells_eta1+1,j)     
@@ -463,9 +858,16 @@ program contrib_rho_tester
      coef(i,-1:N_cells_eta2+1) = spl_eta2%coeffs(-1:N_cells_eta2+1)
   enddo
 
+  !do j=1,N_int2+1
+  !  print *,j,integration_points(1,j,1),integration_points(2,j,1)
+  !enddo
+  
+  !stop
+  !integration_points(1,N_int2+1,1) =1._f64-1e-13
+  !integration_points(1,1,1) =1._f64-1e-13
   
   do i=1,N_int1+1
-    rho_exact(i)=0._f64
+    rho_exact_grid(i)=0._f64
     do j=1,N_int2+1
       eta_1 = integration_points(1,j,i)
       eta_2 = integration_points(2,j,i)
@@ -498,15 +900,15 @@ program contrib_rho_tester
       !x2 = x2_min+real(j-1,f64)*dx2
       !tmp = exp(-10._f64*eta_1**2)
       !tmp = exp(-10._f64*(x1**2+x2**2))
-      rho_exact(i) = rho_exact(i)+tmp
+      rho_exact_grid(i) = rho_exact_grid(i)+tmp
       !print *,i,j,tmp,eta_1
     enddo
     !print *,''
-    rho_exact(i) = rho_exact(i)*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2+1,f64)
+    !rho_exact_grid(i) = rho_exact_grid(i)*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2+1,f64)
+    rho_exact_grid(i) = rho_exact_grid(i)*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2,f64)
   enddo
-
-
-  !stop
+  
+  
   do i=1,N_int1+1
     eta_1 = integration_points(1,N_int2/2+1,i)
     !if(N_eta1_non_unif<0)then
@@ -528,7 +930,7 @@ program contrib_rho_tester
   !print *,node_positions_eta1_non_unif
   
   !print *,eta1_min,eta1_max
-  !stop
+  
   
   !we redefine the integration_points on [0,1], bu using the composition of the two transforms:
   ! uniform mesh-> non uniform mesh -> mapping
@@ -548,7 +950,7 @@ program contrib_rho_tester
     enddo
   endif
   
-  
+  !stop
   
   !compute splines
   
@@ -592,7 +994,8 @@ program contrib_rho_tester
         tmp = tmp+coef(store_index_contrib_rho(s),j)*store_contrib_rho(s)
       enddo
     enddo
-    rho(i) = tmp*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2+1,f64)
+    !rho(i) = tmp*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2+1,f64)
+    rho(i) = tmp*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2,f64)
   enddo  
 
   !change for rho(L/2)
@@ -612,10 +1015,24 @@ program contrib_rho_tester
       enddo
     enddo
     !rho(i) = tmp*(x2_max_tab(i)-x2_min_tab(i))/real(N_int2+1,f64)
-    print *,x1_min+real(i-1,f64)*(x1_max-x1_min)/real(N_int1,f64),rho(i),rho_exact(i),&
+    print *,x1_min+real(i-1,f64)*(x1_max-x1_min)/real(N_int1,f64),rho(i),rho_exact(i),rho_exact_grid(i),&
     &2._f64*x2_max_tab(i),&
     &tmp/real(N_int2+1,f64)!tmp*dx2,tmp*(x2_max-x2_min)/real(N_int2+1,f64)   
   enddo  
+
+    tmp=0._f64
+    open(unit=900,file='rho_mapped_mesh.dat')    
+      do i=1,N_int1+1
+        x1=real(i-1)*dx1
+        write(900,*) x1,rho(i),rho_exact(i),rho_exact(i)-rho(i)
+        if(abs(rho_exact(i)-rho(i))>tmp)then
+          tmp = abs(rho_exact(i)-rho(i))
+        endif
+      enddo
+    close(900)
+
+    print *,'# error of rho on mapped mesh',N_int1,N_int2,N_cells_eta1,N_cells_eta2,tmp,abs(rho_exact(1)-rho(1))
+
   
   !print *,'rho0'
   
