@@ -5,10 +5,393 @@ module contrib_rho_module
 #include "sll_memory.h"
 
   use numeric_constants
+  use cubic_nonuniform_splines
   !use utils
   implicit none
 contains  
 
+function compute_non_unif_integral(integration_points,N_points)
+  sll_real64 :: compute_non_unif_integral
+  sll_real64,dimension(:,:),pointer :: integration_points
+  sll_int,intent(in) :: N_points
+  sll_int :: i
+  sll_real64 :: tmp,x1,x2,fval1,fval2
+  compute_non_unif_integral = 0._f64
+  if(N_points<=1)then
+    print *,'bad value of N_points=',N_points
+    stop
+  endif
+  do i=1,N_points-1
+    x1 = integration_points(1,i)
+    x2 = integration_points(1,i+1)
+    if(x2<x1)then
+      print *,i,'bad integration points x1=',x1,'x2=',x2
+      stop
+    endif
+    fval1 = integration_points(2,i)
+    fval2 = integration_points(2,i+1)
+    tmp = 0.5_f64*(fval1+fval2)*(x2-x1)
+    compute_non_unif_integral=compute_non_unif_integral+tmp
+  enddo
+  
+  
+end  function compute_non_unif_integral
+
+
+function compute_non_unif_integral_spline_old(integration_points,N_points,Nb)
+  sll_real64 :: compute_non_unif_integral_spline_old
+  sll_real64,dimension(:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_fine
+  sll_int,intent(in) :: N_points,Nb
+  sll_int :: i,N_points_fine,ierr,j
+  sll_real64 :: tmp,x1,x2,fval1,fval2
+  type(cubic_nonunif_spline_1D), pointer :: spl
+  compute_non_unif_integral_spline_old = 0._f64
+  if(N_points<=1)then
+    print *,'bad value of N_points=',N_points
+    stop
+  endif
+  N_points_fine = (N_points-1)*Nb+1
+  spl =>  new_cubic_nonunif_spline_1D( N_points-1, HERMITE_SPLINE)
+  SLL_ALLOCATE(integration_points_fine(2,N_points_fine),ierr)
+  do i=1,N_points-1
+    x1 = integration_points(1,i)
+    x2 = integration_points(1,i+1)
+    if(x2<x1)then
+      print *,i,'(spl) bad integration points x1=',x1,'x2=',x2
+      stop
+    endif
+    do j=1,Nb
+      integration_points_fine(1,(i-1)*Nb+j)=x1+real(j-1,f64)/real(Nb,f64)*(x2-x1)
+    enddo
+  enddo  
+  integration_points_fine(1,N_points_fine)=integration_points(1,N_points)
+  !stop  
+  call compute_spline_nonunif( integration_points(2,1:N_points), spl, integration_points(1,1:N_points),0._f64,0._f64)
+  call interpolate_array_value_nonunif( integration_points_fine(1,1:N_points_fine), &
+  &integration_points_fine(2,1:N_points_fine),N_points_fine-1, spl)
+  call delete_cubic_nonunif_spline_1D( spl, ierr)
+
+  do i=1,N_points_fine-1
+     x1 = integration_points_fine(1,i)
+     x2 = integration_points_fine(1,i+1)
+     if(x2<x1)then
+       print *,i,'(spl2) bad integration points x1=',x1,'x2=',x2
+       stop
+     endif
+     !print *,i,integration_points_fine(1,i)
+  enddo
+  
+  
+  compute_non_unif_integral_spline_old = compute_non_unif_integral(integration_points_fine,N_points_fine)
+  SLL_DEALLOCATE_ARRAY(integration_points_fine,ierr)
+  
+end  function compute_non_unif_integral_spline_old
+
+function compute_non_unif_integral_spline(integration_points,N_points)
+  sll_real64 :: compute_non_unif_integral_spline
+  sll_real64,dimension(:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_middle
+  sll_int,intent(in) :: N_points
+  sll_int :: i,ierr,j
+  sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
+  type(cubic_nonunif_spline_1D), pointer :: spl
+  compute_non_unif_integral_spline = 0._f64
+
+  if(N_points<=1)then
+    print *,'bad value of N_points=',N_points
+    stop
+  endif
+  spl =>  new_cubic_nonunif_spline_1D( N_points-1, HERMITE_SPLINE)
+  SLL_ALLOCATE(integration_points_middle(2,N_points-1),ierr)
+  do i=1,N_points-1
+    x1 = integration_points(1,i)
+    x2 = integration_points(1,i+1)
+    integration_points_middle(1,i)=0.5_f64*(x1+x2)
+  enddo  
+  call compute_spline_nonunif( integration_points(2,1:N_points), spl, integration_points(1,1:N_points),0._f64,0._f64)
+  call interpolate_array_value_nonunif( integration_points_middle(1,1:N_points-1), &
+  &integration_points_middle(2,1:N_points-1),N_points-1, spl)
+  call delete_cubic_nonunif_spline_1D( spl, ierr)
+  
+  do i=1,N_points-1
+    x1 = integration_points(1,i)
+    x2 = integration_points(1,i+1)
+    fval1 = integration_points(2,i)
+    fval2 = integration_points(2,i+1)
+    fvalm = integration_points_middle(2,i)
+    tmp = (fval1+4._f64*fvalm+fval2)*(x2-x1)/6._f64
+    compute_non_unif_integral_spline=compute_non_unif_integral_spline+tmp
+  enddo
+  
+  SLL_DEALLOCATE_ARRAY(integration_points_middle,ierr)
+  
+end  function compute_non_unif_integral_spline
+
+
+function compute_non_unif_integral_gaussian(integration_points,N_points)
+  sll_real64 :: compute_non_unif_integral_gaussian
+  sll_real64,dimension(:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_new
+  sll_int,intent(in) :: N_points
+  sll_int :: i,ierr,j,is_center_point,N_points_new
+  sll_real64 :: tmp,x1,x2,x3,fval1,fval2,fval3,x4,fval4,dx_int
+  sll_int :: N_int,d_gauss,j_gauss
+  sll_real64,dimension(:,:),pointer :: gauss_points
+  compute_non_unif_integral_gaussian = 0._f64
+  N_int = 2
+  d_gauss = 10
+  
+  SLL_ALLOCATE(gauss_points(2,d_gauss+1),ierr)
+  
+  if(d_gauss==0)then
+    gauss_points(1,1) = 0.5_f64
+    gauss_points(2,1) = 1._f64
+  endif
+
+  if(d_gauss==2)then
+    gauss_points(1,1) = 0.11270166537925831148_f64 
+    gauss_points(1,2) = 0.50000000000000000000_f64
+    gauss_points(1,3) = 0.88729833462074168852_f64
+    gauss_points(2,1) = 0.27777777777777777775_f64
+    gauss_points(2,2) = 0.44444444444444444445_f64
+    gauss_points(2,3) = 0.27777777777777777778_f64
+  endif
+
+  if(d_gauss==4)then
+    gauss_points(1,1) = 0.046910077030668003601_f64 
+    gauss_points(1,2) = 0.23076534494715845448_f64
+    gauss_points(1,3) = 0.50000000000000000000_f64
+    gauss_points(1,4) = 0.76923465505284154552_f64
+    gauss_points(1,5) = 0.95308992296933199640_f64
+    gauss_points(2,1) = 0.11846344252809454382_f64
+    gauss_points(2,2) = 0.23931433524968323302_f64
+    gauss_points(2,3) = 0.28444444444444444382_f64
+    gauss_points(2,4) = 0.23931433524968323408_f64
+    gauss_points(2,5) = 0.11846344252809454332_f64
+  endif
+
+  if(d_gauss==6)then
+    gauss_points(1,1) = 0.025446043828620737737_f64 
+    gauss_points(1,2) = 0.12923440720030278007_f64
+    gauss_points(1,3) = 0.29707742431130141655_f64
+    gauss_points(1,4) = 0.50000000000000000000_f64
+    gauss_points(1,5) = 0.70292257568869858345_f64
+    gauss_points(1,6) = 0.87076559279969721993_f64
+    gauss_points(1,7) = 0.97455395617137926226_f64
+    gauss_points(2,1) = 0.064742483084434846538_f64
+    gauss_points(2,2) = 0.13985269574463833578_f64
+    gauss_points(2,3) = 0.19091502525255949935_f64
+    gauss_points(2,4) = 0.20897959183673468797_f64
+    gauss_points(2,5) = 0.19091502525255948899_f64
+    gauss_points(2,6) = 0.13985269574463833022_f64
+    gauss_points(2,7) = 0.064742483084434844832_f64
+  endif
+
+  if(d_gauss==8)then
+    gauss_points(1,1) = 0.015919880246186955082_f64 
+    gauss_points(1,2) = 0.081984446336682102850_f64
+    gauss_points(1,3) = 0.19331428364970480135_f64
+    gauss_points(1,4) = 0.33787328829809553548_f64
+    gauss_points(1,5) = 0.50000000000000000000_f64
+    gauss_points(1,6) = 0.66212671170190446452_f64
+    gauss_points(1,7) = 0.80668571635029519865_f64
+    gauss_points(1,8) = 0.91801555366331789715_f64
+    gauss_points(1,9) = 0.98408011975381304492_f64
+    gauss_points(2,1) = 0.040637194180787175822_f64
+    gauss_points(2,2) = 0.090324080347428468792_f64
+    gauss_points(2,3) = 0.13030534820146771147_f64
+    gauss_points(2,4) = 0.15617353852000146170_f64
+    gauss_points(2,5) = 0.16511967750063012022_f64
+    gauss_points(2,6) = 0.15617353852000133681_f64
+    gauss_points(2,7) = 0.13030534820146773892_f64
+    gauss_points(2,8) = 0.090324080347428458790_f64
+    gauss_points(2,9) = 0.040637194180787192773_f64
+  endif
+
+  if(d_gauss==10)then
+    gauss_points(1,1) = 0.010885670926971503598_f64 
+    gauss_points(1,2) = 0.056468700115952350462_f64
+    gauss_points(1,3) = 0.13492399721297533795_f64
+    gauss_points(1,4) = 0.24045193539659409204_f64
+    gauss_points(1,5) = 0.36522842202382751383_f64
+    gauss_points(1,6) = 0.50000000000000000000_f64
+    gauss_points(1,7) = 0.63477157797617248617_f64
+    gauss_points(1,8) = 0.75954806460340590796_f64
+    gauss_points(1,9) = 0.86507600278702466205_f64
+    gauss_points(1,10) = 0.94353129988404764954_f64
+    gauss_points(1,11) = 0.98911432907302849640_f64
+    gauss_points(2,1) = 0.027834283558086630522_f64
+    gauss_points(2,2) = 0.062790184732454913642_f64
+    gauss_points(2,3) = 0.093145105463867582027_f64
+    gauss_points(2,4) = 0.11659688229597882542_f64
+    gauss_points(2,5) = 0.13140227225513898990_f64
+    gauss_points(2,6) = 0.13646254338895855961_f64
+    gauss_points(2,7) = 0.13140227225511460324_f64
+    gauss_points(2,8) = 0.11659688229599488815_f64
+    gauss_points(2,9) = 0.093145105463868674217_f64
+    gauss_points(2,10) = 0.062790184732451937905_f64
+    gauss_points(2,11) = 0.027834283558088336992_f64
+  endif
+
+
+  
+  if(N_points<=1)then
+    print *,'bad value of N_points=',N_points
+    stop
+  endif
+  i=N_points/2
+  is_center_point=0
+  if(2*i/=N_points)then
+    is_center_point=1
+  endif
+  !check that the integration points are increasing
+  do i=1,N_points-1
+    if(integration_points(1,i+1)<=integration_points(1,i))then
+      print *,'order problem for integration_points',i,integration_points(1,i),integration_points(1,i+1)
+      do j=1,N_points
+        print *,j,integration_points(1,j)
+      enddo
+      stop
+    endif
+  enddo
+  !check for the symmetry  
+  tmp=0._f64
+  if(is_center_point==0)then
+    do i=1,N_points/2
+      if(abs(integration_points(1,N_points/2+i)+integration_points(1,N_points/2-i+1))>tmp)then
+        tmp=abs(integration_points(1,N_points/2+i)+integration_points(1,N_points/2-i+1))
+      endif
+    enddo
+    if(tmp>0)then
+      print *,'integration_points are not symmetric',tmp
+      do j=1,N_points
+        print *,j,integration_points(1,j)
+      enddo
+      stop
+    endif
+  endif
+  
+  if(is_center_point==1)then
+    tmp=0._f64
+    tmp=abs(integration_points(1,(N_points+1)/2))
+    do i=1,(N_points-1)/2
+      if(abs(integration_points(1,(N_points+1)/2+i)+integration_points(1,(N_points+1)/2-i))>tmp)then
+        tmp=abs(integration_points(1,(N_points+1)/2+i)+integration_points(1,(N_points+1)/2-i))
+      endif
+    enddo
+    if(tmp>0)then
+      print *,'integration_points are not symmetric',tmp
+      do j=1,N_points
+        print *,j,integration_points(1,j)
+      enddo
+      stop
+    endif
+  endif
+  
+  !we will store in a new tab so that we are in the even case
+  N_points_new = N_points
+  if(is_center_point==0)then
+    N_points_new= N_points+1
+  endif
+  SLL_ALLOCATE(integration_points_new(2,N_points_new),ierr)
+  if(is_center_point==1)then
+    integration_points_new = integration_points
+  endif
+  if(is_center_point==0)then
+    if(N_points/2+3>N_points)then
+      print *,'N_points is too small',N_points
+    endif
+    integration_points_new(1:2,1:N_points/2) = integration_points(1:2,1:N_points/2)
+    integration_points_new(1:2,N_points/2+2:N_points+1) = integration_points(1:2,N_points/2+1:N_points)
+    !we have to predict the value of the center
+    integration_points_new(1,N_points/2+1)=0._f64
+    x1=integration_points(1,N_points/2+1)
+    x2=integration_points(1,N_points/2+2)
+    x3=integration_points(1,N_points/2+3)
+    fval1=integration_points(2,N_points/2+1)*exp(0.5_f64*x1*x1)
+    fval2=integration_points(2,N_points/2+2)*exp(0.5_f64*x2*x2)
+    fval3=integration_points(2,N_points/2+3)*exp(0.5_f64*x3*x3)
+    !print *,x1,x2,x3,fval1,fval2,fval3
+    x4=0._f64
+    fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))+fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
+    fval4=fval4*exp(-0.5_f64*x4*x4)
+    integration_points_new(2,N_points/2+1)=fval4
+  endif
+  
+  do i=1,(N_points_new-1)/4
+    x1 = integration_points_new(1,(N_points_new-1)/2+2*i-1)
+    x2 = integration_points_new(1,(N_points_new-1)/2+2*i)
+    x3 = integration_points_new(1,(N_points_new-1)/2+2*i+1)
+    fval1 = integration_points_new(2,(N_points_new-1)/2+2*i-1)*exp(0.5_f64*x1*x1)
+    fval2 = integration_points_new(2,(N_points_new-1)/2+2*i)*exp(0.5_f64*x2*x2)
+    fval3 = integration_points_new(2,(N_points_new-1)/2+2*i+1)*exp(0.5_f64*x3*x3)
+    tmp=0._f64
+    dx_int=(x3-x1)/real(N_int,f64)
+    do j=1,N_int
+      do j_gauss=1,d_gauss+1
+        !x4 =x1+(real(j,f64)-0.5_f64)*dx_int
+        x4 =x1+(real(j-1,f64)+gauss_points(1,j_gauss))*dx_int
+        fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))+fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
+        fval4=fval4*exp(-0.5_f64*x4*x4)
+        tmp=tmp+fval4*gauss_points(2,j_gauss)
+      enddo
+    enddo  
+    tmp=tmp*dx_int
+    !print *,i,x1,x2,x3
+    compute_non_unif_integral_gaussian =compute_non_unif_integral_gaussian+tmp
+    !integration_points_middle(1,i)=0.5_f64*(x1+x2)
+  enddo
+  j=(N_points_new-1)/4
+  if(2*j/=(N_points_new-1)/2)then
+    !print *,2*j,(N_points_new-1)/2
+    if(2*j+1/=(N_points_new-1)/2)then
+      print *,'Problem concerning N_points',2*j+1,(N_points_new-1)/2
+    endif
+    x1 = integration_points_new(1,N_points_new-2)
+    x2 = integration_points_new(1,N_points_new-1)
+    x3 = integration_points_new(1,N_points_new)
+    fval1 = integration_points_new(2,N_points_new-2)*exp(0.5_f64*x1*x1)
+    fval2 = integration_points_new(2,N_points_new-1)*exp(0.5_f64*x2*x2)
+    fval3 = integration_points_new(2,N_points_new)*exp(0.5_f64*x3*x3)
+    x4 = 2._f64*x3-x2
+    fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))+fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
+    fval4=fval4*exp(-0.5_f64*x4*x4)
+
+
+    
+    x1 = integration_points_new(1,N_points_new-1)
+    x2 = integration_points_new(1,N_points_new)
+    x3 = 2._f64*x2-x1
+    fval1 = integration_points_new(2,N_points_new-1)*exp(0.5_f64*x1*x1)
+    fval2 = integration_points_new(2,N_points_new)*exp(0.5_f64*x2*x2)
+    fval3 = fval4*exp(0.5_f64*x3*x3)
+    
+    !print *,x1,x2,x3
+    !print *,fval1,fval2,fval3
+    !print *,x1,x2,x3
+    !print *,fval1,fval2,fval3
+    
+    !stop
+    
+    tmp=0._f64
+    N_int =N_int*2
+    dx_int=(x3-x1)/real(N_int,f64)
+    do j=1,N_int
+      do j_gauss=1,d_gauss+1
+        !x4 =x1+(real(j,f64)-0.5_f64)*dx_int
+        x4 =x1+(real(j-1,f64)+gauss_points(1,j_gauss))*dx_int
+        fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))+fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
+        fval4=fval4*exp(-0.5_f64*x4*x4)
+        tmp=tmp+fval4*gauss_points(2,j_gauss)
+      enddo
+    enddo
+    tmp=tmp*dx_int
+    !print *,i,x1,x2,x3
+    compute_non_unif_integral_gaussian =compute_non_unif_integral_gaussian+tmp
+  endif
+  compute_non_unif_integral_gaussian = 2._f64*compute_non_unif_integral_gaussian
+end  function compute_non_unif_integral_gaussian
 
 
 
