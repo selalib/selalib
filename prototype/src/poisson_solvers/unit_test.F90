@@ -17,9 +17,9 @@ program test_poisson_solvers
 
   sll_int64 :: nx, ny, nz
 
-  nx = 4
-  ny = 4
-  nz = 2
+  nx = 64
+  ny = 64
+  nz = 16
 
   call test_poisson_1d()
   call test_sll_poisson_3d_periodic_seq(nx, ny, nz)
@@ -154,10 +154,11 @@ contains
           do i=1,nx
              x = (i-1)*dx
              phi_an(i,j,k) = cos(x)*sin(y)*cos(z)
-             rho(i,j,k) = 3*phi_an(i,j,k)
           enddo
        enddo
     enddo
+
+    rho = 3*phi_an
 
     plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64))
     call solve_poisson_3d_periodic(plan, rho, phi)

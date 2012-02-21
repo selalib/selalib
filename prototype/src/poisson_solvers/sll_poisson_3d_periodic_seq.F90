@@ -46,8 +46,6 @@ contains
 
     sll_comp64, dimension(:,:,:)             :: array
     sll_int32                                :: nx, ny, nz
-    type(sll_fft_plan), pointer              :: px, py, pz
-    type(sll_fft_plan), pointer              :: px_inv, py_inv, pz_inv
     type (poisson_3d_periodic_plan), pointer :: new_poisson_3d_periodic_plan
     sll_int32                                :: ierr
 
@@ -88,16 +86,16 @@ contains
     SLL_ALLOCATE(hat_phi(nx,ny,nz), ierr)
 
     ! FFTs in z-direction
- call random_number(rho)
+ !call random_number(rho)
     hat_rho = cmplx(rho, 0_f64, kind=f64)
-print*, 'test1:',hat_rho(1,1,:)
-    do j=1,1!ny
-       do i=1,1!nx
+!print*, 'test1:',hat_rho(1,1,:)
+    do j=1,ny
+       do i=1,nx
           call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
     enddo
-print*, 'test2',hat_rho(1,1,:)
-stop
+!print*, 'test2',hat_rho(1,1,:)
+!stop
     do k=1,nz-1,2
        hat_rho(:,:,k) = -hat_rho(:,:,k)
     enddo
