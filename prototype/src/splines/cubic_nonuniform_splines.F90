@@ -211,14 +211,14 @@ contains  ! ****************************************************************
     lift(3,1) = lift(3,1)-(spline%node_positions(0)-spline%node_positions(-1))*(spline%node_positions(0)-spline%node_positions(-2))
     lift(3,1) = lift(3,1)/((spline%node_positions(2)-spline%node_positions(-1))*(spline%node_positions(1)-spline%node_positions(0)))
 
-    lift(3,2) = (spline%node_positions(nc)-spline%node_positions(nc-1))*(spline%node_positions(nc+2)-spline%node_positions(nc-1))
+    lift(3,2) = (spline%node_positions(nc+1)-spline%node_positions(nc))*(spline%node_positions(nc+2)-spline%node_positions(nc-1))
     lift(3,2) = lift(3,2)/((spline%node_positions(nc+1)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1)))
 
     lift(4,1) = (spline%node_positions(0)-spline%node_positions(-1))*(spline%node_positions(1)-spline%node_positions(-2))
     lift(4,1) = lift(4,1)/((spline%node_positions(2)-spline%node_positions(-1))*(spline%node_positions(1)-spline%node_positions(0)))
 
-    lift(4,2) = (spline%node_positions(nc+2)-spline%node_positions(nc))*(spline%node_positions(nc+1)-spline%node_positions(nc))
-    lift(4,2) = lift(4,2)-(spline%node_positions(nc)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1))
+    lift(4,2) = (spline%node_positions(nc)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1))
+    lift(4,2) = lift(4,2)-(spline%node_positions(nc+2)-spline%node_positions(nc))*(spline%node_positions(nc+1)-spline%node_positions(nc))
     lift(4,2) = lift(4,2)/((spline%node_positions(nc+1)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1)))
 
     
@@ -271,16 +271,17 @@ contains  ! ****************************************************************
     cts  => buf(3*Np+1:10*Np)
     ipiv => ibuf(1:Np)
     
-    
+    !symmetric case
     node_pos(-1)=2._f64*node_pos(0)-node_pos(1)
     node_pos(-2)=2._f64*node_pos(0)-node_pos(2)
     node_pos(N+1)=2.0_f64*node_pos(N)-node_pos(N-1)
     node_pos(N+2)=2.0_f64*node_pos(N)-node_pos(N-2)
 
-    !node_pos(-1)=node_pos(0)
-    !node_pos(-2)=node_pos(0)
-    !node_pos(N+1)=node_pos(N)
-    !node_pos(N+2)=node_pos(N)
+    !triple point case
+    node_pos(-1)=node_pos(0)
+    node_pos(-2)=node_pos(0)
+    node_pos(N+1)=node_pos(N)
+    node_pos(N+2)=node_pos(N)
 
     
     !fill a with mesh information
