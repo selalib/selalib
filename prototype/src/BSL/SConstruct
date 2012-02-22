@@ -80,6 +80,6 @@ env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2D_periodic.
 
 #env.Program('unit_test', ["unit_test.F90", "sll_bsl.F90"])
 
-env.Program('landau_dumping', ["landau_dumping.F90", "sll_bsl.F90"])
+env.Program('landau_damping', ["landau_damping.F90", "sll_bsl.F90"])
 
 Help(vars.GenerateHelpText(env))
