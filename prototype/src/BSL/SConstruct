@@ -13,17 +13,17 @@ print 'platform : ' + platform
 if os.environ.has_key("HDF5INCPATH"):
    print 'hdf5 header files are in %s ' %  os.environ['HDF5INCPATH']
 else:
-   os.environ['HDF5INCPATH'] = "/usr/local/include"
+   print 'HDF5INCPATH not set'
 
 if os.environ.has_key("HDF5MODPATH"):
    print 'hdf5 mod files are in %s ' %  os.environ['HDF5MODPATH']
 else:
-   os.environ['HDF5MODPATH'] = "/usr/local/include"
+   print 'HDF5MODPATH not set'
 
 if os.environ.has_key("HDF5LIBPATH"):
    print 'hdf5 library files are in %s ' %  os.environ['HDF5LIBPATH']
 else:
-   os.environ['HDF5LIBPATH'] = "/usr/local/lib"
+   print 'HDF5LIBPATH not set'
 
 vars = Variables()
 vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
@@ -42,8 +42,10 @@ env = Environment( ENV = os.environ,
                               '../constants',
                               '../mesh_types',
                               '../splines',
-                              '../ode_solvers'],
-                   LIBPATH = ['.'],
+                              os.environ['HDF5INCPATH'],
+                              '../ode_solvers',
+			      '../poisson_solvers'],
+                   LIBPATH = ['.',os.environ['HDF5LIBPATH'],'../fftpack'],
                    LIBS = ['sll_memory',
                            'sll_precision',
                            'sll_assert',
@@ -56,12 +58,10 @@ env = Environment( ENV = os.environ,
                            'sll_diagnostics',
                            'sll_poisson_solvers'])
 
-env.Append(CPPDEFINES=['DEBUG','GFORTRAN'])
+env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
 
-env.Append(LIBS=['dfftpack'])
+env.Append(LIBS=['dfftpack','hdf5','hdf5_fortran','z'])
 
-env.Append(F90PATH=['${HDF5INCPATH}','${HDF5MODPATH}'])
-env.Append(LIBPATH= ['${HDF5LIBPATH}'])
 
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
@@ -74,9 +74,12 @@ env.Library('sll_diagnostics',Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
 env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2D_periodic.F90",
+                                    "../poisson_solvers/sll_poisson_1D_periodic.F90",
+                                    "../poisson_solvers/fft1d.f90",
                                     "../poisson_solvers/fft_module.F90"])
 
-env.Program('unit_test', ["unit_test.F90", "sll_bsl.F90"])
+#env.Program('unit_test', ["unit_test.F90", "sll_bsl.F90"])
+
 env.Program('landau_dumping', ["landau_dumping.F90", "sll_bsl.F90"])
 
 Help(vars.GenerateHelpText(env))
