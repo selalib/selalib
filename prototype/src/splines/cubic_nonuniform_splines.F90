@@ -171,7 +171,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: buf,fp,coeffs
     sll_int32, dimension(:), pointer :: ibuf
     sll_int32 :: nc
-    sll_real64 :: lift(2,2)
+    sll_real64 :: lift(4,2)
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_nonunif_1D_hermite(): ', &
@@ -192,12 +192,36 @@ contains  ! ****************************************************************
     ibuf    => spline%ibuf
     coeffs => spline%coeffs
     
+    !lift(1,1) = 1._f64/3._f64*(spline%node_positions(1)-spline%node_positions(0))*spline%slope_L
+    !lift(1,2) = -1._f64/3._f64*(spline%node_positions(nc)-spline%node_positions(nc-1))*spline%slope_R
+    !lift(2,1) = -2._f64/3._f64*(spline%node_positions(1)+spline%node_positions(2)-2.0_f64*spline%node_positions(0))*spline%slope_L
+    !lift(2,2) = 2._f64/3._f64*(2.0_f64*spline%node_positions(nc)-spline%node_positions(nc-1)-spline%node_positions(nc-2))*spline%slope_R
+
     lift(1,1) = 1._f64/3._f64*(spline%node_positions(1)-spline%node_positions(0))*spline%slope_L
     lift(1,2) = -1._f64/3._f64*(spline%node_positions(nc)-spline%node_positions(nc-1))*spline%slope_R
-    lift(2,1) = -2._f64/3._f64*(spline%node_positions(1)+spline%node_positions(2)-2.0_f64*spline%node_positions(0))*spline%slope_L
-    lift(2,2) = 2._f64/3._f64*(2.0_f64*spline%node_positions(nc)-spline%node_positions(nc-1)-spline%node_positions(nc-2))*spline%slope_R
+    lift(2,1) = -1._f64/3._f64*(spline%node_positions(1)-spline%node_positions(-1))&
+                &*(spline%node_positions(1)-spline%node_positions(-2))/(spline%node_positions(1)-spline%node_positions(0))*spline%slope_L
+    lift(2,2) = 1._f64/3._f64*(spline%node_positions(nc+1)-spline%node_positions(nc-1))&
+    &*(spline%node_positions(nc+2)-spline%node_positions(nc-1))/(spline%node_positions(nc)-spline%node_positions(nc-1))*spline%slope_R
+
     
-    lift = lift*(spline%xmax-spline%xmin)
+    lift(1:2,1:2) = lift(1:2,1:2)*(spline%xmax-spline%xmin)
+    
+    lift(3,1) = (spline%node_positions(2)-spline%node_positions(0))*(spline%node_positions(1)-spline%node_positions(0))
+    lift(3,1) = lift(3,1)-(spline%node_positions(0)-spline%node_positions(-1))*(spline%node_positions(0)-spline%node_positions(-2))
+    lift(3,1) = lift(3,1)/((spline%node_positions(2)-spline%node_positions(-1))*(spline%node_positions(1)-spline%node_positions(0)))
+
+    lift(3,2) = (spline%node_positions(nc)-spline%node_positions(nc-1))*(spline%node_positions(nc+2)-spline%node_positions(nc-1))
+    lift(3,2) = lift(3,2)/((spline%node_positions(nc+1)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1)))
+
+    lift(4,1) = (spline%node_positions(0)-spline%node_positions(-1))*(spline%node_positions(1)-spline%node_positions(-2))
+    lift(4,1) = lift(4,1)/((spline%node_positions(2)-spline%node_positions(-1))*(spline%node_positions(1)-spline%node_positions(0)))
+
+    lift(4,2) = (spline%node_positions(nc+2)-spline%node_positions(nc))*(spline%node_positions(nc+1)-spline%node_positions(nc))
+    lift(4,2) = lift(4,2)-(spline%node_positions(nc)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1))
+    lift(4,2) = lift(4,2)/((spline%node_positions(nc+1)-spline%node_positions(nc-2))*(spline%node_positions(nc)-spline%node_positions(nc-1)))
+
+    
     call compute_spline_nonunif_1D_hermite_aux( fp, nc, buf, ibuf, coeffs, lift )
   end subroutine compute_spline_nonunif_1D_hermite
 
@@ -253,10 +277,18 @@ contains  ! ****************************************************************
     node_pos(N+1)=2.0_f64*node_pos(N)-node_pos(N-1)
     node_pos(N+2)=2.0_f64*node_pos(N)-node_pos(N-2)
 
+    !node_pos(-1)=node_pos(0)
+    !node_pos(-2)=node_pos(0)
+    !node_pos(N+1)=node_pos(N)
+    !node_pos(N+2)=node_pos(N)
+
     
     !fill a with mesh information
+    !a(1)=0.0_f64
+    !a(2)=(node_pos(2)-node_pos(0))/(node_pos(1)+node_pos(2)-2._f64*node_pos(0))
+    !a(3)=1.0_f64-a(2)
     a(1)=0.0_f64
-    a(2)=(node_pos(2)-node_pos(0))/(node_pos(1)+node_pos(2)-2._f64*node_pos(0))
+    a(2)=(node_pos(2)-node_pos(0))/(node_pos(2)-node_pos(-1))
     a(3)=1.0_f64-a(2)
     do i=1,N-1
       !subdiagonal terms
@@ -266,7 +298,10 @@ contains  ! ****************************************************************
       !diagonal terms
       a(3*i+2)=1.0_f64-a(3*i+1)-a(3*i+3)
     enddo
-    a(3*N+2)=(node_pos(N)-node_pos(N-2))/(2._f64*node_pos(N)-node_pos(N-1)-node_pos(N-2))
+    !a(3*N+2)=(node_pos(N)-node_pos(N-2))/(2._f64*node_pos(N)-node_pos(N-1)-node_pos(N-2))
+    !a(3*N+1)=1.0_f64-a(3*N+2)
+    !a(3*N+3)=0.0_f64
+    a(3*N+2)=(node_pos(N)-node_pos(N-2))/(node_pos(N+1)-node_pos(N-2))
     a(3*N+1)=1.0_f64-a(3*N+2)
     a(3*N+3)=0.0_f64
 
@@ -309,7 +344,7 @@ contains  ! ****************************************************************
   subroutine compute_spline_nonunif_1D_hermite_aux( f, N, buf, ibuf, coeffs, lift )
     sll_real64, dimension(:), pointer :: f,buf,coeffs
     sll_int32, intent(in) :: N
-    sll_real64, intent(in) :: lift(2,2)
+    sll_real64, intent(in) :: lift(4,2)
     sll_real64, dimension(:), pointer :: cts
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
     sll_int32 :: i,Np
@@ -322,8 +357,12 @@ contains  ! ****************************************************************
     coeffs(0)=f(1)+lift(1,1)
     coeffs(N)=f(N+1)+lift(1,2)
     call solve_cyclic_tridiag( cts, ipiv, coeffs(0:N), Np, coeffs(0:N) )
-    coeffs(-1) = coeffs(1)+lift(2,1)
-    coeffs(N+1) = coeffs(N-1)+lift(2,2)
+    !coeffs(-1) = coeffs(1)+lift(2,1)
+    !coeffs(N+1) = coeffs(N-1)+lift(2,2)
+    
+    coeffs(-1) = lift(3,1)*coeffs(0)+lift(4,1)*coeffs(1)+lift(2,1)
+    coeffs(N+1) = lift(3,2)*coeffs(N-1)+lift(4,2)*coeffs(N)+lift(2,2)
+    
     
   end subroutine compute_spline_nonunif_1D_hermite_aux
   
