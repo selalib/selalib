@@ -14,9 +14,9 @@ program unit_test
   sll_real64, dimension(:,:), allocatable :: x2
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
   sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
-  sll_real64, dimension(:,:), allocatable :: jacs
+!  sll_real64, dimension(:,:), allocatable :: jacs
   sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2, delta, delta2, acc, node, interp, jac_analyt
+  sll_real64 :: eta1, eta2, h1, h2, delta, delta2, acc, acc1, node, node_a, node_d, interp, jac_analyt
 
   print *,  'filling out discrete arrays for x1 and x2 ', &
        'needed in the discrete case'
@@ -30,18 +30,19 @@ program unit_test
   allocate(x1_eta1_max(NPTS2))
   allocate(x2_eta1_min(NPTS2))
   allocate(x2_eta1_max(NPTS2))
+!  allocate(jacs(NPTS1,NPTS2))
 
-  allocate(jacs(NPTS1,NPTS2))
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
         x1(i+1,j+1)   = x1_polar_f(eta1,eta2) 
         x2(i+1,j+1)   = x2_polar_f(eta1,eta2) 
-        jacs(i+1,j+1) = eta1
+ !       jacs(i+1,j+1) = eta1
      end do
   end do
 
+  ! Fill out the transformation's slopes at the borders
   do j=0,NPTS2-1
      eta1           = 0.0_f64
      eta2           = real(j,f64)*h2
@@ -72,7 +73,7 @@ program unit_test
   print *, 'initialized map'
 
   print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', jacobian_2d(map_a,0.5_f64,0.5_f64)
-
+  print *, x1_eta1_min(1)
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE MAP                    '
   print *, '**********************************************************'
@@ -86,7 +87,6 @@ program unit_test
        NPTS2, &
        x1_node=x1, &
        x2_node=x2, &
-       jacobians_node=jacs, &
        eta1_bc_type_x1=HERMITE_MAP_BC, &
        eta2_bc_type_x1=PERIODIC_MAP_BC,&
        eta1_bc_type_x2=HERMITE_MAP_BC, &
@@ -95,8 +95,25 @@ program unit_test
        eta1_max_slopes_x1=x1_eta1_max, &
        eta1_min_slopes_x2=x2_eta1_min, &
        eta1_max_slopes_x2=x2_eta1_max )
-print *, 'x1: '
-print *, map_d%x1_node(:,:)
+  print *, 'x1: '
+  print *, map_d%x1_node(:,:)
+
+  print *, 'Compare the values of the transformation at the nodes: '
+  acc  = 0.0_f64
+  acc1 = 0.0_f64
+  do j=1,NPTS2
+     do i=1,NPTS1
+        node_a   = map2d_x1_node(map_a,i,j)
+        node_d   = map2d_x1_node(map_d,i,j)
+        acc = acc + abs(node_a-node_d)
+        node_a   = map2d_x2_node(map_a,i,j)
+        node_d   = map2d_x2_node(map_d,i,j)
+        acc1 = acc1 + abs(node_a-node_d)
+     end do
+  end do
+  print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
+  print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
+
   print *, 'Compare the values of the jacobian at the nodes, resulting from ',&
        'calls to map_2d_jacobian_node() and jacobian_2D(map, eta1, eta2)'
   acc = 0.0_f64
@@ -104,11 +121,13 @@ print *, map_d%x1_node(:,:)
      do i=0,NPTS1-1
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
-        node   = map_2d_jacobian_node(map_d,i+1,j+1)
+        node   = map_2D_jacobian_node(map_a,i+1,j+1)
+!        node   = map_2d_jacobian_node(map_d,i+1,j+1)
         interp = jacobian_2D(map_d,eta1,eta2) 
         delta  =  node - interp
         jac_analyt = jacobian_2D(map_a,eta1,eta2)  
         delta2 = node - jac_analyt
+        print *, 'eta1 = ', eta1, 'eta2 = ', eta2
         print *, '(',i+1,j+1,'): NODE = ', node, ', INTERP = ', interp, &
              '. DIFFERENCE  = ', delta
         print *, '(',i+1,j+1,'): NODE = ', node, ', ANALYT = ', jac_analyt, &

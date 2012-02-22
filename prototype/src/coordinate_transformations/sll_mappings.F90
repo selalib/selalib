@@ -187,9 +187,9 @@ contains
     j12 = (map%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (map%j_matrix(2,1)%f( eta1, eta2 ))
     j22 = (map%j_matrix(2,2)%f( eta1, eta2 ))
-print *, 'jacobian_2D_analytic: '
-print *, j11, j12
-print *, j21, j22
+    !    print *, 'jacobian_2D_analytic: '
+    !    print *, j11, j12
+    !    print *, j21, j22
     jacobian_2D_analytic = j11*j22 - j12*j21
   end function jacobian_2D_analytic
 
@@ -206,9 +206,9 @@ print *, j21, j22
     j12 = interpolate_x2_derivative_2D( eta1, eta2, map%x1_spline )
     j21 = interpolate_x1_derivative_2D( eta1, eta2, map%x2_spline )
     j22 = interpolate_x2_derivative_2D( eta1, eta2, map%x2_spline )
-print *, 'jacobian_2D_discrete: '
-print *, j11, j12
-print *, j21, j22
+    !    print *, 'jacobian_2D_discrete: '
+    !    print *, j11, j12
+    !    print *, j21, j22
     jacobian_2D_discrete = j11*j22 - j12*j21
   end function jacobian_2D_discrete
 
@@ -292,12 +292,12 @@ print *, j21, j22
     sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes_x2
     sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes_x2
 
-
     sll_int32  :: map_type ! enumerated constant-valued
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: delta_2  ! cell spacing in eta2 
     sll_real64 :: eta_1
     sll_real64 :: eta_2
+    sll_real64 :: jacobian_val
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: x1_eta1_bc ! to translate the BC enumerators to the splines
@@ -521,6 +521,8 @@ print *, j21, j22
 
     map%num_pts_1 = npts1
     map%num_pts_2 = npts2
+    delta_1 = 1.0_f64/(npts1 - 1)
+    delta_2 = 1.0_f64/(npts2 - 1)
 
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(map%jacobians_n(npts1,npts2), ierr)
@@ -570,8 +572,6 @@ print *, j21, j22
           SLL_ALLOCATE(map%jacobians_c(npts1-1, npts2-1), ierr)
 
           ! Fill out the jacobians for the points in the uniform mesh.
-          delta_1 = 1.0_f64/(npts1 - 1)
-          delta_2 = 1.0_f64/(npts2 - 1)
 
           ! Fill the values at the nodes
           do j=0, npts2 - 1
@@ -580,7 +580,11 @@ print *, j21, j22
                 eta_2 = real(j,f64)*delta_2
                 map%x1_node(i+1,j+1) = x1_func(eta_1, eta_2)
                 map%x2_node(i+1,j+1) = x2_func(eta_1, eta_2)
-                map%jacobians_n(i+1,j+1) = (map%jacobian_func(map,eta_1,eta_2))
+                ! for some compiler reason, the following intermediate 
+                ! variable is required, else the jacobians_n array will not
+                ! be filled out properly.
+                jacobian_val             = (map%jacobian_func(map,eta_1,eta_2))
+                map%jacobians_n(i+1,j+1) = jacobian_val
              end do
           end do
 
@@ -718,7 +722,7 @@ print *, j21, j22
           ! the user-provided values and the predictions from the splines,
           ! then this may itself be a way to look for errors.
           !
-          ! Copy the values of the jacobians at the nodes is user given:
+          ! Copy the values of the jacobians at the nodes if user given:
           if( jn .eqv. .true. ) then
              do j=1, npts2
                 do i=1, npts1
@@ -726,14 +730,13 @@ print *, j21, j22
                 end do
              end do
           else
-
          ! Fill the jacobian values at the nodes calculated from the splines
              do j=0, npts2 - 1
                 do i=0, npts1 - 1
                    eta_1 = real(i,f64)*delta_1
                    eta_2 = real(j,f64)*delta_2
-                   map%jacobians_n(i+1,j+1) = &
-                        (map%jacobian_func(map,eta_1,eta_2)) 
+                   jacobian_val = (map%jacobian_func(map,eta_1,eta_2)) 
+                   map%jacobians_n(i+1,j+1) = jacobian_val
                 end do
              end do
           end if
@@ -819,8 +822,8 @@ print *, j21, j22
     SLL_ASSERT( associated(map) )
     num_pts_1 = map%num_pts_1
     num_pts_2 = map%num_pts_2
-    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1 - 1) )
-    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2 - 1) )
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
     map2d_x2_node = map%x2_node(i,j)
   end function map2d_x2_node
 
