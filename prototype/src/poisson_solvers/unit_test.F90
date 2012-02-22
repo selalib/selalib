@@ -16,13 +16,17 @@ program test_poisson_solvers
   implicit none
 
   sll_int64 :: nx, ny, nz
+  sll_real64 :: Lx, Ly, Lz
 
   nx = 64
   ny = 64
-  nz = 16
+  nz = 64
+  Lx = 2*sll_pi
+  Ly = 2*sll_pi
+  Lz = 2*sll_pi
 
   call test_poisson_1d()
-  call test_sll_poisson_3d_periodic_seq(nx, ny, nz)
+  call test_sll_poisson_3d_periodic_seq(nx, ny, nz, Lx, Ly, Lz)
 
 contains
 
@@ -133,9 +137,10 @@ contains
 
   end subroutine test_poisson_1d
 
-  subroutine test_sll_poisson_3d_periodic_seq(nx, ny, nz)
+  subroutine test_sll_poisson_3d_periodic_seq(nx, ny, nz, Lx, Ly, Lz)
 
     sll_int64                                :: nx, ny, nz
+    sll_real64                               :: Lx, Ly, Lz
     sll_real64                               :: dx, dy, dz
     sll_real64                               :: x, y, z
     sll_real64, dimension(nx,ny,nz)          :: rho, phi_an, phi
@@ -143,9 +148,9 @@ contains
     type (poisson_3d_periodic_plan), pointer :: plan
     sll_real64                               :: average_err
 
-    dx = 2*sll_pi/nx
-    dy = 2*sll_pi/ny
-    dz = 2*sll_pi/nz
+    dx = Lx/nx
+    dy = Ly/ny
+    dz = Lz/nz
 
     do k=1,nz
        z = (k-1)*dz
@@ -160,7 +165,7 @@ contains
 
     rho = 3*phi_an
 
-    plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64))
+    plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
     call solve_poisson_3d_periodic(plan, rho, phi)
     call delete_poisson_3d_periodic_plan(plan)
 
