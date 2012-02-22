@@ -326,7 +326,7 @@ contains
   function x2_polar_f( eta1, eta2 )
     sll_real64 :: x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
-    x2_polar_f = (R1 + (R2-R1)*eta2)*sin(2.0_f64*sll_pi*eta2)
+    x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_pi*eta2)
   end function x2_polar_f
 
   function deriv_x1_polar_f_eta1( eta1, eta2 )
