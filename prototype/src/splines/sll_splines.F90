@@ -1119,8 +1119,8 @@ contains  ! ****************************************************************
     ! the condition of periodicity.
     datap => spline%coeffs(1:npx1,0)
     coeffs => spline%coeffs(1:npx1+2,0)
-    min_slope = spline%x1_min_slopes(npx1-1)
-    max_slope = spline%x1_max_slopes(npx1-1)
+    min_slope = spline%x1_min_slopes(npx2-1)
+    max_slope = spline%x1_max_slopes(npx2-1)
     call compute_spline_1D_hermite_aux( &
          datap, &
          npx1, &
