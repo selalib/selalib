@@ -100,24 +100,50 @@ program spline_tester
 
   call test_spline_1d_hrmt( line, 2.0_f64, 2.0_f64, test_passed )
 
-  call interpolator_tester_2d( &
+  call interpolator_tester_2d_prdc_prdc( &
        coscos, &
        msincos, &
        interpolate_x1_derivative_2D, &
        test_passed )
 
-  call interpolator_tester_2d( &
+  call interpolator_tester_2d_prdc_prdc( &
        coscos, &
        mcossin, &
        interpolate_x2_derivative_2D, &
        test_passed )
 
+  print *,  'Test polar transformation case: '
   call test_2d_spline_hrmt_prdc( &
        polar_x, &
        deriv1_polar_x, &
        deriv1_polar_x, &
        test_passed )
 
+  call test_2d_spline_hrmt_prdc( &
+       polar_y, &
+       deriv1_polar_y, &
+       deriv1_polar_y, &
+       test_passed )
+
+  call test_2d_spline_hrmt_prdc( &
+       polar_y, &
+       deriv1_polar_y, &
+       deriv1_polar_y, &
+       test_passed )
+
+  call test_2d_spline_hrmt_prdc( &
+       polar_y, &
+       deriv2_polar_y, &
+       deriv2_polar_y, &
+       test_passed )
+
+  call interpolator_tester_2d_hrmt_prdc( &
+       polar_x, &
+       deriv1_polar_x, &
+       interpolate_x1_derivative_2D, &
+       deriv1_polar_x, &
+       deriv1_polar_x, &
+       test_passed )
 
   print *, 'plane test case'
   call test_2d_spline_hrmt_prdc( plane, plane_deriv, plane_deriv, test_passed )
