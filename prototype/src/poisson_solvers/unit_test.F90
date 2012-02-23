@@ -5,13 +5,17 @@ program test_poisson_solvers
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
 #include "sll_poisson_solvers.h"
+#include "sll_remap.h"
 
   use numeric_constants
-  use sll_poisson_1D_periodic
-  use sll_poisson_2D_periodic
+  use sll_poisson_1d_periodic
+  use sll_poisson_2d_periodic
   !use geometry1d_module
   use numeric_constants
+  use sll_poisson_3d_periodic_util
   use sll_poisson_3d_periodic_seq
+  use sll_poisson_3d_periodic_par
+  use sll_collective
 
   implicit none
 
@@ -25,8 +29,12 @@ program test_poisson_solvers
   Ly = 2*sll_pi
   Lz = 2*sll_pi
 
+  print*, ' '
+  print*, 'Test poisson_1d'
+  print*, ' '
   call test_poisson_1d()
-  call test_sll_poisson_3d_periodic_seq(nx, ny, nz, Lx, Ly, Lz)
+  print*, ' '
+  call test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
 
 contains
 
@@ -137,16 +145,27 @@ contains
 
   end subroutine test_poisson_1d
 
-  subroutine test_sll_poisson_3d_periodic_seq(nx, ny, nz, Lx, Ly, Lz)
+  subroutine test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
 
-    sll_int64                                :: nx, ny, nz
-    sll_real64                               :: Lx, Ly, Lz
-    sll_real64                               :: dx, dy, dz
-    sll_real64                               :: x, y, z
-    sll_real64, dimension(nx,ny,nz)          :: rho, phi_an, phi
-    sll_int64                                :: i, j, k
-    type (poisson_3d_periodic_plan), pointer :: plan
-    sll_real64                               :: average_err
+    sll_int64                                 :: nx, ny, nz
+    sll_int64                                 :: nx_loc, ny_loc, nz_loc
+    sll_int32                                 :: e, ierr
+    sll_real64                                :: Lx, Ly, Lz
+    sll_real64                                :: dx, dy, dz
+    sll_real64                                :: x, y, z
+    sll_real64, dimension(nx,ny,nz)           :: rho, phi_an, phi_seq
+    sll_real64, dimension(:,:,:), allocatable :: phi_par
+    sll_int64                                 :: i, j, k
+    type (poisson_3d_periodic_plan), pointer  :: plan
+    sll_real64                                :: average_err, seq_par_diff
+    sll_int32, dimension(1:3)                 :: global
+    sll_int32                                 :: gi, gj
+    sll_int32                                 :: myrank
+    sll_real32                                :: ok = 1.d0
+    sll_real32, dimension(1)                  :: prod4test
+    sll_int32                                 :: npx, npy, npz
+    type(layout_3D_t), pointer                :: layout
+    sll_int64                                 :: colsz ! collective size
 
     dx = Lx/nx
     dy = Ly/ny
@@ -165,23 +184,96 @@ contains
 
     rho = 3*phi_an
 
-    plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
-    call solve_poisson_3d_periodic(plan, rho, phi)
-    call delete_poisson_3d_periodic_plan(plan)
+    ! Test sequential periodic 3D poisson solver
 
-    average_err = sum( abs(phi_an-phi) ) / (nx*ny*nz)
+    print*, 'Test poisson_3d in sequential'
+
+    plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
+    call solve_poisson_3d_periodic_seq(plan, rho, phi_seq)
+
+    average_err = sum( abs(phi_an-phi_seq) ) / (nx*ny*nz)
+    print*, ' '
+    print*, 'Average error:', average_err
+    print*, 'dx*dy*dz =', dx*dy*dz
 
     if (average_err <= dx*dx*dy) then
-       print*, 'sll_poisson_3d_periodic_seq.F90 test: PASS'
-       print*, 'Average error:', average_err
+    print*, ' '
+       print*, 'sll_poisson_3d_periodic_seq test: PASS'
     else
-       print*, 'Test stoppped by sll_poisson_3d_periodic_seq.F90 test'
-       print*, 'Average error:', average_err
-       print*, 'dx*dy*dz =', dx*dy*dz
+    print*, ' '
+       print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
+    print*, ' '
        stop
     endif
 
-    end subroutine test_sll_poisson_3d_periodic_seq
+    ! Test parallel periodic 3D poisson solver
+
+    print*, ' '
+    print*, 'Test poisson_3d in parallel'
+
+    ! Boot parallel environment
+    call sll_boot_collective()
+
+    colsz  = sll_get_collective_size(sll_world_collective)
+    myrank = sll_get_collective_rank(sll_world_collective)
+    
+    e = int(log(real(colsz))/log(2.))
+    npx = 2**(e/2)
+    npy = int(colsz)/npx
+    npz = 1
+    layout  => new_layout_3D( sll_world_collective ) 
+    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout )
+
+    nx_loc = nx/npx
+    ny_loc = ny/npy   
+    nz_loc = nz/npz
+    SLL_ALLOCATE(phi_par(nx_loc,nx_loc,nx_loc), ierr)
+    call solve_poisson_3d_periodic_par(plan, rho, phi_par)
+
+    call delete_poisson_3d_periodic_plan(plan)
+
+    average_err = 0.d0
+    seq_par_diff = 0.d0
+    do j=1,ny_loc
+       do i=1,nx_loc
+       global = local_to_global_3D( layout, (/int(i), int(j), 1/))
+       gi =global(1)
+       gj =global(2)
+          average_err = average_err + sum( abs( phi_an(gi,gj,:) - phi_par(i,j,:) ) ) 
+          seq_par_diff = seq_par_diff + sum( abs( phi_seq(gi,gj,:) - phi_par(i,j,:) ) )
+       enddo
+    enddo
+    average_err = average_err/(nx_loc*ny_loc*nz_loc)
+    seq_par_diff = seq_par_diff/(nx_loc*ny_loc*nz_loc)
+
+    print*, ' '
+    print*, 'local average error:', average_err
+    print*, 'dx*dy*dz =', dx*dy*dz
+    print*, 'Local average diff between seq sol and par sol:', average_err
+
+    if (average_err > dx*dx*dy) then
+    print*, ' '
+       print*, 'Test stoppped by sll_poisson_3d_periodic_par test'
+       print*, 'myrank=', myrank
+    print*, ' '
+       stop
+    endif
+
+    call sll_collective_reduce(sll_world_collective, (/ ok /), 1, MPI_PROD, 0, prod4test )
+    
+    if (myrank==0) then
+       if (prod4test(1)==1.d0) then
+          print*, ' '
+          print*, 'sll_poisson_3d_periodic_par test: PASS'
+          print*, ' '
+       endif
+    endif
+
+    SLL_DEALLOCATE_ARRAY(phi_par, ierr)
+
+    call sll_halt_collective()
+
+    end subroutine test_sll_poisson_3d_periodic
 
     end program test_poisson_solvers
 
