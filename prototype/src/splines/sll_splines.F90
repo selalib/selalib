@@ -58,6 +58,10 @@ module sll_splines
      sll_real64, dimension(:), pointer   :: x1_max_slopes
      sll_real64, dimension(:), pointer   :: x2_min_slopes
      sll_real64, dimension(:), pointer   :: x2_max_slopes
+     sll_real64, dimension(:), pointer   :: x1_min_slopes_coeffs
+     sll_real64, dimension(:), pointer   :: x1_max_slopes_coeffs
+     sll_real64, dimension(:), pointer   :: x2_min_slopes_coeffs
+     sll_real64, dimension(:), pointer   :: x2_max_slopes_coeffs
   end type sll_spline_2D
 
 
@@ -813,6 +817,9 @@ contains  ! ****************************************************************
        SLL_ASSERT(size(x2_max_slopes) .ge. num_pts_x1 )
     end if
 
+    SLL_ALLOCATE( new_spline_2D%d1(num_pts_x1),   ierr )
+    SLL_ALLOCATE( new_spline_2D%d2(num_pts_x2),   ierr )
+
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
     ! given. This scheme allows to add more types of boundary conditions
@@ -848,6 +855,10 @@ contains  ! ****************************************************************
           new_spline_2d%x1_max_slopes => null()
           new_spline_2d%x2_min_slopes => null()
           new_spline_2d%x2_max_slopes => null()
+          new_spline_2d%x1_min_slopes_coeffs => null()
+          new_spline_2d%x1_max_slopes_coeffs => null()
+          new_spline_2d%x2_min_slopes_coeffs => null()
+          new_spline_2d%x2_max_slopes_coeffs => null()
        end if
     case ( 6 ) 
        ! Hermite condition in X1 and periodic in X2 
@@ -860,12 +871,6 @@ contains  ! ****************************************************************
                'Exiting program...'
           STOP 'new_spline_2D'
        end if
-       ! X2 slope arrays are not needed
-       new_spline_2d%x2_min_slopes => null()
-       new_spline_2d%x2_max_slopes => null()
-       ! But X1 slopes are.
-       SLL_ALLOCATE(new_spline_2d%x1_min_slopes(num_pts_x2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
           print *, 'new_spline_2D(): hermite-periodic-case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
@@ -878,6 +883,27 @@ contains  ! ****************************************************************
                'the slopes at x1_max and an array-specified set of slopes.'
           STOP 'new_spline_2D'
        end if
+
+       ! X2 slope arrays are not needed
+       new_spline_2d%x2_min_slopes => null()
+       new_spline_2d%x2_max_slopes => null()
+       new_spline_2d%x2_min_slopes_coeffs => null()
+       new_spline_2d%x2_max_slopes_coeffs => null()
+
+       ! But X1 slopes are.
+       SLL_ALLOCATE(new_spline_2d%x1_min_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
+
+       ! And since the X1 direction splines are computed second, then we
+       ! need to convert the slope information into spline coefficient
+       ! information.
+       SLL_ALLOCATE(new_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
+       SLL_ALLOCATE(new_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
+
+       ! NOTE: because we are using the spline coefficients directly and not
+       ! the slope values, the slope values are redundant and at this point
+       ! we could deallocate those arrays...
+
        ! The following macro is obviously intended only for use within
        ! new_spline_2D(). But this should be replaced with a subroutine
        ! whenever possible.
@@ -901,6 +927,17 @@ contains  ! ****************************************************************
        ! Set the values of the slopes at x1_max
        FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x2,x1_max_slopes)
 
+       ! And compute the spline coefficients for the above slope values
+       call compute_spline_1D_periodic_aux( &
+            new_spline_2d%x1_min_slopes, &
+            num_pts_x2, &
+            new_spline_2d%d2, &
+            new_spline_2d%x1_min_slopes_coeffs )
+       call compute_spline_1D_periodic_aux( &
+            new_spline_2d%x1_max_slopes, &
+            num_pts_x2, &
+            new_spline_2d%d2, &
+            new_spline_2d%x1_max_slopes_coeffs )
     case( 9 )
        ! Periodic in X1 and Hermite in X2
        if( &
@@ -912,12 +949,6 @@ contains  ! ****************************************************************
                'Exiting program...'
           STOP 'new_spline_2D'
        end if
-       ! X1 slope arrays are not needed
-       new_spline_2d%x1_min_slopes => null()
-       new_spline_2d%x1_max_slopes => null()
-       ! But X2 slopes are.
-       SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
-       SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
           print *, 'new_spline_2D(): periodic-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
@@ -930,6 +961,21 @@ contains  ! ****************************************************************
                'the slopes at x2_max and an array-specified set of slopes.'
           STOP 'new_spline_2D'
        end if
+
+       ! X1 slope arrays are not needed
+       new_spline_2d%x1_min_slopes => null()
+       new_spline_2d%x1_max_slopes => null()
+       new_spline_2d%x1_min_slopes_coeffs => null()
+       new_spline_2d%x1_max_slopes_coeffs => null()
+
+       ! But X2 slopes are.
+       SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
+       SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
+       ! Except that the slope information is used directly, and not as
+       ! spline coefficients data.
+       new_spline_2d%x2_min_slopes_coeffs => null()
+       new_spline_2d%x2_max_slopes_coeffs => null()
+
        ! Set the values of the slopes at x2_min     
        FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes)
 
@@ -938,11 +984,6 @@ contains  ! ****************************************************************
 
     case( 10 )
        ! Hermite conditions in both, X1 and X2
-       ! Both, X1 and X2 slope arrays are needed.
-       SLL_ALLOCATE(new_spline_2d%x1_min_slopes(num_pts_x2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
-       SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
           print *, 'new_spline_2D(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
@@ -967,6 +1008,21 @@ contains  ! ****************************************************************
                'the slopes at x2_max and an array-specified set of slopes.'
           STOP 'new_spline_2D'
        end if
+
+       ! Both, X1 and X2 slope arrays are needed.
+       SLL_ALLOCATE(new_spline_2d%x1_min_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
+       SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
+       ! In the order that we compute the splines, first along X2 and then
+       ! along X1, the coefficients-as-slopes data would never be used
+       ! in the X2 direction. Consider eliminating these pointers from the 
+       ! object.
+       new_spline_2d%x2_min_slopes_coeffs => null()
+       new_spline_2d%x2_max_slopes_coeffs => null()
+       SLL_ALLOCATE(new_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
+       SLL_ALLOCATE(new_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
+
        ! Set the values of the slopes at x1_min     
        FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes)
 
@@ -978,13 +1034,14 @@ contains  ! ****************************************************************
 
        ! Set the values of the slopes at x2_max
        FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x1,x2_max_slopes)
+
+       ! THIS PART IS NOT FINISHED: NEED TO COMPUTE THE COEFFICIENTS USING
+       ! THE SLOPE ARRAYS.
     case default
        print *, 'ERROR: new_spline_2D(): ', &
             'did not recognize given boundary conditions.'
        STOP
     end select
-    SLL_ALLOCATE( new_spline_2D%d1(num_pts_x1),   ierr )
-    SLL_ALLOCATE( new_spline_2D%d2(num_pts_x2),   ierr )
     ! Reminder: Fortran arrays are column-major ordered...
     ! Note: The indexing of the coefficients array includes the end-
     ! points 0, num_points, num_points+1, num_points+2. These are meant to 
@@ -1115,8 +1172,8 @@ contains  ! ****************************************************************
     ! the original data.
 
     ! First, compute the spline coefficients along the lines (:,0) and
-    ! (:,npx2+1), using the appropriate boundary condition, in this case
-    ! the condition of periodicity.
+    ! (:,npx2+1)
+#if 0
     datap => spline%coeffs(1:npx1,0)
     coeffs => spline%coeffs(1:npx1+2,0)
     min_slope = spline%x1_min_slopes(npx2-1)
@@ -1142,15 +1199,15 @@ contains  ! ****************************************************************
          max_slope,       &
          spline%x1_delta, &
          coeffs )
+#endif
 
-
-    do j=1,npx2  
+    do j=0,npx2+2  
        datap  => spline%coeffs(1:npx1,j)
        ! same trick regarding the starting point of this pointer. This is
        ! not good.
        coeffs => spline%coeffs(1:npx1+2,j)
-       min_slope = spline%x1_min_slopes(j)
-       max_slope = spline%x1_max_slopes(j)
+       min_slope = spline%x1_min_slopes_coeffs(j)
+       max_slope = spline%x1_max_slopes_coeffs(j)
        call compute_spline_1D_hermite_aux( &
             datap, &
             npx1, &

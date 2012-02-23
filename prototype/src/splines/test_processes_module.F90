@@ -550,12 +550,13 @@ print *,  spline%coeffs(:)
           if( err .lt. min_err ) then
              min_err = err
           end if
-          print *, '(i,j) = ',i+1,j+1, 'correct value = ', &
-               correct_data_out(i+1,j+1), '. Calculated = ', val     
+!          print *, '(i,j) = ',i+1,j+1, 'correct value = ', &
+!               correct_data_out(i+1,j+1), '. Calculated = ', val     
        end do
     end do
     average_error = acc/(real(NPX1*NPX2,f64))
-    print *, 'Average error = ', average_error, 'Max err = ', max_err, 'Min err = ', min_err
+    print *, 'interpolator_tester_2d_hrmt_prdc results. Average error = ', &
+         average_error, 'Max err = ', max_err, 'Min err = ', min_err
     print *, 'max error at (i,j) = ', imax, jmax
     if( average_error .le. 1.0e-5 ) then
        test_passed = .true.
