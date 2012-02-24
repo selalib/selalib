@@ -16,22 +16,21 @@ vars.Add('LPATH', 'dummy path','.')
 
 env = Environment( ENV = os.environ,
                    F90 = 'mpif90',
-                   F90PATH= ['../memory','../precision','../assert', 
-                             '../numerical_utilities','../constants',
-                             '../mesh_types','../diagnostics','../collective',
-                             '../utilities','../remap'],
+                   F90PATH= ['../memory', '../precision', '../assert', 
+                             '../numerical_utilities', '../constants',
+                             '../mesh_types', '../diagnostics', '../collective',
+                             '../utilities', '../fft', '../remap'],
 # fix the following: fftpack should be treated as any other local library.
                    LINK = 'mpif90',
                    LIBPATH = ['.','../fftpack'],
-                   LIBS = ['sll_remap','sll_mesh_types', 'dfftpack',
-                           'sll_collective',
+                   LIBS = ['sll_remap','sll_mesh_types', 'dfftpack', 
+                           'sll_fft', 'sll_collective',
                            'sll_diagnostics','sll_assertion','sll_utilities',
                            'sll_constants','sll_precision','sll_memory'],
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
                    '-fopenmp'],
-                   F90FLAGS = ['-g', '-W', '-Wall','-std=f2003',
-                               '-ffree-line-length-none',
-                               '-fbounds-check'] )
+                    F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', 
+                   '-ffree-line-length-none'])
 
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])
@@ -50,15 +49,16 @@ env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
+env.Library('sll_fft', ["../fft/sll_fft.F90"])
 env.Library('sll_remap', ["../remap/sll_remap.F90"])
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 
 
 
-env.Program('unit_test',['sll_poisson_1D_periodic.F90', 
+env.Program('unit_test',['sll_poisson_1d_periodic.F90', 
                                 'fft1d.f90', 'unit_test.F90',
-                                'sll_poisson_2D_periodic.F90', 
-                                'fft_module.F90' ])
+                                'sll_poisson_2d_periodic.F90', 
+                                'fft_module.F90', "sll_poisson_3d_periodic_seq.F90" ])
 
 env.Program('test_poisson_1d', ['test_poisson_1d.F90',
                                 'sll_poisson_1D_periodic.F90', 
@@ -70,6 +70,13 @@ env.Program('test_poisson_2d', ["test_poisson_2d.F90",
 env.Append(LIBS=['fftw3'])
 env.Program('fftw_solver', source = ["fftw_solver.F90"])
 
+<<<<<<< HEAD
 #env.Append(LIBS=['fftw3_threads'])
 #env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
 #env.Program('poisson3d_with_fftw3_par', source = ["poisson3d_with_fftw3.F90"])
+=======
+env.Append(LIBS=['fftw3_threads'])
+env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
+env.Program('poisson_3d_periodic', source = ["poisson_3d_periodic.F90"])
+
+>>>>>>> mesh-2d-test

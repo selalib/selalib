@@ -16,7 +16,6 @@ default:
 	(cd mesh_types; scons)
 	(cd distribution_function; scons)
 
-
 clean:
 	(cd constants; scons -c)
 	(cd precision; scons -c)	
