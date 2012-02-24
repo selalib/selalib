@@ -1,3 +1,19 @@
+
+!***************************************************************************
+!
+! Selalib 2012     
+! Module: unit_test.F90
+!
+!> @brief 
+!> Selalib poisson solvers unit test
+!   
+!> @authors                    
+!> Aliou DIOUF (aliou.l.diouf@inria.fr), 
+!> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
+!> Pierre NAVARRO (navaro@math.unistra.fr)
+!                                  
+!***************************************************************************
+
 program test_poisson_solvers
 
 #include "sll_working_precision.h"
@@ -19,7 +35,7 @@ program test_poisson_solvers
 
   implicit none
 
-  sll_int64 :: nx, ny, nz
+  sll_int64  :: nx, ny, nz
   sll_real64 :: Lx, Ly, Lz
 
   nx = 64
@@ -34,7 +50,13 @@ program test_poisson_solvers
   print*, ' '
   call test_poisson_1d()
   print*, ' '
+
+  ! Boot parallel environment
+  call sll_boot_collective()
+
   call test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
+
+  call sll_halt_collective()
 
 contains
 
@@ -185,20 +207,26 @@ contains
     rho = 3*phi_an
 
     ! Test sequential periodic 3D poisson solver
-
-    print*, 'Test poisson_3d in sequential'
+    if (myrank==0) then
+       print*, 'Test poisson_3d in sequential'
+    endif
 
     plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
     call solve_poisson_3d_periodic_seq(plan, rho, phi_seq)
 
     average_err = sum( abs(phi_an-phi_seq) ) / (nx*ny*nz)
-    print*, ' '
-    print*, 'Average error:', average_err
-    print*, 'dx*dy*dz =', dx*dy*dz
+
+    if (myrank==0) then
+       print*, ' '
+       print*, 'Average error:', average_err
+       print*, 'dx*dy*dz =', dx*dy*dz
+    endif
 
     if (average_err <= dx*dx*dy) then
-    print*, ' '
-       print*, 'sll_poisson_3d_periodic_seq test: PASS'
+       if (myrank==0) then
+          print*, ' '
+          print*, 'sll_poisson_3d_periodic_seq test: PASS'
+       endif
     else
     print*, ' '
        print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
@@ -208,11 +236,10 @@ contains
 
     ! Test parallel periodic 3D poisson solver
 
-    print*, ' '
-    print*, 'Test poisson_3d in parallel'
-
-    ! Boot parallel environment
-    call sll_boot_collective()
+    if (myrank==0) then
+       print*, ' '
+       print*, 'Test poisson_3d in parallel'
+    endif
 
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
@@ -243,13 +270,14 @@ contains
           seq_par_diff = seq_par_diff + sum( abs( phi_seq(gi,gj,:) - phi_par(i,j,:) ) )
        enddo
     enddo
+
     average_err = average_err/(nx_loc*ny_loc*nz_loc)
     seq_par_diff = seq_par_diff/(nx_loc*ny_loc*nz_loc)
 
     print*, ' '
     print*, 'local average error:', average_err
     print*, 'dx*dy*dz =', dx*dy*dz
-    print*, 'Local average diff between seq sol and par sol:', average_err
+    print*, 'Local average diff between seq sol and par sol:', seq_par_diff
 
     if (average_err > dx*dx*dy) then
     print*, ' '
@@ -270,8 +298,6 @@ contains
     endif
 
     SLL_DEALLOCATE_ARRAY(phi_par, ierr)
-
-    call sll_halt_collective()
 
     end subroutine test_sll_poisson_3d_periodic
 
