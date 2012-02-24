@@ -305,5 +305,38 @@ contains
          (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
+  !function fromarray_x1 ( xx1, xx2 )
+     !sll_real64 :: fromarray_x1
+     !sll_real64, intent(in)   :: xx1
+     !sll_real64, intent(in)   :: xx2
+     !sll_real64, dimension(:,:), pointer  :: fromarray_x1
+     !sll_real64, dimension(:,:), pointer :: xx1
+     !sll_real64, dimension(:,:), pointer :: xx2
+     !sll_real64, dimension(:), intent(in), target :: f
+   !fromarray_x1=compute_spline_1D_hermite (f, spline)
+  !end function fromarray_x1
+  !function fromarray_x2 ( xx1, xx2 )
+     !sll_real64, dimension(:,:), pointer  :: fromarray_x2
+     !sll_real64 :: fromarray_x2
+    !sll_real64, intent(in)   :: xx1
+   ! sll_real64, dimension(:,:), pointer :: xx1
+    !sll_real64, dimension(:,:), pointer :: xx2
+    !sll_real64, intent(in)   :: xx2  
+  !end function fromarray_x2
+ 
+  function from_array_x1 ( ii1, ii2 )
+     sll_real64 :: from_array_x1
+     sll_real64, dimension(:,:),pointer :: tab_x1
+     sll_int32, intent(in)   :: ii1
+     sll_int32, intent(in)   :: ii2
+     from_array_x1=tab_x1(ii1,ii2)
+  end function from_array_x1
+  function from_array_x2 ( ii1, ii2 )
+    sll_real64 :: from_array_x2
+    sll_real64, dimension(:,:),pointer :: tab_x2
+    sll_int32, intent(in)   :: ii1
+    sll_int32, intent(in)   :: ii2  
+    from_array_x2=tab_x2(ii1,ii2)
+  end function from_array_x2
 end module geometry_functions
 
