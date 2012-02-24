@@ -406,68 +406,6 @@ eta2_max   = dist_func_4D%field%descriptor_x%eta2_max
 boundary1_type = dist_func_4D%field%descriptor_x%boundary1_type
 boundary2_type = dist_func_4D%field%descriptor_x%boundary2_type
 
-! allocation
-!SLL_ALLOCATE(advfield_1D_1_old(nc_eta1+1),ierr)
-!SLL_ALLOCATE(advfield_1D_2_old(nc_eta2+1),ierr)
-!SLL_ALLOCATE(advfield_1D_1_new(nc_eta1+1),ierr)
-!SLL_ALLOCATE(advfield_1D_2_new(nc_eta2+1),ierr)
-!SLL_ALLOCATE(eta1_out(nc_eta1+1),ierr)
-!SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
-    
-
-!   
-!   if (ihalf == 1) then
-!
-!      ! advection along the second direction
-!      eta1 = eta1_min 
-!      
-!      do i1=1, nc_eta1
-!  
-!         eta2 = eta2_min  ! node centered
-!      
-!         advfield_1D_2_old(1) = FIELD_2D_AT_I_V2( advfield_old, i1, 1 )
-!         advfield_1D_2_new(1) = FIELD_2D_AT_I_V2( advfield_new, i1, 1 )
-!      
-!         do i2 = 2, nc_eta2+1
-!      
-!            eta2 = eta2 + delta_eta2
-!      
-!            ! extract subarray from advection field
-!            advfield_1D_2_old(i2) = FIELD_2D_AT_I_V2( advfield_old, i1, i2 )
-!            advfield_1D_2_new(i2) = FIELD_2D_AT_I_V2( advfield_new, i1, i2 )
-!  
-!         end do
-!  
-!         global_eta1 = eta1
-!  
-!         call advance_1D( primitive2,        &
-!                          advfield_1D_2_old, &
-!                          advfield_1D_2_new, &
-!                          order,             &
-!                          deltat,            &
-!                          eta2_min,          &
-!                          nc_eta2,           &
-!                          delta_eta2,        &
-!                          boundary2_type,    &
-!                          bsl_work%spl_eta2, &
-!                          eta2_out)
-!  
-!         ! update average value of distribution function in cell using 
-!         ! difference of primitives
-!  
-!         do i2 = 1, nc_eta2 
-!            val = (primitive2(i2+1) - primitive2(i2))/delta_eta2 
-!            dist_func_4D%field%data(i1, i2, :, :) = val
-!         end do
-!
-!         eta1 = eta1 + delta_eta1
-!
-!      end do
-!
-!   end if
-!   
-!end do
-
 end subroutine bsl_second_order_4d
 
 
