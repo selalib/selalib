@@ -156,6 +156,7 @@ module sll_fft
     sll_int32                         :: direction
     sll_comp64, dimension(:), pointer  :: in_comp, out_comp 
     sll_real64, dimension(:), pointer  :: in_real, out_real
+    sll_real64 :: fft_time_execution
   end type sll_fft_plan
 
   type sll_fft_plan_2d
@@ -236,22 +237,55 @@ module sll_fft
   interface apply_plan_c2r_1d
     module procedure fft_apply_c2r_1d
   end interface
+
+! -----------------
+! - NEW INTERFACE -
+! -----------------
+  interface fft_new_plan
+    module procedure fft_new_c2c_1d_for_3d, fft_new_c2c_1d_for_1d, fft_new_c2c_1d_for_2d
+  end interface
+
+  interface fft_apply_plan
+    module procedure fft_apply_c2c_1d, fft_apply_c2c_1d_2d, fft_apply_c2c_1d_3d 
+  end interface
+
+  interface fft_delete_plan
+    module procedure delete_fft_plan1d, delete_fft_plan2d
+  end interface
+
+!  REAL(KIND=KIND(1.D0)) :: FFT_TIME_EXECUTION
+
 contains
 
-!#define  _FFTINFO
-#define INFO print *,'-----------------------------';\
-             if(plan%library .eq. SLLFFT_MOD) then;  \
-               print *, 'LIBRARY :: SELALIB';        \
-             endif;                                  \
-             if(plan%library .eq. FFTPACK_MOD) then; \
-               print *, 'LIBRARY :: FFTPACK';        \
-             endif;                                  \
-             if(plan%library .eq. FFTW_MOD) then;    \
-               print *, 'LIBRARY :: FFTW';           \
-             endif;                                  \
-             print *, 'TIME : ',time;                \
-             print *,'-----------------------------'
 
+  function fft_get_time_execution(plan) result(time)
+    type(sll_fft_plan), pointer :: plan
+    sll_real64 :: time
+    time = plan%fft_time_execution
+  end function
+
+!#define  _FFTINFO
+
+#define INFO plan%fft_time_execution = time
+
+!#define INFO print *,'-----------------------------';\
+!             if(plan%library .eq. SLLFFT_MOD) then;  \
+!               print *, 'LIBRARY :: SELALIB';        \
+!             endif;                                  \
+!             if(plan%library .eq. FFTPACK_MOD) then; \
+!               print *, 'LIBRARY :: FFTPACK';        \
+!             endif;                                  \
+!             if(plan%library .eq. FFTW_MOD) then;    \
+!               print *, 'LIBRARY :: FFTW';           \
+!             endif;                                  \
+!             open(1,file="info.txt",position='append');\
+!             print *, 'TIME : ',time;                \
+!             plan%fft_time_execution = time;         \
+!             write(1,*) time;                        \
+!             close(1);                               \
+!             print *,'-----------------------------'
+
+#define _DEFAULTFFTLIB SLLFFT_MOD
 #ifndef _DEFAULTFFTLIB
 #ifdef _NOFFTW
 #define _DEFAULTFFTLIB SLLFFT_MOD
