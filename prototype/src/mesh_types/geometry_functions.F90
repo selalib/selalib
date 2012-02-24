@@ -315,8 +315,8 @@ contains
   ! the functions that embody this transformation. This is used for testing
   ! purposes, hence the parameters R1 and R2 do not form part of the functions'
   ! interfaces. This may become a limitation and should be discussed further.
-#define R1 0.1
-#define R2 1.0
+#define R1 0.1_f64
+#define R2 1.0_f64
   function x1_polar_f( eta1, eta2 )
     sll_real64 :: x1_polar_f
     sll_real64, intent(in) :: eta1, eta2

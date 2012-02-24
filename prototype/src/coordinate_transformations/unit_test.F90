@@ -5,8 +5,8 @@ program unit_test
   use geometry_functions
   implicit none
 
-#define NPTS1 32
-#define NPTS2 64
+#define NPTS1 33 
+#define NPTS2 33 
 
   type(map_2D), pointer     :: map_a    ! analytic map
   type(map_2D), pointer     :: map_d    ! discrete map
@@ -41,7 +41,8 @@ program unit_test
  !       jacs(i+1,j+1) = eta1
      end do
   end do
-
+  print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
+  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
   ! Fill out the transformation's slopes at the borders
   do j=0,NPTS2-1
      eta1           = 0.0_f64
@@ -127,12 +128,11 @@ program unit_test
         delta  =  node - interp
         jac_analyt = jacobian_2D(map_a,eta1,eta2)  
         delta2 = node - jac_analyt
-        print *, 'eta1 = ', eta1, 'eta2 = ', eta2
-        print *, '(',i+1,j+1,'): NODE = ', node, ', INTERP = ', interp, &
-             '. DIFFERENCE  = ', delta
-        print *, '(',i+1,j+1,'): NODE = ', node, ', ANALYT = ', jac_analyt, &
-             '. DIFFERENCE  = ', delta2
-
+!        print *, 'eta1 = ', eta1, 'eta2 = ', eta2
+!        print *, '(',i+1,j+1,'): NODE = ', node, ', INTERP = ', interp, &
+!             '. DIFFERENCE  = ', delta
+!        print *, '(',i+1,j+1,'): NODE = ', node, ', ANALYT = ', jac_analyt, &
+!             '. DIFFERENCE  = ', delta2
         acc = acc + abs(delta)
      end do
   end do

@@ -39,14 +39,25 @@ module test_processes_module
   end interface
 
   abstract interface
-     function spline_interpolator(  x, y, spline )
+     function spline_interpolator_1d(  x, spline )
        use sll_working_precision
        use sll_splines
-       sll_real64 :: spline_interpolator
+       sll_real64 :: spline_interpolator_1d
+       sll_real64, intent(in) :: x
+       type(sll_spline_1D), pointer :: spline
+     end function spline_interpolator_1d
+  end interface
+
+
+  abstract interface
+     function spline_interpolator_2d(  x, y, spline )
+       use sll_working_precision
+       use sll_splines
+       sll_real64 :: spline_interpolator_2d
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y
        type(sll_spline_2D), pointer :: spline
-     end function spline_interpolator
+     end function spline_interpolator_2d
   end interface
 
 contains
@@ -353,6 +364,79 @@ contains
 
   end subroutine test_process_2d
 
+
+  !*********************************************************************
+  ! The above routines should be converted into individualized routines
+  ! like the ones below, designed to test individual utilities.
+  !
+  !*********************************************************************
+
+  subroutine interpolator_tester_1d_prdc( &
+    func, &           ! function to produce the data
+    result_f, &       ! function to produce the right result
+    interpolator_f, & ! function used to interpolate the data
+    xmin, &           ! extent of the domain over where the spline is tested
+    xmax, &
+    npts, &
+    test_passed )
+
+    procedure(fx)                     :: func
+    procedure(fx)                     :: result_f
+    procedure(spline_interpolator_1d) :: interpolator_f
+    sll_real64, intent(in)            :: xmin
+    sll_real64, intent(in)            :: xmax
+    sll_int32, intent(in)             :: npts
+    logical, intent(out)              :: test_passed
+    sll_real64, allocatable, dimension(:) :: data_in
+    sll_real64, allocatable, dimension(:) :: correct_data_out
+    sll_int32  :: ierr, i
+    sll_real64 :: h1
+    sll_real64 :: x1
+    sll_real64 :: acc, val
+    type(sll_spline_1d), pointer :: spline
+    sll_real64 :: average_error
+    h1 = (xmax - xmin)/real(npts-1,f64)
+    acc = 0.0_f64
+
+    ! allocate arrays and initialize them
+    SLL_ALLOCATE(data_in(npts),ierr)
+    SLL_ALLOCATE(correct_data_out(npts), ierr)
+
+    do i=0,npts-1
+       x1 = xmin + real(i,f64)*h1 
+       data_in(i+1) = func(x1)
+       correct_data_out(i+1) = result_f(x1)
+    end do
+
+    spline => new_spline_1D( &
+      npts, &
+      xmin, &
+      xmax, &
+      PERIODIC_SPLINE )
+
+    call compute_spline_1D(data_in,PERIODIC_SPLINE,spline)
+
+    do i=0,npts-1
+       x1 = xmin + real(i,f64)*h1 
+       val = interpolator_f(x1,spline)
+       acc = acc + abs(val-correct_data_out(i+1))  
+ !         print *, '(i) = ',i+1, 'correct value = ', &
+ !              correct_data_out(i+1), '. Calculated = ', val     
+    end do
+    average_error = acc/(real(npts,f64))
+    print *, 'Average error = ', average_error
+    if( average_error .le. 1.0e-14 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+    end if
+    ! deallocate memory
+    call delete(spline)
+    SLL_DEALLOCATE_ARRAY(data_in, ierr)
+    SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
+  end subroutine interpolator_tester_1d_prdc
+
+
   subroutine test_spline_1d_hrmt ( &
     func_1d, &
     slope_l, &
@@ -387,8 +471,8 @@ contains
          slope_r )
 
     call compute_spline_1D( data_in, HERMITE_SPLINE, spline )
-print *, '1D coefficients: '
-print *,  spline%coeffs(:)
+    ! print *, '1D coefficients: '
+    ! print *,  spline%coeffs(:)
     acc = 0.0_f64
     do i=0,NPX1-1
        x1 = X1MIN + real(i,f64)*h1 
@@ -414,7 +498,7 @@ print *,  spline%coeffs(:)
     
     procedure(fxy)                          :: func_2d   
     procedure(fxy)                          :: partial_x1 
-    procedure(spline_interpolator)          :: interpolation_func
+    procedure(spline_interpolator_2d)          :: interpolation_func
     logical, intent(out)                    :: test_passed
     sll_real64, allocatable, dimension(:,:) :: data_in
     sll_real64, allocatable, dimension(:,:) :: correct_data_out
@@ -481,7 +565,7 @@ print *,  spline%coeffs(:)
     
     procedure(fxy)                          :: func_2d   
     procedure(fxy)                          :: transformed_func
-    procedure(spline_interpolator)          :: interpolation_func
+    procedure(spline_interpolator_2d)          :: interpolation_func
     procedure(fxy)                          :: slope_min_func
     procedure(fxy)                          :: slope_max_func
     logical, intent(out)                    :: test_passed
@@ -899,7 +983,7 @@ print *,  spline%coeffs(:)
   function deriv2_polar_x( eta1, eta2 )
     sll_real64 :: deriv2_polar_x
     sll_real64, intent(in) :: eta1, eta2
-    deriv2_polar_x = -(r1 + eta1*(r2-r1))*sin(2*sll_pi*eta2)
+    deriv2_polar_x = -(r1+eta1*(r2-r1))*sin(2.0_f64*sll_pi*eta2)*2.0_f64*sll_pi
   end function deriv2_polar_x
 
   function deriv1_polar_y( eta1, eta2 )
@@ -911,9 +995,22 @@ print *,  spline%coeffs(:)
   function deriv2_polar_y( eta1, eta2 )
     sll_real64 :: deriv2_polar_y
     sll_real64, intent(in) :: eta1, eta2
-    deriv2_polar_y = (r1 + eta1*(r2-r1))*cos(2*sll_pi*eta2)
+    deriv2_polar_y = (r1+eta1*(r2-r1))*cos(2.0_f64*sll_pi*eta2)*2.0_f64*sll_pi
   end function deriv2_polar_y
 
+  function mycos(x)
+    intrinsic :: cos
+    sll_real64 :: mycos
+    sll_real64, intent(in) :: x
+    mycos = cos(x)
+  end function mycos
+
+  function dmycos(x)
+    intrinsic :: sin
+    sll_real64 :: dmycos
+    sll_real64, intent(in) :: x
+    dmycos = -sin(x)
+  end function dmycos
 
   function coscos(x,y)
     sll_real64 :: coscos
