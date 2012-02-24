@@ -136,7 +136,7 @@ module remapper
   end interface
 
   interface apply_remap_3D
-     module procedure apply_remap_3D_int, apply_remap_3D_double
+     module procedure apply_remap_3D_int, apply_remap_3D_double, apply_remap_3D_complex
   end interface
 
 contains  !******************************************************************
@@ -1259,6 +1259,177 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
     SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_3D_double
 
+  subroutine apply_remap_3D_complex( plan, data_in, data_out )
+    intrinsic                                 :: transfer
+    type(remap_plan_3D_t), pointer            :: plan
+    double complex, dimension(:,:,:), intent(in)  :: data_in
+    double complex, dimension(:,:,:), intent(out) :: data_out
+    sll_int32, dimension(:), pointer          :: sb     ! send buffer
+    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: scnts  ! send counts
+    sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
+    type(sll_collective_t), pointer           :: col    ! collective
+    type(layout_3D_t), pointer                :: init_layout  => NULL()
+    type(layout_3D_t), pointer                :: final_layout => NULL()
+    sll_int32                                 :: id, jd, kd
+    sll_int32                                 :: i
+    sll_int32                                 :: col_sz
+    sll_int32                                 :: ierr
+    sll_int32                                 :: loi, loj, lok
+    sll_int32                                 :: hii, hij, hik
+    type(box_3D)                              :: sbox
+    sll_int32                                 :: my_rank
+    sll_int32                                 :: loc
+    sll_int32, dimension(1:3)                 :: local_lo, local_hi
+    sll_int32                                 :: int32_data_size
+
+    ! to load the MPI function and send integers, we have a separate set of
+    ! arrays to store this information for now.
+    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
+    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
+    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
+    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+
+    ! unpack the plan: There are inconsistencies here, one one hand we access
+    ! directly and on the other with access functions... standardize...
+    sdisp        => plan%send_displs
+    rdisp        => plan%recv_displs
+    scnts        => plan%send_counts
+    rcnts        => plan%recv_counts
+    col          => plan%collective
+    col_sz       =  sll_get_collective_size(col)
+    init_layout  => get_remap_3D_initial_layout(plan)
+    final_layout => get_remap_3D_final_layout(plan)
+    my_rank      =  sll_get_collective_rank(col)
+    sb           => plan%send_buffer
+    rb           => plan%recv_buffer
+
+    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
+    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
+    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
+    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+
+    ! Translate the amounts into integers
+#if 1
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), sdisp, &
+         col_sz, sdispi)
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rdisp, &
+         col_sz, rdispi)
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), scnts, &
+         col_sz, scntsi)
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rcnts, &
+         col_sz, rcntsi)
+#endif
+    
+#if 0
+    write (*,'(a,i4)') 'parameters from rank ', my_rank
+    print *, scntsi(:)
+    print *, sdispi(:)
+    print *, rcntsi(:)
+    print *, rdispi(:)
+#endif
+    
+    ! load the send buffer
+    loc = 0             ! first loading is at position zero
+    ! This step is obviously not needed for integers themselves. We put this
+    ! here for generality.
+    int32_data_size = INT32_SIZEOF( data_in(1,1,1) )
+    do i = 0, col_sz-1
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+          if( loc .ne. sdispi(i) ) then
+             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdispi(i)
+             write(*,'(a,i8)') 'col_sz = ', col_sz
+             stop 'apply_remap(): loading error'
+          end if
+          ! get the information on the box to send, get the limits,
+          ! convert to the local indices and find out where in the 
+          ! buffer to start writing.
+          sbox = plan%send_boxes(i)
+          loi = get_box_3D_i_min(sbox)
+          loj = get_box_3D_j_min(sbox)
+          lok = get_box_3D_k_min(sbox)
+          hii = get_box_3D_i_max(sbox)
+          hij = get_box_3D_j_max(sbox)
+          hik = get_box_3D_k_max(sbox)
+          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
+          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+
+          ! The plan to load the send buffer is to traverse the integer
+          ! array with a single index (loc). When we load the buffer, each
+          ! data element may occupy multiple integer 'slots', hence the
+          ! loading index needs to be manually increased. As an advantage,
+          ! we can do some error checking every time we send data to a 
+          ! different process, as we know what is the expected value of 
+          ! the index at that point.
+          do kd = local_lo(3), local_hi(3)
+             do jd = local_lo(2), local_hi(2)
+                do id = local_lo(1), local_hi(1)
+                   sb(loc:) = transfer(data_in(id,jd,kd),(/1_i32/))
+                   loc      = loc + int32_data_size
+                end do
+             end do
+          end do
+       end if
+    end do
+    
+!    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
+!    print *, sb(0:(size(sb)-1))
+!    call flush()
+ 
+   if( plan%is_uniform .eqv. .false. ) then 
+       call sll_collective_alltoallV( sb(:),       &
+                                      scntsi(0:col_sz-1), &
+                                      sdispi(0:col_sz-1), &
+                                      rb(:),       &
+                                      rcntsi(0:col_sz-1), &
+                                      rdispi(0:col_sz-1), col )
+    else
+       call sll_collective_alltoall ( sb(:), &
+                                      scntsi(0), &
+                                      rcntsi(0), &
+                                      rb(:), col )
+    end if
+!    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
+!    print *, rb(0:size(rb)-1)
+!    call flush()
+    ! Unpack the plan into the outgoing buffer.
+    loc = 0  ! We load first from position 0 in the receive buffer.
+    do i = 0, col_sz-1
+       if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
+          if( loc .ne. rdispi(i) ) then
+             write (*,'(a,i4)') &
+                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+             stop 'unpacking error'
+          end if
+          ! get the information on the box to receive, get the limits, and 
+          ! convert to the local indices.
+          sbox = plan%recv_boxes(i)
+          loi = get_box_3D_i_min(sbox)
+          loj = get_box_3D_j_min(sbox)
+          lok = get_box_3D_k_min(sbox)
+          hii = get_box_3D_i_max(sbox)
+          hij = get_box_3D_j_max(sbox)
+          hik = get_box_3D_k_max(sbox)
+          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
+          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          do kd = local_lo(3), local_hi(3)
+             do jd = local_lo(2), local_hi(2)
+                do id = local_lo(1), local_hi(1)
+                   data_out(id,jd,kd) = transfer(rb(loc:),data_out(1,1,1))
+                   loc                = loc + int32_data_size
+                end do
+             end do
+          end do
+       end if
+    end do
+
+    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
+    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
+    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
+    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
+  end subroutine apply_remap_3D_complex
 
   ! Placeholder: the load/unload subroutines for the send and receive buffers
   ! should ideally be abstracted out. This means that we need to probably
