@@ -717,8 +717,11 @@ contains  ! ****************************************************************
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
     SLL_ASSERT( associated(spline) )
 
-    interpolate_derivative = &
-         interpolate_derivative_aux(x,spline%xmin,spline%rdelta,spline%coeffs)
+    interpolate_derivative = interpolate_derivative_aux( &
+         x, &
+         spline%xmin, &
+         spline%rdelta, &
+         spline%coeffs)
   end function interpolate_derivative
 
   subroutine delete_spline_1D( spline )
