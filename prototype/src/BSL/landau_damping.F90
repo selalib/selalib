@@ -10,6 +10,7 @@ use distribution_function
 use sll_splines
 use sll_diagnostics
 use sll_poisson_2d_periodic
+use sll_bsl
 
 implicit none
   
@@ -32,54 +33,55 @@ sll_real32 :: time
 !Distribution function 4D
 type(sll_distribution_function_4D_t), pointer :: dist_func
 
+type (bsl_workspace_4d), pointer :: bsl
+
 !Poisson solver
 type(poisson_2d_periodic), pointer :: poisson
 type(field_2D_vec2),       pointer :: exy
 type(field_2D_vec1),       pointer :: rho
 
-!Semi lagrangian scheme
-type (sll_spline_1D), pointer :: spl_eta1
-type (sll_spline_1D), pointer :: spl_eta2
-type (sll_spline_1D), pointer :: spl_eta3
-type (sll_spline_1D), pointer :: spl_eta4
-
-sll_real64, dimension(:), pointer  ::  eta1_out , eta1
-sll_real64, dimension(:), pointer  ::  eta2_out , eta2
-sll_real64, dimension(:), pointer  ::  eta3_out , eta3
-sll_real64, dimension(:), pointer  ::  eta4_out , eta4
+sll_real64, dimension(:), pointer  ::  eta1_out 
+sll_real64, dimension(:), pointer  ::  eta2_out
+sll_real64, dimension(:), pointer  ::  eta3_out
+sll_real64, dimension(:), pointer  ::  eta4_out
 
 !Diagnostics and errors
 sll_int32                          :: error
-sll_real32 :: nrj
+sll_real64 :: nrj
 character(len=4) :: counter
 
 !Local indices
 sll_int32  :: i1, i2, i3, i4
 
 !x domain
-eta1_min =  0.0_f64; eta1_max =  2.0_f64 * sll_pi
-eta2_min =  0.0_f64; eta2_max =  2.0_f64 * sll_pi
+eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_pi
+eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_pi
 
 geom_x => new_geometry_2D('cartesian')
 
-nc_eta1 = 128; nc_eta2 = 32
+nc_eta1 = 31; nc_eta2 = 31
 
 mesh_x => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
           PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom_x)
 
+delta_eta1 = GET_MESH_DELTA_ETA1(mesh_x)
+delta_eta2 = GET_MESH_DELTA_ETA2(mesh_x)
+
 call write_mesh_2D(mesh_x,"mesh_x")
 
 !v domain
-eta3_min = -6.0_f64; eta3_max =  6.0_f64 
-eta4_min = -6.0_f64; eta4_max =  6.0_f64 
+eta3_min = -6.0_f64; eta3_max = 6.0_f64 
+eta4_min = -6.0_f64; eta4_max = 6.0_f64 
 
 geom_v => new_geometry_2D('cartesian')
 
-nc_eta3 = 64; nc_eta4 = 64
+nc_eta3 = 31; nc_eta4 = 31
 
 mesh_v => new_mesh_descriptor_2D(eta3_min, eta3_max, nc_eta3, &
           PERIODIC, eta4_min, eta4_max, nc_eta4, PERIODIC, geom_v)
 
+delta_eta3 = GET_MESH_DELTA_ETA1(mesh_v)
+delta_eta4 = GET_MESH_DELTA_ETA2(mesh_v)
 
 rho     => new_field_2D_vec1(mesh_x)
 exy     => new_field_2D_vec2(mesh_x)
@@ -87,44 +89,38 @@ exy     => new_field_2D_vec2(mesh_x)
 poisson   => new_poisson_2d_periodic(exy)
 
 dist_func => sll_new_distribution_function_4D(mesh_x, mesh_v, NODE_CENTERED_DF, 'f')
+bsl       => new_bsl_workspace(dist_func)
 
 call sll_init_distribution_function_4D( dist_func, LANDAU)
 
-delta_eta1 = GET_MESH_DELTA_ETA1(mesh_x)
-delta_eta2 = GET_MESH_DELTA_ETA2(mesh_x)
-delta_eta3 = GET_MESH_DELTA_ETA1(mesh_v)
-delta_eta4 = GET_MESH_DELTA_ETA2(mesh_v)
+call compute_rho(dist_func, rho)
+
+print*, "SUMF=",sum(dist_func%field%data)
+print*, "SUMRHO=",sum(rho%data)
+
+call solve_poisson_2d_periodic(poisson,exy,rho,error)
+
+nrj=0._f64
+do i1=1,nc_eta1+1
+   do i2=1,nc_eta2+1
+      nrj=nrj+exy%data(i1,i2)%v1*exy%data(i1,i2)%v1 &
+             +exy%data(i1,i2)%v2*exy%data(i1,i2)%v2          
+   enddo
+enddo
+nrj=nrj*delta_eta1*delta_eta2
+if (nrj>1.e-30) then 
+    nrj=0.5_f64*log(nrj)
+else
+    nrj=-1e-9
+end if
+print*,nrj, 0.5_f64*log(0.08_f64*sll_pi*sll_pi)
 
 !call write_distribution_function(dist_func)
-
-! initialize splines
-spl_eta1 => new_spline_1D( nc_eta1+1,eta1_min,eta1_max,PERIODIC_SPLINE )
-spl_eta2 => new_spline_1D( nc_eta2+1,eta2_min,eta2_max,PERIODIC_SPLINE )  
-spl_eta3 => new_spline_1D( nc_eta3+1,eta3_min,eta3_max,HERMITE_SPLINE )
-spl_eta4 => new_spline_1D( nc_eta4+1,eta4_min,eta4_max,HERMITE_SPLINE )  
-
-SLL_ALLOCATE(eta1(nc_eta1+1),error)
-SLL_ALLOCATE(eta2(nc_eta2+1),error)
-SLL_ALLOCATE(eta3(nc_eta3+1),error)
-SLL_ALLOCATE(eta4(nc_eta4+1),error)
 
 SLL_ALLOCATE(eta1_out(nc_eta1+1),error)
 SLL_ALLOCATE(eta2_out(nc_eta2+1),error)
 SLL_ALLOCATE(eta3_out(nc_eta3+1),error)
 SLL_ALLOCATE(eta4_out(nc_eta4+1),error)
-
-do i1 = 1, nc_eta1+1
-   eta1(i1) = eta1_min + (i1-1) * delta_eta1
-end do
-do i2 = 1, nc_eta2+1
-   eta2(i2) = eta2_min + (i2-1) * delta_eta2
-end do
-do i3 = 1, nc_eta3+1
-   eta3(i3) = eta3_min + (i3-1) * delta_eta3
-end do
-do i4 = 1, nc_eta4+1
-   eta4(i4) = eta4_min + (i4-1) * delta_eta4
-end do
 
 n_step = 1000
 delta_t = .01_f64
@@ -177,50 +173,49 @@ call delete_field_2D_vec2( exy )
 contains
 
 subroutine advection_x1(dt)
-sll_real64, intent(in) :: dt
+
+   sll_real64, intent(in) :: dt
+   sll_real64             :: eta3
 
    do i4 = 1, nc_eta4+1
-   do i3 = 1, nc_eta3+1
-   do i2 = 1, nc_eta2+1
-
-      call sl_step( dist_func%field%data(:,i2,i3,i4),    &
-                    eta1, nc_eta1, eta3(i3), eta1_min,   &
-                    eta1_max, spl_eta1, dt )
-
-   end do
-   end do
+      eta3 = eta3_min
+      do i3 = 1, nc_eta3+1
+         do i2 = 1, nc_eta2+1
+            call sl_step( dist_func%field%data(:,i2,i3,i4), eta3, bsl%spl_eta1, dt )
+         end do
+         eta3 = eta3 + delta_eta3
+      end do
    end do
 
 end subroutine advection_x1
 
 subroutine advection_x2(dt)
-sll_real64, intent(in) :: dt
 
+   sll_real64, intent(in) :: dt
+   sll_real64             :: eta4
+
+   eta4 = eta4_min
    do i4 = 1, nc_eta4+1
-   do i3 = 1, nc_eta3+1
-   do i1 = 1, nc_eta1+1
-
-      call sl_step( dist_func%field%data(i1,:,i3,i4),    &
-                    eta2, nc_eta2, eta4(i4), eta2_min,   &  
-                    eta2_max, spl_eta2, dt )
-
-   end do
-   end do
+      do i3 = 1, nc_eta3+1
+         do i1 = 1, nc_eta1+1
+            call sl_step( dist_func%field%data(i1,:,i3,i4), eta4, bsl%spl_eta2, dt )
+         end do
+      end do
+      eta4 = eta4 + delta_eta4
    end do
 
 
 end subroutine advection_x2
 
 subroutine advection_v1(dt)
-sll_real64, intent(in) :: dt
+   sll_real64, intent(in) :: dt
 
    do i4 = 1, nc_eta4+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
 
-      call sl_step( dist_func%field%data(i1,i2,:,i4),     &
-                    eta3, nc_eta3, exy%data(i1,i2)%v1,&
-                    eta3_min, eta3_max, spl_eta3, dt )
+      call sl_step( dist_func%field%data(i1,i2,:,i4), exy%data(i1,i2)%v1,&
+                    bsl%spl_eta3, dt )
 
    end do
    end do
@@ -229,15 +224,15 @@ sll_real64, intent(in) :: dt
 end subroutine advection_v1
 
 subroutine advection_v2(dt)
-sll_real64, intent(in) :: dt
+
+   sll_real64, intent(in) :: dt
 
    do i3 = 1, nc_eta3+1
    do i2 = 1, nc_eta2+1
    do i1 = 1, nc_eta1+1
 
-      call sl_step( dist_func%field%data(i1,i2,i3,:),      &
-                    eta4, nc_eta4, exy%data(i1,i2)%v2, &
-                    eta4_min, eta4_max, spl_eta4, dt )
+      call sl_step( dist_func%field%data(i1,i2,i3,:), exy%data(i1,i2)%v2, &
+                    bsl%spl_eta4, dt )
 
    end do
    end do
@@ -245,32 +240,29 @@ sll_real64, intent(in) :: dt
 
 end subroutine advection_v2
 
-subroutine sl_step( array_1d, eta_in, nc_eta, &
-                    flux, eta_min, eta_max, spl_eta, dt )
+subroutine sl_step( array_1d, flux, spl_eta, dt )
 
-sll_real64, dimension(:)        :: array_1d
-sll_real64, dimension(nc_eta+1) :: eta_in
-sll_real64, dimension(nc_eta+1) :: eta_out
-sll_real64                      :: flux
-sll_int32                       :: i
-sll_int32                       :: nc_eta
-sll_real64                      :: eta_min
-sll_real64                      :: eta_max
-sll_real64                      :: dt
-type (sll_spline_1D), pointer   :: spl_eta
+   implicit none
+   sll_real64, dimension(:)          :: array_1d
+   sll_real64                        :: flux
+   sll_int32                         :: i
+   sll_real64                        :: dt
+   type (sll_spline_1D), pointer     :: spl_eta
+   sll_real64, dimension(:), pointer :: eta_out
 
-!Periodic boundary conditions (both spaces)
-do i = 1, nc_eta+1
-   eta_out(i) = eta_in(i) - flux*dt
-   if (eta_out(i) < eta_min) then
-      eta_out(i) = eta_out(i) + eta_max - eta_min
-   else if (eta_out(i) > eta_max) then
-      eta_out(i) = eta_out(i) - eta_max + eta_min
-   end if
-end do
-
-call compute_spline_1D_periodic( array_1d, spl_eta )
-call interpolate_array_values( eta_out, array_1d, nc_eta+1, spl_eta )
+   allocate(eta_out(spl_eta%n_points)) 
+   !Periodic boundary conditions (both spaces)
+   do i = 1, spl_eta%n_points
+      eta_out(i) = spl_eta%xmin +(i-1)*spl_eta%delta - flux*dt
+      if (eta_out(i) < spl_eta%xmin) then
+         eta_out(i) = eta_out(i) + spl_eta%xmax - spl_eta%xmin
+      else if (eta_out(i) > spl_eta%xmax) then
+         eta_out(i) = eta_out(i) - spl_eta%xmax + spl_eta%xmin
+      end if
+   end do
+   
+   call compute_spline_1D_periodic( array_1d, spl_eta )
+   call interpolate_array_values( eta_out, array_1d, size(array_1d), spl_eta )
 
 end subroutine sl_step
   
