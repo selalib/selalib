@@ -346,50 +346,60 @@ contains
     type(sll_distribution_function_4D_t), pointer :: dist_func_4D
     sll_int32  :: test_case
 
-    sll_int32 :: nnode_x1, nnode_x2, nnode_v1, nnode_v2
-    sll_real64 :: delta_x1, delta_x2,  x1_min, x2_min
-    sll_real64 :: delta_v1, delta_v2,  v1_min, v2_min
-    sll_real64 :: x1, v1, x2, v2, eps, kx, ky, xi, vsq
+    sll_int32  :: nnode_x1, nnode_x2, nnode_v1, nnode_v2
+    sll_real64 :: delta_x1, delta_x2,  x1_min, x2_min, x1_max, x2_max
+    sll_real64 :: delta_v1, delta_v2,  v1_min, v2_min, v1_max, v2_max
+    sll_real64 :: x1, v1, x2, v2, eps, kx, vsq
     sll_int32  :: ix, jx, iv, jv
     
-    x1_min =   dist_func_4D%field%descriptor_x%eta1_min
+    x1_min   = dist_func_4D%field%descriptor_x%eta1_min
+    x1_max   = dist_func_4D%field%descriptor_x%eta1_max
     nnode_x1 = dist_func_4D%field%descriptor_x%nc_eta1+1
     delta_x1 = dist_func_4D%field%descriptor_x%delta_eta1
 
-    x2_min =   dist_func_4D%field%descriptor_x%eta2_min
+    x2_min   = dist_func_4D%field%descriptor_x%eta2_min
+    x2_max   = dist_func_4D%field%descriptor_x%eta2_max
     nnode_x2 = dist_func_4D%field%descriptor_x%nc_eta2+1
     delta_x2 = dist_func_4D%field%descriptor_x%delta_eta2
 
-    v1_min =   dist_func_4D%field%descriptor_v%eta1_min
+    v1_min   = dist_func_4D%field%descriptor_v%eta1_min
+    v1_max   = dist_func_4D%field%descriptor_v%eta1_max
     nnode_v1 = dist_func_4D%field%descriptor_v%nc_eta1+1
     delta_v1 = dist_func_4D%field%descriptor_v%delta_eta1
 
-    v2_min =   dist_func_4D%field%descriptor_v%eta2_min
+    v2_min   = dist_func_4D%field%descriptor_v%eta2_min
+    v2_max   = dist_func_4D%field%descriptor_v%eta2_max
     nnode_v2 = dist_func_4D%field%descriptor_v%nc_eta2+1
     delta_v2 = dist_func_4D%field%descriptor_v%delta_eta2
 
     select case (test_case)
     case (LANDAU)
-       xi  = 0.9
-       eps = 0.05
-       kx  = 2.0_f64*sll_pi/(nnode_x1*nnode_x2)
-       ky  = 2.0_f64*sll_pi/(nnode_v1*nnode_v2)
+       eps = 0.05_f64
+       kx  = 2.0_f64*sll_pi/((nnode_x1-1)*delta_x1)
+       v2 = v2_min
        do jv=1, nnode_v2
-          v2 = v2_min+(jv-1)*delta_v2
+	  v1 = v1_min
           do iv=1, nnode_v1
-             v1 = v1_min+(iv-1)*delta_v1
              vsq = v1*v1+v2*v2
              do jx=1, nnode_x2
-                x2=x2_min+(jx-1)*delta_x2
+	        x1 = x1_min
                 do ix=1, nnode_x1
-                   x1=x1_min+(ix-1)*delta_x1
                    dist_func_4D%field%data(ix,jx,iv,jv)= &
-                      (1+eps*cos(kx*x1))*1/(2.*sll_pi)*exp(-.5*vsq)
+                      (1+eps*cos(kx*x1))/(2.*sll_pi)*exp(-.5_f64*vsq)
+                   x1=x1+delta_x1
                 end do
              end do
+             v1 = v1+delta_v1
           end do
+          v2 = v2+delta_v2
        end do
     end select
+    print*,nnode_x1, x1_min, delta_x1, x1_max
+    print*,nnode_x2, x2_min, delta_x2, x2_max
+    print*,nnode_v1, v1_min, delta_v1, v1_max
+    print*,nnode_v2, v2_min, delta_v2, v2_max
+    print*,"SUMF=", sum(dist_func_4D%field%data)
+
   end subroutine sll_init_distribution_function_4D
 
     ! compute integral of f with respect to x2 (-> rho)
