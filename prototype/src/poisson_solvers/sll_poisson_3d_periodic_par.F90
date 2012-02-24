@@ -5,9 +5,9 @@
 ! Module: sll_poisson_3d_periodic.F90
 !
 !> @brief 
-!> Selalib 3D poisson solver
+!> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: Feb. 23, 2012
+!> Last modification: Feb. 24, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -50,7 +50,7 @@ contains
     type(layout_3D_t), pointer                :: layout2
     type(remap_plan_3D_t), pointer            :: rmp3
     sll_int32, dimension(1:3)                 :: global
-    sll_int32                                 :: gi, gj
+    sll_int32                                 :: gi, gj, gk
 
     nx = plan%nx
     ny = plan%ny
@@ -158,25 +158,29 @@ contains
     do k=1,nz/npz
        do j=1,ny/npy
           do i=1,nx/npx
-             if (i<=nx/2) then
-                ind_x = real(i-1,f64)
+             global = local_to_global_3D( layout2, (/int(i), int(j), int(k)/))
+             gi = global(1)
+             gj = global(2)
+             gk = global(3)
+             if (gi<=nx/2) then
+                ind_x = real(gi-1,f64)
              else
-                ind_x = real(nx-(i-1),f64)
+                ind_x = real(nx-(gi-1),f64)
              endif
-             if (j<=ny/2) then
-                ind_y = real(j-1,f64)
+             if (gj<=ny/2) then
+                ind_y = real(gj-1,f64)
              else
-                ind_y = real(ny-(j-1),f64)
+                ind_y = real(ny-(gj-1),f64)
              endif
-             if (k<=nz/2) then
-                ind_z = real(k-1,f64)
+             if (gk<=nz/2) then
+                ind_z = real(gk-1,f64)
              else
-                ind_z = real(nz-(k-1),f64)
+                ind_z = real(nz-(gk-1),f64)
              endif                
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
                 hat_phi(i,j,k) = 0.d0
              else
-                hat_phi(i,j,k) = tmp(i,j,k) / (4*sll_pi**2*((ind_x/Lx)**2+(ind_y/Ly)**2+(ind_z/Lz)**2))
+                hat_phi(i,j,k) = tmp(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2+(ind_y/Ly)**2+(ind_z/Lz)**2))
                 ! tmp is hat_rho remapped
              endif
           enddo
