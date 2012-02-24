@@ -36,7 +36,7 @@ env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('geometry_funcs', ["../mesh_types/geometry_functions.F90"])
-env.Program('unit_test', ["unit_test.F90","sll_mappings.F90",
+env.Program('unit_test', ["unit_test.F90","sll_mapped_meshes.F90",
                           "geometry_functions.F90"])
 
 

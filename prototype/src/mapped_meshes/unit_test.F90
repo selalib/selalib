@@ -1,15 +1,15 @@
 program unit_test
 #include "sll_working_precision.h"
   use numeric_constants
-  use sll_coordinate_transformation
+  use sll_mapped_meshes
   use geometry_functions
   implicit none
 
-#define NPTS1 33 
-#define NPTS2 33 
+#define NPTS1 65 
+#define NPTS2 65 
 
-  type(map_2D), pointer     :: map_a    ! analytic map
-  type(map_2D), pointer     :: map_d    ! discrete map
+  type(mapped_mesh_2D_general), pointer     :: map_a    ! analytic map
+  type(mapped_mesh_2D_general), pointer     :: map_d    ! discrete map
   sll_real64, dimension(:,:), allocatable :: x1
   sll_real64, dimension(:,:), allocatable :: x2
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -58,10 +58,10 @@ program unit_test
   print *, '              TESTING THE ANALYTIC MAP                    '
   print *, '**********************************************************'
 
-  map_a => new_map_2D( ANALYTIC_MAP )
+  map_a => new_mapped_mesh_2D_general( ANALYTIC_MAP )
   print *, 'allocated map'
 
-  call initialize_map_2D( &
+  call initialize_mapped_mesh_2D_general( &
        map_a, &
        NPTS1, &
        NPTS2, &
@@ -79,36 +79,36 @@ program unit_test
   print *, '              TESTING THE DISCRETE MAP                    '
   print *, '**********************************************************'
 
-  map_d => new_map_2D( DISCRETE_MAP )
+  map_d => new_mapped_mesh_2D_general( DISCRETE_MAP )
   print *, 'allocated discrete map'
 
-  call initialize_map_2D( &
+  call initialize_mapped_mesh_2D_general( &
        map_d, &
        NPTS1, &
        NPTS2, &
        x1_node=x1, &
        x2_node=x2, &
-       eta1_bc_type_x1=HERMITE_MAP_BC, &
-       eta2_bc_type_x1=PERIODIC_MAP_BC,&
-       eta1_bc_type_x2=HERMITE_MAP_BC, &
-       eta2_bc_type_x2=PERIODIC_MAP_BC,&
+       eta1_bc_type_x1=HERMITE_MESH_BC, &
+       eta2_bc_type_x1=PERIODIC_MESH_BC,&
+       eta1_bc_type_x2=HERMITE_MESH_BC, &
+       eta2_bc_type_x2=PERIODIC_MESH_BC,&
        eta1_min_slopes_x1=x1_eta1_min, &
        eta1_max_slopes_x1=x1_eta1_max, &
        eta1_min_slopes_x2=x2_eta1_min, &
        eta1_max_slopes_x2=x2_eta1_max )
-  print *, 'x1: '
-  print *, map_d%x1_node(:,:)
+ ! print *, 'x1: '
+ ! print *, map_d%x1_node(:,:)
 
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
   do j=1,NPTS2
      do i=1,NPTS1
-        node_a   = map2d_x1_node(map_a,i,j)
-        node_d   = map2d_x1_node(map_d,i,j)
+        node_a   = mesh_2d_x1_node(map_a,i,j)
+        node_d   = mesh_2d_x1_node(map_d,i,j)
         acc = acc + abs(node_a-node_d)
-        node_a   = map2d_x2_node(map_a,i,j)
-        node_d   = map2d_x2_node(map_d,i,j)
+        node_a   = mesh_2d_x2_node(map_a,i,j)
+        node_d   = mesh_2d_x2_node(map_d,i,j)
         acc1 = acc1 + abs(node_a-node_d)
      end do
   end do
@@ -122,7 +122,7 @@ program unit_test
      do i=0,NPTS1-1
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
-        node   = map_2D_jacobian_node(map_a,i+1,j+1)
+        node   = mesh_2D_jacobian_node(map_a,i+1,j+1)
 !        node   = map_2d_jacobian_node(map_d,i+1,j+1)
         interp = jacobian_2D(map_d,eta1,eta2) 
         delta  =  node - interp
