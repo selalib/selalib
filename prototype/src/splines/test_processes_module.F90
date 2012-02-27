@@ -19,7 +19,7 @@ module test_processes_module
   use sll_splines
   use numeric_constants
   use util_constants
-    use test_func_module
+  use test_func_module
   implicit none
 contains
 
