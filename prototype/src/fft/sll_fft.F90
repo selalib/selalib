@@ -112,7 +112,7 @@ module sll_fft
   use numeric_constants
   use sll_timer
   use, intrinsic :: iso_c_binding
-!#include "conf.h"
+#include "conf.h"
 #ifndef _NOFFTW
   !use FFTW3
   use, intrinsic :: iso_c_binding
