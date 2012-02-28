@@ -3,56 +3,27 @@ module sll_WENO
 #include "sll_memory.h"
 #include "sll_assert.h"
   implicit none
-
-  type sll_WENO_1D
+  type :: sll_weno_1d
      sll_real64                                    :: xmin
      sll_real64                                    :: xmax
      sll_int32                                     :: n_points ! size
      sll_real64                                    :: delta    ! discretization step
      sll_real64                                    :: rdelta   ! reciprocal of delta
      sll_real64, dimension(:), pointer             :: data     ! data for interpolation
-  end type sll_WENO_1D
-  
+  end type sll_weno_1d
+
   interface delete
-     module procedure delete_WENO_1D
-  end interface
+     module procedure delete_weno_1d
+  end interface delete
 
 contains  ! ****************************************************************
 
-  function new_WENO_1D(num_points, xmin, xmax)
-    
-    type(sll_WENO_1D), pointer                   :: new_WENO_1D
-    sll_int32,  intent(in)                       :: num_points
-    sll_real64, intent(in)                       :: xmin
-    sll_real64, intent(in)                       :: xmax	
-    sll_int32                                    :: ierr  ! allows for an error code return in allocating memory
-    sll_int32                                    :: i_temp
-    SLL_ALLOCATE( new_WENO_1D, ierr )
-    new_WENO_1D%xmin     = xmin
-    new_WENO_1D%xmax     = xmax
-    new_WENO_1D%n_points = num_points
-    new_WENO_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
-    new_WENO_1D%rdelta   = 1.0_f64/new_WENO_1D%delta
-    SLL_ALLOCATE(new_WENO_1D%data(num_points), ierr)
-    if( num_points .le. 28 ) then
-       print *, 'ERROR, new_WENO_1D: Because of the algorithm used, this function is meant to be used with arrays that are at least of size = 28'
-       STOP 'new_WENO_1D()'
-    end if
-    if( xmin .gt. xmax ) then
-       print *, 'ERROR, new_WENO_1D: xmin is greater than xmax, this would cause all sorts of errors.'
-       STOP
-    end if
-  end function new_WENO_1D
-  
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
-  
-  subroutine interpolate_WENO_1D(fWENO, num_points, data, coordinate_o, f_out)
-    type(sll_WENO_1D), pointer, intent(in)      :: fWENO   ! pointer with basic discretization parameter set up and data
-    sll_int32, intent(in)                       ::  num_points  ! size of data
-    sll_real64, dimension(1:num_points), intent(in)  ::  data        ! data to be interpolated
-    sll_real64, dimension(1:num_points), intent(in)  :: coordinate_o ! coordinate for data and interpolation locations
-    sll_real64, dimension(1:num_points), intent(out) :: f_out          ! interpolated f at coordinates_o
+  function interpolate_WENO_1D(this, num_points, coordinates, data) result(res)
+    type(sll_WENO_1D),  intent(in)        :: this        ! basic discretization parameter set up and data
+    sll_int32, intent(in)                 :: num_points  ! size of data
+    sll_real64, dimension(:), intent(in)  :: data        ! data to be interpolated
+    sll_real64, dimension(:), intent(in)  :: coordinates ! coordinate for data and interpolation locations
+    sll_real64, dimension(num_points)     :: res         ! interpolated f at coordinates
 
     sll_real64, dimension(-6: num_points+6)         :: f_temp
     sll_real64                                      :: xi_temp
@@ -64,7 +35,7 @@ contains  ! ****************************************************************
 
     eps = 1.e-8
     order = 6
-    if(.not.(fWENO%n_points.eq.num_points))then
+    if (.not.(this%n_points.eq.num_points)) then
        write(*,*) 'size of f does not agree; check n_f!'
     endif
 
@@ -77,23 +48,23 @@ contains  ! ****************************************************************
 
 !!! interpolation based on f_temp
     do ic_temp = 1, num_points
-       i_temp  = ceiling((coordinate_o(ic_temp) -fWENO%xmin)*fWENO%rdelta)+1
-       xi_temp = (coordinate_o(ic_temp)-(fWENO%xmin+(i_temp-1.0_f64)*fWENO%delta))*fWENO%rdelta
+       i_temp  = ceiling((coordinates(ic_temp) -this%xmin)*this%rdelta)+1
+       xi_temp = (coordinates(ic_temp)-(this%xmin+(i_temp-1.0_f64)*this%delta))*this%rdelta
        if(xi_temp.ge.eps)then
           write(*,*) 'something wrong in locating i_temp'
        elseif(xi_temp.le.-1.-eps)then
           write(*,*) 'something wrong in locating i_temp'
        endif
        g1 = f_temp(i_temp) &
-            &	  + (11.0_f64/6.0_f64*f_temp(i_temp)-3.0_f64*f_temp(i_temp-1)+1.5_f64*f_temp(i_temp-2)-f_temp(i_temp-3)/3.0_f64)*xi_temp &
+            &  + (11.0_f64/6.0_f64*f_temp(i_temp)-3.0_f64*f_temp(i_temp-1)+1.5_f64*f_temp(i_temp-2)-f_temp(i_temp-3)/3.0_f64)*xi_temp &
             &     + (f_temp(i_temp)-2.5_f64*f_temp(i_temp-1)+2.0_f64*f_temp(i_temp-2)-.5_f64*f_temp(i_temp-3))*xi_temp**2.0_f64 &
             &     + (f_temp(i_temp)/6.0_f64-f_temp(i_temp-1)/2.0_f64+f_temp(i_temp-2)/2.0_f64-f_temp(i_temp-3)/6.0_f64)*xi_temp**3.0_f64
        g2 = f_temp(i_temp) &
-            &	  + (f_temp(i_temp+1)/3.0_f64+f_temp(i_temp)/2.0_f64-f_temp(i_temp-1)+f_temp(i_temp-2)/6.0_f64)*xi_temp &
+            &  + (f_temp(i_temp+1)/3.0_f64+f_temp(i_temp)/2.0_f64-f_temp(i_temp-1)+f_temp(i_temp-2)/6.0_f64)*xi_temp &
             &     + (0.5_f64*f_temp(i_temp+1)-f_temp(i_temp)+.5_f64*f_temp(i_temp-1))*xi_temp**2.0_f64 &
             &     + (f_temp(i_temp+1)/6.0_f64-f_temp(i_temp)/2.0_f64+f_temp(i_temp-1)/2.0_f64-f_temp(i_temp-2)/6.0_f64)*xi_temp**3.0_f64
        g3 = f_temp(i_temp) &
-            &	  + (-f_temp(i_temp+2)/6.0_f64+f_temp(i_temp+1)-0.5_f64*f_temp(i_temp)-f_temp(i_temp-1)/3.0_f64)*xi_temp &
+            &  + (-f_temp(i_temp+2)/6.0_f64+f_temp(i_temp+1)-0.5_f64*f_temp(i_temp)-f_temp(i_temp-1)/3.0_f64)*xi_temp &
             &       +(0.5_f64*f_temp(i_temp+1)-f_temp(i_temp)+.5_f64*f_temp(i_temp-1))*xi_temp**2.0_f64 &
             &     + (f_temp(i_temp+2)/6.0_f64-f_temp(i_temp+1)/2.0_f64+f_temp(i_temp)/2.0_f64-f_temp(i_temp-1)/6.0_f64)*xi_temp**3.0_f64
 
@@ -125,12 +96,36 @@ contains  ! ****************************************************************
        w = w1 + w2 + w3
        w1 = w1/w
        w2 = w2/w
-       w3 = w3/w		 
-       f_out(ic_temp) = w1*g1 + w2*g2 + w3*g3		
+       w3 = w3/w
+       res(ic_temp) = w1*g1 + w2*g2 + w3*g3
     enddo
 
-  end subroutine interpolate_WENO_1D
+  end function interpolate_WENO_1D
 
+ function new_WENO_1D(num_points, xmin, xmax)
+
+    type(sll_WENO_1D), pointer                 :: new_WENO_1D
+    sll_int32,  intent(in)                       :: num_points
+    sll_real64, intent(in)                       :: xmin
+    sll_real64, intent(in)                       :: xmax
+    sll_int32                                    :: ierr  ! allows for an error code return in allocating memory
+    sll_int32                                    :: i_temp
+    !SLL_ALLOCATE( new_WENO_1D, ierr )
+    new_WENO_1D%xmin     = xmin
+    new_WENO_1D%xmax     = xmax
+    new_WENO_1D%n_points = num_points
+    new_WENO_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
+    new_WENO_1D%rdelta   = 1.0_f64/new_WENO_1D%delta
+    SLL_ALLOCATE(new_WENO_1D%data(num_points), ierr)
+    if( num_points .le. 28 ) then
+       print *, 'ERROR, new_WENO_1D: Because of the algorithm used, this function is meant to be used with arrays that are at least of size = 28'
+       STOP 'new_WENO_1D()'
+    end if
+    if( xmin .gt. xmax ) then
+       print *, 'ERROR, new_WENO_1D: xmin is greater than xmax, this would cause all sorts of errors.'
+       STOP
+    end if
+  end function new_WENO_1D
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -139,11 +134,11 @@ contains  ! ****************************************************************
     sll_int32                    :: ierr
     ! Fixme: some error checking, whether the spline pointer is associated
     ! for instance
-    SLL_ASSERT( associated(fWENO) )
+    !SLL_ASSERT( associated(fWENO) )
     fWENO%data => null()
-    SLL_DEALLOCATE(fWENO, ierr )
+    !SLL_DEALLOCATE(fWENO, ierr )
   end subroutine delete_WENO_1D
-  
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
+
 end module sll_WENO
