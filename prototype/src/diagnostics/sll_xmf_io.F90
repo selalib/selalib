@@ -125,6 +125,21 @@ write(file_id,"(a)")trim(filename)
 write(file_id,"(a)")"</DataItem>"
 end subroutine sll_xmf_dataitem_2d
 
+subroutine sll_xmf_dataitem_3d(file_id, filename, nnodes_x1, nnodes_x2, nnodes_x3, filetype)
+sll_int32, intent(in) :: file_id
+character(len=*), intent(in) :: filename
+character(len=*), intent(in) :: filetype
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+sll_int32, intent(in) :: nnodes_x3
+
+SLL_ASSERT(filetype == 'HDF' .or. filetype == 'Binary')
+write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nnodes_x3,nnodes_x2,nnodes_x1, &
+"' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
+write(file_id,"(a)")trim(filename)
+write(file_id,"(a)")"</DataItem>"
+end subroutine sll_xmf_dataitem_3d
+
 !> Write the description of a scalar field on a 2D mesh.
 !> \param[in] file_id   - the unit number or your xmf file
 !> \param[in] fieldname - the dataset name where the heavy data are (hdf5 case)
@@ -154,6 +169,24 @@ write(file_id,"(a)")"</Attribute>"
 
 end subroutine sll_xmf_field_2d
 
+subroutine sll_xmf_field_3d(file_id,fieldname,filename,npoints_1,npoints_2,npoints_3,center)
+sll_int32, intent(in) :: file_id
+character(len=*), intent(in) :: filename
+character(len=*), intent(in) :: fieldname
+character(len=*), intent(in) :: center
+sll_int32, intent(in) :: npoints_1
+sll_int32, intent(in) :: npoints_2
+sll_int32, intent(in) :: npoints_3
+
+write(file_id,"(a)")"<Attribute Name='"//fieldname//"' AttributeType='Scalar' Center='"//center//"'>"
+#ifdef NOHDF5
+call sll_xmf_dataitem_3d(file_id,trim(filename)//"-"//fieldname//".bin",npoints_1,npoints_2,npoints_3,'Binary')
+#else
+call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/"//fieldname,npoints_1,npoints_2,npoints_3,'HDF')
+#endif
+write(file_id,"(a)")"</Attribute>"
+
+end subroutine sll_xmf_field_3d
 
 !> Write the description of a 2D strutured grid
 !> mesh with its nodes coordinates contains in filename-x1 and filename-x2.
@@ -191,6 +224,36 @@ call sll_xmf_dataitem_2d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,'
 write(file_id,"(a)")"</Geometry>"
 
 end subroutine sll_xmf_grid_geometry_2d
+
+subroutine sll_xmf_grid_geometry_3d(file_id, filename,  &
+                                    nnodes_x1, nnodes_x2, nnodes_x3)
+sll_int32, intent(in) :: file_id
+character(len=*), intent(in) :: filename
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+sll_int32, intent(in) :: nnodes_x3
+
+write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+write(file_id,"(a,3i5,a)")"<Topology TopologyType='3DSMesh' NumberOfElements='", &
+                          nnodes_x3,nnodes_x2,nnodes_x1,"'/>"
+write(file_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
+
+#ifdef NOHDF5
+
+call sll_xmf_dataitem_3d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+call sll_xmf_dataitem_3d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+call sll_xmf_dataitem_3d(file_id,trim(filename)//"-x3.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+#else
+
+call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/x3",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+
+#endif
+
+write(file_id,"(a)")"</Geometry>"
+
+end subroutine sll_xmf_grid_geometry_3d
 
 
 end module sll_xmf_io

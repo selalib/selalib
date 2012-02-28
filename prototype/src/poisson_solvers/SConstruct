@@ -24,7 +24,7 @@ env = Environment( ENV = os.environ,
                    LINK = 'mpif90',
                    LIBPATH = ['.','../fftpack'],
                    LIBS = ['sll_remap','sll_mesh_types', 'dfftpack', 
-                           'sll_fft', 'sll_collective',
+                           'sll_collective',
                            'sll_diagnostics','sll_assertion','sll_utilities',
                            'sll_constants','sll_precision','sll_memory'],
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
@@ -49,34 +49,28 @@ env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
-env.Library('sll_fft', ["../fft/sll_fft.F90"])
+#env.Library('sll_fft', ["../fft/sll_fft.F90"])
 env.Library('sll_remap', ["../remap/sll_remap.F90"])
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 
 
+#env.Append(LIBS=['sll_fft'])
 
 env.Program('unit_test',['sll_poisson_1d_periodic.F90', 
                                 'fft1d.f90', 'unit_test.F90',
                                 'sll_poisson_2d_periodic.F90', 
-                                'fft_module.F90', "sll_poisson_3d_periodic_seq.F90" ])
+                                'fft_module.F90'])
 
 env.Program('test_poisson_1d', ['test_poisson_1d.F90',
-                                'sll_poisson_1D_periodic.F90', 
+                                'sll_poisson_1d_periodic.F90', 
                                 'fft1d.f90'])
 env.Program('test_poisson_2d', ["test_poisson_2d.F90",
                                 'fft_module.F90',
-                                'sll_poisson_2D_periodic.F90' ])
+                                'sll_poisson_2d_periodic.F90' ])
 
 env.Append(LIBS=['fftw3'])
 env.Program('fftw_solver', source = ["fftw_solver.F90"])
 
-<<<<<<< HEAD
 #env.Append(LIBS=['fftw3_threads'])
 #env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
-#env.Program('poisson3d_with_fftw3_par', source = ["poisson3d_with_fftw3.F90"])
-=======
-env.Append(LIBS=['fftw3_threads'])
-env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
-env.Program('poisson_3d_periodic', source = ["poisson_3d_periodic.F90"])
-
->>>>>>> mesh-2d-test
+#env.Program('poisson_3d_periodic', source = ["poisson_3d_periodic.F90"])
