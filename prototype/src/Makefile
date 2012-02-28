@@ -13,6 +13,7 @@ default:
 	(cd remap; scons)
 	(cd timer; scons)
 	(cd ode_solvers; scons)
+	(cd mapped_meshes; scons)
 	(cd mesh_types; scons)
 	(cd distribution_function; scons)
 
@@ -31,5 +32,6 @@ clean:
 	(cd collective; scons -c)
 	(cd timer; scons -c)
 	(cd mesh_types; scons -c)
+	(cd mapped_meshes; scons -c)
 	(cd ode_solvers; scons -c)
 	(cd distribution_function; scons -c)
