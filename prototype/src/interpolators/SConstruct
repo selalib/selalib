@@ -1,0 +1,33 @@
+# SCons file for the unit test of the LinRood module
+import os
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+env = Environment( ENV = os.environ,
+                   F90PATH = ['../memory','../precision','../assert',
+                              '../utilities','../constants',
+                              '../splines', '../WENO',
+                              os.environ['HDF5INCLUDEPATH']],
+                   FORTRANMODDIRPREFIX= '-J', 
+                   LIBPATH= ['.', os.environ['HDF5LIBPATH']],
+                   LIBS=['sll_memory','sll_precision','sll_assert',
+                         'sll_utilities', 'sll_constants', 'sll_splines',
+                         'sll_WENO', 'hdf5_fortran','hdf5','z'],
+                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
+                               '-DGFORTRAN','-ffree-line-length-none'])
+
+
+env.Library('sll_memory',["../memory/sll_memory.F90"])
+env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+env.Library('sll_assert', ["../assert/sll_assert.F90"])
+env.Library('sll_splines', ["../splines/sll_splines.F90"])
+env.Library('sll_WENO', ["../WENO/sll_WENO.F90"])
+env.Library('sll_constants', ["../constants/numeric_constants.F90"])
+env.Library('sll_utilities',["../utilities/misc_utils.F90"])
+env.Program('unit_test', ["unit_test.F90", "sll_interpolators.F90"])
