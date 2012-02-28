@@ -11,10 +11,9 @@ module sll_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_interpolator1d_interface
   implicit none
   
-  type, extends(interpolator1d) ::  sll_spline_1D
+  type  ::  sll_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
@@ -28,8 +27,6 @@ use sll_interpolator1d_interface
      sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
      sll_real64                        :: slope_L  ! left slope, for Hermite
      sll_real64                        :: slope_R  ! right slope, for Hermite
-     contains 
-       procedure, pass:: interpolate1d
   end type sll_spline_1D
 
   ! Are x1 and x2 the coordinates that we should use? Or are eta1 and eta2
@@ -109,22 +106,6 @@ contains  ! ****************************************************************
     spline%slope_r = value
   end subroutine set_slope_right
   
-  ! the following provides an implementation for the abstract interface interpolate1d
-  function interpolate1d(this, num_points, data) result(data_out)
-    class(sll_spline_1D), intent(in)       :: this
-    sll_int32,  intent(in)                 :: num_points
-    sll_real64, dimension(:), intent(in)   :: data
-    sll_real64, dimension(num_points)      :: data_out
-    ! local variables
-    sll_int32 :: ierr
-    ! allocate 
-    !SLL_ALLOCATE(data_out( num_points ), ierr)
-    ! compute the interpolating spline coefficients
-    call compute_spline_1D( data, this%bc_type, this )
-    call interpolate_array_values( data, data_out, num_points, this )
-    
-  end function interpolate1d
-  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
@@ -198,6 +179,7 @@ contains  ! ****************************************************************
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
+
   end function new_spline_1D
   
   ! - data: the array whose data must be fit with the cubic spline.
@@ -281,7 +263,7 @@ contains  ! ****************************************************************
   subroutine compute_spline_1D( f, bc_type, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32,  intent(in)               :: bc_type
-    class(sll_spline_1D), pointer         :: spline
+    type(sll_spline_1D), pointer         :: spline
     ! Note that this function does no error checking and basically
     ! outsources this task to the functions it is wrapping around.
     ! This is so because those functions can be used independently
@@ -432,7 +414,7 @@ contains  ! ****************************************************************
 
   subroutine compute_spline_1D_periodic( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    class(sll_spline_1D), pointer         :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer    :: coeffs
     sll_int32                         :: np
     sll_real64, dimension(:), pointer :: d
@@ -462,7 +444,7 @@ contains  ! ****************************************************************
 
   subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    class(sll_spline_1D), pointer      :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: np
     sll_real64, dimension(:), pointer :: fp
@@ -633,7 +615,7 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
     sll_real64, dimension(1:n), intent(out) :: a_out
-    class(sll_spline_1D), pointer           :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer       :: coeffs
     sll_real64                              :: rh   ! reciprocal of cell spacing
     sll_int32                               :: cell
