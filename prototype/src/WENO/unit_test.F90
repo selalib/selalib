@@ -9,7 +9,10 @@
 ! the option -O3 is for optimization
 ! the option -ffree-line-length-none: 
 !    -ffree-line-length-n
-!    Set column after which characters are ignored in typical free-form lines in the source file. For free-form, the default value is 132. n may be none, meaning that the entire line is meaningful. -ffree-line-length-0 means the same thing as -ffree-line-length-none. 
+!    Set column after which characters are ignored in typical free-form lines in the source file. For free-form, 
+!    the default value is 132. n may be none, meaning that the entire line is meaningful.
+!    -ffree-line-length-0 means
+!    the same thing as -ffree-line-length-none. 
 !    -fmax-identifier-length=n 
 
 
@@ -21,7 +24,7 @@ program SLWENO_tester
   use sll_WENO
   use numeric_constants
   implicit none
-#define NP 240
+#define NP 40
 
   sll_int32 :: err    ! indicator for allocating data array
   sll_int32 :: i
@@ -33,7 +36,6 @@ program SLWENO_tester
   sll_real64, allocatable, dimension(:) :: data_interp  ! exact function value at interpolated locations
   sll_real64 :: dx
   sll_real64 :: accumulator1
-
 
   ! constants
   accumulator1 = 0.0_f64
@@ -50,7 +52,7 @@ program SLWENO_tester
   dx = sll_pi*2.0_f64/NP
 
   do i=1,NP
-     coordinates_d(i) = i*dx
+     coordinates_d(i) = (i-0.5_f64)*dx
      coordinates_o(i) = coordinates_d(i) - dx/3.0_f64
      data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 + cos(coordinates_d(i)))
      data_interp(i) = 2.0_f64*(sin(coordinates_o(i)) + 2.5_f64 + cos(coordinates_o(i)))
@@ -59,7 +61,7 @@ program SLWENO_tester
   weno =>  new_WENO_1D(NP, coordinates_d(1), coordinates_d(NP))  
   ! NP is the number of data points, the second and the third argument is the min and max of coordinates
   ! set up the basic information for data: np, xmin, xmax, delta (mesh size), rdelta (reciprocal of delta)
-  call interpolate_WENO_1D( weno, NP, data, coordinates_o, out)
+  out = interpolate_WENO_1D( weno, NP, data, coordinates_o)
 
   print *, 'Contents of the weno:'
   print *, 'weno%xmin=', weno%xmin
