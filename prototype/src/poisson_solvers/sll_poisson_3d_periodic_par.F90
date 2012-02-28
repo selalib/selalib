@@ -35,7 +35,8 @@ contains
   subroutine solve_poisson_3d_periodic_par(plan, rho, phi)
 
     type (poisson_3d_periodic_plan), pointer  :: plan
-    sll_real64, dimension(:,:,:)              :: rho, phi
+    sll_real64, dimension(:,:,:)              :: rho
+    sll_real64, dimension(:,:,:), allocatable :: phi
     sll_comp64, dimension(:,:,:), allocatable :: hat_rho, tmp, hat_phi
     sll_int64                                 :: nx, ny, nz
     sll_int32                                 :: npx, npy, npz
@@ -93,8 +94,8 @@ contains
     do j=1,ny/npy
        do i=1,nx/npx
        global = local_to_global_3D( layout1, (/int(i), int(j), 1/))
-       gi =global(1)
-       gj =global(2)
+       gi = global(1)
+       gj = global(2)
        hat_rho(i,j,:) = cmplx(rho(gi,gj,:), 0_f64, kind=f64)
           call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
@@ -245,6 +246,7 @@ contains
        enddo
     enddo
 
+    SLL_ALLOCATE(phi(nx/npx,ny/npy,nz/npz), ierr)
     phi = real(tmp, f64)
 
     SLL_DEALLOCATE_ARRAY(tmp, ierr)
