@@ -35,7 +35,6 @@ env = Environment( ENV = os.environ,
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])
 env.Append(F90PATH=[os.environ['HDF5INCPATH']])
-env.Append(F90PATH=[os.environ['FFTW3INCLUDE']])
 env.Append(LIBPATH=[os.environ['HDF5LIBPATH']])
 env.Append(LIBS=['hdf5_fortran','hdf5','z'])
 
@@ -68,8 +67,11 @@ env.Program('test_poisson_2d', ["test_poisson_2d.F90",
                                 'fft_module.F90',
                                 'sll_poisson_2d_periodic.F90' ])
 
-env.Append(LIBS=['fftw3'])
-env.Program('fftw_solver', source = ["fftw_solver.F90"])
+if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
+  env.Append(F90PATH=[os.environ['FFTWINCPATH']])
+  env.Append(LIBPATH=[os.environ['FFTWLIBPATH']])
+  env.Append(LIBS=['fftw3'])
+  env.Program('fftw_solver', source = ["fftw_solver.F90"])
 
 #env.Append(LIBS=['fftw3_threads'])
 #env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
