@@ -5,6 +5,7 @@ program diagnostics_tester
 use sll_binary_io
 use sll_xmf_io
 use sll_diagnostics
+use numeric_constants
 
 #ifndef NOHDF5
 use hdf5
@@ -12,25 +13,23 @@ use sll_hdf5_io
 #endif
 
 implicit none
+sll_int32  :: i, j, k
+sll_int32 :: error
 
-sll_int32  :: nx, nv, i, j
-sll_real64 :: angle, xt, vt, pi, R
+call test_2d()
+
+call test_3d()
+
+contains
+
+subroutine test_2d()
+
+sll_int32  :: nx, nv
+sll_real64 :: angle, xt, vt, R
 
 sll_real64, allocatable, dimension(:,:) :: x
 sll_real64, allocatable, dimension(:,:) :: v
 sll_real64, allocatable, dimension(:,:) :: f
-
-sll_int32 :: error
-
-#ifdef NOHDF5
-sll_int32 :: file_id
-#else
-integer(hid_t)   :: file_id
-integer(hsize_t) :: data_dims(2)
-character(len=2) :: coord_names(2)
-#endif
-  
-pi = 4.*atan(1.)
 
 nx = 32
 nv = 64
@@ -41,7 +40,7 @@ SLL_ALLOCATE(v(nx,nv),error)
 
 do j = 1, nv
    vt = real(j-1)/(nv-1)
-   angle = vt * 2. * pi
+   angle = vt * 2. * sll_pi
    do i = 1, nx
       xt = real(i-1) / float(nx-1)
       R = (1.-xt)*2. + xt*5.
@@ -70,8 +69,12 @@ call write_vec2d(x,v,nx,nv,"vec2d_on_cells","mesh",1)
 !nodes values
 call write_vec2d(x,v,nx,nv,"vec2d_on_nodes","mesh",0)
 
+end subroutine test_2d
+
 #ifdef NOHDF5
 
+subroutine test_binary()
+sll_int32 :: file_id
 !Binary version
 call sll_binary_file_create("test-f.bin",file_id,error)
 call sll_binary_write_array_2d(file_id,f,error)
@@ -103,7 +106,17 @@ write(file_id,"(a)"      ) "</DataItem>"
 write(file_id,"(a)"      ) "</Attribute>"
 call sll_xmf_file_close(file_id,error)
 
+end test_binary
+
 #else
+
+subroutine test_hdf5(x, v, nx, nv)
+sll_real64, dimension(:,:) :: x, v
+sll_int32 :: nx, nv
+
+integer(hid_t)   :: file_id
+integer(hsize_t) :: data_dims(2)
+character(len=2) :: coord_names(2)
 
 data_dims(1) = nx
 data_dims(2) = nv
@@ -133,9 +146,15 @@ write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 call sll_xmf_file_close(file_id,error)
 
+end subroutine test_hdf5
+
 #endif
 
 !ASCII version
+subroutine test_ascii( x, v, f, nx, nv )
+sll_real64, dimension(:,:) :: x, v, f
+sll_int32 :: nx, nv
+sll_int32 :: file_id
 
 call sll_xmf_file_create("test_ascii.xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
@@ -160,5 +179,47 @@ end do
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
 call sll_xmf_file_close(file_id,error)
+
+end subroutine test_ascii
+
+subroutine test_3d()
+sll_int32  :: n1, n2, n3
+sll_real64 :: theta, a, b, phi
+sll_real64, allocatable, dimension(:,:,:) :: p1, p2, p3, pf
+
+n1 = 32
+n2 = 64
+n3 = 128
+SLL_ALLOCATE(p1(n1,n2,n3),error)
+SLL_ALLOCATE(p2(n1,n2,n3),error)
+SLL_ALLOCATE(p3(n1,n2,n3),error)
+SLL_ALLOCATE(pf(n1,n2,n3),error)
+
+a = 3
+phi = 0
+do k = 1, n3
+   theta = 0
+   do j = 1, n2
+      b = 0
+      do i = 1, n1
+         p1(i,j,k) =  (a + b*cos(phi))*cos(theta)
+         p2(i,j,k) =  (a + b*cos(phi))*sin(theta)
+         p3(i,j,k) =  b*sin(phi)
+         pf(i,j,k) =  sin(phi)*cos(theta)
+         b = b + 1._f64/(n1-1)
+      end do
+      theta = theta + 2._f64*sll_pi / (n2-1)
+   end do 
+   phi = phi + 2._f64*sll_pi / (n3-1)
+end do 
+
+call write_mesh(p1,p2,p3,n1,n2,n3,"mesh3d")
+
+!cells values
+call write_vec1d(pf,n1,n2,n3,"vec3d_on_cells","mesh3d",1)
+!nodes values
+call write_vec1d(pf,n1,n2,n3,"vec3d_on_nodes","mesh3d",0)
+
+end subroutine test_3d
 
 end program diagnostics_tester
