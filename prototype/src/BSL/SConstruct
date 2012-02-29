@@ -43,7 +43,6 @@ env = Environment( ENV = os.environ,
                               '../mesh_types',
                               '../splines',
                               os.environ['HDF5INCPATH'],
-                              '../ode_solvers',
 			      '../poisson_solvers'],
                    LIBPATH = ['.',os.environ['HDF5LIBPATH'],'../fftpack'],
                    LIBS = ['sll_memory',
@@ -53,7 +52,6 @@ env = Environment( ENV = os.environ,
                            'sll_constants',
                            'sll_mesh_types',
                            'sll_splines',
-                           'sll_ode_solvers',
                            'sll_distribution_function',
                            'sll_diagnostics',
                            'sll_poisson_solvers'])
@@ -66,7 +64,6 @@ env.Append(LIBS=['dfftpack','hdf5','hdf5_fortran','z'])
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
-env.Library('sll_ode_solvers',["../ode_solvers/sll_ode_solvers.F90"])
 env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
