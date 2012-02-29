@@ -37,6 +37,7 @@ program test_poisson_solvers
 
   sll_int32  :: nx, ny, nz
   sll_real64 :: Lx, Ly, Lz
+  sll_real64 :: colsz
 
   nx = 64
   ny = 64
@@ -45,18 +46,18 @@ program test_poisson_solvers
   Ly = 2*sll_pi
   Lz = 2*sll_pi
 
-  print*, ' '
-  print*, 'Test poisson_1d'
-  print*, ' '
-  call test_poisson_1d()
-  print*, ' '
-
   ! Boot parallel environment
   call sll_boot_collective()
-
+  colsz  = sll_get_collective_size(sll_world_collective)
   call test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
-
   call sll_halt_collective()
+
+  if (colsz==1) then
+     print*, ' '
+     print*, 'Test poisson_1d'
+     print*, ' '
+     call test_poisson_1d()
+  endif
 
 contains
 
@@ -203,11 +204,14 @@ contains
           enddo
        enddo
     enddo
-
     rho = 3*phi_an
+
+    colsz  = sll_get_collective_size(sll_world_collective)
+    myrank = sll_get_collective_rank(sll_world_collective)
 
     ! Test sequential periodic 3D poisson solver
     if (myrank==0) then
+       print*, ' '
        print*, 'Test poisson_3d in sequential'
     endif
 
@@ -224,6 +228,7 @@ contains
 
     if (average_err <= dx*dx*dy) then
        if (myrank==0) then
+          call flush()
           print*, ' '
           print*, 'sll_poisson_3d_periodic_seq test: PASS'
        endif
@@ -237,12 +242,11 @@ contains
     ! Test parallel periodic 3D poisson solver
 
     if (myrank==0) then
+       call flush()
        print*, ' '
+       call flush()
        print*, 'Test poisson_3d in parallel'
     endif
-
-    colsz  = sll_get_collective_size(sll_world_collective)
-    myrank = sll_get_collective_rank(sll_world_collective)
     
     call solve_poisson_3d_periodic_par(plan, rho, phi_par)
 
@@ -274,16 +278,18 @@ contains
     average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
     seq_par_diff = seq_par_diff / (nx_loc*ny_loc*nz_loc)
 
+    call flush()
     print*, ' '
     print*, 'local average error:', average_err
     print*, 'dx*dy*dz =', dx*dy*dz
     print*, 'Local average diff between seq sol and par sol:', seq_par_diff
 
     if (average_err > dx*dx*dy) then
-    print*, ' '
+       call flush()
+       print*, ' '
        print*, 'Test stoppped by sll_poisson_3d_periodic_par test'
        print*, 'myrank=', myrank
-    print*, ' '
+       print*, ' '
        stop
     endif
 
@@ -291,6 +297,7 @@ contains
     
     if (myrank==0) then
        if (prod4test(1)==1.d0) then
+          call flush()
           print*, ' '
           print*, 'sll_poisson_3d_periodic_par test: PASS'
           print*, ' '
