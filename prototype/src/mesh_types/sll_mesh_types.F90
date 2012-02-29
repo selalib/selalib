@@ -178,7 +178,7 @@ contains   ! *****************************************************************
 
   subroutine dump_mesh_descriptor_1d(this)
   class(mesh_descriptor_1d) :: this
-  SLL_ASSERT(associated(this))
+  
   print 100, this%eta1_min, this%eta1_max, this%nc_eta1, &
              this%delta_eta1, this%boundary_type
 
