@@ -67,7 +67,7 @@ mesh_x => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
 delta_eta1 = GET_MESH_DELTA_ETA1(mesh_x)
 delta_eta2 = GET_MESH_DELTA_ETA2(mesh_x)
 
-call write_mesh_2D(mesh_x,"mesh_x")
+call write_mesh_2d(mesh_x,"mesh_x")
 
 !v domain
 eta3_min = -6.0_f64; eta3_max = 6.0_f64 
