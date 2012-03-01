@@ -89,7 +89,8 @@ end subroutine sll_xmf_file_create
 
 !> Close the XML file and finish to write last lines.
 !> You give the file unit number.
-!> \param[in] file_id is the unit number or your xmf file
+!> \param[in]  file_id - the unit number or your xmf file
+!> \param[out] error   - error parameter
 subroutine sll_xmf_file_close(file_id,error)
 sll_int32, intent(in)  :: file_id
 sll_int32, intent(out) :: error
@@ -125,11 +126,12 @@ write(file_id,"(a)")"</DataItem>"
 end subroutine sll_xmf_dataitem_2d
 
 !> Write the description of a scalar field on a 2D mesh.
-!> \param[in] file_id is the unit number or your xmf file
-!> \param[in] fieldname is the dataset name where the heavy data are (hdf5 case)
-!> \param[in] filename is the file name where the heavy data are (bin or h5)
+!> \param[in] file_id   - the unit number or your xmf file
+!> \param[in] fieldname - the dataset name where the heavy data are (hdf5 case)
+!> \param[in] filename  - the file name where the heavy data are (bin or h5)
 !> \param[in] npoints_1 - nodes or cells number along direction 1
 !> \param[in] npoints_2 - nodes or cells number along direction 2
+!> \param[in] center    - values are centered on nodes or cells 
 !>
 !> The file named filename-fieldname.bin must exist in case of binary output.
 !> The file named filename.h5 with dataset fieldname must exist in case of hdf5 output.

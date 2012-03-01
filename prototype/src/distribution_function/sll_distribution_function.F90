@@ -196,11 +196,35 @@ contains
     get_df_jac => f%field%descriptor%geom%Jacobian
   end function get_df_jac
 
-  function get_df_jac_index ( f )
-    sll_real64, dimension(:,:) pointer        :: get_df_jac_index
+  function get_df_x1_at_i ( f )
+    sll_real64, dimension(:,:), pointer        :: get_df_x1_at_i
     type(sll_distribution_function_2D_t), pointer :: f
-    get_df_jac => f%field%descriptor%geom%Jacobian_index
-  end function get_df_jac
+    get_df_x1_at_i => f%field%descriptor%geom%x1_at_i
+  end function get_df_x1_at_i
+
+  function get_df_x2_at_i ( f )
+    sll_real64, dimension(:,:), pointer        :: get_df_x2_at_i
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_x2_at_i => f%field%descriptor%geom%x2_at_i
+  end function get_df_x2_at_i
+
+  function get_df_x1c_at_i ( f )
+    sll_real64, dimension(:,:), pointer        :: get_df_x1c_at_i
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_x1c_at_i => f%field%descriptor%geom%x1c_at_i
+  end function get_df_x1c_at_i
+
+  function get_df_x2c_at_i ( f )
+    sll_real64, dimension(:,:), pointer        :: get_df_x2c_at_i
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_x2c_at_i => f%field%descriptor%geom%x2c_at_i
+  end function get_df_x2c_at_i
+
+  function get_df_jac_at_i ( f )
+    sll_real64, dimension(:,:), pointer        :: get_df_jac_at_i
+    type(sll_distribution_function_2D_t), pointer :: f
+    get_df_jac_at_i => f%field%descriptor%geom%Jacobian_at_i
+  end function get_df_jac_at_i
 
 
   function sll_get_df_val( f, i, j )
@@ -222,6 +246,7 @@ contains
     sll_int32  :: test_case
     ! local variables
     procedure(scalar_function_2D), pointer :: x1, x2, jac
+    sll_real64, dimension(:,:), pointer :: x1c_at_i, x2c_at_i, jac_at_i
     sll_int32 :: nc_eta1, nc_eta2, i1, i2
     sll_real64 :: delta_eta1, delta_eta2,  eta1_min, eta2_min
     sll_real64 :: x, vx, xx, vv, eps, kx, xi, v0, fval, xoffset, voffset
@@ -238,6 +263,9 @@ contains
     x1 => get_df_x1 ( dist_func_2D )
     x2 => get_df_x2 ( dist_func_2D )
     jac => get_df_jac ( dist_func_2D )
+    x1c_at_i => get_df_x1c_at_i ( dist_func_2D )
+    x2c_at_i => get_df_x2c_at_i ( dist_func_2D )
+    jac_at_i => get_df_jac_at_i ( dist_func_2D )
 
     if (dist_func_2D%center==CELL_CENTERED_DF) then ! half cell offset
        eta1_min = eta1_min + 0.5_f64 * delta_eta1
@@ -282,20 +310,21 @@ contains
           end do
        end do
     case (GAUSSIAN)
-       xoffset = 1.0_f64
-       voffset = 1.0_f64
+       xoffset = .5_f64
+       voffset = .5_f64
        avg = 0.0_f64
        avg_jac = 0.0_f64
        eta2 = eta2_min
        do i2 = 1, nc_eta2 
           eta1 = eta1_min
           do i1 = 1, nc_eta1           
-             xx = (x1(eta1,eta2) - xoffset )**2
-             vv = (x2(eta1,eta2) - voffset )**2
+             xx = (x1c_at_i(i1,i2) - xoffset )**2
+             vv = (x2c_at_i(i1,i2) - voffset )**2
              ! store f * jac for conservative cell centered schemes
-             fval =  exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)!jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
+             !fval =  exp(-0.5_f64*(xx+vv)) * jac_at_i(i1,i2)!jac(eta1,eta2) !exp(-0.5_f64*(xx+vv)) * jac(eta1,eta2)
+             fval =  exp(-0.5_f64*(xx+vv)*40.) * jac_at_i(i1,i2)
              avg = avg + fval
-             avg_jac = avg_jac + jac(eta1,eta2)
+             avg_jac = avg_jac + jac_at_i(i1,i2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
              eta1 = eta1 +  delta_eta1
           end do
@@ -306,10 +335,10 @@ contains
        ! subtract average from distribution function
        avg = dist_func_2D%average
        eta2 = eta2_min
-       do i2 = 1, nc_eta2 + 1
+       do i2 = 1, nc_eta2 
           eta1 = eta1_min
-          do i1 = 1, nc_eta1+1
-             fval  =  sll_get_df_val( dist_func_2D, i1, i2 ) - avg * jac(eta1,eta2)
+          do i1 = 1, nc_eta1
+             fval  =  sll_get_df_val( dist_func_2D, i1, i2 ) - avg * jac_at_i(i1,i2)
              call sll_set_df_val(dist_func_2D, i1, i2, fval)
              eta1 = eta1 +  delta_eta1
           end do

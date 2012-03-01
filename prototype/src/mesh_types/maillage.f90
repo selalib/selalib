@@ -1,4 +1,5 @@
-  
+!gfortran -O3 maillage.f90
+!./a.out <in.param
 Program Curvilinear_mesh2D
 
   Implicit None
@@ -13,25 +14,28 @@ Program Curvilinear_mesh2D
        Xmax,Xmin,fmin,fmax,dE, th_max, th_min,stheta
   Real*8                  :: Enmin, Enmax,xmin1,xmax1, Enl2
   real*8, allocatable     :: tab_phi(:), tab_dphi(:),xx(:,:),vv(:,:), xx_node(:,:),vv_node(:,:),&
-       jacobian_cell(:,:), xx_cell(:,:),vv_cell(:,:)
+       jacobian_cell(:,:), xx_cell(:,:),vv_cell(:,:),integration_points(:,:,:),vrho_max_tab(:)
   Real*8                  :: x_index,eps,En,eps_nw,eps_dich,Et, Air_T1, Air_T2
   Real*8                  :: c,f,fp,g,gp,a,b,gc,ga,K0,dx1,dif1,de2, dth2
   Character(6)            :: ichar
   Logical                 :: test,loc
   Integer                 :: Nth_in,  Nh1_in,  Nh2_in
   Real*8                  :: xrho_min, xrho_max, x0_min,x0_max,x0,hrho,xrho,vrho, h_ap
+  Real*8                  :: dxrho,dvrho,  vrho_min, vrho_max,xrho_tmp,vrho_tmp
   Real*8                  :: baryc,CoefA, CoefB, CoefC,xA,vA,xB,vB,xD,vD, xM,vM,xC,vC
-  Integer                 :: indxh
+  Integer                 :: indxh, Nx_rho,Nv_rho,vrho_max_index, icount
   Namelist /param/ Nth_in, Nh1_in , Nh2_in, mu,&
-       xi,L,Enmin, eps_dich,eps, eps_nw, Nx, loc    
+       xi,L,Enmin, eps_dich,eps, eps_nw, Nx, loc,&
+      Nv_rho,Nx_rho    
   read(*,NML=param);open(unit=900,file="in.param");write(900,NML=param);close(900)
   Pi   = 2.d0*asin(1.d0)
-  ENL2 = 0.48708847265908323
+  ENL2 = 0.48708847265908323_8
   !Nx0  =0.d0
   if( mod(Nth_in,4).ne.0.d0) then
      Stop" Nth_in must be divisible by 4"
   endif
-  
+  vrho_min=0;  vrho_max=0    
+  xrho_min=0;  xrho_max=0  
   baryc  =99.99
   Xmin   = 0.d0     ; Xmax   = L/2.d0
   Nen    = 2*Nh1_in ; Nen2   = 2*Nh2_in
@@ -53,6 +57,10 @@ Program Curvilinear_mesh2D
   allocate(xx_cell(2*Nth+2,(Nh1_in+Nh2_in)+2))
   allocate(vv_cell(2*Nth+2,(Nh1_in+Nh2_in)+2))
   allocate(jacobian_cell(2*Nth,(Nh1_in+Nh2_in)+1))
+  allocate(integration_points(2,1:Nv_rho+1,1:Nx_rho+1))
+  
+  allocate(vrho_max_tab(1:Nx))
+  
   tab_phi     = 0.d0 ; tab_dphi    = 0.d0
   phi(1)      = 0.d0 ; phi(2)      = 0.d0
   xx_cell     = 0.d0 ; xx_node     = 0.d0
@@ -76,10 +84,17 @@ Program Curvilinear_mesh2D
   
   ! close(10)
   
+  
+  
+  
   Enl2=tab_phi(Nx+1)
   dE=(Enl2-Enmin)/Nen
   Enmax=Enl2+Nen2*de
   de=(Enmax-Enmin)/(Nen+Nen2)
+
+  print *,'#',Enl2,Enmax,exp(-Enl2),exp(-Enmax)
+  
+  !stop
   
   !************************************
   !   TEST
@@ -115,7 +130,7 @@ Program Curvilinear_mesh2D
   !************************************
   !    Axis points 
   !************************************
-  
+  print *,Enmin
   if(Enmin.ge. 1.d-9) then
      n=0
      r=L/4.d0  
@@ -129,15 +144,21 @@ Program Curvilinear_mesh2D
            x2=(x-xmin)/dx
            ii=abs(floor(x2))
            alpha = x2-ii
-           g  = (alpha*tab_phi(ii+1)+(1.d0-alpha)*tab_phi(ii))-En
-           gp = (alpha*tab_dphi(ii+1)+(1.d0-alpha)*tab_dphi(ii))         
+           !g  = (alpha*tab_phi(ii+1)+(1.d0-alpha)*tab_phi(ii))-En
+           !gp = (alpha*tab_dphi(ii+1)+(1.d0-alpha)*tab_dphi(ii))         
+           !warning new definition
+           g  = (alpha*tab_phi(ii+2)+(1.d0-alpha)*tab_phi(ii+1))-En
+           gp = (alpha*tab_dphi(ii+2)+(1.d0-alpha)*tab_dphi(ii+1))         
            r=r-g/gp 
            n=n+1
         enddo !n  
         xx(1,m)=r
         vv(1,m)=0.d0
         xx(2*Nth+2,m)=L-r
-        vv(2*Nth+2,m)=0.d0   
+        vv(2*Nth+2,m)=0.d0
+        if(m==1)then
+          print *,m,ii,alpha,g,r
+        endif
      enddo !m 
   endif
   xrho_min=xx(1,1)     
@@ -164,8 +185,11 @@ Program Curvilinear_mesh2D
            x2=(x-xmin)/dx
            ii=abs(floor(x2))
            alpha = x2-ii
-           g  = r**2*sin(theta)**2/2.d0+(alpha*tab_phi(ii+1)+(1.d0-alpha)*tab_phi(ii))-En
-           gp = r*sin(theta)**2 +cos(theta)*(alpha*tab_dphi(ii+1)+(1.d0-alpha)*tab_dphi(ii))    
+           !g  = r**2*sin(theta)**2/2.d0+(alpha*tab_phi(ii+1)+(1.d0-alpha)*tab_phi(ii))-En
+           !gp = r*sin(theta)**2 +cos(theta)*(alpha*tab_dphi(ii+1)+(1.d0-alpha)*tab_dphi(ii))    
+           !warning new definition
+           g  = r**2*sin(theta)**2/2.d0+(alpha*tab_phi(ii+2)+(1.d0-alpha)*tab_phi(ii+1))-En
+           gp = r*sin(theta)**2 +cos(theta)*(alpha*tab_dphi(ii+2)+(1.d0-alpha)*tab_dphi(ii+1))    
            r=r-g/gp 
            n=n+1
         enddo !n
@@ -246,8 +270,12 @@ Program Curvilinear_mesh2D
      !close(13)  
   enddo !k  
   
+  
+  !stop
   !loc=.true.
   if(loc) then
+     integration_points=-1.d0
+     xrho_max=L/2.d0
      !**************************************************************************************
      !                   Rho: Localisation  using Barycentric coordinates 
      !**************************************************************************************
@@ -261,19 +289,104 @@ Program Curvilinear_mesh2D
      !                       eta1=H
      Xrho  = 3.d0
      Vrho  = 1.d0/2.0d0
+     !Nx_rho=1000
+     !Nv_rho=1000
      CoefA = 0.d0
      CoefB = 0.d0
      CoefC = 0.d0
-     do i=1,10
-       xrho=xrho_min+1000*(i-1)*dx
+     vrho_max=sqrt(2.d0*Enmax)
+     dxrho =(xrho_max-xrho_min)/Nx_rho
+     dvrho =(vrho_max-vrho_min)/Nv_rho
+     !print*,"xrho_max",xrho_max, dxrho, dvrho
+     !stop
+     !print*,xx(1,1)/dx,680*dx,xx(1,1),681*dx
+     
+     !stop
+     
+     !we redefine x(1,1) using piecewise linear representation of phi
+     i=1
+     do while(tab_phi(i)<=Enmin)
+       i=i+1
+     enddo
+     i=i-1
+     !print *,i,tab_phi(i),Enmin,tab_phi(i+1)
+     alpha=(Enmin-tab_phi(i))/(tab_phi(i+1)-tab_phi(i))
+     print *,xx(1,1),xmin+(real(i-1,8)+alpha)*dx,xx(1,1)-(xmin+(real(i-1,8)+alpha)*dx)
+     print *,alpha,i
+     !xx(1,1)=xmin+(real(i-1,8)+alpha)*dx
+     !stop
+     
+     vrho_max_index=Nth+1
+     
+     !integration_points = 0._8
+     
+     do i=1,Nx_rho       
+       xrho=xrho_min+(i-1)*dxrho
        x2=(xrho-xmin)/dx
        ii=abs(floor(x2))
        alpha = abs(x2-ii)
-       y=(alpha*tab_phi(ii+1)+(1.d0-alpha)*tab_phi(ii))
-       hrho=(vrho**2)/2.d0+y    
-       indxh=int((hrho-Enmin)/de)+1
+      ! if(xrho.lt.1.d-7) then
+       if(ii.eq.0) then
+        y=0.d0
+       else
+       !y=(alpha*tab_phi(ii+1)+(1.d0-alpha)*tab_phi(ii))
+       ! warning change here
+       y=(alpha*tab_phi(ii+2)+(1.d0-alpha)*tab_phi(ii+1))
+       endif
+       vrho_max=sqrt(2.d0*(Enmax-y))
+       !warning change of the value of vrho_max
+       !xx(Nth+1,Nen+Nen2+1),vv(Nth+1,Nen+Nen2+1)
+       if(xx(vrho_max_index,Nen+Nen2+1)>xrho)then
+         vrho_max_index=Nth+1
+       endif
+       do while(xx(vrho_max_index,Nen+Nen2+1)<=xrho)
+         vrho_max_index=vrho_max_index-1
+       enddo
+       vrho_max_index=vrho_max_index+1
+       k=vrho_max_index-1
+       !print *,xx(k+1,Nen+Nen2+1),xrho,xx(k,Nen+Nen2+1)
+       !print *,vrho_max , vv(k+1,Nen+Nen2+1)+(xrho-xx(k+1,Nen+Nen2+1))/(xx(k,Nen+Nen2+1)-xx(k+1,Nen+Nen2+1))&
+       !   &*(vv(k,Nen+Nen2+1)-vv(k+1,Nen+Nen2+1))
+       vrho_max = vv(k+1,Nen+Nen2+1)+(xrho-xx(k+1,Nen+Nen2+1))/(xx(k,Nen+Nen2+1)-xx(k+1,Nen+Nen2+1))&
+          &*(vv(k,Nen+Nen2+1)-vv(k+1,Nen+Nen2+1))
+       vrho_max_tab(i) = vrho_max   
+       dvrho =(vrho_max-vrho_min)/Nv_rho
+       !stop
+      do j=1,Nv_rho+1
+        vrho=vrho_min+(j-1)*dvrho
+        !print *,vrho,sqrt(2.d0*(Enmin-y))
+        !print *,tab_phi(ii),tab_phi(ii+1)
+        !print *,xrho,xx(1,1)
+        !print *,y,Enmin,Enmin-y
+        !stop
+        if(Enmin>=y)then
+          if(vrho.lt.sqrt(2.d0*(Enmin-y))) then
+            vrho = sqrt(2.d0*(Enmin-y))
+          endif
+        endif
+        !stop
+        hrho=(vrho**2)/2.d0+y    
+        indxh=int((hrho-Enmin)/de)+1
+        
+        if((i==1).and.j==1)then
+          xrho_tmp=xrho
+          vrho_tmp=vrho
+          print *,'xrho= ',xrho,xx(1,1),xrho-xx(1,1),L/2._8,'vrho= ',vrho,vrho_min+(j-1)*dvrho,vrho_max-vrho
+          print *,'vrho_max= ',vrho_max,'Enmax',Enmax,'vrho_min',vrho_min
+          print *,'hrho= ',hrho,'hmin= ',Enmin
+          print *,'indxh= ',indxh
+          print *,'h_inf',Enmin+real(indxh-1,8)*de
+          print *,'h_next',Enmin+real(indxh,8)*de
+          print *,'y=',y,y-Enmin,'Nth',Nth
+          print *,'x(Nth+1)',xx(Nth+1,Nen+Nen2+1),vv(Nth+1,Nen+Nen2+1)
+          print *,'x(Nth)',xx(Nth,Nen+Nen2+1),vv(Nth,Nen+Nen2+1)          
+          print *,'val',vv(Nth+1,Nen+Nen2+1)+(xrho-xx(Nth+1,Nen+Nen2+1))/(xx(Nth,Nen+Nen2+1)-xx(Nth+1,Nen+Nen2+1))&
+          &*(vv(Nth,Nen+Nen2+1)-vv(Nth+1,Nen+Nen2+1))
+        !stop
+        endif
+        
        k=1
-       do while(k.lt. Nth)    
+       do while(k.le. Nth)    
           xA=xx(k,indxh)    ; vA=vv(k,indxh)
           xB=xx(k,indxh+1)  ; vB=vv(k,indxh+1)
           xC=xx(k+1,indxh)  ; vC=vv(k+1,indxh)
@@ -285,7 +398,9 @@ Program Curvilinear_mesh2D
           if(abs(baryc-1).le. 1.d-10) then
              h_ap  =(CoefA*(enmin+(indxh-1)*de)+CoefB*(enmin+(indxh)*de)+CoefC*(enmin+(indxh-1)*de))
              theta =(CoefA*(th_min+(k-1)*dth)+CoefB*(th_min+(k-1)*dth)+CoefC*(th_min+(k)*dth))
-             write(*,*)"Tr1",baryc, k,theta,indxh,hrho,abs(hrho-h_ap) 
+             !write(*,*)"Tr1",baryc, k,theta,indxh,hrho,abs(hrho-h_ap)
+             integration_points(1,j,i) = hrho
+             integration_points(2,j,i) = theta             
              k=Nth+1
           else
              xA=xC; vA=VC
@@ -295,23 +410,105 @@ Program Curvilinear_mesh2D
              if(abs(baryc-1).le. 1.d-10) then
                 h_ap  =(CoefA*(enmin+(indxh-1)*de)+CoefB*(enmin+(indxh)*de)+CoefC*(enmin+(indxh)*de))
                 theta =(CoefA*(th_min+(k)*dth)+CoefB*(th_min+(k-1)*dth)+CoefC*(th_min+(k)*dth))
-                write(*,*)"Tr2",baryc, k,theta,indxh,hrho, abs(hrho-h_ap)
-                
+                !write(*,*)"Tr2",baryc, k,theta,indxh,hrho, abs(hrho-h_ap)
+                integration_points(1,j,i) = hrho
+                integration_points(2,j,i) = theta                             
                 k=Nth+1
                
              else
                 k=k+1
-               
+                if((k==Nth+1).and.(integration_points(1,j,i)==-1))then
+                  k=1
+                  if(indxh<Nen+Nen2)then 
+                    indxh=indxh+1
+                    integration_points(1,j,i)=-2
+                  else
+                   integration_points(1,j,i)=-4                    
+                  endif
+                  
+                endif
+                if((k==Nth+1).and.(integration_points(1,j,i)==-2))then
+                  k=1
+                  if(indxh>2)then
+                    indxh=indxh-2
+                  endif  
+                  integration_points(1,j,i)=-3
+                endif
+                if((k==Nth+1).and.(integration_points(1,j,i)==-4))then
+                  k=1
+                  if(indxh>2)then
+                    indxh=indxh-1
+                  endif  
+                  integration_points(1,j,i)=-3
+                endif                
+                if((k==Nth+1).and.(integration_points(1,j,i)==-3))then
+                  print *,'BIG PROBLEM ','i=',i,'j=',j
+                  !stop
+                endif
+                
+                !if(k>=Nth+1)then
+                !  print *,'point not found ','i=',i,'j',j
+                !  stop
+                !endif
              endif
           endif
           
        enddo
     enddo
+ enddo
+ endif
+ k=0
+     do i=1,Nx_rho
+      do j=1,Nv_rho+1
+       xrho=integration_points(1,j,i)
+       vrho=integration_points(2,j,i)
+       if(xrho==-3)then
+         print *,i,j,xrho,vrho
+         k=1     
+       endif
+      enddo  
+    enddo
+ 
+ if(k==1)then
+   print *,'localization problem'
+   !stop
  endif
  
  
+ 
+ open(unit=900,file='integration_points.dat')
+     write(900,*),Nx_rho,Nv_rho,Enmin,Enmax
+     
+     do i=1,Nx_rho+1
+       write(900,*) i,vrho_max_tab(i)  
+     enddo
+     
+     do i=1,Nx_rho+1
+      do j=1,Nv_rho+1
+        write(900,* ) i,j,integration_points(1,j,i),integration_points(2,j,i)
+      enddo  
+    enddo
+
+ close(900)
+ 
+ !stop
+ 
  deallocate(tab_phi)
  deallocate(tab_dphi)
+ open(unit=900,file='test_mesh.dat') 
+ do i=1,Nth+1
+   do j=1,Nen+Nen2+1
+        write(900,* ) i,j,xx(i,j),vv(i,j)     
+   enddo
+ enddo
+ close(900)
+
+ open(unit=900,file='test_point.dat') 
+        write(900,* ) xrho_tmp,vrho_tmp   
+ close(900)
+
+
+ !stop
 
  !*****************************************
  !   First part
@@ -442,20 +639,81 @@ Program Curvilinear_mesh2D
  open(unit=12,file='xxvv_cell.dat')
  open(unit=13,file='jac_cell.dat')
  
- do k=1,Nth_in
-    do m=1,Nh1_in+Nh2_in+1
+!!$ do k=1,Nth_in
+!!$    do m=1,Nh1_in+Nh2_in+1
+!!$       write(12,* ),k,m, xx_cell(k,m), vv_cell(k,m)
+!!$       write(13,* ),k,m, jacobian_cell(k,m)
+!!$    enddo
+!!$ enddo
+ icount = 1
+ do k= 1, Nth/2 
+    do m=1,(Nh1_in+Nh2_in)+1
        write(12,* ),k,m, xx_cell(k,m), vv_cell(k,m)
        write(13,* ),k,m, jacobian_cell(k,m)
     enddo
+    icount=icount+1
  enddo
+ do k= Nth/2 + 1, Nth 
+    do m=1,(Nh1_in+Nh2_in)+1
+       write(12,* ),k,m, xx_cell(k,m)-L, vv_cell(k,m)
+       write(13,* ),k,m, jacobian_cell(k,m)
+    enddo
+    icount=icount+1
+ enddo
+ k = Nth+1
+ do m=1,(Nh1_in+Nh2_in)+1
+    write(12,* ),k,m, xx_node(k+1,m)-L, -vv_node(k+1,m)
+    write(13,* ),k,m, 0.0
+ enddo
+ icount=Nth+2
+ do k= 3*Nth/2, Nth + 1,-1 
+    do m=1,Nh1_in+Nh2_in+1
+       write(12,* ), icount,m, xx_cell(k,m)-L, vv_cell(k,m)
+       write(13,* ), icount,m, jacobian_cell(k,m)
+    enddo
+    icount=icount+1
+ enddo
+ do k= 3*Nth/2 + 1, 2*Nth
+    do m=1,(Nh1_in+Nh2_in)+1
+       write(12,* ),icount,m, xx_cell(k,m), vv_cell(k,m)
+       write(13,* ), icount,m, jacobian_cell(k,m)
+    enddo
+    icount=icount+1
+ enddo
+ k = 2*Nth+2
+ do m=1,(Nh1_in+Nh2_in)+1
+    write(12,* ),k,m, xx_node(k+2,m), vv_node(k+2,m)
+    write(13,* ),k,m, 0.0
+ enddo
+
  close(12)
  close(13)
  
  open(unit=14,file='xxvv_node.dat')
- do k= 1,Nth_in+4
+ icount = 1
+ do k= 1, Nth/2 + 1
     do m=1,(Nh1_in+Nh2_in)+1+1
        write(14,* ),k,m, xx_node(k,m), vv_node(k,m)
     enddo
+    icount=icount+1
+ enddo
+ do k= Nth/2 + 3, Nth + 3
+    do m=1,(Nh1_in+Nh2_in)+1+1
+       write(14,* ),k-1,m, xx_node(k,m)-L, vv_node(k,m)
+    enddo
+    icount=icount+1
+ enddo
+ do k= 3*Nth/2 + 2, Nth + 4,-1 
+    do m=1,Nh1_in+Nh2_in+2
+       write(14,* ), icount ,m, xx_node(k,m)-L, vv_node(k,m)
+    enddo
+    icount=icount+1
+ enddo
+ do k= 3*Nth/2 + 4, 2*Nth + 4
+    do m=1,(Nh1_in+Nh2_in)+1+1
+       write(14,* ),icount,m, xx_node(k,m), vv_node(k,m)
+    enddo
+    icount=icount+1
  enddo
  close(14)
  write(*,*)'The curvilinear  mesh has been created'

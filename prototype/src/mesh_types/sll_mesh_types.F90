@@ -70,6 +70,17 @@ module sll_mesh_types
      procedure(scalar_function_2D), pointer, nopass :: Jacobian21
      procedure(scalar_function_2D), pointer, nopass :: Jacobian22
      procedure(scalar_function_2D), pointer, nopass :: Jacobian
+     sll_real64, dimension(:,:), pointer :: x1_at_i 
+     sll_real64, dimension(:,:), pointer :: x2_at_i
+     sll_real64, dimension(:,:), pointer :: x1c_at_i 
+     sll_real64, dimension(:,:), pointer :: x2c_at_i
+     sll_real64, dimension(:,:), pointer :: eta1_at_i
+     sll_real64, dimension(:,:), pointer :: eta2_at_i
+     sll_real64, dimension(:,:), pointer :: Jacobian11_at_i
+     sll_real64, dimension(:,:), pointer :: Jacobian12_at_i
+     sll_real64, dimension(:,:), pointer :: Jacobian21_at_i
+     sll_real64, dimension(:,:), pointer :: Jacobian22_at_i
+     sll_real64, dimension(:,:), pointer :: Jacobian_at_i
   end type geometry_2D
 
   type mesh_descriptor_2D
@@ -166,13 +177,29 @@ module sll_mesh_types
 contains   ! *****************************************************************
   
 
-  function new_geometry_2D ( name )
+  function new_geometry_2D ( name, nc1, nc2, x1_in, x2_in, x1c_in, x2c_in, jac_in, bt1, bt2 )
     type(geometry_2D), pointer  ::  new_geometry_2D
     character(len=*)               :: name
-
-    sll_int32  :: ierr
+    sll_int32 :: nc1
+    sll_int32 :: nc2
+    sll_real64, dimension(:,:), optional :: x1_in
+    sll_real64, dimension(:,:), optional :: x2_in
+    sll_real64, dimension(:,:), optional :: x1c_in
+    sll_real64, dimension(:,:), optional :: x2c_in
+    sll_real64, dimension(:,:), optional :: jac_in
+    sll_int32, optional :: bt1
+    sll_int32, optional :: bt2
+    
+    ! local variables
+    sll_real64 :: eta1, eta2, delta1, delta2
+    sll_int32  :: i1, i2, ierr
     
     SLL_ALLOCATE(new_geometry_2D,ierr)
+    SLL_ALLOCATE(new_geometry_2D%x1_at_i(nc1+1,nc2+1),ierr)
+    SLL_ALLOCATE(new_geometry_2D%x2_at_i(nc1+1,nc2+1),ierr)
+    SLL_ALLOCATE(new_geometry_2D%x1c_at_i(nc1+1,nc2+1),ierr)
+    SLL_ALLOCATE(new_geometry_2D%x2c_at_i(nc1+1,nc2+1),ierr)
+    SLL_ALLOCATE(new_geometry_2D%Jacobian_at_i(nc1+1,nc2+1),ierr)
 
     ! cartesian coordinates correspond to identity mapping
     if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
@@ -216,6 +243,49 @@ contains   ! *****************************************************************
        new_geometry_2D%Jacobian21 => test_jac21
        new_geometry_2D%Jacobian22 => test_jac22
        new_geometry_2D%Jacobian => test_jac
+    else if (name(1:10) == 'from_array') then
+       if (present(x1_in) .and. &
+            present(x2_in) .and. present(x1c_in) .and. &
+            present(x2c_in) .and. present( jac_in)) then
+
+          new_geometry_2D%x1_at_i = x1_in
+          new_geometry_2D%x2_at_i = x2_in
+          new_geometry_2D%x1c_at_i = x1c_in
+          new_geometry_2D%x2c_at_i = x2c_in
+          new_geometry_2D%Jacobian_at_i = jac_in
+          ! initialize cubic spline mesh interpolation
+          call init_cubic_spline(x1_in, x2_in, bt1, bt2)
+
+          new_geometry_2D%x1         => cubic_spline_x1
+          new_geometry_2D%x2         => cubic_spline_x2
+          new_geometry_2D%eta1       => cubic_spline_eta1
+          new_geometry_2D%eta2       => cubic_spline_eta2
+          new_geometry_2D%Jacobian11 => cubic_spline_jac11
+          new_geometry_2D%Jacobian12 => cubic_spline_jac12
+          new_geometry_2D%Jacobian21 => cubic_spline_jac21
+          new_geometry_2D%Jacobian22 => cubic_spline_jac22
+          new_geometry_2D%Jacobian => cubic_spline_jac
+       else 
+          print*, 'new_geometry_2D: from_array. Need input'
+          stop
+       end if
+       if (.not.(name(1:10) == 'from_array')) then
+          delta1 = 1.0_f64 / nc1
+          delta1 = 1.0_f64 / nc2
+          eta1 = 0.0_f64
+          eta2 = 0.0_f64
+          do i2 = 1, nc2
+             do i1 = 1, nc1
+                new_geometry_2D%x1_at_i = new_geometry_2D%x1(eta1,eta2)
+                new_geometry_2D%x2_at_i = new_geometry_2D%x2(eta1,eta2)
+                new_geometry_2D%x1c_at_i = new_geometry_2D%x1(eta1+0.5_f64*delta1,eta2+0.5_f64*delta2)
+                new_geometry_2D%x2c_at_i = new_geometry_2D%x2(eta1+0.5_f64*delta1,eta2+0.5_f64*delta2)
+                new_geometry_2D%Jacobian_at_i = new_geometry_2D%Jacobian(eta1+0.5_f64*delta1,eta2+0.5_f64*delta2)
+                eta1 = eta1 + delta1
+             end do
+             eta2 = eta2 + delta2
+          end do
+       end if
     else
        print*, 'new_geometry_2D: mapping ',name, ' is not implemented'
        stop
@@ -421,7 +491,6 @@ contains   ! *****************************************************************
     sll_real64 :: eta2
     sll_int32 :: ierr
 
-
     ! create 2D mesh
     SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
     SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
@@ -429,8 +498,8 @@ contains   ! *****************************************************************
     do i1=1, mesh%nc_eta1+1
        eta2 = mesh%eta2_min
        do i2=1, mesh%nc_eta2+1
-          x1mesh(i1,i2) = mesh%geom%x1(eta1,eta2)
-          x2mesh(i1,i2) = mesh%geom%x2(eta1,eta2)
+          x1mesh(i1,i2) = mesh%geom%x1_at_i(i1,i2)
+          x2mesh(i1,i2) = mesh%geom%x2_at_i(i1,i2)
           eta2 = eta2 + mesh%delta_eta2 
        end do
        eta1 = eta1 + mesh%delta_eta1
@@ -481,12 +550,13 @@ contains   ! *****************************************************************
        do i1 = 1, mesh%nc_eta1
           eta2 = mesh%eta2_min + 0.5_f64 * mesh%delta_eta2
           do i2 = 1, mesh%nc_eta2
-             SLL_ASSERT( mesh%geom%Jacobian (eta1, eta2) > 0.0_f64 )
-             if (mesh%geom%Jacobian (eta1, eta2) > 1.0D-14) then 
-                val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian (eta1, eta2) + avg
-             else 
-                val(i1,i2) = 0.0
-             end if
+!             SLL_ASSERT( mesh%geom%Jacobian (eta1, eta2) > 0.0_f64 )
+!             if (mesh%geom%Jacobian (eta1, eta2) > 1.0D-14) then 
+!                val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian (eta1, eta2) + avg
+!             else 
+!                val(i1,i2) = 0.0
+!             end if
+             val(i1,i2) = f2Dv1%data( i1,i2) / mesh%geom%Jacobian_at_i (i1, i2) + avg
              eta2 = eta2 + mesh%delta_eta2
           end do
           eta1 = eta1 + mesh%delta_eta1

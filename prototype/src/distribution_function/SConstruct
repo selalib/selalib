@@ -19,8 +19,9 @@ env = Environment( ENV=os.environ,
                    LIBS=['sll_splines','sll_memory','sll_precision','sll_assert',
                          'sll_utilities', 'sll_constants', 
                          'sll_mesh_types', 'sll_diagnostics','hdf5_fortran','hdf5','z'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
-                               '-DGFORTRAN','-ffree-line-length-none'])
+                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', 
+                               '-ffree-line-length-none'],
+                   CPPDEFINES = ['GFORTRAN','DEBUG'])
 
 
 env.Library('sll_memory',      ["../memory/sll_memory.F90"])
