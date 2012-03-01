@@ -156,7 +156,7 @@ contains
     sll_real64, dimension(:), pointer  ::  primitive1
     sll_real64, dimension(:), pointer  ::  eta1_out 
     sll_real64, dimension(:), pointer  ::  jacobian
-    procedure(scalar_function_2D), pointer  ::  df_jac
+    sll_real64, dimension(:,:), pointer  ::  df_jac_at_i
     
     sll_int32  :: i1
     sll_int32  :: i2
@@ -198,7 +198,7 @@ contains
     SLL_ALLOCATE(eta1_out(nc_eta1+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta1+1),ierr)
 
-    df_jac => get_df_jac( dist_func_2D)
+    df_jac_at_i => get_df_jac_at_i( dist_func_2D )
 
     ! advection along the first direction 
     eta2 = eta2_min + 0.5_f64*delta_eta2  ! at cell center in this direction
@@ -231,7 +231,7 @@ contains
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
                + delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
           eta1 = eta1 + delta_eta1
-          jacobian(i1) = df_jac( i1-1, i2 )
+          jacobian(i1) = df_jac_at_i( i1-1, i2 )
        end do
        call advance_1D_nonuniform( primitive1,        &
                         advfield_1D_1_old, &
@@ -249,6 +249,9 @@ contains
        do i1 = 1, nc_eta1 
           val = (primitive1 ( i1+1 ) - primitive1 ( i1 )) / delta_eta1
           call sll_set_df_val( dist_func_2D, i1, i2, val )
+          !if (val/df_jac_at_i(i1,i2)>1.) then
+          !   print*, 'val', i1,i2, val, primitive1(i1) , primitive1(i1+1), df_jac_at_i(i1,i2), delta_eta1
+          !end if
        end do
     eta2 = eta2 + delta_eta2
     end do
@@ -282,7 +285,7 @@ contains
     sll_real64, dimension(:), pointer  ::  advfield_1D_2_new
     sll_real64, dimension(:), pointer  ::  primitive2
     sll_real64, dimension(:), pointer  ::  eta2_out
-    sll_real64, dimension(:,:), pointer  ::  df_jac
+    sll_real64, dimension(:,:), pointer  :: df_jac_at_i, x1c_at_i, x2c_at_i
     sll_real64, dimension(:), pointer  ::  jacobian
     sll_int32  :: i1
     sll_int32  :: i2
@@ -324,8 +327,10 @@ contains
     SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta2+1),ierr)
 
-    df_jac = get_df_jac( dist_func_2D )
-    
+    df_jac_at_i => get_df_jac_at_i( dist_func_2D )
+    x1c_at_i => get_df_x1c_at_i( dist_func_2D )
+    x2c_at_i => get_df_x2c_at_i( dist_func_2D )
+
     ! advection along the second direction
     eta1 = eta1_min + 0.5_f64*delta_eta1 ! cell centered
     do i1=1, nc_eta1
@@ -357,8 +362,10 @@ contains
           ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
                + delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 )
-          jacobian(i2) = df_jac( i1, i2-1 )
+          jacobian(i2) = df_jac_at_i( i1, i2-1 )
        end do
+       !i2 = nc_eta2+1
+       !print*, 'new', i1,i2, sqrt(x1c_at_i(i1,10)**2+x2c_at_i(i1,10)**2), primitive2 (i2), jacobian(i2)
        call advance_1D_nonuniform( primitive2,        &
                         advfield_1D_2_old, &
                         advfield_1D_2_new, &
@@ -375,6 +382,9 @@ contains
        do i2 = 1, nc_eta2 
           val = (primitive2(i2+1) - primitive2(i2))/delta_eta2 
           call sll_set_df_val( dist_func_2D, i1, i2, val )
+          !if (val/df_jac_at_i(i1,i2)>1.) then
+          !   print*, 'val', i1,i2, val, primitive2(i2) , primitive2(i2+1), df_jac_at_i(i1,i2), delta_eta2
+          !end if
        end do
        eta1 = eta1 + delta_eta1
     end do
@@ -398,12 +408,12 @@ contains
                                     fieldnp1,      &
                                     jacobian,      &
                                     order,         &
-                         deltat,        &
-                         nc_eta,        & 
-                         delta_eta,     &
-                         boundary_type, &
-                         spline,        &
-                         xi_out)  
+                                    deltat,        &
+                                    nc_eta,        & 
+                                    delta_eta,     &
+                                    boundary_type, &
+                                    spline,        &
+                                    xi_out)  
     sll_real64, dimension(:), pointer, intent(inout) :: primitive
     sll_real64, dimension(:), pointer, intent(in)    :: fieldn
     sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
@@ -438,24 +448,30 @@ contains
     xi(1) = 0_f64  
     do i = 2, nc_eta+1
        xi(i) = xi(i-1) + jacobian(i)* delta_eta
+       !print*, 'xi ', xi(i), xi(i) - xi(i-1)
     end do
+    
     select case (boundary_type)
     case (PERIODIC)
        ! average of dist func along the line
-       avg = primitive ( nc_eta+1 ) / xi(nc_eta+1) 
+       avg = primitive ( nc_eta+1 ) / xi(nc_eta+1)
        ! modify primitive so that it becomes periodic
        do i = 2, nc_eta+1
           primitive ( i ) = primitive ( i ) - avg * xi(i)
        end do
        xi_max = xi(nc_eta + 1)
-       call implicit_ode_nouniform( order, &
-                          deltat,          &
-                          xi,              &
-                          nc_eta,          &
-                          PERIODIC_ODE,    &
-                          xi_out,          &
-                          fieldn,          &
-                          fieldnp1 )
+
+       !print*, 'avg', avg, xi_max
+       !print*, 'a',fieldn
+
+       call implicit_ode_nonuniform( order,   &
+                          deltat,             &
+                          xi,                 &
+                          nc_eta,             &
+                          PERIODIC_ODE,       &
+                          xi_out,             &
+                          fieldn,             &
+                          fieldnp1 ) 
        !call compute_spline_1D_periodic( primitive, spline )
        call compute_spline_nonunif( primitive, spline, xi)
        ! interpolate primitive at origin of characteritics
@@ -469,8 +485,8 @@ contains
        end if
        xi_new = xi_out(1) +  lperiod*xi_max
        primitive ( 1 ) = primitive ( 1 ) + avg * xi_new
-       !if ((eta_new > eta_max) .or. (eta_new <eta_min)) then
-       !   print*, 1, eta_new, eta_out(1), primitive(1)
+       !if ((xi_new > xi_max) .or. (xi_new <xi(1))) then
+       !   print*, 1, xi_new, xi_out(1), primitive(1)
        !end if
        do i = 2, nc_eta+1
           ! We need here to find the points where it has been modified by periodicity
@@ -479,9 +495,13 @@ contains
           end if
           xi_new = xi_out(i) +  lperiod*xi_max
           primitive ( i ) = primitive ( i ) + avg * xi_new
+          !if (i>98) then
+          !   print*, 'iii', i, xi_new, xi_out(i),xi_max, primitive(i), primitive(i-1)
+          !endif
        end do
 
     case (COMPACT)
+
        call implicit_ode_nonuniform( order,       &
                           deltat,      &
                           xi,     &
@@ -493,8 +513,10 @@ contains
        !call compute_spline_1D_hermite( primitive, spline )
        call compute_spline_nonunif( primitive, spline, xi)
        ! interpolate primitive at origin of characteritics
-       !call interpolate_array_values( xi_out, primitive, nc_eta+1, spline )
        call interpolate_array_value_nonunif( xi_out, primitive, nc_eta+1, spline)
+       !do i = 2, nc_eta+1
+       !   print*, 'iii', i, xi(1), xi_out(i),xi(nc_eta+1), primitive(i), primitive(i-1)
+       !end do
     end select
   end subroutine advance_1D_nonuniform
 
