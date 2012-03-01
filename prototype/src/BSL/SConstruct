@@ -53,12 +53,13 @@ env = Environment( ENV = os.environ,
                            'sll_poisson_solvers',
                            'sll_mesh_types',
                            'sll_utilities',
-                           'sll_diagnostics'])
+                           'sll_diagnostics',
+                           'dfftpack'])
 
 #HDF5 flags 
 env.Append( LIBPATH = os.environ['HDF5LIBPATH'],
             F90PATH = os.environ['HDF5INCPATH'],
-            LIBS = ['dfftpack','hdf5','hdf5_fortran','z'])
+            LIBS = ['hdf5','hdf5_fortran','z'])
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
 
@@ -69,6 +70,7 @@ env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_diagnostics',Glob("../diagnostics/sll_*.F90"))
+env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
 env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
 env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2d_periodic.F90",
