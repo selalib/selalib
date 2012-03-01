@@ -38,3 +38,4 @@ env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types
 env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
 env.Program('unit_test', ["unit_test.F90", "sll_csl.F90"])
 env.Program('unit_test_from_array', ["unit_test_from_array.F90", "sll_csl.F90"])
+env.Program('bgk_csl', ["bgk_csl.F90", "sll_csl.F90"])
