@@ -1,4 +1,4 @@
-program landau_damping
+program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
@@ -26,7 +26,7 @@ sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 type(mesh_descriptor_2D), pointer :: mesh_x, mesh_v
 
 !Time domain
-sll_int32  :: i_step, n_step
+sll_int32  :: i_step, n_step, j_step
 sll_real64 :: delta_t
 sll_real32 :: time
 
@@ -47,7 +47,7 @@ sll_real64, dimension(:), pointer  ::  eta4_out
 
 !Diagnostics and errors
 sll_int32                          :: error
-sll_real64 :: nrj
+sll_real64, dimension(:), allocatable :: nrj
 character(len=4) :: counter
 
 !Local indices
@@ -95,25 +95,7 @@ call sll_init_distribution_function_4D( dist_func, LANDAU)
 
 call compute_rho(dist_func, rho)
 
-print*, "SUMF=",sum(dist_func%field%data)
-print*, "SUMRHO=",sum(rho%data)
-
 call solve_poisson_2d_periodic(poisson,exy,rho,error)
-
-nrj=0._f64
-do i1=1,nc_eta1+1
-   do i2=1,nc_eta2+1
-      nrj=nrj+exy%data(i1,i2)%v1*exy%data(i1,i2)%v1 &
-             +exy%data(i1,i2)%v2*exy%data(i1,i2)%v2          
-   enddo
-enddo
-nrj=nrj*delta_eta1*delta_eta2
-if (nrj>1.e-30) then 
-    nrj=0.5_f64*log(nrj)
-else
-    nrj=-1e-9
-end if
-print*,nrj, 0.5_f64*log(0.08_f64*sll_pi*sll_pi)
 
 !call write_distribution_function(dist_func)
 
@@ -123,6 +105,7 @@ SLL_ALLOCATE(eta3_out(nc_eta3+1),error)
 SLL_ALLOCATE(eta4_out(nc_eta4+1),error)
 
 n_step = 1000
+SLL_ALLOCATE(nrj(n_step), error)
 delta_t = .01_f64
 time = 0.0_f32
 
@@ -150,12 +133,11 @@ do i_step = 1, n_step !Loop over time
 
    time  = time + delta_t
 
-   nrj = sum(exy%data%v1*exy%data%v1+exy%data%v2*exy%data%v2) 
-   nrj = nrj*delta_eta1*delta_eta2
-   nrj = 0.5_f64*log(nrj)
+   nrj(i_step) = sum(exy%data%v1*exy%data%v1+exy%data%v2*exy%data%v2) 
+   nrj(i_step) = nrj(i_step)*delta_eta1*delta_eta2
+   nrj(i_step) = 0.5_f64*log(nrj(i_step))
    
-   write(11,*) time, nrj
-   write(*,*) time, nrj
+   write(11,*) time, nrj(i_step)
 
    call int2string(dist_func%plot_counter,counter)
    !call write_distribution_function(dist_func)
@@ -164,11 +146,20 @@ do i_step = 1, n_step !Loop over time
    !call write_vec2d(exy%data%v1,exy%data%v2,mesh_x%nc_eta1+1, &
    !                 mesh_x%nc_eta2+1,"exy"//counter,"mesh_x",0)
 
+   write(*,100) .0,10.,-15.,1.
+   do j_step = 1, i_step
+      print*, (j_step-1)*delta_t, nrj(j_step)
+   end do
+   print*, 'e'
+
+
 end do !next time step
 
 call delete_poisson_2d_periodic(poisson)
 call delete_field_2D_vec1( rho )
 call delete_field_2D_vec2( exy )
+
+100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
 
 contains
 
@@ -266,4 +257,4 @@ subroutine sl_step( array_1d, flux, spl_eta, dt )
 
 end subroutine sl_step
   
-end program landau_damping
+end program landau_4d
