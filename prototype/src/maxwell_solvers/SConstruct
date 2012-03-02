@@ -19,11 +19,11 @@ env = Environment( ENV = os.environ,
                    F90PATH= ['../memory','../precision','../assert', 
                              '../numerical_utilities','../constants',
                              '../mesh_types','../diagnostics','../collective',
-                             '../utilities','../remap'],
+                             '../utilities'],
 # fix the following: fftpack should be treated as any other local library.
                    LINK = 'mpif90',
                    LIBPATH = ['.','../fftpack'],
-                   LIBS = ['sll_remap','sll_mesh_types', 'dfftpack',
+                   LIBS = ['sll_mesh_types', 'dfftpack',
                            'sll_collective',
                            'sll_diagnostics','sll_assertion','sll_utilities',
                            'sll_constants','sll_precision','sll_memory'],
@@ -50,7 +50,6 @@ env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
-env.Library('sll_remap', ["../remap/.F90"])
 
 env.Program('unit_test', Glob("*.F90"))
 
