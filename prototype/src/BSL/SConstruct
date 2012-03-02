@@ -83,3 +83,11 @@ env.Program('landau_4d', ["landau_4d.F90", "sll_bsl.F90"])
 env.Program('landau_2d', ["landau_2d.F90", "sll_bsl.F90"])
 
 Help(vars.GenerateHelpText(env))
+
+print """
+	To display results during execution, launch 
+        ./landau_2d | gnuplot 
+        or 
+        ./landau_4d | gnuplot
+        It could take some time in 4D case 
+"""
