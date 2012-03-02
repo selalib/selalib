@@ -13,18 +13,30 @@ use sll_maxwell_2d
 
 implicit none
 
+sll_real64 :: eta1_max, eta1_min
+sll_real64 :: eta2_max, eta2_min
+sll_real64 :: delta_eta1, delta_eta2
 
-sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
-sll_int32   :: nc_eta1, nc_eta2
-sll_int32   :: error
+sll_int32  :: nc_eta1, nc_eta2
+sll_int32  :: error
 
-type(maxwell_2d), pointer :: maxwell_TE
+type(maxwell_2d),          pointer :: maxwell_TE
 type(geometry_2D),         pointer :: geom
 type(mesh_descriptor_2D),  pointer :: mesh
 type(field_2D_vec3),       pointer :: ExEyHz
-sll_real64                         :: x1, x2
-sll_int32                          :: mode
+
 sll_int32                          :: i, j
+sll_real64                         :: omega
+sll_real64                         :: time
+sll_int32                          :: istep, nstep
+sll_real64                         :: err_l2
+sll_real64                         :: dt
+
+sll_real64, dimension(:,:), allocatable :: bz
+
+sll_real64, parameter              :: c = 1.0_f64
+sll_real64, parameter              :: cfl = 0.1_f64
+sll_int32,  parameter              :: mode = 2
 
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64
@@ -36,29 +48,59 @@ nc_eta1 = 127; nc_eta2 = 127
 mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
         PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
 
+delta_eta1 = mesh%delta_eta1
+delta_eta2 = mesh%delta_eta2
+
 call write_mesh_2D(mesh)
 
-ExEyHz       => new_field_2D_vec3(mesh)
+ExEyHz      => new_field_2D_vec3(mesh)
 
-maxwell_TE  => new_maxwell_2d(ExEyHz)
+SLL_ASSERT(associated(exeyhz))
 
-mode = 2
-do i = 1, nc_eta1+1
-   do j = 1, nc_eta2+1
-      x1 = eta1_min+(i-1)*mesh%delta_eta1
-      x2 = eta2_min+(j-1)*mesh%delta_eta2
-      ExEyHz%data(i,j)%v1=1
-      ExEyHz%data(i,j)%v2=0
-      ExEyHz%data(i,j)%v3=1
+maxwell_TE  => new(ExEyHz)
 
-   end do
-end do
+dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2)) / c
+nstep = 100
 
-call solve_maxwell_2d(maxwell_TE,error)
+time  = 0.
 
-write(*,*) " Ex Error = " , 0
+omega = c * sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
+      &          +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
 
-call delete_maxwell_2d(maxwell_TE)
+SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1), error)
+
+
+do istep = 1, nstep !*** Loop over time
+
+   if (istep == 1) then
+      ExEyHz%data%v1 = 0.0_f64
+      ExEyHz%data%v2 = 0.0_f64
+   end if
+
+   time = time + 0.5_f64*dt
+
+   do i=1,nc_eta1+1
+   do j=1,nc_eta2+1
+      bz(i,j) =   - cos(mode*sll_pi*(i-0.5_f64)/nc_eta1)    &
+                  * cos(mode*sll_pi*(j-0.5_f64)/nc_eta2)    &
+                  * cos(omega*time)
+   end do  
+   end do  
+
+   if (istep == 1) ExEyHz%data(:,:)%v3 = bz
+
+   call solve(maxwell_TE, dt)
+
+   time = time + 0.5_f64*dt
+
+   err_l2 = maxval(abs(maxwell_TE%fields%data%v3 - bz))
+   write(*,"(10x,' istep = ',I6)",advance="no") istep
+   write(*,"(' time = ',g12.3,' sec')",advance="no") time
+   write(*,"(' erreur L2 = ',g10.5)") sqrt(err_l2)
+
+end do ! next time step
+
+call delete(maxwell_TE)
 call delete_field_2D_vec3( ExEyHz )
 
 

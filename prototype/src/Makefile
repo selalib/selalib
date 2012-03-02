@@ -17,6 +17,7 @@ default:
 	(cd mesh_types; scons)
 	(cd distribution_function; scons)
 	(cd poisson_solvers; scons)
+	(cd BSL; scons)
 
 clean:
 	(cd constants; scons -c)
@@ -37,3 +38,4 @@ clean:
 	(cd ode_solvers; scons -c)
 	(cd distribution_function; scons -c)
 	(cd poisson_solvers; scons -c)
+	(cd BSL; scons -c)
