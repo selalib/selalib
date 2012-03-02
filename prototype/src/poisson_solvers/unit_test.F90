@@ -6,6 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers unit test
+!> Last modification: Feb. 29, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -37,31 +38,31 @@ program test_poisson_solvers
 
   sll_int32  :: nx, ny, nz
   sll_real64 :: Lx, Ly, Lz
-  sll_real64 :: colsz
+  sll_int64  :: colsz
 
-  nx = 64
-  ny = 64
-  nz = 64
+  nx = 128
+  ny = 128
+  nz = 128
   Lx = 2*sll_pi
   Ly = 2*sll_pi
   Lz = 2*sll_pi
 
-  ! Boot parallel environment
+  !Boot parallel environment
   call sll_boot_collective()
   colsz  = sll_get_collective_size(sll_world_collective)
   call test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
   call sll_halt_collective()
 
-  if (colsz==1) then
+ ! if (colsz==1) then
      print*, ' '
-     print*, 'Test poisson_1d'
+     print*, 'Test poisson_2d'
      print*, ' '
-     call test_poisson_1d()
-  endif
+     call test_poisson_2d()
+  !endif
 
 contains
 
-  subroutine test_poisson_1d()
+  subroutine test_poisson_2d()
     !-------------------------------------------------------------------
     !  test 1D Poisson solver based on FFT
     !-------------------------------------------------------------------
@@ -120,8 +121,9 @@ contains
 
     FIELD_DATA(exy_exact) = FIELD_DATA(exy)
     FIELD_DATA(phi_exact) = FIELD_DATA(phi)
-
+print*, 'test1'
     call solve_poisson_2d_periodic(poisson_potential,phi%data,rho%data,error)
+print*, 'test2'
     call solve_poisson_2d_periodic(poisson_e_fields,exy,rho,error)
 
     call write_vec1d(phi%data,mesh%nc_eta1+1,mesh%nc_eta2+1,"phi1","mesh",0)
@@ -166,7 +168,7 @@ contains
     !! check solution
     !print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
 
-  end subroutine test_poisson_1d
+  end subroutine test_poisson_2d
 
   subroutine test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
 
@@ -176,11 +178,13 @@ contains
     sll_real64                                :: Lx, Ly, Lz
     sll_real64                                :: dx, dy, dz
     sll_real64                                :: x, y, z
-    sll_real64, dimension(nx,ny,nz)           :: rho, phi_an, phi_seq
-    sll_real64, dimension(:,:,:), allocatable :: phi_par
+    sll_real64, dimension(nx,ny,nz)           :: rho1, phi_an1, phi_seq1
+    sll_real64, dimension(nx,ny,nz)           :: rho2, phi_an2, phi_seq2
+    sll_real64, dimension(:,:,:), allocatable :: phi_par1, phi_par2
     sll_int32                                 :: i, j, k
     type (poisson_3d_periodic_plan), pointer  :: plan
-    sll_real64                                :: average_err, seq_par_diff
+    sll_real64                                :: average_err1, average_err2
+    sll_real64                                :: seq_par_diff1, seq_par_diff2
     sll_int32, dimension(1:3)                 :: global
     sll_int32                                 :: gi, gj, gk
     sll_int32                                 :: myrank
@@ -200,42 +204,50 @@ contains
           y = (j-1)*dy
           do i=1,nx
              x = (i-1)*dx
-             phi_an(i,j,k) = cos(x)*sin(y)*cos(z)
+             phi_an1(i,j,k) = cos(x)*sin(y)*cos(z)
+             phi_an2(i,j,k) = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) * exp(-.5*(x-Lx/2)**2) * &
+                              exp(-.5*(y-Ly/2)**2) * sin(z)
+             rho2(i,j,k) = phi_an2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + (y-Ly/2)**2 ) )
           enddo
        enddo
     enddo
-    rho = 3*phi_an
+    rho1 = 3*phi_an1
 
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
 
     ! Test sequential periodic 3D poisson solver
     if (myrank==0) then
+       call flush()
        print*, ' '
        print*, 'Test poisson_3d in sequential'
     endif
 
-    plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
-    call solve_poisson_3d_periodic_seq(plan, rho, phi_seq)
+    plan => new_poisson_3d_periodic_plan(cmplx(rho1, 0_f64, kind=f64), Lx, Ly, Lz)
+    call solve_poisson_3d_periodic_seq(plan, rho1, phi_seq1)
+    call solve_poisson_3d_periodic_seq(plan, rho2, phi_seq2)
 
-    average_err = sum( abs(phi_an-phi_seq) ) / (nx*ny*nz)
+    average_err1 = sum( abs(phi_an1-phi_seq1) ) / (nx*ny*nz)
+    average_err2 = sum( abs(phi_an2-phi_seq2) ) / (nx*ny*nz)
 
     if (myrank==0) then
+       call flush()
        print*, ' '
-       print*, 'Average error:', average_err
+       print*, 'Average error1, Average error2:', average_err1, average_err2
        print*, 'dx*dy*dz =', dx*dy*dz
     endif
 
-    if (average_err <= dx*dx*dy) then
+    if ( max(average_err1, average_err2) <= dx*dx*dy) then
        if (myrank==0) then
           call flush()
           print*, ' '
           print*, 'sll_poisson_3d_periodic_seq test: PASS'
        endif
     else
-    print*, ' '
+       call flush()
+       print*, ' '
        print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
-    print*, ' '
+       print*, ' '
        stop
     endif
 
@@ -248,11 +260,12 @@ contains
        print*, 'Test poisson_3d in parallel'
     endif
     
-    call solve_poisson_3d_periodic_par(plan, rho, phi_par)
+    call solve_poisson_3d_periodic_par(plan, rho1, phi_par1)
+    call solve_poisson_3d_periodic_par(plan, rho2, phi_par2)
 
-    nx_loc = size(phi_par,1)
-    ny_loc = size(phi_par,2)
-    nz_loc = size(phi_par,3)
+    nx_loc = size(phi_par1,1)
+    ny_loc = size(phi_par1,2)
+    nz_loc = size(phi_par1,3)
     npx = nx / nx_loc
     npy = ny / ny_loc
     npz = nz / nz_loc
@@ -260,8 +273,11 @@ contains
     layout  => new_layout_3D( sll_world_collective ) 
     call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, layout )
 
-    average_err = 0.d0
-    seq_par_diff = 0.d0
+    average_err1  = 0.d0
+    seq_par_diff1 = 0.d0
+    average_err2  = 0.d0
+    seq_par_diff2 = 0.d0
+
     do k=1,nz_loc
        do j=1,ny_loc
           do i=1,nx_loc
@@ -269,22 +285,27 @@ contains
              gi = global(1)
              gj = global(2)
              gk = global(3)
-             average_err =  average_err  + abs( phi_an (gi,gj,gk) - phi_par(i,j,k) )
-             seq_par_diff = seq_par_diff + abs( phi_seq(gi,gj,gk) - phi_par(i,j,k) )
+             average_err1  = average_err1  + abs( phi_an1 (gi,gj,gk) - phi_par1(i,j,k) )
+             seq_par_diff1 = seq_par_diff1 + abs( phi_seq1(gi,gj,gk) - phi_par1(i,j,k) )
+             average_err2  = average_err2  + abs( phi_an2 (gi,gj,gk) - phi_par2(i,j,k) )
+             seq_par_diff2 = seq_par_diff2 + abs( phi_seq2(gi,gj,gk) - phi_par2(i,j,k) )
           enddo
        enddo
     enddo
 
-    average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
-    seq_par_diff = seq_par_diff / (nx_loc*ny_loc*nz_loc)
+    average_err1  = average_err1  / (nx_loc*ny_loc*nz_loc)
+    seq_par_diff1 = seq_par_diff1 / (nx_loc*ny_loc*nz_loc)
+    average_err2  = average_err2  / (nx_loc*ny_loc*nz_loc)
+    seq_par_diff2 = seq_par_diff2 / (nx_loc*ny_loc*nz_loc)
 
     call flush()
     print*, ' '
-    print*, 'local average error:', average_err
+    print*, 'local average error1, local average error2:', average_err1, average_err2
     print*, 'dx*dy*dz =', dx*dy*dz
-    print*, 'Local average diff between seq sol and par sol:', seq_par_diff
+    print*, 'Local average diff between seq sol 1 and par sol 2:', seq_par_diff1, seq_par_diff2
 
-    if (average_err > dx*dx*dy) then
+    if ( max(average_err1, average_err2) > dx*dx*dy) then
+       ok = 1.d0
        call flush()
        print*, ' '
        print*, 'Test stoppped by sll_poisson_3d_periodic_par test'
@@ -305,7 +326,8 @@ contains
     endif
 
     call delete_poisson_3d_periodic_plan(plan)
-    SLL_DEALLOCATE_ARRAY(phi_par, ierr)
+    SLL_DEALLOCATE_ARRAY(phi_par1, ierr)
+    SLL_DEALLOCATE_ARRAY(phi_par2, ierr)
 
     end subroutine test_sll_poisson_3d_periodic
 
