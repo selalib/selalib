@@ -41,7 +41,7 @@ program unit_test
   eta2_min = -6.0_f64
   eta2_max = 6.0_f64 
 
-  geom => new_geometry_2D ('sinprod')
+  geom => new_geometry_2D ('sinprod',nc_eta1,nc_eta2)
   m2D_descriptor => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
        PERIODIC, eta2_min, eta2_max, nc_eta2, COMPACT, geom)
   dist_func => sll_new_distribution_function_2D(m2D_descriptor,CELL_CENTERED_DF,name)
@@ -60,8 +60,8 @@ program unit_test
   nc_v1 = 31; nc_v2 = 31
   nc_x1 = 31; nc_x2 = 31
   
-  geom_x => new_geometry_2D('cartesian')
-  geom_v => new_geometry_2D('cartesian')
+  geom_x => new_geometry_2D('cartesian',nc_x1,nc_x2)
+  geom_v => new_geometry_2D('cartesian',nc_v1,nc_v2)
 
   mesh_x => new_mesh_descriptor_2D(x1_min, x1_max, nc_x1, &
           PERIODIC, x2_min, x2_max, nc_x2, PERIODIC, geom_x)
@@ -86,7 +86,7 @@ program unit_test
      end do
   end do
 
-  geom_xv => new_geometry_2D('cartesian')
+  geom_xv => new_geometry_2D('cartesian',nc_x1,nc_v1)
 
   mesh_xv => new_mesh_descriptor_2D(x1_min, x1_max, nc_x1, &
              PERIODIC, v1_min, v1_max, nc_v1, PERIODIC, geom_xv)
