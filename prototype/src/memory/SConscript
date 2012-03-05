@@ -1,0 +1,2 @@
+Import('env')
+env.Library('sll_memory',['sll_memory.F90'])
