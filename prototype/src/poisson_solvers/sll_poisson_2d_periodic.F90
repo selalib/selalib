@@ -122,14 +122,14 @@ subroutine solve_poisson_2d_periodic_potential(this,sol,rhs,error)
 
    call transpose_r2c(sol(1:ncx,1:ncy), this%rhst)
 
-   do i=1,ncx
+   do i=1,ncx/2+1
       call zfftf( ncy, this%rhst(:,i), this%ffty%coefcd)
    end do
 
    call wave_number_vectors(this)
    this%rhst = this%rhst / (this%kx*this%kx+this%ky*this%ky)
 
-   do i=1,ncx
+   do i=1,ncx/2+1
       call zfftb( ncy, this%rhst(:,i),  this%ffty%coefcd )
    end do
 
@@ -210,7 +210,7 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
 
    call transpose_r2c(sol(1:ncx,1:ncy), this%rhst)
 
-   do i=1,ncx
+   do i=1,ncx/2+1
       call zfftf( ncy, this%rhst(:,i), this%ffty%coefcd)
    end do
 
@@ -220,14 +220,17 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
    this%eyt(1,1) = 0.0_f64
 
    this%ext = -cmplx(zero,this%kx/this%k2,kind=f64)*this%rhst
+
 print*, 'test3'
    do i=1,ncx
 print*, 'test5'
       call zfftb( ncy, this%ext(:,i),  this%ffty%coefcd )
    end do
 print*, 'test4'
+
    this%eyt = -cmplx(zero,this%ky/this%k2,kind=f64)*this%rhst
-   do i=1,ncx
+   do i=1,ncx/2+1
+      call zfftb( ncy, this%ext(:,i),  this%ffty%coefcd )
       call zfftb( ncy, this%eyt(:,i),  this%ffty%coefcd )
    end do
 
@@ -238,7 +241,6 @@ print*, 'test4'
       call dfftb( ncx, e_fields%data(1:ncx,j)%v1,  this%fftx%coefd )
       call dfftb( ncx, e_fields%data(1:ncx,j)%v2,  this%fftx%coefd )
    end do
-
 
    e_fields%data(1:ncx,1:ncy)%v1 = e_fields%data(1:ncx,1:ncy)%v1 / (ncx*ncy)
    e_fields%data(1:ncx,1:ncy)%v2 = e_fields%data(1:ncx,1:ncy)%v2 / (ncx*ncy)
