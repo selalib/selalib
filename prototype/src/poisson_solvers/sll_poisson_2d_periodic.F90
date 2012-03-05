@@ -220,9 +220,12 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
    this%eyt(1,1) = 0.0_f64
 
    this%ext = -cmplx(zero,this%kx/this%k2,kind=f64)*this%rhst
+print*, 'test3'
    do i=1,ncx
+print*, 'test5'
       call zfftb( ncy, this%ext(:,i),  this%ffty%coefcd )
    end do
+print*, 'test4'
    this%eyt = -cmplx(zero,this%ky/this%k2,kind=f64)*this%rhst
    do i=1,ncx
       call zfftb( ncy, this%eyt(:,i),  this%ffty%coefcd )
