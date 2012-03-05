@@ -5,16 +5,20 @@ program unit_test
   implicit none
  
   sll_real64, parameter  :: err_max = 10E-14
-  sll_int32, parameter   :: n = 2**20
   sll_int32, parameter   :: hmax = 1
   sll_int32, parameter   :: imin = 10
   sll_int32, parameter   :: imax = 20
+  sll_int32, parameter   :: n = 2**imax
+  sll_int32, parameter   :: m = 2**10
   type(sll_fft_plan), pointer :: plan
+  type(fft_plan), pointer :: fft_plan2d
   sll_comp64, dimension(n) :: data_comp, data_copy
+  sll_comp64, dimension(m,m/2) :: data_comp2d
+  sll_comp64, dimension(m,m/2) :: data_copy2d
   sll_real64, dimension(n) :: rdata_comp, rdata_copy
   sll_real64 :: time = 0_f64
   sll_real64 :: ierr
-  sll_int32 :: i,j,s,h
+  sll_int32 :: i,j,s,h,k,t
 
 
 !  if( _DEFAULTFFTLIB == FFTW_MOD) then
@@ -72,9 +76,6 @@ program unit_test
   
     plan => fft_new_plan(s,rdata_comp(1:s),rdata_comp(1:s),FFT_FORWARD)
     call fft_apply_plan(plan,rdata_comp(1:s),rdata_comp(1:s))
-
-    time = time + fft_get_time_execution(plan)
-
     call fft_delete_plan(plan)
 
     plan => fft_new_plan(s,rdata_comp(1:s),rdata_comp(1:s),FFT_INVERSE,FFT_NORMALIZE)
@@ -103,9 +104,6 @@ program unit_test
   
     plan => fft_new_plan(s,rdata_comp(1:s),data_comp(1:s/2+1))
     call fft_apply_plan(plan,rdata_comp(1:s),data_comp(1:s/2+1))
-
-    time = time + fft_get_time_execution(plan)
-
     call fft_delete_plan(plan)
     
     plan => fft_new_plan(s,data_comp(1:s/2+1),rdata_comp(1:s),FFT_NORMALIZE)
@@ -118,6 +116,39 @@ program unit_test
    enddo
   enddo
   print *, 'OK'
+
+  print *,'-------------------------------------------------'
+  print * ,'COMPLEX TO COMPLEX 2D'
+  do i=10,10
+   do h=1,hmax
+    s = 2**i
+    t = 2**(i-1)
+
+    do j=1,s
+     do k=1,t
+      CALL RANDOM_COMPLEX(data_comp2d(j,k))
+     enddo
+    enddo
+    data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
+  
+    fft_plan2d => fft_new_plan2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_FORWARD)
+    call fft_apply_plan2d(fft_plan2d,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+    call fft_delete_plan(fft_plan2d)
+
+    fft_plan2d => fft_new_plan2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE,FFT_NORMALIZE)
+    call fft_apply_plan2d(fft_plan2d,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+    call fft_delete_plan(fft_plan2d)
+    ierr = 0_f64
+    do j=1,t
+      ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
+    enddo
+    if( ierr > err_max ) then
+      stop 'Everage error too big'
+    endif
+   enddo
+  enddo
+  print *, 'OK'
+
 
 contains
 
