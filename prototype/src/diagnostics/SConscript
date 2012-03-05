@@ -1,0 +1,2 @@
+Import('env')
+env.Library('sll_diagnostics',Glob("sll_*.F90"))
