@@ -1,0 +1,2 @@
+Import('env')
+env.Library('sll_splines', ["sll_splines.F90"])

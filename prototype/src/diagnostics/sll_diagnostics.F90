@@ -62,11 +62,11 @@ enum, bind(C)
 end enum
 
 interface write_mesh
-   procedure write_mesh_2d, write_mesh_3d
+   module procedure write_mesh_2d, write_mesh_3d
 end interface
 
 interface write_vec1d
-   procedure write_vec1_2d, write_vec1_3d
+   module procedure write_vec1_2d, write_vec1_3d
 end interface
 
 public write_vec1d, write_vec2d, write_mesh
