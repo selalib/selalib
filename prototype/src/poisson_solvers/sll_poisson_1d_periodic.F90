@@ -1,4 +1,4 @@
-module sll_poisson_1D_periodic
+module sll_poisson_1d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -127,4 +127,4 @@ contains
 
 
 
-end module sll_poisson_1D_periodic
+end module sll_poisson_1d_periodic
