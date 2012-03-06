@@ -26,24 +26,63 @@ hostname = socket.gethostname()
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
-if hostname[:7] != "hpc-f02":
-	print 'Ce fichier SCons ne fonctionne que sur hpc-f02'
 
-intel11 = Environment( 
+env = Environment( 
                         ENV = os.environ,
                         CC = 'mpicc',
                         F90 = 'mpif90',
                         F90FLAGS = ['-cpp','-g'],
-                        F90PATH = ['../'+dirs for dirs in sll_dirs ],
+                        F90PATH = ['../'+dirs for dirs in sll_dirs]+['.'],
                         CPPDEFINES = ['GFORTRAN', 'DEBUG', 'MPIF90', 'NOHDF5'],
                         LINK = ['mpif90'],
                         LIBPATH = ['.'],
                        )
 
-env = intel11.Clone()
-for dir in sll_dirs:
-   print dir
-   #SConscript([dir+'/SConscript'],['env'])
 
-SConscript(['diagnostics/SConscript'],['env'])
-SConscript(['mesh_types/SConscript'],['env'])
+if hostname[:7] == "hpc-f02":
+   print 'hpc-f02'
+
+if platform[:6] == "macosx":
+   env.Append( F90FLAGS = ['-g', '-W', '-Wall', '-ffree-line-length-none'] )
+
+sll_memory = SConscript(['memory/SConscript'],['env'])
+
+sll_precision = SConscript(['precision/SConscript'],['env'])
+
+sll_tridiagonal = SConscript(['numerical_utilities/SConscript'],['env'])
+Depends(sll_tridiagonal,[sll_precision])
+
+sll_assert = SConscript(['assert/SConscript'],['env'])
+Depends(sll_assert,[sll_memory,sll_precision])
+
+sll_constants = SConscript(['constants/SConscript'],['env'])
+Depends(sll_constants,[sll_precision])
+
+sll_utilities = SConscript(['utilities/SConscript'],['env'])
+Depends(sll_utilities,[sll_precision])
+
+sll_splines = SConscript(['splines/SConscript'],['env'])
+Depends(sll_splines,[sll_assert])
+
+sll_collective = SConscript(['collective/SConscript'],['env'])
+Depends(sll_collective,[sll_assert])
+
+sll_remap = SConscript(['remap/SConscript'],['env'])
+Depends(sll_remap,[sll_assert,sll_collective,sll_utilities])
+
+sll_timer = SConscript(['timer/SConscript'],['env'])
+
+sll_diagnostics = SConscript(['diagnostics/SConscript'],['env'])
+Depends(sll_diagnostics,[sll_assert])
+
+sll_mesh_types = SConscript(['mesh_types/SConscript'],['env'])
+Depends(sll_mesh_types,[sll_assert,sll_utilities,sll_splines,sll_diagnostics])
+
+sll_ode_solvers = SConscript(['ode_solvers/SConscript'],['env'])
+Depends(sll_ode_solvers,[sll_mesh_types])
+
+sll_distribution_function = SConscript(['distribution_function/SConscript'],['env'])
+Depends(sll_distribution_function,[sll_mesh_types])
+
+sll_poisson_solvers = SConscript(['poisson_solvers/SConscript'],['env'])
+Depends(sll_poisson_solvers,[sll_mesh_types])
