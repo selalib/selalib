@@ -1,0 +1,4 @@
+Import('env')
+env.Library('sll_poisson_solvers', ['sll_poisson_2d_periodic.F90',
+                                    'sll_poisson_1d_periodic.F90',
+                                    'fft_module.F90','fft1d.f90'])

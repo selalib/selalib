@@ -35,8 +35,10 @@ sll_real64                         :: dt
 sll_real64, dimension(:,:), allocatable :: bz
 
 sll_real64, parameter              :: c = 1.0_f64
-sll_real64, parameter              :: cfl = 0.1_f64
+sll_real64, parameter              :: cfl = 0.5_f64
 sll_int32,  parameter              :: mode = 2
+
+character(len=4)                   :: counter
 
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64
@@ -69,7 +71,6 @@ omega = c * sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
 
 SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1), error)
 
-
 do istep = 1, nstep !*** Loop over time
 
    if (istep == 1) then
@@ -98,11 +99,13 @@ do istep = 1, nstep !*** Loop over time
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' erreur L2 = ',g10.5)") sqrt(err_l2)
 
+   call int2string(istep, counter)
+   call write_vec1d(ExEyHz%data%v3,mesh%nc_eta1+1,mesh%nc_eta2+1,"hz"//counter,"mesh",0)
+
 end do ! next time step
 
 call delete(maxwell_TE)
 call delete_field_2D_vec3( ExEyHz )
-
 
 end program testMaxwell
 
