@@ -32,6 +32,7 @@ vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
 
 env = Environment( ENV = os.environ, 
                    variable = vars,
+                   F90='mpif90',
                    F90FLAGS = ['-g', '-W', '-Wall', 
                                '-ffree-line-length-none',
                                '-fbounds-check'],
@@ -59,7 +60,7 @@ env = Environment( ENV = os.environ,
 #HDF5 flags 
 env.Append( LIBPATH = os.environ['HDF5LIBPATH'],
             F90PATH = os.environ['HDF5INCPATH'],
-            LIBS = ['hdf5','hdf5_fortran','z'])
+            LIBS = ['hdf5_fortran','hdf5','z'])
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
 
