@@ -5,8 +5,8 @@
 ! Module: unit_test.F90
 !
 !> @brief 
-!> Selalib poisson solvers unit test
-!> Last modification: March 05, 2012
+!> Selalib poisson solvers (1D, 2D and 3D) unit test
+!> Last modification: March 06, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -51,7 +51,12 @@ program test_poisson_solvers
   Lz = 2*sll_pi
 
   colsz  = sll_get_collective_size(sll_world_collective)
+
   if (colsz==1) then
+     print*, ' '
+     print*, 'Test poisson_1d'
+     print*, ' '
+     call test_poisson_1d()
      print*, ' '
      print*, 'Test poisson_2d'
      print*, ' '
@@ -65,16 +70,47 @@ program test_poisson_solvers
 
 contains
 
+  subroutine test_poisson_1d()
+
+    type (mesh_descriptor_1D), pointer :: geometry
+
+    type (field_1D_vec1), pointer      :: ex
+    type (field_1D_vec1), pointer      :: ex_exact
+    type (field_1D_vec1), pointer      :: rho
+
+    type (poisson1dp)         :: poisson
+
+    sll_int32   :: nc_eta1
+    sll_real64  :: eta1_min, eta1_max
+    sll_real64  :: delta_eta1
+    sll_int32   :: error
+    sll_int32   :: mode
+    sll_int32   :: i
+
+    eta1_min = 0.0; eta1_max = 2*sll_pi;
+    nc_eta1 = 128
+
+    geometry => new_mesh_descriptor_1D( eta1_min, eta1_max, nc_eta1, PERIODIC )
+    rho      => new_field_1D_vec1( geometry )
+    ex       => new_field_1D_vec1( geometry )
+    ex_exact => new_field_1D_vec1( geometry )
+
+    call new(poisson, nc_eta1, error) 
+
+    mode = 7
+    delta_eta1 = geometry%delta_eta1
+    do i=1,nc_eta1+1
+       rho%data(i)      =  mode**2*sin(mode*(i-1)*delta_eta1)
+       ex_exact%data(i) = -mode*cos(mode*(i-1)*delta_eta1)
+    end do
+
+    call solve(poisson, ex, rho)
+
+    print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
+
+  end subroutine test_poisson_1d
+
   subroutine test_poisson_2d()
-    !-------------------------------------------------------------------
-    !  test 1D Poisson solver based on FFT
-    !-------------------------------------------------------------------
-    !type (mesh_descriptor_1D), pointer :: geom
-    !type (poisson1dp)                  :: poisson_1d
-    !type (field_1D_vec1), pointer      :: ex, rho_1d, ex_exact
-    !sll_int32   :: ncx, iflag 
-    !sll_real64  :: xmin, xmax
-    !sll_real64  :: dx
 
     sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
     sll_int32   :: nc_eta1, nc_eta2
@@ -149,30 +185,6 @@ contains
     call delete_field_2D_vec1( phi_exact )
     call delete_field_2D_vec2( exy )
     call delete_field_2D_vec2( exy_exact )
-
-    !Solveur de Poisson1D, commente car ne parche pas
-
-    !xmin = 0.0; xmax = 2*sll_pi;
-    !ncx = 128
-    !
-    !geomx    => new_mesh_descriptor_1D( xmin, xmax, ncx, PERIODIC )
-    !rho1d    => new_field_1D_vec1( geomx )
-    !ex       => new_field_1D_vec1( geomx )
-    !ex_exact => new_field_1D_vec1( geomx )
-    !
-    !call new(poisson_1d,ncx,iflag) 
-    !
-    !mode = 7
-    !dx = geomx%delta_eta1
-    !do i=1,ncx+1
-    !   rho1d%data(i) =  mode**2*sin(mode*(i-1)*dx)
-    !   ex_exact%data(i) = -mode*cos(mode*(i-1)*dx)
-    !end do
-    !! compute electric field
-    !call solve(poisson_1d,ex,rho1d)
-    !    
-    ! check solution
-    !print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
 
   end subroutine test_poisson_2d
 
