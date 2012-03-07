@@ -91,4 +91,3 @@ if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
 
 env.Append(LIBS=['fftw3_threads'])
 env.Program('poisson3d_with_fftw3_seq', source = ["poisson3d_with_fftw3_seq.F90"])
-env.Program('poisson_3d_periodic', source = ["poisson_3d_periodic.F90"])

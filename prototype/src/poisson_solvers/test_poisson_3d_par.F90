@@ -69,7 +69,6 @@ program test_poisson_3d_par
   dz = Lz/nz
 
   SLL_ALLOCATE(phi_an(nx,ny,nz),ierr)
-  SLL_ALLOCATE(phi(nx,ny,nz),ierr)
   SLL_ALLOCATE(rho(nx,ny,nz),ierr)
 
   plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
