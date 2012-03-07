@@ -83,13 +83,13 @@ contains
     ! for instance
     SLL_ASSERT( associated(plan) )
 
-    call delete(plan%px)
-    call delete(plan%py)
-    call delete(plan%pz)
+    call fft_delete_plan(plan%px)
+    call fft_delete_plan(plan%py)
+    call fft_delete_plan(plan%pz)
 
-    call delete(plan%px_inv)
-    call delete(plan%py_inv)
-    call delete(plan%pz_inv)
+    call fft_delete_plan(plan%px_inv)
+    call fft_delete_plan(plan%py_inv)
+    call fft_delete_plan(plan%pz_inv)
 
     SLL_DEALLOCATE(plan, ierr)
 
