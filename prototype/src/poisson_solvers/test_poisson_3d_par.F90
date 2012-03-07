@@ -102,118 +102,117 @@ contains
     myrank = sll_get_collective_rank(sll_world_collective)
 
     ! Test sequential periodic 3D poisson solver
-    if (myrank==0) then
+    if (colsz == 1) then
        call flush()
        print*, ' '
        print*, 'Test poisson_3d in sequential'
-    endif
 
-    plan => new_poisson_3d_periodic_plan(cmplx(rho1, 0_f64, kind=f64), Lx, Ly, Lz)
-    call solve_poisson_3d_periodic_seq(plan, rho1, phi_seq1)
-    call solve_poisson_3d_periodic_seq(plan, rho2, phi_seq2)
+       plan => new_poisson_3d_periodic_plan(cmplx(rho1, 0_f64, kind=f64), Lx, Ly, Lz)
+       call solve_poisson_3d_periodic_seq(plan, rho1, phi_seq1)
+       call solve_poisson_3d_periodic_seq(plan, rho2, phi_seq2)
 
-    average_err1 = sum( abs(phi_an1-phi_seq1) ) / (nx*ny*nz)
-    average_err2 = sum( abs(phi_an2-phi_seq2) ) / (nx*ny*nz)
+       average_err1 = sum( abs(phi_an1-phi_seq1) ) / (nx*ny*nz)
+       average_err2 = sum( abs(phi_an2-phi_seq2) ) / (nx*ny*nz)
 
-    if (myrank==0) then
        call flush()
        print*, ' '
        print*, 'Average error1, Average error2:', average_err1, average_err2
        print*, 'dx*dy*dz =', dx*dy*dz
-    endif
 
-    if ( max(average_err1, average_err2) <= dx*dx*dy) then
-       if (myrank==0) then
+       if ( max(average_err1, average_err2) <= dx*dx*dy) then
           call flush()
           print*, ' '
           print*, 'sll_poisson_3d_periodic_seq test: PASS'
-       endif
-    else
-       call flush()
-       print*, ' '
-       print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
-       print*, ' '
-       stop
-    endif
-
-    ! Test parallel periodic 3D poisson solver
-
-    if (myrank==0) then
-       call flush()
-       print*, ' '
-       call flush()
-       print*, 'Test poisson_3d in parallel'
-    endif
-
-    call solve_poisson_3d_periodic_par(plan, rho1, phi_par1)
-    call solve_poisson_3d_periodic_par(plan, rho2, phi_par2)
-
-    nx_loc = size(phi_par1,1)
-    ny_loc = size(phi_par1,2)
-    nz_loc = size(phi_par1,3)
-    npx = nx / nx_loc
-    npy = ny / ny_loc
-    npz = nz / nz_loc
-
-    layout  => new_layout_3D( sll_world_collective ) 
-    call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, layout )
-
-    average_err1  = 0.d0
-    seq_par_diff1 = 0.d0
-    average_err2  = 0.d0
-    seq_par_diff2 = 0.d0
-
-    do k=1,nz_loc
-       do j=1,ny_loc
-          do i=1,nx_loc
-             global = local_to_global_3D( layout, (/i, j, k/))
-             gi = global(1)
-             gj = global(2)
-             gk = global(3)
-             average_err1  = average_err1  + abs( phi_an1 (gi,gj,gk) - phi_par1(i,j,k) )
-             seq_par_diff1 = seq_par_diff1 + abs( phi_seq1(gi,gj,gk) - phi_par1(i,j,k) )
-             average_err2  = average_err2  + abs( phi_an2 (gi,gj,gk) - phi_par2(i,j,k) )
-             seq_par_diff2 = seq_par_diff2 + abs( phi_seq2(gi,gj,gk) - phi_par2(i,j,k) )
-          enddo
-       enddo
-    enddo
-
-    average_err1  = average_err1  / (nx_loc*ny_loc*nz_loc)
-    seq_par_diff1 = seq_par_diff1 / (nx_loc*ny_loc*nz_loc)
-    average_err2  = average_err2  / (nx_loc*ny_loc*nz_loc)
-    seq_par_diff2 = seq_par_diff2 / (nx_loc*ny_loc*nz_loc)
-
-    call flush()
-    print*, ' '
-    print*, 'local average error1, local average error2:', average_err1, average_err2
-    print*, 'dx*dy*dz =', dx*dy*dz
-    print*, 'Local average diff between seq sol 1 and par sol 2:', seq_par_diff1, seq_par_diff2
-
-    if ( max(average_err1, average_err2) > dx*dx*dy) then
-       ok = 1.d0
-       call flush()
-       print*, ' '
-       print*, 'Test stoppped by sll_poisson_3d_periodic_par test'
-       print*, 'myrank=', myrank
-       print*, ' '
-       stop
-    endif
-
-    call sll_collective_reduce(sll_world_collective, (/ ok /), 1, MPI_PROD, 0, prod4test )
-
-    if (myrank==0) then
-       if (prod4test(1)==1.d0) then
+       else
           call flush()
           print*, ' '
-          print*, 'sll_poisson_3d_periodic_par test: PASS'
+          print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
           print*, ' '
-       endif
-    endif
+          stop
+       end if
 
-    call delete_poisson_3d_periodic_plan(plan)
-    SLL_DEALLOCATE_ARRAY(phi_par1, ierr)
-    SLL_DEALLOCATE_ARRAY(phi_par2, ierr)
+    else
 
+        ! Test parallel periodic 3D poisson solver
+ 
+        if (myrank==0) then
+           call flush()
+           print*, ' '
+           call flush()
+           print*, 'Test poisson_3d in parallel'
+        endif
+ 
+        call solve_poisson_3d_periodic_par(plan, rho1, phi_par1)
+        call solve_poisson_3d_periodic_par(plan, rho2, phi_par2)
+    
+        nx_loc = size(phi_par1,1)
+        ny_loc = size(phi_par1,2)
+        nz_loc = size(phi_par1,3)
+        npx = nx / nx_loc
+        npy = ny / ny_loc
+        npz = nz / nz_loc
+    
+        layout  => new_layout_3D( sll_world_collective ) 
+        call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, layout )
+    
+        average_err1  = 0.d0
+        seq_par_diff1 = 0.d0
+        average_err2  = 0.d0
+        seq_par_diff2 = 0.d0
+   
+        do k=1,nz_loc
+          do j=1,ny_loc
+              do i=1,nx_loc
+                 global = local_to_global_3D( layout, (/i, j, k/))
+                 gi = global(1)
+                 gj = global(2)
+                 gk = global(3)
+                 average_err1  = average_err1  + abs( phi_an1 (gi,gj,gk) - phi_par1(i,j,k) )
+                 seq_par_diff1 = seq_par_diff1 + abs( phi_seq1(gi,gj,gk) - phi_par1(i,j,k) )
+                 average_err2  = average_err2  + abs( phi_an2 (gi,gj,gk) - phi_par2(i,j,k) )
+                 seq_par_diff2 = seq_par_diff2 + abs( phi_seq2(gi,gj,gk) - phi_par2(i,j,k) )
+              enddo
+           enddo
+        enddo
+   
+        average_err1  = average_err1  / (nx_loc*ny_loc*nz_loc)
+        seq_par_diff1 = seq_par_diff1 / (nx_loc*ny_loc*nz_loc)
+        average_err2  = average_err2  / (nx_loc*ny_loc*nz_loc)
+        seq_par_diff2 = seq_par_diff2 / (nx_loc*ny_loc*nz_loc)
+   
+        call flush()
+        print*, 'myrank =  ', myrank
+        print*, 'local average error1, local average error2:', average_err1, average_err2
+        print*, 'dx*dy*dz =', dx*dy*dz
+        print*, 'Local average diff between seq sol 1 and par sol 2:', seq_par_diff1, seq_par_diff2
+   
+        if ( max(average_err1, average_err2) > dx*dx*dy) then
+           ok = 1.d0
+           call flush()
+           print*, ' '
+           print*, 'Test stoppped by sll_poisson_3d_periodic_par test'
+           print*, 'myrank=', myrank
+           print*, ' '
+           stop
+        endif
+   
+        call sll_collective_reduce(sll_world_collective, (/ ok /), 1, MPI_PROD, 0, prod4test )
+   
+        if (myrank==0) then
+           if (prod4test(1)==1.0_f64) then
+              call flush()
+              print*, ' '
+              print*, 'sll_poisson_3d_periodic_par test: PASS'
+              print*, ' '
+           endif
+        endif
+   
+        call delete_poisson_3d_periodic_plan(plan)
+        SLL_DEALLOCATE_ARRAY(phi_par1, ierr)
+        SLL_DEALLOCATE_ARRAY(phi_par2, ierr)
+
+     end if
+   
   end subroutine test_sll_poisson_3d_periodic
 
 end program test_poisson_3d
