@@ -27,13 +27,17 @@ env = Environment( ENV = os.environ,
                            'sll_collective',
                            'sll_diagnostics',
                            'sll_assertion',
-                           'sll_utilities',
                            'sll_constants',
                            'sll_precision',
                            'sll_memory',
+                           'sll_fft',
+                           'sll_timer',
+                           'sll_utilities',
                            'dfftpack'],
                    LINKFLAGS= ['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'], '-fopenmp'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', '-ffree-line-length-none'])
+                   F90FLAGS = ['-g', '-W', '-Wall', 
+                               '-DMPIF90', '-DDEBUG', 
+                               '-ffree-line-length-none'])
 
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])
@@ -70,12 +74,14 @@ env.Program('test_poisson_2d', ["test_poisson_2d.F90",
                                 'fft_module.F90',
                                 'sll_poisson_2d_periodic.F90' ])
 
-env.Append(LIBS=['sll_fft','dfftpack', 'sll_timer','sll_fft'])
 
-env.Program('test_poisson_3d',[ 'test_poisson_3d.F90',
+env.Program('test_poisson_3d_seq',[ 'test_poisson_3d_seq.F90',
                                 'sll_poisson_3d_periodic_util.F90',
-                                'sll_poisson_3d_periodic_seq.F90', 
-                                'sll_poisson_3d_periodic_par.F90' ])
+                                'sll_poisson_3d_periodic_seq.F90'])
+
+#env.Program('test_poisson_3d_par',[ 'test_poisson_3d_seq.F90',
+#                                'sll_poisson_3d_periodic_util.F90',
+#                                'sll_poisson_3d_periodic_par.F90' ])
 
 if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(F90PATH=[os.environ['FFTWINCPATH']])
