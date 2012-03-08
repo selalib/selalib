@@ -46,6 +46,9 @@ if hostname[:7] == "hpc-f02":
 if platform[:6] == "macosx":
    env.Append( F90FLAGS = ['-g', '-W', '-Wall', '-ffree-line-length-none'] )
 
+if hostname[:8] == "irma-hpc":
+   env.Append( F90FLAGS = ['-g', '-W', '-Wall', '-ffree-line-length-none'] )
+
 Export('env')
 
 sll = {}
