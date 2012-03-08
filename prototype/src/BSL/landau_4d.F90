@@ -28,7 +28,7 @@ type(mesh_descriptor_2D), pointer :: mesh_x, mesh_v
 !Time domain
 sll_int32  :: i_step, n_step, j_step
 sll_real64 :: delta_t
-sll_real32 :: time
+sll_real64 :: time
 
 !Distribution function 4D
 type(sll_distribution_function_4D_t), pointer :: dist_func

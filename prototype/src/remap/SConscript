@@ -1,2 +1,3 @@
 Import('env')
-env.Library('sll_remap', ["sll_remap.F90"])
+lib = env.Library('sll_remap', ["sll_remap.F90"])
+Return('lib')

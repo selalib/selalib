@@ -17,6 +17,7 @@ sll_dirs = Split(""" 	memory
 			ode_solvers
 			diagnostics
 			distribution_function
+			poisson_solvers
 """)
 
 
@@ -45,44 +46,22 @@ if hostname[:7] == "hpc-f02":
 if platform[:6] == "macosx":
    env.Append( F90FLAGS = ['-g', '-W', '-Wall', '-ffree-line-length-none'] )
 
-sll_memory = SConscript(['memory/SConscript'],['env'])
+Export('env')
 
-sll_precision = SConscript(['precision/SConscript'],['env'])
+sll = {}
+for dir in sll_dirs:
+   print '%s/SConscript' % dir
+   lib = SConscript('%s/SConscript' % dir)
+   print lib
+   sll.update({dir:lib})
 
-sll_tridiagonal = SConscript(['numerical_utilities/SConscript'],['env'])
-Depends(sll_tridiagonal,[sll_precision])
+print sll['precision']
 
-sll_assert = SConscript(['assert/SConscript'],['env'])
-Depends(sll_assert,[sll_memory,sll_precision])
+#Requires(sll['assert'], ['sll_working_precision.mod'])
+Requires(sll['precision'], sll['memory'])
+Requires(sll['collective'], sll['precision'])
+#Requires(sll['constants'], sll['precision'])
+Requires(sll['distribution_function'], sll['mesh_types'])
+#Requires(sll['mesh_types'], sll['precision'])
 
-sll_constants = SConscript(['constants/SConscript'],['env'])
-Depends(sll_constants,[sll_precision])
-
-sll_utilities = SConscript(['utilities/SConscript'],['env'])
-Depends(sll_utilities,[sll_precision])
-
-sll_splines = SConscript(['splines/SConscript'],['env'])
-Depends(sll_splines,[sll_assert])
-
-sll_collective = SConscript(['collective/SConscript'],['env'])
-Depends(sll_collective,[sll_assert])
-
-sll_remap = SConscript(['remap/SConscript'],['env'])
-Depends(sll_remap,[sll_assert,sll_collective,sll_utilities])
-
-sll_timer = SConscript(['timer/SConscript'],['env'])
-
-sll_diagnostics = SConscript(['diagnostics/SConscript'],['env'])
-Depends(sll_diagnostics,[sll_assert])
-
-sll_mesh_types = SConscript(['mesh_types/SConscript'],['env'])
-Depends(sll_mesh_types,[sll_assert,sll_utilities,sll_splines,sll_diagnostics])
-
-sll_ode_solvers = SConscript(['ode_solvers/SConscript'],['env'])
-Depends(sll_ode_solvers,[sll_mesh_types])
-
-sll_distribution_function = SConscript(['distribution_function/SConscript'],['env'])
-Depends(sll_distribution_function,[sll_mesh_types])
-
-sll_poisson_solvers = SConscript(['poisson_solvers/SConscript'],['env'])
-Depends(sll_poisson_solvers,[sll_mesh_types])
+env.Append(LIBS = sll.values())
