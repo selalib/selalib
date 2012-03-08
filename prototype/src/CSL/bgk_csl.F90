@@ -26,25 +26,23 @@ program bgk_csl
   sll_real64, dimension(:,:), pointer :: x1c_array, x2c_array, jac_array
   sll_real64, dimension(:,:), pointer :: x1n_array, x2n_array
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, eta1c, eta2c
-  sll_real64 :: delta_eta1, delta_eta2
+  sll_real64 :: delta_eta1, delta_eta2,alpha_mesh
   sll_int  :: mesh_case,ierr,visu_step
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
   character(32), parameter  :: name = 'distribution_function'
+  type(field_2D_vec1), pointer :: uniform_field
+  type(csl_workspace), pointer :: csl_work
 
-  eta1_min =  0.0_f64
-  eta1_max =  1.0_f64
-  eta2_min =  0.0_f64
-  eta2_max =  1.0_f64
 
-  mesh_case = 1
-  visu_step = 20
+  mesh_case = 2
+  visu_step = 10
   
-  N_x1 = 128
-  N_x2 = 256
-  dt = 0.1_f64
-  nb_step = 600
+  N_x1 = 32
+  N_x2 = 32
+  dt = 0.001_f64
+  nb_step = 100!600
   
   N = max(N_x1,N_x2)
   
@@ -96,6 +94,8 @@ program bgk_csl
   x1_max = L
   delta_x1_phi = (x1_max-x1_min)/real(N_phi,f64)
   
+  !nb_step = 10
+  !dt = L/real(nb_step,f64)
   
 
   open(unit=900,file='phi0.dat')  
@@ -128,6 +128,18 @@ program bgk_csl
   nc_eta1 = N_x1
   nc_eta2 = N_x2
 
+  eta1_min =  0.0_f64
+  eta1_max = 1.0_f64 ! 0.15_f64*x1_max! 1.0_f64
+  eta2_min =  0.0_f64
+  eta2_max =  1.0_f64
+
+  !eta1_min =  x1_min
+  !eta1_max = x1_max
+  !eta2_min = x2_min
+  !eta2_max = x2_max
+
+
+
   delta_eta1 = (eta1_max-eta1_min)/real(nc_eta1,f64)
   delta_eta2 = (eta1_max-eta1_min)/real(nc_eta2,f64)
   SLL_ALLOCATE(x1n_array(nc_eta1+1, nc_eta2+1), ierr)
@@ -145,7 +157,7 @@ program bgk_csl
         x2n_array(i1,i2) = x2_min+real(i2-1,f64)*delta_x2
         x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
         x2c_array(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
-        jac_array(i1,i2) = 1._f64
+        jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)
       enddo
     enddo
     geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
@@ -155,12 +167,51 @@ program bgk_csl
     dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
   endif
+
+  if(mesh_case==2)then
+     alpha_mesh = 1.e-1_f64 !0.1_f64
+     eta2 = 0.0_f64 
+     eta2c = eta2 + 0.5_f64*delta_eta2
+     do i2= 1, nc_eta2 + 1
+        eta1 = 0.0_f64
+        eta1c = 0.5_f64*delta_eta1
+        do i1 = 1, nc_eta1 + 1
+           x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+           x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+           x1c_array(i1,i2) = eta1c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)
+           x2c_array(i1,i2) = eta2c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)
+           jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)) * &
+             (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c)) - &
+             alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c) * &
+             alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)
+           eta1 = eta1 + delta_eta1
+           eta1c = eta1c + delta_eta1
+           x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+           x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+           x1c_array(i1,i2) = x1_min+x1c_array(i1,i2)*(x1_max-x1_min)
+           x2c_array(i1,i2) = x2_min+x2c_array(i1,i2)*(x2_max-x2_min)
+           jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+        end do
+        eta2 = eta2 + delta_eta2
+        eta2c = eta2c + delta_eta2
+     end do
+
+    geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+       x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+    mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+       PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+    dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+  endif
+
+
+
   
   !call sll_init_distribution_function_2D( dist_func, GAUSSIAN )
   do i1=1,nc_eta1+1
     do i2=1,nc_eta2+1
-      x1 = x1n_array(i1,i2)
-      x2 = x2n_array(i1,i2)
+      x1 = x1c_array(i1,i2)
+      x2 = x2c_array(i1,i2)
       phi_val = 0._f64
       xx = (x1-x1_min)/(x1_max-x1_min)
       if(xx<=0._f64)then
@@ -181,7 +232,7 @@ program bgk_csl
       H = 0.5_f64*x2*x2 + phi_val
       val = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+H/(1._f64-xi))*exp(-H)
       !f(i1,i2) = 1._f64/sqrt(2._f64*sll_pi)*exp(-H)
-      val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/L*x1))
+      val = val*(1._f64+0.0_f64*cos(2._f64*sll_pi/L*x1))
       !f(i1,i2) = 1._f64/(x2_max-x2_min)
       f(i1,i2) = val
       call sll_set_df_val(dist_func, i1, i2, val)
@@ -194,8 +245,46 @@ program bgk_csl
 
   call write_distribution_function ( dist_func )
   
+
+  uniform_field => new_field_2D_vec1(mesh)
+  do i1 = 1, nc_eta1+1 
+     do i2 = 1, nc_eta2+1
+       x1 = x1c_array(i1,i2)
+       x2 = x2c_array(i1,i2)
+       phi_val = 0._f64
+       xx = (x1-x1_min)/(x1_max-x1_min)
+       if(xx<=0._f64)then
+         xx = 0._f64
+        endif
+        if(xx>=1._f64)then
+          xx = xx-1._f64!1._f64-1e-15_f64
+        endif
+        if(xx<=0._f64)then
+          xx = 0._f64
+        endif      
+        xx = xx*real(N_phi,f64)
+        ii = floor(xx)
+        xx = xx-real(ii,f64)      
+        phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)     
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) =  0.5_f64*x2**2!-phi_val
+     end do
+  end do
   
-  !stop
+  ! initialize CSL  
+  csl_work => new_csl_workspace( dist_func )
+  ! run CSL method for 10 time steps
+  !deltat = 0.4_f64
+  do step = 1, nb_step
+     !print*, 'iteration=',it
+     !call csl_first_order(csl_work, dist_func, uniform_field, deltat)
+     call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
+     if(mod(step,visu_step)==0)then
+       call write_distribution_function ( dist_func )
+     endif
+  end do
+  
+  
+  stop
   
   
   !print *,f(N_x1+1,:)
