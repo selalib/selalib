@@ -30,7 +30,7 @@ env = Environment( ENV = os.environ,
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
                    '-fopenmp'],
                     F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', 
-                   '-ffree-line-length-none'])
+                   '-ffree-line-length-none', '-fbounds-check'])
 
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])

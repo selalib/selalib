@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: Feb. 29, 2012
+!> Last modification: March 09, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -34,38 +34,47 @@ contains
 
   subroutine solve_poisson_3d_periodic_par(plan, rho, phi)
 
-    type (poisson_3d_periodic_plan), pointer  :: plan
-    sll_real64, dimension(:,:,:)              :: rho
-    sll_real64, dimension(:,:,:), allocatable :: phi
-    sll_comp64, dimension(:,:,:), allocatable :: hat_rho, tmp, hat_phi
-    sll_int64                                 :: nx, ny, nz
-    sll_int32                                 :: npx, npy, npz
-    sll_int32                                 :: e, ex, ey, ez
-    sll_int64                                 :: i, j, k
-    sll_int32                                 :: ierr
-    sll_real64                                :: Lx, Ly, Lz
-    sll_real64                                :: ind_x, ind_y, ind_z
-    sll_int32                                 :: myrank
-    sll_int64                                 :: colsz ! collective size
-    type(layout_3D_t), pointer                :: layout1
-    type(layout_3D_t), pointer                :: layout2
-    type(remap_plan_3D_t), pointer            :: rmp3
-    sll_int32, dimension(1:3)                 :: global
-    sll_int32                                 :: gi, gj, gk
+    type (poisson_3d_periodic_plan_par), pointer :: plan
+    sll_real64, dimension(:,:,:)                 :: rho
+    sll_real64, dimension(:,:,:), allocatable    :: phi
+    sll_comp64, dimension(:,:,:), allocatable    :: hat_rho, tmp, hat_phi
+    sll_int64                                    :: nx, ny, nz
+    sll_int64                                    :: nx_loc, ny_loc, nz_loc
+    sll_int32                                    :: e, ex, ey, ez
+    sll_int64                                    :: i, j, k
+    sll_int32                                    :: ierr
+    sll_real64                                   :: Lx, Ly, Lz
+    sll_real64                                   :: ind_x, ind_y, ind_z
+    sll_int32                                    :: myrank
+    sll_int64                                    :: colsz ! collective size
+    type(layout_3D_t), pointer                   :: layout_x, layout_y, layout_z, layout_kernel
+    type(remap_plan_3D_t), pointer               :: rmp3
+    sll_int32, dimension(1:3)                    :: global
+    sll_int32                                    :: gi, gj, gk
+    sll_int32, dimension(4,3)                    :: loc_sizes ! local sizes in the 4 layouts
 
+    ! Get geometry informations
     nx = plan%nx
     ny = plan%ny
     nz = plan%nz
+    Lx = plan%Lx
+    Ly = plan%Ly
+    Lz = plan%Lz
+
+    ! Get layouts to compute FFTs (in each direction) and poisson solver kernel
+    layout_x => plan%layout_x
+    layout_y => plan%layout_y
+    layout_z => plan%layout_z
+    layout_kernel => plan%layout_kernel
+
+    ! Get loc_sizes in the 4 layouts
+    loc_sizes = plan%loc_sizes
 
     if ( (.not.is_power_of_two(nx)) .and. (.not.is_power_of_two(ny)) &
          .and.(.not.is_power_of_two(nz))) then     
        print *, 'This test needs to run in numbers of points which are powers of 2.'
        stop
     end if
-
-    Lx = plan%Lx
-    Ly = plan%Ly
-    Lz = plan%Lz
 
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
@@ -81,59 +90,53 @@ contains
        stop
     end if
 
-    ! FFTs in z-direction
+    ! FFTs in x-direction
 
-    e = int(log(real(colsz))/log(2.))
-    npx = 2**(e/2)
-    npy = int(colsz)/npx
-    npz = 1
-    layout1  => new_layout_3D( sll_world_collective ) 
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout1 )
+    nx_loc = loc_sizes(1,1)
+    ny_loc = loc_sizes(1,2)
+    nz_loc = loc_sizes(1,3)
+    SLL_ALLOCATE(hat_rho(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(hat_rho(nx/npx,ny/npy,nz/npz), ierr)
-    do j=1,ny/npy
-       do i=1,nx/npx
-          global = local_to_global_3D( layout1, (/int(i), int(j), 1/))
-          gi = global(1)
+    do k=1,nz_loc
+       do j=1,ny_loc
+          global = local_to_global_3D( layout_x, (/1, int(j), int(k)/))
           gj = global(2)
-          hat_rho(i,j,:) = cmplx(rho(gi,gj,:), 0_f64, kind=f64)
-          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
+          gk = global(3)
+          hat_rho(:,j,k) = cmplx(rho(:,gj,gk), 0_f64, kind=f64)
+          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
     enddo
 
     ! FFTs in y-direction
 
-    npz = npy
-    npy = 1
-    layout2  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout2 )
+    nx_loc = loc_sizes(2,1)
+    ny_loc = loc_sizes(2,2)
+    nz_loc = loc_sizes(2,3)
+    SLL_ALLOCATE(tmp(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(tmp(nx/npx,ny/npy,nz/npz), ierr)
-    rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, hat_rho )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout_x, layout_y, hat_rho )
     call apply_remap_3D( rmp3, hat_rho, tmp) 
-
-    do k=1,nz/npz
-       do i=1,nx/npx
+    do k=1,nz_loc
+       do i=1,nx_loc
           call apply_fft_c2c_1d( plan%py, tmp(i,:,k), tmp(i,:,k) )
        enddo
     enddo
 
     SLL_DEALLOCATE_ARRAY(hat_rho, ierr)
 
-    ! FFTs in x-direction
+    ! FFTs in z-direction
 
-    npy = npx
-    npx = 1
-    layout1  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout1 )
+    nx_loc = loc_sizes(3,1)
+    ny_loc = loc_sizes(3,2)
+    nz_loc = loc_sizes(3,3)
+    SLL_ALLOCATE(hat_rho(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(hat_rho(nx/npx,ny/npy,nz/npz), ierr)
-    rmp3 => NEW_REMAPPER_PLAN_3D( layout2, layout1, tmp )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout_y, layout_z, tmp )
+
     call apply_remap_3D( rmp3, tmp, hat_rho) 
-
-    do k=1,nz/npz
-       do j=1,ny/npy
-          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
+    do j=1,ny_loc
+       do i=1,nx_loc
+          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
     enddo
 
@@ -142,24 +145,19 @@ contains
 
     ! Compute hat_phi, phi = inv_fft(hat_phi)
 
-    ex = e/3
-    ey = (e-ex)/2
-    ez = e - (ex+ey)
-    npx = 2**ex
-    npy = 2**ey
-    npz = 2**ez
-    layout2  => new_layout_3D( sll_world_collective ) 
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout2 )
+    nx_loc = loc_sizes(4,1)
+    ny_loc = loc_sizes(4,2)
+    nz_loc = loc_sizes(4,3)
+    SLL_ALLOCATE(tmp(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(tmp(nx/npx,ny/npy,nz/npz), ierr)
-    rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, hat_rho )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout_z, layout_kernel, hat_rho )
     call apply_remap_3D( rmp3, hat_rho, tmp) 
 
-    SLL_ALLOCATE(hat_phi(nx/npx,ny/npy,nz/npz), ierr)
-    do k=1,nz/npz
-       do j=1,ny/npy
-          do i=1,nx/npx
-             global = local_to_global_3D( layout2, (/int(i), int(j), int(k)/))
+    SLL_ALLOCATE(hat_phi(nx_loc,ny_loc,nz_loc), ierr)
+    do k=1,nz_loc
+       do j=1,ny_loc
+          do i=1,nx_loc
+             global = local_to_global_3D( layout_kernel, (/int(i), int(j), int(k)/))
              gi = global(1)
              gj = global(2)
              gk = global(3)
@@ -190,68 +188,57 @@ contains
 
     SLL_DEALLOCATE_ARRAY(tmp, ierr)
 
-    ! Inverse FFTs in z-direction
+    ! Inverse FFTs in x-direction
 
-    npx = 2**(e/2)
-    npy = int(colsz)/npx
-    npz = 1
-    layout1  => new_layout_3D( sll_world_collective ) 
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout1 )
+    nx_loc = loc_sizes(1,1)
+    ny_loc = loc_sizes(1,2)
+    nz_loc = loc_sizes(1,3)
+    SLL_ALLOCATE(tmp(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(tmp(nx/npx,ny/npy,nz/npz), ierr)
-    rmp3 => NEW_REMAPPER_PLAN_3D( layout2, layout1, hat_phi )
-    call apply_remap_3D( rmp3, hat_phi, tmp ) 
-
-    do j=1,ny/npy
-       do i=1,nx/npx
-          call apply_fft_c2c_1d( plan%pz_inv, tmp(i,j,:), tmp(i,j,:) )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout_kernel, layout_x, hat_phi )
+    call apply_remap_3D( rmp3, hat_phi, tmp )
+    do k=1,nz_loc
+       do j=1,ny_loc
+          call apply_fft_c2c_1d( plan%px_inv, tmp(:,j,k), tmp(:,j,k) )
        enddo
     enddo
-
     SLL_DEALLOCATE_ARRAY(hat_phi, ierr)
 
     ! Inverse FFTs in y-direction
 
-    npz = npy
-    npy = 1
-    layout2  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout2 )
+    nx_loc = loc_sizes(2,1)
+    ny_loc = loc_sizes(2,2)
+    nz_loc = loc_sizes(2,3)
+    SLL_ALLOCATE(hat_phi(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(hat_phi(nx/npx,ny/npy,nz/npz), ierr)
-    rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, tmp )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout_x, layout_y, tmp )
     call apply_remap_3D( rmp3, tmp, hat_phi)
-
-    do k=1,nz/npz
-       do i=1,nx/npx
+    do k=1,nz_loc
+       do i=1,nx_loc
           call apply_fft_c2c_1d( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
        enddo
     enddo
-
     SLL_DEALLOCATE_ARRAY(tmp, ierr)
 
-    ! Inverse FFTs in x-direction
+    ! Inverse FFTs in z-direction
 
-    npy = npx
-    npx = 1
-    layout1  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( int(nx), int(ny), int(nz), npx, npy, npz, layout1 )
+    nx_loc = loc_sizes(3,1)
+    ny_loc = loc_sizes(3,2)
+    nz_loc = loc_sizes(3,3)
+    SLL_ALLOCATE(tmp(nx_loc,ny_loc,nz_loc), ierr)
 
-    SLL_ALLOCATE(tmp(nx/npx,ny/npy,nz/npz), ierr)
-    rmp3 => NEW_REMAPPER_PLAN_3D( layout2, layout1, hat_phi )
+    rmp3 => NEW_REMAPPER_PLAN_3D( layout_y, layout_z, hat_phi )
     call apply_remap_3D( rmp3, hat_phi, tmp ) 
-
-    do k=1,nz/npz
-       do j=1,ny/npy
-          call apply_fft_c2c_1d( plan%px_inv, tmp(:,j,k), tmp(:,j,k) )
+    do j=1,ny_loc
+       do i=1,nx_loc
+          call apply_fft_c2c_1d( plan%pz_inv, tmp(i,j,:), tmp(i,j,:) )
        enddo
     enddo
 
-    SLL_ALLOCATE(phi(nx/npx,ny/npy,nz/npz), ierr)
+    SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
     phi = real(tmp, f64)
 
     SLL_DEALLOCATE_ARRAY(tmp, ierr)
-    call delete_layout_3D( layout1 )
-    call delete_layout_3D( layout2 )
 
   end subroutine solve_poisson_3d_periodic_par
 
