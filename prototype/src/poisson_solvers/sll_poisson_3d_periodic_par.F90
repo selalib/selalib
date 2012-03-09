@@ -40,7 +40,6 @@ contains
     sll_comp64, dimension(:,:,:), allocatable    :: hat_rho, tmp, hat_phi
     sll_int64                                    :: nx, ny, nz
     sll_int64                                    :: nx_loc, ny_loc, nz_loc
-    sll_int32                                    :: e, ex, ey, ez
     sll_int64                                    :: i, j, k
     sll_int32                                    :: ierr
     sll_real64                                   :: Lx, Ly, Lz

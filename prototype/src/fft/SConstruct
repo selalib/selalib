@@ -9,26 +9,18 @@ os.system("touch conf.h")
 fichier = open("conf.h", "w")
 fichier.write("! Generated automatically.  DO NOT EDIT!\n")
 
-FFTW_LIB_PATH = ''
-FFTW_INC_PATH = ''
-FFTW = ''
-if os.path.exists("/opt/local/lib/libfftw3.a") and os.path.exists("/opt/local/include/fftw3.f03"):
-  FFTW_LIB_PATH = '/opt/local/lib'
-  FFTW_INC_PATH = '/opt/local/include'
-  FFTW = 'fftw3'
-elif os.path.exists("/usr/local/lib/libfftw3.a") and os.path.exists("/usr/local/include/fftw3.f03"):
-  FFTW_LIB_PATH = '/usr/local/lib'
-  FFTW_INC_PATH = '/usr/local/include'
-  FFTW = 'fftw3'
-elif os.path.exists("../fftw/lib/libfftw3.a") and os.path.exists("../fftw/include/fftw3.f03"):
-  FFTW_LIB_PATH = '../fftw/lib'
-  FFTW_INC_PATH = '../fftw/include'
+
+if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
+  FFTW_LIB_PATH = os.environ['FFTWLIBPATH']
+  FFTW_INC_PATH = os.environ['FFTWINCPATH']
   FFTW = 'fftw3'
 else :
+  FFTW_LIB_PATH = ''
+  FFTW_INC_PATH = ''
+  FFTW = ''
   fichier.write("#define _NOFFTW\n")
 
-#HDF5_INC_PATH='/usr/local/hdf5/include'
-#HDF5_LIB_PATH='/usr/local/hdf5/lib'
+
 HDF5_INC_PATH = os.environ['HDF5INCPATH']
 HDF5_LIB_PATH = os.environ['HDF5LIBPATH']
 
@@ -61,7 +53,5 @@ env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_misc',         ["../utilities/misc_utils.F90"])
 env.Library('sll_constants',    ["../constants/numeric_constants.F90"])
 env.Library('sll_fft',          ["./sll_fft.F90"])
-
 env.Program('unit_test',        ["unit_test.F90"])
-#env.Program('test',             ["test.F90"])
 

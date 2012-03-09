@@ -305,5 +305,60 @@ contains
          (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
+
+  ! Alternative formulation for the polar coordinate transformation:
+  !
+  ! X1 = (Rmin + (Rmax-Rmin)*eta1)*cos(2*pi*eta2)
+  ! X2 = (Rmin + (Rmax-Rmin)*eta1)*sin(2*pi*eta2)
+  !
+  ! Where eta1 and eta2 are defined in the interval [0,1]. Following are
+  ! the functions that embody this transformation. This is used for testing
+  ! purposes, hence the parameters R1 and R2 do not form part of the functions'
+  ! interfaces. This may become a limitation and should be discussed further.
+#define R1 0.1_f64
+#define R2 1.0_f64
+  function x1_polar_f( eta1, eta2 )
+    sll_real64 :: x1_polar_f
+    sll_real64, intent(in) :: eta1, eta2
+    x1_polar_f = (R1 + (R2-R1)*eta1)*cos(2.0_f64*sll_pi*eta2)
+  end function x1_polar_f
+
+  function x2_polar_f( eta1, eta2 )
+    sll_real64 :: x2_polar_f
+    sll_real64, intent(in) :: eta1, eta2
+    x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_pi*eta2)
+  end function x2_polar_f
+
+  function deriv_x1_polar_f_eta1( eta1, eta2 )
+    sll_real64 :: deriv_x1_polar_f_eta1
+    sll_real64, intent(in) :: eta1, eta2
+    deriv_x1_polar_f_eta1 = (R2-R1)*cos(2.0_f64*sll_pi*eta2)
+  end function deriv_x1_polar_f_eta1
+
+  function deriv_x1_polar_f_eta2( eta1, eta2 )
+    sll_real64 :: deriv_x1_polar_f_eta2
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64 :: k
+    k = 2.0_f64*sll_pi
+    deriv_x1_polar_f_eta2 = -(R1+(R2-R1)*eta1)*sin(k*eta2)*k
+  end function deriv_x1_polar_f_eta2
+
+  function deriv_x2_polar_f_eta1( eta1, eta2 )
+    sll_real64 :: deriv_x2_polar_f_eta1
+    sll_real64, intent(in) :: eta1, eta2
+    deriv_x2_polar_f_eta1 = (R2-R1)*sin(2.0_f64*sll_pi*eta2)
+  end function deriv_x2_polar_f_eta1
+
+  function deriv_x2_polar_f_eta2( eta1, eta2 )
+    sll_real64 :: deriv_x2_polar_f_eta2
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64 :: k
+    k = 2.0_f64*sll_pi
+    deriv_x2_polar_f_eta2 = (R1+(R2-R1)*eta1)*cos(k*eta2)*k
+  end function deriv_x2_polar_f_eta2
+
+#undef R1
+#undef R2
+
 end module geometry_functions
 

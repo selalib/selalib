@@ -107,28 +107,16 @@
 !------------------------------------------------------------------------------
 
 module sll_fft 
-!#define _NOFFTPACK
-!#define _NOFFTW
   use numeric_constants
   use sll_timer
   use, intrinsic :: iso_c_binding
-!#include "conf.h"
-#ifndef _NOFFTW
-  !use FFTW3
-  use, intrinsic :: iso_c_binding
-  !include 'fftw3.f03'
-#endif
-#ifndef _NOFFTPACK
-  !use fftpack
-#endif
+#include "conf.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"  
 #include "sll_assert.h"
 #include "sll_memory.h"
   implicit none
 #ifndef _NOFFTW
-  !use FFTW3
-  !use, intrinsic :: iso_c_binding
   include 'fftw3.f03'
 #endif
 
@@ -149,13 +137,14 @@ module sll_fft
     sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
     sll_real64, dimension(:), pointer :: dwsave => null() ! for use fftpack
     !sll_int32                         :: mod !type of library used
-    sll_real64                        :: normalization_factor_forward = 1.0_f64
-    sll_real64                        :: normalization_factor_backward = 1.0_f64
+    !sll_real64                        :: normalization_factor_forward = 1.0_f64
+    !sll_real64                        :: normalization_factor_backward = 1.0_f64
     sll_int32                         :: library
     type(C_PTR)                       :: fftw_plan
     sll_int32                         :: direction
     sll_comp64, dimension(:), pointer  :: in_comp, out_comp 
     sll_real64, dimension(:), pointer  :: in_real, out_real
+    sll_real64 :: fft_time_execution
   end type sll_fft_plan
 
   type sll_fft_plan_2d
@@ -191,14 +180,22 @@ module sll_fft
                    FFT_FORWARD_Z = -3, FFT_INVERSE_Z = 3
   end enum
 
-  enum, bind(C)
-     enumerator :: FFT_REAL = 0, FFT_COMPLEX = 1
-  end enum
+!  enum, bind(C)
+!     enumerator :: FFT_REAL = 0, FFT_COMPLEX = 1
+!  end enum
 
-  enum, bind(C)
-     enumerator :: FFT_NORMALIZE_FORWARD = 1, FFT_NORMALIZE_INVERSE = 2,&
-                   FFT_NEGATIVE_PHASE = 4
-  end enum
+!  enum, bind(C)
+!     enumerator :: FFT_NORMALIZE_FORWARD = 1, FFT_NORMALIZE_INVERSE = 2,&
+!                   FFT_NEGATIVE_PHASE = 4
+!  end enum
+
+  sll_int32, parameter :: FFT_NORMALIZE_FORWARD = 1
+  sll_int32, parameter :: FFT_NORMALIZE_INVERSE = 1
+  sll_int32, parameter :: FFT_NORMALIZE         = 2**0
+
+  sll_int32, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
+  sll_int32, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
+  sll_int32, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
 
   enum, bind(C)
      enumerator ::  FFTW_MOD = 1000000000, SLLFFT_MOD = 0, FFTPACK_MOD = 100
@@ -209,9 +206,9 @@ module sll_fft
                      bit_reverse_integer64
   end interface
 
-  interface delete
-    module procedure delete_fft_plan1d, delete_fft_plan2d
-  end interface
+!  interface delete
+!    module procedure delete_fft_plan1d, delete_fft_plan2d
+!  end interface
 
   interface apply_fft_c2c_1d
     module procedure fft_apply_c2c_1d, fft_apply_c2c_1d_2d, fft_apply_c2c_1d_3d 
@@ -221,37 +218,91 @@ module sll_fft
     module procedure fft_new_c2c_1d_for_3d, fft_new_c2c_1d_for_1d, fft_new_c2c_1d_for_2d
   end interface
 
-  interface new_plan_r2r_1d
-    module procedure fft_new_r2r_1d
+!  interface new_plan_r2r_1d
+!    module procedure fft_new_r2r_1d
+!  end interface
+
+!  interface apply_plan_r2r_1d
+!    module procedure fft_apply_r2r_1d
+!  end interface
+
+!  interface apply_plan_r2c_1d
+!    module procedure fft_apply_r2c_1d
+!  end interface
+
+!  interface apply_plan_c2r_1d
+!    module procedure fft_apply_c2r_1d
+!  end interface
+
+! -----------------
+! - NEW INTERFACE -
+! -----------------
+  interface fft_new_plan
+    module procedure fft_new_c2c_1d_for_3d, fft_new_c2c_1d_for_1d, fft_new_c2c_1d_for_2d, &
+                     fft_new_r2r_1d, new_plan_r2c_1d, new_plan_c2r_1d
   end interface
 
-  interface apply_plan_r2r_1d
-    module procedure fft_apply_r2r_1d
+  interface fft_apply_plan
+    module procedure fft_apply_c2c_1d, fft_apply_c2c_1d_2d, fft_apply_c2c_1d_3d, &
+                     fft_apply_r2r_1d, fft_apply_r2c_1d, fft_apply_c2r_1d
   end interface
 
-  interface apply_plan_r2c_1d
-    module procedure fft_apply_r2c_1d
+  interface fft_new_plan2d
+    module procedure new_plan_c2c_2d 
+  end interface
+  interface fft_apply_plan2d
+    module procedure apply_plan_c2c_2d
   end interface
 
-  interface apply_plan_c2r_1d
-    module procedure fft_apply_c2r_1d
+  interface fft_delete_plan
+    module procedure delete_fft_plan1d, delete_fft_plan2d
   end interface
+
 contains
 
-!#define  _FFTINFO
-#define INFO print *,'-----------------------------';\
-             if(plan%library .eq. SLLFFT_MOD) then;  \
-               print *, 'LIBRARY :: SELALIB';        \
-             endif;                                  \
-             if(plan%library .eq. FFTPACK_MOD) then; \
-               print *, 'LIBRARY :: FFTPACK';        \
-             endif;                                  \
-             if(plan%library .eq. FFTW_MOD) then;    \
-               print *, 'LIBRARY :: FFTW';           \
-             endif;                                  \
-             print *, 'TIME : ',time;                \
-             print *,'-----------------------------'
+  function fft_present_style(plan,s) result(bool)
+    type(sll_fft_plan), pointer, intent(in) :: plan
+    sll_int32, intent(in)                   :: s
+    logical                                 :: bool
+    sll_int32                               :: m
+   
+    SLL_ASSERT( is_power_of_two( int(s,kind=i64) ) )
 
+    m = iand(plan%style,s)
+    if( m .eq. s ) then
+      bool = .true.
+    else
+      bool = .false.
+    endif 
+  end function
+
+
+  function fft_get_time_execution(plan) result(time)
+    type(sll_fft_plan), pointer :: plan
+    sll_real64 :: time
+    time = plan%fft_time_execution
+  end function
+
+#define INFO plan%fft_time_execution = time
+
+!#define INFO print *,'-----------------------------';\
+!             if(plan%library .eq. SLLFFT_MOD) then;  \
+!               print *, 'LIBRARY :: SELALIB';        \
+!             endif;                                  \
+!             if(plan%library .eq. FFTPACK_MOD) then; \
+!               print *, 'LIBRARY :: FFTPACK';        \
+!             endif;                                  \
+!             if(plan%library .eq. FFTW_MOD) then;    \
+!               print *, 'LIBRARY :: FFTW';           \
+!             endif;                                  \
+!             open(1,file="info.txt",position='append');\
+!             print *, 'TIME : ',time;                \
+!             plan%fft_time_execution = time;         \
+!             write(1,*) time;                        \
+!             close(1);                               \
+!             print *,'-----------------------------'
+
+#define _DEFAULTFFTLIB SLLFFT_MOD
 #ifndef _DEFAULTFFTLIB
 #ifdef _NOFFTW
 #define _DEFAULTFFTLIB SLLFFT_MOD
@@ -926,11 +977,11 @@ INFO
       stop     '      This function doesn''t work with FFTAPCK library'
     endif
 
-    if(size(array_in)<size_problem) then
+    if(size(array_in) .ne. size_problem) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_in size problem'
-    else if( size(array_out) < (size_problem/2 + 1) ) then
+    else if( size(array_out) .ne. (size_problem/2 + 1) ) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_out size problem'
@@ -1014,11 +1065,11 @@ INFO
     sll_real64                                      :: time
     type(time_mark), pointer                        :: mark
 
-    if(size(array_in)<plan%N) then
+    if(size(array_in) .ne. plan%N) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_in size problem'
-    else if( size(array_out) < (plan%N/2 + 1) ) then
+    else if( size(array_out) .ne. (plan%N/2 + 1) ) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_out size problem'
@@ -1118,11 +1169,11 @@ INFO
       stop     '      This function doesn''t work with FFTAPCK library'
     endif
 
-    if(size(array_out)<size_problem) then
+    if(size(array_out) .ne. size_problem) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_c2r_1d_for_1d'
       stop     '      array_out size problem'
-    else if( size(array_in) < (size_problem/2 + 1) ) then
+    else if( size(array_in) .ne. (size_problem/2 + 1) ) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_c2r_1d_for_1d'
       stop     '      array_in size problem'
