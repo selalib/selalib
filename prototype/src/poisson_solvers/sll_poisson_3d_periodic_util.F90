@@ -205,13 +205,13 @@ module sll_poisson_3d_periodic_util
        ! for instance
        SLL_ASSERT( associated(plan) )
 
-       call delete(plan%px)
-       call delete(plan%py)
-       call delete(plan%pz)
+       call delete_fft_plan1d(plan%px)
+       call delete_fft_plan1d(plan%py)
+       call delete_fft_plan1d(plan%pz)
 
-       call delete(plan%px_inv)
-       call delete(plan%py_inv)
-       call delete(plan%pz_inv)
+       call delete_fft_plan1d(plan%px_inv)
+       call delete_fft_plan1d(plan%py_inv)
+       call delete_fft_plan1d(plan%pz_inv)
 
        SLL_DEALLOCATE(plan, ierr)
 
@@ -227,13 +227,13 @@ module sll_poisson_3d_periodic_util
        ! for instance
        SLL_ASSERT( associated(plan) )
 
-       call delete(plan%px)
-       call delete(plan%py)
-       call delete(plan%pz)
+       call delete_fft_plan1d(plan%px)
+       call delete_fft_plan1d(plan%py)
+       call delete_fft_plan1d(plan%pz)
 
-       call delete(plan%px_inv)
-       call delete(plan%py_inv)
-       call delete(plan%pz_inv)
+       call delete_fft_plan1d(plan%px_inv)
+       call delete_fft_plan1d(plan%py_inv)
+       call delete_fft_plan1d(plan%pz_inv)
 
        call delete_layout_3D( plan%layout_x )
        call delete_layout_3D( plan%layout_y )

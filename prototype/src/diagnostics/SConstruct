@@ -15,7 +15,7 @@ vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
 vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location',os.environ['HDF5MODPATH'])
 vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
 
-SLLPATH = ['../memory','../assert','../precision']
+SLLPATH = ['../memory','../assert','../precision','../constants']
 SLLLIBS = ['sll_memory','sll_precision','sll_assertion']
 
 env = Environment( variables  = vars,
