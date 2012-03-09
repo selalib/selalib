@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 08, 2012
+!> Last modification: March 09, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -34,7 +34,7 @@ program test_poisson_solvers
   use sll_poisson_3d_periodic_par
   use sll_collective
 
-  implicit none
+implicit none
 
   sll_int32  :: nx, ny, nz
   sll_real64 :: Lx, Ly, Lz
@@ -78,7 +78,7 @@ contains
     type (field_1D_vec1), pointer      :: ex_exact
     type (field_1D_vec1), pointer      :: rho
 
-    type (poisson1dp)         :: poisson
+    type (poisson_1d_periodic)         :: poisson
 
     sll_int32   :: nc_eta1
     sll_real64  :: eta1_min, eta1_max

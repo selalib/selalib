@@ -58,7 +58,7 @@ program nonuniform_spline_tester
   
   nb_test = 10000
   
-  N = 32
+  N = 64
   
   N_new = 15
   
@@ -238,7 +238,23 @@ program nonuniform_spline_tester
       pp(1:4)=1._f64-p(1:4)
       
       fp(1:4)=f_fine((4*(i-1)+1):(4*(i-1)+4))
-
+      if(fp(1).ne.fp(1))then
+        print *,'detection of NaN'
+        stop
+      endif
+      if(fp(2).ne.fp(2))then
+        print *,'detection of NaN'
+        stop
+      endif
+      if(fp(3).ne.fp(3))then
+        print *,'detection of NaN'
+        stop
+      endif
+      if(fp(4).ne.fp(4))then
+        print *,'detection of NaN'
+        stop
+      endif
+      
       !compute of f(x_i)
       w(1) = (p(2)*p(3)*p(4))/((p(2)-p(1))*(p(3)-p(1))*(p(4)-p(1)))
       w(2) = (p(1)*p(3)*p(4))/((p(1)-p(2))*(p(3)-p(2))*(p(4)-p(2)))
