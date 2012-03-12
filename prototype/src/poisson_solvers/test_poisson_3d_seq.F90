@@ -36,7 +36,7 @@ program test_poisson_3d
   sll_real64                                :: x, y, z
   sll_real64, dimension(:,:,:), allocatable :: rho, phi_an, phi
   sll_int32                                 :: i, j, k
-  type (poisson_3d_periodic_plan), pointer  :: plan
+  type (poisson_3d_periodic_plan_seq), pointer  :: plan
   sll_real64                                :: average_err
   sll_real64                                :: time_0, time_1, time_2
   sll_int32                                 :: i_test
@@ -60,7 +60,7 @@ program test_poisson_3d
   SLL_ALLOCATE(phi(nx,ny,nz),ierr)
   SLL_ALLOCATE(phi_an(nx,ny,nz),ierr)
 
-  plan => new_poisson_3d_periodic_plan(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
+  plan => new_poisson_3d_periodic_plan_seq(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
 
   print*, ' '
   call cpu_time(time_1)
@@ -104,10 +104,12 @@ program test_poisson_3d
         print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
         stop
      end if
+
+
    
   end do
    
-  call delete_poisson_3d_periodic_plan(plan)
+  call delete_poisson_3d_periodic_plan_seq(plan)
    
 
   print*, 'sll_poisson_3d_periodic_seq test: PASS'
