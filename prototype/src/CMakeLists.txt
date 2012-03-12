@@ -16,10 +16,12 @@ include_directories(remap poisson_solvers utilities memory mesh_types assert pre
 
 add_subdirectory(memory)
 add_subdirectory(precision)
-#add_subdirectory(assert)
+add_subdirectory(assert)
+add_subdirectory(collective)
 
 # add tests
 enable_testing()
 add_test(memory memory/test_memory)
-add_test(precision precision/test_precision)
+add_test(collective collective/test_collective)
+#add_test(precision precision/test_precision)
 #add_test(assert assert/test_assert)
