@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 09, 2012
+!> Last modification: March 12, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -36,7 +36,7 @@ contains
 
     type (poisson_3d_periodic_plan_par), pointer :: plan
     sll_real64, dimension(:,:,:)                 :: rho
-    sll_real64, dimension(:,:,:), allocatable    :: phi
+    sll_real64, dimension(:,:,:)                 :: phi
     sll_comp64, dimension(:,:,:), allocatable    :: hat_rho, tmp, hat_phi
     sll_int64                                    :: nx, ny, nz
     sll_int64                                    :: nx_loc, ny_loc, nz_loc
@@ -234,7 +234,6 @@ contains
        enddo
     enddo
 
-    SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
     phi = real(tmp, f64)
 
     SLL_DEALLOCATE_ARRAY(tmp, ierr)

@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 09, 2012
+!> Last modification: March 12, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -196,14 +196,14 @@ contains
     sll_real64                                   :: Lx, Ly, Lz
     sll_real64                                   :: dx, dy, dz
     sll_real64                                   :: x, y, z
-    sll_real64, dimension(nx,ny,nz)              :: rho1, phi_an1, phi_seq1
-    sll_real64, dimension(nx,ny,nz)              :: rho2, phi_an2, phi_seq2
-    sll_real64, dimension(:,:,:), allocatable    :: phi_par1, phi_par2
+    sll_real64, dimension(nx,ny,nz)              :: rho_1, phi_an_1, phi_seq_1
+    sll_real64, dimension(nx,ny,nz)              :: rho_2, phi_an_2, phi_seq_2
+    sll_real64, dimension(:,:,:), allocatable    :: phi_par_1, phi_par_2
     sll_int32                                    :: i, j, k
     type (poisson_3d_periodic_plan_seq), pointer :: plan_seq
     type (poisson_3d_periodic_plan_par), pointer :: plan_par
-    sll_real64                                   :: average_err1, average_err2
-    sll_real64                                   :: seq_par_diff1, seq_par_diff2
+    sll_real64                                   :: average_err_1, average_err_2
+    sll_real64                                   :: seq_par_diff_1, seq_par_diff_2
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
     sll_int32                                    :: myrank
@@ -222,14 +222,14 @@ contains
           y = (j-1)*dy
           do i=1,nx
              x = (i-1)*dx
-             phi_an1(i,j,k) = cos(x)*sin(y)*cos(z)
-             phi_an2(i,j,k) = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) * exp(-.5*(x-Lx/2)**2) * &
+             phi_an_1(i,j,k) = cos(x)*sin(y)*cos(z)
+             phi_an_2(i,j,k) = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) * exp(-.5*(x-Lx/2)**2) * &
                   exp(-.5*(y-Ly/2)**2) * sin(z)
-             rho2(i,j,k) = phi_an2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + (y-Ly/2)**2 ) )
+             rho_2(i,j,k) = phi_an_2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + (y-Ly/2)**2 ) )
           enddo
        enddo
     enddo
-    rho1 = 3*phi_an1
+    rho_1 = 3*phi_an_1
 
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
@@ -241,25 +241,25 @@ contains
        print*, 'Test poisson_3d (2 equations here ) in sequential'
     endif
 
-    plan_seq => new_poisson_3d_periodic_plan_seq(cmplx(rho1, 0_f64, kind=f64), Lx, Ly, Lz)
-    call solve_poisson_3d_periodic_seq(plan_seq, rho1, phi_seq1)
-    call solve_poisson_3d_periodic_seq(plan_seq, rho2, phi_seq2)
+    plan_seq => new_poisson_3d_periodic_plan_seq(cmplx(rho_1, 0_f64, kind=f64), Lx, Ly, Lz)
+    call solve_poisson_3d_periodic_seq(plan_seq, rho_1, phi_seq_1)
+    call solve_poisson_3d_periodic_seq(plan_seq, rho_2, phi_seq_2)
 
-    average_err1 = sum( abs(phi_an1-phi_seq1) ) / (nx*ny*nz)
-    average_err2 = sum( abs(phi_an2-phi_seq2) ) / (nx*ny*nz)
+    average_err_1 = sum( abs(phi_an_1-phi_seq_1) ) / (nx*ny*nz)
+    average_err_2 = sum( abs(phi_an_2-phi_seq_2) ) / (nx*ny*nz)
 
     if (myrank==0) then
        call flush()
        print*, ' '
        call flush()
-       print*, 'Average error for equation 1:', average_err1
+       print*, 'Average error for equation 1:', average_err_1
        call flush()
-       print*, 'Average error for equation 2:', average_err2
+       print*, 'Average error for equation 2:', average_err_2
        call flush()
        print*, 'dx*dy*dz =', dx*dy*dz
     endif
 
-    if ( max(average_err1, average_err2) <= dx*dx*dy) then
+    if ( max(average_err_1, average_err_2) <= dx*dx*dy) then
        if (myrank==0) then
           call flush()
           print*, ' '
@@ -282,18 +282,23 @@ contains
        print*, 'Test poisson_3d (2 equations here ) in parallel'
     endif
 
-    plan_par => new_poisson_3d_periodic_plan_par(cmplx(rho1, 0_f64, kind=f64), Lx, Ly, Lz)
-    call solve_poisson_3d_periodic_par(plan_par, rho1, phi_par1)
-    call solve_poisson_3d_periodic_par(plan_par, rho2, phi_par2)
+    plan_par => new_poisson_3d_periodic_plan_par(cmplx(rho_1, 0_f64, kind=f64), Lx, Ly, Lz)
 
-    nx_loc = size(phi_par1,1)
-    ny_loc = size(phi_par1,2)
-    nz_loc = size(phi_par1,3)
+    nx_loc = plan_par%loc_sizes(3,1)
+    ny_loc = plan_par%loc_sizes(3,2)
+    nz_loc = plan_par%loc_sizes(3,3)
 
-    average_err1  = 0.d0
-    seq_par_diff1 = 0.d0
-    average_err2  = 0.d0
-    seq_par_diff2 = 0.d0
+    SLL_ALLOCATE(phi_par_1(nx_loc,ny_loc,nz_loc), ierr)
+    SLL_ALLOCATE(phi_par_2(nx_loc,ny_loc,nz_loc), ierr)
+
+    call solve_poisson_3d_periodic_par(plan_par, rho_1, phi_par_1)
+    call solve_poisson_3d_periodic_par(plan_par, rho_1, phi_par_1)
+    call solve_poisson_3d_periodic_par(plan_par, rho_2, phi_par_2)
+
+    average_err_1  = 0.d0
+    seq_par_diff_1 = 0.d0
+    average_err_2  = 0.d0
+    seq_par_diff_2 = 0.d0
 
     layout_z => plan_par%layout_z
 
@@ -304,34 +309,34 @@ contains
              gi = global(1)
              gj = global(2)
              gk = global(3)
-             average_err1  = average_err1  + abs( phi_an1 (gi,gj,gk) - phi_par1(i,j,k) )
-             seq_par_diff1 = seq_par_diff1 + abs( phi_seq1(gi,gj,gk) - phi_par1(i,j,k) )
-             average_err2  = average_err2  + abs( phi_an2 (gi,gj,gk) - phi_par2(i,j,k) )
-             seq_par_diff2 = seq_par_diff2 + abs( phi_seq2(gi,gj,gk) - phi_par2(i,j,k) )
+             average_err_1  = average_err_1  + abs( phi_an_1 (gi,gj,gk) - phi_par_1(i,j,k) )
+             seq_par_diff_1 = seq_par_diff_1 + abs( phi_seq_1(gi,gj,gk) - phi_par_1(i,j,k) )
+             average_err_2  = average_err_2  + abs( phi_an_2 (gi,gj,gk) - phi_par_2(i,j,k) )
+             seq_par_diff_2 = seq_par_diff_2 + abs( phi_seq_2(gi,gj,gk) - phi_par_2(i,j,k) )
           enddo
        enddo
     enddo
 
-    average_err1  = average_err1  / (nx_loc*ny_loc*nz_loc)
-    seq_par_diff1 = seq_par_diff1 / (nx_loc*ny_loc*nz_loc)
-    average_err2  = average_err2  / (nx_loc*ny_loc*nz_loc)
-    seq_par_diff2 = seq_par_diff2 / (nx_loc*ny_loc*nz_loc)
+    average_err_1  = average_err_1  / (nx_loc*ny_loc*nz_loc)
+    seq_par_diff_1 = seq_par_diff_1 / (nx_loc*ny_loc*nz_loc)
+    average_err_2  = average_err_2  / (nx_loc*ny_loc*nz_loc)
+    seq_par_diff_2 = seq_par_diff_2 / (nx_loc*ny_loc*nz_loc)
 
     call flush()
     print*, ' '
     call flush()
-    print*, 'Average error for equation 1, in proc', myrank, ':', average_err1
+    print*, 'Average error for equation 1, in proc', myrank, ':', average_err_1
     call flush()
-    print*, 'Average error for equation 2, in proc', myrank, ':', average_err2
+    print*, 'Average error for equation 2, in proc', myrank, ':', average_err_2
     call flush()
     print*, 'dx*dy*dz =', dx*dy*dz
     call flush()
-    print*, 'Average diff between seq sol and par sol for equation 1, in proc', myrank, ':', seq_par_diff1
+    print*, 'Average diff between seq sol and par sol for equation 1, in proc', myrank, ':', seq_par_diff_1
     call flush()
-    print*, 'Average diff between seq sol and par sol for equation 2, in proc', myrank, ':', seq_par_diff2
+    print*, 'Average diff between seq sol and par sol for equation 2, in proc', myrank, ':', seq_par_diff_2
 
 
-    if ( max(average_err1, average_err2) > dx*dx*dy) then
+    if ( max(average_err_1, average_err_2) > dx*dx*dy) then
        ok = 1.d0
        call flush()
        print*, ' '
@@ -359,8 +364,8 @@ contains
 
     call delete_poisson_3d_periodic_plan_par(plan_par)
     call delete_poisson_3d_periodic_plan_seq(plan_seq)
-    SLL_DEALLOCATE_ARRAY(phi_par1, ierr)
-    SLL_DEALLOCATE_ARRAY(phi_par2, ierr)
+    SLL_DEALLOCATE_ARRAY(phi_par_1, ierr)
+    SLL_DEALLOCATE_ARRAY(phi_par_2, ierr)
 
   end subroutine test_sll_poisson_3d_periodic
 
