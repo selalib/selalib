@@ -57,12 +57,12 @@ module sll_poisson_3d_periodic_util
      type(sll_fft_plan), pointer :: px_inv
      type(sll_fft_plan), pointer :: py_inv
      type(sll_fft_plan), pointer :: pz_inv
-     type(layout_3D_t),                  pointer :: layout_x
-     type(layout_3D_t),                  pointer :: layout_y
-     type(layout_3D_t),                  pointer :: layout_z
-     type(layout_3D_t),                  pointer :: layout_kernel
-     sll_int32,                   dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
-     end type poisson_3d_periodic_plan_par
+     type(layout_3D_t),  pointer :: layout_x
+     type(layout_3D_t),  pointer :: layout_y
+     type(layout_3D_t),  pointer :: layout_z
+     type(layout_3D_t),  pointer :: layout_kernel
+     sll_int32,   dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
+  end type poisson_3d_periodic_plan_par
 
    contains
 
