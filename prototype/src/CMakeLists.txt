@@ -6,16 +6,20 @@ add_definitions(-DGFORTRAN -DDEBUG -DMPIF90 -DNOHDF5)
 
 # FLAGS
 message (STATUS ${CMAKE_Fortran_COMPILER})
+# use MPIF90 as compiler
 set(CMAKE_Fortran_COMPILER mpif90)
-#set(CMAKE_Fortran_SOURCE_FILE_EXTENSIONS .h .F90)
+# some useful flags
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall -cpp -ffree-line-length-none -std=f2003")
 
-# pour les includes
+# include's
 include_directories(remap poisson_solvers utilities memory mesh_types assert precision) 
 
-# pour les sources de test
 add_subdirectory(memory)
+add_subdirectory(precision)
+#add_subdirectory(assert)
 
-# pour les tests
+# add tests
 enable_testing()
-add_test(memory memory/unit_test)
+add_test(memory memory/test_memory)
+add_test(precision precision/test_precision)
+#add_test(assert assert/test_assert)
