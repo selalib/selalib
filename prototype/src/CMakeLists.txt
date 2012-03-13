@@ -9,7 +9,7 @@ message (STATUS ${CMAKE_Fortran_COMPILER})
 # use MPIF90 as compiler
 set(CMAKE_Fortran_COMPILER mpif90)
 # some useful flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O5 -Wall -cpp -ffree-line-length-none -std=f2003")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O5 -Wall -cpp -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # include's
@@ -20,11 +20,12 @@ add_subdirectory(precision)
 add_subdirectory(assert)
 add_subdirectory(collective)
 add_subdirectory(utilities)
+add_subdirectory(remap)
 
 # add tests
 enable_testing()
 add_test(memory memory/test_memory)
 add_test(collective collective/test_collective)
 add_test(utilities utilities/test_utilities)
-add_test(precision precision/test_precision)
+#add_test(precision precision/test_precision)
 #add_test(assert assert/test_assert)
