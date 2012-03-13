@@ -21,6 +21,7 @@ add_subdirectory(assert)
 add_subdirectory(collective)
 add_subdirectory(utilities)
 add_subdirectory(remap)
+add_subdirectory(constants)
 
 # add tests
 enable_testing()
@@ -28,4 +29,5 @@ add_test(memory memory/test_memory)
 add_test(collective collective/test_collective)
 add_test(utilities utilities/test_utilities)
 add_test(remap mpirun -np 2 remap/test_remap)
+add_test(constants constants/test_constants)
 #add_test(assert assert/test_assert)
