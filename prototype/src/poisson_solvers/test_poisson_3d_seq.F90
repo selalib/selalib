@@ -76,7 +76,7 @@ program test_poisson_3d
   SLL_ALLOCATE(phi(nx,ny,nz),error)
   SLL_ALLOCATE(phi_an(nx,ny,nz),error)
 
-  plan => new_poisson_3d_periodic_plan_seq(cmplx(rho, 0_f64, kind=f64), Lx, Ly, Lz)
+  plan => new_poisson_3d_periodic_plan_seq(nx, ny, nz, Lx, Ly, Lz)
 
   print*, ' '
   call cpu_time(time_1)
