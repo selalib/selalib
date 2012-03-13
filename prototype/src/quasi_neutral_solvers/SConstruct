@@ -25,8 +25,8 @@ env = Environment( ENV = os.environ,
                    LIBPATH = ['.'],
                    LIBS = ['sll_remap','sll_mesh_types', 
                            'sll_fft', 'sll_collective',
-                           'sll_diagnostics','sll_assertion','sll_utilities',
-                           'sll_constants','sll_precision','sll_memory','sll_timer','fftpack'],
+                           'sll_diagnostics','sll_assertion','sll_utilities','sll_tridiagonal',
+                           'sll_constants','sll_precision','sll_memory','sll_timer','dfftpack'],
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
                    '-fopenmp'],
                     F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', 
@@ -48,6 +48,7 @@ env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90",
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
+env.Library('sll_tridiagonal',["../numerical_utilities/tridiagonal.F90"])
 env.Library('sll_fft', ["../fft/sll_fft.F90"])
 env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
 env.Library('sll_remap', ["../remap/sll_remap.F90"])
@@ -61,7 +62,10 @@ if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(F90PATH=[os.environ['FFTWINCPATH']])
   env.Append(LIBPATH=[os.environ['FFTWLIBPATH']])
   env.Append(LIBS=['fftw3'])
-  env.Program('fftw_solver', source = ["fftw_solver.F90"])
+  #env.Program('fftw_solver', source = ["fftw_solver.F90"])
 
-env.Program('unit_test', ["unit_test.F90", "bsplvb.F90", "bsplvd.F90",
-"sll_quasi_neutral_solver.F90", "sll_qns_2d_with_finite_diff.F90"])
+#env.Program('unit_test', ["unit_test.F90", "bsplvb.F90", "bsplvd.F90",
+#"sll_quasi_neutral_solver.F90", "sll_qns_2d_with_finite_diff.F90"])
+
+env.Program('unit_test', ["unit_test.F90", "sll_qns_2d_with_finite_diff.F90", "sll_qns_2d_with_finite_diff_util.F90"])
+
