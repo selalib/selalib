@@ -67,7 +67,7 @@ module sll_poisson_3d_periodic_util
    contains
 
 
-     function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz)
+     function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz) result(plan)
 
        sll_comp64,                    dimension(nx) :: x
        sll_comp64,                    dimension(ny) :: y
@@ -75,104 +75,101 @@ module sll_poisson_3d_periodic_util
        sll_int32                                    :: nx, ny, nz
        sll_int32                                    :: ierr
        sll_real64                                   :: Lx, Ly, Lz
-       type (poisson_3d_periodic_plan_seq), pointer :: new_poisson_3d_periodic_plan_seq
+       type (poisson_3d_periodic_plan_seq), pointer :: plan
 
-       SLL_ALLOCATE(new_poisson_3d_periodic_plan_seq, ierr)
+       SLL_ALLOCATE(plan, ierr)
 
        ! Geometry informations
-       new_poisson_3d_periodic_plan_seq%nx = nx
-       new_poisson_3d_periodic_plan_seq%ny = ny
-       new_poisson_3d_periodic_plan_seq%nz = nz
-       new_poisson_3d_periodic_plan_seq%Lx = Lx
-       new_poisson_3d_periodic_plan_seq%Ly = Ly
-       new_poisson_3d_periodic_plan_seq%Lz = Lz
+       plan%nx = nx
+       plan%ny = ny
+       plan%nz = nz
+       plan%Lx = Lx
+       plan%Ly = Ly
+       plan%Lz = Lz
 
        ! For FFTs (in each direction)
-       new_poisson_3d_periodic_plan_seq%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
-       new_poisson_3d_periodic_plan_seq%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
-       new_poisson_3d_periodic_plan_seq%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+       plan%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+       plan%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+       plan%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
        ! For inverse FFTs (in each direction)
-       new_poisson_3d_periodic_plan_seq%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE)
-       new_poisson_3d_periodic_plan_seq%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
-       new_poisson_3d_periodic_plan_seq%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+       plan%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE)
+       plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+       plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
 
      end function new_poisson_3d_periodic_plan_seq
 
 
-     function new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz)
+     function new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz) result(plan)
 
        sll_int32                                    :: nx, ny, nz
        sll_comp64,                    dimension(nx) :: x
        sll_comp64,                    dimension(ny) :: y
        sll_comp64,                    dimension(nz) :: z
        sll_real64                                   :: Lx, Ly, Lz
-       type (poisson_3d_periodic_plan_par), pointer :: new_poisson_3d_periodic_plan_par
        sll_int64                                    :: colsz ! collective size
        sll_int32                                    :: npx, npy, npz
        sll_int32                                    :: e, ex, ey, ez
        sll_int32,                    dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
        sll_int32                                    :: ierr
+       type (poisson_3d_periodic_plan_par), pointer :: plan
 
-       SLL_ALLOCATE(new_poisson_3d_periodic_plan_par, ierr)
+       SLL_ALLOCATE(plan, ierr)
 
        ! Geometry informations
-       new_poisson_3d_periodic_plan_par%nx = nx
-       new_poisson_3d_periodic_plan_par%ny = ny
-       new_poisson_3d_periodic_plan_par%nz = nz
-       new_poisson_3d_periodic_plan_par%Lx = Lx
-       new_poisson_3d_periodic_plan_par%Ly = Ly
-       new_poisson_3d_periodic_plan_par%Lz = Lz
+       plan%nx = nx
+       plan%ny = ny
+       plan%nz = nz
+       plan%Lx = Lx
+       plan%Ly = Ly
+       plan%Lz = Lz
 
        ! For FFTs (in each direction)
-       new_poisson_3d_periodic_plan_par%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
-       new_poisson_3d_periodic_plan_par%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
-       new_poisson_3d_periodic_plan_par%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+       plan%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+       plan%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+       plan%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
        ! For inverse FFTs (in each direction)
-       new_poisson_3d_periodic_plan_par%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE )
-       new_poisson_3d_periodic_plan_par%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
-       new_poisson_3d_periodic_plan_par%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+       plan%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE )
+       plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+       plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
 
        colsz  = sll_get_collective_size(sll_world_collective)
        e = int(log(real(colsz))/log(2.))
 
        ! Layout and local sizes for FFTs in x-direction
 
-       new_poisson_3d_periodic_plan_par%layout_x => new_layout_3D( sll_world_collective )
+       plan%layout_x => new_layout_3D( sll_world_collective )
        npx = 1
        npy = 2**(e/2)
        npz = int(colsz)/npy
-       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
-            new_poisson_3d_periodic_plan_par%layout_x )
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_x )
 
-       new_poisson_3d_periodic_plan_par%loc_sizes(1,1) = nx/npx
-       new_poisson_3d_periodic_plan_par%loc_sizes(1,2) = ny/npy
-       new_poisson_3d_periodic_plan_par%loc_sizes(1,3) = nz/npz
+       plan%loc_sizes(1,1) = nx/npx
+       plan%loc_sizes(1,2) = ny/npy
+       plan%loc_sizes(1,3) = nz/npz
 
        ! Layout and local sizes for FFTs in y-direction
 
-       new_poisson_3d_periodic_plan_par%layout_y => new_layout_3D( sll_world_collective )
+       plan%layout_y => new_layout_3D( sll_world_collective )
        npx = npy
        npy = 1
-       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
-            new_poisson_3d_periodic_plan_par%layout_y )
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_y )
 
-       new_poisson_3d_periodic_plan_par%loc_sizes(2,1) = nx/npx
-       new_poisson_3d_periodic_plan_par%loc_sizes(2,2) = ny/npy
-       new_poisson_3d_periodic_plan_par%loc_sizes(2,3) = nz/npz
+       plan%loc_sizes(2,1) = nx/npx
+       plan%loc_sizes(2,2) = ny/npy
+       plan%loc_sizes(2,3) = nz/npz
 
        ! Layout and local sizes for FFTs in z-direction
 
-       new_poisson_3d_periodic_plan_par%layout_z => new_layout_3D( sll_world_collective )
+       plan%layout_z => new_layout_3D( sll_world_collective )
        npy = npz
        npz = 1
-       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
-            new_poisson_3d_periodic_plan_par%layout_z )
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_z )
 
-       new_poisson_3d_periodic_plan_par%loc_sizes(3,1) = nx/npx
-       new_poisson_3d_periodic_plan_par%loc_sizes(3,2) = ny/npy
-       new_poisson_3d_periodic_plan_par%loc_sizes(3,3) = nz/npz
+       plan%loc_sizes(3,1) = nx/npx
+       plan%loc_sizes(3,2) = ny/npy
+       plan%loc_sizes(3,3) = nz/npz
 
        ! Layout and local sizes for poisson solver kernel
        ex = e/3
@@ -181,13 +178,12 @@ module sll_poisson_3d_periodic_util
        npx = 2**ex
        npy = 2**ey
        npz = 2**ez
-       new_poisson_3d_periodic_plan_par%layout_kernel  => new_layout_3D( sll_world_collective ) 
-       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
-            new_poisson_3d_periodic_plan_par%layout_kernel )
+       plan%layout_kernel  => new_layout_3D( sll_world_collective ) 
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_kernel )
 
-       new_poisson_3d_periodic_plan_par%loc_sizes(4,1) = nx/npx
-       new_poisson_3d_periodic_plan_par%loc_sizes(4,2) = ny/npy
-       new_poisson_3d_periodic_plan_par%loc_sizes(4,3) = nz/npz
+       plan%loc_sizes(4,1) = nx/npx
+       plan%loc_sizes(4,2) = ny/npy
+       plan%loc_sizes(4,3) = nz/npz
 
      end function new_poisson_3d_periodic_plan_par
 

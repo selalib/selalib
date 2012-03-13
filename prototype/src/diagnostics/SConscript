@@ -1,0 +1,3 @@
+Import('env')
+lib = env.Library('sll_diagnostics',Glob("sll_*.F90"))
+Return('lib')
