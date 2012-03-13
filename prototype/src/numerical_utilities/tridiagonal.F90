@@ -52,7 +52,7 @@ module sll_tridiagonal
 #include "sll_working_precision.h"
 implicit none
 
-  interface apply_remap_3D
+  interface solve_cyclic_tridiag
      module procedure solve_cyclic_tridiag_double, solve_cyclic_tridiag_complex
   end interface
 contains
