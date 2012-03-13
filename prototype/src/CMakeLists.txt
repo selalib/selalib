@@ -10,6 +10,7 @@ message (STATUS ${CMAKE_Fortran_COMPILER})
 set(CMAKE_Fortran_COMPILER mpif90)
 # some useful flags
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O5 -Wall -cpp -ffree-line-length-none -std=f2003")
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # include's
 include_directories(remap poisson_solvers utilities memory mesh_types assert precision) 
