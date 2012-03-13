@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 12, 2012
+!> Last modification: March 13, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -196,8 +196,10 @@ contains
     sll_real64                                   :: Lx, Ly, Lz
     sll_real64                                   :: dx, dy, dz
     sll_real64                                   :: x, y, z
-    sll_real64, dimension(nx,ny,nz)              :: rho_1, phi_an_1, phi_seq_1
-    sll_real64, dimension(nx,ny,nz)              :: rho_2, phi_an_2, phi_seq_2
+    sll_real64, dimension(nx,ny,nz)              :: rho_seq_1, rho_seq_2
+    sll_real64, dimension(:,:,:), allocatable    :: rho_par_1, rho_par_2
+    sll_real64, dimension(nx,ny,nz)              :: phi_an_1, phi_an_2
+    sll_real64, dimension(nx,ny,nz)              :: phi_seq_1, phi_seq_2
     sll_real64, dimension(:,:,:), allocatable    :: phi_par_1, phi_par_2
     sll_int32                                    :: i, j, k
     type (poisson_3d_periodic_plan_seq), pointer :: plan_seq
@@ -209,7 +211,7 @@ contains
     sll_int32                                    :: myrank
     sll_real32                                   :: ok = 1.d0
     sll_real32, dimension(1)                     :: prod4test
-    type(layout_3D_t), pointer                   :: layout_z
+    type(layout_3D_t), pointer                   :: layout
     sll_int64                                    :: colsz ! collective size
 
     dx = Lx/nx
@@ -225,11 +227,11 @@ contains
              phi_an_1(i,j,k) = cos(x)*sin(y)*cos(z)
              phi_an_2(i,j,k) = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) * exp(-.5*(x-Lx/2)**2) * &
                   exp(-.5*(y-Ly/2)**2) * sin(z)
-             rho_2(i,j,k) = phi_an_2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + (y-Ly/2)**2 ) )
+             rho_seq_2(i,j,k) = phi_an_2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + (y-Ly/2)**2 ) )
           enddo
        enddo
     enddo
-    rho_1 = 3*phi_an_1
+    rho_seq_1 = 3*phi_an_1
 
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
@@ -241,9 +243,9 @@ contains
        print*, 'Test poisson_3d (2 equations here ) in sequential'
     endif
 
-    plan_seq => new_poisson_3d_periodic_plan_seq(cmplx(rho_1, 0_f64, kind=f64), Lx, Ly, Lz)
-    call solve_poisson_3d_periodic_seq(plan_seq, rho_1, phi_seq_1)
-    call solve_poisson_3d_periodic_seq(plan_seq, rho_2, phi_seq_2)
+    plan_seq => new_poisson_3d_periodic_plan_seq(nx, ny, nz, Lx, Ly, Lz)
+    call solve_poisson_3d_periodic_seq(plan_seq, rho_seq_1, phi_seq_1)
+    call solve_poisson_3d_periodic_seq(plan_seq, rho_seq_2, phi_seq_2)
 
     average_err_1 = sum( abs(phi_an_1-phi_seq_1) ) / (nx*ny*nz)
     average_err_2 = sum( abs(phi_an_2-phi_seq_2) ) / (nx*ny*nz)
@@ -282,30 +284,45 @@ contains
        print*, 'Test poisson_3d (2 equations here ) in parallel'
     endif
 
-    plan_par => new_poisson_3d_periodic_plan_par(cmplx(rho_1, 0_f64, kind=f64), Lx, Ly, Lz)
+    plan_par => new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz)
 
-    nx_loc = plan_par%loc_sizes(3,1)
-    ny_loc = plan_par%loc_sizes(3,2)
-    nz_loc = plan_par%loc_sizes(3,3)
+    layout => plan_par%layout_x
+    call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
 
+
+    SLL_ALLOCATE(rho_par_1(nx_loc,ny_loc,nz_loc), ierr)
+    SLL_ALLOCATE(rho_par_2(nx_loc,ny_loc,nz_loc), ierr)
+
+    do k=1,nz_loc
+       do j=1,ny_loc
+          do i=1,nx_loc
+             global = local_to_global_3D( layout, (/i, j, k/))
+             gi = global(1)
+             gj = global(2)
+             gk = global(3)
+             rho_par_1(i,j,k) = rho_seq_1(gi,gj,gk)
+             rho_par_2(i,j,k) = rho_seq_2(gi,gj,gk)
+          enddo
+       enddo
+    enddo
+
+    layout => plan_par%layout_z
+    call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
     SLL_ALLOCATE(phi_par_1(nx_loc,ny_loc,nz_loc), ierr)
     SLL_ALLOCATE(phi_par_2(nx_loc,ny_loc,nz_loc), ierr)
 
-    call solve_poisson_3d_periodic_par(plan_par, rho_1, phi_par_1)
-    call solve_poisson_3d_periodic_par(plan_par, rho_1, phi_par_1)
-    call solve_poisson_3d_periodic_par(plan_par, rho_2, phi_par_2)
+    call solve_poisson_3d_periodic_par(plan_par, rho_par_1, phi_par_1)
+    call solve_poisson_3d_periodic_par(plan_par, rho_par_2, phi_par_2)
 
     average_err_1  = 0.d0
     seq_par_diff_1 = 0.d0
     average_err_2  = 0.d0
     seq_par_diff_2 = 0.d0
 
-    layout_z => plan_par%layout_z
-
     do k=1,nz_loc
        do j=1,ny_loc
           do i=1,nx_loc
-             global = local_to_global_3D( layout_z, (/i, j, k/))
+             global = local_to_global_3D( layout, (/i, j, k/))
              gi = global(1)
              gj = global(2)
              gk = global(3)
@@ -364,10 +381,42 @@ contains
 
     call delete_poisson_3d_periodic_plan_par(plan_par)
     call delete_poisson_3d_periodic_plan_seq(plan_seq)
+
     SLL_DEALLOCATE_ARRAY(phi_par_1, ierr)
     SLL_DEALLOCATE_ARRAY(phi_par_2, ierr)
+    SLL_DEALLOCATE_ARRAY(rho_par_1, ierr)
+    SLL_DEALLOCATE_ARRAY(rho_par_2, ierr)
 
   end subroutine test_sll_poisson_3d_periodic
+
+  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
+    type(layout_3D_t), pointer :: layout
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32, intent(out) :: loc_sz_k
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: k_min
+    sll_int32 :: k_max
+    sll_int32 :: my_rank
+    if( .not. associated(layout) ) then
+       print *, 'not-associated layout passed to new_distributed_mesh_3D'
+       print *, 'Exiting...'
+       STOP
+    end if
+    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
+    i_min = get_layout_3D_i_min( layout, my_rank )
+    i_max = get_layout_3D_i_max( layout, my_rank )
+    j_min = get_layout_3D_j_min( layout, my_rank )
+    j_max = get_layout_3D_j_max( layout, my_rank )
+    k_min = get_layout_3D_k_min( layout, my_rank )
+    k_max = get_layout_3D_k_max( layout, my_rank )
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+    loc_sz_k = k_max - k_min + 1
+  end subroutine compute_local_sizes
 
 end program test_poisson_solvers
 
