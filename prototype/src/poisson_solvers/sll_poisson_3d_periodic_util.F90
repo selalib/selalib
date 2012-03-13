@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 23, 2012
-!> Last modification: March 09, 2012
+!> Last modification: March 13, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -67,17 +67,15 @@ module sll_poisson_3d_periodic_util
    contains
 
 
-     function new_poisson_3d_periodic_plan_seq(array, Lx, Ly, Lz)
+     function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz)
 
-       sll_comp64, dimension(:,:,:)                 :: array
+       sll_comp64,                    dimension(nx) :: x
+       sll_comp64,                    dimension(ny) :: y
+       sll_comp64,                    dimension(nz) :: z
        sll_int32                                    :: nx, ny, nz
        sll_int32                                    :: ierr
        sll_real64                                   :: Lx, Ly, Lz
        type (poisson_3d_periodic_plan_seq), pointer :: new_poisson_3d_periodic_plan_seq
-
-       nx = size(array,1)
-       ny = size(array,2)
-       nz = size(array,3)
 
        SLL_ALLOCATE(new_poisson_3d_periodic_plan_seq, ierr)
 
@@ -90,35 +88,33 @@ module sll_poisson_3d_periodic_util
        new_poisson_3d_periodic_plan_seq%Lz = Lz
 
        ! For FFTs (in each direction)
-       new_poisson_3d_periodic_plan_seq%px => new_plan_c2c_1d( nx, array(:,1,1), array(:,1,1), FFT_FORWARD )
-       new_poisson_3d_periodic_plan_seq%py => new_plan_c2c_1d( ny, array(1,:,1), array(1,:,1), FFT_FORWARD )
-       new_poisson_3d_periodic_plan_seq%pz => new_plan_c2c_1d( nz, array(1,1,:), array(1,1,:), FFT_FORWARD )
+       new_poisson_3d_periodic_plan_seq%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_seq%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_seq%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
        ! For inverse FFTs (in each direction)
-       new_poisson_3d_periodic_plan_seq%px_inv => new_plan_c2c_1d( nx, array(:,1,1), array(:,1,1), FFT_INVERSE)
-       new_poisson_3d_periodic_plan_seq%py_inv => new_plan_c2c_1d( ny, array(1,:,1), array(1,:,1), FFT_INVERSE )
-       new_poisson_3d_periodic_plan_seq%pz_inv => new_plan_c2c_1d( nz, array(1,1,:), array(1,1,:), FFT_INVERSE )
+       new_poisson_3d_periodic_plan_seq%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE)
+       new_poisson_3d_periodic_plan_seq%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+       new_poisson_3d_periodic_plan_seq%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
 
      end function new_poisson_3d_periodic_plan_seq
 
 
-     function new_poisson_3d_periodic_plan_par(array, Lx, Ly, Lz)
+     function new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz)
 
-       sll_comp64, dimension(:,:,:)                 :: array
+       sll_int32                                    :: nx, ny, nz
+       sll_comp64,                    dimension(nx) :: x
+       sll_comp64,                    dimension(ny) :: y
+       sll_comp64,                    dimension(nz) :: z
        sll_real64                                   :: Lx, Ly, Lz
        type (poisson_3d_periodic_plan_par), pointer :: new_poisson_3d_periodic_plan_par
        sll_int64                                    :: colsz ! collective size
-       sll_int32                                    :: nx, ny, nz
        sll_int32                                    :: npx, npy, npz
        sll_int32                                    :: e, ex, ey, ez
        sll_int32,                    dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
        sll_int32                                    :: ierr
 
        SLL_ALLOCATE(new_poisson_3d_periodic_plan_par, ierr)
-
-       nx = size(array,1)
-       ny = size(array,2)
-       nz = size(array,3)
 
        ! Geometry informations
        new_poisson_3d_periodic_plan_par%nx = nx
@@ -129,14 +125,14 @@ module sll_poisson_3d_periodic_util
        new_poisson_3d_periodic_plan_par%Lz = Lz
 
        ! For FFTs (in each direction)
-       new_poisson_3d_periodic_plan_par%px => new_plan_c2c_1d( nx, array(:,1,1), array(:,1,1), FFT_FORWARD )
-       new_poisson_3d_periodic_plan_par%py => new_plan_c2c_1d( ny, array(1,:,1), array(1,:,1), FFT_FORWARD )
-       new_poisson_3d_periodic_plan_par%pz => new_plan_c2c_1d( nz, array(1,1,:), array(1,1,:), FFT_FORWARD )
+       new_poisson_3d_periodic_plan_par%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_par%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_par%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
        ! For inverse FFTs (in each direction)
-       new_poisson_3d_periodic_plan_par%px_inv => new_plan_c2c_1d( nx, array(:,1,1), array(:,1,1), FFT_INVERSE)
-       new_poisson_3d_periodic_plan_par%py_inv => new_plan_c2c_1d( ny, array(1,:,1), array(1,:,1), FFT_INVERSE )
-       new_poisson_3d_periodic_plan_par%pz_inv => new_plan_c2c_1d( nz, array(1,1,:), array(1,1,:), FFT_INVERSE )
+       new_poisson_3d_periodic_plan_par%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE )
+       new_poisson_3d_periodic_plan_par%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+       new_poisson_3d_periodic_plan_par%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
 
        colsz  = sll_get_collective_size(sll_world_collective)
        e = int(log(real(colsz))/log(2.))

@@ -98,10 +98,7 @@ contains
 
     do k=1,nz_loc
        do j=1,ny_loc
-          global = local_to_global_3D( layout_x, (/1, int(j), int(k)/))
-          gj = global(2)
-          gk = global(3)
-          hat_rho(:,j,k) = cmplx(rho(:,gj,gk), 0_f64, kind=f64)
+          hat_rho(:,j,k) = cmplx(rho(:,j,k), 0_f64, kind=f64)
           call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
     enddo
