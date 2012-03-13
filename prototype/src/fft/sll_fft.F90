@@ -159,6 +159,17 @@ module sll_fft
     type(sll_fft_plan), pointer :: plan_z => null()
   endtype sll_fft_plan3d
 
+  type fft_plan
+    type(sll_fft_plan), pointer     :: fft_plan_1d => null()
+    type(sll_fft_plan_2d), pointer  :: fft_plan_2d => null()
+
+    sll_int32                       :: style
+    sll_int32                       :: library
+    sll_int32                       :: direction
+    sll_int32                       :: problem_rank
+    sll_int32, allocatable          :: problem_shape(:)
+  end type fft_plan
+
   ! We choose the convention in which the direction of the FFT is determined
   ! by the conjugation of the twiddle factors. If 
   !
@@ -255,7 +266,7 @@ module sll_fft
   end interface
 
   interface fft_delete_plan
-    module procedure delete_fft_plan1d, delete_fft_plan2d
+    module procedure delete_fft_plan1d, delete_fft_plan2d, fft_delete_plan_2d
   end interface
 
 contains
@@ -277,11 +288,41 @@ contains
   end function
 
 
+  function fft_is_present_flag(plan,s) result(bool)
+    type(fft_plan), pointer, intent(in)     :: plan
+    sll_int32, intent(in)                   :: s
+    logical                                 :: bool
+    sll_int32                               :: m
+   
+    SLL_ASSERT( is_power_of_two( int(s,kind=i64) ) )
+
+    m = iand(plan%style,s)
+    if( m .eq. s ) then
+      bool = .true.
+    else
+      bool = .false.
+    endif 
+  end function
+
   function fft_get_time_execution(plan) result(time)
     type(sll_fft_plan), pointer :: plan
     sll_real64 :: time
     time = plan%fft_time_execution
   end function
+
+  function fft_get_rank(plan) result(rank)
+    type(fft_plan), pointer :: plan
+    sll_int32               :: rank
+    rank = plan%problem_rank
+  end function
+
+  function fft_get_shape(plan) result(etendue)
+    type(fft_plan), pointer :: plan
+    sll_int32, allocatable  :: etendue(:)
+    allocate(etendue(fft_get_rank(plan)))
+    etendue = plan%problem_shape
+  end function
+
 
 #define INFO plan%fft_time_execution = time
 
@@ -568,8 +609,10 @@ contains
     sll_comp64, dimension(0:,0:), target, intent(in) :: array_in, array_out
     sll_int32, intent(in)                          :: direction
     sll_int32, optional, intent(in)                :: flags
-    type(sll_fft_plan_2d), pointer                 :: plan
-
+    !type(sll_fft_plan_2d), pointer                 :: plan
+    type(fft_plan), pointer                        :: plan
+    sll_int32                                      :: ierr
+    
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
     stop 'The default library cannot be FFTW because she is not installed'
 #endif
@@ -578,7 +621,25 @@ contains
           .or. (size(array_out(:,0)) .ne. NX) .or. (size(array_out(0,:)) .ne. NY) ) then
       stop 'Error in new_plan_c2c_2d size problem'
     endif 
-    plan => fft_plan_c2c_2d(_DEFAULTFFTLIB,NX,NY,array_in,array_out,direction,flags)
+
+    SLL_ALLOCATE(plan,ierr)
+    plan%library = _DEFAULTFFTLIB
+    plan%direction = direction
+    if( present(flags) )then
+      plan%style = flags
+    else
+      plan%style = 0_f32
+    endif
+    plan%problem_rank = 2
+    SLL_ALLOCATE(plan%problem_shape(2),ierr)
+    plan%problem_shape = (/ NX , NY /)
+!    if (fft_is_present_flag(FFT_ONLY_FIRST_DIRECTION)) then
+!     if( _DEFAULTFFTLIB .ne. SLLFFT_MOD ) &
+!       stop 'option FFT_ONLY_FIRST_DIRECTION available only with Selalib FFT '
+!      plan%fft_plan_1d => sll_new_plan_c2c_1d_for_2d(library,NX,NY,array_in,array_out,direction,flags)
+!    else
+      plan%fft_plan_2d => fft_plan_c2c_2d(_DEFAULTFFTLIB,NX,NY,array_in,array_out,direction,flags)
+!    endif
   end function
 
 ! ---------------------
@@ -798,27 +859,31 @@ INFO
 
 
   subroutine apply_plan_c2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan_2d), pointer, intent(in)      :: plan
+    !type(sll_fft_plan_2d), pointer, intent(in)      :: plan
+    type(fft_plan), pointer, intent(in)             :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_real64                                      :: factor
     sll_int32                                       :: i
-    factor = 1.0_f64/real(plan%plan_x%N*plan%plan_y%N,kind=f64)
+    factor = 1.0_f64/real( plan%problem_shape(1)*plan%problem_shape(2) ,kind=f64)
 #ifndef _NOFFTW
     if(plan%library .eq. FFTW_MOD) then
-      call fftw_apply_plan_c2c_2d(plan, array_in, array_out)
+      call fftw_apply_plan_c2c_2d(plan%fft_plan_2d, array_in, array_out)
    endif
 #endif
 #ifndef _NOFFTSLL
     if(plan%library .eq. SLLFFT_MOD) then
-      call sll_apply_fft_c2c_2d(plan, array_in, array_out)
+      call sll_apply_fft_c2c_2d(plan%fft_plan_2d, array_in, array_out)
     endif
 #endif
 #ifndef _NOFFTPACK
 !    if(plan%library .eq. FFTPACK_MOD) &
 !      stop 'apply_plan_c2c_1d with 2d data not available with fftpack'
 #endif
-    if( (plan%plan_x%style .eq. FFT_NORMALIZE_INVERSE) .or. (plan%plan_x%style .eq. FFT_NORMALIZE_FORWARD) ) then
-        array_out = factor*array_out
+    !if( (plan%plan_x%style .eq. FFT_NORMALIZE_INVERSE) .or. (plan%plan_x%style .eq. FFT_NORMALIZE_FORWARD) ) then
+    !    array_out = factor*array_out
+    !endif
+    if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+      array_out = factor*array_out
     endif
   end subroutine
 
@@ -1450,8 +1515,18 @@ INFO
     plan => null()
   end subroutine
 
+  subroutine fft_delete_plan_2d(plan)
+   type(fft_plan), pointer, intent(inout) :: plan
 
-
+    if(.not. associated(plan)) then
+      print * , 'Error in file sll_fft.F90'
+      print * , '      function fft_delete_plan_2d'
+      stop 'plan is not associated'
+    endif
+    
+    call delete_fft_plan2d(plan%fft_plan_2d)
+    plan => null()
+  end subroutine
 
 
 
