@@ -106,7 +106,7 @@ write(file_id,"(a)"      ) "</DataItem>"
 write(file_id,"(a)"      ) "</Attribute>"
 call sll_xmf_file_close(file_id,error)
 
-end test_binary
+end subroutine test_binary
 
 #else
 
