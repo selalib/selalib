@@ -1,2 +1,4 @@
 Import('env')
-env.Library('sll_collective',["sll_collective.F90"])
+lib = env.Library('sll_collective',["sll_collective.F90"])
+Return('lib')
+
