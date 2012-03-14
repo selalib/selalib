@@ -36,6 +36,7 @@ module distribution_function
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
+  use sll_mesh_types
   use numeric_constants
   use sll_misc_utils   ! for int2string
   implicit none

@@ -1,2 +1,4 @@
 Import('env')
-env.Library('sll_constants', ["numeric_constants.F90"])
+lib = env.Library('sll_constants', ["numeric_constants.F90"])
+Return('lib')
+
