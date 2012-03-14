@@ -10,6 +10,16 @@ set(CMAKE_Fortran_COMPILER mpif90)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O5 -Wall -cpp -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
+# recherche de HDF5
+find_package(HDF5 COMPONENTS Fortran Fortran_HL)
+
+if (HDF5_FOUND)
+    message(STATUS "HDF5 trouve")
+    message(STATUS "libraries = " ${HDF5_LIBRARIES}) 
+    message(STATUS "include = " ${HDF5_INCLUDE_DIRS}) 
+    #include_directories(${HDF5_INCLUDE_DIRS})
+endif(HDF5_FOUND)
+
 # include's
 include_directories(remap poisson_solvers utilities memory mesh_types assert precision) 
 
@@ -21,7 +31,7 @@ add_subdirectory(utilities)
 add_subdirectory(remap)
 add_subdirectory(constants)
 add_subdirectory(numerical_utilities)
-
+add_subdirectory(diagnostics)
 # add tests
 enable_testing()
 add_test(memory memory/test_memory)
