@@ -1,2 +1,3 @@
 Import('env')
-env.Library('sll_mesh_types', ["sll_mesh_types.F90","geometry_functions.F90"])
+lib = env.Library('sll_mesh_types', ["sll_mesh_types.F90","geometry_functions.F90"])
+Return('lib')

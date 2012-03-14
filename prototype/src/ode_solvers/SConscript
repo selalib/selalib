@@ -1,2 +1,3 @@
 Import('env')
-env.Library('sll_ode_solvers',["sll_ode_solvers.F90"])
+lib = env.Library('sll_ode_solvers',["sll_ode_solvers.F90"])
+Return('lib')

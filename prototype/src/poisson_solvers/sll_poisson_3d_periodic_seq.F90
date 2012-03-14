@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: Feb. 23, 2012
+!> Last modification: March 09, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -32,7 +32,7 @@ contains
 
   subroutine solve_poisson_3d_periodic_seq(plan, rho, phi)
 
-    type (poisson_3d_periodic_plan), pointer  :: plan
+    type (poisson_3d_periodic_plan_seq), pointer  :: plan
     sll_real64, dimension(:,:,:)              :: rho, phi
     sll_comp64, dimension(:,:,:), allocatable :: hat_rho, hat_phi
     sll_int32                                 :: nx, ny, nz
@@ -50,11 +50,11 @@ contains
     SLL_ALLOCATE(hat_rho(nx,ny,nz), ierr)
     SLL_ALLOCATE(hat_phi(nx,ny,nz), ierr)
 
-    ! FFTs in z-direction
+    ! FFTs in x-direction
     hat_rho = cmplx(rho, 0_f64, kind=f64)
-    do j=1,ny
-       do i=1,nx
-          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
+    do k=1,nz
+       do j=1,ny
+          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
     enddo       
 
@@ -65,10 +65,10 @@ contains
        enddo
     enddo
 
-    ! FFTs in x-direction
-    do k=1,nz
-       do j=1,ny
-          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
+    ! FFTs in z-direction
+    do j=1,ny
+       do i=1,nx
+          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
     enddo
 
@@ -102,10 +102,10 @@ contains
        enddo
     enddo
 
-    ! Inverse FFTs in z-direction
-    do j=1,ny
-       do i=1,nx
-          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
+    ! Inverse FFTs in x-direction
+    do k=1,nz
+       do j=1,ny
+          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
        enddo
     enddo
 
@@ -116,10 +116,10 @@ contains
        enddo
     enddo
 
-    ! Inverse FFTs in x-direction
-    do k=1,nz
-       do j=1,ny
-          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
+    ! Inverse FFTs in z-direction
+    do j=1,ny
+       do i=1,nx
+          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
        enddo
     enddo
 
