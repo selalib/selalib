@@ -39,9 +39,9 @@ program bgk_csl
   mesh_case = 2
   visu_step = 10
   
-  N_x1 = 32
-  N_x2 = 32
-  dt = 0.001_f64
+  N_x1 = 128
+  N_x2 = 256
+  dt = 0.1_f64
   nb_step = 100!600
   
   N = max(N_x1,N_x2)
@@ -149,7 +149,6 @@ program bgk_csl
   SLL_ALLOCATE(jac_array(nc_eta1+1, nc_eta2+1), ierr)
   
   
-  
   if(mesh_case==1)then
     do i2=1,nc_eta2+1
       do i1=1,nc_eta1+1
@@ -180,6 +179,10 @@ program bgk_csl
            x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
            x1c_array(i1,i2) = eta1c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)
            x2c_array(i1,i2) = eta2c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)
+           !x1n_array(i1,i2) = (x1n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x2n_array(i1,i2) = (x2n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x1c_array(i1,i2) = (x1c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x2c_array(i1,i2) = (x2c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
            jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)) * &
              (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c)) - &
              alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c) * &
@@ -204,6 +207,7 @@ program bgk_csl
 
   endif
 
+  
 
 
   
@@ -231,26 +235,38 @@ program bgk_csl
       !phi_val = 0._f64
       H = 0.5_f64*x2*x2 + phi_val
       val = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+H/(1._f64-xi))*exp(-H)
-      !f(i1,i2) = 1._f64/sqrt(2._f64*sll_pi)*exp(-H)
+      !f(i1,i2) = 1._f64/sqrt(2._f64*sll_pi)*exp(-H)      
       val = val*(1._f64+0.0_f64*cos(2._f64*sll_pi/L*x1))
       !f(i1,i2) = 1._f64/(x2_max-x2_min)
-      f(i1,i2) = val
-      call sll_set_df_val(dist_func, i1, i2, val)
+      f(i1,i2) = val*jac_array(i1,i2)
+      call sll_set_df_val(dist_func, i1, i2, f(i1,i2))
     enddo
   enddo
   
   
   
   call write_mesh_2D(mesh)
-
+!  do i1=1,nc_eta1+1
+!    do i2=1,nc_eta2+1
+!      val = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)
+!      val = jac_array(i1,i2)
+!      call sll_set_df_val(dist_func, i1, i2, val)
+!    enddo
+!  enddo  
   call write_distribution_function ( dist_func )
-  
+!  do i1=1,nc_eta1+1
+!    do i2=1,nc_eta2+1
+!      val = sll_get_df_val(dist_func, i1, i2)*jac_array(i1,i2)
+!      call sll_set_df_val(dist_func, i1, i2, val)
+!    enddo
+!  enddo  
+!  
 
   uniform_field => new_field_2D_vec1(mesh)
   do i1 = 1, nc_eta1+1 
      do i2 = 1, nc_eta2+1
-       x1 = x1c_array(i1,i2)
-       x2 = x2c_array(i1,i2)
+       x1 = x1n_array(i1,i2)
+       x2 = x2n_array(i1,i2)
        phi_val = 0._f64
        xx = (x1-x1_min)/(x1_max-x1_min)
        if(xx<=0._f64)then
@@ -266,7 +282,7 @@ program bgk_csl
         ii = floor(xx)
         xx = xx-real(ii,f64)      
         phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)     
-        FIELD_2D_AT_I( uniform_field, i1, i2 ) =  0.5_f64*x2**2!-phi_val
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) =  0.5_f64*x2**2+phi_val
      end do
   end do
   
@@ -275,9 +291,9 @@ program bgk_csl
   ! run CSL method for 10 time steps
   !deltat = 0.4_f64
   do step = 1, nb_step
-     !print*, 'iteration=',it
-     !call csl_first_order(csl_work, dist_func, uniform_field, deltat)
-     call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
+     print*, 'iteration=',step
+     call csl_first_order(csl_work, dist_func, uniform_field, dt)
+     !call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
      if(mod(step,visu_step)==0)then
        call write_distribution_function ( dist_func )
      endif
