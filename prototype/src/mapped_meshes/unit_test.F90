@@ -5,18 +5,18 @@ program unit_test
   use geometry_functions
   implicit none
 
-#define NPTS1 65 
+#define NPTS1 65
 #define NPTS2 65 
 
-  type(mapped_mesh_2D_general), pointer     :: map_a    ! analytic map
-  type(mapped_mesh_2D_general), pointer     :: map_d    ! discrete map
+  type(sll_mapped_mesh_2d_analytic)    :: map_a    ! analytic map
+  type(sll_mapped_mesh_2d_discrete)    :: map_d    ! discrete map
   sll_real64, dimension(:,:), allocatable :: x1
   sll_real64, dimension(:,:), allocatable :: x2
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
   sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
 !  sll_real64, dimension(:,:), allocatable :: jacs
   sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2, delta, delta2, acc, acc1, node, node_a, node_d, interp, jac_analyt
+  sll_real64 :: eta1, eta2, h1, h2, delta, delta2, acc, acc1, node, node_a, node_d, interp, jac_analyt, val_a
 
   print *,  'filling out discrete arrays for x1 and x2 ', &
        'needed in the discrete case'
@@ -58,23 +58,36 @@ program unit_test
   print *, '              TESTING THE ANALYTIC MAP                    '
   print *, '**********************************************************'
 
-  map_a => new_mapped_mesh_2D_general( ANALYTIC_MAP )
-  print *, 'allocated map'
-
-  call initialize_mapped_mesh_2D_general( &
-       map_a, &
+  ! Need to do something about these variables being always on the stack...
+!  map_a => new_mapped_mesh_2D_general( ANALYTIC_MAP )
+  call map_a%initialize( &
        NPTS1, &
        NPTS2, &
-       x1_func=x1_polar_f, &
-       x2_func=x2_polar_f, &
-       j11_func=deriv_x1_polar_f_eta1, &
-       j12_func=deriv_x1_polar_f_eta2, &
-       j21_func=deriv_x2_polar_f_eta1, &
-       j22_func=deriv_x2_polar_f_eta2 )
-  print *, 'initialized map'
+       x1_polar_f, &
+       x2_polar_f, &
+       deriv_x1_polar_f_eta1, &
+       deriv_x1_polar_f_eta2, &
+       deriv_x2_polar_f_eta1, &
+       deriv_x2_polar_f_eta2 )
+  print *, 'initialized analytic map'
 
-  print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', jacobian_2d(map_a,0.5_f64,0.5_f64)
-  print *, x1_eta1_min(1)
+  print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', map_a%jacobian(0.5_f64,0.5_f64)
+
+  acc = 0.0_f64
+  do j=1,NPTS2
+     do i=1,NPTS1
+        eta1    = real(i,f64)*h1
+        eta2    = real(j,f64)*h2
+        node_a  = map_a%x1_at_node(i,j)
+        val_a   = map_a%x1(eta1,eta2)
+        acc     = acc + abs(node_a-val_a)
+     end do
+  end do
+  print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
+!  print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
+
+
+#if 0
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE MAP                    '
   print *, '**********************************************************'
@@ -140,6 +153,7 @@ program unit_test
   print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
   call delete(map_a)
   call delete(map_d)
+#endif
   print *, 'deleted maps'
   print *, 'reached end of unit test'
   deallocate(x1_eta1_min)
