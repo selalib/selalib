@@ -17,8 +17,8 @@ env = Environment( ENV = os.environ,
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.', os.environ['HDF5LIBPATH']],
                    LIBS=['sll_memory','sll_precision','sll_assert',
-                         'sll_utilities', 'sll_constants','sll_mesh_types',
-                         'sll_splines','sll_ode_solvers','sll_tridiagonal',
+                         'sll_utilities', 'sll_constants','sll_field_2d',
+                         'sll_interpolators','sll_ode_solvers',
                          'sll_distribution_function','sll_diagnostics',
                          'hdf5_fortran','hdf5','z'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
@@ -30,10 +30,10 @@ env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_ode_solvers',["../ode_solvers/sll_ode_solvers.F90"])
 #env.Library('sll_tridiagonal', ["../numerical_utilities/tridiagonal.F90"])
-env.Library('sll_splines', ["../splines/sll_splines.F90"])
+env.Library('sll_interpolators', ["../interpolators/sll_interpolators.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_diagnostics',Glob("../diagnostics/sll_*.F90"))
-env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
+env.Library('sll_field_2d', ["../mesh_types/sll_mesh_test.F90","../mesh_types/sll_field_2d.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
 env.Program('unit_test', ["unit_test.F90", "sll_linrood.F90"])

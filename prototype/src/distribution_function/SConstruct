@@ -17,8 +17,9 @@ env = Environment( ENV=os.environ,
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.', os.environ['HDF5LIBPATH']],
                    LIBS=['sll_memory','sll_precision','sll_assert',
-                         'sll_utilities', 'sll_constants', 
-                         'sll_mesh_types', 'sll_diagnostics','hdf5_fortran','hdf5','z'],
+                         'sll_utilities', 'sll_constants', 'sll_splines',
+                         'sll_field_2d', 'sll_diagnostics','hdf5_fortran',
+                         'hdf5','z'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', 
                                '-ffree-line-length-none'],
                    CPPDEFINES = ['GFORTRAN','DEBUG'])
@@ -29,8 +30,10 @@ env.Library('sll_precision',   ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert',      ["../assert/sll_assert.F90"])
 env.Library('sll_constants',   ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',   ["../utilities/misc_utils.F90"])
-env.Library('sll_mesh_types',  ["../mesh_types/sll_mesh_types.F90",
+env.Library('sll_splines',    ["../splines/sll_splines.F90"])
+env.Library('sll_field_2d',    ["../mesh_types/sll_mesh_test.F90",
+                                "../mesh_types/sll_field_2d.F90",
                                 "../mesh_types/geometry_functions.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
-env.Program('unit_test',       ["unit_test.F90", 
+env.Program('unit_test',       ["unit_test.F90", "initial_functions.F90",
                                 "sll_distribution_function.F90"])
