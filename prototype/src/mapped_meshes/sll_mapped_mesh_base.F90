@@ -11,8 +11,6 @@ module sll_mapped_mesh_base
      sll_int32  :: num_pts2
      sll_real64 :: delta1
      sll_real64 :: delta2
-     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
-     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j) 
      sll_real64, dimension(:,:), pointer :: x1_cell
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
