@@ -28,6 +28,7 @@ env = Environment( ENV=os.environ,
 #env.Append(LIBS = ['nsl', 'socket'])
 
 env.Library('sll_memory', ["../memory/sll_memory.F90"])
+env.Library('sll_tridiagonal', ["../numerical_utilities/tridiagonal.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion', ["../assert/sll_assert.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
@@ -37,6 +38,7 @@ env.Program('unit_test', ["unit_test.F90", "sll_splines.F90", "test_func_module.
                           "test_processes_module.F90", "util_constants.F90"])
 env.Program('unit_test_nonuniform', ["unit_test_nonuniform.F90", "cubic_nonuniform_splines.F90"])
 env.Program('unit_test_contrib_rho', ["unit_test_contrib_rho.F90","contrib_rho.F90","cubic_nonuniform_splines.F90"])
+env.Program('polar_SL', ["polar_SL.F90", "cubic_nonuniform_splines.F90"])
 
 
 

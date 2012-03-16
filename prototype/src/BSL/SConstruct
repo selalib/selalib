@@ -13,17 +13,17 @@ print 'platform : ' + platform
 if os.environ.has_key("HDF5INCPATH"):
    print 'hdf5 header files are in %s ' %  os.environ['HDF5INCPATH']
 else:
-   os.environ['HDF5INCPATH'] = "/usr/local/include"
+   print 'HDF5INCPATH not set'
 
 if os.environ.has_key("HDF5MODPATH"):
    print 'hdf5 mod files are in %s ' %  os.environ['HDF5MODPATH']
 else:
-   os.environ['HDF5MODPATH'] = "/usr/local/include"
+   print 'HDF5MODPATH not set'
 
 if os.environ.has_key("HDF5LIBPATH"):
    print 'hdf5 library files are in %s ' %  os.environ['HDF5LIBPATH']
 else:
-   os.environ['HDF5LIBPATH'] = "/usr/local/lib"
+   print 'HDF5LIBPATH not set'
 
 vars = Variables()
 vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
@@ -32,6 +32,7 @@ vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
 
 env = Environment( ENV = os.environ, 
                    variable = vars,
+                   F90='mpif90',
                    F90FLAGS = ['-g', '-W', '-Wall', 
                                '-ffree-line-length-none',
                                '-fbounds-check'],
@@ -42,41 +43,52 @@ env = Environment( ENV = os.environ,
                               '../constants',
                               '../mesh_types',
                               '../splines',
-                              '../ode_solvers'],
-                   LIBPATH = ['.'],
+			      '../poisson_solvers'],
+                   LIBPATH = ['.','../fftpack'],
                    LIBS = ['sll_memory',
                            'sll_precision',
                            'sll_assert',
-                           'sll_utilities',
                            'sll_constants',
-                           'sll_mesh_types',
                            'sll_splines',
-                           'sll_ode_solvers',
                            'sll_distribution_function',
+                           'sll_poisson_solvers',
+                           'sll_mesh_types',
+                           'sll_utilities',
                            'sll_diagnostics',
-                           'sll_poisson_solvers'])
+                           'dfftpack'])
 
-env.Append(CPPDEFINES=['DEBUG','GFORTRAN'])
+#HDF5 flags 
+env.Append( LIBPATH = os.environ['HDF5LIBPATH'],
+            F90PATH = os.environ['HDF5INCPATH'],
+            LIBS = ['hdf5_fortran','hdf5','z'])
 
-env.Append(LIBS=['dfftpack'])
-
-env.Append(F90PATH=['${HDF5INCPATH}','${HDF5MODPATH}'])
-env.Append(LIBPATH= ['${HDF5LIBPATH}'])
+env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
 
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
-env.Library('sll_ode_solvers',["../ode_solvers/sll_ode_solvers.F90"])
 env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_diagnostics',Glob("../diagnostics/sll_*.F90"))
+env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
 env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
-env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2D_periodic.F90",
+env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2d_periodic.F90",
+                                    "../poisson_solvers/sll_poisson_1d_periodic.F90",
+                                    "../poisson_solvers/fft1d.f90",
                                     "../poisson_solvers/fft_module.F90"])
 
 env.Program('unit_test', ["unit_test.F90", "sll_bsl.F90"])
-env.Program('landau_dumping', ["landau_dumping.F90", "sll_bsl.F90"])
+env.Program('landau_4d', ["landau_4d.F90", "sll_bsl.F90"])
+env.Program('landau_2d', ["landau_2d.F90", "sll_bsl.F90"])
 
 Help(vars.GenerateHelpText(env))
+
+print """
+	To display results during execution, launch 
+        ./landau_2d | gnuplot 
+        or 
+        ./landau_4d | gnuplot
+        It could take some time in 4D case 
+"""

@@ -1,386 +1,187 @@
-program fft_test
+program unit_test
   use sll_fft
-  use numeric_constants
+  !use sll_timer
 #include "sll_working_precision.h"
   implicit none
-
-#define CREAL(array, i) array(2*(i))
-#define CIMAG(array, i) array(2*(i)+1)
-
-#define NC 4096
-
-#define PRINT_ARRAYS 0
-
-  sll_comp64, dimension(:), allocatable :: dat
-  sll_comp64, dimension(:), allocatable :: dat_copy
-  sll_comp64, dimension(:), allocatable :: tst
-  sll_comp64, dimension(:), allocatable :: data_complex
-  sll_comp64, dimension(:), allocatable :: data_complex_copy
-  sll_comp64, dimension(:), allocatable :: data_complex_n
-  sll_comp64, dimension(:), allocatable :: data_complex_n_copy
-  sll_real64, dimension(:), allocatable :: data_real
-  sll_real64, dimension(:), allocatable :: data_real_copy
-  sll_real64, dimension(:), allocatable :: data_real_copy2
-  sll_real64, dimension(:), allocatable :: nr_data
-  sll_real64, dimension(:), allocatable :: nr_data_copy
-  ! twiddles are named according to the size of the FFT that they are
-  ! meant to be used with.
-  sll_comp64, dimension(:), allocatable :: twiddles_c_n_2
-  sll_comp64, dimension(:), allocatable :: twiddles_c_n
-  sll_real64, dimension(:), allocatable :: twiddles_r_n_2
-  sll_real64, dimension(:), allocatable :: twiddles_r_n
-  sll_real64, dimension(:), allocatable :: tst2
-  sll_real64                            :: phase
-  sll_comp64                            :: tmp_c
-  sll_real64                            :: tmp_r
-  sll_real64                            :: tmp_i
-  sll_real64                            :: acc
-  sll_real64                            :: val
-  integer                            :: i
-
-#if TEST_TIME
-  sll_real32       :: tarray(1:2)
-  sll_real32       :: tresult
-#endif
-  ! caution: size of twiddles is half the size of the array whose fft is       
-  ! needed. This is a source of errors.
-
-  print *, 'Array size for tests: ', NC
-  allocate(tst(0:NC/2))
-  allocate(tst2(0:NC))
-  allocate(dat(0:NC-1))
-  allocate(dat_copy(0:NC-1))
-  allocate(data_real(0:NC-1))
-  allocate(data_real_copy(0:NC-1))
-  allocate(data_real_copy2(0:NC-1))
-  allocate(nr_data(0:NC-1))
-  allocate(nr_data_copy(0:NC-1))
-  allocate(data_complex(0:NC/2-1))
-  allocate(data_complex_copy(0:NC/2-1))
-  allocate(data_complex_n(0:NC-1))
-  allocate(data_complex_n_copy(0:NC-1))
-  allocate(twiddles_c_n(0:NC/2-1))
-  allocate(twiddles_c_n_2(0:NC/4-1))
-  allocate(twiddles_r_n_2(0:NC/2-1))! these are real arrays storing complex nums
-  allocate(twiddles_r_n(0:NC-1)) ! real array storing complex nums
-  call compute_twiddles(NC/2,twiddles_c_n_2(0:NC/2-1))
-  call compute_twiddles_real_array( NC/2, twiddles_r_n_2(0:NC-1) )
-  call compute_twiddles_real_array( NC, twiddles_r_n(0:NC-1) ) 
-  do i=0,NC-1
-     phase         = 2.0*sll_pi*real(i)/real(NC)
-     dat(i)        = test_func(phase)
-     data_real(i)  = test_func(phase)
-     nr_data(i)    = test_func(phase)
-  end do
-
-  print *, '0--------------------------------------------------------------'
-  print *, 'test of bit-reversing subroutines. Note: these only work when the arrays are of size 16' ! ... so don't dynamically allocate them...
-  tst(:) = (/(1000,0), (1001,0), (1010,0), (1011,0), (1100,0), (1101,0), (1110,0), (1111,0)/)
-#if PRINT_ARRAYS
-  print *, tst(:)
-#endif
-  tst2(:) = (/ 1000, 0, 1001, 0, 1010, 0, 1011, 0, 1100, 0, 1101, 0, 1110, 0, 1111, 0 /)
-
-  call bit_reverse_complex(NC/2,tst)
-#if PRINT_ARRAYS
-  print *, 'bit reversed:'
-  do i=0, size(tst)-1
-     print *, tst(i)
-  end do
-  print *, 'bit reversing in pairs test:'
-  print *, 'original:'
-  do i=0, size(tst2)/2-1
-     write (*,'(f10.0, f10.0)') tst2(2*i), tst2(2*i+1)
-  end do
-  print *, 'bit-reversed:'
-  call bit_reverse_in_pairs(size(tst2)/2,tst2)
-  do i=0, size(tst2)/2-1
-     write (*,'(f10.0, f10.0)') tst2(2*i), tst2(2*i+1)
-  end do
-#endif
-
-  print *, '1--------------------------------------------------------------'
-  print *, 'Test complex FFT'
-  do i=0, NC/2-1
-     data_complex(i) = transfer(data_real(2*i:),data_complex(0))
-  end do
-  data_complex_copy(:) = data_complex(:)
-
-#if PRINT_ARRAYS
-  print *, 'complex data: '
-  do i=0, NC/2-1
-     print *, data_complex(i)
-  end do
-#endif
-
-  call bit_reverse( NC/4, twiddles_c_n_2(0:(NC/4-1)) )
-  call fft_dit_nr_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1), &
-                       0, FFT_FORWARD )
-#if PRINT_ARRAYS
-  print *, 'transformed complex array: '
-  do i=0, NC/2-1
-     print *, data_complex(i)
-  end do
-#endif
-
-  print *, 'applying inverse transform: '
-  call bit_reverse( NC/4, twiddles_c_n_2(0:(NC/4-1)) )
-  call fft_dit_rn_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1), &
-       1, FFT_INVERSE )
-  data_complex(:)      = data_complex(:)*1.0/real(NC/2)
-  data_complex_copy(:) = data_complex_copy(:) - data_complex(:)
-  tmp_c = (0.0,0.0)
-  do i=0,size(data_complex_copy)-1
-     tmp_r = tmp_r + abs( real(data_complex_copy(i)))
-     tmp_i = tmp_i + abs(aimag(data_complex_copy(i)))
-  end do
-  tmp_r = tmp_r/size(data_complex_copy)
-  tmp_i = tmp_i/size(data_complex_copy)
-  print *, 'Average error: '
-  write (*,'(a,e20.12,a,e20.12)') 'real: ', tmp_r, '    imaginary: ', tmp_i
-
-#if PRINT_ARRAYS
-  print *, 'Difference with the original data: '
-  do i=0, NC/2-1
-     print *, data_complex_copy(i)
-  end do
-#endif
-
-  print *, '2-------------------------------------------------------------'
-  print *, 'Test of the complex array, represented by a real array:'
-  do i=0,NC-1
-     phase         = 2.0*sll_pi*real(i)/real(NC)
-     data_real(i)  = test_func(phase)
-  end do
-
-#if PRINT_ARRAYS
-  print *, 'Original real data (data_real):'
-  do i=0, NC/2-1
-     print *, data_real(2*i:2*i+1)
-  end do
-#endif
-
-  data_real_copy(:) = data_real(:)
-  ! interpret data_real as a half-sized sequence of complex numbers:
-  do i=0, NC/2-1
-     data_complex(i) = transfer(data_real(2*i:),data_complex(0))
-  end do
-  data_complex_copy(:) = data_complex(:)
-
-#if PRINT_ARRAYS
-  print *, 'Original data, as complex, for comparison (data_complex):'
-  do i=0, NC/2-1
-     print *, data_complex(i)
-  end do
-  print *, 'transformed complex array, for comparison...'
-#endif
-
-  call compute_twiddles(NC/2,twiddles_c_n_2(0:NC/4-1))
-  call bit_reverse(NC/4, twiddles_c_n_2(0:NC/4-1))
-  call fft_dit_nr_aux( data_complex(0:NC/2-1),   &
-                       NC/2,                     &
-                       twiddles_c_n_2(0:NC/4-1), &
-                       0,                        &
-                       FFT_FORWARD )
-
-#if PRINT_ARRAYS
-  print *, 'transformed complex array: '
-  do i=0,NC/2-1
-     print *, data_complex(i)
-  end do
-
- ! call bit_reverse(NC/4, twiddles_c_n_2(0:NC/2-1)) ! natural order now
-  print *, 'complex twiddles:'
-  do i=0, NC/4-1
-     print *, twiddles_c_n_2(i)
-  end do
-#endif
-  print *, 'applying the inverse transform'
-  call bit_reverse(NC/4, twiddles_c_n_2(0:NC/4-1)) ! now in natural order
- ! call  fft_dit_nr_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1), 0, FFT_INVERSE )
-  call fft_dit_rn_aux( data_complex(0:NC/2-1), NC/2, twiddles_c_n_2(0:NC/4-1),&
-                       1, FFT_INVERSE )
-  data_complex(:)      = data_complex(:)*1.0/real(NC/2)
-  data_complex_copy(:) = data_complex_copy(:) - data_complex(:)
-  tmp_c = (0.0,0.0)
-  tmp_r = 0.0
-  tmp_i = 0.0
-  do i=0,size(data_complex_copy)-1
-     tmp_r = tmp_r + abs( real(data_complex_copy(i)))
-     tmp_i = tmp_i + abs(aimag(data_complex_copy(i)))
-  end do
-  tmp_r = tmp_r/size(data_complex_copy)
-  tmp_i = tmp_i/size(data_complex_copy)
-  print *, 'Average error: '
-  write (*,'(a,e20.12,a,e20.12)') 'real: ', tmp_r, '    imaginary: ', tmp_i
+ 
+  sll_real64, parameter  :: err_max = 10E-14
+  sll_int32, parameter   :: hmax = 1
+  sll_int32, parameter   :: imin = 10
+  sll_int32, parameter   :: imax = 20
+  sll_int32, parameter   :: n = 2**imax
+  sll_int32, parameter   :: m = 2**10
+  type(sll_fft_plan), pointer :: plan
+  type(fft_plan), pointer :: fft_plan2d
+  sll_comp64, dimension(n) :: data_comp, data_copy
+  sll_comp64, dimension(m,m/2) :: data_comp2d
+  sll_comp64, dimension(m,m/2) :: data_copy2d
+  sll_real64, dimension(n) :: rdata_comp, rdata_copy
+  sll_real64 :: time = 0_f64
+  sll_real64 :: ierr
+  sll_int32 :: i,j,s,h,k,t
 
 
-  print *, 'transformed real array: '
-  call compute_twiddles_real_array(NC/2, twiddles_r_n_2(0:NC/2-1))
-  call bit_reverse_in_pairs( NC/4, twiddles_r_n_2(0:NC-1))
-  call fft_dit_nr_real_array_aux( data_real(0:NC-1),      &
-                                  NC/2,                   &
-                                  twiddles_r_n_2(0:NC-1), &
-                                  0,                      &
-                                  FFT_FORWARD )
+!  if( _DEFAULTFFTLIB == FFTW_MOD) then
+!    open(1,file="time_fftw")
+!  else if( _DEFAULTFFTLIB == SLLFFT_MOD) then
+!    open(1,file="time_sllfft")
+!  else if( _DEFAULTFFTLIB == FFTPACK_MOD) then
+!    open(1,file="time_fftpack")
+!  end if
 
-#if PRINT_ARRAYS
-  do i=0, NC/2-1
-     write (*,'(f15.8, f15.8)') data_real(2*i), data_real(2*i+1)
-  end do
-#endif
+  print *,'-------------------------------------------------'
+  print * ,'COMPLEX TO COMPLEX'
+  do i=imin,imax
+   do h=1,hmax
+    s = 2**i
 
-  call bit_reverse_in_pairs( NC/4, twiddles_r_n_2(0:NC-1) )
+    do j=1,s
+      CALL RANDOM_COMPLEX(data_comp(j))
+    enddo
+    data_copy(1:s) = data_comp(1:s)
+  
+    plan => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+    call fft_apply_plan(plan,data_comp(1:s),data_comp(1:s))
 
-#if PRINT_ARRAYS
-  print *, 'twiddles represented by a real array:'
-  do i=0,NC/4-1
-     print *, twiddles_r_n_2(2*i:2*i+1)
-  end do
-#endif
+    time = time + fft_get_time_execution(plan)
 
-  print *, 'Entering the inverse real array: '
-  call fft_dit_rn_real_array_aux( data_real(0:NC-1),      &
-                                  NC/2,                   &
-                                  twiddles_r_n_2(0:NC-1), &
-                                  1,                      &
-                                  FFT_INVERSE )
-  data_real(:) = data_real(:)*2.0/real(NC)
-  acc = 0.0
-  do i=0,size(data_real)-1
-     acc = acc + abs(data_real(i) - data_real_copy(i))
-  end do
+    call fft_delete_plan(plan)
 
-#if PRINT_ARRAYS
-  print *, 'Difference with the original data: '
-  do i=0, NC-1
-     print *, (data_real(i) - data_real_copy(i))
-  end do
-#endif
+    plan => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_INVERSE,FFT_NORMALIZE)
+    call fft_apply_plan(plan,data_comp(1:s),data_comp(1:s))
+    call fft_delete_plan(plan)
+    ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
+    if( ierr > err_max ) then
+      stop 'Everage error too big'
+    endif
+!    print * , 'Error max : ' , ierr
+   enddo
+!   write(1,*) time/real(hmax,kind=f64)
+  enddo
+  print *, 'OK'
 
-  write (*,'(a, e20.12)') 'Average error complex (as real) FFT case = ', acc/NC
-  print *, 'Finished test of complex array represented by real data.'
+!  close(1)
 
-  print *, '3---------------------------------------------------------------'
 
-  print *, 'Test of a real-valued FFT'
-  print *, 'For comparison, we run a complex-valued FFT in which the data is the same as the real data we intend to process in the real case.'
-  do i=0,NC-1
-     phase             = 2.0*sll_pi*real(i)/real(NC)
-     val               = test_func(phase)
-     data_real(i)      = val
-     data_real_copy(i) = val
-     data_complex_n(i) = val
-  end do
+  print *,'-------------------------------------------------'
+  print * ,'REAL TO REAL'
+  do i=imin,imax
+   do h=1,hmax
+    s = 2**i
 
-#if PRINT_ARRAYS
-  print *, 'data to be transformed:'
-  print *, '     real data                            complex data'
-  print *, '___________________________________________________________________'
-  do i=0, NC-1
-     print *, data_real(i), data_complex_n(i)
-  end do
-#endif
+    do j=1,s
+      CALL RANDOM_NUMBER(rdata_comp(j))
+    enddo
+    rdata_copy(1:s) = rdata_comp(1:s)
+  
+    plan => fft_new_plan(s,rdata_comp(1:s),rdata_comp(1:s),FFT_FORWARD)
+    call fft_apply_plan(plan,rdata_comp(1:s),rdata_comp(1:s))
+    call fft_delete_plan(plan)
 
-  call compute_twiddles(NC, twiddles_c_n(0:NC/2-1))
-  call bit_reverse(NC/2, twiddles_c_n(0:NC/2-1))
-  call fft_dit_nr_aux( data_complex_n(0:NC-1), &
-                       NC,                     &
-                       twiddles_c_n(0:NC/2-1), &
-                       0,                      &
-                       FFT_FORWARD )
-  print *, 'transformed complex array (in natural order): '
-  call bit_reverse(NC, data_complex_n(0:NC-1))
-
-#if PRINT_ARRAYS
-  do i=0,NC-1
-     print *, data_complex_n(i)
-  end do
-#endif
-
-  ! For the real-valued FFT we need two pairs of twiddles:
-  ! - one set to compute complex FFT's of size N/2,
-  ! - another set to glue the results of the complex FFT's into the
-  !   solution that we want.
-  call compute_twiddles_real_array(NC/2, twiddles_r_n_2(0:NC/2-1))
-  call bit_reverse_in_pairs( NC/4, twiddles_r_n_2(0:NC-1))
-  call compute_twiddles_real_array(NC, twiddles_r_n(0:NC-1))
-
-#if PRINT_ARRAYS
-  print *, 'long twiddles:'
-  do i=0, size(twiddles_r_n)/2-1
-     write (*, '( a, f15.8, a, f15.8, a)') '(', twiddles_r_n(2*i), ', ', &
-          twiddles_r_n(2*i+1),')'
-  end do
-#endif
-
-  print *, 'Entering the real data FFT function'
-
-#if TEST_TIME
-  print *, 'timing test:'
-  call ETIME(tarray, tresult)
-  print *, tresult
-  print *, tarray(1)
-  print *, tarray(2)
-#endif
-
-  call real_data_fft_dit( data_real,      &
-                          NC,             &
-                          twiddles_r_n_2, &
-                          twiddles_r_n,   &
-                          FFT_FORWARD )
-
-#if TEST_TIME
-  call ETIME(tarray, tresult)
-  print *, 'timing test'
-  print *, tresult
-  print *, tarray(1)
-  print *, tarray(2)
-#endif
+    plan => fft_new_plan(s,rdata_comp(1:s),rdata_comp(1:s),FFT_INVERSE,FFT_NORMALIZE)
+    call fft_apply_plan(plan,rdata_comp(1:s),rdata_comp(1:s))
+    call fft_delete_plan(plan)
+    ierr = MAXVAL(rdata_comp(1:s) - rdata_copy(1:s))
+    if( ierr > err_max ) then
+      stop 'Everage error too big'
+    endif
+   enddo
+  enddo
+  print *, 'OK'
 
 
 
-#if PRINT_ARRAYS
-  print *, 'After the real FFT:'
-  do i=0,NC/2-1
-     print *, data_real(2*i:2*i+1)
-  end do
-#endif
+  print *,'-------------------------------------------------'
+  print * ,'REAL TO COMPLEX and COMPLEX TO REAL '
+  do i=imin,imax
+   do h=1,hmax
+    s = 2**i
 
-  data_real(:) = data_real(:)*2.0/real(NC)
-  print *, 'Proceeding to invert the real transform...'
-  call real_data_fft_dit( data_real,      &
-                          NC,             &
-                          twiddles_r_n_2, &
-                          twiddles_r_n,   &
-                          FFT_INVERSE )
+    do j=1,s
+      CALL RANDOM_NUMBER(rdata_comp(j))
+    enddo
+    rdata_copy(1:s) = rdata_comp(1:s)
+  
+    plan => fft_new_plan(s,rdata_comp(1:s),data_comp(1:s/2+1))
+    call fft_apply_plan(plan,rdata_comp(1:s),data_comp(1:s/2+1))
+    call fft_delete_plan(plan)
+    
+    plan => fft_new_plan(s,data_comp(1:s/2+1),rdata_comp(1:s),FFT_NORMALIZE)
+    call fft_apply_plan(plan,data_comp(1:s/2+1),rdata_comp(1:s))
+    call fft_delete_plan(plan)
+    ierr = MAXVAL(rdata_comp(1:s) - rdata_copy(1:s))
+    if( ierr > err_max ) then
+      stop 'Everage error too big'
+    endif
+   enddo
+  enddo
+  print *, 'OK'
 
-  acc = 0.0
-  do i=0, NC-1
-     acc = acc + abs(data_real_copy(i) - data_real(i))
-  end do
-  print *, 'Averager error:', acc/NC  
+  print *,'-------------------------------------------------'
+  print * ,'COMPLEX TO COMPLEX 2D'
+  do i=10,10
+   do h=1,hmax
+    s = 2**i
+    t = 2**(i-1)
 
-#if PRINT_ARRAYS
-  do i=0, NC-1
-     print *, abs(data_real_copy(i) - data_real(i))
-  end do
-#endif
+    do j=1,s
+     do k=1,t
+      CALL RANDOM_COMPLEX(data_comp2d(j,k))
+     enddo
+    enddo
+    data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
+  
+    fft_plan2d => fft_new_plan2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_FORWARD)
+    call fft_apply_plan2d(fft_plan2d,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+    call fft_delete_plan(fft_plan2d)
 
-  print *, 'REACHED END OF UNIT TEST'
+    fft_plan2d => fft_new_plan2d(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE,FFT_NORMALIZE)
+    call fft_apply_plan2d(fft_plan2d,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+    call fft_delete_plan(fft_plan2d)
+    ierr = 0_f64
+    do j=1,t
+      ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
+    enddo
+    if( ierr > err_max ) then
+      stop 'Everage error too big'
+    endif
+   enddo
+  enddo
+  print *, 'OK'
+
 
 contains
- 
-  function test_func(x)
-    sll_real64, intent(in) :: x
-    sll_real64 :: test_func
-    test_func = 1.0 + 1.0*cos(x) + 2.0*cos(2.0*x) + 3.0*cos(3.0*x) + &
-         4.0*cos(4.0*x) + 5.0*cos(5.0*x) + 6.0*cos(6.0*x) + 7.0*cos(7.0*x) + &
-         8.0*cos(8.0*x) + &
-         1.0*sin(x) + 2.0*sin(2.0*x) + 3.0*sin(3.0*x) + &
-         4.0*sin(4.0*x) + 5.0*sin(5.0*x) + 6.0*sin(6.0*x) + 7.0*sin(7.0*x) + &
-         8.0*sin(8.0*x) 
-  end function test_func
 
-  
-end program fft_test
+  FUNCTION ERROR_MAX(tab) RESULT(error)
+    sll_comp64, DIMENSION(:) :: tab
+    sll_real64 :: error
+
+    error = MAX( MAXVAL(REAL(tab)) , MAXVAL(DIMAG(tab)) )
+  END FUNCTION
+
+  SUBROUTINE init_random_seed()
+    INTEGER                            :: i, n, clock
+    INTEGER, DIMENSION(:), ALLOCATABLE :: seed
+
+    CALL RANDOM_SEED(size = n)
+    ALLOCATE(seed(n))
+
+    CALL SYSTEM_CLOCK(COUNT=clock)
+
+    seed = clock + 37 * (/ (i - 1, i = 1, n) /)
+    CALL RANDOM_SEED(PUT = seed)
+
+    DEALLOCATE(seed)
+  END SUBROUTINE
+
+  SUBROUTINE RANDOM_COMPLEX(c)
+    COMPLEX(KIND=KIND(1.D0)) :: c
+    REAL(KIND=KIND(1.D0))    :: realpart,imagpart
+   
+    CALL init_random_seed() 
+    CALL RANDOM_NUMBER(realpart)
+    CALL RANDOM_NUMBER(imagpart)
+    c = COMPLEX(realpart,imagpart)
+  END SUBROUTINE
+
+end program unit_test
