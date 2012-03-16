@@ -12,8 +12,7 @@ program unit_test
   sll_int32 :: nc1, nc2
   procedure(polar_x1), pointer :: px1, px2, pjac
 
-  end subroutine test_cylindrical_3d
-
+ 
   
 
   
