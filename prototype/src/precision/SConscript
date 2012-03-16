@@ -1,0 +1,4 @@
+Import('env')
+lib = env.Library('sll_working_precision',['sll_working_precision.F90'])
+Return('lib')
+
