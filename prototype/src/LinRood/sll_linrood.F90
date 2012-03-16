@@ -11,19 +11,17 @@ module sll_linrood
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
+#include "sll_mesh_2d.h"
 
   use numeric_constants
-  use sll_splines
+  use sll_interpolator_1d
   use ode_solvers
   use distribution_function
   implicit none
 
-
   type linrood_plan
-     type (sll_spline_1D), pointer   :: spl_eta1
-     type (sll_spline_1D), pointer   :: spl_eta2
-     procedure(interpolate1D), pointer, nopass :: interp1D
+     type (interpolator_1d), pointer   :: interp_eta1
+     type (interpolator_1d), pointer   :: interp_eta2
   end type linrood_plan
 
 contains
@@ -31,65 +29,48 @@ contains
 !> initialize opaque pointer that contains information used by the algorithm
 !> \param[in] dist_func_2D 2D distribution function object
 !> \return pointer to opaque data type 
-  function new_linrood_plan(dist_func_2D)
-    type (linrood_plan), pointer :: new_linrood_plan
+  subroutine new_linrood_plan(this,dist_func_2d, which_interpolator)
+    type (linrood_plan) :: this
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D 
+    character(len=*) :: which_interpolator
     sll_int32  :: ierr
     sll_int32  :: nc_eta1
     sll_int32  :: nc_eta2
-    sll_real64 :: eta1_min
-    sll_real64 :: eta1_max
-    sll_real64 :: eta2_min
-    sll_real64 :: eta2_max
     sll_int32  :: boundary1_type
     sll_int32  :: boundary2_type
 
-    ! allocate pointer
-    SLL_ALLOCATE(new_linrood_plan,ierr)
-
     ! get dimensions
-    nc_eta1    = get_df_nc_eta1( dist_func_2D ) 
-    eta1_min   = get_df_eta1_min( dist_func_2D )
-    eta1_max   = get_df_eta1_max( dist_func_2D )
-    nc_eta2    = get_df_nc_eta2( dist_func_2D ) 
-    eta2_min   = get_df_eta2_min( dist_func_2D )
-    eta2_max   = get_df_eta2_max( dist_func_2D )
-    boundary1_type = get_df_boundary1_type( dist_func_2D )
-    boundary2_type = get_df_boundary2_type( dist_func_2D )
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+    boundary1_type = GET_FIELD_BOUNDARY1( dist_func_2D )
+    boundary2_type = GET_FIELD_BOUNDARY2( dist_func_2D )
 
-    ! initialize splines
-    if (boundary1_type == PERIODIC) then
-       new_linrood_plan%spl_eta1 => new_spline_1D( nc_eta1, PERIODIC_SPLINE)
-    else if (boundary1_type == COMPACT) then
-       new_linrood_plan%spl_eta1 => new_spline_1D( nc_eta1, HERMITE_SPLINE)
+    ! initialize interpolators
+    if (boundary1_type == PERIODIC_MESH) then
+       this%interp_eta1 => new_interpolator_1d( which_interpolator, nc_eta1+1, &
+            eta1_min, eta1_max, PERIODIC_INTERPOLATOR)
+    else if (boundary1_type == COMPACT_MESH) then
+       this%interp_eta1 => new_interpolator_1d( which_interpolator, nc_eta1+1, &
+            eta1_min, eta1_max, COMPACT_INTERPOLATOR)
     else
-       print*, 'sll_csl.F90: new_linrood_plan. boundary1_type ', boundary1_type, ' not implemented'
+       print*, 'sll_csl.F90: new_linrood_plan. boundary1_type ', boundary1_type, &
+            ' not implemented'
        stop
     end if
-    if (boundary2_type == PERIODIC) then
-       new_linrood_plan%spl_eta2 => new_spline_1D( nc_eta2, PERIODIC_SPLINE)
-    else if (boundary2_type == COMPACT) then
-       new_linrood_plan%spl_eta2 => new_spline_1D( nc_eta2, HERMITE_SPLINE)  
+    if (boundary2_type == PERIODIC_MESH) then
+       this%interp_eta2 => new_interpolator_1d( which_interpolator, nc_eta2+1, &
+            eta2_min, eta2_max, PERIODIC_INTERPOLATOR)
+    else if (boundary2_type == COMPACT_MESH) then
+       this%interp_eta2 => new_interpolator_1d( which_interpolator, nc_eta2+1, &
+            eta2_min, eta2_max, COMPACT_INTERPOLATOR)  
     else
-       print*, 'sll_csl.F90: new_linrood_plan. boundary2_type ', boundary2_type, ' not implemented'
+       print*, 'sll_csl.F90: new_linrood_plan. boundary2_type ', boundary2_type, &
+            ' not implemented'
        stop
     end if
 
-  end function new_linrood_plan
+  end subroutine new_linrood_plan
 
-!> delete pointer on opaque data type
-  subroutine delete_linrood_plan(plan)
-    type (linrood_plan), pointer :: plan
-    sll_int32   :: ierr
-
-    if( .not. (associated(plan))) then
-       write (*,'(a)') 'ERROR: delete_linrood_plan(), not associated argument.'
-       STOP
-    end if
-    nullify(plan%spl_eta1)
-    nullify(plan%spl_eta2)
-    SLL_DEALLOCATE(plan, ierr)
-  end subroutine delete_linrood_plan
 
   !> Advances the distribution function on a time step deltat using a first 
   !> order time split backward semi-Lagrangian scheme
@@ -97,16 +78,16 @@ contains
   !> \param[in,out] dist_func_2D distribution function which is advanced
   !> \param[in] advfield advection field used for advancing distribution function
   !> \param[in] deltat time step on which distribution function is advanced
-  subroutine bsl_first_order(plan, dist_func_2D, advfield, deltat)
-    type (linrood_plan), pointer                    :: plan
+  subroutine bsl_first_order(plan, dist_func_2d, advfield, deltat)
+    type (linrood_plan)                  :: plan
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  
-    type (field_2D_vec1), pointer                   :: advfield ! advection field defined by its stream function
+    type (scalar_field_2d), pointer                   :: advfield ! advection field defined by its stream function
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
     sll_int32, parameter   :: order = 1    ! order of scheme
 
-    call csl_advance_1(plan, dist_func_2D, advfield, advfield, deltat, order)
-    call csl_advance_2(plan, dist_func_2D, advfield, advfield, deltat, order)
+    call bsl_advance_1(plan, dist_func_2D, advfield, advfield, deltat, order)
+    call bsl_advance_2(plan, dist_func_2D, advfield, advfield, deltat, order)
   end subroutine bsl_first_order
 
   !> Advances the distribution function on a time step deltat using a second
@@ -119,8 +100,8 @@ contains
   subroutine csl_second_order(csl_work, dist_func_2D, advfield_old, advfield_new, deltat)
     type (linrood_plan), pointer                   :: csl_work
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  
-    type (field_2D_vec1), pointer                   :: advfield_old ! advection field at t
-    type (field_2D_vec1), pointer                   :: advfield_new ! advection field at t+dt
+    type (scalar_field_2d), pointer                   :: advfield_old ! advection field at t
+    type (scalar_field_2d), pointer                   :: advfield_new ! advection field at t+dt
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
     sll_int32, parameter   :: order = 2    ! order of scheme
@@ -136,7 +117,7 @@ contains
   !> \param[in] csl_work pointer on CSL opaque object
   !> \param[in,out] dist_func_2D distribution function which is advanced
   !> \param[in] advfield_old advection field at t used for advancing distribution function
-  !> \param[in] advfield_new advection field at t+dt used for advancing distribution function
+   !> \param[in] advfield_new advection field at t+dt used for advancing distribution function
   !> \param[in] deltat time step on which distribution function is advanced
   !> \param[in] order order of time scheme 1 or 2 needed by advance_1D
   subroutine csl_advance_1( csl_work,       &
@@ -147,8 +128,8 @@ contains
                             order)
     type (linrood_plan), pointer :: csl_work
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
-    type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
-    type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
+    type (scalar_field_2d), pointer  :: advfield_old   ! adv. field at (t)
+    type (scalar_field_2d), pointer  :: advfield_new   ! adv. field at (t+dt)
     sll_real64, intent(in)  ::  deltat                           ! dt
     sll_int32, intent(in)  :: order 
 
@@ -276,8 +257,8 @@ contains
                             order )
     type (linrood_plan), pointer :: csl_work
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
-    type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
-    type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
+    type (scalar_field_2d), pointer  :: advfield_old   ! adv. field at (t)
+    type (scalar_field_2d), pointer  :: advfield_new   ! adv. field at (t+dt)
     sll_real64, intent(in)  :: deltat                            ! dt
     sll_int32, intent(in)   :: order                             ! order
 

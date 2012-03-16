@@ -24,11 +24,11 @@ program SLWENO_tester
   use sll_WENO
   use numeric_constants
   implicit none
-#define NP 40
+#define NP 30
 
   sll_int32 :: err    ! indicator for allocating data array
   sll_int32 :: i
-  type(sll_WENO_1d), pointer :: weno
+  type(sll_WENO_1d) :: weno
   sll_real64, allocatable, dimension(:) :: data       ! data at coordinates_d with size NP
   sll_real64, allocatable, dimension(:) :: coordinates_d  ! coordinates for data with size NP
   sll_real64, allocatable, dimension(:) :: out        ! data at coordinates_i with size NP
@@ -49,27 +49,27 @@ program SLWENO_tester
   SLL_ALLOCATE(data_interp(NP), err)
 
   print *, 'initialize data and coordinates array'
-  dx = sll_pi*2.0_f64/NP
+  dx = sll_pi*2.0_f64/(NP-1)
 
   do i=1,NP
-     coordinates_d(i) = (i-0.5_f64)*dx
-     coordinates_o(i) = coordinates_d(i) - dx/3.0_f64
+     coordinates_d(i) = (i-1)*dx !(i-0.5_f64)*dx
+     coordinates_o(i) = modulo(coordinates_d(i) - dx/3.0_f64, 2*sll_pi)
      data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 + cos(coordinates_d(i)))
      data_interp(i) = 2.0_f64*(sin(coordinates_o(i)) + 2.5_f64 + cos(coordinates_o(i)))
   enddo
   print *, 'proceed to allocate the data for WENO interpolation...'
-  weno =>  new_WENO_1D(NP, coordinates_d(1), coordinates_d(NP))  
+  weno =  new_WENO_1D(NP, coordinates_d(1), coordinates_d(NP))  
   ! NP is the number of data points, the second and the third argument is the min and max of coordinates
   ! set up the basic information for data: np, xmin, xmax, delta (mesh size), rdelta (reciprocal of delta)
-  out = interpolate_WENO_1D( weno, NP, data, coordinates_o)
+  out =  interpolate_WENO_1D( weno, NP, data, coordinates_o )
 
   print *, 'Contents of the weno:'
   print *, 'weno%xmin=', weno%xmin
   print *, 'weno%xmax=',weno%xmax
   print *, 'dx=',weno%delta
   print *, '1/dx=',weno%rdelta
-  print *, 'left b. =', weno%xmin - weno%delta/2.0_f64
-  print *, 'right b= ', weno%xmax + weno%delta/2.0_f64 
+  print *, 'left b. =', weno%xmin !- weno%delta/2.0_f64
+  print *, 'right b= ', weno%xmax !+ weno%delta/2.0_f64 
   print *, 'cumulative errors: '
   print *, 'periodic case, NP points: '
   print *, 'interpolating individual values from 1 to NP:'
