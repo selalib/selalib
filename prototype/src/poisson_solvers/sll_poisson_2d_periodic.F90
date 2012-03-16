@@ -65,6 +65,7 @@ interface new_poisson_2d_periodic
    module procedure new_poisson_2d_periodic_potential
 end interface
 
+
 !> Solve Poisson equation on 2D mesh with periodic 
 !> boundary conditions. 
 interface solve_poisson_2d_periodic
@@ -99,7 +100,40 @@ function new_poisson_2d_periodic_potential(potential)
    call initdfft(new_poisson_2d_periodic_potential%fftx, ncx)
    call initcfft(new_poisson_2d_periodic_potential%ffty, ncy)
 
+   call wave_number_vectors(new_poisson_2d_periodic_potential)
+
 end function new_poisson_2d_periodic_potential
+
+function new_poisson_2d_periodic_e_fields(e_fields)
+
+   type(poisson_2d_periodic), pointer :: new_poisson_2d_periodic_e_fields
+   type(field_2D_vec2),       pointer :: e_fields
+   type(mesh_descriptor_2d),  pointer :: mesh
+   sll_int32                          :: ncx
+   sll_int32                          :: ncy
+   sll_int32                          :: error
+
+   mesh => e_fields%descriptor
+   ncx = GET_MESH_NC_ETA1(mesh)
+   ncy = GET_MESH_NC_ETA2(mesh)
+
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields,                   error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%descriptor,        error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%rhst(ncy,ncx/2+1), error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%ext(ncy,ncx/2+1),  error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%eyt(ncy,ncx/2+1),  error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%kx(ncy,ncx/2+1),   error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%ky(ncy,ncx/2+1),   error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%k2(ncy,ncx/2+1),   error)
+
+   new_poisson_2d_periodic_e_fields%descriptor => mesh
+   
+   call initdfft(new_poisson_2d_periodic_e_fields%fftx, ncx)
+   call initcfft(new_poisson_2d_periodic_e_fields%ffty, ncy)
+
+   call wave_number_vectors(new_poisson_2d_periodic_e_fields)
+
+end function new_poisson_2d_periodic_e_fields
 
 subroutine solve_poisson_2d_periodic_potential(this,sol,rhs,error)
 
@@ -109,7 +143,6 @@ subroutine solve_poisson_2d_periodic_potential(this,sol,rhs,error)
    sll_int32 , intent(out)                  :: error
    sll_int32                                :: ncx,ncy
    sll_int32                                :: i, j
-
 
    ncx = GET_FIELD_NC_ETA1(this)
    ncy = GET_FIELD_NC_ETA2(this)
@@ -121,14 +154,13 @@ subroutine solve_poisson_2d_periodic_potential(this,sol,rhs,error)
 
    call transpose_r2c(sol(1:ncx,1:ncy), this%rhst)
 
-   do i=1,ncx
+   do i=1,ncx/2+1
       call zfftf( ncy, this%rhst(:,i), this%ffty%coefcd)
    end do
 
-   call wave_number_vectors(this)
    this%rhst = this%rhst / (this%kx*this%kx+this%ky*this%ky)
 
-   do i=1,ncx
+   do i=1,ncx/2+1
       call zfftb( ncy, this%rhst(:,i),  this%ffty%coefcd )
    end do
 
@@ -147,96 +179,56 @@ subroutine solve_poisson_2d_periodic_potential(this,sol,rhs,error)
 
 end subroutine solve_poisson_2d_periodic_potential
 
-function new_poisson_2d_periodic_e_fields(e_fields)
-
-   type(poisson_2d_periodic),pointer :: new_poisson_2d_periodic_e_fields
-   type(field_2D_vec2), pointer :: e_fields
-   type(mesh_descriptor_2d), pointer :: mesh
-   sll_int32                         :: error
-   sll_int32                         :: nx
-   sll_int32                         :: ny
-
-   mesh => e_fields%descriptor
-   nx = GET_MESH_NC_ETA1(mesh)
-   ny = GET_MESH_NC_ETA2(mesh)
-
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields, error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%descriptor, error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%rhst(ny,nx/2+1), error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%ext(ny,nx/2+1),  error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%eyt(ny,nx/2+1),  error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%kx(ny,nx/2+1),   error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%ky(ny,nx/2+1),   error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%k2(ny,nx/2+1),   error)
-
-   new_poisson_2d_periodic_e_fields%descriptor => mesh
-   
-   call initdfft(new_poisson_2d_periodic_e_fields%fftx, nx)
-   call initcfft(new_poisson_2d_periodic_e_fields%ffty, ny)
-
-end function new_poisson_2d_periodic_e_fields
-
-!> Delete the Poisson object
-subroutine delete_poisson_2d_periodic(this)
-
-   type(poisson_2d_periodic),intent(out) :: this
-   deallocate(this%rhst)
-
-end subroutine delete_poisson_2d_periodic
-
 subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
 
    type(poisson_2d_periodic), intent(inout) :: this
    type(field_2d_vec1), intent(in)          :: rhs
    type(field_2d_vec2), intent(out)         :: e_fields
    sll_int32 , intent(out)                  :: error
-   sll_int32                                :: nx,ny
-   sll_real64                               :: dx,dy
-   sll_real64                               :: kx0, kx, kx2
-   sll_real64                               :: ky0, ky, ky2
-   sll_int32                                :: ik, jk, i, j
+   sll_int32                                :: ncx,ncy
+   sll_int32                                :: i, j
 
-   sll_real64, dimension(:,:), allocatable  :: tmp
-   sll_real64, parameter :: zero = 0.0_f64
+   ncx = GET_FIELD_NC_ETA1(rhs)
+   ncy = GET_FIELD_NC_ETA2(rhs)
 
-   nx = GET_FIELD_NC_ETA1(this)
-   ny = GET_FIELD_NC_ETA2(this)
-   dx = GET_FIELD_DELTA_ETA1(this)
-   dy = GET_FIELD_DELTA_ETA2(this)
+   do j=1,ncy
+      call dfftf(ncx, rhs%data(1:ncx,j),this%fftx%coefd)
+   end do
 
-   SLL_ALLOCATE(tmp(nx,ny),error)
+   call transpose_r2c(rhs%data(1:ncx,1:ncy), this%rhst)
 
-   tmp = rhs%data(1:nx,1:ny)
-   call fft(this%fftx,tmp)
-   
-   call transpose_r2c(tmp, this%rhst)
+   do i=1,ncx/2+1
+      call zfftf( ncy, this%rhst(:,i), this%ffty%coefcd)
+   end do
 
-   call fft(this%ffty,this%rhst)
-
-   kx0=2._f64*sll_pi/(nx*dx)
-   ky0=2._f64*sll_pi/(ny*dy)
 
    this%ext(1,1) = 0.0_f64
    this%eyt(1,1) = 0.0_f64
 
-   call wave_number_vectors(this)
+   this%ext = -cmplx(0.0_f64,this%kx/this%k2,kind=f64)*this%rhst
+   this%eyt = -cmplx(0.0_f64,this%ky/this%k2,kind=f64)*this%rhst
 
-   this%ext = -cmplx(zero,this%kx/this%k2)*this%rhst
-   this%eyt = -cmplx(zero,this%ky/this%k2)*this%rhst
+   do i=1,ncx/2+1
+      call zfftb( ncy, this%ext(:,i),  this%ffty%coefcd )
+      call zfftb( ncy, this%eyt(:,i),  this%ffty%coefcd )
+   end do
 
-   call fftinv(this%ffty,this%ext)
-   call fftinv(this%ffty,this%eyt)
+   call transpose_c2r(this%ext, e_fields%data(1:ncx,1:ncy)%v1)
+   call transpose_c2r(this%eyt, e_fields%data(1:ncx,1:ncy)%v2)
 
-   call transpose_c2r(this%ext,e_fields%data(1:nx,1:ny)%v1 )
-   call transpose_c2r(this%eyt,e_fields%data(1:nx,1:ny)%v2 )
+   do j=1,ncy
+      call dfftb( ncx, e_fields%data(1:ncx,j)%v1,  this%fftx%coefd )
+      call dfftb( ncx, e_fields%data(1:ncx,j)%v2,  this%fftx%coefd )
+   end do
 
-   call fftinv(this%fftx,e_fields%data(1:nx,1:ny)%v1)
-   call fftinv(this%fftx,e_fields%data(1:nx,1:ny)%v2)
 
-   e_fields%data(nx+1,:)%v1 = e_fields%data(1,:)%v1
-   e_fields%data(:,ny+1)%v1 = e_fields%data(:,1)%v1
-   e_fields%data(nx+1,:)%v2 = e_fields%data(1,:)%v2
-   e_fields%data(:,ny+1)%v2 = e_fields%data(:,1)%v2
+   e_fields%data(1:ncx,1:ncy)%v1 = e_fields%data(1:ncx,1:ncy)%v1 / (ncx*ncy)
+   e_fields%data(1:ncx,1:ncy)%v2 = e_fields%data(1:ncx,1:ncy)%v2 / (ncx*ncy)
+
+   e_fields%data(ncx+1,:)%v1 = e_fields%data(1,:)%v1
+   e_fields%data(:,ncy+1)%v1 = e_fields%data(:,1)%v1
+   e_fields%data(ncx+1,:)%v2 = e_fields%data(1,:)%v2
+   e_fields%data(:,ncy+1)%v2 = e_fields%data(:,1)%v2
 
    error = 0
 
@@ -245,7 +237,7 @@ end subroutine solve_poisson_2d_periodic_E_fields
 
 subroutine wave_number_vectors(this)
 type(poisson_2d_periodic) :: this
-sll_int32  :: i, j, ik, jk, error
+sll_int32  :: ik, jk
 sll_int32  :: ncx, ncy
 sll_real64 :: dx, dy
 sll_real64 :: kx, ky, kx0, ky0
@@ -286,15 +278,15 @@ sll_int32 :: i, j, n1, n2
 n1 = size(real_array,1)
 n2 = size(real_array,2)
 
-SLL_ASSERT((n2==size(comp_array,1)))
-SLL_ASSERT((size(comp_array,2)==n1/2+1))
+SLL_ASSERT(size(comp_array,1)==n2)
+SLL_ASSERT(size(comp_array,2)==n1/2+1)
 
 do j=1,n2
-   comp_array(j,1) = cmplx(real_array(1,j),0._f64)
+   comp_array(j,1) = cmplx(real_array(1,j),0._f64,kind=f64)
    do i=2, n1/2
-      comp_array(j,i) = cmplx(real_array(2*i-2,j),real_array(2*i-1,j))
+      comp_array(j,i) = cmplx(real_array(2*i-2,j),real_array(2*i-1,j),kind=f64)
    end do
-   comp_array(j,n1/2+1) = cmplx(real_array(n1,j),0._f64)
+   comp_array(j,n1/2+1) = cmplx(real_array(n1,j),0._f64,kind=f64)
 end do
 
 end subroutine transpose_r2c
@@ -311,14 +303,22 @@ SLL_ASSERT((n2==size(comp_array,1)))
 SLL_ASSERT((size(comp_array,2)==n1/2+1))
 
 do j=1,n2
-   real_array(1,j) = dble(comp_array(j,1))
+   real_array(1,j) = real(comp_array(j,1),kind=f64)
    do i=2,n1/2
-      real_array(2*i-2,j) = dble(comp_array(j,i))
-      real_array(2*i-1,j) = aimag(comp_array(j,i))
+      real_array(2*i-2,j) = real(comp_array(j,i),kind=f64)
+      real_array(2*i-1,j) = dimag(comp_array(j,i))
    end do
-   real_array(n1,j) = dble(comp_array(j,n1/2+1))
+   real_array(n1,j) = real(comp_array(j,n1/2+1),kind=f64)
 end do
 
 end subroutine transpose_c2r
+
+!> Delete the Poisson object
+subroutine delete_poisson_2d_periodic(this)
+
+   type(poisson_2d_periodic), pointer :: this
+   this => null()
+
+end subroutine delete_poisson_2d_periodic
 
 end module sll_poisson_2D_periodic

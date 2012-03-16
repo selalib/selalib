@@ -118,7 +118,7 @@ INLINE_INHERITED_MEMB  = YES
 # path before files name in the file list and in the header files. If set 
 # to NO the shortest path that makes the file name unique will be used.
 
-FULL_PATH_NAMES        = NO
+FULL_PATH_NAMES        = YES
 
 # If the FULL_PATH_NAMES tag is set to YES then the STRIP_FROM_PATH tag 
 # can be used to strip a user-defined part of the path. Stripping is 
@@ -1453,8 +1453,8 @@ PREDEFINED             = NEW_ACCESS_FUNCTION= \
                          MAKE_GET_BOX_SLOT_FUNCTION= \
 			 sll_int32=integer(kind=i32) \
 			 sll_int64=integer(kind=i64) \
-			 sll_real32=real(kind=i32) \
-			 sll_real64=real(kind=i64) \
+			 sll_real32=real(kind=f32) \
+			 sll_real64=real(kind=f64) \
 			 sll_comp32=complex(kind=f32) \
 			 sll_comp64=complex(kind=f64)
 			 #SW(a,b)= swp=(a); a=(b); b=swp \
