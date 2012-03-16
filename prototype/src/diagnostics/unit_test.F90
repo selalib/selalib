@@ -73,8 +73,11 @@ end subroutine test_2d
 
 #ifdef NOHDF5
 
-subroutine test_binary()
+subroutine test_binary(x, v, f, nx, nv)
+sll_real64, dimension(:,:) :: x, v, f
+sll_int32 :: nx, nv
 sll_int32 :: file_id
+sll_int32 :: error
 !Binary version
 call sll_binary_file_create("test-f.bin",file_id,error)
 call sll_binary_write_array_2d(file_id,f,error)
