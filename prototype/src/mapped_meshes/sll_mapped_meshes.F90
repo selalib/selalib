@@ -43,6 +43,8 @@ module sll_mapped_meshes
   ! information in the 'jacobians' array.
 
   type, extends(sll_mapped_mesh_2d_base)::sll_mapped_mesh_2d_analytic
+     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
+     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j) 
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
@@ -59,13 +61,14 @@ module sll_mapped_meshes
   end type sll_mapped_mesh_2d_analytic
   
   type, extends(sll_mapped_mesh_2d_base)::sll_mapped_mesh_2d_discrete
+     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
+     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j) 
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(interpolator_2d_base), pointer                   :: x1_interp
      class(interpolator_2d_base), pointer                   :: x2_interp
      procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
-
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete
@@ -190,7 +193,7 @@ contains
 
     ! Assign the transformation functions
     mesh%x1_func => x1_func
-    mesh%x1_func => x2_func
+    mesh%x2_func => x2_func
 
     ! Fill the jacobian matrix
     SLL_ALLOCATE(mesh%j_matrix(2,2), ierr)
@@ -252,7 +255,7 @@ contains
   end function jacobian_2d_analytic
 
   function x1_analytic( mesh, eta1, eta2 ) result(val)
-    sll_real64                        :: val
+    sll_real64                         :: val
     class(sll_mapped_mesh_2d_analytic) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -350,8 +353,8 @@ contains
     x2_node,        &
     x1_interpolator, &
     x2_interpolator, &
-    jacobians_node, &
     jacobians_n_interpolator, &
+    jacobians_node, &
     x1_cell, &
     x2_cell, &
     jacobians_cell )
@@ -437,7 +440,7 @@ contains
     mesh%delta1    = 1.0_f64/(npts1 - 1)
     mesh%delta2    = 1.0_f64/(npts2 - 1)
     mesh%x1_interp => x1_interpolator
-    mesh%x1_interp => x2_interpolator
+    mesh%x2_interp => x2_interpolator
 
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
