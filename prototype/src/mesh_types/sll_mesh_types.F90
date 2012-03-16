@@ -94,7 +94,17 @@ module sll_mesh_types
      sll_real64 :: delta_eta2
      sll_int32  :: boundary1_type
      sll_int32  :: boundary2_type
-     type (geometry_2D), pointer :: geom 
+     !type (geometry_2D), pointer :: geom
+   contains
+     procedure(geom_func_int), pass :: x1_int
+     procedure(geom_func_int), pass :: x2_int
+     procedure(geom_func_int), pass :: jac_int
+     procedure(geom_func_real), pass :: x1_real
+     procedure(geom_func_real), pass :: x2_real
+     procedure(geom_func_real), pass :: jac_real
+     generic :: x1 => x1_int, x1_real
+     generic :: x2 => x2_int, x2_real
+     generic :: Jacobian => jac_int, jac_real
   end type mesh_descriptor_2D
 
   type mesh_descriptor_3D

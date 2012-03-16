@@ -1,42 +1,28 @@
 program unit_test
-#include "sll_mesh_types.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use numeric_constants
+  use geometry_functions
+  use sll_mesh_2d
   implicit none
   
-  type(mesh_cylindrical_3D), pointer :: mesh
-  integer :: i,j,k
-  sll_real64 :: val
-  type(mesh_descriptor_1D), pointer :: m1D_descriptor
-  type(field_1D_vec1), pointer :: field1D_scalar
-  m1D_descriptor => new_mesh_descriptor_1D(0.0_f64, 1.0_f64, 1024, PERIODIC)
-  field1D_scalar => new_field_1D_vec1(m1D_descriptor)
-  print *, 'Allocated a field1d_vec1 type successfully'
-  print *, 'Proceeding to allocate and initialize a 3D mesh...'
-  mesh => new_mesh_cylindrical_3D(0.2_f64, 0.8_f64, 0.0_f64, 10.0_f64, &
-       32, 32, 256)
-  print *, 'Allocation successful'
-  
-  do i=1, GET_MESH_NCR(mesh)
-     do j=1, GET_MESH_NCTHETA(mesh)
-        do k=1, GET_MESH_NCR(mesh)
-           val = sin(int(i)*2.0*sll_pi/real(GET_MESH_NCR(mesh),f64))*&
-                sin(int(j)*2.0*sll_pi/real(GET_MESH_NCTHETA(mesh),f64))*&
-                sin(int(k)*2.0*sll_pi/real(GET_MESH_NCZ(mesh),f64))
-           SET_MESH_VALUE( mesh, i, j, k, val )
-        end do
-     end do
-  end do
-  print *, GET_MESH_DELTA_R(mesh)
-  print *, GET_MESH_DELTA_THETA(mesh)
-  print *, GET_MESH_DELTA_Z(mesh)
-  
-  print *, 'Proceeding to delete the mesh...'
-  call delete_mesh_cylindrical_3D( mesh )
-  print *, 'Proceeding to delete the field_1D_vec1 instance.'
-  call delete_field_1D_vec1( field1D_scalar )
+  type(mesh_2d_analytic), target :: mesh
+  class(mesh_2d), pointer :: m
+  sll_int32 :: nc1, nc2
+  procedure(polar_x1), pointer :: px1, px2, pjac
+
+  nc1 = 10
+  nc2 = 10
+  px1 => sinprod_x1
+  px2 => sinprod_x2
+  pjac => sinprod_jac
+  call new_mesh_2d_analytic ( mesh, nc1, nc2, px1, px2, pjac)
+  m => mesh
+
+  print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64), m%x1_array(5,3)
 
   print *, 'Successful, exiting program.'
+  
+
   
 end program unit_test
