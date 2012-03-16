@@ -1,30 +1,70 @@
-program testPoisson
-  !-------------------------------------------------------------------
-  !  test 1D Poisson solver based on FFT
-  !-------------------------------------------------------------------
+program test_poisson_solvers
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
 #include "sll_poisson_solvers.h"
+
 use numeric_constants
 
+use sll_poisson_1D_periodic
 use sll_poisson_2D_periodic
-!use geometry1d_module
-!use sll_poisson_1D_periodic
 
 implicit none
-
-!PN!type (mesh_descriptor_1D), pointer :: geomx ! 1D mesh
-!PN!type (poisson1dp)                  :: poisson_1d
-!PN!type (field_1D_vec1), pointer      :: ex, rho1d, ex_exact
-!PN!sll_int32   :: ncx, iflag 
-!PN!sll_real64  :: xmin, xmax
-!PN!sll_real64  :: dx
 
 sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
 sll_int32   :: nc_eta1, nc_eta2
 sll_int32   :: error
+
+
+call test_1d()
+
+call test_2d()
+
+
+
+
+contains
+
+subroutine test_1d()
+
+type (mesh_descriptor_1D), pointer :: geometry
+type (field_1D_vec1), pointer      :: ex
+type (field_1D_vec1), pointer      :: ex_exact
+type (field_1D_vec1), pointer      :: rho_1d
+type (poisson_1d_periodic)         :: poisson_1d
+sll_real64  :: delta_eta1
+sll_int32   :: i, mode
+
+print*,'!-----------'
+print*,'!  1D test |'
+print*,'!-----------'
+
+eta1_min = 0.0; eta1_max = 2*sll_pi;
+nc_eta1 = 128
+
+geometry => new_mesh_descriptor_1D( eta1_min, eta1_max, nc_eta1, PERIODIC )
+rho_1d   => new_field_1D_vec1( geometry )
+ex       => new_field_1D_vec1( geometry )
+ex_exact => new_field_1D_vec1( geometry )
+
+call new(poisson_1d, nc_eta1, error) 
+
+mode = 7
+delta_eta1 = geometry%delta_eta1
+do i=1,nc_eta1+1
+   rho_1d%data(i)      =  mode**2*sin(mode*(i-1)*delta_eta1)
+   ex_exact%data(i) = -mode*cos(mode*(i-1)*delta_eta1)
+end do
+
+call solve(poisson_1d, ex, rho_1d)
+    
+print*,' error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
+
+end subroutine test_1d
+
+subroutine test_2d()
 
 type(poisson_2d_periodic), pointer :: poisson_e_fields
 type(poisson_2d_periodic), pointer :: poisson_potential
@@ -35,6 +75,10 @@ type(field_2D_vec1),       pointer :: rho, phi, phi_exact
 sll_real64                         :: x1, x2
 sll_int32                          :: mode
 sll_int32                          :: i, j
+
+print*,'!-----------'
+print*,'!  2D test |'
+print*,'!-----------'
 
 eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
 eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
@@ -86,6 +130,7 @@ call write_vec2d(exy%data%v1,exy%data%v2,mesh%nc_eta1+1,mesh%nc_eta2+1,"exy1","m
 write(*,*) " Ex Error = " , maxval(abs(exy_exact%data%v1-exy%data%v1))
 write(*,*) " Ey Error = " , maxval(abs(exy_exact%data%v2-exy%data%v2))
 write(*,*) " Po Error = " , maxval(abs(phi_exact%data+phi%data))
+write(*,*) epsilon(2._f64)
 
 call delete_poisson_2d_periodic(poisson_e_fields)
 call delete_poisson_2d_periodic(poisson_potential)
@@ -96,32 +141,6 @@ call delete_field_2D_vec1( phi_exact )
 call delete_field_2D_vec2( exy )
 call delete_field_2D_vec2( exy_exact )
 
-!PN!
-!PN!!Solveur de Poisson1D, commente car ne parche pas
-!PN!
-!PN!logical, parameter :: per = .true.
-!PN! initialisation of 1D periodic mesh 
-!PN!xmin = 0.0; xmax = 2*sll_pi;
-!PN!ncx = 128
-!PN!
-!PN!geomx    => new_mesh_descriptor_1D( xmin, xmax, ncx, PERIODIC )
-!PN!rho1d    => new_field_1D_vec1( geomx )
-!PN!ex       => new_field_1D_vec1( geomx )
-!PN!ex_exact => new_field_1D_vec1( geomx )
-!PN!
-!PN!call new(poisson_1d,ncx,iflag) 
-!PN!
-!PN!mode = 7
-!PN!dx = geomx%delta_eta1
-!PN!do i=1,ncx+1
-!PN!   FIELD_1D_AT_I(rho,i) =  mode**2*sin(mode*(i-1)*dx)
-!PN!   FIELD_1D_AT_I(ex_exact,i) = -mode*cos(mode*(i-1)*dx)
-!PN!end do
-!PN!! compute electric field
-!PN!call solve(poiss1dp,ex,rho)
-!PN!     
-!PN!! check solution
-!PN!print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
+end subroutine test_2d
 
-end program testPoisson
-
+end program test_poisson_solvers

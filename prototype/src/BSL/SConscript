@@ -1,0 +1,4 @@
+Import('env')
+landau_2d = env.Program('landau_4d', ["landau_4d.F90", "sll_bsl.F90"])
+landau_4d = env.Program('landau_2d', ["landau_2d.F90", "sll_bsl.F90"])
+Return(['landau_2d','landau_4d'])
