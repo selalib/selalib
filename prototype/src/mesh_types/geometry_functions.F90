@@ -357,6 +357,18 @@ contains
     deriv_x2_polar_f_eta2 = (R1+(R2-R1)*eta1)*cos(k*eta2)*k
   end function deriv_x2_polar_f_eta2
 
+  function jacobian_polar_f( eta1, eta2 ) result(jac)
+    sll_real64             :: jac
+    sll_real64, intent(in) :: eta1, eta2
+    jac = 2.0_f64*sll_pi*(R1+(R2-R1)*eta1)*(R2-R1)
+  end function jacobian_polar_f
+
+  function deriv1_jacobian_polar_f( ) result(deriv)
+    sll_real64             :: deriv
+    deriv = 2.0_f64*sll_pi*(R2-R1)**2
+  end function deriv1_jacobian_polar_f
+
+
 #undef R1
 #undef R2
 
