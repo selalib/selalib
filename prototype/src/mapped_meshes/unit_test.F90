@@ -21,7 +21,8 @@ program unit_test
   sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
   sll_real64, dimension(:,:), allocatable :: jacs
   sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2, delta, delta2, acc, acc1, node, node_a, node_d, interp, jac_analyt, val_a
+  sll_real64 :: eta1, eta2, h1, h2, delta, acc, acc1
+  sll_real64 :: node, node_a, node_d, interp, val_a
 
   print *,  'filling out discrete arrays for x1 and x2 ', &
        'needed in the discrete case'
