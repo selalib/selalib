@@ -105,7 +105,7 @@ call sll_xmf_grid_geometry_2d(xmffile_id, trim(mesh_prefix), nnodes_x1, nnodes_x
 
 call sll_binary_file_create(mesh_prefix//"-x1.bin",binfile_id,error); SLL_ASSERT(error==0)
 call sll_binary_write_array_2d(binfile_id,x1,error); SLL_ASSERT(error==0)
-call sll_binary_file_close(binfile_id,error)
+call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 call sll_binary_file_create(mesh_prefix//"-x2.bin",binfile_id,error); SLL_ASSERT(error==0)
 call sll_binary_write_array_2d(binfile_id,x2,error); SLL_ASSERT(error==0)
 call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
@@ -154,28 +154,21 @@ sll_int32 :: binfile_id
 
 
 call sll_xmf_file_create(trim(mesh_prefix)//".xmf",xmffile_id,error)
-write(xmffile_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(xmffile_id,"(a,3i5,a)")"<Topology TopologyType='3DSMesh' NumberOfElements='", &
-                     nnodes_x3,nnodes_x2,nnodes_x1,"'/>"
-write(xmffile_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
-
-#define WRITE_BIN_ARRAY(array) \
-call sll_binary_file_create(mesh_prefix//"-array.bin",binfile_id,error); \
-SLL_ASSERT(error==0); \
-call sll_binary_write_array_3d(binfile_id,array,error); \
-SLL_ASSERT(error==0); \
-call sll_binary_file_close(binfile_id,error); \
-SLL_ASSERT(error==0); \
-write(xmffile_id,"(a,3i5,a)")"<DataItem Dimensions='",nnodes_x3,nnodes_x2,nnodes_x1 \
-                  ,"' NumberType='Float' Precision='8' Format='Binary'>"; \
-write(xmffile_id,"(a)")mesh_prefix//"-array.bin"; \
-write(xmffile_id,"(a)")"</DataItem>"
+call sll_xmf_grid_geometry_3d(xmffile_id,trim(mesh_prefix),nnodes_x1,nnodes_x2,nnodes_x3)
 
 #ifdef NOHDF5
 
-WRITE_BIN_ARRAY(x1)
-WRITE_BIN_ARRAY(x2)
-WRITE_BIN_ARRAY(x3)
+call sll_binary_file_create(mesh_prefix//"-x1.bin",binfile_id,error);SLL_ASSERT(error==0)
+call sll_binary_write_array_3d(binfile_id,x1,error);SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error);SLL_ASSERT(error==0);
+
+call sll_binary_file_create(mesh_prefix//"-x2.bin",binfile_id,error);SLL_ASSERT(error==0)
+call sll_binary_write_array_3d(binfile_id,x2,error);SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error);SLL_ASSERT(error==0);
+
+call sll_binary_file_create(mesh_prefix//"-x3.bin",binfile_id,error);SLL_ASSERT(error==0)
+call sll_binary_write_array_3d(binfile_id,x3,error);SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error);SLL_ASSERT(error==0);
 
 #else
 
@@ -202,7 +195,6 @@ end do
 
 #endif
 
-write(xmffile_id,"(a)")"</Geometry>"
 call sll_xmf_file_close(xmffile_id,error)
 
 end subroutine write_mesh_data_3d
