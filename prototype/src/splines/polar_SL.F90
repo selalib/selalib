@@ -4,11 +4,13 @@ program radial_1d_SL
 #include "sll_memory.h"
 
   use cubic_nonuniform_splines
+  use sll_splines
   use numeric_constants
   implicit none
 
 
-  type(cubic_nonunif_spline_1D), pointer :: spl_hrmt 
+  type(cubic_nonunif_spline_1D), pointer :: spl_hrmt
+  type(sll_spline_2D), pointer :: spl_natper
   sll_int32 :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,nb_diag
   sll_real64,dimension(:,:), pointer :: f
   sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,tmp
@@ -38,6 +40,11 @@ program radial_1d_SL
   dtheta = 2._f64*sll_pi/real(Ntheta,f64)
   SLL_ALLOCATE(f(Nr+1,Ntheta+1), err)
   SLL_ALLOCATE(diag(nb_diag,0:nb_step), err)
+	
+!  spl_natper => new_spline_2D(Nr, Ntheta, &
+!    rmin, rmax, &
+!    0._f64, 2._f64*sll_pi, &
+!    HERMITE_SPLINE, PERIODIC_SPLINE)
   
   if(test_case==1)then
     do i=1,Nr+1
@@ -56,6 +63,7 @@ program radial_1d_SL
     enddo
   endif
   
+!  call compute_spline_2D_hrmt_prdc(f,spl_natper)
   
   tmp=0._f64
   do i=1,Nr!+1
