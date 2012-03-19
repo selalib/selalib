@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 09, 2012
+!> Last modification: March 19, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -30,15 +30,18 @@ module sll_poisson_3d_periodic_seq
 
 contains
 
+
   subroutine solve_poisson_3d_periodic_seq(plan, rho, phi)
 
-    type (poisson_3d_periodic_plan_seq), pointer  :: plan
-    sll_real64, dimension(:,:,:)              :: rho, phi
-    sll_comp64, dimension(:,:,:), allocatable :: hat_rho, hat_phi
-    sll_int32                                 :: nx, ny, nz
-    sll_int32                                 :: i, j, k, ierr
-    sll_real64                                :: Lx, Ly, Lz
-    sll_real64                                :: ind_x, ind_y, ind_z
+    type (poisson_3d_periodic_plan_seq), pointer :: plan
+    sll_real64, dimension(:,:,:)                 :: rho, phi
+    sll_comp64, dimension(:,:,:), allocatable    :: hat_rho, hat_phi
+    sll_int32                                    :: nx, ny, nz
+    sll_int32                                    :: i, j, k, ierr
+    sll_real64                                   :: Lx, Ly, Lz
+    sll_real64                                   :: ind_x, ind_y, ind_z
+
+    call if_sizes_do_not_match(plan, rho, phi)
 
     nx = plan%nx
     ny = plan%ny
@@ -129,5 +132,29 @@ contains
     SLL_DEALLOCATE_ARRAY(hat_phi, ierr)
 
   end subroutine solve_poisson_3d_periodic_seq
+
+
+  subroutine if_sizes_do_not_match(plan, rho, phi)
+
+    type (poisson_3d_periodic_plan_seq), pointer :: plan
+    sll_real64, dimension(:,:,:)                 :: rho
+    sll_real64, dimension(:,:,:)                 :: phi
+    sll_int32,  dimension(3)                     :: n ! nx_loc, ny_loc, nz_loc
+    sll_int32                                    :: i
+
+    n(1) = plan%nx
+    n(2) = plan%ny
+    n(3) = plan%nz
+
+    do i=1,3
+       if ( (n(i)/=size(rho,i)) .or. (n(i)/=size(phi,i))  ) then
+          print*, 'Input sizes passed to solve_poisson_3d_periodic_par do not match'
+          print *, 'Exiting...'
+          stop
+       endif
+    enddo
+
+  end subroutine if_sizes_do_not_match
+
 
 end module sll_poisson_3d_periodic_seq
