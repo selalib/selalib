@@ -44,10 +44,12 @@ add_subdirectory(numerical_utilities)
 add_subdirectory(diagnostics)
 add_subdirectory(splines)
 add_subdirectory(mesh_types)
+#add_subdirectory(timer)
 #add_subdirectory(fft)
 
 # add tests
 enable_testing()
+#add_test(timer timer/test_timer)
 add_test(memory memory/test_memory)
 add_test(collective collective/test_collective)
 add_test(utilities utilities/test_utilities)
