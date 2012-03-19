@@ -39,7 +39,10 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-! From the Fortran Standard (2.4.1.1): "The kind type parameter indicates the decimal exponent range for the integer type (4.4.1), the decimal precision and exponent range for the real and complex types (4.4.2, 4.4.3), and the representation methods for the character and logical types (4.4.4, 4.4.5)."
+! From the Fortran Standard (2.4.1.1): "The kind type parameter indicates the 
+! decimal exponent range for the integer type (4.4.1), the decimal precision 
+! and exponent range for the real and complex types (4.4.2, 4.4.3), and the 
+! representation methods for the character and logical types (4.4.4, 4.4.5)."
 module sll_working_precision
   implicit none
   intrinsic :: kind, selected_real_kind
