@@ -79,26 +79,29 @@ integer :: error
 call H5Fclose_f(file_id,error)
 end subroutine sll_hdf5_file_close
 
-#define NEW_HDF5_FUNCTION(func_name, dataspace_dimension, array_name_and_dims)      \
-subroutine func_name(file_id,array,dsetname,error);                                 \
-integer(hid_t)  , intent(in)           :: file_id;                                  \
-character(len=*), intent(in)           :: dsetname;                                 \
-sll_int32, intent(out)                 :: error;                                    \
-sll_int32                              :: rank, i;                                  \
-sll_real64, intent(in)                 :: array_name_and_dims;                      \
-integer(hsize_t)                       :: array_dims(dataspace_dimension);          \
-integer(hid_t)                         :: dataset_id;                               \
-integer(hid_t)                         :: dataspace_id;                             \
-rank = dataspace_dimension;                                                         \
-do i = 1, rank;                                                                     \
-   array_dims(i) = size(array,i);                                                   \
-end do;                                                                             \
-call H5Screate_simple_f(rank,array_dims,dataspace_id,error);                        \
-call H5Dcreate_f(file_id,dsetname,H5T_NATIVE_DOUBLE,dataspace_id,dataset_id,error); \
-call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error);               \
-call H5Sclose_f(dataspace_id,error);                                                \
-call H5Dclose_f(dataset_id,error);                                                  \
-end subroutine func_name
+
+define(`NEW_HDF5_FUNCTION', 
+`
+subroutine `$1'(file_id,array,dsetname,error)
+integer(hid_t)  , intent(in)           :: file_id
+character(len=*), intent(in)           :: dsetname
+sll_int32, intent(out)                 :: error
+sll_int32                              :: rank, i
+sll_real64, intent(in)                 :: `$3'
+integer(hsize_t)                       :: array_dims(`$2')
+integer(hid_t)                         :: dataset_id
+integer(hid_t)                         :: dataspace_id
+rank = `$2'
+do i = 1, rank
+   array_dims(i) = size(array,i)
+end do
+call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+call H5Dcreate_f(file_id,dsetname,H5T_NATIVE_DOUBLE,dataspace_id,dataset_id,error)
+call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+call H5Sclose_f(dataspace_id,error)
+call H5Dclose_f(dataset_id,error)
+end subroutine `$1'
+')
 
 !> Write a 1D array of float in double precision in a HDF5 file: 
 !>    - Create a dataspace with 1 dimension
@@ -155,4 +158,3 @@ NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 #endif
 
 end module sll_hdf5_io
-
