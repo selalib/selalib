@@ -191,8 +191,8 @@ sll_real64 :: theta, a, b, phi
 sll_real64, allocatable, dimension(:,:,:) :: p1, p2, p3, pf
 
 n1 = 32
-n2 = 64
-n3 = 128
+n2 = 32
+n3 = 32
 SLL_ALLOCATE(p1(n1,n2,n3),error)
 SLL_ALLOCATE(p2(n1,n2,n3),error)
 SLL_ALLOCATE(p3(n1,n2,n3),error)
@@ -216,12 +216,24 @@ do k = 1, n3
    phi = phi + 2._f64*sll_pi / (n3-1)
 end do 
 
-call write_mesh(p1,p2,p3,n1,n2,n3,"mesh3d")
+call write_mesh(p1,p2,p3,n1,n2,n3,"tore3d")
+call write_vec1d(pf,n1,n2,n3,"vec3d_on_cells","tore3d",1)
+call write_vec1d(pf,n1,n2,n3,"vec3d_on_nodes","tore3d",0)
 
-!cells values
-call write_vec1d(pf,n1,n2,n3,"vec3d_on_cells","mesh3d",1)
-!nodes values
-call write_vec1d(pf,n1,n2,n3,"vec3d_on_nodes","mesh3d",0)
+do k = 1, n3
+   do j = 1, n2
+      do i = 1, n1
+         p1(i,j,k) =  i
+         p2(i,j,k) =  j
+         p3(i,j,k) =  k
+         pf(i,j,k) =  (i+j)*k
+      end do
+   end do 
+end do 
+
+call write_mesh(p1,p2,p3,n1,n2,n3,"cube3d")
+call write_vec1d(pf,n1,n2,n3,"vec3d_on_cells","cube3d",1)
+call write_vec1d(pf,n1,n2,n3,"vec3d_on_nodes","cube3d",0)
 
 end subroutine test_3d
 
