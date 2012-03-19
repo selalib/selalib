@@ -35,11 +35,11 @@ module sll_field_2d
 
   use numeric_constants
   use sll_diagnostics
-  use sll_mesh_2d
+  use sll_mapped_mesh_base
   implicit none
 
   enum, bind(C)
-     enumerator :: NODE = 0, CELL_CENTER = 1
+     enumerator :: NODE_FIELD = 0, CELL_CENTER_FIELD = 1
   end enum
 
   type vec2
@@ -48,7 +48,7 @@ module sll_field_2d
   end type vec2
 
   type scalar_field_2d
-     class(mesh_2d), pointer :: mesh
+     class(sll_mapped_mesh_2d_base), pointer :: mesh
      sll_real64, dimension(:,:), pointer :: data
      sll_int32  :: data_position
      character(len=30) :: name
@@ -57,18 +57,26 @@ module sll_field_2d
   end type scalar_field_2d
 
   type vector_field_2d
-     class(mesh_2d), pointer :: mesh
+     class(sll_mapped_mesh_2d_base), pointer :: mesh
      type(vec2), dimension(:,:), pointer :: data
      sll_int32  :: data_position
      character(len=30) :: name
   end type vector_field_2d
 
+  abstract interface
+     function scalar_function_2D( eta1, eta2 )
+       use sll_working_precision
+       sll_real64 :: scalar_function_2D
+       sll_real64, intent(in)  :: eta1
+       sll_real64, intent(in)  :: eta2
+     end function scalar_function_2D
+  end interface
 
 contains   ! *****************************************************************  
  
   subroutine new_scalar_field_2d( this, mesh, data_position, data_func)
     class(scalar_field_2d), intent(inout)   :: this
-    class(mesh_2d), pointer, intent(in) :: mesh
+    class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
     sll_int32 :: data_position
     procedure(scalar_function_2D), pointer :: data_func
     ! local variables
@@ -79,7 +87,7 @@ contains   ! *****************************************************************
 
     this%mesh => mesh
     this%data_position = data_position
-    if (data_position == NODE) then
+    if (data_position == NODE_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        do i2 = 1, mesh%nc_eta2+1
           do i1 = 1, mesh%nc_eta1+1
@@ -87,7 +95,7 @@ contains   ! *****************************************************************
                   mesh%x2_at_node(i1,i2))
           end do
        end do
-    else if (data_position == CELL_CENTER) then
+    else if (data_position == CELL_CENTER_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1,mesh%nc_eta2), ierr)
        delta1 = 1.0_f64/mesh%nc_eta1
        delta2 = 1.0_f64/mesh%nc_eta2
@@ -145,8 +153,8 @@ contains   ! *****************************************************************
 
 
 
-  subroutine write_mesh_2d(mesh,mesh_name)
-    class(mesh_2d) :: mesh
+  subroutine write_sll_mapped_mesh_2d_base(mesh,mesh_name)
+    class(sll_mapped_mesh_2d_base) :: mesh
     character(len=*), intent(in), optional :: mesh_name
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -159,9 +167,9 @@ contains   ! *****************************************************************
     ! create 2D mesh
     SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
     SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    eta1 = mesh%eta1_min
+    eta1 = 0.0_f64
     do i1=1, mesh%nc_eta1+1
-       eta2 = mesh%eta2_min
+       eta2 = 0.0_f64
        do i2=1, mesh%nc_eta2+1
           x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
           x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
@@ -174,14 +182,14 @@ contains   ! *****************************************************************
     else
        call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,"mesh")
     end if
-  end subroutine write_mesh_2D
+  end subroutine write_sll_mapped_mesh_2d_base
 
   subroutine write_scalar_field_2d( f2Dv1, name, jacobian)
     class(scalar_field_2d) :: f2Dv1
     character(len=*) :: name
     logical, optional  :: jacobian ! .true. if field data multiplied by jacobian is stored
     
-    class(mesh_2d), pointer :: mesh
+    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32  :: i1
     sll_int32  :: i2
     sll_real64 :: eta1
@@ -205,7 +213,7 @@ contains   ! *****************************************************************
        do i1 = 1, mesh%nc_eta1
           eta2 =  0.5_f64 * mesh%delta_eta2
           do i2 = 1, mesh%nc_eta2
-             val(i1,i2) = f2Dv1%data( i1,i2) / mesh%jac (eta1, eta2)
+             val(i1,i2) = f2Dv1%data( i1,i2) / mesh%jacobian (eta1, eta2)
              eta2 = eta2 + mesh%delta_eta2
           end do
           eta1 = eta1 + mesh%delta_eta1

@@ -34,7 +34,7 @@ module sll_poisson_2D_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
+#include "sll_mesh_2d.h"
 
 use numeric_constants
 use fft_module
@@ -49,10 +49,10 @@ public :: delete_poisson_2d_periodic
 !> Object with data to solve Poisson equation on 2d domain with
 !> periodic boundary conditions
 type, public :: poisson_2d_periodic
-  type(field_2d_vec1), pointer        :: sol, rhs
+  type(scalar_field_2d), pointer        :: sol, rhs
   sll_comp64, dimension(:,:), pointer :: rhst, ext, eyt
   type(fftclass)                      :: fftx, ffty
-  type(mesh_descriptor_2d), pointer   :: descriptor
+  class(sll_mapped_mesh_2d_base), pointer   :: mesh
   sll_real64, dimension(:,:), pointer :: kx, ky, k2
 end type poisson_2d_periodic
 
@@ -78,24 +78,24 @@ contains
 function new_poisson_2d_periodic_potential(potential)
 
    type(poisson_2d_periodic),pointer :: new_poisson_2d_periodic_potential
-   type(field_2D_vec1),      pointer :: potential
-   type(mesh_descriptor_2d), pointer :: mesh
+   type(scalar_field_2d),      pointer :: potential
+   class(sll_mapped_mesh_2d_base), pointer :: mesh
    sll_int32                         :: error
    sll_int32                         :: ncx
    sll_int32                         :: ncy
 
-   mesh => potential%descriptor
+   mesh => potential%mesh
    ncx = GET_MESH_NC_ETA1(mesh)
    ncy = GET_MESH_NC_ETA2(mesh)
 
    SLL_ALLOCATE(new_poisson_2d_periodic_potential,                   error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_potential%descriptor,        error)
+   SLL_ALLOCATE(new_poisson_2d_periodic_potential%mesh,        error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%rhst(ncy,ncx/2+1), error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%kx(ncy,ncx/2+1),   error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%ky(ncy,ncx/2+1),   error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%k2(ncy,ncx/2+1),   error)
 
-   new_poisson_2d_periodic_potential%descriptor => mesh
+   new_poisson_2d_periodic_potential%mesh => mesh
 
    call initdfft(new_poisson_2d_periodic_potential%fftx, ncx)
    call initcfft(new_poisson_2d_periodic_potential%ffty, ncy)
@@ -107,18 +107,18 @@ end function new_poisson_2d_periodic_potential
 function new_poisson_2d_periodic_e_fields(e_fields)
 
    type(poisson_2d_periodic), pointer :: new_poisson_2d_periodic_e_fields
-   type(field_2D_vec2),       pointer :: e_fields
-   type(mesh_descriptor_2d),  pointer :: mesh
+   type(vector_field_2d),       pointer :: e_fields
+   class(sll_mapped_mesh_2d_base),  pointer :: mesh
    sll_int32                          :: ncx
    sll_int32                          :: ncy
    sll_int32                          :: error
 
-   mesh => e_fields%descriptor
+   mesh => e_fields%mesh
    ncx = GET_MESH_NC_ETA1(mesh)
    ncy = GET_MESH_NC_ETA2(mesh)
 
    SLL_ALLOCATE(new_poisson_2d_periodic_e_fields,                   error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%descriptor,        error)
+   !SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%mesh,        error)
    SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%rhst(ncy,ncx/2+1), error)
    SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%ext(ncy,ncx/2+1),  error)
    SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%eyt(ncy,ncx/2+1),  error)
@@ -126,7 +126,7 @@ function new_poisson_2d_periodic_e_fields(e_fields)
    SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%ky(ncy,ncx/2+1),   error)
    SLL_ALLOCATE(new_poisson_2d_periodic_e_fields%k2(ncy,ncx/2+1),   error)
 
-   new_poisson_2d_periodic_e_fields%descriptor => mesh
+   new_poisson_2d_periodic_e_fields%mesh => mesh
    
    call initdfft(new_poisson_2d_periodic_e_fields%fftx, ncx)
    call initcfft(new_poisson_2d_periodic_e_fields%ffty, ncy)
@@ -182,8 +182,8 @@ end subroutine solve_poisson_2d_periodic_potential
 subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
 
    type(poisson_2d_periodic), intent(inout) :: this
-   type(field_2d_vec1), intent(in)          :: rhs
-   type(field_2d_vec2), intent(out)         :: e_fields
+   type(scalar_field_2d), intent(in)          :: rhs
+   type(vector_field_2d), intent(out)         :: e_fields
    sll_int32 , intent(out)                  :: error
    sll_int32                                :: ncx,ncy
    sll_int32                                :: i, j

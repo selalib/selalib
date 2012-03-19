@@ -7,10 +7,10 @@ module sll_mapped_mesh_base
   ! represented by an analytic transformation and those represented by a
   ! discrete transformation. 
   type, abstract :: sll_mapped_mesh_2d_base
-     sll_int32  :: num_pts1
-     sll_int32  :: num_pts2
-     sll_real64 :: delta1
-     sll_real64 :: delta2
+     sll_int32  :: nc_eta1
+     sll_int32  :: nc_eta2
+     sll_real64 :: delta_eta1
+     sll_real64 :: delta_eta2
      sll_real64, dimension(:,:), pointer :: x1_cell
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
@@ -18,9 +18,10 @@ module sll_mapped_mesh_base
    contains
      procedure(geometry_function), deferred, pass       :: x1
      procedure(geometry_function), deferred, pass       :: x2
+     procedure(geometry_function), deferred, pass       :: jacobian
      procedure(geometry_function_nodes), deferred, pass :: x1_at_node
      procedure(geometry_function_nodes), deferred, pass :: x2_at_node
-     procedure(geometry_function), deferred, pass       :: jacobian
+     procedure(geometry_function_nodes), deferred, pass       :: jacobian_at_node
 !     procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
   end type sll_mapped_mesh_2d_base
 

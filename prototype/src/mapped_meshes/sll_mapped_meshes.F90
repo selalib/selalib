@@ -55,6 +55,7 @@ module sll_mapped_meshes
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_analytic
      procedure, pass(mesh) :: x1_at_node => x1_node_analytic
      procedure, pass(mesh) :: x2_at_node => x2_node_analytic
+     procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_analytic
      procedure, pass(mesh) :: x1         => x1_analytic
      procedure, pass(mesh) :: x2         => x2_analytic
      procedure, pass(mesh) :: jacobian   => jacobian_2d_analytic
@@ -73,6 +74,7 @@ module sll_mapped_meshes
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete
      procedure, pass(mesh) :: x2_at_node => x2_node_discrete
+     procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_discrete
      procedure, pass(mesh) :: x1         => x1_discrete
      procedure, pass(mesh) :: x2         => x2_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
@@ -172,12 +174,12 @@ contains
     sll_int32  :: j
     sll_int32  :: ierr
 
-    mesh%num_pts1 = npts1
-    mesh%num_pts2 = npts2
+    mesh%nc_eta1 = npts1
+    mesh%nc_eta2 = npts2
     delta_1       = 1.0_f64/(npts1 - 1)
     delta_2       = 1.0_f64/(npts2 - 1)
-    mesh%delta1   = delta_1
-    mesh%delta2   = delta_2
+    mesh%delta_eta1   = delta_1
+    mesh%delta_eta2   = delta_2
 
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
@@ -435,10 +437,10 @@ contains
        end if
     end if
 
-    mesh%num_pts1  = npts1
-    mesh%num_pts2  = npts2
-    mesh%delta1    = 1.0_f64/(npts1 - 1)
-    mesh%delta2    = 1.0_f64/(npts2 - 1)
+    mesh%nc_eta1  = npts1
+    mesh%nc_eta2  = npts2
+    mesh%delta_eta1    = 1.0_f64/(npts1 - 1)
+    mesh%delta_eta2    = 1.0_f64/(npts2 - 1)
     mesh%x1_interp => x1_interpolator
     mesh%x2_interp => x2_interpolator
 
@@ -487,9 +489,9 @@ contains
     else
        ! Fill the jacobian values at the nodes calculated from the splines
        do j=0, npts2 - 1
-          eta_2 = real(j,f64)*mesh%delta2          
+          eta_2 = real(j,f64)*mesh%delta_eta2          
           do i=0, npts1 - 1
-             eta_1 = real(i,f64)*mesh%delta1
+             eta_1 = real(i,f64)*mesh%delta_eta1
              ! FIX THIS PART!!!
              jacobian_val = mesh%jacobian_func(eta_1,eta_2)
              mesh%jacobians_n(i+1,j+1) = jacobian_val
@@ -517,6 +519,34 @@ contains
        end do
     end if
   end subroutine initialize_mesh_2d_discrete
+
+  function mesh_2d_jacobian_node_analytic( mesh, i, j )
+    sll_real64              :: mesh_2d_jacobian_node_analytic
+    class(sll_mapped_mesh_2d_analytic)   :: mesh
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    num_pts_1 = mesh%nc_eta1 + 1
+    num_pts_2 = mesh%nc_eta2 + 1
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
+    mesh_2d_jacobian_node_analytic = mesh%jacobians_n(i,j)
+  end function mesh_2d_jacobian_node_analytic
+
+  function mesh_2d_jacobian_node_discrete( mesh, i, j )
+    sll_real64              :: mesh_2d_jacobian_node_discrete
+    class(sll_mapped_mesh_2d_discrete)   :: mesh
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    num_pts_1 = mesh%nc_eta1 + 1
+    num_pts_2 = mesh%nc_eta2 + 1
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
+    mesh_2d_jacobian_node_discrete = mesh%jacobians_n(i,j)
+  end function mesh_2d_jacobian_node_discrete
 
 #if 0
   subroutine delete_mapped_mesh_2D_general( map )
@@ -612,21 +642,6 @@ contains
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
     mesh_2d_x2_cell = map%x2_cell(i,j)
   end function mesh_2d_x2_cell
-
-  function mesh_2d_jacobian_node( map, i, j )
-    sll_real64              :: mesh_2d_jacobian_node
-    type(mapped_mesh_2D_general), pointer   :: map
-    sll_int32, intent(in)   :: i
-    sll_int32, intent(in)   :: j
-    sll_int32 :: num_pts_1
-    sll_int32 :: num_pts_2
-    SLL_ASSERT( associated(map) )
-    num_pts_1 = map%num_pts_1
-    num_pts_2 = map%num_pts_2
-    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
-    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
-    mesh_2d_jacobian_node = map%jacobians_n(i,j)
-  end function mesh_2d_jacobian_node
 
   function mesh_2d_jacobian_cell( map, i, j )
     sll_real64              :: mesh_2d_jacobian_cell

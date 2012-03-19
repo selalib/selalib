@@ -16,6 +16,7 @@ env = Environment( ENV=os.environ,
                               '../utilities',
                               '../constants',
                               '../splines',
+                              '../mapped_meshes',
                               '../diagnostics'], 
                    LIBPATH= ['.'],
                    LIBS=['sll_memory',
@@ -24,6 +25,7 @@ env = Environment( ENV=os.environ,
                          'sll_utilities', 
                          'sll_constants',
                          'sll_splines',
+                         'sll_mapped_mesh_2d',
                          'sll_diagnostics'],
                    F90FLAGS = ['-g','-cpp','-W','-Wall','-std=f2003',
                                '-ffree-line-length-none'])
@@ -41,7 +43,9 @@ env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
-env.Program('sll_field_2d', ["sll_mesh_test.F90","sll_field_2d.F90","unit_test.F90","geometry_functions.F90"])
+env.Library('sll_mapped_mesh_2d', ["../mapped_meshes/sll_mapped_mesh_base.F90",
+                                   "../mapped_meshes/sll_mapped_meshes.F90"])
+env.Program('sll_field_2d', ["sll_field_2d.F90","unit_test.F90","geometry_functions.F90"])
 #env.Program('unit_test',["sll_mesh_experimental.F90", "geometry_functions.F90",
 #                         "unit_test_experimental.F90"])
 #env.Program('unit_test_experimental',["unit_test_experimental.F90",
