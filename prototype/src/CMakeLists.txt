@@ -20,6 +20,16 @@ if (HDF5_FOUND)
     #include_directories(${HDF5_INCLUDE_DIRS})
 endif(HDF5_FOUND)
 
+#ajoute les modules locaux
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeModules)	
+
+# recherche le package GMP
+find_package(FFTW)
+if (FFTW_FOUND)
+	include_directories(${FFTW_INCLUDE_DIR})
+endif()
+
+
 # include's
 include_directories(remap poisson_solvers utilities memory mesh_types assert precision) 
 
@@ -34,6 +44,8 @@ add_subdirectory(numerical_utilities)
 add_subdirectory(diagnostics)
 add_subdirectory(splines)
 add_subdirectory(mesh_types)
+#add_subdirectory(fft)
+
 # add tests
 enable_testing()
 add_test(memory memory/test_memory)
