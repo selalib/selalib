@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 23, 2012
-!> Last modification: March 13, 2012
+!> Last modification: March 19, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -60,8 +60,6 @@ module sll_poisson_3d_periodic_util
      type(layout_3D_t),  pointer :: layout_x
      type(layout_3D_t),  pointer :: layout_y
      type(layout_3D_t),  pointer :: layout_z
-     type(layout_3D_t),  pointer :: layout_kernel
-     sll_int32,   dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
   end type poisson_3d_periodic_plan_par
 
    contains
@@ -100,8 +98,9 @@ module sll_poisson_3d_periodic_util
      end function new_poisson_3d_periodic_plan_seq
 
 
-     function new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz) result(plan)
+     function new_poisson_3d_periodic_plan_par(start_layout, nx, ny, nz, Lx, Ly, Lz) result(plan)
 
+       type(layout_3D_t),  pointer                  :: start_layout
        sll_int32                                    :: nx, ny, nz
        sll_comp64,                    dimension(nx) :: x
        sll_comp64,                    dimension(ny) :: y
@@ -110,7 +109,7 @@ module sll_poisson_3d_periodic_util
        sll_int64                                    :: colsz ! collective size
        sll_int32                                    :: npx, npy, npz
        sll_int32                                    :: e, ex, ey, ez
-       sll_int32,                    dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
+       sll_int32                                    :: nx_loc, ny_loc, nz_loc 
        sll_int32                                    :: ierr
        type (poisson_3d_periodic_plan_par), pointer :: plan
 
@@ -134,56 +133,23 @@ module sll_poisson_3d_periodic_util
        plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
        plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
 
-       colsz  = sll_get_collective_size(sll_world_collective)
-       e = int(log(real(colsz))/log(2.))
-
        ! Layout and local sizes for FFTs in x-direction
-
-       plan%layout_x => new_layout_3D( sll_world_collective )
-       npx = 1
-       npy = 2**(e/2)
-       npz = int(colsz)/npy
-       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_x )
-
-       plan%loc_sizes(1,1) = nx/npx
-       plan%loc_sizes(1,2) = ny/npy
-       plan%loc_sizes(1,3) = nz/npz
+       plan%layout_x => start_layout
 
        ! Layout and local sizes for FFTs in y-direction
-
+       colsz  = sll_get_collective_size(sll_world_collective)
+       e = int(log(real(colsz))/log(2.))
        plan%layout_y => new_layout_3D( sll_world_collective )
-       npx = npy
+       npx = 2**(e/2)
        npy = 1
+       npz = int(colsz)/npx
        call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_y )
 
-       plan%loc_sizes(2,1) = nx/npx
-       plan%loc_sizes(2,2) = ny/npy
-       plan%loc_sizes(2,3) = nz/npz
-
        ! Layout and local sizes for FFTs in z-direction
-
        plan%layout_z => new_layout_3D( sll_world_collective )
        npy = npz
        npz = 1
        call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_z )
-
-       plan%loc_sizes(3,1) = nx/npx
-       plan%loc_sizes(3,2) = ny/npy
-       plan%loc_sizes(3,3) = nz/npz
-
-       ! Layout and local sizes for poisson solver kernel
-       ex = e/3
-       ey = (e-ex)/2
-       ez = e - (ex+ey)
-       npx = 2**ex
-       npy = 2**ey
-       npz = 2**ez
-       plan%layout_kernel  => new_layout_3D( sll_world_collective ) 
-       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, plan%layout_kernel )
-
-       plan%loc_sizes(4,1) = nx/npx
-       plan%loc_sizes(4,2) = ny/npy
-       plan%loc_sizes(4,3) = nz/npz
 
      end function new_poisson_3d_periodic_plan_par
 
@@ -230,11 +196,11 @@ module sll_poisson_3d_periodic_util
        call delete_layout_3D( plan%layout_x )
        call delete_layout_3D( plan%layout_y )
        call delete_layout_3D( plan%layout_z )
-       call delete_layout_3D( plan%layout_kernel )
 
        SLL_DEALLOCATE(plan, ierr)
 
      end subroutine delete_poisson_3d_periodic_plan_par
 
-     end module sll_poisson_3d_periodic_util
+
+end module sll_poisson_3d_periodic_util
 
