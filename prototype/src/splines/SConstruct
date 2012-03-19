@@ -34,7 +34,7 @@ env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Program('unit_test', ["unit_test.F90", "sll_splines.F90", "test_func_module.F90",
  "test_processes_module.F90", "util_constants.F90"])
 env.Program('unit_test_nonuniform', ["unit_test_nonuniform.F90", "cubic_nonuniform_splines.F90"])
-env.Program('polar_SL', ["polar_SL.F90", "cubic_nonuniform_splines.F90"])
+env.Program('polar_SL', ["polar_SL.F90", "sll_splines.F90","cubic_nonuniform_splines.F90"])
 
 
 
