@@ -19,11 +19,11 @@ env = Environment( ENV = os.environ,
                    F90PATH= ['../memory', '../precision', '../assert', 
                              '../numerical_utilities', '../constants',
                              '../mesh_types', '../diagnostics', '../collective',
-                             '../utilities', '../fft', '../remap'],
+                             '../utilities', '../fft', '../remap','../mapped_meshes'],
                    LINK = 'mpif90',
                    LIBPATH = ['.'],
                    LIBS = ['sll_remap',
-                           'sll_mesh_types', 
+                           'sll_field_2d', 
                            'sll_collective',
                            'sll_diagnostics',
                            'sll_assertion',
@@ -50,8 +50,8 @@ env.Library('sll_memory',     ["../memory/sll_memory.F90"])
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
 env.Library('sll_constants',  ["../constants/numeric_constants.F90"])
-env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90",
-                               "../mesh_types/geometry_functions.F90"])
+env.Library('sll_field_2d', ["../mapped_meshes/sll_mapped_meshes.F90",
+                               "../mesh_types/field_2d.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
@@ -61,27 +61,27 @@ env.Library('sll_remap', ["../remap/sll_remap.F90"])
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 
 
-env.Program('unit_test',['sll_poisson_1d_periodic.F90', 
-                         'fft1d.f90', 'unit_test.F90',
-                         'sll_poisson_2d_periodic.F90', 
-                         'fft_module.F90'])
+#env.Program('unit_test',['sll_poisson_1d_periodic.F90', 
+#                         'fft1d.f90', 'unit_test.F90',
+#                         'sll_poisson_2d_periodic.F90', 
+#                         'fft_module.F90'])
 
-env.Program('test_poisson_1d', ['test_poisson_1d.F90',
-                                'sll_poisson_1d_periodic.F90', 
-                                'fft1d.f90'])
+#env.Program('test_poisson_1d', ['test_poisson_1d.F90',
+#                                'sll_poisson_1d_periodic.F90', 
+#                                'fft1d.f90'])
 
 env.Program('test_poisson_2d', ["test_poisson_2d.F90",
                                 'fft_module.F90',
                                 'sll_poisson_2d_periodic.F90' ])
 
 
-env.Program('test_poisson_3d_seq',[ 'test_poisson_3d_seq.F90',
-                                'sll_poisson_3d_periodic_util.F90',
-                                'sll_poisson_3d_periodic_seq.F90'])
+#env.Program('test_poisson_3d_seq',[ 'test_poisson_3d_seq.F90',
+#                                'sll_poisson_3d_periodic_util.F90',
+#                                'sll_poisson_3d_periodic_seq.F90'])
 
-env.Program('test_poisson_3d_par',[ 'test_poisson_3d_par.F90',
-                                'sll_poisson_3d_periodic_util.F90',
-                                'sll_poisson_3d_periodic_par.F90' ])
+#env.Program('test_poisson_3d_par',[ 'test_poisson_3d_par.F90',
+#                                'sll_poisson_3d_periodic_util.F90',
+#                                'sll_poisson_3d_periodic_par.F90' ])
 
 if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(F90PATH=[os.environ['FFTWINCPATH']])

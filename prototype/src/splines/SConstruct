@@ -12,12 +12,11 @@ print 'platform : ' + platform
 
 env = Environment( ENV=os.environ,
                    F90PATH= ['../memory','../precision','../assert', 
-                             '../numerical_utilities','../constants',
-                             '../interpolators'],
+                             '../numerical_utilities','../constants'],
 #                  FORTRANMODDIRPREFIX= '-fmod', 
                    LIBPATH= ['.'],
                    LIBS=['sll_constants','sll_memory','sll_precision',
-                         'sll_assertion','sll_tridiagonal','sll_interpolators'],
+                         'sll_assertion','sll_tridiagonal'],
                    F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
                               '-std=f2003', '-ffree-line-length-none', 
                               '-DGFORTRAN'])
@@ -33,7 +32,6 @@ env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion', ["../assert/sll_assert.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_tridiagonal', ["../numerical_utilities/tridiagonal.F90"])
-env.Library('sll_interpolators', ["../interpolators/sll_interpolators.F90"])
 env.Program('unit_test', ["unit_test.F90", "sll_splines.F90", "test_func_module.F90",
                           "test_processes_module.F90", "util_constants.F90"])
 env.Program('unit_test_nonuniform', ["unit_test_nonuniform.F90", "cubic_nonuniform_splines.F90"])
