@@ -2,7 +2,7 @@ module ode_solvers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
+#include "sll_mesh_2d.h"
   
   implicit none
   enum, bind(C)

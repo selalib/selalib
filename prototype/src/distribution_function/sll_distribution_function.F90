@@ -80,7 +80,7 @@ contains
     this%pmass = 1.0_f64
     this%plot_counter = 0
     this%name = name
-    if (data_position == NODE) then
+    if (data_position == NODE_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        do i2 = 1, mesh%nc_eta2+1
           do i1 = 1, mesh%nc_eta1+1
@@ -88,7 +88,7 @@ contains
                   mesh%x2_at_node(i1,i2))
           end do
        end do
-    else if (data_position == CELL_CENTER) then
+    else if (data_position == CELL_CENTER_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        delta1 = 1.0_f64/mesh%nc_eta1
        delta2 = 1.0_f64/mesh%nc_eta2

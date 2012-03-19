@@ -3,7 +3,7 @@ module sll_poisson_1D_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
+#include "sll_mesh_2d.h"
   use numeric_constants
  !PN use geometry1d_module
   use fft1d_module
@@ -48,8 +48,8 @@ contains
 
   subroutine solve_poisson_1d_periodic(this,phi,rhs)
     type(poisson_1d_periodic)                 :: this
-    type(field_1D_vec1), pointer              :: phi
-    type(field_1D_vec1), pointer              :: rhs
+    type(scalar_field_1d), pointer            :: phi
+    type(scalar_field_1d), pointer            :: rhs
     sll_int32                                 :: i, ik
     sll_int32                                 :: nxh1
     sll_real64                                :: kx0, kx, k2
