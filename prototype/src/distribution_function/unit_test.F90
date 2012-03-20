@@ -7,14 +7,14 @@ program unit_test
   use sll_diagnostics
   use geometry_functions
   use sll_mapped_meshes
-!  use initial_distribution_functions
+  use initial_distribution_functions
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic) :: mesh2d
   type(sll_distribution_function_2D_t) :: dist_func
   character(32)  :: name = 'dist_func'
-  procedure(scalar_function_2D), pointer :: p_init_f, px1, px2, pjac
+  procedure(scalar_function_2D), pointer :: p_init_f !, px1, px2, pjac
   sll_int32  :: ierr
   sll_int32 :: ix, iv, nnode_x1, nnode_v1
 
@@ -24,10 +24,18 @@ program unit_test
 
   print*, 'initialization of mesh'
   
-  px1 => sinprod_x1
-  px2 => sinprod_x2
-  pjac => sinprod_jac
-  call new_mesh_2d_analytic ( mesh2d, nc_eta1, nc_eta2, px1, px2, pjac)
+!  px1 => sinprod_x1
+!  px2 => sinprod_x2
+!  pjac => sinprod_jac
+  call mesh2d%initialize( &
+       nc_eta1+1, &
+       nc_eta2+1, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22 )
 
   print*, 'initialization of distribution_function'
 
@@ -36,7 +44,7 @@ program unit_test
        name, p_init_f)
  
   print*, 'write mesh and distribution function'
-  call write_mesh_2d(mesh2d)
+!  call write_mesh_2d(mesh2d)
   call write_scalar_field_2d(dist_func,name,jacobian=.true.) 
 
 !!$  x1_min =  0.0_f64; x1_max =  2.0_f64 * sll_pi
