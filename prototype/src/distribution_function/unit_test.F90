@@ -6,11 +6,12 @@ program unit_test
   use distribution_function
   use sll_diagnostics
   use geometry_functions
-  use initial_distribution_functions
+  use sll_mapped_meshes
+!  use initial_distribution_functions
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
-  type(mesh_2d_analytic) :: mesh2d
+  type(sll_mapped_mesh_2d_analytic) :: mesh2d
   type(sll_distribution_function_2D_t) :: dist_func
   character(32)  :: name = 'dist_func'
   procedure(scalar_function_2D), pointer :: p_init_f, px1, px2, pjac
