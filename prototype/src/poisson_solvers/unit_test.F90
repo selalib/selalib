@@ -27,8 +27,6 @@ program test_poisson_solvers
   use numeric_constants
   use sll_poisson_1d_periodic
   use sll_poisson_2d_periodic
-  !use geometry1d_module
-  use numeric_constants
   use sll_poisson_3d_periodic_util
   use sll_poisson_3d_periodic_seq
   use sll_poisson_3d_periodic_par
