@@ -9,7 +9,7 @@ program radial_1d_SL
   implicit none
 
   type(sll_spline_2D), pointer :: spl_natper
-  sll_int32  :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,nb_diag,meth,jac
+  sll_int32  :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,nb_diag,meth,jac,field_case
   sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,tmp,tmp1,tmp2
   sll_real64 :: a1,a2,rr,thetath,k1r,k2r,k3r,k4r,k1theta,k2theta,k3theta,k4theta
   sll_real64,dimension(:,:), pointer :: f,fh,fh_buf
@@ -17,21 +17,22 @@ program radial_1d_SL
   sll_real64,dimension(:,:), pointer :: diag
 	
   !parameters
-  N=256
-  Nr=512 !128
-  Ntheta=512!128
+  N=512
+  Nr=N !128
+  Ntheta=N!128
   rmin = 0.2_f64
   rmax = 0.8_f64
   test_case = 1
+  field_case = 3
   dt = 0.01_f64
-  nb_step = 100
+  nb_step = 1
   visu_step = 10
   nb_diag = 4
-  meth = 1
+  meth = 2
   jac = 1
 	
-  a1=1.0_f64
-  a2=2.0_f64
+  a1=-1.0_f64
+  a2=-2.0_f64
   
   print *,'#N=',N
   print *,'#T=',real(nb_step,f64)*dt
@@ -71,7 +72,14 @@ program radial_1d_SL
         f(i,j) = cos(theta)
       endif
       if (test_case==4) then
-        f(i,j) = exp(-30._f64*(theta-0.5*sll_pi)**2)
+        if(r>=0.4.and.r<=0.6)then
+          f(i,j) = exp(-30._f64*(theta-0.5*sll_pi)**2)
+        else
+          f(i,j) = 0._f64
+        endif  
+      endif
+      if (test_case==5) then
+        f(i,j) = 1._f64
       endif
     enddo  
   enddo
@@ -140,22 +148,35 @@ program radial_1d_SL
           !theta = thetath
           
           !RK4
-          rr = r
-          thetath = theta
-          k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-          k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-          rr = r + 0.5_f64*dt*k1r
-          thetath = theta +  0.5_f64*dt*k1theta
-          k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-          k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-          rr = r + 0.5_f64*dt*k2r
-          thetath = theta +  0.5_f64*dt*k2theta
-          k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-          k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-          rr = r + dt*k3r
-          thetath = theta +  dt*k3theta
-          k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-          k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          if(field_case==1)then
+            rr = r
+            thetath = theta
+            k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+            k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+            rr = r + 0.5_f64*dt*k1r
+            thetath = theta +  0.5_f64*dt*k1theta
+            k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+            k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+            rr = r + 0.5_f64*dt*k2r
+            thetath = theta +  0.5_f64*dt*k2theta
+            k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+            k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+            rr = r + dt*k3r
+            thetath = theta +  dt*k3theta
+            k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+            k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+		    r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
+            theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
+          endif
+          if(field_case==2)then
+            theta = theta+dt
+          endif
+          if(field_case==3)then
+            x = x + a1*dt
+            y = y + a2*dt
+            r = sqrt(x**2+y**2)
+            theta = acos(x/r)            
+          endif
           
           if(theta>2._f64*sll_pi)then
             theta= theta-2._f64*sll_pi
@@ -174,8 +195,9 @@ program radial_1d_SL
           !r = x
           !theta = y
 					
-					r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
-          theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
+
+
+
           
           x = r*cos(theta)
           y = r*sin(theta)
@@ -190,8 +212,16 @@ program radial_1d_SL
 						val = cos(theta)
 					endif
 					if (test_case==4) then
-						val = exp(-30._f64*(theta-0.5*sll_pi)**2)
+					  if(r>=0.4.and.r<=0.6)then
+                        val = exp(-30._f64*(theta-0.5*sll_pi)**2)
+                      else
+                        val = 0._f64
+                      endif
+                      
 					endif
+                    if (test_case==5) then
+                      val = 1._f64
+                    endif
 			
           diag(1,step) = diag(1,step) + val*(rmin+real(i-1,f64)*dr)*dr*dtheta
           diag(2,step) = diag(2,step) + val*dr*dtheta
@@ -217,6 +247,7 @@ program radial_1d_SL
     enddo
   close(900)
   
+  
 !  diag(1:nb_diag,1:nb_step) = 0._f64
   
   ! BSL
@@ -240,25 +271,52 @@ program radial_1d_SL
         y = r*sin(theta)    
 				    
         !RK4
-        rr = r
-        thetath = theta
-        k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-        rr = r + 0.5_f64*dt*k1r
-        thetath = theta +  0.5_f64*dt*k1theta
-        k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-        rr = r + 0.5_f64*dt*k2r
-        thetath = theta +  0.5_f64*dt*k2theta
-        k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-        rr = r + dt*k3r
-        thetath = theta +  dt*k3theta
-        k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+        if(field_case==1)then
+          rr = r
+          thetath = theta
+          k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          rr = r + 0.5_f64*dt*k1r
+          thetath = theta +  0.5_f64*dt*k1theta
+          k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          rr = r + 0.5_f64*dt*k2r
+          thetath = theta +  0.5_f64*dt*k2theta
+          k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          rr = r + dt*k3r
+          thetath = theta +  dt*k3theta
+          k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
+          theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
+        endif
         
-        !theta = theta+dt
-				
+        if(field_case==2)then
+          theta = theta+dt
+		endif
+
+        if(field_case==3)then
+            x = x + a1*dt
+            y = y + a2*dt
+
+            r = sqrt(x**2+y**2)
+            if(y>=0)then
+              theta = acos(x/r)
+            else
+              theta = 2._f64*sll_pi-acos(x/r)
+            endif
+            !if(abs(r-sqrt(x**2+y**2))>1.e-12)then
+            !  print *,'r',r,sqrt(x**2+y**2),i,j
+            !  stop
+            !endif
+            !if(abs(theta-acos(x/r))>1.e-12)then
+            !  print *,theta,acos(x/r),i,j
+            !  stop
+            !endif
+		endif
+
+		
         if(theta>2._f64*sll_pi)then
           theta= theta-2._f64*sll_pi
         endif
@@ -266,8 +324,6 @@ program radial_1d_SL
           theta= theta+2._f64*sll_pi
         endif
         
-        r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
-        theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
         
         val = interpolate_value_2D(r,theta,spl_natper)
 				
@@ -325,25 +381,54 @@ program radial_1d_SL
 				    
         !RK4
         dt = -dt
-        rr = r
-        thetath = theta
-        k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-        rr = r + 0.5_f64*dt*k1r
-        thetath = theta +  0.5_f64*dt*k1theta
-        k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-        rr = r + 0.5_f64*dt*k2r
-        thetath = theta +  0.5_f64*dt*k2theta
-        k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
-        rr = r + dt*k3r
-        thetath = theta +  dt*k3theta
-        k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
-        k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
         
-        !theta = theta+dt
-				
+        if(field_case==1)then
+          rr = r
+          thetath = theta
+          k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          rr = r + 0.5_f64*dt*k1r
+          thetath = theta +  0.5_f64*dt*k1theta
+          k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          rr = r + 0.5_f64*dt*k2r
+          thetath = theta +  0.5_f64*dt*k2theta
+          k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          rr = r + dt*k3r
+          thetath = theta +  dt*k3theta
+          k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+          k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+          r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
+          theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
+        endif
+        
+        
+        if(field_case==2)then
+          theta = theta+dt
+		endif
+
+        if(field_case==3)then
+            x = x + a1*dt
+            y = y + a2*dt
+
+            r = sqrt(x**2+y**2)
+            if(y>=0)then
+              theta = acos(x/r)
+            else
+              theta = 2._f64*sll_pi-acos(x/r)
+            endif
+            !if(abs(r-sqrt(x**2+y**2))>1.e-12)then
+            !  print *,'r',r,sqrt(x**2+y**2),i,j
+            !  stop
+            !endif
+            !if(abs(theta-acos(x/r))>1.e-12)then
+            !  print *,theta,acos(x/r),i,j
+            !  stop
+            !endif
+		endif
+
+		
         if(theta>2._f64*sll_pi)then
           theta= theta-2._f64*sll_pi
         endif
@@ -351,8 +436,8 @@ program radial_1d_SL
           theta= theta+2._f64*sll_pi
         endif
         
-        rfeet(i,j) = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
-        thetafeet(i,j) = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
+        rfeet(i,j) = r
+        thetafeet(i,j) = theta
         dt = -dt
       enddo
     enddo
@@ -384,6 +469,11 @@ program radial_1d_SL
       enddo
     enddo
   enddo
+  
+  
+  
+
+  
 ! L^{\infty} error 
   val = 0._f64
   do i=1,Nr
@@ -399,6 +489,9 @@ program radial_1d_SL
   close(900)
 	
 	end if
+	
+	
+
 
   open(unit=900,file='fh.dat')  
     do i=1,Nr!+1
