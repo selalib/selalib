@@ -1262,8 +1262,8 @@ NEW_DELETE_LAYOUT_FUNCTION( delete_layout_5D, layout_5D_t )
   subroutine apply_remap_3D_complex( plan, data_in, data_out )
     intrinsic                                 :: transfer
     type(remap_plan_3D_t), pointer            :: plan
-    double complex, dimension(:,:,:), intent(in)  :: data_in
-    double complex, dimension(:,:,:), intent(out) :: data_out
+    sll_comp64, dimension(:,:,:), intent(in)  :: data_in
+    sll_comp64, dimension(:,:,:), intent(out) :: data_out
     sll_int32, dimension(:), pointer          :: sb     ! send buffer
     sll_int32, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
