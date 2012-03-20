@@ -20,10 +20,6 @@ else :
   FFTW = ''
   fichier.write("#define _NOFFTW\n")
 
-
-HDF5_INC_PATH = os.environ['HDF5INCPATH']
-HDF5_LIB_PATH = os.environ['HDF5LIBPATH']
-
 fichier.close()
 
 platform = distutils.util.get_platform()
@@ -33,23 +29,24 @@ print 'hostname : ' + hostname
 print 'platform : ' + platform
 
 env = Environment( ENV = os.environ,
-                   F90PATH = ['../memory','../precision','../assert','../mesh_types','../diagnostics',
-                              '../utilities','../constants','../timer','../fftpack',FFTW_INC_PATH,HDF5_INC_PATH,'.'],
+                   F90PATH = ['../memory','../precision','../assert',
+                              '../utilities','../constants','../timer',
+                              '../fftpack', FFTW_INC_PATH,'.'],
                    FORTRANMODDIRPREFIX= '-J', 
-                   LIBPATH= ['.','../fftpack',FFTW_LIB_PATH, HDF5_LIB_PATH],
-                   LIBS=['sll_fft','sll_memory','sll_precision','sll_assertion','sll_diagnostics',
-                         'sll_misc','sll_constants','sll_timer','fftpack','sll_mesh_types',FFTW,'hdf5','hdf5_fortran','z'],
+                   LIBPATH= ['.', FFTW_LIB_PATH],
+                   LIBS=['sll_fft','sll_memory','sll_precision',
+                         'sll_assertion', 'sll_misc','sll_constants',
+                         'sll_timer','fftpack',FFTW],
                    F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
                                '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
 
-env.Library('fftpack',          ["../fftpack/fftpack.f90","../fftpack/dfftpack.f"])
+env.Library('fftpack',          ["../fftpack/fftpack.f90",
+                                 "../fftpack/dfftpack.f"])
 env.Library('sll_timer',        ["../timer/sll_timer.F90"])
 env.Library('sll_memory',       ["../memory/sll_memory.F90"])
-env.Library('sll_mesh_types',   ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_precision',    ["../precision/sll_working_precision.F90"])
 env.Library('sll_assertion',    ["../assert/sll_assert.F90"])
-env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_misc',         ["../utilities/misc_utils.F90"])
 env.Library('sll_constants',    ["../constants/numeric_constants.F90"])
 env.Library('sll_fft',          ["./sll_fft.F90"])

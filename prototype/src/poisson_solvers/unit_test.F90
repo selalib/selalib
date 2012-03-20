@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 13, 2012
+!> Last modification: March 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -43,9 +43,9 @@ implicit none
   !Boot parallel environment
   call sll_boot_collective()
 
-  nx = 16
-  ny = 16
-  nz = 16
+  nx = 64
+  ny = 64
+  nz = 64
   Lx = 2*sll_pi
   Ly = 2*sll_pi
   Lz = 2*sll_pi
@@ -77,7 +77,6 @@ contains
     type (field_1D_vec1), pointer      :: ex
     type (field_1D_vec1), pointer      :: ex_exact
     type (field_1D_vec1), pointer      :: rho
-
     type (poisson_1d_periodic)         :: poisson
 
     sll_int32   :: nc_eta1
@@ -213,6 +212,8 @@ contains
     sll_real32, dimension(1)                     :: prod4test
     type(layout_3D_t), pointer                   :: layout
     sll_int64                                    :: colsz ! collective size
+    sll_int32                                    :: npx, npy, npz
+    sll_int32                                    :: e
 
     dx = Lx/nx
     dy = Ly/ny
@@ -284,12 +285,19 @@ contains
        print*, 'Test poisson_3d (2 equations here ) in parallel'
     endif
 
-    plan_par => new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz)
+    colsz  = sll_get_collective_size(sll_world_collective)
+    e = int(log(real(colsz))/log(2.))
 
-    layout => plan_par%layout_x
+    ! Layout and local sizes for FFTs in x-direction
+    layout => new_layout_3D( sll_world_collective )
+    npx = 1
+    npy = 2**(e/2)
+    npz = int(colsz)/npy
+    call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, layout )
+
+    plan_par => new_poisson_3d_periodic_plan_par(layout, nx, ny, nz, Lx, Ly, Lz)
+
     call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
-
-
     SLL_ALLOCATE(rho_par_1(nx_loc,ny_loc,nz_loc), ierr)
     SLL_ALLOCATE(rho_par_2(nx_loc,ny_loc,nz_loc), ierr)
 
@@ -305,9 +313,7 @@ contains
           enddo
        enddo
     enddo
-
-    layout => plan_par%layout_z
-    call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
+    
     SLL_ALLOCATE(phi_par_1(nx_loc,ny_loc,nz_loc), ierr)
     SLL_ALLOCATE(phi_par_2(nx_loc,ny_loc,nz_loc), ierr)
 
@@ -388,35 +394,6 @@ contains
     SLL_DEALLOCATE_ARRAY(rho_par_2, ierr)
 
   end subroutine test_sll_poisson_3d_periodic
-
-  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
-    type(layout_3D_t), pointer :: layout
-    sll_int32, intent(out) :: loc_sz_i
-    sll_int32, intent(out) :: loc_sz_j
-    sll_int32, intent(out) :: loc_sz_k
-    sll_int32 :: i_min
-    sll_int32 :: i_max
-    sll_int32 :: j_min
-    sll_int32 :: j_max
-    sll_int32 :: k_min
-    sll_int32 :: k_max
-    sll_int32 :: my_rank
-    if( .not. associated(layout) ) then
-       print *, 'not-associated layout passed to new_distributed_mesh_3D'
-       print *, 'Exiting...'
-       STOP
-    end if
-    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
-    i_min = get_layout_3D_i_min( layout, my_rank )
-    i_max = get_layout_3D_i_max( layout, my_rank )
-    j_min = get_layout_3D_j_min( layout, my_rank )
-    j_max = get_layout_3D_j_max( layout, my_rank )
-    k_min = get_layout_3D_k_min( layout, my_rank )
-    k_max = get_layout_3D_k_max( layout, my_rank )
-    loc_sz_i = i_max - i_min + 1
-    loc_sz_j = j_max - j_min + 1
-    loc_sz_k = k_max - k_min + 1
-  end subroutine compute_local_sizes
 
 end program test_poisson_solvers
 

@@ -36,6 +36,7 @@ module distribution_function
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
+  use sll_mesh_types
   use numeric_constants
   use sll_misc_utils   ! for int2string
   implicit none
@@ -106,23 +107,23 @@ contains
     sll_new_distribution_function_2D%name = name
   end function sll_new_distribution_function_2D
 
-  function sll_new_distribution_function_4D( mesh_descriptor_x,  &
-                                             mesh_descriptor_v,  &
+  function sll_new_distribution_function_4D( mesh_descriptor_1,  &
+                                             mesh_descriptor_2,  &
                                              center, name ) 
 
     type(sll_distribution_function_4D_t), pointer :: &
          sll_new_distribution_function_4D
-    type(mesh_descriptor_2D), pointer :: mesh_descriptor_x
-    type(mesh_descriptor_2D), pointer :: mesh_descriptor_v
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_1
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_2
     sll_int32, intent(in)             :: center
     character(len=*), intent(in)      :: name
     sll_int32                         :: ierr
     !
-    SLL_ASSERT(associated(mesh_descriptor_x))
-    SLL_ASSERT(associated(mesh_descriptor_v))
+    SLL_ASSERT(associated(mesh_descriptor_1))
+    SLL_ASSERT(associated(mesh_descriptor_2))
     SLL_ALLOCATE(sll_new_distribution_function_4D, ierr)
     sll_new_distribution_function_4D%field => &
-         new_field_4D_vec1( mesh_descriptor_x, mesh_descriptor_v )
+         new_field_4D_vec1( mesh_descriptor_1, mesh_descriptor_2 )
     sll_new_distribution_function_4D%pcharge = 1.0_f64
     sll_new_distribution_function_4D%pmass = 1.0_f64
     sll_new_distribution_function_4D%plot_counter = 0
@@ -200,17 +201,23 @@ contains
     get_df_jac21 => f%field%descriptor%geom%Jacobian21
   end function get_df_jac21
 
+!********************************************************************************
+
   function get_df_jac22 ( f )
     procedure(scalar_function_2D), pointer        :: get_df_jac22
     type(sll_distribution_function_2D_t), pointer :: f
     get_df_jac22 => f%field%descriptor%geom%Jacobian22
   end function get_df_jac22  
 
+!********************************************************************************
+
   function get_df_jac ( f )
     procedure(scalar_function_2D), pointer        :: get_df_jac
     type(sll_distribution_function_2D_t), pointer :: f
     get_df_jac => f%field%descriptor%geom%Jacobian
   end function get_df_jac
+
+!********************************************************************************
 
   function sll_get_df_val_2d( f, i, j )
     sll_real64 :: sll_get_df_val_2d
@@ -219,12 +226,16 @@ contains
     sll_get_df_val_2d = f%field%data(i,j)
   end function sll_get_df_val_2d
 
+!********************************************************************************
+
   subroutine sll_set_df_val_2d( f, i, j, val )
     type(sll_distribution_function_2D_t), pointer      :: f
     sll_int32 :: i, j
     sll_real64 :: val
     f%field%data(i,j) = val
   end subroutine sll_set_df_val_2d
+
+!********************************************************************************
 
   function sll_get_df_val_4d( f, i, j, k, l )
     sll_real64 :: sll_get_df_val_4d
@@ -233,12 +244,16 @@ contains
     sll_get_df_val_4d = f%field%data(i,j,k,l)
   end function sll_get_df_val_4d
 
+!********************************************************************************
+
   subroutine sll_set_df_val_4d( f, i, j, k, l, val )
     type(sll_distribution_function_4D_t), pointer      :: f
     sll_int32 :: i, j, k, l
     sll_real64 :: val
     f%field%data(i,j,k,l) = val
   end subroutine sll_set_df_val_4d
+
+!********************************************************************************
 
   subroutine sll_init_distribution_function_2D( dist_func_2D, test_case)
     type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
@@ -340,6 +355,9 @@ contains
        end do
     end select
   end subroutine sll_init_distribution_function_2D
+
+!********************************************************************************
+
   
   subroutine sll_init_distribution_function_4D( dist_func_4D, test_case)
 
@@ -352,25 +370,25 @@ contains
     sll_real64 :: x1, v1, x2, v2, eps, kx, vsq
     sll_int32  :: ix, jx, iv, jv
     
-    x1_min   = dist_func_4D%field%descriptor_x%eta1_min
-    x1_max   = dist_func_4D%field%descriptor_x%eta1_max
-    nnode_x1 = dist_func_4D%field%descriptor_x%nc_eta1+1
-    delta_x1 = dist_func_4D%field%descriptor_x%delta_eta1
+    x1_min   = dist_func_4D%field%descriptor_1%eta1_min
+    x1_max   = dist_func_4D%field%descriptor_1%eta1_max
+    nnode_x1 = dist_func_4D%field%descriptor_1%nc_eta1+1
+    delta_x1 = dist_func_4D%field%descriptor_1%delta_eta1
 
-    x2_min   = dist_func_4D%field%descriptor_x%eta2_min
-    x2_max   = dist_func_4D%field%descriptor_x%eta2_max
-    nnode_x2 = dist_func_4D%field%descriptor_x%nc_eta2+1
-    delta_x2 = dist_func_4D%field%descriptor_x%delta_eta2
+    x2_min   = dist_func_4D%field%descriptor_1%eta2_min
+    x2_max   = dist_func_4D%field%descriptor_1%eta2_max
+    nnode_x2 = dist_func_4D%field%descriptor_1%nc_eta2+1
+    delta_x2 = dist_func_4D%field%descriptor_1%delta_eta2
 
-    v1_min   = dist_func_4D%field%descriptor_v%eta1_min
-    v1_max   = dist_func_4D%field%descriptor_v%eta1_max
-    nnode_v1 = dist_func_4D%field%descriptor_v%nc_eta1+1
-    delta_v1 = dist_func_4D%field%descriptor_v%delta_eta1
+    v1_min   = dist_func_4D%field%descriptor_2%eta1_min
+    v1_max   = dist_func_4D%field%descriptor_2%eta1_max
+    nnode_v1 = dist_func_4D%field%descriptor_2%nc_eta1+1
+    delta_v1 = dist_func_4D%field%descriptor_2%delta_eta1
 
-    v2_min   = dist_func_4D%field%descriptor_v%eta2_min
-    v2_max   = dist_func_4D%field%descriptor_v%eta2_max
-    nnode_v2 = dist_func_4D%field%descriptor_v%nc_eta2+1
-    delta_v2 = dist_func_4D%field%descriptor_v%delta_eta2
+    v2_min   = dist_func_4D%field%descriptor_2%eta2_min
+    v2_max   = dist_func_4D%field%descriptor_2%eta2_max
+    nnode_v2 = dist_func_4D%field%descriptor_2%nc_eta2+1
+    delta_v2 = dist_func_4D%field%descriptor_2%delta_eta2
 
     select case (test_case)
     case (LANDAU)
@@ -394,13 +412,11 @@ contains
           v2 = v2+delta_v2
        end do
     end select
-    print*,nnode_x1, x1_min, delta_x1, x1_max
-    print*,nnode_x2, x2_min, delta_x2, x2_max
-    print*,nnode_v1, v1_min, delta_v1, v1_max
-    print*,nnode_v2, v2_min, delta_v2, v2_max
-    print*,"SUMF=", sum(dist_func_4D%field%data)
 
   end subroutine sll_init_distribution_function_4D
+
+!********************************************************************************
+
 
     ! compute integral of f with respect to x2 (-> rho)
     ! using a trapezoidal rule on a uniform grid of physical space
@@ -487,17 +503,21 @@ contains
 
   end subroutine compute_rho_2d
 
+!********************************************************************************
+
+
   subroutine compute_rho_4d(dist_func_4D,rho)
+
     type(sll_distribution_function_4D_t), pointer      :: dist_func_4D
     type(field_2D_vec1), pointer                       :: rho 
     sll_int32                                          :: nc_eta1, nc_eta2
     sll_int32                                          :: i, j 
     sll_real64                                         :: delta_v1, delta_v2
 
-    nc_eta1  = dist_func_4D%field%descriptor_x%nc_eta1
-    nc_eta2  = dist_func_4D%field%descriptor_x%nc_eta2
-    delta_v1 = dist_func_4D%field%descriptor_v%delta_eta1
-    delta_v2 = dist_func_4D%field%descriptor_v%delta_eta2
+    nc_eta1  = dist_func_4D%field%descriptor_1%nc_eta1
+    nc_eta2  = dist_func_4D%field%descriptor_1%nc_eta2
+    delta_v1 = dist_func_4D%field%descriptor_2%delta_eta1
+    delta_v2 = dist_func_4D%field%descriptor_2%delta_eta2
 
     do i = 1, nc_eta1 + 1
        do j = 1, nc_eta2 + 1
@@ -507,7 +527,10 @@ contains
 
   end subroutine compute_rho_4d
 
+!********************************************************************************
+
   subroutine write_distribution_function_2D ( f )
+
     type(sll_distribution_function_2D_t), pointer      :: f
     character(len=4) :: counter
     character(64) :: name
@@ -516,9 +539,13 @@ contains
     name = trim(f%name)//counter
     call write_field_2d_vec1 ( f%field, name, jacobian, f%average, f%center )
     f%plot_counter = f%plot_counter + 1
+
   end subroutine write_distribution_function_2D
 
+!********************************************************************************
+
   subroutine write_distribution_function_4D ( f )
+
     type(sll_distribution_function_4D_t), pointer      :: f
     character(len=4) :: counter
     character(64) :: name
@@ -534,8 +561,8 @@ contains
     call int2string(f%plot_counter,counter)
     name = trim(f%name)//counter
 
-    mesh_x => f%field%descriptor_x
-    mesh_v => f%field%descriptor_v
+    mesh_x => f%field%descriptor_1
+    mesh_v => f%field%descriptor_2
 
     SLL_ASSERT(associated(mesh_x))
     SLL_ASSERT(associated(mesh_v))
