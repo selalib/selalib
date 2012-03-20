@@ -3,14 +3,14 @@ module geometry_functions
   
 #include "sll_assert.h"
 
-  use sll_splines
+!  use sll_splines
   use numeric_constants
   implicit none
   
   sll_real64, parameter :: c1_test = 0.1_f64
   sll_real64, parameter :: c2_test = 0.1_f64
 
-  type(sll_spline_2D), pointer :: spl2D_x1, spl2D_x2 
+!  type(sll_spline_2D), pointer :: spl2D_x1, spl2D_x2 
 
 contains
   

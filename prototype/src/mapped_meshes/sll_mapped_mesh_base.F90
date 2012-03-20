@@ -21,7 +21,7 @@ module sll_mapped_mesh_base
      procedure(geometry_function), deferred, pass       :: jacobian
      procedure(geometry_function_nodes), deferred, pass :: x1_at_node
      procedure(geometry_function_nodes), deferred, pass :: x2_at_node
-     procedure(geometry_function_nodes), deferred, pass       :: jacobian_at_node
+     procedure(geometry_function_nodes), deferred, pass :: jacobian_at_node
 !     procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
   end type sll_mapped_mesh_2d_base
 
