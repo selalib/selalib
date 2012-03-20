@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 19, 2012
+!> Last modification: March 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -47,7 +47,7 @@ contains
     sll_real64                                   :: ind_x, ind_y, ind_z
     sll_int32                                    :: myrank
     sll_int64                                    :: colsz ! collective size
-    type(layout_3D_t), pointer                   :: layout_x, layout_y, layout_z, layout_kernel
+    type(layout_3D_t), pointer                   :: layout_x, layout_y, layout_z
     type(remap_plan_3D_t), pointer               :: rmp3
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
@@ -89,9 +89,9 @@ contains
     call compute_local_sizes( layout_x, nx_loc, ny_loc, nz_loc )
     call if_sizes_do_not_match(layout_x, rho, phi)
     SLL_ALLOCATE(hat_rho(nx_loc,ny_loc,nz_loc), ierr)
+    hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
-          hat_rho(:,j,k) = cmplx(rho(:,j,k), 0_f64, kind=f64)
           call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
     enddo
