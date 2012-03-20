@@ -61,13 +61,18 @@ NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
 
 contains
 
-  subroutine sll_new_distribution_function_2d(this, mesh, data_position, &
-       name, data_func ) 
-    class(sll_distribution_function_2D_t) :: this
-    class(mesh_2d), target                :: mesh
-    sll_int32, intent(in)             :: data_position
-    character(len=*), intent(in)      :: name
-    procedure(scalar_function_2D), pointer :: data_func
+  subroutine sll_new_distribution_function_2d( &
+    this, &
+    mesh, &
+    data_position, &
+    name, &
+    data_func ) 
+    
+    class(sll_distribution_function_2D_t)   :: this
+    class(sll_mapped_mesh_2d_base), target  :: mesh
+    sll_int32, intent(in)                   :: data_position
+    character(len=*), intent(in)            :: name
+    procedure(scalar_function_2D), pointer  :: data_func
     ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
@@ -97,7 +102,7 @@ contains
           eta1 = 0.5_f64 * delta1
           do i1 = 1, mesh%nc_eta1
              this%data(i1,i2) = data_func(mesh%x1(eta1,eta2), &
-                  mesh%x2(eta1,eta2)) * mesh%jac(eta1,eta2)
+                  mesh%x2(eta1,eta2)) * mesh%jacobian(eta1,eta2)
              eta1 = eta1 + delta1
           end do
           eta2 = eta2 + delta2
