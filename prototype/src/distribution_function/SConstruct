@@ -40,5 +40,5 @@ env.Library('sll_field_2d',    ["../mesh_types/sll_mesh_test.F90",
 env.Library('sll_mapped_meshes',["../mapped_meshes/sll_mapped_mesh_base.F90",
                                  "../mapped_meshes/sll_mapped_meshes.F90"])
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
-env.Program('unit_test',       ["unit_test.F90",# "initial_functions.F90",
+env.Program('unit_test',       ["unit_test.F90", "initial_functions.F90",
                                 "sll_distribution_function.F90"])
