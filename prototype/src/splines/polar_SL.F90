@@ -3,44 +3,46 @@ program radial_1d_SL
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use cubic_nonuniform_splines
   use sll_splines
+  use cubic_nonuniform_splines
   use numeric_constants
   implicit none
 
-
-  type(cubic_nonunif_spline_1D), pointer :: spl_hrmt
   type(sll_spline_2D), pointer :: spl_natper
-  sll_int32 :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,nb_diag
-  sll_real64,dimension(:,:), pointer :: f,fh,fh_buf
-  sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,tmp
-  sll_real64,dimension(:,:), pointer :: diag
+	sll_int32  :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,nb_diag,meth
+  sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,tmp,tmp1,tmp2
   sll_real64 :: a1,a2,rr,thetath,k1r,k2r,k3r,k4r,k1theta,k2theta,k3theta,k4theta
-  
+	sll_real64,dimension(:,:), pointer :: f,fh,fh_buf
+	sll_real64,dimension(:,:), pointer   :: rfeet,thetafeet
+  sll_real64,dimension(:,:), pointer :: diag
+	
   !parameters
   N=256
-  Nr=128!128
-  Ntheta=256!128
+  Nr=64 !128
+  Ntheta=64!128
   rmin = 0.2_f64
   rmax = 0.8_f64
   test_case = 1
-  dt = 0.1_f64
+  dt = 0.0_f64
   nb_step = 10
   visu_step = 10
   nb_diag = 4
-  
-  a1=1._f64
-  a2=2._f64
-  
+	meth = 2
+	
+	a1=1.0_f64
+	a2=2.0_f64
   
   print *,'#N=',N
   print *,'#T=',real(nb_step,f64)*dt
   
   dr = (rmax-rmin)/real(Nr,f64)
   dtheta = 2._f64*sll_pi/real(Ntheta,f64)
+	
   SLL_ALLOCATE(f(Nr+1,Ntheta+1), err)
   SLL_ALLOCATE(fh(Nr+1,Ntheta+1), err)
   SLL_ALLOCATE(fh_buf(Nr+1,Ntheta+1), err)
+	SLL_ALLOCATE(rfeet(Nr+1,Ntheta+1), err)
+	SLL_ALLOCATE(thetafeet(Nr+1,Ntheta+1), err)
   SLL_ALLOCATE(diag(nb_diag,0:nb_step), err)
 	
   spl_natper => new_spline_2D(Nr+1, Ntheta+1, &
@@ -49,67 +51,62 @@ program radial_1d_SL
     HERMITE_SPLINE, PERIODIC_SPLINE,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
   
-  
-  if(test_case==1)then
-    do i=1,Nr+1
-      r = rmin+real(i-1,f64)*dr
-      do j=1,Ntheta+1
-        theta = real(j-1,f64)*dtheta
-      !f(i) = 1._f64
-        !f(i,j) = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)
-        x = r*cos(theta)
-        y = r*sin(theta)
-        r = sqrt(x*x+y*y)
-        !f(i,j) = exp(-1000._f64*(x-0.35)**2-1000._f64*(y-0.35)**2)
-        !f(i,j) = cos(theta)
-        f(i,j) = exp(-3000._f64*(r-1.5_f64*rmin)**2)
-        !f(i,j) = exp(-30._f64*(theta-0.5*sll_pi)**2)
-      enddo  
-    enddo
-  endif
+	do i=1,Nr+1
+		r = rmin+real(i-1,f64)*dr
+		do j=1,Ntheta+1
+			theta = real(j-1,f64)*dtheta
+			x = r*cos(theta)
+			y = r*sin(theta)
+			r = sqrt(x*x+y*y)
+			
+			! test-function
+			if (test_case==1) then
+				f(i,j) = exp(-3000._f64*(r-1.5_f64*rmin)**2)
+			endif
+			if (test_case==2) then
+				f(i,j) = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)
+			endif
+			if (test_case==3) then
+				f(i,j) = cos(theta)
+			endif
+			if (test_case==4) then
+				f(i,j) = exp(-30._f64*(theta-0.5*sll_pi)**2)
+			endif
+			
+		enddo  
+	enddo
+
   
   fh = f
   
-  
-  
-  
-  
-  tmp=0._f64
-  
+  ! diagnostic with the mass multiplied by the jacobien and the classical mass
+	tmp1=0._f64
+	tmp2=0._f64
   do i=1,Nr!+1
     r = rmin+real(i-1,f64)*dr
     do j=1,Ntheta!+1
-      tmp = tmp + f(i,j)*r
+      tmp1 = tmp1 + f(i,j)*r
+			tmp2 = tmp2 + f(i,j)
     enddo
   enddo
-  tmp = tmp*dr*dtheta
+  tmp1 = tmp1*dr*dtheta
+	tmp2 = tmp2*dr*dtheta
   
-  diag = 0._f64
-  diag(1,0) = tmp
-  diag(3,0) = tmp
-
-
-  tmp=0._f64
-  do i=1,Nr!+1
-    r = rmin+real(i-1,f64)*dr
-    do j=1,Ntheta!+1
-      tmp = tmp + f(i,j)
-    enddo
-  enddo
-  tmp = tmp*dr*dtheta
-  diag(2,0) = tmp
-  diag(4,0) = tmp
+  diag(1,0) = tmp1
+  diag(3,0) = tmp1
+	diag(2,0) = tmp2
+  diag(4,0) = tmp2
   
   print *,'#init mass=',diag(1,0)
   
-  
-  print *,'#f0 boundary:',f(1,1),f(Nr+1,1)
-  !save f
+  !checking that the fucntion is close to 0 at the r boundary 
+	print *,'#f0 boundary:',f(1,1),f(Nr+1,1)
+  !saving f
   open(unit=900,file='f0.dat')  
     do i=1,Nr+1
       r = rmin+real(i-1,f64)*dr
       do j=1,Ntheta+1
-        theta = real(j,f64)*dtheta
+        theta = real(j-1,f64)*dtheta
         x = r*cos(theta)
         y = r*sin(theta)
         !write(900,*) r,theta,f(i,j)
@@ -119,12 +116,12 @@ program radial_1d_SL
     enddo
   close(900)
   
-  
-  i=1;j=Ntheta/2
-  r=rmin+real(i-1,f64)*dr
-  theta=real(j-1,f64)*dtheta
+!  i=1;j=Ntheta/2
+!  r=rmin+real(i-1,f64)*dr
+!  theta=real(j-1,f64)*dtheta
 
-  open(unit=900,file='carac.dat')  
+  ! Analytic solution
+	open(unit=900,file='carac.dat')  
   open(unit=800,file='fn.dat')    
     do i=1,Nr!+1
       do j=1,Ntheta!+1
@@ -137,11 +134,12 @@ program radial_1d_SL
         do step=1,nb_step
           !x = r + r*cos(theta)*dt
           !y = theta+sin(theta)*dt
+					!y = theta+(-r*(rmax+rmin-2._f64*r)+(r-rmin)*(rmax-r))*sin(theta)*dt
+					
           !Explicit Euler
-          rr = r + r*(r-rmin)*(rmax-r)*cos(theta)*dt
-          !y = theta+(-r*(rmax+rmin-2._f64*r)+(r-rmin)*(rmax-r))*sin(theta)*dt
-          thetath = theta-(r*(rmax+rmin-2._f64*r)+2._f64*(r-rmin)*(rmax-r))*sin(theta)*dt
-          !r = rr
+          !rr = r + r*(r-rmin)*(rmax-r)*cos(theta)*dt
+          !thetath = theta-(r*(rmax+rmin-2._f64*r)+2._f64*(r-rmin)*(rmax-r))*sin(theta)*dt
+					!r = rr
           !theta = thetath
           
           !RK4
@@ -162,42 +160,45 @@ program radial_1d_SL
           k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
           k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
           
+          if(theta>2._f64*sll_pi)then
+            theta= theta-2._f64*sll_pi
+          endif
+          if(theta<0._f64)then
+            theta= theta+2._f64*sll_pi
+          endif
           
-          !theta = theta+dt
-          r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
-          theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
-          
-          
-        if(theta>2._f64*sll_pi)then
-          theta= theta-2._f64*sll_pi
-        endif
-        if(theta<0._f64)then
-          theta= theta+2._f64*sll_pi
-        endif
-          
-          
-          
-          !x = x + a1*dt
+          ! advection coef constant 
+					!x = x + a1*dt
           !y = y + a2*dt
-          
-          
           
           !r = sqrt(x**2+y**2)
           !theta = acos(x/r)
           
           !r = x
           !theta = y
+					
+					r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
+          theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
           
           x = r*cos(theta)
           y = r*sin(theta)
-          !val = exp(-3000._f64*(r-1.5_f64*rmin)**2)
-          
-          val = exp(-3000._f64*(r-1.5_f64*rmin)**2)
-          !val = cos(theta)
-          !val = exp(-30._f64*(theta-0.5*sll_pi)**2)
-          !val = exp(-1000._f64*(x-0.35)**2-1000._f64*(y-0.35)**2)
-          diag(1,step) = diag(1,step)+ val *(rmin+real(i-1,f64)*dr)*dr*dtheta
-          diag(2,step) = diag(2,step)+ val *dr*dtheta
+          					
+					if (test_case==1) then
+						val = exp(-3000._f64*(r-1.5_f64*rmin)**2)
+					endif
+					if (test_case==2) then
+						val = exp(-100._f64*(r-0.5_f64*(rmax+rmin))**2)
+					endif
+					if (test_case==3) then
+						val = cos(theta)
+					endif
+					if (test_case==4) then
+						val = exp(-30._f64*(theta-0.5*sll_pi)**2)
+					endif
+			
+          diag(1,step) = diag(1,step) + val*(rmin+real(i-1,f64)*dr)*dr*dtheta
+          diag(2,step) = diag(2,step) + val*dr*dtheta
+					
           if(mod(step,visu_step)==0)then
             write(900,*) x,y
             write(800,'(a,f0.3)',advance='no') ' ',val
@@ -213,24 +214,26 @@ program radial_1d_SL
     enddo  
   close(900)
   close(800)
-  
   open(unit=900,file='diag.dat')
     do step=0,nb_step
       write(900,*) real(step,f64)*dt,diag(1,step),diag(1,step)/diag(1,0)-1._f64,diag(2,step),diag(2,step)/diag(2,0)-1._f64
     enddo
   close(900)
   
-  diag(1:nb_diag,1:nb_step) = 0._f64
+!  diag(1:nb_diag,1:nb_step) = 0._f64
   
-  do step=1,nb_step
-    !call compute_spline_2D_hrmt_prdc(fh,spl_natper)
+  ! BSL
+	if (meth==1) then
+				
+	do step=1,nb_step
     call compute_spline_2D(fh,spl_natper)
     do i=1,Nr!+1
       do j=1,Ntheta!+1
         r=rmin+real(i-1,f64)*dr
         theta=real(j-1,f64)*dtheta
         x = r*cos(theta)
-        y = r*sin(theta)        
+        y = r*sin(theta)    
+				    
         !RK4
         rr = r
         thetath = theta
@@ -249,59 +252,134 @@ program radial_1d_SL
         k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
         k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
         
-        
         !theta = theta+dt
-        !if(theta>2._f64*sll_pi)then
-        !  theta= theta-2._f64*sll_pi
-        !endif
-        !if(theta<0._f64)then
-        !  theta= theta+2._f64*sll_pi
-        !endif
+				
+        if(theta>2._f64*sll_pi)then
+          theta= theta-2._f64*sll_pi
+        endif
+        if(theta<0._f64)then
+          theta= theta+2._f64*sll_pi
+        endif
         
         r = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
         theta = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
         
-        
         val = interpolate_value_2D(r,theta,spl_natper)
+				
         !if(abs(val-f(i,j))>1.e-12)then
         !  print *,i,j,fh(i,j),val,fh(i,j)-val,f(i,j),cos(theta)
         !endif
+				
         fh(i,j) = val
-        diag(1,step) = diag(1,step)+ val *(rmin+real(i-1,f64)*dr)*dr*dtheta
-        diag(2,step) = diag(2,step)+ val *dr*dtheta
+				
+        diag(3,step) = diag(3,step)+ val *(rmin+real(i-1,f64)*dr)*dr*dtheta
+        diag(4,step) = diag(4,step)+ val *dr*dtheta
         
       enddo
     enddo  
   enddo
-
+	! L^{\infty} error 
   val = 0._f64
   do i=1,Nr
     do j=1,Ntheta
       val = max(val,abs(f(i,j)-fh(i,j)))
     enddo
   enddo  
-  print *,val
-
+  print*,val
+	open(unit=900,file='diag2.dat')
+    do step=0,nb_step
+      write(900,*) real(step,f64)*dt,diag(3,step),diag(3,step)/diag(1,0)-1._f64,diag(4,step),diag(4,step)/diag(4,0)-1._f64
+    enddo
+  close(900)
+	
+	!FSL
+	else
+	
+	do step=1,nb_step
+    call compute_spline_2D(fh,spl_natper)
+    do i=1,Nr+1
+      do j=1,Ntheta+1
+        r=rmin+real(i-1,f64)*dr
+        theta=real(j-1,f64)*dtheta
+        x = r*cos(theta)
+        y = r*sin(theta)    
+				    
+        !RK4
+        rr = r
+        thetath = theta
+        k1r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+        k1theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+        rr = r + 0.5_f64*dt*k1r
+        thetath = theta +  0.5_f64*dt*k1theta
+        k2r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+        k2theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+        rr = r + 0.5_f64*dt*k2r
+        thetath = theta +  0.5_f64*dt*k2theta
+        k3r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+        k3theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+        rr = r + dt*k3r
+        thetath = theta +  dt*k3theta
+        k4r = rr*(rr-rmin)*(rmax-rr)*cos(thetath)
+        k4theta = -(rr*(rmax+rmin-2._f64*rr)+2._f64*(rr-rmin)*(rmax-rr))*sin(thetath)
+        
+        !theta = theta+dt
+				
+        if(theta>2._f64*sll_pi)then
+          theta= theta-2._f64*sll_pi
+        endif
+        if(theta<0._f64)then
+          theta= theta+2._f64*sll_pi
+        endif
+        
+        rfeet(i,j) = r+dt/6._f64*(k1r+2._f64*k2r+2._f64*k3r+k4r)
+        thetafeet(i,j) = theta+dt/6._f64*(k1theta+2._f64*k2theta+2._f64*k3theta+k4theta)
+      enddo
+    enddo
+    
+    !print*,'r/theta-feet',rmin+real(17-1,f64)*dr,rfeet(17,12),real(12-1,f64)*dtheta,thetafeet(17,12)
+    
+		print*,'avant',fh(17,12)
+    call deposit_value_2D(rfeet,thetafeet,spl_natper,fh)
+    print*,'apres',fh(17,12)
+    
+		do i=1,Nr!+1
+      r = rmin+real(i-1,f64)*dr
+      do j=1,Ntheta!+1
+        theta = real(j-1,f64)*dtheta
+				
+        diag(3,step) = diag(3,step)+ fh(i,j)*(rmin+real(i-1,f64)*dr)*dr*dtheta
+        diag(4,step) = diag(4,step)+ fh(i,j)*dr*dtheta
+      enddo
+    enddo
+  enddo
+! L^{\infty} error 
+  val = 0._f64
+  do i=1,Nr
+    do j=1,Ntheta
+      val = max(val,abs(f(i,j)-fh(i,j)))
+    enddo
+  enddo  
+  print*,val
+	open(unit=900,file='diag2.dat')
+    do step=0,nb_step
+      write(900,*) real(step,f64)*dt,diag(3,step),diag(3,step)/diag(1,0)-1._f64,diag(4,step),diag(4,step)/diag(4,0)-1._f64
+    enddo
+  close(900)
+	
+	end if
 
   open(unit=900,file='fh.dat')  
     do i=1,Nr!+1
       r = rmin+real(i-1,f64)*dr
       do j=1,Ntheta!+1
-        theta = real(j,f64)*dtheta
+        theta = real(j-1,f64)*dtheta
         x = r*cos(theta)
         y = r*sin(theta)
+				
         !write(900,*) r,theta,f(i,j)
         write(900,*) x,y,r,theta,fh(i,j),f(i,j)
       enddo
       write(900,*) ' '
     enddo
   close(900)
-
-  open(unit=900,file='diag2.dat')
-    do step=0,nb_step
-      write(900,*) real(step,f64)*dt,diag(1,step),diag(1,step)/diag(1,0)-1._f64,diag(2,step),diag(2,step)/diag(2,0)-1._f64
-    enddo
-  close(900)
-  
-
 end program

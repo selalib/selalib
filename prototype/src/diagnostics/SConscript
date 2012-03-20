@@ -1,4 +1,18 @@
 Import('env')
+sll_hdf5_io_m4 = env.M4('sll_hdf5_io.F90','sll_hdf5_io.m4')
+sll_ascii_io_m4 = env.M4('sll_ascii_io.F90','sll_ascii_io.m4')
+sll_binary_io_m4 = env.M4('sll_binary_io.F90','sll_binary_io.m4')
+
+sll_hdf5_io = env.Object('sll_hdf5_io.F90')
+sll_ascii_io = env.Object('sll_ascii_io.F90')
+sll_binary_io = env.Object('sll_binary_io.F90')
+
+env.Depends(sll_hdf5_io,sll_hdf5_io_m4)
+env.Depends(sll_ascii_io,sll_ascii_io_m4)
+env.Depends(sll_binary_io,sll_binary_io_m4)
+
+sll_diagnostics = env.Object('sll_diagnostics.F90')
+env.Depends(sll_diagnostics,[sll_hdf5_io,sll_ascii_io,sll_binary_io])
+
 lib = env.Library('sll_diagnostics',Glob("sll_*.F90"))
 Return('lib')
-
