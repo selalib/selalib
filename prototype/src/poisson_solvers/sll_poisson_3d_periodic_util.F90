@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 23, 2012
-!> Last modification: March 19, 2012
+!> Last modification: March 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -108,8 +108,7 @@ module sll_poisson_3d_periodic_util
        sll_real64                                   :: Lx, Ly, Lz
        sll_int64                                    :: colsz ! collective size
        sll_int32                                    :: npx, npy, npz
-       sll_int32                                    :: e, ex, ey, ez
-       sll_int32                                    :: nx_loc, ny_loc, nz_loc 
+       sll_int32                                    :: e
        sll_int32                                    :: ierr
        type (poisson_3d_periodic_plan_par), pointer :: plan
 

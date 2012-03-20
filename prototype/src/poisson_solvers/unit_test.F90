@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 19, 2012
+!> Last modification: March 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -77,7 +77,6 @@ contains
     type (field_1D_vec1), pointer      :: ex
     type (field_1D_vec1), pointer      :: ex_exact
     type (field_1D_vec1), pointer      :: rho
-
     type (poisson_1d_periodic)         :: poisson
 
     sll_int32   :: nc_eta1

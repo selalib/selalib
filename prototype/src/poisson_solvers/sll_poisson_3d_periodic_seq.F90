@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 19, 2012
+!> Last modification: March 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -105,10 +105,10 @@ contains
        enddo
     enddo
 
-    ! Inverse FFTs in x-direction
-    do k=1,nz
-       do j=1,ny
-          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
+    ! Inverse FFTs in z-direction
+    do j=1,ny
+       do i=1,nx
+          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
        enddo
     enddo
 
@@ -119,10 +119,10 @@ contains
        enddo
     enddo
 
-    ! Inverse FFTs in z-direction
-    do j=1,ny
-       do i=1,nx
-          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
+    ! Inverse FFTs in x-direction
+    do k=1,nz
+       do j=1,ny
+          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
        enddo
     enddo
 
