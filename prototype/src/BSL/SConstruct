@@ -32,6 +32,7 @@ vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
 
 env = Environment( ENV = os.environ, 
                    variable = vars,
+                   F90='mpif90',
                    F90FLAGS = ['-g', '-W', '-Wall', 
                                '-ffree-line-length-none',
                                '-fbounds-check'],
@@ -42,43 +43,52 @@ env = Environment( ENV = os.environ,
                               '../constants',
                               '../mesh_types',
                               '../splines',
-                              os.environ['HDF5INCPATH'],
-                              '../ode_solvers',
 			      '../poisson_solvers'],
-                   LIBPATH = ['.',os.environ['HDF5LIBPATH'],'../fftpack'],
+                   LIBPATH = ['.','../fftpack'],
                    LIBS = ['sll_memory',
                            'sll_precision',
                            'sll_assert',
-                           'sll_utilities',
                            'sll_constants',
-                           'sll_mesh_types',
                            'sll_splines',
-                           'sll_ode_solvers',
                            'sll_distribution_function',
+                           'sll_poisson_solvers',
+                           'sll_mesh_types',
+                           'sll_utilities',
                            'sll_diagnostics',
-                           'sll_poisson_solvers'])
+                           'dfftpack'])
+
+#HDF5 flags 
+env.Append( LIBPATH = os.environ['HDF5LIBPATH'],
+            F90PATH = os.environ['HDF5INCPATH'],
+            LIBS = ['hdf5_fortran','hdf5','z'])
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK'])
-
-env.Append(LIBS=['dfftpack','hdf5','hdf5_fortran','z'])
-
 
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
-env.Library('sll_ode_solvers',["../ode_solvers/sll_ode_solvers.F90"])
 env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
 env.Library('sll_diagnostics',Glob("../diagnostics/sll_*.F90"))
+env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
 env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
 env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
-env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2D_periodic.F90",
-                                    "../poisson_solvers/sll_poisson_1D_periodic.F90",
+env.Library('sll_poisson_solvers', ["../poisson_solvers/sll_poisson_2d_periodic.F90",
+                                    "../poisson_solvers/sll_poisson_1d_periodic.F90",
                                     "../poisson_solvers/fft1d.f90",
                                     "../poisson_solvers/fft_module.F90"])
 
 env.Program('unit_test', ["unit_test.F90", "sll_bsl.F90"])
-env.Program('landau_damping', ["landau_damping.F90", "sll_bsl.F90"])
+env.Program('landau_4d', ["landau_4d.F90", "sll_bsl.F90"])
+env.Program('landau_2d', ["landau_2d.F90", "sll_bsl.F90"])
 
 Help(vars.GenerateHelpText(env))
+
+print """
+	To display results during execution, launch 
+        ./landau_2d | gnuplot 
+        or 
+        ./landau_4d | gnuplot
+        It could take some time in 4D case 
+"""
