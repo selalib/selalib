@@ -1500,7 +1500,7 @@ contains  ! ****************************************************************
     sll_real64    :: svaly1, svaly2, svaly3, svaly4
     sll_real64    :: ax1, ax2, ax3, ay1, ay2, ay3
 		
-    sll_int32     :: t1,t2
+    sll_real64     :: t1,t2
     sll_int32     :: ipm1,ip,ipp1,ipp2
     sll_int32     :: jpm1,jp,jpp1,jpp2
 		
@@ -1515,17 +1515,17 @@ contains  ! ****************************************************************
 		a_out = 0._f64
 		
     do i1 = 1,n1
-      do i2 = 1,n2
+      do i2 = 1,n2-1
 		
 			! find the cell and offset for x1
       t1         = (x1(i1,i2)-x1_min)*rh1
-      cell1       = int(t1) + 1
+      cell1       = floor(t1) + 1
       dx1         = t1- real(cell1-1)
       cdx1        = 1.0_f64 - dx1
 		
 			! find the cell and offset for x2
       t2         = (x2(i1,i2)-x2_min)*rh2
-      cell2      = int(t2) + 1
+      cell2      = floor(t2) + 1
       dx2        = t2 - real(cell2-1)
       cdx2       = 1.0_f64 - dx2
 			
@@ -1533,25 +1533,30 @@ contains  ! ****************************************************************
 			!print*,'cell',t1,t2,cell1,cell2
 		
 			if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
-				print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min
+				print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
 			end if
 			
 			if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
-				print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min
+				print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
 			end if
 
-      cij = spline%coeffs(cell1,cell2)
-			print*,'taille tableau coeff',lbound(spline%coeffs,1),n1,ubound(spline%coeffs,1),lbound(spline%coeffs,2),n2,ubound(spline%coeffs,2)
+      cij = spline%coeffs(i1,i2)
+			!print*,'taille tableau coeff',lbound(spline%coeffs,1),n1,ubound(spline%coeffs,1),lbound(spline%coeffs,2),n2,ubound(spline%coeffs,2)
 			
       ipm1=cell1-1
       ip  =cell1  
 			ipp1=cell1+1
       ipp2=cell1+2
 			
-      jpm1=mod(cell2-1,n2)
-      jp  =mod(cell2  ,n2)
-      jpp1=mod(cell2+1,n2)
-      jpp2=mod(cell2+2,n2)
+      !jpm1=mod(cell2-1,n2)
+      !jp  =mod(cell2  ,n2)
+      !jpp1=mod(cell2+1,n2)
+      !jpp2=mod(cell2+2,n2)
+
+      jpm1 = mod(cell2-1+n2-2,n2-1)+1
+      jp = mod(cell2+n2-2,n2-1)+1
+      jpp1 = mod(cell2+1+n2-2,n2-1)+1
+      jpp2 = mod(cell2+2+n2-2,n2-1)+1
 			
 			!print*,'1',ipm1,ip,ipp1,ipp2
 			!print*,'2',jpm1,jp,jpp1,jpp2
@@ -1615,7 +1620,7 @@ contains  ! ****************************************************************
 		
       end do
     end do
-				 
+	a_out(:,n2) = a_out(:,1)			 
   end subroutine deposit_value_2D
 
   function interpolate_value_2D( x1, x2, spline )
