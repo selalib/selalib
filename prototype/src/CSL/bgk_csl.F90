@@ -39,8 +39,8 @@ program bgk_csl
   mesh_case = 2
   visu_step = 10
   
-  N_x1 = 128
-  N_x2 = 256
+  N_x1 = 100
+  N_x2 = 100
   dt = 0.1_f64
   nb_step = 100!600
   
@@ -92,6 +92,16 @@ program bgk_csl
   
   x1_min = 0._f64
   x1_max = L
+
+  x1_min = 0._f64
+  x1_max = 1._f64
+  x2_min = 0._f64
+  x2_max = 1._f64
+  
+  
+  
+  
+  
   delta_x1_phi = (x1_max-x1_min)/real(N_phi,f64)
   
   !nb_step = 10
@@ -238,6 +248,7 @@ program bgk_csl
       !f(i1,i2) = 1._f64/sqrt(2._f64*sll_pi)*exp(-H)      
       val = val*(1._f64+0.0_f64*cos(2._f64*sll_pi/L*x1))
       !f(i1,i2) = 1._f64/(x2_max-x2_min)
+      val = exp(-0.5_f64*40._f64*((x1-.5_f64)**2+(x2-.5_f64)**2))
       f(i1,i2) = val*jac_array(i1,i2)
       call sll_set_df_val(dist_func, i1, i2, f(i1,i2))
     enddo
@@ -282,7 +293,9 @@ program bgk_csl
         ii = floor(xx)
         xx = xx-real(ii,f64)      
         phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)     
-        FIELD_2D_AT_I( uniform_field, i1, i2 ) =  0.5_f64*x2**2+phi_val
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) = 0._f64*( 0.5_f64*x2**2+phi_val)&
+        !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
+        -(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
      end do
   end do
   
@@ -291,14 +304,23 @@ program bgk_csl
   ! run CSL method for 10 time steps
   !deltat = 0.4_f64
   do step = 1, nb_step
-     print*, 'iteration=',step
-     call csl_first_order(csl_work, dist_func, uniform_field, dt)
-     !call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
+     !print*, 'iteration=',step
+     !call csl_first_order(csl_work, dist_func, uniform_field, dt)
+     call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
      if(mod(step,visu_step)==0)then
        call write_distribution_function ( dist_func )
      endif
   end do
+
+  val = 0._f64
+  do i1=1,nc_eta1+1
+    do i2=1,nc_eta2+1
+      val = max(abs(sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)&
+      -f(i1,i2)/jac_array(i1,i2)),val)
+    enddo
+  enddo  
   
+  print *,nc_eta1,nc_eta2,dt,nb_step,val
   
   stop
   
