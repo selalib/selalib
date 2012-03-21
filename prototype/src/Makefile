@@ -41,3 +41,4 @@ clean:
 	(cd distribution_function; scons -c)
 	(cd poisson_solvers; scons -c)
 	(cd BSL; scons -c)
+	find . -name '*.mod' -exec rm {} \;

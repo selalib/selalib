@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_diagnostics
+! MODULE: sll_scalar_field_2d
 !
 !> @author
 !> - Edwin
@@ -28,7 +28,7 @@
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_field_2d
+module sll_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -42,11 +42,6 @@ module sll_field_2d
      enumerator :: NODE_FIELD = 0, CELL_CENTER_FIELD = 1
   end enum
 
-  type vec2
-     sll_real64 :: v1
-     sll_real64 :: v2
-  end type vec2
-
   type scalar_field_2d
      class(sll_mapped_mesh_2d_base), pointer :: mesh
      sll_real64, dimension(:,:), pointer :: data
@@ -55,13 +50,6 @@ module sll_field_2d
    !contains
    !  procedure :: get_data
   end type scalar_field_2d
-
-  type vector_field_2d
-     class(sll_mapped_mesh_2d_base), pointer :: mesh
-     type(vec2), dimension(:,:), pointer :: data
-     sll_int32  :: data_position
-     character(len=30) :: name
-  end type vector_field_2d
 
   abstract interface
      function scalar_function_2D( eta1, eta2 )
@@ -74,13 +62,14 @@ module sll_field_2d
 
 contains   ! *****************************************************************  
  
-  subroutine new_scalar_field_2d( this, mesh, data_position, data_func)
+  subroutine new_scalar_field_2d( this, mesh, data_position, init_function)
+
     class(scalar_field_2d), intent(inout)   :: this
     class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
     sll_int32 :: data_position
-    procedure(scalar_function_2D), pointer :: data_func
+    procedure(scalar_function_2D), pointer :: init_function
     ! local variables
-    sll_int32                :: ierr
+    sll_int32  :: ierr
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
@@ -91,7 +80,7 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        do i2 = 1, mesh%nc_eta2+1
           do i1 = 1, mesh%nc_eta1+1
-             this%data(i1,i2) = data_func(mesh%x1_at_node(i1,i2), &
+             this%data(i1,i2) = init_function(mesh%x1_at_node(i1,i2), &
                   mesh%x2_at_node(i1,i2))
           end do
        end do
@@ -103,7 +92,7 @@ contains   ! *****************************************************************
        eta2 = 0.5_f64 * delta2
        do i2 = 1, mesh%nc_eta2
           do i1 = 1, mesh%nc_eta1
-             this%data(i1,i2) = data_func(mesh%x1(eta1,eta2), &
+             this%data(i1,i2) = init_function(mesh%x1(eta1,eta2), &
                   mesh%x2(eta1,eta2))
              eta1 = eta1 + delta1
           end do
@@ -113,76 +102,12 @@ contains   ! *****************************************************************
     
   end subroutine new_scalar_field_2d
 
-!!$  function get_data(this, i1, i2)
-!!$    class (scalar_field_2d) :: this
-!!$    sll_int32  :: i1, i2
-!!$    sll_real64 :: get_data(this%vec_length)
-!!$    get_data = this%data(:,i1,i2)
-!!$  end function get_data
-
   subroutine delete_scalar_field_2d( this )
     type(scalar_field_2d), pointer :: this
     sll_int32                    :: ierr
     nullify(this%mesh)
     SLL_DEALLOCATE(this%data, ierr)
   end subroutine delete_scalar_field_2d
-
- 
-!!$  function new_field_2D_vec2( mesh_descriptor )
-!!$    type(field_2D_vec2), pointer      :: new_field_2D_vec2
-!!$    type(mesh_descriptor_2D), pointer :: mesh_descriptor
-!!$    sll_int32                         :: ierr
-!!$    SLL_ASSERT(associated(mesh_descriptor))
-!!$    SLL_ALLOCATE(new_field_2D_vec2, ierr)
-!!$    new_field_2D_vec2%descriptor => mesh_descriptor
-!!$    SLL_ALLOCATE(new_field_2D_vec2%data(1:mesh_descriptor%nc_eta1+1,1:mesh_descriptor%nc_eta2+1),ierr)
-!!$  end function new_field_2D_vec2
-!!$
-!!$  subroutine delete_field_2D_vec2( f2Dv2 )
-!!$    type(field_2D_vec2), pointer :: f2Dv2
-!!$    sll_int32                    :: ierr
-!!$    if( .not. (associated(f2Dv2))) then
-!!$       write (*,'(a)') 'ERROR: delete_field_1D_vec1(), not associated argument.'
-!!$       STOP
-!!$    end if
-!!$    nullify(f2Dv2%descriptor)
-!!$    SLL_DEALLOCATE(f2Dv2%data, ierr)
-!!$    SLL_DEALLOCATE(f2Dv2, ierr)
-!!$  end subroutine delete_field_2D_vec2
-
-
-
-
-  subroutine write_sll_mapped_mesh_2d_base(mesh,mesh_name)
-    class(sll_mapped_mesh_2d_base) :: mesh
-    character(len=*), intent(in), optional :: mesh_name
-    sll_real64, dimension(:,:), pointer :: x1mesh
-    sll_real64, dimension(:,:), pointer :: x2mesh
-    sll_int32  :: i1
-    sll_int32  :: i2
-    sll_real64 :: eta1
-    sll_real64 :: eta2
-    sll_int32 :: ierr
-
-    ! create 2D mesh
-    SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    eta1 = 0.0_f64
-    do i1=1, mesh%nc_eta1+1
-       eta2 = 0.0_f64
-       do i2=1, mesh%nc_eta2+1
-          x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
-          x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
-          eta2 = eta2 + mesh%delta_eta2 
-       end do
-       eta1 = eta1 + mesh%delta_eta1
-    end do
-    if (present(mesh_name)) then
-       call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,trim(mesh_name))
-    else
-       call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,"mesh")
-    end if
-  end subroutine write_sll_mapped_mesh_2d_base
 
   subroutine write_scalar_field_2d( f2Dv1, name, jacobian)
     class(scalar_field_2d) :: f2Dv1
