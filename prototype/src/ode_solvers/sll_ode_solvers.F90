@@ -194,7 +194,7 @@ contains
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
     sll_real64, dimension(:), pointer        :: b
     sll_real64, parameter                    :: eps = 1.0e-14  ! small real number
-
+    sll_real64 :: tmp
     ! initialize zeros
     zeros(:) = 0.0_f64
     ! check order. The implementation with a 'select' construct permits
@@ -224,6 +224,17 @@ contains
     ! case of periodic boundary conditions
     !-------------------------------------
     if (bt == PERIODIC_ODE) then
+      !begin modif 
+      tmp = 0._f64  
+      do i=1,ncx
+        tmp = tmp+abs(a(i))
+      enddo
+      tmp = tmp/real(ncx,f64)
+      if(tmp<1.e-14)then
+        xout = xin
+        return
+      endif
+      !end modif
        x1 = xin(1)
        period = xin(ncx+1)-x1
 

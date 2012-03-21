@@ -14,7 +14,7 @@ env = Environment( ENV = os.environ,
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.'],
                    LIBS=['sll_memory','sll_precision'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f95', 
+                   F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', 
                                '-DDEBUG','-ffree-line-length-none'])
                    #I've deleted the '-Werror' flag. De Santis S.
 #env.Replace(	
