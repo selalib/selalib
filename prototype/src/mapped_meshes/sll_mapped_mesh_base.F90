@@ -1,4 +1,5 @@
 module sll_mapped_mesh_base
+#include "sll_memory.h"
 #include "sll_working_precision.h"
   implicit none
   
@@ -15,6 +16,7 @@ module sll_mapped_mesh_base
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
+     character(len=64) :: mesh_name
    contains
      procedure(geometry_function), deferred, pass       :: x1
      procedure(geometry_function), deferred, pass       :: x2
@@ -23,6 +25,7 @@ module sll_mapped_mesh_base
      procedure(geometry_function_nodes), deferred, pass :: x2_at_node
      procedure(geometry_function_nodes), deferred, pass :: jacobian_at_node
 !     procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
+     procedure, pass :: write_to_file => write_mapped_mesh_2d_base
   end type sll_mapped_mesh_2d_base
 
  
@@ -103,6 +106,43 @@ module sll_mapped_mesh_base
       end function two_arg_message_passing_func
    end interface
    
+   abstract interface
+      subroutine write_to_file_signature( map, mesh_name )
+        import     :: sll_mapped_mesh_2d_base
+        class(sll_mapped_mesh_2d_base)  :: map
+        character(len=*), optional      :: mesh_name
+      end subroutine write_to_file_signature
+   end interface
+
+contains
+
+  subroutine write_mapped_mesh_2d_base(mesh)
+    class(sll_mapped_mesh_2d_base) :: mesh
+    sll_real64, dimension(:,:), pointer :: x1mesh
+    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_int32  :: i1
+    sll_int32  :: i2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: ierr
+
+    ! create 2D mesh
+    SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+    SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+    eta1 = 0.0_f64
+    do i1=1, mesh%nc_eta1+1
+       eta2 = 0.0_f64
+       do i2=1, mesh%nc_eta2+1
+          x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
+          x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
+          eta2 = eta2 + mesh%delta_eta2 
+       end do
+       eta1 = eta1 + mesh%delta_eta1
+    end do
+    call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,mesh%mesh_name)
+  end subroutine write_mapped_mesh_2d_base
+
+
  
    
  end module sll_mapped_mesh_base

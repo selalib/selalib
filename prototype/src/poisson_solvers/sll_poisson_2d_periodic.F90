@@ -89,7 +89,7 @@ function new_poisson_2d_periodic_potential(potential)
    ncy = GET_MESH_NC_ETA2(mesh)
 
    SLL_ALLOCATE(new_poisson_2d_periodic_potential,                   error)
-   SLL_ALLOCATE(new_poisson_2d_periodic_potential%mesh,        error)
+   !SLL_ALLOCATE(new_poisson_2d_periodic_potential%mesh,        error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%rhst(ncy,ncx/2+1), error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%kx(ncy,ncx/2+1),   error)
    SLL_ALLOCATE(new_poisson_2d_periodic_potential%ky(ncy,ncx/2+1),   error)

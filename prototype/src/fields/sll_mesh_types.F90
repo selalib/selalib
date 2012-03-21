@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_diagnostics
+! MODULE: sll_mesh_types
 !
 !> @author
 !> - Edwin
