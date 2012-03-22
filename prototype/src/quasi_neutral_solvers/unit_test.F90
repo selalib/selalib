@@ -42,7 +42,7 @@ implicit none
 
   bc = 'neumann'
   bc = 'dirichlet'
-  nr = 64
+  nr = 256
   ntheta = 1024
   rmin = 1.d0
   rmax = 10.d0
@@ -84,7 +84,7 @@ contains
     type (qns_2d_with_finite_diff_plan_seq), pointer :: plan_seq
     type (qns_2d_with_finite_diff_plan_par), pointer :: plan_par
     sll_real64                                       :: average_err
-    sll_real64                                       ::average_err_bound
+    sll_real64                                       :: average_err_bound
     sll_real64                                       :: seq_par_diff
     sll_real64                                       :: Mr, Mtheta
     sll_int32, dimension(1:3)                        :: global
