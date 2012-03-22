@@ -22,12 +22,10 @@ program test_quasi_neutral
 #include "sll_mesh_types.h"
 #include "sll_remap.h"
 
-  use sll_qns_2d_with_finite_diff_seq
   use numeric_constants
-  use sll_qns_2d_with_finite_diff_par
-  use sll_qns_2d_with_finite_diff_seq
- ! use sll_qns_2d_with_finite_diff_par
   use sll_collective
+  use sll_qns_2d_with_finite_diff_seq
+  use sll_qns_2d_with_finite_diff_par
 
 implicit none
 
