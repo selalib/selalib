@@ -62,11 +62,7 @@ if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(F90PATH=[os.environ['FFTWINCPATH']])
   env.Append(LIBPATH=[os.environ['FFTWLIBPATH']])
   env.Append(LIBS=['fftw3'])
-  #env.Program('fftw_solver', source = ["fftw_solver.F90"])
-
-#env.Program('unit_test', ["unit_test.F90", "bsplvb.F90", "bsplvd.F90",
-#"sll_quasi_neutral_solver.F90", "sll_qns_2d_with_finite_diff.F90"])
 
 env.Program('unit_test', ["unit_test.F90", "sll_qns_2d_with_finite_diff_seq.F90", 
-"sll_qns_2d_with_finite_diff_util.F90"])
+"sll_qns_2d_with_finite_diff_par.F90"])
 
