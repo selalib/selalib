@@ -263,7 +263,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
         tmp=abs(integration_points(1,N_points/2+i)+integration_points(1,N_points/2-i+1))
       endif
     enddo
-    if(tmp>0)then
+    if(tmp>1.e-14)then
       print *,'integration_points are not symmetric',tmp
       do j=1,N_points
         print *,j,integration_points(1,j)
@@ -280,7 +280,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
         tmp=abs(integration_points(1,(N_points+1)/2+i)+integration_points(1,(N_points+1)/2-i))
       endif
     enddo
-    if(tmp>0)then
+    if(tmp>1.e-14)then
       print *,'integration_points are not symmetric',tmp
       do j=1,N_points
         print *,j,integration_points(1,j)
