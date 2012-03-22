@@ -24,10 +24,10 @@ module sll_qns_2d_with_finite_diff_seq
 #include "sll_assert.h"
 #include "sll_remap.h"
 
-  use sll_fft
   use numeric_constants
-  use sll_collective
+  use sll_fft
   use sll_tridiagonal
+  use sll_collective
 
   implicit none
 

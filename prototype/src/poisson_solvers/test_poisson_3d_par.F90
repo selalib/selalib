@@ -1,18 +1,18 @@
-!***************************************************************************
+!************************************************************************
 !
 ! Selalib 2012     
 ! File : test_poisson_3d_par.F90
 !
 !> @brief 
 !> Selalib poisson solvers (3D) unit test
-!> Last modification: March 19, 2012
+!> Last modification: March 22, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !> Pierre NAVARO (navaro@math.unistra.fr)
 !                                  
-!***************************************************************************
+!************************************************************************
 
 program test_poisson_3d_par
 
@@ -24,7 +24,6 @@ program test_poisson_3d_par
 #include "sll_poisson_solvers.h"
 
   use numeric_constants
-  use sll_poisson_3d_periodic_util
   use sll_poisson_3d_periodic_par
   use sll_collective
 
@@ -77,12 +76,14 @@ program test_poisson_3d_par
   npx = 1
   npy = 2**(e/2)
   npz = int(colsz)/npy
-  call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, layout )
+  call initialize_layout_with_distributed_3D_array( nx, ny, &
+                                  nz, npx, npy, npz, layout )
 
-  plan => new_poisson_3d_periodic_plan_par(layout, nx, ny, nz, Lx, Ly, Lz)
+  plan => new_poisson_3d_periodic_plan_par(layout, nx, ny, &
+                                             nz, Lx, Ly, Lz)
 
   call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
-  
+
   SLL_ALLOCATE(rho(nx_loc,ny_loc,nz_loc), ierr)
   SLL_ALLOCATE(x(nx_loc,ny_loc,nz_loc),ierr)
   SLL_ALLOCATE(y(nx_loc,ny_loc,nz_loc),ierr)
@@ -108,9 +109,9 @@ program test_poisson_3d_par
      if (i_test==1) then
         phi_an = cos(x)*sin(y)*cos(z)
      else if (i_test == 2) then
-        phi_an = (4/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz))        &
-                            * exp(-.5*(x-Lx/2)**2)           &
-                            * exp(-.5*(y-Ly/2)**2) * sin(z)
+        phi_an = (4/(sll_pi * sqrt(sll_pi)*Lx*Ly*Lz)) &
+             * exp(-.5*(x-Lx/2)**2)                   &
+             * exp(-.5*(y-Ly/2)**2) * sin(z)
      end if
 
      do k=1,nz_loc
@@ -119,36 +120,37 @@ program test_poisson_3d_par
               if (i_test == 1) then
                  rho(i,j,k) = 3*phi_an(i,j,k)
               else if(i_test == 2) then
-                 rho(i,j,k) = phi_an(i,j,k)             &
-                             *(3-((x(i,j,k)-Lx/2)**2    &
-                                 +(y(i,j,k)-Ly/2)**2))
+                 rho(i,j,k) = phi_an(i,j,k)   &
+                      *(3-((x(i,j,k)-Lx/2)**2 &
+                      +(y(i,j,k)-Ly/2)**2))
               end if
            enddo
         enddo
      enddo
 
-    SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
-    call solve_poisson_3d_periodic_par(plan, rho, phi)
+     SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
+     call solve_poisson_3d_periodic_par(plan, rho, phi)
 
-    average_err  = 0.d0
+     average_err  = 0.d0
 
-    do k=1,nz_loc
-       do j=1,ny_loc
-          do i=1,nx_loc
-             average_err  = average_err  + abs( phi_an (i,j,k) - phi(i,j,k) )
-          enddo
-       enddo
-    enddo
+     do k=1,nz_loc
+        do j=1,ny_loc
+           do i=1,nx_loc
+              average_err  = average_err + abs( phi_an(i,j,k) &
+                             - phi(i,j,k) )
+           enddo
+        enddo
+     enddo
 
-    average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
+     average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
 
-    call flush(); print*, ' ------------------'
-    call flush(); print*, ' myrank ', myrank
-    call flush(); print*, 'local average error:', average_err
-    call flush(); print*, 'dx*dy*dz =', dx*dy*dz
-    call flush(); print*, ' ------------------'
+     call flush(); print*, ' ------------------'
+     call flush(); print*, ' myrank ', myrank
+     call flush(); print*, 'local average error:', average_err
+     call flush(); print*, 'dx*dy*dz =', dx*dy*dz
+     call flush(); print*, ' ------------------'
 
-    SLL_DEALLOCATE_ARRAY(phi, ierr)
+     SLL_DEALLOCATE_ARRAY(phi, ierr)
 
   end do
 

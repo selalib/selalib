@@ -5,7 +5,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (3D) unit test
-!> Last modification: March 13, 2012
+!> Last modification: March 22, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -24,7 +24,6 @@ program test_poisson_3d_seq
 #include "sll_remap.h"
 
   use numeric_constants
-  use sll_poisson_3d_periodic_util
   use sll_poisson_3d_periodic_seq
   use sll_diagnostics
 
@@ -71,7 +70,7 @@ program test_poisson_3d_seq
   end do
 
   call write_mesh(x,y,z,nx,ny,nz,"mesh3d")
-  
+
   SLL_ALLOCATE(rho(nx,ny,nz),error)
   SLL_ALLOCATE(phi(nx,ny,nz),error)
   SLL_ALLOCATE(phi_an(nx,ny,nz),error)
@@ -92,20 +91,21 @@ program test_poisson_3d_seq
         phi_an = cos(x)*sin(y)*cos(z)
         rho = 3._f64 * phi_an
      else if (i_test == 2) then
-        phi_an = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) * &
-                 exp(-.5*(x-Lx/2)**2) * exp(-.5*(y-Ly/2)**2) * sin(z)
-        rho = phi_an * (3.0_f64 - ((x-Lx/2.0_f64)**2 + (y-Ly/2.0_f64)**2))
+        phi_an = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) *  exp(-.5 & 
+                 *(x-Lx/2)**2) * exp(-.5*(y-Ly/2)**2) * sin(z)
+        rho    = phi_an * (3.0_f64 - ((x-Lx/2.0_f64)**2 + &
+                 (y-Ly/2.0_f64)**2))
      end if
-   
+
      call cpu_time(time_1)
      call solve_poisson_3d_periodic_seq(plan, rho, phi)
      call cpu_time(time_2)
-   
+
      average_err = sum( abs(phi_an-phi) ) / (nx*ny*nz)
      print*, 'Average error:', average_err
      print*, 'dx*dy*dz =', dx*dy*dz
      print*, 'CPU time = ', time_2-time_1
-   
+
      if ( average_err > dx*dx*dy) then
         print*, ' '
         print*, 'sll_poisson_3d_periodic_seq test not passed'
@@ -116,14 +116,14 @@ program test_poisson_3d_seq
      call write_vec1d(phi,nx,ny,nz,"phi"//char(i_test+48),"mesh3d",0)
 
   end do
-   
+
   call delete_poisson_3d_periodic_plan_seq(plan)
-   
+
 
   print*, 'sll_poisson_3d_periodic_seq test: PASS'
-   
+
   call cpu_time(time_2)
   print*, 'Total CPU time : ', time_2-time_0
-     
-   
-  end program test_poisson_3d_seq
+
+
+end program test_poisson_3d_seq

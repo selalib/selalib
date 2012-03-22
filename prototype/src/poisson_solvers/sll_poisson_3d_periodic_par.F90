@@ -1,5 +1,5 @@
 
-!***************************************************************************
+!**************************************************************************
 !
 ! Selalib 2012     
 ! Module: sll_poisson_3d_periodic.F90
@@ -7,13 +7,13 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 20, 2012
+!> Last modification: March 22, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
-!***************************************************************************
+!**************************************************************************
 
 module sll_poisson_3d_periodic_par
 
@@ -26,11 +26,117 @@ module sll_poisson_3d_periodic_par
   use sll_fft
   use numeric_constants
   use sll_collective
-  use sll_poisson_3d_periodic_util
 
   implicit none
 
+  type poisson_3d_periodic_plan_par
+     sll_int32                   :: nx ! Number of points-1 in x-direction
+     sll_int32                   :: ny ! Number of points-1 in y-direction
+     sll_int32                   :: nz ! Number of points-1 in z-direction
+     sll_real64                  :: Lx
+     sll_real64                  :: Ly
+     sll_real64                  :: Lz
+     type(sll_fft_plan), pointer :: px
+     type(sll_fft_plan), pointer :: py
+     type(sll_fft_plan), pointer :: pz
+     type(sll_fft_plan), pointer :: px_inv
+     type(sll_fft_plan), pointer :: py_inv
+     type(sll_fft_plan), pointer :: pz_inv
+     type(layout_3D_t),  pointer :: layout_x
+     type(layout_3D_t),  pointer :: layout_y
+     type(layout_3D_t),  pointer :: layout_z
+     sll_int32, dimension(3,3)   :: loc_sizes
+  end type poisson_3d_periodic_plan_par
+
 contains
+
+
+  function new_poisson_3d_periodic_plan_par(start_layout, nx, ny, nz, Lx, &
+                                                       Ly, Lz) result(plan)
+
+    type(layout_3D_t),  pointer                  :: start_layout
+    sll_int32                                    :: nx, ny, nz
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
+    sll_comp64,                    dimension(nx) :: x
+    sll_comp64,                    dimension(ny) :: y
+    sll_comp64,                    dimension(nz) :: z
+    sll_real64                                   :: Lx, Ly, Lz
+    sll_int64                                    :: colsz ! collective size
+    sll_int32                                    :: npx, npy, npz
+    ! npx, npy, npz are the numbers of processors in directions x, y, z
+    sll_int32                                    :: e
+    sll_int32                                    :: ierr
+    type (poisson_3d_periodic_plan_par), pointer :: plan
+    sll_int32, dimension(3,3)                    :: loc_sizes
+
+    if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two( & 
+              int(ny,i64))) .and. (.not.is_power_of_two(int(nz,i64)))) then     
+       print *, 'This test needs to run in numbers of points which are',  &
+                'powers of 2.' 
+       stop
+    end if
+
+    colsz  = sll_get_collective_size(sll_world_collective)
+    if ( colsz > min(nx,ny,nz) ) then     
+       print *, 'This test needs to run in a number of processes which',  &
+                'is less than', min(nx,ny,nz)
+       stop
+    end if
+    if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two( &
+               int(ny,i64))) .and.(.not.is_power_of_two(int(nz,i64)))) then     
+       print *, 'This test needs to run in numbers of points which are',  &
+                'powers of 2.'
+       stop
+    end if
+
+    SLL_ALLOCATE(plan, ierr)
+
+    ! Geometry informations
+    plan%nx = nx
+    plan%ny = ny
+    plan%nz = nz
+    plan%Lx = Lx
+    plan%Ly = Ly
+    plan%Lz = Lz
+
+    ! For FFTs (in each direction)
+    plan%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+    plan%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+    plan%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+
+    ! For inverse FFTs (in each direction)
+    plan%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE )
+    plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+    plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+
+    ! Layout and local sizes for FFTs in x-direction
+    plan%layout_x => start_layout
+    call compute_local_sizes( plan%layout_x, loc_sizes(1,1), &
+                              loc_sizes(1,2), loc_sizes(1,3) )
+
+    ! Layout and local sizes for FFTs in y-direction
+    e = int(log(real(colsz))/log(2.))
+    plan%layout_y => new_layout_3D( sll_world_collective )
+    npx = 2**(e/2)
+    npy = 1
+    npz = int(colsz)/npx
+    call initialize_layout_with_distributed_3D_array( nx, ny, &
+                             nz, npx, npy, npz, plan%layout_y )
+    call compute_local_sizes( plan%layout_y, loc_sizes(2,1),  &
+                               loc_sizes(2,2), loc_sizes(2,3) )
+
+    ! Layout and local sizes for FFTs in z-direction
+    plan%layout_z => new_layout_3D( sll_world_collective )
+    npy = npz
+    npz = 1
+    call initialize_layout_with_distributed_3D_array( nx, ny, &
+                             nz, npx, npy, npz, plan%layout_z )
+    call compute_local_sizes( plan%layout_z, loc_sizes(3,1),  &
+                               loc_sizes(3,2), loc_sizes(3,3) )
+
+    plan%loc_sizes = loc_sizes
+
+  end function new_poisson_3d_periodic_plan_par
 
 
   subroutine solve_poisson_3d_periodic_par(plan, rho, phi)
@@ -40,14 +146,17 @@ contains
     sll_real64, dimension(:,:,:)                 :: phi
     sll_comp64, dimension(:,:,:), allocatable    :: hat_rho, tmp, hat_phi
     sll_int32                                    :: nx, ny, nz
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y ,z
     sll_int32                                    :: nx_loc, ny_loc, nz_loc
     sll_int32                                    :: i, j, k
     sll_int32                                    :: ierr
     sll_real64                                   :: Lx, Ly, Lz
     sll_real64                                   :: ind_x, ind_y, ind_z
     sll_int32                                    :: myrank
-    sll_int64                                    :: colsz ! collective size
-    type(layout_3D_t), pointer                   :: layout_x, layout_y, layout_z
+    sll_int64                                    :: colsz!collective size
+    type(layout_3D_t), pointer                   :: layout_x
+    type(layout_3D_t), pointer                   :: layout_y
+    type(layout_3D_t), pointer                   :: layout_z
     type(remap_plan_3D_t), pointer               :: rmp3
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
@@ -60,34 +169,17 @@ contains
     Ly = plan%Ly
     Lz = plan%Lz
 
-    ! Get layouts to compute FFTs (in each direction) and poisson solver kernel
+    ! Get layouts to compute FFTs (in each direction) and poisson solver 
+    !kernel
     layout_x => plan%layout_x
     layout_y => plan%layout_y
     layout_z => plan%layout_z
 
-    if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two(int(ny,i64))) &
-         .and.(.not.is_power_of_two(int(nz,i64)))) then     
-       print *, 'This test needs to run in numbers of points which are powers of 2.'
-       stop
-    end if
-
-    colsz  = sll_get_collective_size(sll_world_collective)
-    myrank = sll_get_collective_rank(sll_world_collective)
-
-    if ( colsz > min(nx,ny,nz) ) then     
-       print *, 'This test needs to run in a number of processes which is less than', min(nx,ny,nz)
-       stop
-    end if
-
-    if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two(int(ny,i64))) &
-         .and.(.not.is_power_of_two(int(nz,i64)))) then     
-       print *, 'This test needs to run in numbers of points which are powers of 2.'
-       stop
-    end if
-
     ! FFTs in x-direction
-    call compute_local_sizes( layout_x, nx_loc, ny_loc, nz_loc )
-    call if_sizes_do_not_match(layout_x, rho, phi)
+    nx_loc = plan%loc_sizes(1,1) 
+    ny_loc = plan%loc_sizes(1,2) 
+    nz_loc = plan%loc_sizes(1,3)
+    call verify_argument_sizes_par(layout_x, rho, phi)
     SLL_ALLOCATE(hat_rho(nx_loc,ny_loc,nz_loc), ierr)
     hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
@@ -97,7 +189,9 @@ contains
     enddo
 
     ! FFTs in y-direction
-    call compute_local_sizes( layout_y, nx_loc, ny_loc, nz_loc )
+    nx_loc = plan%loc_sizes(2,1) 
+    ny_loc = plan%loc_sizes(2,2) 
+    nz_loc = plan%loc_sizes(2,3)
     SLL_ALLOCATE(tmp(nx_loc,ny_loc,nz_loc), ierr)
     rmp3 => NEW_REMAPPER_PLAN_3D( layout_x, layout_y, hat_rho )
     call apply_remap_3D( rmp3, hat_rho, tmp ) 
@@ -109,7 +203,9 @@ contains
     SLL_DEALLOCATE_ARRAY(hat_rho, ierr)
 
     ! FFTs in z-direction
-    call compute_local_sizes( layout_z, nx_loc, ny_loc, nz_loc )
+    nx_loc = plan%loc_sizes(3,1) 
+    ny_loc = plan%loc_sizes(3,2) 
+    nz_loc = plan%loc_sizes(3,3)
     SLL_ALLOCATE(hat_rho(nx_loc,ny_loc,nz_loc), ierr)
     rmp3 => NEW_REMAPPER_PLAN_3D( layout_y, layout_z, tmp )
     call apply_remap_3D( rmp3, tmp, hat_rho ) 
@@ -148,7 +244,8 @@ contains
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
                 hat_phi(i,j,k) = 0.d0
              else
-                hat_phi(i,j,k) = hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2+(ind_y/Ly)**2+(ind_z/Lz)**2))
+                hat_phi(i,j,k) = hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
+                                 + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
        enddo
@@ -163,7 +260,9 @@ contains
     enddo
 
     ! Inverse FFTs in y-direction
-    call compute_local_sizes( layout_y, nx_loc, ny_loc, nz_loc )
+    nx_loc = plan%loc_sizes(2,1) 
+    ny_loc = plan%loc_sizes(2,2) 
+    nz_loc = plan%loc_sizes(2,3)
     SLL_ALLOCATE(tmp(nx_loc,ny_loc,nz_loc), ierr)
     rmp3 => NEW_REMAPPER_PLAN_3D( layout_z, layout_y, tmp )
     call apply_remap_3D( rmp3, hat_phi, tmp )
@@ -175,7 +274,9 @@ contains
     SLL_DEALLOCATE_ARRAY(hat_phi, ierr)
 
     ! Inverse FFTs in x-direction
-    call compute_local_sizes( layout_x, nx_loc, ny_loc, nz_loc )
+    nx_loc = plan%loc_sizes(1,1) 
+    ny_loc = plan%loc_sizes(1,2) 
+    nz_loc = plan%loc_sizes(1,3)
     SLL_ALLOCATE(hat_phi(nx_loc,ny_loc,nz_loc), ierr)
     rmp3 => NEW_REMAPPER_PLAN_3D( layout_y, layout_x, hat_phi )
     call apply_remap_3D( rmp3, tmp, hat_phi ) 
@@ -191,6 +292,33 @@ contains
     SLL_DEALLOCATE_ARRAY(tmp, ierr)
 
   end subroutine solve_poisson_3d_periodic_par
+
+
+  subroutine delete_poisson_3d_periodic_plan_par(plan)
+
+    type (poisson_3d_periodic_plan_par), pointer :: plan
+    sll_int32                                    :: ierr
+
+    ! Fixme: some error checking, whether the poisson pointer is associated
+    ! for instance
+    SLL_ASSERT( associated(plan) )
+
+    call delete_fft_plan1d(plan%px)
+    call delete_fft_plan1d(plan%py)
+    call delete_fft_plan1d(plan%pz)
+
+    call delete_fft_plan1d(plan%px_inv)
+    call delete_fft_plan1d(plan%py_inv)
+    call delete_fft_plan1d(plan%pz_inv)
+
+    call delete_layout_3D( plan%layout_x )
+    call delete_layout_3D( plan%layout_y )
+    call delete_layout_3D( plan%layout_z )
+
+    SLL_DEALLOCATE(plan, ierr)
+
+  end subroutine delete_poisson_3d_periodic_plan_par
+
 
   subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
     type(layout_3D_t), pointer :: layout
@@ -221,7 +349,7 @@ contains
     loc_sz_k = k_max - k_min + 1
   end subroutine compute_local_sizes
 
-  subroutine if_sizes_do_not_match(layout, rho, phi)
+  subroutine verify_argument_sizes_par(layout, rho, phi)
 
 
     type(layout_3D_t), pointer   :: layout
@@ -235,12 +363,22 @@ contains
     do i=1,3
        if ( (n(i)/=size(rho,i)) .or. (n(i)/=size(phi,i))  ) then
           print*, 'Input sizes passed to solve_poisson_3d_periodic_par do not match'
+          if (i==1) then
+             print*, 'Input sizes passed to "solve_poisson_3d_periodic_par" ', &
+                  'do not match in direction x'
+          elseif (i==2) then
+             print*, 'Input sizes passed to "solve_poisson_3d_periodic_par" ', &
+                  'do not match in direction y'
+          else
+             print*, 'Input sizes passed to "solve_poisson_3d_periodic_par" ', &
+                  'do not match in direction z'
+          endif
           print *, 'Exiting...'
           stop
        endif
     enddo
 
-  end subroutine if_sizes_do_not_match
+  end subroutine verify_argument_sizes_par
 
 
 end module sll_poisson_3d_periodic_par
