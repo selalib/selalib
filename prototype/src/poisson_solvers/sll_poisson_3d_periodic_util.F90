@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 23, 2012
-!> Last modification: Feb. 23, 2012
+!> Last modification: March 13, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -21,13 +21,15 @@ module sll_poisson_3d_periodic_util
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_assert.h"
+#include "sll_remap.h"
 
   use sll_fft
   use numeric_constants
+  use sll_collective
 
   implicit none
 
-  type poisson_3d_periodic_plan
+  type poisson_3d_periodic_plan_seq
      sll_int32                   :: nx ! Number of points-1 in x-direction
      sll_int32                   :: ny ! Number of points-1 in y-direction
      sll_int32                   :: nz ! Number of points-1 in z-direction
@@ -40,60 +42,203 @@ module sll_poisson_3d_periodic_util
      type(sll_fft_plan), pointer :: px_inv
      type(sll_fft_plan), pointer :: py_inv
      type(sll_fft_plan), pointer :: pz_inv
-  end type poisson_3d_periodic_plan
+  end type poisson_3d_periodic_plan_seq
 
-contains
+  type poisson_3d_periodic_plan_par
+     sll_int32                   :: nx ! Number of points-1 in x-direction
+     sll_int32                   :: ny ! Number of points-1 in y-direction
+     sll_int32                   :: nz ! Number of points-1 in z-direction
+     sll_real64                  :: Lx
+     sll_real64                  :: Ly
+     sll_real64                  :: Lz
+     type(sll_fft_plan), pointer :: px
+     type(sll_fft_plan), pointer :: py
+     type(sll_fft_plan), pointer :: pz
+     type(sll_fft_plan), pointer :: px_inv
+     type(sll_fft_plan), pointer :: py_inv
+     type(sll_fft_plan), pointer :: pz_inv
+     type(layout_3D_t),  pointer :: layout_x
+     type(layout_3D_t),  pointer :: layout_y
+     type(layout_3D_t),  pointer :: layout_z
+     type(layout_3D_t),  pointer :: layout_kernel
+     sll_int32,   dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
+  end type poisson_3d_periodic_plan_par
 
-  function new_poisson_3d_periodic_plan(array, Lx, Ly, Lz)
+   contains
 
-    sll_comp64, dimension(:,:,:)             :: array
-    sll_int32                                :: nx, ny, nz
-    sll_int32                                :: ierr
-    sll_real64                               :: Lx, Ly, Lz
-    type (poisson_3d_periodic_plan), pointer :: new_poisson_3d_periodic_plan
 
-    nx = size(array,1)
-    ny = size(array,2)
-    nz = size(array,3)
+     function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz)
 
-    SLL_ALLOCATE(new_poisson_3d_periodic_plan, ierr)
+       sll_comp64,                    dimension(nx) :: x
+       sll_comp64,                    dimension(ny) :: y
+       sll_comp64,                    dimension(nz) :: z
+       sll_int32                                    :: nx, ny, nz
+       sll_int32                                    :: ierr
+       sll_real64                                   :: Lx, Ly, Lz
+       type (poisson_3d_periodic_plan_seq), pointer :: new_poisson_3d_periodic_plan_seq
 
-    new_poisson_3d_periodic_plan%nx = nx
-    new_poisson_3d_periodic_plan%ny = ny
-    new_poisson_3d_periodic_plan%nz = nz
-    new_poisson_3d_periodic_plan%Lx = Lx
-    new_poisson_3d_periodic_plan%Ly = Ly
-    new_poisson_3d_periodic_plan%Lz = Lz
+       SLL_ALLOCATE(new_poisson_3d_periodic_plan_seq, ierr)
 
-    new_poisson_3d_periodic_plan%px => new_plan_c2c_1d( nx, array(:,1,1), array(:,1,1), FFT_FORWARD )
-    new_poisson_3d_periodic_plan%py => new_plan_c2c_1d( ny, array(1,:,1), array(1,:,1), FFT_FORWARD )
-    new_poisson_3d_periodic_plan%pz => new_plan_c2c_1d( nz, array(1,1,:), array(1,1,:), FFT_FORWARD )
-    new_poisson_3d_periodic_plan%px_inv => new_plan_c2c_1d( nx, array(:,1,1), array(:,1,1), FFT_INVERSE)
-    new_poisson_3d_periodic_plan%py_inv => new_plan_c2c_1d( ny, array(1,:,1), array(1,:,1), FFT_INVERSE )
-    new_poisson_3d_periodic_plan%pz_inv => new_plan_c2c_1d( nz, array(1,1,:), array(1,1,:), FFT_INVERSE )
+       ! Geometry informations
+       new_poisson_3d_periodic_plan_seq%nx = nx
+       new_poisson_3d_periodic_plan_seq%ny = ny
+       new_poisson_3d_periodic_plan_seq%nz = nz
+       new_poisson_3d_periodic_plan_seq%Lx = Lx
+       new_poisson_3d_periodic_plan_seq%Ly = Ly
+       new_poisson_3d_periodic_plan_seq%Lz = Lz
 
-  end function new_poisson_3d_periodic_plan
+       ! For FFTs (in each direction)
+       new_poisson_3d_periodic_plan_seq%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_seq%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_seq%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
 
-  subroutine delete_poisson_3d_periodic_plan(plan)
+       ! For inverse FFTs (in each direction)
+       new_poisson_3d_periodic_plan_seq%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE)
+       new_poisson_3d_periodic_plan_seq%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+       new_poisson_3d_periodic_plan_seq%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
 
-    type (poisson_3d_periodic_plan), pointer :: plan
-    sll_int32                                :: ierr
+     end function new_poisson_3d_periodic_plan_seq
 
-    ! Fixme: some error checking, whether the poisson pointer is associated
-    ! for instance
-    SLL_ASSERT( associated(plan) )
 
-    call fft_delete_plan(plan%px)
-    call fft_delete_plan(plan%py)
-    call fft_delete_plan(plan%pz)
+     function new_poisson_3d_periodic_plan_par(nx, ny, nz, Lx, Ly, Lz)
 
-    call fft_delete_plan(plan%px_inv)
-    call fft_delete_plan(plan%py_inv)
-    call fft_delete_plan(plan%pz_inv)
+       sll_int32                                    :: nx, ny, nz
+       sll_comp64,                    dimension(nx) :: x
+       sll_comp64,                    dimension(ny) :: y
+       sll_comp64,                    dimension(nz) :: z
+       sll_real64                                   :: Lx, Ly, Lz
+       type (poisson_3d_periodic_plan_par), pointer :: new_poisson_3d_periodic_plan_par
+       sll_int64                                    :: colsz ! collective size
+       sll_int32                                    :: npx, npy, npz
+       sll_int32                                    :: e, ex, ey, ez
+       sll_int32,                    dimension(4,3) :: loc_sizes ! local sizes in the 4 layouts
+       sll_int32                                    :: ierr
 
-    SLL_DEALLOCATE(plan, ierr)
+       SLL_ALLOCATE(new_poisson_3d_periodic_plan_par, ierr)
 
-  end subroutine delete_poisson_3d_periodic_plan
+       ! Geometry informations
+       new_poisson_3d_periodic_plan_par%nx = nx
+       new_poisson_3d_periodic_plan_par%ny = ny
+       new_poisson_3d_periodic_plan_par%nz = nz
+       new_poisson_3d_periodic_plan_par%Lx = Lx
+       new_poisson_3d_periodic_plan_par%Ly = Ly
+       new_poisson_3d_periodic_plan_par%Lz = Lz
 
-end module sll_poisson_3d_periodic_util
+       ! For FFTs (in each direction)
+       new_poisson_3d_periodic_plan_par%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_par%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+       new_poisson_3d_periodic_plan_par%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+
+       ! For inverse FFTs (in each direction)
+       new_poisson_3d_periodic_plan_par%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE )
+       new_poisson_3d_periodic_plan_par%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+       new_poisson_3d_periodic_plan_par%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+
+       colsz  = sll_get_collective_size(sll_world_collective)
+       e = int(log(real(colsz))/log(2.))
+
+       ! Layout and local sizes for FFTs in x-direction
+
+       new_poisson_3d_periodic_plan_par%layout_x => new_layout_3D( sll_world_collective )
+       npx = 1
+       npy = 2**(e/2)
+       npz = int(colsz)/npy
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
+            new_poisson_3d_periodic_plan_par%layout_x )
+
+       new_poisson_3d_periodic_plan_par%loc_sizes(1,1) = nx/npx
+       new_poisson_3d_periodic_plan_par%loc_sizes(1,2) = ny/npy
+       new_poisson_3d_periodic_plan_par%loc_sizes(1,3) = nz/npz
+
+       ! Layout and local sizes for FFTs in y-direction
+
+       new_poisson_3d_periodic_plan_par%layout_y => new_layout_3D( sll_world_collective )
+       npx = npy
+       npy = 1
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
+            new_poisson_3d_periodic_plan_par%layout_y )
+
+       new_poisson_3d_periodic_plan_par%loc_sizes(2,1) = nx/npx
+       new_poisson_3d_periodic_plan_par%loc_sizes(2,2) = ny/npy
+       new_poisson_3d_periodic_plan_par%loc_sizes(2,3) = nz/npz
+
+       ! Layout and local sizes for FFTs in z-direction
+
+       new_poisson_3d_periodic_plan_par%layout_z => new_layout_3D( sll_world_collective )
+       npy = npz
+       npz = 1
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
+            new_poisson_3d_periodic_plan_par%layout_z )
+
+       new_poisson_3d_periodic_plan_par%loc_sizes(3,1) = nx/npx
+       new_poisson_3d_periodic_plan_par%loc_sizes(3,2) = ny/npy
+       new_poisson_3d_periodic_plan_par%loc_sizes(3,3) = nz/npz
+
+       ! Layout and local sizes for poisson solver kernel
+       ex = e/3
+       ey = (e-ex)/2
+       ez = e - (ex+ey)
+       npx = 2**ex
+       npy = 2**ey
+       npz = 2**ez
+       new_poisson_3d_periodic_plan_par%layout_kernel  => new_layout_3D( sll_world_collective ) 
+       call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, &
+            new_poisson_3d_periodic_plan_par%layout_kernel )
+
+       new_poisson_3d_periodic_plan_par%loc_sizes(4,1) = nx/npx
+       new_poisson_3d_periodic_plan_par%loc_sizes(4,2) = ny/npy
+       new_poisson_3d_periodic_plan_par%loc_sizes(4,3) = nz/npz
+
+     end function new_poisson_3d_periodic_plan_par
+
+
+     subroutine delete_poisson_3d_periodic_plan_seq(plan)
+
+       type (poisson_3d_periodic_plan_seq), pointer :: plan
+       sll_int32                                    :: ierr
+
+       ! Fixme: some error checking, whether the poisson pointer is associated
+       ! for instance
+       SLL_ASSERT( associated(plan) )
+
+       call delete_fft_plan1d(plan%px)
+       call delete_fft_plan1d(plan%py)
+       call delete_fft_plan1d(plan%pz)
+
+       call delete_fft_plan1d(plan%px_inv)
+       call delete_fft_plan1d(plan%py_inv)
+       call delete_fft_plan1d(plan%pz_inv)
+
+       SLL_DEALLOCATE(plan, ierr)
+
+     end subroutine delete_poisson_3d_periodic_plan_seq
+
+
+     subroutine delete_poisson_3d_periodic_plan_par(plan)
+
+       type (poisson_3d_periodic_plan_par), pointer :: plan
+       sll_int32                                    :: ierr
+
+       ! Fixme: some error checking, whether the poisson pointer is associated
+       ! for instance
+       SLL_ASSERT( associated(plan) )
+
+       call delete_fft_plan1d(plan%px)
+       call delete_fft_plan1d(plan%py)
+       call delete_fft_plan1d(plan%pz)
+
+       call delete_fft_plan1d(plan%px_inv)
+       call delete_fft_plan1d(plan%py_inv)
+       call delete_fft_plan1d(plan%pz_inv)
+
+       call delete_layout_3D( plan%layout_x )
+       call delete_layout_3D( plan%layout_y )
+       call delete_layout_3D( plan%layout_z )
+       call delete_layout_3D( plan%layout_kernel )
+
+       SLL_DEALLOCATE(plan, ierr)
+
+     end subroutine delete_poisson_3d_periodic_plan_par
+
+     end module sll_poisson_3d_periodic_util
 
