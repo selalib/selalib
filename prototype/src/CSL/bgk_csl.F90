@@ -8,15 +8,16 @@ program bgk_csl
   use sll_diagnostics
   use sll_csl
   use sll_splines
+  use contrib_rho_module
   implicit none
-  external compute_translate_nodes_periodic,compute_non_unif_integral
+  external compute_translate_nodes_periodic,compute_non_unif_integral2
   !external poisson1dpertrap
-  sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2
+  sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2,tmp
   sll_real64 :: mu,xi,L,H
   sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step
   LOGICAL :: ex
   sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2
-  sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E
+  sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E,rho_exact
   sll_real64,dimension(:,:), pointer :: f
   sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val
   sll_int :: ii,step
@@ -34,13 +35,13 @@ program bgk_csl
   character(32), parameter  :: name = 'distribution_function'
   type(field_2D_vec1), pointer :: uniform_field
   type(csl_workspace), pointer :: csl_work
-
+  sll_real64,dimension(:,:), pointer :: integration_points,integration_points_val
 
   mesh_case = 2
   visu_step = 10
   
-  N_x1 = 100
-  N_x2 = 100
+  N_x1 = 30
+  N_x2 = 30
   dt = 0.1_f64
   nb_step = 100!600
   
@@ -58,8 +59,10 @@ program bgk_csl
   SLL_ALLOCATE(new_node_positions(N+1),err)
   SLL_ALLOCATE(buf_1d(N+1),err)
   SLL_ALLOCATE(rho(N_x1+1),err)
+  SLL_ALLOCATE(rho_exact(N_x1+1),err)
   SLL_ALLOCATE(E(N_x1+1),err)
-    
+  SLL_ALLOCATE(integration_points(N_x1+1,N_x2+1),err)  
+  SLL_ALLOCATE(integration_points_val(2,N_x2),err)  
   
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
@@ -93,10 +96,10 @@ program bgk_csl
   x1_min = 0._f64
   x1_max = L
 
-  x1_min = 0._f64
-  x1_max = 1._f64
-  x2_min = 0._f64
-  x2_max = 1._f64
+!  x1_min = 0._f64
+!  x1_max = 1._f64
+!  x2_min = 0._f64
+!  x2_max = 1._f64
   
   
   
@@ -175,7 +178,19 @@ program bgk_csl
        PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
     dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
+    do i2=1,nc_eta2+1
+      do i1=1,nc_eta1+1
+        integration_points(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+      enddo
+    enddo
+    
+    
+    
   endif
+  
+
+
+  
 
   if(mesh_case==2)then
      alpha_mesh = 1.e-1_f64 !0.1_f64
@@ -215,10 +230,43 @@ program bgk_csl
        PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
     dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
+    val = 0._f64
+    do i2=1,nc_eta2
+      do i1=1,nc_eta1
+        x1 = (real(i1,f64)-0.5_f64)/real(nc_eta1,f64)
+        eta2 = (real(i2,f64)-0.5_f64)/real(nc_eta2,f64)
+        tmp = alpha_mesh*sin(2._f64*sll_pi*eta2)
+        do i=1,100
+          val = val-(val+tmp*sin(2._f64*sll_pi*val)-x1)/&
+          (1._f64+2._f64*sll_pi*tmp*cos(2._f64*sll_pi*val))
+        enddo
+        if(abs(val+tmp*sin(2._f64*sll_pi*val)-x1)>1.e-14)then
+          print *,i1,i2,val+tmp*sin(2._f64*sll_pi*val)-x1,val
+          print *,'Problem of convergence of Newton'
+          stop
+        endif
+        integration_points(i1,i2) = x2_min+(x1-val+eta2)*(x2_max-x2_min)
+        
+      enddo
+    enddo
+    !do i1=1,nc_eta1
+    !  print *,i1,integration_points(i1,1), integration_points(i1,nc_eta2)
+    !enddo
+    !stop
+
+
   endif
 
+  open(unit=900,file='intersect_points.dat')  
+    do i1=1,N_x1
+      x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+      do i2=1,N_x2
+        write(900,*) x1,integration_points(i1,i2),x1c_array(i1,i2),x2c_array(i1,i2)
+      enddo  
+    enddo
+  close(900)
   
-
+  stop
 
   
   !call sll_init_distribution_function_2D( dist_func, GAUSSIAN )
@@ -248,12 +296,29 @@ program bgk_csl
       !f(i1,i2) = 1._f64/sqrt(2._f64*sll_pi)*exp(-H)      
       val = val*(1._f64+0.0_f64*cos(2._f64*sll_pi/L*x1))
       !f(i1,i2) = 1._f64/(x2_max-x2_min)
-      val = exp(-0.5_f64*40._f64*((x1-.5_f64)**2+(x2-.5_f64)**2))
+      !val = exp(-0.5_f64*40._f64*((x1-.5_f64)**2+(x2-.5_f64)**2))
       f(i1,i2) = val*jac_array(i1,i2)
-      call sll_set_df_val(dist_func, i1, i2, f(i1,i2))
+      call sll_set_df_val(dist_func, i1, i2, f(i1,i2))      
     enddo
   enddo
   
+  do i1=1,N_x1+1
+      xx = (real(i1,f64)-0.5_f64)/real(N_x1,f64)
+      if(xx<=0._f64)then
+        xx = 0._f64
+      endif
+      if(xx>=1._f64)then
+        xx = xx-1._f64!1._f64-1e-15_f64
+      endif
+      if(xx<=0._f64)then
+        xx = 0._f64
+      endif      
+      xx = xx*real(N_phi,f64)
+      ii = floor(xx)
+      xx = xx-real(ii,f64)      
+      phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)
+      rho_exact(i1) = mu*(3._f64-2._f64*xi+2*phi_val)/(3._f64-2._f64*xi)*exp(-phi_val)
+  enddo
   
   
   call write_mesh_2D(mesh)
@@ -272,7 +337,25 @@ program bgk_csl
 !    enddo
 !  enddo  
 !  
+  do i1 = 1, nc_eta1
+    do i2=1,nc_eta2
+      integration_points_val(1,i2) = integration_points(i1,i2)
+      integration_points_val(2,i2) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)
+    enddo
+    !rho(i1)= compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
+    !rho(i1)= compute_non_unif_integral_spline(integration_points_val,nc_eta2)
+    rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+  enddo
+  
+  open(unit=900,file='rho0.dat')  
+    do i1=1,N_x1
+      x1 = x1_min+real(i1-1,f64)*delta_x1
+      write(900,*) x1,rho(i1),rho_exact(i1)
+    enddo
+  close(900)
 
+  stop
+  
   uniform_field => new_field_2D_vec1(mesh)
   do i1 = 1, nc_eta1+1 
      do i2 = 1, nc_eta2+1
@@ -293,9 +376,9 @@ program bgk_csl
         ii = floor(xx)
         xx = xx-real(ii,f64)      
         phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)     
-        FIELD_2D_AT_I( uniform_field, i1, i2 ) = 0._f64*( 0.5_f64*x2**2+phi_val)&
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
         !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
-        -(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
+        !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
      end do
   end do
   
@@ -343,7 +426,7 @@ program bgk_csl
   !compute_rho
   do i1=1,N_x1+1
     buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
-    call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+    call compute_non_unif_integral2(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
     rho(i1)=val-1._f64
   enddo
   E=rho
@@ -409,7 +492,7 @@ program bgk_csl
     !compute E
     do i1=1,N_x1+1
       buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
-      call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+      call compute_non_unif_integral2(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
       rho(i1)=val-1._f64
     enddo
     E=rho
@@ -461,7 +544,7 @@ subroutine compute_translate_nodes_periodic(alpha,N_cells,old_node_positions,new
 end subroutine compute_translate_nodes_periodic
 
 
-subroutine compute_non_unif_integral(x_points,f_points,N_points,val)
+subroutine compute_non_unif_integral2(x_points,f_points,N_points,val)
   use numeric_constants
   implicit none
   sll_real64,intent(out) :: val
@@ -488,7 +571,7 @@ subroutine compute_non_unif_integral(x_points,f_points,N_points,val)
   enddo
   
   
-end  subroutine compute_non_unif_integral
+end  subroutine compute_non_unif_integral2
 
 
 subroutine poisson1dpertrap(E,L,N)
