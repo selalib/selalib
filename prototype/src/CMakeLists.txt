@@ -2,7 +2,7 @@ project (sll)
 enable_language (Fortran)
 cmake_minimum_required(VERSION 2.8)
 
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90 -DNOHDF5)
+add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 # use MPIF90 as compiler
 set(CMAKE_Fortran_COMPILER mpif90)
@@ -17,7 +17,9 @@ if (HDF5_FOUND)
     message(STATUS "HDF5 trouve")
     message(STATUS "libraries = " ${HDF5_LIBRARIES}) 
     message(STATUS "include = " ${HDF5_INCLUDE_DIRS}) 
-    #include_directories(${HDF5_INCLUDE_DIRS})
+   include_directories(${HDF5_INCLUDE_DIRS})
+else (HDF5_FOUND)
+    add_definitions(-DNOHDF5)
 endif(HDF5_FOUND)
 
 #ajoute les modules locaux
@@ -33,8 +35,8 @@ endif()
 # include's
 include_directories(remap poisson_solvers utilities memory mesh_types assert precision) 
 
-add_subdirectory(memory)
 add_subdirectory(precision)
+add_subdirectory(memory)
 add_subdirectory(assert)
 add_subdirectory(collective)
 add_subdirectory(utilities)
@@ -44,12 +46,12 @@ add_subdirectory(numerical_utilities)
 add_subdirectory(diagnostics)
 add_subdirectory(splines)
 add_subdirectory(mesh_types)
-#add_subdirectory(timer)
+add_subdirectory(timer)
 #add_subdirectory(fft)
 
 # add tests
 enable_testing()
-#add_test(timer timer/test_timer)
+add_test(timer timer/test_timer)
 add_test(memory memory/test_memory)
 add_test(collective collective/test_collective)
 add_test(utilities utilities/test_utilities)
