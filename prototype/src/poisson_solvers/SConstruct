@@ -83,7 +83,6 @@ env.Program('test_poisson_3d_seq',[ 'test_poisson_3d_seq.F90',
                                 'sll_poisson_3d_periodic_seq.F90'])
 
 env.Program('test_poisson_3d_par',[ 'test_poisson_3d_par.F90',
-                                'sll_poisson_3d_periodic_util.F90',
                                 'sll_poisson_3d_periodic_par.F90' ])
 
 if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :

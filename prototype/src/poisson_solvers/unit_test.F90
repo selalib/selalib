@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 20, 2012
+!> Last modification: March 22, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -25,16 +25,16 @@ program test_poisson_solvers
 #include "sll_remap.h"
 
   use numeric_constants
+  use sll_collective
   use sll_poisson_1d_periodic
   use sll_poisson_2d_periodic
-  use sll_poisson_3d_periodic_util
   use sll_poisson_3d_periodic_seq
   use sll_poisson_3d_periodic_par
-  use sll_collective
 
-implicit none
+  implicit none
 
   sll_int32  :: nx, ny, nz
+  ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
   sll_real64 :: Lx, Ly, Lz
   sll_int64  :: colsz
 
@@ -52,11 +52,11 @@ implicit none
 
   if (colsz==1) then
      print*, ' '
-     print*, 'Test poisson_1d'
+     print*, 'Testing poisson_1d ...'
      print*, ' '
      call test_poisson_1d()
      print*, ' '
-     print*, 'Test poisson_2d'
+     print*, 'Testing poisson_2d ...'
      print*, ' '
      call test_poisson_2d()
      print*, ' '
@@ -188,6 +188,7 @@ contains
   subroutine test_sll_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
 
     sll_int32                                    :: nx, ny, nz
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
     sll_int32                                    :: nx_loc, ny_loc, nz_loc
     sll_int32                                    :: ierr
     sll_real64                                   :: Lx, Ly, Lz
@@ -201,8 +202,10 @@ contains
     sll_int32                                    :: i, j, k
     type (poisson_3d_periodic_plan_seq), pointer :: plan_seq
     type (poisson_3d_periodic_plan_par), pointer :: plan_par
-    sll_real64                                   :: average_err_1, average_err_2
-    sll_real64                                   :: seq_par_diff_1, seq_par_diff_2
+    sll_real64                                   :: average_err_1
+    sll_real64                                   :: average_err_2
+    sll_real64                                   :: seq_par_diff_1
+    sll_real64                                   :: seq_par_diff_2
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
     sll_int32                                    :: myrank
@@ -211,6 +214,7 @@ contains
     type(layout_3D_t), pointer                   :: layout
     sll_int64                                    :: colsz ! collective size
     sll_int32                                    :: npx, npy, npz
+    ! npx, npy, npz are the numbers of processors in directions x, y, z
     sll_int32                                    :: e
 
     dx = Lx/nx
@@ -223,10 +227,11 @@ contains
           y = (j-1)*dy
           do i=1,nx
              x = (i-1)*dx
-             phi_an_1(i,j,k) = cos(x)*sin(y)*cos(z)
-             phi_an_2(i,j,k) = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) * exp(-.5*(x-Lx/2)**2) * &
-                  exp(-.5*(y-Ly/2)**2) * sin(z)
-             rho_seq_2(i,j,k) = phi_an_2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + (y-Ly/2)**2 ) )
+             phi_an_1(i,j,k)  = cos(x)*sin(y)*cos(z)
+             phi_an_2(i,j,k)  = (4/(sll_pi*sqrt(sll_pi)*Lx*Ly*Lz)) *  exp(-.5 &
+                                * (x-Lx/2)**2) * exp(-.5*(y-Ly/2)**2) * sin(z)
+             rho_seq_2(i,j,k) = phi_an_2(i,j,k) * ( 3 - ( (x-Lx/2)**2 + &
+                                (y-Ly/2)**2 ) )
           enddo
        enddo
     enddo
@@ -239,7 +244,7 @@ contains
     if (myrank==0) then
        call flush()
        print*, ' '
-       print*, 'Test poisson_3d (2 equations here ) in sequential'
+       print*, 'Testing poisson_3d (2 equations here ) in sequential ...'
     endif
 
     plan_seq => new_poisson_3d_periodic_plan_seq(nx, ny, nz, Lx, Ly, Lz)
@@ -264,12 +269,12 @@ contains
        if (myrank==0) then
           call flush()
           print*, ' '
-          print*, 'sll_poisson_3d_periodic_seq test: PASS'
+          print*, '"sll_poisson_3d_periodic_seq" test: PASS'
        endif
     else
        call flush()
        print*, ' '
-       print*, 'Test stoppped by sll_poisson_3d_periodic_seq test'
+       print*, 'Test stopped by "sll_poisson_3d_periodic_seq" failure'
        print*, ' '
        stop
     endif
@@ -280,7 +285,7 @@ contains
        call flush()
        print*, ' '
        call flush()
-       print*, 'Test poisson_3d (2 equations here ) in parallel'
+       print*, 'Testing poisson_3d (2 equations here ) in parallel ...'
     endif
 
     colsz  = sll_get_collective_size(sll_world_collective)
@@ -291,9 +296,11 @@ contains
     npx = 1
     npy = 2**(e/2)
     npz = int(colsz)/npy
-    call initialize_layout_with_distributed_3D_array( nx, ny, nz, npx, npy, npz, layout )
+    call initialize_layout_with_distributed_3D_array( nx, ny, &
+                                    nz, npx, npy, npz, layout )
 
-    plan_par => new_poisson_3d_periodic_plan_par(layout, nx, ny, nz, Lx, Ly, Lz)
+    plan_par => new_poisson_3d_periodic_plan_par(layout, nx, &
+                                           ny, nz, Lx, Ly, Lz)
 
     call compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
     SLL_ALLOCATE(rho_par_1(nx_loc,ny_loc,nz_loc), ierr)
@@ -311,7 +318,7 @@ contains
           enddo
        enddo
     enddo
-    
+
     SLL_ALLOCATE(phi_par_1(nx_loc,ny_loc,nz_loc), ierr)
     SLL_ALLOCATE(phi_par_2(nx_loc,ny_loc,nz_loc), ierr)
 
@@ -330,10 +337,14 @@ contains
              gi = global(1)
              gj = global(2)
              gk = global(3)
-             average_err_1  = average_err_1  + abs( phi_an_1 (gi,gj,gk) - phi_par_1(i,j,k) )
-             seq_par_diff_1 = seq_par_diff_1 + abs( phi_seq_1(gi,gj,gk) - phi_par_1(i,j,k) )
-             average_err_2  = average_err_2  + abs( phi_an_2 (gi,gj,gk) - phi_par_2(i,j,k) )
-             seq_par_diff_2 = seq_par_diff_2 + abs( phi_seq_2(gi,gj,gk) - phi_par_2(i,j,k) )
+             average_err_1  = average_err_1  + abs( phi_an_1 (gi,gj,gk) &
+                              - phi_par_1(i,j,k) )
+             seq_par_diff_1 = seq_par_diff_1 + abs( phi_seq_1(gi,gj,gk) &
+                              - phi_par_1(i,j,k) )
+             average_err_2  = average_err_2  + abs( phi_an_2 (gi,gj,gk) &
+                              - phi_par_2(i,j,k) )
+             seq_par_diff_2 = seq_par_diff_2 + abs( phi_seq_2(gi,gj,gk) &
+                              - phi_par_2(i,j,k) )
           enddo
        enddo
     enddo
@@ -346,15 +357,19 @@ contains
     call flush()
     print*, ' '
     call flush()
-    print*, 'Average error for equation 1, in proc', myrank, ':', average_err_1
+    print*, 'Average error for equation 1, in proc', myrank, &
+            ':', average_err_1
     call flush()
-    print*, 'Average error for equation 2, in proc', myrank, ':', average_err_2
+    print*, 'Average error for equation 2, in proc', myrank, &
+            ':', average_err_2
     call flush()
     print*, 'dx*dy*dz =', dx*dy*dz
     call flush()
-    print*, 'Average diff between seq sol and par sol for equation 1, in proc', myrank, ':', seq_par_diff_1
+    print*, 'Average diff between seq sol and par sol for ', &
+            'equation 1, in proc', myrank, ':', seq_par_diff_1
     call flush()
-    print*, 'Average diff between seq sol and par sol for equation 2, in proc', myrank, ':', seq_par_diff_2
+    print*, 'Average diff between seq sol and par sol for', &
+            'equation 2, in proc', myrank, ':', seq_par_diff_2
 
 
     if ( max(average_err_1, average_err_2) > dx*dx*dy) then
@@ -362,7 +377,7 @@ contains
        call flush()
        print*, ' '
        call flush()
-       print*, 'Test stoppped by sll_poisson_3d_periodic_par test'
+       print*, 'Test stopped by "sll_poisson_3d_periodic_par" failure'
        call flush()
        print*, 'myrank=', myrank
        call flush()
@@ -370,14 +385,15 @@ contains
        stop
     endif
 
-    call sll_collective_reduce(sll_world_collective, (/ ok /), 1, MPI_PROD, 0, prod4test )
+    call sll_collective_reduce(sll_world_collective, (/ ok /), &
+                                     1, MPI_PROD, 0, prod4test )
 
     if (myrank==0) then
        if (prod4test(1)==1.d0) then
           call flush()
           print*, ' '
           call flush()
-          print*, 'sll_poisson_3d_periodic_par test: PASS'
+          print*, '"sll_poisson_3d_periodic_par" test: PASS'
           call flush()
           print*, ' '
        endif
