@@ -1,4 +1,3 @@
-
 !***************************************************************************
 !
 ! Selalib 2012     
@@ -7,7 +6,7 @@
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
 !> Some arrays are here in 3D for remap utilities
-!> Start date: March 12, 2012
+!> Start date: March 13, 2012
 !> Last modification: March 22, 2012
 !   
 !> @authors                    
@@ -16,7 +15,7 @@
 !                                  
 !***************************************************************************
 
-module sll_qns_2d_with_finite_diff_seq
+module sll_qns_2d_with_finite_diff_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -31,7 +30,8 @@ module sll_qns_2d_with_finite_diff_seq
 
   implicit none
 
-  type qns_2d_with_finite_diff_plan_seq
+
+  type qns_2d_with_finite_diff_plan_par
      character(len=100)                      :: bc ! Boundary_conditions
      sll_int32                               :: nr ! Number of points in r-direction
      sll_int32                               :: ntheta ! Number of points in theta-direction
@@ -45,13 +45,16 @@ module sll_qns_2d_with_finite_diff_seq
      sll_real64                              :: Zi
      type(sll_fft_plan), pointer             :: fft_plan
      type(sll_fft_plan), pointer             :: inv_fft_plan
-  end type qns_2d_with_finite_diff_plan_seq
+     type(layout_3D_t),  pointer             :: layout_fft
+     type(layout_3D_t),  pointer             :: layout_lin_syst
+  end type qns_2d_with_finite_diff_plan_par
 
 contains
 
 
-  function new_qns_2d_with_finite_diff_plan_seq(bc, rmin, rmax, rho, c, Te, f, g, Zi) result (plan)
+  function new_qns_2d_with_finite_diff_plan_par(start_layout, bc, rmin, rmax, rho, c, Te, f, g, Zi) result (plan)
 
+    type(layout_3D_t), pointer                      :: start_layout
     character(len=100)                              :: bc ! Boundary_conditions
     sll_real64                                      :: rmin
     sll_real64                                      :: rmax
@@ -60,7 +63,8 @@ contains
     sll_real64                                      :: Zi
     sll_comp64, dimension(:),   allocatable         :: x
     sll_int32                                       :: nr, ntheta, ierr
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
+    sll_int64                                       :: colsz
+    type(qns_2d_with_finite_diff_plan_par), pointer :: plan
 
     nr = size(rho,1)
     ntheta = size(rho,2)
@@ -91,98 +95,31 @@ contains
     ! For inverse FFTs in theta-direction
     plan%inv_fft_plan => new_plan_c2c_1d( ntheta, x, x, FFT_INVERSE )
 
+    ! Layout for FFTs-Inv_FFT in theta-direction
+    plan%layout_fft => new_layout_3D( sll_world_collective )
+    colsz  = sll_get_collective_size(sll_world_collective)
+    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, int(colsz), 1, 1, plan%layout_fft )
+
+    ! Layout for Linear systems in r-direction
+    plan%layout_lin_syst => new_layout_3D( sll_world_collective )
+    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, 1, int(colsz), 1, plan%layout_lin_syst )
+
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
-  end function new_qns_2d_with_finite_diff_plan_seq
+  end function new_qns_2d_with_finite_diff_plan_par
 
 
-  subroutine solve_qn_2d_with_finite_diff_seq(plan, phi)
+ subroutine solve_qn_2d_with_finite_diff_par(plan, phi)
 
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
-    sll_real64                                      :: dr, dtheta 
-    sll_int32                                       :: nr, ntheta, i, j, ierr
+    type(qns_2d_with_finite_diff_plan_par), pointer :: plan
     sll_real64, dimension(:,:)                      :: phi
-    sll_comp64, dimension(:,:), allocatable         :: tild_rho, tild_phi
-    sll_comp64, dimension(:),   allocatable         :: b, f, g
-    sll_int32, dimension(:),    allocatable         :: ipiv
-    sll_real64, dimension(:),   allocatable         :: a_resh ! 3*n
-    sll_real64, dimension(:),   allocatable         :: cts  ! 7*n allocation
 
-    nr = plan%nr
-    ntheta = plan%ntheta
-    if (plan%bc=='neumann') then
-       dr = (plan%rmax-plan%rmin)/(nr-1)
-    else ! 'dirichlet'
-       dr = (plan%rmax-plan%rmin)/(nr+1)
-    endif
-    dtheta = 2*sll_pi/ntheta
-
-    SLL_ALLOCATE( f(ntheta), ierr )
-    SLL_ALLOCATE( g(ntheta), ierr )
-    SLL_ALLOCATE( tild_rho(nr,ntheta), ierr )
-    SLL_ALLOCATE( tild_phi(nr,ntheta), ierr )
-    SLL_ALLOCATE( b(nr), ierr ) 
-    SLL_ALLOCATE( ipiv(nr), ierr ) 
-    SLL_ALLOCATE( a_resh(3*nr), ierr )    
-    SLL_ALLOCATE( cts(7*nr), ierr )
-
-    tild_rho = cmplx(plan%rho, 0_f64, kind=f64)
-    f = cmplx(plan%f, 0_f64, kind=f64)
-    g = cmplx(plan%g, 0_f64, kind=f64)
-
-    call apply_fft_c2c_1d( plan%fft_plan, f, f )
-    call apply_fft_c2c_1d( plan%fft_plan, g, g )
-    
-    call apply_fft_c2c_1d( plan%fft_plan, tild_rho(1,:), tild_rho(1,:) )
-    call apply_fft_c2c_1d( plan%fft_plan, tild_rho(nr,:), tild_rho(nr,:) )
-
-    if (plan%bc=='neumann') then
-       tild_rho(1,:) = tild_rho(1,:) + (plan%c(1)-2/dr)*f 
-       tild_rho(nr,:) = tild_rho(nr,:) + (plan%c(nr)+2/dr)*g
-    else ! 'dirichlet'
-       tild_rho(1,:) = tild_rho(1,:) + (1/dr**2 - plan%c(1)/(2*dr))*f
-       tild_rho(nr,:) = tild_rho(nr,:) + (1/dr**2 + plan%c(nr)/(2*dr))*g
-    endif
-
-    do i=2,nr-1
-       call apply_fft_c2c_1d( plan%fft_plan, tild_rho(i,:), tild_rho(i,:) ) 
-    enddo
-
-    do j=1,ntheta
-       if (plan%bc=='neumann') then
-          call neumann_matrix_resh_seq(plan, j-1, a_resh)
-       else ! 'dirichlet'
-          call dirichlet_matrix_resh_seq(plan, j-1, a_resh)
-       endif
-       b = tild_rho(:,j) ! b is given by taking the FFT in the theta-direction of rho_{r,theta}      
-       ! Solving the linear system: Ax = b  
-       call setup_cyclic_tridiag( a_resh, nr, cts, ipiv )
-       call solve_cyclic_tridiag( cts, ipiv, b, nr, tild_phi(:,j))         
-    enddo
-
-    ! Solution phi of the Quasi-neutral equation is given by taking the inverse FFT in the 
-    ! k-direction of Tild_phi (storaged in phi)  
-    do i=1,nr
-       call apply_fft_c2c_1d( plan%inv_fft_plan, tild_phi(i,:), tild_phi(i,:) ) 
-    enddo
-
-    phi = real(tild_phi, f64)/ntheta
-
-    SLL_DEALLOCATE_ARRAY( f, ierr )
-    SLL_DEALLOCATE_ARRAY( g, ierr )
-    SLL_DEALLOCATE_ARRAY( tild_rho, ierr )
-    SLL_DEALLOCATE_ARRAY( tild_phi, ierr )
-    SLL_DEALLOCATE_ARRAY( b, ierr )    
-    SLL_DEALLOCATE_ARRAY( ipiv, ierr )
-    SLL_DEALLOCATE_ARRAY( a_resh, ierr )    
-    SLL_DEALLOCATE_ARRAY( cts, ierr )
-
-  end subroutine solve_qn_2d_with_finite_diff_seq
+  end subroutine solve_qn_2d_with_finite_diff_par
 
 
-  subroutine delete_new_qns_2d_with_finite_diff_plan_seq(plan)
+  subroutine delete_new_qns_2d_with_finite_diff_plan_par(plan)
 
-       type (qns_2d_with_finite_diff_plan_seq), pointer :: plan
+       type (qns_2d_with_finite_diff_plan_par), pointer :: plan
        sll_int32                                        :: ierr
 
        ! Fixme: some error checking, whether the poisson pointer is associated
@@ -192,6 +129,9 @@ contains
        call delete_fft_plan1d(plan%fft_plan)
        call delete_fft_plan1d(plan%inv_fft_plan)
 
+       call delete_layout_3D( plan%layout_fft )
+       call delete_layout_3D( plan%layout_lin_syst )
+
        SLL_DEALLOCATE_ARRAY(plan%rho, ierr)
        SLL_DEALLOCATE_ARRAY(plan%c, ierr)
        SLL_DEALLOCATE_ARRAY(plan%Te, ierr)
@@ -199,12 +139,12 @@ contains
        SLL_DEALLOCATE_ARRAY(plan%g, ierr)
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_new_qns_2d_with_finite_diff_plan_seq
+  end subroutine delete_new_qns_2d_with_finite_diff_plan_par
 
 
-  subroutine dirichlet_matrix_resh_seq(plan, j, a_resh)
+  subroutine dirichlet_matrix_resh_par(plan, j, a_resh)
 
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan ! Matrix is sequential
+    type(qns_2d_with_finite_diff_plan_par), pointer :: plan ! Matrix is sequential
     sll_real64                                      :: dr, dtheta, r, rmin, rmax, Zi
     sll_int32                                       :: i, j, nr, ierr
     sll_real64, dimension(:)                        :: a_resh
@@ -233,16 +173,16 @@ contains
     SLL_DEALLOCATE_ARRAY( c, ierr )
     SLL_DEALLOCATE_ARRAY( Te, ierr )
 
-  end subroutine dirichlet_matrix_resh_seq
+  end subroutine dirichlet_matrix_resh_par
 
 
-  subroutine neumann_matrix_resh_seq(plan, j, a_resh)
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan ! Matrix is sequential
+  subroutine neumann_matrix_resh_par(plan, j, a_resh)
+    type(qns_2d_with_finite_diff_plan_par), pointer :: plan ! Matrix is sequential
     sll_real64                                      :: dr, dtheta, Zi, rmin, rmax, r
     sll_int32                                       :: i, j, nr, ierr
     sll_real64, dimension(:)                        :: a_resh
     sll_real64, dimension(:), allocatable           :: c, Te 
-    ! c & Te are the vector of the cr & Te(i) respectively
+    ! c & Te are the vector of the Cr & Te(i) respectively
 
     nr = plan%nr
     rmin = plan%rmin
@@ -273,8 +213,7 @@ contains
     SLL_DEALLOCATE_ARRAY( c, ierr )
     SLL_DEALLOCATE_ARRAY( Te, ierr )
 
-  end subroutine neumann_matrix_resh_seq
+  end subroutine neumann_matrix_resh_par
 
 
-end module sll_qns_2d_with_finite_diff_seq
-
+end module sll_qns_2d_with_finite_diff_par
