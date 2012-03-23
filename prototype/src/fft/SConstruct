@@ -22,6 +22,9 @@ else :
 
 fichier.close()
 
+#DL = ARGUMENTS.get('DL', 0)
+#DL=''
+
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
 
@@ -37,7 +40,7 @@ env = Environment( ENV = os.environ,
                    LIBS=['sll_fft','sll_memory','sll_precision',
                          'sll_assertion', 'sll_misc','sll_constants',
                          'sll_timer','fftpack',FFTW],
-                   F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
+                   F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME',
                                '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
 

@@ -1,0 +1,9 @@
+add_library(sll_bsl STATIC sll_bsl.F90)
+add_executable(test_bsl unit_test.F90)
+target_link_libraries(test_bsl sll_assertion sll_constants sll_splines sll_diagnostics sll_distribution_function sll_memory sll_mesh_types sll_utilities sll_fft sll_bsl)
+
+add_executable(test_landau_4d landau_4d.F90)
+target_link_libraries(test_landau_4d sll_assertion sll_constants sll_splines sll_diagnostics sll_distribution_function sll_memory sll_mesh_types sll_utilities fftpack_module sll_poisson_2d_periodic sll_bsl)
+
+add_executable(test_landau_2d landau_2d.F90)
+target_link_libraries(test_landau_2d sll_assertion sll_constants sll_splines sll_diagnostics sll_distribution_function sll_memory sll_mesh_types sll_utilities fftpack_module sll_poisson_1d_periodic sll_bsl)

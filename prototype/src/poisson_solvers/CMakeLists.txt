@@ -1,3 +1,15 @@
-set(REMAP_SRC sll_remap.F90)
-add_library(sll_remap STATIC ${REMAP_SRC})
-add_executable(test_remap unit_test.F90)
+add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90 fft1d.f90)
+add_executable(test_poisson_1d test_poisson_1d.F90)
+target_link_libraries(test_poisson_1d sll_assertion sll_memory sll_mesh_types fftpack_module sll_diagnostics sll_utilities sll_poisson_1d_periodic)
+
+add_library(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.f90)
+add_executable(test_poisson_2d test_poisson_2d.F90)
+target_link_libraries(test_poisson_2d sll_assertion sll_memory sll_mesh_types fftpack_module sll_diagnostics sll_utilities sll_poisson_2d_periodic)
+
+#don't work wait new version from aliou
+#add_library(sll_poisson_3d_periodic_seq STATIC #sll_poisson_3d_periodic_seq.F90 sll_poisson_3d_periodic_util.F90)
+#add_executable(test_poisson_3d_seq test_poisson_3d_seq.F90)
+#target_link_libraries(test_poisson_3d_seq sll_assertion sll_memory #sll_mesh_types sll_diagnostics sll_fft sll_utilities #sll_poisson_3d_periodic_seq)
+
+add_executable(unit_test unit_test.F90)
+target_link_libraries(unit_test sll_assertion sll_memory sll_mesh_types fftpack_module sll_diagnostics sll_utilities sll_poisson_1d_periodic sll_poisson_2d_periodic)
