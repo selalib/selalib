@@ -39,7 +39,6 @@ env = Environment( ENV = os.environ,
                                '-DMPIF90', '-DDEBUG', 
                                '-ffree-line-length-none'])
 
-
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])
 env.Append(F90PATH=[os.environ['HDF5INCPATH']])
 env.Append(LIBPATH=[os.environ['HDF5LIBPATH']])
@@ -55,7 +54,9 @@ env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90",
 env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
+env.Library('sll_fft', ["../fft/sll_fft.F90"])
 env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
+
 env.Library('sll_fft', ["../fft/sll_fft.F90"])
 env.Library('sll_remap', ["../remap/sll_remap.F90"])
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
@@ -64,6 +65,9 @@ env.Library('sll_collective', ["../collective/sll_collective.F90"])
 env.Program('unit_test',['sll_poisson_1d_periodic.F90', 
                          'fft1d.f90', 'unit_test.F90',
                          'sll_poisson_2d_periodic.F90', 
+                         'sll_poisson_3d_periodic_seq.F90',
+                         'sll_poisson_3d_periodic_par.F90',
+                         'sll_poisson_3d_periodic_util.F90',
                          'fft_module.F90'])
 
 env.Program('test_poisson_1d', ['test_poisson_1d.F90',
@@ -74,13 +78,11 @@ env.Program('test_poisson_2d', ["test_poisson_2d.F90",
                                 'fft_module.F90',
                                 'sll_poisson_2d_periodic.F90' ])
 
-
 env.Program('test_poisson_3d_seq',[ 'test_poisson_3d_seq.F90',
                                 'sll_poisson_3d_periodic_util.F90',
                                 'sll_poisson_3d_periodic_seq.F90'])
 
 env.Program('test_poisson_3d_par',[ 'test_poisson_3d_par.F90',
-                                'sll_poisson_3d_periodic_util.F90',
                                 'sll_poisson_3d_periodic_par.F90' ])
 
 if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
