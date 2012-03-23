@@ -1,5 +1,5 @@
 
-!***************************************************************************
+!*************************************************************************
 !
 ! Selalib 2012     
 ! Module: sll_poisson_3d_periodic.F90
@@ -7,13 +7,13 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 09, 2012
+!> Last modification: March 22, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
-!***************************************************************************
+!*************************************************************************
 
 module sll_poisson_3d_periodic_seq
 
@@ -24,21 +24,74 @@ module sll_poisson_3d_periodic_seq
 
   use sll_fft
   use numeric_constants
-  use sll_poisson_3d_periodic_util
 
   implicit none
 
+  type poisson_3d_periodic_plan_seq
+     sll_int32                   :: nx ! Number of points-1 in x-direction
+     sll_int32                   :: ny ! Number of points-1 in y-direction
+     sll_int32                   :: nz ! Number of points-1 in z-direction
+     sll_real64                  :: Lx
+     sll_real64                  :: Ly
+     sll_real64                  :: Lz
+     type(sll_fft_plan), pointer :: px
+     type(sll_fft_plan), pointer :: py
+     type(sll_fft_plan), pointer :: pz
+     type(sll_fft_plan), pointer :: px_inv
+     type(sll_fft_plan), pointer :: py_inv
+     type(sll_fft_plan), pointer :: pz_inv
+  end type poisson_3d_periodic_plan_seq
+
 contains
+
+
+  function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz) &
+                                                         result(plan)
+
+    sll_comp64,                    dimension(nx) :: x
+    sll_comp64,                    dimension(ny) :: y
+    sll_comp64,                    dimension(nz) :: z
+    sll_int32                                    :: nx, ny, nz
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
+    sll_int32                                    :: ierr
+    sll_real64                                   :: Lx, Ly, Lz
+    type (poisson_3d_periodic_plan_seq), pointer :: plan
+
+    SLL_ALLOCATE(plan, ierr)
+
+    ! Geometry informations
+    plan%nx = nx
+    plan%ny = ny
+    plan%nz = nz
+    plan%Lx = Lx
+    plan%Ly = Ly
+    plan%Lz = Lz
+
+    ! For FFTs (in each direction)
+    plan%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
+    plan%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
+    plan%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+
+    ! For inverse FFTs (in each direction)
+    plan%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE)
+    plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
+    plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+
+  end function new_poisson_3d_periodic_plan_seq
+
 
   subroutine solve_poisson_3d_periodic_seq(plan, rho, phi)
 
-    type (poisson_3d_periodic_plan_seq), pointer  :: plan
-    sll_real64, dimension(:,:,:)              :: rho, phi
-    sll_comp64, dimension(:,:,:), allocatable :: hat_rho, hat_phi
-    sll_int32                                 :: nx, ny, nz
-    sll_int32                                 :: i, j, k, ierr
-    sll_real64                                :: Lx, Ly, Lz
-    sll_real64                                :: ind_x, ind_y, ind_z
+    type (poisson_3d_periodic_plan_seq), pointer   :: plan
+    sll_real64, dimension(:,:,:)                   :: rho, phi
+    sll_comp64, dimension(plan%nx,plan%ny,plan%nz) :: hat_rho, hat_phi
+    sll_int32                                      :: nx, ny, nz
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
+    sll_int32                                      :: i, j, k
+    sll_real64                                     :: Lx, Ly, Lz
+    sll_real64                                     :: ind_x, ind_y, ind_z
+
+    call verify_argument_sizes_seq(plan, rho, phi)
 
     nx = plan%nx
     ny = plan%ny
@@ -47,16 +100,13 @@ contains
     Ly = plan%Ly
     Lz = plan%Lz
 
-    SLL_ALLOCATE(hat_rho(nx,ny,nz), ierr)
-    SLL_ALLOCATE(hat_phi(nx,ny,nz), ierr)
-
     ! FFTs in x-direction
     hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz
        do j=1,ny
           call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
-    enddo       
+    enddo
 
     ! FFTs in y-direction
     do k=1,nz
@@ -92,27 +142,14 @@ contains
                 ind_z = real(k-1,f64)
              else
                 ind_z = real(nz-(k-1),f64)
-             endif                
+             endif
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
                 hat_phi(i,j,k) = 0.d0
              else
-                hat_phi(i,j,k) = hat_rho(i,j,k) / (4*sll_pi**2*((ind_x/Lx)**2+(ind_y/Ly)**2+(ind_z/Lz)**2))
+                hat_phi(i,j,k) = hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
+                                 + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
-       enddo
-    enddo
-
-    ! Inverse FFTs in x-direction
-    do k=1,nz
-       do j=1,ny
-          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
-       enddo
-    enddo
-
-    ! Inverse FFTs in y-direction
-    do k=1,nz
-       do i=1,nx
-          call apply_fft_c2c_1d( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
        enddo
     enddo
 
@@ -123,11 +160,77 @@ contains
        enddo
     enddo
 
+    ! Inverse FFTs in y-direction
+    do k=1,nz
+       do i=1,nx
+          call apply_fft_c2c_1d( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
+       enddo
+    enddo
+
+    ! Inverse FFTs in x-direction
+    do k=1,nz
+       do j=1,ny
+          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
+       enddo
+    enddo
+
     phi = real(hat_phi, f64)
 
-    SLL_DEALLOCATE_ARRAY(hat_rho, ierr)
-    SLL_DEALLOCATE_ARRAY(hat_phi, ierr)
-
   end subroutine solve_poisson_3d_periodic_seq
+
+
+  subroutine delete_poisson_3d_periodic_plan_seq(plan)
+
+    type (poisson_3d_periodic_plan_seq), pointer :: plan
+    sll_int32                                    :: ierr
+
+    ! Fixme: some error checking, whether the poisson pointer is associated
+    ! for instance
+    SLL_ASSERT( associated(plan) )
+
+    call delete_fft_plan1d(plan%px)
+    call delete_fft_plan1d(plan%py)
+    call delete_fft_plan1d(plan%pz)
+
+    call delete_fft_plan1d(plan%px_inv)
+    call delete_fft_plan1d(plan%py_inv)
+    call delete_fft_plan1d(plan%pz_inv)
+
+    SLL_DEALLOCATE(plan, ierr)
+
+  end subroutine delete_poisson_3d_periodic_plan_seq
+
+
+  subroutine verify_argument_sizes_seq(plan, rho, phi)
+
+    type (poisson_3d_periodic_plan_seq), pointer :: plan
+    sll_real64, dimension(:,:,:)                 :: rho
+    sll_real64, dimension(:,:,:)                 :: phi
+    sll_int32,  dimension(3)                     :: n ! nx_loc, ny_loc, nz_loc
+    sll_int32                                    :: i
+
+    n(1) = plan%nx
+    n(2) = plan%ny
+    n(3) = plan%nz
+
+    do i=1,3
+       if ( (n(i)/=size(rho,i)) .or. (n(i)/=size(phi,i))  ) then
+          if (i==1) then
+             print*, 'Input sizes passed to "solve_poisson_3d_periodic_par" ', &
+                  'do not match in direction x'
+          elseif (i==2) then
+             print*, 'Input sizes passed to "solve_poisson_3d_periodic_par" ', &
+                  'do not match in direction y'
+          else
+             print*, 'Input sizes passed to "solve_poisson_3d_periodic_par" ', &
+                  'do not match in direction z'
+          endif
+          print *, 'Exiting...'
+          stop
+       endif
+    enddo
+
+  end subroutine verify_argument_sizes_seq
+
 
 end module sll_poisson_3d_periodic_seq

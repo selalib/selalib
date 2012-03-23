@@ -29,7 +29,7 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-module sll_poisson_2D_periodic
+module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -322,3 +322,4 @@ subroutine delete_poisson_2d_periodic(this)
 end subroutine delete_poisson_2d_periodic
 
 end module sll_poisson_2D_periodic
+
