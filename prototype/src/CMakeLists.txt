@@ -11,7 +11,7 @@ set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -ffree-line-length
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # recherche de HDF5
-find_package(HDF5 COMPONENTS Fortran Fortran_HL)
+find_package(HDF5)
 
 if (HDF5_FOUND)
     message(STATUS "HDF5 trouve")
@@ -94,9 +94,9 @@ add_subdirectory(distribution_function)
 add_subdirectory(fft)
 add_subdirectory(maxwell_solvers)
 add_subdirectory(remap)
-add_subdirectory(poisson_solvers)
-add_subdirectory(bsl)
-#add_subdirectory(csl) don't compile! 
+#add_subdirectory(poisson_solvers)
+#add_subdirectory(BSL)
+#add_subdirectory(CSL) don't compile! 
 #add_subdirectory(quasi_neutral_solvers) don't compile!
 
 
