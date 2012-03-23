@@ -485,6 +485,95 @@
       end do
       U(:,:) = U(:,:)/plan%num_pts_t    ! normalization
     end subroutine apply_quasi_neutral_solver_plan
+
+    subroutine solve_quasi_neutral_equation( plan, rho, phi ) !F, U )
+      ! Solve 2D QN equation on structured grid in polar coordinates with 
+      ! Dirichlet BC in r and periodic in theta
+      ! Tensor product technique used to bring the solution back to 1D problems
+      ! Discrete problem is of the form Kar U Mtheta +Mar U K th +Mcr U Mth = F
+      ! where the unknow U and the RHS F are in matrix form and U is multiplied
+      ! on left or right by 1D matrices
+      ! See Crouseilles, Ratnani, Sonnendrucker 2011
+      !------------------------------------------------------------------------
+      ! Input :
+      type(quasi_neutral_plan), pointer        :: plan
+      sll_real64, dimension(:,:), intent(in)   :: rho
+      sll_real64, dimension(:,:), intent(out)  :: phi
+      real(f64), dimension(:,:) :: F !  RHS in matrix form
+      ! Output : 
+      real(f64), dimension(:,:) :: U ! solution in matrix form
+      ! local variables 
+      integer :: info, i,k, nband
+      ! banded matrix for problem in r :
+      real(f64), dimension(plan%spline_degree+1, &
+           plan%num_pts_r + plan%spline_degree - 3) :: A 
+      ! eigenvalues of circulant mass and stiffness matrix in theta direction 
+      real(f64), dimension(plan%num_pts_t/2+1) :: valpm, valpk 
+      real(f64), dimension(2*plan%num_pts_t+15) :: wsave  ! help array for FFTPACK
+      
+      ! intialize dffft
+      call dffti(plan%num_pts_t, wsave) 
+      
+      ! forward FFT of lines of F with FFTPACK
+      do i=2,plan%num_pts_r+plan%spline_degree-2
+         call dfftf(plan%num_pts_t, F(i,:), wsave) 
+      end do
+      
+      ! compute eigenvalues of circulant matrices
+      do k=1,plan%num_pts_t/2+1
+         valpm(k) = plan%Mth(1)
+         valpk(k) = plan%Kth(1)
+         do i=2,plan%spline_degree+1
+            valpm(k) = valpm(k) + &
+                 2*plan%Mth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%num_pts_t)
+            valpk(k) = valpk(k) + &
+                 2*plan%Kth(i)*cos(2*sll_pi*(i-1)*(k-1)/plan%num_pts_t)
+         end do
+      end do
+      
+      ! Banded solves in x direction
+      nband = plan%spline_degree+1
+      U(:,:) = F(:,:)  ! copy rhs into solution
+      A(:,:) = valpm(1)*(plan%Kar(:,2:plan%num_pts_r+plan%spline_degree-2) + &
+           plan%Mcr(:,2:plan%num_pts_r+plan%spline_degree-2)) + &
+           valpk(1)*plan%Mar(:,2:plan%num_pts_r+plan%spline_degree-2)
+      ! Cholesky factorisation of A
+      call DPBTRF( 'L', plan%num_pts_r+plan%spline_degree-3, nband-1, A, nband, info )
+      call DPBTRS( 'L', plan%num_pts_r+plan%spline_degree-3, nband-1, 1, A, nband, &
+           U(2:plan%num_pts_r+plan%spline_degree-2,1), plan%num_pts_r+plan%spline_degree-3, &
+           info ) ! Solution
+      do k = 1, plan%num_pts_t/2-1
+         A(:,:) = valpm(k+1)*(plan%Kar(:,2:plan%num_pts_r+plan%spline_degree-2) + &
+              plan%Mcr(:,2:plan%num_pts_r+plan%spline_degree-2)) + &
+              valpk(k+1)*plan%Mar(:,2:plan%num_pts_r+plan%spline_degree-2)
+         ! Cholesky factorisation of A
+         call DPBTRF( 'L',plan%num_pts_r+plan%spline_degree-3, nband-1, A, nband, info ) 
+         call DPBTRS( 'L',plan%num_pts_r+plan%spline_degree-3, nband-1, 1, A, nband, &
+              U(2:plan%num_pts_r+plan%spline_degree-2,2*k), &
+              plan%num_pts_r+plan%spline_degree-3, info )
+         call DPBTRS( 'L', plan%num_pts_r+plan%spline_degree-3, nband-1, 1, A, nband,&
+              U(2:plan%num_pts_r+plan%spline_degree-2,2*k+1), &
+              plan%num_pts_r+plan%spline_degree-3, info )
+      end do
+      A(:,:) = &
+           valpm(plan%num_pts_t/2+1)*(plan%Kar(:,2:plan%num_pts_r+plan%spline_degree-2) + &
+           plan%Mcr(:,2:plan%num_pts_r+plan%spline_degree-2)) + &
+           valpk(plan%num_pts_t/2+1)*plan%Mar(:,2:plan%num_pts_r+plan%spline_degree-2) 
+      ! Cholesky factorisation of A
+      call DPBTRF( 'L', plan%num_pts_r+plan%spline_degree-3, nband-1, A, nband, info ) 
+      call DPBTRS( 'L', plan%num_pts_r+plan%spline_degree-3, nband-1, 1, A, nband, &
+           U(2:plan%num_pts_r+plan%spline_degree-2,plan%num_pts_t), &
+           plan%num_pts_r+plan%spline_degree-3, info ) ! Solution
+      
+      ! backward FFT of lines of U with FFTPACK
+      U(1,:) = 0.0 
+      U(plan%num_pts_r+plan%spline_degree-1,:) = 0.0
+      do i=1,plan%num_pts_r+plan%spline_degree-1
+         call dfftb(plan%num_pts_t, U(i,:), wsave) 
+      end do
+      U(:,:) = U(:,:)/plan%num_pts_t    ! normalization
+    end subroutine solve_quasi_neutral_equation
+
     
     subroutine evalsplgrid(plan,C,U)
       ! evaluate spline defined by coefficient array C at all grid points
