@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 22, 2012
+!> Last modification: March 23, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -42,8 +42,8 @@ program test_poisson_solvers
   call sll_boot_collective()
 
   nx = 64
-  ny = 64
-  nz = 64
+  ny = 128
+  nz = 256
   Lx = 2*sll_pi
   Ly = 2*sll_pi
   Lz = 2*sll_pi
