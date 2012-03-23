@@ -12,12 +12,11 @@ print 'platform : ' + platform
 
 env = Environment( ENV=os.environ,
                    F90PATH= ['../memory','../precision','../assert', 
-                             '../numerical_utilities','../constants',
-                             '../interpolators'],
+                             '../numerical_utilities','../constants'],
 #                  FORTRANMODDIRPREFIX= '-fmod', 
                    LIBPATH= ['.'],
                    LIBS=['sll_constants','sll_memory','sll_precision',
-                         'sll_assertion','sll_tridiagonal','sll_interpolators'],
+                         'sll_assertion','sll_tridiagonal'],
                    F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
                               '-std=f2003', '-ffree-line-length-none', 
                               '-DGFORTRAN'])
