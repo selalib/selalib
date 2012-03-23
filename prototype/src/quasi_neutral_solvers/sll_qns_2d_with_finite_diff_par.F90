@@ -123,7 +123,7 @@ contains
 
 
  subroutine solve_qn_2d_with_finite_diff_par(plan, phi)
-
+!UNDER CONSTRUCTION
     type(qns_2d_with_finite_diff_plan_par), pointer :: plan
     sll_real64                                      :: dr, dtheta 
     sll_int32                                       :: nr, ntheta, i, j, ierr
