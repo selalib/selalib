@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
 !> Start date: March 20, 2012
-!> Last modification: March 22, 2012
+!> Last modification: March 23, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -92,8 +92,6 @@ contains
     sll_real32, dimension(1)                         :: prod4test
     type(layout_3D_t), pointer                       :: layout
     sll_int64                                        :: colsz ! collective size
-    sll_int32                                        :: npx, npy, npz
-    sll_int32                                        :: e
 
     if (bc=='neumann') then
        dr = (rmax-rmin)/(nr-1)
@@ -184,26 +182,16 @@ contains
        print*, 'Testing "sll_qns_2d_with_finite_diff_par"...'
     endif
 
-print*, ' '
-print*, '"sll_qns_2d_with_finite_diff_par" is not available yet'
-print*, ' '
-stop
-
     colsz  = sll_get_collective_size(sll_world_collective)
-    e = int(log(real(colsz))/log(2.))
 
-    ! Layout and local sizes for FFTs in x-direction
     layout => new_layout_3D( sll_world_collective )
-    npx = 1
-    npy = 2**(e/2)
-    npz = int(colsz)/npy
-    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, npx, npy, npz, layout )
+    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, int(colsz), 1, 1, layout )
 
+    nr_loc = nr/int(colsz)
+    ntheta_loc = ntheta
 
-    !call compute_local_sizes( layout, nr_loc, ntheta_loc, nz_loc )
-nr_loc = nr/npx; ntheta_loc = ntheta ! provisional
     SLL_ALLOCATE(rho_par(nr_loc,ntheta_loc), ierr)
-    plan_par => new_qns_2d_with_finite_diff_plan_par(layout, bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
+    SLL_ALLOCATE(phi_par(nr_loc,ntheta_loc), ierr)
 
     do j=1,ntheta_loc
        do i=1,nr_loc
@@ -214,8 +202,8 @@ nr_loc = nr/npx; ntheta_loc = ntheta ! provisional
         enddo
     enddo
    
-    SLL_ALLOCATE(phi_par(nr_loc,ntheta_loc), ierr)
-    !call solve_qn_2d_with_finite_diff_par(plan_par, phi_par)
+    plan_par => new_qns_2d_with_finite_diff_plan_par(layout, bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
+    call solve_qn_2d_with_finite_diff_par(plan_par, phi_par)
 
     average_err  = 0.d0
     seq_par_diff = 0.d0
