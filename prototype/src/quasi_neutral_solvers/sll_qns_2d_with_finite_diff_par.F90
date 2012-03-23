@@ -49,8 +49,8 @@ module sll_qns_2d_with_finite_diff_par
      type(layout_3D_t),  pointer               :: layout_lin_sys
      sll_comp64, dimension(:,:,:), allocatable :: array_fft
      sll_comp64, dimension(:,:,:), allocatable :: array_lin_sys
-     type(remap_plan_3D_t), pointer            :: rmp3_fft
-     type(remap_plan_3D_t), pointer            :: rmp3_lin_sys
+     type(remap_plan_3D_t), pointer            :: rmp3_1
+     type(remap_plan_3D_t), pointer            :: rmp3_2
   end type qns_2d_with_finite_diff_plan_par
 
 contains
@@ -67,20 +67,25 @@ contains
     sll_real64, dimension(:)                        :: c, Te, f, g    
     sll_real64                                      :: Zi
     sll_comp64, dimension(:),   allocatable         :: x
-    sll_int32                                       :: nr, ntheta, ierr
+    sll_int32                                       :: nr, ntheta
+    sll_int32                                       :: nr_loc, ntheta_loc
+    sll_int32                                       :: ierr
     sll_int64                                       :: colsz
     type(qns_2d_with_finite_diff_plan_par), pointer :: plan
 
-    nr = size(rho,1)
+    colsz  = sll_get_collective_size(sll_world_collective)
+    nr_loc = size(rho,1)
+    nr     = nr_loc*int(colsz)
     ntheta = size(rho,2)
+    ntheta_loc = ntheta/int(colsz)
 
     SLL_ALLOCATE(plan, ierr)
-    SLL_ALLOCATE(plan%rho(nr,ntheta), ierr)
-    SLL_ALLOCATE(plan%c(nr), ierr)
-    SLL_ALLOCATE(plan%Te(nr), ierr)
-    SLL_ALLOCATE(plan%f(ntheta), ierr)
-    SLL_ALLOCATE(plan%g(ntheta), ierr)
-    SLL_ALLOCATE( x(ntheta), ierr )
+    SLL_ALLOCATE(plan%rho(nr_loc,ntheta_loc), ierr)
+    SLL_ALLOCATE(plan%c(nr_loc), ierr)
+    SLL_ALLOCATE(plan%Te(nr_loc), ierr)
+    SLL_ALLOCATE(plan%f(ntheta_loc), ierr)
+    SLL_ALLOCATE(plan%g(ntheta_loc), ierr)
+    SLL_ALLOCATE( x(ntheta_loc), ierr )
 
     plan%bc     = bc
     plan%nr     = nr
@@ -102,7 +107,6 @@ contains
 
     ! Layout for FFTs-Inv_FFT in theta-direction
     plan%layout_fft => new_layout_3D( sll_world_collective )
-    colsz  = sll_get_collective_size(sll_world_collective)
     call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, &
                                    int(colsz), 1, 1, plan%layout_fft )
 
@@ -111,11 +115,11 @@ contains
     call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, &
                                1, int(colsz), 1, plan%layout_lin_sys )
 
-    SLL_ALLOCATE(plan%array_fft(nr/int(colsz),ntheta,1), ierr)
-    SLL_ALLOCATE(plan%array_lin_sys(nr,ntheta/int(colsz),1), ierr)
+    SLL_ALLOCATE(plan%array_fft(nr_loc,ntheta,1), ierr)
+    SLL_ALLOCATE(plan%array_lin_sys(nr,ntheta_loc,1), ierr)
 
-    plan%rmp3_fft => NEW_REMAPPER_PLAN_3D(plan%layout_fft, plan%layout_lin_sys,plan%array_fft)
-    plan%rmp3_lin_sys => NEW_REMAPPER_PLAN_3D(plan%layout_lin_sys,plan%layout_fft,plan%array_lin_sys)
+    plan%rmp3_1 => NEW_REMAPPER_PLAN_3D(plan%layout_fft, plan%layout_lin_sys,plan%array_fft)
+    plan%rmp3_2 => NEW_REMAPPER_PLAN_3D(plan%layout_lin_sys,plan%layout_fft,plan%array_lin_sys)
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
@@ -126,16 +130,25 @@ contains
 
     type(qns_2d_with_finite_diff_plan_par), pointer :: plan
     sll_real64                                      :: dr, dtheta 
-    sll_int32                                       :: nr, ntheta, i, j, ierr
+    sll_int32                                       :: nr, ntheta
+    sll_int32                                       :: nr_loc, ntheta_loc
+    sll_int32                                       :: i, j, ierr
     sll_real64, dimension(:,:)                      :: phi
-    sll_comp64, dimension(:,:), allocatable         :: tild_rho, tild_phi
-    sll_comp64, dimension(:),   allocatable         :: b, f, g
-    sll_int32, dimension(:),    allocatable         :: ipiv
-    sll_real64, dimension(:),   allocatable         :: a_resh ! 3*n
-    sll_real64, dimension(:),   allocatable         :: cts  ! 7*n allocation
+    sll_comp64, dimension(plan%ntheta)              :: f, g
+    sll_int32, dimension(plan%nr)                   :: ipiv
+    sll_real64, dimension(3*plan%nr)                :: a_resh ! 3*n
+    sll_real64, dimension(7*plan%nr)                :: cts ! 7*n allocation
+    sll_int64                                       :: colsz ! collective size
+    sll_int32, dimension(1:3)                       :: global
+    sll_int32                                       :: ind
 
-    nr = plan%nr
-    ntheta = plan%ntheta
+    colsz  = sll_get_collective_size(sll_world_collective)
+
+    nr         = plan%nr
+    ntheta     = plan%ntheta
+    nr_loc     = nr/int(colsz)
+    ntheta_loc = ntheta/int(colsz)
+
     if (plan%bc=='neumann') then
        dr = (plan%rmax-plan%rmin)/(nr-1)
     else ! 'dirichlet'
@@ -143,66 +156,59 @@ contains
     endif
     dtheta = 2*sll_pi/ntheta
 
-    SLL_ALLOCATE( f(ntheta), ierr )
-    SLL_ALLOCATE( g(ntheta), ierr )
-    SLL_ALLOCATE( tild_rho(nr,ntheta), ierr )
-    SLL_ALLOCATE( tild_phi(nr,ntheta), ierr )
-    SLL_ALLOCATE( b(nr), ierr ) 
-    SLL_ALLOCATE( ipiv(nr), ierr ) 
-    SLL_ALLOCATE( a_resh(3*nr), ierr )    
-    SLL_ALLOCATE( cts(7*nr), ierr )
+    ! FFTs (in theta-direction)
 
-    tild_rho = cmplx(plan%rho, 0_f64, kind=f64)
+    plan%array_fft(:,:,1) = cmplx(plan%rho, 0_f64, kind=f64)
     f = cmplx(plan%f, 0_f64, kind=f64)
     g = cmplx(plan%g, 0_f64, kind=f64)
 
     call apply_fft_c2c_1d( plan%fft_plan, f, f )
     call apply_fft_c2c_1d( plan%fft_plan, g, g )
-    
-    call apply_fft_c2c_1d( plan%fft_plan, tild_rho(1,:), tild_rho(1,:) )
-    call apply_fft_c2c_1d( plan%fft_plan, tild_rho(nr,:), tild_rho(nr,:) )
 
-    if (plan%bc=='neumann') then
-       tild_rho(1,:) = tild_rho(1,:) + (plan%c(1)-2/dr)*f 
-       tild_rho(nr,:) = tild_rho(nr,:) + (plan%c(nr)+2/dr)*g
-    else ! 'dirichlet'
-       tild_rho(1,:) = tild_rho(1,:) + (1/dr**2 - plan%c(1)/(2*dr))*f
-       tild_rho(nr,:) = tild_rho(nr,:) + (1/dr**2 + plan%c(nr)/(2*dr))*g
-    endif
-
-    do i=2,nr-1
-       call apply_fft_c2c_1d( plan%fft_plan, tild_rho(i,:), tild_rho(i,:) ) 
+    do i=1,nr_loc
+       call apply_fft_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), plan%array_fft(i,:,1) )
+       global = local_to_global_3D( plan%layout_fft, (/i, 1, 1/))
+       ind = global(1)
+       if (ind==1) then
+          if (plan%bc=='neumann') then
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (plan%c(ind)-2/dr)*f 
+          else ! 'dirichlet'
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (1/dr**2 - plan%c(ind)/(2*dr))*f
+          endif
+       elseif(ind==nr) then
+          if (plan%bc=='neumann') then
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (plan%c(ind)+2/dr)*g
+          else ! 'dirichlet'
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (1/dr**2 + plan%c(ind)/(2*dr))*g
+          endif
+       endif 
     enddo
 
-    do j=1,ntheta
+    ! Remapping to solve linear systems
+    call apply_remap_3D( plan%rmp3_1, plan%array_fft, plan%array_lin_sys ) 
+
+    ! Solve linear systems (r-direction)
+    do j=1,ntheta_loc
+       global = local_to_global_3D( plan%layout_lin_sys, (/1, j, 1/))
+       ind = global(2)
        if (plan%bc=='neumann') then
-          call neumann_matrix_resh_par(plan, j-1, a_resh)
+          call neumann_matrix_resh_par(plan, ind-1, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix_resh_par(plan, j-1, a_resh)
-       endif
-       b = tild_rho(:,j) 
-       ! b is given by taking the FFT in the theta-direction of rho_{r,theta}      
-       ! Solving the linear system: Ax = b  
+          call dirichlet_matrix_resh_par(plan, ind-1, a_resh)
+       endif 
        call setup_cyclic_tridiag( a_resh, nr, cts, ipiv )
-       call solve_cyclic_tridiag( cts, ipiv, b, nr, tild_phi(:,j))         
+       call solve_cyclic_tridiag(cts,ipiv,plan%array_lin_sys(:,j,1),nr,plan%array_lin_sys(:,j,1))         
     enddo
 
-    ! Solution phi of the Quasi-neutral equation is given by taking the inverse
-    ! FFT in the k-direction of Tild_phi (storaged in phi)  
-    do i=1,nr
-       call apply_fft_c2c_1d( plan%inv_fft_plan, tild_phi(i,:), tild_phi(i,:) ) 
+    ! Remapping to do inverse FFTs
+    call apply_remap_3D( plan%rmp3_2, plan%array_lin_sys, plan%array_fft ) 
+
+    ! Inverse FFTs (in the theta-direction)
+    do i=1,nr/int(colsz)
+       call apply_fft_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), plan%array_fft(i,:,1) ) 
     enddo
 
-    phi = real(tild_phi, f64)/ntheta
-
-    SLL_DEALLOCATE_ARRAY( f, ierr )
-    SLL_DEALLOCATE_ARRAY( g, ierr )
-    SLL_DEALLOCATE_ARRAY( tild_rho, ierr )
-    SLL_DEALLOCATE_ARRAY( tild_phi, ierr )
-    SLL_DEALLOCATE_ARRAY( b, ierr )    
-    SLL_DEALLOCATE_ARRAY( ipiv, ierr )
-    SLL_DEALLOCATE_ARRAY( a_resh, ierr )    
-    SLL_DEALLOCATE_ARRAY( cts, ierr )
+    phi = real(plan%array_fft(:,:,1), f64)/ntheta
 
   end subroutine solve_qn_2d_with_finite_diff_par
 
