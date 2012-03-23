@@ -125,7 +125,84 @@ contains
  subroutine solve_qn_2d_with_finite_diff_par(plan, phi)
 
     type(qns_2d_with_finite_diff_plan_par), pointer :: plan
+    sll_real64                                      :: dr, dtheta 
+    sll_int32                                       :: nr, ntheta, i, j, ierr
     sll_real64, dimension(:,:)                      :: phi
+    sll_comp64, dimension(:,:), allocatable         :: tild_rho, tild_phi
+    sll_comp64, dimension(:),   allocatable         :: b, f, g
+    sll_int32, dimension(:),    allocatable         :: ipiv
+    sll_real64, dimension(:),   allocatable         :: a_resh ! 3*n
+    sll_real64, dimension(:),   allocatable         :: cts  ! 7*n allocation
+
+    nr = plan%nr
+    ntheta = plan%ntheta
+    if (plan%bc=='neumann') then
+       dr = (plan%rmax-plan%rmin)/(nr-1)
+    else ! 'dirichlet'
+       dr = (plan%rmax-plan%rmin)/(nr+1)
+    endif
+    dtheta = 2*sll_pi/ntheta
+
+    SLL_ALLOCATE( f(ntheta), ierr )
+    SLL_ALLOCATE( g(ntheta), ierr )
+    SLL_ALLOCATE( tild_rho(nr,ntheta), ierr )
+    SLL_ALLOCATE( tild_phi(nr,ntheta), ierr )
+    SLL_ALLOCATE( b(nr), ierr ) 
+    SLL_ALLOCATE( ipiv(nr), ierr ) 
+    SLL_ALLOCATE( a_resh(3*nr), ierr )    
+    SLL_ALLOCATE( cts(7*nr), ierr )
+
+    tild_rho = cmplx(plan%rho, 0_f64, kind=f64)
+    f = cmplx(plan%f, 0_f64, kind=f64)
+    g = cmplx(plan%g, 0_f64, kind=f64)
+
+    call apply_fft_c2c_1d( plan%fft_plan, f, f )
+    call apply_fft_c2c_1d( plan%fft_plan, g, g )
+    
+    call apply_fft_c2c_1d( plan%fft_plan, tild_rho(1,:), tild_rho(1,:) )
+    call apply_fft_c2c_1d( plan%fft_plan, tild_rho(nr,:), tild_rho(nr,:) )
+
+    if (plan%bc=='neumann') then
+       tild_rho(1,:) = tild_rho(1,:) + (plan%c(1)-2/dr)*f 
+       tild_rho(nr,:) = tild_rho(nr,:) + (plan%c(nr)+2/dr)*g
+    else ! 'dirichlet'
+       tild_rho(1,:) = tild_rho(1,:) + (1/dr**2 - plan%c(1)/(2*dr))*f
+       tild_rho(nr,:) = tild_rho(nr,:) + (1/dr**2 + plan%c(nr)/(2*dr))*g
+    endif
+
+    do i=2,nr-1
+       call apply_fft_c2c_1d( plan%fft_plan, tild_rho(i,:), tild_rho(i,:) ) 
+    enddo
+
+    do j=1,ntheta
+       if (plan%bc=='neumann') then
+          call neumann_matrix_resh_par(plan, j-1, a_resh)
+       else ! 'dirichlet'
+          call dirichlet_matrix_resh_par(plan, j-1, a_resh)
+       endif
+       b = tild_rho(:,j) 
+       ! b is given by taking the FFT in the theta-direction of rho_{r,theta}      
+       ! Solving the linear system: Ax = b  
+       call setup_cyclic_tridiag( a_resh, nr, cts, ipiv )
+       call solve_cyclic_tridiag( cts, ipiv, b, nr, tild_phi(:,j))         
+    enddo
+
+    ! Solution phi of the Quasi-neutral equation is given by taking the inverse
+    ! FFT in the k-direction of Tild_phi (storaged in phi)  
+    do i=1,nr
+       call apply_fft_c2c_1d( plan%inv_fft_plan, tild_phi(i,:), tild_phi(i,:) ) 
+    enddo
+
+    phi = real(tild_phi, f64)/ntheta
+
+    SLL_DEALLOCATE_ARRAY( f, ierr )
+    SLL_DEALLOCATE_ARRAY( g, ierr )
+    SLL_DEALLOCATE_ARRAY( tild_rho, ierr )
+    SLL_DEALLOCATE_ARRAY( tild_phi, ierr )
+    SLL_DEALLOCATE_ARRAY( b, ierr )    
+    SLL_DEALLOCATE_ARRAY( ipiv, ierr )
+    SLL_DEALLOCATE_ARRAY( a_resh, ierr )    
+    SLL_DEALLOCATE_ARRAY( cts, ierr )
 
   end subroutine solve_qn_2d_with_finite_diff_par
 
