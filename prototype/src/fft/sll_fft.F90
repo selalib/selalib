@@ -110,7 +110,7 @@ module sll_fft
   use numeric_constants
   use sll_timer
   use, intrinsic :: iso_c_binding
-#include "conf.h"
+!#include "conf.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"  
 #include "sll_assert.h"
@@ -126,42 +126,33 @@ module sll_fft
   ! - index : given a wavenumber on 1:N, return the corresponding array 
   !           index (also on 1:N)
   ! - mode  : given an array index, return the corresponding wavenumber
-  type sll_fft_plan
-    sll_int32 :: N,N2,N3
-    sll_int32 :: style !, flags
-    !sll_int32 :: data_type
-    sll_int32,  dimension(:), pointer :: index => null()
-    sll_int32,  dimension(:), pointer :: mode => null()
+  !type sll_fft_plan
+  !  sll_int32 :: N,N2,N3
+  !  sll_int32 :: style !, flags
+  !  !sll_int32 :: data_type
+  !  sll_int32,  dimension(:), pointer :: index => null()
+  !  sll_int32,  dimension(:), pointer :: mode => null()
+  !  sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
+  !  sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
+  !  sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
+  !  sll_real64, dimension(:), pointer :: dwsave => null() ! for use fftpack
+  !  !sll_int32                         :: mod !type of library used
+  !  !sll_real64                        :: normalization_factor_forward = 1.0_f64
+  !  !sll_real64                        :: normalization_factor_backward = 1.0_f64
+  !  sll_int32                         :: library
+  !  type(C_PTR)                       :: fftw_plan
+  !  sll_int32                         :: direction
+  !  sll_comp64, dimension(:), pointer  :: in_comp, out_comp 
+  !  sll_real64, dimension(:), pointer  :: in_real, out_real
+  !  sll_real64 :: fft_time_execution
+  !end type sll_fft_plan
+
+  type fft_plan
+    type(C_PTR)                     :: fftw_plan
+
     sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
     sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
     sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
-    sll_real64, dimension(:), pointer :: dwsave => null() ! for use fftpack
-    !sll_int32                         :: mod !type of library used
-    !sll_real64                        :: normalization_factor_forward = 1.0_f64
-    !sll_real64                        :: normalization_factor_backward = 1.0_f64
-    sll_int32                         :: library
-    type(C_PTR)                       :: fftw_plan
-    sll_int32                         :: direction
-    sll_comp64, dimension(:), pointer  :: in_comp, out_comp 
-    sll_real64, dimension(:), pointer  :: in_real, out_real
-    sll_real64 :: fft_time_execution
-  end type sll_fft_plan
-
-  type sll_fft_plan_2d
-    type(sll_fft_plan), pointer :: plan_x => null()
-    type(sll_fft_plan), pointer :: plan_y => null()
-    sll_int32                   :: library
-  endtype sll_fft_plan_2d
-
-  type sll_fft_plan3d
-    type(sll_fft_plan), pointer :: plan_x => null()
-    type(sll_fft_plan), pointer :: plan_y => null()
-    type(sll_fft_plan), pointer :: plan_z => null()
-  endtype sll_fft_plan3d
-
-  type fft_plan
-    type(sll_fft_plan), pointer     :: fft_plan_1d => null()
-    type(sll_fft_plan_2d), pointer  :: fft_plan_2d => null()
 
     sll_int32                       :: style
     sll_int32                       :: library
@@ -169,6 +160,20 @@ module sll_fft
     sll_int32                       :: problem_rank
     sll_int32, allocatable          :: problem_shape(:)
   end type fft_plan
+
+  type sll_fft_plan
+    type(C_PTR)                     :: fftw_plan
+
+    sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
+    sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
+    sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
+
+    sll_int32                       :: style
+    sll_int32                       :: library
+    sll_int32                       :: direction
+    sll_int32                       :: problem_rank
+    sll_int32, allocatable          :: problem_shape(:)
+  end type sll_fft_plan
 
   ! We choose the convention in which the direction of the FFT is determined
   ! by the conjugation of the twiddle factors. If 
@@ -184,95 +189,78 @@ module sll_fft
   ! enumeration, reducing flexibility. However, this is a flexibility we
   ! may choose never to exercise.
 
-  enum, bind(C)
-     enumerator :: FFT_FORWARD = -1, FFT_INVERSE = 1, &
-                   FFT_FORWARD_X = -1, FFT_INVERSE_X = 1, &  
-                   FFT_FORWARD_Y = -2, FFT_INVERSE_Y = 2, & 
-                   FFT_FORWARD_Z = -3, FFT_INVERSE_Z = 3
-  end enum
-
-!  enum, bind(C)
-!     enumerator :: FFT_REAL = 0, FFT_COMPLEX = 1
-!  end enum
-
-!  enum, bind(C)
-!     enumerator :: FFT_NORMALIZE_FORWARD = 1, FFT_NORMALIZE_INVERSE = 2,&
-!                   FFT_NEGATIVE_PHASE = 4
-!  end enum
-
-  sll_int32, parameter :: FFT_NORMALIZE_FORWARD = 1
-  sll_int32, parameter :: FFT_NORMALIZE_INVERSE = 1
+  sll_int32, parameter :: FFT_FORWARD = -1
+  sll_int32, parameter :: FFT_INVERSE = 1
+  sll_int32, parameter :: FFT_NORMALIZE_FORWARD = 2**0
+  sll_int32, parameter :: FFT_NORMALIZE_INVERSE = 2**0
   sll_int32, parameter :: FFT_NORMALIZE         = 2**0
 
   sll_int32, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
   sll_int32, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
   sll_int32, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
 
-  enum, bind(C)
-     enumerator ::  FFTW_MOD = 1000000000, SLLFFT_MOD = 0, FFTPACK_MOD = 100
-  end enum
+  sll_int32, parameter :: FFTW_MOD = 1000000000
+  sll_int32, parameter :: SLLFFT_MOD = 0
+  sll_int32, parameter :: FFTPACK_MOD = 100
+
+!need to be change on simple parameter
+#define FFTW_MOD 1000000000
+#define SLLFFT_MOD 0
+#define FFTPACK_MOD 100
+
+!#define _DEFAULTFFTLIB SLLFFT_MOD
+!#define _NOFFTPACK
+!#define _NOFFTW
 
   interface bit_reverse
     module procedure bit_reverse_complex, bit_reverse_integer32, &
                      bit_reverse_integer64
   end interface
 
-!  interface delete
-!    module procedure delete_fft_plan1d, delete_fft_plan2d
-!  end interface
+!----------------------------------------------------------------------------------
+! -                                  NEW INTERFACE                                -
+!----------------------------------------------------------------------------------
 
-  interface apply_fft_c2c_1d
-    module procedure fft_apply_c2c_1d, fft_apply_c2c_1d_2d, fft_apply_c2c_1d_3d 
-  end interface
-
-  interface new_plan_c2c_1d
-    module procedure fft_new_c2c_1d_for_3d, fft_new_c2c_1d_for_1d, fft_new_c2c_1d_for_2d
-  end interface
-
-!  interface new_plan_r2r_1d
-!    module procedure fft_new_r2r_1d
-!  end interface
-
-!  interface apply_plan_r2r_1d
-!    module procedure fft_apply_r2r_1d
-!  end interface
-
-!  interface apply_plan_r2c_1d
-!    module procedure fft_apply_r2c_1d
-!  end interface
-
-!  interface apply_plan_c2r_1d
-!    module procedure fft_apply_c2r_1d
-!  end interface
-
-! -----------------
-! - NEW INTERFACE -
-! -----------------
   interface fft_new_plan
-    module procedure fft_new_c2c_1d_for_3d, fft_new_c2c_1d_for_1d, fft_new_c2c_1d_for_2d, &
-                     fft_new_r2r_1d, new_plan_r2c_1d, new_plan_c2r_1d
+    module procedure new_plan_c2c_2d, new_plan_c2r_2d, new_plan_r2c_2d,&
+                     fft_new_r2r_1d, new_plan_r2c_1d, new_plan_c2r_1d,&
+                     fft_new_c2c_1d_for_1d
   end interface
-
   interface fft_apply_plan
-    module procedure fft_apply_c2c_1d, fft_apply_c2c_1d_2d, fft_apply_c2c_1d_3d, &
-                     fft_apply_r2r_1d, fft_apply_r2c_1d, fft_apply_c2r_1d
-  end interface
-
-  interface fft_new_plan2d
-    module procedure new_plan_c2c_2d 
-  end interface
-  interface fft_apply_plan2d
-    module procedure apply_plan_c2c_2d
-  end interface
+    module procedure apply_plan_c2c_2d, fft_apply_r2c_2d, fft_apply_c2r_2d,&
+                     fft_apply_r2r_1d, fft_apply_r2c_1d, fft_apply_c2r_1d,&
+                     fft_apply_c2c_1d
+  end interface 
 
   interface fft_delete_plan
-    module procedure delete_fft_plan1d, delete_fft_plan2d, fft_delete_plan_2d
+    module procedure fft_delete
   end interface
+  
+!----------------------------------------------------------------------------------
 
+! -----------------------------------------------
+! -                 OLD INTERFACE               -
+! -----------------------------------------------
+  interface new_plan_c2c_1d
+      module procedure fft_new_c2c_1d_for_1d
+  end interface  
+
+  interface apply_fft_c2c_1d
+      module procedure fft_apply_c2c_1d
+  end interface 
+
+  interface delete_fft_plan1d
+    module procedure fft_delete 
+  end interface
+! -----------------------------------------------
+
+  interface fft_is_present_flag
+    module procedure fft_is_present_flag1,fft_is_present_flag2
+  end interface
 contains
 
-  function fft_present_style(plan,s) result(bool)
-    type(sll_fft_plan), pointer, intent(in) :: plan
+  function fft_is_present_flag1(plan,s) result(bool)
+    type(sll_fft_plan), pointer, intent(in)     :: plan
     sll_int32, intent(in)                   :: s
     logical                                 :: bool
     sll_int32                               :: m
@@ -287,42 +275,49 @@ contains
     endif 
   end function
 
-
-  function fft_is_present_flag(plan,s) result(bool)
-    type(fft_plan), pointer, intent(in)     :: plan
-    sll_int32, intent(in)                   :: s
+  function fft_is_present_flag2(flags,s) result(bool)
+    sll_int32, intent(in)                   :: s, flags
     logical                                 :: bool
     sll_int32                               :: m
    
     SLL_ASSERT( is_power_of_two( int(s,kind=i64) ) )
 
-    m = iand(plan%style,s)
+    m = iand(flags,s)
     if( m .eq. s ) then
       bool = .true.
     else
       bool = .false.
     endif 
-  end function
-
-  function fft_get_time_execution(plan) result(time)
-    type(sll_fft_plan), pointer :: plan
-    sll_real64 :: time
-    time = plan%fft_time_execution
   end function
 
   function fft_get_rank(plan) result(rank)
-    type(fft_plan), pointer :: plan
+    type(sll_fft_plan), pointer :: plan
     sll_int32               :: rank
     rank = plan%problem_rank
   end function
 
   function fft_get_shape(plan) result(etendue)
-    type(fft_plan), pointer :: plan
+    type(sll_fft_plan), pointer :: plan
     sll_int32, allocatable  :: etendue(:)
     allocate(etendue(fft_get_rank(plan)))
     etendue = plan%problem_shape
   end function
 
+
+  function fft_get_mode(plan,array,k) result(mode)
+    type(sll_fft_plan), pointer    :: plan
+    sll_comp64, dimension(:)  :: array
+    sll_int32                 :: k
+    sll_comp64                :: mode
+    mode = array(k)
+  end function
+
+  function fft_get_index_mode_in_array(plan,array,i) result(k)
+    type(sll_fft_plan), pointer             :: plan
+    sll_comp64, dimension(:), optional :: array
+    sll_int32                          :: i, k
+    i = k
+  end function
 
 #define INFO plan%fft_time_execution = time
 
@@ -343,7 +338,7 @@ contains
 !             close(1);                               \
 !             print *,'-----------------------------'
 
-#define _DEFAULTFFTLIB SLLFFT_MOD
+
 #ifndef _DEFAULTFFTLIB
 #ifdef _NOFFTW
 #define _DEFAULTFFTLIB SLLFFT_MOD
@@ -364,25 +359,44 @@ contains
 #include "my_lib.F90"
 #endif
 
-#if ( _DEFAULTFFTLIB == FFTW_MOD ) || ( _DEFAULTFFTLIB == FFTPACK_MOD ) 
-  function get_fft_mode(plan,data,k) result(mode)
-    sll_comp64                                :: mode
-    type(sll_fft_plan)                        :: plan
-    sll_int32, intent(in)                     :: k
-    sll_comp64, dimension(0:) , intent(in)    :: data
-    mode = data(k)
-  end function
-#else
-  function get_fft_mode(plan,data,k) result(mode)
-    sll_comp64                                :: mode
-    type(sll_fft_plan)                        :: plan
-    sll_int32, intent(in)                     :: k
-    sll_comp64, dimension(0:) , intent(in)    :: data
-    !mode = data(plan%mode(k))
-    mode = data(k)
-  end function
-#endif
 
+  subroutine print_defaultfftlib()
+    print *, '----------------'
+    print *,  _DEFAULTFFTLIB
+    print *, '----------------'
+  end subroutine
+
+  function fft_default_lib_is(lib) result(bool)
+    sll_int32 :: lib
+    logical :: bool
+    
+    if(_DEFAULTFFTLIB .eq. lib ) then
+      bool = .true.
+    else
+      bool = .false.
+    endif 
+  end function
+
+
+!#if ( _DEFAULTFFTLIB == FFTW_MOD ) || ( _DEFAULTFFTLIB == FFTPACK_MOD ) 
+!  function get_fft_mode(plan,data,k) result(mode)
+!    sll_comp64                                :: mode
+!    type(sll_fft_plan)                        :: plan
+!    sll_int32, intent(in)                     :: k
+!    sll_comp64, dimension(0:) , intent(in)    :: data
+!    mode = data(k)
+!  end function
+!#else
+!  function get_fft_mode(plan,data,k) result(mode)
+!    sll_comp64                                :: mode
+!    type(sll_fft_plan)                        :: plan
+!    sll_int32, intent(in)                     :: k
+!    sll_comp64, dimension(0:) , intent(in)    :: data
+!    !mode = data(plan%mode(k))
+!    mode = data(k)
+!  end function
+!#endif
+!
 !  function sll_get_mode_complex_array(plan,data,k) result(mode)
 !    sll_comp64                                :: mode
 !    sll_int32, intent(in)                     :: k
@@ -410,15 +424,15 @@ contains
 !    endif
 !  end function sll_get_mode_complex_array
 
-  function sll_get_index_real_array(plan,k) result(index)
-    sll_int32                                 :: index
-    sll_int32, intent(in)                     :: k
-    type(sll_fft_plan) , intent(in)           :: plan
-    sll_int32                                 :: n_2, n
-
-    index = plan%index(k)
-    return  
- 
+!  function sll_get_index_real_array(plan,k) result(index)
+!    sll_int32                                 :: index
+!    sll_int32, intent(in)                     :: k
+!    type(sll_fft_plan) , intent(in)           :: plan
+!    sll_int32                                 :: n_2, n
+!
+!    index = plan%index(k)
+!    return  
+! 
 !    n = plan%N
 !    n_2 = n/2
 !
@@ -459,32 +473,32 @@ contains
 !    else
 !      stop 'ERROR IN =SLL_GET_MODE_REAL= plan%mod invalid'
 !    endif
-  end function sll_get_index_real_array
-
-  function sll_get_mode_real_array(plan,data,k) result(mode)
-    sll_comp64                                :: mode
-    sll_int32, intent(in)                     :: k
-    type(sll_fft_plan) , pointer              :: plan
-    sll_real64, dimension(0:) , intent(in)    :: data
-    sll_int32                                 :: n_2, n
-   
-    n = plan%N
-    n_2 = n/2 !ishft(n,-1)
-
-    if( k .eq. 0 ) then
-      mode = complex(data(0),0.0_f64)
-      return
-    else if( k .eq. n_2 ) then
-      mode = complex(data(1),0.0_f64)
-      return
-    else if( k .gt. n_2 ) then
-      mode = complex( data(2*(n-k)) , -data(2*(n-k)+1) )
-      return
-    else
-      mode = complex( data(2*k) , data(2*k+1) )
-      return
-    endif
-
+!  end function sll_get_index_real_array
+!
+!  function sll_get_mode_real_array(plan,data,k) result(mode)
+!    sll_comp64                                :: mode
+!    sll_int32, intent(in)                     :: k
+!    type(sll_fft_plan) , pointer              :: plan
+!    sll_real64, dimension(0:) , intent(in)    :: data
+!    sll_int32                                 :: n_2, n
+!   
+!    n = plan%N
+!    n_2 = n/2 !ishft(n,-1)
+!
+!    if( k .eq. 0 ) then
+!      mode = complex(data(0),0.0_f64)
+!      return
+!    else if( k .eq. n_2 ) then
+!      mode = complex(data(1),0.0_f64)
+!      return
+!    else if( k .gt. n_2 ) then
+!      mode = complex( data(2*(n-k)) , -data(2*(n-k)+1) )
+!      return
+!    else
+!      mode = complex( data(2*k) , data(2*k+1) )
+!      return
+!    endif
+!
 !    if(plan%library .eq. FFTPACK_MOD) then
 !      if( k .eq. 0 ) then
 !        mode = complex(data(0),0.0_f64)
@@ -519,36 +533,10 @@ contains
 !    else
 !      stop 'ERROR IN =SLL_GET_MODE_REAL= plan%library invalid'
 !    endif
-  end function sll_get_mode_real_array
+!  end function sll_get_mode_real_array
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-!If FFTW is available its the default library, otherwise its our version.
-!#ifndef _NOFFTW
-!  function sll_new_plan_c2c_default_lib(size_problem,array_in,array_out,direction,flags) result(plan)
-!    sll_int32, intent(in)                        :: size_problem
-!    sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
-!    sll_int32, intent(in)                        :: direction
-!    sll_int32, optional, intent(in)              :: flags
-!    type(sll_fft_plan), pointer                  :: plan
-!
-!    plan => fft_plan_c2c_1d(FFTW_MOD,size_problem,array_in,array_out,direction,flags)
-!  end function
-!#else
-! function sll_new_plan_c2c_default_lib(size_problem,array_in,array_out,direction,flags) result(plan)
-!    sll_int32, intent(in)                        :: size_problem
-!    sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
-!    sll_int32, intent(in)                        :: direction
-!    sll_int32, optional, intent(in)              :: flags
-!    type(sll_fft_plan), pointer                  :: plan
-!
-!    plan => fft_plan_c2c_1d(SLLFFT_MOD,size_problem,array_in,array_out,direction,flags)
-!  end function
-!#endif
-
-
 
 
                                   !!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -560,10 +548,10 @@ contains
 ! ---------------------
  function fft_new_c2c_1d_for_1d(size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: size_problem
-    sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
+    sll_comp64, dimension(:), target, intent(inout) :: array_in, array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
+    type(sll_fft_plan), pointer                       :: plan
 
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
     stop 'The default library cannot be FFTW because she is not installed'
@@ -571,47 +559,28 @@ contains
     plan => fft_plan_c2c_1d(_DEFAULTFFTLIB,size_problem,array_in,array_out,direction,flags)
   end function
 
- function fft_new_c2c_1d_for_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                            :: NX,NY
-    sll_comp64, dimension(:,:), target, intent(in) :: array_in, array_out
-    sll_int32, intent(in)                        :: direction
-    sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
-
-#if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
-    stop 'The default library cannot be FFTW because she is not installed'
-#endif
-   
-    if( _DEFAULTFFTLIB .eq. FFTW_MOD ) then
-      stop 'FFTW not available for DFT in one direction on multidimensional array'
-    endif
-    plan => fft_plan_c2c_1d_for_2d(_DEFAULTFFTLIB,NX,NY,array_in,array_out,direction,flags)
-  end function
-
- function fft_new_c2c_1d_for_3d(NX,NY,NZ,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                            :: NX,NY,NZ
-    sll_comp64, dimension(:,:,:), target, intent(in) :: array_in, array_out
-    sll_int32, intent(in)                        :: direction
-    sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
-
-#if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
-    stop 'The default library cannot be FFTW because she is not installed'
-#endif
-    if( _DEFAULTFFTLIB .eq. FFTW_MOD ) then
-      stop 'FFTW not available for DFT in one direction on multidimensional array'
-    endif
-    plan => fft_plan_c2c_1d_for_3d(_DEFAULTFFTLIB,NX,NY,NZ,array_in,array_out,direction,flags)
-  end function
+! function fft_new_c2c_1d_for_3d(NX,NY,NZ,array_in,array_out,direction,flags) result(plan)
+!    sll_int32, intent(in)                            :: NX,NY,NZ
+!    sll_comp64, dimension(:,:,:), target, intent(in) :: array_in, array_out
+!    sll_int32, intent(in)                        :: direction
+!    sll_int32, optional, intent(in)              :: flags
+!    type(sll_fft_plan), pointer                      :: plan
+!
+!#if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
+!    stop 'The default library cannot be FFTW because she is not installed'
+!#endif
+!    if( _DEFAULTFFTLIB .eq. FFTW_MOD ) then
+!      stop 'FFTW not available for DFT in one direction on multidimensional array'
+!    endif
+!    plan => fft_plan_c2c_1d_for_3d(_DEFAULTFFTLIB,NX,NY,NZ,array_in,array_out,direction,flags)
+!  end function
 
  function new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                          :: NX,NY
     sll_comp64, dimension(0:,0:), target, intent(in) :: array_in, array_out
     sll_int32, intent(in)                          :: direction
     sll_int32, optional, intent(in)                :: flags
-    !type(sll_fft_plan_2d), pointer                 :: plan
-    type(fft_plan), pointer                        :: plan
-    sll_int32                                      :: ierr
+    type(sll_fft_plan), pointer                        :: plan
     
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
     stop 'The default library cannot be FFTW because she is not installed'
@@ -622,24 +591,14 @@ contains
       stop 'Error in new_plan_c2c_2d size problem'
     endif 
 
-    SLL_ALLOCATE(plan,ierr)
-    plan%library = _DEFAULTFFTLIB
-    plan%direction = direction
-    if( present(flags) )then
-      plan%style = flags
-    else
-      plan%style = 0_f32
+    if( present(flags) .and. &
+      ( fft_is_present_flag(flags,FFT_ONLY_FIRST_DIRECTION) .or. &
+        fft_is_present_flag(flags,FFT_ONLY_SECOND_DIRECTION) ) ) then
+      if( _DEFAULTFFTLIB .ne. SLLFFT_MOD ) &
+        stop 'option FFT_ONLY_FIRST_DIRECTION available only with Selalib FFT '     
     endif
-    plan%problem_rank = 2
-    SLL_ALLOCATE(plan%problem_shape(2),ierr)
-    plan%problem_shape = (/ NX , NY /)
-!    if (fft_is_present_flag(FFT_ONLY_FIRST_DIRECTION)) then
-!     if( _DEFAULTFFTLIB .ne. SLLFFT_MOD ) &
-!       stop 'option FFT_ONLY_FIRST_DIRECTION available only with Selalib FFT '
-!      plan%fft_plan_1d => sll_new_plan_c2c_1d_for_2d(library,NX,NY,array_in,array_out,direction,flags)
-!    else
-      plan%fft_plan_2d => fft_plan_c2c_2d(_DEFAULTFFTLIB,NX,NY,array_in,array_out,direction,flags)
-!    endif
+
+    plan => fft_plan_c2c_2d(_DEFAULTFFTLIB,NX,NY,array_in,array_out,direction,flags)
   end function
 
 ! ---------------------
@@ -648,7 +607,7 @@ contains
   function fft_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
     sll_int32, intent(in)                        :: size_problem
-    sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
+    sll_comp64, dimension(:), intent(inout)      :: array_in, array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional, intent(in)              :: flags
     type(sll_fft_plan), pointer                  :: plan
@@ -674,63 +633,34 @@ contains
     stop 'ERROR in =fft_plan_c2c_1d= library unknown'
   end function
 
-  function fft_plan_c2c_1d_for_2d(library,NX,NY,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                        :: library
-    sll_int32, intent(in)                        :: NX,NY
-    sll_comp64, dimension(:,:), target, intent(in) :: array_in, array_out
-    sll_int32, intent(in)                        :: direction
-    sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
-
-#ifndef _NOFFTW
+!  function fft_plan_c2c_1d_for_3d(library,NX,NY,NZ,array_in,array_out,direction,flags) result(plan)
+!    sll_int32, intent(in)                        :: library
+!    sll_int32, intent(in)                        :: NX,NY,NZ
+!    sll_comp64, dimension(:,:,:), target, intent(in) :: array_in, array_out
+!    sll_int32, intent(in)                        :: direction
+!    sll_int32, optional, intent(in)              :: flags
+!    type(sll_fft_plan), pointer                  :: plan
+!
+!#ifndef _NOFFTW
 !    if(library .eq. FFTW_MOD) then
 !      plan => fftw_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
 !      return
 !    endif
-#endif
-#ifndef _NOFFTSLL
-    if(library .eq. SLLFFT_MOD) then
-      plan => sll_new_plan_c2c_1d_for_2d(library,NX,NY,array_in,array_out,direction,flags)
-      return
-    endif
-#endif
-#ifndef _NOFFTPACK
+!#endif
+!#ifndef _NOFFTSLL
+!    if(library .eq. SLLFFT_MOD) then
+!      plan => sll_new_plan_c2c_1d_for_3d(library,NX,NY,NZ,array_in,array_out,direction,flags)
+!      return
+!    endif
+!#endif
+!#ifndef _NOFFTPACK
 !    if(library .eq. FFTPACK_MOD) then
 !      plan => fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
 !      return
 !    endif
-#endif
-    stop 'ERROR in =fft_plan_c2c_1d= library unknown'
-  end function
-
-  function fft_plan_c2c_1d_for_3d(library,NX,NY,NZ,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                        :: library
-    sll_int32, intent(in)                        :: NX,NY,NZ
-    sll_comp64, dimension(:,:,:), target, intent(in) :: array_in, array_out
-    sll_int32, intent(in)                        :: direction
-    sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
-
-#ifndef _NOFFTW
-!    if(library .eq. FFTW_MOD) then
-!      plan => fftw_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
-!      return
-!    endif
-#endif
-#ifndef _NOFFTSLL
-    if(library .eq. SLLFFT_MOD) then
-      plan => sll_new_plan_c2c_1d_for_3d(library,NX,NY,NZ,array_in,array_out,direction,flags)
-      return
-    endif
-#endif
-#ifndef _NOFFTPACK
-!    if(library .eq. FFTPACK_MOD) then
-!      plan => fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
-!      return
-!    endif
-#endif
-    stop 'ERROR in =fft_plan_c2c_1d= library unknown'
-  end function
+!#endif
+!    stop 'ERROR in =fft_plan_c2c_1d= library unknown'
+!  end function
 
   function fft_plan_c2c_2d(library,NX,NY,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                          :: library
@@ -738,7 +668,7 @@ contains
     sll_comp64, dimension(0:,0:), target           :: array_in, array_out
     sll_int32, intent(in)                          :: direction
     sll_int32, optional, intent(in)                :: flags
-    type(sll_fft_plan_2d), pointer                 :: plan
+    type(sll_fft_plan), pointer                        :: plan
 
 #ifndef _NOFFTW
     if(library .eq. FFTW_MOD) then
@@ -753,10 +683,10 @@ contains
     endif
 #endif
 #ifndef _NOFFTPACK
-!    if(library .eq. FFTPACK_MOD) then
-!      plan => fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags)
-!      return
-!    endif
+    if(library .eq. FFTPACK_MOD) then
+      print*, 'not available in fftpack'
+      stop ''
+    endif
 #endif
     stop 'ERROR in =fft_plan_c2c_2d= library unknown'
   end function
@@ -765,13 +695,21 @@ contains
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_c2c_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
+    type(sll_fft_plan), pointer, intent(in)             :: plan
     sll_comp64, dimension(0:), intent(inout)        :: array_in, array_out
     type(time_mark), pointer                        :: mark 
     sll_real64                                      :: factor, time
+    sll_int32 :: nx
 
+   if( .not. associated(plan) ) then
+     print*,'Error in the sll_fft.F90'
+     print*,'      in subroutine fft_apply_c2c_1d'
+     print*,'      plan not associated'
+     stop ''
+   endif
+
+    nx = plan%problem_shape(1)
     mark => new_time_mark() 
-    factor = 1.0_f64/real(plan%N,kind=f64)
 
 #ifndef _NOFFTW
     if(plan%library .eq. FFTW_MOD) then
@@ -797,92 +735,66 @@ contains
 #ifdef _FFTINFO
 INFO
 #endif
-    if( plan%style .eq. FFT_NORMALIZE_INVERSE .and. plan%direction .eq. FFT_INVERSE ) &
+    if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+      factor = 1.0_f64/real(nx,kind=f64)
       array_out = factor*array_out
-    if( plan%style .eq. FFT_NORMALIZE_FORWARD .and. plan%direction .eq. FFT_FORWARD ) &
-      array_out = factor*array_out
-  end subroutine
-
-
-  subroutine fft_apply_c2c_1d_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
-    sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
-    sll_real64                                      :: factor
-    sll_int32                                       :: i
-    if(plan%direction .eq. FFT_FORWARD_X .or. plan%direction .eq. FFT_INVERSE_X) then
-      factor = 1.0_f64/real(plan%N,kind=f64)
-    else
-      factor = 1.0_f64/real(plan%N2,kind=f64)
-    endif
-#ifndef _NOFFTW
-    if(plan%library .eq. FFTW_MOD) &
-      stop 'apply_plan_c2c_1d with 2d data not available with fftw'
-#endif
-#ifndef _NOFFTSLL
-    if(plan%library .eq. SLLFFT_MOD) &
-      call sll_apply_fft_c2c_1d_for_2d(plan, array_in, array_out)
-#endif
-#ifndef _NOFFTPACK
-    if(plan%library .eq. FFTPACK_MOD) &
-      stop 'apply_plan_c2c_1d with 2d data not available with fftpack'
-#endif
-    if( plan%style .eq. FFT_NORMALIZE_INVERSE .or. plan%style .eq. FFT_NORMALIZE_FORWARD ) then
-      if(plan%direction .eq. FFT_FORWARD_X .or. plan%direction .eq. FFT_INVERSE_X) then
-       do i=0,plan%N2-1
-        array_out(:,i) = factor*array_out(:,i)
-       enddo
-      else
-       do i=0,plan%N-1
-        array_out(i,:) = factor*array_out(i,:)
-       enddo
-      endif
     endif
   end subroutine
 
-
-  subroutine fft_apply_c2c_1d_3d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
-    sll_comp64, dimension(0:,0:,0:), intent(inout)  :: array_in, array_out
-#ifndef _NOFFTW
-    if(plan%library .eq. FFTW_MOD) &
-      stop 'apply_plan_c2c_1d with 3d data not available with fftw'
-#endif
-#ifndef _NOFFTSLL
-    if(plan%library .eq. SLLFFT_MOD) &
-      call sll_apply_fft_c2c_1d_for_3d(plan, array_in, array_out)
-#endif
-#ifndef _NOFFTPACK
-    if(plan%library .eq. FFTPACK_MOD) &
-      stop 'apply_plan_c2c_1d with 3d data not available with fftpack'
-#endif
-  end subroutine
+!  subroutine fft_apply_c2c_1d_3d(plan,array_in,array_out)
+!    type(sll_fft_plan), pointer, intent(in)         :: plan
+!    sll_comp64, dimension(0:,0:,0:), intent(inout)  :: array_in, array_out
+!#ifndef _NOFFTW
+!    if(plan%library .eq. FFTW_MOD) &
+!      stop 'apply_plan_c2c_1d with 3d data not available with fftw'
+!#endif
+!#ifndef _NOFFTSLL
+!    if(plan%library .eq. SLLFFT_MOD) &
+!      call sll_apply_fft_c2c_1d_for_3d(plan, array_in, array_out)
+!#endif
+!#ifndef _NOFFTPACK
+!    if(plan%library .eq. FFTPACK_MOD) &
+!      stop 'apply_plan_c2c_1d with 3d data not available with fftpack'
+!#endif
+!  end subroutine
 
 
   subroutine apply_plan_c2c_2d(plan,array_in,array_out)
-    !type(sll_fft_plan_2d), pointer, intent(in)      :: plan
-    type(fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer, intent(in)             :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_real64                                      :: factor
-    sll_int32                                       :: i
-    factor = 1.0_f64/real( plan%problem_shape(1)*plan%problem_shape(2) ,kind=f64)
+
+    if( .not. associated(plan) ) then
+      print*,'Error in the file sll_fft.F90'
+      print*,'      in function apply_plan_c2c_2d'
+      print*,'      plan not associated'
+      stop ''
+    endif
+
 #ifndef _NOFFTW
     if(plan%library .eq. FFTW_MOD) then
-      call fftw_apply_plan_c2c_2d(plan%fft_plan_2d, array_in, array_out)
+      call fftw_apply_plan_c2c_2d(plan, array_in, array_out)
    endif
 #endif
 #ifndef _NOFFTSLL
     if(plan%library .eq. SLLFFT_MOD) then
-      call sll_apply_fft_c2c_2d(plan%fft_plan_2d, array_in, array_out)
+        call sll_apply_fft_c2c_2d(plan, array_in, array_out)
     endif
 #endif
 #ifndef _NOFFTPACK
-!    if(plan%library .eq. FFTPACK_MOD) &
-!      stop 'apply_plan_c2c_1d with 2d data not available with fftpack'
+    if(plan%library .eq. FFTPACK_MOD) &
+      stop 'apply_plan_c2c_2d not available with fftpack'
 #endif
-    !if( (plan%plan_x%style .eq. FFT_NORMALIZE_INVERSE) .or. (plan%plan_x%style .eq. FFT_NORMALIZE_FORWARD) ) then
-    !    array_out = factor*array_out
-    !endif
     if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+      if( fft_is_present_flag(plan,FFT_ONLY_FIRST_DIRECTION) .and. fft_is_present_flag(plan,FFT_ONLY_SECOND_DIRECTION) ) then
+        factor = 1.0_f64/real( plan%problem_shape(1)*plan%problem_shape(2) ,kind=f64)
+      else if( .not. fft_is_present_flag(plan,FFT_ONLY_FIRST_DIRECTION) .and. .not. fft_is_present_flag(plan,FFT_ONLY_SECOND_DIRECTION) ) then
+        factor = 1.0_f64/real( plan%problem_shape(1)*plan%problem_shape(2) ,kind=f64)
+      else if( fft_is_present_flag(plan,FFT_ONLY_FIRST_DIRECTION) ) then
+        factor = 1.0_f64/real( plan%problem_shape(1),kind=f64)
+      else
+        factor = 1.0_f64/real( plan%problem_shape(2),kind=f64)
+      endif
       array_out = factor*array_out
     endif
   end subroutine
@@ -904,12 +816,14 @@ INFO
 ! ---------------------
 ! - DEFAULT INTERFACE -
 ! ---------------------
-  function fft_new_r2r_1d(size_problem,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                        :: size_problem
-    sll_real64, dimension(:), target, intent(in) :: array_in, array_out
+  function fft_new_r2r_1d(rank,n,array_in,array_out,direction,flags) result(plan)
+    sll_int32, intent(in)                        :: rank
+    sll_int32, dimension(:), intent(in)          :: n
+    sll_real64, dimension(:), intent(inout)      :: array_in, array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
+    type(sll_fft_plan), pointer                       :: plan
+    sll_int32                                    :: nx
 
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
     print * ,'Error in file sll_fft.F90'
@@ -917,12 +831,14 @@ INFO
     stop 'The default library cannot be FFTW because she is not installed'
 #endif
   
-    if( size(array_in).ne.size_problem .or. size(array_out).ne.size_problem) then
+    nx = n(1)
+
+    if( size(array_in).ne.nx .or. size(array_out).ne.nx) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2r_1d'
       stop 'size problem'
     endif
-    plan => fft_plan_r2r_1d(_DEFAULTFFTLIB,size_problem,array_in,array_out,direction,flags)
+    plan => fft_plan_r2r_1d(_DEFAULTFFTLIB,nx,array_in,array_out,direction,flags)
   end function
 
 ! ---------------------
@@ -931,10 +847,11 @@ INFO
   function fft_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
     sll_int32, intent(in)                        :: size_problem
-    sll_real64, dimension(:), target, intent(in) :: array_in, array_out
+    sll_real64, dimension(:), intent(inout)      :: array_in
+    sll_real64, dimension(:), intent(inout)      :: array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                  :: plan
+    type(sll_fft_plan), pointer                      :: plan
 
 #ifndef _NOFFTW 
     if(library .eq. FFTW_MOD) then
@@ -964,15 +881,24 @@ INFO
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_r2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
-    sll_real64, dimension(0:), intent(inout)        :: array_in, array_out
+    type(sll_fft_plan), pointer, intent(in)             :: plan
+    sll_real64, dimension(:), intent(inout)         :: array_in
+    sll_real64, dimension(:), intent(inout)         :: array_out
     sll_real64                                      :: factor, time
     type(time_mark), pointer                        :: mark
+    sll_int32                                       :: nx
 
+    if( .not. associated(plan) ) then
+      print*,'Error in the sll_fft.F90'
+      print*,'      in subroutine fft_apply_r2r_1d'
+      print*,'      plan not associated'
+      stop ''
+    endif
+
+    nx = plan%problem_shape(1)
     mark => new_time_mark()
-    factor = 1.0_f64/real(plan%N,kind=f64)
 
-    if( size(array_in).ne.plan%N .or. size(array_out).ne.plan%N) then
+    if( size(array_in).ne.nx .or. size(array_out).ne.nx) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2r_1d'
       stop 'size problem'
@@ -1004,10 +930,10 @@ INFO
 INFO
 #endif
 
-    if( plan%style .eq. FFT_NORMALIZE_INVERSE) &
+    if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+      factor = 1.0_f64/real(nx,kind=f64)
       array_out = factor*array_out
-    if( plan%style .eq. FFT_NORMALIZE_FORWARD) &
-      array_out = factor*array_out
+    endif
   end subroutine
 
 
@@ -1023,12 +949,12 @@ INFO
 ! ---------------------
 ! - DEFAULT INTERFACE -
 ! ---------------------
- function new_plan_r2c_1d(size_problem,array_in,array_out,flags) result(plan)
-    sll_int32, intent(in)                :: size_problem
-    sll_real64, dimension(0:), target    :: array_in
-    sll_comp64, dimension(0:), target    :: array_out
+ function new_plan_r2c_1d(nx,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                :: nx
+    sll_real64, dimension(:)             :: array_in
+    sll_comp64, dimension(:)             :: array_out
     sll_int32, optional, intent(in)      :: flags
-    type(sll_fft_plan), pointer          :: plan
+    type(sll_fft_plan), pointer              :: plan
 
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
     print * ,'Error in file sll_fft.F90'
@@ -1042,46 +968,68 @@ INFO
       stop     '      This function doesn''t work with FFTAPCK library'
     endif
 
-    if(size(array_in) .ne. size_problem) then
+    if(size(array_in) .ne. nx) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_in size problem'
-    else if( size(array_out) .ne. (size_problem/2 + 1) ) then
+    else if( size(array_out) .ne. (nx/2 + 1) ) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_out size problem'
     endif
 
-    plan => fft_plan_r2c_1d(_DEFAULTFFTLIB,size_problem,array_in(0:size_problem-1),array_out(0:size_problem/2),flags)
+    plan => fft_plan_r2c_1d(_DEFAULTFFTLIB,nx,array_in(1:nx),array_out(1:nx/2+1),flags)
+  end function
+
+ function new_plan_r2c_2d(nx,ny,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                         :: nx,ny
+    sll_real64, dimension(0:,0:), intent(inout)   :: array_in
+    sll_comp64, dimension(0:,0:), intent(inout)   :: array_out
+    sll_int32, optional, intent(in)               :: flags
+    type(sll_fft_plan), pointer                       :: plan
+
+    if( (size(array_in,dim=1).ne.nx) .and. (size(array_in,dim=2).ne.ny) ) then
+      print * ,'Error in file sll_fft.F90'
+      print * ,'      in function new_plan_r2c_2d'
+      print * ,'      array_in size problem'
+      stop ''
+    else if( size(array_in,dim=1).ne.nx/2+1 .and. size(array_in,dim=2).ne.ny ) then
+      print * ,'Error in file sll_fft.F90'
+      print * ,'      in function new_plan_r2c_2d'
+      print * ,'      array_out size problem'
+      stop ''
+    endif
+
+    plan => fft_plan_r2c_2d(_DEFAULTFFTLIB,nx,ny,array_in,array_out,flags)
   end function
 
 ! ---------------------
 ! -  DEBUG INTERFACE  -
 ! ---------------------
-  function fft_plan_r2c_1d(library,size_problem,array_in,array_out,flags) result(plan)
+  function fft_plan_r2c_1d(library,nx,array_in,array_out,flags) result(plan)
     sll_int32, intent(in)                            :: library
-    sll_int32, intent(in)                            :: size_problem
-    sll_real64, dimension(0:), target, intent(inout) :: array_in
-    sll_comp64, dimension(0:), target, intent(out)   :: array_out
+    sll_int32, intent(in)                            :: nx
+    sll_real64, dimension(0:), intent(inout)         :: array_in
+    sll_comp64, dimension(0:), intent(out)           :: array_out
     sll_int32, optional, intent(in)                  :: flags
-    type(sll_fft_plan), pointer                      :: plan
+    type(sll_fft_plan), pointer                          :: plan
 
 #ifndef _NOFFTW 
     if(library .eq. FFTW_MOD) then
-      plan => fftw_new_plan_r2c_1d(library,size_problem,array_in,array_out,flags)
+      plan => fftw_new_plan_r2c_1d(library,nx,array_in,array_out,flags)
       return
     endif
 #endif
 #ifndef _NOFFTSLL
     if(library .eq. SLLFFT_MOD) then
-      plan => sll_new_plan_r2r_1d(library,size_problem,array_in,array_in,FFT_FORWARD,flags)
+      plan => sll_new_plan_r2c_1d(library,nx,array_in,array_out,flags)
       return
     endif
 #endif
 #ifndef _NOFFTPACK
-    !if(library .eq. FFTPACK_MOD) then
-    !  plan => fftpack_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags)
-    !endif
+    if(library .eq. FFTPACK_MOD) then
+      stop 'not available in fftpack'
+    endif
 #endif
 
     stop 'ERROR in =fft_plan_r2c_1d= library unknown'
@@ -1090,23 +1038,32 @@ INFO
   function fft_plan_r2c_2d(library,nx,ny,array_in,array_out,flags) result(plan)
     sll_int32, intent(in)                          :: library
     sll_int32, intent(in)                          :: nx, ny
-    sll_real64, dimension(0:,0:), target           :: array_in
-    sll_comp64, dimension(0:,0:), target           :: array_out
+    sll_real64, dimension(0:,0:)                   :: array_in
+    sll_comp64, dimension(0:,0:)                   :: array_out
     sll_int32, optional, intent(in)                :: flags
-    type(sll_fft_plan_2d), pointer                  :: plan 
+    type(sll_fft_plan), pointer                        :: plan
+    sll_int32                                      :: ierr
 
-    if( .not. associated(plan)) &
-      allocate(plan)
 #ifndef _NOFFTW 
-    !if(library .eq. FFTW_MOD) then
-    !  plan => fftw_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags)
-    !  return
-    !endif
+    if(library .eq. FFTW_MOD) then
+      SLL_ALLOCATE(plan,ierr)
+      plan%library = FFTW_MOD 
+      plan%direction = FFT_FORWARD
+      if( present(flags) )then
+        plan%style = flags
+      else
+        plan%style = 0_f32
+      endif
+      plan%problem_rank = 2
+      SLL_ALLOCATE(plan%problem_shape(2),ierr)
+      plan%problem_shape = (/ nx , ny /)
+      plan%fftw_plan = fftw_plan_dft_r2c_2d(ny,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+      return
+    endif
 #endif
 #ifndef _NOFFTSLL
     if(library .eq. SLLFFT_MOD) then
-      plan%plan_x => fft_plan_r2c_1d(library,nx,array_in(:,0),array_out(:,0),flags)
-      plan%plan_y => fft_plan_c2c_1d(library,ny,array_out(0,:),array_out(0,:),FFT_FORWARD,flags)
+      plan => sll_new_plan_r2c_2d(library,nx,ny,array_in,array_out,flags)
       return
     endif
 #endif
@@ -1116,25 +1073,34 @@ INFO
     !endif
 #endif
 
-    stop 'ERROR in =fft_plan_r2c_1d= library unknown'
+    stop 'ERROR in =fft_plan_r2c_2d= library unknown'
   end function
 
 ! ---------------------
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_r2c_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
-    sll_real64, dimension(0:), intent(inout)        :: array_in
-    sll_comp64, dimension(0:), intent(out)          :: array_out
-    sll_int32                                       :: i
-    sll_real64                                      :: time
+    type(sll_fft_plan), pointer, intent(in)             :: plan
+    sll_real64, dimension(:), intent(inout)        :: array_in
+    sll_comp64, dimension(:), intent(out)          :: array_out
+    sll_int32                                       :: nx
+    sll_real64                                      :: time, factor
     type(time_mark), pointer                        :: mark
 
-    if(size(array_in) .ne. plan%N) then
+    if( .not. associated(plan) ) then
+      print*,'Error in the sll_fft.F90'
+      print*,'      in subroutine fft_apply_r2c_1d'
+      print*,'      plan not associated'
+      stop ''
+    endif
+
+    nx = plan%problem_shape(1)
+
+    if(size(array_in) .ne. nx) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_in size problem'
-    else if( size(array_out) .ne. (plan%N/2 + 1) ) then
+    else if( size(array_out) .ne. (nx/2 + 1) ) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_new_r2c_1d_for_1d'
       stop     '      array_out size problem'
@@ -1145,30 +1111,27 @@ INFO
 #ifndef _NOFFTW
     if(plan%library .eq. FFTW_MOD) then
       mark => start_time_mark(mark)
-      call fftw_apply_fft_r2c_1d(plan, array_in(0:plan%N-1), array_out(0:plan%N/2))
+      call fftw_apply_fft_r2c_1d(plan, array_in(1:nx), array_out(1:nx/2+1))
       time = time_elapsed_since(mark)
     endif
 #endif
 #ifndef _NOFFTSLL
     if(plan%library .eq. SLLFFT_MOD) then
       mark => start_time_mark(mark)
-      call sll_apply_fft_real(plan, array_in(0:plan%N-1), array_in(0:plan%N-1))
-      !mode k=0
-      array_out(0) = cmplx(array_in(0),0.0_f64,kind=f64)
-      !mode k=n/2
-      array_out(plan%N/2) = cmplx(array_in(1),0.0_f64,kind=f64)
-      !mode k=1 to k= n-2
-      do i=1,plan%N/2-1
-          array_out(i) = cmplx(array_in(2*i),array_in(2*i+1),kind=f64)
-          !array_out(plan%N-i) = cmplx(array_in(2*i),-array_in(2*i+1),kind=f64)
-      enddo
+      call sll_fft_apply_r2c_1d(plan, array_in(1:nx), array_out(1:nx/2+1))
       time = time_elapsed_since(mark)
     endif
 #endif
-!#ifndef _NOFFTPACK
-!    else if(plan%library .eq. FFTPACK_MOD) &
+#ifndef _NOFFTPACK
+!    if(plan%library .eq. FFTPACK_MOD) then
 !      call fftpack_apply_fft_complex(plan, array_in, array_out)
-!#endif
+!    endif
+#endif
+
+   if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+     factor = 1.0_f64/real(nx,kind=f64)
+     array_out = array_out*factor
+   endif
 #ifdef _FFTINFO
 INFO
 #endif
@@ -1176,29 +1139,52 @@ INFO
   end subroutine
 
   subroutine fft_apply_r2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan_2d), pointer, intent(in)        :: plan
-    sll_real64, dimension(0:,0:), intent(inout)         :: array_in
-    sll_comp64, dimension(0:,0:), intent(inout)         :: array_out
-    sll_int32 :: i
-!
-!#ifndef _NOFFTW
-!    if(plan%library .eq. FFTW_MOD) &
-!      call fftw_apply_fft_complex(plan, array_in, array_out)
-!#endif
-#ifndef _NOFFTSLL
-    if(plan%plan_x%library .eq. SLLFFT_MOD) then
-      do i=0,plan%plan_y%N-1
-        call fft_apply_r2c_1d(plan%plan_x,array_in(:,i),array_out(:,i))
-      enddo
-      do i=0,plan%plan_x%N-1
-        call fft_apply_c2c_1d(plan%plan_y,array_out(i,:),array_out(i,:))
-      enddo
+    type(sll_fft_plan), pointer, intent(in)               :: plan
+    sll_real64, dimension(:,:), intent(inout)         :: array_in
+    sll_comp64, dimension(:,:), intent(inout)         :: array_out
+    sll_real64                                        :: factor
+    sll_int32 :: nx, ny
+
+    if( .not. associated(plan) ) then
+      print*,'Error in the sll_fft.F90'
+      print*,'      in subroutine fft_apply_r2c_2d'
+      print*,'      plan not associated'
+      stop ''
+    endif
+
+    nx = plan%problem_shape(1)
+    ny = plan%problem_shape(2)
+
+    if( (size(array_in,dim=1).ne.nx) .and. (size(array_in,dim=2).ne.ny) ) then
+      print * ,'Error in file sll_fft.F90'
+      print * ,'      in subroutine fft_apply_r2c_2d'
+      print * ,'      array_in size problem'
+      stop ''
+    else if( size(array_in,dim=1).ne.nx/2+1 .and. size(array_in,dim=2).ne.ny ) then
+      print * ,'Error in file sll_fft.F90'
+      print * ,'      in subroutine fft_apply_r2c_2d'
+      print * ,'      array_out size problem'
+      stop ''
+    endif
+
+#ifndef _NOFFTW
+    if(plan%library .eq. FFTW_MOD) then
+      call fftw_execute_dft_r2c(plan%fftw_plan, array_in, array_out )
     endif
 #endif
-!#ifndef _NOFFTPACK
+#ifndef _NOFFTSLL
+    if(plan%library .eq. SLLFFT_MOD) then
+      call sll_fft_apply_r2c_2d(plan,array_in,array_out)
+    endif
+#endif
+#ifndef _NOFFTPACK
 !    else if(plan%library .eq. FFTPACK_MOD) &
 !      call fftpack_apply_fft_complex(plan, array_in, array_out)
-!#endif
+#endif
+  if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+    factor = 1.0_f64/real(nx*ny,kind=f64)
+    array_out = factor*array_out
+  endif
   end subroutine
 
 
@@ -1216,10 +1202,10 @@ INFO
 ! - DEFAULT INTERFACE -
 ! ---------------------
  function new_plan_c2r_1d(size_problem,array_in,array_out,flags) result(plan)
-    sll_int32, intent(in)                        :: size_problem
-    sll_comp64, dimension(0:), target, intent(in) :: array_in
-    sll_real64, dimension(0:), target, intent(in) :: array_out
-    sll_int32, optional, intent(in)              :: flags
+    sll_int32, intent(in)                    :: size_problem
+    sll_comp64, dimension(0:), intent(in)    :: array_in
+    sll_real64, dimension(0:), intent(in)    :: array_out
+    sll_int32, optional, intent(in)          :: flags
     type(sll_fft_plan), pointer                  :: plan
 
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
@@ -1247,16 +1233,37 @@ INFO
     plan => fft_plan_c2r_1d(_DEFAULTFFTLIB,size_problem,array_in(0:size_problem/2),array_out(0:size_problem-1),flags)
   end function
 
+ function new_plan_c2r_2d(nx,ny,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                         :: nx,ny
+    sll_comp64, dimension(0:,0:), intent(inout)      :: array_in
+    sll_real64, dimension(0:,0:), intent(inout)      :: array_out
+    sll_int32, optional, intent(in)               :: flags
+    type(sll_fft_plan), pointer                       :: plan
+
+    if( (size(array_in,dim=1).ne.nx/2+1) .and. (size(array_in,dim=2).ne.ny) ) then
+      print * ,'Error in file sll_fft.F90'
+      print * ,'      in function new_plan_c2r_2d'
+      print * ,'      array_in size problem'
+      stop ''
+    else if( size(array_in,dim=1).ne.nx .and. size(array_in,dim=2).ne.ny ) then
+      print * ,'Error in file sll_fft.F90'
+      print * ,'      in function new_plan_c2r_2d'
+      print * ,'      array_out size problem'
+      stop ''
+    endif
+
+    plan => fft_plan_c2r_2d(_DEFAULTFFTLIB,nx,ny,array_in,array_out,flags)
+  end function
 ! ---------------------
 ! -  DEBUG INTERFACE  -
 ! ---------------------
   function fft_plan_c2r_1d(library,size_problem,array_in,array_out,flags) result(plan)
-    sll_int32, intent(in)                         :: library
-    sll_int32, intent(in)                         :: size_problem
-    sll_comp64, dimension(0:), target, intent(in) :: array_in
-    sll_real64, dimension(0:), target, intent(in) :: array_out
-    sll_int32, optional, intent(in)               :: flags
-    type(sll_fft_plan), pointer                   :: plan
+    sll_int32, intent(in)                 :: library
+    sll_int32, intent(in)                 :: size_problem
+    sll_comp64, dimension(:), intent(in)  :: array_in
+    sll_real64, dimension(:), intent(in)  :: array_out
+    sll_int32, optional, intent(in)       :: flags
+    type(sll_fft_plan), pointer               :: plan
 
 #ifndef _NOFFTW 
     if(library .eq. FFTW_MOD) then
@@ -1266,39 +1273,51 @@ INFO
 #endif
 #ifndef _NOFFTSLL
     if(library .eq. SLLFFT_MOD) then
-      plan => sll_new_plan_r2r_1d(library,size_problem,array_out,array_out,FFT_INVERSE,flags)
+      plan => sll_new_plan_c2r_1d(library,size_problem,array_in,array_out,flags)
       return
     endif
 #endif
 #ifndef _NOFFTPACK
-    if(library .eq. FFTPACK_MOD) then
-      stop 'c2r transform not available with fftpack'    
-    endif
+!    if(library .eq. FFTPACK_MOD) then
+!      stop 'c2r transform not available with fftpack'    
+!    endif
 #endif
     stop 'ERROR in =fft_plan_c2r_1d= library unknown'
   end function
 
   function fft_plan_c2r_2d(library,nx,ny,array_in,array_out,flags) result(plan)
-    sll_int32, intent(in)                          :: library
-    sll_int32, intent(in)                          :: nx, ny
-    sll_comp64, dimension(0:,0:), target, intent(inout) :: array_in
-    sll_real64, dimension(0:,0:), target, intent(inout) :: array_out
-    sll_int32, optional, intent(in)                :: flags
-    type(sll_fft_plan_2d), pointer                  :: plan 
+    sll_int32, intent(in)                               :: library
+    sll_int32, intent(in)                               :: nx, ny
+    sll_comp64, dimension(0:,0:), intent(inout)         :: array_in
+    sll_real64, dimension(0:,0:), intent(inout)         :: array_out
+    sll_int32, optional, intent(in)                     :: flags
+    type(sll_fft_plan), pointer                             :: plan 
+    sll_int32                                           :: ierr
 
     if( .not. associated(plan)) then
       stop 'ERROR IN fft_plan_c2r_2d'
     endif
+
 #ifndef _NOFFTW 
-    !if(library .eq. FFTW_MOD) then
-    !  plan => fftw_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags)
-    !  return
-    !endif
+    if(library .eq. FFTW_MOD) then
+      SLL_ALLOCATE(plan,ierr)
+      plan%library = FFTW_MOD 
+      plan%direction = FFT_INVERSE
+      if( present(flags) )then
+        plan%style = flags
+      else
+        plan%style = 0_f32
+      endif
+      plan%problem_rank = 2
+      SLL_ALLOCATE(plan%problem_shape(2),ierr)
+      plan%problem_shape = (/ nx , ny /)
+      plan%fftw_plan = fftw_plan_dft_c2r_2d(ny,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+      return
+    endif
 #endif
 #ifndef _NOFFTSLL
     if(library .eq. SLLFFT_MOD) then
-      plan%plan_x => fft_plan_c2r_1d(library,nx,array_in(:,0),array_out(:,0),flags)
-      plan%plan_y => fft_plan_c2c_1d(library,ny,array_in(0,:),array_in(0,:),flags)
+      plan => sll_new_plan_c2r_2d(library,nx,ny,array_in,array_out,flags)
       return
     endif
 #endif
@@ -1315,57 +1334,51 @@ INFO
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_c2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)     :: plan
+    type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_comp64, dimension(0:), intent(inout)    :: array_in
     sll_real64, dimension(0:), intent(inout)    :: array_out
-    sll_int32                                   :: i
+    sll_int32                                   ::  nx
     sll_real64                                  :: factor, time
     type(time_mark), pointer                    :: mark
 
-    if(size(array_out) .ne. plan%N) then
+    nx = plan%problem_shape(1)   
+ 
+    if(size(array_out) .ne. nx) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_apply_c2r_1d'
       stop     '      array_out size problem'
-    else if( size(array_in) .ne. (plan%N/2 + 1) ) then
+    else if( size(array_in) .ne. (nx/2 + 1) ) then
       print * ,'Error in file sll_fft.F90'
       print * ,'      function fft_apply_c2r_1d'
       stop     '      array_in size problem'
     endif
 
-    factor = 1.0_f64/real(plan%N,kind=f64)
     mark => new_time_mark()
 
 #ifndef _NOFFTW
     if(plan%library .eq. FFTW_MOD) then
       mark => start_time_mark(mark)
-      call fftw_apply_fft_c2r_1d(plan, array_in(0:plan%N/2), array_out(0:plan%N-1))
+      call fftw_apply_fft_c2r_1d(plan, array_in(0:nx/2), array_out(0:nx-1))
       time = time_elapsed_since(mark)
     endif
 #endif
 #ifndef _NOFFTSLL
     if(plan%library .eq. SLLFFT_MOD) then
       mark => start_time_mark(mark)
-      !mode k=0
-      array_out(0) = real(array_in(0),kind=f64)
-      !mode k=n/2
-      array_out(1) = real(array_in(plan%N/2),kind=f64)
-      !mode k=1 to k= n-2
-      do i=1,plan%N/2-1
-          array_out(2*i) = real(array_in(i),kind=f64)
-          array_out(2*i+1) = dimag(array_in(i))
-      enddo
-      call sll_apply_fft_real(plan, array_out, array_out)
-
-      if( plan%style .eq. FFT_NORMALIZE_INVERSE ) then
-        array_out = factor*array_out
-      endif
+      call sll_fft_apply_c2r_1d(plan,array_in,array_out)
       time = time_elapsed_since(mark)
     endif
 #endif
 #ifndef _NOFFTPACK
-    if(plan%library .eq. FFTPACK_MOD) &
+    if(plan%library .eq. FFTPACK_MOD) then
       stop 'c2r transform don''t work with fftpack'
+    endif
 #endif
+
+   if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+     factor = 1.0_f64/real(nx,kind=f64)
+     array_out = factor*array_out
+   endif
 
 #ifdef _FFTINFO
 INFO
@@ -1373,30 +1386,43 @@ INFO
   mark => delete_time_mark(mark)
   end subroutine
 
+
   subroutine fft_apply_c2r_2d(plan,array_in,array_out)
-    type(sll_fft_plan_2d), pointer, intent(in)        :: plan
-    sll_comp64, dimension(0:,0:), intent(inout)         :: array_in
-    sll_real64, dimension(0:,0:), intent(inout)         :: array_out
-    sll_int32 :: i
-!
-!#ifndef _NOFFTW
-!    if(plan%library .eq. FFTW_MOD) &
-!      call fftw_apply_fft_complex(plan, array_in, array_out)
-!#endif
+    type(sll_fft_plan), pointer, intent(in)               :: plan
+    sll_comp64, dimension(:,:), intent(inout)         :: array_in
+    sll_real64, dimension(:,:), intent(inout)         :: array_out
+    sll_real64                                        :: factor
+    sll_int32                                         :: nx, ny
+
+    if( .not. associated(plan) ) then
+      print*,'Error in the sll_fft.F90'
+      print*,'      in subroutine fft_apply_c2r_2d'
+      print*,'      plan not associated'
+      stop ''
+    endif
+
+    nx = plan%problem_shape(1)
+    ny = plan%problem_shape(2)
+
+#ifndef _NOFFTW
+    if(plan%library .eq. FFTW_MOD) then
+      call fftw_execute_dft_c2r(plan%fftw_plan, array_in(1:nx/2+1,1:ny), array_out(1:nx,1:ny) )
+    endif
+#endif
 #ifndef _NOFFTSLL
-    if(plan%plan_x%library .eq. SLLFFT_MOD) then
-      do i=0,plan%plan_x%N-1
-        call fft_apply_c2c_1d(plan%plan_y,array_in(i,:),array_in(i,:))
-      enddo
-      do i=0,plan%plan_y%N-1
-        call fft_apply_c2r_1d(plan%plan_x,array_in(:,i),array_out(:,i))
-      enddo
+    if(plan%library .eq. SLLFFT_MOD) then
+      call sll_fft_apply_c2r_2d(plan,array_in,array_out)
     endif
 #endif
 !#ifndef _NOFFTPACK
 !    else if(plan%library .eq. FFTPACK_MOD) &
 !      call fftpack_apply_fft_complex(plan, array_in, array_out)
 !#endif
+  
+  if( fft_is_present_flag(plan,FFT_NORMALIZE) ) then
+    factor = 1.0_f64/real(nx*ny,kind=f64)
+    array_out = factor*array_out    
+  endif
   end subroutine
 
 
@@ -1404,7 +1430,7 @@ INFO
 
 
 !  function get_mode(input,x,y) result(mode)
-!    !type(fft_plan) :: plan
+!    !type(sll_fft_plan) :: plan
 !    sll_comp64, dimension(0:,0:), target :: input
 !    sll_int32 :: x, y
 !    sll_comp64, pointer :: mode
@@ -1453,13 +1479,15 @@ INFO
 
 
 
-  subroutine delete_fft_plan1d(plan)
-    type(sll_fft_plan), pointer, intent(inout)         :: plan
-    
-    if( .not. associated(plan)) then
+  subroutine fft_delete(plan)
+   type(sll_fft_plan), pointer, intent(inout) :: plan
+   sll_int32 :: ierr
+
+    if( .not. associated(plan) ) then
       print * , 'Error in file sll_fft.F90'
-      print * , '      function delete_fft_plan1d'
-      stop 'plan is not associated'
+      print * , '      subroutine fft_delete'
+      print * , '      plan is not associated'
+      stop 
     endif
 
 #ifndef _NOFFTW
@@ -1467,7 +1495,6 @@ INFO
       call fftw_destroy_plan(plan%fftw_plan)
      endif
 #endif
-#ifndef _NOFFTSLL
     if(plan%library .eq. SLLFFT_MOD) then
       if(associated(plan%t)) then
         deallocate(plan%t)
@@ -1481,50 +1508,16 @@ INFO
         deallocate(plan%twiddles_n)
         plan%twiddles_n => null()
       endif
+      if(allocated(plan%problem_shape)) then
+        SLL_DEALLOCATE_ARRAY(plan%problem_shape,ierr)
+      endif
     endif
-#endif
-#ifndef _NOFFTPACK
     if(plan%library .eq. FFTPACK_MOD) then
-      if(associated(plan%dwsave)) deallocate(plan%dwsave)
+      if(associated(plan%twiddles)) then
+        deallocate(plan%twiddles)
+        plan%twiddles => null()
+      endif
     endif
-#endif
-    if(associated(plan%index)) then
-      deallocate(plan%index)
-      plan%index => null()
-    endif
-    plan%in_real => null()
-    plan%out_real => null()
-    plan%in_comp => null()
-    plan%out_comp => null()
-    plan => null()
-  end subroutine
-
-  subroutine delete_fft_plan2d(plan)
-   type(sll_fft_plan_2d), pointer, intent(inout) :: plan
-
-    if(.not. associated(plan)) then
-      print * , 'Error in file sll_fft.F90'
-      print * , '      function delete_fft_plan2d'
-      stop 'plan is not associated'
-    endif
-
-    call delete_fft_plan1d(plan%plan_x)
-    call delete_fft_plan1d(plan%plan_y)
-    plan%plan_x => null()
-    plan%plan_y => null()
-    plan => null()
-  end subroutine
-
-  subroutine fft_delete_plan_2d(plan)
-   type(fft_plan), pointer, intent(inout) :: plan
-
-    if(.not. associated(plan)) then
-      print * , 'Error in file sll_fft.F90'
-      print * , '      function fft_delete_plan_2d'
-      stop 'plan is not associated'
-    endif
-    
-    call delete_fft_plan2d(plan%fft_plan_2d)
     plan => null()
   end subroutine
 
@@ -1746,8 +1739,8 @@ INFO
   recursive subroutine fft_dit_nr_aux( dat, size, twiddles, &
                                        twiddle_index, sign )
     intrinsic ishft, conjg
-    sll_comp64, dimension(0:size-1), intent(inout)  :: dat
     integer, intent(in)                             :: size
+    sll_comp64, dimension(0:size-1), intent(inout)  :: dat
     ! It is more convenient when the twiddles are 0-indexed
     sll_comp64, dimension(0:), intent(in)           :: twiddles 
     integer, intent(in)                             :: twiddle_index
@@ -2169,6 +2162,7 @@ INFO
        ! but our _nr_ algorithm bit reverses the result, so, until we have
        ! some way to index the data correctly we have to do this:
        call bit_reverse_in_pairs( n_2, data(0:n-1) )
+       data = data*2.0_f64
     end if
   end subroutine real_data_fft_dit
   

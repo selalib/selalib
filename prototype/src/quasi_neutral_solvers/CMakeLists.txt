@@ -1,0 +1,4 @@
+add_library(sll_quasi_neutral_solver STATIC sll_quasi_neutral_solver.F90 bsplvb.F90 bsplvd.F90)
+add_executable(test_quasi_neutral_solver unit_test.F90)
+target_link_libraries(test_quasi_neutral_solver sll_assertion sll_constants 
+ sll_diagnostics sll_memory sll_mesh_types sll_utilities sll_remap sll_collective sll_diagnostics sll_timer fftpack_module sll_quasi_neutral_solver)
