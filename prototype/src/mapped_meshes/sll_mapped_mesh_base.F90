@@ -131,29 +131,20 @@ contains
     sll_int32  :: file_id
 
     ! create 2D mesh
-    SLL_ALLOCATE(x1mesh(mesh%nc_eta1,mesh%nc_eta2), ierr)
-    SLL_ALLOCATE(x2mesh(mesh%nc_eta1,mesh%nc_eta2), ierr)
+    SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+    SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
     eta1 = 0.0_f64
-    do i1=1, mesh%nc_eta1
+    do i1=1, mesh%nc_eta1+1
        eta2 = 0.0_f64
-       do i2=1, mesh%nc_eta2
+       do i2=1, mesh%nc_eta2+1
           x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
           x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
           eta2 = eta2 + mesh%delta_eta2 
        end do
        eta1 = eta1 + mesh%delta_eta1
     end do
-    !call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,mesh%mesh_name)
-    open(10, file=trim(mesh%mesh_name)//".gp")
-    do i1=1, mesh%nc_eta1
-       do i2=1, mesh%nc_eta2
-          write(10,*) x1mesh(i1,i2), x2mesh(i1,i2)
-       end do
-       write(10,*) 
-    end do
-    close(10)
     
-    call sll_xdmf_open(trim(mesh%mesh_name),file_id,mesh%nc_eta1,mesh%nc_eta2,ierr)
+    call sll_xdmf_open(trim(mesh%mesh_name),file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
     call sll_xdmf_mesh(trim(mesh%mesh_name),x1mesh,x2mesh,ierr)
     call sll_xdmf_close(file_id,ierr)
 
