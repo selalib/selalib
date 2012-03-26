@@ -12,26 +12,31 @@ print 'platform : ' + platform
 env = Environment( ENV=os.environ,
                    F90PATH = ['../memory',
                               '../precision',
-                              '../assert', '../constants',
-                              '../splines','../fields',
-                              '../interpolators'], 
+                              '../assert', 
+                              '../constants',
+                              '../splines',
+                              '../fields',
+                              '../interpolators',
+                              '../low_level_file_io'], 
                    LIBPATH= ['.'],
-                   LIBS=[  'interpolators',
-                           'sll_splines',
-                           'geometry_funcs',
+                   LIBS=[ 'interpolators',
+                          'sll_splines',
+                          'geometry_funcs',
                           'sll_memory',
                           'sll_precision',
                           'sll_constants',
-                          'sll_assert'],
+                          'sll_assert',
+                          'sll_low_level_file_io'],
                    F90FLAGS = ['-g','-cpp','-W','-Wall','-std=f2003',
                                '-ffree-line-length-none'])
 
-env.Append(CPPDEFINES=['DEBUG','GFORTRAN','NOHDF5'])
+env.Append(CPPDEFINES=['DEBUG','GFORTRAN'])
 
-#env.Append(F90PATH=[os.environ['HDF5INCPATH']])
-#env.Append(LIBPATH=[os.environ['HDF5LIBPATH'])
-#env.Append(LIBS=['hdf5_fortran','hdf5','z'])
+env.Append(F90PATH=[os.environ['HDF5INCPATH']])
+env.Append(LIBPATH=[os.environ['HDF5LIBPATH']])
+env.Append(LIBS=['hdf5_fortran','hdf5','z'])
 
+env.Library('sll_low_level_file_io',Glob("../low_level_file_io/sll_*.F90"))
 env.Library('sll_memory',["../memory/sll_memory.F90"])
 env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
