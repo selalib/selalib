@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 23, 2012
+!> Last modification: March 26, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -76,24 +76,20 @@ contains
     sll_int32                                    :: ierr
     type (poisson_3d_periodic_plan_par), pointer :: plan
     sll_int32, dimension(3,3)                    :: loc_sizes
-   
-    if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two( & 
-              int(ny,i64))) .and. (.not.is_power_of_two(int(nz,i64)))) then     
-       print *, 'This test needs to run in numbers of points which are',  &
-                'powers of 2.' 
-       stop
-    end if
 
     colsz  = sll_get_collective_size(sll_world_collective)
+
     if ( colsz > min(nx,ny,nz) ) then     
        print *, 'This test needs to run in a number of processes which',  &
                 'is less than', min(nx,ny,nz)
+       print *, 'Exiting...'
        stop
     end if
     if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two( &
                int(ny,i64))) .and.(.not.is_power_of_two(int(nz,i64)))) then     
        print *, 'This test needs to run in numbers of points which are',  &
                 'powers of 2.'
+       print *, 'Exiting...'
        stop
     end if
 
