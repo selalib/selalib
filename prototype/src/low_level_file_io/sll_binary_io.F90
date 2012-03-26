@@ -39,6 +39,13 @@ module sll_binary_io
 
 implicit none
 
+interface sll_binary_write_array
+module procedure sll_binary_write_array_1d
+module procedure sll_binary_write_array_2d
+module procedure sll_binary_write_array_3d
+end interface sll_binary_write_array
+
+
 contains
   
 !> Create binary file :

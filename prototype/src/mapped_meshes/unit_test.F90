@@ -97,6 +97,9 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
 
+  map_a%mesh_name = "map_a"
+  call map_a%write_to_file()
+
 
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE MAP                    '
@@ -193,12 +196,16 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
      end do
   end do
 
+  map_d%mesh_name = "map_d"
+  call map_d%write_to_file()
+
   print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
 !  call delete(map_a)
 !  call delete(map_d)
 
   print *, 'deleted maps'
   print *, 'reached end of unit test'
+
   deallocate(x1_eta1_min)
   deallocate(x1_eta1_max)
   deallocate(x2_eta1_min)
