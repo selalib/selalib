@@ -57,9 +57,10 @@ do j = 1, nnodes_x2
    end do
 end do
  
-call sll_xdmf_open("test2d",file_id,x1,x2,error)
-call sll_xdmf_write("test2d",file_id,df,"NodeVal","Node",error)
-call sll_xdmf_write("test2d",file_id,df(1:ncells_x1,1:ncells_x2),"CellVal","Cell",error)
+call sll_xdmf_open("test2d",file_id,nnodes_x1,nnodes_x2,error)
+call sll_xdmf_mesh("test2d",x1,x2,error)
+call sll_xdmf_field("test2d",file_id,df,"NodeVal","Node",error)
+call sll_xdmf_field("test2d",file_id,df(1:ncells_x1,1:ncells_x2),"CellVal","Cell",error)
 call sll_xdmf_close(file_id,error)
 
 
@@ -126,9 +127,10 @@ do k = 1, nnodes_x3
    phi = phi + 2._f64*sll_pi / (nnodes_x3-1)
 end do 
 
-call sll_xdmf_open("tore3d",file_id,x1,x2,x3,error)
-call sll_xdmf_write("tore3d",file_id,df,"NodeVal","Node",error)
-call sll_xdmf_write("tore3d",file_id,df(1:ncells_x1,1:ncells_x2,1:ncells_x3),"CellVal","Cell",error)
+call sll_xdmf_open("tore3d",file_id,nnodes_x1,nnodes_x2,nnodes_x3,error)
+call sll_xdmf_mesh("tore3d",x1,x2,x3,error)
+call sll_xdmf_field("tore3d",file_id,df,"NodeVal","Node",error)
+call sll_xdmf_field("tore3d",file_id,df(1:ncells_x1,1:ncells_x2,1:ncells_x3),"CellVal","Cell",error)
 call sll_xdmf_close(file_id,error)
 
 end subroutine test_3d

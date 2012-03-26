@@ -16,7 +16,7 @@ vars = Variables()
 vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
 vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location',os.environ['HDF5MODPATH'])
 vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
-vars.Add('HDF5', 'Set to 0 to build without HDF5 library', 1) 
+vars.Add('HDF5'       , 'Set to 0 to build without HDF5 library', 1) 
 
 SLLPATH = ['../memory','../assert','../precision','../constants']
 SLLLIBS = ['sll_memory','sll_precision','sll_assertion']
@@ -33,11 +33,7 @@ env = Environment( variables  = vars,
 
 Help(vars.GenerateHelpText(env))
 
-nohdf5 = ARGUMENTS.get('HDF5', 1)
-if int(nohdf5):
-   env.Append(LIBS = ['hdf5_fortran','hdf5','z'])
-else:
-   env.Append(CPPDEFINES = 'NOHDF5')
+env.Append(LIBS = ['hdf5_fortran','hdf5','z'])
 
 env.Library('sll_memory',  ["../memory/sll_memory.F90"])
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
