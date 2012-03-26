@@ -1,4 +1,4 @@
 add_library(ode_solvers STATIC sll_ode_solvers.F90)
 add_executable(test_ode_solvers unit_test.F90)
-target_link_libraries(test_ode_solvers sll_assertion sll_constants 
- sll_diagnostics sll_memory sll_mesh_types sll_utilities ode_solvers)
+target_link_libraries(test_ode_solvers ode_solvers sll_assertion sll_constants 
+ sll_diagnostics sll_memory sll_mesh_types sll_utilities)

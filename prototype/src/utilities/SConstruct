@@ -1,0 +1,20 @@
+# SCons file to build the test case for the misc utilities module
+import os
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname()
+
+print 'Building utilities module...'
+print 'hostname: ' + hostname
+print 'platform: ' + platform
+
+env = Environment( ENV = os.environ,
+                   F90PATH = ['../precision'],
+                   LIBPATH = ['.'],
+                   LIBS = ['sll_precision'],
+                   F90FLAGS = ['-g', '-W', '-Wall', '-pedantic', '-std=f2003', '-ffree-line-length-none'] )
+env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+src_files = Split('unit_test.F90 misc_utils.F90')
+env.Program(target='unit_test', source = src_files)

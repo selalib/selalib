@@ -10,11 +10,15 @@ set(CMAKE_Fortran_COMPILER mpif90)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
+#ajoute les modules locaux
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
+message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
+
 # recherche de HDF5
-find_package(HDF5)
+find_package(HDF5 COMPONENTS Fortran)
 
 if (HDF5_FOUND)
-    message(STATUS "HDF5 trouve")
+    message(STATUS "HDF5 FOUND")
     message(STATUS "libraries = " ${HDF5_LIBRARIES}) 
     message(STATUS "include = " ${HDF5_INCLUDE_DIRS}) 
     include_directories(${HDF5_INCLUDE_DIRS})
@@ -22,9 +26,6 @@ else (HDF5_FOUND)
     add_definitions(-DNOHDF5)
     set(HDF5_LIBRARIES "")
 endif(HDF5_FOUND)
-
-#ajoute les modules locaux
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeModules)	
 
 # recherche le package FFTW
 #find_package(FFTW)
@@ -59,19 +60,16 @@ IF(FFTW_FOUND)
   MESSAGE(STATUS "FFTW FOUND")
   MESSAGE(STATUS "FFTW_INCLUDE_DIR=${FFTW_INCLUDE_DIR}")
   MESSAGE(STATUS "FFTW_LIBRARIES=${FFTW_LIBRARIES}")
+  set(FFT_ADD_MODULE fftpack_module fftw_module)
+  include_directories(${FFTW_INCLUDE_DIR})
 ELSE()
   MESSAGE(STATUS "FFTW NOT FOUND")
-ENDIF()
-
-IF(FFTW_FOUND)
-  set(FFT_ADD_MODULE fftpack_module fftw_module)
-ELSE()
   set(FFT_ADD_MODULE fftpack_module)
   add_definitions(-D_NOFFTW)
 ENDIF()
 
 # include's
-include_directories(remap poisson_solvers utilities memory mesh_types assert precision ${FFTW_INCLUDE_DIR}) 
+include_directories(remap poisson_solvers utilities memory mesh_types assert precision fft) 
 
 add_subdirectory(fftpack)
 add_subdirectory(assert)
@@ -79,10 +77,10 @@ add_subdirectory(precision)
 add_subdirectory(constants)
 add_subdirectory(memory)
 add_subdirectory(timer)
+add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(collective)
 add_subdirectory(utilities)
-add_subdirectory(numerical_utilities)
 add_subdirectory(splines)
 add_subdirectory(integration)
 add_subdirectory(diagnostics)
@@ -94,10 +92,10 @@ add_subdirectory(distribution_function)
 add_subdirectory(fft)
 add_subdirectory(maxwell_solvers)
 add_subdirectory(remap)
-#add_subdirectory(poisson_solvers)
-#add_subdirectory(BSL)
-#add_subdirectory(CSL) don't compile! 
-#add_subdirectory(quasi_neutral_solvers) don't compile!
+add_subdirectory(poisson_solvers)
+add_subdirectory(BSL)
+#add_subdirectory(CSL) don't compile error in SConstruct!
+#add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread!
 
 
 # add tests
@@ -125,7 +123,9 @@ add_test(ode_solvers ode_solvers/test_ode_solvers)
 #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 add_test(poisson_solvers poisson_solvers/test_poisson_1d)
 add_test(poisson_solvers poisson_solvers/test_poisson_2d)
-add_test(poisson_solvers poisson_solvers/unit_test)
+add_test(poisson_solvers poisson_solvers/test_poisson_3d_seq)
+add_test(poisson_solvers mpirun -np 2 poisson_solvers/test_poisson_3d_par)
+#add_test(poisson_solvers poisson_solvers/unit_test)
 add_test(BSL BSL/test_bsl)
 add_test(BSL BSL/test_landau_4d)
 add_test(BSL BSL/test_landau_2d)

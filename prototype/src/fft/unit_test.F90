@@ -61,21 +61,13 @@ program unit_test
     enddo
     rdata_copy(1:s) = rdata(1:s)
   
-    p => fft_new_plan(1,[s],rdata(1:s),rdata(1:s),FFT_FORWARD)
-    call fft_apply_plan(p,rdata(1:s),rdata(1:s))
-    call fft_delete_plan(p)
-!    print *, rdata_comp
-
-    p => fft_new_plan(1,[s],rdata(1:s),rdata(1:s),FFT_INVERSE,FFT_NORMALIZE)
+    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
     call fft_apply_plan(p,rdata(1:s),rdata(1:s))
     call fft_delete_plan(p)
 
-!    fftw_plan = fftw_plan_r2r_1d(s,rdata_comp(1:s),rdata_comp(1:s),FFTW_R2HC,FFTW_ESTIMATE + FFTW_UNALIGNED)
-!    call fftw_execute_r2r(fftw_plan, rdata_comp(1:s), rdata_comp(1:s))
-!    fftw_plan = fftw_plan_r2r_1d(s,rdata_comp(1:s),rdata_comp(1:s),FFTW_HC2R,FFTW_ESTIMATE + FFTW_UNALIGNED)
-!    call fftw_execute_r2r(fftw_plan, rdata_comp(1:s), rdata_comp(1:s))
-   
-  
+    p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_INVERSE,FFT_NORMALIZE)
+    call fft_apply_plan(p,rdata(1:s),rdata(1:s))
+    call fft_delete_plan(p)
  
     ierr = MAXVAL(ABS( rdata(1:s) - rdata_copy(1:s) ))
     if( ierr > err_max ) then
@@ -85,7 +77,6 @@ program unit_test
    enddo
   enddo
   print *, 'OK'
-
 
 if( .not. fft_default_lib_is(FFTPACK_MOD) ) then
   print *,'-------------------------------------------------'

@@ -1,0 +1,22 @@
+# SCons file for the unit test of the constants module
+import os
+import socket
+import distutils.util
+
+platform = distutils.util.get_platform()
+hostname = socket.gethostname() 
+
+print 'Building the constants module...'
+print 'hostname : ' + hostname
+print 'platform : ' + platform
+
+env = Environment(ENV = os.environ,
+		  F90PATH = ['../precision'],
+                  FORTRANMODDIRPREFIX= '-J', 
+                  LIBPATH= ['.'],
+                  LIBS=['sll_precision'],
+                  F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG','-DGFORTRAN','-ffree-line-length-none'])
+
+
+env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+env.Program('unit_test', ["numeric_constants.F90","unit_test.F90"])
