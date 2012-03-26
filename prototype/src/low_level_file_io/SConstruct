@@ -1,4 +1,4 @@
-# SCons file for the unit test of the diagnostics
+# SCons file for the unit test of the low_level_file_io
 import os
 import socket
 import distutils.util
@@ -6,7 +6,9 @@ import distutils.util
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
 
-print 'Building HDF5 module...'
+print 'Run scons -h to display options'
+print 'Building XDMF module...'
+print 'Run  scons HDF5=0 to build without hdf5 library'
 print 'hostname : ' + hostname
 print 'platform : ' + platform
 
@@ -14,6 +16,7 @@ vars = Variables()
 vars.Add('HDF5INCPATH', 'hdf5 header files location',os.environ['HDF5INCPATH'])
 vars.Add('HDF5MODPATH', 'fortran module hdf5.mod location',os.environ['HDF5MODPATH'])
 vars.Add('HDF5LIBPATH', 'hdf5 library location',os.environ['HDF5LIBPATH'])
+vars.Add('HDF5'       , 'Set to 0 to build without HDF5 library', 1) 
 
 SLLPATH = ['../memory','../assert','../precision','../constants']
 SLLLIBS = ['sll_memory','sll_precision','sll_assertion']
@@ -25,35 +28,12 @@ env = Environment( variables  = vars,
                                  '-ffree-line-length-none'],
                    F90PATH    = SLLPATH+['${HDF5INCPATH}','${HDF5INCPATH}'],
                    LIBPATH    = ['.','${HDF5LIBPATH}'],
+                   CPPDEFINES = ['GFORTRAN','DEBUG'],
                    LIBS       = SLLLIBS)
 
 Help(vars.GenerateHelpText(env))
 
-
-env.Append(CPPDEFINES=['GFORTRAN', 'DEBUG'])
-
 env.Append(LIBS = ['hdf5_fortran','hdf5','z'])
-
-cppvars = []
-for key, value in ARGLIST:
-    if key == 'define':
-       cppvars.append(value)
-       env.Append(CPPDEFINES=cppvars)
-       env.Replace(LIBS=SLLLIBS)
-
-
-#env.Append(CPPDEFINES=['NOHDF5'])
-#env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
-#env.PrependENVPath('PATH', '/opt/local/bin')
-
-##Check gcc and gfortran version
-#ff = os.popen('gfortran --version')
-#ll = ff.readline()
-#ff.close()
-#gcc_version =ll[18:21]
-#if float(gcc_version) < 4.5:
-#   print 'gfortran version number '+gcc_version+' less than 4.5'
-#   exit();
 
 env.Library('sll_memory',  ["../memory/sll_memory.F90"])
 env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
