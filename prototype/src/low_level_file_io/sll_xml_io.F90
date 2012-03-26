@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_xmf_io
+! MODULE: sll_xml_io
 !
 !> @author
 !> Pierre Navaro
@@ -11,14 +11,14 @@
 ! DESCRIPTION: 
 !
 !> @brief
-!> Implements the functions to write xmf file to store light data
+!> Implements the functions to write xml file to store light data
 !>
 !>@details
 !> With XDMF file you can describe data to plot them with VisIt
 !>
 !> <h2>How to use this module: </h2>
 !>
-!> \code use sll_xmf_io \endcode
+!> \code use sll_xml_io \endcode
 !>
 !> External links:
 !> - https://wci.llnl.gov/codes/visit/
@@ -29,10 +29,10 @@
 !>
 !><pre>
 !>
-!>call sll_xmf_file_create("example.xmf",xmffile_id,error)
-!>call sll_xmf_grid_geometry_2d(xmffile_id, "mesh", nnodes_x1, nnodes_x2)
-!>call sll_xmf_field_2d(xmffile_id,'NodeValues',"field",nnodes_x1,nnodes_x2,'Node')
-!>call sll_xmf_file_close(xmffile_id,error)
+!>call sll_xml_file_create("example.xml",xmlfile_id,error)
+!>call sll_xml_grid_geometry_2d(xmlfile_id, "mesh", nnodes_x1, nnodes_x2)
+!>call sll_xml_field_2d(xmlfile_id,'NodeValues',"field",nnodes_x1,nnodes_x2,'Node')
+!>call sll_xml_file_close(xmlfile_id,error)
 !>
 !></pre>
 !>Don't forget to write heavy data in hdf5 file or binary file !
@@ -41,15 +41,30 @@
 ! 05 12 2011 - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_xmf_io
+module sll_xml_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+
+interface sll_xml_dataitem
+module procedure sll_xml_dataitem_2d
+module procedure sll_xml_dataitem_3d
+end interface sll_xml_dataitem
+
+interface sll_xml_field
+module procedure sll_xml_field_2d
+module procedure sll_xml_field_3d
+end interface sll_xml_field
+
+interface sll_xml_grid_geometry
+module procedure sll_xml_grid_geometry_2d
+module procedure sll_xml_grid_geometry_3d
+end interface sll_xml_grid_geometry
 
 contains
 
 !> Create the XML file and begin to write first lines.
 !> You get the file unit number.
-subroutine sll_xmf_file_create(filename,file_id,error)
+subroutine sll_xml_file_create(filename,file_id,error)
 character(len=*) , intent(in)  :: filename   
 sll_int32        , intent(out) :: file_id   
 sll_int32        , intent(out) :: error
@@ -85,13 +100,13 @@ write(file_id,"(a)")"<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []>"
 write(file_id,"(a)")"<Xdmf Version='2.0'>"
 write(file_id,"(a)")"<Domain>"
 
-end subroutine sll_xmf_file_create
+end subroutine sll_xml_file_create
 
 !> Close the XML file and finish to write last lines.
 !> You give the file unit number.
-!> \param[in]  file_id - the unit number or your xmf file
+!> \param[in]  file_id - the unit number or your xml file
 !> \param[out] error   - error parameter
-subroutine sll_xmf_file_close(file_id,error)
+subroutine sll_xml_file_close(file_id,error)
 sll_int32, intent(in)  :: file_id
 sll_int32, intent(out) :: error
 
@@ -100,10 +115,10 @@ write(file_id,"(a)")"</Domain>"
 write(file_id,"(a)")"</Xdmf>"
 close(file_id)
 error = 0
-end subroutine sll_xmf_file_close
+end subroutine sll_xml_file_close
 
 !> Write the description of a scalar field on a 2D mesh.
-!> \param[in] file_id is the unit number or your xmf file
+!> \param[in] file_id is the unit number or your xml file
 !> \param[in] filename is the file name where the heavy data are (bin or h5)
 !> \param[in] nnodes_x1 - nodes number along direction 1
 !> \param[in] nnodes_x2 - nodes number along direction 2
@@ -111,7 +126,7 @@ end subroutine sll_xmf_file_close
 !>
 !> The file named filename must exist.
 !>
-subroutine sll_xmf_dataitem_2d(file_id, filename, nnodes_x1, nnodes_x2, filetype)
+subroutine sll_xml_dataitem_2d(file_id, filename, nnodes_x1, nnodes_x2, filetype)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
 character(len=*), intent(in) :: filetype
@@ -123,9 +138,9 @@ write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
 "' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
 write(file_id,"(a)")trim(filename)
 write(file_id,"(a)")"</DataItem>"
-end subroutine sll_xmf_dataitem_2d
+end subroutine sll_xml_dataitem_2d
 
-subroutine sll_xmf_dataitem_3d(file_id, filename, nnodes_x1, nnodes_x2, nnodes_x3, filetype)
+subroutine sll_xml_dataitem_3d(file_id, filename, nnodes_x1, nnodes_x2, nnodes_x3, filetype)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
 character(len=*), intent(in) :: filetype
@@ -138,10 +153,10 @@ write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nnodes_x3,nnodes_x2,nnodes_x1
 "' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
 write(file_id,"(a)")trim(filename)
 write(file_id,"(a)")"</DataItem>"
-end subroutine sll_xmf_dataitem_3d
+end subroutine sll_xml_dataitem_3d
 
 !> Write the description of a scalar field on a 2D mesh.
-!> \param[in] file_id   - the unit number or your xmf file
+!> \param[in] file_id   - the unit number or your xml file
 !> \param[in] fieldname - the dataset name where the heavy data are (hdf5 case)
 !> \param[in] filename  - the file name where the heavy data are (bin or h5)
 !> \param[in] npoints_1 - nodes or cells number along direction 1
@@ -151,46 +166,40 @@ end subroutine sll_xmf_dataitem_3d
 !> The file named filename-fieldname.bin must exist in case of binary output.
 !> The file named filename.h5 with dataset fieldname must exist in case of hdf5 output.
 !>
-subroutine sll_xmf_field_2d(file_id,fieldname,filename,npoints_1,npoints_2,center)
+subroutine sll_xml_field_2d(file_id,fieldname,filename,npoints_1,npoints_2,filetype,center)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
 character(len=*), intent(in) :: fieldname
 character(len=*), intent(in) :: center
+character(len=*), intent(in) :: filetype
 sll_int32, intent(in) :: npoints_1
 sll_int32, intent(in) :: npoints_2
 
 write(file_id,"(a)")"<Attribute Name='"//fieldname//"' AttributeType='Scalar' Center='"//center//"'>"
-#ifdef NOHDF5
-call sll_xmf_dataitem_2d(file_id,trim(filename)//"-"//fieldname//".bin",npoints_1,npoints_2,'Binary')
-#else
-call sll_xmf_dataitem_2d(file_id,trim(filename)//".h5:/"//fieldname,npoints_1,npoints_2,'HDF')
-#endif
+call sll_xml_dataitem_2d(file_id,filename,npoints_1,npoints_2,filetype)
 write(file_id,"(a)")"</Attribute>"
 
-end subroutine sll_xmf_field_2d
+end subroutine sll_xml_field_2d
 
-subroutine sll_xmf_field_3d(file_id,fieldname,filename,npoints_1,npoints_2,npoints_3,center)
+subroutine sll_xml_field_3d(file_id,fieldname,filename,npoints_1,npoints_2,npoints_3,filetype,center)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
 character(len=*), intent(in) :: fieldname
 character(len=*), intent(in) :: center
+character(len=*), intent(in) :: filetype
 sll_int32, intent(in) :: npoints_1
 sll_int32, intent(in) :: npoints_2
 sll_int32, intent(in) :: npoints_3
 
 write(file_id,"(a)")"<Attribute Name='"//fieldname//"' AttributeType='Scalar' Center='"//center//"'>"
-#ifdef NOHDF5
-call sll_xmf_dataitem_3d(file_id,trim(filename)//"-"//fieldname//".bin",npoints_1,npoints_2,npoints_3,'Binary')
-#else
-call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/"//fieldname,npoints_1,npoints_2,npoints_3,'HDF')
-#endif
+call sll_xml_dataitem_3d(file_id,filename,npoints_1,npoints_2,npoints_3,filetype)
 write(file_id,"(a)")"</Attribute>"
 
-end subroutine sll_xmf_field_3d
+end subroutine sll_xml_field_3d
 
 !> Write the description of a 2D strutured grid
 !> mesh with its nodes coordinates contains in filename-x1 and filename-x2.
-!> \param[in] file_id is the unit number or your xmf file
+!> \param[in] file_id is the unit number or your xml file
 !> \param[in] filename is the file name where the coordinates data are (bin or h5)
 !> \param[in] nnodes_x1 - nodes number along direction 1
 !> \param[in] nnodes_x2 - nodes number along direction 2
@@ -198,7 +207,7 @@ end subroutine sll_xmf_field_3d
 !> The file named filename-x1.bin and filename-x2.bin must exist in case of binary output.
 !> The file named filename.h5 with dataset x1 and x2 must exist in case of hdf5 output.
 !>
-subroutine sll_xmf_grid_geometry_2d(file_id, filename, nnodes_x1, nnodes_x2)
+subroutine sll_xml_grid_geometry_2d(file_id, filename, nnodes_x1, nnodes_x2)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
 sll_int32, intent(in) :: nnodes_x1
@@ -211,21 +220,21 @@ write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 
 #ifdef NOHDF5
 
-call sll_xmf_dataitem_2d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
-call sll_xmf_dataitem_2d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
+call sll_xml_dataitem_2d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
+call sll_xml_dataitem_2d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
 
 #else
 
-call sll_xmf_dataitem_2d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-call sll_xmf_dataitem_2d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
+call sll_xml_dataitem_2d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
+call sll_xml_dataitem_2d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
 
 #endif
 
 write(file_id,"(a)")"</Geometry>"
 
-end subroutine sll_xmf_grid_geometry_2d
+end subroutine sll_xml_grid_geometry_2d
 
-subroutine sll_xmf_grid_geometry_3d(file_id, filename,  &
+subroutine sll_xml_grid_geometry_3d(file_id, filename,  &
                                     nnodes_x1, nnodes_x2, nnodes_x3)
 sll_int32, intent(in) :: file_id
 character(len=*), intent(in) :: filename
@@ -240,20 +249,20 @@ write(file_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
 
 #ifdef NOHDF5
 
-call sll_xmf_dataitem_3d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
-call sll_xmf_dataitem_3d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
-call sll_xmf_dataitem_3d(file_id,trim(filename)//"-x3.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+call sll_xml_dataitem_3d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+call sll_xml_dataitem_3d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
 #else
 
-call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
-call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
-call sll_xmf_dataitem_3d(file_id,trim(filename)//".h5:/x3",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+call sll_xml_dataitem_3d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+call sll_xml_dataitem_3d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+call sll_xml_dataitem_3d(file_id,trim(filename)//".h5:/x3",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
 
 #endif
 
 write(file_id,"(a)")"</Geometry>"
 
-end subroutine sll_xmf_grid_geometry_3d
+end subroutine sll_xml_grid_geometry_3d
 
 
-end module sll_xmf_io
+end module sll_xml_io

@@ -1,6 +1,9 @@
 module sll_mapped_mesh_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+
+use sll_xdmf
+
   implicit none
   
   ! A single abstract base class is defined which will further be extended
@@ -124,7 +127,8 @@ contains
     sll_int32  :: i2
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_int32 :: ierr
+    sll_int32  :: ierr
+    sll_int32  :: file_id
 
     ! create 2D mesh
     SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
@@ -139,7 +143,11 @@ contains
        end do
        eta1 = eta1 + mesh%delta_eta1
     end do
-    call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,mesh%mesh_name)
+    
+    call sll_xdmf_open(trim(mesh%mesh_name),file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
+    call sll_xdmf_mesh(trim(mesh%mesh_name),x1mesh,x2mesh,ierr)
+    call sll_xdmf_close(file_id,ierr)
+
   end subroutine write_mapped_mesh_2d_base
 
 

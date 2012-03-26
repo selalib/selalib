@@ -43,6 +43,12 @@ use hdf5
 
 implicit none
 
+interface sll_hdf5_write_array
+module procedure sll_hdf5_write_array_1d
+module procedure sll_hdf5_write_array_2d
+module procedure sll_hdf5_write_array_3d
+end interface sll_hdf5_write_array
+
 contains
   
 !> Create HDF5 file :
@@ -118,6 +124,7 @@ NEW_HDF5_FUNCTION(sll_hdf5_write_array_2d, 2, array(:,:))
 !>    - Close dataset and dataspace
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 
+!Gysela functions that can be useful for future
 !  ! HDF5 saving for an integer
 !  subroutine HDF5_integer_saving(file_id,int,dsetname)
 !  ! HDF5 saving for a real double
