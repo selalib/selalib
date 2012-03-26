@@ -48,10 +48,10 @@ contains
   function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz) &
                                                          result(plan)
 
+    sll_int32                                    :: nx, ny, nz
     sll_comp64,                    dimension(nx) :: x
     sll_comp64,                    dimension(ny) :: y
     sll_comp64,                    dimension(nz) :: z
-    sll_int32                                    :: nx, ny, nz
     ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
     sll_int32                                    :: ierr
     sll_real64                                   :: Lx, Ly, Lz

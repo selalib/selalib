@@ -17,16 +17,16 @@ program radial_1d_SL
   sll_real64,dimension(:,:), pointer :: diag
 	
   !parameters
-  N=512
+  N=64
   Nr=N !128
   Ntheta=N!128
   rmin = 0.2_f64
   rmax = 0.8_f64
   test_case = 1
-  field_case = 3
-  dt = 0.01_f64
-  nb_step = 1
-  visu_step = 10
+  field_case = 1
+  dt = 1._f64/4._f64
+  nb_step = 4
+  visu_step = 1
   nb_diag = 4
   meth = 2
   jac = 1
@@ -175,7 +175,11 @@ program radial_1d_SL
             x = x + a1*dt
             y = y + a2*dt
             r = sqrt(x**2+y**2)
-            theta = acos(x/r)            
+            if(y>=0)then
+              theta = acos(x/r)
+            else
+              theta = 2._f64*sll_pi-acos(x/r)
+            endif
           endif
           
           if(theta>2._f64*sll_pi)then
@@ -260,7 +264,8 @@ program radial_1d_SL
 	    do j=1,Ntheta
 	      fh(i,j) = fh(i,j)*r
 	    enddo
-	  enddo  
+	    fh(i,Ntheta+1)=fh(i,1)
+	  enddo
 	endif
     call compute_spline_2D(fh,spl_natper)
     do i=1,Nr!+1
@@ -445,7 +450,8 @@ program radial_1d_SL
     !print*,'r/theta-feet',rmin+real(17-1,f64)*dr,rfeet(17,12),real(12-1,f64)*dtheta,thetafeet(17,12)
     
 		!print*,'avant',fh(17,12)
-    call deposit_value_2D(rfeet,thetafeet,spl_natper,fh)
+    call deposit_value_2D_bis(rfeet,thetafeet,spl_natper,fh)
+    !call deposit_value_2D(rfeet,thetafeet,spl_natper,fh)
     
     if(jac==1)then
 	  do i=1,Nr
