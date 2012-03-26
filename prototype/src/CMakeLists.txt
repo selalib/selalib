@@ -11,7 +11,7 @@ set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -ffree-line-length
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 #ajoute les modules locaux
-set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
+set (CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
 message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
 
 # recherche de HDF5
