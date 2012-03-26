@@ -174,8 +174,8 @@ contains
     sll_int32  :: j
     sll_int32  :: ierr
 
-    mesh%nc_eta1 = npts1
-    mesh%nc_eta2 = npts2
+    mesh%nc_eta1 = npts1-1
+    mesh%nc_eta2 = npts2-1
     delta_1       = 1.0_f64/(npts1 - 1)
     delta_2       = 1.0_f64/(npts2 - 1)
     mesh%delta_eta1   = delta_1
@@ -437,8 +437,8 @@ contains
        end if
     end if
 
-    mesh%nc_eta1  = npts1
-    mesh%nc_eta2  = npts2
+    mesh%nc_eta1  = npts1-1
+    mesh%nc_eta2  = npts2-1
     mesh%delta_eta1    = 1.0_f64/(npts1 - 1)
     mesh%delta_eta2    = 1.0_f64/(npts2 - 1)
     mesh%x1_interp => x1_interpolator
