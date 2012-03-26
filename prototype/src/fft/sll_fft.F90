@@ -107,14 +107,14 @@
 !------------------------------------------------------------------------------
 
 module sll_fft 
+#include "sll_working_precision.h"
+#include "misc_utils.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
   use numeric_constants
   use sll_timer
   use, intrinsic :: iso_c_binding
-!#include "conf.h"
-#include "sll_working_precision.h"
-#include "misc_utils.h"  
-#include "sll_assert.h"
-#include "sll_memory.h"
+
   implicit none
 #ifndef _NOFFTW
   include 'fftw3.f03'
@@ -147,19 +147,19 @@ module sll_fft
   !  sll_real64 :: fft_time_execution
   !end type sll_fft_plan
 
-  type fft_plan
-    type(C_PTR)                     :: fftw_plan
-
-    sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
-    sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
-    sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
-
-    sll_int32                       :: style
-    sll_int32                       :: library
-    sll_int32                       :: direction
-    sll_int32                       :: problem_rank
-    sll_int32, allocatable          :: problem_shape(:)
-  end type fft_plan
+!  type fft_plan
+!    type(C_PTR)                     :: fftw_plan
+!
+!    sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
+!    sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
+!    sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
+!
+!    sll_int32                       :: style
+!    sll_int32                       :: library
+!    sll_int32                       :: direction
+!    sll_int32                       :: problem_rank
+!    sll_int32, allocatable          :: problem_shape(:)
+!  end type fft_plan
 
   type sll_fft_plan
     type(C_PTR)                     :: fftw_plan
@@ -257,6 +257,7 @@ module sll_fft
   interface fft_is_present_flag
     module procedure fft_is_present_flag1,fft_is_present_flag2
   end interface
+
 contains
 
   function fft_is_present_flag1(plan,s) result(bool)
@@ -347,6 +348,24 @@ contains
 #endif 
 #endif
 
+
+  subroutine print_defaultfftlib()
+    print *, '----------------'
+    print *,  _DEFAULTFFTLIB
+    print *, '----------------'
+  end subroutine
+
+  function fft_default_lib_is(lib) result(bool)
+    sll_int32 :: lib
+    logical   :: bool
+    
+    if(_DEFAULTFFTLIB .eq. lib ) then
+      bool = .true.
+    else
+      bool = .false.
+    endif 
+  end function fft_default_lib_is
+
 #ifndef _NOFFTW
 #include "fftw_lib.F90"
 #endif
@@ -358,25 +377,6 @@ contains
 #ifndef _NOFFTSLL
 #include "my_lib.F90"
 #endif
-
-
-  subroutine print_defaultfftlib()
-    print *, '----------------'
-    print *,  _DEFAULTFFTLIB
-    print *, '----------------'
-  end subroutine
-
-  function fft_default_lib_is(lib) result(bool)
-    sll_int32 :: lib
-    logical :: bool
-    
-    if(_DEFAULTFFTLIB .eq. lib ) then
-      bool = .true.
-    else
-      bool = .false.
-    endif 
-  end function
-
 
 !#if ( _DEFAULTFFTLIB == FFTW_MOD ) || ( _DEFAULTFFTLIB == FFTPACK_MOD ) 
 !  function get_fft_mode(plan,data,k) result(mode)
@@ -816,13 +816,13 @@ INFO
 ! ---------------------
 ! - DEFAULT INTERFACE -
 ! ---------------------
-  function fft_new_r2r_1d(rank,n,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                        :: rank
-    sll_int32, dimension(:), intent(in)          :: n
+  function fft_new_r2r_1d(n,array_in,array_out,direction,flags) result(plan)
+    !sll_int32, intent(in)                        :: rank
+    sll_int32, intent(in)                        :: n
     sll_real64, dimension(:), intent(inout)      :: array_in, array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional, intent(in)              :: flags
-    type(sll_fft_plan), pointer                       :: plan
+    type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: nx
 
 #if defined(_NOFFTW) && _DEFAULTFFTLIB==FFTW_MOD
@@ -831,7 +831,7 @@ INFO
     stop 'The default library cannot be FFTW because she is not installed'
 #endif
   
-    nx = n(1)
+    nx = n
 
     if( size(array_in).ne.nx .or. size(array_out).ne.nx) then
       print * ,'Error in file sll_fft.F90'
@@ -985,8 +985,8 @@ INFO
     sll_int32, intent(in)                         :: nx,ny
     sll_real64, dimension(0:,0:), intent(inout)   :: array_in
     sll_comp64, dimension(0:,0:), intent(inout)   :: array_out
-    sll_int32, optional, intent(in)               :: flags
-    type(sll_fft_plan), pointer                       :: plan
+    sll_int32, optional                           :: flags
+    type(sll_fft_plan), pointer                   :: plan
 
     if( (size(array_in,dim=1).ne.nx) .and. (size(array_in,dim=2).ne.ny) ) then
       print * ,'Error in file sll_fft.F90'
@@ -1139,7 +1139,7 @@ INFO
   end subroutine
 
   subroutine fft_apply_r2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)               :: plan
+    type(sll_fft_plan), pointer, intent(in)           :: plan
     sll_real64, dimension(:,:), intent(inout)         :: array_in
     sll_comp64, dimension(:,:), intent(inout)         :: array_out
     sll_real64                                        :: factor
