@@ -55,10 +55,15 @@ module procedure sll_xdmf_open_2d
 module procedure sll_xdmf_open_3d
 end interface sll_xdmf_open
 
-interface sll_xdmf_write
+interface sll_xdmf_mesh
+module procedure sll_xdmf_mesh_2d
+module procedure sll_xdmf_mesh_3d
+end interface sll_xdmf_mesh
+
+interface sll_xdmf_field
 module procedure sll_write_data_2d
 module procedure sll_write_data_3d
-end interface sll_xdmf_write
+end interface sll_xdmf_field
 
 interface sll_xdmf_close
 module procedure sll_xml_file_close
@@ -66,86 +71,83 @@ end interface sll_xdmf_close
 
 contains  
 
-subroutine sll_xdmf_open_2d(prefix,file_id,x1,x2,error)
+subroutine sll_xdmf_open_2d(prefix,file_id,nnodes_x1,nnodes_x2,error)
 character(len=*), intent(in) :: prefix
 sll_int32, intent(out)       :: file_id
-sll_real64, intent(in)       :: x1(:,:)
-sll_real64, intent(in)       :: x2(:,:)
 sll_int32, intent(out)       :: error
 sll_int32                    :: nnodes_x1
 sll_int32                    :: nnodes_x2
-sll_int32                    :: data_id
-
-nnodes_x1 = size(x1,1)
-nnodes_x2 = size(x1,2)
-
-SLL_ASSERT( nnodes_x1 == size(x2,1) )
-SLL_ASSERT( nnodes_x2 == size(x2,2) )
 
 call sll_xml_file_create(prefix//".xmf",file_id,error)
 call sll_xml_grid_geometry(file_id, prefix, nnodes_x1, nnodes_x2)
-
-#ifdef NOHDF5
-call sll_binary_file_create(prefix//"-x1.bin",data_id,error)
-call sll_binary_write_array(data_id,x1,error)
-call sll_binary_file_close(data_id,error)
-call sll_binary_file_create(prefix//"-x2.bin",data_id,error)
-call sll_binary_write_array(data_id,x2,error)
-call sll_binary_file_close(data_id,error)
-#else
-call sll_hdf5_file_create(prefix//".h5",data_id,error)
-call sll_hdf5_write_array(data_id,x1,"/x1",error)
-call sll_hdf5_write_array(data_id,x2,"/x2",error)
-call sll_hdf5_file_close(data_id, error)
-#endif
-
 end subroutine sll_xdmf_open_2d
 
-subroutine sll_xdmf_open_3d(prefix,file_id,x1,x2,x3,error)
+subroutine sll_xdmf_mesh_2d(prefix,x1,x2,error)
+character(len=*), intent(in) :: prefix
+sll_real64, intent(in)       :: x1(:,:)
+sll_real64, intent(in)       :: x2(:,:)
+sll_int32, intent(out)       :: error
+sll_int32                    :: file_id
+
+#ifdef NOHDF5
+call sll_binary_file_create(prefix//"-x1.bin",file_id,error)
+call sll_binary_write_array(file_id,x1,error)
+call sll_binary_file_close(file_id,error)
+call sll_binary_file_create(prefix//"-x2.bin",file_id,error)
+call sll_binary_write_array(file_id,x2,error)
+call sll_binary_file_close(file_id,error)
+#else
+call sll_hdf5_file_create(prefix//".h5",file_id,error)
+call sll_hdf5_write_array(file_id,x1,"/x1",error)
+call sll_hdf5_write_array(file_id,x2,"/x2",error)
+call sll_hdf5_file_close(file_id, error)
+#endif
+
+end subroutine sll_xdmf_mesh_2d
+
+subroutine sll_xdmf_open_3d(prefix,file_id,nnodes_x1,nnodes_x2,nnodes_x3,error)
 character(len=*), intent(in) :: prefix
 sll_int32, intent(out)       :: file_id
-sll_real64, intent(in)       :: x1(:,:,:)
-sll_real64, intent(in)       :: x2(:,:,:)
-sll_real64, intent(in)       :: x3(:,:,:)
 sll_int32, intent(out)       :: error
-sll_int32                    :: data_id
 sll_int32                    :: nnodes_x1
 sll_int32                    :: nnodes_x2
 sll_int32                    :: nnodes_x3
 
-nnodes_x1 = size(x1,1)
-nnodes_x2 = size(x1,2)
-nnodes_x3 = size(x1,3)
-
-SLL_ASSERT( nnodes_x1 == size(x2,1) )
-SLL_ASSERT( nnodes_x2 == size(x2,2) )
-SLL_ASSERT( nnodes_x3 == size(x2,3) )
-SLL_ASSERT( nnodes_x1 == size(x3,1) )
-SLL_ASSERT( nnodes_x2 == size(x3,2) )
-SLL_ASSERT( nnodes_x3 == size(x3,3) )
-
 call sll_xml_file_create(prefix//".xmf",file_id,error)
 call sll_xml_grid_geometry(file_id, prefix, nnodes_x1, nnodes_x2, nnodes_x3)
 
+end subroutine sll_xdmf_open_3d
+
+subroutine sll_xdmf_mesh_3d(prefix,x1,x2,x3,error)
+character(len=*), intent(in) :: prefix
+sll_real64, intent(in)       :: x1(:,:,:)
+sll_real64, intent(in)       :: x2(:,:,:)
+sll_real64, intent(in)       :: x3(:,:,:)
+sll_int32, intent(out)       :: error
+sll_int32                    :: file_id
+sll_int32                    :: nnodes_x1
+sll_int32                    :: nnodes_x2
+sll_int32                    :: nnodes_x3
+
 #ifdef NOHDF5
-call sll_binary_file_create(prefix//"-x1.bin",data_id,error)
-call sll_binary_write_array(data_id,x1,error)
-call sll_binary_file_close(data_id,error)
-call sll_binary_file_create(prefix//"-x2.bin",data_id,error)
-call sll_binary_write_array(data_id,x2,error)
-call sll_binary_file_close(data_id,error)
-call sll_binary_file_create(prefix//"-x3.bin",data_id,error)
-call sll_binary_write_array(data_id,x3,error)
-call sll_binary_file_close(data_id,error)
+call sll_binary_file_create(prefix//"-x1.bin",file_id,error)
+call sll_binary_write_array(file_id,x1,error)
+call sll_binary_file_close(file_id,error)
+call sll_binary_file_create(prefix//"-x2.bin",file_id,error)
+call sll_binary_write_array(file_id,x2,error)
+call sll_binary_file_close(file_id,error)
+call sll_binary_file_create(prefix//"-x3.bin",file_id,error)
+call sll_binary_write_array(file_id,x3,error)
+call sll_binary_file_close(file_id,error)
 #else
-call sll_hdf5_file_create(prefix//".h5",data_id,error)
-call sll_hdf5_write_array(data_id,x1,"/x1",error)
-call sll_hdf5_write_array(data_id,x2,"/x2",error)
-call sll_hdf5_write_array(data_id,x3,"/x3",error)
-call sll_hdf5_file_close(data_id, error)
+call sll_hdf5_file_create(prefix//".h5",file_id,error)
+call sll_hdf5_write_array(file_id,x1,"/x1",error)
+call sll_hdf5_write_array(file_id,x2,"/x2",error)
+call sll_hdf5_write_array(file_id,x3,"/x3",error)
+call sll_hdf5_file_close(file_id, error)
 #endif
 
-end subroutine sll_xdmf_open_3d
+end subroutine sll_xdmf_mesh_3d
 
 
 subroutine sll_write_data_2d(prefix,xmffile_id,array,array_name,center,error)
