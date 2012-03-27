@@ -145,7 +145,7 @@ contains
     end do
     
     call sll_xdmf_open(trim(mesh%mesh_name),file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
-    call sll_xdmf_mesh(trim(mesh%mesh_name),x1mesh,x2mesh,ierr)
+    call sll_xdmf_write_mesh(trim(mesh%mesh_name),x1mesh,x2mesh,ierr)
     call sll_xdmf_close(file_id,ierr)
 
   end subroutine write_mapped_mesh_2d_base
