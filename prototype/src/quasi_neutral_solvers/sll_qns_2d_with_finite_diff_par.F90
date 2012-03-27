@@ -7,7 +7,7 @@
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
 !> Some arrays are here in 3D for remap utilities
 !> Start date: March 13, 2012
-!> Last modification: March 26, 2012
+!> Last modification: March 27, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -79,7 +79,7 @@ contains
 
     if ( colsz > min(nr,ntheta) ) then     
        print *, 'This test needs to run in a number of processes which',  &
-                ' is less than', min(nr,ntheta)
+                ' is less than or equal', min(nr,ntheta)
        print *, 'Exiting...'
        stop
     end if
