@@ -8,7 +8,7 @@
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
 !> Some arrays are here in 3D for remap utilities
 !> Start date: March 12, 2012
-!> Last modification: March 23, 2012
+!> Last modification: March 26, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -101,13 +101,13 @@ contains
 
     type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
     sll_real64                                      :: dr, dtheta 
-    sll_int32                                       :: nr, ntheta, i, j, ierr
+    sll_int32                                       :: nr, ntheta, i, j
     sll_real64, dimension(:,:)                      :: phi
-    sll_comp64, dimension(:,:), allocatable         :: tild_rho, tild_phi
-    sll_comp64, dimension(:),   allocatable         :: b, f, g
-    sll_int32, dimension(:),    allocatable         :: ipiv
-    sll_real64, dimension(:),   allocatable         :: a_resh ! 3*n
-    sll_real64, dimension(:),   allocatable         :: cts  ! 7*n allocation
+    sll_comp64, dimension(plan%nr,plan%ntheta)      :: tild_rho, tild_phi
+    sll_comp64, dimension(plan%ntheta)              :: f, g
+    sll_int32, dimension(plan%nr)                   :: ipiv
+    sll_real64, dimension(3*plan%nr)                :: a_resh ! 3*n
+    sll_real64, dimension(7*plan%nr)                :: cts  ! 7*n allocation
 
     nr = plan%nr
     ntheta = plan%ntheta
@@ -117,15 +117,6 @@ contains
        dr = (plan%rmax-plan%rmin)/(nr+1)
     endif
     dtheta = 2*sll_pi/ntheta
-
-    SLL_ALLOCATE( f(ntheta), ierr )
-    SLL_ALLOCATE( g(ntheta), ierr )
-    SLL_ALLOCATE( tild_rho(nr,ntheta), ierr )
-    SLL_ALLOCATE( tild_phi(nr,ntheta), ierr )
-    SLL_ALLOCATE( b(nr), ierr ) 
-    SLL_ALLOCATE( ipiv(nr), ierr ) 
-    SLL_ALLOCATE( a_resh(3*nr), ierr )    
-    SLL_ALLOCATE( cts(7*nr), ierr )
 
     tild_rho = cmplx(plan%rho, 0_f64, kind=f64)
     f = cmplx(plan%f, 0_f64, kind=f64)
@@ -155,11 +146,10 @@ contains
        else ! 'dirichlet'
           call dirichlet_matrix_resh_seq(plan, j-1, a_resh)
        endif
-       b = tild_rho(:,j) 
        ! b is given by taking the FFT in the theta-direction of rho_{r,theta}      
        ! Solving the linear system: Ax = b  
        call setup_cyclic_tridiag( a_resh, nr, cts, ipiv )
-       call solve_cyclic_tridiag( cts, ipiv, b, nr, tild_phi(:,j))         
+       call solve_cyclic_tridiag( cts, ipiv, tild_rho(:,j), nr, tild_phi(:,j))         
     enddo
 
     ! Solution phi of the Quasi-neutral equation is given by taking the inverse
@@ -169,15 +159,6 @@ contains
     enddo
 
     phi = real(tild_phi, f64)/ntheta
-
-    SLL_DEALLOCATE_ARRAY( f, ierr )
-    SLL_DEALLOCATE_ARRAY( g, ierr )
-    SLL_DEALLOCATE_ARRAY( tild_rho, ierr )
-    SLL_DEALLOCATE_ARRAY( tild_phi, ierr )
-    SLL_DEALLOCATE_ARRAY( b, ierr )    
-    SLL_DEALLOCATE_ARRAY( ipiv, ierr )
-    SLL_DEALLOCATE_ARRAY( a_resh, ierr )    
-    SLL_DEALLOCATE_ARRAY( cts, ierr )
 
   end subroutine solve_qn_2d_with_finite_diff_seq
 
@@ -209,78 +190,65 @@ contains
     type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
     sll_real64                                      :: dr, dtheta, Zi
     sll_real64                                      :: r, rmin, rmax
-    sll_int32                                       :: i, j, nr, ierr
+    sll_int32                                       :: i, j, nr
     sll_real64, dimension(:)                        :: a_resh
-    sll_real64, dimension(:), allocatable           :: c, Te 
-    ! C & Te are the vector of the Cr & Te(i) respectively
 
     nr = plan%nr
     rmin = plan%rmin
     rmax = plan%rmax
     dr = (rmax-rmin)/(nr+1)
     dtheta = 2*sll_pi / plan%ntheta
-    SLL_ALLOCATE( c(nr), ierr )
-    c = plan%c
-    SLL_ALLOCATE( Te(nr), ierr )
-    Te = plan%Te
     Zi = plan%Zi        
 
     a_resh = 0.d0
 
     do i=1,nr
        r = rmin + i*dr
-       if (i>1) a_resh(3*(i-1)+1) = -(1/dr**2 - c(i)/(2*dr))
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2 + 1/(Zi*Te(i)) &
-                                      - 2*cos(j*dtheta)/(r*dtheta)**2
-       if (i<nr) a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
+       if (i>1) then
+          a_resh(3*(i-1)+1) = -(1/dr**2 - plan%c(i)/(2*dr))
+       endif
+       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2 + 1/(Zi*plan%Te(i)) &
+                                           - 2*cos(j*dtheta)/(r*dtheta)**2
+       if (i<nr) then
+          a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
+       endif
     enddo
-
-    SLL_DEALLOCATE_ARRAY( c, ierr )
-    SLL_DEALLOCATE_ARRAY( Te, ierr )
 
   end subroutine dirichlet_matrix_resh_seq
 
 
   subroutine neumann_matrix_resh_seq(plan, j, a_resh)
+
     type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
     sll_real64                                      :: dr, dtheta, Zi
     sll_real64                                      :: rmin, rmax, r
-    sll_int32                                       :: i, j, nr, ierr
+    sll_int32                                       :: i, j, nr
     sll_real64, dimension(:)                        :: a_resh
-    sll_real64, dimension(:), allocatable           :: c, Te 
-    ! c & Te are the vector of the cr & Te(i) respectively
 
     nr = plan%nr
     rmin = plan%rmin
     rmax = plan%rmax
     dr = (rmax-rmin)/(nr-1)
     dtheta = 2*sll_pi / plan%ntheta
-    SLL_ALLOCATE( c(nr), ierr )
-    c = plan%c
-    SLL_ALLOCATE( Te(nr), ierr )
-    Te = plan%Te
     Zi = plan%Zi
 
     a_resh = 0.d0
 
     a_resh(2) = 2/dr**2 + 2/(rmin*dtheta)**2 * &
-                (-cos(j*dtheta)+1) + 1/(Zi*Te(1))
+                (-cos(j*dtheta)+1) + 1/(Zi*plan%Te(1))
     a_resh(3) = -2/dr**2
 
     do i=2,nr-1
        r = rmin + (i-1)*dr
-       a_resh(3*(i-1)+1) = -(1/dr**2 - c(i)/(2*dr))
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2 + 1/(Zi*Te(i)) - &
-                                          2*cos(j*dtheta)/(r*dtheta)**2
-       a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
+       a_resh(3*(i-1)+1) = -(1/dr**2 - plan%c(i)/(2*dr))
+       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2 + 1/(Zi*plan%Te(i)) - &
+                                               2*cos(j*dtheta)/(r*dtheta)**2
+       a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
     enddo
 
     a_resh(3*(nr-1)+1) = -2/dr**2
     a_resh(3*(nr-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2 * &
-                       (-cos(j*dtheta)+1) + 1/(Zi*Te(nr))
-
-    SLL_DEALLOCATE_ARRAY( c, ierr )
-    SLL_DEALLOCATE_ARRAY( Te, ierr )
+                       (-cos(j*dtheta)+1) + 1/(Zi*plan%Te(nr))
 
   end subroutine neumann_matrix_resh_seq
 
