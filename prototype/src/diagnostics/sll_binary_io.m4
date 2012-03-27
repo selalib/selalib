@@ -85,42 +85,24 @@ close(file_id, IOSTAT=error)
 
 end subroutine sll_binary_file_close
 
-
+define(`NEW_FUNCTION',`
+subroutine `$1'(file_id,array,error)
+sll_int32 , intent(in)       :: file_id
+sll_int32 , intent(out)      :: error
+sll_real64, intent(in)       :: `$2'
+                                
+write(file_id,IOSTAT=error) array
+                               
+end subroutine `$1'
+')
 
 !> Write a 1D array in the binary file file_id
-
-subroutine sll_binary_write_array_1d(file_id,array,error)
-sll_int32 , intent(in)       :: file_id
-sll_int32 , intent(out)      :: error
-sll_real64, intent(in)       :: array(:)
-                                
-write(file_id,IOSTAT=error) array
-                               
-end subroutine sll_binary_write_array_1d
-
+NEW_FUNCTION(sll_binary_write_array_1d, array(:))
 
 !> Write a 2D array in the binary file file_id
-
-subroutine sll_binary_write_array_2d(file_id,array,error)
-sll_int32 , intent(in)       :: file_id
-sll_int32 , intent(out)      :: error
-sll_real64, intent(in)       :: array(:,:)
-                                
-write(file_id,IOSTAT=error) array
-                               
-end subroutine sll_binary_write_array_2d
-
+NEW_FUNCTION(sll_binary_write_array_2d, array(:,:))
 
 !> Write a 3D array in the binary file file_id
-
-subroutine sll_binary_write_array_3d(file_id,array,error)
-sll_int32 , intent(in)       :: file_id
-sll_int32 , intent(out)      :: error
-sll_real64, intent(in)       :: array(:,:,:)
-                                
-write(file_id,IOSTAT=error) array
-                               
-end subroutine sll_binary_write_array_3d
-
+NEW_FUNCTION(sll_binary_write_array_3d, array(:,:,:))
 
 end module sll_binary_io
