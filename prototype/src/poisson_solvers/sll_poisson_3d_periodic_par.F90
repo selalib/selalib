@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 26, 2012
+!> Last modification: March 27, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -81,7 +81,7 @@ contains
 
     if ( colsz > min(nx,ny,nz) ) then     
        print *, 'This test needs to run in a number of processes which',  &
-                'is less than', min(nx,ny,nz)
+                ' is less than or equal', min(nx,ny,nz)
        print *, 'Exiting...'
        stop
     end if
