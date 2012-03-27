@@ -21,14 +21,14 @@ SLLLIBS = ['sll_memory','sll_precision','sll_assertion']
 env = Environment( variables  = vars,
                    ENV        = os.environ, 
                    F90FLAGS   = ['-cpp',
-                                 '-pedantic','-std=f2003', 
+                                 '-pedantic',
+                                 '-std=f2003', 
                                  '-ffree-line-length-none'],
                    F90PATH    = SLLPATH+['${HDF5INCPATH}','${HDF5INCPATH}'],
                    LIBPATH    = ['.','${HDF5LIBPATH}'],
                    LIBS       = SLLLIBS)
 
 Help(vars.GenerateHelpText(env))
-
 
 env.Append(CPPDEFINES=['GFORTRAN', 'DEBUG'])
 
@@ -42,9 +42,31 @@ for key, value in ARGLIST:
        env.Replace(LIBS=SLLLIBS)
 
 
+#Pour tester sans hdf5 decommenter cette ligne
 #env.Append(CPPDEFINES=['NOHDF5'])
-#env.PrependENVPath('PATH', env.subst('${COMPILERDIR}'))
-#env.PrependENVPath('PATH', '/opt/local/bin')
+
+env.Library('sll_memory',  ["../memory/sll_memory.F90"])
+env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
+env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
+
+sll_hdf5_io_m4 = env.M4('sll_hdf5_io.F90','sll_hdf5_io.m4')
+sll_ascii_io_m4 = env.M4('sll_ascii_io.F90','sll_ascii_io.m4')
+sll_binary_io_m4 = env.M4('sll_binary_io.F90','sll_binary_io.m4')
+
+sll_hdf5_io = env.Object('sll_hdf5_io.F90')
+sll_ascii_io = env.Object('sll_ascii_io.F90')
+sll_binary_io = env.Object('sll_binary_io.F90')
+
+env.Depends(sll_hdf5_io,sll_hdf5_io_m4)
+env.Depends(sll_ascii_io,sll_ascii_io_m4)
+env.Depends(sll_binary_io,sll_binary_io_m4)
+
+sll_diagnostics = env.Object('sll_diagnostics.F90')
+env.Depends(sll_diagnostics,[sll_hdf5_io,sll_ascii_io,sll_binary_io])
+
+env.Program('unit_test', ["unit_test.F90"]+Glob("sll_*.F90"))
+
+
 
 ##Check gcc and gfortran version
 #ff = os.popen('gfortran --version')
@@ -54,8 +76,3 @@ for key, value in ARGLIST:
 #if float(gcc_version) < 4.5:
 #   print 'gfortran version number '+gcc_version+' less than 4.5'
 #   exit();
-
-env.Library('sll_memory',  ["../memory/sll_memory.F90"])
-env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
-env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
-env.Program('unit_test', ["unit_test.F90"]+Glob("sll_*.F90"))

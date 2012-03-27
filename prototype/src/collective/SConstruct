@@ -24,7 +24,7 @@ env = Environment(
                    LINK = 'mpif90',
                    LIBPATH= ['.','${LD_LIBRARY_PATH}'],
                    LIBS=['sll_memory','sll_precision','sll_assert'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', '-ffree-line-length-none'] )
+                   F90FLAGS = ['-std=f2003','-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', '-ffree-line-length-none'] )
 # -std=f2003 Does this work since we are including mpif.h????????
 
 env.Library('sll_memory',["../memory/sll_memory.F90"])
