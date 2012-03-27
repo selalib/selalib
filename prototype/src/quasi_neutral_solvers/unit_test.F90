@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
 !> Start date: March 20, 2012
-!> Last modification: March 22, 2012
+!> Last modification: March 26, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -40,7 +40,7 @@ implicit none
 
   bc = 'neumann'
   bc = 'dirichlet'
-  nr = 256
+  nr = 258
   ntheta = 1024
   rmin = 1.d0
   rmax = 10.d0
@@ -76,7 +76,7 @@ contains
     sll_real64                                       :: dr, dtheta
     sll_real64                                       :: r, theta
     sll_real64, dimension(nr,ntheta)                 :: rho_seq, phi_seq
-    sll_real64, dimension(nr,ntheta)                 :: phi_an, bound_error
+    sll_real64, dimension(nr,ntheta)                 :: phi_an
     sll_real64, dimension(:,:), allocatable          :: rho_par, phi_par
     sll_int32                                        :: i, j
     type (qns_2d_with_finite_diff_plan_seq), pointer :: plan_seq
@@ -92,8 +92,6 @@ contains
     sll_real32, dimension(1)                         :: prod4test
     type(layout_3D_t), pointer                       :: layout
     sll_int64                                        :: colsz ! collective size
-    sll_int32                                        :: npx, npy, npz
-    sll_int32                                        :: e
 
     if (bc=='neumann') then
        dr = (rmax-rmin)/(nr-1)
@@ -107,13 +105,15 @@ contains
     SLL_ALLOCATE(g(ntheta), ierr)
 
     f = 0.d0
+    average_err_bound  = 0.d0
 
     do j=1,ntheta
 
        theta = (j-1)*dtheta
-        if (bc=='neumann') then
-           f(j) = sin(rmax-rmin)*cos(theta)
-        endif
+       Mr = 4*abs(cos(theta))
+       if (bc=='neumann') then
+          f(j) = sin(rmax-rmin)*cos(theta)
+       endif
 
        do i=1,nr
           if (bc=='neumann') then
@@ -125,11 +125,10 @@ contains
           endif
           phi_an(i,j)  = sin(r-rmin)*sin(rmax-r)*cos(theta)
           rho_seq(i,j) = cos(theta) * ( 2*cos(rmin+rmax-2*r) - c(i)* sin( &
-           rmin+rmax-2*r) + (1/r**2+1/(Zi*Te(i)))*sin(rmax-r)*sin(r-rmin) )
-          Mr = 4*abs(cos(theta))
+              rmin+rmax-2*r)+(1/r**2+1/(Zi*Te(i)))*sin(rmax-r)*sin(r-rmin))
           Mtheta = abs(sin(r-rmin)*sin(rmax-r))
-          bound_error(i,j) = Mr*dr**2/12 + abs(c(i))*Mr*dr**2/6 + &
-                             Mtheta*dtheta**2/(r**2*12)
+          average_err_bound = average_err_bound + &
+          Mr*dr**2/12 + abs(c(i))*Mr*dr**2/6 + Mtheta*dtheta**2/(r**2*12)
        enddo
 
     enddo
@@ -149,8 +148,8 @@ contains
     plan_seq => new_qns_2d_with_finite_diff_plan_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
     call solve_qn_2d_with_finite_diff_seq(plan_seq, phi_seq)
 
-    average_err = sum( abs(phi_an-phi_seq) ) / (nr*ntheta)
-    average_err_bound = sum(bound_error)/(nr*ntheta)
+    average_err = sum(abs(phi_an-phi_seq))/(nr*ntheta)
+    average_err_bound = average_err_bound/(nr*ntheta)
 
     if (myrank==0) then
        call flush()
@@ -184,26 +183,16 @@ contains
        print*, 'Testing "sll_qns_2d_with_finite_diff_par"...'
     endif
 
-print*, ' '
-print*, '"sll_qns_2d_with_finite_diff_par" is not available yet'
-print*, ' '
-stop
-
     colsz  = sll_get_collective_size(sll_world_collective)
-    e = int(log(real(colsz))/log(2.))
 
-    ! Layout and local sizes for FFTs in x-direction
     layout => new_layout_3D( sll_world_collective )
-    npx = 1
-    npy = 2**(e/2)
-    npz = int(colsz)/npy
-    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, npx, npy, npz, layout )
+    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, int(colsz), 1, 1, layout )
 
+    nr_loc = nr/int(colsz)
+    ntheta_loc = ntheta
 
-    !call compute_local_sizes( layout, nr_loc, ntheta_loc, nz_loc )
-nr_loc = nr/npx; ntheta_loc = ntheta ! provisional
     SLL_ALLOCATE(rho_par(nr_loc,ntheta_loc), ierr)
-    plan_par => new_qns_2d_with_finite_diff_plan_par(layout, bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
+    SLL_ALLOCATE(phi_par(nr_loc,ntheta_loc), ierr)
 
     do j=1,ntheta_loc
        do i=1,nr_loc
@@ -214,40 +203,47 @@ nr_loc = nr/npx; ntheta_loc = ntheta ! provisional
         enddo
     enddo
    
-    SLL_ALLOCATE(phi_par(nr_loc,ntheta_loc), ierr)
-    !call solve_qn_2d_with_finite_diff_par(plan_par, phi_par)
-
+    plan_par => new_qns_2d_with_finite_diff_plan_par(bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
+    call solve_qn_2d_with_finite_diff_par(plan_par, phi_par)
+!print*, phi_par
     average_err  = 0.d0
+    average_err_bound  = 0.d0
     seq_par_diff = 0.d0
 
     do j=1,ntheta_loc
        do i=1,nr_loc
-          global = local_to_global_3D( layout, (/i, j, 1/))
+          global = local_to_global_3D(layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
           average_err  = average_err  + abs( phi_an (gi,gj) - phi_par(i,j) )
+          Mr = 4*abs(cos(theta))
+          Mtheta = abs(sin(r-rmin)*sin(rmax-r))
+          average_err_bound = average_err_bound + Mr*dr**2/12 + abs(c(gi))*Mr*dr**2/6 + &
+                                                               Mtheta*dtheta**2/(r**2*12)
           seq_par_diff = seq_par_diff + abs( phi_seq(gi,gj) - phi_par(i,j) )
        enddo
     enddo
 
-    average_err  = average_err  / (nr_loc*ntheta_loc)
-    seq_par_diff = seq_par_diff / (nr_loc*ntheta_loc)
+    average_err  = average_err/(nr_loc*ntheta_loc)
+    average_err_bound = average_err_bound/(nr_loc*ntheta_loc)
+    seq_par_diff = seq_par_diff/(nr_loc*ntheta_loc)
 
     call flush()
     print*, ' '
     call flush()
     print*, 'Average error in proc', myrank, ':', average_err
     call flush()
-    print*, 'dr*dtheta =', dr*dtheta
+    print*, 'Boundary average error =', average_err_bound
     call flush()
     print*, 'Average diff between seq sol and par sol in proc', myrank, ':', seq_par_diff
 
-    if ( average_err > dr*dtheta) then
+    if ( average_err > average_err_bound) then
        ok = 1.d0
        call flush()
        print*, ' '
        call flush()
        print*, 'Test stopped by "sll_qns_2d_with_finite_diff_par" test'
+print*, phi_par
        call flush()
        print*, 'myrank=', myrank
        call flush()
