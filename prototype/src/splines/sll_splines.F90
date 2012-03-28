@@ -1469,6 +1469,332 @@ contains  ! ****************************************************************
        STOP
     end select
   end subroutine compute_spline_2D
+	
+  subroutine deposit_value_2D(x1, x2, spline, a_out)
+	  intrinsic :: real, int
+	  sll_real64, dimension(1:,1:), intent(in)      :: x1
+    sll_real64, dimension(1:,1:), intent(in)      :: x2
+    type(sll_spline_2D), pointer                  :: spline
+		
+		sll_real64, dimension(:,:),intent(out)  			:: a_out
+		
+    sll_real64    :: cij   ! C_ij
+    sll_real64    :: x1_min
+    sll_real64    :: x2_min
+    sll_real64    :: dx1
+    sll_real64    :: dx2
+    sll_real64    :: cdx1  ! 1-dx1
+    sll_real64    :: cdx2  ! 1-dx2
+    sll_int32     :: cell1
+    sll_int32     :: cell2
+    sll_real64    :: rh1
+    sll_real64    :: rh2
+		sll_int32     :: n1
+    sll_int32     :: n2
+		
+		! variables locales
+    sll_int32     :: i1
+    sll_int32     :: i2
+		
+    sll_real64    :: svalx1, svalx2, svalx3, svalx4
+    sll_real64    :: svaly1, svaly2, svaly3, svaly4
+    sll_real64    :: ax1, ax2, ax3, ay1, ay2, ay3
+		
+    sll_real64     :: t1,t2
+    sll_int32     :: ipm1,ip,ipp1,ipp2
+    sll_int32     :: jpm1,jp,jpp1,jpp2
+		
+    x1_min     = spline%x1_min
+    x2_min     = spline%x2_min
+    rh1        = spline%x1_rdelta
+    rh2        = spline%x2_rdelta
+				
+		n1         = size(x1,1)
+		n2         = size(x1,2)
+		
+		a_out = 0._f64
+		
+    do i1 = 1,n1
+      do i2 = 1,n2-1
+		
+			! find the cell and offset for x1
+      t1         = (x1(i1,i2)-x1_min)*rh1
+      cell1       = floor(t1) + 1
+      dx1         = t1- real(cell1-1)
+      cdx1        = 1.0_f64 - dx1
+		
+			! find the cell and offset for x2
+      t2         = (x2(i1,i2)-x2_min)*rh2
+      cell2      = floor(t2) + 1
+      dx2        = t2 - real(cell2-1)
+      cdx2       = 1.0_f64 - dx2
+			
+			!print*,'données début de boucle',i1,i2,x1(i1,i2),x2(i1,i2)
+			!print*,'cell',t1,t2,cell1,cell2
+		
+			if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
+				print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
+			end if
+			
+			if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
+				print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
+			end if
+
+      cij = spline%coeffs(i1,i2)
+			!print*,'taille tableau coeff',lbound(spline%coeffs,1),n1,ubound(spline%coeffs,1),lbound(spline%coeffs,2),n2,ubound(spline%coeffs,2)
+			
+      ipm1=cell1-1
+      ip  =cell1  
+			ipp1=cell1+1
+      ipp2=cell1+2
+			
+      !jpm1=mod(cell2-1,n2)
+      !jp  =mod(cell2  ,n2)
+      !jpp1=mod(cell2+1,n2)
+      !jpp2=mod(cell2+2,n2)
+
+      jpm1 = mod(cell2-1+n2-2,n2-1)+1
+      jp = mod(cell2+n2-2,n2-1)+1
+      jpp1 = mod(cell2+1+n2-2,n2-1)+1
+      jpp2 = mod(cell2+2+n2-2,n2-1)+1
+			
+			!print*,'1',ipm1,ip,ipp1,ipp2
+			!print*,'2',jpm1,jp,jpp1,jpp2
+			
+      ax1 = cdx1 
+      ax2 = ax1*ax1
+      ax3 = ax2*ax1
+      ay1 = cdx2
+      ay2 = ay1*ay1
+      ay3 = ay2*ay1
+									
+      svalx1 = ax3/6._f64*cij
+      svalx2 = (0.5_f64*(-ax3+ax2+ax1)+1._f64/6._f64)*cij
+      svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)*cij
+      svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))*cij
+		
+      svaly1 = ay3/6._f64
+      svaly2 = 0.5_f64*(-ay3+ay2+ay1) + 1._f64/6._f64
+      svaly3 = 2._f64/3.0_f64 - ay2 + 0.5_f64*ay3
+      svaly4 = (1._f64-ay3)/6._f64 +0.5_f64*(ay2-ay1)
+			
+			if (ipm1.ge.0) then
+				a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + svalx1*svaly1
+				a_out(ipm1,jp)   = a_out(ipm1,jp)   + svalx1*svaly2
+				a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + svalx1*svaly3
+				a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + svalx1*svaly4
+			end if
+			
+			a_out(ip,jpm1) = a_out(ip,jpm1) + svalx2*svaly1
+			a_out(ip,jp)   = a_out(ip,jp)   + svalx2*svaly2 
+			a_out(ip,jpp1) = a_out(ip,jpp1) + svalx2*svaly3
+			a_out(ip,jpp2) = a_out(ip,jpp2) + svalx2*svaly4
+				  
+			if (ipp1.le.n1) then
+				a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + svalx3*svaly1
+				a_out(ipp1,jp)   = a_out(ipp1,jp)   + svalx3*svaly2
+				a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + svalx3*svaly3
+				a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + svalx3*svaly4
+			end if
+			
+			if (ipp2.le.n1) then
+				a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + svalx4*svaly1
+				a_out(ipp2,jp)   = a_out(ipp2,jp)   + svalx4*svaly2
+				a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + svalx4*svaly3
+				a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + svalx4*svaly4
+			end if
+						
+		!if (i1.eq.1) then
+		! a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
+		!	a_out(1,jp)	 = a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
+		!	a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
+		!	a_out(1,jpp2) = a_out(1,jpp2) + spline%coeffs(0,i2)/6._f64*svaly4
+		!end if	
+		
+		!if (i1.eq.n1) then
+		!	a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
+		!	a_out(n1,jp)	 = a_out(n1,jp)	  + spline%coeffs(n1+1,i2)/6._f64*svaly2
+		!	a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
+		!	a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
+		!end if	
+		
+      end do
+    end do
+	a_out(:,n2) = a_out(:,1)			 
+  end subroutine deposit_value_2D
+
+
+  subroutine deposit_value_2D_bis(x1, x2, spline, a_out)
+	  intrinsic :: real, int
+	  sll_real64, dimension(1:,1:), intent(in)      :: x1
+    sll_real64, dimension(1:,1:), intent(in)      :: x2
+    type(sll_spline_2D), pointer                  :: spline
+		
+		sll_real64, dimension(:,:),intent(out)  			:: a_out
+		
+    sll_real64    :: cij   ! C_ij
+    sll_real64    :: x1_min
+    sll_real64    :: x2_min
+    sll_real64    :: dx1
+    sll_real64    :: dx2
+    sll_real64    :: cdx1  ! 1-dx1
+    sll_real64    :: cdx2  ! 1-dx2
+    sll_int32     :: cell1
+    sll_int32     :: cell2
+    sll_real64    :: rh1
+    sll_real64    :: rh2
+		sll_int32     :: n1
+    sll_int32     :: n2
+		
+		! variables locales
+    sll_int32     :: i1
+    sll_int32     :: i2
+		
+    sll_real64    :: svalx1, svalx2, svalx3, svalx4
+    sll_real64    :: svaly1, svaly2, svaly3, svaly4
+    sll_real64    :: ax1, ax2, ax3, ay1, ay2, ay3
+		
+    sll_real64     :: t1,t2
+    sll_int32     :: ipm1,ip,ipp1,ipp2
+    sll_int32     :: jpm1,jp,jpp1,jpp2
+		
+    x1_min     = spline%x1_min
+    x2_min     = spline%x2_min
+    rh1        = spline%x1_rdelta
+    rh2        = spline%x2_rdelta
+				
+		n1         = size(x1,1)
+		n2         = size(x1,2)
+		
+		a_out = 0._f64
+		
+    do i1 = 1,n1
+      do i2 = 1,n2-1
+		
+			! find the cell and offset for x1
+      t1         = (x1(i1,i2)-x1_min)/(spline%x1_max-spline%x1_min)
+      if(t1>=1._f64)then
+        t1=1._f64-1.e-14
+      endif
+      if(t1<0._f64)then
+        t1=0._f64
+      endif
+      t1 = t1*real(n1-1)
+      cell1       = int(t1) + 1
+      dx1         = t1- real(cell1-1)
+      cdx1        = 1.0_f64 - dx1
+		
+			! find the cell and offset for x2
+      t2         = (x2(i1,i2)-x2_min)/(spline%x2_max-spline%x2_min)
+      do while(t2>=1._f64)
+        t2=t2-1._f64
+      enddo
+      do while(t2<0._f64)
+        t2=t2+1._f64
+      enddo
+      if((t2>=1._f64).or.(t2<0._f64))then
+        print *,'bad value of t2',t2
+        stop
+      endif
+      t2 = t2*real(n2-1)
+      cell2      = int(t2) + 1
+      dx2        = t2 - real(cell2-1)
+      cdx2       = 1.0_f64 - dx2
+			
+			!print*,'données début de boucle',i1,i2,x1(i1,i2),x2(i1,i2)
+			!print*,'cell',t1,t2,cell1,cell2
+		
+			!if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
+		!		print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
+		!	end if
+			
+		!	if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
+		!		print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
+		!	end if
+
+      cij = spline%coeffs(i1,i2)
+			!print*,'taille tableau coeff',lbound(spline%coeffs,1),n1,ubound(spline%coeffs,1),lbound(spline%coeffs,2),n2,ubound(spline%coeffs,2)
+			
+      ipm1=cell1-1
+      ip  =cell1  
+			ipp1=cell1+1
+      ipp2=cell1+2
+			
+      !jpm1=mod(cell2-1,n2)
+      !jp  =mod(cell2  ,n2)
+      !jpp1=mod(cell2+1,n2)
+      !jpp2=mod(cell2+2,n2)
+
+      jpm1 = mod(cell2-1+n2-2,n2-1)+1
+      jp = mod(cell2+n2-2,n2-1)+1
+      jpp1 = mod(cell2+1+n2-2,n2-1)+1
+      jpp2 = mod(cell2+2+n2-2,n2-1)+1
+			
+			!print*,'1',ipm1,ip,ipp1,ipp2
+			!print*,'2',jpm1,jp,jpp1,jpp2
+			
+      ax1 = cdx1 
+      ax2 = ax1*ax1
+      ax3 = ax2*ax1
+      ay1 = cdx2
+      ay2 = ay1*ay1
+      ay3 = ay2*ay1
+									
+      svalx1 = ax3/6._f64*cij
+      svalx2 = (0.5_f64*(-ax3+ax2+ax1)+1._f64/6._f64)*cij
+      svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)*cij
+      svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))*cij
+		
+      svaly1 = ay3/6._f64
+      svaly2 = 0.5_f64*(-ay3+ay2+ay1) + 1._f64/6._f64
+      svaly3 = 2._f64/3.0_f64 - ay2 + 0.5_f64*ay3
+      svaly4 = (1._f64-ay3)/6._f64 +0.5_f64*(ay2-ay1)
+			
+			if (ipm1.ge.0) then
+				a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + svalx1*svaly1
+				a_out(ipm1,jp)   = a_out(ipm1,jp)   + svalx1*svaly2
+				a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + svalx1*svaly3
+				a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + svalx1*svaly4
+			end if
+			
+			a_out(ip,jpm1) = a_out(ip,jpm1) + svalx2*svaly1
+			a_out(ip,jp)   = a_out(ip,jp)   + svalx2*svaly2 
+			a_out(ip,jpp1) = a_out(ip,jpp1) + svalx2*svaly3
+			a_out(ip,jpp2) = a_out(ip,jpp2) + svalx2*svaly4
+				  
+			if (ipp1.le.n1) then
+				a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + svalx3*svaly1
+				a_out(ipp1,jp)   = a_out(ipp1,jp)   + svalx3*svaly2
+				a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + svalx3*svaly3
+				a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + svalx3*svaly4
+			end if
+			
+			if (ipp2.le.n1) then
+				a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + svalx4*svaly1
+				a_out(ipp2,jp)   = a_out(ipp2,jp)   + svalx4*svaly2
+				a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + svalx4*svaly3
+				a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + svalx4*svaly4
+			end if
+						
+		!if (i1.eq.1) then
+		! a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
+		!	a_out(1,jp)	 = a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
+		!	a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
+		!	a_out(1,jpp2) = a_out(1,jpp2) + spline%coeffs(0,i2)/6._f64*svaly4
+		!end if	
+		
+		!if (i1.eq.n1) then
+		!	a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
+		!	a_out(n1,jp)	 = a_out(n1,jp)	  + spline%coeffs(n1+1,i2)/6._f64*svaly2
+		!	a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
+		!	a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
+		!end if	
+		
+      end do
+    end do
+	a_out(:,n2) = a_out(:,1)			 
+  end subroutine deposit_value_2D_bis
+
 
   function interpolate_value_2D( x1, x2, spline )
     sll_real64                          :: interpolate_value_2D
