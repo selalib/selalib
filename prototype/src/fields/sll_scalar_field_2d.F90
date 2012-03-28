@@ -32,6 +32,7 @@ module sll_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+  use sll_xdmf
   use numeric_constants
   use sll_mapped_mesh_base
   implicit none
@@ -118,7 +119,11 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(this%data, ierr)
   end subroutine delete_scalar_field_2d
 
-  subroutine write_scalar_field_2d( scalar_field, name, multiply_by_jacobian)
+  subroutine write_scalar_field_2d( &
+    scalar_field, &
+    name, &
+    multiply_by_jacobian, &
+    file_id ) ! por aqui: this is intent(out) in sll_xdmf.F90
     class(scalar_field_2d) :: scalar_field
     character(len=*)       :: name
     logical, optional      :: multiply_by_jacobian 
@@ -140,6 +145,9 @@ contains   ! *****************************************************************
     SLL_ASSERT(associated(mesh))    
     SLL_ALLOCATE(val(num_pts1,num_pts2), ierr)
 
+    call sll_xdmf_open( &
+         scalar_field%name, &
+         
     if (.not.(present(multiply_by_jacobian))) then
        call write_vec1d( &
             scalar_field%data, &
@@ -166,6 +174,7 @@ contains   ! *****************************************************************
             "mesh", &
             scalar_field%data_position)
     end if
+    SLL_DEALLOCATE(val,ierr)
   end subroutine write_scalar_field_2d
 
 end module sll_scalar_field_2d
