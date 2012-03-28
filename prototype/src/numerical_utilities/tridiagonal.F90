@@ -52,6 +52,9 @@ module sll_tridiagonal
 #include "sll_working_precision.h"
 implicit none
 
+  interface solve_cyclic_tridiag
+     module procedure solve_cyclic_tridiag_double, solve_cyclic_tridiag_complex
+  end interface
 contains
 
 ! careful with side-effects here
@@ -487,7 +490,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !> @param x the solution vector
    !--------------------------------------------------------------------------- 
  
-   subroutine solve_cyclic_tridiag( cts, ipiv, b, n, x )
+   subroutine solve_cyclic_tridiag_double( cts, ipiv, b, n, x )
      ! size of the allocations:
      ! x:     n
      ! cts:  7n
@@ -547,7 +550,69 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
         x(i) = (x(i)-(u(i)*x(i+1) + v(i)*x(i+2) + &
                       q(i)*x(n-1) + r(i)*x(n) ))/d(i)
      end do
-   end subroutine solve_cyclic_tridiag
+   end subroutine solve_cyclic_tridiag_double
+
+   subroutine solve_cyclic_tridiag_complex( cts, ipiv, b, n, x )
+     ! size of the allocations:
+     ! x:     n
+     ! cts:  7n
+     ! ipiv:  n
+     ! b:     n
+
+     sll_int32,  intent(in)                 :: n    ! matrix size
+     sll_real64, dimension(1:7*n), target   :: cts  ! 7*n size allocation
+     sll_int32,  dimension(1:n), intent(in) :: ipiv
+     sll_comp64, target                     :: b(n)
+     sll_comp64, target                     :: x(n)  
+     sll_comp64, pointer, dimension(:)      :: bptr
+     sll_comp64, pointer, dimension(:)      :: xptr  
+     sll_real64                             :: swp
+     sll_int32                              :: i
+     sll_real64, pointer                    :: d(:)
+     sll_real64, pointer                    :: u(:)
+     sll_real64, pointer                    :: v(:)
+     sll_real64, pointer                    :: q(:)
+     sll_real64, pointer                    :: r(:)
+     sll_real64, pointer                    :: l(:)
+     sll_real64, pointer                    :: m(:)
+
+     d => cts(    1:n  )
+     u => cts(  n+1:2*n)
+     v => cts(2*n+1:3*n)
+     q => cts(3*n+1:4*n)
+     r => cts(4*n+1:5*n)
+     l => cts(5*n+1:6*n)
+     m => cts(6*n+1:7*n)
+
+     bptr =>b(1:n)
+     xptr =>x(1:n)
+     ! FIX: ADD SOME ERROR CHECKING ON ARGUMENTS
+     if( .not. associated(xptr, target=bptr) ) then
+        do i=1,n
+           x(i) = b(i)
+        end do
+     end if
+     ! 'x' contains now the informatin in 'b', in case that it was given as 
+     ! a different array.
+     !
+     ! Overwrite x with the solution of Ly = Pb
+     do i=1,n-1
+        SWP(x(i),x(ipiv(i)))
+        x(i+1) = x(i+1) - l(i)*x(i)
+        x(n)   = x(n) - m(i)*x(i)
+     end do
+
+     ! Overwrite x with the solution of Ux = y
+     i    = n
+     x(i) = x(i)/d(i)
+     i    = i-1
+     x(i) = (x(i) - u(i)*x(i+1))/d(i)
+     i    = i-1
+     do i=i,1,-1
+        x(i) = (x(i)-(u(i)*x(i+1) + v(i)*x(i+2) + &
+                      q(i)*x(n-1) + r(i)*x(n) ))/d(i)
+     end do
+   end subroutine solve_cyclic_tridiag_complex
 
    ! @brief Solves the system ax=b
    ! param[in] a Global matrix
