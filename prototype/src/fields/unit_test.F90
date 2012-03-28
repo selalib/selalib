@@ -3,6 +3,7 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use geometry_functions
+  use sll_scalar_field_2d
   !use sll_mapped_mesh_base
   use sll_mapped_meshes
   implicit none

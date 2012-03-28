@@ -6,9 +6,7 @@
 ! Why this with macros? We explore hiding the access to an array behind a
 ! defined interface but at the same time we don't want to be penalized by
 ! function calls. Access functions like these are expected to live within
-! inner loops and thus would have an appreciable overhead. Here we also 
-! hide some protection against incorrect array indexing which should not
-! represent any additional cost if the DEBUG flag is turned off.
+! inner loops and thus would have an appreciable overhead. 
 
 ! get macros
 #define GET_FIELD_MESH_MESH( f )           f%mesh
