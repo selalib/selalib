@@ -29,7 +29,7 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-module sll_poisson_2D_periodic
+module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -59,15 +59,14 @@ end type poisson_2d_periodic
 !> Create an object to solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:
 !> To solve the potential input parameter is a sll_real64 2d array.
-!> To solve the potential derivatives (electric field), input parameter is a field_2d_vec2.
+!> To solve the potential derivatives (electric field), input parameter 
+!> is a field_2d_vec2.
 interface new_poisson_2d_periodic
    module procedure new_poisson_2d_periodic_E_fields
    module procedure new_poisson_2d_periodic_potential
 end interface
 
-
-!> Solve Poisson equation on 2D mesh with periodic 
-!> boundary conditions. 
+!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 interface solve_poisson_2d_periodic
    module procedure solve_poisson_2d_periodic_E_fields
    module procedure solve_poisson_2d_periodic_potential
@@ -201,7 +200,6 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
       call zfftf( ncy, this%rhst(:,i), this%ffty%coefcd)
    end do
 
-
    this%ext(1,1) = 0.0_f64
    this%eyt(1,1) = 0.0_f64
 
@@ -221,7 +219,6 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
       call dfftb( ncx, e_fields%data(1:ncx,j)%v2,  this%fftx%coefd )
    end do
 
-
    e_fields%data(1:ncx,1:ncy)%v1 = e_fields%data(1:ncx,1:ncy)%v1 / (ncx*ncy)
    e_fields%data(1:ncx,1:ncy)%v2 = e_fields%data(1:ncx,1:ncy)%v2 / (ncx*ncy)
 
@@ -234,82 +231,85 @@ subroutine solve_poisson_2d_periodic_E_fields(this,e_fields,rhs,error)
 
 end subroutine solve_poisson_2d_periodic_E_fields
 
-
 subroutine wave_number_vectors(this)
-type(poisson_2d_periodic) :: this
-sll_int32  :: ik, jk
-sll_int32  :: ncx, ncy
-sll_real64 :: dx, dy
-sll_real64 :: kx, ky, kx0, ky0
 
-ncx = GET_FIELD_NC_ETA1(this)
-ncy = GET_FIELD_NC_ETA2(this)
-
-dx = GET_FIELD_DELTA_ETA1(this)
-dy = GET_FIELD_DELTA_ETA2(this)
-
-kx0 = 2._f64*sll_pi/(ncx*dx)
-ky0 = 2._f64*sll_pi/(ncy*dy)
-
-do ik=1,ncx/2+1
-   kx  = (ik-1)*kx0
-   do jk = 1, ncy/2
-      ky  = (jk-1)*ky0
-      this%kx(jk,ik) = kx
-      this%ky(jk,ik) = ky
+   type(poisson_2d_periodic) :: this
+   sll_int32  :: ik, jk
+   sll_int32  :: ncx, ncy
+   sll_real64 :: dx, dy
+   sll_real64 :: kx, ky, kx0, ky0
+   
+   ncx = GET_FIELD_NC_ETA1(this)
+   ncy = GET_FIELD_NC_ETA2(this)
+   
+   dx = GET_FIELD_DELTA_ETA1(this)
+   dy = GET_FIELD_DELTA_ETA2(this)
+   
+   kx0 = 2._f64*sll_pi/(ncx*dx)
+   ky0 = 2._f64*sll_pi/(ncy*dy)
+   
+   do ik=1,ncx/2+1
+      kx  = (ik-1)*kx0
+      do jk = 1, ncy/2
+         ky  = (jk-1)*ky0
+         this%kx(jk,ik) = kx
+         this%ky(jk,ik) = ky
+      end do
+      do jk = ncy/2+1 , ncy     
+         ky  = (jk-1-ncy)*ky0
+         this%kx(jk,ik) = kx
+         this%ky(jk,ik) = ky
+      end do
    end do
-   do jk = ncy/2+1 , ncy     
-      ky  = (jk-1-ncy)*ky0
-      this%kx(jk,ik) = kx
-      this%ky(jk,ik) = ky
-   end do
-end do
-this%kx(1,1) = 1.0_f64
-
-this%k2 = this%kx*this%kx+this%ky*this%ky
+   this%kx(1,1) = 1.0_f64
+   
+   this%k2 = this%kx*this%kx+this%ky*this%ky
 
 end subroutine wave_number_vectors
 
 subroutine transpose_r2c(real_array, comp_array)
-sll_real64, dimension(:,:), intent(in)  :: real_array
-sll_comp64, dimension(:,:), intent(out) :: comp_array
-sll_int32 :: i, j, n1, n2
 
-n1 = size(real_array,1)
-n2 = size(real_array,2)
+   sll_real64, dimension(:,:), intent(in)  :: real_array
+   sll_comp64, dimension(:,:), intent(out) :: comp_array
+   sll_int32 :: i, j, n1, n2
 
-SLL_ASSERT(size(comp_array,1)==n2)
-SLL_ASSERT(size(comp_array,2)==n1/2+1)
+   n1 = size(real_array,1)
+   n2 = size(real_array,2)
 
-do j=1,n2
-   comp_array(j,1) = cmplx(real_array(1,j),0._f64,kind=f64)
-   do i=2, n1/2
-      comp_array(j,i) = cmplx(real_array(2*i-2,j),real_array(2*i-1,j),kind=f64)
+   SLL_ASSERT(size(comp_array,1)==n2)
+   SLL_ASSERT(size(comp_array,2)==n1/2+1)
+
+   do j=1,n2
+      comp_array(j,1) = cmplx(real_array(1,j),0._f64,kind=f64)
+      do i=2, n1/2
+         comp_array(j,i) = cmplx(real_array(2*i-2,j),real_array(2*i-1,j),kind=f64)
+      end do
+      comp_array(j,n1/2+1) = cmplx(real_array(n1,j),0._f64,kind=f64)
    end do
-   comp_array(j,n1/2+1) = cmplx(real_array(n1,j),0._f64,kind=f64)
-end do
 
 end subroutine transpose_r2c
 
+!> convert complex array to real and transpose
 subroutine transpose_c2r(comp_array, real_array)
-sll_comp64, dimension(:,:), intent(in) :: comp_array
-sll_real64, dimension(:,:), intent(out)  :: real_array
-sll_int32 :: i, j, n1, n2
 
-n1 = size(real_array,1)
-n2 = size(real_array,2)
+   sll_comp64, dimension(:,:), intent(in) :: comp_array
+   sll_real64, dimension(:,:), intent(out)  :: real_array
+   sll_int32 :: i, j, n1, n2
 
-SLL_ASSERT((n2==size(comp_array,1)))
-SLL_ASSERT((size(comp_array,2)==n1/2+1))
+   n1 = size(real_array,1)
+   n2 = size(real_array,2)
 
-do j=1,n2
-   real_array(1,j) = real(comp_array(j,1),kind=f64)
-   do i=2,n1/2
-      real_array(2*i-2,j) = real(comp_array(j,i),kind=f64)
-      real_array(2*i-1,j) = dimag(comp_array(j,i))
+   SLL_ASSERT((n2==size(comp_array,1)))
+   SLL_ASSERT((size(comp_array,2)==n1/2+1))
+
+   do j=1,n2
+      real_array(1,j) = real(comp_array(j,1),kind=f64)
+      do i=2,n1/2
+         real_array(2*i-2,j) = real(comp_array(j,i),kind=f64)
+         real_array(2*i-1,j) = dimag(comp_array(j,i))
+      end do
+      real_array(n1,j) = real(comp_array(j,n1/2+1),kind=f64)
    end do
-   real_array(n1,j) = real(comp_array(j,n1/2+1),kind=f64)
-end do
 
 end subroutine transpose_c2r
 
@@ -322,3 +322,4 @@ subroutine delete_poisson_2d_periodic(this)
 end subroutine delete_poisson_2d_periodic
 
 end module sll_poisson_2D_periodic
+
