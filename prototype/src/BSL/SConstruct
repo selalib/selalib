@@ -86,7 +86,7 @@ env.Program('landau_2d', ["landau_2d.F90", "sll_bsl.F90"])
 Help(vars.GenerateHelpText(env))
 
 print """
-	To display results during execution, launch 
+	To display results during execution, launch in BSL directory
         ./landau_2d | gnuplot 
         or 
         ./landau_4d | gnuplot
