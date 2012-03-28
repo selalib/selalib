@@ -20,7 +20,6 @@ program test_quasi_neutral
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
-<<<<<<< HEAD
   implicit none
 
   type(quasi_neutral_plan), pointer :: qn_plan
@@ -368,7 +367,6 @@ contains
           gj = global(2)
           rho_par(i,j) = rho_seq(gi,gj)
         enddo
->>>>>>> origin/prototype-devel
     enddo
    
     plan_par => new_qns_2d_with_finite_diff_plan_par(bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
