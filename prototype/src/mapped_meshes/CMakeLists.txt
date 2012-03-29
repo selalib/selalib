@@ -6,10 +6,11 @@ add_library(sll_mapped_meshes STATIC
 add_executable(test_mapped_meshes unit_test.F90)
 target_link_libraries(test_mapped_meshes
 	sll_mapped_meshes
-	sll_interpolators
+	interpolators
+	sll_splines
 	geometry_funcs
 	sll_constants
-	sll_assertion
-	sll_memory
 	sll_low_level_file_io
+	sll_memory
+	sll_assertion
   )
