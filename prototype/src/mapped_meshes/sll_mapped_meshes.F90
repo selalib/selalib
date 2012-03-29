@@ -146,6 +146,7 @@ contains
 
   subroutine initialize_mesh_2d_analytic( &
     mesh,           &
+    label,           &
     npts1,          &
     npts2,          &
     x1_func,        &
@@ -156,6 +157,7 @@ contains
     j22_func )
 
     class(sll_mapped_mesh_2d_analytic), intent(inout) :: mesh
+    character(len=*), intent(in)                  :: label
     sll_int32, intent(in)                         :: npts1
     sll_int32, intent(in)                         :: npts2
     procedure(two_arg_scalar_function)            :: x1_func
@@ -174,6 +176,7 @@ contains
     sll_int32  :: j
     sll_int32  :: ierr
 
+    mesh%label   = trim(label)
     mesh%nc_eta1 = npts1-1
     mesh%nc_eta2 = npts2-1
     delta_1       = 1.0_f64/(npts1 - 1)
@@ -349,6 +352,7 @@ contains
 
   subroutine initialize_mesh_2d_discrete( &
     mesh,            &
+    label,            &
     npts1,          &
     npts2,          &
     x1_node,        &
@@ -362,6 +366,7 @@ contains
     jacobians_cell )
 
     class(sll_mapped_mesh_2d_discrete)    :: mesh
+    character(len=*), intent(in)         :: label
     sll_int32, intent(in)                :: npts1
     sll_int32, intent(in)                :: npts2
     sll_real64, dimension(:,:)           :: x1_node
@@ -385,6 +390,7 @@ contains
     logical    :: jc
     logical    :: jn
 
+    mesh%label = trim(label)
     x1c = present(x1_cell)
     x2c = present(x2_cell)
     jc  = present(jacobians_cell)
