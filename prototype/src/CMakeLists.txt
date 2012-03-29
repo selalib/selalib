@@ -97,10 +97,12 @@ add_subdirectory(fftpack)
 add_subdirectory(fft)
 add_subdirectory(collective)
 add_subdirectory(remap)
+add_subdirectory(WENO)
+add_subdirectory(interpolators) # unit_test not work
+add_subdirectory(mapped_meshes)
 
-#add_subdirectory(interpolators)
-#add_subdirectory(WENO)
-#add_subdirectory(mapped_meshes)
+
+
 #add_subdirectory(fields)
 #add_subdirectory(ode_solvers)
 #add_subdirectory(distribution_function)
@@ -129,11 +131,11 @@ add_test(integration integration/test_integration)
 add_test(fft fft/test_fft)
 add_test(collective mpirun -np 4 collective/test_collective)
 add_test(remap mpirun -np 8 remap/test_remap)
+add_test(WENO WENO/test_WENO)
+#add_test(interpolators interpolators/test_interpolators) not work
+add_test(mapped_meshes mapped_meshes/test_mapped_meshes)
 
-#add_test(interpolators interpolators/test_interpolators)
-#add_test(WENO WENO/test_WENO)
-#add_test(mapped_meshes mapped_meshes/test_mapped_meshes)
-#add_test(fields fields/test_mesh_types)
+#add_test(fields fields/test_scalar_field)
 #add_test(distribution_function distribution_function/test_distribution_function)
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
 #add_test(ode_solvers ode_solvers/test_ode_solvers)
