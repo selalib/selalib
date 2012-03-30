@@ -51,18 +51,15 @@ end do
 
 ! Create the scalar data.
 SLL_ALLOCATE(df(nnodes_x1,nnodes_x2),error)
-do j = 1, nnodes_x2
-   do i = 1, nnodes_x1
-      df(i,j) = i*float(j-1)
-   end do
-end do
+
+df = cos(2.*x1)*exp(-x2*x2)
  
 call sll_xdmf_open("test2d",file_id,nnodes_x1,nnodes_x2,error)
 call sll_xdmf_write_array("test2d",x1,'x1',error)
 call sll_xdmf_write_array("test2d",x2,'x2',error)
-call sll_xdmf_write_field("test2d",file_id,df,"NodeVal","Node",error)
-call sll_xdmf_write_field("test2d", &
-     file_id,df(1:ncells_x1,1:ncells_x2),"CellVal","Cell",error)
+call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
+call sll_xdmf_write_array("test2d", &
+     df(1:ncells_x1,1:ncells_x2),"CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
 
 
@@ -133,8 +130,8 @@ call sll_xdmf_open("tore3d",file_id,nnodes_x1,nnodes_x2,nnodes_x3,error)
 call sll_xdmf_write_array("tore3d",x1,'x1',error)
 call sll_xdmf_write_array("tore3d",x2,'x2',error)
 call sll_xdmf_write_array("tore3d",x3,'x3',error)
-call sll_xdmf_write_field("tore3d",file_id,df,"NodeVal","Node",error)
-call sll_xdmf_write_field("tore3d",file_id,df(1:ncells_x1,1:ncells_x2,1:ncells_x3),"CellVal","Cell",error)
+call sll_xdmf_write_array("tore3d",df,"NodeVal",error,file_id,"Node")
+call sll_xdmf_write_array("tore3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3),"CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
 
 end subroutine test_3d

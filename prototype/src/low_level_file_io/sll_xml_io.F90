@@ -199,7 +199,7 @@ contains
        sll_int32, intent(in) :: npoints_1
        sll_int32, intent(in) :: npoints_2
        
-       write(file_id,"(a)")"<Attribute Name='"//fieldname//"' AttributeType='Scalar' Center='"//center//"'>"
+       write(file_id,"(a)")"<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
        call sll_xml_dataitem_2d(file_id,filename,npoints_1,npoints_2,filetype)
        write(file_id,"(a)")"</Attribute>"
      end subroutine sll_xml_field_2d
@@ -222,7 +222,7 @@ contains
        sll_int32, intent(in) :: npoints_2
        sll_int32, intent(in) :: npoints_3
        
-       write(file_id,"(a)")"<Attribute Name='"//fieldname//"' AttributeType='Scalar' Center='"//center//"'>"
+       write(file_id,"(a)")"<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
        call sll_xml_dataitem_3d( file_id, &
             filename, &
             npoints_1, &
