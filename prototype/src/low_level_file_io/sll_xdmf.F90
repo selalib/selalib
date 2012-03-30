@@ -55,9 +55,9 @@ module sll_xdmf
      module procedure sll_xdmf_open_3d
   end interface
 
-  interface sll_xdmf_write_mesh
-     module procedure sll_xdmf_mesh_2d
-     module procedure sll_xdmf_mesh_3d
+  interface sll_xdmf_write_array
+     module procedure sll_xdmf_array_2d
+     module procedure sll_xdmf_array_3d
   end interface
   
   interface sll_xdmf_write_field
@@ -78,31 +78,27 @@ contains
     sll_int32                    :: nnodes_x1
     sll_int32                    :: nnodes_x2
     
-    call sll_xml_file_create(prefix//".xmf",file_id,error)
-    call sll_xml_grid_geometry(file_id, prefix, nnodes_x1, nnodes_x2)
+    call sll_xml_file_create(trim(prefix)//".xmf",file_id,error)
+    call sll_xml_grid_geometry(file_id, trim(prefix), nnodes_x1, nnodes_x2)
   end subroutine sll_xdmf_open_2d
   
-  subroutine sll_xdmf_mesh_2d(prefix,x1,x2,error)
+  subroutine sll_xdmf_array_2d(prefix,array,array_name,error)
     character(len=*), intent(in) :: prefix
-    sll_real64, intent(in)       :: x1(:,:)
-    sll_real64, intent(in)       :: x2(:,:)
+    sll_real64, intent(in)       :: array(:,:)
+    character(len=*), intent(in) :: array_name
     sll_int32, intent(out)       :: error
     sll_int32                    :: file_id
     
 #ifdef NOHDF5
-    call sll_binary_file_create(prefix//"-x1.bin",file_id,error)
-    call sll_binary_write_array(file_id,x1,error)
-    call sll_binary_file_close(file_id,error)
-    call sll_binary_file_create(prefix//"-x2.bin",file_id,error)
-    call sll_binary_write_array(file_id,x2,error)
+    call sll_binary_file_create(trim(prefix)//"-"//array_name//".bin",file_id,error)
+    call sll_binary_write_array(file_id,array,error)
     call sll_binary_file_close(file_id,error)
 #else
-    call sll_hdf5_file_create(prefix//".h5",file_id,error)
-    call sll_hdf5_write_array(file_id,x1,"/x1",error)
-    call sll_hdf5_write_array(file_id,x2,"/x2",error)
+    call sll_hdf5_file_create(trim(prefix)//"-"//array_name//".h5",file_id,error)
+    call sll_hdf5_write_array(file_id,array,"/"//array_name,error)
     call sll_hdf5_file_close(file_id, error)
 #endif
-  end subroutine sll_xdmf_mesh_2d
+  end subroutine sll_xdmf_array_2d
 
   subroutine sll_xdmf_open_3d( &
     prefix, &
@@ -118,39 +114,27 @@ contains
     sll_int32                    :: nnodes_x1
     sll_int32                    :: nnodes_x2
     sll_int32                    :: nnodes_x3
-    call sll_xml_file_create(prefix//".xmf",file_id,error)
-    call sll_xml_grid_geometry(file_id, prefix, nnodes_x1, nnodes_x2, nnodes_x3)
+    call sll_xml_file_create(trim(prefix)//".xmf",file_id,error)
+    call sll_xml_grid_geometry(file_id, trim(prefix), nnodes_x1, nnodes_x2, nnodes_x3)
   end subroutine sll_xdmf_open_3d
 
-  subroutine sll_xdmf_mesh_3d(prefix,x1,x2,x3,error)
+  subroutine sll_xdmf_array_3d(prefix,array,array_name,error)
     character(len=*), intent(in) :: prefix
-    sll_real64, intent(in)       :: x1(:,:,:)
-    sll_real64, intent(in)       :: x2(:,:,:)
-    sll_real64, intent(in)       :: x3(:,:,:)
+    sll_real64, intent(in)       :: array(:,:,:)
+    character(len=*), intent(in) :: array_name
     sll_int32, intent(out)       :: error
     sll_int32                    :: file_id
-    sll_int32                    :: nnodes_x1
-    sll_int32                    :: nnodes_x2
-    sll_int32                    :: nnodes_x3
     
 #ifdef NOHDF5
-    call sll_binary_file_create(prefix//"-x1.bin",file_id,error)
-    call sll_binary_write_array(file_id,x1,error)
-    call sll_binary_file_close(file_id,error)
-    call sll_binary_file_create(prefix//"-x2.bin",file_id,error)
-    call sll_binary_write_array(file_id,x2,error)
-    call sll_binary_file_close(file_id,error)
-    call sll_binary_file_create(prefix//"-x3.bin",file_id,error)
-    call sll_binary_write_array(file_id,x3,error)
+    call sll_binary_file_create(trim(prefix)//"-"//array_name//".bin",file_id,error)
+    call sll_binary_write_array(file_id,array,error)
     call sll_binary_file_close(file_id,error)
 #else
-    call sll_hdf5_file_create(prefix//".h5",file_id,error)
-    call sll_hdf5_write_array(file_id,x1,"/x1",error)
-    call sll_hdf5_write_array(file_id,x2,"/x2",error)
-    call sll_hdf5_write_array(file_id,x3,"/x3",error)
+    call sll_hdf5_file_create(trim(prefix)//"-"//array_name//".h5",file_id,error)
+    call sll_hdf5_write_array(file_id,array,"/"//array_name,error)
     call sll_hdf5_file_close(file_id, error)
 #endif
-  end subroutine sll_xdmf_mesh_3d
+  end subroutine sll_xdmf_array_3d
 
 
   subroutine sll_write_data_2d(prefix,xmffile_id,array,array_name,center,error)
@@ -168,19 +152,19 @@ contains
     npoints_x2 = size(array,2)
     
 #ifdef NOHDF5
-    call sll_binary_file_create(prefix//"-"//array_name//".bin",file_id,error)
+    call sll_binary_file_create(trim(prefix)//"-"//array_name//".bin",file_id,error)
     call sll_binary_write_array(file_id,array,error)
     call sll_binary_file_close(file_id,error)
-    call sll_xml_field(xmffile_id,array_name,prefix//"-"//array_name//".bin", &
+    call sll_xml_field(xmffile_id,array_name,trim(prefix)//"-"//array_name//".bin", &
          npoints_x1,npoints_x2,'Binary',center)
 #else
-    call sll_hdf5_file_create(prefix//"-"//array_name//".h5",file_id,error)
+    call sll_hdf5_file_create(trim(prefix)//"-"//array_name//".h5",file_id,error)
     call sll_hdf5_write_array(file_id,array,"/"//array_name,error)
     call sll_hdf5_file_close(file_id, error)
     call sll_xml_field( &
          xmffile_id, &
          array_name, &
-         prefix//"-"//array_name//".h5:/"//array_name, &
+         trim(prefix)//"-"//array_name//".h5:/"//array_name, &
          npoints_x1,&
          npoints_x2,&
          'HDF',&
@@ -205,19 +189,19 @@ contains
     npoints_x3 = size(array,3)
     
 #ifdef NOHDF5
-    call sll_binary_file_create(prefix//"-"//array_name//".bin",file_id,error)
+    call sll_binary_file_create(trim(prefix)//"-"//array_name//".bin",file_id,error)
     call sll_binary_write_array(file_id,array,error)
     call sll_binary_file_close(file_id,error)
-    call sll_xml_field(xmffile_id,array_name,prefix//"-"//array_name//".bin", &
+    call sll_xml_field(xmffile_id,array_name,trim(prefix)//"-"//array_name//".bin", &
          npoints_x1,npoints_x2,npoints_x3,'Binary',center)
 #else
-    call sll_hdf5_file_create(prefix//"-"//array_name//".h5",file_id,error)
+    call sll_hdf5_file_create(trim(prefix)//"-"//array_name//".h5",file_id,error)
     call sll_hdf5_write_array(file_id,array,"/"//array_name,error)
     call sll_hdf5_file_close(file_id, error)
     call sll_xml_field( &
          xmffile_id, &
          array_name, &
-         prefix//"-"//array_name//".h5:/"//array_name, &
+         trim(prefix)//"-"//array_name//".h5:/"//array_name, &
          npoints_x1,&
          npoints_x2,&
          npoints_x3,&
