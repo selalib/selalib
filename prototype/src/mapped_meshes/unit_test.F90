@@ -198,6 +198,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   end do
 
   call map_d%write_to_file()
+  call map_d%write_to_file()
 
   print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
 !  call delete(map_a)
