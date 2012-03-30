@@ -7,7 +7,8 @@ add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 # use MPIF90 as compiler
 set(CMAKE_Fortran_COMPILER mpif90)
 # some useful flags
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -ffree-line-length-none -std=f2003 -fall-intrinsics")
+#set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 #ajoute les modules locaux
@@ -80,7 +81,7 @@ endif(FFTW_FOUND)
 #ENDIF()
 
 # include's
-include_directories(remap poisson_solvers utilities memory mesh_types assert precision fft fftw) 
+include_directories(remap poisson_solvers utilities memory assert precision) 
 
 add_subdirectory(memory)
 add_subdirectory(precision)
