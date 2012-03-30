@@ -266,8 +266,8 @@ contains
        
 #else
        
-       call sll_xml_dataitem_2d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-       call sll_xml_dataitem_2d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,'HDF')
+       call sll_xml_dataitem_2d(file_id,trim(filename)//"-x1.h5:/x1",nnodes_x1,nnodes_x2,'HDF')
+       call sll_xml_dataitem_2d(file_id,trim(filename)//"-x2.h5:/x2",nnodes_x1,nnodes_x2,'HDF')
        
 #endif
        
@@ -295,9 +295,9 @@ contains
        call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
 #else
        
-       call sll_xml_dataitem_3d(file_id,trim(filename)//".h5:/x1",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
-       call sll_xml_dataitem_3d(file_id,trim(filename)//".h5:/x2",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
-       call sll_xml_dataitem_3d(file_id,trim(filename)//".h5:/x3",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x1.h5:/x1",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x2.h5:/x2",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.h5:/x3",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
        
 #endif
        

@@ -19,7 +19,7 @@ use sll_xdmf
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: mesh_name
+     character(len=64) :: label
    contains
      procedure(geometry_function), deferred, pass       :: x1
      procedure(geometry_function), deferred, pass       :: x2
@@ -110,10 +110,10 @@ use sll_xdmf
    end interface
    
    abstract interface
-      subroutine write_to_file_signature( map, mesh_name )
+      subroutine write_to_file_signature( map, label )
         import     :: sll_mapped_mesh_2d_base
         class(sll_mapped_mesh_2d_base)  :: map
-        character(len=*), optional      :: mesh_name
+        character(len=*), optional      :: label
       end subroutine write_to_file_signature
    end interface
 
@@ -144,9 +144,12 @@ contains
        eta1 = eta1 + mesh%delta_eta1
     end do
     
-    call sll_xdmf_open(trim(mesh%mesh_name),file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
-    call sll_xdmf_write_mesh(trim(mesh%mesh_name),x1mesh,x2mesh,ierr)
+    call sll_xdmf_open(mesh%label,file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
+    call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+    call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
     call sll_xdmf_close(file_id,ierr)
+
+    !call sll_write_mesh(mesh,x1mesh,x2mesh,ierr)
 
   end subroutine write_mapped_mesh_2d_base
 
