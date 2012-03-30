@@ -36,6 +36,7 @@ module sll_field_2d
   use numeric_constants
   use sll_diagnostics
   use sll_mapped_mesh_base
+  use sll_io
   implicit none
 
   enum, bind(C)
