@@ -2,7 +2,7 @@ module sll_mapped_mesh_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_xdmf
+use sll_io
 
   implicit none
   
@@ -20,6 +20,7 @@ use sll_xdmf
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
      character(len=64) :: label
+     logical           :: written = .false.
    contains
      procedure(geometry_function), deferred, pass       :: x1
      procedure(geometry_function), deferred, pass       :: x2
@@ -119,8 +120,10 @@ use sll_xdmf
 
 contains
 
-  subroutine write_mapped_mesh_2d_base(mesh)
+  subroutine write_mapped_mesh_2d_base(mesh,output_format)
     class(sll_mapped_mesh_2d_base) :: mesh
+    sll_int32, optional :: output_format 
+    sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
     sll_int32  :: i1
@@ -130,30 +133,49 @@ contains
     sll_int32  :: ierr
     sll_int32  :: file_id
 
-    ! create 2D mesh
-    SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    eta1 = 0.0_f64
-    do i1=1, mesh%nc_eta1+1
-       eta2 = 0.0_f64
-       do i2=1, mesh%nc_eta2+1
-          x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
-          x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
-          eta2 = eta2 + mesh%delta_eta2 
-       end do
-       eta1 = eta1 + mesh%delta_eta1
-    end do
-    
-    call sll_xdmf_open(mesh%label,file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
-    call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
-    call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
-    call sll_xdmf_close(file_id,ierr)
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
 
-    !call sll_write_mesh(mesh,x1mesh,x2mesh,ierr)
+    if ( .not. mesh%written ) then
+
+       select case(local_format)
+
+       case (SLL_IO_XDMF)
+          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          eta1 = 0.0_f64
+          do i1=1, mesh%nc_eta1+1
+             eta2 = 0.0_f64
+             do i2=1, mesh%nc_eta2+1
+                x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
+                x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
+                eta2 = eta2 + mesh%delta_eta2 
+             end do
+             eta1 = eta1 + mesh%delta_eta1
+          end do
+       
+          call sll_xdmf_open(mesh%label,file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
+          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
+
+       case default
+          print*, 'Not recognized format to write this mesh'
+          stop
+
+       end select
+
+    else
+
+       print*,' Warning, you have already written the mesh '
+
+    end if
+
+    mesh%written = .true.
 
   end subroutine write_mapped_mesh_2d_base
 
-
- 
-   
  end module sll_mapped_mesh_base

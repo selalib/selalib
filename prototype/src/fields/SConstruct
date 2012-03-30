@@ -28,7 +28,7 @@ env = Environment( ENV=os.environ,
                          'sll_mapped_mesh_2d',
                          'sll_low_level_io'],
                    F90FLAGS = ['-g','-cpp','-W','-Wall','-std=f2003',
-                               '-ffree-line-length-none'])
+                               '-ffree-line-length-none','-fbounds-check'])
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN'])
 
