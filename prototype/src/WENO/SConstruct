@@ -12,11 +12,11 @@ print 'platform : ' + platform
 env = Environment( ENV = os.environ,
                    F90PATH = ['../memory','../precision','../assert',
                               '../utilities','../constants','../interpolators',
-                              os.environ['HDF5INCLUDEPATH']],
+                              os.environ['HDF5INCPATH']],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.', os.environ['HDF5LIBPATH']],
                    LIBS=['sll_memory','sll_precision','sll_assert',
-                         'sll_utilities', 'sll_constants','sll_interpolators'],
+                         'sll_utilities', 'sll_constants'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
                                '-DGFORTRAN','-ffree-line-length-none'])
 
@@ -26,5 +26,4 @@ env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
-env.Library('sll_interpolators',["../interpolators/sll_interpolators.F90"])
 env.Program('unit_test', ["unit_test.F90", "WENO_interp.F90", "WENO_recon.F90" ])
