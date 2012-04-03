@@ -35,7 +35,7 @@ module distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_2d.h"
+#include "sll_scalar_field_2d.h"
   use numeric_constants
   use sll_misc_utils   ! for int2string
   implicit none
@@ -85,7 +85,7 @@ contains
     this%pmass = 1.0_f64
     this%plot_counter = 0
     this%name = name
-    if (data_position == NODE_FIELD) then
+    if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        do i2 = 1, mesh%nc_eta2+1
           do i1 = 1, mesh%nc_eta1+1
@@ -93,7 +93,7 @@ contains
                   mesh%x2_at_node(i1,i2))
           end do
        end do
-    else if (data_position == CELL_CENTER_FIELD) then
+    else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        delta1 = 1.0_f64/mesh%nc_eta1
        delta2 = 1.0_f64/mesh%nc_eta2

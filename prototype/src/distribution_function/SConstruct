@@ -13,7 +13,7 @@ env = Environment( ENV=os.environ,
                    F90PATH = ['../mapped_meshes','../memory','../precision',
                               '../assert',
                               '../utilities','../constants', '../splines',
-                              '../diagnostics','../mesh_types',
+                              '../low_level_file_io','../fields',
                               os.environ['HDF5INCPATH']],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.', os.environ['HDF5LIBPATH']],
@@ -33,12 +33,11 @@ env.Library('sll_precision',   ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert',      ["../assert/sll_assert.F90"])
 env.Library('sll_constants',   ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',   ["../utilities/misc_utils.F90"])
-env.Library('sll_splines',    ["../splines/sll_splines.F90"])
-env.Library('sll_field_2d',    ["../mesh_types/sll_mesh_test.F90",
-                                "../mesh_types/sll_field_2d.F90",
-                                "../mesh_types/geometry_functions.F90"])
+env.Library('sll_splines',     ["../splines/sll_splines.F90"])
+env.Library('sll_field_2d',    ["../fields/sll_scalar_field_2d.F90",
+                                "../fields/geometry_functions.F90"])
 env.Library('sll_mapped_meshes',["../mapped_meshes/sll_mapped_mesh_base.F90",
                                  "../mapped_meshes/sll_mapped_meshes.F90"])
-env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
+env.Library('sll_diagnostics', Glob("../low_level_file_io/sll_*.F90"))
 env.Program('unit_test',       ["unit_test.F90", "initial_functions.F90",
                                 "sll_distribution_function.F90"])
