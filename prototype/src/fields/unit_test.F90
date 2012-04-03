@@ -10,7 +10,7 @@ program unit_test
   
   type(sll_mapped_mesh_2d_analytic), target :: mesh
   type(scalar_field_2d)                     :: field
-  class(sll_mapped_mesh_2d_base), pointer :: m
+  class(sll_mapped_mesh_2d_base), pointer   :: m
   sll_int32 :: nc1, nc2
   procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
 
@@ -23,10 +23,24 @@ program unit_test
   pjac12 => sinprod_jac12
   pjac21 => sinprod_jac21
   pjac22 => sinprod_jac22
-  call mesh%initialize('sinprod',nc1, nc2, px1, px2, pjac11, pjac12, pjac21, pjac22)
+  call mesh%initialize(&
+       'sinprod',&
+       nc1, &
+       nc2, &
+       px1, &
+       px2, &
+       pjac11, &
+       pjac12, &
+       pjac21, &
+       pjac22)
   m => mesh
 
-  call initialize_scalar_field_2d( field, "px1_field", m, NODE_CENTERED_FIELD, px1)
+  call initialize_scalar_field_2d( &
+       field, &
+       "px1_field", &
+       m, &
+       NODE_CENTERED_FIELD, &
+       px1)
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
   call write_scalar_field_2d( field, &

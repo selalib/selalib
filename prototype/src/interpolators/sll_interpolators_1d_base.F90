@@ -23,11 +23,13 @@ module sll_interpolator_1d
      end function interpolate_1d_array
   end interface
   abstract interface
-     function reconstruct_1d_array(this, data) result(res)
+     function reconstruct_1d_array(this, num_points, data) result(res)
        use sll_working_precision
        import interpolator_1d_base
        class(interpolator_1d_base), intent(in)     :: this
+       sll_int32, intent(in)                 :: num_points    ! size of output array
        sll_real64, dimension(:), intent(in)  :: data          ! data to be interpolated 
+       sll_real64, dimension(num_points)     :: res
      end function reconstruct_1d_array
   end interface
 
