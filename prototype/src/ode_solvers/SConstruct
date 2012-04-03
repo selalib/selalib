@@ -31,7 +31,7 @@ env.Library('sll_constants',  ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',  ["../utilities/misc_utils.F90"])
 env.Library('sll_splines',    ["../splines/sll_splines.F90"])
 env.Library('sll_mapped_mesh', ["../mapped_meshes/sll_mapped_meshes.F90"])
-#env.Library('sll_diagnostics',["../diagnostics/sll_diagnostics.F90"])
+env.Library('sll_diagnostics', Glob("../low_level_file_io/sll_*.F90"))
 env.Library('sll_field_2d',   ["../mapped_meshes/sll_maped_mesh_base.F90",
                                "../mapped_meshes/sll_mapped_meshes.F90",
                                "../fields/sll_scalar_field_2d.F90",
