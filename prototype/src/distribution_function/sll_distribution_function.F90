@@ -35,7 +35,7 @@ module distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_scalar_field_2d.h"
+#include "sll_field_2d.h"
   use numeric_constants
   use sll_misc_utils   ! for int2string
   implicit none
