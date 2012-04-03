@@ -15,9 +15,9 @@ env = Environment( ENV=os.environ,
                    F90PATH = ['../memory',
                               '../precision',
                               '../assert', '../constants',
-                              '../splines','../fields'], 
+                              '../splines','../fields','../WENO'], 
                    LIBPATH= ['.'],
-                   LIBS=[ 'sll_splines','geometry_funcs',
+                   LIBS=[ 'sll_splines','sll_weno','geometry_funcs',
                           'sll_memory',
                           'sll_precision',
                           'sll_constants',
@@ -37,10 +37,15 @@ env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_splines', ["../splines/sll_splines.F90"])
 env.Library('sll_constants', ["../constants/numeric_constants.F90"])
 env.Library('geometry_funcs', ["../fields/geometry_functions.F90"])
+#env.Library('sll_weno', ["../WENO/
 env.Program('unit_test', ["unit_test.F90","unit_test_1d.F90",
                           "sll_interpolators_base.F90",
                           "sll_cubic_spline_interpolator_2d.F90",
                           "sll_interpolators_2d_base.F90",
                           "sll_interpolators_1d_base.F90"])
-
+env.Program('unit_test_1d', ["unit_test.F90",
+                             "sll_interpolators_base.F90",
+                             "sll_cubic_spline_interpolator_2d.F90",
+                             "sll_interpolators_2d_base.F90",
+                             "sll_interpolators_1d_base.F90"])
 
