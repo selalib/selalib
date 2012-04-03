@@ -126,11 +126,13 @@ contains   ! *****************************************************************
   subroutine write_scalar_field_2d( &
     scalar_field, &
     multiply_by_jacobian, &
+    output_file_name, &
     output_format)
 
     class(scalar_field_2d) :: scalar_field
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
+    character(len=*), optional    :: output_file_name 
     class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32              :: local_format 
 
@@ -198,12 +200,18 @@ contains   ! *****************************************************************
     select case(local_format)
     case (SLL_IO_XDMF)
        
-       !PN we should find a better name for the XMF file
-       !PN add a tag or the plot_counter integer
+       if (.not. present(output_file_name)) then
        call sll_xdmf_open(  &
             trim(scalar_field%name)//".xmf", &
             scalar_field%mesh%label,                              &
             num_pts1,num_pts2,file_id,ierr)
+       else
+       call sll_xdmf_open(  &
+            trim(output_file_name)//".xmf", &
+            scalar_field%mesh%label,                              &
+            num_pts1,num_pts2,file_id,ierr)
+       end if
+
        if (scalar_field%data_position == NODE_CENTERED_FIELD) then
           call sll_xdmf_write_array(scalar_field%mesh%label, &
                                     val,&
