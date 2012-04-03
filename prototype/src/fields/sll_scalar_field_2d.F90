@@ -35,6 +35,7 @@ module sll_scalar_field_2d
   use sll_io
   use numeric_constants
   use sll_mapped_mesh_base
+  use sll_misc_utils
   implicit none
 
   enum, bind(C)
@@ -132,6 +133,8 @@ contains   ! *****************************************************************
     sll_int32, optional    :: output_format 
     class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32              :: local_format 
+    sll_int32, save        :: iplot = 0
+    character(len=4)       :: cplot
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -196,8 +199,15 @@ contains   ! *****************************************************************
 
     select case(local_format)
     case (SLL_IO_XDMF)
-
-       call sll_xdmf_open(scalar_field%mesh%label,file_id,num_pts1,num_pts2,ierr)
+       
+       !PN we should find a better name for the XMF file
+       !PN add a tag or the plot_counter integer
+       iplot = iplot + 1
+       call int2string(iplot,cplot)
+       call sll_xdmf_open(  &
+            trim(scalar_field%name)//"-"//cplot//".xmf", &
+            scalar_field%mesh%label,                              &
+            num_pts1,num_pts2,file_id,ierr)
        if (scalar_field%data_position == NODE_CENTERED_FIELD) then
           call sll_xdmf_write_array(scalar_field%mesh%label, &
                                     val,&
