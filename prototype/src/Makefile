@@ -8,6 +8,7 @@ default:
 	(cd low_level_file_io; scons)
 	(cd non_linear_solvers; scons)
 	(cd splines; scons)
+	(cd WENO; scons)	
 	(cd fft; scons)
 	(cd collective; scons CPATH='.' LPATH='.')
 	(cd remap; scons)
@@ -17,8 +18,9 @@ default:
 	(cd ode_solvers; scons)
 	(cd fields; scons)
 	(cd distribution_function; scons)
-	(cd poisson_solvers; scons)
-	(cd BSL; scons)
+	#(cd poisson_solvers; scons)
+	#(cd BSL; scons)
+	#(cd CSL; scons)		
 
 clean:
 	(cd constants; scons -c)
@@ -27,6 +29,7 @@ clean:
 	(cd assert; scons -c)
 	(cd non_linear_solvers; scons -c)
 	(cd splines; scons -c)
+	(cd WENO; scons -c)	
 	(cd utilities; scons -c)
 	(cd fft; scons -c)
 	(cd low_level_file_io; scons -c)
@@ -39,6 +42,7 @@ clean:
 	(cd fields; scons -c)
 	(cd ode_solvers; scons -c)
 	(cd distribution_function; scons -c)
-	(cd poisson_solvers; scons -c)
-	(cd BSL; scons -c)
+	#(cd poisson_solvers; scons -c)
+	#(cd BSL; scons -c)
+	#(cd CSL; scons -c)	
 	find . -name '*.mod' -exec rm {} \;
