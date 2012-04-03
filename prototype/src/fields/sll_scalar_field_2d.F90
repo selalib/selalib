@@ -68,9 +68,9 @@ contains   ! *****************************************************************
 
     class(scalar_field_2d), intent(inout)               :: this
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
+    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_2D), pointer              :: init_function
+    procedure(scalar_function_2D)                       :: init_function
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
