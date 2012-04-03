@@ -157,7 +157,8 @@ contains
              eta1 = eta1 + mesh%delta_eta1
           end do
        
-          call sll_xdmf_open(mesh%label,file_id,mesh%nc_eta1+1,mesh%nc_eta2+1,ierr)
+          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
+               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
           call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)

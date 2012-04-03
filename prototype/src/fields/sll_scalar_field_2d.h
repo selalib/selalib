@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 #ifndef _mesh_2d_h_
 #define _mesh_2d_h_
 
 #include "sll_assert.h"
+=======
+#ifndef _scalar_field_2d_h_
+#define _scalar_field_2d_h_
+>>>>>>> origin/fortran03-es
   use sll_scalar_field_2d
 ! Why this with macros? We explore hiding the access to an array behind a
 ! defined interface but at the same time we don't want to be penalized by
