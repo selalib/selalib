@@ -133,8 +133,6 @@ contains   ! *****************************************************************
     sll_int32, optional    :: output_format 
     class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32              :: local_format 
-    sll_int32, save        :: iplot = 0
-    character(len=4)       :: cplot
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -202,10 +200,8 @@ contains   ! *****************************************************************
        
        !PN we should find a better name for the XMF file
        !PN add a tag or the plot_counter integer
-       iplot = iplot + 1
-       call int2string(iplot,cplot)
        call sll_xdmf_open(  &
-            trim(scalar_field%name)//"-"//cplot//".xmf", &
+            trim(scalar_field%name)//".xmf", &
             scalar_field%mesh%label,                              &
             num_pts1,num_pts2,file_id,ierr)
        if (scalar_field%data_position == NODE_CENTERED_FIELD) then

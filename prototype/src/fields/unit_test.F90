@@ -47,12 +47,6 @@ program unit_test
   call write_scalar_field_2d( field, &
                               multiply_by_jacobian=.true. )
 
-  !PN Call several times to test plot counting
-  call write_scalar_field_2d( field, &
-                              multiply_by_jacobian=.true. )
-  call write_scalar_field_2d( field, &
-                              multiply_by_jacobian=.true. )
-
   call mesh%write_to_file()
 
   print *, 'Successful, exiting program.'
