@@ -35,6 +35,7 @@ module sll_scalar_field_2d
   use sll_io
   use numeric_constants
   use sll_mapped_mesh_base
+  use sll_misc_utils
   implicit none
 
   enum, bind(C)
@@ -68,9 +69,9 @@ contains   ! *****************************************************************
 
     class(scalar_field_2d), intent(inout)               :: this
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
+    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_2D), pointer              :: init_function
+    procedure(scalar_function_2D)                       :: init_function
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
@@ -125,11 +126,13 @@ contains   ! *****************************************************************
   subroutine write_scalar_field_2d( &
     scalar_field, &
     multiply_by_jacobian, &
+    output_file_name, &
     output_format)
 
     class(scalar_field_2d) :: scalar_field
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
+    character(len=*), optional    :: output_file_name 
     class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32              :: local_format 
 
@@ -196,8 +199,19 @@ contains   ! *****************************************************************
 
     select case(local_format)
     case (SLL_IO_XDMF)
+       
+       if (.not. present(output_file_name)) then
+       call sll_xdmf_open(  &
+            trim(scalar_field%name)//".xmf", &
+            scalar_field%mesh%label,                              &
+            num_pts1,num_pts2,file_id,ierr)
+       else
+       call sll_xdmf_open(  &
+            trim(output_file_name)//".xmf", &
+            scalar_field%mesh%label,                              &
+            num_pts1,num_pts2,file_id,ierr)
+       end if
 
-       call sll_xdmf_open(scalar_field%mesh%label,file_id,num_pts1,num_pts2,ierr)
        if (scalar_field%data_position == NODE_CENTERED_FIELD) then
           call sll_xdmf_write_array(scalar_field%mesh%label, &
                                     val,&
