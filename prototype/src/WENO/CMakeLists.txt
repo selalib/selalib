@@ -1,5 +1,5 @@
 
-add_library(sll_WENO STATIC sll_WENO.F90)
+add_library(sll_weno STATIC sll_WENO_node_interpolation.F90)
 
 add_library(WENO_interp STATIC WENO_interp.F90)
 add_library(WENO_recon STATIC WENO_recon.F90)

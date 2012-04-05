@@ -3,6 +3,8 @@ add_library(sll_splines STATIC sll_splines.F90)
 
 set(SPL_LIBS sll_splines sll_tridiagonal sll_memory sll_assertion sll_constants)
 
+add_library(util_constants STATIC util_constants.F90)
+
 # add first test
 set(SRC_TEST1 unit_test.F90 test_func_module.F90 test_processes_module.F90 util_constants.F90)
 add_executable(test_splines ${SRC_TEST1})
