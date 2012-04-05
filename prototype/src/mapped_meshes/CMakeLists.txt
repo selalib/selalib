@@ -8,7 +8,7 @@ target_link_libraries(test_mapped_meshes
 	sll_mapped_meshes
 	interpolators
 	sll_splines
-	geometry_funcs
+	geometry_functions
 	sll_constants
 	sll_low_level_file_io
 	sll_memory
