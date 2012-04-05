@@ -1,10 +1,9 @@
 program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_mesh_2d.h"
+#include "sll_field_2d.h"
   use numeric_constants
   use distribution_function
-  use sll_diagnostics
   use geometry_functions
   use sll_mapped_meshes
   use initial_distribution_functions
@@ -13,11 +12,12 @@ program unit_test
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic) :: mesh2d
   type(sll_distribution_function_2D_t) :: dist_func
+  type(sll_distribution_function_2d)   :: df ! new type to test
   character(32)  :: name = 'dist_func'
+  character(len=4) :: cstep
   procedure(scalar_function_2D), pointer :: p_init_f !, px1, px2, pjac
-  sll_int32  :: ierr
+  sll_int32  :: ierr, istep
   sll_int32 :: ix, iv, nnode_x1, nnode_v1
-
 
   nc_eta1 = 100
   nc_eta2 = 100
@@ -28,6 +28,7 @@ program unit_test
 !  px2 => sinprod_x2
 !  pjac => sinprod_jac
   call mesh2d%initialize( &
+       "mesh2d",  &
        nc_eta1+1, &
        nc_eta2+1, &
        sinprod_x1, &
@@ -40,13 +41,23 @@ program unit_test
   print*, 'initialization of distribution_function'
 
   p_init_f => gaussian
-  call sll_new_distribution_function_2D(dist_func,mesh2d,CELL_CENTER_FIELD, &
+  call sll_new_distribution_function_2D(dist_func,mesh2d,CELL_CENTERED_FIELD, &
        name, p_init_f)
- 
-  print*, 'write mesh and distribution function'
-!  call write_mesh_2d(mesh2d)
-  call write_scalar_field_2d(dist_func,name,jacobian=.true.) 
 
+  call initialize_distribution_function_2d( &
+       df, &
+       1.0_f64, &
+       1.0_f64, &
+       name, &
+       mesh2d, &
+       CELL_CENTERED_FIELD, &
+       p_init_f )
+  print*, 'write mesh and distribution function'
+
+  istep = 0
+  call int2string(istep,cstep)
+  dist_func%name = trim(name)//cstep
+  call write_scalar_field_2d(dist_func,multiply_by_jacobian=.true.) 
 !!$  x1_min =  0.0_f64; x1_max =  2.0_f64 * sll_pi
 !!$  x2_min =  0.0_f64; x2_max =  2.0_f64 * sll_pi
 !!$

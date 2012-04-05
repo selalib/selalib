@@ -6,10 +6,12 @@ program unit_test
   use util_constants
   use sll_interpolator_1d
   use sll_WENO
+  use sll_cubic_spline_interpolator_1d
     implicit none
 
   class(interpolator_1d_base), pointer        :: interp
-  type(sll_WENO_1d), target             :: WENO
+  type(sll_WENO_1d), target                   :: WENO
+  type(cubic_spline_1d_interpolator), target  :: spline
   sll_real64                            :: error
   sll_real64                            :: phase
   sll_real64, allocatable, dimension(:) :: interpolation_points
@@ -41,7 +43,8 @@ program unit_test
   end do
 
   print*, 'Cubic spline interpolation'
-  interp =>  new_interpolator_1d('spline', n, x_min, x_max, PERIODIC_SPLINE )
+  call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
+  interp =>  spline 
   out = interp%interpolate_array(n, data, interpolation_points)
   error = 0.0_f64
   do i=1,n   

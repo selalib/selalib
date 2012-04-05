@@ -8,6 +8,7 @@
 !> - Eric
 !> - Michel
 !> - Pierre
+!> - Edwin
 !>
 !
 ! DESCRIPTION: 
@@ -35,21 +36,24 @@ module distribution_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_2d.h"
+#include "sll_field_2d.h"
   use numeric_constants
   use sll_misc_utils   ! for int2string
   implicit none
   
-#define NEW_TYPE_FOR_DF(sll_distribution_function_nD_t, scalar_field_nD) \
-  type, extends(scalar_field_nD) :: sll_distribution_function_nD_t;  \
-     sll_real64      :: pmass;                                    \
-     sll_real64      :: pcharge;                                  \
-     sll_real64      :: average;                                  \
-     sll_int32       :: plot_counter;                             \
-  end type sll_distribution_function_nD_t
+#define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
+  type, extends(extended_type) :: new_df_type;                       \
+     sll_real64      :: pmass;                                       \
+     sll_real64      :: pcharge;                                     \
+     sll_real64      :: average;                                     \
+     sll_int32       :: plot_counter;                                \
+  end type new_df_type
 
 NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
 !NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, scalar_field_4d)
+
+NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
+
 
 !!$  interface write_distribution_function
 !!$     module procedure write_distribution_function_2D, &
@@ -72,7 +76,7 @@ contains
     class(sll_mapped_mesh_2d_base), target  :: mesh
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
-    procedure(scalar_function_2D), pointer  :: data_func
+    procedure(scalar_function_2D)           :: data_func
     ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
@@ -85,7 +89,7 @@ contains
     this%pmass = 1.0_f64
     this%plot_counter = 0
     this%name = name
-    if (data_position == NODE_FIELD) then
+    if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        do i2 = 1, mesh%nc_eta2+1
           do i1 = 1, mesh%nc_eta1+1
@@ -93,7 +97,7 @@ contains
                   mesh%x2_at_node(i1,i2))
           end do
        end do
-    else if (data_position == CELL_CENTER_FIELD) then
+    else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        delta1 = 1.0_f64/mesh%nc_eta1
        delta2 = 1.0_f64/mesh%nc_eta2
@@ -109,6 +113,34 @@ contains
        end do
     endif
   end subroutine sll_new_distribution_function_2d
+
+  subroutine initialize_distribution_function_2d( &
+    this, &
+    mass, &
+    charge, &
+    field_name, &
+    mesh, &
+    data_position, &
+    init_function )
+
+    type(sll_distribution_function_2d), intent(inout)   :: this
+    sll_real64, intent(in)                              :: mass
+    sll_real64, intent(in)                              :: charge
+    character(len=*), intent(in)                        :: field_name
+    class(sll_mapped_mesh_2d_base), target             :: mesh
+    sll_int32, intent(in)                               :: data_position
+    procedure(scalar_function_2D)                       :: init_function
+
+    this%pmass = mass
+    this%pcharge = charge
+    call initialize_scalar_field_2d( &
+         this, &
+         field_name, &
+         mesh, &
+         data_position, &
+         init_function )
+  end subroutine initialize_distribution_function_2d
+
 
 !!$  function sll_new_distribution_function_4D( mesh_descriptor_x,  &
 !!$                                             mesh_descriptor_v,  &
