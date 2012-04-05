@@ -30,6 +30,9 @@ sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: df
 
+character(6)  :: mesh_name = "grid2d"
+character(10) :: file_name = "test2d.xmf"
+
 nnodes_x1 = 32
 nnodes_x2 = 64
 ncells_x1 = nnodes_x1 - 1
@@ -54,7 +57,7 @@ SLL_ALLOCATE(df(nnodes_x1,nnodes_x2),error)
 
 df = cos(2.*x1)*exp(-x2*x2)
  
-call sll_xdmf_open("test2d",file_id,nnodes_x1,nnodes_x2,error)
+call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
 call sll_xdmf_write_array("test2d",x1,'x1',error)
 call sll_xdmf_write_array("test2d",x2,'x2',error)
 call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
@@ -95,6 +98,9 @@ sll_int32  :: ncells_x1, ncells_x2, ncells_x3
 sll_real64 :: theta, a, b, phi
 sll_real64, allocatable, dimension(:,:,:) :: x1, x2, x3, df
 
+character(6) :: mesh_name = "tore3d"
+character(10) :: file_name = "test3d.xmf"
+
 nnodes_x1 = 32
 nnodes_x2 = 64
 nnodes_x3 = 128
@@ -126,12 +132,14 @@ do k = 1, nnodes_x3
    phi = phi + 2._f64*sll_pi / (nnodes_x3-1)
 end do 
 
-call sll_xdmf_open("tore3d",file_id,nnodes_x1,nnodes_x2,nnodes_x3,error)
-call sll_xdmf_write_array("tore3d",x1,'x1',error)
-call sll_xdmf_write_array("tore3d",x2,'x2',error)
-call sll_xdmf_write_array("tore3d",x3,'x3',error)
-call sll_xdmf_write_array("tore3d",df,"NodeVal",error,file_id,"Node")
-call sll_xdmf_write_array("tore3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3),"CellVal",error,file_id,"Cell")
+
+call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,nnodes_x3,file_id,error)
+call sll_xdmf_write_array(mesh_name,x1,'x1',error)
+call sll_xdmf_write_array(mesh_name,x2,'x2',error)
+call sll_xdmf_write_array(mesh_name,x3,'x3',error)
+call sll_xdmf_write_array(mesh_name,df,"NodeVal",error,file_id,"Node")
+call sll_xdmf_write_array(mesh_name,df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
+                          "CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
 
 end subroutine test_3d

@@ -43,8 +43,9 @@ program unit_test
        px1)
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
-  call write_scalar_field_2d( field, &
-                              multiply_by_jacobian=.true. )
+
+  call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
+  call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
 
   call mesh%write_to_file()
 
