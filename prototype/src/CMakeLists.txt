@@ -81,7 +81,7 @@ endif(FFTW_FOUND)
 #ENDIF()
 
 # include's
-include_directories(remap poisson_solvers utilities memory assert precision) 
+include_directories(remap poisson_solvers utilities memory assert precision fields) 
 
 add_subdirectory(memory)
 add_subdirectory(precision)
@@ -99,14 +99,14 @@ add_subdirectory(fft)
 add_subdirectory(collective)
 add_subdirectory(remap)
 add_subdirectory(WENO)
-add_subdirectory(interpolators) # unit_test not work
+add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
+add_subdirectory(fields)
+add_subdirectory(ode_solvers)
+add_subdirectory(distribution_function)
 
 
 
-#add_subdirectory(fields)
-#add_subdirectory(ode_solvers)
-#add_subdirectory(distribution_function)
 #add_subdirectory(maxwell_solvers)
 #add_subdirectory(poisson_solvers)
 #add_subdirectory(BSL)
@@ -117,6 +117,7 @@ add_subdirectory(mapped_meshes)
 
 # add tests
 enable_testing()
+set(failRegex "NOT PASS")
 add_test(memory memory/test_memory)
 add_test(precision precision/test_precision)
 add_test(assert assert/test_assert)
@@ -131,15 +132,18 @@ add_test(splines splines/test_non_unif_splines)
 add_test(integration integration/test_integration)
 add_test(fft fft/test_fft)
 add_test(collective mpirun -np 4 collective/test_collective)
+set_tests_properties(collective PROPERTIES FAIL_REGULAR_EXPRESSION "${failRegex}")
 add_test(remap mpirun -np 8 remap/test_remap)
 add_test(WENO WENO/test_WENO)
-#add_test(interpolators interpolators/test_interpolators) not work
+add_test(interpolators interpolators/test_interpolators_1d)
+add_test(interpolators interpolators/test_interpolators_2d)
 add_test(mapped_meshes mapped_meshes/test_mapped_meshes)
+add_test(fields fields/test_scalar_field)
+add_test(ode_solvers ode_solvers/test_implicit_ode_nonuniform)
+add_test(distribution_function distribution_function/test_distribution_function)
 
-#add_test(fields fields/test_scalar_field)
-#add_test(distribution_function distribution_function/test_distribution_function)
+
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
-#add_test(ode_solvers ode_solvers/test_ode_solvers)
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 #add_test(poisson_solvers poisson_solvers/test_poisson_1d)
 #add_test(poisson_solvers poisson_solvers/test_poisson_2d)
