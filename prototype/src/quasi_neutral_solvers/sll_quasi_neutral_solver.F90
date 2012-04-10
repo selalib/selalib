@@ -30,6 +30,8 @@
        integer   :: num_pts_z
        real(f64) :: dr, dtheta     ! cell size in r and theta
        real(f64) :: rmin
+       sll_real64, dimension(:,:), allocatable :: F ! RHS in matrix form
+       sll_real64, dimension(:,:), allocatable :: U ! solution
        real(f64), dimension(:), pointer :: knotsr, knotsth  ! knot vectors for 
                                                             ! splines in r and 
                                                             ! theta direction
@@ -60,17 +62,23 @@
     ! plan for a 3D mesh...
     ! Here we explore the idea of having all the information about the data
     ! layouts and remap plans internally, without any exposure in the interface.
-    function new_qn_plan(spline_degree, rtz_mesh ) 
+    function new_qn_plan( &
+      spline_degree, &
+      num_pts_r, &
+      num_pts_theta, &
+      r_min, &
+      r_max, &
+      theta_min, &
+      theta_max )
+ 
       type(quasi_neutral_plan), pointer  :: new_qn_plan
-      type(mesh_cylindrical_3D), pointer :: rtz_mesh
-      integer   :: spline_degree   ! degree of spline basis functions
-      real(f64) :: rmin            ! Minimum value of r
+      sll_int32, intent(in) :: spline_degree   ! degree of spline basis funcs
+      sll_int32, intent(in) :: num_pts_r, num_pts_theta
+      sll_real64, intent(in) :: r_min, r_max, theta_min, theta_max
       ! point dimensions in r, theta and z
-      integer   :: npr
-      integer   :: npt   
-      integer   :: npz        
+      integer   :: num_pts_r
+      integer   :: num_pts_theta   
       real(f64) :: dr, dtheta      ! cell size in r and theta
-      
       real(f64) :: rprof           ! r profile for Kar and Mar matrices
       integer   :: i,j,k,ig,j1,j2  ! loop indices
       integer   :: ierr            ! for error codes
@@ -99,19 +107,18 @@
       
       SLL_ALLOCATE( new_qn_plan, ierr )
       ! set scalars in quasi_neutral_plan object
-      rmin                      = GET_MESH_RMIN(rtz_mesh)
-      npr                       = GET_MESH_NCR(rtz_mesh)+1   ! num of points
-      npt                       = GET_MESH_NCTHETA(rtz_mesh) ! periodic
-      npz                       = GET_MESH_NCZ(rtz_mesh)+1   ! num of points
-      dr                        = GET_MESH_DELTA_R(rtz_mesh)
-      dtheta                    = GET_MESH_DELTA_THETA(rtz_mesh)
+!!$      rmin                      = GET_MESH_RMIN(rtz_mesh)
+!!$      npr                       = GET_MESH_NCR(rtz_mesh)+1   ! num of points
+!!$      npt                       = GET_MESH_NCTHETA(rtz_mesh) ! periodic
+!!$      npz                       = GET_MESH_NCZ(rtz_mesh)+1   ! num of points
+!!$      dr                        = GET_MESH_DELTA_R(rtz_mesh)
+!!$      dtheta                    = GET_MESH_DELTA_THETA(rtz_mesh)
       new_qn_plan%spline_degree = spline_degree
-      new_qn_plan%num_pts_r     = npr
-      new_qn_plan%num_pts_t     = npt
-      new_qn_plan%num_pts_z     = npz
-      new_qn_plan%dr            = dr
-      new_qn_plan%dtheta        = dtheta
-      new_qn_plan%rmin          = rmin
+      new_qn_plan%num_pts_r     = num_pts_r
+      new_qn_plan%num_pts_t     = num_pts_theta
+      new_qn_plan%dr            = (r_max-r_min)/(num_pts_r-1)
+      new_qn_plan%dtheta        = (theta_max-theta_min)/(num_pts_theta-1)
+      new_qn_plan%r_min         = r_min
       ! Start with a layout for sequential operations in theta
       nproc_t = NUMP_X1
       nproc_r = NUMP_X2
