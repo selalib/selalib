@@ -19,14 +19,17 @@ env = Environment( ENV = os.environ,
                    F90PATH= ['../memory', '../precision', '../assert', 
                              '../numerical_utilities', '../constants',
                              '../mesh_types', '../diagnostics', '../collective',
-                             '../utilities', '../fft', '../remap','../timer','../fftpack'],
+                             '../utilities', '../fft', '../remap','../timer',
+                             '../fftpack'],
 # fix the following: fftpack should be treated as any other local library.
                    LINK = 'mpif90',
                    LIBPATH = ['.'],
                    LIBS = ['sll_remap','sll_mesh_types', 
                            'sll_fft', 'sll_collective',
-                           'sll_diagnostics','sll_assertion','sll_utilities','sll_tridiagonal',
-                           'sll_constants','sll_precision','sll_memory','sll_timer','dfftpack'],
+                           'sll_diagnostics','sll_assertion','sll_utilities',
+                           'sll_tridiagonal',
+                           'sll_constants','sll_precision','sll_memory',
+                           'sll_timer','dfftpack'],
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
                    '-fopenmp'],
                     F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', 
@@ -63,6 +66,6 @@ if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(LIBPATH=[os.environ['FFTWLIBPATH']])
   env.Append(LIBS=['fftw3'])
 
-env.Program('unit_test', ["unit_test.F90", "sll_qns_2d_with_finite_diff_seq.F90", 
-"sll_qns_2d_with_finite_diff_par.F90"])
-
+env.Program('unit_test', ["unit_test.F90","sll_quasi_neutral_solver.F90"])
+#env.Program('unit_test_fd_seq',["sll_qns_2d_with_finite_diff_seq.F90"])
+#env.Program('unit_test_fd_par',["sll_qns_2d_with_finite_diff_par.F90"])
