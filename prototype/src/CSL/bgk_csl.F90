@@ -16,9 +16,9 @@ program bgk_csl
   sll_real64 :: mu,xi,L,H
   sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step
   LOGICAL :: ex
-  sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2
+  sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2,phi_poisson
   sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E,rho_exact
-  sll_real64,dimension(:,:), pointer :: f
+  sll_real64,dimension(:,:), pointer :: f,f_init,f_equil
   sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val
   sll_int :: ii,step
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
@@ -28,22 +28,27 @@ program bgk_csl
   sll_real64, dimension(:,:), pointer :: x1n_array, x2n_array
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, eta1c, eta2c
   sll_real64 :: delta_eta1, delta_eta2,alpha_mesh
-  sll_int  :: mesh_case,ierr,visu_step
+  sll_int  :: mesh_case,ierr,visu_step,test_case,rho_case
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
   character(32), parameter  :: name = 'distribution_function'
   type(field_2D_vec1), pointer :: uniform_field
+  type(field_2D_vec1), pointer :: uniform_field_new
   type(csl_workspace), pointer :: csl_work
-  sll_real64,dimension(:,:), pointer :: integration_points,integration_points_val
+  sll_real64,dimension(:,:,:), pointer :: integration_points
+  sll_real64,dimension(:,:), pointer :: integration_points_val
+  character*80,str,str2
 
-  mesh_case = 2
+  mesh_case = 3
   visu_step = 10
+  test_case = 7
+  rho_case = 3
   
-  N_x1 = 30
-  N_x2 = 30
+  N_x1 = 128
+  N_x2 = 128
   dt = 0.1_f64
-  nb_step = 100!600
+  nb_step = 600
   
   N = max(N_x1,N_x2)
   
@@ -54,6 +59,8 @@ program bgk_csl
   x2_min = -x2_max
   
   SLL_ALLOCATE(f(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(f_init(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(f_equil(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(node_positions_x1(N_x1+1),err)
   SLL_ALLOCATE(node_positions_x2(N_x2+1),err)
   SLL_ALLOCATE(new_node_positions(N+1),err)
@@ -61,12 +68,14 @@ program bgk_csl
   SLL_ALLOCATE(rho(N_x1+1),err)
   SLL_ALLOCATE(rho_exact(N_x1+1),err)
   SLL_ALLOCATE(E(N_x1+1),err)
-  SLL_ALLOCATE(integration_points(N_x1+1,N_x2+1),err)  
+  SLL_ALLOCATE(phi_poisson(N_x1+1),err)
+  SLL_ALLOCATE(integration_points(3,N_x1+1,N_x2+1),err)  
   SLL_ALLOCATE(integration_points_val(2,N_x2),err)  
   
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
   
+  f_equil=0._f64
   
   !physical parameters
   mu=0.92_f64
@@ -95,11 +104,21 @@ program bgk_csl
   
   x1_min = 0._f64
   x1_max = L
+  
+  
+  if(test_case>=4)then
+    L = 4._f64*sll_pi
+    x1_min = 0._f64
+    x1_max = L
+    x2_min = -8._f64
+    x2_max = -x2_min
+  endif
 
 !  x1_min = 0._f64
 !  x1_max = 1._f64
 !  x2_min = 0._f64
 !  x2_max = 1._f64
+  
   
   
   
@@ -146,6 +165,12 @@ program bgk_csl
   eta2_min =  0.0_f64
   eta2_max =  1.0_f64
 
+  !eta1_min =  -0.5_f64
+  !eta1_max = 0.5_f64 ! 0.15_f64*x1_max! 1.0_f64
+  !eta2_min =  -0.5_f64
+  !eta2_max =  0.5_f64
+
+
   !eta1_min =  x1_min
   !eta1_max = x1_max
   !eta2_min = x2_min
@@ -170,6 +195,7 @@ program bgk_csl
         x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
         x2c_array(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
         jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)
+        !jac_array(i1,i2) = 1._f64!(x1_max-x1_min)*(x2_max-x2_min)
       enddo
     enddo
     geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
@@ -180,7 +206,10 @@ program bgk_csl
 
     do i2=1,nc_eta2+1
       do i1=1,nc_eta1+1
-        integration_points(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+        !eta1 value of intersecting point (eta2,x1)=constant
+        integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+        !x2 value of intersecting point (eta2,x1)=constant
+        integration_points(2,i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
       enddo
     enddo
     
@@ -245,8 +274,10 @@ program bgk_csl
           print *,'Problem of convergence of Newton'
           stop
         endif
-        integration_points(i1,i2) = x2_min+(x1-val+eta2)*(x2_max-x2_min)
-        
+        !eta1 value of intersecting point (eta2,x1)=constant
+        integration_points(1,i1,i2) = val
+        !x2 value of intersecting point (eta2,x1)=constant
+        integration_points(2,i1,i2) = x2_min+(x1-val+eta2)*(x2_max-x2_min)        
       enddo
     enddo
     !do i1=1,nc_eta1
@@ -257,16 +288,96 @@ program bgk_csl
 
   endif
 
+
+
+  if(mesh_case==3)then
+     alpha_mesh = 1.e-1_f64 !0.1_f64
+     eta2 = eta2_min 
+     eta2c = eta2_min + 0.5_f64*delta_eta2
+     do i2= 1, nc_eta2 + 1
+        eta1 = eta1_min
+        eta1c = 0.5_f64*delta_eta1
+        do i1 = 1, nc_eta1 + 1
+           x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)**2
+           x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+           x1c_array(i1,i2) = eta1c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)**2
+           x2c_array(i1,i2) = eta2c + alpha_mesh * sin(2*sll_pi*eta1c)* sin(2*sll_pi*eta2c)
+           !x1n_array(i1,i2) = (x1n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x2n_array(i1,i2) = (x2n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x1c_array(i1,i2) = (x1c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x2c_array(i1,i2) = (x2c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)) * &
+           !  (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c)) - &
+           !  alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c) * &
+           !  alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)
+           !val =   1.0_f64 + 2._f64*alpha_mesh *sll_pi*sin(2*sll_pi*(eta1c+eta2c))
+           !if(abs(jac_array(i1,i2)-val)>1e-13)then
+           !  print *,jac_array(i1,i2),val
+           !  stop
+           !endif
+           jac_array(i1,i2) = 1._f64+2._f64*sll_pi*alpha_mesh*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)&
+           +2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1c)&
+           -2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)**2&
+           -4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)*cos(2._f64*sll_pi*eta1c)&
+           +4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)**3*cos(2._f64*sll_pi*eta1c)
+           eta1 = eta1 + delta_eta1
+           eta1c = eta1c + delta_eta1
+           x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+           x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+           x1c_array(i1,i2) = x1_min+x1c_array(i1,i2)*(x1_max-x1_min)
+           x2c_array(i1,i2) = x2_min+x2c_array(i1,i2)*(x2_max-x2_min)
+           jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+        end do
+        eta2 = eta2 + delta_eta2
+        eta2c = eta2c + delta_eta2
+     end do
+
+    geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+       x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+    mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+       PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+    dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+    val = 0._f64
+    do i2=1,nc_eta2
+      do i1=1,nc_eta1
+        x1 = (real(i1,f64)-0.5_f64)/real(nc_eta1,f64)
+        eta2 = (real(i2,f64)-0.5_f64)/real(nc_eta2,f64)
+        tmp = alpha_mesh*sin(2._f64*sll_pi*eta2)**2
+        do i=1,100
+          val = val-(val+tmp*sin(2._f64*sll_pi*val)-x1)/&
+          (1._f64+2._f64*sll_pi*tmp*cos(2._f64*sll_pi*val))
+        enddo
+        if(abs(val+tmp*sin(2._f64*sll_pi*val)-x1)>1.e-14)then
+          print *,i1,i2,val+tmp*sin(2._f64*sll_pi*val)-x1,val
+          print *,'Problem of convergence of Newton'
+          stop
+        endif
+        !eta1 value of intersecting point (eta2,x1)=constant
+        integration_points(1,i1,i2) = val
+        !x2 value of intersecting point (eta2,x1)=constant
+        integration_points(2,i1,i2) = x2_min+((x1-val)/sin(2._f64*sll_pi*eta2)+eta2)*(x2_max-x2_min)        
+      enddo
+    enddo
+    !do i1=1,nc_eta1
+    !  print *,i1,integration_points(i1,1), integration_points(i1,nc_eta2)
+    !enddo
+    !stop
+
+
+  endif
+
+
   open(unit=900,file='intersect_points.dat')  
     do i1=1,N_x1
       x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
       do i2=1,N_x2
-        write(900,*) x1,integration_points(i1,i2),x1c_array(i1,i2),x2c_array(i1,i2)
+        write(900,*) x1,integration_points(2,i1,i2),x1c_array(i1,i2),x2c_array(i1,i2)
       enddo  
     enddo
   close(900)
   
-  stop
+  !stop
 
   
   !call sll_init_distribution_function_2D( dist_func, GAUSSIAN )
@@ -292,13 +403,35 @@ program bgk_csl
       phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)
       !phi_val = 0._f64
       H = 0.5_f64*x2*x2 + phi_val
-      val = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+H/(1._f64-xi))*exp(-H)
-      !f(i1,i2) = 1._f64/sqrt(2._f64*sll_pi)*exp(-H)      
-      val = val*(1._f64+0.0_f64*cos(2._f64*sll_pi/L*x1))
-      !f(i1,i2) = 1._f64/(x2_max-x2_min)
-      !val = exp(-0.5_f64*40._f64*((x1-.5_f64)**2+(x2-.5_f64)**2))
-      f(i1,i2) = val*jac_array(i1,i2)
-      call sll_set_df_val(dist_func, i1, i2, f(i1,i2))      
+      if(test_case==1)then
+        val = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+H/(1._f64-xi))*exp(-H)
+      endif
+      if(test_case==2)then
+        val = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+H/(1._f64-xi))*exp(-H)
+        val = val*(1._f64+0.1_f64*cos(2._f64*sll_pi/L*x1))
+      endif
+      if(test_case==3)then
+        val = exp(-0.5_f64*40._f64*((x1-.5_f64)**2+(x2-.5_f64)**2))
+      endif
+      if(test_case==4)then
+        !linear landau damping
+        val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
+        !f_equil(i1,i2) = val*jac_array(i1,i2)
+        val = val*(1._f64+0.001_f64*cos(2._f64*sll_pi/L*x1))
+      endif
+      if(test_case==5)then
+        !non linear landau damping
+        val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
+        val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/L*x1))
+      endif
+      if(test_case==6.or.test_case==7)then
+        !gaussian equilibrium
+        val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
+        !f_equil(i1,i2) = val*jac_array(i1,i2)
+      endif
+
+      f_init(i1,i2) = val*jac_array(i1,i2)      
+      call sll_set_df_val(dist_func, i1, i2, f_init(i1,i2))      
     enddo
   enddo
   
@@ -322,49 +455,162 @@ program bgk_csl
   
   
   call write_mesh_2D(mesh)
-!  do i1=1,nc_eta1+1
-!    do i2=1,nc_eta2+1
-!      val = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)
-!      val = jac_array(i1,i2)
-!      call sll_set_df_val(dist_func, i1, i2, val)
-!    enddo
-!  enddo  
   call write_distribution_function ( dist_func )
-!  do i1=1,nc_eta1+1
-!    do i2=1,nc_eta2+1
-!      val = sll_get_df_val(dist_func, i1, i2)*jac_array(i1,i2)
-!      call sll_set_df_val(dist_func, i1, i2, val)
-!    enddo
-!  enddo  
-!  
-  do i1 = 1, nc_eta1
-    do i2=1,nc_eta2
-      integration_points_val(1,i2) = integration_points(i1,i2)
-      integration_points_val(2,i2) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)
-    enddo
-    !rho(i1)= compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
-    !rho(i1)= compute_non_unif_integral_spline(integration_points_val,nc_eta2)
-    rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
-  enddo
-  
-  open(unit=900,file='rho0.dat')  
-    do i1=1,N_x1
-      x1 = x1_min+real(i1-1,f64)*delta_x1
-      write(900,*) x1,rho(i1),rho_exact(i1)
-    enddo
-  close(900)
 
-  stop
+
   
+
+  ! initialize CSL  
+  csl_work => new_csl_workspace( dist_func )
   uniform_field => new_field_2D_vec1(mesh)
-  do i1 = 1, nc_eta1+1 
-     do i2 = 1, nc_eta2+1
-       x1 = x1n_array(i1,i2)
-       x2 = x2n_array(i1,i2)
-       phi_val = 0._f64
-       xx = (x1-x1_min)/(x1_max-x1_min)
-       if(xx<=0._f64)then
-         xx = 0._f64
+  uniform_field_new => new_field_2D_vec1(mesh)
+
+  do i1=1,nc_eta1+1
+    node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+  enddo
+
+
+  do step = 1, nb_step
+
+    do i2=1,nc_eta2
+      do i1 = 1,nc_eta1
+        new_node_positions(i1) = integration_points(1,i1,i2)
+        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
+          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
+        endif
+        if(new_node_positions(i1)<node_positions_x1(1))then
+          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
+        endif      
+        buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
+      enddo
+      buf_1d(nc_eta1+1) = buf_1d(1)
+
+      !write(str2,*) i2
+      !write(str,*) 'test'//trim(adjustl((str2)))//'.dat'
+      
+      !open(unit=900,file=trim(adjustl((str))))  
+      !do ii=1,nc_eta1
+      !  write(900,*) node_positions_x1(ii),buf_1d(ii)
+      !enddo  
+      !close(900)
+      
+      
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
+      do i1 = 1,nc_eta1
+        integration_points(3,i1,i2) =  buf_1d(i1)
+      enddo
+
+      !write(str2,*) i2
+      !write(str,*) 'ntest'//trim(adjustl((str2)))//'.dat'
+      
+      !open(unit=900,file=trim(adjustl((str))))  
+      !do ii=1,nc_eta1
+      !  write(900,*) new_node_positions(ii),buf_1d(ii)
+      !enddo  
+      !close(900)
+      
+      
+      
+    enddo
+    
+    !if(step==11)then
+    !  stop
+    !endif
+    !stop
+  
+    do i1 = 1, nc_eta1
+      do i2=1,nc_eta2
+        integration_points_val(1,i2) = integration_points(2,i1,i2)
+        integration_points_val(2,i2) = integration_points(3,i1,i2)
+      enddo
+      if(rho_case==1)then
+        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==2)then
+        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==3)then
+        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
+      endif      
+      !if(test_case==4)then
+       ! rho(i1) = rho(i1)+1._f64
+      !endif  
+    enddo  
+    E=rho-1._f64
+    call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+    
+    tmp=sum(rho(1:N_x1))*delta_x1
+  
+    val=0._f64
+    do i1=1,N_x1
+      val = val+E(i1)*E(i1)
+    enddo
+    val = val/real(N_x1,f64)
+    print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64
+
+  
+    phi_poisson = E
+    call poisson1dpertrap(phi_poisson,x1_max-x1_min,N_x1)
+    tmp = phi_poisson(1)
+    do i1=1,N_x1
+      phi_poisson(i1) = -phi_poisson(i1) + tmp
+    enddo
+    phi_poisson(N_x1+1) = phi_poisson(1) 
+    do i1=2,N_x1+1
+      buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
+    enddo
+    buf_1d(1)=buf_1d(N_x1+1)
+
+    if(mod(step,visu_step)==0.or. step==1)then
+      write(str2,*) step
+      write(str,*) 'rho'//trim(adjustl((str2)))//'.dat'
+      open(unit=900,file=trim(adjustl((str))))  
+        do i1=1,N_x1
+          x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+          write(900,*) x1,rho(i1),rho_exact(i1),phi_poisson(i1),E(i1)
+        enddo
+      close(900)
+    endif
+   if(test_case==7)then
+     phi_poisson = 0._f64
+   endif
+    
+    
+!    do i1 = 1, nc_eta1+1 
+!      do i2 = 1, nc_eta2+1
+!        x1 = x1n_array(i1,i2)
+!        x2 = x2n_array(i1,i2)
+!        phi_val = 0._f64
+!        xx = (x1-x1_min)/(x1_max-x1_min)
+!        if(xx<=0._f64)then
+!          xx = 0._f64
+!        endif
+!        if(xx>=1._f64)then
+!          xx = xx-1._f64!1._f64-1e-15_f64
+!        endif
+!        if(xx<=0._f64)then
+!          xx = 0._f64
+!        endif      
+!        xx = xx*real(N_phi,f64)
+!        ii = floor(xx)
+!        xx = xx-real(ii,f64)      
+!        phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)     
+!        FIELD_2D_AT_I( uniform_field, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
+!        !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
+!        !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
+!      end do
+!    end do
+
+
+    do i1 = 1, nc_eta1+1 
+      do i2 = 1, nc_eta2+1
+        x1 = x1n_array(i1,i2)
+        x2 = x2n_array(i1,i2)
+        phi_val = 0._f64
+        xx = (x1-x1_min)/(x1_max-x1_min)
+        if(xx<=0._f64)then
+          xx = 0._f64
         endif
         if(xx>=1._f64)then
           xx = xx-1._f64!1._f64-1e-15_f64
@@ -372,133 +618,150 @@ program bgk_csl
         if(xx<=0._f64)then
           xx = 0._f64
         endif      
-        xx = xx*real(N_phi,f64)
+        xx = xx*real(N_x1,f64)
         ii = floor(xx)
         xx = xx-real(ii,f64)      
-        phi_val = (1._f64-xx)*phi(ii+1)+xx*phi(ii+2)     
+        phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
         FIELD_2D_AT_I( uniform_field, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
         !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
         !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
-     end do
-  end do
+      end do
+    end do
+
+    do i1 = 1, nc_eta1 
+      do i2 = 1, nc_eta2    
+        f(i1,i2) = sll_get_df_val(dist_func, i1, i2)
+      enddo  
+    enddo
+    
+    
+    call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
+    do i1=1,nc_eta1+1
+      node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+    enddo
+    do i2=1,nc_eta2
+      do i1 = 1,nc_eta1
+        new_node_positions(i1) = integration_points(1,i1,i2)
+        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
+          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
+          stop
+        endif
+        if(new_node_positions(i1)<node_positions_x1(1))then
+          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
+        endif      
+        buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
+      enddo
+      buf_1d(nc_eta1+1) = buf_1d(1)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
+      do i1 = 1,nc_eta1
+        integration_points(3,i1,i2) =  buf_1d(i1)
+      enddo
+    enddo
   
-  ! initialize CSL  
-  csl_work => new_csl_workspace( dist_func )
-  ! run CSL method for 10 time steps
-  !deltat = 0.4_f64
-  do step = 1, nb_step
-     !print*, 'iteration=',step
-     !call csl_first_order(csl_work, dist_func, uniform_field, dt)
-     call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, dt)
-     if(mod(step,visu_step)==0)then
-       call write_distribution_function ( dist_func )
-     endif
+    do i1 = 1, nc_eta1
+      do i2=1,nc_eta2
+        integration_points_val(1,i2) = integration_points(2,i1,i2)
+        integration_points_val(2,i2) = integration_points(3,i1,i2)
+      enddo
+      !rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      if(rho_case==1)then
+        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==2)then
+        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==3)then
+        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
+      endif      
+      !if(test_case==4)then      
+      !  rho(i1) = rho(i1)+1._f64
+      !endif  
+    enddo
+    E=rho-1._f64
+    call poisson1dpertrap(E,x1_max-x1_min,N_x1)  
+    phi_poisson = E
+    call poisson1dpertrap(phi_poisson,x1_max-x1_min,N_x1)
+    tmp = phi_poisson(1)
+    do i1=1,N_x1
+      phi_poisson(i1) = -phi_poisson(i1) + tmp
+    enddo
+    phi_poisson(N_x1+1) = phi_poisson(1) 
+    do i1=2,N_x1+1
+      buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
+    enddo
+    buf_1d(1)=buf_1d(N_x1+1)
+
+  
+  
+   if(test_case==7)then
+     phi_poisson = 0._f64
+   endif
+
+
+    do i1 = 1, nc_eta1+1 
+      do i2 = 1, nc_eta2+1
+        x1 = x1n_array(i1,i2)
+        x2 = x2n_array(i1,i2)
+        phi_val = 0._f64
+        xx = (x1-x1_min)/(x1_max-x1_min)
+        if(xx<=0._f64)then
+          xx = 0._f64
+        endif
+        if(xx>=1._f64)then
+          xx = xx-1._f64!1._f64-1e-15_f64
+        endif
+        if(xx<=0._f64)then
+          xx = 0._f64
+        endif      
+        xx = xx*real(N_x1,f64)
+        ii = floor(xx)
+        xx = xx-real(ii,f64)      
+        phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
+        FIELD_2D_AT_I( uniform_field_new, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
+        !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
+        !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
+      end do
+    end do
+
+    do i1 = 1, nc_eta1 
+      do i2 = 1, nc_eta2    
+        call sll_set_df_val(dist_func, i1, i2,f(i1,i2)-f_equil(i1,i2))
+      enddo  
+    enddo
+
+    !do i1 = 1, nc_eta1 
+    !  do i2 = 1, nc_eta2    
+    !    call sll_set_df_val(dist_func, i1, i2,f(i1,i2))
+    !  enddo  
+    !enddo
+
+
+    call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
+
+
+    do i1 = 1, nc_eta1 
+      do i2 = 1, nc_eta2
+        val = sll_get_df_val(dist_func, i1, i2)
+        call sll_set_df_val(dist_func, i1, i2,val+f_equil(i1,i2))
+      enddo  
+    enddo
+    
+    if(mod(step,visu_step)==0)then
+      call write_distribution_function ( dist_func )
+    endif
   end do
 
   val = 0._f64
   do i1=1,nc_eta1+1
     do i2=1,nc_eta2+1
       val = max(abs(sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)&
-      -f(i1,i2)/jac_array(i1,i2)),val)
+      -f_init(i1,i2)/jac_array(i1,i2)),val)
     enddo
   enddo  
   
-  print *,nc_eta1,nc_eta2,dt,nb_step,val
+  print *,'#',nc_eta1,nc_eta2,dt,nb_step,val
   
-  stop
-  
-  
-  !print *,f(N_x1+1,:)
-  
-  !stop
-
-  !splitting x1 dt/2
-  do i2=1,N_x2+1
-    buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
-    call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-    alpha = node_positions_x2(i2)*0.5_f64*dt
-    new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
-    call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
-    call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
-    f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
-  enddo
-  
-  !compute_rho
-  do i1=1,N_x1+1
-    buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
-    call compute_non_unif_integral2(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
-    rho(i1)=val-1._f64
-  enddo
-  E=rho
-  call poisson1dpertrap(E,x1_max-x1_min,N_x1)
-
-  open(unit=900,file='field_1.dat')  
-    do i1=1,N_x1+1
-      x1 = x1_min+real(i1-1,f64)*delta_x1
-      write(900,*) x1,E(i1),rho(i1)
-    enddo
-  close(900)
-  
-  
-  !time iteration
-  
-  do step=1,nb_step
-    !diagnostic
-    val=0._f64
-    do i1=1,N_x1
-      val = val+E(i1)*E(i1)
-    enddo
-    val = val/real(N_x1,f64)
-    print *,(real(step,f64)-0.5_f64)*dt,val
-    
-    !splitting x2 dt
-    do i1=1,N_x1+1
-      buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
-      call compute_spline_nonunif( buf_1d, spl_per_x2, node_positions_x2)
-      alpha = E(i1)*dt
-      new_node_positions(1:N_x2+1) = node_positions_x2(1:N_x2+1)
-      call compute_translate_nodes_periodic(-alpha,N_x2,node_positions_x2(1:N_x2+1),new_node_positions(1:N_x2+1))
-      call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x2+1, spl_per_x2)
-      f(i1,1:N_x2+1) = buf_1d(1:N_x2+1)
-    enddo
-    !splitting x1 dt
-    do i2=1,N_x2+1
-      buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
-      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-      alpha = node_positions_x2(i2)*dt
-      new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
-      call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
-      call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
-      f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
-    enddo
-    
-    if(mod(step,visu_step)==0)then
-      do i2=1,N_x2+1
-        buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
-        call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-        alpha = -0.5_f64*node_positions_x2(i2)*dt
-        new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
-        call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
-        call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
-        !f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
-        do i1=1,N_x1
-          call sll_set_df_val(dist_func, i1, i2, buf_1d(i1))
-        enddo  
-      enddo      
-      call write_distribution_function ( dist_func )
-    endif
-    
-    
-    !compute E
-    do i1=1,N_x1+1
-      buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
-      call compute_non_unif_integral2(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
-      rho(i1)=val-1._f64
-    enddo
-    E=rho
-    call poisson1dpertrap(E,x1_max-x1_min,N_x1)
-  enddo
-
   open(unit=900,file='field_final.dat')  
     do i1=1,N_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
@@ -583,6 +846,7 @@ subroutine poisson1dpertrap(E,L,N)
   sll_int::i
   sll_real64::eold,enew,dx2,tmp
   !ensures at first that Ein is of mean zero
+  
   tmp=0._f64
   do i=1,N
     tmp=tmp+E(i)
@@ -591,6 +855,7 @@ subroutine poisson1dpertrap(E,L,N)
   do i=1,N
     E(i)=E(i)+tmp
   enddo
+  
   dx2=0.5_f64*L/real(N,f64)
   eold=E(1)
   E(1)=0._f64
