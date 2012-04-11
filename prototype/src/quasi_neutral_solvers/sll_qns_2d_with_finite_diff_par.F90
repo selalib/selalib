@@ -7,7 +7,7 @@
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
 !> Some arrays are here in 3D for remap utilities
 !> Start date: March 13, 2012
-!> Last modification: March 27, 2012
+!> Last modification: April 11, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -286,10 +286,10 @@ contains
     do i=1,nr
        r = rmin + i*dr
        if (i>1) then
-           a_resh(3*(i-1)+1) = -(1/dr**2 - plan%c(i)/(2*dr))
+           a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
        endif
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2 + 1/(Zi*plan%Te(i)) &
-                                      - 2*cos(j*dtheta)/(r*dtheta)**2
+       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
+                                                     + 1/(Zi*plan%Te(i))
        if (i<nr) then
            a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
        endif
@@ -316,20 +316,21 @@ contains
 
     a_resh = 0.d0
 
-    a_resh(2) = 2/dr**2 + 2/(rmin*dtheta)**2 * (-cos(j*dtheta)+1) + 1/(Zi*plan%Te(1))
+    a_resh(2) = 2/dr**2 + 2/(rmin*dtheta)**2*(1-cos(j*dtheta)) + &
+                                                 1/(Zi*plan%Te(1))
     a_resh(3) = -2/dr**2
 
     do i=2,nr-1
        r = rmin + (i-1)*dr
-       a_resh(3*(i-1)+1) = -(1/dr**2 - plan%c(i)/(2*dr))
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2 + 1/(Zi*plan%Te(i)) - &
-                                               2*cos(j*dtheta)/(r*dtheta)**2
+       a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
+       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
+                                                     + 1/(Zi*plan%Te(i))
        a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
     enddo
 
     a_resh(3*(nr-1)+1) = -2/dr**2
-    a_resh(3*(nr-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2 * &
-                       (-cos(j*dtheta)+1) + 1/(Zi*plan%Te(nr))
+    a_resh(3*(nr-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2*(1-cos(j*dtheta)) &
+                                                     + 1/(Zi*plan%Te(nr))
 
   end subroutine neumann_matrix_resh_par
 
