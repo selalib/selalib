@@ -297,7 +297,12 @@ contains
              beta = (xi - yi0 + period)/(yi0p1 - yi0 + period)
           end if
           !print*, i, i0, yi0, xi, yi0p1, beta, period, x1
-          SLL_ASSERT((beta>=-eps) .and. (beta < 1))
+          !if(.not.((beta>=-eps) .and. (beta < 1)))then
+          !  print *,beta,eps,i0,beta-1._f64
+          !  print *,'problem'
+          !endif
+          !SLL_ASSERT((beta>=-eps) .and. (beta < 1))
+          SLL_ASSERT((beta>=-eps) .and. (beta <= 1))
           xout(i) = xin(i0) + beta * (xin(i0+1)-xin(i0))
           ! handle periodic boundary conditions
           xout(i) = modulo(xout(i)-xin(1),xin(ncx+1)-xin(1)) + xin(1) 

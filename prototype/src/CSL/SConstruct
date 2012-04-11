@@ -39,3 +39,4 @@ env.Library('sll_distribution_function', ["../distribution_function/sll_distribu
 env.Program('unit_test', ["unit_test.F90", "sll_csl.F90"])
 env.Program('unit_test_from_array', ["unit_test_from_array.F90", "sll_csl.F90"])
 env.Program('bgk_csl', ["bgk_csl.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
+env.Program('bgk_csl_uniform', ["bgk_csl_uniform.F90", "sll_csl.F90","../splines/contrib_rho.F90"])

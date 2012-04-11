@@ -134,11 +134,32 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_new
   sll_int,intent(in) :: N_points
+  sll_int::i,ierr
+  compute_non_unif_integral_gaussian = 0.5_f64*compute_non_unif_integral_gaussian_sym(integration_points,N_points)
+  
+  SLL_ALLOCATE(integration_points_new(2,N_points),ierr)
+  
+  
+  integration_points_new(1,1:N_points)=integration_points(1,1:N_points)
+  do i=1,N_points
+    integration_points_new(2,i)=integration_points(2,N_points-i+1)
+  enddo
+  
+  compute_non_unif_integral_gaussian = compute_non_unif_integral_gaussian+&
+  0.5_f64*compute_non_unif_integral_gaussian_sym(integration_points_new,N_points)
+end  function compute_non_unif_integral_gaussian
+
+
+function compute_non_unif_integral_gaussian_sym(integration_points,N_points)
+  sll_real64 :: compute_non_unif_integral_gaussian_sym
+  sll_real64,dimension(:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_new
+  sll_int,intent(in) :: N_points
   sll_int :: i,ierr,j,is_center_point,N_points_new
   sll_real64 :: tmp,x1,x2,x3,fval1,fval2,fval3,x4,fval4,dx_int
   sll_int :: N_int,d_gauss,j_gauss
   sll_real64,dimension(:,:),pointer :: gauss_points
-  compute_non_unif_integral_gaussian = 0._f64
+  compute_non_unif_integral_gaussian_sym = 0._f64
   N_int = 2
   d_gauss = 10
   
@@ -263,7 +284,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
         tmp=abs(integration_points(1,N_points/2+i)+integration_points(1,N_points/2-i+1))
       endif
     enddo
-    if(tmp>1.e-14)then
+    if(tmp>1.e-13)then
       print *,'integration_points are not symmetric',tmp
       do j=1,N_points
         print *,j,integration_points(1,j)
@@ -339,7 +360,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
     enddo  
     tmp=tmp*dx_int
     !print *,i,x1,x2,x3
-    compute_non_unif_integral_gaussian =compute_non_unif_integral_gaussian+tmp
+    compute_non_unif_integral_gaussian_sym =compute_non_unif_integral_gaussian_sym+tmp
     !integration_points_middle(1,i)=0.5_f64*(x1+x2)
   enddo
   j=(N_points_new-1)/4
@@ -381,17 +402,22 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
       do j_gauss=1,d_gauss+1
         !x4 =x1+(real(j,f64)-0.5_f64)*dx_int
         x4 =x1+(real(j-1,f64)+gauss_points(1,j_gauss))*dx_int
-        fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))+fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
+        fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))&
+        +fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
         fval4=fval4*exp(-0.5_f64*x4*x4)
         tmp=tmp+fval4*gauss_points(2,j_gauss)
       enddo
     enddo
     tmp=tmp*dx_int
     !print *,i,x1,x2,x3
-    compute_non_unif_integral_gaussian =compute_non_unif_integral_gaussian+tmp
+    compute_non_unif_integral_gaussian_sym =compute_non_unif_integral_gaussian_sym+tmp
   endif
-  compute_non_unif_integral_gaussian = 2._f64*compute_non_unif_integral_gaussian
-end  function compute_non_unif_integral_gaussian
+  
+  
+  
+  
+  compute_non_unif_integral_gaussian_sym = 2._f64*compute_non_unif_integral_gaussian_sym
+end  function compute_non_unif_integral_gaussian_sym
 
 
 
