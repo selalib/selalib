@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
 !> Start date: March 20, 2012
-!> Last modification: March 26, 2012
+!> Last modification: April 11, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -26,7 +26,7 @@ program test_quasi_neutral
   use sll_collective
   use sll_qns_2d_with_finite_diff_seq
   use sll_qns_2d_with_finite_diff_par
-
+  use sll_qns2d_angular_spectral_method_seq
 implicit none
 
   character(len=100)                    :: bc ! Boundary_conditions
@@ -39,9 +39,9 @@ implicit none
   call sll_boot_collective()
 
   bc = 'neumann'
-  bc = 'dirichlet'
-  nr = 258
-  ntheta = 1024
+  !bc = 'dirichlet'
+  nr = 128
+  ntheta = 128
   rmin = 1.d0
   rmax = 10.d0
   Zi = 1.d0
@@ -81,6 +81,7 @@ contains
     sll_int32                                        :: i, j
     type (qns_2d_with_finite_diff_plan_seq), pointer :: plan_seq
     type (qns_2d_with_finite_diff_plan_par), pointer :: plan_par
+    type (qns2d_angular_spectral_method_seq),pointer :: plan_spec_seq
     sll_real64                                       :: average_err
     sll_real64                                       :: average_err_bound
     sll_real64                                       :: seq_par_diff
@@ -148,6 +149,9 @@ contains
     plan_seq => new_qns_2d_with_finite_diff_plan_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
     call solve_qn_2d_with_finite_diff_seq(plan_seq, phi_seq)
 
+    !plan_spec_seq => new_qns2d_angular_spectral_method_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
+    !call solve_qns2d_angular_spectral_method_seq(plan_spec_seq, phi_seq)
+
     average_err = sum(abs(phi_an-phi_seq))/(nr*ntheta)
     average_err_bound = average_err_bound/(nr*ntheta)
 
@@ -205,7 +209,7 @@ contains
    
     plan_par => new_qns_2d_with_finite_diff_plan_par(bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
     call solve_qn_2d_with_finite_diff_par(plan_par, phi_par)
-!print*, phi_par
+
     average_err  = 0.d0
     average_err_bound  = 0.d0
     seq_par_diff = 0.d0
@@ -243,7 +247,6 @@ contains
        print*, ' '
        call flush()
        print*, 'Test stopped by "sll_qns_2d_with_finite_diff_par" test'
-print*, phi_par
        call flush()
        print*, 'myrank=', myrank
        call flush()

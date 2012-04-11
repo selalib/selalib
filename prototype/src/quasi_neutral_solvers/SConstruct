@@ -64,5 +64,6 @@ if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(LIBS=['fftw3'])
 
 env.Program('unit_test', ["unit_test.F90", "sll_qns_2d_with_finite_diff_seq.F90", 
-"sll_qns_2d_with_finite_diff_par.F90"])
+"sll_qns_2d_with_finite_diff_par.F90",
+"sll_qns2d_angular_spectral_method_seq.F90"])
 
