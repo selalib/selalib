@@ -35,14 +35,15 @@ program bgk_csl
   character(32), parameter  :: name = 'distribution_function'
   type(field_2D_vec1), pointer :: uniform_field
   type(field_2D_vec1), pointer :: uniform_field_new
+  type(field_2D_vec1), pointer :: uniform_field_velocity
   type(csl_workspace), pointer :: csl_work
   sll_real64,dimension(:,:,:), pointer :: integration_points
   sll_real64,dimension(:,:), pointer :: integration_points_val
   character*80,str,str2
 
-  mesh_case = 3
+  mesh_case = 1
   visu_step = 10
-  test_case = 7
+  test_case = 4
   rho_case = 3
   
   N_x1 = 128
@@ -416,7 +417,7 @@ program bgk_csl
       if(test_case==4)then
         !linear landau damping
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
-        !f_equil(i1,i2) = val*jac_array(i1,i2)
+        f_equil(i1,i2) = val*jac_array(i1,i2)
         val = val*(1._f64+0.001_f64*cos(2._f64*sll_pi/L*x1))
       endif
       if(test_case==5)then
@@ -464,6 +465,7 @@ program bgk_csl
   csl_work => new_csl_workspace( dist_func )
   uniform_field => new_field_2D_vec1(mesh)
   uniform_field_new => new_field_2D_vec1(mesh)
+  uniform_field_velocity => new_field_2D_vec1(mesh)
 
   do i1=1,nc_eta1+1
     node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
@@ -623,6 +625,7 @@ program bgk_csl
         xx = xx-real(ii,f64)      
         phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
         FIELD_2D_AT_I( uniform_field, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
+        FIELD_2D_AT_I( uniform_field_velocity, i1, i2 ) = 0.5_f64*x2**2!&
         !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
         !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
       end do
@@ -724,11 +727,31 @@ program bgk_csl
       end do
     end do
 
+        
+    
     do i1 = 1, nc_eta1 
       do i2 = 1, nc_eta2    
-        call sll_set_df_val(dist_func, i1, i2,f(i1,i2)-f_equil(i1,i2))
+        call sll_set_df_val(dist_func, i1, i2,f(i1,i2))
       enddo  
     enddo
+
+    do i2 = 1, nc_eta2
+      val = 0._f64
+      do i1 = 1, nc_eta1    
+         val=val+sll_get_df_val(dist_func, i1, i2)
+      enddo
+      val = val/real(nc_eta1,f64)
+      buf_1d(i2)=0._f64!val
+    enddo
+
+
+    do i1 = 1, nc_eta1 
+      do i2 = 1, nc_eta2
+        val = sll_get_df_val(dist_func, i1, i2)
+        call sll_set_df_val(dist_func, i1, i2,val-buf_1d(i2))
+      enddo  
+    enddo
+
 
     !do i1 = 1, nc_eta1 
     !  do i2 = 1, nc_eta2    
@@ -737,15 +760,48 @@ program bgk_csl
     !enddo
 
 
-    call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
+    !call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
+    call csl_second_order(csl_work, dist_func, uniform_field_velocity, uniform_field_velocity, dt)
 
 
     do i1 = 1, nc_eta1 
       do i2 = 1, nc_eta2
         val = sll_get_df_val(dist_func, i1, i2)
-        call sll_set_df_val(dist_func, i1, i2,val+f_equil(i1,i2))
+        !call sll_set_df_val(dist_func, i1, i2,val+f_equil(i1,i2))
+        call sll_set_df_val(dist_func, i1, i2,val+buf_1d(i2))
       enddo  
     enddo
+
+    do i1 = 1, nc_eta1+1 
+      do i2 = 1, nc_eta2+1
+        val = sll_get_df_val(dist_func, i1, i2)
+        call sll_set_df_val(dist_func, i1, i2,val-buf_1d(i2))
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) = FIELD_2D_AT_I( uniform_field, i1, i2 )&
+        -FIELD_2D_AT_I( uniform_field_velocity, i1, i2 )
+        FIELD_2D_AT_I( uniform_field_new, i1, i2 ) = FIELD_2D_AT_I( uniform_field_new, i1, i2 )&
+        -FIELD_2D_AT_I( uniform_field_velocity, i1, i2 )        
+      enddo  
+    enddo
+
+    !do i1 = 1, nc_eta1+1 
+    !  do i2 = 1, nc_eta2+1
+    !    val = sll_get_df_val(dist_func, i1, i2)        
+    !    call sll_set_df_val(dist_func, i1, i2,f(i1,i2))
+    !    f(i1,i2)=val
+    !  enddo  
+    !enddo
+
+    
+    call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
+    
+    !do i1 = 1, nc_eta1+1 
+    !  do i2 = 1, nc_eta2+1
+    !    val = sll_get_df_val(dist_func, i1, i2)        
+    !    call sll_set_df_val(dist_func, i1, i2,f(i1,i2)+val)
+    !  enddo  
+    !enddo
+
+    
     
     if(mod(step,visu_step)==0)then
       call write_distribution_function ( dist_func )
