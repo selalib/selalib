@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with angular spectral method
 !> Start date: April 10, 2012
-!> Last modification: April 11, 2012
+!> Last modification: April 18, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -15,7 +15,7 @@
 !                                  
 !***************************************************************************
 
-module sll_qns2d_angular_spectral_method_seq
+module sll_qns2d_angular_spect_method_seq
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -30,7 +30,7 @@ module sll_qns2d_angular_spectral_method_seq
 
   implicit none
 
-  type qns2d_angular_spectral_method_seq
+  type qns2d_angular_spect_method_seq
      character(len=100)                      :: bc!Boundary_conditions
      sll_int32                               :: nr!Number of points in r-direction
      sll_int32                               :: ntheta!Number of points in theta-direction
@@ -44,12 +44,12 @@ module sll_qns2d_angular_spectral_method_seq
      sll_real64                              :: Zi
      type(sll_fft_plan), pointer             :: fft_plan
      type(sll_fft_plan), pointer             :: inv_fft_plan
-  end type qns2d_angular_spectral_method_seq
+  end type qns2d_angular_spect_method_seq
 
 contains
 
 
-  function new_qns2d_angular_spectral_method_seq(bc, rmin, rmax, rho, c, Te, f, g, Zi) &
+  function new_qns2d_angular_spect_method_seq(bc, rmin, rmax, rho, c, Te, f, g, Zi) &
                                                                           result (plan)
 
     character(len=100)                              :: bc ! Boundary_conditions
@@ -60,7 +60,7 @@ contains
     sll_real64                                      :: Zi
     sll_comp64, dimension(:),   allocatable         :: x
     sll_int32                                       :: nr, ntheta, ierr
-    type(qns2d_angular_spectral_method_seq), pointer :: plan
+    type(qns2d_angular_spect_method_seq), pointer :: plan
 
     nr = size(rho,1)
     ntheta = size(rho,2)
@@ -93,20 +93,20 @@ contains
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
-  end function new_qns2d_angular_spectral_method_seq
+  end function new_qns2d_angular_spect_method_seq
 
 
-  subroutine solve_qns2d_angular_spectral_method_seq(plan, phi)
+  subroutine solve_qns2d_angular_spect_method_seq(plan, phi)
 
-    type(qns2d_angular_spectral_method_seq),pointer :: plan
-    sll_real64                                      :: dr, dtheta 
-    sll_int32                                       :: nr, ntheta, i, j, k
-    sll_real64, dimension(:,:)                      :: phi
-    sll_comp64, dimension(plan%nr,plan%ntheta)      :: tild_rho, tild_phi
-    sll_comp64, dimension(plan%ntheta)              :: f, g
-    sll_int32, dimension(plan%nr)                   :: ipiv
-    sll_real64, dimension(3*plan%nr)                :: a_resh ! 3*n
-    sll_real64, dimension(7*plan%nr)                :: cts  ! 7*n allocation
+    type(qns2d_angular_spect_method_seq),pointer :: plan
+    sll_real64                                   :: dr, dtheta 
+    sll_int32                                    :: nr, ntheta, i, j, k
+    sll_real64, dimension(:,:)                   :: phi
+    sll_comp64, dimension(plan%nr,plan%ntheta)   :: tild_rho, tild_phi
+    sll_comp64, dimension(plan%ntheta)           :: f, g
+    sll_int32, dimension(plan%nr)                :: ipiv
+    sll_real64, dimension(3*plan%nr)             :: a_resh ! 3*n
+    sll_real64, dimension(7*plan%nr)             :: cts  ! 7*n allocation
 
     nr = plan%nr
     ntheta = plan%ntheta
@@ -164,13 +164,13 @@ contains
 
     phi = real(tild_phi, f64)/ntheta
 
-  end subroutine solve_qns2d_angular_spectral_method_seq
+  end subroutine solve_qns2d_angular_spect_method_seq
 
 
-  subroutine delete_qns2d_angular_spectral_method_seq(plan)
+  subroutine delete_qns2d_angular_spect_method_seq(plan)
 
-       type (qns2d_angular_spectral_method_seq), pointer :: plan
-       sll_int32                                         :: ierr
+       type (qns2d_angular_spect_method_seq), pointer :: plan
+       sll_int32                                      :: ierr
 
        ! Fixme: some error checking, whether the poisson pointer is associated
        ! for instance
@@ -186,16 +186,16 @@ contains
        SLL_DEALLOCATE_ARRAY(plan%g, ierr)
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_qns2d_angular_spectral_method_seq
+  end subroutine delete_qns2d_angular_spect_method_seq
 
 
   subroutine dirichlet_matrix_resh_spec_seq(plan, k, a_resh)
 
-    type(qns2d_angular_spectral_method_seq), pointer :: plan
-    sll_real64                                       :: dr, dtheta, Zi
-    sll_real64                                       :: r, rmin, rmax
-    sll_int32                                        :: i, k, nr
-    sll_real64, dimension(:)                         :: a_resh
+    type(qns2d_angular_spect_method_seq), pointer :: plan
+    sll_real64                                    :: dr, dtheta, Zi
+    sll_real64                                    :: r, rmin, rmax
+    sll_int32                                     :: i, k, nr
+    sll_real64, dimension(:)                      :: a_resh
 
     nr = plan%nr
     rmin = plan%rmin
@@ -211,7 +211,7 @@ contains
        if (i>1) then
           a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
        endif
-       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(i)) - (k/r)**2  
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(i)) + (k/r)**2  
        if (i<nr) then
           a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
        endif
@@ -222,7 +222,7 @@ contains
 
   subroutine neumann_matrix_resh_spec_seq(plan, k, a_resh)
 
-    type(qns2d_angular_spectral_method_seq), pointer :: plan
+    type(qns2d_angular_spect_method_seq), pointer :: plan
     sll_real64                                       :: dr, dtheta, Zi
     sll_real64                                       :: rmin, rmax, r
     sll_int32                                        :: i, k, nr
@@ -237,21 +237,21 @@ contains
 
     a_resh = 0.d0
 
-    a_resh(2) = 2/dr**2 + 1/(Zi*plan%Te(1)) - (k/r)**2
+    a_resh(2) = 2/dr**2 + 1/(Zi*plan%Te(1)) + (k/r)**2
     a_resh(3) = -2/dr**2
 
     do i=2,nr-1
        r = rmin + (i-1)*dr
        a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
-       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(i)) - (k/r)**2
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(i)) + (k/r)**2
        a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
     enddo
 
     a_resh(3*(nr-1)+1) = -2/dr**2
-    a_resh(3*(nr-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(nr)) - (k/r)**2
+    a_resh(3*(nr-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(nr)) + (k/r)**2
 
   end subroutine neumann_matrix_resh_spec_seq
 
 
-end module sll_qns2d_angular_spectral_method_seq
+end module sll_qns2d_angular_spect_method_seq
 
