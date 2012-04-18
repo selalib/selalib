@@ -162,7 +162,7 @@ contains
   end subroutine solve_qn_2d_with_finite_diff_seq
 
 
-  subroutine delete_new_qns_2d_with_finite_diff_plan_seq(plan)
+  subroutine delete_qns_2d_with_finite_diff_plan_seq(plan)
 
        type (qns_2d_with_finite_diff_plan_seq), pointer :: plan
        sll_int32                                        :: ierr
@@ -181,7 +181,7 @@ contains
        SLL_DEALLOCATE_ARRAY(plan%g, ierr)
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_new_qns_2d_with_finite_diff_plan_seq
+  end subroutine delete_qns_2d_with_finite_diff_plan_seq
 
 
   subroutine dirichlet_matrix_resh_seq(plan, j, a_resh)

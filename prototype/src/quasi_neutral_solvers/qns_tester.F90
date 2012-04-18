@@ -14,7 +14,7 @@
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
 !***************************************************************************
-program test_quasi_neutral
+program qns_tester
  
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -26,7 +26,7 @@ program test_quasi_neutral
   use sll_collective
   use sll_qns_2d_with_finite_diff_seq
   use sll_qns_2d_with_finite_diff_par
-  use sll_qns2d_angular_spectral_method_seq
+  use sll_qns2d_angular_spect_method_seq
 implicit none
 
   character(len=100)                    :: bc ! Boundary_conditions
@@ -40,8 +40,8 @@ implicit none
 
   bc = 'neumann'
   !bc = 'dirichlet'
-  nr = 128
-  ntheta = 128
+  nr = 1024
+  ntheta = 1024
   rmin = 1.d0
   rmax = 10.d0
   Zi = 1.d0
@@ -76,13 +76,15 @@ contains
     sll_real64                                       :: dr, dtheta
     sll_real64                                       :: r, theta
     sll_real64, dimension(nr,ntheta)                 :: rho_seq, phi_seq
+     sll_real64, dimension(nr,ntheta)                :: phi_spect_seq
     sll_real64, dimension(nr,ntheta)                 :: phi_an
     sll_real64, dimension(:,:), allocatable          :: rho_par, phi_par
     sll_int32                                        :: i, j
     type (qns_2d_with_finite_diff_plan_seq), pointer :: plan_seq
     type (qns_2d_with_finite_diff_plan_par), pointer :: plan_par
-    type (qns2d_angular_spectral_method_seq),pointer :: plan_spec_seq
+    type (qns2d_angular_spect_method_seq),pointer    :: plan_spect_seq
     sll_real64                                       :: average_err
+    sll_real64                                       :: average_err_spect
     sll_real64                                       :: average_err_bound
     sll_real64                                       :: seq_par_diff
     sll_real64                                       :: Mr, Mtheta
@@ -143,23 +145,26 @@ contains
     if (myrank==0) then
        call flush()
        print*, ' '
-       print*, 'Testing "sll_qns_2d_with_finite_diff_seq"...'
+       print*, 'TESTING QUASINEUTRAL SOLVERS IN SEQUENTIAL...'
     endif
 
     plan_seq => new_qns_2d_with_finite_diff_plan_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
     call solve_qn_2d_with_finite_diff_seq(plan_seq, phi_seq)
 
-    !plan_spec_seq => new_qns2d_angular_spectral_method_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
-    !call solve_qns2d_angular_spectral_method_seq(plan_spec_seq, phi_seq)
+    plan_spect_seq => new_qns2d_angular_spect_method_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
+    call solve_qns2d_angular_spect_method_seq(plan_spect_seq, phi_spect_seq)
 
     average_err = sum(abs(phi_an-phi_seq))/(nr*ntheta)
+    average_err_spect = sum(abs(phi_an-phi_spect_seq))/(nr*ntheta)
     average_err_bound = average_err_bound/(nr*ntheta)
 
     if (myrank==0) then
        call flush()
        print*, ' '
        call flush()
-       print*, 'Average error:', average_err
+       print*, 'sll_qns_2d_with_finite_diff_seq average error:', average_err
+       call flush()
+       print*, 'sll_qns2d_angular_spect_method_seq average error:', average_err_spect
        call flush()
       print*, 'Boundary average error =', average_err_bound
     endif
@@ -168,12 +173,26 @@ contains
        if (myrank==0) then
           call flush()
           print*, ' '
-          print*, '"sll_qns_2d_with_finite_diff_seq" test: PASS'
+          print*, 'sll_qns_2d_with_finite_diff_seq: PASSED'
        endif
     else
        call flush()
        print*, ' '
-       print*, 'Test stopped by "sll_qns_2d_with_finite_diff_seq" test'
+       print*, 'Test stopped by sll_qns_2d_with_finite_diff_seq failure'
+       print*, ' '
+       stop
+    endif
+
+    if ( average_err_spect <= average_err_bound ) then
+       if (myrank==0) then
+          call flush()
+          print*, ' '
+          print*, 'sll_qns2d_angular_spect_method_seq: PASSED'
+       endif
+    else
+       call flush()
+       print*, ' '
+       print*, 'Test stopped by sll_qns2d_angular_spect_method_seq failure'
        print*, ' '
        stop
     endif
@@ -184,7 +203,7 @@ contains
        call flush()
        print*, ' '
        call flush()
-       print*, 'Testing "sll_qns_2d_with_finite_diff_par"...'
+       print*, 'TESTING QUASINEUTRAL SOLVERS IN PARALLEL...'
     endif
 
     colsz  = sll_get_collective_size(sll_world_collective)
@@ -246,7 +265,7 @@ contains
        call flush()
        print*, ' '
        call flush()
-       print*, 'Test stopped by "sll_qns_2d_with_finite_diff_par" test'
+       print*, 'Test stopped by sll_qns_2d_with_finite_diff_par failure'
        call flush()
        print*, 'myrank=', myrank
        call flush()
@@ -261,14 +280,15 @@ contains
           call flush()
           print*, ' '
           call flush()
-          print*, '"sll_qns_2d_with_finite_diff_par" test: PASS'
+          print*, 'sll_qns_2d_with_finite_diff_par: PASSED'
           call flush()
           print*, ' '
        endif
     endif
 
-    call delete_new_qns_2d_with_finite_diff_plan_par(plan_par)
-    call delete_new_qns_2d_with_finite_diff_plan_seq(plan_seq)
+    call delete_qns_2d_with_finite_diff_plan_par(plan_par)
+    call delete_qns_2d_with_finite_diff_plan_seq(plan_seq)
+    !call delete_qns2d_angular_spect_method_seq(plan_spec_seq)
 
     SLL_DEALLOCATE_ARRAY(phi_par, ierr)
     SLL_DEALLOCATE_ARRAY(c, ierr)
@@ -278,4 +298,4 @@ contains
   end subroutine test_sll_qns_2d_with_finite_diff
 
 
-end program test_quasi_neutral
+end program qns_tester

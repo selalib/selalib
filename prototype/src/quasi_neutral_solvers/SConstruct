@@ -5,7 +5,7 @@ import distutils.util
 
 platform = distutils.util.get_platform()
 hostname = socket.gethostname()
-print 'Building Poisson solvers... '
+print 'Building quasineutral solvers... '
 print ' '
 print 'hostname : ' + hostname
 print 'platform : ' + platform
@@ -30,7 +30,7 @@ env = Environment( ENV = os.environ,
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
                    '-fopenmp'],
                     F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', 
-                   '-ffree-line-length-none', '-fbounds-check'])
+                   '-ffree-line-length-none', '-fbounds-check', '-DNOHDF5'])
 
 
 env.Append(CPPDEFINES=['DEBUG','GFORTRAN','_FFTPACK','MPIF90'])
@@ -63,7 +63,7 @@ if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
   env.Append(LIBPATH=[os.environ['FFTWLIBPATH']])
   env.Append(LIBS=['fftw3'])
 
-env.Program('unit_test', ["unit_test.F90", "sll_qns_2d_with_finite_diff_seq.F90", 
+env.Program('qns_tester', ["qns_tester.F90", "sll_qns_2d_with_finite_diff_seq.F90", 
 "sll_qns_2d_with_finite_diff_par.F90",
-"sll_qns2d_angular_spectral_method_seq.F90"])
+"sll_qns2d_angular_spect_method_seq.F90"])
 

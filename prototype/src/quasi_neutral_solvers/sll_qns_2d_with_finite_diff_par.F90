@@ -236,7 +236,7 @@ contains
   end subroutine solve_qn_2d_with_finite_diff_par
 
 
-  subroutine delete_new_qns_2d_with_finite_diff_plan_par(plan)
+  subroutine delete_qns_2d_with_finite_diff_plan_par(plan)
 
        type (qns_2d_with_finite_diff_plan_par), pointer :: plan
        sll_int32                                        :: ierr
@@ -262,7 +262,7 @@ contains
 
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_new_qns_2d_with_finite_diff_plan_par
+  end subroutine delete_qns_2d_with_finite_diff_plan_par
 
 
   subroutine dirichlet_matrix_resh_par(plan, j, a_resh)
