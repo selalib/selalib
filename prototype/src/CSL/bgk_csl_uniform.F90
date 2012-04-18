@@ -15,20 +15,20 @@ program bgk_csl
   sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step
   LOGICAL :: ex
   sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2
-  sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E
-  sll_real64,dimension(:,:), pointer :: f
+  sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E,E_store
+  sll_real64,dimension(:,:), pointer :: f,f_store
   sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val
   sll_int :: ii,step,test_case
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
   
   
 
-  N_x1 = 120!128
-  N_x2 = 120!256
-  dt = 0.01_f64
-  nb_step = 6000
+  N_x1 = 128!128
+  N_x2 = 128!256
+  dt = 0.1_f64
+  nb_step = 600
   
-  test_case = 5
+  test_case = 4
   
   
   N = max(N_x1,N_x2)
@@ -40,12 +40,14 @@ program bgk_csl
   x2_min = -x2_max
   
   SLL_ALLOCATE(f(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(f_store(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(node_positions_x1(N_x1+1),err)
   SLL_ALLOCATE(node_positions_x2(N_x2+1),err)
   SLL_ALLOCATE(new_node_positions(N+1),err)
   SLL_ALLOCATE(buf_1d(N+1),err)
   SLL_ALLOCATE(rho(N_x1+1),err)
   SLL_ALLOCATE(E(N_x1+1),err)
+  SLL_ALLOCATE(E_store(N_x1+1),err)
     
   
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
@@ -168,43 +170,98 @@ program bgk_csl
   !stop
 
   !splitting x1 dt/2
-  do i2=1,N_x2+1
-    buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
-    call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-    alpha = node_positions_x2(i2)*0.5_f64*dt
-    new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
-    call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
-    call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
-    f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
-  enddo
-  
-  !compute_rho
-  do i1=1,N_x1+1
-    buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
-    call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
-    rho(i1)=val-1._f64
-  enddo
-  E=rho
-  call poisson1dpertrap(E,x1_max-x1_min,N_x1)
-
-  open(unit=900,file='field_1.dat')  
-    do i1=1,N_x1+1
-      x1 = x1_min+real(i1-1,f64)*delta_x1
-      write(900,*) x1,E(i1),rho(i1)
-    enddo
-  close(900)
+!  do i2=1,N_x2+1
+!    buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
+!    call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+!    alpha = node_positions_x2(i2)*0.5_f64*dt
+!    new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
+!    call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
+!    call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
+!    f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
+!  enddo
+!  
+!  !compute_rho
+!  do i1=1,N_x1+1
+!    buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
+!    call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+!    rho(i1)=val-1._f64
+!  enddo
+!  E=rho
+!  call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+!
+!  open(unit=900,file='field_1.dat')  
+!    do i1=1,N_x1+1
+!      x1 = x1_min+real(i1-1,f64)*delta_x1
+!      write(900,*) x1,E(i1),rho(i1)
+!    enddo
+!  close(900)
   
   
   !time iteration
   
   do step=1,nb_step
+    
+    
+    f_store = f
+    !compute E
+    do i1=1,N_x1+1
+      buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
+      call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+      rho(i1)=val-1._f64
+    enddo
+    E=rho
+    call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+    
+    E_store = E
+    
+
     !diagnostic
     val=0._f64
     do i1=1,N_x1
       val = val+E(i1)*E(i1)
     enddo
     val = val/real(N_x1,f64)
-    print *,(real(step,f64)-0.5_f64)*dt,val
+    print *,(real(step,f64)-1._f64)*dt,val
+
+
+
+    !splitting x1 dt/2
+    do i2=1,N_x2+1
+      buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      alpha = node_positions_x2(i2)*dt*0.5_f64
+      new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
+      call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
+      f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
+    enddo
+    !compute E
+    !do i1=1,N_x1+1
+    !  buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
+    !  call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+    !  rho(i1)=val-1._f64
+    !enddo
+    !E=rho
+    !call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+
+
+
+
+
+    !diagnostic
+    !val=0._f64
+    !do i1=1,N_x1
+    !  val = val+E(i1)*E(i1)
+    !enddo
+    !val = val/real(N_x1,f64)
+    !print *,(real(step,f64)-0.5_f64)*dt,val
+
+
+
+
+
+
+
     
     !splitting x2 dt
     do i1=1,N_x1+1
@@ -216,16 +273,20 @@ program bgk_csl
       call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x2+1, spl_per_x2)
       f(i1,1:N_x2+1) = buf_1d(1:N_x2+1)
     enddo
-    !splitting x1 dt
+    
+
+    !splitting x1 dt/2
     do i2=1,N_x2+1
       buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
       call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-      alpha = node_positions_x2(i2)*dt
+      alpha = node_positions_x2(i2)*dt*0.5_f64
       new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
       call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
       call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
       f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
     enddo
+
+    
     !compute E
     do i1=1,N_x1+1
       buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
@@ -234,6 +295,86 @@ program bgk_csl
     enddo
     E=rho
     call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+
+    !print *,N_x1, modulo(1,N_x1),modulo(N_x1,N_x1),modulo(0,N_x1),modulo(-1,N_x1)
+    
+    !stop
+
+    !E = 0.5_f64*(E+E_store)
+    do i=1,N_x1
+      E(i) = 0.5_f64*(E_store(i)+1._f64*dt*E_store(i)*(E_store(1+modulo(i,N_x1))-E_store(1+modulo(i+N_x1-2,N_x1))/(2._f64*delta_x1))+E(i))
+    enddo
+    E(N_x1+1)=E(1)
+
+    f = f_store
+
+    !splitting x1 dt/2
+    do i2=1,N_x2+1
+      buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      alpha = node_positions_x2(i2)*dt*0.5_f64
+      new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
+      call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
+      f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
+    enddo
+    !compute E
+    !do i1=1,N_x1+1
+    !  buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
+    !  call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+    !  rho(i1)=val-1._f64
+    !enddo
+    !E=rho
+    !call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+
+
+
+
+
+    !diagnostic
+    !val=0._f64
+    !do i1=1,N_x1
+    !  val = val+E(i1)*E(i1)
+    !enddo
+    !val = val/real(N_x1,f64)
+    !print *,(real(step,f64)-0.5_f64)*dt,val
+
+
+
+
+
+
+
+    
+    !splitting x2 dt
+    do i1=1,N_x1+1
+      buf_1d(1:N_x2+1) = f(i1,1:N_x2+1)
+      call compute_spline_nonunif( buf_1d, spl_per_x2, node_positions_x2)
+      alpha = E(i1)*dt
+      new_node_positions(1:N_x2+1) = node_positions_x2(1:N_x2+1)
+      call compute_translate_nodes_periodic(-alpha,N_x2,node_positions_x2(1:N_x2+1),new_node_positions(1:N_x2+1))
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x2+1, spl_per_x2)
+      f(i1,1:N_x2+1) = buf_1d(1:N_x2+1)
+    enddo
+    
+
+    !splitting x1 dt/2
+    do i2=1,N_x2+1
+      buf_1d(1:N_x1+1) = f(1:N_x1+1,i2)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      alpha = node_positions_x2(i2)*dt*0.5_f64
+      new_node_positions(1:N_x1+1) = node_positions_x1(1:N_x1+1)
+      call compute_translate_nodes_periodic(-alpha,N_x1,node_positions_x1(1:N_x1+1),new_node_positions(1:N_x1+1))
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d, N_x1+1, spl_per_x1)
+      f(1:N_x1+1,i2) = buf_1d(1:N_x1+1)
+    enddo
+
+    
+    
+    
+    
+    
+    
   enddo
 
   open(unit=900,file='field_final.dat')  
