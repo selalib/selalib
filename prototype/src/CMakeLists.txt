@@ -12,7 +12,7 @@ set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 #ajoute les modules locaux
-set (CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
 message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
 
 #set(PATH_WITH_SPACE $ENV{PATH})
@@ -21,7 +21,7 @@ message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
 #set( CMAKE_PREFIX_PATH ${PATH_WITH_SPACE})
 #set( CMAKE_PREFIX_PATH /opt/local )
 
-set(CMAKE_LIBRARY_PATH "/opt/local;${CMAKE_LIBRARY_PATH}")
+#set(CMAKE_LIBRARY_PATH "/opt/local;${CMAKE_LIBRARY_PATH}")
 
 
 
@@ -123,7 +123,7 @@ add_subdirectory(distribution_function)
 enable_testing()
 set(failRegex "NOT PASS")
 add_test(memory memory/test_memory)
-add_test(precision precision/test_precision)
+#add_test(precision precision/test_precision)
 add_test(assert assert/test_assert)
 add_test(constants constants/test_constants)
 add_test(utilities utilities/test_utilities)
