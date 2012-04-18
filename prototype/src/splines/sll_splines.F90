@@ -13,7 +13,7 @@ module sll_splines
 #include "sll_assert.h"
   implicit none
   
-  type sll_spline_1D
+  type  ::  sll_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
@@ -106,7 +106,6 @@ contains  ! ****************************************************************
     spline%slope_r = value
   end subroutine set_slope_right
   
-  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
@@ -180,6 +179,7 @@ contains  ! ****************************************************************
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
+
   end function new_spline_1D
   
   ! - data: the array whose data must be fit with the cubic spline.
@@ -444,7 +444,7 @@ contains  ! ****************************************************************
 
   subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    type(sll_spline_1D), pointer      :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: np
     sll_real64, dimension(:), pointer :: fp
@@ -615,7 +615,7 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
     sll_real64, dimension(1:n), intent(out) :: a_out
-    type(sll_spline_1D), pointer            :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer       :: coeffs
     sll_real64                              :: rh   ! reciprocal of cell spacing
     sll_int32                               :: cell
