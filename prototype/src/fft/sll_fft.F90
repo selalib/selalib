@@ -14,64 +14,178 @@
 !>
 !> \section how How to use sll_fft module?
 !>
-!> First, initialize the plan with sll_new_fft function
-!> \code plan => sll_new_fft(n,data_type,flags)\endcode
-!> You can call sll_new_fft without the flags argument
-!> \code plan => sll_new_fft(n,data_type)\endcode
-!> In this case, sll_apply_fft computes an unnormalized FFT.
-!> 
-!> data_type can take two values : FFT_COMPLEX or FFT_REAL.
-!> sll_fft module provides only 64bit fast fourier transform.
-!> 
-!> flags can take the values : FFT_NORMALIZE_FORWARD, FFT_NORMALIZE_INVERSE
-!> You can combine flags with "+", by example
-!> \code sll_new_fft(n,data_type,FFT_NORMALIZE_FORWARD + FFT_NORMALIZE_INVERSE) \endcode
-!> 
-!> Second, apply the fft on the data with sll_apply_fft
-!> \code plan => sll_apply_fft(plan,data,direction)\endcode
-!> 
+!> 1. Declare a fft plan
+!> \code type(sll_fft_plan), pointer :: p \endcode
+!> 2. Initialize the plan
+!> \code p => fft_new_plan(size,in,out,direction,flags) \endcode
+!> The arrays in and out can be real and/or complex, 1d or 2d. The size is only a power of two (radix-2).
+!> \warning For complex to real and real to complex transform, there is no direction flag.
+!>          \code p => fft_new_plan(size,in,out,flags) \endcode
 !>
-!> \warning the output of sll_apply_fft is only in-place way and it is scrambled.
-!!          Thus, if you want the mode k (i.e. X_k) you must call sll_get_mode(k).
-!!          If you want know which mode is in position i in array data call
-!!          sll_get_index(i)
+!> \a direction can take two values : FFT_FORWARD and FFT_INVERSE
+!>
+!> \a flags optional argument that can be : FFT_NORMALIZE
+!>                                FFT_ONLY_FIRST_DIRECTION, FFT_ONLY_SECOND_DIRECTION (2d case only)
+!> You can combine flags with '+'.
+!>
+!> 3. Execute the plan
+!> \code call fft_apply_plan(p,in,out) \endcode
+!> 4. Delete the plan
+!> \code call fft_delete_plan(p) \endcode
+!>
+! \warning the output of sll_apply_fft is only in-place way and it is scrambled.
+!          Thus, if you want the mode k (i.e. X_k) you must call sll_get_mode(k).
+!          If you want know which mode is in position i in array data call
+!          sll_get_index(i)
+!>
+!> \section sum Summary:
+!>
+!> 1D
+!> <table border="1">
+!> <tr>
+!> <th> size's problem </th>
+!> <th> type of in </th>
+!> <th> type of out </th>
+!> <th> size of in </th>
+!> <th> size of out </th>
+!> <th> direction </th>
+!> <th> flags </th>
+!> </tr>
+!> <tr>
+!> <td> n </td>
+!> <td> real </td>
+!> <td> real </td>
+!> <td> n </td>
+!> <td> n </td>
+!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> <tr>
+!> <td> n </td>
+!> <td> complex </td>
+!> <td> complex </td>
+!> <td> n </td>
+!> <td> n </td>
+!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> <tr>
+!> <td> n </td>
+!> <td> real </td>
+!> <td> complex </td>
+!> <td> n </td>
+!> <td> n/2 </td>
+!> <td> ----- </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> <tr>
+!> <td> n </td>
+!> <td> complex </td>
+!> <td> real </td>
+!> <td> n/2 </td>
+!> <td> n </td>
+!> <td> ----- </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> </table>
+!>
+!>
+!> 2D
+!> <table border="1">
+!> <tr>
+!> <th> size's problem </th>
+!> <th> type of in </th>
+!> <th> type of out </th>
+!> <th> size of in </th>
+!> <th> size of out </th>
+!> <th> direction present </th>
+!> <th> flags </th>
+!> </tr>
+!> <tr>
+!> <td> n,m </td>
+!> <td> real </td>
+!> <td> real </td>
+!> <td> n,m </td>
+!> <td> n,m </td>
+!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> <tr>
+!> <td> n,m </td>
+!> <td> complex </td>
+!> <td> complex </td>
+!> <td> n,m </td>
+!> <td> n,m </td>
+!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
+!> <td> FFT_NORMALIZE <br /> FFT_ONLY_FIRST_DIRECTION <br /> FFT_ONLY_SECOND_DIRECTION </td>
+!> </tr>
+!> <tr>
+!> <td> n,m </td>
+!> <td> real </td>
+!> <td> complex </td>
+!> <td> n,m </td>
+!> <td> n/2,m </td>
+!> <td> ----- </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> <tr>
+!> <td> n,m </td>
+!> <td> complex </td>
+!> <td> real </td>
+!> <td> n/2,m </td>
+!> <td> n,m </td>
+!> <td> ----- </td>
+!> <td> FFT_NORMALIZE </td>
+!> </tr>
+!> </table>
+!>
+!>
 !>
 !> \section example Examples:
 !>
-!> For complexe data :
+!> In-place transform
 !> \code
-!> sll_comp64, dimension(0,n-1) :: data    ! n is the size of the problem
-!> type(sll_fft_plan), pointer  :: plan
-!> sll_int32                    :: flags
-!> sll_int32                    :: direction
+!> sll_int32, parameter :: n = 2**5
+!> sll_comp64, dimension(0,n) :: in
+!> type(sll_fft_plan), pointer  :: p
 !>
-!> ** INIT DATA **
+!> !** INIT DATA **
 !>
-!> plan => sll_new_fft(n,FFT_COMPLEX,flags)
-!> plan => sll_apply_fft(plan,data,direction)
-!>
-!> plan => sll_delete_fft(plan)
+!> p => fft_new_plan(n,in,in,FFT_FORWARD,FFT_NORMALIZE)
+!> call fft_apply_plan(p,in,in)
+!> call fft_delete_plan(p)
 !> \endcode
 !>
-!> By example if, the input data is \f$(x_0,x_1,x_2,x_3)\f$ the output is \f$(X_0,X_2,X_1,X_3)\f$.
-!> Thus, sll_get_index(1) returns 2 (cause data[1]=X_2) and sll_get_mode(1) returns X_1.
-!> 
-!> 
-!> 
-!> For real data : 
+!> Two-dimensional transform  
 !> \code
-!> sll_real64, dimension(0,n-1) :: data    ! n is the size of the problem
-!> type(sll_fft_plan), pointer  :: plan
-!> sll_int32                    :: flags
-!> sll_int32                    :: direction
+!> sll_int32, parameter :: n = 2**5
+!> sll_int32, parameter :: m = 2**3
+!> sll_comp64, dimension(n/2,m) :: in
+!> sll_real64, dimension(n,m) :: out
+!> type(sll_fft_plan), pointer  :: p
 !>
-!> ** INIT DATA **
+!> !** INIT DATA **
 !>
-!> plan => sll_new_fft(n,FFT_REAL,flags)
-!> plan => sll_apply_fft(plan,data,direction)
-!>
-!> plan => sll_delete_fft(plan)
+!> p => fft_new_plan(n,in,out,FFT_INVERSE)
+!> call fft_apply_plan(p,in,out)
+!> call fft_delete_plan(p)
 !> \endcode
+!>
+!> Transform in one direction
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_int32, parameter :: m = 2**3
+!> sll_comp64, dimension(n,m) :: in
+!> sll_comp64, dimension(n,m) :: out
+!> type(sll_fft_plan), pointer  :: p
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,out,FFT_FORWARD,FFT_ONLY_FIRST_DIRECTION)
+!> call fft_apply_plan(p,in,out)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
 !>
 ! \warning let p = sll_get_index(i), if p is even data(i) is the real part of X_p, else if p is odd data(i) is the imaginary part of X_p
 !>
@@ -87,23 +201,25 @@
 !>
 !> \f[ x_i = \sum_{k=0}^{n-1} X_k e^{2\pi k j i/n}. \f]
 !>
-!> For the real transform, we have
-!> \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
-!!     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
-!> which must be interpreted as the complex array
-!> \f[ \begin{pmatrix} r_0 &,& 0
-!!                     \\ r_1 &,& i_1
-!!                     \\ \vdots  & & \vdots 
-!!                     \\ r_{n/2-1} &,& i_{n/2-1}
-!!                     \\ r_{n/2} &,& 0
-!!                     \\ r_{n/2-1} &,& -i_{n/2-1}
-!!                     \\ \vdots    & & \vdots
-!!                     \\ r_1 &,& -i_1 
-!! \end{pmatrix}\f] 
-!> \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
-!!          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
-!> 
-!>
+! For the real transform, we have
+! \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
+!     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
+! which must be interpreted as the complex array
+! \f[ \begin{pmatrix} r_0 &,& 0
+!                     \\ r_1 &,& i_1
+!                     \\ \vdots  & & \vdots 
+!                     \\ r_{n/2-1} &,& i_{n/2-1}
+!                     \\ r_{n/2} &,& 0
+!                     \\ r_{n/2-1} &,& -i_{n/2-1}
+!                     \\ \vdots    & & \vdots
+!                     \\ r_1 &,& -i_1 
+! \end{pmatrix}\f] 
+! \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
+!          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
+! 
+!
+! By example if, the input data is \f$(x_0,x_1,x_2,x_3)\f$ the output is \f$(X_0,X_2,X_1,X_3)\f$.
+! Thus, sll_get_index(1) returns 2 (cause data[1]=X_2) and sll_get_mode(1) returns X_1.
 !------------------------------------------------------------------------------
 
 module sll_fft 
