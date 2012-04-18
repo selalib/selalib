@@ -41,7 +41,7 @@ program bgk_csl
   sll_real64,dimension(:,:), pointer :: integration_points_val
   character*80,str,str2
 
-  mesh_case = 1
+  mesh_case = 3
   visu_step = 10
   test_case = 4
   rho_case = 3
@@ -111,7 +111,7 @@ program bgk_csl
     L = 4._f64*sll_pi
     x1_min = 0._f64
     x1_max = L
-    x2_min = -8._f64
+    x2_min = -6._f64
     x2_max = -x2_min
   endif
 
@@ -203,6 +203,7 @@ program bgk_csl
        x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
     mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
        PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+       
     dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
     do i2=1,nc_eta2+1
@@ -292,7 +293,7 @@ program bgk_csl
 
 
   if(mesh_case==3)then
-     alpha_mesh = 1.e-1_f64 !0.1_f64
+     alpha_mesh = 1.e-2_f64 !0.1_f64
      eta2 = eta2_min 
      eta2c = eta2_min + 0.5_f64*delta_eta2
      do i2= 1, nc_eta2 + 1
@@ -337,6 +338,14 @@ program bgk_csl
        x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
     mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
        PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+
+    !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+    !   x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,COMPACT)
+    !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+    !   PERIODIC, eta2_min, eta2_max, nc_eta2, COMPACT, geom)
+
+
+
     dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
     val = 0._f64
@@ -563,6 +572,7 @@ program bgk_csl
       buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
     enddo
     buf_1d(1)=buf_1d(N_x1+1)
+    phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
 
     if(mod(step,visu_step)==0.or. step==1)then
       write(str2,*) step
@@ -625,7 +635,7 @@ program bgk_csl
         xx = xx-real(ii,f64)      
         phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
         FIELD_2D_AT_I( uniform_field, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
-        FIELD_2D_AT_I( uniform_field_velocity, i1, i2 ) = 0.5_f64*x2**2!&
+        !FIELD_2D_AT_I( uniform_field_velocity, i1, i2 ) = 0.5_f64*x2**2!&
         !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
         !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
       end do
@@ -677,6 +687,9 @@ program bgk_csl
       if(rho_case==3)then
         rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
       endif      
+      if(rho_case==4)then
+        rho(i1)=compute_non_unif_integral_gaussian_sym(integration_points_val,nc_eta2)
+      endif      
       !if(test_case==4)then      
       !  rho(i1) = rho(i1)+1._f64
       !endif  
@@ -694,6 +707,7 @@ program bgk_csl
       buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
     enddo
     buf_1d(1)=buf_1d(N_x1+1)
+    phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
 
   
   
@@ -735,22 +749,22 @@ program bgk_csl
       enddo  
     enddo
 
-    do i2 = 1, nc_eta2
-      val = 0._f64
-      do i1 = 1, nc_eta1    
-         val=val+sll_get_df_val(dist_func, i1, i2)
-      enddo
-      val = val/real(nc_eta1,f64)
-      buf_1d(i2)=0._f64!val
-    enddo
+    !do i2 = 1, nc_eta2
+    !  val = 0._f64
+    !  do i1 = 1, nc_eta1    
+    !     val=val+sll_get_df_val(dist_func, i1, i2)
+    !  enddo
+    !  val = val/real(nc_eta1,f64)
+    !  buf_1d(i2)=0._f64!val
+    !enddo
 
 
-    do i1 = 1, nc_eta1 
-      do i2 = 1, nc_eta2
-        val = sll_get_df_val(dist_func, i1, i2)
-        call sll_set_df_val(dist_func, i1, i2,val-buf_1d(i2))
-      enddo  
-    enddo
+    !do i1 = 1, nc_eta1 
+    !  do i2 = 1, nc_eta2
+    !    val = sll_get_df_val(dist_func, i1, i2)
+    !    call sll_set_df_val(dist_func, i1, i2,val-buf_1d(i2))
+    !  enddo  
+    !enddo
 
 
     !do i1 = 1, nc_eta1 
@@ -760,28 +774,28 @@ program bgk_csl
     !enddo
 
 
-    !call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
-    call csl_second_order(csl_work, dist_func, uniform_field_velocity, uniform_field_velocity, dt)
+    call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
+    !call csl_second_order(csl_work, dist_func, uniform_field_velocity, uniform_field_velocity, dt)
 
 
-    do i1 = 1, nc_eta1 
-      do i2 = 1, nc_eta2
-        val = sll_get_df_val(dist_func, i1, i2)
-        !call sll_set_df_val(dist_func, i1, i2,val+f_equil(i1,i2))
-        call sll_set_df_val(dist_func, i1, i2,val+buf_1d(i2))
-      enddo  
-    enddo
+    !do i1 = 1, nc_eta1 
+    !  do i2 = 1, nc_eta2
+    !    val = sll_get_df_val(dist_func, i1, i2)
+    !    !call sll_set_df_val(dist_func, i1, i2,val+f_equil(i1,i2))
+    !    call sll_set_df_val(dist_func, i1, i2,val+buf_1d(i2))
+    !  enddo  
+    !enddo
 
-    do i1 = 1, nc_eta1+1 
-      do i2 = 1, nc_eta2+1
-        val = sll_get_df_val(dist_func, i1, i2)
-        call sll_set_df_val(dist_func, i1, i2,val-buf_1d(i2))
-        FIELD_2D_AT_I( uniform_field, i1, i2 ) = FIELD_2D_AT_I( uniform_field, i1, i2 )&
-        -FIELD_2D_AT_I( uniform_field_velocity, i1, i2 )
-        FIELD_2D_AT_I( uniform_field_new, i1, i2 ) = FIELD_2D_AT_I( uniform_field_new, i1, i2 )&
-        -FIELD_2D_AT_I( uniform_field_velocity, i1, i2 )        
-      enddo  
-    enddo
+    !do i1 = 1, nc_eta1+1 
+    !  do i2 = 1, nc_eta2+1
+    !    val = sll_get_df_val(dist_func, i1, i2)
+    !    call sll_set_df_val(dist_func, i1, i2,val-buf_1d(i2))
+    !    FIELD_2D_AT_I( uniform_field, i1, i2 ) = FIELD_2D_AT_I( uniform_field, i1, i2 )&
+    !    -FIELD_2D_AT_I( uniform_field_velocity, i1, i2 )
+    !    FIELD_2D_AT_I( uniform_field_new, i1, i2 ) = FIELD_2D_AT_I( uniform_field_new, i1, i2 )&
+    !   -FIELD_2D_AT_I( uniform_field_velocity, i1, i2 )        
+    !  enddo  
+    !enddo
 
     !do i1 = 1, nc_eta1+1 
     !  do i2 = 1, nc_eta2+1
@@ -792,7 +806,7 @@ program bgk_csl
     !enddo
 
     
-    call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
+    !call csl_second_order(csl_work, dist_func, uniform_field, uniform_field_new, dt)
     
     !do i1 = 1, nc_eta1+1 
     !  do i2 = 1, nc_eta2+1
