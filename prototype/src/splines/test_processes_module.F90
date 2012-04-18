@@ -19,7 +19,7 @@ module test_processes_module
   use sll_splines
   use numeric_constants
   use util_constants
-    use test_func_module
+  use test_func_module
   implicit none
 contains
 
@@ -28,8 +28,8 @@ contains
     implicit none
 
     sll_int32                             :: i_test, ok, i, err 
-    type(sll_spline_1d), pointer          :: sp1
-    type(sll_spline_1d), pointer          :: sp2
+    type(sll_spline_1d), pointer         :: sp1
+    type(sll_spline_1d), pointer         :: sp2
     sll_real64                            :: x
     sll_real64                            :: phase
     sll_real64, allocatable, dimension(:) :: coordinates
