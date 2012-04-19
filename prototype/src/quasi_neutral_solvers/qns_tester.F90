@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
 !> Start date: March 20, 2012
-!> Last modification: April 11, 2012
+!> Last modification: April 19, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -27,44 +27,51 @@ program qns_tester
   use sll_qns_2d_with_finite_diff_seq
   use sll_qns_2d_with_finite_diff_par
   use sll_qns2d_angular_spect_method_seq
+  use sll_qns2d_angular_spect_method_par
 implicit none
 
   character(len=100)                    :: bc ! Boundary_conditions
   sll_int32                             :: nr, ntheta
   sll_real64                            :: rmin, rmax, Zi
   sll_real64, dimension(:), allocatable :: Te
-  sll_int32                             :: ierr
+  sll_int32                             :: ierr, i, myrank
 
   !Boot parallel environment
   call sll_boot_collective()
 
-  bc = 'neumann'
-  !bc = 'dirichlet'
-  nr = 1024
-  ntheta = 1024
+  myrank = sll_get_collective_rank(sll_world_collective)
+
+  nr = 64
+  ntheta = 64
   rmin = 1.d0
   rmax = 10.d0
   Zi = 1.d0
 
-  if (bc=='neumann') then
-     nr = nr
-  else ! 'dirichlet'
-     nr = nr - 2
-  endif
+  do i=1,2
 
-  SLL_ALLOCATE(Te(nr), ierr)
-  Te = 1.d0
+     if (i==1) then
+        bc = 'neumann'
+     else
+        bc = 'dirichlet'
+     endif
+     SLL_ALLOCATE(Te(nr), ierr)
+     Te = 1.d0
+     if (myrank==0) then
+        call flush()
+        print*, ' '
+        print*, 'TESTING QUASINEUTRAL SOLVERS WITH ', bc
+     endif
+     call test_qns_2d(bc, nr, ntheta, rmin, rmax, Te, Zi)
+     SLL_DEALLOCATE_ARRAY(Te, ierr)
 
-  call test_sll_qns_2d_with_finite_diff(bc, nr, ntheta, rmin, rmax, Te, Zi)
-
-  SLL_DEALLOCATE_ARRAY(Te, ierr)
+  enddo
 
   call sll_halt_collective()
 
 contains
 
 
-  subroutine test_sll_qns_2d_with_finite_diff(bc, nr, ntheta, rmin, rmax, Te, Zi)
+  subroutine test_qns_2d(bc, nr, ntheta, rmin, rmax, Te, Zi)
 
     character(len=*)                                 :: bc ! Boundary_conditions
     sll_int32                                        :: nr, ntheta
@@ -79,14 +86,17 @@ contains
      sll_real64, dimension(nr,ntheta)                :: phi_spect_seq
     sll_real64, dimension(nr,ntheta)                 :: phi_an
     sll_real64, dimension(:,:), allocatable          :: rho_par, phi_par
+    sll_real64, dimension(:,:), allocatable          :: phi_spect_par
     sll_int32                                        :: i, j
     type (qns_2d_with_finite_diff_plan_seq), pointer :: plan_seq
     type (qns_2d_with_finite_diff_plan_par), pointer :: plan_par
     type (qns2d_angular_spect_method_seq),pointer    :: plan_spect_seq
+    type (qns2d_angular_spect_method_par),pointer    :: plan_spect_par
     sll_real64                                       :: average_err
     sll_real64                                       :: average_err_spect
     sll_real64                                       :: average_err_bound
     sll_real64                                       :: seq_par_diff
+    sll_real64                                       :: seq_par_diff_spect
     sll_real64                                       :: Mr, Mtheta
     sll_int32, dimension(1:3)                        :: global
     sll_int32                                        :: gi, gj
@@ -145,7 +155,7 @@ contains
     if (myrank==0) then
        call flush()
        print*, ' '
-       print*, 'TESTING QUASINEUTRAL SOLVERS IN SEQUENTIAL...'
+       print*, '... IN SEQUENTIAL...'
     endif
 
     plan_seq => new_qns_2d_with_finite_diff_plan_seq(bc, rmin, rmax, rho_seq, c, Te, f, g, Zi)
@@ -203,10 +213,8 @@ contains
        call flush()
        print*, ' '
        call flush()
-       print*, 'TESTING QUASINEUTRAL SOLVERS IN PARALLEL...'
+       print*, '...IN PARALLEL...'
     endif
-
-    colsz  = sll_get_collective_size(sll_world_collective)
 
     layout => new_layout_3D( sll_world_collective )
     call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, int(colsz), 1, 1, layout )
@@ -216,6 +224,7 @@ contains
 
     SLL_ALLOCATE(rho_par(nr_loc,ntheta_loc), ierr)
     SLL_ALLOCATE(phi_par(nr_loc,ntheta_loc), ierr)
+    SLL_ALLOCATE(phi_spect_par(nr_loc,ntheta_loc), ierr)
 
     do j=1,ntheta_loc
        do i=1,nr_loc
@@ -229,39 +238,57 @@ contains
     plan_par => new_qns_2d_with_finite_diff_plan_par(bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
     call solve_qn_2d_with_finite_diff_par(plan_par, phi_par)
 
-    average_err  = 0.d0
+    plan_spect_par => new_qns2d_angular_spect_method_par(bc, rmin, rmax, rho_par, c, Te, f, g, Zi)
+    call solve_qns2d_angular_spect_method_par(plan_spect_par, phi_spect_par)
+
+    average_err        = 0.d0
+    average_err_spect  = 0.d0
     average_err_bound  = 0.d0
-    seq_par_diff = 0.d0
+    seq_par_diff       = 0.d0
+    seq_par_diff_spect = 0.d0
 
     do j=1,ntheta_loc
        do i=1,nr_loc
           global = local_to_global_3D(layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
-          average_err  = average_err  + abs( phi_an (gi,gj) - phi_par(i,j) )
+          average_err = average_err  + abs( phi_an (gi,gj) - phi_par(i,j))
+          average_err_spect  = average_err_spect + abs( phi_an (gi,gj) - &
+                                                      phi_spect_par(i,j) )
           Mr = 4*abs(cos(theta))
           Mtheta = abs(sin(r-rmin)*sin(rmax-r))
-          average_err_bound = average_err_bound + Mr*dr**2/12 + abs(c(gi))*Mr*dr**2/6 + &
-                                                               Mtheta*dtheta**2/(r**2*12)
+          average_err_bound = average_err_bound + Mr*dr**2/12 + &
+               abs(c(gi))*Mr*dr**2/6 + Mtheta*dtheta**2/(r**2*12)
           seq_par_diff = seq_par_diff + abs( phi_seq(gi,gj) - phi_par(i,j) )
+          seq_par_diff_spect = seq_par_diff_spect + abs(phi_spect_seq(gi,gj) & 
+                                                      - phi_spect_par(i,j) )
        enddo
     enddo
 
     average_err  = average_err/(nr_loc*ntheta_loc)
+    average_err_spect  = average_err_spect/(nr_loc*ntheta_loc)
     average_err_bound = average_err_bound/(nr_loc*ntheta_loc)
     seq_par_diff = seq_par_diff/(nr_loc*ntheta_loc)
+    seq_par_diff_spect = seq_par_diff_spect/(nr_loc*ntheta_loc)
 
     call flush()
     print*, ' '
     call flush()
-    print*, 'Average error in proc', myrank, ':', average_err
+    print*, 'sll_qns_2d_with_finite_diff_par average error:',          &
+                                    ' in proc', myrank, ':', average_err
+    call flush()
+    print*, 'sll_qns2d_angular_spect_method_par average error:',       &
+                              ' in proc', myrank, ':', average_err_spect
     call flush()
     print*, 'Boundary average error =', average_err_bound
     call flush()
-    print*, 'Average diff between seq sol and par sol in proc', myrank, ':', seq_par_diff
+    print*, 'sll_qns_2d_with_finite_diff_par average diff(seq,par)',   &
+                                   ' in proc', myrank, ':', seq_par_diff
+    call flush()
+    print*, 'sll_qns2d_angular_spect_method_par average diff(seq,par)',&
+                             ' in proc', myrank, ':', seq_par_diff_spect
 
     if ( average_err > average_err_bound) then
-       ok = 1.d0
        call flush()
        print*, ' '
        call flush()
@@ -272,15 +299,27 @@ contains
        print*, ' '
        stop
     endif
+    if ( average_err_spect > average_err_bound) then
+       call flush()
+       print*, ' '
+       call flush()
+       print*, 'Test stopped by sll_qns2d_angular_spect_method_par failure'
+       call flush()
+       print*, 'myrank=', myrank
+       call flush()
+       print*, ' '
+       stop
+    endif
 
-    call sll_collective_reduce(sll_world_collective, (/ ok /), 1, MPI_PROD, 0, prod4test )
-
+    call sll_collective_reduce(sll_world_collective, (/ ok /), 1,        &
+                                                  MPI_PROD, 0, prod4test )
     if (myrank==0) then
        if (prod4test(1)==1.d0) then
           call flush()
           print*, ' '
           call flush()
           print*, 'sll_qns_2d_with_finite_diff_par: PASSED'
+          print*, 'sll_qns2d_angular_spect_method_par: PASSED'
           call flush()
           print*, ' '
        endif
@@ -288,14 +327,15 @@ contains
 
     call delete_qns_2d_with_finite_diff_plan_par(plan_par)
     call delete_qns_2d_with_finite_diff_plan_seq(plan_seq)
-    !call delete_qns2d_angular_spect_method_seq(plan_spec_seq)
+    call delete_qns2d_angular_spect_method_seq(plan_spect_seq)
+    call delete_qns2d_angular_spect_method_par(plan_spect_par)
 
     SLL_DEALLOCATE_ARRAY(phi_par, ierr)
     SLL_DEALLOCATE_ARRAY(c, ierr)
     SLL_DEALLOCATE_ARRAY(f, ierr)
     SLL_DEALLOCATE_ARRAY(g, ierr)
  
-  end subroutine test_sll_qns_2d_with_finite_diff
+  end subroutine test_qns_2d
 
 
 end program qns_tester
