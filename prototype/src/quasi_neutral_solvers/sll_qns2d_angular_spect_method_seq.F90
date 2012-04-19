@@ -2,12 +2,12 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_qns_2d_with_finite_diff.F90
+! Module: sll_qns2d_angular_spect_method_seq.F90
 !
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with angular spectral method
 !> Start date: April 10, 2012
-!> Last modification: April 18, 2012
+!> Last modification: April 19, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -52,14 +52,14 @@ contains
   function new_qns2d_angular_spect_method_seq(bc, rmin, rmax, rho, c, Te, f, g, Zi) &
                                                                           result (plan)
 
-    character(len=100)                              :: bc ! Boundary_conditions
-    sll_real64                                      :: rmin
-    sll_real64                                      :: rmax
-    sll_real64, dimension(:,:)                      :: rho
-    sll_real64, dimension(:)                        :: c, Te, f, g    
-    sll_real64                                      :: Zi
-    sll_comp64, dimension(:),   allocatable         :: x
-    sll_int32                                       :: nr, ntheta, ierr
+    character(len=100)                            :: bc ! Boundary_conditions
+    sll_real64                                    :: rmin
+    sll_real64                                    :: rmax
+    sll_real64, dimension(:,:)                    :: rho
+    sll_real64, dimension(:)                      :: c, Te, f, g    
+    sll_real64                                    :: Zi
+    sll_comp64, dimension(:),   allocatable       :: x
+    sll_int32                                     :: nr, ntheta, ierr
     type(qns2d_angular_spect_method_seq), pointer :: plan
 
     nr = size(rho,1)
@@ -141,14 +141,14 @@ contains
 
     do j=1,ntheta
        if (j<=ntheta/2) then
-          k = real(j-1,f64)
+          k = j-1
        else
-          k = real(ntheta-(j-1),f64)
+          k = ntheta-(j-1)
        endif
        if (plan%bc=='neumann') then
-          call neumann_matrix_resh_spec_seq(plan, k, a_resh)
+          call neumann_matrix_resh_spect_seq(plan, k, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix_resh_spec_seq(plan, k, a_resh)
+          call dirichlet_matrix_resh_spect_seq(plan, k, a_resh)
        endif
        ! b is given by taking the FFT in the theta-direction of rho_{r,theta}      
        ! Solving the linear system: Ax = b  
@@ -189,7 +189,7 @@ contains
   end subroutine delete_qns2d_angular_spect_method_seq
 
 
-  subroutine dirichlet_matrix_resh_spec_seq(plan, k, a_resh)
+  subroutine dirichlet_matrix_resh_spect_seq(plan, k, a_resh)
 
     type(qns2d_angular_spect_method_seq), pointer :: plan
     sll_real64                                    :: dr, dtheta, Zi
@@ -217,16 +217,16 @@ contains
        endif
     enddo
 
-  end subroutine dirichlet_matrix_resh_spec_seq
+  end subroutine dirichlet_matrix_resh_spect_seq
 
 
-  subroutine neumann_matrix_resh_spec_seq(plan, k, a_resh)
+  subroutine neumann_matrix_resh_spect_seq(plan, k, a_resh)
 
     type(qns2d_angular_spect_method_seq), pointer :: plan
-    sll_real64                                       :: dr, dtheta, Zi
-    sll_real64                                       :: rmin, rmax, r
-    sll_int32                                        :: i, k, nr
-    sll_real64, dimension(:)                         :: a_resh
+    sll_real64                                    :: dr, dtheta, Zi
+    sll_real64                                    :: rmin, rmax, r
+    sll_int32                                     :: i, k, nr
+    sll_real64, dimension(:)                      :: a_resh
 
     nr = plan%nr
     rmin = plan%rmin
@@ -237,7 +237,7 @@ contains
 
     a_resh = 0.d0
 
-    a_resh(2) = 2/dr**2 + 1/(Zi*plan%Te(1)) + (k/r)**2
+    a_resh(2) = 2/dr**2 + 1/(Zi*plan%Te(1)) + (k/rmin)**2
     a_resh(3) = -2/dr**2
 
     do i=2,nr-1
@@ -248,9 +248,9 @@ contains
     enddo
 
     a_resh(3*(nr-1)+1) = -2/dr**2
-    a_resh(3*(nr-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(nr)) + (k/r)**2
+    a_resh(3*(nr-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(nr)) + (k/rmax)**2
 
-  end subroutine neumann_matrix_resh_spec_seq
+  end subroutine neumann_matrix_resh_spect_seq
 
 
 end module sll_qns2d_angular_spect_method_seq
