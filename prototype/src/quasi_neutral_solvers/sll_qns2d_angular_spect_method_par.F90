@@ -1,13 +1,13 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_qns_2d_with_finite_diff.F90
+! Module: sll_qns2d_angular_spect_method_par.F90
 !
 !> @brief 
-!> Selalib 2D (r, theta) quasi-neutral solver with finite differences
+!> Selalib 2D (r, theta) quasi-neutral solver with angular spectral method
 !> Some arrays are here in 3D for remap utilities
-!> Start date: March 13, 2012
-!> Last modification: April 11, 2012
+!> Start date: April 19, 2012
+!> Last modification: April 19, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -15,7 +15,7 @@
 !                                  
 !***************************************************************************
 
-module sll_qns_2d_with_finite_diff_par
+module sll_qns2d_angular_spect_method_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -31,7 +31,7 @@ module sll_qns_2d_with_finite_diff_par
   implicit none
 
 
-  type qns_2d_with_finite_diff_plan_par
+  type qns2d_angular_spect_method_par
      character(len=100)                        :: bc!Boundary_conditions
      sll_int32                                 :: nr!Number of points in r-direction
      sll_int32                                 :: ntheta!Number of points in theta-direction
@@ -51,25 +51,25 @@ module sll_qns_2d_with_finite_diff_par
      sll_comp64, dimension(:,:,:), allocatable :: array_lin_sys
      type(remap_plan_3D_t), pointer            :: rmp3_1
      type(remap_plan_3D_t), pointer            :: rmp3_2
-  end type qns_2d_with_finite_diff_plan_par
+  end type qns2d_angular_spect_method_par
 
 contains
 
 
-  function new_qns_2d_with_finite_diff_plan_par(bc,rmin,rmax,rho,c,Te,f,g,Zi) result (plan)
+  function new_qns2d_angular_spect_method_par(bc,rmin,rmax,rho,c,Te,f,g,Zi) result (plan)
 
-    character(len=100)                              :: bc ! Boundary_conditions
-    sll_real64                                      :: rmin
-    sll_real64                                      :: rmax
-    sll_real64, dimension(:,:)                      :: rho
-    sll_real64, dimension(:)                        :: c, Te, f, g    
-    sll_real64                                      :: Zi
-    sll_comp64, dimension(:),   allocatable         :: x
-    sll_int32                                       :: nr, ntheta
-    sll_int32                                       :: nr_loc, ntheta_loc
-    sll_int32                                       :: ierr
-    sll_int64                                       :: colsz
-    type(qns_2d_with_finite_diff_plan_par), pointer :: plan
+    character(len=100)                            :: bc ! Boundary_conditions
+    sll_real64                                    :: rmin
+    sll_real64                                    :: rmax
+    sll_real64, dimension(:,:)                    :: rho
+    sll_real64, dimension(:)                      :: c, Te, f, g    
+    sll_real64                                    :: Zi
+    sll_comp64, dimension(:),   allocatable       :: x
+    sll_int32                                     :: nr, ntheta
+    sll_int32                                     :: nr_loc, ntheta_loc
+    sll_int32                                     :: ierr
+    sll_int64                                     :: colsz
+    type(qns2d_angular_spect_method_par), pointer :: plan
 
     colsz  = sll_get_collective_size(sll_world_collective)
     nr_loc = size(rho,1)
@@ -146,24 +146,24 @@ contains
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
-  end function new_qns_2d_with_finite_diff_plan_par
+  end function new_qns2d_angular_spect_method_par
 
 
- subroutine solve_qn_2d_with_finite_diff_par(plan, phi)
+ subroutine solve_qns2d_angular_spect_method_par(plan, phi)
 
-    type(qns_2d_with_finite_diff_plan_par), pointer :: plan
-    sll_real64                                      :: dr, dtheta 
-    sll_int32                                       :: nr, ntheta
-    sll_int32                                       :: nr_loc, ntheta_loc
-    sll_int32                                       :: i, j
-    sll_real64, dimension(:,:)                      :: phi
-    sll_comp64, dimension(plan%ntheta)              :: f, g
-    sll_int32, dimension(plan%nr)                   :: ipiv
-    sll_real64, dimension(3*plan%nr)                :: a_resh ! 3*n
-    sll_real64, dimension(7*plan%nr)                :: cts ! 7*n allocation
-    sll_int64                                       :: colsz ! collective size
-    sll_int32, dimension(1:3)                       :: global
-    sll_int32                                       :: ind
+    type(qns2d_angular_spect_method_par), pointer :: plan
+    sll_real64                                    :: dr, dtheta 
+    sll_int32                                     :: nr, ntheta
+    sll_int32                                     :: nr_loc, ntheta_loc
+    sll_int32                                     :: i, j
+    sll_real64, dimension(:,:)                    :: phi
+    sll_comp64, dimension(plan%ntheta)            :: f, g
+    sll_int32, dimension(plan%nr)                 :: ipiv
+    sll_real64, dimension(3*plan%nr)              :: a_resh ! 3*n
+    sll_real64, dimension(7*plan%nr)              :: cts ! 7*n allocation
+    sll_int64                                     :: colsz ! collective size
+    sll_int32, dimension(1:3)                     :: global
+    sll_int32                                     :: ind
 
     colsz = sll_get_collective_size(sll_world_collective)
 
@@ -189,20 +189,25 @@ contains
     call apply_fft_c2c_1d( plan%fft_plan, g, g )
 
     do i=1,nr_loc
-       call apply_fft_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), plan%array_fft(i,:,1) )
+       call apply_fft_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
+                                              plan%array_fft(i,:,1) )
        global = local_to_global_3D( plan%layout_fft, (/i, 1, 1/))
        ind = global(1)
        if (ind==1) then
           if (plan%bc=='neumann') then
-             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (plan%c(ind)-2/dr)*f 
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + &
+                                          (plan%c(ind)-2/dr)*f 
           else ! 'dirichlet'
-             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (1/dr**2 - plan%c(ind)/(2*dr))*f
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + &
+                              (1/dr**2 - plan%c(ind)/(2*dr))*f
           endif
        elseif(ind==nr) then
           if (plan%bc=='neumann') then
-             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (plan%c(ind)+2/dr)*g
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + &
+                                          (plan%c(ind)+2/dr)*g
           else ! 'dirichlet'
-             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + (1/dr**2 + plan%c(ind)/(2*dr))*g
+             plan%array_fft(i,:,1) = plan%array_fft(i,:,1) + &
+                              (1/dr**2 + plan%c(ind)/(2*dr))*g
           endif
        endif 
     enddo
@@ -214,13 +219,19 @@ contains
     do j=1,ntheta_loc
        global = local_to_global_3D( plan%layout_lin_sys, (/1, j, 1/))
        ind = global(2)
+       if (ind<=ntheta/2) then
+          ind = ind-1
+       else
+          ind = ntheta-(ind-1)
+       endif
        if (plan%bc=='neumann') then
-          call neumann_matrix_resh_par(plan, ind-1, a_resh)
+          call neumann_matrix_resh_spect_par(plan, ind, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix_resh_par(plan, ind-1, a_resh)
+          call dirichlet_matrix_resh_spect_par(plan, ind, a_resh)
        endif 
        call setup_cyclic_tridiag( a_resh, nr, cts, ipiv )
-       call solve_cyclic_tridiag(cts,ipiv,plan%array_lin_sys(:,j,1),nr,plan%array_lin_sys(:,j,1))         
+       call solve_cyclic_tridiag(cts,ipiv,plan%array_lin_sys(:,j,1) &
+                                       ,nr,plan%array_lin_sys(:,j,1))         
     enddo
 
     ! Remapping to do inverse FFTs
@@ -228,18 +239,18 @@ contains
 
     ! Inverse FFTs (in the theta-direction)
     do i=1,nr/int(colsz)
-       call apply_fft_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), plan%array_fft(i,:,1) ) 
+       call apply_fft_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
+                                                  plan%array_fft(i,:,1) ) 
     enddo
 
     phi = real(plan%array_fft(:,:,1), f64)/ntheta
 
-  end subroutine solve_qn_2d_with_finite_diff_par
+  end subroutine solve_qns2d_angular_spect_method_par
 
+  subroutine delete_qns2d_angular_spect_method_par(plan)
 
-  subroutine delete_qns_2d_with_finite_diff_plan_par(plan)
-
-       type (qns_2d_with_finite_diff_plan_par), pointer :: plan
-       sll_int32                                        :: ierr
+       type (qns2d_angular_spect_method_par), pointer :: plan
+       sll_int32                                      :: ierr
 
        ! Fixme: some error checking, whether the poisson pointer is 
        ! associated for instance
@@ -262,50 +273,47 @@ contains
 
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_qns_2d_with_finite_diff_plan_par
+  end subroutine delete_qns2d_angular_spect_method_par
 
 
-  subroutine dirichlet_matrix_resh_par(plan, j, a_resh)
+  subroutine dirichlet_matrix_resh_spect_par(plan, k, a_resh)
 
-    type(qns_2d_with_finite_diff_plan_par), pointer :: plan
-    sll_real64                                      :: dr, dtheta, Zi
-    sll_real64                                      :: r, rmin, rmax
-    sll_int32                                       :: i, j, nr
-    sll_real64, dimension(:)                        :: a_resh
-    ! C & Te are the vector of the Cr & Te(i) respectively
+    type(qns2d_angular_spect_method_par), pointer :: plan
+    sll_real64                                    :: dr, dtheta, Zi
+    sll_real64                                    :: r, rmin, rmax
+    sll_int32                                     :: i, k, nr
+    sll_real64, dimension(:)                      :: a_resh
 
     nr = plan%nr
     rmin = plan%rmin
     rmax = plan%rmax
     dr = (rmax-rmin)/(nr+1)
     dtheta = 2*sll_pi / plan%ntheta
-    Zi = plan%Zi
+    Zi = plan%Zi        
 
     a_resh = 0.d0
 
     do i=1,nr
        r = rmin + i*dr
        if (i>1) then
-           a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
+          a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
        endif
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
-                                                     + 1/(Zi*plan%Te(i))
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(i)) + (k/r)**2  
        if (i<nr) then
-           a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
+          a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
        endif
     enddo
 
-  end subroutine dirichlet_matrix_resh_par
+  end subroutine dirichlet_matrix_resh_spect_par
 
 
-  subroutine neumann_matrix_resh_par(plan, j, a_resh)
+  subroutine neumann_matrix_resh_spect_par(plan, k, a_resh)
 
-    type(qns_2d_with_finite_diff_plan_par), pointer :: plan
-    sll_real64                                      :: dr, dtheta, Zi
-    sll_real64                                      :: rmin, rmax, r
-    sll_int32                                       :: i, j, nr
-    sll_real64, dimension(:)                        :: a_resh
-    ! c & Te are the vector of the Cr & Te(i) respectively
+    type(qns2d_angular_spect_method_par), pointer :: plan
+    sll_real64                                    :: dr, dtheta, Zi
+    sll_real64                                    :: rmin, rmax, r
+    sll_int32                                     :: i, k, nr
+    sll_real64, dimension(:)                      :: a_resh
 
     nr = plan%nr
     rmin = plan%rmin
@@ -316,23 +324,19 @@ contains
 
     a_resh = 0.d0
 
-    a_resh(2) = 2/dr**2 + 2/(rmin*dtheta)**2*(1-cos(j*dtheta)) + &
-                                                 1/(Zi*plan%Te(1))
+    a_resh(2) = 2/dr**2 + 1/(Zi*plan%Te(1)) + (k/rmin)**2
     a_resh(3) = -2/dr**2
 
     do i=2,nr-1
        r = rmin + (i-1)*dr
        a_resh(3*(i-1)+1) = plan%c(i)/(2*dr) - 1/dr**2
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
-                                                     + 1/(Zi*plan%Te(i))
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(i)) + (k/r)**2
        a_resh(3*(i-1)+3) = -( 1/dr**2 + plan%c(i)/(2*dr) )
     enddo
 
     a_resh(3*(nr-1)+1) = -2/dr**2
-    a_resh(3*(nr-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2*(1-cos(j*dtheta)) &
-                                                     + 1/(Zi*plan%Te(nr))
+    a_resh(3*(nr-1)+2) = 2/dr**2 + 1/(Zi*plan%Te(nr)) + (k/rmax)**2
 
-  end subroutine neumann_matrix_resh_par
+  end subroutine neumann_matrix_resh_spect_par
 
-
-end module sll_qns_2d_with_finite_diff_par
+end module sll_qns2d_angular_spect_method_par
