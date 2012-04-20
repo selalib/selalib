@@ -41,13 +41,13 @@ implicit none
 
   myrank = sll_get_collective_rank(sll_world_collective)
 
-  nr = 64
-  ntheta = 64
+  nr = 4
+  ntheta = 4
   rmin = 1.d0
   rmax = 10.d0
   Zi = 1.d0
 
-  do i=1,2
+  do i=1,1
 
      if (i==1) then
         bc = 'neumann'
@@ -83,7 +83,7 @@ contains
     sll_real64                                       :: dr, dtheta
     sll_real64                                       :: r, theta
     sll_real64, dimension(nr,ntheta)                 :: rho_seq, phi_seq
-     sll_real64, dimension(nr,ntheta)                :: phi_spect_seq
+    sll_real64, dimension(nr,ntheta)                 :: phi_spect_seq
     sll_real64, dimension(nr,ntheta)                 :: phi_an
     sll_real64, dimension(:,:), allocatable          :: rho_par, phi_par
     sll_real64, dimension(:,:), allocatable          :: phi_spect_par
@@ -151,7 +151,7 @@ contains
     colsz  = sll_get_collective_size(sll_world_collective)
     myrank = sll_get_collective_rank(sll_world_collective)
 
-    ! Test sll_qns_2d_with_finite_diff_seq solver
+    ! Test 2d qns
     if (myrank==0) then
        call flush()
        print*, ' '
@@ -217,7 +217,8 @@ contains
     endif
 
     layout => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, int(colsz), 1, 1, layout )
+    call initialize_layout_with_distributed_3D_array( nr, ntheta, 1, &
+                                            int(colsz), 1, 1, layout )
 
     nr_loc = nr/int(colsz)
     ntheta_loc = ntheta
@@ -252,6 +253,12 @@ contains
           global = local_to_global_3D(layout, (/i, j, 1/))
           gi = global(1)
           gj = global(2)
+          theta = (gj-1)*dtheta
+          if (bc=='neumann') then
+             r = rmin + (gi-1)*dr
+          else ! 'dirichlet'
+             r = rmin + gi*dr
+          endif
           average_err = average_err  + abs( phi_an (gi,gj) - phi_par(i,j))
           average_err_spect  = average_err_spect + abs( phi_an (gi,gj) - &
                                                       phi_spect_par(i,j) )
@@ -274,10 +281,10 @@ contains
     call flush()
     print*, ' '
     call flush()
-    print*, 'sll_qns_2d_with_finite_diff_par average error:',          &
+    print*, 'sll_qns_2d_with_finite_diff_par average error',          &
                                     ' in proc', myrank, ':', average_err
     call flush()
-    print*, 'sll_qns2d_angular_spect_method_par average error:',       &
+    print*, 'sll_qns2d_angular_spect_method_par average error',       &
                               ' in proc', myrank, ':', average_err_spect
     call flush()
     print*, 'Boundary average error =', average_err_bound
