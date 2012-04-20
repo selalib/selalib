@@ -1621,7 +1621,7 @@ contains  ! ****************************************************************
           jpp1=cell2+1
           jpp2=cell2+2
         end if
-			
+        			
         ax1 = cdx1 
         ax2 = ax1*ax1
         ax3 = ax2*ax1
@@ -1668,7 +1668,7 @@ contains  ! ****************************************************************
           if (jpm1.ge.1) then
             a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + cij*svalx3*svaly1
           end if
-          a_out(ipp1,jp)     = a_out(ipp1,jp) + cij*svalx3*svaly2
+          a_out(ipp1,jp)     = a_out(ipp1,jp)   + cij*svalx3*svaly2
           if (jpp1.le.n2) then
             a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + cij*svalx3*svaly3
           end if
