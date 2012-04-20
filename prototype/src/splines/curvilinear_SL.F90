@@ -46,8 +46,8 @@ program radial_1d_SL
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
     
-    bc1_type = PERIODIC_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    bc1_type = HERMITE_SPLINE
+    bc2_type = HERMITE_SPLINE
   end if
   ! mesh type : polar or polar-like
   ! domain    : disc of radius eta1_max with a hole of radius eta1_min
@@ -90,8 +90,8 @@ program radial_1d_SL
   test_case = 3
   if (test_case > 6) then
     print*,'Non existing case'
-    print*,'test_case = 1 (f=1), 2 (cos(eta2)), 3 (centered gaussian in eta1 and eta2 for nat-per BC),'
-    print*,'4 (centered gaussian in eta1 and eta2 for per-per BC), 5 (gaussian in eta1) or 6 (centered dirac)'
+    print*,'test_case = 1 (f=1), 2 (cos(eta2)), 3 (centered gaussian in eta1 and eta2 for cartesian mesh),'
+    print*,'4 (centered gaussian in eta1 and eta2 for polar/polar-like mesh), 5 (gaussian in eta1) or 6 (centered dirac)'
     STOP
   end if
   
@@ -100,17 +100,20 @@ program radial_1d_SL
   ! 2 : rotation
   ! 3 : divergence free complex field (mesh_case = 1)
   ! 4 : divergence free complex field (mesh_case = 2,3)
-  field_case = 3
-  if (field_case > 3) then
+  ! 5 : divergence free non-symmetric field (mesh_case = 1)
+  field_case = 5
+  if (field_case > 5) then
     print*,'Non existing case'
-    print*,'field_case = 1 (complex divergence free field), 2 (rotation) or 3 (translation)'
+    print*,'field_case = 1 (transaltion), 2 (rotation),'
+    print*,'3 (complex divergence free field for cartesian mesh), 4 (complex divergence free field for polar/polar-like mesh)'
+    print*,'or 5 (divergence free non-symmetric field)'
     STOP
   end if
   a1=0.001_f64
   a2=0.002_f64
   
   ! ---- * time-scheme parameters * ----
-  dt = 0.1_f64*delta_eta1 ! 1._f64/1._f64
+  dt = 0.001_f64*delta_eta1 ! 1._f64/1._f64
   nb_step = 1 !floor(1._f64/dt)
   
   ! visualization parameters
@@ -285,7 +288,7 @@ program radial_1d_SL
   
   ! ---- Evolution in time ----
 
-	! Evolution in time - Numerical solution	
+	! Evolution in time - Numerical solution
   do step=1,nb_step
   
     do i=1,Neta1+1
@@ -356,19 +359,19 @@ program radial_1d_SL
         if (field_case==3) then
           eta1t = eta1
           eta2t = eta2
-          k1eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k1eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k1eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + 0.5_f64*dt*k1eta1
-          eta2t = eta2 +  0.5_f64*dt*k1eta2
-          k2eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta2t = eta2 + 0.5_f64*dt*k1eta2
+          k2eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k2eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + 0.5_f64*dt*k2eta1
-          eta2t = eta2 +  0.5_f64*dt*k2eta2
-          k3eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta2t = eta2 + 0.5_f64*dt*k2eta2
+          k3eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k3eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + dt*k3eta1
-          eta2t = eta2 +  dt*k3eta2
-          k4eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta2t = eta2 + dt*k3eta2
+          k4eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k4eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
@@ -394,6 +397,12 @@ program radial_1d_SL
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
+        if (field_case==5) then
+          eta1t = eta1*cos(2*sqrt(a1*a2)*step*dt) - eta2*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
+          eta2t = eta1*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) - eta2*sin(2*sqrt(a1*a2)*step*dt)
+          eta1 = eta1t
+          eta2 = eta2t
+        end if
                 
         ! Corrections in case of periodic BC
         if (bc1_type==PERIODIC_SPLINE) then
@@ -491,19 +500,19 @@ program radial_1d_SL
         if (field_case==3) then
           eta1t = eta1
           eta2t = eta2
-          k1eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k1eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k1eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + 0.5_f64*dt*k1eta1
-          eta2t = eta2 +  0.5_f64*dt*k1eta2
-          k2eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta2t = eta2 + 0.5_f64*dt*k1eta2
+          k2eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k2eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + 0.5_f64*dt*k2eta1
-          eta2t = eta2 +  0.5_f64*dt*k2eta2
-          k3eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta2t = eta2 + 0.5_f64*dt*k2eta2
+          k3eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k3eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + dt*k3eta1
-          eta2t = eta2 +  dt*k3eta2
-          k4eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta2t = eta2 + dt*k3eta2
+          k4eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k4eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
@@ -529,6 +538,12 @@ program radial_1d_SL
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
+        if (field_case==5) then
+          eta1t = eta1*cos(2*sqrt(a1*a2)*step*dt) - eta2*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
+          eta2t = eta1*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) - eta2*sin(2*sqrt(a1*a2)*step*dt)
+          eta1 = eta1t
+          eta2 = eta2t
+        end if
                 
         ! Corrections in case of periodic BC
         if (bc1_type==PERIODIC_SPLINE) then
@@ -602,19 +617,19 @@ program radial_1d_SL
         if (field_case==3) then
           eta1t = eta1
           eta2t = eta2
-          k1eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k1eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k1eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + 0.5_f64*dt*k1eta1
           eta2t = eta2 +  0.5_f64*dt*k1eta2
-          k2eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k2eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k2eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + 0.5_f64*dt*k2eta1
           eta2t = eta2 +  0.5_f64*dt*k2eta2
-          k3eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k3eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k3eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1t = eta1 + dt*k3eta1
           eta2t = eta2 +  dt*k3eta2
-          k4eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k4eta1 = -(3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1)
           k4eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
@@ -640,6 +655,12 @@ program radial_1d_SL
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
+        if (field_case==5) then
+          eta1t = eta1*cos(2*sqrt(a1*a2)*step*dt) - eta2*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
+          eta2t = eta1*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) - eta2*sin(2*sqrt(a1*a2)*step*dt)
+          eta1 = eta1t
+          eta2 = eta2t
+        end if
                 
         ! Corrections in case of periodic BC
         if (bc1_type==PERIODIC_SPLINE) then
@@ -671,7 +692,6 @@ program radial_1d_SL
 				
         dt = -dt
         
-        
         ! Actual coordinates 
         if (mesh_case==2) then 
           x1 = eta1
@@ -693,8 +713,12 @@ program radial_1d_SL
       enddo
     enddo
     
+    print*,'avant',fh_fsl(1,1),fh_fsl(17,1)
+    
     call deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl)
     call deposit_value_2D(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
+    
+    print*,'après',fh_fsl(1,1),fh_fsl(17,1)
     
     ! some adding operations
     
@@ -743,6 +767,13 @@ program radial_1d_SL
       diag(9,step),diag(9,step)/diag(1,step)-1._f64,diag(10,step),diag(10,step)/diag(2,step)-1._f64
   end do
   close(900)
+  open(unit=950,file='carac.dat')
+  do i=1,Neta1+1
+    do j=1,Neta2+1
+      write(950,*) eta1tot(i,j),eta2tot(i,j)
+    end do
+    end do
+  close(950)
 
   ! L^\infty
   val = 0._f64
@@ -777,4 +808,4 @@ end program
 ! conservation de la masse
 !plot 'diag.dat' u 1:3 w lp title 'BSL', 'diag.dat' u 1:7 w lp title 'BSL NC', 'diag.dat' u 1:11 w lp title 'FSL', 'diag.dat' u 1:15 w lp title 'FSL NC'
 ! convergence en espace
-!plot 'Conv_cart_rot_f4.dat' u 1:2 w lp title 'BSL', 'Conv_cart_rot_f4.dat' u 1:3 w lp title 'BSL NC', 'Conv_cart_rot_f4.dat' u 1:4 w lp title 'FSL', 'Conv_cart_rot_f4.dat' u 1:5 w lp title 'FSL NC'
+!plot 'Conv_cart_nonsym_f3.dat' u 1:2 w lp title 'BSL', 'Conv_cart_nonsym_f3.dat' u 1:3 w lp title 'BSL NC', 'Conv_cart_nonsym_f3.dat' u 1:4 w lp title 'FSL', 'Conv_cart_nonsym_f3.dat' u 1:5 w lp title 'FSL NC'
