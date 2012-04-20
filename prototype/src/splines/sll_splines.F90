@@ -596,7 +596,6 @@ contains  ! ****************************************************************
     interpolate_value_aux = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value_aux
 
-
   
   !> get spline interpolate at point x
   function interpolate_value( x, spline )
@@ -1483,34 +1482,34 @@ contains  ! ****************************************************************
     type(sll_spline_2D), pointer                  :: spline
 		sll_real64, dimension(:,:),intent(out)  			:: a_out
 		
-    sll_real64    :: cij   ! C_ij
-    sll_real64    :: x1_min
-    sll_real64    :: x2_min
-    sll_real64    :: dx1
-    sll_real64    :: dx2
-    sll_real64    :: cdx1  ! 1-dx1
-    sll_real64    :: cdx2  ! 1-dx2
-    sll_int32     :: cell1
-    sll_int32     :: cell2
-    sll_real64    :: rh1
-    sll_real64    :: rh2
-		sll_int32     :: n1
-    sll_int32     :: n2
+    sll_real64  :: cij   ! C_ij
+    sll_real64  :: x1_min
+    sll_real64  :: x2_min
+    sll_real64  :: dx1
+    sll_real64  :: dx2
+    sll_real64  :: cdx1  ! 1-dx1
+    sll_real64  :: cdx2  ! 1-dx2
+    sll_int32   :: cell1
+    sll_int32   :: cell2
+    sll_real64  :: rh1
+    sll_real64  :: rh2
+		sll_int32   :: n1
+    sll_int32   :: n2
     
 		! local variables
-    sll_int32     :: i1
-    sll_int32     :: i2
+    sll_int32   :: i1
+    sll_int32   :: i2
     
-    sll_int32     :: nt1
-    sll_int32     :: nt2
+    sll_int32   :: nt1
+    sll_int32   :: nt2
 		
-    sll_real64    :: svalx1, svalx2, svalx3, svalx4
-    sll_real64    :: svaly1, svaly2, svaly3, svaly4
-    sll_real64    :: ax1, ax2, ax3, ay1, ay2, ay3
+    sll_real64  :: svalx1, svalx2, svalx3, svalx4
+    sll_real64  :: svaly1, svaly2, svaly3, svaly4
+    sll_real64  :: ax1, ax2, ax3, ay1, ay2, ay3
 		
-    sll_real64     :: t1,t2
-    sll_int32     :: ipm1,ip,ipp1,ipp2
-    sll_int32     :: jpm1,jp,jpp1,jpp2
+    sll_real64 :: t1,t2
+    sll_int32  :: ipm1,ip,ipp1,ipp2
+    sll_int32  :: jpm1,jp,jpp1,jpp2
     
     sll_int32 :: bc1
     sll_int32 :: bc2
@@ -1561,7 +1560,6 @@ contains  ! ****************************************************************
     if( bc1 .eq. HERMITE_SPLINE ) then 
       nt1 = n1
     end if
-      
     if( bc2 .eq. PERIODIC_SPLINE ) then 
       nt2 = n2-1
     end if
