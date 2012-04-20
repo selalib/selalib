@@ -1627,76 +1627,77 @@ contains  ! ****************************************************************
         ax1 = cdx1 
         ax2 = ax1*ax1
         ax3 = ax2*ax1
+        
         ay1 = cdx2
         ay2 = ay1*ay1
         ay3 = ay2*ay1
 									
-        svalx1 = ax3/6._f64*cij
-        svalx2 = (0.5_f64*(-ax3+ax2+ax1) + 1._f64/6._f64)*cij
-        svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)*cij
-        svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))*cij
+        svalx1 = ax3/6._f64
+        svalx2 = (0.5_f64*(-ax3+ax2+ax1) + 1._f64/6._f64)
+        svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)
+        svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))
 		
         svaly1 = ay3/6._f64
         svaly2 = 0.5_f64*(-ay3+ay2+ay1) + 1._f64/6._f64
         svaly3 = 2._f64/3.0_f64 - ay2 + 0.5_f64*ay3
         svaly4 = (1._f64-ay3)/6._f64 + 0.5_f64*(ay2-ay1)
 			
-        if (ipm1.ge.0) then
-          if (jpm1.ge.0) then
-            a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + svalx1*svaly1
+        if (ipm1.ge.1) then
+          if (jpm1.ge.1) then
+            a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + cij*svalx1*svaly1
           end if
-          a_out(ipm1,jp) = a_out(ipm1,jp) + svalx1*svaly2
+          a_out(ipm1,jp)     = a_out(ipm1,jp)   + cij*svalx1*svaly2
           if (jpp1.le.n2) then
-            a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + svalx1*svaly3
+            a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + cij*svalx1*svaly3
           end if
           if (jpp2.le.n2) then
-            a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + svalx1*svaly4
+            a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + cij*svalx1*svaly4
           end if
         end if
         
-        if (jpm1.ge.0) then
-          a_out(ip,jpm1) = a_out(ip,jpm1) + svalx2*svaly1
+        if (jpm1.ge.1) then
+          a_out(ip,jpm1) = a_out(ip,jpm1) + cij*svalx2*svaly1
         end if
-        a_out(ip,jp) = a_out(ip,jp) + svalx2*svaly2
+        a_out(ip,jp)     = a_out(ip,jp)   + cij*svalx2*svaly2
         if (jpp1.le.n2) then
-          a_out(ip,jpp1) = a_out(ip,jpp1) + svalx2*svaly3
+          a_out(ip,jpp1) = a_out(ip,jpp1) + cij*svalx2*svaly3
         end if
         if (jpp2.le.n2) then
-          a_out(ip,jpp2) = a_out(ip,jpp2) + svalx2*svaly4
+          a_out(ip,jpp2) = a_out(ip,jpp2) + cij*svalx2*svaly4
         end if
             
         if (ipp1.le.n1) then
-          if (jpm1.ge.0) then
-            a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + svalx3*svaly1
+          if (jpm1.ge.1) then
+            a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + cij*svalx3*svaly1
           end if
-          a_out(ipp1,jp) = a_out(ipp1,jp) + svalx3*svaly2
+          a_out(ipp1,jp)     = a_out(ipp1,jp) + cij*svalx3*svaly2
           if (jpp1.le.n2) then
-            a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + svalx3*svaly3
+            a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + cij*svalx3*svaly3
           end if
           if (jpp2.le.n2) then
-            a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + svalx3*svaly4
+            a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + cij*svalx3*svaly4
           end if
         end if
         
         if (ipp2.le.n1) then
-          if (jpm1.ge.0) then
-            a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + svalx4*svaly1
+          if (jpm1.ge.1) then
+            a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + cij*svalx4*svaly1
           end if
-          a_out(ipp2,jp) = a_out(ipp2,jp)   + svalx4*svaly2
+          a_out(ipp2,jp)     = a_out(ipp2,jp)   + cij*svalx4*svaly2
           if (jpp1.le.n2) then
-            a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + svalx4*svaly3
+            a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + cij*svalx4*svaly3
           end if
           if (jpp2.le.n2) then
-            a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + svalx4*svaly4
+            a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + cij*svalx4*svaly4
           end if
         end if
               
         if (bc1.eq.HERMITE_SPLINE) then 
           if (i1.eq.1) then
-            if (jpm1.ge.0) then
+            if (jpm1.ge.1) then
               a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
             end if
-            a_out(1,jp)	= a_out(1,jp)	+ spline%coeffs(0,i2)/6._f64*svaly2
+            a_out(1,jp)   	= a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
             if (jpp1.le.n2) then
               a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
             end if
@@ -1705,26 +1706,26 @@ contains  ! ****************************************************************
             end if
           end if	
       
-          if (i1.eq.n1) then            
-            if (jpm1.ge.0) then
-            !  a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
+          if (i1.eq.n1) then
+            if (jpm1.ge.1) then
+              a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
             end if
-            !a_out(n1,jp) = a_out(n1,jp) + spline%coeffs(n1+1,i2)/6._f64*svaly2
+            a_out(n1,jp)     = a_out(n1,jp)   + spline%coeffs(n1+1,i2)/6._f64*svaly2
             if (jpp1.le.n2) then
-            !  a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
+              a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
             end if
             if (jpp2.le.n2) then
-            !  a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
+              a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
             end if
           end if
         end if
       
         if (bc2.eq.HERMITE_SPLINE) then 
           if (i2.eq.1) then
-            if (ipm1.ge.0) then
+            if (ipm1.ge.1) then
               a_out(ipm1,1) = a_out(ipm1,1) + spline%coeffs(i1,0)/6._f64*svalx1
             end if
-            a_out(ip,1)	= a_out(ip,1) + spline%coeffs(i1,0)/6._f64*svalx2
+            a_out(ip,1)	    = a_out(ip,1)   + spline%coeffs(i1,0)/6._f64*svalx2
             if (ipp1.ne.n1) then
               a_out(ipp1,1) = a_out(ipp1,1) + spline%coeffs(i1,0)/6._f64*svalx3
             end if
@@ -1734,10 +1735,10 @@ contains  ! ****************************************************************
           end if	
       
           if (i2.eq.n2) then
-            if (ipm1.ge.0) then
+            if (ipm1.ge.1) then
               a_out(ipm1,n2) = a_out(ipm1,n2) + spline%coeffs(i1,n2+1)/6._f64*svalx1
             end if
-            a_out(ip,n1) = a_out(ip,n1) + spline%coeffs(i1,n2+1)/6._f64*svalx2
+            a_out(ip,n1)     = a_out(ip,n1)   + spline%coeffs(i1,n2+1)/6._f64*svalx2
             if (ipp1.ne.n1) then
               a_out(ipp1,n2) = a_out(ipp1,n2) + spline%coeffs(i1,n2+1)/6._f64*svalx3
             end if
