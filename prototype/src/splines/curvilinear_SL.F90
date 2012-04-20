@@ -17,12 +17,12 @@ program radial_1d_SL
   sll_real64 :: val,val_bsl,val_bsl_nc,val_fsl,val_fsl_nc,tmp1,tmp2
   sll_real64 :: a1,a2,eta1t,eta2t,eta1c,eta2c,k1eta1,k2eta1,k3eta1,k4eta1,k1eta2,k2eta2,k3eta2,k4eta2
   sll_real64,dimension(:,:), pointer :: f,fh_bsl,fh_bsl_nc,fh_fsl,fh_fsl_nc
-  sll_real64,dimension(:,:), pointer :: x1_array,x2_array,x1c_array,x2c_array,jac_array,eta1feet,eta2feet
+  sll_real64,dimension(:,:), pointer :: x1_array,x2_array,x1c_array,x2c_array,jac_array,eta1feet,eta2feet,eta1tot,eta2tot
   sll_real64,dimension(:,:), pointer :: diag
 	 
   ! for the python script polar-ex1e.py
   namelist /param/ N
-  N = 64
+  N = 32
   read(*,NML=param);open(unit=900,file="gyrof.param");write(900,NML=param);close(900)
   
   ! ---- * mesh type * ----
@@ -83,11 +83,11 @@ program radial_1d_SL
   ! ---- * distribution function * ----
   ! 1 : f=1
   ! 2 : cos eta2
-  ! 3 : centered gaussian in eta1 and eta2 (mesh_case = 2,3) 
-  ! 4 : centered gaussian in eta1 and eta2 (mesh_case = 1) 
+  ! 3 : centered gaussian in eta1 and eta2 (mesh_case = 1)
+  ! 4 : centered gaussian in eta1 and eta2 (mesh_case = 2,3) 
   ! 5 : gaussian in eta1
   ! 6 : centered dirac 
-  test_case = 4
+  test_case = 3
   if (test_case > 6) then
     print*,'Non existing case'
     print*,'test_case = 1 (f=1), 2 (cos(eta2)), 3 (centered gaussian in eta1 and eta2 for nat-per BC),'
@@ -96,9 +96,10 @@ program radial_1d_SL
   end if
   
   ! ---- * advecton field * ---- 
-  ! 1 : divergence free complex field
+  ! 1 : translation of vector (a1,a2)
   ! 2 : rotation
-  ! 3 : translation of vector (a1,a2)
+  ! 3 : divergence free complex field (mesh_case = 1)
+  ! 4 : divergence free complex field (mesh_case = 2,3)
   field_case = 3
   if (field_case > 3) then
     print*,'Non existing case'
@@ -110,7 +111,7 @@ program radial_1d_SL
   
   ! ---- * time-scheme parameters * ----
   dt = 0.1_f64*delta_eta1 ! 1._f64/1._f64
-  nb_step = floor(1._f64/dt)
+  nb_step = 1 !floor(1._f64/dt)
   
   ! visualization parameters
   visu_step = 1
@@ -135,6 +136,8 @@ program radial_1d_SL
   SLL_ALLOCATE(x2c_array(Neta1+1,Neta2+1), err)
   SLL_ALLOCATE(eta1feet(Neta1+1,Neta2+1), err)
   SLL_ALLOCATE(eta2feet(Neta1+1,Neta2+1), err)
+  SLL_ALLOCATE(eta1tot(Neta1+1,Neta2+1), err)
+  SLL_ALLOCATE(eta2tot(Neta1+1,Neta2+1), err)
   SLL_ALLOCATE(jac_array(Neta1+1,Neta2+1), err)
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
@@ -212,6 +215,10 @@ program radial_1d_SL
              
         jac_array(i,j) = jac_array(i,j)*(x1_max-x1_min)*(x2_max-x2_min)
       end if
+      
+      ! total displacement
+      eta1tot(i,j) = eta1
+      eta2tot(i,j) = eta2
 
       ! test-function
       if (test_case==1) then
@@ -223,12 +230,12 @@ program radial_1d_SL
       if (test_case==3) then
         eta1c = 0.5_f64*(eta1_max+eta1_min)
         eta2c = 0.5_f64*(eta2_max+eta2_min)
-        f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
+        f(i,j) = exp(-2._f64*(eta1-eta1c)**2)*exp(-2._f64*(eta2-eta2c)**2)
       endif
       if (test_case==4) then
         eta1c = 0.5_f64*(eta1_max+eta1_min)
         eta2c = 0.5_f64*(eta2_max+eta2_min)
-        f(i,j) = exp(-2._f64*(eta1-eta1c)**2)*exp(-2._f64*(eta2-eta2c)**2)
+        f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
       endif
       if (test_case==5) then
         f(i,j) = exp(-100._f64*(eta1-0.5_f64*(eta1_max+eta1_min))**2)
@@ -278,7 +285,6 @@ program radial_1d_SL
   
   ! ---- Evolution in time ----
 
-
 	! Evolution in time - Numerical solution	
   do step=1,nb_step
   
@@ -301,13 +307,74 @@ program radial_1d_SL
     do i=1,Neta1+1
       do j=1,Neta2+1
       				    
-        ! ------------ BSL part -----------------
+        ! ------------ Analytic part -----------------
         
-        eta1 = eta1_min + real(i-1,f64)*delta_eta1
-        eta2 = eta2_min + real(j-1,f64)*delta_eta2
+        eta1 = eta1tot(i,j)
+        eta2 = eta2tot(i,j)
         
+        if (field_case==1) then          
+          if (mesh_case==1) then
+            eta1 = eta1 + a1*dt 
+            eta2 = eta2 + a2*dt
+          endif
+          if (mesh_case==2) then
+            x1 = x1_array(i,j) + a1*dt
+            x2 = x2_array(i,j) + a2*dt
+            eta1 = sqrt(x1**2+x2**2)
+            if (x2>=0) then
+              eta2 = acos(x1/eta1)
+            else
+              eta2 = 2._f64*sll_pi-acos(x1/eta1)
+            endif
+          endif
+          if (mesh_case==3) then
+            x1 = x1_array(i,j) + a1*dt
+            x2 = x2_array(i,j) + a2*dt
+            eta1 = (x1**2+x2**2)**(0.25_f64)
+            if (x2>=0) then
+              eta2 = acos(x1/(eta1*eta1))
+            else
+              eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
+            endif
+          end if
+        end if
+        if (field_case==2) then
+          if (mesh_case==1) then            
+            eta1c = 0.5_f64*(eta1_max+eta1_min)
+            eta2c = 0.5_f64*(eta2_max+eta2_min)
+        
+            eta1t = cos(dt)*(eta1-eta1c)  + sin(dt)*(eta2-eta2c) + eta1c
+            eta2t = -sin(dt)*(eta1-eta1c) + cos(dt)*(eta2-eta2c) + eta2c
+ 
+            eta1 = eta1t
+            eta2 = eta2t
+          end if
+          if ((mesh_case==2).or.(mesh_case==3)) then
+            eta2 = eta2 + dt
+          end if
+        endif
+        if (field_case==3) then
+          eta1t = eta1
+          eta2t = eta2
+          k1eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k1eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + 0.5_f64*dt*k1eta1
+          eta2t = eta2 +  0.5_f64*dt*k1eta2
+          k2eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k2eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + 0.5_f64*dt*k2eta1
+          eta2t = eta2 +  0.5_f64*dt*k2eta2
+          k3eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k3eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + dt*k3eta1
+          eta2t = eta2 +  dt*k3eta2
+          k4eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k4eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
+          eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
+        endif
         ! RK4
-        if (field_case==1) then
+        if (field_case==4) then
           eta1t = eta1
           eta2t = eta2
           k1eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
@@ -327,49 +394,7 @@ program radial_1d_SL
           eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
-        if (field_case==2) then
-          if (mesh_case==1) then            
-            eta1c = 0.5_f64*(eta1_max+eta1_min)
-            eta2c = 0.5_f64*(eta2_max+eta2_min)
-        
-            eta1t = cos(dt)*(eta1-eta1c)  + sin(dt)*(eta2-eta2c) + eta1c
-            eta2t = -sin(dt)*(eta1-eta1c) + cos(dt)*(eta2-eta2c) + eta2c
- 
-            eta1 = eta1t
-            eta2 = eta2t
-          end if
-          if ((mesh_case==2).or.(mesh_case==3)) then
-            eta2 = eta2 + dt
-          end if
-        endif
-        if (field_case==3) then
-          x1 = x1_array(i,j) + a1*dt
-          x2 = x2_array(i,j) + a2*dt
-          
-          if (mesh_case==1) then
-            eta1 = x1
-            eta2 = x2
-          endif
-          
-          if (mesh_case==2) then
-            eta1 = sqrt(x1**2+x2**2)
-            if (x2>=0) then
-              eta2 = acos(x1/eta1)
-            else
-              eta2 = 2._f64*sll_pi-acos(x1/eta1)
-            endif
-          endif
-          
-          if (mesh_case==3) then
-            eta1 = (x1**2+x2**2)**(0.25_f64)
-            if (x2>=0) then
-              eta2 = acos(x1/(eta1*eta1))
-            else
-              eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
-            endif
-          end if
-        end if
-        
+                
         ! Corrections in case of periodic BC
         if (bc1_type==PERIODIC_SPLINE) then
           if (eta1>eta1_max) then
@@ -387,6 +412,265 @@ program radial_1d_SL
             eta2 = eta2+(eta2_max-eta2_min)
           endif
         end if
+          					
+        if (test_case==1) then
+          f(i,j) = 1._f64
+        endif
+        if (test_case==2) then
+          f(i,j) = cos(eta2)
+        endif
+        if (test_case==4) then
+          eta1c = 0.5_f64*(eta1_max+eta1_min)
+          eta2c = 0.5_f64*(eta2_max+eta2_min)
+          f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
+        endif
+        if (test_case==3) then
+          eta1c = 0.5_f64*(eta1_max+eta1_min)
+          eta2c = 0.5_f64*(eta2_max+eta2_min)
+          f(i,j) = exp(-2._f64*(eta1-eta1c)**2)*exp(-2._f64*(eta2-eta2c)**2)
+        endif
+        if (test_case==5) then
+          f(i,j) = exp(-100._f64*(eta1-0.5_f64*(eta1_max+eta1_min))**2)
+        endif
+        if (test_case==6) then
+          f(i,j) = 0._f64
+          if ((i==(Neta1+1)/2).and.(j==(Neta2+1)/2)) then
+            f(i,j) = 1._f64
+          end if
+        endif
+        
+        eta1tot(i,j) = eta1
+        eta2tot(i,j) = eta2
+        
+        ! ------------ BSL part -----------------
+        
+        eta1 = eta1_min + real(i-1,f64)*delta_eta1
+        eta2 = eta2_min + real(j-1,f64)*delta_eta2
+        
+        if (field_case==1) then          
+          if (mesh_case==1) then
+            eta1 = eta1 + a1*dt 
+            eta2 = eta2 + a2*dt
+          endif
+          if (mesh_case==2) then
+            x1 = x1_array(i,j) + a1*dt
+            x2 = x2_array(i,j) + a2*dt
+            eta1 = sqrt(x1**2+x2**2)
+            if (x2>=0) then
+              eta2 = acos(x1/eta1)
+            else
+              eta2 = 2._f64*sll_pi-acos(x1/eta1)
+            endif
+          endif
+          if (mesh_case==3) then
+            x1 = x1_array(i,j) + a1*dt
+            x2 = x2_array(i,j) + a2*dt
+            eta1 = (x1**2+x2**2)**(0.25_f64)
+            if (x2>=0) then
+              eta2 = acos(x1/(eta1*eta1))
+            else
+              eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
+            endif
+          end if
+        end if
+        if (field_case==2) then
+          if (mesh_case==1) then            
+            eta1c = 0.5_f64*(eta1_max+eta1_min)
+            eta2c = 0.5_f64*(eta2_max+eta2_min)
+        
+            eta1t = cos(dt)*(eta1-eta1c)  + sin(dt)*(eta2-eta2c) + eta1c
+            eta2t = -sin(dt)*(eta1-eta1c) + cos(dt)*(eta2-eta2c) + eta2c
+ 
+            eta1 = eta1t
+            eta2 = eta2t
+          end if
+          if ((mesh_case==2).or.(mesh_case==3)) then
+            eta2 = eta2 + dt
+          end if
+        endif
+        if (field_case==3) then
+          eta1t = eta1
+          eta2t = eta2
+          k1eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k1eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + 0.5_f64*dt*k1eta1
+          eta2t = eta2 +  0.5_f64*dt*k1eta2
+          k2eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k2eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + 0.5_f64*dt*k2eta1
+          eta2t = eta2 +  0.5_f64*dt*k2eta2
+          k3eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k3eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + dt*k3eta1
+          eta2t = eta2 +  dt*k3eta2
+          k4eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k4eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
+          eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
+        endif
+        ! RK4
+        if (field_case==4) then
+          eta1t = eta1
+          eta2t = eta2
+          k1eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k1eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1t = eta1 + 0.5_f64*dt*k1eta1
+          eta2t = eta2 +  0.5_f64*dt*k1eta2
+          k2eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k2eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1t = eta1 + 0.5_f64*dt*k2eta1
+          eta2t = eta2 +  0.5_f64*dt*k2eta2
+          k3eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k3eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1t = eta1 + dt*k3eta1
+          eta2t = eta2 +  dt*k3eta2
+          k4eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k4eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
+          eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
+        endif
+                
+        ! Corrections in case of periodic BC
+        if (bc1_type==PERIODIC_SPLINE) then
+          if (eta1>eta1_max) then
+            eta1 = eta1-(eta1_max-eta1_min)
+          endif
+          if (eta1<eta1_min) then
+            eta1 = eta1+(eta1_max-eta1_min)
+          endif
+        end if
+        if (bc2_type==PERIODIC_SPLINE) then
+          if (eta2>eta2_max) then
+            eta2 = eta2-(eta2_max-eta2_min)
+          endif
+          if (eta2<eta2_min) then
+            eta2 = eta2+(eta2_max-eta2_min)
+          endif
+        end if
+        
+        fh_bsl(i,j)    = interpolate_value_2D(eta1,eta2,spl_bsl)
+        fh_bsl_nc(i,j) = interpolate_value_2D(eta1,eta2,spl_bsl_nc)/jac_array(i,j)
+        
+        ! ------------ FSL part -----------------
+        
+        dt = -dt
+        
+        eta1 = eta1_min + real(i-1,f64)*delta_eta1
+        eta2 = eta2_min + real(j-1,f64)*delta_eta2
+        
+        if (field_case==1) then          
+          if (mesh_case==1) then
+            eta1 = eta1 + a1*dt 
+            eta2 = eta2 + a2*dt
+          endif
+          if (mesh_case==2) then
+            x1 = x1_array(i,j) + a1*dt
+            x2 = x2_array(i,j) + a2*dt
+            eta1 = sqrt(x1**2+x2**2)
+            if (x2>=0) then
+              eta2 = acos(x1/eta1)
+            else
+              eta2 = 2._f64*sll_pi-acos(x1/eta1)
+            endif
+          endif
+          if (mesh_case==3) then
+            x1 = x1_array(i,j) + a1*dt
+            x2 = x2_array(i,j) + a2*dt
+            eta1 = (x1**2+x2**2)**(0.25_f64)
+            if (x2>=0) then
+              eta2 = acos(x1/(eta1*eta1))
+            else
+              eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
+            endif
+          end if
+        end if
+        if (field_case==2) then
+          if (mesh_case==1) then            
+            eta1c = 0.5_f64*(eta1_max+eta1_min)
+            eta2c = 0.5_f64*(eta2_max+eta2_min)
+        
+            eta1t = cos(dt)*(eta1-eta1c)  + sin(dt)*(eta2-eta2c) + eta1c
+            eta2t = -sin(dt)*(eta1-eta1c) + cos(dt)*(eta2-eta2c) + eta2c
+ 
+            eta1 = eta1t
+            eta2 = eta2t
+          end if
+          if ((mesh_case==2).or.(mesh_case==3)) then
+            eta2 = eta2 + dt
+          end if
+        endif
+        if (field_case==3) then
+          eta1t = eta1
+          eta2t = eta2
+          k1eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k1eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + 0.5_f64*dt*k1eta1
+          eta2t = eta2 +  0.5_f64*dt*k1eta2
+          k2eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k2eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + 0.5_f64*dt*k2eta1
+          eta2t = eta2 +  0.5_f64*dt*k2eta2
+          k3eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k3eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1t = eta1 + dt*k3eta1
+          eta2t = eta2 +  dt*k3eta2
+          k4eta1 = -3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          k4eta2 = 3*eta1t*eta1t+6*eta1t*eta2t+3*eta2*eta2t+1
+          eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
+          eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
+        endif
+        ! RK4
+        if (field_case==4) then
+          eta1t = eta1
+          eta2t = eta2
+          k1eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k1eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1t = eta1 + 0.5_f64*dt*k1eta1
+          eta2t = eta2 +  0.5_f64*dt*k1eta2
+          k2eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k2eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1t = eta1 + 0.5_f64*dt*k2eta1
+          eta2t = eta2 +  0.5_f64*dt*k2eta2
+          k3eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k3eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1t = eta1 + dt*k3eta1
+          eta2t = eta2 +  dt*k3eta2
+          k4eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
+          k4eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
+          eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
+          eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
+        endif
+                
+        ! Corrections in case of periodic BC
+        if (bc1_type==PERIODIC_SPLINE) then
+          if (eta1>eta1_max) then
+            eta1 = eta1-(eta1_max-eta1_min)
+          endif
+          if (eta1<eta1_min) then
+            eta1 = eta1+(eta1_max-eta1_min)
+          endif
+        end if
+        if (bc2_type==PERIODIC_SPLINE) then
+          if (eta2>eta2_max) then
+            eta2 = eta2-(eta2_max-eta2_min)
+          endif
+          if (eta2<eta2_min) then
+            eta2 = eta2+(eta2_max-eta2_min)
+          endif
+        end if
+                                
+        ! conditions for the mass preservation
+        !if ((i==1).or.(i==Neta1+1)) then
+        !  eta1 = eta1_min + real(i-1,f64)*delta_eta1
+        !else
+        !  eta1 = min(max(eta1, eta1_min + delta_eta1), eta1_min + real(Neta1,f64)*delta_eta1)
+        !end if
+        
+        eta1feet(i,j) = eta1
+        eta2feet(i,j) = eta2
+				
+        dt = -dt
+        
         
         ! Actual coordinates 
         if (mesh_case==2) then 
@@ -405,139 +689,6 @@ program radial_1d_SL
           print*,'Maillage de Collela non encore disponible'
           STOP
         end if
-
-        ! ---- Analytic function ----
-          					
-        if (test_case==1) then
-          f(i,j) = 1._f64
-        endif
-        if (test_case==2) then
-          f(i,j) = cos(eta2)
-        endif
-        if (test_case==3) then
-          eta1c = 0.5_f64*(eta1_max+eta1_min)
-          eta2c = 0.5_f64*(eta2_max+eta2_min)
-          f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
-        endif
-        if (test_case==4) then
-          eta1c = 0.5_f64*(eta1_max+eta1_min)
-          eta2c = 0.5_f64*(eta2_max+eta2_min)
-          f(i,j) = exp(-2._f64*(eta1-eta1c)**2)*exp(-2._f64*(eta2-eta2c)**2)
-        endif
-        if (test_case==5) then
-          f(i,j) = exp(-100._f64*(eta1-0.5_f64*(eta1_max+eta1_min))**2)
-        endif
-        if (test_case==6) then
-          f(i,j) = 0._f64
-          if ((i==(Neta1+1)/2).and.(j==(Neta2+1)/2)) then
-            f(i,j) = 1._f64
-          end if
-        endif
-
-        fh_bsl(i,j)    = interpolate_value_2D(eta1,eta2,spl_bsl)
-        fh_bsl_nc(i,j) = interpolate_value_2D(eta1,eta2,spl_bsl_nc)/jac_array(i,j)
-        
-        ! ------------ FSL part -----------------
-        
-        dt = -dt
-        
-        eta1 = eta1_min + real(i-1,f64)*delta_eta1
-        eta2 = eta2_min + real(j-1,f64)*delta_eta2
-        
-        ! RK4
-        if (field_case==1) then
-          eta1t = eta1
-          eta2t = eta2
-          k1eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
-          k1eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
-          eta1t = eta1 + 0.5_f64*dt*k1eta1
-          eta2t = eta2 +  0.5_f64*dt*k1eta2
-          k2eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
-          k2eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
-          eta1t = eta1 + 0.5_f64*dt*k2eta1
-          eta2t = eta2 +  0.5_f64*dt*k2eta2
-          k3eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
-          k3eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
-          eta1t = eta1 + dt*k3eta1
-          eta2t = eta2 +  dt*k3eta2
-          k4eta1 = eta1t*(eta1t-eta1_min)*(eta1_max-eta1t)*cos(eta2t)
-          k4eta2 = -(eta1t*(eta1_max+eta1_min-2._f64*eta1t)+2._f64*(eta1t-eta1_min)*(eta1_max-eta1t))*sin(eta2t)
-          eta1 = eta1 + dt/6._f64*(k1eta1+2._f64*k2eta1+2._f64*k3eta1+k4eta1)
-          eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
-        endif
-        if (field_case==2) then
-          ! cartesian
-          if (mesh_case==1) then            
-            eta1c = 0.5_f64*(eta1_max+eta1_min)
-            eta2c = 0.5_f64*(eta2_max+eta2_min)
-        
-            eta1t = cos(dt)*(eta1-eta1c)  + sin(dt)*(eta2-eta2c) + eta1c
-            eta2t = -sin(dt)*(eta1-eta1c) + cos(dt)*(eta2-eta2c) + eta2c
- 
-            eta1 = eta1t
-            eta2 = eta2t
-          end if
-          if ((mesh_case==2).or.(mesh_case==3)) then
-            eta2 = eta2 + dt
-          end if
-        endif
-        if (field_case==3) then
-          x1 = x1_array(i,j) + a1*dt
-          x2 = x2_array(i,j) + a2*dt
-          
-          if (mesh_case==1) then
-            eta1 = x1
-            eta2 = x2
-          endif
-          
-          if (mesh_case==2) then
-            eta1 = sqrt(x1**2+x2**2)
-            if (x2>=0) then
-              eta2 = acos(x1/eta1)
-            else
-              eta2 = 2._f64*sll_pi-acos(x1/eta1)
-            endif
-          endif
-          
-          if (mesh_case==3) then
-            eta1 = (x1**2+x2**2)**(0.25_f64)
-            if (x2>=0) then
-              eta2 = acos(x1/(eta1*eta1))
-            else
-              eta2 = 2._f64*sll_pi-acos(x1/(eta1*eta1))
-            endif
-          end if
-        end if
-        
-        ! Corrections in case of periodic BC
-        if (bc1_type==PERIODIC_SPLINE) then
-          if (eta1>eta1_max) then
-            eta1 = eta1-(eta1_max-eta1_min)
-          endif
-          if (eta1<eta1_min) then
-            eta1 = eta1+(eta1_max-eta1_min)
-          endif
-        end if
-        if (bc2_type==PERIODIC_SPLINE) then
-          if (eta2>eta2_max) then
-            eta2 = eta2-(eta2_max-eta2_min)
-          endif
-          if (eta2<eta2_min) then
-            eta2 = eta2+(eta2_max-eta2_min)
-          endif
-        end if 
-                        
-        ! conditions for the mass preservation
-        !if ((i==1).or.(i==Neta1+1)) then
-        !  eta1 = eta1_min + real(i-1,f64)*delta_eta1
-        !else
-        !  eta1 = min(max(eta1, eta1_min + delta_eta1), eta1_min + real(Neta1,f64)*delta_eta1)
-        !end if
-        
-        eta1feet(i,j) = eta1
-        eta2feet(i,j) = eta2
-				
-        dt = -dt
         
       enddo
     enddo
