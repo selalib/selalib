@@ -398,8 +398,10 @@ program radial_1d_SL
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
         if (field_case==5) then
-          eta1t = eta1*cos(2*sqrt(a1*a2)*step*dt) - eta2*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
-          eta2t = eta1*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) - eta2*sin(2*sqrt(a1*a2)*step*dt)
+          eta1c = 0.5_f64*(eta1_max+eta1_min)
+          eta2c = 0.5_f64*(eta2_max+eta2_min)
+          eta1t = eta1c+(eta1-eta1c)*cos(2*sqrt(a1*a2)*step*dt) - (eta2-eta2c)*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
+          eta2t = eta2c+(eta1-eta1c)*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) + (eta2-eta2c)*cos(2*sqrt(a1*a2)*step*dt)
           eta1 = eta1t
           eta2 = eta2t
         end if
@@ -539,8 +541,10 @@ program radial_1d_SL
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
         if (field_case==5) then
-          eta1t = eta1*cos(2*sqrt(a1*a2)*step*dt) - eta2*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
-          eta2t = eta1*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) - eta2*sin(2*sqrt(a1*a2)*step*dt)
+          eta1c = 0.5_f64*(eta1_max+eta1_min)
+          eta2c = 0.5_f64*(eta2_max+eta2_min)
+          eta1t = eta1c+(eta1-eta1c)*cos(2*sqrt(a1*a2)*dt) - (eta2-eta2c)*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*dt)
+          eta2t = eta2c+(eta1-eta1c)*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*dt) + (eta2-eta2c)*cos(2*sqrt(a1*a2)*dt)
           eta1 = eta1t
           eta2 = eta2t
         end if
@@ -656,8 +660,10 @@ program radial_1d_SL
           eta2 = eta2 + dt/6._f64*(k1eta2+2._f64*k2eta2+2._f64*k3eta2+k4eta2)
         endif
         if (field_case==5) then
-          eta1t = eta1*cos(2*sqrt(a1*a2)*step*dt) - eta2*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*step*dt)
-          eta2t = eta1*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*step*dt) - eta2*sin(2*sqrt(a1*a2)*step*dt)
+          eta1c = 0.5_f64*(eta1_max+eta1_min)
+          eta2c = 0.5_f64*(eta2_max+eta2_min)
+          eta1t = eta1c+(eta1-eta1c)*cos(2*sqrt(a1*a2)*dt) - (eta2-eta2c)*sqrt(a2/a1)*sin(2*sqrt(a1*a2)*dt)
+          eta2t = eta2c+(eta1-eta1c)*sqrt(a1/a2)*sin(2*sqrt(a1*a2)*dt) + (eta2-eta2c)*cos(2*sqrt(a1*a2)*dt)
           eta1 = eta1t
           eta2 = eta2t
         end if
