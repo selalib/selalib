@@ -22,8 +22,16 @@ use sll_splines
 contains  ! ****************************************************************
 
 
-  ! the following provides an implementation for the abstract interface interpolate1d
-  !> Define spline interpolation of values in data define on original grid at points coordinates
+  ! the following provides an implementation for the abstract interface 
+  !interpolate1d
+  !> Define spline interpolation of values in data define on original grid at 
+  !> points coordinates
+  ! Issues with the following function:
+  ! - entities referenced through "this" are modified, violating the declared
+  !   intent.
+  ! - it is probably better to convert this into a subroutine, since data_out
+  !   will be allocated on the stack (too big an array will crash the program),
+  !   and some copy operation might be involved when "catching" the results.
   function spline_interpolate1d(this, num_points, data, coordinates) result(data_out)
     class(cubic_spline_1d_interpolator),  intent(in)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
@@ -63,9 +71,9 @@ contains  ! ****************************************************************
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
     class(cubic_spline_1d_interpolator), intent(in)     :: this
-       sll_int32, intent(in)                 :: num_points    ! size of output array
-       sll_real64, dimension(:), intent(in)  :: data          ! data to be interpolated 
-       sll_real64, dimension(num_points)     :: res
+       sll_int32, intent(in)                :: num_points! size of output array
+       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
+       sll_real64, dimension(num_points)    :: res
   end function reconstruct_array
   
 end module sll_cubic_spline_interpolator_1d
