@@ -48,7 +48,7 @@ implicit none
   rmax = 10.d0
   Zi = 1.d0
 
-  do i=1,1
+  do i=2,2
 
      if (i==1) then
         BC = 'neumann'
@@ -250,15 +250,15 @@ contains
     call solve_qn_2d_with_finite_diff_par(plan_par, rho_par, c_par, Te_par, f, &
                                                                    g, Zi, phi_par)
 
-    !plan_spect_par => new_qns2d_angular_spect_method_par(BC,rmin,rmax,NP_r, NP_theta)
-    !call solve_qns2d_angular_spect_method_par(plan_spect_par, rho_par, c_par, &
-                                                !Te_par, f, g, Zi, phi_spect_par)
+    plan_spect_par => new_qns2d_angular_spect_method_par(BC,rmin,rmax,NP_r, NP_theta)
+    call solve_qns2d_angular_spect_method_par(plan_spect_par, rho_par, c_par, &
+                                                Te_par, f, g, Zi, phi_spect_par)
 
     average_err        = 0.d0
-    !average_err_spect  = 0.d0
+    average_err_spect  = 0.d0
     average_err_bound  = 0.d0
     seq_par_diff       = 0.d0
-    !seq_par_diff_spect = 0.d0
+    seq_par_diff_spect = 0.d0
 
     do j=1,NP_theta_loc
        do i=1,NP_r_loc
@@ -272,23 +272,23 @@ contains
              r = rmin + gi*dr
           endif
           average_err = average_err  + abs( phi_an (gi,gj) - phi_par(i,j))
-         ! average_err_spect  = average_err_spect + abs( phi_an (gi,gj) - &
-                                                      !phi_spect_par(i,j) )
+          average_err_spect  = average_err_spect + abs( phi_an (gi,gj) - &
+                                                      phi_spect_par(i,j) )
           Mr = 4*abs(cos(theta))
           Mtheta = abs(sin(r-rmin)*sin(rmax-r))
           average_err_bound = average_err_bound + Mr*dr**2/12 + &
                abs(c_par(i))*Mr*dr**2/6 + Mtheta*dtheta**2/(r**2*12)
           seq_par_diff = seq_par_diff + abs( phi_seq(gi,gj) - phi_par(i,j) )
-         ! seq_par_diff_spect = seq_par_diff_spect + abs(phi_spect_seq(gi,gj) & 
-                                                     ! - phi_spect_par(i,j) )
+          seq_par_diff_spect = seq_par_diff_spect + abs(phi_spect_seq(gi,gj) & 
+                                                      - phi_spect_par(i,j) )
        enddo
     enddo
 
     average_err  = average_err/(NP_r_loc*NP_theta_loc)
-    !average_err_spect  = average_err_spect/(NP_r_loc*NP_theta_loc)
+    average_err_spect  = average_err_spect/(NP_r_loc*NP_theta_loc)
     average_err_bound = average_err_bound/(NP_r_loc*NP_theta_loc)
     seq_par_diff = seq_par_diff/(NP_r_loc*NP_theta_loc)
-    !seq_par_diff_spect = seq_par_diff_spect/(NP_r_loc*NP_theta_loc)
+    seq_par_diff_spect = seq_par_diff_spect/(NP_r_loc*NP_theta_loc)
 
     call flush()
     print*, ' '
@@ -296,16 +296,16 @@ contains
     print*, 'sll_qns_2d_with_finite_diff_par average error',          &
                                     ' in proc', myrank, ':', average_err
     call flush()
-    !print*, 'sll_qns2d_angular_spect_method_par average error',       &
-                             ! ' in proc', myrank, ':', average_err_spect
+    print*, 'sll_qns2d_angular_spect_method_par average error',       &
+                              ' in proc', myrank, ':', average_err_spect
     call flush()
     print*, 'Boundary average error =', average_err_bound
     call flush()
     print*, 'sll_qns_2d_with_finite_diff_par average diff(seq,par)',   &
                                    ' in proc', myrank, ':', seq_par_diff
     call flush()
-    !print*, 'sll_qns2d_angular_spect_method_par average diff(seq,par)',&
-     !                        ' in proc', myrank, ':', seq_par_diff_spect
+    print*, 'sll_qns2d_angular_spect_method_par average diff(seq,par)',&
+                             ' in proc', myrank, ':', seq_par_diff_spect
 
     if ( average_err > average_err_bound) then
        call flush()
@@ -318,17 +318,17 @@ contains
        print*, ' '
        stop
     endif
-    !if ( average_err_spect > average_err_bound) then
+    if ( average_err_spect > average_err_bound) then
        call flush()
-     !  print*, ' '
+       print*, ' '
        call flush()
-      ! print*, 'Test stopped by sll_qns2d_angular_spect_method_par failure'
+       print*, 'Test stopped by sll_qns2d_angular_spect_method_par failure'
        call flush()
-       !print*, 'myrank=', myrank
+       print*, 'myrank=', myrank
        call flush()
-       !print*, ' '
-       !stop
-    !endif
+       print*, ' '
+       stop
+    endif
 
     call sll_collective_reduce(sll_world_collective, (/ ok /), 1,        &
                                                   MPI_PROD, 0, prod4test )
@@ -338,7 +338,7 @@ contains
           print*, ' '
           call flush()
           print*, 'sll_qns_2d_with_finite_diff_par: PASSED'
-       !   print*, 'sll_qns2d_angular_spect_method_par: PASSED'
+          print*, 'sll_qns2d_angular_spect_method_par: PASSED'
           call flush()
           print*, ' '
        endif
@@ -347,7 +347,7 @@ contains
     call delete_qns_2d_with_finite_diff_plan_par(plan_par)
     call delete_qns_2d_with_finite_diff_plan_seq(plan_seq)
     call delete_qns2d_angular_spect_method_seq(plan_spect_seq)
-    !call delete_qns2d_angular_spect_method_par(plan_spect_par)
+    call delete_qns2d_angular_spect_method_par(plan_spect_par)
 
     SLL_DEALLOCATE_ARRAY(phi_par, ierr)
     SLL_DEALLOCATE_ARRAY(c_seq, ierr)
