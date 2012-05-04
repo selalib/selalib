@@ -14,6 +14,12 @@ module sll_WENO
    contains
      procedure, pass :: interpolate_array => interpolate_WENO_1D  
      procedure, pass :: reconstruct_array => reconstruct_WENO_1D
+
+     ! the next functions do nothing but are in the interpolator_1d_base class
+     ! as deferred.
+     procedure :: compute_interpolants => compute_interpolants_weno
+     procedure :: interpolate_value => interpolate_value_weno
+     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_weno
   end type sll_weno_1d
 
   interface delete
@@ -154,5 +160,27 @@ contains  ! ****************************************************************
   end subroutine delete_WENO_1D
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+! Modify by Samuel    ---------------------------------------------------------------
+! This functions are here for respect the pattern of the interpolator_1d_base class
+  subroutine compute_interpolants_weno( interpolator, data_array )
+    class(sll_weno_1d), intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in)               :: data_array
+  end subroutine compute_interpolants_weno
+
+  function interpolate_value_weno( interpolator, eta1 ) result(val)
+    sll_real64 :: val
+    class(sll_weno_1d), intent(inout) :: interpolator
+    sll_real64, intent(in) :: eta1
+  end function interpolate_value_weno
+
+  function interpolate_deriv1_weno( interpolator, eta1 ) result(val)
+    sll_real64 :: val
+    class(sll_weno_1d), intent(in) :: interpolator
+    sll_real64, intent(in) :: eta1
+  end function interpolate_deriv1_weno
+
+!------------------------------------------------------------------------------------
 
 end module sll_WENO

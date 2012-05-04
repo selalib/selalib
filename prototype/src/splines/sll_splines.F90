@@ -287,6 +287,30 @@ contains  ! ****************************************************************
     end select
   end subroutine compute_spline_1D
 
+  !> just a copy of the subroutine above and remove bc_type argument
+  !> because now it is in the spline object.
+  subroutine compute_spline_1D_bis( f, spline )
+    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
+    sll_int32                            :: bc_type
+    type(sll_spline_1D), pointer         :: spline
+    ! Note that this function does no error checking and basically
+    ! outsources this task to the functions it is wrapping around.
+    ! This is so because those functions can be used independently
+    ! (if the user wants to avoid the overhead of calling this
+    ! wrapper function), so in any case, the error checking of
+    ! the arguments will be carried out at least once.
+    bc_type = spline%bc_type;
+    select case (bc_type)
+    case (PERIODIC_SPLINE)
+       call compute_spline_1D_periodic( f, spline )
+    case (HERMITE_SPLINE)
+       call compute_spline_1D_hermite( f, spline )
+    case default
+       print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
+       STOP
+    end select
+  end subroutine compute_spline_1D_bis
+
 #define NUM_TERMS 27
   ! The following auxiliary functions:
   ! compute_spline_1D_periodic_aux() 
@@ -616,6 +640,27 @@ contains  ! ****************************************************************
     coeffs => spline%coeffs
     interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
   end function interpolate_value
+
+  !> Just a copy of the function interpolate_value but with a different name.
+  !> Need because, i want a function in my interpolator interface called interpolate value
+  !> and i have a polymorphic error.
+  function interpolate_value_1D( x, spline )
+    sll_real64                        :: interpolate_value_1D
+    intrinsic                         :: associated, int, real
+    sll_real64, intent(in)            :: x
+    type(sll_spline_1D), pointer      :: spline
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_real64                        :: xmin
+    sll_real64                        :: rh   ! reciprocal of cell spacing
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
+    xmin = spline%xmin
+    rh        = spline%rdelta
+    coeffs => spline%coeffs
+    interpolate_value_1D = interpolate_value_aux( x, xmin, rh, coeffs )
+  end function interpolate_value_1D
   
   !> get spline interpolate at array of points
   subroutine interpolate_array_values( a_in, a_out, n, spline )
