@@ -32,7 +32,7 @@ module sll_qns2d_angular_spect_method_par
 
 
   type qns2d_angular_spect_method_par
-     character(len=100)                        :: bc ! Boundary_conditions
+     character(len=100)                        :: BC ! Boundary_conditions
      sll_int32                                 :: NP_r ! Number of points in r-direction
      sll_int32                                 :: NP_theta!Number of points in theta-direction
      sll_real64                                :: rmin
@@ -95,11 +95,11 @@ contains
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE( x(NP_theta_loc), ierr )
 
-    plan%BC     = BC
+    plan%BC       = BC
     plan%NP_r     = NP_r
     plan%NP_theta = NP_theta
-    plan%rmin   = rmin
-    plan%rmax   = rmax
+    plan%rmin     = rmin
+    plan%rmax     = rmax
     
     ! For FFTs in theta-direction
     plan%fft_plan => new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
@@ -217,10 +217,10 @@ contains
           ind = NP_theta-(ind-1)
        endif
        if (plan%BC=='neumann') then
-          call neumann_matrix_resh_spect_par(plan, ind-1, real(plan%c_remap(:,1,1), f64), & 
+          call neumann_matrix_resh_spect_par(plan, ind, real(plan%c_remap(:,1,1), f64), & 
                                          real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix_resh_spect_par(plan, ind-1, real(plan%c_remap(:,1,1), f64), & 
+          call dirichlet_matrix_resh_spect_par(plan, ind, real(plan%c_remap(:,1,1), f64), & 
                                          real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
        endif 
        call setup_cyclic_tridiag( a_resh, NP_r, cts, ipiv )
@@ -232,7 +232,7 @@ contains
     call apply_remap_3D( plan%rmp3_2, plan%array_lin_sys, plan%array_fft ) 
 
     ! Inverse FFTs (in the theta-direction)
-    do i=1,NP_r/int(colsz)
+    do i=1,NP_r_loc
        call apply_fft_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
                                                   plan%array_fft(i,:,1) ) 
     enddo
