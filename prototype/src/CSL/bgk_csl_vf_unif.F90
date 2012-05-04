@@ -31,11 +31,11 @@ program bgk_csl_vf_unif
   
   
 
-  N_x1 =100!,0!256! 128!128
-  N_x2 =100!128!256! 128!256
+  N_x1 =180!,0!256! 128!128
+  N_x2 =180!128!256! 128!256
   rk=2
   dt = 0.01_f64
-  nb_step = 6000
+  nb_step = 8000
   order=3
   test_case = 4
   visu_step = 10
@@ -249,7 +249,7 @@ program bgk_csl_vf_unif
 
   if(rk==1) then
     f_tmp=f
-    call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+    call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
    do i1=1,N_x1+1
      do i2=1,N_x2+1
         f(i1,i2)=f_store(i1,i2)+dt*Flux(i1,i2)
@@ -265,14 +265,14 @@ program bgk_csl_vf_unif
         a21=1._f64/2._f64
         
         f_tmp=f
-        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K1=Flux
         do i1=1,N_x1+1
           do i2=1,N_x2+1
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a21
           enddo
          enddo
-        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
    do i1=1,N_x1+1
      do i2=1,N_x2+1
@@ -298,14 +298,14 @@ program bgk_csl_vf_unif
         a42=0._f64
         a43=1._f64
         f_tmp=f_store
-        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K1=Flux
         do i1=1,N_x1+1
           do i2=1,N_x2+1
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a21
           enddo
          enddo
-        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
 
          do i1=1,N_x1+1
@@ -313,14 +313,14 @@ program bgk_csl_vf_unif
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a31+K2(i1,i2)*dt*a32
           enddo
          enddo
-        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K3=Flux
          do i1=1,N_x1+1
           do i2=1,N_x2+1
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a41+K2(i1,i2)*dt*a42+K3(i1,i2)*dt*a43
           enddo
          enddo
-        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K4=Flux
    do i1=1,N_x1+1
      do i2=1,N_x2+1
@@ -381,14 +381,14 @@ program bgk_csl_vf_unif
 end program
 
 !interface 
- subroutine Compute_flux(a1,a2,f,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+ subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
   use numeric_constants
   implicit none
   
   
   sll_int,intent(in)::N_x1,N_x2,order
   !sll_real64,dimension(:,:), pointer :: chi,sigma
-   sll_real64,dimension(N_x1+1,N_x2+1):: a1,a2,f, Flux_x1,Flux_x2,flux
+   sll_real64,dimension(N_x1+1,N_x2+1):: a1,a2,f,f_store, Flux_x1,Flux_x2,flux
   sll_real64,dimension(N_x1+1+2,N_x2+1+2) ::chi,sigma
   sll_real64,dimension(N_x1+1)::abar_x1
   sll_real   ,dimension(N_x1+1)::abar_x2!E
@@ -429,9 +429,9 @@ if(order==3) then
  do i2=1,N_x2+1
       x2 = x2_min+real(i2-1,f64)*delta_x2
      do i1=1,N_x1
-     abar_x1(i1)=a1(i1,i2)!special uniform
+     abar_x1(i1)=(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))!a1(i1,i2)!special uniform
      enddo
-     !abar_x1(N_x1+1)=abar_x1(1)
+     abar_x1(N_x1+1)=abar_x1(1)
 
   do i1=1,N_x1+1
     
@@ -441,10 +441,10 @@ if(order==3) then
        i1m1=i1-1
      
        if (i1m1 <=0) then 
-         i1m1=i1m1+N_x1+1
+         i1m1=i1m1+N_x1
        endif
        if (i1m2 <=0) then 
-         i1m2=i1m2+N_x1 +2     
+         i1m2=i1m2+N_x1     
        endif
         
        !if (i1p1 >=N_x1+1) then 
@@ -471,8 +471,8 @@ if(order==3) then
  enddo 
   !For fixed i1
  do i1=1,N_x1+1
-     do i2=1,N_x2+1
-     abar_x2(i2)=a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
+     do i2=1,N_x2
+     abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))!a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
      enddo
      !abar_x2(N_x2+1)=abar_x2(1)!special uniform
   do i2=1,N_x2+1
@@ -483,10 +483,10 @@ if(order==3) then
      
      
      if (i2m1 <=0) then 
-         i2m1=i2m1+N_x2+1
+         i2m1=i2m1+N_x2
      endif
      if (i2m2 <=0) then 
-         i2m2=i2m2+N_x2 +2     
+         i2m2=i2m2+N_x2      
      endif
         
       ! if (i2p1 >=N_x2+1) then 
@@ -593,7 +593,7 @@ endif!order
      do i2=1,N_x2+1
      abar_x2(i2)=a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
      enddo
-     !abar_x2(N_x2+1)=abar_x2(1)!special uniform
+     abar_x2(N_x2+1)=abar_x2(1)!special uniform
   do i2=1,N_x2+1
      i2p1=i2+1
      i2p2=i2+2
