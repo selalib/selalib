@@ -1,4 +1,4 @@
-program bgk_csl
+program bgk_csl_vf_unif
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
@@ -9,32 +9,33 @@ program bgk_csl
   use sll_splines
   implicit none
   external compute_translate_nodes_periodic,compute_non_unif_integral
-  !external compute_flux
+  external Compute_flux
   !external poisson1dpertrap
   sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2
   sll_real64 :: mu,xi,L,H
-  sll_real64 :: Flux_x1_p, Flux_x1_m,Flux_x2_p,Flux_x2_m
-  !sll_int :: i1m1, i1p1, i2m2, i2p2, i1m2,i1p2,&
-          !   i2m3,i2p3,i1m3,i1p3
-  sll_real ::  fterm1,fterm2,fterm3,fterm4
+  !sll_real64 :: Flux_x1_p, Flux_x1_m,Flux_x2_p,Flux_x2_m
+  sll_real64 :: Flux_p05,Flux_m05
+  sll_real64 :: b1,b2,b3,b4, a21, a32,a42,a43,a41,a31
+  sll_int  ::  rk
   sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step
   LOGICAL :: ex
     !type(sll_distribution_function_2D_t), pointer :: dist_func
   sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2
   sll_real64,dimension(:), pointer :: abar_x1,abar_x2
   sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E,E_store, rho_exact
-  sll_real64,dimension(:,:), pointer :: f,f_store, chi,sigma, Flux_x1,Flux_x2
+  sll_real64,dimension(:,:), pointer :: f,f_store, chi,sigma, Flux,a1,a2,f_tmp,K1,K2,K3,K4
   sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val,beta
-  sll_int :: i1m3,i1m2,i1m1,i1p3,i1p2,i1p1,i2m3,i2m2,i2m1,i2p3,i2p2,i2p1
+  sll_int :: i1m2,i1m1,i2m2,i2m1,i1p1
   sll_int :: ii,step,test_case,order, visu_step
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
   
   
 
-  N_x1 =128!256! 128!128
-  N_x2 =128!256! 128!256
+  N_x1 =100!,0!256! 128!128
+  N_x2 =100!128!256! 128!256
+  rk=2
   dt = 0.01_f64
-  nb_step = 600
+  nb_step = 6000
   order=3
   test_case = 4
   visu_step = 10
@@ -48,6 +49,11 @@ program bgk_csl
   x2_min = -x2_max
   
   SLL_ALLOCATE(f(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(f_tmp(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(K1(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(K2(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(K3(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(K4(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(f_store(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(node_positions_x1(N_x1+1),err)
   SLL_ALLOCATE(node_positions_x2(N_x2+1),err)
@@ -59,10 +65,12 @@ program bgk_csl
   SLL_ALLOCATE(E_store(N_x1+1),err)
   SLL_ALLOCATE(chi(N_x1+1+2,N_x2+1+2),err)
   SLL_ALLOCATE(sigma(N_x1+1+2,N_x2+1+2),err)
-  SLL_ALLOCATE(Flux_x1(N_x1+1,N_x2+1),err)
-  SLL_ALLOCATE(Flux_x2(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(a1(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(a2(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(Flux(N_x1+1,N_x2+1),err)
+  !SLL_ALLOCATE(Flux_x2(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(abar_x1(N_x1+1),err)
-  SLL_ALLOCATE(abar_x2(N_x1+1),err)
+  SLL_ALLOCATE(abar_x2(N_x2+1),err)
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
   
@@ -123,6 +131,8 @@ program bgk_csl
   
   delta_x1 = (x1_max-x1_min)/real(N_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(N_x2,f64)
+   alpha=(1._f64/delta_x1)
+   beta =(1._f64/delta_x2)
 
   do i1=1,N_x1+1
     x1 = x1_min+real(i1-1,f64)*delta_x1
@@ -178,18 +188,7 @@ program bgk_csl
       f(i1,i2) = val
     enddo
   enddo
-          !N_x1=6  
-        !do i1=1,N_x1+1
-           !print *,"mod2",i1-1, i1,i1+1
-           !print *,"mod1", modulo(i1-1,N_x1)+1, modulo(i1,N_x1)+1, modulo(i1+1,N_x1)+1
-           
-        !enddo
-          !print *,N_x1, modulo(1,N_x1),modulo(N_x1,N_x1),modulo(0,N_x1),modulo(-1,N_x1)
-  !time iteration
-    !N_x1=4
-    !print *,"mod1", modulo(-2,N_x1), modulo(-1,N_x1), modulo(0,N_x1),modulo(1,N_x1),modulo(4,N_x1)
-    !stop
-   !stop
+      
    do i1=1,N_x1+1
       xx = (real(i1,f64)-0.5_f64)/real(N_x1,f64)
       if(xx<=0._f64)then
@@ -209,12 +208,127 @@ program bgk_csl
       rho_exact(i1) = mu*(3._f64-2._f64*xi+2*phi_val)/(3._f64-2._f64*xi)*exp(-phi_val)
       
   enddo
-  !E(0)=0!*****
-  !do i1=2,N_x1+1
-  !E(i1)=-(rho(i1)-rho(i1-1))/delta_x1!*******
-  !enddo
+   !Compute E0 and rho0 
+
+    f_store = f
+    !compute E
+    do i1=1,N_x1+1
+      buf_1d(1:N_x2+1) = f_store(i1,1:N_x2+1)
+      call compute_non_unif_integral(node_positions_x2(1:N_x2+1),buf_1d(1:N_x2+1),N_x2+1,val)
+      rho(i1)=val-1._f64
+    enddo
+    E=rho
+    call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+    E_store = E
+    
+     !diagnostic
+      do i1=1,N_x1+1
+        x1 = x1_min+real(i1-1._f64)*delta_x1
+        !write(*,*) x1,E(i1),rho(i1)!,rho_exact(i1)
+      enddo
+     ! stop
+
+ 
   do step=1,nb_step
     
+    
+    
+
+    !Inisialize a1 and a2
+      do i1=1,N_x1+1
+        x1 = x1_min+real(i1-1._f64)*delta_x1
+        do i2=1,N_x2+1
+           x2 = x2_min+real(i2-1._f64)*delta_x2
+           a1(i1,i2)=x2
+           a2(i1,i2)=E_store(i1)    
+          ! chi(i1,i2)   =a1(i1,i2)*f_store(i1,i2)
+           !sigma(i1,i2) =a2(i1,i2)*f_store(i1,i2)
+       enddo
+   enddo
+    
+
+  if(rk==1) then
+    f_tmp=f
+    call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+   do i1=1,N_x1+1
+     do i2=1,N_x2+1
+        f(i1,i2)=f_store(i1,i2)+dt*Flux(i1,i2)
+     enddo
+   enddo
+  endif
+ 
+    if(rk==2) then
+   
+        !Flux=(-alpha*Flux_x1(i1,i2)-beta*Flux_x2(i1,i2))
+        b1=0._f64
+        b2=1._f64
+        a21=1._f64/2._f64
+        
+        f_tmp=f
+        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+         K1=Flux
+        do i1=1,N_x1+1
+          do i2=1,N_x2+1
+            f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a21
+          enddo
+         enddo
+        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+         K2=Flux
+   do i1=1,N_x1+1
+     do i2=1,N_x2+1
+        
+        !K2(i1,i2)=0._f64/3._f64
+        f(i1,i2)=f_store(i1,i2)+dt*(b1*K1(i1,i2)+b2*K2(i1,i2))
+      !-alpha*Flux_x1(i1,i2)-beta*Flux_x2(i1,i2)
+     enddo
+    enddo
+  endif
+    if(rk==4) then
+   
+        !Flux=(-alpha*Flux_x1(i1,i2)-beta*Flux_x2(i1,i2))
+        b1=1._f64/6._f64
+        b2=1._f64/3._f64
+        b3=1._f64/3._f64
+        b4=1._f64/6._f64
+       
+        a21=1._f64/2._f64
+        a32=1._f64/2._f64
+        a31=0._f64
+        a41=0._f64
+        a42=0._f64
+        a43=1._f64
+        f_tmp=f_store
+        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+         K1=Flux
+        do i1=1,N_x1+1
+          do i2=1,N_x2+1
+            f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a21
+          enddo
+         enddo
+        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+         K2=Flux
+
+         do i1=1,N_x1+1
+          do i2=1,N_x2+1
+            f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a31+K2(i1,i2)*dt*a32
+          enddo
+         enddo
+        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+         K3=Flux
+         do i1=1,N_x1+1
+          do i2=1,N_x2+1
+            f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a41+K2(i1,i2)*dt*a42+K3(i1,i2)*dt*a43
+          enddo
+         enddo
+        call Compute_flux(a1,a2,f_tmp,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+         K4=Flux
+   do i1=1,N_x1+1
+     do i2=1,N_x2+1
+        f(i1,i2)=f_store(i1,i2)+dt*(b1*K1(i1,i2)+b2*K2(i1,i2)+b3*K3(i1,i2)+b4*K4(i1,i2))
+      !-alpha*Flux_x1(i1,i2)-beta*Flux_x2(i1,i2)
+     enddo
+    enddo
+  endif
     
     f_store = f
     !compute E
@@ -224,25 +338,23 @@ program bgk_csl
       rho(i1)=val-1._f64
   
     enddo
-    !rho=rho_exact
     E=rho
     call poisson1dpertrap(E,x1_max-x1_min,N_x1)
-    
+    E(N_x1+1)=E(1)
     E_store = E
     
      !diagnostic
     val=0._f64
     do i1=1,N_x1
-      val = val+E(i1)*E(i1)
+      val = val+E_store(i1)*E_store(i1)
     enddo
     val = val/real(N_x1,f64)
-    !print *,step, (real(step,f64)-1._f64)*dt,val
+    print *,step, (real(step,f64)-1._f64)*dt,val
     
      
-   if(step==1) then
-
+   if(step==100000) then
    do i1=1,N_x1+1
-      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x1 = x1_min+real(i1-1._f64)*delta_x1
       write(*,*) x1,E(i1),rho(i1)!,rho_exact(i1)
     enddo
     stop
@@ -251,223 +363,6 @@ program bgk_csl
     ! do i1=1,N_x1
       !print *,x1_min+real(i1-1)*delta_x1,E(i1),rho(i1)
     !enddo
-
-    !compute chi(uij) and sigma(uij)
-      do i1=1,N_x1+1
-        x1 = x1_min+real(i1-1,f64)*delta_x1
-        do i2=1,N_x2+1
-           x2 = x2_min+real(i2-1,f64)*delta_x2
-           chi(i1,i2)   =x2*f_store(i1,i2)
-           sigma(i1,i2) =E_store(i1)*f_store(i1,i2)
-       enddo
-   enddo
-    chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2)
-    chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
-    chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
-    chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
-    sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2)
-    sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
-    sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
-    sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
-  ! For fixed  i2 
- do i2=1,N_x2+1
-     do i1=1,N_x1
-     abar_x1(i1)=0!(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))
-     
-     enddo
-  
-     abar_x1(N_x1+1)=abar_x1(1)
-  do i1=1,N_x1+1
-     !abar_x1(i1)=(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))
-    if(order==3) then
-     i1m2=i1-2
-     i1m1=i1-1
-     i1p1=i1+1
-     i1p2=i1+2
-     if (i1m1 <=0) then 
-         i1m1=i1m1+N_x1+1
-     endif
-     if (i1p1 >=N_x1+1) then 
-         i1p1=i1p1-N_x1-1
-     endif
-     if (i1m2 <=0) then 
-         i1m2=i1m2+N_x1+1        
-     endif
-     if (i1p2 >=N_x1+1) then 
-         i1p2=i1p2-N_x1-1
-     endif
-   
-    if(abar_x1(i1m2)>=0) then     
-     fterm1=chi(i1m2,i2)
-    else 
-     fterm1=chi(i1m2+1,i2)
-    endif
-
-     if(abar_x1(i1m1)>=0) then     
-     fterm2=chi(i1m1,i2)
-    else 
-     fterm2=chi(i1m1+1,i2)
-    endif
-     
-    if(abar_x1(i1)>=0) then     
-     fterm3=chi(i1,i2)
-    else 
-     fterm3=chi(i1+1,i2)
-    endif
-
-     if(abar_x1(i1p1)>=0) then     
-     fterm4=chi(i1p1,i2)
-    else 
-     fterm4=chi(i1p1+1,i2)
-    endif
-     !fterm1=chi(i1left2,i2)
-     !fterm2=chi(i1left,i2)
-     !fterm3=chi(i1,i2)
-     !fterm4=chi(i1right,i2)
-    
-    
-      Flux_x1(i1,i2)=(1._f64/6._f64)*fterm1-fterm2+(1._f64/2._f64)*fterm3&
-       +(1._f64/3._f64)*fterm4
-     !Flux_x1_p=(1._f64/6._f64)*fterm1_p-fterm2_p+(1._f64/2._f64)*fterm3_p&
-      ! +(1._f64/3._f64)*fterm4_p
-
-     !Flux_x1_m=(1._f64/6._f64)*fterm1_m-fterm2_m+(1._f64/2._f64)*fterm3_m&
-     !  +(1._f64/3._f64)*fterm4_m
-
-    ! Flux_x1(i1,i2)=(1._f64/6._f64)*chi(i1left2,i2)-chi(i1left,i2)+(1._f64/2._f64)*chi(i1,i2)&
-      ! +(1._f64/3._f64)*chi(i1right,i2)
-  endif   
-    !Flux_x1(i1,1:N_x2+1)=-(1._f64/6._f64)*chi(i1left,1:N_x2+1)+(5._f64/6._f64)*chi(i1,1:N_x2+1)&
-      ! +(1._f64/3._f64)*chi(i1right,1:N_x2+1)
-    !Flux_x1(i1,1:N_x2+1)=-(1._f64/6._f64)*chi(i1-1,1:N_x2+1)+(5._f64/6._f64)*chi(i1,1:N_x2+1)+(1._f64/3._f64)*chi(i1+1,1:N_x2+1)
-  if(order==5) then
-     i1m3=modulo(i1-3,N_x1)
-     i1m2=modulo(i1-2,N_x1)
-     i1m1=modulo(i1-1,N_x1)
-     i1p1=modulo(i1+1,N_x1)
-     i1p2=modulo(i1+2,N_x1)
-     i1p3=modulo(i1+3,N_x1)
-     if(i1m3==0)  i1m3=N_x1
-     if(i1m2==0)  i1m2=N_x1
-     if(i1m1==0)  i1m1=N_x1
-     if(i1p1==0)  i1p1=N_x1+1
-     if(i1p2==0)  i1p2=N_x1+1
-     if(i1p3==0)  i1p3=N_x1+1
-     
-     Flux_x1_p=(1._f64/30._f64)*chi(i1-2,i2)-(13._f64/60._f64)*chi(i1-1,i2)+(47._f64/60._f64)*chi(i1,i2)&
-                +(9._f64/20._f64)*chi(i1+1,i2)-(1._f64/20._f64)*chi(i1+2,i2)
-     Flux_x1_m=(1._f64/30._f64)*chi(i1-3,i2)-(13._f64/60._f64)*chi(i1-2,i2)+(47._f64/60._f64)*chi(i1-1,i2)&
-                +(9._f64/20._f64)*chi(i1,i2)-(1._f64/20._f64)*chi(i1+1,i2)
-    Flux_x1(i1,i2)=Flux_x1_p-Flux_x1_m
-  endif
-  enddo
- enddo 
-  
- !For fixed i1
- do i1=1,N_x1+1
-     do i2=1,N_x2
-     abar_x2(i2)=E(i1)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
-     !print*,"aa", x2_min+(i2-1)*delta_x2,abar_x2(i2)
-     enddo
-    !stop
-     abar_x2(N_x2+1)=abar_x2(1)
-  do i2=1,N_x2+1
-   if(order==3) then
-     i2m2=i2-2
-     i2m1=i2-1
-     i2p1=i2+1
-     i2p2=i2+1
-     if (i2m1 <=0) then 
-         i2m1=i2m1+N_x2+1        
-     endif
-     if (i2p1 >=N_x2+1) then 
-         i2p1=i2p1-N_x2-1
-     endif
-
-     if (i2m2 <=0) then 
-         i2m2=i2m2+N_x2+1        
-     endif
-     if (i2p2 >=N_x2+1) then 
-         i2p2=i2p2-N_x2-1
-     endif
-
-
-     if(abar_x2(i2m2)>=0) then     
-     fterm1=sigma(i1,i2m2)
-    else 
-     fterm1=sigma(i1,i2m2+1)
-    endif
-
-     if(abar_x2(i1m2)>=0) then     
-     fterm2=sigma(i1,i2m1)
-    else 
-     fterm2=sigma(i1,i2m1+1)
-    endif
-     
-    if(abar_x2(i2)>=0) then     
-     fterm3=sigma(i1,i2)
-    else 
-     fterm3=sigma(i1,i2+1)
-    endif
-
-     if(abar_x2(i2p1)>=0) then     
-     fterm4=sigma(i1,i2p1)
-    else 
-     fterm4=sigma(i1,i2p1+1)
-    endif
-     !fterm1=chi(i1left2,i2)
-     !fterm2=chi(i1left,i2)
-     !fterm3=chi(i1,i2)
-     !fterm4=chi(i1right,i2)
-    
-    
-      Flux_x2(i1,i2)=(1._f64/6._f64)*fterm1-fterm2+(1._f64/2._f64)*fterm3&
-       +(1._f64/3._f64)*fterm4
-
-      !Flux_x2(i1,i2)=(1._f64/6._f64)*sigma(i1,i2left2)-sigma(i1,i2left)+(1._f64/2._f64)*sigma(i1,i2)&
-      !+(1._f64/3._f64)*sigma(i1,i2right)
-  end if
-    !Flux_x2(1:N_x1+1,i2)=-(1._f64/6._f64)*sigma(1:N_x1+1,i2left)+(5._f64/6._f64)*sigma(1:N_x1+1,i2)&
-      !+(1._f64/3._f64)*sigma(1:N_x1+1,i2right)
-   ! Flux_x2(1:N_x1+1,i2)=-(1._f64/6._f64)*sigma(1:N_x1+1,i2-1)+(5._f64/6._f64)*sigma(1:N_x1+1,i2)+(1._f64/3._f64)*sigma(1:N_x1+1,i2+1)
-   if(order==5) then
-     i2m3=modulo(i2-3,N_x2)
-     i2m2=modulo(i2-2,N_x2)
-     i2m1=modulo(i2-1,N_x2)
-     i2p1=modulo(i2+1,N_x2)
-     i2p2=modulo(i2+2,N_x2)
-     i2p3=modulo(i2+3,N_x2)
-     if(i2m3==0)  i2m3=N_x1
-     if(i2m2==0)  i2m2=N_x1
-     if(i2m1==0)  i2m1=N_x1
-     if(i2p1==0)  i2p1=N_x1+1
-     if(i2p2==0)  i2p2=N_x1+1
-     if(i2p3==0)  i2p3=N_x1+1
-     Flux_x2_p=(1._f64/30._f64)*sigma(i1,i2-2)-(13._f64/60._f64)*sigma(i1,i2-1)+(47._f64/60._f64)*sigma(i1,i2)&
-                +(9._f64/20._f64)*sigma(i1,i2+1)-(1._f64/20._f64)*sigma(i1,i2+2)
-     Flux_x2_m=(1._f64/30._f64)*sigma(i1,i2-3)-(13._f64/60._f64)*sigma(i1,i2-2)+(47._f64/60._f64)*sigma(i1,i2-1)&
-                +(9._f64/20._f64)*sigma(i1,i2)-(1._f64/20._f64)*sigma(i1,i2+1)
-    Flux_x2(i1,i2)=Flux_x2_p-Flux_x2_m
-   endif
-  enddo
- enddo
- alpha=(dt/delta_x1)
- beta =(dt/delta_x2)
-   do i1=1,N_x1+1
-     do i2=1,N_x2+1
-         !Flux_x1=-(1._f64/6._f64)*chi(i1-1,i2)+(5._f64/6._f64)*chi(i1,i2)+(1._f64/3._f64)*chi(i1+1,i2)
-         !Flux_x2=-(1._f64/6._f64)*sigma(i1-1,i2)+(5._f64/6._f64)*sigma(i1,i2)+(1._f64/3._f64)*sigma(i1+1,i2)
-        f(i1,i2)=f_store(i1,i2)-alpha*Flux_x1(i1,i2)-beta*Flux_x2(i1,i2)
-     enddo
-   enddo
-  !do i1 = 1,N_x1 
-     ! do i2 = 1, N_x2    
-       ! call sll_set_df_val(dist_func, i1, i2,f(i1,i2))
-      !enddo  
-    !enddo
-    !if(mod(step,visu_step)==0)then
-    !  call write_distribution_function ( dist_func )
-    !endif
    
  enddo !end time step
     
@@ -476,7 +371,7 @@ program bgk_csl
 
   open(unit=900,file='field_final_vf.dat')  
     do i1=1,N_x1+1
-      x1 = x1_min+real(i1-1,f64)*delta_x1
+      x1 = x1_min+real(i1-1._f64)*delta_x1
       write(900,*) x1,E(i1),rho(i1)
     enddo
   close(900)
@@ -485,19 +380,265 @@ program bgk_csl
   
 end program
 
+!interface 
+ subroutine Compute_flux(a1,a2,f,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+  use numeric_constants
+  implicit none
+  
+  
+  sll_int,intent(in)::N_x1,N_x2,order
+  !sll_real64,dimension(:,:), pointer :: chi,sigma
+   sll_real64,dimension(N_x1+1,N_x2+1):: a1,a2,f, Flux_x1,Flux_x2,flux
+  sll_real64,dimension(N_x1+1+2,N_x2+1+2) ::chi,sigma
+  sll_real64,dimension(N_x1+1)::abar_x1
+  sll_real   ,dimension(N_x1+1)::abar_x2!E
+  sll_real64,intent(in)::x1_min,x2_min,delta_x1,delta_x2!L
+  sll_int::i1,i2,i1m2,i1m1, i2m2,i2m1,i1p1,i1p2,i2p1,i2p2,i1m3
+  sll_real64::x1,x2,Flux_p05,Flux_m05,alpha,beta!,eold,enew,dx2,tmp
+    !compute chi(uij) and sigma(uij)
+     alpha=(1._f64/delta_x1)
+     beta =(1._f64/delta_x2)
+   do i1=1,N_x1+1
+        do i2=1,N_x2+1   
+           chi(i1,i2)   =a1(i1,i2)*f(i1,i2)
+           sigma(i1,i2) =a2(i1,i2)*f(i1,i2)
+       enddo
+   enddo
 
- !subroutine Compute_flux(E,L,N1,N2)
- ! use numeric_constants
-  !implicit none
- ! sll_int,intent(in)::N1,N2
-  !sll_real64,dimension(N1+1)::E
-  !sll_real64,intent(in)::L
-  !sll_int::i
-  !sll_real64::eold,enew,dx2,tmp
+if(order==3) then
+    !stop
+    !sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2) 
+    !sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
+    !sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
+    !sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
+    !chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2)
+    !chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
+    !chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
+    !chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
+  
+    chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2) 
+    chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
+    !chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
+    !chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
+    !sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2)
+    !sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
+    sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
+    sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
 
-!end subroutine compute_flux
+  ! For fixed  i2 
+ do i2=1,N_x2+1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+     do i1=1,N_x1
+     abar_x1(i1)=a1(i1,i2)!special uniform
+     enddo
+     !abar_x1(N_x1+1)=abar_x1(1)
+
+  do i1=1,N_x1+1
+    
+       i1p1=i1+1
+       i1p2=i1+2
+       i1m2=i1-2
+       i1m1=i1-1
+     
+       if (i1m1 <=0) then 
+         i1m1=i1m1+N_x1+1
+       endif
+       if (i1m2 <=0) then 
+         i1m2=i1m2+N_x1 +2     
+       endif
+        
+       !if (i1p1 >=N_x1+1) then 
+        ! i1p1=i1p1+N_x1+1
+       !endif
+       !if (i1p2 >=N_x1+1) then 
+        ! i1p2=i1p2+N_x1+1
+       !endif
+    
+       if(abar_x1(i1)>=0) then   
+        Flux_p05=-(1._f64/6._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)+(1._f64/3._f64)*chi(i1p1,i2)! stencil i1-1,i1,i1+1  
+        Flux_m05=-(1._f64/6._f64)*chi(i1m2,i2)+(5._f64/6._f64)*chi(i1m1,i2)+(1._f64/3._f64)*chi(i1,i2)! stencil i1-1,i1,i1+1  
+        Flux_x1(i1,i2)=Flux_p05-Flux_m05
+       else 
+        Flux_p05=(1._f64/3._f64)*chi(i1,i2)+(5._f64/6._f64)*chi(i1p1,i2)-(1._f64/6._f64)*chi(i1p2,i2)! stencil i1,i1+1,i1+2
+        Flux_m05=(1._f64/3._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)-(1._f64/6._f64)*chi(i1p1,i2)! stencil i1,i1+1,i1+2
+        Flux_x1(i1,i2)=Flux_p05-Flux_m05
+      endif  
+
+     
+   
+
+  enddo
+ enddo 
+  !For fixed i1
+ do i1=1,N_x1+1
+     do i2=1,N_x2+1
+     abar_x2(i2)=a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
+     enddo
+     !abar_x2(N_x2+1)=abar_x2(1)!special uniform
+  do i2=1,N_x2+1
+     i2p1=i2+1
+     i2p2=i2+2
+     i2m2=i2-2
+     i2m1=i2-1
+     
+     
+     if (i2m1 <=0) then 
+         i2m1=i2m1+N_x2+1
+     endif
+     if (i2m2 <=0) then 
+         i2m2=i2m2+N_x2 +2     
+     endif
+        
+      ! if (i2p1 >=N_x2+1) then 
+        ! i2p1=i2p1+N_x2+1
+       !endif
+       !if (i2p2 >=N_x2+1) then 
+       !  i2p2=i2p2+N_x2+1
+    !   endif
+   
+    
+     if(abar_x2(i2)>=0) then   
+        Flux_p05=-(1._f64/6._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  +(1._f64/3._f64)*sigma(i1,i2p1)! stencil i2-1,i2,i2+1  
+        Flux_m05=-(1._f64/6._f64)*sigma(i1,i2m2)+(5._f64/6._f64)*sigma(i1,i2m1)+(1._f64/3._f64)*sigma(i1,i2  )! stencil i2-1,i2,i2+1  
+        Flux_x2(i1,i2)=Flux_p05-Flux_m05
+     else 
+        Flux_p05=(1._f64/3._f64)*sigma(i1,i2  )+(5._f64/6._f64)*sigma(i1,i2p1)-(1._f64/6._f64)*sigma(i1,i2p2)! stencil i2,i2+1,i2+2
+        Flux_m05=(1._f64/3._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  -(1._f64/6._f64)*sigma(i1,i2p1)! stencil i2,i2+1,i2+2
+        Flux_x2(i1,i2)=Flux_p05-Flux_m05
+     endif
+    
+  
+
+  enddo
+ enddo
+  do i1=1,N_x1+1
+     do i2=1,N_x2+1
+       Flux(i1,i2)=-(alpha*Flux_x1(i1,i2)+beta*Flux_x2(i1,i2))
+     enddo
+   enddo
+endif!order
 
 
+  if(order==5) then
+    !stop
+    !sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2) 
+    !sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
+    !sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
+    !sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
+    !chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2)
+    !chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
+    !chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
+    !chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
+  
+    chi(N_x1+2,1:N_x2+1+4)=chi(2,1:N_x2+1+4) 
+    chi(N_x1+3,1:N_x2+1+4)=chi(3,1:N_x2+1+4)
+    chi(N_x1+4,1:N_x2+1+4)=chi(4,1:N_x2+1+4)
+    !chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
+    !chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
+    !sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2)
+    !sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
+    sigma(1:N_x1+1+4,N_x2+2)=sigma(1:N_x1+1+4,2)
+    sigma(1:N_x1+1+4,N_x2+3)=sigma(1:N_x1+1+4,3)
+    sigma(1:N_x1+1+4,N_x2+4)=sigma(1:N_x1+1+4,4)
+
+  ! For fixed  i2 
+ do i2=1,N_x2+1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+     do i1=1,N_x1
+     abar_x1(i1)=a1(i1,i2)!special uniform
+     enddo
+     !abar_x1(N_x1+1)=abar_x1(1)
+
+  do i1=1,N_x1+1
+    
+       i1p1=i1+1
+       i1p2=i1+2
+       i1m3=i1-3
+       i1m2=i1-2
+       i1m1=i1-1
+     
+       if (i1m1 <=0) then 
+         i1m1=i1m1+N_x1+1
+       endif
+       if (i1m2 <=0) then 
+         i1m2=i1m2+N_x1 +2     
+       endif
+        if (i1m3 <=0) then 
+         i1m2=i1m2+N_x1 +3     
+       endif
+       !if (i1p1 >=N_x1+1) then 
+        ! i1p1=i1p1+N_x1+1
+       !endif
+       !if (i1p2 >=N_x1+1) then 
+        ! i1p2=i1p2+N_x1+1
+       !endif
+    
+       if(abar_x1(i1)>=0) then   
+        Flux_p05=-(1._f64/6._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)+(1._f64/3._f64)*chi(i1+1,i2)! stencil i1-1,i1,i1+1  
+        Flux_m05=-(1._f64/6._f64)*chi(i1m2,i2)+(5._f64/6._f64)*chi(i1m1,i2)+(1._f64/3._f64)*chi(i1,i2)! stencil i1-1,i1,i1+1  
+        Flux_x1(i1,i2)=Flux_p05-Flux_m05
+       else 
+        Flux_p05=(1._f64/3._f64)*chi(i1,i2)+(5._f64/6._f64)*chi(i1p1,i2)-(1._f64/6._f64)*chi(i1p2,i2)! stencil i1,i1+1,i1+2
+        Flux_m05=(1._f64/3._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)-(1._f64/6._f64)*chi(i1p1,i2)! stencil i1,i1+1,i1+2
+        Flux_x1(i1,i2)=Flux_p05-Flux_m05
+      endif  
+
+     
+   
+
+  enddo
+ enddo 
+  !For fixed i1
+ do i1=1,N_x1+1
+     do i2=1,N_x2+1
+     abar_x2(i2)=a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
+     enddo
+     !abar_x2(N_x2+1)=abar_x2(1)!special uniform
+  do i2=1,N_x2+1
+     i2p1=i2+1
+     i2p2=i2+2
+     i2m2=i2-2
+     i2m1=i2-1
+     
+     
+     if (i2m1 <=0) then 
+         i2m1=i2m1+N_x2+1
+     endif
+     if (i2m2 <=0) then 
+         i2m2=i2m2+N_x2 +2     
+     endif
+        
+      ! if (i2p1 >=N_x2+1) then 
+        ! i2p1=i2p1+N_x2+1
+       !endif
+       !if (i2p2 >=N_x2+1) then 
+       !  i2p2=i2p2+N_x2+1
+    !   endif
+   
+    
+     if(abar_x2(i2)>=0) then   
+        Flux_p05=-(1._f64/6._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  +(1._f64/3._f64)*sigma(i1,i2p1)! stencil i2-1,i2,i2+1  
+        Flux_m05=-(1._f64/6._f64)*sigma(i1,i2m2)+(5._f64/6._f64)*sigma(i1,i2m1)+(1._f64/3._f64)*sigma(i1,i2  )! stencil i2-1,i2,i2+1  
+        Flux_x2(i1,i2)=Flux_p05-Flux_m05
+     else 
+        Flux_p05=(1._f64/3._f64)*sigma(i1,i2  )+(5._f64/6._f64)*sigma(i1,i2p1)-(1._f64/6._f64)*sigma(i1,i2p2)! stencil i2,i2+1,i2+2
+        Flux_m05=(1._f64/3._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  -(1._f64/6._f64)*sigma(i1,i2p1)! stencil i2,i2+1,i2+2
+        Flux_x2(i1,i2)=Flux_p05-Flux_m05
+     endif
+    
+  
+
+  enddo
+ enddo
+  do i1=1,N_x1+1
+     do i2=1,N_x2+1
+       Flux(i1,i2)=-(alpha*Flux_x1(i1,i2)+beta*Flux_x2(i1,i2))
+     enddo
+   enddo
+endif!order
+end subroutine compute_flux
+
+!end interface
 
 subroutine compute_translate_nodes_periodic(alpha,N_cells,old_node_positions,new_node_positions)
   ! compute displaced nodes in the case of a translation
