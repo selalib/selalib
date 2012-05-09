@@ -2,12 +2,12 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_qns_2d_with_finite_diff.F90
+! Module: sll_qns2d_with_finite_diff.F90
 !
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
 !> Start date: March 12, 2012
-!> Last modification: May 03, 2012
+!> Last modification: May 04, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -15,7 +15,7 @@
 !                                  
 !***************************************************************************
 
-module sll_qns_2d_with_finite_diff_seq
+module sll_qns2d_with_finite_diff_seq
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -30,27 +30,28 @@ module sll_qns_2d_with_finite_diff_seq
 
   implicit none
 
-  type qns_2d_with_finite_diff_plan_seq
+  type qns2d_with_finite_diff_plan_seq
      character(len=100)                      :: BC ! Boundary_conditions
-     sll_int32                               :: NP_r ! Number of points in r-direction
-     sll_int32                               :: NP_theta!Number of points in theta-direction
-     sll_real64                              :: rmin
-     sll_real64                              :: rmax
-     type(sll_fft_plan), pointer             :: fft_plan
-     type(sll_fft_plan), pointer             :: inv_fft_plan
-  end type qns_2d_with_finite_diff_plan_seq
+     sll_int32                               :: NP_r!Number of points in r-direction
+     sll_int32                   :: NP_theta!Number of points in theta-direction
+     sll_real64                  :: rmin
+     sll_real64                  :: rmax
+     type(sll_fft_plan), pointer :: fft_plan
+     type(sll_fft_plan), pointer :: inv_fft_plan
+  end type qns2d_with_finite_diff_plan_seq
 
 contains
 
 
-  function new_qns_2d_with_finite_diff_plan_seq(BC, rmin, rmax, NP_r, NP_theta) result (plan)
+  function new_qns2d_with_finite_diff_plan_seq(BC, rmin, rmax, NP_r, NP_theta) &
+                                                                   result (plan)
 
-    character(len=100)                              :: BC ! Boundary_conditions
-    sll_real64                                      :: rmin
-    sll_real64                                      :: rmax    
-    sll_int32                                       :: NP_r, NP_theta, ierr
-    sll_comp64, dimension(:),   allocatable         :: x
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
+    character(len=100)                             :: BC ! Boundary_conditions
+    sll_real64                                     :: rmin
+    sll_real64                                     :: rmax    
+    sll_int32                                      :: NP_r, NP_theta, ierr
+    sll_comp64, dimension(:),   allocatable        :: x
+    type(qns2d_with_finite_diff_plan_seq), pointer :: plan
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE( x(NP_theta), ierr )
@@ -69,21 +70,21 @@ contains
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
-  end function new_qns_2d_with_finite_diff_plan_seq
+  end function new_qns2d_with_finite_diff_plan_seq
 
 
-  subroutine solve_qn_2d_with_finite_diff_seq(plan, rho, c, Te, f, g, Zi, phi)
+  subroutine solve_qns2d_with_finite_diff_seq(plan, rho, c, Te, f, g, Zi, phi)
 
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
-    sll_real64                                      :: dr, dtheta, Zi 
-    sll_int32                                       :: NP_r, NP_theta, i, j
-    sll_real64, dimension(:,:)                      :: rho, phi
-    sll_comp64, dimension(plan%NP_r,plan%NP_theta)  :: hat_rho, hat_phi
-    sll_real64, dimension(:)                        :: c, Te, f, g
-    sll_comp64, dimension(plan%NP_theta)            :: hat_f, hat_g
-    sll_int32, dimension(plan%NP_r)                 :: ipiv
-    sll_real64, dimension(3*plan%NP_r)              :: a_resh ! 3*n
-    sll_real64, dimension(7*plan%NP_r)              :: cts  ! 7*n allocation
+    type(qns2d_with_finite_diff_plan_seq), pointer :: plan
+    sll_real64                                     :: dr, dtheta, Zi 
+    sll_int32                                      :: NP_r, NP_theta, i, j
+    sll_real64, dimension(:,:)                     :: rho, phi
+    sll_comp64, dimension(plan%NP_r,plan%NP_theta) :: hat_rho, hat_phi
+    sll_real64, dimension(:)                       :: c, Te, f, g
+    sll_comp64, dimension(plan%NP_theta)           :: hat_f, hat_g
+    sll_int32, dimension(plan%NP_r)                :: ipiv
+    sll_real64, dimension(3*plan%NP_r)             :: a_resh ! 3*n
+    sll_real64, dimension(7*plan%NP_r)             :: cts  ! 7*n allocation
 
     NP_r = plan%NP_r
     NP_theta = plan%NP_theta
@@ -134,13 +135,13 @@ contains
 
     phi = real(hat_phi, f64)/NP_theta
 
-  end subroutine solve_qn_2d_with_finite_diff_seq
+  end subroutine solve_qns2d_with_finite_diff_seq
 
 
-  subroutine delete_qns_2d_with_finite_diff_plan_seq(plan)
+  subroutine delete_qns2d_with_finite_diff_plan_seq(plan)
 
-       type (qns_2d_with_finite_diff_plan_seq), pointer :: plan
-       sll_int32                                        :: ierr
+       type (qns2d_with_finite_diff_plan_seq), pointer :: plan
+       sll_int32                                       :: ierr
 
        ! Fixme: some error checking, whether the poisson pointer is associated
        ! for instance
@@ -151,17 +152,17 @@ contains
 
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_qns_2d_with_finite_diff_plan_seq
+  end subroutine delete_qns2d_with_finite_diff_plan_seq
 
 
   subroutine dirichlet_matrix_resh_seq(plan, j, c, Te, Zi, a_resh)
 
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
-    sll_real64, dimension(:)                        :: c, Te
-    sll_real64                                      :: dr, dtheta, Zi
-    sll_real64                                      :: r, rmin, rmax
-    sll_int32                                       :: i, j, NP_r
-    sll_real64, dimension(:)                        :: a_resh
+    type(qns2d_with_finite_diff_plan_seq), pointer :: plan
+    sll_real64, dimension(:)                       :: c, Te
+    sll_real64                                     :: dr, dtheta, Zi
+    sll_real64                                     :: r, rmin, rmax
+    sll_int32                                      :: i, j, NP_r
+    sll_real64, dimension(:)                       :: a_resh
 
     NP_r = plan%NP_r
     rmin = plan%rmin
@@ -189,12 +190,12 @@ contains
 
   subroutine neumann_matrix_resh_seq(plan, j, c, Te, Zi, a_resh)
 
-    type(qns_2d_with_finite_diff_plan_seq), pointer :: plan
-    sll_real64, dimension(:)                        :: c, Te
-    sll_real64                                      :: dr, dtheta, Zi
-    sll_real64                                      :: rmin, rmax, r
-    sll_int32                                       :: i, j, NP_r
-    sll_real64, dimension(:)                        :: a_resh
+    type(qns2d_with_finite_diff_plan_seq), pointer :: plan
+    sll_real64, dimension(:)                       :: c, Te
+    sll_real64                                     :: dr, dtheta, Zi
+    sll_real64                                     :: rmin, rmax, r
+    sll_int32                                      :: i, j, NP_r
+    sll_real64, dimension(:)                       :: a_resh
 
     NP_r = plan%NP_r
     rmin = plan%rmin
@@ -211,17 +212,17 @@ contains
     do i=2,NP_r-1
        r = rmin + (i-1)*dr
        a_resh(3*(i-1)+1) = c(i)/(2*dr) - 1/dr**2
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
-                                                     + 1/(Zi*Te(i))
+       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2* &
+                       (1-cos(j*dtheta)) + 1/(Zi*Te(i))
        a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
     enddo
 
     a_resh(3*(NP_r-1)+1) = -2/dr**2
-    a_resh(3*(NP_r-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2*(1-cos(j*dtheta)) &
-                                                          + 1/(Zi*Te(NP_r))
+    a_resh(3*(NP_r-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2* &
+                       (1-cos(j*dtheta)) + 1/(Zi*Te(NP_r))
 
   end subroutine neumann_matrix_resh_seq
 
 
-end module sll_qns_2d_with_finite_diff_seq
+end module sll_qns2d_with_finite_diff_seq
 
