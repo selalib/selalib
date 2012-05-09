@@ -58,3 +58,5 @@ setenv HDF5LIBPATH /usr/local/lib
 Our intent is to make the collection of SConstruct files and their auxiliary
 files as machine-independent as possible. The user would thus be responsible 
 for setting up his environment with the use of the conf.py file.
+
+May 4, 2012: change this is obsolete in cmake.
