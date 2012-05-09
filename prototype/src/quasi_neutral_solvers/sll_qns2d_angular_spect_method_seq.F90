@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with angular spectral method
 !> Start date: April 10, 2012
-!> Last modification: May 03, 2012
+!> Last modification: May 04, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -31,19 +31,20 @@ module sll_qns2d_angular_spect_method_seq
   implicit none
 
   type qns2d_angular_spect_method_seq
-     character(len=100)                      :: BC ! Boundary_conditions
-     sll_int32                               :: NP_r!Number of points in r-direction
-     sll_int32                               :: NP_theta!Number of points in theta-direction
-     sll_real64                              :: rmin
-     sll_real64                              :: rmax
-     type(sll_fft_plan), pointer             :: fft_plan
-     type(sll_fft_plan), pointer             :: inv_fft_plan
+     character(len=100)          :: BC ! Boundary_conditions
+     sll_int32                   :: NP_r!Number of points in r-direction
+     sll_int32                   :: NP_theta!Number of points in theta-direction
+     sll_real64                  :: rmin
+     sll_real64                  :: rmax
+     type(sll_fft_plan), pointer :: fft_plan
+     type(sll_fft_plan), pointer :: inv_fft_plan
   end type qns2d_angular_spect_method_seq
 
 contains
 
 
-  function new_qns2d_angular_spect_method_seq(BC, rmin, rmax, NP_r, NP_theta)result (plan)
+  function new_qns2d_angular_spect_method_seq(BC, rmin, rmax, NP_r, NP_theta) &
+                                                                  result (plan)
 
     character(len=100)                            :: BC ! Boundary_conditions
     sll_real64                                    :: rmin
@@ -146,17 +147,17 @@ contains
 
   subroutine delete_qns2d_angular_spect_method_seq(plan)
 
-       type (qns2d_angular_spect_method_seq), pointer :: plan
-       sll_int32                                      :: ierr
+    type (qns2d_angular_spect_method_seq), pointer :: plan
+    sll_int32                                      :: ierr
 
-       ! Fixme: some error checking, whether the poisson pointer is associated
-       ! for instance
-       SLL_ASSERT( associated(plan) )
+    ! Fixme: some error checking, whether the poisson pointer is associated
+    ! for instance
+    SLL_ASSERT( associated(plan) )
 
-       call delete_fft_plan1d(plan%fft_plan)
-       call delete_fft_plan1d(plan%inv_fft_plan)
+    call delete_fft_plan1d(plan%fft_plan)
+    call delete_fft_plan1d(plan%inv_fft_plan)
 
-       SLL_DEALLOCATE(plan, ierr)
+    SLL_DEALLOCATE(plan, ierr)
 
   end subroutine delete_qns2d_angular_spect_method_seq
 

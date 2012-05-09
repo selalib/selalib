@@ -7,7 +7,7 @@
 !> Selalib 2D (r, theta) quasi-neutral solver with angular spectral method
 !> Some arrays are here in 3D for remap utilities
 !> Start date: April 19, 2012
-!> Last modification: April 19, 2012
+!> Last modification: May 04, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -33,8 +33,10 @@ module sll_qns2d_angular_spect_method_par
 
   type qns2d_angular_spect_method_par
      character(len=100)                        :: BC ! Boundary_conditions
-     sll_int32                                 :: NP_r ! Number of points in r-direction
-     sll_int32                                 :: NP_theta!Number of points in theta-direction
+     sll_int32                                 :: NP_r ! Number of points in 
+                                                               ! r-direction
+     sll_int32                                 :: NP_theta ! Number of points
+                                                         ! in theta-direction
      sll_real64                                :: rmin
      sll_real64                                :: rmax
      type(sll_fft_plan), pointer               :: fft_plan
@@ -51,7 +53,8 @@ module sll_qns2d_angular_spect_method_par
 contains
 
 
-  function new_qns2d_angular_spect_method_par(BC,rmin,rmax,NP_r, NP_theta) result (plan)
+  function new_qns2d_angular_spect_method_par(BC,rmin,rmax,NP_r, NP_theta) &
+                                                               result (plan)
 
     character(len=100)                            :: BC ! Boundary_conditions
     sll_real64                                    :: rmin
@@ -217,11 +220,11 @@ contains
           ind = NP_theta-(ind-1)
        endif
        if (plan%BC=='neumann') then
-          call neumann_matrix_resh_spect_par(plan, ind, real(plan%c_remap(:,1,1), f64), & 
-                                         real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
+          call neumann_matrix_resh_spect_par(plan, ind, real(plan%c_remap( &
+                  :,1,1), f64), real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
        else ! 'dirichlet'
-          call dirichlet_matrix_resh_spect_par(plan, ind, real(plan%c_remap(:,1,1), f64), & 
-                                         real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
+          call dirichlet_matrix_resh_spect_par(plan, ind, real(plan%c_remap( &
+                    :,1,1), f64), real(plan%Te_remap(:,1,1), f64), Zi, a_resh)
        endif 
        call setup_cyclic_tridiag( a_resh, NP_r, cts, ipiv )
        call solve_cyclic_tridiag(cts,ipiv,plan%array_lin_sys(:,j,1), &
