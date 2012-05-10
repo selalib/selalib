@@ -46,3 +46,5 @@ clean:
 	#(cd BSL; scons -c)
 	#(cd CSL; scons -c)	
 	find . -name '*.mod' -exec rm {} \;
+	find . -name '*.a' -exec rm {} \;
+	find . -name '*.o' -exec rm {} \;
