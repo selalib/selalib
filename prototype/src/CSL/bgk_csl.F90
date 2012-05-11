@@ -293,7 +293,7 @@ program bgk_csl
 
 
   if(mesh_case==3)then
-     alpha_mesh = 1.e-2_f64 !0.1_f64
+     alpha_mesh = 1.e-1_f64 !0.1_f64
      eta2 = eta2_min 
      eta2c = eta2_min + 0.5_f64*delta_eta2
      do i2= 1, nc_eta2 + 1
@@ -465,6 +465,8 @@ program bgk_csl
   
   
   call write_mesh_2D(mesh)
+  
+  stop
   call write_distribution_function ( dist_func )
 
 
