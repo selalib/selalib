@@ -272,7 +272,7 @@ program bgk_csl
   ! For fixed  i2 
  do i2=1,N_x2+1
      do i1=1,N_x1
-     abar_x1(i1)=0!(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))
+     abar_x1(i1)=x2_min+real(i2-1,f64)*delta_x2!(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))
      
      enddo
   
