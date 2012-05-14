@@ -406,22 +406,9 @@ end program
    enddo
 
 if(order==3) then
-    !stop
-    !sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2) 
-    !sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
-    !sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
-    !sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
-    !chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2)
-    !chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
-    !chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
-    !chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
-  
+   
     chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2) 
     chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
-    !chi(1:N_x1+1+2,N_x2+2)=chi(1:N_x1+1+2,2)
-    !chi(1:N_x1+1+2,N_x2+3)=chi(1:N_x1+1+2,3)
-    !sigma(N_x1+2,1:N_x2+1+2)=sigma(2,1:N_x2+1+2)
-    !sigma(N_x1+3,1:N_x2+1+2)=sigma(3,1:N_x2+1+2)
     sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
     sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
 
