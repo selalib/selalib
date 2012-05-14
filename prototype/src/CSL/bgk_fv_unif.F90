@@ -1,4 +1,4 @@
-program bgk_csl_vf_unif
+program bgk_fv_unif
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
@@ -31,11 +31,11 @@ program bgk_csl_vf_unif
   
   
 
-  N_x1 =180!,0!256! 128!128
-  N_x2 =180!128!256! 128!256
+  N_x1 =128!,0!256! 128!128
+  N_x2 =128!128!256! 128!256
   rk=2
   dt = 0.01_f64
-  nb_step = 8000
+  nb_step = 6000
   order=3
   test_case = 4
   visu_step = 10
@@ -63,14 +63,14 @@ program bgk_csl_vf_unif
   SLL_ALLOCATE(rho_exact(N_x1+1),err)
   SLL_ALLOCATE(E(N_x1+1),err)
   SLL_ALLOCATE(E_store(N_x1+1),err)
-  SLL_ALLOCATE(chi(N_x1+1+2,N_x2+1+2),err)
-  SLL_ALLOCATE(sigma(N_x1+1+2,N_x2+1+2),err)
+  !SLL_ALLOCATE(chi(N_x1+1+2,N_x2+1+2),err)
+  !SLL_ALLOCATE(sigma(N_x1+1+2,N_x2+1+2),err)
   SLL_ALLOCATE(a1(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(a2(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(Flux(N_x1+1,N_x2+1),err)
   !SLL_ALLOCATE(Flux_x2(N_x1+1,N_x2+1),err)
-  SLL_ALLOCATE(abar_x1(N_x1+1),err)
-  SLL_ALLOCATE(abar_x2(N_x2+1),err)
+  !SLL_ALLOCATE(abar_x1(N_x1+1),err)
+  !SLL_ALLOCATE(abar_x2(N_x2+1),err)
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
   
@@ -369,7 +369,7 @@ program bgk_csl_vf_unif
     
   !enddo !end time step
 
-  open(unit=900,file='field_final_vf.dat')  
+  open(unit=900,file='field_final_vf_unif.dat')  
     do i1=1,N_x1+1
       x1 = x1_min+real(i1-1._f64)*delta_x1
       write(900,*) x1,E(i1),rho(i1)
@@ -380,7 +380,7 @@ program bgk_csl_vf_unif
   
 end program
 
-!interface 
+
  subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
   use numeric_constants
   implicit none
@@ -625,7 +625,7 @@ endif!order
 endif!order
 end subroutine compute_flux
 
-!end interface
+
 
 subroutine compute_translate_nodes_periodic(alpha,N_cells,old_node_positions,new_node_positions)
   ! compute displaced nodes in the case of a translation
