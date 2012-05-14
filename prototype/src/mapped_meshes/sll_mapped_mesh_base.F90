@@ -10,6 +10,21 @@ use sll_io
   ! by its subclasses. The two main types of mapped meshes are those
   ! represented by an analytic transformation and those represented by a
   ! discrete transformation. 
+
+  type, abstract :: sll_mapped_mesh_1d_base
+     sll_int32   :: nc_eta1
+     sll_real64  :: delta_eta1
+     character(len=64) :: label
+     logical           :: written = .false.
+   contains
+     procedure(geometry_function_1d), deferred, pass       :: x1
+     procedure(geometry_function_nodes_1d), deferred, pass :: x1_at_node
+     procedure(geometry_function_1d), deferred, pass       :: jacobian
+     procedure(geometry_function_nodes_1d), deferred, pass :: jacobian_at_node
+     !procedure, pass :: write_to_file
+  end type sll_mapped_mesh_1d_base
+
+
   type, abstract :: sll_mapped_mesh_2d_base
      sll_int32  :: nc_eta1
      sll_int32  :: nc_eta2
@@ -32,11 +47,61 @@ use sll_io
      procedure, pass :: write_to_file => write_mapped_mesh_2d_base
   end type sll_mapped_mesh_2d_base
 
- 
-   !************************************************************************
-   !                       Function signatures
-   !
-   !************************************************************************
+  
+  !************************************************************************
+  !
+  !                       Function signatures
+  !
+  !************************************************************************
+
+  !************************************************************************
+  ! 1D CASE:
+  !************************************************************************
+
+  abstract interface
+     function geometry_function_1d( mesh, eta1 ) result(res)
+       use sll_working_precision
+       import sll_mapped_mesh_1d_base
+       class(sll_mapped_mesh_1d_base) :: mesh
+       sll_real64, intent(in)    :: eta1
+       sll_real64                :: res
+     end function geometry_function_1d
+  end interface
+
+  abstract interface
+      function geometry_function_nodes_1d( mesh, i ) result(res)
+        use sll_working_precision
+        import sll_mapped_mesh_1d_base       
+        class(sll_mapped_mesh_1d_base) :: mesh
+        sll_int32, intent(in)   :: i
+        sll_real64              :: res
+      end function geometry_function_nodes_1d
+   end interface
+
+   abstract interface
+      function one_arg_scalar_function( eta1 )
+        use sll_working_precision
+        sll_real64             :: one_arg_scalar_function
+        sll_real64, intent(in) :: eta1
+      end function one_arg_scalar_function
+   end interface
+   
+   abstract interface
+      function one_arg_message_passing_func( map, eta1 )
+        use sll_working_precision
+        import     :: sll_mapped_mesh_1d_base
+        sll_real64                      :: one_arg_message_passing_func
+        class(sll_mapped_mesh_1d_base)  :: map
+        sll_real64, intent(in)          :: eta1
+      end function two_arg_message_passing_func
+   end interface
+
+
+
+  !************************************************************************
+  ! 2D CASE:
+  !************************************************************************
+
    abstract interface
       function geometry_function( mesh, eta1, eta2 ) result(res)
         use sll_working_precision

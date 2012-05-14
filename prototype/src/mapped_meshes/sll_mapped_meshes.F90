@@ -134,15 +134,6 @@ contains
 
   ! initialize_mapped_mesh_2D_general() allocates all the memory needed by 
   ! the 2D map. 
-  !
-  ! This interface is ending up very awkward because of the large amount of
-  ! optional parameters that it takes, much of this in account of the 
-  ! splines that it initializes, which take plenty of optional parameters
-  ! themselves. This is not desirable and should be reassessed critically.
-  !
-  ! We should offer the possibility to pass the jacobian function directly.
-  ! What routines like these really need are self-checking and consistency
-  ! functions for safety.
 
   subroutine initialize_mesh_2d_analytic( &
     mesh,           &
