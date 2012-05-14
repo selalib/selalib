@@ -381,7 +381,7 @@ contains
   ! 1D maps
   !************************************************************************
 
-#define A -1.0_f64
+#define A (-1.0_f64)
 #define B  1.0_f64
 
   function linear_map_f( eta ) result(val)
