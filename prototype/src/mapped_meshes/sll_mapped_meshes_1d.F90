@@ -39,9 +39,12 @@ module sll_mapped_meshes_1d
   end type sll_mapped_mesh_1d_analytic
   
   type, extends(sll_mapped_mesh_1d_base)::sll_mapped_mesh_1d_discrete
-     sll_real64, dimension(:), pointer                    :: x1_node   ! x1(i) 
+     sll_real64, dimension(:), pointer                    :: x1_node   ! x1(i)
+     sll_real64, dimension(:), pointer                    :: x1_cell
      procedure(one_arg_scalar_function), pointer, nopass  :: x1_func
      class(interpolator_1d_base), pointer                 :: x1_interp
+     sll_real64, dimension(:), pointer                    :: jacobians_n
+     sll_real64, dimension(:), pointer                    :: jacobians_c
      procedure(one_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_discrete
@@ -50,7 +53,7 @@ module sll_mapped_meshes_1d
      procedure, pass(mesh) :: x1         => x1_discrete
      procedure, pass(mesh) :: x2         => x2_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
-  end type sll_mapped_mesh_2d_discrete
+  end type sll_mapped_mesh_1d_discrete
 
   abstract interface
      function one_arg_message_passing_func_discr( map, eta1 )
@@ -148,7 +151,7 @@ contains
     class(sll_mapped_mesh_1d_analytic) :: mesh
     sll_real64, intent(in) :: eta1
     val = mesh%x1_func(eta1)
-  end function x1_analytic
+  end function x1_analytic_1d
 
   function mesh_1d_jacobian_node_analytic( mesh, i )
     sll_real64              :: mesh_1d_jacobian_node_analytic
