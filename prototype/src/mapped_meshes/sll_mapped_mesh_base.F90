@@ -93,7 +93,7 @@ use sll_io
         sll_real64                      :: one_arg_message_passing_func
         class(sll_mapped_mesh_1d_base)  :: map
         sll_real64, intent(in)          :: eta1
-      end function two_arg_message_passing_func
+      end function one_arg_message_passing_func
    end interface
 
 
