@@ -2,15 +2,15 @@ module sll_WENO
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_interpolator_1d
+  use sll_interpolator_1d_base
   implicit none
-  type, extends(interpolator_1d_base) :: sll_weno_1d
-     sll_real64                                    :: xmin
-     sll_real64                                    :: xmax
-     sll_int32                                     :: n_points ! size
-     sll_real64                                    :: delta    ! discretization step
-     sll_real64                                    :: rdelta   ! reciprocal of delta
-     sll_real64, dimension(:), pointer             :: data     ! data for interpolation
+  type, extends(sll_interpolator_1d_base)  :: sll_weno_1d
+     sll_real64                        :: xmin
+     sll_real64                        :: xmax
+     sll_int32                         :: n_points ! size
+     sll_real64                        :: delta    ! discretization step
+     sll_real64                        :: rdelta   ! reciprocal of delta
+     sll_real64, dimension(:), pointer :: data     ! data for interpolation
    contains
      procedure, pass :: interpolate_array => interpolate_WENO_1D  
      procedure, pass :: reconstruct_array => reconstruct_WENO_1D
