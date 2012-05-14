@@ -24,6 +24,10 @@ message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
 #set(CMAKE_LIBRARY_PATH "/opt/local;${CMAKE_LIBRARY_PATH}")
 
 
+find_package(MPI) # PATHS ${MPI_ROOT})
+if (MPI_FOUND)
+  message(STATUS "MPI FOUND")
+endif(MPI_FOUND)
 
 # recherche de HDF5
 find_package(HDF5)
@@ -142,6 +146,7 @@ add_test(WENO WENO/test_WENO)
 add_test(interpolators interpolators/test_interpolators_1d)
 add_test(interpolators interpolators/test_interpolators_2d)
 add_test(mapped_meshes mapped_meshes/test_mapped_meshes)
+add_test(mapped_meshes_1d mapped_meshes/test_mapped_meshes_1d)
 add_test(fields fields/test_scalar_field)
 add_test(ode_solvers ode_solvers/test_implicit_ode_nonuniform)
 add_test(distribution_function distribution_function/test_distribution_function)
