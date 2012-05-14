@@ -377,5 +377,27 @@ contains
 #undef R1
 #undef R2
 
+  !************************************************************************
+  ! 1D maps
+  !************************************************************************
+
+#define A -1.0_f64
+#define B  1.0_f64
+
+  function linear_map_f( eta ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: eta
+    val = (B-A)*eta + A
+  end function linear_map_f
+
+  function linear_map_jac_f( eta ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: eta
+    val = (B-A)
+  end function linear_map_jac_f
+
+#undef A
+#undef B
+
 end module geometry_functions
 
