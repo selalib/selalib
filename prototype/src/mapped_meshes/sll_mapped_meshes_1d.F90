@@ -4,6 +4,7 @@ module sll_mapped_meshes_1d
 #include "sll_assert.h"
   use sll_splines
   use sll_module_interpolator_1d_base
+  use sll_interpolators_base
   use sll_mapped_mesh_base
   implicit none
 
@@ -50,10 +51,9 @@ module sll_mapped_meshes_1d
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete_1d
-     procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_discrete
-     procedure, pass(mesh) :: x1         => x1_discrete
-     procedure, pass(mesh) :: x2         => x2_discrete
-     procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
+     procedure, pass(mesh) :: jacobian_at_node => mesh_1d_jacobian_node_discrete
+     procedure, pass(mesh) :: x1         => x1_discrete_1d
+     procedure, pass(mesh) :: jacobian   => jacobian_1d_discrete
   end type sll_mapped_mesh_1d_discrete
 
   abstract interface
@@ -335,6 +335,21 @@ contains
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     mesh_1d_jacobian_node_discrete = mesh%jacobians_n(i)
   end function mesh_1d_jacobian_node_discrete
+
+  function jacobian_1d_discrete( mesh, eta1 ) result(jac)
+    sll_real64             :: jac
+    class(sll_mapped_mesh_1d_discrete) :: mesh
+    sll_real64, intent(in) :: eta1
+    jac = mesh%jacobian_func(eta1)
+  end function jacobian_1d_discrete
+
+  function x1_discrete_1d( mesh, eta1 ) result(val)
+    sll_real64                         :: val
+    class(sll_mapped_mesh_1d_discrete) :: mesh
+    sll_real64, intent(in) :: eta1
+    val = mesh%x1_interp%interpolate_value(eta1)
+  end function x1_discrete_1d
+
 
 
 end module sll_mapped_meshes_1d
