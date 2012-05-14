@@ -40,17 +40,17 @@ program bgk_fv
   sll_real64,dimension(:,:), pointer :: integration_points_val
   character*80,str,str2
 
-  mesh_case = 1
-  alpha_mesh =0._f64!1.e-1_f64 !0.1_f64!0._f64!
+  mesh_case = 3
+  alpha_mesh =1.e-1_f64 !0.1_f64!0._f64!
   visu_step = 100
-  test_case = 5
+  test_case = 4
   rho_case = 3
-   rk=2
+   rk=1
    order=3
-  N_x1 =128! 128
-  N_x2 =128! 128
+  N_x1 = 128
+  N_x2 =128
   dt = 0.01_f64
-  nb_step = 2
+  nb_step = 2!6000
   
   N = max(N_x1,N_x2)
   
@@ -92,7 +92,7 @@ program bgk_fv
   !physical parameters
   mu=0.92_f64
   xi=0.90_f64
-  L=1.71_f64
+  L=14.71_f64
   
   inquire(file='half_phi.dat', exist=ex) 
   if(.not.(ex))then
@@ -737,6 +737,14 @@ program bgk_fv
      enddo
     enddo
   endif
+
+   do i1=1,N_x1+1
+     do i2=1,N_x2+1
+          if(abs(f(i1,i2))<-1.e-3)then
+          f_init(i1,i2)=1._f64
+        endif
+     enddo
+   enddo
     f_equil=f_init
     
     
@@ -844,8 +852,8 @@ program bgk_fv
         ii = floor(xx)
         xx = xx-real(ii,f64)      
         phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
-       ! Flux( i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!& utilisation de tableau abusive 
-        Flux( i1, i2 ) = ( 0.5_f64*x2**2+0.5*x1**2)!phi_val)
+       Flux( i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!& utilisation de tableau abusive 
+        !Flux( i1, i2 ) = ( 0.5_f64*x2**2+0.5*x1**2)!phi_val)
         !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
         !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
       end do
@@ -858,12 +866,13 @@ program bgk_fv
       val = val+E(i1)*E(i1)
     enddo
     val = val/real(N_x1,f64)
-   ! print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64
+    !print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64
      
   enddo! time loop*********************
+  !diagnostic
     do i2=1,nc_eta2+1
       do i1 = 1,nc_eta1+1 
-      print*,i1,i2,f_init(i1,i2), jac_array(i1,i2)
+      print*,i1,i2,f_init(i1,i2), jac_array(i1,i2),f(i1,i2)
       enddo
     enddo
   stop
