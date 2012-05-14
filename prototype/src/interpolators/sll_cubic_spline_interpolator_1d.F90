@@ -2,19 +2,23 @@ module sll_cubic_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_module_interpolator_1d_base
+use sll_interpolator_1d
 use sll_splines
   implicit none
   
-  type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
-     sll_int32            :: num_points ! size
-     sll_int32            :: bc_type
+  type, extends(interpolator_1d_base) ::  cubic_spline_1d_interpolator
+     sll_int32                     :: num_points ! size
+     sll_int32                     :: bc_type
      type(sll_spline_1D), pointer  :: spline
    contains
-     procedure, pass:: initialize_cs1d_interpolator
+     procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
+     procedure :: compute_interpolants => compute_interpolants_cs1d
+     procedure :: interpolate_value => interpolate_value_cs1d
+     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+     
      procedure, pass:: interpolate_array => spline_interpolate1d
      procedure, pass:: reconstruct_array
-     generic :: initialize => initialize_cs1d_interpolator
+     !generic :: initialize => initialize_cs1d_interpolator
   end type cubic_spline_1d_interpolator
 
 
@@ -44,36 +48,45 @@ contains  ! ****************************************************************
     ! compute the interpolating spline coefficients
     call compute_spline_1D( data, this%bc_type, this%spline )
     call interpolate_array_values( coordinates, data_out, num_points, this%spline )
-    
   end function spline_interpolate1d
   
-  
-  !> create new spline object
-  subroutine initialize_cs1d_interpolator( &
-    this,       &
-    num_points, &
-    xmin,       &
-    xmax,       &
-    bc_type,    &
-    slope_left, &
-    slope_right )
+  subroutine compute_interpolants_cs1d( interpolator, data_array )
+    class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in)               :: data_array
+    call compute_spline_1D_bis( data_array, interpolator%spline )
+  end subroutine compute_interpolants_cs1d
 
-    class(cubic_spline_1d_interpolator),  intent(inout)       :: this
+  function interpolate_value_cs1d( interpolator, eta1 ) result(val)
+    sll_real64 :: val
+    class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
+    sll_real64, intent(in) :: eta1
+    val = interpolate_value_1D( eta1, interpolator%spline )
+  end function interpolate_value_cs1d
+  
+  function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
+    sll_real64 :: val
+    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    sll_real64, intent(in) :: eta1
+    val = interpolate_derivative(eta1,interpolator%spline)
+  end function interpolate_deriv1_cs1d
+
+  !> create new spline object
+  subroutine initialize_cs1d_interpolator( interpolator, num_points, xmin, xmax, bc_type, sl, sr )
+    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator 
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
-    sll_real64, intent(in), optional     :: slope_left
-    sll_real64, intent(in), optional     :: slope_right
+    sll_real64, intent(in), optional     :: sl
+    sll_real64, intent(in), optional     :: sr
     sll_int32                            :: ierr
     
-    this%num_points = num_points
-    this%bc_type = bc_type
-    if (present(slope_left).and.present(slope_right)) then
-       this%spline => new_spline_1D(num_points, xmin, xmax, bc_type, &
-            slope_left, slope_right )
+    interpolator%num_points = num_points
+    interpolator%bc_type = bc_type
+    if (present(sl).and.present(sr)) then
+       interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type, sl, sr )
     else
-       this%spline => new_spline_1D(num_points, xmin, xmax, bc_type)
+       interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type)
     end if
   end subroutine initialize_cs1d_interpolator
 
