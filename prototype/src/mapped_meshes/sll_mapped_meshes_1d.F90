@@ -3,8 +3,8 @@ module sll_mapped_meshes_1d
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_splines
+  use sll_module_interpolator_1d_base
   use sll_mapped_mesh_base
-  use sll_interpolators_base
   implicit none
 
   ! A 1D map is specified by the coordinate transformation from eta1 to x1:
@@ -29,7 +29,8 @@ module sll_mapped_meshes_1d
      sll_real64, dimension(:), pointer :: jacobians_n
      sll_real64, dimension(:), pointer :: jacobians_c
      procedure(one_arg_scalar_function), pointer, nopass    :: x1_func  ! user
-     procedure(one_arg_message_passing_func), pointer, pass :: jacobian_func
+     procedure(one_arg_message_passing_func_analyt), pointer, pass :: &
+          jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_analytic
      procedure, pass(mesh) :: x1_at_node => x1_node_analytic_1d
@@ -42,7 +43,7 @@ module sll_mapped_meshes_1d
      sll_real64, dimension(:), pointer                    :: x1_node   ! x1(i)
      sll_real64, dimension(:), pointer                    :: x1_cell
      procedure(one_arg_scalar_function), pointer, nopass  :: x1_func
-     class(interpolator_1d_base), pointer                 :: x1_interp
+     class(sll_interpolator_1d_base), pointer             :: x1_interp
      sll_real64, dimension(:), pointer                    :: jacobians_n
      sll_real64, dimension(:), pointer                    :: jacobians_c
      procedure(one_arg_message_passing_func_discr),pointer,pass :: jacobian_func
@@ -54,6 +55,17 @@ module sll_mapped_meshes_1d
      procedure, pass(mesh) :: x2         => x2_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
   end type sll_mapped_mesh_1d_discrete
+
+  abstract interface
+     function one_arg_message_passing_func_analyt( map, eta1 )
+       use sll_working_precision
+       import :: sll_mapped_mesh_1d_analytic
+       sll_real64 :: one_arg_message_passing_func_analyt
+       class(sll_mapped_mesh_1d_analytic)  :: map
+       sll_real64, intent(in)              :: eta1
+     end function one_arg_message_passing_func_analyt
+  end interface
+
 
   abstract interface
      function one_arg_message_passing_func_discr( map, eta1 )

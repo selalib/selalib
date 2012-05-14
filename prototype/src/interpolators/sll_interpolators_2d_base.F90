@@ -41,7 +41,7 @@ module sll_interpolators_base
      subroutine interpolator_array_msg( interpolator, data_array )
        use sll_working_precision
        import :: interpolator_2d_base
-       class(interpolator_2d_base) :: interpolator
+       class(interpolator_2d_base), intent(inout) :: interpolator
        sll_real64, dimension(:,:), intent(in) :: data_array
      end subroutine interpolator_array_msg
   end interface
