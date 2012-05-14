@@ -4,14 +4,14 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use util_constants
-  use sll_interpolator_1d
+  use sll_module_interpolator_1d_base
   use sll_WENO
   use sll_cubic_spline_interpolator_1d
     implicit none
 
-  class(interpolator_1d_base), pointer        :: interp
-  type(sll_WENO_1d), target                   :: WENO
-  type(cubic_spline_1d_interpolator), target  :: spline
+  class(sll_interpolator_1d_base), pointer     :: interp
+  class(sll_WENO_1d), target                   :: WENO
+  class(cubic_spline_1d_interpolator), target  :: spline
   sll_real64                            :: error
   sll_real64                            :: phase
   sll_real64, allocatable, dimension(:) :: interpolation_points
