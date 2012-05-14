@@ -25,18 +25,18 @@ module sll_module_interpolator_1d_base
   abstract interface
      function interpolator_one_arg_msg( interpolator, eta1 ) result(val)
        use sll_working_precision
-       import :: interpolator_1d_base
-       sll_real64                              :: val
-       class(interpolator_1d_base), intent(in) :: interpolator
-       sll_real64, intent(in)                  :: eta1
+       import :: sll_interpolator_1d_base
+       sll_real64                                  :: val
+       class(sll_interpolator_1d_base), intent(in) :: interpolator
+       sll_real64, intent(in)                      :: eta1
      end function interpolator_one_arg_msg
   end interface
 
   abstract interface
      subroutine interpolator_array_msg( interpolator, data_array )
        use sll_working_precision
-       import :: interpolator_1d_base
-       class(interpolator_1d_base)          :: interpolator
+       import :: sll_interpolator_1d_base
+       class(sll_interpolator_1d_base)          :: interpolator
        sll_real64, dimension(:), intent(in) :: data_array
      end subroutine interpolator_array_msg
   end interface

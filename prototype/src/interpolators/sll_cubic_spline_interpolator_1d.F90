@@ -2,11 +2,11 @@ module sll_cubic_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_interpolator_1d
+use sll_module_interpolator_1d_base
 use sll_splines
   implicit none
   
-  type, extends(interpolator_1d_base) ::  cubic_spline_1d_interpolator
+  type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
      sll_int32                     :: num_points ! size
      sll_int32                     :: bc_type
      type(sll_spline_1D), pointer  :: spline
