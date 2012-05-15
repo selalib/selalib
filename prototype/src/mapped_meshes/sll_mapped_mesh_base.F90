@@ -21,7 +21,7 @@ use sll_io
      procedure(geometry_function_nodes_1d), deferred, pass :: x1_at_node
      procedure(geometry_function_1d), deferred, pass       :: jacobian
      procedure(geometry_function_nodes_1d), deferred, pass :: jacobian_at_node
-     !procedure, pass :: write_to_file
+     procedure, pass :: write_to_file => write_to_file_that_do_nothing
   end type sll_mapped_mesh_1d_base
 
 
@@ -184,6 +184,11 @@ use sll_io
    end interface
 
 contains
+
+  subroutine write_to_file_that_do_nothing(mesh,output_format)
+    class(sll_mapped_mesh_1d_base) :: mesh
+    sll_int32, optional            :: output_format
+  end subroutine
 
   subroutine write_mapped_mesh_2d_base(mesh,output_format)
     class(sll_mapped_mesh_2d_base) :: mesh

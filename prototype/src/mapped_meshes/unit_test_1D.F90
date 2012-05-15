@@ -4,6 +4,7 @@ program unit_test_1d
   use sll_mapped_meshes
   use geometry_functions
   use sll_cubic_spline_interpolator_1d
+  use sll_mapped_meshes_1d
   implicit none
 
 #define NPTS1 33
@@ -64,7 +65,6 @@ program unit_test_1d
      node_a  = map_a%x1_at_node(i+1)
      val_a   = map_a%x1(eta1)
      acc     = acc + abs(node_a-val_a)
-     end do
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1)
 
@@ -118,14 +118,16 @@ program unit_test_1d
   print *, 'Compare the values of the jacobian at the nodes, resulting from ',&
        'calls to map_1d_jacobian_node() and jacobian_1D(map, eta1)'
   acc = 0.0_f64
+
   do i=0,NPTS1-1
+     PRINT*,'i=',i
      eta1   = real(i,f64)*h1
      !        print *, 'values: ', i, j, eta1, eta2
      !        print *, 'about to call map_a%jacobian(eta1,eta2)'
      node   = map_a%jacobian(eta1)
      !        node   = map_2d_jacobian_node(map_d,i+1,j+1)
      !        print *, 'about to call map_d%jacobian(eta1,eta2)'
-     interp = map_d%jacobian(eta1) 
+     interp = map_d%jacobian(eta1)
      delta  =  node - interp
      print *, 'eta1 = ', eta1
      print *, '(',i+1,'): ANALYT = ', node, ', DISCR = ', interp, &
@@ -144,5 +146,4 @@ program unit_test_1d
 
   print *, 'deleted maps'
   print *, 'reached end of unit test'
-
-end program unit_test
+end program unit_test_1d
