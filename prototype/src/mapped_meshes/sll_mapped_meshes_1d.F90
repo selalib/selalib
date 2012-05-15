@@ -4,7 +4,6 @@ module sll_mapped_meshes_1d
 #include "sll_assert.h"
   use sll_splines
   use sll_module_interpolator_1d_base
-  use sll_interpolators_base
   use sll_mapped_mesh_base
   implicit none
 
@@ -30,7 +29,9 @@ module sll_mapped_meshes_1d
      sll_real64, dimension(:), pointer :: jacobians_n
      sll_real64, dimension(:), pointer :: jacobians_c
      procedure(one_arg_scalar_function), pointer, nopass    :: x1_func  ! user
-     procedure(one_arg_message_passing_func_analyt), pointer, pass :: &
+     ! Samuel : I change to nopass from pass and i change the signature
+     !    to one_arg_scalar_function from one_arg_message_passing_func_analyt
+     procedure(one_arg_scalar_function), pointer, nopass :: &
           jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_analytic
@@ -47,7 +48,8 @@ module sll_mapped_meshes_1d
      class(sll_interpolator_1d_base), pointer             :: x1_interp
      sll_real64, dimension(:), pointer                    :: jacobians_n
      sll_real64, dimension(:), pointer                    :: jacobians_c
-     procedure(one_arg_message_passing_func_discr),pointer,pass :: jacobian_func
+    ! Samuel : this functions seems never initialize, see jacobian
+    ! procedure(one_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete_1d
@@ -108,7 +110,9 @@ contains
     sll_real64 :: jacobian_val
     sll_int32  :: i
     sll_int32  :: ierr
+    sll_int32  :: npts1
 
+    npts1 = npts
     mesh%label      = trim(label)
     mesh%nc_eta1    = npts1-1
     delta_1         = 1.0_f64/(npts1 - 1)
@@ -198,12 +202,12 @@ contains
     class(sll_mapped_mesh_1d_discrete)    :: mesh
     character(len=*), intent(in)         :: label
     sll_int32, intent(in)                :: npts1
-    sll_real64, dimension(:,:)           :: x1_node
-    class(interpolator_2d_base), target  :: x1_interpolator
-    class(interpolator_2d_base), target  :: jacobians_n_interpolator  
-    sll_real64, dimension(:,:), optional :: jacobians_node
-    sll_real64, dimension(:,:), optional :: jacobians_cell
-    sll_real64, dimension(:,:), optional :: x1_cell
+    sll_real64, dimension(:)           :: x1_node
+    class(sll_interpolator_1d_base), target  :: x1_interpolator
+    class(sll_interpolator_1d_base), target  :: jacobians_n_interpolator  
+    sll_real64, dimension(:), optional :: jacobians_node
+    sll_real64, dimension(:), optional :: jacobians_cell
+    sll_real64, dimension(:), optional :: x1_cell
 
     sll_real64 :: eta_1
     sll_real64 :: jacobian_val
@@ -217,6 +221,8 @@ contains
     x1c = present(x1_cell)
     jc  = present(jacobians_cell)
     jn  = present(jacobians_node)
+    ! Samuel : I've commented the next line because jacobian_func isn't use
+    !mesh%jacobian_func => null() !This functions is never initialize!!
 
     ! Check argument consistency
     ! DISCRETE_MAPs require only some of the parameters. If the mapping is
@@ -299,7 +305,10 @@ contains
        do i=0, npts1 - 1
           eta_1 = real(i,f64)*mesh%delta_eta1
           ! FIX THIS PART!!!
-          jacobian_val = mesh%jacobian_func(eta_1)
+          ! Samuel : I replace the next line
+          !jacobian_val = mesh%jacobian_func(eta_1)
+          ! by the this 
+          jacobian_val = mesh%jacobian(eta_1)
           mesh%jacobians_n(i+1) = jacobian_val
        end do
     end if
@@ -340,7 +349,8 @@ contains
     sll_real64             :: jac
     class(sll_mapped_mesh_1d_discrete) :: mesh
     sll_real64, intent(in) :: eta1
-    jac = mesh%jacobian_func(eta1)
+    !jac = mesh%jacobian_func(eta1)
+    jac = mesh%x1_interp%interpolate_derivative_eta1( eta1 )
   end function jacobian_1d_discrete
 
   function x1_discrete_1d( mesh, eta1 ) result(val)
@@ -351,5 +361,30 @@ contains
   end function x1_discrete_1d
 
 
+
+!
+!  The next stuff is just here for test the unit_test
+!
+
+!#define A (-1.0_f64)
+!#define B  1.0_f64
+!
+!  function linear_map_f( eta ) result(val)
+!    sll_real64 :: val
+!    sll_real64, intent(in) :: eta
+!    val = (B-A)*eta + A
+!  end function linear_map_f
+!
+!  function linear_map_jac_f( map , eta ) result(val)
+!    class(sll_mapped_mesh_1d_analytic)  :: map
+!    sll_real64                          :: val
+!    sll_real64, intent(in)              :: eta
+!    val = (B-A)
+!  end function linear_map_jac_f
+!
+!#undef A
+!#undef B
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module sll_mapped_meshes_1d
