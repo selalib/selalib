@@ -71,20 +71,20 @@ contains  ! ****************************************************************
   end function interpolate_deriv1_cs1d
 
   !> create new spline object
-  subroutine initialize_cs1d_interpolator( interpolator, num_points, xmin, xmax, bc_type, sl, sr )
+  subroutine initialize_cs1d_interpolator( interpolator, num_points, xmin, xmax, bc_type, slope_left, slope_right )
     class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator 
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
-    sll_real64, intent(in), optional     :: sl
-    sll_real64, intent(in), optional     :: sr
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
     sll_int32                            :: ierr
     
     interpolator%num_points = num_points
     interpolator%bc_type = bc_type
-    if (present(sl).and.present(sr)) then
-       interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type, sl, sr )
+    if (present(slope_left).and.present(slope_right)) then
+       interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type, slope_left, slope_right )
     else
        interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type)
     end if
