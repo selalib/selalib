@@ -4,7 +4,7 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use util_constants
-  use sll_module_interpolator_1d_base
+  use sll_module_interpolators_1d_base
   use sll_WENO
   use sll_cubic_spline_interpolator_1d
     implicit none

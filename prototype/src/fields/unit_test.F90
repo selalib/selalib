@@ -4,8 +4,8 @@ program unit_test
   use numeric_constants
   use geometry_functions
   use sll_scalar_field_2d
-  !use sll_mapped_mesh_base
-  use sll_mapped_meshes
+  use sll_module_mapped_meshes_2d_base
+  use sll_module_mapped_meshes_2d
   implicit none
   
   type(sll_mapped_mesh_2d_analytic), target :: mesh

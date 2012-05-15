@@ -34,7 +34,7 @@ module sll_scalar_field_1d
 #include "sll_assert.h"
   use sll_io
   use numeric_constants
-  use sll_mapped_mesh_base
+  use sll_module_mapped_meshes_1d_base
   use sll_misc_utils
   implicit none
 
