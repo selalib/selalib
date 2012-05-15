@@ -1,10 +1,10 @@
-module sll_mapped_meshes_1d
+module sll_module_mapped_meshes_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_splines
-  use sll_module_interpolator_1d_base
-  use sll_mapped_mesh_base
+  use sll_module_interpolators_1d_base
+  use sll_module_mapped_meshes_1d_base
   implicit none
 
   ! A 1D map is specified by the coordinate transformation from eta1 to x1:
@@ -387,4 +387,4 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module sll_mapped_meshes_1d
+end module sll_module_mapped_meshes_1d

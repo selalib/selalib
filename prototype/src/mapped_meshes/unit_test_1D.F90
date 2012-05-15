@@ -1,10 +1,10 @@
 program unit_test_1d
 #include "sll_working_precision.h"
   use numeric_constants
-  use sll_mapped_meshes
+  use sll_module_mapped_meshes_2d
   use geometry_functions
   use sll_cubic_spline_interpolator_1d
-  use sll_mapped_meshes_1d
+  use sll_module_mapped_meshes_1d
   implicit none
 
 #define NPTS1 33

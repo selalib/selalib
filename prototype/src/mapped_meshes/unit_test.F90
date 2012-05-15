@@ -1,7 +1,7 @@
 program unit_test
 #include "sll_working_precision.h"
   use numeric_constants
-  use sll_mapped_meshes
+  use sll_module_mapped_meshes_2d
   use geometry_functions
   use sll_cubic_spline_interpolator_2d
   implicit none

@@ -1,7 +1,7 @@
 !> \brief abstract data type for 1D interpolation and reconstruction
 !> 
 
-module sll_module_interpolator_1d_base
+module sll_module_interpolators_1d_base
 #include "sll_working_precision.h"
   implicit none
 
@@ -68,4 +68,4 @@ module sll_module_interpolator_1d_base
   end interface
 
 
-end module sll_module_interpolator_1d_base
+end module sll_module_interpolators_1d_base

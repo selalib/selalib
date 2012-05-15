@@ -5,7 +5,7 @@ program unit_test
   use numeric_constants
   use distribution_function
   use geometry_functions
-  use sll_mapped_meshes
+  use sll_module_mapped_meshes_2d
   use initial_distribution_functions
   implicit none
  
