@@ -1,10 +1,10 @@
-module sll_mapped_meshes
+module sll_module_mapped_meshes_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_splines
-  use sll_mapped_mesh_base
-  use sll_interpolators_base
+  use sll_module_mapped_meshes_2d_base
+  use sll_module_interpolators_2d_base
   implicit none
   
   ! ---------------------------------------------------------------------
@@ -655,4 +655,4 @@ contains
     mesh_2d_jacobian_cell = map%jacobians_c(i,j)
   end function mesh_2d_jacobian_cell
 #endif
-end module sll_mapped_meshes
+end module sll_module_mapped_meshes_2d

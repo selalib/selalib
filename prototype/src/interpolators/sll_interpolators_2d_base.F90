@@ -1,4 +1,4 @@
-module sll_interpolators_base
+module sll_module_interpolators_2d_base
 #include "sll_working_precision.h" 
   implicit none
   
@@ -47,4 +47,4 @@ module sll_interpolators_base
   end interface
   
   
-end module sll_interpolators_base
+end module sll_module_interpolators_2d_base
