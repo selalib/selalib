@@ -11,7 +11,6 @@ add_library(interpolators STATIC
 
 add_executable(test_interpolators_2d unit_test.F90)
 target_link_libraries(test_interpolators_2d
-	sll_weno
 	interpolators
 	geometry_functions
 	sll_splines
@@ -22,7 +21,7 @@ target_link_libraries(test_interpolators_2d
 
 add_executable(test_interpolators_1d unit_test_1d.F90)
 target_link_libraries(test_interpolators_1d
-	sll_weno
+#	sll_weno
 	interpolators
 	geometry_functions
 	sll_splines
