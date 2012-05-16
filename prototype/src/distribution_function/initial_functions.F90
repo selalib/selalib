@@ -38,7 +38,7 @@ contains
     ! fval=(1+eps*cos(sll_kx*x))*1/sqrt(2*pi)*exp(-.5_f64*vv)
     ! fval=exp(-.5_f64*(xx+vv))
   end function two_stream
-  elemental function gaussian(x,v) result(fval)
+  pure function gaussian(x,v) result(fval)
     sll_real64, intent(in) :: x, v
     sll_real64 :: fval
     ! local variables
