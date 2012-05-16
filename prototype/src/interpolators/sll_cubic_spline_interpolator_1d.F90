@@ -65,7 +65,7 @@ contains  ! ****************************************************************
   
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
     sll_real64 :: val
-    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_deriv1_cs1d
