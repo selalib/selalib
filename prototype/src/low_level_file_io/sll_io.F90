@@ -23,6 +23,7 @@
 module sll_io
   
   use sll_xdmf
+  use sll_gnuplot
 
   enum, bind(C)
     enumerator :: SLL_IO_XDMF = 0, &
