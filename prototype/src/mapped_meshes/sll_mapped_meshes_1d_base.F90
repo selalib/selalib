@@ -3,7 +3,6 @@ module sll_module_mapped_meshes_1d_base
 #include "sll_working_precision.h"
 
 use sll_io
-
   implicit none
   
   ! A single abstract base class is defined which will further be extended
@@ -21,7 +20,7 @@ use sll_io
      procedure(geometry_function_nodes_1d), deferred, pass :: x1_at_node
      procedure(geometry_function_1d), deferred, pass       :: jacobian
      procedure(geometry_function_nodes_1d), deferred, pass :: jacobian_at_node
-     procedure, pass :: write_to_file => write_to_file_that_do_nothing
+     procedure, pass :: write_to_file => write_to_file_1d
   end type sll_mapped_mesh_1d_base
   
   !************************************************************************
@@ -74,9 +73,22 @@ use sll_io
 
 contains
 
-  subroutine write_to_file_that_do_nothing(mesh,output_format)
+  subroutine write_to_file_1d(mesh,output_format)
     class(sll_mapped_mesh_1d_base) :: mesh
     sll_int32, optional            :: output_format
+    sll_int32                      :: error
+    sll_real64, dimension(:), allocatable  :: x1_array
+    sll_int32                      :: num_pts1   
+
+    if(present(output_format))then
+      print*,'There is just gnuplot format available'
+    endif
+    
+
+    num_pts1 = mesh%nc_eta1+1
+    SLL_ALLOCATE(x1_array(num_pts1),error)
+    call sll_gnuplot_write(x1_array,mesh%label,error)
+    SLL_DEALLOCATE_ARRAY(x1_array,error)
   end subroutine
 
  end module sll_module_mapped_meshes_1d_base
