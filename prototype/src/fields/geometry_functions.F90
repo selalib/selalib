@@ -377,6 +377,12 @@ contains
 #undef R1
 #undef R2
 
+  function zero_function(eta1, eta2)
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64             :: zero_function
+    zero_function = 0.0_f64
+  end function zero_function
+    
   !************************************************************************
   ! 1D maps
   !************************************************************************
@@ -398,6 +404,25 @@ contains
 
 #undef A
 #undef B
+
+#define A 0.0_f64
+#define B 6.2831853071795862_f64
+
+  function linear_map_poisson_f( eta ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: eta
+    val = (B-A)*eta + A
+  end function linear_map_poisson_f
+
+  function linear_map_poisson_jac_f( eta ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: eta
+    val = (B-A)
+  end function linear_map_poisson_jac_f
+
+#undef A
+#undef B
+  
 
 end module geometry_functions
 

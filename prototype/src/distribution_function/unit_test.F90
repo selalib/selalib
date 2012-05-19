@@ -41,8 +41,8 @@ program unit_test
   print*, 'initialization of distribution_function'
 
   p_init_f => gaussian
-  call sll_new_distribution_function_2D(dist_func,mesh2d,CELL_CENTERED_FIELD, &
-       name, p_init_f)
+!  call sll_new_distribution_function_2D(dist_func,mesh2d,CELL_CENTERED_FIELD, &
+!       name, p_init_f)
 
   call initialize_distribution_function_2d( &
        df, &
