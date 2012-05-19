@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_scalar_field_2d
+! MODULE: sll_scalar_field_1d
 !
 !> @author
 !> - Edwin

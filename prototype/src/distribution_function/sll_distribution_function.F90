@@ -65,6 +65,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 
 contains
 
+#if 0
   subroutine sll_new_distribution_function_2d( &
     this, &
     mesh, &
@@ -72,7 +73,7 @@ contains
     name, &
     data_func ) 
     
-    class(sll_distribution_function_2D_t)   :: this
+    class(sll_distribution_function_2D)   :: this
     class(sll_mapped_mesh_2d_base), target  :: mesh
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
@@ -113,6 +114,7 @@ contains
        end do
     endif
   end subroutine sll_new_distribution_function_2d
+#endif
 
   subroutine initialize_distribution_function_2d( &
     this, &

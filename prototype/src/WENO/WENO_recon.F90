@@ -5,11 +5,11 @@ module WENO_recon
   implicit none
 
   type WENO_recon_1D
-     sll_real64                                    :: xmin
-     sll_real64                                    :: xmax
-     sll_int32                                     :: n_points ! size
-     sll_real64                                    :: delta    ! discretization step
-     sll_real64                                    :: rdelta   ! reciprocal of delta
+     sll_real64                :: xmin
+     sll_real64                :: xmax
+     sll_int32                 :: n_points ! size
+     sll_real64                :: delta    ! discretization step
+     sll_real64                :: rdelta   ! reciprocal of delta
      sll_real64, dimension(:), pointer  :: data     ! data for interpolation
   end type WENO_recon_1D
   
@@ -34,7 +34,8 @@ contains  ! ****************************************************************
     
     if( num_points .le. 28 ) then
        print *, 'ERROR, new_WENO_recon_1D: Because of the algorithm used,', &
-            'this function is meant to be used with arrays that are at least of size = 28'
+            'this function is meant to be used with arrays that are at least',&
+            ' of size = 28'
        STOP 'new_WENO_recon_1D()'
     end if
     if( xmin .gt. xmax ) then
@@ -48,12 +49,14 @@ contains  ! ****************************************************************
   
   
   subroutine FD_WENO_recon_1D(fWENO, num_points, data, order, deri)
-    type(WENO_recon_1D)      :: fWENO   ! pointer with basic discretization parameter set up and data
+    type(WENO_recon_1D)      :: fWENO  
     sll_int32, intent(in)    ::  num_points  ! size of data
     sll_int32, intent(in)    ::  order
-    sll_real64, dimension(1:num_points), intent(in)    ::  data  ! point values of function
-    sll_real64, dimension(1:num_points), intent(out)   ::  deri   ! derivatives of f 
-
+    ! point values of function
+    sll_real64, dimension(1:num_points), intent(in)    ::  data 
+    ! derivatives of f 
+    sll_real64, dimension(1:num_points), intent(out)   ::  deri   
+    ! local variables
     sll_real64, dimension(-6: num_points+6)   :: f_temp
     sll_real64, dimension(0:num_points)       :: flux, flux_l, flux_r
     sll_real64                                :: g1, g2, g3, smo1, smo2, smo3
@@ -118,20 +121,28 @@ contains  ! ****************************************************************
           w2=.6_f64
           w3=.3_f64
           g1=1.0_f64/3.0_f64*f_temp(ic_temp-2) &
-               & -7.0_f64/6.0_f64*f_temp(ic_temp-1)+11.0_f64/6.0_f64*f_temp(ic_temp)
+               -7.0_f64/6.0_f64*f_temp(ic_temp-1) &
+               +11.0_f64/6.0_f64*f_temp(ic_temp)
           smo1=13.0_f64/12.0_f64*(f_temp(ic_temp-2) &
-               &  -2.0_f64*f_temp(ic_temp-1)+f_temp(ic_temp))**2.0_f64 &
-               &  +1.0_f64/4.0_f64*(f_temp(ic_temp-2)-4.0_f64*f_temp(ic_temp-1)+3.0_f64*f_temp(ic_temp))**2.0_f64
+               -2.0_f64*f_temp(ic_temp-1)+f_temp(ic_temp))**2.0_f64 &
+               +1.0_f64/4.0_f64*(f_temp(ic_temp-2) &
+               -4.0_f64*f_temp(ic_temp-1)+3.0_f64*f_temp(ic_temp))**2.0_f64
 
           g2=-1.0_f64/6.0_f64*f_temp(ic_temp-1) &
-               &  +5.0_f64/6.0_f64*f_temp(ic_temp)+1.0_f64/3.0_f64*f_temp(ic_temp+1)
-          smo2=13.0_f64/12.0_f64*(f_temp(ic_temp-1)-2.0_f64*f_temp(ic_temp)+f_temp(ic_temp+1))**2.0_f64 &
-               &   +1.0_f64/4.0_f64*(f_temp(ic_temp+1)-f_temp(ic_temp-1))**2.0_f64
+               +5.0_f64/6.0_f64*f_temp(ic_temp) &
+               +1.0_f64/3.0_f64*f_temp(ic_temp+1)
+          smo2=13.0_f64/12.0_f64*(f_temp(ic_temp-1)-2.0_f64*f_temp(ic_temp) &
+               +f_temp(ic_temp+1))**2.0_f64 &
+               +1.0_f64/4.0_f64*(f_temp(ic_temp+1) &
+               -f_temp(ic_temp-1))**2.0_f64
 
           g3=1.0_f64/3.0_f64*f_temp(ic_temp) &
-               &  +5.0_f64/6.0_f64*f_temp(ic_temp+1)-1.0_f64/6.0_f64*f_temp(ic_temp+2)
-          smo3=13.0_f64/12.0_f64*(f_temp(ic_temp)-2.0_f64*f_temp(ic_temp+1)+f_temp(ic_temp+2))**2.0_f64 &
-               &  +1.0_f64/4.0_f64*(3.0_f64*f_temp(ic_temp)-4.0_f64*f_temp(ic_temp+1)+f_temp(ic_temp+2))**2.0_f64
+               +5.0_f64/6.0_f64*f_temp(ic_temp+1) &
+               -1.0_f64/6.0_f64*f_temp(ic_temp+2)
+          smo3=13.0_f64/12.0_f64*(f_temp(ic_temp) &
+               -2.0_f64*f_temp(ic_temp+1)+f_temp(ic_temp+2))**2.0_f64 &
+               +1.0_f64/4.0_f64*(3.0_f64*f_temp(ic_temp) &
+               -4.0_f64*f_temp(ic_temp+1)+f_temp(ic_temp+2))**2.0_f64
 
           w1=w1/(eps+smo1)**2.0_f64
           w2=w2/(eps+smo2)**2.0_f64
@@ -145,15 +156,25 @@ contains  ! ****************************************************************
           w1=.3
           w2=.6
           w3=.1
-          g1=-1.0_f64/6.0_f64*f_temp(ic_temp-1)+5.0_f64/6.0_f64*f_temp(ic_temp)+1.0_f64/3.0_f64*f_temp(ic_temp+1)
-          smo1=13.0_f64/12.0_f64*(f_temp(ic_temp-1)-2.0_f64*f_temp(ic_temp)+f_temp(ic_temp+1))**2.0_f64 &
-               &   +1.0_f64/4.0_f64*(f_temp(ic_temp-1)-4.0_f64*f_temp(ic_temp)+3.0_f64*f_temp(ic_temp+1))**2.0_f64
-          g2=1.0_f64/3*f_temp(ic_temp)+5.0_f64/6.0_f64*f_temp(ic_temp+1)-1.0_f64/6.0_f64*f_temp(ic_temp+2) 
-          smo2=13.0_f64/12.0_f64*(f_temp(ic_temp)-2*f_temp(ic_temp+1)+f_temp(ic_temp+2))**2.0_f64 &
-               &   +1.0_f64/4.0_f64*(f_temp(ic_temp)-f_temp(ic_temp+2))**2.0_f64
-          g3=11.0_f64/6.0_f64*f_temp(ic_temp+1)-7.0_f64/6.0_f64*f_temp(ic_temp+2)+1.0_f64/3.0_f64*f_temp(ic_temp+3)
-          smo3=13.0_f64/12.0_f64*(f_temp(ic_temp+1)-2.0_f64*f_temp(ic_temp+2)+f_temp(ic_temp+3))**2.0_f64 &
-               &    +1.0_f64/4.0_f64*(3.0_f64*f_temp(ic_temp+1)-4.0_f64*f_temp(ic_temp+2)+f_temp(ic_temp+3))**2.0_f64
+          g1=-1.0_f64/6.0_f64*f_temp(ic_temp-1) &
+               +5.0_f64/6.0_f64*f_temp(ic_temp) &
+               +1.0_f64/3.0_f64*f_temp(ic_temp+1)
+          smo1=13.0_f64/12.0_f64*(f_temp(ic_temp-1) &
+               -2.0_f64*f_temp(ic_temp)+f_temp(ic_temp+1))**2.0_f64 &
+                  +1.0_f64/4.0_f64*(f_temp(ic_temp-1) &
+                  -4.0_f64*f_temp(ic_temp)+3.0_f64*f_temp(ic_temp+1))**2.0_f64
+          g2=1.0_f64/3*f_temp(ic_temp)+5.0_f64/6.0_f64*f_temp(ic_temp+1) &
+               -1.0_f64/6.0_f64*f_temp(ic_temp+2) 
+          smo2=13.0_f64/12.0_f64*(f_temp(ic_temp)-2*f_temp(ic_temp+1) &
+               +f_temp(ic_temp+2))**2.0_f64 &
+               +1.0_f64/4.0_f64*(f_temp(ic_temp)-f_temp(ic_temp+2))**2.0_f64
+          g3=11.0_f64/6.0_f64*f_temp(ic_temp+1) &
+               -7.0_f64/6.0_f64*f_temp(ic_temp+2) &
+               +1.0_f64/3.0_f64*f_temp(ic_temp+3)
+          smo3=13.0_f64/12.0_f64*(f_temp(ic_temp+1) &
+               -2.0_f64*f_temp(ic_temp+2)+f_temp(ic_temp+3))**2.0_f64 &
+               &    +1.0_f64/4.0_f64*(3.0_f64*f_temp(ic_temp+1)  &
+               -4.0_f64*f_temp(ic_temp+2)+f_temp(ic_temp+3))**2.0_f64
           w1 = w1/(eps+smo1)**2.0_f64
           w2 = w2/(eps+smo2)**2.0_f64
           w3 = w3/(eps+smo3)**2.0_f64
@@ -177,7 +198,7 @@ contains  ! ****************************************************************
   end subroutine FD_WENO_recon_1D
 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine delete_WENO_recon_1D( fWENO )
     type(WENO_recon_1D)   :: fWENO
@@ -188,6 +209,6 @@ contains  ! ****************************************************************
     end if
   end subroutine delete_WENO_recon_1D
   
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 end module WENO_recon

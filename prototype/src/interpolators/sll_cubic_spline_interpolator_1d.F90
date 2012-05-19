@@ -36,7 +36,8 @@ contains  ! ****************************************************************
   ! - it is probably better to convert this into a subroutine, since data_out
   !   will be allocated on the stack (too big an array will crash the program),
   !   and some copy operation might be involved when "catching" the results.
-  function spline_interpolate1d(this, num_points, data, coordinates) result(data_out)
+  function spline_interpolate1d(this, num_points, data, coordinates) &
+       result(data_out)
     class(cubic_spline_1d_interpolator),  intent(in)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
