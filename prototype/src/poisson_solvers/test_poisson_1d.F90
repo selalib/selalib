@@ -22,13 +22,11 @@ type (scalar_field_1d)     :: rho
 type (poisson_1d_periodic)         :: poisson
 
 sll_int32   :: nc_eta1
-sll_real64  :: eta1_min, eta1_max
 sll_real64  :: delta_eta1
 sll_int32   :: error
 sll_int32   :: mode
 sll_int32   :: i
 
-eta1_min = 0.0; eta1_max = 2*sll_pi;
 nc_eta1 = 128
 
 call initialize_mesh_1d_analytic( &
@@ -64,11 +62,11 @@ call initialize_scalar_field_1d( &
 
 call new(poisson, nc_eta1, error) 
 
-mode = 7
+mode = 4
 delta_eta1 = mesh_1d%delta_eta1
 do i=1,nc_eta1+1
-   rho%data(i)      =  mode**2*sin(mode*(i-1)*delta_eta1)
-   ex_exact%data(i) = -mode*cos(mode*(i-1)*delta_eta1)
+   rho%data(i)      =  mode**2*sin(mode*mesh_1d%x1_at_node(i))
+   ex_exact%data(i) = -mode*cos(mode*mesh_1d%x1_at_node(i))
 end do
 
 call solve(poisson, ex, rho)
