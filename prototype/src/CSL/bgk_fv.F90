@@ -45,12 +45,12 @@ program bgk_fv
   visu_step = 100
   test_case = 4
   rho_case = 3
-   rk=1
+   rk=4
    order=3
   N_x1 = 128
   N_x2 =128
   dt = 0.01_f64
-  nb_step = 2!6000
+  nb_step = 2000!6000
   
   N = max(N_x1,N_x2)
   
@@ -551,28 +551,46 @@ program bgk_fv
      !write(*,*) delta_eta1,delta_eta2,delta_x1, delta_x2,jac_array(1,2),(x1_max-x1_min)*(x2_max-x2_min)
     !stop
    f_equil=1._f64
+     !do i2=1,nc_eta2+1
+      !do i1 = 1,nc_eta1+2
+      !f_equil(i1,i2)=jac_array(i1,i2)
+      !enddo
+     !enddo
   do step = 1, nb_step
    !Inisialize a1 and a2
       do i1=1,nc_eta1
-        eta1 = eta1_min+real(i1-1._f64)*delta_eta1
-        x1 = x1_min+real(i1-1._f64)*delta_x1
         do i2=1,Nc_eta2
-           eta2 = eta2_min+real(i2-1._f64)*delta_eta2
-           x2 = x2_min+real(i2-1._f64)*delta_x2
-          ! a1(i1,i2)=x2!/jac_array(i1,i2)
-          ! a2(i1,i2)=E_store(i1)!/jac_array(i1,i2)   
-        ! print*,eta1,eta2, a1(i1,i2), a2(i1,i2), jac_array(i1,i2)  
-
-           !a1(i1,i2)=((Flux(i1,i2+1)-Flux(i1,i2))/delta_x2)*(x1_max-x1_min)*(x2_max-x2_min)/jac_array(i1,i2)!/delta_eta2
-           !a2(i1,i2)=-((Flux(i1+1,i2)-Flux(i1,i2))/delta_x1)*(x1_max-x1_min)*(x2_max-x2_min)/jac_array(i1,i2)!/delta_eta1
-            a1(i1,i2)=((Flux(i1,i2+1)-Flux(i1,i2))/delta_eta2)*(x1_max-x1_min)/jac_array(i1,i2)!/delta_eta2
-            a2(i1,i2)=-((Flux(i1+1,i2)-Flux(i1,i2))/delta_eta1)*(x2_max-x2_min)/jac_array(i1,i2)!/delta_eta1
-           a1(i1,nc_eta2+1)=a1(i1,1)
-           a1(nc_eta1+1,i2)=a1(1,i2)
-           a2(i1,nc_eta2+1)=a2(i1,1)
-           a2(nc_eta1+1,i2)=a2(1,i2)
+            a1(i1,i2)=((Flux(i1,i2+1)-Flux(i1,i2))/delta_eta2)*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=-((Flux(i1+1,i2)-Flux(i1,i2))/delta_eta1)*(x2_max-x2_min)/jac_array(i1,i2)
        enddo
      enddo
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+   !diagno
+      !do i1=2,nc_eta1
+        !do i2=2,Nc_eta2
+          
+            !a1(i1,i2)=((Flux(i1,i2+1)-Flux(i1,i2-1))/(2*delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)!/delta_eta2
+            !a2(i1,i2)=-((Flux(i1+1,i2)-Flux(i1-1,i2))/(2*delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)!/delta_eta1
+           
+       !enddo
+     !enddo
+       !do i1=1,nc_eta1
+           !a1(i1,1)=a1(i1,Nc_eta2+1)
+           !a2(i1,1)=a1(i1,Nc_eta2+1)
+           
+     !enddo
+      !do i2=1,nc_eta2
+           
+           !a1(1,i2)=a1(nc_eta1+1,i2)
+           !a2(1,i2)=a1(nc_eta1+1,i2)
+     !enddo
   !stop
    if(rk==1) then
     f_tmp=f
@@ -738,13 +756,13 @@ program bgk_fv
     enddo
   endif
 
-   do i1=1,N_x1+1
-     do i2=1,N_x2+1
-          if(abs(f(i1,i2))<-1.e-3)then
-          f_init(i1,i2)=1._f64
-        endif
-     enddo
-   enddo
+   !do i1=1,N_x1+1
+     !do i2=1,N_x2+1
+          !if(abs(f(i1,i2))<-1.e-3)then
+          !f_init(i1,i2)=1._f64
+        !endif
+     !enddo
+   !enddo
     f_equil=f_init
     
     
@@ -866,9 +884,10 @@ program bgk_fv
       val = val+E(i1)*E(i1)
     enddo
     val = val/real(N_x1,f64)
-    !print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64
+    print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64
      
   enddo! time loop*********************
+       stop
   !diagnostic
     do i2=1,nc_eta2+1
       do i1 = 1,nc_eta1+1 
