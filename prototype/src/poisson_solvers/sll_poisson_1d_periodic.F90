@@ -66,7 +66,9 @@ contains
     call fft(this%fft, this%rhs)
 
     ! Calcul de la transformee de Fourier de E a partir de celle de rhs
-    kx0  = 2*sll_pi/(this%n_cells * rhs%mesh%delta_eta1 )
+    kx0  = 2*sll_pi/(rhs%mesh%x1_at_node(this%n_cells+1)  &
+         - rhs%mesh%x1_at_node(1))
+    print*, 'kx0 ', this%n_cells, rhs%mesh%x1_at_node(1), rhs%mesh%x1_at_node(this%n_cells+1)
     nxh1 = (this%n_cells-2)/2 
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
