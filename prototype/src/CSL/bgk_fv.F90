@@ -10,27 +10,27 @@ program bgk_fv
   use sll_splines
   use contrib_rho_module
   implicit none
-  external Compute_flux
+  external Compute_flux,compute_psi
   !external poisson1dpertrap
   sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2,tmp
   sll_real64 :: mu,xi,L,H
   sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step
   LOGICAL :: ex
   sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2,phi_poisson
-  sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E,rho_exact,E_store
+  sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,rho2,E,rho_exact,E_store
   sll_real64,dimension(:,:), pointer :: f,f_init,f_equil, f_store,f_tmp
   sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val
-  sll_int :: ii,step
+  sll_int :: ii,step,div_case
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
 
   sll_int32 :: nc_eta1, nc_eta2
   sll_real64, dimension(:,:), pointer :: x1c_array, x2c_array, jac_array
   sll_real64, dimension(:,:), pointer :: x1n_array, x2n_array
-  sll_real64, dimension(:,:), pointer :: a1,a2,flux,K1,K2,K3,K4
+  sll_real64, dimension(:,:), pointer :: a1,a2,flux,psi,K1,K2,K3,K4
    sll_real64 :: b1,b2,b3,b4, a21, a32,a42,a43,a41,a31
   sll_int  ::  rk,order
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, eta1c, eta2c
-  sll_real64 :: delta_eta1, delta_eta2,alpha_mesh,coef1
+  sll_real64 :: delta_eta1, delta_eta2,alpha_mesh,coef1,tmp2
   sll_int  :: mesh_case,ierr,visu_step,test_case,rho_case
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
@@ -38,19 +38,22 @@ program bgk_fv
   character(32), parameter  :: name = 'distribution_function'
   sll_real64,dimension(:,:,:), pointer :: integration_points
   sll_real64,dimension(:,:), pointer :: integration_points_val
+  sll_real64 :: geom_eta(2,2),geom_x(2,2)
   character*80,str,str2
 
   mesh_case = 3
-  alpha_mesh =1.e-1_f64 !0.1_f64!0._f64!
+  alpha_mesh =1.e-2_f64 !0.1_f64!0._f64!
   visu_step = 100
   test_case = 4
-  rho_case = 3
+  rho_case = 2
+  div_case=3
+  
    rk=4
    order=3
   N_x1 = 128
   N_x2 =128
   dt = 0.01_f64
-  nb_step = 2000!6000
+  nb_step = 6000!6000
   
   N = max(N_x1,N_x2)
   
@@ -68,6 +71,7 @@ program bgk_fv
   SLL_ALLOCATE(new_node_positions(N+1),err)
   SLL_ALLOCATE(buf_1d(N+1),err)
   SLL_ALLOCATE(rho(N_x1+1),err)
+  SLL_ALLOCATE(rho2(N_x1+1),err)
   SLL_ALLOCATE(rho_exact(N_x1+1),err)
   SLL_ALLOCATE(E(N_x1+1),err)
   SLL_ALLOCATE(phi_poisson(N_x1+1),err)
@@ -77,6 +81,7 @@ program bgk_fv
   SLL_ALLOCATE(a1(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(a2(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(Flux(N_x1+1,N_x2+1),err)
+  SLL_ALLOCATE(psi(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(f_tmp(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(K1(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(K2(N_x1+1,N_x2+1),err)
@@ -198,6 +203,12 @@ program bgk_fv
   SLL_ALLOCATE(x2c_array(nc_eta1+1, nc_eta2+1), ierr)
   SLL_ALLOCATE(jac_array(nc_eta1+1, nc_eta2+1), ierr)
   
+
+  geom_x(1,1)=x1_min
+  geom_x(2,1)=x1_max 
+  geom_x(1,2)=x2_min 
+  geom_x(2,2)=x2_max 
+
   
   if(mesh_case==1)then
     do i2=1,nc_eta2+1
@@ -235,12 +246,11 @@ program bgk_fv
   
 
   if(mesh_case==2)then
-    ! alpha_mesh = 1.e-1_f64 !0.1_f64
      eta2 = 0.0_f64 
-     eta2c = eta2 !+ 0.5_f64*delta_eta2
+     eta2c =  0.5_f64*delta_eta2
      do i2= 1, nc_eta2 + 1
         eta1 = 0.0_f64
-        eta1c =eta1! 0.5_f64*delta_eta1
+        eta1c = 0.5_f64*delta_eta1
         do i1 = 1, nc_eta1 + 1
            x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
            x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
@@ -250,12 +260,20 @@ program bgk_fv
            !x2n_array(i1,i2) = (x2n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
            !x1c_array(i1,i2) = (x1c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
            !x2c_array(i1,i2) = (x2c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !jacobian defined on center
            jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)) * &
              (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c)) - &
              alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c) * &
              alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)
+           !jacobian defined on nodes
+           jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)) * &
+             (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)) - &
+             alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2) * &
+             alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+
+
            eta1 = eta1 + delta_eta1
-           eta1c = eta1!eta1c + delta_eta1
+           eta1c = eta1c + delta_eta1
            x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
            x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
            x1c_array(i1,i2) = x1_min+x1c_array(i1,i2)*(x1_max-x1_min)
@@ -263,7 +281,7 @@ program bgk_fv
            jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
         end do
         eta2 = eta2 + delta_eta2
-        eta2c =eta2! eta2c + delta_eta2
+        eta2c = eta2c + delta_eta2
      end do
 
     geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
@@ -306,28 +324,33 @@ program bgk_fv
 
 
  if(mesh_case==3)then
-     !alpha_mesh =0._f64!1.e-5_f64 !0.1_f64
      eta2 = eta2_min 
-      eta2c = eta2_min
-     !eta2c = eta2_min + 0.5_f64*delta_eta2
+     eta2c = eta2_min + 0.5_f64*delta_eta2
      do i2= 1, nc_eta2 + 1
-        eta1 = eta1_min
-        eta1c =eta1_min
-        !eta1c = 0.5_f64*delta_eta1
+        eta1 = eta1_min    
+        eta1c = 0.5_f64*delta_eta1
         do i1 = 1, nc_eta1 + 1
            x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)**2
            x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
            x1c_array(i1,i2) = eta1c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)**2
            x2c_array(i1,i2) = eta2c + alpha_mesh * sin(2*sll_pi*eta1c)* sin(2*sll_pi*eta2c)
-          
+           !jacobian defined on center
            jac_array(i1,i2) = 1._f64+2._f64*sll_pi*alpha_mesh*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)&
            +2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1c)&
            -2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)**2&
            -4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)*cos(2._f64*sll_pi*eta1c)&
            +4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)**3*cos(2._f64*sll_pi*eta1c)
+
+           !jacobian defined on nodes           
+           jac_array(i1,i2) = 1._f64+2._f64*sll_pi*alpha_mesh*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)&
+           +2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1)&
+           -2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)**2&
+           -4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)*cos(2._f64*sll_pi*eta1)&
+           +4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)**3*cos(2._f64*sll_pi*eta1)
+
+
            eta1 = eta1 + delta_eta1
-           eta1c =eta1
-           !eta1c = eta1c + delta_eta1
+           eta1c = eta1c + delta_eta1
            x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
            x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
            x1c_array(i1,i2) = x1_min+x1c_array(i1,i2)*(x1_max-x1_min)
@@ -335,8 +358,7 @@ program bgk_fv
            jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
         end do
         eta2 = eta2 + delta_eta2
-        eta2c =eta2
-          !eta2c = eta2c + delta_eta2
+        eta2c = eta2c + delta_eta2
      end do
 
     geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
@@ -352,10 +374,11 @@ program bgk_fv
     val = 0._f64
     do i2=1,nc_eta2
       do i1=1,nc_eta1
-        x1 = x1_min+(real(i1,f64)-0.5_f64)/real(nc_eta1,f64)
-        eta2  = (real(i2,f64)-0.5_f64)/real(nc_eta2,f64)
-        !x1   = (real(i1,f64)-1._f64)/real(nc_eta1,f64)
-        !eta2 = (real(i2,f64)-1._f64)/real(nc_eta2,f64)
+        !x1 = x1_min+(real(i1,f64)-0.5_f64)/real(nc_eta1,f64)
+        !eta2  = (real(i2,f64)-0.5_f64)/real(nc_eta2,f64)
+        x1   = (real(i1,f64)-1._f64)/real(nc_eta1,f64)
+        eta2 = (real(i2,f64)-1._f64)/real(nc_eta2,f64)
+        if(abs(eta2)<1e-14)eta2=1e-8;
         !x1   =x1_min+ (real(i1,f64))/real(nc_eta1,f64)
        ! eta2 =eta1_min+ (real(i2,f64))/real(nc_eta2,f64)
         tmp = alpha_mesh*sin(2._f64*sll_pi*eta2)**2
@@ -387,14 +410,16 @@ program bgk_fv
 
   open(unit=900,file='intersect_points.dat')  
     do i1=1,N_x1
-      x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+      !x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+      x1 = x1_min+(real(i1,f64)-1._f64)*delta_x1
       do i2=1,N_x2
-        write(900,*) x1,integration_points(2,i1,i2),x1c_array(i1,i2),x2c_array(i1,i2)
+        !write(900,*) x1,integration_points(2,i1,i2),x1c_array(i1,i2),x2c_array(i1,i2)
+        write(900,*) x1,integration_points(2,i1,i2),x1n_array(i1,i2),x2n_array(i1,i2)
       enddo  
     enddo
   close(900)
   
-  !stop
+  
 
   
   !call sll_init_distribution_function_2D( dist_func, GAUSSIAN )
@@ -454,7 +479,8 @@ program bgk_fv
   enddo
    f_store=f
   do i1=1,N_x1+1
-      xx = (real(i1,f64)-0.5_f64)/real(N_x1,f64)
+      !xx = (real(i1,f64)-0.5_f64)/real(N_x1,f64)
+      xx = (real(i1,f64)-1._f64)/real(N_x1,f64)
       if(xx<=0._f64)then
         xx = 0._f64
       endif
@@ -485,63 +511,20 @@ program bgk_fv
   !uniform_field_new => new_field_2D_vec1(mesh)
   !uniform_field_velocity => new_field_2D_vec1(mesh)
 
-  do i1=1,nc_eta1+1
-    node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
-  enddo
-    do i2=1,nc_eta2
-      do i1 = 1,nc_eta1
-        new_node_positions(i1) = integration_points(1,i1,i2)
-        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
-          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
-          stop
-        endif
-        if(new_node_positions(i1)<node_positions_x1(1))then
-          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
-        endif      
-        !buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
-        buf_1d(i1) = f_store(i1,i2)/jac_array(i1,i2)
-        
-      enddo
-      buf_1d(nc_eta1+1) = buf_1d(1)
-      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
-      do i1 = 1,nc_eta1
-        integration_points(3,i1,i2) =  buf_1d(i1)
-      enddo
-    enddo
+  geom_eta(1,1) = eta1_min
+  geom_eta(2,1) = eta1_max
+  geom_eta(1,2) = eta2_min
+  geom_eta(2,2) = eta2_max
 
-  do i1=1,nc_eta1+1
-    node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
-  enddo
-   rho_case=1
-  !Compute rho0 and E0
-    do i1 = 1, nc_eta1
-      do i2=1,nc_eta2
-        integration_points_val(1,i2) = integration_points(2,i1,i2)
-        integration_points_val(2,i2) = integration_points(3,i1,i2)
-      enddo
-      !rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
-      if(rho_case==1)then
-        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
-      endif
-      if(rho_case==2)then
-        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
-      endif
-      if(rho_case==3)then
-        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
-      endif      
-      if(rho_case==4)then
-        rho(i1)=compute_non_unif_integral_gaussian_sym(integration_points_val,nc_eta2)
-      endif      
-      !if(test_case==4)then      
-      !  rho(i1) = rho(i1)+1._f64
-      !endif  
-    enddo
-    !rho=rho_exact
-     rho(nc_eta1+1)=rho(1)
-    E=rho-1._f64
-    call poisson1dpertrap(E,x1_max-x1_min,N_x1)
-     E_store=E
+  call compute_rho_mapped_mesh(rho,f_store,integration_points,rho_case,nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+  call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+  geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
+  E_store=E
+    
+    
+    
+     
      !diagnostic
       do i1=1,nc_eta1+1
         x1 = x1_min+real(i1-1._f64)*delta_x1
@@ -551,48 +534,16 @@ program bgk_fv
      !write(*,*) delta_eta1,delta_eta2,delta_x1, delta_x2,jac_array(1,2),(x1_max-x1_min)*(x2_max-x2_min)
     !stop
    f_equil=1._f64
-     !do i2=1,nc_eta2+1
-      !do i1 = 1,nc_eta1+2
-      !f_equil(i1,i2)=jac_array(i1,i2)
-      !enddo
-     !enddo
-  do step = 1, nb_step
-   !Inisialize a1 and a2
-      do i1=1,nc_eta1
-        do i2=1,Nc_eta2
-            a1(i1,i2)=((Flux(i1,i2+1)-Flux(i1,i2))/delta_eta2)*(x1_max-x1_min)/jac_array(i1,i2)
-            a2(i1,i2)=-((Flux(i1+1,i2)-Flux(i1,i2))/delta_eta1)*(x2_max-x2_min)/jac_array(i1,i2)
-       enddo
+     do i2=1,nc_eta2+1
+      do i1 = 1,nc_eta1+2
+      f_equil(i1,i2)=jac_array(i1,i2)
+      enddo
      enddo
-        do i1=1,nc_eta1+1
-           a1(i1,nc_eta2+1)=a1(i1,1)
-           a2(i1,nc_eta2+1)=a2(i1,1)
-        enddo
-        do i2=1,nc_eta2+1
-           a1(nc_eta1+1,i2)=a1(1,i2)
-           a2(nc_eta1+1,i2)=a2(1,i2)    
-        enddo
-   !diagno
-      !do i1=2,nc_eta1
-        !do i2=2,Nc_eta2
-          
-            !a1(i1,i2)=((Flux(i1,i2+1)-Flux(i1,i2-1))/(2*delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)!/delta_eta2
-            !a2(i1,i2)=-((Flux(i1+1,i2)-Flux(i1-1,i2))/(2*delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)!/delta_eta1
-           
-       !enddo
-     !enddo
-       !do i1=1,nc_eta1
-           !a1(i1,1)=a1(i1,Nc_eta2+1)
-           !a2(i1,1)=a1(i1,Nc_eta2+1)
-           
-     !enddo
-      !do i2=1,nc_eta2
-           
-           !a1(1,i2)=a1(nc_eta1+1,i2)
-           !a2(1,i2)=a1(nc_eta1+1,i2)
-     !enddo
-  !stop
-   if(rk==1) then
+     
+    
+  do step = 1, nb_step
+
+  if(rk==1) then
     f_tmp=f
     call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
    do i1=1,N_x1+1
@@ -615,13 +566,29 @@ program bgk_fv
           enddo
         call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K1=Flux
+         
         do i1=1,N_x1+1
           do i2=1,N_x2+1
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a21
           enddo
          enddo
+
+        call compute_rho_mapped_mesh(rho,f_tmp,integration_points,rho_case,&
+        nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+        call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+        geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
+
+         
+         
+         
+         
+         
         call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
+         
+         
+         
    do i1=1,N_x1+1
      do i2=1,N_x2+1
         
@@ -630,6 +597,8 @@ program bgk_fv
       !-alpha*Flux_x1(i1,i2)-beta*Flux_x2(i1,i2)
      enddo
     enddo
+    
+
   endif
     if(rk==4) then
    
@@ -653,6 +622,15 @@ program bgk_fv
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a21
           enddo
          enddo
+        
+        !update field psi
+        call compute_rho_mapped_mesh(rho,f_tmp,integration_points,rho_case,nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+        call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+        geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
+
+         
+                
         call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
 
@@ -661,6 +639,17 @@ program bgk_fv
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a31+K2(i1,i2)*dt*a32
           enddo
          enddo
+         
+        !update field psi
+        call compute_rho_mapped_mesh(rho,f_tmp,integration_points,rho_case,&
+        nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+        call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+        geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
+
+
+         
+         
         call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K3=Flux
          do i1=1,N_x1+1
@@ -668,6 +657,16 @@ program bgk_fv
             f_tmp(i1,i2)=f_store(i1,i2)+K1(i1,i2)*dt*a41+K2(i1,i2)*dt*a42+K3(i1,i2)*dt*a43
           enddo
          enddo
+
+        !update field psi
+        call compute_rho_mapped_mesh(rho,f_tmp,integration_points,rho_case,&
+        nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+        call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+        geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
+
+         
+         
         call Compute_flux(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K4=Flux
    do i1=1,N_x1+1
@@ -768,81 +767,25 @@ program bgk_fv
     
  !diagnostic********************************
 
-    do i2=1,nc_eta2
-      do i1 = 1,nc_eta1
-        new_node_positions(i1) = integration_points(1,i1,i2)
-        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
-          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
-          stop
-        endif
-        if(new_node_positions(i1)<node_positions_x1(1))then
-          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
-        endif      
-        !buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
-        buf_1d(i1) = f(i1,i2)/jac_array(i1,i2)
-      enddo
-      buf_1d(nc_eta1+1) = buf_1d(1)
-      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
-      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
-      do i1 = 1,nc_eta1
-        integration_points(3,i1,i2) =  buf_1d(i1)
-      enddo
-    enddo
+        !update field psi
+        call compute_rho_mapped_mesh(rho,f,integration_points,rho_case,nc_eta1,&
+        nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+        call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+        geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
 
-  do i1=1,nc_eta1+1
-    node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
-  enddo
-   rho_case=1
-  !Compute rho0 and E0
-    do i1 = 1, nc_eta1
-      do i2=1,nc_eta2
-        integration_points_val(1,i2) = integration_points(2,i1,i2)
-        integration_points_val(2,i2) = integration_points(3,i1,i2)
-      enddo
-      !rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
-      if(rho_case==1)then
-        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
-      endif
-      if(rho_case==2)then
-        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
-      endif
-      if(rho_case==3)then
-        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
-      endif      
-      if(rho_case==4)then
-        rho(i1)=compute_non_unif_integral_gaussian_sym(integration_points_val,nc_eta2)
-      endif      
-      !if(test_case==4)then      
-      !  rho(i1) = rho(i1)+1._f64
-      !endif  
-    enddo
-    !rho=rho_exact
-     rho(nc_eta1+1)=rho(1)
-    E=rho-1._f64
-    call poisson1dpertrap(E,x1_max-x1_min,N_x1)
+
+     
+     
      E_store=E
       
     f_store = f
      !diagnostic
-    do i1=1,N_x1+1
-      x1 = x1_min+real(i1-1,f64)*delta_x1
-      write(900,*) x1,E(i1),rho(i1)
-    enddo
+    !do i1=1,N_x1+1
+    !  x1 = x1_min+real(i1-1,f64)*delta_x1
+    !  write(900,*) x1,E(i1),rho(i1)
+    !enddo
    
-     E=rho-1._f64
-    call poisson1dpertrap(E,x1_max-x1_min,N_x1)  
-    phi_poisson = E
-    call poisson1dpertrap(phi_poisson,x1_max-x1_min,N_x1)
-    tmp = phi_poisson(1)
-    do i1=1,N_x1
-      phi_poisson(i1) = -phi_poisson(i1) + tmp
-    enddo
-    phi_poisson(N_x1+1) = phi_poisson(1) 
-    do i1=2,N_x1+1
-      buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
-    enddo
-    buf_1d(1)=buf_1d(N_x1+1)
-    phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
 
   
   
@@ -851,32 +794,6 @@ program bgk_fv
    endif
 
 
-    do i1 = 1, nc_eta1+1 
-      do i2 = 1, nc_eta2+1
-        x1 = x1n_array(i1,i2)
-        x2 = x2n_array(i1,i2)
-        phi_val = 0._f64
-        xx = (x1-x1_min)/(x1_max-x1_min)
-        if(xx<=0._f64)then
-          xx = 0._f64
-        endif
-        if(xx>=1._f64)then
-          xx = xx-1._f64!1._f64-1e-15_f64
-        endif
-        if(xx<=0._f64)then
-          xx = 0._f64
-        endif      
-        xx = xx*real(N_x1,f64)
-        ii = floor(xx)
-        xx = xx-real(ii,f64)      
-        phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
-       Flux( i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!& utilisation de tableau abusive 
-        !Flux( i1, i2 ) = ( 0.5_f64*x2**2+0.5*x1**2)!phi_val)
-        !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
-        !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
-      end do
-    end do
-     !stop
     tmp=sum(rho(1:N_x1))*delta_x1
   
     val=0._f64
@@ -884,7 +801,16 @@ program bgk_fv
       val = val+E(i1)*E(i1)
     enddo
     val = val/real(N_x1,f64)
-    print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64
+    
+    tmp2=0._f64
+    do i1=1,N_x1
+      do i2=1,N_x2
+        if(abs(f_init(i1,i2)/jac_array(i1,i2)-1._f64)>tmp2)then
+          tmp2 = abs(f_init(i1,i2)/jac_array(i1,i2)-1._f64)
+        endif
+      enddo
+    enddo
+    print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64,tmp2
      
   enddo! time loop*********************
        stop
@@ -975,7 +901,15 @@ if(order==3) then
      abar_x1(i1)=chi(i1+1,i2)-chi(i1,i2)
      endif
      enddo
+     do i1=1,N_x1
+       abar_x1(i1) = a1(i1,i2)
+     enddo
+     
+     
      abar_x1(N_x1+1)=abar_x1(1)
+
+
+     
 
      abar_x1m(1)=abar_x1(N_x1)
       do i1=2,N_x1+1
@@ -1036,6 +970,13 @@ if(order==3) then
      endif
      !abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))!a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
      enddo
+     
+     do i2=1,N_x2
+       abar_x2(i2) = a2(i1,i2)
+     enddo
+
+     
+     
      abar_x2(N_x2+1)=abar_x2(1)!special uniform
 
       abar_x2m(1)=abar_x2(N_x2)
@@ -1123,6 +1064,11 @@ if(order==5) then
      abar_x1(i1)=chi(i1+1,i2)-chi(i1,i2)
      endif
      enddo
+
+     do i1=1,N_x1
+       abar_x1(i1) = a1(i1,i2)
+     enddo
+
      abar_x1(N_x1+1)=abar_x1(1)
 
       abar_x1m(1)=abar_x1(N_x1)
@@ -1189,6 +1135,12 @@ if(order==5) then
      endif
      !abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))!a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
      enddo
+
+     do i2=1,N_x2
+       abar_x2(i2) = a2(i1,i2)
+     enddo
+
+
      abar_x2(N_x2+1)=abar_x2(1)!special uniform
 
       abar_x2m(1)=abar_x2(N_x2)
@@ -1255,6 +1207,256 @@ endif
 end subroutine compute_flux
 
 
+
+subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
+geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
+  use numeric_constants
+  implicit none
+
+  sll_int,intent(in) :: nc_eta1,nc_eta2
+  sll_real64,dimension(1:nc_eta1+1) :: rho
+  sll_real64,dimension(1:nc_eta1+1) :: phi_poisson
+  sll_real64,dimension(1:nc_eta1+1) :: E
+  sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: x1n_array
+  sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: x2n_array
+  sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: jac_array
+  sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: a1
+  sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: a2
+  sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: psi
+  sll_real64 :: x1_min,x1_max,x2_min,x2_max
+  sll_int :: i1,i2,ii
+  sll_real64 :: tmp,x1,x2,phi_val,xx,a(-10:10)
+  sll_real64,intent(in) :: delta_eta1,delta_eta2
+  sll_real64,intent(in) :: geom_x(2,2)
+  sll_int,intent(in) :: div_case
+  
+  !a[-2] = 0, a[-1] = -1/6, a[0] = 1, a[1] = -1/2, a[2] = -1/3
+  x1_min = geom_x(1,1)
+  x1_max = geom_x(2,1)
+  x2_min = geom_x(1,2)
+  x2_max = geom_x(2,2)
+
+
+
+    E=rho-1._f64
+    call poisson1dpertrap(E,x1_max-x1_min,nc_eta1)
+    phi_poisson = E
+    call poisson1dpertrap(phi_poisson,x1_max-x1_min,nc_eta1)
+    tmp = phi_poisson(1)
+    do i1=1,nc_eta1
+      phi_poisson(i1) = -phi_poisson(i1) + tmp
+    enddo
+    phi_poisson(nc_eta1+1) = phi_poisson(1)
+    
+    do i1=1,nc_eta1+1
+      do i2=1,nc_eta2+1
+        x1 = x1n_array(i1,i2)
+        x2 = x2n_array(i1,i2)
+        phi_val = 0._f64
+        xx = (x1-x1_min)/(x1_max-x1_min)
+        if(xx<=0._f64)then
+          xx = 0._f64
+        endif
+        if(xx>=1._f64)then
+          xx = xx-1._f64!1._f64-1e-15_f64
+        endif
+        if(xx<=0._f64)then
+          xx = 0._f64
+        endif      
+        xx = xx*real(nc_eta1,f64)
+        ii = floor(xx)
+        xx = xx-real(ii,f64)      
+        phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
+       psi( i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!& utilisation de tableau abusive 
+      enddo  
+    enddo
+   
+     if(div_case==0)then
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+           a1(i1,i2)=((psi(i1,i2+1)-psi(i1,modulo(i2-1-1+nc_eta2,nc_eta2)+1))/(2._f64*delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+           a2(i1,i2)=-((psi(i1+1,i2)-psi(modulo(i1-1-1+nc_eta1,nc_eta1)+1,i2))/(2._f64*delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+         enddo
+       enddo
+    
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
+     
+     if(div_case==1)then
+       a(-1) =-1._f64/3._f64
+       a(0) =-1._f64/2._f64
+       a(1) =1._f64
+       a(2)=-1._f64/6._f64
+       a(3)=0._f64
+
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            a1(i1,i2)=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+            a2(i1,i2)=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
+             
+         enddo
+       enddo
+        do i1=1,nc_eta1
+          do i2=1,Nc_eta2
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          enddo
+        enddo
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
+     if(div_case==2)then
+       a(-2)= 1._f64/6._f64
+       a(-1) =-1._f64
+       a(0) =1._f64/2._f64
+       a(1) =1._f64/3._f64
+       a(2) = 0._f64
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            a1(i1,i2)=a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+            a2(i1,i2)=-(a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
+             
+         enddo
+       enddo
+        do i1=1,nc_eta1
+          do i2=1,Nc_eta2
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          enddo
+        enddo
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
+
+
+     if(div_case==3)then
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+           a1(i1,i2)=((psi(i1,i2+1)-psi(i1,modulo(i2-1-1+nc_eta2,nc_eta2)+1))/(2._f64*delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+           a2(i1,i2)=-((psi(i1+1,i2)-psi(modulo(i1-1-1+nc_eta1,nc_eta1)+1,i2))/(2._f64*delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+         enddo
+       enddo
+    
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+
+
+
+       a(-2)= 1._f64/6._f64
+       a(-1) =-1._f64
+       a(0) =1._f64/2._f64
+       a(1) =1._f64/3._f64
+       a(2) = 0._f64
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            if(a1(i1,i2)>0._f64)then
+            a1(i1,i2)=a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            endif
+            if(a2(i1,i2)>0._f64)then  
+            a2(i1,i2)=-(a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+            endif 
+         enddo
+       enddo
+
+
+       a(-1) =-1._f64/3._f64
+       a(0) =-1._f64/2._f64
+       a(1) =1._f64
+       a(2)=-1._f64/6._f64
+       a(3)=0._f64
+
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+          if(a1(i1,i2)<0._f64)then
+            a1(i1,i2)=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+             a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+           endif     
+          if(a2(i1,i2)<0._f64)then
+            a2(i1,i2)=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
+             a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          endif   
+         enddo
+       enddo
+
+
+
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
+
+
+
+            
+         
+
+
+
+  
+end subroutine compute_psi
 
 
 
