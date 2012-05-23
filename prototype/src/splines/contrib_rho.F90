@@ -10,6 +10,99 @@ module contrib_rho_module
   implicit none
 contains  
 
+subroutine compute_rho_mapped_mesh&
+  (rho,f,integration_points,rho_case,nc_eta1,nc_eta2,geom,jac_array,spl_per_x1)
+  sll_int :: rho_case
+  sll_real64,dimension(:,:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_val
+  sll_real64,dimension(:), pointer :: rho
+  sll_real64,dimension(:), pointer :: node_positions_x1
+  sll_real64,dimension(:), pointer :: new_node_positions
+  sll_real64,dimension(:), pointer :: buf_1d
+  sll_real64,dimension(:,:), pointer :: jac_array
+  sll_real64,dimension(:,:), pointer :: f
+  sll_real64,intent(in) :: geom(2,2)
+  sll_int,intent(in) :: nc_eta1,nc_eta2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
+  sll_int :: i1,i2
+  type(cubic_nonunif_spline_1D), pointer :: spl_per_x1
+  sll_int :: err
+
+  eta1_min = geom(1,1)
+  eta1_max = geom(2,1)
+  eta2_min = geom(1,2)
+  eta2_max = geom(2,2)
+  
+  SLL_ALLOCATE(node_positions_x1(nc_eta1+1),err)
+  SLL_ALLOCATE(new_node_positions(nc_eta1),err)
+  SLL_ALLOCATE(buf_1d(nc_eta1+1),err)
+  SLL_ALLOCATE(integration_points_val(2,nc_eta1+1),err)
+  do i1=1,nc_eta1+1
+    !node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+    node_positions_x1(i1) = eta1_min+(real(i1,f64)-1._f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+  enddo
+    do i2=1,nc_eta2
+      do i1 = 1,nc_eta1
+        new_node_positions(i1) = integration_points(1,i1,i2)
+        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
+          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
+          stop
+        endif
+        if(new_node_positions(i1)<node_positions_x1(1))then
+          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
+        endif      
+        !buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
+        buf_1d(i1) = f(i1,i2)/jac_array(i1,i2)
+        
+      enddo
+      buf_1d(nc_eta1+1) = buf_1d(1)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
+      do i1 = 1,nc_eta1
+        integration_points(3,i1,i2) =  buf_1d(i1)
+      enddo
+    enddo
+   
+   
+
+  !Compute rho0 and E0
+    do i1 = 1, nc_eta1
+      do i2=1,nc_eta2
+        integration_points_val(1,i2) = integration_points(2,i1,i2)
+        integration_points_val(2,i2) = integration_points(3,i1,i2)
+      enddo
+      !rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      if(rho_case==1)then
+        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==2)then
+        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==3)then
+        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
+      endif      
+      if(rho_case==4)then
+        rho(i1)=compute_non_unif_integral_gaussian_sym(integration_points_val,nc_eta2)
+      endif      
+      !if(test_case==4)then      
+      !  rho(i1) = rho(i1)+1._f64
+      !endif  
+   enddo
+   
+   rho(nc_eta1+1)=rho(1)
+ 
+     
+  SLL_DEALLOCATE(node_positions_x1,err)
+  SLL_DEALLOCATE(new_node_positions,err)
+  SLL_DEALLOCATE(buf_1d,err)
+  SLL_DEALLOCATE(integration_points_val,err)
+
+
+
+end subroutine compute_rho_mapped_mesh
+
+
+
 function compute_non_unif_integral(integration_points,N_points)
   sll_real64 :: compute_non_unif_integral
   sll_real64,dimension(:,:),pointer :: integration_points
