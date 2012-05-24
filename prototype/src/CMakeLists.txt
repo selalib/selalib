@@ -113,6 +113,7 @@ add_subdirectory(fields)
 add_subdirectory(ode_solvers)
 add_subdirectory(poisson_solvers)
 add_subdirectory(distribution_function)
+add_subdirectory(advection_field)
 add_subdirectory(simulation)
 
 
@@ -151,6 +152,7 @@ add_test(mapped_meshes_1d mapped_meshes/test_mapped_meshes_1d)
 add_test(fields fields/test_scalar_field)
 add_test(ode_solvers ode_solvers/test_implicit_ode_nonuniform)
 add_test(distribution_function distribution_function/test_distribution_function)
+add_test(advection_field advection_field/test_advection_field)
 add_test(simulation_1d simulation/test_simulation_1d)
 
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)

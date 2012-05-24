@@ -6,6 +6,8 @@ program unit_test
   use sll_scalar_field_2d
   use sll_module_mapped_meshes_2d_base
   use sll_module_mapped_meshes_2d
+  use sll_scalar_field_initializers_base
+  use sll_landau_2d_initializer
   implicit none
   
   type(sll_mapped_mesh_2d_analytic), target :: mesh
@@ -13,6 +15,8 @@ program unit_test
   class(sll_mapped_mesh_2d_base), pointer   :: m
   sll_int32 :: nc1, nc2
   procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
+  type(init_landau_2d), target :: init_landau
+  class(scalar_field_2d_initializer_base), pointer    :: pfinit
 
 
   nc1 = 10
@@ -35,12 +39,15 @@ program unit_test
        pjac22)
   m => mesh
 
+  call init_landau%initialize(0.001_f64)
+  pfinit => init_landau
+
   call initialize_scalar_field_2d( &
        field, &
        "px1_field", &
        m, &
        NODE_CENTERED_FIELD, &
-       px1)
+       pfinit)
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 

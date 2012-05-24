@@ -1,4 +1,7 @@
-add_library(sll_scalar_field_2d STATIC sll_scalar_field_2d.F90)
+add_library(sll_scalar_field_2d STATIC sll_scalar_field_2d.F90 
+		scalar_field_initializer_base.F90
+		landau_2d_initializer.F90	)
+		
 add_library(sll_scalar_field_1d STATIC sll_scalar_field_1d.F90)
 
 add_executable(test_scalar_field unit_test.F90)

@@ -45,6 +45,8 @@ contains
 
   end subroutine new_poisson_1d_periodic
 
+  ! Even though the variable is called phi. This routine computes the electric
+  ! field from the charge density rho
   subroutine solve_poisson_1d_periodic(this,phi,rhs)
     type(poisson_1d_periodic)                 :: this
     type(scalar_field_1d)                     :: phi
