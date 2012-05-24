@@ -70,7 +70,7 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_1d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_1D)                       :: init_function
+    procedure(scalar_function_1D), optional             :: init_function
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_pts1
@@ -86,17 +86,25 @@ contains   ! *****************************************************************
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1), ierr)
+       if (present(init_function)) then
           do i1 = 1, num_pts1
              this%data(i1) = init_function( mesh%x1_at_node(i1) )
           end do
+       else 
+          this%data = 0.0_f64 ! initialize to zero
+       end if
     else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_cells1), ierr)
-       delta1 = 1.0_f64/real(num_cells1,f64)
-       eta1   = 0.5_f64 * delta1
+       if (present(init_function)) then
+          delta1 = 1.0_f64/real(num_cells1,f64)
+          eta1   = 0.5_f64 * delta1
           do i1 = 1, num_cells1
              this%data(i1) = init_function( mesh%x1(eta1) )
              eta1 = eta1 + delta1
           end do
+       else 
+          this%data = 0.0_f64 ! initialize to zero
+       end if
     endif
   end subroutine initialize_scalar_field_1d
 

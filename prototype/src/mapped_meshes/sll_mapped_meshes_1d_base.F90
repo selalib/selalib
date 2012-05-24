@@ -78,7 +78,8 @@ contains
     sll_int32, optional            :: output_format
     sll_int32                      :: error
     sll_real64, dimension(:), allocatable  :: x1_array
-    sll_int32                      :: num_pts1   
+    sll_int32                      :: num_pts1  
+    sll_int32                      :: i
 
     if(present(output_format))then
       print*,'There is just gnuplot format available'
@@ -87,6 +88,9 @@ contains
 
     num_pts1 = mesh%nc_eta1+1
     SLL_ALLOCATE(x1_array(num_pts1),error)
+    do i=1,num_pts1
+       x1_array(i) = mesh%x1_at_node(i)
+    end do
     call sll_gnuplot_write(x1_array,mesh%label,error)
     SLL_DEALLOCATE_ARRAY(x1_array,error)
   end subroutine
