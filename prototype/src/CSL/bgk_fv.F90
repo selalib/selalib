@@ -46,14 +46,14 @@ program bgk_fv
   visu_step = 100
   test_case = 4
   rho_case = 2
-  div_case=3
+  div_case=4
   
    rk=4
-   order=3
-  N_x1 = 128
-  N_x2 =128
-  dt = 0.01_f64
-  nb_step = 6000!6000
+   order=5
+  N_x1 = 256
+  N_x2 = 256
+  dt = 0.005_f64
+  nb_step =120000! 6000!6000
   
   N = max(N_x1,N_x2)
   
@@ -1335,11 +1335,11 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
      
        do i1=1,nc_eta1
          do i2=1,Nc_eta2
-            a1(i1,i2)=a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1) + &
-            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a1(i1,i2)=a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1) + &
+             a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
              a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
-              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
-            a2(i1,i2)=-(a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+             a2(i1,i2)=-(a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 ) +&
              a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
              a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
              a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
@@ -1436,7 +1436,9 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
        enddo
 
 
+     
 
+   
          
         do i1=1,nc_eta1+1
            a1(i1,nc_eta2+1)=a1(i1,1)
@@ -1448,7 +1450,104 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
         enddo
      endif
 
+    if(div_case==4)then
+       a(-3) = -1._f64/30._f64
+       a(-2) = 1._f64/4._f64
+       a(-1) = -1._f64
+       a(0)  = 1._f64/3._f64
+       a(1)  = 1._f64/2._f64
+       a(2)  = -1._f64/20._f64
+       a(3)  = 0._f64
+       !a(-1) =-1._f64/3._f64
+       !a(0) =-1._f64/2._f64
+       !a(1) =1._f64
+       !a(2)=-1._f64/6._f64
+       !a(3)=0._f64
 
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            a1(i1,i2)=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1) + &
+              a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1)+ &
+              a(-3)*psi(i1, modulo(i2-3 -1+nc_eta2,nc_eta2)+1)
+
+            a2(i1,i2)=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-3)*psi(modulo(i1-3 -1+nc_eta1,nc_eta1)+1, i2 ))
+             
+         enddo
+       enddo
+        do i1=1,nc_eta1
+          do i2=1,Nc_eta2
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          enddo
+        enddo
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
+      if(div_case==5)then
+       a(-3) = 0._f64
+       a(-2) = 1._f64/20._f64
+       a(-1) = -1._f64/2._f64
+       a(0)  = -1._f64/3._f64
+       a(1)  = 1._f64
+       a(2)  = -1._f64/4._f64
+       a(3)  = 1._f64/30._f64
+       !a(-1) =-1._f64/3._f64
+       !a(0) =-1._f64/2._f64
+       !a(1) =1._f64
+       !a(2)=-1._f64/6._f64
+       !a(3)=0._f64
+
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            a1(i1,i2)=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1) + &
+              a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1)+ &
+              a(-3)*psi(i1, modulo(i2-3 -1+nc_eta2,nc_eta2)+1)
+
+            a2(i1,i2)=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-3)*psi(modulo(i1-3 -1+nc_eta1,nc_eta1)+1, i2 ))
+             
+         enddo
+       enddo
+        do i1=1,nc_eta1
+          do i2=1,Nc_eta2
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          enddo
+        enddo
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
 
             
          
