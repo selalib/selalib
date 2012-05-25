@@ -44,12 +44,14 @@ program bgk_csl
   mesh_case = 3
   visu_step = 10
   test_case = 4
-  rho_case = 3
+  rho_case = 2
+     
+  alpha_mesh = 1.e-2_f64 !0.1_f64
   
-  N_x1 = 128
-  N_x2 = 128
+  N_x1 = 64
+  N_x2 = 64
   dt = 0.1_f64
-  nb_step = 600
+  nb_step = 3000
   
   N = max(N_x1,N_x2)
   
@@ -224,7 +226,6 @@ program bgk_csl
   
 
   if(mesh_case==2)then
-     alpha_mesh = 1.e-1_f64 !0.1_f64
      eta2 = 0.0_f64 
      eta2c = eta2 + 0.5_f64*delta_eta2
      do i2= 1, nc_eta2 + 1
@@ -293,7 +294,6 @@ program bgk_csl
 
 
   if(mesh_case==3)then
-     alpha_mesh = 1.e-1_f64 !0.1_f64
      eta2 = eta2_min 
      eta2c = eta2_min + 0.5_f64*delta_eta2
      do i2= 1, nc_eta2 + 1
@@ -466,7 +466,7 @@ program bgk_csl
   
   call write_mesh_2D(mesh)
   
-  stop
+
   call write_distribution_function ( dist_func )
 
 
