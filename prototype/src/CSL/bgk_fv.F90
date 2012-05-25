@@ -19,7 +19,7 @@ program bgk_fv
   sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2,phi_poisson
   sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,rho2,E,rho_exact,E_store
   sll_real64,dimension(:,:), pointer :: f,f_init,f_equil, f_store,f_tmp
-  sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val
+  sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val,max_f
   sll_int :: ii,step,div_case
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
 
@@ -46,14 +46,14 @@ program bgk_fv
   visu_step = 100
   test_case = 4
   rho_case = 2
-  div_case=4
+  div_case=0
   
    rk=4
-   order=5
-  N_x1 = 256
-  N_x2 = 256
-  dt = 0.005_f64
-  nb_step =120000! 6000!6000
+   order=6
+  N_x1 = 64!256
+  N_x2 = 64!256
+  dt = 0.02_f64!0.005_f64
+  nb_step =3000!120000! 6000!6000
   
   N = max(N_x1,N_x2)
   
@@ -754,14 +754,17 @@ program bgk_fv
      enddo
     enddo
   endif
-
-   !do i1=1,N_x1+1
-     !do i2=1,N_x2+1
-          !if(abs(f(i1,i2))<-1.e-3)then
-          !f_init(i1,i2)=1._f64
-        !endif
-     !enddo
-   !enddo
+   max_f = 0._f64 
+   do i1=1,N_x1+1
+     do i2=1,N_x2+1
+        if(f(i1,i2)>max_f)then
+          max_f = f(i1,i2)
+        endif
+          if(f(i1,i2)<1.e-2)then
+          f_init(i1,i2)=jac_array(i1,i2)
+        endif
+     enddo
+   enddo
     f_equil=f_init
     
     
@@ -808,9 +811,14 @@ program bgk_fv
         if(abs(f_init(i1,i2)/jac_array(i1,i2)-1._f64)>tmp2)then
           tmp2 = abs(f_init(i1,i2)/jac_array(i1,i2)-1._f64)
         endif
+        !print *,i1,i2,f_init(i1,i2)/jac_array(i1,i2)
       enddo
     enddo
-    print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64,tmp2
+    
+    
+    
+    
+    print *,(real(step,f64)-1._f64)*dt,val,tmp/(x1_max-x1_min)-1._f64,tmp2,max_f
      
   enddo! time loop*********************
        stop
@@ -868,7 +876,7 @@ subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,de
   sll_real   ,dimension(N_x1+1)::abar_x2,abar_x2m!E
   sll_real64,intent(in)::x1_min,x2_min,delta_x1,delta_x2!L
   sll_int::i1,i2,i1m2,i1m1, i2m2,i2m1,i1p1,i1p2,i2p1,i2p2,i1m3,i2m3
-  sll_real64::x1,x2,Flux_p05,Flux_m05,alpha,beta,df,coef1!,eold,enew,dx2,tmp
+  sll_real64::x1,x2,Flux_p05,Flux_m05,alpha,beta,df,coef1,tmp!,eold,enew,dx2,tmp
   sll_int   :: test
     !compute chi(uij) and sigma(uij)
      alpha=(1._f64/delta_x1)
@@ -1033,8 +1041,114 @@ if(order==3) then
    enddo
 endif!order 3
 
+
+
+
+
+
+
+
+if(order==4) then
+   
+    chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2) 
+    chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
+    sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
+    sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
+
+  ! For fixed  i2 
+ do i2=1,N_x2+1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+
+
+  do i1=1,N_x1+1
+    
+       i1p1=i1+1
+       i1p2=i1+2
+       i1m2=i1-2
+       i1m1=i1-1
+     
+       if (i1m1 <=0) then 
+         i1m1=i1m1+N_x1
+       endif
+       if (i1m2 <=0) then 
+         i1m2=i1m2+N_x1     
+       endif
+        
+       !if (i1p1 >=N_x1+1) then 
+        ! i1p1=i1p1+N_x1+1
+       !endif
+       !if (i1p2 >=N_x1+1) then 
+        ! i1p2=i1p2+N_x1+1
+       !endif
+    
+        Flux_p05=-(1._f64/6._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)+(1._f64/3._f64)*chi(i1p1,i2)! stencil i1-1,i1,i1+1  
+        tmp=(1._f64/3._f64)*chi(i1,i2)+(5._f64/6._f64)*chi(i1p1,i2)-(1._f64/6._f64)*chi(i1p2,i2)! stencil i1,i1+1,i1+2
+        Flux_p05 = 0.5_f64*(Flux_p05+tmp)
+
+        Flux_m05=-(1._f64/6._f64)*chi(i1m2,i2)+(5._f64/6._f64)*chi(i1m1,i2)+(1._f64/3._f64)*chi(i1,i2)! stencil i1-1,i1,i1+1   
+        tmp=(1._f64/3._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)-(1._f64/6._f64)*chi(i1p1,i2)! stencil i1,i1+1,i1+2
+        Flux_m05 = 0.5_f64*(Flux_m05+tmp)
+        
+        Flux_x1(i1,i2)=Flux_p05-Flux_m05
+     
+   
+
+  enddo
+ enddo 
+  !For fixed i1
+ do i1=1,N_x1+1
+     
+  do i2=1,N_x2+1
+     i2p1=i2+1
+     i2p2=i2+2
+     i2m2=i2-2
+     i2m1=i2-1
+     
+     
+     if (i2m1 <=0) then 
+         i2m1=i2m1+N_x2
+     endif
+     if (i2m2 <=0) then 
+         i2m2=i2m2+N_x2      
+     endif
+        
+      ! if (i2p1 >=N_x2+1) then 
+        ! i2p1=i2p1+N_x2+1
+       !endif
+       !if (i2p2 >=N_x2+1) then 
+       !  i2p2=i2p2+N_x2+1
+    !   endif
+   
+    
+        Flux_p05=-(1._f64/6._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  +(1._f64/3._f64)*sigma(i1,i2+1)! stencil i2-1,i2,i2+1  
+        tmp=(1._f64/3._f64)*sigma(i1,i2  )+(5._f64/6._f64)*sigma(i1,i2p1)-(1._f64/6._f64)*sigma(i1,i2p2)! stencil i2,i2+1,i2+2
+        Flux_p05 = 0.5_f64*(Flux_p05+tmp)
+     
+        Flux_m05=-(1._f64/6._f64)*sigma(i1,i2m2)+(5._f64/6._f64)*sigma(i1,i2m1)+(1._f64/3._f64)*sigma(i1,i2  )! stencil i2-1,i2,i2+1  
+        tmp=(1._f64/3._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  -(1._f64/6._f64)*sigma(i1,i2p1)! stencil i2,i2+1,i2+2
+        Flux_m05 = 0.5_f64*(Flux_m05+tmp)
+
+      Flux_x2(i1,i2)=Flux_p05-Flux_m05
+
+  enddo
+ enddo
+  do i1=1,N_x1+1
+     do i2=1,N_x2+1
+       Flux(i1,i2)=-(alpha*Flux_x1(i1,i2)+beta*Flux_x2(i1,i2))
+     enddo
+   enddo
+endif!order 4
+
+
+
+
+
+
+
+
+
  
- test=2
+
 if(order==5) then
      
     
@@ -1203,6 +1317,164 @@ if(order==5) then
      enddo
    enddo  
 endif
+
+!Order 6
+ if(order==6) then
+   
+    chi(N_x1+2,1:N_x2+4)=chi(2,1:N_x2+4) 
+    chi(N_x1+3,1:N_x2+4)=chi(3,1:N_x2+4)
+    chi(N_x1+4,1:N_x2+4)=chi(4,1:N_x2+4)
+    sigma(1:N_x1+4,N_x2+2)=sigma(1:N_x1+4,2)
+    sigma(1:N_x1+4,N_x2+3)=sigma(1:N_x1+4,3)
+    sigma(1:N_x1+4,N_x2+4)=sigma(1:N_x1+4,4)
+    
+    
+    !chi(N_x1+1,1:N_x2+4)=chi(1,1:N_x2+4)  
+    !chi(N_x1+2,1:N_x2+4)=chi(2,1:N_x2+4) 
+    !chi(N_x1+3,1:N_x2+4)=chi(3,1:N_x2+4)
+    !chi(N_x1+4,1:N_x2+4)=chi(4,1:N_x2+4) 
+
+    !!sigma(1:N_x1+4,N_x2+1)=sigma(1:N_x1+4,1)
+    !sigma(1:N_x1+4,N_x2+1)=0!sigma(1:N_x1+4,1)
+    !sigma(1:N_x1+4,N_x2+2)=0!sigma(1:N_x1+4,2)
+    !sigma(1:N_x1+4,N_x2+3)=0!sigma(1:N_x1+4,3)
+    !sigma(1:N_x1+4,N_x2+4)=0!sigma(1:N_x1+4,4)
+
+    
+    
+    
+    
+    coef1=(9._f64/20._f64)
+  ! For fixed  i2 
+ do i2=1,N_x2+1
+      x2 = x2_min+real(i2-1,f64)*delta_x2
+
+
+  do i1=1,N_x1+1
+    
+       i1p1=i1+1
+       i1p2=i1+2
+       i1m2=i1-2
+       i1m1=i1-1
+       i1m3=i1-3
+       if (i1m1 <=0) then 
+         i1m1=i1m1+N_x1
+       endif
+       if (i1m2 <=0) then 
+         i1m2=i1m2+N_x1     
+       endif
+        if (i1m3 <=0) then 
+         i1m3=i1m3+N_x1     
+       endif
+        
+        !*******
+         
+        Flux_p05=(1._f64/30._f64)*chi(i1m2,i2)-(13._f64/60._f64)*chi(i1m1,i2)+(47._f64/60._f64)*chi(i1,i2)&
+                +coef1*chi(i1+1,i2)-(1._f64/20._f64)*chi(i1+2,i2)! stencil i1-1,i1,i1+1 
+        
+       
+        tmp=-(1._f64/20._f64)*chi(i1m1,i2)+ coef1*chi(i1,i2)+(47._f64/60._f64)*chi(i1+1,i2)&
+                 -(13._f64/60._f64)*chi(i1+2,i2)+(1._f64/30._f64)*chi(i1+3,i2)! stencil i1,i1+1,i1+2      
+        Flux_p05 = 0.5_f64*(Flux_p05+tmp)
+        
+         
+        Flux_m05=(1._f64/30._f64)*chi(i1m3,i2)-(13._f64/60._f64)*chi(i1m2,i2)+(47._f64/60._f64)*chi(i1m1,i2)&
+             +coef1*chi(i1,i2)-(1._f64/20._f64)*chi(i1+1,i2)! stencil i1-1,i1,i1+1  
+       
+        tmp=-(1._f64/20._f64)*chi(i1m2,i2)+ coef1*chi(i1m1,i2)+(47._f64/60._f64)*chi(i1,i2)-&
+                  (13._f64/60._f64)*chi(i1+1,i2)+(1._f64/30._f64)*chi(i1+2,i2)!! stencil i1,i1+1,i1+2
+      
+        Flux_m05 = 0.5_f64*(Flux_m05+tmp)
+        
+        Flux_x1(i1,i2)=Flux_p05-Flux_m05
+ 
+        !******
+    
+      !  Flux_p05=-(1._f64/6._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)+(1._f64/3._f64)*chi(i1p1,i2)! stencil i1-1,i1,i1+1  
+       ! tmp=(1._f64/3._f64)*chi(i1,i2)+(5._f64/6._f64)*chi(i1p1,i2)-(1._f64/6._f64)*chi(i1p2,i2)! stencil i1,i1+1,i1+2
+       ! Flux_p05 = 0.5_f64*(Flux_p05+tmp)
+
+       ! Flux_m05=-(1._f64/6._f64)*chi(i1m2,i2)+(5._f64/6._f64)*chi(i1m1,i2)+(1._f64/3._f64)*chi(i1,i2)! stencil i1-1,i1,i1+1   
+       ! tmp=(1._f64/3._f64)*chi(i1m1,i2)+(5._f64/6._f64)*chi(i1,i2)-(1._f64/6._f64)*chi(i1p1,i2)! stencil i1,i1+1,i1+2
+       ! Flux_m05 = 0.5_f64*(Flux_m05+tmp)
+        
+       ! Flux_x1(i1,i2)=Flux_p05-Flux_m05
+     
+   
+
+  enddo
+ enddo 
+  !For fixed i1
+ do i1=1,N_x1+1
+     
+  do i2=1,N_x2+1
+    
+     !******
+      i2p1=i2+1
+     i2p2=i2+2
+     i2m2=i2-2
+     i2m1=i2-1
+     i2m3=i2-3
+     
+     if (i2m1 <=0) then 
+         i2m1=i2m1+N_x2
+     endif
+     if (i2m2 <=0) then 
+         i2m2=i2m2+N_x2      
+     endif
+        if (i2m3 <=0) then 
+         i2m3=i2m3+N_x2     
+       endif 
+    
+   
+    
+       
+        Flux_p05=(1._f64/30._f64)*sigma(i1,i2m2)-(13._f64/60._f64)*sigma(i1,i2m1)+(47._f64/60._f64)*sigma(i1,i2)+&
+                coef1*sigma(i1,i2+1)-(1._f64/20._f64)*sigma(i1,i2+2)! stencil i1-1,i1,i1+1  
+        
+        tmp=-(1._f64/20._f64)*sigma(i1,i2m1)+ coef1*sigma(i1,i2)+(47._f64/60._f64)*sigma(i1,i2+1)-&
+                   (13._f64/60._f64)*sigma(i1,i2+2)+(1._f64/30._f64)*sigma(i1,i2+3)! stencil i1,i1+1,i1+2
+        
+
+         Flux_p05 = 0.5_f64*(Flux_p05+tmp)
+         
+        Flux_m05=(1._f64/30._f64)*sigma(i1,i2m3)-(13._f64/60._f64)*sigma(i1,i2m2)+(47._f64/60._f64)*sigma(i1,i2m1)+&
+                 coef1*sigma(i1,i2)-(1._f64/20._f64)*sigma(i1,i2+1)! stencil i1-1,i1,i1+1  
+       
+        tmp=-(1._f64/20._f64)*sigma(i1,i2m2)+ coef1*sigma(i1,i2m1)+(47._f64/60._f64)*sigma(i1,i2)-&
+                 (13._f64/60._f64)*sigma(i1,i2+1)+(1._f64/30._f64)*sigma(i1,i2+2)!! stencil i1,i1+1,i1+2
+     
+       Flux_m05 = 0.5_f64*(Flux_m05+tmp)
+        
+        Flux_x2(i1,i2)=Flux_p05-Flux_m05
+     !*****
+   
+    
+       ! Flux_p05=-(1._f64/6._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  +(1._f64/3._f64)*sigma(i1,i2+1)! stencil i2-1,i2,i2+1  
+        !tmp=(1._f64/3._f64)*sigma(i1,i2  )+(5._f64/6._f64)*sigma(i1,i2p1)-(1._f64/6._f64)*sigma(i1,i2p2)! stencil i2,i2+1,i2+2
+       ! Flux_p05 = 0.5_f64*(Flux_p05+tmp)
+     
+        !Flux_m05=-(1._f64/6._f64)*sigma(i1,i2m2)+(5._f64/6._f64)*sigma(i1,i2m1)+(1._f64/3._f64)*sigma(i1,i2  )! stencil i2-1,i2,i2+1  
+        !tmp=(1._f64/3._f64)*sigma(i1,i2m1)+(5._f64/6._f64)*sigma(i1,i2)  -(1._f64/6._f64)*sigma(i1,i2p1)! stencil i2,i2+1,i2+2
+        !Flux_m05 = 0.5_f64*(Flux_m05+tmp)
+
+      !Flux_x2(i1,i2)=Flux_p05-Flux_m05
+
+  enddo
+ enddo
+  do i1=1,N_x1+1
+     do i2=1,N_x2+1
+       Flux(i1,i2)=-(alpha*Flux_x1(i1,i2)+beta*Flux_x2(i1,i2))
+     enddo
+   enddo
+endif!order 4
+
+
+
+
+
+
+
 
 end subroutine compute_flux
 
@@ -1391,14 +1663,14 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
      
        do i1=1,nc_eta1
          do i2=1,Nc_eta2
-            if(a1(i1,i2)>0._f64)then
+            if(1+0*a1(i1,i2)>0._f64)then
             a1(i1,i2)=a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1) + &
             a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
              a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
               a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
             a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
             endif
-            if(a2(i1,i2)>0._f64)then  
+            if(1+0*a2(i1,i2)>0._f64)then  
             a2(i1,i2)=-(a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 ) +&
              a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
              a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
@@ -1436,9 +1708,7 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
        enddo
 
 
-     
 
-   
          
         do i1=1,nc_eta1+1
            a1(i1,nc_eta2+1)=a1(i1,1)
@@ -1449,6 +1719,75 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
            a2(nc_eta1+1,i2)=a2(1,i2)    
         enddo
      endif
+
+
+
+     if(div_case==30)then
+
+
+
+       a(-2)= 1._f64/6._f64
+       a(-1) =-1._f64
+       a(0) =1._f64/2._f64
+       a(1) =1._f64/3._f64
+       a(2) = 0._f64
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            a1(i1,i2)=a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=-(a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          enddo
+       enddo
+
+
+       a(-1) =-1._f64/3._f64
+       a(0) =-1._f64/2._f64
+       a(1) =1._f64
+       a(2)=-1._f64/6._f64
+       a(3)=0._f64
+
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            tmp=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1)
+             tmp=(tmp/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a1(i1,i2)=0.5_f64*(a1(i1,i2)+tmp)
+            tmp=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 ))
+             tmp=(tmp/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+             a2(i1,i2)=0.5_f64*(a2(i1,i2)+tmp)
+         enddo
+       enddo
+
+
+
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+
+    
+     endif
+
+
 
     if(div_case==4)then
        a(-3) = -1._f64/30._f64
@@ -1532,6 +1871,96 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
              
          enddo
        enddo
+        do i1=1,nc_eta1
+          do i2=1,Nc_eta2
+            a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
+            a2(i1,i2)=(a2(i1,i2)/(delta_eta1))*(x2_max-x2_min)/jac_array(i1,i2)
+          enddo
+        enddo
+         
+        do i1=1,nc_eta1+1
+           a1(i1,nc_eta2+1)=a1(i1,1)
+           a2(i1,nc_eta2+1)=a2(i1,1)
+        enddo
+        do i2=1,nc_eta2+1
+           a1(nc_eta1+1,i2)=a1(1,i2)
+           a2(nc_eta1+1,i2)=a2(1,i2)    
+        enddo
+     endif
+
+
+
+      if(div_case==50)then
+       a(-3) = 0._f64
+       a(-2) = 1._f64/20._f64
+       a(-1) = -1._f64/2._f64
+       a(0)  = -1._f64/3._f64
+       a(1)  = 1._f64
+       a(2)  = -1._f64/4._f64
+       a(3)  = 1._f64/30._f64
+       !a(-1) =-1._f64/3._f64
+       !a(0) =-1._f64/2._f64
+       !a(1) =1._f64
+       !a(2)=-1._f64/6._f64
+       !a(3)=0._f64
+
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            a1(i1,i2)=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1) + &
+              a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1)+ &
+              a(-3)*psi(i1, modulo(i2-3 -1+nc_eta2,nc_eta2)+1)
+
+            a2(i1,i2)=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-3)*psi(modulo(i1-3 -1+nc_eta1,nc_eta1)+1, i2 ))
+             
+         enddo
+       enddo
+
+       a(-3) = -1._f64/30._f64
+       a(-2) = 1._f64/4._f64
+       a(-1) = -1._f64
+       a(0)  = 1._f64/3._f64
+       a(1)  = 1._f64/2._f64
+       a(2)  = -1._f64/20._f64
+       a(3)  = 0._f64
+       !a(-1) =-1._f64/3._f64
+       !a(0) =-1._f64/2._f64
+       !a(1) =1._f64
+       !a(2)=-1._f64/6._f64
+       !a(3)=0._f64
+
+     
+       do i1=1,nc_eta1
+         do i2=1,Nc_eta2
+            tmp=a(3)*psi(i1, modulo(i2+3 -1+nc_eta2,nc_eta2)+1) + &
+            a(2)*psi(i1, modulo(i2+2 -1+nc_eta2,nc_eta2)+1) + a(1)*psi(i1,i2+1)+&
+             a(0)*psi(i1, modulo(i2 -1+nc_eta2,nc_eta2)+1) + &
+              a(-1)*psi(i1, modulo(i2-1 -1+nc_eta2,nc_eta2)+1) + &
+              a(-2)*psi(i1, modulo(i2-2 -1+nc_eta2,nc_eta2)+1)+ &
+              a(-3)*psi(i1, modulo(i2-3 -1+nc_eta2,nc_eta2)+1)
+            a1(i1,i2)=0.5_f64*(a1(i1,i2)+tmp)
+            
+            tmp=-(a(3)*psi(modulo(i1+3 -1+nc_eta1,nc_eta1)+1, i2 ) +&
+             a(2)*psi(modulo(i1+2-1+nc_eta1,nc_eta1)+1, i2 ) + a(1)*psi(i1+1,i2)+&
+             a(0)*psi(modulo(i1 -1+nc_eta1,nc_eta1)+1, i2 ) + &
+             a(-1)*psi(modulo(i1-1 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-2)*psi(modulo(i1-2 -1+nc_eta1,nc_eta1)+1, i2 )+ &
+             a(-3)*psi(modulo(i1-3 -1+nc_eta1,nc_eta1)+1, i2 ))
+             a2(i1,i2)=0.5_f64*(a2(i1,i2)+tmp)
+         enddo
+       enddo
+
+
+
+
         do i1=1,nc_eta1
           do i2=1,Nc_eta2
             a1(i1,i2)=(a1(i1,i2)/(delta_eta2))*(x1_max-x1_min)/jac_array(i1,i2)
