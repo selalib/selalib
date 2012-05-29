@@ -28,7 +28,7 @@ program bgk_csl
   sll_real64, dimension(:,:), pointer :: x1n_array, x2n_array
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, eta1c, eta2c
   sll_real64 :: delta_eta1, delta_eta2,alpha_mesh
-  sll_int  :: mesh_case,ierr,visu_step,test_case,rho_case
+  sll_int  :: mesh_case,ierr,visu_step,test_case,rho_case,phi_case
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
@@ -45,13 +45,14 @@ program bgk_csl
   visu_step = 10
   test_case = 4
   rho_case = 2
+  phi_case = 3
      
   alpha_mesh = 1.e-2_f64 !0.1_f64
   
   N_x1 = 64
   N_x2 = 64
   dt = 0.1_f64
-  nb_step = 3000
+  nb_step = 600
   
   N = max(N_x1,N_x2)
   
@@ -485,6 +486,8 @@ program bgk_csl
 
   do step = 1, nb_step
 
+
+
     do i2=1,nc_eta2
       do i1 = 1,nc_eta1
         new_node_positions(i1) = integration_points(1,i1,i2)
@@ -570,12 +573,14 @@ program bgk_csl
       phi_poisson(i1) = -phi_poisson(i1) + tmp
     enddo
     phi_poisson(N_x1+1) = phi_poisson(1) 
-    do i1=2,N_x1+1
-      buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
-    enddo
-    buf_1d(1)=buf_1d(N_x1+1)
-    phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
-
+    
+    if(phi_case==1)then
+      do i1=2,N_x1+1
+        buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
+      enddo
+      buf_1d(1)=buf_1d(N_x1+1)
+      phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
+    endif
     if(mod(step,visu_step)==0.or. step==1)then
       write(str2,*) step
       write(str,*) 'rho'//trim(adjustl((str2)))//'.dat'
@@ -616,33 +621,72 @@ program bgk_csl
 !      end do
 !    end do
 
-
+    !do i1=1,nc_eta1+1
+    !  print *,i1,phi_poisson(i1)
+    !enddo
+    !stop
+    call compute_spline_nonunif( phi_poisson, spl_per_x1, node_positions_x1)
+    
     do i1 = 1, nc_eta1+1 
       do i2 = 1, nc_eta2+1
         x1 = x1n_array(i1,i2)
         x2 = x2n_array(i1,i2)
         phi_val = 0._f64
-        xx = (x1-x1_min)/(x1_max-x1_min)
-        if(xx<=0._f64)then
-          xx = 0._f64
+        if(phi_case==1)then
+          xx = (x1-x1_min)/(x1_max-x1_min)
+          if(xx<=0._f64)then
+            xx = xx+1._f64
+          endif
+          if(xx>=1._f64)then
+            xx = xx-1._f64!1._f64-1e-15_f64
+          endif
+          if(xx<=0._f64)then
+            xx = 0._f64
+          endif      
+          xx = xx*real(N_x1,f64)
+          ii = floor(xx)
+          xx = xx-real(ii,f64)      
+          phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
         endif
-        if(xx>=1._f64)then
-          xx = xx-1._f64!1._f64-1e-15_f64
+        if(phi_case==2)then
+          xx = (x1-x1_min)/(x1_max-x1_min)-0.5_f64/real(N_x1,f64)
+          if(xx<=0._f64)then
+            xx = xx+1._f64
+          endif
+          if(xx>=1._f64)then
+            xx = xx-1._f64!1._f64-1e-15_f64
+          endif
+          if(xx<=0._f64)then
+            xx = 0._f64
+          endif      
+          xx = xx*real(N_x1,f64)
+          ii = floor(xx)
+          xx = xx-real(ii,f64)      
+          phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)
+          tmp = phi_val     
         endif
-        if(xx<=0._f64)then
-          xx = 0._f64
-        endif      
-        xx = xx*real(N_x1,f64)
-        ii = floor(xx)
-        xx = xx-real(ii,f64)      
-        phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
+        if(phi_case==3)then
+          xx = (x1-x1_min)/(x1_max-x1_min)!+0.5_f64/real(N_x1,f64)
+          if(xx<0.5_f64/real(N_x1,f64))then
+            xx = xx+1._f64
+          endif
+          new_node_positions(1)=xx
+          call interpolate_array_value_nonunif( new_node_positions(1:1), buf_1d(1:1), 1, spl_per_x1)
+          phi_val = buf_1d(1)
+          !phi_val = interpolate_value_nonunif( xx, spl_per_x1 )     
+        endif
+        !print *,x1,xx,phi_val
         FIELD_2D_AT_I( uniform_field, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
         !FIELD_2D_AT_I( uniform_field_velocity, i1, i2 ) = 0.5_f64*x2**2!&
         !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
         !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
       end do
+      !if(step<=2)then
+      !  print *,step,1,i1,tmp,phi_val,tmp-phi_val
+      !endif  
+      
     end do
-
+    
     do i1 = 1, nc_eta1 
       do i2 = 1, nc_eta2    
         f(i1,i2) = sll_get_df_val(dist_func, i1, i2)
@@ -705,45 +749,87 @@ program bgk_csl
       phi_poisson(i1) = -phi_poisson(i1) + tmp
     enddo
     phi_poisson(N_x1+1) = phi_poisson(1) 
-    do i1=2,N_x1+1
-      buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
-    enddo
-    buf_1d(1)=buf_1d(N_x1+1)
-    phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
-
+    if(phi_case==1)then
+      do i1=2,N_x1+1
+        buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
+      enddo
+      buf_1d(1)=buf_1d(N_x1+1)
+      phi_poisson(1:N_x1+1) = buf_1d(1:N_x1+1)
+    endif
   
   
    if(test_case==7)then
      phi_poisson = 0._f64
    endif
 
+    call compute_spline_nonunif( phi_poisson, spl_per_x1, node_positions_x1)
+    
 
     do i1 = 1, nc_eta1+1 
       do i2 = 1, nc_eta2+1
         x1 = x1n_array(i1,i2)
         x2 = x2n_array(i1,i2)
         phi_val = 0._f64
-        xx = (x1-x1_min)/(x1_max-x1_min)
-        if(xx<=0._f64)then
-          xx = 0._f64
+        if(phi_case==1)then
+          xx = (x1-x1_min)/(x1_max-x1_min)
+          if(xx<=0._f64)then
+            xx = xx +1._f64
+          endif
+          if(xx>=1._f64)then
+            xx = xx-1._f64!1._f64-1e-15_f64
+          endif
+          if(xx<=0._f64)then
+            xx = 0._f64
+          endif      
+          xx = xx*real(N_x1,f64)
+          ii = floor(xx)
+          xx = xx-real(ii,f64)      
+          phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
+          !&
+          !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
+          !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
+        endif  
+        if(phi_case==2)then
+          xx = (x1-x1_min)/(x1_max-x1_min)-0.5_f64/real(N_x1,f64)
+          if(xx<=0._f64)then
+            xx = xx+1._f64
+          endif
+          if(xx>=1._f64)then
+            xx = xx-1._f64!1._f64-1e-15_f64
+          endif
+          if(xx<=0._f64)then
+            xx = 0._f64
+          endif      
+          xx = xx*real(N_x1,f64)
+          ii = floor(xx)
+          xx = xx-real(ii,f64)      
+          phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
+          !&
+          !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
+          !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
+          tmp = phi_val
+        endif  
+        if(phi_case==3)then
+          xx = (x1-x1_min)/(x1_max-x1_min)!+0.5_f64/real(N_x1,f64)
+          if(xx<0.5_f64/real(N_x1,f64))then
+            xx = xx+1._f64
+          endif
+          new_node_positions(1)=xx
+          call interpolate_array_value_nonunif( new_node_positions(1:1), buf_1d(1:1), 1, spl_per_x1)
+          phi_val = buf_1d(1)
+         
+          !phi_val = interpolate_value_nonunif( xx, spl_per_x1 )     
         endif
-        if(xx>=1._f64)then
-          xx = xx-1._f64!1._f64-1e-15_f64
-        endif
-        if(xx<=0._f64)then
-          xx = 0._f64
-        endif      
-        xx = xx*real(N_x1,f64)
-        ii = floor(xx)
-        xx = xx-real(ii,f64)      
-        phi_val = (1._f64-xx)*phi_poisson(ii+1)+xx*phi_poisson(ii+2)     
-        FIELD_2D_AT_I( uniform_field_new, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)!&
-        !+(x1_max-x1_min)/(real(nb_step,f64)*dt)*x2
-        !-(x2_max-x2_min)/(real(nb_step,f64)*dt)*x1
-      end do
-    end do
+        FIELD_2D_AT_I( uniform_field_new, i1, i2 ) = ( 0.5_f64*x2**2+phi_val)
 
-        
+      end do
+      !if(step<=2)then
+      !  print *,step,2,i1,tmp,phi_val,tmp-phi_val
+      !endif  
+    end do
+    !if(step==2)then
+    !stop
+    !endif    
     
     do i1 = 1, nc_eta1 
       do i2 = 1, nc_eta2    
