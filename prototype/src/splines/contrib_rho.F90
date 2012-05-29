@@ -102,7 +102,6 @@ subroutine compute_rho_mapped_mesh&
 end subroutine compute_rho_mapped_mesh
 
 
-
 function compute_non_unif_integral(integration_points,N_points)
   sll_real64 :: compute_non_unif_integral
   sll_real64,dimension(:,:),pointer :: integration_points
