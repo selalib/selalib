@@ -102,7 +102,7 @@ contains
     type (field_2D_vec1), pointer                   :: advfield ! advection field defined by its stream function
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
-    sll_int32, parameter   :: order = 1 ,field_order=2   ! order of scheme
+    sll_int32, parameter   :: order = 1 ,field_order=4   ! order of scheme
 
     call csl_advance_1(csl_work, dist_func_2D, advfield, advfield, deltat, order,field_order)
     call csl_advance_2(csl_work, dist_func_2D, advfield, advfield, deltat, order,field_order)
@@ -122,7 +122,7 @@ contains
     type (field_2D_vec1), pointer                   :: advfield_new ! advection field at t+dt
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
-    sll_int32, parameter   :: order = 2 ,field_order=2   ! order of scheme
+    sll_int32, parameter   :: order = 2 ,field_order=4   ! order of scheme
  
     call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order,field_order)
     call csl_advance_2(csl_work, dist_func_2D, advfield_old, advfield_new, deltat, order,field_order)

@@ -51,8 +51,8 @@ program bgk_csl
   
   N_x1 = 64
   N_x2 = 64
-  dt = 0.1_f64
-  nb_step = 600
+  dt = 0.01_f64
+  nb_step = 6000
   
   N = max(N_x1,N_x2)
   
