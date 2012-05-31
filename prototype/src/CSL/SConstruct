@@ -42,3 +42,4 @@ env.Program('bgk_csl', ["bgk_csl.F90", "sll_csl.F90","../splines/contrib_rho.F90
 env.Program('bgk_csl_uniform', ["bgk_csl_uniform.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
 env.Program('bgk_fv_unif', ["bgk_fv_unif.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
 env.Program('bgk_fv', ["bgk_fv.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
+env.Program('bgk_fv2', ["bgk_fv2.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
