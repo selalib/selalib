@@ -11,14 +11,14 @@ module finite_volume2
 contains  
 
 
-subroutine Compute_flux2(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+subroutine Compute_flux2(a1,a2,f,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
   use numeric_constants
   implicit none
   
   
   sll_int,intent(in)::N_x1,N_x2,order
   !sll_real64,dimension(:,:), pointer :: chi,sigma
-   sll_real64,dimension(N_x1+1,N_x2+1):: a1,a2,f,f_store, Flux_x1,Flux_x2,flux
+   sll_real64,dimension(N_x1+1,N_x2+1):: a1,a2,f,jac_array, Flux_x1,Flux_x2,flux
   sll_real64,dimension(N_x1+1+2+1,N_x2+1+2+1) ::chi,sigma
   sll_real64,dimension(N_x1+1)::abar_x1,abar_x1m
   sll_real   ,dimension(N_x1+1)::abar_x2,abar_x2m!E
@@ -31,8 +31,8 @@ subroutine Compute_flux2(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,d
      beta =(1._f64/delta_x2)
    do i1=1,N_x1+1
         do i2=1,N_x2+1   
-           chi(i1,i2)   =f(i1,i2)
-           sigma(i1,i2) =f(i1,i2)
+           chi(i1,i2)   =f(i1,i2)/jac_array(i1,i2)
+           sigma(i1,i2) =f(i1,i2)/jac_array(i1,i2)
        enddo
    enddo
 
@@ -45,18 +45,6 @@ if(order==3) then
 
   ! For fixed  i2 
  do i2=1,N_x2+1
-      x2 = x2_min+real(i2-1,f64)*delta_x2
-     !do i1=1,N_x1
-     !abar_x1(i1)=(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))!a1(i1,i2)!special uniform     
-     !enddo
-     do i1=1,N_x1
-      df=abs(f_store(i1+1,i2)-f_store(i1,i2))
-     if(df>1.d-14) then
-     abar_x1(i1)=(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))!a1(i1,i2)!special uniform
-      else
-     abar_x1(i1)=chi(i1+1,i2)-chi(i1,i2)
-     endif
-     enddo
      do i1=1,N_x1
        abar_x1(i1) = a1(i1,i2)
      enddo
@@ -78,6 +66,12 @@ if(order==3) then
        i1p2=i1+2
        i1m2=i1-2
        i1m1=i1-1
+
+       i1p1=modulo(i1+1-1,N_x1)+1
+       i1p2=modulo(i1+2-1,N_x1)+1
+       i1m2=modulo(i1-2-1,N_x1)+1
+       i1m1=modulo(i1-1-1,N_x1)+1
+
      
        if (i1m1 <=0) then 
          i1m1=i1m1+N_x1
@@ -117,15 +111,6 @@ if(order==3) then
  enddo 
   !For fixed i1
  do i1=1,N_x1+1
-     do i2=1,N_x2
-      df=abs(f_store(i1,i2+1)-f_store(i1,i2))
-     if(df>1.d-14) then
-      abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
-     else
-      abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))
-     endif
-     !abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))!a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
-     enddo
      
      do i2=1,N_x2
        abar_x2(i2) = a2(i1,i2)
@@ -145,6 +130,12 @@ if(order==3) then
      i2p2=i2+2
      i2m2=i2-2
      i2m1=i2-1
+
+       i2p1=modulo(i2+1-1,N_x2)+1
+       i2p2=modulo(i2+2-1,N_x2)+1
+       i2m2=modulo(i2-2-1,N_x2)+1
+       i2m1=modulo(i2-1-1,N_x2)+1
+
      
      
      if (i2m1 <=0) then 
@@ -209,6 +200,12 @@ if(order==4) then
        i1p2=i1+2
        i1m2=i1-2
        i1m1=i1-1
+
+       i1p1=modulo(i1+1-1,N_x1)+1
+       i1p2=modulo(i1+2-1,N_x1)+1
+       i1m2=modulo(i1-2-1,N_x1)+1
+       i1m1=modulo(i1-1-1,N_x1)+1
+
      
        if (i1m1 <=0) then 
          i1m1=i1m1+N_x1
@@ -246,6 +243,11 @@ if(order==4) then
      i2p2=i2+2
      i2m2=i2-2
      i2m1=i2-1
+
+       i2p1=modulo(i2+1-1,N_x2)+1
+       i2p2=modulo(i2+2-1,N_x2)+1
+       i2m2=modulo(i2-2-1,N_x2)+1
+       i2m1=modulo(i2-1-1,N_x2)+1
      
      
      if (i2m1 <=0) then 
@@ -305,17 +307,6 @@ if(order==5) then
   ! For fixed  i2 
  do i2=1,N_x2+1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-     !do i1=1,N_x1
-     !abar_x1(i1)=(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))!a1(i1,i2)!special uniform     
-     !enddo
-     do i1=1,N_x1
-      df=abs(f_store(i1+1,i2)-f_store(i1,i2))
-     if(df>1.d-14) then
-     abar_x1(i1)=(chi(i1+1,i2)-chi(i1,i2))/(f_store(i1+1,i2)-f_store(i1,i2))!a1(i1,i2)!special uniform
-      else
-     abar_x1(i1)=chi(i1+1,i2)-chi(i1,i2)
-     endif
-     enddo
 
      do i1=1,N_x1
        abar_x1(i1) = a1(i1,i2)
@@ -335,6 +326,14 @@ if(order==5) then
        i1m2=i1-2
        i1m1=i1-1
        i1m3=i1-3
+
+       i1p1=modulo(i1+1-1,N_x1)+1
+       i1p2=modulo(i1+2-1,N_x1)+1
+       i1m2=modulo(i1-2-1,N_x1)+1
+       i1m1=modulo(i1-1-1,N_x1)+1
+       i1m3=modulo(i1-3-1,N_x1)+1
+
+
        if (i1m1 <=0) then 
          i1m1=i1m1+N_x1
        endif
@@ -378,15 +377,6 @@ if(order==5) then
 
   !For fixed i1
  do i1=1,N_x1+1
-     do i2=1,N_x2
-      df=abs(f_store(i1,i2+1)-f_store(i1,i2))
-     if(df>1.d-14) then
-      abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
-     else
-      abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))
-     endif
-     !abar_x2(i2)=(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))!a1(i1,i2)!(sigma(i1,i2+1)-sigma(i1,i2))/(f_store(i1,i2+1)-f_store(i1,i2))
-     enddo
 
      do i2=1,N_x2
        abar_x2(i2) = a2(i1,i2)
@@ -405,7 +395,13 @@ if(order==5) then
      i2m2=i2-2
      i2m1=i2-1
      i2m3=i2-3
-     
+
+       i2p1=modulo(i2+1-1,N_x2)+1
+       i2p2=modulo(i2+2-1,N_x2)+1
+       i2m2=modulo(i2-2-1,N_x2)+1
+       i2m1=modulo(i2-1-1,N_x2)+1
+       i2m3=modulo(i2-3-1,N_x2)+1
+
      if (i2m1 <=0) then 
          i2m1=i2m1+N_x2
      endif
@@ -490,6 +486,14 @@ endif
        i1m2=i1-2
        i1m1=i1-1
        i1m3=i1-3
+       
+       i1p1=modulo(i1+1-1,N_x1)+1
+       i1p2=modulo(i1+2-1,N_x1)+1
+       i1m2=modulo(i1-2-1,N_x1)+1
+       i1m1=modulo(i1-1-1,N_x1)+1
+       i1m3=modulo(i1-3-1,N_x1)+1
+
+       
        if (i1m1 <=0) then 
          i1m1=i1m1+N_x1
        endif
@@ -548,6 +552,15 @@ endif
      i2m2=i2-2
      i2m1=i2-1
      i2m3=i2-3
+     
+
+       i2p1=modulo(i2+1-1,N_x2)+1
+       i2p2=modulo(i2+2-1,N_x2)+1
+       i2m2=modulo(i2-2-1,N_x2)+1
+       i2m1=modulo(i2-1-1,N_x2)+1
+       i2m3=modulo(i2-3-1,N_x2)+1
+     
+     
      
      if (i2m1 <=0) then 
          i2m1=i2m1+N_x2
@@ -710,9 +723,9 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
            !a2(i1,i2)=-((psi(i1+1,i2)-psi(modulo(i1-1+nc_eta1,nc_eta1)+1,i2))&
            !/(delta_eta1))*(x2_max-x2_min)/(0.5_f64*(jac_array(i1,i2)+jac_array(i1,i2+1)))
            a1(i1,i2)=((psi(i1+1,i2+1)-psi(i1+1,modulo(i2-1+nc_eta2,nc_eta2)+1))&
-           /(delta_eta2))*(x1_max-x1_min)/(0.5_f64*(jac_array(i1,i2)+jac_array(i1+1,i2)))
+           /(delta_eta2))*(x1_max-x1_min)!/(0.5_f64*(jac_array(i1,i2)+jac_array(i1+1,i2)))
            a2(i1,i2)=-((psi(i1+1,i2+1)-psi(modulo(i1-1+nc_eta1,nc_eta1)+1,i2+1))&
-           /(delta_eta1))*(x2_max-x2_min)/(0.5_f64*(jac_array(i1,i2)+jac_array(i1,i2+1)))
+           /(delta_eta1))*(x2_max-x2_min)!/(0.5_f64*(jac_array(i1,i2)+jac_array(i1,i2+1)))
          enddo
        enddo
     
@@ -1209,7 +1222,7 @@ program bgk_fv2
   div_case=0
   
    rk=4
-   order=3
+   order=5
   N_x1 = 64!256
   N_x2 = 64!256
   dt = 0.02_f64!0.005_f64
@@ -1705,7 +1718,7 @@ program bgk_fv2
 
   if(rk==1) then
     f_tmp=f
-    call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+    call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
    do i1=1,N_x1+1
      do i2=1,N_x2+1
         f(i1,i2)=f_store(i1,i2)+dt*Flux(i1,i2)
@@ -1724,7 +1737,7 @@ program bgk_fv2
         f_tmp(i1,i2)=f_store(i1,i2)!jac_array(i1,i2)
         enddo
           enddo
-        call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K1=Flux
          
         do i1=1,N_x1+1
@@ -1744,7 +1757,7 @@ program bgk_fv2
          
          
          
-        call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
          
          
@@ -1775,7 +1788,7 @@ program bgk_fv2
         a42=0._f64
         a43=1._f64
         f_tmp=f_store
-        call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K1=Flux
         do i1=1,N_x1+1
           do i2=1,N_x2+1
@@ -1791,7 +1804,7 @@ program bgk_fv2
 
          
                 
-        call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
 
          do i1=1,N_x1+1
@@ -1810,7 +1823,7 @@ program bgk_fv2
 
          
          
-        call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K3=Flux
          do i1=1,N_x1+1
           do i2=1,N_x2+1
@@ -1827,7 +1840,7 @@ program bgk_fv2
 
          
          
-        call Compute_flux2(a1,a2,f_tmp,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K4=Flux
    do i1=1,N_x1+1
      do i2=1,N_x2+1
@@ -1857,7 +1870,7 @@ program bgk_fv2
             f_tmp(i1,i2)=f_equil(i1,i2)+K1(i1,i2)*dt*a21
           enddo
          enddo
-        call Compute_flux2(a1,a2,f_tmp,f_equil,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
    do i1=1,N_x1+1
      do i2=1,N_x2+1
@@ -1883,14 +1896,14 @@ program bgk_fv2
         a42=0._f64
         a43=1._f64
         f_tmp=f_equil
-        call Compute_flux2(a1,a2,f_tmp,f_equil,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K1=Flux
         do i1=1,N_x1+1
           do i2=1,N_x2+1
             f_tmp(i1,i2)=f_equil(i1,i2)+K1(i1,i2)*dt*a21
           enddo
          enddo
-        call Compute_flux2(a1,a2,f_tmp,f_equil,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K2=Flux
 
          do i1=1,N_x1+1
@@ -1898,14 +1911,14 @@ program bgk_fv2
             f_tmp(i1,i2)=f_equil(i1,i2)+K1(i1,i2)*dt*a31+K2(i1,i2)*dt*a32
           enddo
          enddo
-        call Compute_flux2(a1,a2,f_tmp,f_equil,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K3=Flux
          do i1=1,N_x1+1
           do i2=1,N_x2+1
             f_tmp(i1,i2)=f_equil(i1,i2)+K1(i1,i2)*dt*a41+K2(i1,i2)*dt*a42+K3(i1,i2)*dt*a43
           enddo
          enddo
-        call Compute_flux2(a1,a2,f_tmp,f_equil,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
+        call Compute_flux2(a1,a2,f_tmp,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
          K4=Flux
    do i1=1,N_x1+1
      do i2=1,N_x2+1
