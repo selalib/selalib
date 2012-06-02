@@ -49,7 +49,7 @@ program bgk_fv
   div_case=0
   
    rk=4
-   order=6
+   order=3
   N_x1 = 64!256
   N_x2 = 64!256
   dt = 0.02_f64!0.005_f64
@@ -887,6 +887,94 @@ subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,de
            sigma(i1,i2) =a2(i1,i2)*f(i1,i2)
        enddo
    enddo
+   
+   
+if(order==2) then
+
+    chi(N_x1+2,1:N_x2+1+2)=chi(2,1:N_x2+1+2) 
+    chi(N_x1+3,1:N_x2+1+2)=chi(3,1:N_x2+1+2)
+    sigma(1:N_x1+1+2,N_x2+2)=sigma(1:N_x1+1+2,2)
+    sigma(1:N_x1+1+2,N_x2+3)=sigma(1:N_x1+1+2,3)
+
+  ! For fixed  i2 
+ do i2=1,N_x2+1
+
+     
+     
+ 
+  do i1=1,N_x1+1
+    
+       i1p1=i1+1
+       i1p2=i1+2
+       i1m2=i1-2
+       i1m1=i1-1
+     
+       if (i1m1 <=0) then 
+         i1m1=i1m1+N_x1
+       endif
+       if (i1m2 <=0) then 
+         i1m2=i1m2+N_x1     
+       endif
+        
+       !if (i1p1 >=N_x1+1) then 
+        ! i1p1=i1p1+N_x1+1
+       !endif
+       !if (i1p2 >=N_x1+1) then 
+        ! i1p2=i1p2+N_x1+1
+       !endif
+    
+        Flux_p05=0.5_f64*chi(i1,i2)+0.5_f64*chi(i1p1,i2)! stencil i1-1,i1,i1+1  
+
+        Flux_m05=0.5_f64*chi(i1m1,i2)+0.5_f64*chi(i1,i2)! stencil i1-1,i1,i1+1   
+
+       
+       Flux_x1(i1,i2)=Flux_p05-Flux_m05
+     
+   
+
+  enddo
+ enddo 
+  !For fixed i1
+ do i1=1,N_x1+1
+     
+
+     
+     
+     
+  do i2=1,N_x2+1
+     i2p1=i2+1
+     i2p2=i2+2
+     i2m2=i2-2
+     i2m1=i2-1
+     
+     
+     if (i2m1 <=0) then 
+         i2m1=i2m1+N_x2
+     endif
+     if (i2m2 <=0) then 
+         i2m2=i2m2+N_x2      
+     endif
+        
+   
+    
+        Flux_p05=0.5_f64*sigma(i1,i2)+0.5_f64*sigma(i1,i2+1)! stencil i2-1,i2,i2+1  
+ 
+     
+        Flux_m05=0.5_f64*sigma(i1,i2m1)+0.5_f64*sigma(i1,i2  )! stencil i2-1,i2,i2+1  
+   
+      Flux_x2(i1,i2)=Flux_p05-Flux_m05
+
+  enddo
+ enddo
+  do i1=1,N_x1+1
+     do i2=1,N_x2+1
+       Flux(i1,i2)=-(alpha*Flux_x1(i1,i2)+beta*Flux_x2(i1,i2))
+     enddo
+   enddo
+
+
+
+endif   
 
 if(order==3) then
    
