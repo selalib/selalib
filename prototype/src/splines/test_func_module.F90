@@ -31,7 +31,7 @@ module test_func_module
 
       function_test: select case(function_num)
         case(1)
-           f = cos(x)
+           f = 200*cos(x)
         case(2)
            f = sin(x)
         case(3)
@@ -76,7 +76,7 @@ module test_func_module
 
       function_test: select case(function_num)
         case(1)
-           fprime = -sin(x)
+           fprime = -200*sin(x)
         case(2)
            fprime = cos(x)
         case(3)

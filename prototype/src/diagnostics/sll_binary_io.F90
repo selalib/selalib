@@ -85,23 +85,42 @@ close(file_id, IOSTAT=error)
 
 end subroutine sll_binary_file_close
 
-#define NEW_FUNCTION(func_name, dataspace_dimension, array_name_and_dims) \
-subroutine func_name(file_id,array,error);                                \
-sll_int32 , intent(in)       :: file_id;                                  \
-sll_int32 , intent(out)      :: error;                                    \
-sll_real64, intent(in)       :: array_name_and_dims;                      \
-                                                                          \
-write(file_id,IOSTAT=error) array;                                        \
-                                                                          \
-end subroutine func_name
+
 
 !> Write a 1D array in the binary file file_id
-NEW_FUNCTION(sll_binary_write_array_1d, 1, array(:))
+
+subroutine sll_binary_write_array_1d(file_id,array,error)
+sll_int32 , intent(in)       :: file_id
+sll_int32 , intent(out)      :: error
+sll_real64, intent(in)       :: array(:)
+                                
+write(file_id,IOSTAT=error) array
+                               
+end subroutine sll_binary_write_array_1d
+
 
 !> Write a 2D array in the binary file file_id
-NEW_FUNCTION(sll_binary_write_array_2d, 2, array(:,:))
+
+subroutine sll_binary_write_array_2d(file_id,array,error)
+sll_int32 , intent(in)       :: file_id
+sll_int32 , intent(out)      :: error
+sll_real64, intent(in)       :: array(:,:)
+                                
+write(file_id,IOSTAT=error) array
+                               
+end subroutine sll_binary_write_array_2d
+
 
 !> Write a 3D array in the binary file file_id
-NEW_FUNCTION(sll_binary_write_array_3d, 3, array(:,:,:))
+
+subroutine sll_binary_write_array_3d(file_id,array,error)
+sll_int32 , intent(in)       :: file_id
+sll_int32 , intent(out)      :: error
+sll_real64, intent(in)       :: array(:,:,:)
+                                
+write(file_id,IOSTAT=error) array
+                               
+end subroutine sll_binary_write_array_3d
+
 
 end module sll_binary_io
