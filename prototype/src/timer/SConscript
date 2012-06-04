@@ -1,0 +1,3 @@
+Import('env')
+lib = env.Library('sll_timer', ["sll_timer.F90"])
+Return('lib')

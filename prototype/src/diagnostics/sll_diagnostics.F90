@@ -61,6 +61,14 @@ enum, bind(C)
    enumerator :: NODE_CENTERED_DF = 0, CELL_CENTERED_DF = 1
 end enum
 
+interface write_mesh
+   module procedure write_mesh_2d, write_mesh_3d
+end interface
+
+interface write_vec1d
+   module procedure write_vec1_2d, write_vec1_3d
+end interface
+
 public write_vec1d, write_vec2d, write_mesh
 
 contains  
@@ -89,10 +97,6 @@ character(len=3) :: coord_names(2)
 sll_int32 :: binfile_id 
 #endif
 
-SLL_ASSERT(size(x1,1) == nnodes_x1)
-SLL_ASSERT(size(x2,1) == nnodes_x1)
-SLL_ASSERT(size(x1,2) == nnodes_x2)
-SLL_ASSERT(size(x2,2) == nnodes_x2)
 
 call sll_xmf_file_create(trim(mesh_prefix)//".xmf",xmffile_id,error)
 call sll_xmf_grid_geometry_2d(xmffile_id, trim(mesh_prefix), nnodes_x1, nnodes_x2)
@@ -101,7 +105,7 @@ call sll_xmf_grid_geometry_2d(xmffile_id, trim(mesh_prefix), nnodes_x1, nnodes_x
 
 call sll_binary_file_create(mesh_prefix//"-x1.bin",binfile_id,error); SLL_ASSERT(error==0)
 call sll_binary_write_array_2d(binfile_id,x1,error); SLL_ASSERT(error==0)
-call sll_binary_file_close(binfile_id,error)
+call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
 call sll_binary_file_create(mesh_prefix//"-x2.bin",binfile_id,error); SLL_ASSERT(error==0)
 call sll_binary_write_array_2d(binfile_id,x2,error); SLL_ASSERT(error==0)
 call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
@@ -127,7 +131,8 @@ call sll_xmf_file_close(xmffile_id,error)
 
 end subroutine write_mesh_data_2d
 
-subroutine write_mesh_data_3d(mesh_prefix,x1,x2,x3,nnodes_x1,nnodes_x2,nnodes_x3,error)
+subroutine write_mesh_data_3d(mesh_prefix,x1,x2,x3, &
+                              nnodes_x1,nnodes_x2,nnodes_x3,error)
 character(len=*), intent(in) :: mesh_prefix 
 sll_real64, dimension(:,:,:), intent(in) :: x1
 sll_real64, dimension(:,:,:), intent(in) :: x2
@@ -147,39 +152,23 @@ integer(hid_t)   :: hdffile_id
 sll_int32 :: binfile_id
 #endif
 
-SLL_ASSERT(size(x1,1) == nnodes_x1)
-SLL_ASSERT(size(x2,1) == nnodes_x2)
-SLL_ASSERT(size(x3,1) == nnodes_x3)
-SLL_ASSERT(size(x1,2) == nnodes_x1)
-SLL_ASSERT(size(x2,2) == nnodes_x2)
-SLL_ASSERT(size(x3,2) == nnodes_x3)
-SLL_ASSERT(size(x1,3) == nnodes_x1)
-SLL_ASSERT(size(x2,3) == nnodes_x2)
-SLL_ASSERT(size(x3,3) == nnodes_x3)
 
 call sll_xmf_file_create(trim(mesh_prefix)//".xmf",xmffile_id,error)
-write(xmffile_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(xmffile_id,"(a,3i5,a)")"<Topology TopologyType='3DSMesh' NumberOfElements='", &
-                     nnodes_x3,nnodes_x2,nnodes_x1,"'/>"
-write(xmffile_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
-
-#define WRITE_BIN_ARRAY(array) \
-call sll_binary_file_create(mesh_prefix//"-array.bin",binfile_id,error); \
-SLL_ASSERT(error==0); \
-call sll_binary_write_array_3d(binfile_id,array,error); \
-SLL_ASSERT(error==0); \
-call sll_binary_file_close(binfile_id,error); \
-SLL_ASSERT(error==0); \
-write(xmffile_id,"(a,3i5,a)")"<DataItem Dimensions='",nnodes_x3,nnodes_x2,nnodes_x1 \
-                  ,"' NumberType='Float' Precision='8' Format='Binary'>"; \
-write(xmffile_id,"(a)")mesh_prefix//"-array.bin"; \
-write(xmffile_id,"(a)")"</DataItem>"
+call sll_xmf_grid_geometry_3d(xmffile_id,trim(mesh_prefix),nnodes_x1,nnodes_x2,nnodes_x3)
 
 #ifdef NOHDF5
 
-WRITE_BIN_ARRAY(x1)
-WRITE_BIN_ARRAY(x2)
-WRITE_BIN_ARRAY(x3)
+call sll_binary_file_create(mesh_prefix//"-x1.bin",binfile_id,error);SLL_ASSERT(error==0)
+call sll_binary_write_array_3d(binfile_id,x1,error);SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error);SLL_ASSERT(error==0);
+
+call sll_binary_file_create(mesh_prefix//"-x2.bin",binfile_id,error);SLL_ASSERT(error==0)
+call sll_binary_write_array_3d(binfile_id,x2,error);SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error);SLL_ASSERT(error==0);
+
+call sll_binary_file_create(mesh_prefix//"-x3.bin",binfile_id,error);SLL_ASSERT(error==0)
+call sll_binary_write_array_3d(binfile_id,x3,error);SLL_ASSERT(error==0)
+call sll_binary_file_close(binfile_id,error);SLL_ASSERT(error==0);
 
 #else
 
@@ -206,7 +195,6 @@ end do
 
 #endif
 
-write(xmffile_id,"(a)")"</Geometry>"
 call sll_xmf_file_close(xmffile_id,error)
 
 end subroutine write_mesh_data_3d
@@ -251,7 +239,7 @@ end subroutine write_mesh_data_3d
 !! A file <i>mesh.xmf</i> is created, readable by VisIt or Paraview. For non
 !!moving mesh, call it only one time, heavy data produced will be reused.
 !!
-subroutine write_mesh(x1,x2,nnodes_x1,nnodes_x2,mesh_prefix)
+subroutine write_mesh_2d(x1,x2,nnodes_x1,nnodes_x2,mesh_prefix)
 character(len=*), intent(in) :: mesh_prefix 
 sll_real64, dimension(:,:), intent(in) :: x1
 sll_real64, dimension(:,:), intent(in) :: x2
@@ -259,9 +247,38 @@ sll_int32, intent(in) :: nnodes_x1
 sll_int32, intent(in) :: nnodes_x2
 sll_int32 :: error
     
+SLL_ASSERT(size(x1,1) == nnodes_x1)
+SLL_ASSERT(size(x2,1) == nnodes_x1)
+SLL_ASSERT(size(x1,2) == nnodes_x2)
+SLL_ASSERT(size(x2,2) == nnodes_x2)
+
 call write_mesh_data_2d(mesh_prefix,x1,x2,nnodes_x1,nnodes_x2,error)
 
-end subroutine write_mesh
+end subroutine write_mesh_2d
+
+subroutine write_mesh_3d(x1,x2,x3,nnodes_x1,nnodes_x2,nnodes_x3,mesh_prefix)
+character(len=*), intent(in) :: mesh_prefix 
+sll_real64, dimension(:,:,:), intent(in) :: x1
+sll_real64, dimension(:,:,:), intent(in) :: x2
+sll_real64, dimension(:,:,:), intent(in) :: x3
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+sll_int32, intent(in) :: nnodes_x3
+sll_int32 :: error
+
+SLL_ASSERT(size(x1,1) == nnodes_x1)
+SLL_ASSERT(size(x2,1) == nnodes_x1)
+SLL_ASSERT(size(x3,1) == nnodes_x1)
+SLL_ASSERT(size(x1,2) == nnodes_x2)
+SLL_ASSERT(size(x2,2) == nnodes_x2)
+SLL_ASSERT(size(x3,2) == nnodes_x2)
+SLL_ASSERT(size(x1,3) == nnodes_x3)
+SLL_ASSERT(size(x2,3) == nnodes_x3)
+SLL_ASSERT(size(x3,3) == nnodes_x3)
+    
+call write_mesh_data_3d(mesh_prefix,x1,x2,x3,nnodes_x1,nnodes_x2,nnodes_x3,error)
+
+end subroutine write_mesh_3d
     
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !> Write XDMF file for vector 1d on 2d mesh with data in binary or HDF5 files
@@ -310,7 +327,7 @@ end subroutine write_mesh
 !!\endverbatim
 !! A file <i>f.xmf</i> is created, readable by VisIt or Paraview. 
 !!
-subroutine write_vec1d(vec_values,nnodes_x1,nnodes_x2,field_prefix,mesh_prefix,icenter)
+subroutine write_vec1_2d(vec_values,nnodes_x1,nnodes_x2,field_prefix,mesh_prefix,icenter)
 character(len=*), intent(in) :: field_prefix
 character(len=*), intent(in) :: mesh_prefix
 sll_real64, dimension(:,:), intent(in) :: vec_values
@@ -387,10 +404,100 @@ end if
 
 #endif
 
-end subroutine write_vec1d
+end subroutine write_vec1_2d
+
+subroutine write_vec1_3d(vec_values,nnodes_x1,nnodes_x2,nnodes_x3, &
+                         field_prefix,mesh_prefix,icenter)
+character(len=*), intent(in) :: field_prefix
+character(len=*), intent(in) :: mesh_prefix
+sll_real64, dimension(:,:,:), intent(in) :: vec_values
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+sll_int32, intent(in) :: nnodes_x3
+sll_int32             :: ncells_x1
+sll_int32             :: ncells_x2
+sll_int32             :: ncells_x3
+
+#ifndef NOHDF5
+integer(hid_t)   :: hdffile_id
+#else
+sll_int32 :: binfile_id
+#endif
+
+sll_int32 :: xmffile_id
+
+integer :: error
+logical :: flag
+integer, intent(in), optional :: icenter   ! centering ('node' or 'cell')
+
+SLL_ASSERT(size(vec_values,1) == nnodes_x1)
+SLL_ASSERT(size(vec_values,2) == nnodes_x2)
+SLL_ASSERT(size(vec_values,3) == nnodes_x3)
+ncells_x1 = nnodes_x1 - 1
+ncells_x2 = nnodes_x2 - 1
+ncells_x3 = nnodes_x3 - 1
+
+inquire(file=trim(mesh_prefix)//".xmf", exist=flag) 
+
+if (.not. flag) then
+   call errout(6,"W","sll_diagnostics:write_vec1_3d","Mesh file does not exist")
+end if
+
+if (.not. present(icenter)) then
+   call errout(6,"W","sll_diagnostics:write_vec1_3d","Default: cell centered value")
+end if
+
+call sll_xmf_file_create(trim(field_prefix)//".xmf",xmffile_id,error)
+
+call sll_xmf_grid_geometry_3d(xmffile_id, trim(mesh_prefix), &
+                              nnodes_x1, nnodes_x2, nnodes_x3)
+
+if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
+ call sll_xmf_field_3d(xmffile_id,'NodeValues',trim(field_prefix), &
+                       nnodes_x1,nnodes_x2,nnodes_x3,'Node')
+else
+ call sll_xmf_field_3d(xmffile_id,'CellValues',trim(field_prefix), &
+                       ncells_x1,ncells_x2,ncells_x3,'Cell')
+end if
+
+call sll_xmf_file_close(xmffile_id,error)
+
+
+#ifndef NOHDF5
+
+call sll_hdf5_file_create(trim(field_prefix)//".h5",hdffile_id,error)
+SLL_ASSERT(error==0)
+if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values,"NodeValues",error)
+   SLL_ASSERT(error==0)
+else
+   call sll_hdf5_write_array_3d(hdffile_id, &
+                                vec_values(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
+                                "CellValues",error)
+   SLL_ASSERT(error==0)
+end if
+call sll_hdf5_file_close(hdffile_id,error)
+SLL_ASSERT(error==0)
+
+#else
+
+if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values,error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+else
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id, &
+        vec_values(1:ncells_x1,1:ncells_x2,1:ncells_x3),error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+end if
+
+#endif
+
+end subroutine write_vec1_3d
   
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!> Write XDMF file for vector 2d on 2d mesh with data in binary files
+!> Write XDMF file for vector 2d on 2d mesh with data in binary or hdf5 files
 !!
 !! Light data are in :
 !!  - <c>field_prefix.xmf</c>.
@@ -539,6 +646,162 @@ call sll_hdf5_file_close(hdffile_id,error); SLL_ASSERT(error==0)
 #endif
 
 end subroutine write_vec2d
+
+!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!> Write XDMF file for vector 3d on 3d mesh with data in binary or hdf5 files
+!!
+!! Light data are in :
+!!  - <c>field_prefix.xmf</c>.
+!! Heavy data :
+!!  - mesh nodes coordinates created by write_mesh call are in :
+!!     - <c>mesh_prefix.h5</c>
+!!     - <c>mesh_prefix-x123.bin</c>
+!!  - scalar values are in :
+!!     - <c>field_prefix.h5</c>
+!!     - <c>field_prefix-x123.bin</c>
+!!
+!! \param[in] vec_values_x1 Array with vector values
+!! \param[in] vec_values_x2 Array with vector values
+!! \param[in] vec_values_x3 Array with vector values
+!! \param[in] nnodes_x1 nodes number along direction 1
+!! \param[in] nnodes_x2 nodes number along direction 2
+!! \param[in] nnodes_x3 nodes number along direction 2
+!! \param[in] field_prefix filename prefix for the vector
+!! \param[in] mesh_prefix filename prefix for the mesh
+!! \param[in] icenter parameter to distinguish cells values or nodes values
+!!
+subroutine write_vec3d( vec_values_x1, vec_values_x2, vec_values_x3,      &
+                        nnodes_x1, nnodes_x2, nnodes_x3,              &
+                        field_prefix, mesh_prefix, icenter)
+
+character(len=*), intent(in) :: field_prefix !prefix for field file
+character(len=*), intent(in) :: mesh_prefix  !prefix for mesh file
+sll_real64, dimension(:,:,:), intent(in) :: vec_values_x1
+sll_real64, dimension(:,:,:), intent(in) :: vec_values_x2
+sll_real64, dimension(:,:,:), intent(in) :: vec_values_x3
+sll_int32, intent(in) :: nnodes_x1
+sll_int32, intent(in) :: nnodes_x2
+sll_int32, intent(in) :: nnodes_x3
+sll_int32             :: ncells_x1
+sll_int32             :: ncells_x2
+sll_int32             :: ncells_x3
+integer, intent(in), optional :: icenter   ! centering of field, one of ('node' or 'cell')
+
+sll_int32        :: error
+logical          :: flag
+sll_int32        :: xmffile_id
+
+#ifndef NOHDF5
+integer(hid_t)   :: hdffile_id
+#else
+sll_int32        :: binfile_id
+#endif
+
+SLL_ASSERT(size(vec_values_x1,1) == nnodes_x1)
+SLL_ASSERT(size(vec_values_x1,2) == nnodes_x2)
+SLL_ASSERT(size(vec_values_x1,3) == nnodes_x3)
+SLL_ASSERT(size(vec_values_x2,1) == nnodes_x1)
+SLL_ASSERT(size(vec_values_x2,2) == nnodes_x2)
+SLL_ASSERT(size(vec_values_x2,3) == nnodes_x3)
+SLL_ASSERT(size(vec_values_x3,1) == nnodes_x1)
+SLL_ASSERT(size(vec_values_x3,2) == nnodes_x2)
+SLL_ASSERT(size(vec_values_x3,3) == nnodes_x3)
+
+ncells_x1 = nnodes_x1-1
+ncells_x2 = nnodes_x2-1
+ncells_x3 = nnodes_x3-1
+
+inquire(file=trim(mesh_prefix)//".xmf", exist=flag) 
+
+if (.not. flag) then
+   call errout(6,"W","sll_diagnostics:write_vec3d", "Mesh file does not exist" )
+end if
+if (.not. present(icenter)) then
+   call errout(6,"W","sll_diagnostics:write_vec3d","Default: cell centered value")
+end if
+    
+call sll_xmf_file_create(trim(field_prefix)//".xmf",xmffile_id,error)
+
+call sll_xmf_grid_geometry_3d(xmffile_id, trim(mesh_prefix), &
+                              nnodes_x1, nnodes_x2, nnodes_x3)
+
+if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
+   call sll_xmf_field_3d(xmffile_id,'NodeValues1', &
+                         trim(field_prefix),nnodes_x1,nnodes_x2,nnodes_x3,'Node')
+   call sll_xmf_field_3d(xmffile_id,'NodeValues2', &
+                         trim(field_prefix),nnodes_x1,nnodes_x2,nnodes_x3,'Node')
+   call sll_xmf_field_3d(xmffile_id,'NodeValues3', &
+                         trim(field_prefix),nnodes_x1,nnodes_x2,nnodes_x3,'Node')
+else
+   call sll_xmf_field_3d(xmffile_id,'CellValues1',trim(field_prefix), &
+                         ncells_x1,ncells_x2,ncells_x3,'Cell')
+   call sll_xmf_field_3d(xmffile_id,'CellValues2',trim(field_prefix), &
+                         ncells_x1,ncells_x2,ncells_x3,'Cell')
+   call sll_xmf_field_3d(xmffile_id,'CellValues3',trim(field_prefix), &
+                         ncells_x1,ncells_x2,ncells_x3,'Cell')
+end if
+    
+call sll_xmf_file_close(xmffile_id,error)
+
+#ifdef NOHDF5
+
+if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
+
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues1.bin", &
+                               binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values_x1,error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues2.bin", &
+                               binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values_x2,error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+
+   call sll_binary_file_create(trim(field_prefix)//"-NodeValues3.bin", &
+                               binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values_x3,error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+
+else
+
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues1.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values_x1(1:ncells_x1,1:ncells_x2,1:ncells_x3),error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues2.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values_x2(1:ncells_x1,1:ncells_x2,1:ncells_x3),error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+
+   call sll_binary_file_create(trim(field_prefix)//"-CellValues3.bin",binfile_id,error); SLL_ASSERT(error==0)
+   call sll_binary_write_array_3d(binfile_id,vec_values_x3(1:ncells_x1,1:ncells_x2,1:ncells_x3),error); SLL_ASSERT(error==0)
+   call sll_binary_file_close(binfile_id,error); SLL_ASSERT(error==0)
+
+end if
+
+#else
+
+call sll_hdf5_file_create(trim(field_prefix)//".h5",hdffile_id,error)
+SLL_ASSERT(error==0)
+
+if (present(icenter) .and. icenter == NODE_CENTERED_DF) then
+
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values_x1,"/NodeValues1",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values_x2,"/NodeValues2",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values_x3,"/NodeValues3",error); SLL_ASSERT(error==0)
+
+else
+
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values_x1(1:ncells_x1,1:ncells_x2,1:ncells_x3),"/CellValues1",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values_x2(1:ncells_x1,1:ncells_x2,1:ncells_x3),"/CellValues2",error); SLL_ASSERT(error==0)
+   call sll_hdf5_write_array_3d(hdffile_id,vec_values_x3(1:ncells_x1,1:ncells_x2,1:ncells_x3),"/CellValues2",error); SLL_ASSERT(error==0)
+
+end if
+call sll_hdf5_file_close(hdffile_id,error); SLL_ASSERT(error==0)
+
+#endif
+
+end subroutine write_vec3d
+
 
 !------------------------------------------------------------------------------
 !> Outputs an error message:

@@ -3,6 +3,25 @@ import os
 import socket
 import distutils.util
 
+os.system("rm -f conf.h")
+os.system("touch conf.h")
+
+fichier = open("conf.h", "w")
+fichier.write("! Generated automatically.  DO NOT EDIT!\n")
+
+
+if os.environ.has_key('FFTWINCPATH') and os.environ.has_key('FFTWLIBPATH') :
+  FFTW_LIB_PATH = os.environ['FFTWLIBPATH']
+  FFTW_INC_PATH = os.environ['FFTWINCPATH']
+  FFTW = 'fftw3'
+else :
+  FFTW_LIB_PATH = ''
+  FFTW_INC_PATH = ''
+  FFTW = ''
+  fichier.write("#define _NOFFTW\n")
+
+fichier.close()
+
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
 
@@ -11,25 +30,25 @@ print 'platform : ' + platform
 
 env = Environment( ENV = os.environ,
                    F90PATH = ['../memory','../precision','../assert',
-                              '../utilities','../constants'],
+                              '../utilities','../constants','../timer',
+                              '../fftpack', FFTW_INC_PATH,'.'],
                    FORTRANMODDIRPREFIX= '-J', 
-                   LIBPATH= ['.'],
-                   LIBS=['sll_memory','sll_precision','sll_assertion',
-                         'sll_misc','sll_constants'],
-                   F90FLAGS = ['-g', '-W', '-Wall', '-DTEST_TIME', 
+                   LIBPATH= ['.', FFTW_LIB_PATH],
+                   LIBS=['sll_fft','sll_memory','sll_precision',
+                         'sll_assertion', 'sll_misc','sll_constants',
+                         'sll_timer','fftpack',FFTW],
+                   F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
                                '-DDEBUG','-DGFORTRAN',
                                '-ffree-line-length-none'])
-#'-std=f2003',
-# Reminder: the -DGFORTRAN flag is necessary to make the hash operator work.
-# This is important especially when using SLL_ASSERT()
-#env.Append(LIBS = ['nsl', 'socket'])
 
-env.Library('sll_memory',    ["../memory/sll_memory.F90"])
-env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
-env.Library('sll_assertion', ["../assert/sll_assert.F90"])
-env.Library('sll_misc',      ["../utilities/misc_utils.F90"])
-env.Library('sll_constants', ["../constants/numeric_constants.F90"])
-env.Program('unit_test',     ["unit_test.F90", "sll_fft.F90"])
-
-
+env.Library('fftpack',          ["../fftpack/fftpack.f90",
+                                 "../fftpack/dfftpack.f"])
+env.Library('sll_timer',        ["../timer/sll_timer.F90"])
+env.Library('sll_memory',       ["../memory/sll_memory.F90"])
+env.Library('sll_precision',    ["../precision/sll_working_precision.F90"])
+env.Library('sll_assertion',    ["../assert/sll_assert.F90"])
+env.Library('sll_misc',         ["../utilities/misc_utils.F90"])
+env.Library('sll_constants',    ["../constants/numeric_constants.F90"])
+env.Library('sll_fft',          ["./sll_fft.F90"])
+env.Program('unit_test',        ["unit_test.F90"])
 
