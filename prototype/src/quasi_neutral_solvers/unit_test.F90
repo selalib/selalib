@@ -11,7 +11,7 @@ program test_quasi_neutral
   integer, parameter     :: k=5  ! spline degree
   real(8), parameter     :: eps=1.d-14
   real(8), parameter     :: pi = 3.1415926535897931_8
-  integer                :: nr, ntheta ! number of points 
+  integer                :: npr, nptheta ! number of points 
   real(8)                :: dr, dtheta ! cell size
   real(8)                :: rmin, rmax, Lr   ! computational domain in r
   integer                :: nmode !, sec ! sec is not used
@@ -32,18 +32,18 @@ program test_quasi_neutral
   call sll_boot_collective()
   ! Test intialisation
   ! Allocation
-  nr = 10
+  npr = 10
   rmin = 0.2_8
   rmax = 1.0_8
-  dr=(rmax-rmin)/(nr-1)
-  ntheta = 16
-  dtheta = 1.0_8/ntheta 
+  dr=(rmax-rmin)/(npr-1)
+  nptheta = 16
+  dtheta = 1.0_8/nptheta 
   
   allocate(mth(k+1))
   allocate(kth(k+1))
-  allocate(mar(k+1,nr+k-1))
-  allocate(kar(k+1,nr+k-1))
-  ! enter correct matrices (nr=10, ntheta=16, rmin=0.2, rmax=1.0, dtheta=1/ntheta)
+  allocate(mar(k+1,npr+k-1))
+  allocate(kar(k+1,npr+k-1))
+  ! enter correct matrices (npr=10, nptheta=16, rmin=0.2, rmax=1.0, dtheta=1/nptheta)
   if (k==1) then
      mth = (/0.041666666666666671_8,0.010416666666666664_8/)
      kth = (/32._8,-16._8/)
@@ -57,19 +57,19 @@ program test_quasi_neutral
   
   ! test solver
   !------------
-  nr = 129
+  npr = 129
   rmin = 0.2_8
   rmax = 1.0_8
   Lr = rmax-rmin
-  dr= Lr/(nr-1)
-  ntheta = 128
-  dtheta = 2*pi/ntheta 
+  dr= Lr/(npr-1)
+  nptheta = 128
+  dtheta = 2*pi/nptheta 
   rtz_mesh => new_mesh_cylindrical_3D( rmin,    &
                                        rmax,    &
                                        0.0_f64, &
                                        0.0_f64, &
-                                       nr-1,    &
-                                       ntheta,  &
+                                       npr-1,    &
+                                       nptheta,  &
                                        0 )
   qn_plan => new_qn_plan( k, rtz_mesh )
   err = maxval(abs(qn_plan%mth-mth))
@@ -86,10 +86,10 @@ program test_quasi_neutral
   endif
 
   ! Allocation
-  allocate(F(nr+k-1,ntheta))
-  allocate(C(nr+k-1,ntheta))
-  allocate(U(nr,ntheta))
-  allocate(Uex(nr,ntheta))
+  allocate(F(npr+k-1,nptheta))
+  allocate(C(npr+k-1,nptheta))
+  allocate(U(npr,nptheta))
+  allocate(Uex(npr,nptheta))
   ! Why is the initialization of the RHS outside of the QN solver? This
   ! is intimately related with the chosen algorithm. The QN solver should 
   ! only receive a 3D mesh with the charge density. Then the solver can do what
@@ -103,7 +103,7 @@ program test_quasi_neutral
   do jg = 1, k+1
      ttg =  0.5_8*dtheta*(qn_plan%xgauss(jg)+1.0_8)
      call bsplvb(qn_plan%knotsth,k+1,1,ttg,k+1,biatth)
-     do i = 0, Nr-2 ! loop on cells (Nr-1 cells for Nr points)
+     do i = 0, Npr-2 ! loop on cells (Npr-1 cells for Npr points)
         ri = rmin+i*dr
         do ig= 1, k+1
            rg = ri + 0.5_8*dr*(qn_plan%xgauss(ig)+1.0_8)  ! rescale Gauss points to be in interval [ri,ri+dr]
@@ -111,12 +111,12 @@ program test_quasi_neutral
            sr = sin(pi*(rg-rmin)/Lr)
            cr = cos(pi*(rg-rmin)/Lr)
            coef = 0.25_8*dtheta*dr*qn_plan%wgauss(ig)*qn_plan%wgauss(jg)*rg 
-           do j = 0, Ntheta-1              
+           do j = 0, Nptheta-1              
               st = cos(nmode*(ttg+j*dtheta))   
               fij = (((nmode/rg)**2+(pi/Lr)**2)*sr - pi/(rg*Lr)*cr)*st
               do ii = 0, k
                  do jj = 0, k   
-                    jjj = mod(j+jj,Ntheta)+1
+                    jjj = mod(j+jj,Nptheta)+1
                     F(i+ii+1,jjj) = F(i+ii+1,jjj) + coef*biatr(ii+1)*biatth(jj+1)*fij 
                  enddo
               enddo
@@ -128,7 +128,7 @@ program test_quasi_neutral
 !!$ do jg = 1, k+1
 !!$     ttg =  0.5_8*dtheta*(qn_plan%xgauss(jg)+1.0_8)
 !!$     call bsplvb(qn_plan%knotsth,k+1,1,ttg,k+1,biatth)
-!!$     do i = 0, Nr-2 ! loop on cells (Nr-1 cells for Nr points)
+!!$     do i = 0, Npr-2 ! loop on cells (Npr-1 cells for Npr points)
 !!$        ri = rmin+i*dr
 !!$        do ig= 1, k+1
 !!$           rg = ri + 0.5_8*dr*(qn_plan%xgauss(ig)+1.0_8)  ! rescale Gauss points to be in interval [ri,ri+dr]
@@ -136,10 +136,10 @@ program test_quasi_neutral
 !!$           sr = sin(pi*(rg-rmin)/Lr)
 !!$           cr = cos(pi*(rg-rmin)/Lr)
 !!$           do ii = 0, k
-!!$              do j = 0, Ntheta-1              
+!!$              do j = 0, Nptheta-1              
 !!$                 st = cos(nmode*(ttg+j*dtheta))        
 !!$                 do jj = 0, k            
-!!$                    F(i+ii+1,mod(j+jj,Ntheta)+1) = F(i+ii+1,mod(j+jj,Ntheta)+1) + &
+!!$                    F(i+ii+1,mod(j+jj,Nptheta)+1) = F(i+ii+1,mod(j+jj,Nptheta)+1) + &
 !!$                         0.25_8*dtheta*dr*qn_plan%wgauss(ig)*qn_plan%wgauss(jg)*biatr(ii+1)*biatth(jj+1)*rg &
 !!$                         *(((nmode/rg)**2+(pi/Lr)**2)*sr - pi/(rg*Lr)*cr)*st
 !!$                 enddo
@@ -167,8 +167,8 @@ program test_quasi_neutral
   t1=t2
 
   ! compute exact solution and error
-  do j=1,ntheta
-    do i=1,nr
+  do j=1,nptheta
+    do i=1,npr
        Uex(i,j)= sin(pi*(i-1)*dr/Lr)*cos(nmode*(j-1)*dtheta)   
     enddo
  enddo
