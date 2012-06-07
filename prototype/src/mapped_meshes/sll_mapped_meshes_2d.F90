@@ -69,7 +69,7 @@ module sll_module_mapped_meshes_2d
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(interpolator_2d_base), pointer                   :: x1_interp
      class(interpolator_2d_base), pointer                   :: x2_interp
-     procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
+!procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete
@@ -490,7 +490,7 @@ contains
           do i=0, npts1 - 1
              eta_1 = real(i,f64)*mesh%delta_eta1
              ! FIX THIS PART!!!
-             jacobian_val = mesh%jacobian_func(eta_1,eta_2)
+             jacobian_val = mesh%jacobian(eta_1,eta_2)
              mesh%jacobians_n(i+1,j+1) = jacobian_val
           end do
        end do
