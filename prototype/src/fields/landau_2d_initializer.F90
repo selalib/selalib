@@ -11,7 +11,7 @@ module sll_landau_2d_initializer
     sll_real64 :: kx
   contains
     procedure, pass(init_obj) :: initialize => initialize_landau_2d
-    procedure, pass(init_obj) :: f_of_x1x2     => f_x1x2_landau_2d
+    procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_landau_2d
   end type init_landau_2d
 
 contains
@@ -28,9 +28,9 @@ contains
   end subroutine initialize_landau_2d
 
   subroutine f_x1x2_landau_2d( init_obj, mesh, data_out )
-    class(init_landau_2d)                      :: init_obj
+    class(init_landau_2d), intent(inout)       :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in) :: mesh
-    sll_real64, dimension(:,:), intent(out)      :: data_out
+    sll_real64, dimension(:,:), intent(out)    :: data_out
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
