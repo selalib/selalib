@@ -38,10 +38,11 @@ program unit_test
        zero_function, &
        zero_function, &
        jac2_cartesian )
-
+  m => mesh2d
   print*, 'initialization of distribution_function'
   call init_landau%initialize(0.001_f64)
   p_init_f => init_landau
+  print *, 'completed initialization of distribution function'
 
   call initialize_distribution_function_2d( &
        df, &
