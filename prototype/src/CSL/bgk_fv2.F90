@@ -29,6 +29,8 @@ subroutine Compute_flux2(a1,a2,f,jac_array,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1
     !compute chi(uij) and sigma(uij)
      alpha=(1._f64/delta_x1)
      beta =(1._f64/delta_x2)
+     !alpha=real(N_x1,f64)
+     !beta =real(N_x2,f64)
    do i1=1,N_x1+1
         do i2=1,N_x2+1   
            chi(i1,i2)   =f(i1,i2)/jac_array(i1,i2)
@@ -623,9 +625,9 @@ endif!order 4
        +beta*(a2(i1,i2)*Flux_x2(i1,i2)-a2(i1,i2m1)*Flux_x2(i1,i2m1)))
 
        Flux(i1,i2)=Flux(i1,i2)&
-       -(alpha*delta_x2**2/48._f64*((a1(i1,i2p1)-a1(i1,i2m1))*(Flux_x1(i1,i2p1)-Flux_x1(i1,i2m1))&
+       -(alpha*(1._f64/real(N_x2,f64))**2/48._f64*((a1(i1,i2p1)-a1(i1,i2m1))*(Flux_x1(i1,i2p1)-Flux_x1(i1,i2m1))&
        -(a1(i1m1,i2p1)-a1(i1m1,i2m1))*(Flux_x1(i1m1,i2p1)-Flux_x1(i1m1,i2m1)))&
-       +beta*delta_x1**2/48._f64*(&
+       +beta*(1._f64/real(N_x1,f64))**2/48._f64*(&
        (a2(i1p1,i2)-a2(i1m1,i2))*(Flux_x2(i1p1,i2)-Flux_x2(i1m1,i2))&
        -(a2(i1p1,i2m1)-a2(i1m1,i2m1))*(Flux_x2(i1p1,i2m1)-Flux_x2(i1m1,i2))&
        ))
@@ -661,7 +663,7 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
   sll_real64,dimension(1:nc_eta1+1,1:nc_eta2+1) :: psi
   sll_real64,dimension(:), pointer :: buf_1d
   sll_real64 :: x1_min,x1_max,x2_min,x2_max
-  sll_int :: i1,i2,ii,err,i1m1,i1p1,i1p2,i1m2,i1m3
+  sll_int :: i1,i2,ii,err,i1m1,i1p1,i1p2,i1m2,i1m3,i2m1,i2p1,i2p2,i2m2
   sll_real64 :: tmp,x1,x2,phi_val,xx,a(-10:10)
   sll_real64,intent(in) :: delta_eta1,delta_eta2
   sll_real64,intent(in) :: geom_x(2,2)
@@ -696,14 +698,14 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
    i1m1 = modulo(i1-1-1+nc_eta1,nc_eta1)+1
    i1p1 = modulo(i1+1-1+nc_eta1,nc_eta1)+1
    i1p2 = modulo(i1+2-1+nc_eta1,nc_eta1)+1
-   if(div_case==0)then
+   if(modulo(div_case,10)==0)then
      buf_1d(i1) = 0.5_f64*(phi_poisson(i1)+phi_poisson(i1-1))
    endif
-   if(div_case==1)then   
+   if(modulo(div_case,10)==1)then   
      buf_1d(i1)=(1._f64/3._f64)*phi_poisson(i1m1)+(5._f64/6._f64)*phi_poisson(i1)&
      -(1._f64/6._f64)*phi_poisson(i1p1)
    endif  
-   if(div_case==2)then   
+   if(modulo(div_case,10)==2)then   
      buf_1d(i1)=(1._f64/30._f64)*phi_poisson(i1m3)-(13._f64/60._f64)*phi_poisson(i1m2)&
      +(47._f64/60._f64)*phi_poisson(i1m1)+&
                  (9._f64/20._f64)*phi_poisson(i1)-(1._f64/20._f64)*phi_poisson(i1p1)
@@ -750,14 +752,36 @@ geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
    
        do i1=1,nc_eta1
          do i2=1,Nc_eta2
+
+       i1m2=modulo(i1-2-1+nc_eta1,nc_eta1)+1
+       i1m1=modulo(i1-1-1+nc_eta1,nc_eta1)+1
+       i2m2=modulo(i2-2-1+nc_eta2,nc_eta2)+1
+       i2m1=modulo(i2-1-1+nc_eta2,nc_eta2)+1
+       i1p1=modulo(i1+1-1+nc_eta1,nc_eta1)+1
+       i1p2=modulo(i1+2-1+nc_eta1,nc_eta1)+1
+       i2p1=modulo(i2+1-1+nc_eta2,nc_eta2)+1
+       i2p2=modulo(i2+2-1+nc_eta2,nc_eta2)+1
+
+           
+           
            !a1(i1,i2)=((psi(i1,i2+1)-psi(i1,modulo(i2-1+nc_eta2,nc_eta2)+1))&
            !/(delta_eta2))*(x1_max-x1_min)/(0.5_f64*(jac_array(i1,i2)+jac_array(i1+1,i2)))
            !a2(i1,i2)=-((psi(i1+1,i2)-psi(modulo(i1-1+nc_eta1,nc_eta1)+1,i2))&
            !/(delta_eta1))*(x2_max-x2_min)/(0.5_f64*(jac_array(i1,i2)+jac_array(i1,i2+1)))
-           a1(i1,i2)=((psi(i1+1,i2+1)-psi(i1+1,modulo(i2-1+nc_eta2,nc_eta2)+1))&
+           a1(i1,i2)=((psi(i1+1,i2+1)-psi(i1+1,i2))&
            /(delta_eta2))*(x1_max-x1_min)!/(0.5_f64*(jac_array(i1,i2)+jac_array(i1+1,i2)))
-           a2(i1,i2)=-((psi(i1+1,i2+1)-psi(modulo(i1-1+nc_eta1,nc_eta1)+1,i2+1))&
+           a2(i1,i2)=-((psi(i1+1,i2+1)-psi(i1,i2+1))&
            /(delta_eta1))*(x2_max-x2_min)!/(0.5_f64*(jac_array(i1,i2)+jac_array(i1,i2+1)))
+
+
+           if(div_case>=10)then
+             a1(i1,i2)=1._f64/24._f64*(psi(i1+1,i2m1)-psi(i1+1,i2p2))
+             a1(i1,i2)=a1(i1,i2)+9._f64/8._f64*(psi(i1+1,i2p1)-psi(i1+1,i2))
+             a1(i1,i2)=a1(i1,i2)/delta_eta2*(x1_max-x1_min)
+             a2(i1,i2)=1._f64/24._f64*(psi(i1m1,i2+1)-psi(i1p2,i2+1))
+             a2(i1,i2)=a2(i1,i2)+9._f64/8._f64*(psi(i1p1,i2+1)-psi(i1,i2+1))           
+             a2(i1,i2)=-a2(i1,i2)/delta_eta1*(x2_max-x2_min)
+           endif  
          enddo
        enddo
     
@@ -833,7 +857,7 @@ program bgk_fv2
   visu_step = 100
   test_case = 4
   rho_case = 2
-  div_case=2
+  div_case=12
   
    rk=4
    order=5
