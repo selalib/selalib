@@ -127,7 +127,7 @@ add_subdirectory(simulation)
 
 # add tests
 enable_testing()
-set(failRegex "NOT PASS")
+set(failRegex "FAILED")
 add_test(memory memory/test_memory)
 #add_test(precision precision/test_precision)
 add_test(assert assert/test_assert)
