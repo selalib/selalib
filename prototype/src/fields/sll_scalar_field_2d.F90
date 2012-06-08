@@ -35,6 +35,7 @@ module sll_scalar_field_2d
   use sll_io
   use numeric_constants
   use sll_module_mapped_meshes_2d_base
+  use sll_scalar_field_initializers_base
   use sll_misc_utils
   implicit none
 
@@ -65,13 +66,14 @@ contains   ! *****************************************************************
     field_name, &
     mesh, &
     data_position, &
-    init_function)
+    initializer)
 
     class(scalar_field_2d), intent(inout)               :: this
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
+    class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_2D)                       :: init_function
+    class(scalar_field_2d_initializer_base), pointer, optional    :: initializer
+
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
@@ -81,7 +83,9 @@ contains   ! *****************************************************************
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
+    SLL_ASSERT(associated(mesh))
     this%mesh => mesh
+    this%mesh%written = .false.
     this%name  = trim(field_name)
     num_cells1 = mesh%nc_eta1
     num_cells2 = mesh%nc_eta2
@@ -91,26 +95,22 @@ contains   ! *****************************************************************
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
-       do i2 = 1, num_pts2
-          do i1 = 1, num_pts1
-             this%data(i1,i2) = init_function( mesh%x1_at_node(i1,i2), &
-                                               mesh%x2_at_node(i1,i2) )
-          end do
-       end do
+       if (present(initializer)) then
+          call initializer%f_of_x1x2(mesh,this%data)
+       else 
+          this%data = 0.0_f64
+       end if
     else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_cells1,num_cells2), ierr)
        delta1 = 1.0_f64/real(num_cells1,f64)
        delta2 = 1.0_f64/real(num_cells2,f64)
        eta1   = 0.5_f64 * delta1
        eta2   = 0.5_f64 * delta2
-       do i2 = 1, num_cells2
-          do i1 = 1, num_cells1
-             this%data(i1,i2) = init_function( mesh%x1(eta1,eta2), &
-                                               mesh%x2(eta1,eta2) )
-             eta1 = eta1 + delta1
-          end do
-          eta2 = eta2 + delta2
-       end do
+       if (present(initializer)) then
+          call initializer%f_of_x1x2(mesh,this%data)
+       else 
+          this%data = 0.0_f64
+       end if
     endif
   end subroutine initialize_scalar_field_2d
 
@@ -155,8 +155,7 @@ contains   ! *****************************************************************
 
     mesh => scalar_field%mesh
 
-    SLL_ASSERT(associated(mesh))    
-
+    SLL_ASSERT(associated(mesh))  
     if (.not. mesh%written) then
        call mesh%write_to_file(local_format)
     end if

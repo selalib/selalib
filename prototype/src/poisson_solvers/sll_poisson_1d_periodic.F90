@@ -3,9 +3,8 @@ module sll_poisson_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_2d.h"
+#include "sll_field_1d.h"
   use numeric_constants
- !PN use geometry1d_module
   use fft1d_module
 
   implicit none
@@ -24,7 +23,7 @@ module sll_poisson_1d_periodic
   end interface
 
   interface solve
-     module procedure solve_poisson_1d_periodic !, solve_poisson1dp_axisymetrique
+     module procedure solve_poisson_1d_periodic 
   end interface
 
 contains
@@ -46,10 +45,12 @@ contains
 
   end subroutine new_poisson_1d_periodic
 
+  ! Even though the variable is called phi. This routine computes the electric
+  ! field from the charge density rho
   subroutine solve_poisson_1d_periodic(this,phi,rhs)
     type(poisson_1d_periodic)                 :: this
-    type(scalar_field_1d), pointer            :: phi
-    type(scalar_field_1d), pointer            :: rhs
+    type(scalar_field_1d)                     :: phi
+    type(scalar_field_1d)                     :: rhs
     sll_int32                                 :: i, ik
     sll_int32                                 :: nxh1
     sll_real64                                :: kx0, kx, k2
@@ -57,8 +58,8 @@ contains
     ! Check that phi and rhs are both associated to the 
     ! same mesh with the right number of cells 
     ! that has been initialized in new_poisson_1d_periodic
-    SLL_ASSERT(associated(phi%descriptor,target=rhs%descriptor))
-    SLL_ASSERT(rhs%descriptor%nc_eta1 == this%n_cells )
+    SLL_ASSERT(associated(phi%mesh,target=rhs%mesh))
+    SLL_ASSERT(rhs%mesh%nc_eta1 == this%n_cells )
 
     ! copy rhs into auxiliary array for fftpack
     this%rhs(1:this%n_cells+1) = FIELD_DATA(rhs) 
@@ -67,7 +68,9 @@ contains
     call fft(this%fft, this%rhs)
 
     ! Calcul de la transformee de Fourier de E a partir de celle de rhs
-    kx0  = 2*sll_pi/(this%n_cells * rhs%descriptor%delta_eta1 )
+    kx0  = 2*sll_pi/(rhs%mesh%x1_at_node(this%n_cells+1)  &
+         - rhs%mesh%x1_at_node(1))
+    print*, 'kx0 ', this%n_cells, rhs%mesh%x1_at_node(1), rhs%mesh%x1_at_node(this%n_cells+1)
     nxh1 = (this%n_cells-2)/2 
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
