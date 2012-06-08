@@ -1,0 +1,23 @@
+find_path(HDF5_INCLUDE_DIRS NAMES hdf5.h
+	PATH_SUFFIXES include hdf5/include
+	DOC "PATH TO hdf5.h and hdf5.mod")
+
+find_library(HDF5_HDF5_LIBRARY NAMES hdf5
+	PATH_SUFFIXES hdf5/lib
+	DOC "PATH TO libhdf5.dylib")
+find_library(HDF5_HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
+	PATH_SUFFIXES hdf5/lib
+	DOC "PATH TO libhdf5_fortran.a")
+find_library(HDF5_Z_LIBRARY NAMES z
+	PATH_SUFFIXES hdf5/lib
+	DOC "PATH TO libz.dylib")
+
+set(HDF5_LIBRARIES @HDF5_HDF5_LIBRARY@;@HDF5_HDF5_FORTRAN_LIBRARY@;@HDF5_Z_LIBRARY@)
+
+if (HDF5_INCLUDE_DIRS AND
+	HDF5_HDF5_LIBRARY AND
+	HDF5_HDF5_FORTRAN_LIBRARY AND
+	HDF5_Z_LIBRARY)
+  set(HDF5_FOUND YES)
+  include_directories(${HDF5_INCLUDE_DIRS})
+endif()
