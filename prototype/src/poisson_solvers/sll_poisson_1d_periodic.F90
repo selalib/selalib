@@ -46,11 +46,9 @@ contains
   end subroutine new_poisson_1d_periodic
 
 
-  ! Even though the variable is called phi. This routine computes the electric
-  ! field from the charge density rho
-  subroutine solve_poisson_1d_periodic(this,phi,rhs)
+  subroutine solve_poisson_1d_periodic(this, efield, rhs)
     type(poisson_1d_periodic)                 :: this
-    type(scalar_field_1d)                     :: phi
+    type(scalar_field_1d)                     :: efield
     type(scalar_field_1d)                     :: rhs
     sll_int32                                 :: i, ik
     sll_int32                                 :: nxh1
@@ -59,7 +57,7 @@ contains
     ! Check that e_field and rhs are both associated to the 
     ! same mesh with the right number of cells 
     ! that has been initialized in new_poisson_1d_periodic
-    SLL_ASSERT(associated(phi%mesh,target=rhs%mesh))
+    SLL_ASSERT(associated(efield%mesh,target=rhs%mesh))
     SLL_ASSERT(rhs%mesh%nc_eta1 == this%n_cells )
 
     ! copy rhs into auxiliary array for fftpack
@@ -98,10 +96,10 @@ contains
 
     ! Copy local Ex into field data structure
     do i=1, this%n_cells
-       FIELD_1D_AT_I(e_field,i) = this%e_field(i)
+       FIELD_1D_AT_I(efield,i) = this%e_field(i)
     end do
     ! complete last term by periodicity
-    FIELD_1D_AT_I(e_field,this%n_cells+1) = this%e_field(1)
+    FIELD_1D_AT_I(efield,this%n_cells+1) = this%e_field(1)
 
   end subroutine solve_poisson_1d_periodic
 
