@@ -64,7 +64,6 @@ module fft_module
 
     subroutine doubfft(this,array)
       type(fftclass) :: this
-      integer, parameter :: sign = -1   ! we choose this for direct transform
       integer :: i,j,p, inc, lda
       double precision, dimension(:,:) :: array
 #ifdef _SINE
@@ -100,7 +99,6 @@ module fft_module
 
     subroutine doubcfft(this,array)
       type(fftclass) :: this
-      integer, parameter :: sign = -1   ! we choose this for direct transform
       integer :: i, p, inc, lda
       complex(8), dimension(:,:) :: array
 
@@ -116,21 +114,17 @@ module fft_module
 
     subroutine doubfftinv(this,array)
       type(fftclass) :: this
-      integer, parameter :: sign = 1   ! we choose this for inverse transform
-      integer :: i, p, inc, lda
+      integer :: i, p
       double precision, dimension(:,:) :: array
 
+#if defined _SINE
+      integer :: inc, lda
       double precision, dimension(size(array,2),size(array,1)) :: DX
 
       p = size(array,2)   ! number of 1d transforms
       inc = 1             ! all data are samples
       lda = size(array,1) ! leading dimension of array
 
-#if defined _FFTPACK
-      do i=1,p
-         call dfftb( this%n, array(:,i),  this%coefd )
-      end do
-#elif defined _SINE
       do i=1,lda
          do j=1,p
             DX(j,i) = array(i,j)
@@ -142,12 +136,15 @@ module fft_module
             array(i,j) = DX(j,i)
          enddo
       end do
+#elif defined _FFTPACK
+      do i=1,p
+         call dfftb( this%n, array(:,i),  this%coefd )
+      end do
 #endif
     end subroutine doubfftinv
 
     subroutine doubcfftinv(this,array)
       type(fftclass) :: this
-      integer, parameter :: sign = 1   ! we choose this for inverse transform
       integer :: i, p, inc, lda
       complex(8), dimension(:,:) :: array
 
