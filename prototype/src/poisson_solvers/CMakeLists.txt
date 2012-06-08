@@ -1,18 +1,27 @@
 add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90 fft1d.f90)
 add_executable(test_poisson_1d test_poisson_1d.F90)
-target_link_libraries(test_poisson_1d sll_poisson_1d_periodic sll_assertion sll_memory sll_mesh_types fftpack_module sll_diagnostics sll_utilities)
+target_link_libraries(test_poisson_1d 
+      sll_poisson_1d_periodic 
+      sll_assertion 
+      sll_memory 
+      sll_mapped_meshes
+      sll_scalar_field_1d	 
+      fftpack_module
+      geometry_functions	 
+      sll_low_level_file_io	
+      sll_utilities)
 
-add_library(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
-add_executable(test_poisson_2d test_poisson_2d.F90)
-target_link_libraries(test_poisson_2d sll_poisson_2d_periodic sll_assertion sll_memory sll_mesh_types fftpack_module sll_diagnostics sll_utilities)
+#add_library(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
+#add_executable(test_poisson_2d test_poisson_2d.F90)
+#target_link_libraries(test_poisson_2d sll_poisson_2d_periodic sll_assertion sll_memory #sll_mesh_types fftpack_module sll_diagnostics sll_utilities)
 
-add_library(sll_poisson_3d_periodic_seq STATIC sll_poisson_3d_periodic_seq.F90)
-add_executable(test_poisson_3d_seq test_poisson_3d_seq.F90)
-target_link_libraries(test_poisson_3d_seq sll_poisson_3d_periodic_seq sll_mesh_types sll_fft sll_diagnostics sll_memory sll_timer sll_utilities sll_assertion)
+#add_library(sll_poisson_3d_periodic_seq STATIC sll_poisson_3d_periodic_seq.F90)
+#add_executable(test_poisson_3d_seq test_poisson_3d_seq.F90)
+#target_link_libraries(test_poisson_3d_seq sll_poisson_3d_periodic_seq sll_mesh_types #sll_fft sll_diagnostics sll_memory sll_timer sll_utilities sll_assertion)
 
-add_library(sll_poisson_3d_periodic_par STATIC sll_poisson_3d_periodic_par.F90)
-add_executable(test_poisson_3d_par test_poisson_3d_par.F90)
-target_link_libraries(test_poisson_3d_par sll_poisson_3d_periodic_par sll_remap sll_mesh_types sll_collective sll_fft sll_diagnostics sll_memory sll_timer sll_utilities sll_assertion)
+#add_library(sll_poisson_3d_periodic_par STATIC sll_poisson_3d_periodic_par.F90)
+#add_executable(test_poisson_3d_par test_poisson_3d_par.F90)
+#target_link_libraries(test_poisson_3d_par sll_poisson_3d_periodic_par sll_remap #sll_mesh_types sll_collective sll_fft sll_diagnostics sll_memory sll_timer sll_utilities #sll_assertion)
 
-add_executable(unit_test unit_test.F90)
-target_link_libraries(unit_test sll_poisson_3d_periodic_par sll_poisson_3d_periodic_seq sll_poisson_2d_periodic sll_poisson_1d_periodic sll_remap sll_collective sll_fft sll_mesh_types fftpack_module sll_diagnostics sll_utilities sll_timer sll_memory sll_assertion)
+#add_executable(unit_test unit_test.F90)
+#target_link_libraries(unit_test sll_poisson_3d_periodic_par sll_poisson_3d_periodic_seq #sll_poisson_2d_periodic sll_poisson_1d_periodic sll_remap sll_collective sll_fft #sll_mesh_types fftpack_module sll_diagnostics sll_utilities sll_timer sll_memory #sll_assertion)

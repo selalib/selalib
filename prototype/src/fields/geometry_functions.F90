@@ -87,6 +87,69 @@ contains
     identity_jac = 1.0_f64
   end function identity_jac
 
+  ! affine function (logical mesh is [0,1]x[0,1])
+  ! x1 = (b1-a1)*eta1 + a1; x2=(b2-a2)*eta2 + a2
+  !-------------------
+#define A1 (-1.0_f64)
+#define B1  1.0_f64
+#define A2 (-1.0_f64)
+#define B2  1.0_f64
+  ! direct mapping
+  function affine_x1 ( eta1, eta2 )
+    sll_real64  :: affine_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_x1 = (B1-A1)*eta1 + A1
+  end function affine_x1
+
+  function affine_x2 ( eta1, eta2 )
+    sll_real64  :: affine_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_x2 = (B2-A2)*eta2 + A2
+  end function affine_x2
+
+  ! jacobian maxtrix
+  function affine_jac11 ( eta1, eta2 )
+    sll_real64  :: affine_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_jac11 = B1-A1
+  end function affine_jac11
+
+    function affine_jac12 ( eta1, eta2 )
+    sll_real64  :: affine_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_jac12 = 0.0_f64
+  end function affine_jac12
+
+  function affine_jac21 ( eta1, eta2 )
+    sll_real64  :: affine_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_jac21 = 0.0_f64
+  end function affine_jac21
+
+  function affine_jac22 ( eta1, eta2 )
+    sll_real64  :: affine_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_jac22 = B2-A2
+  end function affine_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function affine_jac ( eta1, eta2 )
+    sll_real64  :: affine_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    affine_jac = (B1-A1) * (B2-A2)
+  end function affine_jac
+
+#undef A1
+#undef B1
+#undef A2
+#undef B2
   ! polar coordinates (r = eta1, theta = eta2)
   ! x1 = eta1 * cos (eta2)
   ! x2 = eta1 * sin (eta2)
@@ -377,6 +440,12 @@ contains
 #undef R1
 #undef R2
 
+  function zero_function(eta1, eta2)
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64             :: zero_function
+    zero_function = 0.0_f64
+  end function zero_function
+    
   !************************************************************************
   ! 1D maps
   !************************************************************************
@@ -398,6 +467,25 @@ contains
 
 #undef A
 #undef B
+
+#define A 0.0_f64
+#define B 6.2831853071795862_f64
+
+  function linear_map_poisson_f( eta ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: eta
+    val = (B-A)*eta + A
+  end function linear_map_poisson_f
+
+  function linear_map_poisson_jac_f( eta ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: eta
+    val = (B-A)
+  end function linear_map_poisson_jac_f
+
+#undef A
+#undef B
+  
 
 end module geometry_functions
 

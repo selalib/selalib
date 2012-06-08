@@ -19,12 +19,19 @@ program WENO_tester
   sll_int32 :: i
   type(WENO_interp_1d) :: WENO_int
   type(WENO_recon_1d)  :: WENO_rec
-  sll_real64, allocatable, dimension(:) :: data       ! data at coordinates_d with size NP
-  sll_real64, allocatable, dimension(:) :: coordinates_d  ! coordinates for data with size NP
-  sll_real64, allocatable, dimension(:) :: out        ! data at coordinates_i with size NP
-  sll_real64, allocatable, dimension(:) :: coordinates_o  ! coordinates for interpolated locations with size NP
-  sll_real64, allocatable, dimension(:) :: data_interp  ! exact function value at interpolated locations
-sll_real64, allocatable, dimension(:) :: data_deriv  ! exact derivative value at initial locations
+  ! data at coordinates_d with size NP
+  sll_real64, allocatable, dimension(:) :: data 
+  ! coordinates for data with size NP
+  sll_real64, allocatable, dimension(:) :: coordinates_d
+  ! data at coordinates_i with size NP 
+  sll_real64, allocatable, dimension(:) :: out        
+  ! coordinates for interpolated locations with size NP
+  sll_real64, allocatable, dimension(:) :: coordinates_o 
+  ! exact function value at interpolated locations
+  sll_real64, allocatable, dimension(:) :: data_interp 
+  ! exact derivative value at initial locations
+  sll_real64, allocatable, dimension(:) :: data_deriv  
+
   sll_real64 :: dx
   sll_real64 :: accumulator1
 
@@ -46,15 +53,20 @@ sll_real64, allocatable, dimension(:) :: data_deriv  ! exact derivative value at
   do i=1,NP
      coordinates_d(i) = (i-0.5_f64)*dx
      coordinates_o(i) = modulo(coordinates_d(i) - dx/3.0_f64, 2*sll_pi)
-     data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 + cos(coordinates_d(i)))
-     data_interp(i) = 2.0_f64*(sin(coordinates_o(i)) + 2.5_f64 + cos(coordinates_o(i)))
-     data_deriv(i) = 2.0_f64*(cos(coordinates_d(i))  - sin(coordinates_d(i)))
+     data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 &
+          + cos(coordinates_d(i)))
+     data_interp(i) = 2.0_f64*(sin(coordinates_o(i)) + 2.5_f64 &
+          + cos(coordinates_o(i)))
+     data_deriv(i) = 2.0_f64*(cos(coordinates_d(i))  &
+          - sin(coordinates_d(i)))
   enddo
   print *, 'Test WENO interpolation...'
   weno_int =  new_WENO_1D(NP, coordinates_d(1), coordinates_d(NP))  
-  ! NP is the number of data points, the second and the third argument is the min and max of coordinates
-  ! set up the basic information for data: np, xmin, xmax, delta (mesh size), rdelta (reciprocal of delta)
-   call interpolate_WENO_1D( weno_int, NP, data, coordinates_o, 4, out )
+  ! NP is the number of data points, the second and the third argument 
+  ! is the min and max of coordinates
+  ! set up the basic information for data: np, xmin, xmax, delta (mesh size),
+  ! rdelta (reciprocal of delta)
+  call interpolate_WENO_1D( weno_int, NP, data, coordinates_o, 4, out )
 
   print *, 'Contents of the weno:'
   print *, 'weno%xmin=', weno_int%xmin
@@ -85,8 +97,10 @@ sll_real64, allocatable, dimension(:) :: data_deriv  ! exact derivative value at
 
   print *, 'Test WENO reconstruction...'
   weno_rec =  new_WENO_recon_1D(NP, 0.0_f64, sll_pi*2.0_f64)   
-  ! NP is the number of data points, the second and the third argument is the min and max of coordinates
-  ! set up the basic information for data: np, xmin, xmax, delta (mesh size), rdelta (reciprocal of delta)
+  ! NP is the number of data points, the second and the third argument 
+  ! is the min and max of coordinates
+  ! set up the basic information for data: np, xmin, xmax, delta (mesh size), 
+  ! rdelta (reciprocal of delta)
    call FD_WENO_recon_1D( weno_rec, NP, data,  4, out )
 
   print *, 'Contents of the weno:'
