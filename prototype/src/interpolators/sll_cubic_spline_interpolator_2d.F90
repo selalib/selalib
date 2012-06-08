@@ -104,7 +104,7 @@ contains
 
   function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
     sll_real64 :: val
-    class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
+    class(cubic_spline_2d_interpolator), intent(in) :: interpolator
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     val = interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
