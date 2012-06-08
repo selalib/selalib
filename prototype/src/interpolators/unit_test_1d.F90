@@ -4,14 +4,15 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use util_constants
-  use sll_module_interpolators_1d_base
-  use sll_WENO
+  use sll_interpolator_1d
+!  use sll_WENO
   use sll_cubic_spline_interpolator_1d
     implicit none
 
-  class(sll_interpolator_1d_base), pointer     :: interp
-  class(sll_WENO_1d), target                   :: WENO
-  class(cubic_spline_1d_interpolator), target  :: spline
+  class(interpolator_1d_base), pointer        :: interp
+!  type(sll_WENO_1d), target                   :: WENO
+  type(cubic_spline_1d_interpolator), target  :: spline
+
   sll_real64                            :: error
   sll_real64                            :: phase
   sll_real64, allocatable, dimension(:) :: interpolation_points
@@ -52,20 +53,20 @@ program unit_test
      !print*, i, interpolation_points(i), data_interp(i) - out(i)
   end do
   print*, '    error=',error
-
-  print*, 'WENO interpolation'
-  weno =  new_WENO_1D(n, x_min, x_max )
-  interp => weno
-  out = interp%interpolate_array(n, data, interpolation_points)
-  !print*, 'delta ', delta , interp%weno%delta, x_min, coordinates_d(1), x_max, coordinates_d(n)
-  error = 0.0_f64
-  do i=1,n   
-     error = max(error, abs(data_interp(i) - out(i)))
-     !print*, i, interpolation_points(i), data_interp(i) - out(i)
-  end do
-  
-  print*, '    error=',error
-
+!
+!  print*, 'WENO interpolation'
+!  weno =  new_WENO_1D(n, x_min, x_max )
+!  interp => weno
+!  out = interp%interpolate_array(n, data, interpolation_points)
+!  !print*, 'delta ', delta , interp%weno%delta, x_min, coordinates_d(1), x_max, coordinates_d(n)
+!  error = 0.0_f64
+!  do i=1,n   
+!     error = max(error, abs(data_interp(i) - out(i)))
+!     !print*, i, interpolation_points(i), data_interp(i) - out(i)
+!  end do
+!  
+!  print*, '    error=',error
+!
   print *, 'Successful, exiting program.'
 
 end program unit_test

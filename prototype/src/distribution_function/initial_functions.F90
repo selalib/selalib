@@ -38,6 +38,11 @@ contains
     ! fval=(1+eps*cos(sll_kx*x))*1/sqrt(2*pi)*exp(-.5_f64*vv)
     ! fval=exp(-.5_f64*(xx+vv))
   end function two_stream
+
+  ! Samuel : I've change elemental by pure because there is an error with 
+  ! gcc 4.7.0 in the unit_test because he does'nt like pointer to elemental 
+  ! function.
+
   pure function gaussian(x,v) result(fval)
     sll_real64, intent(in) :: x, v
     sll_real64 :: fval
