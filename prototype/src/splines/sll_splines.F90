@@ -292,7 +292,7 @@ contains  ! ****************************************************************
   subroutine compute_spline_1D_bis( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32                            :: bc_type
-    type(sll_spline_1D), pointer         :: spline
+    type(sll_spline_1D), pointer, intent(inout)  :: spline
     ! Note that this function does no error checking and basically
     ! outsources this task to the functions it is wrapping around.
     ! This is so because those functions can be used independently

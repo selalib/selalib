@@ -60,10 +60,10 @@ subroutine sll_gnuplot_write(array,array_name,error)
    200 continue
    error=0
 
-   open(file_id,FILE=array_name//".gnu",FORM='FORMATTED',IOSTAT=error)
+   open(file_id,FILE=trim(array_name)//".gnu",FORM='FORMATTED',IOSTAT=error)
    rewind(file_id)
 
-   write(file_id,"(a)")"plot '-' using 1:2 t '"//array_name//"' with linesp"
+   write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
    do ipoints = 1, npoints
       write(file_id,"(g15.3)") array(ipoints)
    end do

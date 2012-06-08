@@ -21,7 +21,7 @@ use sll_io
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
      character(len=64) :: label
-     logical           :: written = .false.
+     logical           :: written! = .false.
    contains
      procedure(geometry_function), deferred, pass       :: x1
      procedure(geometry_function), deferred, pass       :: x2

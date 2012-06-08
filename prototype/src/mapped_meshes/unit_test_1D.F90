@@ -1,7 +1,9 @@
 program unit_test_1d
 #include "sll_working_precision.h"
   use numeric_constants
-  use sll_module_mapped_meshes_2d
+! The next line cause an error with the definition of 
+! compute_interpolants in sll_cubic_spline_interpolator_1d
+! use sll_module_mapped_meshes_2d
   use geometry_functions
   use sll_cubic_spline_interpolator_1d
   use sll_module_mapped_meshes_1d

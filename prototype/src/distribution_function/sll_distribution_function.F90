@@ -39,6 +39,7 @@ module distribution_function
 #include "sll_field_2d.h"
   use numeric_constants
   use sll_misc_utils   ! for int2string
+  use sll_scalar_field_initializers_base
   implicit none
   
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
@@ -65,6 +66,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 
 contains
 
+#if 0
   subroutine sll_new_distribution_function_2d( &
     this, &
     mesh, &
@@ -72,7 +74,7 @@ contains
     name, &
     data_func ) 
     
-    class(sll_distribution_function_2D_t)   :: this
+    class(sll_distribution_function_2D)   :: this
     class(sll_mapped_mesh_2d_base), target  :: mesh
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
@@ -113,6 +115,7 @@ contains
        end do
     endif
   end subroutine sll_new_distribution_function_2d
+#endif
 
   subroutine initialize_distribution_function_2d( &
     this, &
@@ -121,15 +124,15 @@ contains
     field_name, &
     mesh, &
     data_position, &
-    init_function )
+    initializer )
 
     type(sll_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass
     sll_real64, intent(in)                              :: charge
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), target             :: mesh
+    class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_2D)                       :: init_function
+    class(scalar_field_2d_initializer_base), pointer    :: initializer
 
     this%pmass = mass
     this%pcharge = charge
@@ -138,7 +141,7 @@ contains
          field_name, &
          mesh, &
          data_position, &
-         init_function )
+         initializer )
   end subroutine initialize_distribution_function_2d
 
 
