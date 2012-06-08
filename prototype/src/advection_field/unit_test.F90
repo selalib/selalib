@@ -11,15 +11,15 @@ program unit_test
  
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
-  class(sll_mapped_mesh_2d_base), pointer  :: pm2d
-  type(hamiltonian_advection_field_2d)  :: adv_field
-  type(sll_mapped_mesh_1d_analytic), target     :: mesh1d
-  class(sll_mapped_mesh_1d_base), pointer  :: pm1d
-  type(scalar_field_1d)                 :: phi_self
-  character(len=32)  :: name = 'adv_field'
-  character(len=4) :: cstep
-  sll_int32  :: ierr, istep
-  sll_int32 :: ix, iv, nnode_x1, nnode_v1
+  class(sll_mapped_mesh_2d_base), pointer      :: pm2d
+  type(hamiltonian_advection_field_2d)         :: adv_field
+  type(sll_mapped_mesh_1d_analytic), target    :: mesh1d
+  class(sll_mapped_mesh_1d_base), pointer      :: pm1d
+  type(scalar_field_1d)                        :: phi_self
+  character(len=32)                            :: name = 'adv_field'
+  character(len=4)                             :: cstep
+  sll_int32                                    :: ierr, istep
+  sll_int32                                    :: ix, iv, nnode_x1, nnode_v1
 
   nc_eta1 = 100
   nc_eta2 = 100
@@ -36,6 +36,7 @@ program unit_test
        affine_jac12, &
        affine_jac21, &
        affine_jac22 )
+  pm2d => mesh2d
 
   print*, 'initialization of advection field'
 

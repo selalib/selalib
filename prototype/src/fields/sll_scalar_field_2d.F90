@@ -85,9 +85,6 @@ contains   ! *****************************************************************
 
     SLL_ASSERT(associated(mesh))
     this%mesh => mesh
-    
-    print *, 'from initialize_scalar_field: ', mesh%nc_eta1
-    print*,'init_scal_field',this%mesh%nc_eta1
     this%mesh%written = .false.
     this%name  = trim(field_name)
     num_cells1 = mesh%nc_eta1
