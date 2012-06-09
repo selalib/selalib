@@ -57,36 +57,10 @@ else (FFTW_FOUND)
 	set(FFT_ADD_MODULE fftpack_module)
 endif(FFTW_FOUND)
 
-# FFTW_INCLUDE_DIR = fftw3.f03
-# FFTW_LIBRARIES = libfftw3.a
-# FFTW_FOUND = true if FFTW3 is found
-
-#set(FFTW_FOUND TRUE)
+# the next line are here for not forgot the syntax 
 #IF( DEFINED ENV{FFTWINCPATH} )
 #  set(FFTW_INCLUDE_DIR $ENV{FFTWINCPATH})
-#ELSE( DEFINED ENV{FFTWINCPATH} )
-#  set(FFTW_INCLUDE_DIR "")
-#  set(FFTW_FOUND FALSE)
-#ENDIF( DEFINED ENV{FFTWINCPATH} )
 
-#IF( FFTW_FOUND AND DEFINED ENV{FFTWLIBPATH} )
-#  FIND_LIBRARY(FFTW_LIBRARIES fftw3 $ENV{FFTWLIBPATH})
-#ELSE()
-#  set(FFTW_LIBRARIES "")
-#  set(FFTW_FOUND FALSE)
-#ENDIF()
-
-#IF(FFTW_FOUND)
-#  MESSAGE(STATUS "FFTW FOUND")
-#  MESSAGE(STATUS "FFTW_INCLUDE_DIR=${FFTW_INCLUDE_DIR}")
-#  MESSAGE(STATUS "FFTW_LIBRARIES=${FFTW_LIBRARIES}")
-#  set(FFT_ADD_MODULE fftpack_module fftw_module)
-#  include_directories(${FFTW_INCLUDE_DIR})
-#ELSE()
-#  MESSAGE(STATUS "FFTW NOT FOUND")
-#  set(FFT_ADD_MODULE fftpack_module)
-#  add_definitions(-D_NOFFTW)
-#ENDIF()
 
 # include's
 include_directories(remap poisson_solvers utilities memory assert precision fields) 
