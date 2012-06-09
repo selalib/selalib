@@ -124,13 +124,20 @@ add_subdirectory(simulation)
 #add_subdirectory(CSL) don't compile error in SConstruct!
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread!
 
+######################################################################
+#                              TESTS                                 #
+######################################################################
 
-# add tests
 enable_testing()
-set(failRegex "FAILED")
+
 add_test(memory memory/test_memory)
-#add_test(precision precision/test_precision)
+
+#add_test(precision precision/test_precision) #too longer
+
+set(passRegex "Assertion error triggered in file")
 add_test(assert assert/test_assert)
+set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
+
 add_test(constants constants/test_constants)
 add_test(utilities utilities/test_utilities)
 add_test(low_level_file_io low_level_file_io/test_io)
