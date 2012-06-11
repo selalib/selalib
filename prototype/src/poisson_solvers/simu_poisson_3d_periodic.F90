@@ -60,6 +60,16 @@ program test_poisson_3d_seq
   SLL_ALLOCATE(y(nx,ny,nz),error)
   SLL_ALLOCATE(z(nx,ny,nz),error)
 
+  do k=1,nz
+     do j=1,ny
+        do i=1,nx
+           x(i,j,k) = (i-1)*dx
+           y(i,j,k) = (j-1)*dy
+           z(i,j,k) = (k-1)*dz
+        end do
+     end do
+  end do
+
   call write_mesh(x,y,z,nx,ny,nz,"mesh3d")
 
   SLL_ALLOCATE(rho(nx,ny,nz),error)
