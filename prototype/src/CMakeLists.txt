@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.8)
 add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 # use MPIF90 as compiler
-set(CMAKE_Fortran_COMPILER mpif90)
+# set(CMAKE_Fortran_COMPILER mpif90)
 
 # some useful flags
 #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
@@ -26,18 +26,25 @@ message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
 #set(CMAKE_LIBRARY_PATH "/opt/local;${CMAKE_LIBRARY_PATH}")
 
 # recherche de MPI
-find_package(MPI REQUIRED)
+IF( DEFINED ENV{MPI_ROOT} )
+  set(MPI_ROOT $ENV{MPI_ROOT})
+  set(_MPI_BASE_DIR ${MPI_ROOT})
+ENDIF()
+find_package(MPI)
 if (MPI_FOUND)
   message(STATUS "MPI FOUND")
   include_directories(${MPI_Fortran_INCLUDE_PATH})
   message(STATUS "PARALLEL FORTRAN IS ${MPI_Fortran_COMPILER}")
-#  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 else (MPI_FOUND)
   message(STATUS "MPI NOT FOUND")
 endif(MPI_FOUND)
 
 # recherche de HDF5
-find_package(HDF5)
+IF( DEFINED ENV{HDF5_ROOT} )
+  set(HDF5_ROOT $ENV{HDF5_ROOT})
+ENDIF()
+find_package(HDF5 QUIET)
 if (HDF5_FOUND)
     message(STATUS "HDF5 FOUND")
     message(STATUS "libraries = " ${HDF5_LIBRARIES}) 
@@ -49,7 +56,10 @@ else (HDF5_FOUND)
 endif(HDF5_FOUND)
 
 # recherche le package FFTW
-find_package(FFTW)
+IF( DEFINED ENV{FFTW_ROOT} )
+  set(FFTW_ROOT $ENV{FFTW_ROOT})
+ENDIF()
+find_package(FFTW QUIET)
 if (FFTW_FOUND)
 	message(STATUS "FFTW FOUND")
 	message(STATUS "libraries = " ${FFTW_LIBRARIES})
@@ -61,11 +71,6 @@ else (FFTW_FOUND)
 	add_definitions(-D_NOFFTW)
 	set(FFT_ADD_MODULE fftpack_module)
 endif(FFTW_FOUND)
-
-# the next line are here for not forgot the syntax 
-#IF( DEFINED ENV{FFTWINCPATH} )
-#  set(FFTW_INCLUDE_DIR $ENV{FFTWINCPATH})
-
 
 # include's
 include_directories(remap poisson_solvers utilities memory assert precision fields) 
