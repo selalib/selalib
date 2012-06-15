@@ -2,89 +2,89 @@
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! COMPLEX
-  function fftpack_new_plan_c2c_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
+  function fftpack_new_plan_c2c_1d(library,nx,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
-    sll_int32, intent(in)                        :: size_problem
-    sll_comp64, dimension(:), target, intent(in) :: array_in, array_out
+    sll_int32, intent(in)                        :: nx
+    sll_comp64, dimension(:)                     :: array_in, array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional,  intent(in)             :: flags
-    type(sll_fft_plan), pointer                  :: plan
- 
-    allocate(plan)
-    
-    plan%N = size_problem
-    if( present(flags)) then
+    type(sll_fft_plan), pointer                      :: plan
+    sll_int32                                    :: ierr
+
+    SLL_ALLOCATE(plan,ierr)
+    plan%library = FFTPACK_MOD 
+    plan%direction = direction
+    if( present(flags) )then
       plan%style = flags
     else
-      plan%style = 0
+      plan%style = 0_f32
     endif
-    plan%library = library
-    plan%direction = direction
-    plan%in_comp => array_in
-    plan%out_comp => array_out
-    plan%in_real => null()
-    plan%out_real => null()
-
-    allocate(plan%dwsave(4*plan%N + 15))
-    call zffti(plan%N,plan%dwsave)
+    plan%problem_rank = 1
+    SLL_ALLOCATE(plan%problem_shape(1),ierr)
+    plan%problem_shape = (/ nx  /)
+    allocate(plan%twiddles(4*nx + 15))
+    call zffti(nx,plan%twiddles)
   end function
 
   subroutine fftpack_apply_fft_complex(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
+    type(sll_fft_plan), pointer, intent(in)             :: plan
     sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
+    sll_int32 :: nx
 
-    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
-       array_out = array_in
-    endif   
-
+!    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
+!       array_out = array_in
+!    endif   
+    nx = plan%problem_shape(1)
+ 
     if( plan%direction .eq. FFT_FORWARD ) then
-      call zfftf( plan%N , array_out ,plan%dwsave )
+      call zfftf( nx , array_out ,plan%twiddles )
     else if( plan%direction .eq. FFT_INVERSE ) then
-      call zfftb( plan%N, array_out , plan%dwsave )
+      call zfftb( nx, array_out , plan%twiddles )
     endif
   end subroutine
 ! END COMPLEX
 
 ! REAL
-  function fftpack_new_plan_r2r_1d(library,size_problem,array_in,array_out,direction,flags) result(plan)
+  function fftpack_new_plan_r2r_1d(library,nx,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                        :: library
-    sll_int32, intent(in)                        :: size_problem
-    sll_real64, dimension(:), target, intent(in) :: array_in, array_out
+    sll_int32, intent(in)                        :: nx
+    sll_real64, dimension(:)                     :: array_in, array_out
     sll_int32, intent(in)                        :: direction
     sll_int32, optional,  intent(in)             :: flags
     type(sll_fft_plan), pointer                  :: plan
- 
-    allocate(plan)
-    
-    plan%N = size_problem
-    if( present(flags)) then
+    sll_int32                                    :: ierr
+
+    SLL_ALLOCATE(plan,ierr)
+    plan%library = FFTPACK_MOD 
+    plan%direction = direction
+    if( present(flags) )then
       plan%style = flags
     else
-      plan%style = 0
+      plan%style = 0_f32
     endif
-    plan%library = library
-    plan%direction = direction
-    plan%in_real => array_in
-    plan%out_real => array_out
-    plan%in_comp => null()
-    plan%out_comp => null()
+    plan%problem_rank = 1
+    SLL_ALLOCATE(plan%problem_shape(1),ierr)
+    plan%problem_shape = (/ nx  /)
 
-    allocate(plan%dwsave(2*plan%N + 15))
-    call dffti(plan%N,plan%dwsave)
+    SLL_ALLOCATE(plan%twiddles(2*nx + 15),ierr)
+    call dffti(nx,plan%twiddles)
   end function
 
   subroutine fftpack_apply_fft_real(plan,array_in,array_out)
     type(sll_fft_plan), pointer, intent(in)         :: plan
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
+    sll_int32 :: nx
 
-    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
-       array_out = array_in
-    endif   
+!    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
+!       array_out = array_in
+!    endif   
+
+    nx = plan%problem_shape(1)
 
     if( plan%direction .eq. FFT_FORWARD ) then
-      call dfftf( plan%N , array_out ,plan%dwsave )
+      call dfftf( nx , array_out ,plan%twiddles )
     else if( plan%direction .eq. FFT_INVERSE ) then
-      call dfftb( plan%N, array_out , plan%dwsave )
+      call dfftb( nx, array_out , plan%twiddles )
     endif
   end subroutine
 ! END REAL

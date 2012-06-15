@@ -15,7 +15,7 @@ module sll_splines
 #include "sll_assert.h"
   implicit none
   
-  type sll_spline_1D
+  type  ::  sll_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
@@ -112,7 +112,6 @@ contains  ! ****************************************************************
     spline%slope_r = value
   end subroutine set_slope_right
   
-  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
@@ -186,6 +185,7 @@ contains  ! ****************************************************************
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
+
   end function new_spline_1D
   
   ! - data: the array whose data must be fit with the cubic spline.
@@ -286,6 +286,30 @@ contains  ! ****************************************************************
        STOP
     end select
   end subroutine compute_spline_1D
+
+  !> just a copy of the subroutine above and remove bc_type argument
+  !> because now it is in the spline object.
+  subroutine compute_spline_1D_bis( f, spline )
+    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
+    sll_int32                            :: bc_type
+    type(sll_spline_1D), pointer, intent(inout)  :: spline
+    ! Note that this function does no error checking and basically
+    ! outsources this task to the functions it is wrapping around.
+    ! This is so because those functions can be used independently
+    ! (if the user wants to avoid the overhead of calling this
+    ! wrapper function), so in any case, the error checking of
+    ! the arguments will be carried out at least once.
+    bc_type = spline%bc_type;
+    select case (bc_type)
+    case (PERIODIC_SPLINE)
+       call compute_spline_1D_periodic( f, spline )
+    case (HERMITE_SPLINE)
+       call compute_spline_1D_hermite( f, spline )
+    case default
+       print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
+       STOP
+    end select
+  end subroutine compute_spline_1D_bis
 
 #define NUM_TERMS 27
   ! The following auxiliary functions:
@@ -450,7 +474,7 @@ contains  ! ****************************************************************
 
   subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    type(sll_spline_1D), pointer      :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: np
     sll_real64, dimension(:), pointer :: fp
@@ -596,7 +620,6 @@ contains  ! ****************************************************************
     interpolate_value_aux = (1.0_f64/6.0_f64)*(t2 + t4)
   end function interpolate_value_aux
 
-
   
   !> get spline interpolate at point x
   function interpolate_value( x, spline )
@@ -616,6 +639,27 @@ contains  ! ****************************************************************
     coeffs => spline%coeffs
     interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
   end function interpolate_value
+
+  !> Just a copy of the function interpolate_value but with a different name.
+  !> Need because, i want a function in my interpolator interface called interpolate value
+  !> and i have a polymorphic error.
+  function interpolate_value_1D( x, spline )
+    sll_real64                        :: interpolate_value_1D
+    intrinsic                         :: associated, int, real
+    sll_real64, intent(in)            :: x
+    type(sll_spline_1D), pointer      :: spline
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_real64                        :: xmin
+    sll_real64                        :: rh   ! reciprocal of cell spacing
+    ! We set these as assertions since we want the flexibility of turning
+    ! them off.
+    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+    SLL_ASSERT( associated(spline) )
+    xmin = spline%xmin
+    rh        = spline%rdelta
+    coeffs => spline%coeffs
+    interpolate_value_1D = interpolate_value_aux( x, xmin, rh, coeffs )
+  end function interpolate_value_1D
   
   !> get spline interpolate at array of points
   subroutine interpolate_array_values( a_in, a_out, n, spline )
@@ -623,7 +667,7 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
     sll_real64, dimension(1:n), intent(out) :: a_out
-    type(sll_spline_1D), pointer            :: spline
+    type(sll_spline_1D), pointer         :: spline
     sll_real64, dimension(:), pointer       :: coeffs
     sll_real64                              :: rh   ! reciprocal of cell spacing
     sll_int32                               :: cell
@@ -1470,330 +1514,294 @@ contains  ! ****************************************************************
     end select
   end subroutine compute_spline_2D
 	
+  ! deposit_value_2D(): given a spline that describes the decomposition 
+  ! of the distribution function at time t^n, and two 2D arrays x1 and x2 
+  ! where the foot of the forward characteristics are stored, returns
+  ! a 2D array a_out which is the updated distribution function at time t^{n+1}
+  !
+  ! the boundary conditions are taken into account and any type of BC are allowed
   subroutine deposit_value_2D(x1, x2, spline, a_out)
 	  intrinsic :: real, int
 	  sll_real64, dimension(1:,1:), intent(in)      :: x1
     sll_real64, dimension(1:,1:), intent(in)      :: x2
     type(sll_spline_2D), pointer                  :: spline
-		
 		sll_real64, dimension(:,:),intent(out)  			:: a_out
 		
-    sll_real64    :: cij   ! C_ij
-    sll_real64    :: x1_min
-    sll_real64    :: x2_min
-    sll_real64    :: dx1
-    sll_real64    :: dx2
-    sll_real64    :: cdx1  ! 1-dx1
-    sll_real64    :: cdx2  ! 1-dx2
-    sll_int32     :: cell1
-    sll_int32     :: cell2
-    sll_real64    :: rh1
-    sll_real64    :: rh2
-		sll_int32     :: n1
-    sll_int32     :: n2
+    sll_real64  :: cij   ! C_ij
+    sll_real64  :: x1_min
+    sll_real64  :: x2_min
+    sll_real64  :: dx1
+    sll_real64  :: dx2
+    sll_real64  :: cdx1  ! 1-dx1
+    sll_real64  :: cdx2  ! 1-dx2
+    sll_int32   :: cell1
+    sll_int32   :: cell2
+    sll_real64  :: rh1
+    sll_real64  :: rh2
+		sll_int32   :: n1
+    sll_int32   :: n2
+    
+		! local variables
+    sll_int32   :: i1
+    sll_int32   :: i2
+    
+    sll_int32   :: nt1
+    sll_int32   :: nt2
 		
-		! variables locales
-    sll_int32     :: i1
-    sll_int32     :: i2
+    sll_real64  :: svalx1, svalx2, svalx3, svalx4
+    sll_real64  :: svaly1, svaly2, svaly3, svaly4
+    sll_real64  :: ax1, ax2, ax3, ay1, ay2, ay3
 		
-    sll_real64    :: svalx1, svalx2, svalx3, svalx4
-    sll_real64    :: svaly1, svaly2, svaly3, svaly4
-    sll_real64    :: ax1, ax2, ax3, ay1, ay2, ay3
-		
-    sll_real64     :: t1,t2
-    sll_int32     :: ipm1,ip,ipp1,ipp2
-    sll_int32     :: jpm1,jp,jpp1,jpp2
-		
+    sll_real64 :: t1,t2
+    sll_int32  :: ipm1,ip,ipp1,ipp2
+    sll_int32  :: jpm1,jp,jpp1,jpp2
+    
+    sll_int32 :: bc1
+    sll_int32 :: bc2
+    
+    if( .not. associated(spline) ) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: deposit_value_2D(): ', &
+            'uninitialized spline object passed as argument. Exiting... '
+       STOP
+    end if
+    
+    if ((size(x1,1).ne.spline%num_pts_x1).or.(size(x1,2).ne.spline%num_pts_x2)) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: deposit_value_2D(): '
+       write (*,'(a, i8, i8, a, i8, i8, a)') 'array of feets of characteristics needs data of size = (', &
+            spline%num_pts_x1, spline%num_pts_x2,') . Passed size: (', size(x1,1), size(x1,2),')'
+       STOP
+    end if
+    if ((size(x2,1).ne.spline%num_pts_x1).or.(size(x2,2).ne.spline%num_pts_x2)) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: deposit_value_2D(): '
+       write (*,'(a, i8, i8, a, i8, i8, a)') 'array of feets of characteristics needs data of size = (', &
+            spline%num_pts_x1, spline%num_pts_x2,') . Passed size: (', size(x2,1), size(x2,2),')'
+       STOP
+    end if
+    if ((size(a_out,1).ne.spline%num_pts_x1).or.(size(a_out,2).ne.spline%num_pts_x2)) then
+       ! FIXME: THROW ERROR
+       print *, 'ERROR: deposit_value_2D(): '
+       write (*,'(a, i8, i8, a, i8, i8, a)') 'array of feets of characteristics needs data of size = (', &
+            spline%num_pts_x1, spline%num_pts_x2,') . Passed size: (', size(a_out,1), size(a_out,2),')'
+       STOP
+    end if
+
+    bc1 = spline%x1_bc_type
+    bc2 = spline%x2_bc_type
+
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     rh1        = spline%x1_rdelta
     rh2        = spline%x2_rdelta
 				
-		n1         = size(x1,1)
-		n2         = size(x1,2)
-		
+		n1         = spline%num_pts_x1
+		n2         = spline%num_pts_x2
+    
+    if( bc1 .eq. PERIODIC_SPLINE ) then 
+      nt1 = n1-1
+    end if
+    if( bc1 .eq. HERMITE_SPLINE ) then 
+      nt1 = n1
+    end if
+    if( bc2 .eq. PERIODIC_SPLINE ) then 
+      nt2 = n2-1
+    end if
+    if( bc2 .eq. HERMITE_SPLINE ) then 
+      nt2 = n2
+    end if
+
 		a_out = 0._f64
 		
-    do i1 = 1,n1
-      do i2 = 1,n2-1
+    do i1 = 1,nt1                       
+      do i2 = 1,nt2
 		
-			! find the cell and offset for x1
-      t1         = (x1(i1,i2)-x1_min)*rh1
-      cell1       = floor(t1) + 1
-      dx1         = t1- real(cell1-1)
-      cdx1        = 1.0_f64 - dx1
+        ! find the cell and offset for x1
+        t1         = (x1(i1,i2)-x1_min)*rh1
+        cell1       = floor(t1) + 1
+        dx1         = t1- real(cell1-1)
+        cdx1        = 1.0_f64 - dx1
 		
-			! find the cell and offset for x2
-      t2         = (x2(i1,i2)-x2_min)*rh2
-      cell2      = floor(t2) + 1
-      dx2        = t2 - real(cell2-1)
-      cdx2       = 1.0_f64 - dx2
-			
-			!print*,'données début de boucle',i1,i2,x1(i1,i2),x2(i1,i2)
-			!print*,'cell',t1,t2,cell1,cell2
-		
-			if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
-				print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
-			end if
-			
-			if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
-				print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
-			end if
+        ! find the cell and offset for x2
+        t2         = (x2(i1,i2)-x2_min)*rh2
+        cell2      = floor(t2) + 1
+        dx2        = t2 - real(cell2-1)
+        cdx2       = 1.0_f64 - dx2
+      
+        ! checking if the particle is well localized
+        ! the particle is in the cell (cell1,cell2)
+        ! placed in ((cell1-1)/rh1+x1_min,(cell2-1)/rh2+x2_min)
+        if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
+          print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
+        end if
+        if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
+          print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
+        end if
 
-      cij = spline%coeffs(i1,i2)
-			!print*,'taille tableau coeff',lbound(spline%coeffs,1),n1,ubound(spline%coeffs,1),lbound(spline%coeffs,2),n2,ubound(spline%coeffs,2)
-			
-      ipm1=cell1-1
-      ip  =cell1  
-			ipp1=cell1+1
-      ipp2=cell1+2
-			
-      !jpm1=mod(cell2-1,n2)
-      !jp  =mod(cell2  ,n2)
-      !jpp1=mod(cell2+1,n2)
-      !jpp2=mod(cell2+2,n2)
-
-      jpm1 = mod(cell2-1+n2-2,n2-1)+1
-      jp = mod(cell2+n2-2,n2-1)+1
-      jpp1 = mod(cell2+1+n2-2,n2-1)+1
-      jpp2 = mod(cell2+2+n2-2,n2-1)+1
-			
-			!print*,'1',ipm1,ip,ipp1,ipp2
-			!print*,'2',jpm1,jp,jpp1,jpp2
-			
-      ax1 = cdx1 
-      ax2 = ax1*ax1
-      ax3 = ax2*ax1
-      ay1 = cdx2
-      ay2 = ay1*ay1
-      ay3 = ay2*ay1
+        cij = spline%coeffs(i1,i2)
+      
+        ! index depending on the BC 
+        if( bc1 .eq. PERIODIC_SPLINE ) then 
+          ipm1 = mod(cell1+n1-3,n1-1)+1
+          ip   = mod(cell1+n1-2,n1-1)+1
+          ipp1 = mod(cell1+n1-1,n1-1)+1
+          ipp2 = mod(cell1+n1  ,n1-1)+1
+        end if
+        if( bc1 .eq. HERMITE_SPLINE ) then 
+          ipm1=cell1-1
+          ip  =cell1
+          ipp1=cell1+1
+          ipp2=cell1+2
+        end if
+        if( bc2 .eq. PERIODIC_SPLINE ) then 
+          jpm1 = mod(cell2+n2-3,n2-1)+1
+          jp   = mod(cell2+n2-2,n2-1)+1
+          jpp1 = mod(cell2+n2-1,n2-1)+1
+          jpp2 = mod(cell2+n2  ,n2-1)+1
+        end if
+        if( bc2 .eq. HERMITE_SPLINE ) then 
+          jpm1=cell2-1
+          jp  =cell2
+          jpp1=cell2+1
+          jpp2=cell2+2
+        end if
+        			
+        ax1 = cdx1 
+        ax2 = ax1*ax1
+        ax3 = ax2*ax1
+        
+        ay1 = cdx2
+        ay2 = ay1*ay1
+        ay3 = ay2*ay1
 									
-      svalx1 = ax3/6._f64*cij
-      svalx2 = (0.5_f64*(-ax3+ax2+ax1)+1._f64/6._f64)*cij
-      svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)*cij
-      svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))*cij
+        svalx1 = ax3/6._f64
+        svalx2 = (0.5_f64*(-ax3+ax2+ax1) + 1._f64/6._f64)
+        svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)
+        svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))
 		
-      svaly1 = ay3/6._f64
-      svaly2 = 0.5_f64*(-ay3+ay2+ay1) + 1._f64/6._f64
-      svaly3 = 2._f64/3.0_f64 - ay2 + 0.5_f64*ay3
-      svaly4 = (1._f64-ay3)/6._f64 +0.5_f64*(ay2-ay1)
+        svaly1 = ay3/6._f64
+        svaly2 = 0.5_f64*(-ay3+ay2+ay1) + 1._f64/6._f64
+        svaly3 = 2._f64/3.0_f64 - ay2 + 0.5_f64*ay3
+        svaly4 = (1._f64-ay3)/6._f64 + 0.5_f64*(ay2-ay1)
 			
-			if (ipm1.ge.0) then
-				a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + svalx1*svaly1
-				a_out(ipm1,jp)   = a_out(ipm1,jp)   + svalx1*svaly2
-				a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + svalx1*svaly3
-				a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + svalx1*svaly4
-			end if
-			
-			a_out(ip,jpm1) = a_out(ip,jpm1) + svalx2*svaly1
-			a_out(ip,jp)   = a_out(ip,jp)   + svalx2*svaly2 
-			a_out(ip,jpp1) = a_out(ip,jpp1) + svalx2*svaly3
-			a_out(ip,jpp2) = a_out(ip,jpp2) + svalx2*svaly4
-				  
-			if (ipp1.le.n1) then
-				a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + svalx3*svaly1
-				a_out(ipp1,jp)   = a_out(ipp1,jp)   + svalx3*svaly2
-				a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + svalx3*svaly3
-				a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + svalx3*svaly4
-			end if
-			
-			if (ipp2.le.n1) then
-				a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + svalx4*svaly1
-				a_out(ipp2,jp)   = a_out(ipp2,jp)   + svalx4*svaly2
-				a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + svalx4*svaly3
-				a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + svalx4*svaly4
-			end if
-						
-		!if (i1.eq.1) then
-		! a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
-		!	a_out(1,jp)	 = a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
-		!	a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
-		!	a_out(1,jpp2) = a_out(1,jpp2) + spline%coeffs(0,i2)/6._f64*svaly4
-		!end if	
-		
-		!if (i1.eq.n1) then
-		!	a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
-		!	a_out(n1,jp)	 = a_out(n1,jp)	  + spline%coeffs(n1+1,i2)/6._f64*svaly2
-		!	a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
-		!	a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
-		!end if	
-		
+        if (ipm1.ge.1) then
+          if (jpm1.ge.1) then
+            a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + cij*svalx1*svaly1
+          end if
+          a_out(ipm1,jp)     = a_out(ipm1,jp)   + cij*svalx1*svaly2
+          if (jpp1.le.n2) then
+            a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + cij*svalx1*svaly3
+          end if
+          if (jpp2.le.n2) then
+            a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + cij*svalx1*svaly4
+          end if
+        end if
+        
+        if (jpm1.ge.1) then
+          a_out(ip,jpm1) = a_out(ip,jpm1) + cij*svalx2*svaly1
+        end if
+        a_out(ip,jp)     = a_out(ip,jp)   + cij*svalx2*svaly2
+        if (jpp1.le.n2) then
+          a_out(ip,jpp1) = a_out(ip,jpp1) + cij*svalx2*svaly3
+        end if
+        if (jpp2.le.n2) then
+          a_out(ip,jpp2) = a_out(ip,jpp2) + cij*svalx2*svaly4
+        end if
+            
+        if (ipp1.le.n1) then
+          if (jpm1.ge.1) then
+            a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + cij*svalx3*svaly1
+          end if
+          a_out(ipp1,jp)     = a_out(ipp1,jp)   + cij*svalx3*svaly2
+          if (jpp1.le.n2) then
+            a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + cij*svalx3*svaly3
+          end if
+          if (jpp2.le.n2) then
+            a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + cij*svalx3*svaly4
+          end if
+        end if
+        
+        if (ipp2.le.n1) then
+          if (jpm1.ge.1) then
+            a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + cij*svalx4*svaly1
+          end if
+          a_out(ipp2,jp)     = a_out(ipp2,jp)   + cij*svalx4*svaly2
+          if (jpp1.le.n2) then
+            a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + cij*svalx4*svaly3
+          end if
+          if (jpp2.le.n2) then
+            a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + cij*svalx4*svaly4
+          end if
+        end if
+              
+        if (bc1.eq.HERMITE_SPLINE) then 
+          if (i1.eq.1) then
+            if (jpm1.ge.1) then
+              a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
+            end if
+            a_out(1,jp)   	= a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
+            if (jpp1.le.n2) then
+              a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
+            end if
+            if (jpp2.le.n2) then
+              a_out(1,jpp2) = a_out(1,jpp2) + spline%coeffs(0,i2)/6._f64*svaly4
+            end if
+          end if	
+      
+          if (i1.eq.n1) then
+            if (jpm1.ge.1) then
+              a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
+            end if
+            a_out(n1,jp)     = a_out(n1,jp)   + spline%coeffs(n1+1,i2)/6._f64*svaly2
+            if (jpp1.le.n2) then
+              a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
+            end if
+            if (jpp2.le.n2) then
+              a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
+            end if
+          end if
+        end if
+      
+        if (bc2.eq.HERMITE_SPLINE) then 
+          if (i2.eq.1) then
+            if (ipm1.ge.1) then
+              a_out(ipm1,1) = a_out(ipm1,1) + spline%coeffs(i1,0)/6._f64*svalx1
+            end if
+            a_out(ip,1)	    = a_out(ip,1)   + spline%coeffs(i1,0)/6._f64*svalx2
+            if (ipp1.ne.n1) then
+              a_out(ipp1,1) = a_out(ipp1,1) + spline%coeffs(i1,0)/6._f64*svalx3
+            end if
+            if (ipp2.ne.n1) then
+              a_out(ipp2,1) = a_out(ipp2,1) + spline%coeffs(i1,0)/6._f64*svalx4
+            end if
+          end if	
+      
+          if (i2.eq.n2) then
+            if (ipm1.ge.1) then
+              a_out(ipm1,n2) = a_out(ipm1,n2) + spline%coeffs(i1,n2+1)/6._f64*svalx1
+            end if
+            a_out(ip,n1)     = a_out(ip,n1)   + spline%coeffs(i1,n2+1)/6._f64*svalx2
+            if (ipp1.ne.n1) then
+              a_out(ipp1,n2) = a_out(ipp1,n2) + spline%coeffs(i1,n2+1)/6._f64*svalx3
+            end if
+            if (ipp2.ne.n1) then
+              a_out(ipp2,n2) = a_out(ipp2,n2) + spline%coeffs(i1,n2+1)/6._f64*svalx4
+            end if
+          end if
+        end if
+        
       end do
     end do
-	a_out(:,n2) = a_out(:,1)			 
+    
+    if( bc1 .eq. PERIODIC_SPLINE ) then 
+      a_out(n1,:) = a_out(1,:)
+    end if
+    if( bc2 .eq. PERIODIC_SPLINE ) then 
+      a_out(:,n2) = a_out(:,1)
+    end if
+    			 
   end subroutine deposit_value_2D
-
-
-  subroutine deposit_value_2D_bis(x1, x2, spline, a_out)
-	  intrinsic :: real, int
-	  sll_real64, dimension(1:,1:), intent(in)      :: x1
-    sll_real64, dimension(1:,1:), intent(in)      :: x2
-    type(sll_spline_2D), pointer                  :: spline
-		
-		sll_real64, dimension(:,:),intent(out)  			:: a_out
-		
-    sll_real64    :: cij   ! C_ij
-    sll_real64    :: x1_min
-    sll_real64    :: x2_min
-    sll_real64    :: dx1
-    sll_real64    :: dx2
-    sll_real64    :: cdx1  ! 1-dx1
-    sll_real64    :: cdx2  ! 1-dx2
-    sll_int32     :: cell1
-    sll_int32     :: cell2
-    sll_real64    :: rh1
-    sll_real64    :: rh2
-		sll_int32     :: n1
-    sll_int32     :: n2
-		
-		! variables locales
-    sll_int32     :: i1
-    sll_int32     :: i2
-		
-    sll_real64    :: svalx1, svalx2, svalx3, svalx4
-    sll_real64    :: svaly1, svaly2, svaly3, svaly4
-    sll_real64    :: ax1, ax2, ax3, ay1, ay2, ay3
-		
-    sll_real64     :: t1,t2
-    sll_int32     :: ipm1,ip,ipp1,ipp2
-    sll_int32     :: jpm1,jp,jpp1,jpp2
-		
-    x1_min     = spline%x1_min
-    x2_min     = spline%x2_min
-    rh1        = spline%x1_rdelta
-    rh2        = spline%x2_rdelta
-				
-		n1         = size(x1,1)
-		n2         = size(x1,2)
-		
-		a_out = 0._f64
-		
-    do i1 = 1,n1
-      do i2 = 1,n2-1
-		
-			! find the cell and offset for x1
-      t1         = (x1(i1,i2)-x1_min)/(spline%x1_max-spline%x1_min)
-      if(t1>=1._f64)then
-        t1=1._f64-1.e-14
-      endif
-      if(t1<0._f64)then
-        t1=0._f64
-      endif
-      t1 = t1*real(n1-1)
-      cell1       = int(t1) + 1
-      dx1         = t1- real(cell1-1)
-      cdx1        = 1.0_f64 - dx1
-		
-			! find the cell and offset for x2
-      t2         = (x2(i1,i2)-x2_min)/(spline%x2_max-spline%x2_min)
-      do while(t2>=1._f64)
-        t2=t2-1._f64
-      enddo
-      do while(t2<0._f64)
-        t2=t2+1._f64
-      enddo
-      if((t2>=1._f64).or.(t2<0._f64))then
-        print *,'bad value of t2',t2
-        stop
-      endif
-      t2 = t2*real(n2-1)
-      cell2      = int(t2) + 1
-      dx2        = t2 - real(cell2-1)
-      cdx2       = 1.0_f64 - dx2
-			
-			!print*,'données début de boucle',i1,i2,x1(i1,i2),x2(i1,i2)
-			!print*,'cell',t1,t2,cell1,cell2
-		
-			!if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
-		!		print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
-		!	end if
-			
-		!	if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
-		!		print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
-		!	end if
-
-      cij = spline%coeffs(i1,i2)
-			!print*,'taille tableau coeff',lbound(spline%coeffs,1),n1,ubound(spline%coeffs,1),lbound(spline%coeffs,2),n2,ubound(spline%coeffs,2)
-			
-      ipm1=cell1-1
-      ip  =cell1  
-			ipp1=cell1+1
-      ipp2=cell1+2
-			
-      !jpm1=mod(cell2-1,n2)
-      !jp  =mod(cell2  ,n2)
-      !jpp1=mod(cell2+1,n2)
-      !jpp2=mod(cell2+2,n2)
-
-      jpm1 = mod(cell2-1+n2-2,n2-1)+1
-      jp = mod(cell2+n2-2,n2-1)+1
-      jpp1 = mod(cell2+1+n2-2,n2-1)+1
-      jpp2 = mod(cell2+2+n2-2,n2-1)+1
-			
-			!print*,'1',ipm1,ip,ipp1,ipp2
-			!print*,'2',jpm1,jp,jpp1,jpp2
-			
-      ax1 = cdx1 
-      ax2 = ax1*ax1
-      ax3 = ax2*ax1
-      ay1 = cdx2
-      ay2 = ay1*ay1
-      ay3 = ay2*ay1
-									
-      svalx1 = ax3/6._f64*cij
-      svalx2 = (0.5_f64*(-ax3+ax2+ax1)+1._f64/6._f64)*cij
-      svalx3 = (2._f64/3._f64 - ax2 + 0.5_f64*ax3)*cij
-      svalx4 = ((1._f64-ax3)/6._f64 + 0.5_f64*(ax2-ax1))*cij
-		
-      svaly1 = ay3/6._f64
-      svaly2 = 0.5_f64*(-ay3+ay2+ay1) + 1._f64/6._f64
-      svaly3 = 2._f64/3.0_f64 - ay2 + 0.5_f64*ay3
-      svaly4 = (1._f64-ay3)/6._f64 +0.5_f64*(ay2-ay1)
-			
-			if (ipm1.ge.0) then
-				a_out(ipm1,jpm1) = a_out(ipm1,jpm1) + svalx1*svaly1
-				a_out(ipm1,jp)   = a_out(ipm1,jp)   + svalx1*svaly2
-				a_out(ipm1,jpp1) = a_out(ipm1,jpp1) + svalx1*svaly3
-				a_out(ipm1,jpp2) = a_out(ipm1,jpp2) + svalx1*svaly4
-			end if
-			
-			a_out(ip,jpm1) = a_out(ip,jpm1) + svalx2*svaly1
-			a_out(ip,jp)   = a_out(ip,jp)   + svalx2*svaly2 
-			a_out(ip,jpp1) = a_out(ip,jpp1) + svalx2*svaly3
-			a_out(ip,jpp2) = a_out(ip,jpp2) + svalx2*svaly4
-				  
-			if (ipp1.le.n1) then
-				a_out(ipp1,jpm1) = a_out(ipp1,jpm1) + svalx3*svaly1
-				a_out(ipp1,jp)   = a_out(ipp1,jp)   + svalx3*svaly2
-				a_out(ipp1,jpp1) = a_out(ipp1,jpp1) + svalx3*svaly3
-				a_out(ipp1,jpp2) = a_out(ipp1,jpp2) + svalx3*svaly4
-			end if
-			
-			if (ipp2.le.n1) then
-				a_out(ipp2,jpm1) = a_out(ipp2,jpm1) + svalx4*svaly1
-				a_out(ipp2,jp)   = a_out(ipp2,jp)   + svalx4*svaly2
-				a_out(ipp2,jpp1) = a_out(ipp2,jpp1) + svalx4*svaly3
-				a_out(ipp2,jpp2) = a_out(ipp2,jpp2) + svalx4*svaly4
-			end if
-						
-		!if (i1.eq.1) then
-		! a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
-		!	a_out(1,jp)	 = a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
-		!	a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
-		!	a_out(1,jpp2) = a_out(1,jpp2) + spline%coeffs(0,i2)/6._f64*svaly4
-		!end if	
-		
-		!if (i1.eq.n1) then
-		!	a_out(n1,jpm1) = a_out(n1,jpm1) + spline%coeffs(n1+1,i2)/6._f64*svaly1
-		!	a_out(n1,jp)	 = a_out(n1,jp)	  + spline%coeffs(n1+1,i2)/6._f64*svaly2
-		!	a_out(n1,jpp1) = a_out(n1,jpp1) + spline%coeffs(n1+1,i2)/6._f64*svaly3
-		!	a_out(n1,jpp2) = a_out(n1,jpp2) + spline%coeffs(n1+1,i2)/6._f64*svaly4
-		!end if	
-		
-      end do
-    end do
-	a_out(:,n2) = a_out(:,1)			 
-  end subroutine deposit_value_2D_bis
 
 
   function interpolate_value_2D( x1, x2, spline )
