@@ -6,7 +6,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
-!> Last modification: March 23, 2012
+!> Last modification: April 10, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -236,15 +236,16 @@ contains
        print*, ' '
        print*, 'Average error, vcell volume :', average_err, vcell_volume
    
-       if ( average_err <= vcell_volume) then
-           print*, ' '
-           print*, '"sll_poisson_3d_periodic_seq" test: PASS'
-       else
+       if ( average_err > vcell_volume) then
           print*, 'Test stopped by "sll_poisson_3d_periodic_seq" failure'
           stop
        endif
 
     end do
+
+    print*, ' '
+    print*, '"sll_poisson_3d_periodic_seq" test: PASS'
+    print*, ' '
 
     SLL_DEALLOCATE_ARRAY(eta1,error)
     SLL_DEALLOCATE_ARRAY(eta2,error)

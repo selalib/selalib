@@ -5,7 +5,7 @@
 !
 !> @brief 
 !> Selalib poisson solvers (3D) unit test
-!> Last modification: March 22, 2012
+!> Last modification: April 10, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -49,6 +49,8 @@ program test_poisson_3d_par
   sll_int32                                    :: i_test
   sll_int32                                    :: npx, npy, npz
   sll_int32                                    :: e
+  sll_real32                                   :: ok = 1.0
+  sll_real32   , dimension(1)                  :: prod4test
 
   !Boot parallel environment
   call sll_boot_collective()
@@ -150,9 +152,28 @@ program test_poisson_3d_par
      call flush(); print*, 'dx*dy*dz =', dx*dy*dz
      call flush(); print*, ' ------------------'
 
+     if (average_err> dx*dy*dz ) then
+        print*, 'Test stopped by "sll_poisson_3d_periodic_par" failure'
+        stop
+     endif
+
      SLL_DEALLOCATE_ARRAY(phi, ierr)
 
   end do
+
+     call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
+          1, MPI_PROD, 0, prod4test )
+     if (myrank==0) then
+
+        if (prod4test(1)==1.) then
+           call flush()
+           print*, ' '
+           call flush()
+           print*, '"sll_poisson_3d_periodic_par" test: PASS'
+           call flush()
+           print*, ' '
+        endif
+     endif           
 
   call delete_poisson_3d_periodic_plan_par(plan)
 

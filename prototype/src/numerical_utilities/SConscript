@@ -1,3 +1,0 @@
-Import('env')
-lib = env.Library('sll_tridiagonal', ["tridiagonal.F90"])
-Return('lib')
