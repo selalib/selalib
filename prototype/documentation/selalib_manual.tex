@@ -7,7 +7,7 @@
 
 \title{Selalib Notes - DRAFT -}   
 \author{Edwin Chacon-Golcher}        
-\date{August, 2011}    
+\date{April, 2012}    
 \maketitle
 
 \begin{abstract}
@@ -64,7 +64,7 @@ alias & shorthand for... \\
 \hline
 \verb+sll_int32+ & \verb+integer(kind=i32)+ \\
 \verb+sll_int64+ & \verb+integer(kind=i64)+ \\
-\verb+sll_real64+ & \verb+real(kind=f32)+ \\
+\verb+sll_real32+ & \verb+real(kind=f32)+ \\
 \verb+sll_real64+ & \verb+real(kind=f64)+ \\
 \verb+sll_int+  & \verb+integer(kind=user)+ \\
 \verb+sll_real+ & \verb+real(kind=user)+ \\
@@ -302,6 +302,42 @@ Any number of time markers can be declared and set at different points. So this 
 \subsection{Status}
 Unit-tested.
 
+
+\section{Low-Level File IO}
+
+    \subsection{Description}
+	Presently, Selalib offers facilities to output data in the XDMF file format, readable by the VisIt program. To use, import the module \verb+sll_low_level_file_io+. The interface allows to open a file, write multi-dimensional data in it and then close it. The main purpose of this module is to provide the low-level building blocks that can be used by higher-level functions to conveniently write data to files.
+
+    \subsection{Exposed Interface}
+    The current interface is a collection of generic functions:
+    \begin{verbatim}
+        sll_xdmf_open( file_name,
+                       mesh_name,
+                       nnodes_x1,nnodes_x2,[nnodes_x3,]
+                       file_id,
+                       error )
+        sll_xdmf_write_array( mesh_name,
+                              array,
+                              array_name,
+                              error,
+                              xmffile_id,
+                              center )
+        sll_xdmf_close(file_id,error)
+    \end{verbatim}
+    Where the parameters in brackets are used depending of the dimensionality of the data.
+    \begin{description}
+       \item \verb+sll_xdmf_open( )+ opens a file with a given name and returns a file identifier on \verb+file_id+.
+       \item \verb+sll_xdmf_write_array( )+ writes a given multi-dimensional array on a file identified by \verb+xmffile_id+.
+       \item \verb+sll_sdmf_close( )+ closes the given file.
+    \end{description}
+
+\subsection{Critical Commentary}
+ECG: This interface can be improved. To consider:
+\begin{description}
+\item The job of \verb+sll_xdmf_open( )+ should be to open a file, with a given filename; it should take as parameters some flags to indicate what behavior to exercise in case of error or if the file exists (overwrite? append?) and nothing else. The nnodes parameters are used to write XDMF-related preambles, but this should be sent to the other functions that actually write into the file.
+\item The mesh\_name parameter is not clear. Why mesh?
+\item What is the 'center' parameter in the write\_array() function?
+\end{description}
 
 \chapter{Mid-Level Layer: Numerical and Parallel Utilities}
 
@@ -588,21 +624,29 @@ Unit-tested.
 
 \section{FFT}
 \subsection{Description}
-The FFT module provides an unified interface to native or external library FFT functions. This module plays a role analogous to the \emph{Collective} module, explained below, but in this case applied to FFT capabilities instead of a parallelization library like MPI.
+The FFT module intends to provide an unified interface to native or external library FFT functions. This module plays a role analogous to the \emph{Collective} module, explained below, but in this case applied to FFT capabilities instead of a parallelization library like MPI. In this sense, the \verb+sll_fft+ module provides a set of types, functions and subroutines that can in principle be implemented with a choice of external libraries.
 
 \subsection{Exposed Interface}
-The interface to the FFT functions follows a "create plan" followed by "apply plan" model. The "plan" stores all relevant information (twiddle factor arrays, auxiliary arrays, etc.) that may be needed by a given type of FFT operation. The application of the plan executes the operation itself on a given data. Like all other native types in Selalib, the FFT plan is declared through a pointer, which must be allocated and initialized. To declare, call:
+The interface to the FFT functions is inspired by the FFTW interface in which the FFT operation is carried out by the creation of a plan followed by the execution of this plan. The "plan" stores all relevant information (twiddle factor arrays, auxiliary arrays, etc.) that may be needed by a given type of FFT operation. The application of the plan executes the operation itself on a given data. Like all other native types in Selalib, the FFT plan is declared through a pointer, which must be allocated and initialized. To declare, call:
 
 \begin{verbatim}
      type(sll_fft_plan), pointer :: fft_plan
 \end{verbatim}
 Followed by an initialization step:
 \begin{verbatim}
-     fft_plan => sll_new_fft_plan( sample_number,  
-                                   data_type, 
-                                   fft_direction )
+     fft_plan => sll_new_fft( sample_number,  
+                              data_type, 
+                              fft_flags )
 \end{verbatim}
-Where 
+Where the \verb+data_type+ parameter can take either of the values: \verb+FFT_REAL+ or \verb+FFT_COMPLEX+. Presently we only provide double precision transforms (i.e.: 64-bit floating precision numbers).  The \verb+fft_flags+ can take the values: \verb+FFT_NORMALIZE_FORWARD+ and/or \verb+FFT_NORMALIZE_INVERSE+. If no flags are present, an unnormalized FFT will be executed. The user may request that the FFT be normalized in both directions by combining the flags with a \verb+ + + sign.
+
+To execute the FFT plan:
+
+\begin{verbatim}
+
+\end{verbatim}
+
+
 \begin{description}
 \item[sample\_number:] 
 %This is the size of the array on which the number of points will be applied. Note that for an ordinary FFT, periodic boundary conditions are implied, and thus the last point in the array is not taken into account.
@@ -1055,6 +1099,57 @@ In testing.
 
 
 \chapter{Top-Level Layer: Semi-Lagrangian Toolbox}
+
+\section{Meshes}
+\subsection{Description}
+The mesh types aim at storing array data, but including additional information needed to put this data in context. There are several types of meshes:
+\begin{description}
+\item[cartesian mesh]: an N-D fully regular mesh defined by an N-D data array and additional parameters that define the domain (i.e.: xmin, xmax) and other parameters like the number of cells in each dimension and the spacing of the data (i.e.: delta). The services provided should be like (with corresponding name changes, indicating the dimensionality of the data):
+\begin{itemize}
+\item allocation(new) and initialization functions,
+\item deletion,
+\item a copy constructor,
+\item computation of data interpolants (cubic splines for example),
+\item \verb+get_value(mesh,x1,x2,...)+: where \verb+x1+, \verb+x2+,... belong to the corresponding interval \verb+(x1_min, x1_max)+, \verb+(x2_min, x2_max)+, etc., and which returns the interpolated value at the desired point. This operation launches spline interpolations under the hood.
+\item \verb+get_node_value(mesh,i,j,...)+: analogous to \verb+get_value()+ but does not need to launch any interpolation as the indices are integers and the requested value falls on a mesh node. This is implemented by a macro.
+\item \verb+set_node_value(mesh,i,j,...,val)+: sets the node datum at i,j,... with value. Implemented with a macro.
+\end{itemize}
+\end{description}
+There are some pitfalls with the suggested interface:
+\begin{itemize}
+\item the naming convention could get a little complicated depending on the type of data stored in the array (scalar, multiple-valued, etc.), as we had originally intended with the field/vec naming convention.
+\item The interface may need to directly expose its underlying data, or pointers to sections of it for certain operations, like FFT. The whole data field of a mesh could need to be set to a whole data array in one step, during the initialization, such as after a remap operation. At least in these cases, the access to the data might be safer given the nature of the operations.
+\end{itemize}
+
+\begin{description}
+\item[structured mesh]: a structured mesh is a mapped cartesian mesh in which the coordinates are decoupled. An ND mesh data is stored as an ND array. In addition, however, we need N 1D arrays to store the actual coordinates of the node locations in each dimension. As an alternative, we could use N functions $x_1=f(\eta_1)$, $x_2=f(\eta_2)$, ... , $x_n=f(\eta_n)$, to represent each transformation. We follow the convention that $\eta_1$, $\eta_2$, etc.  are values in the $[0,1]$. The offered services ought to be:
+
+\begin{itemize}
+\item allocation, initialization, deletion and copy.
+\item \verb+get_node_value(mesh, i, j, ... )+: which reads directly from the data array.
+\item \verb+set_node_value(mesh, i, j, ... )+: which writes directly to the data array.
+\item In an analogous way to the \verb+get_value()+ functions described above, we could provide something like \verb+get_value(mesh,+ $\eta_1$\verb+, +$\eta_2$\verb+)+. This would also trigger an interpolation step using uniform splines generated with the ND data. This would require the user to be \emph{thinking} in terms of the logical variables $\eta_i$. 
+\item Similar functions could be provided such that the user could also request values at points $x_i$. For this, we could launch non-uniform splines, with the spacing determined by the $x_i$ arrays and the ND data.
+\item This type may also need to grant direct access to the data array for use in operations like FFT and similar.
+\end{itemize}
+
+\item[tensor product mesh]: This is a mapped cartesian mesh in which the coordinates are coupled. That is, the mappings have the form: $x_1=f(\eta_1, \eta_2, ..., \eta_n)$, $x_2=f(\eta_1,\eta_2, ..., \eta_n)$, ... , $x_n=f(\eta_1,\eta_2, ..., \eta_n)$. The specification of this type of mesh requires an ND data array, N ND arrays that specify the transformations numerically, or N functions of arity N to specify the transformations. The services provided should be:
+\begin{itemize}
+\item allocation, initialization, deletion and copy.
+\item \verb+get_node_value(mesh, i, j, ... )+: which reads directly from the data array.
+\item \verb+set_node_value(mesh, i, j, ... )+: which writes directly to the data array.
+\item \verb+get_value(mesh,+ $\eta_1$\verb+, +$\eta_2$\verb+, ... )+ which would also trigger uniform spline interpolations, and
+\item \verb+get_value(mesh, x1, x2, ... )+, which would trigger nonuniform spline interpolations.
+\end{itemize}
+We may need to include other operations here which would entail inverse mappings (maybe also with splines), or NURBS or something else. Need to fill in the details more here.
+\end{description}
+
+
+\subsection{Exposed Interface}
+
+\subsection{Usage}
+
+\subsection{Status}
 
 \section{Quasi-Neutral Equation Solver}
 \subsection{Description}
