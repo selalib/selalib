@@ -1,16 +1,28 @@
 project (sll)
 enable_language (Fortran)
 cmake_minimum_required(VERSION 2.8)
+INCLUDE(CMakeForceCompiler)
+
+# make sure that the default is a RELEASE
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
+      "Choose the type of build, options are: None Debug Release."
+      FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
 
 add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 # use MPIF90 as compiler
 # set(CMAKE_Fortran_COMPILER mpif90)
 
-# some useful flags
-#set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+if(Fortran_COMPILER_NAME STREQUAL "gfortran")
+	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+	message(STATUS "COMPILER GFORTRAN")
+else()
+	message(STATUS "NO FORTRAN COMPILER FOUND")
+endif()
 
-set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 #ajoute les modules locaux
@@ -35,7 +47,10 @@ if (MPI_FOUND)
   message(STATUS "MPI FOUND")
   include_directories(${MPI_Fortran_INCLUDE_PATH})
   message(STATUS "PARALLEL FORTRAN IS ${MPI_Fortran_COMPILER}")
-  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  #CMAKE_FORCE_Fortran_COMPILER(mpif90 ${Fortran_COMPILER_NAME})
+  CMAKE_FORCE_Fortran_COMPILER(${MPI_Fortran_COMPILER} ${Fortran_COMPILER_NAME})
+  message(STATUS "Compiler : ${CMAKE_Fortran_COMPILER}")
+  #set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 else (MPI_FOUND)
   message(STATUS "MPI NOT FOUND")
 endif(MPI_FOUND)
@@ -152,9 +167,12 @@ add_test(fft fft/test_fft)
 set(PROCS ${MPIEXEC_MAX_NUMPROCS})
 set(ARGS "")
 add_test(collective ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} collective/test_collective ${MPIEXEC_POSTFLAGS} ${ARGS})
-set_tests_properties(collective PROPERTIES FAIL_REGULAR_EXPRESSION "${failRegex}")
+#set_tests_properties(collective PROPERTIES FAIL_REGULAR_EXPRESSION "${failRegex}")
 
-add_test(remap mpirun -np 8 remap/test_remap)
+set(PROCS 8)
+set(ARGS "")
+add_test(collective ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} remap/test_remap ${MPIEXEC_POSTFLAGS} ${ARGS})
+
 add_test(WENO WENO/test_WENO)
 add_test(interpolators interpolators/test_interpolators_1d)
 add_test(interpolators interpolators/test_interpolators_2d)
