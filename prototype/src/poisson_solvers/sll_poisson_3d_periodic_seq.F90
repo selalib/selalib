@@ -147,7 +147,7 @@ contains
                 hat_phi(i,j,k) = 0.d0
              else
                 hat_phi(i,j,k) = hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
-                                 + (ind_y/Ly)**2+(ind_z/Lz)**2))
+                                              + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
        enddo
