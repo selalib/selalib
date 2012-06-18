@@ -297,18 +297,21 @@ contains
     call set_layout_3D_k_max( layout_3D, proc_p, k_max_n )   
   end subroutine swap_box_3D
   
-  function theoretical_global_3D_indices(d, ni, nj)
-    integer, dimension(1:3) :: theoretical_global_3D_indices
+  function theoretical_global_3D_indices(d, ni, nj) result(ind)
+    integer, dimension(1:3) :: ind
     integer, intent(in)     :: d, ni, nj
-    integer                 :: q
     if(mod(d,ni) /= 0) then
-       theoretical_global_3D_indices(1) = mod(d,ni)
+       ind(1) = mod(d,ni)
     else
-       theoretical_global_3D_indices(1) = ni
+       ind(1) = ni
     end if
-    q = d/ni
-    theoretical_global_3D_indices(2) = mod(q,nj) + 1
-    theoretical_global_3D_indices(3) = q/nj + 1
+    if (mod(d,ni*nj)/=0) then
+       ind(3) = d/(ni*nj) + 1
+    else
+       ind(3) = d/(ni*nj)
+    endif
+    ind(2) = (d-ind(1))/ni - nj*(ind(3)-1) + 1
+
   end function theoretical_global_3D_indices
   
   subroutine two_power_rand_factorization(n, n1, n2, n3)

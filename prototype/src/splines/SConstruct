@@ -16,10 +16,10 @@ env = Environment( ENV=os.environ,
 #                  FORTRANMODDIRPREFIX= '-fmod', 
                    LIBPATH= ['.'],
                    LIBS=['sll_constants','sll_memory','sll_precision',
-                         'sll_assertion','sll_tridiagonal'],
+                         'sll_assertion','sll_tridiagonal','sym_penta_diagonal'],
                    F90FLAGS =['-g', '-W', '-Wall', '-Wextra', '-pedantic', 
                               '-std=f2003', '-ffree-line-length-none', 
-                              '-DGFORTRAN'])
+                              '-DGCC -lm'])
 #print "GFORTRAN is :", env['GFORTRAN']
 #env.Replace(	
 #		F90FLAGS = OPT+' -fpp',
@@ -36,5 +36,9 @@ env.Program('unit_test', ["unit_test.F90", "sll_splines.F90", "test_func_module.
 env.Program('unit_test_nonuniform', ["unit_test_nonuniform.F90", "cubic_nonuniform_splines.F90"])
 env.Program('polar_SL', ["polar_SL.F90", "sll_splines.F90","cubic_nonuniform_splines.F90"])
 
+env.Library('sym_penta_diagonal', ["../numerical_utilities/sym_penta_diagonal.c"])
+env.Library('sym_penta_diagonal_h', ["../numerical_utilities/sym_penta_diagonal.h"])
+env.Program('quintic_spline_tester', ["quintic_spline_tester.c", 
+            'quintic_spline.c', 'quintic_spline.h'])
 
-
+#env.Program('simu_spline', ["simu_spline.F90", "sll_splines.F90", "util_constants.F90"])
