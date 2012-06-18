@@ -7,7 +7,7 @@ program radial_1d_SL
   use cubic_nonuniform_splines
   use numeric_constants
   implicit none
-
+  
   type(sll_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,field_case
   sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,val_bsl,val_bsl_nc,val_fsl,val_fsl_nc,tmp1,tmp2
@@ -15,7 +15,7 @@ program radial_1d_SL
   sll_real64,dimension(:,:), pointer :: f,fh_bsl,fh_bsl_nc,fh_fsl,fh_fsl_nc
   sll_real64,dimension(:,:), pointer :: rfeet,thetafeet
   sll_real64,dimension(:,:), pointer :: diag
-	
+
   ! for the python script polar-exe.py
   !namelist /param/ N
   N = 256
@@ -24,7 +24,7 @@ program radial_1d_SL
   ! physical parameters
   Nr = N
   Ntheta = N
-  
+
   ! domain : disc of radius rmax with a hole of radius rmin
   rmin = 0.2_f64
   rmax = 0.8_f64
@@ -90,6 +90,8 @@ program radial_1d_SL
     0._f64, 2._f64*sll_pi, &
     HERMITE_SPLINE, PERIODIC_SPLINE,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
+
+ 
   
   ! Analytic distribution function
   do i=1,Nr+1
@@ -501,5 +503,7 @@ program radial_1d_SL
     write(900,*) ' '
   enddo
   close(900)
+	
+  
 
 end program
