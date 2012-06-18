@@ -12,6 +12,7 @@ program test_poisson_2d
 
    use numeric_constants
    use sll_poisson_2D_periodic
+   use sll_mesh_types
 
    implicit none
 

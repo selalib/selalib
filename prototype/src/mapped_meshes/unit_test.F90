@@ -1,7 +1,7 @@
 program unit_test
 #include "sll_working_precision.h"
   use numeric_constants
-  use sll_mapped_meshes
+  use sll_module_mapped_meshes_2d
   use geometry_functions
   use sll_cubic_spline_interpolator_2d
   implicit none
@@ -68,6 +68,7 @@ program unit_test
 
 print *, x1_polar_f(1.0_f64,1.0_f64)
   call map_a%initialize( &
+       "map_a", &
        NPTS1, &
        NPTS2, &
        x1_polar_f, &
@@ -96,6 +97,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
+
+  call map_a%write_to_file()
 
 
   print *, '**********************************************************'
@@ -142,6 +145,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
 
 
   call map_d%initialize( &
+       "map_d", &
        NPTS1, &
        NPTS2, &
        x1, &
@@ -193,12 +197,16 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
      end do
   end do
 
+  call map_d%write_to_file()
+  call map_d%write_to_file()
+
   print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
 !  call delete(map_a)
 !  call delete(map_d)
 
   print *, 'deleted maps'
   print *, 'reached end of unit test'
+
   deallocate(x1_eta1_min)
   deallocate(x1_eta1_max)
   deallocate(x2_eta1_min)

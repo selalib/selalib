@@ -1,0 +1,13 @@
+add_library(ode_solvers STATIC sll_ode_solvers.F90)
+add_executable(test_implicit_ode_nonuniform unit_test_implicit_ode_nonuniform.F90)
+target_link_libraries(test_implicit_ode_nonuniform
+	ode_solvers
+	sll_scalar_field_2d
+	sll_low_level_file_io
+	sll_mapped_meshes
+	geometry_functions
+	sll_splines
+	sll_assertion
+	sll_constants
+	sll_memory
+	sll_utilities)
