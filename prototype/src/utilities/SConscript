@@ -1,3 +1,0 @@
-Import('env')
-lib = env.Library('sll_utilities',["misc_utils.F90"])
-Return('lib')
