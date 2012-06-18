@@ -9,26 +9,35 @@ program bgk_csl
   use sll_csl
   use sll_splines
   use contrib_rho_module
+  use bgk_mesh_construction
+  
   implicit none
   external compute_translate_nodes_periodic,compute_non_unif_integral2
   !external poisson1dpertrap
   sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2,tmp
   sll_real64 :: mu,xi,L,H
-  sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step
+  sll_int    :: i,j,N_phi,err,N_x1,N_x2,i1,i2,N,nb_step,Nen,Nen2,Nx
   LOGICAL :: ex
   sll_real64,dimension(:), pointer :: phi,node_positions_x1,node_positions_x2,phi_poisson
+  sll_real64,dimension(:), pointer :: tab_phi,tab_dphi
   sll_real64,dimension(:), pointer :: new_node_positions,buf_1d,rho,E,rho_exact
   sll_real64,dimension(:,:), pointer :: f,f_init,f_equil
-  sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val
-  sll_int :: ii,step
+  sll_real64 :: phi_val,delta_x1_phi,xx,dt,alpha,val,dxrho,dvrho,dx
+  sll_int :: ii,step,i2p1,jj
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
 
-  sll_int32 :: nc_eta1, nc_eta2
+  sll_int32 :: nc_eta1, nc_eta2,Nx_rho
   sll_real64, dimension(:,:), pointer :: x1c_array, x2c_array, jac_array
   sll_real64, dimension(:,:), pointer :: x1n_array, x2n_array
+  
+  sll_real64, dimension(:,:), pointer :: tab_phi_positions
+  sll_real64, dimension(:,:,:), pointer :: h_theta_positions
+  sll_real64, dimension(:), pointer :: h_positions
+  
+  
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, eta1c, eta2c
-  sll_real64 :: delta_eta1, delta_eta2,alpha_mesh
-  sll_int  :: mesh_case,ierr,visu_step,test_case,rho_case,phi_case
+  sll_real64 :: delta_eta1, delta_eta2,alpha_mesh,h_max,xx1(2,2),xx2(2,2)
+  sll_int  :: mesh_case,ierr,visu_step,test_case,rho_case,phi_case,k,Nv_rho
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
   type(sll_distribution_function_2D_t), pointer :: dist_func
@@ -40,10 +49,10 @@ program bgk_csl
   sll_real64,dimension(:,:,:), pointer :: integration_points
   sll_real64,dimension(:,:), pointer :: integration_points_val
   character*80,str,str2
-
-  mesh_case = 3
+  sll_real64 :: x_factor,y_factor,length,tmp_loc,total_length,x,v
+  mesh_case = 4
   visu_step = 10
-  test_case = 4
+  test_case = 3
   rho_case = 2
   phi_case = 3
      
@@ -53,8 +62,21 @@ program bgk_csl
   N_x2 = 64
   dt = 0.1_f64
   nb_step = 600
+  h_max = 25._f64
+
+  N_phi=400000
+  Nx_rho = 10
+  Nx = N_phi/2
+  Nv_rho=100
   
   N = max(N_x1,N_x2)
+  
+  Nen=10
+  Nen2=N_x1-Nen
+  
+  
+      
+  
   
   print *,'#max(N_x1,N_x2)=',N
   
@@ -75,6 +97,9 @@ program bgk_csl
   SLL_ALLOCATE(phi_poisson(N_x1+1),err)
   SLL_ALLOCATE(integration_points(3,N_x1+1,N_x2+1),err)  
   SLL_ALLOCATE(integration_points_val(2,N_x2),err)  
+
+
+
   
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
@@ -86,37 +111,66 @@ program bgk_csl
   xi=0.90_f64
   L=14.71_f64
   
-  inquire(file='half_phi.dat', exist=ex) 
-  if(.not.(ex))then
-    print *,'file half_phi.dat does not exist'
-    stop
-  endif  
-  open(unit=900,file='half_phi.dat')  
-    read(900,*) N_phi,L
-    N_phi = 2*N_phi
-    SLL_ALLOCATE(phi(N_phi+1),err)
-    do j=1,N_phi/2+1
-      read(900,*) i,x1,x2
-      phi(i)=x1
-    enddo
-    do j=N_phi/2+2,N_phi+1
+  
+  
+  !inquire(file='half_phi.dat', exist=ex) 
+  !if(.not.(ex))then
+  !  print *,'file half_phi.dat does not exist'
+  !  stop
+  !endif  
+  !open(unit=900,file='half_phi.dat')  
+  !  read(900,*) N_phi,L
+  !  N_phi = 2*N_phi
+  !  SLL_ALLOCATE(phi(N_phi+1),err)
+  !  do j=1,N_phi/2+1
+  !    read(900,*) i,x1,x2
+  !    phi(i)=x1
+  !  enddo
+  !  do j=N_phi/2+2,N_phi+1
+  !    phi(j)=phi(N_phi+2-j)
+  !  enddo
+  !close(900)
+  
+  
+  SLL_ALLOCATE(phi(N_phi+1),err)
+  SLL_ALLOCATE(tab_phi_positions(2,N_phi+1),err)
+
+  SLL_ALLOCATE(h_positions(N_x1+1),err)
+
+  SLL_ALLOCATE(h_theta_positions(2,1:N_x2+1,1:N_x1+1),err)
+
+
+  !SLL_ALLOCATE(tab_phi(N_phi+1),err)
+  SLL_ALLOCATE(tab_dphi(N_phi+1),err)
+  call compute_bgk_phi(L,N_phi/2,mu,xi,phi,tab_dphi)  
+  do j=N_phi/2+2,N_phi+1
       phi(j)=phi(N_phi+2-j)
-    enddo
-  close(900)
+      tab_dphi(j)=tab_dphi(N_phi+2-j)
+  enddo
+
+  
+  !do i1=1,N_phi+1
+  !  if(modulo(i1-1+1000,1000)+1==1)then
+  !    print *,i1,phi(i1),tab_dphi(i1)
+  !  endif  
+  !enddo
+  
+  !print *,N_phi
   
   !L = 4._f64*sll_pi
   
   x1_min = 0._f64
   x1_max = L
-  
+    
   
   if(test_case>=4)then
-    L = 4._f64*sll_pi
+    !L = 4._f64*sll_pi
     x1_min = 0._f64
-    x1_max = L
+    x1_max = 4._f64*sll_pi
     x2_min = -6._f64
     x2_max = -x2_min
   endif
+
 
 !  x1_min = 0._f64
 !  x1_max = 1._f64
@@ -163,6 +217,12 @@ program bgk_csl
 
   nc_eta1 = N_x1
   nc_eta2 = N_x2
+  
+  if(mesh_case==4)then
+    nc_eta1 = nc_eta1/2
+    nc_eta2 = nc_eta2*2
+  endif
+  
 
   eta1_min =  0.0_f64
   eta1_max = 1.0_f64 ! 0.15_f64*x1_max! 1.0_f64
@@ -377,6 +437,301 @@ program bgk_csl
 
 
   endif
+  
+  
+  
+  if(mesh_case==4)then
+    call construct_mesh_bgk(phi,h_positions,tab_phi_positions,h_theta_positions,&
+      N_phi/2,Nen,Nen2,h_max,L,N_x2)
+
+    !print *,nc_eta1,nc_eta2,Nen+Nen2,N_x1,N_x2
+
+    open(unit=10,file='meshtmp.dat')
+     
+    !compute cell centers (CCC) 
+     
+    do i1 = 1, nc_eta1! + 1
+      do i2= 1, nc_eta2/4! + 1
+        !x1n_array(i1,i2) = 0._f64
+        !x2n_array(i1,i2) = 0._f64
+        x1c_array(i1,i2) = h_theta_positions(1,2*i2,2*i1)
+        x2c_array(i1,i2) = h_theta_positions(2,2*i2,2*i1)
+        !write(10,* ) x1c_array(i1,i2),x2c_array(i1,i2)
+      enddo
+      do i2= 1, nc_eta2/4
+        x1c_array(i1,nc_eta2/4+i2)=x1c_array(i1,nc_eta2/4+1-i2)
+        x2c_array(i1,nc_eta2/4+i2)=-x2c_array(i1,nc_eta2/4+1-i2)
+        !write(10,* ) x1c_array(i1,nc_eta2/4+i2),x2c_array(i1,nc_eta2/4+i2)
+      enddo      
+      do i2= 1, nc_eta2/4
+        x1c_array(i1,nc_eta2/2+i2)=-x1c_array(i1,i2)+L
+        x2c_array(i1,nc_eta2/2+i2)=-x2c_array(i1,i2)
+        !write(10,* ) x1c_array(i1,nc_eta2/2+i2),x2c_array(i1,nc_eta2/2+i2)
+      enddo      
+      do i2= 1, nc_eta2/4
+        x1c_array(i1,3*nc_eta2/4+i2)=-x1c_array(i1,nc_eta2/4+1-i2)+L
+        x2c_array(i1,3*nc_eta2/4+i2)=x2c_array(i1,nc_eta2/4+1-i2)
+        !write(10,* ) x1c_array(i1,3*nc_eta2/4+i2),x2c_array(i1,3*nc_eta2/4+i2)
+      enddo      
+
+    enddo
+    ! compute nodes
+    
+    do i1 = 1, nc_eta1+ 1
+      do i2= 1, nc_eta2/4! + 1
+        x1n_array(i1,i2) = h_theta_positions(1,2*i2-1,2*i1-1)
+        x2n_array(i1,i2) = h_theta_positions(2,2*i2-1,2*i1-1)
+        !write(10,* ) x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo
+      
+      do i2= 1, nc_eta2/4
+        !x1c_array(i1,nc_eta2/4+i2)=x1c_array(i1,nc_eta2/4+1-i2)
+        !x2c_array(i1,nc_eta2/4+i2)=-x2c_array(i1,nc_eta2/4+1-i2)
+        x1n_array(i1,nc_eta2/4+i2)=x1n_array(i1,nc_eta2/4+1-i2)
+        x2n_array(i1,nc_eta2/4+i2)=-x2n_array(i1,nc_eta2/4+1-i2)
+        !write(10,* ) x1n_array(i1,nc_eta2/4+i2),x2n_array(i1,nc_eta2/4+i2)
+      enddo
+      
+      do i2= 1, nc_eta2/4
+        !x1c_array(i1,nc_eta2/2+i2)=-x1c_array(i1,i2)+L
+        !x2c_array(i1,nc_eta2/2+i2)=-x2c_array(i1,i2)
+        x1n_array(i1,nc_eta2/2+i2)=-x1n_array(i1,i2)+L
+        x2n_array(i1,nc_eta2/2+i2)=-x2n_array(i1,i2)
+        !write(10,* ) x1n_array(i1,nc_eta2/2+i2),x2n_array(i1,nc_eta2/2+i2)
+      enddo      
+      do i2= 1, nc_eta2/4
+        !x1c_array(i1,3*nc_eta2/4+i2)=-x1c_array(i1,nc_eta2/4+1-i2)+L
+        !x2c_array(i1,3*nc_eta2/4+i2)=x2c_array(i1,nc_eta2/4+1-i2)
+        x1n_array(i1,3*nc_eta2/4+i2)=-x1n_array(i1,nc_eta2/4+1-i2)+L
+        x2n_array(i1,3*nc_eta2/4+i2)=x2n_array(i1,nc_eta2/4+1-i2)
+        !write(10,* ) x1n_array(i1,3*nc_eta2/4+i2),x2n_array(i1,3*nc_eta2/4+i2)
+      enddo
+      
+      !boundary stored in nc_eta2 and nc_eta2/2+1 which was already existing by periodicity     
+      i2=nc_eta2/4 + 1
+      x1n_array(i1,nc_eta2) = h_theta_positions(1,2*i2-1,2*i1-1)
+      x2n_array(i1,nc_eta2) = h_theta_positions(2,2*i2-1,2*i1-1)
+      x1n_array(i1,nc_eta2/2+1) = -x1n_array(i1,nc_eta2)+L
+      x2n_array(i1,nc_eta2/2+1) = -x2n_array(i1,nc_eta2)
+      !write(10,*) x1n_array(i1,nc_eta2),x2n_array(i1,nc_eta2)
+      !write(10,*) x1n_array(i1,nc_eta2+1),x2n_array(i1,nc_eta2+1)
+
+    enddo
+
+    do i1 = 1, nc_eta1+ 1
+      do i2= 1, nc_eta2+1
+        write(10,* ) x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo     
+    enddo
+
+    !compute jac_array on cell 
+    do i1 = 1, nc_eta1! + 1
+      do i2= 1, nc_eta2/4! + 1
+        i2p1=i2+1
+        if(i2==nc_eta2/4)then
+          i2p1=nc_eta2
+        endif
+        !find the indices of the nodes corresponding to the cell
+        xx1(1,1)=x1n_array(i1,i2)
+        xx1(1,2)=x1n_array(i1,i2p1)
+        xx1(2,1)=x1n_array(i1+1,i2)
+        xx1(2,2)=x1n_array(i1+1,i2p1)
+        xx2(1,1)=x2n_array(i1,i2)
+        xx2(1,2)=x2n_array(i1,i2p1)
+        xx2(2,1)=x2n_array(i1+1,i2)
+        xx2(2,2)=x2n_array(i1+1,i2p1)
+        jac_array(i1,i2)= 0.5_f64*abs((xx1(2,1)-xx1(1,1))*(xx2(1,2)-xx2(1,1))&
+        -(xx1(1,2)-xx1(1,1))*(xx2(2,1)-xx2(1,1)))&
+        +0.5_f64*abs((xx1(2,2)-xx1(2,1))*(xx2(1,2)-xx2(2,1))&
+        -(xx1(1,2)-xx1(2,1))*(xx2(2,2)-xx2(2,1)))       
+       !jacobian_cell(k,m)=(Air_T1+Air_T2)/(dth*de)
+      enddo
+
+
+      do i2= 1, nc_eta2/4
+        jac_array(i1,nc_eta2/4+i2)=jac_array(i1,nc_eta2/4+1-i2)
+      enddo      
+      do i2= 1, nc_eta2/4
+        jac_array(i1,nc_eta2/2+i2)=jac_array(i1,i2)
+      enddo      
+      do i2= 1, nc_eta2/4
+        jac_array(i1,3*nc_eta2/4+i2)=jac_array(i1,nc_eta2/4+1-i2)
+      enddo      
+
+      
+    enddo
+    
+    tmp = 0._f64
+    do i1 = 1, nc_eta1
+      do i2= 1, nc_eta2
+        tmp =tmp+jac_array(i1,i2)
+      enddo
+    enddo
+    
+    print *,tmp,(x1_max-x1_min)*(x2_max-x2_min),&
+    x2_max,(x1_max-x1_min)*7.1*2,(x1_max-x1_min)*6.98*2
+    
+    ! compute x1_min=xx1(1,1),x1_max=xx1(2,1),x2_min=xx1(1,2),x2_max=xx1(2,2)
+
+
+    xx1(1,1)=x1n_array(1,1)
+    xx1(2,1)=x1n_array(1,1)
+    xx1(1,2)=x2n_array(1,1)
+    xx1(2,2)=x2n_array(1,1)
+    do i1 = 1, nc_eta1+ 1
+      do i2= 1, nc_eta2
+        tmp = x1n_array(i1,i2)
+        if(tmp<xx1(1,1))then
+          xx1(1,1)=tmp
+        endif
+        if(tmp>xx1(2,1))then
+          xx1(2,1)=tmp
+        endif
+        tmp = x2n_array(i1,i2)
+        if(tmp<xx1(1,2))then
+          xx1(1,2)=tmp
+        endif
+        if(tmp>xx1(2,2))then
+          xx1(2,2)=tmp
+        endif                
+      enddo
+    enddo
+    
+    print *,xx1(1,1),xx1(2,1),xx1(1,2),xx1(2,2)
+    
+    !we then renormalize to [x1_min,x1_max]x[x2_min,x2_max]
+    
+    x1n_array = x1_min+(x1_max-x1_min)*(x1n_array-xx1(1,1))/(xx1(2,1)-xx1(1,1))
+    x1c_array = x1_min+(x1_max-x1_min)*(x1c_array-xx1(1,1))/(xx1(2,1)-xx1(1,1))
+    x2n_array = x2_min+(x2_max-x2_min)*(x1n_array-xx1(1,2))/(xx1(2,2)-xx1(1,2))
+    x2c_array = x2_min+(x2_max-x2_min)*(x2c_array-xx1(1,2))/(xx1(2,2)-xx1(1,2))
+    
+    tmp = (x1_max-x1_min)/(xx1(2,1)-xx1(1,1))
+    tmp = tmp*(x2_max-x2_min)/(xx1(2,2)-xx1(1,2))
+    jac_array = tmp*jac_array 
+
+    tmp = 0._f64
+    do i1 = 1, nc_eta1
+      do i2= 1, nc_eta2
+        tmp =tmp+jac_array(i1,i2)
+      enddo
+    enddo
+    
+    print *,tmp,(x1_max-x1_min)*(x2_max-x2_min)
+
+    
+    close(10)
+    
+    
+    
+    !compute the integration points
+    integration_points = 0._f64
+
+
+    jj= Nx/Nx_rho
+    if(jj==0)then
+      print *,'bad compatibility between Nx=',Nx,' and Nx_rho=',Nx_rho
+      print *,'Nx/Nen should be a non zero integer'
+      stop
+    endif
+    if(jj*Nx_rho/=Nx)then
+      print *,'bad compatibility between Nx=',Nx,' and Nen=',Nx_rho
+      print *,'Nx/Nen should be a non zero integer'
+      stop
+    endif
+
+  
+    ! first define the xrho,vrho for the grid
+    jj = Nx/Nx_rho
+    dxrho = (x1_max-x1_min)/real(Nx_rho,f64)
+    dx  = (x1_max-x1_min)/real(Nx,f64)
+    !vrho_max_tab(1)=sqrt(2._f64*h_max)
+    do i=1,Nx_rho+1
+      jj = Nx/Nx_rho
+      x=x1_min+real(i-1,f64)*dxrho!tab_phi(1+(i-1)*jj)
+      phi_val = tab_phi(1+(i-1)*jj)
+      !vrho_max_tab(i) = sqrt(2._f64*(h_max-phi_val))
+      !dvrho=vrho_max_tab(i)/real(Nv_rho,f64)
+      dvrho=sqrt(2._f64*(h_max-phi_val))/real(Nv_rho,f64)
+      
+      do k=1,Nv_rho+1
+        if((i/=1).or.(k/=1)) then
+          v=real(k-1,f64)*dvrho
+          h=0.5_f64*v*v+phi_val
+          !compute length
+          j=1
+          do while((h-phi(j)>=0._f64).and.(j<=Nx))
+            tab_phi_positions(2,j) = sqrt(2._f64*(h-phi(j)))
+            !tab_phi_positions(2,j) = sqrt(tab_phi(j))
+            !tab_phi_positions(2,j) = min(sqrt(tab_phi(Nx+1)-tab_phi(j)),2._8*sqrt(tab_phi(j)))
+            tab_phi_positions(1,j) = x1_min+real(j-1,f64)*dx
+            j=j+1
+          enddo
+          if((j==Nx+1).and.(h-phi(j)>=0._f64))then
+            tab_phi_positions(1,j) = x1_min+real(j-1,f64)*dx
+            tab_phi_positions(2,j) = sqrt(2._f64*(h-phi(j)))    
+            j=j+1
+          endif    
+          jj=j-1
+          !compute length
+          y_factor = tab_phi_positions(1,jj)**2
+          x_factor = tab_phi_positions(2,1)**2
+          total_length = 0._f64
+          do j=1,jj-1
+            if(j==1+(i-1)*(Nx/Nx_rho))then
+              length=total_length
+            endif
+            tmp_loc = y_factor*(tab_phi_positions(2,j+1)-tab_phi_positions(2,j))**2
+            tmp_loc = tmp_loc+x_factor*(tab_phi_positions(1,j+1)-tab_phi_positions(1,j))**2
+            total_length = total_length+sqrt(tmp_loc)    
+          enddo
+          if(jj==1+(i-1)*(Nx/Nx_rho))then
+            length=total_length
+          endif
+          if(total_length<=0._f64)then
+            print *,'length is zero',total_length
+            stop
+          endif
+          if(jj<1+(i-1)*(Nx/Nx_rho))then
+            print *,'bad jvalue of jj=',jj,' 1+(i-1)*(Nx/Nx_rho)=',1+(i-1)*(Nx/Nx_rho)
+            print *,i,k
+            stop
+          endif
+          if(length>total_length)then
+            print *,'bad value of length=',length,' total length=',total_length
+            stop
+          endif
+          !print *,i,k,length,total_length,jj,1+(i-1)*(Nx/Nx_rho)
+          integration_points(1,k,i) = h
+          integration_points(2,k,i) = length/total_length      
+        endif!((i/=1).or.(k/=1))
+      enddo
+    enddo
+
+
+    open(unit=900,file='integration_points.dat')
+      write(900,*) '#',Nx_rho,Nv_rho,0._f64,h_max,N_x1     
+      !do i=1,Nx_rho+1
+      !  write(900,*) i,vrho_max_tab(i)  
+      !enddo     
+      !do i=1,N_h+1
+      !  write(900,*) i,h_positions(i)  
+      !enddo            
+      do i=1,Nx_rho+1
+        do j=1,Nv_rho+1
+          write(900,* ) i,j,integration_points(1,j,i),2._f64*sll_pi*integration_points(2,j,i)
+        enddo  
+      enddo
+    close(900)
+
+    
+    
+    stop
+    
+             
+  endif
+  
+  
 
 
   open(unit=900,file='intersect_points.dat')  
@@ -419,7 +774,7 @@ program bgk_csl
       endif
       if(test_case==2)then
         val = mu/(sqrt(2._f64*sll_pi))*(2._f64-2._f64*xi)/(3._f64-2._f64*xi)*(1._f64+H/(1._f64-xi))*exp(-H)
-        val = val*(1._f64+0.1_f64*cos(2._f64*sll_pi/L*x1))
+        val = val*(1._f64+0.1_f64*cos(2._f64*sll_pi/(x1_max-x1_min)*x1))
       endif
       if(test_case==3)then
         val = exp(-0.5_f64*40._f64*((x1-.5_f64)**2+(x2-.5_f64)**2))
@@ -428,12 +783,12 @@ program bgk_csl
         !linear landau damping
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
         f_equil(i1,i2) = val*jac_array(i1,i2)
-        val = val*(1._f64+0.001_f64*cos(2._f64*sll_pi/L*x1))
+        val = val*(1._f64+0.001_f64*cos(2._f64*sll_pi/(x1_max-x1_min)*x1))
       endif
       if(test_case==5)then
         !non linear landau damping
         val = 1._f64/(sqrt(2._f64*sll_pi))*exp(-0.5_f64*x2*x2)
-        val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/L*x1))
+        val = val*(1._f64+0.5_f64*cos(2._f64*sll_pi/(x1_max-x1_min)*x1))
       endif
       if(test_case==6.or.test_case==7)then
         !gaussian equilibrium

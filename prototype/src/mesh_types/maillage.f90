@@ -73,6 +73,7 @@ Program Curvilinear_mesh2D
   tab_phi(1) = phi(1)
   tab_dphi(1)= phi(2)
   !write(10,* ) x, phi(1), phi(2),k2,v1,v2,1.d0/phi(2)
+  
   do j=2, Nx+1
      x =xmin+ (j-1)*dx
      call Solve_Runge_K4(mu,xi,x, phi, dx, 2, Diff_Eq,y,c)
