@@ -11,7 +11,7 @@ add_executable(test_mapped_meshes_1d unit_test_1D.F90)
 
 target_link_libraries(test_mapped_meshes
 	sll_mapped_meshes
-	interpolators
+	sll_interpolators
 	sll_splines
 	geometry_functions
 	sll_constants
@@ -22,7 +22,7 @@ target_link_libraries(test_mapped_meshes
 
 target_link_libraries(test_mapped_meshes_1d
 	sll_mapped_meshes
-	interpolators
+	sll_interpolators
 	sll_splines
 	geometry_functions
 	sll_constants
@@ -35,7 +35,7 @@ target_link_libraries(test_mapped_meshes_1d
 add_executable(test_mapped_meshes_cartesian unit_test_cartesian.F90)
 target_link_libraries(test_mapped_meshes_cartesian
 	sll_mapped_meshes
-	interpolators
+	sll_interpolators
 	sll_splines
 	geometry_functions
 	sll_constants
