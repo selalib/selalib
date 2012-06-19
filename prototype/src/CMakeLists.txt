@@ -167,14 +167,15 @@ add_test(fft fft/test_fft)
 add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
 
 
-set(PROCS ${MPIEXEC_MAX_NUMPROCS})
+# we can call ${MPIEXEC_MAX_NUMPROCS}
+set(PROCS 2)
 set(ARGS "")
 add_test(collective ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} collective/test_collective ${MPIEXEC_POSTFLAGS} ${ARGS})
 #set_tests_properties(collective PROPERTIES FAIL_REGULAR_EXPRESSION "${failRegex}")
 
 set(PROCS 8)
 set(ARGS "")
-add_test(collective ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} remap/test_remap ${MPIEXEC_POSTFLAGS} ${ARGS})
+add_test(remap ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} remap/test_remap ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 add_test(WENO WENO/test_WENO)
 add_test(interpolators interpolators/test_interpolators_1d)
