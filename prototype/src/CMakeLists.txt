@@ -130,6 +130,7 @@ add_subdirectory(poisson_solvers)
 add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
 add_subdirectory(simulation)
+add_subdirectory(fishpack)
 
 
 #add_subdirectory(maxwell_solvers)
@@ -163,6 +164,8 @@ add_test(splines splines/test_splines)
 add_test(splines splines/test_non_unif_splines)
 add_test(integration integration/test_integration)
 add_test(fft fft/test_fft)
+add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
+
 
 set(PROCS ${MPIEXEC_MAX_NUMPROCS})
 set(ARGS "")
