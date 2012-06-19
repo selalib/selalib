@@ -1407,12 +1407,8 @@ INFO
     sll_comp64, dimension(0:,0:), intent(inout)         :: array_in
     sll_real64, dimension(0:,0:), intent(inout)         :: array_out
     sll_int32, optional, intent(in)                     :: flags
-    type(sll_fft_plan), pointer                             :: plan 
+    type(sll_fft_plan), pointer                         :: plan 
     sll_int32                                           :: ierr
-
-    if( .not. associated(plan)) then
-      stop 'ERROR IN fft_plan_c2r_2d'
-    endif
 
 #ifndef _NOFFTW 
     if(library .eq. FFTW_MOD) then
