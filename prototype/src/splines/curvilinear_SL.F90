@@ -46,6 +46,8 @@ program radial_1d_SL
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
     
+    !bc1_type = PERIODIC_SPLINE
+    !bc2_type = PERIODIC_SPLINE
     bc1_type = HERMITE_SPLINE
     bc2_type = HERMITE_SPLINE
   end if
@@ -109,12 +111,14 @@ program radial_1d_SL
     print*,'or 5 (divergence free non-symmetric field)'
     STOP
   end if
-  a1=0.001_f64
-  a2=0.002_f64
+  !a1=0.001_f64
+  !a2=0.002_f64
+  a1=4._f64
+  a2=1._f64
   
   ! ---- * time-scheme parameters * ----
-  dt = 0.001_f64*delta_eta1 ! 1._f64/1._f64
-  nb_step = 1 !floor(1._f64/dt)
+  dt = 0.01_f64*delta_eta1 ! 1._f64/1._f64
+  nb_step = floor(0.01_f64/dt) !1 !floor(1._f64/dt)
   
   ! visualization parameters
   visu_step = 1
@@ -450,8 +454,10 @@ program radial_1d_SL
           end if
         endif
         
-        eta1tot(i,j) = eta1
-        eta2tot(i,j) = eta2
+        if(field_case.ne.5)then
+          eta1tot(i,j) = eta1
+          eta2tot(i,j) = eta2
+        endif  
         
         ! ------------ BSL part -----------------
         

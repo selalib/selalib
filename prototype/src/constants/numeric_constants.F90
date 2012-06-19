@@ -29,5 +29,8 @@ module numeric_constants
 
 
   sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64
+  ! sll_kx is the fundamental mode in the x-direction. 
+  ! It should be set at mesh initialization
+  sll_real64            :: sll_kx = 2*sll_pi 
 
 end module numeric_constants
