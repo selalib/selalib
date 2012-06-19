@@ -624,6 +624,9 @@ program bgk_csl
     
     
     
+    
+    
+    
     !compute the integration points
     integration_points = 0._f64
 
@@ -649,7 +652,7 @@ program bgk_csl
     do i=1,Nx_rho+1
       jj = Nx/Nx_rho
       x=x1_min+real(i-1,f64)*dxrho!tab_phi(1+(i-1)*jj)
-      phi_val = tab_phi(1+(i-1)*jj)
+      phi_val = phi(1+(i-1)*jj)
       !vrho_max_tab(i) = sqrt(2._f64*(h_max-phi_val))
       !dvrho=vrho_max_tab(i)/real(Nv_rho,f64)
       dvrho=sqrt(2._f64*(h_max-phi_val))/real(Nv_rho,f64)
