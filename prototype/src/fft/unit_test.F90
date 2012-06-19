@@ -338,7 +338,7 @@ contains
     CALL init_random_seed() 
     CALL RANDOM_NUMBER(realpart)
     CALL RANDOM_NUMBER(imagpart)
-    c = COMPLEX(realpart,imagpart)
+    c = CMPLX(realpart,imagpart,KIND=KIND(1.D0))
   END SUBROUTINE
 
 end program unit_test
