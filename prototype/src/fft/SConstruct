@@ -22,6 +22,9 @@ else :
 
 fichier.close()
 
+#DL = ARGUMENTS.get('DL', 0)
+#DL=''
+
 platform = distutils.util.get_platform()
 hostname = socket.gethostname() 
 
@@ -29,6 +32,7 @@ print 'hostname : ' + hostname
 print 'platform : ' + platform
 
 env = Environment( ENV = os.environ,
+                   F90 = 'mpif90',
                    F90PATH = ['../memory','../precision','../assert',
                               '../utilities','../constants','../timer',
                               '../fftpack', FFTW_INC_PATH,'.'],
@@ -37,8 +41,8 @@ env = Environment( ENV = os.environ,
                    LIBS=['sll_fft','sll_memory','sll_precision',
                          'sll_assertion', 'sll_misc','sll_constants',
                          'sll_timer','fftpack',FFTW],
-                   F90FLAGS = ['-g','-W','-Wall','-DTEST_TIME', 
-                               '-DDEBUG','-DGFORTRAN',
+                   F90FLAGS = ['-g','-W','-cpp','-Wall','-DTEST_TIME',
+                               '-DDEBUG','-DGFORTRAN','-DMPIF90','-std=f2003', '-fall-intrinsics',
                                '-ffree-line-length-none'])
 
 env.Library('fftpack',          ["../fftpack/fftpack.f90",
