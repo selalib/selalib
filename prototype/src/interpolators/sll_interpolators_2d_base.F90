@@ -15,7 +15,7 @@ module sll_module_interpolators_2d_base
   ! express that a derivative is in a particular direction? Why eta???
   type, abstract :: interpolator_2d_base
    contains
-     procedure(interpolator_array_msg), deferred, pass(interpolator) :: &
+     procedure(interpolator_2d_array_msg), deferred, pass(interpolator) :: &
           compute_interpolants
      procedure(interpolator_two_arg_msg), deferred, pass(interpolator) :: &
           interpolate_value
@@ -38,12 +38,12 @@ module sll_module_interpolators_2d_base
   end interface
 
   abstract interface
-     subroutine interpolator_array_msg( interpolator, data_array )
+     subroutine interpolator_2d_array_msg( interpolator, data_array )
        use sll_working_precision
        import :: interpolator_2d_base
        class(interpolator_2d_base), intent(inout) :: interpolator
        sll_real64, dimension(:,:), intent(in) :: data_array
-     end subroutine interpolator_array_msg
+     end subroutine interpolator_2d_array_msg
   end interface
   
 end module sll_module_interpolators_2d_base

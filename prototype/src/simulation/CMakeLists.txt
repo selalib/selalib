@@ -7,8 +7,9 @@ add_executable(polar_SL polar_SL.F90)
 add_executable(curvilinear_SL curvilinear_SL.F90)
 
 target_link_libraries(test_simulation_1d
+        sll_advection_field
 	sll_mapped_meshes
-	interpolators
+	sll_interpolators
 	sll_splines
 	geometry_functions
 	sll_distribution_function
@@ -18,6 +19,7 @@ target_link_libraries(test_simulation_1d
         sll_utilities
 	sll_memory
 	sll_assertion
+	sll_working_precision
   )
 
 target_link_libraries(polar_SL

@@ -10,7 +10,7 @@ module sll_module_interpolators_1d_base
      ! must delete deferred keyword for the moment because sll_WENO
      ! (sll_WENO_node_interpolation.F90) is an extends
      ! type of interpolator_1d_base and i don't want touch this module.
-     procedure(interpolator_array_msg), deferred, pass(interpolator) :: &
+     procedure(interpolator_1d_array_msg), deferred, pass(interpolator) :: &
           compute_interpolants
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
           interpolate_value
@@ -26,19 +26,19 @@ module sll_module_interpolators_1d_base
      function interpolator_one_arg_msg( interpolator, eta1 ) result(val)
        use sll_working_precision
        import :: sll_interpolator_1d_base
-       sll_real64                                  :: val
+       sll_real64                                     :: val
        class(sll_interpolator_1d_base), intent(inout) :: interpolator
-       sll_real64, intent(in)                      :: eta1
+       sll_real64, intent(in)                         :: eta1
      end function interpolator_one_arg_msg
   end interface
 
   abstract interface
-     subroutine interpolator_array_msg( interpolator, data_array )
+     subroutine interpolator_1d_array_msg( interpolator, data_array )
        use sll_working_precision
        import :: sll_interpolator_1d_base
        class(sll_interpolator_1d_base), intent(inout) :: interpolator
        sll_real64, dimension(:), intent(in) :: data_array
-     end subroutine interpolator_array_msg
+     end subroutine interpolator_1d_array_msg
   end interface
 
   abstract interface

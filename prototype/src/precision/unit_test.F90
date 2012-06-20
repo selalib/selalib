@@ -54,7 +54,7 @@ program working_precision_tester
 
   print *, '*************************************'
   print *, 'Tester for the working precision module'
-  print *,
+  print *, ' '
   print *, '*************************************'
   print *, 'Test the 32-bit int'
   ! test based on the change of sign that the integer suffers when there is
@@ -71,7 +71,7 @@ program working_precision_tester
   write (*, '("  In theory, the value of the largest i32 is ", i12)') i
   write (*, '("  KIND number for our i32 integer is", I2)') kind(i)
   write (*, '("  value of the largest (theoretical) i32 + 1 is ", i20)') i+1
-  print *,
+  print *, ' '
   print *, '*************************************'
   print *, 'Test the 32-bit float'
   stepf32 = transfer(z'00000001',stepf32) ! smallest positive normalized number
@@ -100,14 +100,14 @@ program working_precision_tester
   print *, ' ...If the last value is +Infinity, our f32 got overflowed, which was the intent.'
   write (*, '("  largest number that will be neglected when added to the largest f32: ", es20.10)') neglected
   write (*, '("  value of the largest f32 + neglected is ", es20.10)') f+neglected
-  print *,
+  print *, ' '
   print *, '*************************************'
   write (*, '("  KIND number for our i64 integer is", I2)') kind(i2)
   print *, ' compare the last number with kind number for i32'
   write (*, '("  value of the largest representable f64 is ", es20.10)') f2
   write (*, '("  the value of the smallest f64 with same binary exp ", es20.10)') small2
   write (*, '("  value of the largest f32 + small is ", es20.10)') f2+small2
-  print *,
+  print *, ' '
 
 
   write ( *, '("KIND number for default integer is", I2)') kind ( 0 )
