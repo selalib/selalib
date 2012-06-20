@@ -11,8 +11,8 @@ target_link_libraries(test_poisson_1d
       sll_low_level_file_io	
       sll_utilities)
 
-add_executable(test_fishpack test_fishpack.F90)
-target_link_libraries( test_fishpack fishpack)
+add_executable(test_fishpack test_fishpack.F90 fishpack.F90)
+target_link_libraries( test_fishpack sll_memory sll_assertion fishpack)
 
 #add_library(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
 #add_executable(test_poisson_2d test_poisson_2d.F90)
