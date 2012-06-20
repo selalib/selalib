@@ -1618,7 +1618,7 @@ contains  ! ****************************************************************
       do i2 = 1,nt2
 		
         ! find the cell and offset for x1
-        t1         = (x1(i1,i2)-x1_min)*rh1
+        t1          = (x1(i1,i2)-x1_min)*rh1
         cell1       = floor(t1) + 1
         dx1         = t1- real(cell1-1)
         cdx1        = 1.0_f64 - dx1
