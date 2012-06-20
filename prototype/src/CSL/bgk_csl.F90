@@ -50,7 +50,7 @@ program bgk_csl
   sll_real64,dimension(:,:), pointer :: integration_points_val
   character*80,str,str2
   sll_real64 :: x_factor,y_factor,length,tmp_loc,total_length,x,v
-  mesh_case = 4
+  mesh_case = 3
   visu_step = 10
   test_case = 3
   rho_case = 2
