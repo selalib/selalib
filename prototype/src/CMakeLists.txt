@@ -94,6 +94,9 @@ include_directories(remap poisson_solvers utilities memory assert precision fiel
 # pour la doc 
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
+   get_filename_component(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
+   set(DOXYGEN_OUTPUT_DIR "${DOXYGEN_OUTPUT_DIR}/documentation/")
+   message(STATUS "The documentation is in ${DOXYGEN_OUTPUT_DIR}")
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in 
    ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
    add_custom_target(doc ${DOXYGEN_EXECUTABLE} 
