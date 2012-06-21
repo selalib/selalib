@@ -134,6 +134,7 @@ add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
 add_subdirectory(simulation)
 add_subdirectory(fishpack)
+add_subdirectory(mudpack)
 
 
 #add_subdirectory(maxwell_solvers)
@@ -168,6 +169,7 @@ add_test(splines splines/test_non_unif_splines)
 add_test(integration integration/test_integration)
 add_test(fft fft/test_fft)
 add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
+add_test(mudpack mudpack/tmud34sp mudpack/tmud24sp )
 
 
 # we can call ${MPIEXEC_MAX_NUMPROCS}
