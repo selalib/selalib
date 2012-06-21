@@ -10,6 +10,7 @@ integer :: l, m, n, mp1, np1
 integer :: i, j, k
 
 real(8), allocatable, dimension(:,:)   :: f_2d
+real(8), allocatable, dimension(:,:)   :: f_polar
 real(8), allocatable, dimension(:,:,:) :: f_3d
 real(8) :: pi, piby2, pisq, err, z
 real(8) :: xs, xf, ys, yf, zs, zf
@@ -23,15 +24,13 @@ mp1 = m + 1; np1 = n + 1
 xs =  0.; xf =  2.; ys = -1.; yf =  3.
 allocate(f_2d(mp1,np1)); f_2d = 0.0
 call test_cartesian_2d(f_2d,xs,xf,m,ys,yf,n)
-deallocate(f_2d)
 
 
 m = 50; n = 48
 mp1 = m + 1; np1 = n + 1
 xs = 0.; xf = 1.; ys = 0.; yf = 0.5*pi
-allocate(f_2d(mp1,np1)); f_2d = 0.0
-call test_polar_2d(f_2d,xs,xf,m,ys,yf,n)
-deallocate(f_2d)
+allocate(f_polar(mp1,np1)); f_2d = 0.0
+call test_polar_2d(f_polar,xs,xf,m,ys,yf,n)
 
 xs = 0.; xf = 1.
 ys = 0.; yf = 2.*pi
@@ -40,8 +39,11 @@ l = 10
 m = 40
 n = 15
 
-allocate(f_3d(l,m,n)); f_3d = 0.0
+allocate(f_3d(l+1,m+1,n+1)); f_3d = 0.0
 call test_cartesian_3d(f_3d,xs,xf,l,ys,yf,m,zs,zf,n)
+
+deallocate(f_2d)
+deallocate(f_polar)
 deallocate(f_3d)
 
 contains
