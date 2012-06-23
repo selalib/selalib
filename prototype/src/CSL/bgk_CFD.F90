@@ -11,6 +11,8 @@ program bgk_CFD
   use sll_splines
   use contrib_rho_module
   use conservative_finite_difference
+  use bgk_mesh_construction
+
   implicit none
   sll_real64 :: x2_min,x2_max,x1_min,x1_max,x1,x2,delta_x1,delta_x2,tmp
   sll_real64 :: mu,xi,L,H
@@ -408,6 +410,12 @@ program bgk_CFD
 
   endif
 
+   !call construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
+   !  &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
+   !  &geom_x,geom_eta,alpha_mesh,N_x1,N_x2)
+
+
+
   open(unit=900,file='intersect_points.dat')  
     do i1=1,N_x1
       !x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
@@ -516,7 +524,11 @@ program bgk_CFD
   geom_eta(1,2) = eta2_min
   geom_eta(2,2) = eta2_max
 
-  call compute_rho_mapped_mesh(rho,f_store,integration_points,rho_case,nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+  call compute_rho_mapped_mesh(rho,f_store,integration_points,rho_case,nc_eta1,&
+  nc_eta2,geom_eta,jac_array,spl_per_x1)
+  
+  
+  
   
   call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
   geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
