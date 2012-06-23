@@ -38,9 +38,12 @@ module sll_scalar_field_1d
   use sll_misc_utils
   implicit none
 
+#ifndef CENTERED_FIELD
+#define CENTERED_FIELD
   enum, bind(C)
      enumerator :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
   end enum
+#endif
 
   type scalar_field_1d
      class(sll_mapped_mesh_1d_base), pointer :: mesh
