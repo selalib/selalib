@@ -7,7 +7,7 @@ add_executable(polar_SL polar_SL.F90)
 add_executable(curvilinear_SL curvilinear_SL.F90)
 
 #target_link_libraries(test_simulation_1d
-# sll_advection_field
+# 	sll_advection_field
 #	sll_mapped_meshes
 #	sll_interpolators
 #	sll_splines
@@ -16,7 +16,7 @@ add_executable(curvilinear_SL curvilinear_SL.F90)
 #	sll_scalar_field_2d	
 #	sll_constants
 #	sll_low_level_file_io
-# sll_utilities
+# 	sll_utilities
 #	sll_memory
 #	sll_assertion
 #	sll_working_precision
