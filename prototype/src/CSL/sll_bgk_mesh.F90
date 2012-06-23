@@ -9,9 +9,248 @@ module bgk_mesh_construction
   implicit none
 
 contains 
-  subroutine construct_bgk_mesh()
+  subroutine construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
+   &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
+   &geom_x,geom_eta,alpha_mesh,N_x1,N_x2)
     use numeric_constants
     implicit none
+    sll_int32,intent(in)::nc_eta1,nc_eta2,mesh_case,n_x1,n_x2
+    sll_real64,intent(in)::geom_x(2,2),geom_eta(2,2),alpha_mesh
+    sll_real64,dimension(:,:),pointer::x1n_array,x2n_array,x1c_array,x2c_array
+    sll_real64,dimension(:,:),pointer::jac_array
+    sll_real64,dimension(:,:,:),pointer::integration_points
+    sll_int32  :: i1,i2,err,i
+    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1,x2,x1c,x2c
+    sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
+    sll_real64 :: val,tmp
+
+    SLL_ALLOCATE(x1n_array(nc_eta1+1, nc_eta2+1), err)
+    SLL_ALLOCATE(x2n_array(nc_eta1+1, nc_eta2+1), err)
+    SLL_ALLOCATE(x1c_array(nc_eta1+1, nc_eta2+1), err)
+    SLL_ALLOCATE(x2c_array(nc_eta1+1, nc_eta2+1), err)
+    SLL_ALLOCATE(jac_array(nc_eta1+1, nc_eta2+1), err)
+    SLL_ALLOCATE(integration_points(3,N_x1+1,N_x2+1),err)
+
+    
+    x1_min=geom_x(1,1)
+    x1_max=geom_x(2,1)
+    x2_min=geom_x(1,2)
+    x2_max=geom_x(2,2)
+
+    eta1_min=geom_eta(1,1)
+    eta1_max=geom_eta(2,1)
+    eta2_min=geom_eta(1,2)
+    eta2_max=geom_eta(2,2)
+
+        
+
+
+    delta_x1 = (x1_max-x1_min)/real(nc_eta1,f64)
+    delta_x2 = (x2_max-x2_min)/real(nc_eta2,f64)
+    
+    delta_eta1 = (eta1_max-eta1_min)/real(nc_eta1,f64)
+    delta_eta2 = (eta1_max-eta1_min)/real(nc_eta2,f64)
+    
+    
+    if(mesh_case==1)then
+      do i2=1,nc_eta2+1
+        do i1=1,nc_eta1+1
+          x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+          x2n_array(i1,i2) = x2_min+real(i2-1,f64)*delta_x2
+          x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+          x2c_array(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+          jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)
+          !jac_array(i1,i2) = 1._f64!(x1_max-x1_min)*(x2_max-x2_min)
+        enddo
+      enddo
+    !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+    !   x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+    !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+    !   PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+       
+    !dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+      do i2=1,nc_eta2+1
+        do i1=1,nc_eta1+1
+          !eta1 value of intersecting point (eta2,x1)=constant
+          integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+          !x2 value of intersecting point (eta2,x1)=constant
+          integration_points(2,i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+        enddo
+      enddo
+    
+    
+    
+    endif
+
+  if(mesh_case==2)then
+    eta2 = 0.0_f64 
+    eta2c = eta2 + 0.5_f64*delta_eta2
+    do i2= 1, nc_eta2 + 1
+      eta1 = 0.0_f64
+      eta1c = 0.5_f64*delta_eta1
+      do i1 = 1, nc_eta1 + 1
+        x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+        x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+        x1c_array(i1,i2) = eta1c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)
+        x2c_array(i1,i2) = eta2c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)
+        !x1n_array(i1,i2) = (x1n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+        !x2n_array(i1,i2) = (x2n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+        !x1c_array(i1,i2) = (x1c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+        !x2c_array(i1,i2) = (x2c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+        jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)) * &
+         (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c)) - &
+         alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c) * &
+         alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)
+        eta1 = eta1 + delta_eta1
+        eta1c = eta1c + delta_eta1
+        x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+        x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+        x1c_array(i1,i2) = x1_min+x1c_array(i1,i2)*(x1_max-x1_min)
+        x2c_array(i1,i2) = x2_min+x2c_array(i1,i2)*(x2_max-x2_min)
+        jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+      end do
+      eta2 = eta2 + delta_eta2
+      eta2c = eta2c + delta_eta2
+    end do
+
+    !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+    !  x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+    !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+    !  PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+    !dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+    val = 0._f64
+    do i2=1,nc_eta2
+      do i1=1,nc_eta1
+        x1 = (real(i1,f64)-0.5_f64)/real(nc_eta1,f64)
+        eta2 = (real(i2,f64)-0.5_f64)/real(nc_eta2,f64)
+        tmp = alpha_mesh*sin(2._f64*sll_pi*eta2)
+        do i=1,100
+          val = val-(val+tmp*sin(2._f64*sll_pi*val)-x1)/&
+           (1._f64+2._f64*sll_pi*tmp*cos(2._f64*sll_pi*val))
+        enddo
+        if(abs(val+tmp*sin(2._f64*sll_pi*val)-x1)>1.e-14)then
+          print *,i1,i2,val+tmp*sin(2._f64*sll_pi*val)-x1,val
+          print *,'Problem of convergence of Newton'
+          stop
+        endif
+        !eta1 value of intersecting point (eta2,x1)=constant
+        integration_points(1,i1,i2) = val
+        !x2 value of intersecting point (eta2,x1)=constant
+        integration_points(2,i1,i2) = x2_min+(x1-val+eta2)*(x2_max-x2_min)        
+      enddo
+    enddo
+  endif
+
+
+
+  if(mesh_case==3)then
+     eta2 = eta2_min 
+     eta2c = eta2_min + 0.5_f64*delta_eta2
+     do i2= 1, nc_eta2 + 1
+        eta1 = eta1_min
+        eta1c = 0.5_f64*delta_eta1
+        do i1 = 1, nc_eta1 + 1
+           x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)**2
+           x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+           x1c_array(i1,i2) = eta1c + alpha_mesh * sin(2*sll_pi*eta1c) * sin(2*sll_pi*eta2c)**2
+           x2c_array(i1,i2) = eta2c + alpha_mesh * sin(2*sll_pi*eta1c)* sin(2*sll_pi*eta2c)
+           !x1n_array(i1,i2) = (x1n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x2n_array(i1,i2) = (x2n_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x1c_array(i1,i2) = (x1c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !x2c_array(i1,i2) = (x2c_array(i1,i2) + alpha_mesh)/(1._f64+2._f64*alpha_mesh)
+           !jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)) * &
+           !  (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c)) - &
+           !  alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1c) * cos (2*sll_pi*eta2c) * &
+           !  alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1c) * sin (2*sll_pi*eta2c)
+           !val =   1.0_f64 + 2._f64*alpha_mesh *sll_pi*sin(2*sll_pi*(eta1c+eta2c))
+           !if(abs(jac_array(i1,i2)-val)>1e-13)then
+           !  print *,jac_array(i1,i2),val
+           !  stop
+           !endif
+           jac_array(i1,i2) = 1._f64+2._f64*sll_pi*alpha_mesh*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)&
+           +2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1c)&
+           -2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)**2&
+           -4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)*cos(2._f64*sll_pi*eta1c)&
+           +4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1c)*cos(2._f64*sll_pi*eta2c)**3*cos(2._f64*sll_pi*eta1c)
+           eta1 = eta1 + delta_eta1
+           eta1c = eta1c + delta_eta1
+           x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+           x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+           x1c_array(i1,i2) = x1_min+x1c_array(i1,i2)*(x1_max-x1_min)
+           x2c_array(i1,i2) = x2_min+x2c_array(i1,i2)*(x2_max-x2_min)
+           jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+        end do
+        eta2 = eta2 + delta_eta2
+        eta2c = eta2c + delta_eta2
+      end do
+  
+        
+  open(unit=900,file='xn_array.dat')  
+    do i1=1,N_x1
+      !x1 = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+      x1 = x1_min+(real(i1,f64)-1._f64)*delta_x1
+      do i2=1,N_x2
+        !write(900,*) x1,integration_points(2,i1,i2),x1c_array(i1,i2),x2c_array(i1,i2)
+        write(900,*) x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo  
+    enddo
+  close(900)
+       
+      
+
+      !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+      !   x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+      !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+      !   PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+
+      !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+      !   x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,COMPACT)
+      !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+      !   PERIODIC, eta2_min, eta2_max, nc_eta2, COMPACT, geom)
+
+
+
+      !dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+      val = 0._f64
+      do i2=1,nc_eta2
+        do i1=1,nc_eta1
+          x1 = (real(i1,f64)-0.5_f64)/real(nc_eta1,f64)
+          eta2 = (real(i2,f64)-0.5_f64)/real(nc_eta2,f64)
+          tmp = alpha_mesh*sin(2._f64*sll_pi*eta2)**2
+          do i=1,100
+            val = val-(val+tmp*sin(2._f64*sll_pi*val)-x1)/&
+            (1._f64+2._f64*sll_pi*tmp*cos(2._f64*sll_pi*val))
+          enddo
+          if(abs(val+tmp*sin(2._f64*sll_pi*val)-x1)>1.e-14)then
+            print *,i1,i2,val+tmp*sin(2._f64*sll_pi*val)-x1,val
+            print *,'Problem of convergence of Newton'
+            stop
+          endif
+          
+          !eta1 value of intersecting point (eta2,x1)=constant
+          integration_points(1,i1,i2) = val
+          
+          
+          !x2 value of intersecting point (eta2,x1)=constant
+          integration_points(2,i1,i2) = x2_min+((x1-val)/sin(2._f64*sll_pi*eta2)+eta2)*(x2_max-x2_min)        
+        
+        enddo
+        
+        
+      enddo
+      !do i1=1,nc_eta1
+      !  print *,i1,integration_points(i1,1), integration_points(i1,nc_eta2)
+      !enddo
+      !stop
+
+
+    endif
+  
+  
+  
   
   
   
