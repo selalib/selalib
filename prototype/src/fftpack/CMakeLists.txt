@@ -1,2 +1,8 @@
+if(Fortran_COMPILER_NAME STREQUAL "gfortran")
 set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -fall-intrinsics")
+elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
+	set(CMAKE_Fortran_FLAGS " ")
+elseif(Fortran_COMPILER_NAME STREQUAL "xlf")
+	set(CMAKE_Fortran_FLAGS " ")
+endif()
 add_library(fftpack_module STATIC dfftpack.f fftpack.f90)
