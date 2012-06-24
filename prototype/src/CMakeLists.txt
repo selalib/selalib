@@ -168,7 +168,7 @@ ENDIF()
 
 enable_testing()
 
-IF(Fortran_COMPILER_NAME STREQUAL "ifort")
+IF(NOT Fortran_COMPILER_NAME STREQUAL "ifort")
 add_test(memory memory/test_memory)
 ENDIF()
 
