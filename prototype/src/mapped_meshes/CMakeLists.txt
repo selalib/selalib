@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
 add_library(sll_mapped_meshes STATIC
 	sll_mapped_meshes_1d_base.F90
 	sll_mapped_meshes_2d_base.F90
