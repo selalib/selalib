@@ -18,7 +18,7 @@ program bgk_classic_csl
   !other variables
   sll_int32 :: N,err  
   sll_real64 :: x1_min,x1_max,x2_min,x2_max
-  type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2
+  type(cubic_nonunif_spline_1D), pointer :: spl_per_x1, spl_per_x2, spl_per_x1_rho
   sll_real64 ::geom_x(2,2),geom_eta(2,2)
   sll_real64,dimension(:), pointer :: rho,E,phi_poisson,buf1d
   sll_real64,dimension(:), pointer :: Xstar,node_positions_x1,node_positions_x2
@@ -44,7 +44,7 @@ program bgk_classic_csl
   N_x1 = 64
   N_x2 = 64
 
-  alpha_mesh = 0.e-2_f64 !0.1_f64
+  alpha_mesh = 0.1e-3_f64 !0.1_f64
   dt = 0.1_f64
   velocity = 1._f64
   
@@ -144,6 +144,7 @@ program bgk_classic_csl
   spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
 
+  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
 
   do i1=1,nc_eta1+1
     do i2=1,nc_eta2+1
@@ -175,7 +176,7 @@ program bgk_classic_csl
   
   !compute rho init
   call compute_rho_mapped_mesh2(rho,f_init,integration_points,rho_case,&
-    nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+    nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1_rho)
   !compute E init and psi
   call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
   geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
@@ -209,7 +210,7 @@ program bgk_classic_csl
     
     !compute field at time t_n
     call compute_rho_mapped_mesh2(rho,f,integration_points,rho_case,&
-      nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+      nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1_rho)
     call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
       geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
 
@@ -227,7 +228,7 @@ program bgk_classic_csl
 
     !compute field at time t_{n+1/2}
     call compute_rho_mapped_mesh2(rho,f,integration_points,rho_case,&
-      nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1)
+      nc_eta1,nc_eta2,geom_eta,jac_array,spl_per_x1_rho)
     !compute E and psi
     call compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
       geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
