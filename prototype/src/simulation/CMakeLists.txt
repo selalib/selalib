@@ -5,10 +5,9 @@ add_library(sll_simulation_1d STATIC
 #add_executable(test_simulation_1d user_geometry_functions.F90 unit_test.F90)
 add_executable(polar_SL polar_SL.F90)
 add_executable(curvilinear_SL curvilinear_SL.F90)
-add_executable(VlasovPoisson VlasovPoisson.F90 sll_advection_polaire.F90 sll_poisson_2d_polar.F90)
 
 #target_link_libraries(test_simulation_1d
-# sll_advection_field
+# 	sll_advection_field
 #	sll_mapped_meshes
 #	sll_interpolators
 #	sll_splines
@@ -17,7 +16,7 @@ add_executable(VlasovPoisson VlasovPoisson.F90 sll_advection_polaire.F90 sll_poi
 #	sll_scalar_field_2d	
 #	sll_constants
 #	sll_low_level_file_io
-# sll_utilities
+# 	sll_utilities
 #	sll_memory
 #	sll_assertion
 #	sll_working_precision
@@ -32,7 +31,7 @@ target_link_libraries(polar_SL
 	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
-	sll_utilities
+  sll_utilities
 	sll_memory
 	sll_assertion
   )
@@ -46,18 +45,7 @@ target_link_libraries(polar_SL
 	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
-	sll_utilities
+  sll_utilities
 	sll_memory
 	sll_assertion
   )
-
-target_link_libraries(VlasovPoisson
-	sll_fft
-	sll_tridiagonal
-	sll_constants
-	sll_splines
-	sll_memory
-	sll_assertion
-	sll_timer
-	sll_utilities
-)
