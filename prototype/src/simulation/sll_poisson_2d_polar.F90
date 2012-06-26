@@ -10,15 +10,17 @@ module poisson_polar
 
 contains
 
+  !>subroutine poisson_solve_polar(ftab,rmin,dr,Nr,Ntheta,pfwd,pinv,phitab)
+  !>poisson solver for polar system
+  !>ftab : distribution function, size (nr+1)X(ntheta+1)
+  !>phitab : solution of laplacien phi = -f
+  !>phitab(1,:) and phitab(nr+1,:) must be known as boudary condition
+  !>rmin : radius of the hole
+  !>dr : size of r step
+  !>Nr and Ntheta : number Step in directions r and theta
+  !>pfwd and pinv : initialization object for FFt forward and inverse
+  !>initialization must be done outside the solver
   subroutine poisson_solve_polar(ftab,rmin,dr,Nr,Ntheta,pfwd,pinv,phitab)
-    ! ftab : distribution function, size (nr+1)X(ntheta+1)
-    ! phitab : solution of laplacien phi = f
-    ! phitab(0,:) and phitab(Nr,:) must be known as boudary condition
-    ! rmin : radius of the hole
-    ! dr : size of r step
-    ! Nr and Ntheta : number Step in directions r and theta
-    ! pfwd and pinv : initialization object for FFt forward and inverse
-    ! initialization must be done outside the solver
 
     sll_real64, intent(in) :: rmin,dr
     sll_int32, intent(in) :: nr, ntheta
@@ -42,8 +44,8 @@ contains
     ! copy of ftab
     ! we work with ffttab not to modify ftab
     ffttab=ftab(:,1:ntheta)
-    ffttab(1,:)=phitab(1,:)
-    ffttab(nr+1,:)=phitab(nr+1,:)
+    ffttab(1,:)=phitab(1,1:ntheta)
+    ffttab(nr+1,:)=phitab(nr+1,1:ntheta)
 
     do i=1,nr+1
        call fft_apply_plan(pfwd,ffttab(i,:),ffttab(i,:))
