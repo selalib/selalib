@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
 add_library(sll_scalar_field_2d STATIC sll_scalar_field_2d.F90 
 		scalar_field_initializer_base.F90
 		landau_2d_initializer.F90	)
@@ -8,6 +12,7 @@ add_executable(test_scalar_field unit_test.F90)
 target_link_libraries(test_scalar_field
 	sll_scalar_field_2d
 	sll_mapped_meshes
+	sll_interpolators
 	sll_splines
 	sll_low_level_file_io
 	sll_constants
