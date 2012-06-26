@@ -13,6 +13,7 @@ program vlaspois
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
+  sll_real64 :: w0, w, l10, l1, l20, l2, e
   sll_real64, dimension(:,:), pointer :: f, phi ,fdemi
   sll_real64, dimension(:,:,:), pointer :: grad_phi
   type(sll_fft_plan), pointer ::pfwd, pinv
@@ -28,9 +29,17 @@ program vlaspois
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
 
-  tf=1.0_f64
-  nb_step=20
-  dt=tf/real(nb_step,f64)
+!!$  !definition of dt=tf/nb_step
+!!$  tf=130.0_f64
+!!$  nb_step=
+!!$  dt=tf/real(nb_step,f64)
+!!$  print*,'#dt=',dt
+
+  !definition of nb_step=tf/dt
+  dt=0.25_f64
+  tf=200.0_f64
+  nb_step=floor(tf/dt)
+  print*,'#nb_step=',nb_step
 
   SLL_ALLOCATE(f(nr+1,ntheta+1),err)
   SLL_ALLOCATE(phi(nr+1,ntheta+1),err)
@@ -68,7 +77,7 @@ program vlaspois
         if (r>=r1 .and. r<=r2) then
            do j=1,ntheta+1
               theta=real(j-1,f64)*dtheta
-              f(i,j)=cos(theta)
+              f(i,j)=cos(3.0_f64*theta)
            end do
         end if
      end do
@@ -87,7 +96,37 @@ program vlaspois
   end do
   close(20)
 
+  open(unit=23,file='thdiag.dat')
+  write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
+  write(23,*)'#t // l1 // l2 // e' 
+  w0=0.0_f64
+  l10=0.0_f64
+  l20=0.0_f64
+  e=0.0_f64
+  !a faire : calcul de grad_phi pour le calcul de e à t=0
+  !pas la bonne allure, chercher les erreurs
+  do i=1,nr+1
+     r=rmin+real(i-1,f64)*dr
+     do j=1,ntheta
+        w0=w0+r*f(i,j)
+        l10=l10+r*abs(f(i,j))
+        l20=l20+r*f(i,j)**2
+        e=e+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
+     end do
+  end do
+  w0=w0*dr*dtheta
+  l10=l10*dr*dtheta
+  l20=sqrt(l20*dr*dtheta)
+  e=e*dr*dtheta
+  write(23,*)0.0_f64,0.0_f64,0.0_f64,0.0_f64,e
+
   do step=1,nb_step
+     print*,'step',step
+     !initialisation of weight (w), l1, l2 and energy (e)
+     w=0.0_f64
+     l1=0.0_f64
+     l2=0.0_f64
+     e=0.0_f64
 
      if (scheme==1) then
         !classical semi-Lagrangian scheme
@@ -102,7 +141,23 @@ program vlaspois
      grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
      phi(:,ntheta+1)=phi(:,1)
   
+     do i=1,nr+1
+        r=rmin+real(i-1,f64)*dr
+        do j=1,ntheta
+           w=w+r*f(i,j)
+           l1=l1+r*abs(f(i,j))
+           l2=l2+r*f(i,j)**2
+           e=e+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
+        end do
+     end do
+     w=w*dr*dtheta
+     l1=l1*dr*dtheta
+     l2=sqrt(l2*dr*dtheta)
+     e=e*dr*dtheta
+     write(23,*)dt*real(step,f64),(w-w0)/w0,(l1-l10)/l10,(l2-l20)/l20,e
+
   end do
+  close(23)
 
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
@@ -114,10 +169,18 @@ program vlaspois
         y=r*sin(theta)
         write(21,*)r,theta,x,y,f(i,j)
      end do
+     write(21,*)' '
   end do
   close(21)
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
+
+  SLL_DEALLOCATE(f,err)
+  SLL_DEALLOCATE(phi,err)
+  SLL_DEALLOCATE(grad_phi,err)
+  if (scheme==2) then
+     SLL_DEALLOCATE(fdemi,err)
+  end if
 
 end program vlaspois
