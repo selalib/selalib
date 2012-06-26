@@ -20,7 +20,7 @@ env = Environment( ENV = os.environ,
                          'sll_utilities', 'sll_constants','sll_mesh_types',
                          'sll_splines','sll_ode_solvers','sll_tridiagonal',
                          'sll_distribution_function','sll_diagnostics',
-                         'hdf5_fortran','hdf5','z'],
+                         'hdf5_fortran','hdf5','z','dfftpack'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
                                '-DGFORTRAN','-ffree-line-length-none'])
 
@@ -45,3 +45,4 @@ env.Program('bgk_fv_unif', ["bgk_fv_unif.F90", "sll_csl.F90","../splines/contrib
 env.Program('bgk_fv', ["bgk_fv.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
 env.Program('bgk_fv2', ["bgk_fv2.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
 env.Program('bgk_cfd', ["bgk_CFD.F90", "sll_CFD.F90","../splines/contrib_rho.F90","sll_bgk_mesh.F90"])
+env.Program('cg_csl_uniform', ["cg_csl_uniform.F90", "cg_csl_uniform_module.F90"])
