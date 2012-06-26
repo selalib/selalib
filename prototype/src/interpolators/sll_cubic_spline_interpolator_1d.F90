@@ -105,6 +105,7 @@ contains  ! ****************************************************************
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
+       res(:) = 0.0_f64
   end function reconstruct_array
   
 end module sll_cubic_spline_interpolator_1d

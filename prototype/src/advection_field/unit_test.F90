@@ -20,6 +20,7 @@ program unit_test
   character(len=4)                             :: cstep
   sll_int32                                    :: ierr, istep
   sll_int32                                    :: ix, iv, nnode_x1, nnode_v1
+  sll_int32, parameter                         :: NODE_CENTERED_FIELD_COPY = 0
 
   nc_eta1 = 100
   nc_eta2 = 100
@@ -46,7 +47,7 @@ program unit_test
        1.0_f64, &
        name, &
        pm2d, &
-       NODE_CENTERED_FIELD)
+       NODE_CENTERED_FIELD_COPY)
   
   print*, 'define 1d mesh in x for potential'
   call mesh1d%initialize( &
@@ -61,7 +62,7 @@ program unit_test
        phi_self, &
        "phi_self", &
        pm1d, &
-       NODE_CENTERED_FIELD)
+       NODE_CENTERED_FIELD_COPY)
 
   do ix = 1, nc_eta1
      phi_self%data(ix) = pm1d%x1_at_node(ix)**2

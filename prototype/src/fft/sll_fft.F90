@@ -229,8 +229,9 @@ module sll_fft
 #include "sll_memory.h"
   use numeric_constants
   use sll_timer
+#ifndef _NOFFTW
   use, intrinsic :: iso_c_binding
-
+#endif
   implicit none
 #ifndef _NOFFTW
   include 'fftw3.f03'
@@ -278,8 +279,9 @@ module sll_fft
 !  end type fft_plan
 
   type sll_fft_plan
+#ifndef _NOFFTW
     type(C_PTR)                     :: fftw_plan
-
+#endif
     sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
     sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
     sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
@@ -323,10 +325,6 @@ module sll_fft
 #define FFTW_MOD 1000000000
 #define SLLFFT_MOD 0
 #define FFTPACK_MOD 100
-
-!#define _DEFAULTFFTLIB SLLFFT_MOD
-!#define _NOFFTPACK
-!#define _NOFFTW
 
   interface bit_reverse
     module procedure bit_reverse_complex, bit_reverse_integer32, &
@@ -427,13 +425,6 @@ contains
     sll_int32                 :: k
     sll_comp64                :: mode
     mode = array(k)
-  end function
-
-  function fft_get_index_mode_in_array(plan,array,i) result(k)
-    type(sll_fft_plan), pointer             :: plan
-    sll_comp64, dimension(:), optional :: array
-    sll_int32                          :: i, k
-    i = k
   end function
 
 #define INFO plan%fft_time_execution = time
