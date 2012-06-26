@@ -152,6 +152,7 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
+	add_subdirectory(mgd3)
 ENDIF()
 
 
@@ -193,6 +194,7 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 IF(MUDPACK_ENABLED)
 	add_test(mudpack mudpack/tmud34sp mudpack/tmud24sp )
+	add_test(mgd3 mgd3/tmgd3)
 ENDIF()
 
 # we can call ${MPIEXEC_MAX_NUMPROCS}
