@@ -13,7 +13,7 @@ program vlaspois
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
-  sll_real64 :: w0, w, l10, l1, l20, l2, e
+  sll_real64 :: w0, w, l10, l1, l20, l2, e, exact,maxi
   sll_real64, dimension(:,:), pointer :: f, phi ,fdemi
   sll_real64, dimension(:,:,:), pointer :: grad_phi
   type(sll_fft_plan), pointer ::pfwd, pinv
@@ -23,7 +23,7 @@ program vlaspois
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=64
+  nr=128
   ntheta=64
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
@@ -34,7 +34,7 @@ program vlaspois
 
   !definition of dt=tf/nb_step
   tf=1.0_f64
-  nb_step=1
+  nb_step=10
   dt=tf/real(nb_step,f64)
   print*,'#dt=',dt
 
@@ -64,7 +64,7 @@ program vlaspois
   ! 1 : gaussienne in r, constant in theta
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
-  fcase=3
+  fcase=2
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
@@ -126,7 +126,7 @@ program vlaspois
   l20=0.0_f64
   e=0.0_f64
   call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-  phi=-phi
+  !phi=-phi
   call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
@@ -187,6 +187,8 @@ program vlaspois
   close(23)
 
   w0=0.0_f64
+  e=0._f64
+  maxi=0._f64
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
   do i=1,nr+1
@@ -196,12 +198,18 @@ program vlaspois
         x=r*cos(theta)
         y=r*sin(theta)
         w0=max(w0,abs(phi(i,j)))
-        write(21,*)r,theta,x,y,f(i,j),phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(theta)
+        exact=(r-rmin)**3*(r-rmax)**3*cos(theta)
+        maxi=max(maxi,abs(exact))
+        write(21,*)r,theta,x,y,f(i,j),phi(i,j),exact
+        if(abs(exact-phi(i,j))>e)then
+          e = abs(exact-phi(i,j))
+        endif
      end do
      write(21,*)' '
   end do
   close(21)
-  print*,'norme l1)',w0
+  print*,'norme linf',w0,maxi
+  print*,'# error for phi=',e,e/w0,e/maxi
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
