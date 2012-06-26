@@ -16,8 +16,8 @@ contains
     ! dr and dtheta : size of step in directions r and theta
     ! rmin : radius of the hole
     ! rmax : radius of the disc
-    ! phi : known field, size nrXntheta
-    ! a = grad(phi), size 2XnrXntheta
+    ! phi : known field, size (nr+1)X(ntheta+1)
+    ! a = grad(phi), size 2X(nr+1)X(ntheta+1)
     ! a(1,i,j) = d_r(phi)(r_i,theta_j)
     ! a(2,i,j) = d_theta(phi)(r_i,theta_j)
 
@@ -29,7 +29,7 @@ contains
     sll_real64, dimension(:,:,:), intent(out), pointer :: a
 
     sll_int32 :: i,j,calculus
-    sll_real64 :: r
+    sll_real64 :: r,theta,x,y
 
     ! way to compute a
     ! 1 : center for r and theta
@@ -54,6 +54,20 @@ contains
           a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
        end do
     end if
+
+    a(:,:,ntheta+1)=a(:,:,1)
+
+    open(unit=22,file='phi.dat')
+    do i=1,nr+1
+       r=rmin+real(i-1,f64)*dr
+       do j=1,ntheta+1
+          theta=real(j-1,f64)*2.0_f64*sll_pi
+          x=r*cos(theta)
+          y=r*sin(theta)
+          write (22,*)x,y,a(1,i,j),a(2,i,j)
+       end do
+    end do
+    close(22)
 
   end subroutine compute_advection
 
@@ -84,8 +98,6 @@ contains
     sll_int32 :: i,j
     sll_real64 :: r, theta
 
-    print*,'entre dans advect_VP_polar'
-
     ! creation spline 
     spl_f => new_spline_2D(Nr+1, Ntheta+1, &
          rmin, rmax, &
@@ -93,16 +105,12 @@ contains
          HERMITE_SPLINE, PERIODIC_SPLINE,&
          const_slope_x1_min = 0.0_f64,const_slope_x1_max = 0.0_f64)
 
-    print*,'construction de spl_f ok'
-
-    stop
-
     !interpolation
     ! 1 : using explicite Eulerian scheme
     ! 2 : rotation, this case ignore the field phi
     !     roation speed = -1
     ! 3 : using RK4
-    interpolate_case=2
+    interpolate_case=1
 
     if (interpolate_case/=3) then
 
@@ -313,6 +321,17 @@ contains
     call delete_spline_2d(spl_f)
     call delete_spline_2d(spl_a1)
     call delete_spline_2d(spl_a2)
+    SLL_DEALLOCATE(fcopie,err)
+    SLL_DEALLOCATE(phicopie,err)
+    SLL_DEALLOCATE(a,err)
+    SLL_DEALLOCATE(r1,err)
+    SLL_DEALLOCATE(r2,err)
+    SLL_DEALLOCATE(r3,err)
+    SLL_DEALLOCATE(r4,err)
+    SLL_DEALLOCATE(theta1,err)
+    SLL_DEALLOCATE(theta2,err)
+    SLL_DEALLOCATE(theta3,err)
+    SLL_DEALLOCATE(theta4,err)
 
   end subroutine rk4_polar_advect
 
@@ -338,14 +357,8 @@ contains
     sll_real64, dimension(:,:,:), intent(inout), pointer :: grad_phi
 
     call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-    phi(:,ntheta+1)=phi(:,1)
-    print*,'poisson ok'
     call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
-    grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
-    print*,'gradphi_ok'
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
-    print*,'advect_VP ok'
-
   end subroutine SL_classic
 
 
@@ -372,16 +385,12 @@ contains
 
     fdemi=f
     call poisson_solve_polar(fdemi,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-    phi(:,ntheta+1)=phi(:,1)
     call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
-    grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
     call advect_VP_polar(dt/2.0_f64,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,fdemi,pfwd,pinv)
     !we just obtained f^(n+1/2)
     call poisson_solve_polar(fdemi,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-    phi(:,ntheta+1)=phi(:,1)
     !we just obtained E^(n+1/2)
     call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
-    grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
 
   end subroutine SL_controlled

@@ -5,7 +5,6 @@ module poisson_polar
 
   use sll_fft
   use sll_tridiagonal
-  
   use numeric_constants
   implicit none
 
@@ -27,17 +26,18 @@ contains
     type(sll_fft_plan),intent(in), pointer ::pfwd, pinv
     sll_real64, dimension(:,:), intent(inout), pointer :: phitab
 
-    sll_real64 :: r1,r2
+    sll_real64 :: r
     sll_int32::i,k,err
     sll_real64, dimension(:,:), pointer :: ffttab
     ! for the tridiag solver
-    sll_real64, dimension(:), pointer :: cts,a
+    sll_real64, dimension(:), pointer :: cts
+    sll_real64, dimension(:), pointer :: a
     sll_int32, dimension(:), pointer :: ipiv
 
     SLL_ALLOCATE(ffttab(nr+1,ntheta),err)
     SLL_ALLOCATE(a(3*(nr+1)),err)
-    SLL_ALLOCATE(cts(7*nr),err)
-    SLL_ALLOCATE(ipiv(nr),err)
+    SLL_ALLOCATE(cts(7*(nr+1)),err)
+    SLL_ALLOCATE(ipiv(nr+1),err)
 
     ! copy of ftab
     ! we work with ffttab not to modify ftab
@@ -51,16 +51,12 @@ contains
 
     ! poisson solver
     do k=1,ntheta
-       r1=rmin
-       r2=rmin
-
        ! build the matrix
-       do i=1,Nr+1
-          r1=rmin+real(i-1,f64)*dr
-          a(3*(i+1)-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r1)
-          a(3*i-1)=-2.0_f64/dr**2-(real(k,f64)/r2)**2
-          a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r2)
-          r2=r1
+       do i=2,Nr
+          r=rmin+real(i,f64)*dr
+          a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+          a(3*i-1)=-2.0_f64/dr**2-(real(k,f64)/r)**2
+          a(3*i-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
        enddo
        !Neuman condition
        a(1)=0.0_f64
@@ -79,6 +75,13 @@ contains
     do i=1,Nr+1
        call fft_apply_plan(pinv,phitab(i,1:ntheta),phitab(i,1:ntheta))
     end do
+
+    phitab(:,ntheta+1)=phitab(:,1)
+
+    SLL_DEALLOCATE(ffttab,err)
+    SLL_DEALLOCATE(cts,err)
+    SLL_DEALLOCATE(ipiv,err)
+    SLL_DEALLOCATE(a,err)
 
   end subroutine poisson_solve_polar
 
