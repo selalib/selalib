@@ -365,10 +365,10 @@ contains
     sll_real64, dimension(:,:), intent(inout), pointer :: f, phi
     sll_real64, dimension(:,:,:), intent(inout), pointer :: grad_phi
 
-    f=-f
+    !f=-f
     call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-!    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
-!    call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
+    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+    call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
   end subroutine SL_classic
 
 

@@ -28,7 +28,7 @@ contains
     type(sll_fft_plan),intent(in), pointer ::pfwd, pinv
     sll_real64, dimension(:,:), intent(inout), pointer :: phitab
 
-    sll_real64 :: r
+    sll_real64 :: r,ind_theta
     sll_int32::i,k,err
     sll_real64, dimension(:,:), pointer :: ffttab
     ! for the tridiag solver
@@ -55,22 +55,32 @@ contains
     do k=1,ntheta
        ! build the matrix
        do i=2,Nr
-          r=rmin+real(i,f64)*dr
-          a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          a(3*i-1)=-2.0_f64/dr**2-(real(k,f64)/r)**2
-          a(3*i-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+       
+         if (k<=ntheta/2) then
+          ind_theta = real(k-1,f64)
+         else
+          ind_theta = real(ntheta-(k-1),f64)
+         endif
+
+       
+          r=rmin+real(i-1,f64)*dr
+          a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          a(3*i-1)=2.0_f64/dr**2+(real(ind_theta,f64)/r)**2
+          a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
        enddo
        !Neuman condition
        a(1)=0.0_f64
-       a(2)=real(k-1,f64)/dr**2+1.0_f64/(2.0_f64*rmin*dr)
+       a(2)=1._f64
+       !a(2)=real(k-1,f64)/dr**2+1.0_f64/(2.0_f64*rmin*dr)
        a(3)=0.0_f64
        !Dirichlet condition
        a(3*(nr+1))=0.0_f64
        a(3*(nr+1)-1)=1.0_f64
        a(3*(nr+1)-2)=0.0_f64
 
-       call setup_cyclic_tridiag(a,nr,cts,ipiv)
-       call solve_cyclic_tridiag(cts,ipiv,ffttab(:,k),nr,phitab(:,k))
+       call setup_cyclic_tridiag(a,nr+1,cts,ipiv)
+       call solve_cyclic_tridiag(cts,ipiv,ffttab(:,k),nr+1,phitab(:,k))
+       phitab(:,k) = phitab(:,k)*real(ntheta,f64)
     end do
 
     ! FFT INVERSE
