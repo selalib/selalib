@@ -77,7 +77,7 @@ program bgk_classic_csl
   SLL_ALLOCATE(Xstar(N+1),err)
   
   SLL_ALLOCATE(node_positions_x1(N_x1+1),err)
-  SLL_ALLOCATE(node_positions_x2(N_x1+1),err)
+  SLL_ALLOCATE(node_positions_x2(N_x2+1),err)
   
   
   
