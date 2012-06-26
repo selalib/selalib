@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
 add_library(geometry_functions STATIC
 	../fields/geometry_functions.F90
 )
