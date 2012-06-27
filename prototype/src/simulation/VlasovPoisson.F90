@@ -9,11 +9,11 @@ program vlaspois
   use numeric_constants
   implicit none
 
-  sll_int32 :: i, j, step, err
+  sll_int32 :: i, j, k, step, err
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
-  sll_real64 :: w0, w, l10, l1, l20, l2, e
+  sll_real64 :: w0, w, l10, l1, l20, l2, e, exact,maxi
   sll_real64, dimension(:,:), pointer :: f, phi ,fdemi
   sll_real64, dimension(:,:,:), pointer :: grad_phi
   type(sll_fft_plan), pointer ::pfwd, pinv
@@ -23,23 +23,32 @@ program vlaspois
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=64
+  nr=128
   ntheta=64
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
 
-!!$  !definition of dt=tf/nb_step
-!!$  tf=130.0_f64
-!!$  nb_step=
-!!$  dt=tf/real(nb_step,f64)
-!!$  print*,'#dt=',dt
+  !choose the way to define dt, tf and nb_step
+  !the tree ways are equivalent
 
-  !definition of nb_step=tf/dt
-  dt=0.25_f64
-  tf=200.0_f64
-  nb_step=floor(tf/dt)
-  print*,'#nb_step=',nb_step
+  !definition of dt=tf/nb_step
+  tf=1.0_f64
+  nb_step=10
+  dt=tf/real(nb_step,f64)
+  print*,'#dt=',dt
+
+!!$  !definition of nb_step=tf/dt
+!!$  dt=0.25_f64
+!!$  tf=200.0_f64
+!!$  nb_step=floor(tf/dt)
+!!$  print*,'#nb_step=',nb_step
+
+!!$  !definition of tf=dt*nb_step
+!!$  nb_step=
+!!$  dt=
+!!$  tf=dt*real(nb_step,f64)
+!!$  print*,'# tf=',tf
 
   SLL_ALLOCATE(f(nr+1,ntheta+1),err)
   SLL_ALLOCATE(phi(nr+1,ntheta+1),err)
@@ -54,6 +63,7 @@ program vlaspois
   !distribution function
   ! 1 : gaussienne in r, constant in theta
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
+  ! 3 : test distribution for poisson solver
   fcase=2
 
   !chose the way to calcul
@@ -69,6 +79,7 @@ program vlaspois
         r=rmin+real(i-1,f64)*dr
         f(i,:)=1.0_f64/(5.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/50.0_f64)
      end do
+
   else if (fcase==2) then
      r1=rmin+(rmax-rmin)/3.0_f64
      r2=rmin+2.0_f64*(rmax-rmin)/3.0_f64
@@ -80,6 +91,17 @@ program vlaspois
               f(i,j)=cos(3.0_f64*theta)
            end do
         end if
+     end do
+
+  else if (fcase==3) then
+     do i=1,nr+1
+        r=rmin+real(i-1,f64)*dr
+        do j=1,ntheta+1
+           theta=real(j-1,f64)*dtheta
+           f(i,j)=-(r-rmin)*(r-rmax)/r**2*(-37*r**3*rmax+8*r**2*rmax**2 &
+                & -37*r**3*rmin+8*r**2*rmin**2-rmin**2*rmax**2+35*r**4 &
+                & +26*r**2*rmin*rmax-r*rmin**2*rmax-r*rmin*rmax**2)*cos(theta)
+        end do
      end do
   end if
 
@@ -98,13 +120,14 @@ program vlaspois
 
   open(unit=23,file='thdiag.dat')
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
-  write(23,*)'#t // l1 // l2 // e' 
+  write(23,*)'#  t  //  w  //  l1  //  l2  //  e' 
   w0=0.0_f64
   l10=0.0_f64
   l20=0.0_f64
   e=0.0_f64
-  !a faire : calcul de grad_phi pour le calcul de e à t=0
-  !pas la bonne allure, chercher les erreurs
+  call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
+  !phi=-phi
+  call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta
@@ -121,7 +144,11 @@ program vlaspois
   write(23,*)0.0_f64,0.0_f64,0.0_f64,0.0_f64,e
 
   do step=1,nb_step
-     print*,'step',step
+     do k=1,ceiling(real(step)/10.0)
+        if (k*10==step) then
+           print*,'# step',step
+        end if
+     end do
      !initialisation of weight (w), l1, l2 and energy (e)
      w=0.0_f64
      l1=0.0_f64
@@ -159,6 +186,9 @@ program vlaspois
   end do
   close(23)
 
+  w0=0.0_f64
+  e=0._f64
+  maxi=0._f64
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
   do i=1,nr+1
@@ -167,11 +197,19 @@ program vlaspois
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(21,*)r,theta,x,y,f(i,j)
+        w0=max(w0,abs(phi(i,j)))
+        exact=(r-rmin)**3*(r-rmax)**3*cos(theta)
+        maxi=max(maxi,abs(exact))
+        write(21,*)r,theta,x,y,f(i,j),phi(i,j),exact
+        if(abs(exact-phi(i,j))>e)then
+          e = abs(exact-phi(i,j))
+        endif
      end do
      write(21,*)' '
   end do
   close(21)
+  print*,'norme linf',w0,maxi
+  print*,'# error for phi=',e,e/w0,e/maxi
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
