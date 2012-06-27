@@ -35,7 +35,12 @@ contains
     
     !print *,dx
     
+    
     do i=1,N+1
+      if(abs(Xstar(i))>2._f64)then
+        print *,'displacement too big in csl_advection_per',Xstar(i)
+        stop
+      endif
       do while (Xstar(i).gt.1._f64)
         Xstar(i) = Xstar(i)-1._f64
       end do
@@ -118,14 +123,22 @@ Xstar,spl_per_x1,time_case)
   sll_real64,dimension(:),pointer :: buf,node_positions_x1,Xstar
   sll_real64,dimension(:,:),pointer:: a1,f
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1
-  sll_int32 :: i1,i2,i1m1
-  sll_real64 :: x
+  sll_int32 :: i1,i2,i1m1,ix,ix1,s,i
+  sll_real64 :: x,result,tmp,x1_min,x1_max,x2_min,x2_max
+  
+  x1_min = geom_x(1,1)
+  x1_max = geom_x(2,1)
+  x2_min = geom_x(1,2)
+  x2_max = geom_x(2,2)
+  
   do i2=1,N_x2
     buf(1:N_x1) = f(1:N_x1,i2)
     if(time_case(1)==1)then
-      do i1=1,N_x1    
-        Xstar(i1) = node_positions_x1(i1)-dt*a1(i1,i2)
-      enddo
+      do i1=1,N_x1
+        i1m1=modulo(i1-1-1+N_x1,N_x1)+1    
+        Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+      enddo      
+      Xstar(N_x1+1) = Xstar(1)+1._f64
     endif        
     if(time_case(1)==2)then
       do i1=1,N_x1
@@ -137,43 +150,69 @@ Xstar,spl_per_x1,time_case)
         Xstar(i1) = 0._f64
         do s=1,time_case(2)
           x = node_positions_x1(i1)-Xstar(i1)
-          if(x>=1._f64)then
+          if(abs(x-0.5_f64)>1.5)then
+            print *,'#displacement is too big in classical_csl_1',x,s
+            do i=1,N_x1
+              print *,node_positions_x1(i),a1(i,i2)
+            enddo
+            print *,node_positions_x1(N_x1+1),a1(1,i2)
+            stop
+          endif
+          do while (x>=1._f64)
             x=x-1._f64
-          endif
-          if(x<0._f64)then
+          enddo
+          do while(x<0._f64)
             x=x+1._f64
-          endif
+          enddo
           if(x>=1.)then
             x=x-1._f64
           endif
+          if(x<0._f64)then
+            print *,'problem x should be >=0 in advec_classical_csl_1',x
+            stop
+          endif
           x = x*N_x1
           ix=floor(x)
+          x=x-real(ix,f64)
           ix1=ix+1
           if(ix1==N_x1)then
             ix1=0
           endif
+          if(ix1+1>N_x1)then
+            print *,ix1+1,i1,node_positions_x1(i1)-Xstar(i1),Xstar(i1)
+            print *,'Problem in advec_classical_csl_1'
+            stop
+          endif
           result = (1.-x)*a1(ix+1,i2)+x*a1(ix1+1,i2)
-          Xstar(i1)=result*dt/(x2_max-x2_min)
+          Xstar(i1)=0.5_f64*result*dt/(x1_max-x1_min)
         enddo  
         !i1m1=modulo(i1-1-1+N_x1,N_x1)+1
         !Xstar(i1) = node_positions_x1(i1)-Xstar(i1)
         !Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))
       enddo
-      tmp=Xstar(1)
-      do i1=1,N_x1-1
-        Xstar(i1)=Xstar(i1)+Xstar(i1+1)
+      tmp=Xstar(N_x1)
+      do i1=N_x1,2,-1
+        Xstar(i1)=Xstar(i1)+Xstar(i1-1)
       enddo
-      Xstar(Nx)=Xstar(Nx-1)+tmp
-      !in Xstar are stored displacements of X_{1/2},...X_{N+1/2}
+      Xstar(1)=Xstar(1)+tmp
+      !tmp=Xstar(1)
+      !do i1=1,N_x1-1
+      !  Xstar(i1)=Xstar(i1)+Xstar(i1+1)
+      !enddo
+      !Xstar(N_x1)=Xstar(N_x1-1)+tmp
+      
+      !in Xstar are stored displacements of X_{-1/2},...X_{N-1/2}: X_star=d_{-1/2},...,d_{N-1/2}
       ! the displacement of X_{N+1/2} is the same than the displacement of X_{-1/2}
-      !do i1=1,N_x1
-      !  Xstar(i1)=node_positions_x1(i1)-Xstar(i1)
-      !enddo    
+      !the primitive will be evaluated at 0dx-d_{-1/2}, dx-d_{1/2},...(N-1)dx-d_{N-1/2}
+      do i1=1,N_x1
+        Xstar(i1)=node_positions_x1(i1)-Xstar(i1)
+      enddo
+      Xstar(N_x1+1) = Xstar(1)+ 1._f64   
     endif        
     call csl_advection_per(buf,spl_per_x1,Xstar,node_positions_x1,N_x1)
     f(1:N_x1+1,i2) = buf(1:N_x1+1)
   enddo
-  
+  f(1:N_x1+1,N_x2+1)=f(1:N_x1+1,1)
 
 end subroutine advect_classical_csl_1
 
@@ -186,24 +225,96 @@ Xstar,spl_per_x2,time_case)
   sll_real64,dimension(:),pointer :: buf,node_positions_x2,Xstar
   sll_real64,dimension(:,:),pointer:: a2,f
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x2
-  sll_int32 :: i1,i2,i2m1
+  sll_int32 :: i1,i2,i2m1,ix,ix1,s,i
+  sll_real64 :: x,result,tmp,x1_min,x1_max,x2_min,x2_max
+
+  x1_min = geom_x(1,1)
+  x1_max = geom_x(2,1)
+  x2_min = geom_x(1,2)
+  x2_max = geom_x(2,2)
+
+
   do i1=1,N_x1
     buf(1:N_x2) = f(i1,1:N_x2)
     if(time_case(1)==1)then
-      do i1=1,N_x1    
-        Xstar(i1) = node_positions_x1(i1)-dt*a1(i1,i2)
+      do i2=1,N_x2
+        i2m1=modulo(i2-1-1+N_x2,N_x2)+1    
+        Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
       enddo
+      Xstar(N_x2+1)=Xstar(1)+1._f64
     endif
     if(time_case(1)==2)then  
       do i2=1,N_x2
         i2m1=modulo(i2-1-1+N_x2,N_x2)+1
-        Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))
+        !Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))
+        Xstar(i2) = 0._f64
+        do s=1,time_case(2)
+          x = node_positions_x2(i2)-Xstar(i2)
+          if(abs(x-0.5_f64)>1.5)then
+            print *,'displacement is too big in classical_csl_2',x
+            do i=1,N_x2
+              print *,node_positions_x2(i),a2(i1,i)
+            enddo
+            print *,node_positions_x2(N_x1+1),a2(i1,i)
+            stop
+          endif
+          do while(x>=1._f64)
+            x=x-1._f64
+          enddo
+          do while(x<0._f64)
+            x=x+1._f64
+          enddo
+          if(x>=1.)then
+            x=x-1._f64
+          endif
+          if(x<0._f64)then
+            print *,'problem x should be >=0 in advec_classical_csl_2',x
+            stop
+          endif
+          x = x*N_x2
+          ix=floor(x)
+          x=x-real(ix,f64)
+          ix1=ix+1
+          if(ix1==N_x2)then
+            ix1=0
+          endif
+          if(ix1+1>N_x2)then
+            print *,ix1+1,i2,node_positions_x2(i2)-Xstar(i2),Xstar(i2)
+            print *,'Problem in advec_classical_csl_2'
+            stop
+          endif
+          result = (1.-x)*a2(i1,ix+1)+x*a2(i1,ix1+1)
+          Xstar(i2)=0.5_f64*result*dt/(x2_max-x2_min)
+        enddo  
+      enddo
+      tmp=Xstar(N_x2)
+      do i2=N_x2,2,-1
+        Xstar(i2)=Xstar(i2)+Xstar(i2-1)
+      enddo
+      Xstar(1)=Xstar(1)+tmp
+      !tmp=Xstar(1)
+      !do i1=1,N_x1-1
+      !  Xstar(i1)=Xstar(i1)+Xstar(i1+1)
+      !enddo
+      !Xstar(N_x1)=Xstar(N_x1-1)+tmp
+      
+      !in Xstar are stored displacements of X_{-1/2},...X_{N-1/2}: X_star=d_{-1/2},...,d_{N-1/2}
+      ! the displacement of X_{N+1/2} is the same than the displacement of X_{-1/2}
+      !the primitive will be evaluated at 0dx-d_{-1/2}, dx-d_{1/2},...(N-1)dx-d_{N-1/2}
+      do i2=1,N_x2
+        Xstar(i2)=node_positions_x2(i2)-Xstar(i2)
       enddo    
+      Xstar(N_x2+1) = Xstar(1)+ 1._f64
+      
+      !do i=1,N_x2+1
+      !  print *,node_positions_x2(i),Xstar(i),a2(i1,i)
+      !enddo
+      !stop
     endif
     call csl_advection_per(buf,spl_per_x2,Xstar,node_positions_x2,N_x2)
     f(i1,1:N_x2+1) = buf(1:N_x2+1)
   enddo
-  
+  f(N_x1+1,1:N_x2+1)=f(1,1:N_x2+1)
 
 end subroutine advect_classical_csl_2
 
@@ -216,7 +327,8 @@ node_positions_x1,node_positions_x2,Xstar,spl_per_x1,spl_per_x2)
   sll_real64,dimension(:,:),pointer:: a1,a2,f
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1,spl_per_x2
   sll_int32  :: time_case(2)
-  time_case(1) = 1
+  time_case(1) = 2
+  time_case(2) = 10
   
   call advect_classical_csl_1(0.5_f64*dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
     Xstar,spl_per_x1,time_case)

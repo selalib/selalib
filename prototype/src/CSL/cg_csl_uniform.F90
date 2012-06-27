@@ -46,13 +46,13 @@ program cg_csl_uniform
   nb_diag=8
   test_case=1
   visu_step=100
-  scheme=10
+  scheme=20
   !pause=0.00
   !visu=0
   !execu=1
   time_case=[3,20]
   eps=1.e10_f64
-  poisson_case=2
+  poisson_case=1
   modx=1
   mody=1
   !scratch_file="~/scratch/visu/"
@@ -69,7 +69,7 @@ program cg_csl_uniform
     N_x1=128
     N_x2=128
     dt=0.1
-    nb_step=500!0
+    nb_step=5000
     x1_min = 0._f64
     x1_max = 2._f64*sll_pi/landau_k
     x2_min = 0._f64 
@@ -130,9 +130,9 @@ program cg_csl_uniform
   spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
   
   
-  if(test_case==1)then  
-    do i2=1,N_x2!+1
-      do i1=1,N_x1!+1
+  if(test_case==1)then !khp testcase 
+    do i2=1,N_x2+1
+      do i1=1,N_x1+1
         x1 = x1_min+real(i1-1,f64)*delta_x1
         x2 = x2_min+real(i2-1,f64)*delta_x2         
         f(i1,i2) = sin(x2)+landau_alpha*cos(landau_k*x1)
@@ -140,9 +140,9 @@ program cg_csl_uniform
     enddo  
   endif
 
-  if(test_case==2)then  
-    do i2=1,N_x2!+1
-      do i1=1,N_x1!+1
+  if(test_case==2)then  !khp2 testcase
+    do i2=1,N_x2+1
+      do i1=1,N_x1+1
         x1 = x1_min+real(i1-1,f64)*delta_x1
         x2 = x2_min+real(i2-1,f64)*delta_x2         
         f(i1,i2) = sin(x1)*sin(x2)+&
@@ -189,7 +189,7 @@ program cg_csl_uniform
   
   
   buff=f
-  call thdiagcgper(buff,E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),&
+  call thdiagcgper(buff(1:N_x1,1:N_x2),E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),&
     geom_x,N_x1,N_x2,nb_diag,thf0,bufpoisson,Nbufpoisson,bufcpoisson,&
     Nbufcpoisson(1),Nbufcpoisson(2),modx,mody)
 
@@ -276,9 +276,9 @@ program cg_csl_uniform
     enddo
   endif
   
-  if(scheme==10)then
+  if(scheme==10)then !Euler scheme
     SLL_ALLOCATE(fold(N_x1+1,N_x2+1),err)    !time loop
-    do step=1,nb_step      
+    do step=1,nb_step            
       E_x1=f
       if(poisson_case==1)then
         call poisson2dper(bufpoisson,Nbufpoisson,bufcpoisson,Nbufcpoisson(1),&
@@ -316,6 +316,72 @@ program cg_csl_uniform
   
   
   endif
+
+  if(scheme==20)then !predictor corrector scheme
+    SLL_ALLOCATE(fold(N_x1+1,N_x2+1),err)    !time loop
+    do step=1,nb_step      
+      !compute poisson
+      E_x1=f
+      if(poisson_case==1)then
+        call poisson2dper(bufpoisson,Nbufpoisson,bufcpoisson,Nbufcpoisson(1),&
+          Nbufcpoisson(2),E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),N_x1,N_x2,L_x1,L_x2)
+      endif  
+      if(poisson_case==2)then
+        call computephiper(bufphi,Nbufphi,bufcphi,Nbufcphi(1),Nbufcphi(2),&
+          E_x1(1:N_x1,1:N_x2),N_x1,N_x2,L_x1,L_x2)
+        call splpoissonperper2d(E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),&
+          bufsplpoisson,Nbufsplpoisson,N_x1,N_x2,L_x1,L_x2)
+      endif
+      fold=f
+      !diagnostics
+      call thdiagcgper(fold(1:N_x1,1:N_x2),E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),&
+        geom_x,N_x1,N_x2,nb_diag,thf,bufpoisson,Nbufpoisson,bufcpoisson,&
+        Nbufcpoisson(1),Nbufcpoisson(2),modx,mody)
+      thff=(thf(2:4)-thf0(2:4))/thf0(2:4)
+      ! tn,mass,(l1-l10)/l10,(l2-l20)/l20,(enstrophy-enstrophy0)/enstrophy0,
+      print *,(step-1)*dt,thf(1),thff(1),thff(2),thff(3),thf(5),thf(6)
+      !call advect2d(geom_x,f,E_x2,-E_x1,N_x1,N_x2,bufspl,Nbufspl,buf2dspl,dt,&
+      !time_case,eps)
+      fold=f
+      !compute advection of dt/2 with fold
+      E_x1=-E_x1 !warning -E_x(x_i,y_j) stored in E_x1(i,j)
+      call advect_classical_csl(0.5_f64*dt,E_x2,E_x1,fold,geom_x,N_x1,N_x2,buf1d,&
+        node_positions_x1,node_positions_x2,Xstar,spl_per_x1,spl_per_x2)
+      E_x1=-E_x1 !now E_x(x_i,y_j) stored in E_x1(i,j)
+
+      !compute field at time t_{n+1/2}
+      E_x1=fold
+      if(poisson_case==1)then
+        call poisson2dper(bufpoisson,Nbufpoisson,bufcpoisson,Nbufcpoisson(1),&
+          Nbufcpoisson(2),E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),N_x1,N_x2,L_x1,L_x2)
+      endif  
+      if(poisson_case==2)then
+        call computephiper(bufphi,Nbufphi,bufcphi,Nbufcphi(1),Nbufcphi(2),&
+          E_x1(1:N_x1,1:N_x2),N_x1,N_x2,L_x1,L_x2)
+        call splpoissonperper2d(E_x1(1:N_x1,1:N_x2),E_x2(1:N_x1,1:N_x2),&
+          bufsplpoisson,Nbufsplpoisson,N_x1,N_x2,L_x1,L_x2)
+      endif
+
+      
+      !compute advection of dt with f and E_{n+1/2}
+      E_x1=-E_x1 !warning -E_x(x_i,y_j) stored in E_x1(i,j)
+      call advect_classical_csl(dt,E_x2,E_x1,f,geom_x,N_x1,N_x2,buf1d,&
+        node_positions_x1,node_positions_x2,Xstar,spl_per_x1,spl_per_x2)
+      E_x1=-E_x1 !now E_x(x_i,y_j) stored in E_x1(i,j)
+      
+            
+      if(modulo(step,visu_step)==0)then
+        call print2dper(geom_x,f(1:N_x1,1:N_x2),N_x1,N_x2,visu_case,step,'f')
+      endif
+    enddo
+
+
+  
+  
+  
+  endif
+
+
   
   
   
