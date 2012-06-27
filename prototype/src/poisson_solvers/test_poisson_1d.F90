@@ -29,36 +29,25 @@ sll_int32   :: i
 
 nc_eta1 = 128
 
-call initialize_mesh_1d_analytic( &
-    mesh_1d,           &
-    "mesh_1d",          &
-    nc_eta1 + 1,    &
-    linear_map_poisson_f,        &
-    linear_map_poisson_jac_f )
+call initialize_mesh_1d_analytic( mesh_1d, "mesh_1d",        &
+                                  nc_eta1 + 1,               &
+                                  linear_map_poisson_f,      &
+                                  linear_map_poisson_jac_f )
 
 call mesh_1d%write_to_file()
 m => mesh_1d
 
-call initialize_scalar_field_1d( &
-    rho, &
-    "rho", &
-    m, &
-    NODE_CENTERED_FIELD, &
-    linear_map_poisson_f)
+call initialize_scalar_field_1d( rho, "rho", &
+                                 m, NODE_CENTERED_FIELD, &
+                                 linear_map_poisson_f)
 
-call initialize_scalar_field_1d( &
-    ex, &
-    "ex", &
-    m, &
-    NODE_CENTERED_FIELD, &
-    linear_map_poisson_f)
+call initialize_scalar_field_1d( ex, "ex", &
+                                 m, NODE_CENTERED_FIELD, &
+                                 linear_map_poisson_f)
 
-call initialize_scalar_field_1d( &
-    ex_exact, &
-    "ex_exact", &
-    m, &
-    NODE_CENTERED_FIELD, &
-    linear_map_poisson_f)
+call initialize_scalar_field_1d( ex_exact, "ex_exact", &
+                                 m, NODE_CENTERED_FIELD, &
+                                 linear_map_poisson_f)
 
 
 mode = 4
