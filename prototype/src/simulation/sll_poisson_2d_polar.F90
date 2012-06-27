@@ -10,15 +10,17 @@ module poisson_polar
 
 contains
 
+  !>subroutine poisson_solve_polar(ftab,rmin,dr,Nr,Ntheta,pfwd,pinv,phitab)
+  !>poisson solver for polar system
+  !>ftab : distribution function, size (nr+1)X(ntheta+1)
+  !>phitab : solution of laplacien phi = -f
+  !>phitab(1,:) and phitab(nr+1,:) must be known as boudary condition
+  !>rmin : radius of the hole
+  !>dr : size of r step
+  !>Nr and Ntheta : number Step in directions r and theta
+  !>pfwd and pinv : initialization object for FFt forward and inverse
+  !>initialization must be done outside the solver
   subroutine poisson_solve_polar(ftab,rmin,dr,Nr,Ntheta,pfwd,pinv,phitab)
-    ! ftab : distribution function, size (nr+1)X(ntheta+1)
-    ! phitab : solution of laplacien phi = f
-    ! phitab(0,:) and phitab(Nr,:) must be known as boudary condition
-    ! rmin : radius of the hole
-    ! dr : size of r step
-    ! Nr and Ntheta : number Step in directions r and theta
-    ! pfwd and pinv : initialization object for FFt forward and inverse
-    ! initialization must be done outside the solver
 
     sll_real64, intent(in) :: rmin,dr
     sll_int32, intent(in) :: nr, ntheta
@@ -26,7 +28,7 @@ contains
     type(sll_fft_plan),intent(in), pointer ::pfwd, pinv
     sll_real64, dimension(:,:), intent(inout), pointer :: phitab
 
-    sll_real64 :: r
+    sll_real64 :: r,ind_theta
     sll_int32::i,k,err
     sll_real64, dimension(:,:), pointer :: ffttab
     ! for the tridiag solver
@@ -42,8 +44,8 @@ contains
     ! copy of ftab
     ! we work with ffttab not to modify ftab
     ffttab=ftab(:,1:ntheta)
-    ffttab(1,:)=phitab(1,:)
-    ffttab(nr+1,:)=phitab(nr+1,:)
+    ffttab(1,:)=phitab(1,1:ntheta)
+    ffttab(nr+1,:)=phitab(nr+1,1:ntheta)
 
     do i=1,nr+1
        call fft_apply_plan(pfwd,ffttab(i,:),ffttab(i,:))
@@ -53,22 +55,32 @@ contains
     do k=1,ntheta
        ! build the matrix
        do i=2,Nr
-          r=rmin+real(i,f64)*dr
-          a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          a(3*i-1)=-2.0_f64/dr**2-(real(k,f64)/r)**2
-          a(3*i-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+       
+         if (k<=ntheta/2) then
+          ind_theta = real(k-1,f64)
+         else
+          ind_theta = real(ntheta-(k-1),f64)
+         endif
+
+       
+          r=rmin+real(i-1,f64)*dr
+          a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          a(3*i-1)=2.0_f64/dr**2+(real(ind_theta,f64)/r)**2
+          a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
        enddo
        !Neuman condition
        a(1)=0.0_f64
-       a(2)=real(k-1,f64)/dr**2+1.0_f64/(2.0_f64*rmin*dr)
+       a(2)=1._f64
+       !a(2)=real(k-1,f64)/dr**2+1.0_f64/(2.0_f64*rmin*dr)
        a(3)=0.0_f64
        !Dirichlet condition
        a(3*(nr+1))=0.0_f64
        a(3*(nr+1)-1)=1.0_f64
        a(3*(nr+1)-2)=0.0_f64
 
-       call setup_cyclic_tridiag(a,nr,cts,ipiv)
-       call solve_cyclic_tridiag(cts,ipiv,ffttab(:,k),nr,phitab(:,k))
+       call setup_cyclic_tridiag(a,nr+1,cts,ipiv)
+       call solve_cyclic_tridiag(cts,ipiv,ffttab(:,k),nr+1,phitab(:,k))
+       phitab(:,k) = phitab(:,k)*real(ntheta,f64)
     end do
 
     ! FFT INVERSE
