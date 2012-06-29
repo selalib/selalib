@@ -15,7 +15,7 @@ module polar_advection
 
 contains
 
-  !>subroutine compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,a)
+  !>subroutine compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,a)
   !>compute a = grad(phi) for phi scalar field
   !>nr and ntheta : numbers of steps in directions r and theta
   !>dr and dtheta : size of step in directions r and theta
@@ -25,7 +25,7 @@ contains
   !>a = grad(phi), size 2X(nr+1)X(ntheta+1)
   !>a(1,i,j) = d_r(phi)(r_i,theta_j)
   !>a(2,i,j) = d_theta(phi)(r_i,theta_j)
-  subroutine compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,a)
+  subroutine compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,a)
 
     implicit none
 
@@ -75,7 +75,7 @@ contains
     end do
     close(22)
 
-  end subroutine compute_advection
+  end subroutine compute_grad_field
 
 
   !>subroutine advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,a,f,pfwd,pinv)
@@ -256,7 +256,7 @@ contains
     end do
 
     call poisson_solve_polar(fcopie,rmin,dr,nr,ntheta-1,pfwd,pinv,phicopie)
-    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phicopie,a)
+    call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phicopie,a)
 
     !construction of spline coeficients for a
     call compute_spline_2d(a(1,:,:),spl_a1)
@@ -309,7 +309,7 @@ contains
     end do
 
     call poisson_solve_polar(fcopie,rmin,dr,nr,ntheta-1,pfwd,pinv,phicopie)
-    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phicopie,a)
+    call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phicopie,a)
 
     !construction of spline coeficients for a
     call compute_spline_2d(a(1,:,:),spl_a1)
@@ -365,9 +365,8 @@ contains
     sll_real64, dimension(:,:), intent(inout), pointer :: f, phi
     sll_real64, dimension(:,:,:), intent(inout), pointer :: grad_phi
 
-    !f=-f
     call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+    call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
   end subroutine SL_classic
 
@@ -394,15 +393,14 @@ contains
     sll_real64, dimension(:,:), intent(inout), pointer :: f, fdemi, phi
     sll_real64, dimension(:,:,:), intent(inout), pointer :: grad_phi
 
-    f=-f
     fdemi=f
     call poisson_solve_polar(fdemi,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+    call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
     call advect_VP_polar(dt/2.0_f64,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,fdemi,pfwd,pinv)
     !we just obtained f^(n+1/2)
     call poisson_solve_polar(fdemi,rmin,dr,nr,ntheta,pfwd,pinv,phi)
     !we just obtained E^(n+1/2)
-    call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+    call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
 
   end subroutine SL_controlled
