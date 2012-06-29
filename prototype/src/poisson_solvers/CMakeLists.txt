@@ -12,6 +12,23 @@ target_link_libraries(test_poisson_1d
       geometry_functions	 
       sll_low_level_file_io	
       sll_utilities)
+
+add_definitions(-D_FFTPACK)
+add_library(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
+add_executable(test_poisson_2d test_poisson_2d.F90)
+target_link_libraries(test_poisson_2d 
+                      sll_poisson_2d_periodic 
+	              sll_scalar_field_2d
+	              sll_constants
+	              sll_working_precision
+                      sll_assertion 
+                      sll_memory 
+                      sll_mapped_meshes
+                      sll_scalar_field_1d
+                      fftpack_module	 
+                      geometry_functions	 
+                      sll_low_level_file_io	
+                      sll_utilities)
 ENDIF()
 
 IF(FISHPACK_ENABLED)
