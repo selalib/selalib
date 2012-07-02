@@ -63,7 +63,7 @@ add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 if(Fortran_COMPILER_NAME STREQUAL "gfortran")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
 elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
 	set(CMAKE_Fortran_FLAGS " ")
 elseif(Fortran_COMPILER_NAME STREQUAL "xlf")

@@ -65,7 +65,7 @@ program vlaspois
 
   !initialization of FFT
   pfwd => fft_new_plan(ntheta,f(1,1:ntheta),f(1,1:ntheta),FFT_FORWARD,FFT_NORMALIZE)
-  pinv => fft_new_plan(ntheta,phi(1,1:ntheta),phi(1,1:ntheta),FFT_INVERSE,FFT_NORMALIZE)
+  pinv => fft_new_plan(ntheta,phi(1,1:ntheta),phi(1,1:ntheta),FFT_INVERSE)
 
   phi=0.0_f64
 
@@ -110,23 +110,23 @@ program vlaspois
            f(i,j)=-(r-rmin)*(r-rmax)/r**2*(-37*r**3*rmax+8*r**2*rmax**2 &
                 & -37*r**3*rmin+8*r**2*rmin**2-rmin**2*rmax**2+35*r**4 &
                 & +26*r**2*rmin*rmax-r*rmin**2*rmax-r*rmin*rmax**2) &
-                & *mode**2*cos(mode*theta)
+                & *mode**2*sin(mode*theta)
         end do
      end do
   end if
 
-  !write f in a file before calculations
-  open (unit=20,file='CGinit.dat')
-  do i=1,nr+1
-     r=rmin+real(i-1,f64)*dr
-     do j=1,ntheta+1
-        theta=real(j-1,f64)*dtheta
-        x=r*cos(theta)
-        y=r*sin(theta)
-        write(20,*)r,theta,x,y,f(i,j)
-     end do
-  end do
-  close(20)
+!!$  !write f in a file before calculations
+!!$  open (unit=20,file='CGinit.dat')
+!!$  do i=1,nr+1
+!!$     r=rmin+real(i-1,f64)*dr
+!!$     do j=1,ntheta+1
+!!$        theta=real(j-1,f64)*dtheta
+!!$        x=r*cos(theta)
+!!$        y=r*sin(theta)
+!!$        write(20,*)r,theta,x,y,f(i,j)
+!!$     end do
+!!$  end do
+!!$  close(20)
 
   open(unit=23,file='thdiag.dat')
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
@@ -204,13 +204,13 @@ program vlaspois
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        w0=max(w0,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*cos(mode*theta)))
-        write(21,*)r,theta,x,y,f(i,j),phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+        w0=max(w0,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
+        write(21,*)r,theta,x,y,f(i,j),phi(i,j),(r-rmin)**3*(r-rmax)**3*sin(mode*theta)
      end do
      write(21,*)' '
   end do
   close(21)
-  print*,'norme linf',w0,'mode',mod
+  print*,'norme linf',w0,'mode',mod,mode
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
