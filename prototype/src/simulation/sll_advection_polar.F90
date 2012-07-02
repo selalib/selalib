@@ -50,14 +50,14 @@ contains
           r=rmin+real(i-1,f64)*dr
           do j=1,ntheta
              a(1,i,j)=(phi(i+1,j)-phi(i-1,j))/(2*dr)
-             a(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
+             a(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*r*dtheta)
           end do
        end do
        do j=1,ntheta
           a(1,1,j)=(phi(2,j)-phi(1,j))/(2*dr)
           a(1,nr+1,j)=(phi(nr,j)-phi(nr-1,j))/(2*dr)
-          a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
-          a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
+          a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
+          a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
        end do
     end if
 
