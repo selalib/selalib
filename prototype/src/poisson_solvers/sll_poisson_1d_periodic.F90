@@ -3,7 +3,7 @@ module sll_poisson_1d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_1d.h"
+
   use numeric_constants
   use fft1d_module
 
@@ -12,10 +12,14 @@ module sll_poisson_1d_periodic
   public :: new, solve
 
   type, public :: poisson_1d_periodic
-     sll_real64, dimension(:), pointer       :: rhs
-     sll_real64, dimension(:), pointer       :: e_field
+     sll_real64, dimension(:), pointer       :: work
      type(fft1dclass)                        :: fft
-     sll_int32                               :: n_cells
+     sll_int32                               :: nc_eta1
+     sll_real64                              :: eta1_min
+     sll_real64                              :: eta1_max
+  contains
+     procedure :: initialize => new_poisson_1d_periodic
+     procedure :: solve => solve_poisson_1d_periodic
   end type poisson_1d_periodic
 
   interface new
@@ -28,78 +32,72 @@ module sll_poisson_1d_periodic
 
 contains
 
-  subroutine new_poisson_1d_periodic(this,n_cells,error)
-    type(poisson_1d_periodic),intent(out) :: this
-    sll_int32,intent(in)                  :: n_cells
-    sll_int32, intent(out)                :: error 
+  subroutine new_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+    class(poisson_1d_periodic),intent(out) :: this
+    sll_int32,intent(in)                   :: nc_eta1
+    sll_int32, intent(out)                 :: error 
+    sll_real64, intent(in)                 :: eta1_min
+    sll_real64, intent(in)                 :: eta1_max
 
     ! Indicateur d'erreur
     error = 0
     ! Initialisation de la geometrie
-    this%n_cells=n_cells
+    this%nc_eta1=nc_eta1
+    this%eta1_min=eta1_min
+    this%eta1_max=eta1_max
     ! Initialisation des fft (le nombre de points pris en compte est n
-    call initdoubfft(this%fft, this%n_cells)
+    call initdoubfft(this%fft, this%nc_eta1)
     ! Allocate auxiliary arrays for fft
-    SLL_ALLOCATE(this%rhs(n_cells+2),error)
-    SLL_ALLOCATE(this%e_field(n_cells+2),error)
+    SLL_ALLOCATE(this%work(nc_eta1+2),error)
 
   end subroutine new_poisson_1d_periodic
 
 
-  subroutine solve_poisson_1d_periodic(this, efield, rhs)
-    type(poisson_1d_periodic)                 :: this
-    type(scalar_field_1d)                     :: efield
-    type(scalar_field_1d)                     :: rhs
-    sll_int32                                 :: i, ik
+  subroutine solve_poisson_1d_periodic(this, field, rhs)
+    class(poisson_1d_periodic)                :: this
+    sll_real64, dimension(:), intent(out)     :: field
+    sll_real64, dimension(:), intent(in)      :: rhs
+    sll_int32                                 :: ik
     sll_int32                                 :: nxh1
     sll_real64                                :: kx0, kx, k2
 
-    ! Check that e_field and rhs are both associated to the 
+    ! Check that field and rhs are both associated to the 
     ! same mesh with the right number of cells 
     ! that has been initialized in new_poisson_1d_periodic
-    SLL_ASSERT(associated(efield%mesh,target=rhs%mesh))
-    SLL_ASSERT(rhs%mesh%nc_eta1 == this%n_cells )
+    SLL_ASSERT(size(field)==this%nc_eta1+1)
+    SLL_ASSERT(size(rhs)==this%nc_eta1+1)
 
     ! copy rhs into auxiliary array for fftpack
-    this%rhs(1:this%n_cells+1) = FIELD_DATA(rhs) 
+    ! in order to keep rhs unchanged
+    this%work = rhs 
 
     ! Faire une FFT dans la direction x de rhs
-    call fft(this%fft, this%rhs)
+    call fft(this%fft, this%work)
 
-    ! Calcul de la transformee de Fourier de E a partir de celle de rhs
-    kx0  = 2*sll_pi/(rhs%mesh%x1_at_node(this%n_cells+1)  &
-         - rhs%mesh%x1_at_node(1))
-    print*, 'kx0 ', this%n_cells, rhs%mesh%x1_at_node(1), rhs%mesh%x1_at_node(this%n_cells+1)
-    nxh1 = (this%n_cells-2)/2 
+    kx0  = 2*sll_pi/(this%eta1_max-this%eta1_min)
+    nxh1 = (this%nc_eta1-2)/2 
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
     ! correspondant a k=0 sont nulles
-    this%e_field(1) = 0.
+    field(1) = 0.
 
     ! Calcul des autres composantes de Fourier
     do ik=1,nxh1
        kx= ik*kx0
        k2 = kx*kx
-       this%e_field(2*ik) = kx/k2*this%rhs(2*ik+1)
-       this%e_field(2*ik+1) = -kx/k2*this%rhs(2*ik)
-       this%rhs(2*ik) = 1/k2*this%rhs(2*ik)
-       this%rhs(2*ik+1) = 1/k2*this%rhs(2*ik+1)
+       field(2*ik) = kx/k2*this%work(2*ik+1)
+       field(2*ik+1) = -kx/k2*this%work(2*ik)
+       this%work(2*ik) = 1/k2*this%work(2*ik)
+       this%work(2*ik+1) = 1/k2*this%work(2*ik+1)
     end do
 
-    this%e_field(this%n_cells)= 0.          ! because Im(rhs/2)=0
-    !PN this%rhs(this%n_cells) = ((GET_FIELD_DELTA_X1( rhs )/sll_pi)**2)*GET_FIELD_NCELLS_X1( rhs )
-
+    field(this%nc_eta1)= 0.          ! because Im(rhs/2)=0
  
     ! Faire une FFT inverse  dans la direction x de E
-    call fftinv(this%fft,this%e_field)
-    call fftinv(this%fft,this%rhs)
+    call fftinv(this%fft,field)
 
-    ! Copy local Ex into field data structure
-    do i=1, this%n_cells
-       FIELD_1D_AT_I(efield,i) = this%e_field(i)
-    end do
     ! complete last term by periodicity
-    FIELD_1D_AT_I(efield,this%n_cells+1) = this%e_field(1)
+    field(this%nc_eta1+1) = field(1)
 
   end subroutine solve_poisson_1d_periodic
 
