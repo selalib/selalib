@@ -71,10 +71,8 @@ contains  ! ****************************************************************
      sll_real64                                                       :: w1, w2, w3, ww1, ww2, ww3, w
      sll_int32                                                         :: i_temp, ic_temp, i_weno, order
      sll_real64                                                       :: eps                
-     sll_int32                                                         ::  i_weno  ! indicator for weno reconstruction
-     sll_int32                                                         ::  order
 	 
-	 eps = 1.e-8
+	 eps = 1.d-8
 	
 	if(.not.(fWENO%n_points.eq.num_points))then
 	write(*,*) 'size of f does not agree; check n_f!'
