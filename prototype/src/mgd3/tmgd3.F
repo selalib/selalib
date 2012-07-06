@@ -356,6 +356,7 @@ c
      1          pi,nx,ny,nz,IOUT)
 c-----------------------------------------------------------------------
       close(8)
+      call MPI_FINALIZE(ierr)
       stop
 1000  write(IOUT,200)
 200   format(/,'ERROR in multigrid code',/)
