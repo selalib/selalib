@@ -3,7 +3,7 @@
 ! default that the size of output and input data are the same = NP
 
 ! to compile
-! gfortran -O3 -ffree-line-length-none sll_memory.F90 sll_assert.F90 sll_working_precision.F90 sll_WENO.F90 unit_test.F90 -o unit_test
+! gfortran -O3 -ffree-line-length-none sll_memory.F90 sll_assert.F90 sll_working_precision.F90 WENO_interp.F90 unit_test.F90 -o unit_test
 
 !
 ! the option -O3 is for optimization
@@ -18,7 +18,7 @@ program SLWENO_tester
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_WENO
+  use WENO_interp
   implicit none
 #define NP 60
 
@@ -26,7 +26,7 @@ program SLWENO_tester
   sll_int32 :: i
   sll_int32 :: i_weno ! indicator for weno(1) or linear interpolation
 
-  type(sll_WENO_1d), pointer :: sp1
+  type(WENO_interp_1d), pointer :: sp1
   sll_real64                   :: phase
   sll_real64, allocatable, dimension(:) :: data       ! data at coordinates_d with size NP
   sll_real64, allocatable, dimension(:) :: coordinates_d  ! coordinates for data with size NP
@@ -63,7 +63,7 @@ program SLWENO_tester
      data_interp(i) = (sin(coordinates_o(i)) + cos(coordinates_o(i))) 	 
   enddo
   print *, 'proceed to allocate the data for WENO interpolation...'
-  sp1 =>  new_WENO_1D(NP, 0.0_f64, sll_pi*2.0_f64, order, i_weno)  
+  sp1 =>  new(NP, 0.0_f64, sll_pi*2.0_f64, order, i_weno)  
   
   ! NP is the number of data points, the second and the third argument is the min and max of coordinates
   ! set up the basic information for data: np, xmin, xmax, delta (mesh size), rdelta (reciprocal of delta)
@@ -97,6 +97,6 @@ program SLWENO_tester
   print *, 'average error at the nodes (single values) = '
   print *, accumulator1/real(NP,f64)
 
-  call delete_WENO_1D(sp1)
+  call delete(sp1)
  
 end program SLWENO_tester
