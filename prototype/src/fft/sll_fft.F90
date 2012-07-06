@@ -146,7 +146,7 @@
 !> In-place transform
 !> \code
 !> sll_int32, parameter :: n = 2**5
-!> sll_comp64, dimension(0,n) :: in
+!> sll_comp64, dimension(0,n-1) :: in
 !> type(sll_fft_plan), pointer  :: p
 !>
 !> !** INIT DATA **
@@ -190,6 +190,115 @@
 ! \warning let p = sll_get_index(i), if p is even data(i) is the real part of X_p, else if p is odd data(i) is the imaginary part of X_p
 !>
 !>
+!> \section acc Access the mode
+!> 
+!> To get the value of a mode call the function fft_get_mode(plan,data,num_mode)
+!>
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_comp64, dimension(0,n-1) :: in
+!> type(sll_fft_plan), pointer  :: p
+!> sll_comp64 :: mode
+!> sll_int32 :: k = 3
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,in,FFT_FORWARD,FFT_NORMALIZE)
+!> call fft_apply_plan(p,in,in)
+!> mode = fft_get_mode(plan,in,k)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_int32, parameter :: m = 2**3
+!> sll_comp64, dimension(n/2,m) :: in
+!> sll_real64, dimension(n,m) :: out
+!> type(sll_fft_plan), pointer  :: p
+!> sll_comp64 :: mode
+!> sll_int32 :: k=4, l=2
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,out,FFT_INVERSE)
+!> call fft_apply_plan(p,in,out)
+!> mode = fft_get_mode(plan,out,k,l)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_real64, dimension(0,n-1) :: in
+!> sll_real64, dimension(0,n-1) :: out
+!> type(sll_fft_plan), pointer  :: p
+!> sll_comp64 :: mode
+!> sll_int32 :: k = 3
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,out,FFT_FORWARD,FFT_NORMALIZE)
+!> call fft_apply_plan(p,in,out)
+!> mode = fft_get_mode(plan,out,k)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
+!>
+!>
+!>
+!> To set a mode call the subroutine fft_set_mode(plan,data,new_value,num_mode)
+!>
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_comp64, dimension(0,n-1) :: in
+!> type(sll_fft_plan), pointer  :: p
+!> sll_comp64 :: new_value
+!> sll_int32 :: k = 3
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,in,FFT_FORWARD,FFT_NORMALIZE)
+!> call fft_apply_plan(p,in,in)
+!> new_value = complex(5.0_f64,3.2_f64)
+!> call fft_set_mode(plan,in,new_value,k)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_int32, parameter :: m = 2**3
+!> sll_comp64, dimension(n/2,m) :: in
+!> sll_real64, dimension(n,m) :: out
+!> type(sll_fft_plan), pointer  :: p
+!> sll_comp64 :: new_value
+!> sll_int32 :: k=4, l=2
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,out,FFT_INVERSE)
+!> call fft_apply_plan(p,in,out)
+!> new_value = complex(5.0_f64,3.2_f64)
+!> call fft_set_mode(plan,out,new_value,k,l)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
+!> \code
+!> sll_int32, parameter :: n = 2**5
+!> sll_real64, dimension(0,n-1) :: in
+!> sll_real64, dimension(0,n-1) :: out
+!> type(sll_fft_plan), pointer  :: p
+!> sll_comp64 :: new_value
+!> sll_int32 :: k = 0
+!>
+!> !** INIT DATA **
+!>
+!> p => fft_new_plan(n,in,out,FFT_FORWARD,FFT_NORMALIZE)
+!> call fft_apply_plan(p,in,out)
+!> new_value = complex(5.0_f64,3.2_f64)
+!> call fft_set_mode(plan,out,new_value,k)
+!> call fft_delete_plan(p)
+!> \endcode
+!>
+!>
 !>
 !> \section what What sll_fft really computes
 !>
@@ -229,8 +338,9 @@ module sll_fft
 #include "sll_memory.h"
   use numeric_constants
   use sll_timer
+#ifndef _NOFFTW
   use, intrinsic :: iso_c_binding
-
+#endif
   implicit none
 #ifndef _NOFFTW
   include 'fftw3.f03'
@@ -278,8 +388,9 @@ module sll_fft
 !  end type fft_plan
 
   type sll_fft_plan
+#ifndef _NOFFTW
     type(C_PTR)                     :: fftw_plan
-
+#endif
     sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
     sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
     sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
@@ -324,13 +435,19 @@ module sll_fft
 #define SLLFFT_MOD 0
 #define FFTPACK_MOD 100
 
-!#define _DEFAULTFFTLIB SLLFFT_MOD
-!#define _NOFFTPACK
-!#define _NOFFTW
-
   interface bit_reverse
     module procedure bit_reverse_complex, bit_reverse_integer32, &
                      bit_reverse_integer64
+  end interface
+  
+  interface fft_get_mode
+     module procedure fft_get_mode_complx_1d, fft_get_mode_complx_2d, &
+                      fft_get_mode_complx_3d, fft_get_mode_real_1d
+  end interface
+
+  interface fft_set_mode
+     module procedure fft_set_mode_complx_1d, fft_set_mode_complx_2d, &
+                      fft_set_mode_complx_3d, fft_set_mode_real_1d
   end interface
 
 !----------------------------------------------------------------------------------
@@ -371,36 +488,38 @@ module sll_fft
 ! -----------------------------------------------
 
   interface fft_is_present_flag
-    module procedure fft_is_present_flag1,fft_is_present_flag2
+    module procedure fft_is_present_flag_in_plan,fft_is_present_flag_in_integer
   end interface
 
 contains
 
-  function fft_is_present_flag1(plan,s) result(bool)
+  ! Return NO if the flag is disabled in the plan or YES if enabled.
+  function fft_is_present_flag_in_plan(plan,flag) result(bool)
     type(sll_fft_plan), pointer, intent(in)     :: plan
-    sll_int32, intent(in)                   :: s
+    sll_int32, intent(in)                   :: flag
     logical                                 :: bool
     sll_int32                               :: m
    
-    SLL_ASSERT( is_power_of_two( int(s,kind=i64) ) )
+    SLL_ASSERT( is_power_of_two( int(flag,kind=i64) ) )
 
-    m = iand(plan%style,s)
-    if( m .eq. s ) then
+    m = iand(plan%style,flag)
+    if( m .eq. flag ) then
       bool = .true.
     else
       bool = .false.
     endif 
   end function
 
-  function fft_is_present_flag2(flags,s) result(bool)
-    sll_int32, intent(in)                   :: s, flags
+  ! Return NO if the flag (bit) is disabled in the integer or YES if enabled.
+  function fft_is_present_flag_in_integer(intege,bit) result(bool)
+    sll_int32, intent(in)                   :: bit, intege
     logical                                 :: bool
     sll_int32                               :: m
    
-    SLL_ASSERT( is_power_of_two( int(s,kind=i64) ) )
+    SLL_ASSERT( is_power_of_two( int(bit,kind=i64) ) )
 
-    m = iand(flags,s)
-    if( m .eq. s ) then
+    m = iand(intege,bit)
+    if( m .eq. bit ) then
       bool = .true.
     else
       bool = .false.
@@ -420,21 +539,164 @@ contains
     etendue = plan%problem_shape
   end function
 
-
-  function fft_get_mode(plan,array,k) result(mode)
-    type(sll_fft_plan), pointer    :: plan
-    sll_comp64, dimension(:)  :: array
-    sll_int32                 :: k
-    sll_comp64                :: mode
+  function fft_get_mode_complx_1d(plan,array,k) result(mode)
+    type(sll_fft_plan), pointer :: plan
+    sll_comp64, dimension(0:)   :: array
+    sll_int32                   :: k
+    sll_comp64                  :: mode
     mode = array(k)
   end function
 
-  function fft_get_index_mode_in_array(plan,array,i) result(k)
-    type(sll_fft_plan), pointer             :: plan
-    sll_comp64, dimension(:), optional :: array
-    sll_int32                          :: i, k
-    i = k
+  function fft_get_mode_complx_2d(plan,array,k,l) result(mode)
+    type(sll_fft_plan), pointer   :: plan
+    sll_comp64, dimension(0:,0:)  :: array
+    sll_int32                     :: k, l
+    sll_comp64                    :: mode
+    mode = array(k,l)
   end function
+
+  function fft_get_mode_complx_3d(plan,array,k,l,m) result(mode)
+    type(sll_fft_plan), pointer     :: plan
+    sll_comp64, dimension(0:,0:,0:) :: array
+    sll_int32                       :: k, l, m
+    sll_comp64                      :: mode
+    mode = array(k,l,m)
+  end function
+
+  function fft_get_mode_real_1d(plan,data,k) result(mode)
+    type(sll_fft_plan), pointer :: plan
+    sll_real64, dimension(0:)   :: data
+    sll_int32                   :: k, n_2, n
+    sll_comp64                  :: mode
+
+    if(fft_get_rank(plan) .ne. 1) then
+      print*,'Error in sll_fft.F90'
+      print*,'      in function fft_get_mode_real_1d'
+      print*,'      fata can be only 1d'
+      stop
+    endif
+
+    n = plan%problem_shape(1)
+    n_2 = n/2 !ishft(n,-1)
+
+    if(plan%library .eq. FFTPACK_MOD) then
+      if( k .eq. 0 ) then
+        mode = complex(data(0),0.0_f64)
+      else if( k .eq. n_2 ) then
+        mode = complex(data(n-1),0.0_f64)
+      else if( k .gt. n_2 ) then
+        mode = cmplx( data(2*(n-k)-1) , -data(2*(n-k)) ,kind=f64)
+      else
+        mode = complex( data(2*k-1) , data(2*k) )
+      endif
+    else if(plan%library .eq. SLLFFT_MOD) then
+      if( k .eq. 0 ) then
+        mode = complex(data(0),0.0_f64)
+      else if( k .eq. n_2 ) then
+        mode = complex(data(1),0.0_f64)
+      else if( k .gt. n_2 ) then
+        mode = complex( data(2*(n-k)) , -data(2*(n-k)+1) )
+      else
+        mode = complex( data(2*k) , data(2*k+1) )
+      endif
+    else if(plan%library .eq. FFTW_MOD) then
+      if( k .eq. 0 ) then
+        mode = complex(data(0),0.0_f64)
+      else if( k .eq. n_2 ) then
+        mode = complex(data(n_2),0.0_f64)
+      else if( k .gt. n_2 ) then
+        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
+        mode = complex( data(n-k) , -data(k) )
+      else
+        mode = complex( data(k) , data(n-k) )
+      endif
+    else
+      stop 'ERROR IN =fft_get_mode_real_1d= plan%library invalid'
+    endif
+  end function
+
+  subroutine fft_set_mode_complx_1d(plan,array,new_value,k)
+    type(sll_fft_plan), pointer :: plan
+    sll_comp64, dimension(0:)   :: array
+    sll_int32                   :: k
+    sll_comp64                  :: new_value
+    array(k) = new_value
+  end subroutine
+
+
+  subroutine fft_set_mode_complx_2d(plan,array,new_value,k,l)
+    type(sll_fft_plan), pointer :: plan
+    sll_comp64, dimension(0:,0:)   :: array
+    sll_int32                   :: k,l
+    sll_comp64                  :: new_value
+    array(k,l) = new_value
+  end subroutine
+
+
+  subroutine fft_set_mode_complx_3d(plan,array,new_value,k,l,m)
+    type(sll_fft_plan), pointer :: plan
+    sll_comp64, dimension(0:,0:,0:)   :: array
+    sll_int32                   :: k,l,m
+    sll_comp64                  :: new_value
+    array(k,l,m) = new_value
+  end subroutine
+
+  subroutine fft_set_mode_real_1d(plan,data,new_value,k)
+    type(sll_fft_plan), pointer :: plan
+    sll_real64, dimension(0:)   :: data
+    sll_int32                   :: k, n_2, n, index_mode
+    sll_comp64                  :: new_value
+
+    if(fft_get_rank(plan) .ne. 1) then
+      print*,'Error in sll_fft.F90'
+      print*,'      in function fft_set_mode_real_1d'
+      print*,'      data can be only 1d'
+      stop
+    endif
+
+    n = plan%problem_shape(1)
+    n_2 = n/2 !ishft(n,-1)
+
+    if(plan%library .eq. FFTPACK_MOD) then
+      if( k .eq. 0 ) then
+        data(0) = real(new_value,kind=f64)
+      else if( k .eq. n_2 ) then
+        data(n-1) = real(new_value,kind=f64)
+      else if( k .gt. n_2 ) then
+        data(2*(n-k)-1) = real(new_value,kind=f64)
+        data(2*(n-k)) = -dimag(new_value)
+      else
+        data(2*k-1) = real(new_value,kind=f64)
+        data(2*k) = dimag(new_value)
+      endif
+    else if(plan%library .eq. SLLFFT_MOD) then
+      if( k .eq. 0 ) then
+        data(0) = real(new_value,kind=f64)
+      else if( k .eq. n_2 ) then
+        data(1) = real(new_value,kind=f64)
+      else if( k .gt. n_2 ) then
+        data(2*(n-k)) = real(new_value,kind=f64)
+        data(2*(n-k)+1) = -dimag(new_value)
+      else
+        data(2*k) = real(new_value,kind=f64)
+        data(2*k+1) = dimag(new_value)
+      endif
+    else if(plan%library .eq. FFTW_MOD) then
+      if( k .eq. 0 ) then
+        data(0) = real(new_value,kind=f64)
+      else if( k .eq. n_2 ) then
+        data(n_2) = real(new_value,kind=f64)
+      else if( k .gt. n_2 ) then
+        data(n-k) = real(new_value,kind=f64)
+        data(k) = -dimag(new_value)
+      else
+        data(k) = real(new_value,kind=f64)
+        data(n-k) = dimag(new_value)
+      endif
+    else
+      stop 'ERROR IN =fft_set_mode_real_1d= plan%library invalid'
+    endif
+  end subroutine 
 
 #define INFO plan%fft_time_execution = time
 
@@ -1407,12 +1669,8 @@ INFO
     sll_comp64, dimension(0:,0:), intent(inout)         :: array_in
     sll_real64, dimension(0:,0:), intent(inout)         :: array_out
     sll_int32, optional, intent(in)                     :: flags
-    type(sll_fft_plan), pointer                             :: plan 
+    type(sll_fft_plan), pointer                         :: plan 
     sll_int32                                           :: ierr
-
-    if( .not. associated(plan)) then
-      stop 'ERROR IN fft_plan_c2r_2d'
-    endif
 
 #ifndef _NOFFTW 
     if(library .eq. FFTW_MOD) then
