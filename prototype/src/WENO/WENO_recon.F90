@@ -14,7 +14,7 @@ module WENO_recon
      sll_real64                                    :: rdelta   ! reciprocal of delta
      sll_real64, dimension(:), pointer  :: data     ! data for interpolation
      sll_int32                                      :: i_weno ! flag for weno or linear interpolation
-     sll_int32                                      :: order   ! order of interpolation	 
+     sll_int32                                      :: order   ! order of interpolation  
   end type WENO_recon_1D
   
   interface delete
@@ -25,14 +25,14 @@ contains  ! ****************************************************************
 
   function new_WENO_recon_1D(num_points, xmin, xmax, order, i_weno)
     
-    type(WENO_recon_1D), pointer                         :: new_WENO_recon_1D
-    sll_int32,  intent(in)                                      :: num_points
-    sll_real64, intent(in)                                      :: xmin
-    sll_real64, intent(in)                                      :: xmax	
-    sll_int32, intent(in)                                        :: order
-    sll_int32, intent(in)                                        :: i_weno	
-    sll_int32                                                   :: ierr  ! allows for an error code return in allocating memory
-    sll_int32                                                   :: i_temp
+    type(WENO_recon_1D), pointer          :: new_WENO_recon_1D
+    sll_int32,  intent(in)                :: num_points
+    sll_real64, intent(in)                :: xmin
+    sll_real64, intent(in)                :: xmax 
+    sll_int32, intent(in)                 :: order
+    sll_int32, intent(in)                 :: i_weno 
+    sll_int32                             :: ierr  ! allows for an error code return in allocating memory
+   
     SLL_ALLOCATE( new_WENO_recon_1D, ierr )
     new_WENO_recon_1D%xmin     = xmin
     new_WENO_recon_1D%xmax     = xmax
@@ -40,7 +40,7 @@ contains  ! ****************************************************************
     new_WENO_recon_1D%delta    = (xmax - xmin)/real((num_points),f64)
     new_WENO_recon_1D%rdelta   = 1.0_f64/new_WENO_recon_1D%delta
     new_WENO_recon_1D%order = order
-    new_WENO_recon_1D%i_weno = i_weno	
+    new_WENO_recon_1D%i_weno = i_weno 
     SLL_ALLOCATE(new_WENO_recon_1D%data(num_points), ierr)
     if( num_points .le. 28 ) then
        print *, 'ERROR, new_WENO_recon_1D: Because of the algorithm used, this function is meant to be used with arrays that are at least of size = 28'
@@ -62,29 +62,29 @@ contains  ! ****************************************************************
     sll_real64, dimension(1:num_points), intent(out)         ::  deri      ! derivatives of f 
 
     sll_real64, dimension(-6: num_points+6)        :: f_temp
-    sll_real64, dimension(0:num_points)            :: flux, flux_l, flux_r
+    sll_real64, dimension(0:num_points)            :: flux
     sll_real64                                     :: g1, g2, g3, smo1, smo2, smo3
-    sll_real64                                     :: w1, w2, w3, ww1, ww2, ww3, w
+    sll_real64                                     :: w1, w2, w3,  w
     sll_real64                                     :: eps 
     sll_int32                                      :: ic_temp               
     sll_int32                    ::  i_weno  ! indicator for weno reconstruction
-    sll_int32                   ::  order	 
+    sll_int32                   ::  order  
     eps = 1.d-8
     
-	if(.not.(fWENO%n_points.eq.num_points))then
-	write(*,*) 'size of f does not agree; check n_f!'
-	endif
-	 order = fWENO%order
-	 i_weno = fWENO%i_weno
-	   	
-	!!! copy data to f_temp with periodic b.c.
-	f_temp(1:num_points) = data(1:num_points)
+ if(.not.(fWENO%n_points.eq.num_points))then
+ write(*,*) 'size of f does not agree; check n_f!'
+ endif
+  order = fWENO%order
+  i_weno = fWENO%i_weno
+     
+ !!! copy data to f_temp with periodic b.c.
+ f_temp(1:num_points) = data(1:num_points)
     
     ! periodic b.c.
-	do ic_temp = 1, order 
-	f_temp(1-ic_temp) = f_temp(num_points+1-ic_temp)
-	f_temp(num_points+ic_temp) = f_temp(ic_temp)
-	enddo
+ do ic_temp = 1, order 
+ f_temp(1-ic_temp) = f_temp(num_points+1-ic_temp)
+ f_temp(num_points+ic_temp) = f_temp(ic_temp)
+ enddo
 
     ! WENO reconstruction
     ! 1st order    
@@ -96,7 +96,7 @@ contains  ! ****************************************************************
     ! third order
     elseif(order.eq.3)then
   
-	do ic_temp = 1, num_points
+ do ic_temp = 1, num_points
     g1 = -0.5_f64*f_temp(ic_temp-1) + 1.5_f64*f_temp(ic_temp)
     g2 = 0.5_f64*f_temp(ic_temp) + 0.5_f64*f_temp(ic_temp+1)
     smo1 = (f_temp(ic_temp-1) - f_temp(ic_temp))**2.0_f64
@@ -114,8 +114,8 @@ contains  ! ****************************************************************
     enddo
 
     ! fifth order   
-    elseif(order.eq.5)then	
-	do ic_temp = 1, num_points
+    elseif(order.eq.5)then 
+ do ic_temp = 1, num_points
     w1=.1_f64
      w2=.6_f64
      w3=.3_f64
@@ -144,7 +144,7 @@ contains  ! ****************************************************************
       w2=w2/w
       w3=1.0_f64-w1-w2
       flux(ic_temp)=w1*g1+w2*g2+w3*g3
-	enddo
+ enddo
     else
     write(*,*) 'other order options not available.'
     endif
