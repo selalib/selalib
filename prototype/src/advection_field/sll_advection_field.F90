@@ -61,7 +61,7 @@ contains
     sll_real64, intent(in)                              :: mass
     sll_real64, intent(in)                              :: charge
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), target              :: mesh
+    class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
 
     this%pmass = mass
