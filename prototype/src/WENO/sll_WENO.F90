@@ -27,7 +27,7 @@ contains  ! ****************************************************************
   function new_WENO_1D(num_points, xmin, xmax, order, i_weno)
     
     type(sll_WENO_1D), pointer                         :: new_WENO_1D
-    sll_int32,  intent(in)                                       :: num_points
+    sll_int32,  intent(in)                              :: num_points
     sll_real64, intent(in)                                      :: xmin
     sll_real64, intent(in)                                      :: xmax	
     sll_int32, intent(in)                                        :: order
