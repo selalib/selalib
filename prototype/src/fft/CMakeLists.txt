@@ -1,15 +1,31 @@
 
-IF(FFTW_FOUND)
+IF(FFTW_FOUND AND FFTW_ENABLED)
   add_library(fftw_module STATIC fftw_module.F90)
   target_link_libraries(fftw_module ${FFTW_LIBRARIES})
-  set(SRC_FILE sll_fft.F90 fftpack_lib.F90 fftw_lib.F90 my_lib.F90)
+  include_directories(${FFTW_INCLUDE_DIRS})
 ELSE()
-  set(SRC_FILE sll_fft.F90 fftpack_lib.F90 my_lib.F90)
+	add_definitions(-D_NOFFTW)
 ENDIF()
 
-set(SRC_FILE sll_fft.F90)
-add_library(sll_fft STATIC ${SRC_FILE})
-target_link_libraries(sll_fft ${FFT_ADD_MODULE})
+IF(NOT FFTPACK_ENABLED)
+	add_definitions(-D_NOFFTPACK)
+ENDIF()
+
+add_library(sll_fft STATIC sll_fft.F90)
+IF(FFTW_FOUND AND FFTW_ENABLED)
+	target_link_libraries(sll_fft fftw_module)
+ENDIF()
+IF(FFTPACK_ENABLED)
+	target_link_libraries(sll_fft fftpack_module)
+ENDIF()
+
 add_executable(test_fft unit_test.F90)
-target_link_libraries(test_fft sll_fft sll_utilities sll_timer sll_constants sll_memory sll_assertion)
+target_link_libraries(test_fft
+	sll_fft
+	sll_utilities
+	sll_timer
+	sll_constants
+	sll_memory
+	sll_assertion
+)
 
