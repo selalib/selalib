@@ -1,3 +1,0 @@
-Import('env')
-lib = env.Library('sll_distribution_function', ["sll_distribution_function.F90"])
-Return('lib')
