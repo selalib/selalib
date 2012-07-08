@@ -131,6 +131,7 @@ add_subdirectory(timer)
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
+add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
 	add_subdirectory(fftpack)
@@ -139,7 +140,6 @@ add_subdirectory(fft)
 #add_subdirectory(collective)
 #add_subdirectory(remap)
 add_subdirectory(interpolators)
-add_subdirectory(WENO)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
 add_subdirectory(ode_solvers)
@@ -154,14 +154,14 @@ IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(mgd3)
 ENDIF()
-
+add_subdirectory(LinRood)
 
 #add_subdirectory(maxwell_solvers)
 #add_subdirectory(poisson_solvers)
 #add_subdirectory(BSL)
 
 #add_subdirectory(CSL) don't compile error in SConstruct!
-#add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread!
+#add_subdirectory(quasi_neutral_solvers) #don't compile problem with fftw3_thread!
 
 ######################################################################
 #                              TESTS                                 #
