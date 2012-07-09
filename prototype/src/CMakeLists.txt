@@ -68,15 +68,15 @@ elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
 	set(CMAKE_Fortran_FLAGS " ")
 elseif(Fortran_COMPILER_NAME STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
-	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLE ON)
+	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLED ON)
 else()
 	message(STATUS "NO FORTRAN COMPILER FOUND")
 endif()
 
 
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLED OFF)
-ENDIF()
+#IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+#	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLED OFF)
+#ENDIF()
 
 # recherche de MPI
 IF( DEFINED ENV{MPI_ROOT} )
