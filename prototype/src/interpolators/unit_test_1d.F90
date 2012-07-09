@@ -46,7 +46,7 @@ program unit_test
   print*, 'Cubic spline interpolation'
   call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
   interp =>  spline 
-  out = interp%interpolate_array(n, data, interpolation_points)
+  call interp%interpolate_array_values(n, interpolation_points, out)
   error = 0.0_f64
   do i=1,n   
      error = max(error, abs(data_interp(i) - out(i)))

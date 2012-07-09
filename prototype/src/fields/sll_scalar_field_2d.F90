@@ -37,6 +37,7 @@ module sll_scalar_field_2d
   use sll_module_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   use sll_misc_utils
+  use sll_module_interpolators_1d_base
   implicit none
 
   enum, bind(C)
