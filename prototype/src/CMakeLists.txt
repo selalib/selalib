@@ -59,6 +59,26 @@ IF(FFTW_ENABLED)
 ENDIF(FFTW_ENABLED)
 ##########################################################
 
+##########################################################
+# add the cache entry PASTIX_ENABLED for enable/disable pastix
+set(PASTIX_ENABLED NO CACHE BOOL " ")
+
+# recherche le package PASTIX
+set(PASTIX ENABLED YES CACHE BOOL " ")
+IF(PASTIX_ENABLED)
+	IF( DEFINED ENV{PASTIX_ROOT} )
+		set(PASTIX_ROOT $ENV{PASTIX_ROOT})
+	ENDIF()
+	find_package(PASTIX QUIET)
+	IF(PASTIX_FOUND)
+		message(STATUS "PASTIX FOUND")
+	ELSE(PASTIX_FOUND)
+		message(STATUS "PASTIX NOT FOUND")
+		set(PASTIX_ENABLED NO)
+	ENDIF(PASTIX_FOUND)
+ENDIF(PASTIX_ENABLED)
+##########################################################
+
 add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
@@ -92,10 +112,6 @@ IF(MPI_FOUND)
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
 ENDIF(MPI_FOUND)
-
-IF(MPI_FOUND OR MPI_IBM_COMPILER_ENABLED)
-	set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF()
 
 # include's
 include_directories(fft remap poisson_solvers utilities memory assert precision fields) 

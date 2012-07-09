@@ -13,17 +13,25 @@ program vlaspois
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
-  sll_real64 :: w0, w, l10, l1, l20, l2, e, exact,maxi
+  sll_real64 :: w0, w, l10, l1, l20, l2, e
   sll_real64, dimension(:,:), pointer :: f, phi ,fdemi
   sll_real64, dimension(:,:,:), pointer :: grad_phi
   type(sll_fft_plan), pointer ::pfwd, pinv
+
+  sll_int32 :: mod
+  sll_real64 :: mode
+
+  !namelist /modes/ mod
+  mod=1
+  !read(*,NML=modes)
+  mode=real(mod,f64)
 
   rmin=0.2_f64
   rmax=0.8_f64
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=128
+  nr=64
   ntheta=64
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
@@ -31,22 +39,26 @@ program vlaspois
 
   !choose the way to define dt, tf and nb_step
   !the tree ways are equivalent
-
-  !definition of dt=tf/nb_step
+  !default
   tf=1.0_f64
+  dt=0.1_f64
   nb_step=10
-  dt=tf/real(nb_step,f64)
-  print*,'#dt=',dt
 
-!!$  !definition of nb_step=tf/dt
-!!$  dt=0.25_f64
-!!$  tf=200.0_f64
-!!$  nb_step=floor(tf/dt)
-!!$  print*,'#nb_step=',nb_step
+!!$  !definition of dt=tf/nb_step
+!!$  tf=1.0_f64
+!!$  nb_step=-1
+!!$  dt=tf/real(nb_step,f64)
+!!$  print*,'#dt=',dt
+
+  !definition of nb_step=tf/dt
+  dt=0.1_f64
+  tf=100.0_f64
+  nb_step=floor(tf/dt)
+  print*,'#nb_step=',nb_step
 
 !!$  !definition of tf=dt*nb_step
-!!$  nb_step=
-!!$  dt=
+!!$  nb_step=1
+!!$  dt=0.1_f64
 !!$  tf=dt*real(nb_step,f64)
 !!$  print*,'# tf=',tf
 
@@ -56,7 +68,7 @@ program vlaspois
 
   !initialization of FFT
   pfwd => fft_new_plan(ntheta,f(1,1:ntheta),f(1,1:ntheta),FFT_FORWARD,FFT_NORMALIZE)
-  pinv => fft_new_plan(ntheta,phi(1,1:ntheta),phi(1,1:ntheta),FFT_INVERSE,FFT_NORMALIZE)
+  pinv => fft_new_plan(ntheta,phi(1,1:ntheta),phi(1,1:ntheta),FFT_INVERSE)
 
   phi=0.0_f64
 
@@ -64,6 +76,7 @@ program vlaspois
   ! 1 : gaussienne in r, constant in theta
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
+  ! 4 : (gaussienne in r)*cos(theta)
   fcase=2
 
   !chose the way to calcul
@@ -98,11 +111,28 @@ program vlaspois
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta+1
            theta=real(j-1,f64)*dtheta
-           f(i,j)=-(r-rmin)*(r-rmax)/r**2*(-37*r**3*rmax+8*r**2*rmax**2 &
-                & -37*r**3*rmin+8*r**2*rmin**2-rmin**2*rmax**2+35*r**4 &
-                & +26*r**2*rmin*rmax-r*rmin**2*rmax-r*rmin*rmax**2)*cos(theta)
+           f(i,j)=-(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
+                & +(9.0_f64-mode**2)*r**2*(rmin**2+rmax**2)+(30.0_f64-4.0_f64*mode**2)*r**2*rmin*rmax &
+                & +(2.0_f64*mode**2-3.0_f64)*r*rmin*rmax*(rmin+rmax)-mode**2*rmin**2*rmax**2) &
+                & *cos(mode*theta)
         end do
      end do
+
+  else if (fcase==4) then
+     do i=1,nr+1
+        r=rmin+real(i-1,f64)*dr
+        do j=1,ntheta+1
+           theta=real(j-1,f64)*dtheta
+           f(i,j)=1.0_f64/(5.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/50.0_f64)*cos(theta)
+        end do
+     end do
+
+  else
+     print*,"f is not defined"
+     print*,'see line 76 of file selalib/prototype/src/simulation/VlasovPoisson.F90'
+     print*,'can not go any further'
+     print*,'exiting...'
+     stop
   end if
 
   !write f in a file before calculations
@@ -120,14 +150,13 @@ program vlaspois
 
   open(unit=23,file='thdiag.dat')
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
-  write(23,*)'#  t  //  w  //  l1  //  l2  //  e' 
+  write(23,*)'#   t   //   w   //   l1   //   l2   //   e' 
   w0=0.0_f64
   l10=0.0_f64
   l20=0.0_f64
   e=0.0_f64
   call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-  !phi=-phi
-  call compute_advection(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+  call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta
@@ -137,6 +166,7 @@ program vlaspois
         e=e+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
      end do
   end do
+
   w0=w0*dr*dtheta
   l10=l10*dr*dtheta
   l20=sqrt(l20*dr*dtheta)
@@ -144,11 +174,11 @@ program vlaspois
   write(23,*)0.0_f64,0.0_f64,0.0_f64,0.0_f64,e
 
   do step=1,nb_step
-     do k=1,ceiling(real(step)/10.0)
-        if (k*10==step) then
-           print*,'# step',step
-        end if
-     end do
+     k=step/10
+     if (k*10==step) then
+        print*,'# step',step
+        print*,'# temps', dt*real(step,f64)
+     end if
      !initialisation of weight (w), l1, l2 and energy (e)
      w=0.0_f64
      l1=0.0_f64
@@ -162,12 +192,17 @@ program vlaspois
      else if (scheme==2) then
         !semi-Lagrangian scheme with control
         call SL_controlled(dt,dr,dtheta,nr,ntheta,rmin,rmax,pfwd,pinv,f,fdemi,phi,grad_phi)
+
+        else
+           print*,'no scheme define'
+           print*,"the program won't do anything"
+           print*,'see line 85 of file selalib/prototype/src/simulation to solve the probleme'
      end if
 
      f(:,ntheta+1)=f(:,1)
      grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
      phi(:,ntheta+1)=phi(:,1)
-  
+
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta
@@ -186,9 +221,6 @@ program vlaspois
   end do
   close(23)
 
-  w0=0.0_f64
-  e=0._f64
-  maxi=0._f64
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
   do i=1,nr+1
@@ -197,19 +229,11 @@ program vlaspois
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        w0=max(w0,abs(phi(i,j)))
-        exact=(r-rmin)**3*(r-rmax)**3*cos(theta)
-        maxi=max(maxi,abs(exact))
-        write(21,*)r,theta,x,y,f(i,j),phi(i,j),exact
-        if(abs(exact-phi(i,j))>e)then
-          e = abs(exact-phi(i,j))
-        endif
+        write(21,*)r,theta,x,y,f(i,j),phi(i,j)
      end do
      write(21,*)' '
   end do
   close(21)
-  print*,'norme linf',w0,maxi
-  print*,'# error for phi=',e,e/w0,e/maxi
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
