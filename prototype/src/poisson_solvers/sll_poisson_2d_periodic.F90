@@ -201,7 +201,7 @@ end subroutine solve_e_fields
 
 subroutine wave_number_vectors(this)
 
-   type(poisson_2d_periodic) :: this
+   class(poisson_2d_periodic) :: this
    sll_int32  :: ik, jk
    sll_int32  :: nc_x, nc_y
    sll_real64 :: kx, ky, kx0, ky0
