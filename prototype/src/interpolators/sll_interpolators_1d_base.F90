@@ -12,7 +12,7 @@ module sll_module_interpolators_1d_base
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
           interpolate_value
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
-          interpolate_derivative
+          interpolate_derivative_eta1
      ! The following two are equivalent, and differ only by the type of
      ! the input and output data, one acts on 1d arrays, the other on 1d
      ! pointers. This is done for flexibility purposes.
@@ -110,8 +110,6 @@ module sll_module_interpolators_1d_base
        sll_real64, dimension(num_points)     :: res
      end function reconstruct_1d_array
   end interface
-
-contains
 
 
 end module sll_module_interpolators_1d_base

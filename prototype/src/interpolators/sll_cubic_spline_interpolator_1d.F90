@@ -14,7 +14,7 @@ use sll_splines
      procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
      procedure :: compute_interpolants => compute_interpolants_cs1d
      procedure :: interpolate_value => interpolate_value_cs1d
-     procedure :: interpolate_derivative => interpolate_deriv1_cs1d
+     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
      procedure :: interpolate_array_values => interpolate_values_cs1d
      procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
      procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
