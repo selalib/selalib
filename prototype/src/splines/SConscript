@@ -1,3 +1,0 @@
-Import('env')
-lib = env.Library('sll_splines', ["sll_splines.F90"])
-Return('lib')
