@@ -22,54 +22,45 @@ type (scalar_field_1d)     :: rho
 type (poisson_1d_periodic)         :: poisson
 
 sll_int32   :: nc_eta1
-sll_real64  :: delta_eta1
+sll_real64  :: eta1_min, eta1_max
 sll_int32   :: error
 sll_int32   :: mode
 sll_int32   :: i
 
 nc_eta1 = 128
 
-call initialize_mesh_1d_analytic( &
-    mesh_1d,           &
-    "mesh_1d",          &
-    nc_eta1 + 1,    &
-    linear_map_poisson_f,        &
-    linear_map_poisson_jac_f )
+call initialize_mesh_1d_analytic( mesh_1d, "mesh_1d",        &
+                                  nc_eta1 + 1,               &
+                                  linear_map_poisson_f,      &
+                                  linear_map_poisson_jac_f )
 
 call mesh_1d%write_to_file()
 m => mesh_1d
 
-call initialize_scalar_field_1d( &
-    rho, &
-    "rho", &
-    m, &
-    NODE_CENTERED_FIELD, &
-    linear_map_poisson_f)
+call initialize_scalar_field_1d( rho, "rho", &
+                                 m, NODE_CENTERED_FIELD, &
+                                 linear_map_poisson_f)
 
-call initialize_scalar_field_1d( &
-    ex, &
-    "ex", &
-    m, &
-    NODE_CENTERED_FIELD, &
-    linear_map_poisson_f)
+call initialize_scalar_field_1d( ex, "ex", &
+                                 m, NODE_CENTERED_FIELD, &
+                                 linear_map_poisson_f)
 
-call initialize_scalar_field_1d( &
-    ex_exact, &
-    "ex_exact", &
-    m, &
-    NODE_CENTERED_FIELD, &
-    linear_map_poisson_f)
+call initialize_scalar_field_1d( ex_exact, "ex_exact", &
+                                 m, NODE_CENTERED_FIELD, &
+                                 linear_map_poisson_f)
 
-call new(poisson, nc_eta1, error) 
 
 mode = 4
-delta_eta1 = mesh_1d%delta_eta1
 do i=1,nc_eta1+1
    rho%data(i)      =  mode**2*sin(mode*mesh_1d%x1_at_node(i))
    ex_exact%data(i) = -mode*cos(mode*mesh_1d%x1_at_node(i))
 end do
 
-call solve(poisson, ex, rho)
+eta1_min = mesh_1d%x1_at_node(1)
+eta1_max = mesh_1d%x1_at_node(nc_eta1+1)
+call poisson%initialize( eta1_min, eta1_max, nc_eta1, error) 
+
+call poisson%solve( ex%data, rho%data)
     
 print*,'mode=',mode,'   error=',maxval(abs(FIELD_DATA(ex)-FIELD_DATA(ex_exact)))
 

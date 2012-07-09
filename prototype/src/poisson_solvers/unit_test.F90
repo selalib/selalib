@@ -71,7 +71,7 @@ contains
     ex       => new_field_1D_vec1( geometry )
     ex_exact => new_field_1D_vec1( geometry )
 
-    call new(poisson, nc_eta1, error) 
+    call new(poisson, eta1_min, eta1_max, nc_eta1, error) 
 
     mode = 7
     delta_eta1 = geometry%delta_eta1
