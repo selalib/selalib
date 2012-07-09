@@ -1,3 +1,4 @@
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 set(COLLECTIVE_SRC sll_collective.F90)
 add_library(sll_collective STATIC ${COLLECTIVE_SRC})
 add_executable(test_collective unit_test.F90)

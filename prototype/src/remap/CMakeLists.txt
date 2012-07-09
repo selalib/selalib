@@ -1,3 +1,6 @@
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+
 set(REMAP_SRC sll_remap.F90)
 add_library(sll_remap STATIC ${REMAP_SRC})
 add_executable(test_remap unit_test.F90)
