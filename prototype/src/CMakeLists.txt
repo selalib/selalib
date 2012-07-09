@@ -3,11 +3,13 @@ enable_language (Fortran)
 cmake_minimum_required(VERSION 2.8)
 #INCLUDE(CMakeForceCompiler)
 
+# Determine how-to install the modules
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+# Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-#ajoute les modules locaux
-set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
+# Add new directory to find the FIND<PACKAGE>.cmake files
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
@@ -17,6 +19,40 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 ##########################################################
+# Try to determine the compiler
+try_run(RUN_RESULT_VAR
+	COMPILE_RESULT_VAR
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/check_compiler.F90
+)
+
+# COMPILE_RESULT_VAR is set to true if try_run succeed
+# RUN_RESULT_VAR is a string that represent the exit status
+# message(STATUS "TRY_RUN_STATUS : ${COMPILE_RESULT_VAR}, EXIT_STATUS : ${RUN_RESULT_VAR}")
+
+set(NO_FORTRAN_2003 NO)
+IF(COMPILE_RESULT_VAR)
+	IF(${RUN_RESULT_VAR} STREQUAL 20 )
+		message(STATUS "COMPILER IS GNU, FORTRAN 2003 NOT SUPPORTED")
+		set(Fortran_COMPILER "GFORTRAN")
+		set(NO_FORTRAN_2003 YES)
+		add_definitions(-DNOF03SUPPORT)
+	ELSEIF(${RUN_RESULT_VAR} STREQUAL 21 )
+		message(STATUS "COMPILER IS GNU, FORTRAN 2003 SUPPORTED")
+		set(Fortran_COMPILER "GFORTRAN")
+	ELSEIF(${RUN_RESULT_VAR} STREQUAL 30 )
+		message(STATUS "COMPILER IS INTEL, FORTRAN 2003 NOT SUPPORTED")
+		set(NO_FORTRAN_2003 YES)
+		set(Fortran_COMPILER "INTEL")
+	ELSEIF(${RUN_RESULT_VAR} STREQUAL 31 )
+		message(STATUS "COMPILER IS INTEL, FORTRAN 2003 SUPPORTED")
+		set(Fortran_COMPILER "INTEL")
+	ENDIF()
+ELSE()
+	message(STATUS "IMPOSSIBLE TO DETERMINE WHICH COMPILER IS USED")
+ENDIF()
+##########################################################
+
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED YES CACHE BOOL " ")
 
@@ -51,7 +87,8 @@ IF(FFTW_ENABLED)
 	ENDIF()
 	find_package(FFTW QUIET)
 	IF(FFTW_FOUND)
-		message(STATUS "FFTW FOUND")
+		message(STATUS "FFTW FOUND")	
+  		include_directories(${FFTW_INCLUDE_DIRS})
 	ELSE(FFTW_FOUND)
 		message(STATUS "FFTW NOT FOUND")
 		set(FFTW_ENABLED NO)
@@ -82,21 +119,19 @@ ENDIF(PASTIX_ENABLED)
 add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-if(Fortran_COMPILER_NAME STREQUAL "gfortran")
+IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
-elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
+ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS " ")
-elseif(Fortran_COMPILER_NAME STREQUAL "xlf")
+ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
 	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLED ON)
 else()
 	message(STATUS "NO FORTRAN COMPILER FOUND")
-endif()
+ENDIF()
 
-
-#IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-#	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLED OFF)
-#ENDIF()
+#add flag to disabled MPI stuff for debug
+set(DISABLED_MPI_MODULE NO CACHE BOOL " ")
 
 # recherche de MPI
 IF( DEFINED ENV{MPI_ROOT} )
@@ -132,11 +167,12 @@ else(DOXYGEN_FOUND)
    MESSAGE(STATUS "DOXYGEN NOT FOUND")
 endif(DOXYGEN_FOUND)
 
-
 set(FISHPACK_ENABLED CACHE BOOL OFF)
 set(MUDPACK_ENABLED CACHE BOOL OFF)
 
 
+#low-level
+set(LOW_LEVEL_LIST_DIR memory precision assert constants utilities low_level_file_io timer)
 add_subdirectory(memory)
 add_subdirectory(precision)
 add_subdirectory(assert)
@@ -144,40 +180,57 @@ add_subdirectory(constants)
 add_subdirectory(utilities)
 add_subdirectory(low_level_file_io)
 add_subdirectory(timer)
+
+#mid-level
+set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integration fftpack fft collective remap WENO )#poisson_solvers)
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
 	add_subdirectory(fftpack)
+ELSE()
+	LIST(REMOVE_ITEM MID_LEVEL_LIST_DIR fftpack)
 ENDIF()
 add_subdirectory(fft)
-add_subdirectory(collective)
-add_subdirectory(remap)
-add_subdirectory(interpolators)
+IF(NOT DISABLED_MPI_MODULE)
+  add_subdirectory(collective)
+  add_subdirectory(remap)
+ENDIF()
 add_subdirectory(WENO)
+add_subdirectory(poisson_solvers)
+
+#hight-level
+add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
 add_subdirectory(ode_solvers)
-add_subdirectory(poisson_solvers)
 add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
 add_subdirectory(simulation)
 IF(FISHPACK_ENABLED)
 	add_subdirectory(fishpack)
 ENDIF()
+
+
+
 IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(mgd3)
 ENDIF()
 
 
-#add_subdirectory(maxwell_solvers)
-#add_subdirectory(poisson_solvers)
-#add_subdirectory(BSL)
+#add_subdirectory(maxwell_solvers) #use old mesh_types 
+#add_subdirectory(BSL) top
+#add_subdirectory(CSL) don't compile error in SConstruct! top
+#add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 
-#add_subdirectory(CSL) don't compile error in SConstruct!
-#add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread!
+
+
+add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
+#add_custom_target(install make selalib_low_level)
+
+
 
 ######################################################################
 #                              TESTS                                 #
@@ -232,6 +285,7 @@ add_test(fields fields/test_scalar_field)
 add_test(ode_solvers ode_solvers/test_implicit_ode_nonuniform)
 add_test(distribution_function distribution_function/test_distribution_function)
 add_test(advection_field advection_field/test_advection_field)
+
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
