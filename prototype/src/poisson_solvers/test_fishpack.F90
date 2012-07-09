@@ -23,14 +23,14 @@ m = 40; n = 80
 mp1 = m + 1; np1 = n + 1
 xs =  0.; xf =  2.; ys = -1.; yf =  3.
 allocate(f_2d(mp1,np1)); f_2d = 0.0
-call test_cartesian_2d(f_2d,xs,xf,m,ys,yf,n)
+call test_cartesian_2d(f_2d,xs,xf,m,2,ys,yf,n,0)
 
 
 m = 50; n = 48
 mp1 = m + 1; np1 = n + 1
 xs = 0.; xf = 1.; ys = 0.; yf = 0.5*pi
 allocate(f_polar(mp1,np1)); f_2d = 0.0
-call test_polar_2d(f_polar,xs,xf,m,ys,yf,n)
+call test_polar_2d(f_polar,xs,xf,m,5,ys,yf,n,3)
 
 xs = 0.; xf = 1.
 ys = 0.; yf = 2.*pi
@@ -40,7 +40,7 @@ m = 40
 n = 15
 
 allocate(f_3d(l+1,m+1,n+1)); f_3d = 0.0
-call test_cartesian_3d(f_3d,xs,xf,l,ys,yf,m,zs,zf,n)
+call test_cartesian_3d(f_3d,xs,xf,l,1,ys,yf,m,0,zs,zf,n,2)
 
 deallocate(f_2d)
 deallocate(f_polar)
@@ -48,10 +48,12 @@ deallocate(f_3d)
 
 contains
 
-subroutine test_cartesian_2d(field, eta1_min, eta1_max, nc_eta1, &
-                            eta2_min, eta2_max, nc_eta2)
+subroutine test_cartesian_2d(field,                               &
+                             eta1_min, eta1_max, nc_eta1, bc_eta1, &
+                             eta2_min, eta2_max, nc_eta2, bc_eta2  )
 implicit none
 integer, intent(in)                     :: nc_eta1, nc_eta2
+integer, intent(in)                     :: bc_eta1, bc_eta2 
 real(8), dimension(nc_eta1+1,nc_eta2+1) :: field
 real(8), dimension(nc_eta1+1)           :: eta1
 real(8), dimension(nc_eta2+1)           :: eta2
@@ -61,11 +63,11 @@ real(8), intent(in)                     :: eta2_min, eta2_max
 type(fishpack_2d) :: poisson
 
 call poisson%initialize(CARTESIAN_2D, &
-         eta1_min, eta1_max, nc_eta1, &
-         eta2_min, eta2_max, nc_eta2  )
+         eta1_min, eta1_max, nc_eta1, bc_eta1,&
+         eta2_min, eta2_max, nc_eta2, bc_eta2  )
 
-poisson%mbdcnd = 2
-poisson%nbdcnd = 0
+poisson%bc_eta1 = bc_eta1
+poisson%bc_eta2 = bc_eta2
 poisson%elmbda = -4.
 
 !     generate and store grid points for the purpose of computing
@@ -118,10 +120,12 @@ write (*, *) '    ierror =', poisson%error, ' discretization error = ', err
 
 end subroutine test_cartesian_2d
 
-subroutine test_polar_2d(field, eta1_min, eta1_max, nc_eta1, &
-                        eta2_min, eta2_max, nc_eta2)
+subroutine test_polar_2d(field, &
+                         eta1_min, eta1_max, nc_eta1, bc_eta1,&
+                         eta2_min, eta2_max, nc_eta2, bc_eta2)
 implicit none
 integer, intent(in)                     :: nc_eta1, nc_eta2
+integer, intent(in)                     :: bc_eta1, bc_eta2
 real(8), dimension(nc_eta1+1,nc_eta2+1) :: field
 real(8), dimension(nc_eta1+1)           :: eta1
 real(8), dimension(nc_eta2+1)           :: eta2
@@ -156,11 +160,9 @@ type(fishpack_2d) :: poisson
 !-------------------------------------------------------------------------!
 
 call poisson%initialize(POLAR_2D, &
-         eta1_min, eta1_max, nc_eta1, &
-         eta2_min, eta2_max, nc_eta2  )
+         eta1_min, eta1_max, nc_eta1, bc_eta1,&
+         eta2_min, eta2_max, nc_eta2, bc_eta2   )
 
-poisson%mbdcnd = 5
-poisson%nbdcnd = 3
 poisson%elmbda = 0.
 
 do i = 1, nc_eta1+1
@@ -205,13 +207,14 @@ end subroutine test_polar_2d
 
 
 subroutine test_cartesian_3d(field, &
-                             eta1_min, eta1_max, nc_eta1, &
-                             eta2_min, eta2_max, nc_eta2, &
-                             eta3_min, eta3_max, nc_eta3 )
+                             eta1_min, eta1_max, nc_eta1, bc_eta1,&
+                             eta2_min, eta2_max, nc_eta2, bc_eta2,&
+                             eta3_min, eta3_max, nc_eta3, bc_eta3)
 
 implicit none
 
 integer, intent(in)                     :: nc_eta1, nc_eta2, nc_eta3
+integer, intent(in)                     :: bc_eta1, bc_eta2, bc_eta3
 real(8), intent(in)                     :: eta1_min, eta1_max
 real(8), intent(in)                     :: eta2_min, eta2_max
 real(8), intent(in)                     :: eta3_min, eta3_max
@@ -226,14 +229,11 @@ real(8) , allocatable, dimension(:) :: eta3
 real(8) :: t, delta_eta1, delta_eta2, delta_eta3
 
 call poisson%initialize(CARTESIAN_3D,     &
-         eta1_min,eta1_max,nc_eta1, &
-         eta2_min,eta2_max,nc_eta2, &
-         eta3_min,eta3_max,nc_eta3  )
+         eta1_min, eta1_max, nc_eta1, bc_eta1,&
+         eta2_min, eta2_max, nc_eta2, bc_eta2,&
+         eta3_min, eta3_max, nc_eta3, bc_eta3)
  
 poisson%elmbda = -3.
-poisson%lbdcnd = 1
-poisson%mbdcnd = 0
-poisson%nbdcnd = 2
 
 delta_eta1 = (eta1_max - eta1_min)/float(nc_eta1)
 allocate(eta1(nc_eta1+1))
