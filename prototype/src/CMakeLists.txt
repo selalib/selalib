@@ -8,6 +8,8 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 # Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${sll_BINARY_DIR}/bin")
+
 # Add new directory to find the FIND<PACKAGE>.cmake files
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
