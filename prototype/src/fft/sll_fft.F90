@@ -581,34 +581,34 @@ contains
 
     if(plan%library .eq. FFTPACK_MOD) then
       if( k .eq. 0 ) then
-        mode = complex(data(0),0.0_f64)
+        mode = cmplx(data(0),0.0_f64,kind=f64)
       else if( k .eq. n_2 ) then
-        mode = complex(data(n-1),0.0_f64)
+        mode = cmplx(data(n-1),0.0_f64,kind=f64)
       else if( k .gt. n_2 ) then
         mode = cmplx( data(2*(n-k)-1) , -data(2*(n-k)) ,kind=f64)
       else
-        mode = complex( data(2*k-1) , data(2*k) )
+        mode = cmplx( data(2*k-1) , data(2*k) ,kind=f64)
       endif
     else if(plan%library .eq. SLLFFT_MOD) then
       if( k .eq. 0 ) then
-        mode = complex(data(0),0.0_f64)
+        mode = cmplx(data(0),0.0_f64,kind=f64)
       else if( k .eq. n_2 ) then
-        mode = complex(data(1),0.0_f64)
+        mode = cmplx(data(1),0.0_f64,kind=f64)
       else if( k .gt. n_2 ) then
-        mode = complex( data(2*(n-k)) , -data(2*(n-k)+1) )
+        mode = cmplx( data(2*(n-k)) , -data(2*(n-k)+1),kind=f64 )
       else
-        mode = complex( data(2*k) , data(2*k+1) )
+        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)
       endif
     else if(plan%library .eq. FFTW_MOD) then
       if( k .eq. 0 ) then
-        mode = complex(data(0),0.0_f64)
+        mode = cmplx(data(0),0.0_f64,kind=f64)
       else if( k .eq. n_2 ) then
-        mode = complex(data(n_2),0.0_f64)
+        mode = cmplx(data(n_2),0.0_f64,kind=f64)
       else if( k .gt. n_2 ) then
         !mode = complex( data(k-n_2) , -data(n-k+n_2) )
-        mode = complex( data(n-k) , -data(k) )
+        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
       else
-        mode = complex( data(k) , data(n-k) )
+        mode = cmplx( data(k) , data(n-k) ,kind=f64)
       endif
     else
       stop 'ERROR IN =fft_get_mode_real_1d= plan%library invalid'
