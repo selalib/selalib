@@ -11,6 +11,7 @@ module polar_advection
 !!$  type data
 !!$     sll_real64 :: dt, dr, dtheta
 !!$     sll_real64 :: r_min, r_max
+!!$     sll_int32 :: nr, ntheta
 !!$  end type data
 
 contains
@@ -25,6 +26,10 @@ contains
   !>a = grad(phi), size 2X(nr+1)X(ntheta+1)
   !>a(1,i,j) = d_r(phi)(r_i,theta_j)
   !>a(2,i,j) = d_theta(phi)(r_i,theta_j)
+  !>
+  !>warning :
+  !>the user may need to know the path to this routine if the way to compute grad
+  !>is not defined
   subroutine compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,a)
 
     implicit none
@@ -35,12 +40,14 @@ contains
     sll_real64, dimension(:,:,:), intent(out), pointer :: a
 
     sll_int32 :: i,j,calculus
-    sll_real64 :: r,theta,x,y
+    sll_real64 :: r
 
     ! way to compute a
     ! 1 : center for r and theta
     !     decenter on boundaries
-    calculus = 1
+    ! 2 : center for r, decenter on boundaries
+    !     using fft for theta
+    calculus = 2
 
     if (calculus==1) then
        ! center formula for r end theta
@@ -54,26 +61,32 @@ contains
           end do
        end do
        do j=1,ntheta
-          a(1,1,j)=(phi(2,j)-phi(1,j))/(2*dr)
-          a(1,nr+1,j)=(phi(nr,j)-phi(nr-1,j))/(2*dr)
+          a(1,1,j)=(phi(2,j)-phi(1,j))/dr
+          a(1,nr+1,j)=(phi(nr+1,j)-phi(nr,j))/dr
           a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
           a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
        end do
+       
+    else if (calculus==2) then
+       do i=2,nr
+          r=rmin+real(i-1,f64)*dr
+          a(1,i,:)=(phi(i+1,:)-phi(i-1,:))/(2*dr)
+       end do
+       do j=1,ntheta
+          a(1,1,j)=(phi(2,j)-phi(1,j))/dr
+          a(1,nr+1,j)=(phi(nr+1,j)-phi(nr,j))/dr
+       end do
+
+       call derivate_fft(nr,ntheta,phi,a)
+
+    else
+       print*,'no choosen way to compute grad'
+       print*,'see line 46 of file selalib/prototype/src/simulation/sll_advection_polar.F90'
+       print*,'initializing grad to 0'
+       a=0.0_f64
     end if
 
     a(:,:,ntheta+1)=a(:,:,1)
-
-    open(unit=22,file='phi.dat')
-    do i=1,nr+1
-       r=rmin+real(i-1,f64)*dr
-       do j=1,ntheta+1
-          theta=real(j-1,f64)*2.0_f64*sll_pi
-          x=r*cos(theta)
-          y=r*sin(theta)
-          write (22,*)x,y,a(1,i,j),a(2,i,j)
-       end do
-    end do
-    close(22)
 
   end subroutine compute_grad_field
 
@@ -138,18 +151,8 @@ contains
                 theta=theta+dt
              end if
 
-             !correction of r
-             if (r>rmax) then
-                r=rmax
-             else if (r<rmin) then
-                r=rmin
-             end if
-             !correction of theta
-             if (theta<0.0_f64) then
-                theta=theta+2*sll_pi
-             else if (theta>2*sll_pi) then
-                theta=theta-2*sll_pi
-             end if
+             call correction_r(r,rmin,rmax)
+             call correction_theta(theta)
 
              f(i,j)=interpolate_value_2D(r,theta,spl_f)
 
@@ -187,7 +190,7 @@ contains
     type(sll_fft_plan), intent(in), pointer ::pfwd, pinv
 
     sll_int32 :: i,j,err
-    sll_real64 :: r,theta
+    sll_real64 :: r,theta,rr,ttheta
     sll_real64, dimension(:,:), pointer :: r1,r2,r3,r4, theta1,theta2,theta3,theta4
     sll_real64, dimension(:,:), pointer :: fcopie, phicopie
     sll_real64, dimension(:,:,:), pointer :: a
@@ -230,28 +233,20 @@ contains
     end do
     theta1(:,:)=-dt*a(1,:,:)
 
+    !print*,'step 1 of rk4 ok'
+
     !2nd step of RK4
     do i=1,nr+1
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
           theta=real(j-1,f64)*dtheta
-          r3(i,j)=r-dt/2.0_f64*a(2,i,j)/r
-          theta3(i,j)=theta+dt/2.0_f64*a(1,i,j)
+          r2(i,j)=r-dt/2.0_f64*a(2,i,j)/r
+          theta2(i,j)=theta+dt/2.0_f64*a(1,i,j)
 
-          !correction of r
-          if (r3(i,j)>rmax) then
-             r3(i,j)=rmax
-          else if (r3(i,j)<rmin) then
-             r3(i,j)=rmin
-          end if
-          !correction of theta
-          if (theta3(i,j)>2.0_f64*sll_pi) then
-             theta3(i,j)=theta3(i,j)-2.0_f64*sll_pi
-          else if (theta3(i,j)<0.0_f64) then
-             theta3(i,j)=theta3(i,j)+2.0_f64*sll_pi
-          end if
+          call correction_r(r2(i,j),rmin,rmax)
+          call correction_theta(theta2(i,j))
 
-          fcopie(i,j)=interpolate_value_2D(r3(i,j),theta3(i,j),spl_f)
+          fcopie(i,j)=interpolate_value_2D(r2(i,j),theta2(i,j),spl_f)
        end do
     end do
 
@@ -264,22 +259,35 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          r2(i,j)=interpolate_value_2d(r3(i,j)+r1(i,j)/2.0_f64,theta3(i,j)+theta1(i,j)/2.0_f64,spl_a2)* &
-               & dt/(r3(i,j)+r1(i,j)/2.0_f64)
-          theta2(i,j)=-interpolate_value_2d(r3(i,j)+r1(i,j)/2.0_f64,theta3(i,j)+theta1(i,j)/2.0_f64,spl_a2)*dt
+
+          call correction_r(r2(i,j),rmin,rmax)
+          call correction_theta(theta2(i,j))
+
+          rr=r2(i,j)
+          r2(i,j)=interpolate_value_2d(r2(i,j),theta2(i,j),spl_a2)*dt
+          theta2(i,j)=-interpolate_value_2d(rr,theta2(i,j),spl_a1)*dt
        end do
     end do
 
+    !print*,'step 2 of rk4 ok'
+
     !3rd step of RK4
-    !fcopie, phicopie and a already at t+dt/2
-    !r and theta already at t+dt/2
     do i=1,nr+1
        do j=1,ntheta+1
-          r3(i,j)=interpolate_value_2d(r3(i,j)+r2(i,j)/2.0_f64,theta3(i,j)+theta2(i,j)/2.0_f64,spl_a2)* &
-               & dt/(r3(i,j)+r2(i,j)/2.0_f64)
-          theta3(i,j)=-interpolate_value_2d(r3(i,j)+r2(i,j)/2.0_f64,theta3(i,j)+theta2(i,j)/2.0_f64,spl_a2)*dt
+          rr=r3(i,j)+r2(i,j)/2.0_f64
+          ttheta=theta3(i,j)+theta2(i,j)/2.0_f64
+
+          !correction of r
+
+          call correction_r(rr,rmin,rmax)
+          call correction_theta(ttheta)
+
+          r3(i,j)=interpolate_value_2d(rr,ttheta,spl_a2)*dt/rr
+          theta3(i,j)=-interpolate_value_2d(rr,ttheta,spl_a1)*dt
        end do
     end do
+
+    !print*,'step 3 of rk4 ok'
 
     !4th step of RK4
     fcopie=f
@@ -291,18 +299,8 @@ contains
           r4(i,j)=r-dt*a(2,i,j)/r
           theta4(i,j)=theta+dt*a(1,i,j)
 
-          !correction of r
-          if (r4(i,j)>rmax) then
-             r4(i,j)=rmax
-          else if (r4(i,j)<rmin) then
-             r4(i,j)=rmin
-          end if
-          !correction of theta
-          if (theta4(i,j)>2.0_f64*sll_pi) then
-             theta4(i,j)=theta4(i,j)-2.0_f64*sll_pi
-          else if (theta4(i,j)<0.0_f64) then
-             theta4(i,j)=theta4(i,j)+2.0_f64*sll_pi
-          end if
+          call correction_r(r4(i,j),rmin,rmax)
+          call correction_theta(theta4(i,j))
 
           fcopie(i,j)=interpolate_value_2D(r4(i,j),theta4(i,j),spl_f)
        end do
@@ -317,14 +315,39 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          r4(i,j)=interpolate_value_2d(r4(i,j)+r3(i,j),theta4(i,j)+theta3(i,j),spl_a2)* &
-               & dt/(r4(i,j)+r3(i,j))
-          theta3(i,j)=-interpolate_value_2d(r4(i,j)+r3(i,j),theta4(i,j)+theta3(i,j),spl_a2)*dt
+          rr=r4(i,j)+r3(i,j)
+          ttheta=theta4(i,j)+theta3(i,j)
+
+          call correction_r(rr,rmin,rmax)
+          call correction_theta(ttheta)
+
+          r4(i,j)=interpolate_value_2d(rr,ttheta,spl_a2)*dt/rr
+          theta4(i,j)=-interpolate_value_2d(rr,ttheta,spl_a1)*dt
        end do
     end do
 
+    !print*,'step 4 of rk4 ok'
+
     !sommation
-    f=f+r1/6.0_f64+r2/3.0_f64+r3/3.0_f64+r4/6.0_f64
+    do i=1,nr+1
+       r=rmin+real(i-1,f64)*dr
+       do j=1,ntheta+1
+          theta=real(j-1,f64)*dtheta
+          r1(i,j)=r+r1(i,j)/6.0_f64+r2(i,j)/3.0_f64+r3(i,j)/3.0_f64+r4(i,j)/6.0_f64
+          theta1(i,j)=theta+theta1(i,j)/6.0_f64+theta2(i,j)/3.0_f64+theta3(i,j)/3.0_f64+theta4(i,j)/6.0_f64
+
+          call correction_r(r1(i,j),rmin,rmax)
+          call correction_theta(theta1(i,j))
+       end do
+    end do
+
+    do i=1,nr+1
+       do j=1,ntheta+1
+          f(i,j)=interpolate_value_2d(r1(i,j),theta1(i,j),spl_f)
+       end do
+    end do
+
+    !print*,'end of rk4 ok'
 
     call delete_spline_2d(spl_f)
     call delete_spline_2d(spl_a1)
@@ -404,5 +427,44 @@ contains
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
 
   end subroutine SL_controlled
+
+
+  !> subroutine correction_r(r,rmin,rmax)
+  !> correction of r to stay in the domain
+  !> r : value tu corret
+  !> rmin and rmax : boundaries of the domain
+  subroutine correction_r(r,rmin,rmax)
+
+    implicit none
+
+    sll_real64, intent(in) :: rmin,rmax
+    sll_real64, intent(inout) :: r
+
+    if (r>rmax) then
+       r=rmax
+    else if (r<rmin) then
+       r=rmin
+    end if
+
+  end subroutine correction_r
+
+
+  !> subroutine correction_theta(theta)
+  !> correction of theta to stay in [0;2pi]
+  !> theta : angle to correct
+  subroutine correction_theta(theta)
+
+    implicit none
+
+    sll_real64, intent(inout) :: theta
+
+    do while (theta>2.0_f64*sll_pi)
+       theta=theta-2.0_f64*sll_pi
+    end do
+    do while (theta<0.0_f64)
+       theta=theta+2.0_f64*sll_pi
+    end do
+
+  end subroutine correction_theta
 
 end module polar_advection
