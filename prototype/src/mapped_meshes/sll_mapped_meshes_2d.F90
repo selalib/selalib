@@ -5,6 +5,9 @@ module sll_module_mapped_meshes_2d
   use sll_splines
   use sll_module_mapped_meshes_2d_base
   use sll_module_interpolators_2d_base
+#ifdef NOF03SUPPORT
+  use sll_cubic_spline_interpolator_2d
+#endif
   implicit none
   
   ! ---------------------------------------------------------------------
@@ -65,6 +68,9 @@ module sll_module_mapped_meshes_2d
      procedure, pass(mesh) :: x2         => x2_analytic
      procedure, pass(mesh) :: jacobian   => jacobian_2d_analytic
      procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_analytic
+#ifdef NOF03SUPPORT
+     procedure, pass :: write_to_file => write_to_file_2d_analytic
+#endif
   end type sll_mapped_mesh_2d_analytic
   
   type, extends(sll_mapped_mesh_2d_base)::sll_mapped_mesh_2d_discrete
@@ -73,8 +79,13 @@ module sll_module_mapped_meshes_2d
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
+#ifndef NOF03SUPPORT
      class(interpolator_2d_base), pointer                   :: x1_interp
      class(interpolator_2d_base), pointer                   :: x2_interp
+#else
+     type(cubic_spline_2d_interpolator), pointer            :: x1_interp
+     type(cubic_spline_2d_interpolator), pointer            :: x2_interp
+#endif
 !procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_discrete
@@ -88,6 +99,9 @@ module sll_module_mapped_meshes_2d
      procedure, pass(mesh) :: jacobian_at_cell => jacobian_2d_cell_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
      procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_discrete
+#ifdef NOF03SUPPORT
+     procedure, pass :: write_to_file => write_to_file_2d_discrete
+#endif
   end type sll_mapped_mesh_2d_discrete
 
   abstract interface
@@ -342,6 +356,65 @@ contains
     jacobian_2d_cell_analytic = mesh%jacobians_c(i,j)
   end function jacobian_2d_cell_analytic
 
+#ifdef NOF03SUPPORT
+  subroutine write_to_file_2d_analytic(mesh,output_format)
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_int32, optional :: output_format 
+    sll_int32           :: local_format 
+    sll_real64, dimension(:,:), pointer :: x1mesh
+    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_int32  :: i1
+    sll_int32  :: i2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32  :: ierr
+    sll_int32  :: file_id
+
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
+
+    if ( .not. mesh%written ) then
+
+       select case(local_format)
+
+       case (SLL_IO_XDMF)
+          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          eta1 = 0.0_f64
+          do i1=1, mesh%nc_eta1+1
+             eta2 = 0.0_f64
+             do i2=1, mesh%nc_eta2+1
+                x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
+                x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
+                eta2 = eta2 + mesh%delta_eta2 
+             end do
+             eta1 = eta1 + mesh%delta_eta1
+          end do
+       
+          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
+               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
+          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
+
+       case default
+          print*, 'Not recognized format to write this mesh'
+          stop
+
+       end select
+
+    else
+
+       print*,' Warning, you have already written the mesh '
+
+    end if
+
+    mesh%written = .true.
+  end subroutine
+#endif
 
   !**************************************************************************
   !
@@ -386,7 +459,11 @@ contains
     class(sll_mapped_mesh_2d_discrete) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+#ifndef NOF03SUPPORT
     val = mesh%x1_interp%interpolate_value(eta1, eta2)
+#else
+    val = interpolate_value_f95(mesh%x1_interp,eta1, eta2)
+#endif
   end function x1_discrete
 
   function x2_discrete( mesh, eta1, eta2 ) result(val)
@@ -394,7 +471,11 @@ contains
     class(sll_mapped_mesh_2d_discrete) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+#ifndef NOF03SUPPORT
     val = mesh%x2_interp%interpolate_value(eta1, eta2)
+#else
+    val = interpolate_value_f95(mesh%x2_interp, eta1, eta2)
+#endif
   end function x2_discrete
 
   function jacobian_2d_discrete( mesh, eta1, eta2 ) result(jac)
@@ -406,10 +487,17 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
+#ifndef NOF03SUPPORT
     j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
     j21 = mesh%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
     j22 = mesh%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+#else
+    j11 = interpolate_derivative_eta1_f95( mesh%x1_interp, eta1, eta2 )
+    j12 = interpolate_derivative_eta2_f95( mesh%x1_interp, eta1, eta2 )
+    j21 = interpolate_derivative_eta1_f95( mesh%x1_interp, eta1, eta2 )
+    j22 = interpolate_derivative_eta2_f95( mesh%x1_interp, eta1, eta2 )
+#endif
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -470,9 +558,15 @@ contains
     sll_int32, intent(in)                :: npts2
     sll_real64, dimension(:,:)           :: x1_node
     sll_real64, dimension(:,:)           :: x2_node
+#ifndef NOF03SUPPORT
     class(interpolator_2d_base), target  :: x1_interpolator
     class(interpolator_2d_base), target  :: x2_interpolator
-    class(interpolator_2d_base), target  :: jacobians_n_interpolator  
+    class(interpolator_2d_base), target  :: jacobians_n_interpolator
+#else
+    type(cubic_spline_2d_interpolator), target  :: x1_interpolator
+    type(cubic_spline_2d_interpolator), target  :: x2_interpolator
+    type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
+#endif 
     sll_real64, dimension(:,:), optional :: jacobians_node
     sll_real64, dimension(:,:), optional :: jacobians_cell
     sll_real64, dimension(:,:), optional :: x1_cell
@@ -574,8 +668,14 @@ contains
     end do
 
     ! Compute the spline coefficients
+#ifndef NOF03SUPPORT
     call x1_interpolator%compute_interpolants( mesh%x1_node )
     call x2_interpolator%compute_interpolants( mesh%x2_node )
+#else
+    call compute_interpolants_f95( x1_interpolator, mesh%x1_node )
+    call compute_interpolants_f95( x2_interpolator, mesh%x2_node )
+#endif
+
 
     ! The splines contain all the information to compute the
     ! jacobians everywhere; however, here we explore assigning
@@ -665,8 +765,65 @@ contains
     mesh_2d_jacobian_node_discrete = mesh%jacobians_n(i,j)
   end function mesh_2d_jacobian_node_discrete
 
+#ifdef NOF03SUPPORT
+  subroutine write_to_file_2d_discrete(mesh,output_format)
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+    sll_int32, optional :: output_format 
+    sll_int32           :: local_format 
+    sll_real64, dimension(:,:), pointer :: x1mesh
+    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_int32  :: i1
+    sll_int32  :: i2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32  :: ierr
+    sll_int32  :: file_id
 
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
 
+    if ( .not. mesh%written ) then
+
+       select case(local_format)
+
+       case (SLL_IO_XDMF)
+          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          eta1 = 0.0_f64
+          do i1=1, mesh%nc_eta1+1
+             eta2 = 0.0_f64
+             do i2=1, mesh%nc_eta2+1
+                x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
+                x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
+                eta2 = eta2 + mesh%delta_eta2 
+             end do
+             eta1 = eta1 + mesh%delta_eta1
+          end do
+       
+          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
+               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
+          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
+
+       case default
+          print*, 'Not recognized format to write this mesh'
+          stop
+
+       end select
+
+    else
+
+       print*,' Warning, you have already written the mesh '
+
+    end if
+
+    mesh%written = .true.
+  end subroutine
+#endif
 
 
 #if 0
