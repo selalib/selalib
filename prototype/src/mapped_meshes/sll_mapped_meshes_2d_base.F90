@@ -23,13 +23,33 @@ use sll_io
      character(len=64) :: label
      logical           :: written! = .false.
    contains
+     ! x1 = x1(eta1,eta2)
      procedure(geometry_function), deferred, pass       :: x1
+     ! x2 = x2(eta1,eta2)
      procedure(geometry_function), deferred, pass       :: x2
+     ! jacobian = jacobian(eta1,eta2)
      procedure(geometry_function), deferred, pass       :: jacobian
+     ! x1_at_node = x1_at_node(i,j)
      procedure(geometry_function_nodes), deferred, pass :: x1_at_node
+     ! x2_at_node = x2_at_node(i,j)
      procedure(geometry_function_nodes), deferred, pass :: x2_at_node
+     !jacobian_at_node = jacobian_at_node(i,j)
      procedure(geometry_function_nodes), deferred, pass :: jacobian_at_node
+     ! jacobian_matrix = jacobian(matrix(eta1,eta2))
+     procedure(matrix_geometry_function), deferred, pass   :: jacobian_matrix
 !     procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
+
+     ! The name of the abstract signature 'geometry_function_nodes' is
+     ! potentially misleading since the same signature is also used for
+     ! functions that return values on cells. The key point is that the 
+     ! arguments are integers.
+
+     ! x1_at_cell = x1_at_cell(i,j)
+     procedure(geometry_function_nodes), deferred, pass :: x1_at_cell
+     ! x1_at_cell = x1_at_cell(i,j)
+     procedure(geometry_function_nodes), deferred, pass :: x2_at_cell
+     ! jacobian_at_cell = jacobian_at_cell(i,j)
+     procedure(geometry_function_nodes), deferred, pass :: jacobian_at_cell
      procedure, pass :: write_to_file => write_mapped_mesh_2d_base
   end type sll_mapped_mesh_2d_base
 
@@ -67,13 +87,13 @@ use sll_io
    end interface
    
    abstract interface
-      function matrix_geometry_function( mesh, eta1, eta2 ) result(res)
+      function matrix_geometry_function( mesh, eta1, eta2 )
         use sll_working_precision       
         import sll_mapped_mesh_2d_base
         class(sll_mapped_mesh_2d_base) :: mesh
-        sll_real64, intent(in)   :: eta1
-        sll_real64, intent(in)   :: eta2
-        sll_real64               :: res(2,2)
+        sll_real64, intent(in)         :: eta1
+        sll_real64, intent(in)         :: eta2
+        sll_real64                     :: matrix_geometry_function(2,2)
       end function matrix_geometry_function
    end interface
    
