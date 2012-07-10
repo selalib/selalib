@@ -44,12 +44,8 @@ c
 # if cdebug
       tmpi=MPI_WTIME()
 # endif
-# if double_precision
       call MPI_ALLREDUCE(avloc,av,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      1                   comm3d,ierr)
-# else
-      call MPI_ALLREDUCE(avloc,av,1,MPI_REAL,MPI_SUM,comm3d,ierr)
-# endif
 # if cdebug
       nallreduce=nallreduce+1
       tallreduce=tallreduce+MPI_WTIME()-tmpi
