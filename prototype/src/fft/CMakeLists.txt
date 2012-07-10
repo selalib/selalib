@@ -1,3 +1,4 @@
+add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
   add_library(fftw_module STATIC fftw_module.F90)
