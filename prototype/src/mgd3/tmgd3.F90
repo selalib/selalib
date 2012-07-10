@@ -53,7 +53,7 @@ integer, parameter :: nwork=9*int(8.0/7.0*float(nx*ny*nz)     &
 integer, parameter :: nxdim=int(float(nxp2-2)/float(nxprocs)+0.99)+2
 integer, parameter :: nydim=int(float(nyp2-2)/float(nyprocs)+0.99)+2
 integer, parameter :: nzdim=int(float(nzp2-2)/float(nzprocs)+0.99)+2
-integer, parameter :: IOUT=6
+integer, parameter :: iout=6
 real(8), parameter :: tolmax=1.0d-05
 !
 ! variables
@@ -93,9 +93,9 @@ m1=mod(myid,10)+1
 m0=mod(myid/10,10)+1
 outfile(5:6)=num(m0)
 outfile(6:7)=num(m1)
-open(IOUT,file=outfile,status='unknown',form='formatted')
+open(iout,file=outfile,status='unknown',form='formatted')
 if (numprocs.ne.(nxprocs*nyprocs*nzprocs)) then
-  write(IOUT,100)
+  write(iout,100)
 100     format(/,'ERROR: numprocs <> (nxprocs*nyprocs*nzprocs)',/)
   stop
 end if
@@ -279,23 +279,23 @@ call MPE_DECOMP1D(nzp2-2,dims(3),coords(3),sz,ez)
 sz=sz+1
 ez=ez+1
 if ((ex-sx+3).gt.nxdim) then
-  write(IOUT,110) myid,nxdim,ex-sx+3
+  write(iout,110) myid,nxdim,ex-sx+3
   nerror=1
   return
 end if
 if ((ey-sy+3).gt.nydim) then
-  write(IOUT,120) myid,nydim,ey-sy+3
+  write(iout,120) myid,nydim,ey-sy+3
   nerror=1
   return
 end if
 if ((ez-sz+3).gt.nzdim) then
-  write(IOUT,130) myid,nzdim,ez-sz+3
+  write(iout,130) myid,nzdim,ez-sz+3
   nerror=1
   return
 end if
-write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
+write(iout,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 do i=1,26
-  write(IOUT,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
+  write(iout,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
 end do
 110   format(/,'ERROR: process:',i3,' nxdim=',i4,' < ex-sx+3=',i4,/, &
        ' -> put the parameter formula for nxdim in main.F in ', &
@@ -315,7 +315,7 @@ end do
 call mgdinit(vbc,phibc,ixp,jyq,kzr,iex,jey,kez,ngrid,nxp2,	&
              nyp2,nzp2,sx,ex,sy,ey,sz,ez,realtype,nxprocs,	&
              nyprocs,nzprocs,nwork,ibdry,jbdry,kbdry,myid,	&
-             IOUT,nerror)
+             iout,nerror)
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -332,8 +332,8 @@ rro=1.0d0
 hxi=float(nxp2-2)/xl
 hyi=float(nyp2-2)/yl
 hzi=float(nzp2-2)/zl
-write(IOUT,*) 'hxi=',hxi,' hyi=',hyi,' hzi=',hzi
-call ginit(sx,ex,sy,ey,sz,ez,p,r,f,wk,hxi,hyi,hzi,pi,IOUT)
+write(iout,*) 'hxi=',hxi,' hyi=',hyi,' hzi=',hzi
+call ginit(sx,ex,sy,ey,sz,ez,p,r,f,wk,hxi,hyi,hzi,pi,iout)
 !-----------------------------------------------------------------------
 ! solve using mgd3
 !
@@ -341,17 +341,17 @@ call mgdsolver(2,sx,ex,sy,ey,sz,ez,p,f,r,ngrid,work,	&
                maxcy,tolmax,kcycle,iprer,ipost,iresw,	&
                xl,yl,zl,rro,nx,ny,nz,comm3d,comm3dp,	&
                comm3dl,comm3dc,myid,neighbor,bd,phibc,	&
-               iter,.true.,IOUT,nerror)
+               iter,.true.,iout,nerror)
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! compare numerical and exact solutions
 !
-call gerr(sx,ex,sy,ey,sz,ez,p,comm3d,wk,hxi,hyi,hzi,pi,nx,ny,nz,IOUT)
+call gerr(sx,ex,sy,ey,sz,ez,p,comm3d,wk,hxi,hyi,hzi,pi,nx,ny,nz,iout)
 !-----------------------------------------------------------------------
 close(8)
 call MPI_FINALIZE(ierr)
 stop
-1000  write(IOUT,200)
+1000  write(iout,200)
 200   format(/,'ERROR in multigrid code',/)
 close(8)
 stop
