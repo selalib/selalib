@@ -57,6 +57,12 @@ contains  ! ****************************************************************
     call compute_spline_1D_bis( data_array, interpolator%spline )
   end subroutine compute_interpolants_cs1d
 
+  subroutine compute_interpolants_f95( interpolator, data_array )
+    type(cubic_spline_1d_interpolator), intent(inout)  :: interpolator
+    sll_real64, dimension(:), intent(in)               :: data_array
+    call compute_spline_1D_bis( data_array, interpolator%spline )
+  end subroutine
+
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
     sll_real64 :: val
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
@@ -64,12 +70,26 @@ contains  ! ****************************************************************
     val = interpolate_value_1D( eta1, interpolator%spline )
   end function interpolate_value_cs1d
   
+  function interpolate_value_f95( interpolator, eta1 ) result(val)
+    sll_real64 :: val
+    type(cubic_spline_1d_interpolator), intent(inout) :: interpolator
+    sll_real64, intent(in) :: eta1
+    val = interpolate_value_1D( eta1, interpolator%spline )
+  end function
+
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
     sll_real64 :: val
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_deriv1_cs1d
+
+  function interpolate_derivative_f95( interpolator, eta1 ) result(val)
+    sll_real64 :: val
+    type(cubic_spline_1d_interpolator), intent(inout) :: interpolator
+    sll_real64, intent(in) :: eta1
+    val = interpolate_derivative(eta1,interpolator%spline)
+  end function
 
   !> create new spline object
   subroutine initialize_cs1d_interpolator( &

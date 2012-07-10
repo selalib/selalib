@@ -21,6 +21,8 @@ program vlaspois
   sll_int32 :: mod
   sll_real64 :: mode
 
+  call print_defaultfftlib()
+
   !namelist /modes/ mod
   mod=1
   !read(*,NML=modes)
@@ -67,7 +69,7 @@ program vlaspois
   SLL_ALLOCATE(grad_phi(2,nr+1,ntheta+1),err)
 
   !initialization of FFT
-  pfwd => fft_new_plan(ntheta,f(1,1:ntheta),f(1,1:ntheta),FFT_FORWARD,FFT_NORMALIZE)
+  pfwd => fft_new_plan(ntheta,f(1,1:ntheta),f(1,1:ntheta),FFT_FORWARD)!,FFT_NORMALIZE)
   pinv => fft_new_plan(ntheta,phi(1,1:ntheta),phi(1,1:ntheta),FFT_INVERSE)
 
   phi=0.0_f64
@@ -77,7 +79,7 @@ program vlaspois
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=2
+  fcase=3
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
@@ -135,6 +137,7 @@ program vlaspois
      stop
   end if
 
+#if 0
   !write f in a file before calculations
   open (unit=20,file='CGinit.dat')
   do i=1,nr+1
@@ -155,7 +158,9 @@ program vlaspois
   l10=0.0_f64
   l20=0.0_f64
   e=0.0_f64
+#endif
   call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
+#if 0
   call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
@@ -220,20 +225,25 @@ program vlaspois
 
   end do
   close(23)
+#endif
 
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
+  w0 = 0
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
+        w0 = MAX(w0,ABS(phi(i,j)-(r-rmin)**3*(r-rmax)**3*cos(mode*theta)))
         write(21,*)r,theta,x,y,f(i,j),phi(i,j)
      end do
      write(21,*)' '
   end do
   close(21)
+
+  PRINT*,'==>',w0
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
