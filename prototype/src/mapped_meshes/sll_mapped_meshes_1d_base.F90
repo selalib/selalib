@@ -20,7 +20,9 @@ use sll_io
      procedure(geometry_function_nodes_1d), deferred, pass :: x1_at_node
      procedure(geometry_function_1d), deferred, pass       :: jacobian
      procedure(geometry_function_nodes_1d), deferred, pass :: jacobian_at_node
+#ifndef NOF03SUPPORT
      procedure, pass :: write_to_file => write_to_file_1d
+#endif
   end type sll_mapped_mesh_1d_base
   
   !************************************************************************
@@ -71,6 +73,8 @@ use sll_io
       end function one_arg_message_passing_func
    end interface
 
+#ifndef NOF03SUPPORT
+
 contains
 
   subroutine write_to_file_1d(mesh,output_format)
@@ -94,5 +98,6 @@ contains
     call sll_gnuplot_write(x1_array,mesh%label,error)
     SLL_DEALLOCATE_ARRAY(x1_array,error)
   end subroutine
+#endif
 
  end module sll_module_mapped_meshes_1d_base
