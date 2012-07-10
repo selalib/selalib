@@ -14,7 +14,7 @@ c Called in : main
 c Calls     : MPI_ALLREDUCE
 c-----------------------------------------------------------------------
       integer i,j,k,ierr
-      REALN errloc,err,cx,cy,cz,exact
+      REALN errloc,err,cx,cy,cz,exact,zk,yj,xi
 c
 c calculate local error
 c
@@ -36,12 +36,8 @@ c
 c
 c calculate global error
 c
-# if double_precision
       call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      1                   comm3d,ierr)
-# else
-      call MPI_ALLREDUCE(errloc,err,1,MPI_REAL,MPI_SUM,comm3d,ierr)
-# endif
       write(IOUT,100) errloc/float(nx*ny*nz),err/float(nx*ny*nz)
 100   format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
 c
