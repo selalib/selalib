@@ -3,7 +3,10 @@ module sll_module_mapped_meshes_1d
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_splines
+#ifndef NOF03SUPPORT
   use sll_module_interpolators_1d_base
+#endif
+  use sll_cubic_spline_interpolator_1d
   use sll_module_mapped_meshes_1d_base
   implicit none
 
@@ -39,13 +42,20 @@ module sll_module_mapped_meshes_1d
      procedure, pass(mesh) :: jacobian_at_node => mesh_1d_jacobian_node_analytic
      procedure, pass(mesh) :: x1         => x1_analytic_1d
      procedure, pass(mesh) :: jacobian   => jacobian_1d_analytic
+#ifdef NOF03SUPPORT
+     procedure, pass :: write_to_file => write_to_file_analytic
+#endif
   end type sll_mapped_mesh_1d_analytic
   
   type, extends(sll_mapped_mesh_1d_base)::sll_mapped_mesh_1d_discrete
      sll_real64, dimension(:), pointer                    :: x1_node   ! x1(i)
      sll_real64, dimension(:), pointer                    :: x1_cell
      procedure(one_arg_scalar_function), pointer, nopass  :: x1_func
+#ifndef NOF03SUPPORT
      class(sll_interpolator_1d_base), pointer             :: x1_interp
+#else
+     type(cubic_spline_1d_interpolator)                   :: x1_interp
+#endif
      sll_real64, dimension(:), pointer                    :: jacobians_n
      sll_real64, dimension(:), pointer                    :: jacobians_c
     ! Samuel : this functions seems never initialize, see jacobian
@@ -56,6 +66,15 @@ module sll_module_mapped_meshes_1d
      procedure, pass(mesh) :: jacobian_at_node => mesh_1d_jacobian_node_discrete
      procedure, pass(mesh) :: x1         => x1_discrete_1d
      procedure, pass(mesh) :: jacobian   => jacobian_1d_discrete
+#ifdef NOF03SUPPORT
+     procedure, pass :: write_to_file => write_to_file_discrete
+#endif
+
+
+
+
+
+
   end type sll_mapped_mesh_1d_discrete
 
   abstract interface
@@ -186,6 +205,29 @@ contains
     val = mesh%jacobian_func(eta1)
   end function jacobian_1d_analytic
 
+  subroutine write_to_file_analytic(mesh,output_format)
+    class(sll_mapped_mesh_1d_analytic)  :: mesh
+    sll_int32, optional            :: output_format
+    sll_int32                      :: error
+    sll_real64, dimension(:), allocatable  :: x1_array
+    sll_int32                      :: num_pts1  
+    sll_int32                      :: i
+
+    if(present(output_format))then
+      print*,'There is just gnuplot format available'
+    endif
+    
+
+    num_pts1 = mesh%nc_eta1+1
+    SLL_ALLOCATE(x1_array(num_pts1),error)
+    do i=1,num_pts1
+       x1_array(i) = mesh%x1_at_node(i)
+    end do
+    call sll_gnuplot_write(x1_array,mesh%label,error)
+    SLL_DEALLOCATE_ARRAY(x1_array,error)
+  end subroutine
+
+
   ! Discrete case:
 
   subroutine initialize_mesh_1d_discrete( &
@@ -203,8 +245,13 @@ contains
     character(len=*), intent(in)         :: label
     sll_int32, intent(in)                :: npts1
     sll_real64, dimension(:)           :: x1_node
+#ifndef NOF03SUPPORT
     class(sll_interpolator_1d_base), target  :: x1_interpolator
     class(sll_interpolator_1d_base), target  :: jacobians_n_interpolator  
+#else
+    type(cubic_spline_1d_interpolator)  :: x1_interpolator
+    type(cubic_spline_1d_interpolator)  :: jacobians_n_interpolator
+#endif
     sll_real64, dimension(:), optional :: jacobians_node
     sll_real64, dimension(:), optional :: jacobians_cell
     sll_real64, dimension(:), optional :: x1_cell
@@ -264,7 +311,11 @@ contains
 
     mesh%nc_eta1    = npts1-1
     mesh%delta_eta1 = 1.0_f64/(npts1 - 1)
+#ifndef NOF03SUPPORT
     mesh%x1_interp  => x1_interpolator
+#else
+    mesh%x1_interp  = x1_interpolator
+#endif
 
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1), ierr)
@@ -286,7 +337,11 @@ contains
     end do
     
     ! Compute the spline coefficients
+#ifndef NOF03SUPPORT
     call x1_interpolator%compute_interpolants( mesh%x1_node )
+#else
+    call compute_interpolants_f95( x1_interpolator , mesh%x1_node )
+#endif
 
     ! The splines contain all the information to compute the
     ! jacobians everywhere; however, here we explore assigning
@@ -349,41 +404,46 @@ contains
     sll_real64             :: jac
     class(sll_mapped_mesh_1d_discrete) :: mesh
     sll_real64, intent(in) :: eta1
-    !jac = mesh%jacobian_func(eta1)
+#ifndef NOF03SUPPORT
     jac = mesh%x1_interp%interpolate_derivative_eta1( eta1 )
+#else
+    jac = interpolate_derivative_f95( mesh%x1_interp , eta1 )
+#endif
   end function jacobian_1d_discrete
 
   function x1_discrete_1d( mesh, eta1 ) result(val)
     sll_real64                         :: val
     class(sll_mapped_mesh_1d_discrete) :: mesh
     sll_real64, intent(in) :: eta1
+#ifndef NOF03SUPPORT
     val = mesh%x1_interp%interpolate_value(eta1)
+#else
+    val = interpolate_value_f95(mesh%x1_interp,eta1)
+#endif
   end function x1_discrete_1d
 
+  subroutine write_to_file_discrete(mesh,output_format)
+    class(sll_mapped_mesh_1d_discrete)  :: mesh
+    sll_int32, optional            :: output_format
+    sll_int32                      :: error
+    sll_real64, dimension(:), allocatable  :: x1_array
+    sll_int32                      :: num_pts1  
+    sll_int32                      :: i
 
+    if(present(output_format))then
+      print*,'There is just gnuplot format available'
+    endif
+    
 
-!
-!  The next stuff is just here for test the unit_test
-!
+    num_pts1 = mesh%nc_eta1+1
+    SLL_ALLOCATE(x1_array(num_pts1),error)
+    do i=1,num_pts1
+       x1_array(i) = mesh%x1_at_node(i)
+    end do
+    call sll_gnuplot_write(x1_array,mesh%label,error)
+    SLL_DEALLOCATE_ARRAY(x1_array,error)
+  end subroutine
 
-!#define A (-1.0_f64)
-!#define B  1.0_f64
-!
-!  function linear_map_f( eta ) result(val)
-!    sll_real64 :: val
-!    sll_real64, intent(in) :: eta
-!    val = (B-A)*eta + A
-!  end function linear_map_f
-!
-!  function linear_map_jac_f( map , eta ) result(val)
-!    class(sll_mapped_mesh_1d_analytic)  :: map
-!    sll_real64                          :: val
-!    sll_real64, intent(in)              :: eta
-!    val = (B-A)
-!  end function linear_map_jac_f
-!
-!#undef A
-!#undef B
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
