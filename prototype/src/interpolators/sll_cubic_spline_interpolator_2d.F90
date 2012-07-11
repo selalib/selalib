@@ -94,6 +94,13 @@ contains
     call compute_spline_2D( data_array, interpolator%spline )
   end subroutine compute_interpolants_cs2d
 
+  subroutine compute_interpolants_f95( interpolator, data_array )
+    type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
+    sll_real64, dimension(:,:), intent(in) :: data_array
+    call compute_spline_2D( data_array, interpolator%spline )
+  end subroutine
+
+
   function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
     sll_real64 :: val
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
@@ -101,6 +108,16 @@ contains
     sll_real64, intent(in) :: eta2
     val = interpolate_value_2D( eta1, eta2, interpolator%spline )
   end function interpolate_value_cs2d
+
+  function interpolate_value_f95( interpolator, eta1, eta2 ) result(val)
+    sll_real64 :: val
+    type(cubic_spline_2d_interpolator), intent(in) :: interpolator
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    val = interpolate_value_2D( eta1, eta2, interpolator%spline )
+  end function
+
+
 
   function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
     sll_real64 :: val
@@ -110,6 +127,16 @@ contains
     val = interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
   end function interpolate_deriv1_cs2d
 
+  function interpolate_derivative_eta1_f95( interpolator, eta1, eta2 ) result(val)
+    sll_real64 :: val
+    type(cubic_spline_2d_interpolator), intent(in) :: interpolator
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    val = interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
+  end function
+
+
+
   function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
     sll_real64 :: val
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
@@ -117,6 +144,15 @@ contains
     sll_real64, intent(in) :: eta2
     val = interpolate_x2_derivative_2D(eta1,eta2,interpolator%spline)
   end function interpolate_deriv2_cs2d
+
+  function interpolate_derivative_eta2_f95( interpolator, eta1, eta2 ) result(val)
+    sll_real64 :: val
+    type(cubic_spline_2d_interpolator), intent(in) :: interpolator
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    val = interpolate_x2_derivative_2D(eta1,eta2,interpolator%spline)
+  end function
+
 
 
 end module sll_cubic_spline_interpolator_2d

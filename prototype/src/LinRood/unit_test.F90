@@ -43,7 +43,7 @@ program unit_test
 
   print*, 'initialization of distribution_function'
 
-  call init_gaussian%initialize( CELL_CENTERED_FIELD, 0.5_f64, 0.5_f64, 0.1_f64, 0.1_f64 )
+  call init_gaussian%initialize( m, CELL_CENTERED_FIELD, 0.5_f64, 0.5_f64, 0.1_f64, 0.1_f64 )
   p_init_f => init_gaussian
 
   call initialize_distribution_function_2d( &
