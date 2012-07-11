@@ -1,18 +1,27 @@
+# 1 "mgdrestr.F"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "mgdrestr.F"
       subroutine mgdrestr(sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,phic,
      1                    rhsc,sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,
      2                    phif,cof,resf,iresw,comm3dp,comm3dl,comm3dc,
      3                    neighbor,bd,datatypes,IOUT)
-# include "compdir.inc"
+
+# 1 "compdir.inc" 1
+
+
+      implicit none 
+# 6 "mgdrestr.F" 2
       include "mpif.h"
       integer sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,IOUT
       integer sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf
       integer iresw,comm3dp,comm3dl,comm3dc
       integer neighbor(26),bd(26),datatypes(7)
-      REALN phic(sxc-1:exc+1,syc-1:eyc+1,szc-1:ezc+1)
-      REALN rhsc(sxc-1:exc+1,syc-1:eyc+1,szc-1:ezc+1)
-      REALN phif(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1)
-      REALN resf(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1)
-      REALN cof(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1,8)
+      real*8 phic(sxc-1:exc+1,syc-1:eyc+1,szc-1:ezc+1)
+      real*8 rhsc(sxc-1:exc+1,syc-1:eyc+1,szc-1:ezc+1)
+      real*8 phif(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1)
+      real*8 resf(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1)
+      real*8 cof(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1,8)
 c------------------------------------------------------------------------
 c Calculate the residual and restrict it to the coarser level. Full
 c weighting (iresw=1) is the best method. A half-weighting method
@@ -26,19 +35,11 @@ c Calls     : gxch1pla, gxch1lin, gxch1cor,
 c             MPI_WAITALL (non-blocking version)
 c------------------------------------------------------------------------
       integer i,j,k,isrt,jsrt,ksrt,iinc,jinc,kinc,ic,jc,kc
-# if !WMGD
+
       integer ireq,req(52)
-# if NBLOCKGR
+
       integer status(MPI_STATUS_SIZE,52),ierr
-# endif
-# endif
-# if cdebug
-      double precision tinitial
-# if NBLOCKGR
-      double precision tmpi
-# endif
-      tinitial=MPI_WTIME()
-# endif
+# 42 "mgdrestr.F"
 c------------------------------------------------------------------------
       do kc=szc-1,ezc+1
         do jc=syc-1,eyc+1
@@ -64,118 +65,14 @@ c
           end do
         end do
       end do
-# if WMGD
-c------------------------------------------------------------------------
-c new version: calculate the right-hand side at the coarser grid
-c level from the averages of the values at the 8 surrounding points;
-c if there is no coarsifying in one direction, only 2 or 4 points are
-c used; no exchange of boundary data is necessary
-c
-c first, general case where coarsifying takes place in all directions;
-c calculate the value from the 8 surrounding points
-c
-      if ((nxc.lt.nxf).and.(nyc.lt.nyf).and.(nzc.lt.nzf)) then
-        do kc=szc,ezc
-          k=2*kc-2
-          do jc=syc,eyc
-            j=2*jc-2
-            do ic=sxc,exc
-              i=2*ic-2
-              rhsc(ic,jc,kc)=0.125d0*(resf(i,j,k)+resf(i,j+1,k)
-     1                               +resf(i,j,k+1)+resf(i,j+1,k+1)
-     2                               +resf(i+1,j,k)+resf(i+1,j+1,k+1)
-     3                               +resf(i+1,j+1,k)+resf(i+1,j,k+1))
-            end do
-          end do
-        end do
-      else if
-c
-c no coarsifying in two directions; calculate the value from the 2 
-c surrounding points
-c
-        if ((nxf.eq.nxc).and.(nyf.eq.nyc)) then
-          do kc=szc,ezc
-            k=2*kc-2
-            do jc=syc,eyc
-              j=jc
-              do ic=sxc,exc
-                i=ic
-                rhsc(ic,jc,kc)=0.5d0*(resf(i,j,k)+resf(i,j,k+1))
-              end do
-            end do
-          end do
-        else if ((nxf.eq.nxc).and.(nzf.eq.nzc)) then
-          do kc=szc,ezc
-            k=kc
-            do jc=syc,eyc
-              j=2*jc-2
-              do ic=sxc,exc
-                i=ic
-                rhsc(ic,jc,kc)=0.5d0*(resf(i,j,k)+resf(i,j+1,k))
-              end do
-            end do
-          end do
-        else if ((nyf.eq.nyc).and.(nzf.eq.nzc)) then
-          do kc=szc,ezc
-            k=kc
-            do jc=syc,eyc
-              j=jc
-              do ic=sxc,exc
-                i=2*ic-2
-                rhsc(ic,jc,kc)=0.5d0*(resf(i,j,k)+resf(i+1,j,k))
-              end do
-            end do
-          end do
-c
-c no coarsifying in one direction; calculate the value from the 4
-c surrounding points
-c
-        else if (nxf.eq.nxc) then
-          do kc=szc,ezc
-            k=2*kc-2
-            do jc=syc,eyc
-              j=2*jc-2
-              do ic=sxc,exc
-                i=ic
-                rhsc(ic,jc,kc)=0.25d0*(resf(i,j,k)+resf(i,j+1,k)
-     1                                +resf(i,j,k+1)+resf(i,j+1,k+1))
-              end do
-            end do
-          end do
-        else if (nyf.eq.nyc) then
-          do kc=szc,ezc
-            k=2*kc-2
-            do jc=syc,eyc
-              j=jc
-              do ic=sxc,exc
-                i=2*ic-2
-                rhsc(ic,jc,kc)=0.25d0*(resf(i,j,k)+resf(i,j,k+1)
-     1                                +resf(i+1,j,k)+resf(i+1,j,k+1))
-              end do
-            end do
-          end do
-        else if (nzf.eq.nzc) then
-          do kc=szc,ezc
-            k=kc
-            do jc=syc,eyc
-              j=2*jc-2
-              do ic=sxc,exc
-                i=2*ic-2
-                rhsc(ic,jc,kc)=0.25d0*(resf(i,j,k)+resf(i+1,j,k)
-     1                                +resf(i,j+1,k)+resf(i+1,j+1,k))
-              end do
-            end do
-          end do
-        end if
-      end if
-# else
+# 172 "mgdrestr.F"
 c------------------------------------------------------------------------
 c old version: have to exchange boundary data; if full-weighting, 
 c need to exchange also lines and corners
 c
-# if NBLOCKGR
+
       ireq=0
-# endif
+
       call gxch1pla(sxf,exf,syf,eyf,szf,ezf,resf,comm3dp,neighbor,
      1              bd,datatypes(1),req,ireq,IOUT)
       if (iresw.eq.1) then
@@ -184,16 +81,16 @@ c
         call gxch1cor(sxf,exf,syf,eyf,szf,ezf,resf,comm3dc,neighbor,
      1                bd,datatypes(7),req,ireq,IOUT)
       end if
-# if NBLOCKGR
-# if cdebug
-      tmpi=MPI_WTIME()
-# endif
+
+
+
+
       call MPI_WAITALL(ireq,req,status,ierr)
-# if cdebug
-      nwaitall=nwaitall+1
-      twaitall=twaitall+MPI_WTIME()-tmpi
-# endif
-# endif
+
+
+
+
+
 c
 c restrict it to coarser level
 c
@@ -271,10 +168,10 @@ c
           k=k+kinc
         end do
       end if
-# endif
+
 c
-# if cdebug
-      timing(91)=timing(91)+MPI_WTIME()-tinitial
-# endif
+
+
+
       return
       end
