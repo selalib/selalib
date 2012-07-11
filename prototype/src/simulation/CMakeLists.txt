@@ -1,6 +1,4 @@
-add_library(sll_simulation_1d STATIC
-	simulation_1d.F90
-  )
+add_library(sll_simulation_1d STATIC simulation_1d.F90)
 
 #add_executable(test_simulation_1d user_geometry_functions.F90 unit_test.F90)
 add_executable(polar_SL polar_SL.F90)
