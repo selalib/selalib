@@ -53,6 +53,7 @@ target_link_libraries(test_mapped_meshes
 	sll_low_level_file_io
 	sll_memory
 	sll_assertion
+	sll_working_precision
   )
 
 IF(NOT NO_FORTRAN_2003)

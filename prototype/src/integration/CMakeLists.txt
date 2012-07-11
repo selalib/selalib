@@ -1,3 +1,4 @@
 add_library(gauss_legendre_integration STATIC gauss_legendre.F90)
+add_dependencies(gauss_legendre_integration sll_splines sll_working_precision)
 add_executable(test_integration unit_test.F90 test_func_module.F90)
 target_link_libraries(test_integration sll_working_precision sll_memory sll_assertion sll_constants sll_splines gauss_legendre_integration)
