@@ -96,7 +96,7 @@ contains   ! *****************************************************************
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
        if (present(initializer)) then
-          call initializer%f_of_x1x2(mesh,this%data)
+          call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
@@ -107,7 +107,7 @@ contains   ! *****************************************************************
        eta1   = 0.5_f64 * delta1
        eta2   = 0.5_f64 * delta2
        if (present(initializer)) then
-          call initializer%f_of_x1x2(mesh,this%data)
+          call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
