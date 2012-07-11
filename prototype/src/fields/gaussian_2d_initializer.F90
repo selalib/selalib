@@ -12,6 +12,7 @@ module sll_gaussian_2d_initializer
   type, extends(scalar_field_2d_initializer_base) :: init_gaussian_2d
     sll_real64 :: xc, yc
     sll_real64 :: sigma_x, sigma_y
+    class(sll_mapped_mesh_2d_base), pointer :: mesh 
   contains
     procedure, pass(init_obj) :: initialize => initialize_gaussian_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_gaussian_2d
@@ -19,11 +20,14 @@ module sll_gaussian_2d_initializer
 
 contains
 
-  subroutine initialize_gaussian_2d( init_obj, data_position, xc, yc, sigma_x, sigma_y )
+  subroutine initialize_gaussian_2d( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
     class(init_gaussian_2d), intent(inout)  :: init_obj
+    class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: xc, yc, sigma_x, sigma_y 
     init_obj%data_position = data_position
+    
+    init_obj%mesh => mesh
     if( present(xc) ) then
        init_obj%xc = xc
     else
@@ -46,10 +50,11 @@ contains
     end if
   end subroutine initialize_gaussian_2d
 
-  subroutine f_x1x2_gaussian_2d( init_obj, mesh, data_out )
+  subroutine f_x1x2_gaussian_2d( init_obj, data_out )
     class(init_gaussian_2d), intent(inout)       :: init_obj
-    class(sll_mapped_mesh_2d_base), intent(in) :: mesh
     sll_real64, dimension(:,:), intent(out)    :: data_out
+
+    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -57,6 +62,8 @@ contains
     sll_real64 :: x
     sll_real64 :: y
     sll_real64 :: jac
+
+    mesh => init_obj%mesh
 
     if (init_obj%data_position == CELL_CENTERED_FIELD) then
        num_pts1 = mesh%nc_eta1
