@@ -78,11 +78,7 @@ pi=4.0d0*atan(1.0d0)
 call MPI_INIT(ierr)
 call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
-# if double_precision
-      realtype=MPI_DOUBLE_PRECISION
-# else
-      realtype=MPI_REAL
-# endif
+realtype=MPI_DOUBLE_PRECISION
 !-----------------------------------------------------------------------
 ! open file for output of messages and check that the number of 
 ! processes is correct

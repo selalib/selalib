@@ -10,26 +10,16 @@ use mgd3
 include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,ngrid,IOUT
 integer :: maxcy,kcycle,iprer,ipost,iresw
-REALN   :: phif(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-REALN   :: rhsf(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-REALN   :: r(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),rro
-REALN   :: work(*),tolmax,xl,yl,zl,phibc(6,20)
+real(8) :: phif(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real(8) :: rhsf(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real(8) :: r(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),rro
+real(8) :: work(*),tolmax,xl,yl,zl,phibc(6,20)
 integer :: isol,comm3d,comm3dp,comm3dl,comm3dc,myid
 integer :: neighbor(26),bd(26),iter,nerror
 logical :: nprscr
-
-!integer :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
-!integer :: kpbgn,kcbgn,kdatatype
-!integer :: sxi,exi,syi,eyi,szi,ezi
-!integer :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
-!integer :: rdatatype
-!
-!common/mgd/nxk(20),nyk(20),nzk(20),                          &
-!           sxk(20),exk(20),syk(20),eyk(20),szk(20),ezk(20),  &
-!           kpbgn(20),kcbgn(20),kdatatype(7,20),              &
-!           sxi(20),exi(20),syi(20),eyi(20),szi(20),ezi(20),  &
-!           nxr(20),nyr(20),nzr(20),sxr(20),exr(20),syr(20),  &
-!           eyr(20),szr(20),ezr(20),rdatatype(7,20)
+integer :: k
+integer :: nx, ny, nz, icf
+real(8) :: relmax
 
 !------------------------------------------------------------------------
 ! Parallel multigrid solver in 3-D cartesian coordinates for the 
@@ -72,11 +62,11 @@ logical :: nprscr
 !             gxch1pla, gxch1lin, gxch1cor, MPI_WAITALL (non-blocking
 !             version)
 !------------------------------------------------------------------------
-REALN   :: avo,acorr
+real(8) :: avo,acorr
 integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf
 integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc
 integer :: sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm
-integer :: ipf,irf,ipc,irc,ip,ic,kcur,lev,ir1,ir2
+integer :: ipf,irf,ip,ic,kcur,lev,ir1,ir2
 integer :: ireq,req(52)
 # if NBLOCKGR
 integer status(MPI_STATUS_SIZE,52),ierr
