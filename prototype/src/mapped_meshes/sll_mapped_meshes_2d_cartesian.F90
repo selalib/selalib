@@ -134,7 +134,6 @@ contains
     SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
     SLL_ALLOCATE(mesh%jacobians_c(npts1-1, npts2-1), ierr)
 
-    ! Start filling out the fields and allocating the object's memory.
     SLL_ALLOCATE(mesh%x1_cell(npts1-1, npts2-1), ierr)
     SLL_ALLOCATE(mesh%x2_cell(npts1-1, npts2-1), ierr)
 
@@ -287,7 +286,12 @@ contains
     x2_cell_cartesian = (real(j-1,f64)+0.5_f64)*mesh%delta_eta2
   end function x2_cell_cartesian
 
-
+ function x1_one_var( mesh, eta1) result(val)
+    sll_real64                         :: val
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_real64, intent(in) :: eta1
+    val = mesh%x1_func(eta1)
+  end function x1_one_var
 
 
 
