@@ -220,6 +220,7 @@ IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(mgd3)
 ENDIF()
+add_subdirectory(LinRood)
 
 
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
