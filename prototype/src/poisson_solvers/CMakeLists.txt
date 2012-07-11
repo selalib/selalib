@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
 add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90 fft1d.f90)
 
 IF(FFTPACK_ENABLED)

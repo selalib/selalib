@@ -40,7 +40,8 @@ program unit_test
      coordinates_d(i) = (i-1)*delta
      interpolation_points(i) = modulo(coordinates_d(i) - delta/3.0_f64,2.0_f64 * sll_pi)
      data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 + cos(coordinates_d(i)))
-     data_interp(i) = 2.0_f64*(sin(interpolation_points(i)) + 2.5_f64 + cos(interpolation_points(i)))
+     data_interp(i) = 2.0_f64*(sin(interpolation_points(i)) + 2.5_f64 &
+          + cos(interpolation_points(i)))
   end do
 
   print*, 'Cubic spline interpolation'
