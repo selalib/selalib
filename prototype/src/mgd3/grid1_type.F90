@@ -1,5 +1,14 @@
+# 1 "grid1_type.F"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "grid1_type.F"
       subroutine grid1_type(gtype,realtype,sx,ex,sy,ey,sz,ez,IOUT)
-# include "compdir.inc"
+
+# 1 "compdir.inc" 1
+
+
+      implicit none 
+# 3 "grid1_type.F" 2
       include "mpif.h"
       integer gtype(7),realtype,sx,ex,sy,ey,sz,ez,IOUT
 c------------------------------------------------------------------------
@@ -22,10 +31,10 @@ c Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR,
 c             MPI_TYPE_EXTENT, MPI_TYPE_HVECTOR
 c------------------------------------------------------------------------
       integer i,ierr
-# if cdebug
-      double precision tinitial
-      tinitial=MPI_WTIME()
-# endif
+
+
+
+
 c------------------------------------------------------------------------
 c datatype for one 1*1 corner (i=const,j=const,k=const)
 c
@@ -67,8 +76,8 @@ c
      1                     realtype,gtype(3),ierr)
       call MPI_TYPE_COMMIT(gtype(3),ierr)
 c
-# if cdebug
-      timing(7)=timing(7)+MPI_WTIME()-tinitial
-# endif
+
+
+
       return
       end

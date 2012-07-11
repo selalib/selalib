@@ -1,9 +1,18 @@
+# 1 "gscale.F"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "gscale.F"
       subroutine gscale(sx,ex,sy,ey,sz,ez,a,avo,acorr,comm3d,nx,ny,nz,
      1                  isol,IOUT)
-# include "compdir.inc"
+
+# 1 "compdir.inc" 1
+
+
+      implicit none 
+# 4 "gscale.F" 2
       include "mpif.h"
       integer sx,ex,sy,ey,sz,ez,nx,ny,nz,IOUT
-      REALN a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),avo,acorr
+      real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),avo,acorr
       integer comm3d,isol
 c------------------------------------------------------------------------
 c Rescale the field a so that its average inside the domain
@@ -21,12 +30,12 @@ c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 c Called in : mgdsolver, gdrbsor, gprbsor
 c Calls     : MPI_ALLREDUCE
 c------------------------------------------------------------------------
-      REALN avloc,av
+      real(8) :: avloc,av
       integer i,j,k,ierr
-# if cdebug
-      double precision tinitial,tmpi
-      tinitial=MPI_WTIME()
-# endif
+
+
+
+
 c
 c determine average value
 c
@@ -41,15 +50,15 @@ c
 c
 c global reduce across all process
 c
-# if cdebug
-      tmpi=MPI_WTIME()
-# endif
+
+
+
       call MPI_ALLREDUCE(avloc,av,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      1                   comm3d,ierr)
-# if cdebug
-      nallreduce=nallreduce+1
-      tallreduce=tallreduce+MPI_WTIME()-tmpi
-# endif
+
+
+
+
       av=av/float(nx*ny*nz)
 c
 c do correction
@@ -63,9 +72,9 @@ c
         end do
       end do
 c
-# if cdebug
-      timing(49)=timing(49)+MPI_WTIME()-tinitial
-# endif
+
+
+
       return
       end 
 
