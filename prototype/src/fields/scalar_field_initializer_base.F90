@@ -11,6 +11,7 @@ module sll_scalar_field_initializers_base
   implicit none
 
   type, abstract :: scalar_field_2d_initializer_base
+     sll_int32   :: data_position
    contains
      procedure(scalar_field_initializer), deferred, pass :: f_of_x1x2
   end type scalar_field_2d_initializer_base
@@ -24,6 +25,8 @@ module sll_scalar_field_initializers_base
      end subroutine scalar_field_initializer
   end interface
 
-  
+  enum, bind(C)
+     enumerator :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
+  end enum
   
 end module sll_scalar_field_initializers_base
