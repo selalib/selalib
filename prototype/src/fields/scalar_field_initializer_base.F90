@@ -16,11 +16,10 @@ module sll_scalar_field_initializers_base
   end type scalar_field_2d_initializer_base
 
   abstract interface
-     subroutine scalar_field_initializer( init_obj, mesh, data_out )
+     subroutine scalar_field_initializer( init_obj, data_out )
        use sll_working_precision
        import sll_mapped_mesh_2d_base, scalar_field_2d_initializer_base
        class(scalar_field_2d_initializer_base), intent(inout) :: init_obj
-       !class(sll_mapped_mesh_2d_base), intent(in)             :: mesh
        sll_real64, dimension(:,:), intent(out)                :: data_out
      end subroutine scalar_field_initializer
   end interface
