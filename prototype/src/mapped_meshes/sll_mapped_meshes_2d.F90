@@ -651,9 +651,9 @@ contains
     SLL_ALLOCATE(mesh%x1_node(npts1,npts2), ierr)
     SLL_ALLOCATE(mesh%x2_node(npts1,npts2), ierr)
 
-    ! Start filling out the fields and allocating the object's memory.
-    SLL_ALLOCATE(mesh%x1_node(npts1,npts2), ierr)
-    SLL_ALLOCATE(mesh%x2_node(npts1,npts2), ierr)
+    ! Allocation for x1 and x2 at cells
+    SLL_ALLOCATE(mesh%x1_cell(npts1-1,npts2-1), ierr)
+    SLL_ALLOCATE(mesh%x2_cell(npts1-1,npts2-1), ierr)
 
     ! initialize the local arrays. Note that since the map has its
     ! own copies, it owns this information locally and will destroy
