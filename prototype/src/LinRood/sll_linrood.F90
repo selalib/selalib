@@ -1,10 +1,10 @@
 !> \brief Implements a conservative and consistant algorithm based on an idea by Lin and Rood
 !> for the solution in 2D of $\partial_t u + \partial_x (au) = 0$, with a divergence free.
-!> This algorithm is based on an advective backward semi-Lagrangian method for predicting th fluxes
-!> in a conservative finite difference scheme which leads to conservativity
-!> Consitancy (conservation of constant states) is achieved by prediction using the advective form
-!> and by using a reconstruction of the stream function associated to a identical to the reconstruction 
-!> used for the fluxes
+!> This algorithm is based on an advective backward semi-Lagrangian method for predicting 
+!> the fluxes in a conservative finite difference scheme which leads to conservativity
+!> Consitancy (conservation of constant states) is achieved by prediction using 
+!> the advective form and by using a reconstruction of the stream function associated
+!> to a identical to the reconstruction used for the fluxes
 !> It is described in Qiu - Sonnendrucker
 
 module sll_linrood
@@ -53,7 +53,7 @@ contains
        this%interp_eta1 => new_interpolator_1d( which_interpolator, nc_eta1+1, &
             eta1_min, eta1_max, COMPACT_INTERPOLATOR)
     else
-       print*, 'sll_csl.F90: new_linrood_plan. boundary1_type ', boundary1_type, &
+       print*, 'sll_linrood.F90: new_linrood_plan. boundary1_type ', boundary1_type, &
             ' not implemented'
        stop
     end if
@@ -64,7 +64,7 @@ contains
        this%interp_eta2 => new_interpolator_1d( which_interpolator, nc_eta2+1, &
             eta2_min, eta2_max, COMPACT_INTERPOLATOR)  
     else
-       print*, 'sll_csl.F90: new_linrood_plan. boundary2_type ', boundary2_type, &
+       print*, 'sll_linrood.F90: new_linrood_plan. boundary2_type ', boundary2_type, &
             ' not implemented'
        stop
     end if
