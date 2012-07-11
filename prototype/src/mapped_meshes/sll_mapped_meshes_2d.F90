@@ -53,15 +53,21 @@ module sll_module_mapped_meshes_2d
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
           jacobian_func
-     procedure(j_matrix_f_nopass), pointer, nopass          :: jacobian_matrix
+     procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_analytic
+     ! Functions with integer arguments
      procedure, pass(mesh) :: x1_at_node => x1_node_analytic
      procedure, pass(mesh) :: x2_at_node => x2_node_analytic
      procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_analytic
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_analytic
+     procedure, pass(mesh) :: x2_at_cell => x2_cell_analytic
+     procedure, pass(mesh) :: jacobian_at_cell => jacobian_2d_cell_analytic
+     ! Functions with real arguments
      procedure, pass(mesh) :: x1         => x1_analytic
      procedure, pass(mesh) :: x2         => x2_analytic
      procedure, pass(mesh) :: jacobian   => jacobian_2d_analytic
+     procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_analytic
 #ifdef NOF03SUPPORT
      procedure, pass :: write_to_file => write_to_file_2d_analytic
 #endif
@@ -88,7 +94,11 @@ module sll_module_mapped_meshes_2d
      procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_discrete
      procedure, pass(mesh) :: x1         => x1_discrete
      procedure, pass(mesh) :: x2         => x2_discrete
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_discrete
+     procedure, pass(mesh) :: x2_at_cell => x2_cell_discrete
+     procedure, pass(mesh) :: jacobian_at_cell => jacobian_2d_cell_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
+     procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_discrete
 #ifdef NOF03SUPPORT
      procedure, pass :: write_to_file => write_to_file_2d_discrete
 #endif
@@ -264,6 +274,32 @@ contains
     val = j11*j22 - j12*j21
   end function jacobian_2d_analytic
 
+  ! The efficiency of the following function could be improved by just
+  ! passing the output array rather than returning values on the stack which
+  ! need to be caught by the caller.
+  function jacobian_matrix_2d_analytic( mesh, eta1, eta2 )
+    sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_analytic
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
+    j11 = (mesh%j_matrix(1,1)%f( eta1, eta2 ))
+    j12 = (mesh%j_matrix(1,2)%f( eta1, eta2 ))
+    j21 = (mesh%j_matrix(2,1)%f( eta1, eta2 ))
+    j22 = (mesh%j_matrix(2,2)%f( eta1, eta2 ))
+    ! For debugging:
+    !    print *, 'jacobian_2d_analytic: '
+    !    print *, j11, j12
+    !    print *, j21, j22
+    jacobian_matrix_2d_analytic(1,1) = j11
+    jacobian_matrix_2d_analytic(1,2) = j12
+    jacobian_matrix_2d_analytic(2,1) = j21
+    jacobian_matrix_2d_analytic(2,2) = j22
+  end function jacobian_matrix_2d_analytic
+
   function x1_analytic( mesh, eta1, eta2 ) result(val)
     sll_real64                         :: val
     class(sll_mapped_mesh_2d_analytic) :: mesh
@@ -295,6 +331,30 @@ contains
     sll_int32, intent(in) :: j
     val = mesh%x2_node(i,j)
   end function x2_node_analytic
+
+  function x1_cell_analytic( mesh, i, j )
+    sll_real64             :: x1_cell_analytic
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    x1_cell_analytic = mesh%x1_cell(i,j)
+  end function x1_cell_analytic
+
+  function x2_cell_analytic( mesh, i, j )
+    sll_real64             :: x2_cell_analytic
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    x2_cell_analytic = mesh%x2_cell(i,j)
+  end function x2_cell_analytic
+
+  function jacobian_2d_cell_analytic( mesh, i, j )
+    sll_real64             :: jacobian_2d_cell_analytic
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    jacobian_2d_cell_analytic = mesh%jacobians_c(i,j)
+  end function jacobian_2d_cell_analytic
 
 #ifdef NOF03SUPPORT
   subroutine write_to_file_2d_analytic(mesh,output_format)
@@ -378,6 +438,22 @@ contains
     val = mesh%x2_node(i,j)
   end function x2_node_discrete
 
+  function x1_cell_discrete( mesh, i, j )
+    sll_real64                         :: x1_cell_discrete
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+    sll_int32, intent(in)              :: i
+    sll_int32, intent(in)              :: j
+    x1_cell_discrete = mesh%x1_cell(i,j)
+  end function x1_cell_discrete
+
+  function x2_cell_discrete( mesh, i, j )
+    sll_real64                         :: x2_cell_discrete
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+    sll_int32, intent(in)              :: i
+    sll_int32, intent(in)              :: j
+    x2_cell_discrete = mesh%x2_cell(i,j)
+  end function x2_cell_discrete
+
   function x1_discrete( mesh, eta1, eta2 ) result(val)
     sll_real64                        :: val
     class(sll_mapped_mesh_2d_discrete) :: mesh
@@ -428,6 +504,37 @@ contains
     !    print *, j21, j22
     jac = j11*j22 - j12*j21
   end function jacobian_2d_discrete
+
+  function jacobian_2d_cell_discrete( mesh, i, j )
+    sll_real64                         :: jacobian_2d_cell_discrete
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+    sll_int32, intent(in)              :: i
+    sll_int32, intent(in)              :: j
+    jacobian_2d_cell_discrete = mesh%jacobians_c(i,j)
+  end function jacobian_2d_cell_discrete
+
+  function jacobian_matrix_2d_discrete( mesh, eta1, eta2 )
+    sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_discrete
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
+    j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+    j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j21 = mesh%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+    j22 = mesh%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+    ! For debugging:
+    !    print *, 'jacobian_2D_discrete: '
+    !    print *, j11, j12
+    !    print *, j21, j22
+    jacobian_matrix_2d_discrete(1,1) = j11
+    jacobian_matrix_2d_discrete(1,2) = j12
+    jacobian_matrix_2d_discrete(2,1) = j21
+    jacobian_matrix_2d_discrete(2,2) = j22
+  end function jacobian_matrix_2d_discrete
 
 
   subroutine initialize_mesh_2d_discrete( &
@@ -590,9 +697,8 @@ contains
           eta_2 = real(j,f64)*mesh%delta_eta2          
           do i=0, npts1 - 1
              eta_1 = real(i,f64)*mesh%delta_eta1
-             ! FIX THIS PART!!!
              jacobian_val = mesh%jacobian(eta_1,eta_2)
-             mesh%jacobians_n(i+1,j+1) = jacobian_val
+             mesh%jacobians_c(i+1,j+1) = jacobian_val
           end do
        end do
     end if
@@ -613,6 +719,19 @@ contains
        do j=1, npts2 - 1
           do i=1, npts1 - 1
              mesh%jacobians_c(i,j) = jacobians_cell(i,j)
+          end do
+       end do
+    else ! if cell-based jacobians are not available, compute them.
+    ! Fill the values at the mid-point of the cells
+       do j=0, npts2 - 2
+          eta_2 = mesh%delta_eta2*(real(j,f64) + 0.5_f64)
+          do i=0, npts1 - 2
+             ! it is very bad practice to invoke the mesh methods while
+             ! we are not even done initializing the mesh object...
+             eta_1 = mesh%delta_eta1*(real(i,f64) + 0.5_f64)
+             mesh%x1_cell(i+1,j+1)     = mesh%x1(eta_1, eta_2)
+             mesh%x2_cell(i+1,j+1)     = mesh%x2(eta_1, eta_2)
+             mesh%jacobians_c(i+1,j+1) = mesh%jacobian(eta_1,eta_2)
           end do
        end do
     end if
@@ -705,6 +824,7 @@ contains
     mesh%written = .true.
   end subroutine
 #endif
+
 
 #if 0
   subroutine delete_mapped_mesh_2D_general( map )
