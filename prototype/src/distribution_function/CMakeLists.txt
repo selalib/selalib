@@ -5,6 +5,13 @@ ENDIF()
 add_library(sll_distribution_function STATIC
 	sll_distribution_function.F90
 	initial_functions.F90)
+add_dependencies(sll_distribution_function
+	sll_working_precision
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_scalar_field_2d
+)
 add_executable(test_distribution_function unit_test.F90)
 target_link_libraries(test_distribution_function
 	sll_distribution_function
@@ -17,4 +24,6 @@ target_link_libraries(test_distribution_function
 	sll_utilities
 	sll_memory
 	sll_assertion
-	sll_constants)
+	sll_constants
+	sll_working_precision
+)

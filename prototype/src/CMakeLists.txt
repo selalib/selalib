@@ -8,7 +8,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 # Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-#set(CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}/bin")
+# Specify the output for binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # Add new directory to find the FIND<PACKAGE>.cmake files
@@ -133,20 +133,15 @@ ELSE()
 ENDIF()
 
 #add flag to disabled MPI stuff for debug
-#set(DISABLED_MPI_MODULE NO CACHE BOOL " ")
 set(DISABLED_MPI_MODULE BOOL NO)
 
 # recherche de MPI
-IF( DEFINED ENV{MPI_ROOT} )
-	set(MPI_ROOT $ENV{MPI_ROOT})
-	set(_MPI_BASE_DIR ${MPI_ROOT})
-ENDIF()
+# I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
+# If specify MPI_ROOT doesn't work try to change your PATH variable
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
-	#CMAKE_FORCE_Fortran_COMPILER(mpif90 ${Fortran_COMPILER_NAME})
-	#CMAKE_FORCE_Fortran_COMPILER(${MPI_Fortran_COMPILER} ${Fortran_COMPILER_NAME})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
 ENDIF(MPI_FOUND)
@@ -186,8 +181,7 @@ add_subdirectory(low_level_file_io)
 add_subdirectory(timer)
 
 #mid-level
-set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integration fftpack fft collective remap WENO )
-#poisson_solvers)
+set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integration fftpack fft collective remap WENO poisson_solvers)
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
@@ -198,17 +192,18 @@ ELSE()
 	LIST(REMOVE_ITEM MID_LEVEL_LIST_DIR fftpack)
 ENDIF()
 add_subdirectory(fft)
-#IF(DISABLED_MPI_MODULE)
-#ELSE()
-add_subdirectory(collective)
-add_subdirectory(remap)
-#ENDIF()
+IF(DISABLED_MPI_MODULE)
+ELSE()
+  add_subdirectory(collective)
+  add_subdirectory(remap)
+ENDIF()
 add_subdirectory(WENO)
 add_subdirectory(poisson_solvers)
 
 #hight-level
+add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+add_dependencies(geometry_functions sll_assertion sll_constants sll_working_precision)
 add_subdirectory(interpolators)
-#add_dependencies(sll_interpolators ${LOW_LEVEL_MODULES})
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
 add_subdirectory(ode_solvers)
@@ -234,7 +229,7 @@ ENDIF()
 
 
 
-add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
+#add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
 #add_custom_target(install make selalib_low_level)
 
 
