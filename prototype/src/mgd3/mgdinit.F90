@@ -10,7 +10,7 @@ include "mpif.h"
 integer :: ixp,jyq,kzr,iex,jey,kez,ngrid,nxp2,nyp2,nzp2
 integer :: sx,ex,sy,ey,sz,ez,realtype,nxprocs,nyprocs,nzprocs
 integer :: nwork,ibdry,jbdry,kbdry,myid,IOUT,nerror
-REALN   :: vbc(6),phibc(6,20)
+real(8) :: vbc(6),phibc(6,20)
  
 !integer :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
 !integer :: kpbgn,kcbgn,kdatatype
