@@ -9,8 +9,8 @@ mgdsolver.F90
 mgd3.F90
 decomp.F 
 gerr.F90
-grid1_type.F 
-gscale.F 
+grid1_type.F90
+gscale.F
 gxch1cor.F90
 gxch1lin.F90
 gxch1pla.F90
@@ -20,12 +20,12 @@ mgderr.F
 mgdpfpde.F 
 mgdphpde.F 
 mgdppde.F 
-mgdrelax.F90 
+mgdrelax.F 
 mgdrestr.F 
 mgdrpde.F 
 mgdrsetf.F
-mgdrtrsf.F90 
 mgdsetf.F 
+mgdrtrsf.F 
 )
 
 add_executable(tmgd3 tmgd3.F90)
