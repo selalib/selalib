@@ -1,6 +1,7 @@
 subroutine gxch1cor(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
                     bd,cornertype,req,ireq,IOUT)
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,comm3d
 integer :: neighbor(26),bd(26),cornertype,req(52),ireq,IOUT

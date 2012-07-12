@@ -2,7 +2,9 @@ subroutine mgdrestr(sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,phic,    &
                     rhsc,sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,    &
                     phif,cof,resf,iresw,comm3dp,comm3dl,comm3dc, &
                     neighbor,bd,datatypes,IOUT)
-# include "compdir.inc"
+
+implicit none
+# include "mgd3.h"
 include "mpif.h"
 integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,IOUT
 integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf
@@ -28,9 +30,7 @@ real(8) :: cof(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1,8)
 integer :: i,j,k,isrt,jsrt,ksrt,iinc,jinc,kinc,ic,jc,kc
 # if !WMGD
 integer ireq,req(52)
-# if NBLOCKGR
 integer status(MPI_STATUS_SIZE,52),ierr
-# endif
 # endif
 !------------------------------------------------------------------------
 do kc=szc-1,ezc+1

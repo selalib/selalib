@@ -1,11 +1,13 @@
 subroutine mgdrelax(sxm,exm,sym,eym,szm,ezm,phi,cof,iters,  &
      &              comm3dp,neighbor,bd,phibc,planetype,IOUT)
-# include "compdir.inc"
+
+implicit none
+#include "mgd3.h"
 include "mpif.h"
-integer sxm,exm,sym,eym,szm,ezm,iters,IOUT
-integer comm3dp,neighbor(26),bd(26),planetype(3)
-REALN phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1)
-REALN cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8),phibc(6)
+integer :: sxm,exm,sym,eym,szm,ezm,iters,IOUT
+integer :: comm3dp,neighbor(26),bd(26),planetype(3)
+real(8) :: phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1)
+real(8) :: cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8),phibc(6)
 !------------------------------------------------------------------------
 ! Gauss-Seidel point relaxation with Red & Black ordering. Works for
 ! periodic, Neumann, and Dirichlet boundary conditions.
