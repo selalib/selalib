@@ -8,7 +8,7 @@ include "mpif.h"
 integer :: kcur,kcycle,iprer,ipost,iresw,IOUT
 integer :: comm3dp,comm3dl,comm3dc
 integer :: neighbor(26),bd(26)
-REALN   :: work(*),res(*),phibc(6,*)
+real(8) :: work(*),res(*),phibc(6,*)
 
 !integer :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
 !integer :: kpbgn,kcbgn,kdatatype
