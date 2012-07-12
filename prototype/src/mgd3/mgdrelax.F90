@@ -1,12 +1,11 @@
-subroutine mgdrelax(sxm,exm,sym,eym,szm,ezm,phi,cof,iters, &
-                    comm3dp,neighbor,bd,phibc,planetype,IOUT)
-
-implicit none 
+subroutine mgdrelax(sxm,exm,sym,eym,szm,ezm,phi,cof,iters,  &
+     &              comm3dp,neighbor,bd,phibc,planetype,IOUT)
+# include "compdir.inc"
 include "mpif.h"
-integer :: sxm,exm,sym,eym,szm,ezm,iters,IOUT
-integer :: comm3dp,neighbor(26),bd(26),planetype(3)
-real(8) :: phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1)
-real(8) :: cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8),phibc(6)
+integer sxm,exm,sym,eym,szm,ezm,iters,IOUT
+integer comm3dp,neighbor(26),bd(26),planetype(3)
+REALN phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1)
+REALN cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8),phibc(6)
 !------------------------------------------------------------------------
 ! Gauss-Seidel point relaxation with Red & Black ordering. Works for
 ! periodic, Neumann, and Dirichlet boundary conditions.
@@ -20,6 +19,7 @@ integer rb,rbs,it,ipass,i,j,k
 integer ireq,req(52)
 
 integer status(MPI_STATUS_SIZE,52),ierr
+
 !
 ! do iters sweeps in the subdomain; impose the wall derivative
 ! BC after each half-sweep
@@ -32,19 +32,24 @@ do it=1,iters
       do j=sym,eym
         do i=sxm+rb,exm,2
           phi(i,j,k)=(cof(i,j,k,8)-(cof(i,j,k,1)*phi(i-1,j,k)   &
-                                   +cof(i,j,k,2)*phi(i+1,j,k)   &
-                                   +cof(i,j,k,3)*phi(i,j-1,k)   &
-                                   +cof(i,j,k,4)*phi(i,j+1,k)   &
-                                   +cof(i,j,k,5)*phi(i,j,k-1)   &
-                                   +cof(i,j,k,6)*phi(i,j,k+1))) &
-                     /cof(i,j,k,7)
+     &                                   +cof(i,j,k,2)*phi(i+1,j,k)   &
+     &                                   +cof(i,j,k,3)*phi(i,j-1,k)   &
+     &                                   +cof(i,j,k,4)*phi(i,j+1,k)   &
+     &                                   +cof(i,j,k,5)*phi(i,j,k-1)   &
+     &                                   +cof(i,j,k,6)*phi(i,j,k+1))) &
+     &                     /cof(i,j,k,7)
         end do
         rb=1-rb
       end do
       rb=1-rbs
     end do
     rb=1-mod(sxm,2)
-
+# if WMGD
+!
+! new version: impose Neumann and Dirichlet boundary conditions
+!
+    call mgdbdry(sxm,exm,sym,eym,szm,ezm,phi,bd,phibc,IOUT)
+# endif
   end do
 end do
 !
@@ -58,9 +63,16 @@ end do
 ireq=0
 
 call gxch1pla(sxm,exm,sym,eym,szm,ezm,phi,comm3dp,neighbor, &
-              bd,planetype,req,ireq,IOUT)
+     &              bd,planetype,req,ireq,IOUT)
 
 call MPI_WAITALL(ireq,req,status,ierr)
 
+# if WMGD
+!
+! new version: impose Neumann and Dirichlet boundary conditions
+!
+call mgdbdry(sxm,exm,sym,eym,szm,ezm,phi,bd,phibc,IOUT)
+# endif
+!
 return
 end
