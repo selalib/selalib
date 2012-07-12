@@ -47,7 +47,11 @@ program unit_test
   !
   ! X1 = (r1 + (r2-r1)*eta1)*cos(2*pi*eta2)
 
+#ifdef STDF95
+  call cubic_spline_initialize( cs2d, &
+#else
   call cs2d%initialize( &
+#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -59,7 +63,11 @@ program unit_test
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
+#ifdef STDF95
+  call cubic_spline_compute_interpolants(cs2d,x1)
+#else
   call cs2d%compute_interpolants(x1)
+#endif
 
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
@@ -69,13 +77,25 @@ program unit_test
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
+#ifdef STDF95
+        node_val   = cubic_spline_interpolate_value(cs2d,eta1,eta2)
+#else
         node_val   = cs2d%interpolate_value(eta1,eta2)
+#endif
         ref        = x1_polar_f(eta1,eta2)
         acc        = acc + abs(node_val-ref)
+#ifdef STDF95
+        deriv1_val = cubic_spline_interpolate_derivative_eta1(cs2d,eta1,eta2)
+#else
         deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
+#endif
         ref        = deriv_x1_polar_f_eta1(eta1,eta2)
         acc1       = acc1 + abs(deriv1_val-ref)
+#ifdef STDF95
+        deriv2_val = cubic_spline_interpolate_derivative_eta2(cs2d,eta1,eta2)
+#else
         deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
+#endif
         ref        = deriv_x1_polar_f_eta2(eta1,eta2)
         acc2       = acc2 + abs(deriv2_val-ref)
      end do
