@@ -2,10 +2,8 @@ IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
-IF(NO_FORTRAN_2003)
+IF(STDF95)
  add_library(sll_mapped_meshes STATIC
-	sll_mapped_meshes_1d_base.F90
-	sll_mapped_meshes_2d_base.F90
 	sll_mapped_meshes_1d.F90
 	sll_mapped_meshes_2d.F90
   )
@@ -18,7 +16,6 @@ ELSE()
 	sll_mapped_meshes_2d_cartesian.F90
   )
 ENDIF()
-
 add_dependencies(sll_mapped_meshes
 	sll_interpolators
 	sll_splines
@@ -43,8 +40,8 @@ target_link_libraries(test_mapped_meshes_1d
 	sll_working_precision
   )
 
-add_executable(test_mapped_meshes unit_test.F90)
-target_link_libraries(test_mapped_meshes
+add_executable(test_mapped_meshes_2d unit_test.F90)
+target_link_libraries(test_mapped_meshes_2d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
@@ -56,7 +53,7 @@ target_link_libraries(test_mapped_meshes
 	sll_working_precision
   )
 
-IF(NOT NO_FORTRAN_2003)
+IF(NOT STDF95)
  add_executable(test_mapped_meshes_cartesian unit_test_cartesian.F90)
  target_link_libraries(test_mapped_meshes_cartesian
 	sll_mapped_meshes

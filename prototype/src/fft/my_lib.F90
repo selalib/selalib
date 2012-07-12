@@ -38,7 +38,7 @@
   end function
 
   subroutine sll_apply_fft_complex(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
+    type(sll_fft_plan), pointer                 :: plan
     sll_comp64, dimension(:), intent(inout)     :: array_in, array_out
 
     if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
@@ -98,7 +98,7 @@
   end function
 
   subroutine sll_apply_fft_c2c_1d_for_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_int32                                       :: i, j, direction
 
@@ -173,7 +173,7 @@
   end function
 
   subroutine sll_apply_fft_c2c_1d_for_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)      :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_int32                                       :: i, nx, ny
     sll_int32 :: fft_shape(2)
@@ -259,7 +259,7 @@
   end function
 
   subroutine sll_apply_fft_c2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)      :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_int32                                       :: i, nx, ny
     sll_int32                                       :: fft_shape(2)
@@ -421,7 +421,7 @@
 
   subroutine sll_apply_fft_real(plan,array_in,array_out)
     implicit none
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
     sll_int32 :: nx
 
@@ -474,7 +474,7 @@
 
   subroutine sll_fft_apply_r2c_1d(plan,array_in,array_out)
     implicit none
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_real64, dimension(0:), intent(inout)        :: array_in
     sll_comp64, dimension(0:), intent(out)          :: array_out
     sll_int32                                       :: nx, i
@@ -527,10 +527,10 @@
 
   subroutine sll_fft_apply_c2r_1d(plan,array_in,array_out)
     implicit none
-    type(sll_fft_plan), pointer, intent(in)             :: plan
-    sll_comp64, dimension(0:), intent(inout)          :: array_in
+    type(sll_fft_plan), pointer                   :: plan
+    sll_comp64, dimension(0:), intent(inout)      :: array_in
     sll_real64, dimension(0:), intent(out)        :: array_out
-    sll_int32                                       :: nx, i
+    sll_int32                                     :: nx, i
 
     nx = plan%problem_shape(1)
  
@@ -588,7 +588,7 @@
 
   subroutine sll_fft_apply_r2c_2d(plan,array_in,array_out)
     implicit none
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_real64, dimension(0:,0:), intent(inout)     :: array_in
     sll_comp64, dimension(0:,0:), intent(out)       :: array_out
     sll_int32                                       :: nx, i, ny, k
@@ -652,7 +652,7 @@
 
   subroutine sll_fft_apply_c2r_2d(plan,array_in,array_out)
     implicit none
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in
     sll_real64, dimension(0:,0:), intent(out)       :: array_out
     sll_int32                                       :: nx, i, ny, k, j
