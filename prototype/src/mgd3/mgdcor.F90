@@ -1,7 +1,8 @@
 subroutine mgdcor(sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,phif, &
                   sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,phic, &
                   sx1,ex1,sy1,ey1,sz1,ez1,bd,phibc,IOUT)
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf
 integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc

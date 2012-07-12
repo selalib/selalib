@@ -6,7 +6,8 @@ subroutine mgdsolver(isol,sx,ex,sy,ey,sz,ez,phif,rhsf,r,ngrid, &
 
 
 use mgd3
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,ngrid,IOUT
 integer :: maxcy,kcycle,iprer,ipost,iresw

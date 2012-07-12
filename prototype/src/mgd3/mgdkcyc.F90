@@ -3,24 +3,13 @@ subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
 
 use mgd3
 
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: kcur,kcycle,iprer,ipost,iresw,IOUT
 integer :: comm3dp,comm3dl,comm3dc
 integer :: neighbor(26),bd(26)
 real(8) :: work(*),res(*),phibc(6,*)
-
-!integer :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
-!integer :: kpbgn,kcbgn,kdatatype
-!integer :: sxi,exi,syi,eyi,szi,ezi
-!integer :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
-!integer :: rdatatype
-!common/mgd/nxk(20),nyk(20),nzk(20),                          &
-!           sxk(20),exk(20),syk(20),eyk(20),szk(20),ezk(20),  &
-!           kpbgn(20),kcbgn(20),kdatatype(7,20),              &
-!           sxi(20),exi(20),syi(20),eyi(20),szi(20),ezi(20),  &
-!           nxr(20),nyr(20),nzr(20),sxr(20),exr(20),syr(20),  &
-!           eyr(20),szr(20),ezr(20),rdatatype(7,20)
 
 !------------------------------------------------------------------------
 ! Do one multigrid K-cycle
