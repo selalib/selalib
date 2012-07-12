@@ -5,24 +5,14 @@ subroutine mgdinit(vbc,phibc,ixp,jyq,kzr,iex,jey,kez,ngrid,nxp2,&
 
 use mgd3
 
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: ixp,jyq,kzr,iex,jey,kez,ngrid,nxp2,nyp2,nzp2
 integer :: sx,ex,sy,ey,sz,ez,realtype,nxprocs,nyprocs,nzprocs
 integer :: nwork,ibdry,jbdry,kbdry,myid,IOUT,nerror
 real(8) :: vbc(6),phibc(6,20)
  
-!integer :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
-!integer :: kpbgn,kcbgn,kdatatype
-!integer :: sxi,exi,syi,eyi,szi,ezi
-!integer :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
-!integer :: rdatatype
-!common/mgd/nxk(20),nyk(20),nzk(20),                          &
-!           sxk(20),exk(20),syk(20),eyk(20),szk(20),ezk(20),  &
-!           kpbgn(20),kcbgn(20),kdatatype(7,20),              &
-!           sxi(20),exi(20),syi(20),eyi(20),szi(20),ezi(20),  &
-!           nxr(20),nyr(20),nzr(20),sxr(20),exr(20),syr(20),  &
-!           eyr(20),szr(20),ezr(20),rdatatype(7,20)
 !------------------------------------------------------------------------
 ! Initialize the parallel multigrid solver: subdomain indices,
 ! MPI datatypes, boundary values for Dirichlet boundaries.
@@ -96,38 +86,42 @@ integer :: sxm,exm,sym,eym,szm,ezm
 !------------------------------------------------------------------------
 ! set /mgd/ variables to zero
 !
+
+nxk=0
+nyk=0
+nzk=0
+sxk=0
+exk=0
+syk=0
+eyk=0
+szk=0
+ezk=0
+kpbgn=0
+kcbgn=0
+
 do k=1,20
-  nxk(k)=0
-  nyk(k)=0
-  nzk(k)=0
-  sxk(k)=0
-  exk(k)=0
-  syk(k)=0
-  eyk(k)=0
-  szk(k)=0
-  ezk(k)=0
-  kpbgn(k)=0
-  kcbgn(k)=0
   do j=1,7
     kdatatype(j,k)=MPI_DATATYPE_NULL
     rdatatype(j,k)=MPI_DATATYPE_NULL
   end do
-  sxi(k)=0
-  exi(k)=0
-  syi(k)=0
-  eyi(k)=0
-  szi(k)=0
-  ezi(k)=0
-  nxr(k)=0
-  nyr(k)=0
-  nzr(k)=0
-  sxr(k)=0
-  exr(k)=0
-  syr(k)=0
-  eyr(k)=0
-  szr(k)=0
-  ezr(k)=0
 end do
+
+sxi=0
+exi=0
+syi=0
+eyi=0
+szi=0
+ezi=0
+nxr=0
+nyr=0
+nzr=0
+sxr=0
+exr=0
+syr=0
+eyr=0
+szr=0
+ezr=0
+
 !------------------------------------------------------------------------
 ! make a number of checks
 !
