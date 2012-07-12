@@ -2,9 +2,9 @@ subroutine ginit(sx,ex,sy,ey,sz,ez,p,r,f,wk,hxi,hyi,hzi,pi,IOUT)
 # include "compdir.inc"
 include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,IOUT
-REALN :: p(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-REALN :: r(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-REALN :: f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),hxi,hyi,hzi,wk,pi
+real(8) :: p(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real(8) :: r(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real(8) :: f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),hxi,hyi,hzi,wk,pi
 
 !-----------------------------------------------------------------------
 ! Initialize the pressure, density, and right-hand side of the
@@ -16,7 +16,7 @@ REALN :: f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),hxi,hyi,hzi,wk,pi
 ! Calls     : --
 !-----------------------------------------------------------------------
 integer :: i,j,k
-REALN :: cnst,cx,cy,cz,xi,yj,zk
+real(8) :: cnst,cx,cy,cz,xi,yj,zk
 
 do k=sz-1,ez+1
   do j=sy-1,ey+1
