@@ -4,12 +4,18 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use util_constants
-  use sll_module_interpolators_1d_base
 !  use sll_WENO
+#ifndef STDF95
+  use sll_module_interpolators_1d_base
+#endif
   use sll_cubic_spline_interpolator_1d
     implicit none
 
+#ifdef STDF95
+  type(cubic_spline_1d_interpolator), pointer  :: interp
+#else
   class(sll_interpolator_1d_base), pointer     :: interp
+#endif
 !  class(sll_WENO_1d), target                   :: WENO
   type(cubic_spline_1d_interpolator), target  :: spline
 
@@ -45,9 +51,17 @@ program unit_test
   end do
 
   print*, 'Cubic spline interpolation'
+#ifdef STDF95
+  call cubic_spline_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
+#else
   call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  interp =>  spline 
+#endif
+  interp =>  spline
+#ifdef STDF95
+  out = cubic_spline_interpolate_array(interp, n, data, interpolation_points)
+#else
   out = interp%interpolate_array(n, data, interpolation_points)
+#endif
   error = 0.0_f64
   do i=1,n   
      error = max(error, abs(data_interp(i) - out(i)))

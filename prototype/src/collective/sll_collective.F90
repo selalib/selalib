@@ -832,9 +832,18 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
  end subroutine sll_collective_alltoallV_int
 
-
+  ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
   subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
                                              recv_buf,col )
+#ifdef STDF95
+    sll_int32, dimension(:), intent(in) :: send_buf
+    sll_int32, dimension(:), intent(in) :: send_cnts
+    sll_int32, dimension(:), intent(out) :: recv_buf
+    type(sll_collective_t), pointer     :: col
+
+    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
+    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
+#else
     sll_int32, dimension(:), intent(in) :: send_buf
     sll_int32, dimension(:), intent(in) :: send_cnts
     sll_int32, allocatable, dimension(:), intent(out) :: recv_buf
@@ -885,6 +894,7 @@ contains !************************** Operations **************************
     SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
     SLL_DEALLOCATE_ARRAY(send_displs,ierr)
     SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
+#endif
  end subroutine sll_collective_alltoallV_int_simple
 
 end module sll_collective
