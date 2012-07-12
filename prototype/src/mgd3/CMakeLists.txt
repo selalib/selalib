@@ -15,13 +15,13 @@ gxch1cor.F90
 gxch1lin.F90
 gxch1pla.F90
 mgdbdry.F 
-mgdcor.F 
+mgdcor.F90 
 mgderr.F 
 mgdpfpde.F 
 mgdphpde.F 
 mgdppde.F 
-mgdrelax.F 
-mgdrestr.F 
+mgdrelax.F90
+mgdrestr.F90
 mgdrpde.F 
 mgdrsetf.F
 mgdsetf.F 
