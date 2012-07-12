@@ -399,7 +399,7 @@ module sll_fft
     sll_int32                       :: library
     sll_int32                       :: direction
     sll_int32                       :: problem_rank
-    sll_int32, allocatable          :: problem_shape(:)
+    sll_int32, pointer              :: problem_shape(:)
   end type sll_fft_plan
 
   ! We choose the convention in which the direction of the FFT is determined
@@ -495,7 +495,7 @@ contains
 
   ! Return NO if the flag is disabled in the plan or YES if enabled.
   function fft_is_present_flag_in_plan(plan,flag) result(bool)
-    type(sll_fft_plan), pointer, intent(in)     :: plan
+    type(sll_fft_plan), pointer             :: plan
     sll_int32, intent(in)                   :: flag
     logical                                 :: bool
     sll_int32                               :: m
@@ -534,7 +534,7 @@ contains
 
   function fft_get_shape(plan) result(etendue)
     type(sll_fft_plan), pointer :: plan
-    sll_int32, allocatable  :: etendue(:)
+    sll_int32, pointer  :: etendue(:)
     allocate(etendue(fft_get_rank(plan)))
     etendue = plan%problem_shape
   end function
@@ -1073,7 +1073,7 @@ contains
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_c2c_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_comp64, dimension(0:), intent(inout)        :: array_in, array_out
     type(time_mark), pointer                        :: mark 
     sll_real64                                      :: factor, time
@@ -1138,7 +1138,7 @@ INFO
 
 
   subroutine apply_plan_c2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
     sll_real64                                      :: factor
 
@@ -1259,7 +1259,7 @@ INFO
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_r2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_real64, dimension(:), intent(inout)         :: array_in
     sll_real64, dimension(:), intent(inout)         :: array_out
     sll_real64                                      :: factor, time
@@ -1458,7 +1458,7 @@ INFO
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_r2c_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)             :: plan
+    type(sll_fft_plan), pointer                     :: plan
     sll_real64, dimension(:), intent(inout)        :: array_in
     sll_comp64, dimension(:), intent(out)          :: array_out
     sll_int32                                       :: nx
@@ -1517,7 +1517,7 @@ INFO
   end subroutine
 
   subroutine fft_apply_r2c_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)           :: plan
+    type(sll_fft_plan), pointer                       :: plan
     sll_real64, dimension(:,:), intent(inout)         :: array_in
     sll_comp64, dimension(:,:), intent(inout)         :: array_out
     sll_real64                                        :: factor
@@ -1708,7 +1708,7 @@ INFO
 ! -       APPLY       -
 ! ---------------------
   subroutine fft_apply_c2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)         :: plan
+    type(sll_fft_plan), pointer                 :: plan
     sll_comp64, dimension(0:), intent(inout)    :: array_in
     sll_real64, dimension(0:), intent(inout)    :: array_out
     sll_int32                                   ::  nx
@@ -1762,7 +1762,7 @@ INFO
 
 
   subroutine fft_apply_c2r_2d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)               :: plan
+    type(sll_fft_plan), pointer                       :: plan
     sll_comp64, dimension(:,:), intent(inout)         :: array_in
     sll_real64, dimension(:,:), intent(inout)         :: array_out
     sll_real64                                        :: factor
@@ -1854,7 +1854,7 @@ INFO
 
 
   subroutine fft_delete(plan)
-   type(sll_fft_plan), pointer, intent(inout) :: plan
+   type(sll_fft_plan), pointer :: plan
    sll_int32 :: ierr
 
     if( .not. associated(plan) ) then
@@ -1882,8 +1882,8 @@ INFO
         deallocate(plan%twiddles_n)
         plan%twiddles_n => null()
       endif
-      if(allocated(plan%problem_shape)) then
-        SLL_DEALLOCATE_ARRAY(plan%problem_shape,ierr)
+      if(associated(plan%problem_shape)) then
+        SLL_DEALLOCATE(plan%problem_shape,ierr)
       endif
     endif
     if(plan%library .eq. FFTPACK_MOD) then
