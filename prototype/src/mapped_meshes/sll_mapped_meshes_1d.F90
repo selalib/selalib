@@ -88,24 +88,24 @@ module sll_module_mapped_meshes_1d
   end type sll_mapped_mesh_1d_discrete
 
 #ifdef STDF95
- interface mapped_meshes_initialize
-    module procedure mma_initialize, mmd_initialize
+ interface initialize
+    module procedure initialize_mesh_1d_analytic, initialize_mesh_1d_discrete
   end interface
 
-  interface mapped_meshes_write_to_file
+  interface write_to_file
     module procedure mma_write_to_file, mmd_write_to_file
   end interface
 
-  interface mapped_meshes_x1_at_node
-    module procedure mma_x1_at_node, mmd_x1_at_node
+  interface x1_at_node
+    module procedure x1_node_discrete_1d, x1_node_analytic_1d
   end interface
 
-  interface mapped_meshes_jacobian_at_node
-    module procedure mma_jacobian_at_node
+  interface jacobian_at_node
+    module procedure mesh_1d_jacobian_node_discrete
   end interface
 
-  interface mapped_meshes_jacobian
-    module procedure mmd_jacobian
+  interface jacobian
+    module procedure jacobian_1d_discrete
   end interface
 #else
   abstract interface
@@ -142,11 +142,7 @@ contains
   ! the 1D map. 
   !
 
-#ifdef STDF95
-  subroutine mma_initialize( &
-#else
   subroutine initialize_mesh_1d_analytic( &
-#endif
     mesh,           &
     label,          &
     npts,           &
@@ -220,19 +216,18 @@ contains
        mesh%x1_cell(i+1)     = x1_func(eta_1)
        mesh%jacobians_c(i+1) = jacobian_func(eta_1)
     end do
-  end subroutine
+  end subroutine initialize_mesh_1d_analytic
 
+  function x1_node_analytic_1d( mesh, i ) result(val)
 #ifdef STDF95
-  function mma_x1_at_node( mesh, i ) result(val)
     type(sll_mapped_mesh_1d_analytic) :: mesh
 #else
-  function x1_node_analytic_1d( mesh, i ) result(val)
     class(sll_mapped_mesh_1d_analytic) :: mesh
 #endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     val = mesh%x1_node(i)
-  end function
+  end function x1_node_analytic_1d
 
 #ifdef STDF95
 #else
@@ -244,11 +239,10 @@ contains
   end function x1_analytic_1d
 #endif
 
+  function mesh_1d_jacobian_node_analytic( mesh, i ) result(val)
 #ifdef STDF95
-  function mma_jacobian_at_node( mesh, i ) result(val)
     type(sll_mapped_mesh_1d_analytic)    :: mesh
 #else
-  function mesh_1d_jacobian_node_analytic( mesh, i ) result(val)
     class(sll_mapped_mesh_1d_analytic)   :: mesh
 #endif
     sll_real64              :: val
@@ -257,7 +251,7 @@ contains
     num_pts_1 = mesh%nc_eta1 + 1
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     val = mesh%jacobians_n(i)
-  end function
+  end function mesh_1d_jacobian_node_analytic
 
 #ifdef STDF95
 #else
@@ -286,7 +280,7 @@ contains
     num_pts1 = mesh%nc_eta1+1
     SLL_ALLOCATE(x1_array(num_pts1),error)
     do i=1,num_pts1
-       x1_array(i) = mapped_meshes_x1_at_node(mesh,i)
+       x1_array(i) = x1_at_node(mesh,i)
     end do
     call sll_gnuplot_write(x1_array,mesh%label,error)
     SLL_DEALLOCATE_ARRAY(x1_array,error)
@@ -295,11 +289,7 @@ contains
 
   ! Discrete case:
 
-#ifdef STDF95
-  subroutine mmd_initialize( &
-#else
   subroutine initialize_mesh_1d_discrete( &
-#endif
     mesh,            &
     label,            &
     npts1,          &
@@ -433,7 +423,7 @@ contains
           !jacobian_val = mesh%jacobian_func(eta_1)
           ! by the next
 #ifdef STDF95
-          jacobian_val = mmd_jacobian(mesh,eta_1)
+          jacobian_val = jacobian(mesh,eta_1)
 #else
           jacobian_val = mesh%jacobian(eta_1)
 #endif
@@ -454,25 +444,23 @@ contains
           mesh%jacobians_c(i) = jacobians_cell(i)
        end do
     end if
-  end subroutine
+  end subroutine initialize_mesh_1d_discrete
 
+  function x1_node_discrete_1d( mesh, i ) result(val)
 #ifdef STDF95
-  function mmd_x1_at_node( mesh, i ) result(val)
     type(sll_mapped_mesh_1d_discrete) :: mesh
 #else
-  function x1_node_discrete_1d( mesh, i ) result(val)
     class(sll_mapped_mesh_1d_discrete) :: mesh
 #endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     val = mesh%x1_node(i)
-  end function
+  end function x1_node_discrete_1d
 
+  function mesh_1d_jacobian_node_discrete( mesh, i ) result(var)
 #ifdef STDF95
-  function mmd_jacobian_at_node( mesh, i ) result(var)
     type(sll_mapped_mesh_1d_discrete)   :: mesh
 #else
-  function mesh_1d_jacobian_node_discrete( mesh, i ) result(var)
     class(sll_mapped_mesh_1d_discrete)   :: mesh
 #endif
     sll_real64              :: var
@@ -481,13 +469,12 @@ contains
     num_pts_1 = mesh%nc_eta1 + 1
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     var = mesh%jacobians_n(i)
-  end function
+  end function mesh_1d_jacobian_node_discrete
 
+  function jacobian_1d_discrete( mesh, eta1 ) result(jac)
 #ifdef STDF95
-  function mmd_jacobian( mesh, eta1 ) result(jac)
     type(sll_mapped_mesh_1d_discrete) :: mesh
 #else
-  function jacobian_1d_discrete( mesh, eta1 ) result(jac)
     class(sll_mapped_mesh_1d_discrete) :: mesh
 #endif
     sll_real64             :: jac
@@ -497,13 +484,12 @@ contains
 #else
     jac = mesh%x1_interp%interpolate_derivative_eta1( eta1 )
 #endif
-  end function
+  end function jacobian_1d_discrete
 
+  function x1_discrete_1d( mesh, eta1 ) result(val)
 #ifdef STDF95
-  function mmd_x1( mesh, eta1 ) result(val)
     type(sll_mapped_mesh_1d_discrete) :: mesh
 #else
-  function x1_discrete_1d( mesh, eta1 ) result(val)
     class(sll_mapped_mesh_1d_discrete) :: mesh
 #endif
     sll_real64                         :: val
@@ -513,7 +499,7 @@ contains
 #else
     val = mesh%x1_interp%interpolate_value(eta1)
 #endif
-  end function
+  end function x1_discrete_1d
 
 #ifdef STDF95
   subroutine mmd_write_to_file(mesh,output_format)
@@ -532,7 +518,7 @@ contains
     num_pts1 = mesh%nc_eta1+1
     SLL_ALLOCATE(x1_array(num_pts1),error)
     do i=1,num_pts1
-       x1_array(i) = mmd_x1_at_node(mesh,i)
+       x1_array(i) = x1_node_discrete_1d(mesh,i)
     end do
     call sll_gnuplot_write(x1_array,mesh%label,error)
     SLL_DEALLOCATE_ARRAY(x1_array,error)
