@@ -132,6 +132,33 @@ module sll_module_mapped_meshes_2d
   end type sll_mapped_mesh_2d_discrete
 
 #ifdef STDF95
+  interface initialize 
+     module procedure initialize_mesh_2d_discrete, initialize_mesh_2d_analytic
+  end interface
+
+  interface x1_at_node 
+     module procedure x1_node_analytic, x1_node_discrete
+  end interface
+
+  interface x2_at_node 
+     module procedure x2_node_analytic, x2_node_discrete
+  end interface
+
+  interface x1 
+     module procedure x1_discrete
+  end interface
+
+  interface x2
+     module procedure x2_discrete
+  end interface
+
+  interface jacobian
+     module procedure jacobian_2d_discrete 
+  end interface
+
+  interface write_to_file
+     module procedure mma_write_to_file_2d_analytic, write_to_file_2d_discrete 
+  end interface
 #else
   abstract interface
      function j_matrix_f_nopass ( eta1, eta2) result(val)
@@ -172,38 +199,6 @@ module sll_module_mapped_meshes_2d
   end type jacobian_matrix_element
 #endif
   
-#ifdef STDF95
-  interface initialize 
-     module procedure initialize_mesh_2d_discrete, initialize_mesh_2d_analytic
-  end interface
-
-  interface x1_at_node 
-     module procedure x1_node_analytic, x1_node_discrete
-  end interface
-
-  interface x2_at_node 
-     module procedure x2_node_analytic, x2_node_discrete
-  end interface
-
-  interface mapped_meshes_x1 
-     module procedure x1_discrete
-  end interface
-
-  interface mapped_meshes_x2
-     module procedure x2_discrete
-  end interface
-
-  interface jacobian
-     module procedure jacobian_2d_discrete 
-  end interface
-
-  interface write_to_file
-     module procedure mma_write_to_file_2d_analytic, write_to_file_2d_discrete 
-  end interface
-
-
-#endif
-
 #if 0
   interface delete
      module procedure delete_mapped_mesh_2D_general
@@ -227,7 +222,7 @@ contains
   subroutine initialize_mesh_2d_analytic( &
 !#endif
     mesh,           &
-    label,           &
+    label,          &
     npts1,          &
     npts2,          &
     x1_func,        &

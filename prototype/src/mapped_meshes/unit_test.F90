@@ -15,8 +15,8 @@ program unit_test
   type(cubic_spline_2d_interpolator)   :: x1_interp
   type(cubic_spline_2d_interpolator)   :: x2_interp
   type(cubic_spline_2d_interpolator)   :: j_interp
-  sll_real64, dimension(:,:), allocatable :: x1
-  sll_real64, dimension(:,:), allocatable :: x2
+  sll_real64, dimension(:,:), allocatable :: x1_tab
+  sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
   sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
   sll_real64, dimension(:,:), allocatable :: jacs
@@ -30,8 +30,8 @@ program unit_test
   h2 = 1.0_f64/real(NPTS2-1,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
-  allocate(x1(NPTS1,NPTS2))
-  allocate(x2(NPTS1,NPTS2))
+  allocate(x1_tab(NPTS1,NPTS2))
+  allocate(x2_tab(NPTS1,NPTS2))
   allocate(x1_eta1_min(NPTS2))
   allocate(x1_eta1_max(NPTS2))
   allocate(x2_eta1_min(NPTS2))
@@ -42,8 +42,8 @@ program unit_test
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
-        x1(i+1,j+1)   = x1_polar_f(eta1,eta2) 
-        x2(i+1,j+1)   = x2_polar_f(eta1,eta2) 
+        x1_tab(i+1,j+1)   = x1_polar_f(eta1,eta2) 
+        x2_tab(i+1,j+1)   = x2_polar_f(eta1,eta2) 
         jacs(i+1,j+1) = jacobian_polar_f(eta1,eta2)
      end do
   end do
@@ -187,8 +187,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        "map_d", &
        NPTS1, &
        NPTS2, &
-       x1, &
-       x2, &
+       x1_tab, &
+       x2_tab, &
        x1_interp, &
        x2_interp, &
        j_interp, &

@@ -258,9 +258,8 @@ ENDIF()
 
 enable_testing()
 
-IF(NOT Fortran_COMPILER_NAME STREQUAL "ifort")
 add_test(NAME memory COMMAND test_memory)
-ENDIF()
+set_tests_properties(memory PROPERTIES TIMEOUT 20)
 
 #add_test(precision precision/test_precision) #too longer
 
