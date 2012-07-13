@@ -52,7 +52,7 @@ program unit_test_1d
 
   !print *, x1_polar_f(1.0_f64,1.0_f64)
 #ifdef STDF95
-  call mapped_meshes_initialize( map_a, &
+  call initialize( map_a, &
 #else
   call map_a%initialize( &
 #endif
@@ -73,7 +73,7 @@ program unit_test_1d
   do i=0,NPTS1-1
      eta1    = real(i,f64)*h1
 #ifdef STDF95
-     node_a  = mapped_meshes_x1_at_node(map_a,i+1)
+     node_a  = x1_at_node(map_a,i+1)
      val_a   = linear_map_f(eta1)
 #else
      node_a  = map_a%x1_at_node(i+1)
@@ -84,7 +84,7 @@ program unit_test_1d
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1)
 
 #ifdef STDF95
-  call mapped_meshes_write_to_file(map_a)
+  call write_to_file(map_a)
 #else
   call map_a%write_to_file()
 #endif
@@ -121,7 +121,7 @@ program unit_test_1d
        slope_right=linear_map_jac_f(1.0_f64) )
 
 #ifdef STDF95
-  call mapped_meshes_initialize( map_d,&
+  call initialize( map_d,&
 #else
   call map_d%initialize( &
 #endif
@@ -140,8 +140,8 @@ program unit_test_1d
   acc1 = 0.0_f64
   do i=1,NPTS1
 #ifdef STDF95
-     node_a   = mapped_meshes_x1_at_node(map_a,i)
-     node_d   = mapped_meshes_x1_at_node(map_d,i)
+     node_a   = x1_at_node(map_a,i)
+     node_d   = x1_at_node(map_d,i)
 #else
      node_a   = map_a%x1_at_node(i)
      node_d   = map_d%x1_at_node(i)
@@ -163,7 +163,7 @@ program unit_test_1d
      !node   = mapped_meshes_jacobian(map_a,eta1)
      ! So call simply the user function
      node   = linear_map_jac_f(eta1)
-     interp = mapped_meshes_jacobian(map_d,eta1)
+     interp = jacobian(map_d,eta1)
 #else
      !        print *, 'values: ', i, j, eta1, eta2
      !        print *, 'about to call map_a%jacobian(eta1,eta2)'
@@ -182,8 +182,8 @@ program unit_test_1d
   end do
 
 #ifdef STDF95
-  call mapped_meshes_write_to_file(map_d)
-  call mapped_meshes_write_to_file(map_d)
+  call write_to_file(map_d)
+  call write_to_file(map_d)
 #else
   call map_d%write_to_file()
   call map_d%write_to_file()
