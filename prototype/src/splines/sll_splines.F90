@@ -70,10 +70,14 @@ module sll_splines
   ! enumeration. It is thus possible to give descriptive names to flags,
   ! instead of using some numeric code that one needs to look up somewhere.
 
+#ifdef STDF95
+   integer, parameter :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
+#else
   enum, bind(C)
      enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
   end enum
-  
+#endif
+
   interface delete
      module procedure delete_spline_1D, delete_spline_2D
   end interface
@@ -292,7 +296,7 @@ contains  ! ****************************************************************
   subroutine compute_spline_1D_bis( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32                            :: bc_type
-    type(sll_spline_1D), pointer, intent(inout)  :: spline
+    type(sll_spline_1D), pointer         :: spline
     ! Note that this function does no error checking and basically
     ! outsources this task to the functions it is wrapping around.
     ! This is so because those functions can be used independently
@@ -328,10 +332,17 @@ contains  ! ****************************************************************
     sll_int32, intent(in)             :: num_pts
     sll_real64, dimension(:), pointer :: d
     sll_real64, dimension(:), pointer :: coeffs
+#ifdef STDF95
+    sll_real64, parameter             :: a = 0.78867513459481287_f64
+    sll_real64, parameter             :: r_a = 1.2679491924311228_f64
+    sll_real64, parameter             :: b = 0.21132486540518716_f64
+    sll_real64, parameter             :: b_a = 0.26794919243112275_f64
+#else
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
+#endif
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_int32                         :: i
@@ -389,11 +400,19 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: i
     sll_int32                         :: np
+#ifdef STDF95
+    sll_real64, parameter             :: a = 0.78867513459481287_f64
+    sll_real64, parameter             :: r_a = 1.2679491924311228_f64
+    sll_real64, parameter             :: b = 0.21132486540518716_f64
+    sll_real64, parameter             :: b_a = 0.26794919243112275_f64
+    sll_real64, parameter             :: ralpha = 1.8612097182041993_f64 
+#else
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
     sll_real64, parameter             :: ralpha = sqrt(6.0_f64/sqrt(3.0_f64))
+#endif
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64                        :: f1   ! to store modified value of f(1)
@@ -625,41 +644,51 @@ contains  ! ****************************************************************
   function interpolate_value( x, spline )
     sll_real64                        :: interpolate_value
     intrinsic                         :: associated, int, real
+#ifdef STDF95
+    sll_real64               :: x
+    type(sll_spline_1D)      :: spline
+#else
     sll_real64, intent(in)            :: x
     type(sll_spline_1D), pointer      :: spline
+#endif
     sll_real64, dimension(:), pointer :: coeffs
     sll_real64                        :: xmin
     sll_real64                        :: rh   ! reciprocal of cell spacing
+    
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+#ifdef STDF95
+#else
     SLL_ASSERT( associated(spline) )
+#endif
     xmin = spline%xmin
-    rh        = spline%rdelta
+    rh   = spline%rdelta
     coeffs => spline%coeffs
-    interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
+    interpolate_value = interpolate_value_aux( 0.0_f64, xmin, rh, coeffs )
+
   end function interpolate_value
 
-  !> Just a copy of the function interpolate_value but with a different name.
-  !> Need because, i want a function in my interpolator interface called interpolate value
-  !> and i have a polymorphic error.
-  function interpolate_value_1D( x, spline )
-    sll_real64                        :: interpolate_value_1D
-    intrinsic                         :: associated, int, real
-    sll_real64, intent(in)            :: x
-    type(sll_spline_1D), pointer      :: spline
-    sll_real64, dimension(:), pointer :: coeffs
-    sll_real64                        :: xmin
-    sll_real64                        :: rh   ! reciprocal of cell spacing
-    ! We set these as assertions since we want the flexibility of turning
-    ! them off.
-    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-    SLL_ASSERT( associated(spline) )
-    xmin = spline%xmin
-    rh        = spline%rdelta
-    coeffs => spline%coeffs
-    interpolate_value_1D = interpolate_value_aux( x, xmin, rh, coeffs )
-  end function interpolate_value_1D
+!  !> Just a copy of the function interpolate_value but with a different name.
+!  !> Need because, i want a function in my interpolator interface called interpolate value
+!  !> and i have a polymorphic error.
+!  function interpolate_value_1D( x, spline )
+!    sll_real64                        :: interpolate_value_1D
+!    intrinsic                         :: associated, int, real
+!    sll_real64, intent(in)            :: x
+!    type(sll_spline_1D), pointer      :: spline
+!    sll_real64, dimension(:), pointer :: coeffs
+!    sll_real64                        :: xmin
+!    sll_real64                        :: rh   ! reciprocal of cell spacing
+!    ! We set these as assertions since we want the flexibility of turning
+!    ! them off.
+!    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+!    SLL_ASSERT( associated(spline) )
+!    xmin = spline%xmin
+!    rh        = spline%rdelta
+!    coeffs => spline%coeffs
+!    interpolate_value_1D = interpolate_value_aux( x, xmin, rh, coeffs )
+!  end function interpolate_value_1D
   
   !> get spline interpolate at array of points
   subroutine interpolate_array_values( a_in, a_out, n, spline )
@@ -754,13 +783,19 @@ contains  ! ****************************************************************
     sll_real64                        :: interpolate_derivative
     intrinsic                         :: associated, int, real
     sll_real64, intent(in)            :: x
+#ifdef STDF95
+    type(sll_spline_1D)               :: spline
+#else
     type(sll_spline_1D), pointer      :: spline
+#endif
 
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+#ifdef STDF95
+#else
     SLL_ASSERT( associated(spline) )
-
+#endif
     interpolate_derivative = interpolate_derivative_aux( &
          x, &
          spline%xmin, &
@@ -1513,7 +1548,7 @@ contains  ! ****************************************************************
        STOP
     end select
   end subroutine compute_spline_2D
-	
+
   ! deposit_value_2D(): given a spline that describes the decomposition 
   ! of the distribution function at time t^n, and two 2D arrays x1 and x2 
   ! where the foot of the forward characteristics are stored, returns
@@ -1521,12 +1556,12 @@ contains  ! ****************************************************************
   !
   ! the boundary conditions are taken into account and any type of BC are allowed
   subroutine deposit_value_2D(x1, x2, spline, a_out)
-	  intrinsic :: real, int
-	  sll_real64, dimension(1:,1:), intent(in)      :: x1
+    intrinsic :: real, int
+    sll_real64, dimension(1:,1:), intent(in)      :: x1
     sll_real64, dimension(1:,1:), intent(in)      :: x2
     type(sll_spline_2D), pointer                  :: spline
-		sll_real64, dimension(:,:),intent(out)  			:: a_out
-		
+    sll_real64, dimension(:,:),intent(out)        :: a_out
+
     sll_real64  :: cij   ! C_ij
     sll_real64  :: x1_min
     sll_real64  :: x2_min
@@ -1895,7 +1930,11 @@ contains  ! ****************************************************************
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
+#ifdef STDF95
+    type(sll_spline_2D)                 :: spline
+#else
     type(sll_spline_2D), pointer        :: spline
+#endif
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -1922,7 +1961,10 @@ contains  ! ****************************************************************
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
+#ifdef STDF95
+#else
     SLL_ASSERT( associated(spline) )
+#endif
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
@@ -1971,7 +2013,11 @@ contains  ! ****************************************************************
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
+#ifdef STDF95
+    type(sll_spline_2D)                 :: spline
+#else
     type(sll_spline_2D), pointer        :: spline
+#endif
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -1997,7 +2043,10 @@ contains  ! ****************************************************************
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
+#ifdef STDF95
+#else
     SLL_ASSERT( associated(spline) )
+#endif
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
