@@ -7,6 +7,13 @@ module mgd3
    integer, dimension(20)   :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
    integer, dimension(7,20) :: rdatatype
 
+
+   type, public :: block
+      integer :: sx, ex
+      integer :: sy, ey
+      integer :: sz, ez
+   end type block
+
 contains
 
 

@@ -1,6 +1,7 @@
 subroutine gerr(sx,ex,sy,ey,sz,ez,p,comm3d,wk,hxi,hyi,hzi, &
                 pi,nx,ny,nz,IOUT)
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,comm3d,IOUT,nx,ny,nz
 real(8) :: p(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),wk,hxi,hyi,hzi,pi
