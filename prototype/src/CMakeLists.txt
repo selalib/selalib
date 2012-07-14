@@ -1,7 +1,6 @@
-project (sll)
-enable_language (Fortran)
+project(sll)
+enable_language(Fortran)
 cmake_minimum_required(VERSION 2.8)
-#INCLUDE(CMakeForceCompiler)
 
 # Determine how-to install the modules
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
@@ -132,8 +131,17 @@ ELSE()
 	message(STATUS "NO FORTRAN COMPILER FOUND")
 ENDIF()
 
+STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
+IF(${VAR} EQUAL -1)
+  set(STDF95 NO)
+ELSE()
+  set(STDF95 YES)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+  add_definitions(-DSTDF95)
+ENDIF()
+
 #add flag to disabled MPI stuff for debug
-set(DISABLED_MPI_MODULE BOOL NO)
+set(DISABLED_MPI_MODULE NO)
 
 # recherche de MPI
 # I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
@@ -168,6 +176,13 @@ endif(DOXYGEN_FOUND)
 set(FISHPACK_ENABLED CACHE BOOL OFF)
 set(MUDPACK_ENABLED CACHE BOOL OFF)
 
+#############
+#  RESUME
+#############
+#
+#message("DISABLED_MPI_MODULE = ${DISABLED_MPI_MODULE}")
+#
+#############
 
 #low-level
 set(LOW_LEVEL_LIST_DIR memory precision assert constants utilities low_level_file_io timer)
@@ -185,6 +200,7 @@ set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integratio
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
+add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
 	add_subdirectory(fftpack)
@@ -193,12 +209,14 @@ ELSE()
 ENDIF()
 add_subdirectory(fft)
 IF(DISABLED_MPI_MODULE)
+# nothing to do
 ELSE()
   add_subdirectory(collective)
   add_subdirectory(remap)
 ENDIF()
-add_subdirectory(WENO)
+IF(NOT STDF95)
 add_subdirectory(poisson_solvers)
+ENDIF()
 
 #hight-level
 add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
@@ -241,9 +259,8 @@ add_subdirectory(LinRood)
 
 enable_testing()
 
-IF(NOT Fortran_COMPILER_NAME STREQUAL "ifort")
 add_test(NAME memory COMMAND test_memory)
-ENDIF()
+set_tests_properties(memory PROPERTIES TIMEOUT 20)
 
 #add_test(precision precision/test_precision) #too longer
 
@@ -257,7 +274,8 @@ add_test(NAME low_level_file_io COMMAND test_io)
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
-add_test(NAME splines COMMAND test_splines test_non_unif_splines)
+add_test(NAME splines COMMAND test_splines)
+add_test(NAME splines_non_unif COMMAND test_non_unif_splines)
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
 IF(FISHPACK_ENABLED)
@@ -287,11 +305,11 @@ add_test(NAME remap
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-add_test(NAME WENO COMMAND test_WENO)
+add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
-add_test(NAME mapped_meshes COMMAND test_mapped_meshes
-				    test_mapped_meshes_1d)
+add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
+				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)

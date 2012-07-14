@@ -6,7 +6,8 @@ subroutine mgdsolver(isol,sx,ex,sy,ey,sz,ez,phif,rhsf,r,ngrid, &
 
 
 use mgd3
-# include "compdir.inc"
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,ngrid,IOUT
 integer :: maxcy,kcycle,iprer,ipost,iresw
@@ -68,16 +69,8 @@ integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc
 integer :: sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm
 integer :: ipf,irf,ip,ic,kcur,lev,ir1,ir2
 integer :: ireq,req(52)
-# if NBLOCKGR
-integer status(MPI_STATUS_SIZE,52),ierr
-# endif
-# if cdebug
-double precision tinitial
-# if NBLOCKGR
-double precision tmpi
-# endif
-tinitial=MPI_WTIME()
-# endif
+integer :: status(MPI_STATUS_SIZE,52),ierr
+
 !------------------------------------------------------------------------
 ! discretize pde at all levels
 !
@@ -264,7 +257,7 @@ return
 !------------------------------------------------------------------------
 ! converged
 !
-1000  continue
+1000 continue
 !
 ! rescale phif
 !
@@ -277,25 +270,18 @@ call gscale(sx,ex,sy,ey,sz,ez,phif,avo,acorr,comm3d,nx,ny,nz,isol,IOUT)
 !
 ! exchange boundary data and impose periodic BCs
 !
-# if NBLOCKGR
+
 ireq=0
-# endif
+
 call gxch1pla(sxm,exm,sym,eym,szm,ezm,phif,comm3dp,neighbor, &
               bd,kdatatype(1,ngrid),req,ireq,IOUT)
 call gxch1lin(sxm,exm,sym,eym,szm,ezm,phif,comm3dl,neighbor, &
               bd,kdatatype(4,ngrid),req,ireq,IOUT)
 call gxch1cor(sxm,exm,sym,eym,szm,ezm,phif,comm3dc,neighbor, &
               bd,kdatatype(7,ngrid),req,ireq,IOUT)
-# if NBLOCKGR
-# if cdebug
-tmpi=MPI_WTIME()
-# endif
+
 call MPI_WAITALL(ireq,req,status,ierr)
-# if cdebug
-nwaitall=nwaitall+1
-twaitall=twaitall+MPI_WTIME()-tmpi
-# endif
-# endif
+
 # if WMGD
 !
 ! impose wall and Dirichlet BCs
@@ -304,17 +290,11 @@ call mgdbdry(sx,ex,sy,ey,sz,ez,phif,bd,vbc,IOUT)
 # endif
 
 if (isol.eq.1) then
-  if (nprscr.and.myid.eq.0) write(IOUT,110) relmax,iter,acorr
-110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
-# if cdebug
-  timing(95)=timing(95)+MPI_WTIME()-tinitial
-# endif
+   if (nprscr.and.myid.eq.0) write(IOUT,110) relmax,iter,acorr
+   110 format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
 else
   if (nprscr.and.myid.eq.0) write(IOUT,120) relmax,iter,acorr
-120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
-# if cdebug
-  timing(96)=timing(96)+MPI_WTIME()-tinitial
-# endif
+   120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
 end if
 
 return
