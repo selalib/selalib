@@ -7,7 +7,7 @@
 ! inner loops and thus would have an appreciable overhead. 
 
 ! get macros
-#define GET_FIELD_MESH_MESH( f )           f%mesh
+#define GET_FIELD_MESH( f )                f%mesh
 #define GET_FIELD_ETA1_MIN( f )            f%mesh%eta1_min
 #define GET_FIELD_ETA1_MAX( f )            f%mesh%eta1_max
 #define GET_FIELD_NC_ETA1( f )             f%mesh%nc_eta1
@@ -24,6 +24,8 @@
 ! values outside of the initialization.
 #define FIELD_2D_AT_I( f, index1, index2 ) \
      f%data(index1,index2)
+#define FIELD_2D_JACOBIAN_AT_I( f, index1, index2 ) \
+     f%mesh%jacobian(index1,index2)
 #define FIELD_2D_AT_I_V1( f, index1, index2 ) \
      f%data(index1,index2)%v1
 #define FIELD_2D_AT_I_V2( f, index1, index2 ) \

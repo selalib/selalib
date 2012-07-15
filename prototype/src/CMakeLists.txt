@@ -213,6 +213,7 @@ set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integratio
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
+add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
 	add_subdirectory(fftpack)
@@ -226,7 +227,6 @@ ELSE()
   add_subdirectory(collective)
   add_subdirectory(remap)
 ENDIF()
-add_subdirectory(WENO)
 IF(NOT STDF95)
 add_subdirectory(poisson_solvers)
 ENDIF()
@@ -251,6 +251,7 @@ IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(mgd3)
 ENDIF()
+add_subdirectory(LinRood)
 
 
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
@@ -317,7 +318,7 @@ add_test(NAME remap
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-add_test(NAME WENO COMMAND test_WENO)
+add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
