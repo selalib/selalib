@@ -52,7 +52,9 @@ module sll_module_mapped_meshes_1d
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_analytic
      procedure, pass(mesh) :: x1_at_node => x1_node_analytic_1d
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_analytic_1d
      procedure, pass(mesh) :: jacobian_at_node => mesh_1d_jacobian_node_analytic
+     procedure, pass(mesh) :: jacobian_at_cell => mesh_1d_jacobian_cell_analytic
      procedure, pass(mesh) :: x1         => x1_analytic_1d
      procedure, pass(mesh) :: jacobian   => jacobian_1d_analytic
 #endif
@@ -81,7 +83,9 @@ module sll_module_mapped_meshes_1d
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete_1d
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_discrete_1d
      procedure, pass(mesh) :: jacobian_at_node => mesh_1d_jacobian_node_discrete
+     procedure, pass(mesh) :: jacobian_at_cell => mesh_1d_jacobian_cell_discrete
      procedure, pass(mesh) :: x1         => x1_discrete_1d
      procedure, pass(mesh) :: jacobian   => jacobian_1d_discrete
 #endif
@@ -100,8 +104,16 @@ module sll_module_mapped_meshes_1d
     module procedure x1_node_discrete_1d, x1_node_analytic_1d
   end interface
 
+  interface x1_at_cell
+    module procedure x1_cell_discrete_1d, x1_cell_analytic_1d
+  end interface
+
   interface jacobian_at_node
     module procedure mesh_1d_jacobian_node_discrete
+  end interface
+
+  interface jacobian_at_cell
+    module procedure mesh_1d_jacobian_cell_discrete
   end interface
 
   interface jacobian
@@ -229,6 +241,17 @@ contains
     val = mesh%x1_node(i)
   end function x1_node_analytic_1d
 
+  function x1_cell_analytic_1d( mesh, i ) result(val)
+#ifdef STDF95
+    type(sll_mapped_mesh_1d_analytic) :: mesh
+#else
+    class(sll_mapped_mesh_1d_analytic) :: mesh
+#endif
+    sll_real64             :: val
+    sll_int32, intent(in) :: i
+    val = mesh%x1_cell(i)
+  end function x1_cell_analytic_1d
+
 #ifdef STDF95
 #else
   function x1_analytic_1d( mesh, eta1 ) result(val)
@@ -252,6 +275,20 @@ contains
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     val = mesh%jacobians_n(i)
   end function mesh_1d_jacobian_node_analytic
+
+  function mesh_1d_jacobian_cell_analytic( mesh, i ) result(val)
+#ifdef STDF95
+    type(sll_mapped_mesh_1d_analytic)    :: mesh
+#else
+    class(sll_mapped_mesh_1d_analytic)   :: mesh
+#endif
+    sll_real64              :: val
+    sll_int32, intent(in)   :: i
+    sll_int32 :: num_pts_1
+    num_pts_1 = mesh%nc_eta1 
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    val = mesh%jacobians_c(i)
+  end function mesh_1d_jacobian_cell_analytic
 
 #ifdef STDF95
 #else
@@ -457,6 +494,17 @@ contains
     val = mesh%x1_node(i)
   end function x1_node_discrete_1d
 
+  function x1_cell_discrete_1d( mesh, i ) result(val)
+#ifdef STDF95
+    type(sll_mapped_mesh_1d_discrete) :: mesh
+#else
+    class(sll_mapped_mesh_1d_discrete) :: mesh
+#endif
+    sll_real64             :: val
+    sll_int32, intent(in) :: i
+    val = mesh%x1_cell(i)
+  end function x1_cell_discrete_1d
+
   function mesh_1d_jacobian_node_discrete( mesh, i ) result(var)
 #ifdef STDF95
     type(sll_mapped_mesh_1d_discrete)   :: mesh
@@ -470,6 +518,20 @@ contains
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     var = mesh%jacobians_n(i)
   end function mesh_1d_jacobian_node_discrete
+
+  function mesh_1d_jacobian_cell_discrete( mesh, i ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_1d_discrete)   :: mesh
+#else
+    class(sll_mapped_mesh_1d_discrete)   :: mesh
+#endif
+    sll_real64              :: var
+    sll_int32, intent(in)   :: i
+    sll_int32 :: num_pts_1
+    num_pts_1 = mesh%nc_eta1
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    var = mesh%jacobians_c(i)
+  end function mesh_1d_jacobian_cell_discrete
 
   function jacobian_1d_discrete( mesh, eta1 ) result(jac)
 #ifdef STDF95
