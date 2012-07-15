@@ -24,13 +24,12 @@ endif (NOT CMAKE_BUILD_TYPE)
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
 add_custom_target(clear
-		COMMAND find . -name '*.mod' -delete
-		COMMAND find . -name '*.a' -delete
-		COMMAND find . -name '*.o' -delete
-		COMMAND find . -name '*.cmake' -delete
-		COMMAND rm -f ${CMAKE_BINARY_DIR}/bin/*
-		COMMAND rm -f ${CMAKE_BINARY_DIR}/modules/*
-		WORKING_DIRECTORY ${CMAKE_BINARY_DIR} 
+		COMMAND find . -name *.mod -delete
+		COMMAND find . -name *.a -delete
+		COMMAND find . -name *.o -delete
+		COMMAND find . -name *.cmake -delete
+		COMMAND rm -rf bin
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 ##########################################################
