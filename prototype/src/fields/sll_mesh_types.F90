@@ -52,18 +52,12 @@ module sll_mesh_types
      end function scalar_function_2D
   end interface
 
-  interface operator(*)
-     module procedure mesh_grid_2d
-  end interface
-
   type mesh_descriptor_1D
      sll_real64 :: eta1_min
      sll_real64 :: eta1_max
      sll_int32  :: nc_eta1
      sll_real64 :: delta_eta1
      sll_int32  :: boundary_type
-  contains
-     procedure :: dump => dump_mesh_descriptor_1d
   end type mesh_descriptor_1D
 
   type geometry_2D
@@ -168,16 +162,11 @@ module sll_mesh_types
      type(vec2), dimension(:,:), pointer :: data
   end type field_2D_vec2
 
-  type field_2D_vec3
-     type(mesh_descriptor_2D), pointer :: descriptor
-     type(vec3), dimension(:,:), pointer :: data
-  end type field_2D_vec3
-
   !This type is defined only in splitted meshes case
   type field_4D_vec1
      !type(mesh_descriptor_4D), pointer :: descriptor
-     type(mesh_descriptor_2D), pointer :: descriptor_1
-     type(mesh_descriptor_2D), pointer :: descriptor_2
+     type(mesh_descriptor_2D), pointer :: descriptor_x
+     type(mesh_descriptor_2D), pointer :: descriptor_v
      sll_real64, dimension(:,:,:,:), pointer :: data
   end type field_4D_vec1
 
@@ -196,50 +185,6 @@ module sll_mesh_types
   end type mesh_cylindrical_3D
 
 contains   ! *****************************************************************
-
-  subroutine dump_mesh_descriptor_1d(this)
-  class(mesh_descriptor_1d) :: this
-  
-  print 100, this%eta1_min, this%eta1_max, this%nc_eta1, &
-             this%delta_eta1, this%boundary_type
-
-  100 format( /, " eta1_min, eta1_max = ", 2f12.3, &
-  &           /, " nc_eta1            = ", i5,     &
-  &           /, " delta_eta1         = ", f15.7,  &
-  &           /, " boundary_type      = ", i1     )
-  end subroutine dump_mesh_descriptor_1d
-
-  function mesh_grid_2d( mesh_1d_1, mesh_1d_2 )
-
-  type (mesh_descriptor_1D), intent(in), pointer  :: mesh_1d_1
-  type (mesh_descriptor_1D), intent(in), pointer  :: mesh_1d_2
-  type (mesh_descriptor_2D), pointer              :: mesh_grid_2d
-  type (geometry_2D), pointer                     :: geom_2d
-  sll_real64 :: eta1_min, eta1_max
-  sll_real64 :: eta2_min, eta2_max
-  sll_int32  :: nc_eta1, nc_eta2
-  sll_int32  :: boundary1_type, boundary2_type
-  sll_int32  :: error
-
-  eta1_min = mesh_1d_1%eta1_min
-  eta1_max = mesh_1d_1%eta1_max
-  eta2_min = mesh_1d_2%eta1_min
-  eta2_max = mesh_1d_2%eta1_max
-
-  nc_eta1  = mesh_1d_1%nc_eta1
-  nc_eta2  = mesh_1d_2%nc_eta1
-
-  boundary1_type = mesh_1d_1%boundary_type
-  boundary2_type = mesh_1d_2%boundary_type
-
-  geom_2d =>  new_geometry_2D ( 'cartesian' )
-
-  mesh_grid_2d => new_mesh_descriptor_2D( eta1_min, eta1_max, nc_eta1, &
-                                          boundary1_type,              &
-                                          eta2_min, eta2_max, nc_eta2, &
-                                          boundary2_type, geom_2d )
-
-  end function mesh_grid_2d
   
 
   function new_geometry_2D ( name )
@@ -267,7 +212,7 @@ contains   ! *****************************************************************
     SLL_ALLOCATE(new_geometry_2D%Jacobian_at_i(nc1+1,nc2+1),ierr)
 
     ! cartesian coordinates correspond to identity mapping
-    if ((trim(name)=='identity').or.(trim(name)=='cartesian')) then
+    if ((name(1:8)=='identity').or.(name(1:9)=='cartesian')) then
        new_geometry_2D%x1         => identity_x1
        new_geometry_2D%x2         => identity_x2
        new_geometry_2D%eta1       => identity_eta1
@@ -357,30 +302,30 @@ contains   ! *****************************************************************
     end if
   end function new_geometry_2D
 
-  function new_mesh_descriptor_1D( eta1_min, eta1_max, nc_eta1, boundary_type )
+  function new_mesh_descriptor_1D( eta1_min, eta1_max, ncells, bt )
     intrinsic                         :: real
     type(mesh_descriptor_1D), pointer :: new_mesh_descriptor_1D
     sll_int32                         :: ierr
     sll_real64, intent(in)            :: eta1_min
     sll_real64, intent(in)            :: eta1_max
-    sll_int32, intent(in)             :: nc_eta1
-    sll_int32, intent(in)             :: boundary_type
+    sll_int32, intent(in)             :: ncells
+    sll_int32, intent(in)             :: bt
     SLL_ALLOCATE(new_mesh_descriptor_1D, ierr)
     new_mesh_descriptor_1D%eta1_min   = eta1_min
     new_mesh_descriptor_1D%eta1_max   = eta1_max
-    new_mesh_descriptor_1D%nc_eta1     = nc_eta1
-    new_mesh_descriptor_1D%delta_eta1 = (eta1_max-eta1_min)/real(nc_eta1)
-    new_mesh_descriptor_1D%boundary_type = boundary_type
+    new_mesh_descriptor_1D%nc_eta1     = ncells
+    new_mesh_descriptor_1D%delta_eta1 = (eta1_max-eta1_min)/real(ncells)
+    new_mesh_descriptor_1D%boundary_type = bt
   end function new_mesh_descriptor_1D
 
-  function new_mesh_descriptor_2D( eta1_min, eta1_max, nc_eta1, boundary1_type, eta2_min, eta2_max, nc_eta2, boundary2_type, geom )
+  function new_mesh_descriptor_2D( eta1_min, eta1_max, ncells1, bt1, eta2_min, eta2_max, ncells2, bt2, geom )
     intrinsic                         :: real
     type(mesh_descriptor_2D), pointer :: new_mesh_descriptor_2D
     sll_int32                         :: ierr
     sll_real64, intent(in)            :: eta1_min, eta2_min
     sll_real64, intent(in)            :: eta1_max, eta2_max
-    sll_int32, intent(in)             :: nc_eta1, nc_eta2
-    sll_int32, intent(in)             :: boundary1_type, boundary2_type
+    sll_int32, intent(in)             :: ncells1, ncells2
+    sll_int32, intent(in)             :: bt1, bt2
     type(geometry_2D), pointer        :: geom
 
     if (.not.(associated(geom))) then
@@ -389,14 +334,14 @@ contains   ! *****************************************************************
     SLL_ALLOCATE(new_mesh_descriptor_2D, ierr)
     new_mesh_descriptor_2D%eta1_min   = eta1_min
     new_mesh_descriptor_2D%eta1_max   = eta1_max
-    new_mesh_descriptor_2D%nc_eta1     = nc_eta1
-    new_mesh_descriptor_2D%delta_eta1 = (eta1_max-eta1_min)/real(nc_eta1)
-    new_mesh_descriptor_2D%boundary1_type = boundary1_type
+    new_mesh_descriptor_2D%nc_eta1     = ncells1
+    new_mesh_descriptor_2D%delta_eta1 = (eta1_max-eta1_min)/real(ncells1)
+    new_mesh_descriptor_2D%boundary1_type = bt1
     new_mesh_descriptor_2D%eta2_min   = eta2_min
     new_mesh_descriptor_2D%eta2_max   = eta2_max
-    new_mesh_descriptor_2D%nc_eta2     = nc_eta2
-    new_mesh_descriptor_2D%delta_eta2 = (eta2_max-eta2_min)/real(nc_eta2)
-    new_mesh_descriptor_2D%boundary2_type = boundary2_type
+    new_mesh_descriptor_2D%nc_eta2     = ncells2
+    new_mesh_descriptor_2D%delta_eta2 = (eta2_max-eta2_min)/real(ncells2)
+    new_mesh_descriptor_2D%boundary2_type = bt2
     new_mesh_descriptor_2D%geom => geom
   end function new_mesh_descriptor_2D
 
@@ -445,17 +390,17 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(f2Dv1, ierr)
   end subroutine delete_field_2D_vec1
 
-  function new_field_4D_vec1( mesh_descriptor_1, mesh_descriptor_2 )
+  function new_field_4D_vec1( mesh_descriptor_x, mesh_descriptor_v )
     type(field_4D_vec1), pointer      :: new_field_4D_vec1
-    type(mesh_descriptor_2D), pointer :: mesh_descriptor_1
-    type(mesh_descriptor_2D), pointer :: mesh_descriptor_2
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_x
+    type(mesh_descriptor_2D), pointer :: mesh_descriptor_v
     sll_int32                         :: ierr
-    SLL_ASSERT(associated(mesh_descriptor_1))
-    SLL_ASSERT(associated(mesh_descriptor_2))
+    SLL_ASSERT(associated(mesh_descriptor_x))
+    SLL_ASSERT(associated(mesh_descriptor_v))
     SLL_ALLOCATE(new_field_4D_vec1, ierr)
-    new_field_4D_vec1%descriptor_1 => mesh_descriptor_1
-    new_field_4D_vec1%descriptor_2 => mesh_descriptor_2
-    SLL_ALLOCATE(new_field_4D_vec1%data(mesh_descriptor_1%nc_eta1+1, mesh_descriptor_1%nc_eta2+1,mesh_descriptor_2%nc_eta1+1, mesh_descriptor_2%nc_eta2+1),ierr)
+    new_field_4D_vec1%descriptor_x => mesh_descriptor_x
+    new_field_4D_vec1%descriptor_v => mesh_descriptor_v
+    SLL_ALLOCATE(new_field_4D_vec1%data(mesh_descriptor_x%nc_eta1+1, mesh_descriptor_x%nc_eta2+1,mesh_descriptor_v%nc_eta1+1, mesh_descriptor_v%nc_eta2+1),ierr)
   end function new_field_4D_vec1
 
   subroutine delete_field_4D_vec1( f4Dv1 )
@@ -465,8 +410,8 @@ contains   ! *****************************************************************
        write (*,'(a)') 'ERROR: delete_field_4D_vec1(), not associated argument.'
        STOP
     end if
-    nullify(f4Dv1%descriptor_1)
-    nullify(f4Dv1%descriptor_2)
+    nullify(f4Dv1%descriptor_x)
+    nullify(f4Dv1%descriptor_v)
     SLL_DEALLOCATE(f4Dv1%data, ierr)
     SLL_DEALLOCATE(f4Dv1, ierr)
   end subroutine delete_field_4D_vec1
@@ -485,7 +430,7 @@ contains   ! *****************************************************************
     type(field_2D_vec2), pointer :: f2Dv2
     sll_int32                    :: ierr
     if( .not. (associated(f2Dv2))) then
-       write (*,'(a)') 'ERROR: delete_field_2D_vec2(), not associated argument.'
+       write (*,'(a)') 'ERROR: delete_field_1D_vec1(), not associated argument.'
        STOP
     end if
     nullify(f2Dv2%descriptor)
@@ -493,27 +438,6 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(f2Dv2, ierr)
   end subroutine delete_field_2D_vec2
 
-  function new_field_2D_vec3( mesh_descriptor )
-    type(field_2D_vec3), pointer      :: new_field_2D_vec3
-    type(mesh_descriptor_2D), pointer :: mesh_descriptor
-    sll_int32                         :: ierr
-    SLL_ASSERT(associated(mesh_descriptor))
-    SLL_ALLOCATE(new_field_2D_vec3, ierr)
-    new_field_2D_vec3%descriptor => mesh_descriptor
-    SLL_ALLOCATE(new_field_2D_vec3%data(1:mesh_descriptor%nc_eta1+1,1:mesh_descriptor%nc_eta2+1),ierr)
-  end function new_field_2D_vec3
-
-  subroutine delete_field_2D_vec3( f2Dv3 )
-    type(field_2D_vec3), pointer :: f2Dv3
-    sll_int32                    :: ierr
-    if( .not. (associated(f2Dv3))) then
-       write (*,'(a)') 'ERROR: delete_field_2D_vec3(), not associated argument.'
-       STOP
-    end if
-    nullify(f2Dv3%descriptor)
-    SLL_DEALLOCATE(f2Dv3%data, ierr)
-    SLL_DEALLOCATE(f2Dv3, ierr)
-  end subroutine delete_field_2D_vec3
 
 !#define NEW_FIELD_CONSTRUCTOR_FUNCTION( func_name, descriptor_t, field_t )
 !  function func_name( mesh_descriptor )
