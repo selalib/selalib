@@ -1,4 +1,6 @@
 set(PRECISION_SRC sll_working_precision.F90)
 add_library(sll_working_precision STATIC ${PRECISION_SRC})
-add_executable(test_precision unit_test.F90)
-target_link_libraries(test_precision sll_working_precision)
+IF(NOT STDF95)
+  add_executable(test_precision unit_test.F90)
+  target_link_libraries(test_precision sll_working_precision)
+ENDIF()

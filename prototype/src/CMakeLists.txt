@@ -1,13 +1,17 @@
-project (sll)
-enable_language (Fortran)
+project(sll)
+enable_language(Fortran)
 cmake_minimum_required(VERSION 2.8)
-#INCLUDE(CMakeForceCompiler)
 
+# Determine how-to install the modules
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+# Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-#ajoute les modules locaux
-set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
+# Specify the output for binary
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# Add new directory to find the FIND<PACKAGE>.cmake files
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
@@ -16,7 +20,53 @@ if (NOT CMAKE_BUILD_TYPE)
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
+# Define folder to be delete by make clean
+#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
+#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
+add_custom_target(clear
+		COMMAND find . -name *.mod -delete
+		COMMAND find . -name *.a -delete
+		COMMAND find . -name *.o -delete
+		COMMAND find . -name *.cmake -delete
+		COMMAND rm -rf bin
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
+
 ##########################################################
+# Try to determine the compiler
+try_run(RUN_RESULT_VAR
+	COMPILE_RESULT_VAR
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/check_compiler.F90
+)
+
+# COMPILE_RESULT_VAR is set to true if try_run succeed
+# RUN_RESULT_VAR is a string that represent the exit status
+# message(STATUS "TRY_RUN_STATUS : ${COMPILE_RESULT_VAR}, EXIT_STATUS : ${RUN_RESULT_VAR}")
+
+set(NO_FORTRAN_2003 NO)
+IF(COMPILE_RESULT_VAR)
+	IF(${RUN_RESULT_VAR} STREQUAL 20 )
+		message(STATUS "COMPILER IS GNU, FORTRAN 2003 NOT SUPPORTED")
+		set(Fortran_COMPILER "GFORTRAN")
+		set(NO_FORTRAN_2003 YES)
+		add_definitions(-DNOF03SUPPORT)
+	ELSEIF(${RUN_RESULT_VAR} STREQUAL 21 )
+		message(STATUS "COMPILER IS GNU, FORTRAN 2003 SUPPORTED")
+		set(Fortran_COMPILER "GFORTRAN")
+	ELSEIF(${RUN_RESULT_VAR} STREQUAL 30 )
+		message(STATUS "COMPILER IS INTEL, FORTRAN 2003 NOT SUPPORTED")
+		set(NO_FORTRAN_2003 YES)
+		set(Fortran_COMPILER "INTEL")
+	ELSEIF(${RUN_RESULT_VAR} STREQUAL 31 )
+		message(STATUS "COMPILER IS INTEL, FORTRAN 2003 SUPPORTED")
+		set(Fortran_COMPILER "INTEL")
+	ENDIF()
+ELSE()
+	message(STATUS "IMPOSSIBLE TO DETERMINE WHICH COMPILER IS USED")
+ENDIF()
+##########################################################
+
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED YES CACHE BOOL " ")
 
@@ -51,7 +101,8 @@ IF(FFTW_ENABLED)
 	ENDIF()
 	find_package(FFTW QUIET)
 	IF(FFTW_FOUND)
-		message(STATUS "FFTW FOUND")
+		message(STATUS "FFTW FOUND")	
+  		include_directories(${FFTW_INCLUDE_DIRS})
 	ELSE(FFTW_FOUND)
 		message(STATUS "FFTW NOT FOUND")
 		set(FFTW_ENABLED NO)
@@ -82,40 +133,38 @@ ENDIF(PASTIX_ENABLED)
 add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-if(Fortran_COMPILER_NAME STREQUAL "gfortran")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
-elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
+IF(Fortran_COMPILER STREQUAL "GFORTRAN")
+	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS " ")
-elseif(Fortran_COMPILER_NAME STREQUAL "xlf")
+ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
-	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLE ON)
-else()
+ELSE()
 	message(STATUS "NO FORTRAN COMPILER FOUND")
-endif()
-
-
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-	set_property(GLOBAL PROPERTY MPI_IBM_COMPILER_ENABLED OFF)
 ENDIF()
+
+STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
+IF(${VAR} EQUAL -1)
+  set(STDF95 NO)
+ELSE()
+  set(STDF95 YES)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+  add_definitions(-DSTDF95)
+ENDIF()
+
+#add flag to disabled MPI stuff for debug
+set(DISABLED_MPI_MODULE NO)
 
 # recherche de MPI
-IF( DEFINED ENV{MPI_ROOT} )
-	set(MPI_ROOT $ENV{MPI_ROOT})
-	set(_MPI_BASE_DIR ${MPI_ROOT})
-ENDIF()
+# I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
+# If specify MPI_ROOT doesn't work try to change your PATH variable
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
-	#CMAKE_FORCE_Fortran_COMPILER(mpif90 ${Fortran_COMPILER_NAME})
-	#CMAKE_FORCE_Fortran_COMPILER(${MPI_Fortran_COMPILER} ${Fortran_COMPILER_NAME})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
 ENDIF(MPI_FOUND)
-
-IF(MPI_FOUND OR MPI_IBM_COMPILER_ENABLED)
-	set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF()
 
 # include's
 include_directories(fft remap poisson_solvers utilities memory assert precision fields) 
@@ -136,11 +185,20 @@ else(DOXYGEN_FOUND)
    MESSAGE(STATUS "DOXYGEN NOT FOUND")
 endif(DOXYGEN_FOUND)
 
-
 set(FISHPACK_ENABLED CACHE BOOL OFF)
 set(MUDPACK_ENABLED CACHE BOOL OFF)
 
+#############
+#  RESUME
+#############
+#
+#message("DISABLED_MPI_MODULE = ${DISABLED_MPI_MODULE}")
+#
+#############
 
+#low-level
+set(LOW_LEVEL_LIST_DIR memory precision assert constants utilities low_level_file_io timer)
+#set(LOW_LEVEL_MODULES sll_memory sll_working_precision sll_assertion sll_constants sll_utilities sll_low_level_file_io sll_timer)
 add_subdirectory(memory)
 add_subdirectory(precision)
 add_subdirectory(assert)
@@ -148,40 +206,64 @@ add_subdirectory(constants)
 add_subdirectory(utilities)
 add_subdirectory(low_level_file_io)
 add_subdirectory(timer)
+
+#mid-level
+set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integration fftpack fft collective remap WENO poisson_solvers)
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
+add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
 	add_subdirectory(fftpack)
+ELSE()
+	LIST(REMOVE_ITEM MID_LEVEL_LIST_DIR fftpack)
 ENDIF()
 add_subdirectory(fft)
-add_subdirectory(collective)
-add_subdirectory(remap)
+IF(DISABLED_MPI_MODULE)
+# nothing to do
+ELSE()
+  add_subdirectory(collective)
+  add_subdirectory(remap)
+ENDIF()
+IF(NOT STDF95)
+add_subdirectory(poisson_solvers)
+ENDIF()
+
+#hight-level
+add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+add_dependencies(geometry_functions sll_assertion sll_constants sll_working_precision)
 add_subdirectory(interpolators)
-add_subdirectory(WENO)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
 add_subdirectory(ode_solvers)
-add_subdirectory(poisson_solvers)
 add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
 add_subdirectory(simulation)
 IF(FISHPACK_ENABLED)
 	add_subdirectory(fishpack)
 ENDIF()
+
+
+
 IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(mgd3)
 ENDIF()
+add_subdirectory(LinRood)
 
 
-#add_subdirectory(maxwell_solvers)
-#add_subdirectory(poisson_solvers)
-#add_subdirectory(BSL)
+#add_subdirectory(maxwell_solvers) #use old mesh_types 
+#add_subdirectory(BSL) top
+#add_subdirectory(CSL) don't compile error in SConstruct! top
+#add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 
-#add_subdirectory(CSL) don't compile error in SConstruct!
-#add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread!
+
+
+#add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
+#add_custom_target(install make selalib_low_level)
+
+
 
 ######################################################################
 #                              TESTS                                 #
@@ -189,26 +271,25 @@ ENDIF()
 
 enable_testing()
 
-IF(NOT Fortran_COMPILER_NAME STREQUAL "ifort")
-add_test(memory memory/test_memory)
-ENDIF()
+add_test(NAME memory COMMAND test_memory)
+set_tests_properties(memory PROPERTIES TIMEOUT 20)
 
 #add_test(precision precision/test_precision) #too longer
 
 set(passRegex "Assertion error triggered in file")
-add_test(assert assert/test_assert)
+add_test(NAME assert COMMAND test_assert)
 set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
 
-add_test(constants constants/test_constants)
-add_test(utilities utilities/test_utilities)
-add_test(low_level_file_io low_level_file_io/test_io)
-add_test(timer timer/test_timer)
-add_test(tridiagonal numerical_utilities/test_tridiagonal)
-add_test(newton_raphson non_linear_solvers/test_newton_raphson)
-add_test(splines splines/test_splines)
-add_test(splines splines/test_non_unif_splines)
-add_test(integration integration/test_integration)
-add_test(fft fft/test_fft)
+add_test(NAME constants COMMAND test_constants)
+add_test(NAME utilities COMMAND test_utilities)
+add_test(NAME low_level_file_io COMMAND test_io)
+add_test(NAME timer COMMAND test_timer)
+add_test(NAME tridiagonal COMMAND test_tridiagonal)
+add_test(NAME newton_raphson COMMAND test_newton_raphson)
+add_test(NAME splines COMMAND test_splines)
+add_test(NAME splines_non_unif COMMAND test_non_unif_splines)
+add_test(NAME integration COMMAND test_integration)
+add_test(NAME fft COMMAND test_fft)
 IF(FISHPACK_ENABLED)
 	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
 ENDIF()
@@ -217,29 +298,39 @@ IF(MUDPACK_ENABLED)
 	add_test(mgd3 mgd3/tmgd3)
 ENDIF()
 
-# we can call ${MPIEXEC_MAX_NUMPROCS}
+# we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
 set(PROCS 2)
 set(ARGS "")
-add_test(collective ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} collective/test_collective ${MPIEXEC_POSTFLAGS} ${ARGS})
-#set_tests_properties(collective PROPERTIES FAIL_REGULAR_EXPRESSION "${failRegex}")
+add_test(NAME collective
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_collective
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(collective PROPERTIES FAIL_REGULAR_EXPRESSION "NOT PASS")
 
 set(PROCS 8)
 set(ARGS "")
-add_test(remap ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS} remap/test_remap ${MPIEXEC_POSTFLAGS} ${ARGS})
+add_test(NAME remap
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-add_test(WENO WENO/test_WENO)
-add_test(interpolators interpolators/test_interpolators_1d)
-add_test(interpolators interpolators/test_interpolators_2d)
-add_test(mapped_meshes mapped_meshes/test_mapped_meshes)
-add_test(mapped_meshes_1d mapped_meshes/test_mapped_meshes_1d)
-add_test(fields fields/test_scalar_field)
-add_test(ode_solvers ode_solvers/test_implicit_ode_nonuniform)
-add_test(distribution_function distribution_function/test_distribution_function)
-add_test(advection_field advection_field/test_advection_field)
+add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
+add_test(NAME interpolators COMMAND test_interpolators_1d
+				    test_interpolators_2d)
+add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
+				    test_mapped_meshes_2d)
+add_test(NAME fields COMMAND test_scalar_field)
+add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
+add_test(NAME distribution_function COMMAND test_distribution_function)
+add_test(NAME advection_field COMMAND test_advection_field)
+
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
-	add_test(poisson_solvers poisson_solvers/test_poisson_1d)
+	add_test(NAME poisson_solvers COMMAND test_poisson_1d)
 ENDIF(FFTPACK_ENABLED)
 #add_test(poisson_solvers poisson_solvers/test_poisson_2d)
 #add_test(poisson_solvers poisson_solvers/test_poisson_3d_seq)

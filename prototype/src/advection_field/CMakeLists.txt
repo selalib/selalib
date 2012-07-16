@@ -4,6 +4,12 @@ ENDIF()
 
 add_library(sll_advection_field STATIC
 	sll_advection_field.F90)
+add_dependencies(sll_advection_field
+	sll_working_precision
+	sll_memory
+	sll_assertion
+	sll_scalar_field_2d
+	sll_scalar_field_1d)
 add_executable(test_advection_field unit_test.F90)
 target_link_libraries(test_advection_field
 	sll_advection_field
@@ -17,4 +23,5 @@ target_link_libraries(test_advection_field
 	sll_utilities
 	sll_memory
 	sll_assertion
-	sll_constants)
+	sll_constants
+	sll_working_precision)
