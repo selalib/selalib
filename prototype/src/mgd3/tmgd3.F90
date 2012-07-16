@@ -1,5 +1,7 @@
 program tmgd3
-# include "compdir.inc"
+use mgd3
+implicit none
+#include "mgd3.h"
 include "mpif.h"
 !-----------------------------------------------------------------------
 ! Test problem for 3D multigrid parallel code mgd3. mgd3 solves the
@@ -53,7 +55,7 @@ integer, parameter :: nwork=9*int(8.0/7.0*float(nx*ny*nz)     &
 integer, parameter :: nxdim=int(float(nxp2-2)/float(nxprocs)+0.99)+2
 integer, parameter :: nydim=int(float(nyp2-2)/float(nyprocs)+0.99)+2
 integer, parameter :: nzdim=int(float(nzp2-2)/float(nzprocs)+0.99)+2
-integer, parameter :: IOUT=6
+integer, parameter :: iout=60
 real(8), parameter :: tolmax=1.0d-05
 !
 ! variables
@@ -64,12 +66,22 @@ integer :: sx,ex,sy,ey,sz,ez,neighbor(26),bd(26),iter
 integer :: realtype,ibdry,jbdry,kbdry,ngb(3)
 integer :: ierr,nerror,m0,m1,dims(3),coords(3),i,j,k
 integer :: status(MPI_STATUS_SIZE)
-REALN p(nxdim,nydim,nzdim),r(nxdim,nydim,nzdim)
-REALN f(nxdim,nydim,nzdim),work(nwork)
 
-REALN xl,yl,zl,hxi,hyi,hzi,vbc(6),phibc(6,20),wk,rro,err,pi
-character*20 outfile
-character*1 num(10)
+!Fields : Potential, RHS, residual
+
+real(8) :: work(nwork)
+real(8), allocatable :: r(:,:,:)
+real(8), allocatable :: p(:,:,:)
+real(8), allocatable :: f(:,:,:)
+
+real(8) :: xl,yl,zl,hxi,hyi,hzi,vbc(6),phibc(6,20),wk,rro,err,pi
+character(len=20) :: outfile
+character(len=1)  :: num(10)
+
+
+type(block) :: my_block
+
+
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 pi=4.0d0*atan(1.0d0)
 !-----------------------------------------------------------------------
@@ -78,11 +90,7 @@ pi=4.0d0*atan(1.0d0)
 call MPI_INIT(ierr)
 call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
-# if double_precision
-      realtype=MPI_DOUBLE_PRECISION
-# else
-      realtype=MPI_REAL
-# endif
+realtype=MPI_DOUBLE_PRECISION
 !-----------------------------------------------------------------------
 ! open file for output of messages and check that the number of 
 ! processes is correct
@@ -93,9 +101,9 @@ m1=mod(myid,10)+1
 m0=mod(myid/10,10)+1
 outfile(5:6)=num(m0)
 outfile(6:7)=num(m1)
-open(IOUT,file=outfile,status='unknown',form='formatted')
+open(iout,file=outfile,status='unknown',form='formatted')
 if (numprocs.ne.(nxprocs*nyprocs*nzprocs)) then
-  write(IOUT,100)
+  write(iout,100)
 100     format(/,'ERROR: numprocs <> (nxprocs*nyprocs*nzprocs)',/)
   stop
 end if
@@ -279,43 +287,45 @@ call MPE_DECOMP1D(nzp2-2,dims(3),coords(3),sz,ez)
 sz=sz+1
 ez=ez+1
 if ((ex-sx+3).gt.nxdim) then
-  write(IOUT,110) myid,nxdim,ex-sx+3
+  write(iout,110) myid,nxdim,ex-sx+3
   nerror=1
   return
 end if
 if ((ey-sy+3).gt.nydim) then
-  write(IOUT,120) myid,nydim,ey-sy+3
+  write(iout,120) myid,nydim,ey-sy+3
   nerror=1
   return
 end if
 if ((ez-sz+3).gt.nzdim) then
-  write(IOUT,130) myid,nzdim,ez-sz+3
+  write(iout,130) myid,nzdim,ez-sz+3
   nerror=1
   return
 end if
-write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
+write(iout,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 do i=1,26
-  write(IOUT,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
+  write(iout,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
 end do
-110   format(/,'ERROR: process:',i3,' nxdim=',i4,' < ex-sx+3=',i4,/, &
-       ' -> put the parameter formula for nxdim in main.F in ', &
-       'comments and',/,'    assign to nxdim the maximum ', &
-       'value of ex-sx+3',/)
-120   format(/,'ERROR: process:',i3,' nydim=',i4,' < ey-sy+3=',i4,/, &
-            ' -> put the parameter formula for nydim in main.F in ', &
-            'comments and'/,'     assign to nydim the maximum ', &
-            'value of ey-sy+3',/)
-130   format(/,'ERROR: process:',i3,' nzdim=',i4,' < ez-sz+3=',i4,/, &
-            ' -> put the parameter formula for nzdim in main.F in ', &
-            'comments and'/,'     assign to nzdim the maximum ', &
-            'value of ez-sz+3',/)
+110 format(/,'ERROR: process:',i3,' nxdim=',i4,' < ex-sx+3=',i4,/, &
+    ' -> put the parameter formula for nxdim in main.F in ',       &
+    'comments and',/,'    assign to nxdim the maximum ',           &
+    'value of ex-sx+3',/)
+120 format(/,'ERROR: process:',i3,' nydim=',i4,' < ey-sy+3=',i4,/, &
+    ' -> put the parameter formula for nydim in main.F in ',       &
+    'comments and'/,'     assign to nydim the maximum ',           &
+    'value of ey-sy+3',/)
+130 format(/,'ERROR: process:',i3,' nzdim=',i4,' < ez-sz+3=',i4,/, &
+    ' -> put the parameter formula for nzdim in main.F in ',       &
+    'comments and'/,'     assign to nzdim the maximum ',           &
+    'value of ez-sz+3',/)
 !-----------------------------------------------------------------------
 ! initialize mgd3
-!
+!-----------------------------------------------------------------------
+
 call mgdinit(vbc,phibc,ixp,jyq,kzr,iex,jey,kez,ngrid,nxp2,	&
              nyp2,nzp2,sx,ex,sy,ey,sz,ez,realtype,nxprocs,	&
              nyprocs,nzprocs,nwork,ibdry,jbdry,kbdry,myid,	&
-             IOUT,nerror)
+             iout,nerror)
+
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -323,7 +333,8 @@ if (nerror.eq.1) goto 1000
 ! wk is the wavenumber (must be an integer value)
 ! rro is the average density
 ! 1/hxi,1/hyi,1/hzi are the spatial resolutions
-!
+!-----------------------------------------------------------------------
+
 xl=1.0d0
 yl=1.0d0
 zl=1.0d0
@@ -332,26 +343,37 @@ rro=1.0d0
 hxi=float(nxp2-2)/xl
 hyi=float(nyp2-2)/yl
 hzi=float(nzp2-2)/zl
-write(IOUT,*) 'hxi=',hxi,' hyi=',hyi,' hzi=',hzi
-call ginit(sx,ex,sy,ey,sz,ez,p,r,f,wk,hxi,hyi,hzi,pi,IOUT)
+write(iout,*) 'hxi=',hxi,' hyi=',hyi,' hzi=',hzi
+write(*,*) 'hxi=',hxi,' hyi=',hyi,' hzi=',hzi
+write(*,*) 'nxdim=',nxdim,' nydim=',nydim,' nzdim=',nzdim
+
+allocate p(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+allocate r(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+allocate f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+call ginit(my_block,p,r,f,wk,hxi,hyi,hzi,pi,iout)
+
 !-----------------------------------------------------------------------
 ! solve using mgd3
-!
+!-----------------------------------------------------------------------
+
 call mgdsolver(2,sx,ex,sy,ey,sz,ez,p,f,r,ngrid,work,	&
                maxcy,tolmax,kcycle,iprer,ipost,iresw,	&
                xl,yl,zl,rro,nx,ny,nz,comm3d,comm3dp,	&
                comm3dl,comm3dc,myid,neighbor,bd,phibc,	&
-               iter,.true.,IOUT,nerror)
+               iter,.true.,iout,nerror)
+
 if (nerror.eq.1) goto 1000
+
 !-----------------------------------------------------------------------
 ! compare numerical and exact solutions
-!
-call gerr(sx,ex,sy,ey,sz,ez,p,comm3d,wk,hxi,hyi,hzi,pi,nx,ny,nz,IOUT)
+!-----------------------------------------------------------------------
+
+call gerr(sx,ex,sy,ey,sz,ez,p,comm3d,wk,hxi,hyi,hzi,pi,nx,ny,nz,iout)
 !-----------------------------------------------------------------------
 close(8)
 call MPI_FINALIZE(ierr)
 stop
-1000  write(IOUT,200)
+1000  write(iout,200)
 200   format(/,'ERROR in multigrid code',/)
 close(8)
 stop
