@@ -8,12 +8,6 @@ module polar_advection
   use sll_splines
   implicit none
 
-!!$  type data
-!!$     sll_real64 :: dt, dr, dtheta
-!!$     sll_real64 :: r_min, r_max
-!!$     sll_int32 :: nr, ntheta
-!!$  end type data
-
 contains
 
   !>subroutine compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,a)
@@ -47,12 +41,12 @@ contains
     !     decenter on boundaries
     ! 2 : center for r, decenter on boundaries
     !     using fft for theta
-    calculus = 2
+    calculus = 1
 
     if (calculus==1) then
        ! center formula for r end theta
        ! decenter for r on boundaries
-       
+
        do i=2,nr
           r=rmin+real(i-1,f64)*dr
           do j=1,ntheta
@@ -66,8 +60,11 @@ contains
           a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
           a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
        end do
-       
+
     else if (calculus==2) then
+       ! center formula for r, decenter on boundaries
+       ! using fft for theta
+
        do i=2,nr
           r=rmin+real(i-1,f64)*dr
           a(1,i,:)=(phi(i+1,:)-phi(i-1,:))/(2*dr)
@@ -118,12 +115,12 @@ contains
     sll_int32 :: i,j
     sll_real64 :: r, theta
 
-    ! creation spline 
+    ! creation spline
     spl_f => new_spline_2D(Nr+1, Ntheta+1, &
          rmin, rmax, &
          0.0_f64, 2.0_f64*sll_pi, &
-         HERMITE_SPLINE, PERIODIC_SPLINE,&
-         const_slope_x1_min = 0.0_f64,const_slope_x1_max = 0.0_f64)
+         & HERMITE_SPLINE, PERIODIC_SPLINE,&
+         const_slope_x1_min = 1.0_f64,const_slope_x1_max = 1.0_f64)
 
     !interpolation
     ! 1 : using explicite Eulerian scheme
@@ -132,7 +129,7 @@ contains
     ! 3 : using RK4
     interpolate_case=1
 
-    if (interpolate_case/=3) then
+    if (interpolate_case<3 .and. interpolate_case>0) then
 
        !construction of spline coeficients for f
        call compute_spline_2D(f,spl_f)
@@ -144,8 +141,8 @@ contains
 
              if (interpolate_case==1) then
                 !Eulerian scheme
-                r=r-dt*a(2,i,j)/r
-                theta=theta+dt*a(1,i,j)
+                r=r+dt*a(2,i,j)/r
+                theta=theta-dt*a(1,i,j)
              else if (interpolate_case==2) then
                 !rotation
                 theta=theta+dt
@@ -161,6 +158,11 @@ contains
 
     else if (interpolate_case==3) then
        call rk4_polar_advect(dt,dr,dtheta,nr,ntheta,rmin,rmax,f,phi,a,pfwd,pinv)
+
+    else
+       print*,'no way chosen to compute r'
+       print*,'nothing will be done'
+       print*,'see line 136 of file prototype/src/simulation/sll_advection_polar.F90'
     end if
 
     call delete_spline_2d(spl_f)
@@ -233,20 +235,18 @@ contains
     end do
     theta1(:,:)=-dt*a(1,:,:)
 
-    !print*,'step 1 of rk4 ok'
-
     !2nd step of RK4
     do i=1,nr+1
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
           theta=real(j-1,f64)*dtheta
-          r2(i,j)=r-dt/2.0_f64*a(2,i,j)/r
-          theta2(i,j)=theta+dt/2.0_f64*a(1,i,j)
+          r3(i,j)=r+r1(i,j)/2.0_f64
+          theta3(i,j)=theta+theta1(i,j)/2.0_f64
 
-          call correction_r(r2(i,j),rmin,rmax)
-          call correction_theta(theta2(i,j))
+          call correction_r(r3(i,j),rmin,rmax)
+          call correction_theta(theta3(i,j))
 
-          fcopie(i,j)=interpolate_value_2D(r2(i,j),theta2(i,j),spl_f)
+          fcopie(i,j)=interpolate_value_2D(r3(i,j),theta3(i,j),spl_f)
        end do
     end do
 
@@ -259,35 +259,46 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
+          r2(i,j)=interpolate_value_2d(r3(i,j),theta3(i,j),spl_a2)*dt/r3(i,j)
+          theta2(i,j)=-interpolate_value_2d(r3(i,j),theta3(i,j),spl_a1)*dt
 
           call correction_r(r2(i,j),rmin,rmax)
           call correction_theta(theta2(i,j))
-
-          rr=r2(i,j)
-          r2(i,j)=interpolate_value_2d(r2(i,j),theta2(i,j),spl_a2)*dt
-          theta2(i,j)=-interpolate_value_2d(rr,theta2(i,j),spl_a1)*dt
        end do
     end do
-
-    !print*,'step 2 of rk4 ok'
 
     !3rd step of RK4
     do i=1,nr+1
+       r=rmin+real(i-1,f64)*dr
        do j=1,ntheta+1
-          rr=r3(i,j)+r2(i,j)/2.0_f64
-          ttheta=theta3(i,j)+theta2(i,j)/2.0_f64
+          theta=real(j-i)*dtheta
+          r4(i,j)=r+r2(i,j)/2.0_f64
+          theta4(i,j)=theta+theta2(i,j)/2.0_f64
 
-          !correction of r
+          !correction of r and theta
+          call correction_r(r4(i,j),rmin,rmax)
+          call correction_theta(theta4(i,j))
 
-          call correction_r(rr,rmin,rmax)
-          call correction_theta(ttheta)
-
-          r3(i,j)=interpolate_value_2d(rr,ttheta,spl_a2)*dt/rr
-          theta3(i,j)=-interpolate_value_2d(rr,ttheta,spl_a1)*dt
+          fcopie(i,j)=interpolate_value_2D(r4(i,j),theta4(i,j),spl_f)
        end do
     end do
 
-    !print*,'step 3 of rk4 ok'
+    call poisson_solve_polar(fcopie,rmin,dr,nr,ntheta-1,pfwd,pinv,phicopie)
+    call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phicopie,a)
+
+    !construction of spline coeficients for a
+    call compute_spline_2d(a(1,:,:),spl_a1)
+    call compute_spline_2d(a(2,:,:),spl_a2)
+
+    do i=1,nr+1
+       do j=1,ntheta+1
+          r3(i,j)=interpolate_value_2d(r4(i,j),theta4(i,j),spl_a2)*dt/r4(i,j)
+          theta3(i,j)=-interpolate_value_2d(r4(i,j),theta4(i,j),spl_a1)*dt
+
+          call correction_r(r2(i,j),rmin,rmax)
+          call correction_theta(theta2(i,j)) 
+       end do
+    end do
 
     !4th step of RK4
     fcopie=f
@@ -296,8 +307,9 @@ contains
     do i=1,nr+1
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
-          r4(i,j)=r-dt*a(2,i,j)/r
-          theta4(i,j)=theta+dt*a(1,i,j)
+          theta=real(j-i)*dtheta
+          r4(i,j)=r+r3(i,j)
+          theta4(i,j)=theta+theta3(i,j)
 
           call correction_r(r4(i,j),rmin,rmax)
           call correction_theta(theta4(i,j))
@@ -315,18 +327,16 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          rr=r4(i,j)+r3(i,j)
-          ttheta=theta4(i,j)+theta3(i,j)
-
-          call correction_r(rr,rmin,rmax)
-          call correction_theta(ttheta)
+          rr=r4(i,j)
+          ttheta=theta4(i,j)
 
           r4(i,j)=interpolate_value_2d(rr,ttheta,spl_a2)*dt/rr
           theta4(i,j)=-interpolate_value_2d(rr,ttheta,spl_a1)*dt
+
+          call correction_r(r4(i,j),rmin,rmax)
+          call correction_theta(theta4(i,j))
        end do
     end do
-
-    !print*,'step 4 of rk4 ok'
 
     !sommation
     do i=1,nr+1
@@ -389,8 +399,11 @@ contains
     sll_real64, dimension(:,:,:), intent(inout), pointer :: grad_phi
 
     call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
+    phi(:,ntheta+1)=phi(:,1)
     call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+    grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
+    f(:,ntheta+1)=f(:,1)
   end subroutine SL_classic
 
 
@@ -422,8 +435,8 @@ contains
     call advect_VP_polar(dt/2.0_f64,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,fdemi,pfwd,pinv)
     !we just obtained f^(n+1/2)
     call poisson_solve_polar(fdemi,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-    !we just obtained E^(n+1/2)
     call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+    !we just obtained E^(n+1/2)
     call advect_VP_polar(dt,dr,dtheta,nr,ntheta,rmin,rmax,phi,grad_phi,f,pfwd,pinv)
 
   end subroutine SL_controlled

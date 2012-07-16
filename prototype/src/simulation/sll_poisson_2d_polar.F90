@@ -65,7 +65,7 @@ contains
        ind_k=real(floor(real(k+1,f64)/2.0_f64),f64)
 !!$    do k=0,ntheta-1
 !!$       ind_k=real(k,f64)
-       do i=1,Nr+1
+       do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
           a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
           a(3*i-1)=-2.0_f64/dr**2-(ind_k/r)**2
@@ -73,7 +73,7 @@ contains
 !!$          fk(i)=fft_get_mode(pfwd,ffttab(i,:),k)
        enddo
        a(1)=0.0_f64
-       a(3*nr+3)=0
+       a(3*nr+3)=0.0_f64
        a(2)=1.0_f64
        a(3*nr+2)=1.0_f64
 
@@ -106,11 +106,12 @@ contains
 
   !>subroutine derivate_fft(nr,ntheta,phi,derivated)
   !>this routine is used to make derivation using the fft
+  !>in the VP probleme it is used to compute derivation in direction theta
   !>nr and ntheta : number of points in direction r and theta
   !>phi : field we want to derivate in direction theta
   !>derivate : grad(phi)
   !>
-  !>this routine is done for compute_grad_field, so derivated(1,:,:) = d_r(phi)
+  !>this routine is writen for compute_grad_field, so derivated(1,:,:) = d_r(phi)
   subroutine derivate_fft(nr,ntheta,phi,derivated)
 
     implicit none
@@ -124,27 +125,29 @@ contains
     sll_real64 :: temp
     sll_int32 :: i,j,k,err
 
-    SLL_ALLOCATE(phi_copie(nr+1,ntheta),err)
+    !SLL_ALLOCATE(phi_copie(nr+1,ntheta),err)
     SLL_ALLOCATE(buf(2*ntheta+15),err)
 
-    phi_copie=phi(:,1:ntheta)
+    !phi_copie=phi(:,1:ntheta)
+    derivated(2,:,:)=phi
     call dffti(ntheta,buf)
     do i=1,nr+1
-       call dfftf(ntheta,phi_copie(i,:),buf)
+       !call dfftf(ntheta,phi_copie(i,:),buf)
+       call dfftf(ntheta,derivated(2,i,1:ntheta),buf)
     end do
 
     do i=1,nr+1
        do j=1,ntheta/2
-          temp=phi_copie(i,2*(j-1)+1)*real(floor(real(j,f64)/2.0_f64),f64)
-          phi_copie(i,2*(j-1)+1)=-phi_copie(i,2*(j-1)+2)*real(floor(real(j,f64)/2.0_f64),f64)
-          phi_copie(i,2*(j-1)+2)=temp
+          temp=derivated(2,i,2*j-1)*real(j,f64)
+          derivated(2,i,2*j-1)=-derivated(2,i,2*(j-1)+2)*real(j,f64)
+          derivated(2,i,2*j)=temp
        end do
     end do
 
     do i=1,nr+1
-       call dfftb(ntheta,phi_copie(i,:),buf)
+       call dfftb(ntheta,derivated(2,i,:),buf)
     end do
-    derivated(2,:,1:ntheta)=phi_copie
+    !derivated(2,:,1:ntheta)=phi_copie
     derivated(2,:,ntheta+1)=derivated(2,:,1)
 
   end subroutine derivate_fft
