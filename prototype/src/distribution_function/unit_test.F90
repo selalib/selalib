@@ -43,7 +43,7 @@ program unit_test
 
   print*, 'initialization of distribution_function'
 
-  call init_landau%initialize(0.001_f64)
+  call init_landau%initialize(m,0.001_f64)
   p_init_f => init_landau
 
   call initialize_distribution_function_2d( &

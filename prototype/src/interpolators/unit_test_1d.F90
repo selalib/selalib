@@ -4,14 +4,22 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use util_constants
+
+#ifndef STDF95
   use sll_module_interpolators_1d_base
-!  use sll_WENO
+#endif
+  use WENO_interp
   use sll_cubic_spline_interpolator_1d
     implicit none
 
+#ifdef STDF95
+  type(cubic_spline_1d_interpolator), pointer  :: interp
+#else
   class(sll_interpolator_1d_base), pointer     :: interp
-!  class(sll_WENO_1d), target                   :: WENO
+#endif
+
   type(cubic_spline_1d_interpolator), target  :: spline
+  type(WENO_interp_1d), pointer               :: weno
 
   sll_real64                            :: error
   sll_real64                            :: phase
@@ -40,13 +48,22 @@ program unit_test
      coordinates_d(i) = (i-1)*delta
      interpolation_points(i) = modulo(coordinates_d(i) - delta/3.0_f64,2.0_f64 * sll_pi)
      data(i)        = 2.0_f64*(sin(coordinates_d(i)) + 2.5_f64 + cos(coordinates_d(i)))
-     data_interp(i) = 2.0_f64*(sin(interpolation_points(i)) + 2.5_f64 + cos(interpolation_points(i)))
+     data_interp(i) = 2.0_f64*(sin(interpolation_points(i)) + 2.5_f64 &
+          + cos(interpolation_points(i)))
   end do
 
   print*, 'Cubic spline interpolation'
+#ifdef STDF95
+  call cubic_spline_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
+#else
   call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  interp =>  spline 
+#endif
+  interp =>  spline
+#ifdef STDF95
+  out = cubic_spline_interpolate_array(interp, n, data, interpolation_points)
+#else
   out = interp%interpolate_array(n, data, interpolation_points)
+#endif
   error = 0.0_f64
   do i=1,n   
      error = max(error, abs(data_interp(i) - out(i)))
@@ -56,18 +73,18 @@ program unit_test
 
 
 
-!  print*, 'WENO interpolation'
-!  weno =  new_WENO_1D(n, x_min, x_max )
-!  interp => weno
-!  out = interp%interpolate_array(n, data, interpolation_points)
-!  !print*, 'delta ', delta , interp%weno%delta, x_min, coordinates_d(1), x_max, coordinates_d(n)
-!  error = 0.0_f64
-!  do i=1,n   
-!     error = max(error, abs(data_interp(i) - out(i)))
-!     !print*, i, interpolation_points(i), data_interp(i) - out(i)
-!  end do
-!  
-!  print*, '    error=',error
+!!$  print*, 'WENO interpolation'
+!!$  weno = new_WENO_1D( n, x_min, x_max )
+!!$  interp => weno
+!!$  out = interp%interpolate_array(n, data, interpolation_points)
+!!$  !print*, 'delta ', delta , interp%weno%delta, x_min, coordinates_d(1), x_max, coordinates_d(n)
+!!$  error = 0.0_f64
+!!$  do i=1,n   
+!!$     error = max(error, abs(data_interp(i) - out(i)))
+!!$     !print*, i, interpolation_points(i), data_interp(i) - out(i)
+!!$  end do
+!!$  
+!!$  print*, '    error=',error
 
 
 

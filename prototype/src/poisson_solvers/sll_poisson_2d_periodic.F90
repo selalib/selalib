@@ -41,8 +41,6 @@ use fft_module
 implicit none
 private
 
-
-
 !> Object with data to solve Poisson equation on 2d domain with
 !> periodic boundary conditions
 type, public :: poisson_2d_periodic
@@ -59,25 +57,20 @@ contains
    generic   :: solve => solve_e_fields, solve_potential
 end type poisson_2d_periodic
 
-!> Create an object to solve Poisson equation on 2D mesh with periodic
-!> boundary conditions:
-!> To solve the potential input parameter is a sll_real64 2d array.
-!> To solve the potential derivatives (electric field), input parameter 
-!> is a field_2d_vec2.
-
-!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 
 contains
 
+!> Create an object to solve Poisson equation on 2D mesh with periodic
+!> boundary conditions:
 subroutine initialize(this, x_min, x_max, nc_x, &
-               y_min, y_max, nc_y, error )
+                      y_min, y_max, nc_y, error )
 
-   class(poisson_2d_periodic)         :: this
-   sll_int32, intent(in)              :: nc_x
-   sll_int32, intent(in)              :: nc_y
-   sll_real64, intent(in)             :: x_min, x_max
-   sll_real64, intent(in)             :: y_min, y_max
-   sll_int32, intent(out), optional   :: error
+   class(poisson_2d_periodic)        :: this
+   sll_int32,  intent(in)            :: nc_x
+   sll_int32,  intent(in)            :: nc_y
+   sll_real64, intent(in)            :: x_min, x_max
+   sll_real64, intent(in)            :: y_min, y_max
+   sll_int32,  intent(out), optional :: error
    
    this%nc_x = nc_x
    this%nc_y = nc_y
@@ -88,11 +81,11 @@ subroutine initialize(this, x_min, x_max, nc_x, &
    this%y_max = y_max
 
    SLL_ALLOCATE(this%rhst(nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%ext(nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%eyt(nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%kx(  nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%ky(  nc_y,nc_x/2+1), error)
-   SLL_ALLOCATE(this%k2(  nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(this%ext (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(this%eyt (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(this%kx  (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(this%ky  (nc_y,nc_x/2+1), error)
+   SLL_ALLOCATE(this%k2  (nc_y,nc_x/2+1), error)
 
    call initdfft(this%fftx, nc_x)
    call initcfft(this%ffty, nc_y)
@@ -101,6 +94,8 @@ subroutine initialize(this, x_min, x_max, nc_x, &
 
 end subroutine initialize
 
+!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
+!> return potential.
 subroutine solve_potential(this,sol,rhs)
 
    class(poisson_2d_periodic)                :: this
@@ -111,7 +106,6 @@ subroutine solve_potential(this,sol,rhs)
 
    nc_x = this%nc_x
    nc_y = this%nc_y
-
 
    sol(1:nc_x,1:nc_y) = rhs(1:nc_x,1:nc_y)
    do j=1,nc_y
@@ -143,6 +137,8 @@ subroutine solve_potential(this,sol,rhs)
 
 end subroutine solve_potential
 
+!> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
+!> return electric fields.
 subroutine solve_e_fields(this,field_x,field_y,rhs)
 
    class(poisson_2d_periodic)               :: this
@@ -213,14 +209,14 @@ subroutine wave_number_vectors(this)
    ky0 = 2._f64*sll_pi/(this%y_max-this%y_min)
    
    do ik=1,nc_x/2+1
-      kx  = (ik-1)*kx0
+      kx = (ik-1)*kx0
       do jk = 1, nc_y/2
-         ky  = (jk-1)*ky0
+         ky = (jk-1)*ky0
          this%kx(jk,ik) = kx
          this%ky(jk,ik) = ky
       end do
       do jk = nc_y/2+1 , nc_y     
-         ky  = (jk-1-nc_y)*ky0
+         ky = (jk-1-nc_y)*ky0
          this%kx(jk,ik) = kx
          this%ky(jk,ik) = ky
       end do
@@ -257,8 +253,8 @@ end subroutine transpose_r2c
 !> convert complex array to real and transpose
 subroutine transpose_c2r(comp_array, real_array)
 
-   sll_comp64, dimension(:,:), intent(in) :: comp_array
-   sll_real64, dimension(:,:), intent(out)  :: real_array
+   sll_comp64, dimension(:,:), intent(in)  :: comp_array
+   sll_real64, dimension(:,:), intent(out) :: real_array
    sll_int32 :: i, j, n1, n2
 
    n1 = size(real_array,1)
@@ -279,4 +275,3 @@ subroutine transpose_c2r(comp_array, real_array)
 end subroutine transpose_c2r
 
 end module sll_poisson_2D_periodic
-
