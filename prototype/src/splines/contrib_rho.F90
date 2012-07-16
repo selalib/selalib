@@ -10,6 +10,191 @@ module contrib_rho_module
   implicit none
 contains  
 
+subroutine compute_rho_mapped_mesh&
+  (rho,f,integration_points,rho_case,nc_eta1,nc_eta2,geom,jac_array,spl_per_x1)
+  sll_int :: rho_case
+  sll_real64,dimension(:,:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_val
+  sll_real64,dimension(:), pointer :: rho
+  sll_real64,dimension(:), pointer :: node_positions_x1
+  sll_real64,dimension(:), pointer :: new_node_positions
+  sll_real64,dimension(:), pointer :: buf_1d
+  sll_real64,dimension(:,:), pointer :: jac_array
+  sll_real64,dimension(:,:), pointer :: f
+  sll_real64,intent(in) :: geom(2,2)
+  sll_int,intent(in) :: nc_eta1,nc_eta2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
+  sll_int :: i1,i2
+  type(cubic_nonunif_spline_1D), pointer :: spl_per_x1
+  sll_int :: err
+
+  eta1_min = geom(1,1)
+  eta1_max = geom(2,1)
+  eta2_min = geom(1,2)
+  eta2_max = geom(2,2)
+  
+  SLL_ALLOCATE(node_positions_x1(nc_eta1+1),err)
+  SLL_ALLOCATE(new_node_positions(nc_eta1),err)
+  SLL_ALLOCATE(buf_1d(nc_eta1+1),err)
+  SLL_ALLOCATE(integration_points_val(2,nc_eta1+1),err)
+  do i1=1,nc_eta1+1
+    !node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+    node_positions_x1(i1) = eta1_min+(real(i1,f64)-1._f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+  enddo
+    do i2=1,nc_eta2
+      do i1 = 1,nc_eta1
+        new_node_positions(i1) = integration_points(1,i1,i2)
+        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
+          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
+          stop
+        endif
+        if(new_node_positions(i1)<node_positions_x1(1))then
+          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
+        endif      
+        !buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
+        buf_1d(i1) = f(i1,i2)/jac_array(i1,i2)
+        
+      enddo
+      buf_1d(nc_eta1+1) = buf_1d(1)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
+      do i1 = 1,nc_eta1
+        integration_points(3,i1,i2) =  buf_1d(i1)
+      enddo
+    enddo
+   
+   
+
+  !Compute rho0 and E0
+    do i1 = 1, nc_eta1
+      do i2=1,nc_eta2
+        integration_points_val(1,i2) = integration_points(2,i1,i2)
+        integration_points_val(2,i2) = integration_points(3,i1,i2)
+      enddo
+      !rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      if(rho_case==1)then
+        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==2)then
+        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==3)then
+        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
+      endif      
+      if(rho_case==4)then
+        rho(i1)=compute_non_unif_integral_gaussian_sym(integration_points_val,nc_eta2)
+      endif      
+      !if(test_case==4)then      
+      !  rho(i1) = rho(i1)+1._f64
+      !endif  
+   enddo
+   
+   rho(nc_eta1+1)=rho(1)
+ 
+     
+  SLL_DEALLOCATE(node_positions_x1,err)
+  SLL_DEALLOCATE(new_node_positions,err)
+  SLL_DEALLOCATE(buf_1d,err)
+  SLL_DEALLOCATE(integration_points_val,err)
+
+
+
+end subroutine compute_rho_mapped_mesh
+
+
+subroutine compute_rho_mapped_mesh2&
+  (rho,f,integration_points,rho_case,nc_eta1,nc_eta2,geom,jac_array,spl_per_x1)
+  sll_int :: rho_case
+  sll_real64,dimension(:,:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_val
+  sll_real64,dimension(:), pointer :: rho
+  sll_real64,dimension(:), pointer :: node_positions_x1
+  sll_real64,dimension(:), pointer :: new_node_positions
+  sll_real64,dimension(:), pointer :: buf_1d
+  sll_real64,dimension(:,:), pointer :: jac_array
+  sll_real64,dimension(:,:), pointer :: f
+  sll_real64,intent(in) :: geom(2,2)
+  sll_int,intent(in) :: nc_eta1,nc_eta2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
+  sll_int :: i1,i2
+  type(cubic_nonunif_spline_1D), pointer :: spl_per_x1
+  sll_int :: err
+
+  eta1_min = geom(1,1)
+  eta1_max = geom(2,1)
+  eta2_min = geom(1,2)
+  eta2_max = geom(2,2)
+  
+  SLL_ALLOCATE(node_positions_x1(nc_eta1+1),err)
+  SLL_ALLOCATE(new_node_positions(nc_eta1),err)
+  SLL_ALLOCATE(buf_1d(nc_eta1+1),err)
+  SLL_ALLOCATE(integration_points_val(2,nc_eta1+1),err)
+  do i1=1,nc_eta1+1
+    node_positions_x1(i1) = eta1_min+(real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+    !node_positions_x1(i1) = eta1_min+(real(i1,f64)-1._f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+  enddo
+    do i2=1,nc_eta2
+      do i1 = 1,nc_eta1
+        new_node_positions(i1) = integration_points(1,i1,i2)
+        if((new_node_positions(i1)>eta1_max).or.(new_node_positions(i1)<eta1_min) )then
+          print *,'problem of new_node_position:',new_node_positions(i1),eta1_min,eta1_max
+          stop
+        endif
+        if(new_node_positions(i1)<node_positions_x1(1))then
+          new_node_positions(i1)=new_node_positions(i1)+eta1_max-eta1_min
+        endif      
+        !buf_1d(i1) = sll_get_df_val(dist_func, i1, i2)/jac_array(i1,i2)!-f_equil(i1,i2)
+        buf_1d(i1) = f(i1,i2)/jac_array(i1,i2)
+        
+      enddo
+      buf_1d(nc_eta1+1) = buf_1d(1)
+      call compute_spline_nonunif( buf_1d, spl_per_x1, node_positions_x1)
+      call interpolate_array_value_nonunif( new_node_positions, buf_1d(1:nc_eta1), nc_eta1, spl_per_x1)
+      do i1 = 1,nc_eta1
+        integration_points(3,i1,i2) =  buf_1d(i1)
+      enddo
+    enddo
+   
+   
+
+  !Compute rho0 and E0
+    do i1 = 1, nc_eta1
+      do i2=1,nc_eta2
+        integration_points_val(1,i2) = integration_points(2,i1,i2)
+        integration_points_val(2,i2) = integration_points(3,i1,i2)
+      enddo
+      !rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      if(rho_case==1)then
+        rho(i1)= compute_non_unif_integral(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==2)then
+        rho(i1)=compute_non_unif_integral_spline(integration_points_val,nc_eta2)
+      endif
+      if(rho_case==3)then
+        rho(i1)=compute_non_unif_integral_gaussian(integration_points_val,nc_eta2)
+      endif      
+      if(rho_case==4)then
+        rho(i1)=compute_non_unif_integral_gaussian_sym(integration_points_val,nc_eta2)
+      endif      
+      !if(test_case==4)then      
+      !  rho(i1) = rho(i1)+1._f64
+      !endif  
+   enddo
+   
+   rho(nc_eta1+1)=rho(1)
+ 
+     
+  SLL_DEALLOCATE(node_positions_x1,err)
+  SLL_DEALLOCATE(new_node_positions,err)
+  SLL_DEALLOCATE(buf_1d,err)
+  SLL_DEALLOCATE(integration_points_val,err)
+
+
+
+end subroutine compute_rho_mapped_mesh2
+
+
+
 function compute_non_unif_integral(integration_points,N_points)
   sll_real64 :: compute_non_unif_integral
   sll_real64,dimension(:,:),pointer :: integration_points
@@ -134,11 +319,32 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_new
   sll_int,intent(in) :: N_points
+  sll_int::i,ierr
+  compute_non_unif_integral_gaussian = 0.5_f64*compute_non_unif_integral_gaussian_sym(integration_points,N_points)
+  
+  SLL_ALLOCATE(integration_points_new(2,N_points),ierr)
+  
+  
+  integration_points_new(1,1:N_points)=integration_points(1,1:N_points)
+  do i=1,N_points
+    integration_points_new(2,i)=integration_points(2,N_points-i+1)
+  enddo
+  
+  compute_non_unif_integral_gaussian = compute_non_unif_integral_gaussian+&
+  0.5_f64*compute_non_unif_integral_gaussian_sym(integration_points_new,N_points)
+end  function compute_non_unif_integral_gaussian
+
+
+function compute_non_unif_integral_gaussian_sym(integration_points,N_points)
+  sll_real64 :: compute_non_unif_integral_gaussian_sym
+  sll_real64,dimension(:,:),pointer :: integration_points
+  sll_real64,dimension(:,:),pointer :: integration_points_new
+  sll_int,intent(in) :: N_points
   sll_int :: i,ierr,j,is_center_point,N_points_new
   sll_real64 :: tmp,x1,x2,x3,fval1,fval2,fval3,x4,fval4,dx_int
   sll_int :: N_int,d_gauss,j_gauss
   sll_real64,dimension(:,:),pointer :: gauss_points
-  compute_non_unif_integral_gaussian = 0._f64
+  compute_non_unif_integral_gaussian_sym = 0._f64
   N_int = 2
   d_gauss = 10
   
@@ -263,7 +469,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
         tmp=abs(integration_points(1,N_points/2+i)+integration_points(1,N_points/2-i+1))
       endif
     enddo
-    if(tmp>0)then
+    if(tmp>1.e-13)then
       print *,'integration_points are not symmetric',tmp
       do j=1,N_points
         print *,j,integration_points(1,j)
@@ -280,7 +486,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
         tmp=abs(integration_points(1,(N_points+1)/2+i)+integration_points(1,(N_points+1)/2-i))
       endif
     enddo
-    if(tmp>0)then
+    if(tmp>1.e-14)then
       print *,'integration_points are not symmetric',tmp
       do j=1,N_points
         print *,j,integration_points(1,j)
@@ -339,7 +545,7 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
     enddo  
     tmp=tmp*dx_int
     !print *,i,x1,x2,x3
-    compute_non_unif_integral_gaussian =compute_non_unif_integral_gaussian+tmp
+    compute_non_unif_integral_gaussian_sym =compute_non_unif_integral_gaussian_sym+tmp
     !integration_points_middle(1,i)=0.5_f64*(x1+x2)
   enddo
   j=(N_points_new-1)/4
@@ -381,17 +587,22 @@ function compute_non_unif_integral_gaussian(integration_points,N_points)
       do j_gauss=1,d_gauss+1
         !x4 =x1+(real(j,f64)-0.5_f64)*dx_int
         x4 =x1+(real(j-1,f64)+gauss_points(1,j_gauss))*dx_int
-        fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))+fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
+        fval4=(fval1*(x4-x2)*(x4-x3)/((x1-x2)*(x1-x3))+fval2*(x4-x1)*(x4-x3)/((x2-x1)*(x2-x3))&
+        +fval3*(x4-x1)*(x4-x2)/((x3-x1)*(x3-x2)))
         fval4=fval4*exp(-0.5_f64*x4*x4)
         tmp=tmp+fval4*gauss_points(2,j_gauss)
       enddo
     enddo
     tmp=tmp*dx_int
     !print *,i,x1,x2,x3
-    compute_non_unif_integral_gaussian =compute_non_unif_integral_gaussian+tmp
+    compute_non_unif_integral_gaussian_sym =compute_non_unif_integral_gaussian_sym+tmp
   endif
-  compute_non_unif_integral_gaussian = 2._f64*compute_non_unif_integral_gaussian
-end  function compute_non_unif_integral_gaussian
+  
+  
+  
+  
+  compute_non_unif_integral_gaussian_sym = 2._f64*compute_non_unif_integral_gaussian_sym
+end  function compute_non_unif_integral_gaussian_sym
 
 
 

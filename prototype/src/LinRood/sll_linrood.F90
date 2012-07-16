@@ -76,7 +76,8 @@ contains
 
  subroutine linrood_step(plan, dist_func_2d, advfield, deltat)
    type (linrood_plan)                  :: plan
-   type (sll_distribution_function_2D_t)  :: dist_func_2D  
+   !type (sll_distribution_function_2D_t)  :: dist_func_2D  
+   type (sll_distribution_function_2d)  :: dist_func_2D  
    ! advection field defined by its stream function
    type(hamiltonian_advection_field_2d), intent(in) :: advfield
    sll_real64  :: deltat
