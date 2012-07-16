@@ -52,11 +52,11 @@ program bgk_csl
   sll_real64 :: x_factor,y_factor,length,tmp_loc,total_length,x,v
   mesh_case = 3
   visu_step = 10
-  test_case = 3
+  test_case = 4
   rho_case = 2
   phi_case = 3
      
-  alpha_mesh = 1.e-2_f64 !0.1_f64
+  alpha_mesh = 1.e-1_f64 !0.1_f64
   
   N_x1 = 64
   N_x2 = 64
@@ -825,7 +825,7 @@ program bgk_csl
   
   call write_mesh_2D(mesh)
   
-
+  stop
   call write_distribution_function ( dist_func )
 
 
