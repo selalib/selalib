@@ -9,14 +9,13 @@ module sll_module_mapped_meshes_2d_cartesian
 
 ! Definition of a 2D uniform cartesian mesh
 ! In this case
-!  x1(eta1) = x1_min + delta_eta1 * (eta1 - x1_min) 
-!         with delta_eta1 = (x1_max - x1_min)/nc_eta1
-!  x2(eta2) = x2_min + delta_eta2 * (eta2 - x2_min) 
-!         with delta_eta2 = (x2_max - x2_min)/nc_eta2
+!  x1(eta1) = x1_min + eta1 * (x1_max - x1_min), eta1 \in [0,1] 
+!  x2(eta2) = x2_min + eta2 * (x2_max - x2_min), eta2 \in [0,1] 
+!         
 !  the Jacobian matrix is 
-!   ( delta_eta1   0     )
-!   (  0      delta_eta2 )
-! and its determinant, the Jacobian, is delta_1 * delta_2
+!   ( l1   0  )
+!   (  0   l2 )
+! and its determinant, the Jacobian, is l1*l2, with li=(xi_max - xi_min)
 ! 
 !  HOW-TO INITIALIZE THE CARTESIAN MESH
 !
@@ -134,8 +133,8 @@ contains
     mesh%nc_eta2 = npts2-1
     mesh%x1_min  = x1_min
     mesh%x2_min  = x2_min    
-    delta_1       = (x1_max - x1_min)/(npts1 - 1)
-    delta_2       = (x2_max - x2_min)/(npts2 - 1)
+    delta_1       = 1.0_f64 / (npts1 - 1)
+    delta_2       = 1.0_f64 / (npts2 - 1)
     mesh%delta_eta1   = delta_1
     mesh%delta_eta2   = delta_2
     mesh%l1 =  x1_max - x1_min
@@ -148,7 +147,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = mesh%delta_eta1 * mesh%delta_eta2
+    val = mesh%l1 * mesh%l2
   end function jacobian_2d_cartesian
 
   function jacobian_matrix_2d_cartesian( mesh, eta1, eta2 )
@@ -161,10 +160,10 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
     
-    jacobian_matrix_2d_cartesian(1,1) = mesh%delta_eta1
+    jacobian_matrix_2d_cartesian(1,1) = mesh%l1
     jacobian_matrix_2d_cartesian(1,2) = 0.0
     jacobian_matrix_2d_cartesian(2,1) = 0.0
-    jacobian_matrix_2d_cartesian(2,2) = mesh%delta_eta2
+    jacobian_matrix_2d_cartesian(2,2) = mesh%l2
   end function jacobian_matrix_2d_cartesian
 
   function mesh_2d_jacobian_node_cartesian( mesh, i, j )
@@ -178,7 +177,7 @@ contains
     num_pts_2 = mesh%nc_eta2 + 1
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
-    mesh_2d_jacobian_node_cartesian = mesh%delta_eta1 * mesh%delta_eta2
+    mesh_2d_jacobian_node_cartesian = mesh%l1 * mesh%l2
   end function mesh_2d_jacobian_node_cartesian
 
   function mesh_2d_jacobian_cell_cartesian( mesh, i, j )
@@ -192,7 +191,7 @@ contains
     num_pts_2 = mesh%nc_eta2 
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
-    mesh_2d_jacobian_cell_cartesian = mesh%delta_eta1 * mesh%delta_eta2
+    mesh_2d_jacobian_cell_cartesian = mesh%l1 * mesh%l2
   end function mesh_2d_jacobian_cell_cartesian
 
 
@@ -217,7 +216,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    val = mesh%x1_min + real(i-1,f64)*mesh%delta_eta1
+    val = mesh%x1_min + real(i-1,f64)*mesh%delta_eta1*mesh%l1
   end function x1_node_cartesian
 
   function x2_node_cartesian( mesh, i, j ) result(val)
@@ -225,7 +224,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    val = mesh%x2_min + real(j-1,f64)*mesh%delta_eta2
+    val = mesh%x2_min + real(j-1,f64)*mesh%delta_eta2*mesh%l2
   end function x2_node_cartesian
 
  function x1_cell_cartesian( mesh, i, j ) 
@@ -233,7 +232,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    x1_cell_cartesian = mesh%x1_min + (real(i-1,f64)+0.5_f64)*mesh%delta_eta1
+    x1_cell_cartesian = mesh%x1_min + (real(i-1,f64)+0.5_f64)*mesh%delta_eta1*mesh%l1
   end function x1_cell_cartesian
 
   function x2_cell_cartesian( mesh, i, j )
@@ -241,7 +240,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    x2_cell_cartesian = mesh%x2_min + (real(j-1,f64)+0.5_f64)*mesh%delta_eta2
+    x2_cell_cartesian = mesh%x2_min + (real(j-1,f64)+0.5_f64)*mesh%delta_eta2*mesh%l2
   end function x2_cell_cartesian
 
  function x1_cartesian_one_arg( mesh, eta1) result(val)
