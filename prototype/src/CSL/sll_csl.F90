@@ -102,10 +102,10 @@ contains
     type (field_2D_vec1), pointer                   :: advfield ! advection field defined by its stream function
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
-    sll_int32, parameter   :: order = 1    ! order of scheme
+    sll_int32, parameter   :: order = 1 ,field_order=4   ! order of scheme
 
-    call csl_advance_1(csl_work, dist_func_2D, advfield, advfield, deltat, order)
-    call csl_advance_2(csl_work, dist_func_2D, advfield, advfield, deltat, order)
+    call csl_advance_1(csl_work, dist_func_2D, advfield, advfield, deltat, order,field_order)
+    call csl_advance_2(csl_work, dist_func_2D, advfield, advfield, deltat, order,field_order)
   end subroutine csl_first_order
 
   !> Advances the distribution function on a time step deltat using a second
@@ -122,11 +122,11 @@ contains
     type (field_2D_vec1), pointer                   :: advfield_new ! advection field at t+dt
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
-    sll_int32, parameter   :: order = 2    ! order of scheme
+    sll_int32, parameter   :: order = 2 ,field_order=4   ! order of scheme
  
-    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order)
-    call csl_advance_2(csl_work, dist_func_2D, advfield_old, advfield_new, deltat, order)
-    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order)
+    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order,field_order)
+    call csl_advance_2(csl_work, dist_func_2D, advfield_old, advfield_new, deltat, order,field_order)
+    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order,field_order)
   end subroutine csl_second_order
 
 
@@ -143,13 +143,13 @@ contains
                             advfield_old,   &
                             advfield_new,   &
                             deltat,         &
-                            order)
+                            order,field_order)
     type (csl_workspace), pointer :: csl_work
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
     type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
     type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
     sll_real64, intent(in)  ::  deltat                           ! dt
-    sll_int32, intent(in)  :: order 
+    sll_int32, intent(in)  :: order ,field_order
 
     sll_real64, dimension(:), pointer  ::  advfield_1D_1_old
     sll_real64, dimension(:), pointer  ::  advfield_1D_1_new
@@ -209,11 +209,27 @@ contains
        !advfield_1D_1_new ( 1 ) = FIELD_2D_AT_I_V1( advfield_new, 1, i2 )
        advfield_1D_1_old ( 1 ) = (FIELD_2D_AT_I( advfield_old, 1, i2+1 ) - FIELD_2D_AT_I( advfield_old, 1, i2 )) / &
             ( delta_eta2)
+       if(field_order==4)then 
+       
+              advfield_1D_1_old ( 1 ) = 9._f64/8._f64*advfield_1D_1_old ( 1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, 1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_old, 1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+       endif
+            
+            
+            
        if (order == 1) then
           advfield_1D_1_new ( 1 ) = 0.0_f64
        else
           advfield_1D_1_new ( 1 ) = (FIELD_2D_AT_I( advfield_new, 1, i2+1 )   &
                - FIELD_2D_AT_I( advfield_new, 1, i2 )) / ( delta_eta2)
+       if(field_order==4)then 
+
+              advfield_1D_1_new ( 1 ) = 9._f64/8._f64*advfield_1D_1_new ( 1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, 1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_new, 1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+
+    endif
        end if
        do i1 = 2, nc_eta1+1
           ! extract subarray from advection field
@@ -221,11 +237,25 @@ contains
           !advfield_1D_1_new ( i1 ) = FIELD_2D_AT_I_V1( advfield_new, i1, i2 )
           advfield_1D_1_old ( i1 ) = (FIELD_2D_AT_I( advfield_old, i1, i2+1 ) &
                - FIELD_2D_AT_I( advfield_old, i1, i2 )) / delta_eta2
+        if(field_order==4)then 
+              
+                        advfield_1D_1_old ( i1 ) = 9._f64/8._f64*advfield_1D_1_old ( i1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, i1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_old, i1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+     
+          endif     
           if (order == 1) then
              advfield_1D_1_new ( i1 ) = 0.0_f64
           else
              advfield_1D_1_new ( i1 ) = (FIELD_2D_AT_I( advfield_new, i1, i2+1 ) &
                   - FIELD_2D_AT_I( advfield_new, i1, i2 )) / delta_eta2
+       if(field_order==4)then 
+
+                        advfield_1D_1_new ( i1 ) = 9._f64/8._f64*advfield_1D_1_new ( i1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, i1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_new, i1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+
+endif
           end if
           ! compute primitive of distribution function along this line
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
@@ -272,13 +302,13 @@ contains
                             advfield_old,   &
                             advfield_new,   &
                             deltat,         &
-                            order )
+                            order ,field_order)
     type (csl_workspace), pointer :: csl_work
     type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
     type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
     type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
     sll_real64, intent(in)  :: deltat                            ! dt
-    sll_int32, intent(in)   :: order                             ! order
+    sll_int32, intent(in)   :: order ,field_order                            ! order
 
     ! local variables
     sll_real64, dimension(:), pointer  ::  advfield_1D_2_old
@@ -340,11 +370,21 @@ contains
        !advfield_1D_2_new(1) = FIELD_2D_AT_I_V2( advfield_new, i1, 1 )
        advfield_1D_2_old ( 1 ) = (FIELD_2D_AT_I( advfield_old, i1, 1 ) &
                - FIELD_2D_AT_I( advfield_old, i1+1, 1 )) / ( delta_eta1 )
+       if(field_order==4)then 
+       advfield_1D_2_old ( 1 ) = 9._f64/8._f64*advfield_1D_2_old ( 1 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, modulo(i1+2-1,nc_eta1)+1, 1 ) &
+               - FIELD_2D_AT_I( advfield_old, modulo(i1-1-1+nc_eta1,nc_eta1)+1, 1 )) / ( delta_eta1 )
+       endif
        if (order == 1) then
           advfield_1D_2_new ( 1 ) = 0.0_f64
        else
           advfield_1D_2_new ( 1 ) = (FIELD_2D_AT_I( advfield_new, i1, 1 ) &
                - FIELD_2D_AT_I( advfield_new, i1+1, 1 )) / delta_eta1
+       if(field_order==4)then 
+       advfield_1D_2_new ( 1 ) = 9._f64/8._f64*advfield_1D_2_new ( 1 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, modulo(i1+2-1,nc_eta1)+1, 1 ) &
+               - FIELD_2D_AT_I( advfield_new, modulo(i1-1-1+nc_eta1,nc_eta1)+1, 1 )) / ( delta_eta1 )
+       endif
        end if
        do i2 = 2, nc_eta2+1
           eta2 = eta2 + delta_eta2
@@ -353,11 +393,27 @@ contains
           !advfield_1D_2_new(i2) = FIELD_2D_AT_I_V2( advfield_new, i1, i2 )
           advfield_1D_2_old ( i2 ) = (FIELD_2D_AT_I( advfield_old, i1, i2 ) &
                - FIELD_2D_AT_I( advfield_old, i1+1, i2 )) / ( delta_eta1)
+       if(field_order==4)then 
+
+                 advfield_1D_2_old ( i2 ) = 9._f64/8._f64*advfield_1D_2_old ( i2 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, modulo(i1+2-1,nc_eta1)+1, i2 ) &
+               - FIELD_2D_AT_I( advfield_old, modulo(i1-1-1+nc_eta1,nc_eta1)+1, i2 )) / ( delta_eta1 )
+     
+       endif               
+               
+               
           if (order == 1) then
              advfield_1D_2_new ( i2 ) = 0.0_f64
           else
              advfield_1D_2_new ( i2 ) = (FIELD_2D_AT_I( advfield_new, i1, i2 ) &
                   - FIELD_2D_AT_I( advfield_new, i1+1, i2 )) / delta_eta1
+       if(field_order==4)then 
+
+            advfield_1D_2_new ( i2 ) = 9._f64/8._f64*advfield_1D_2_new ( i2 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, modulo(i1+2-1,nc_eta1)+1, i2 ) &
+               - FIELD_2D_AT_I( advfield_new, modulo(i1-1-1+nc_eta1,nc_eta1)+1, i2 )) / ( delta_eta1 )
+
+        endif          
           end if
           ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
