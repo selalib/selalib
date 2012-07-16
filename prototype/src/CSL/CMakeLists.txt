@@ -1,3 +1,35 @@
 add_library(sll_csl STATIC sll_csl.F90)
 add_executable(test_csl unit_test.F90)
-target_link_libraries(test_csl sll_assertion sll_constants sll_splines sll_diagnostics sll_distribution_function sll_memory sll_mesh_types sll_utilities sll_ode_solvers sll_csl)
+target_link_libraries(test_csl sll_assertion sll_constants sll_splines sll_low_level_file_io 
+  sll_distribution_function sll_memory sll_mapped_meshes sll_utilities ode_solvers sll_csl
+  sll_scalar_field_2d geometry_functions)
+
+
+
+
+
+
+#env.Library('sll_memory',["../memory/sll_memory.F90"])
+#env.Library('sll_precision', ["../precision/sll_working_precision.F90"])
+#env.Library('sll_assert', ["../assert/sll_assert.F90"])
+#env.Library('sll_ode_solvers',["../ode_solvers/sll_ode_solvers.F90"])
+#env.Library('sll_tridiagonal', ["../numerical_utilities/tridiagonal.F90"])
+#env.Library('sll_splines', ["../splines/sll_splines.F90","../splines/cubic_nonuniform_splines.F90" ])
+#env.Library('sll_constants', ["../constants/numeric_constants.F90"])
+#env.Library('sll_utilities',["../utilities/misc_utils.F90"])
+#env.Library('sll_diagnostics',Glob("../diagnostics/sll_*.F90"))
+#env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90","../mesh_types/geometry_functions.F90"])
+#env.Library('sll_distribution_function', ["../distribution_function/sll_distribution_function.F90"])
+
+
+
+#env.Program('unit_test', ["unit_test.F90", "sll_csl.F90"])
+#env.Program('unit_test_from_array', ["unit_test_from_array.F90", "sll_csl.F90"])
+#env.Program('bgk_csl', ["bgk_csl.F90", "sll_csl.F90","sll_bgk_mesh.F90","../splines/contrib_rho.F90"])
+#env.Program('bgk_classic_csl', ["bgk_classic_csl.F90", "sll_classic_csl.F90","sll_bgk_mesh.F90","../splines/contrib_rho.F90"])
+#env.Program('bgk_csl_uniform', ["bgk_csl_uniform.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
+#env.Program('bgk_fv_unif', ["bgk_fv_unif.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
+#env.Program('bgk_fv', ["bgk_fv.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
+#env.Program('bgk_fv2', ["bgk_fv2.F90", "sll_csl.F90","../splines/contrib_rho.F90"])
+#env.Program('bgk_cfd', ["bgk_CFD.F90", "sll_CFD.F90","../splines/contrib_rho.F90","sll_bgk_mesh.F90"])
+#env.Program('cg_csl_uniform', ["cg_csl_uniform.F90", "cg_csl_uniform_module.F90"])

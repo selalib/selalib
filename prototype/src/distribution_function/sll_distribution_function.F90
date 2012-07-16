@@ -50,7 +50,7 @@ module distribution_function
      sll_int32       :: plot_counter;                                \
   end type new_df_type
 
-NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
+!NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
 !NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, scalar_field_4d)
 
 NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
@@ -62,6 +62,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 !!$  end interface
 
 #undef NEW_TYPE_FOR_DF
+
 
 
 contains
