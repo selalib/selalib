@@ -6,32 +6,50 @@ module sll_module_mapped_meshes_2d_cartesian
   use sll_module_mapped_meshes_2d_base
   use sll_module_interpolators_2d_base
   implicit none
- 
+
+! Definition of a 2D uniform cartesian mesh
+! In this case
+!  x1(eta1) = x1_min + delta_eta1 * (eta1 - x1_min) 
+!         with delta_eta1 = (x1_max - x1_min)/nc_eta1
+!  x2(eta2) = x2_min + delta_eta2 * (eta2 - x2_min) 
+!         with delta_eta2 = (x2_max - x2_min)/nc_eta2
+!  the Jacobian matrix is 
+!   ( delta_eta1   0     )
+!   (  0      delta_eta2 )
+! and its determinant, the Jacobian, is delta_1 * delta_2
+! 
 !  HOW-TO INITIALIZE THE CARTESIAN MESH
 !
 !  type(sll_mapped_mesh_2d_cartesian)        :: mesh
-!  call mesh%initialize(label , nx , ny )
+!  call mesh%initialize(label , x1_min, x1_max, nx1 , x2_min, x2_max, nx2)
 !
 !  where label is a string for identify the output ("label".xmf)
-!  and nx,ny the numbers of points in x and y-axes.
+!  and nx1, nx2 the numbers of points in x1 and x2-axes.
+!  The computational domain is [x1_min, x1_max] x  [x2_min, x2_max]
 !
-! You have access to all functions and attributes defined in sll_mapped_meshes_base
+! You have access to all functions and attributes defined in 
+! sll_mapped_meshes_base
  
   type, public, extends(sll_mapped_mesh_2d_base)::sll_mapped_mesh_2d_cartesian
-    private
-     procedure(one_arg_scalar_function), pointer, nopass    :: x1_func  ! user
-     procedure(one_arg_scalar_function), pointer, nopass    :: x2_func  ! user
-     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
-     procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
-          jacobian_func
-     procedure(j_matrix_f_nopass), pointer, nopass          :: jacobian_matrix
+     private
+     sll_real64  :: x1_min
+     sll_real64  :: x2_min
+     sll_real64  :: l1   ! = x1_max - x1_min
+     sll_real64  :: l2   ! = x2_max - x2_min
+    ! nc_eta1, nc_eta2, delta_eta1, delta_eta2 are inherited from the base class
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_cartesian
      procedure, pass(mesh) :: x1_at_node => x1_node_cartesian
      procedure, pass(mesh) :: x2_at_node => x2_node_cartesian
-     procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_cartesian
-     procedure, pass(mesh) :: x1         => x1_cartesian
-     procedure, pass(mesh) :: x2         => x2_cartesian
+     procedure, pass(mesh) :: jacobian_at_node =>mesh_2d_jacobian_node_cartesian
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_cartesian
+     procedure, pass(mesh) :: x2_at_cell => x2_cell_cartesian
+     procedure, pass(mesh) :: jacobian_at_cell =>mesh_2d_jacobian_cell_cartesian
+     procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_cartesian
+     procedure, pass(mesh) :: x1 => x1_cartesian 
+     procedure, pass(mesh) :: x2 => x2_cartesian
+     procedure, pass(mesh) :: x1_cartesian_one_arg
+     procedure, pass(mesh) :: x2_cartesian_one_arg
      procedure, pass(mesh) :: jacobian   => jacobian_2d_cartesian
   end type sll_mapped_mesh_2d_cartesian
 
@@ -85,7 +103,11 @@ contains
   subroutine initialize_mesh_2d_cartesian( &
     mesh,           &
     label,          &
+    x1_min,         &
+    x1_max,         &
     npts1,          &
+    x2_min,         &
+    x2_max,         &
     npts2           &
    )
 
@@ -93,13 +115,10 @@ contains
     character(len=*), intent(in)                  :: label
     sll_int32, intent(in)                         :: npts1
     sll_int32, intent(in)                         :: npts2
-
-    procedure(one_arg_scalar_function), pointer            :: x1_func 
-    procedure(one_arg_scalar_function), pointer            :: x2_func
-    procedure(two_arg_scalar_function), pointer            :: j11_func
-    procedure(two_arg_scalar_function), pointer            :: j12_func
-    procedure(two_arg_scalar_function), pointer            :: j21_func
-    procedure(two_arg_scalar_function), pointer            :: j22_func
+    sll_real64, intent(in)                        :: x1_min 
+    sll_real64, intent(in)                        :: x1_max 
+    sll_real64, intent(in)                        :: x2_min
+    sll_real64, intent(in)                        :: x2_max  
 
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: delta_2  ! cell spacing in eta2 
@@ -113,65 +132,15 @@ contains
     mesh%label   = trim(label)
     mesh%nc_eta1 = npts1-1
     mesh%nc_eta2 = npts2-1
-    delta_1       = 1.0_f64/(npts1 - 1)
-    delta_2       = 1.0_f64/(npts2 - 1)
+    mesh%x1_min  = x1_min
+    mesh%x2_min  = x2_min    
+    delta_1       = (x1_max - x1_min)/(npts1 - 1)
+    delta_2       = (x2_max - x2_min)/(npts2 - 1)
     mesh%delta_eta1   = delta_1
     mesh%delta_eta2   = delta_2
+    mesh%l1 =  x1_max - x1_min
+    mesh%l2 =  x2_max - x2_min
 
-    x1_func => identity_x1
-    x2_func => identity_x2
-    j11_func => identity_jac11
-    j12_func => identity_jac12
-    j21_func => identity_jac21
-    j22_func => identity_jac22
-
-    ! Allocate the arrays for precomputed jacobians.
-    SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
-    SLL_ALLOCATE(mesh%jacobians_c(npts1-1, npts2-1), ierr)
-
-    ! Start filling out the fields and allocating the object's memory.
-    SLL_ALLOCATE(mesh%x1_cell(npts1-1, npts2-1), ierr)
-    SLL_ALLOCATE(mesh%x2_cell(npts1-1, npts2-1), ierr)
-
-    ! Assign the transformation functions
-    mesh%x1_func => x1_func
-    mesh%x2_func => x2_func
-
-    ! Fill the jacobian matrix
-    SLL_ALLOCATE(mesh%j_matrix(2,2), ierr)
-    mesh%j_matrix(1,1)%f => j11_func
-    mesh%j_matrix(1,2)%f => j12_func
-    mesh%j_matrix(2,1)%f => j21_func
-    mesh%j_matrix(2,2)%f => j22_func
-    mesh%jacobian_func   => jacobian_2d_cartesian
-    
-    ! Allocate the arrays for precomputed jacobians.
-    SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
-    SLL_ALLOCATE(mesh%jacobians_c(npts1-1, npts2-1), ierr)
-    
-    ! Fill the values of the transformation and the jacobians at the nodes
-    do j=0, npts2 - 1
-       eta_2 = real(j,f64)*delta_2
-       do i=0, npts1 - 1
-          eta_1 = real(i,f64)*delta_1
-          ! for some compiler reason, the following intermediate 
-          ! variable is required, else the jacobians_n array will not
-          ! be filled out properly.
-          jacobian_val             = mesh%jacobian_func(eta_1,eta_2)
-          mesh%jacobians_n(i+1,j+1) = jacobian_val
-       end do
-    end do
-    
-    ! Fill the values at the mid-point of the cells
-    do j=0, npts2 - 2
-       eta_2 = delta_2*(real(j,f64) + 0.5_f64)
-       do i=0, npts1 - 2
-          eta_1 = delta_1*(real(i,f64) + 0.5_f64)
-          mesh%x1_cell(i+1,j+1)     = x1_func(eta_1)
-          mesh%x2_cell(i+1,j+1)     = x2_func(eta_2)
-          mesh%jacobians_c(i+1,j+1) = mesh%jacobian_func(eta_1,eta_2)
-       end do
-    end do
   end subroutine initialize_mesh_2d_cartesian
 
   function jacobian_2d_cartesian( mesh, eta1, eta2 ) result(val)
@@ -179,8 +148,24 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = identity_jac(eta1,eta2)
+    val = mesh%delta_eta1 * mesh%delta_eta2
   end function jacobian_2d_cartesian
+
+  function jacobian_matrix_2d_cartesian( mesh, eta1, eta2 )
+    sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_cartesian
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
+    
+    jacobian_matrix_2d_cartesian(1,1) = mesh%delta_eta1
+    jacobian_matrix_2d_cartesian(1,2) = 0.0
+    jacobian_matrix_2d_cartesian(2,1) = 0.0
+    jacobian_matrix_2d_cartesian(2,2) = mesh%delta_eta2
+  end function jacobian_matrix_2d_cartesian
 
   function mesh_2d_jacobian_node_cartesian( mesh, i, j )
     sll_real64              :: mesh_2d_jacobian_node_cartesian
@@ -193,15 +178,30 @@ contains
     num_pts_2 = mesh%nc_eta2 + 1
     SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
-    mesh_2d_jacobian_node_cartesian = mesh%jacobians_n(i,j)
+    mesh_2d_jacobian_node_cartesian = mesh%delta_eta1 * mesh%delta_eta2
   end function mesh_2d_jacobian_node_cartesian
+
+  function mesh_2d_jacobian_cell_cartesian( mesh, i, j )
+    sll_real64              :: mesh_2d_jacobian_cell_cartesian
+    class(sll_mapped_mesh_2d_cartesian)   :: mesh
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32 :: num_pts_1
+    sll_int32 :: num_pts_2
+    num_pts_1 = mesh%nc_eta1 
+    num_pts_2 = mesh%nc_eta2 
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
+    mesh_2d_jacobian_cell_cartesian = mesh%delta_eta1 * mesh%delta_eta2
+  end function mesh_2d_jacobian_cell_cartesian
+
 
   function x1_cartesian( mesh, eta1, eta2 ) result(val)
     sll_real64                         :: val
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = mesh%x1_func(eta1)
+    val = mesh%x1_min + eta1 * mesh%l1
   end function x1_cartesian
 
   function x2_cartesian( mesh, eta1, eta2 ) result(val)
@@ -209,7 +209,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = mesh%x2_func(eta2)
+    val = mesh%x2_min + eta2 * mesh%l2
   end function x2_cartesian
 
   function x1_node_cartesian( mesh, i, j ) result(val)
@@ -217,7 +217,7 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    val = real(i-1,f64)*mesh%delta_eta1
+    val = mesh%x1_min + real(i-1,f64)*mesh%delta_eta1
   end function x1_node_cartesian
 
   function x2_node_cartesian( mesh, i, j ) result(val)
@@ -225,80 +225,37 @@ contains
     class(sll_mapped_mesh_2d_cartesian) :: mesh
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    val = real(j-1,f64)*mesh%delta_eta2
+    val = mesh%x2_min + real(j-1,f64)*mesh%delta_eta2
   end function x2_node_cartesian
 
+ function x1_cell_cartesian( mesh, i, j ) 
+    sll_real64            :: x1_cell_cartesian
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    x1_cell_cartesian = mesh%x1_min + (real(i-1,f64)+0.5_f64)*mesh%delta_eta1
+  end function x1_cell_cartesian
 
+  function x2_cell_cartesian( mesh, i, j )
+    sll_real64            :: x2_cell_cartesian
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    x2_cell_cartesian = mesh%x2_min + (real(j-1,f64)+0.5_f64)*mesh%delta_eta2
+  end function x2_cell_cartesian
 
+ function x1_cartesian_one_arg( mesh, eta1) result(val)
+    sll_real64                         :: val
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_real64, intent(in) :: eta1
+    val = mesh%x1_min + eta1 * mesh%l1
+  end function x1_cartesian_one_arg
 
-
-
-
-  ! identity function
-  !-------------------
-  ! direct mapping
-  function identity_x1 ( eta1 )
-    sll_real64  :: identity_x1
-    sll_real64, intent(in)   :: eta1
-    identity_x1 = eta1
-  end function identity_x1
-
-  function identity_x2 ( eta2 )
-    sll_real64  :: identity_x2
-    sll_real64, intent(in)   :: eta2
-    identity_x2 = eta2
-  end function identity_x2
-
-  ! inverse mapping
-  function identity_eta1 ( x1, x2 )
-    sll_real64  :: identity_eta1
-    sll_real64, intent(in)   :: x1
-    sll_real64, intent(in)   :: x2
-    identity_eta1 = x1
-  end function identity_eta1
-
-  function identity_eta2 ( x1, x2 )
-    sll_real64  :: identity_eta2
-    sll_real64, intent(in)   :: x1
-    sll_real64, intent(in)   :: x2
-    identity_eta2 = x2
-  end function identity_eta2
-
-  ! jacobian maxtrix
-  function identity_jac11 ( eta1, eta2 )
-    sll_real64  :: identity_jac11
-    sll_real64, intent(in)   :: eta1
-    sll_real64, intent(in)   :: eta2
-    identity_jac11 = 1.0_f64
-  end function identity_jac11
-
-    function identity_jac12 ( eta1, eta2 )
-    sll_real64  :: identity_jac12
-    sll_real64, intent(in)   :: eta1
-    sll_real64, intent(in)   :: eta2
-    identity_jac12 = 0.0_f64
-  end function identity_jac12
-
-  function identity_jac21 ( eta1, eta2 )
-    sll_real64  :: identity_jac21
-    sll_real64, intent(in)   :: eta1
-    sll_real64, intent(in)   :: eta2
-    identity_jac21 = 0.0_f64
-  end function identity_jac21
-
-  function identity_jac22 ( eta1, eta2 )
-    sll_real64  :: identity_jac22
-    sll_real64, intent(in)   :: eta1
-    sll_real64, intent(in)   :: eta2
-    identity_jac22 = 1.0_f64
-  end function identity_jac22
-
-  ! jacobian ie determinant of jacobian matrix
-  function identity_jac ( eta1, eta2 )
-    sll_real64  :: identity_jac
-    sll_real64, intent(in)   :: eta1
-    sll_real64, intent(in)   :: eta2
-    identity_jac = 1.0_f64
-  end function identity_jac
+  function x2_cartesian_one_arg( mesh, eta2) result(val)
+    sll_real64                         :: val
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_real64, intent(in) :: eta2
+    val = mesh%x2_min + eta2 * mesh%l2
+  end function x2_cartesian_one_arg
 
 end module sll_module_mapped_meshes_2d_cartesian

@@ -53,16 +53,17 @@ contains
     ffttab(1,:)=0.0_f64
     ffttab(nr+1,:)=0.0_f64
 
-    call dffti(ntheta,buf)
+!!$    call dffti(ntheta,buf)
     do i=1,nr+1
-!!$       call fft_apply_plan(pfwd,ffttab(i,:),ffttab(i,:))
-       call dfftf(ntheta,ffttab(i,:),buf)
+       call fft_apply_plan(pfwd,ffttab(i,:),ffttab(i,:))
+!!$       call dfftf(ntheta,ffttab(i,:),buf)
     end do
     ffttab=ffttab/real(ntheta,f64)
 
     ! poisson solver
     do k=0,ntheta-1
        ind_k=real(floor(real(k+1,f64)/2.0_f64),f64)
+       PRINT*,"k=",ind_k
 !!$    do k=0,ntheta-1
 !!$       ind_k=real(k,f64)
        do i=1,nr+1
@@ -89,8 +90,8 @@ contains
 
     ! FFT INVERSE
     do i=1,Nr+1
-!!$       call fft_apply_plan(pinv,phitab(i,1:ntheta),phitab(i,1:ntheta))
-       call dfftb(ntheta,phitab(i,1:ntheta),buf)
+       call fft_apply_plan(pinv,phitab(i,1:ntheta),phitab(i,1:ntheta))
+!!$       call dfftb(ntheta,phitab(i,1:ntheta),buf)
     end do
 
     phitab(:,ntheta+1)=phitab(:,1)
