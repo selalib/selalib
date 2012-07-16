@@ -45,18 +45,18 @@ program cg_csl_uniform
 
   nb_diag=8
   test_case=1
-  visu_step=100
+  visu_step=10
   scheme=20
   !pause=0.00
   !visu=0
   !execu=1
   time_case=[3,20]
   eps=1.e10_f64
-  poisson_case=1
+  poisson_case=2
   modx=1
   mody=1
   !scratch_file="~/scratch/visu/"
-  visu_case = 1
+  visu_case = 0
   
   SLL_ALLOCATE(thf(nb_diag),err)
   SLL_ALLOCATE(thf0(nb_diag),err)
@@ -69,7 +69,7 @@ program cg_csl_uniform
     N_x1=128
     N_x2=128
     dt=0.1
-    nb_step=5000
+    nb_step=500
     x1_min = 0._f64
     x1_max = 2._f64*sll_pi/landau_k
     x2_min = 0._f64 
@@ -345,7 +345,7 @@ program cg_csl_uniform
       fold=f
       !compute advection of dt/2 with fold
       E_x1=-E_x1 !warning -E_x(x_i,y_j) stored in E_x1(i,j)
-      call advect_classical_csl(0.5_f64*dt,E_x2,E_x1,fold,geom_x,N_x1,N_x2,buf1d,&
+      call advect_classical_csl(0.5_f64*dt,E_x2,E_x1,f,geom_x,N_x1,N_x2,buf1d,&
         node_positions_x1,node_positions_x2,Xstar,spl_per_x1,spl_per_x2)
       E_x1=-E_x1 !now E_x(x_i,y_j) stored in E_x1(i,j)
 
@@ -365,11 +365,11 @@ program cg_csl_uniform
       
       !compute advection of dt with f and E_{n+1/2}
       E_x1=-E_x1 !warning -E_x(x_i,y_j) stored in E_x1(i,j)
-      call advect_classical_csl(dt,E_x2,E_x1,f,geom_x,N_x1,N_x2,buf1d,&
+      call advect_classical_csl(dt,E_x2,E_x1,fold,geom_x,N_x1,N_x2,buf1d,&
         node_positions_x1,node_positions_x2,Xstar,spl_per_x1,spl_per_x2)
       E_x1=-E_x1 !now E_x(x_i,y_j) stored in E_x1(i,j)
       
-            
+      f=fold      
       if(modulo(step,visu_step)==0)then
         call print2dper(geom_x,f(1:N_x1,1:N_x2),N_x1,N_x2,visu_case,step,'f')
       endif

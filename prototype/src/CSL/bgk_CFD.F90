@@ -48,7 +48,7 @@ program bgk_CFD
   visu_step = 100
   test_case = 4
   rho_case = 2
-  div_case=50
+  div_case=2
   
    rk=4
    order=6

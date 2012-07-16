@@ -10,7 +10,7 @@ module cg_csl_uniform_module
 
 contains 
   
-  subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
+  subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N,interp_case)
     !Xstar and node_positions are normalized to [0,1]
     use numeric_constants
     use cubic_nonuniform_splines
@@ -18,7 +18,7 @@ contains
     
     sll_real64,dimension(:),pointer::f,Xstar,node_positions
     type(cubic_nonunif_spline_1D), pointer :: spl_per
-    sll_int32,intent(in):: N
+    sll_int32,intent(in):: N,interp_case
     sll_real64 :: dx
     sll_int32  :: i
     sll_real64 :: M,tmp,tmp2
@@ -41,16 +41,43 @@ contains
         print *,'displacement too big in csl_advection_per',Xstar(i)
         stop
       endif
-      do while (Xstar(i).gt.1._f64)
+      do while (Xstar(i).ge.1._f64)
         Xstar(i) = Xstar(i)-1._f64
       end do
       do while (Xstar(i).lt.0._f64)
         Xstar(i) = Xstar(i)+1._f64
-      end do    
+      end do
+      if(Xstar(i)>=1._f64)then
+        Xstar(i) = Xstar(i)-1._f64
+      endif
+      if((Xstar(i)>=1).or.(Xstar(i)<0))then
+        print *,'#problem for Xstar in csl_advection_per',i,Xstar(i)
+        stop
+      endif    
     enddo
 
+    !tmp=0._f64
+    !do i=4,N-4
+    !  tmp2=abs(node_positions(i)-Xstar(i)-(node_positions(i-1)-Xstar(i-1)))
+    !  if(tmp2>tmp)then
+    !    tmp = tmp2
+    !  endif
+    !enddo
+    !if(tmp>0.01/real(N,f64))then
+    !  do i=1,N
+    !    print *,real(i-1,f64)/real(N,f64),node_positions(i),f(i),Xstar(i)
+    !  enddo
+    !  stop
+    !endif
 
 
+
+    if(interp_case==1)then
+      call compute_spline_nonunif( f, spl_per,node_positions)
+      call interpolate_array_value_nonunif( Xstar(1:N), f, N, spl_per)
+      return
+    endif
+    
     !from f compute the mean
     do i=0,N-1
       f(i+1)=f(i+1)*(node_positions(i+2)-node_positions(i+1))/dx
@@ -65,7 +92,15 @@ contains
     !M=M/real(N,f64)
     do i=1,N
       f(i)=f(i)-M*(node_positions(i+1)-node_positions(i))!/dx
-    enddo    
+    enddo
+    tmp=0._f64
+    do i=1,N
+      tmp=tmp+f(i)
+    enddo
+    if(abs(tmp)>1.e-12)then
+      print *,tmp
+      stop    
+    endif
     !f_per(1)=0._f64
     !do i=2,N
     !  f_per(i)=f_per(i-1)+f(i-1)
@@ -91,7 +126,9 @@ contains
     !print *,spl_per%buf(9),spl_per%buf(7),spl_per%buf(8)
     !stop
     
-    call interpolate_array_value_nonunif( Xstar, f, N, spl_per)
+    !node_positions = f
+        
+    call interpolate_array_value_nonunif( Xstar(1:N), f(1:N), N, spl_per)
     
     
     tmp=f(1)!;for(i=0;i<Nx-1;i++)p[i]=p[i+1]-p[i];p[Nx-1]=tmp+M-p[Nx-1];
@@ -102,11 +139,34 @@ contains
 
 
     !from mean compute f
-    do i=1,N
+    do i=1,N-1
       f(i)=f(i)*dx/(node_positions(i+1)-node_positions(i))
     enddo
-
+    f(N) = f(N)*dx/(node_positions(1)+1._f64-node_positions(N))
     f(N+1) = f(1)
+
+    !tmp=0._f64
+    !do i=1,N
+    !  tmp2=min(abs(node_positions(i)-Xstar(i)),abs(node_positions(i)+1._f64-Xstar(i)))
+    !  tmp2=min(tmp2,abs(node_positions(i)-1._f64-Xstar(i)))
+    !  if(tmp2>tmp)then
+    !    tmp = tmp2
+    !  endif
+    !enddo
+    !tmp=0._f64
+    !do i=4,N-4
+    !  tmp2=abs(node_positions(i)-Xstar(i)-(node_positions(i-1)-Xstar(i-1)))
+    !  if(tmp2>tmp)then
+    !    tmp = tmp2
+    !  endif
+    !enddo
+    !if(tmp>0.01/real(N,f64))then
+    !  do i=1,N
+    !    print *,real(i-1,f64)/real(N,f64),node_positions(i),f(i),Xstar(i)
+    !  enddo
+    !  stop
+    !endif
+    
     
     
     
@@ -116,9 +176,9 @@ contains
 
 
 subroutine advect_classical_csl_1(dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
-Xstar,spl_per_x1,time_case)
+Xstar,spl_per_x1,time_case,carac_position_case,interp_case)
 !solve \partial_t f(t,x,y) + \partial_x(a1(x,y)f(t,x,y))=0 over dt
-  sll_int32,intent(in) :: N_x1,N_x2,time_case(2)
+  sll_int32,intent(in) :: N_x1,N_x2,time_case(2),carac_position_case,interp_case
   sll_real64,intent(in) :: dt,geom_x(2,2)
   sll_real64,dimension(:),pointer :: buf,node_positions_x1,Xstar
   sll_real64,dimension(:,:),pointer:: a1,f
@@ -135,8 +195,16 @@ Xstar,spl_per_x1,time_case)
     buf(1:N_x1) = f(1:N_x1,i2)
     if(time_case(1)==1)then
       do i1=1,N_x1
-        i1m1=modulo(i1-1-1+N_x1,N_x1)+1    
-        Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        Xstar(i1) = node_positions_x1(i1)-dt*a1(i1,i2)/(x1_max-x1_min)
+        if(carac_position_case==-1)then
+          i1m1=modulo(i1-1-1+N_x1,N_x1)+1    
+          Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        endif
+        if(carac_position_case==1)then
+          i1m1=modulo(i1+1-1+N_x1,N_x1)+1    
+          Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        endif
+          
       enddo      
       Xstar(N_x1+1) = Xstar(1)+1._f64
     endif        
@@ -190,26 +258,132 @@ Xstar,spl_per_x1,time_case)
         !Xstar(i1) = node_positions_x1(i1)-Xstar(i1)
         !Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))
       enddo
-      tmp=Xstar(N_x1)
-      do i1=N_x1,2,-1
-        Xstar(i1)=Xstar(i1)+Xstar(i1-1)
-      enddo
-      Xstar(1)=Xstar(1)+tmp
-      !tmp=Xstar(1)
-      !do i1=1,N_x1-1
-      !  Xstar(i1)=Xstar(i1)+Xstar(i1+1)
+      !tmp=1._f64/real(N_x1)Xstar(2)-Xstar(1)
+      !do i=1,N_x1-1
+      !  if(Xstar(i+1)-Xstar(i)<tmp)then
+      !    tmp=Xstar(i+1)-Xstar(i)
+      !  endif
       !enddo
-      !Xstar(N_x1)=Xstar(N_x1-1)+tmp
-      
+      if(carac_position_case==-1)then
+        tmp=Xstar(N_x1)
+        do i1=N_x1,2,-1
+          Xstar(i1)=0.5_f64*(Xstar(i1)+Xstar(i1-1))
+        enddo
+        Xstar(1)=0.5_f64*(Xstar(1)+tmp)
+      endif  
+      if(carac_position_case==1)then
+        tmp=Xstar(1)
+        do i1=1,N_x1-1
+          Xstar(i1)=0.5_f64*(Xstar(i1)+Xstar(i1+1))
+        enddo
+        Xstar(N_x1)=0.5_f64*(Xstar(N_x1-1)+tmp)
+      endif
       !in Xstar are stored displacements of X_{-1/2},...X_{N-1/2}: X_star=d_{-1/2},...,d_{N-1/2}
       ! the displacement of X_{N+1/2} is the same than the displacement of X_{-1/2}
       !the primitive will be evaluated at 0dx-d_{-1/2}, dx-d_{1/2},...(N-1)dx-d_{N-1/2}
       do i1=1,N_x1
-        Xstar(i1)=node_positions_x1(i1)-Xstar(i1)
+        Xstar(i1)=node_positions_x1(i1)-2._f64*Xstar(i1)
       enddo
       Xstar(N_x1+1) = Xstar(1)+ 1._f64   
+    endif
+    if(time_case(1)==3)then
+      do i1=1,N_x1
+        Xstar(i1) = node_positions_x1(i1)-dt*a1(i1,i2)/(x1_max-x1_min)
+        if(carac_position_case==-1)then
+          i1m1=modulo(i1-1-1+N_x1,N_x1)+1    
+          Xstar(i1) = node_positions_x1(i1)-0.5_f64/real(N_x1,f64)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        endif
+        if(carac_position_case==1)then
+          i1m1=modulo(i1+1-1+N_x1,N_x1)+1    
+          Xstar(i1) = node_positions_x1(i1)-0.5_f64/real(N_x1,f64)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        endif
+          
+      enddo      
+      Xstar(N_x1+1) = Xstar(1)+1._f64
     endif        
-    call csl_advection_per(buf,spl_per_x1,Xstar,node_positions_x1,N_x1)
+    if(time_case(1)==4)then
+      do i1=1,N_x1
+        !x=i*dx-p[i];if(x>=1.)x-=1.;if(x<0.)x+=1.;if(x>=1.)x-=1.;ix=(int)(x*Nx);
+        !if(x>=1. || x<0.){fprintf(stderr,"x too big/small %1.1000lg i=%d j=%d\n",x,i,j);exit(1);}
+        !assert(x>=0.&&x<1.);assert(ix>=0 &&ix<Nx);x=x*Nx-ix;assert(x>=0 &&x<1.);
+        !ix1=ix+1;if(ix1==Nx)ix1=0;
+        !result=(1.-x)*Ey[ix+Nx*j]+x*Ey[ix1+Nx*j];p[i]=result*dtmp2*dt;
+        Xstar(i1) = 0._f64
+        do s=1,time_case(2)
+          x = node_positions_x1(i1)+real(carac_position_case,f64)*0.5_f64/real(N_x1,f64)-Xstar(i1)
+          if(abs(x-0.5_f64)>1.5)then
+            print *,'#displacement is too big in classical_csl_1',x,s
+            do i=1,N_x1
+              print *,node_positions_x1(i),a1(i,i2)
+            enddo
+            print *,node_positions_x1(N_x1+1),a1(1,i2)
+            stop
+          endif
+          !do while (x>=1._f64)
+          !  x=x-1._f64
+          !enddo
+          !do while(x<0._f64)
+          !  x=x+1._f64
+          !enddo
+          !if(x>=1.)then
+          !  x=x-1._f64
+          !endif
+          !if(x<0._f64)then
+          !  print *,'problem x should be >=0 in advec_classical_csl_1',x
+          !  stop
+          !endif
+          x = x*N_x1
+          ix=floor(x)
+          x=x-real(ix,f64)
+          ix = modulo(ix+N_x1,N_x1)
+          ix1=ix+1
+          if(ix1==N_x1)then
+            ix1=0
+          endif
+          if(ix1+1>N_x1)then
+            print *,ix,ix1+1,i1,node_positions_x1(i1)-Xstar(i1),Xstar(i1)
+            print *,'Problem in advec_classical_csl_1'
+            stop
+          endif
+          result = (1.-x)*a1(ix+1,i2)+x*a1(ix1+1,i2)
+          Xstar(i1)=0.5_f64*result*dt/(x1_max-x1_min)
+        enddo  
+        !i1m1=modulo(i1-1-1+N_x1,N_x1)+1
+        !Xstar(i1) = node_positions_x1(i1)-Xstar(i1)
+        !Xstar(i1) = node_positions_x1(i1)-0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))
+      enddo
+      do i1=1,N_x1
+        !Xstar(i1)=node_positions_x1(i1)+real(carac_position_case,f64)*0.5_f64/real(N_x1,f64)&
+        !  -2._f64*Xstar(i1)
+        Xstar(i1)=node_positions_x1(i1)-2._f64*Xstar(i1)
+      enddo
+      Xstar(N_x1+1) = Xstar(1)+ 1._f64   
+    endif
+    if(time_case(1)==10)then
+      do i1=1,N_x1
+        Xstar(i1) = node_positions_x1(i1)+dt*a1(i1,i2)/(x1_max-x1_min)
+        if(carac_position_case==-1)then
+          i1m1=modulo(i1-1-1+N_x1,N_x1)+1    
+          Xstar(i1) = node_positions_x1(i1)+0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        endif
+        if(carac_position_case==1)then
+          i1m1=modulo(i1+1-1+N_x1,N_x1)+1    
+          Xstar(i1) = node_positions_x1(i1)+0.5_f64*dt*(a1(i1,i2)+a1(i1m1,i2))/(x1_max-x1_min)
+        endif
+          
+      enddo      
+      Xstar(N_x1+1) = Xstar(1)+1._f64
+    endif        
+
+
+
+    if(time_case(1)<10)then    
+      call csl_advection_per(buf,spl_per_x1,Xstar,node_positions_x1,N_x1,interp_case)
+    endif
+    if(time_case(1)>=10)then
+      call interp1dcascons(buf,Xstar,100,N_x1)
+      buf(N_x1+1)=buf(1)
+    endif  
     f(1:N_x1+1,i2) = buf(1:N_x1+1)
   enddo
   f(1:N_x1+1,N_x2+1)=f(1:N_x1+1,1)
@@ -218,9 +392,9 @@ end subroutine advect_classical_csl_1
 
 
 subroutine advect_classical_csl_2(dt,a2,f,geom_x,N_x1,N_x2,buf,node_positions_x2,&
-Xstar,spl_per_x2,time_case)
+Xstar,spl_per_x2,time_case,carac_position_case,interp_case)
 !solve \partial_t f(t,x,y) + \partial_x(a1(x,y)f(t,x,y))=0 over dt
-  sll_int32,intent(in) :: N_x1,N_x2,time_case(2)
+  sll_int32,intent(in) :: N_x1,N_x2,time_case(2),carac_position_case,interp_case
   sll_real64,intent(in) :: dt,geom_x(2,2)
   sll_real64,dimension(:),pointer :: buf,node_positions_x2,Xstar
   sll_real64,dimension(:,:),pointer:: a2,f
@@ -238,8 +412,15 @@ Xstar,spl_per_x2,time_case)
     buf(1:N_x2) = f(i1,1:N_x2)
     if(time_case(1)==1)then
       do i2=1,N_x2
-        i2m1=modulo(i2-1-1+N_x2,N_x2)+1    
-        Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        Xstar(i2) = node_positions_x2(i2)-dt*a2(i1,i2)/(x2_max-x2_min)
+        if(carac_position_case==-1)then
+          i2m1=modulo(i2-1-1+N_x2,N_x2)+1    
+          Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        endif  
+        if(carac_position_case==1)then
+          i2m1=modulo(i2+1-1+N_x2,N_x2)+1    
+          Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        endif  
       enddo
       Xstar(N_x2+1)=Xstar(1)+1._f64
     endif
@@ -287,22 +468,25 @@ Xstar,spl_per_x2,time_case)
           Xstar(i2)=0.5_f64*result*dt/(x2_max-x2_min)
         enddo  
       enddo
-      tmp=Xstar(N_x2)
-      do i2=N_x2,2,-1
-        Xstar(i2)=Xstar(i2)+Xstar(i2-1)
-      enddo
-      Xstar(1)=Xstar(1)+tmp
-      !tmp=Xstar(1)
-      !do i1=1,N_x1-1
-      !  Xstar(i1)=Xstar(i1)+Xstar(i1+1)
-      !enddo
-      !Xstar(N_x1)=Xstar(N_x1-1)+tmp
-      
+      if(carac_position_case==-1)then
+        tmp=Xstar(N_x2)
+        do i2=N_x2,2,-1
+          Xstar(i2)=0.5_f64*(Xstar(i2)+Xstar(i2-1))
+        enddo
+        Xstar(1)=0.5_f64*(Xstar(1)+tmp)
+      endif
+      if(carac_position_case==1)then      
+        tmp=Xstar(1)
+        do i2=1,N_x2-1
+          Xstar(i2)=0.5_f64*(Xstar(i2)+Xstar(i2+1))
+        enddo
+        Xstar(N_x2)=0.5_f64*(Xstar(N_x2-1)+tmp)
+      endif
       !in Xstar are stored displacements of X_{-1/2},...X_{N-1/2}: X_star=d_{-1/2},...,d_{N-1/2}
       ! the displacement of X_{N+1/2} is the same than the displacement of X_{-1/2}
       !the primitive will be evaluated at 0dx-d_{-1/2}, dx-d_{1/2},...(N-1)dx-d_{N-1/2}
       do i2=1,N_x2
-        Xstar(i2)=node_positions_x2(i2)-Xstar(i2)
+        Xstar(i2)=node_positions_x2(i2)-2._f64*Xstar(i2)
       enddo    
       Xstar(N_x2+1) = Xstar(1)+ 1._f64
       
@@ -311,7 +495,102 @@ Xstar,spl_per_x2,time_case)
       !enddo
       !stop
     endif
-    call csl_advection_per(buf,spl_per_x2,Xstar,node_positions_x2,N_x2)
+    if(time_case(1)==3)then
+      do i2=1,N_x2
+        Xstar(i2) = node_positions_x2(i2)-dt*a2(i1,i2)/(x2_max-x2_min)
+        if(carac_position_case==-1)then
+          i2m1=modulo(i2-1-1+N_x2,N_x2)+1    
+          Xstar(i2) = node_positions_x2(i2)-0.5_f64/real(N_x2,f64)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        endif  
+        if(carac_position_case==1)then
+          i2m1=modulo(i2+1-1+N_x2,N_x2)+1    
+          Xstar(i2) = node_positions_x2(i2)+0.5_f64/real(N_x2,f64)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        endif  
+      enddo
+      Xstar(N_x2+1)=Xstar(1)+1._f64
+    endif
+
+    if(time_case(1)==4)then  
+      do i2=1,N_x2
+        i2m1=modulo(i2-1-1+N_x2,N_x2)+1
+        !Xstar(i2) = node_positions_x2(i2)-0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))
+        Xstar(i2) = 0._f64
+        do s=1,time_case(2)
+          x = node_positions_x2(i2)+real(carac_position_case,f64)*0.5_f64/real(N_x2,f64)-Xstar(i2)
+          if(abs(x-0.5_f64)>1.5)then
+            print *,'displacement is too big in classical_csl_2',x
+            do i=1,N_x2
+              print *,node_positions_x2(i),a2(i1,i)
+            enddo
+            print *,node_positions_x2(N_x1+1),a2(i1,i)
+            stop
+          endif
+          !do while(x>=1._f64)
+          !  x=x-1._f64
+          !enddo
+          !do while(x<0._f64)
+          !  x=x+1._f64
+          !enddo
+          !if(x>=1.)then
+          !  x=x-1._f64
+          !endif
+          !if(x<0._f64)then
+          !  print *,'problem x should be >=0 in advec_classical_csl_2',x
+          !  stop
+          !endif
+          x = x*N_x2
+          ix=floor(x)
+          x=x-real(ix,f64)
+          ix = modulo(ix+N_x2,N_x2)
+          ix1=ix+1
+          if(ix1==N_x2)then
+            ix1=0
+          endif
+          if(ix1+1>N_x2)then
+            print *,ix,ix1+1,i2,node_positions_x2(i2)-Xstar(i2),Xstar(i2)
+            print *,'Problem in advec_classical_csl_2'
+            stop
+          endif
+          result = (1.-x)*a2(i1,ix+1)+x*a2(i1,ix1+1)
+          Xstar(i2)=0.5_f64*result*dt/(x2_max-x2_min)
+        enddo  
+      enddo
+      do i2=1,N_x2
+        !Xstar(i2)=node_positions_x2(i2)+real(carac_position_case,f64)*0.5_f64/real(N_x2,f64)&
+        !  -2._f64*Xstar(i2)
+        Xstar(i2)=node_positions_x2(i2)-2._f64*Xstar(i2)
+      enddo    
+      Xstar(N_x2+1) = Xstar(1)+ 1._f64
+      
+      !do i=1,N_x2+1
+      !  print *,node_positions_x2(i),Xstar(i),a2(i1,i)
+      !enddo
+      !stop
+    endif
+    if(time_case(1)==10)then
+      do i2=1,N_x2
+        Xstar(i2) = node_positions_x2(i2)+dt*a2(i1,i2)/(x2_max-x2_min)
+        if(carac_position_case==-1)then
+          i2m1=modulo(i2-1-1+N_x2,N_x2)+1    
+          Xstar(i2) = node_positions_x2(i2)+0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        endif  
+        if(carac_position_case==1)then
+          i2m1=modulo(i2+1-1+N_x2,N_x2)+1    
+          Xstar(i2) = node_positions_x2(i2)+0.5_f64*dt*(a2(i1,i2)+a2(i1,i2m1))/(x2_max-x2_min)
+        endif  
+      enddo
+      Xstar(N_x2+1)=Xstar(1)+1._f64
+    endif
+    
+    
+    
+    if(time_case(1)<10)then
+      call csl_advection_per(buf,spl_per_x2,Xstar,node_positions_x2,N_x2,interp_case)
+    endif
+    if(time_case(1)>=10)then
+      call interp1dcascons(buf,Xstar,100,N_x2)
+      buf(N_x2+1)=buf(1)
+    endif
     f(i1,1:N_x2+1) = buf(1:N_x2+1)
   enddo
   f(N_x1+1,1:N_x2+1)=f(1,1:N_x2+1)
@@ -326,19 +605,250 @@ node_positions_x1,node_positions_x2,Xstar,spl_per_x1,spl_per_x2)
   sll_real64,dimension(:),pointer :: buf,node_positions_x1,node_positions_x2,Xstar
   sll_real64,dimension(:,:),pointer:: a1,a2,f
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1,spl_per_x2
-  sll_int32  :: time_case(2)
-  time_case(1) = 2
-  time_case(2) = 10
+  sll_int32  :: time_case(2),carac_position_case,interp_case
+  time_case(1) = 10
+  time_case(2) = 20
+  carac_position_case = -1
+  interp_case = 0
   
-  call advect_classical_csl_1(0.5_f64*dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
-    Xstar,spl_per_x1,time_case)
-  call advect_classical_csl_2(dt,a2,f,geom_x,N_x1,N_x2,buf,node_positions_x2,&
-    Xstar,spl_per_x2,time_case)
-  call advect_classical_csl_1(0.5_f64*dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
-    Xstar,spl_per_x1,time_case)
+  !call advect_classical_csl_1(0.5_f64*dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
+  !  Xstar,spl_per_x1,time_case)
+  !call advect_classical_csl_2(dt,a2,f,geom_x,N_x1,N_x2,buf,node_positions_x2,&
+  !  Xstar,spl_per_x2,time_case)
+  !call advect_classical_csl_1(0.5_f64*dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
+  !  Xstar,spl_per_x1,time_case)
+
+  call advect_classical_csl_2(0.5_f64*dt,a2,f,geom_x,N_x1,N_x2,buf,node_positions_x2,&
+    Xstar,spl_per_x2,time_case,carac_position_case,interp_case)
+  call advect_classical_csl_1(dt,a1,f,geom_x,N_x1,N_x2,buf,node_positions_x1,&
+    Xstar,spl_per_x1,time_case,carac_position_case,interp_case)
+  call advect_classical_csl_2(0.5_f64*dt,a2,f,geom_x,N_x1,N_x2,buf,node_positions_x2,&
+    Xstar,spl_per_x2,time_case,carac_position_case,interp_case)
+
 
 end subroutine advect_classical_csl
 
+
+
+subroutine interp1dcascons(pp,alphax,Nbdr,Nx)
+  sll_int32,intent(in) :: Nbdr,Nx
+  sll_real64,dimension(:),pointer :: pp,alphax
+  sll_int32 :: i,j,ix,mem=0,err
+  sll_real64 :: x,dx,tmp,M,w(0:3)
+  sll_real64,dimension(:),pointer :: coef,Xnode,A,B,C,ltab2,vtab2,dtab2,mtab2,p
+  
+  dx = 1._f64/real(Nx,f64) 
+  
+  SLL_ALLOCATE(coef(-Nbdr:Nx+Nbdr-1),err)
+  SLL_ALLOCATE(Xnode(-Nbdr:Nx+Nbdr-1),err)
+  SLL_ALLOCATE(A(0:Nx-1),err)
+  SLL_ALLOCATE(B(0:Nx-1),err)
+  SLL_ALLOCATE(C(0:Nx-1),err)
+  SLL_ALLOCATE(ltab2(0:Nx-2),err)
+  SLL_ALLOCATE(vtab2(0:Nx-2),err)
+  SLL_ALLOCATE(dtab2(0:Nx-1),err)
+  SLL_ALLOCATE(mtab2(0:Nx-3),err)
+  SLL_ALLOCATE(p(0:Nx-1),err)
+  
+
+  !do i=0,Nx-1
+  !  print *,i,pp(i+1),alphax(i+1)!,p(i)
+  !enddo
+  !stop
+
+
+  
+  !coef(-Nbdr:Nx+Nbdr-1) X(-Nbdr:Nx+Nbdr-1)
+  !A(0:Nx-1) B(0:Nx-1) C(0:Nx-1) ltab2(0:Nx-2) vtab2(0:Nx-2) dtab2(0:Nx-1) mtab2(0:Nx-3)
+  
+  !we compute the new 1D unstructured mesh
+  !//for(i=0;i<Nx;i++)X[i]=((double)i-0.5)*dx+alphax[i];
+  !for(i=0;i<Nx;i++)X[i]=alphax[i];
+  do i=0,Nx-1
+    Xnode(i) = alphax(i+1)
+    p(i) = pp(i+1)
+  enddo
+  
+  
+  !//for(i=0;i<Nx;i++)fprintf(stderr,"X[%d] %lg\n",i,X[i]);
+  !for(i=0;i<Nbdr;i++)X[Nx+i]=X[i]+1.;for(i=0;i<Nbdr;i++)X[-i-1]=X[Nx-i-1]-1.;
+  do i=0,Nbdr-1
+    Xnode(Nx+i)=Xnode(i)+1._f64
+  enddo
+  do i=0,Nbdr-1
+    Xnode(-i-1)=Xnode(Nx-i-1)-1._f64
+  enddo
+
+  !do i=-Nbdr,Nx+Nbdr-1
+  !  print *,i,Xnode(i),i*dx
+  !enddo
+  !stop
+  !//compute the minsize
+  !tmp=X[1]-X[0];for(i=1;i<Nx;i++)if(X[i+1]-X[i]<tmp)tmp=X[i+1]-X[i];
+  tmp=Xnode(1)-Xnode(0)
+  do i=1,Nx-1
+    if(Xnode(i+1)-Xnode(i)<tmp)then
+      tmp=Xnode(i+1)-Xnode(i)
+    endif  
+  enddo
+  if(tmp<1.e-10_f64)then
+    do i=0,Nx-1
+      print *,i,Xnode(i)      
+    enddo
+    print *,"min size of forward mesh is too small:",tmp
+  endif
+  !print *,tmp,1._f64/real(Nx,f64),tmp-1./real(Nx,f64)
+  !stop
+  !if(tmp<1.e-10){
+  !  for(i=0;i<Nx;i++)fprintf(stderr,"X[%d] %lg\n",i,X[i]);
+  !  fprintf(stderr,"min size of forward mesh is too small:%lg\n",tmp);exit(1);
+  !}
+  !//we compute the almost tridiag matrix and LU decomposition	    
+  do i=0,Nx-1
+    B(i)=((Xnode(i+2)-Xnode(i+1))*(Xnode(i+2)-Xnode(i+1)))/((Xnode(i+2)-Xnode(i-1))*(Xnode(i+2)-Xnode(i)))
+    C(i)=((Xnode(i-1)-Xnode(i-2))*(Xnode(i-1)-Xnode(i-2)))/((Xnode(i+1)-Xnode(i-2))*(Xnode(i)-Xnode(i-2)))
+    A(i)=((Xnode(i)-Xnode(i-2))*(Xnode(i+1)-Xnode(i)))/((Xnode(i+1)-Xnode(i-2))*(Xnode(i+1)-Xnode(i-1)))
+    A(i)=A(i)+((Xnode(i+2)-Xnode(i))*(Xnode(i)-Xnode(i-1)))/((Xnode(i+2)-Xnode(i-1))*(Xnode(i+1)-Xnode(i-1)))
+  enddo
+  
+  !do i=0,Nx-1
+  !  print *,i,A(i),B(i),C(i)
+  !enddo
+  !stop
+  
+  dtab2(0)=A(0);vtab2(0)=B(Nx-1);ltab2(0)=B(0)/dtab2(0);mtab2(0)=C(0)/dtab2(0);
+  do i=0,Nx-3
+    ltab2(i)=B(i)/dtab2(i);dtab2(i+1)=A(i+1)-ltab2(i)*C(i+1)
+  enddo
+  do i=0,Nx-4
+    vtab2(i+1)=-ltab2(i)*vtab2(i);mtab2(i+1)=-mtab2(i)*C(i+1)/dtab2(i+1);
+  enddo  
+  vtab2(Nx-2)=C(Nx-1)-ltab2(Nx-3)*vtab2(Nx-3);ltab2(Nx-2)=(B(Nx-2)-mtab2(Nx-3)*C(Nx-2))/dtab2(Nx-2);
+  tmp=0.;
+  do i=0,Nx-3
+    tmp=tmp+mtab2(i)*vtab2(i)
+  enddo  
+  dtab2(Nx-1)=A(Nx-1)-tmp-ltab2(Nx-2)*vtab2(Nx-2);
+  !//we compute the coefficients in x by solving the LU decomposition 
+  M=0._f64
+  do i=0,Nx-1
+    M=M+p(i)
+  enddo
+  
+  
+  coef(0)=0._f64
+  do i=1,Nx-1
+    coef(i)=coef(i-1)+p(i-1);
+  enddo
+  coef(0)=coef(0)+M*B(Nx-1)
+  coef(Nx-1)=coef(Nx-1)-M*C(0)
+  !print *,B(Nx-1),coef(0),M
+  
+  !stop
+
+  do i=1,Nx-2
+    coef(i)=coef(i)-ltab2(i-1)*coef(i-1);
+  enddo
+  tmp=0._f64;
+  do i=0,Nx-3
+    tmp=tmp+coef(i)*mtab2(i)
+  enddo
+  coef(Nx-1)=coef(Nx-1)-(tmp+ltab2(Nx-2)*coef(Nx-2))
+  coef(Nx-1)=coef(Nx-1)/dtab2(Nx-1);coef(Nx-2)=(coef(Nx-2)-coef(Nx-1)*vtab2(Nx-2))/dtab2(Nx-2);
+
+
+
+  do i=Nx-3,0,-1
+    coef(i)=(coef(i)-C(i+1)*coef(i+1)-vtab2(i)*coef(Nx-1))/dtab2(i);
+  enddo
+  do i=0,Nbdr-1
+    coef(Nx+i)=coef(i)+M;
+  enddo
+  do i=0,Nbdr-1
+    coef(-i-1)=coef(Nx-i-1)-M;
+  enddo
+  
+  
+  !do i=-Nbdr,Nx+Nbdr-1
+  !  print *,i,coef(i)
+  !enddo
+  !stop  
+  !//we interpolate the cumulative function on uniform mesh and get     
+  do i=0,Nx-1
+    tmp=(i-0.0_f64)*dx;j=i;
+    if(Xnode(j)<tmp)then
+      do while(Xnode(j)<tmp)
+        j=j+1
+      enddo
+      j=j-1
+    else
+      do while (Xnode(j)>tmp)
+        j=j-1
+      enddo
+    endif    
+    if(.not.((Xnode(j)<=tmp) .and. (Xnode(j+1)>tmp)))then
+      print *,"j= tmp= Xnode(j)= Xnode(j+1)= ",j,tmp,Xnode(j),Xnode(j+1),Xnode(j+1)-tmp;
+      stop
+    endif  
+    !assert(Xnode(j)<=tmp && Xnode(j+1)>tmp);
+    if(.not.((j>=-Nbdr).and.(j<Nx+Nbdr)))then
+      print *,"j= Nx= Nbdr= ",j,Nx,Nbdr;
+      stop
+    endif
+    !assert(j>=-Nbdr && j<Nx+Nbdr);
+    w(0)=(Xnode(j+1)-tmp)*(Xnode(j+1)-tmp)*(Xnode(j+1)-tmp)/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+1)-Xnode(j-1))*(Xnode(j+1)-Xnode(j-2)));    
+    w(1)=(Xnode(j+1)-tmp)*(Xnode(j+1)-tmp)*(tmp-Xnode(j-2))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+1)-Xnode(j-1))*(Xnode(j+1)-Xnode(j-2)));
+    w(1)=w(1)+(Xnode(j+2)-tmp)*(Xnode(j+1)-tmp)*(tmp-Xnode(j-1))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+1)-Xnode(j-1))*(Xnode(j+2)-Xnode(j-1)));
+    w(1)=w(1)+(Xnode(j+2)-tmp)*(Xnode(j+2)-tmp)*(tmp-Xnode(j))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+2)-Xnode(j))*(Xnode(j+2)-Xnode(j-1)));	 
+    w(2)=(Xnode(j+1)-tmp)*(tmp-Xnode(j-1))*(tmp-Xnode(j-1))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+1)-Xnode(j-1))*(Xnode(j+2)-Xnode(j-1)));
+    w(2)=w(2)+(Xnode(j+2)-tmp)*(tmp-Xnode(j-1))*(tmp-Xnode(j))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+2)-Xnode(j))*(Xnode(j+2)-Xnode(j-1)));
+    w(2)=w(2)+(Xnode(j+3)-tmp)*(tmp-Xnode(j))*(tmp-Xnode(j))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+2)-Xnode(j))*(Xnode(j+3)-Xnode(j)));    
+    w(3)=(tmp-Xnode(j))*(tmp-Xnode(j))*(tmp-Xnode(j))/((Xnode(j+1)-Xnode(j))&
+      *(Xnode(j+2)-Xnode(j))*(Xnode(j+3)-Xnode(j)));
+    p(i)=w(0)*coef(j-1)+w(1)*coef(j)+w(2)*coef(j+1)+w(3)*coef(j+2);
+  enddo
+  
+  !do i=0,Nx-1
+  !  print *,i,p(i)
+  !enddo
+  
+  !stop
+  tmp=p(0);
+  do i=0,Nx-2
+    p(i)=p(i+1)-p(i)
+  enddo
+  p(Nx-1)=tmp+M-p(Nx-1);
+  
+  
+  !do i=0,Nx-1
+  !  print *,i,pp(i+1),alphax(i+1),p(i)
+  !enddo
+  !stop
+  
+  do i=0,Nx-1
+    pp(i+1)=p(i)
+  enddo  
+
+  SLL_DEALLOCATE(coef,err)
+  SLL_DEALLOCATE(Xnode,err)
+  SLL_DEALLOCATE(A,err)
+  SLL_DEALLOCATE(B,err)
+  SLL_DEALLOCATE(C,err)
+  SLL_DEALLOCATE(ltab2,err)
+  SLL_DEALLOCATE(vtab2,err)
+  SLL_DEALLOCATE(dtab2,err)
+  SLL_DEALLOCATE(mtab2,err)
+  SLL_DEALLOCATE(p,err)
+  
+  
+end subroutine interp1dcascons
 !! begin poisson module
 
 
