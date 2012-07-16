@@ -34,6 +34,9 @@
 ! The intent of this macro is to pass all the data to functions that require it, eg FFT
 ! It works for all types of fields
 #define FIELD_DATA(f)   f%data
+#define FIELD_JACOBIAN_CELL_DATA(f)   f%mesh%jacobians_c
+#define FIELD_X1_CELL(f)   f%mesh%x1_cell
+#define FIELD_X2_CELL(f)   f%mesh%x2_cell
 
 
 ! The following macro should call some interpolation with splines or something
