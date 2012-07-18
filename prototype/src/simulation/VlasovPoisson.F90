@@ -23,10 +23,9 @@ program vlaspois
 
   !for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
-  namelist /modes/ nr
-  !mod=1
-  read(*,NML=modes)
-  mod=32
+  !namelist /modes/ mod
+  mod=1
+  !read(*,NML=modes)
   mode=real(mod,f64)
 
   rmin=1.0_f64
@@ -34,8 +33,8 @@ program vlaspois
 
   ! number of step in r and theta directions
   ! /= of number of points
-  !nr=1024
-  ntheta=64
+  nr=128
+  ntheta=128
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
@@ -45,26 +44,25 @@ program vlaspois
   !we should have dt<=0.1*dr
   !default
   tf=1.0_f64
-  dt=0.1_f64
-  nb_step=10
+  dt=0.1_f64*dr
+  nb_step=floor(tf/dt)
 
 !!$  !definition of dt=tf/nb_step
 !!$  tf=1.0_f64
 !!$  nb_step=-1
 !!$  dt=tf/real(nb_step,f64)
-!!$  print*,'#dt=',dt
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=1.0_f64
+  tf=5.0_f64
   nb_step=floor(tf/dt)
-  !print*,'#nb_step=',nb_step
 
 !!$  !definition of tf=dt*nb_step
 !!$  nb_step=1000
 !!$  dt=0.1_f64
 !!$  tf=dt*real(nb_step,f64)
-!!$  print*,'# tf=',tf
+
+  print*,'# nb_step =',nb_step,' dt =',dt,'tf =',real(nb_step,f64)*dt
 
   SLL_ALLOCATE(f(nr+1,ntheta+1),err)
   SLL_ALLOCATE(phi(nr+1,ntheta+1),err)
@@ -81,7 +79,7 @@ program vlaspois
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=3
+  fcase=4
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
@@ -94,7 +92,7 @@ program vlaspois
   if (fcase==1) then
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
-        f(i,:)=1.0_f64/(5.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/50.0_f64)
+        f(i,:)=1.0_f64/(1.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2.0_f64*1.0_f64**2))
      end do
 
   else if (fcase==2) then
@@ -118,7 +116,7 @@ program vlaspois
            f(i,j)=-(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
                 & +(9.0_f64-mode**2)*r**2*(rmin**2+rmax**2)+(30.0_f64-4.0_f64*mode**2)*r**2*rmin*rmax &
                 & +(2.0_f64*mode**2-3.0_f64)*r*rmin*rmax*(rmin+rmax)-mode**2*rmin**2*rmax**2) &
-                & *cos(mode*theta)
+                & *sin(mode*theta)
         end do
      end do
 
@@ -139,114 +137,114 @@ program vlaspois
      stop
   end if
 
-!!$  !write f in a file before calculations
-!!$  open (unit=20,file='CGinit.dat')
-!!$  do i=1,nr+1
-!!$     r=rmin+real(i-1,f64)*dr
-!!$     do j=1,ntheta+1
-!!$        theta=real(j-1,f64)*dtheta
-!!$        x=r*cos(theta)
-!!$        y=r*sin(theta)
-!!$        write(20,*)r,theta,x,y,f(i,j)
-!!$     end do
-!!$     write(20,*)' '
-!!$  end do
-!!$  close(20)
-!!$
-!!$  open(unit=23,file='thdiag.dat')
-!!$  write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
-!!$  write(23,*)'#   t   //   w   //   l1   //   l2   //   e' 
-!!$  w0=0.0_f64
-!!$  l10=0.0_f64
-!!$  l20=0.0_f64
-!!$  e0=0.0_f64
-  call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
-  phi(:,ntheta+1)=phi(:,1)
-!!$  call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
-!!$  do i=1,nr
-!!$     r=rmin+real(i-1,f64)*dr
-!!$     do j=1,ntheta
-!!$        w0=w0+r*f(i,j)
-!!$        l10=l10+r*abs(f(i,j))
-!!$        l20=l20+r*f(i,j)**2
-!!$        e0=e0+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
-!!$     end do
-!!$  end do
-!!$
-!!$  w0=w0*dr*dtheta
-!!$  l10=l10*dr*dtheta
-!!$  l20=sqrt(l20*dr*dtheta)
-!!$  e0=e0*dr*dtheta
-!!$  write(23,*)'#',w0,l10,l20,e0
-!!$  write(23,*)0.0_f64,1.0_f64,1.0_f64,1.0_f64,0.0_f64
-!!$  print*,'e=',e0, log(e0)
-!!$
-!!$  do step=1,nb_step
-!!$     !initialisation of weight (w), l1, l2 and energy (e)
-!!$     w=0.0_f64
-!!$     l1=0.0_f64
-!!$     l2=0.0_f64
-!!$     e=0.0_f64
-!!$
-!!$     if (scheme==1) then
-!!$        !classical semi-Lagrangian scheme
-!!$        call SL_classic(dt,dr,dtheta,nr,ntheta,rmin,rmax,pfwd,pinv,f,phi,grad_phi)
-!!$
-!!$     else if (scheme==2) then
-!!$        !semi-Lagrangian scheme with control
-!!$        call SL_controlled(dt,dr,dtheta,nr,ntheta,rmin,rmax,pfwd,pinv,f,fdemi,phi,grad_phi)
-!!$
-!!$     else
-!!$        print*,'no scheme define'
-!!$        print*,"the program won't do anything"
-!!$        print*,'see line 85 of file selalib/prototype/src/simulation to solve the probleme'
-!!$        print*,'exiting the loop'
-!!$        exit
-!!$     end if
-!!$
-!!$     f(:,ntheta+1)=f(:,1)
-!!$     grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
-!!$     phi(:,ntheta+1)=phi(:,1)
-!!$
-!!$     do i=1,nr
-!!$        r=rmin+real(i-1,f64)*dr
-!!$        do j=1,ntheta
-!!$           w=w+r*f(i,j)
-!!$           l1=l1+r*abs(f(i,j))
-!!$           l2=l2+r*f(i,j)**2
-!!$           e=e+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
-!!$        end do
-!!$     end do
-!!$     w=w*dr*dtheta
-!!$     l1=l1*dr*dtheta
-!!$     l2=sqrt(l2*dr*dtheta)
-!!$     e=e*dr*dtheta
-!!$     write(23,*)dt*real(step,f64),w/w0,l1/l10,l2/l20,e-e0
-!!$
-!!$     if ((step/10)*10==step) then
-!!$        print*,'#step',step
-!!$     end if
-!!$  end do
-!!$  close(23)
-
-  !write the final f in a file
-  w0=0.0_f64
-  w=0.0_f64
-  !open (unit=21,file='CGfinal.dat')
+  !write f in a file before calculations
+  open (unit=20,file='CGinit.dat')
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        w0=max(w0,abs(phi(i,j)))
-        w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*cos(mode*theta)))
-        !write(21,*)r,theta,x,y,f(i,j),phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+        write(20,*)r,theta,x,y,f(i,j)
+     end do
+     write(20,*)' '
+  end do
+  close(20)
+
+  open(unit=23,file='thdiag.dat')
+  write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
+  write(23,*)'#   t   //   w   //   l1   //   l2   //   e' 
+  w0=0.0_f64
+  l10=0.0_f64
+  l20=0.0_f64
+  e0=0.0_f64
+  call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
+  phi(:,ntheta+1)=phi(:,1)
+  call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+  do i=1,nr
+     r=rmin+real(i-1,f64)*dr
+     do j=1,ntheta
+        w0=w0+r*f(i,j)
+        l10=l10+r*abs(f(i,j))
+        l20=l20+r*f(i,j)**2
+        e0=e0+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
+     end do
+  end do
+
+  w0=w0*dr*dtheta
+  l10=l10*dr*dtheta
+  l20=sqrt(l20*dr*dtheta)
+  e0=e0*dr*dtheta
+  write(23,*)'#',w0,l10,l20,e0
+  write(23,*)0.0_f64,1.0_f64,1.0_f64,1.0_f64,0.0_f64
+  !print*,'e=',e0, log(e0)
+
+  do step=1,nb_step
+     !initialisation of weight (w), l1, l2 and energy (e)
+     w=0.0_f64
+     l1=0.0_f64
+     l2=0.0_f64
+     e=0.0_f64
+
+     if (scheme==1) then
+        !classical semi-Lagrangian scheme
+        call SL_classic(dt,dr,dtheta,nr,ntheta,rmin,rmax,pfwd,pinv,f,phi,grad_phi)
+
+     else if (scheme==2) then
+        !semi-Lagrangian scheme with control
+        call SL_controlled(dt,dr,dtheta,nr,ntheta,rmin,rmax,pfwd,pinv,f,fdemi,phi,grad_phi)
+
+     else
+        print*,'no scheme define'
+        print*,"the program won't do anything"
+        print*,'see line 85 of file selalib/prototype/src/simulation to solve the probleme'
+        print*,'exiting the loop'
+        exit
+     end if
+
+     f(:,ntheta+1)=f(:,1)
+     grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
+     phi(:,ntheta+1)=phi(:,1)
+
+     do i=1,nr
+        r=rmin+real(i-1,f64)*dr
+        do j=1,ntheta
+           w=w+r*f(i,j)
+           l1=l1+r*abs(f(i,j))
+           l2=l2+r*f(i,j)**2
+           e=e+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
+        end do
+     end do
+     w=w*dr*dtheta
+     l1=l1*dr*dtheta
+     l2=sqrt(l2*dr*dtheta)
+     e=e*dr*dtheta
+     write(23,*)dt*real(step,f64),w/w0,l1/l10,l2/l20,e-e0
+
+     if ((step/10)*10==step) then
+        print*,'#step',step
+     end if
+  end do
+  close(23)
+
+  !write the final f in a file
+  !w0=0.0_f64
+  !w=0.0_f64
+  open (unit=21,file='CGfinal.dat')
+  do i=1,nr+1
+     r=rmin+real(i-1,f64)*dr
+     do j=1,ntheta+1
+        theta=real(j-1,f64)*dtheta
+        x=r*cos(theta)
+        y=r*sin(theta)
+        !w0=max(w0,abs(phi(i,j)))
+        !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
+        write(21,*)r,theta,x,y,f(i,j)!,phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
      end do
      write(21,*)' '
   end do
-  !close(21)
-  print*,dr,w0,w,w/w0,'#dr, w0, w,w/w0'
+  close(21)
+  !print*,dr,w0,w,w/w0,'#dr, w0, w,w/w0'
 
   call fft_delete_plan(pinv)
   call fft_delete_plan(pfwd)
