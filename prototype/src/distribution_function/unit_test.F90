@@ -6,7 +6,6 @@ program unit_test
   use distribution_function
   use geometry_functions
   use sll_module_mapped_meshes_2d
-  use sll_scalar_field_initializers_base
   use sll_landau_2d_initializer
   implicit none
  
@@ -43,7 +42,7 @@ program unit_test
 
   print*, 'initialization of distribution_function'
 
-  call init_landau%initialize(m,0.001_f64)
+  call init_landau%initialize(m,CELL_CENTERED_FIELD,0.001_f64)
   p_init_f => init_landau
 
   call initialize_distribution_function_2d( &

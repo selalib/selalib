@@ -43,7 +43,8 @@ program test_poisson_2d
 
    nc_eta1 = 127; nc_eta2 = 127
 
-   call mesh%initialize("mesh", nc_eta1+1, nc_eta2+1)
+   call mesh%initialize("mesh", eta1_min, eta1_max, nc_eta1+1, &
+        eta2_min, eta2_max, nc_eta2+1)
 
    call mesh%write_to_file()
    m => mesh

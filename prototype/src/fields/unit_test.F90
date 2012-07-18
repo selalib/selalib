@@ -39,7 +39,7 @@ program unit_test
        pjac22)
   m => mesh
 
-  call init_landau%initialize(m,0.001_f64)
+  call init_landau%initialize(m,NODE_CENTERED_FIELD,0.001_f64)
   pfinit => init_landau
 
   call initialize_scalar_field_2d( &
