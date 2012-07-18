@@ -50,8 +50,8 @@ contains
     ! copy of ftab
     ! we work with ffttab not to modify ftab
     ffttab=-ftab(:,1:ntheta)
-    ffttab(1,:)=0.0_f64
-    ffttab(nr+1,:)=0.0_f64
+    !ffttab(1,:)=0.0_f64
+    !ffttab(nr+1,:)=0.0_f64
 
     call dffti(ntheta,buf)
     do i=1,nr+1
