@@ -17,17 +17,23 @@ module sll_landau_2d_initializer
 
 contains
 
-  subroutine initialize_landau_2d( init_obj, mesh, data_position, eps_val )
+  subroutine initialize_landau_2d( init_obj, mesh, data_position, eps_val, kx_val )
     class(init_landau_2d), intent(inout)  :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
+    sll_real64, intent(in), optional     :: kx_val
 
     init_obj%data_position = data_position
     if( present(eps_val) ) then
        init_obj%eps = eps_val
     else
        init_obj%eps = 0.01_f64 ! just some default value
+    end if
+    if( present(kx_val) ) then
+       init_obj%kx = kx_val
+    else
+       init_obj%kx = 0.5_f64 ! just some default value
     end if
     init_obj%mesh => mesh
     ! kx remains uninitialized because we need mesh information
@@ -47,18 +53,16 @@ contains
     sll_real64 :: x
     sll_real64 :: v
 
-    
-
     eps = init_obj%eps
     mesh => init_obj%mesh
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
        num_pts1 = mesh%nc_eta1+1
        num_pts2 = mesh%nc_eta2+1
-    else if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
+    else if (init_obj%data_position ==  CELL_CENTERED_FIELD) then
        num_pts1 = mesh%nc_eta1
        num_pts2 = mesh%nc_eta2
     end if
-    kx = 2.0_f64*sll_pi/(mesh%x1_at_node(num_pts1,1) - mesh%x1_at_node(1,1))
+    kx = init_obj%kx
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
     SLL_ASSERT( size(data_out,2) .ge. num_pts2 )
     do j=1,num_pts2
@@ -66,7 +70,7 @@ contains
           if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
              v = mesh%x2_at_node(i,j)
              x = mesh%x1_at_node(i,j)
-          else if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
+          else if (init_obj%data_position ==  CELL_CENTERED_FIELD) then
              v = mesh%x2_at_cell(i,j)
              x = mesh%x1_at_cell(i,j)
           else
