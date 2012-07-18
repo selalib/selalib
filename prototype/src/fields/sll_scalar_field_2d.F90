@@ -44,6 +44,7 @@ module sll_scalar_field_2d
      sll_real64, dimension(:,:), pointer     :: data
      sll_int32                               :: data_position
      character(len=64)                       :: name
+     sll_int32                               :: plot_counter
   end type scalar_field_2d
 
   abstract interface
@@ -82,6 +83,7 @@ contains   ! *****************************************************************
     SLL_ASSERT(associated(mesh))
     this%mesh => mesh
     this%mesh%written = .false.
+    
     this%name  = trim(field_name)
     num_cells1 = mesh%nc_eta1
     num_cells2 = mesh%nc_eta2
@@ -108,6 +110,7 @@ contains   ! *****************************************************************
           this%data = 0.0_f64
        end if
     endif
+    this%plot_counter = 0
   end subroutine initialize_scalar_field_2d
 
   ! need to do something about deallocating the field proper, when allocated
@@ -142,6 +145,9 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_int32  :: file_id
+    character(len=4) :: counter
+    character(len=4) :: center
+
 
     if (.not. present(output_format)) then
        local_format = SLL_IO_XDMF
@@ -192,32 +198,33 @@ contains   ! *****************************************************************
      
     end if
 
+
     select case(local_format)
     case (SLL_IO_XDMF)
        
-       if (.not. present(output_file_name)) then
-       call sll_xdmf_open(  &
-            trim(scalar_field%name)//".xmf", &
-            scalar_field%mesh%label,                              &
-            num_pts1,num_pts2,file_id,ierr)
-       else
-       call sll_xdmf_open(  &
-            trim(output_file_name)//".xmf", &
-            scalar_field%mesh%label,                              &
-            num_pts1,num_pts2,file_id,ierr)
+       if (scalar_field%data_position == NODE_CENTERED_FIELD) then
+          center = "Node"
+       else if (scalar_field%data_position == CELL_CENTERED_FIELD) then
+          center = "Cell"
        end if
 
-       if (scalar_field%data_position == NODE_CENTERED_FIELD) then
-          call sll_xdmf_write_array(scalar_field%mesh%label, &
-                                    val,&
-                                    scalar_field%name,ierr,file_id, &
-                                    "Node")
-       else if (scalar_field%data_position == CELL_CENTERED_FIELD) then
-          call sll_xdmf_write_array(scalar_field%mesh%label, &
-                                    val,&
-                                    scalar_field%name,ierr,file_id, &
-                                    "Cell")
+       if (.not. present(output_file_name)) then
+          scalar_field%plot_counter = scalar_field%plot_counter+1
+          call int2string(scalar_field%plot_counter, counter)
+          call sll_xdmf_open(trim(scalar_field%name)//counter//".xmf", &
+             scalar_field%mesh%label,        &
+             num_pts1,num_pts2,file_id,ierr)
        end if
+      
+       call sll_xdmf_open(  &
+             trim(output_file_name)//".xmf", &
+             scalar_field%mesh%label,        &
+             num_pts1,num_pts2,file_id,ierr)
+
+       call sll_xdmf_write_array(trim(output_file_name), &
+                                 val,&
+                                 trim(scalar_field%name),ierr,file_id, &
+                                 "Node")
        call sll_xdmf_close(file_id,ierr)
 
     case default
