@@ -148,6 +148,9 @@ contains
                 theta=theta+dt
              end if
 
+             !if (i==1) then
+             !   print*,j,theta,r
+             !end if
              call correction_r(r,rmin,rmax)
              call correction_theta(theta)
 
@@ -192,7 +195,7 @@ contains
     type(sll_fft_plan), intent(in), pointer ::pfwd, pinv
 
     sll_int32 :: i,j,err
-    sll_real64 :: r,theta,rr,ttheta
+    sll_real64 :: r,theta
     sll_real64, dimension(:,:), pointer :: r1,r2,r3,r4, theta1,theta2,theta3,theta4
     sll_real64, dimension(:,:), pointer :: fcopie, phicopie
     sll_real64, dimension(:,:,:), pointer :: a
@@ -240,8 +243,8 @@ contains
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
           theta=real(j-1,f64)*dtheta
-          r3(i,j)=r+r1(i,j)/2.0_f64
-          theta3(i,j)=theta+theta1(i,j)/2.0_f64
+          r3(i,j)=r+dt/2.0_f64*a(2,i,j)/r
+          theta3(i,j)=theta-dt/2.0_f64*a(1,i,j)
 
           call correction_r(r3(i,j),rmin,rmax)
           call correction_theta(theta3(i,j))
@@ -259,11 +262,13 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          r2(i,j)=interpolate_value_2d(r3(i,j),theta3(i,j),spl_a2)*dt/r3(i,j)
-          theta2(i,j)=-interpolate_value_2d(r3(i,j),theta3(i,j),spl_a1)*dt
+          r=rmin+real(i-1)*dr+r1(i,j)/2.0_f64
+          theta=real(j-1,f64)*dtheta+theta1(i,j)/2.0_f64
+          call correction_r(r,rmin,rmax)
+          call correction_theta(theta)
 
-          call correction_r(r2(i,j),rmin,rmax)
-          call correction_theta(theta2(i,j))
+          r2(i,j)=interpolate_value_2d(r,theta,spl_a2)*dt/r3(i,j)
+          theta2(i,j)=-interpolate_value_2d(r,theta,spl_a1)*dt
        end do
     end do
 
@@ -272,8 +277,8 @@ contains
        r=rmin+real(i-1,f64)*dr
        do j=1,ntheta+1
           theta=real(j-i)*dtheta
-          r4(i,j)=r+r2(i,j)/2.0_f64
-          theta4(i,j)=theta+theta2(i,j)/2.0_f64
+          r4(i,j)=r3(i,j)
+          theta4(i,j)=theta3(i,j)
 
           !correction of r and theta
           call correction_r(r4(i,j),rmin,rmax)
@@ -292,11 +297,13 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          r3(i,j)=interpolate_value_2d(r4(i,j),theta4(i,j),spl_a2)*dt/r4(i,j)
-          theta3(i,j)=-interpolate_value_2d(r4(i,j),theta4(i,j),spl_a1)*dt
+          r=rmin+real(i-1)*dr+r2(i,j)/2.0_f64
+          theta=real(j-1,f64)*dtheta+theta2(i,j)/2.0_f64
+          call correction_r(r,rmin,rmax)
+          call correction_theta(theta) 
 
-          call correction_r(r2(i,j),rmin,rmax)
-          call correction_theta(theta2(i,j)) 
+          r3(i,j)=interpolate_value_2d(r,theta,spl_a2)*dt/r4(i,j)
+          theta3(i,j)=-interpolate_value_2d(r,theta,spl_a1)*dt
        end do
     end do
 
@@ -308,9 +315,8 @@ contains
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
           theta=real(j-i)*dtheta
-          r4(i,j)=r+r3(i,j)
-          theta4(i,j)=theta+theta3(i,j)
-
+          r4(i,j)=r+r1(i,j)
+          theta4(i,j)=theta+theta1(i,j)
           call correction_r(r4(i,j),rmin,rmax)
           call correction_theta(theta4(i,j))
 
@@ -327,14 +333,13 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          rr=r4(i,j)
-          ttheta=theta4(i,j)
+          r=rmin+real(i-1)*dr+r3(i,j)
+          theta=real(j-1,f64)*dtheta+theta3(i,j)
+          call correction_r(r,rmin,rmax)
+          call correction_theta(theta)
 
-          r4(i,j)=interpolate_value_2d(rr,ttheta,spl_a2)*dt/rr
-          theta4(i,j)=-interpolate_value_2d(rr,ttheta,spl_a1)*dt
-
-          call correction_r(r4(i,j),rmin,rmax)
-          call correction_theta(theta4(i,j))
+          r4(i,j)=interpolate_value_2d(r,theta,spl_a2)*dt/r
+          theta4(i,j)=-interpolate_value_2d(r,theta,spl_a1)*dt
        end do
     end do
 
