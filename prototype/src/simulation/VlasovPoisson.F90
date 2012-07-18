@@ -1,4 +1,4 @@
-program vlaspois
+program cg_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -86,7 +86,7 @@ program vlaspois
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme with control
-  scheme=1
+  scheme=2
   if (scheme==2) then
      SLL_ALLOCATE(fdemi(nr+1,ntheta+1),err)
   end if
@@ -159,15 +159,16 @@ program vlaspois
   open(unit=23,file=thd)
   !open(unit=23,file='thdiag.dat')
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
-  write(23,*)'#   t   //   w   //   l1   //   l2   //   e' 
-  w0=0.0_f64
-  l10=0.0_f64
-  l20=0.0_f64
-  e0=0.0_f64
+  write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
   call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
   phi(:,ntheta+1)=phi(:,1)
   call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
   grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
+  
+  w0=0.0_f64
+  l10=0.0_f64
+  l20=0.0_f64
+  e0=0.0_f64  
   do i=1,nr
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta
@@ -177,20 +178,14 @@ program vlaspois
         e0=e0+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
      end do
   end do
-
   w0=w0*dr*dtheta
   l10=l10*dr*dtheta
   l20=sqrt(l20*dr*dtheta)
   e0=e0*dr*dtheta
   write(23,*)'#',w0,l10,l20,e0
-  write(23,*)0.0_f64,1.0_f64,1.0_f64,1.0_f64,0.0_f64
+  write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64
 
   do step=1,nb_step
-     !initialisation of weight (w), l1, l2 and energy (e)
-     w=0.0_f64
-     l1=0.0_f64
-     l2=0.0_f64
-     e=0.0_f64
 
      if (scheme==1) then
         !classical semi-Lagrangian scheme
@@ -212,6 +207,11 @@ program vlaspois
      grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
      phi(:,ntheta+1)=phi(:,1)
 
+     !computation of mass (w), l1, l2 and energy (e)
+     w=0.0_f64
+     l1=0.0_f64
+     l2=0.0_f64
+     e=0.0_f64
      do i=1,nr
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta
@@ -225,7 +225,7 @@ program vlaspois
      l1=l1*dr*dtheta
      l2=sqrt(l2*dr*dtheta)
      e=e*dr*dtheta
-     write(23,*)dt*real(step,f64),w/w0,l1/l10,l2/l20,e-e0
+     write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0
 
      if ((step/100)*100==step) then
         print*,'#step',step
@@ -321,4 +321,4 @@ contains
 
   end subroutine sthd
 
-end program vlaspois
+end program cg_polar
