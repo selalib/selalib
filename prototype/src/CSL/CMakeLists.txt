@@ -5,7 +5,28 @@ target_link_libraries(test_csl sll_assertion sll_constants sll_splines sll_low_l
   sll_scalar_field_2d geometry_functions)
 
 
+add_library(sll_bgk_mesh STATIC sll_bgk_mesh.F90)
 
+add_executable(vp_csl_bloc_unif vp_csl_bloc_unif.F90)
+target_link_libraries(vp_csl_bloc_unif sll_assertion sll_constants sll_splines sll_low_level_file_io 
+  sll_distribution_function sll_memory sll_mapped_meshes sll_utilities ode_solvers sll_csl
+  sll_scalar_field_2d geometry_functions sll_bgk_mesh)
+
+#add_library(sll_classic_csl STATIC sll_classic_csl.F90)
+
+add_executable(vp_classic_csl bgk_classic_csl.F90 
+  sll_classic_csl.F90 ../splines/contrib_rho.F90 ../splines/cubic_nonuniform_splines.F90)
+target_link_libraries(vp_classic_csl sll_assertion sll_constants sll_low_level_file_io 
+  sll_distribution_function sll_memory sll_mapped_meshes sll_utilities ode_solvers
+  sll_scalar_field_2d geometry_functions sll_bgk_mesh sll_tridiagonal)
+
+
+
+#  use numeric_constants
+#  use cubic_nonuniform_splines
+#  use bgk_mesh_construction
+#  use contrib_rho_module
+#  use classical_conservative_semi_lagrangian
 
 
 

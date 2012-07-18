@@ -2,6 +2,11 @@
 add_library(sll_splines STATIC sll_splines.F90)
 add_dependencies(sll_splines sll_memory sll_assertion sll_working_precision)
 
+add_library(cubic_non_unif_splines STATIC cubic_nonuniform_splines.F90)
+add_dependencies(cubic_non_unif_splines sll_memory sll_assertion sll_working_precision
+sll_tridiagonal sll_splines)
+
+
 add_library(util_constants STATIC util_constants.F90)
 add_dependencies(util_constants sll_constants sll_working_precision)
 
