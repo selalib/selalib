@@ -10,7 +10,6 @@ implicit none
 sll_int32 :: i, j, k
 sll_int32 :: error
 sll_int32 :: file_id
-sll_int32 :: datafile_id 
 
 call test_2d()
 
@@ -20,10 +19,8 @@ contains
 
 subroutine test_2d()
 
-sll_int32 :: nnodes_x1
-sll_int32 :: nnodes_x2
-sll_int32 :: ncells_x1
-sll_int32 :: ncells_x2
+sll_int32 :: nnodes_x1, nnodes_x2
+sll_int32 :: ncells_x1, ncells_x2
 
 sll_real64 :: angle, xt, vt, R
 sll_real64, allocatable, dimension(:,:) :: x1
@@ -46,7 +43,7 @@ do j = 1, nnodes_x2
    angle = vt * 2. * sll_pi
    do i = 1, nnodes_x1
       xt = real(i-1) / float(nnodes_x1-1)
-      R = (1.-xt)*2. + xt*5.
+      R =  1 + xt
       x1(i,j) = R * cos(angle)
       x2(i,j) = R * sin(angle)
    end do
@@ -58,11 +55,10 @@ SLL_ALLOCATE(df(nnodes_x1,nnodes_x2),error)
 df = cos(2.*x1)*exp(-x2*x2)
  
 call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
-call sll_xdmf_write_array("test2d",x1,'x1',error)
-call sll_xdmf_write_array("test2d",x2,'x2',error)
+call sll_xdmf_write_array(mesh_name,x1,'x1',error)
+call sll_xdmf_write_array(mesh_name,x2,'x2',error)
 call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
-call sll_xdmf_write_array("test2d", &
-     df(1:ncells_x1,1:ncells_x2),"CellVal",error,file_id,"Cell")
+call sll_xdmf_write_array("test2d",df(1:ncells_x1,1:ncells_x2),"CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
 
 
@@ -71,19 +67,19 @@ call sll_xdmf_close(file_id,error)
 call sll_xml_file_create("test_ascii.xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
-                          nnodes_x1,nnodes_x2,"'/>"
+                          nnodes_x2,nnodes_x1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x1,nnodes_x2, &
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
                           "' NumberType='Float' Precision='8' Format='XML'>"
 call sll_ascii_write_array(file_id,x1,error)
 write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x1,nnodes_x2, &
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
                           "' NumberType='Float' Precision='8' Format='XML'>"
 call sll_ascii_write_array(file_id,x2,error)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='NodesVal' AttributeType='Scalar' Center='Node'>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x1,nnodes_x2, &
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
                           "' NumberType='Float' Precision='8' Format='XML'>"
 call sll_ascii_write_array(file_id,df,error)
 write(file_id,"(a)")"</DataItem>"
@@ -98,7 +94,7 @@ sll_int32  :: ncells_x1, ncells_x2, ncells_x3
 sll_real64 :: theta, a, b, phi
 sll_real64, allocatable, dimension(:,:,:) :: x1, x2, x3, df
 
-character(6) :: mesh_name = "tore3d"
+character(6)  :: mesh_name = "mesh3d"
 character(10) :: file_name = "test3d.xmf"
 
 nnodes_x1 = 32
@@ -137,8 +133,8 @@ call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,nnodes_x3,file_id,err
 call sll_xdmf_write_array(mesh_name,x1,'x1',error)
 call sll_xdmf_write_array(mesh_name,x2,'x2',error)
 call sll_xdmf_write_array(mesh_name,x3,'x3',error)
-call sll_xdmf_write_array(mesh_name,df,"NodeVal",error,file_id,"Node")
-call sll_xdmf_write_array(mesh_name,df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
+call sll_xdmf_write_array("field3d",df,"NodeVal",error,file_id,"Node")
+call sll_xdmf_write_array("field3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
                           "CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
 
