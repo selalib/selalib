@@ -255,7 +255,7 @@ add_subdirectory(LinRood)
 
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
 #add_subdirectory(BSL) top
-add_subdirectory(CSL) #don't compile error in SConstruct! top
+add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 
 
