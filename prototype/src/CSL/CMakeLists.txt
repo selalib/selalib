@@ -1,8 +1,9 @@
 add_library(sll_csl STATIC sll_csl.F90)
 add_executable(test_csl unit_test.F90)
 target_link_libraries(test_csl sll_csl sll_constants sll_splines 
-  sll_distribution_function sll_mapped_meshes sll_utilities ode_solvers
-  sll_scalar_field_2d geometry_functions sll_low_level_file_io sll_memory sll_assertion sll_working_precision)
+  sll_distribution_function sll_mapped_meshes ode_solvers
+  sll_scalar_field_2d geometry_functions sll_low_level_file_io sll_memory
+sll_assertion sll_working_precision sll_utilities)
 
 
 add_library(sll_bgk_mesh STATIC sll_bgk_mesh.F90)
