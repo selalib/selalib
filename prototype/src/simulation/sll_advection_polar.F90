@@ -51,14 +51,14 @@ contains
           r=rmin+real(i-1,f64)*dr
           do j=1,ntheta
              a(1,i,j)=(phi(i+1,j)-phi(i-1,j))/(2*dr)
-             a(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*r*dtheta)
+             a(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
           end do
        end do
        do j=1,ntheta
           a(1,1,j)=(phi(2,j)-phi(1,j))/dr
           a(1,nr+1,j)=(phi(nr+1,j)-phi(nr,j))/dr
-          a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
-          a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
+          a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
+          a(2,nr+1,j)=(phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
        end do
 
     else if (calculus==2) then
@@ -123,15 +123,15 @@ contains
          const_slope_x1_min = 1.0_f64,const_slope_x1_max = 1.0_f64)
 
     !interpolation
-    ! 1 : using explicite Eulerian scheme
+    ! 1 : using explicit Eulerian scheme
     ! 2 : rotation, this case ignore the field phi
-    !     roation speed = -1
+    !     rotation speed = -1
     ! 3 : using RK4
     interpolate_case=1
 
     if (interpolate_case<3 .and. interpolate_case>0) then
 
-       !construction of spline coeficients for f
+       !construction of spline coefficients for f
        call compute_spline_2D(f,spl_f)
 
        do i=1,nr+1
@@ -174,7 +174,7 @@ contains
 
 
   !>subroutine rk4_polar_advect(dt,dr,dtheta,nr,ntheta,rmin,rmax,f,phi,grad_phi,pfwd,pinv)
-  !>KR4 for polar advection only
+  !>RK4 for polar advection only
   !>dt, dr, dtheta : size of time step, step in direction r and theta
   !>nr, ntheta : number of steps in direction r and theta
   !>rmin and rmax : radius of the hole and of the disc
