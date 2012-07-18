@@ -5,7 +5,8 @@ ENDIF()
 add_library(sll_scalar_field_2d STATIC sll_scalar_field_2d.F90 
 		scalar_field_initializer_base.F90
 		landau_2d_initializer.F90
-                gaussian_2d_initializer.F90	
+                gaussian_2d_initializer.F90
+		tsi_2d_initializer.F90	
 	)		
 
 add_dependencies(sll_scalar_field_2d

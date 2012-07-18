@@ -137,6 +137,7 @@ contains
 
     this%pmass = mass
     this%pcharge = charge
+
     call initialize_scalar_field_2d( &
          this, &
          field_name, &
