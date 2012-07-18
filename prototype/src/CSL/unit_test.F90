@@ -1,10 +1,12 @@
 program unit_test
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
   use numeric_constants
   use distribution_function
   !use sll_diagnostics
+  use sll_io
   use sll_csl
   use sll_module_mapped_meshes_2d_cartesian
   use sll_gaussian_2d_initializer

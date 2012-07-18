@@ -18,6 +18,7 @@ module sll_module_interpolators_1d_base
           interpolate_derivative_eta1
      
      procedure(interpolate_1d_array), pass, deferred :: interpolate_array
+     procedure(interpolate_1d_array_at_displacement), pass, deferred :: interpolate_array_disp
      procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
   end type sll_interpolator_1d_base
 
@@ -54,6 +55,21 @@ module sll_module_interpolators_1d_base
        sll_real64, dimension(:), intent(in) :: coordinates  
        sll_real64, dimension(num_points)    :: res
      end function interpolate_1d_array
+  end interface
+
+  abstract interface
+     function interpolate_1d_array_at_displacement(this, num_points, data, alpha) &
+          result(res)
+
+       use sll_working_precision
+       import sll_interpolator_1d_base
+       class(sll_interpolator_1d_base), intent(in)     :: this
+       sll_int32, intent(in)  :: num_points    ! size of output array
+       sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated 
+       ! points where output is desired
+       sll_real64, intent(in) :: alpha  
+       sll_real64, dimension(num_points)    :: res
+     end function interpolate_1d_array_at_displacement
   end interface
 
   abstract interface
