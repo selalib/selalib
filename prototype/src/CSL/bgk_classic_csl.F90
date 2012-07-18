@@ -36,7 +36,7 @@ program bgk_classic_csl
   
   
   test_case = 4
-  mesh_case = 3
+  mesh_case = 10
   rho_case = 2
   div_case = 1
 
@@ -84,7 +84,7 @@ program bgk_classic_csl
   if(test_case>=4)then
     x1_min = 0._f64
     x1_max = 4._f64*sll_pi
-    x2_min = -6._f64
+    x2_min = -10._f64!-6._f64
     x2_max = -x2_min
   endif
 

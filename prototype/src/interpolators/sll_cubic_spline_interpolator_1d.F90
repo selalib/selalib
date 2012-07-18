@@ -13,6 +13,7 @@ use sll_splines
 #else  
   type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
 #endif
+     sll_real64, dimension(:), allocatable :: interpolation_points 
      sll_int32                     :: num_points ! size
      sll_int32                     :: bc_type
      type(sll_spline_1D), pointer  :: spline
@@ -24,6 +25,7 @@ use sll_splines
      procedure :: interpolate_value => interpolate_value_cs1d
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
      procedure, pass:: interpolate_array => spline_interpolate1d
+     procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
 #endif
@@ -66,6 +68,56 @@ contains  ! ****************************************************************
     call interpolate_array_values( coordinates, data_out, num_points, &
          this%spline )
   end function 
+
+#ifdef STDF95
+  function cubic_spline_interpolate_array_at_displacement(this, num_points, &
+       data, coordinates) &
+       result(data_out)
+    type(cubic_spline_1d_interpolator),  intent(in)       :: this
+#else
+  function spline_interpolate1d_disp(this, num_points, data, alpha) &
+       result(data_out)
+    class(cubic_spline_1d_interpolator),  intent(in)       :: this
+#endif
+    !class(sll_spline_1D),  intent(in)      :: this
+    sll_int32,  intent(in)                 :: num_points
+    sll_real64,  intent(in)   :: alpha
+    sll_real64, dimension(:), intent(in)   :: data
+    sll_real64, dimension(num_points)      :: data_out
+    ! local variables
+    sll_real64, dimension(num_points)      :: coordinates
+    sll_real64 :: length, delta
+    sll_int32 :: i
+    sll_int32 :: ierr
+    ! compute the interpolating spline coefficients
+    call compute_spline_1D( data, this%bc_type, this%spline )
+    ! compute array of coordinates where interpolation is performed from displacement
+    length = this%interpolation_points(num_points) - this%interpolation_points(1)
+    delta = this%interpolation_points(2) - this%interpolation_points(1)
+!    if (this%bc_type == PERIODIC_SPLINE) then
+       coordinates(1) = this%interpolation_points(1) + modulo(this%interpolation_points(1) - alpha, length)
+       print*, coordinates(1), this%interpolation_points(1), this%interpolation_points(num_points)
+       do i = 2, num_points      
+          coordinates(i) = modulo(coordinates(i-1) + delta, length)
+          print*, coordinates(i)
+       end do
+!!$    else
+!!$       if (alpha < 0 ) then 
+!!$          coordinates(1) = this%interpolation_points(1)
+!!$          do i = 2, num_points
+!!$             coordinates(i) = max(coordinates(i-1) + delta, this%interpolation_points(1))
+!!$          end do
+!!$       else
+!!$          coordinates(num_points) = this%interpolation_points(num_points)
+!!$          do i = num_points-1, 1, -1
+!!$             coordinates(i) = min(coordinates(i+1) - delta, &
+!!$                  this%interpolation_points(num_points))
+!!$          end do
+!!$       endif
+!!$    end if
+    call interpolate_array_values( coordinates, data_out, num_points, &
+         this%spline )
+  end function
   
 #ifdef STDF95
   subroutine cubic_spline_compute_interpolants( interpolator, data_array )
@@ -128,8 +180,16 @@ contains  ! ****************************************************************
     sll_real64, intent(in), optional     :: slope_left
     sll_real64, intent(in), optional     :: slope_right
     sll_int32                            :: ierr
+    sll_int32  :: i  
+    sll_real64 :: delta
     
     interpolator%num_points = num_points
+    SLL_ALLOCATE(interpolator%interpolation_points(num_points),ierr)
+    interpolator%interpolation_points(1) = xmin
+    delta = (xmax - xmin) / (num_points - 1)
+    do i = 2, num_points
+       interpolator%interpolation_points(i) = interpolator%interpolation_points(i-1) + delta
+    end do
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
        interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type, slope_left, slope_right )
