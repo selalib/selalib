@@ -45,6 +45,8 @@ program unit_test
   call init_landau%initialize(m,CELL_CENTERED_FIELD,0.001_f64)
   p_init_f => init_landau
 
+  print*, 'landau initialized'
+
   call initialize_distribution_function_2d( &
        df, &
        1.0_f64, &
@@ -53,6 +55,7 @@ program unit_test
        m, &
        CELL_CENTERED_FIELD, &
        p_init_f )
+  
   print*, 'write mesh and distribution function'
 
   istep = 0
