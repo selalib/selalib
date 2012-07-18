@@ -144,7 +144,7 @@ ELSE()
 ENDIF()
 
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
-IF(${VAR} EQUAL -1)
+IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
 ELSE()
   set(STDF95 YES)
