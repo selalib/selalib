@@ -23,6 +23,13 @@ contains
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1,x2,x1c,x2c
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
     sll_real64 :: val,tmp
+    sll_real64 :: slope_mesh1,slope_mesh2,wk,ll,dxx,slope_mesh3
+    sll_int    ::Nzon,Nzon2,Nzon3
+    sll_real64 , dimension(4)         :: ws
+    sll_int , dimension(4)         :: Ns
+
+    
+    
 
     SLL_ALLOCATE(x1n_array(nc_eta1+1, nc_eta2+1), err)
     SLL_ALLOCATE(x2n_array(nc_eta1+1, nc_eta2+1), err)
@@ -249,6 +256,319 @@ contains
 
     endif
   
+
+   if(mesh_case==10)then
+   ! 3 parts 
+      slope_mesh1=1._f64/2._f64
+      wk=2.82_f64
+      ll=0.5_f64
+      !stop
+      Ns(1)=int((-wk-ll-x2_min)/delta_x2)+1
+      ws(1)=x2_min+(Ns(1)-1)*delta_x2
+      !Ns(2)=int((-wk+ll-x2_min)/delta_x2)+1
+      !ws(2)=x2_min+(Ns(2)-1)*delta_x2
+      
+     ! Ns(3)=int((wk-ll-x2_min)/delta_x2)
+      !ws(3)=x2_min+(Ns(3)-1)*delta_x2
+      Ns(4)=int((wk+ll-x2_min)/delta_x2)+1
+      ws(4)=x2_max-(ws(1)-x2_min)!x2_min+(Ns(4)-1)*delta_x2
+     !iiw2=int((-wk-1-x2_min)/delta_x2)
+    ! print*,ws(1)-ws(2),ws(3)-ws(4),delta_x2
+     !stop
+     !stop
+     Nzon= int((ws(4)-ws(1))/(slope_mesh1*delta_x2))
+     if(mod(N_x2-Nzon,2)==0) then
+      Nzon=Nzon
+     else
+      Nzon=Nzon+1
+     endif 
+     ! print*,"slop",slope_mesh1,Nzon,N_x2-2*Nzon
+      !stop
+      !if(
+      !Nzon= int(1._f64/(slope_mesh1*delta_x2))
+      !slope_mesh2=(x2_max-x2_min-(ws(4)-ws(1)))/((N_x2-Nzon)*delta_x2)
+        slope_mesh2=(ws(1)-x2_min)/((N_x2-Nzon)*delta_x2/2._f64)
+        slope_mesh1=(ws(4)-ws(1))/(Nzon*delta_x2)
+       !slope_mesh2=(x2_max-x2_min-2)/((N_x2-2*Nzon)*delta_x2)
+       !print*,(ws(4)-ws(1))/slope_mesh1+2*(ws(1)-x2_min)/slope_mesh2,(x2_max-x2_min)!, (ws(1)-x2_min)/((N_x2-Nzon)*delta_x2/2._f64),Nzon,N_x2-Nzon
+       !stop
+       !(ws(2)-ws(1))-(ws(4)-ws(3)),
+       !stop
+      
+      !do i1=1,nc_eta1+1  
+       !do i2=1,nc_eta2+1  
+         !x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       !enddo
+      !enddo
+     
+ 
+     do i1=1,nc_eta1+1   
+
+       dxx=(ws(1)-x2_min)/((N_x2-Nzon)/2._f64)
+      
+       do i2=1, (N_x2-Nzon)/2+1
+
+       x2n_array(i1,i2) =x2_min+real(i2-1,f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*dxx
+       !jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)*(ws(1)-x2_min)/((N_x2-Nzon)*delta_x2/2._f64)
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(1)-x2_min)/(slope_mesh2)
+       !jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)/slope_mesh2
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) =x2_min+(real(i2,f64)-0.5_f64)*dxx
+       
+      enddo
+     enddo
+
+     do i1=1,nc_eta1+1   
+
+       dxx=(ws(4)-ws(1))/(Nzon)
+      
+       do i2=(N_x2-Nzon)/2+1, (N_x2-Nzon)/2+Nzon +1
+
+       x2n_array(i1,i2) =ws(1)+real(i2-1-(N_x2-Nzon)/2,f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2) = ws(1)+real(i2-(N_x2-Nzon)/2-0.5_f64,f64)*dxx
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(4)-ws(1))/(slope_mesh1)
+        !jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)/slope_mesh1
+                       
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) = ws(1)+real(i2-(N_x2-Nzon)/2-0.5_f64,f64)*dxx
+      enddo
+     enddo
+
+     do i1=1,nc_eta1+1   
+
+       dxx=(x2_max-ws(4))/((N_x2-Nzon)/2._f64)
+      
+       do i2= (N_x2-Nzon)/2+Nzon +1, N_x2+1
+
+       x2n_array(i1,i2) =ws(4)+real(i2-1-((N_x2-Nzon)/2+Nzon),f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2)  =ws(4)+real(i2-((N_x2-Nzon)/2+Nzon)-0.5_f64,f64)*dxx
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(1)-x2_min)/(slope_mesh2)
+       !jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)/slope_mesh2
+        
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) =ws(4)+real(i2-((N_x2-Nzon)/2+Nzon)-0.5_f64,f64)*dxx
+      enddo
+     enddo
+
+        !eta1 value of intersecting point (eta2,x1)=constant
+        !integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+        !x2 value of intersecting point (eta2,x1)=constant
+        !integration_points(2,i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+     
+
+
+    !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+    !   x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+    !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+    !   PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+       
+    !dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+    !do i2=1,nc_eta2+1
+      !do i1=1,nc_eta1+1
+        !eta1 value of intersecting point (eta2,x1)=constant
+        !integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+        !x2 value of intersecting point (eta2,x1)=constant
+        !integration_points(2,i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+      !enddo
+    !enddo
+    
+   
+     
+    
+  endif
+! do i1=1,nc_eta1 +1  
+!       do i2= 1, N_x2+1
+!         print*, x1c_array(i1,i2),x2c_array(i1,i2),ws(1),ws(2),ws(3),ws(4)!x1c_array(i1,i2),x2c_array(i1,i2),integration_points(1,i1,i2),integration_points(2,i1,i2)  
+!      enddo
+!     enddo
+!stop
+  if(mesh_case==11)then
+
+      slope_mesh1=1._f64/2._f64
+      wk=2.82_f64
+      ll=1._f64
+       
+      Ns(1)=int((-wk-ll-x2_min)/delta_x2)+1
+      ws(1)=x2_min+(Ns(1)-1)*delta_x2
+      
+      ll=(int(ll/delta_x2)+1)*delta_x2
+     ! print*,ll
+     !stop
+      !Ns(2)=int((-wk+ll-x2_min)/delta_x2)+1
+      ws(2)=ws(1)+2*ll
+      
+     ! Ns(3)=int((wk-ll-x2_min)/delta_x2)
+      !ws(3)=x2_min+(Ns(3)-1)*delta_x2
+      Ns(4)=int((wk+ll-x2_min)/delta_x2)+1
+      ws(4)=x2_max-(ws(1)-x2_min)!x2_min+(Ns(4)-1)*delta_x2
+      ws(3)=ws(4)-2*ll
+     !iiw2=int((-wk-1-x2_min)/delta_x2)
+    ! print*,ws(1)-ws(2),ws(3)-ws(4),delta_x2
+     !stop
+     !stop
+     Nzon= int((ws(2)-ws(1))/(slope_mesh1*delta_x2))
+
+     !print*,Nzon,int((ws(4)-ws(3))/(slope_mesh1*delta_x2))
+     !stop
+     Nzon2=3!int((ws(3)-ws(2))/(delta_x2))
+
+     if(mod(N_x2-2*Nzon-Nzon2,2)==0) then
+      Nzon2=Nzon2
+     else
+      Nzon2=Nzon2+1
+     endif 
+     ! print*,"slop",slope_mesh1,Nzon,N_x2-2*Nzon
+      !stop
+      !if(
+      !Nzon= int(1._f64/(slope_mesh1*delta_x2))
+      !slope_mesh2=(x2_max-x2_min-(ws(4)-ws(1)))/((N_x2-Nzon)*delta_x2)
+        slope_mesh2=(ws(1)-x2_min)/((N_x2-2*Nzon-Nzon2)*delta_x2/2._f64)
+
+        slope_mesh1=(ws(2)-ws(1))/(Nzon*delta_x2)
+        slope_mesh3=(ws(3)-ws(2))/(Nzon2*delta_x2)
+       
+       !slope_mesh2=(x2_max-x2_min-2)/((N_x2-2*Nzon)*delta_x2)
+       !print*,slope_mesh1,slope_mesh2!, (ws(1)-x2_min)/((N_x2-Nzon)*delta_x2/2._f64),Nzon,N_x2-Nzon
+       !(ws(2)-ws(1))-(ws(4)-ws(3)),
+       !stop
+      
+      !do i1=1,nc_eta1+1  
+       !do i2=1,nc_eta2+1  
+         !x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       !enddo
+      !enddo
+     
+ 
+     do i1=1,nc_eta1+1   
+
+       dxx=(ws(1)-x2_min)/((N_x2-2*Nzon-Nzon2)/2._f64)
+      
+       do i2=1, (N_x2-2*Nzon-Nzon2)/2+1
+
+       x2n_array(i1,i2) =x2_min+real(i2-1,f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*dxx
+       
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(1)-x2_min)/slope_mesh2
+       
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) =x2_min+(real(i2,f64)-0.5_f64)*dxx
+       !print*,x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo
+     enddo
+     
+     
+
+     do i1=1,nc_eta1+1   
+
+       dxx=(ws(2)-ws(1))/(Nzon)
+      
+       do i2=(N_x2-2*Nzon-Nzon2)/2+1, (N_x2-2*Nzon-Nzon2)/2+Nzon +1
+
+       x2n_array(i1,i2) =ws(1)+real(i2-1-(N_x2-2*Nzon-Nzon2)/2,f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2) = ws(1)+real(i2-(N_x2-2*Nzon-Nzon2)/2-0.5_f64,f64)*dxx
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(2)-ws(1))/slope_mesh1
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) = ws(1)+real(i2-(N_x2-2*Nzon-Nzon2)/2-0.5_f64,f64)*dxx
+       !print*,x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo
+     enddo
+
+     do i1=1,nc_eta1+1   
+
+       dxx=(ws(3)-ws(2))/(Nzon2)
+      
+       do i2= (N_x2-2*Nzon-Nzon2)/2+Nzon +1, (N_x2-2*Nzon-Nzon2)/2+Nzon +Nzon2 +1
+
+       x2n_array(i1,i2) =ws(2)+real(i2-1-((N_x2-2*Nzon-Nzon2)/2+Nzon),f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2) = ws(2)+real(i2-((N_x2-2*Nzon-Nzon2)/2+Nzon)-0.5_f64,f64)*dxx
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(3)-ws(2))/slope_mesh3
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) = ws(2)+real(i2-((N_x2-2*Nzon-Nzon2)/2+Nzon)-0.5_f64,f64)*dxx
+       !print*,x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo
+     enddo 
+
+       do i1=1,nc_eta1+1   
+
+       !dxx=(ws(4)-ws(3))/(Nzon)
+        dxx=(ws(2)-ws(1))/(Nzon)
+       do i2=  (N_x2-2*Nzon-Nzon2)/2+Nzon +Nzon2 +1, (N_x2-2*Nzon-Nzon2)/2+2*Nzon +Nzon2 +1
+
+       x2n_array(i1,i2) =ws(3)+real(i2-1-((N_x2-2*Nzon-Nzon2)/2+Nzon+Nzon2),f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2) = ws(3)+real(i2-((N_x2-2*Nzon-Nzon2)/2+Nzon+Nzon2)-0.5_f64,f64)*dxx
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(2)-ws(1))/slope_mesh1
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) = ws(3)+real(i2-((N_x2-2*Nzon-Nzon2)/2+Nzon+Nzon2)-0.5_f64,f64)*dxx
+      ! print*,x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo
+     enddo 
+
+     
+     do i1=1,nc_eta1+1   
+
+       !dxx=(x2_max-ws(4))/((N_x2-Nzon)/2._f64)
+        dxx=(x2_max-ws(4))/((N_x2-2*Nzon-Nzon2)/2._f64)
+       
+       do i2= (N_x2-2*Nzon-Nzon2)/2+2*Nzon +Nzon2 +1, N_x2+1
+
+       x2n_array(i1,i2) =ws(4)+real(i2-1-((N_x2-2*Nzon-Nzon2)/2+2*Nzon+Nzon2),f64)*dxx
+       x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
+       x1c_array(i1,i2) = x1_min+(real(i1,f64)-0.5_f64)*delta_x1
+       x2c_array(i1,i2)  =ws(4)+real(i2-((N_x2-2*Nzon-Nzon2)/2+2*Nzon+Nzon2)-0.5_f64,f64)*dxx
+       !jac_array(i1,i2) = (x1_max-x1_min)*(x2_max-x2_min)*slope_mesh2
+       jac_array(i1,i2) = (x1_max-x1_min)*(ws(1)-x2_min)/slope_mesh2
+       integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+       integration_points(2,i1,i2) =ws(4)+real(i2-((N_x2-2*Nzon-Nzon2)/2+2*Nzon+Nzon2)-0.5_f64,f64)*dxx
+        !print*,x1n_array(i1,i2),x2n_array(i1,i2)
+      enddo
+     enddo
+     !stop
+        !eta1 value of intersecting point (eta2,x1)=constant
+        !integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+        !x2 value of intersecting point (eta2,x1)=constant
+        !integration_points(2,i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+     
+
+
+    !geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+    !   x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,PERIODIC)
+    !mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+    !   PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+       
+    !dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
+
+    !do i2=1,nc_eta2+1
+      !do i1=1,nc_eta1+1
+        !eta1 value of intersecting point (eta2,x1)=constant
+        !integration_points(1,i1,i2) = (real(i1,f64)-0.5_f64)*(eta1_max-eta1_min)/real(nc_eta1,f64)
+        !x2 value of intersecting point (eta2,x1)=constant
+        !integration_points(2,i1,i2) = x2_min+(real(i2,f64)-0.5_f64)*delta_x2
+      !enddo
+    !enddo
+    
+   
+     !print*,slope_mesh1,slope_mesh2,slope_mesh3,
+   !print*, (2*(ws(1)-x2_min)/slope_mesh2+2*(ws(2)-ws(1))/slope_mesh1+(ws(3)-ws(2))/slope_mesh3)*(x1_max-x1_min), (x1_max-x1_min)*(x2_max-x2_min)!,2*sll_Pi
+    
+  endif
+   
+
   
   
   
