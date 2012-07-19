@@ -1,3 +1,0 @@
-Import('env')
-lib = env.Library('assert', ["sll_assert.F90"])
-Return('lib')

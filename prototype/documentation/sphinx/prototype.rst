@@ -36,7 +36,7 @@ Developer GIT Access via SSH
 `Edit keys on your INRIA gforge account <https://gforge.inria.fr/account/editsshkeys.php>`_ and follow instructions.
 Only project developers can access the GIT tree via this method. Substitute with the proper values::
 
- git clone git+ssh://navaro@scm.gforge.inria.fr//gitroot//selalib/selalib.git
+ git clone git+ssh://YOUR_INRIA_LOGIN@scm.gforge.inria.fr//gitroot//selalib/selalib.git
  cd selalib/
 
 Display all branches with::
@@ -57,15 +57,18 @@ Build the prototype
 Go to prototype/src/ directory, build the libraries and the program with ::
 
  cd prototype/src
- env PATH=/opt/local/bin:${PATH} HDF5INCPATH=/opt/local/include \
-     HDF5LIBPATH=/opt/local/lib HDF5MODPATH=/opt/local/include make
+ export HDF5INCPATH=/usr/include
+ export HDF5LIBPATH=/usr/lib 
+ export HDF5MODPATH=/usr/include 
+ export FFTW3INCLUDE=/usr/include 
+ make
 
 You can set these variables in your shell profile (csh example) ::
  
- setenv PATH "/opt/local/bin:${PATH}"
  setenv HDF5INCPATH "/opt/local/include"
  setenv HDF5MODPATH "/opt/local/include"
  setenv HDF5LIBPATH "/opt/local/lib"
+ setenv FFTW3INCLUDE "/opt/local/lib"
 
 If library location is unusual, you probably have to set your runtime path with::
 

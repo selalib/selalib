@@ -1,6 +1,6 @@
 module sll_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
-  use sll_interpolators_base
+  use sll_module_interpolators_2d_base
   use sll_splines
   implicit none
 

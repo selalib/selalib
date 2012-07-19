@@ -27,9 +27,9 @@ program remap_test
   sll_real64, dimension(:,:,:), allocatable ::  arrays_diff
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 512
-  integer , parameter                       :: nj = 512
-  integer , parameter                       :: nk = 256
+  integer , parameter                       :: ni = 64
+  integer , parameter                       :: nj = 64
+  integer , parameter                       :: nk = 32
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init

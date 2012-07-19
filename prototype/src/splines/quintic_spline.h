@@ -4,25 +4,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "sym_penta_diagonal.c"
+#include "sym_penta_diagonal.h"
 
-typedef struct quintic_spline
+typedef struct quintic_spline_hermite
 
 {
 
   int n;
   double xmin, xmax;
-  double *p;
+  double *coeffs;
 
-} quintic_spline_plan;
+} quintic_spline_hermite_plan;
 
-  quintic_spline_plan *new_quintic_spline(const int n, 
-                const double xmin, const double xmax);
-  double B_spline(const double x); 
-  // Quintic B-spline 
-  double *coeffs(const double *f);
-  // Coefficients of the spline
-  double spline(const double x, const double *f); 
-  // The interpolator spline function
-  quintic_spline_plan *delete_quintic_spline();
+  quintic_spline_hermite_plan *new_quintic_spline_hermite(const int n, 
+               const double xmin, const double xmax, const double *f);
+  double B(int j, int i, double x, quintic_spline_hermite_plan *plan_spline);
+  void compute_coeffs_hermite(const double *f, quintic_spline_hermite_plan *plan_spline);
+  // The interpolator spline function with Hermite boundary conditions
+  double spline_hermite(const double x, quintic_spline_hermite_plan *plan);
+  void delete_quintic_spline_hermite(quintic_spline_hermite_plan *plan);
 

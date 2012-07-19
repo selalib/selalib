@@ -1,32 +1,36 @@
-# SCons file to build the test case for the poisson solvers directory
+# SCons file for the unit test of the QN solver
 import os
 import socket
-import distutils.util
+import distutils. util
 
 platform = distutils.util.get_platform()
 hostname = socket.gethostname()
+<<<<<<< HEAD
 print 'Building quasineutral solvers... '
+=======
+>>>>>>> origin/prototype-devel
 print ' '
-print 'hostname : ' + hostname
-print 'platform : ' + platform
-
-vars = Variables()
-vars.Add('CPATH', 'dummy path','.')
-vars.Add('LPATH', 'dummy path','.')
+print 'building the quasi-neutral solver directory...'
+print ' '
+print 'hostname: ' + hostname
+print 'platform: ' + platform
 
 env = Environment( ENV = os.environ,
                    F90 = 'mpif90',
                    F90PATH= ['../memory', '../precision', '../assert', 
                              '../numerical_utilities', '../constants',
                              '../mesh_types', '../diagnostics', '../collective',
-                             '../utilities', '../fft', '../remap','../timer','../fftpack'],
+                             '../utilities', '../fft', '../remap','../timer',
+                             '../fftpack'],
 # fix the following: fftpack should be treated as any other local library.
                    LINK = 'mpif90',
                    LIBPATH = ['.'],
                    LIBS = ['sll_remap','sll_mesh_types', 
                            'sll_fft', 'sll_collective',
-                           'sll_diagnostics','sll_assertion','sll_utilities','sll_tridiagonal',
-                           'sll_constants','sll_precision','sll_memory','sll_timer','dfftpack'],
+                           'sll_diagnostics','sll_assertion','sll_utilities',
+                           'sll_tridiagonal',
+                           'sll_constants','sll_precision','sll_memory',
+                           'sll_timer','dfftpack'],
                    LINKFLAGS=['-Wl,-rpath','-Wl,'+os.environ['HDF5LIBPATH'],
                    '-fopenmp'],
                     F90FLAGS = ['-g', '-W', '-Wall', '-DMPIF90', '-DDEBUG', 
@@ -45,12 +49,9 @@ env.Library('sll_assertion',  ["../assert/sll_assert.F90"])
 env.Library('sll_constants',  ["../constants/numeric_constants.F90"])
 env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90",
                                "../mesh_types/geometry_functions.F90"])
-env.Library('sll_diagnostics', Glob("../diagnostics/sll_*.F90"))
-env.Library('sll_collective', ["../collective/sll_collective.F90"])
+env.Library('sll_assert', ["../assert/sll_assert.F90"])
 env.Library('sll_utilities',["../utilities/misc_utils.F90"])
-env.Library('sll_tridiagonal',["../numerical_utilities/tridiagonal.F90"])
-env.Library('sll_fft', ["../fft/sll_fft.F90"])
-env.Library('dfftpack', ['../fftpack/fftpack.f90', '../fftpack/dfftpack.f'])
+env.Library('sll_constants',["../constants/numeric_constants.F90"])
 env.Library('sll_remap', ["../remap/sll_remap.F90"])
 env.Library('sll_collective', ["../collective/sll_collective.F90"])
 

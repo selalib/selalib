@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 27, 2012
+!> Last modification: April 10, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -180,17 +180,17 @@ contains
     Ly = plan%Ly
     Lz = plan%Lz
 
-    ! Get layouts to compute FFTs (in each direction) and poisson 
-    ! solver kernel
+    ! Get layouts to compute FFTs (in each direction)
     layout_x => plan%layout_x
     layout_y => plan%layout_y
     layout_z => plan%layout_z
+
+    call verify_argument_sizes_par(layout_x, rho, phi)
 
     ! FFTs in x-direction
     nx_loc = plan%loc_sizes(1,1) 
     ny_loc = plan%loc_sizes(1,2) 
     nz_loc = plan%loc_sizes(1,3)
-    call verify_argument_sizes_par(layout_x, rho, phi)
     plan%array_x = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
@@ -245,6 +245,12 @@ contains
                 ind_z = real(nz-(gk-1),f64)
              endif
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
+                 if ( rho(i,j,k) /= 0.d0 ) then     
+                    print *, '3D periodic poisson cannot be solved without', &
+                                                        ' global_rho(1,1,1)=0'
+                    print *, 'Exiting...'
+                    stop
+                endif
                 plan%array_z(i,j,k) = 0.d0
              else
                 plan%array_z(i,j,k) = plan%array_z(i,j,k)/(4*sll_pi**2 * &

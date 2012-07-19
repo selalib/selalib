@@ -11,14 +11,16 @@ print 'platform : ' + platform
 
 env = Environment( ENV = os.environ,
                    F90PATH = ['../memory', '../precision', '../assert',
-                              '../constants', '../utilities/',
-                              '../diagnostics', '../mesh_types',
+                              '../constants', '../utilities/', 
+                              '../fields','../splines','../mapped_meshes',
                               os.environ['HDF5INCPATH']],
                    FORTRANMODDIRPREFIX= '-J', 
                    LIBPATH= ['.', os.environ['HDF5LIBPATH']],
-                   LIBS=['sll_memory','sll_precision','sll_assert',
+                   LIBS=['sll_field_2d','sll_mapped_mesh','sll_splines',
+                         'sll_memory',
+                         'sll_precision','sll_assert',
                          'sll_constants', 'sll_utilities', 'sll_diagnostics',
-                         'sll_mesh_types', 'hdf5_fortran', 'hdf5', 'z'],
+                         'hdf5_fortran', 'hdf5', 'z'],
                    F90FLAGS = ['-g', '-W', '-Wall', '-std=f2003', '-DDEBUG',
                                '-DGFORTRAN','-ffree-line-length-none'])
 
@@ -27,9 +29,13 @@ env.Library('sll_precision',  ["../precision/sll_working_precision.F90"])
 env.Library('sll_assert',     ["../assert/sll_assert.F90"])
 env.Library('sll_constants',  ["../constants/numeric_constants.F90"])
 env.Library('sll_utilities',  ["../utilities/misc_utils.F90"])
-env.Library('sll_diagnostics',["../diagnostics/sll_diagnostics.F90"])
-env.Library('sll_mesh_types', ["../mesh_types/sll_mesh_types.F90",
-                               "../mesh_types/geometry_functions.F90"])
-env.Program('unit_test',      ["unit_test.F90", "sll_ode_solvers.F90"])
-
+env.Library('sll_splines',    ["../splines/sll_splines.F90"])
+env.Library('sll_mapped_mesh', ["../mapped_meshes/sll_mapped_meshes.F90"])
+env.Library('sll_diagnostics', Glob("../low_level_file_io/sll_*.F90"))
+env.Library('sll_field_2d',   ["../mapped_meshes/sll_maped_mesh_base.F90",
+                               "../mapped_meshes/sll_mapped_meshes.F90",
+                               "../fields/sll_scalar_field_2d.F90",
+                               "../fields/geometry_functions.F90"])
+#env.Program('unit_test',      ["unit_test.F90", "sll_ode_solvers.F90"])
+env.Program('unit_test_implicit_ode_nonuniform',  ["unit_test_implicit_ode_nonuniform.F90", "sll_ode_solvers.F90"])
 
