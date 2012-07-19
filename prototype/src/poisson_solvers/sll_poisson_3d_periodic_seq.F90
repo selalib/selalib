@@ -7,7 +7,7 @@
 !> @brief 
 !> Selalib 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: March 22, 2012
+!> Last modification: April 10, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -91,6 +91,12 @@ contains
     sll_real64                                     :: Lx, Ly, Lz
     sll_real64                                     :: ind_x, ind_y, ind_z
 
+    ! Checking input arguments consistency
+    if ( rho(1,1,1) /= 0.d0 ) then     
+       print *, '3D periodic poisson cannot be solved without rho(1,1,1)=0'
+       print *, 'Exiting...'
+       stop
+    endif
     call verify_argument_sizes_seq(plan, rho, phi)
 
     nx = plan%nx

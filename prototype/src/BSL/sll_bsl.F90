@@ -2,7 +2,7 @@ module sll_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
+#include "sll_scalar_field_2d.h"
 
 use numeric_constants
 use sll_splines

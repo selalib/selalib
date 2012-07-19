@@ -8,19 +8,13 @@
 
 
   double *alloc_double(int n)
-
   {
-
     double *ptr = malloc( n*sizeof(double) );
-
-    if ( ptr == NULL )
-    {
+    if ( ptr == NULL )    {
       fprintf(stderr,"Impossible to allocate pointer\n");
       exit(EXIT_FAILURE);
     }
-
     return ptr;
-
   }
 
 
@@ -51,32 +45,36 @@
     plan->e1 = alloc_double(n);
     plan->e2 = alloc_double(n);
     plan->y  = alloc_double(n);
-    plan->z  = alloc_double(n);
-    plan->w  = alloc_double(n);
     plan->x  = alloc_double(n);
-    plan->for_subsys  = alloc_double(plan->n);//plan->x=malloc( n*sizeof(double) );
 
     return plan;
 
   }
 
 
-  void solve_subsystem(double l1, double l2, double *b,
-                       int n, double *tmp, double* y)
+  double *solve_subsystem(double l1, double l2, double *b, int n)
 
   {
 
     int i;
-     
-    tmp[0] = b[0];
-    tmp[1] = b[1] - l1*tmp[0];
-    for (i = 2; i < n; i++)
-      tmp[i] = b[i] - ( l2*tmp[i-2] + l1*tmp[i-1] );
+    double *x, *y;
 
-    y[n-1] = tmp[n-1];
-    y[n-2] = tmp[n-2] - l1*y[n-1];
+    x = alloc_double(n);
+    y = alloc_double(n);
+     
+    y[0] = b[0];
+    y[1] = b[1] - l1*y[0];
+    for (i = 2; i < n; i++)
+      y[i] = b[i] - ( l2*y[i-2] + l1*y[i-1] );
+
+    x[n-1] = y[n-1];
+    x[n-2] = y[n-2] - l1*y[n-1];
     for (i = n-3; i >= 0; i--)
-      y[i] = tmp[i] - ( l1*y[i+1] + l2*y[i+2] );
+      x[i] = y[i] - ( l1*x[i+1] + l2*x[i+2] );
+
+    return x;
+
+    dealloc_double(y);
 
   }
 
@@ -89,14 +87,14 @@
     double s, t, p, l1, l2;
     double d, d1, d2;
     double *e1, *e2;
-    double *y, *z, *w;
-    double *x, *tmp;
+    double *x, *y, *z, *w;
     int n, i;
     int sign_of_a;
 
     if ( fabs(a) <= 2*(fabs(b)+fabs(c)) )
     {
       printf("a, b, and c must be such that: |a| > 2(|b|+|c|)\n");
+      printf("a=%f, b=%f, c=%f\n", a, b, c);
       printf("Exiting...\n");
       exit(0);
     }
@@ -104,10 +102,7 @@
     e1  = plan->e1;
     e2  = plan->e2;
     y   = plan->y;
-    z   = plan->z;
-    w   = plan->w;
     x   = plan->x;
-    tmp = plan->for_subsys;
     n   = plan->n;
 
     s = (a/2+c)*(a/2+c) - b*b;
@@ -120,21 +115,23 @@
 
     for (i = 0 ; i < n ; i++)
     {
-      tmp[i] = f[i]/p;
+      y[i] = f[i]/p;
       e1[i] = 0.;
       e2[i] = 0.;
     }
     e1[0] = 1.;
     e2[1] = 1.;
 
-    solve_subsystem(l1, l2, tmp, n, tmp, y); 
-    solve_subsystem(l1, l2, e1,  n, tmp, z);
-    solve_subsystem(l1, l2, e2,  n, tmp, w);
+    y = solve_subsystem(l1, l2, y, n); 
+    z = solve_subsystem(l1, l2, e1,  n);
+    w = solve_subsystem(l1, l2, e2,  n);
 
     d = 1. + l1*l2*(z[1]+w[0]) + l2*l2*(z[0]+w[1]) + 
        l1*l1*z[0] + pow(l2,4)*(z[0]*w[1]-z[1]*w[0]);
+
     d1 = pow(l2,4)*(y[0]*w[1]-y[1]*w[0]) + 
           (l1*l1+l2*l2)*y[0] + l1*l2*y[1];
+
     d2 = pow(l2,4)*(y[1]*z[0]-y[0]*z[1]) + 
                   l1*l2*y[0] + l2*l2*y[1];
 
@@ -164,8 +161,6 @@
     dealloc_double(plan->e1);
     dealloc_double(plan->e2);
     dealloc_double(plan->y);
-    dealloc_double(plan->z);
-    dealloc_double(plan->w);
 
     // Plan deallocation
     free(plan);
