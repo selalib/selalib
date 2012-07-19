@@ -79,8 +79,8 @@ program VP_1d
 
   ! initialization of distribution_function
   eps = 0.05_f64  ! perturbation for Landau
-  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps)
-  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps)
+  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode)
+  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode)
   !p_init_f => init_landau
   p_init_f => init_tsi
 
@@ -96,8 +96,8 @@ program VP_1d
   ! write mesh and initial distribution function
   istep = 0
   call int2string(istep,cstep)
-  name = trim(fname)//cstep
-  call write_scalar_field_2d(f,output_file_name=name) 
+  f%name = trim(fname)//cstep
+  call write_scalar_field_2d(f) 
 
   ! initialise Poisson
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
@@ -109,7 +109,7 @@ program VP_1d
   
   ! time loop
   !----------
-  nbiter = 500
+  nbiter = 20
   dt = .1_f64
   ! half time step advection in v
   do istep = 1, nbiter
@@ -142,8 +142,8 @@ program VP_1d
      write(ex_diag,*) efield
      if (mod(istep,10)==0) then
         call int2string(istep,cstep)
-        name = trim(fname)//cstep
-        call write_scalar_field_2d(f,output_file_name=name) 
+        f%name = trim(fname)//cstep
+        call write_scalar_field_2d(f) 
      end if
   end do
 

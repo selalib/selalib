@@ -183,7 +183,7 @@ contains   ! *****************************************************************
           do i2 = 1, num_pts2
              eta1 = 0.0_f64 
              do i1 = 1, num_pts1
-                val(i1,i2) = scalar_field%data(i1,i2) / mesh%jacobian(eta1, eta2)
+                val(i1,i2) = scalar_field%data(i1,i2)
                 eta1 = eta1 + mesh%delta_eta1
              end do
              eta2 = eta2 + mesh%delta_eta2
