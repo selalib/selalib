@@ -145,6 +145,7 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_int32  :: file_id
+    character(len=32) :: name
     character(len=4) :: counter
     character(len=4) :: center
 
@@ -211,19 +212,17 @@ contains   ! *****************************************************************
        if (.not. present(output_file_name)) then
           scalar_field%plot_counter = scalar_field%plot_counter+1
           call int2string(scalar_field%plot_counter, counter)
-          call sll_xdmf_open(trim(scalar_field%name)//counter//".xmf", &
-             scalar_field%mesh%label,        &
-             num_pts1,num_pts2,file_id,ierr)
+          name = trim(scalar_field%name)//counter
+       else 
+          name = output_file_name
        end if
+       call sll_xdmf_open(trim(name)//".xmf", &
+            scalar_field%mesh%label,        &
+            num_pts1,num_pts2,file_id,ierr)
       
-       call sll_xdmf_open(  &
-             trim(output_file_name)//".xmf", &
-             scalar_field%mesh%label,        &
-             num_pts1,num_pts2,file_id,ierr)
-
-       call sll_xdmf_write_array(trim(output_file_name), &
+       call sll_xdmf_write_array(trim(name), &
                                  val,&
-                                 trim(scalar_field%name),ierr,file_id, &
+                                 trim(name),ierr,file_id, &
                                  "Node")
        call sll_xdmf_close(file_id,ierr)
 
