@@ -1,4 +1,4 @@
-program vlaspois
+program cg_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -9,7 +9,7 @@ program vlaspois
   use numeric_constants
   implicit none
 
-  sll_int32 :: i, j, step, err
+  sll_int32 :: i, j, step, err,fin
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
@@ -17,7 +17,7 @@ program vlaspois
   sll_real64, dimension(:,:), pointer :: f, phi ,fdemi
   sll_real64, dimension(:,:,:), pointer :: grad_phi
   type(sll_fft_plan), pointer ::pfwd, pinv
-
+  character*30 :: cgf, thd
   sll_int32 :: mod
   sll_real64 :: mode
 
@@ -33,7 +33,7 @@ program vlaspois
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=128
+  nr=512
   ntheta=128
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
@@ -45,24 +45,26 @@ program vlaspois
   !default
   tf=1.0_f64
   dt=0.1_f64*dr
-  nb_step=floor(tf/dt)
+  nb_step=ceiling(tf/dt)
 
 !!$  !definition of dt=tf/nb_step
 !!$  tf=1.0_f64
-!!$  nb_step=-1
+!!$  nb_step=1
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=5.0_f64
-  nb_step=floor(tf/dt)
+  tf=50.0_f64
+  nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
-!!$  nb_step=1000
-!!$  dt=0.1_f64
+!!$  nb_step=-5
+!!$  dt=0.01_f64*dr
 !!$  tf=dt*real(nb_step,f64)
 
-  print*,'# nb_step =',nb_step,' dt =',dt,'tf =',real(nb_step,f64)*dt
+  tf=real(nb_step,f64)*dt
+  fin=floor(tf+0.5_f64)
+  print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
   SLL_ALLOCATE(f(nr+1,ntheta+1),err)
   SLL_ALLOCATE(phi(nr+1,ntheta+1),err)
@@ -79,15 +81,18 @@ program vlaspois
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=4
+  fcase=2
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme with control
-  scheme=1
+  scheme=2
   if (scheme==2) then
      SLL_ALLOCATE(fdemi(nr+1,ntheta+1),err)
   end if
+
+  call scgf(cgf,mod,scheme,fin)
+  call sthd(thd,mod,scheme,fin)
 
   if (fcase==1) then
      do i=1,nr+1
@@ -125,7 +130,7 @@ program vlaspois
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta+1
            theta=real(j-1,f64)*dtheta
-           f(i,j)=1.0_f64/(5.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/50.0_f64)*cos(theta)
+           f(i,j)=1.0_f64/(0.5_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2*0.5_f64**2))*sin(mode*theta)
         end do
      end do
 
@@ -151,16 +156,19 @@ program vlaspois
   end do
   close(20)
 
-  open(unit=23,file='thdiag.dat')
+  open(unit=23,file=thd)
+  !open(unit=23,file='thdiag.dat')
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
-  write(23,*)'#   t   //   w   //   l1   //   l2   //   e' 
-  w0=0.0_f64
-  l10=0.0_f64
-  l20=0.0_f64
-  e0=0.0_f64
+  write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
   call poisson_solve_polar(f,rmin,dr,nr,ntheta,pfwd,pinv,phi)
   phi(:,ntheta+1)=phi(:,1)
   call compute_grad_field(nr,ntheta,dr,dtheta,rmin,rmax,phi,grad_phi)
+  grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
+  
+  w0=0.0_f64
+  l10=0.0_f64
+  l20=0.0_f64
+  e0=0.0_f64  
   do i=1,nr
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta
@@ -170,21 +178,14 @@ program vlaspois
         e0=e0+r*(grad_phi(1,i,j)**2+grad_phi(2,i,j)**2)
      end do
   end do
-
   w0=w0*dr*dtheta
   l10=l10*dr*dtheta
   l20=sqrt(l20*dr*dtheta)
   e0=e0*dr*dtheta
   write(23,*)'#',w0,l10,l20,e0
-  write(23,*)0.0_f64,1.0_f64,1.0_f64,1.0_f64,0.0_f64
-  !print*,'e=',e0, log(e0)
+  write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64
 
   do step=1,nb_step
-     !initialisation of weight (w), l1, l2 and energy (e)
-     w=0.0_f64
-     l1=0.0_f64
-     l2=0.0_f64
-     e=0.0_f64
 
      if (scheme==1) then
         !classical semi-Lagrangian scheme
@@ -206,6 +207,11 @@ program vlaspois
      grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
      phi(:,ntheta+1)=phi(:,1)
 
+     !computation of mass (w), l1, l2 and energy (e)
+     w=0.0_f64
+     l1=0.0_f64
+     l2=0.0_f64
+     e=0.0_f64
      do i=1,nr
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta
@@ -219,9 +225,9 @@ program vlaspois
      l1=l1*dr*dtheta
      l2=sqrt(l2*dr*dtheta)
      e=e*dr*dtheta
-     write(23,*)dt*real(step,f64),w/w0,l1/l10,l2/l20,e-e0
+     write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0
 
-     if ((step/10)*10==step) then
+     if ((step/100)*100==step) then
         print*,'#step',step
      end if
   end do
@@ -230,7 +236,8 @@ program vlaspois
   !write the final f in a file
   !w0=0.0_f64
   !w=0.0_f64
-  open (unit=21,file='CGfinal.dat')
+  open (unit=21,file=cgf)
+  !open (unit=21,file='CGfinal.dat')
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
@@ -256,4 +263,62 @@ program vlaspois
      SLL_DEALLOCATE(fdemi,err)
   end if
 
-end program vlaspois
+contains
+
+  subroutine scgf(cgf,mode,scheme,tf)
+
+    implicit none
+
+    character*30, intent(out) :: cgf
+    sll_int32, intent(in) :: scheme, mode,tf
+
+    integer :: i1,i2,i3
+    character :: sch
+    character*2 :: mod
+    character*3 :: fin
+
+    i1=mode/10
+    i2=mode-i1
+    mod=char(i1+48)//char(i2+48)
+    if (scheme==2) then
+       sch='c'
+    else
+       sch=char(095)
+    end if
+    i1=tf/100
+    i2=(tf-100*i1)/10
+    i3=tf-100*i1-10*i2
+    fin=char(i1+48)//char(i2+48)//char(i3+48)
+    cgf='CGfinal'//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
+
+  end subroutine scgf
+
+  subroutine sthd(thd,mode,scheme,tf)
+
+    implicit none
+
+    character*30, intent(out) :: thd
+    sll_int32, intent(in) :: scheme, mode,tf
+
+    integer :: i1,i2,i3
+    character :: sch
+    character*2 :: mod
+    character*3 :: fin
+
+    i1=mode/10
+    i2=mode-i1
+    mod=char(i1+48)//char(i2+48)
+    if (scheme==2) then
+       sch='c'
+    else
+       sch=char(095)
+    end if
+    i1=tf/100
+    i2=(tf-100*i1)/10
+    i3=tf-100*i1-10*i2
+    fin=char(i1+48)//char(i2+48)//char(i3+48)
+    thd='thdiag'//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
+
+  end subroutine sthd
+
+end program cg_polar

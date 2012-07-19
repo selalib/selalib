@@ -51,14 +51,14 @@ contains
           r=rmin+real(i-1,f64)*dr
           do j=1,ntheta
              a(1,i,j)=(phi(i+1,j)-phi(i-1,j))/(2*dr)
-             a(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*r*dtheta)
+             a(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
           end do
        end do
        do j=1,ntheta
           a(1,1,j)=(phi(2,j)-phi(1,j))/dr
           a(1,nr+1,j)=(phi(nr+1,j)-phi(nr,j))/dr
-          a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
-          a(2,nr+1,j)=(phi(nr,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
+          a(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
+          a(2,nr+1,j)=(phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
        end do
 
     else if (calculus==2) then
@@ -123,15 +123,15 @@ contains
          const_slope_x1_min = 1.0_f64,const_slope_x1_max = 1.0_f64)
 
     !interpolation
-    ! 1 : using explicite Eulerian scheme
+    ! 1 : using explicit Eulerian scheme
     ! 2 : rotation, this case ignore the field phi
-    !     roation speed = -1
+    !     rotation speed = -1
     ! 3 : using RK4
     interpolate_case=1
 
     if (interpolate_case<3 .and. interpolate_case>0) then
 
-       !construction of spline coeficients for f
+       !construction of spline coefficients for f
        call compute_spline_2D(f,spl_f)
 
        do i=1,nr+1
@@ -148,6 +148,9 @@ contains
                 theta=theta+dt
              end if
 
+             !if (i==1) then
+             !   print*,j,theta,r
+             !end if
              call correction_r(r,rmin,rmax)
              call correction_theta(theta)
 
@@ -171,7 +174,7 @@ contains
 
 
   !>subroutine rk4_polar_advect(dt,dr,dtheta,nr,ntheta,rmin,rmax,f,phi,grad_phi,pfwd,pinv)
-  !>KR4 for polar advection only
+  !>RK4 for polar advection only
   !>dt, dr, dtheta : size of time step, step in direction r and theta
   !>nr, ntheta : number of steps in direction r and theta
   !>rmin and rmax : radius of the hole and of the disc
@@ -192,7 +195,7 @@ contains
     type(sll_fft_plan), intent(in), pointer ::pfwd, pinv
 
     sll_int32 :: i,j,err
-    sll_real64 :: r,theta,rr,ttheta
+    sll_real64 :: r,theta
     sll_real64, dimension(:,:), pointer :: r1,r2,r3,r4, theta1,theta2,theta3,theta4
     sll_real64, dimension(:,:), pointer :: fcopie, phicopie
     sll_real64, dimension(:,:,:), pointer :: a
@@ -240,8 +243,8 @@ contains
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
           theta=real(j-1,f64)*dtheta
-          r3(i,j)=r+r1(i,j)/2.0_f64
-          theta3(i,j)=theta+theta1(i,j)/2.0_f64
+          r3(i,j)=r+dt/2.0_f64*a(2,i,j)/r
+          theta3(i,j)=theta-dt/2.0_f64*a(1,i,j)
 
           call correction_r(r3(i,j),rmin,rmax)
           call correction_theta(theta3(i,j))
@@ -259,11 +262,13 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          r2(i,j)=interpolate_value_2d(r3(i,j),theta3(i,j),spl_a2)*dt/r3(i,j)
-          theta2(i,j)=-interpolate_value_2d(r3(i,j),theta3(i,j),spl_a1)*dt
+          r=rmin+real(i-1)*dr+r1(i,j)/2.0_f64
+          theta=real(j-1,f64)*dtheta+theta1(i,j)/2.0_f64
+          call correction_r(r,rmin,rmax)
+          call correction_theta(theta)
 
-          call correction_r(r2(i,j),rmin,rmax)
-          call correction_theta(theta2(i,j))
+          r2(i,j)=interpolate_value_2d(r,theta,spl_a2)*dt/r3(i,j)
+          theta2(i,j)=-interpolate_value_2d(r,theta,spl_a1)*dt
        end do
     end do
 
@@ -272,8 +277,8 @@ contains
        r=rmin+real(i-1,f64)*dr
        do j=1,ntheta+1
           theta=real(j-i)*dtheta
-          r4(i,j)=r+r2(i,j)/2.0_f64
-          theta4(i,j)=theta+theta2(i,j)/2.0_f64
+          r4(i,j)=r3(i,j)
+          theta4(i,j)=theta3(i,j)
 
           !correction of r and theta
           call correction_r(r4(i,j),rmin,rmax)
@@ -292,11 +297,13 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          r3(i,j)=interpolate_value_2d(r4(i,j),theta4(i,j),spl_a2)*dt/r4(i,j)
-          theta3(i,j)=-interpolate_value_2d(r4(i,j),theta4(i,j),spl_a1)*dt
+          r=rmin+real(i-1)*dr+r2(i,j)/2.0_f64
+          theta=real(j-1,f64)*dtheta+theta2(i,j)/2.0_f64
+          call correction_r(r,rmin,rmax)
+          call correction_theta(theta) 
 
-          call correction_r(r2(i,j),rmin,rmax)
-          call correction_theta(theta2(i,j)) 
+          r3(i,j)=interpolate_value_2d(r,theta,spl_a2)*dt/r4(i,j)
+          theta3(i,j)=-interpolate_value_2d(r,theta,spl_a1)*dt
        end do
     end do
 
@@ -308,9 +315,8 @@ contains
        r=rmin+real(i-1)*dr
        do j=1,ntheta+1
           theta=real(j-i)*dtheta
-          r4(i,j)=r+r3(i,j)
-          theta4(i,j)=theta+theta3(i,j)
-
+          r4(i,j)=r+r1(i,j)
+          theta4(i,j)=theta+theta1(i,j)
           call correction_r(r4(i,j),rmin,rmax)
           call correction_theta(theta4(i,j))
 
@@ -327,14 +333,13 @@ contains
 
     do i=1,nr+1
        do j=1,ntheta+1
-          rr=r4(i,j)
-          ttheta=theta4(i,j)
+          r=rmin+real(i-1)*dr+r3(i,j)
+          theta=real(j-1,f64)*dtheta+theta3(i,j)
+          call correction_r(r,rmin,rmax)
+          call correction_theta(theta)
 
-          r4(i,j)=interpolate_value_2d(rr,ttheta,spl_a2)*dt/rr
-          theta4(i,j)=-interpolate_value_2d(rr,ttheta,spl_a1)*dt
-
-          call correction_r(r4(i,j),rmin,rmax)
-          call correction_theta(theta4(i,j))
+          r4(i,j)=interpolate_value_2d(r,theta,spl_a2)*dt/r
+          theta4(i,j)=-interpolate_value_2d(r,theta,spl_a1)*dt
        end do
     end do
 

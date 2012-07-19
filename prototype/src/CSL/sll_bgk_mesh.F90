@@ -2,7 +2,6 @@ module bgk_mesh_construction
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-
   use numeric_constants
   use cubic_nonuniform_splines
   !use utils
