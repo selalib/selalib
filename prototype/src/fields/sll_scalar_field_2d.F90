@@ -222,7 +222,7 @@ contains   ! *****************************************************************
       
        call sll_xdmf_write_array(trim(name), &
                                  val,&
-                                 trim(name),ierr,file_id, &
+                                 scalar_field%name,ierr,file_id, &
                                  "Node")
        call sll_xdmf_close(file_id,ierr)
 
