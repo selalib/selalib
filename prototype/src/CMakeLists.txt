@@ -144,7 +144,7 @@ ELSE()
 ENDIF()
 
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
-IF(${VAR} EQUAL -1)
+IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
 ELSE()
   set(STDF95 YES)
@@ -255,7 +255,7 @@ add_subdirectory(LinRood)
 
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
 #add_subdirectory(BSL) top
-add_subdirectory(CSL) #don't compile error in SConstruct! top
+add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 
 
