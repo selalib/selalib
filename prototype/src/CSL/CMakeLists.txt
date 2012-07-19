@@ -1,0 +1,3 @@
+add_library(sll_csl STATIC sll_csl.F90)
+add_executable(test_csl unit_test.F90)
+target_link_libraries(test_csl sll_assertion sll_constants sll_splines sll_diagnostics sll_distribution_function sll_memory sll_mesh_types sll_utilities sll_ode_solvers sll_csl)
