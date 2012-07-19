@@ -8,6 +8,7 @@ module sll_tsi_2d_initializer
 
   type, extends(scalar_field_2d_initializer_base) :: init_tsi_2d
     sll_real64 :: eps
+    sll_real64 :: kx
     sll_real64 :: xi
     sll_real64 :: v0
     class(sll_mapped_mesh_2d_base), pointer :: mesh
@@ -18,11 +19,13 @@ module sll_tsi_2d_initializer
 
 contains
 
-  subroutine initialize_tsi_2d( init_obj, mesh, data_position, eps_val, xi_val, v0_val )
+  subroutine initialize_tsi_2d( init_obj, mesh, data_position, eps_val, &
+       kx_val, xi_val, v0_val )
     class(init_tsi_2d), intent(inout)  :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
+    sll_real64, intent(in), optional     :: kx_val
     sll_real64, intent(in), optional     :: xi_val
     sll_real64, intent(in), optional     :: v0_val
 
@@ -31,6 +34,11 @@ contains
        init_obj%eps = eps_val
     else
        init_obj%eps = 0.01_f64 ! just some default value
+    end if
+    if( present(kx_val) ) then
+       init_obj%kx = kx_val
+    else
+       init_obj%kx = 0.2_f64 ! just some default value
     end if
     if( present(xi_val) ) then
        init_obj%xi = xi_val
@@ -73,7 +81,7 @@ contains
        num_pts1 = mesh%nc_eta1
        num_pts2 = mesh%nc_eta2
     end if
-    kx = 2.0_f64*sll_pi/(mesh%x1_at_node(num_pts1,1) - mesh%x1_at_node(1,1))
+    kx = init_obj%kx
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
     SLL_ASSERT( size(data_out,2) .ge. num_pts2 )
     do j=1,num_pts2
