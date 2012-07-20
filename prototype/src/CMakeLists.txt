@@ -294,8 +294,13 @@ IF(FISHPACK_ENABLED)
 	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
 ENDIF()
 IF(MUDPACK_ENABLED)
-	add_test(mudpack mudpack/tmud34sp mudpack/tmud24sp )
-	add_test(mgd3 mgd3/tmgd3)
+	add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
+        set(PROCS 4)
+        set(ARGS "")
+	add_test(NAME mgd3 COMMAND 
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_mgd3
+	${MPIEXEC_POSTFLAGS} ${ARGS})
 ENDIF()
 
 # we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
