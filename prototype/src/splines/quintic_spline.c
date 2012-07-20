@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "sym_penta_diagonal.h"
+#include "toep_penta_diagonal.h"
 #include "quintic_spline.h"
 
 
@@ -47,7 +47,7 @@
 
     double a, b, c, xmin, xmax, h;
     int n, i;
-    sym_penta_diagonal_plan *plan_pent;
+    toep_penta_diagonal_plan *plan_pent;
 
     n = plan_spline->n;
     xmin = plan_spline->xmin;
@@ -58,9 +58,9 @@
     b = B(5, n-4, xmax, plan_spline); 
     c = B(5, n-5, xmax, plan_spline); 
 
-    plan_pent = new_sym_penta_diagonal(n+6);
-    plan_spline->coeffs = solve_sym_penta_diagonal(a, b, c, f, plan_pent);
-    delete_sym_penta_diagonal(plan_pent);    
+    plan_pent = new_toep_penta_diagonal(n+6);
+    plan_spline->coeffs = solve_toep_penta_diagonal(a, b, c, f, plan_pent);
+    delete_toep_penta_diagonal(plan_pent);    
 
   }
 

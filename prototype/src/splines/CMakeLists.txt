@@ -4,7 +4,7 @@ add_library(quintic_spline STATIC quintic_spline.c)
 add_library(util_constants STATIC util_constants.F90)
 
 
-set(SPL_LIBS sll_splines quintic_spline sym_penta_diagonal sll_tridiagonal 
+set(SPL_LIBS sll_splines quintic_spline toep_penta_diagonal sll_tridiagonal 
 sll_memory sll_assertion sll_constants util_constants )
 
 

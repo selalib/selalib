@@ -39,13 +39,13 @@ int main(void)
     err1 = 0.; 
     err2 = 0.;
 
-    for (i=-2; i<=n+3; i++)
+    for (i=0; i<=n; i++)
     {
 
       x = xmin + (double)i*h;
       err1 += fabs( f[i+2] - spline_hermite(x, s) );
 
-      x_rand = xmin-2*h + (n+5)*h*( (rand()%11) / 10. );
+      x_rand = xmin + n*h*( (rand()%11) / 10. );
 
       y = log( (double)n ) * ( 2*pi*x_rand/(n*h) - sin( 2*pi*(x_rand-xmin)/(n*h) ) ); 
       max = fabs( y - spline_hermite(x_rand, s) );
@@ -56,10 +56,10 @@ int main(void)
 
     }
 
-    bound = log( (double)n ) * 2*pi/n;
-    printf("Average absolute errors: %f, %f, %f \n", err1/(n+5), err2, bound);
+    bound = log( (double)n ) * 8*pow(pi,4) / ( 2*pow(n,3)*pow(h,3/2) );
+    printf("Average absolute errors: %f, %f, %f \n", err1/(n+1), err2, bound);
 
-    if ( (err1/(n+5) > pow(10,-9)) || (err2 > bound) )
+    if ( (err1/(n+1) > pow(10,-9)) || (err2 > bound) )
     {
       printf("Program stopped by iteration number %d of quintic ");
       printf("splines unit test:\n", n);
