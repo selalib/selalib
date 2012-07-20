@@ -15,3 +15,7 @@ set(SRC_TEST2 unit_test_nonuniform.F90 cubic_nonuniform_splines.F90)
 add_executable(test_non_unif_splines ${SRC_TEST2})
 target_link_libraries(test_non_unif_splines ${SPL_LIBS})
 
+# third test: arbitrary order splines
+set(SRC_TEST3 unit_test_arbitrary_degree.F90 sll_arbitrary_degree_splines.F90)
+add_executable(test_arbitrary_degree_splines ${SRC_TEST3})
+target_link_libraries(test_arbitrary_degree_splines ${SPL_LIBS})
