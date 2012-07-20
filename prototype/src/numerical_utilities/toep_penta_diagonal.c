@@ -1,10 +1,10 @@
 
-// This is a symmetric penta-diagonal solver module
+// This is a Toeplitz penta-diagonal solver module
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "sym_penta_diagonal.h"
+#include "toep_penta_diagonal.h"
 
 
   double *alloc_double(int n)
@@ -18,11 +18,11 @@
   }
 
 
-  sym_penta_diagonal_plan *new_sym_penta_diagonal(int n)
+  toep_penta_diagonal_plan *new_toep_penta_diagonal(int n)
 
   {
     // Declaration
-    sym_penta_diagonal_plan *plan;
+    toep_penta_diagonal_plan *plan;
 
     if (n<3)
     {
@@ -32,7 +32,7 @@
     }
 
     // Plan allocation
-    plan = malloc(sizeof(sym_penta_diagonal_plan));
+    plan = malloc(sizeof(toep_penta_diagonal_plan));
 
     if ( plan == NULL )
     {
@@ -79,8 +79,8 @@
   }
 
 
-  double *solve_sym_penta_diagonal(double a, double b, double c, 
-  		 const double *f, sym_penta_diagonal_plan *plan)
+  double *solve_toep_penta_diagonal(double a, double b, double c, 
+  		 const double *f, toep_penta_diagonal_plan *plan)
 
   {
 
@@ -153,7 +153,7 @@
   }
 
 
-  void delete_sym_penta_diagonal(sym_penta_diagonal_plan *plan)
+  void delete_toep_penta_diagonal(toep_penta_diagonal_plan *plan)
 
   {
  
