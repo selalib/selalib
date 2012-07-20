@@ -32,6 +32,14 @@ target_link_libraries(vp_classic_csl
   sll_distribution_function sll_mapped_meshes sll_utilities ode_solvers
   sll_scalar_field_2d geometry_functions sll_tridiagonal sll_memory sll_working_precision)
 
+add_executable(vp_non_unif_mesh vp_non_unif_mesh.F90 
+  sll_classic_csl.F90 ../splines/contrib_rho.F90 ../splines/cubic_nonuniform_splines.F90)
+target_link_libraries(vp_non_unif_mesh
+	sll_bgk_mesh
+	sll_assertion sll_constants sll_low_level_file_io 
+  sll_distribution_function sll_mapped_meshes sll_utilities ode_solvers
+  sll_scalar_field_2d geometry_functions sll_tridiagonal sll_memory sll_working_precision)
+
 
 
 #  use numeric_constants
