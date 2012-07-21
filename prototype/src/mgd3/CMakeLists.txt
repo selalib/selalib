@@ -20,8 +20,13 @@ mgdrpde.F90
 mgdrsetf.F90
 mgdsetf.F90 
 mgdrtrsf.F90
+write_xdmf_3d.F90
 )
 
 add_executable(test_mgd3 unit_test.F90)
 
-target_link_libraries(test_mgd3 mgd3)
+
+IF(HDF5_FOUND AND HDF5_ENABLED)
+   target_link_libraries(test_mgd3 mgd3 sll_utilities ${HDF5_LIBRARIES})
+ENDIF()
+
