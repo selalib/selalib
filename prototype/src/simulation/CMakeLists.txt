@@ -82,5 +82,21 @@ target_link_libraries(VP1D_cart
 	dfftpack
 	)
 
+add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
+target_link_libraries(VP1D_deltaf_cart
+	sll_mapped_meshes
+	sll_interpolators
+	sll_splines
+	geometry_functions
+	sll_distribution_function
+	sll_scalar_field_2d	
+	sll_constants
+	sll_low_level_file_io
+  	sll_utilities
+	sll_memory
+	sll_assertion 	
+	sll_poisson_1d_periodic
+	dfftpack
+	)
 
 ENDIF()
