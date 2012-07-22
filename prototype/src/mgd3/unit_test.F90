@@ -80,9 +80,9 @@ my_mg%iprer=2
 my_mg%ipost=1
 my_mg%iresw=1
 
-my_block%nx=32
-my_block%ny=32
-my_block%nz=32
+my_mg%nx=32
+my_mg%ny=32
+my_mg%nz=32
 
 my_block%ixp=4
 my_block%jyq=4
@@ -102,6 +102,7 @@ if (numprocs.ne.(my_mg%nxprocs*my_mg%nyprocs*my_mg%nzprocs)) then
 100     format(/,'ERROR: numprocs <> (nxprocs*nyprocs*nzprocs)',/)
   stop
 end if
+
 
 
 !-----------------------------------------------------------------------
@@ -150,6 +151,7 @@ bd(:)=0
 !     13|    12     |11          22|     21    |20
 !
 call MPI_CART_GET(comm3d,3,dims,periods,coords,ierr)
+
 !
 ! neighbors which share a plane with 'myid'
 !
@@ -215,19 +217,19 @@ call MPI_CART_RANK(comm3d,ngb,neighbor(26),ierr)
 ! find indices of subdomain and check that dimensions of arrays are
 ! sufficient
 !
-call MPE_DECOMP1D(my_block%nx,dims(1),coords(1),sx,ex)
+call MPE_DECOMP1D(my_mg%nx,dims(1),coords(1),sx,ex)
 sx=sx+1
 ex=ex+1
-call MPE_DECOMP1D(my_block%ny,dims(2),coords(2),sy,ey)
+call MPE_DECOMP1D(my_mg%ny,dims(2),coords(2),sy,ey)
 sy=sy+1
 ey=ey+1
-call MPE_DECOMP1D(my_block%nz,dims(3),coords(3),sz,ez)
+call MPE_DECOMP1D(my_mg%nz,dims(3),coords(3),sz,ez)
 sz=sz+1
 ez=ez+1
 
-nxdim=int(float(my_block%nx)/float(my_mg%nxprocs)+0.99)+2
-nydim=int(float(my_block%ny)/float(my_mg%nyprocs)+0.99)+2
-nzdim=int(float(my_block%nz)/float(my_mg%nzprocs)+0.99)+2
+nxdim=int(float(my_mg%nx)/float(my_mg%nxprocs)+0.99)+2
+nydim=int(float(my_mg%ny)/float(my_mg%nyprocs)+0.99)+2
+nzdim=int(float(my_mg%nz)/float(my_mg%nzprocs)+0.99)+2
 
 if ((ex-sx+3).gt.nxdim) then
   write(6,110) my_block%id,nxdim,ex-sx+3
@@ -276,14 +278,13 @@ my_mg%xl=1.0d0
 my_mg%yl=1.0d0
 my_mg%zl=1.0d0
 wk=5.0d0
-hxi=float(my_block%nx)/my_mg%xl
-hyi=float(my_block%ny)/my_mg%yl
-hzi=float(my_block%nz)/my_mg%zl
+hxi=float(my_mg%nx)/my_mg%xl
+hyi=float(my_mg%ny)/my_mg%yl
+hzi=float(my_mg%nz)/my_mg%zl
 
 call ginit()
 
-call write_xdmf_3d(myid,f,sx,ex,sy,ey,sz,ez,hxi,hyi,hzi,nerror)
-call write_xdmf_3d(myid,f,sx,ex,sy,ey,sz,ez,hxi,hyi,hzi,nerror)
+call write_xdmf_3d(myid,numprocs,f,sx,ex,sy,ey,sz,ez,hxi,hyi,hzi,nerror)
 
 !-----------------------------------------------------------------------
 ! solve using mgd3
@@ -300,6 +301,8 @@ my_block%bd = bd
 my_mg%isol = 2
 
 call solve(p,f,r,my_block,my_mg,nerror)
+
+call write_xdmf_3d(myid,numprocs,p,sx,ex,sy,ey,sz,ez,hxi,hyi,hzi,nerror)
 
 if (nerror.eq.1) goto 1000
 
@@ -410,7 +413,7 @@ end do
 ! calculate global error
 !
 call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM,comm3d,ierr)
-write(6,100) my_block%id,errloc/float(my_block%nx*my_block%ny*my_block%nz),err/float(my_block%nx*my_block%ny*my_block%nz)
+write(6,100) my_block%id,errloc/float(my_mg%nx*my_mg%ny*my_mg%nz),err/float(my_mg%nx*my_mg%ny*my_mg%nz)
 100   format(/,i3,3x,'Local error: ',e13.6,'  total error: ',e13.6,/)
 
 return

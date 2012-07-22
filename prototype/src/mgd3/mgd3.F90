@@ -18,11 +18,11 @@ module mgd3
       integer :: ixp, jyq, kzr
       integer :: iex, jey, kez
       integer :: ngrid
-      integer :: nx, ny, nz
       integer :: neighbor(26),bd(26)
    end type block
 
    type, public :: mg_solver
+      integer :: nx, ny, nz
       integer :: ibdry
       integer :: jbdry
       integer :: kbdry
@@ -39,7 +39,7 @@ module mgd3
 
    real(8), private, allocatable :: work(:)
 
-   private :: grid1_type
+   private grid1_type
    real(8), parameter, private :: rro=1.0d0
 
 contains
@@ -195,9 +195,9 @@ kez = my_block%kez
 
 ngrid = my_block%ngrid
 
-nxp2 = my_block%nx+2
-nyp2 = my_block%ny+2
-nzp2 = my_block%nz+2
+nxp2 = my_mg%nx+2
+nyp2 = my_mg%ny+2
+nzp2 = my_mg%nz+2
 
 !------------------------------------------------------------------------
 ! make a number of checks
@@ -327,6 +327,7 @@ ezk(ngrid)=ez
 
 call grid1_type(kdatatype(1,ngrid),sxk(ngrid),exk(ngrid), &
                 syk(ngrid),eyk(ngrid),szk(ngrid),ezk(ngrid))
+
 do k=ngrid-1,1,-1
   nxm=nxk(k)
   nym=nyk(k)
@@ -571,9 +572,6 @@ do k=ngrid-1,1,-1
 end do
 # endif
 
-# if cdebug
-timing(81)=timing(81)+MPI_WTIME()-tinitial
-# endif
 return
 
 #if WMGD
@@ -790,6 +788,9 @@ iprer    = my_mg%iprer
 ipost    = my_mg%ipost
 iresw    = my_mg%iresw
 kcycle   = my_mg%kcycle
+nx       = my_mg%nx
+ny       = my_mg%ny
+nz       = my_mg%nz
 
 xl       = my_mg%xl
 yl       = my_mg%yl
@@ -805,9 +806,7 @@ ez       = my_block%ez
 
 ngrid    = my_block%ngrid
 
-nx       = my_block%nx
-ny       = my_block%ny
-nz       = my_block%nz
+
 myid     = my_block%id
 
 neighbor = my_block%neighbor
@@ -1074,6 +1073,7 @@ endif
 e = s + nlocal - 1
 if (e .gt. n .or. myid .eq. numprocs-1) e = n
 return
-end
+
+end subroutine MPE_DECOMP1D
 
 end module mgd3
