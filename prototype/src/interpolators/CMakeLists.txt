@@ -11,6 +11,7 @@ ELSE()
   add_library(sll_interpolators STATIC
 	sll_interpolators_1d_base.F90
 	sll_cubic_spline_interpolator_1d.F90
+	sll_finite_difference_interpolator_1d.F90
 	sll_interpolators_2d_base.F90
 	sll_cubic_spline_interpolator_2d.F90
   )
@@ -35,6 +36,7 @@ target_link_libraries(test_interpolators_2d
 	sll_working_precision
 )
 
+#need to add test for finite difference 1D case.
 add_executable(test_interpolators_1d unit_test_1d.F90)
 target_link_libraries(test_interpolators_1d
 #	sll_weno
