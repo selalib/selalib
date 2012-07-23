@@ -1,8 +1,8 @@
 subroutine mgdpfpde(sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,cof,r,xl,yl,zl,IOUT)
 
-implicit none 
 
-include "mpif.h"
+use mpi
+implicit none 
 integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,IOUT
 real(8) :: cof(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1,8)
 real(8) :: r(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1),xl,yl,zl
