@@ -16,14 +16,15 @@ int main(void)
   int n, nmax, i;
 
   nmax = 1000;
+  printf("Testing quintic_spline_hermite...\n");
 
   for(n=1; n<=nmax; n++)
   {
 
     /* initialize random seed: */
     srand ( time(NULL) );
-    xmin = (rand()%11) - 5;//Generating random number between -5 and 5
-    xmax = xmin + (rand()%100) + 1;//Generating random number between 1 and 100
+    xmin = log( fabs(rand()) + 1 );
+    xmax = xmin + fabs( log( fabs(rand()) + 1 ) );
     h = (xmax-xmin)/n;
 
     f = malloc( (n+6) * sizeof(double));
