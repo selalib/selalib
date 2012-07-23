@@ -35,7 +35,7 @@ program vp_non_unif_mesh
   sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
   sll_real64 :: val,tmp
   sll_real64 :: alpha_x2,shift
-  sll_real64,dimension(:), pointer :: node_positions_x1_tmp  
+  sll_real64,dimension(:), pointer :: node_positions_x1_tmp,node_positions_x2_tmp  
   !for mesh_case 2: [zone_1,zone_2,zone_3]=
   !                 [(N_x2-N_alpha_x2)/2,N_alpha_x2,(N_x2-N_alpha_x2)/2]=[(1-alpha)/2,alpha,(1-alpha)/2]
   
@@ -45,7 +45,7 @@ program vp_non_unif_mesh
   
   test_case = 4
   mesh_case = 2
-  rho_case = 2
+  rho_case = 5
   div_case = 1
   
   dual_case_x1 = 1
@@ -53,12 +53,12 @@ program vp_non_unif_mesh
 
   nb_step = 600
   N_x1 = 96
-  N_x2 = 96
+  N_x2 = 96*4
   
   N_x1_poisson = 2048!N_x1!
   
   alpha_x2 = 0.5_f64
-  N_alpha_x2 = 64 ! for finer mesh inside should be greater than N_x2*alpha_x2
+  N_alpha_x2 = 64*4 ! for finer mesh inside should be greater than N_x2*alpha_x2
   
 
   alpha_mesh = 0.1e-3_f64 !0.1_f64
@@ -75,7 +75,7 @@ program vp_non_unif_mesh
   print *,'#max(N_x1,N_x2)=',N
   
   SLL_ALLOCATE(node_positions_x1_tmp(N+1), err)
-
+  SLL_ALLOCATE(node_positions_x2_tmp(N+1), err)
   
   SLL_ALLOCATE(f(N_x1+1,N_x2+1),err)
   SLL_ALLOCATE(f_init(N_x1+1,N_x2+1),err)
@@ -223,7 +223,7 @@ program vp_non_unif_mesh
   !initialization of X
   node_positions_x1(1)=0._f64
   do i=2,N_x1+1
-    node_positions_x1(i)=x1_min+real(i-1,f64)*delta_x1
+    node_positions_x1(i)=real(i-1,f64)*delta_x1
     !Xmesh(i)=xmin+(real(i,rk)+0.5*sin(2._rk*M_PI*real(i,rk)*dx))*dx
     !Xmesh(i)=Xmesh(i-1)+(2._rk+sin(2._rk*M_PI*real(i,rk)/real(N+1,rk)))*3._rk
     node_positions_x1(i)=node_positions_x1(i-1)+(real(i-1,f64)*real(N_x1+1-(i-1),f64))
@@ -232,7 +232,7 @@ program vp_non_unif_mesh
     !  Xmesh(i)=Xmesh(i)+1._rk
     !endif
   enddo
-  node_positions_x1=node_positions_x1/node_positions_x1(N+1)
+  node_positions_x1=node_positions_x1/node_positions_x1(N_x1+1)
   j1=N_x1/3;shift=0._f64
   do i=0,N_x1    
     node_positions_x1_tmp(i+1)=node_positions_x1(j1+1)+shift
@@ -267,6 +267,53 @@ program vp_non_unif_mesh
   endif
   
   
+  if(mesh_case==5)then
+
+  !initialization of X
+  node_positions_x2(1)=0._f64
+  do i=2,N_x2+1
+    node_positions_x2(i)=real(i-1,f64)*delta_x2
+    !Xmesh(i)=xmin+(real(i,rk)+0.5*sin(2._rk*M_PI*real(i,rk)*dx))*dx
+    !Xmesh(i)=Xmesh(i-1)+(2._rk+sin(2._rk*M_PI*real(i,rk)/real(N+1,rk)))*3._rk
+    node_positions_x2(i)=node_positions_x2(i-1)+(real(i-1,f64)*real(N_x2+1-(i-1),f64))
+    !Xmesh(i)=(real(mod(i+N/2,N),rk)/real(N,rk))**2
+    !if(i>0.and.Xmesh(i)<Xmesh(i-1))then
+    !  Xmesh(i)=Xmesh(i)+1._rk
+    !endif
+  enddo
+  node_positions_x2=node_positions_x2/node_positions_x2(N_x2+1)
+  j1=N_x2/3;shift=0._f64
+  do i=0,N_x2    
+    node_positions_x2_tmp(i+1)=node_positions_x2(j1+1)+shift
+    j1=j1+1
+    if(j1>=N_x2)then
+      j1=j1-N_x2;shift=shift+1._f64
+    endif
+  enddo
+  node_positions_x2=node_positions_x2_tmp-node_positions_x2_tmp(1)
+  
+  !node_positions_x1(1)=0._f64
+  !node_positions_x1(2)=1._f64
+  !node_positions_x1(3)=2._f64
+  !node_positions_x1(4)=node_positions_x1(3)+9.67062069240196_f64
+  node_positions_x2=node_positions_x2/node_positions_x2(N_x2+1)
+  
+  !do i=1,N_x1+1
+  !  print *,i,node_positions_x1(i)
+  !enddo
+  
+  !stop
+
+
+    do i=1,N_x2+1
+      node_positions_x2(i) = x2_min+node_positions_x2(i)*(x2_max-x2_min)
+    enddo
+
+
+    do i=1,N_x1+1
+      node_positions_x1(i) = x1_min+(real(i,f64)-1._f64)*delta_x1
+    enddo
+  endif
 
 
   
@@ -346,6 +393,7 @@ program vp_non_unif_mesh
   
   !compute rho init  
   integration_points(1,1:N_x2+1) = x2_min+(x2_max-x2_min)*node_positions_x2(1:N_x2+1)   
+  
   do i1 = 1, N_x1+1 
     integration_points(2,1:N_x2+1) = f(i1,1:N_x2+1) 
     rho(i1) = compute_non_unif_integral(integration_points,N_x2+1,rho_case)
@@ -413,6 +461,23 @@ program vp_non_unif_mesh
     !E=rho
     !call poisson1dpertrap(E,x1_max-x1_min,N_x1)
 
+    tmp = 0._f64
+    do i1=1,N_x1
+      tmp = tmp+rho(i1)
+    enddo
+    tmp = -tmp/real(N_x1,f64)
+    do i1=1,N_x1+1
+     rho(i1) = rho(i1)+tmp
+    enddo
+    
+
+
+    tmp = 0._f64
+    do i1=1,N_x1
+      tmp = tmp+rho(i1)
+    enddo
+    tmp = tmp*delta_x1
+
     
     call compute_spline_nonunif( rho, spl_per_x1_rho,node_positions_x1)  
     call interpolate_array_value_nonunif( node_positions_x1_poisson, &
@@ -421,7 +486,6 @@ program vp_non_unif_mesh
     call compute_spline_nonunif( E_fine, spl_per_x1_E,node_positions_x1_poisson)
     call interpolate_array_value_nonunif( node_positions_x1, &
       E, N_x1, spl_per_x1_E)
-
 
     !val=0._f64
     !do i1=1,N_x1
@@ -435,7 +499,7 @@ program vp_non_unif_mesh
     enddo
     val = val/real(N_x1_poisson,f64)
 
-    print *,(real(step,f64)-1._f64)*dt,val
+    print *,(real(step,f64)-1._f64)*dt,val,tmp!-(x1_max-x1_min)
 
     
     ! advect in x dt/2 
@@ -464,7 +528,15 @@ program vp_non_unif_mesh
       integration_points(2,1:N_x2+1) = f(i1,1:N_x2+1) 
       rho(i1) = compute_non_unif_integral(integration_points,N_x2+1,rho_case)
     enddo
-    
+    tmp = 0._f64
+    do i1=1,N_x1
+      tmp = tmp+rho(i1)
+    enddo
+    tmp = -tmp/real(N_x1,f64)
+    do i1=1,N_x1+1
+     rho(i1) = rho(i1)+tmp
+    enddo
+
     !compute E
     !E=rho
     !call poisson1dpertrap(E,x1_max-x1_min,N_x1)
