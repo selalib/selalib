@@ -18,7 +18,7 @@ main(void)
   double err, norm;
   toep_penta_diagonal_plan *plan;
 
-  printf("Testing...\n");
+  printf("Testing Toeplitz penta-diagonal solver...\n");
   /* initialize random seed: */
   srand ( time(NULL) );
 
