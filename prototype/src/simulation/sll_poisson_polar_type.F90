@@ -82,7 +82,9 @@ contains
     sll_real64, intent(in) :: dt
     sll_real64, intent(in) :: rmin, rmax
     sll_int32, intent(in) :: nb_step,nr, ntheta
-print*,'in new_polar_data_dt_nbstep',ntheta
+    sll_int32 :: err
+
+    SLL_ALLOCATE(this,err)
     this%dt=dt
     this%dr=(rmax-rmin)/real(nr,f64)
     this%dtheta=2.0_f64*sll_pi/real(ntheta,f64)
@@ -92,7 +94,7 @@ print*,'in new_polar_data_dt_nbstep',ntheta
     this%nr=nr
     this%ntheta=ntheta
     this%tf=dt*real(nb_step,f64)
-print*,'in new_polar_data_dt_nbstep',this%ntheta
+
   end function new_polar_data_dt_nbstep
 
 
@@ -104,7 +106,9 @@ print*,'in new_polar_data_dt_nbstep',this%ntheta
     sll_real64, intent(in) :: dt
     sll_real64, intent(in) :: tf,rmin, rmax
     sll_int32, intent(in) :: nr, ntheta
+    sll_int32 :: err
 
+    SLL_ALLOCATE(this,err)
     this%dt=dt
     this%dr=(rmax-rmin)/real(nr,f64)
     this%dtheta=2.0_f64*sll_pi/real(ntheta,f64)
@@ -125,7 +129,9 @@ print*,'in new_polar_data_dt_nbstep',this%ntheta
     type(polar_data), pointer :: this
     sll_real64, intent(in) :: tf,rmin, rmax
     sll_int32, intent(in) :: nb_step,nr, ntheta
+    sll_int32 :: err
 
+    SLL_ALLOCATE(this,err)
     this%dt=tf/real(nb_step,f64)
     this%dr=(rmax-rmin)/real(nr,f64)
     this%dtheta=2.0_f64*sll_pi/real(ntheta,f64)
@@ -151,31 +157,26 @@ print*,'in new_polar_data_dt_nbstep',this%ntheta
 
     sll_int32 :: err
     sll_real64,dimension(:),pointer :: buf
-print*,'new_VP_dat_from_polar_data, entre'
-print*,data_pol%ntheta
+
+    SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(buf(data_pol%ntheta),err)
-print*,1
     SLL_ALLOCATE(this%f(data_pol%nr+1,data_pol%ntheta+1),err)
-print*,2
     SLL_ALLOCATE(this%f_fft(data_pol%nr+1,data_pol%ntheta+1),err)
-print*,3
     SLL_ALLOCATE(this%fdemi(data_pol%nr+1,data_pol%ntheta+1),err)
-print*,4
     SLL_ALLOCATE(this%phi(data_pol%nr+1,data_pol%ntheta+1),err)
-print*,5
     SLL_ALLOCATE(this%grad_phi(2,data_pol%nr+1,data_pol%ntheta+1),err)
-print*,6
     SLL_ALLOCATE(this%a(3*data_pol%nr+1),err)
     SLL_ALLOCATE(this%cts(7*data_pol%nr+1),err)
     SLL_ALLOCATE(this%ipiv(data_pol%nr+1),err)
     SLL_ALLOCATE(this%fk(data_pol%ntheta),err)
     SLL_ALLOCATE(this%phik(data_pol%ntheta),err)
-print*,'alloc ok'
+
     this%pfwd => fft_new_plan(data_pol%ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(data_pol%ntheta,buf,buf,FFT_INVERSE)
 
+    SLL_ALLOCATE(this%data,err)
     this%data=data_pol
-print*,'fft+data ok'
+
     this%spl_f => new_spline_2D(data_pol%nr+1,data_pol%ntheta+1,data_pol%rmin,data_pol%rmax,0._f64, 2._f64*sll_pi, &
          HERMITE_SPLINE, PERIODIC_SPLINE,&
          const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
@@ -188,7 +189,7 @@ print*,'fft+data ok'
     this%spl_phi => new_spline_2D(data_pol%nr+1,data_pol%ntheta+1,data_pol%rmin,data_pol%rmax,0._f64, 2._f64*sll_pi, &
          HERMITE_SPLINE, PERIODIC_SPLINE,&
          const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-print*,'spl ok'
+
     SLL_DEALLOCATE(buf,err)
 
   end function new_VP_dat_from_polar_data
@@ -207,6 +208,7 @@ print*,'spl ok'
     sll_int32 :: err
     sll_real64,dimension(:),pointer :: buf
 
+    SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(buf(ntheta),err)
     SLL_ALLOCATE(this%f(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),err)
@@ -222,6 +224,7 @@ print*,'spl ok'
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
 
+    SLL_ALLOCATE(this%data,err)
     this%data => new_polar_data(dt,rmin,rmax,nb_step,nr,ntheta)
 
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
@@ -254,6 +257,7 @@ print*,'spl ok'
     sll_int32 :: err
     sll_real64,dimension(:),pointer :: buf
 
+    SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(buf(ntheta),err)
     SLL_ALLOCATE(this%f(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),err)
@@ -269,6 +273,7 @@ print*,'spl ok'
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
 
+    SLL_ALLOCATE(this%data,err)
     this%data => new_polar_data(tf,rmin,rmax,nb_step,nr,ntheta)
 
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
@@ -302,6 +307,7 @@ print*,'spl ok'
     sll_int32 :: err
     sll_real64,dimension(:),pointer :: buf
 
+    SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(buf(ntheta),err)
     SLL_ALLOCATE(this%f(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),err)
@@ -317,6 +323,7 @@ print*,'spl ok'
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
 
+    SLL_ALLOCATE(this%data,err)
     this%data => new_polar_data(dt,tf,rmin,rmax,nr,ntheta)
 
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
@@ -345,40 +352,57 @@ print*,'spl ok'
 
     type(polar_VP_data), intent(inout), pointer :: this
     sll_int32 :: err
-
+    print*,'enter vp_data_delete'
     call fft_delete(this%pfwd)
     call fft_delete(this%pinv)
-
+    print*,'fft ok'
     if (associated(this%f)) then
+       print*,11
        SLL_DEALLOCATE(this%f,err)
+       print*,12
     end if
     if (associated(this%f_fft)) then
+       print*,13
        SLL_DEALLOCATE(this%f_fft,err)
+       print*,14
+    end if
+    if (associated(this%fdemi)) then
+       print*,09
+       SLL_DEALLOCATE(this%fdemi,err)
+       print*,10
     end if
     if (associated(this%phi)) then
-       SLL_DEALLOCATE(this%phi,err)
+       print*,15
+       !SLL_DEALLOCATE(this%phi,err)
+       print*,16
     end if
     if (associated(this%grad_phi)) then
+       print*,17
        SLL_DEALLOCATE(this%grad_phi,err)
+       print*,18
     end if
     if (associated(this%a)) then
-       SLL_DEALLOCATE(this%a,err)
+       print*,19
+       !SLL_DEALLOCATE(this%a,err)
+       print*,20
     end if
     if (associated(this%cts)) then
-       SLL_DEALLOCATE(this%cts,err)
+       print*,21
+       !SLL_DEALLOCATE(this%cts,err)
+       print*,22
     end if
     if (associated(this%ipiv)) then
-       SLL_DEALLOCATE(this%ipiv,err)
+       print*,23
+       !SLL_DEALLOCATE(this%ipiv,err)
+       print*,24
     end if
 
     call delete_spline_2d(this%spl_f)
     call delete_spline_2d(this%spl_a1)
     call delete_spline_2d(this%spl_a2)
-
     this%data => null()
-    this%f => null()
-    this%phi => null()
-    this%grad_phi => null()
+
+    SLL_DEALLOCATE(this,err)
 
   end subroutine VP_data_delete
 
@@ -396,6 +420,7 @@ print*,'spl ok'
     sll_int32, intent(in) :: nr,ntheta
     sll_int32 :: err
 
+    SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%r1(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%r2(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%r3(nr+1,ntheta+1),err)
@@ -404,7 +429,6 @@ print*,'spl ok'
     SLL_ALLOCATE(this%theta2(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%theta3(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%theta4(nr+1,ntheta+1),err)
-
   end function new_polar_vp_rk4
 
 !==============================
@@ -436,15 +460,15 @@ print*,'spl ok'
        SLL_DEALLOCATE(this%theta1,err)
     end if
     if (associated(this%theta2)) then
-       SLL_DEALLOCATE(this%theta1,err)
+       SLL_DEALLOCATE(this%theta2,err)
     end if
     if (associated(this%theta3)) then
-       SLL_DEALLOCATE(this%theta1,err)
+       SLL_DEALLOCATE(this%theta3,err)
     end if
     if (associated(this%theta4)) then
-       SLL_DEALLOCATE(this%theta1,err)
+       SLL_DEALLOCATE(this%theta4,err)
     end if
-    this => null()
+    SLL_DEALLOCATE(this,err)
 
   end subroutine vp_rk4_delete
 
