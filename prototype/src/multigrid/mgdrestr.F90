@@ -3,9 +3,9 @@ subroutine mgdrestr(sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,phic,    &
                     phif,cof,resf,iresw,comm3dp,comm3dl,comm3dc, &
                     neighbor,bd,datatypes,IOUT)
 
+use mpi
 implicit none
 # include "mgd3.h"
-include "mpif.h"
 integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,IOUT
 integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf
 integer :: iresw,comm3dp,comm3dl,comm3dc

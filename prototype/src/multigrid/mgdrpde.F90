@@ -1,7 +1,7 @@
 subroutine mgdrpde(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,cof,xl,yl,zl,IOUT)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,IOUT
 real(8) :: cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8),xl,yl,zl
 !------------------------------------------------------------------------

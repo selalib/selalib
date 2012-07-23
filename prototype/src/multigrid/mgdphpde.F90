@@ -1,8 +1,8 @@
 subroutine mgdphpde(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,cof,          &
                     sx,ex,sy,ey,sz,ez,nxf,nyf,nzf,r,bd,xl,yl,zl,IOUT)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm
 integer sx,ex,sy,ey,sz,ez,nxf,nyf,nzf,bd(26),IOUT
 real(8) :: cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8)
