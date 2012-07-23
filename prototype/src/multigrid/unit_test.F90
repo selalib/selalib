@@ -1,8 +1,8 @@
-program test_mgd3
+program test_multigrid
 use mgd3
+use mpi
 implicit none
 #include "mgd3.h"
-include "mpif.h"
 !-----------------------------------------------------------------------
 ! Test problem for 3D multigrid parallel code mgd3. mgd3 solves the
 ! non-separable elliptic equation div(1/r*grad(p))=f on a rectangular
@@ -234,17 +234,17 @@ nzdim=int(float(my_mg%nz)/float(my_mg%nzprocs)+0.99)+2
 if ((ex-sx+3).gt.nxdim) then
   write(6,110) my_block%id,nxdim,ex-sx+3
   nerror=1
-  return
+  stop
 end if
 if ((ey-sy+3).gt.nydim) then
   write(6,120) my_block%id,nydim,ey-sy+3
   nerror=1
-  return
+  stop
 end if
 if ((ez-sz+3).gt.nzdim) then
   write(6,130) my_block%id,nzdim,ez-sz+3
   nerror=1
-  return
+  stop
 end if
 !write(6,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 !do i=1,26
@@ -417,6 +417,6 @@ write(6,100) my_block%id,errloc/float(my_mg%nx*my_mg%ny*my_mg%nz),err/float(my_m
 100   format(/,i3,3x,'Local error: ',e13.6,'  total error: ',e13.6,/)
 
 return
-end
+end subroutine gerr
 
-end program test_mgd3
+end program test_multigrid

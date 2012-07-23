@@ -2,8 +2,8 @@ subroutine mgdrtrsf(sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,rc,  &
                     sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,rf,  &
                     comm3dp,myid,neighbor,bd,planetype,IOUT)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc
 integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf
 integer :: comm3dp,myid,neighbor(26),bd(26),planetype(3),IOUT

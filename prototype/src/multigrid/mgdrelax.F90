@@ -1,9 +1,9 @@
 subroutine mgdrelax(sxm,exm,sym,eym,szm,ezm,phi,cof,iters,  &
      &              comm3dp,neighbor,bd,phibc,planetype,IOUT)
 
+use mpi
 implicit none
 #include "mgd3.h"
-include "mpif.h"
 integer :: sxm,exm,sym,eym,szm,ezm,iters,IOUT
 integer :: comm3dp,neighbor(26),bd(26),planetype(3)
 real(8) :: phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1)
