@@ -1,6 +1,6 @@
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -fall-intrinsics")
-add_library(mgd3 STATIC 
+add_library(multigrid STATIC 
 mgdend.F90 
 mgdkcyc.F90
 mgd3.F90
@@ -23,10 +23,10 @@ mgdrtrsf.F90
 write_xdmf_3d.F90
 )
 
-add_executable(test_mgd3 unit_test.F90)
+add_executable(test_multigrid unit_test.F90)
 
 
 IF(HDF5_FOUND AND HDF5_ENABLED)
-   target_link_libraries(test_mgd3 mgd3 sll_utilities ${HDF5_LIBRARIES})
+   target_link_libraries(test_multigrid multigrid sll_utilities ${HDF5_LIBRARIES})
 ENDIF()
 
