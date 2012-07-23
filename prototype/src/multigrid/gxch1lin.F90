@@ -1,8 +1,8 @@
 subroutine gxch1lin(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
                     bd,linetype,req,ireq,IOUT)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,comm3d
 integer :: neighbor(26),bd(26),linetype(3),req(52),ireq,IOUT
 real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
