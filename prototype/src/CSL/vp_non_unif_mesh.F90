@@ -33,7 +33,7 @@ program vp_non_unif_mesh
   sll_int32  :: i1,i2,ierr,i,step,k,NN,N_alpha_x2,j1,N_x1_poisson,dual_case_x1,dual_case_x2
   sll_real64 :: delta_x1,delta_x2,x1,x2,x1c,x2c
   sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
-  sll_real64 :: val,tmp
+  sll_real64 :: val,tmp,tmp0
   sll_real64 :: alpha_x2,shift
   sll_real64,dimension(:), pointer :: node_positions_x1_tmp,node_positions_x2_tmp  
   !for mesh_case 2: [zone_1,zone_2,zone_3]=
@@ -44,7 +44,7 @@ program vp_non_unif_mesh
   
   
   test_case = 4
-  mesh_case = 2
+  mesh_case = 5
   rho_case = 5
   div_case = 1
   
@@ -52,13 +52,13 @@ program vp_non_unif_mesh
   dual_case_x2 = 1
 
   nb_step = 600
-  N_x1 = 96
-  N_x2 = 96*4
+  N_x1 = 64
+  N_x2 = 250
   
   N_x1_poisson = 2048!N_x1!
   
-  alpha_x2 = 0.5_f64
-  N_alpha_x2 = 64*4 ! for finer mesh inside should be greater than N_x2*alpha_x2
+  alpha_x2 = 0.25_f64
+  N_alpha_x2 = 100 ! for finer mesh inside should be greater than N_x2*alpha_x2
   
 
   alpha_mesh = 0.1e-3_f64 !0.1_f64
@@ -108,7 +108,7 @@ program vp_non_unif_mesh
   if(test_case>=4)then
     x1_min = 0._f64
     x1_max = 4._f64*sll_pi
-    x2_min = -6._f64!-6._f64
+    x2_min = -10._f64!-6._f64
     x2_max = -x2_min
   endif
 
@@ -499,7 +499,22 @@ program vp_non_unif_mesh
     enddo
     val = val/real(N_x1_poisson,f64)
 
-    print *,(real(step,f64)-1._f64)*dt,val,tmp!-(x1_max-x1_min)
+    !compute int fv dv  
+    tmp = 0._f64
+    integration_points(1,1:N_x2+1) = x2_min+(x2_max-x2_min)*node_positions_x2(1:N_x2+1)   
+    do i1 = 1, N_x1+1
+      do i2=1,N_x2+1 
+        integration_points(2,i2) = integration_points(1,i2)*f(i1,i2)         
+      enddo
+      tmp = tmp+compute_non_unif_integral(integration_points,N_x2+1,rho_case)   
+    enddo
+    if(step==1)then
+      tmp0=tmp
+    endif
+
+
+
+    print *,(real(step,f64)-1._f64)*dt,val,(tmp-tmp0)/tmp0,tmp,tmp0!-(x1_max-x1_min)
 
     
     ! advect in x dt/2 
