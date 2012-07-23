@@ -1,7 +1,7 @@
 subroutine gscale(sx,ex,sy,ey,sz,ez,a,avo,acorr,comm3d,nx,ny,nz)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,nx,ny,nz
 real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),avo,acorr
 integer :: comm3d
