@@ -1,8 +1,8 @@
 subroutine mgderr(relmax,sxm,exm,sym,eym,szm,ezm,phio,phin,comm3d,IOUT)
 
+use mpi
 implicit none 
 
-include "mpif.h"
 integer :: sxm,exm,sym,eym,szm,ezm,comm3d,IOUT
 real(8) :: relmax
 real(8) :: phio(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1)
