@@ -482,10 +482,10 @@ program vp_non_unif_mesh
     call compute_spline_nonunif( rho, spl_per_x1_rho,node_positions_x1)  
     call interpolate_array_value_nonunif( node_positions_x1_poisson, &
       E_fine, N_x1_poisson, spl_per_x1_rho)  
-    call poisson1dpertrap(E_fine,x1_max-x1_min,N_x1_poisson)
+    call poisson1dpertrap(E_fine,x1_max-x1_min,N_x1_poisson+1)
     call compute_spline_nonunif( E_fine, spl_per_x1_E,node_positions_x1_poisson)
     call interpolate_array_value_nonunif( node_positions_x1, &
-      E, N_x1, spl_per_x1_E)
+      E, N_x1+1, spl_per_x1_E)
 
     !val=0._f64
     !do i1=1,N_x1
@@ -557,11 +557,11 @@ program vp_non_unif_mesh
     !call poisson1dpertrap(E,x1_max-x1_min,N_x1)
     call compute_spline_nonunif( rho, spl_per_x1_rho,node_positions_x1)  
     call interpolate_array_value_nonunif( node_positions_x1_poisson, &
-      E_fine, N_x1_poisson, spl_per_x1_rho)  
+      E_fine, N_x1_poisson+1, spl_per_x1_rho)  
     call poisson1dpertrap(E_fine,x1_max-x1_min,N_x1_poisson)
     call compute_spline_nonunif( E_fine, spl_per_x1_E,node_positions_x1_poisson)
     call interpolate_array_value_nonunif( node_positions_x1, &
-      E, N_x1, spl_per_x1_E)
+      E, N_x1+1, spl_per_x1_E)
 
     ! advect in v dt
     do i1=1,N_x1+1
