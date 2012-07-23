@@ -1,9 +1,9 @@
 subroutine mgdppde(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,cof, &
                    sxf,exf,syf,eyf,szf,ezf,rf,xl,yl,zl,IOUT)
 
-implicit none 
 
-include "mpif.h"
+use mpi
+implicit none 
 integer :: sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm 
 integer :: sxf,exf,syf,eyf,szf,ezf,IOUT
 real(8) :: cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8)
