@@ -1,11 +1,11 @@
 subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
                    comm3dp,comm3dl,comm3dc,neighbor,bd,phibc)
 
+use mpi
 use mgd3
 
 implicit none
 #include "mgd3.h"
-include "mpif.h"
 integer :: kcur,kcycle,iprer,ipost,iresw
 integer :: comm3dp,comm3dl,comm3dc
 integer :: neighbor(26),bd(26)

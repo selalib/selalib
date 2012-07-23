@@ -1,6 +1,7 @@
 module mgd3
- 
+use mpi 
 #include "mgd3.h"
+implicit none
 
    integer, dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
    integer, dimension(20)   :: kpbgn,kcbgn
@@ -48,7 +49,6 @@ contains
 subroutine initialize(my_block,my_mg,nerror)
 
 implicit none
-include "mpif.h"
 
 integer     :: ngrid
 integer     :: ixp,jyq,kzr,iex,jey,kez,nxp2,nyp2,nzp2
@@ -644,7 +644,6 @@ end subroutine initialize
 subroutine grid1_type(gtype,sx,ex,sy,ey,sz,ez)
 
 implicit none 
-include "mpif.h"
 integer :: gtype(7),realtype,sx,ex,sy,ey,sz,ez
 !------------------------------------------------------------------------
 ! Define the 7 derived datatypes needed to communicate the boundary 
@@ -711,7 +710,6 @@ end subroutine grid1_type
 subroutine solve(phif,rhsf,r,my_block,my_mg,nerror)
 
 implicit none
-include "mpif.h"
 integer :: sx,ex,sy,ey,sz,ez,ngrid
 integer :: maxcy,kcycle,iprer,ipost,iresw
 real(8) :: phif(:,:,:)
