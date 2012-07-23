@@ -20,13 +20,12 @@ module sll_tsi_2d_initializer
 contains
 
   subroutine initialize_tsi_2d( init_obj, mesh, data_position, eps_val, &
-       kx_val, xi_val, v0_val )
+       kx_val, v0_val )
     class(init_tsi_2d), intent(inout)  :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
     sll_real64, intent(in), optional     :: kx_val
-    sll_real64, intent(in), optional     :: xi_val
     sll_real64, intent(in), optional     :: v0_val
 
     init_obj%data_position = data_position
@@ -40,15 +39,10 @@ contains
     else
        init_obj%kx = 0.2_f64 ! just some default value
     end if
-    if( present(xi_val) ) then
-       init_obj%xi = xi_val
-    else
-       init_obj%xi = 0.90_f64 ! just some default value
-    end if
     if( present(v0_val) ) then
        init_obj%v0 = v0_val
     else
-       init_obj%xi = 2.4_f64 ! just some default value
+       init_obj%v0 = 2.4_f64 ! just some default value
     end if
     init_obj%mesh => mesh
   end subroutine initialize_tsi_2d
@@ -68,10 +62,8 @@ contains
     sll_real64 :: kx
     sll_real64 :: x
     sll_real64 :: v
-    sll_real64 :: v2
 
     eps = init_obj%eps
-    xi = init_obj%xi
     v0 = init_obj%v0
     mesh => init_obj%mesh
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
@@ -95,11 +87,8 @@ contains
           else
              print*, 'f_x1x2_tsi_2d:',  init_obj%data_position, 'not defined'
           end if
-          v2 = v*v
-          data_out(i,j) = &
-               (1+eps*((cos(2*kx*x)+cos(3*kx*x))/1.2_f64+cos(kx*x)))* &
-               (1/sqrt(2*sll_pi))*((2-2*xi)/(3-2*xi))*(1+.5_f64*v2/(1-xi))*exp(-.5_f64*v2)
-
+          data_out(i,j) = (1+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
+               *(exp(-.5_f64*(v-v0)**2)+ exp(-.5_f64*(v+v0)**2))
        end do
     end do
   end subroutine f_x1x2_tsi_2d
