@@ -171,9 +171,6 @@ contains
                 theta=theta+dt
              end if
 
-             !if (i==1) then
-             !   print*,j,theta,r
-             !end if
              call correction_r(r,rmin,rmax)
              call correction_theta(theta)
 
@@ -233,7 +230,7 @@ contains
     do i=1,nr+1
        r=rmin+real(i-1)*dr
        rk%r1(i,:)=-dt*adv%grad_phi(2,i,:)/r
-       rk%theta1(:,:)=dt*adv%grad_phi(1,:,:)/r
+       rk%theta1(i,:)=dt*adv%grad_phi(1,i,:)/r
     end do
 
     !2nd step of RK4
