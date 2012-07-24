@@ -690,7 +690,7 @@ contains  ! ****************************************************************
 !    interpolate_value_1D = interpolate_value_aux( x, xmin, rh, coeffs )
 !  end function interpolate_value_1D
   
-  !> get spline interpolate at array of points
+  !> interpolates the values given as an array of points as input.
   subroutine interpolate_array_values( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
@@ -742,6 +742,61 @@ contains  ! ****************************************************************
     end do
   end subroutine interpolate_array_values
 
+  !> interpolates the values given as a pointer to an array of points.
+  ! FIXME: The following function is not in the unit test.
+  subroutine interpolate_pointer_values( ptr_in, ptr_out, n, spline )
+    intrinsic                               :: associated, int, real
+    sll_int32, intent(in)                   :: n
+    sll_real64, dimension(:), pointer       :: ptr_in
+    sll_real64, dimension(:), pointer       :: ptr_out
+    type(sll_spline_1D), pointer            :: spline
+    sll_real64, dimension(:), pointer       :: coeffs
+    sll_real64                              :: rh   ! reciprocal of cell spacing
+    sll_int32                               :: cell
+    sll_real64                              :: dx
+    sll_real64                              :: cdx  ! 1-dx
+    sll_real64                              :: t0   ! temp/scratch variables ...
+    sll_real64                              :: t1
+    sll_real64                              :: t2
+    sll_real64                              :: t3
+    sll_real64                              :: t4
+    sll_real64                              :: cim1 ! C_(i-1)
+    sll_real64                              :: ci   ! C_i
+    sll_real64                              :: cip1 ! C_(i+1)
+    sll_real64                              :: cip2 ! C_(i+2)
+    sll_int32                               :: num_cells
+    sll_real64                              :: x
+    sll_int32                               :: i
+    SLL_ASSERT( associated(spline) )
+    SLL_ASSERT( associated(ptr_in) )
+    SLL_ASSERT( associated(ptr_out) )
+    ! FIXME: arg checks here
+    num_cells = spline%n_points-1
+    rh        = spline%rdelta
+    coeffs    => spline%coeffs
+    ! find the cell and offset for x
+    do i=1,n
+       x        = ptr_in(i)
+       !print*, 'splines', x,  spline%xmin, spline%xmax
+       SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
+       t0       = (x-spline%xmin)*rh
+       cell     = int(t0) + 1
+       dx       = t0 - real(cell-1)
+       cdx      = 1.0_f64 - dx
+       !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+       cim1     = coeffs(cell-1)
+       ci       = coeffs(cell)
+       cip1     = coeffs(cell+1)
+       cip2     = coeffs(cell+2)
+       t1       = 3.0_f64*ci
+       t3       = 3.0_f64*cip1
+       t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+       t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+       ptr_out(i) = (1.0_f64/6.0_f64)*(t2 + t4)
+       !print*,'interpolate_array_values', i, a_out(i)
+    end do
+  end subroutine interpolate_pointer_values
+
   ! interpolate_derivative_aux() is a private function aimed at abstracting
   ! away the capability of computing the derivative at a point, given the
   ! array of cubic spline coefficients.
@@ -781,7 +836,7 @@ contains  ! ****************************************************************
 
   function interpolate_derivative( x, spline )
     sll_real64                        :: interpolate_derivative
-    intrinsic                         :: associated, int, real
+    intrinsic                         :: associated
     sll_real64, intent(in)            :: x
 #ifdef STDF95
     type(sll_spline_1D)               :: spline
@@ -802,6 +857,56 @@ contains  ! ****************************************************************
          spline%rdelta, &
          spline%coeffs)
   end function interpolate_derivative
+
+  subroutine interpolate_array_derivatives( &
+    array_in, &
+    num_pts, &
+    array_out, &
+    spline )
+
+    intrinsic :: associated
+    sll_real64, dimension(:), intent(in)  :: array_in
+    sll_int32, intent(in)                 :: num_pts
+    sll_real64, dimension(:), intent(out) :: array_out
+    type(sll_spline_1d), pointer          :: spline
+    sll_int32 :: i
+
+    SLL_ASSERT( num_pts .le. size(array_in) )
+    SLL_ASSERT( associated(spline) )
+
+    do i=1,num_pts
+       SLL_ASSERT((array_in(i).ge.spline%xmin).and.(array_in(i).le.spline%xmax))
+       array_out(i) = interpolate_derivative_aux( &
+            array_in(i), spline%xmin, spline%rdelta, spline%coeffs )
+    end do
+  end subroutine interpolate_array_derivatives
+
+  ! FIXME: The following subroutine is not in the unit test
+  subroutine interpolate_pointer_derivatives( &
+    ptr_in, &
+    num_pts, &
+    ptr_out, &
+    spline )
+
+    intrinsic :: associated
+    sll_real64, dimension(:), pointer  :: ptr_in
+    sll_int32, intent(in)              :: num_pts
+    sll_real64, dimension(:), pointer  :: ptr_out
+    type(sll_spline_1d), pointer       :: spline
+    sll_int32 :: i
+
+    SLL_ASSERT( num_pts .le. size(ptr_in) )
+    SLL_ASSERT( associated(spline) )
+    SLL_ASSERT( associated(ptr_in) )
+    SLL_ASSERT( associated(ptr_out))
+
+    do i=1,num_pts
+       SLL_ASSERT((ptr_in(i).ge.spline%xmin) .and. (ptr_in(i).le.spline%xmax))
+       ptr_out(i) = interpolate_derivative_aux( &
+            ptr_in(i), spline%xmin, spline%rdelta, spline%coeffs )
+    end do
+  end subroutine interpolate_pointer_derivatives
+
 
   subroutine delete_spline_1D( spline )
     type(sll_spline_1D), pointer :: spline
@@ -1554,7 +1659,8 @@ contains  ! ****************************************************************
   ! where the foot of the forward characteristics are stored, returns
   ! a 2D array a_out which is the updated distribution function at time t^{n+1}
   !
-  ! the boundary conditions are taken into account and any type of BC are allowed
+  ! the boundary conditions are taken into account and any type of BC are 
+  ! allowed
   subroutine deposit_value_2D(x1, x2, spline, a_out)
     intrinsic :: real, int
     sll_real64, dimension(1:,1:), intent(in)      :: x1
@@ -1573,7 +1679,7 @@ contains  ! ****************************************************************
     sll_int32   :: cell2
     sll_real64  :: rh1
     sll_real64  :: rh2
-		sll_int32   :: n1
+    sll_int32   :: n1
     sll_int32   :: n2
     
 		! local variables
@@ -1631,8 +1737,8 @@ contains  ! ****************************************************************
     rh1        = spline%x1_rdelta
     rh2        = spline%x2_rdelta
 				
-		n1         = spline%num_pts_x1
-		n2         = spline%num_pts_x2
+    n1         = spline%num_pts_x1
+    n2         = spline%num_pts_x2
     
     if( bc1 .eq. PERIODIC_SPLINE ) then 
       nt1 = n1-1
@@ -1647,7 +1753,7 @@ contains  ! ****************************************************************
       nt2 = n2
     end if
 
-		a_out = 0._f64
+    a_out = 0._f64
 		
     do i1 = 1,nt1                       
       do i2 = 1,nt2
@@ -1771,18 +1877,18 @@ contains  ! ****************************************************************
         end if
               
         if (bc1.eq.HERMITE_SPLINE) then 
-          if (i1.eq.1) then
-            if (jpm1.ge.1) then
-              a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
-            end if
-            a_out(1,jp)   	= a_out(1,jp)	  + spline%coeffs(0,i2)/6._f64*svaly2
+           if (i1.eq.1) then
+              if (jpm1.ge.1) then
+                 a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
+              end if
+              a_out(1,jp) = a_out(1,jp) + spline%coeffs(0,i2)/6._f64*svaly2
             if (jpp1.le.n2) then
               a_out(1,jpp1) = a_out(1,jpp1) + spline%coeffs(0,i2)/6._f64*svaly3
             end if
             if (jpp2.le.n2) then
               a_out(1,jpp2) = a_out(1,jpp2) + spline%coeffs(0,i2)/6._f64*svaly4
             end if
-          end if	
+          end if
       
           if (i1.eq.n1) then
             if (jpm1.ge.1) then
@@ -1803,14 +1909,14 @@ contains  ! ****************************************************************
             if (ipm1.ge.1) then
               a_out(ipm1,1) = a_out(ipm1,1) + spline%coeffs(i1,0)/6._f64*svalx1
             end if
-            a_out(ip,1)	    = a_out(ip,1)   + spline%coeffs(i1,0)/6._f64*svalx2
+            a_out(ip,1) = a_out(ip,1) + spline%coeffs(i1,0)/6._f64*svalx2
             if (ipp1.ne.n1) then
               a_out(ipp1,1) = a_out(ipp1,1) + spline%coeffs(i1,0)/6._f64*svalx3
             end if
             if (ipp2.ne.n1) then
               a_out(ipp2,1) = a_out(ipp2,1) + spline%coeffs(i1,0)/6._f64*svalx4
             end if
-          end if	
+          end if
       
           if (i2.eq.n2) then
             if (ipm1.ge.1) then
@@ -2096,179 +2202,6 @@ contains  ! ****************************************************************
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_spline_2D
 
-  ! b_splines_at_x() returns the values of all the B-splines of a given 
-  ! degree that have support in cell 'cell' and evaluated at the point 'x'. 
-  ! In other words, if B[j,i](x) is the spline of degree 'j' whose leftmost 
-  ! support is at cell 'i' and evaluated at 'x', then b_splines_at_x returns 
-  ! the sequence (in the form of an array):
-  ! 
-  ! B[j,i-degree](x), B[j,i-degree+1](x), B[j,i-degree+2](x), ..., B[j,i](x)
-  !
-  ! Implementation notes: 
-  !
-  ! It would have been very simple and convenient to implement this with
-  ! a recursion, since:
-  !
-  !               x-t(i)                       t(i+j+1)-x
-  ! B[j,i](x) = ----------- * B[j-1,i](x) + ----------------* B[j-1,i+1](x)
-  !             t(i+j)-t(i)                  t(i+j+1)-t(i+1)
-  !
-  ! and
-  !
-  ! B[0,i] = 1 if t(i) <= x < t(i+1), and 0 otherwise.
-  !
-  ! More generally:
-  !
-  ! if t(i) <= x < t(i+j+1) then the formula above applies but B[j,i](x) = 0
-  ! otherwise.
-  !
-  ! The problem with the above recursion is that it will end up computing the
-  ! splines of lower orders very redundantly, much like the problem of 
-  ! computing a Fibonacci sequence with a recursion. For such a critical
-  ! function (this will be present in inner loops), this is not acceptable.
-  !
-  ! Here we try a different approach but still use the idea of the 
-  ! recursion formula above. We use the fact that for the desired sequence
-  ! of splines of degree 'J', we need information within 2*J+1 cells:
-  ! (i-J):(i+J). We populate these with the values of the B[0,i](x) splines
-  ! and iteratively build the higher order splines as needed.
-
-  function b_splines_at_x( knot_positions, spline_degree, cell, x )
-    sll_int32, intent(in)                      :: spline_degree
-    sll_real64, dimension(1:spline_degree+1)   :: b_splines_at_x
-    sll_real64, dimension(:), intent(in)       :: knot_positions
-    sll_int32, intent(in)                      :: cell
-    sll_real64, intent(in)                     :: x
-    sll_real64, dimension(1:2*spline_degree+1) :: splines
-    sll_int32                                  :: i
-    sll_int32                                  :: j
-    sll_int32                                  :: last
-    sll_real64                                 :: ti     ! t(i)
-    sll_real64                                 :: tip1   ! t(i+1)
-    sll_real64                                 :: tipj   ! t(i+j)
-    sll_real64                                 :: tipjp1 ! t(i+j+1)
-    sll_real64                                 :: fac1
-    sll_real64                                 :: fac2
-    sll_int32                                  :: current
-    ! what argument checking to do here? Assertions only...
-
-    ! Build the zeroth-order splines. The middle cell of the splines array
-    ! corresponds to the 'cell' given as argument. So for example,
-    ! splines(spline_degree+1) will have the value 1.0 if 'x' is inside 'cell'.
-    do i=1,2*spline_degree+1
-       if((x .ge. knot_positions(cell - spline_degree + i - 1)) .and. &
-          (x .lt. knot_positions(cell - spline_degree + i))) then
-          splines(i) = 1.0
-       else
-          splines(i) = 0.0
-       end if
-    end do
-    
-    ! Build the higher order splines. All of this work is redundant in 
-    ! case that 'x' is not in the support of any of the splines. We might
-    ! want to check for this condition and return accordingly.
-    last = 2*spline_degree  
-    do j=1,spline_degree
-       do i=1,last
-          current    = cell - spline_degree + i - 1
-          ti         = knot_positions(current)
-          tip1       = knot_positions(current+1)
-          tipj       = knot_positions(current+j)
-          tipjp1     = knot_positions(current+j+1)
-          ! This is a dangerous situation for which we need some sort of
-          ! protection: What guarantees are there that these denominators
-          ! will not be zero?? This should probably be error-checked, else
-          ! one can just end up with an array of NaN's.
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
-          splines(i) = fac1*splines(i) + fac2*splines(i+1)
-       end do
-       last = last - 1
-    end do
-    b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
-  end function b_splines_at_x
-
-  ! b_spline_derivatives_at_x() returns an array with the values of the
-  ! B-splines of a requested order that are supported in 'cell' and evaluated
-  ! at 'x'. The return value has the format:
-  !
-  ! B'[j,i-degree](x), B'[j,i-degree+1](x), B'[j,i-degree+2](x),..., B'[j,i](x)
-  !
-  ! where 'j' is the requested degree of the spline.
-  function b_spline_derivatives_at_x( knots, spline_degree, cell, x )
-    sll_int32, intent(in)                    :: spline_degree
-    sll_real64, dimension(spline_degree+1)   :: b_spline_derivatives_at_x
-    sll_real64, dimension(:), intent(in)     :: knots
-    sll_int32, intent(in)                    :: cell
-    sll_real64, intent(in)                   :: x
-    sll_real64, dimension(spline_degree+1)   :: derivs
-    sll_real64, dimension(2*spline_degree+1) :: splines 
-    sll_int32                                :: current
-    sll_real64                               :: delta_x
-    sll_real64                               :: fac1
-    sll_real64                               :: fac2
-    sll_int32                                :: i
-    sll_int32                                :: j
-    sll_int32                                :: last
-    sll_real64                               :: ti
-    sll_real64                               :: tip1
-    sll_real64                               :: tipj
-    sll_real64                               :: tipjp1
-    ! FIXME: ARGUMENT CHECKS
-    ! Compute derivatives of the splines of order spline_degree.
-    ! what argument checking to do here? Use assertions only...
-
-    ! FIXME, MORTAL SIN: HERE WE HAVE DUPLICATED CODE WITH THE PREVIOUS
-    ! FUNCTION AND EXPECT TO DUPLICATE THIS EVEN MORE WITH A FUNCTION
-    ! THAT FURTHER COMBINES VALUES AND DERIVATIVES. THIS IS NOT ACCEPTABLE.
-    ! EVENTUALLY THIS CODE SEGMENT SHOULD BE MACROIZED. LEAVE AS IS FOR THE
-    ! MOMENT SINCE WE NEED TO FIX THE ISSUE OF POSSIBLY ZERO VALUES IN
-    ! DENOMINATORS AT LEAST. PRODUCTION VERSION SHOULD NOT HAVE DUPLICATED
-    ! CODE IN THIS CASE.
-
-    ! Build the zeroth-order splines. The middle cell of the splines array
-    ! corresponds to the 'cell' given as argument. So for example,
-    ! splines(spline_degree+1) will have the value 1.0 if 'x' is inside 'cell'.
-    do i=1,2*spline_degree+1
-       if((x .ge. knots(cell - spline_degree + i - 1)) .and. &
-          (x .lt. knots(cell - spline_degree + i))) then
-          splines(i) = 1.0
-       else
-          splines(i) = 0.0
-       end if
-    end do
-
-    ! Build the higher order splines. All of this work is redundant in 
-    ! case that 'x' is not in the support of any of the splines. We might
-    ! want to check for this condition and return accordingly.
-    last = 2*spline_degree  
-    do j=1,spline_degree-1 ! we stop earlier to compute derivatives
-       do i=1,last
-          current    = cell - spline_degree + i - 1
-          ti         = knots(current)
-          tip1       = knots(current+1)
-          tipj       = knots(current+j)
-          tipjp1     = knots(current+j+1)
-          ! This is a dangerous situation for which we need some sort of
-          ! protection: What guarantees are there that these denominators
-          ! will not be zero?? This should probably be error-checked, else
-          ! one can just end up with an array of NaN's.
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
-          splines(i) = fac1*splines(i) + fac2*splines(i+1)
-       end do
-       last = last - 1
-    end do
-    ! At this moment we have an array with values of the splines up to the
-    ! order spline_degree - 1. Proceed to compute the derivatives of order
-    ! spline_degree.
-    do i=1,last
-       current = cell - spline_degree + i - 1
-       delta_x = knots(current+1) - knots(current)
-       derivs(i) = (splines(i) - splines(i+1))/delta_x
-    end do
-    b_spline_derivatives_at_x(1:spline_degree+1) = derivs(1:spline_degree+1)
-  end function b_spline_derivatives_at_x
 
 #undef NUM_TERMS
 end module sll_splines

@@ -10,6 +10,7 @@ program unit_test
   use sll_csl
   use sll_module_mapped_meshes_2d_cartesian
   use sll_gaussian_2d_initializer
+  use sll_cubic_spline_interpolator_1d
   implicit none
   
   sll_int32 :: nc_eta1_coarse, nc_eta2_coarse
@@ -32,6 +33,11 @@ program unit_test
   character(32),parameter  :: name = 'distribution_function'
   type(init_gaussian_2d),target :: pgaussian
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
+  type(cubic_spline_1d_interpolator), target  :: interp_eta1
+  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+
   
   eta1_min =  -8.0_f64
   eta1_max =  8.0_f64
@@ -59,7 +65,12 @@ program unit_test
   
   p_init_f => pgaussian
   
-  
+  ! Set up the interpolators for the distribution function
+  call interp_eta1%initialize( nc_eta1_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta2%initialize( nc_eta2_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  interp_eta1_ptr => interp_eta1
+  interp_eta2_ptr => interp_eta2
+
   !geomc => new_geometry_2D ('cartesian', nc_eta1_coarse,  nc_eta2_coarse)
   !nc_eta1_fine = 200
   !nc_eta2_fine = 200
@@ -94,6 +105,8 @@ program unit_test
     "f_coarse", &
     m, &
     CELL_CENTERED_FIELD, &
+    interp_eta1_ptr, &
+    interp_eta2_ptr, &
     p_init_f )
 
 
