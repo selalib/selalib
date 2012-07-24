@@ -350,3 +350,17 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(BSL BSL/test_landau_2d)
    #add_test(CSL CSL/test_csl)
 #add_test(simulation_1d simulation/test_simulation_1d)
+
+
+set(FORTRANCL_ENABLED CACHE BOOL OFF)
+# recherche de FORTRANCL
+IF(FORTRANCL_ENABLED)
+	find_package(FORTRANCL QUIET)
+	if (FORTRANCL_FOUND)
+		message(STATUS "FORTRANCL FOUND")
+	   include_directories(${FORTRANCL_INCLUDE_DIRS})
+           add_subdirectory(opencl)
+           add_test(NAME opencl COMMAND test_opencl)
+           set_tests_properties(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+	endif(FORTRANCL_FOUND)
+ENDIF(FORTRANCL_ENABLED)
