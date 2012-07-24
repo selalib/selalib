@@ -191,11 +191,11 @@ program spline_tester
 
   if (ok==1) then
      print *, ' '
-     print *, 'Splines unit test: PASS'
+     print *, 'Splines unit test: PASSED'
      print *, ' '
   else
      print *, ' '
-     print *, 'Splines unit test: FAIL' ! YES BUT WHERE???!!!
+     print *, 'Splines unit test: FAILED' ! YES BUT WHERE???!!!
      print *, ' '
   endif
   
