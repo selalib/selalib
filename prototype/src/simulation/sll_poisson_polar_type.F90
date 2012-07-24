@@ -24,26 +24,26 @@ module polar_kind
   type polar_VP_data
      type(polar_data), pointer :: data
      type(sll_fft_plan), pointer :: pfwd, pinv
-     sll_real64, dimension(:,:), pointer :: f,phi,f_fft,fdemi
-     sll_real64, dimension(:,:,:), pointer :: grad_phi
-     sll_comp64, dimension(:), pointer :: fk,phik
+     sll_real64, dimension(:,:), allocatable :: f,phi,f_fft,fdemi
+     sll_real64, dimension(:,:,:), allocatable :: grad_phi
+     sll_comp64, dimension(:), allocatable :: fk,phik
      type(sll_spline_2D), pointer :: spl_f, spl_a1, spl_a2, spl_phi
      !for the tridiagonal solver
-     sll_real64, dimension(:), pointer :: cts,a
-     sll_int32, dimension(:), pointer :: ipiv
+     sll_real64, dimension(:), allocatable :: cts,a
+     sll_int32, dimension(:), allocatable :: ipiv
   end type polar_VP_data
 
   !>type polar_VP_rk4
   !>used for RK4 in Vlasov Poisson
   !>contains r1, r2, r3, r4, theta1, theta2, theta3, theta4 for all points
   type polar_VP_rk4
-     sll_real64, dimension(:,:), pointer :: r1,r2,r3,r4
-     sll_real64, dimension(:,:), pointer :: theta1, theta2, theta3, theta4
+     sll_real64, dimension(:,:), allocatable :: r1,r2,r3,r4
+     sll_real64, dimension(:,:), allocatable :: theta1, theta2, theta3, theta4
   end type polar_VP_rk4
 
-!>   //==============\\
-!>   ||  INTERFACES  ||
-!>   \\==============//
+!   //==============\\
+!   ||  INTERFACES  ||
+!   \\==============//
 
   !>new_polar_data
   !>build a polar_data object
@@ -165,8 +165,8 @@ contains
     SLL_ALLOCATE(this%fdemi(data_pol%nr+1,data_pol%ntheta+1),err)
     SLL_ALLOCATE(this%phi(data_pol%nr+1,data_pol%ntheta+1),err)
     SLL_ALLOCATE(this%grad_phi(2,data_pol%nr+1,data_pol%ntheta+1),err)
-    SLL_ALLOCATE(this%a(3*data_pol%nr+1),err)
-    SLL_ALLOCATE(this%cts(7*data_pol%nr+1),err)
+    SLL_ALLOCATE(this%a(3*(data_pol%nr+1)),err)
+    SLL_ALLOCATE(this%cts(7*(data_pol%nr+1)),err)
     SLL_ALLOCATE(this%ipiv(data_pol%nr+1),err)
     SLL_ALLOCATE(this%fk(data_pol%ntheta),err)
     SLL_ALLOCATE(this%phik(data_pol%ntheta),err)
@@ -352,55 +352,23 @@ contains
 
     type(polar_VP_data), intent(inout), pointer :: this
     sll_int32 :: err
-    print*,'enter vp_data_delete'
-    call fft_delete(this%pfwd)
-    call fft_delete(this%pinv)
-    print*,'fft ok'
-    if (associated(this%f)) then
-       print*,11
-       SLL_DEALLOCATE(this%f,err)
-       print*,12
-    end if
-    if (associated(this%f_fft)) then
-       print*,13
-       SLL_DEALLOCATE(this%f_fft,err)
-       print*,14
-    end if
-    if (associated(this%fdemi)) then
-       print*,09
-       SLL_DEALLOCATE(this%fdemi,err)
-       print*,10
-    end if
-    if (associated(this%phi)) then
-       print*,15
-       !SLL_DEALLOCATE(this%phi,err)
-       print*,16
-    end if
-    if (associated(this%grad_phi)) then
-       print*,17
-       SLL_DEALLOCATE(this%grad_phi,err)
-       print*,18
-    end if
-    if (associated(this%a)) then
-       print*,19
-       !SLL_DEALLOCATE(this%a,err)
-       print*,20
-    end if
-    if (associated(this%cts)) then
-       print*,21
-       !SLL_DEALLOCATE(this%cts,err)
-       print*,22
-    end if
-    if (associated(this%ipiv)) then
-       print*,23
-       !SLL_DEALLOCATE(this%ipiv,err)
-       print*,24
-    end if
+    if (associated(this)) then
+       call fft_delete_plan(this%pfwd)
+       call fft_delete_plan(this%pinv)
+       SLL_DEALLOCATE_ARRAY(this%f,err)
+       SLL_DEALLOCATE_ARRAY(this%f_fft,err)
+       SLL_DEALLOCATE_ARRAY(this%fdemi,err)
+       SLL_DEALLOCATE_ARRAY(this%phi,err)
+       SLL_DEALLOCATE_ARRAY(this%grad_phi,err)
+       SLL_DEALLOCATE_ARRAY(this%a,err)
+       SLL_DEALLOCATE_ARRAY(this%cts,err)
+       SLL_DEALLOCATE_ARRAY(this%ipiv,err)
 
-    call delete_spline_2d(this%spl_f)
-    call delete_spline_2d(this%spl_a1)
-    call delete_spline_2d(this%spl_a2)
-    this%data => null()
+       call delete_spline_2d(this%spl_f)
+       call delete_spline_2d(this%spl_a1)
+       call delete_spline_2d(this%spl_a2)
+       this%data => null()
+    end if
 
     SLL_DEALLOCATE(this,err)
 
@@ -444,29 +412,15 @@ contains
     type(polar_vp_rk4),intent(inout), pointer :: this
     sll_int32 :: err
 
-    if (associated(this%r1)) then
-       SLL_DEALLOCATE(this%r1,err)
-    end if
-    if (associated(this%r2)) then
-       SLL_DEALLOCATE(this%r2,err)
-    end if
-    if (associated(this%r3)) then
-       SLL_DEALLOCATE(this%r3,err)
-    end if
-    if (associated(this%r4)) then
-       SLL_DEALLOCATE(this%r4,err)
-    end if
-    if (associated(this%theta1)) then
-       SLL_DEALLOCATE(this%theta1,err)
-    end if
-    if (associated(this%theta2)) then
-       SLL_DEALLOCATE(this%theta2,err)
-    end if
-    if (associated(this%theta3)) then
-       SLL_DEALLOCATE(this%theta3,err)
-    end if
-    if (associated(this%theta4)) then
-       SLL_DEALLOCATE(this%theta4,err)
+    if (associated(this)) then
+       SLL_DEALLOCATE_ARRAY(this%r1,err)
+       SLL_DEALLOCATE_ARRAY(this%r2,err)
+       SLL_DEALLOCATE_ARRAY(this%r3,err)
+       SLL_DEALLOCATE_ARRAY(this%r4,err)
+       SLL_DEALLOCATE_ARRAY(this%theta1,err)
+       SLL_DEALLOCATE_ARRAY(this%theta2,err)
+       SLL_DEALLOCATE_ARRAY(this%theta3,err)
+       SLL_DEALLOCATE_ARRAY(this%theta4,err)
     end if
     SLL_DEALLOCATE(this,err)
 
