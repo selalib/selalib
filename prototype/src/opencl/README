@@ -15,7 +15,7 @@ The basic download and installation procedure is to run:
 
 svn checkout http://fortrancl.googlecode.com/svn/trunk/ fortrancl
 cd fortran
-autoreconfig -i
+autoreconf -i
 ./configure --prefix=/usr/local
 make 
 make install
