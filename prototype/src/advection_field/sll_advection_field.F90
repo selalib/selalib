@@ -78,9 +78,9 @@ contains
          field_name, &
          mesh, &
          data_position, &
-         initializer, &
          eta1_interpolator, &
-         eta2_interpolator )
+         eta2_interpolator, &
+         initializer )
   end subroutine initialize_advection_field_2d
 
   !> sets advection field to Hamiltonian function at nodes from given 

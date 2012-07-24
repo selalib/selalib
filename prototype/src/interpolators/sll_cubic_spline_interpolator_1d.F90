@@ -225,6 +225,7 @@ contains  ! ****************************************************************
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
+    sll_real64             :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
 #ifdef STDF95
@@ -235,6 +236,7 @@ contains  ! ****************************************************************
 
 
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
+    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)

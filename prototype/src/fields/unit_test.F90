@@ -59,9 +59,9 @@ program unit_test
        "px1_field", &
        m, &
        NODE_CENTERED_FIELD, &
-       pfinit, &
        interp_eta1_ptr, &
-       interp_eta2_ptr )
+       interp_eta2_ptr, &
+       pfinit )
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 

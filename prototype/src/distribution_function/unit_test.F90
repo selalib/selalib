@@ -68,9 +68,9 @@ program unit_test
        name, &
        m, &
        CELL_CENTERED_FIELD, &
-       p_init_f, &
        interp_eta1_ptr, &
-       interp_eta2_ptr )
+       interp_eta2_ptr, &
+       p_init_f )
 
   print*, 'write mesh and distribution function'
 

@@ -124,9 +124,9 @@ contains
     field_name, &
     mesh, &
     data_position, &
-    initializer, &
     eta1_interpolator, &
-    eta2_interpolator )
+    eta2_interpolator, &
+    initializer )
 
     type(sll_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass
@@ -134,10 +134,9 @@ contains
     character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    class(scalar_field_2d_initializer_base), pointer    :: initializer
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-
+    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
 
     this%pmass = mass
     this%pcharge = charge
@@ -147,9 +146,9 @@ contains
          field_name, &
          mesh, &
          data_position, &
-         initializer, &
          eta1_interpolator, &
-         eta2_interpolator )
+         eta2_interpolator, &
+         initializer )
   end subroutine initialize_distribution_function_2d
 
 
