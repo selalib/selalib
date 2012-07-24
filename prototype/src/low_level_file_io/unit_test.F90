@@ -15,6 +15,8 @@ call test_2d()
 
 call test_3d()
 
+print*,"PASSED"
+
 contains
 
 subroutine test_2d()
