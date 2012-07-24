@@ -50,12 +50,13 @@ target_link_libraries(polar_SL
 
 
 IF(FFTPACK_ENABLED)
- add_executable(VlasovPoisson
-		VlasovPoisson.F90
+ add_executable(CG_polar
+		CG_polar.F90
 		sll_advection_polar.F90
 		sll_poisson_2d_polar.F90
+		sll_poisson_polar_type.F90
 		)
- target_link_libraries(VlasovPoisson
+ target_link_libraries(CG_polar
 	sll_fft
 	sll_tridiagonal
 	sll_constants
@@ -65,6 +66,7 @@ IF(FFTPACK_ENABLED)
 	sll_timer
 	sll_utilities
 	)
+
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
 	sll_mapped_meshes
@@ -82,5 +84,21 @@ target_link_libraries(VP1D_cart
 	dfftpack
 	)
 
+add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
+target_link_libraries(VP1D_deltaf_cart
+	sll_mapped_meshes
+	sll_interpolators
+	sll_splines
+	geometry_functions
+	sll_distribution_function
+	sll_scalar_field_2d	
+	sll_constants
+	sll_low_level_file_io
+  	sll_utilities
+	sll_memory
+	sll_assertion 	
+	sll_poisson_1d_periodic
+	dfftpack
+	)
 
 ENDIF()

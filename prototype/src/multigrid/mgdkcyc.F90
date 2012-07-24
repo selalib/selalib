@@ -1,12 +1,12 @@
 subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
-                   comm3dp,comm3dl,comm3dc,neighbor,bd,phibc,IOUT)
+                   comm3dp,comm3dl,comm3dc,neighbor,bd,phibc)
 
+use mpi
 use mgd3
 
 implicit none
 #include "mgd3.h"
-include "mpif.h"
-integer :: kcur,kcycle,iprer,ipost,iresw,IOUT
+integer :: kcur,kcycle,iprer,ipost,iresw
 integer :: comm3dp,comm3dl,comm3dc
 integer :: neighbor(26),bd(26)
 real(8) :: work(*),res(*),phibc(6,*)
@@ -26,10 +26,6 @@ integer :: sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,ipf,icf
 integer :: sxc,exc,syc,eyc,szc,ezc,nxc,nyc,nzc,ipc,irc
 integer :: klevel,kount(20),l,nrel
 integer :: sx1,ex1,sy1,ey1,sz1,ez1
-# if cdebug
-double precision tinitial
-tinitial=MPI_WTIME()
-# endif
 
 klevel=kcur
 
