@@ -90,24 +90,36 @@ ENDIF(HDF5_ENABLED)
 ##########################################################
 
 ##########################################################
+# add the cache entry FFT_DEFAULT_LIBRARY to define the default library use by sll_fft
+set(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft")
+
 # add the cache entry FFTPACK_ENABLED for enable/disable fftpack
 set(FFTPACK_ENABLED NO CACHE BOOL " ")
 
 # recherche le package FFTW
-set(FFTW_ENABLED YES CACHE BOOL " ")
+set(FFTW_ENABLED YES CACHE BOOL " " FORCE)
 IF(FFTW_ENABLED)
 	IF( DEFINED ENV{FFTW_ROOT} )
 		set(FFTW_ROOT $ENV{FFTW_ROOT})
 	ENDIF()
 	find_package(FFTW QUIET)
 	IF(FFTW_FOUND)
-		message(STATUS "FFTW FOUND")	
+		message(STATUS "FFTW FOUND")
   		include_directories(${FFTW_INCLUDE_DIRS})
 	ELSE(FFTW_FOUND)
 		message(STATUS "FFTW NOT FOUND")
-		set(FFTW_ENABLED NO)
+		set(FFTW_ENABLED NO CACHE BOOL " " FORCE)
 	ENDIF(FFTW_FOUND)
 ENDIF(FFTW_ENABLED)
+
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK" AND NOT FFTPACK_ENABLED)
+	message("Please put on FFTPACK_ENABLED to use fftpack")
+ENDIF()
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_FOUND)
+	message("You can't use fftw library because it's not installed")
+ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_ENABLED)
+	message("Please put on FFTW_ENABLED to use fftw")
+ENDIF()
 ##########################################################
 
 ##########################################################

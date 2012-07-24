@@ -3,6 +3,10 @@ program unit_test
   use sll_fft
   implicit none
 
+#define SLLFFT_MOD 0
+#define FFTPACK_MOD 100
+#define FFTW_MOD 1000000000
+
   sll_real64, parameter  :: err_max = 10E-14
   sll_int32, parameter   :: hmax = 1
   sll_int32, parameter   :: imin = 10
@@ -17,10 +21,51 @@ program unit_test
   sll_comp64, dimension(m1,m2) :: data_copy2d
   sll_real64, dimension(m1,m2) :: rdata_copy2d
   sll_real64, dimension(n) :: rdata_comp, rdata_copy, rdata
+  sll_comp64 :: mode
   sll_real64 :: ierr
   sll_int32 :: i,j,s,h,k,t
 
   call print_defaultfftlib()
+
+
+
+! test for get mode
+  s = 2**imin
+  do j=1,s
+    CALL RANDOM_COMPLEX(data_comp(j))
+  enddo
+  data_copy(1:s) = data_comp(1:s)
+  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+  do i=0,s-1
+    mode = fft_get_mode(p,data_comp(1:s),i)
+    call fft_set_mode(p,data_comp(1:s),mode,i)
+  enddo
+  ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
+  if( ierr .ne. 0_f64 ) then
+    print *,'Everage error too big',ierr
+    stop
+  else
+    print *,'get and set mode complex ok'
+  endif
+
+! test for set mode
+  s = 2**imax
+  do j=1,s
+    CALL RANDOM_NUMBER(rdata(j))
+  enddo
+  rdata_copy(1:s) = rdata(1:s)
+  p => fft_new_plan(s,rdata(1:s),rdata(1:s),FFT_FORWARD)
+  do i=0,s/2
+    mode = fft_get_mode(p,rdata(1:s),i)
+    call fft_set_mode(p,rdata(1:s),mode,i)
+  enddo
+  ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
+  if( ierr .ne. 0_f64 ) then
+    print *,'Everage error too big',ierr
+    stop
+  else
+    print *,'get and set mode real ok'
+  endif
 
 
   print *,'-------------------------------------------------'
@@ -78,7 +123,8 @@ program unit_test
   enddo
   print *, 'OK'
 
-if( .not. fft_default_lib_is(FFTPACK_MOD) ) then
+
+#if _DEFAULTFFTLIB!=FFTPACK_MOD
   print *,'-------------------------------------------------'
   print * ,'REAL TO COMPLEX and COMPLEX TO REAL '
   do i=imin,imax
@@ -160,9 +206,9 @@ if( .not. fft_default_lib_is(FFTPACK_MOD) ) then
    enddo
   enddo
   print *, 'OK', ierr
-endif
+#endif
 
-if( fft_default_lib_is(SLLFFT_MOD) ) then
+#if _DEFAULTFFTLIB==SLLFFTMOD
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX 2D in one direction only'
   do i=10,10
@@ -235,9 +281,9 @@ if( fft_default_lib_is(SLLFFT_MOD) ) then
   enddo
   print *, 'OK', ierr
 !-----------------------------
-endif
+#endif
 
-if( .not. fft_default_lib_is(FFTPACK_MOD) ) then
+#if _DEFAULTFFTLIB!=FFTPACK_MOD
   print *,'-------------------------------------------------'
   print * ,'REAL TO COMPLEX 2D and COMPLEX TO REAL 2D'
   do i=10,10
@@ -305,7 +351,7 @@ if( .not. fft_default_lib_is(FFTPACK_MOD) ) then
    enddo
   enddo
   print *, 'OK', ierr
-endif
+#endif
 
 contains
 
