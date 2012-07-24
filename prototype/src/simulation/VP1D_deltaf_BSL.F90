@@ -1,4 +1,10 @@
-program VP_1d
+!> Vlasov-Poisson 1D on a uniform cartesian grid
+!> using the Backward Semi-Lagrangian (BSL) method.
+!> For increased accuracy we work here on delta_f = f-f_M
+!> where f_M is the equilibrium Maxwellian function
+
+
+program VP1d_deltaf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -39,7 +45,7 @@ program VP_1d
   sll_int32  :: istep
   sll_int32  :: nbox
   sll_real64 :: eps
-  sll_real64 :: v0
+  sll_real64 :: v, v0
   sll_int32  :: i, j
   sll_int32  :: ierr   ! error flag 
 
@@ -84,9 +90,9 @@ program VP_1d
 
   ! print out run parameters
   if (case == "landau") then
-     print*, '     --------------'
-     print*, '     | Landau run |'
-     print*, '     --------------'
+     print*, '     ----------------------'
+     print*, '     | Landau delta_f run |'
+     print*, '     ----------------------'
      print*, '   k=', kmode
      print*, '   perturbation=', eps
   else if (case == "tsi") then
@@ -132,7 +138,7 @@ program VP_1d
   SLL_ALLOCATE(efield(Ncx+1),ierr)
 
   ! initialization of distribution_function
-  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode)
+  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, .true.)
   call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode)
   if (case == "landau") then
      p_init_f => init_landau
@@ -169,6 +175,11 @@ program VP_1d
         alpha = -efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        ! add equilibrium contribution
+        do j=1, Ncv + 1
+           v = vmin + (j-1) * delta_v
+           f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
+        end do
      end do
      ! full time step advection in x
      do j = 1, Ncv+1
@@ -184,6 +195,11 @@ program VP_1d
         alpha = -efield(i) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+        ! add equilibrium contribution
+        do j=1, Ncv + 1
+           v = vmin + (j-1) * delta_v
+           f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
+        end do
      end do
      ! diagnostics
      time = istep*dt
@@ -201,5 +217,12 @@ program VP_1d
 
   close(th_diag)
   close(ex_diag)
-  print*, 'VP1D_cart has exited normally'
+  print*, 'VP1D_deltaf_cart has exited normally'
+  contains
+    function f_equilibrium(v)
+      sll_real64 :: v
+      sll_real64 :: f_equilibrium
+
+      f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+    end function f_equilibrium
 end program 

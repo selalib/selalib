@@ -1,7 +1,7 @@
 subroutine mgdsetf(sxf,exf,syf,eyf,szf,ezf,phi,rhs,phif,rhsf,IOUT)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer :: sxf,exf,syf,eyf,szf,ezf,IOUT
 real(8) :: phi(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1)
 real(8) :: rhs(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1)

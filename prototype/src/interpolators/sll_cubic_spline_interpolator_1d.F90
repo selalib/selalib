@@ -87,6 +87,7 @@ contains  ! ****************************************************************
     ! local variables
     sll_real64, dimension(num_points)      :: coordinates
     sll_real64 :: length, delta
+    sll_real64 :: xmin, xmax 
     sll_int32 :: i
     sll_int32 :: ierr
     ! compute the interpolating spline coefficients
@@ -94,27 +95,26 @@ contains  ! ****************************************************************
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_points) - this%interpolation_points(1)
     delta = this%interpolation_points(2) - this%interpolation_points(1)
-!    if (this%bc_type == PERIODIC_SPLINE) then
-       coordinates(1) = this%interpolation_points(1) + modulo(this%interpolation_points(1) - alpha, length)
-       print*, coordinates(1), this%interpolation_points(1), this%interpolation_points(num_points)
-       do i = 2, num_points      
-          coordinates(i) = modulo(coordinates(i-1) + delta, length)
-          print*, coordinates(i)
+    xmin = this%interpolation_points(1)
+    xmax = this%interpolation_points(num_points)
+    if (this%bc_type == PERIODIC_SPLINE) then
+       do i = 1, num_points      
+          coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
+          SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))          
        end do
-!!$    else
-!!$       if (alpha < 0 ) then 
-!!$          coordinates(1) = this%interpolation_points(1)
-!!$          do i = 2, num_points
-!!$             coordinates(i) = max(coordinates(i-1) + delta, this%interpolation_points(1))
-!!$          end do
-!!$       else
-!!$          coordinates(num_points) = this%interpolation_points(num_points)
-!!$          do i = num_points-1, 1, -1
-!!$             coordinates(i) = min(coordinates(i+1) - delta, &
-!!$                  this%interpolation_points(num_points))
-!!$          end do
-!!$       endif
-!!$    end if
+    else
+       if (alpha > 0 ) then 
+          do i = 1, num_points
+             coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
+             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
+          end do
+       else
+          do i = 1, num_points
+             coordinates(i) = min(this%interpolation_points(i) - alpha, xmax)
+             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
+          end do
+       endif
+    end if
     call interpolate_array_values( coordinates, data_out, num_points, &
          this%spline )
   end function
