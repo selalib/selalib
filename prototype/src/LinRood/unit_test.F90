@@ -9,6 +9,7 @@ program unit_test
   use distribution_function
   use sll_scalar_field_2d
   use sll_linrood
+  use sll_cubic_spline_interpolator_1d
   implicit none
 
   sll_int32 :: nc_eta1, nc_eta2
@@ -21,7 +22,21 @@ program unit_test
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   type(scalar_field_2d) :: uniform_field, rotating_field 
   type(linrood_plan) :: linrood
-  
+  type(cubic_spline_1d_interpolator), target  :: interp_eta1
+  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+  ! interpolators for scalar field
+  type(cubic_spline_1d_interpolator), target  :: interp_eta1_sf 
+  type(cubic_spline_1d_interpolator), target  :: interp_eta2_sf
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr_sf
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr_sf
+  ! interpolators for rotating field
+  type(cubic_spline_1d_interpolator), target  :: interp_eta1_rf
+  type(cubic_spline_1d_interpolator), target  :: interp_eta2_rf
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr_rf
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr_rf
+
   sll_int32  :: ierr, istep
   sll_int32 :: i1, i2
   sll_real64 :: alpha1, alpha2
@@ -46,6 +61,24 @@ program unit_test
   call init_gaussian%initialize( m, CELL_CENTERED_FIELD, 0.5_f64, 0.5_f64, 0.1_f64, 0.1_f64 )
   p_init_f => init_gaussian
 
+ ! Set up the interpolators for the distribution function
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  interp_eta1_ptr => interp_eta1
+  interp_eta2_ptr => interp_eta2
+
+ ! Set up the interpolators for the scalar field
+  call interp_eta1_sf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta2_sf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  interp_eta1_ptr_sf => interp_eta1_sf
+  interp_eta2_ptr_sf => interp_eta2_sf
+
+ ! Set up the interpolators for the rotating field
+  call interp_eta1_rf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta2_rf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  interp_eta1_ptr_rf => interp_eta1_rf
+  interp_eta2_ptr_rf => interp_eta2_rf
+
   call initialize_distribution_function_2d( &
        df, &
        1.0_f64, &
@@ -53,7 +86,10 @@ program unit_test
        name, &
        m, &
        CELL_CENTERED_FIELD, &
+       interp_eta1_ptr, &
+       interp_eta2_ptr, &
        p_init_f )
+
   print*, 'write mesh and distribution function'
 
   istep = 0
@@ -68,7 +104,14 @@ program unit_test
   Print*, 'checking advection of a Gaussian in a uniform field'
 
   ! define uniform field on coarse_mesh (using stream function)
-  call initialize_scalar_field_2d(uniform_field, "uniform_field", m, CELL_CENTERED_FIELD)
+  call initialize_scalar_field_2d( &
+       uniform_field, &
+       "uniform_field", &
+       m, &
+       CELL_CENTERED_FIELD, &
+       interp_eta1_ptr_sf, &
+       interp_eta2_ptr_sf )
+
   ! components of field
   alpha1 = 0.0_f64
   alpha2 = 10.0_f64
@@ -81,7 +124,14 @@ program unit_test
  
   print*, 'checking advection in rotating field' 
   ! define rotating field
-  call initialize_scalar_field_2d(rotating_field, "rotating_field", m, CELL_CENTERED_FIELD)
+  call initialize_scalar_field_2d( &
+       rotating_field, &
+       "rotating_field", &
+       m, &
+       CELL_CENTERED_FIELD, &
+       interp_eta1_ptr_rf, &
+       interp_eta2_ptr_rf )
+
   do i1 = 1, nc_eta1
      do i2 = 1, nc_eta2
         FIELD_2D_AT_I( rotating_field, i1, i2 ) = 0.5_f64*(m%x1_cell(i1,i2)**2 &

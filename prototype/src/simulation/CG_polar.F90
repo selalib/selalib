@@ -56,7 +56,7 @@ program cg_polar
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=100.0_f64
+  tf=50.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -153,12 +153,10 @@ program cg_polar
   close(20)
 
   open(unit=23,file=thd)
-  !open(unit=23,file='thdiag.dat')
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
   call poisson_solve_polar(adv)
   call compute_grad_field(adv)
-
   w0=0.0_f64
   l10=0.0_f64
   l20=0.0_f64
@@ -241,7 +239,6 @@ program cg_polar
   !w0=0.0_f64
   !w=0.0_f64
   open (unit=21,file=cgf)
-  !open (unit=21,file='CGfinal.dat')
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
@@ -257,11 +254,8 @@ program cg_polar
   close(21)
   !print*,dr,w0,w,w/w0,'#dr, w0, w,w/w0'
 
-  print*,'begin deletion'
   call vp_data_delete(adv)
-  print*,'deletion of adv ok'
   call vp_rk4_delete(rk)
-  print*,'deletion of rk ok'
 
 contains
 
@@ -292,7 +286,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
+    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'srk4'//sch//char(095)//fin//'s.dat'
 
   end subroutine scgf
 
@@ -323,7 +317,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
+    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'srk4'//sch//char(095)//fin//'s.dat'
 
   end subroutine sthd
 

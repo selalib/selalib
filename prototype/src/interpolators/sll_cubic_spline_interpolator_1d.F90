@@ -24,6 +24,11 @@ use sll_splines
      procedure :: compute_interpolants => compute_interpolants_cs1d
      procedure :: interpolate_value => interpolate_value_cs1d
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+     procedure :: interpolate_array_values => interpolate_values_cs1d
+     procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+     procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+     procedure :: interpolate_pointer_derivatives => &
+          interpolate_pointer_derivatives_cs1d
      procedure, pass:: interpolate_array => spline_interpolate1d
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
@@ -128,7 +133,77 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     call compute_spline_1D_bis( data_array, interpolator%spline )
-  end subroutine
+#ifdef STD95
+  end subroutine cubic_spline_compute_interpolants
+#else
+  end subroutine compute_interpolants_cs1d
+#endif
+
+  ! Alternative implementation for the function meant to interpolate a
+  ! whole array. This implementation fixes some problems in the previous
+  ! function. Furthermore, it separates the operation into the more
+  ! elementary steps: one is supposed to first compute the interpolants, 
+  ! then request to interpolate array values.
+  subroutine interpolate_values_cs1d( &
+    interpolator, &
+    num_pts, &
+    vals_to_interpolate, &
+    output_array )
+
+    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_int32 :: ierr
+    call interpolate_array_values( vals_to_interpolate, output_array, &
+         num_pts, interpolator%spline )
+  end subroutine interpolate_values_cs1d
+
+  subroutine interpolate_pointer_values_cs1d( &
+    interpolator, &
+    num_pts, &
+    vals_to_interpolate, &
+    output )
+
+    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)            :: num_pts
+    sll_real64, dimension(:), pointer :: vals_to_interpolate
+    sll_real64, dimension(:), pointer :: output
+    sll_int32 :: ierr
+    call interpolate_pointer_values( vals_to_interpolate, output, &
+         num_pts, interpolator%spline )
+  end subroutine interpolate_pointer_values_cs1d
+
+
+  subroutine interpolate_derivatives_cs1d( &
+    interpolator, &
+    num_pts, &
+    vals_to_interpolate, &
+    output_array )
+
+    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(:), intent(out)  :: output_array
+    sll_int32 :: ierr
+    call interpolate_array_derivatives( vals_to_interpolate, num_pts, &
+         output_array, interpolator%spline )
+  end subroutine interpolate_derivatives_cs1d
+
+  subroutine interpolate_pointer_derivatives_cs1d( &
+    interpolator, &
+    num_pts, &
+    vals_to_interpolate, &
+    output )
+
+    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)              :: num_pts
+    sll_real64, dimension(:), pointer   :: vals_to_interpolate
+    sll_real64, dimension(:), pointer   :: output
+    sll_int32 :: ierr
+    call interpolate_pointer_derivatives( vals_to_interpolate, num_pts, &
+         output, interpolator%spline )
+  end subroutine interpolate_pointer_derivatives_cs1d
 
 #ifdef STDF95
   function cubic_spline_interpolate_value( interpolator, eta1 ) result(val)
@@ -143,18 +218,31 @@ contains  ! ****************************************************************
   end function
   
 #ifdef STDF95
-  function cubic_spline_interpolate_derivative_eta1( interpolator, eta1 ) result(val)
+  function cubic_spline_interpolate_derivative_eta1( interpolator, eta1 ) &
+       result(val)
     type(cubic_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
+    sll_real64             :: val
+    sll_real64, intent(in) :: eta1
+    val = interpolate_derivative(eta1,interpolator%spline)
+#ifdef STDF95
+  end function cubic_spline_interpolate_derivative_eta1
+#else
+  end function interpolate_deriv1_cs1d
+#endif
+
+
+  function interpolate_derivative_f95( interpolator, eta1 ) result(val)
+    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
-  end function
+  end function interpolate_derivative_f95
 
-  !> create new spline object
+  !> initialize cubic spline interpolator
 #ifdef STDF95
   subroutine cubic_spline_initialize( &
 #else
@@ -188,11 +276,17 @@ contains  ! ****************************************************************
     interpolator%interpolation_points(1) = xmin
     delta = (xmax - xmin) / (num_points - 1)
     do i = 2, num_points
-       interpolator%interpolation_points(i) = interpolator%interpolation_points(i-1) + delta
+       interpolator%interpolation_points(i) = &
+            interpolator%interpolation_points(i-1) + delta
     end do
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
-       interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type, slope_left, slope_right )
+       interpolator%spline => new_spline_1D( &
+            num_points, &
+            xmin, xmax, &
+            bc_type, &
+            slope_left, &
+            slope_right )
     else
        interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type)
     end if

@@ -58,12 +58,14 @@ program unit_test
 #else
   call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
 #endif
+
   interp =>  spline
 #ifdef STDF95
   out = cubic_spline_interpolate_array(interp, n, data, interpolation_points)
 #else
   out = interp%interpolate_array(n, data, interpolation_points)
 #endif
+
   error = 0.0_f64
   do i=1,n   
      error = max(error, abs(data_interp(i) - out(i)))
