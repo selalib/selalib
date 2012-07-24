@@ -230,9 +230,9 @@ IF(NOT STDF95)
 add_subdirectory(poisson_solvers)
 ENDIF()
 
-#hight-level
+#high-level
 add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
-add_dependencies(geometry_functions sll_assertion sll_constants sll_working_precision)
+add_dependencies(geometry_functions sll_utilities sll_assertion sll_constants sll_working_precision)
 add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
