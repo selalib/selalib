@@ -12,9 +12,9 @@ program arbitrary_degree_spline_tester
   call  test_nonuniform_arb_deg_splines( passed_test )
 
   if( passed_test .eqv. .true. ) then
-     print *, 'PASS'
+     print *, 'PASSED'
   else
-     print *, 'FAIL'
+     print *, 'FAILED'
   end if
 
 contains
