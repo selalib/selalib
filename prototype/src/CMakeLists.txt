@@ -283,6 +283,7 @@ set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
 add_test(NAME constants COMMAND test_constants)
 add_test(NAME utilities COMMAND test_utilities)
 add_test(NAME low_level_file_io COMMAND test_io)
+set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
@@ -296,12 +297,14 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 IF(MUDPACK_ENABLED)
 	add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
+        set_tests_properties(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
         set(PROCS 4)
         set(ARGS "")
 	add_test(NAME multigrid COMMAND 
 	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
 	${MPIEXEC_POSTFLAGS} ${ARGS})
+        set_tests_properties(multigrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
 # we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
