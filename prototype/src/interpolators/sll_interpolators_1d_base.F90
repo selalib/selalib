@@ -103,9 +103,13 @@ module sll_module_interpolators_1d_base
      end function interpolate_1d_array
   end interface
 
+  ! it is a bad practice to return large arrays like this. Must modify.
   abstract interface
-     function interpolate_1d_array_at_displacement(this, num_points, data, alpha) &
-          result(res)
+     function interpolate_1d_array_at_displacement( &
+       this, &
+       num_points, &
+       data, &
+       alpha) result(res)
 
        use sll_working_precision
        import sll_interpolator_1d_base
