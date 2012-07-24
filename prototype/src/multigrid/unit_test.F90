@@ -314,6 +314,9 @@ call gerr()
 !-----------------------------------------------------------------------
 close(8)
 call MPI_FINALIZE(ierr)
+
+print*,"PASSED"
+
 stop
 1000  write(6,200)
 200   format(/,'ERROR in multigrid code',/)
