@@ -13,7 +13,7 @@ program unit_test
   type(sll_mapped_mesh_2d_analytic), target :: mesh
   type(scalar_field_2d)                     :: field
   class(sll_mapped_mesh_2d_base), pointer   :: m
-  sll_int32 :: nc1, nc2
+  sll_int32 :: nc1, nc2, iplot
   procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
   type(init_landau_2d), target :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: pfinit
@@ -51,8 +51,13 @@ program unit_test
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 
-  call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
-  call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
+  
+
+  do iplot = 1, 10
+     field%data = exp(-(mesh%x1_node**2+mesh%x2_node**2)*iplot*0.1)
+     call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
+     call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
+  end do
 
   call mesh%write_to_file()
 

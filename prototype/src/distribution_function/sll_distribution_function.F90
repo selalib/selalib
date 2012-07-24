@@ -47,7 +47,6 @@ module distribution_function
      sll_real64      :: pmass;                                       \
      sll_real64      :: pcharge;                                     \
      sll_real64      :: average;                                     \
-     sll_int32       :: plot_counter;                                \
   end type new_df_type
 
 !NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)

@@ -1,7 +1,7 @@
 subroutine mgdbdry(sxm,exm,sym,eym,szm,ezm,phi,bd,phibc,IOUT)
 
+use mpi
 implicit none 
-include "mpif.h"
 integer :: sxm,exm,sym,eym,szm,ezm,bd(26),IOUT
 real(8) :: phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1),phibc(6)
 !------------------------------------------------------------------------
