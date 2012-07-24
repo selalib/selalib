@@ -30,10 +30,10 @@ program spline_tester
 
   sll_int32                              :: err, ok
   sll_int32                              :: i, i_test, j_test
-  sll_real64, allocatable, dimension(:)  :: knots
+ 
   sll_real64, dimension(1:100)           :: spline_vals
   sll_real64                             :: rnd
-  sll_real64                             :: reduction
+
   sll_int32, parameter                   :: nbtest = 12
   logical                                :: test_passed
   print *, 'Test of the 1D spline: '
@@ -70,31 +70,6 @@ program spline_tester
   enddo
 
 #endif
-
-
-#define NUM_KNOTS 10
-#define SPLINE_DEGREE 3
-  SLL_ALLOCATE(knots(NUM_KNOTS),err)
-  
-  knots(1) = 0.0
-  do i=2,NUM_KNOTS
-     call random_number(rnd)
-     knots(i) = knots(i-1) + rnd 
-  end do
-  
-  print *, 'knots: '
-  print *, knots(:)
-  spline_vals(1:SPLINE_DEGREE+1) = b_splines_at_x(knots,SPLINE_DEGREE,5,3.3_f64)
-  print *, spline_vals(1:SPLINE_DEGREE+1)
-  
-  reduction = 0.0
-  do i=1,SPLINE_DEGREE+1
-     reduction = reduction + spline_vals(i)
-  end do
-  
-  print *, 'sum of spline values = ', reduction
-#undef NUM_KNOTS
-#undef SPLINE_DEGREE
 
   ! The following tests are currently not included in determining the
   ! value of the OK flag, this should be fixed. The OK flag should be a
@@ -216,11 +191,11 @@ program spline_tester
 
   if (ok==1) then
      print *, ' '
-     print *, 'Splines unit test: PASS'
+     print *, 'Splines unit test: PASSED'
      print *, ' '
   else
      print *, ' '
-     print *, 'Splines unit test: FAIL' ! YES BUT WHERE???!!!
+     print *, 'Splines unit test: FAILED' ! YES BUT WHERE???!!!
      print *, ' '
   endif
   

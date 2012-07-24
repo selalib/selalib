@@ -37,14 +37,17 @@ module sll_scalar_field_2d
   use sll_module_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   use sll_misc_utils
+  use sll_module_interpolators_1d_base
   implicit none
 
   type scalar_field_2d
-     class(sll_mapped_mesh_2d_base), pointer :: mesh
-     sll_real64, dimension(:,:), pointer     :: data
-     sll_int32                               :: data_position
-     character(len=64)                       :: name
-     sll_int32                               :: plot_counter
+     class(sll_mapped_mesh_2d_base), pointer  :: mesh
+     sll_real64, dimension(:,:), pointer      :: data
+     sll_int32                                :: data_position
+     class(sll_interpolator_1d_base), pointer :: eta1_interpolator
+     class(sll_interpolator_1d_base), pointer :: eta2_interpolator
+     character(len=64)                        :: name
+     sll_int32                                :: plot_counter
   end type scalar_field_2d
 
   abstract interface
@@ -63,13 +66,17 @@ contains   ! *****************************************************************
     field_name, &
     mesh, &
     data_position, &
-    initializer)
+    eta1_interpolator, &
+    eta2_interpolator, &
+    initializer )
 
     class(scalar_field_2d), intent(inout)               :: this
     character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    class(scalar_field_2d_initializer_base), pointer, optional    :: initializer
+    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
+    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -89,6 +96,24 @@ contains   ! *****************************************************************
     num_cells2 = mesh%nc_eta2
     num_pts1   = mesh%nc_eta1+1
     num_pts2   = mesh%nc_eta2+1
+
+    ! For an initializing function, argument check should not be assertions
+    ! but more permanent if-tests. There is no reason to turn these off ever.
+    if( associated(eta1_interpolator) ) then
+       this%eta1_interpolator => eta1_interpolator
+    else
+       print *, 'initialize_scalar_field_2d(): eta1_interpolator pointer ', &
+            'is not associated. Exiting...'
+       stop
+    end if
+    if( associated(eta2_interpolator) ) then
+       this%eta2_interpolator => eta2_interpolator
+    else
+       print *, 'initialize_scalar_field_2d(): eta2_interpolator pointer ', &
+            'is not associated. Exiting...'
+       stop
+    end if
+
 
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
@@ -112,6 +137,20 @@ contains   ! *****************************************************************
     endif
     this%plot_counter = 0
   end subroutine initialize_scalar_field_2d
+
+  ! The following pair of subroutines are tricky. We want them as general 
+  ! services by the fields, hence we need this subroutine interface, yet
+  ! we would also like a flexibility in how the derivatives are computed.
+  ! A general interpolator interface would cover most of the cases, maybe
+  ! all. It could be that a finite difference scheme would also work, if
+  ! we ignore some of the interpolator services, like the ability to return
+  ! values anywhere instead of at the nodes.
+  ! For now, this interface would permit to have multiple implementations.
+  subroutine compute_eta1_derivative_on_col( field2d, ith_col, deriv_out )
+    type(scalar_field_2d), intent(in)    :: field2d
+    sll_int32, intent(in)                :: ith_col
+    sll_real64, dimension(:),intent(out) :: deriv_out
+  end subroutine compute_eta1_derivative_on_col
 
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
@@ -228,7 +267,7 @@ contains   ! *****************************************************************
 
     case default
 
-       print*, "No recognized output format"
+       print*, "write_scalar_field_2d: requested output format not recognized."
        stop
     end select
 

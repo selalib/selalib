@@ -7,6 +7,7 @@ program unit_test
   use geometry_functions
   use sll_module_mapped_meshes_2d
   use sll_landau_2d_initializer
+  use sll_cubic_spline_interpolator_1d
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
@@ -17,6 +18,11 @@ program unit_test
   character(len=4) :: cstep
   type(init_landau_2d), target :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
+  type(cubic_spline_1d_interpolator), target  :: interp_eta1
+  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+
   sll_int32  :: ierr, istep
   sll_int32 :: ix, iv, nnode_x1, nnode_v1
 
@@ -40,6 +46,14 @@ program unit_test
        sinprod_jac22 )
   m => mesh2d
 
+  print *, 'initialization of the interpolators'
+ ! Set up the interpolators for the field
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  interp_eta1_ptr => interp_eta1
+  interp_eta2_ptr => interp_eta2
+
+
   print*, 'initialization of distribution_function'
 
   call init_landau%initialize(m,CELL_CENTERED_FIELD,0.001_f64)
@@ -54,8 +68,10 @@ program unit_test
        name, &
        m, &
        CELL_CENTERED_FIELD, &
+       interp_eta1_ptr, &
+       interp_eta2_ptr, &
        p_init_f )
-  
+
   print*, 'write mesh and distribution function'
 
   istep = 0
