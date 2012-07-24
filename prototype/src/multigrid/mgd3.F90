@@ -1,6 +1,7 @@
 module mgd3
- 
+use mpi 
 #include "mgd3.h"
+implicit none
 
    integer, dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
    integer, dimension(20)   :: kpbgn,kcbgn
@@ -8,6 +9,7 @@ module mgd3
    integer, dimension(20)   :: sxi,exi,syi,eyi,szi,ezi
    integer, dimension(20)   :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
    integer, dimension(7,20) :: rdatatype
+   integer, parameter :: iout=60
 
    type, public :: block
       integer :: id
@@ -17,10 +19,11 @@ module mgd3
       integer :: ixp, jyq, kzr
       integer :: iex, jey, kez
       integer :: ngrid
-      integer :: nx, ny, nz
+      integer :: neighbor(26),bd(26)
    end type block
 
    type, public :: mg_solver
+      integer :: nx, ny, nz
       integer :: ibdry
       integer :: jbdry
       integer :: kbdry
@@ -28,23 +31,29 @@ module mgd3
       integer :: nyprocs
       integer :: nzprocs
       real(8) :: vbc(6),phibc(6,20)
+      integer :: comm3d,comm3dp,comm3dl,comm3dc
+      real(8) :: tolmax
+      real(8) :: xl,yl,zl
+      integer :: maxcy, kcycle, iprer, ipost, iresw
+      integer :: isol
    end type mg_solver
 
+   real(8), private, allocatable :: work(:)
 
-   private :: grid1_type
+   private grid1_type
+   real(8), parameter, private :: rro=1.0d0
 
 contains
 
 
-subroutine initialize(my_block,nwork,my_mg,IOUT,nerror)
+subroutine initialize(my_block,my_mg,nerror)
 
 implicit none
-include "mpif.h"
 
 integer     :: ngrid
 integer     :: ixp,jyq,kzr,iex,jey,kez,nxp2,nyp2,nzp2
 integer     :: sx,ex,sy,ey,sz,ez
-integer     :: nwork,IOUT,nerror
+integer     :: nerror,m0,m1
 type(block) :: my_block
 type(mg_solver) :: my_mg
  
@@ -114,7 +123,22 @@ type(mg_solver) :: my_mg
 !------------------------------------------------------------------------
 integer :: i,j,k,nxf,nyf,nzf,nxm,nym,nzm,kps,nxc,nyc,nzc
 integer :: sxm,exm,sym,eym,szm,ezm
+character(len=20) :: outfile
+character(len=1)  :: num(10)
+data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 
+
+!-----------------------------------------------------------------------
+! open file for output of messages and check that the number of 
+! processes is correct
+!
+outfile='out'
+outfile(4:5)='_'
+m1=mod(my_block%id,10)+1
+m0=mod(my_block%id/10,10)+1
+outfile(5:6)=num(m0)
+outfile(6:7)=num(m1)
+open(iout,file=outfile,status='unknown',form='formatted')
 
 !------------------------------------------------------------------------
 ! set /mgd/ variables to zero
@@ -171,9 +195,9 @@ kez = my_block%kez
 
 ngrid = my_block%ngrid
 
-nxp2 = my_block%nx+2
-nyp2 = my_block%ny+2
-nzp2 = my_block%nz+2
+nxp2 = my_mg%nx+2
+nyp2 = my_mg%ny+2
+nzp2 = my_mg%nz+2
 
 !------------------------------------------------------------------------
 ! make a number of checks
@@ -302,7 +326,8 @@ szk(ngrid)=sz
 ezk(ngrid)=ez
 
 call grid1_type(kdatatype(1,ngrid),sxk(ngrid),exk(ngrid), &
-                syk(ngrid),eyk(ngrid),szk(ngrid),ezk(ngrid),IOUT)
+                syk(ngrid),eyk(ngrid),szk(ngrid),ezk(ngrid))
+
 do k=ngrid-1,1,-1
   nxm=nxk(k)
   nym=nyk(k)
@@ -332,7 +357,7 @@ do k=ngrid-1,1,-1
   nyf=nym
   nzf=nzm
   call grid1_type(kdatatype(1,k),sxk(k),exk(k), &
-                  syk(k),eyk(k),szk(k),ezk(k),IOUT)
+                  syk(k),eyk(k),szk(k),ezk(k))
 end do
 !
 ! set work space indices for phi, cof at each grid level, and check
@@ -350,13 +375,17 @@ do k=ngrid,1,-1
   kcbgn(k)=kpbgn(k)+(exm-sxm+3)*(eym-sym+3)*(ezm-szm+3)
   kps=kcbgn(k)+8*(exm-sxm+3)*(eym-sym+3)*(ezm-szm+3)
 end do
-if (kps.gt.nwork) then
-  write(IOUT,230) kps,nwork,my_block%id
-  nerror=1
-  return
-else
-  write(IOUT,240) kps,nwork
-end if
+
+!if (kps.gt.nwork) then
+!  write(IOUT,230) kps,nwork,my_block%id
+!  nerror=1
+!  return
+!else
+!  write(IOUT,240) kps,nwork
+!end if
+
+allocate(work(kps))
+
 # if WMGD
 !------------------------------------------------------------------------
 ! For the new version of the multigrid code, set the boundary values 
@@ -539,15 +568,13 @@ do k=ngrid-1,1,-1
     nzr(k)=nzm
   end if
   call grid1_type(rdatatype(1,k),sxr(k),exr(k), &
-                  syr(k),eyr(k),szr(k),ezr(k),IOUT)
+                  syr(k),eyr(k),szr(k),ezr(k))
 end do
 # endif
 
-# if cdebug
-timing(81)=timing(81)+MPI_WTIME()-tinitial
-# endif
 return
 
+#if WMGD
 100 format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
     &       'nxprocs=',i3,/,'cannot use the new version of the ', &
     &       'multigrid code',/)
@@ -557,6 +584,7 @@ return
 120 format(/,'ERROR in mgdinit: nz=',i3,' is not a multiple of ', &
     &       'nzprocs=',i3,/,'cannot use the new version of the ', &
     &       'multigrid code',/)
+#endif
 130 format(/,'ERROR in mgdinit: ibdry=',i2,' jbdry=',i2,' kbdry=',i2, &
     &       /,'cannot use the old version of the multigrid code',     &
     &       /,'boundary conditions that are not periodic',            &
@@ -595,15 +623,15 @@ return
 220 format(/,'ERROR in mgdinit: ngrid=',i3,' kez=',i3,                  &
     &       /,'no coarsifying at the finest grid level in z-direction', &
     &       /,'this is not allowed by the mutligrid code',/)
-230 format(/,'ERROR in mgdinit: not enough work space',/,            &
-    &        ' kps=',i12,' nwork=',i12,' myid: ',i3,/,               &
-    &        ' -> put the formula for nwork in main in ',            &
-    &        'comments',/,'    and set nwork to the value of kps',/)
-240 format(/,'WARNING in mgdinit: kps=',i10,' nwork=',i10,          &
-    &         /,'can optimize the amount of memory needed by ',     &
-    &           'the multigrid code',/,'by putting the formula ',   &
-    &           'for nwork into comments and setting',/,'nwork ',   &
-    &           'to the value of kps',/)
+!230 format(/,'ERROR in mgdinit: not enough work space',/,            &
+!    &        ' kps=',i12,' nwork=',i12,' myid: ',i3,/,               &
+!    &        ' -> put the formula for nwork in main in ',            &
+!    &        'comments',/,'    and set nwork to the value of kps',/)
+!240 format(/,'WARNING in mgdinit: kps=',i10,' nwork=',i10,          &
+!    &         /,'can optimize the amount of memory needed by ',     &
+!    &           'the multigrid code',/,'by putting the formula ',   &
+!    &           'for nwork into comments and setting',/,'nwork ',   &
+!    &           'to the value of kps',/)
 250 format('ERROR in mgdinit: no coarsifying between level ', &
     &      i3,' and level ',i3,/,', the current version of ', &
     &      'the code cannot cope with that',/,                &
@@ -613,11 +641,10 @@ return
 end subroutine initialize
 
 
-subroutine grid1_type(gtype,sx,ex,sy,ey,sz,ez,IOUT)
+subroutine grid1_type(gtype,sx,ex,sy,ey,sz,ez)
 
 implicit none 
-include "mpif.h"
-integer :: gtype(7),realtype,sx,ex,sy,ey,sz,ez,IOUT
+integer :: gtype(7),realtype,sx,ex,sy,ey,sz,ez
 !------------------------------------------------------------------------
 ! Define the 7 derived datatypes needed to communicate the boundary 
 ! data of (sx-1:ex+1,sy-1:ey+1,sz-1:ez+1) arrays between 'myid' and
@@ -680,28 +707,24 @@ call MPI_TYPE_COMMIT(gtype(3),ierr)
 
 end subroutine grid1_type
 
-subroutine solve(isol,sx,ex,sy,ey,sz,ez,phif,rhsf,residual,ngrid, &
-                 work,maxcy,tolmax,kcycle,iprer,ipost,     &
-                 iresw,xl,yl,zl,rro,nx,ny,nz,comm3d,       &
-                 comm3dp,comm3dl,comm3dc,myid,neighbor,    &
-                 bd,phibc,iter,nprscr,IOUT,nerror)
-
+subroutine solve(phif,rhsf,r,my_block,my_mg,nerror)
 
 implicit none
-include "mpif.h"
-integer :: sx,ex,sy,ey,sz,ez,ngrid,IOUT
+integer :: sx,ex,sy,ey,sz,ez,ngrid
 integer :: maxcy,kcycle,iprer,ipost,iresw
-real(8) :: phif(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-real(8) :: rhsf(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-real(8) :: residual(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1),rro
-real(8) :: work(*),tolmax,xl,yl,zl,phibc(6,20)
+real(8) :: phif(:,:,:)
+real(8) :: rhsf(:,:,:)
+real(8) :: r(:,:,:)
+
+real(8) :: xl,yl,zl,phibc(6,20)
 integer :: isol,comm3d,comm3dp,comm3dl,comm3dc,myid
 integer :: neighbor(26),bd(26),iter,nerror
-logical :: nprscr
 integer :: k
 integer :: nx, ny, nz, icf
 real(8) :: relmax
 type(block) :: my_block
+type(mg_solver) :: my_mg
+
 
 !------------------------------------------------------------------------
 ! Parallel multigrid solver in 3-D cartesian coordinates for the 
@@ -752,6 +775,43 @@ integer :: ipf,irf,ip,ic,kcur,lev,ir1,ir2
 integer :: ireq,req(52)
 integer :: status(MPI_STATUS_SIZE,52),ierr
 
+comm3d   = my_mg%comm3d
+comm3dp  = my_mg%comm3dp
+comm3dl  = my_mg%comm3dl
+comm3dc  = my_mg%comm3dc
+phibc    = my_mg%phibc
+maxcy    = my_mg%maxcy
+kcycle   = my_mg%kcycle
+iprer    = my_mg%iprer
+ipost    = my_mg%ipost
+iresw    = my_mg%iresw
+kcycle   = my_mg%kcycle
+nx       = my_mg%nx
+ny       = my_mg%ny
+nz       = my_mg%nz
+
+xl       = my_mg%xl
+yl       = my_mg%yl
+zl       = my_mg%zl
+
+sx       = my_block%sx
+sy       = my_block%sy
+sz       = my_block%sz
+
+ex       = my_block%ex
+ey       = my_block%ey
+ez       = my_block%ez
+
+ngrid    = my_block%ngrid
+
+
+myid     = my_block%id
+
+neighbor = my_block%neighbor
+bd       = my_block%bd
+
+isol     = my_mg%isol
+
 !------------------------------------------------------------------------
 ! discretize pde at all levels
 !
@@ -772,7 +832,9 @@ if (isol.eq.1) then
     ic=kcbgn(k)
     call mgdrpde(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,work(ic),xl,yl,zl,IOUT)
   end do
+
 else
+
 ! pressure: have to do a lot more work. The coefficients in the new
 !           and old versions of the multigrid code are located at
 !           different places on the grid.
@@ -792,7 +854,7 @@ else
   nyf=nyk(ngrid)
   nzf=nzk(ngrid)
   icf=kcbgn(ngrid)
-  call mgdpfpde(sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,work(icf),residual,xl,yl,zl,IOUT)
+  call mgdpfpde(sxf,exf,syf,eyf,szf,ezf,nxf,nyf,nzf,work(icf),r,xl,yl,zl,IOUT)
 # if WMGD
 !
 ! new version: determine coefficients at coarser grid levels from
@@ -812,7 +874,7 @@ else
     nzm=nzk(k)
     ic=kcbgn(k)
     call mgdphpde(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,work(ic),  &
-                  sx,ex,sy,ey,sz,ez,nxf,nyf,nzf,residual,bd,xl,yl,zl,   &
+                  sx,ex,sy,ey,sz,ez,nxf,nyf,nzf,r,bd,xl,yl,zl,   &
                   IOUT)
   end do
 # else
@@ -835,7 +897,7 @@ else
     nyf=nyr(ngrid-1)
     nzf=nzr(ngrid-1)
     lev=1
-    call mgdrsetf(sxf,exf,syf,eyf,szf,ezf,work(ir1),residual,IOUT)
+    call mgdrsetf(sxf,exf,syf,eyf,szf,ezf,work(ir1),r,IOUT)
 !
 ! for the levels k=ngrid-1,1, calculate the coefficients from the
 ! densities stored in the arrays work(ir1) and work(ir2)
@@ -917,7 +979,7 @@ call mgdsetf(sxf,exf,syf,eyf,szf,ezf,work(ipf),work(irf),phif,rhsf,IOUT)
 kcur=ngrid
 do iter=1,maxcy
   call mgdkcyc(work,rhsf,kcur,kcycle,iprer,ipost,iresw,         &
-               comm3dp,comm3dl,comm3dc,neighbor,bd,phibc,IOUT)
+               comm3dp,comm3dl,comm3dc,neighbor,bd,phibc)
   sxm=sxk(ngrid)
   exm=exk(ngrid)
   sym=syk(ngrid)
@@ -926,7 +988,7 @@ do iter=1,maxcy
   ezm=ezk(ngrid)
   ip=kpbgn(ngrid)
   call mgderr(relmax,sxm,exm,sym,eym,szm,ezm,phif,work(ip),comm3d,IOUT)
-  if (relmax.le.tolmax) goto 1000
+  if (relmax.le.my_mg%tolmax) goto 1000
 end do
 !------------------------------------------------------------------------
 ! If not converged in maxcy, issue an error message and quit
@@ -947,7 +1009,7 @@ if (isol.eq.1) then
 else
   avo=0.0d0
 end if
-call gscale(sx,ex,sy,ey,sz,ez,phif,avo,acorr,comm3d,nx,ny,nz,isol,IOUT)
+call gscale(sx,ex,sy,ey,sz,ez,phif,avo,acorr,comm3d,nx,ny,nz)
 !
 ! exchange boundary data and impose periodic BCs
 !
@@ -971,10 +1033,10 @@ call mgdbdry(sx,ex,sy,ey,sz,ez,phif,bd,vbc,IOUT)
 # endif
 
 if (isol.eq.1) then
-   if (nprscr.and.myid.eq.0) write(IOUT,110) relmax,iter,acorr
+   if (myid.eq.0) write(IOUT,110) relmax,iter,acorr
    110 format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
 else
-  if (nprscr.and.myid.eq.0) write(IOUT,120) relmax,iter,acorr
+  if (myid.eq.0) write(IOUT,120) relmax,iter,acorr
    120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
 end if
 
@@ -982,5 +1044,34 @@ return
 end subroutine solve
 
 
+subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
+implicit none 
+
+integer :: n, numprocs, myid, s, e
+integer :: nlocal
+integer :: deficit
+!------------------------------------------------------------------------
+!  From the MPE library
+!  This file contains a routine for producing a decomposition of a 1-d 
+!  array when given a number of processors.  It may be used in "direct" 
+!  product decomposition.  The values returned assume a "global" domain 
+!  in [1:n]
+!
+! Code      : tmgd3
+! Called in : main
+! Calls     : --
+!------------------------------------------------------------------------
+nlocal  = n / numprocs
+s = myid * nlocal + 1
+deficit = mod(n,numprocs)
+s = s + min(myid,deficit)
+if (myid .lt. deficit) then
+   nlocal = nlocal + 1
+endif
+e = s + nlocal - 1
+if (e .gt. n .or. myid .eq. numprocs-1) e = n
+return
+
+end subroutine MPE_DECOMP1D
 
 end module mgd3

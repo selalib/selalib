@@ -1,8 +1,8 @@
 subroutine mgdend(ngrid)
 use mgd3
+use mpi
 implicit none
 #include "mgd3.h"
-include "mpif.h"
 
 integer :: ngrid
 

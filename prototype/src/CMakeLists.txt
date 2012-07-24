@@ -248,7 +248,7 @@ ENDIF()
 
 IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
-	add_subdirectory(mgd3)
+	add_subdirectory(multigrid)
 ENDIF()
 add_subdirectory(LinRood)
 
@@ -300,9 +300,9 @@ IF(MUDPACK_ENABLED)
 	add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
         set(PROCS 4)
         set(ARGS "")
-	add_test(NAME mgd3 COMMAND 
+	add_test(NAME multigrid COMMAND 
 	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_mgd3
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 ENDIF()
 
