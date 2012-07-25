@@ -307,7 +307,9 @@ c
       end do
       write(*,201) errmax
       end if
+      print*,"PASSED"
 
+      
       end
 
       subroutine cofx(x,cxx,cx,cex)

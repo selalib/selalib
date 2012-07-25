@@ -51,9 +51,12 @@ contains
 
     type (mesh_descriptor_1D), pointer :: geometry
 
-    type (field_1D_vec1), pointer      :: ex
-    type (field_1D_vec1), pointer      :: ex_exact
-    type (field_1D_vec1), pointer      :: rho
+    !type (field_1D_vec1), pointer      :: ex
+    !type (field_1D_vec1), pointer      :: ex_exact
+    !type (field_1D_vec1), pointer      :: rho
+    sll_real64, dimension(:), allocatable :: ex
+    sll_real64, dimension(:), allocatable :: ex_exact
+    sll_real64, dimension(:), allocatable :: rho
     type (poisson_1d_periodic)         :: poisson
 
     sll_int32   :: nc_eta1

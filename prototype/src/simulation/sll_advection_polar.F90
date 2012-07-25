@@ -234,22 +234,22 @@ contains
     end do
 
     !2nd step of RK4
-!!$    do i=1,nr+1
-!!$       r=rmin+real(i-1)*dr
-!!$       do j=1,ntheta+1
-!!$          theta=real(j-1,f64)*dtheta
-!!$          rk%r4(i,j)=r-dt/2.0_f64*adv%grad_phi(2,i,j)/r
-!!$          rk%theta4(i,j)=theta+dt/2.0_f64*adv%grad_phi(1,i,j)/r
-!!$
-!!$          call correction_r(rk%r4(i,j),rmin,rmax)
-!!$          call correction_theta(rk%theta4(i,j))
-!!$
-!!$          adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)
-!!$       end do
-!!$    end do
-!!$
-!!$    call poisson_solve_polar(adv)
-!!$    call compute_grad_field(adv)
+    do i=1,nr+1
+       r=rmin+real(i-1)*dr
+       do j=1,ntheta+1
+          theta=real(j-1,f64)*dtheta
+          rk%r4(i,j)=r-dt/2.0_f64*adv%grad_phi(2,i,j)/r
+          rk%theta4(i,j)=theta+dt/2.0_f64*adv%grad_phi(1,i,j)/r
+
+          call correction_r(rk%r4(i,j),rmin,rmax)
+          call correction_theta(rk%theta4(i,j))
+
+          adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)
+       end do
+    end do
+
+    call poisson_solve_polar(adv)
+    call compute_grad_field(adv)
 
     !construction of spline coeficients for a
     call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
@@ -282,25 +282,25 @@ contains
     end do
 
     !4th step of RK4
-!!$    do i=1,nr+1
-!!$       r=rmin+real(i-1)*dr
-!!$       do j=1,ntheta+1
-!!$          theta=real(j-i)*dtheta
-!!$          rk%r4(i,j)=r+rk%r1(i,j)
-!!$          rk%theta4(i,j)=theta+rk%theta1(i,j)
-!!$          call correction_r(rk%r4(i,j),rmin,rmax)
-!!$          call correction_theta(rk%theta4(i,j))
-!!$
-!!$          adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)
-!!$       end do
-!!$    end do
-!!$
-!!$    call poisson_solve_polar(adv)
-!!$    call compute_grad_field(adv)
-!!$
-!!$    !construction of spline coeficients for a
-!!$    call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
-!!$    call compute_spline_2d(adv%grad_phi(2,:,:),adv%spl_a2)
+    do i=1,nr+1
+       r=rmin+real(i-1)*dr
+       do j=1,ntheta+1
+          theta=real(j-i)*dtheta
+          rk%r4(i,j)=r+rk%r1(i,j)
+          rk%theta4(i,j)=theta+rk%theta1(i,j)
+          call correction_r(rk%r4(i,j),rmin,rmax)
+          call correction_theta(rk%theta4(i,j))
+
+          adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)
+       end do
+    end do
+
+    call poisson_solve_polar(adv)
+    call compute_grad_field(adv)
+
+    !construction of spline coeficients for a
+    call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
+    call compute_spline_2d(adv%grad_phi(2,:,:),adv%spl_a2)
 
     do i=1,nr+1
        do j=1,ntheta+1
@@ -327,11 +327,13 @@ contains
        end do
     end do
 
-    do i=1,nr+1
-       do j=1,ntheta+1
-          adv%f(i,j)=interpolate_value_2d(rk%r1(i,j),rk%theta1(i,j),adv%spl_f)
-       end do
-    end do
+    !updating the distribution function
+    call deposit_value_2D(rk%r1,rk%theta1,adv%spl_f,adv%f)
+!!$    do i=1,nr+1
+!!$       do j=1,ntheta+1
+!!$          adv%f(i,j)=interpolate_value_2d(rk%r1(i,j),rk%theta1(i,j),adv%spl_f)
+!!$       end do
+!!$    end do
 
   end subroutine rk4_polar_advect
 

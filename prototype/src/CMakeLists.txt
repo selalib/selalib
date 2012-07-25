@@ -68,7 +68,7 @@ ENDIF()
 ##########################################################
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
-set(HDF5_ENABLED YES CACHE BOOL " ")
+set(HDF5_ENABLED ON CACHE BOOL " ")
 
 # recherche de HDF5
 IF(HDF5_ENABLED)
@@ -76,38 +76,51 @@ IF(HDF5_ENABLED)
 		set(HDF5_ROOT $ENV{HDF5_ROOT})
 	ENDIF()
 	find_package(HDF5 QUIET)
-	if (HDF5_FOUND)
+	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
 		include_directories(${HDF5_INCLUDE_DIRS})
-	else (HDF5_FOUND)
+	ELSE()
 		add_definitions(-DNOHDF5)
-		set(HDF5_ENABLED NO)
+		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
 		set(HDF5_LIBRARIES "")
-	endif(HDF5_FOUND)
+	ENDIF()
 ELSE(HDF5_ENABLED)
 	add_definitions(-DNOHDF5)
 ENDIF(HDF5_ENABLED)
 ##########################################################
 
 ##########################################################
+# add the cache entry FFT_DEFAULT_LIBRARY to define the default library use by sll_fft
+set(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft")
+
 # add the cache entry FFTPACK_ENABLED for enable/disable fftpack
-set(FFTPACK_ENABLED NO CACHE BOOL " ")
+set(FFTPACK_ENABLED OFF CACHE BOOL " ")
 
 # recherche le package FFTW
-set(FFTW_ENABLED YES CACHE BOOL " ")
+set(FFTW_ENABLED ON CACHE BOOL " ")
+
 IF(FFTW_ENABLED)
 	IF( DEFINED ENV{FFTW_ROOT} )
 		set(FFTW_ROOT $ENV{FFTW_ROOT})
 	ENDIF()
 	find_package(FFTW QUIET)
 	IF(FFTW_FOUND)
-		message(STATUS "FFTW FOUND")	
+		message(STATUS "FFTW FOUND")
   		include_directories(${FFTW_INCLUDE_DIRS})
 	ELSE(FFTW_FOUND)
 		message(STATUS "FFTW NOT FOUND")
-		set(FFTW_ENABLED NO)
+		set(FFTW_ENABLED NO CACHE BOOL " " FORCE)
 	ENDIF(FFTW_FOUND)
 ENDIF(FFTW_ENABLED)
+
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK" AND NOT FFTPACK_ENABLED)
+	message("Please put on FFTPACK_ENABLED to use fftpack")
+ENDIF()
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_FOUND)
+	message("You can't use fftw library because it's not installed")
+ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_ENABLED)
+	message("Please put on FFTW_ENABLED to use fftw")
+ENDIF()
 ##########################################################
 
 ##########################################################
@@ -125,7 +138,7 @@ IF(PASTIX_ENABLED)
 		message(STATUS "PASTIX FOUND")
 	ELSE(PASTIX_FOUND)
 		message(STATUS "PASTIX NOT FOUND")
-		set(PASTIX_ENABLED NO)
+		set(PASTIX ENABLED YES CACHE BOOL " " FORCE)
 	ENDIF(PASTIX_FOUND)
 ENDIF(PASTIX_ENABLED)
 ##########################################################
@@ -153,7 +166,7 @@ ELSE()
 ENDIF()
 
 #add flag to disabled MPI stuff for debug
-set(DISABLED_MPI_MODULE NO)
+set(DISABLED_MPI_MODULE OFF CACHE BOOL " ")
 
 # recherche de MPI
 # I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
@@ -164,6 +177,7 @@ IF(MPI_FOUND)
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
+	#set(DISABLED_MPI_MODULE ON CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
 
 # include's
@@ -185,8 +199,8 @@ else(DOXYGEN_FOUND)
    MESSAGE(STATUS "DOXYGEN NOT FOUND")
 endif(DOXYGEN_FOUND)
 
-set(FISHPACK_ENABLED CACHE BOOL OFF)
-set(MUDPACK_ENABLED CACHE BOOL OFF)
+set(FISHPACK_ENABLED OFF CACHE BOOL " ")
+set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 
 #############
 #  RESUME
@@ -230,9 +244,9 @@ IF(NOT STDF95)
 add_subdirectory(poisson_solvers)
 ENDIF()
 
-#hight-level
+#high-level
 add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
-add_dependencies(geometry_functions sll_assertion sll_constants sll_working_precision)
+add_dependencies(geometry_functions sll_utilities sll_assertion sll_constants sll_working_precision)
 add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
@@ -283,6 +297,7 @@ set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
 add_test(NAME constants COMMAND test_constants)
 add_test(NAME utilities COMMAND test_utilities)
 add_test(NAME low_level_file_io COMMAND test_io)
+set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
@@ -296,12 +311,14 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 IF(MUDPACK_ENABLED)
 	add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
+        set_tests_properties(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
         set(PROCS 4)
         set(ARGS "")
 	add_test(NAME multigrid COMMAND 
 	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
 	${MPIEXEC_POSTFLAGS} ${ARGS})
+        set_tests_properties(multigrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
 # we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
@@ -347,3 +364,17 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(BSL BSL/test_landau_2d)
    #add_test(CSL CSL/test_csl)
 #add_test(simulation_1d simulation/test_simulation_1d)
+
+
+set(FORTRANCL_ENABLED CACHE BOOL OFF)
+# recherche de FORTRANCL
+IF(FORTRANCL_ENABLED)
+	find_package(FORTRANCL QUIET)
+	if (FORTRANCL_FOUND)
+		message(STATUS "FORTRANCL FOUND")
+	   include_directories(${FORTRANCL_INCLUDE_DIRS})
+           add_subdirectory(opencl)
+           add_test(NAME opencl COMMAND test_opencl)
+           set_tests_properties(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+	endif(FORTRANCL_FOUND)
+ENDIF(FORTRANCL_ENABLED)

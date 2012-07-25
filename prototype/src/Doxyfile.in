@@ -641,7 +641,12 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = 
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/fft/sll_fft.F90 \
+			 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
+			 @CMAKE_CURRENT_SOURCE_DIR@/mgd3 \
+			 @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
+			 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
+			 @CMAKE_CURRENT_SOURCE_DIR@/CSL
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix file system feature) are excluded 
@@ -1444,20 +1449,22 @@ INCLUDE_FILE_PATTERNS  =
 # undefined via #undef or recursively expanded use the := operator 
 # instead of the = operator.
 
-PREDEFINED             = NEW_ACCESS_FUNCTION= \
-                         NEW_LAYOUT_FUNCTION= \
-                         NEW_DELETE_LAYOUT_FUNCTION= \
-                         MAKE_GET_LAYOUT_SLOT_FUNCTION= \
-                         MAKE_SET_LAYOUT_SLOT_FUNCTION= \
-                         MAKE_GET_BOX_SLOT_FUNCTION= \
-			 sll_int32=integer(kind=i32) \
-			 sll_int64=integer(kind=i64) \
-			 sll_real32=real(kind=f32) \
-			 sll_real64=real(kind=f64) \
-			 sll_comp32=complex(kind=f32) \
-			 sll_comp64=complex(kind=f64)
-			 #SW(a,b)= swp=(a); a=(b); b=swp \
-                         #aa:=
+PREDEFINED             = 
+
+#			 NEW_ACCESS_FUNCTION= \
+#                         NEW_LAYOUT_FUNCTION= \
+#                         NEW_DELETE_LAYOUT_FUNCTION= \
+#                         MAKE_GET_LAYOUT_SLOT_FUNCTION= \
+#                         MAKE_SET_LAYOUT_SLOT_FUNCTION= \
+#                         MAKE_GET_BOX_SLOT_FUNCTION= \
+#			 sll_int32=integer(kind=i32) \
+#			 sll_int64=integer(kind=i64) \
+#			 sll_real32=real(kind=f32) \
+#			 sll_real64=real(kind=f64) \
+#			 sll_comp32=complex(kind=f32) \
+#			 sll_comp64=complex(kind=f64)
+#			 #SW(a,b)= swp=(a); a=(b); b=swp \
+#                         #aa:=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
