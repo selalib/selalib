@@ -166,7 +166,7 @@ ELSE()
 ENDIF()
 
 #add flag to disabled MPI stuff for debug
-set(DISABLED_MPI_MODULE OFF CACHE BOOL " " FORCE)
+set(DISABLED_MPI_MODULE OFF CACHE BOOL " ")
 
 # recherche de MPI
 # I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
