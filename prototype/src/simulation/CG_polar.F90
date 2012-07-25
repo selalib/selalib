@@ -14,6 +14,7 @@ program cg_polar
   type(polar_data), pointer :: data
   type(polar_VP_data), pointer :: adv
   type(polar_VP_rk4), pointer :: rk
+  type(time_mark), pointer :: t1,t2
   sll_int32 :: i, j, step,fin
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
@@ -21,7 +22,8 @@ program cg_polar
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   character (len=30) :: cgf, thd
   sll_int32 :: mod
-  sll_real64 :: mode
+  sll_real64 :: mode,temps
+  integer :: hh,min,ss
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
@@ -29,6 +31,9 @@ program cg_polar
   mod=3
   !read(*,NML=modes)
   mode=real(mod,f64)
+
+  t1 => new_time_mark()
+  t2 => new_time_mark()
 
   rmin=1.0_f64
   rmax=10.0_f64
@@ -56,7 +61,7 @@ program cg_polar
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=50.0_f64
+  tf=1.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -184,6 +189,18 @@ program cg_polar
 
   do step=1,nb_step
 
+     if (step==1) then
+        t1 => start_time_mark(t1)
+     else if (step==101) then
+        t2 => start_time_mark(t2)
+        temps=time_elapsed_between(t1,t2)
+        temps=temps/100*real(nb_step,f32)
+        hh=floor(temps/3600.0d0)
+        min=floor((temps-3600.0d0*real(hh))/60.0d0)
+        ss=temps-3600.0d0*real(hh)-60.0d0*real(min)
+        print*,'# temps de calcul estimmé : ',hh,'h',min,'min',ss,'s'
+     end if
+
      if (scheme==1) then
         !classical semi-Lagrangian scheme
         call SL_classic(adv,rk)
@@ -254,6 +271,8 @@ program cg_polar
   close(21)
   !print*,dr,w0,w,w/w0,'#dr, w0, w,w/w0'
 
+  t1 => delete_time_mark(t1)
+  t2 => delete_time_mark(t2)
   call vp_data_delete(adv)
   call vp_rk4_delete(rk)
 
@@ -286,7 +305,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'srk4'//sch//char(095)//fin//'s.dat'
+    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'rk4'//sch//char(095)//fin//'s.dat'
 
   end subroutine scgf
 
@@ -317,7 +336,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'srk4'//sch//char(095)//fin//'s.dat'
+    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'rk4'//sch//char(095)//fin//'s.dat'
 
   end subroutine sthd
 
