@@ -313,6 +313,7 @@ c
 	end do
       end do
       write(*,201) errmax
+      print*,"PASSED"
       end
 
       subroutine cof(x,y,cxx,cyy,cx,cy,ce)
