@@ -14,7 +14,7 @@ The basic download and installation procedure is to run:
 (tested only on Apple Macbook Pro with Lion)
 
 svn checkout http://fortrancl.googlecode.com/svn/trunk/ fortrancl
-cd fortran
+cd fortrancl
 autoreconf -i
 ./configure --prefix=/usr/local
 make 
