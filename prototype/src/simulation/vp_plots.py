@@ -1,22 +1,91 @@
+from numpy import *
 from pylab import *
+import tables
+import string
+rundir='/Users/sonnen/Codes/selalib/prototype/build/runs/'
 
-rundir='run_k=0.26/'
 
-x=loadtxt(rundir+'x.txt')
-v=loadtxt(rundir+'v.txt')
-v_df = loadtxt(rundir+'deltaf_movie_v.txt')
-t=loadtxt(rundir+'rho_movie_t.txt')
-rho=loadtxt(rundir+'rho_movie.txt')
-#rhok = loadtxt(rundir+'rho_from_E_movie.txt')
-thdiag = loadtxt(rundir+'time_history.txt')
-phi=loadtxt(rundir+'phi_movie.txt')
-efield = loadtxt(rundir+'efield_movie.txt')
-edr = loadtxt(rundir+"Edr.txt")
-deltaf=loadtxt(rundir+'deltaf_movie.txt')
-nx=x.size
-nv=v.size
-deltaf.shape = (deltaf.shape[0]/nx,nx,deltaf.shape[1])
-fhat0v = sum(deltaf,axis=1)
+thdiag = loadtxt(rundir+'thdiag.dat')
+efield = loadtxt(rundir+'exdiag.dat')
+rho = loadtxt(rundir+'rhodiag.dat')
+param_file = open(rundir+'param_out.dat')
+param = param_file.readline().split()
+case = param[0]
+xmin = string.atof(param[1])
+xmax = string.atof(param[2])
+ncx = string.atoi(param[3])
+dx = (xmax-xmin) / ncx
+vmin = string.atof(param[4])
+vmax = string.atof(param[5])
+ncv = string.atoi(param[6])
+dt = string.atof(param[7])
+nbiter = string.atoi(param[8])
+freqdiag = string.atoi(param[9])
+if param[10]== 'F':
+    is_delta_f = False
+else:
+    is_delta_f = True
+#edr = loadtxt(rundir+"Edr.txt")
+x=linspace(xmin,xmax,ncx+1)
+v=linspace(vmin,vmax,ncv+1)
+X,V=meshgrid(x,v)
+# Maxwellian needs to be added to f in delta_f case as delta_f is stored
+if is_delta_f:
+    fmaxw = exp(-0.5*V*V)/sqrt(2*pi)
+else:
+    fmaxw = zeros_like(X)
+    
+def read_h5(it):
+    """reads hdf5 file and returns dist_func array"""
+    h5file=tables.openFile('landau'+string.zfill(it,4)+'-landau.h5','r')
+    obj = h5file.getNode("/landau")
+    a = obj.read()
+    h5file.close()
+    return a
+
+def plot_f(it,ivmin=0,ivmax=-1,fmax=None):
+    clf()
+    f=read_h5(it)+fmaxw
+    fplot = f[ivmin:ivmax,:]
+    if fmax == None:
+        fmax = fplot.max()
+    ratio = (xmax-xmin) / (v[ivmax]-v[ivmin])
+    imshow(fplot,origin='lower',extent=(xmin,xmax,v[ivmin],v[ivmax]),
+           aspect=ratio,vmax=fmax)
+    colorbar()
+
+def movie_f(ivmin=0,ivmax=-1,fmax=None,vphase=0.):
+    clf()
+    f=read_h5(1)+fmaxw
+    fplot = f[ivmin:ivmax,:]
+    ratio = (xmax-xmin) / (v[ivmax]-v[ivmin])
+    if fmax == None:
+        fmax = fplot.max()
+    im=imshow(fplot,origin='lower',extent=(xmin,xmax,v[ivmin],v[ivmax]),
+           aspect=ratio,vmax=fmax)
+    colorbar()
+    for it in range(2,nbiter/freqdiag):
+        f = read_h5(it)+fmaxw
+        f1 = f[ivmin:ivmax,:]
+        # phase shift
+        if vphase <> 0.0:
+            fplot=zeros((f1.shape[0],ncx),dtype=float)
+            for i in range(ncx):
+                xshift = mod(i*dx + (vphase*freqdiag*(it-1))*dt, xmax-xmin)
+                k = int(xshift/dx)
+                alpha = xshift - k*dx
+                fplot[:,i] = (1.-alpha)*f1[:,k] + alpha*f1[:,k+1]
+        else:
+            fplot = f1[:,:-1]
+        #title("f at time "+str((it-1)*dt))
+        im.set_data(fplot)
+        draw()
+
+def plot_fhatv(it):
+    clf()
+    f=read_h5(it)
+    f_hatv=sum(f,axis=1)
+    plot(v,f_hatv)
 
 def plot_thdiag():
     """Plot time history monitoring data: average, L1 norm, kinetic entropy, L2 norm."""
@@ -30,7 +99,7 @@ def plot_thdiag():
     title('L1 norm')
     subplot(223)
     plot(thdiag[:,0], thdiag[:,3])
-    title('kinetic entropy')
+    title('momentum')
     subplot(224)
     plot(thdiag[:,0], thdiag[:,4])
     title('L2 norm')
@@ -58,21 +127,6 @@ def plot_avg(x, u, tstart=0):
     plot(x,uavg)
     title("average")
     draw()
-    
-def movie_rho(maxit=-1):
-    t=loadtxt(rundir+'rho_movie_t.txt')
-    rho=loadtxt(rundir+'rho_movie.txt')
-    umin = rho.min()
-    umax = rho.max()
-    if maxit < 0:
-        imax = t.size
-    else:
-        imax = maxit
-    for i in range(imax):        
-        plot(x,rho[i,:])
-        ylim(umin,umax)
-        title('rho at time '+ str(t[i]))
-        draw()
 
 def plot1d(u,it=0, name="u"):
     """Plots 1d function u versus x at time t[it]."""
@@ -87,22 +141,6 @@ def movie1d(x,u,name='movie',imin=0, imax=201):
         ylim(umin,umax)
         draw()
 
-def plot2d(u,it=0, name="u"):
-    """Plots 2 function at time t[it]."""
-    imshow(u[it,:,:].transpose(), origin='lower', aspect=4.0,
-           extent=(x[0],x[-1], v_df[0],v_df[-1]))
-    colorbar()
-    title(name + ' at time '+ str(t[it]))
-    
-def movie2d(u):
-    hold(False)
-    for i in range(u.shape[0]/2):
-        clf()
-        title('frame='+str(i))
-        imshow(u[i,:,:].transpose(), origin='lower', aspect=4.0,
-               extent=(x[0],x[-1], v_df[0],v_df[-1]))
-        colorbar()
-        draw()
 
 def phase(a):
     """Compute phase of array of complex number"""
@@ -122,7 +160,8 @@ def phase(a):
     return c
 
 def plot_phase_modes_time(u,f=phase):
-    uk = rfft(u)/nx
+    uk = rfft(u)/u.shape[1]
+    t=arange(u.shape[0]) * dt
     clf()
     hold(True)
     plot(t,f(uk[:,1])/t,'r',label='k=1')
@@ -137,7 +176,8 @@ def plot_phase_modes_time(u,f=phase):
     hold(False)
 
 def plot_modes_time(u,f=abs):
-    uk = rfft(u)/nx
+    uk = rfft(u[:,:-1])/(ncx+1)
+    t=arange(u.shape[0]) * dt
     clf()
     hold(True)
     plot(t,f(uk[:,1]),'r',label='k=1')
@@ -152,16 +192,17 @@ def plot_modes_time(u,f=abs):
     hold(False) 
         
 
-def plot_modes_frequency(u,istart=0,iend=t.size-1,f=abs):
+def plot_modes_frequency(u,istart=0,iend=-1,f=abs,step=1):
     """Plot modes versus frequency using the butterfly transform in time
     of the Fourier modes starting at time t[itstart].
     The butterfly of a function u defined in [t1,t2] consists in extending
     it to [t1-t2,t2] by parity. It is then considered periodic on this interval."""
-
+    t=arange(u[::step,:].shape[0]) * dt * step
+    nx = ncx+1
     # compute frequency range
     freq = arange(t[istart:iend].size+1)*pi/(t[iend]-t[istart])
     # compute Fourier transform of u
-    uk = rfft(u)/nx
+    uk = rfft(u[::step,:-1])/nx
     # compute the butterfly transform of the first 7 modes of uk (excluding 0)
     s = uk.shape
     uk_butterfly = empty((8,2*s[0]-1))
@@ -169,7 +210,7 @@ def plot_modes_frequency(u,istart=0,iend=t.size-1,f=abs):
         uk_butterfly[i,s[0]-1:] = uk[:,i] 
         uk_butterfly[i,:s[0]-1] = uk[:0:-1,i]
     # Fourier transform of uk_butterfly
-    ukom = fft(uk_butterfly)/(iend-istart+1)
+    ukom = fft(uk_butterfly)/t.size
     # plot positive half of spectrum
     clf()
     hold(True)
@@ -183,3 +224,11 @@ def plot_modes_frequency(u,istart=0,iend=t.size-1,f=abs):
     title('rho_k vs frequency') 
     legend()
     hold(False) 
+
+def print_conserved():
+    """Prints errors in conserved quantities"""
+    print 'mass:', (thdiag[:,1].max()-thdiag[:,1].min())/thdiag[:,1].max()
+    print 'L1 norm:',(thdiag[:,2].max()-thdiag[:,2].min())/thdiag[:,2].max()
+    print 'Total momentum:',(thdiag[:,3].max()-thdiag[:,3].min())
+    print 'Total energy:',(thdiag[:,7].max()-thdiag[:,7].min())/thdiag[:,7].max()
+    
