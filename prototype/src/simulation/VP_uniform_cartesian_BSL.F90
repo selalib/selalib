@@ -34,7 +34,9 @@ program VP_1d
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
+  sll_int32  :: freqdiag
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
+  sll_real64 :: l1norm, l2norm
   character(len=32) :: fname, case
   sll_int32  :: istep
   sll_int32  :: nbox
@@ -149,6 +151,8 @@ program VP_1d
        fname, &
        mesh2d_base, &
        NODE_CENTERED_FIELD, &
+       interp_x, &
+       interp_v, &
        p_init_f )
   ! write mesh and initial distribution function
   call write_scalar_field_2d(f) 
@@ -188,13 +192,17 @@ program VP_1d
      ! diagnostics
      time = istep*dt
      mass = delta_x * delta_v * sum(FIELD_DATA(f)(1:Ncx,:))
+     l1norm = delta_x * delta_v * sum(abs(FIELD_DATA(f)(1:Ncx,:)))
+     l2norm = delta_x * delta_v * sum(FIELD_DATA(f)(1:Ncx,:)*FIELD_DATA(f)(1:Ncx,:))
      momentum = delta_x * delta_v * sum(matmul(FIELD_DATA(f)(1:Ncx,:),v_array))
      kinetic_energy = delta_x * delta_v * 0.5_f64 * &
           sum(matmul(FIELD_DATA(f)(1:Ncx,:),v_array**2))
      potential_energy = delta_x * 0.5_f64 * sum(efield**2)
-     write(th_diag,*) time, mass, momentum, kinetic_energy, potential_energy
+     write(th_diag,*) time, mass, l1norm, momentum, l2norm, &
+          kinetic_energy, potential_energy, kinetic_energy + potential_energy
      write(ex_diag,*) efield
-     if (mod(istep,10)==0) then
+     if (mod(istep,freqdiag)==0) then
+        print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
   end do

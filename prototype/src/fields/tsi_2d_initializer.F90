@@ -12,6 +12,7 @@ module sll_tsi_2d_initializer
     sll_real64 :: xi
     sll_real64 :: v0
     class(sll_mapped_mesh_2d_base), pointer :: mesh
+    logical :: is_delta_f
   contains
     procedure, pass(init_obj) :: initialize => initialize_tsi_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_tsi_2d
@@ -20,14 +21,15 @@ module sll_tsi_2d_initializer
 contains
 
   subroutine initialize_tsi_2d( init_obj, mesh, data_position, eps_val, &
-       kx_val, v0_val )
+       kx_val, v0_val, is_delta_f )
     class(init_tsi_2d), intent(inout)  :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
     sll_real64, intent(in), optional     :: kx_val
     sll_real64, intent(in), optional     :: v0_val
-
+    logical, intent(in), optional        :: is_delta_f
+    
     init_obj%data_position = data_position
     if( present(eps_val) ) then
        init_obj%eps = eps_val
@@ -43,6 +45,11 @@ contains
        init_obj%v0 = v0_val
     else
        init_obj%v0 = 2.4_f64 ! just some default value
+    end if
+    if( present(is_delta_f) ) then
+       init_obj%is_delta_f = is_delta_f
+    else
+       init_obj%is_delta_f = .false. ! just some default value
     end if
     init_obj%mesh => mesh
   end subroutine initialize_tsi_2d
@@ -87,8 +94,13 @@ contains
           else
              print*, 'f_x1x2_tsi_2d:',  init_obj%data_position, 'not defined'
           end if
-          data_out(i,j) = (1+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
+          if (init_obj%is_delta_f) then ! delta_f code
+             data_out(i,j) = (1+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
                *(exp(-.5_f64*(v-v0)**2)+ exp(-.5_f64*(v+v0)**2))
+          else 
+             data_out(i,j) = (1+eps*cos(kx*x))*0.5_f64/sqrt(2*sll_pi) &
+                  *(exp(-.5_f64*(v-v0)**2)+ exp(-.5_f64*(v+v0)**2))
+          end if
        end do
     end do
   end subroutine f_x1x2_tsi_2d

@@ -1,3 +1,4 @@
+
 subroutine write_xdmf_3d(my_id,nproc,f,sx,ex,sy,ey,sz,ez,hx,hy,hz,error)
 
 use hdf5 
@@ -8,17 +9,18 @@ implicit none
 
 integer, intent(in) :: my_id, nproc
 integer, intent(in) :: sx,ex,sy,ey,sz,ez
-real(8) :: f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-real    :: x(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-real    :: y(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-real    :: z(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
-real(8) :: hx, hy, hz
-integer :: nx, ny, nz
+real(8)             :: f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real                :: x(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real                :: y(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real                :: z(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+real(8)             :: hx, hy, hz
+integer             :: nx, ny, nz
+integer, parameter  :: xmf = 77
+character(len=72)   :: field_label, mesh_label
+character(len=72)   :: field_name, mesh_name
+character(len=4)    :: my_proc, cproc
+
 character(len=2), dimension(3) :: coordNames
-integer, parameter :: xmf = 77
-character(len=72) :: field_label, mesh_label
-character(len=72) :: field_name, mesh_name
-character(len=4)  :: my_proc, cproc
 
 integer          :: error, i, j, k, iproc
 integer(hid_t)   :: file_id, dataset_id, dataspace_id
@@ -42,14 +44,13 @@ ny = size(f,2)
 nz = size(f,3)
 data_dims = (/nx,ny,nz/)
 
-
 iplot = iplot+1
 call int2string(iplot,cplot)
 mesh_name  = trim(mesh_label)//my_proc//".h5"
 field_name = trim(field_label)//my_proc//"-"//cplot//".h5"
 
 !Open the file and write the XML description of the mesh..
-open(xmf,file=trim(field_label)//cplot//my_proc//".xmf")
+open(xmf,file=trim(field_label)//cplot//"-"//my_proc//".xmf")
 write(xmf,'(a)')"<?xml version=""1.0"" ?>"
 write(xmf,'(a)')"<!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
 write(xmf,'(a)')"<Xdmf Version=""2.0"">"
@@ -144,29 +145,25 @@ if (my_id == 0) then
    write(xmf,'(a)')"<?xml version=""1.0"" ?>"
    write(xmf,'(a)')"<!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
    write(xmf,'(a)')"<Xdmf Version=""2.0"">"
-   write(xmf,'(a)')"<Domain>"
+   write(xmf,'(a)')"<Domain Name=""mesh3d"">"
    write(xmf,'(a)')"<Grid Name=""Domain"" GridType=""Collection"" CollectionType=""Spatial"">"
    do iproc = 0, nproc-1
       call int2string(iproc,cproc)
       write(xmf,'(a)')"<Grid Name=""SubDomain"" GridType=""Uniform"">"
       write(xmf,'(a,3i5,a)')"<Topology TopologyType=""3DSMesh"" NumberOfElements='",nz,ny,nx,"'/>"
       write(xmf,'(a)')"<Geometry GeometryType=""X_Y_Z"">"
-      write(xmf,'(a,3i5)')"<DataItem Dimensions='",nz,ny,nx
-      write(xmf,'(a)')"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
+      write(xmf,'(a,3i5,a)')"<DataItem Dimensions='",nz,ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
       write(xmf,'(a)')trim(mesh_label)//cproc//".h5:"//coordnames(1)
       write(xmf,'(a)')"</DataItem>"
-      write(xmf,'(a,3i5)')"<DataItem Dimensions='",nz,ny,nx
-      write(xmf,'(a)')"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
+      write(xmf,'(a,3i5,a)')"<DataItem Dimensions='",nz,ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
       write(xmf,'(a)')trim(mesh_label)//cproc//".h5:"//coordnames(2)
       write(xmf,'(a)')"</DataItem>"
-      write(xmf,'(a,3i5)')"<DataItem Dimensions='",nz,ny,nx
-      write(xmf,'(a)')"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
+      write(xmf,'(a,3i5,a)')"<DataItem Dimensions='",nz,ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
       write(xmf,'(a)')trim(mesh_label)//cproc//".h5:"//coordnames(3)
       write(xmf,'(a)')"</DataItem>"
       write(xmf,'(a)')"</Geometry>"
       write(xmf,'(a)')"<Attribute Name=""U"" AttributeType=""Scalar"" Center=""Node"">"
-      write(xmf,'(a,3i5)')"<DataItem Dimensions='",nz,ny,nx
-      write(xmf,'(a)')"' NumberType=""Float"" Precision=""8"" Format=""HDF"">"
+      write(xmf,'(a,3i5,a)')"<DataItem Dimensions='",nz,ny,nx,"' NumberType=""Float"" Precision=""8"" Format=""HDF"">"
       write(xmf,'(a)')trim(field_label)//cproc//"-"//cplot//".h5:/F"
       write(xmf,'(a)')"</DataItem>"
       write(xmf,'(a)')"</Attribute>"
@@ -180,3 +177,4 @@ end if
 
 
 end subroutine write_xdmf_3d 
+
