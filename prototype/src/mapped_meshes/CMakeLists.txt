@@ -20,6 +20,7 @@ add_dependencies(sll_mapped_meshes
 	sll_interpolators
 	sll_splines
 	geometry_functions
+	sll_utilities
 	sll_constants
 	sll_low_level_file_io
 	sll_memory
@@ -33,6 +34,7 @@ target_link_libraries(test_mapped_meshes_1d
 	sll_interpolators
 	sll_splines
 	geometry_functions
+	sll_utilities
 	sll_constants
 	sll_low_level_file_io
 	sll_memory
@@ -46,6 +48,7 @@ target_link_libraries(test_mapped_meshes_2d
 	sll_interpolators
 	sll_splines
 	geometry_functions
+	sll_utilities
 	sll_constants
 	sll_low_level_file_io
 	sll_memory
@@ -60,6 +63,7 @@ IF(NOT STDF95)
 	sll_interpolators
 	sll_splines
 	geometry_functions
+	sll_utilities
 	sll_constants
 	sll_low_level_file_io
 	sll_memory

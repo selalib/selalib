@@ -30,17 +30,23 @@ program VP1d_deltaf
   type(poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
+  sll_real64, dimension(:), allocatable :: e_app ! applied field
   sll_real64, dimension(:), pointer :: f1d
+  sll_real64, dimension(:), allocatable :: f_maxw
   sll_real64, dimension(:), allocatable :: v_array
   sll_int32  :: Ncx, Ncv   ! number of cells
-  sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35
-  sll_real64 :: kmode
+  sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
+  sll_int32, parameter  :: param_out = 37, eapp_diag = 38
+  sll_real64 :: kmode, omegadr, omegadr0
+  logical    :: is_delta_f, driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
+  sll_int32  :: freqdiag
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
+  sll_real64 :: l1norm, l2norm
   character(len=32) :: fname, case
   sll_int32  :: istep
   sll_int32  :: nbox
@@ -48,12 +54,17 @@ program VP1d_deltaf
   sll_real64 :: v, v0
   sll_int32  :: i, j
   sll_int32  :: ierr   ! error flag 
+  sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
+  sll_real64 :: adr, Edrmax
+  logical    :: turn_drive_off
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
-  namelist / time_iterations / dt, nbiter
-  namelist / landau / kmode, eps 
+  namelist / time_iterations / dt, nbiter, freqdiag
+  namelist / landau / kmode, eps, is_delta_f, driven 
   namelist / tsi / kmode, eps, v0 
+  namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax
+
 
   ! determine what case is being run
   call GET_COMMAND_ARGUMENT(1,case)
@@ -62,7 +73,30 @@ program VP1d_deltaf
      open(unit = input_file, file = 'landau_input.txt')
      read(input_file, geom) 
      read(input_file, time_iterations)
-     read(input_file,landau)
+     read(input_file, landau)
+     if (driven) then
+        read(input_file, drive)
+        ! This is the EPW frequency obtained from non-driven simulations
+        if (abs(kmode-0.1)<0.00001) then
+           omegadr0 = 1.0158
+        elseif (abs(kmode-0.2)<0.00001) then
+           omegadr0 = 1.064
+        elseif (abs(kmode-0.22)<0.00001) then
+           omegadr0 = 1.079
+        elseif (abs(kmode-0.26)<0.00001) then
+           omegadr0 = 1.1157
+        elseif (abs(kmode-0.3)<0.00001) then
+           omegadr0 = 1.1598
+        elseif (abs(kmode-0.4)<0.00001) then
+           omegadr0 = 1.2851
+        elseif (abs(kmode-0.5)<0.00001) then
+           omegadr0 = 1.4156
+        else
+           write(*,*) ' Problem: omega_dr not defined, kmode=', kmode 
+           stop
+        endif
+        omegadr = omegadr0
+     end if
      close(input_file)
   else if (case == "tsi") then
      open(unit = input_file, file = 'tsi_input.txt')
@@ -87,7 +121,13 @@ program VP1d_deltaf
   do j = 1, Ncv + 1
      v_array(j) = vmin + (j-1)*delta_v
   end do
-
+  ! allocate f_maxw for diagnostics
+  SLL_ALLOCATE(f_maxw(Ncv+1),ierr)
+  if (is_delta_f) then
+     f_maxw = f_equilibrium(v_array)
+  else 
+     f_maxw = 0.0_f64
+  end if
   ! print out run parameters
   if (case == "landau") then
      print*, '     ----------------------'
@@ -95,6 +135,7 @@ program VP1d_deltaf
      print*, '     ----------------------'
      print*, '   k=', kmode
      print*, '   perturbation=', eps
+     print*, '   driven=', driven
   else if (case == "tsi") then
      print*, '     -----------'
      print*, '     | TSI run |'
@@ -102,6 +143,11 @@ program VP1d_deltaf
      print*, '   k=', kmode
      print*, '   perturbation=', eps
      print*, '   v0=', v0
+  end if
+  if (is_delta_f) then
+     print*, '   delta_f version'
+  else
+     print*, '   full_f version'
   end if
   print*, 'geometry of computational domain:'
   print*, '   xmin=', xmin
@@ -111,20 +157,24 @@ program VP1d_deltaf
   print*, '   vmax=', vmax
   print*, '   Ncv=', Ncv
   print*, 'time iterations:'
-  print*, '   dt=',dt
+  print*, '   dt=', dt
   print*, '   number of iterations=', nbiter
   print*, ' '
-  
+  open(unit = param_out, file = 'param_out.dat') 
+  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, dt, nbiter, freqdiag, &
+       is_delta_f
+  close(param_out)
+
   call initialize_mesh_2d_cartesian( &
-    mesh2d,           &
-    "mesh2d_cart",       &
-    xmin,         &
-    xmax,         &
-    Ncx+1,          &
-    vmin,         &
-    vmax,         &
-    Ncv+1           &
-   )
+       mesh2d,           &
+       "mesh2d_cart",       &
+       xmin,         &
+       xmax,         &
+       Ncx+1,          &
+       vmin,         &
+       vmax,         &
+       Ncv+1           &
+       )
   mesh2d_base => mesh2d
 
   ! initialize interpolators
@@ -136,10 +186,11 @@ program VP1d_deltaf
   ! allocate rho and phi
   SLL_ALLOCATE(rho(Ncx+1),ierr)
   SLL_ALLOCATE(efield(Ncx+1),ierr)
+  SLL_ALLOCATE(e_app(Ncx+1),ierr)
 
   ! initialization of distribution_function
-  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, .true.)
-  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode)
+  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
+  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, is_delta_f)
   if (case == "landau") then
      p_init_f => init_landau
      fname = "landau"
@@ -147,7 +198,7 @@ program VP1d_deltaf
      p_init_f => init_tsi
      fname = "tsi"
   end if
-  
+
   call initialize_distribution_function_2d( &
        f, &
        1.0_f64, &
@@ -155,31 +206,52 @@ program VP1d_deltaf
        fname, &
        mesh2d_base, &
        NODE_CENTERED_FIELD, &
+       interp_x, &
+       interp_v, &
        p_init_f )
   ! write mesh and initial distribution function
   call write_scalar_field_2d(f) 
 
-  ! initialise Poisson
+  ! initialize Poisson
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
   call solve(poisson_1d, efield, rho)
+  ! Ponderomotive force at initial time. We use a sine wave
+  ! with parameters k_dr and omega_dr.
+  istep = 0
+  if (driven) then
+     call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
+          t0, turn_drive_off)
+     do i = 1, Ncx + 1
+        E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
+     enddo
+  endif
 
   ! open files for time history diagnostics
   open(unit = th_diag, file = 'thdiag.dat') 
-  open(unit = ex_diag, file = 'exdiag.dat') 
-  
+  open(unit = ex_diag, file = 'exdiag.dat')
+  open(unit = rho_diag, file = 'rhodiag.dat') 
+  open(unit = eapp_diag, file = 'eappdiag.dat') 
+
+  ! write initial fields
+  write(ex_diag,*) efield
+  write(rho_diag,*) rho
+  write(eapp_diag,*) e_app
+
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
      do i = 1, Ncx+1
-        alpha = -efield(i) * 0.5_f64 * dt
+        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        ! add equilibrium contribution
-        do j=1, Ncv + 1
-           v = vmin + (j-1) * delta_v
-           f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
-        end do
+        if (is_delta_f) then
+           ! add equilibrium contribution
+           do j=1, Ncv + 1
+              v = vmin + (j-1) * delta_v
+              f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
+           end do
+        endif
      end do
      ! full time step advection in x
      do j = 1, Ncv+1
@@ -190,27 +262,55 @@ program VP1d_deltaf
      ! compute rho and electric field
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
      call solve(poisson_1d, efield, rho)
+     if (driven) then
+        call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
+             t0, turn_drive_off)
+        do i = 1, Ncx + 1
+           E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x - omegadr*istep*dt)
+        enddo
+     endif
      ! half time step advection in v
      do i = 1, Ncx+1
-        alpha = -efield(i) * 0.5_f64 * dt
+        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        ! add equilibrium contribution
-        do j=1, Ncv + 1
-           v = vmin + (j-1) * delta_v
-           f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
-        end do
+        if (is_delta_f) then
+           ! add equilibrium contribution
+           do j=1, Ncv + 1
+              v = vmin + (j-1) * delta_v
+              f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
+           end do
+        end if
      end do
      ! diagnostics
      time = istep*dt
-     mass = delta_x * delta_v * sum(FIELD_DATA(f)(1:Ncx,:))
-     momentum = delta_x * delta_v * sum(matmul(FIELD_DATA(f)(1:Ncx,:),v_array))
-     kinetic_energy = delta_x * delta_v * 0.5_f64 * &
-          sum(matmul(FIELD_DATA(f)(1:Ncx,:),v_array**2))
-     potential_energy = delta_x * 0.5_f64 * sum(efield**2)
-     write(th_diag,*) time, mass, momentum, kinetic_energy, potential_energy
+     mass = 0.
+     momentum = 0.
+     l1norm = 0.
+     l2norm = 0.
+     kinetic_energy = 0.
+     potential_energy = 0.
+     do i = 1, Ncx 
+        mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxw)   
+        l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxw))
+        l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxw)**2)
+        momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
+        kinetic_energy = kinetic_energy + 0.5_f64 * &
+             sum((FIELD_DATA(f)(i,:) + f_maxw)*(v_array**2))
+     end do
+     mass = mass * delta_x * delta_v 
+     l1norm = l1norm  * delta_x * delta_v
+     l2norm = l2norm  * delta_x * delta_v
+     momentum = momentum * delta_x * delta_v
+     kinetic_energy = kinetic_energy * delta_x * delta_v
+     potential_energy =   0.5_f64 * sum(efield**2) * delta_x
+     write(th_diag,*) time, mass, l1norm, momentum, l2norm, &
+          kinetic_energy, potential_energy, kinetic_energy + potential_energy
      write(ex_diag,*) efield
-     if (mod(istep,10)==0) then
+     write(rho_diag,*) rho
+     write(eapp_diag,*) e_app
+     if (mod(istep,freqdiag)==0) then
+        print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
   end do
@@ -218,11 +318,49 @@ program VP1d_deltaf
   close(th_diag)
   close(ex_diag)
   print*, 'VP1D_deltaf_cart has exited normally'
-  contains
-    function f_equilibrium(v)
-      sll_real64 :: v
-      sll_real64 :: f_equilibrium
+contains
+  elemental function f_equilibrium(v)
+    sll_real64, intent(in) :: v
+    sll_real64 :: f_equilibrium
 
-      f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
-    end function f_equilibrium
-end program 
+    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
+  end function f_equilibrium
+
+  subroutine PFenvelope(S, t, tflat, tL, tR, twL, twR, t0, &
+       turn_drive_off)
+
+    ! DESCRIPTION
+    ! -----------
+    ! S: the wave form at a given point in time. This wave form is 
+    !    not scaled (its maximum value is 1).
+    ! t: the time at which the envelope is being evaluated
+    ! tflat, tL, tR, twL, twR, tstart, t0: the parameters defining the
+    !    envelope, defined in the main portion of this program.
+    ! turn_drive_off: 1 if the drive should be turned off after a time
+    !    tflat, and 0 otherwise
+
+    sll_real64, intent(in) :: t, tflat, tL, tR, twL, twR, t0
+    sll_real64, intent(out) :: S
+    logical, intent(in) :: turn_drive_off
+    ! local variables
+    sll_int32 :: i 
+    sll_real64 :: epsilon
+
+    ! The envelope function is defined such that it is zero at t0,
+    ! rises to 1 smoothly, stay constant for tflat, and returns
+    ! smoothly to zero.
+    if(turn_drive_off) then
+       epsilon = 0.5*(tanh((t0-tL)/twL) - tanh((t0-tR)/twR))
+       S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
+       S = S / (1-epsilon)
+    else
+       epsilon = 0.5*(tanh((t0-tL)/twL) + 1)
+       S = 0.5*(tanh((t-tL)/twL) + 1) - epsilon
+       S = S / (1-epsilon)
+    endif
+    if(S<0) then
+       S = 0.
+    endif
+    return
+  end subroutine PFenvelope
+end program VP1d_deltaf
