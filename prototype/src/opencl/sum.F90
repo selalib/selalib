@@ -33,7 +33,7 @@ program sum
   type(cl_program)       :: prog
   type(cl_kernel)        :: kernel
 
-  integer    :: num, ierr, irec, size
+  integer    :: ierr, irec, size
   integer(8) :: size_in_bytes, globalsize, localsize
   integer, parameter :: iunit = 10
   integer, parameter :: source_length = 1000

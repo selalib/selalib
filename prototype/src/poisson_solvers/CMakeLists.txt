@@ -2,7 +2,7 @@ IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
-add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90 fft1d.f90)
+add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 
 IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
@@ -10,13 +10,13 @@ IF(FFTPACK_ENABLED)
       sll_poisson_1d_periodic 
       sll_assertion 
       sll_memory 
-      sll_mapped_meshes
-      sll_scalar_field_1d
-      fftpack_module	 
       geometry_functions	 
+      fftpack_module	 
+      sll_mapped_meshes
       sll_low_level_file_io	
       sll_utilities
   )
+
   add_definitions(-D_FFTPACK)
   add_library(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90
 	fft_module.F90)
