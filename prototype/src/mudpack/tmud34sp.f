@@ -331,6 +331,7 @@ c
       if (ierror.gt.0) call exit(0)
       call error(nx,ny,nz,phi,errm)
       write(*,108) errm
+      print*,"PASSED"
       end
 
       subroutine error(nx,ny,nz,phi,errm)

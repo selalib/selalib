@@ -1,0 +1,23 @@
+To run this example you need to install FortranCL.
+
+FortranCL is an OpenCL interface for Fortran 90. It allows programmers
+to call OpenCL directly from Fortran. Kernels are still written in C.
+
+More information and updated versions can be found in the FortranCL website:
+
+http://code.google.com/p/fortrancl/
+
+INSTALLATION
+============
+
+The basic download and installation procedure is to run:
+(tested only on Apple Macbook Pro with Lion)
+
+svn checkout http://fortrancl.googlecode.com/svn/trunk/ fortrancl
+cd fortran
+autoreconf -i
+./configure --prefix=/usr/local
+make 
+make install
+
+Set FORTRANCL_ENABLED to ON in CMake and enjoy it
