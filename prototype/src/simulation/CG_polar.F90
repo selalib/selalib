@@ -4,6 +4,7 @@ program cg_polar
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+  use sll_timer
   use polar_kind
   use sll_fft
   use polar_advection
