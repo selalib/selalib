@@ -14,7 +14,8 @@ program cg_polar
   type(polar_data), pointer :: data
   type(polar_VP_data), pointer :: adv
   type(polar_VP_rk4), pointer :: rk
-  type(time_mark), pointer :: t1,t2
+  type(time_mark), pointer :: t1,t2,t3
+  sll_real64, dimension (:,:), allocatable :: div
   sll_int32 :: i, j, step,fin
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
@@ -34,6 +35,7 @@ program cg_polar
 
   t1 => new_time_mark()
   t2 => new_time_mark()
+  t3 => new_time_mark()
 
   rmin=1.0_f64
   rmax=10.0_f64
@@ -60,12 +62,12 @@ program cg_polar
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
-  dt=0.05_f64*dr
-  tf=1.0_f64
+  dt=0.1_f64!0.05_f64*dr
+  tf=10.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
-!!$  nb_step=-5
+!!$  nb_step=2
 !!$  dt=0.01_f64*dr
 !!$  tf=dt*real(nb_step,f64)
 
@@ -73,9 +75,17 @@ program cg_polar
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
+  print*,'dtheta',dtheta
+
   data => new_polar_data(nb_step,dt,rmin,rmax,nr,ntheta)
   adv => new_vp_data(data)
   rk => new_polar_vp_rk4(nr,ntheta)
+  SLL_ALLOCATE(div(nr+1,ntheta+1),i)
+
+!!$  adv%rr=1.0_f64
+!!$  do i=1,nr+1
+!!$     adv%rr(i)=rmax
+!!$  end do
 
   adv%phi=0.0_f64
   adv%f=0.0_f64
@@ -246,11 +256,23 @@ program cg_polar
      e=e*dr*dtheta
      write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0
 
-     if ((step/100)*100==step) then
+     !if ((step/100)*100==step) then
         print*,'#step',step
-     end if
+     !end if
   end do
   close(23)
+
+  t3 => start_time_mark(t3)
+  temps=time_elapsed_between(t1,t3)
+  hh=floor(temps/3600.0d0)
+  min=floor((temps-3600.0d0*real(hh))/60.0d0)
+  ss=temps-3600.0d0*real(hh)-60.0d0*real(min)
+  print*,'# temps pour faire la boucle en temps : ',hh,'h',min,'min',ss,'s'
+
+  !checking divergence of field
+  call poisson_solve_polar(adv)
+  call compute_grad_field(adv)
+  call divergence_ortho_field(adv,div)
 
   !write the final f in a file
   !w0=0.0_f64
@@ -264,13 +286,14 @@ program cg_polar
         y=r*sin(theta)
         !w0=max(w0,abs(phi(i,j)))
         !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
-        write(21,*)r,theta,x,y,adv%f(i,j)!,phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+        write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
      end do
      write(21,*)' '
   end do
   close(21)
   !print*,dr,w0,w,w/w0,'#dr, w0, w,w/w0'
 
+  SLL_DEALLOCATE_ARRAY(div,i)
   t1 => delete_time_mark(t1)
   t2 => delete_time_mark(t2)
   call vp_data_delete(adv)
