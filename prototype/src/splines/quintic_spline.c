@@ -138,7 +138,7 @@
 
   {
  
-    // Plan components deallocation 
+    // Plan component deallocation 
     free(plan->coeffs);
     plan->coeffs = NULL;
 
