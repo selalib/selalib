@@ -24,6 +24,7 @@ module polar_kind
   type polar_VP_data
      type(polar_data), pointer :: data
      type(sll_fft_plan), pointer :: pfwd, pinv
+     sll_real64, dimension(:), allocatable :: rr,ttheta
      sll_real64, dimension(:,:), allocatable :: f,phi,f_fft,fdemi
      sll_real64, dimension(:,:,:), allocatable :: grad_phi
      sll_comp64, dimension(:), allocatable :: fk,phik
@@ -155,7 +156,7 @@ contains
     type(polar_data) :: data_pol
     type(polar_VP_data), pointer :: this
 
-    sll_int32 :: err
+    sll_int32 :: err,i
     sll_real64,dimension(:),pointer :: buf
 
     SLL_ALLOCATE(this,err)
@@ -170,12 +171,21 @@ contains
     SLL_ALLOCATE(this%ipiv(data_pol%nr+1),err)
     SLL_ALLOCATE(this%fk(data_pol%ntheta),err)
     SLL_ALLOCATE(this%phik(data_pol%ntheta),err)
+    SLL_ALLOCATE(this%rr(data_pol%nr+1),err)
+    SLL_ALLOCATE(this%ttheta(data_pol%ntheta+1),err)
 
     this%pfwd => fft_new_plan(data_pol%ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(data_pol%ntheta,buf,buf,FFT_INVERSE)
 
     SLL_ALLOCATE(this%data,err)
     this%data=data_pol
+
+    do i=1,this%data%nr+1
+       this%rr(i)=this%data%rmin+real(i-1,f64)*this%data%dr
+    end do
+    do i=1,this%data%ntheta+1
+       this%ttheta(i)=real(i-1,f64)*this%data%dtheta
+    end do
 
     this%spl_f => new_spline_2D(data_pol%nr+1,data_pol%ntheta+1,data_pol%rmin,data_pol%rmax,0._f64, 2._f64*sll_pi, &
          HERMITE_SPLINE, PERIODIC_SPLINE,&
@@ -205,7 +215,7 @@ contains
 
     type(polar_VP_data), pointer :: this
 
-    sll_int32 :: err
+    sll_int32 :: err,i
     sll_real64,dimension(:),pointer :: buf
 
     SLL_ALLOCATE(this,err)
@@ -220,12 +230,21 @@ contains
     SLL_ALLOCATE(this%ipiv(nr+1),err)
     SLL_ALLOCATE(this%fk(ntheta),err)
     SLL_ALLOCATE(this%phik(ntheta),err)
+    SLL_ALLOCATE(this%rr(nr+1),err)
+    SLL_ALLOCATE(this%ttheta(ntheta+1),err)
 
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
 
     SLL_ALLOCATE(this%data,err)
     this%data => new_polar_data(dt,rmin,rmax,nb_step,nr,ntheta)
+
+    do i=1,nr+1
+       this%rr(i)=rmin+real(i-1,f64)*this%data%dr
+    end do
+    do i=1,ntheta+1
+       this%ttheta(i)=real(i-1,f64)*this%data%dtheta
+    end do
 
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
          HERMITE_SPLINE, PERIODIC_SPLINE,&
@@ -254,7 +273,7 @@ contains
 
     type(polar_VP_data), pointer :: this
 
-    sll_int32 :: err
+    sll_int32 :: err,i
     sll_real64,dimension(:),pointer :: buf
 
     SLL_ALLOCATE(this,err)
@@ -269,9 +288,18 @@ contains
     SLL_ALLOCATE(this%ipiv(nr+1),err)
     SLL_ALLOCATE(this%fk(ntheta),err)
     SLL_ALLOCATE(this%phik(ntheta),err)
+    SLL_ALLOCATE(this%rr(nr+1),err)
+    SLL_ALLOCATE(this%ttheta(ntheta+1),err)
 
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+
+    do i=1,nr+1
+       this%rr(i)=rmin+real(i-1,f64)*this%data%dr
+    end do
+    do i=1,ntheta+1
+       this%ttheta(i)=real(i-1,f64)*this%data%dtheta
+    end do
 
     SLL_ALLOCATE(this%data,err)
     this%data => new_polar_data(tf,rmin,rmax,nb_step,nr,ntheta)
@@ -304,7 +332,7 @@ contains
 
     type(polar_VP_data), pointer :: this
 
-    sll_int32 :: err
+    sll_int32 :: err,i
     sll_real64,dimension(:),pointer :: buf
 
     SLL_ALLOCATE(this,err)
@@ -319,12 +347,21 @@ contains
     SLL_ALLOCATE(this%ipiv(nr+1),err)
     SLL_ALLOCATE(this%fk(ntheta),err)
     SLL_ALLOCATE(this%phik(ntheta),err)
+    SLL_ALLOCATE(this%rr(nr+1),err)
+    SLL_ALLOCATE(this%ttheta(ntheta+1),err)
 
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
 
     SLL_ALLOCATE(this%data,err)
     this%data => new_polar_data(dt,tf,rmin,rmax,nr,ntheta)
+
+    do i=1,nr+1
+       this%rr(i)=rmin+real(i-1,f64)*this%data%dr
+    end do
+    do i=1,ntheta+1
+       this%ttheta(i)=real(i-1,f64)*this%data%dtheta
+    end do
 
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
          HERMITE_SPLINE, PERIODIC_SPLINE,&
@@ -363,6 +400,8 @@ contains
        SLL_DEALLOCATE_ARRAY(this%a,err)
        SLL_DEALLOCATE_ARRAY(this%cts,err)
        SLL_DEALLOCATE_ARRAY(this%ipiv,err)
+       SLL_DEALLOCATE_ARRAY(this%rr,err)
+       SLL_DEALLOCATE_ARRAY(this%ttheta,err)
 
        call delete_spline_2d(this%spl_f)
        call delete_spline_2d(this%spl_a1)
