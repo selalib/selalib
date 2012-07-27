@@ -10,9 +10,11 @@ add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 # some useful flags
 #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 
-set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 set(CMAKE_C_FLAGS "-lm")
+set(CMAKE_C_FLAGS "-llapack -lblas")
+
 
 #ajoute les modules locaux
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )	
@@ -25,6 +27,8 @@ message(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
 #set( CMAKE_PREFIX_PATH /opt/local )
 
 #set(CMAKE_LIBRARY_PATH "/opt/local;${CMAKE_LIBRARY_PATH}")
+
+#find_package(LAPACK)
 
 # recherche de MPI
 IF( DEFINED ENV{MPI_ROOT} )

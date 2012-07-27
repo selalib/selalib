@@ -65,7 +65,7 @@ main(void)
       }
       err = err/norm;
 
-      if (err > pow(10,-16))
+      if (err > pow(10,-15))
       {
         printf("Program stopped by Toeplitz penta-diagonal solver failure \n");
         printf("Error = %f\n", err);
