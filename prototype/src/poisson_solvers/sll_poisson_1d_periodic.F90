@@ -5,18 +5,17 @@ module sll_poisson_1d_periodic
 #include "sll_assert.h"
 
   use numeric_constants
-  use fft1d_module
 
   implicit none
   private
   public :: new, solve
 
   type, public :: poisson_1d_periodic
-     sll_real64, dimension(:), pointer       :: work
-     type(fft1dclass)                        :: fft
-     sll_int32                               :: nc_eta1
-     sll_real64                              :: eta1_min
-     sll_real64                              :: eta1_max
+     sll_int32                         :: nc_eta1
+     sll_real64                        :: eta1_min
+     sll_real64                        :: eta1_max
+     sll_real64, dimension(:), pointer :: wsave
+     sll_real64, dimension(:), pointer :: work
   contains
      procedure :: initialize => new_poisson_1d_periodic
      procedure :: solve => solve_poisson_1d_periodic
@@ -39,16 +38,18 @@ contains
     sll_real64, intent(in)                 :: eta1_min
     sll_real64, intent(in)                 :: eta1_max
 
-    ! Indicateur d'erreur
     error = 0
-    ! Initialisation de la geometrie
-    this%nc_eta1=nc_eta1
-    this%eta1_min=eta1_min
-    this%eta1_max=eta1_max
-    ! Initialisation des fft (le nombre de points pris en compte est n
-    call initdoubfft(this%fft, this%nc_eta1)
-    ! Allocate auxiliary arrays for fft
-    SLL_ALLOCATE(this%work(nc_eta1+2),error)
+    ! geometry
+    this%nc_eta1  = nc_eta1
+    this%eta1_min = eta1_min
+    this%eta1_max = eta1_max
+
+    SLL_ALLOCATE(this%wsave(2*this%nc_eta1+15),error)
+
+    call dffti(this%nc_eta1,this%wsave)
+
+    ! Allocate auxiliary arrays for fft in order to keep rhs unchanged
+    SLL_ALLOCATE(this%work(nc_eta1+1),error)
 
   end subroutine new_poisson_1d_periodic
 
@@ -58,7 +59,6 @@ contains
     sll_real64, dimension(:), intent(out)     :: field
     sll_real64, dimension(:), intent(in)      :: rhs
     sll_int32                                 :: ik
-    sll_int32                                 :: nxh1
     sll_real64                                :: kx0, kx, k2
 
     ! Check that field and rhs are both associated to the 
@@ -71,30 +71,32 @@ contains
     ! in order to keep rhs unchanged
     this%work = rhs 
 
-    ! Faire une FFT dans la direction x de rhs
-    call fft(this%fft, this%work)
+    ! Forward FFT 
+    call dfftf( this%nc_eta1, this%work, this%wsave)
 
-    kx0  = 2*sll_pi/(this%eta1_max-this%eta1_min)
-    nxh1 = (this%nc_eta1-2)/2 
+    this%work = this%work /this%nc_eta1      ! normalize FFT
+
+    kx0  = 2_f64*sll_pi/(this%eta1_max-this%eta1_min)
 
     ! La moyenne de Ex est nulle donc les composantes de Fourier 
     ! correspondant a k=0 sont nulles
     field(1) = 0.
 
     ! Calcul des autres composantes de Fourier
-    do ik=1,nxh1
+    do ik=1,(this%nc_eta1-2)/2 
        kx= ik*kx0
        k2 = kx*kx
-       field(2*ik) = kx/k2*this%work(2*ik+1)
-       field(2*ik+1) = -kx/k2*this%work(2*ik)
-       this%work(2*ik) = 1/k2*this%work(2*ik)
+       field(2*ik)       = kx/k2*this%work(2*ik+1)
+       field(2*ik+1)     = -kx/k2*this%work(2*ik)
+       this%work(2*ik)   = 1/k2*this%work(2*ik)
        this%work(2*ik+1) = 1/k2*this%work(2*ik+1)
     end do
 
     field(this%nc_eta1)= 0.          ! because Im(rhs/2)=0
  
-    ! Faire une FFT inverse  dans la direction x de E
-    call fftinv(this%fft,field)
+    ! Backward FFT 
+
+    call dfftb( this%nc_eta1, field,  this%wsave )
 
     ! complete last term by periodicity
     field(this%nc_eta1+1) = field(1)

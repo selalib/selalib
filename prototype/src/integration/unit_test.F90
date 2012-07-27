@@ -13,5 +13,8 @@ program gauss_legendre_tester
   print *, 'Exact value: '
   write (*,'(e20.15)') 0.4674011002723395
 
+  print *, 'Test gauss_points()'
+  print *, gauss_points(5,-1.0_f64,1.0_f64)
+
 
 end program gauss_legendre_tester
