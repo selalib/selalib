@@ -26,6 +26,7 @@ program cg_polar
   sll_int32 :: mod
   sll_real64 :: mode,temps
   integer :: hh,min,ss
+  integer, dimension(3) :: time
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
@@ -63,8 +64,8 @@ program cg_polar
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
-  dt=0.1_f64!0.05_f64*dr
-  tf=10.0_f64
+  dt=0.05_f64*dr
+  tf=50.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -75,8 +76,6 @@ program cg_polar
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
-
-  print*,'dtheta',dtheta
 
   data => new_polar_data(nb_step,dt,rmin,rmax,nr,ntheta)
   adv => new_vp_data(data)
@@ -208,8 +207,17 @@ program cg_polar
         temps=temps/100*real(nb_step,f32)
         hh=floor(temps/3600.0d0)
         min=floor((temps-3600.0d0*real(hh))/60.0d0)
-        ss=temps-3600.0d0*real(hh)-60.0d0*real(min)
+        ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
         print*,'# temps de calcul estimmé : ',hh,'h',min,'min',ss,'s'
+        call itime(time)
+        time(3)=time(3)+ss
+        time(2)=time(2)+floor(real(time(3))/60.0)
+        time(3)=time(3)-60*floor(real(time(3))/60.0)
+        time(2)=time(2)+min
+        time(1)=time(1)+floor(real(time(2))/60.0)
+        time(2)=time(2)-60*floor(real(time(2))/60.0)
+        time(1)=time(1)+hh
+        print*,'#fin estimmée à',time(1),'h',time(2),"'",time(3),'"'
      end if
 
      if (scheme==1) then
@@ -257,9 +265,9 @@ program cg_polar
      e=e*dr*dtheta
      write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0
 
-     !if ((step/100)*100==step) then
+     if ((step/100)*100==step) then
         print*,'#step',step
-     !end if
+     end if
   end do
   close(23)
 
@@ -267,7 +275,7 @@ program cg_polar
   temps=time_elapsed_between(t1,t3)
   hh=floor(temps/3600.0d0)
   min=floor((temps-3600.0d0*real(hh))/60.0d0)
-  ss=temps-3600.0d0*real(hh)-60.0d0*real(min)
+  ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
   print*,'# temps pour faire la boucle en temps : ',hh,'h',min,'min',ss,'s'
 
   !checking divergence of field
@@ -329,7 +337,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'rk4'//sch//char(095)//fin//'s.dat'
+    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
 
   end subroutine scgf
 
@@ -360,7 +368,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'rk4'//sch//char(095)//fin//'s.dat'
+    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
 
   end subroutine sthd
 
