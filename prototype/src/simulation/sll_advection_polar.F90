@@ -146,8 +146,7 @@ contains
 
        !construction of spline coefficients for f
        do i=1,nr+1
-          r=rmin+real(i,f64)*dr
-          adv%f_fft(i,:)=adv%phi(i,:)*r
+          adv%f_fft(i,:)=adv%f(i,:)!*adv%rr(i)
        end do
        call compute_spline_2D(adv%f_fft,adv%spl_f)
 
@@ -168,7 +167,7 @@ contains
 
              call correction_r(r,rmin,rmax)
              call correction_theta(theta)
-             adv%f(i,j)=interpolate_value_2D(r,theta,adv%spl_f)/adv%rr(i)
+             adv%f(i,j)=interpolate_value_2D(r,theta,adv%spl_f)!/adv%rr(i)
 
           end do
        end do
@@ -337,6 +336,9 @@ contains
 
     !updating the distribution function
     call deposit_value_2D(rk%r1,rk%theta1,adv%spl_f,adv%f)
+    do i=1,nr+1
+       adv%f(i,:)=adv%f(i,:)/adv%rr(i)
+    end do
 
   end subroutine rk4_polar_advect
 
@@ -379,7 +381,7 @@ contains
           rk%theta1(i,j)=adv%ttheta(j)+dt/2.0_f64*adv%grad_phi(1,i,j)/adv%rr(i)
        end do
     end do
-print*,1
+
     !2nd step of rk2
     do i=1,nr+1
        do j=1,ntheta+1
@@ -389,69 +391,27 @@ print*,1
 
           call correction_r(rk%r4(i,j),rmin,rmax)
           call correction_theta(rk%theta4(i,j))
-          !print*,i,j,rk%theta4(i,j)
-!!$          if (rk%theta4(i,j)>4.0_f64*sll_pi .or. rk%theta4(i,j)< -2.0_f64*sll_pi) then
-!!$             print*,i,j,1
-!!$             print*,rk%theta4(i,j)
-!!$             stop
-!!$          end if
-!!$
-!!$          if (rk%r4(i,j)>rmax) then
-!!$             rk%r4(i,j)=rmax
-!!$          else if (rk%r4(i,j)<rmin) then
-!!$             rk%r4(i,j)=rmin
-!!$          end if
-!!$          do while (rk%theta4(i,j)>2.0_f64*sll_pi)
-!!$             !print*,rk%theta4(i,j),i,j
-!!$             rk%theta4(i,j)=rk%theta4(i,j)-2.0_f64*sll_pi
-!!$          end do
-!!$          do while (rk%theta4(i,j)<0.0_f64)
-!!$             !print*,rk%theta4(i,j),i,j
-!!$             rk%theta4(i,j)=rk%theta4(i,j)+2.0_f64*sll_pi
-!!$          end do
 
           adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)/adv%rr(i)
        end do
     end do
-print*,2
+
     call poisson_solve_polar(adv)
     call compute_grad_field(adv)
 
     !construction of spline coeficients for a
     do i=1,nr+1
-       !r=1.0_f64!rmin+real(i,f64)*dr
        adv%grad_phi(:,i,:)=adv%grad_phi(:,i,:)*adv%rr(i)
     end do
     call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
     call compute_spline_2d(adv%grad_phi(2,:,:),adv%spl_a2)
 
     do i=1,nr+1
-       !rr=1.0_f64!rmin+real(i-1)*dr
        do j=1,ntheta+1
           r=rk%r1(i,j)
           theta=rk%theta1(i,j)
           call correction_r(r,rmin,rmax)
           call correction_theta(theta)
-
-!!$          if (theta>4.0_f64*sll_pi .or. theta<-2.0_f64*sll_pi) then
-!!$             print*,i,j,2
-!!$             print*,theta
-!!$             stop
-!!$          end if
-!!$
-!!$          if (r>rmax) then
-!!$             r=rmax
-!!$          else if (r<rmin) then
-!!$             r=rmin
-!!$          end if
-!!$          do while (theta>2.0_f64*sll_pi)
-!!$             !print*,theta,i,j
-!!$             theta=theta-2.0_f64*sll_pi
-!!$          end do
-!!$          do while (theta<0.0_f64)
-!!$             !print*,theta,i,j
-!!$             theta=theta+2.0_f64*sll_pi
-!!$          end do
 
           rk%r2(i,j)=-interpolate_value_2d(r,theta,adv%spl_a2)*dt/(rk%r4(i,j)*adv%rr(i))
           rk%theta2(i,j)=interpolate_value_2d(r,theta,adv%spl_a1)*dt/(rk%r4(i,j)*adv%rr(i))
@@ -471,6 +431,9 @@ print*,2
 
     !updating the distribution function
     call deposit_value_2D(rk%r1,rk%theta1,adv%spl_f,adv%f)
+    do i=1,nr+1
+       adv%f(i,:)=adv%f(i,:)/adv%rr(i)
+    end do
 
   end subroutine rk2_polar_advect
 
@@ -603,7 +566,7 @@ print*,2
 
     div=-adv%grad_phi(2,:,:)
     adv%grad_phi(2,:,:)=adv%grad_phi(1,:,:)
-    adv%grad_phi(1,:,:)=adv%grad_phi(2,:,:)
+    adv%grad_phi(1,:,:)=div
     div=0.0_f64
 
     do i=2,nr
