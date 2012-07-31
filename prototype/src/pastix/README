@@ -1,0 +1,44 @@
+To run this example you need to install Scotch and Pastix.
+
+INSTALLATION
+============
+
+The basic download and installation procedure is to run:
+(tested only on Apple Macbook Pro with Lion)
+
+* Reconfigure OpenMPI with
+./configure --prefix=/usr/local --enable-mpi-thread-multiple
+make 
+sudo make install
+
+* Install scotch
+
+https://gforge.inria.fr/frs/download.php/28977/scotch_5.1.12b.tar.gzV
+tar zxvf ~/Downloads/scotch_5.1.12b.tar.gz 
+cd scotch_5.1.12/src/
+cp Make.inc/Makefile.inc.i686_mac_darwin8 Makefile.inc
+make
+sudo make install
+
+* Install Pastix
+
+https://gforge.inria.fr/frs/download.php/30920/pastix_release_3725.tar.bz2
+tar jxvf ~/Downloads/pastix_release_3725.tar.bz2 
+cd pastix_release_3725/src
+cp config/MAC.in config.in
+
+* In config.in set
+
+ROOT       = /usr/local
+SCOTCH_HOME = /usr/local
+
+make
+make examples
+example/bin/simple -lap 100
+sudo make install
+
+* Variables in CMake
+
+PASTIX_ENABLED:BOOL=YES
+PASTIX_INCLUDE_DIRS:PATH=/usr/local/include
+PASTIX_PASTIX_LIBRARY:FILEPATH=/usr/local/lib/libpastix.a

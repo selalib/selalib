@@ -24,35 +24,40 @@ program vlasov_1d
 
   type(cl_platform_id), allocatable :: platforms(:)
   type(cl_device_id),   allocatable :: devices(:)
-  integer :: num_platforms, num_devices, iplat, idev
-  integer(8) :: val
-  character(len=200) :: info
+  integer                           :: num_platforms
+  integer                           :: num_devices
+  integer                           :: iplat
+  integer                           :: idev
+  integer(8)                        :: val
+  character(len=200)                :: info
 
   type(cl_context)       :: context
   type(cl_command_queue) :: command_queue
   type(cl_program)       :: prog
   type(cl_kernel)        :: kernel
 
-  integer    :: ierr, irec, size_system, num_systems
+  integer    :: ierr, irec, system_size, num_systems
   integer(8) :: size_in_bytes, globalsize, localsize
   integer, parameter :: iunit = 10
-  integer, parameter :: source_length = 1000
+  integer, parameter :: source_length = 2000
   character(len = source_length) :: source
   real, allocatable  :: a(:), x(:), b(:), c(:), d(:)
   type(cl_mem)       :: cl_a, cl_x, cl_b, cl_c, cl_d
+
+  integer :: i
 
   !=====================
   ! INITIALIZATION
   !=====================
 
   num_systems = 1
-  size_system = 10
-  size_in_bytes = int(size_system, 8)*4_8
-  allocate(a(1:size_system))
-  allocate(b(1:size_system))
-  allocate(c(1:size_system))
-  allocate(d(1:size_system))
-  allocate(x(1:size_system))
+  system_size = 10
+  size_in_bytes = int(system_size, 8)*4_8
+  allocate(a(1:system_size))
+  allocate(b(1:system_size))
+  allocate(c(1:system_size))
+  allocate(d(1:system_size))
+  allocate(x(1:system_size))
 
   ! get the number of platforms
   call clGetPlatformIDs(num_platforms, ierr)
@@ -117,9 +122,9 @@ program vlasov_1d
       context = clCreateContext(platforms(iplat), devices(idev), ierr)
       command_queue = clCreateCommandQueue(context, devices(idev), CL_QUEUE_PROFILING_ENABLE, ierr)
 
-      !=====================
-      ! BUILD THE KERNEL
-      !=====================
+      !=====================!
+      ! BUILD THE KERNEL    !
+      !=====================!
 
       ! read the source file
       open(unit = iunit, file = './vlasov_1d.cl', access='direct', &
@@ -153,21 +158,21 @@ program vlasov_1d
       kernel = clCreateKernel(prog, 'vlasov_1d', ierr)
       call clReleaseProgram(prog, ierr)
 
-      !=====================
-      ! RUN THE KERNEL
-      !=====================
+      !=====================!
+      ! RUN THE KERNEL      !
+      !=====================!
   
       a = 1.0
-      b = 2.0
-      c = 3.0
-      d = 4.0
+      b = -2.0
+      c = 1.0
+      d = 1.0
       x = 0.0
 
       ! allocate device memory
-      cl_a = clCreateBuffer(context, CL_MEM_READ_ONLY, size_in_bytes, ierr)
-      cl_b = clCreateBuffer(context, CL_MEM_READ_ONLY, size_in_bytes, ierr)
-      cl_c = clCreateBuffer(context, CL_MEM_READ_ONLY, size_in_bytes, ierr)
-      cl_d = clCreateBuffer(context, CL_MEM_READ_ONLY, size_in_bytes, ierr)
+      cl_a = clCreateBuffer(context, CL_MEM_READ_ONLY,  size_in_bytes, ierr)
+      cl_b = clCreateBuffer(context, CL_MEM_READ_ONLY,  size_in_bytes, ierr)
+      cl_c = clCreateBuffer(context, CL_MEM_READ_ONLY,  size_in_bytes, ierr)
+      cl_d = clCreateBuffer(context, CL_MEM_READ_ONLY,  size_in_bytes, ierr)
       cl_x = clCreateBuffer(context, CL_MEM_READ_WRITE, size_in_bytes, ierr)
 
       ! copy data to device memory
@@ -178,7 +183,7 @@ program vlasov_1d
       call clEnqueueWriteBuffer(command_queue, cl_x, cl_bool(.true.), 0_8, size_in_bytes, x(1), ierr)
 
       ! set the kernel arguments
-      call clSetKernelArg(kernel, 0, size_system, ierr)
+      call clSetKernelArg(kernel, 0, system_size, ierr)
       call clSetKernelArg(kernel, 1, num_systems, ierr)
       call clSetKernelArg(kernel, 2, cl_a, ierr)
       call clSetKernelArg(kernel, 3, cl_b, ierr)
@@ -188,7 +193,7 @@ program vlasov_1d
 
       ! get the localsize for the kernel (note that the sizes are integer(8) variable)
       call clGetKernelWorkGroupInfo(kernel, devices(idev), CL_KERNEL_WORK_GROUP_SIZE, localsize, ierr)
-      globalsize = int(size_system, 8)
+      globalsize = int(system_size, 8)
       if(mod(globalsize, localsize) /= 0) globalsize = globalsize + localsize - mod(globalsize, localsize) 
 
       ! execute the kernel
@@ -197,12 +202,16 @@ program vlasov_1d
 
       ! read the resulting vector from device memory
       call clEnqueueReadBuffer(command_queue, cl_x, cl_bool(.true.), 0_8, size_in_bytes, x(1), ierr)
+      
+      open(11,file='plot'//char(idev+48)//'.dat')
+      do i = 1, system_size
+         write(11,*) x(i)
+      end do
+      close(11)
 
-      write(*,*) x
-
-      !=====================
-      ! RELEASE EVERYTHING
-      !=====================
+      !=====================!
+      ! RELEASE EVERYTHING  !
+      !=====================!
 
       call clReleaseKernel(kernel, ierr)
       call clReleaseCommandQueue(command_queue, ierr)
