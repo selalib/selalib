@@ -7,7 +7,7 @@
 !> Selalib odd order Hermite splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: July 27, 2012
+!> Last modification: August 1, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -83,12 +83,11 @@ contains
         v(j) = B(order, plan%n-( order/2 + 2 - j ), xmax, plan)
         ! v(i) = B(order, n-(order/2+1-j+1), xmax, plan)
     enddo
-print*,v(j)
+
     ! Solve the linear system
 
     n = size(f)
-    KD = n - 1
-    LDAB = KD + 1
+    KD = order/2
 
     A = 0.
     do i=1,n
@@ -107,7 +106,8 @@ print*,v(j)
           AB(1+i-j,j) = A(i,j)
        enddo
     enddo
-  
+
+    LDAB = size(AB,1)
     ! Cholesky factorization
     call DPBTRF( 'L', n, KD, AB, LDAB, ierr )
     ! Solve the linear system with Cholesky factorization
@@ -173,7 +173,7 @@ print*,v(j)
     s = 0.d0
     do j=left-order,left
        if ( (j>=-order) .and. (j<=n) ) then
-          s = s + plan%coeffs(j+order) * B(order, j, x, plan)
+          s = s + plan%coeffs(j+order+1) * B(order, j, x, plan)
        endif
     enddo
 
