@@ -1,4 +1,7 @@
+
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+message(${CMAKE_Fortran_COMPILER})
 
 IF(PASTIX_FOUND)
    include_directories(${PASTIX_INCLUDE_DIRS})
