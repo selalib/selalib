@@ -125,7 +125,7 @@ ENDIF()
 
 ##########################################################
 # add the cache entry PASTIX_ENABLED for enable/disable pastix
-set(PASTIX_ENABLED ON CACHE BOOL " ")
+set(PASTIX_ENABLED NO CACHE BOOL " ")
 
 IF(PASTIX_ENABLED)
    IF( DEFINED ENV{SCOTCH_ROOT} )
@@ -137,6 +137,7 @@ IF(PASTIX_ENABLED)
       set(MURGE_ROOT $ENV{PASTIX_ROOT})
    ENDIF()
    find_package(BLAS QUIET)
+   find_package(RT QUIET)
    find_package(SCOTCH QUIET)
    find_package(PTSCOTCH QUIET)
    find_package(MURGE QUIET)
