@@ -125,7 +125,7 @@ ENDIF()
 
 ##########################################################
 # add the cache entry PASTIX_ENABLED for enable/disable pastix
-set(PASTIX_ENABLED ON CACHE BOOL " ")
+set(PASTIX_ENABLED NO CACHE BOOL " ")
 
 IF(PASTIX_ENABLED)
    IF( DEFINED ENV{SCOTCH_ROOT} )
