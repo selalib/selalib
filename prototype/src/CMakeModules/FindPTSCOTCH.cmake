@@ -4,27 +4,27 @@
 
 
 find_path(PTSCOTCH_INCLUDE_DIRS
-		NAMES scotch.h scotchf.h 
+		NAMES ptscotch.h ptscotchf.h 
 		HINTS ${PTSCOTCH_ROOT}
 		PATH_SUFFIXES include Include INCLUDE
-		DOC "PATH TO scotch.h and scotchf.h")
+		DOC "PATH TO ptscotch.h and ptscotchf.h")
 find_library(PTSCOTCH_LIBRARY
-		NAMES scotch
+		NAMES ptscotch
 		HINTS ${PTSCOTCH_ROOT}
 		PATH_SUFFIXES lib Lib LIB
-		DOC "PATH TO libscotch.a")
+		DOC "PATH TO libptscotch.a")
 find_library(PTSCOTCHERR_LIBRARY
-		NAMES scotcherr
+		NAMES ptscotcherr
 		HINTS ${PTSCOTCH_ROOT}
 		PATH_SUFFIXES lib Lib LIB
-		DOC "PATH TO libscotcherr.a")
+		DOC "PATH TO libptscotcherr.a")
 find_library(PTSCOTCHERREXIT_LIBRARY
-		NAMES scotcherrexit
+		NAMES ptscotcherrexit
 		HINTS ${PTSCOTCH_ROOT}
 		PATH_SUFFIXES lib Lib LIB
-		DOC "PATH TO libscotcherrexit.a")
+		DOC "PATH TO libptscotcherrexit.a")
 
-set (PTSCOTCH_LIBRARIES ${PTSCOTCH_LIBRARY};${PTSCOTCHERR_LIBRARY};${PTSCOTCHERREXIT_LIBRARY})
+set (PTSCOTCH_LIBRARIES @PTSCOTCH_LIBRARY@;@PTSCOTCHERR_LIBRARY@;@PTSCOTCHERREXIT_LIBRARY@)
 if (PTSCOTCH_INCLUDE_DIRS AND PTSCOTCH_LIBRARIES)
   set(PTSCOTCH_FOUND YES)
 endif(PTSCOTCH_INCLUDE_DIRS AND PTSCOTCH_LIBRARIES)
