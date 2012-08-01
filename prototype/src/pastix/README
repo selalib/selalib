@@ -30,10 +30,26 @@ cp config/MAC.in config.in
 
 * In config.in set
 
-ROOT       = /usr/local
-...
+###################################################################
+#                  SETTING INSTALL DIRECTORIES                    #
+###################################################################
+ROOT  = /usr/local
+INCLUDEDIR = ${ROOT}/include
+LIBDIR     = ${ROOT}/lib
+BINDIR     = ${ROOT}/bin
+
+###################################################################
+#                      GRAPH PARTITIONING                         #
+###################################################################
+
+# Uncomment the following lines for using metis ordering
+#VERSIONORD  = _metis
+#METIS_HOME  = ${HOME}/metis-4.0
+#CCPASTIX   := $(CCPASTIX) -DMETIS -I$(METIS_HOME)/Lib
+#EXTRALIB   := $(EXTRALIB) -L$(METIS_HOME) -lmetis
+
 # Scotch always needed to compile
-SCOTCH_HOME ?= /usr/local
+SCOTCH_HOME = /usr/local
 SCOTCH_INC ?= $(SCOTCH_HOME)/include
 SCOTCH_LIB ?= $(SCOTCH_HOME)/lib
 # Uncomment on of this blocks
