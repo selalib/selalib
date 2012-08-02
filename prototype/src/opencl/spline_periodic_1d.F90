@@ -74,7 +74,6 @@ subroutine compute_spline (spline, fi, n)
 !
 ! assign the intervals and function differences
 !
-
   spline%fi = fi
 
   do i = 1, n
@@ -163,8 +162,8 @@ subroutine tridiagonal_linear_eq (l, d, e, c, b, z)
 ! evaluate the elements in the lu decomposition
 !
   w(1) = d(1)
-  v(1)  = c(1)
-  t(1)  = e(1)/w(1)
+  v(1) = c(1)
+  t(1) = e(1)/w(1)
   do i = 2, l - 1
     w(i) = d(i)-v(i-1)*t(i-1)
     v(i) = c(i)
