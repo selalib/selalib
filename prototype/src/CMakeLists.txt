@@ -210,6 +210,10 @@ set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 #
 #############
 
+######################################################################
+#  III. SUBDIRECTORY                                                 #
+######################################################################
+
 #low-level
 set(LOW_LEVEL_LIST_DIR memory precision assert constants utilities low_level_file_io timer)
 #set(LOW_LEVEL_MODULES sll_memory sll_working_precision sll_assertion sll_constants sll_utilities sll_low_level_file_io sll_timer)
@@ -280,7 +284,7 @@ add_subdirectory(CSL)
 
 
 ######################################################################
-#                              TESTS                                 #
+#  IV. TEST                                                          #
 ######################################################################
 
 enable_testing()
