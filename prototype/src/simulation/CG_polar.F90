@@ -49,6 +49,7 @@ program cg_polar
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
+  print*,'#dr=',dr,'dtheta=',dtheta
 
   !choose the way to define dt, tf and nb_step
   !the tree ways are equivalent
@@ -65,12 +66,12 @@ program cg_polar
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=50.0_f64
+  tf=5.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
-!!$  nb_step=2
-!!$  dt=0.01_f64*dr
+!!$  nb_step=1
+!!$  dt=0.05_f64*dr
 !!$  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
@@ -100,7 +101,7 @@ program cg_polar
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
-  scheme=1
+  scheme=2
 
   call scgf(cgf,mod,scheme,fin,fcase)
   call sthd(thd,mod,scheme,fin,fcase)
@@ -337,7 +338,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
+    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'vs'//sch//char(095)//fin//'s.dat'
 
   end subroutine scgf
 
@@ -368,7 +369,7 @@ contains
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'ee'//sch//char(095)//fin//'s.dat'
+    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'vs'//sch//char(095)//fin//'s.dat'
 
   end subroutine sthd
 

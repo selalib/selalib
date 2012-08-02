@@ -123,26 +123,6 @@ ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_ENABLED)
 ENDIF()
 ##########################################################
 
-##########################################################
-# add the cache entry PASTIX_ENABLED for enable/disable pastix
-set(PASTIX_ENABLED NO CACHE BOOL " ")
-
-# recherche le package PASTIX
-set(PASTIX ENABLED YES CACHE BOOL " ")
-IF(PASTIX_ENABLED)
-	IF( DEFINED ENV{PASTIX_ROOT} )
-		set(PASTIX_ROOT $ENV{PASTIX_ROOT})
-	ENDIF()
-	find_package(PASTIX QUIET)
-	IF(PASTIX_FOUND)
-		message(STATUS "PASTIX FOUND")
-	ELSE(PASTIX_FOUND)
-		message(STATUS "PASTIX NOT FOUND")
-		set(PASTIX ENABLED YES CACHE BOOL " " FORCE)
-	ENDIF(PASTIX_FOUND)
-ENDIF(PASTIX_ENABLED)
-##########################################################
-
 add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
@@ -375,10 +355,47 @@ set(FORTRANCL_ENABLED CACHE BOOL OFF)
 IF(FORTRANCL_ENABLED)
 	find_package(FORTRANCL QUIET)
 	if (FORTRANCL_FOUND)
-		message(STATUS "FORTRANCL FOUND")
+	   message(STATUS "FORTRANCL FOUND")
 	   include_directories(${FORTRANCL_INCLUDE_DIRS})
            add_subdirectory(opencl)
            add_test(NAME opencl COMMAND test_opencl)
            set_tests_properties(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 	endif(FORTRANCL_FOUND)
 ENDIF(FORTRANCL_ENABLED)
+
+##########################################################
+# add the cache entry PASTIX_ENABLED for enable/disable pastix
+set(PASTIX_ENABLED NO CACHE BOOL " ")
+
+IF(PASTIX_ENABLED)
+   IF( DEFINED ENV{SCOTCH_ROOT} )
+      set(SCOTCH_ROOT $ENV{SCOTCH_ROOT})
+      set(PTSCOTCH_ROOT $ENV{SCOTCH_ROOT})
+   ENDIF()
+   IF( DEFINED ENV{PASTIX_ROOT} )
+      set(PASTIX_ROOT $ENV{PASTIX_ROOT})
+      set(MURGE_ROOT $ENV{PASTIX_ROOT})
+   ENDIF()
+   find_package(BLAS QUIET)
+   find_package(RT QUIET)
+   find_package(SCOTCH QUIET)
+   find_package(PTSCOTCH QUIET)
+   find_package(MURGE QUIET)
+   find_package(PASTIX QUIET)
+   IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
+      message(STATUS "PASTIX FOUND")
+      include_directories(${PASTIX_INCLUDE_DIRS})
+      add_subdirectory(pastix)
+      set(PROCS 4)
+      set(ARGS 1000 3)
+      add_test(NAME pastix 
+               COMMAND
+               ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_pastix ${ARGS})
+      set_tests_properties(pastix PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ELSE()
+      message(STATUS "PASTIX NOT FOUND")
+   ENDIF()
+ENDIF(PASTIX_ENABLED)
+##########################################################
+
