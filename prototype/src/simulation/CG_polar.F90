@@ -1,4 +1,3 @@
-!version with types
 program cg_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -22,7 +21,7 @@ program cg_polar
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
-  character (len=30) :: cgf, thd
+  character (len=40) :: cgf, thd
   sll_int32 :: mod
   sll_real64 :: mode,temps
   integer :: hh,min,ss
@@ -60,19 +59,19 @@ program cg_polar
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of dt=tf/nb_step
-!!$  tf=1.0_f64
-!!$  nb_step=1
+!!$  tf=5.0_f64
+!!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-  !definition of nb_step=tf/dt
-  dt=0.05_f64*dr
-  tf=5.0_f64
-  nb_step=ceiling(tf/dt)
-
-!!$  !definition of tf=dt*nb_step
-!!$  nb_step=1
+!!$  !definition of nb_step=tf/dt
 !!$  dt=0.05_f64*dr
-!!$  tf=dt*real(nb_step,f64)
+!!$  tf=5.0_f64
+!!$  nb_step=ceiling(tf/dt)
+!!$
+  !definition of tf=dt*nb_step
+  nb_step=1
+  dt=0.05_f64*dr
+  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
@@ -96,15 +95,16 @@ program cg_polar
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=4
+  fcase=3
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
-  scheme=2
+  ! 3 : ?jump-sheep? scheme
+  scheme=1
 
-  call scgf(cgf,mod,scheme,fin,fcase)
-  call sthd(thd,mod,scheme,fin,fcase)
+  call filename('CGfinal',len('CGfinal'),fcase,scheme,mod,fin,cgf)
+  call filename('thdiag',len('thdiag'),fcase,scheme,mod,fin,thd)
 
   if (fcase==1) then
      do i=1,nr+1
@@ -226,8 +226,21 @@ program cg_polar
         call SL_classic(adv,rk)
 
      else if (scheme==2) then
-        !semi-Lagrangian scheme with control
+        !semi-Lagrangian predictiv-correctiv scheme
         call SL_ordre_2(adv,rk)
+
+     else if (scheme==3) then
+        !?jump-sheep scheme?
+        if (step==1) then
+           call SL_ordre_2(adv,rk)
+        else 
+           call poisson_solve_polar(adv)
+           call compute_grad_field(adv)
+           adv%f_fft=adv%f
+           adv%f=adv%fdemi
+           adv%fdemi=adv%f_fft
+           call advect_CG_polar(adv,rk)
+        end if
 
      else
         print*,'no scheme define'
@@ -285,8 +298,6 @@ program cg_polar
   call divergence_ortho_field(adv,div)
 
   !write the final f in a file
-  !w0=0.0_f64
-  !w=0.0_f64
   open (unit=21,file=cgf)
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
@@ -294,14 +305,16 @@ program cg_polar
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
+        !<for fase=3, checking the poisson solveur>
         !w0=max(w0,abs(phi(i,j)))
         !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
-        write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
+        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*sin(mode*theta)
+        !</for fase=3, checking the poisson solveur>
+        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
      end do
      write(21,*)' '
   end do
   close(21)
-  !print*,dr,w0,w,w/w0,'#dr, w0, w,w/w0'
 
   SLL_DEALLOCATE_ARRAY(div,i)
   t1 => delete_time_mark(t1)
@@ -311,66 +324,33 @@ program cg_polar
 
 contains
 
-  subroutine scgf(cgf,mode,scheme,tf,fcase)
+  subroutine filename(str,lenght,fcase,scheme,mod,tf,out)
 
     implicit none
 
-    character (len=30), intent(out) :: cgf
-    sll_int32, intent(in) :: scheme, mode,tf,fcase
+    character (len=40), intent(out) :: out
+    sll_int32, intent(in) :: scheme, mod,tf,fcase,lenght
+    character (len=lenght) :: str
 
     integer :: i1,i2,i3
-    character :: sch
-    character (len=2) :: mod,f
+    character (len=2) :: mode,f,sch
     character (len=3) :: fin
 
-    i1=mode/10
-    i2=mode-i1
-    mod=char(i1+48)//char(i2+48)
+    i1=mod/10
+    i2=mod-i1
+    mode=char(i1+48)//char(i2+48)
     i1=fcase/10
     i2=fcase-i1
     f=char(i1+48)//char(i2+48)
-    if (scheme==2) then
-       sch='c'
-    else
-       sch=char(095)
-    end if
     i1=tf/100
     i2=(tf-100*i1)/10
     i3=tf-100*i1-10*i2
     fin=char(i1+48)//char(i2+48)//char(i3+48)
-    cgf='CGfinal'//char(095)//f//char(095)//mod//char(095)//'vs'//sch//char(095)//fin//'s.dat'
+    i1=scheme/10
+    i2=scheme-i1
+    sch=char(i1+48)//char(i2+48)
+    out=str//char(095)//'f'//f//char(095)//'s'//sch//char(095)//''//mode//char(095)//'i06'//char(095)//fin//'s.dat'
 
-  end subroutine scgf
-
-  subroutine sthd(thd,mode,scheme,tf,fcase)
-
-    implicit none
-
-    character (len=30), intent(out) :: thd
-    sll_int32, intent(in) :: scheme, mode,tf,fcase
-
-    integer :: i1,i2,i3
-    character :: sch
-    character (len=2) :: mod,f
-    character (len=3) :: fin
-
-    i1=mode/10
-    i2=mode-i1
-    mod=char(i1+48)//char(i2+48)
-    i1=fcase/10
-    i2=fcase-i1
-    f=char(i1+48)//char(i2+48)
-    if (scheme==2) then
-       sch='c'
-    else
-       sch=char(095)
-    end if
-    i1=tf/100
-    i2=(tf-100*i1)/10
-    i3=tf-100*i1-10*i2
-    fin=char(i1+48)//char(i2+48)//char(i3+48)
-    thd='thdiag'//char(095)//f//char(095)//mod//char(095)//'vs'//sch//char(095)//fin//'s.dat'
-
-  end subroutine sthd
+  end subroutine filename
 
 end program cg_polar
