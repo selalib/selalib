@@ -1,4 +1,4 @@
-To run this example you need to install Scotch and Pastix.
+To run this example you need to install PTScotch and Pastix.
 
 INSTALLATION
 ============
@@ -18,6 +18,7 @@ tar zxvf ~/Downloads/scotch_5.1.12b.tar.gz
 cd scotch_5.1.12/src/
 cp Make.inc/Makefile.inc.i686_mac_darwin8 Makefile.inc
 make
+make ptscotch
 sudo make install
 
 * Install Pastix
@@ -29,12 +30,39 @@ cp config/MAC.in config.in
 
 * In config.in set
 
-ROOT       = /usr/local
+###################################################################
+#                  SETTING INSTALL DIRECTORIES                    #
+###################################################################
+ROOT  = /usr/local
+INCLUDEDIR = ${ROOT}/include
+LIBDIR     = ${ROOT}/lib
+BINDIR     = ${ROOT}/bin
+
+###################################################################
+#                      GRAPH PARTITIONING                         #
+###################################################################
+
+# Uncomment the following lines for using metis ordering
+#VERSIONORD  = _metis
+#METIS_HOME  = ${HOME}/metis-4.0
+#CCPASTIX   := $(CCPASTIX) -DMETIS -I$(METIS_HOME)/Lib
+#EXTRALIB   := $(EXTRALIB) -L$(METIS_HOME) -lmetis
+
+# Scotch always needed to compile
 SCOTCH_HOME = /usr/local
+SCOTCH_INC ?= $(SCOTCH_HOME)/include
+SCOTCH_LIB ?= $(SCOTCH_HOME)/lib
+# Uncomment on of this blocks
+#scotch
+#CCPASTIX   := $(CCPASTIX) -I$(SCOTCH_INC) -DWITH_SCOTCH
+#EXTRALIB   := $(EXTRALIB) -L$(SCOTCH_LIB) -lscotch -lscotcherrexit
+#ptscotch
+CCPASTIX   := $(CCPASTIX) -I$(SCOTCH_INC) -DDISTRIBUTED -DWITH_SCOTCH
+EXTRALIB   := $(EXTRALIB) -L$(SCOTCH_LIB) -lptscotch -lscotcherrexit
 
 make
 make examples
-example/bin/simple -lap 100
+example/bin/fmurge 1000 3
 sudo make install
 
 * Variables in CMake
