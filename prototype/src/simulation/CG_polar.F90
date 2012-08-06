@@ -88,6 +88,7 @@ program cg_polar
 !!$  end do
 
   adv%phi=0.0_f64
+  adv%grad_phi=0.0_f64
   adv%f=0.0_f64
 
   !distribution function

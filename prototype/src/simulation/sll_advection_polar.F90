@@ -186,28 +186,26 @@ contains
 
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
-       tolth=dtheta/5.0_f64
        maxiter=1000
 
        do j=1,ntheta
           do i=1,nr+1
              !initialization for r interpolation
-             rr=adv%rr(i)+dt*adv%grad_phi(2,i,j)/adv%rr(i)
+             rr=adv%rr(i)+dt*adv%grad_phi(2,i,j)
              r=0.0_f64
              iter=0
 
              call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
                 r=(rr-rmin)/(rmax-rmin)
-                r=r-real(floor(r),f64)
                 r=r*real(nr,f64)
                 k=floor(r)+1
                 r=r-real(k,f64)
                 rrn=rr
                 if (k==nr+1) then
-                   rr=adv%rr(i)+dt*(1.0_f64)*adv%grad_phi(2,k,j)
+                   rr=adv%rr(i)+dt*adv%grad_phi(2,k,j)
                 else if (k<nr+1 .and. k>=1) then
-                   rr=adv%rr(i)+dt*((1.0_f64)*adv%grad_phi(2,k,j)+r*adv%grad_phi(2,k+1,j))
+                   rr=adv%rr(i)+dt*((1.0_f64-r)*adv%grad_phi(2,k,j)+r*adv%grad_phi(2,k+1,j))
                 else
                    print*,'k is outside of boundaries : error'
                    print*,'exiting the program...'
@@ -218,12 +216,13 @@ contains
              end do
              if (iter==maxiter .and. abs(rrn-rr)>tolr) then
                 print*,'not enought iterations for r in symplectic Euler',i,j,rr,rrn
+stop
              end if
 
              if (k/=nr+1) then
                 theta=adv%ttheta(j)-dt*((1.0_f64-r)*adv%grad_phi(1,k,j)/adv%rr(k)+r*adv%grad_phi(1,k+1,j)/adv%rr(k+1))
              else
-                theta=adv%ttheta(j)-dt*((1.0_f64-r)*adv%grad_phi(1,k,j)/adv%rr(k))
+                theta=adv%ttheta(j)-dt*adv%grad_phi(1,k,j)/adv%rr(k)
              end if
              call correction_theta(theta)
 
@@ -254,7 +253,6 @@ contains
              call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
                 r=(rr-rmin)/(rmax-rmin)
-                r=r-real(floor(r),f64)
                 r=r*real(nr,f64)
                 kr=floor(r)+1
                 r=r-real(kr,f64)
@@ -351,7 +349,6 @@ contains
              do while (iter<maxiter .and. abs((rrn-rr)+(tthetan-ttheta))>tolr .and. abs((rrn-rr)+(tthetan+2.0_f64*sll_pi-ttheta))>tolr &
                   & .and. abs((rrn-rr)+(tthetan-ttheta-2.0_f64*sll_pi))>tolr)
                 r=(rr-rmin)/(rmax-rmin)
-                r=r-real(floor(r),f64)
                 kr=floor(r)+1
                 r=r-real(kr,f64)
                 theta=ttheta/(2.0_f64*sll_pi)
@@ -698,7 +695,7 @@ contains
        theta=modulo(theta,2.0_f64*sll_pi)
     end if
     if (theta>2.0_f64*sll_pi) then
-       print*,'POney'
+       print*,'je ne sais pas calculer!'
        print*,th
        print*,theta
     end if
