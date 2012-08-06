@@ -46,7 +46,8 @@ contains
     if (calculus==1) then
        ! center formula for r end theta
        ! decenter for r on boundaries
-
+!pb : inversion entre d_r et d_theta
+!     pb de signe sur d_theta
        do i=2,nr
           r=adv%rr(i)
           do j=1,ntheta
@@ -142,7 +143,7 @@ contains
     ! 5 : using symplectic Euler with linear interpolation
     ! 6 : using symplectic Verlet with linear interpolation
     ! 7 : using fixed point method
-    interpolate_case=5
+    interpolate_case=1
     !in grad_phi(2,:,:), the field is already divided by r, there is non need to do it here
     !hypothesis for 5, 6, 7 : field = 0 every where outside of the domain => grad_phi=0
 
@@ -200,9 +201,10 @@ contains
                 r=(rr-rmin)/(rmax-rmin)
                 r=r*real(nr,f64)
                 k=floor(r)+1
-                r=r-real(k,f64)
+                r=r-real(k-1,f64)
                 rrn=rr
                 if (k==nr+1) then
+                   !r=0
                    rr=adv%rr(i)+dt*adv%grad_phi(2,k,j)
                 else if (k<nr+1 .and. k>=1) then
                    rr=adv%rr(i)+dt*((1.0_f64-r)*adv%grad_phi(2,k,j)+r*adv%grad_phi(2,k+1,j))
@@ -255,7 +257,7 @@ stop
                 r=(rr-rmin)/(rmax-rmin)
                 r=r*real(nr,f64)
                 kr=floor(r)+1
-                r=r-real(kr,f64)
+                r=r-real(kr-1,f64)
                 rrn=rr
                 if (kr==nr+1) then
                    rr=adv%rr(i)+0.5_f64*dt*(1.0_f64-r)*adv%grad_phi(2,kr,j)
@@ -289,7 +291,7 @@ stop
                 theta=theta-real(floor(theta),f64)
                 theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
-                theta=theta-real(k,f64)
+                theta=theta-real(k-1,f64)
                 if (k==ntheta+1) then
                    k=1
                    theta=0.0_f64
@@ -350,12 +352,12 @@ stop
                   & .and. abs((rrn-rr)+(tthetan-ttheta-2.0_f64*sll_pi))>tolr)
                 r=(rr-rmin)/(rmax-rmin)
                 kr=floor(r)+1
-                r=r-real(kr,f64)
+                r=r-real(kr-1,f64)
                 theta=ttheta/(2.0_f64*sll_pi)
                 theta=theta-real(floor(theta),f64)
                 theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
-                theta=theta-real(k,f64)
+                theta=theta-real(k-1,f64)
                 if (k==ntheta+1) then
                    k=1
                    theta=0.0_f64
