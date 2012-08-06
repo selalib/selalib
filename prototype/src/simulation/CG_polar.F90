@@ -63,15 +63,15 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-!!$  !definition of nb_step=tf/dt
-!!$  dt=0.05_f64*dr
-!!$  tf=5.0_f64
-!!$  nb_step=ceiling(tf/dt)
-!!$
-  !definition of tf=dt*nb_step
-  nb_step=1
+  !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=dt*real(nb_step,f64)
+  tf=5.0_f64
+  nb_step=ceiling(tf/dt)
+
+!!$  !definition of tf=dt*nb_step
+!!$  nb_step=1
+!!$  dt=0.05_f64*dr
+!!$  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
@@ -101,7 +101,7 @@ program cg_polar
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
   ! 3 : ?jump-sheep? scheme
-  scheme=1
+  scheme=2
 
   call filename('CGfinal',len('CGfinal'),fcase,scheme,mod,fin,cgf)
   call filename('thdiag',len('thdiag'),fcase,scheme,mod,fin,thd)
@@ -349,7 +349,7 @@ contains
     i1=scheme/10
     i2=scheme-i1
     sch=char(i1+48)//char(i2+48)
-    out=str//char(095)//'f'//f//char(095)//'s'//sch//char(095)//''//mode//char(095)//'i06'//char(095)//fin//'s.dat'
+    out=str//char(095)//'f'//f//char(095)//'s'//sch//char(095)//''//mode//char(095)//'i05'//char(095)//fin//'s.dat'
 
   end subroutine filename
 
