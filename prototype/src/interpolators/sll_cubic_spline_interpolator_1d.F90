@@ -69,7 +69,7 @@ contains  ! ****************************************************************
     ! local variables
     sll_int32 :: ierr
     ! compute the interpolating spline coefficients
-    call compute_spline_1D( data, this%bc_type, this%spline )
+    call compute_spline_1D( data, this%spline )
     call interpolate_array_values( coordinates, data_out, num_points, &
          this%spline )
   end function 
@@ -96,7 +96,7 @@ contains  ! ****************************************************************
     sll_int32 :: i
     sll_int32 :: ierr
     ! compute the interpolating spline coefficients
-    call compute_spline_1D( data, this%bc_type, this%spline )
+    call compute_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_points) - this%interpolation_points(1)
     delta = this%interpolation_points(2) - this%interpolation_points(1)
@@ -132,7 +132,7 @@ contains  ! ****************************************************************
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
-    call compute_spline_1D_bis( data_array, interpolator%spline )
+    call compute_spline_1D( data_array, interpolator%spline )
 #ifdef STD95
   end subroutine cubic_spline_compute_interpolants
 #else
