@@ -1,4 +1,3 @@
-!version with types
 program cg_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -60,13 +59,13 @@ program cg_polar
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of dt=tf/nb_step
-!!$  tf=1.0_f64
-!!$  nb_step=1
+!!$  tf=5.0_f64
+!!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=20.0_f64
+  tf=5.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -96,13 +95,13 @@ program cg_polar
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=4
+  fcase=3
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
   ! 3 : ?jump-sheep? scheme
-  scheme=1
+  scheme=2
 
   call filename('CGfinal',len('CGfinal'),fcase,scheme,mod,fin,cgf)
   call filename('thdiag',len('thdiag'),fcase,scheme,mod,fin,thd)
@@ -306,9 +305,12 @@ program cg_polar
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
+        !<for fase=3, checking the poisson solveur>
         !w0=max(w0,abs(phi(i,j)))
         !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
-        write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
+        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*sin(mode*theta)
+        !</for fase=3, checking the poisson solveur>
+        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
      end do
      write(21,*)' '
   end do
