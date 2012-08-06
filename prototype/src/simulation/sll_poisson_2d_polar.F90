@@ -13,7 +13,7 @@ module poisson_polar
 contains
 
   !>subroutine poisson_solve_polar(adv)
-  !>poisson solver for polar system
+  !>poisson solver for polar system : Laplacian(phi)=-f
   !>adv : polar_vp_data object, all datas and needed objet are inside
   !>initialization must be done outside the solver
   subroutine poisson_solve_polar(adv)
@@ -34,7 +34,7 @@ contains
 
     SLL_ALLOCATE(buf(2*ntheta+15),err)
 
-    adv%f_fft=adv%f
+    adv%f_fft=-adv%f
 
     call dffti(ntheta,buf)
     do i=1,nr+1
