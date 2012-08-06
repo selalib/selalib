@@ -43,7 +43,7 @@ program cg_polar
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=512
+  nr=256
   ntheta=128
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
@@ -63,15 +63,17 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-!!$  !definition of nb_step=tf/dt
-!!$  dt=0.05_f64*dr
-!!$  tf=5.0_f64
-!!$  nb_step=ceiling(tf/dt)
-!!$
+ !definition of nb_step=tf/dt
+  !dt=0.05_f64*dr
+  !dt=0.1_f64*dr
+  dt=7.03125000000000017E-003
+  tf=100.0_f64
+  nb_step=ceiling(tf/dt)
+
   !definition of tf=dt*nb_step
-  nb_step=1
-  dt=0.05_f64*dr
-  tf=dt*real(nb_step,f64)
+  !nb_step=100
+  !dt=0.05_f64*dr
+  !tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
@@ -131,7 +133,7 @@ program cg_polar
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta+1
            theta=real(j-1,f64)*dtheta
-            adv%f(i,j)=(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
+            adv%f(i,j)=-(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
                 & +(9.0_f64-mode**2)*r**2*(rmin**2+rmax**2)+(30.0_f64-4.0_f64*mode**2)*r**2*rmin*rmax &
                 & +(2.0_f64*mode**2-3.0_f64)*r*rmin*rmax*(rmin+rmax)-mode**2*rmin**2*rmax**2) &
                 & *cos(mode*theta)
@@ -174,6 +176,33 @@ program cg_polar
   write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
   call poisson_solve_polar(adv)
   call compute_grad_field(adv)
+  
+
+!
+    open (unit=21,file='test.dat')
+    do i=1,nr+1
+      r=adv%rr(i)
+      do j=1,ntheta+1
+      !j=1
+         theta=adv%ttheta(j)
+         x=r*cos(theta)
+        y=r*sin(theta)
+        !<for fase=3, checking the poisson solveur>
+        !w0=max(w0,abs(phi(i,j)))
+        !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
+!!$        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+       !</for fase=3, checking the poisson solveur>
+        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
+        write(21,*)r,theta,x,y,adv%grad_phi(1,i,j),adv%grad_phi(2,i,j),adv%phi(i,j),&
+        &3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta), &
+             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r
+     end do
+     write(21,*)' '
+  end do
+
+  stop
+  
+  
   w0=0.0_f64
   l10=0.0_f64
   l20=0.0_f64
@@ -295,7 +324,7 @@ program cg_polar
   !checking divergence of field
   call poisson_solve_polar(adv)
   call compute_grad_field(adv)
-  call divergence_ortho_field(adv,div)
+  !call divergence_ortho_field(adv,div)
 
   !write the final f in a file
   open (unit=21,file=cgf)
@@ -311,9 +340,9 @@ program cg_polar
         !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
 !!$        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
         !</for fase=3, checking the poisson solveur>
-        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
-        write(21,*)r,theta,x,y,adv%grad_phi(1,i,j),adv%grad_phi(2,i,j),3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta), &
-             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r
+        write(21,*)r,theta,x,y,adv%f(i,j)!,div(i,j)
+        !write(21,*)r,theta,x,y,adv%grad_phi(1,i,j),adv%grad_phi(2,i,j),3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta), &
+        !     & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r
      end do
      write(21,*)' '
   end do
