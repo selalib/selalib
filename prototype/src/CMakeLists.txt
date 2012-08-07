@@ -267,13 +267,10 @@ enable_testing()
 
 add_test(NAME memory COMMAND test_memory)
 set_tests_properties(memory PROPERTIES TIMEOUT 20)
-
-#add_test(precision precision/test_precision) #too longer
-
+#add_test(precision precision/test_precision) #too long
 set(passRegex "Assertion error triggered in file")
 add_test(NAME assert COMMAND test_assert)
 set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
-
 add_test(NAME constants COMMAND test_constants)
 add_test(NAME utilities COMMAND test_utilities)
 add_test(NAME low_level_file_io COMMAND test_io)
@@ -319,6 +316,21 @@ add_test(NAME remap
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+add_test(NAME remap_2d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_2d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+# to make the test meaningful at higher dimensions, we need more processes...
+set(PROCS 16)
+add_test(NAME remap_4d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_4d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
