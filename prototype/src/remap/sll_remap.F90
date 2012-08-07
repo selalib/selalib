@@ -139,7 +139,7 @@ module remapper
   end interface
 
   interface get_layout_k_max
-     module procedure get_layout_3D_k_min, get_layout_4D_k_min
+     module procedure get_layout_3D_k_max, get_layout_4D_k_max
   end interface
 
   interface set_layout_k_max
@@ -179,7 +179,7 @@ module remapper
   interface sll_get_num_nodes
      module procedure sll_get_num_nodes_2D, sll_get_num_nodes_3D, &
           sll_get_num_nodes_4D
-  end interface
+   end interface
 
   interface count_elements_in_box
      module procedure count_elements_in_box_2D, count_elements_in_box_3D, &
@@ -430,6 +430,92 @@ contains  !******************************************************************
     linear_index_4D = i + npx1*(j + npx2*(k + npx3*l))
   end function linear_index_4D
 
+  subroutine initialize_layout_with_distributed_2D_array( &
+    global_npx1, &  
+    global_npx2, &
+    num_proc_x1, &
+    num_proc_x2, &
+    layout )
+    
+    ! layout_2D should have been allocated with new(), which means that
+    ! its memory is allocated in accordance with the size of collective.
+    ! This should be error-checked below for consistency.
+    sll_int32, intent(in) :: global_npx1
+    sll_int32, intent(in) :: global_npx2
+    sll_int32, intent(in) :: num_proc_x1
+    sll_int32, intent(in) :: num_proc_x2
+    type(layout_2D), pointer :: layout
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: total_num_processors
+    sll_int32 :: node
+    sll_int32 :: collective_size
+    sll_int32 :: err
+    sll_int32, dimension(:,:), allocatable :: intervals_x1
+    sll_int32, dimension(:,:), allocatable :: intervals_x2
+
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+
+    if( &
+       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
+       .not. is_power_of_two(int(num_proc_x2,i64)) ) then
+       print *, 'ERROR: distribute_2D_array() needs that the integers that',&
+            'describe the process mesh are powers of 2.'
+       STOP
+    end if
+
+    if( &
+       .not. (global_npx1 .gt. 0) .or. &
+       .not. (global_npx2 .gt. 0) ) then
+       print *, 'ERROR: distribute_2D_array() needs that the array dimensions',&
+            'be greater than zero.'
+       STOP
+    end if
+
+    ! FIXME: add further error checking, like a minimum number of points
+    ! needed given a processor number along a dimension. Also, num_proc_xi
+    ! should be different than zero.
+    SLL_ALLOCATE( intervals_x1(0:1,0:num_proc_x1-1), err )
+    SLL_ALLOCATE( intervals_x2(0:1,0:num_proc_x2-1), err )
+
+    ! Allocate the layout to be returned.    
+    total_num_processors = num_proc_x1*num_proc_x2
+    collective_size = get_layout_2D_size(layout)
+    if( total_num_processors .ne. collective_size ) then
+       print *, 'requested size of the processor mesh is inconsistent with ', &
+            'the size of the collective.', 'number of processors = ', &
+            total_num_processors, ' collective size = ', collective_size
+       STOP
+    end if
+
+    ! Compute the arrays with the split index information along the different
+    ! dimensions.
+    intervals_x1(0:1,0:num_proc_x1-1) = &
+         split_array_indices( 1, global_npx1, num_proc_x1 )
+
+    intervals_x2(0:1,0:num_proc_x2-1) = &
+         split_array_indices( 1, global_npx2, num_proc_x2 )
+
+    ! Fill the layout array.
+    do j=0, num_proc_x2-1
+       do i=0, num_proc_x1-1
+          node = linear_index_2D( num_proc_x1, i, j )
+          i_min = intervals_x1(0,i)
+          i_max = intervals_x1(1,i)
+          j_min = intervals_x2(0,j)
+          j_max = intervals_x2(1,j)
+          call set_layout_i_min( layout, node, i_min )
+          call set_layout_i_max( layout, node, i_max )
+          call set_layout_j_min( layout, node, j_min )
+          call set_layout_j_max( layout, node, j_max )
+       end do
+    end do
+    SLL_DEALLOCATE_ARRAY( intervals_x1, err )
+    SLL_DEALLOCATE_ARRAY( intervals_x2, err )
+  end subroutine initialize_layout_with_distributed_2D_array
 
   subroutine initialize_layout_with_distributed_3D_array( &
     global_npx1, &  
@@ -542,92 +628,6 @@ contains  !******************************************************************
     SLL_DEALLOCATE_ARRAY( intervals_x3, err )
    end subroutine initialize_layout_with_distributed_3D_array
 
-  subroutine initialize_layout_with_distributed_2D_array( &
-    global_npx1, &  
-    global_npx2, &
-    num_proc_x1, &
-    num_proc_x2, &
-    layout )
-    
-    ! layout_2D should have been allocated with new(), which means that
-    ! its memory is allocated in accordance with the size of collective.
-    ! This should be error-checked below for consistency.
-    sll_int32, intent(in) :: global_npx1
-    sll_int32, intent(in) :: global_npx2
-    sll_int32, intent(in) :: num_proc_x1
-    sll_int32, intent(in) :: num_proc_x2
-    type(layout_2D), pointer :: layout
-    sll_int32 :: i
-    sll_int32 :: j
-    sll_int32 :: total_num_processors
-    sll_int32 :: node
-    sll_int32 :: collective_size
-    sll_int32 :: err
-    sll_int32, dimension(:,:), allocatable :: intervals_x1
-    sll_int32, dimension(:,:), allocatable :: intervals_x2
-
-    sll_int32 :: i_min
-    sll_int32 :: i_max
-    sll_int32 :: j_min
-    sll_int32 :: j_max
-
-    if( &
-       .not. is_power_of_two(int(num_proc_x1,i64)) .or. &
-       .not. is_power_of_two(int(num_proc_x2,i64)) ) then
-       print *, 'ERROR: distribute_2D_array() needs that the integers that',&
-            'describe the process mesh are powers of 2.'
-       STOP
-    end if
-
-    if( &
-       .not. (global_npx1 .gt. 0) .or. &
-       .not. (global_npx2 .gt. 0) ) then
-       print *, 'ERROR: distribute_2D_array() needs that the array dimensions',&
-            'be greater than zero.'
-       STOP
-    end if
-
-    ! FIXME: add further error checking, like a minimum number of points
-    ! needed given a processor number along a dimension. Also, num_proc_xi
-    ! should be different than zero.
-    SLL_ALLOCATE( intervals_x1(0:1,0:num_proc_x1-1), err )
-    SLL_ALLOCATE( intervals_x2(0:1,0:num_proc_x2-1), err )
-
-    ! Allocate the layout to be returned.    
-    total_num_processors = num_proc_x1*num_proc_x2
-    collective_size = get_layout_2D_size(layout)
-    if( total_num_processors .ne. collective_size ) then
-       print *, 'requested size of the processor mesh is inconsistent with ', &
-            'the size of the collective.', 'number of processors = ', &
-            total_num_processors, ' collective size = ', collective_size
-       STOP
-    end if
-
-    ! Compute the arrays with the split index information along the different
-    ! dimensions.
-    intervals_x1(0:1,0:num_proc_x1-1) = &
-         split_array_indices( 1, global_npx1, num_proc_x1 )
-
-    intervals_x2(0:1,0:num_proc_x2-1) = &
-         split_array_indices( 1, global_npx2, num_proc_x2 )
-
-    ! Fill the layout array.
-    do j=0, num_proc_x2-1
-       do i=0, num_proc_x1-1
-          node = linear_index_2D( num_proc_x1, i, j )
-          i_min = intervals_x1(0,i)
-          i_max = intervals_x1(1,i)
-          j_min = intervals_x2(0,j)
-          j_max = intervals_x2(1,j)
-          call set_layout_i_min( layout, node, i_min )
-          call set_layout_i_max( layout, node, i_max )
-          call set_layout_j_min( layout, node, j_min )
-          call set_layout_j_max( layout, node, j_max )
-       end do
-    end do
-    SLL_DEALLOCATE_ARRAY( intervals_x1, err )
-    SLL_DEALLOCATE_ARRAY( intervals_x2, err )
-  end subroutine initialize_layout_with_distributed_2D_array
 
   subroutine initialize_layout_with_distributed_4D_array( &
     global_npx1, &  
@@ -740,10 +740,13 @@ contains  !******************************************************************
                      l )
                 i_min = intervals_x1(0,i)
                 i_max = intervals_x1(1,i)
+
                 j_min = intervals_x2(0,j)
                 j_max = intervals_x2(1,j)
+
                 k_min = intervals_x3(0,k)
                 k_max = intervals_x3(1,k)
+
                 l_min = intervals_x4(0,l)
                 l_max = intervals_x4(1,l)
                 call set_layout_i_min( layout, node, i_min )
@@ -769,6 +772,16 @@ contains  !******************************************************************
     sll_int32, dimension(0:1,0:num_intervals-1) :: split_array_indices
     sll_int32, intent(in)                       :: min
     sll_int32, intent(in)                       :: max
+    sll_int32                                   :: num_elements
+    num_elements = max - min + 1
+    if( num_elements < num_intervals ) then
+       print *, 'ERROR, split_array_indices(): the array given to split ', &
+            'has less elements than the number of intervals requested. ', &
+            'We have not implemented how to handle this case.'
+       print *, 'number of elements: ', num_elements
+       print *, 'number of intervals: ', num_intervals
+       STOP 
+    end if
     call split_array_indices_aux( &
       split_array_indices, &
       0, &
@@ -2087,7 +2100,7 @@ contains  !******************************************************************
          col_sz, rcntsi)
 #endif
     
-#if 1
+#if 0
     write (*,'(a,i4)') 'parameters from rank ', my_rank
     print *, 'scntsi', scntsi(:)
     print *, 'sdispi', sdispi(:)
@@ -2594,12 +2607,12 @@ contains  !******************************************************************
         (gtuple(2) .le. get_box_4D_j_max(box)) .and. &
         (gtuple(3) .ge. get_box_4D_k_min(box)) .and. &
         (gtuple(3) .le. get_box_4D_k_max(box)) .and. &
-        (gtuple(4) .le. get_box_4D_l_min(box)) .and. &
+        (gtuple(4) .ge. get_box_4D_l_min(box)) .and. &
         (gtuple(4) .le. get_box_4D_l_max(box)) ) then  ! the index is present
        global_to_local_4D(1) = gtuple(1) - get_box_4D_i_min(box) + 1
        global_to_local_4D(2) = gtuple(2) - get_box_4D_j_min(box) + 1
        global_to_local_4D(3) = gtuple(3) - get_box_4D_k_min(box) + 1
-       global_to_local_4D(3) = gtuple(3) - get_box_4D_k_min(box) + 1
+       global_to_local_4D(4) = gtuple(4) - get_box_4D_l_min(box) + 1
     else  ! the index is not present
        global_to_local_4D(1) = -1
        global_to_local_4D(2) = -1
