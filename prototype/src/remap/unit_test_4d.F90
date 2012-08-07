@@ -12,10 +12,10 @@ program remap_test_4d
   sll_real64, dimension(:,:,:,:), allocatable :: local_array2
   sll_real64, dimension(:,:,:,:), allocatable :: arrays_diff
   ! Dimensions of the 4d array (global dimensions)
-  integer, parameter                       :: ni = 8
-  integer, parameter                       :: nj = 4
-  integer, parameter                       :: nk = 2
-  integer, parameter                       :: nl = 2
+  integer, parameter                       :: ni = 64
+  integer, parameter                       :: nj = 32
+  integer, parameter                       :: nk = 16   ! change
+  integer, parameter                       :: nl = 16   ! change
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init
@@ -76,6 +76,10 @@ program remap_test_4d
      end if
      layout1  => new_layout_4D( sll_world_collective )        
      call factorize_in_random_2powers_4d(colsz, npi, npj, npk, npl)
+!!$     npi = 2
+!!$     npj = 4
+!!$     npk = 1
+!!$     npl = 1
      if( myrank .eq. 0 ) then
         print *, 'source configuration: ', npi, npj, npk, npl
      end if
@@ -119,6 +123,11 @@ program remap_test_4d
      
      layout2  => new_layout_4D( sll_world_collective )
      call factorize_in_random_2powers_4d(colsz, npi, npj, npk, npl)
+!!$     npi = 4
+!!$     npj = 2
+!!$     npk = 1
+!!$     npl = 1
+
      if( myrank .eq. 0 ) then
         print *, 'target configuration: ', npi, npj, npk, npl
      end if
@@ -151,7 +160,7 @@ program remap_test_4d
 
      SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final,loc_sz_l_final),ierr )
  
-#if 1
+#if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
         call sll_view_lims_4D( layout1 )
