@@ -34,7 +34,7 @@ contains
 
     SLL_ALLOCATE(buf(2*ntheta+15),err)
 
-    adv%f_fft=-adv%f
+    adv%f_fft=adv%f
 
     call dffti(ntheta,buf)
     do i=1,nr+1
@@ -53,9 +53,9 @@ contains
 !!$!print*,'sll_p',adv%pfwd%problem_shape(1),k
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
-          adv%a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          adv%a(3*i-1)=-2.0_f64/dr**2-(ind_k/r)**2
-          adv%a(3*i-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          adv%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          adv%a(3*i-1)=2.0_f64/dr**2+(ind_k/r)**2
+          adv%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
 !!$          adv%fk(i)=fft_get_mode(adv%pfwd,adv%f_fft(i,1:ntheta),k)
        enddo
        adv%a(1)=0.0_f64
