@@ -344,7 +344,7 @@ add_test(NAME remap_2d
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 # to make the test meaningful at higher dimensions, we need more processes...
-set(PROCS 4)
+set(PROCS 16)
 add_test(NAME remap_4d
 	COMMAND
 	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
