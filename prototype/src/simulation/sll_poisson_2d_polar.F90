@@ -5,7 +5,6 @@ module poisson_polar
 
   use polar_kind
   use sll_fft
-!!$  use fftpack_module
   use sll_tridiagonal
   use numeric_constants
   implicit none
