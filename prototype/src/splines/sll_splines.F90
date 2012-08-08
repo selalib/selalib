@@ -270,30 +270,10 @@ contains  ! ****************************************************************
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
   !> compute spline coefficients
-  subroutine compute_spline_1D( f, bc_type, spline )
-    sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    sll_int32,  intent(in)               :: bc_type
-    type(sll_spline_1D), pointer         :: spline
-    ! Note that this function does no error checking and basically
-    ! outsources this task to the functions it is wrapping around.
-    ! This is so because those functions can be used independently
-    ! (if the user wants to avoid the overhead of calling this
-    ! wrapper function), so in any case, the error checking of
-    ! the arguments will be carried out at least once.
-    select case (bc_type)
-    case (PERIODIC_SPLINE)
-       call compute_spline_1D_periodic( f, spline )
-    case (HERMITE_SPLINE)
-       call compute_spline_1D_hermite( f, spline )
-    case default
-       print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
-       STOP
-    end select
-  end subroutine compute_spline_1D
 
-  !> just a copy of the subroutine above and remove bc_type argument
-  !> because now it is in the spline object.
-  subroutine compute_spline_1D_bis( f, spline )
+  !> compute_spline_1D() computes the spline coefficients using the parameters
+  !> initially given to 'spline' and using 'f' as the data.
+  subroutine compute_spline_1D( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32                            :: bc_type
     type(sll_spline_1D), pointer         :: spline
@@ -313,7 +293,7 @@ contains  ! ****************************************************************
        print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
        STOP
     end select
-  end subroutine compute_spline_1D_bis
+  end subroutine compute_spline_1D
 
 #define NUM_TERMS 27
   ! The following auxiliary functions:
@@ -632,11 +612,15 @@ contains  ! ****************************************************************
     ci        = coeffs(cell)
     cip1      = coeffs(cell+1)
     cip2      = coeffs(cell+2)
+    !    print *, 'intepolate_value_aux(): coefficients:'
+    !    print *, cim1, ci, cip1, cip2, cdx, dx
     t1        = 3.0_f64*ci
     t3        = 3.0_f64*cip1
     t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
     t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    ! print *, 't2 and t4: ', t2, t4
     interpolate_value_aux = (1.0_f64/6.0_f64)*(t2 + t4)
+    !print *, interpolate_value_aux
   end function interpolate_value_aux
 
   
@@ -665,7 +649,7 @@ contains  ! ****************************************************************
     xmin = spline%xmin
     rh   = spline%rdelta
     coeffs => spline%coeffs
-    interpolate_value = interpolate_value_aux( 0.0_f64, xmin, rh, coeffs )
+    interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
 
   end function interpolate_value
 

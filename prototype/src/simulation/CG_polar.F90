@@ -21,7 +21,6 @@ program cg_polar
   sll_int32 :: fcase, scheme
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
-  character (len=40) :: cgf, thd
   sll_int32 :: mod
   sll_real64 :: mode,temps
   integer :: hh,min,ss
@@ -43,7 +42,7 @@ program cg_polar
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=512
+  nr=256
   ntheta=128
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
@@ -65,11 +64,12 @@ program cg_polar
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=5.0_f64
+  !dt=0.01_f64
+  tf=15.0_f64
   nb_step=ceiling(tf/dt)
 
-!!$  !definition of tf=dt*nb_step
-!!$  nb_step=1
+!!$  definition of tf=dt*nb_step
+!!$  nb_step=100
 !!$  dt=0.05_f64*dr
 !!$  tf=dt*real(nb_step,f64)
 
@@ -88,6 +88,7 @@ program cg_polar
 !!$  end do
 
   adv%phi=0.0_f64
+  adv%grad_phi=0.0_f64
   adv%f=0.0_f64
 
   !distribution function
@@ -95,16 +96,13 @@ program cg_polar
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=3
+  fcase=4
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
   ! 3 : ?jump-sheep? scheme
   scheme=2
-
-  call filename('CGfinal',len('CGfinal'),fcase,scheme,mod,fin,cgf)
-  call filename('thdiag',len('thdiag'),fcase,scheme,mod,fin,thd)
 
   if (fcase==1) then
      do i=1,nr+1
@@ -133,7 +131,7 @@ program cg_polar
             adv%f(i,j)=-(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
                 & +(9.0_f64-mode**2)*r**2*(rmin**2+rmax**2)+(30.0_f64-4.0_f64*mode**2)*r**2*rmin*rmax &
                 & +(2.0_f64*mode**2-3.0_f64)*r*rmin*rmax*(rmin+rmax)-mode**2*rmin**2*rmax**2) &
-                & *sin(mode*theta)
+                & *cos(mode*theta)
         end do
      end do
 
@@ -168,11 +166,42 @@ program cg_polar
   end do
   close(20)
 
-  open(unit=23,file=thd)
+
+
+!!$  call poisson_solve_polar(adv)
+!!$  call compute_grad_field(adv)
+!!$  open (unit=21,file='test.dat')
+!!$  do i=1,nr+1
+!!$     r=adv%rr(i)
+!!$     do j=1,ntheta+1
+!!$        !j=1
+!!$        theta=adv%ttheta(j)
+!!$        x=r*cos(theta)
+!!$        y=r*sin(theta)
+!!$        !<for fase=3, checking the poisson solveur>
+!!$        !w0=max(w0,abs(phi(i,j)))
+!!$        !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
+!!$        !write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+!!$        !</for fase=3, checking the poisson solveur>
+!!$        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
+!!$        write(21,*)r,theta,x,y,adv%grad_phi(1,i,j),adv%grad_phi(2,i,j),adv%phi(i,j), &
+!!$             & 3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta), &
+!!$             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r, (r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+!!$     end do
+!!$     write(21,*)' '
+!!$  end do
+!!$
+!!$  stop
+  
+  
+
+  open(unit=23,file='thdiag.dat')
+  write(23,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
   call poisson_solve_polar(adv)
   call compute_grad_field(adv)
+
   w0=0.0_f64
   l10=0.0_f64
   l20=0.0_f64
@@ -198,11 +227,10 @@ program cg_polar
   write(23,*)'#t=0',w0,l10,l20,e0
   write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64
 
+  t1 => start_time_mark(t1)
   do step=1,nb_step
 
-     if (step==1) then
-        t1 => start_time_mark(t1)
-     else if (step==101) then
+     if (step==101) then
         t2 => start_time_mark(t2)
         temps=time_elapsed_between(t1,t2)
         temps=temps/100*real(nb_step,f32)
@@ -298,19 +326,22 @@ program cg_polar
   call divergence_ortho_field(adv,div)
 
   !write the final f in a file
-  open (unit=21,file=cgf)
+  open (unit=21,file='CGfinal.dat')
+  write(21,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
+  write(21,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   do i=1,nr+1
-     r=rmin+real(i-1,f64)*dr
+     r=adv%rr(i)
      do j=1,ntheta+1
-        theta=real(j-1,f64)*dtheta
+     !j=1
+        theta=adv%ttheta(j)
         x=r*cos(theta)
         y=r*sin(theta)
         !<for fase=3, checking the poisson solveur>
         !w0=max(w0,abs(phi(i,j)))
         !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
-        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*sin(mode*theta)
+!!$        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
         !</for fase=3, checking the poisson solveur>
-        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
+        write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
      end do
      write(21,*)' '
   end do
@@ -321,36 +352,5 @@ program cg_polar
   t2 => delete_time_mark(t2)
   call vp_data_delete(adv)
   call vp_rk4_delete(rk)
-
-contains
-
-  subroutine filename(str,lenght,fcase,scheme,mod,tf,out)
-
-    implicit none
-
-    character (len=40), intent(out) :: out
-    sll_int32, intent(in) :: scheme, mod,tf,fcase,lenght
-    character (len=lenght) :: str
-
-    integer :: i1,i2,i3
-    character (len=2) :: mode,f,sch
-    character (len=3) :: fin
-
-    i1=mod/10
-    i2=mod-i1
-    mode=char(i1+48)//char(i2+48)
-    i1=fcase/10
-    i2=fcase-i1
-    f=char(i1+48)//char(i2+48)
-    i1=tf/100
-    i2=(tf-100*i1)/10
-    i3=tf-100*i1-10*i2
-    fin=char(i1+48)//char(i2+48)//char(i3+48)
-    i1=scheme/10
-    i2=scheme-i1
-    sch=char(i1+48)//char(i2+48)
-    out=str//char(095)//'f'//f//char(095)//'s'//sch//char(095)//''//mode//char(095)//'i05'//char(095)//fin//'s.dat'
-
-  end subroutine filename
 
 end program cg_polar

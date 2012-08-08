@@ -46,7 +46,6 @@ contains
     if (calculus==1) then
        ! center formula for r end theta
        ! decenter for r on boundaries
-
        do i=2,nr
           r=adv%rr(i)
           do j=1,ntheta
@@ -56,7 +55,9 @@ contains
        end do
        do j=1,ntheta
           adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
-          adv%grad_phi(1,nr+1,j)=(adv%phi(nr+1,j)-adv%phi(nr,j))/dr
+          adv%grad_phi(1,nr+1,j)=(adv%phi(nr,j)-adv%phi(nr+1,j))/dr
+!!$          adv%grad_phi(1,1,j)=-(1.5_f64*adv%phi(1,j)-2.0_f64*adv%phi(2,j)+0.5_f64*adv%phi(3,j))/dr
+!!$          adv%grad_phi(1,nr+1,j)=-(1.5_f64*adv%phi(nr+1,j)-2.0_f64*adv%phi(nr,j)+0.5_f64*adv%phi(nr-1,j))/dr
           adv%grad_phi(2,1,j)=(adv%phi(1,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
           adv%grad_phi(2,nr+1,j)=(adv%phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
        end do
@@ -134,7 +135,7 @@ contains
     rmax=adv%data%rmax
 
     !interpolation
-    ! 1 : using explicit Euler methode
+    ! 1 : using explicit Euler method
     ! 2 : rotation, this case ignore the field phi
     !     rotation speed = -1
     ! 3 : using RK4 // A REPRENDRE
@@ -142,7 +143,7 @@ contains
     ! 5 : using symplectic Euler with linear interpolation
     ! 6 : using symplectic Verlet with linear interpolation
     ! 7 : using fixed point method
-    interpolate_case=5
+    interpolate_case=6
     !in grad_phi(2,:,:), the field is already divided by r, there is non need to do it here
     !hypothesis for 5, 6, 7 : field = 0 every where outside of the domain => grad_phi=0
 
@@ -186,28 +187,28 @@ contains
 
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
-       tolth=dtheta/5.0_f64
+       tolr=1e-14
        maxiter=1000
 
        do j=1,ntheta
           do i=1,nr+1
              !initialization for r interpolation
-             rr=adv%rr(i)+dt*adv%grad_phi(2,i,j)/adv%rr(i)
+             rr=adv%rr(i)+dt*adv%grad_phi(2,i,j)
              r=0.0_f64
              iter=0
 
              call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
                 r=(rr-rmin)/(rmax-rmin)
-                r=r-real(floor(r),f64)
                 r=r*real(nr,f64)
                 k=floor(r)+1
-                r=r-real(k,f64)
+                r=r-real(k-1,f64)
                 rrn=rr
                 if (k==nr+1) then
-                   rr=adv%rr(i)+dt*(1.0_f64)*adv%grad_phi(2,k,j)
+                   !r=0
+                   rr=adv%rr(i)+dt*adv%grad_phi(2,k,j)
                 else if (k<nr+1 .and. k>=1) then
-                   rr=adv%rr(i)+dt*((1.0_f64)*adv%grad_phi(2,k,j)+r*adv%grad_phi(2,k+1,j))
+                   rr=adv%rr(i)+dt*((1.0_f64-r)*adv%grad_phi(2,k,j)+r*adv%grad_phi(2,k+1,j))
                 else
                    print*,'k is outside of boundaries : error'
                    print*,'exiting the program...'
@@ -218,17 +219,21 @@ contains
              end do
              if (iter==maxiter .and. abs(rrn-rr)>tolr) then
                 print*,'not enought iterations for r in symplectic Euler',i,j,rr,rrn
+                stop
              end if
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             k=floor(r)+1
+             r=r-real(k-1,f64)
 
              if (k/=nr+1) then
                 theta=adv%ttheta(j)-dt*((1.0_f64-r)*adv%grad_phi(1,k,j)/adv%rr(k)+r*adv%grad_phi(1,k+1,j)/adv%rr(k+1))
              else
-                theta=adv%ttheta(j)-dt*((1.0_f64-r)*adv%grad_phi(1,k,j)/adv%rr(k))
+                theta=adv%ttheta(j)-dt*adv%grad_phi(1,k,j)/adv%rr(k)
              end if
              call correction_theta(theta)
 
              adv%f(i,j)=interpolate_value_2d(rr,theta,adv%spl_f)
-
           end do
        end do
 
@@ -240,6 +245,8 @@ contains
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
        tolth=dtheta/5.0_f64
+       tolr=1e-14
+       tolth=1e-14
        maxiter=1000
 
        do j=1,ntheta
@@ -254,13 +261,12 @@ contains
              call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
                 r=(rr-rmin)/(rmax-rmin)
-                r=r-real(floor(r),f64)
                 r=r*real(nr,f64)
                 kr=floor(r)+1
-                r=r-real(kr,f64)
+                r=r-real(kr-1,f64)
                 rrn=rr
                 if (kr==nr+1) then
-                   rr=adv%rr(i)+0.5_f64*dt*(1.0_f64-r)*adv%grad_phi(2,kr,j)
+                   rr=adv%rr(i)+0.5_f64*dt*adv%grad_phi(2,kr,j)
                 else if (kr>0 .and. kr<nr+1) then
                    rr=adv%rr(i)+0.5_f64*dt*((1.0_f64-r)*adv%grad_phi(2,kr,j)+r*adv%grad_phi(2,kr+1,j))
                 else
@@ -277,33 +283,40 @@ contains
                 print*,'not enought iterations for r in symplectic Verlet',i,j,rr,rrn
                 stop
              end if
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
 
              !initialization for theta interpolation
-             ttheta=adv%ttheta(1)-dt*adv%grad_phi(1,i,j)/adv%rr(i)
+             ttheta=adv%ttheta(j)-dt*adv%grad_phi(1,i,j)/adv%rr(i)
              tthetan=3.0_f64*sll_pi
              theta=0.0_f64
              k=1
              iter=0
 
              call correction_theta(theta)
-             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
+             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. &
+                  & abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
                 theta=ttheta/(2.0_f64*sll_pi)
                 theta=theta-real(floor(theta),f64)
                 theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
-                theta=theta-real(k,f64)
+                theta=theta-real(k-1,f64)
                 if (k==ntheta+1) then
                    k=1
                    theta=0.0_f64
                 end if
                 tthetan=ttheta
                 if (kr==nr+1) then
-                   ttheta=adv%ttheta(j)-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
-                        & +theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr))))
-                   ttheta=ttheta-0.5_f64*dt*(1.0_f64-r)*adv%grad_phi(1,kr,j)/adv%rr(kr)
+                   ttheta=adv%ttheta(j)-0.5_f64*dt*((1.0_f64-theta)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
+                        & +theta*adv%grad_phi(1,kr,k+1)/adv%rr(kr))
+                   ttheta=ttheta-0.5_f64*dt*adv%grad_phi(1,kr,j)/adv%rr(kr)
                 else
-                   ttheta=adv%ttheta(j)-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
-                        & +r*adv%grad_phi(1,kr+1,k)/adv%rr(kr+1))+theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr) &
+                   ttheta=adv%ttheta(j)-0.5_f64*dt*((1.0_f64-theta) &
+                        & *((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
+                        & +r*adv%grad_phi(1,kr+1,k)/adv%rr(kr+1)) &
+                        & +theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr) &
                         & +r*adv%grad_phi(1,kr+1,k+1)/adv%rr(kr+1)))
                    ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*adv%grad_phi(1,kr,j)/adv%rr(kr)+r*adv%grad_phi(1,kr+1,j)/adv%rr(kr+1))
                 end if
@@ -311,13 +324,22 @@ contains
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
                 print*,'not enought iterations for theta in symplectic Verlet',i,j,ttheta,tthetan
                 stop
              end if
-
+             theta=ttheta/(2.0_f64*sll_pi)
+             theta=theta-real(floor(theta),f64)
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             if (k==ntheta+1) then
+               k=1
+               theta=0.0_f64
+             end if
              if (kr==nr+1) then
-                rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(2,kr,k)+theta*(1.0_f64-r)*adv%grad_phi(2,kr,k+1)))
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*adv%grad_phi(2,kr,k)+theta*adv%grad_phi(2,kr,k+1))
              else
                 rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(2,kr,k)+r*adv%grad_phi(2,kr+1,k)) &
                      & +theta*((1.0_f64-r)*adv%grad_phi(2,kr,k+1)+r*adv%grad_phi(2,kr+1,k+1)))
@@ -351,14 +373,13 @@ contains
              do while (iter<maxiter .and. abs((rrn-rr)+(tthetan-ttheta))>tolr .and. abs((rrn-rr)+(tthetan+2.0_f64*sll_pi-ttheta))>tolr &
                   & .and. abs((rrn-rr)+(tthetan-ttheta-2.0_f64*sll_pi))>tolr)
                 r=(rr-rmin)/(rmax-rmin)
-                r=r-real(floor(r),f64)
                 kr=floor(r)+1
-                r=r-real(kr,f64)
+                r=r-real(kr-1,f64)
                 theta=ttheta/(2.0_f64*sll_pi)
                 theta=theta-real(floor(theta),f64)
                 theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
-                theta=theta-real(k,f64)
+                theta=theta-real(k-1,f64)
                 if (k==ntheta+1) then
                    k=1
                    theta=0.0_f64
@@ -698,7 +719,7 @@ contains
        theta=modulo(theta,2.0_f64*sll_pi)
     end if
     if (theta>2.0_f64*sll_pi) then
-       print*,'POney'
+       print*,'je ne sais pas calculer!'
        print*,th
        print*,theta
     end if
