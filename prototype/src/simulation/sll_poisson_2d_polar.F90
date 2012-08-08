@@ -5,7 +5,6 @@ module poisson_polar
 
   use polar_kind
   use sll_fft
-!!$  use fftpack_module
   use sll_tridiagonal
   use numeric_constants
   implicit none
@@ -13,7 +12,7 @@ module poisson_polar
 contains
 
   !>subroutine poisson_solve_polar(adv)
-  !>poisson solver for polar system
+  !>poisson solver for polar system : Laplacian(phi)=-f
   !>adv : polar_vp_data object, all datas and needed objet are inside
   !>initialization must be done outside the solver
   subroutine poisson_solve_polar(adv)
@@ -53,9 +52,9 @@ contains
 !!$!print*,'sll_p',adv%pfwd%problem_shape(1),k
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
-          adv%a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          adv%a(3*i-1)=-2.0_f64/dr**2-(ind_k/r)**2
-          adv%a(3*i-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          adv%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          adv%a(3*i-1)=2.0_f64/dr**2+(ind_k/r)**2
+          adv%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
 !!$          adv%fk(i)=fft_get_mode(adv%pfwd,adv%f_fft(i,1:ntheta),k)
        enddo
        adv%a(1)=0.0_f64

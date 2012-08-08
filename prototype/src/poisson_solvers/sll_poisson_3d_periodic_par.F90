@@ -43,17 +43,17 @@ module sll_poisson_3d_periodic_par
      type(sll_fft_plan), pointer               :: px_inv
      type(sll_fft_plan), pointer               :: py_inv
      type(sll_fft_plan), pointer               :: pz_inv
-     type(layout_3D_t),  pointer               :: layout_x
-     type(layout_3D_t),  pointer               :: layout_y
-     type(layout_3D_t),  pointer               :: layout_z
+     type(layout_3D),  pointer               :: layout_x
+     type(layout_3D),  pointer               :: layout_y
+     type(layout_3D),  pointer               :: layout_z
      sll_int32, dimension(3,3)                 :: loc_sizes
      sll_comp64, dimension(:,:,:), allocatable :: array_x
      sll_comp64, dimension(:,:,:), allocatable :: array_y
      sll_comp64, dimension(:,:,:), allocatable :: array_z
-     type(remap_plan_3D_t), pointer            :: rmp3_xy
-     type(remap_plan_3D_t), pointer            :: rmp3_yz
-     type(remap_plan_3D_t), pointer            :: rmp3_zy
-     type(remap_plan_3D_t), pointer            :: rmp3_yx
+     type(remap_plan_3D), pointer            :: rmp3_xy
+     type(remap_plan_3D), pointer            :: rmp3_yz
+     type(remap_plan_3D), pointer            :: rmp3_zy
+     type(remap_plan_3D), pointer            :: rmp3_yx
   end type poisson_3d_periodic_plan_par
 
 contains
@@ -62,7 +62,7 @@ contains
   function new_poisson_3d_periodic_plan_par(start_layout, nx, ny, nz, Lx, &
                                                        Ly, Lz) result(plan)
 
-    type(layout_3D_t),  pointer                  :: start_layout
+    type(layout_3D),  pointer                  :: start_layout
     sll_int32                                    :: nx, ny, nz
     ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
     sll_comp64,                    dimension(nx) :: x
@@ -144,10 +144,10 @@ contains
     SLL_ALLOCATE( plan%array_y(loc_sizes(2,1),loc_sizes(2,2),loc_sizes(2,3)),ierr)
     SLL_ALLOCATE( plan%array_z(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
 
-    plan%rmp3_xy => NEW_REMAPPER_PLAN_3D(plan%layout_x, plan%layout_y, plan%array_x)
-    plan%rmp3_yz => NEW_REMAPPER_PLAN_3D(plan%layout_y, plan%layout_z, plan%array_y)
-    plan%rmp3_zy => NEW_REMAPPER_PLAN_3D(plan%layout_z, plan%layout_y, plan%array_z)
-    plan%rmp3_yx => NEW_REMAPPER_PLAN_3D(plan%layout_y, plan%layout_x, plan%array_y)
+    plan%rmp3_xy => NEW_REMAP_PLAN_3D(plan%layout_x, plan%layout_y, plan%array_x)
+    plan%rmp3_yz => NEW_REMAP_PLAN_3D(plan%layout_y, plan%layout_z, plan%array_y)
+    plan%rmp3_zy => NEW_REMAP_PLAN_3D(plan%layout_z, plan%layout_y, plan%array_z)
+    plan%rmp3_yx => NEW_REMAP_PLAN_3D(plan%layout_y, plan%layout_x, plan%array_y)
 
   end function new_poisson_3d_periodic_plan_par
 
@@ -166,9 +166,9 @@ contains
     sll_real64                                   :: ind_x, ind_y, ind_z
     sll_int32                                    :: myrank
     sll_int64                                    :: colsz ! collective size
-    type(layout_3D_t), pointer                   :: layout_x
-    type(layout_3D_t), pointer                   :: layout_y
-    type(layout_3D_t), pointer                   :: layout_z
+    type(layout_3D), pointer                   :: layout_x
+    type(layout_3D), pointer                   :: layout_y
+    type(layout_3D), pointer                   :: layout_z
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
 
@@ -325,7 +325,7 @@ contains
 
 
   subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
-    type(layout_3D_t), pointer :: layout
+    type(layout_3D), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32, intent(out) :: loc_sz_k
@@ -356,7 +356,7 @@ contains
   subroutine verify_argument_sizes_par(layout, rho, phi)
 
 
-    type(layout_3D_t), pointer   :: layout
+    type(layout_3D), pointer   :: layout
     sll_real64, dimension(:,:,:) :: rho
     sll_real64, dimension(:,:,:) :: phi
     sll_int32,  dimension(3)     :: n ! nx_loc, ny_loc, nz_loc

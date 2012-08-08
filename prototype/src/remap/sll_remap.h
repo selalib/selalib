@@ -11,8 +11,15 @@ use remapper
 ! array for which the plan is needed... but in doing so, we would make this
 ! call type-dependent. Hence the macro is necessary in this case.
 
-#define NEW_REMAPPER_PLAN_3D( arg1, arg2, array3D ) \
+! Unfortunately, the following macro cannot be made typeless because it
+! implicitly depends on the dimension of the passed array.
+#define NEW_REMAP_PLAN_2D( arg1, arg2, array2d ) \
+   new_remap_plan_2d( arg1, arg2, INT32_SIZEOF(array2d(1,1)) )
+
+#define NEW_REMAP_PLAN_3D( arg1, arg2, array3D ) \
    new_remap_plan_3D( arg1, arg2, INT32_SIZEOF(array3D(1,1,1)) )
 
+#define NEW_REMAP_PLAN_4D( arg1, arg2, array4D ) \
+   new_remap_plan_4D( arg1, arg2, INT32_SIZEOF(array4D(1,1,1,1)) )
 
 #endif
