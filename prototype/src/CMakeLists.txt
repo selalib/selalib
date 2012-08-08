@@ -2,42 +2,53 @@ project(sll)
 enable_language(Fortran)
 cmake_minimum_required(VERSION 2.8)
 
-# Determine how-to install the modules
+# Determine how-to install the modules. CMAKE_BINARY_DIR is the directory
+# in which the make command is invoked.
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+
 # Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 # Specify the output for binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-# Add new directory to find the FIND<PACKAGE>.cmake files
+# Add new directory to find the FIND<PACKAGE>.cmake files. CMAKE_SOURCE_DIR is
+# the directory where the project sources are located. CMAKE_MODULE_PATH is 
+# the list of directories in which to search for CMake modules.
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-# make sure that the default is a RELEASE
+# make sure that the default is a RELEASE. Here is where we need to set
+# the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
+# turn on assertions.
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
       "Choose the type of build, options are: None Debug Release."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
-# Define folder to be delete by make clean
+# DGFORTRAN is used to set the way in which numbers get converted to strings
+# by the preprocessor. gfotran uses "x" while other preprocessors use the
+# cpp #x. Defining the GFORTRAN flag chooses the first.
+add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
+
+# Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
-add_custom_target(clear
-		COMMAND find . -name *.mod -delete
-		COMMAND find . -name *.a -delete
-		COMMAND find . -name *.o -delete
-		COMMAND find . -name *.cmake -delete
-		COMMAND rm -rf bin
-		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
+add_custom_target( clear
+                   COMMAND find . -name *.mod -delete
+		   COMMAND find . -name *.a -delete
+		   COMMAND find . -name *.o -delete
+		   COMMAND find . -name *.cmake -delete
+		   COMMAND rm -rf bin
+		   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 ##########################################################
 # Try to determine the compiler
-try_run(RUN_RESULT_VAR
-	COMPILE_RESULT_VAR
-        ${CMAKE_BINARY_DIR}
-        ${CMAKE_SOURCE_DIR}/check_compiler.F90
+try_run( RUN_RESULT_VAR
+	 COMPILE_RESULT_VAR
+         ${CMAKE_BINARY_DIR}
+         ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
@@ -63,14 +74,14 @@ IF(COMPILE_RESULT_VAR)
 		set(Fortran_COMPILER "INTEL")
 	ENDIF()
 ELSE()
-	message(STATUS "IMPOSSIBLE TO DETERMINE WHICH COMPILER IS USED")
+	message(STATUS "UNABLE TO DETERMINE WHICH COMPILER IS USED")
 ENDIF()
 ##########################################################
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED ON CACHE BOOL " ")
 
-# recherche de HDF5
+# search for HDF5
 IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
 		set(HDF5_ROOT $ENV{HDF5_ROOT})
@@ -122,9 +133,7 @@ ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_ENABLED)
 	message("Please put on FFTW_ENABLED to use fftw")
 ENDIF()
 ##########################################################
-
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
-
+# find out which compiler we are using.
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
@@ -133,9 +142,11 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
 ELSE()
-	message(STATUS "NO FORTRAN COMPILER FOUND")
+	message(STATUS "NO KNOWN FORTRAN COMPILER FOUND")
 ENDIF()
 
+# this checks the existing collection of compiler flags to find if the
+# fortran95 standard was requested. 
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
 IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
@@ -145,25 +156,27 @@ ELSE()
   add_definitions(-DSTDF95)
 ENDIF()
 
-#add flag to disabled MPI stuff for debug
-set(DISABLED_MPI_MODULE OFF CACHE BOOL " ")
+#add flag to disable MPI stuff for debug
+set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
 
-# recherche de MPI
-# I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
-# If specify MPI_ROOT doesn't work try to change your PATH variable
+# search for MPI
+# Samuel DeSantis: added the line "HINTS $ENV{MPI_ROOT}" to the 
+# find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules). 
+# If specifying MPI_ROOT in your environment doesn't work, then try changing
+# your PATH variable.
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
-	#set(DISABLED_MPI_MODULE ON CACHE BOOL " " FORCE)
+	#set(DISABLE_MPI_MODULE ON CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
 
-# include's
+# include's. Here we include the folders which contain '.h' files.
 include_directories(fft remap poisson_solvers utilities memory assert precision fields) 
 
-# pour la doc 
+# for the documentation
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
    get_filename_component(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
@@ -186,7 +199,7 @@ set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 #  RESUME
 #############
 #
-#message("DISABLED_MPI_MODULE = ${DISABLED_MPI_MODULE}")
+#message("DISABLE_MPI_MODULE = ${DISABLE_MPI_MODULE}")
 #
 #############
 
@@ -214,7 +227,7 @@ ELSE()
 	LIST(REMOVE_ITEM MID_LEVEL_LIST_DIR fftpack)
 ENDIF()
 add_subdirectory(fft)
-IF(DISABLED_MPI_MODULE)
+IF(DISABLE_MPI_MODULE)
 # nothing to do
 ELSE()
   add_subdirectory(collective)
@@ -238,23 +251,16 @@ IF(FISHPACK_ENABLED)
 	add_subdirectory(fishpack)
 ENDIF()
 
-
-
 IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(multigrid)
 ENDIF()
 add_subdirectory(LinRood)
-
-
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
 #add_subdirectory(BSL) top
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
-
-
-
-#add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
+add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
 #add_custom_target(install make selalib_low_level)
 
 
