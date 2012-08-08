@@ -5,22 +5,15 @@ module poisson_polar
 
   use polar_kind
   use sll_fft
-!!$  use fftpack_module
   use sll_tridiagonal
   use numeric_constants
   implicit none
 
 contains
 
-  !>subroutine poisson_solve_polar(ftab,rmin,dr,Nr,Ntheta,pfwd,pinv,phitab)
-  !>poisson solver for polar system
-  !>ftab : distribution function, size (nr+1)X(ntheta+1)
-  !>phitab : solution of laplacien phi = -f
-  !>phitab(1,:) and phitab(nr+1,:) must be known as boudary condition
-  !>rmin : radius of the hole
-  !>dr : size of r step
-  !>Nr and Ntheta : number Step in directions r and theta
-  !>pfwd and pinv : initialization object for FFt forward and inverse
+  !>subroutine poisson_solve_polar(adv)
+  !>poisson solver for polar system : Laplacian(phi)=-f
+  !>adv : polar_vp_data object, all datas and needed objet are inside
   !>initialization must be done outside the solver
   subroutine poisson_solve_polar(adv)
 
@@ -44,7 +37,7 @@ contains
 
     call dffti(ntheta,buf)
     do i=1,nr+1
-!!$       call fft_apply_plan(pfwd,ffttab(i,:),ffttab(i,:))
+!!$       call fft_apply_plan(adv%pfwd,adv%f_fft(i,:),adv%f_fft(i,:))
        call dfftf(ntheta,adv%f_fft(i,1:ntheta),buf)
     end do
     adv%f_fft=adv%f_fft/real(ntheta,f64)
@@ -55,12 +48,14 @@ contains
        !PRINT*,"k=",ind_k
 !!$    do k=0,ntheta-1
 !!$       ind_k=real(k,f64)
+!!$!PROBLEM with plan%problem_shape(1) for k>first step of k
+!!$!print*,'sll_p',adv%pfwd%problem_shape(1),k
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
-          adv%a(3*i)=1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          adv%a(3*i-1)=-2.0_f64/dr**2-(ind_k/r)**2
-          adv%a(3*i-2)=1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-!!$          fk(i)=fft_get_mode(pfwd,ffttab(i,:),k)
+          adv%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          adv%a(3*i-1)=2.0_f64/dr**2+(ind_k/r)**2
+          adv%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+!!$          adv%fk(i)=fft_get_mode(adv%pfwd,adv%f_fft(i,1:ntheta),k)
        enddo
        adv%a(1)=0.0_f64
        adv%a(3*nr+3)=0.0_f64
@@ -69,15 +64,16 @@ contains
 
        call setup_cyclic_tridiag(adv%a,nr+1,adv%cts,adv%ipiv)
        call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%f_fft(:,k+1),nr+1,adv%phi(:,k+1))
+!!$       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%fk,nr+1,adv%phik)
 
 !!$       do i=1,nr+1
-!!$          call fft_set_mode(pinv,phitab(i,:),phik(i),k)
+!!$          call fft_set_mode(adv%pinv,adv%phi(i,1:ntheta),adv%phik(i),k)
 !!$       end do
     end do
 
     ! FFT INVERSE
     do i=1,Nr+1
-!!$       call fft_apply_plan(pinv,phitab(i,1:ntheta),phitab(i,1:ntheta))
+!!$       call fft_apply_plan(adv%pinv,adv%phi(i,1:ntheta),adv%phi(i,1:ntheta))
        call dfftb(ntheta,adv%phi(i,1:ntheta),buf)
     end do
 
@@ -86,14 +82,11 @@ contains
   end subroutine poisson_solve_polar
 
 
-  !>subroutine derivate_fft(nr,ntheta,phi,derivated)
-  !>this routine is used to make derivation using the fft
-  !>in the VP probleme it is used to compute derivation in direction theta
-  !>nr and ntheta : number of points in direction r and theta
-  !>phi : field we want to derivate in direction theta
-  !>derivate : grad(phi)
-  !>
-  !>this routine is writen for compute_grad_field, so derivated(1,:,:) = d_r(phi)
+!!$  !>subroutine derivate_fft(adv)
+!!$  !>this routine is used to make derivation using the fft
+!!$  !>in the CG probleme it is used to compute derivation in direction theta
+!!$  !>adv : polar_vp_data object
+!!$  !>WARNING :  if your program works using fftpack real to real fft, then this routine can not be used
   subroutine derivate_fft(adv)
 
     implicit none
