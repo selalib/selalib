@@ -46,8 +46,6 @@ contains
     if (calculus==1) then
        ! center formula for r end theta
        ! decenter for r on boundaries
-!pb : inversion entre d_r et d_theta
-!     pb de signe sur d_theta
        do i=2,nr
           r=adv%rr(i)
           do j=1,ntheta
@@ -57,7 +55,9 @@ contains
        end do
        do j=1,ntheta
           adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
-          adv%grad_phi(1,nr+1,j)=(adv%phi(nr+1,j)-adv%phi(nr,j))/dr
+          adv%grad_phi(1,nr+1,j)=(adv%phi(nr,j)-adv%phi(nr+1,j))/dr
+!!$          adv%grad_phi(1,1,j)=-(1.5_f64*adv%phi(1,j)-2.0_f64*adv%phi(2,j)+0.5_f64*adv%phi(3,j))/dr
+!!$          adv%grad_phi(1,nr+1,j)=-(1.5_f64*adv%phi(nr+1,j)-2.0_f64*adv%phi(nr,j)+0.5_f64*adv%phi(nr-1,j))/dr
           adv%grad_phi(2,1,j)=(adv%phi(1,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
           adv%grad_phi(2,nr+1,j)=(adv%phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
        end do
@@ -187,7 +187,7 @@ contains
 
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
-       tolr=1e-12
+       tolr=1e-14
        maxiter=1000
 
        do j=1,ntheta
@@ -219,7 +219,7 @@ contains
              end do
              if (iter==maxiter .and. abs(rrn-rr)>tolr) then
                 print*,'not enought iterations for r in symplectic Euler',i,j,rr,rrn
-stop
+                stop
              end if
              r=(rr-rmin)/(rmax-rmin)
              r=r*real(nr,f64)
@@ -234,7 +234,6 @@ stop
              call correction_theta(theta)
 
              adv%f(i,j)=interpolate_value_2d(rr,theta,adv%spl_f)
-
           end do
        end do
 
@@ -246,8 +245,8 @@ stop
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
        tolth=dtheta/5.0_f64
-       tolr=1e-12
-       tolth=1e-12
+       tolr=1e-14
+       tolth=1e-14
        maxiter=1000
 
        do j=1,ntheta
@@ -297,7 +296,8 @@ stop
              iter=0
 
              call correction_theta(theta)
-             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
+             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. &
+                  & abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
                 theta=ttheta/(2.0_f64*sll_pi)
                 theta=theta-real(floor(theta),f64)
                 theta=theta*real(ntheta,f64)
@@ -313,10 +313,10 @@ stop
                         & +theta*adv%grad_phi(1,kr,k+1)/adv%rr(kr))
                    ttheta=ttheta-0.5_f64*dt*adv%grad_phi(1,kr,j)/adv%rr(kr)
                 else
-                   ttheta=adv%ttheta(j)-0.5_f64*dt*((1.0_f64-theta)*&
-                   &((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
-                        & +r*adv%grad_phi(1,kr+1,k)/adv%rr(kr+1))&
-                        &+theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr) &
+                   ttheta=adv%ttheta(j)-0.5_f64*dt*((1.0_f64-theta) &
+                        & *((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
+                        & +r*adv%grad_phi(1,kr+1,k)/adv%rr(kr+1)) &
+                        & +theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr) &
                         & +r*adv%grad_phi(1,kr+1,k+1)/adv%rr(kr+1)))
                    ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*adv%grad_phi(1,kr,j)/adv%rr(kr)+r*adv%grad_phi(1,kr+1,j)/adv%rr(kr+1))
                 end if
@@ -324,7 +324,8 @@ stop
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
                 print*,'not enought iterations for theta in symplectic Verlet',i,j,ttheta,tthetan
                 stop
              end if
