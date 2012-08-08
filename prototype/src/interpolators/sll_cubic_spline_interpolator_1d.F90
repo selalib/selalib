@@ -123,7 +123,12 @@ contains  ! ****************************************************************
     call interpolate_array_values( coordinates, data_out, num_points, &
          this%spline )
   end function
-  
+
+  ! Both versions F03 and F95 of compute_interpolants_cs1d should have the
+  ! same name. In the F95 we should add a generic interface around this
+  ! subroutine, selecting on the type of interpolator. In the F03 case the
+  ! interface is the compute_interpolants routine which gets assigned to
+  ! the cs1d at initialization time.  
 #ifdef STDF95
   subroutine cubic_spline_compute_interpolants( interpolator, data_array )
     type(cubic_spline_1d_interpolator), intent(inout)  :: interpolator
