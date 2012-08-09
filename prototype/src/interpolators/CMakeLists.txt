@@ -2,6 +2,14 @@ IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
+add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+add_dependencies(geometry_functions
+	sll_utilities
+	sll_assertion
+	sll_constants
+	sll_working_precision
+)
+
 IF(STDF95)
   add_library(sll_interpolators STATIC
 	sll_cubic_spline_interpolator_1d.F90
