@@ -6,15 +6,17 @@ add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 
 IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
-  target_link_libraries(test_poisson_1d 
-      sll_poisson_1d_periodic 
-      sll_assertion 
-      sll_memory 
-      geometry_functions	 
-      fftpack_module	 
+  target_link_libraries(test_poisson_1d
+      sll_poisson_1d_periodic
+      sll_scalar_field_1d
       sll_mapped_meshes
-      sll_low_level_file_io	
+      geometry_functions
+      sll_low_level_file_io
+      fftpack_module
       sll_utilities
+      sll_assertion
+      sll_memory
+      sll_working_precision
   )
 
   add_definitions(-D_FFTPACK)

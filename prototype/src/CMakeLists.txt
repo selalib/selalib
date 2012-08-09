@@ -34,6 +34,7 @@ add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 # Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
 add_custom_target( clear
                    COMMAND find . -name *.mod -delete
 		   COMMAND find . -name *.a -delete
@@ -208,8 +209,6 @@ set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 ######################################################################
 
 #low-level
-set(LOW_LEVEL_LIST_DIR memory precision assert constants utilities low_level_file_io timer)
-#set(LOW_LEVEL_MODULES sll_memory sll_working_precision sll_assertion sll_constants sll_utilities sll_low_level_file_io sll_timer)
 add_subdirectory(memory)
 add_subdirectory(precision)
 add_subdirectory(assert)
@@ -219,7 +218,6 @@ add_subdirectory(low_level_file_io)
 add_subdirectory(timer)
 
 #mid-level
-set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integration fftpack fft collective remap WENO poisson_solvers)
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
@@ -242,8 +240,6 @@ add_subdirectory(poisson_solvers)
 ENDIF()
 
 #high-level
-add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
-add_dependencies(geometry_functions sll_utilities sll_assertion sll_constants sll_working_precision)
 add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
