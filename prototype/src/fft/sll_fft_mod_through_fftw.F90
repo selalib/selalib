@@ -160,8 +160,18 @@ contains
       endif
   end subroutine 
 
-
-
+  ! return the index mode of ith stored mode
+  ! In the complex output case the mode are stored in the natural order
+  !     X_0,X_1,...,X_N-1
+  ! In the real output case the order is
+  !     r_o,r_1,...,r_N/2,i_N/2-1,...,i_1
+  ! where X_k is the complex number (r_k,i_k).
+  ! X_o and X_N/2 are purely real.
+  function fft_ith_stored_mode(plan,i)
+    type(sll_fft_plan), pointer :: plan
+    sll_int32                   :: i, fft_ith_stored_mode
+    fft_ith_stored_mode = i
+  end function fft_ith_stored_mode
 
 ! COMPLEX
   function fftw_new_plan_c2c_1d(nx,array_in,array_out,direction,flags) result(plan)
