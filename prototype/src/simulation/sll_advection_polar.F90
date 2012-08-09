@@ -39,9 +39,8 @@ contains
     !     decenter on boundaries
     ! 2 : center for r, decenter on boundaries
     !     using fft for theta
-    ! 3 : center for r, decenter on boundaries (not writen)
-    !     using splines for theta
-    calculus = 1
+    ! 3 : using splines
+    calculus = 3
 
     if (calculus==1) then
        ! center formula for r end theta
@@ -54,6 +53,10 @@ contains
           end do
        end do
        do j=1,ntheta
+!!$          adv%grad_phi(1,1,j)=(adv%phi(2,j)-0.0_f64)/(2.0_f64*dr)
+!!$          adv%grad_phi(1,nr+1,j)=(0.0_f64-adv%phi(nr,j))/(dr*2.0_f64)
+!!$          adv%grad_phi(1,1,j)=0.0_f64
+!!$          adv%grad_phi(1,nr+1,j)=0.0_f64
           adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
           adv%grad_phi(1,nr+1,j)=(adv%phi(nr,j)-adv%phi(nr+1,j))/dr
 !!$          adv%grad_phi(1,1,j)=-(1.5_f64*adv%phi(1,j)-2.0_f64*adv%phi(2,j)+0.5_f64*adv%phi(3,j))/dr
@@ -78,23 +81,17 @@ contains
 
        call derivate_fft(adv)
 
-    else if (calculus==3) then !modifier : passer derivation en r avec les splines?
-       ! center formula for r, decenter on boundaries
-       ! using splines for theta
+    else if (calculus==3) then
+       ! using splines for r and theta
 
        call compute_spline_2D(adv%phi,adv%spl_phi)
 
-       do i=2,nr
-          r=adv%rr(i)
-          adv%grad_phi(1,i,:)=(adv%phi(i+1,:)-adv%phi(i-1,:))/(2*dr)
-       end do
        do j=1,ntheta
-          adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
-          adv%grad_phi(1,nr+1,j)=(adv%phi(nr+1,j)-adv%phi(nr,j))/dr
-          theta=real(j-1,f64)*dtheta
+          theta=adv%ttheta(j)
           do i=1,nr+1
-             r=rmin+real(i-1,f64)*dr
-             adv%grad_phi(2,i,j)=interpolate_x2_derivative_2D(r,theta,adv%spl_phi)
+             r=adv%rr(i)
+             adv%grad_phi(1,i,j)=interpolate_x1_derivative_2D(r,theta,adv%spl_phi)
+             adv%grad_phi(2,i,j)=interpolate_x2_derivative_2D(r,theta,adv%spl_phi)/r
           end do
        end do
 

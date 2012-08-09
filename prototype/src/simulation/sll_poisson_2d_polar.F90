@@ -22,8 +22,8 @@ contains
     sll_real64 :: rmin,dr
     sll_int32 :: nr, ntheta
 
-    sll_real64 :: r, ind_k
-    sll_int32::i,k,err
+    sll_real64 :: r
+    sll_int32::i,k,err, ind_k
     sll_real64, dimension(:), pointer :: buf
 
     nr=adv%data%nr
@@ -35,27 +35,27 @@ contains
 
     adv%f_fft=adv%f
 
-    call dffti(ntheta,buf)
+!!$    call dffti(ntheta,buf)
     do i=1,nr+1
-!!$       call fft_apply_plan(adv%pfwd,adv%f_fft(i,:),adv%f_fft(i,:))
-       call dfftf(ntheta,adv%f_fft(i,1:ntheta),buf)
+       call fft_apply_plan(adv%pfwd,adv%f_fft(i,:),adv%f_fft(i,:))
+!!$       call dfftf(ntheta,adv%f_fft(i,1:ntheta),buf)
     end do
     adv%f_fft=adv%f_fft/real(ntheta,f64)
 
     ! poisson solver
-    do k=0,ntheta-1
-       ind_k=real(floor(real(k+1,f64)/2.0_f64),f64)
-       !PRINT*,"k=",ind_k
 !!$    do k=0,ntheta-1
-!!$       ind_k=real(k,f64)
-!!$!PROBLEM with plan%problem_shape(1) for k>first step of k
-!!$!print*,'sll_p',adv%pfwd%problem_shape(1),k
+!!$       ind_k=real(floor(real(k+1,f64)/2.0_f64),f64)
+!!$       !PRINT*,"k=",ind_k
+    do k=0,ntheta-1
+       ind_k=ith_stored_mode(adv%pfwd,k)
+!PROBLEM with plan%problem_shape(1) for k>first step of k
+!print*,'sll_p',adv%pfwd%problem_shape(1),k
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
           adv%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-          adv%a(3*i-1)=2.0_f64/dr**2+(ind_k/r)**2
+          adv%a(3*i-1)=2.0_f64/dr**2+(real(ind_k,f64)/r)**2
           adv%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-!!$          adv%fk(i)=fft_get_mode(adv%pfwd,adv%f_fft(i,1:ntheta),k)
+          adv%fk(i)=fft_get_mode(adv%pfwd,adv%f_fft(i,1:ntheta),ind_k)
        enddo
        adv%a(1)=0.0_f64
        adv%a(3*nr+3)=0.0_f64
@@ -63,18 +63,18 @@ contains
        adv%a(3*nr+2)=1.0_f64
 
        call setup_cyclic_tridiag(adv%a,nr+1,adv%cts,adv%ipiv)
-       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%f_fft(:,k+1),nr+1,adv%phi(:,k+1))
-!!$       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%fk,nr+1,adv%phik)
+!!$       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%f_fft(:,k+1),nr+1,adv%phi(:,k+1))
+       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%fk,nr+1,adv%phik)
 
-!!$       do i=1,nr+1
-!!$          call fft_set_mode(adv%pinv,adv%phi(i,1:ntheta),adv%phik(i),k)
-!!$       end do
+       do i=1,nr+1
+          call fft_set_mode(adv%pinv,adv%phi(i,1:ntheta),adv%phik(i),ind_k)
+       end do
     end do
 
     ! FFT INVERSE
     do i=1,Nr+1
-!!$       call fft_apply_plan(adv%pinv,adv%phi(i,1:ntheta),adv%phi(i,1:ntheta))
-       call dfftb(ntheta,adv%phi(i,1:ntheta),buf)
+       call fft_apply_plan(adv%pinv,adv%phi(i,1:ntheta),adv%phi(i,1:ntheta))
+!!$       call dfftb(ntheta,adv%phi(i,1:ntheta),buf)
     end do
 
     adv%phi(:,ntheta+1)=adv%phi(:,1)
