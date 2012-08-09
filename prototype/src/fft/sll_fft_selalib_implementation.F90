@@ -16,8 +16,8 @@ module sll_fft
     sll_int32                        :: library
     sll_int32                        :: direction
     sll_int32                        :: problem_rank
-    sll_int32, dimension(:), pointer :: problem_shape
-    sll_int32, dimension(:), pointer :: scramble_index
+    sll_int32, dimension(:), pointer :: problem_shape => null()
+    sll_int32, dimension(:), pointer :: scramble_index => null()
   end type sll_fft_plan
 
   interface fft_new_plan
@@ -176,6 +176,8 @@ contains
   function fft_ith_stored_mode(plan,i)
     type(sll_fft_plan), pointer :: plan
     sll_int32                   :: i, fft_ith_stored_mode
+
+    SLL_ASSERT(associated(plan%scramble_index))
     fft_ith_stored_mode = plan%scramble_index(i)
   end function fft_ith_stored_mode
 
