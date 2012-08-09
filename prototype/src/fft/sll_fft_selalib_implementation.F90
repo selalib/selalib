@@ -16,7 +16,8 @@ module sll_fft
     sll_int32                        :: library
     sll_int32                        :: direction
     sll_int32                        :: problem_rank
-    sll_int32, dimension(:), pointer :: problem_shape
+    sll_int32, dimension(:), pointer :: problem_shape => null()
+    sll_int32, dimension(:), pointer :: scramble_index => null()
   end type sll_fft_plan
 
   interface fft_new_plan
@@ -152,7 +153,7 @@ contains
   subroutine fft_set_mode_real_1d(plan,data,new_value,k)
     type(sll_fft_plan), pointer :: plan
     sll_real64, dimension(0:)   :: data
-    sll_int32                   :: k, n_2, n, index_mode
+    sll_int32                   :: k, n_2, n
     sll_comp64                  :: new_value
 
     n = plan%problem_shape(1)
@@ -171,7 +172,14 @@ contains
       endif
   end subroutine 
 
+  ! return the index mode of ith stored mode
+  function fft_ith_stored_mode(plan,i)
+    type(sll_fft_plan), pointer :: plan
+    sll_int32                   :: i, fft_ith_stored_mode
 
+    SLL_ASSERT(associated(plan%scramble_index))
+    fft_ith_stored_mode = plan%scramble_index(i)
+  end function fft_ith_stored_mode
 
 
 ! COMPLEX
@@ -184,7 +192,7 @@ contains
     sll_int32, intent(in)                        :: direction
     sll_int32, optional,  intent(in)             :: flags
     type(sll_fft_plan), pointer                  :: plan
-    sll_int32                                    :: ierr
+    sll_int32                                    :: ierr,i
 
     SLL_ASSERT(size(array_in).eq.nx)
     SLL_ASSERT(size(array_out).eq.nx)
@@ -198,8 +206,14 @@ contains
     endif
     plan%problem_rank = 1
     SLL_ALLOCATE(plan%problem_shape(1),ierr)
-    plan%problem_shape = (/ nx  /)
+    plan%problem_shape = (/ nx /)
 
+    SLL_ALLOCATE(plan%scramble_index(0:nx-1),ierr)
+    ! For the moment the mode are stored in the natural order
+    ! 0,1,2,...,n-1
+    do i=0,nx-1
+      plan%scramble_index(i) = i
+    enddo
     SLL_ALLOCATE(plan%t(1:nx/2),ierr)
     call compute_twiddles(nx,plan%t)
     if ( direction == FFT_FORWARD ) then
@@ -227,81 +241,8 @@ contains
   end subroutine
 
 
-#if 0
 ! --------------------
-! - 2D one direction -
-! --------------------
-  function fft_new_plan_c2c_2d_one_direction(NX,NY,array_in,array_out,direction,flags) result(plan)
-    sll_int32, intent(in)                            :: NX,NY
-    sll_comp64, dimension(0:,0:), target, intent(in) :: array_in, array_out
-    sll_int32, intent(in)                            :: direction
-    sll_int32, optional,  intent(in)                 :: flags
-    type(sll_fft_plan), pointer                          :: plan
-    sll_int32                                        :: ierr    
-
-    SLL_ASSERT(size(array_in,dim=1).eq.NX)
-    SLL_ASSERT(size(array_in,dim=2).eq.NY)
-    SLL_ASSERT(size(array_out,dim=1).eq.NX)
-    SLL_ASSERT(size(array_out,dim=2).eq.NY)
-    SLL_ALLOCATE(plan,ierr)
-    plan%library = SLLFFT_MOD
-    plan%direction = direction
-    if( present(flags) )then
-      plan%style = flags
-    else
-      plan%style = 0_f32
-    endif
-    plan%problem_rank = 2
-    SLL_ALLOCATE(plan%problem_shape(2),ierr)
-    plan%problem_shape = (/ NX , NY /)
-
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) ) then
-      SLL_ALLOCATE(plan%t(1:NX/2),ierr)
-      call compute_twiddles(NX,plan%t(1:NX/2))
-      if ( direction == FFT_FORWARD ) then
-         plan%t(1:NX/2) = conjg(plan%t(1:NX/2))
-      end if
-      call bit_reverse(NX/2,plan%t(1:NX/2))
-    else if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-      SLL_ALLOCATE(plan%t(1:NY/2),ierr)
-      call compute_twiddles(NY,plan%t(1:NY/2))
-      if ( direction == FFT_FORWARD ) then
-         plan%t(1:NY/2) = conjg(plan%t(1:NY/2))
-      end if
-      call bit_reverse(NY/2,plan%t(1:NY/2))
-    endif
-  end function
-
-  subroutine fft_apply_plan_c2c_2d_one_direction(plan,array_in,array_out)
-    type(sll_fft_plan), pointer                     :: plan
-    sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
-    sll_int32                                       :: i, nx, ny
-    sll_int32 :: fft_shape(2)
-
-    if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
-       array_out = array_in
-    endif   
-      
-    fft_shape = plan%problem_shape
-    nx = fft_shape(1)
-    ny = fft_shape(2)
-
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) ) then    
-      do i=0,ny-1
-        call fft_dit_nr(array_out(0:nx-1,i),plan%t(1:nx/2),plan%direction)
-        call bit_reverse_complex(nx,array_out(0:nx-1,i))
-      enddo
-    else if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-      do i=0,nx-1
-        call fft_dit_nr(array_out(i,0:ny-1),plan%t(1:ny/2),plan%direction)
-        call bit_reverse_complex(ny,array_out(i,0:ny-1))
-      enddo
-    endif
-  end subroutine
-#endif
-
-! --------------------
-! - 2D Two direction -
+! - 2D               -
 ! --------------------
   function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
     sll_int32, intent(in)                            :: NX,NY
@@ -310,7 +251,8 @@ contains
     sll_int32, optional,  intent(in)                 :: flags
     type(sll_fft_plan), pointer                      :: plan
     sll_int32                                        :: ierr    
-    logical                                          :: two_direction !true if dft in the two directions, false otherwise.
+    logical                                          :: two_direction
+                 !true if dft in the two directions, false otherwise.
 
     SLL_ASSERT(size(array_in,dim=1).eq.NX)
     SLL_ASSERT(size(array_in,dim=2).eq.NY)
@@ -329,14 +271,16 @@ contains
     plan%problem_shape = (/ NX , NY /)
 
     two_direction = .false.
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
+    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) & 
+        .and. fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
       SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
     else if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) ) then
       SLL_ALLOCATE(plan%t(1:NX/2),ierr)
     else if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
       SLL_ALLOCATE(plan%t(NX/2+1:NX/2+NY/2),ierr)
     else
-      !If we are here, there is no FFT_ONLY_XXXXX_DIRECTION flags. So we want a 2D FFT in all direction.
+      !If we are here, there is no FFT_ONLY_XXXXX_DIRECTION flags.
+      ! So we want a 2D FFT in all direction.
       SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
       two_direction = .true.
     endif
@@ -421,7 +365,7 @@ contains
     sll_real64, dimension(:), intent(in)         :: array_out
     sll_int32, optional,  intent(in)             :: flags
     type(sll_fft_plan), pointer                  :: plan
-    sll_int32                                    :: ierr
+    sll_int32                                    :: ierr, i
 
     SLL_ASSERT(size(array_in).eq.nx)
     SLL_ASSERT(size(array_out).eq.nx) 
@@ -436,6 +380,16 @@ contains
     plan%problem_rank = 1
     SLL_ALLOCATE(plan%problem_shape(1),ierr)
     plan%problem_shape = (/ nx /)
+
+    SLL_ALLOCATE(plan%scramble_index(0:nx/2),ierr)
+    ! The mode are stored in the order 0,n/2,1,2,3,...,n/2-1
+    ! with the representation r_0,r_n/2,r_1,i_1,...,
+    ! The modes 0 and n/2 are purely real.
+    plan%scramble_index(0) = 0
+    plan%scramble_index(1) = nx/2
+    do i=1,nx/2-1
+      plan%scramble_index(i+1) = i
+    enddo
 
     SLL_ALLOCATE(plan%twiddles(0:nx/2-1),ierr)
     SLL_ALLOCATE(plan%twiddles_n(0:nx-1),ierr)
