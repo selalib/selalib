@@ -24,14 +24,14 @@ contains
 
     sll_real64 :: r
     sll_int32::i,k,err, ind_k
-    sll_real64, dimension(:), pointer :: buf
+    !sll_real64, dimension(:), pointer :: buf
 
     nr=adv%data%nr
     ntheta=adv%data%ntheta
     rmin=adv%data%rmin
     dr=adv%data%dr
 
-    SLL_ALLOCATE(buf(2*ntheta+15),err)
+!!$    SLL_ALLOCATE(buf(2*ntheta+15),err)
 
     adv%f_fft=adv%f
 
@@ -40,16 +40,10 @@ contains
        call fft_apply_plan(adv%pfwd,adv%f_fft(i,:),adv%f_fft(i,:))
 !!$       call dfftf(ntheta,adv%f_fft(i,1:ntheta),buf)
     end do
-    adv%f_fft=adv%f_fft/real(ntheta,f64)
+    !adv%f_fft=adv%f_fft/real(ntheta,f64)
 
-    ! poisson solver
-!!$    do k=0,ntheta-1
-!!$       ind_k=real(floor(real(k+1,f64)/2.0_f64),f64)
-!!$       !PRINT*,"k=",ind_k
-    do k=0,ntheta-1
-       ind_k=ith_stored_mode(adv%pfwd,k)
-!PROBLEM with plan%problem_shape(1) for k>first step of k
-!print*,'sll_p',adv%pfwd%problem_shape(1),k
+   ! poisson solver
+    do ind_k=0,ntheta/2
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
           adv%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
