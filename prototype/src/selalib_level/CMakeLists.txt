@@ -1,5 +1,7 @@
 # set the output directory for library and include
+file(MAKE_DIRECTORY ${sll_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${sll_BINARY_DIR}/lib)
+file(MAKE_DIRECTORY ${sll_BINARY_DIR}/include)
 set(CMAKE_Fortran_MODULE_DIRECTORY ${sll_BINARY_DIR}/include)
 
 # set the compiler flag for the build.
