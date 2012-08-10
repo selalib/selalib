@@ -169,8 +169,8 @@ contains
     SLL_ALLOCATE(this%a(3*(data_pol%nr+1)),err)
     SLL_ALLOCATE(this%cts(7*(data_pol%nr+1)),err)
     SLL_ALLOCATE(this%ipiv(data_pol%nr+1),err)
-    SLL_ALLOCATE(this%fk(data_pol%ntheta),err)
-    SLL_ALLOCATE(this%phik(data_pol%ntheta),err)
+    SLL_ALLOCATE(this%fk(data_pol%nr+1),err)
+    SLL_ALLOCATE(this%phik(data_pol%nr+1),err)
     SLL_ALLOCATE(this%rr(data_pol%nr+1),err)
     SLL_ALLOCATE(this%ttheta(data_pol%ntheta+1),err)
 
@@ -228,8 +228,8 @@ contains
     SLL_ALLOCATE(this%a(3*(nr+1)),err)
     SLL_ALLOCATE(this%cts(7*(nr+1)),err)
     SLL_ALLOCATE(this%ipiv(nr+1),err)
-    SLL_ALLOCATE(this%fk(ntheta),err)
-    SLL_ALLOCATE(this%phik(ntheta),err)
+    SLL_ALLOCATE(this%fk(nr+1),err)
+    SLL_ALLOCATE(this%phik(nr+1),err)
     SLL_ALLOCATE(this%rr(nr+1),err)
     SLL_ALLOCATE(this%ttheta(ntheta+1),err)
 
@@ -286,8 +286,8 @@ contains
     SLL_ALLOCATE(this%a(3*(nr+1)),err)
     SLL_ALLOCATE(this%cts(7*(nr+1)),err)
     SLL_ALLOCATE(this%ipiv(nr+1),err)
-    SLL_ALLOCATE(this%fk(ntheta),err)
-    SLL_ALLOCATE(this%phik(ntheta),err)
+    SLL_ALLOCATE(this%fk(nr+1),err)
+    SLL_ALLOCATE(this%phik(nr+1),err)
     SLL_ALLOCATE(this%rr(nr+1),err)
     SLL_ALLOCATE(this%ttheta(ntheta+1),err)
 
@@ -345,8 +345,8 @@ contains
     SLL_ALLOCATE(this%a(3*(nr+1)),err)
     SLL_ALLOCATE(this%cts(7*(nr+1)),err)
     SLL_ALLOCATE(this%ipiv(nr+1),err)
-    SLL_ALLOCATE(this%fk(ntheta),err)
-    SLL_ALLOCATE(this%phik(ntheta),err)
+    SLL_ALLOCATE(this%fk(nr+1),err)
+    SLL_ALLOCATE(this%phik(nr+1),err)
     SLL_ALLOCATE(this%rr(nr+1),err)
     SLL_ALLOCATE(this%ttheta(ntheta+1),err)
 
