@@ -53,8 +53,8 @@ contains
        enddo
        adv%a(1)=0.0_f64
        adv%a(3*nr+3)=0.0_f64
-       adv%a(2)=1.0_f64
-       adv%a(3*nr+2)=1.0_f64
+       !adv%a(2)=1.0_f64
+       !adv%a(3*nr+2)=1.0_f64
 
        call setup_cyclic_tridiag(adv%a,nr+1,adv%cts,adv%ipiv)
 !!$       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%f_fft(:,k+1),nr+1,adv%phi(:,k+1))
@@ -71,6 +71,7 @@ contains
 !!$       call dfftb(ntheta,adv%phi(i,1:ntheta),buf)
     end do
 
+    adv%phi(1,:)=0.0_f64
     adv%phi(:,ntheta+1)=adv%phi(:,1)
 
   end subroutine poisson_solve_polar
@@ -81,25 +82,25 @@ contains
 !!$  !>in the CG probleme it is used to compute derivation in direction theta
 !!$  !>adv : polar_vp_data object
 !!$  !>WARNING :  if your program works using fftpack real to real fft, then this routine can not be used
-  subroutine derivate_fft(adv)
-
-    implicit none
-
-    type(polar_vp_data), intent(in), pointer :: adv
-
-    sll_int32 :: nr, ntheta
-    sll_real64, dimension(:), pointer :: buf
-    sll_real64 :: temp
-    sll_int32 :: i,j,k,err
-
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-
-    !SLL_ALLOCATE(phi_copie(nr+1,ntheta),err)
-    SLL_ALLOCATE(buf(2*ntheta+15),err)
-
-    !!!!can't be done with fftpack r2r
-
-  end subroutine derivate_fft
+!!$  subroutine derivate_fft(adv)
+!!$
+!!$    implicit none
+!!$
+!!$    type(polar_vp_data), intent(in), pointer :: adv
+!!$
+!!$    sll_int32 :: nr, ntheta
+!!$    sll_real64, dimension(:), pointer :: buf
+!!$    sll_real64 :: temp
+!!$    sll_int32 :: i,j,k,err
+!!$
+!!$    nr=adv%data%nr
+!!$    ntheta=adv%data%ntheta
+!!$
+!!$    !SLL_ALLOCATE(phi_copie(nr+1,ntheta),err)
+!!$    SLL_ALLOCATE(buf(2*ntheta+15),err)
+!!$
+!!$    !!!!can't be done with fftpack r2r
+!!$
+!!$  end subroutine derivate_fft
 
 end module poisson_polar
