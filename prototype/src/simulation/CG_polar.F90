@@ -62,16 +62,15 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-!!$  !definition of nb_step=tf/dt
-!!$  dt=0.05_f64*dr
-!!$  !dt=0.01_f64
-!!$  tf=30.0_f64
-!!$  nb_step=ceiling(tf/dt)
-
-  !definition of tf=dt*nb_step
-  nb_step=0
+  !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=dt*real(nb_step,f64)
+  tf=20.0_f64
+  nb_step=ceiling(tf/dt)
+!!$
+!!$  !definition of tf=dt*nb_step
+!!$  nb_step=0
+!!$  dt=0.05_f64*dr
+!!$  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
@@ -96,7 +95,7 @@ program cg_polar
   ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
-  fcase=3
+  fcase=2
 
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
@@ -155,9 +154,9 @@ program cg_polar
   !write f in a file before calculations
   open (unit=20,file='CGinit.dat')
   do i=1,nr+1
-     r=rmin+real(i-1,f64)*dr
+     r=adv%rr(i)
      do j=1,ntheta+1
-        theta=real(j-1,f64)*dtheta
+        theta=adv%ttheta(j)
         x=r*cos(theta)
         y=r*sin(theta)
         write(20,*)r,theta,x,y, adv%f(i,j)
@@ -168,31 +167,28 @@ program cg_polar
 
 
 
-  call poisson_solve_polar(adv)
-  call compute_grad_field(adv)
-  open (unit=21,file='test.dat')
-  do i=1,nr+1
-     r=adv%rr(i)
-     do j=1,ntheta+1
-        !j=1
-        theta=adv%ttheta(j)
-        x=r*cos(theta)
-        y=r*sin(theta)
-        !<for fase=3, checking the poisson solveur>
-        !w0=max(w0,abs(phi(i,j)))
-        !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
-        !write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
-        !</for fase=3, checking the poisson solveur>
-        !write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
-        write(21,*)r,theta,x,y,adv%grad_phi(1,i,j),adv%grad_phi(2,i,j),adv%phi(i,j), &
-             & 3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta), &
-             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r, (r-rmin)**3*(r-rmax)**3*cos(mode*theta)
-     end do
-     write(21,*)' '
-  end do
 
-  stop
+
+!!$  call poisson_solve_polar(adv)
+!!$  call compute_grad_field(adv)
+!!$  open (unit=21,file='test.dat')
+!!$  do i=1,nr+1
+!!$     r=adv%rr(i)
+!!$     do j=1,ntheta+1
+!!$        theta=adv%ttheta(j)
+!!$        x=r*cos(theta)
+!!$        y=r*sin(theta)
+!!$        write(21,*)r,theta,x,y,adv%grad_phi(1,i,j),adv%grad_phi(2,i,j),adv%phi(i,j), &
+!!$             & 3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta), &
+!!$             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r, (r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+!!$     end do
+!!$     write(21,*)' '
+!!$  end do
+!!$
+!!$  stop
   
+
+
   
 
   open(unit=23,file='thdiag.dat')
@@ -332,15 +328,9 @@ program cg_polar
   do i=1,nr+1
      r=adv%rr(i)
      do j=1,ntheta+1
-     !j=1
         theta=adv%ttheta(j)
         x=r*cos(theta)
         y=r*sin(theta)
-        !<for fase=3, checking the poisson solveur>
-        !w0=max(w0,abs(phi(i,j)))
-        !w=max(w,abs(phi(i,j)-(r-rmin)**3*(r-rmax)**3*sin(mode*theta)))
-!!$        write(21,*)r,theta,x,y,adv%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
-        !</for fase=3, checking the poisson solveur>
         write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
      end do
      write(21,*)' '
