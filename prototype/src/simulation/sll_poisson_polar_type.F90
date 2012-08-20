@@ -402,6 +402,8 @@ contains
        SLL_DEALLOCATE_ARRAY(this%ipiv,err)
        SLL_DEALLOCATE_ARRAY(this%rr,err)
        SLL_DEALLOCATE_ARRAY(this%ttheta,err)
+       SLL_DEALLOCATE_ARRAY(this%fk,err)
+       SLL_DEALLOCATE_ARRAY(this%phik,err)
 
        call delete_spline_2d(this%spl_f)
        call delete_spline_2d(this%spl_a1)
