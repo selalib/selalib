@@ -11,68 +11,73 @@ module poisson_polar
 
 contains
 
-  !>subroutine poisson_solve_polar(adv)
-  !>poisson solver for polar system : Laplacian(phi)=-f
-  !>adv : polar_vp_data object, all datas and needed objet are inside
+  !>subroutine poisson_solve_polar(data,f,phi,f_fft,fk,phik,a,cts,ipiv,pfwd,pinv)
+  !>poisson solver for polar system : -Laplacian(phi)=f
+  !>data : polar_data object, contains data about the domain
+  !>f : distribution function, size (nr+1)*(ntheta+1)
+  !>phi : unknown field, size (nr+1)*(ntheta+1)
+  !>f_fft : copy of f not to overwrite f
+  !>fk and phik : complex vectors, size ntheta/2+1
+  !>a : matrix for Laplacian in polar coordinates
+  !>cts and ipiv : vectors for the tridiagonal solver, see the section about the tridiagonal solver
+  !>pfwd and pinv : sll_fft_plan object for fft forward and inverse
   !>initialization must be done outside the solver
-  subroutine poisson_solve_polar(adv)
+  subroutine poisson_solve_polar(data,f,phi,f_fft,fk,phik,a,cts,ipiv,pfwd,pinv)
 
-    type(polar_vp_data), intent(inout), pointer :: adv
+    type(polar_data), intent(in), pointer :: data
+    type(sll_fft_plan), intent(in), pointer :: pfwd, pinv
+    sll_real64, dimension(data%nr+1,data%ntheta+1), intent(inout) :: f,phi,f_fft
+    sll_real64, dimension(:), intent(inout) :: cts,a
+    sll_int32, dimension(:), intent(inout) :: ipiv
+    sll_comp64, dimension(:), intent(inout) :: fk,phik
 
     sll_real64 :: rmin,dr
     sll_int32 :: nr, ntheta
 
     sll_real64 :: r
     sll_int32::i,k,err, ind_k
-    !sll_real64, dimension(:), pointer :: buf
 
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-    rmin=adv%data%rmin
-    dr=adv%data%dr
+    nr=data%nr
+    ntheta=data%ntheta
+    rmin=data%rmin
+    dr=data%dr
 
-!!$    SLL_ALLOCATE(buf(2*ntheta+15),err)
+    f_fft=f
 
-    adv%f_fft=adv%f
-
-!!$    call dffti(ntheta,buf)
     do i=1,nr+1
-       call fft_apply_plan(adv%pfwd,adv%f_fft(i,:),adv%f_fft(i,:))
-!!$       call dfftf(ntheta,adv%f_fft(i,1:ntheta),buf)
+       call fft_apply_plan(pfwd,f_fft(i,1:ntheta),f_fft(i,1:ntheta))
     end do
-    !adv%f_fft=adv%f_fft/real(ntheta,f64)
 
    ! poisson solver
     do ind_k=0,ntheta/2
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
-          adv%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-          adv%a(3*i-1)=2.0_f64/dr**2+(real(ind_k,f64)/r)**2
-          adv%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          adv%fk(i)=fft_get_mode(adv%pfwd,adv%f_fft(i,1:ntheta),ind_k)
+          a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          a(3*i-1)=2.0_f64/dr**2+(real(ind_k,f64)/r)**2
+          a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+          fk(i)=fft_get_mode(pfwd,f_fft(i,1:ntheta),ind_k)
        enddo
-       adv%a(1)=0.0_f64
-       adv%a(3*nr+3)=0.0_f64
-       !adv%a(2)=1.0_f64
-       !adv%a(3*nr+2)=1.0_f64
+       a(1)=0.0_f64
+       a(3*nr+3)=0.0_f64
+       !a(2)=1.0_f64
+       !a(3*nr+2)=1.0_f64
 
-       call setup_cyclic_tridiag(adv%a,nr+1,adv%cts,adv%ipiv)
-!!$       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%f_fft(:,k+1),nr+1,adv%phi(:,k+1))
-       call solve_cyclic_tridiag(adv%cts,adv%ipiv,adv%fk,nr+1,adv%phik)
+       call setup_cyclic_tridiag(a,nr+1,cts,ipiv)
+       call solve_cyclic_tridiag(cts,ipiv,fk,nr+1,phik)
 
        do i=1,nr+1
-          call fft_set_mode(adv%pinv,adv%phi(i,1:ntheta),adv%phik(i),ind_k)
+          call fft_set_mode(pinv,phi(i,1:ntheta),phik(i),ind_k)
        end do
     end do
 
     ! FFT INVERSE
     do i=1,Nr+1
-       call fft_apply_plan(adv%pinv,adv%phi(i,1:ntheta),adv%phi(i,1:ntheta))
-!!$       call dfftb(ntheta,adv%phi(i,1:ntheta),buf)
+       call fft_apply_plan(pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
-    adv%phi(1,:)=0.0_f64
-    adv%phi(:,ntheta+1)=adv%phi(:,1)
+    phi(1,:)=0.0_f64
+    phi(nr+1,:)=0.0_f64
+    phi(:,ntheta+1)=phi(:,1)
 
   end subroutine poisson_solve_polar
 
