@@ -62,15 +62,15 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-  !definition of nb_step=tf/dt
-  dt=0.05_f64*dr
-  tf=20.0_f64
-  nb_step=ceiling(tf/dt)
-!!$
-!!$  !definition of tf=dt*nb_step
-!!$  nb_step=0
+!!$  !definition of nb_step=tf/dt
 !!$  dt=0.05_f64*dr
-!!$  tf=dt*real(nb_step,f64)
+!!$  tf=50.0_f64
+!!$  nb_step=ceiling(tf/dt)
+!!$
+  !definition of tf=dt*nb_step
+  nb_step=0
+  dt=0.05_f64*dr
+  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
@@ -80,11 +80,6 @@ program cg_polar
   adv => new_vp_data(data)
   rk => new_polar_vp_rk4(nr,ntheta)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
-
-!!$  adv%rr=1.0_f64
-!!$  do i=1,nr+1
-!!$     adv%rr(i)=rmax
-!!$  end do
 
   adv%phi=0.0_f64
   adv%grad_phi=0.0_f64
@@ -101,7 +96,7 @@ program cg_polar
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
   ! 3 : ?jump-sheep? scheme
-  scheme=2
+  scheme=1
 
   if (fcase==1) then
      do i=1,nr+1
@@ -153,13 +148,16 @@ program cg_polar
 
   !write f in a file before calculations
   open (unit=20,file='CGinit.dat')
+  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
+  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
+  call divergence_ortho_field(data,adv%grad_phi,div)
   do i=1,nr+1
      r=adv%rr(i)
      do j=1,ntheta+1
         theta=adv%ttheta(j)
         x=r*cos(theta)
         y=r*sin(theta)
-        write(20,*)r,theta,x,y, adv%f(i,j)
+        write(20,*)r,theta,x,y,adv%f(i,j),div(i,j)
      end do
      write(20,*)' '
   end do
@@ -169,8 +167,8 @@ program cg_polar
 
 
 
-!!$  call poisson_solve_polar(adv)
-!!$  call compute_grad_field(adv)
+!!$  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
+!!$  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
 !!$  open (unit=21,file='test.dat')
 !!$  do i=1,nr+1
 !!$     r=adv%rr(i)
@@ -195,8 +193,8 @@ program cg_polar
   write(23,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
-  call poisson_solve_polar(adv)
-  call compute_grad_field(adv)
+  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
+  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
 
   w0=0.0_f64
   l10=0.0_f64
@@ -247,23 +245,23 @@ program cg_polar
 
      if (scheme==1) then
         !classical semi-Lagrangian scheme
-        call SL_classic(adv,rk)
+        call SL_classic(data,rk,adv%f,adv%f_fft,adv%phi,adv%grad_phi,adv%pfwd,adv%pinv,adv%fk,adv%phik,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2,adv%a,adv%cts,adv%ipiv)
 
      else if (scheme==2) then
         !semi-Lagrangian predictiv-correctiv scheme
-        call SL_ordre_2(adv,rk)
+        call SL_ordre_2(data,rk,adv%f,adv%fdemi,adv%f_fft,adv%phi,adv%grad_phi,adv%pfwd,adv%pinv,adv%fk,adv%phik,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2,adv%a,adv%cts,adv%ipiv)
 
      else if (scheme==3) then
         !?jump-sheep scheme?
         if (step==1) then
-           call SL_ordre_2(adv,rk)
+           call SL_ordre_2(data,rk,adv%f,adv%fdemi,adv%f_fft,adv%phi,adv%grad_phi,adv%pfwd,adv%pinv,adv%fk,adv%phik,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2,adv%a,adv%cts,adv%ipiv)
         else 
-           call poisson_solve_polar(adv)
-           call compute_grad_field(adv)
+           call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
+           call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
            adv%f_fft=adv%f
            adv%f=adv%fdemi
            adv%fdemi=adv%f_fft
-           call advect_CG_polar(adv,rk)
+           call advect_CG_polar(data,rk,adv%f,adv%f_fft,adv%phi,adv%grad_phi,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2)
         end if
 
      else
@@ -317,9 +315,9 @@ program cg_polar
   print*,'# temps pour faire la boucle en temps : ',hh,'h',min,'min',ss,'s'
 
   !checking divergence of field
-  call poisson_solve_polar(adv)
-  call compute_grad_field(adv)
-  call divergence_ortho_field(adv,div)
+  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
+  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
+  call divergence_ortho_field(data,adv%grad_phi,div)
 
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
