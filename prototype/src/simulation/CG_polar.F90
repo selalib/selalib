@@ -61,15 +61,15 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-!!$  !definition of nb_step=tf/dt
-!!$  dt=0.05_f64*dr
-!!$  tf=50.0_f64
-!!$  nb_step=ceiling(tf/dt)
-!!$
-  !definition of tf=dt*nb_step
-  nb_step=1
+  !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=dt*real(nb_step,f64)
+  tf=50.0_f64
+  nb_step=ceiling(tf/dt)
+
+!!$  !definition of tf=dt*nb_step
+!!$  nb_step=1
+!!$  dt=0.05_f64*dr
+!!$  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
