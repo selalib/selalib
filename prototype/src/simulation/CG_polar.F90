@@ -4,18 +4,17 @@ program cg_polar
 #include "sll_assert.h"
 
   use sll_timer
-  use polar_kind
   use sll_fft
+  use polar_operators
   use polar_advection
   use poisson_polar
   use numeric_constants
   implicit none
 
-  type(polar_data), pointer :: data
-  type(polar_VP_data), pointer :: adv
-  type(polar_VP_rk4), pointer :: rk
+  type(sll_polar_data), pointer :: data
+  type(sll_SL_polar), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2,t3
-  sll_real64, dimension (:,:), allocatable :: div
+  sll_real64, dimension (:,:), allocatable :: div,f
   sll_int32 :: i, j, step,fin
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme
@@ -68,7 +67,7 @@ program cg_polar
 !!$  nb_step=ceiling(tf/dt)
 !!$
   !definition of tf=dt*nb_step
-  nb_step=0
+  nb_step=1
   dt=0.05_f64*dr
   tf=dt*real(nb_step,f64)
 
@@ -77,13 +76,11 @@ program cg_polar
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
   data => new_polar_data(nb_step,dt,rmin,rmax,nr,ntheta)
-  adv => new_vp_data(data)
-  rk => new_polar_vp_rk4(nr,ntheta)
+  plan_sl => new_SL(data,3,4)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
+  SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
-  adv%phi=0.0_f64
-  adv%grad_phi=0.0_f64
-  adv%f=0.0_f64
+  f=0.0_f64
 
   !distribution function
   ! 1 : gaussienne in r, constant in theta
@@ -101,7 +98,7 @@ program cg_polar
   if (fcase==1) then
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
-        adv%f(i,:)=1.0_f64/(1.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2.0_f64*1.0_f64**2))
+        f(i,:)=1.0_f64/(1.0_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2.0_f64*1.0_f64**2))
      end do
 
   else if (fcase==2) then
@@ -112,7 +109,7 @@ program cg_polar
         if (r>=r1 .and. r<=r2) then
            do j=1,ntheta+1
               theta=real(j-1,f64)*dtheta
-               adv%f(i,j)=cos(3.0_f64*theta)
+              f(i,j)=cos(3.0_f64*theta)
            end do
         end if
      end do
@@ -122,7 +119,7 @@ program cg_polar
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta+1
            theta=real(j-1,f64)*dtheta
-            adv%f(i,j)=-(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
+           f(i,j)=-(r-rmin)*(r-rmax)/r**2*((36.0_f64-mode**2)*r**4+(2.0_f64*mode**2-39.0_f64)*r**3*(rmin+rmax) &
                 & +(9.0_f64-mode**2)*r**2*(rmin**2+rmax**2)+(30.0_f64-4.0_f64*mode**2)*r**2*rmin*rmax &
                 & +(2.0_f64*mode**2-3.0_f64)*r*rmin*rmax*(rmin+rmax)-mode**2*rmin**2*rmax**2) &
                 & *cos(mode*theta)
@@ -134,7 +131,7 @@ program cg_polar
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta+1
            theta=real(j-1,f64)*dtheta
-            adv%f(i,j)=1.0_f64/(0.5_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2*0.5_f64**2))*sin(mode*theta)
+           f(i,j)=1.0_f64/(0.5_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2*0.5_f64**2))*sin(mode*theta)
         end do
      end do
 
@@ -144,20 +141,29 @@ program cg_polar
      print*,'can not go any further'
      print*,'exiting...'
      stop
+     print*,'so far so good'
   end if
 
   !write f in a file before calculations
   open (unit=20,file='CGinit.dat')
-  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
-  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
-  call divergence_ortho_field(data,adv%grad_phi,div)
+  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
   do i=1,nr+1
-     r=adv%rr(i)
+     r=rmin+dr*real(i-1,f64)
      do j=1,ntheta+1
-        theta=adv%ttheta(j)
+        temps=plan_sl%adv%field(1,i,j)/r
+        plan_sl%adv%field(1,i,j)=-plan_sl%adv%field(2,i,j)
+        plan_sl%adv%field(2,i,j)=temps
+     end do
+  end do
+  call divergence_ortho_field(plan_sl%grad,plan_sl%adv%field,div)
+  do i=1,nr+1
+     r=rmin+real(i-1,f64)*dr
+     do j=1,ntheta+1
+        theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(20,*)r,theta,x,y,adv%f(i,j),div(i,j)
+        write(20,*)r,theta,x,y,f(i,j),div(i,j)
      end do
      write(20,*)' '
   end do
@@ -184,34 +190,37 @@ program cg_polar
 !!$  end do
 !!$
 !!$  stop
-  
 
 
-  
+
+
 
   open(unit=23,file='thdiag.dat')
   write(23,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
-  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
-  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
+
+  do i=1,nr+1
+     r=rmin+real(i-1,f64)*dr
+     plan_sl%adv%field(:,i,:)=plan_sl%adv%field(:,i,:)*r
+  end do
 
   w0=0.0_f64
   l10=0.0_f64
   l20=0.0_f64
   e0=0.0_f64
   do j=1,ntheta
-     w0=w0+(adv%f(1,j)*rmin+adv%f(nr+1,j)*rmax)/2.0_f64
-     l10=l10+abs(adv%f(1,j)*rmin+adv%f(nr+1,j)*rmax)/2.0_f64
-     l20=l20+(adv%f(1,j)/2.0_f64)**2*rmin+(adv%f(nr+1,j)/2.0_f64)**2*rmax
-     e0=e0+rmin*(adv%grad_phi(1,1,j)/2.0_f64)**2+rmax*(adv%grad_phi(1,nr+1,j)/2.0_f64)**2+ &
-          & rmin*(adv%grad_phi(2,1,j)/2.0_f64)**2+rmax*(adv%grad_phi(2,nr+1,j)/2.0_f64)**2
+     w0=w0+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
+     l10=l10+abs(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
+     l20=l20+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
+     e0=e0+rmin*(plan_sl%adv%field(1,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(1,nr+1,j)/2.0_f64)**2+ &
+          & rmin*(plan_sl%adv%field(2,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(2,nr+1,j)/2.0_f64)**2
      do i=2,nr
         r=rmin+real(i-1,f64)*dr
-        w0=w0+r*adv%f(i,j)
-        l10=l10+r*abs(adv%f(i,j))
-        l20=l20+r*adv%f(i,j)**2
-        e0=e0+r*(adv%grad_phi(1,i,j)**2+adv%grad_phi(2,i,j)**2)
+        w0=w0+r*f(i,j)
+        l10=l10+r*abs(f(i,j))
+        l20=l20+r*f(i,j)**2
+        e0=e0+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)
      end do
   end do
   w0=w0*dr*dtheta
@@ -245,24 +254,21 @@ program cg_polar
 
      if (scheme==1) then
         !classical semi-Lagrangian scheme
-        call SL_classic(data,rk,adv%f,adv%f_fft,adv%phi,adv%grad_phi,adv%pfwd,adv%pinv,adv%fk,adv%phik,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2,adv%a,adv%cts,adv%ipiv)
+        call SL_classic(plan_sl,f,f)
 
      else if (scheme==2) then
         !semi-Lagrangian predictiv-correctiv scheme
-        call SL_ordre_2(data,rk,adv%f,adv%fdemi,adv%f_fft,adv%phi,adv%grad_phi,adv%pfwd,adv%pinv,adv%fk,adv%phik,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2,adv%a,adv%cts,adv%ipiv)
+        call SL_ordre_2(plan_sl,f,f)
 
-     else if (scheme==3) then
-        !?jump-sheep scheme?
-        if (step==1) then
-           call SL_ordre_2(data,rk,adv%f,adv%fdemi,adv%f_fft,adv%phi,adv%grad_phi,adv%pfwd,adv%pinv,adv%fk,adv%phik,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2,adv%a,adv%cts,adv%ipiv)
-        else 
-           call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
-           call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
-           adv%f_fft=adv%f
-           adv%f=adv%fdemi
-           adv%fdemi=adv%f_fft
-           call advect_CG_polar(data,rk,adv%f,adv%f_fft,adv%phi,adv%grad_phi,adv%spl_f,adv%spl_phi,adv%spl_a1,adv%spl_a2)
-        end if
+!!$     else if (scheme==3) then
+!!$        !?jump-sheep scheme?
+!!$        if (step==1) then
+!!$           call SL_ordre_2()
+!!$        else 
+!!$           call poisson_solve_polar()
+!!$           call compute_grad_field()
+!!$           call advect_CG_polar()
+!!$        end if
 
      else
         print*,'no scheme define'
@@ -272,27 +278,29 @@ program cg_polar
         exit
      end if
 
-     adv%f(:,ntheta+1)=adv%f(:,1)
-     adv%grad_phi(:,:,ntheta+1)=adv%grad_phi(:,:,1)
-     adv%phi(:,ntheta+1)=adv%phi(:,1)
+     f(:,ntheta+1)=f(:,1)
 
      !computation of mass (w), l1, l2 and energy (e)
+     do i=1,nr+1
+        r=rmin+real(i-1,f64)*dr
+        plan_sl%adv%field(:,i,:)=plan_sl%adv%field(:,i,:)*r
+     end do
      w=0.0_f64
      l1=0.0_f64
      l2=0.0_f64
      e=0.0_f64
      do j=1,ntheta
-        w=w+(adv%f(1,j)*rmin+adv%f(nr+1,j)*rmax)/2.0_f64
-        l1=l1+abs(adv%f(1,j)*rmin+adv%f(nr+1,j)*rmax)/2.0_f64
-        l2=l2+(adv%f(1,j)/2.0_f64)**2*rmin+(adv%f(nr+1,j)/2.0_f64)**2*rmax
-        e=e+rmin*(adv%grad_phi(1,1,j)/2.0_f64)**2+rmax*(adv%grad_phi(1,nr+1,j)/2.0_f64)**2+ &
-             & rmin*(adv%grad_phi(2,1,j)/2.0_f64)**2+rmax*(adv%grad_phi(2,nr+1,j)/2.0_f64)**2
+        w=w+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
+        l1=l1+abs(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
+        l2=l2+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
+        e=e+rmin*(plan_sl%adv%field(1,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(1,nr+1,j)/2.0_f64)**2+ &
+             & rmin*(plan_sl%adv%field(2,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(2,nr+1,j)/2.0_f64)**2
         do i=2,nr
            r=rmin+real(i-1,f64)*dr
-           w=w+r*adv%f(i,j)
-           l1=l1+r*abs(adv%f(i,j))
-           l2=l2+r*adv%f(i,j)**2
-           e=e+r*(adv%grad_phi(1,i,j)**2+adv%grad_phi(2,i,j)**2)
+           w=w+r*f(i,j)
+           l1=l1+r*abs(f(i,j))
+           l2=l2+r*f(i,j)**2
+           e=e+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)
         end do
      end do
      w=w*dr*dtheta
@@ -315,21 +323,29 @@ program cg_polar
   print*,'# temps pour faire la boucle en temps : ',hh,'h',min,'min',ss,'s'
 
   !checking divergence of field
-  call poisson_solve_polar(data,adv%f,adv%phi,adv%f_fft,adv%fk,adv%phik,adv%a,adv%cts,adv%ipiv,adv%pfwd,adv%pinv)
-  call compute_grad_field(data,adv%phi,adv%grad_phi,adv%spl_phi)
-  call divergence_ortho_field(data,adv%grad_phi,div)
+  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
+  do i=1,nr+1
+     r=rmin+dr*real(i-1,f64)
+     do j=1,ntheta+1
+        temps=plan_sl%adv%field(1,i,j)/r
+        plan_sl%adv%field(1,i,j)=-plan_sl%adv%field(2,i,j)
+        plan_sl%adv%field(2,i,j)=temps
+     end do
+  end do
+  call divergence_ortho_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
   write(21,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
   write(21,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   do i=1,nr+1
-     r=adv%rr(i)
+     r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
-        theta=adv%ttheta(j)
+        theta=real(j-1,f64)*dr
         x=r*cos(theta)
         y=r*sin(theta)
-        write(21,*)r,theta,x,y,adv%f(i,j),div(i,j)
+        write(21,*)r,theta,x,y,f(i,j),div(i,j)
      end do
      write(21,*)' '
   end do
@@ -338,7 +354,5 @@ program cg_polar
   SLL_DEALLOCATE_ARRAY(div,i)
   t1 => delete_time_mark(t1)
   t2 => delete_time_mark(t2)
-  call vp_data_delete(adv)
-  call vp_rk4_delete(rk)
 
 end program cg_polar
