@@ -142,8 +142,8 @@ contains
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(buf(data%ntheta),err)
     SLL_ALLOCATE(this%f_fft(data%nr+1,data%ntheta+1),err)
-    SLL_ALLOCATE(this%fk(data%ntheta/2+1),err)
-    SLL_ALLOCATE(this%phik(data%ntheta/2+1),err)
+    SLL_ALLOCATE(this%fk(data%nr+1),err)
+    SLL_ALLOCATE(this%phik(data%nr+1),err)
     SLL_ALLOCATE(this%a(3*(data%nr+1)),err)
     SLL_ALLOCATE(this%cts(7*(data%nr+1)),err)
     SLL_ALLOCATE(this%ipiv(data%nr+1),err)
@@ -245,6 +245,7 @@ stop
           call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),ind_k)
        end do
     end do
+
 print*,'ok'
     ! FFT INVERSE
     do i=1,Nr+1
