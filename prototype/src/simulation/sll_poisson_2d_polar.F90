@@ -238,9 +238,8 @@ contains
        !a(3*nr+2)=1.0_f64
 
        call setup_cyclic_tridiag(plan%a,nr+1,plan%cts,plan%ipiv)
-stop
        call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk,nr+1,plan%phik)
-stop
+
        do i=1,nr+1
           call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),ind_k)
        end do
