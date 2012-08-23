@@ -134,14 +134,7 @@ ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_ENABLED)
 	message("Please put on FFTW_ENABLED to use fftw")
 ENDIF()
 ##########################################################
-<<<<<<< HEAD
-
-
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
-
-=======
 # find out which compiler we are using.
->>>>>>> origin/prototype-devel
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
@@ -384,16 +377,9 @@ ENDIF(FORTRANCL_ENABLED)
 
 ##########################################################
 # add the cache entry PASTIX_ENABLED for enable/disable pastix
-<<<<<<< HEAD
-set(PASTIX_ENABLED ON CACHE BOOL " ")
-
-IF(PASTIX_ENABLED)
-   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-=======
 set(PASTIX_ENABLED NO CACHE BOOL " ")
 
 IF(PASTIX_ENABLED)
->>>>>>> origin/prototype-devel
    IF( DEFINED ENV{SCOTCH_ROOT} )
       set(SCOTCH_ROOT $ENV{SCOTCH_ROOT})
       set(PTSCOTCH_ROOT $ENV{SCOTCH_ROOT})
@@ -424,7 +410,4 @@ IF(PASTIX_ENABLED)
    ENDIF()
 ENDIF(PASTIX_ENABLED)
 ##########################################################
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/prototype-devel
