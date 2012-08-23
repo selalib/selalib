@@ -1,22 +1,3 @@
-!! Copyright (C) 2011 X. Andrade
-!!
-!! FortranCL is free software; you can redistribute it and/or modify
-!! it under the terms of the GNU General Public License as published by
-!! the Free Software Foundation; either version 2, or (at your option)
-!! any later version.
-!!
-!! FortranCL is distributed in the hope that it will be useful,
-!! but WITHOUT ANY WARRANTY; without even the implied warranty of
-!! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!! GNU General Public License for more details.
-!!
-!! You should have received a copy of the GNU General Public License
-!! along with this program; if not, write to the Free Software
-!! Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-!! 02111-1307, USA.
-!!
-!! $Id$
-
 program vlasov_1d
   use cl
 
@@ -39,7 +20,7 @@ program vlasov_1d
   integer    :: ierr, irec, system_size, num_systems
   integer(8) :: size_in_bytes, globalsize, localsize
   integer, parameter :: iunit = 10
-  integer, parameter :: source_length = 2000
+  integer, parameter :: source_length = 3000
   character(len = source_length) :: source
   real, allocatable  :: a(:), x(:), b(:), c(:), d(:)
   type(cl_mem)       :: cl_a, cl_x, cl_b, cl_c, cl_d
@@ -51,7 +32,7 @@ program vlasov_1d
   !=====================
 
   num_systems = 1
-  system_size = 10
+  system_size = 128
   size_in_bytes = int(system_size, 8)*4_8
   allocate(a(1:system_size))
   allocate(b(1:system_size))
@@ -61,13 +42,11 @@ program vlasov_1d
 
   ! get the number of platforms
   call clGetPlatformIDs(num_platforms, ierr)
-
-  allocate(platforms(1:num_platforms))
-
   write(*, '(a,i1)')   'Number of CL platforms      : ', num_platforms
   write(*, '(a)')      ''
 
-  
+  allocate(platforms(1:num_platforms))
+
   ! get an array of platforms
   call clGetPlatformIDs(platforms, num_platforms, ierr)
 
@@ -76,28 +55,24 @@ program vlasov_1d
 
     ! print some info
     write(*, '(a,i1)') 'Platform number             : ', iplat
-
     call clGetPlatformInfo(platforms(iplat), CL_PLATFORM_VENDOR, info, ierr)
     write(*, '(2a)')   'Vendor                      : ', trim(info)
-
     call clGetPlatformInfo(platforms(iplat), CL_PLATFORM_NAME, info, ierr)
     write(*, '(2a)')   'Name                        : ', trim(info)
-
     call clGetPlatformInfo(platforms(iplat), CL_PLATFORM_VERSION, info, ierr)
     write(*, '(2a)')   'Version                     : ', trim(info)
-
     ! get the device ID
     call clGetDeviceIDs(platforms(iplat), CL_DEVICE_TYPE_ALL, num_devices, ierr)
-  
     write(*, '(a,i1)') 'Number of devices           : ', num_devices
     write(*, '(a)')      ''
 
     allocate(devices(1:num_devices))
 
-    ! get the device ID
     call clGetDeviceIDs(platforms(iplat), CL_DEVICE_TYPE_ALL, devices, num_devices, ierr)
     
-    do idev = 1, num_devices
+    do idev = num_devices,1,-1
+
+      write(*, '(a)')      ''
       write(*, '(a,i1)') '    Device number           : ', idev
 
       call clGetDeviceInfo(devices(idev), CL_DEVICE_TYPE, val, ierr)
@@ -109,7 +84,7 @@ program vlasov_1d
       case(CL_DEVICE_TYPE_ACCELERATOR)
         info = 'Accelerator'
       end select
-
+   
       write(*, '(2a)')   '    Device type             : ', trim(info)
       call clGetDeviceInfo(devices(idev), CL_DEVICE_VENDOR, info, ierr)
       write(*, '(2a)')   '    Device vendor           : ', trim(info)
@@ -118,6 +93,7 @@ program vlasov_1d
       call clGetDeviceInfo(devices(idev), CL_DEVICE_GLOBAL_MEM_SIZE, val, ierr)
       write(*, '(a,i4)') '    Device memory           : ', val/1024**2
       write(*, '(a)')      ''
+
       ! create the context and the command queue
       context = clCreateContext(platforms(iplat), devices(idev), ierr)
       command_queue = clCreateCommandQueue(context, devices(idev), CL_QUEUE_PROFILING_ENABLE, ierr)
@@ -168,6 +144,15 @@ program vlasov_1d
       d = 1.0
       x = 0.0
 
+      b(1) = 1.
+      c(1) = 0.
+      d(1) = 0.
+      b(1) = 1.
+
+      a(system_size) = 0.
+      b(system_size) = 1.
+      d(system_size) = 0.
+
       ! allocate device memory
       cl_a = clCreateBuffer(context, CL_MEM_READ_ONLY,  size_in_bytes, ierr)
       cl_b = clCreateBuffer(context, CL_MEM_READ_ONLY,  size_in_bytes, ierr)
@@ -183,8 +168,8 @@ program vlasov_1d
       call clEnqueueWriteBuffer(command_queue, cl_x, cl_bool(.true.), 0_8, size_in_bytes, x(1), ierr)
 
       ! set the kernel arguments
-      call clSetKernelArg(kernel, 0, system_size, ierr)
-      call clSetKernelArg(kernel, 1, num_systems, ierr)
+      call clSetKernelArg(kernel, 0, num_systems, ierr)
+      call clSetKernelArg(kernel, 1, system_size, ierr)
       call clSetKernelArg(kernel, 2, cl_a, ierr)
       call clSetKernelArg(kernel, 3, cl_b, ierr)
       call clSetKernelArg(kernel, 4, cl_c, ierr)
@@ -205,7 +190,8 @@ program vlasov_1d
       
       open(11,file='plot'//char(idev+48)//'.dat')
       do i = 1, system_size
-         write(11,*) x(i)
+         write(11,*) i, x(i), -0.5*i*i
+         write(*,*)i, x(i)
       end do
       close(11)
 
@@ -223,8 +209,8 @@ program vlasov_1d
 
   end do
 
-
   deallocate(platforms)
   write(*, '(a)')      'PASSED'
+
 
 end program vlasov_1d

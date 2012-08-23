@@ -3,337 +3,366 @@ module polar_advection
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use polar_kind
+  use polar_operators
   use poisson_polar
   use numeric_constants
-  !WARNING
-  !we work with polar coordinates but splines work with cartesian coordinates
-  !we must multiply and divide by the jacobian (r)
   use sll_splines
   implicit none
 
+  !>type sll_plan_adv_polar
+  !>type for advection with center-guide equations
+  !>the field and other needed data/object are within
+  type sll_plan_adv_polar
+     type(sll_polar_data), pointer :: data
+     type(sll_spline_2D), pointer :: spl_f
+     sll_int32 :: interpolate_case
+     sll_real64, dimension(:,:,:), allocatable :: field
+  end type sll_plan_adv_polar
+
+  !>type sll_SL_polar
+  !>type for semi Lagrangian
+  !>contains other types for the routines called in SL routines
+  type sll_SL_polar
+     type(sll_plan_adv_polar), pointer :: adv
+     type(plan_polar_op), pointer :: grad
+     type(sll_plan_poisson_polar), pointer :: poisson
+     sll_real64, dimension(:,:), allocatable :: phi
+  end type sll_SL_polar
+
 contains
 
-  !>subroutine compute_grad_field(adv)
-  !>compute a = grad(phi) for phi scalar field
-  !>adv : polar_vp_data object, all datas are included in
-  subroutine compute_grad_field(adv)
+!===================================
+!  creation of sll_plan_adv_polar
+!===================================
+
+  !>function new_plan_adv_polar(data,interpolate_case)
+  !>data : sll_polar_data object, contains data about the domain
+  !>interpolate_case : integer to choose the scheme for advection
+  !>                   1 : using explicit Euler method
+  !>                   2 : rotation, rotation speed = -1
+  !>                   3 : using symplectic Euler with linear interpolation
+  !>                   4 : using symplectic Verlet with linear interpolation
+  !>                   5 : using fixed point method
+  function new_plan_adv_polar(data,interpolate_case) result(this)
+
+    type(sll_plan_adv_polar), pointer :: this
+    type(sll_polar_data), intent(in), pointer :: data
+    sll_int32, intent(in) :: interpolate_case
+
+    sll_int32 :: err
+
+    SLL_ALLOCATE(this,err)
+    SLL_ALLOCATE(this%data,err)
+    SLL_ALLOCATE(this%field(2,data%nr+1,data%ntheta+1),err)
+
+    this%field=0.0_f64
+    this%data=data
+    this%interpolate_case=interpolate_case
+
+    this%spl_f => new_spline_2D(data%nr+1,data%ntheta+1,data%rmin,data%rmax,0._f64, 2._f64*sll_pi, &
+         & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
+
+  end function new_plan_adv_polar
+
+!===================================
+!  deletion of sll_plan_adv_polar
+!===================================
+
+  !>delete_plan_adv_polar(this)
+  !>deletion of sll_plan_adv_polar object
+  subroutine delete_plan_adv_polar(this)
 
     implicit none
 
-    type(polar_vp_data), intent(inout), pointer :: adv
+    type(sll_plan_adv_polar), intent(inout), pointer :: this
 
-    sll_int32 :: nr, ntheta
-    sll_real64 :: dr, dtheta, rmin, rmax
-    sll_int32 :: i,j,calculus
-    sll_real64 :: r,theta
+    sll_int32 :: err
 
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-    dr=adv%data%dr
-    dtheta=adv%data%dtheta
-    rmin=adv%data%rmin
-    rmax=adv%data%rmax
-
-    ! way to compute a
-    ! 1 : center for r and theta
-    !     decenter on boundaries
-    ! 2 : center for r, decenter on boundaries
-    !     using fft for theta
-    ! 3 : center for r, decenter on boundaries (not writen)
-    !     using splines for theta
-    calculus = 1
-
-    if (calculus==1) then
-       ! center formula for r end theta
-       ! decenter for r on boundaries
-
-       do i=2,nr
-          r=rmin+real(i-1,f64)*dr
-          do j=1,ntheta
-             adv%grad_phi(1,i,j)=(adv%phi(i+1,j)-adv%phi(i-1,j))/(2*dr)
-             adv%grad_phi(2,i,j)=(adv%phi(i,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*r*dtheta)
-          end do
-       end do
-       do j=1,ntheta
-          adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
-          adv%grad_phi(1,nr+1,j)=(adv%phi(nr+1,j)-adv%phi(nr,j))/dr
-          adv%grad_phi(2,1,j)=(adv%phi(1,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
-          adv%grad_phi(2,nr+1,j)=(adv%phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-adv%phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
-       end do
-
-    else if (calculus==2) then
-       ! center formula for r, decenter on boundaries
-       ! using fft for theta
-
-       do i=2,nr
-          r=rmin+real(i-1,f64)*dr
-          adv%grad_phi(1,i,:)=(adv%phi(i+1,:)-adv%phi(i-1,:))/(2*dr)
-       end do
-       do j=1,ntheta
-          adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
-          adv%grad_phi(1,nr+1,j)=(adv%phi(nr+1,j)-adv%phi(nr,j))/dr
-       end do
-
-       call derivate_fft(adv)
-
-    else if (calculus==3) then !modifier : passer derivation en r avec les splines?
-       ! center formula for r, decenter on boundaries
-       ! using splines for theta
-
-       do i=1,nr+1
-          r=rmin+real(i,f64)*dr
-          adv%f_fft(i,:)=adv%phi(i,:)*r
-       end do
-       call compute_spline_2D(adv%f_fft,adv%spl_phi)
-
-       do i=2,nr
-          r=rmin+real(i-1,f64)*dr
-          adv%grad_phi(1,i,:)=(adv%phi(i+1,:)-adv%phi(i-1,:))/(2*dr)
-       end do
-       do j=1,ntheta
-          adv%grad_phi(1,1,j)=(adv%phi(2,j)-adv%phi(1,j))/dr
-          adv%grad_phi(1,nr+1,j)=(adv%phi(nr+1,j)-adv%phi(nr,j))/dr
-          theta=real(j-1,f64)*dtheta
-          do i=1,nr+1
-             r=rmin+real(i-1,f64)*dr
-             adv%grad_phi(2,i,j)=interpolate_x2_derivative_2D(r,theta,adv%spl_phi)/r
-          end do
-       end do
-
-    else
-       print*,'no choosen way to compute grad'
-       print*,'see line 46 of file selalib/prototype/src/simulation/sll_advection_polar.F90'
-       print*,'initializing grad to 0'
-       adv%grad_phi=0.0_f64
+    if (associated(this)) then
+       SLL_DEALLOCATE(this%data,err)
+       SLL_DEALLOCATE_ARRAY(this%field,err)
+       call delete_spline_2d(this%spl_f)
+       this%data=>null()
+       SLL_DEALLOCATE(this,err)
+       this=>null()
     end if
 
-    adv%grad_phi(:,:,ntheta+1)=adv%grad_phi(:,:,1)
+  end subroutine delete_plan_adv_polar
 
-  end subroutine compute_grad_field
+!==================================
+!  creation of sll_SL_polar type
+!==================================
 
+  !>function new_SL(data,grad_case,interpolate_case)
+  !>creation of sll_SL_polar object for semi Lagrangian scheme in polar coordinates
+  !>data : sll_polar_data
+  !>grad_case : integer, see function new_polar_op
+  !>interpolate_case : integer, see function new_plan_adv_polar
+  function new_SL(data,grad_case,interpolate_case) result(this)
 
-  !>subroutine advect_CG_polar(adv)
-  !>compute step for Center-Guide equation
-  !>adv : polar_vp_data object, all data are included in
-  subroutine advect_CG_polar(adv,rk)
+    type(sll_SL_polar), pointer :: this
+    type(sll_polar_data), intent(in), pointer :: data
+    sll_int32, intent(in) :: grad_case,interpolate_case
+
+    sll_int32 :: err
+
+    SLL_ALLOCATE(this,err)
+    SLL_ALLOCATE(this%phi(data%nr+1,data%ntheta+1),err)
+
+    this%poisson => new_plan_poisson_polar(data)
+    this%grad => new_polar_op(data,grad_case)
+    this%adv => new_plan_adv_polar(data,interpolate_case)
+
+  end function new_SL
+
+!=============================
+!  deletion of sll_SL_polar
+!=============================
+
+  !>subroutine delete_SL_polar(this)
+  !>deletion of sll_SL_polar object
+  subroutine delete_SL_polar(this)
 
     implicit none
 
-    type(polar_vp_data), intent(inout), pointer :: adv
-    type(polar_vp_rk4), intent(inout), pointer :: rk
+    type(sll_SL_polar), intent(inout), pointer :: this
+
+    sll_int32 :: err
+
+    if (associated(this)) then
+       call delete_plan_adv_polar(this%adv)
+       call delete_plan_poisson_polar(this%poisson)
+       call delete_plan_polar_op(this%grad)
+       SLL_DEALLOCATE(this,err)
+    end if
+
+  end subroutine delete_SL_polar
+
+!==============
+!  advection
+!==============
+
+  !>subroutine advect_CG_polar(plan,in,out)
+  !>compute step for Center-Guide equation
+  !>plan : sll_plan_adv_polar object
+  !>in : distribution function at time t_n, size (nr+1)*(ntheta+1)
+  !>out : distribution function at time t_(n+1), size (nr+1)*(ntheta+1)
+  subroutine advect_CG_polar(plan,fn,fnp1)
+
+    implicit none
+
+    type(sll_plan_adv_polar), intent(inout), pointer :: plan
+    sll_real64, dimension(:,:), intent(in) :: fn
+    sll_real64, dimension(:,:), intent(out) :: fnp1
 
     sll_int32 :: nr, ntheta
     sll_real64 :: dt, dr, dtheta, rmin, rmax
-    sll_int32 :: interpolate_case
     sll_int32 :: i,j,maxiter,iter,kr,k
     sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
 
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-    dt=adv%data%dt
-    dr=adv%data%dr
-    dtheta=adv%data%dtheta
-    rmin=adv%data%rmin
-    rmax=adv%data%rmax
+    nr=plan%data%nr
+    ntheta=plan%data%ntheta
+    dt=plan%data%dt
+    dr=plan%data%dr
+    dtheta=plan%data%dtheta
+    rmin=plan%data%rmin
+    rmax=plan%data%rmax
 
-    !interpolation
-    ! 1 : using explicit Euler methode
-    ! 2 : rotation, this case ignore the field phi
-    !     rotation speed = -1
-    ! 3 : using RK4 // A REPRENDRE
-    ! 4 : using RK2
-    ! 5 : using symplectic Euler with linear interpolation
-    ! 6 : using symplectic Verlet with linear interpolation
-    ! 7 : using fixe point method
-    interpolate_case=6
+    !construction of spline coefficients for f
+    call compute_spline_2D(fn,plan%spl_f)
 
-    if (interpolate_case==1 .or. interpolate_case==2) then
-
-       !construction of spline coefficients for f
+    if (plan%interpolate_case==1) then
+       !explicit Euler
        do i=1,nr+1
-          adv%f_fft(i,:)=adv%f(i,:)*adv%rr(i)
-       end do
-       call compute_spline_2D(adv%f_fft,adv%spl_f)
-
-       do i=1,nr+1
-          r=adv%rr(i)
+          r=rmin+real(i-1,f64)*dr
           do j=1,ntheta+1
-             theta=adv%ttheta(j)
+             theta=real(j-1,f64)*dtheta
 
-             if (interpolate_case==1) then
-                !Euler methode
-                theta=theta-dt*adv%grad_phi(1,i,j)/r
-                r=r+dt*adv%grad_phi(2,i,j)/r
-
-             else if (interpolate_case==2) then
-                !rotation
-                theta=theta-dt
-             end if
+             theta=theta-dt*plan%field(2,i,j)
+             r=r-dt*plan%field(1,i,j)
 
              call correction_r(r,rmin,rmax)
              call correction_theta(theta)
-             adv%f(i,j)=interpolate_value_2D(r,theta,adv%spl_f)!/adv%rr(i)
+             fnp1(i,j)=interpolate_value_2D(r,theta,plan%spl_f)
 
           end do
        end do
 
-    else if (interpolate_case==3) then
-       call rk4_polar_advect(adv,rk)
+    else if (plan%interpolate_case==2) then
+       !rotation
 
-    else if (interpolate_case==4) then
-       call rk2_polar_advect(adv,rk)
-
-    else if (interpolate_case==5) then
-       !using symplectic Euler with linear interpolation
-       !construction of spline coefficients
        do i=1,nr+1
-          adv%f_fft(i,:)=adv%f(i,:)*adv%rr(i)
+          do j=1,ntheta+1
+             theta=real(j-1,f64)*dtheta-dt
+             call correction_theta(theta)
+             fnp1(i,j)=interpolate_value_2D(r,theta,plan%spl_f)
+          end do
        end do
-       call compute_spline_2D(adv%f_fft,adv%spl_f)
 
+    else if (plan%interpolate_case==3) then
+       !using symplectic Euler with linear interpolation
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
-       tolth=dtheta/5.0_f64
-       maxiter=100
+       tolr=1e-14
+       maxiter=1000
 
        do j=1,ntheta
           do i=1,nr+1
              !initialization for r interpolation
-             rr=adv%rr(i)+dt*adv%grad_phi(2,i,j)/adv%rr(i)
+             rr=rmin+real(i-1,f64)*dr-dt*plan%field(1,i,j)
              r=0.0_f64
              iter=0
 
              call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
-                r=(rr-rmin)/dr
-                r=r-real(floor(r),f64)
+                r=(rr-rmin)/(rmax-rmin)
+                r=r*real(nr,f64)
                 k=floor(r)+1
-                r=r-real(k,f64)
+                r=r-real(k-1,f64)
+                rrn=rr
                 if (k==nr+1) then
-                   rrn=rr
-                   !hypothesis : field = 0 every where outside of the domain => grad_phi=0
-                   rr=adv%rr(i)-dt*((1.0_f64)*adv%grad_phi(2,k,j)/adv%rr(i))
-                else if (k>nr+1) then
-                   rrn=rr
-                   rr=adv%rr(i)-dt*((1.0_f64)*adv%grad_phi(2,k,j)/adv%rr(k)+r*adv%grad_phi(2,k+1,j)/adv%rr(k+1))
+                   !r=0
+                   rr=rmin+real(i-1,f64)*dr-dt*plan%field(1,i,j)
+                else if (k<nr+1 .and. k>=1) then
+                   rr=rmin+real(i-1,f64)*dr-dt*((1.0_f64-r)*plan%field(1,k,j)+r*plan%field(1,k+1,j))
+                else
+                   print*,'k is outside of boundaries : error'
+                   print*,'exiting the program...'
+                   stop
                 end if
                 call correction_r(rr,rmin,rmax)
                 iter=iter+1
              end do
              if (iter==maxiter .and. abs(rrn-rr)>tolr) then
-                print*,'not enought iterations for r in symplectic Euler',i,j
+                print*,'not enought iterations for r in symplectic Euler',i,j,rr,rrn
+                stop
              end if
-             
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             k=floor(r)+1
+             r=r-real(k-1,f64)
+
              if (k/=nr+1) then
-                theta=adv%ttheta(j)+dt*((1.0_f64-r)*adv%grad_phi(1,k,j)/adv%rr(k)+r*adv%grad_phi(1,k+1,j)/adv%rr(k+1))
+                theta=real(j-1,f64)*dtheta-dt*((1.0_f64-r)*plan%field(2,k,j)+r*plan%field(2,k+1,j))
              else
-                theta=adv%ttheta(j)+dt*((1.0_f64-r)*adv%grad_phi(1,k,j)/adv%rr(k))
+                theta=real(j-1,f64)*dtheta-dt*plan%field(2,k,j)
              end if
              call correction_theta(theta)
 
-             adv%f(i,j)=interpolate_value_2d(rr,theta,adv%spl_f)/adv%rr(i)
-
+             fnp1(i,j)=interpolate_value_2d(rr,theta,plan%spl_f)
           end do
        end do
 
-    else if (interpolate_case==6) then
+    else if (plan%interpolate_case==4) then
        !using symplectic Verlet with linear interpolation
-       !construction of spline coefficients
-       do i=1,nr+1
-          adv%f_fft(i,:)=adv%f(i,:)*adv%rr(i)
-       end do
-       call compute_spline_2D(adv%f_fft,adv%spl_f)
 
        !we fix the tolerance and the maximum of iteration
-       tolr=dr/5.0_f64
-       tolth=dtheta/5.0_f64
-       maxiter=10
+       tolr=1e-12
+       tolth=1e-12
+       tolr=1e-4
+       tolth=1e-4
+       maxiter=1000
 
        do j=1,ntheta
           do i=1,nr+1
              !initialization for r interpolation
-             rr=adv%rr(1)-dt/2.0_f64*adv%grad_phi(2,i,j)/adv%rr(i)
+             rr=rmin+real(i-1,f64)*dr+dt/2.0_f64*plan%field(1,i,j)
+             rrn=0.0_f64
              r=0.0_f64
+             kr=1
              iter=0
 
              call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
-                r=(rr-rmin)/dr
-                r=r-real(floor(r),f64)
-                r=r*real(nr+1,f64)
+                r=(rr-rmin)/(rmax-rmin)
+                r=r*real(nr,f64)
                 kr=floor(r)+1
-                r=r-real(kr,f64)
+                r=r-real(kr-1,f64)
                 rrn=rr
                 if (kr==nr+1) then
-                   rr=adv%rr(i)+0.5_f64*dt*((1.0_f64-r)*adv%grad_phi(2,kr,j)/adv%rr(kr)+r*adv%grad_phi(2,kr+1,j)/adv%rr(kr+1))
+                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*plan%field(1,kr,j)
+                else if (kr>0 .and. kr<nr+1) then
+                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*((1.0_f64-r)*plan%field(1,kr,j)+r*plan%field(1,kr+1,j))
                 else
-                   rr=adv%rr(i)+0.5_f64*dt*(1.0_f64-r)*adv%grad_phi(2,kr,j)/adv%rr(kr)
+                   print*,kr
+                   print*,'error : kr is not in range'
+                   print*,'exiting'
+                   stop
                 end if
                 call correction_r(rr,rmin,rmax)
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
-                print*,'not enought iterations for r in symplectic Verlet'
-             end if
+!!$             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
+!!$                print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
+!!$                stop
+!!$             end if
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
 
              !initialization for theta interpolation
-             ttheta=adv%ttheta(1)-dt*adv%grad_phi(1,i,j)/adv%rr(i)
+             ttheta=real(j-1,f64)*dtheta-dt*plan%field(2,i,j)
+             tthetan=3.0_f64*sll_pi
              theta=0.0_f64
+             k=1
              iter=0
 
              call correction_theta(theta)
-             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth)
-                theta=ttheta/dtheta
+             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. &
+                  & abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
+                theta=ttheta/(2.0_f64*sll_pi)
                 theta=theta-real(floor(theta),f64)
-                theta=theta*real(ntheta+1,f64)
+                theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
-                theta=theta-real(k,f64)
+                theta=theta-real(k-1,f64)
                 if (k==ntheta+1) then
-                   k=1 !correction to stay in the domain
+                   k=1
+                   theta=0.0_f64
                 end if
                 tthetan=ttheta
                 if (kr==nr+1) then
-                   ttheta=adv%ttheta(j)-0.5-f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
-                        & +theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr))))
-                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*adv%grad_phi(1,kr,j)/adv%rr(kr)+r*adv%grad_phi(1,kr+1,j)/adv%rr(kr+1))
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(2,kr,k)+theta*plan%field(2,kr,k+1))
+                   ttheta=ttheta-0.5_f64*dt*plan%field(2,kr,j)
                 else
-                   ttheta=adv%ttheta(j)-0.5-f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr) &
-                        & +r*adv%grad_phi(1,kr+1,k)/adv%rr(kr+1))+theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr) &
-                        & +r*adv%grad_phi(1,kr+1,k+1)/adv%rr(kr+1)))
-                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*adv%grad_phi(1,kr,j)/adv%rr(kr)+r*adv%grad_phi(1,kr+1,j)/adv%rr(kr+1))
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+r*plan%field(2,kr+1,k)) &
+                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(2,kr+1,k+1)))
+                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*plan%field(2,kr,j)+r*plan%field(2,kr+1,j))
                 end if
                 call correction_theta(ttheta)
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth) then
-                print*,'not enought iterations for theta in symplectic Verlet',i,j
+!!$             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+!!$                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+!!$                print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
+!!$                stop
+!!$             end if
+             theta=ttheta/(2.0_f64*sll_pi)
+             theta=theta-real(floor(theta),f64)
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             if (k==ntheta+1) then
+               k=1
+               theta=0.0_f64
              end if
-
              if (kr==nr+1) then
-                rr=rr-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(2,kr,k)/adv%rr(kr) &
-                     & +theta*((1.0_f64-r)*adv%grad_phi(2,kr,k+1)/adv%rr(kr))))
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(1,kr,k)+theta*plan%field(1,kr,k+1))
              else
-                rr=rr-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(2,kr,k)/adv%rr(kr) &
-                     & +r*adv%grad_phi(2,kr+1,k)/adv%rr(kr+1))+theta*((1.0_f64-r)*adv%grad_phi(2,kr,k+1)/adv%rr(kr) &
-                     & +r*adv%grad_phi(2,kr+1,k+1)/adv%rr(kr+1)))
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
+                     & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
              end if
              call correction_r(rr,rmin,rmax)
 
-             adv%f(i,j)=interpolate_value_2d(rr,ttheta,adv%spl_f)/adv%rr(i)
+             fnp1(i,j)=interpolate_value_2d(rr,ttheta,plan%spl_f)
 
           end do
        end do
 
-    else if (interpolate_case==7) then
-       !using fixe point methode
-       !construction of spline coefficients
-       do i=1,nr+1
-          adv%f_fft(i,:)=adv%f(i,:)*adv%rr(i)
-       end do
-       call compute_spline_2D(adv%f_fft,adv%spl_f)
+    else if (plan%interpolate_case==5) then
+       !using fixed point method
 
        !initialization
        maxiter=10
@@ -341,41 +370,41 @@ contains
 
        do j=1,ntheta
           do i=1,nr+1
-             rr=adv%rr(i)
-             ttheta=adv%ttheta(j)
+             rr=rmin+real(i-1,f64)*dr
+             ttheta=real(j-1,f64)*dtheta
              r=0.0_f64
              kr=i
              ar=0.0_f64
              atheta=0.0_f64
              iter=0
 
-             do while (iter<maxiter .and. (rrn-rr)+(tthetan-ttheta)>tolr)
-                r=(rr-rmin)/dr
-                r=r-real(floor(r),f64)
-                r=r*real(nr+1,f64)
+             do while (iter<maxiter .and. abs((rrn-rr)+(tthetan-ttheta))>tolr .and. abs((rrn-rr)+(tthetan+2.0_f64*sll_pi-ttheta))>tolr &
+                  & .and. abs((rrn-rr)+(tthetan-ttheta-2.0_f64*sll_pi))>tolr)
+                r=(rr-rmin)/(rmax-rmin)
                 kr=floor(r)+1
-                r=r-real(kr,f64)
-                theta=ttheta/dtheta
+                r=r-real(kr-1,f64)
+                theta=ttheta/(2.0_f64*sll_pi)
                 theta=theta-real(floor(theta),f64)
-                theta=theta*real(ntheta+1,f64)
+                theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
-                theta=theta-real(k,f64)
+                theta=theta-real(k-1,f64)
                 if (k==ntheta+1) then
                    k=1
+                   theta=0.0_f64
                 end if
                 if (kr==nr+1) then
-                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(2,kr,k)/adv%rr(kr)+theta*((1.0_f64-r)*adv%grad_phi(2,kr,k+1)/adv%rr(kr))))
-                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr)+theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr))))
+                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+theta*((1.0_f64-r)*plan%field(1,kr,k+1))))
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+theta*((1.0_f64-r)*plan%field(2,kr,k+1))))
                 else
-                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(2,kr,k)/adv%rr(kr)+r*adv%grad_phi(2,kr+1,k)/adv%rr(kr+1)) &
-                        & +theta*((1.0_f64-r)*adv%grad_phi(2,kr,k+1)/adv%rr(kr)+r*adv%grad_phi(2,kr+1,k+1)/adv%rr(kr+1)))
-                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*adv%grad_phi(1,kr,k)/adv%rr(kr)+r*adv%grad_phi(1,kr+1,k)/adv%rr(kr+1)) &
-                        & +theta*((1.0_f64-r)*adv%grad_phi(1,kr,k+1)/adv%rr(kr)+r*adv%grad_phi(1,kr+1,k+1)/adv%rr(kr+1)))
+                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
+                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+r*plan%field(2,kr+1,k)) &
+                        & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)+r*plan%field(1,kr+1,k+1)))
                 end if
                 rrn=rr
                 tthetan=ttheta
-                rr=adv%rr(i)-ar
-                ttheta=adv%ttheta(j)-atheta
+                rr=rmin+real(i-1,f64)*dr-ar
+                ttheta=real(j-1,f64)*dtheta-atheta
 
                 iter=iter+1
              end do
@@ -383,304 +412,19 @@ contains
                 print*,'no convergence in fixe point methode',i,j
              end if
 
-             rr=adv%rr(i)-2.0_f64*ar
-             ttheta=adv%ttheta(j)-2.0_f64*atheta
+             rr=rmin+real(i-1,f64)*dr-2.0_f64*ar
+             ttheta=real(j-1,f64)*dtheta-2.0_f64*atheta
              call correction_r(rr,rmin,rmax)
              call correction_theta(ttheta)
-             adv%f(i,j)=interpolate_value_2d(rr,ttheta,adv%spl_f)/adv%rr(i)
+             fnp1(i,j)=interpolate_value_2d(rr,ttheta,plan%spl_f)
           end do
        end do
 
-    else
-       print*,'no way chosen to compute r and theta'
-       print*,'nothing will be done'
-       print*,'see variable interpolate_case, routine advect_VP_polar in file prototype/src/simulation/sll_advection_polar.F90'
     end if
 
-    adv%f(:,ntheta+1)=adv%f(:,1)
+    fnp1(:,ntheta+1)=fnp1(:,1)
 
   end subroutine advect_CG_polar
-
-
-  !>subroutine rk4_polar_advect(adv,rk)
-  !>RK4 for polar advection only
-  !>adv : polar_vp_data object, all data are included in
-  !>rk : polar_vp_rk4 object, array for rk4
-  subroutine rk4_polar_advect(adv,rk)
-!A REPRENDRE
-    implicit none
-
-    type(polar_vp_data), intent(inout), pointer :: adv
-    type(polar_vp_rk4), intent(inout), pointer :: rk
-
-    sll_real64 :: dt, dr, dtheta, rmin, rmax
-    sll_int32 :: nr, ntheta
-    sll_int32 :: i,j
-    sll_real64 :: r,theta,rr
-
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-    dt=adv%data%dt
-    dr=adv%data%dr
-    dtheta=adv%data%dtheta
-    rmin=adv%data%rmin
-    rmax=adv%data%rmax
-
-    !construction of spline coeficients for f
-    do i=1,nr+1
-       !r=1.0_f64!rmin+real(i,f64)*dr
-       adv%f_fft(i,:)=adv%f(i,:)*adv%rr(i)
-    end do
-    call compute_spline_2D(adv%f_fft,adv%spl_f)
-
-    !first step of RK4
-    do i=1,nr+1
-       !r=rmin+real(i-1)*dr
-       rk%r1(i,:)=-dt*adv%grad_phi(2,i,:)/adv%rr(i)
-       rk%theta1(i,:)=dt*adv%grad_phi(1,i,:)/adv%rr(i)
-    end do
-
-    !2nd step of RK4
-    do i=1,nr+1
-       !r=rmin+real(i-1)*dr
-       do j=1,ntheta+1
-          theta=real(j-1,f64)*dtheta
-          rk%r4(i,j)=adv%rr(i)-dt/2.0_f64*adv%grad_phi(2,i,j)/adv%rr(i)
-          rk%theta4(i,j)=adv%ttheta(j)+dt/2.0_f64*adv%grad_phi(1,i,j)/adv%rr(i)
-
-          call correction_r(rk%r4(i,j),rmin,rmax)
-          call correction_theta(rk%theta4(i,j))
-
-          adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)/adv%rr(i)
-       end do
-    end do
-
-    call poisson_solve_polar(adv)
-    call compute_grad_field(adv)
-
-    !construction of spline coeficients for a
-    do i=1,nr+1
-       !r=1.0_f64!rmin+real(i,f64)*dr
-       adv%grad_phi(:,i,:)=adv%grad_phi(:,i,:)*adv%rr(i)
-    end do
-    call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
-    call compute_spline_2d(adv%grad_phi(2,:,:),adv%spl_a2)
-
-    do i=1,nr+1
-       !rr=1.0_f64!rmin+real(i-1)*dr
-       do j=1,ntheta+1
-          r=adv%rr(i)+rk%r1(i,j)/2.0_f64
-          theta=adv%ttheta(j)+rk%theta1(i,j)/2.0_f64
-          call correction_r(r,rmin,rmax)
-          call correction_theta(theta)
-          rk%r2(i,j)=-interpolate_value_2d(r,theta,adv%spl_a2)*dt/(rk%r4(i,j)*adv%rr(i))
-          rk%theta2(i,j)=interpolate_value_2d(r,theta,adv%spl_a1)*dt/(rk%r4(i,j)*adv%rr(i))
-       end do
-    end do
-
-    !3rd step of RK4
-    do i=1,nr+1
-       !rr=1.0_f64!rmin+real(i-1)*dr
-       do j=1,ntheta+1
-          r=adv%rr(i)+rk%r2(i,j)/2.0_f64
-          theta=adv%ttheta(j)+rk%theta2(i,j)/2.0_f64
-          call correction_r(r,rmin,rmax)
-          call correction_theta(theta)
-          rk%r4(i,j)=rk%r4(i,j)*adv%rr(i)
-
-          rk%r3(i,j)=-interpolate_value_2d(r,theta,adv%spl_a2)*dt/rk%r4(i,j)
-          rk%theta3(i,j)=interpolate_value_2d(r,theta,adv%spl_a1)*dt/rk%r4(i,j)
-          !print*,'3',i,j
-       end do
-    end do
-
-    !4th step of RK4
-    do i=1,nr+1
-       r=adv%rr(i)!rmin+real(i-1)*dr
-       do j=1,ntheta+1
-          theta=adv%ttheta(j)!real(j-i)*dtheta
-          rk%r4(i,j)=r+rk%r1(i,j)
-          rk%theta4(i,j)=theta+rk%theta1(i,j)
-          call correction_r(rk%r4(i,j),rmin,rmax)
-          call correction_theta(rk%theta4(i,j))
-
-          adv%f(i,j)=interpolate_value_2D(rk%r4(i,j),rk%theta4(i,j),adv%spl_f)/r
-          !print*,'41',i,j
-       end do
-    end do
-
-    call poisson_solve_polar(adv)
-    call compute_grad_field(adv)
-
-    !construction of spline coeficients for a
-    do i=1,nr+1
-       r=adv%rr(i)!1.0_f64!rmin+real(i,f64)*dr
-       adv%grad_phi(:,i,:)=adv%grad_phi(:,i,:)*r
-    end do
-    call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
-    call compute_spline_2d(adv%grad_phi(2,:,:),adv%spl_a2)
-
-    do i=1,nr+1
-       rr=r*adv%rr(i)
-       do j=1,ntheta+1
-          r=adv%rr(i)+rk%r3(i,j)
-          theta=adv%ttheta(j)+rk%theta3(i,j)
-          call correction_r(r,rmin,rmax)
-          call correction_theta(theta)
-
-          rk%r4(i,j)=-interpolate_value_2d(r,theta,adv%spl_a2)*dt/rr
-          rk%theta4(i,j)=interpolate_value_2d(r,theta,adv%spl_a1)*dt/rr
-          !!print*,'43',i,j
-       end do
-    end do
-
-    !sommation
-    do i=1,nr+1
-       r=adv%rr(i)!rmin+real(i-1,f64)*dr
-       do j=1,ntheta+1
-          theta=adv%ttheta(j)!real(j-1,f64)*dtheta
-          rk%r1(i,j)=r+rk%r1(i,j)/6.0_f64+rk%r2(i,j)/3.0_f64+rk%r3(i,j)/3.0_f64+rk%r4(i,j)/6.0_f64
-          rk%theta1(i,j)=theta+rk%theta1(i,j)/6.0_f64+rk%theta2(i,j)/3.0_f64+rk%theta3(i,j)/3.0_f64+rk%theta4(i,j)/6.0_f64
-
-          call correction_r(rk%r1(i,j),rmin,rmax)
-          call correction_theta(rk%theta1(i,j))
-       end do
-    end do
-
-    !updating the distribution function
-    call deposit_value_2D(rk%r1,rk%theta1,adv%spl_f,adv%f)
-    do i=1,nr+1
-       adv%f(i,:)=adv%f(i,:)/adv%rr(i)
-    end do
-
-  end subroutine rk4_polar_advect
-
-
-  !>subroutine rk2_polar_advect(adv,rk)
-  !>RK2 for polar advection only
-  !>adv : polar_vp_data object
-  !>rk : polar_vp_rk4 object, contains more array than necessary
-  subroutine rk2_polar_advect(adv,rk)
-
-    implicit none
-
-    type(polar_vp_data), intent(inout), pointer :: adv
-    type(polar_vp_rk4), intent(inout), pointer :: rk
-
-    sll_real64 :: dt, dr, dtheta, rmin, rmax
-    sll_int32 :: nr, ntheta
-    sll_int32 :: i,j
-    sll_real64 :: r,theta
-
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-    dt=adv%data%dt
-    dr=adv%data%dr
-    dtheta=adv%data%dtheta
-    rmin=adv%data%rmin
-    rmax=adv%data%rmax
-
-    !construction of spline coeficients for f
-    do i=1,nr+1
-       adv%f_fft(i,:)=adv%f(i,:)*adv%rr(i)
-    end do
-    call compute_spline_2D(adv%f_fft,adv%spl_f)
-
-    do i=1,nr+1
-       do j=1,ntheta+1
-          rk%r1(i,j)=adv%rr(i)+dt/2.0_f64*adv%grad_phi(2,i,j)/adv%rr(i)
-          rk%theta1(i,j)=adv%ttheta(j)-dt/2.0_f64*adv%grad_phi(1,i,j)/adv%rr(i)
-          call correction_r(rk%r1(i,j),rmin,rmax)
-          call correction_theta(rk%theta1(i,j))
-
-          adv%f(i,j)=interpolate_value_2D(rk%r1(i,j),rk%theta1(i,j),adv%spl_f)/adv%rr(i)
-       end do
-    end do
-
-    call poisson_solve_polar(adv)
-    call compute_grad_field(adv)
-
-    !construction of spline coeficients for a
-    do i=1,nr+1
-       adv%grad_phi(:,i,:)=adv%grad_phi(:,i,:)*adv%rr(i)
-    end do
-    call compute_spline_2d(adv%grad_phi(1,:,:),adv%spl_a1)
-    call compute_spline_2d(adv%grad_phi(2,:,:),adv%spl_a2)
-
-    do i=1,nr+1
-       do j=1,ntheta+1
-          r=rk%r1(i,j)
-          theta=rk%theta1(i,j)
-
-          rk%r2(i,j)=interpolate_value_2d(r,theta,adv%spl_a2)/(r*adv%rr(i))
-          rk%theta2(i,j)=-interpolate_value_2d(r,theta,adv%spl_a1)/(r*adv%rr(i))
-       end do
-    end do
-
-    !sommation
-    do i=1,nr+1
-       do j=1,ntheta+1
-          rk%r1(i,j)=adv%rr(i)+dt*rk%r2(i,j)
-          rk%theta1(i,j)=adv%ttheta(j)+dt*rk%theta2(i,j)
-
-          call correction_r(rk%r1(i,j),rmin,rmax)
-          call correction_theta(rk%theta1(i,j))
-
-          !updating distribution function f
-          adv%f(i,j)=interpolate_value_2d(rk%r1(i,j),rk%theta1(i,j),adv%spl_f)/adv%rr(i)
-       end do
-    end do
-
-  end subroutine rk2_polar_advect
-
-
-  !>subroutine SL_classic(adv,rk)
-  !>computes the classic semi-Lagrangian scheme for Vlasov-Poisson equation
-  !>adv : polar_vp_data object, all data are included in
-  !>rk : polar_vp_rk4 object, array for rk4
-  subroutine SL_classic(adv,rk)
-
-    implicit none
-
-    type(polar_vp_data), intent(inout), pointer :: adv
-    type(polar_vp_rk4), intent(inout), pointer :: rk
-
-    call poisson_solve_polar(adv)
-    call compute_grad_field(adv)
-    call advect_CG_polar(adv,rk)
-
-  end subroutine SL_classic
-
-
-  !>subroutine SL_controlled(adv,rk)
-  !>computes the semi-Lagrangian scheme with control for Vlasov-Poisson equation
-  !>adv : polar_vp_data object, all data are included in
-  !>rk : polar_vp_rk4 object, array for rk4
-  subroutine SL_ordre_2(adv,rk)
-
-    implicit none
-
-    type(polar_vp_data), intent(inout), pointer :: adv
-    type(polar_vp_rk4), intent(inout), pointer :: rk
-
-    sll_real64 :: dt
-
-    adv%fdemi=adv%f
-    dt=adv%data%dt
-    adv%data%dt=dt/2.0_f64
-
-    call poisson_solve_polar(adv)
-    call compute_grad_field(adv)
-    call advect_CG_polar(adv,rk)
-    !we just obtained f^(n+1/2)
-    call poisson_solve_polar(adv)
-    call compute_grad_field(adv)
-    !we just obtained E^(n+1/2)
-    adv%data%dt=dt
-    adv%f=adv%fdemi
-    call advect_CG_polar(adv,rk)
-
-  end subroutine SL_ordre_2
 
 
   !> subroutine correction_r(r,rmin,rmax)
@@ -719,7 +463,7 @@ contains
        theta=modulo(theta,2.0_f64*sll_pi)
     end if
     if (theta>2.0_f64*sll_pi) then
-       print*,'POney'
+       print*,'je ne sais pas calculer!'
        print*,th
        print*,theta
     end if
@@ -737,51 +481,80 @@ contains
   end subroutine correction_theta
 
 
-  !>subroutine divergence_ortho_field(adv)
-  !>compute divergence of the field used for CG equations
-  !>this field is orthogonal to grad_phi
-  !>this field is orthogonal to adv%grad_phi
-  !>adv : polar_vp_data object
-  subroutine divergence_ortho_field(adv,div)
+  !>subroutine SL_classic(plan,in,out)
+  !>computes the classic semi-Lagrangian scheme for Vlasov-Poisson equation
+  !>plan : sll_SL_polar object, contains plan for Poisso, gradian and advection
+  !>in : distribution function at time n, size (nr+1)*(ntheta+1)
+  !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
+  subroutine SL_classic(plan,in,out)
 
     implicit none
 
-    type(polar_vp_data), intent(in), pointer :: adv
-    sll_real64, dimension(:,:), intent(out) :: div
+    type(sll_SL_polar), intent(inout), pointer :: plan
+    sll_real64, dimension(:,:), intent(inout) :: in,out
 
-    sll_real64 :: dr,dtheta,rmin,rmax
-    sll_int32 :: nr,ntheta
-    sll_real64 :: r
     sll_int32 :: i,j
+    sll_real64 :: temp,r
 
-    nr=adv%data%nr
-    ntheta=adv%data%ntheta
-    dr=adv%data%dr
-    dtheta=adv%data%dtheta
-    rmin=adv%data%rmin
-    rmax=adv%data%rmax
-
-    div=-adv%grad_phi(2,:,:)
-    adv%grad_phi(2,:,:)=adv%grad_phi(1,:,:)
-    adv%grad_phi(1,:,:)=div
-    div=0.0_f64
-
-    do i=2,nr
-       r=rmin+real(i-1,f64)*dr
-       do j=1,ntheta
-          div(i,j)=1/r*((adv%grad_phi(1,i+1,j)*(r+dr)-adv%grad_phi(1,i-1,j)*(r-dr))/(2*dr) &
-               & +(adv%grad_phi(2,i,modulo(j+1-1+ntheta,ntheta+1)+1)-adv%grad_phi(2,i,modulo(j-1-1+ntheta,ntheta+1)+1))/(2*dtheta))
+    call poisson_solve_polar(plan%poisson,in,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    do i=1,plan%adv%data%nr+1
+       r=plan%adv%data%rmin+plan%adv%data%dr*real(i-1,f64)
+       do j=1,plan%adv%data%ntheta+1
+          temp=plan%adv%field(1,i,j)/r
+          plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
+          plan%adv%field(2,i,j)=temp
        end do
     end do
-    do j=1,ntheta
-       div(1,j)=1/rmin*((adv%grad_phi(1,2,j)*(rmin+dr)-adv%grad_phi(1,i,j)*(rmin))/(dr) &
-               & +(adv%grad_phi(2,1,modulo(j+1-1+ntheta,ntheta+1)+1)-adv%grad_phi(2,1,modulo(j-1-1+ntheta,ntheta+1)+1))/(2*dtheta))
-       div(nr+1,j)=1/r*((adv%grad_phi(1,nr+1,j)*(rmax)-adv%grad_phi(1,nr+1-1,j)*(rmax-dr))/(2*dr) &
-               & +(adv%grad_phi(2,nr+1,modulo(j+1-1+ntheta,ntheta+1)+1)-adv%grad_phi(2,nr+1,modulo(j-1-1+ntheta,ntheta+1)+1))/(2*dtheta))
+    call advect_CG_polar(plan%adv,in,out)
+
+  end subroutine SL_classic
+
+
+  !>subroutine SL_ordre_2(plan,in,out)
+  !>computes the semi-Lagrangian scheme order 2
+  !>plan : sll_SL_polar object, contains plan for Poisso, gradian and advection
+  !>in : distribution function at time n, size (nr+1)*(ntheta+1)
+  !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
+  subroutine SL_ordre_2(plan,in,out)
+
+    implicit none
+
+    type(sll_SL_polar), intent(inout), pointer :: plan
+    sll_real64, dimension(:,:), intent(inout) :: in,out
+
+    sll_int32 :: i,j
+    sll_real64 :: dt,temp,r
+
+    dt=plan%adv%data%dt
+    plan%adv%data%dt=dt/2.0_f64
+
+    call poisson_solve_polar(plan%poisson,in,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    do i=1,plan%adv%data%nr+1
+       r=plan%adv%data%rmin+plan%adv%data%dr*real(i-1,f64)
+       do j=1,plan%adv%data%ntheta+1
+          temp=plan%adv%field(1,i,j)/r
+          plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
+          plan%adv%field(2,i,j)=temp
+       end do
     end do
+    call advect_CG_polar(plan%adv,in,out)
+    !we just obtained f^(n+1/2)
+    call poisson_solve_polar(plan%poisson,out,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    do i=1,plan%adv%data%nr+1
+       r=plan%adv%data%rmin+plan%adv%data%dr*real(i-1,f64)
+       do j=1,plan%adv%data%ntheta+1
+          temp=plan%adv%field(1,i,j)/r
+          plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
+          plan%adv%field(2,i,j)=temp
+       end do
+    end do
+    !we just obtained E^(n+1/2)
+    plan%adv%data%dt=dt
+    call advect_CG_polar(plan%adv,in,out)
 
-    div(:,ntheta+1)=div(:,1)
-
-  end subroutine divergence_ortho_field
+  end subroutine SL_ordre_2
 
 end module polar_advection
