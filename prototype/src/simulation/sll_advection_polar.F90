@@ -259,6 +259,8 @@ contains
        !we fix the tolerance and the maximum of iteration
        tolr=1e-12
        tolth=1e-12
+       tolr=1e-4
+       tolth=1e-4
        maxiter=1000
 
        do j=1,ntheta
@@ -291,10 +293,10 @@ contains
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
-                print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
-                stop
-             end if
+!!$             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
+!!$                print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
+!!$                stop
+!!$             end if
              r=(rr-rmin)/(rmax-rmin)
              r=r*real(nr,f64)
              kr=floor(r)+1
@@ -332,11 +334,11 @@ contains
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
-                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
-                print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
-                stop
-             end if
+!!$             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+!!$                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+!!$                print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
+!!$                stop
+!!$             end if
              theta=ttheta/(2.0_f64*sll_pi)
              theta=theta-real(floor(theta),f64)
              theta=theta*real(ntheta,f64)

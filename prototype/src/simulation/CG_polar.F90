@@ -156,7 +156,7 @@ program cg_polar
         plan_sl%adv%field(2,i,j)=temps
      end do
   end do
-  call divergence_ortho_field(plan_sl%grad,plan_sl%adv%field,div)
+  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
@@ -333,7 +333,7 @@ program cg_polar
         plan_sl%adv%field(2,i,j)=temps
      end do
   end do
-  call divergence_ortho_field(plan_sl%grad,plan_sl%adv%field,div)
+  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
