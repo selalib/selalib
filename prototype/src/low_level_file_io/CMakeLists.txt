@@ -5,7 +5,8 @@ add_library(sll_low_level_file_io STATIC ${IO_SRC})
 add_dependencies(sll_low_level_file_io sll_assertion sll_working_precision)
 
 IF(HDF5_FOUND AND HDF5_ENABLED)
-	target_link_libraries(sll_low_level_file_io ${HDF5_LIBRARIES})
+        message ( ${HDF5_LIBRARIES})
+	target_link_libraries(sll_low_level_file_io ${HDF5_LIBRARIES} -lhdf5)
 ENDIF()
 
 add_executable(test_io unit_test.F90)
