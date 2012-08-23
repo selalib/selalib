@@ -27,12 +27,14 @@ program vlasov_1d
 
   integer :: i,j
 
+  character (len=12), parameter :: kernel_file = "./tridiag.cl"
+
   !=====================
   ! INITIALIZATION
   !=====================
 
-  num_systems = 32
-  system_size = 64
+  num_systems = 128
+  system_size = 128
   size_in_bytes = int(system_size*num_systems, 8)*4_8
   allocate(a(num_systems,system_size))
   allocate(b(num_systems,system_size))
@@ -103,9 +105,9 @@ program vlasov_1d
       !=====================!
 
       ! read the source file
-      open(unit = iunit, file = './vlasov_1d.cl', access='direct', &
+      open(unit = iunit, file = kernel_file, access='direct', &
            status = 'old', action = 'read', iostat = ierr, recl = 1)
-      if (ierr /= 0) stop 'Cannot open file vlasov_1d.cl'
+      if (ierr /= 0) stop 'Cannot open file '//kernel_file
 
       source = ''
       irec = 1
@@ -131,7 +133,7 @@ program vlasov_1d
       if(ierr /= CL_SUCCESS) stop 'Error: program build failed.'
 
       ! finally get the kernel and release the program
-      kernel = clCreateKernel(prog, 'vlasov_1d', ierr)
+      kernel = clCreateKernel(prog, 'tridiag', ierr)
       call clReleaseProgram(prog, ierr)
 
       !=====================!

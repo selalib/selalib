@@ -1,5 +1,5 @@
 
-#define NATIVE_DIVIDE
+//define NATIVE_DIVIDE
 #define REORDER
 
 // system_size is defined during program building
@@ -30,7 +30,7 @@ __kernel void tridiag( int num_systems,
 #endif
 
 	// local memory
-	float a[64];
+	float a[128];
 
 	float c1, c2, c3;
 	float f_i, x_prev, x_next;
