@@ -1,5 +1,3 @@
-
-#define NATIVE_DIVIDE
 #define REORDER
 
 // system_size is defined during program building
@@ -42,13 +40,8 @@ __kernel void vlasov_1d( int num_systems,
 	c2 = b_d[base_idx];
 	f_i = d_d[base_idx];
 
-#ifndef NATIVE_DIVIDE
 	a[1] = - c1 / c2;
 	x_prev = f_i / c2;
-#else
-	a[1] = - native_divide(c1, c2);
-	x_prev = native_divide(f_i, c2);
-#endif
 
 	// forward trace
 	int idx = base_idx;
@@ -63,11 +56,7 @@ __kernel void vlasov_1d( int num_systems,
 		f_i = d_d[idx];
 		
 		float q = (c3 * a[k] + c2);
-#ifndef NATIVE_DIVIDE
 		float t = 1 / q; 
-#else
-		float t = native_recip(q);
-#endif
 		x_next = (f_i - c3 * x_prev) * t;
 		x_d[idx] = x_prev = x_next;
 		
@@ -81,11 +70,7 @@ __kernel void vlasov_1d( int num_systems,
 	f_i = d_d[idx];
 
 	float q = (c3 * a[system_size-1] + c2);
-#ifndef NATIVE_DIVIDE
 	float t = 1 / q; 
-#else
-	float t = native_recip(q);
-#endif 
 	x_next = (f_i - c3 * x_prev) * t;
 	x_d[idx] = x_prev = x_next;
 
