@@ -245,7 +245,6 @@ contains
        end do
     end do
 
-print*,'ok'
     ! FFT INVERSE
     do i=1,Nr+1
        call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
