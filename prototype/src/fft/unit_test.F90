@@ -23,13 +23,13 @@ program unit_test
   sll_real64, dimension(n) :: rdata_comp, rdata_copy, rdata
   sll_comp64 :: mode
   sll_real64 :: ierr
-  sll_int32 :: i,j,s,h,k,t
+  sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
 
   call print_defaultfftlib()
 
 
 
-! test for get mode
+! test getter and setter functions in complex case
   s = 2**imin
   do j=1,s
     CALL RANDOM_COMPLEX(data_comp(j))
@@ -47,8 +47,9 @@ program unit_test
   else
     print *,'get and set mode complex ok'
   endif
+  call fft_delete_plan(p)
 
-! test for set mode
+! test getter and setter functions in real case
   s = 2**imax
   do j=1,s
     CALL RANDOM_NUMBER(rdata(j))
@@ -66,7 +67,34 @@ program unit_test
   else
     print *,'get and set mode real ok'
   endif
+  call fft_delete_plan(p)
 
+
+! Standard do-loop on the mode
+  s = 2**imin
+  do j=1,s
+    CALL RANDOM_COMPLEX(data_comp(j))
+  enddo
+  data_copy(1:s) = data_comp(1:s)
+  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+  do ind_mode=0,s-1
+    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
+  enddo
+  call fft_delete_plan(p)
+
+! optimized do-loop on the mode
+  s = 2**imin
+  do j=1,s
+    CALL RANDOM_COMPLEX(data_comp(j))
+  enddo
+  data_copy(1:s) = data_comp(1:s)
+  p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
+  do array_position=0,s-1
+    ind_mode = fft_ith_stored_mode(p,array_position) !The only change with the standard
+                                                     !do-loop is this line.
+    mode = fft_get_mode(p,data_comp(1:s),ind_mode)
+  enddo
+  call fft_delete_plan(p)
 
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX'

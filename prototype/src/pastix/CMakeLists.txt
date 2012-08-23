@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/prototype-devel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 IF(PASTIX_FOUND)
@@ -12,6 +15,7 @@ IF(PASTIX_FOUND)
                                      ${BLAS_LIBRARIES}
                                      ${PTSCOTCH_LIBRARIES})
 
+<<<<<<< HEAD
    target_link_libraries(fsimple -lmatrix_driver ${PASTIX_LIBRARIES} 
                                      ${BLAS_LIBRARIES}
                                      ${PTSCOTCH_LIBRARIES})
@@ -24,6 +28,10 @@ IF(PASTIX_FOUND)
        target_link_libraries(test_pastix rt)
        target_link_libraries(fsimple rt)
        target_link_libraries(fstep-by-step rt)
+=======
+   if(UNIX AND NOT APPLE)
+       target_link_libraries(test_pastix rt)
+>>>>>>> origin/prototype-devel
    endif()
 
 ENDIF()
