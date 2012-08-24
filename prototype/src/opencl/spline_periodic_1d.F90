@@ -55,6 +55,7 @@ allocate(spline%xi(n+1))
 allocate(spline%fi(n+1))
 allocate(spline%p2(n+1))
 
+spline%n  = n
 spline%xi = xi
 
 end subroutine new_spline
@@ -99,7 +100,6 @@ subroutine compute_spline (spline, fi, n)
   end do
 
 end subroutine compute_spline
-!
 
 subroutine interpolate_array_values( spline, xj, fj )
 
@@ -142,7 +142,7 @@ integer :: i, k
 
   end do
 
-  fj(m) = fj(1)
+  fj(m) = spline%fi(spline%n+1)
 
 end subroutine interpolate_array_values
 
