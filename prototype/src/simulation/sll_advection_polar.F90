@@ -13,9 +13,10 @@ module polar_advection
   !>type for advection with center-guide equations
   !>the field and other needed data/object are within
   type sll_plan_adv_polar
-     type(sll_polar_data), pointer :: data
+     sll_real64 :: rmin,rmax,dr,dtheta,dt
+     sll_int32 :: nr,ntheta
      type(sll_spline_2D), pointer :: spl_f
-     sll_int32 :: interpolate_case
+     sll_int32 :: time_scheme
      sll_real64, dimension(:,:,:), allocatable :: field
   end type sll_plan_adv_polar
 
@@ -35,31 +36,39 @@ contains
 !  creation of sll_plan_adv_polar
 !===================================
 
-  !>function new_plan_adv_polar(data,interpolate_case)
-  !>data : sll_polar_data object, contains data about the domain
-  !>interpolate_case : integer to choose the scheme for advection
+  !>function new_plan_adv_polar(rmin,rmax,dr,dtheta,dt,nr,ntheta,time_scheme)
+  !>rmin : interior adius
+  !>dr, dtheta and dt : size of step in direction r and theta and in time
+  !>nr and ntheta : number of space in direction r and theta
+  !>time_scheme : integer to choose the scheme for advection
   !>                   1 : using explicit Euler method
   !>                   2 : rotation, rotation speed = -1
   !>                   3 : using symplectic Euler with linear interpolation
   !>                   4 : using symplectic Verlet with linear interpolation
   !>                   5 : using fixed point method
-  function new_plan_adv_polar(data,interpolate_case) result(this)
+  function new_plan_adv_polar(rmin,rmax,dr,dtheta,dt,nr,ntheta,time_scheme) result(this)
 
     type(sll_plan_adv_polar), pointer :: this
-    type(sll_polar_data), intent(in), pointer :: data
-    sll_int32, intent(in) :: interpolate_case
+    sll_real64, intent(in) :: rmin,rmax,dr,dtheta,dt
+    sll_int32, intent(in) :: nr,ntheta
+    sll_int32, intent(in) :: time_scheme
 
     sll_int32 :: err
 
     SLL_ALLOCATE(this,err)
-    SLL_ALLOCATE(this%data,err)
-    SLL_ALLOCATE(this%field(2,data%nr+1,data%ntheta+1),err)
+    SLL_ALLOCATE(this%field(2,nr+1,ntheta+1),err)
 
     this%field=0.0_f64
-    this%data=data
-    this%interpolate_case=interpolate_case
+    this%rmin=rmin
+    this%rmax=rmax
+    this%dr=dr
+    this%dtheta=dtheta
+    this%dt=dt
+    this%nr=nr
+    this%ntheta=ntheta
+    this%time_scheme=time_scheme
 
-    this%spl_f => new_spline_2D(data%nr+1,data%ntheta+1,data%rmin,data%rmax,0._f64, 2._f64*sll_pi, &
+    this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
          & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
   end function new_plan_adv_polar
@@ -79,10 +88,8 @@ contains
     sll_int32 :: err
 
     if (associated(this)) then
-       SLL_DEALLOCATE(this%data,err)
        SLL_DEALLOCATE_ARRAY(this%field,err)
        call delete_spline_2d(this%spl_f)
-       this%data=>null()
        SLL_DEALLOCATE(this,err)
        this=>null()
     end if
@@ -93,25 +100,28 @@ contains
 !  creation of sll_SL_polar type
 !==================================
 
-  !>function new_SL(data,grad_case,interpolate_case)
+  !>function new_SL(rmin,dr,dtheta,dt,nr,ntheta,grad_case,time_scheme)
   !>creation of sll_SL_polar object for semi Lagrangian scheme in polar coordinates
-  !>data : sll_polar_data
+  !>rmin : interior adius
+  !>dr, dtheta and dt : size of step in direction r and theta and in time
+  !>nr and ntheta : number of space in direction r and theta
   !>grad_case : integer, see function new_polar_op
-  !>interpolate_case : integer, see function new_plan_adv_polar
-  function new_SL(data,grad_case,interpolate_case) result(this)
+  !>time_scheme : integer, see function new_plan_adv_polar
+  function new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad_case,time_scheme) result(this)
 
     type(sll_SL_polar), pointer :: this
-    type(sll_polar_data), intent(in), pointer :: data
-    sll_int32, intent(in) :: grad_case,interpolate_case
+    sll_real64 :: rmin,rmax,dr,dtheta,dt
+    sll_int32 :: nr,ntheta
+    sll_int32, intent(in) :: grad_case,time_scheme
 
     sll_int32 :: err
 
     SLL_ALLOCATE(this,err)
-    SLL_ALLOCATE(this%phi(data%nr+1,data%ntheta+1),err)
+    SLL_ALLOCATE(this%phi(nr+1,ntheta+1),err)
 
-    this%poisson => new_plan_poisson_polar(data)
-    this%grad => new_polar_op(data,grad_case)
-    this%adv => new_plan_adv_polar(data,interpolate_case)
+    this%poisson => new_plan_poisson_polar(rmin,dr,nr,ntheta)
+    this%grad => new_polar_op(rmin,rmax,dr,dtheta,nr,ntheta,grad_case)
+    this%adv => new_plan_adv_polar(rmin,rmax,dr,dtheta,dt,nr,ntheta,time_scheme)
 
   end function new_SL
 
@@ -160,18 +170,18 @@ contains
     sll_int32 :: i,j,maxiter,iter,kr,k
     sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
 
-    nr=plan%data%nr
-    ntheta=plan%data%ntheta
-    dt=plan%data%dt
-    dr=plan%data%dr
-    dtheta=plan%data%dtheta
-    rmin=plan%data%rmin
-    rmax=plan%data%rmax
+    nr=plan%nr
+    ntheta=plan%ntheta
+    dt=plan%dt
+    dr=plan%dr
+    dtheta=plan%dtheta
+    rmin=plan%rmin
+    rmax=plan%rmax
 
     !construction of spline coefficients for f
     call compute_spline_2D(fn,plan%spl_f)
 
-    if (plan%interpolate_case==1) then
+    if (plan%time_scheme==1) then
        !explicit Euler
        do i=1,nr+1
           r=rmin+real(i-1,f64)*dr
@@ -188,7 +198,7 @@ contains
           end do
        end do
 
-    else if (plan%interpolate_case==2) then
+    else if (plan%time_scheme==2) then
        !rotation
 
        do i=1,nr+1
@@ -199,7 +209,7 @@ contains
           end do
        end do
 
-    else if (plan%interpolate_case==3) then
+    else if (plan%time_scheme==3) then
        !using symplectic Euler with linear interpolation
        !we fix the tolerance and the maximum of iteration
        tolr=dr/5.0_f64
@@ -253,7 +263,7 @@ contains
           end do
        end do
 
-    else if (plan%interpolate_case==4) then
+    else if (plan%time_scheme==4) then
        !using symplectic Verlet with linear interpolation
 
        !we fix the tolerance and the maximum of iteration
@@ -293,10 +303,10 @@ contains
 
                 iter=iter+1
              end do
-!!$             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
-!!$                print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
-!!$                stop
-!!$             end if
+             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
+                print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
+                stop
+             end if
              r=(rr-rmin)/(rmax-rmin)
              r=r*real(nr,f64)
              kr=floor(r)+1
@@ -334,11 +344,11 @@ contains
 
                 iter=iter+1
              end do
-!!$             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
-!!$                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
-!!$                print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
-!!$                stop
-!!$             end if
+             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+                print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
+                stop
+             end if
              theta=ttheta/(2.0_f64*sll_pi)
              theta=theta-real(floor(theta),f64)
              theta=theta*real(ntheta,f64)
@@ -349,9 +359,9 @@ contains
                theta=0.0_f64
              end if
              if (kr==nr+1) then
-                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(1,kr,k)+theta*plan%field(1,kr,k+1))
+                rr=rr-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,kr,k)+theta*plan%field(1,kr,k+1))
              else
-                rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
+                rr=rr-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
                      & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
              end if
              call correction_r(rr,rmin,rmax)
@@ -361,7 +371,7 @@ contains
           end do
        end do
 
-    else if (plan%interpolate_case==5) then
+    else if (plan%time_scheme==5) then
        !using fixed point method
 
        !initialization
@@ -498,9 +508,9 @@ contains
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    do i=1,plan%adv%data%nr+1
-       r=plan%adv%data%rmin+plan%adv%data%dr*real(i-1,f64)
-       do j=1,plan%adv%data%ntheta+1
+    do i=1,plan%adv%nr+1
+       r=plan%adv%rmin+plan%adv%dr*real(i-1,f64)
+       do j=1,plan%adv%ntheta+1
           temp=plan%adv%field(1,i,j)/r
           plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
           plan%adv%field(2,i,j)=temp
@@ -526,14 +536,14 @@ contains
     sll_int32 :: i,j
     sll_real64 :: dt,temp,r
 
-    dt=plan%adv%data%dt
-    plan%adv%data%dt=dt/2.0_f64
+    dt=plan%adv%dt
+    plan%adv%dt=dt/2.0_f64
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    do i=1,plan%adv%data%nr+1
-       r=plan%adv%data%rmin+plan%adv%data%dr*real(i-1,f64)
-       do j=1,plan%adv%data%ntheta+1
+    do i=1,plan%adv%nr+1
+       r=plan%adv%rmin+plan%adv%dr*real(i-1,f64)
+       do j=1,plan%adv%ntheta+1
           temp=plan%adv%field(1,i,j)/r
           plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
           plan%adv%field(2,i,j)=temp
@@ -543,16 +553,16 @@ contains
     !we just obtained f^(n+1/2)
     call poisson_solve_polar(plan%poisson,out,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    do i=1,plan%adv%data%nr+1
-       r=plan%adv%data%rmin+plan%adv%data%dr*real(i-1,f64)
-       do j=1,plan%adv%data%ntheta+1
+    do i=1,plan%adv%nr+1
+       r=plan%adv%rmin+plan%adv%dr*real(i-1,f64)
+       do j=1,plan%adv%ntheta+1
           temp=plan%adv%field(1,i,j)/r
           plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
           plan%adv%field(2,i,j)=temp
        end do
     end do
     !we just obtained E^(n+1/2)
-    plan%adv%data%dt=dt
+    plan%adv%dt=dt
     call advect_CG_polar(plan%adv,in,out)
 
   end subroutine SL_ordre_2
