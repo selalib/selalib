@@ -11,7 +11,6 @@ program cg_polar
   use numeric_constants
   implicit none
 
-  type(sll_polar_data), pointer :: data
   type(sll_SL_polar), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2,t3
   sll_real64, dimension (:,:), allocatable :: div,f
@@ -61,22 +60,21 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-  !definition of nb_step=tf/dt
-  dt=0.05_f64*dr
-  tf=50.0_f64
-  nb_step=ceiling(tf/dt)
-
-!!$  !definition of tf=dt*nb_step
-!!$  nb_step=1
+!!$  !definition of nb_step=tf/dt
 !!$  dt=0.05_f64*dr
-!!$  tf=dt*real(nb_step,f64)
+!!$  tf=50.0_f64
+!!$  nb_step=ceiling(tf/dt)
+!!$
+  !definition of tf=dt*nb_step
+  nb_step=1
+  dt=0.05_f64*dr
+  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
-  data => new_polar_data(nb_step,dt,rmin,rmax,nr,ntheta)
-  plan_sl => new_SL(data,3,4)
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,4)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
@@ -84,7 +82,7 @@ program cg_polar
 
   !distribution function
   ! 1 : gaussienne in r, constant in theta
-  ! 2 : f(r,theta)=1[r1,r2](r)*cos(theta)
+  ! 2 : f(r,theta)=1_[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussienne in r)*cos(theta)
   fcase=2
@@ -92,7 +90,7 @@ program cg_polar
   !chose the way to calcul
   ! 1 : Semi-Lagrangien scheme
   ! 2 : Semi-Lagrangien scheme order 2
-  ! 3 : ?jump-sheep? scheme
+  ! 3 : leap-frog scheme
   scheme=1
 
   if (fcase==1) then
@@ -261,7 +259,7 @@ program cg_polar
         call SL_ordre_2(plan_sl,f,f)
 
 !!$     else if (scheme==3) then
-!!$        !?jump-sheep scheme?
+!!$        !leap-frog scheme
 !!$        if (step==1) then
 !!$           call SL_ordre_2()
 !!$        else 

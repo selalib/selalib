@@ -12,7 +12,8 @@ module polar_operators
   !>type plan_polar_op
   !>data type for polar gradient and polar divergence
   type plan_polar_op
-     type(sll_polar_data), pointer :: data
+     sll_real64 :: rmin,rmax,dr,dtheta
+     sll_int32 :: nr,ntheta
      sll_int32 :: grad_case
      type(sll_spline_2D), pointer :: spl_phi
      type(sll_fft_plan), pointer :: pfwd,pinv
@@ -25,26 +26,36 @@ contains
 !  construction of plan_polar_op
 !===================================
 
-  !>function new_polar_op(data,grad_case)
+  !>function new_polar_op(rmin,rmax,dr,dtheta,nr,ntheta,grad_case)
   !>creation of plan_polar_op
-  !>data : sll_polar_data object, contains data about the domain. See type plar_data for more information
+  !>rmin : interior radius
+  !>rmax : exterior radius
+  !>dr and dtheta : size of step in direction r and theta
+  !>nr and ntheta : number of step in direction r and theta
   !>grad_case : integer, enable to choose the way to compute the gradient, optional
   !>            1 : final differencies center for r and theta, decenter on boundaries
   !>            2 : final differencies center for r, decenter on boundaries, using fft for theta
   !>                this case is not possible with fftpack
   !>            3 : using splines
   !>            default case is 3
-  function new_polar_op(data,grad_case) result(this)
+  function new_polar_op(rmin,rmax,dr,dtheta,nr,ntheta,grad_case) result(this)
+
     type(plan_polar_op), pointer :: this
-    type(sll_polar_data),intent(in) :: data
+    sll_real64, intent(in) :: rmin,rmax,dr,dtheta
+    sll_int32, intent(in) :: nr, ntheta
     sll_int32, intent(in), optional :: grad_case
     sll_int32 :: err
     sll_real64, dimension(:), allocatable :: bufr
     sll_comp64, dimension(:), allocatable :: bufc
 
     SLL_ALLOCATE(this,err)
-    SLL_ALLOCATE(this%data,err)
-    this%data=data
+
+    this%rmin=rmin
+    this%rmax=rmax
+    this%dr=dr
+    this%dtheta=dtheta
+    this%nr=nr
+    this%ntheta=ntheta
 
     if (.not. present(grad_case)) then
        this%grad_case=3
@@ -53,17 +64,17 @@ contains
     end if
 
     if (grad_case==2) then
-       SLL_ALLOCATE(this%grad_fft(data%nr+1,data%ntheta/2+1),err)
+       SLL_ALLOCATE(this%grad_fft(nr+1,ntheta/2+1),err)
     end if
 
-    this%spl_phi => new_spline_2D(data%nr+1,data%ntheta+1,data%rmin,data%rmax,0._f64, 2._f64*sll_pi, &
+    this%spl_phi => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
          & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
-    SLL_ALLOCATE(bufr(data%ntheta),err)
-    SLL_ALLOCATE(bufc(data%ntheta/2+1),err)
+    SLL_ALLOCATE(bufr(ntheta),err)
+    SLL_ALLOCATE(bufc(ntheta/2+1),err)
 
-    this%pfwd => fft_new_plan(data%ntheta,bufr,bufc,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(data%ntheta,bufc,bufr)
+    this%pfwd => fft_new_plan(ntheta,bufr,bufc,FFT_NORMALIZE)
+    this%pinv => fft_new_plan(ntheta,bufc,bufr)
     SLL_DEALLOCATE_ARRAY(bufr,err)
     SLL_DEALLOCATE_ARRAY(bufc,err)
 
@@ -88,8 +99,7 @@ contains
     call fft_delete_plan(this%pfwd)
     call fft_delete_plan(this%pinv)
     call delete_spline_2d(this%spl_phi)
-    SLL_DEALLOCATE(this%data,err)
-    this%data=>null()
+    SLL_DEALLOCATE(this,err)
     this=>null()
 
   end subroutine delete_plan_polar_op
@@ -119,12 +129,12 @@ contains
     sll_real64 :: r,theta
     sll_comp64 :: temp
 
-    nr=plan%data%nr
-    ntheta=plan%data%ntheta
-    dr=plan%data%dr
-    dtheta=plan%data%dtheta
-    rmin=plan%data%rmin
-    rmax=plan%data%rmax
+    nr=plan%nr
+    ntheta=plan%ntheta
+    dr=plan%dr
+    dtheta=plan%dtheta
+    rmin=plan%rmin
+    rmax=plan%rmax
 
     if (plan%grad_case==1) then
        ! center formula for r end theta
@@ -206,9 +216,9 @@ contains
   end subroutine compute_grad_field
 
 
-  !>subroutine divergence_scalar_field(data,field,div)
+  !>subroutine divergence_scalar_field(plan,field,div)
   !>compute divergence of field in polar coordinate
-  !>data : polar_data object
+  !>plan : plan_polar_op object
   !>field : size 2*(nr+1)*(ntheta+1), input
   !>div : polar divergence of field at point (i,j), size (nr+1)*(ntheta+1) output
   subroutine divergence_scalar_field(plan,field,div)
@@ -224,12 +234,12 @@ contains
     sll_real64 :: r
     sll_int32 :: i,j
 
-    nr=plan%data%nr
-    ntheta=plan%data%ntheta
-    dr=plan%data%dr
-    dtheta=plan%data%dtheta
-    rmin=plan%data%rmin
-    rmax=plan%data%rmax
+    nr=plan%nr
+    ntheta=plan%ntheta
+    dr=plan%dr
+    dtheta=plan%dtheta
+    rmin=plan%rmin
+    rmax=plan%rmax
 
     div=0.0_f64
 
