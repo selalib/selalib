@@ -7,21 +7,11 @@ module poisson_polar
   use sll_tridiagonal
   use numeric_constants
   implicit none
-
-  !>type polar_data
-  !>generic type for problems in polar
-  !>contains size of time and space steps, boundaries, number of steps in time and space,
-  !>and the final time
-  type sll_polar_data
-     sll_real64 :: dt, dr, dtheta
-     sll_real64 :: tf,rmin, rmax
-     sll_int32 :: nb_step,nr, ntheta
-  end type sll_polar_data
-
   !>type sll_plan_poisson_polar
   !>type for the Poisson solver in polar coordinate
   type sll_plan_poisson_polar
-     type(sll_polar_data), pointer :: data
+     sll_real64 :: dr, rmin
+     sll_int32 :: nr, ntheta
      type(sll_fft_plan), pointer :: pfwd,pinv
      sll_real64, dimension(:,:), allocatable :: f_fft
      sll_comp64, dimension(:), allocatable :: fk,phik
@@ -30,130 +20,44 @@ module poisson_polar
      sll_int32, dimension(:), allocatable :: ipiv
   end type sll_plan_poisson_polar
 
-!   //==============\\
-!   ||  INTERFACES  ||
-!   \\==============//
-
-  !>new_polar_data
-  !>build a polar_data object
-  !>can be build knowing only two of the folowing data : final time(tf), number of step in time (nb_step),
-  !>and size of time step (dt)
-  !>Syntaxe to use the interface :
-  !>1/ knowing tf and dt : new_polar_data(dt,tf,rmin,rmax,nr,ntheta)
-  !>2/ knowing dt and nb_step : new_polar_data(nb_step,dt,rmin,rmax,nr,ntheta)
-  !>3/ knowing tf and nb_step : new_polar_data(tf,rmin,rmax,nb_step,nr,ntheta)
-  interface new_polar_data
-     module procedure new_polar_data_dt_tf, new_polar_data_tf_nbstep, new_polar_data_dt_nbstep
-  end interface new_polar_data
-
 contains
-  
-!=========================================
-!  beginnig of creation of polar data
-!=========================================
-
-  function new_polar_data_dt_nbstep(nb_step,dt,rmin,rmax,nr,ntheta) result(this)
-
-    implicit none
-
-    type(sll_polar_data), pointer :: this
-    sll_real64, intent(in) :: dt
-    sll_real64, intent(in) :: rmin, rmax
-    sll_int32, intent(in) :: nb_step,nr, ntheta
-    sll_int32 :: err
-
-    SLL_ALLOCATE(this,err)
-    this%dt=dt
-    this%dr=(rmax-rmin)/real(nr,f64)
-    this%dtheta=2.0_f64*sll_pi/real(ntheta,f64)
-    this%rmin=rmin
-    this%rmax=rmax
-    this%nb_step=nb_step
-    this%nr=nr
-    this%ntheta=ntheta
-    this%tf=dt*real(nb_step,f64)
-
-  end function new_polar_data_dt_nbstep
-
-
-  function new_polar_data_dt_tf(dt,tf,rmin,rmax,nr,ntheta) result(this)
-
-    implicit none
-
-    type(sll_polar_data), pointer :: this
-    sll_real64, intent(in) :: dt
-    sll_real64, intent(in) :: tf,rmin, rmax
-    sll_int32, intent(in) :: nr, ntheta
-    sll_int32 :: err
-
-    SLL_ALLOCATE(this,err)
-    this%dt=dt
-    this%dr=(rmax-rmin)/real(nr,f64)
-    this%dtheta=2.0_f64*sll_pi/real(ntheta,f64)
-    this%rmin=rmin
-    this%rmax=rmax
-    this%nb_step=ceiling(tf/dt)
-    this%nr=nr
-    this%ntheta=ntheta
-    this%tf=tf
-
-  end function new_polar_data_dt_tf
-
-
-  function new_polar_data_tf_nbstep(tf,rmin,rmax,nb_step,nr,ntheta) result(this)
-
-    implicit none
-
-    type(sll_polar_data), pointer :: this
-    sll_real64, intent(in) :: tf,rmin, rmax
-    sll_int32, intent(in) :: nb_step,nr, ntheta
-    sll_int32 :: err
-
-    SLL_ALLOCATE(this,err)
-    this%dt=tf/real(nb_step,f64)
-    this%dr=(rmax-rmin)/real(nr,f64)
-    this%dtheta=2.0_f64*sll_pi/real(ntheta,f64)
-    this%rmin=rmin
-    this%rmax=rmax
-    this%nb_step=nb_step
-    this%nr=nr
-    this%ntheta=ntheta
-    this%tf=tf
-
-  end function new_polar_data_tf_nbstep
 
 !========================================
 !  creation of sll_plan_poisson_polar
 !========================================
 
-  !>new_plan_poisson_polar(data)
+  !>new_plan_poisson_polar(dr,rmin,nr,ntheta)
   !>build a sll_plan_poisson_polar object for the Poisson solver in polar coordinate
-  !>data : sll_polar_data object
-  function new_plan_poisson_polar(data) result(this)
+  !>dr : size of space in direction r
+  !>rmin : interior radius
+  !>nr and ntheta : number of space in direction r and theta
+  function new_plan_poisson_polar(dr,rmin,nr,ntheta) result(this)
 
     implicit none
 
+    sll_real64 :: dr, rmin
+    sll_int32 :: nr, ntheta
     type(sll_plan_poisson_polar), pointer :: this
-    type(sll_polar_data), intent(in) :: data
 
     sll_int32 :: err
     sll_real64, dimension(:), allocatable :: buf
 
     SLL_ALLOCATE(this,err)
-    SLL_ALLOCATE(buf(data%ntheta),err)
-    SLL_ALLOCATE(this%f_fft(data%nr+1,data%ntheta+1),err)
-    SLL_ALLOCATE(this%fk(data%nr+1),err)
-    SLL_ALLOCATE(this%phik(data%nr+1),err)
-    SLL_ALLOCATE(this%a(3*(data%nr+1)),err)
-    SLL_ALLOCATE(this%cts(7*(data%nr+1)),err)
-    SLL_ALLOCATE(this%ipiv(data%nr+1),err)
+    SLL_ALLOCATE(buf(ntheta),err)
+    SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),err)
+    SLL_ALLOCATE(this%fk(nr+1),err)
+    SLL_ALLOCATE(this%phik(nr+1),err)
+    SLL_ALLOCATE(this%a(3*(nr+1)),err)
+    SLL_ALLOCATE(this%cts(7*(nr+1)),err)
+    SLL_ALLOCATE(this%ipiv(nr+1),err)
 
-    this%pfwd => fft_new_plan(data%ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(data%ntheta,buf,buf,FFT_INVERSE)
+    this%dr=dr
+    this%rmin=rmin
+    this%nr=nr
+    this%ntheta=ntheta
 
-    SLL_ALLOCATE(this%data,err)
-    this%data=data
-
+    this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
+    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
     SLL_DEALLOCATE_ARRAY(buf,err)
 
   end function new_plan_poisson_polar
@@ -179,9 +83,6 @@ contains
        SLL_DEALLOCATE_ARRAY(this%a,err)
        SLL_DEALLOCATE_ARRAY(this%cts,err)
        SLL_DEALLOCATE_ARRAY(this%ipiv,err)
-
-       this%data => null()
-
        SLL_DEALLOCATE(this,err)
     end if
 
@@ -202,8 +103,8 @@ contains
     implicit none
 
     type(sll_plan_poisson_polar), intent(inout), pointer :: plan
-    sll_real64, dimension(plan%data%nr+1,plan%data%ntheta+1), intent(in) :: f
-    sll_real64, dimension(plan%data%nr+1,plan%data%ntheta+1), intent(out) :: phi
+    sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in) :: f
+    sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
 
     sll_real64 :: rmin,dr
     sll_int32 :: nr, ntheta
@@ -211,10 +112,10 @@ contains
     sll_real64 :: r
     sll_int32::i,ind_k
 
-    nr=plan%data%nr
-    ntheta=plan%data%ntheta
-    rmin=plan%data%rmin
-    dr=plan%data%dr
+    nr=plan%nr
+    ntheta=plan%ntheta
+    rmin=plan%rmin
+    dr=plan%dr
 
     plan%f_fft=f
 
