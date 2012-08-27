@@ -27,7 +27,7 @@ program cg_polar
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /modes/ mod
-  mod=0
+  mod=3
   alpha = 0.e-3_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
@@ -41,8 +41,8 @@ program cg_polar
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=64
-  ntheta=32
+  nr=256
+  ntheta=128
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
@@ -164,8 +164,9 @@ program cg_polar
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(20,*)r,theta,x,y,f(i,j),div(i,j),plan_sl%phi(i,j),&
-        & plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j),3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta)/r, &
+        write(20,*)r,theta,x,y,f(i,j),div(i,j),plan_sl%phi(i,j), &
+             & plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j), &
+             & 3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta)/r, &
              & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r, (r-rmin)**3*(r-rmax)**3*cos(mode*theta)
 
      end do
@@ -357,7 +358,10 @@ program cg_polar
   close(21)
 
   SLL_DEALLOCATE_ARRAY(div,i)
+  SLL_DEALLOCATE_ARRAY(f,i)
   t1 => delete_time_mark(t1)
   t2 => delete_time_mark(t2)
+  t3 => delete_time_mark(t3)
+  call delete_SL_polar(plan_sl)
 
 end program cg_polar

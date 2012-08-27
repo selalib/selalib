@@ -119,7 +119,7 @@ contains
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%phi(nr+1,ntheta+1),err)
 
-    this%poisson => new_plan_poisson_polar(rmin,dr,nr,ntheta)
+    this%poisson => new_plan_poisson_polar(dr,rmin,nr,ntheta)
     this%grad => new_polar_op(rmin,rmax,dr,dtheta,nr,ntheta,grad_case)
     this%adv => new_plan_adv_polar(rmin,rmax,dr,dtheta,dt,nr,ntheta,time_scheme)
 
