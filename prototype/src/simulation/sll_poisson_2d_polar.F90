@@ -135,8 +135,8 @@ contains
 
        plan%a(1)=0.0_f64
        plan%a(3*nr+3)=0.0_f64
-       !a(2)=1.0_f64
-       !a(3*nr+2)=1.0_f64
+       !plan%a(2)=1.0_f64
+       !plan%a(3*nr+2)=1.0_f64
 
        call setup_cyclic_tridiag(plan%a,nr+1,plan%cts,plan%ipiv)
        call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk,nr+1,plan%phik)
