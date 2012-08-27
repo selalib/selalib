@@ -20,14 +20,15 @@ program cg_polar
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32 :: mod
-  sll_real64 :: mode,temps
+  sll_real64 :: mode,temps,alpha
   integer :: hh,min,ss
   integer, dimension(3) :: time
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /modes/ mod
-  mod=3
+  mod=0
+  alpha = 0.e-3_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
 
@@ -40,8 +41,8 @@ program cg_polar
 
   ! number of step in r and theta directions
   ! /= of number of points
-  nr=256
-  ntheta=128
+  nr=64
+  ntheta=32
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
@@ -66,7 +67,7 @@ program cg_polar
 !!$  nb_step=ceiling(tf/dt)
 !!$
   !definition of tf=dt*nb_step
-  nb_step=1
+  nb_step=0
   dt=0.05_f64*dr
   tf=dt*real(nb_step,f64)
 
@@ -74,22 +75,22 @@ program cg_polar
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,4)
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,1)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
   f=0.0_f64
 
   !distribution function
-  ! 1 : gaussienne in r, constant in theta
+  ! 1 : gaussian in r, constant in theta
   ! 2 : f(r,theta)=1_[r1,r2](r)*cos(theta)
   ! 3 : test distribution for poisson solver
-  ! 4 : (gaussienne in r)*cos(theta)
-  fcase=2
+  ! 4 : (gaussian in r)*cos(theta)
+  fcase=3
 
-  !chose the way to calcul
-  ! 1 : Semi-Lagrangien scheme
-  ! 2 : Semi-Lagrangien scheme order 2
+  !choose the way to compute
+  ! 1 : Semi-Lagrangian scheme order 1
+  ! 2 : Semi-Lagrangian scheme order 2
   ! 3 : leap-frog scheme
   scheme=1
 
@@ -107,7 +108,7 @@ program cg_polar
         if (r>=r1 .and. r<=r2) then
            do j=1,ntheta+1
               theta=real(j-1,f64)*dtheta
-              f(i,j)=cos(3.0_f64*theta)
+              f(i,j)=1._f64+alpha*cos(mode*theta)
            end do
         end if
      end do
@@ -142,8 +143,6 @@ program cg_polar
      print*,'so far so good'
   end if
 
-  !write f in a file before calculations
-  open (unit=20,file='CGinit.dat')
   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
   call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
   do i=1,nr+1
@@ -155,13 +154,20 @@ program cg_polar
      end do
   end do
   call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
-  do i=1,nr+1
+
+  !write f in a file before calculations
+
+  open (unit=20,file='CGinit.dat')
+    do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(20,*)r,theta,x,y,f(i,j),div(i,j)
+        write(20,*)r,theta,x,y,f(i,j),div(i,j),plan_sl%phi(i,j),&
+        & plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j),3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta)/r, &
+             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r, (r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+
      end do
      write(20,*)' '
   end do
@@ -251,11 +257,11 @@ program cg_polar
      end if
 
      if (scheme==1) then
-        !classical semi-Lagrangian scheme
+        !classical semi-Lagrangian scheme (order 1)
         call SL_classic(plan_sl,f,f)
 
      else if (scheme==2) then
-        !semi-Lagrangian predictiv-correctiv scheme
+        !semi-Lagrangian predictive-corrective scheme
         call SL_ordre_2(plan_sl,f,f)
 
 !!$     else if (scheme==3) then
@@ -340,10 +346,11 @@ program cg_polar
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
      do j=1,ntheta+1
-        theta=real(j-1,f64)*dr
+        theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(21,*)r,theta,x,y,f(i,j),div(i,j)
+        write(21,*)r,theta,x,y,f(i,j),div(i,j),plan_sl%phi(i,j),&
+        & plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j)
      end do
      write(21,*)' '
   end do
