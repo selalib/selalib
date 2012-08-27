@@ -151,8 +151,8 @@ contains
        call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
-    phi(1,:)=0.0_f64
-    phi(nr+1,:)=0.0_f64
+    !phi(1,:)=0.0_f64
+    !phi(nr+1,:)=0.0_f64
     phi(:,ntheta+1)=phi(:,1)
 
   end subroutine poisson_solve_polar
