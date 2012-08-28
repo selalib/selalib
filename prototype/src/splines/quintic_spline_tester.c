@@ -10,67 +10,66 @@ int main(void)
 {
   
   #define pi 3.14159265
-  quintic_spline_hermite_plan *s;
+  quintic_spline_plan *s;
   double *f;
-  double h, xmin, xmax, x, x_rand, y, err1, err2, max, bound;
+  double h, xmin, xmax, mu;
+  double x, y, norm1;
+  double err1, err2;
   int n, nmax, i;
 
-  nmax = 1000;
-  printf("Testing quintic_spline_hermite...\n");
+  nmax = 100;
+  printf("Testing quintic_spline...\n");
 
   for(n=1; n<=nmax; n++)
   {
 
     /* initialize random seed: */
     srand ( time(NULL) );
-    xmin = log( fabs(rand()) + 1 );
-    xmax = xmin + fabs( log( fabs(rand()) + 1 ) );
+    xmin=0;xmax=100;
     h = (xmax-xmin)/n;
+    mu = ( (xmin-5*h) + (xmin+(n+6)*h) ) / 2;
 
     f = malloc( (n+6) * sizeof(double));
 
     for (i=-2; i<=n+3; i++)
     {
       x = xmin + (double)i*h;
-      f[i+2] = log( (double)n ) * ( 2*pi*x/(n*h) - sin(2*pi*(x-xmin)/(n*h)) ); 
+      f[i+2] = exp( - .5*pow( x - mu, 2) ); 
     }
 
-    s = new_quintic_spline_hermite(n, xmin, xmax, f);
+    s = new_quintic_spline(n, xmin, xmax, f);
 
     err1 = 0.; 
-    err2 = 0.;
+    norm1 = 0.;
 
     for (i=0; i<=n; i++)
     {
 
       x = xmin + (double)i*h;
-      err1 += fabs( f[i+2] - spline_hermite(x, s) );
+      err1 += ( f[i+2] - spline(x, s) ) * ( f[i+2] - spline(x, s) );
+      norm1 += f[i+2] * f[i+2];
 
-      x_rand = xmin + n*h*( (rand()%11) / 10. );
+      x = xmin + n*h*( (rand()%11) / 10. );
 
-      y = log( (double)n ) * ( 2*pi*x_rand/(n*h) - sin( 2*pi*(x_rand-xmin)/(n*h) ) ); 
-      max = fabs( y - spline_hermite(x_rand, s) );
-      if (err2 < max )
-      {
-        err2 = max; 
-      }
+      y = exp( - .5*pow( x - mu, 2) ); 
 
     }
 
-    bound = log( (double)n ) * 8*pow(pi,4) / ( 2*pow(n,3)*pow(h,3/2) );
-    printf("Average absolute errors: %f, %f, %f \n", err1/(n+1), err2, bound);
+    err1 = sqrt(err1/norm1);
+    printf("Average absolute errors: %f, %f \n", err1, err2);
 
-    if ( (err1/(n+1) > pow(10,-9)) || (err2 > bound) )
+    if ( (err1 > pow(10,-9)) )
     {
-      printf("Program stopped by iteration number %d of quintic ");
-      printf("splines unit test:\n", n);
-      printf("Exciting...\n");
+      printf("Program stopped by iteration number %d of quintic ", n);
+      printf("splines unit test:\n");
+    printf("%f, %f\n", y, spline(x, s) );
+      printf("Exiting...\n");
       exit(0);
     }
 
     free(f);
     f = NULL;
-    delete_quintic_spline_hermite(s);
+    delete_quintic_spline(s);
 
   }
 

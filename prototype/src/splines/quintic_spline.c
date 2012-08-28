@@ -6,14 +6,14 @@
 #include "quintic_spline.h"
 
 
-  quintic_spline_hermite_plan *new_quintic_spline_hermite(const int n,
+  quintic_spline_plan *new_quintic_spline(const int n,
                 const double xmin, const double xmax, const double *f)
   {
 
-    quintic_spline_hermite_plan *plan;
+    quintic_spline_plan *plan;
 
     // Plan allocation
-    plan = malloc(sizeof(quintic_spline_hermite_plan));
+    plan = malloc(sizeof(quintic_spline_plan));
     if ( plan == NULL )
     {
       fprintf(stderr,"Impossible to allocate pointer\n");
@@ -31,15 +31,15 @@
     plan->n = n;
     plan->xmin = xmin;
     plan->xmax = xmax;
-    compute_coeffs_hermite(f, plan);
+    compute_coeffs(f, plan);
 
     return plan;
 
   }
 
 
-  void compute_coeffs_hermite(const double *f, 
-        quintic_spline_hermite_plan *plan_spline)
+  void compute_coeffs(const double *f, 
+        quintic_spline_plan *plan_spline)
   /* f is the vector of the values of the function 
      in the nodes of the mesh*/
  
@@ -64,7 +64,7 @@
 
   }
 
-  double B(int j, int i, double x, quintic_spline_hermite_plan *plan_spline)
+  double B(int j, int i, double x, quintic_spline_plan *plan_spline)
   {
 
     double xmin, xmax, h;
@@ -108,7 +108,7 @@
   }
 
 
-  double spline_hermite(const double x, quintic_spline_hermite_plan *plan_spline) 
+  double spline(const double x, quintic_spline_plan *plan_spline) 
   // The interpolator spline function
 
   {
@@ -122,7 +122,7 @@
     h = (xmax-xmin)/n;
     i = (int)((x-xmin)/h); // Determine the leftmost support index 'i' of x
 
-    for (j=i-5; j<=i; j++)
+    for (j=i-5; j<i; j++)
     {
       if( (j>=-5) && (j<=n) )
       {
@@ -134,7 +134,7 @@
   }
 
 
-  void delete_quintic_spline_hermite(quintic_spline_hermite_plan *plan)
+  void delete_quintic_spline(quintic_spline_plan *plan)
 
   {
  
