@@ -6,7 +6,7 @@
 #include <math.h>
 #include "toep_penta_diagonal.h"
 
-typedef struct quintic_spline_hermite
+typedef struct quintic_spline
 
 {
 
@@ -14,13 +14,13 @@ typedef struct quintic_spline_hermite
   double xmin, xmax;
   double *coeffs;
 
-} quintic_spline_hermite_plan;
+} quintic_spline_plan;
 
-  quintic_spline_hermite_plan *new_quintic_spline_hermite(const int n, 
+  quintic_spline_plan *new_quintic_spline(const int n, 
                const double xmin, const double xmax, const double *f);
-  double B(int j, int i, double x, quintic_spline_hermite_plan *plan_spline);
-  void compute_coeffs_hermite(const double *f, quintic_spline_hermite_plan *plan_spline);
-  // The interpolator spline function with Hermite boundary conditions
-  double spline_hermite(const double x, quintic_spline_hermite_plan *plan);
-  void delete_quintic_spline_hermite(quintic_spline_hermite_plan *plan);
+  double B(int j, int i, double x, quintic_spline_plan *plan_spline);
+  void compute_coeffs(const double *f, quintic_spline_plan *plan_spline);
+  // The interpolator spline function with boundary conditions
+  double spline(const double x, quintic_spline_plan *plan);
+  void delete_quintic_spline(quintic_spline_plan *plan);
 

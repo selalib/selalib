@@ -1,10 +1,10 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_odd_order_splines_hermite.F90
+! Module: sll_odd_order_splines.F90
 !
 !> @brief 
-!> Selalib odd order Hermite splines interpolator
+!> Selalib odd order splines interpolator
 !
 !> Start date: July 26, 2012
 !> Last modification: August 1, 2012
@@ -14,28 +14,28 @@
 !                                  
 !***************************************************************************
 
-module sll_odd_order_splines_hermite
+module sll_odd_order_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
   implicit none
 
-  type odd_order_splines_hermite_plan
+  type odd_order_splines_plan
     sll_int32                             :: n
     sll_int32                             :: order
     sll_real64                            :: xmin
     sll_real64                            :: xmax
     sll_real64, dimension(:), allocatable :: coeffs
-  end type odd_order_splines_hermite_plan
+  end type odd_order_splines_plan
 
 
 contains 
 
 
-  function new_odd_order_splines_hermite(n,order,xmin,xmax,f)result(plan)
+  function new_odd_order_splines(n,order,xmin,xmax,f)result(plan)
 
     sll_real64, dimension(:)                      :: f
-    type(odd_order_splines_hermite_plan), pointer :: plan
+    type(odd_order_splines_plan), pointer :: plan
     sll_int32                                     :: ierr, n, order
     sll_real64                                    :: xmin
     sll_real64                                    :: xmax
@@ -53,18 +53,18 @@ contains
     plan%order = order
     plan%xmin = xmin
     plan%xmax = xmax
-    call compute_coeffs_hermite(f, plan)
+    call compute_coeffs(f, plan)
 
-  end function new_odd_order_splines_hermite
+  end function new_odd_order_splines
 
 
-  subroutine compute_coeffs_hermite(f, plan)
+  subroutine compute_coeffs(f, plan)
 
     ! f is the vector of the values of the function 
     !  in the nodes of the mesh
 
     sll_real64, dimension(:)                      :: f
-    type(odd_order_splines_hermite_plan), pointer :: plan
+    type(odd_order_splines_plan), pointer :: plan
     sll_real64                                    :: xmin, xmax, h
     sll_int32                                     :: n, order, i, j
     sll_real64, dimension(plan%order/2+1)         :: v
@@ -114,14 +114,14 @@ contains
     plan%coeffs = f
     call DPBTRS( 'L', n, KD, 1, AB, LDAB, plan%coeffs, n, ierr )
 
-  end subroutine compute_coeffs_hermite
+  end subroutine compute_coeffs
 
 
-  sll_real64 recursive function B(j, i, x, plan) result(res)
+  sll_real64 recursive function B(j, i, x, plan) result(res) ! j:=order
 
     sll_real64                                    :: x, xmin, xmax, h
     sll_int32                                     :: n, j, i
-    type(odd_order_splines_hermite_plan), pointer :: plan
+    type(odd_order_splines_plan), pointer :: plan
 
     xmin = plan%xmin
     xmax = plan%xmax
@@ -141,7 +141,7 @@ contains
     if (j/=0) then
                                             
       res = ((x-xmin-i*h)/(j*h)) * B(j-1, i, x, plan) + &
-          ((xmin+(i+j+1)*h-x)/(j*h)) * B(j-1, i+1, x, plan)
+        ((xmin+(i+j+1)*h-x)/(j*h)) * B(j-1, i+1, x, plan)
    
     else
 
@@ -156,18 +156,18 @@ contains
   end function B
 
 
-  function spline_hermite( x, plan) result(s) ! The interpolator spline function
+  function spline(x, plan) result(s) ! The interpolator spline function
 
     sll_real64                                    :: x, xmin, xmax
     sll_real64                                    :: h, s
-    type(odd_order_splines_hermite_plan), pointer :: plan
+    type(odd_order_splines_plan), pointer         :: plan
     sll_int32                                     :: n, j, left, order
 
     xmin = plan%xmin
     xmax = plan%xmax
     n = plan%n
     order = plan%order
-    h = (xmax-xmin)/n
+    h = (xmax-xmin)/real(n,f64)
     left = int((x-xmin)/h)!Determine the leftmost support index 'i' of x
 
     s = 0.d0
@@ -177,17 +177,17 @@ contains
        endif
     enddo
 
-  end function spline_hermite
+  end function spline
 
 
-  subroutine delete_odd_order_splines_hermite(plan)
+  subroutine delete_odd_order_splines(plan)
 
-    type(odd_order_splines_hermite_plan), pointer :: plan
+    type(odd_order_splines_plan), pointer :: plan
     sll_int32                                     :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
 
-  end subroutine delete_odd_order_splines_hermite
+  end subroutine delete_odd_order_splines
 
-end module sll_odd_order_splines_hermite
+end module sll_odd_order_splines
