@@ -109,7 +109,8 @@ contains
 !===========================================
 
   !>subroutine compute_grad_field(plan,phi,grad_phi)
-  !>compute grad(phi) for phi scalar field in polar coordinate
+  !>compute grad(phi) for phi scalar field in cartesian coordinate.
+  !>For computation in polar coordinate, juste divide the second coordinate by r
   !>plan : plan_polar_op object, data for grad and div in polar
   !>phi : scalar field, size (nr+1)*(ntheta+1), input
   !>grad_phi : grad(phi), size 2*(nr+1)*(ntheta+1), output
@@ -140,10 +141,9 @@ contains
        ! center formula for r end theta
        ! decenter for r on boundaries
        do i=2,nr
-          r=rmin+real(i-1,f64)*dr
           do j=1,ntheta
              grad_phi(1,i,j)=(phi(i+1,j)-phi(i-1,j))/(2*dr)
-             grad_phi(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*r*dtheta)
+             grad_phi(2,i,j)=(phi(i,modulo(j+1-1+ntheta,ntheta)+1)-phi(i,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
           end do
        end do
        do j=1,ntheta
@@ -155,8 +155,8 @@ contains
           grad_phi(1,nr+1,j)=(phi(nr,j)-phi(nr+1,j))/dr
 !!$          grad_phi(1,1,j)=-(1.5_f64*phi(1,j)-2.0_f64*phi(2,j)+0.5_f64*phi(3,j))/dr
 !!$          grad_phi(1,nr+1,j)=-(1.5_f64*phi(nr+1,j)-2.0_f64*phi(nr,j)+0.5_f64*phi(nr-1,j))/dr
-          grad_phi(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmin*dtheta)
-          grad_phi(2,nr+1,j)=(phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*rmax*dtheta)
+          grad_phi(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
+          grad_phi(2,nr+1,j)=(phi(nr+1,modulo(j+1-1+ntheta,ntheta)+1)-phi(nr+1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
        end do
 
     else if (plan%grad_case==2) then
@@ -189,7 +189,6 @@ contains
        do i=1,nr+1
           call fft_apply_plan(plan%pinv,plan%grad_fft(i,:),grad_phi(2,i,1:ntheta))
           grad_phi(2,i,ntheta+1)=grad_phi(2,i,1)
-          grad_phi(2,i,:)=grad_phi(2,i,:)/(rmin+real(i-1,f64)*dr)
        end do
 
     else if (plan%grad_case==3) then
@@ -202,7 +201,7 @@ contains
           do i=1,nr+1
              r=rmin+real(i-1,f64)*dr
              grad_phi(1,i,j)=interpolate_x1_derivative_2D(r,theta,plan%spl_phi)
-             grad_phi(2,i,j)=interpolate_x2_derivative_2D(r,theta,plan%spl_phi)/r
+             grad_phi(2,i,j)=interpolate_x2_derivative_2D(r,theta,plan%spl_phi)
           end do
        end do
 
