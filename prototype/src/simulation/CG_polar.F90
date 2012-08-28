@@ -28,7 +28,7 @@ program cg_polar
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /modes/ mod
   mod=3
-  alpha = 0.1_f64
+  alpha = 1.e-6_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
 
@@ -63,7 +63,7 @@ program cg_polar
 
   !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=30.0_f64
+  tf=10.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -75,7 +75,7 @@ program cg_polar
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,3)
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,4)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
@@ -313,6 +313,21 @@ program cg_polar
      if ((step/100)*100==step) then
         print*,'#step',step
      end if
+
+     if (abs(real(step)*dt-125.)<=1e-3) then
+        open(24,file='125s.dat')
+        do i=1,nr+1
+           r=rmin+real(i-1,f64)*dr
+           do j=1,ntheta+1
+              theta=real(j-1,f64)*dtheta
+              x=r*cos(theta)
+              y=r*sin(theta)
+              write(24,*)r,theta,x,y,f(i,j)
+           end do
+        end do
+        close(24)
+     end if
+
   end do
   close(23)
 
