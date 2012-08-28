@@ -188,8 +188,8 @@ contains
           do j=1,ntheta+1
              theta=real(j-1,f64)*dtheta
 
-             theta=theta-dt*plan%field(2,i,j)
-             r=r-dt*plan%field(1,i,j)
+             theta=theta-dt*plan%field(1,i,j)/r
+             r=r+dt*plan%field(2,i,j)/r
 
              call correction_r(r,rmin,rmax)
              call correction_theta(theta)
@@ -232,9 +232,9 @@ contains
                 rrn=rr
                 if (k==nr+1) then
                    !r=0
-                   rr=rmin+real(i-1,f64)*dr-dt*plan%field(1,i,j)
+                   rr=rmin+real(i-1,f64)*dr+dt*plan%field(2,i,j)/rr
                 else if (k<nr+1 .and. k>=1) then
-                   rr=rmin+real(i-1,f64)*dr-dt*((1.0_f64-r)*plan%field(1,k,j)+r*plan%field(1,k+1,j))
+                   rr=rmin+real(i-1,f64)*dr+dt*((1.0_f64-r)*plan%field(2,k,j)/rr+r*plan%field(1,k+1,j)/(rr+dr))
                 else
                    print*,'k is outside of boundaries : error'
                    print*,'exiting the program...'
@@ -253,9 +253,12 @@ contains
              r=r-real(k-1,f64)
 
              if (k/=nr+1) then
-                theta=real(j-1,f64)*dtheta-dt*((1.0_f64-r)*plan%field(2,k,j)+r*plan%field(2,k+1,j))
+                theta=real(j-1,f64)*dtheta*rr/(rmin+real(i-1,f64)*dr)-dt &
+                     & *((1.0_f64-r)*(plan%field(1,k,j)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/(rr**2)*plan%field(2,k,j)) &
+                     & +r*(plan%field(1,k+1,j)/(rmin+real(i+1-1,f64)*dr)+real(j-1,f64)*dtheta/(rr+dr)**2*plan%field(2,k+1,j)))
              else
-                theta=real(j-1,f64)*dtheta-dt*plan%field(2,k,j)
+                theta=real(j-1,f64)*dtheta*rr/(rmin+real(i-1,f64)*dr)-dt &
+                     & *(plan%field(1,k,j)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/(rr**2)*plan%field(2,k,j))
              end if
              call correction_theta(theta)
 
@@ -290,9 +293,9 @@ contains
                 r=r-real(kr-1,f64)
                 rrn=rr
                 if (kr==nr+1) then
-                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*plan%field(1,kr,j)
+                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*plan%field(2,kr,j)/rr
                 else if (kr>0 .and. kr<nr+1) then
-                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*((1.0_f64-r)*plan%field(1,kr,j)+r*plan%field(1,kr+1,j))
+                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*((1.0_f64-r)*plan%field(2,kr,j)/rr+r*plan%field(2,kr+1,j)/(rr+dr))
                 else
                    print*,kr
                    print*,'error : kr is not in range'
@@ -333,12 +336,22 @@ contains
                 end if
                 tthetan=ttheta
                 if (kr==nr+1) then
-                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(2,kr,k)+theta*plan%field(2,kr,k+1))
-                   ttheta=ttheta-0.5_f64*dt*plan%field(2,kr,j)
+
+                   ttheta=real(j-1,f64)*dtheta*rr/(rmin+real(i-1,f64)*dr)-0.5_f64*dt &
+                        & *((1.0_f64-theta)*(plan%field(1,kr,k)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/(rr**2)*plan%field(2,kr,k)) &
+                        & +theta*(plan%field(1,kr,k+1)/(rmin+real(i-1,f64)*dr)+real(j+1-1,f64)*dtheta/(rr**2)*plan%field(2,kr,k+1)))
+                   ttheta=ttheta-0.5_f64*dt*(plan%field(1,kr,j)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/(rr**2)*plan%field(2,kr,j))
+
                 else
-                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+r*plan%field(2,kr+1,k)) &
-                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(2,kr+1,k+1)))
-                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*plan%field(2,kr,j)+r*plan%field(2,kr+1,j))
+
+                   ttheta=real(j-1,f64)*dtheta*rr/(rmin+real(i-1,f64)*dr)-0.5_f64*dt &
+                        & *((1.0_f64-theta)*((1.0_f64-r)*(plan%field(1,kr,k)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/(rr**2)*plan%field(2,kr,k)) &
+                        & +r*(plan%field(1,kr+1,k)/(rmin+real(i+1-1,f64)*dr)+real(j-1,f64)*dtheta/(rr+dr)**2*plan%field(2,kr+1,k))) &
+                        & +theta*((1.0_f64-r)*(plan%field(1,kr,k+1)/(rmin+real(i-1,f64)*dr)+real(j+1-1,f64)*dtheta/(rr**2)*plan%field(2,kr,k+1)) &
+                        & +r*(plan%field(1,kr+1,k+1)/(rmin+real(i+1-1,f64)*dr)+real(j+1-1,f64)*dtheta/(rr+dr)**2*plan%field(2,kr+1,k+1))))
+                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*(plan%field(1,kr,j)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/(rr**2)*plan%field(2,kr,j)) &
+                        & +r*(plan%field(1,kr+1,j)/(rmin+real(i+1-1,f64)*dr)+real(j-1,f64)*dtheta/(rr+dr)**2*plan%field(2,kr+1,j)))
+
                 end if
                 call correction_theta(ttheta)
 
@@ -359,10 +372,10 @@ contains
                theta=0.0_f64
              end if
              if (kr==nr+1) then
-                rr=rr-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,kr,k)+theta*plan%field(1,kr,k+1))
+                rr=rr-0.5_f64*dt*((1.0_f64-theta)*plan%field(2,kr,k)/rr+theta*plan%field(2,kr,k+1)/rr)
              else
-                rr=rr-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
-                     & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/(rr+dr)) &
+                     & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr+r*plan%field(2,kr+1,k+1)/(rr+dr)))
              end if
              call correction_r(rr,rmin,rmax)
 
@@ -403,13 +416,20 @@ contains
                    theta=0.0_f64
                 end if
                 if (kr==nr+1) then
-                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+theta*((1.0_f64-r)*plan%field(1,kr,k+1))))
-                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+theta*((1.0_f64-r)*plan%field(2,kr,k+1))))
+
+                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr)))
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*(plan%field(1,kr,k)/(rmin+real(1+1-1,f64)*dr)+real(j-1,f64)*dtheta/rr*2*plan%field(2,kr,k)) &
+                        & +theta*(plan%field(1,kr,k+1)/(rmin+real(1+1-1,f64)*dr)+real(j+1-1,f64)*dtheta/rr*2*plan%field(2,kr,k+1)))
+
                 else
-                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
-                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
-                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+r*plan%field(2,kr+1,k)) &
-                        & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)+r*plan%field(1,kr+1,k+1)))
+
+                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(1,kr+1,k)/(rr+dr)) &
+                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr+r*plan%field(1,kr+1,k+1)/(rr+dr)))
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*(plan%field(1,kr,k)/(rmin+real(i-1,f64)*dr)+real(j-1,f64)*dtheta/rr**2*plan%field(2,kr,k)) &
+                        & +r*(plan%field(1,kr+1,k)/(rmin+real(i+1-1,f64)*dr)+real(j-1,f64)*dtheta/(rr+dr)**2*plan%field(2,kr+1,k))) &
+                        & +theta*((1.0_f64-r)*(plan%field(1,kr,k+1)/(rmin+real(i-1,f64)*dr)+real(j+1-1,f64)*dtheta/rr**2*plan%field(2,kr,k+1)) &
+                        & +r*(plan%field(1,kr+1,k+1)/(rmin+real(i+1-1,f64)*dr)+real(j+1-1,f64)*dtheta/(rr+dr)**2*plan%field(2,kr+1,k+1))))
+
                 end if
                 rrn=rr
                 tthetan=ttheta
@@ -503,19 +523,8 @@ contains
     type(sll_SL_polar), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(inout) :: in,out
 
-    sll_int32 :: i,j
-    sll_real64 :: temp,r
-
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    do i=1,plan%adv%nr+1
-       r=plan%adv%rmin+plan%adv%dr*real(i-1,f64)
-       do j=1,plan%adv%ntheta+1
-          temp=plan%adv%field(1,i,j)/r
-          plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
-          plan%adv%field(2,i,j)=temp
-       end do
-    end do
     call advect_CG_polar(plan%adv,in,out)
 
   end subroutine SL_classic
@@ -533,34 +542,17 @@ contains
     type(sll_SL_polar), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(inout) :: in,out
 
-    sll_int32 :: i,j
-    sll_real64 :: dt,temp,r
+    sll_real64 :: dt
 
     dt=plan%adv%dt
     plan%adv%dt=dt/2.0_f64
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    do i=1,plan%adv%nr+1
-       r=plan%adv%rmin+plan%adv%dr*real(i-1,f64)
-       do j=1,plan%adv%ntheta+1
-          temp=plan%adv%field(1,i,j)/r
-          plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
-          plan%adv%field(2,i,j)=temp
-       end do
-    end do
     call advect_CG_polar(plan%adv,in,out)
     !we just obtained f^(n+1/2)
     call poisson_solve_polar(plan%poisson,out,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    do i=1,plan%adv%nr+1
-       r=plan%adv%rmin+plan%adv%dr*real(i-1,f64)
-       do j=1,plan%adv%ntheta+1
-          temp=plan%adv%field(1,i,j)/r
-          plan%adv%field(1,i,j)=-plan%adv%field(2,i,j)
-          plan%adv%field(2,i,j)=temp
-       end do
-    end do
     !we just obtained E^(n+1/2)
     plan%adv%dt=dt
     call advect_CG_polar(plan%adv,in,out)
