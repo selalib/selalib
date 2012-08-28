@@ -7,7 +7,7 @@
 !> Selalib odd order splines interpolator tester
 !
 !> Start date: July 26, 2012
-!> Last modification: August 1, 2012
+!> Last modification: August 28, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -40,12 +40,12 @@ use sll_odd_order_splines
      xmin = 0.d0
      xmax = 10.d0
      h = (xmax-xmin)/n
-     mu = ( (xmin-5*h) + (xmin+(n+6)*h) ) / 2
+     mu = ( (xmin-order*h) + (xmin+(n+order+1)*h) ) / 2
 
-     SLL_ALLOCATE( f1(n+6), ierr)
-     SLL_ALLOCATE( f2(n+6), ierr)
+     SLL_ALLOCATE( f1(n+order+1), ierr)
+     SLL_ALLOCATE( f2(n+order+1), ierr)
 
-     do i=-2,n+3
+     do i=order/2+1-order,n+order/2+1
 
         x = xmin + i*h
         f1(i+3) = exp( - .5*( x - mu )**2  )
@@ -56,6 +56,7 @@ use sll_odd_order_splines
               f2(i+3) = f2(i+3) + B_test(order, j, x, xmin, h)
            endif
         enddo
+
      enddo
 
      plan1 => new_odd_order_splines(n, order, xmin, xmax, f1)
@@ -88,7 +89,7 @@ use sll_odd_order_splines
 
      err1 = sqrt(err1/sum(f1(3:n+3)*f1(3:n+3)))
      err2 = sqrt(err2/norm)
-     print*, 'Relative errors: ', err1, err2
+     print*, 'Relative errors:', err1, err2
 
      if ( (err1 >= 1.e-12) .or. (err2 >= 1.e-12) ) then
         print*, 'Program stopped by iteration number', n

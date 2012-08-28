@@ -113,16 +113,16 @@
 
   {
 
-    int n, i_x, i, j;
+    int n, left, j;
     double xmin, xmax, y, h, s = 0.;
 
     xmin = plan_spline->xmin;
     xmax = plan_spline->xmax;
     n = plan_spline->n;
     h = (xmax-xmin)/n;
-    i = (int)((x-xmin)/h); // Determine the leftmost support index 'i' of x
+    left = (int)((x-xmin)/h); // Determine the leftmost support index 'i' of x
 
-    for (j=i-5; j<i; j++)
+    for (j=left-5; j<=left; j++)
     {
       if( (j>=-5) && (j<=n) )
       {
