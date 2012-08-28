@@ -28,7 +28,7 @@ program cg_polar
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /modes/ mod
   mod=3
-  alpha = 0.e-3_f64
+  alpha = 0.1_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
 
@@ -61,21 +61,21 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-!!$  !definition of nb_step=tf/dt
-!!$  dt=0.05_f64*dr
-!!$  tf=50.0_f64
-!!$  nb_step=ceiling(tf/dt)
-!!$
-  !definition of tf=dt*nb_step
-  nb_step=0
+  !definition of nb_step=tf/dt
   dt=0.05_f64*dr
-  tf=dt*real(nb_step,f64)
+  tf=30.0_f64
+  nb_step=ceiling(tf/dt)
+
+!!$  !definition of tf=dt*nb_step
+!!$  nb_step=1
+!!$  dt=0.05_f64*dr
+!!$  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,1)
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,3)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
@@ -83,10 +83,10 @@ program cg_polar
 
   !distribution function
   ! 1 : gaussian in r, constant in theta
-  ! 2 : f(r,theta)=1_[r1,r2](r)*cos(theta)
+  ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
   ! 3 : test distribution for poisson solver
-  ! 4 : (gaussian in r)*cos(theta)
-  fcase=3
+  ! 4 : (gaussian in r)*(1+cos(theta))
+  fcase=4
 
   !choose the way to compute
   ! 1 : Semi-Lagrangian scheme order 1
@@ -130,7 +130,7 @@ program cg_polar
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta+1
            theta=real(j-1,f64)*dtheta
-           f(i,j)=1.0_f64/(0.5_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2*0.5_f64**2))*sin(mode*theta)
+           f(i,j)=1.0_f64/(0.5_f64*sqrt(2.0_f64*sll_pi))*exp(-(r-(real(rmax-rmin)/2.0_f64))**2/(2*0.5_f64**2))*(1.0_f64+alpha*sin(mode*theta))
         end do
      end do
 
@@ -164,11 +164,7 @@ program cg_polar
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(20,*)r,theta,x,y,f(i,j),div(i,j),plan_sl%phi(i,j), &
-             & plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j), &
-             & 3.0_f64*(r-rmin)**2*(r-rmax)**2*(2.0_f64*r-rmin-rmax)*cos(mode*theta)/r, &
-             & -mode*(r-rmin)**3*(r-rmax)**3*sin(mode*theta)/r, (r-rmin)**3*(r-rmax)**3*cos(mode*theta)
-
+        write(20,*)r,theta,x,y,f(i,j),div(i,j)
      end do
      write(20,*)' '
   end do
