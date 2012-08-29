@@ -21,7 +21,7 @@ program cg_polar
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32 :: mod
   sll_real64 :: mode,temps,alpha
-  integer :: hh,min,ss
+  integer :: hh,min,ss,carac_case
   integer, dimension(3) :: time
 
   !python script for fcase=3
@@ -31,6 +31,9 @@ program cg_polar
   alpha = 1.e-6_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
+  
+  carac_case = 30 ! 30= symplectic euler
+  carac_case = 1 ! 1= explicit euler
 
   t1 => new_time_mark()
   t2 => new_time_mark()
@@ -62,8 +65,8 @@ program cg_polar
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
-  dt=0.05_f64*dr
-  tf=10.0_f64
+  dt=0.005_f64*dr
+  tf=1.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -75,7 +78,9 @@ program cg_polar
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,3)
+
+
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,carac_case)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
@@ -86,7 +91,7 @@ program cg_polar
   ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussian in r)*(1+cos(theta))
-  fcase=4
+  fcase=2
 
   !choose the way to compute
   ! 1 : Semi-Lagrangian scheme order 1
@@ -145,14 +150,14 @@ program cg_polar
 
   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
   call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
-  do i=1,nr+1
-     r=rmin+dr*real(i-1,f64)
-     do j=1,ntheta+1
-        temps=plan_sl%adv%field(1,i,j)/r
-        plan_sl%adv%field(1,i,j)=-plan_sl%adv%field(2,i,j)
-        plan_sl%adv%field(2,i,j)=temps
-     end do
-  end do
+  !do i=1,nr+1
+  !   r=rmin+dr*real(i-1,f64)
+  !   do j=1,ntheta+1
+  !      temps=plan_sl%adv%field(1,i,j)/r
+  !      plan_sl%adv%field(1,i,j)=-plan_sl%adv%field(2,i,j)
+  !      plan_sl%adv%field(2,i,j)=temps
+  !   end do
+  !end do
   call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write f in a file before calculations
@@ -203,7 +208,7 @@ program cg_polar
 
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
-     plan_sl%adv%field(:,i,:)=plan_sl%adv%field(:,i,:)*r
+     plan_sl%adv%field(2,i,:)=plan_sl%adv%field(2,i,:)/r
   end do
 
   w0=0.0_f64
@@ -229,7 +234,7 @@ program cg_polar
   l20=sqrt(l20*dr*dtheta)
   e0=e0*dr*dtheta
   write(23,*)'#t=0',w0,l10,l20,e0
-  write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64
+  write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64,e0
 
   t1 => start_time_mark(t1)
   do step=1,nb_step
@@ -284,7 +289,7 @@ program cg_polar
      !computation of mass (w), l1, l2 and energy (e)
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
-        plan_sl%adv%field(:,i,:)=plan_sl%adv%field(:,i,:)*r
+        plan_sl%adv%field(2,i,:)=plan_sl%adv%field(2,i,:)/r
      end do
      w=0.0_f64
      l1=0.0_f64
@@ -308,7 +313,7 @@ program cg_polar
      l1=l1*dr*dtheta
      l2=sqrt(l2*dr*dtheta)
      e=e*dr*dtheta
-     write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0
+     write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0,e
 
      if ((step/100)*100==step) then
         print*,'#step',step
