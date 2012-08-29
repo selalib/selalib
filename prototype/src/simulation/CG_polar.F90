@@ -75,7 +75,7 @@ program cg_polar
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,4)
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,3)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
 
