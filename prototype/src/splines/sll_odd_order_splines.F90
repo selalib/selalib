@@ -7,7 +7,7 @@
 !> Selalib odd order splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: August 1, 2012
+!> Last modification: August 29, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -84,7 +84,7 @@ contains
         ! v(i) = B(order, n-(order/2+1-j+1), xmax, plan)
     enddo
 
-    ! Solve the linear system
+    ! Solve the linear system with LAPACK
 
     n = size(f)
     KD = order/2
