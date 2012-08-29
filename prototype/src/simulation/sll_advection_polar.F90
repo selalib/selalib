@@ -450,6 +450,231 @@ contains
           end do
        end do
 
+
+    else if (plan%time_scheme==30) then
+       !using symplectic Euler with linear interpolation
+       !we fix the tolerance and the maximum of iteration
+       tolr=dr/5.0_f64
+       tolr=1e-14
+       maxiter=1000
+
+       do j=1,ntheta
+          do i=1,nr+1
+             !initialization for r interpolation
+             rr=rmin+real(i-1,f64)*dr-dt*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
+             r=0.0_f64
+             iter=0
+
+             call correction_r(rr,rmin,rmax)
+             do while (iter<maxiter .and. abs(rrn-rr)>tolr)
+                r=(rr-rmin)/(rmax-rmin)
+                r=r*real(nr,f64)
+                k=floor(r)+1
+                r=r-real(k-1,f64)
+                rrn=rr
+                if (k==nr+1) then
+                   !r=0
+                   rr=rmin+real(i-1,f64)*dr-dt*plan%field(2,k,j)/(rmin+real(k-1,f64)*dr)
+                else if (k<nr+1 .and. k>=1) then
+                   rr=rmin+real(i-1,f64)*dr-dt*((1.0_f64-r)*plan%field(2,k,j)/(rmin+real(k-1,f64)*dr)+r*plan%field(2,k+1,j)/(rmin+real(k,f64)*dr))
+                else
+                   print*,'k is outside of boundaries : error'
+                   print*,'exiting the program...'
+                   stop
+                end if
+                call correction_r(rr,rmin,rmax)
+                iter=iter+1
+             end do
+             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
+                print*,'not enought iterations for r in symplectic Euler',i,j,rr,rrn
+                stop
+             end if
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             k=floor(r)+1
+             r=r-real(k-1,f64)
+
+             if (k/=nr+1) then
+                theta=real(j-1,f64)*dtheta+dt*((1.0_f64-r)*plan%field(1,k,j)/(rmin+real(i-1,f64)*dr)&
+                &+r*plan%field(1,k+1,j)/(rmin+real(k,f64)*dr))
+             else
+                theta=real(j-1,f64)*dtheta+dt*plan%field(1,k,j)/(rmin+real(k-1,f64)*dr)
+             end if
+             call correction_theta(theta)
+
+             fnp1(i,j)=interpolate_value_2d(rr,theta,plan%spl_f)
+          end do
+       end do
+
+    else if (plan%time_scheme==40) then
+       !using symplectic Verlet with linear interpolation
+
+       !we fix the tolerance and the maximum of iteration
+       tolr=1e-12
+       tolth=1e-12
+       tolr=1e-4
+       tolth=1e-4
+       maxiter=1000
+
+       do j=1,ntheta
+          do i=1,nr+1
+             !initialization for r interpolation
+             rr=rmin+real(i-1,f64)*dr+dt/2.0_f64*plan%field(1,i,j)
+             rrn=0.0_f64
+             r=0.0_f64
+             kr=1
+             iter=0
+
+             call correction_r(rr,rmin,rmax)
+             do while (iter<maxiter .and. abs(rrn-rr)>tolr)
+                r=(rr-rmin)/(rmax-rmin)
+                r=r*real(nr,f64)
+                kr=floor(r)+1
+                r=r-real(kr-1,f64)
+                rrn=rr
+                if (kr==nr+1) then
+                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*plan%field(1,kr,j)
+                else if (kr>0 .and. kr<nr+1) then
+                   rr=rmin+real(i-1,f64)*dr-0.5_f64*dt*((1.0_f64-r)*plan%field(1,kr,j)+r*plan%field(1,kr+1,j))
+                else
+                   print*,kr
+                   print*,'error : kr is not in range'
+                   print*,'exiting'
+                   stop
+                end if
+                call correction_r(rr,rmin,rmax)
+
+                iter=iter+1
+             end do
+             if (iter==maxiter .and. abs(rrn-rr)>tolr) then
+                print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
+                stop
+             end if
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
+
+             !initialization for theta interpolation
+             ttheta=real(j-1,f64)*dtheta-dt*plan%field(2,i,j)
+             tthetan=3.0_f64*sll_pi
+             theta=0.0_f64
+             k=1
+             iter=0
+
+             call correction_theta(theta)
+             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. &
+                  & abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
+                theta=ttheta/(2.0_f64*sll_pi)
+                theta=theta-real(floor(theta),f64)
+                theta=theta*real(ntheta,f64)
+                k=floor(theta)+1
+                theta=theta-real(k-1,f64)
+                if (k==ntheta+1) then
+                   k=1
+                   theta=0.0_f64
+                end if
+                tthetan=ttheta
+                if (kr==nr+1) then
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(2,kr,k)+theta*plan%field(2,kr,k+1))
+                   ttheta=ttheta-0.5_f64*dt*plan%field(2,kr,j)
+                else
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+r*plan%field(2,kr+1,k)) &
+                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(2,kr+1,k+1)))
+                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*plan%field(2,kr,j)+r*plan%field(2,kr+1,j))
+                end if
+                call correction_theta(ttheta)
+
+                iter=iter+1
+             end do
+             if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+                  & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+                print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
+                stop
+             end if
+             theta=ttheta/(2.0_f64*sll_pi)
+             theta=theta-real(floor(theta),f64)
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             if (k==ntheta+1) then
+               k=1
+               theta=0.0_f64
+             end if
+             if (kr==nr+1) then
+                rr=rr-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,kr,k)+theta*plan%field(1,kr,k+1))
+             else
+                rr=rr-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
+                     & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
+             end if
+             call correction_r(rr,rmin,rmax)
+
+             fnp1(i,j)=interpolate_value_2d(rr,ttheta,plan%spl_f)
+
+          end do
+       end do
+
+    else if (plan%time_scheme==50) then
+       !using fixed point method
+
+       !initialization
+       maxiter=10
+       tolr=(dr+dtheta)/5.0_f64
+
+       do j=1,ntheta
+          do i=1,nr+1
+             rr=rmin+real(i-1,f64)*dr
+             ttheta=real(j-1,f64)*dtheta
+             r=0.0_f64
+             kr=i
+             ar=0.0_f64
+             atheta=0.0_f64
+             iter=0
+
+             do while (iter<maxiter .and. abs((rrn-rr)+(tthetan-ttheta))>tolr .and. abs((rrn-rr)+(tthetan+2.0_f64*sll_pi-ttheta))>tolr &
+                  & .and. abs((rrn-rr)+(tthetan-ttheta-2.0_f64*sll_pi))>tolr)
+                r=(rr-rmin)/(rmax-rmin)
+                kr=floor(r)+1
+                r=r-real(kr-1,f64)
+                theta=ttheta/(2.0_f64*sll_pi)
+                theta=theta-real(floor(theta),f64)
+                theta=theta*real(ntheta,f64)
+                k=floor(theta)+1
+                theta=theta-real(k-1,f64)
+                if (k==ntheta+1) then
+                   k=1
+                   theta=0.0_f64
+                end if
+                if (kr==nr+1) then
+                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+theta*((1.0_f64-r)*plan%field(1,kr,k+1))))
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+theta*((1.0_f64-r)*plan%field(2,kr,k+1))))
+                else
+                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)+r*plan%field(1,kr+1,k)) &
+                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)+r*plan%field(1,kr+1,k+1)))
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)+r*plan%field(2,kr+1,k)) &
+                        & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)+r*plan%field(1,kr+1,k+1)))
+                end if
+                rrn=rr
+                tthetan=ttheta
+                rr=rmin+real(i-1,f64)*dr-ar
+                ttheta=real(j-1,f64)*dtheta-atheta
+
+                iter=iter+1
+             end do
+             if (iter==maxiter .and. (rrn-rr)+(tthetan-ttheta)>tolr) then
+                print*,'no convergence in fixe point methode',i,j
+             end if
+
+             rr=rmin+real(i-1,f64)*dr-2.0_f64*ar
+             ttheta=real(j-1,f64)*dtheta-2.0_f64*atheta
+             call correction_r(rr,rmin,rmax)
+             call correction_theta(ttheta)
+             fnp1(i,j)=interpolate_value_2d(rr,ttheta,plan%spl_f)
+          end do
+       end do
+
+
+
     end if
 
     fnp1(:,ntheta+1)=fnp1(:,1)
