@@ -232,7 +232,7 @@ contains
                 rrn=rr
                 if (k==nr+1) then
                    !r=0
-                   rr=rmin+real(i-1,f64)*dr+dt*plan%field(2,i,j)/rr
+                   rr=rmin+real(i-1,f64)*dr+dt*plan%field(2,k,j)/rr
                 else if (k<nr+1 .and. k>=1) then
                    rr=rmin+real(i-1,f64)*dr+dt*((1.0_f64-r)*plan%field(2,k,j)/rr+r*plan%field(1,k+1,j)/(rr+dr))
                 else
