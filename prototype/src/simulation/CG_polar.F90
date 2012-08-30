@@ -95,7 +95,7 @@ program cg_polar
 
   !distribution function
   ! 1 : gaussian in r, constant in theta
-  ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
+  ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(mod*theta))
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussian in r)*(1+cos(theta))
   ! 5 : read f in a file with syntax : r theta x y f(i,j)
@@ -258,7 +258,7 @@ program cg_polar
         w0=w0+r*f(i,j)
         l10=l10+r*abs(f(i,j))
         l20=l20+r*f(i,j)**2
-        e0=e0+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)
+        e0=e0+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)/2.0_f64
      end do
   end do
   w0=w0*dr*dtheta
@@ -339,7 +339,7 @@ program cg_polar
            w=w+r*f(i,j)
            l1=l1+r*abs(f(i,j))
            l2=l2+r*f(i,j)**2
-           e=e+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)
+           e=e+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)/2.0_f64
         end do
      end do
      w=w*dr*dtheta
