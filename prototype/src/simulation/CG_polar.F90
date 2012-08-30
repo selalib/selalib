@@ -13,16 +13,17 @@ program cg_polar
 
   type(sll_SL_polar), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2,t3
-  sll_real64, dimension (:,:), allocatable :: div,f
+  sll_real64, dimension (:,:), allocatable :: div,f,fp1
   sll_int32 :: i, j, step,fin
   sll_int32 :: nr, ntheta, nb_step
-  sll_int32 :: fcase, scheme
+  sll_int32 :: fcase, scheme,carac,grad
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32 :: mod
   sll_real64 :: mode,temps,alpha
-  integer :: hh,min,ss,carac_case
+  integer :: hh,min,ss
   integer, dimension(3) :: time
+  character (len=20) :: f_file
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
@@ -31,9 +32,6 @@ program cg_polar
   alpha = 1.e-6_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
-  
-  carac_case = 30 ! 30= symplectic euler
-  carac_case = 1 ! 1= explicit euler
 
   t1 => new_time_mark()
   t2 => new_time_mark()
@@ -65,8 +63,8 @@ program cg_polar
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
-  dt=0.005_f64*dr
-  tf=1.0_f64
+  dt=0.05_f64*dr
+  tf=30.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
@@ -78,26 +76,44 @@ program cg_polar
   fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
 
+  !scheme to compute caracteristics
+  ! 1 : using explicit Euler method
+  ! 2 : rotation, rotation speed = -1
+  ! 3 : using symplectic Euler with linear interpolation
+  ! 4 : using symplectic Verlet with linear interpolation
+  ! 5 : using fixed point method
+  ! 6 : using modified symplectic Euler
+  ! 7 : using modified symplectic Verlet
+  ! 8 : using modified fixed point
+  carac=4
 
-
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,3,carac_case)
-  SLL_ALLOCATE(div(nr+1,ntheta+1),i)
-  SLL_ALLOCATE(f(nr+1,ntheta+1),i)
-
-  f=0.0_f64
+  !scheme to compute gradian
+  ! 1 : final differencies in r and theta
+  ! 2 : fft in theta, final differencies in r
+  ! 3 : splines in r and theta
+  grad=3
 
   !distribution function
   ! 1 : gaussian in r, constant in theta
   ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
   ! 3 : test distribution for poisson solver
   ! 4 : (gaussian in r)*(1+cos(theta))
+  ! 5 : read f in a file with syntax : r theta x y f(i,j)
   fcase=2
+!!$  f_file='CGfinal04.dat' !not working
 
   !choose the way to compute
   ! 1 : Semi-Lagrangian scheme order 1
   ! 2 : Semi-Lagrangian scheme order 2
   ! 3 : leap-frog scheme
-  scheme=1
+  scheme=2
+
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad,carac)
+  SLL_ALLOCATE(div(nr+1,ntheta+1),i)
+  SLL_ALLOCATE(f(nr+1,ntheta+1),i)
+  SLL_ALLOCATE(fp1(nr+1,ntheta+1),i)
+
+  f=0.0_f64
 
   if (fcase==1) then
      do i=1,nr+1
@@ -139,6 +155,19 @@ program cg_polar
         end do
      end do
 
+  else if (fcase==5) then
+     open(25,file=f_file,action="read")
+     read(25,*)
+     read(25,*)
+     read(25,*)
+     do i=i,nr+1
+        do j=1,ntheta+1
+           read(25,'(2X,5(1F18.16,8X))')r,theta,x,y,f(i,j)
+        end do
+        read(25,*)
+     end do
+     close(25)
+
   else
      print*,"f is not defined"
      print*,'see variable "fcase" in file selalib/prototype/src/simulation/CG_polar.F90'
@@ -147,6 +176,8 @@ program cg_polar
      stop
      print*,'so far so good'
   end if
+
+  fp1=0.0_f64
 
   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
   call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
@@ -202,7 +233,8 @@ program cg_polar
 
 
   open(unit=23,file='thdiag.dat')
-  write(23,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
+  write(23,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'grad',grad,'carac',carac
+  write(23,*)'#nr',nr,'ntheta',ntheta
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e' 
 
@@ -260,11 +292,11 @@ program cg_polar
 
      if (scheme==1) then
         !classical semi-Lagrangian scheme (order 1)
-        call SL_classic(plan_sl,f,f)
+        call SL_classic(plan_sl,f,fp1)
 
      else if (scheme==2) then
         !semi-Lagrangian predictive-corrective scheme
-        call SL_ordre_2(plan_sl,f,f)
+        call SL_ordre_2(plan_sl,f,fp1)
 
 !!$     else if (scheme==3) then
 !!$        !leap-frog scheme
@@ -284,7 +316,8 @@ program cg_polar
         exit
      end if
 
-     f(:,ntheta+1)=f(:,1)
+     fp1(:,ntheta+1)=fp1(:,1)
+     f=fp1
 
      !computation of mass (w), l1, l2 and energy (e)
      do i=1,nr+1
@@ -315,23 +348,23 @@ program cg_polar
      e=e*dr*dtheta
      write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0,e
 
-     if ((step/100)*100==step) then
+     if ((step/500)*500==step) then
         print*,'#step',step
      end if
 
-     if (abs(real(step)*dt-125.)<=1e-3) then
-        open(24,file='125s.dat')
-        do i=1,nr+1
-           r=rmin+real(i-1,f64)*dr
-           do j=1,ntheta+1
-              theta=real(j-1,f64)*dtheta
-              x=r*cos(theta)
-              y=r*sin(theta)
-              write(24,*)r,theta,x,y,f(i,j)
-           end do
-        end do
-        close(24)
-     end if
+!!$     if (abs(real(step)*dt-125.)<=1e-3) then
+!!$        open(24,file='125s.dat')
+!!$        do i=1,nr+1
+!!$           r=rmin+real(i-1,f64)*dr
+!!$           do j=1,ntheta+1
+!!$              theta=real(j-1,f64)*dtheta
+!!$              x=r*cos(theta)
+!!$              y=r*sin(theta)
+!!$              write(24,*)r,theta,x,y,f(i,j)
+!!$           end do
+!!$        end do
+!!$        close(24)
+!!$     end if
 
   end do
   close(23)
@@ -358,7 +391,8 @@ program cg_polar
 
   !write the final f in a file
   open (unit=21,file='CGfinal.dat')
-  write(21,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'nr',nr,'ntheta',ntheta
+  write(21,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'grad',grad,'carac',carac
+  write(21,*)'#nr',nr,'ntheta',ntheta
   write(21,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
   do i=1,nr+1
      r=rmin+real(i-1,f64)*dr
