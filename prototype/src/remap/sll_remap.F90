@@ -2904,5 +2904,49 @@ contains  !******************************************************************
     count_elements_in_box_4D = irange*jrange*krange*lrange
   end function count_elements_in_box_4D
 
+  ! The following function is useful enough that we should have versions for
+  ! the other dimensions as well.
+  subroutine compute_local_sizes_4d( &
+    layout, &
+    loc_sz_i, &
+    loc_sz_j, &
+    loc_sz_k, &
+    loc_sz_l )
+
+    type(layout_4D), pointer :: layout
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32, intent(out) :: loc_sz_k
+    sll_int32, intent(out) :: loc_sz_l
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: k_min
+    sll_int32 :: k_max
+    sll_int32 :: l_min
+    sll_int32 :: l_max
+    sll_int32 :: my_rank
+    if( .not. associated(layout) ) then
+       print *, 'not-associated layout passed to new_distributed_mesh_4D'
+       print *, 'Exiting...'
+       STOP
+    end if
+    my_rank = sll_get_collective_rank(get_layout_4D_collective(layout))
+    i_min = get_layout_4D_i_min( layout, my_rank )
+    i_max = get_layout_4D_i_max( layout, my_rank )
+    j_min = get_layout_4D_j_min( layout, my_rank )
+    j_max = get_layout_4D_j_max( layout, my_rank )
+    k_min = get_layout_4D_k_min( layout, my_rank )
+    k_max = get_layout_4D_k_max( layout, my_rank )
+    l_min = get_layout_4D_l_min( layout, my_rank )
+    l_max = get_layout_4D_l_max( layout, my_rank )
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+    loc_sz_k = k_max - k_min + 1
+    loc_sz_l = l_max - l_min + 1
+  end subroutine compute_local_sizes_4d
+
+
 
 end module remapper
