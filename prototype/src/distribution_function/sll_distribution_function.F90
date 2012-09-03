@@ -47,10 +47,9 @@ module distribution_function
      sll_real64      :: pmass;                                       \
      sll_real64      :: pcharge;                                     \
      sll_real64      :: average;                                     \
-     sll_int32       :: plot_counter;                                \
   end type new_df_type
 
-NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
+!NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, scalar_field_2d)
 !NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, scalar_field_4d)
 
 NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
@@ -62,6 +61,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 !!$  end interface
 
 #undef NEW_TYPE_FOR_DF
+
 
 
 contains
@@ -78,7 +78,7 @@ contains
     class(sll_mapped_mesh_2d_base), target  :: mesh
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
-    procedure(scalar_function_2D)           :: data_func
+    class(scalar_field_2d_initializer_base) :: data_func
     ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
@@ -124,6 +124,8 @@ contains
     field_name, &
     mesh, &
     data_position, &
+    eta1_interpolator, &
+    eta2_interpolator, &
     initializer )
 
     type(sll_distribution_function_2d), intent(inout)   :: this
@@ -132,15 +134,20 @@ contains
     character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    class(scalar_field_2d_initializer_base), pointer    :: initializer
+    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
+    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
 
     this%pmass = mass
     this%pcharge = charge
+
     call initialize_scalar_field_2d( &
          this, &
          field_name, &
          mesh, &
          data_position, &
+         eta1_interpolator, &
+         eta2_interpolator, &
          initializer )
   end subroutine initialize_distribution_function_2d
 

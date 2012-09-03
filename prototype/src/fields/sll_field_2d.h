@@ -7,7 +7,7 @@
 ! inner loops and thus would have an appreciable overhead. 
 
 ! get macros
-#define GET_FIELD_MESH_MESH( f )           f%mesh
+#define GET_FIELD_MESH( f )                f%mesh
 #define GET_FIELD_ETA1_MIN( f )            f%mesh%eta1_min
 #define GET_FIELD_ETA1_MAX( f )            f%mesh%eta1_max
 #define GET_FIELD_NC_ETA1( f )             f%mesh%nc_eta1
@@ -24,6 +24,8 @@
 ! values outside of the initialization.
 #define FIELD_2D_AT_I( f, index1, index2 ) \
      f%data(index1,index2)
+#define FIELD_2D_JACOBIAN_AT_I( f, index1, index2 ) \
+     f%mesh%jacobian(index1,index2)
 #define FIELD_2D_AT_I_V1( f, index1, index2 ) \
      f%data(index1,index2)%v1
 #define FIELD_2D_AT_I_V2( f, index1, index2 ) \
@@ -32,6 +34,9 @@
 ! The intent of this macro is to pass all the data to functions that require it, eg FFT
 ! It works for all types of fields
 #define FIELD_DATA(f)   f%data
+#define FIELD_JACOBIAN_CELL_DATA(f)   f%mesh%jacobians_c
+#define FIELD_X1_CELL(f)   f%mesh%x1_cell
+#define FIELD_X2_CELL(f)   f%mesh%x2_cell
 
 
 ! The following macro should call some interpolation with splines or something

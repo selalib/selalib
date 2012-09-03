@@ -21,8 +21,11 @@ module test_processes_module
   use test_func_module
   implicit none
 
+#ifdef STDF95
+
+#else
   abstract interface 
-     function fx (x)
+     function fx(x)
        use sll_working_precision
        sll_real64 :: fx
        sll_real64, intent(in) :: x
@@ -59,6 +62,7 @@ module test_processes_module
        type(sll_spline_2D), pointer :: spline
      end function spline_interpolator_2d
   end interface
+#endif
 
 contains
 
@@ -104,7 +108,7 @@ contains
      
     print *, 'proceed to allocate the spline...'
     sp1 =>  new_spline_1D( NP, XMIN, XMAX, PERIODIC_SPLINE )
-    call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
+    call compute_spline_1D( data, sp1 )
     sp2 =>  new_spline_1D( &
          NP, &
          XMIN, &
@@ -112,7 +116,7 @@ contains
          HERMITE_SPLINE, &
          fprime(XMIN, i_test), &
          fprime(XMAX, i_test) )
-    call compute_spline_1D( data, HERMITE_SPLINE, sp2 )
+    call compute_spline_1D( data, sp2 )
     
     print *, 'cumulative errors: '
     print *, 'periodic case, NP-1 points: '
@@ -378,15 +382,23 @@ contains
     xmin, &           ! extent of the domain over where the spline is tested
     xmax, &
     npts, &
-    test_passed )
-
+    test_passed, &
+    criterion )
+#ifdef STDF95
+    sll_real64, external              :: func
+    sll_real64, external              :: result_f
+    sll_real64, external              :: interpolator_f
+#else
     procedure(fx)                     :: func
     procedure(fx)                     :: result_f
     procedure(spline_interpolator_1d) :: interpolator_f
+#endif
     sll_real64, intent(in)            :: xmin
     sll_real64, intent(in)            :: xmax
     sll_int32, intent(in)             :: npts
     logical, intent(out)              :: test_passed
+    sll_real64, intent(in), optional  :: criterion
+    sll_real64                        :: max_tolerable_err
     sll_real64, allocatable, dimension(:) :: data_in
     sll_real64, allocatable, dimension(:) :: correct_data_out
     sll_int32  :: ierr, i
@@ -395,6 +407,12 @@ contains
     sll_real64 :: acc, val
     type(sll_spline_1d), pointer :: spline
     sll_real64 :: average_error
+ 
+    if(present(criterion)) then
+       max_tolerable_err = criterion
+    else
+       max_tolerable_err = 1.0e-14
+    end if
     h1 = (xmax - xmin)/real(npts-1,f64)
     acc = 0.0_f64
 
@@ -403,7 +421,7 @@ contains
     SLL_ALLOCATE(correct_data_out(npts), ierr)
 
     do i=0,npts-1
-       x1 = xmin + real(i,f64)*h1 
+       x1 = xmin + real(i,f64)*h1
        data_in(i+1) = func(x1)
        correct_data_out(i+1) = result_f(x1)
     end do
@@ -414,18 +432,17 @@ contains
       xmax, &
       PERIODIC_SPLINE )
 
-    call compute_spline_1D(data_in,PERIODIC_SPLINE,spline)
-
+    call compute_spline_1D(data_in, spline)
     do i=0,npts-1
        x1 = xmin + real(i,f64)*h1 
        val = interpolator_f(x1,spline)
-       acc = acc + abs(val-correct_data_out(i+1))  
- !         print *, '(i) = ',i+1, 'correct value = ', &
- !              correct_data_out(i+1), '. Calculated = ', val     
+       acc = acc + abs(val-correct_data_out(i+1))
+       !          print *, '(i) = ',i+1, 'correct value = ', &
+       !               correct_data_out(i+1), '. Calculated = ', val   
     end do
     average_error = acc/(real(npts,f64))
     print *, 'Average error = ', average_error
-    if( average_error .le. 1.0e-14 ) then
+    if( average_error .le. max_tolerable_err ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -443,7 +460,11 @@ contains
     slope_r, &
     test_passed )
 
+#ifdef STDF95
+    sll_real64             :: func_1d
+#else
     procedure(fx)          :: func_1d
+#endif
     logical, intent(out)   :: test_passed
     sll_real64, intent(in) :: slope_l, slope_r
     sll_real64, allocatable, dimension(:) :: data_in
@@ -470,13 +491,14 @@ contains
          slope_l, &
          slope_r )
 
-    call compute_spline_1D( data_in, HERMITE_SPLINE, spline )
-    ! print *, '1D coefficients: '
-    ! print *,  spline%coeffs(:)
+    call compute_spline_1D( data_in, spline )
+    !        print *, '1D coefficients: '
+    !    print *,  spline%coeffs(:)
     acc = 0.0_f64
     do i=0,NPX1-1
        x1 = X1MIN + real(i,f64)*h1 
        val = interpolate_value(x1,spline)
+       !print *, 'x = ', x1, 'true data: ', data_in(i+1), 'interpolated: ', val
        acc = acc + abs(val-data_in(i+1))  
     end do
     
@@ -490,15 +512,74 @@ contains
     end if
   end subroutine test_spline_1d_hrmt
 
+  subroutine test_spline_1d_hrmt_no_slopes ( &
+    func_1d, &
+    test_passed )
+
+#ifdef STDF95
+    sll_real64             :: func_1d
+#else
+    procedure(fx)          :: func_1d
+#endif
+    logical, intent(out)   :: test_passed
+    sll_real64, allocatable, dimension(:) :: data_in
+    sll_int32  :: ierr, i
+    sll_real64 :: h1
+    sll_real64 :: x1
+    sll_real64 :: acc, val
+    type(sll_spline_1d), pointer :: spline
+    sll_real64 :: average_error
+    h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
+    acc = 0.0_f64
+
+    SLL_ALLOCATE(data_in(NPX1),ierr)
+    do i=0,NPX1-1
+       x1 = X1MIN + real(i,f64)*h1 
+       data_in(i+1) = func_1d(x1)
+    end do
+
+    spline => new_spline_1D( &
+         NPX1, &
+         X1MIN, &
+         X1MAX, &
+         HERMITE_SPLINE )
+
+    call compute_spline_1D( data_in, spline )
+    ! print *, '1D coefficients: '
+    ! print *,  spline%coeffs(:)
+    acc = 0.0_f64
+    do i=0,NPX1-1
+       x1 = X1MIN + real(i,f64)*h1 
+       val = interpolate_value(x1,spline)
+       acc = acc + abs(val-data_in(i+1))  
+    end do
+    
+    average_error = acc/(real(NPX1,f64))
+    print *, 'test_spline_1d_hrmt_no_slopes(): average error = ', average_error
+    if( average_error .le. 1.0e-15 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+       print *, 'test_spline_1d_hrmt_no_slopes(): TEST FAILED'
+    end if
+  end subroutine test_spline_1d_hrmt_no_slopes
+
+
   subroutine interpolator_tester_2d_prdc_prdc( &
     func_2d, &            ! function to generate input data array
     partial_x1, &         ! function to generate 'correct answer' array
     interpolation_func, & ! function to test
     test_passed )
-    
+
+#ifdef STDF95
+    sll_real64, external                    :: func_2d   
+    sll_real64, external                    :: partial_x1 
+    sll_real64, external                    :: interpolation_func
+#else    
     procedure(fxy)                          :: func_2d   
     procedure(fxy)                          :: partial_x1 
-    procedure(spline_interpolator_2d)          :: interpolation_func
+    procedure(spline_interpolator_2d)       :: interpolation_func
+#endif
     logical, intent(out)                    :: test_passed
     sll_real64, allocatable, dimension(:,:) :: data_in
     sll_real64, allocatable, dimension(:,:) :: correct_data_out
@@ -562,12 +643,20 @@ contains
     slope_min_func, &
     slope_max_func, &
     test_passed )
-    
+
+#ifdef STDF95
+    sll_real64                              :: func_2d   
+    sll_real64                              :: transformed_func
+    sll_real64                              :: interpolation_func
+    sll_real64                              :: slope_min_func
+    sll_real64                              :: slope_max_func
+#else 
     procedure(fxy)                          :: func_2d   
     procedure(fxy)                          :: transformed_func
     procedure(spline_interpolator_2d)          :: interpolation_func
     procedure(fxy)                          :: slope_min_func
     procedure(fxy)                          :: slope_max_func
+#endif
     logical, intent(out)                    :: test_passed
     sll_real64, allocatable, dimension(:,:) :: data_in
     sll_real64, allocatable, dimension(:,:) :: correct_data_out
@@ -655,10 +744,16 @@ contains
     eta1_min_slope_func, &
     eta1_max_slope_func, &
     test_passed )
- 
+
+#ifdef STDF95
+    sll_real64     :: transform_func
+    sll_real64     :: eta1_min_slope_func
+    sll_real64     :: eta1_max_slope_func
+#else
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta1_min_slope_func
     procedure(fxy) :: eta1_max_slope_func
+#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -731,15 +826,112 @@ contains
     SLL_DEALLOCATE_ARRAY(eta1_max_slopes,ierr)
   end subroutine test_2d_spline_hrmt_prdc
 
+  ! same as test_2d_spline_hrmt_prdc but internally it does not pass the
+  ! slope values to the spline, thus testing the default values.
+  subroutine test_2d_spline_hrmt_prdc_no_slopes( &
+    transform_func, &
+    eta1_min_slope_func, &
+    eta1_max_slope_func, &
+    test_passed )
+
+#ifdef STDF95
+    sll_real64     :: transform_func
+    sll_real64     :: eta1_min_slope_func
+    sll_real64     :: eta1_max_slope_func
+#else
+    procedure(fxy) :: transform_func
+    procedure(fxy) :: eta1_min_slope_func
+    procedure(fxy) :: eta1_max_slope_func
+#endif
+    logical, intent(out) :: test_passed
+
+    sll_int32 :: i, j, ierr
+    sll_real64, dimension(:,:), allocatable :: data
+!    sll_real64, dimension(:), allocatable   :: eta1_min_slopes
+!    sll_real64, dimension(:), allocatable   :: eta1_max_slopes
+    sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
+    type(sll_spline_2D), pointer :: spline
+
+    h1 = 1.0_f64/(NPX1-1)
+    h2 = 1.0_f64/(NPX2-1)
+    ! allocate and fill out the data
+    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1 = real(i,f64)*h1
+          data(i+1,j+1) = transform_func(eta1,eta2)
+       end do
+    end do
+
+    ! allocate and fill out the bc data
+!    SLL_ALLOCATE(eta1_min_slopes(NPX2),ierr)
+!    SLL_ALLOCATE(eta1_max_slopes(NPX2),ierr)
+!    do j=0,NPX2-1
+!       eta2 = real(j,f64)*h2
+!       eta1_min_slopes(j+1) = eta1_min_slope_func(0.0_f64,eta2)
+!       eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
+!    end do
+
+    spline =>new_spline_2D( &
+         NPX1, &
+         NPX2, &
+         0.0_f64, &
+         1.0_f64, &
+         0.0_f64, &
+         1.0_f64, &
+         HERMITE_SPLINE, &
+         PERIODIC_SPLINE ) !, &
+!         x1_min_slopes=eta1_min_slopes, &
+!         x1_max_slopes=eta1_max_slopes )
+
+    call compute_spline_2D_hrmt_prdc( data, spline )
+
+    ! compare results
+    acc = 0.0_f64
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1     = real(i,f64)*h1
+          val      = interpolate_value_2D( eta1, eta2, spline )
+          true_val = transform_func( eta1, eta2 )
+          acc      = acc + abs(true_val - val)
+          if(abs(true_val-val).gt.1.0e-14) then
+             print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
+                  true_val, val
+             !print *, spline%coeffs(NPX1,j-1:j+1)
+          end if
+       end do
+    end do
+    ave_err = acc/real(NPX1*NPX2,f64) 
+    print *, 'test_2d_spline_hrmt_prdc results. Average error = ', ave_err
+    if( ave_err .le. 1.0e-14 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+    end if
+    SLL_DEALLOCATE_ARRAY(data,ierr)
+ !   SLL_DEALLOCATE_ARRAY(eta1_min_slopes,ierr)
+ !   SLL_DEALLOCATE_ARRAY(eta1_max_slopes,ierr)
+  end subroutine test_2d_spline_hrmt_prdc_no_slopes
+
+
+
   subroutine test_2d_spline_prdc_hrmt( &
     transform_func, &
     eta2_min_slope_func, &
     eta2_max_slope_func, &
     test_passed )
- 
+
+#ifdef STDF95
+    sll_real64     :: transform_func
+    sll_real64     :: eta2_min_slope_func
+    sll_real64     :: eta2_max_slope_func
+#else 
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta2_min_slope_func
     procedure(fxy) :: eta2_max_slope_func
+#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -813,6 +1005,96 @@ contains
     SLL_DEALLOCATE_ARRAY(eta2_max_slopes,ierr)
   end subroutine test_2d_spline_prdc_hrmt
 
+  ! like test_2d_spline_prdc_hrmt but tests the default slope values
+  subroutine test_2d_spline_prdc_hrmt_no_slopes( &
+    transform_func, &
+    eta2_min_slope_func, &
+    eta2_max_slope_func, &
+    test_passed )
+
+#ifdef STDF95
+    sll_real64     :: transform_func
+    sll_real64     :: eta2_min_slope_func
+    sll_real64     :: eta2_max_slope_func
+#else 
+    procedure(fxy) :: transform_func
+    procedure(fxy) :: eta2_min_slope_func
+    procedure(fxy) :: eta2_max_slope_func
+#endif
+    logical, intent(out) :: test_passed
+
+    sll_int32 :: i, j, ierr
+    sll_real64, dimension(:,:), allocatable :: data
+!    sll_real64, dimension(:), allocatable   :: eta2_min_slopes
+!    sll_real64, dimension(:), allocatable   :: eta2_max_slopes
+    sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
+    type(sll_spline_2D), pointer :: spline
+
+    h1 = 1.0_f64/(NPX1-1)
+    h2 = 1.0_f64/(NPX2-1)
+    ! allocate and fill out the data
+    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1 = real(i,f64)*h1
+          data(i+1,j+1) = transform_func(eta1,eta2)
+       end do
+    end do
+
+    ! allocate and fill out the bc data
+ !   SLL_ALLOCATE(eta2_min_slopes(NPX1),ierr)
+ !   SLL_ALLOCATE(eta2_max_slopes(NPX1),ierr)
+ !   do i=0,NPX1-1
+ !      eta1 = real(i,f64)*h1
+ !      eta2 = 0.0_f64
+ !      eta2_min_slopes(i+1) = eta2_min_slope_func(eta1,eta2)
+ !      eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
+ !   end do
+
+    spline =>new_spline_2D( &
+         NPX1, &
+         NPX2, &
+         0.0_f64, &
+         1.0_f64, &
+         0.0_f64, &
+         1.0_f64, &
+         PERIODIC_SPLINE, &
+         HERMITE_SPLINE ) !, & 
+!         x2_min_slopes=eta2_min_slopes, &
+!         x2_max_slopes=eta2_max_slopes )
+
+    call compute_spline_2D_prdc_hrmt( data, spline )
+
+    ! compare results
+    acc = 0.0_f64
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1     = real(i,f64)*h1
+          val      = interpolate_value_2D( eta1, eta2, spline )
+          true_val = transform_func( eta1, eta2 )
+          acc      = acc + abs(true_val - val)
+          if(abs(true_val-val).gt.1.0e-14) then
+             print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
+                  true_val, val
+             !print *, spline%coeffs(NPX1,j-1:j+1)
+          end if
+       end do
+    end do
+    ave_err = acc/real(NPX1*NPX2,f64) 
+    print *, 'test_2d_spline_prdc_hrmt results. Average error = ', ave_err
+    if( ave_err .le. 1.0e-14 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+    end if
+    SLL_DEALLOCATE_ARRAY(data,ierr)
+ !   SLL_DEALLOCATE_ARRAY(eta2_min_slopes,ierr)
+ !   SLL_DEALLOCATE_ARRAY(eta2_max_slopes,ierr)
+  end subroutine test_2d_spline_prdc_hrmt_no_slopes
+
+
   subroutine test_2d_spline_hrmt_hrmt( &
     transform_func, &
     eta1_min_slope_func, &
@@ -821,11 +1103,19 @@ contains
     eta2_max_slope_func, &
     test_passed )
  
+#ifdef STDF95
+    sll_real64     :: transform_func
+    sll_real64     :: eta1_min_slope_func
+    sll_real64     :: eta1_max_slope_func
+    sll_real64     :: eta2_min_slope_func
+    sll_real64     :: eta2_max_slope_func
+#else
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta1_min_slope_func
     procedure(fxy) :: eta1_max_slope_func
     procedure(fxy) :: eta2_min_slope_func
     procedure(fxy) :: eta2_max_slope_func
+#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -913,11 +1203,75 @@ contains
     SLL_DEALLOCATE_ARRAY(eta2_max_slopes,ierr)
   end subroutine test_2d_spline_hrmt_hrmt
 
+  subroutine test_2d_spline_hrmt_hrmt_no_slopes( transform_func, test_passed )
+#ifdef STDF95
+    sll_real64     :: transform_func
+#else
+    procedure(fxy) :: transform_func
+#endif
+    logical, intent(out) :: test_passed
+
+    sll_int32 :: i, j, ierr
+    sll_real64, dimension(:,:), allocatable :: data
+    sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
+    type(sll_spline_2D), pointer :: spline
+
+    h1 = 1.0_f64/(NPX1-1)
+    h2 = 1.0_f64/(NPX2-1)
+    ! allocate and fill out the data
+    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1 = real(i,f64)*h1
+          data(i+1,j+1) = transform_func(eta1,eta2)
+       end do
+    end do
+
+    spline =>new_spline_2D( &
+         NPX1, &
+         NPX2, &
+         0.0_f64, &
+         1.0_f64, &
+         0.0_f64, &
+         1.0_f64, &
+         HERMITE_SPLINE, &
+         HERMITE_SPLINE )
+
+    call compute_spline_2D_hrmt_hrmt( data, spline )
+
+    ! compare results
+    acc = 0.0_f64
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       do i=0,NPX1-1
+          eta1     = real(i,f64)*h1
+          val      = interpolate_value_2D( eta1, eta2, spline )
+          true_val = transform_func( eta1, eta2 )
+          acc      = acc + abs(true_val - val)
+          if(abs(true_val-val).gt.1.0e-14) then
+             print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
+                  true_val, val
+             !print *, spline%coeffs(NPX1,j-1:j+1)
+          end if
+       end do
+    end do
+    ave_err = acc/real(NPX1*NPX2,f64) 
+    print *, 'test_2d_spline_hrmt_hrmt results. Average error = ', ave_err
+    if( ave_err .le. 1.0e-14 ) then
+       test_passed = .true.
+    else
+       test_passed = .false.
+    end if
+    SLL_DEALLOCATE_ARRAY(data,ierr)
+  end subroutine test_2d_spline_hrmt_hrmt_no_slopes
+
+
 
   function line(x)
     sll_real64 :: line
     sll_real64, intent(in) :: x
-    line = 2.0*x
+    line = x
   end function line
 
   function plane( x, y )

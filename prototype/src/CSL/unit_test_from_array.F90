@@ -16,7 +16,7 @@ program unit_test_from_array
   sll_real64 :: r_min, r_max, delta_r, delta_theta, delta_eta1, delta_eta2
   sll_real64, dimension(:,:), pointer :: x1c_array, x2c_array, jac_array
   sll_real64, dimension(:,:), pointer :: x1n_array, x2n_array
-  sll_int32 :: k1, k2
+  sll_int32 :: k1, k2,visu_step
   sll_real64 :: xx1, xx2
   type(geometry_2D), pointer :: geom
   type(mesh_descriptor_2D), pointer :: mesh
@@ -108,14 +108,18 @@ program unit_test_from_array
 
 ! geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
 !       x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC,COMPACT)
+!  geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
+!       x1n_array, x2n_array, x1c_array, x2c_array, jac_array,COMPACT, PERIODIC)
   geom => new_geometry_2D ('from_array',nc_eta1+1,nc_eta2+1, &
-       x1n_array, x2n_array, x1c_array, x2c_array, jac_array,COMPACT, PERIODIC)
+       x1n_array, x2n_array, x1c_array, x2c_array, jac_array,PERIODIC, PERIODIC)
 
 
 !  mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
 !       COMPACT, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
-  mesh => new_mesh_descriptor_2D(r_min, r_max, nc_eta1, &
-       COMPACT, 0.0_f64, 2*sll_pi, nc_eta2, PERIODIC, geom)
+  mesh => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
+       PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom)
+ ! mesh => new_mesh_descriptor_2D(r_min, r_max, nc_eta1, &
+ !      COMPACT, 0.0_f64, 2*sll_pi, nc_eta2, PERIODIC, geom)
   dist_func => sll_new_distribution_function_2D(mesh,CELL_CENTERED_DF, name)
 
 
@@ -143,13 +147,17 @@ program unit_test_from_array
   csl_work => new_csl_workspace( dist_func )
   ! run CSL method for 10 time steps
   n_steps = 100
-  deltat = 10.0_f64/n_steps
+  visu_step = 10
+  deltat = 0.1_f64/real(n_steps,f64)!0._f64!10.0_f64/n_steps
   !deltat = 0.4_f64
   do it = 1, n_steps
      !print*, 'iteration=',it
+     print*, 't=',real(it,f64)*deltat
      !call csl_first_order(csl_work, dist_func, uniform_field, deltat)
      call csl_second_order(csl_work, dist_func, uniform_field, uniform_field, deltat)
-     call write_distribution_function ( dist_func )
+     if(mod(it,visu_step)==0)then
+       call write_distribution_function ( dist_func )
+     endif  
   end do
   ! compute error when Gaussian arrives at center (t=1)
   error = 0.0_f64
@@ -159,7 +167,8 @@ program unit_test_from_array
         !if (val > 1) then
         !   print*, 'val ',val, i1,i2
         !end if
-        error = max (error, abs(val - exp(-0.5_f64*40*((x1c_array(i1,i2)+.5)**2+(x2c_array(i1,i2)-.5)**2))))
+        !error = max (error, abs(val - exp(-0.5_f64*40*((x1c_array(i1,i2)+.5)**2+(x2c_array(i1,i2)-.5)**2))))
+        error = max (error, abs(val - exp(-0.5_f64*40*((x1c_array(i1,i2)-.5)**2+(x2c_array(i1,i2)-.5)**2))))
      end do
   end do
   print*, ' 1st order splitting, 100 cells, 10 time steps. Error= ', error
