@@ -1,47 +1,47 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_odd_order_splines.F90
+! Module: sll_odd_degree_splines.F90
 !
 !> @brief 
-!> Selalib odd order splines interpolator
+!> Selalib odd degree splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: August 29, 2012
+!> Last modification: September 04, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
 !                                  
 !***************************************************************************
 
-module sll_odd_order_splines
+module sll_odd_degree_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
   implicit none
 
-  type odd_order_splines_plan
+  type odd_degree_splines_plan
     sll_int32                             :: n
-    sll_int32                             :: order
+    sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
     sll_real64, dimension(:), allocatable :: coeffs
-  end type odd_order_splines_plan
+  end type odd_degree_splines_plan
 
 
 contains 
 
 
-  function new_odd_order_splines(n,order,xmin,xmax,f)result(plan)
+  function new_odd_degree_splines(n,degree,xmin,xmax,f)result(plan)
 
     sll_real64, dimension(:)                      :: f
-    type(odd_order_splines_plan), pointer :: plan
-    sll_int32                                     :: ierr, n, order
+    type(odd_degree_splines_plan), pointer :: plan
+    sll_int32                                     :: ierr, n, degree
     sll_real64                                    :: xmin
     sll_real64                                    :: xmax
 
-    if (mod(order,2) == 0) then
-       print*, 'This needs to run with odd spline order'
+    if (mod(degree,2) == 0) then
+       print*, 'This needs to run with odd spline degree'
        print*, 'Exiting...'
        stop
     endif
@@ -50,12 +50,12 @@ contains
     SLL_ALLOCATE(plan%coeffs(size(f)), ierr)
 
     plan%n = n
-    plan%order = order
+    plan%degree = degree
     plan%xmin = xmin
     plan%xmax = xmax
     call compute_coeffs(f, plan)
 
-  end function new_odd_order_splines
+  end function new_odd_degree_splines
 
 
   subroutine compute_coeffs(f, plan)
@@ -64,34 +64,34 @@ contains
     !  in the nodes of the mesh
 
     sll_real64, dimension(:)                      :: f
-    type(odd_order_splines_plan), pointer :: plan
+    type(odd_degree_splines_plan), pointer :: plan
     sll_real64                                    :: xmin, xmax, h
-    sll_int32                                     :: n, order, i, j
-    sll_real64, dimension(plan%order/2+1)         :: v
+    sll_int32                                     :: n, degree, i, j
+    sll_real64, dimension(plan%degree/2+1)         :: v
     sll_real64, dimension(size(f),size(f))        :: A, AB
     sll_int32                                     :: KD, LDAB, ierr
     
-    order = plan%order
+    degree = plan%degree
     xmin = plan%xmin
     xmax = plan%xmax
     h = (xmax-xmin)/plan%n
 
-    do j=1,order/2+1
+    do j=1,degree/2+1
         ! For a given line i, we have:
-        ! 0 ... 0 A(i,i-order) ... A(i,i) ... A(i+order) 0 ... 0
-        ! As A is symmetric, we just need to storage A(i,i)...A(i+order)
-        v(j) = B(order, plan%n-( order/2 + 2 - j ), xmax, plan)
-        ! v(i) = B(order, n-(order/2+1-j+1), xmax, plan)
+        ! 0 ... 0 A(i,i-degree) ... A(i,i) ... A(i+degree) 0 ... 0
+        ! As A is symmetric, we just need to storage A(i,i)...A(i+degree)
+        v(j) = B(degree, plan%n-( degree/2 + 2 - j ), xmax, plan)
+        ! v(i) = B(degree, n-(degree/2+1-j+1), xmax, plan)
     enddo
 
     ! Solve the linear system with LAPACK
 
     n = size(f)
-    KD = order/2
+    KD = degree/2
 
     A = 0.
     do i=1,n
-       do j= 0, order/2
+       do j= 0, degree/2
           if ( i+j<=n ) then
              A(i,i+j) = v(j+1) 
           endif
@@ -117,11 +117,11 @@ contains
   end subroutine compute_coeffs
 
 
-  sll_real64 recursive function B(j, i, x, plan) result(res) ! j:=order
+  sll_real64 recursive function B(j, i, x, plan) result(res) ! j:=degree
 
     sll_real64                                    :: x, xmin, xmax, h
     sll_int32                                     :: n, j, i
-    type(odd_order_splines_plan), pointer :: plan
+    type(odd_degree_splines_plan), pointer :: plan
 
     xmin = plan%xmin
     xmax = plan%xmax
@@ -160,34 +160,34 @@ contains
 
     sll_real64                                    :: x, xmin, xmax
     sll_real64                                    :: h, s
-    type(odd_order_splines_plan), pointer         :: plan
-    sll_int32                                     :: n, j, left, order
+    type(odd_degree_splines_plan), pointer         :: plan
+    sll_int32                                     :: n, j, left, degree
 
     xmin = plan%xmin
     xmax = plan%xmax
     n = plan%n
-    order = plan%order
+    degree = plan%degree
     h = (xmax-xmin)/real(n,f64)
     left = int((x-xmin)/h)!Determine the leftmost support index 'i' of x
 
     s = 0.d0
-    do j=left-order,left
-       if ( (j>=-order) .and. (j<=n) ) then
-          s = s + plan%coeffs(j+order+1) * B(order, j, x, plan)
+    do j=left-degree,left
+       if ( (j>=-degree) .and. (j<=n) ) then
+          s = s + plan%coeffs(j+degree+1) * B(degree, j, x, plan)
        endif
     enddo
 
   end function spline
 
 
-  subroutine delete_odd_order_splines(plan)
+  subroutine delete_odd_degree_splines(plan)
 
-    type(odd_order_splines_plan), pointer :: plan
+    type(odd_degree_splines_plan), pointer :: plan
     sll_int32                                     :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
 
-  end subroutine delete_odd_order_splines
+  end subroutine delete_odd_degree_splines
 
-end module sll_odd_order_splines
+end module sll_odd_degree_splines
