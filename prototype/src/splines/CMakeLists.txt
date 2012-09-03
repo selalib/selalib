@@ -18,10 +18,6 @@ sll_tridiagonal sll_splines)
 add_library(util_constants STATIC util_constants.F90)
 add_dependencies(util_constants sll_constants sll_working_precision)
 
-set(SPL_LIBS sll_splines sll_tridiagonal sll_memory sll_assertion sll_constants sll_working_precision)
-
-
-
 # add uniform splines test
 set(SRC_TEST1 unit_test.F90 test_func_module.F90 test_processes_module.F90 )
 add_executable(test_splines ${SRC_TEST1})
