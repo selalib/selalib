@@ -134,7 +134,7 @@ IF(FFTW_ENABLED)
 ENDIF(FFTW_ENABLED)
 
 
-#find_package(LAPACK)
+find_package(LAPACK REQUIRED)
 
 # recherche de MPI
 #IF( DEFINED ENV{MPI_ROOT} )
