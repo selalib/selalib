@@ -6,8 +6,10 @@
 !
 ! DESCRIPTION:
 !> @author Module Author Name and Affiliation
-!> @brief This is a low-level mathematical utility that applies the Gauss-Legendre method to compute numeric integrals.
-!> @details This module aims at providing a single interface to the process of integrating a function on a given interval.
+!> @brief This is a low-level mathematical utility that applies the 
+!> Gauss-Legendre method to compute numeric integrals.
+!> @details This module aims at providing a single interface to the process of 
+!> integrating a function on a given interval.
 !
 ! REVISION HISTORY:
 ! DD Mmm YYYY - Initial Version
@@ -15,7 +17,8 @@
 !------------------------------------------------------------------------------
 module gauss_legendre_integration
 #include "sll_working_precision.h"
-  use sll_splines
+#include "sll_assert.h"
+!  use sll_splines
   implicit none
   
   ! The following interface is supposed to represent any function of one
@@ -30,6 +33,9 @@ module gauss_legendre_integration
   ! example, to specialize the integrator on the 'interpolated_function_1D'
   ! requires use of the spline module. 
 
+#ifdef STDF95
+
+#else
   abstract interface
      function function_1D(x)
        use sll_working_precision ! can't pass a header file because the
@@ -40,19 +46,19 @@ module gauss_legendre_integration
      end function function_1D
   end interface
 
-  abstract interface
-     function interpolated_function_1D(x,spline_obj)
-       use sll_working_precision
-       use sll_splines
-       sll_real64                   :: interpolated_function_1D
-       sll_real64, intent(in)       :: x
-       type(sll_spline_1D), pointer :: spline_obj
-     end function interpolated_function_1D
-  end interface
+!  abstract interface
+!     function interpolated_function_1D(x,spline_obj)
+!       use sll_working_precision
+!       use sll_splines
+!       sll_real64                   :: interpolated_function_1D
+!       sll_real64, intent(in)       :: x
+!       type(sll_spline_1D), pointer :: spline_obj
+!     end function interpolated_function_1D
+!  end interface
+#endif
 
   interface gauss_legendre_integrate_1D
-     module procedure gauss_legendre_integral_1D, &
-                      gauss_legendre_integral_interpolated_1D
+     module procedure gauss_legendre_integral_1D !,gauss_legendre_integral_interpolated_1D
   end interface
 
 contains
@@ -163,7 +169,11 @@ contains
   function gauss_legendre_integral_1D( f, a, b, n )
     intrinsic                       :: sqrt
     sll_real64                      :: gauss_legendre_integral_1D
+#ifdef STDF95
+    sll_real64             :: f
+#else
     procedure(function_1D) :: f
+#endif
     sll_real64, intent(in)          :: a
     sll_real64, intent(in)          :: b
     sll_int32,  intent(in)          :: n ! needs better name
@@ -217,37 +227,81 @@ contains
   !> @param[in] n the desired number of Gauss points
   !> @return The value of the integral
   !---------------------------------------------------------------------------
-  function gauss_legendre_integral_interpolated_1D( f, spline, a, b, n )
-    intrinsic                           :: sqrt
-    sll_real64                       :: gauss_legendre_integral_interpolated_1D
-    procedure(interpolated_function_1D) :: f
-    type(sll_spline_1D), pointer        :: spline
-    sll_real64, intent(in)              :: a
-    sll_real64, intent(in)              :: b
-    sll_int32,  intent(in)              :: n ! needs better name
-    sll_real64, dimension(1:10)         :: xk
-    sll_real64, dimension(1:10)         :: wk
-    sll_int32                           :: k
-    sll_real64                          :: x
-    sll_real64                          :: c1
-    sll_real64                          :: c2
-    sll_real64                          :: ans
+!!$  function gauss_legendre_integral_interpolated_1D( f, spline, a, b, n )
+!!$    intrinsic                        :: sqrt
+!!$    sll_real64                       :: gauss_legendre_integral_interpolated_1D
+!!$#ifdef STDF95
+!!$    sll_real64                          :: f
+!!$#else
+!!$    procedure(interpolated_function_1D) :: f
+!!$#endif
+!!$    type(sll_spline_1D), pointer        :: spline
+!!$    sll_real64, intent(in)              :: a
+!!$    sll_real64, intent(in)              :: b
+!!$    sll_int32,  intent(in)              :: n ! needs better name
+!!$    sll_real64, dimension(1:10)         :: xk
+!!$    sll_real64, dimension(1:10)         :: wk
+!!$    sll_int32                           :: k
+!!$    sll_real64                          :: x
+!!$    sll_real64                          :: c1
+!!$    sll_real64                          :: c2
+!!$    sll_real64                          :: ans
+!!$    xk(:) = 0.0_f64
+!!$    wk(:) = 0.0_f64
+!!$    select case(n)
+!!$       SELECT_CASES
+!!$    end select
+!!$    ans = 0.0
+!!$    ! need to map the interval [-1,1] into the interval [a,b]
+!!$    c1 = 0.5_f64*(b-a)
+!!$    c2 = 0.5_f64*(b+a)
+!!$    do k=1,n
+!!$       x = c1*xk(k) + c2
+!!$       ans = ans + f(x,spline)*wk(k)
+!!$    end do
+!!$    gauss_legendre_integral_interpolated_1D = c1*ans
+!!$  end function gauss_legendre_integral_interpolated_1D
+
+  !> gauss_points(degree) returns a real 2D array with the values of the
+  !> locations of the gaussian points 'x_k' in the [-1,1] interval and
+  !> their corresponding weights 'w_k'. Each column of the answer array
+  !> contains the pair (x_k, w_k). Optionally, the user may provide the
+  !> endpoints for the desired interval [a,b] where the gauss points should
+  !> be mapped.
+  function gauss_points( degree, a, b ) result(xw)
+    sll_int32, intent(in)              :: degree
+    sll_real64, intent(in), optional   :: a
+    sll_real64, intent(in), optional   :: b
+    sll_real64, dimension(2,1:degree)  :: xw
+    sll_real64, dimension(1:degree)    :: xk
+    sll_real64, dimension(1:degree)    :: wk
+    sll_real64                         :: c1
+    sll_real64                         :: c2
+    sll_int32                          :: k
+
+    SLL_ASSERT( degree >= 2 )
+
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
-    select case(n)
+
+    ! fill out the xk and wk arrays.
+    select case(degree)
        SELECT_CASES
     end select
-    ans = 0.0
-    ! need to map the interval [-1,1] into the interval [a,b]
-    c1 = 0.5_f64*(b-a)
-    c2 = 0.5_f64*(b+a)
-    do k=1,n
-       x = c1*xk(k) + c2
-       ans = ans + f(x,spline)*wk(k)
-    end do
-    gauss_legendre_integral_interpolated_1D = c1*ans
-  end function gauss_legendre_integral_interpolated_1D
 
+    if(present(a) .and. present(b)) then
+       ! need to map the interval [-1,1] into the interval [a,b].
+       c1 = 0.5_f64*(b-a)
+       c2 = 0.5_f64*(b+a)
+       do k=1,degree
+          xw(1,k) = c1*xk(k) + c2
+          xw(2,k) = wk(k)
+       end do
+    else ! use default values in the [-1,1] interval
+       xw(1,1:degree) = xk(1:degree)
+       xw(2,1:degree) = wk(1:degree)
+    end if
 
+  end function gauss_points
 
 end module gauss_legendre_integration

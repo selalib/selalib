@@ -1,5 +1,5 @@
 
-!*******************************************************************************************
+!****************************************************************************
 !
 ! Selalib      
 ! Module: unit_test.F90
@@ -10,7 +10,7 @@
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
-!********************************************************************************************
+!****************************************************************************
 
 program remap_test
   use sll_collective
@@ -19,7 +19,7 @@ program remap_test
 #include "sll_working_precision.h"
 #include "misc_utils.h"
   implicit none
-  
+
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
   ! distributed among NPi*NPj*NPk processors.
   sll_real64, dimension(:,:,:), allocatable :: local_array1
@@ -47,9 +47,9 @@ program remap_test
   integer                                   :: myrank
   sll_int64                                 :: colsz        ! collective size
   ! Remap stuff
-  type(layout_3D_t), pointer                :: layout1
-  type(layout_3D_t), pointer                :: layout2
-  type(remap_plan_3D_t), pointer            :: rmp3
+  type(layout_3D), pointer                  :: layout1
+  type(layout_3D), pointer                  :: layout2
+  type(remap_plan_3D), pointer              :: rmp3
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -151,7 +151,7 @@ program remap_test
 
      SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final, loc_sz_k_final), ierr )
     
-     rmp3 => NEW_REMAPPER_PLAN_3D( layout1, layout2, local_array1)     
+     rmp3 => NEW_REMAP_PLAN_3D( layout1, layout2, local_array1)     
 
      call apply_remap_3D( rmp3, local_array1, local_array2 ) 
 
@@ -246,72 +246,95 @@ program remap_test
   
 contains
 
-  subroutine reorganize_randomly(layout_3D)
+  subroutine reorganize_randomly(layout)
     implicit none
-    type(layout_3D_t), pointer :: layout_3D
+    type(layout_3D), pointer   :: layout
     integer                    :: i, colsz, proc_n, proc_p
     real                       :: rand_real
-    colsz = sll_get_num_nodes(layout_3D)
+    colsz = sll_get_num_nodes(layout)
     do i=0, colsz-1
        call random_number(rand_real)
        proc_n = int(rand_real*(colsz-1))
        call random_number(rand_real)
        proc_p = int(rand_real*(colsz-1))
-       call swap_box_3D(proc_n, proc_p, layout_3D)
+       call swap_box_3D(proc_n, proc_p, layout)
     enddo    
   end subroutine reorganize_randomly
 
-  subroutine swap_box_3D(proc_n, proc_p, layout_3D)
+  subroutine swap_box_3D(proc_n, proc_p, layout)
     implicit none
-    integer                    :: proc_n, proc_p
-    type(layout_3D_t), pointer :: layout_3D
-    integer                    :: i_min_n, i_max_n, j_min_n, j_max_n, &
+    integer                  :: proc_n, proc_p
+    type(layout_3D), pointer :: layout
+    integer                  :: i_min_n, i_max_n, j_min_n, j_max_n, &
     k_min_n, k_max_n, i_min_p, i_max_p, j_min_p, j_max_p, k_min_p, k_max_p    
-    ! Get proc_n contents from layout_3D
-    i_min_n = get_layout_3D_i_min( layout_3D, proc_n )
-    i_max_n = get_layout_3D_i_max( layout_3D, proc_n )
-    j_min_n = get_layout_3D_j_min( layout_3D, proc_n )
-    j_max_n = get_layout_3D_j_max( layout_3D, proc_n )
-    k_min_n = get_layout_3D_k_min( layout_3D, proc_n )
-    k_max_n = get_layout_3D_k_max( layout_3D, proc_n )
-    ! Get proc_p contents from layout_3D
-    i_min_p = get_layout_3D_i_min( layout_3D, proc_p )
-    i_max_p = get_layout_3D_i_max( layout_3D, proc_p )
-    j_min_p = get_layout_3D_j_min( layout_3D, proc_p )
-    j_max_p = get_layout_3D_j_max( layout_3D, proc_p )
-    k_min_p = get_layout_3D_k_min( layout_3D, proc_p )
-    k_max_p = get_layout_3D_k_max( layout_3D, proc_p )
-    ! Set proc_n contents in layout_3D
-    call set_layout_3D_i_min( layout_3D, proc_n, i_min_p )
-    call set_layout_3D_i_max( layout_3D, proc_n, i_max_p)
-    call set_layout_3D_j_min( layout_3D, proc_n, j_min_p )
-    call set_layout_3D_j_max( layout_3D, proc_n, j_max_p )
-    call set_layout_3D_k_min( layout_3D, proc_n, k_min_p )
-    call set_layout_3D_k_max( layout_3D, proc_n, k_max_p )
-    ! Set proc_p contents in layout_3D
-    call set_layout_3D_i_min( layout_3D, proc_p, i_min_n )
-    call set_layout_3D_i_max( layout_3D, proc_p, i_max_n )
-    call set_layout_3D_j_min( layout_3D, proc_p, j_min_n )
-    call set_layout_3D_j_max( layout_3D, proc_p, j_max_n )
-    call set_layout_3D_k_min( layout_3D, proc_p, k_min_n )
-    call set_layout_3D_k_max( layout_3D, proc_p, k_max_n )   
+    ! Get proc_n contents from layout
+    i_min_n = get_layout_3D_i_min( layout, proc_n )
+    i_max_n = get_layout_3D_i_max( layout, proc_n )
+    j_min_n = get_layout_3D_j_min( layout, proc_n )
+    j_max_n = get_layout_3D_j_max( layout, proc_n )
+    k_min_n = get_layout_3D_k_min( layout, proc_n )
+    k_max_n = get_layout_3D_k_max( layout, proc_n )
+    ! Get proc_p contents from layout
+    i_min_p = get_layout_3D_i_min( layout, proc_p )
+    i_max_p = get_layout_3D_i_max( layout, proc_p )
+    j_min_p = get_layout_3D_j_min( layout, proc_p )
+    j_max_p = get_layout_3D_j_max( layout, proc_p )
+    k_min_p = get_layout_3D_k_min( layout, proc_p )
+    k_max_p = get_layout_3D_k_max( layout, proc_p )
+    ! Set proc_n contents in layout
+    call set_layout_3D_i_min( layout, proc_n, i_min_p )
+    call set_layout_3D_i_max( layout, proc_n, i_max_p)
+    call set_layout_3D_j_min( layout, proc_n, j_min_p )
+    call set_layout_3D_j_max( layout, proc_n, j_max_p )
+    call set_layout_3D_k_min( layout, proc_n, k_min_p )
+    call set_layout_3D_k_max( layout, proc_n, k_max_p )
+    ! Set proc_p contents in layout
+    call set_layout_3D_i_min( layout, proc_p, i_min_n )
+    call set_layout_3D_i_max( layout, proc_p, i_max_n )
+    call set_layout_3D_j_min( layout, proc_p, j_min_n )
+    call set_layout_3D_j_max( layout, proc_p, j_max_n )
+    call set_layout_3D_k_min( layout, proc_p, k_min_n )
+    call set_layout_3D_k_max( layout, proc_p, k_max_n )   
   end subroutine swap_box_3D
   
-  function theoretical_global_3D_indices(d, ni, nj) result(ind)
-    integer, dimension(1:3) :: ind
+  function theoretical_global_3D_indices(d, ni, nj) !result(ind)
+    !integer, dimension(1:3) :: ind
+    integer, dimension(1:3) :: theoretical_global_3D_indices
     integer, intent(in)     :: d, ni, nj
-    if(mod(d,ni) /= 0) then
-       ind(1) = mod(d,ni)
-    else
-       ind(1) = ni
-    end if
-    if (mod(d,ni*nj)/=0) then
-       ind(3) = d/(ni*nj) + 1
-    else
-       ind(3) = d/(ni*nj)
-    endif
-    ind(2) = (d-ind(1))/ni - nj*(ind(3)-1) + 1
+!<<<<<<< HEAD
+!    if(mod(d,ni) /= 0) then
+!       ind(1) = mod(d,ni)
+!    else
+!       ind(1) = ni
+!    end if
+!    if (mod(d,ni*nj)/=0) then
+!       ind(3) = d/(ni*nj) + 1
+!    else
+!       ind(3) = d/(ni*nj)
+!    endif
+!    ind(2) = (d-ind(1))/ni - nj*(ind(3)-1) + 1
 
+!=======
+    integer                 :: i, j, k
+    integer                 :: q
+    sll_real64              :: tmp
+    ! We know that the linear index relates with the other
+    ! indices by:
+    !
+    !          linear = i + ni*(j-1) + ni*nj*(k-1)
+    !
+    ! where i,j,k are the indices sought. We start by working backwards.
+    tmp = real(d)/real(ni*nj)
+    k   = ceiling(tmp)
+    ! reduce the size of the number we are working with
+    q   = d - (k-1)*ni*nj
+    tmp = real(q)/real(ni)
+    j   = ceiling(tmp)
+    ! reduce again
+    q   = q - (j-1)*ni
+    i   = q
+    theoretical_global_3D_indices(1:3) = (/i,j,k/) 
+!>>>>>>> origin/prototype-devel
   end function theoretical_global_3D_indices
   
   subroutine two_power_rand_factorization(n, n1, n2, n3)
@@ -351,7 +374,7 @@ contains
   end subroutine factorize_in_random_2powers
   
   subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
-    type(layout_3D_t), pointer :: layout
+    type(layout_3D), pointer :: layout
     sll_int32, intent(out) :: loc_sz_i
     sll_int32, intent(out) :: loc_sz_j
     sll_int32, intent(out) :: loc_sz_k

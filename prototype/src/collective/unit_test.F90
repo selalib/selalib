@@ -66,7 +66,7 @@ program collective_test
   SLL_ALLOCATE(sendbuf_log(1),ierr)
   sendbuf_log(:)=.true.
   SLL_ALLOCATE(recvbuf_log(1),ierr)
-  recvbuf_log(1)=.false.
+  !recvbuf_log(:)=.false.
   
   call sll_collective_reduce_logical( sll_world_collective, sendbuf_log, &
                                       1    , MPI_LAND,0,recvbuf_log)
