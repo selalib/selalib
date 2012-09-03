@@ -1,0 +1,24 @@
+
+SCD released version 1.1 of FISHPACK90 on December 19, 2005. It is an
+improvement over Version 1.0 in that it uses Fortran90 intrinsic function
+ASSOCIATED to check on pointer association. Also, version 1.1 offers
+an integated Makefile for use with gmake.
+
+Here is some history for version 1.0:
+
+SCD released FISHPACK90 1.0 in September 30 2004. It is an improvement
+of the original Fortran77 FISHPACK insofar as it has removed workspace
+arguments in the solvers, replacing them with FORTRAN90 derived data
+types that are pointers to real and complex allocatable arrays and are
+opaque to user level interface. And also this version replaced many 
+internal interfaces in conformance with strict prototype
+matching of Fortran90.
+
+Neither version FISHPACK90 1.0 nor 1.1 are full-blown Fortran90 
+implementation of FISHPACK. User calls to the old FISHPACK solvers are 
+not compatible with calls to FISHPACK90 solvers.
+
+IMPORTANT NOTE: FISHPACK90 has dependencies in the FFTPACK library; the
+present version of  FFTPACK has not been updated in the same manner as
+FISHPACK90. That is, FFTPACK may not strictly conform to the Fortran90
+interface specification.
