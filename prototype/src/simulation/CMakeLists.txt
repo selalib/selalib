@@ -102,3 +102,20 @@ target_link_libraries(VP1D_deltaf_cart
 	)
 
 ENDIF()
+
+
+# ATTENTION: From here below, the simulations/tests are parallel
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+add_executable( test_vp4d_sim unit_test_4d.F90 )
+target_link_libraries( test_vp4d_sim
+                       sll_scalar_field_4d
+                       sll_remap
+		       sll_collective
+                       sll_constants
+		       sll_low_level_file_io
+  		       sll_utilities
+		       sll_memory
+		       sll_assertion 	
+                       sll_working_precision
+)
