@@ -1,5 +1,3 @@
-add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
-
 set(DEPENDENCIES
 	sll_utilities
 	sll_timer
@@ -14,15 +12,25 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
   LIST(APPEND DEPENDENCIES fftw_module)
   target_link_libraries(fftw_module ${FFTW_LIBRARIES})
   include_directories(${FFTW_INCLUDE_DIRS})
+ENDIF()
+
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
+  set(FFT_SRC sll_fft_mod_through_fftpack.F90)
+  set(DEPENDENCIES fftpack_module ${DEPENDENCIES})
+  add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
+ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
+  set(FFT_SRC sll_fft_mod_through_fftw.F90)
+  add_definitions(-D_DEFAULTFFTLIB=FFTW_MOD)
 ELSE()
-	add_definitions(-D_NOFFTW)
+  set(FFT_SRC sll_fft_selalib_implementation.F90)
+  add_definitions(-D_DEFAULTFFTLIB=SLLFFT_MOD)
 ENDIF()
 
-IF(NOT FFTPACK_ENABLED)
-	add_definitions(-D_NOFFTPACK)
-ENDIF()
+add_library(sll_fft STATIC
+	${FFT_SRC}
+	fft_utils.F90
 
-add_library(sll_fft STATIC sll_fft.F90)
+)
 add_dependencies(sll_fft ${DEPENDENCIES})
 
 IF(FFTW_FOUND AND FFTW_ENABLED)

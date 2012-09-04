@@ -2,42 +2,54 @@ project(sll)
 enable_language(Fortran)
 cmake_minimum_required(VERSION 2.8)
 
-# Determine how-to install the modules
+# Determine how-to install the modules. CMAKE_BINARY_DIR is the directory
+# in which the make command is invoked.
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+
 # Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 # Specify the output for binary
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-# Add new directory to find the FIND<PACKAGE>.cmake files
+# Add new directory to find the FIND<PACKAGE>.cmake files. CMAKE_SOURCE_DIR is
+# the directory where the project sources are located. CMAKE_MODULE_PATH is 
+# the list of directories in which to search for CMake modules.
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-# make sure that the default is a RELEASE
+# make sure that the default is a RELEASE. Here is where we need to set
+# the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
+# turn on assertions.
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
       "Choose the type of build, options are: None Debug Release."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
-# Define folder to be delete by make clean
+# DGFORTRAN is used to set the way in which numbers get converted to strings
+# by the preprocessor. gfotran uses "x" while other preprocessors use the
+# cpp #x. Defining the GFORTRAN flag chooses the first.
+add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
+
+# Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
-add_custom_target(clear
-		COMMAND find . -name *.mod -delete
-		COMMAND find . -name *.a -delete
-		COMMAND find . -name *.o -delete
-		COMMAND find . -name *.cmake -delete
-		COMMAND rm -rf bin
-		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
+add_custom_target( clear
+                   COMMAND find . -name *.mod -delete
+		   COMMAND find . -name *.a -delete
+		   COMMAND find . -name *.o -delete
+		   COMMAND find . -name *.cmake -delete
+		   COMMAND rm -rf bin
+		   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 ##########################################################
 # Try to determine the compiler
-try_run(RUN_RESULT_VAR
-	COMPILE_RESULT_VAR
-        ${CMAKE_BINARY_DIR}
-        ${CMAKE_SOURCE_DIR}/check_compiler.F90
+try_run( RUN_RESULT_VAR
+	 COMPILE_RESULT_VAR
+         ${CMAKE_BINARY_DIR}
+         ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
@@ -63,75 +75,66 @@ IF(COMPILE_RESULT_VAR)
 		set(Fortran_COMPILER "INTEL")
 	ENDIF()
 ELSE()
-	message(STATUS "IMPOSSIBLE TO DETERMINE WHICH COMPILER IS USED")
+	message(STATUS "UNABLE TO DETERMINE WHICH COMPILER IS USED")
 ENDIF()
 ##########################################################
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
-set(HDF5_ENABLED YES CACHE BOOL " ")
+set(HDF5_ENABLED ON CACHE BOOL " ")
 
-# recherche de HDF5
+# search for HDF5
 IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
 		set(HDF5_ROOT $ENV{HDF5_ROOT})
 	ENDIF()
 	find_package(HDF5 QUIET)
-	if (HDF5_FOUND)
+	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
 		include_directories(${HDF5_INCLUDE_DIRS})
-	else (HDF5_FOUND)
+	ELSE()
 		add_definitions(-DNOHDF5)
-		set(HDF5_ENABLED NO)
+		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
 		set(HDF5_LIBRARIES "")
-	endif(HDF5_FOUND)
+	ENDIF()
 ELSE(HDF5_ENABLED)
 	add_definitions(-DNOHDF5)
 ENDIF(HDF5_ENABLED)
 ##########################################################
 
 ##########################################################
+# add the cache entry FFT_DEFAULT_LIBRARY to define the default library use by sll_fft
+set(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft")
+
 # add the cache entry FFTPACK_ENABLED for enable/disable fftpack
-set(FFTPACK_ENABLED NO CACHE BOOL " ")
+set(FFTPACK_ENABLED OFF CACHE BOOL " ")
 
 # recherche le package FFTW
-set(FFTW_ENABLED YES CACHE BOOL " ")
+set(FFTW_ENABLED ON CACHE BOOL " ")
+
 IF(FFTW_ENABLED)
 	IF( DEFINED ENV{FFTW_ROOT} )
 		set(FFTW_ROOT $ENV{FFTW_ROOT})
 	ENDIF()
 	find_package(FFTW QUIET)
 	IF(FFTW_FOUND)
-		message(STATUS "FFTW FOUND")	
+		message(STATUS "FFTW FOUND")
   		include_directories(${FFTW_INCLUDE_DIRS})
 	ELSE(FFTW_FOUND)
 		message(STATUS "FFTW NOT FOUND")
-		set(FFTW_ENABLED NO)
+		set(FFTW_ENABLED NO CACHE BOOL " " FORCE)
 	ENDIF(FFTW_FOUND)
 ENDIF(FFTW_ENABLED)
+
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK" AND NOT FFTPACK_ENABLED)
+	message("Please put on FFTPACK_ENABLED to use fftpack")
+ENDIF()
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_FOUND)
+	message("You can't use fftw library because it's not installed")
+ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_ENABLED)
+	message("Please put on FFTW_ENABLED to use fftw")
+ENDIF()
 ##########################################################
-
-##########################################################
-# add the cache entry PASTIX_ENABLED for enable/disable pastix
-set(PASTIX_ENABLED NO CACHE BOOL " ")
-
-# recherche le package PASTIX
-set(PASTIX ENABLED YES CACHE BOOL " ")
-IF(PASTIX_ENABLED)
-	IF( DEFINED ENV{PASTIX_ROOT} )
-		set(PASTIX_ROOT $ENV{PASTIX_ROOT})
-	ENDIF()
-	find_package(PASTIX QUIET)
-	IF(PASTIX_FOUND)
-		message(STATUS "PASTIX FOUND")
-	ELSE(PASTIX_FOUND)
-		message(STATUS "PASTIX NOT FOUND")
-		set(PASTIX_ENABLED NO)
-	ENDIF(PASTIX_FOUND)
-ENDIF(PASTIX_ENABLED)
-##########################################################
-
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
-
+# find out which compiler we are using.
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
@@ -140,9 +143,11 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
 ELSE()
-	message(STATUS "NO FORTRAN COMPILER FOUND")
+	message(STATUS "NO KNOWN FORTRAN COMPILER FOUND")
 ENDIF()
 
+# this checks the existing collection of compiler flags to find if the
+# fortran95 standard was requested. 
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
 IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
@@ -152,24 +157,27 @@ ELSE()
   add_definitions(-DSTDF95)
 ENDIF()
 
-#add flag to disabled MPI stuff for debug
-set(DISABLED_MPI_MODULE NO)
+#add flag to disable MPI stuff for debug
+set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
 
-# recherche de MPI
-# I add HINTS $ENV{MPI_ROOT} to the find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules)
-# If specify MPI_ROOT doesn't work try to change your PATH variable
+# search for MPI
+# Samuel DeSantis: added the line "HINTS $ENV{MPI_ROOT}" to the 
+# find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules). 
+# If specifying MPI_ROOT in your environment doesn't work, then try changing
+# your PATH variable.
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
+	#set(DISABLE_MPI_MODULE ON CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
 
-# include's
+# include's. Here we include the folders which contain '.h' files.
 include_directories(fft remap poisson_solvers utilities memory assert precision fields) 
 
-# pour la doc 
+# for the documentation
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
    get_filename_component(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
@@ -185,20 +193,22 @@ else(DOXYGEN_FOUND)
    MESSAGE(STATUS "DOXYGEN NOT FOUND")
 endif(DOXYGEN_FOUND)
 
-set(FISHPACK_ENABLED CACHE BOOL OFF)
-set(MUDPACK_ENABLED CACHE BOOL OFF)
+set(FISHPACK_ENABLED OFF CACHE BOOL " ")
+set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 
 #############
 #  RESUME
 #############
 #
-#message("DISABLED_MPI_MODULE = ${DISABLED_MPI_MODULE}")
+#message("DISABLE_MPI_MODULE = ${DISABLE_MPI_MODULE}")
 #
 #############
 
+######################################################################
+#  III. SUBDIRECTORY                                                 #
+######################################################################
+
 #low-level
-set(LOW_LEVEL_LIST_DIR memory precision assert constants utilities low_level_file_io timer)
-#set(LOW_LEVEL_MODULES sll_memory sll_working_precision sll_assertion sll_constants sll_utilities sll_low_level_file_io sll_timer)
 add_subdirectory(memory)
 add_subdirectory(precision)
 add_subdirectory(assert)
@@ -208,7 +218,6 @@ add_subdirectory(low_level_file_io)
 add_subdirectory(timer)
 
 #mid-level
-set(MID_LEVEL_LIST_DIR numerical_utilities non_linear_solvers splines integration fftpack fft collective remap WENO poisson_solvers)
 add_subdirectory(numerical_utilities)
 add_subdirectory(non_linear_solvers)
 add_subdirectory(splines)
@@ -216,11 +225,9 @@ add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
 	add_subdirectory(fftpack)
-ELSE()
-	LIST(REMOVE_ITEM MID_LEVEL_LIST_DIR fftpack)
 ENDIF()
 add_subdirectory(fft)
-IF(DISABLED_MPI_MODULE)
+IF(DISABLE_MPI_MODULE)
 # nothing to do
 ELSE()
   add_subdirectory(collective)
@@ -231,8 +238,6 @@ add_subdirectory(poisson_solvers)
 ENDIF()
 
 #high-level
-add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
-add_dependencies(geometry_functions sll_utilities sll_assertion sll_constants sll_working_precision)
 add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
@@ -245,42 +250,32 @@ IF(FISHPACK_ENABLED)
 	add_subdirectory(fishpack)
 ENDIF()
 
-
-
 IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
 	add_subdirectory(multigrid)
 ENDIF()
 add_subdirectory(LinRood)
-
-
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
 #add_subdirectory(BSL) top
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
-
-
-
-#add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
+add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
 #add_custom_target(install make selalib_low_level)
 
 
 
 ######################################################################
-#                              TESTS                                 #
+#  IV. TEST                                                          #
 ######################################################################
 
 enable_testing()
 
 add_test(NAME memory COMMAND test_memory)
 set_tests_properties(memory PROPERTIES TIMEOUT 20)
-
-#add_test(precision precision/test_precision) #too longer
-
+#add_test(precision precision/test_precision) #too long
 set(passRegex "Assertion error triggered in file")
 add_test(NAME assert COMMAND test_assert)
 set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
-
 add_test(NAME constants COMMAND test_constants)
 add_test(NAME utilities COMMAND test_utilities)
 add_test(NAME low_level_file_io COMMAND test_io)
@@ -327,6 +322,21 @@ add_test(NAME remap
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+add_test(NAME remap_2d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_2d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+# to make the test meaningful at higher dimensions, we need more processes...
+set(PROCS 16)
+add_test(NAME remap_4d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_4d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
@@ -352,3 +362,54 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(BSL BSL/test_landau_2d)
    #add_test(CSL CSL/test_csl)
 #add_test(simulation_1d simulation/test_simulation_1d)
+
+
+set(FORTRANCL_ENABLED CACHE BOOL OFF)
+# recherche de FORTRANCL
+IF(FORTRANCL_ENABLED)
+	find_package(FORTRANCL QUIET)
+	if (FORTRANCL_FOUND)
+	   message(STATUS "FORTRANCL FOUND")
+	   include_directories(${FORTRANCL_INCLUDE_DIRS})
+           add_subdirectory(opencl)
+           add_test(NAME opencl COMMAND test_opencl)
+           set_tests_properties(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+	endif(FORTRANCL_FOUND)
+ENDIF(FORTRANCL_ENABLED)
+
+##########################################################
+# add the cache entry PASTIX_ENABLED for enable/disable pastix
+set(PASTIX_ENABLED NO CACHE BOOL " ")
+
+IF(PASTIX_ENABLED)
+   IF( DEFINED ENV{SCOTCH_ROOT} )
+      set(SCOTCH_ROOT $ENV{SCOTCH_ROOT})
+      set(PTSCOTCH_ROOT $ENV{SCOTCH_ROOT})
+   ENDIF()
+   IF( DEFINED ENV{PASTIX_ROOT} )
+      set(PASTIX_ROOT $ENV{PASTIX_ROOT})
+      set(MURGE_ROOT $ENV{PASTIX_ROOT})
+   ENDIF()
+   find_package(BLAS QUIET)
+   find_package(RT QUIET)
+   find_package(SCOTCH QUIET)
+   find_package(PTSCOTCH QUIET)
+   find_package(MURGE QUIET)
+   find_package(PASTIX QUIET)
+   IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
+      message(STATUS "PASTIX FOUND")
+      include_directories(${PASTIX_INCLUDE_DIRS})
+      add_subdirectory(pastix)
+      set(PROCS 4)
+      set(ARGS 1000 3)
+      add_test(NAME pastix 
+               COMMAND
+               ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_pastix ${ARGS})
+      set_tests_properties(pastix PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ELSE()
+      message(STATUS "PASTIX NOT FOUND")
+   ENDIF()
+ENDIF(PASTIX_ENABLED)
+##########################################################
+
