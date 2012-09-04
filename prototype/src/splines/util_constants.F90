@@ -16,9 +16,9 @@ module util_constants
   use numeric_constants
   implicit none
 
-  sll_int32,  parameter :: NP    =  512
-  sll_int32,  parameter :: NPX1  =  65
-  sll_int32,  parameter :: NPX2  =  33
+  sll_int32,  parameter :: NP    =  65
+  sll_int32,  parameter :: NPX1  =  129
+  sll_int32,  parameter :: NPX2  =  65
   sll_real64, parameter :: X1MIN = -2.0_f64*sll_pi
   sll_real64, parameter :: X1MAX =  2.0_f64*sll_pi
   sll_real64, parameter :: X2MIN = -sll_pi
