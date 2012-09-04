@@ -65,6 +65,18 @@ target_link_libraries(CG_polar
 	sll_utilities
 	)
 
+add_executable(Poisson_solver
+		poisson_output.F90
+		sll_poisson_2d_polar.F90
+		)
+target_link_libraries(Poisson_solver
+	sll_fft
+	sll_tridiagonal
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_utilities
+	)
 
 IF(FFTPACK_ENABLED)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)

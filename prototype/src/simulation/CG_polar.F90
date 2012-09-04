@@ -4,7 +4,6 @@ program cg_polar
 #include "sll_assert.h"
 
   use sll_timer
-  use sll_fft
   use polar_operators
   use polar_advection
   use poisson_polar
@@ -13,14 +12,15 @@ program cg_polar
 
   type(sll_SL_polar), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2,t3
-  sll_real64, dimension (:,:), allocatable :: div,f,fp1
-  sll_int32 :: i, j, step,fin
+  sll_real64, dimension (:,:), allocatable :: div,f,fp1,g
+  sll_int32 :: i, j, step,fin,visustep
   sll_int32 :: nr, ntheta, nb_step
-  sll_int32 :: fcase, scheme,carac,grad
+  sll_int32 :: fcase, scheme,carac,grad,visu
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32 :: mod
   sll_real64 :: mode,temps,alpha
+  sll_real64, dimension(2,2) :: dom
   integer :: hh,min,ss
   integer, dimension(3) :: time
   character (len=20) :: f_file
@@ -29,7 +29,8 @@ program cg_polar
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /modes/ mod
   mod=3
-  alpha = 1.e-6_f64
+  alpha = 1.e-3_f64
+  !alpha = 1.e-3_f64
   !read(*,NML=modes)
   mode=real(mod,f64)
 
@@ -37,25 +38,46 @@ program cg_polar
   t2 => new_time_mark()
   t3 => new_time_mark()
 
-  rmin=1.0_f64
-  rmax=10.0_f64
+  !>files 'CG_data.dat' and 'CG_case.dat' are included in directory selalib/prototype/src/simulation
+  !>copy them in the same directory as the executable
+  open(27,file='CG_data.dat',action="read")
+  read(27,*)rmin
+  read(27,*)rmax
+  read(27,*)nr
+  read(27,*)ntheta
+  read(27,*)fin
+  read(27,*)dt
 
-  ! number of step in r and theta directions
-  ! /= of number of points
-  nr=256
-  ntheta=128
+  read(27,*)
+  
+  read(27,*)carac
+  read(27,*)grad
+  read(27,*)fcase
+  read(27,*)scheme
+  read(27,*)visu
+  close(27)
+
+  tf=real(fin,f64)
+
+!!$  rmin=1.0_f64
+!!$  rmax=10.0_f64
+!!$
+!!$  ! number of step in r and theta directions
+!!$  ! /= of number of points
+!!$  nr=256
+!!$  ntheta=128
 
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
   print*,'#dr=',dr,'dtheta=',dtheta
+  dom(1,1)=rmin
+  dom(1,2)=0.0_f64
+  dom(2,1)=rmax
+  dom(2,2)=2.0_f64*sll_pi
 
   !choose the way to define dt, tf and nb_step
   !the tree ways are equivalent
   !we should have dt<=0.1*dr
-  !default
-  tf=1.0_f64
-  dt=0.1_f64*dr
-  nb_step=ceiling(tf/dt)
 
 !!$  !definition of dt=tf/nb_step
 !!$  tf=5.0_f64
@@ -63,56 +85,63 @@ program cg_polar
 !!$  dt=tf/real(nb_step,f64)
 
   !definition of nb_step=tf/dt
-  dt=0.05_f64*dr
-  tf=30.0_f64
+  dt=dt*dr
+  !tf=100.0_f64
   nb_step=ceiling(tf/dt)
 
 !!$  !definition of tf=dt*nb_step
-!!$  nb_step=1
+!!$  nb_step=0
 !!$  dt=0.05_f64*dr
 !!$  tf=dt*real(nb_step,f64)
 
   tf=real(nb_step,f64)*dt
-  fin=floor(tf+0.5_f64)
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
+  visustep=2000
 
-  !scheme to compute caracteristics
-  ! 1 : using explicit Euler method
-  ! 2 : rotation, rotation speed = -1
-  ! 3 : using symplectic Euler with linear interpolation
-  ! 4 : using symplectic Verlet with linear interpolation
-  ! 5 : using fixed point method
-  ! 6 : using modified symplectic Euler
-  ! 7 : using modified symplectic Verlet
-  ! 8 : using modified fixed point
-  carac=4
-
-  !scheme to compute gradian
-  ! 1 : final differencies in r and theta
-  ! 2 : fft in theta, final differencies in r
-  ! 3 : splines in r and theta
-  grad=3
-
-  !distribution function
-  ! 1 : gaussian in r, constant in theta
-  ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
-  ! 3 : test distribution for poisson solver
-  ! 4 : (gaussian in r)*(1+cos(theta))
-  ! 5 : read f in a file with syntax : r theta x y f(i,j)
-  fcase=2
-!!$  f_file='CGfinal04.dat' !not working
-
-  !choose the way to compute
-  ! 1 : Semi-Lagrangian scheme order 1
-  ! 2 : Semi-Lagrangian scheme order 2
-  ! 3 : leap-frog scheme
-  scheme=2
+!!$  !scheme to compute caracteristics
+!!$  ! 1 : using explicit Euler method
+!!$  ! 2 : rotation, rotation speed = -1
+!!$  ! 3 : using symplectic Euler with linear interpolation
+!!$  ! 4 : using symplectic Verlet with linear interpolation
+!!$  ! 5 : using fixed point method
+!!$  ! 6 : using modified symplectic Euler
+!!$  ! 7 : using modified symplectic Verlet
+!!$  ! 8 : using modified fixed point
+!!$  carac=4
+!!$
+!!$  !scheme to compute gradian
+!!$  ! 1 : final differencies in r and theta
+!!$  ! 2 : fft in theta, final differencies in r
+!!$  ! 3 : splines in r and theta
+!!$  grad=3
+!!$
+!!$  !distribution function
+!!$  ! 1 : gaussian in r, constant in theta
+!!$  ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
+!!$  ! 3 : test distribution for poisson solver
+!!$  ! 4 : (gaussian in r)*(1+cos(theta))
+!!$  ! 5 : read f in a file with syntax : r theta x y f(i,j)
+!!$  fcase=2
+!!$  !f_file='CGfinal04.dat' !not working
+!!$
+!!$  !choose the way to compute
+!!$  ! 1 : Semi-Lagrangian scheme order 1
+!!$  ! 2 : Semi-Lagrangian scheme order 2
+!!$  ! 3 : leap-frog scheme
+!!$  scheme=2
+!!$
+!!$  !choose the visualization
+!!$  ! 0 : gnuplot
+!!$  ! 1 : vtk
+!!$  visu=0
 
   plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad,carac)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
+  SLL_ALLOCATE(g(ntheta+1,nr+1),i)
   SLL_ALLOCATE(fp1(nr+1,ntheta+1),i)
 
+  step=0
   f=0.0_f64
 
   if (fcase==1) then
@@ -131,6 +160,7 @@ program cg_polar
               theta=real(j-1,f64)*dtheta
               f(i,j)=1._f64+alpha*cos(mode*theta)
            end do
+           g(j,i)=f(i,j)
         end if
      end do
 
@@ -156,15 +186,16 @@ program cg_polar
      end do
 
   else if (fcase==5) then
-     open(25,file=f_file,action="read")
+     open(25,file='CGfinal.dat',action="read")
      read(25,*)
      read(25,*)
      read(25,*)
      do i=i,nr+1
         do j=1,ntheta+1
+           print*,i,j
            read(25,'(2X,5(1F18.16,8X))')r,theta,x,y,f(i,j)
         end do
-        read(25,*)
+        !read(25,*)
      end do
      close(25)
 
@@ -192,19 +223,19 @@ program cg_polar
   call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write f in a file before calculations
-
-  open (unit=20,file='CGinit.dat')
-    do i=1,nr+1
-     r=rmin+real(i-1,f64)*dr
-     do j=1,ntheta+1
-        theta=real(j-1,f64)*dtheta
-        x=r*cos(theta)
-        y=r*sin(theta)
-        write(20,*)r,theta,x,y,f(i,j),div(i,j)
-     end do
-     write(20,*)' '
-  end do
-  close(20)
+  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+!!$  open (unit=20,file='CGinit.dat')
+!!$    do i=1,nr+1
+!!$     r=rmin+real(i-1,f64)*dr
+!!$     do j=1,ntheta+1
+!!$        theta=real(j-1,f64)*dtheta
+!!$        x=r*cos(theta)
+!!$        y=r*sin(theta)
+!!$        write(20,*)r,theta,x,y,f(i,j),div(i,j)
+!!$     end do
+!!$     write(20,*)' '
+!!$  end do
+!!$  close(20)
 
 
 
@@ -264,7 +295,7 @@ program cg_polar
   w0=w0*dr*dtheta
   l10=l10*dr*dtheta
   l20=sqrt(l20*dr*dtheta)
-  e0=e0*dr*dtheta
+  e0=e0*dr*dtheta/2.0_f64
   write(23,*)'#t=0',w0,l10,l20,e0
   write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64,e0
 
@@ -345,11 +376,15 @@ program cg_polar
      w=w*dr*dtheta
      l1=l1*dr*dtheta
      l2=sqrt(l2*dr*dtheta)
-     e=e*dr*dtheta
+     e=e*dr*dtheta/2.0_f64
      write(23,*)dt*real(step,f64),w,l1/l10,l2/l20,e-e0,e
 
      if ((step/500)*500==step) then
         print*,'#step',step
+     end if
+     
+     if (step/visustep*visustep==step) then
+        call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
      end if
 
 !!$     if (abs(real(step)*dt-125.)<=1e-3) then
@@ -390,6 +425,7 @@ program cg_polar
   call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write the final f in a file
+  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
   open (unit=21,file='CGfinal.dat')
   write(21,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'grad',grad,'carac',carac
   write(21,*)'#nr',nr,'ntheta',ntheta
@@ -400,10 +436,10 @@ program cg_polar
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(21,*)r,theta,x,y,f(i,j),div(i,j),plan_sl%phi(i,j),&
-        & plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j)
+        write(21,*)r,theta,x,y,f(i,j)!,div(i,j),plan_sl%phi(i,j),&
+        !& plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j)
      end do
-     write(21,*)' '
+     !write(21,*)' '
   end do
   close(21)
 
