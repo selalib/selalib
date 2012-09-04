@@ -7,18 +7,33 @@ module sll_module_interpolators_1d_base
 
   type, abstract :: sll_interpolator_1d_base
    contains
-     ! must delete deferred keyword for the moment because sll_WENO
-     ! (sll_WENO_node_interpolation.F90) is an extends
-     ! type of interpolator_1d_base and i don't want touch this module.
      procedure(interpolator_1d_array_msg), deferred, pass(interpolator) :: &
           compute_interpolants
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
           interpolate_value
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
           interpolate_derivative_eta1
-     
      procedure(interpolate_1d_array), pass, deferred :: interpolate_array
+     procedure(interpolate_1d_array_at_displacement), pass, deferred :: interpolate_array_disp
      procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
+     ! The following two are equivalent, and differ only by the type of
+     ! the input and output data, one acts on 1d arrays, the other on 1d
+     ! pointers. This is done for flexibility purposes.
+     procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
+          interpolate_array_values
+     procedure(interpolator_1d_ptr_sub), deferred, pass(interpolator) :: &
+          interpolate_pointer_values
+     ! The following two are equivalent, and differ only by the type of
+     ! the input and output data, one acts on 1d arrays, the other on 1d
+     ! pointers. This is done for flexibility purposes.
+     procedure(interpolator_1d_array_sub), deferred, pass(interpolator) :: &
+          interpolate_array_derivatives
+     procedure(interpolator_1d_ptr_sub), deferred, pass(interpolator) :: &
+          interpolate_pointer_derivatives
+     ! Momentarily comment these out until we are actually going to have
+     ! implementations for them.
+     ! procedure(interpolate_1d_array), pass, deferred :: interpolate_array
+     ! procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
   end type sll_interpolator_1d_base
 
  ! Signature of the interpolating function  
@@ -42,6 +57,38 @@ module sll_module_interpolators_1d_base
   end interface
 
   abstract interface
+     subroutine interpolator_1d_array_sub( &
+       interpolator, &
+       num_pts, &
+       vals_to_interpolate, &
+       output_array )
+
+       use sll_working_precision
+       import :: sll_interpolator_1d_base
+       class(sll_interpolator_1d_base), intent(in) :: interpolator
+       sll_int32, intent(in)                :: num_pts
+       sll_real64, dimension(:), intent(in) :: vals_to_interpolate
+       sll_real64, dimension(:), intent(out):: output_array
+     end subroutine interpolator_1d_array_sub
+  end interface
+
+  abstract interface
+     subroutine interpolator_1d_ptr_sub( &
+       interpolator, &
+       num_pts, &
+       vals_to_interpolate, &
+       output )
+
+       use sll_working_precision
+       import :: sll_interpolator_1d_base
+       class(sll_interpolator_1d_base), intent(in) :: interpolator
+       sll_int32, intent(in)                :: num_pts
+       sll_real64, dimension(:), pointer :: vals_to_interpolate
+       sll_real64, dimension(:), pointer :: output
+     end subroutine interpolator_1d_ptr_sub
+  end interface
+
+  abstract interface
      function interpolate_1d_array(this, num_points, data, coordinates) &
           result(res)
 
@@ -54,6 +101,25 @@ module sll_module_interpolators_1d_base
        sll_real64, dimension(:), intent(in) :: coordinates  
        sll_real64, dimension(num_points)    :: res
      end function interpolate_1d_array
+  end interface
+
+  ! it is a bad practice to return large arrays like this. Must modify.
+  abstract interface
+     function interpolate_1d_array_at_displacement( &
+       this, &
+       num_points, &
+       data, &
+       alpha) result(res)
+
+       use sll_working_precision
+       import sll_interpolator_1d_base
+       class(sll_interpolator_1d_base), intent(in)     :: this
+       sll_int32, intent(in)  :: num_points    ! size of output array
+       sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated 
+       ! points where output is desired
+       sll_real64, intent(in) :: alpha  
+       sll_real64, dimension(num_points)    :: res
+     end function interpolate_1d_array_at_displacement
   end interface
 
   abstract interface
@@ -69,3 +135,4 @@ module sll_module_interpolators_1d_base
 
 
 end module sll_module_interpolators_1d_base
+

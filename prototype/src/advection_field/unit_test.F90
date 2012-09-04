@@ -6,6 +6,7 @@ program unit_test
   use sll_advection_field
   use sll_module_mapped_meshes_2d
   use sll_module_mapped_meshes_1d
+  use sll_cubic_spline_interpolator_1d
   use geometry_functions
   implicit none
  
@@ -18,6 +19,14 @@ program unit_test
   type(scalar_field_1d)                        :: phi_self
   character(len=32)                            :: name = 'adv_field'
   character(len=4)                             :: cstep
+
+  class(scalar_field_2d_initializer_base), pointer    :: pfinit
+  type(cubic_spline_1d_interpolator), target  :: interp_eta1
+  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+
+
   sll_int32                                    :: ierr, istep
   sll_int32                                    :: ix, iv, nnode_x1, nnode_v1
   sll_int32, parameter                         :: NODE_CENTERED_FIELD_COPY = 0
@@ -39,6 +48,14 @@ program unit_test
        affine_jac22 )
   pm2d => mesh2d
 
+  ! Set up the interpolators for the field
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  interp_eta1_ptr => interp_eta1
+  interp_eta2_ptr => interp_eta2
+
+
+
   print*, 'initialization of advection field'
 
   call initialize_advection_field_2d( &
@@ -47,7 +64,9 @@ program unit_test
        1.0_f64, &
        name, &
        pm2d, &
-       NODE_CENTERED_FIELD_COPY)
+       NODE_CENTERED_FIELD_COPY, &
+       eta1_interpolator=interp_eta1_ptr, &
+       eta2_interpolator=interp_eta2_ptr )
   
   print*, 'define 1d mesh in x for potential'
   call mesh1d%initialize( &

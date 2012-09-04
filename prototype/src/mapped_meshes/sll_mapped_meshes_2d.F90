@@ -3,8 +3,13 @@ module sll_module_mapped_meshes_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_splines
+#ifdef STDF95
+  use sll_cubic_spline_interpolator_2d
+  use sll_io
+#else
   use sll_module_mapped_meshes_2d_base
   use sll_module_interpolators_2d_base
+#endif
   implicit none
   
   ! ---------------------------------------------------------------------
@@ -42,34 +47,75 @@ module sll_module_mapped_meshes_2d
   ! collection of locations. The implementation below should provide this
   ! information in the 'jacobians' array.
 
+#ifdef STDF95
+  type                                  ::sll_mapped_mesh_2d_analytic
+     sll_int32  :: nc_eta1
+     sll_int32  :: nc_eta2
+     sll_real64 :: delta_eta1
+     sll_real64 :: delta_eta2
+     sll_real64, dimension(:,:), pointer :: x1_cell
+     sll_real64, dimension(:,:), pointer :: x2_cell
+     sll_real64, dimension(:,:), pointer :: jacobians_n
+     sll_real64, dimension(:,:), pointer :: jacobians_c
+     character(len=64) :: label
+     logical           :: written! = .false.
+#else
   type, extends(sll_mapped_mesh_2d_base)::sll_mapped_mesh_2d_analytic
+#endif
      sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
-     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j) 
+     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
+#ifdef STDF95
+#else
+     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
-     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
           jacobian_func
-     procedure(j_matrix_f_nopass), pointer, nopass          :: jacobian_matrix
+     procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_analytic
+     ! Functions with integer arguments
      procedure, pass(mesh) :: x1_at_node => x1_node_analytic
      procedure, pass(mesh) :: x2_at_node => x2_node_analytic
      procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_analytic
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_analytic
+     procedure, pass(mesh) :: x2_at_cell => x2_cell_analytic
+     procedure, pass(mesh) :: jacobian_at_cell => jacobian_2d_cell_analytic
+     ! Functions with real arguments
      procedure, pass(mesh) :: x1         => x1_analytic
      procedure, pass(mesh) :: x2         => x2_analytic
      procedure, pass(mesh) :: jacobian   => jacobian_2d_analytic
+     procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_analytic
+#endif
   end type sll_mapped_mesh_2d_analytic
-  
+
+#ifdef STDF95
+  type                                  ::sll_mapped_mesh_2d_discrete
+     sll_int32  :: nc_eta1
+     sll_int32  :: nc_eta2
+     sll_real64 :: delta_eta1
+     sll_real64 :: delta_eta2
+     sll_real64, dimension(:,:), pointer :: x1_cell
+     sll_real64, dimension(:,:), pointer :: x2_cell
+     sll_real64, dimension(:,:), pointer :: jacobians_n
+     sll_real64, dimension(:,:), pointer :: jacobians_c
+     character(len=64) :: label
+     logical           :: written! = .false.
+#else
   type, extends(sll_mapped_mesh_2d_base)::sll_mapped_mesh_2d_discrete
+#endif
      sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
      sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j) 
-     procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
-     procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
+#ifdef STDF95
+     type(cubic_spline_2d_interpolator), pointer            :: x1_interp
+     type(cubic_spline_2d_interpolator), pointer            :: x2_interp
+#else
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(interpolator_2d_base), pointer                   :: x1_interp
      class(interpolator_2d_base), pointer                   :: x2_interp
-!procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
+     procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
+     procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
+     !procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_discrete
      procedure, pass(mesh) :: x1_at_node => x1_node_discrete
@@ -77,9 +123,43 @@ module sll_module_mapped_meshes_2d
      procedure, pass(mesh) :: jacobian_at_node => mesh_2d_jacobian_node_discrete
      procedure, pass(mesh) :: x1         => x1_discrete
      procedure, pass(mesh) :: x2         => x2_discrete
+     procedure, pass(mesh) :: x1_at_cell => x1_cell_discrete
+     procedure, pass(mesh) :: x2_at_cell => x2_cell_discrete
+     procedure, pass(mesh) :: jacobian_at_cell => jacobian_2d_cell_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
+     procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_discrete
+#endif
   end type sll_mapped_mesh_2d_discrete
 
+#ifdef STDF95
+  interface initialize 
+     module procedure initialize_mesh_2d_discrete, initialize_mesh_2d_analytic
+  end interface
+
+  interface x1_at_node 
+     module procedure x1_node_analytic, x1_node_discrete
+  end interface
+
+  interface x2_at_node 
+     module procedure x2_node_analytic, x2_node_discrete
+  end interface
+
+  interface x1 
+     module procedure x1_discrete
+  end interface
+
+  interface x2
+     module procedure x2_discrete
+  end interface
+
+  interface jacobian
+     module procedure jacobian_2d_discrete 
+  end interface
+
+  interface write_to_file
+     module procedure mma_write_to_file_2d_analytic, write_to_file_2d_discrete 
+  end interface
+#else
   abstract interface
      function j_matrix_f_nopass ( eta1, eta2) result(val)
        use sll_working_precision
@@ -117,6 +197,7 @@ module sll_module_mapped_meshes_2d
   type jacobian_matrix_element
      procedure(two_arg_scalar_function), pointer, nopass :: f
   end type jacobian_matrix_element
+#endif
   
 #if 0
   interface delete
@@ -135,9 +216,13 @@ contains
   ! initialize_mapped_mesh_2D_general() allocates all the memory needed by 
   ! the 2D map. 
 
+!#ifdef STDF95
+!  subroutine mma_initialize( &
+!#else
   subroutine initialize_mesh_2d_analytic( &
+!#endif
     mesh,           &
-    label,           &
+    label,          &
     npts1,          &
     npts2,          &
     x1_func,        &
@@ -147,16 +232,29 @@ contains
     j21_func,       &
     j22_func )
 
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic), intent(inout) :: mesh
+#else
     class(sll_mapped_mesh_2d_analytic), intent(inout) :: mesh
+#endif
     character(len=*), intent(in)                  :: label
     sll_int32, intent(in)                         :: npts1
     sll_int32, intent(in)                         :: npts2
+#ifdef STDF95
+    sll_real64            :: x1_func
+    sll_real64            :: x2_func
+    sll_real64            :: j11_func
+    sll_real64            :: j12_func
+    sll_real64            :: j21_func
+    sll_real64            :: j22_func
+#else
     procedure(two_arg_scalar_function)            :: x1_func
     procedure(two_arg_scalar_function)            :: x2_func
     procedure(two_arg_scalar_function)            :: j11_func
     procedure(two_arg_scalar_function)            :: j12_func
     procedure(two_arg_scalar_function)            :: j21_func
     procedure(two_arg_scalar_function)            :: j22_func
+#endif
 
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: delta_2  ! cell spacing in eta2 
@@ -187,6 +285,8 @@ contains
     SLL_ALLOCATE(mesh%x1_cell(npts1-1, npts2-1), ierr)
     SLL_ALLOCATE(mesh%x2_cell(npts1-1, npts2-1), ierr)
 
+#ifdef STDF95
+#else
     ! Assign the transformation functions
     mesh%x1_func => x1_func
     mesh%x2_func => x2_func
@@ -198,6 +298,7 @@ contains
     mesh%j_matrix(2,1)%f => j21_func
     mesh%j_matrix(2,2)%f => j22_func
     mesh%jacobian_func   => jacobian_2d_analytic
+#endif
     
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
@@ -213,7 +314,14 @@ contains
           ! for some compiler reason, the following intermediate 
           ! variable is required, else the jacobians_n array will not
           ! be filled out properly.
-          jacobian_val             = mesh%jacobian_func(eta_1,eta_2)
+#ifdef STDF95
+          ! We can't define jacobian_2d_analytic because it use procedure pointer
+          ! So we compute directly the jacobian with their components
+          jacobian_val          = j11_func(eta_1,eta_2)*j22_func(eta_1,eta_2) &
+                                  - j12_func(eta_1,eta_2)*j21_func(eta_1,eta_2)
+#else
+          jacobian_val          = mesh%jacobian_func(eta_1,eta_2)
+#endif
           mesh%jacobians_n(i+1,j+1) = jacobian_val
        end do
     end do
@@ -225,11 +333,18 @@ contains
           eta_1 = delta_1*(real(i,f64) + 0.5_f64)
           mesh%x1_cell(i+1,j+1)     = x1_func(eta_1, eta_2)
           mesh%x2_cell(i+1,j+1)     = x2_func(eta_1, eta_2)
+#ifdef STDF95
+          mesh%jacobians_c(i+1,j+1) = j11_func(eta_1,eta_2)*j22_func(eta_1,eta_2) &
+                                  - j12_func(eta_1,eta_2)*j21_func(eta_1,eta_2)
+#else
           mesh%jacobians_c(i+1,j+1) = mesh%jacobian_func(eta_1,eta_2)
+#endif
        end do
     end do
   end subroutine initialize_mesh_2d_analytic
 
+#ifdef STDF95
+#else
   function jacobian_2d_analytic( mesh, eta1, eta2 ) result(val)
     sll_real64                        :: val
     class(sll_mapped_mesh_2d_analytic) :: mesh
@@ -250,6 +365,32 @@ contains
     val = j11*j22 - j12*j21
   end function jacobian_2d_analytic
 
+  ! The efficiency of the following function could be improved by just
+  ! passing the output array rather than returning values on the stack which
+  ! need to be caught by the caller.
+  function jacobian_matrix_2d_analytic( mesh, eta1, eta2 )
+    sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_analytic
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
+    j11 = (mesh%j_matrix(1,1)%f( eta1, eta2 ))
+    j12 = (mesh%j_matrix(1,2)%f( eta1, eta2 ))
+    j21 = (mesh%j_matrix(2,1)%f( eta1, eta2 ))
+    j22 = (mesh%j_matrix(2,2)%f( eta1, eta2 ))
+    ! For debugging:
+    !    print *, 'jacobian_2d_analytic: '
+    !    print *, j11, j12
+    !    print *, j21, j22
+    jacobian_matrix_2d_analytic(1,1) = j11
+    jacobian_matrix_2d_analytic(1,2) = j12
+    jacobian_matrix_2d_analytic(2,1) = j21
+    jacobian_matrix_2d_analytic(2,2) = j22
+  end function jacobian_matrix_2d_analytic
+
   function x1_analytic( mesh, eta1, eta2 ) result(val)
     sll_real64                         :: val
     class(sll_mapped_mesh_2d_analytic) :: mesh
@@ -265,22 +406,127 @@ contains
     sll_real64, intent(in) :: eta2
     val = mesh%x2_func(eta1, eta2)
   end function x2_analytic
+#endif
 
   function x1_node_analytic( mesh, i, j ) result(val)
-    sll_real64             :: val
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic) :: mesh
+#else
     class(sll_mapped_mesh_2d_analytic) :: mesh
+#endif
+    sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     val = mesh%x1_node(i,j)
   end function x1_node_analytic
 
   function x2_node_analytic( mesh, i, j ) result(val)
-    sll_real64             :: val
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic) :: mesh
+#else
     class(sll_mapped_mesh_2d_analytic) :: mesh
+#endif
+    sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     val = mesh%x2_node(i,j)
   end function x2_node_analytic
+
+  function x1_cell_analytic( mesh, i, j ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic) :: mesh
+#else
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+#endif
+    sll_real64            :: var
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    var = mesh%x1_cell(i,j)
+  end function x1_cell_analytic
+
+  function x2_cell_analytic( mesh, i, j ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic) :: mesh
+#else
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+#endif
+    sll_real64            :: var
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    var = mesh%x2_cell(i,j)
+  end function x2_cell_analytic
+
+  function jacobian_2d_cell_analytic( mesh, i, j ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic) :: mesh
+#else
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+#endif
+    sll_real64            :: var
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    var = mesh%jacobians_c(i,j)
+  end function jacobian_2d_cell_analytic
+
+#ifdef STDF95
+  subroutine mma_write_to_file_2d_analytic(mesh,output_format)
+    type(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_int32, optional :: output_format 
+    sll_int32           :: local_format 
+    sll_real64, dimension(:,:), pointer :: x1mesh
+    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_int32  :: i1
+    sll_int32  :: i2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32  :: ierr
+    sll_int32  :: file_id
+
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
+
+    if ( .not. mesh%written ) then
+
+       select case(local_format)
+
+       case (SLL_IO_XDMF)
+          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          eta1 = 0.0_f64
+          do i1=1, mesh%nc_eta1+1
+             eta2 = 0.0_f64
+             do i2=1, mesh%nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(mesh,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(mesh,i1,i2)
+                eta2 = eta2 + mesh%delta_eta2 
+             end do
+             eta1 = eta1 + mesh%delta_eta1
+          end do
+       
+          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
+               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
+          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
+
+       case default
+          print*, 'Not recognized format to write this mesh'
+          stop
+
+       end select
+
+    else
+
+       print*,' Warning, you have already written the mesh '
+
+    end if
+
+    mesh%written = .true.
+  end subroutine
+#endif
 
   !**************************************************************************
   !
@@ -289,56 +535,161 @@ contains
   !**************************************************************************
 
   function x1_node_discrete( mesh, i, j ) result(val)
-    sll_real64             :: val
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     val = mesh%x1_node(i,j)
   end function x1_node_discrete
 
   function x2_node_discrete( mesh, i, j ) result(val)
-    sll_real64             :: val
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     val = mesh%x2_node(i,j)
   end function x2_node_discrete
 
-  function x1_discrete( mesh, eta1, eta2 ) result(val)
-    sll_real64                        :: val
+  function x1_cell_discrete( mesh, i, j ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64                         :: var
+    sll_int32, intent(in)              :: i
+    sll_int32, intent(in)              :: j
+    var = mesh%x1_cell(i,j)
+  end function x1_cell_discrete
+
+  function x2_cell_discrete( mesh, i, j ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64                         :: var
+    sll_int32, intent(in)              :: i
+    sll_int32, intent(in)              :: j
+    var = mesh%x2_cell(i,j)
+  end function x2_cell_discrete
+
+  function x1_discrete( mesh, eta1, eta2 ) result(val)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+#ifdef STDF95
+    val = cubic_spline_interpolate_value(mesh%x1_interp,eta1, eta2)
+#else
     val = mesh%x1_interp%interpolate_value(eta1, eta2)
+#endif
   end function x1_discrete
 
   function x2_discrete( mesh, eta1, eta2 ) result(val)
-    sll_real64                        :: val
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+#ifdef STDF95
+    val = cubic_spline_interpolate_value(mesh%x2_interp, eta1, eta2)
+#else
     val = mesh%x2_interp%interpolate_value(eta1, eta2)
+#endif
   end function x2_discrete
 
   function jacobian_2d_discrete( mesh, eta1, eta2 ) result(jac)
-    sll_real64             :: jac
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64             :: jac
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: j11
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
+#ifdef STDF95
+    j11 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j12 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j21 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j22 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+#else
     j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
     j21 = mesh%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
     j22 = mesh%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+#endif
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
     !    print *, j21, j22
     jac = j11*j22 - j12*j21
   end function jacobian_2d_discrete
+
+  function jacobian_2d_cell_discrete( mesh, i, j ) result(var)
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete)  :: mesh
+#else
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64                         :: var
+    sll_int32, intent(in)              :: i
+    sll_int32, intent(in)              :: j
+    var = mesh%jacobians_c(i,j)
+  end function jacobian_2d_cell_discrete
+
+  function jacobian_matrix_2d_discrete( mesh, eta1, eta2 )
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+#else
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_discrete
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
+#ifdef STDF95
+    j11 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j12 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j21 = cubic_spline_interpolate_derivative_eta1( mesh%x2_interp, eta1, eta2 )
+    j22 = cubic_spline_interpolate_derivative_eta2( mesh%x2_interp, eta1, eta2 )
+#else
+    j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+    j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+    j21 = mesh%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+    j22 = mesh%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+#endif
+    ! For debugging:
+    !    print *, 'jacobian_2D_discrete: '
+    !    print *, j11, j12
+    !    print *, j21, j22
+    jacobian_matrix_2d_discrete(1,1) = j11
+    jacobian_matrix_2d_discrete(1,2) = j12
+    jacobian_matrix_2d_discrete(2,1) = j21
+    jacobian_matrix_2d_discrete(2,2) = j22
+  end function jacobian_matrix_2d_discrete
 
 
   subroutine initialize_mesh_2d_discrete( &
@@ -356,15 +707,26 @@ contains
     x2_cell, &
     jacobians_cell )
 
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete)     :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete)    :: mesh
+#endif
+
     character(len=*), intent(in)         :: label
     sll_int32, intent(in)                :: npts1
     sll_int32, intent(in)                :: npts2
     sll_real64, dimension(:,:)           :: x1_node
     sll_real64, dimension(:,:)           :: x2_node
+#ifdef STDF95
+    type(cubic_spline_2d_interpolator), target  :: x1_interpolator
+    type(cubic_spline_2d_interpolator), target  :: x2_interpolator
+    type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
+#else
     class(interpolator_2d_base), target  :: x1_interpolator
     class(interpolator_2d_base), target  :: x2_interpolator
-    class(interpolator_2d_base), target  :: jacobians_n_interpolator  
+    class(interpolator_2d_base), target  :: jacobians_n_interpolator
+#endif 
     sll_real64, dimension(:,:), optional :: jacobians_node
     sll_real64, dimension(:,:), optional :: jacobians_cell
     sll_real64, dimension(:,:), optional :: x1_cell
@@ -449,9 +811,9 @@ contains
     SLL_ALLOCATE(mesh%x1_node(npts1,npts2), ierr)
     SLL_ALLOCATE(mesh%x2_node(npts1,npts2), ierr)
 
-    ! Start filling out the fields and allocating the object's memory.
-    SLL_ALLOCATE(mesh%x1_node(npts1,npts2), ierr)
-    SLL_ALLOCATE(mesh%x2_node(npts1,npts2), ierr)
+    ! Allocation for x1 and x2 at cells
+    SLL_ALLOCATE(mesh%x1_cell(npts1-1,npts2-1), ierr)
+    SLL_ALLOCATE(mesh%x2_cell(npts1-1,npts2-1), ierr)
 
     ! initialize the local arrays. Note that since the map has its
     ! own copies, it owns this information locally and will destroy
@@ -466,8 +828,14 @@ contains
     end do
 
     ! Compute the spline coefficients
+#ifdef STDF95
+    call cubic_spline_compute_interpolants( x1_interpolator, mesh%x1_node )
+    call cubic_spline_compute_interpolants( x2_interpolator, mesh%x2_node )
+#else
     call x1_interpolator%compute_interpolants( mesh%x1_node )
     call x2_interpolator%compute_interpolants( mesh%x2_node )
+#endif
+
 
     ! The splines contain all the information to compute the
     ! jacobians everywhere; however, here we explore assigning
@@ -489,9 +857,12 @@ contains
           eta_2 = real(j,f64)*mesh%delta_eta2          
           do i=0, npts1 - 1
              eta_1 = real(i,f64)*mesh%delta_eta1
-             ! FIX THIS PART!!!
+#ifdef STDF95
+             jacobian_val = jacobian_2d_discrete(mesh,eta_1,eta_2)
+#else
              jacobian_val = mesh%jacobian(eta_1,eta_2)
-             mesh%jacobians_n(i+1,j+1) = jacobian_val
+#endif
+             mesh%jacobians_c(i+1,j+1) = jacobian_val
           end do
        end do
     end if
@@ -514,12 +885,35 @@ contains
              mesh%jacobians_c(i,j) = jacobians_cell(i,j)
           end do
        end do
+    else ! if cell-based jacobians are not available, compute them.
+    ! Fill the values at the mid-point of the cells
+       do j=0, npts2 - 2
+          eta_2 = mesh%delta_eta2*(real(j,f64) + 0.5_f64)
+          do i=0, npts1 - 2
+             ! it is very bad practice to invoke the mesh methods while
+             ! we are not even done initializing the mesh object...
+             eta_1 = mesh%delta_eta1*(real(i,f64) + 0.5_f64)
+#ifdef STDF95
+             mesh%x1_cell(i+1,j+1)     = x1_discrete(mesh, eta_1, eta_2)
+             mesh%x2_cell(i+1,j+1)     = x2_discrete(mesh, eta_1, eta_2)
+             mesh%jacobians_c(i+1,j+1) = jacobian_2d_discrete(mesh, eta_1,eta_2)
+#else
+             mesh%x1_cell(i+1,j+1)     = mesh%x1(eta_1, eta_2)
+             mesh%x2_cell(i+1,j+1)     = mesh%x2(eta_1, eta_2)
+             mesh%jacobians_c(i+1,j+1) = mesh%jacobian(eta_1,eta_2)
+#endif
+          end do
+       end do
     end if
   end subroutine initialize_mesh_2d_discrete
 
   function mesh_2d_jacobian_node_analytic( mesh, i, j )
-    sll_real64              :: mesh_2d_jacobian_node_analytic
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_analytic)   :: mesh
+#else
     class(sll_mapped_mesh_2d_analytic)   :: mesh
+#endif
+    sll_real64              :: mesh_2d_jacobian_node_analytic
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
     sll_int32 :: num_pts_1
@@ -532,8 +926,12 @@ contains
   end function mesh_2d_jacobian_node_analytic
 
   function mesh_2d_jacobian_node_discrete( mesh, i, j )
-    sll_real64              :: mesh_2d_jacobian_node_discrete
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete)   :: mesh
+#else
     class(sll_mapped_mesh_2d_discrete)   :: mesh
+#endif
+    sll_real64              :: mesh_2d_jacobian_node_discrete
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
     sll_int32 :: num_pts_1
@@ -544,6 +942,67 @@ contains
     SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
     mesh_2d_jacobian_node_discrete = mesh%jacobians_n(i,j)
   end function mesh_2d_jacobian_node_discrete
+
+#ifdef STDF95
+  subroutine write_to_file_2d_discrete(mesh,output_format)
+    type(sll_mapped_mesh_2d_discrete) :: mesh
+    sll_int32, optional :: output_format 
+    sll_int32           :: local_format 
+    sll_real64, dimension(:,:), pointer :: x1mesh
+    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_int32  :: i1
+    sll_int32  :: i2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32  :: ierr
+    sll_int32  :: file_id
+
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
+
+    if ( .not. mesh%written ) then
+
+       select case(local_format)
+
+       case (SLL_IO_XDMF)
+          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          eta1 = 0.0_f64
+          do i1=1, mesh%nc_eta1+1
+             eta2 = 0.0_f64
+             do i2=1, mesh%nc_eta2+1
+                x1mesh(i1,i2) = x1_node_discrete(mesh,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(mesh,i1,i2)
+                eta2 = eta2 + mesh%delta_eta2 
+             end do
+             eta1 = eta1 + mesh%delta_eta1
+          end do
+       
+          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
+               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
+          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
+
+       case default
+          print*, 'Not recognized format to write this mesh'
+          stop
+
+       end select
+
+    else
+
+       print*,' Warning, you have already written the mesh '
+
+    end if
+
+    mesh%written = .true.
+  end subroutine
+#endif
+
 
 #if 0
   subroutine delete_mapped_mesh_2D_general( map )
