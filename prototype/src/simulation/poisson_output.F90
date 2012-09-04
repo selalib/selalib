@@ -43,7 +43,7 @@ program poisson_output
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
-        write(21,*)r,theta,x,y,f(i,j)
+        write(21,*)r,theta,x,y,phi0(i,j)
      end do
   end do
 
