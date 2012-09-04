@@ -503,6 +503,7 @@ endfunction()
 # Most mpi distros have some form of mpiexec which gives us something we can reliably look for.
 find_program(MPIEXEC
   NAMES ${_MPI_EXEC_NAMES}
+  HINTS $ENV{MPI_ROOT}
   PATHS ${_MPI_PREFIX_PATH}
   PATH_SUFFIXES bin
   DOC "Executable for running MPI programs.")
