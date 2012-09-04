@@ -9,10 +9,12 @@
 &time_iterations
   dt = 0.1
   nbiter = 500
+  freqdiag = 10	
 /
 &tsi
   kmode = 0.2
   eps = 0.001
   v0 = 2.4   
+  is_delta_f = .false.	
 /
 
