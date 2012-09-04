@@ -37,17 +37,17 @@ module sll_scalar_field_2d
   use sll_module_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   use sll_misc_utils
+  use sll_module_interpolators_1d_base
   implicit none
 
-  enum, bind(C)
-     enumerator :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
-  end enum
-
   type scalar_field_2d
-     class(sll_mapped_mesh_2d_base), pointer :: mesh
-     sll_real64, dimension(:,:), pointer     :: data
-     sll_int32                               :: data_position
-     character(len=64)                       :: name
+     class(sll_mapped_mesh_2d_base), pointer  :: mesh
+     sll_real64, dimension(:,:), pointer      :: data
+     sll_int32                                :: data_position
+     class(sll_interpolator_1d_base), pointer :: eta1_interpolator
+     class(sll_interpolator_1d_base), pointer :: eta2_interpolator
+     character(len=64)                        :: name
+     sll_int32                                :: plot_counter
   end type scalar_field_2d
 
   abstract interface
@@ -66,13 +66,17 @@ contains   ! *****************************************************************
     field_name, &
     mesh, &
     data_position, &
-    initializer)
+    eta1_interpolator, &
+    eta2_interpolator, &
+    initializer )
 
     class(scalar_field_2d), intent(inout)               :: this
     character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    class(scalar_field_2d_initializer_base), pointer, optional    :: initializer
+    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
+    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -86,17 +90,36 @@ contains   ! *****************************************************************
     SLL_ASSERT(associated(mesh))
     this%mesh => mesh
     this%mesh%written = .false.
+    
     this%name  = trim(field_name)
     num_cells1 = mesh%nc_eta1
     num_cells2 = mesh%nc_eta2
     num_pts1   = mesh%nc_eta1+1
     num_pts2   = mesh%nc_eta2+1
 
+    ! For an initializing function, argument check should not be assertions
+    ! but more permanent if-tests. There is no reason to turn these off ever.
+    if( associated(eta1_interpolator) ) then
+       this%eta1_interpolator => eta1_interpolator
+    else
+       print *, 'initialize_scalar_field_2d(): eta1_interpolator pointer ', &
+            'is not associated. Exiting...'
+       stop
+    end if
+    if( associated(eta2_interpolator) ) then
+       this%eta2_interpolator => eta2_interpolator
+    else
+       print *, 'initialize_scalar_field_2d(): eta2_interpolator pointer ', &
+            'is not associated. Exiting...'
+       stop
+    end if
+
+
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
        if (present(initializer)) then
-          call initializer%f_of_x1x2(mesh,this%data)
+          call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
@@ -107,12 +130,27 @@ contains   ! *****************************************************************
        eta1   = 0.5_f64 * delta1
        eta2   = 0.5_f64 * delta2
        if (present(initializer)) then
-          call initializer%f_of_x1x2(mesh,this%data)
+          call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
     endif
+    this%plot_counter = 0
   end subroutine initialize_scalar_field_2d
+
+  ! The following pair of subroutines are tricky. We want them as general 
+  ! services by the fields, hence we need this subroutine interface, yet
+  ! we would also like a flexibility in how the derivatives are computed.
+  ! A general interpolator interface would cover most of the cases, maybe
+  ! all. It could be that a finite difference scheme would also work, if
+  ! we ignore some of the interpolator services, like the ability to return
+  ! values anywhere instead of at the nodes.
+  ! For now, this interface would permit to have multiple implementations.
+  subroutine compute_eta1_derivative_on_col( field2d, ith_col, deriv_out )
+    type(scalar_field_2d), intent(in)    :: field2d
+    sll_int32, intent(in)                :: ith_col
+    sll_real64, dimension(:),intent(out) :: deriv_out
+  end subroutine compute_eta1_derivative_on_col
 
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
@@ -146,6 +184,10 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_int32  :: file_id
+    character(len=32) :: name
+    character(len=4) :: counter
+    character(len=4) :: center
+
 
     if (.not. present(output_format)) then
        local_format = SLL_IO_XDMF
@@ -187,7 +229,7 @@ contains   ! *****************************************************************
           do i2 = 1, num_pts2
              eta1 = 0.0_f64 
              do i1 = 1, num_pts1
-                val(i1,i2) = scalar_field%data(i1,i2) / mesh%jacobian(eta1, eta2)
+                val(i1,i2) = scalar_field%data(i1,i2)
                 eta1 = eta1 + mesh%delta_eta1
              end do
              eta2 = eta2 + mesh%delta_eta2
@@ -196,37 +238,36 @@ contains   ! *****************************************************************
      
     end if
 
+
     select case(local_format)
     case (SLL_IO_XDMF)
        
-       if (.not. present(output_file_name)) then
-       call sll_xdmf_open(  &
-            trim(scalar_field%name)//".xmf", &
-            scalar_field%mesh%label,                              &
-            num_pts1,num_pts2,file_id,ierr)
-       else
-       call sll_xdmf_open(  &
-            trim(output_file_name)//".xmf", &
-            scalar_field%mesh%label,                              &
-            num_pts1,num_pts2,file_id,ierr)
+       if (scalar_field%data_position == NODE_CENTERED_FIELD) then
+          center = "Node"
+       else if (scalar_field%data_position == CELL_CENTERED_FIELD) then
+          center = "Cell"
        end if
 
-       if (scalar_field%data_position == NODE_CENTERED_FIELD) then
-          call sll_xdmf_write_array(scalar_field%mesh%label, &
-                                    val,&
-                                    scalar_field%name,ierr,file_id, &
-                                    "Node")
-       else if (scalar_field%data_position == CELL_CENTERED_FIELD) then
-          call sll_xdmf_write_array(scalar_field%mesh%label, &
-                                    val,&
-                                    scalar_field%name,ierr,file_id, &
-                                    "Cell")
+       if (.not. present(output_file_name)) then
+          scalar_field%plot_counter = scalar_field%plot_counter+1
+          call int2string(scalar_field%plot_counter, counter)
+          name = trim(scalar_field%name)//counter
+       else 
+          name = output_file_name
        end if
+       call sll_xdmf_open(trim(name)//".xmf", &
+            scalar_field%mesh%label,        &
+            num_pts1,num_pts2,file_id,ierr)
+      
+       call sll_xdmf_write_array(trim(name), &
+                                 val,&
+                                 scalar_field%name,ierr,file_id, &
+                                 "Node")
        call sll_xdmf_close(file_id,ierr)
 
     case default
 
-       print*, "No recognized output format"
+       print*, "write_scalar_field_2d: requested output format not recognized."
        stop
     end select
 

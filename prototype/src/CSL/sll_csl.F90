@@ -7,7 +7,8 @@ module sll_csl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
+!#include "sll_mesh_types.h"
+#include "sll_field_2d.h"
 
   use numeric_constants
   !use sll_splines
@@ -15,6 +16,12 @@ module sll_csl
   use ode_solvers
   use distribution_function
   implicit none
+  enum, bind(C)
+     enumerator :: PERIODIC = 0, COMPACT = 1
+  end enum
+
+
+
 
   type csl_workspace
      type (cubic_nonunif_spline_1D), pointer :: spl_eta1
@@ -28,7 +35,8 @@ contains
 !> \return pointer to opaque data type 
   function new_csl_workspace(dist_func_2D)
     type (csl_workspace), pointer :: new_csl_workspace
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D 
+    !type (sll_distribution_function_2d), pointer  :: dist_func_2D 
+    type (sll_distribution_function_2d) :: dist_func_2D 
     sll_int32  :: ierr
     sll_int32  :: nc_eta1
     sll_int32  :: nc_eta2
@@ -43,14 +51,14 @@ contains
     SLL_ALLOCATE(new_csl_workspace,ierr)
 
     ! get dimensions
-    nc_eta1    = get_df_nc_eta1( dist_func_2D ) 
-    eta1_min   = get_df_eta1_min( dist_func_2D )
-    eta1_max   = get_df_eta1_max( dist_func_2D )
-    nc_eta2    = get_df_nc_eta2( dist_func_2D ) 
-    eta2_min   = get_df_eta2_min( dist_func_2D )
-    eta2_max   = get_df_eta2_max( dist_func_2D )
-    boundary1_type = get_df_boundary1_type( dist_func_2D )
-    boundary2_type = get_df_boundary2_type( dist_func_2D )
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
+    eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D )
+    eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D )
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+    eta2_min   = 0._f64!get_df_eta2_min( dist_func_2D )
+    eta2_max   = 1._f64!get_df_eta2_max( dist_func_2D )
+    boundary1_type = COMPACT!get_df_boundary1_type( dist_func_2D )
+    boundary2_type = PERIODIC!get_df_boundary2_type( dist_func_2D )
 
     ! initialize splines
     if (boundary1_type == PERIODIC) then
@@ -98,14 +106,14 @@ contains
   !> \param[in] deltat time step on which distribution function is advanced
   subroutine csl_first_order(csl_work, dist_func_2D, advfield, deltat)
     type (csl_workspace), pointer                   :: csl_work
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  
-    type (field_2D_vec1), pointer                   :: advfield ! advection field defined by its stream function
+    type (sll_distribution_function_2D), pointer  :: dist_func_2D  
+    type (scalar_field_2d), pointer                   :: advfield ! advection field defined by its stream function
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
-    sll_int32, parameter   :: order = 1    ! order of scheme
+    sll_int32, parameter   :: order = 1 ,field_order=4   ! order of scheme
 
-    call csl_advance_1(csl_work, dist_func_2D, advfield, advfield, deltat, order)
-    call csl_advance_2(csl_work, dist_func_2D, advfield, advfield, deltat, order)
+    call csl_advance_1(csl_work, dist_func_2D, advfield, advfield, deltat, order,field_order)
+    call csl_advance_2(csl_work, dist_func_2D, advfield, advfield, deltat, order,field_order)
   end subroutine csl_first_order
 
   !> Advances the distribution function on a time step deltat using a second
@@ -117,16 +125,16 @@ contains
   !> \param[in] deltat time step on which distribution function is advanced
   subroutine csl_second_order(csl_work, dist_func_2D, advfield_old, advfield_new, deltat)
     type (csl_workspace), pointer                   :: csl_work
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D  
-    type (field_2D_vec1), pointer                   :: advfield_old ! advection field at t
-    type (field_2D_vec1), pointer                   :: advfield_new ! advection field at t+dt
+    type (sll_distribution_function_2D), pointer  :: dist_func_2D  
+    type (scalar_field_2d), pointer                   :: advfield_old ! advection field at t
+    type (scalar_field_2d), pointer                   :: advfield_new ! advection field at t+dt
     sll_real64, intent(in)  ::  deltat  ! time step
     ! local variables
-    sll_int32, parameter   :: order = 2    ! order of scheme
+    sll_int32, parameter   :: order = 2 ,field_order=4   ! order of scheme
  
-    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order)
-    call csl_advance_2(csl_work, dist_func_2D, advfield_old, advfield_new, deltat, order)
-    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order)
+    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order,field_order)
+    call csl_advance_2(csl_work, dist_func_2D, advfield_old, advfield_new, deltat, order,field_order)
+    call csl_advance_1(csl_work, dist_func_2D, advfield_old, advfield_new, 0.5_f64*deltat, order,field_order)
   end subroutine csl_second_order
 
 
@@ -143,13 +151,13 @@ contains
                             advfield_old,   &
                             advfield_new,   &
                             deltat,         &
-                            order)
+                            order,field_order)
     type (csl_workspace), pointer :: csl_work
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
-    type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
-    type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
+    type (sll_distribution_function_2D), pointer  :: dist_func_2D
+    type (scalar_field_2d), pointer  :: advfield_old   ! adv. field at (t)
+    type (scalar_field_2d), pointer  :: advfield_new   ! adv. field at (t+dt)
     sll_real64, intent(in)  ::  deltat                           ! dt
-    sll_int32, intent(in)  :: order 
+    sll_int32, intent(in)  :: order ,field_order
 
     sll_real64, dimension(:), pointer  ::  advfield_1D_1_old
     sll_real64, dimension(:), pointer  ::  advfield_1D_1_new
@@ -181,15 +189,15 @@ contains
     SLL_ASSERT(associated(advfield_new))
 
     ! get dimensions
-    nc_eta1    = get_df_nc_eta1( dist_func_2D ) 
-    delta_eta1 = get_df_delta_eta1( dist_func_2D )
-    eta1_min   = get_df_eta1_min( dist_func_2D )
-    eta1_max   = get_df_eta1_max( dist_func_2D )
-    nc_eta2    = get_df_nc_eta2( dist_func_2D ) 
-    delta_eta2 = get_df_delta_eta2( dist_func_2D )
-    eta2_min   = get_df_eta2_min( dist_func_2D )
-    eta2_max   = get_df_eta2_max( dist_func_2D )
-    boundary1_type = get_df_boundary1_type( dist_func_2D )
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
+    delta_eta1 = GET_FIELD_DELTA_ETA1( dist_func_2D )
+    eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D )
+    eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D )
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+    delta_eta2 = GET_FIELD_DELTA_ETA2( dist_func_2D )
+    eta2_min   = 0._f64!get_df_eta2_min( dist_func_2D )
+    eta2_max   = 1._f64!get_df_eta2_max( dist_func_2D )
+    boundary1_type = COMPACT!get_df_boundary1_type( dist_func_2D )
     
     ! allocation
     SLL_ALLOCATE(advfield_1D_1_old(nc_eta1+1),ierr)
@@ -198,7 +206,13 @@ contains
     SLL_ALLOCATE(eta1_out(nc_eta1+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta1+1),ierr)
 
-    df_jac_at_i => get_df_jac_at_i( dist_func_2D )
+    !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    !do i2=1,nc_eta2
+    !  do i1=1,nc_eta1
+    !    df_jac_at_i(i1,i2) = FIELD_2D_JACOBIAN_AT_I( dist_func_2D ,i1,i2)
+    !  enddo
+    !enddo
 
     ! advection along the first direction 
     eta2 = eta2_min + 0.5_f64*delta_eta2  ! at cell center in this direction
@@ -209,11 +223,27 @@ contains
        !advfield_1D_1_new ( 1 ) = FIELD_2D_AT_I_V1( advfield_new, 1, i2 )
        advfield_1D_1_old ( 1 ) = (FIELD_2D_AT_I( advfield_old, 1, i2+1 ) - FIELD_2D_AT_I( advfield_old, 1, i2 )) / &
             ( delta_eta2)
+       if(field_order==4)then 
+       
+              advfield_1D_1_old ( 1 ) = 9._f64/8._f64*advfield_1D_1_old ( 1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, 1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_old, 1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+       endif
+            
+            
+            
        if (order == 1) then
           advfield_1D_1_new ( 1 ) = 0.0_f64
        else
           advfield_1D_1_new ( 1 ) = (FIELD_2D_AT_I( advfield_new, 1, i2+1 )   &
                - FIELD_2D_AT_I( advfield_new, 1, i2 )) / ( delta_eta2)
+       if(field_order==4)then 
+
+              advfield_1D_1_new ( 1 ) = 9._f64/8._f64*advfield_1D_1_new ( 1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, 1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_new, 1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+
+    endif
        end if
        do i1 = 2, nc_eta1+1
           ! extract subarray from advection field
@@ -221,15 +251,29 @@ contains
           !advfield_1D_1_new ( i1 ) = FIELD_2D_AT_I_V1( advfield_new, i1, i2 )
           advfield_1D_1_old ( i1 ) = (FIELD_2D_AT_I( advfield_old, i1, i2+1 ) &
                - FIELD_2D_AT_I( advfield_old, i1, i2 )) / delta_eta2
+        if(field_order==4)then 
+              
+                        advfield_1D_1_old ( i1 ) = 9._f64/8._f64*advfield_1D_1_old ( i1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, i1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_old, i1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+     
+          endif     
           if (order == 1) then
              advfield_1D_1_new ( i1 ) = 0.0_f64
           else
              advfield_1D_1_new ( i1 ) = (FIELD_2D_AT_I( advfield_new, i1, i2+1 ) &
                   - FIELD_2D_AT_I( advfield_new, i1, i2 )) / delta_eta2
+       if(field_order==4)then 
+
+                        advfield_1D_1_new ( i1 ) = 9._f64/8._f64*advfield_1D_1_new ( i1 )&
+-1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, i1,modulo(i2+2-1,nc_eta2)+1) &
+               - FIELD_2D_AT_I( advfield_new, i1,modulo(i2-1-1+nc_eta2,nc_eta2)+1 )) / ( delta_eta2 )
+
+endif
           end if
           ! compute primitive of distribution function along this line
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
-               + delta_eta1 * sll_get_df_val( dist_func_2D, i1-1, i2 )
+               + delta_eta1 * FIELD_2D_AT_I( dist_func_2D, i1-1, i2 )
           eta1 = eta1 + delta_eta1
           jacobian(i1) = df_jac_at_i( i1-1, i2 )
        end do
@@ -272,13 +316,13 @@ contains
                             advfield_old,   &
                             advfield_new,   &
                             deltat,         &
-                            order )
+                            order ,field_order)
     type (csl_workspace), pointer :: csl_work
-    type (sll_distribution_function_2D_t), pointer  :: dist_func_2D
-    type (field_2D_vec1), pointer  :: advfield_old   ! adv. field at (t)
-    type (field_2D_vec1), pointer  :: advfield_new   ! adv. field at (t+dt)
+    type (sll_distribution_function_2D), pointer  :: dist_func_2D
+    type (scalar_field_2d), pointer  :: advfield_old   ! adv. field at (t)
+    type (scalar_field_2d), pointer  :: advfield_new   ! adv. field at (t+dt)
     sll_real64, intent(in)  :: deltat                            ! dt
-    sll_int32, intent(in)   :: order                             ! order
+    sll_int32, intent(in)   :: order ,field_order                            ! order
 
     ! local variables
     sll_real64, dimension(:), pointer  ::  advfield_1D_2_old
@@ -310,15 +354,15 @@ contains
     SLL_ASSERT(associated(advfield_new))
 
     ! get dimensions
-    nc_eta1    = get_df_nc_eta1( dist_func_2D ) 
-    delta_eta1 = get_df_delta_eta1( dist_func_2D )
-    eta1_min   = get_df_eta1_min( dist_func_2D )
-    eta1_max   = get_df_eta1_max( dist_func_2D )
-    nc_eta2    = get_df_nc_eta2( dist_func_2D ) 
-    delta_eta2 = get_df_delta_eta2( dist_func_2D )
-    eta2_min   = get_df_eta2_min( dist_func_2D )
-    eta2_max   = get_df_eta2_max( dist_func_2D )
-    boundary2_type = get_df_boundary2_type( dist_func_2D )
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
+    delta_eta1 = GET_FIELD_DELTA_ETA1( dist_func_2D )
+    eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D )
+    eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D )
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+    delta_eta2 = GET_FIELD_DELTA_ETA2( dist_func_2D )
+    eta2_min   = 0._f64!get_df_eta2_min( dist_func_2D )
+    eta2_max   = 1._f64!get_df_eta2_max( dist_func_2D )
+    boundary2_type = PERIODIC!get_df_boundary2_type( dist_func_2D )
     
     ! allocation
     SLL_ALLOCATE(advfield_1D_2_old(nc_eta2+1),ierr)
@@ -327,10 +371,12 @@ contains
     SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta2+1),ierr)
 
-    df_jac_at_i => get_df_jac_at_i( dist_func_2D )
-    x1c_at_i => get_df_x1c_at_i( dist_func_2D )
-    x2c_at_i => get_df_x2c_at_i( dist_func_2D )
-
+    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    !x1c_at_i => get_df_x1c_at_i( dist_func_2D )        
+    !x2c_at_i => get_df_x2c_at_i( dist_func_2D )
+    x1c_at_i => FIELD_X1_CELL( dist_func_2D )
+    x2c_at_i => FIELD_X2_CELL( dist_func_2D )
+    
     ! advection along the second direction
     eta1 = eta1_min + 0.5_f64*delta_eta1 ! cell centered
     do i1=1, nc_eta1
@@ -340,11 +386,21 @@ contains
        !advfield_1D_2_new(1) = FIELD_2D_AT_I_V2( advfield_new, i1, 1 )
        advfield_1D_2_old ( 1 ) = (FIELD_2D_AT_I( advfield_old, i1, 1 ) &
                - FIELD_2D_AT_I( advfield_old, i1+1, 1 )) / ( delta_eta1 )
+       if(field_order==4)then 
+       advfield_1D_2_old ( 1 ) = 9._f64/8._f64*advfield_1D_2_old ( 1 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, modulo(i1+2-1,nc_eta1)+1, 1 ) &
+               - FIELD_2D_AT_I( advfield_old, modulo(i1-1-1+nc_eta1,nc_eta1)+1, 1 )) / ( delta_eta1 )
+       endif
        if (order == 1) then
           advfield_1D_2_new ( 1 ) = 0.0_f64
        else
           advfield_1D_2_new ( 1 ) = (FIELD_2D_AT_I( advfield_new, i1, 1 ) &
                - FIELD_2D_AT_I( advfield_new, i1+1, 1 )) / delta_eta1
+       if(field_order==4)then 
+       advfield_1D_2_new ( 1 ) = 9._f64/8._f64*advfield_1D_2_new ( 1 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, modulo(i1+2-1,nc_eta1)+1, 1 ) &
+               - FIELD_2D_AT_I( advfield_new, modulo(i1-1-1+nc_eta1,nc_eta1)+1, 1 )) / ( delta_eta1 )
+       endif
        end if
        do i2 = 2, nc_eta2+1
           eta2 = eta2 + delta_eta2
@@ -353,15 +409,31 @@ contains
           !advfield_1D_2_new(i2) = FIELD_2D_AT_I_V2( advfield_new, i1, i2 )
           advfield_1D_2_old ( i2 ) = (FIELD_2D_AT_I( advfield_old, i1, i2 ) &
                - FIELD_2D_AT_I( advfield_old, i1+1, i2 )) / ( delta_eta1)
+       if(field_order==4)then 
+
+                 advfield_1D_2_old ( i2 ) = 9._f64/8._f64*advfield_1D_2_old ( i2 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_old, modulo(i1+2-1,nc_eta1)+1, i2 ) &
+               - FIELD_2D_AT_I( advfield_old, modulo(i1-1-1+nc_eta1,nc_eta1)+1, i2 )) / ( delta_eta1 )
+     
+       endif               
+               
+               
           if (order == 1) then
              advfield_1D_2_new ( i2 ) = 0.0_f64
           else
              advfield_1D_2_new ( i2 ) = (FIELD_2D_AT_I( advfield_new, i1, i2 ) &
                   - FIELD_2D_AT_I( advfield_new, i1+1, i2 )) / delta_eta1
+       if(field_order==4)then 
+
+            advfield_1D_2_new ( i2 ) = 9._f64/8._f64*advfield_1D_2_new ( i2 )&
++1._f64/24._f64*(FIELD_2D_AT_I( advfield_new, modulo(i1+2-1,nc_eta1)+1, i2 ) &
+               - FIELD_2D_AT_I( advfield_new, modulo(i1-1-1+nc_eta1,nc_eta1)+1, i2 )) / ( delta_eta1 )
+
+        endif          
           end if
           ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
-               + delta_eta2 * sll_get_df_val( dist_func_2D, i1, i2-1 )
+               + delta_eta2 * FIELD_2D_AT_I( dist_func_2D, i1, i2-1 )
           jacobian(i2) = df_jac_at_i( i1, i2-1 )
        end do
        !i2 = nc_eta2+1

@@ -25,11 +25,16 @@ module sll_io
   use sll_xdmf
   use sll_gnuplot
 
+#ifdef STDF95
+    integer, parameter :: SLL_IO_XDMF = 0, &
+                  SLL_IO_VTK  = 1, &
+                  SLL_IO_GNUPLOT = 2
+#else
   enum, bind(C)
     enumerator :: SLL_IO_XDMF = 0, &
                   SLL_IO_VTK  = 1, &
                   SLL_IO_GNUPLOT = 2
   end enum
-
+#endif
   
 end module sll_io
