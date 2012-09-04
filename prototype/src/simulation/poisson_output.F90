@@ -16,7 +16,7 @@ program poisson_output
   rmax=10.0_f64
 
   nr=512
-  ntheta=256
+  ntheta=64
 
   dr=(rmax-rmin)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
