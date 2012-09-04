@@ -749,7 +749,17 @@ contains
     sll_real64, dimension(:,:), intent(inout) :: in
     sll_real64, dimension(:,:), intent(out) :: out
 
-    call poisson_solve_polar(plan%poisson,in,plan%phi)
+    sll_int32 :: i,j
+
+    out=plan%phi
+    call poisson_solve_polar_2(plan%poisson,in,plan%phi)
+    do i=1,256
+       do j=1,128
+          if (out(i,j)/=plan%phi(i,j)) then
+             print*,out(i,j)-plan%phi(i,j)
+          end if
+       end do
+    end do
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     call advect_CG_polar(plan%adv,in,out)
 
