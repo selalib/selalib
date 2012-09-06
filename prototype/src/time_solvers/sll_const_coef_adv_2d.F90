@@ -35,7 +35,7 @@ contains
 
   subroutine adv1(this, dt)
     class(const_coef_advection_2d) :: this 
-    sll_real64 :: dt
+    sll_real64, intent(in) :: dt
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
     sll_real64 :: displacement
@@ -50,7 +50,7 @@ contains
 
   subroutine adv2(this, dt)
     class(const_coef_advection_2d) :: this 
-    sll_real64 :: dt
+    sll_real64, intent(in) :: dt
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
     sll_real64 :: displacement

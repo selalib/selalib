@@ -2,14 +2,16 @@
 10.000000000000		# rmax
 256			# nr
 128			# ntheta
-30			# tf
-0.05			# factor q so that dt=q*dr
+1			# tf
+0.2			# factor q so that dt=q*dr
+150			# visualization step
 
-4	# computation of caracteristics
-3	# computation of gradian
-2	# distribution function
-1	# scheme
-0	# visualization
+4			# computation of caracteristics
+3			# computation of gradian
+2			# distribution function
+1			# scheme
+1			# visualization
+CG_final.dat		# file if f is read in a file
 
 scheme to compute caracteristics
 1 : using explicit Euler method

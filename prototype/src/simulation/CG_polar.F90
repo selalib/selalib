@@ -38,8 +38,8 @@ program cg_polar
   t2 => new_time_mark()
   t3 => new_time_mark()
 
-  !>files 'CG_data.dat' and 'CG_case.dat' are included in directory selalib/prototype/src/simulation
-  !>copy them in the same directory as the executable
+  !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
+  !>copy it in the same directory as the executable
   open(27,file='CG_data.dat',action="read")
   read(27,*)rmin
   read(27,*)rmax
@@ -47,6 +47,7 @@ program cg_polar
   read(27,*)ntheta
   read(27,*)fin
   read(27,*)dt
+  read(27,*)visustep
 
   read(27,*)
   
@@ -55,6 +56,7 @@ program cg_polar
   read(27,*)fcase
   read(27,*)scheme
   read(27,*)visu
+!  read(24,*)f_file
   close(27)
 
   tf=real(fin,f64)
@@ -96,7 +98,7 @@ program cg_polar
 
   tf=real(nb_step,f64)*dt
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
-  visustep=2000
+  !visustep=2000
 
 !!$  !scheme to compute caracteristics
 !!$  ! 1 : using explicit Euler method
@@ -186,14 +188,14 @@ program cg_polar
      end do
 
   else if (fcase==5) then
-     open(25,file='CGfinal.dat',action="read")
+     open(25,file=f_file,action="read")
      read(25,*)
      read(25,*)
      read(25,*)
      do i=i,nr+1
         do j=1,ntheta+1
            print*,i,j
-           read(25,'(2X,5(1F18.16,8X))')r,theta,x,y,f(i,j)
+           read(25,*)r,theta,x,y,f(i,j)
         end do
         !read(25,*)
      end do
@@ -210,7 +212,7 @@ program cg_polar
 
   fp1=0.0_f64
 
-  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+  call poisson_solve_polar_2(plan_sl%poisson,f,plan_sl%phi)
   call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
   !do i=1,nr+1
   !   r=rmin+dr*real(i-1,f64)
@@ -223,7 +225,7 @@ program cg_polar
   call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write f in a file before calculations
-  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+!!$  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
 !!$  open (unit=20,file='CGinit.dat')
 !!$    do i=1,nr+1
 !!$     r=rmin+real(i-1,f64)*dr
@@ -231,12 +233,12 @@ program cg_polar
 !!$        theta=real(j-1,f64)*dtheta
 !!$        x=r*cos(theta)
 !!$        y=r*sin(theta)
-!!$        write(20,*)r,theta,x,y,f(i,j),div(i,j)
+!!$        write(20,*)r,theta,x,y,f(i,j),plan_sl%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
 !!$     end do
 !!$     write(20,*)' '
 !!$  end do
 !!$  close(20)
-
+!!$stop
 
 
 
@@ -384,7 +386,7 @@ program cg_polar
      end if
      
      if (step/visustep*visustep==step) then
-        call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+        call print2dper(dom,plan_sl%phi(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
      end if
 
 !!$     if (abs(real(step)*dt-125.)<=1e-3) then
@@ -411,18 +413,18 @@ program cg_polar
   ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
   print*,'# temps pour faire la boucle en temps : ',hh,'h',min,'min',ss,'s'
 
-  !checking divergence of field
-  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
-  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
-  do i=1,nr+1
-     r=rmin+dr*real(i-1,f64)
-     do j=1,ntheta+1
-        temps=plan_sl%adv%field(1,i,j)/r
-        plan_sl%adv%field(1,i,j)=-plan_sl%adv%field(2,i,j)
-        plan_sl%adv%field(2,i,j)=temps
-     end do
-  end do
-  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
+!!$  !checking divergence of field
+!!$  call poisson_solve_polar_2(plan_sl%poisson,f,plan_sl%phi)
+!!$  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
+!!$  do i=1,nr+1
+!!$     r=rmin+dr*real(i-1,f64)
+!!$     do j=1,ntheta+1
+!!$        temps=plan_sl%adv%field(1,i,j)/r
+!!$        plan_sl%adv%field(1,i,j)=-plan_sl%adv%field(2,i,j)
+!!$        plan_sl%adv%field(2,i,j)=temps
+!!$     end do
+!!$  end do
+!!$  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write the final f in a file
   call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
@@ -439,7 +441,7 @@ program cg_polar
         write(21,*)r,theta,x,y,f(i,j)!,div(i,j),plan_sl%phi(i,j),&
         !& plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j)
      end do
-     !write(21,*)' '
+     write(21,*)' '
   end do
   close(21)
 
