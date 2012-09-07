@@ -1,9 +1,3 @@
-
-!**************************************************************************
-!
-! Selalib 2012     
-! Module: sll_poisson_3d_periodic.F90
-!
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012

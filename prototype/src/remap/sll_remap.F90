@@ -2947,6 +2947,122 @@ contains  !******************************************************************
     loc_sz_l = l_max - l_min + 1
   end subroutine compute_local_sizes_4d
 
+  !***************************************************************************
+  !
+  ! Functions that operate with more than one dimension.
+  !
+  ! We've found that sometimes it may be necessary to interpret a layout of
+  ! a given dimension, say 4D, as a layout of a different dimension, like 2D.
+  ! For this operation to be valid some conditions need to be met. For
+  ! example, in the 4D to 2D case, some array dimensions should be equal to 1
+  ! in order to reinterpret the layout properly. Here we just proceed to add
+  ! these routines as we need them.
+  !
+  !***************************************************************************
 
+  ! layout_2D_from_layout_4D() takes a 4D layout that describes the distribution
+  ! of a 4D array of dimensions npx1 X npx2 X 1 X 1 and returns a 2D layout,
+  ! defined over the same collective, which describes the distribution of a 2D
+  ! array of dimensions npx1 X npx2. Note that it assumes that it is the last
+  ! two dimensions which are of size 1.
+  ! 
+  ! This function is special in that it allocates the new layout to be returned.
+  ! So the usual interface of declaring the layout, calling new_layout() and
+  ! then initializing is not followed. This irregularity is itself a bit of
+  ! a problem, but may be a sign that the usual way to allocate and initialize
+  ! layouts might need to be merged.
+  function layout_2D_from_layout_4D( layout4d )
+    type(layout_2D), pointer :: layout_2D_from_layout_4D
+    type(layout_4D), pointer :: layout4d
+    type(sll_collective_t), pointer :: coll
+    sll_int32                :: coll_size
+    sll_int32                :: process
+    sll_int32                :: i_min
+    sll_int32                :: i_max
+    sll_int32                :: j_min
+    sll_int32                :: j_max
+    sll_int32                :: k_min
+    sll_int32                :: k_max
+    sll_int32                :: l_min
+    sll_int32                :: l_max
+
+    SLL_ASSERT( associated(layout4d) )
+    coll                     => get_layout_collective( layout4d )
+    coll_size                = sll_get_collective_size( coll )
+    layout_2D_from_layout_4D => new_layout_2d( coll )
+    ! Just copy the contents of the layout
+    do process=0, coll_size-1
+       i_min = get_layout_i_min( layout4d, process )
+       i_max = get_layout_i_max( layout4d, process )
+       j_min = get_layout_j_min( layout4d, process )
+       j_max = get_layout_j_max( layout4d, process )
+       call set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
+       call set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
+       call set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
+       call set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
+       ! For safety, check if there is any loss of information
+       k_min = get_layout_k_min( layout4d, process )
+       k_max = get_layout_k_max( layout4d, process )
+       l_min = get_layout_l_min( layout4d, process )
+       l_max = get_layout_l_max( layout4d, process )
+       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
+           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+           print *, 'WARNING, layout_2D_from_layout_4D(): there is loss of ',&
+                'information in the convertion. Printing values:'
+           print *, 'k_min = ', k_min
+           print *, 'k_max = ', k_max
+           print *, 'l_min = ', l_min
+           print *, 'l_max = ', l_max
+        end if
+    end do
+  end function layout_2D_from_layout_4D
+
+#if 0
+  function layout_4D_from_layout_2D( layout2d )
+    type(layout_4D), pointer :: layout_4D_from_layout_2D
+    type(layout_2D), pointer :: layout2d
+    type(sll_collective_t), pointer :: coll
+    sll_int32                :: coll_size
+    sll_int32                :: process
+    sll_int32                :: i_min
+    sll_int32                :: i_max
+    sll_int32                :: j_min
+    sll_int32                :: j_max
+    sll_int32                :: k_min
+    sll_int32                :: k_max
+    sll_int32                :: l_min
+    sll_int32                :: l_max
+
+    SLL_ASSERT( associated(layout4d) )
+    coll                     => get_layout_collective( layout4d )
+    coll_size                = sll_get_collective_size( coll )
+    layout_2D_from_layout_4D => new_layout_4d( coll )
+    ! Just copy the contents of the layout
+    do process=0, coll_size-1
+       i_min = get_layout_i_min( layout4d, process )
+       i_max = get_layout_i_max( layout4d, process )
+       j_min = get_layout_j_min( layout4d, process )
+       j_max = get_layout_j_max( layout4d, process )
+       call set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
+       call set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
+       call set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
+       call set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
+       ! For safety, check if there is any loss of information
+       k_min = get_layout_k_min( layout4d, process )
+       k_max = get_layout_k_max( layout4d, process )
+       l_min = get_layout_l_min( layout4d, process )
+       l_max = get_layout_l_max( layout4d, process )
+       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or.
+           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+           print *, 'WARNING, layout_2D_from_layout_4D(): there is loss of ',&
+                'information in the convertion. Printing values:'
+           print *, 'k_min = ', k_min
+           print *, 'k_max = ', k_max
+           print *, 'l_min = ', l_min
+           print *, 'l_max = ', l_max
+        end if
+    end do
+  end function layout_2D_from_layout_4D
+#endif
 
 end module remapper
