@@ -6,79 +6,85 @@ module sll_fft
   use numeric_constants
   use fft_utils
   implicit none
-
+  
   type sll_fft_plan
-    sll_comp64, dimension(:), pointer :: t => null()          ! twiddle factors complex case
-    sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors real case 
-    sll_real64, dimension(:), pointer :: twiddles_n => null() ! twiddles factors real case 
-
-    sll_int32                        :: style
-    sll_int32                        :: library
-    sll_int32                        :: direction
-    sll_int32                        :: problem_rank
-    sll_int32, dimension(:), pointer :: problem_shape => null()
-    sll_int32, dimension(:), pointer :: scramble_index => null()
+     ! twiddle factors complex case
+     sll_comp64, dimension(:), pointer :: t => null()         
+     ! twiddles factors real case  
+     sll_real64, dimension(:), pointer :: twiddles => null()  
+     ! twiddles factors real case 
+     sll_real64, dimension(:), pointer :: twiddles_n => null() 
+     sll_int32                        :: style
+     sll_int32                        :: library
+     sll_int32                        :: direction
+     sll_int32                        :: problem_rank
+     sll_int32, dimension(:), pointer :: problem_shape => null()
+     sll_int32, dimension(:), pointer :: scramble_index => null()
   end type sll_fft_plan
-
+  
   interface fft_new_plan
-    module procedure fft_new_plan_c2c_1d, fft_new_plan_c2c_2d, &
-       fft_new_plan_r2r_1d, &
-       fft_new_plan_r2c_1d, fft_new_plan_c2r_1d, &
-       fft_new_plan_r2c_2d, fft_new_plan_c2r_2d
-  end interface
+     module procedure &
+          fft_new_plan_c2c_1d, fft_new_plan_c2c_2d, &
+          fft_new_plan_r2r_1d, &
+          fft_new_plan_r2c_1d, fft_new_plan_c2r_1d, &
+          fft_new_plan_r2c_2d, fft_new_plan_c2r_2d
+  end interface fft_new_plan
+
   interface fft_apply_plan
-    module procedure fft_apply_plan_c2c_1d, fft_apply_plan_c2c_2d, &
-       fft_apply_plan_r2r_1d, &
-       fft_apply_plan_r2c_1d, fft_apply_plan_c2r_1d, &
-       fft_apply_plan_r2c_2d, fft_apply_plan_c2r_2d
-  end interface 
+     module procedure &
+          fft_apply_plan_c2c_1d, fft_apply_plan_c2c_2d, &
+          fft_apply_plan_r2r_1d, &
+          fft_apply_plan_r2c_1d, fft_apply_plan_c2r_1d, &
+          fft_apply_plan_r2c_2d, fft_apply_plan_c2r_2d
+  end interface fft_apply_plan
 
   interface bit_reverse
-    module procedure bit_reverse_complex, bit_reverse_integer32, &
-                     bit_reverse_integer64
-  end interface
+     module procedure &
+          bit_reverse_complex, bit_reverse_integer32, &
+          bit_reverse_integer64
+  end interface bit_reverse
  
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
-
-! Flags to pass when we create a new plan
-! We can define 31 different flags.
-! The value assigned to the flag can only be a power of two.
-! See section "How-to manipulate flags ?" for more information.
+  
+  ! Flags to pass when we create a new plan
+  ! We can define 31 different flags.
+  ! The value assigned to the flag can only be a power of two.
+  ! See section "How-to manipulate flags ?" for more information.
   integer, parameter :: FFT_NORMALIZE_FORWARD = 2**0
   integer, parameter :: FFT_NORMALIZE_INVERSE = 2**0
   integer, parameter :: FFT_NORMALIZE         = 2**0
   integer, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
   integer, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
   integer, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
-
-! Assign a value to the different library.
-! these values are completly arbitrary.
+  
+  ! Assign a value to the different library.
+  ! these values are completly arbitrary.
   integer, parameter :: SLLFFT_MOD = 0
-!  integer, parameter :: FFTPACK_MOD = 100
-!  integer, parameter :: FFTW_MOD = 1000000000
-! tranform in char* !!!
-
+  !  integer, parameter :: FFTPACK_MOD = 100
+  !  integer, parameter :: FFTW_MOD = 1000000000
+  ! tranform in char* !!!
+  
 
   interface fft_get_mode
-     module procedure fft_get_mode_complx_1d, fft_get_mode_complx_2d, &
-                      fft_get_mode_complx_3d, fft_get_mode_real_1d
-  end interface
+     module procedure &
+          fft_get_mode_complx_1d, fft_get_mode_complx_2d, &
+          fft_get_mode_complx_3d, fft_get_mode_real_1d
+  end interface fft_get_mode
 
   interface fft_set_mode
-     module procedure fft_set_mode_complx_1d, fft_set_mode_complx_2d, &
-                      fft_set_mode_complx_3d, fft_set_mode_real_1d
-  end interface
+     module procedure &
+          fft_set_mode_complx_1d, fft_set_mode_complx_2d, &
+          fft_set_mode_complx_3d, fft_set_mode_real_1d
+  end interface fft_set_mode
 
 
 contains
 
 
-
   subroutine print_defaultfftlib()
     print *, 'The library used is SLLFFT'
   end subroutine
-
 
   function fft_get_mode_complx_1d(plan,array,k) result(mode)
     type(sll_fft_plan), pointer :: plan
@@ -241,23 +247,33 @@ contains
   end subroutine
 
 
-! --------------------
-! - 2D               -
-! --------------------
-  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) result(plan)
+  ! --------------------
+  ! - 2D               -
+  ! --------------------
+  function fft_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) &
+    result(plan)
+
     sll_int32, intent(in)                            :: NX,NY
     sll_comp64, dimension(0:,0:), target, intent(in) :: array_in, array_out
     sll_int32, intent(in)                            :: direction
     sll_int32, optional,  intent(in)                 :: flags
     type(sll_fft_plan), pointer                      :: plan
     sll_int32                                        :: ierr    
+    !true if dft in the two directions, false otherwise.    
     logical                                          :: two_direction
-                 !true if dft in the two directions, false otherwise.
 
+    ! This does not look good.
+    ! 1. Error checking like this should be permanent, not with assertions.
+    ! 2. The condition should be to check for a minimum size of the array, not
+    !    to establish a strict limit.
+    ! Can fix this right now since I need to see to what extent the function
+    ! depends on the strict limit. ECG 9-5-12
+    
     SLL_ASSERT(size(array_in,dim=1).eq.NX)
     SLL_ASSERT(size(array_in,dim=2).eq.NY)
     SLL_ASSERT(size(array_out,dim=1).eq.NX)
     SLL_ASSERT(size(array_out,dim=2).eq.NY)
+
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
     plan%direction = direction
@@ -271,34 +287,36 @@ contains
     plan%problem_shape = (/ NX , NY /)
 
     two_direction = .false.
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) & 
-        .and. fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-      SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
+    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. & 
+        fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
+       SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
     else if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) ) then
-      SLL_ALLOCATE(plan%t(1:NX/2),ierr)
+       SLL_ALLOCATE(plan%t(1:NX/2),ierr)
     else if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-      SLL_ALLOCATE(plan%t(NX/2+1:NX/2+NY/2),ierr)
+       SLL_ALLOCATE(plan%t(NX/2+1:NX/2+NY/2),ierr)
     else
-      !If we are here, there is no FFT_ONLY_XXXXX_DIRECTION flags.
-      ! So we want a 2D FFT in all direction.
-      SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
-      two_direction = .true.
+       !If we are here, there is no FFT_ONLY_XXXXX_DIRECTION flags.
+       ! So we want a 2D FFT in all direction.
+       SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
+       two_direction = .true.
     endif
     
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. two_direction ) then
-      call compute_twiddles(NX,plan%t(1:NX/2))
-      if ( direction == FFT_FORWARD ) then
-        plan%t(1:NX/2) = conjg(plan%t(1:NX/2))
-      end if
-      call bit_reverse(NX/2,plan%t(1:NX/2))
+    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
+        two_direction ) then
+       call compute_twiddles(NX,plan%t(1:NX/2))
+       if ( direction == FFT_FORWARD ) then
+          plan%t(1:NX/2) = conjg(plan%t(1:NX/2))
+       end if
+       call bit_reverse(NX/2,plan%t(1:NX/2))
     endif
 
-    if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) .or. two_direction ) then
-      call compute_twiddles(NY,plan%t(NX/2+1:NX/2 + NY/2))
-      if ( direction == FFT_FORWARD ) then
-        plan%t(NX/2+1:NX/2 + NY/2) = conjg(plan%t(NX/2+1:NX/2 + NY/2))
-      end if
-      call bit_reverse(NY/2,plan%t(NX/2+1:NX/2 + NY/2))
+    if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) .or. &
+         two_direction ) then
+       call compute_twiddles(NY,plan%t(NX/2+1:NX/2 + NY/2))
+       if ( direction == FFT_FORWARD ) then
+          plan%t(NX/2+1:NX/2 + NY/2) = conjg(plan%t(NX/2+1:NX/2 + NY/2))
+       end if
+       call bit_reverse(NY/2,plan%t(NX/2+1:NX/2 + NY/2))
     endif
   end function
 
@@ -318,14 +336,19 @@ contains
     nx = fft_shape(1)
     ny = fft_shape(2)
     
+    ! Review this logic, it looks bizarre and contradictory. One should 
+    ! never have to specify SIMULTANEOUSLY FFT_ONLY_FIRST_DIRECTION and
+    ! FFT_ONLY_SECOND_DIRECTION. Such thing should make no sense. 
+    ! Formatting: was trying to limit lines to 80 character length, but 
+    ! this will have to wait for a more detailed revision. ECG 9-5-12
     if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. &
-                       fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-    two_direction = .true.
+        fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
+       two_direction = .true.
     else if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
-                       fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
-      two_direction = .false.
+             fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
+       two_direction = .false.
     else
-      two_direction = .true.
+       two_direction = .true.
     endif
 
     
