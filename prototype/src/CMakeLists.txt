@@ -169,6 +169,7 @@ set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
 # find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules). 
 # If specifying MPI_ROOT in your environment doesn't work, then try changing
 # your PATH variable.
+
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")

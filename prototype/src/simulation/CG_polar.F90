@@ -312,7 +312,7 @@ program cg_polar
         min=floor((temps-3600.0d0*real(hh))/60.0d0)
         ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
         print*,'# temps de calcul estimmé : ',hh,'h',min,'min',ss,'s'
-        call itime(time)
+        !call itime(time)
         time(3)=time(3)+ss
         time(2)=time(2)+floor(real(time(3))/60.0)
         time(3)=time(3)-60*floor(real(time(3))/60.0)
