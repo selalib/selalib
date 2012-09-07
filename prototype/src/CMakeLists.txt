@@ -165,6 +165,7 @@ set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
 # find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules). 
 # If specifying MPI_ROOT in your environment doesn't work, then try changing
 # your PATH variable.
+
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
@@ -241,6 +242,7 @@ ENDIF()
 add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
+add_subdirectory(time_solvers)
 add_subdirectory(ode_solvers)
 add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
@@ -342,6 +344,7 @@ add_test(NAME interpolators COMMAND test_interpolators_1d
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
+add_test(NAME time_splitting COMMAND test_time_splitting)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)
 add_test(NAME advection_field COMMAND test_advection_field)
