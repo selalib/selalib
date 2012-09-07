@@ -41,7 +41,8 @@ program test_time_splitting
   end do
 
   ! initialize time splitting method
-  call initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, interp_eta1_ptr, interp_eta2_ptr)
+  call initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
+       interp_eta1_ptr, interp_eta2_ptr)
   time_split => const_adv
 
   ! do some steps of lie_splitting
