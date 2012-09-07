@@ -47,9 +47,10 @@ contains
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),err)
     SLL_ALLOCATE(this%fk(nr+1),err)
     SLL_ALLOCATE(this%phik(nr+1),err)
-    SLL_ALLOCATE(this%a(3*(nr+1)),err)
-    SLL_ALLOCATE(this%cts(7*(nr+1)),err)
-    SLL_ALLOCATE(this%ipiv(nr+1),err)
+    !SLL_ALLOCATE(this%a(3*(nr+1)),err)
+    SLL_ALLOCATE(this%a(3*(nr-1)),err)
+    SLL_ALLOCATE(this%cts(7*(nr-1)),err)
+    SLL_ALLOCATE(this%ipiv(nr-1),err)
 
     this%dr=dr
     this%rmin=rmin
@@ -156,5 +157,82 @@ contains
     phi(:,ntheta+1)=phi(:,1)
 
   end subroutine poisson_solve_polar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  subroutine poisson_solve_polar_2(plan,f,phi)
+
+    implicit none
+
+    type(sll_plan_poisson_polar), intent(inout), pointer :: plan
+    sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in) :: f
+    sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
+
+    sll_real64 :: rmin,dr
+    sll_int32 :: nr, ntheta
+
+    sll_real64 :: r
+    sll_int32::i,ind_k
+
+    nr=plan%nr
+    ntheta=plan%ntheta
+    rmin=plan%rmin
+    dr=plan%dr
+
+    plan%f_fft=f
+
+    do i=1,nr+1
+       call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
+    end do
+
+   ! poisson solver
+    do ind_k=0,ntheta/2
+       do i=2,nr
+          r=rmin+real(i-1,f64)*dr
+          plan%a(3*(i-1))=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+          plan%a(3*(i-1)-1)=2.0_f64/dr**2+(real(ind_k,f64)/r)**2
+          plan%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+          plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),ind_k)
+       enddo
+
+       !neuman en rmin
+       plan%a(2)=plan%a(2)+plan%a(1)
+
+       plan%a(1)=0.0_f64
+       plan%a(3*(nr-1))=0.0_f64
+
+       call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
+       call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
+
+       plan%phik(1)=plan%phik(2)
+       plan%phik(nr+1)=cmplx(0.0_f64,0.0_f64)
+
+       do i=1,nr+1
+          call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),ind_k)
+       end do
+    end do
+
+    ! FFT INVERSE
+    do i=1,nr+1
+       call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+    end do
+
+    !phi(1,:)=0.0_f64
+    !phi(nr+1,:)=0.0_f64
+    phi(:,ntheta+1)=phi(:,1)
+
+  end subroutine poisson_solve_polar_2
 
 end module poisson_polar
