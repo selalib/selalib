@@ -71,7 +71,7 @@ program VP1d_deltaf
   call GET_COMMAND_ARGUMENT(1,case)
   ! open and read input file
   if (case == "landau") then
-     open(unit = input_file, file = '../../src/simulation/landau_input.txt')
+     open(unit = input_file, file = 'landau_input.txt')
      read(input_file, geom) 
      read(input_file, time_iterations)
      read(input_file, landau)
@@ -81,7 +81,7 @@ program VP1d_deltaf
      end if
      close(input_file)
   else if (case == "tsi") then
-     open(unit = input_file, file = '../../src/simulation/tsi_input.txt')
+     open(unit = input_file, file = 'tsi_input.txt')
      read(input_file, geom) 
      read(input_file, time_iterations)
      read(input_file,tsi)
