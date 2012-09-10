@@ -29,7 +29,12 @@ endif (NOT CMAKE_BUILD_TYPE)
 # DGFORTRAN is used to set the way in which numbers get converted to strings
 # by the preprocessor. gfotran uses "x" while other preprocessors use the
 # cpp #x. Defining the GFORTRAN flag chooses the first.
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
+get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
+  message(STATUS "gfortran compiler")
+  add_definitions(-DGFORTRAN)
+ENDIF()
+add_definitions(-DDEBUG -DMPIF90)
 
 # Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
