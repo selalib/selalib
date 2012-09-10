@@ -87,10 +87,14 @@ IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
 		set(HDF5_ROOT $ENV{HDF5_ROOT})
 	ENDIF()
+        IF( DEFINED ENV{HDF5_HOME} )
+		set(HDF5_ROOT $ENV{HDF5_HOME})
+	ENDIF()
 	find_package(HDF5 QUIET)
 	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
 		include_directories(${HDF5_INCLUDE_DIRS})
+		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
 	ELSE()
 		add_definitions(-DNOHDF5)
 		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
@@ -165,6 +169,7 @@ set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
 # find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules). 
 # If specifying MPI_ROOT in your environment doesn't work, then try changing
 # your PATH variable.
+
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
