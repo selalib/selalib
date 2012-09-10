@@ -348,6 +348,18 @@ program cg_polar
         min=floor((temps-3600.0d0*real(hh))/60.0d0)
         ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
         print*,'# temps de calcul estimmé : ',hh,'h',min,'min',ss,'s'
+<<<<<<< HEAD
+=======
+        !call itime(time)
+        time(3)=time(3)+ss
+        time(2)=time(2)+floor(real(time(3))/60.0)
+        time(3)=time(3)-60*floor(real(time(3))/60.0)
+        time(2)=time(2)+min
+        time(1)=time(1)+floor(real(time(2))/60.0)
+        time(2)=time(2)-60*floor(real(time(2))/60.0)
+        time(1)=time(1)+hh
+        print*,'#fin estimmée à',time(1),'h',time(2),"'",time(3),'"'
+>>>>>>> origin/prototype-devel
      end if
 
      if (scheme==1) then

@@ -27,6 +27,7 @@
     class(child_class), intent(inout) :: interpolator;                \
     sll_real64, intent(in) :: eta1;                                   \
     sll_real64 :: val;                                                \
+    val = 0.0_F64;                                                    \
     print *, STRNG(func_name), ': this function is not meant to ',    \
          'be called. Need an actual implementation.';                 \
     stop;                                                             \
@@ -71,6 +72,7 @@
     sll_real64, dimension(:), intent(in) :: data;                     \
     sll_real64, dimension(:), intent(in) :: coordinates;              \
     sll_real64, dimension(num_points)    :: res;                      \
+    res = 0.0_F64;                                                    \      
     print *, STRNG(func_name), ': this function is not meant to ',    \
          'be called. Need an actual implementation.';                 \
     stop;                                                             \
@@ -82,6 +84,7 @@
     sll_int32, intent(in)     :: num_points;                          \
     sll_real64, dimension(:), intent(in)  :: data;                    \
     sll_real64, dimension(num_points)     :: res;                     \
+    res = 0.0_F64;                                                    \
     print *, STRNG(func_name), ': this function is not meant to ',    \
          'be called. Need an actual implementation.';                 \
     stop;                                                             \
@@ -94,6 +97,7 @@
     sll_real64, dimension(num_points)     :: res;                     \
     sll_real64, dimension(:), intent(in)  :: data;                    \
     sll_real64, intent(in) :: alpha;                                  \
+    res = 0.0_F64;                                                    \
     print *, STRNG(func_name), ': this function is not meant to ',    \
          'be called. Need an actual implementation.';                 \
     stop;                                                             \

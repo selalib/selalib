@@ -11,6 +11,7 @@ IF(FFTPACK_ENABLED)
       sll_scalar_field_1d
       sll_mapped_meshes
       geometry_functions
+      sll_interpolators
       sll_low_level_file_io
       fftpack_module
       sll_utilities
