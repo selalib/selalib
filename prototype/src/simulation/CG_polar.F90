@@ -23,7 +23,7 @@ program cg_polar
   sll_real64, dimension(2,2) :: dom
   sll_real64 :: c1,c2,c3,k1,k2,k3
   integer :: hh,min,ss
-  !integer, dimension(3) :: time
+  integer, dimension(3) :: time
   character (len=16) :: f_file,bctop,bcbot
 
   !python script for fcase=3
