@@ -2,16 +2,19 @@
 10.000000000000		# rmax
 256			# nr
 128			# ntheta
-1			# tf
-0.2			# factor q so that dt=q*dr
-150			# visualization step
+2000			# nb_step
+0.1000000000000		# dt
+10			# visualization step
 
-4			# computation of caracteristics
+3			# computation of caracteristics
 3			# computation of gradian
 2			# distribution function
 1			# scheme
 1			# visualization
-CG_final.dat		# file if f is read in a file
+CGrestart.dat		# file if f is read in a file
+
+TOP_DIRICHLET		# boundary condition in r_max
+BOT_DIRICHLET		# boundary condition in r_min
 
 scheme to compute caracteristics
 1 : using explicit Euler method
@@ -24,8 +27,8 @@ scheme to compute caracteristics
 8 : using modified fixed point
 
 scheme to compute gradian
-1 : final differencies in r and theta
-2 : fft in theta, final differencies in r
+1 : finit differences in r and theta
+2 : fft in theta, finit differences in r
 3 : splines in r and theta
 
 distribution function
@@ -44,3 +47,5 @@ choose the visualization
 0 : gnuplot
 1 : vtk
 
+boundary conditions can be at TOP_ or BOT_ and take value NEUMANN or DIRICHLET
+ex : TOP_DIRICHLET or BOT_NEUMANN
