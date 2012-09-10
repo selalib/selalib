@@ -13,25 +13,28 @@ program cg_polar
   type(sll_SL_polar), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2,t3
   sll_real64, dimension (:,:), allocatable :: div,f,fp1,g
-  sll_int32 :: i, j, step,fin,visustep
+  sll_int32 :: i, j, step,visustep
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme,carac,grad,visu
-  sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, x, y, r1, r2
+  sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2,x,y
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
-  sll_int32 :: mod
+  sll_int32 :: mod,bc_top,bc_botom
   sll_real64 :: mode,temps,alpha
   sll_real64, dimension(2,2) :: dom
+  sll_real64 :: c1,c2,c3,k1,k2,k3
   integer :: hh,min,ss
-  integer, dimension(3) :: time
-  character (len=20) :: f_file
+  !integer, dimension(3) :: time
+  character (len=16) :: f_file,bctop,bcbot
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
-  !namelist /modes/ mod
-  mod=3
-  alpha = 1.e-3_f64
+  !namelist /nnr/ nr
+  !read(*,NML=nnr)
+
+  !alpha = 1.e-6_f64
   !alpha = 1.e-3_f64
-  !read(*,NML=modes)
+  alpha = 0.0_f64
+  mod=3
   mode=real(mod,f64)
 
   t1 => new_time_mark()
@@ -45,21 +48,20 @@ program cg_polar
   read(27,*)rmax
   read(27,*)nr
   read(27,*)ntheta
-  read(27,*)fin
+  read(27,*)nb_step
   read(27,*)dt
   read(27,*)visustep
-
   read(27,*)
-  
   read(27,*)carac
   read(27,*)grad
   read(27,*)fcase
   read(27,*)scheme
   read(27,*)visu
-!  read(24,*)f_file
+  read(27,*)f_file
+  read(27,*)
+  read(27,*)bctop
+  read(27,*)bcbot
   close(27)
-
-  tf=real(fin,f64)
 
 !!$  rmin=1.0_f64
 !!$  rmax=10.0_f64
@@ -77,6 +79,21 @@ program cg_polar
   dom(2,1)=rmax
   dom(2,2)=2.0_f64*sll_pi
 
+!print*,bctop,bcbot
+
+  if (bctop=='TOP_DIRICHLET') then
+     bc_top=TOP_DIRICHLET
+  else if(bctop=='TOP_NEUMANN') then
+     bc_top=TOP_NEUMANN
+  end if
+  if (bcbot=='BOT_DIRICHLET') then
+     bc_botom=BOT_DIRICHLET
+  else if(bctop=='BOT_NEUMANN') then
+     bc_botom=BOT_NEUMANN
+  end if
+
+!print*,bc_top,bc_botom
+
   !choose the way to define dt, tf and nb_step
   !the tree ways are equivalent
   !we should have dt<=0.1*dr
@@ -86,17 +103,17 @@ program cg_polar
 !!$  nb_step=5690
 !!$  dt=tf/real(nb_step,f64)
 
-  !definition of nb_step=tf/dt
-  dt=dt*dr
-  !tf=100.0_f64
-  nb_step=ceiling(tf/dt)
+!!$  !definition of nb_step=tf/dt
+!!$  dt=dt*dr
+!!$  !tf=100.0_f64
+!!$  nb_step=ceiling(tf/dt)
 
-!!$  !definition of tf=dt*nb_step
-!!$  nb_step=0
-!!$  dt=0.05_f64*dr
-!!$  tf=dt*real(nb_step,f64)
+  !definition of tf=dt*nb_step
+  !nb_step=0
+  !dt=0.05_f64*dr
+  tf=dt*real(nb_step,f64)
 
-  tf=real(nb_step,f64)*dt
+  !tf=real(nb_step,f64)*dt
   print*,'# nb_step =',nb_step,' dt =',dt,'tf =',tf
   !visustep=2000
 
@@ -111,9 +128,9 @@ program cg_polar
 !!$  ! 8 : using modified fixed point
 !!$  carac=4
 !!$
-!!$  !scheme to compute gradian
-!!$  ! 1 : final differencies in r and theta
-!!$  ! 2 : fft in theta, final differencies in r
+!!$  !scheme to compute gradient
+!!$  ! 1 : finit differences in r and theta
+!!$  ! 2 : fft in theta, finit differences in r
 !!$  ! 3 : splines in r and theta
 !!$  grad=3
 !!$
@@ -137,7 +154,7 @@ program cg_polar
 !!$  ! 1 : vtk
 !!$  visu=0
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad,carac)
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad,carac,(bc_top+bc_botom))
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
   SLL_ALLOCATE(g(ntheta+1,nr+1),i)
@@ -189,16 +206,7 @@ program cg_polar
 
   else if (fcase==5) then
      open(25,file=f_file,action="read")
-     read(25,*)
-     read(25,*)
-     read(25,*)
-     do i=i,nr+1
-        do j=1,ntheta+1
-           print*,i,j
-           read(25,*)r,theta,x,y,f(i,j)
-        end do
-        !read(25,*)
-     end do
+     read(25)f
      close(25)
 
   else
@@ -212,7 +220,7 @@ program cg_polar
 
   fp1=0.0_f64
 
-  call poisson_solve_polar_2(plan_sl%poisson,f,plan_sl%phi)
+  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
   call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
   !do i=1,nr+1
   !   r=rmin+dr*real(i-1,f64)
@@ -222,23 +230,51 @@ program cg_polar
   !      plan_sl%adv%field(2,i,j)=temps
   !   end do
   !end do
-  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
+  !call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write f in a file before calculations
-!!$  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+!!$  k1=(r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
+!!$  k2=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
+!!$  k3=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
+!!$  c1=(2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax)+r1**2-r2**2)*log(rmin)/(-4.0_f64*log(rmin/rmax))
+!!$  c2=(2.0_f64*r2**2*log(rmin)*log(r2/rmax)+2.0_f64*r1**2*log(rmax)*log(rmin/r1)+r1**2*log(rmax)-r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
+!!$  c3=(r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin)+2.0_f64*r1**2*log(rmin/r1))*log(rmax)/(-4.0_f64*log(rmin/rmax))
+!!$  alpha=0
+!!$  l1=0.0_f64
+!!$  l2=0.0_f64
 !!$  open (unit=20,file='CGinit.dat')
-!!$    do i=1,nr+1
+!!$  do i=1,nr+1
 !!$     r=rmin+real(i-1,f64)*dr
+!!$     if (r<r1) then
+!!$        temps=k1*log(r)+c1
+!!$     else if (r>r2) then
+!!$        temps=k3*log(r)+c3
+!!$     else
+!!$        temps=k2*log(r)-r**2/4.0_f64+c2
+!!$     end if
 !!$     do j=1,ntheta+1
 !!$        theta=real(j-1,f64)*dtheta
 !!$        x=r*cos(theta)
 !!$        y=r*sin(theta)
-!!$        write(20,*)r,theta,x,y,f(i,j),plan_sl%phi(i,j),(r-rmin)**3*(r-rmax)**3*cos(mode*theta)
+!!$        !print*,plan_sl%phi(i,j)-temps
+!!$        write(20,*)r,theta,x,y,plan_sl%phi(i,j),temps,plan_sl%phi(i,j)-temps
+!!$        alpha=max(alpha,abs(plan_sl%phi(i,j)-temps))
+!!$        if (i==1 .or. i==nr+1) then
+!!$           l1=l1+abs(plan_sl%phi(i,j)-temps)*r/2.0_f64
+!!$           l2=l2+(plan_sl%phi(i,j)-temps)**2*r/2.0_f64
+!!$        else
+!!$           l1=l1+abs(plan_sl%phi(i,j)-temps)*r
+!!$           l2=l2+(plan_sl%phi(i,j)-temps)**2*r
+!!$        end if
 !!$     end do
 !!$     write(20,*)' '
 !!$  end do
 !!$  close(20)
-!!$stop
+!!$  l1=l1*dr*dtheta
+!!$  l2=sqrt(l2*dr*dtheta)
+!!$  print*,nr,dr,alpha,l1,l2
+
 
 
 
@@ -312,15 +348,6 @@ program cg_polar
         min=floor((temps-3600.0d0*real(hh))/60.0d0)
         ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
         print*,'# temps de calcul estimmé : ',hh,'h',min,'min',ss,'s'
-        call itime(time)
-        time(3)=time(3)+ss
-        time(2)=time(2)+floor(real(time(3))/60.0)
-        time(3)=time(3)-60*floor(real(time(3))/60.0)
-        time(2)=time(2)+min
-        time(1)=time(1)+floor(real(time(2))/60.0)
-        time(2)=time(2)-60*floor(real(time(2))/60.0)
-        time(1)=time(1)+hh
-        print*,'#fin estimmée à',time(1),'h',time(2),"'",time(3),'"'
      end if
 
      if (scheme==1) then
@@ -334,7 +361,7 @@ program cg_polar
 !!$     else if (scheme==3) then
 !!$        !leap-frog scheme
 !!$        if (step==1) then
-!!$           call SL_ordre_2()
+!!$           call SL_ordre_2(plan_sl,f,fp1)
 !!$        else 
 !!$           call poisson_solve_polar()
 !!$           call compute_grad_field()
@@ -386,22 +413,8 @@ program cg_polar
      end if
      
      if (step/visustep*visustep==step) then
-        call print2dper(dom,plan_sl%phi(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+        call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
      end if
-
-!!$     if (abs(real(step)*dt-125.)<=1e-3) then
-!!$        open(24,file='125s.dat')
-!!$        do i=1,nr+1
-!!$           r=rmin+real(i-1,f64)*dr
-!!$           do j=1,ntheta+1
-!!$              theta=real(j-1,f64)*dtheta
-!!$              x=r*cos(theta)
-!!$              y=r*sin(theta)
-!!$              write(24,*)r,theta,x,y,f(i,j)
-!!$           end do
-!!$        end do
-!!$        close(24)
-!!$     end if
 
   end do
   close(23)
@@ -428,21 +441,8 @@ program cg_polar
 
   !write the final f in a file
   call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
-  open (unit=21,file='CGfinal.dat')
-  write(21,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'grad',grad,'carac',carac
-  write(21,*)'#nr',nr,'ntheta',ntheta
-  write(21,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
-  do i=1,nr+1
-     r=rmin+real(i-1,f64)*dr
-     do j=1,ntheta+1
-        theta=real(j-1,f64)*dtheta
-        x=r*cos(theta)
-        y=r*sin(theta)
-        write(21,*)r,theta,x,y,f(i,j)!,div(i,j),plan_sl%phi(i,j),&
-        !& plan_sl%adv%field(1,i,j),plan_sl%adv%field(2,i,j)
-     end do
-     write(21,*)' '
-  end do
+  open (unit=21,file='CGrestart.dat')
+  write(21,*)f
   close(21)
 
   SLL_DEALLOCATE_ARRAY(div,i)

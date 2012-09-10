@@ -110,11 +110,11 @@ contains
   !>nr and ntheta : number of space in direction r and theta
   !>grad_case : integer, see function new_polar_op
   !>time_scheme : integer, see function new_plan_adv_polar
-  function new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad_case,time_scheme) result(this)
+  function new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad_case,time_scheme,bc) result(this)
 
     type(sll_SL_polar), pointer :: this
     sll_real64 :: rmin,rmax,dr,dtheta,dt
-    sll_int32 :: nr,ntheta
+    sll_int32 :: nr,ntheta,bc
     sll_int32, intent(in) :: grad_case,time_scheme
 
     sll_int32 :: err
@@ -122,7 +122,7 @@ contains
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%phi(nr+1,ntheta+1),err)
 
-    this%poisson => new_plan_poisson_polar(dr,rmin,nr,ntheta)
+    this%poisson => new_plan_poisson_polar(dr,rmin,nr,ntheta,bc)
     this%grad => new_polar_op(rmin,rmax,dr,dtheta,nr,ntheta,grad_case)
     this%adv => new_plan_adv_polar(rmin,rmax,dr,dtheta,dt,nr,ntheta,time_scheme)
 
@@ -738,7 +738,7 @@ contains
 
   !>subroutine SL_classic(plan,in,out)
   !>computes the classic semi-Lagrangian scheme for Vlasov-Poisson equation
-  !>plan : sll_SL_polar object, contains plan for Poisso, gradian and advection
+  !>plan : sll_SL_polar object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
   subroutine SL_classic(plan,in,out)
@@ -749,17 +749,7 @@ contains
     sll_real64, dimension(:,:), intent(inout) :: in
     sll_real64, dimension(:,:), intent(out) :: out
 
-    sll_int32 :: i,j
-
-    out=plan%phi
-    call poisson_solve_polar_2(plan%poisson,in,plan%phi)
-    do i=1,256
-       do j=1,128
-          if (out(i,j)/=plan%phi(i,j)) then
-             print*,out(i,j)-plan%phi(i,j)
-          end if
-       end do
-    end do
+    call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     call advect_CG_polar(plan%adv,in,out)
 
@@ -768,7 +758,7 @@ contains
 
   !>subroutine SL_ordre_2(plan,in,out)
   !>computes the semi-Lagrangian scheme order 2
-  !>plan : sll_SL_polar object, contains plan for Poisso, gradian and advection
+  !>plan : sll_SL_polar object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
   subroutine SL_ordre_2(plan,in,out)
@@ -853,8 +843,8 @@ contains
     i=Nx
     z(0)=dom(0,0)+real(i,f64)*dz(0)
     z(1)=dom(0,1)+real(j,f64)*dz(1)
-    write(900,*) z(0),z(1),ftab(0,0)	  
-    write(900,*) ''	       
+    write(900,*)z(0),z(1),ftab(0,0)
+    write(900,*)''
     close(900)  
   end subroutine printgp2dper
 
@@ -911,7 +901,7 @@ contains
     z(0)=dom(0,0)+real(i,f64)*dz(0)
     z(1)=dom(0,1)+real(j,f64)*dz(1)
     !write(900,'(F0.8)') ftab(0,0)	  	       
-    write(900,*) ftab(0,0)	  	       
+    write(900,*) ftab(0,0)
     close(900)  
   end subroutine printvtk2dper
 
