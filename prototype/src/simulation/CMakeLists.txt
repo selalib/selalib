@@ -63,8 +63,10 @@ target_link_libraries(CG_polar
 	sll_assertion
 	sll_timer
 	sll_utilities
+	#sll_poisson_2d
 	)
 
+IF (0)
 add_executable(Poisson_solver
 		poisson_output.F90
 		sll_poisson_2d_polar.F90
@@ -77,6 +79,7 @@ target_link_libraries(Poisson_solver
 	sll_assertion
 	sll_utilities
 	)
+ENDIF()
 
 IF(FFTPACK_ENABLED)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
