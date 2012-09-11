@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
 add_library(sll_csl STATIC sll_csl.F90)
 add_executable(test_csl unit_test.F90)
 target_link_libraries(test_csl sll_csl sll_distribution_function 

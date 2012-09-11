@@ -42,7 +42,7 @@
 !> 1D
 !> <table border="1">
 !> <tr>
-!> <th> size's problem </th>
+!> <th> size problem </th>
 !> <th> type of in </th>
 !> <th> type of out </th>
 !> <th> size of in </th>
@@ -92,7 +92,7 @@
 !> 2D
 !> <table border="1">
 !> <tr>
-!> <th> size's problem </th>
+!> <th> size problem </th>
 !> <th> type of in </th>
 !> <th> type of out </th>
 !> <th> size of in </th>

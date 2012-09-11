@@ -29,7 +29,12 @@ endif (NOT CMAKE_BUILD_TYPE)
 # DGFORTRAN is used to set the way in which numbers get converted to strings
 # by the preprocessor. gfotran uses "x" while other preprocessors use the
 # cpp #x. Defining the GFORTRAN flag chooses the first.
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
+get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
+  message(STATUS "gfortran compiler")
+  add_definitions(-DGFORTRAN)
+ENDIF()
+add_definitions(-DDEBUG -DMPIF90)
 
 # Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -87,10 +92,14 @@ IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
 		set(HDF5_ROOT $ENV{HDF5_ROOT})
 	ENDIF()
+        IF( DEFINED ENV{HDF5_HOME} )
+		set(HDF5_ROOT $ENV{HDF5_HOME})
+	ENDIF()
 	find_package(HDF5 QUIET)
 	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
 		include_directories(${HDF5_INCLUDE_DIRS})
+		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
 	ELSE()
 		add_definitions(-DNOHDF5)
 		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
@@ -158,20 +167,21 @@ ELSE()
 ENDIF()
 
 #add flag to disable MPI stuff for debug
-set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
+set(MPI_MODULE_ENABLED ON CACHE BOOL " ")
 
 # search for MPI
 # Samuel DeSantis: added the line "HINTS $ENV{MPI_ROOT}" to the 
 # find_program(MPIEXEC) in the FindMPI.cmake file (src/CMakeModules). 
 # If specifying MPI_ROOT in your environment doesn't work, then try changing
 # your PATH variable.
+
 find_package(MPI)
 IF(MPI_FOUND)
 	message(STATUS "MPI FOUND")
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
-	#set(DISABLE_MPI_MODULE ON CACHE BOOL " " FORCE)
+	set(MPI_MODULE_ENABLED OFF CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
 
 # include's. Here we include the folders which contain '.h' files.
@@ -196,14 +206,6 @@ endif(DOXYGEN_FOUND)
 set(FISHPACK_ENABLED OFF CACHE BOOL " ")
 set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 
-#############
-#  RESUME
-#############
-#
-#message("DISABLE_MPI_MODULE = ${DISABLE_MPI_MODULE}")
-#
-#############
-
 ######################################################################
 #  III. SUBDIRECTORY                                                 #
 ######################################################################
@@ -224,35 +226,41 @@ add_subdirectory(splines)
 add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
-	add_subdirectory(fftpack)
+   add_subdirectory(fftpack)
 ENDIF()
+
 add_subdirectory(fft)
-IF(DISABLE_MPI_MODULE)
-# nothing to do
-ELSE()
-  add_subdirectory(collective)
-  add_subdirectory(remap)
+
+IF(MPI_MODULE_ENABLED)
+   add_subdirectory(collective)
+   add_subdirectory(remap)
 ENDIF()
+
 IF(NOT STDF95)
-add_subdirectory(poisson_solvers)
+   add_subdirectory(poisson_solvers)
 ENDIF()
 
 #high-level
 add_subdirectory(interpolators)
 add_subdirectory(mapped_meshes)
 add_subdirectory(fields)
+add_subdirectory(time_solvers)
 add_subdirectory(ode_solvers)
 add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
 add_subdirectory(simulation)
+
 IF(FISHPACK_ENABLED)
-	add_subdirectory(fishpack)
+   add_subdirectory(fishpack)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-	add_subdirectory(mudpack)
+   IF(MPI_MODULE_ENABLED)
 	add_subdirectory(multigrid)
-ENDIF()
+   ELSE(MPI_MODULE_ENABLED)
+	add_subdirectory(mudpack)
+   ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
 #add_subdirectory(BSL) top
@@ -342,6 +350,7 @@ add_test(NAME interpolators COMMAND test_interpolators_1d
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
+add_test(NAME time_splitting COMMAND test_time_splitting)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)
 add_test(NAME advection_field COMMAND test_advection_field)

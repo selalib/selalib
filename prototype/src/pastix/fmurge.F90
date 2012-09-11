@@ -34,11 +34,11 @@
 
 PROGRAM main
   !$ use omp_lib, only : omp_get_num_threads
+  use mpi
   IMPLICIT NONE
 ! will be replaced during compilation by replaceCOEF.sh
 
   INCLUDE "murge.inc"
-  INCLUDE "mpif.h"
   ! MPI Data
   INTEGER(KIND=MURGE_INTS_KIND)          :: ierr
   INTEGER       :: Me, NTasks, required, provided
