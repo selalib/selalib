@@ -167,7 +167,7 @@ ELSE()
 ENDIF()
 
 #add flag to disable MPI stuff for debug
-set(DISABLE_MPI_MODULE OFF CACHE BOOL " ")
+set(MPI_MODULE_ENABLED ON CACHE BOOL " ")
 
 # search for MPI
 # Samuel DeSantis: added the line "HINTS $ENV{MPI_ROOT}" to the 
@@ -181,7 +181,7 @@ IF(MPI_FOUND)
 	include_directories(${MPI_Fortran_INCLUDE_PATH})
 ELSE(MPI_FOUND)
 	message(STATUS "MPI NOT FOUND")
-	#set(DISABLE_MPI_MODULE ON CACHE BOOL " " FORCE)
+	set(MPI_MODULE_ENABLED OFF CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
 
 # include's. Here we include the folders which contain '.h' files.
@@ -206,14 +206,6 @@ endif(DOXYGEN_FOUND)
 set(FISHPACK_ENABLED OFF CACHE BOOL " ")
 set(MUDPACK_ENABLED OFF CACHE BOOL " ")
 
-#############
-#  RESUME
-#############
-#
-#message("DISABLE_MPI_MODULE = ${DISABLE_MPI_MODULE}")
-#
-#############
-
 ######################################################################
 #  III. SUBDIRECTORY                                                 #
 ######################################################################
@@ -234,17 +226,18 @@ add_subdirectory(splines)
 add_subdirectory(WENO)
 add_subdirectory(integration)
 IF(FFTPACK_ENABLED)
-	add_subdirectory(fftpack)
+   add_subdirectory(fftpack)
 ENDIF()
+
 add_subdirectory(fft)
-IF(DISABLE_MPI_MODULE)
-# nothing to do
-ELSE()
-  add_subdirectory(collective)
-  add_subdirectory(remap)
+
+IF(MPI_MODULE_ENABLED)
+   add_subdirectory(collective)
+   add_subdirectory(remap)
 ENDIF()
+
 IF(NOT STDF95)
-add_subdirectory(poisson_solvers)
+   add_subdirectory(poisson_solvers)
 ENDIF()
 
 #high-level
@@ -256,17 +249,18 @@ add_subdirectory(ode_solvers)
 add_subdirectory(distribution_function)
 add_subdirectory(advection_field)
 add_subdirectory(simulation)
+
 IF(FISHPACK_ENABLED)
-	add_subdirectory(fishpack)
+   add_subdirectory(fishpack)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-   IF(DISABLE_MPI_MODULE)
-	add_subdirectory(mudpack)
-   ELSE()
+   IF(MPI_MODULE_ENABLED)
 	add_subdirectory(multigrid)
-   ENDIF()
-ENDIF()
+   ELSE(MPI_MODULE_ENABLED)
+	add_subdirectory(mudpack)
+   ENDIF(MPI_MODULE_ENABLED)
+ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
 #add_subdirectory(BSL) top
