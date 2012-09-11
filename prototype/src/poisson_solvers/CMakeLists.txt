@@ -95,7 +95,7 @@ IF(MPI_MODULE_ENABLED)
   add_executable( test_poisson_2d_per_cart_par 
     test_poisson_2d_periodic_cartesian_par.F90 )
 
-  target_link_libraries(test_poisson_2d_per_cart
+  target_link_libraries(test_poisson_2d_per_cart_par
     test_poisson_2d_per_cart
     sll_remap
     sll_collective
