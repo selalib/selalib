@@ -13,7 +13,7 @@ sudo make install
 
 * Install scotch
 
-https://gforge.inria.fr/frs/download.php/28977/scotch_5.1.12b.tar.gzV
+https://gforge.inria.fr/frs/download.php/28977/scotch_5.1.12b.tar.gz
 tar zxvf ~/Downloads/scotch_5.1.12b.tar.gz 
 cd scotch_5.1.12/src/
 cp Make.inc/Makefile.inc.i686_mac_darwin8 Makefile.inc
