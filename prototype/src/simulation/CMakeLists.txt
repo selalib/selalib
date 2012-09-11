@@ -50,7 +50,7 @@ target_link_libraries(polar_SL
 
 add_executable(CG_polar
 		CG_polar.F90
-		sll_poisson_2d_polar.F90
+		#sll_poisson_2d_polar.F90
 		sll_advection_polar.F90
 		sll_polar_operators.F90
 		)
@@ -63,8 +63,9 @@ target_link_libraries(CG_polar
 	sll_assertion
 	sll_timer
 	sll_utilities
-	#sll_poisson_2d
+	sll_poisson_2d
 	)
+	
 
 IF (0)
 add_executable(Poisson_solver
