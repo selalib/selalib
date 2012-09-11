@@ -25,7 +25,7 @@ target_link_libraries(unit_test_polar
 	sll_memory
 	sll_assertion
 	sll_utilities
-	sll_poisson_2d
+	sll_poisson_2d_polar
 	)
 
 IF(FFTPACK_ENABLED)
