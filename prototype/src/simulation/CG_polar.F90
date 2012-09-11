@@ -6,7 +6,7 @@ program cg_polar
   use sll_timer
   use polar_operators
   use polar_advection
-  use poisson_polar
+  !use poisson_polar
   use numeric_constants
   implicit none
 
@@ -208,13 +208,28 @@ program cg_polar
      read(25)f
      close(25)
 
+  else if (fcase==6) then
+     !essai
+     r1=4.0_f64
+     r2=5.0_f64
+     do j=1,ntheta+1
+        theta=real(j-1,f64)*dtheta
+        do i=1,nr+1
+           r=rmin+real(i-1,f64)*dr
+           if (r>=r1 .and. r<=r2) then
+              f(i,j)=1._f64+alpha*mode**2*cos(mode*theta)/r
+           else
+              f(i,j)=alpha*mode**2*cos(mode*theta)/r
+           end if
+        end do
+     end do
+
   else
      print*,"f is not defined"
      print*,'see variable "fcase" in file selalib/prototype/src/simulation/CG_polar.F90'
      print*,'can not go any further'
      print*,'exiting...'
      stop
-     print*,'so far so good'
   end if
 
   fp1=0.0_f64
@@ -357,15 +372,16 @@ program cg_polar
         !semi-Lagrangian predictive-corrective scheme
         call SL_ordre_2(plan_sl,f,fp1)
 
-!!$     else if (scheme==3) then
-!!$        !leap-frog scheme
-!!$        if (step==1) then
-!!$           call SL_ordre_2(plan_sl,f,fp1)
-!!$        else 
-!!$           call poisson_solve_polar()
-!!$           call compute_grad_field()
-!!$           call advect_CG_polar()
-!!$        end if
+     else if (scheme==3) then
+        !leap-frog scheme
+        if (step==1) then
+           call SL_ordre_2(plan_sl,f,fp1)
+        else 
+           call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+           call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
+           call advect_CG_polar(plan_sl%adv,g,fp1)
+        end if
+        g=f
 
      else
         print*,'no scheme define'
