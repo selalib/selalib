@@ -413,7 +413,7 @@ program cg_polar
      if ((step/500)*500==step) then
         print*,'#step',step
      end if
-     
+
      if (step/visustep*visustep==step) then
         call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
      end if
