@@ -261,8 +261,11 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
+   IF(DISABLE_MPI_MODULE)
 	add_subdirectory(mudpack)
+   ELSE()
 	add_subdirectory(multigrid)
+   ENDIF()
 ENDIF()
 add_subdirectory(LinRood)
 #add_subdirectory(maxwell_solvers) #use old mesh_types 
