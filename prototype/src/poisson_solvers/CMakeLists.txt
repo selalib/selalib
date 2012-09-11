@@ -4,6 +4,30 @@ ENDIF()
 
 add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 
+add_library(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
+target_link_libraries(sll_poisson_2d_polar
+	sll_fft
+	sll_tridiagonal
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_utilities
+	)
+
+add_executable(unit_test_polar
+	unit_test_polar.F90
+	#sll_poisson_2d_polar.F90
+	)
+target_link_libraries(unit_test_polar
+	sll_fft
+	sll_tridiagonal
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_utilities
+	sll_poisson_2d
+	)
+
 IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
   target_link_libraries(test_poisson_1d

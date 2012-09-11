@@ -13,27 +13,26 @@ program cg_polar
   type(sll_SL_polar), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2,t3
   sll_real64, dimension (:,:), allocatable :: div,f,fp1,g
-  sll_int32 :: i, j, step,visustep
+  sll_int32 :: i, j, step,visustep,hh,min,ss
   sll_int32 :: nr, ntheta, nb_step
   sll_int32 :: fcase, scheme,carac,grad,visu
-  sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2,x,y
+  sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32 :: mod,bc_top,bc_botom
   sll_real64 :: mode,temps,alpha
   sll_real64, dimension(2,2) :: dom
-  sll_real64 :: c1,c2,c3,k1,k2,k3
-  integer :: hh,min,ss
-  !integer, dimension(3) :: time
   character (len=16) :: f_file,bctop,bcbot
+  !used for testing poisson with fcase=2
+  !sll_real64 :: c1,c2,c3,k1,k2,k3,x,y
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /nnr/ nr
   !read(*,NML=nnr)
 
-  !alpha = 1.e-6_f64
+  alpha = 1.e-6_f64
   !alpha = 1.e-3_f64
-  alpha = 0.0_f64
+  !alpha = 0.0_f64
   mod=3
   mode=real(mod,f64)
 
@@ -320,8 +319,8 @@ program cg_polar
      w0=w0+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
      l10=l10+abs(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
      l20=l20+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
-     e0=e0+rmin*(plan_sl%adv%field(1,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(1,nr+1,j)/2.0_f64)**2+ &
-          & rmin*(plan_sl%adv%field(2,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(2,nr+1,j)/2.0_f64)**2
+     e0=e0+rmin*(plan_sl%adv%field(1,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(1,nr+1,j))**2/2.0_f64+ &
+          & rmin*(plan_sl%adv%field(2,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(2,nr+1,j))**2/2.0_f64
      do i=2,nr
         r=rmin+real(i-1,f64)*dr
         w0=w0+r*f(i,j)
@@ -348,18 +347,6 @@ program cg_polar
         min=floor((temps-3600.0d0*real(hh))/60.0d0)
         ss=floor(temps-3600.0d0*real(hh)-60.0d0*real(min))
         print*,'# temps de calcul estimmé : ',hh,'h',min,'min',ss,'s'
-<<<<<<< HEAD
-=======
-        !call itime(time)
-        time(3)=time(3)+ss
-        time(2)=time(2)+floor(real(time(3))/60.0)
-        time(3)=time(3)-60*floor(real(time(3))/60.0)
-        time(2)=time(2)+min
-        time(1)=time(1)+floor(real(time(2))/60.0)
-        time(2)=time(2)-60*floor(real(time(2))/60.0)
-        time(1)=time(1)+hh
-        print*,'#fin estimmée à',time(1),'h',time(2),"'",time(3),'"'
->>>>>>> origin/prototype-devel
      end if
 
      if (scheme==1) then
@@ -391,6 +378,7 @@ program cg_polar
      fp1(:,ntheta+1)=fp1(:,1)
      f=fp1
 
+     call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
      !computation of mass (w), l1, l2 and energy (e)
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
@@ -404,8 +392,10 @@ program cg_polar
         w=w+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
         l1=l1+abs(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
         l2=l2+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
-        e=e+rmin*(plan_sl%adv%field(1,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(1,nr+1,j)/2.0_f64)**2+ &
-             & rmin*(plan_sl%adv%field(2,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(2,nr+1,j)/2.0_f64)**2
+        e=e+rmin*(plan_sl%adv%field(1,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(1,nr+1,j))**2/2.0_f64+ &
+             & rmin*(plan_sl%adv%field(2,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(2,nr+1,j))**2/2.0_f64
+!!$        e=e+rmin*(plan_sl%adv%field(1,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(1,nr+1,j)/2.0_f64)**2+ &
+!!$             & rmin*(plan_sl%adv%field(2,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(2,nr+1,j)/2.0_f64)**2
         do i=2,nr
            r=rmin+real(i-1,f64)*dr
            w=w+r*f(i,j)
