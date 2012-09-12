@@ -465,6 +465,8 @@ program cg_polar
 
   SLL_DEALLOCATE_ARRAY(div,i)
   SLL_DEALLOCATE_ARRAY(f,i)
+  SLL_DEALLOCATE_ARRAY(fp1,i)
+  SLL_DEALLOCATE_ARRAY(g,i)
   t1 => delete_time_mark(t1)
   t2 => delete_time_mark(t2)
   t3 => delete_time_mark(t3)
