@@ -18,8 +18,8 @@ ELSE()
 ENDIF()
 
 ADD_LIBRARY(sll_low_level_file_io STATIC ${IO_SRC})
-TARGET_LINK_LIBRARIES(sll_low_level_file_io ${HDF5_LIBRARIES} )
 ADD_DEPENDENCIES(sll_low_level_file_io sll_assertion sll_working_precision)
+TARGET_LINK_LIBRARIES(sll_low_level_file_io ${HDF5_LIBRARIES} )
 
 ADD_EXECUTABLE(test_io unit_test.F90)
 TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
