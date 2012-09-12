@@ -16,6 +16,7 @@ target_link_libraries(sll_poisson_2d_polar
 
 add_executable(unit_test_polar
 	unit_test_polar.F90
+	../simulation/sll_polar_operators.F90
 	#sll_poisson_2d_polar.F90
 	)
 target_link_libraries(unit_test_polar
@@ -26,6 +27,7 @@ target_link_libraries(unit_test_polar
 	sll_assertion
 	sll_utilities
 	sll_poisson_2d_polar
+	sll_splines
 	)
 
 IF(FFTPACK_ENABLED)
