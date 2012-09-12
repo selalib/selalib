@@ -302,15 +302,18 @@ IF(FISHPACK_ENABLED)
 	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
 ENDIF()
 IF(MUDPACK_ENABLED)
-	add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
-        set_tests_properties(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-        set(PROCS 4)
-        set(ARGS "")
-	add_test(NAME multigrid COMMAND 
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-        set_tests_properties(multigrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+        IF(MPI_MODULE_ENABLED)
+           set(PROCS 4)
+           set(ARGS "")
+	   add_test(NAME multigrid COMMAND 
+	   ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
+	   ${MPIEXEC_POSTFLAGS} ${ARGS})
+           set_tests_properties(multigrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+        ELSE()
+	   add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
+           set_tests_properties(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+        ENDIF()
 ENDIF()
 
 # we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
