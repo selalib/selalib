@@ -87,27 +87,28 @@ ENDIF()
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED ON CACHE BOOL " ")
 
-# search for HDF5
-IF(HDF5_ENABLED)
-	IF( DEFINED ENV{HDF5_ROOT} )
-		set(HDF5_ROOT $ENV{HDF5_ROOT})
-	ENDIF()
-        IF( DEFINED ENV{HDF5_HOME} )
-		set(HDF5_ROOT $ENV{HDF5_HOME})
-	ENDIF()
-	find_package(HDF5 QUIET)
-	IF(HDF5_FOUND)
-		message(STATUS "HDF5 FOUND")
-		include_directories(${HDF5_INCLUDE_DIRS})
-		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
-	ELSE()
-		add_definitions(-DNOHDF5)
-		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-		set(HDF5_LIBRARIES "")
-	ENDIF()
-ELSE(HDF5_ENABLED)
-	add_definitions(-DNOHDF5)
-ENDIF(HDF5_ENABLED)
+IF (HDF5_ENABLED)
+
+   IF( DEFINED ENV{HDF5_ROOT} )
+      SET(HDF5_ROOT $ENV{HDF5_ROOT})
+   ENDIF()
+   IF( DEFINED ENV{HDF5_HOME} )
+      SET(HDF5_ROOT $ENV{HDF5_HOME})
+   ENDIF()
+
+   FIND_PACKAGE(HDF5 REQUIRED)
+
+ENDIF()
+
+IF(HDF5_FOUND AND HDF5_ENABLED)
+   message(STATUS "HDF5 FOUND")
+   include_directories(${HDF5_INCLUDE_DIRS})
+   include_directories(${HDF5_INCLUDE_DIRS}/fortran)
+ELSE()
+   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
+   SET(HDF5_LIBRARIES "")
+   ADD_DEFINITIONS(-DNOHDF5)
+ENDIF()
 ##########################################################
 
 ##########################################################
@@ -177,11 +178,12 @@ set(MPI_MODULE_ENABLED ON CACHE BOOL " ")
 
 find_package(MPI)
 IF(MPI_FOUND)
-	message(STATUS "MPI FOUND")
-	include_directories(${MPI_Fortran_INCLUDE_PATH})
+   message(STATUS "MPI FOUND")
+   include_directories(${MPI_Fortran_INCLUDE_PATH})
+   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ELSE(MPI_FOUND)
-	message(STATUS "MPI NOT FOUND")
-	set(MPI_MODULE_ENABLED OFF CACHE BOOL " " FORCE)
+   message(STATUS "MPI NOT FOUND")
+   set(MPI_MODULE_ENABLED OFF CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
 
 # include's. Here we include the folders which contain '.h' files.
