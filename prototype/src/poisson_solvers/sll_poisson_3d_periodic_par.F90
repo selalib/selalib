@@ -1,7 +1,7 @@
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: April 10, 2012
+!> Last modification: Sep 11, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -316,36 +316,6 @@ contains
     SLL_DEALLOCATE(plan, ierr)
 
   end subroutine delete_poisson_3d_periodic_plan_par
-
-
-  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
-    type(layout_3D), pointer :: layout
-    sll_int32, intent(out) :: loc_sz_i
-    sll_int32, intent(out) :: loc_sz_j
-    sll_int32, intent(out) :: loc_sz_k
-    sll_int32 :: i_min
-    sll_int32 :: i_max
-    sll_int32 :: j_min
-    sll_int32 :: j_max
-    sll_int32 :: k_min
-    sll_int32 :: k_max
-    sll_int32 :: my_rank
-    if( .not. associated(layout) ) then
-       print *, 'not-associated layout passed to new_distributed_mesh_3D'
-       print *, 'Exiting...'
-       STOP
-    end if
-    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
-    i_min = get_layout_3D_i_min( layout, my_rank )
-    i_max = get_layout_3D_i_max( layout, my_rank )
-    j_min = get_layout_3D_j_min( layout, my_rank )
-    j_max = get_layout_3D_j_max( layout, my_rank )
-    k_min = get_layout_3D_k_min( layout, my_rank )
-    k_max = get_layout_3D_k_max( layout, my_rank )
-    loc_sz_i = i_max - i_min + 1
-    loc_sz_j = j_max - j_min + 1
-    loc_sz_k = k_max - k_min + 1
-  end subroutine compute_local_sizes
 
   subroutine verify_argument_sizes_par(layout, rho, phi)
 
