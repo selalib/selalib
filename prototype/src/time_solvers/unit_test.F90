@@ -41,17 +41,20 @@ program test_time_splitting
   end do
 
   ! initialize time splitting method
-  call initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, interp_eta1_ptr, interp_eta2_ptr)
+  call initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
+       interp_eta1_ptr, interp_eta2_ptr)
   time_split => const_adv
 
   ! do some steps of lie_splitting
   dt = 0.5
   call time_split%lie_splitting(dt, 4)
 
+#ifndef NOHDF5
   ! save results
   filename = "data.h5"
   call sll_hdf5_file_create(filename, file_id, ierr)
   call sll_hdf5_write_array_2d(file_id, data, "data", ierr)
   call sll_hdf5_file_close(file_id, ierr)
+#endif
   
 end program test_time_splitting
