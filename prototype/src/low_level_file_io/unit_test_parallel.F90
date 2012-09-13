@@ -94,6 +94,7 @@ program test_io
      print *, ' '
      print *, '-------------------------------------------'
      print *, ' '
+     print *, 'PASSED'
      call flush()
   end if
   call flush() 
