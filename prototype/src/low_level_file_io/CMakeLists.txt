@@ -14,16 +14,34 @@ IF(HDF5_FOUND AND HDF5_ENABLED)
       SET(IO_SRC ${IO_SRC} sll_hdf5_io.F90)
    ENDIF(HDF5_ENABLE_PARALLEL)
 ELSE()
-   SET(HDF5_LIBRARIES "")
+   SET(HDF5_LIBRARIES " ")
 ENDIF()
 
 ADD_LIBRARY(sll_low_level_file_io STATIC ${IO_SRC})
 ADD_DEPENDENCIES(sll_low_level_file_io sll_assertion sll_working_precision)
+
+IF(HDF5_ENABLE_PARALLEL)
+   ADD_DEPENDENCIES(sll_low_level_file_io sll_utilities sll_remap sll_collective)
+   ADD_EXECUTABLE(test_io unit_test_parallel.F90)
+ELSE()
+   ADD_EXECUTABLE(test_io unit_test.F90)
+ENDIF(HDF5_ENABLE_PARALLEL)
+
 TARGET_LINK_LIBRARIES(sll_low_level_file_io ${HDF5_LIBRARIES} )
 
-ADD_EXECUTABLE(test_io unit_test.F90)
-TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
-	                      sll_constants
-	                      sll_memory
-	                      sll_assertion
-	                      sll_working_precision)
+IF(HDF5_ENABLE_PARALLEL)
+   TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
+                                 sll_remap
+                                 sll_collective
+	                         sll_utilities
+	                         sll_constants
+	                         sll_memory
+	                         sll_assertion
+	                         sll_working_precision)
+ELSE()
+   TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
+	                         sll_constants
+	                         sll_memory
+	                         sll_assertion
+	                         sll_working_precision)
+ENDIF()

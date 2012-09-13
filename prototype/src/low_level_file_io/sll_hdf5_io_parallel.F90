@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_hdf5_io_parallel
+! MODULE: sll_hdf5_io
 !
 !> @author
 !> Pierre Navaro
@@ -32,14 +32,13 @@
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 !
 ! REVISION HISTORY:
-! 09 12 2012 - Initial Version
+! 05 12 2011 - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_hdf5_io
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
-  use mpi
   use hdf5
   
   implicit none
