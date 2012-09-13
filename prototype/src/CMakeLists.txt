@@ -92,6 +92,7 @@ IF (HDF5_ENABLED)
    IF( DEFINED ENV{HDF5_ROOT} )
       SET(HDF5_ROOT $ENV{HDF5_ROOT})
    ENDIF()
+
    IF( DEFINED ENV{HDF5_HOME} )
       SET(HDF5_ROOT $ENV{HDF5_HOME})
    ENDIF()
@@ -282,14 +283,29 @@ enable_testing()
 
 add_test(NAME memory COMMAND test_memory)
 set_tests_properties(memory PROPERTIES TIMEOUT 20)
+
 #add_test(precision precision/test_precision) #too long
 set(passRegex "Assertion error triggered in file")
+
 add_test(NAME assert COMMAND test_assert)
 set_tests_properties(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
+
 add_test(NAME constants COMMAND test_constants)
+
 add_test(NAME utilities COMMAND test_utilities)
-add_test(NAME low_level_file_io COMMAND test_io)
+
+IF(HDF5_ENABLE_PARALLEL)
+   set(PROCS 4)
+   set(ARGS "")
+   add_test(NAME low_level_file_io COMMAND 
+            ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io
+            ${MPIEXEC_POSTFLAGS} ${ARGS})
+ELSE()
+   add_test(NAME low_level_file_io COMMAND test_io)
+ENDIF()
 set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
