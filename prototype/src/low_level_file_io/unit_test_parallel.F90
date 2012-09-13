@@ -9,7 +9,6 @@ program test_io
   ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,
   ! distributed among NPi*NPj processors.
   sll_real64, dimension(:,:), allocatable :: local_array
-  sll_real64, dimension(:,:), allocatable ::  arrays_diff
   ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
   ! the full array.
   integer , parameter                       :: ni = 512
@@ -17,8 +16,6 @@ program test_io
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init
-  integer                                   :: loc_sz_i_final
-  integer                                   :: loc_sz_j_final
 
   ! the process mesh
   integer                                   :: npi
@@ -27,18 +24,13 @@ program test_io
   integer                                   :: ierr
   integer                                   :: myrank
   sll_int64                                 :: colsz        ! collective size
-  ! Remap stuff
   type(layout_2D), pointer                  :: layout
-  type(remap_plan_2D), pointer              :: rmp2
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
-  integer                                   :: i_test
   integer                                   :: i, j
-  sll_int32, dimension(2)                   :: global_indices, g
-  sll_real32   , dimension(1)               :: prod4test
+  sll_int32, dimension(2)                   :: global_indices
   logical                                   :: test_passed
-  integer                                   :: ok
 
   test_passed = .true.
 
@@ -50,7 +42,7 @@ program test_io
 
   if( myrank .eq. 0) then
      print *, ' '
-     print *, '--------------- REMAP test ---------------------'
+     print *, '--------------- HDF5 parallel test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
      call flush()
