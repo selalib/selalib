@@ -39,7 +39,9 @@ module sll_hdf5_io
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
+  use mpi
   use hdf5
+  use sll_collective
   
   implicit none
   
@@ -48,6 +50,8 @@ module sll_hdf5_io
      module procedure sll_hdf5_write_array_2d
      module procedure sll_hdf5_write_array_3d
   end interface
+
+  integer(hid_t) :: plist_id      ! Property list identifier 
 
 contains
   
@@ -58,9 +62,31 @@ contains
     character(len=*) , intent(in)  :: filename  
     integer(hid_t)   , intent(out) :: file_id   
     integer,           intent(out) :: error
-    
-    call H5open_f(error)
-    call H5Fcreate_f(filename,H5F_ACC_TRUNC_F,file_id,error)
+    integer                        :: comm, info
+    integer                        :: mpi_size
+    integer                        :: mpi_rank
+
+    comm     = sll_world_collective%comm
+    info     = MPI_INFO_NULL
+    mpi_size = sll_get_collective_size(sll_world_collective)
+    mpi_rank = sll_get_collective_rank(sll_world_collective)
+
+    !
+    ! Initialize FORTRAN predefined datatypes
+    !
+    call h5open_f(error) 
+
+    ! 
+    ! Setup file access property list with parallel I/O access.
+    !
+    call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
+    call h5pset_fapl_mpio_f(plist_id, comm, info, error)
+
+    !
+    ! Create the file collectively.
+    ! 
+    call h5fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, error, access_prp = plist_id)
+
   end subroutine sll_hdf5_file_create
 
   !> Open HDF5 file 
@@ -80,7 +106,15 @@ contains
     integer(hid_t), intent(in) :: file_id
     integer :: error
 
-    call H5Fclose_f(file_id,error)
+    !
+    ! Close property list and the file.
+    !
+    call h5pclose_f(plist_id, error)
+    call h5fclose_f(file_id, error)
+    !
+    ! Close FORTRAN interface
+    !
+    call h5close_f(error)
   end subroutine sll_hdf5_file_close
 
 #define NEW_HDF5_FUNCTION(func_name, dataspace_dimension, array_name_and_dims) \
