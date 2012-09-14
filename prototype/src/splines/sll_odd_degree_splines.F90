@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: September 04, 2012
+!> Last modification: September 11, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -18,6 +18,7 @@ module sll_odd_degree_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+use arbitrary_degree_splines
   implicit none
 
   type odd_degree_splines_plan
@@ -34,11 +35,11 @@ contains
 
   function new_odd_degree_splines(n,degree,xmin,xmax,f)result(plan)
 
-    sll_real64, dimension(:)                      :: f
+    sll_real64, dimension(:)               :: f
     type(odd_degree_splines_plan), pointer :: plan
-    sll_int32                                     :: ierr, n, degree
-    sll_real64                                    :: xmin
-    sll_real64                                    :: xmax
+    sll_int32                              :: ierr, n, degree
+    sll_real64                             :: xmin
+    sll_real64                             :: xmax
 
     if (mod(degree,2) == 0) then
        print*, 'This needs to run with odd spline degree'
@@ -63,117 +64,77 @@ contains
     ! f is the vector of the values of the function 
     !  in the nodes of the mesh
 
-    sll_real64, dimension(:)                      :: f
+    sll_real64, dimension(:)               :: f
     type(odd_degree_splines_plan), pointer :: plan
-    sll_real64                                    :: xmin, xmax, h
-    sll_int32                                     :: n, degree, i, j
-    sll_real64, dimension(plan%degree/2+1)         :: v
-    sll_real64, dimension(size(f),size(f))        :: A, AB
-    sll_int32                                     :: KD, LDAB, ierr
+    sll_real64                             :: xmin, xmax, h
+    sll_int32                              :: degree, n, m, i, j
+    sll_real64, dimension(plan%degree+1)   :: b
+    sll_real64, dimension(size(f),size(f)) :: A, AB
+    sll_int32                              :: KD, LDAB, ierr
     
     degree = plan%degree
     xmin = plan%xmin
     xmax = plan%xmax
-    h = (xmax-xmin)/plan%n
+    n = plan%n
+    h = (xmax-xmin)/n
 
-    do j=1,degree/2+1
-        ! For a given line i, we have:
-        ! 0 ... 0 A(i,i-degree) ... A(i,i) ... A(i+degree) 0 ... 0
-        ! As A is symmetric, we just need to storage A(i,i)...A(i+degree)
-        v(j) = B(degree, plan%n-( degree/2 + 2 - j ), xmax, plan)
-        ! v(i) = B(degree, n-(degree/2+1-j+1), xmax, plan)
-    enddo
-
+    b = uniform_b_splines_at_x( degree, 0.d0 )
+!print*, b
     ! Solve the linear system with LAPACK
 
-    n = size(f)
-    KD = degree/2
+    m = size(f)
+    KD = degree/2 ! called KD for lapack use
 
-    A = 0.
-    do i=1,n
-       do j= 0, degree/2
-          if ( i+j<=n ) then
-             A(i,i+j) = v(j+1) 
-          endif
-          if ( i-j>0 ) then
-            A(i,i-j) = A(i-j,i)
+    A = 0.d0
+    do i=1,m
+       do j= -KD, KD
+          if ( (i+j>0) .and. (i+j<=m) ) then
+             A(i,i+j) = b(j+KD+1) 
           endif
        enddo
     enddo
 
-    do j=1,n
-       do i=j,min(n,j+KD)
+    do j=1,m
+       do i=j,min(m,j+KD)
           AB(1+i-j,j) = A(i,j)
        enddo
     enddo
 
     LDAB = size(AB,1)
     ! Cholesky factorization
-    call DPBTRF( 'L', n, KD, AB, LDAB, ierr )
+    call DPBTRF( 'L', m, KD, AB, LDAB, ierr )
     ! Solve the linear system with Cholesky factorization
     plan%coeffs = f
-    call DPBTRS( 'L', n, KD, 1, AB, LDAB, plan%coeffs, n, ierr )
-
+    call DPBTRS( 'L', m, KD, 1, AB, LDAB, plan%coeffs, m, ierr )
+!print*, sum(f-matmul(A,plan%coeffs))
   end subroutine compute_coeffs
-
-
-  sll_real64 recursive function B(j, i, x, plan) result(res) ! j:=degree
-
-    sll_real64                                    :: x, xmin, xmax, h
-    sll_int32                                     :: n, j, i
-    type(odd_degree_splines_plan), pointer :: plan
-
-    xmin = plan%xmin
-    xmax = plan%xmax
-    n    = plan%n
-    h    = (xmax-xmin)/n
-
-    !             x-t(i)                       t(i+j+1)-x
-    ! B[j,i](x) = ----------- * B[j-1,i](x) + ----------------* B[j-1,i+1](x)
-    !           t(i+j)-t(i)                  t(i+j+1)-t(i+1)
-    
-    ! And
-  
-    ! B[0,i] = 1 if t(i) <= x < t(i+1), and 0 otherwise.
-    
-    ! t(i) = xmin + i*h
-
-    if (j/=0) then
-                                            
-      res = ((x-xmin-i*h)/(j*h)) * B(j-1, i, x, plan) + &
-        ((xmin+(i+j+1)*h-x)/(j*h)) * B(j-1, i+1, x, plan)
-   
-    else
-
-      if ( ( xmin + i*h <= x ) .and. ( x < xmin + (i+1)*h ) ) then
-        res = 1.d0
-      else
-        res = 0.d0
-      endif
-
-    endif
-
-  end function B
 
 
   function spline(x, plan) result(s) ! The interpolator spline function
 
-    sll_real64                                    :: x, xmin, xmax
-    sll_real64                                    :: h, s
-    type(odd_degree_splines_plan), pointer         :: plan
-    sll_int32                                     :: n, j, left, degree
+    sll_real64                             :: x, xmin, xmax
+    sll_real64                             :: h, s
+    type(odd_degree_splines_plan), pointer :: plan
+    sll_int32                              :: n, j, left, degree
+    sll_real64, dimension(plan%degree+1)   :: b
+    sll_real64                             :: t0
 
     xmin = plan%xmin
     xmax = plan%xmax
     n = plan%n
     degree = plan%degree
-    h = (xmax-xmin)/real(n,f64)
-    left = int((x-xmin)/h)!Determine the leftmost support index 'i' of x
+    h = (xmax-xmin)/n
+
+    t0 = (x-xmin)/h
+    left = int(t0) ! Determine the leftmost support index 'i' of x
+    t0 = t0 - left ! compute normalized_offset
+
+    b = uniform_b_splines_at_x( degree, t0 )
 
     s = 0.d0
     do j=left-degree,left
        if ( (j>=-degree) .and. (j<=n) ) then
-          s = s + plan%coeffs(j+degree+1) * B(degree, j, x, plan)
+          s = s + plan%coeffs(j+degree+1) * b(j-left+degree+1)
        endif
     enddo
 
@@ -183,7 +144,7 @@ contains
   subroutine delete_odd_degree_splines(plan)
 
     type(odd_degree_splines_plan), pointer :: plan
-    sll_int32                                     :: ierr
+    sll_int32                              :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
