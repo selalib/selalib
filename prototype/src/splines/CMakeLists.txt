@@ -1,14 +1,14 @@
 # use all sll_*F90 files
 add_library(sll_splines STATIC sll_splines.F90)
-
 add_library(quintic_spline STATIC quintic_spline.c)
 add_library(sll_odd_degree_splines STATIC sll_odd_degree_splines.F90)
+add_library(sll_arbitrary_degree_splines STATIC sll_arbitrary_degree_splines.F90)
 
+set(SPL_LIBS sll_splines quintic_spline sll_odd_degree_splines 
+sll_arbitrary_degree_splines toep_penta_diagonal sll_tridiagonal 
+sll_memory sll_assertion sll_constants util_constants ${LAPACK_LIBRARIES})
 
-set(SPL_LIBS sll_splines quintic_spline sll_odd_degree_splines
-toep_penta_diagonal sll_tridiagonal sll_memory sll_assertion sll_constants util_constants ${LAPACK_LIBRARIES})
-
-add_dependencies(sll_splines sll_memory sll_assertion sll_working_precision)
+add_dependencies(sll_splines sll_arbitrary_degree_splines sll_memory sll_assertion sll_working_precision)
 
 add_library(cubic_non_unif_splines STATIC cubic_nonuniform_splines.F90)
 add_dependencies(cubic_non_unif_splines sll_memory sll_assertion sll_working_precision
@@ -36,7 +36,7 @@ target_link_libraries(test_arbitrary_degree_splines ${SPL_LIBS})
 
 # add quintic splines test
 set(SRC_TEST4 quintic_spline_tester.c quintic_spline.c)
-add_executable(quintic_spline_tester ${SRC_TEST3})
+add_executable(quintic_spline_tester ${SRC_TEST4})
 target_link_libraries(quintic_spline_tester ${SPL_LIBS})
 
 # add any odd degree splines test

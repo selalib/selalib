@@ -6,46 +6,6 @@
 #include "quintic_spline.h"
 #include <time.h>
 
-
-  double B_test(int j, int i, double x, double xmin, double h)
-  {
-
-    int n;
-
-    /*
-                 x-t(i)                       t(i+j+1)-x
-    B[j,i](x) = ----------- * B[j-1,i](x) + ----------------* B[j-1,i+1](x)
-               t(i+j)-t(i)                  t(i+j+1)-t(i+1)
-    And
-  
-    B[0,i] = 1 if t(i) <= x < t(i+1), and 0 otherwise.
-    
-    t(i) = xmin + i*h
-
-    */
-
-    if (j!=0)
-    {                                         
-      return ((x-xmin-(double)i*h)/((double)j*h)) * B_test(j-1, i, x, xmin, h) + 
-        ((xmin+(double)(i+j+1)*h-x)/((double)j*h)) * B_test(j-1, i+1, x, xmin, h);
-    }
-    else
-    {
-      if ( ( xmin + (double)i*h <= x ) && ( x < xmin + (double)(i+1)*h ) )
-      {
-        return 1.;
-      }
-      else
-      {
-        return 0.;
-      }
-
-    }
-
-  }
-
-
-
 int main(void)
 {
   
@@ -60,35 +20,27 @@ int main(void)
   nmax = 1000;
   printf("Testing quintic_spline...\n");
 
-  for(n=1; n<=nmax; n++)
+  for(n=5; n<=nmax; n++)
   {
 
     /* initialize random seed: */
     srand ( time(NULL) );
 
-    xmin=0;
-    xmax=100;
+    xmin=-10;
+    xmax=10;
     h = (xmax-xmin)/n;
-    mu = ( (xmin-5*h) + (xmin+(n+6)*h) ) / 2;
+    mu = (xmin+xmax) / 2;
 
     f1 = malloc( (n+6) * sizeof(double));
     f2 = malloc( (n+6) * sizeof(double));
+    f1[0] = 0.;f1[1] = 0.;f1[n+3] = 0.;f1[n+4] = 0.;f1[n+5] = 0.;
+    f2[0] = 0.;f2[1] = 0.;f2[n+3] = 0.;f2[n+4] = 0.;f2[n+5] = 0.;
 
-    for (i=-2; i<=n+3; i++)
+    for (i=0; i<=n; i++)
     {
-
       x = xmin + (double)i*h;
       f1[i+2] = exp( - .5*pow( x - mu, 2) ); 
-
-      f2[i+2] = 0.;
-      for(j=i-5; j<=i; j++)
-      {
-         if ( (j>=-5) && (j<=n) )
-         {
-            f2[i+2] = f2[i+2] + B_test(5, j, x, xmin, h);
-         }
-      }
-
+      f2[i+2] = f2[i] = x*(x-xmin)*(xmax-x);
     }
 
     plan1 = new_quintic_spline(n, xmin, xmax, f1);
@@ -109,14 +61,7 @@ int main(void)
       x = xmin + n*h*( (rand()%11) / 10. );
       left = (int)((x-xmin)/h);//Determine the leftmost support index 'i' of x
 
-      y = 0.;
-      for(j=left-5; j<=left; j++)
-      {
-         if ( (j>=-5) && (j<=n) )
-         {
-            y += B_test(5, j, x, xmin, h);
-         }
-      }
+      y = x*(x-xmin)*(xmax-x);
     
       err2 += ( y - spline(x, plan2) ) * ( y - spline(x, plan2) );
       norm2 += y*y;
