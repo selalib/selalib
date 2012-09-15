@@ -87,7 +87,6 @@ ENDIF()
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED ON CACHE BOOL " ")
 
-<<<<<<< HEAD
 # search for HDF5
 IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
@@ -110,32 +109,6 @@ IF(HDF5_ENABLED)
 ELSE(HDF5_ENABLED)
 	add_definitions(-DNOHDF5)
 ENDIF(HDF5_ENABLED)
-=======
-IF (HDF5_ENABLED)
-
-   IF( DEFINED ENV{HDF5_ROOT} )
-      SET(HDF5_ROOT $ENV{HDF5_ROOT})
-   ENDIF()
-
-   IF( DEFINED ENV{HDF5_HOME} )
-      SET(HDF5_ROOT $ENV{HDF5_HOME})
-   ENDIF()
-
-   FIND_PACKAGE(HDF5 REQUIRED)
-
-ENDIF()
-
-IF(HDF5_FOUND AND HDF5_ENABLED)
-   include_directories(${HDF5_INCLUDE_DIRS})
-   include_directories(${HDF5_INCLUDE_DIR_FORTRAN})
-   message(STATUS "HDF5 include directories ${HDF5_INCLUDE_DIRS}")
-   message(STATUS "HDF5 module directories ${HDF5_INCLUDE_DIR_FORTRAN}")
-ELSE()
-   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-   SET(HDF5_LIBRARIES "")
-   ADD_DEFINITIONS(-DNOHDF5)
-ENDIF()
->>>>>>> origin/prototype-devel
 ##########################################################
 
 ##########################################################
