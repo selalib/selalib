@@ -86,6 +86,7 @@ ENDIF()
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED ON CACHE BOOL " ")
+set(HDF5_ENABLE_PARALLEL OFF CACHE BOOL " ")
 
 # search for HDF5
 IF(HDF5_ENABLED)
