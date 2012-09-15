@@ -1,5 +1,5 @@
 module polar_operators
-!> definition of gradient and divergence in polar coordinate
+! definition of gradient and divergence in polar coordinate
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
