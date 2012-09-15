@@ -29,7 +29,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 # DGFORTRAN is used to set the way in which numbers get converted to strings
 # by the preprocessor. gfotran uses "x" while other preprocessors use the
 # cpp #x. Defining the GFORTRAN flag chooses the first.
-add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
+#add_definitions(-DGFORTRAN -DDEBUG -DMPIF90)
 
 # Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -87,9 +87,10 @@ IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
 		set(HDF5_ROOT $ENV{HDF5_ROOT})
 	ENDIF()
-        IF( DEFINED ENV{HDF5_HOME} )
-		set(HDF5_ROOT $ENV{HDF5_HOME})
-	ENDIF()
+        #IF( DEFINED ENV{HDF5_HOME} )
+	#	set(HDF5_ROOT $ENV{HDF5_HOME})
+	#	message(STATUS "HDF5_HOME FOUND")
+	#ENDIF()
 	find_package(HDF5 QUIET)
 	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
