@@ -39,7 +39,8 @@ program VP1d_deltaf
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_real64 :: kmode, omegadr, omegadr0
-  logical    :: is_delta_f, driven
+  sll_int32  :: is_delta_f
+  logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
   sll_real64 :: alpha
@@ -105,7 +106,7 @@ program VP1d_deltaf
   end do
   ! allocate f_maxwellian for diagnostics
   SLL_ALLOCATE(f_maxwellian(Ncv+1),ierr)
-  if (is_delta_f) then
+  if (is_delta_f==0) then
      f_maxwellian = f_equilibrium(v_array)
   else 
      f_maxwellian = 0.0_f64
@@ -129,7 +130,7 @@ program VP1d_deltaf
      print*, '   perturbation=', eps
      print*, '   v0=', v0
   end if
-  if (is_delta_f) then
+  if (is_delta_f==0) then
      print*, '   delta_f version'
   else
      print*, '   full_f version'
@@ -147,7 +148,7 @@ program VP1d_deltaf
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
   write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, dt, nbiter, freqdiag, &
-       is_delta_f
+       is_delta_f, kmode, omegadr
   close(param_out)
 
   call initialize_mesh_2d_cartesian( &
@@ -231,7 +232,7 @@ program VP1d_deltaf
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f) then
+        if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
               v = vmin + (j-1) * delta_v
@@ -260,7 +261,7 @@ program VP1d_deltaf
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f) then
+        if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
               v = vmin + (j-1) * delta_v
