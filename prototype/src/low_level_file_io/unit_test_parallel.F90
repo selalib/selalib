@@ -1,4 +1,4 @@
-program test_io
+program test_io_parallel
   use sll_collective
 #include "sll_remap.h"
 #include "sll_memory.h"
@@ -139,4 +139,4 @@ contains
     loc_sz_j = j_max - j_min + 1
   end subroutine compute_local_sizes_2d
       
-end program test_io
+end program test_io_parallel
