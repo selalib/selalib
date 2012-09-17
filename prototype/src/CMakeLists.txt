@@ -344,6 +344,14 @@ add_test(NAME remap_4d
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+set(PROCS 16)
+add_test(NAME poisson_periodic_cartesian_par_2d
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
