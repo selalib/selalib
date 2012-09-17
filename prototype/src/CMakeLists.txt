@@ -295,7 +295,7 @@ add_test(NAME constants COMMAND test_constants)
 
 add_test(NAME utilities COMMAND test_utilities)
 
-IF(HDF5_ENABLE_PARALLEL)
+IF(HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    set(PROCS 4)
    set(ARGS "")
    add_test(NAME low_level_file_io COMMAND 
