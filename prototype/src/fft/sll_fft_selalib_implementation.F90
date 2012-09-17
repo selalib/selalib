@@ -138,11 +138,15 @@ contains
     array(k) = new_value
   end subroutine
 
-
+  ! The original choice of having the array be 0-indexed was an extremely bad
+  ! one. Furthermore, this function never checked anything and gave lots of 
+  ! troubles. The change to 1-index will have repercussions in many places... 
+  ! All this needs to be addressed.
   subroutine fft_set_mode_complx_2d(plan,array,new_value,k,l)
     type(sll_fft_plan), pointer :: plan
-    sll_comp64, dimension(0:,0:)   :: array
-    sll_int32                   :: k,l
+!    sll_comp64, dimension(0:,0:)  :: array
+    sll_comp64, dimension(:,:) :: array 
+   sll_int32                   :: k,l
     sll_comp64                  :: new_value
     array(k,l) = new_value
   end subroutine
@@ -318,7 +322,7 @@ contains
        end if
        call bit_reverse(NY/2,plan%t(NX/2+1:NX/2 + NY/2))
     endif
-  end function
+  end function fft_new_plan_c2c_2d
 
   subroutine fft_apply_plan_c2c_2d(plan,array_in,array_out)
     type(sll_fft_plan), pointer                     :: plan
@@ -329,15 +333,14 @@ contains
     sll_real64 :: factor
 
     if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
-       array_out = array_in
+       array_out = array_in  ! copy source
     endif   
-      
-    fft_shape = plan%problem_shape
+    fft_shape(1:2) = plan%problem_shape(1:2)
     nx = fft_shape(1)
     ny = fft_shape(2)
-    
+
     ! Review this logic, it looks bizarre and contradictory. One should 
-    ! never have to specify SIMULTANEOUSLY FFT_ONLY_FIRST_DIRECTION and
+    ! never have to specify SIMULTANEOUSLY FFT_ONLY_FIRST_DIRECTION *AND*
     ! FFT_ONLY_SECOND_DIRECTION. Such thing should make no sense. 
     ! Formatting: was trying to limit lines to 80 character length, but 
     ! this will have to wait for a more detailed revision. ECG 9-5-12
@@ -348,34 +351,41 @@ contains
              fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
        two_direction = .false.
     else
-       two_direction = .true.
+       ! Default case: no direction flags passed means that a two-directional
+       ! case is wanted.
+       two_direction = .true.  
     endif
 
-    
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. two_direction ) then
-      do i=0,ny-1
-        call fft_dit_nr(array_out(0:nx-1,i),plan%t(1:nx/2),plan%direction)
-        call bit_reverse_complex(nx,array_out(0:nx-1,i))
-      enddo
+    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
+        two_direction ) then
+       do i=0,ny-1
+          call fft_dit_nr(array_out(0:nx-1,i),plan%t(1:nx/2),plan%direction)
+          call bit_reverse_complex(nx,array_out(0:nx-1,i))
+       enddo
     endif
-    if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) .or. two_direction ) then
-      do i=0,nx-1
-        call fft_dit_nr(array_out(i,0:ny-1),plan%t(nx/2+1:nx/2+ny/2),plan%direction)
-        call bit_reverse_complex(ny,array_out(i,0:ny-1))
-      enddo
+
+    if( fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) .or. &
+         two_direction ) then
+       do i=0,nx-1
+          call fft_dit_nr( &
+               array_out(i,0:ny-1), &
+               plan%t(nx/2+1:nx/2+ny/2), &
+               plan%direction)
+          call bit_reverse_complex(ny,array_out(i,0:ny-1))
+       enddo
     endif
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) .and. two_direction ) then
-      factor = 1.0_f64/real(nx*ny,kind=f64)
-      array_out = factor*array_out
+       factor = 1.0_f64/real(nx*ny,kind=f64)
+       array_out = factor*array_out
     else if( fft_is_present_flag(plan%style,FFT_NORMALIZE) .and. &
-                      fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION)) then
-      factor = 1.0_f64/real(nx,kind=f64)
-      array_out = factor*array_out
+             fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION)) then
+       factor = 1.0_f64/real(nx,kind=f64)
+       array_out = factor*array_out
     else if( fft_is_present_flag(plan%style,FFT_NORMALIZE) .and. &
-                   fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION)) then
-      factor = 1.0_f64/real(ny,kind=f64)
-      array_out = factor*array_out
+             fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION)) then
+       factor = 1.0_f64/real(ny,kind=f64)
+       array_out = factor*array_out
     endif
   end subroutine
 

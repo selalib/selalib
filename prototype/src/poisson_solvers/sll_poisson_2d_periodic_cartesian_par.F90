@@ -122,7 +122,7 @@ contains
          plan%fft_x_array, &
          plan%fft_x_array, &
          FFT_FORWARD, &
-         FFT_ONLY_FIRST_DIRECTION )
+         FFT_ONLY_FIRST_DIRECTION)!+FFT_NORMALIZE )
 
     plan%px_inv => fft_new_plan( &
          loc_sz_x1, &
@@ -130,7 +130,7 @@ contains
          plan%fft_x_array, &
          plan%fft_x_array, &
          FFT_INVERSE, &
-         FFT_ONLY_FIRST_DIRECTION )
+         FFT_ONLY_FIRST_DIRECTION) !+FFT_NORMALIZE )
 
     ! Layout and local sizes for FFTs in y-direction (x2)
     plan%layout_seq_x2 => new_layout_2D( collective )
@@ -154,13 +154,14 @@ contains
     SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
 
     ! For FFTs (in y-direction)
+
     plan%py => fft_new_plan( &
          loc_sz_x1, &
          loc_sz_x2, &
          plan%fft_y_array, &
          plan%fft_y_array, &
          FFT_FORWARD, &
-         FFT_ONLY_SECOND_DIRECTION )
+         FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
     plan%py_inv => fft_new_plan( &
          loc_sz_x1, &
@@ -168,7 +169,7 @@ contains
          plan%fft_y_array, &
          plan%fft_y_array, &
          FFT_INVERSE, &
-         FFT_ONLY_SECOND_DIRECTION )
+         FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
     plan%rmp_xy => &
      NEW_REMAP_PLAN_2D(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
@@ -201,7 +202,6 @@ contains
     ncy  = plan%ncy
     r_Lx = 1.0_f64/plan%Lx
     r_Ly = 1.0_f64/plan%Ly
-
     ! Get layouts to compute FFTs (in each direction)
     layout_x => plan%layout_seq_x1
     layout_y => plan%layout_seq_x2
@@ -212,63 +212,67 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     ! The input is handled internally as complex arrays
-    plan%fft_x_array = cmplx(rho, 0_f64, kind=f64)
+    plan%fft_x_array = -cmplx(rho, 0_f64, kind=f64)
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
-    
+
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
     npy_loc = plan%seq_x2_local_sz_x2
  
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
+ 
     call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
 
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
 
-    ! Make sure that the first mode is set to zero so that we get an
-    ! answer with zero mean value. This step assumes that the (1,1) point
-    ! will always be at the border of any splitting of the domains. This 
-    ! seems safe in this case.
-    global = local_to_global_2D( layout_y, (/1, 1/))
-    gi = global(1)
-    gj = global(2)
-    if( (gi == 1) .and. (gj == 1) ) then
-       ! NOTE: WE HAVE A POTENTIALLY DANGEROUS SITUATION HERE. THE 2D
-       ! FFT WE HAVE CARRIED OUT WAS THE RESULT OF A SEQUENCE OF TWO
-       ! INDEPENDENT FFTS. HENCE WHEN WE CALL fft_set_mode_complx_2d()
-       ! BASED ON ONE OF THE FFT PLANS, IT WILL BELIEVE THAT ONLY ONE
-       ! DIRECTION WAS TRANSFORMED. IN CASE THAT THE UNDERLYING ARRAYS
-       ! HAVE BEEN SCRAMBLED IN ANY WAY, THIS WOULD YIELD THE WRONG
-       ! RESULT. WE MAY BE GETTING LUCKY HERE IF EVERYTHING IS IN 
-       ! NATURAL ORDER, BUT THIS NEEDS TO BE FIXED. CAN THIS BE FIXED BY
-       ! USING ONLY 1D FFTs? HARDLY, BECAUSE OF THE SAME SITUATION. IT SEEMS
-       ! THAT THE 2d FFT DONE IN A PARALLEL WAY, NEEDS TO BE IMPLEMENTED
-       ! INDEPENDENTLY AND WITH KNOWLEDGE OF LAYOUTS, REMAP, ETC. ...
-       call fft_set_mode_complx_2d( &
-            plan%py,&
-            plan%fft_y_array,&
-            (0.0_f64,0.0_f64),&
-            1,&
-            1)
-    else
-       kx  = real(gi-1,f64)
-       ky  = real(gj-1,f64)
-       val = plan%fft_y_array(i,j)*normalization / &
-            (4.0_f64*sll_pi**2 * ((kx*r_Lx)**2 + (ky*r_Ly)**2))
-       call fft_set_mode_complx_2d(plan%py,plan%fft_y_array,val,1,1)
-    end if
-
     ! Apply the kernel to the rest of the values.
-    do j=2, npy_loc
-       do i=2, npx_loc
+    do j=1, npy_loc
+       do i=1, npx_loc
+          ! Make sure that the first mode is set to zero so that we get an
+          ! answer with zero mean value. This step assumes that the (1,1) point
+          ! will always be at the border of any splitting of the domains. This 
+          ! seems safe in this case.
+          
           global = local_to_global_2D( layout_y, (/i, j/))
           gi = global(1)
           gj = global(2)
-          kx  = real(gi-1,f64)
-          ky  = real(gj-1,f64)
-          val = plan%fft_y_array(i,j)*normalization / &
-               (4.0_f64*sll_pi**2 * ((kx*r_Lx)**2 + (ky*r_Ly)**2))
-          call fft_set_mode_complx_2d(plan%py,plan%fft_y_array,val,i,j)
+          
+          if( (gi == 1) .and. (gj == 1) ) then
+             ! NOTE: WE HAVE A POTENTIALLY DANGEROUS SITUATION HERE. THE 2D
+             ! FFT WE HAVE CARRIED OUT WAS THE RESULT OF A SEQUENCE OF TWO
+             ! INDEPENDENT FFTS. HENCE WHEN WE CALL fft_set_mode_complx_2d()
+             ! BASED ON ONE OF THE FFT PLANS, IT WILL BELIEVE THAT ONLY ONE
+             ! DIRECTION WAS TRANSFORMED. IN CASE THAT THE UNDERLYING ARRAYS
+             ! HAVE BEEN SCRAMBLED IN ANY WAY, THIS WOULD YIELD THE WRONG
+             ! RESULT. WE MAY BE GETTING LUCKY HERE IF EVERYTHING IS IN 
+             ! NATURAL ORDER, BUT THIS NEEDS TO BE FIXED. CAN THIS BE FIXED BY
+             ! USING ONLY 1D FFTs? HARDLY, BECAUSE OF THE SAME SITUATION. IT 
+             ! SEEMS THAT THE 2d FFT DONE IN A PARALLEL WAY, NEEDS TO BE 
+             ! IMPLEMENTED INDEPENDENTLY AND WITH KNOWLEDGE OF LAYOUTS, REMAP, 
+             ! ETC. ...
+             call fft_set_mode_complx_2d( &
+                  plan%py,&
+                  plan%fft_y_array,&
+                  (0.0_f64,0.0_f64),&
+                  1,&
+                  1)
+          else
+             kx  = real(gi-1,f64)
+             ky  = real(gj-1,f64)
+
+             if( kx .ge. ncx/2 ) then
+                kx = kx - ncx
+             end if
+
+             if( ky .ge. ncy/2 ) then
+                ky = ky - ncy
+             end if
+
+              val = -plan%fft_y_array(i,j)*normalization / &
+                  ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_pi**2)
+              call fft_set_mode_complx_2d(plan%py,plan%fft_y_array,val,i,j)
+          end if
        enddo
     enddo
 
