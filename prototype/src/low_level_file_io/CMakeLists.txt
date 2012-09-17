@@ -6,7 +6,7 @@ SET(IO_SRC sll_ascii_io.F90
            sll_xdmf.F90 
            sll_xml_io.F90)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    SET(IO_PARALLEL ${IO_SRC} sll_hdf5_io_parallel.F90)
    ADD_LIBRARY(sll_low_level_file_io_parallel STATIC ${IO_PARALLEL})
