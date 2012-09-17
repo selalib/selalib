@@ -35,7 +35,7 @@
 ! 05 12 2011 - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_hdf5_io
+module sll_hdf5_io_parallel
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
@@ -198,5 +198,5 @@ NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 
 #endif
 
-end module sll_hdf5_io
+end module sll_hdf5_io_parallel
 
