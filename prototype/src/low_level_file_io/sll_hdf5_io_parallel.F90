@@ -71,21 +71,11 @@ contains
     mpi_size = sll_get_collective_size(sll_world_collective)
     mpi_rank = sll_get_collective_rank(sll_world_collective)
 
-    !
-    ! Initialize FORTRAN predefined datatypes
-    !
     call h5open_f(error) 
-
-    ! 
-    ! Setup file access property list with parallel I/O access.
-    !
     call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
     call h5pset_fapl_mpio_f(plist_id, comm, info, error)
-
-    !
-    ! Create the file collectively.
-    ! 
     call h5fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, error, access_prp = plist_id)
+    CALL h5pclose_f(plist_id, error)
 
   end subroutine sll_hdf5_file_create
 
@@ -93,12 +83,25 @@ contains
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
   subroutine sll_hdf5_file_open(filename,file_id,error)
+
     character(len=*) , intent(in)  :: filename  
     integer(hid_t)   , intent(out) :: file_id   
     integer,           intent(out) :: error
+    integer                        :: comm, info
+    integer                        :: mpi_size
+    integer                        :: mpi_rank
+
+    comm     = sll_world_collective%comm
+    info     = MPI_INFO_NULL
+    mpi_size = sll_get_collective_size(sll_world_collective)
+    mpi_rank = sll_get_collective_rank(sll_world_collective)
     
-    call H5open_f(error)
-    call H5Fopen_f(filename,H5F_ACC_RDONLY_F,file_id,error)
+    call h5open_f(error) 
+    call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
+    call h5pset_fapl_mpio_f(plist_id, comm, info, error)
+    call h5fopen_f(filename, H5F_ACC_RDONLY_F, file_id, error, access_prp = plist_id)
+    CALL h5pclose_f(plist_id, error)
+
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
@@ -117,30 +120,29 @@ contains
     call h5close_f(error)
   end subroutine sll_hdf5_file_close
 
-#define NEW_HDF5_FUNCTION(func_name, dataspace_dimension, array_name_and_dims) \
-  subroutine func_name(file_id,array,dsetname,error);                     \
-    integer(hid_t)  , intent(in)           :: file_id;                    \
-    character(len=*), intent(in)           :: dsetname;                   \
-    sll_int32, intent(out)                 :: error;                      \
-    sll_int32                              :: rank, i;                    \
-    sll_real64, intent(in)                 :: array_name_and_dims;        \
-    integer(hsize_t)                       :: array_dims(dataspace_dimension); \
-    integer(hid_t)                         :: dataset_id;                 \
-    integer(hid_t)                         :: dataspace_id;               \
-    rank = dataspace_dimension;                                           \
-    do i = 1, rank;                                                       \
-      array_dims(i) = size(array,i);                                      \
-    end do;                                                               \
-    call H5Screate_simple_f(rank,array_dims,dataspace_id,error);          \
-    call H5Dcreate_f(file_id,                                             \
-                     dsetname,                                            \
-                     H5T_NATIVE_DOUBLE,                                   \
-                     dataspace_id,                                        \
-                     dataset_id,                                          \
-                     error);                                              \
-    call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error); \
-    call H5Sclose_f(dataspace_id,error);                                  \
-    call H5Dclose_f(dataset_id,error);                                    \
+#define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims) \
+  subroutine func_name(file_id,array,dsetname,error);                  \
+    integer(hid_t)  , intent(in)           :: file_id;                 \
+    character(len=*), intent(in)           :: dsetname;                \
+    sll_int32, intent(out)                 :: error;                   \
+    sll_int32                              :: rank, i;                 \
+    sll_real64, intent(in)                 :: array_name_and_dims;     \
+    integer(hsize_t)                       :: array_dims(dspace_dims); \
+    integer(hid_t)                         :: dataset_id;              \
+    integer(hid_t)                         :: memspace;                \ 
+    integer(hid_t)                         :: filespace;               \
+    integer(hsize_t)                       :: chunk_dims(dspace_dims); \
+    rank = dspace_dims;                                                \
+    do i = 1, rank;                                                    \
+      array_dims(i) = size(array,i);                                   \
+    end do;                                                            \
+    call h5screate_simple_f(rank, array_dims, filespace, error);       \
+    call h5screate_simple_f(rank, chunk_dims, memspace, error);        \
+    call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error);           \
+    call h5pset_chunk_f(plist_id, rank, chunk_dims, error);            \
+    call h5dcreate_f(file_id, dsetname, H5T_NATIVE_DOUBLE, filespace,  \
+                     dataset_id, error, plist_id);                     \
+    call h5sclose_f(filespace, error);                                 \
   end subroutine func_name
 
 !> Write a 1D array of float in double precision in a HDF5 file: 
