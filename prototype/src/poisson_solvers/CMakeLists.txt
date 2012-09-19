@@ -4,6 +4,32 @@ ENDIF()
 
 add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 
+add_library(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
+target_link_libraries(sll_poisson_2d_polar
+	sll_fft
+	sll_tridiagonal
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_utilities
+	)
+
+add_executable(unit_test_polar
+	unit_test_polar.F90
+	../simulation/sll_polar_operators.F90
+	#sll_poisson_2d_polar.F90
+	)
+target_link_libraries(unit_test_polar
+	sll_fft
+	sll_tridiagonal
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_utilities
+	sll_poisson_2d_polar
+	sll_splines
+	)
+
 IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
   target_link_libraries(test_poisson_1d
@@ -11,6 +37,7 @@ IF(FFTPACK_ENABLED)
       sll_scalar_field_1d
       sll_mapped_meshes
       geometry_functions
+      sll_interpolators
       sll_low_level_file_io
       fftpack_module
       sll_utilities
@@ -61,9 +88,7 @@ ENDIF()
 #	sll_assertion
 #)
 
-IF(DISABLED_MPI_MODULE)
-# nothing to do
-ELSE()
+IF(MPI_MODULE_ENABLED)
   add_library(sll_poisson_3d_periodic_par STATIC sll_poisson_3d_periodic_par.F90)
   #add_executable(test_poisson_3d_par test_poisson_3d_par.F90)
   #target_link_libraries(test_poisson_3d_par sll_poisson_3d_periodic_par sll_remap #sll_mesh_types sll_collective sll_fft sll_diagnostics sll_memory sll_timer sll_utilities #sll_assertion)

@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
 add_library(sll_simulation_1d STATIC simulation_1d.F90)
 
 #add_executable(test_simulation_1d user_geometry_functions.F90 unit_test.F90)
@@ -50,7 +54,7 @@ target_link_libraries(polar_SL
 
 add_executable(CG_polar
 		CG_polar.F90
-		sll_poisson_2d_polar.F90
+		#sll_poisson_2d_polar.F90
 		sll_advection_polar.F90
 		sll_polar_operators.F90
 		)
@@ -63,8 +67,24 @@ target_link_libraries(CG_polar
 	sll_assertion
 	sll_timer
 	sll_utilities
+	sll_poisson_2d_polar
 	)
+	
 
+IF (0)
+add_executable(Poisson_solver
+		poisson_output.F90
+		sll_poisson_2d_polar.F90
+		)
+target_link_libraries(Poisson_solver
+	sll_fft
+	sll_tridiagonal
+	sll_constants
+	sll_memory
+	sll_assertion
+	sll_utilities
+	)
+ENDIF()
 
 IF(FFTPACK_ENABLED)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
