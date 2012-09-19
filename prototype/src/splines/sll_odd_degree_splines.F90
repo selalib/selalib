@@ -79,7 +79,7 @@ contains
     h = (xmax-xmin)/n
 
     b = uniform_b_splines_at_x( degree, 0.d0 )
-!print*, b
+
     ! Solve the linear system with LAPACK
 
     m = size(f)
