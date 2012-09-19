@@ -1,8 +1,9 @@
 !> Vlasov-Poisson 1D on a uniform cartesian grid
 !> using the Backward Semi-Lagrangian (BSL) method.
-!> For increased accuracy we work here on delta_f = f-f_M
+!> For increased accuracy we can work here on delta_f = f-f_M
 !> where f_M is the equilibrium Maxwellian function
-
+!> driven simulations (i.e. with an external force or non driven can
+!> be performed
 
 program VP1d_deltaf
 #include "sll_working_precision.h"
@@ -32,13 +33,14 @@ program VP1d_deltaf
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
   sll_real64, dimension(:), pointer :: f1d
-  sll_real64, dimension(:), allocatable :: f_maxw
+  sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array
   sll_int32  :: Ncx, Ncv   ! number of cells
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
-  sll_int32, parameter  :: param_out = 37, eapp_diag = 38
+  sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_real64 :: kmode, omegadr, omegadr0
-  logical    :: is_delta_f, driven
+  sll_int32  :: is_delta_f
+  logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
   sll_real64 :: alpha
@@ -63,7 +65,7 @@ program VP1d_deltaf
   namelist / time_iterations / dt, nbiter, freqdiag
   namelist / landau / kmode, eps, is_delta_f, driven 
   namelist / tsi / kmode, eps, v0 
-  namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax
+  namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
 
 
   ! determine what case is being run
@@ -76,26 +78,7 @@ program VP1d_deltaf
      read(input_file, landau)
      if (driven) then
         read(input_file, drive)
-        ! This is the EPW frequency obtained from non-driven simulations
-        if (abs(kmode-0.1)<0.00001) then
-           omegadr0 = 1.0158
-        elseif (abs(kmode-0.2)<0.00001) then
-           omegadr0 = 1.064
-        elseif (abs(kmode-0.22)<0.00001) then
-           omegadr0 = 1.079
-        elseif (abs(kmode-0.26)<0.00001) then
-           omegadr0 = 1.1157
-        elseif (abs(kmode-0.3)<0.00001) then
-           omegadr0 = 1.1598
-        elseif (abs(kmode-0.4)<0.00001) then
-           omegadr0 = 1.2851
-        elseif (abs(kmode-0.5)<0.00001) then
-           omegadr0 = 1.4156
-        else
-           write(*,*) ' Problem: omega_dr not defined, kmode=', kmode 
-           stop
-        endif
-        omegadr = omegadr0
+        eps = 0.0  ! no initial perturbation for driven simulation
      end if
      close(input_file)
   else if (case == "tsi") then
@@ -121,12 +104,12 @@ program VP1d_deltaf
   do j = 1, Ncv + 1
      v_array(j) = vmin + (j-1)*delta_v
   end do
-  ! allocate f_maxw for diagnostics
-  SLL_ALLOCATE(f_maxw(Ncv+1),ierr)
-  if (is_delta_f) then
-     f_maxw = f_equilibrium(v_array)
+  ! allocate f_maxwellian for diagnostics
+  SLL_ALLOCATE(f_maxwellian(Ncv+1),ierr)
+  if (is_delta_f==0) then
+     f_maxwellian = f_equilibrium(v_array)
   else 
-     f_maxw = 0.0_f64
+     f_maxwellian = 0.0_f64
   end if
   ! print out run parameters
   if (case == "landau") then
@@ -136,6 +119,9 @@ program VP1d_deltaf
      print*, '   k=', kmode
      print*, '   perturbation=', eps
      print*, '   driven=', driven
+     if (driven) then
+        print*, 'omegadr=', omegadr
+     endif
   else if (case == "tsi") then
      print*, '     -----------'
      print*, '     | TSI run |'
@@ -144,7 +130,7 @@ program VP1d_deltaf
      print*, '   perturbation=', eps
      print*, '   v0=', v0
   end if
-  if (is_delta_f) then
+  if (is_delta_f==0) then
      print*, '   delta_f version'
   else
      print*, '   full_f version'
@@ -162,7 +148,7 @@ program VP1d_deltaf
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
   write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, dt, nbiter, freqdiag, &
-       is_delta_f
+       is_delta_f, kmode, omegadr
   close(param_out)
 
   call initialize_mesh_2d_cartesian( &
@@ -193,12 +179,11 @@ program VP1d_deltaf
   call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, is_delta_f)
   if (case == "landau") then
      p_init_f => init_landau
-     fname = "landau"
   else if (case == "tsi") then
      p_init_f => init_tsi
-     fname = "tsi"
   end if
 
+  fname = 'dist_func'
   call initialize_distribution_function_2d( &
        f, &
        1.0_f64, &
@@ -222,7 +207,7 @@ program VP1d_deltaf
      call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
           t0, turn_drive_off)
      do i = 1, Ncx + 1
-        E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
+        e_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
      enddo
   endif
 
@@ -230,12 +215,14 @@ program VP1d_deltaf
   open(unit = th_diag, file = 'thdiag.dat') 
   open(unit = ex_diag, file = 'exdiag.dat')
   open(unit = rho_diag, file = 'rhodiag.dat') 
-  open(unit = eapp_diag, file = 'eappdiag.dat') 
+  open(unit = eapp_diag, file = 'eappdiag.dat')
+  open(unit = adr_diag, file = 'adrdiag.dat') 
 
   ! write initial fields
   write(ex_diag,*) efield
   write(rho_diag,*) rho
   write(eapp_diag,*) e_app
+  write(adr_diag,*) istep*dt, adr
 
   ! time loop
   !----------
@@ -245,7 +232,7 @@ program VP1d_deltaf
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f) then
+        if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
               v = vmin + (j-1) * delta_v
@@ -274,7 +261,7 @@ program VP1d_deltaf
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f) then
+        if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
               v = vmin + (j-1) * delta_v
@@ -291,12 +278,12 @@ program VP1d_deltaf
      kinetic_energy = 0.
      potential_energy = 0.
      do i = 1, Ncx 
-        mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxw)   
-        l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxw))
-        l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxw)**2)
+        mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
+        l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
+        l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
         momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
         kinetic_energy = kinetic_energy + 0.5_f64 * &
-             sum((FIELD_DATA(f)(i,:) + f_maxw)*(v_array**2))
+             sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
      end do
      mass = mass * delta_x * delta_v 
      l1norm = l1norm  * delta_x * delta_v
@@ -309,6 +296,7 @@ program VP1d_deltaf
      write(ex_diag,*) efield
      write(rho_diag,*) rho
      write(eapp_diag,*) e_app
+     write(adr_diag,*) istep*dt, adr
      if (mod(istep,freqdiag)==0) then
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 

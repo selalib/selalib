@@ -25,7 +25,7 @@ if param[10]== 'F':
     is_delta_f = False
 else:
     is_delta_f = True
-#edr = loadtxt(rundir+"Edr.txt")
+edr = loadtxt(rundir+"eappdiag.dat")
 x=linspace(xmin,xmax,ncx+1)
 v=linspace(vmin,vmax,ncv+1)
 X,V=meshgrid(x,v)
@@ -37,8 +37,8 @@ else:
     
 def read_h5(it):
     """reads hdf5 file and returns dist_func array"""
-    h5file=tables.openFile('landau'+string.zfill(it,4)+'-landau.h5','r')
-    obj = h5file.getNode("/landau")
+    h5file=tables.openFile('dist_func'+string.zfill(it,4)+'-dist_func.h5','r')
+    obj = h5file.getNode("/dist_func")
     a = obj.read()
     h5file.close()
     return a
@@ -118,7 +118,7 @@ def plot_energy():
     title('total energy')
 
 def plot_E_PF():
-    adr = loadtxt(rundir+"adr.txt")
+    adr = loadtxt(rundir+"adrdiag.dat")
     plot(adr[:,0],adr[:,1])
 
 def plot_avg(x, u, tstart=0):
@@ -131,14 +131,14 @@ def plot_avg(x, u, tstart=0):
 def plot1d(u,it=0, name="u"):
     """Plots 1d function u versus x at time t[it]."""
     plot(x,u[it])
-    title(name + ' at time '+ str(t[it]))
+    title(name + ' at time '+ str(it*dt))
     
-def movie1d(x,u,name='movie',imin=0, imax=201):
+def movie1d(u,name='movie',imin=0, imax=nbiter):
     umin = u.min()
     umax = u.max()
     for i in range(imin,imax):        
-        plot(x,u[i,:])
-        ylim(umin,umax)
+        plot(x,u[i])
+        #ylim(umin,umax)
         draw()
 
 
