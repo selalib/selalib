@@ -25,7 +25,6 @@ program test_poisson_2d_periodic_cart_par
   sll_int32                                    :: myrank
   type(layout_2D), pointer                     :: layout_x
   sll_int64                                    :: colsz ! collective size
-  sll_int32                                    :: i_test
   sll_int32                                    :: nprocx, nprocy
   sll_int32                                    :: e
   sll_real32                                   :: ok 

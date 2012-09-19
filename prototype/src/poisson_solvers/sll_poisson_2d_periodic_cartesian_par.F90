@@ -260,7 +260,14 @@ contains
           else
              kx  = real(gi-1,f64)
              ky  = real(gj-1,f64)
-
+             ! Crucial step: While the results of the FFT are basically a
+             ! list of the modes in the 0..n-1 sense, the algorithm that we
+             ! are using uses a decomposition with negative frequencies,
+             ! i.e.: -n/2..n/2-1. Therefore a step is needed in which we are
+             ! effectively reinterpreting the FFT results in this light.
+             ! More specifically, we take the second half of the transformed
+             ! array and apply a modified factor, proper of a negative 
+             ! frequency.
              if( kx .ge. ncx/2 ) then
                 kx = kx - ncx
              end if
