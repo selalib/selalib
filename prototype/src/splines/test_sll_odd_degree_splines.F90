@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator tester
 !
 !> Start date: July 26, 2012
-!> Last modification: September 11, 2012
+!> Last modification: September 19, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -23,47 +23,44 @@ use sll_odd_degree_splines
 use arbitrary_degree_splines
   implicit none
 
-  type(odd_degree_splines_plan), pointer :: plan1, plan2
-  sll_real64, dimension(:), allocatable  :: f1, f2
+  type(odd_degree_splines_plan), pointer :: plan
+  sll_real64, dimension(:), allocatable  :: f
   sll_real64                             :: xmin, xmax, h
-  sll_real64                             :: x, y, mu, t0
+  sll_real64                             :: x, y, mu
   sll_real64                             :: err1, err2, norm
-  sll_int32                              :: n, nmax
-  sll_int32                              :: i, left, m
+  ! err1 is the relative error in the nodes
+  ! err2 is the relative error in random points
+  sll_int32                              :: n, i, m, pow, pow_max
   sll_int32                              :: degree, degree_max, ierr, ok
-    sll_real64, dimension(8)   :: b=0.d0
+
   print*,'Testing odd degree splines module...'
 
-  nmax = 4
-  degree_max = 3
-  ok = 1
   xmin = -10.d0
   xmax = 10.d0
+  degree_max = 25
+  pow_max = 3
+  ok = 1
 
-  do degree=3,degree_max,2
+  do degree=1,degree_max,2
 
+     print*, 'DEGREE = ', degree
      m = degree/2+1
 
-     do n=nmax,nmax
+     do pow=0,pow_max
 
+        n = degree*10**pow
         h = (xmax-xmin)/n
         mu = (xmin+xmax)/2
 
-        SLL_ALLOCATE( f1(n+degree+1), ierr)
-        SLL_ALLOCATE( f2(n+degree+1), ierr)
-        f1 = 0.d0
-        f2 = 0.d0
+        SLL_ALLOCATE( f(n+degree+1), ierr)
+        f = 0.d0
 
         do i=0,n
-
            x = xmin + i*h
-           f1(i+m) = exp( - ( x - mu )**2  )     
-           f2(i+m) = x*(x-xmin)*(xmax-x)
-
+           f(i+m) = exp( - ( x - mu )**2  )
         enddo
 
-        plan1 => new_odd_degree_splines(n, degree, xmin, xmax, f1)
-        plan2 => new_odd_degree_splines(n, degree, xmin, xmax, f2)
+        plan => new_odd_degree_splines(n, degree, xmin, xmax, f)
 
         err1 = 0.d0
         err2 = 0.d0
@@ -72,45 +69,39 @@ use arbitrary_degree_splines
         do i=0,n
 
            x = xmin + i*h
-           err1 = err1 + ( f1(i+m) - spline(x, plan1) )**2
+           err1 = err1 + ( f(i+m) - spline(x, plan) )**2
 
-           !call random_number(x)
-           !x = x + 0.5d0*h!x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
-   !t0 = (x-xmin)/h
-    !left = int(t0) ! Determine the leftmost support index 'i' of x
-   ! t0 = t0 - left ! compute normalized_offset
-
-    b(i+1:i+degree+1) = uniform_b_splines_at_x( degree, 0.d0 )
-           y = x*(x-xmin)*(xmax-x)
-           err2 = err2 + ( y - sum(plan2%coeffs*b) )**2
+           call random_number(x)
+           x = xmin + x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
+           y = exp( - ( x - mu )**2  )
+           err2 = err2 + ( y - spline(x, plan) )**2
            norm = norm + y*y; 
-print*, y, sum(plan2%coeffs*b),spline(x, plan2)
+
         enddo
 
-        err1 = sqrt( err1/sum( f1(m:n+m)**2 ) )
+        err1 = sqrt( err1/sum( f(m:n+m)**2 ) )
         err2 = sqrt( err2/norm )
-        print*, 'Relative errors:', err1, err2
+        print*, 'Nb_points =', n+1, ', err1 = ', err1, ', err2 =', err2
 
-        if ( (err1 >= 1.e-12) .or. (err2 >= 1.e-12) ) then
+        if ( (err1 >= 1.e-13) ) then
            print*, 'sll_odd_degree_splines: FAIL'
-           print*, 'Degree =', degree
-           print*, 'nb_points =', n+1
            ok = 0
            print*, 'Exiting...'
            stop
         endif
             
-        SLL_DEALLOCATE_ARRAY(f2, ierr)
-        SLL_DEALLOCATE_ARRAY(f1, ierr)
-        call delete_odd_degree_splines(plan1)
-        call delete_odd_degree_splines(plan2)
+        SLL_DEALLOCATE_ARRAY(f, ierr)
+        call delete_odd_degree_splines(plan)
 
      enddo
+
+print*, ' '
 
   enddo
 
   if (ok==1) then
      print*, 'sll_odd_degree_splines: PASS'
+    print*, ' '
   endif
 
 
