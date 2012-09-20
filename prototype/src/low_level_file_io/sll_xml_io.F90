@@ -56,7 +56,8 @@ module sll_xml_io
   end interface
   
   interface sll_xml_grid_geometry
-     module procedure sll_xml_grid_geometry_2d
+     module procedure sll_xml_grid_geometry_2d_high_level
+     module procedure sll_xml_grid_geometry_2d_low_level
      module procedure sll_xml_grid_geometry_3d
   end interface
   
@@ -199,7 +200,8 @@ contains
        sll_int32, intent(in) :: npoints_1
        sll_int32, intent(in) :: npoints_2
        
-       write(file_id,"(a)")"<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
+       write(file_id,"(a)") &
+       "<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
        call sll_xml_dataitem_2d(file_id,filename,npoints_1,npoints_2,filetype)
        write(file_id,"(a)")"</Attribute>"
      end subroutine sll_xml_field_2d
@@ -222,7 +224,8 @@ contains
        sll_int32, intent(in) :: npoints_2
        sll_int32, intent(in) :: npoints_3
        
-       write(file_id,"(a)")"<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
+       write(file_id,"(a)") &
+       "<Attribute Name='"//trim(fieldname)//"' AttributeType='Scalar' Center='"//center//"'>"
        call sll_xml_dataitem_3d( file_id, &
             filename, &
             npoints_1, &
@@ -242,7 +245,7 @@ contains
      !> The file named filename-x1.bin and filename-x2.bin must exist in case of binary output.
      !> The file named filename.h5 with dataset x1 and x2 must exist in case of hdf5 output.
      !>
-     subroutine sll_xml_grid_geometry_2d( &
+     subroutine sll_xml_grid_geometry_2d_high_level( &
        file_id, &
        filename, &
        nnodes_x1, &
@@ -253,6 +256,44 @@ contains
        sll_int32, intent(in) :: nnodes_x1
        sll_int32, intent(in) :: nnodes_x2
        
+#ifdef NOHDF5
+       call sll_xml_grid_geometry_2d_low_level( file_id, &
+            trim(filename), "x1", nnodes_x1, &
+            trim(filename), "x2", nnodes_x2 )
+#else
+       call sll_xml_grid_geometry_2d_low_level( file_id, &
+            trim(filename)//"-x1.h5", "x1", nnodes_x1, &
+            trim(filename)//"-x2.h5", "x2", nnodes_x2 )
+#endif
+       
+       
+     end subroutine sll_xml_grid_geometry_2d_high_level
+
+     !> Write the description of a 2D strutured grid
+     !> mesh with its nodes coordinates contains in filename-x1 and filename-x2.
+     !> \param[in] file_id is the unit number or your xml file
+     !> \param[in] x1filename is the file name where the coordinates x1 are (bin or h5)
+     !> \param[in] x2filename is the file name where the coordinates x2 are (bin or h5)
+     !> \param[in] x1dsetname is the dataset name of coordinates x1 are (bin or h5)
+     !> \param[in] x2dsetname is the dataset name of coordinates x2 are (bin or h5)
+     !> \param[in] nnodes_x1 - nodes number along direction 1
+     !> \param[in] nnodes_x2 - nodes number along direction 2
+     !>
+     !> The file named x*filename-x*dsetname.bin must exists
+     !> The file named x*filename-x*dsetname.h5 with dataset x*dsetname must exists
+     !>
+     subroutine sll_xml_grid_geometry_2d_low_level( file_id, &
+       x1filename, x1dsetname, nnodes_x1, &
+       x2filename, x2dsetname, nnodes_x2 )
+
+       sll_int32, intent(in)        :: file_id
+       character(len=*), intent(in) :: x1filename
+       character(len=*), intent(in) :: x2filename
+       character(len=*), intent(in) :: x1dsetname
+       character(len=*), intent(in) :: x2dsetname
+       sll_int32, intent(in)        :: nnodes_x1
+       sll_int32, intent(in)        :: nnodes_x2
+       
        write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
        write(file_id, &
             "(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
@@ -260,19 +301,23 @@ contains
        write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
        
 #ifdef NOHDF5
-       
-       call sll_xml_dataitem_2d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,'Binary')
-       call sll_xml_dataitem_2d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,'Binary')
-       
+       call sll_xml_dataitem_2d(file_id, &
+                                trim(x1filename)//"-"//x1dsetname//".bin", &
+                                nnodes_x1,nnodes_x2,'Binary')
+       call sll_xml_dataitem_2d(file_id, &
+                                trim(x2filename)//"-"//x2dsetname//".bin", &
+                                nnodes_x1,nnodes_x2,'Binary')
 #else
-       
-       call sll_xml_dataitem_2d(file_id,trim(filename)//"-x1.h5:/x1",nnodes_x1,nnodes_x2,'HDF')
-       call sll_xml_dataitem_2d(file_id,trim(filename)//"-x2.h5:/x2",nnodes_x1,nnodes_x2,'HDF')
-       
+       call sll_xml_dataitem_2d(file_id, &
+                                trim(x1filename)//":/"//x1dsetname, &
+                                nnodes_x1,nnodes_x2,'HDF')
+       call sll_xml_dataitem_2d(file_id, &
+                                trim(x2filename)//":/"//x2dsetname, &
+                                nnodes_x1,nnodes_x2,'HDF')
 #endif
        
        write(file_id,"(a)")"</Geometry>"
-     end subroutine sll_xml_grid_geometry_2d
+     end subroutine sll_xml_grid_geometry_2d_low_level
      
      subroutine sll_xml_grid_geometry_3d(file_id, filename,  &
        nnodes_x1, nnodes_x2, nnodes_x3)
@@ -290,14 +335,20 @@ contains
        
 #ifdef NOHDF5
        
-       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x1.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
-       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x2.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
-       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.bin",nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x1.bin", &
+                                nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x2.bin", &
+                                nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.bin", &
+                                nnodes_x1,nnodes_x2,nnodes_x3,'Binary')
 #else
        
-       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x1.h5:/x1",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
-       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x2.h5:/x2",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
-       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.h5:/x3",nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x1.h5:/x1", &
+                                nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x2.h5:/x2", &
+                                nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
+       call sll_xml_dataitem_3d(file_id,trim(filename)//"-x3.h5:/x3", &
+                                nnodes_x1,nnodes_x2,nnodes_x3,'HDF')
        
 #endif
        
