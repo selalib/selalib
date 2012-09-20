@@ -14,7 +14,7 @@
 &landau
   kmode = 0.26
   eps = 0.0
-  is_delta_f = .true.
+  is_delta_f = 0
   driven = .true.
 /
 &drive
