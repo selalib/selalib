@@ -1,4 +1,4 @@
-// This is a Toeplitz penta-diagonal solver module
+// This is a Toeplitz penta-diagonal solver tester
 
 #include <stdio.h>
 #include <stdlib.h>

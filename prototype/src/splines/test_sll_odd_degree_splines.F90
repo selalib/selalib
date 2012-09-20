@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator tester
 !
 !> Start date: July 26, 2012
-!> Last modification: September 19, 2012
+!> Last modification: September 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -33,7 +33,9 @@ use arbitrary_degree_splines
   sll_int32                              :: n, i, m, pow, pow_max
   sll_int32                              :: degree, degree_max, ierr, ok
 
+  print*,' '
   print*,'Testing odd degree splines module...'
+  print*,' '
 
   xmin = -10.d0
   xmax = 10.d0
@@ -84,7 +86,7 @@ use arbitrary_degree_splines
         print*, 'Nb_points =', n+1, ', err1 = ', err1, ', err2 =', err2
 
         if ( (err1 >= 1.e-13) ) then
-           print*, 'sll_odd_degree_splines: FAIL'
+           print*, 'sll_odd_degree_splines: FAILED'
            ok = 0
            print*, 'Exiting...'
            stop
@@ -95,12 +97,12 @@ use arbitrary_degree_splines
 
      enddo
 
-print*, ' '
+     print*, ' '
 
   enddo
 
   if (ok==1) then
-     print*, 'sll_odd_degree_splines: PASS'
+     print*, 'sll_odd_degree_splines: PASSED'
     print*, ' '
   endif
 
