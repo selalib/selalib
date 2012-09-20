@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: September 11, 2012
+!> Last modification: September 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -26,12 +26,11 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
+    sll_real64, dimension(:), allocatable :: b_at_node
     sll_real64, dimension(:), allocatable :: coeffs
   end type odd_degree_splines_plan
 
-
 contains 
-
 
   function new_odd_degree_splines(n,degree,xmin,xmax,f)result(plan)
 
@@ -48,12 +47,14 @@ contains
     endif
 
     SLL_ALLOCATE(plan, ierr)
+    SLL_ALLOCATE(plan%b_at_node(degree+1), ierr)
     SLL_ALLOCATE(plan%coeffs(size(f)), ierr)
 
     plan%n = n
     plan%degree = degree
     plan%xmin = xmin
     plan%xmax = xmax
+    plan%b_at_node = uniform_b_splines_at_x( degree, 0.d0 )
     call compute_coeffs(f, plan)
 
   end function new_odd_degree_splines
@@ -68,7 +69,6 @@ contains
     type(odd_degree_splines_plan), pointer :: plan
     sll_real64                             :: xmin, xmax, h
     sll_int32                              :: degree, n, m, i, j
-    sll_real64, dimension(plan%degree+1)   :: b
     sll_real64, dimension(size(f),size(f)) :: A, AB
     sll_int32                              :: KD, LDAB, ierr
     
@@ -77,8 +77,6 @@ contains
     xmax = plan%xmax
     n = plan%n
     h = (xmax-xmin)/n
-
-    b = uniform_b_splines_at_x( degree, 0.d0 )
 
     ! Solve the linear system with LAPACK
 
@@ -89,7 +87,7 @@ contains
     do i=1,m
        do j= -KD, KD
           if ( (i+j>0) .and. (i+j<=m) ) then
-             A(i,i+j) = b(j+KD+1) 
+             A(i,i+j) = plan%b_at_node(j+KD+1) 
           endif
        enddo
     enddo
@@ -110,6 +108,11 @@ contains
   end subroutine compute_coeffs
 
 
+
+  !> s(x_i) = f(x_i) 
+  !       <=>
+  !> c_{i-degree}*b_{i-degree} + ... + c_i*b_i = f(x_i), i=-degree..n
+  !> c_j=0 if j<i-degree or j>n  
   function spline(x, plan) result(s) ! The interpolator spline function
 
     sll_real64                             :: x, xmin, xmax
@@ -130,8 +133,8 @@ contains
     t0 = t0 - left ! compute normalized_offset
 
     b = uniform_b_splines_at_x( degree, t0 )
-
     s = 0.d0
+
     do j=left-degree,left
        if ( (j>=-degree) .and. (j<=n) ) then
           s = s + plan%coeffs(j+degree+1) * b(j-left+degree+1)
@@ -147,6 +150,7 @@ contains
     sll_int32                              :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
+    SLL_DEALLOCATE_ARRAY(plan%b_at_node, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
 
   end subroutine delete_odd_degree_splines
