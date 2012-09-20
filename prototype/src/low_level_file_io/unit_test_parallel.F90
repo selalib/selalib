@@ -17,8 +17,7 @@ implicit none
 integer , parameter                       :: nx = 512
 integer , parameter                       :: ny = 256
 ! Local sizes
-integer                                   :: loc_sz_i_init
-integer                                   :: loc_sz_j_init
+integer                  :: mx, my
 
 ! the process mesh
 integer                                   :: npi
@@ -34,9 +33,6 @@ integer                                   :: i, j
 sll_int32, dimension(2)                   :: global_indices
 logical                                   :: test_passed
 
-integer                  :: mx, my
-
-!Parameters
 real(8)                  :: tcpu1
 real(8)                  :: tcpu2
 
@@ -122,19 +118,44 @@ call my_file%create(zfile, error)
 call my_file%write_array(datadims,offset,zdata,zdset,error)
 call my_file%close(error)
 
-call sll_xml_file_create("parallel.xmf",file_id,error)
-call sll_xml_grid_geometry(file_id, xfile, xdset, nx, yfile, ydset, ny )
-call sll_xml_field(file_id,'Z', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-call sll_xml_file_close(file_id,error)
+
 
 call my_file%create('layout.h5', error)
-call my_file%write_array(datadims,offset,xdata,'x1',error)
-call my_file%write_array(datadims,offset,ydata,'x2',error)
+call my_file%write_array(datadims,offset,xdata,'x',error)
+call my_file%write_array(datadims,offset,ydata,'y',error)
+call my_file%write_array(datadims,offset,zdata,'z',error)
 call my_file%close(error)
-call sll_xml_file_create("layout.xmf",file_id,error)
-call sll_xml_grid_geometry(file_id, 'layout', nx, ny )
-call sll_xml_field(file_id,'Z', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-call sll_xml_file_close(file_id,error)
+
+if (myrank == 0) then
+
+   call sll_xml_file_create("parallel.xmf",file_id,error)
+   call sll_xml_grid_geometry(file_id, xfile, xdset, nx, yfile, ydset, ny )
+   call sll_xml_field(file_id,'Z', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
+   call sll_xml_file_close(file_id,error)
+
+   call sll_xml_file_create("layout.xmf",file_id,error)
+   write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+   write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
+                          ny,nx,"'/>"
+   write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
+   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+   write(file_id,"(a)")"layout.h5:/x"
+   write(file_id,"(a)")"</DataItem>"
+   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+   write(file_id,"(a)")"layout.h5:/y"
+   write(file_id,"(a)")"</DataItem>"
+   write(file_id,"(a)")"</Geometry>"
+   write(file_id,"(a)")"<Attribute Name='layout_values' AttributeType='Scalar' Center='Node'>"
+   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+   write(file_id,"(a)")"layout.h5:/z"
+   write(file_id,"(a)")"</DataItem>"
+   write(file_id,"(a)")"</Attribute>"
+   call sll_xml_file_close(file_id,error)
+
+end if
 
 tcpu2 = MPI_WTIME()
 if (myrank == 0) &
