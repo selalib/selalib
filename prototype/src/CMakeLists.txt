@@ -362,13 +362,13 @@ add_test(NAME time_splitting COMMAND test_time_splitting)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)
 add_test(NAME advection_field COMMAND test_advection_field)
-set(PROCS 8)
-add_test(NAME test_vp4d_sim
-         COMMAND
-	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
-	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#set(PROCS 8)
+#add_test(NAME test_vp4d_sim
+#         COMMAND
+#	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+#	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
+#	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+#set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
