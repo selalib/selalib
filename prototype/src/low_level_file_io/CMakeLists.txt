@@ -3,9 +3,9 @@ SET(IO_SRC sll_ascii_io.F90
            sll_binary_io.F90 
            sll_gnuplot.F90 
            sll_io.F90 
-           sll_xdmf.F90 
            sll_hdf5_io.F90
-           sll_xml_io.F90)
+           sll_xml_io.F90
+           sll_xdmf.F90 )
 
 
 ADD_LIBRARY(sll_low_level_file_io STATIC ${IO_SRC})
