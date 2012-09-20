@@ -205,7 +205,7 @@ program cg_polar
 
   else if (fcase==5) then
      open(25,file=f_file,action="read")
-     read(25)f
+     read(25,*)f
      close(25)
 
   else if (fcase==6) then
@@ -376,6 +376,7 @@ program cg_polar
         !leap-frog scheme
         if (step==1) then
            call SL_ordre_2(plan_sl,f,fp1)
+           plan_sl%adv%dt=2.0_f64*dt
         else 
            call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
            call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
