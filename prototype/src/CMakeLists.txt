@@ -85,8 +85,8 @@ ENDIF()
 ##########################################################
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
-set(HDF5_ENABLED ON CACHE BOOL " ")
-set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL " ")
+set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
+set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
 IF (HDF5_ENABLED)
 
@@ -394,7 +394,7 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(simulation_1d simulation/test_simulation_1d)
 
 
-set(FORTRANCL_ENABLED CACHE BOOL OFF)
+set(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 # recherche de FORTRANCL
 IF(FORTRANCL_ENABLED)
 	find_package(FORTRANCL QUIET)
