@@ -1,5 +1,11 @@
 To run this example you need to install PTScotch and Pastix.
 
+To build this library you need MPI implementations that supports MPI_THREAD_MULTIPLE.
+
+With OpenMPI you can check this with:
+ $  ompi_info | grep -i thread
+
+
 INSTALLATION
 ============
 
