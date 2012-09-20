@@ -15,6 +15,6 @@
   kmode = 0.2
   eps = 0.001
   v0 = 2.4   
-  is_delta_f = .false.	
+  is_delta_f = 1	
 /
 
