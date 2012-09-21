@@ -29,6 +29,7 @@ module sll_splines
      sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
      sll_real64                        :: slope_L  ! left slope, for Hermite
      sll_real64                        :: slope_R  ! right slope, for Hermite
+     logical                           :: compute_slopes
   end type sll_spline_1D
 
   ! Are x1 and x2 the coordinates that we should use? Or are eta1 and eta2
@@ -62,6 +63,10 @@ module sll_splines
      sll_real64, dimension(:), pointer   :: x1_max_slopes_coeffs
      sll_real64, dimension(:), pointer   :: x2_min_slopes_coeffs
      sll_real64, dimension(:), pointer   :: x2_max_slopes_coeffs
+     logical                             :: compute_slopes_x1_min
+     logical                             :: compute_slopes_x1_max
+     logical                             :: compute_slopes_x2_min
+     logical                             :: compute_slopes_x2_max
   end type sll_spline_2D
 
 
@@ -89,7 +94,7 @@ contains  ! ****************************************************************
   ! a double precision value at the top of the sll_spline_1D object. For now,
   ! these are the only slots inside the spline that are meant to be modified
   ! outside of the initialization or spline computation functions.
-  
+#if 0
   !> set_slope_left
   !> \param[in] spline object
   !> \param[in] value  set derivative on left hand side to value
@@ -115,7 +120,7 @@ contains  ! ****************************************************************
     end if
     spline%slope_r = value
   end subroutine set_slope_right
-  
+#endif  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
@@ -171,13 +176,17 @@ contains  ! ****************************************************************
     case (HERMITE_SPLINE)
        if( present(sl) ) then
           new_spline_1D%slope_L = sl
+          new_spline_1D%compute_slopes = .false.
        else
-          new_spline_1D%slope_L = 0.0  ! default left slope for Hermite case
+          new_spline_1D%slope_L = 0.0           ! just a filler value
+          new_spline_1D%compute_slopes = .true.
        end if
        if( present(sr) ) then
           new_spline_1D%slope_R = sr
+          new_spline_1D%compute_slopes = .false.
        else
-          new_spline_1D%slope_R = 0.0  ! default right slope for Hermite case
+          new_spline_1D%slope_R = 0.0           ! just a filler value
+          new_spline_1D%compute_slopes = .true.
        end if
     case default
        print *, 'ERROR: new_spline_1D(): not recognized boundary condition'
@@ -189,7 +198,6 @@ contains  ! ****************************************************************
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
     SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
-
   end function new_spline_1D
   
   ! - data: the array whose data must be fit with the cubic spline.
@@ -481,6 +489,7 @@ contains  ! ****************************************************************
     sll_real64                        :: slope_l
     sll_real64                        :: slope_r
     sll_real64                        :: delta
+    sll_real64                        :: r_delta ! reciprocal
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
@@ -499,9 +508,20 @@ contains  ! ****************************************************************
     np      =  spline%n_points
     d       => spline%d
     coeffs  => spline%coeffs
-    slope_l = spline%slope_L
-    slope_r = spline%slope_R
     delta   = spline%delta
+    r_delta = 1.0_f64/delta
+
+    if( spline%compute_slopes .eqv. .true. ) then
+       ! Estimate numerically the values of the slopes based on the given
+       ! values of 'f'. Here we use a forward-difference scheme for the
+       ! first point (-3/2,2,-1/2)
+       slope_l = r_delta*(-1.5_f64*f(1) + 2.0_f64*f(2) - 0.5_f64*f(3))
+       ! and a backward-difference scheme for the last point (1/2,-2,3/2)
+       slope_r = r_delta*(0.5_f64*f(np-2)-2.0_f64*f(np-1) +1.5_f64*f(np))
+    else
+       slope_l = spline%slope_L
+       slope_r = spline%slope_R
+    end if
     call compute_spline_1D_hermite_aux(fp,np,d, slope_l,slope_r, delta, coeffs)
   end subroutine compute_spline_1D_hermite
 
@@ -680,7 +700,7 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
     sll_real64, dimension(1:n), intent(out) :: a_out
-    type(sll_spline_1D), pointer         :: spline
+    type(sll_spline_1D), pointer            :: spline
     sll_real64, dimension(:), pointer       :: coeffs
     sll_real64                              :: rh   ! reciprocal of cell spacing
     sll_int32                               :: cell
@@ -1078,37 +1098,27 @@ contains  ! ****************************************************************
        ! The following macro is obviously intended only for use within
        ! new_spline_2D(). But this should be replaced with a subroutine
        ! whenever possible.
-#define FILL_SLOPES(const_opt, input_opt, numpts, output)       \
+#define FILL_SLOPES(const_opt, input_opt, numpts, output, slopes) \
        if( present(input_opt) ) then;                           \
           do i=1,numpts;                                        \
              new_spline_2D%output(i) = input_opt(i);            \
           end do;                                               \
+          new_spline_2D%slopes = .false.;                       \
        else if( present(const_opt) ) then;                      \
           do i=1,numpts;                                        \
              new_spline_2D%output(i) = const_opt;               \
           end do;                                               \
+          new_spline_2D%slopes = .false.;                       \
        else;                                                    \
-          do i=1,numpts;                                        \
-             new_spline_2D%output(i) = 0.0_f64;                 \
-          end do;                                               \
+          new_spline_2D%slopes = .true.;                        \
        end if
+
        ! Set the values of the slopes at x1_min     
-       FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes)
+       FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes,compute_slopes_x1_min)
 
        ! Set the values of the slopes at x1_max
-       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x2,x1_max_slopes)
+       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x2,x1_max_slopes,compute_slopes_x1_max)
 
-       ! And compute the spline coefficients for the above slope values
-       call compute_spline_1D_periodic_aux( &
-            new_spline_2d%x1_min_slopes, &
-            num_pts_x2, &
-            new_spline_2d%d2, &
-            new_spline_2d%x1_min_slopes_coeffs )
-       call compute_spline_1D_periodic_aux( &
-            new_spline_2d%x1_max_slopes, &
-            num_pts_x2, &
-            new_spline_2d%d2, &
-            new_spline_2d%x1_max_slopes_coeffs )
     case( 9 )
        ! Periodic in X1 and Hermite in X2
        if( &
@@ -1148,10 +1158,10 @@ contains  ! ****************************************************************
        new_spline_2d%x2_max_slopes_coeffs => null()
 
        ! Set the values of the slopes at x2_min     
-       FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes)
+       FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes,compute_slopes_x2_min)
 
        ! Set the values of the slopes at x2_max
-       FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes)
+       FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
 
     case( 10 )
        ! Hermite conditions in both, X1 and X2
@@ -1185,8 +1195,8 @@ contains  ! ****************************************************************
        SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
        SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
        SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
-       ! In the order that we compute the splines, first along X2 and then
-       ! along X1, the coefficients-as-slopes data would never be used
+       ! Given the order in which we compute the splines, first along X2 and 
+       ! then along X1, the coefficients-as-slopes data would never be used
        ! in the X2 direction. Consider eliminating these pointers from the 
        ! object.
        new_spline_2d%x2_min_slopes_coeffs => null()
@@ -1195,19 +1205,17 @@ contains  ! ****************************************************************
        SLL_ALLOCATE(new_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
 
        ! Set the values of the slopes at x1_min     
-       FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes)
+       FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes,compute_slopes_x1_min)
 
        ! Set the values of the slopes at x1_max
-       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x2,x1_max_slopes)
+       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x2,x1_max_slopes,compute_slopes_x1_max)
 
        ! Set the values of the slopes at x2_min     
-       FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes)
+       FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes,compute_slopes_x2_min)
 
        ! Set the values of the slopes at x2_max
-       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x1,x2_max_slopes)
+       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
 
-       ! THIS PART IS NOT FINISHED: NEED TO COMPUTE THE COEFFICIENTS USING
-       ! THE SLOPE ARRAYS.
     case default
        print *, 'ERROR: new_spline_2D(): ', &
             'did not recognize given boundary conditions.'
@@ -1296,6 +1304,8 @@ contains  ! ****************************************************************
     sll_real64                           :: max_slope
     sll_int32                            :: i
     sll_int32                            :: j
+    sll_real64                           :: r_x1_delta
+
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
@@ -1371,6 +1381,40 @@ contains  ! ****************************************************************
          spline%x1_delta, &
          coeffs )
 #endif
+    r_x1_delta = 1.0_f64/spline%x1_delta
+    if( spline%compute_slopes_x1_min .eqv. .true. ) then
+       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! at the first point based on the given data.
+       do j=1,npx2
+          spline%x1_min_slopes(j) = r_x1_delta*(-1.5_f64*data(1,j) + &
+                                                 2.0_f64*data(2,j) - &
+                                                 0.5_f64*data(3,j) )
+       end do
+    end if
+    if( spline%compute_slopes_x1_max .eqv. .true. ) then
+       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! at the last point.
+       do j=1,npx2
+          spline%x1_max_slopes(j) = r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
+                                                 2.0_f64*data(npx1-1,j) + &
+                                                 1.5_f64*data(npx1,j) )
+       end do
+    end if
+    ! At this point, the values of the slopes are available because either
+    ! the caller has supplied the values or they have been computed 
+    ! numerically. 
+    ! Compute the spline coefficients for the available slope values
+    call compute_spline_1D_periodic_aux( &
+         spline%x1_min_slopes, &
+         npx2, &
+         spline%d2, &
+         spline%x1_min_slopes_coeffs )
+
+    call compute_spline_1D_periodic_aux( &
+         spline%x1_max_slopes, &
+         npx2, &
+         spline%d2, &
+         spline%x1_max_slopes_coeffs )
 
     do j=0,npx2+2  
        datap  => spline%coeffs(1:npx1,j)
@@ -1404,6 +1448,8 @@ contains  ! ****************************************************************
     sll_real64                           :: max_slope
     sll_int32                            :: i
     sll_int32                            :: j
+    sll_real64                           :: r_x2_delta
+
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
@@ -1428,6 +1474,29 @@ contains  ! ****************************************************************
     npx2   =  spline%num_pts_x2
     d1     => spline%d1
     d2     => spline%d2
+    r_x2_delta = 1.0_f64/spline%x2_delta
+
+    ! Numerically compute the values of the slopes if the user has not given
+    ! them.
+    if( spline%compute_slopes_x2_min .eqv. .true. ) then
+       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! at the first point based on the given data.
+       do i=1,npx1
+          spline%x2_min_slopes(i) = r_x2_delta*(-1.5_f64*data(i,1) + &
+                                                 2.0_f64*data(i,2) - &
+                                                 0.5_f64*data(i,3) )
+       end do
+    end if
+    if( spline%compute_slopes_x2_max .eqv. .true. ) then
+       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! at the last point.
+       do i=1,npx1
+          spline%x2_max_slopes(i) = r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
+                                                 2.0_f64*data(i,npx2-1) + &
+                                                 1.5_f64*data(i,npx2) )
+       end do
+    end if
+
     ! build splines along the x2 direction (hermite direction). Note: due 
     ! to Fortran's column-major ordering, this uses long strides in memory.
     do i=1,npx1 
@@ -1477,6 +1546,9 @@ contains  ! ****************************************************************
     sll_real64                           :: max_slope
     sll_int32                            :: i
     sll_int32                            :: j
+    sll_real64                           :: r_x1_delta ! reciprocal of x1_delta
+    sll_real64                           :: r_x2_delta ! reciprocal of x2_delta
+
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
@@ -1501,6 +1573,49 @@ contains  ! ****************************************************************
     npx2   =  spline%num_pts_x2
     d1     => spline%d1
     d2     => spline%d2
+    r_x1_delta = 1.0_f64/spline%x1_delta
+    r_x2_delta = 1.0_f64/spline%x2_delta
+
+    ! Compute the values of the slopes in case that they were not given.
+    if( spline%compute_slopes_x1_min .eqv. .true. ) then
+       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! at the first point based on the given data.
+       do j=1,npx2
+          spline%x1_min_slopes(j) = r_x1_delta*(-1.5_f64*data(1,j) + &
+                                                 2.0_f64*data(2,j) - &
+                                                 0.5_f64*data(3,j) )
+       end do
+    end if
+    if( spline%compute_slopes_x1_max .eqv. .true. ) then
+       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! at the last point.
+       do j=1,npx2
+          spline%x1_max_slopes(j) = r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
+                                                 2.0_f64*data(npx1-1,j) + &
+                                                 1.5_f64*data(npx1,j) )
+       end do
+    end if
+
+    if( spline%compute_slopes_x2_min .eqv. .true. ) then
+       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! at the first point based on the given data.
+       do i=1,npx1
+          spline%x2_min_slopes(i) = r_x2_delta*(-1.5_f64*data(i,1) + &
+                                                 2.0_f64*data(i,2) - &
+                                                 0.5_f64*data(i,3) )
+       end do
+    end if
+    if( spline%compute_slopes_x2_max .eqv. .true. ) then
+       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! at the last point.
+       do i=1,npx1
+          spline%x2_max_slopes(i) = r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
+                                                 2.0_f64*data(i,npx2-1) + &
+                                                 1.5_f64*data(i,npx2) )
+       end do
+    end if
+
+
     ! build splines along the x2 direction. Note: due to Fortran's 
     ! column-major ordering, this uses long strides in memory.
     do i=1,npx1 

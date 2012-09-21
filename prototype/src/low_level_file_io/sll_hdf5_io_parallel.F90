@@ -44,24 +44,33 @@ module sll_hdf5_io_parallel
   use sll_collective
   
   implicit none
-  
-  interface sll_hdf5_write_array
-     module procedure sll_hdf5_write_array_1d
-     module procedure sll_hdf5_write_array_2d
-     module procedure sll_hdf5_write_array_3d
-  end interface
 
-  integer(hid_t) :: plist_id      ! Property list identifier 
+  type :: phdf5_file
+     integer(hid_t) :: file_id      ! Property list identifier 
+  contains
+     procedure :: create => sll_hdf5_file_create
+     procedure :: close => sll_hdf5_file_close
+     procedure :: sll_hdf5_write_array_1d
+     procedure :: sll_hdf5_write_array_2d
+     procedure :: sll_hdf5_write_array_3d
+     generic   :: write_array => sll_hdf5_write_array_1d, &
+                                 sll_hdf5_write_array_2d, &
+                                 sll_hdf5_write_array_3d
+  end type
+  
+
 
 contains
   
   !> Create HDF5 file :
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
-  subroutine sll_hdf5_file_create(filename,file_id,error)
+  subroutine sll_hdf5_file_create(self, filename,error)
+    class(phdf5_file) :: self
     character(len=*) , intent(in)  :: filename  
-    integer(hid_t)   , intent(out) :: file_id   
     integer,           intent(out) :: error
+    integer(hid_t)                 :: file_id   
+    integer(hid_t)                 :: plist_id 
     integer                        :: comm, info
     integer                        :: mpi_size
     integer                        :: mpi_rank
@@ -75,17 +84,20 @@ contains
     call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
     call h5pset_fapl_mpio_f(plist_id, comm, info, error)
     call h5fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, error, access_prp = plist_id)
-    CALL h5pclose_f(plist_id, error)
+    call h5pclose_f(plist_id, error)
+
+    self%file_id  = file_id
 
   end subroutine sll_hdf5_file_create
 
   !> Open HDF5 file 
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
-  subroutine sll_hdf5_file_open(filename,file_id,error)
-
+  subroutine sll_hdf5_file_open(self,filename,error)
+    class(phdf5_file)              :: self
     character(len=*) , intent(in)  :: filename  
-    integer(hid_t)   , intent(out) :: file_id   
+    integer(hid_t)                 :: file_id   
+    integer(hid_t)                 :: plist_id   
     integer,           intent(out) :: error
     integer                        :: comm, info
     integer                        :: mpi_size
@@ -100,20 +112,21 @@ contains
     call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
     call h5pset_fapl_mpio_f(plist_id, comm, info, error)
     call h5fopen_f(filename, H5F_ACC_RDONLY_F, file_id, error, access_prp = plist_id)
-    CALL h5pclose_f(plist_id, error)
+    call h5pclose_f(plist_id, error)
+
+    self%file_id  = file_id
 
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
-  subroutine sll_hdf5_file_close(file_id,error)
-    integer(hid_t), intent(in) :: file_id
+  subroutine sll_hdf5_file_close(self,error)
+    class(phdf5_file)              :: self
     integer :: error
 
     !
     ! Close property list and the file.
     !
-    call h5pclose_f(plist_id, error)
-    call h5fclose_f(file_id, error)
+    call h5fclose_f(self%file_id, error)
     !
     ! Close FORTRAN interface
     !
@@ -121,28 +134,53 @@ contains
   end subroutine sll_hdf5_file_close
 
 #define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims) \
-  subroutine func_name(file_id,array,dsetname,error);                  \
-    integer(hid_t)  , intent(in)           :: file_id;                 \
+  subroutine func_name(self,global_size,offset,array,dsetname,error);  \
+    class(phdf5_file)                      :: self;                    \
     character(len=*), intent(in)           :: dsetname;                \
+    integer(hsize_t), intent(in)           :: global_size(dspace_dims);\
     sll_int32, intent(out)                 :: error;                   \
-    sll_int32                              :: rank, i;                 \
     sll_real64, intent(in)                 :: array_name_and_dims;     \
+    integer(hid_t)                         :: file_id;                 \
+    integer(hid_t)                         :: plist_id;                \
+    sll_int32                              :: rank, i;                 \
     integer(hsize_t)                       :: array_dims(dspace_dims); \
-    integer(hid_t)                         :: dataset_id;              \
-    integer(hid_t)                         :: memspace;                \ 
+    integer(hid_t)                         :: dset_id;                 \
+    integer(hid_t)                         :: memspace;                \
     integer(hid_t)                         :: filespace;               \
-    integer(hsize_t)                       :: chunk_dims(dspace_dims); \
+    integer(HSIZE_T)                       :: dimsfi(dspace_dims);     \
+    integer(HSIZE_T)                       :: count(dspace_dims);      \
+    integer(HSSIZE_T)                      :: offset(dspace_dims);     \
+    integer(HSIZE_T)                       :: stride(dspace_dims);     \
+    integer(HSIZE_T)                       :: block(dspace_dims);      \
+    file_id  = self%file_id;                                           \
     rank = dspace_dims;                                                \
     do i = 1, rank;                                                    \
       array_dims(i) = size(array,i);                                   \
     end do;                                                            \
-    call h5screate_simple_f(rank, array_dims, filespace, error);       \
-    call h5screate_simple_f(rank, chunk_dims, memspace, error);        \
+    dimsfi = global_size;                                              \
+    call h5screate_simple_f(rank, global_size, filespace, error);      \
+    call h5screate_simple_f(rank, array_dims, memspace, error);        \
     call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error);           \
-    call h5pset_chunk_f(plist_id, rank, chunk_dims, error);            \
+    call h5pset_chunk_f(plist_id, rank, array_dims, error);            \
     call h5dcreate_f(file_id, dsetname, H5T_NATIVE_DOUBLE, filespace,  \
-                     dataset_id, error, plist_id);                     \
+                     dset_id, error, plist_id);                        \
+    call h5pclose_f(plist_id, error);                                  \
     call h5sclose_f(filespace, error);                                 \
+    stride = 1;                                                        \
+    count  = 1;                                                        \
+    block  = array_dims;                                               \
+    call h5dget_space_f(dset_id, filespace, error);                    \
+    call h5sselect_hyperslab_f (filespace, H5S_SELECT_SET_F,           \
+                                offset, count, error, stride, block);  \
+    call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error);             \
+    call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error);  \
+    call h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, array, dimsfi, error,  \
+                    file_space_id = filespace, mem_space_id = memspace,\
+                    xfer_prp = plist_id);                              \
+    call h5pclose_f(plist_id, error);                                  \
+    call h5sclose_f(filespace, error);                                 \
+    call h5sclose_f(memspace, error);                                  \
+    call h5dclose_f(dset_id, error);                                   \
   end subroutine func_name
 
 !> Write a 1D array of float in double precision in a HDF5 file: 
