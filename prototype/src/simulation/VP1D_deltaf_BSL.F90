@@ -38,6 +38,7 @@ program VP1d_deltaf
   sll_int32  :: Ncx, Ncv   ! number of cells
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
+  sll_int32, parameter  :: param_out_drive = 40
   sll_real64 :: kmode, omegadr, omegadr0
   sll_int32  :: is_delta_f
   logical    :: driven
@@ -147,9 +148,16 @@ program VP1d_deltaf
   print*, '   number of iterations=', nbiter
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
-  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, dt, nbiter, freqdiag, &
-       is_delta_f, kmode, omegadr
+  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
+       dt, nbiter, freqdiag, is_delta_f, kmode
   close(param_out)
+
+  if (driven) then
+     open(unit = param_out_drive, file = 'param_out_drive.dat') 
+     write(param_out_drive,*) t0, twL, twR, tstart, tflat, tL, tR, &
+          Edrmax, omegadr
+     close(param_out_drive)
+  end if
 
   call initialize_mesh_2d_cartesian( &
        mesh2d,           &

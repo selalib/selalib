@@ -200,7 +200,7 @@ module remapper
   end interface new_remap_plan
 
   interface apply_remap_2D
-     module procedure apply_remap_2D_double
+     module procedure apply_remap_2D_double, apply_remap_2d_complex
   end interface apply_remap_2D
 
   interface apply_remap_3D
@@ -211,6 +211,16 @@ module remapper
   interface apply_remap_4D
      module procedure apply_remap_4D_double
   end interface apply_remap_4D
+
+  interface delete
+     module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
+          delete_layout_5D, delete_remap_2D, delete_remap_3D, delete_remap_4D
+  end interface delete
+
+  interface compute_local_sizes
+     module procedure compute_local_sizes_2d, compute_local_sizes_3d, &
+          compute_local_sizes_4d
+  end interface compute_local_sizes
 
 contains  !******************************************************************
 
@@ -956,6 +966,32 @@ contains  !******************************************************************
  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D, remap_plan_2D, layout_2D, box_2D)
   MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D, remap_plan_3D, layout_3D, box_3D)
  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D, remap_plan_4D, layout_4D, box_4D)
+
+ ! Try to fix the name of the subroutine in the print statement by stringifying
+ ! the name.
+#define MAKE_DELETE_REMAP_SUBROUTINE( fname, plan_type ) \
+ subroutine fname( plan ); \
+   type(plan_type), pointer :: plan; \
+   sll_int32                    :: ierr; \
+   if( .not. associated(plan) ) then; \
+      print *, 'ERROR, delete_remap_plan(): passed plan was not associated.'; \
+      stop; \
+   end if; \
+   SLL_DEALLOCATE(plan%send_displs, ierr); \
+   SLL_DEALLOCATE(plan%send_counts, ierr); \
+   SLL_DEALLOCATE(plan%recv_displs, ierr); \
+   SLL_DEALLOCATE(plan%recv_counts, ierr); \
+   SLL_DEALLOCATE(plan%send_boxes, ierr); \
+   SLL_DEALLOCATE(plan%recv_boxes, ierr); \
+   SLL_DEALLOCATE(plan%send_buffer, ierr); \
+   SLL_DEALLOCATE(plan%recv_buffer, ierr); \
+   SLL_DEALLOCATE(plan, ierr); \
+ end subroutine fname
+
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D, remap_plan_2D )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D, remap_plan_3D )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D, remap_plan_4D )
+
 
 #if 0
   ! We leave this function here for reference, as it was the original and
@@ -1852,6 +1888,179 @@ contains  !******************************************************************
     SLL_DEALLOCATE_ARRAY(scntsi, ierr)
     SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_2D_double
+
+  subroutine apply_remap_2D_complex( plan, data_in, data_out )
+    intrinsic                                 :: transfer
+    type(remap_plan_2D), pointer              :: plan
+    sll_comp64, dimension(:,:), intent(in)    :: data_in
+    sll_comp64, dimension(:,:), intent(out)   :: data_out
+    sll_int32, dimension(:), pointer          :: sb     ! send buffer
+    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: scnts  ! send counts
+    sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
+    type(sll_collective_t), pointer           :: col    ! collective
+    type(layout_2D), pointer                :: init_layout  => NULL()
+    type(layout_2D), pointer                :: final_layout => NULL()
+    sll_int32                                 :: id, jd
+    sll_int32                                 :: i
+    sll_int32                                 :: col_sz
+    sll_int32                                 :: ierr
+    sll_int32                                 :: loi, loj
+    sll_int32                                 :: hii, hij
+    type(box_2D)                              :: sbox
+    sll_int32                                 :: my_rank
+    sll_int32                                 :: loc
+    sll_int32, dimension(1:2)                 :: local_lo, local_hi
+    sll_int32                                 :: int32_data_size
+
+    ! to load the MPI function and send integers, we have a separate set of
+    ! arrays to store this information for now.
+    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
+    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
+    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
+    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+
+    ! unpack the plan: There are inconsistencies here, one one hand we access
+    ! directly and on the other with access functions... standardize...
+    sdisp        => plan%send_displs
+    rdisp        => plan%recv_displs
+    scnts        => plan%send_counts
+    rcnts        => plan%recv_counts
+    col          => plan%collective
+    col_sz       =  sll_get_collective_size(col)
+    init_layout  => get_remap_2D_initial_layout(plan)
+    final_layout => get_remap_2D_final_layout(plan)
+    my_rank      =  sll_get_collective_rank(col)
+    sb           => plan%send_buffer
+    rb           => plan%recv_buffer
+
+    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
+    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
+    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
+    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+
+    ! Translate the amounts into integers
+#if 1
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), sdisp, &
+         col_sz, sdispi)
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rdisp, &
+         col_sz, rdispi)
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), scnts, &
+         col_sz, scntsi)
+    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rcnts, &
+         col_sz, rcntsi)
+#endif
+    
+#if 0
+    write (*,'(a,i4)') 'parameters from rank ', my_rank
+    print *, 'scntsi', scntsi(:)
+    print *, 'sdispi', sdispi(:)
+    print *, 'rcntsi', rcntsi(:)
+    print *, 'rdispi', rdispi(:)
+    call flush()
+#endif
+    
+    ! load the send buffer
+    loc = 0             ! first loading is at position zero
+    ! This step is obviously not needed for integers themselves. We put this
+    ! here for generality.
+    int32_data_size = INT32_SIZEOF( data_in(1,1) )
+    do i = 0, col_sz-1
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+          if( loc .ne. sdispi(i) ) then
+             print *, 'ERROR DETECTED in process: ', my_rank
+             print *, 'apply_remap_2D_complex() ERROR: ', &
+                  'discrepancy between displs(i) and the loading index for ',&
+                  'i = ', i, ' displs(i) = ', sdispi(i)
+             write(*,'(a,i8)') 'col_sz = ', col_sz
+             call flush()
+             stop 'apply_remap(): loading error'
+          end if
+          ! get the information on the box to send, get the limits,
+          ! convert to the local indices and find out where in the 
+          ! buffer to start writing.
+          sbox = plan%send_boxes(i)
+          loi = get_box_2D_i_min(sbox)
+          loj = get_box_2D_j_min(sbox)
+          hii = get_box_2D_i_max(sbox)
+          hij = get_box_2D_j_max(sbox)
+          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
+          local_hi = global_to_local_2D( init_layout, (/hii,hij/) )
+
+          ! The plan to load the send buffer is to traverse the integer
+          ! array with a single index (loc). When we load the buffer, each
+          ! data element may occupy multiple integer 'slots', hence the
+          ! loading index needs to be manually increased. As an advantage,
+          ! we can do some error checking every time we send data to a 
+          ! different process, as we know what is the expected value of 
+          ! the index at that point.
+          do jd = local_lo(2), local_hi(2)
+             do id = local_lo(1), local_hi(1)
+                sb(loc:) = transfer(data_in(id,jd),(/1_i32/))
+                loc      = loc + int32_data_size
+             end do
+          end do
+       end if
+    end do
+    ! Comment the following when not debugging    
+    !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
+    !  print *, sb(0:(size(sb)-1))
+    ! call flush()
+    !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
+    !    call flush()
+   if( plan%is_uniform .eqv. .false. ) then 
+      ! the following call can be changed from a generic to a type-specific
+      ! call when right away, but especially if the apply_remap function gets
+      ! specialized (i.e. gets rid of transfer() calls).
+       call sll_collective_alltoallV( sb(:),       &
+                                      scntsi(0:col_sz-1), &
+                                      sdispi(0:col_sz-1), &
+                                      rb(:),       &
+                                      rcntsi(0:col_sz-1), &
+                                      rdispi(0:col_sz-1), col )
+    else
+       call sll_collective_alltoall ( sb(:), &
+                                      scntsi(0), &
+                                      rcntsi(0), &
+                                      rb(:), col )
+    end if
+!    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
+!    print *, rb(0:size(rb)-1)
+!    call flush()
+    ! Unpack the plan into the outgoing buffer.
+    loc = 0  ! We load first from position 0 in the receive buffer.
+    do i = 0, col_sz-1
+       if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
+          if( loc .ne. rdispi(i) ) then
+             write (*,'(a,i4)') &
+                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+             stop 'unpacking error'
+          end if
+          ! get the information on the box to receive, get the limits, and 
+          ! convert to the local indices.
+          sbox = plan%recv_boxes(i)
+          loi = get_box_2D_i_min(sbox)
+          loj = get_box_2D_j_min(sbox)
+          hii = get_box_2D_i_max(sbox)
+          hij = get_box_2D_j_max(sbox)
+          local_lo = global_to_local_2D( final_layout, (/loi,loj/) )
+          local_hi = global_to_local_2D( final_layout, (/hii,hij/) )
+          do jd = local_lo(2), local_hi(2)
+             do id = local_lo(1), local_hi(1)
+                data_out(id,jd) = transfer(rb(loc:),data_out(1,1))
+                loc                = loc + int32_data_size
+             end do
+          end do
+       end if
+    end do
+    ! And why weren't these arrays part of the plan anyway??
+    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
+    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
+    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
+    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
+  end subroutine apply_remap_2D_complex
 
 
   subroutine apply_remap_3D_double( plan, data_in, data_out )
@@ -2904,5 +3113,226 @@ contains  !******************************************************************
     count_elements_in_box_4D = irange*jrange*krange*lrange
   end function count_elements_in_box_4D
 
+  ! The following function is useful enough that we should have versions for
+  ! the other dimensions as well.
+  subroutine compute_local_sizes_4d( &
+    layout, &
+    loc_sz_i, &
+    loc_sz_j, &
+    loc_sz_k, &
+    loc_sz_l )
+
+    type(layout_4D), pointer :: layout
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32, intent(out) :: loc_sz_k
+    sll_int32, intent(out) :: loc_sz_l
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: k_min
+    sll_int32 :: k_max
+    sll_int32 :: l_min
+    sll_int32 :: l_max
+    sll_int32 :: my_rank
+    if( .not. associated(layout) ) then
+       print *, 'not-associated layout passed to compute_local_sizes_4d'
+       print *, 'Exiting...'
+       STOP
+    end if
+    my_rank = sll_get_collective_rank(get_layout_4D_collective(layout))
+    i_min = get_layout_4D_i_min( layout, my_rank )
+    i_max = get_layout_4D_i_max( layout, my_rank )
+    j_min = get_layout_4D_j_min( layout, my_rank )
+    j_max = get_layout_4D_j_max( layout, my_rank )
+    k_min = get_layout_4D_k_min( layout, my_rank )
+    k_max = get_layout_4D_k_max( layout, my_rank )
+    l_min = get_layout_4D_l_min( layout, my_rank )
+    l_max = get_layout_4D_l_max( layout, my_rank )
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+    loc_sz_k = k_max - k_min + 1
+    loc_sz_l = l_max - l_min + 1
+  end subroutine compute_local_sizes_4d
+
+  subroutine compute_local_sizes_3d( &
+    layout, &
+    loc_sz_i, &
+    loc_sz_j, &
+    loc_sz_k )
+
+    type(layout_3D), pointer :: layout
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32, intent(out) :: loc_sz_k
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: k_min
+    sll_int32 :: k_max
+    sll_int32 :: my_rank
+    if( .not. associated(layout) ) then
+       print *, 'not-associated layout passed to compute_local_sizes_3d'
+       print *, 'Exiting...'
+       STOP
+    end if
+    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
+    i_min = get_layout_3D_i_min( layout, my_rank )
+    i_max = get_layout_3D_i_max( layout, my_rank )
+    j_min = get_layout_3D_j_min( layout, my_rank )
+    j_max = get_layout_3D_j_max( layout, my_rank )
+    k_min = get_layout_3D_k_min( layout, my_rank )
+    k_max = get_layout_3D_k_max( layout, my_rank )
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+    loc_sz_k = k_max - k_min + 1
+  end subroutine compute_local_sizes_3d
+
+  subroutine compute_local_sizes_2d( &
+    layout, &
+    loc_sz_i, &
+    loc_sz_j )
+
+    type(layout_2D), pointer :: layout
+    sll_int32, intent(out) :: loc_sz_i
+    sll_int32, intent(out) :: loc_sz_j
+    sll_int32 :: i_min
+    sll_int32 :: i_max
+    sll_int32 :: j_min
+    sll_int32 :: j_max
+    sll_int32 :: my_rank
+    if( .not. associated(layout) ) then
+       print *, 'not-associated layout passed to compute_local_sizes_2d'
+       print *, 'Exiting...'
+       STOP
+    end if
+    my_rank = sll_get_collective_rank(get_layout_2D_collective(layout))
+    i_min = get_layout_2D_i_min( layout, my_rank )
+    i_max = get_layout_2D_i_max( layout, my_rank )
+    j_min = get_layout_2D_j_min( layout, my_rank )
+    j_max = get_layout_2D_j_max( layout, my_rank )
+    loc_sz_i = i_max - i_min + 1
+    loc_sz_j = j_max - j_min + 1
+  end subroutine compute_local_sizes_2d
+
+  !***************************************************************************
+  !
+  ! Functions that operate with more than one dimension.
+  !
+  ! We've found that sometimes it may be necessary to interpret a layout of
+  ! a given dimension, say 4D, as a layout of a different dimension, like 2D.
+  ! For this operation to be valid some conditions need to be met. For
+  ! example, in the 4D to 2D case, some array dimensions should be equal to 1
+  ! in order to reinterpret the layout properly. Here we just proceed to add
+  ! these routines as we need them.
+  !
+  !***************************************************************************
+
+  ! layout_2D_from_layout_4D() takes a 4D layout that describes the distribution
+  ! of a 4D array of dimensions npx1 X npx2 X 1 X 1 and returns a 2D layout,
+  ! defined over the same collective, which describes the distribution of a 2D
+  ! array of dimensions npx1 X npx2. Note that it assumes that it is the last
+  ! two dimensions which are of size 1.
+  ! 
+  ! This function is special in that it allocates the new layout to be returned.
+  ! So the usual interface of declaring the layout, calling new_layout() and
+  ! then initializing is not followed. This irregularity is itself a bit of
+  ! a problem, but may be a sign that the usual way to allocate and initialize
+  ! layouts might need to be merged.
+  function layout_2D_from_layout_4D( layout4d )
+    type(layout_2D), pointer :: layout_2D_from_layout_4D
+    type(layout_4D), pointer :: layout4d
+    type(sll_collective_t), pointer :: coll
+    sll_int32                :: coll_size
+    sll_int32                :: process
+    sll_int32                :: i_min
+    sll_int32                :: i_max
+    sll_int32                :: j_min
+    sll_int32                :: j_max
+    sll_int32                :: k_min
+    sll_int32                :: k_max
+    sll_int32                :: l_min
+    sll_int32                :: l_max
+
+    SLL_ASSERT( associated(layout4d) )
+    coll                     => get_layout_collective( layout4d )
+    coll_size                = sll_get_collective_size( coll )
+    layout_2D_from_layout_4D => new_layout_2d( coll )
+    ! Just copy the contents of the layout
+    do process=0, coll_size-1
+       i_min = get_layout_i_min( layout4d, process )
+       i_max = get_layout_i_max( layout4d, process )
+       j_min = get_layout_j_min( layout4d, process )
+       j_max = get_layout_j_max( layout4d, process )
+       call set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
+       call set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
+       call set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
+       call set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
+       ! For safety, check if there is any loss of information
+       k_min = get_layout_k_min( layout4d, process )
+       k_max = get_layout_k_max( layout4d, process )
+       l_min = get_layout_l_min( layout4d, process )
+       l_max = get_layout_l_max( layout4d, process )
+       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
+           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+           print *, 'WARNING, layout_2D_from_layout_4D(): there is loss of ',&
+                'information in the convertion. Printing values:'
+           print *, 'k_min = ', k_min
+           print *, 'k_max = ', k_max
+           print *, 'l_min = ', l_min
+           print *, 'l_max = ', l_max
+        end if
+    end do
+  end function layout_2D_from_layout_4D
+
+#if 0
+  function layout_4D_from_layout_2D( layout2d )
+    type(layout_4D), pointer :: layout_4D_from_layout_2D
+    type(layout_2D), pointer :: layout2d
+    type(sll_collective_t), pointer :: coll
+    sll_int32                :: coll_size
+    sll_int32                :: process
+    sll_int32                :: i_min
+    sll_int32                :: i_max
+    sll_int32                :: j_min
+    sll_int32                :: j_max
+    sll_int32                :: k_min
+    sll_int32                :: k_max
+    sll_int32                :: l_min
+    sll_int32                :: l_max
+
+    SLL_ASSERT( associated(layout4d) )
+    coll                     => get_layout_collective( layout4d )
+    coll_size                = sll_get_collective_size( coll )
+    layout_2D_from_layout_4D => new_layout_4d( coll )
+    ! Just copy the contents of the layout
+    do process=0, coll_size-1
+       i_min = get_layout_i_min( layout4d, process )
+       i_max = get_layout_i_max( layout4d, process )
+       j_min = get_layout_j_min( layout4d, process )
+       j_max = get_layout_j_max( layout4d, process )
+       call set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
+       call set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
+       call set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
+       call set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
+       ! For safety, check if there is any loss of information
+       k_min = get_layout_k_min( layout4d, process )
+       k_max = get_layout_k_max( layout4d, process )
+       l_min = get_layout_l_min( layout4d, process )
+       l_max = get_layout_l_max( layout4d, process )
+       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or.
+           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+           print *, 'WARNING, layout_2D_from_layout_4D(): there is loss of ',&
+                'information in the convertion. Printing values:'
+           print *, 'k_min = ', k_min
+           print *, 'k_max = ', k_max
+           print *, 'l_min = ', l_min
+           print *, 'l_max = ', l_max
+        end if
+    end do
+  end function layout_2D_from_layout_4D
+#endif
 
 end module remapper
