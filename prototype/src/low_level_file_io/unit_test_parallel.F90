@@ -1,102 +1,170 @@
-program test_io
-  use sll_collective
+program test_io_parallel
+
+use mpi
+use sll_collective
+use sll_hdf5_io_parallel
+use sll_xml_io
+
 #include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
-  implicit none
 
-  ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,
-  ! distributed among NPi*NPj processors.
-  sll_real64, dimension(:,:), allocatable :: local_array
-  ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
-  ! the full array.
-  integer , parameter                       :: ni = 512
-  integer , parameter                       :: nj = 128
-  ! Local sizes
-  integer                                   :: loc_sz_i_init
-  integer                                   :: loc_sz_j_init
+implicit none
 
-  ! the process mesh
-  integer                                   :: npi
-  integer                                   :: npj
-  sll_int32                                 :: gi, gj
-  integer                                   :: ierr
-  integer                                   :: myrank
-  sll_int64                                 :: colsz        ! collective size
-  type(layout_2D), pointer                  :: layout
+! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
+! the full array.
+integer , parameter                       :: nx = 512
+integer , parameter                       :: ny = 256
+! Local sizes
+integer                  :: mx, my
 
-  sll_real64                                :: rand_real
-  integer, parameter                        :: nbtest = 25
-  integer                                   :: i, j
-  sll_int32, dimension(2)                   :: global_indices
-  logical                                   :: test_passed
+! the process mesh
+integer                                   :: npi
+integer                                   :: npj
+sll_int32                                 :: gi, gj
+integer                                   :: ierr
+integer                                   :: myrank
+sll_int64                                 :: colsz        ! collective size
+type(layout_2D), pointer                  :: layout
 
-  test_passed = .true.
+sll_real64                                :: rand_real
+integer                                   :: i, j
+sll_int32, dimension(2)                   :: global_indices
+logical                                   :: test_passed
 
-  ! Boot parallel environment
-  call sll_boot_collective()
+real(8)                  :: tcpu1
+real(8)                  :: tcpu2
 
-  colsz  = sll_get_collective_size(sll_world_collective)
-  myrank = sll_get_collective_rank(sll_world_collective)
+real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
+character(len=8), parameter :: xfile = "xdata.h5" ! File name
+character(len=8), parameter :: yfile = "ydata.h5" ! File name
+character(len=8), parameter :: zfile = "zdata.h5" ! File name
+character(len=8), parameter :: xdset = "xdataset" ! Dataset name
+character(len=8), parameter :: ydset = "ydataset" ! Dataset name
+character(len=8), parameter :: zdset = "zdataset" ! Dataset name
+type(phdf5_file) :: my_file
+integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
+integer(HSSIZE_T), dimension(2) :: offset 
 
-  if( myrank .eq. 0) then
-     print *, ' '
-     print *, '--------------- HDF5 parallel test ---------------------'
-     print *, ' '
-     print *, 'Running a test on ', colsz, 'processes'
-     call flush()
-  end if
+sll_int32 :: file_id, error
 
-  if (.not. is_power_of_two(colsz)) then     
-     print *, 'This test needs to run in a number of processes which is ',&
-          'a power of 2.'
-     stop
-  end if
+test_passed = .true.
 
-  layout => new_layout_2D( sll_world_collective )        
-  call factorize_in_random_2powers_2d(colsz, npi, npj)
+! Boot parallel environment
+call sll_boot_collective()
 
-  if( myrank .eq. 0 ) then
-     print *, 'source configuration: ', npi, npj
-  end if
+colsz  = sll_get_collective_size(sll_world_collective)
+myrank = sll_get_collective_rank(sll_world_collective)
 
-  call initialize_layout_with_distributed_2D_array( &
-          ni, &
-          nj, &
-          npi, &
-          npj, &
-          layout )
+if( myrank .eq. 0) then
+   print *, ' '
+   print *, '--------------- HDF5 parallel test ---------------------'
+   print *, ' '
+   print"('Running a test on ',i4,' processes')", colsz
+   call flush()
+end if
+
+if (.not. is_power_of_two(colsz)) then     
+   print *, 'This test needs to run in a number of processes which is ',&
+        'a power of 2.'
+   call sll_halt_collective()
+   stop
+end if
+
+layout => new_layout_2D( sll_world_collective )        
+call factorize_in_random_2powers_2d(colsz, npi, npj)
+
+if( myrank .eq. 0 ) then
+   print *, 'source configuration: ', npi, npj
+end if
+
+call initialize_layout_with_distributed_2D_array( &
+     nx, ny, npi, npj, layout )
      
-  call compute_local_sizes_2d( layout, loc_sz_i_init, loc_sz_j_init)        
+call sll_collective_barrier(sll_world_collective)
 
-  SLL_ALLOCATE(local_array(loc_sz_i_init,loc_sz_j_init),ierr)
- 
-  ! initialize the local data    
-  do j=1,loc_sz_j_init 
-     do i=1,loc_sz_i_init
-        global_indices =  local_to_global_2D( layout, (/i, j/) )
-        gi = global_indices(1)
-        gj = global_indices(2)
-        local_array(i,j) = gi + (gj-1)*ni
-     enddo
-  enddo
-     
-  if( myrank .eq. 0) then
-     print *, ' '
-     print *, '-------------------------------------------'
-     print *, ' '
-     print *, 'PASSED'
-     call flush()
-  end if
-  call flush() 
-       
-  call sll_collective_barrier(sll_world_collective)
-  
-  call delete_layout_2D( layout )
-  SLL_DEALLOCATE_ARRAY(local_array, ierr)
+tcpu1 = MPI_WTIME()
 
-  call sll_halt_collective()
+call compute_local_sizes_2d( layout, mx, my)        
+
+SLL_ALLOCATE(xdata(mx,my),ierr)
+SLL_ALLOCATE(ydata(mx,my),ierr)
+SLL_ALLOCATE(zdata(mx,my),ierr)
+
+do j = 1, my
+   do i = 1, mx
+      global_indices =  local_to_global_2D( layout, (/i, j/) )
+      gi = global_indices(1)
+      gj = global_indices(2)
+      xdata(i,j) = float(gi-1)
+      ydata(i,j) = float(gj-1)
+      zdata(i,j) = myrank * xdata(i,j) * ydata(i,j)
+   end do
+end do
+
+offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1;          \
+offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1;          \
+
+call my_file%create(xfile, error)
+call my_file%write_array(datadims,offset,xdata,xdset,error)
+call my_file%close(error)
+
+call my_file%create(yfile, error)
+call my_file%write_array(datadims,offset,ydata,ydset,error)
+call my_file%close(error)
+
+call my_file%create(zfile, error)
+call my_file%write_array(datadims,offset,zdata,zdset,error)
+call my_file%close(error)
+
+
+
+call my_file%create('layout.h5', error)
+call my_file%write_array(datadims,offset,xdata,'x',error)
+call my_file%write_array(datadims,offset,ydata,'y',error)
+call my_file%write_array(datadims,offset,zdata,'z',error)
+call my_file%close(error)
+
+if (myrank == 0) then
+
+   call sll_xml_file_create("parallel.xmf",file_id,error)
+   call sll_xml_grid_geometry(file_id, xfile, xdset, nx, yfile, ydset, ny )
+   call sll_xml_field(file_id,'Z', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
+   call sll_xml_file_close(file_id,error)
+
+   call sll_xml_file_create("layout.xmf",file_id,error)
+   write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+   write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
+                          ny,nx,"'/>"
+   write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
+   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+   write(file_id,"(a)")"layout.h5:/x"
+   write(file_id,"(a)")"</DataItem>"
+   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+   write(file_id,"(a)")"layout.h5:/y"
+   write(file_id,"(a)")"</DataItem>"
+   write(file_id,"(a)")"</Geometry>"
+   write(file_id,"(a)")"<Attribute Name='layout_values' AttributeType='Scalar' Center='Node'>"
+   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+   write(file_id,"(a)")"layout.h5:/z"
+   write(file_id,"(a)")"</DataItem>"
+   write(file_id,"(a)")"</Attribute>"
+   call sll_xml_file_close(file_id,error)
+
+end if
+
+tcpu2 = MPI_WTIME()
+if (myrank == 0) &
+   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*colsz
+
+call delete_layout_2D( layout )
+call sll_halt_collective()
+
+if( myrank .eq. 0) print *, 'PASSED'
   
 contains
 
@@ -138,5 +206,8 @@ contains
     loc_sz_i = i_max - i_min + 1
     loc_sz_j = j_max - j_min + 1
   end subroutine compute_local_sizes_2d
-      
-end program test_io
+
+        
+    
+
+end program test_io_parallel
