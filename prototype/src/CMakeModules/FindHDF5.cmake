@@ -2,6 +2,7 @@
 # User Options
 #-----------------------------------------------------------------------------
 SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+#Ne pas mettre cette variable sur OFF, il y a une variable HDF_PARALLEL_ENABLED pour cela
 SET (HDF5_BUILD_FORTRAN   @HDF5_BUILD_FORTRAN@)
 SET (HDF5_ENABLE_F2003    @HDF5_ENABLE_F2003@)
 SET (HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
