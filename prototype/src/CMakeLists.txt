@@ -293,17 +293,18 @@ add_test(NAME constants COMMAND test_constants)
 
 add_test(NAME utilities COMMAND test_utilities)
 
+add_test(NAME low_level_file_io COMMAND test_io)
+set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 IF(HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    set(PROCS 4)
    set(ARGS "")
-   add_test(NAME low_level_file_io COMMAND 
+   add_test(NAME low_level_file_io_parallel COMMAND 
             ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io_parallel
             ${MPIEXEC_POSTFLAGS} ${ARGS})
-ELSE()
-   add_test(NAME low_level_file_io COMMAND test_io)
+   set_tests_properties(low_level_file_io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
-set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
