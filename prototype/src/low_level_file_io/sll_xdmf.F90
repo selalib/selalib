@@ -43,8 +43,12 @@ module sll_xdmf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
-  use sll_hdf5_io
+#ifdef NOHDF5
   use sll_binary_io
+#else
+  use sll_hdf5_io
+#endif
+
   use sll_ascii_io
   use sll_xml_io
   
