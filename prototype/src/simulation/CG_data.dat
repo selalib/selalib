@@ -6,8 +6,8 @@
 0.0500000000000		# dt
 20			# visualization step
 
-1			# computation of caracteristics
-3			# computation of gradian
+3			# computation of caracteristics
+3			# computation of gradient
 2			# distribution function
 2			# scheme
 1			# visualization
@@ -26,7 +26,7 @@ scheme to compute caracteristics
 7 : using modified symplectic Verlet
 8 : using modified mid point
 
-scheme to compute gradian
+scheme to compute gradient
 1 : finit differences in r and theta
 2 : fft in theta, finit differences in r
 3 : splines in r and theta
