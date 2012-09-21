@@ -3,15 +3,10 @@ SET(IO_SRC sll_ascii_io.F90
            sll_binary_io.F90 
            sll_gnuplot.F90 
            sll_io.F90 
-           sll_xdmf.F90 
-           sll_xml_io.F90)
+           sll_hdf5_io.F90
+           sll_xml_io.F90
+           sll_xdmf.F90 )
 
-
-IF(HDF5_FOUND AND HDF5_ENABLED)
-   SET(IO_SRC ${IO_SRC} sll_hdf5_io.F90)
-ELSE()
-   SET(HDF5_LIBRARIES " ")
-ENDIF()
 
 ADD_LIBRARY(sll_low_level_file_io STATIC ${IO_SRC})
 

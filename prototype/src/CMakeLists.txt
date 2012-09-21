@@ -85,33 +85,31 @@ ENDIF()
 ##########################################################
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
-set(HDF5_ENABLED ON CACHE BOOL " ")
-set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL " ")
+set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
+set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
-IF (HDF5_ENABLED)
-
-   IF( DEFINED ENV{HDF5_ROOT} )
-      SET(HDF5_ROOT $ENV{HDF5_ROOT})
-   ENDIF()
-
-   IF( DEFINED ENV{HDF5_HOME} )
-      SET(HDF5_ROOT $ENV{HDF5_HOME})
-   ENDIF()
-
-   FIND_PACKAGE(HDF5 REQUIRED)
-
-ENDIF()
-
-IF(HDF5_FOUND AND HDF5_ENABLED)
-   include_directories(${HDF5_INCLUDE_DIRS})
-   include_directories(${HDF5_INCLUDE_DIR_FORTRAN})
-   message(STATUS "HDF5 include directories ${HDF5_INCLUDE_DIRS}")
-   message(STATUS "HDF5 module directories ${HDF5_INCLUDE_DIR_FORTRAN}")
-ELSE()
-   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-   SET(HDF5_LIBRARIES "")
-   ADD_DEFINITIONS(-DNOHDF5)
-ENDIF()
+# search for HDF5
+IF(HDF5_ENABLED)
+	IF( DEFINED ENV{HDF5_ROOT} )
+		set(HDF5_ROOT $ENV{HDF5_ROOT})
+	ENDIF()
+        #IF( DEFINED ENV{HDF5_HOME} )
+	#	set(HDF5_ROOT $ENV{HDF5_HOME})
+	#	message(STATUS "HDF5_HOME FOUND")
+	#ENDIF()
+	find_package(HDF5 QUIET)
+	IF(HDF5_FOUND)
+		message(STATUS "HDF5 FOUND")
+		include_directories(${HDF5_INCLUDE_DIRS})
+		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
+	ELSE()
+		add_definitions(-DNOHDF5)
+		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
+		set(HDF5_LIBRARIES "")
+	ENDIF()
+ELSE(HDF5_ENABLED)
+	add_definitions(-DNOHDF5)
+ENDIF(HDF5_ENABLED)
 ##########################################################
 
 ##########################################################
@@ -295,17 +293,18 @@ add_test(NAME constants COMMAND test_constants)
 
 add_test(NAME utilities COMMAND test_utilities)
 
+add_test(NAME low_level_file_io COMMAND test_io)
+set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 IF(HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    set(PROCS 4)
    set(ARGS "")
-   add_test(NAME low_level_file_io COMMAND 
+   add_test(NAME low_level_file_io_parallel COMMAND 
             ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io_parallel
             ${MPIEXEC_POSTFLAGS} ${ARGS})
-ELSE()
-   add_test(NAME low_level_file_io COMMAND test_io)
+   set_tests_properties(low_level_file_io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
-set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
@@ -408,7 +407,7 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(simulation_1d simulation/test_simulation_1d)
 
 
-set(FORTRANCL_ENABLED CACHE BOOL OFF)
+set(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 # recherche de FORTRANCL
 IF(FORTRANCL_ENABLED)
 	find_package(FORTRANCL QUIET)
