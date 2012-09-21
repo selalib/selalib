@@ -1,7 +1,8 @@
 #-----------------------------------------------------------------------------
 # User Options
 #-----------------------------------------------------------------------------
-SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+#SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+SET (HDF5_ENABLE_PARALLEL OFF)
 SET (HDF5_BUILD_FORTRAN   @HDF5_BUILD_FORTRAN@)
 SET (HDF5_ENABLE_F2003    @HDF5_ENABLE_F2003@)
 SET (HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
