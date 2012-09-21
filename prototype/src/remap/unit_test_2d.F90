@@ -285,29 +285,5 @@ contains
     n1 = 2**expo1
     n2 = 2**expo2
   end subroutine factorize_in_random_2powers_2d
-
-  subroutine compute_local_sizes_2d( layout, loc_sz_i, loc_sz_j )
-    type(layout_2D), pointer :: layout
-    sll_int32, intent(out) :: loc_sz_i
-    sll_int32, intent(out) :: loc_sz_j
-    sll_int32 :: i_min
-    sll_int32 :: i_max
-    sll_int32 :: j_min
-    sll_int32 :: j_max
-    sll_int32 :: my_rank
-    if( .not. associated(layout) ) then
-       print *, 'not-associated layout passed to new_distributed_mesh_2D'
-       print *, 'Exiting...'
-       STOP
-    end if
-    my_rank = sll_get_collective_rank(get_layout_2D_collective(layout))
-    i_min = get_layout_2D_i_min( layout, my_rank )
-    i_max = get_layout_2D_i_max( layout, my_rank )
-    j_min = get_layout_2D_j_min( layout, my_rank )
-    j_max = get_layout_2D_j_max( layout, my_rank )
-    loc_sz_i = i_max - i_min + 1
-    loc_sz_j = j_max - j_min + 1
-  end subroutine compute_local_sizes_2d
-      
   
 end program remap_2d_unit_test
