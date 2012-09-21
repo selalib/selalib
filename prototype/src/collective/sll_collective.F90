@@ -140,7 +140,7 @@ module sll_collective
      sll_int32                       :: color 
      sll_int32                       :: key !< Control of rank assigment
      sll_int32                       :: rank !< Rank of the process
-     sll_int32                       :: size !< Number of process
+     sll_int32                       :: size !< Communicator size
   end type sll_collective_t
 
   ! **********************************************************************
