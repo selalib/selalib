@@ -495,7 +495,8 @@ contains  !******************************************************************
     total_num_processors = num_proc_x1*num_proc_x2
     collective_size = get_layout_2D_size(layout)
     if( total_num_processors .ne. collective_size ) then
-       print *, 'requested size of the processor mesh is inconsistent with ', &
+       print *, 'ERROR, initialize_layout_with_distributed_2D_array(): ',&
+            'requested size of the processor mesh is inconsistent with ', &
             'the size of the collective.', 'number of processors = ', &
             total_num_processors, ' collective size = ', collective_size
        STOP
@@ -596,7 +597,8 @@ contains  !******************************************************************
     total_num_processors = num_proc_x1*num_proc_x2*num_proc_x3
     collective_size = get_layout_3D_size(layout)
     if( total_num_processors .ne. collective_size ) then
-       print *, 'requested size of the processor mesh is inconsistent with ', &
+       print *, 'ERROR, initialize_layout_with_distributed_3D_array(): ', &
+            'requested size of the processor mesh is inconsistent with ', &
             'the size of the collective.', 'number of processors = ', &
             total_num_processors, ' collective size = ', collective_size
        STOP
@@ -715,7 +717,8 @@ contains  !******************************************************************
     total_num_processors = num_proc_x1*num_proc_x2*num_proc_x3*num_proc_x4
     collective_size = get_layout_4D_size(layout)
     if( total_num_processors .ne. collective_size ) then
-       print *, 'requested size of the processor mesh is inconsistent with ', &
+       print *, 'ERROR, initialize_layout_with_distributed_4D_array():', &
+            'requested size of the processor mesh is inconsistent with ', &
             'the size of the collective.', 'number of processors = ', &
             total_num_processors, ' collective size = ', collective_size
        STOP
@@ -1718,7 +1721,7 @@ contains  !******************************************************************
 
   subroutine apply_remap_2D_double( plan, data_in, data_out )
     intrinsic                                 :: transfer
-    type(remap_plan_2D), pointer            :: plan
+    type(remap_plan_2D), pointer              :: plan
     sll_real64, dimension(:,:), intent(in)    :: data_in
     sll_real64, dimension(:,:), intent(out)   :: data_out
     sll_int32, dimension(:), pointer          :: sb     ! send buffer
