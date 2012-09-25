@@ -22,7 +22,7 @@ use sll_quintic_splines
 use arbitrary_degree_splines
   implicit none
   
-  type(quintic_splines_plan), pointer   :: plan
+  type(quintic_splines_plan_uniform), pointer   :: plan
   sll_real64, dimension(:), allocatable :: f
   sll_real64                            :: xmin, xmax, h
   sll_real64                            :: x, y, mu
