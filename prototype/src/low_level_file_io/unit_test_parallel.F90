@@ -135,6 +135,9 @@ contains
      call sll_xml_grid_geometry(file_id, xfile, xdset, nx, yfile, ydset, ny )
      call sll_xml_field(file_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
      call sll_xml_file_close(file_id,error)
+     print *, 'Printing 2D layout: '
+     call sll_view_lims_2D( layout )
+     print *, '--------------------'
 
   end if
   
@@ -149,9 +152,9 @@ contains
   sll_real64, dimension(:,:,:), allocatable :: local_array
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 64
+  integer , parameter                       :: ni = 32
   integer , parameter                       :: nj = 64
-  integer , parameter                       :: nk = 64
+  integer , parameter                       :: nk = 128
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init
@@ -170,15 +173,11 @@ contains
 
   integer(HID_T) :: file_id       ! File identifier 
 
-  integer(HSIZE_T), dimension(3) :: dimsf = (/ni,nj,nk/) ! Dataset dimensions.
-  integer(HSIZE_T), dimension(3) :: chunk_dims
+  integer(HSIZE_T), dimension(3) :: datadims = (/ni,nj,nk/) ! Dataset dimensions.
 
   integer, PARAMETER :: rank = 3
 
-  integer(HSIZE_T),  dimension(rank) :: count  
   integer(HSSIZE_T), dimension(rank) :: offset 
-  integer(HSIZE_T),  dimension(rank) :: stride
-  integer(HSIZE_T),  dimension(rank) :: block
 
   real(8), dimension(:,:,:), allocatable :: xdata, ydata, zdata
 
@@ -217,33 +216,27 @@ contains
      enddo
   enddo
 
-  chunk_dims(1) = loc_sz_i_init
-  chunk_dims(2) = loc_sz_j_init
-  chunk_dims(3) = loc_sz_k_init
-
-  stride = 1 
-  count =  1 
-  block = chunk_dims
-
   offset(1) = get_layout_3D_i_min( layout, myrank ) - 1
   offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
   offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
 
   call hdf_file%create('layout3d-x.h5',error)
-  call hdf_file%write_array(dimsf,offset,xdata,'x',error)
+  call hdf_file%write_array(datadims,offset,xdata,'x',error)
   call hdf_file%close(error)
+
   call hdf_file%create('layout3d-y.h5',error)
-  call hdf_file%write_array(dimsf,offset,ydata,'y',error)
+  call hdf_file%write_array(datadims,offset,ydata,'y',error)
   call hdf_file%close(error)
+
   call hdf_file%create('layout3d-z.h5',error)
-  call hdf_file%write_array(dimsf,offset,zdata,'z',error)
+  call hdf_file%write_array(datadims,offset,zdata,'z',error)
   call hdf_file%close(error)
+
   call hdf_file%create('layout3d.h5',error)
-  call hdf_file%write_array(dimsf,offset,local_array,'array',error)
+  call hdf_file%write_array(datadims,offset,local_array,'array',error)
   call hdf_file%close(error)
 
   if (myrank == 0) then
-  
      call sll_xml_file_create("layout3d.xmf",file_id,error)
      call sll_xml_grid_geometry(file_id, 'layout3d-x.h5', 'x', ni, &
                                          'layout3d-y.h5', 'y', nj, &
@@ -252,8 +245,9 @@ contains
                         ni,nj,nk,'HDF','Node')
      call sll_xml_file_close(file_id,error)
 
-     print *, 'Printing layout: '
+     print *, 'Printing 3D layout: '
      call sll_view_lims_3D( layout )
+     print *, '--------------------'
   end if
 
 
@@ -272,6 +266,7 @@ contains
     sll_real64                :: rand_real
     if (.not.is_power_of_two(colsz)) then   
        print*, 'The number of processors must be a power of 2'
+       call sll_halt_collective()
        stop
     endif 
     expo = int(log(real(n))/log(2.))  
