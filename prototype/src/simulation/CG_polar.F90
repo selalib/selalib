@@ -35,9 +35,10 @@ program cg_polar
 
   !alpha = 1.e-6_f64
   !alpha = 1.e-3_f64
-  alpha = 0.0_f64
-  mod=3
-  mode=real(mod,f64)
+  !alpha = 0.0_f64
+  !alpha = 1.e-10_f64
+  !mod=3
+  !mode=real(mod,f64)
 
   t1 => new_time_mark()
   t2 => new_time_mark()
@@ -50,6 +51,10 @@ program cg_polar
   read(27,*)rmax
   read(27,*)nr
   read(27,*)ntheta
+  read(27,*)r1
+  read(27,*)r2
+  read(27,*)alpha
+  read(27,*)mod
   read(27,*)nb_step
   read(27,*)dt
   read(27,*)visustep
@@ -73,6 +78,7 @@ program cg_polar
 !!$  nr=256
 !!$  ntheta=128
 
+  mode=real(mod,f64)
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
   print*,'#dr=',dr,'dtheta=',dtheta
@@ -247,6 +253,16 @@ program cg_polar
 
   !write f in a file before calculations
   call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+!!$  open(28,file='maillage.vtk')
+!!$  do i=1,nr+1
+!!$     r=rmin+real(i-1,f64)*dr
+!!$     do j=1,ntheta
+!!$        theta=real(j-1,f64)*dtheta
+!!$        write(28,*)r*cos(theta),r*sin(theta)
+!!$     end do
+!!$  end do
+!!$  close(28)
+!!$  stop
 !!$  k1=(r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
 !!$  k2=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
 !!$  k3=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
@@ -314,7 +330,7 @@ program cg_polar
 
 
   !print*,obs_mod
-  open(unit=23,file='thdiag.dat',position='append')
+  open(unit=23,file='thdiag.dat')
   write(23,*)'#fcase',fcase,'scheme',scheme,'mode',mode,'grad',grad,'carac',carac
   write(23,*)'#nr',nr,'ntheta',ntheta,'alpha',alpha
   write(23,*)'#tf = ',tf,'  nb_step = ',nb_step,'  dt = ',dt
