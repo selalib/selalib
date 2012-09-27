@@ -119,6 +119,7 @@ contains
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
+
   subroutine sll_hdf5_file_close(self,error)
     class(phdf5_file)              :: self
     integer :: error
@@ -133,7 +134,7 @@ contains
     call h5close_f(error)
   end subroutine sll_hdf5_file_close
 
-#define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims) \
+#define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims)  \
   subroutine func_name(self,global_size,offset,array,dsetname,error);  \
     class(phdf5_file)                      :: self;                    \
     character(len=*), intent(in)           :: dsetname;                \
