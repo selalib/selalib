@@ -242,6 +242,7 @@ ENDIF()
 IF(NOT STDF95)
    add_subdirectory(poisson_solvers)
 ENDIF()
+add_subdirectory(electric_field_accumulators)
 
 #high-level
 add_subdirectory(interpolators)
@@ -314,6 +315,7 @@ add_test(NAME splines COMMAND test_splines #test_non_unif_splines
 set_tests_properties(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
+add_test(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 IF(FISHPACK_ENABLED)
 	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
 ENDIF()
