@@ -1,11 +1,7 @@
 !> Vlasov-Poisson 1D on a uniform cartesian grid
 !> using the Backward Semi-Lagrangian (BSL) method.
-!> For increased accuracy we can work here on delta_f = f-f_M
-!> where f_M is the equilibrium Maxwellian function
-!> driven simulations (i.e. with an external force or non driven can
-!> be performed
 
-program VP1d_deltaf
+program VP1d_BSL_time_split
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -18,6 +14,7 @@ program VP1d_deltaf
   use sll_tsi_2d_initializer
   use distribution_function
   use sll_poisson_1d_periodic
+  use sll_vp_cartesian_2d
   implicit none
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
@@ -29,6 +26,9 @@ program VP1d_deltaf
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   type(sll_distribution_function_2d)   :: f
   type(poisson_1d_periodic)  :: poisson_1d
+  type(vp_cartesian_2d), target :: ts_vp_cart_2d
+  class(time_splitting), pointer :: time_split
+  type(app_field_params) :: params
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
@@ -38,10 +38,9 @@ program VP1d_deltaf
   sll_int32  :: Ncx, Ncv   ! number of cells
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
-  sll_int32, parameter  :: param_out_drive = 40
   sll_real64 :: kmode, omegadr, omegadr0
-  sll_int32  :: is_delta_f
   logical    :: driven
+  sll_int32  :: is_delta_f
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
   sll_real64 :: alpha
@@ -58,7 +57,7 @@ program VP1d_deltaf
   sll_int32  :: i, j
   sll_int32  :: ierr   ! error flag 
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
-  sll_real64 :: adr, Edrmax
+  sll_real64 :: Edrmax, adr
   logical    :: turn_drive_off
 
   ! namelists for data input
@@ -97,6 +96,9 @@ program VP1d_deltaf
      stop
   endif
 
+  ! save parameters of applied field in params derived type
+  params =  app_field_params( Edrmax, tflat, tL, tR, twL, twR, t0, kmode, omegadr, &
+       turn_drive_off, driven )
   ! define uniform cartesian mesh in x and v
   xmax = nbox * 2 * sll_pi / kmode
   delta_x = (xmax - xmin) / Ncx
@@ -107,7 +109,7 @@ program VP1d_deltaf
   end do
   ! allocate f_maxwellian for diagnostics
   SLL_ALLOCATE(f_maxwellian(Ncv+1),ierr)
-  if (is_delta_f==0) then
+  if (is_delta_f == 0) then
      f_maxwellian = f_equilibrium(v_array)
   else 
      f_maxwellian = 0.0_f64
@@ -131,7 +133,7 @@ program VP1d_deltaf
      print*, '   perturbation=', eps
      print*, '   v0=', v0
   end if
-  if (is_delta_f==0) then
+  if (is_delta_f == 0) then
      print*, '   delta_f version'
   else
      print*, '   full_f version'
@@ -148,16 +150,9 @@ program VP1d_deltaf
   print*, '   number of iterations=', nbiter
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
-  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
-       dt, nbiter, freqdiag, is_delta_f, kmode
+  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, dt, nbiter, freqdiag, &
+       is_delta_f
   close(param_out)
-
-  if (driven) then
-     open(unit = param_out_drive, file = 'param_out_drive.dat') 
-     write(param_out_drive,*) t0, twL, twR, tstart, tflat, tL, tR, &
-          Edrmax, omegadr
-     close(param_out_drive)
-  end if
 
   call initialize_mesh_2d_cartesian( &
        mesh2d,           &
@@ -212,8 +207,7 @@ program VP1d_deltaf
   ! with parameters k_dr and omega_dr.
   istep = 0
   if (driven) then
-     call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
-          t0, turn_drive_off)
+     call PFenvelope(adr, istep*dt, params)
      do i = 1, Ncx + 1
         e_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x)
      enddo
@@ -236,47 +230,7 @@ program VP1d_deltaf
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-     do i = 1, Ncx+1
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-        f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f==0) then
-           ! add equilibrium contribution
-           do j=1, Ncv + 1
-              v = vmin + (j-1) * delta_v
-              f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
-           end do
-        endif
-     end do
-     ! full time step advection in x
-     do j = 1, Ncv+1
-        alpha = (vmin + (j-1) * delta_v) * dt
-        f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
-     end do
-     ! compute rho and electric field
-     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
-     call solve(poisson_1d, efield, rho)
-     if (driven) then
-        call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
-             t0, turn_drive_off)
-        do i = 1, Ncx + 1
-           E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x - omegadr*istep*dt)
-        enddo
-     endif
-     ! half time step advection in v
-     do i = 1, Ncx+1
-        alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-        f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f==0) then
-           ! add equilibrium contribution
-           do j=1, Ncv + 1
-              v = vmin + (j-1) * delta_v
-              f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
-           end do
-        end if
-     end do
+     call time_split%lie_splitting(dt, 1)
      ! diagnostics
      time = istep*dt
      mass = 0.
@@ -314,49 +268,5 @@ program VP1d_deltaf
   close(th_diag)
   close(ex_diag)
   print*, 'VP1D_deltaf_cart has exited normally'
-contains
-  elemental function f_equilibrium(v)
-    sll_real64, intent(in) :: v
-    sll_real64 :: f_equilibrium
 
-    f_equilibrium = 1.0_f64/sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
-  end function f_equilibrium
-
-  subroutine PFenvelope(S, t, tflat, tL, tR, twL, twR, t0, &
-       turn_drive_off)
-
-    ! DESCRIPTION
-    ! -----------
-    ! S: the wave form at a given point in time. This wave form is 
-    !    not scaled (its maximum value is 1).
-    ! t: the time at which the envelope is being evaluated
-    ! tflat, tL, tR, twL, twR, tstart, t0: the parameters defining the
-    !    envelope, defined in the main portion of this program.
-    ! turn_drive_off: 1 if the drive should be turned off after a time
-    !    tflat, and 0 otherwise
-
-    sll_real64, intent(in) :: t, tflat, tL, tR, twL, twR, t0
-    sll_real64, intent(out) :: S
-    logical, intent(in) :: turn_drive_off
-    ! local variables
-    sll_int32 :: i 
-    sll_real64 :: epsilon
-
-    ! The envelope function is defined such that it is zero at t0,
-    ! rises to 1 smoothly, stay constant for tflat, and returns
-    ! smoothly to zero.
-    if(turn_drive_off) then
-       epsilon = 0.5*(tanh((t0-tL)/twL) - tanh((t0-tR)/twR))
-       S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
-       S = S / (1-epsilon)
-    else
-       epsilon = 0.5*(tanh((t0-tL)/twL) + 1)
-       S = 0.5*(tanh((t-tL)/twL) + 1) - epsilon
-       S = S / (1-epsilon)
-    endif
-    if(S<0) then
-       S = 0.
-    endif
-    return
-  end subroutine PFenvelope
-end program VP1d_deltaf
+end program VP1d_BSL_time_split

@@ -10,7 +10,7 @@ module sll_landau_2d_initializer
     sll_real64 :: eps
     class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_real64 :: kx
-    logical :: is_delta_f
+    sll_int32 :: is_delta_f
   contains
     procedure, pass(init_obj) :: initialize => initialize_landau_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_landau_2d
@@ -25,7 +25,7 @@ contains
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
     sll_real64, intent(in), optional     :: kx_val
-    logical, intent(in), optional        :: is_delta_f
+    sll_int32, intent(in), optional      :: is_delta_f
 
     init_obj%data_position = data_position
     if( present(eps_val) ) then
@@ -41,7 +41,7 @@ contains
     if( present(is_delta_f) ) then
        init_obj%is_delta_f = is_delta_f
     else
-       init_obj%is_delta_f = .false. ! just some default value
+       init_obj%is_delta_f = 1 !  default value is false
     end if
     init_obj%mesh => mesh
     ! kx remains uninitialized because we need mesh information
@@ -84,7 +84,7 @@ contains
           else
              print*, 'f_x1x2_landau_2d:',  init_obj%data_position, 'not defined'
           end if
-          if (init_obj%is_delta_f) then ! delta_f code
+          if (init_obj%is_delta_f==0) then ! delta_f code
              data_out(i,j) = eps*cos(kx*x) /sqrt(2*sll_pi)*exp(-0.5_f64*v*v)
           else  ! full f
              data_out(i,j) = &
