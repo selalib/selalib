@@ -66,7 +66,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 
 contains
 
-#if 0
+#if 1
   subroutine sll_new_distribution_function_2d( &
     this, &
     mesh, &
