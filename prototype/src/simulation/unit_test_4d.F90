@@ -50,8 +50,8 @@ program vlasov_poisson_4d
   ! sequential operations in one given direction. f1 should permit to carry
   ! out sequential operations in x1, f2 in x2, etc.
   sll_real64, dimension(:), pointer           :: line
-  sll_real64, dimension(:,:,:,:), allocatable :: f_x1x2 
-  sll_real64, dimension(:,:,:,:), allocatable :: f_x3x4
+  sll_real64, dimension(:,:,:,:), allocatable, target :: f_x1x2 
+  sll_real64, dimension(:,:,:,:), allocatable, target :: f_x3x4
   sll_real64, dimension(:,:,:), allocatable   :: partial_reduction
   sll_real64, dimension(:,:), allocatable     :: rho_x1 
   sll_real64, dimension(:,:), allocatable     :: rho_x2 
@@ -360,7 +360,7 @@ program vlasov_poisson_4d
      do i=1,loc_sz_x1
         do k=1,mesh4d%num_cells3
            do l=1,mesh4d%num_cells4
-              alpha = efield_split(i,j)*0.5_f64*dt
+              alpha = efield_split(i,j)%ey*0.5_f64*dt
               line => f_x3x4(i,j,k,:)
               ! review with Eric's version... to 
            end do
