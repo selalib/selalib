@@ -55,6 +55,9 @@ use arbitrary_degree_splines
      !SLL_ALLOCATE( f2(n+6), ierr)
      !SLL_ALLOCATE( x2(n+1), ierr)
 
+     f1 = 0.d0
+     !f2 = 0.d0
+
      do i=0,n
         x = xmin + i*h
         f1(i+3) = exp( - ( x - mu )**2  )
