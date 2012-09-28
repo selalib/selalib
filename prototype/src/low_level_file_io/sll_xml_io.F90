@@ -263,8 +263,8 @@ contains
             trim(filename)//"-x2.bin", nnodes_x2 )
 #else
        call sll_xml_grid_geometry_2d_low_level( file_id, &
-            trim(filename)//"-x1.h5", "x1", nnodes_x1, &
-            trim(filename)//"-x2.h5", "x2", nnodes_x2 )
+            trim(filename)//"-x1.h5", nnodes_x1, &
+            trim(filename)//"-x2.h5", nnodes_x2, "x1", "x2" )
 #endif
        
        
