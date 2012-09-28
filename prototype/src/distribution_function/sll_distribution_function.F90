@@ -66,7 +66,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 
 contains
 
-#if 0
+#if 1
   subroutine sll_new_distribution_function_2d( &
     this, &
     mesh, &
@@ -78,7 +78,7 @@ contains
     class(sll_mapped_mesh_2d_base), target  :: mesh
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
-    class(scalar_field_2d_initializer_base) :: data_func
+    procedure(scalar_function_2D)           :: data_func
     ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2

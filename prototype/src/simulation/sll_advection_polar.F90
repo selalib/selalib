@@ -110,11 +110,11 @@ contains
   !>nr and ntheta : number of space in direction r and theta
   !>grad_case : integer, see function new_polar_op
   !>time_scheme : integer, see function new_plan_adv_polar
-  function new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad_case,time_scheme) result(this)
+  function new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad_case,time_scheme,bc) result(this)
 
     type(sll_SL_polar), pointer :: this
     sll_real64 :: rmin,rmax,dr,dtheta,dt
-    sll_int32 :: nr,ntheta
+    sll_int32 :: nr,ntheta,bc
     sll_int32, intent(in) :: grad_case,time_scheme
 
     sll_int32 :: err
@@ -122,7 +122,7 @@ contains
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%phi(nr+1,ntheta+1),err)
 
-    this%poisson => new_plan_poisson_polar(dr,rmin,nr,ntheta)
+    this%poisson => new_plan_poisson_polar(dr,rmin,nr,ntheta,bc)
     this%grad => new_polar_op(rmin,rmax,dr,dtheta,nr,ntheta,grad_case)
     this%adv => new_plan_adv_polar(rmin,rmax,dr,dtheta,dt,nr,ntheta,time_scheme)
 
@@ -273,8 +273,8 @@ contains
        !we fix the tolerance and the maximum of iteration
        tolr=1e-12
        tolth=1e-12
-       tolr=1e-4
-       tolth=1e-4
+       !tolr=1e-4
+       !tolth=1e-4
        maxiter=1000
 
        do j=1,ntheta
@@ -380,7 +380,7 @@ contains
 
        !initialization
        maxiter=10
-       tolr=1e-10
+       tolr=1e-12
 
        do j=1,ntheta
           do i=1,nr+1
@@ -410,9 +410,9 @@ contains
                    ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr)))
                    atheta=-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr)))
                 else
-                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/rr) &
+                   ar=-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/rr) &
                         & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr+r*plan%field(2,kr+1,k+1)/rr))
-                   atheta=-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+r*plan%field(1,kr+1,k)/rr) &
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+r*plan%field(1,kr+1,k)/rr) &
                         & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr+r*plan%field(1,kr+1,k+1)/rr))
                 end if
                 rrn=rr
@@ -738,7 +738,7 @@ contains
 
   !>subroutine SL_classic(plan,in,out)
   !>computes the classic semi-Lagrangian scheme for Vlasov-Poisson equation
-  !>plan : sll_SL_polar object, contains plan for Poisso, gradian and advection
+  !>plan : sll_SL_polar object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
   subroutine SL_classic(plan,in,out)
@@ -758,7 +758,7 @@ contains
 
   !>subroutine SL_ordre_2(plan,in,out)
   !>computes the semi-Lagrangian scheme order 2
-  !>plan : sll_SL_polar object, contains plan for Poisso, gradian and advection
+  !>plan : sll_SL_polar object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
   subroutine SL_ordre_2(plan,in,out)
@@ -785,5 +785,125 @@ contains
     call advect_CG_polar(plan%adv,in,out)
 
   end subroutine SL_ordre_2
+
+
+
+
+
+
+
+
+  subroutine print2dper(dom,ftab,Nx,Ny,visucase,step,filename)
+    sll_int32,intent(in)::Nx,Ny,visucase,step
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx-1,0:Ny-1),intent(in)::ftab
+    character(len=*),intent(in)::filename
+
+    if(visucase==0)then
+       !gnuplot
+       call printgp2dper(dom,ftab,Nx,Ny,step,filename)
+    endif
+    if(visucase==1)then
+       !vtk
+       call printvtk2dper(dom,ftab,Nx,Ny,step,filename)
+    endif
+  end subroutine print2dper
+
+  subroutine printgp2dper(dom,ftab,Nx,Ny,step,filename)
+    sll_int32,intent(in)::Nx,Ny,step
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx-1,0:Ny-1),intent(in)::ftab
+    sll_int32::i,j
+    sll_real64::z(0:1),dz(0:1)
+    character(len=*),intent(in)::filename
+    character(len=80)::str,str2
+    write(str2,*)step
+    str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.dat'
+
+    dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
+    open(unit=900,file=str)
+    do j=0,Ny-1
+       do i=0,Nx-1
+          z(0)=dom(0,0)+real(i,f64)*dz(0)
+          z(1)=dom(0,1)+real(j,f64)*dz(1)
+          write(900,*) z(0),z(1),ftab(i,j)
+       enddo
+       i=Nx
+       z(0)=dom(0,0)+real(i,f64)*dz(0)
+       z(1)=dom(0,1)+real(j,f64)*dz(1)
+       write(900,*) z(0),z(1),ftab(0,j)      
+       write(900,*) ''      
+    enddo
+    j=Ny
+    do i=0,Nx-1
+       z(0)=dom(0,0)+real(i,f64)*dz(0)
+       z(1)=dom(0,1)+real(j,f64)*dz(1)
+       write(900,*) z(0),z(1),ftab(i,0)
+    enddo
+    i=Nx
+    z(0)=dom(0,0)+real(i,f64)*dz(0)
+    z(1)=dom(0,1)+real(j,f64)*dz(1)
+    write(900,*)z(0),z(1),ftab(0,0)
+    write(900,*)''
+    close(900)  
+  end subroutine printgp2dper
+
+  subroutine printvtk2dper(dom,ftab,Nx,Ny,step,filename)
+    sll_int32,intent(in)::Nx,Ny
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx-1,0:Ny-1),intent(in)::ftab
+    sll_int32::i,j
+    sll_int32,intent(in):: step
+    sll_real64::z(0:1),dz(0:1)
+    character(len=*),intent(in)::filename
+    character(len=80)::str,str2
+    write(str2,*)step
+    !write(str,*) 'mv f.dat f'//trim(adjustl((str2)))//'.dat';call system(str)
+    write(str,*) 'f'//trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
+    str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
+    dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
+    !open(unit=900,file='f.vtk')
+    open(unit=900,file=str,form='formatted')
+    write(900,'(A)')                  '# vtk DataFile Version 2.0'
+    write(900,'(A)')                  'Exemple'
+    write(900,'(A)')                  'ASCII'
+    write(900,'(A)')                  'DATASET STRUCTURED_POINTS'
+    write(900,'(A,I0,A,I0,A,I0)') 'DIMENSIONS ', Nx+1,' ', Ny+1,' ', 1
+    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', floor(dom(0,0)+0.1),' ' , floor(dom(0,1)+0.1),' ' , 0
+    !write(900,'(A,F10.4,A,F10.4,A,F10.4)') 'SPACING ', dz(0),' ', dz(1),' ', 1. 
+    write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
+    write(900,*)
+    write(900,'(A,I0)')           'POINT_DATA ',(Nx+1)*(Ny+1)
+    write(900,'(A,I0)')           'SCALARS f float ',1
+    write(900,'(A)')                  'LOOKUP_TABLE default'
+
+    do j=0,Ny-1
+       do i=0,Nx-1
+          z(0)=dom(0,0)+real(i,f64)*dz(0)
+          z(1)=dom(0,1)+real(j,f64)*dz(1)
+          !write(900,'(F0.8)') ftab(i,j)
+          write(900,*) ftab(i,j)
+       enddo
+       i=Nx
+       z(0)=dom(0,0)+real(i,f64)*dz(0)
+       z(1)=dom(0,1)+real(j,f64)*dz(1)
+       !write(900,'(F0.8)') ftab(0,j)            
+       write(900,*) ftab(0,j)            
+    enddo
+    j=Ny
+    do i=0,Nx-1
+       z(0)=dom(0,0)+real(i,f64)*dz(0)
+       z(1)=dom(0,1)+real(j,f64)*dz(1)
+       !write(900,'(F0.8)') ftab(i,0)
+       write(900,*) ftab(i,0)
+    enddo
+    i=Nx
+    z(0)=dom(0,0)+real(i,f64)*dz(0)
+    z(1)=dom(0,1)+real(j,f64)*dz(1)
+    !write(900,'(F0.8)') ftab(0,0)	  	       
+    write(900,*) ftab(0,0)
+    close(900)  
+  end subroutine printvtk2dper
+
 
 end module polar_advection

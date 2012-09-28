@@ -1,5 +1,5 @@
 module polar_operators
-!> definition of gradient and divergence in polar coordinate
+! definition of gradient and divergence in polar coordinate
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -33,8 +33,8 @@ contains
   !>dr and dtheta : size of step in direction r and theta
   !>nr and ntheta : number of step in direction r and theta
   !>grad_case : integer, enable to choose the way to compute the gradient, optional
-  !>            1 : final differencies center for r and theta, decenter on boundaries
-  !>            2 : final differencies center for r, decenter on boundaries, using fft for theta
+  !>            1 : finit differences center for r and theta, decenter on boundaries
+  !>            2 : finit differences center for r, decenter on boundaries, using fft for theta
   !>                this case is not possible with fftpack
   !>            3 : using splines
   !>            default case is 3
