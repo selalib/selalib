@@ -6,7 +6,7 @@
 !> @brief 
 !> Selalib quintic splines interpolator
 !
-!> Last modification: September 20, 2012
+!> Last modification: September 28, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -32,10 +32,6 @@ implicit none
     sll_real64, dimension(:), allocatable     :: coeffs
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
   end type quintic_splines_plan_non_uni  
-
-  interface new_quintic_splines
-     module procedure new_quintic_splines_uniform, new_quintic_splines_non_uni
-  end interface new_quintic_splines
 
   interface compute_coeffs
      module procedure compute_coeffs_uniform, compute_coeffs_non_uni
@@ -147,9 +143,9 @@ contains
   ! *************************************************************************
 
   ! nb_pts = n + 1
-  function new_quintic_splines_non_uni(num_pts, knots, f) result(plan)
+  function new_quintic_splines_non_uni(knots, f) result(plan)
 
-    sll_int32                                   :: num_pts, ierr
+    sll_int32                                   :: n, ierr
     sll_real64, dimension(:), intent(in)        :: knots
     sll_real64, dimension(:)                    :: f
     type(quintic_splines_plan_non_uni), pointer :: plan
@@ -157,11 +153,10 @@ contains
     ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
     ! plan component allocation
-    SLL_ALLOCATE(plan%coeffs(num_pts+5), ierr)
-
-    plan%spline_obj%num_pts = num_pts
+    n = size(knots)
+    SLL_ALLOCATE(plan%coeffs(n+5), ierr)
+    plan%spline_obj=>new_arbitrary_degree_spline_1d(5, knots, n, 1)
     call compute_coeffs_non_uni(f, plan)
-    plan%spline_obj => new_arbitrary_degree_spline_1d(5, knots, num_pts, 1)
 
   end function new_quintic_splines_non_uni
 
@@ -179,7 +174,7 @@ contains
     sll_real64, dimension(6)                        :: b_at_x
 
     n = plan_splines%spline_obj%num_pts
-    b_at_x = b_splines_at_x( plan_splines%spline_obj, n, &
+    b_at_x = b_splines_at_x( plan_splines%spline_obj, n-1, &
                             plan_splines%spline_obj%xmax )
     a = b_at_x(3)
     b = b_at_x(2)
@@ -204,7 +199,7 @@ contains
     n = plan_splines%spline_obj%num_pts
 
     cell = 1
-    do while(  ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<n-1)  )
+    do while(  ( (x<=knots(cell)) .or. (x>=knots(cell+1)) ) .and. (cell<n-1)  )
          cell = cell + 1
     enddo
 
@@ -225,6 +220,7 @@ contains
     sll_int32                                   :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
+    call delete_arbitrary_order_spline_1d( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
   end subroutine delete_quintic_splines_non_uni
