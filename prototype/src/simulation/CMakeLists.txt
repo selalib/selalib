@@ -132,7 +132,10 @@ add_executable( test_vp4d_sim unit_test_4d.F90 )
 target_link_libraries( test_vp4d_sim
                        sll_poisson_parallel
 		       sll_fft
+		       sll_electric_field_accumulators
                        sll_scalar_field_4d
+		       sll_interpolators
+		       sll_splines
                        sll_remap
 		       sll_collective
                        sll_constants
