@@ -46,7 +46,7 @@ contains
 
   subroutine advection_x(this, dt)
     class(vp_cartesian_2d) :: this 
-    sll_real64 :: dt
+    sll_real64, intent(in) :: dt
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
     sll_real64 :: displacement
@@ -65,7 +65,7 @@ contains
 
   subroutine advection_v(this, dt)
     class(vp_cartesian_2d) :: this 
-    sll_real64 :: dt
+    sll_real64, intent(in) :: dt
     ! local variables
     sll_real64 :: time
     sll_real64, dimension(this%Ncx) :: rho, efield, e_app
