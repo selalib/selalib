@@ -15,7 +15,7 @@ implicit none
 sll_int32   :: myrank
 sll_int64   :: colsz 
 sll_int32   :: comm, info
-sll_int32   :: file_id, error
+sll_int32   :: error
 sll_int32   :: i, j, k
 sll_real64  :: tcpu1
 sll_real64  :: tcpu2
@@ -80,7 +80,7 @@ contains
   type(layout_2D), pointer  :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
-  type(phdf5_file) :: my_file
+  integer(HID_T) :: file_id
   integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
   integer(HSSIZE_T), dimension(2) :: offset 
   
@@ -117,22 +117,22 @@ contains
   offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
   offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
   
-  call my_file%create(xfile, error)
-  call my_file%write_array(datadims,offset,xdata,xdset,error)
-  call my_file%close(error)
+  call sll_hdf5_file_create(xfile, file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
+  call sll_hdf5_file_close(file_id,error)
   
-  call my_file%create(yfile, error)
-  call my_file%write_array(datadims,offset,ydata,ydset,error)
-  call my_file%close(error)
+  call sll_hdf5_file_create(yfile, file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
+  call sll_hdf5_file_close(file_id,error)
   
-  call my_file%create(zfile, error)
-  call my_file%write_array(datadims,offset,zdata,zdset,error)
-  call my_file%close(error)
+  call sll_hdf5_file_create(zfile, file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,zdata,zdset,error)
+  call sll_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
   
      call sll_xml_file_create("layout2d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, xfile, xdset, nx, yfile, ydset, ny )
+     call sll_xml_grid_geometry(file_id, xfile, nx, yfile, ny, xdset, ydset )
      call sll_xml_field(file_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
      call sll_xml_file_close(file_id,error)
      print *, 'Printing 2D layout: '
@@ -169,7 +169,6 @@ contains
   type(layout_3D), pointer                  :: layout
 
   sll_int32, dimension(3)                   :: global_indices
-  type(phdf5_file)                          :: hdf_file
 
   integer(HID_T) :: file_id       ! File identifier 
 
@@ -220,27 +219,28 @@ contains
   offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
   offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
 
-  call hdf_file%create('layout3d-x.h5',error)
-  call hdf_file%write_array(datadims,offset,xdata,'x',error)
-  call hdf_file%close(error)
+  call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)
+  call sll_hdf5_file_close(file_id, error)
 
-  call hdf_file%create('layout3d-y.h5',error)
-  call hdf_file%write_array(datadims,offset,ydata,'y',error)
-  call hdf_file%close(error)
+  call sll_hdf5_file_create('layout3d-y.h5',file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,ydata,'y',error)
+  call sll_hdf5_file_close(file_id, error)
 
-  call hdf_file%create('layout3d-z.h5',error)
-  call hdf_file%write_array(datadims,offset,zdata,'z',error)
-  call hdf_file%close(error)
+  call sll_hdf5_file_create('layout3d-z.h5',file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,zdata,'z',error)
+  call sll_hdf5_file_close(file_id, error)
 
-  call hdf_file%create('layout3d.h5',error)
-  call hdf_file%write_array(datadims,offset,local_array,'array',error)
-  call hdf_file%close(error)
+  call sll_hdf5_file_create('layout3d.h5',file_id, error)
+  call sll_hdf5_write_array(file_id, datadims,offset,local_array,'array',error)
+  call sll_hdf5_file_close(file_id, error)
 
   if (myrank == 0) then
      call sll_xml_file_create("layout3d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, 'layout3d-x.h5', 'x', ni, &
-                                         'layout3d-y.h5', 'y', nj, &
-                                         'layout3d-z.h5', 'z', nk )
+     call sll_xml_grid_geometry(file_id, 'layout3d-x.h5', ni, &
+                                         'layout3d-y.h5', nj, &
+                                         'layout3d-z.h5', nk, &
+                                         'x', 'y', 'z' )
      call sll_xml_field(file_id,'values', "layout3d.h5:/array", &
                         ni,nj,nk,'HDF','Node')
      call sll_xml_file_close(file_id,error)
