@@ -57,6 +57,13 @@ try_run( RUN_RESULT_VAR
          ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
+
+set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+set(CMAKE_C_FLAGS "-lm")
+set(CMAKE_C_FLAGS "-llapack -lblas")
+
+
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
 # message(STATUS "TRY_RUN_STATUS : ${COMPILE_RESULT_VAR}, EXIT_STATUS : ${RUN_RESULT_VAR}")
@@ -116,6 +123,7 @@ ENDIF(HDF5_ENABLED)
 # add the cache entry FFT_DEFAULT_LIBRARY to define the default library use by sll_fft
 set(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft")
 
+
 # add the cache entry FFTPACK_ENABLED for enable/disable fftpack
 set(FFTPACK_ENABLED OFF CACHE BOOL " ")
 
@@ -136,8 +144,17 @@ IF(FFTW_ENABLED)
 	ENDIF(FFTW_FOUND)
 ENDIF(FFTW_ENABLED)
 
+
+find_package(LAPACK REQUIRED)
+
+# recherche de MPI
+#IF( DEFINED ENV{MPI_ROOT} )
+#  set(MPI_ROOT $ENV{MPI_ROOT})
+#  set(_MPI_BASE_DIR ${MPI_ROOT})
+
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK" AND NOT FFTPACK_ENABLED)
 	message("Please put on FFTPACK_ENABLED to use fftpack")
+
 ENDIF()
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_FOUND)
 	message("You can't use fftw library because it's not installed")
@@ -168,6 +185,27 @@ ELSE()
   add_definitions(-DSTDF95)
 ENDIF()
 
+find_package(FFTW QUIET)
+if (FFTW_FOUND)
+	message(STATUS "FFTW FOUND")
+	message(STATUS "libraries = " ${FFTW_LIBRARIES})
+	message(STATUS "include = " ${FFTW_INCLUDE_DIRS})
+	include_directories(${FFTW_INCLUDE_DIRS})
+	set(FFT_ADD_MODULE fftpack_module fftw_module)
+else (FFTW_FOUND)
+	message(STATUS "FFTW NOT FOUND")
+	add_definitions(-D_NOFFTW)
+	set(FFT_ADD_MODULE fftpack_module)
+endif(FFTW_FOUND)
+
+# include's
+include_directories(remap poisson_solvers utilities memory assert 
+splines numerical_utilities precision fields) 
+
+
+# pour la doc 
+
+
 #add flag to disable MPI stuff for debug
 set(MPI_MODULE_ENABLED ON CACHE BOOL " ")
 
@@ -191,6 +229,7 @@ ENDIF(MPI_FOUND)
 include_directories(fft remap poisson_solvers utilities memory assert precision fields) 
 
 # for the documentation
+
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
    get_filename_component(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
