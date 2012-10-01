@@ -1,8 +1,13 @@
 program test_multigrid
 use mgd3
+use sll_hdf5_io_parallel
 use mpi
-implicit none
+use hdf5
 #include "mgd3.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "misc_utils.h"
+implicit none
 !-----------------------------------------------------------------------
 ! Test problem for 3D multigrid parallel code mgd3. mgd3 solves the
 ! non-separable elliptic equation div(1/r*grad(p))=f on a rectangular
@@ -52,6 +57,16 @@ real(8) :: hxi,hyi,hzi,wk,pi
 
 type(block) :: my_block
 type(mg_solver) :: my_mg
+
+sll_int32   :: error
+sll_real64  :: tcpu1
+sll_real64  :: tcpu2
+
+integer(HID_T) :: file_id
+integer(HSIZE_T), dimension(3) :: datadims
+integer(HSSIZE_T), dimension(3) :: offset 
+sll_real64, dimension(:,:,:), allocatable :: x, y, z
+sll_int32 :: i, j, k
 
 !-----------------------------------------------------------------------
 ! initialize MPI and create a datatype for real numbers
@@ -286,6 +301,37 @@ call ginit()
 
 call write_xdmf_3d(myid,numprocs,f,sx,ex,sy,ey,sz,ez,hxi,hyi,hzi,nerror)
 
+SLL_ALLOCATE(x(sx:ex,sy:ey,sz:ez),error)
+SLL_ALLOCATE(y(sx:ex,sy:ey,sz:ez),error)
+SLL_ALLOCATE(z(sx:ex,sy:ey,sz:ez),error)
+
+tcpu1 = MPI_WTIME()
+
+tcpu2 = MPI_WTIME()
+if (myid == 0) &
+   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*numprocs
+
+  ! initialize the local data    
+  do k=sz,ez
+     do j=sy,ey
+        do i=sx,ex
+           x(i,j,k) = float(i-1) / hxi
+           y(i,j,k) = float(j-1) / hyi
+           z(i,j,k) = float(k-1) / hzi
+        enddo
+     enddo
+  enddo
+
+  datadims   = (/ex-sx+1,ey-sy+1,ez-sz+1/)
+  offset = (/sx,sy,sz/)
+
+  call sll_hdf5_file_create('grid3d.h5',file_id, error)
+  call sll_hdf5_write_array(file_id,datadims,offset,x,'x',error)
+  call sll_hdf5_write_array(file_id,datadims,offset,y,'y',error)
+  call sll_hdf5_write_array(file_id,datadims,offset,z,'z',error)
+  call sll_hdf5_write_array(file_id,datadims,offset,f,'array',error)
+  call sll_hdf5_file_close(file_id, error)
+
 !-----------------------------------------------------------------------
 ! solve using mgd3
 !-----------------------------------------------------------------------
@@ -354,15 +400,10 @@ implicit none
 integer :: i,j,k
 real(8) :: cnst,cx,cy,cz,xi,yj,zk
 
-do k=sz-1,ez+1
-  do j=sy-1,ey+1
-    do i=sx-1,ex+1
-      p(i,j,k)=0.0d0
-      r(i,j,k)=1.0d0
-      f(i,j,k)=0.0d0
-    end do
-  end do
-end do
+p = 0.0d0
+r = 1.0d0
+f = 0.0d0
+
 cnst=-12.0d0*(pi*wk)**2
 cx=2.0d0*pi*wk
 cy=2.0d0*pi*wk
