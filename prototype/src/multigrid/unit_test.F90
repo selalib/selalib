@@ -1,8 +1,11 @@
 program test_multigrid
 use mgd3
+use sll_collective
 use sll_hdf5_io_parallel
+use sll_xml_io
 use mpi
 use hdf5
+use numeric_constants
 #include "mgd3.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -38,22 +41,17 @@ implicit none
 !             MPI_CART_GET, MPE_DECOMP1D, 
 !             mgdinit, ginit, mgdsolver, gerr
 !-----------------------------------------------------------------------
-!
-! parameters
-!
-!
-! variables
-!
+
 logical :: periods(3)
-integer :: nxdim,nydim,nzdim
-integer :: numprocs,comm3d,comm3dp,comm3dl,comm3dc
-integer :: sx,ex,sy,ey,sz,ez,neighbor(26),bd(26)
-integer :: ngb(3),myid
-integer :: ierr,nerror,dims(3),coords(3)
+integer :: nxdim, nydim, nzdim
+integer :: numprocs, comm3d, comm3dp, comm3dl, comm3dc
+integer :: sx, ex, sy, ey, sz, ez, neighbor(26), bd(26)
+integer :: ngb(3), myid, info
+integer :: ierr, nerror, dims(3), coords(3)
 
 real(8), allocatable :: p(:,:,:), f(:,:,:), r(:,:,:)
 
-real(8) :: hxi,hyi,hzi,wk,pi
+real(8) :: hxi, hyi, hzi, wk
 
 type(block) :: my_block
 type(mg_solver) :: my_mg
@@ -62,20 +60,21 @@ sll_int32   :: error
 sll_real64  :: tcpu1
 sll_real64  :: tcpu2
 
-integer(HID_T) :: file_id
-integer(HSIZE_T), dimension(3) :: datadims
+integer(HID_T)                  :: file_id
+integer(HSIZE_T), dimension(3)  :: datadims
 integer(HSSIZE_T), dimension(3) :: offset 
 sll_real64, dimension(:,:,:), allocatable :: x, y, z
 sll_int32 :: i, j, k
 
-!-----------------------------------------------------------------------
-! initialize MPI and create a datatype for real numbers
-!
-call MPI_INIT(ierr)
-call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
-call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
+! Boot parallel environment
+call sll_boot_collective()
 
-pi=4.0d0*atan(1.0d0)
+numprocs  = sll_get_collective_size(sll_world_collective)
+myid      = sll_get_collective_rank(sll_world_collective)
+comm3d    = sll_world_collective%comm
+info      = MPI_INFO_NULL
+
+if( myid .eq. 0) print *, ' '
 
 !Mutigrid solver parameters
 
@@ -292,7 +291,7 @@ if (nerror.eq.1) goto 1000
 my_mg%xl=1.0d0
 my_mg%yl=1.0d0
 my_mg%zl=1.0d0
-wk=5.0d0
+wk=2.0d0
 hxi=float(my_mg%nx)/my_mg%xl
 hyi=float(my_mg%ny)/my_mg%yl
 hzi=float(my_mg%nz)/my_mg%zl
@@ -307,31 +306,42 @@ SLL_ALLOCATE(z(sx:ex,sy:ey,sz:ez),error)
 
 tcpu1 = MPI_WTIME()
 
+! initialize the local data    
+do k=sz,ez
+   do j=sy,ey
+      do i=sx,ex
+         x(i,j,k)=(float(i))/sngl(hxi)
+         y(i,j,k)=(float(j))/sngl(hyi)
+         z(i,j,k)=(float(k))/sngl(hzi)
+      end do
+   end do
+end do
+
+datadims = (/my_mg%nx,my_mg%ny,my_mg%nz/)
+offset   = (/sx-2,sy-2,sz-2/)
+
+call sll_hdf5_file_create('grid3d.h5',file_id, error)
+call sll_hdf5_write_array(file_id,datadims,offset,x,'x',error)
+call sll_hdf5_write_array(file_id,datadims,offset,y,'y',error)
+call sll_hdf5_write_array(file_id,datadims,offset,z,'z',error)
+call sll_hdf5_write_array(file_id,datadims,offset,f(sx:ex,sy:ey,sz:ez),'array',error)
+call sll_hdf5_file_close(file_id, error)
+
+if (myid == 0) then
+   call sll_xml_file_create("grid3d.xmf",file_id,error)
+   call sll_xml_grid_geometry(file_id, 'grid3d.h5', my_mg%nx, &
+                                       'grid3d.h5', my_mg%ny, &
+                                       'grid3d.h5', my_mg%nz, &
+                                       'x', 'y', 'z' )
+   call sll_xml_field(file_id,'values', "grid3d.h5:/array", &
+                      my_mg%nx,my_mg%ny,my_mg%nz,'HDF','Node')
+   call sll_xml_file_close(file_id,error)
+end if
+
+call sll_collective_barrier(sll_world_collective)
 tcpu2 = MPI_WTIME()
 if (myid == 0) &
    write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*numprocs
-
-  ! initialize the local data    
-  do k=sz,ez
-     do j=sy,ey
-        do i=sx,ex
-           x(i,j,k) = float(i-1) / hxi
-           y(i,j,k) = float(j-1) / hyi
-           z(i,j,k) = float(k-1) / hzi
-        enddo
-     enddo
-  enddo
-
-  datadims   = (/ex-sx+1,ey-sy+1,ez-sz+1/)
-  offset = (/sx,sy,sz/)
-
-  call sll_hdf5_file_create('grid3d.h5',file_id, error)
-  call sll_hdf5_write_array(file_id,datadims,offset,x,'x',error)
-  call sll_hdf5_write_array(file_id,datadims,offset,y,'y',error)
-  call sll_hdf5_write_array(file_id,datadims,offset,z,'z',error)
-  call sll_hdf5_write_array(file_id,datadims,offset,f,'array',error)
-  call sll_hdf5_file_close(file_id, error)
-
 !-----------------------------------------------------------------------
 ! solve using mgd3
 !-----------------------------------------------------------------------
@@ -359,9 +369,10 @@ if (nerror.eq.1) goto 1000
 call gerr()
 !-----------------------------------------------------------------------
 close(8)
-call MPI_FINALIZE(ierr)
 
-print*,"PASSED"
+!if (myid==0) print*,"PASSED"
+
+call sll_halt_collective()
 
 stop
 1000  write(6,200)
@@ -404,10 +415,10 @@ p = 0.0d0
 r = 1.0d0
 f = 0.0d0
 
-cnst=-12.0d0*(pi*wk)**2
-cx=2.0d0*pi*wk
-cy=2.0d0*pi*wk
-cz=2.0d0*pi*wk
+cnst=-12.0d0*(sll_pi*wk)**2
+cx=2.0d0*sll_pi*wk
+cy=2.0d0*sll_pi*wk
+cz=2.0d0*sll_pi*wk
 do k=sz,ez
   zk=(float(k)-1.5d0)/hzi
   do j=sy,ey
@@ -438,9 +449,9 @@ real(8) :: errloc,err,cx,cy,cz,exact,zk,yj,xi
 !
 ! calculate local error
 !
-cx=2.0d0*pi*wk
-cy=2.0d0*pi*wk
-cz=2.0d0*pi*wk
+cx=2.0d0*sll_pi*wk
+cy=2.0d0*sll_pi*wk
+cz=2.0d0*sll_pi*wk
 errloc=0.0d0
 do k=sz,ez
   zk=(float(k)-1.5d0)/hzi
