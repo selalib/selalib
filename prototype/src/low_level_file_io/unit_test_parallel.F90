@@ -60,9 +60,10 @@ tcpu2 = MPI_WTIME()
 if (myrank == 0) &
    write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*colsz
 
-call sll_halt_collective()
 
 if( myrank .eq. 0) print *, 'PASSED'
+
+call sll_halt_collective()
   
 contains
 
