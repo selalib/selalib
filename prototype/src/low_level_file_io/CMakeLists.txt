@@ -27,7 +27,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90)
    ADD_LIBRARY(sll_low_level_file_io_parallel STATIC ${IO_SRC})
    ADD_DEPENDENCIES(sll_low_level_file_io_parallel sll_utilities 
-                                                   sll_remap 
                                                    sll_collective)
    TARGET_LINK_LIBRARIES(sll_low_level_file_io_parallel ${HDF5_LIBRARIES} )
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)

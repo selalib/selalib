@@ -869,7 +869,7 @@ contains
     write(900,'(A)')                  'ASCII'
     write(900,'(A)')                  'DATASET STRUCTURED_POINTS'
     write(900,'(A,I0,A,I0,A,I0)') 'DIMENSIONS ', Nx+1,' ', Ny+1,' ', 1
-    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', 0,' ' , 0,' ' , 0
+    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', floor(dom(0,0)+0.1),' ' , floor(dom(0,1)+0.1),' ' , 0
     !write(900,'(A,F10.4,A,F10.4,A,F10.4)') 'SPACING ', dz(0),' ', dz(1),' ', 1. 
     write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
     write(900,*)
