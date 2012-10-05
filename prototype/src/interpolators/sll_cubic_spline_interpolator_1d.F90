@@ -98,14 +98,16 @@ contains  ! ****************************************************************
     ! compute the interpolating spline coefficients
     call compute_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
-    length = this%interpolation_points(num_points) - this%interpolation_points(1)
+    length = this%interpolation_points(num_points) - &
+             this%interpolation_points(1)
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
     if (this%bc_type == PERIODIC_SPLINE) then
        do i = 1, num_points      
           coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
-          SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))          
+          SLL_ASSERT(xmin <= coordinates(i))
+          SLL_ASSERT(coordinates(i) <= xmax)   
        end do
     else
        if (alpha > 0 ) then 
@@ -246,6 +248,9 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_derivative_f95
+
+  ! Why is the name of this function changing depending on the standard?
+  ! only one will be compiled anyway!!
 
   !> initialize cubic spline interpolator
 #ifdef STDF95
