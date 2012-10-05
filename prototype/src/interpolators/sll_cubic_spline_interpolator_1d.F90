@@ -36,7 +36,9 @@ use sll_splines
 #endif
   end type cubic_spline_1d_interpolator
 
-
+  interface delete
+     module procedure delete_cs1d
+  end interface delete
   
 contains  ! ****************************************************************
 
@@ -315,4 +317,9 @@ contains  ! ****************************************************************
        res(:) = 0.0_f64
   end function reconstruct_array
   
+  subroutine delete_cs1d( obj )
+    class(cubic_spline_1d_interpolator) :: obj
+    call delete(obj%spline)
+  end subroutine delete_cs1d
+
 end module sll_cubic_spline_interpolator_1d
