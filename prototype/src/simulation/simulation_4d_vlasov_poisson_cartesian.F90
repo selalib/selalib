@@ -400,6 +400,19 @@ contains
     call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
 
+    ! ------------------------------------------------------------------------
+    !
+    !                                MAIN LOOP
+    !
+    ! ------------------------------------------------------------------------
+
+       sim%seqx3x4_to_seqx1x2 => &
+           NEW_REMAP_PLAN_4D(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
+
+       sim%seqx1x2_to_seqx3x4 => &
+           NEW_REMAP_PLAN_4D(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
+
+
     do itime=1, num_iterations
        ! Carry out a 'dt/2' advection in the velocities.
        ! Start with vx...(x3)
@@ -435,8 +448,6 @@ contains
 
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
        ! Reconfigure data (remember to initialize the remap plan elsewhere):
-       sim%seqx3x4_to_seqx1x2 => &
-           NEW_REMAP_PLAN_4D(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
@@ -483,8 +494,6 @@ contains
        !    to compute the charge density.
        ! 2. Compute charge density.
        ! 3. Reconfigure charge density to feed to Poisson solver
-       sim%seqx1x2_to_seqx3x4 => &
-           NEW_REMAP_PLAN_4D(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        
        call compute_charge_density( &
@@ -576,7 +585,7 @@ contains
        
        ! Diagnostics here... PIERRE!!!
 
-    end do
+    end do ! main loop
 
     
   end subroutine run_vp4d_cartesian
