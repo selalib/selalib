@@ -297,9 +297,24 @@ contains
     call set_layout_3D_k_max( layout, proc_p, k_max_n )   
   end subroutine swap_box_3D
   
-  function theoretical_global_3D_indices(d, ni, nj)
+  function theoretical_global_3D_indices(d, ni, nj) !result(ind)
+    !integer, dimension(1:3) :: ind
     integer, dimension(1:3) :: theoretical_global_3D_indices
     integer, intent(in)     :: d, ni, nj
+!<<<<<<< HEAD
+!    if(mod(d,ni) /= 0) then
+!       ind(1) = mod(d,ni)
+!    else
+!       ind(1) = ni
+!    end if
+!    if (mod(d,ni*nj)/=0) then
+!       ind(3) = d/(ni*nj) + 1
+!    else
+!       ind(3) = d/(ni*nj)
+!    endif
+!    ind(2) = (d-ind(1))/ni - nj*(ind(3)-1) + 1
+
+!=======
     integer                 :: i, j, k
     integer                 :: q
     sll_real64              :: tmp
@@ -319,6 +334,7 @@ contains
     q   = q - (j-1)*ni
     i   = q
     theoretical_global_3D_indices(1:3) = (/i,j,k/) 
+!>>>>>>> origin/prototype-devel
   end function theoretical_global_3D_indices
   
   subroutine two_power_rand_factorization(n, n1, n2, n3)
@@ -356,36 +372,6 @@ contains
     n1 = 2**expo1
     n2 = 2**expo2
   end subroutine factorize_in_random_2powers
-  
-  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
-    type(layout_3D), pointer :: layout
-    sll_int32, intent(out) :: loc_sz_i
-    sll_int32, intent(out) :: loc_sz_j
-    sll_int32, intent(out) :: loc_sz_k
-    sll_int32 :: i_min
-    sll_int32 :: i_max
-    sll_int32 :: j_min
-    sll_int32 :: j_max
-    sll_int32 :: k_min
-    sll_int32 :: k_max
-    sll_int32 :: my_rank
-    if( .not. associated(layout) ) then
-       print *, 'not-associated layout passed to new_distributed_mesh_3D'
-       print *, 'Exiting...'
-       STOP
-    end if
-    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
-    i_min = get_layout_3D_i_min( layout, my_rank )
-    i_max = get_layout_3D_i_max( layout, my_rank )
-    j_min = get_layout_3D_j_min( layout, my_rank )
-    j_max = get_layout_3D_j_max( layout, my_rank )
-    k_min = get_layout_3D_k_min( layout, my_rank )
-    k_max = get_layout_3D_k_max( layout, my_rank )
-    loc_sz_i = i_max - i_min + 1
-    loc_sz_j = j_max - j_min + 1
-    loc_sz_k = k_max - k_min + 1
-  end subroutine compute_local_sizes
-      
       subroutine split_interval_randomly(n, num_halvings, ans)
         integer, intent(in) :: n
         integer, intent(in) :: num_halvings
