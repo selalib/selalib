@@ -57,6 +57,13 @@ try_run( RUN_RESULT_VAR
          ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
+
+set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+set(CMAKE_C_FLAGS "-lm")
+set(CMAKE_C_FLAGS "-llapack -lblas")
+
+
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
 # message(STATUS "TRY_RUN_STATUS : ${COMPILE_RESULT_VAR}, EXIT_STATUS : ${RUN_RESULT_VAR}")
@@ -85,38 +92,37 @@ ENDIF()
 ##########################################################
 
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
-set(HDF5_ENABLED ON CACHE BOOL " ")
-set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL " ")
+set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
+set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
-IF (HDF5_ENABLED)
-
-   IF( DEFINED ENV{HDF5_ROOT} )
-      SET(HDF5_ROOT $ENV{HDF5_ROOT})
-   ENDIF()
-
-   IF( DEFINED ENV{HDF5_HOME} )
-      SET(HDF5_ROOT $ENV{HDF5_HOME})
-   ENDIF()
-
-   FIND_PACKAGE(HDF5 REQUIRED)
-
-ENDIF()
-
-IF(HDF5_FOUND AND HDF5_ENABLED)
-   include_directories(${HDF5_INCLUDE_DIRS})
-   include_directories(${HDF5_INCLUDE_DIR_FORTRAN})
-   message(STATUS "HDF5 include directories ${HDF5_INCLUDE_DIRS}")
-   message(STATUS "HDF5 module directories ${HDF5_INCLUDE_DIR_FORTRAN}")
-ELSE()
-   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-   SET(HDF5_LIBRARIES "")
-   ADD_DEFINITIONS(-DNOHDF5)
-ENDIF()
+# search for HDF5
+IF(HDF5_ENABLED)
+	IF( DEFINED ENV{HDF5_ROOT} )
+		set(HDF5_ROOT $ENV{HDF5_ROOT})
+	ENDIF()
+        #IF( DEFINED ENV{HDF5_HOME} )
+	#	set(HDF5_ROOT $ENV{HDF5_HOME})
+	#	message(STATUS "HDF5_HOME FOUND")
+	#ENDIF()
+	find_package(HDF5 QUIET)
+	IF(HDF5_FOUND)
+		message(STATUS "HDF5 FOUND")
+		include_directories(${HDF5_INCLUDE_DIRS})
+		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
+	ELSE()
+		add_definitions(-DNOHDF5)
+		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
+		set(HDF5_LIBRARIES "")
+	ENDIF()
+ELSE(HDF5_ENABLED)
+	add_definitions(-DNOHDF5)
+ENDIF(HDF5_ENABLED)
 ##########################################################
 
 ##########################################################
 # add the cache entry FFT_DEFAULT_LIBRARY to define the default library use by sll_fft
 set(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft")
+
 
 # add the cache entry FFTPACK_ENABLED for enable/disable fftpack
 set(FFTPACK_ENABLED OFF CACHE BOOL " ")
@@ -138,8 +144,17 @@ IF(FFTW_ENABLED)
 	ENDIF(FFTW_FOUND)
 ENDIF(FFTW_ENABLED)
 
+
+find_package(LAPACK REQUIRED)
+
+# recherche de MPI
+#IF( DEFINED ENV{MPI_ROOT} )
+#  set(MPI_ROOT $ENV{MPI_ROOT})
+#  set(_MPI_BASE_DIR ${MPI_ROOT})
+
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK" AND NOT FFTPACK_ENABLED)
 	message("Please put on FFTPACK_ENABLED to use fftpack")
+
 ENDIF()
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_FOUND)
 	message("You can't use fftw library because it's not installed")
@@ -170,6 +185,27 @@ ELSE()
   add_definitions(-DSTDF95)
 ENDIF()
 
+find_package(FFTW QUIET)
+if (FFTW_FOUND)
+	message(STATUS "FFTW FOUND")
+	message(STATUS "libraries = " ${FFTW_LIBRARIES})
+	message(STATUS "include = " ${FFTW_INCLUDE_DIRS})
+	include_directories(${FFTW_INCLUDE_DIRS})
+	set(FFT_ADD_MODULE fftpack_module fftw_module)
+else (FFTW_FOUND)
+	message(STATUS "FFTW NOT FOUND")
+	add_definitions(-D_NOFFTW)
+	set(FFT_ADD_MODULE fftpack_module)
+endif(FFTW_FOUND)
+
+# include's
+include_directories(remap poisson_solvers utilities memory assert 
+splines numerical_utilities precision fields) 
+
+
+# pour la doc 
+
+
 #add flag to disable MPI stuff for debug
 set(MPI_MODULE_ENABLED ON CACHE BOOL " ")
 
@@ -193,6 +229,7 @@ ENDIF(MPI_FOUND)
 include_directories(fft remap poisson_solvers utilities memory assert precision fields) 
 
 # for the documentation
+
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
    get_filename_component(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
@@ -244,6 +281,7 @@ ENDIF()
 IF(NOT STDF95)
    add_subdirectory(poisson_solvers)
 ENDIF()
+add_subdirectory(electric_field_accumulators)
 
 #high-level
 add_subdirectory(interpolators)
@@ -295,17 +333,18 @@ add_test(NAME constants COMMAND test_constants)
 
 add_test(NAME utilities COMMAND test_utilities)
 
+add_test(NAME low_level_file_io COMMAND test_io)
+set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 IF(HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    set(PROCS 4)
    set(ARGS "")
-   add_test(NAME low_level_file_io COMMAND 
+   add_test(NAME low_level_file_io_parallel COMMAND 
             ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io_parallel
             ${MPIEXEC_POSTFLAGS} ${ARGS})
-ELSE()
-   add_test(NAME low_level_file_io COMMAND test_io)
+   set_tests_properties(low_level_file_io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
-set_tests_properties(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
@@ -315,6 +354,7 @@ add_test(NAME splines COMMAND test_splines #test_non_unif_splines
 set_tests_properties(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
+add_test(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 IF(FISHPACK_ENABLED)
 	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
 ENDIF()
@@ -367,6 +407,14 @@ add_test(NAME remap_4d
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+set(PROCS 16)
+add_test(NAME poisson_periodic_cartesian_par_2d
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
@@ -377,7 +425,13 @@ add_test(NAME time_splitting COMMAND test_time_splitting)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)
 add_test(NAME advection_field COMMAND test_advection_field)
-
+set(PROCS 8)
+add_test(NAME test_vp4d_sim
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
@@ -394,7 +448,7 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(simulation_1d simulation/test_simulation_1d)
 
 
-set(FORTRANCL_ENABLED CACHE BOOL OFF)
+set(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 # recherche de FORTRANCL
 IF(FORTRANCL_ENABLED)
 	find_package(FORTRANCL QUIET)
