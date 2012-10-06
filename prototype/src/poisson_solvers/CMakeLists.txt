@@ -88,8 +88,33 @@ ENDIF()
 #	sll_assertion
 #)
 
+# ****************************************************************************
+#
+#                           PARALLEL POISSON SOLVERS
+#
+# ****************************************************************************
+
+#MPI_MODULE_ENABLED flag implies MPI_FOUND
 IF(MPI_MODULE_ENABLED)
-  add_library(sll_poisson_3d_periodic_par STATIC sll_poisson_3d_periodic_par.F90)
+
+  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+  add_library( sll_poisson_parallel STATIC 
+    sll_poisson_3d_periodic_par.F90 
+    sll_poisson_2d_periodic_cartesian_par.F90 )
+  
+  add_executable( test_poisson_2d_per_cart_par 
+    test_poisson_2d_periodic_cartesian_par.F90 )
+
+  target_link_libraries(test_poisson_2d_per_cart_par
+    sll_poisson_parallel
+    sll_remap
+    sll_collective
+    sll_fft
+    sll_memory
+    sll_timer
+    sll_utilities
+    sll_assertion )
   #add_executable(test_poisson_3d_par test_poisson_3d_par.F90)
   #target_link_libraries(test_poisson_3d_par sll_poisson_3d_periodic_par sll_remap #sll_mesh_types sll_collective sll_fft sll_diagnostics sll_memory sll_timer sll_utilities #sll_assertion)
 

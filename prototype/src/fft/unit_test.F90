@@ -22,7 +22,8 @@ program unit_test
   sll_real64, dimension(m1,m2) :: rdata_copy2d
   sll_real64, dimension(n) :: rdata_comp, rdata_copy, rdata
   sll_comp64 :: mode
-  sll_real64 :: ierr
+  sll_real64 :: ierr  ! this is not used as an integer below, bad name
+  sll_real64 :: err_var
   sll_int32 :: i,j,s,h,k,t, array_position, ind_mode
 
   call print_defaultfftlib()
@@ -206,33 +207,72 @@ program unit_test
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX 2D'
   do i=10,10
-   do h=1,hmax
-    s = m1!2**i
-    t = m2!2**(i-1)
-
-    do j=1,s
-     do k=1,t
-      CALL RANDOM_COMPLEX(data_comp2d(j,k))
+     do h=1,hmax
+        s = m1!2**i
+        t = m2!2**(i-1)
+        
+        do j=1,s
+           do k=1,t
+              CALL RANDOM_COMPLEX(data_comp2d(j,k))
+           enddo
+        enddo
+        data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
+        
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_FORWARD)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+        
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_INVERSE,FFT_NORMALIZE)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+        ierr = 0_f64
+        do j=1,t
+           ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
+        enddo
+        if( ierr > err_max ) then
+           stop 'Everage error too big'
+        endif
      enddo
-    enddo
-    data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
-  
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_FORWARD)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE,FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-    ierr = 0_f64
-    do j=1,t
-      ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
-    enddo
-    if( ierr > err_max ) then
-      stop 'Everage error too big'
-    endif
-   enddo
   enddo
+
+  print * ,'COMPLEX TO COMPLEX 2D: WITH FLAGS'
+  do i=10,10
+     do h=1,hmax
+        s = m1!2**i
+        t = m2!2**(i-1)
+        
+        do j=1,s
+           do k=1,t
+              CALL RANDOM_COMPLEX(data_comp2d(j,k))
+           enddo
+        enddo
+        data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
+        
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_FORWARD, FFT_ONLY_SECOND_DIRECTION)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+        
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_INVERSE, FFT_NORMALIZE+FFT_ONLY_SECOND_DIRECTION)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+        err_var = 0_f64
+        do j=1,t 
+           err_var = MAX(ERROR_MAX(data_comp2d(1:s,j)-data_copy2d(1:s,j)), &
+                err_var)
+        enddo
+        print *, 'max_error = ', err_var
+        if( ierr > err_max ) then
+           stop 'Everage error too big'
+        endif
+     enddo
+  enddo
+
+
+
   print *, 'OK', ierr
 #endif
 
@@ -240,36 +280,53 @@ program unit_test
   print *,'-------------------------------------------------'
   print * ,'COMPLEX TO COMPLEX 2D in one direction only'
   do i=10,10
-   do h=1,hmax
-    s = m1!2**i
-    t = m2!2**(i-1)
+     do h=1,hmax
+        s = m1!2**i
+        t = m2!2**(i-1)
+        
+        do j=1,s
+           do k=1,t
+              CALL RANDOM_COMPLEX(data_comp2d(j,k))
+           enddo
+        enddo
+        data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
+        
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_FORWARD,FFT_ONLY_FIRST_DIRECTION)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
 
-    do j=1,s
-     do k=1,t
-      CALL RANDOM_COMPLEX(data_comp2d(j,k))
+        call fft_delete_plan(p)
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_FORWARD,FFT_ONLY_SECOND_DIRECTION)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+        ! The following are 2 ways to do the same thing.
+#if 1        
+        p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_INVERSE,FFT_NORMALIZE)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+#endif
+#if 0
+   p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_INVERSE,FFT_ONLY_SECOND_DIRECTION+FFT_NORMALIZE)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+
+   p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
+             FFT_INVERSE,FFT_ONLY_FIRST_DIRECTION+FFT_NORMALIZE)
+        call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
+        call fft_delete_plan(p)
+#endif
+        ierr = 0_f64
+        do j=1,t
+           ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
+        enddo
+        print *, 'error_max = ', ierr
+        if( ierr > err_max ) then
+           stop 'Everage error too big'
+        endif
      enddo
-    enddo
-    data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
-  
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_FORWARD,FFT_ONLY_FIRST_DIRECTION)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_FORWARD,FFT_ONLY_SECOND_DIRECTION)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-
-    p => fft_new_plan(s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t),FFT_INVERSE,FFT_NORMALIZE)
-    call fft_apply_plan(p,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t))
-    call fft_delete_plan(p)
-    ierr = 0_f64
-    do j=1,t
-      ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
-    enddo
-    if( ierr > err_max ) then
-      stop 'Everage error too big'
-    endif
-   enddo
   enddo
   print *, 'OK', ierr
 !-----------------------------

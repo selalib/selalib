@@ -273,8 +273,8 @@ contains
        !we fix the tolerance and the maximum of iteration
        tolr=1e-12
        tolth=1e-12
-       tolr=1e-4
-       tolth=1e-4
+       !tolr=1e-4
+       !tolth=1e-4
        maxiter=1000
 
        do j=1,ntheta
@@ -380,7 +380,7 @@ contains
 
        !initialization
        maxiter=10
-       tolr=1e-10
+       tolr=1e-12
 
        do j=1,ntheta
           do i=1,nr+1
@@ -410,9 +410,9 @@ contains
                    ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr)))
                    atheta=-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr)))
                 else
-                   ar=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/rr) &
+                   ar=-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/rr) &
                         & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr+r*plan%field(2,kr+1,k+1)/rr))
-                   atheta=-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+r*plan%field(1,kr+1,k)/rr) &
+                   atheta=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+r*plan%field(1,kr+1,k)/rr) &
                         & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr+r*plan%field(1,kr+1,k+1)/rr))
                 end if
                 rrn=rr
@@ -869,7 +869,7 @@ contains
     write(900,'(A)')                  'ASCII'
     write(900,'(A)')                  'DATASET STRUCTURED_POINTS'
     write(900,'(A,I0,A,I0,A,I0)') 'DIMENSIONS ', Nx+1,' ', Ny+1,' ', 1
-    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', 0,' ' , 0,' ' , 0
+    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', floor(dom(0,0)+0.1),' ' , floor(dom(0,1)+0.1),' ' , 0
     !write(900,'(A,F10.4,A,F10.4,A,F10.4)') 'SPACING ', dz(0),' ', dz(1),' ', 1. 
     write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
     write(900,*)
