@@ -2,71 +2,12 @@ project(slv2d)
 enable_language(Fortran)
 cmake_minimum_required(VERSION 2.8)
 
-# Determine how-to install the modules. CMAKE_BINARY_DIR is the directory
-# in which the make command is invoked.
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-
-# Add the modules directory to the list of include directories
-include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
-
-# Specify the output for binary
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
-# Add new directory to find the FIND<PACKAGE>.cmake files. CMAKE_SOURCE_DIR is
-# the directory where the project sources are located. CMAKE_MODULE_PATH is 
-# the list of directories in which to search for CMake modules.
-set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
-
-# make sure that the default is a RELEASE. Here is where we need to set
-# the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
-# turn on assertions.
-if (NOT CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-
-# DGFORTRAN is used to set the way in which numbers get converted to strings
-# by the preprocessor. gfotran uses "x" while other preprocessors use the
-# cpp #x. Defining the GFORTRAN flag chooses the first.
-get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
-  message(STATUS "gfortran compiler")
-  add_definitions(-DGFORTRAN)
-ENDIF()
-add_definitions(-DDEBUG -DMPIF90)
-
-# Define folder to be deleted by make clean
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
-add_custom_target( clear
-                   COMMAND find . -name *.mod -delete
-		   COMMAND find . -name *.a -delete
-		   COMMAND find . -name *.o -delete
-		   COMMAND find . -name *.cmake -delete
-		   COMMAND rm -rf bin
-		   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
-
-##########################################################
-# Try to determine the compiler
-try_run( RUN_RESULT_VAR
-	 COMPILE_RESULT_VAR
-         ${CMAKE_BINARY_DIR}
-         ${CMAKE_SOURCE_DIR}/check_compiler.F90
-)
-
-
-set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-set(CMAKE_C_FLAGS "-lm")
-set(CMAKE_C_FLAGS "-llapack -lblas")
-
 set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
 IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
-		SEt(HDF5_ROOT $ENV{HDF5_ROOT})
+		SET(HDF5_ROOT $ENV{HDF5_ROOT})
 	ENDIF()
 	FIND_PACKAGE(HDF5 QUIET)
 	IF(HDF5_FOUND)
@@ -79,17 +20,7 @@ ENDIF(HDF5_ENABLED)
 SET(FFTPACK_ENABLED OFF CACHE BOOL " ")
 
 FIND_PACKAGE(LAPACK REQUIRED)
-
-GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
-ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
-	set(CMAKE_Fortran_FLAGS " ")
-ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
-	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
-ELSE()
-	message(STATUS "NO KNOWN FORTRAN COMPILER FOUND")
-ENDIF()
+FIND_PACKAGE(ZLIB REQUIRED)
 
 #add flag to disable MPI stuff for debug
 SET(MPI_MODULE_ENABLED ON CACHE BOOL " ")
@@ -99,10 +30,57 @@ IF(MPI_FOUND)
    MESSAGE(STATUS "MPI FOUND")
    INCLUDE_DIRECTORIES(${MPI_Fortran_INCLUDE_PATH})
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+   SET(CMAKE_Fortran_FLAGS "-D_MPI")
 ELSE(MPI_FOUND)
    MESSAGE(STATUS "MPI NOT FOUND")
    SET(MPI_MODULE_ENABLED OFF CACHE BOOL " " FORCE)
 ENDIF(MPI_FOUND)
+
+FIND_LIBRARY(FFTPACK_LIBRARIES
+		NAMES dfftpack
+		HINTS /usr/local
+		PATH_SUFFIXES lib 
+		DOC "PATH TO libdfftpack.a")
+
+FIND_PATH(SILO_INCLUDE_DIRS
+		NAMES silo.inc
+		HINTS /usr/local
+		PATH_SUFFIXES include 
+		DOC "PATH TO silo.inc")
+
+FIND_LIBRARY(SILO_LIBRARIES
+		NAMES silo siloh5
+		HINTS /usr/local
+		PATH_SUFFIXES lib 
+		DOC "PATH TO libsilo.a or libsiloh5.a")
+
+if (SILO_INCLUDE_DIRS AND SILO_LIBRARIES)
+  set(SILO_FOUND YES)
+endif(SILO_INCLUDE_DIRS AND SILO_LIBRARIES)
+
+SET(SLV2D_SRC diagnostiquesm.F90
+              diagnostiquesp.F90
+              fft_module.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              module_mpi.F90
+              poisson2ddir.F90
+              poisson2dpp.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d.F90 )
+
+ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
+
+ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
+TARGET_LINK_LIBRARIES(vp2d slv2d ${SILO_LIBRARIES} ${FFTPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES} -lsupc++)
+ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
+TARGET_LINK_LIBRARIES(vm2d slv2d ${SILO_LIBRARIES} ${FFTPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES} -lsupc++)
 
 ENABLE_TESTING()
 
