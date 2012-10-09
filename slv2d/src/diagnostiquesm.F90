@@ -16,8 +16,9 @@ logical :: dir_e
 integer, private :: kk0, kk1, kk2, kk3, kk4
 character(len=4), private :: fin
 character(len=1), private :: aa,bb,cc,dd
-character(len=26) :: outdir = '/scratch/navaro/Runs/'
+!character(len=26) :: outdir = '/scratch/navaro/Runs/'
 !character(len=26) :: outdir = '/scratch/crouseil/Runs/'
+character(len=2) :: outdir = './'
 
 contains
 

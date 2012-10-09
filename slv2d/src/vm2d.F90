@@ -196,4 +196,5 @@ end do
 
 call termine_moduleMPI
 
+  print*,'PASSED'
 end program VM2D

@@ -217,4 +217,6 @@ program VP2D
   end do
 !$OMP END PARALLEL
   call termine_moduleMPI
+
+  print*,'PASSED'
 end program VP2D

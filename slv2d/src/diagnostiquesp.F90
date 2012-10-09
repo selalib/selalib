@@ -134,9 +134,12 @@ contains
 
   end subroutine diagnostiques
   subroutine fichinit
+    character(len=72) :: filename
     integer :: IO_stat ! indicateur d'erreur
     
-    open(idata,file="slv2d.dat",IOStat=IO_stat)
+    call getarg( 1, filename)
+
+    open(idata,file=trim(filename),IOStat=IO_stat)
     if (IO_stat/=0) STOP "erreur d'ouverture du fichier mabo2d.dat"
     open(ithf,file="thf.dat",IOStat=IO_stat)
     if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
