@@ -5,7 +5,7 @@ FIND_PATH(SILO_INCLUDE_DIRS
 		DOC "PATH TO silo.inc")
 
 FIND_LIBRARY(SILO_LIBRARIES
-		NAMES siloh5
+		NAMES silo siloh5
 		HINTS ${SILO_ROOT} /usr/local
 		PATH_SUFFIXES lib 
 		DOC "PATH TO libsilo.a or libsiloh5.a")
