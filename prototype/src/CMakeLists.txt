@@ -58,11 +58,8 @@ try_run( RUN_RESULT_VAR
 )
 
 
-set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-set(CMAKE_C_FLAGS "-lm")
-set(CMAKE_C_FLAGS "-llapack -lblas")
-
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
@@ -94,6 +91,17 @@ ENDIF()
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
+
+
+IF (APPLE)
+   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
+   FIND_LIBRARY(BLAS_LIBRARIES  blas)
+ELSE()
+   FIND_PACKAGE(LAPACK REQUIRED)
+   FIND_PACKAGE(BLAS   REQUIRED)
+ENDIF()
+
+SET(LINK_LIBRARIES  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # search for HDF5
 IF(HDF5_ENABLED)
@@ -474,7 +482,6 @@ IF(PASTIX_ENABLED)
       set(PASTIX_ROOT $ENV{PASTIX_ROOT})
       set(MURGE_ROOT $ENV{PASTIX_ROOT})
    ENDIF()
-   find_package(BLAS QUIET)
    find_package(RT QUIET)
    find_package(SCOTCH QUIET)
    find_package(PTSCOTCH QUIET)
