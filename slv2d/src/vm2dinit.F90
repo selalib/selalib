@@ -195,8 +195,8 @@ call densite_charge(vlas2d,rho)		!calcul de rho
 call solve(poiss2dpp,ex,ey,rho,nrj)	!calcul de ex et ey
 !call solve(poiss2dpp,ex,rho,nrj)	!calcul de ex (cas 1d)
 
-open(15+my_num,file="Runs/r_init:"//char(48+my_num))
-open(16+my_num,file="Runs/e_init:"//char(48+my_num))
+open(15+my_num,file="r_init:"//char(48+my_num))
+open(16+my_num,file="e_init:"//char(48+my_num))
 do j = jstartx, jendx
    do i = 1, geomx%nx
       x = geomx%x0+(i-1)*geomx%dx
