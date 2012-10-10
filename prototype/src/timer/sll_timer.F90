@@ -79,7 +79,7 @@ module sll_timer
   !> @return the time elapsed between t0 and t1 
   function time_elapsed_between(t0,t1)
     real(kind=kind(0d0)) :: time_elapsed_between
-    type(time_mark), pointer, intent(in) :: t0, t1
+    type(time_mark), pointer            :: t0, t1
     integer(kind=kind(t0%clocks_ticks)) :: clocks_ticks
 
     if( (.not. associated(t0)) .or. (.not. associated(t1)) ) then

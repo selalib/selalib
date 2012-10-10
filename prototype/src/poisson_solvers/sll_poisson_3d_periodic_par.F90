@@ -1,13 +1,7 @@
-
-!**************************************************************************
-!
-! Selalib 2012     
-! Module: sll_poisson_3d_periodic.F90
-!
 !> @brief 
 !> Selalib periodic 3D poisson solver
 !> Start date: Feb. 08, 2012
-!> Last modification: April 10, 2012
+!> Last modification: Sep 11, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
@@ -43,17 +37,17 @@ module sll_poisson_3d_periodic_par
      type(sll_fft_plan), pointer               :: px_inv
      type(sll_fft_plan), pointer               :: py_inv
      type(sll_fft_plan), pointer               :: pz_inv
-     type(layout_3D_t),  pointer               :: layout_x
-     type(layout_3D_t),  pointer               :: layout_y
-     type(layout_3D_t),  pointer               :: layout_z
+     type(layout_3D),  pointer               :: layout_x
+     type(layout_3D),  pointer               :: layout_y
+     type(layout_3D),  pointer               :: layout_z
      sll_int32, dimension(3,3)                 :: loc_sizes
      sll_comp64, dimension(:,:,:), allocatable :: array_x
      sll_comp64, dimension(:,:,:), allocatable :: array_y
      sll_comp64, dimension(:,:,:), allocatable :: array_z
-     type(remap_plan_3D_t), pointer            :: rmp3_xy
-     type(remap_plan_3D_t), pointer            :: rmp3_yz
-     type(remap_plan_3D_t), pointer            :: rmp3_zy
-     type(remap_plan_3D_t), pointer            :: rmp3_yx
+     type(remap_plan_3D), pointer            :: rmp3_xy
+     type(remap_plan_3D), pointer            :: rmp3_yz
+     type(remap_plan_3D), pointer            :: rmp3_zy
+     type(remap_plan_3D), pointer            :: rmp3_yx
   end type poisson_3d_periodic_plan_par
 
 contains
@@ -62,7 +56,7 @@ contains
   function new_poisson_3d_periodic_plan_par(start_layout, nx, ny, nz, Lx, &
                                                        Ly, Lz) result(plan)
 
-    type(layout_3D_t),  pointer                  :: start_layout
+    type(layout_3D),  pointer                  :: start_layout
     sll_int32                                    :: nx, ny, nz
     ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
     sll_comp64,                    dimension(nx) :: x
@@ -104,14 +98,14 @@ contains
     plan%Lz = Lz
 
     ! For FFTs (in each direction)
-    plan%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
-    plan%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
-    plan%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan( nx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan( ny, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan( nz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE )
-    plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
-    plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan( nx, x, x, FFT_INVERSE )
+    plan%py_inv => fft_new_plan( ny, y, y, FFT_INVERSE )
+    plan%pz_inv => fft_new_plan( nz, z, z, FFT_INVERSE )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
@@ -144,10 +138,10 @@ contains
     SLL_ALLOCATE( plan%array_y(loc_sizes(2,1),loc_sizes(2,2),loc_sizes(2,3)),ierr)
     SLL_ALLOCATE( plan%array_z(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
 
-    plan%rmp3_xy => NEW_REMAPPER_PLAN_3D(plan%layout_x, plan%layout_y, plan%array_x)
-    plan%rmp3_yz => NEW_REMAPPER_PLAN_3D(plan%layout_y, plan%layout_z, plan%array_y)
-    plan%rmp3_zy => NEW_REMAPPER_PLAN_3D(plan%layout_z, plan%layout_y, plan%array_z)
-    plan%rmp3_yx => NEW_REMAPPER_PLAN_3D(plan%layout_y, plan%layout_x, plan%array_y)
+    plan%rmp3_xy => NEW_REMAP_PLAN_3D(plan%layout_x, plan%layout_y, plan%array_x)
+    plan%rmp3_yz => NEW_REMAP_PLAN_3D(plan%layout_y, plan%layout_z, plan%array_y)
+    plan%rmp3_zy => NEW_REMAP_PLAN_3D(plan%layout_z, plan%layout_y, plan%array_z)
+    plan%rmp3_yx => NEW_REMAP_PLAN_3D(plan%layout_y, plan%layout_x, plan%array_y)
 
   end function new_poisson_3d_periodic_plan_par
 
@@ -166,9 +160,9 @@ contains
     sll_real64                                   :: ind_x, ind_y, ind_z
     sll_int32                                    :: myrank
     sll_int64                                    :: colsz ! collective size
-    type(layout_3D_t), pointer                   :: layout_x
-    type(layout_3D_t), pointer                   :: layout_y
-    type(layout_3D_t), pointer                   :: layout_z
+    type(layout_3D), pointer                   :: layout_x
+    type(layout_3D), pointer                   :: layout_y
+    type(layout_3D), pointer                   :: layout_z
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
 
@@ -194,7 +188,7 @@ contains
     plan%array_x = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
-          call apply_fft_c2c_1d( plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k) )
+          call fft_apply_plan( plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k) )
        enddo
     enddo
 
@@ -205,7 +199,7 @@ contains
     call apply_remap_3D( plan%rmp3_xy, plan%array_x, plan%array_y ) 
     do k=1,nz_loc
        do i=1,nx_loc
-          call apply_fft_c2c_1d( plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k) )
+          call fft_apply_plan( plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k) )
        enddo
     enddo
 
@@ -216,7 +210,7 @@ contains
     call apply_remap_3D( plan%rmp3_yz, plan%array_y, plan%array_z ) 
     do j=1,ny_loc
        do i=1,nx_loc
-          call apply_fft_c2c_1d( plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:) )
+          call fft_apply_plan( plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:) )
        enddo
     enddo
     plan%array_z = plan%array_z/(nx*ny*nz)
@@ -263,7 +257,7 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny_loc
        do i=1,nx_loc
-          call apply_fft_c2c_1d(plan%pz_inv,plan%array_z(i,j,:),plan%array_z(i,j,:))
+          call fft_apply_plan(plan%pz_inv,plan%array_z(i,j,:),plan%array_z(i,j,:))
        enddo
     enddo
 
@@ -274,7 +268,7 @@ contains
     call apply_remap_3D( plan%rmp3_zy, plan%array_z, plan%array_y )
     do k=1,nz_loc
        do i=1,nx_loc
-          call apply_fft_c2c_1d( plan%py_inv, plan%array_y(i,:,k), plan%array_y(i,:,k) )
+          call fft_apply_plan( plan%py_inv, plan%array_y(i,:,k), plan%array_y(i,:,k) )
        enddo
     enddo
 
@@ -285,7 +279,7 @@ contains
     call apply_remap_3D( plan%rmp3_yx, plan%array_y, plan%array_x ) 
     do k=1,nz_loc
        do j=1,ny_loc
-          call apply_fft_c2c_1d( plan%px_inv, plan%array_x(:,j,k), plan%array_x(:,j,k) )
+          call fft_apply_plan( plan%px_inv, plan%array_x(:,j,k), plan%array_x(:,j,k) )
        enddo
     enddo
 
@@ -303,13 +297,13 @@ contains
     ! for instance
     SLL_ASSERT( associated(plan) )
 
-    call delete_fft_plan1d(plan%px)
-    call delete_fft_plan1d(plan%py)
-    call delete_fft_plan1d(plan%pz)
+    call fft_delete_plan(plan%px)
+    call fft_delete_plan(plan%py)
+    call fft_delete_plan(plan%pz)
 
-    call delete_fft_plan1d(plan%px_inv)
-    call delete_fft_plan1d(plan%py_inv)
-    call delete_fft_plan1d(plan%pz_inv)
+    call fft_delete_plan(plan%px_inv)
+    call fft_delete_plan(plan%py_inv)
+    call fft_delete_plan(plan%pz_inv)
 
     call delete_layout_3D( plan%layout_x )
     call delete_layout_3D( plan%layout_y )
@@ -323,40 +317,10 @@ contains
 
   end subroutine delete_poisson_3d_periodic_plan_par
 
-
-  subroutine compute_local_sizes( layout, loc_sz_i, loc_sz_j, loc_sz_k )
-    type(layout_3D_t), pointer :: layout
-    sll_int32, intent(out) :: loc_sz_i
-    sll_int32, intent(out) :: loc_sz_j
-    sll_int32, intent(out) :: loc_sz_k
-    sll_int32 :: i_min
-    sll_int32 :: i_max
-    sll_int32 :: j_min
-    sll_int32 :: j_max
-    sll_int32 :: k_min
-    sll_int32 :: k_max
-    sll_int32 :: my_rank
-    if( .not. associated(layout) ) then
-       print *, 'not-associated layout passed to new_distributed_mesh_3D'
-       print *, 'Exiting...'
-       STOP
-    end if
-    my_rank = sll_get_collective_rank(get_layout_3D_collective(layout))
-    i_min = get_layout_3D_i_min( layout, my_rank )
-    i_max = get_layout_3D_i_max( layout, my_rank )
-    j_min = get_layout_3D_j_min( layout, my_rank )
-    j_max = get_layout_3D_j_max( layout, my_rank )
-    k_min = get_layout_3D_k_min( layout, my_rank )
-    k_max = get_layout_3D_k_max( layout, my_rank )
-    loc_sz_i = i_max - i_min + 1
-    loc_sz_j = j_max - j_min + 1
-    loc_sz_k = k_max - k_min + 1
-  end subroutine compute_local_sizes
-
   subroutine verify_argument_sizes_par(layout, rho, phi)
 
 
-    type(layout_3D_t), pointer   :: layout
+    type(layout_3D), pointer   :: layout
     sll_real64, dimension(:,:,:) :: rho
     sll_real64, dimension(:,:,:) :: phi
     sll_int32,  dimension(3)     :: n ! nx_loc, ny_loc, nz_loc

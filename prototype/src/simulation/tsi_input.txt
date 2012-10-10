@@ -1,0 +1,20 @@
+&geom
+  Ncx = 128 
+  Ncv = 128
+  nbox = 1
+  xmin = 0.0
+  vmin = -10.0
+  vmax = 10.0
+/
+&time_iterations
+  dt = 0.1
+  nbiter = 500
+  freqdiag = 10	
+/
+&tsi
+  kmode = 0.2
+  eps = 0.001
+  v0 = 2.4   
+  is_delta_f = 1	
+/
+
