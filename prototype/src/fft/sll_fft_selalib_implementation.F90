@@ -1099,7 +1099,10 @@ contains
     integer, intent(in)                                    :: num_complex
     sll_real64, dimension(0:2*num_complex-1), intent(inout):: samples
     ! It is more convenient when the twiddles are 0-indexed
-    sll_real64, dimension(0:num_complex-1), intent(in)     :: twiddles 
+    ! Declaring the size of the twiddles as in the following line, gives
+    ! a runtime error as the array is accessed out of bounds.
+    !    sll_real64, dimension(0:num_complex-1), intent(in)     :: twiddles 
+    sll_real64, dimension(0:), intent(in)     :: twiddles 
     integer, intent(in)                                    :: twiddle_index
     integer, intent(in)                                    :: sign
     ! half represents half of the complex problem, not half of the array
