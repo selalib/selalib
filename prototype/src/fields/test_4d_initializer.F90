@@ -95,7 +95,7 @@ contains
     new_cartesian_4d_mesh%num_cells3 = num_cells3
     new_cartesian_4d_mesh%num_cells4 = num_cells4
     new_cartesian_4d_mesh%x1_min     = x1_min
-    new_cartesian_4d_mesh%x1_max     = x1_min
+    new_cartesian_4d_mesh%x1_max     = x1_max
     new_cartesian_4d_mesh%x2_min     = x2_min
     new_cartesian_4d_mesh%x2_max     = x2_max
     new_cartesian_4d_mesh%x3_min     = x3_min
