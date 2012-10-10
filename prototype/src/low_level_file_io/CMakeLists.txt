@@ -16,11 +16,13 @@ ADD_EXECUTABLE(test_io unit_test.F90)
 
 TARGET_LINK_LIBRARIES(sll_low_level_file_io ${HDF5_LIBRARIES} )
 
+MESSAGE(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}" )
 TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
                               sll_constants
                               sll_memory
                               sll_assertion
-                              sll_working_precision)
+                              sll_working_precision
+                              ${HDF5_LIBRARIES} )
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
