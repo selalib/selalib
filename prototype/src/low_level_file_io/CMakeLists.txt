@@ -10,19 +10,17 @@ SET(IO_SRC sll_ascii_io.F90
 
 ADD_LIBRARY(sll_low_level_file_io STATIC ${IO_SRC})
 
-ADD_DEPENDENCIES(sll_low_level_file_io sll_assertion sll_working_precision)
+ADD_DEPENDENCIES(sll_low_level_file_io sll_assertion sll_working_precision sll_utilities)
 
 ADD_EXECUTABLE(test_io unit_test.F90)
 
-TARGET_LINK_LIBRARIES(sll_low_level_file_io ${HDF5_LIBRARIES} )
+TARGET_LINK_LIBRARIES(sll_low_level_file_io ${HDF5_LIBRARIES})
 
-MESSAGE(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}" )
 TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
                               sll_constants
                               sll_memory
                               sll_assertion
-                              sll_working_precision
-                              ${HDF5_LIBRARIES} )
+                              sll_working_precision)
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 

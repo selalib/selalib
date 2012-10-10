@@ -3,6 +3,8 @@ program VM2D
 !  programme de simulation numerique d'un plasma electromagnetique 2D
 !  modelise par les equations de Vlasov-Maxwell
 !-------------------------------------------------------------------
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 use used_precision  
 use geometry_module
 use maxwell2dfdtd_module
@@ -14,6 +16,8 @@ use splinepx_class
 use splinepy_class
 use vlasov1d_module
 use vm2dinit
+
+use sll_xdmf
 
 implicit none
 
@@ -45,6 +49,15 @@ character(2) :: ichar
 
 integer  :: jstartx, jendx, jstartv, jendv
 real(wp) :: nrj, omega, nd, md
+character(10) :: file_name = "test2d.xmf"
+character(6)  :: mesh_name = "grid2d"
+integer       :: file_id, error
+
+sll_real64, allocatable, dimension(:,:) :: x1
+sll_real64, allocatable, dimension(:,:) :: x2
+sll_real64, allocatable, dimension(:,:) :: df
+
+
 
 ! initialisation global
 
@@ -92,7 +105,24 @@ allocate(div(geomx%nx,geomx%ny))
 allocate(Jx1(geomx%nx,geomx%ny),Jx2(geomx%nx,geomx%ny))
 allocate(Jy1(geomx%nx,geomx%ny),Jy2(geomx%nx,geomx%ny))
 
+SLL_ALLOCATE(x1(geomx%nx,geomx%ny),error)
+SLL_ALLOCATE(x2(geomx%nx,geomx%ny),error)
+SLL_ALLOCATE(df(geomx%nx,geomx%ny),error)
 
+do j = 1, geomx%ny
+   do i = 1, geomx%ny
+      x1(i,j) = geomx%xgrid(i)
+      x2(i,j) = geomx%ygrid(j)
+      df(i,j) = sum(f(i,j,:,:))
+   end do
+end do 
+
+
+call sll_xdmf_open(file_name,mesh_name,geomx%nx,geomx%ny,file_id,error)
+call sll_xdmf_write_array(mesh_name,x1,'x',error)
+call sll_xdmf_write_array(mesh_name,x2,'y',error)
+call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
+call sll_xdmf_close(file_id,error)
 
 do iter=1,nbiter	!Loop over time
 
