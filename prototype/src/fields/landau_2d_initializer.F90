@@ -25,7 +25,7 @@ contains
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
     sll_real64, intent(in), optional     :: kx_val
-    sll_int32, intent(in), optional        :: is_delta_f
+    sll_int32, intent(in), optional      :: is_delta_f
 
     init_obj%data_position = data_position
     if( present(eps_val) ) then
@@ -41,7 +41,7 @@ contains
     if( present(is_delta_f) ) then
        init_obj%is_delta_f = is_delta_f
     else
-       init_obj%is_delta_f = 1 ! just some default value
+       init_obj%is_delta_f = 1 !  default value is false
     end if
     init_obj%mesh => mesh
     ! kx remains uninitialized because we need mesh information
