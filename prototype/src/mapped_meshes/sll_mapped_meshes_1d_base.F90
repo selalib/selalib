@@ -18,8 +18,10 @@ use sll_io
    contains
      procedure(geometry_function_1d), deferred, pass       :: x1
      procedure(geometry_function_nodes_1d), deferred, pass :: x1_at_node
+     procedure(geometry_function_nodes_1d), deferred, pass :: x1_at_cell
      procedure(geometry_function_1d), deferred, pass       :: jacobian
      procedure(geometry_function_nodes_1d), deferred, pass :: jacobian_at_node
+     procedure(geometry_function_nodes_1d), deferred, pass :: jacobian_at_cell
      procedure, pass :: write_to_file => write_to_file_1d
   end type sll_mapped_mesh_1d_base
   
@@ -95,4 +97,4 @@ contains
     SLL_DEALLOCATE_ARRAY(x1_array,error)
   end subroutine
 
- end module sll_module_mapped_meshes_1d_base
+end module sll_module_mapped_meshes_1d_base

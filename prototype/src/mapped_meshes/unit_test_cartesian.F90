@@ -6,6 +6,10 @@ program unit_test
 
 #define NPTS1 30
 #define NPTS2 60 
+#define X1MIN (-2.0_f64)
+#define X1MAX 4.0_f64
+#define X2MIN 1.5_f64
+#define X2MAX 14.0_f64
 
   type(sll_mapped_mesh_2d_cartesian)    :: map_a    ! analytic map
   sll_int32  :: i, j
@@ -24,12 +28,18 @@ program unit_test
 
   call map_a%initialize( &
        "map_cartesian", &
+       X1MIN, &
+       X1MAX, &
        NPTS1, &
+       X2MIN, &
+       X2MAX, &
        NPTS2 )
 
   print *, 'initialized analytic map'
 
-  print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', map_a%jacobian(0.5_f64,0.5_f64)
+  print*, 'jacobian_matrix', map_a%jacobian_matrix(0.0_f64,0.0_f64)
+
+  print *, 'jacobian_2d = ', map_a%jacobian(0.5_f64,0.5_f64)
 
   acc  = 0.0_f64
   acc1 = 0.0_f64
