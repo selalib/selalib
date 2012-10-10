@@ -1,14 +1,17 @@
 PROJECT(slv2d)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+
 
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-SET(SILO_ENABLED          ON CACHE BOOL  "Use SILO format for data output ")
-SET(HDF5_ENABLED          ON CACHE BOOL  "Use HDF5 format for data output ")
-SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
-SET(FFTPACK_ENABLED       ON CACHE BOOL  "Use dfftpack library ")
-SET(SILO_ENABLED          ON CACHE BOOL  "Use silo library from LLNL ")
+SET(MPI_ENABLED           ON  CACHE BOOL  "Use parallel version of slv2d   ")
+SET(HDF5_ENABLED          ON  CACHE BOOL  "Use HDF5 format for data output ")
+SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL  "Use Parallel HDF5               ")
+SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
+SET(SILO_ENABLED          OFF CACHE BOOL  "Use SILO Library from LLNL      ")
 
 IF(HDF5_ENABLED)
    IF( DEFINED ENV{HDF5_ROOT} )
@@ -24,9 +27,16 @@ ENDIF(HDF5_ENABLED)
 FIND_PACKAGE(LAPACK  REQUIRED)
 FIND_PACKAGE(ZLIB    REQUIRED)
 FIND_PACKAGE(FFTPACK REQUIRED)
-FIND_PACKAGE(SILO    REQUIRED)
-INCLUDE_DIRECTORIES(${SILO_INCLUDE_DIRS})
-FIND_PACKAGE(MPI     QUIET)
+
+IF(SILO_ENABLED) 
+   FIND_PACKAGE(SILO  REQUIRED)
+   IF(SILO_FOUND)
+      ADD_DEFINITIONS(-D_SILO)
+      INCLUDE_DIRECTORIES(${SILO_INCLUDE_DIRS})
+   ENDIF()
+ENDIF()
+
+FIND_PACKAGE(MPI QUIET)
 
 IF(MPI_FOUND)
    MESSAGE(STATUS "MPI FOUND")
@@ -36,8 +46,22 @@ ELSE(MPI_FOUND)
    MESSAGE(STATUS "MPI NOT FOUND, BUILD SEQUENTIAL VERSION")
 ENDIF(MPI_FOUND)
 
+MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
+MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
+SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
+MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
-SET(SLV2D_SRC diagnostiquesm.F90
+INCLUDE_DIRECTORIES(${SELALIB_DIR}/precision)
+INCLUDE_DIRECTORIES(${SELALIB_DIR}/assert)
+INCLUDE_DIRECTORIES(${SELALIB_DIR}/utilities)
+
+ADD_SUBDIRECTORY(${SELALIB_DIR}/precision ${PROJECT_BINARY_DIR}/precision)
+ADD_SUBDIRECTORY(${SELALIB_DIR}/assert ${PROJECT_BINARY_DIR}/assert)
+ADD_SUBDIRECTORY(${SELALIB_DIR}/utilities ${PROJECT_BINARY_DIR}/utilities)
+ADD_SUBDIRECTORY(${SELALIB_DIR}/low_level_file_io ${PROJECT_BINARY_DIR}/low_level_file_io)
+
+SET(SLV2D_SRC silo_module.F90
+              diagnostiquesm.F90
               diagnostiquesp.F90
               fft_module.F90
               geometry.F90
@@ -86,23 +110,3 @@ ENDIF()
 SET_TESTS_PROPERTIES(test_vp2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vm2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-# if you are building in-source, this is the same as CMAKE_SOURCE_DIR, otherwise 
-# this is the top level directory of your build tree 
-MESSAGE( STATUS "CMAKE_BINARY_DIR:         " ${CMAKE_BINARY_DIR} )
-
-# if you are building in-source, this is the same as CMAKE_CURRENT_SOURCE_DIR, otherwise this 
-# is the directory where the compiled or generated files from the current CMakeLists.txt will go to 
-MESSAGE( STATUS "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR} )
-
-# this is the directory, from which cmake was started, i.e. the top level source directory 
-MESSAGE( STATUS "CMAKE_SOURCE_DIR:         " ${CMAKE_SOURCE_DIR} )
-
-# this is the directory where the currently processed CMakeLists.txt is located in 
-MESSAGE( STATUS "CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR} )
-
-# contains the full path to the top level directory of your build tree 
-MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
-
-# contains the full path to the root of your project source directory,
-# i.e. to the nearest directory where CMakeLists.txt contains the PROJECT() command 
-MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
