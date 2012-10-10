@@ -419,6 +419,9 @@ contains
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
+       call compute_local_sizes_4d( sim%sequential_x3x4, &
+            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do l=1,sim%mesh4d%num_cells4
