@@ -130,7 +130,8 @@ contains
     sll_int32 :: nr, ntheta
 
     sll_real64 :: r
-    sll_int32::i,ind_k
+    sll_int32::i,k,ind_k
+    sll_real64:: kval
 
     nr=plan%nr
     ntheta=plan%ntheta
@@ -144,31 +145,53 @@ contains
     end do
 
    ! poisson solver
-    do ind_k=0,ntheta/2
+    do k=0,ntheta-1!ntheta/2
+       
+       ind_k=k
        !do i=1,nr+1
+       if( ind_k .gt. ntheta/2 ) then
+                ind_k = ind_k - ntheta
+       end if
+       kval=real(ind_k,f64)
+       !kval=1.5
+
        do i=2,nr
           r=rmin+real(i-1,f64)*dr
           plan%a(3*(i-1))=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-          plan%a(3*(i-1)-1)=2.0_f64/dr**2+(real(ind_k,f64)/r)**2
+          plan%a(3*(i-1)-1)=2.0_f64/dr**2+(kval/r)**2
           plan%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+
+
+!          plan%a(3*(i-1))=-plan%a(3*(i-1))
+!          plan%a(3*(i-1)-1)=-plan%a(3*(i-1)-1)
+!          plan%a(3*(i-1)-2)=-plan%a(3*(i-1)-2)
+
 !!$          plan%a(3*i)=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
 !!$          plan%a(3*i-1)=2.0_f64/dr**2+(real(ind_k,f64)/r)**2
 !!$          plan%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-          plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),ind_k)
+          plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
        enddo
+       !print *,k,sum(abs(plan%fk(1:nr+1)))
        plan%phik=0.0_f64
-       plan%a(1)=0.0_f64
-       plan%a(3*(nr-1))=0.0_f64
+       !plan%a(1)=0.0_f64
+       !plan%a(3*(nr-1))=0.0_f64
        
 
        !dirichlet aux deux bords
+        !Neuman at rmin for mode 0
+       if(k==0)then
+         plan%a(2)=plan%a(2)+plan%a(1)
+         plan%a(3*(nr-1))=0.0_f64
+       endif
        
-
+       if(k/=0)then
        select case(plan%bc)
           case(6)
+             plan%a(1)=0.0_f64
              !Neumann in rmax
              plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
           case(9)
+             plan%a(3*(nr-1))=0.0_f64
              !Neuman in rmin
              plan%a(2)=plan%a(2)+plan%a(1)
           case(10)
@@ -176,7 +199,8 @@ contains
              plan%a(2)=plan%a(2)+plan%a(1)
              plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
           end select
-
+       endif
+         
        call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
        call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
 
@@ -203,9 +227,17 @@ contains
              plan%phik(nr+1)=0.0_f64
           end select
 
+        !Neuman at rmin for mode 0
+       if(k==0)then
+         plan%phik(1)=plan%phik(2)
+       endif
+
+
        do i=1,nr+1
-          call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),ind_k)
+          call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
        end do
+       !print *,k,'s',sum(abs(plan%phik(1:nr+1)))
+
     end do
 
     ! FFT INVERSE
