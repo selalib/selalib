@@ -26,7 +26,8 @@ program misc_utils_tester
   print *, 'The size in int32 of an sll_int64 variable is: ',INT32_SIZEOF(in64)
   print *, 'The size in int32 of an sll_int32 variable is: ',INT32_SIZEOF(in32)
 
-  print *, 'Counting the amount of numbers that are a power of two between 1 and 2^31-1... (should be 31, powers 0 through 30, inclusive)'
+  print *, 'Counting the amount of numbers that are a power of two between 1 '
+  print *, 'and 2^31-1... (should be 31, powers 0 through 30, inclusive)'
   acc = 0
   do i=1,in64
      if( is_power_of_two(i) ) then

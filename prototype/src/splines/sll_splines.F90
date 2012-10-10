@@ -339,11 +339,13 @@ contains  ! ****************************************************************
     SLL_ASSERT( size(d) .ge. num_pts )
     SLL_ASSERT( size(coeffs) .ge. num_pts )
     SLL_ASSERT( num_pts .gt. NUM_TERMS)
+
     np     =  num_pts
     ! Compute d(1):
     d1 =  f(1)
     coeff_tmp = 1.0_f64
     do i = 0, NUM_TERMS-1  ! if NUM_TERMS == 0, only f(nc) is considered.
+!    do i = 1, NUM_TERMS 
        coeff_tmp = coeff_tmp*(-b_a)
        d1 = d1 + coeff_tmp*f(np-1-i)
     end do
@@ -359,15 +361,22 @@ contains  ! ****************************************************************
        coeff_tmp = coeff_tmp*(-b_a)
        d1 = d1 + coeff_tmp*d(i)
     end do
-    coeffs(np-1) = d1*r_a
+!    coeffs(np-1) = d1*r_a
+    coeffs(np) = d1*r_a
     ! rest of the coefficients:
     do i = np-2, 1, -1
-       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+!       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+       coeffs(i+1) = r_a*(d(i) - b*coeffs(i+2))
     end do
-    coeffs(0)    = coeffs(np-1)
-    coeffs(np)   = coeffs(1)
-    coeffs(np+1) = coeffs(2)
+!!$    coeffs(0)    = coeffs(np-1)
+!!$    coeffs(np)   = coeffs(1)
+!!$    coeffs(np+1) = coeffs(2)
+!!$    coeffs(np+2) = coeffs(3)
+    coeffs(1)    = coeffs(np)
+    coeffs(np+1)   = coeffs(2)
     coeffs(np+2) = coeffs(3)
+    coeffs(np+3) = coeffs(4)
+
   end subroutine compute_spline_1D_periodic_aux
 
   subroutine compute_spline_1D_hermite_aux( &
@@ -439,13 +448,18 @@ contains  ! ****************************************************************
     end do
     d(np) = ralpha*(0.5_f64*fnp - b*d(np-1))
     ! Compute the coefficients. Start with first term
-    coeffs(np) = ralpha*d(np)
+!    coeffs(np) = ralpha*d(np)
+    coeffs(np+1) = ralpha*d(np)
     do i = np-1, 1, -1
-       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+!       coeffs(i) = r_a*(d(i) - b*coeffs(i+1))
+       coeffs(i+1) = r_a*(d(i) - b*coeffs(i+2))
     end do
-    coeffs(0)    = coeffs(2)    - 2.0 * delta * slope_l
-    coeffs(np+1) = coeffs(np-1) + 2.0 * delta * slope_r
-    coeffs(np+2) = 0.0 !coeffs(np-2)  ! not used
+!!$    coeffs(0)    = coeffs(2)    - 2.0 * delta * slope_l
+!!$    coeffs(np+1) = coeffs(np-1) + 2.0 * delta * slope_r
+!!$    coeffs(np+2) = 0.0 !coeffs(np-2)  ! not used
+    coeffs(1)    = coeffs(3)  - 2.0 * delta * slope_l
+    coeffs(np+2) = coeffs(np) + 2.0 * delta * slope_r
+    coeffs(np+3) = 0.0 !coeffs(np-2)  ! not used
   end subroutine compute_spline_1D_hermite_aux
 
 
@@ -473,7 +487,8 @@ contains  ! ****************************************************************
     fp     => f
     np     =  spline%n_points
     d      => spline%d
-    coeffs => spline%coeffs
+    coeffs => spline%coeffs(0:np+2)
+    ! Remember that now coeffs(1) refers to spline%coeffs(0)
     call compute_spline_1D_periodic_aux( fp, np, d, coeffs )
   end subroutine compute_spline_1D_periodic
 
@@ -507,7 +522,7 @@ contains  ! ****************************************************************
     fp      => f
     np      =  spline%n_points
     d       => spline%d
-    coeffs  => spline%coeffs
+    coeffs  => spline%coeffs(0:)
     delta   = spline%delta
     r_delta = 1.0_f64/delta
 
@@ -628,10 +643,14 @@ contains  ! ****************************************************************
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     cdx       = 1.0_f64 - dx
-    cim1      = coeffs(cell-1)
-    ci        = coeffs(cell)
-    cip1      = coeffs(cell+1)
-    cip2      = coeffs(cell+2)
+!!$    cim1      = coeffs(cell-1)
+!!$    ci        = coeffs(cell)
+!!$    cip1      = coeffs(cell+1)
+!!$    cip2      = coeffs(cell+2)
+    cim1      = coeffs(cell)
+    ci        = coeffs(cell+1)
+    cip1      = coeffs(cell+2)
+    cip2      = coeffs(cell+3)
     !    print *, 'intepolate_value_aux(): coefficients:'
     !    print *, cim1, ci, cip1, cip2, cdx, dx
     t1        = 3.0_f64*ci
@@ -668,9 +687,8 @@ contains  ! ****************************************************************
 #endif
     xmin = spline%xmin
     rh   = spline%rdelta
-    coeffs => spline%coeffs
+    coeffs => spline%coeffs(0:spline%n_points+2)
     interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
-
   end function interpolate_value
 
 !  !> Just a copy of the function interpolate_value but with a different name.
@@ -804,6 +822,8 @@ contains  ! ****************************************************************
   ! interpolate_derivative_aux() is a private function aimed at abstracting
   ! away the capability of computing the derivative at a point, given the
   ! array of cubic spline coefficients.
+
+  ! seems that I need to change this interface to include the number of points
   function interpolate_derivative_aux( x, xmin, rh, coeffs )
     sll_real64                        :: interpolate_derivative_aux
     intrinsic                         :: int, real
@@ -827,10 +847,14 @@ contains  ! ****************************************************************
     cell      = int(t0) + 1
     dx        = t0 - real(cell-1)
     ! write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
-    cim1      = coeffs(cell-1)
-    ci        = coeffs(cell)
-    cip1      = coeffs(cell+1)
-    cip2      = coeffs(cell+2)
+!!$    cim1      = coeffs(cell-1)
+!!$    ci        = coeffs(cell)
+!!$    cip1      = coeffs(cell+1)
+!!$    cip2      = coeffs(cell+2)
+    cim1      = coeffs(cell)
+    ci        = coeffs(cell+1)
+    cip1      = coeffs(cell+2)
+    cip2      = coeffs(cell+3)
     t1 = 2.0_f64*(cim1 - 2.0_f64*ci + cip1)
     t2 = -cim1 + 3.0_f64*(ci - cip1) + cip2
     t3 =  cip1 - cim1
@@ -842,6 +866,7 @@ contains  ! ****************************************************************
     sll_real64                        :: interpolate_derivative
     intrinsic                         :: associated
     sll_real64, intent(in)            :: x
+    sll_real64, dimension(:), pointer :: coeffs
 #ifdef STDF95
     type(sll_spline_1D)               :: spline
 #else
@@ -855,11 +880,12 @@ contains  ! ****************************************************************
 #else
     SLL_ASSERT( associated(spline) )
 #endif
+    coeffs => spline%coeffs(0:spline%n_points+2)
     interpolate_derivative = interpolate_derivative_aux( &
          x, &
          spline%xmin, &
          spline%rdelta, &
-         spline%coeffs)
+         coeffs)
   end function interpolate_derivative
 
   subroutine interpolate_array_derivatives( &
@@ -873,15 +899,17 @@ contains  ! ****************************************************************
     sll_int32, intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(out) :: array_out
     type(sll_spline_1d), pointer          :: spline
+    sll_real64, dimension(:), pointer     :: coeffs
     sll_int32 :: i
 
     SLL_ASSERT( num_pts .le. size(array_in) )
     SLL_ASSERT( associated(spline) )
 
+    coeffs => spline%coeffs(0:spline%n_points+2)
     do i=1,num_pts
        SLL_ASSERT((array_in(i).ge.spline%xmin).and.(array_in(i).le.spline%xmax))
        array_out(i) = interpolate_derivative_aux( &
-            array_in(i), spline%xmin, spline%rdelta, spline%coeffs )
+            array_in(i), spline%xmin, spline%rdelta, coeffs )
     end do
   end subroutine interpolate_array_derivatives
 
@@ -897,17 +925,19 @@ contains  ! ****************************************************************
     sll_int32, intent(in)              :: num_pts
     sll_real64, dimension(:), pointer  :: ptr_out
     type(sll_spline_1d), pointer       :: spline
+    sll_real64, dimension(:), pointer  :: coeffs
     sll_int32 :: i
 
     SLL_ASSERT( num_pts .le. size(ptr_in) )
     SLL_ASSERT( associated(spline) )
     SLL_ASSERT( associated(ptr_in) )
     SLL_ASSERT( associated(ptr_out))
+    coeffs => spline%coeffs(0:spline%n_points+2)
 
     do i=1,num_pts
        SLL_ASSERT((ptr_in(i).ge.spline%xmin) .and. (ptr_in(i).le.spline%xmax))
        ptr_out(i) = interpolate_derivative_aux( &
-            ptr_in(i), spline%xmin, spline%rdelta, spline%coeffs )
+            ptr_in(i), spline%xmin, spline%rdelta, coeffs )
     end do
   end subroutine interpolate_pointer_derivatives
 
@@ -1268,13 +1298,7 @@ contains  ! ****************************************************************
     ! column-major ordering, this uses long strides in memory.
     do i=1,npx1 
        datap  => data(i,1:npx2)
-       ! Intentionally, we make coeffs point to the index 1 of the coefficients
-       ! array. coeffs(0) is still a valid call, which is what 
-       ! compute_spline_1D_periodic_aux() does. This is an ugly trick and
-       ! this demonstrates that the _aux() function is broken. (We need 
-       ! knowledge of its internals to use it properly). This should be 
-       ! fixed.
-       coeffs => spline%coeffs(i,1:npx2+2)
+       coeffs => spline%coeffs(i,0:npx2+2)
        call compute_spline_1D_periodic_aux( datap, npx2, spline%d2, coeffs )
     end do
     ! build splines along the x1 direction. Note: due to Fortran's 
@@ -1286,7 +1310,7 @@ contains  ! ****************************************************************
        datap  => spline%coeffs(1:npx1,j)
        ! same trick regarding the starting point of this pointer. This is
        ! not good.
-       coeffs => spline%coeffs(1:npx1+2,j)
+       coeffs => spline%coeffs(0:npx1+2,j)
        call compute_spline_1D_periodic_aux( datap, npx1, d1, coeffs )
     end do
   end subroutine compute_spline_2D_prdc_prdc
@@ -1300,6 +1324,8 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer    :: d1
     sll_real64, dimension(:), pointer    :: d2
     sll_real64, dimension(:), pointer    :: datap ! 1D data slice pointer
+    sll_real64, dimension(:), pointer    :: coeffs_ptr1
+    sll_real64, dimension(:), pointer    :: coeffs_ptr2
     sll_real64                           :: min_slope ! slopes at endpoints
     sll_real64                           :: max_slope
     sll_int32                            :: i
@@ -1341,7 +1367,7 @@ contains  ! ****************************************************************
        ! this demonstrates that the _aux() function is broken. (We need 
        ! knowledge of its internals to use it properly). This should be 
        ! fixed.
-       coeffs    => spline%coeffs(i,1:npx2+2)
+       coeffs    => spline%coeffs(i,0:npx2+2)
        call compute_spline_1D_periodic_aux( datap, npx2, d2, coeffs )
     end do
     ! build splines along the x1 direction (the Hermite direction). 
@@ -1356,7 +1382,7 @@ contains  ! ****************************************************************
     ! (:,npx2+1)
 #if 0
     datap => spline%coeffs(1:npx1,0)
-    coeffs => spline%coeffs(1:npx1+2,0)
+    coeffs => spline%coeffs(0:npx1+2,0)
     min_slope = spline%x1_min_slopes(npx2-1)
     max_slope = spline%x1_max_slopes(npx2-1)
     call compute_spline_1D_hermite_aux( &
@@ -1369,7 +1395,7 @@ contains  ! ****************************************************************
          coeffs )
 
     datap => spline%coeffs(1:npx1,npx2+1)
-    coeffs => spline%coeffs(1:npx1+2,npx2+1)
+    coeffs => spline%coeffs(0:npx1+2,npx2+1)
     min_slope = spline%x1_min_slopes(2)
     max_slope = spline%x1_max_slopes(2)
     call compute_spline_1D_hermite_aux( &
@@ -1404,23 +1430,22 @@ contains  ! ****************************************************************
     ! the caller has supplied the values or they have been computed 
     ! numerically. 
     ! Compute the spline coefficients for the available slope values
+    coeffs_ptr1 => spline%x1_min_slopes_coeffs(0:npx2+2) 
     call compute_spline_1D_periodic_aux( &
          spline%x1_min_slopes, &
          npx2, &
          spline%d2, &
-         spline%x1_min_slopes_coeffs )
-
+         coeffs_ptr1 )
+    coeffs_ptr2 => spline%x1_max_slopes_coeffs(0:npx2+2)
     call compute_spline_1D_periodic_aux( &
          spline%x1_max_slopes, &
          npx2, &
          spline%d2, &
-         spline%x1_max_slopes_coeffs )
+         coeffs_ptr2 )
 
     do j=0,npx2+2  
        datap  => spline%coeffs(1:npx1,j)
-       ! same trick regarding the starting point of this pointer. This is
-       ! not good.
-       coeffs => spline%coeffs(1:npx1+2,j)
+       coeffs => spline%coeffs(0:npx1+2,j)
        min_slope = spline%x1_min_slopes_coeffs(j)
        max_slope = spline%x1_max_slopes_coeffs(j)
        call compute_spline_1D_hermite_aux( &
@@ -1501,13 +1526,7 @@ contains  ! ****************************************************************
     ! to Fortran's column-major ordering, this uses long strides in memory.
     do i=1,npx1 
        datap  => data(i,1:npx2)
-       ! Intentionally, we make coeffs point to the index 1 of the coefficients
-       ! array. coeffs(0) is still a valid call, which is what 
-       ! compute_spline_1D_periodic_aux() does. This is an ugly trick and
-       ! this demonstrates that the _aux() function is broken. (We need 
-       ! knowledge of its internals to use it properly). This should be 
-       ! fixed.
-       coeffs => spline%coeffs(i,1:npx2+2)
+       coeffs => spline%coeffs(i,0:npx2+2)
        min_slope = spline%x2_min_slopes(i)
        max_slope = spline%x2_max_slopes(i)
        call compute_spline_1D_hermite_aux( &
@@ -1526,9 +1545,7 @@ contains  ! ****************************************************************
     ! the original data.
     do j=0,npx2+1  
        datap  => spline%coeffs(1:npx1,j)
-       ! same trick regarding the starting point of this pointer. This is
-       ! not good.
-       coeffs    => spline%coeffs(1:npx1+2,j)
+       coeffs    => spline%coeffs(0:npx1+2,j)
        call compute_spline_1D_periodic_aux( datap, npx1, spline%d1, coeffs )
     end do
   end subroutine compute_spline_2D_prdc_hrmt
@@ -1626,7 +1643,7 @@ contains  ! ****************************************************************
        ! this demonstrates that the _aux() function is broken. (We need 
        ! knowledge of its internals to use it properly). This should be 
        ! fixed.
-       coeffs => spline%coeffs(i,1:npx2+2) 
+       coeffs => spline%coeffs(i,0:npx2+2) 
        min_slope = spline%x2_min_slopes(i)
        max_slope = spline%x2_max_slopes(i)
        call compute_spline_1D_hermite_aux( &
@@ -1650,7 +1667,7 @@ contains  ! ****************************************************************
     ! OUT OF RANGE. Here we just "reflect" the values around the edge point.
     ! ... it's better than nothing.
     datap => spline%coeffs(1:npx1,0)
-    coeffs => spline%coeffs(1:npx1+2,0)
+    coeffs => spline%coeffs(0:npx1+2,0)
     min_slope = spline%x1_min_slopes(2)
     max_slope = spline%x1_max_slopes(2)
     call compute_spline_1D_hermite_aux( &
@@ -1663,7 +1680,7 @@ contains  ! ****************************************************************
          coeffs )
 
     datap => spline%coeffs(1:npx1,npx2+1)
-    coeffs => spline%coeffs(1:npx1+2,npx2+1)
+    coeffs => spline%coeffs(0:npx1+2,npx2+1)
     min_slope = spline%x1_min_slopes(npx2-1)
     max_slope = spline%x1_max_slopes(npx2-1)
     call compute_spline_1D_hermite_aux( &
@@ -1677,9 +1694,7 @@ contains  ! ****************************************************************
 
     do j=1,npx2  
        datap  => spline%coeffs(1:npx1,j)
-       ! same trick regarding the starting point of this pointer. This is
-       ! not good.
-       coeffs => spline%coeffs(1:npx1+2,j)
+       coeffs => spline%coeffs(0:npx1+2,j)
        min_slope = spline%x1_min_slopes(j)
        max_slope = spline%x1_max_slopes(j)
        call compute_spline_1D_hermite_aux( &
@@ -2095,20 +2110,10 @@ contains  ! ****************************************************************
     ! of the constant x2 lines, as this will be done by each call of 
     ! interpolate_value_aux(). This suggests that the proper refactoring
     ! of this function would have the cell and offset as arguments.
-    ! A call to:
-    !
-    !   print *, 'limits: ', lbound(spline%coeffs)
-    !
-    ! shows that the limits of spline%coeffs are 0 0, as declared. These are
-    ! not reset to 1- since this array has not been passed explicitly as
-    ! an argument to the function. Here we are relying in a very ugly way
-    ! in the fact that some functions may actually need the 0-th value, like
-    ! interpolate_value_aux(). This is a dangerous and easily confusing
-    ! technique that should be abandoned as soon as a better idea is available.
-    coeffs_line_jm1 => spline%coeffs(1:num_pts_x1+2, cell-1)
-    coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
-    coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
-    coeffs_line_jp2 => spline%coeffs(1:num_pts_x1+2, cell+2)
+    coeffs_line_jm1 => spline%coeffs(0:num_pts_x1+2, cell-1)
+    coeffs_line_j   => spline%coeffs(0:num_pts_x1+2, cell)
+    coeffs_line_jp1 => spline%coeffs(0:num_pts_x1+2, cell+1)
+    coeffs_line_jp2 => spline%coeffs(0:num_pts_x1+2, cell+2)
     cim1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jm1)
     ci        = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_j  )
     cip1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jp1)
@@ -2188,10 +2193,10 @@ contains  ! ****************************************************************
     ! of the constant x2 lines, as this will be done by each call of 
     ! interpolate_value_aux(). This suggests that the proper refactoring
     ! of this function would have the cell and offset as arguments.
-    coeffs_line_jm1 => spline%coeffs(1:num_pts_x1+2, cell-1)
-    coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
-    coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
-    coeffs_line_jp2 => spline%coeffs(1:num_pts_x1+2, cell+2)
+    coeffs_line_jm1 => spline%coeffs(0:num_pts_x1+2, cell-1)
+    coeffs_line_j   => spline%coeffs(0:num_pts_x1+2, cell)
+    coeffs_line_jp1 => spline%coeffs(0:num_pts_x1+2, cell+1)
+    coeffs_line_jp2 => spline%coeffs(0:num_pts_x1+2, cell+2)
     cim1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jm1)
     ci        = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_j  )
     cip1      = interpolate_derivative_aux(x1, x1_min, rh1, coeffs_line_jp1)
@@ -2270,10 +2275,10 @@ contains  ! ****************************************************************
     ! of the constant x2 lines, as this will be done by each call of 
     ! interpolate_value_aux(). This suggests that the proper refactoring
     ! of this function would have the cell and offset as arguments.
-    coeffs_line_jm1 => spline%coeffs(1:num_pts_x1+2, cell-1)
-    coeffs_line_j   => spline%coeffs(1:num_pts_x1+2, cell)
-    coeffs_line_jp1 => spline%coeffs(1:num_pts_x1+2, cell+1)
-    coeffs_line_jp2 => spline%coeffs(1:num_pts_x1+2, cell+2)
+    coeffs_line_jm1 => spline%coeffs(0:num_pts_x1+2, cell-1)
+    coeffs_line_j   => spline%coeffs(0:num_pts_x1+2, cell)
+    coeffs_line_jp1 => spline%coeffs(0:num_pts_x1+2, cell+1)
+    coeffs_line_jp2 => spline%coeffs(0:num_pts_x1+2, cell+2)
     cim1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jm1)
     ci        = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_j  )
     cip1      = interpolate_value_aux(x1, x1_min, rh1, coeffs_line_jp1)
