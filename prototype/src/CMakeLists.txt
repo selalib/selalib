@@ -165,7 +165,7 @@ ENDIF()
 # find out which compiler we are using.
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS " ")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
