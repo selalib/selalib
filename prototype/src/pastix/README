@@ -1,0 +1,78 @@
+To run this example you need to install PTScotch and Pastix.
+
+To build this library you need MPI implementations that supports MPI_THREAD_MULTIPLE.
+
+With OpenMPI you can check this with:
+ $  ompi_info | grep -i thread
+
+
+INSTALLATION
+============
+
+The basic download and installation procedure is to run:
+(tested only on Apple Macbook Pro with Lion)
+
+* Reconfigure OpenMPI with
+./configure --prefix=/usr/local --enable-mpi-thread-multiple
+make 
+sudo make install
+
+* Install scotch
+
+https://gforge.inria.fr/frs/download.php/28977/scotch_5.1.12b.tar.gz
+tar zxvf ~/Downloads/scotch_5.1.12b.tar.gz 
+cd scotch_5.1.12/src/
+cp Make.inc/Makefile.inc.i686_mac_darwin8 Makefile.inc
+make
+make ptscotch
+sudo make install
+
+* Install Pastix
+
+https://gforge.inria.fr/frs/download.php/30920/pastix_release_3725.tar.bz2
+tar jxvf ~/Downloads/pastix_release_3725.tar.bz2 
+cd pastix_release_3725/src
+cp config/MAC.in config.in
+
+* In config.in set
+
+###################################################################
+#                  SETTING INSTALL DIRECTORIES                    #
+###################################################################
+ROOT  = /usr/local
+INCLUDEDIR = ${ROOT}/include
+LIBDIR     = ${ROOT}/lib
+BINDIR     = ${ROOT}/bin
+
+###################################################################
+#                      GRAPH PARTITIONING                         #
+###################################################################
+
+# Uncomment the following lines for using metis ordering
+#VERSIONORD  = _metis
+#METIS_HOME  = ${HOME}/metis-4.0
+#CCPASTIX   := $(CCPASTIX) -DMETIS -I$(METIS_HOME)/Lib
+#EXTRALIB   := $(EXTRALIB) -L$(METIS_HOME) -lmetis
+
+# Scotch always needed to compile
+SCOTCH_HOME = /usr/local
+SCOTCH_INC ?= $(SCOTCH_HOME)/include
+SCOTCH_LIB ?= $(SCOTCH_HOME)/lib
+# Uncomment on of this blocks
+#scotch
+#CCPASTIX   := $(CCPASTIX) -I$(SCOTCH_INC) -DWITH_SCOTCH
+#EXTRALIB   := $(EXTRALIB) -L$(SCOTCH_LIB) -lscotch -lscotcherrexit
+#ptscotch
+CCPASTIX   := $(CCPASTIX) -I$(SCOTCH_INC) -DDISTRIBUTED -DWITH_SCOTCH
+EXTRALIB   := $(EXTRALIB) -L$(SCOTCH_LIB) -lptscotch -lscotcherrexit
+
+make
+make examples
+example/bin/fmurge 1000 3
+sudo make install
+
+* Variables in CMake
+
+PASTIX_ENABLED:BOOL=YES
+PASTIX_INCLUDE_DIRS:PATH=/usr/local/include
+PASTIX_PASTIX_LIBRARY:FILEPATH=/usr/local/lib/libpastix.a

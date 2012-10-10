@@ -68,14 +68,14 @@ contains
     plan%Lz = Lz
 
     ! For FFTs (in each direction)
-    plan%px => new_plan_c2c_1d( nx, x, x, FFT_FORWARD )
-    plan%py => new_plan_c2c_1d( ny, y, y, FFT_FORWARD )
-    plan%pz => new_plan_c2c_1d( nz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan( nx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan( ny, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan( nz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => new_plan_c2c_1d( nx, x, x, FFT_INVERSE)
-    plan%py_inv => new_plan_c2c_1d( ny, y, y, FFT_INVERSE )
-    plan%pz_inv => new_plan_c2c_1d( nz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan( nx, x, x, FFT_INVERSE )
+    plan%py_inv => fft_new_plan( ny, y, y, FFT_INVERSE )
+    plan%pz_inv => fft_new_plan( nz, z, z, FFT_INVERSE )
 
   end function new_poisson_3d_periodic_plan_seq
 
@@ -110,21 +110,21 @@ contains
     hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz
        do j=1,ny
-          call apply_fft_c2c_1d( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
+          call fft_apply_plan( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
        enddo
     enddo
 
     ! FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call apply_fft_c2c_1d( plan%py, hat_rho(i,:,k), hat_rho(i,:,k) )
+          call fft_apply_plan( plan%py, hat_rho(i,:,k), hat_rho(i,:,k) )
        enddo
     enddo
 
     ! FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call apply_fft_c2c_1d( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
+          call fft_apply_plan( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
        enddo
     enddo
 
@@ -153,7 +153,7 @@ contains
                 hat_phi(i,j,k) = 0.d0
              else
                 hat_phi(i,j,k) = hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
-                                 + (ind_y/Ly)**2+(ind_z/Lz)**2))
+                                              + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
        enddo
@@ -162,21 +162,21 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call apply_fft_c2c_1d( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
+          call fft_apply_plan( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
        enddo
     enddo
 
     ! Inverse FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call apply_fft_c2c_1d( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
+          call fft_apply_plan( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
        enddo
     enddo
 
     ! Inverse FFTs in x-direction
     do k=1,nz
        do j=1,ny
-          call apply_fft_c2c_1d( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
+          call fft_apply_plan( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
        enddo
     enddo
 
@@ -194,13 +194,13 @@ contains
     ! for instance
     SLL_ASSERT( associated(plan) )
 
-    call delete_fft_plan1d(plan%px)
-    call delete_fft_plan1d(plan%py)
-    call delete_fft_plan1d(plan%pz)
+    call fft_delete_plan(plan%px)
+    call fft_delete_plan(plan%py)
+    call fft_delete_plan(plan%pz)
 
-    call delete_fft_plan1d(plan%px_inv)
-    call delete_fft_plan1d(plan%py_inv)
-    call delete_fft_plan1d(plan%pz_inv)
+    call fft_delete_plan(plan%px_inv)
+    call fft_delete_plan(plan%py_inv)
+    call fft_delete_plan(plan%pz_inv)
 
     SLL_DEALLOCATE(plan, ierr)
 

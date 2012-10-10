@@ -8,13 +8,14 @@
 !> @namespace sll_collective
 !> @author Module Author Name and Affiliation
 !> @brief Parallelizing facility.
-!> @details Selalib applies the principle of modularization throughout all levels of
-!> abstraction of the library and aims at keeping third-party library modules
-!> as what they are: separate library modules. Therefore, in its current design,
-!> even a library like MPI has a single point of entry to Selalib. The collective
-!> communications module is such point of entry. We focus thus on the functionality
-!> offered by MPI, assign wrappers to its most desirable functionalities and write
-!> wrappers around them. These are the functions that are actually used throughout
+!> @details Selalib applies the principle of modularization throughout all 
+!> levels of abstraction of the library and aims at keeping third-party 
+!> library modules as what they are: separate library modules. Therefore, 
+!> in its current design, even a library like MPI has a single point of entry 
+!> to Selalib. The collective communications module is such point of entry. We 
+!> focus thus on the functionality offered by MPI, assign wrappers to its 
+!> most desirable functionalities and write wrappers around them. These are 
+!> the functions that are actually used throughout
 !> the program.  This allows to adjust the exposed interfaces, do additional
 !> error-checking and would even permit to completely change the means to
 !> parallelize a code, by being able to replace MPI in a single file if this
@@ -36,7 +37,8 @@
 !> \code call sll_boot_collective() \endcode
 !> and to "turn off" the parallel capabilities, one should finish by a call to:
 !> \code call sll_halt_collective() \endcode
-!> \warning This \a booting of the parallel environment needs to be done <b> ONLY ONCE </b> in a program.
+!> \warning This \a booting of the parallel environment needs to be done 
+!> <b> ONLY ONCE </b> in a program.
 !>
 !> \n
 !> \n
@@ -138,7 +140,7 @@ module sll_collective
      sll_int32                       :: color 
      sll_int32                       :: key !< Control of rank assigment
      sll_int32                       :: rank !< Rank of the process
-     sll_int32                       :: size !< Number of process
+     sll_int32                       :: size !< Communicator size
   end type sll_collective_t
 
   ! **********************************************************************
@@ -753,14 +755,15 @@ contains !************************** Operations **************************
   !!                      send to each processor
   !> @param[in] send_displs integer array (of length group size). Entry j 
   !!                        specifies the displacement (relative to send_buf)
-  !!                        from which to take the outgoing data destined for process j
+  !!                        from which to take the outgoing data destined for 
+  !!                        process j
   !> @param[out] recv_buf address of receive buffer
   !> @param[in] recv_cnts integer array equal to the group size specifying the 
   !!                      maximum number of elements that can be received from
   !!                      each processor
-  !> @param[in] recv_displs integer array (of length group size). Entry i specifies
-  !!                        the displacement (relative to recvbuf at which to place
-  !!                        the incoming data from process i
+  !> @param[in] recv_displs integer array (of length group size). Entry i 
+  !!                      specifies the displacement (relative to recvbuf 
+  !!                      at which to place the incoming data from process i
   !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoallV_real( send_buf, send_cnts, &
                                             send_displs, &
@@ -789,8 +792,8 @@ contains !************************** Operations **************************
          'sll_collective_alltoallV_real(): MPI_BARRIER()' )
   end subroutine sll_collective_alltoallV_real
 
-  !> @brief Sends integer data from all to all processes; each process may send a
-  !!         different amount of data and provide displacements for the
+  !> @brief Sends integer data from all to all processes; each process may 
+  !!         send a different amount of data and provide displacements for the
   !!         input and output data.
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_cnts integer array equal to the group size
@@ -798,19 +801,20 @@ contains !************************** Operations **************************
   !!                      send to each processor
   !> @param[in] send_displs integer array (of length group size). Entry j 
   !!                        specifies the displacement (relative to send_buf)
-  !!                        from which to take the outgoing data destined for process j
+  !!                        from which to take the outgoing data destined for 
+  !!                        process j
   !> @param[out] recv_buf address of receive buffer
   !> @param[in] recv_cnts integer array equal to the group size specifying the 
   !!                      maximum number of elements that can be received from
   !!                      each processor
-  !> @param[in] recv_displs integer array (of length group size). Entry i specifies
-  !!                        the displacement (relative to recvbuf at which to place
-  !!                        the incoming data from process i
+  !> @param[in] recv_displs integer array (of length group size). Entry i 
+  !!                      specifies the displacement (relative to recvbuf 
+  !!                      at which to place the incoming data from process i
   !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoallV_int( send_buf, send_cnts, &
-                                             send_displs, &
-                                             recv_buf, recv_cnts, &
-                                             recv_displs, col )
+                                           send_displs, &
+                                           recv_buf, recv_cnts, &
+                                           recv_displs, col )
     sll_int32, dimension(:), intent(in) :: send_buf
     sll_int32, dimension(:), intent(in) :: send_cnts
     sll_int32, dimension(:), intent(in) :: send_displs
@@ -832,9 +836,18 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
  end subroutine sll_collective_alltoallV_int
 
-
+  ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
   subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
                                              recv_buf,col )
+#ifdef STDF95
+    sll_int32, dimension(:), intent(in) :: send_buf
+    sll_int32, dimension(:), intent(in) :: send_cnts
+    sll_int32, dimension(:), intent(out) :: recv_buf
+    type(sll_collective_t), pointer     :: col
+
+    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
+    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
+#else
     sll_int32, dimension(:), intent(in) :: send_buf
     sll_int32, dimension(:), intent(in) :: send_cnts
     sll_int32, allocatable, dimension(:), intent(out) :: recv_buf
@@ -885,6 +898,7 @@ contains !************************** Operations **************************
     SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
     SLL_DEALLOCATE_ARRAY(send_displs,ierr)
     SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
+#endif
  end subroutine sll_collective_alltoallV_int_simple
 
 end module sll_collective
