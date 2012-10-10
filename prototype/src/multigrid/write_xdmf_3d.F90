@@ -82,7 +82,6 @@ close(xmf)
 call H5open_f (error)
 if (.not. mesh_writed) then
 
-   print*,'Writing mesh data...'
    do k=sz-1,ez+1
       do j=sy-1,ey+1
          do i=sx-1,ex+1
