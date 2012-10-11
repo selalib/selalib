@@ -31,7 +31,9 @@ IF(SILO_ENABLED)
    ENDIF()
 ENDIF()
 
-FIND_PACKAGE(MPI QUIET)
+IF(MPI_ENABLED)
+   FIND_PACKAGE(MPI REQUIRED Fortran)
+ENDIF()
 
 IF(MPI_FOUND)
    MESSAGE(STATUS "MPI FOUND")
@@ -50,6 +52,7 @@ MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
+INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 
 SET( SLL_COMPONENTS precision 
                     utilities 
