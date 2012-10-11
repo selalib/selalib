@@ -19,7 +19,9 @@ ENDIF()
 IF(FFTPACK_FOUND)
    ADD_DEFINITIONS(-D_FFTPACK)
 ELSE()
+   ADD_LIBRARY(sine vsint.f vsinti.f)
    ADD_DEFINITIONS(-D_SINE)
+   SET(FFTPACK_LIBRARIES sine)
 ENDIF()
 
 IF(SILO_ENABLED) 
@@ -64,7 +66,7 @@ SET( SLL_COMPONENTS precision
 FOREACH( component ${SLL_COMPONENTS} )
    MESSAGE(STATUS "${component}")
    INCLUDE_DIRECTORIES(${SELALIB_DIR}/${component})
-   ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_SOURCE_DIR}/${component})
+   ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
 ENDFOREACH()
 
 
@@ -90,9 +92,8 @@ SET(SLV2D_SRC silo_module.F90
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
-ADD_LIBRARY(sine vsint.f vsinti.f)
-
 SET(LIBS sll_low_level_file_io
+         sll_utilities
          sll_constants
          sll_memory
          sll_assertion
@@ -106,9 +107,9 @@ TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} )
 
 ENABLE_TESTING()
 
+SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.dat)
 IF(MPI_FOUND)
    SET(PROCS 4)
-   SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.dat)
    ADD_TEST(NAME test_vp2d COMMAND 
             ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
             ./vp2d
@@ -118,8 +119,8 @@ IF(MPI_FOUND)
             ./vm2d
             ${MPIEXEC_POSTFLAGS} ${ARGS})
 ELSE()
-   ADD_TEST(NAME vm2d COMMAND test_vm2d)
-   ADD_TEST(NAME vp2d COMMAND test_vp2d)
+   ADD_TEST(NAME vm2d COMMAND ./vm2d ${ARGS})
+   ADD_TEST(NAME vp2d COMMAND ./vp2d ${ARGS})
 ENDIF()
 
 SET_TESTS_PROPERTIES(test_vp2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

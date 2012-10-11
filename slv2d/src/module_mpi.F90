@@ -25,16 +25,9 @@ module module_mpi
 !  implicit none
 !
 use mpi
-#ifdef _CRAY 
-  integer, parameter :: mpi_realtype = mpi_real
-#else 
-!               si wp = sp
-!  integer, parameter :: mpi_realtype = mpi_real
-!               si wp = dp
-  integer, parameter :: mpi_realtype = mpi_double_precision
-#endif
-!
-  integer :: Nombre_Processeurs, Numero_Processeur, Root
+integer, parameter :: mpi_realtype = mpi_double_precision
+
+integer :: Nombre_Processeurs, Numero_Processeur, Root
 contains
 !
 ! initialise les variables MPI
@@ -52,7 +45,7 @@ contains
     Root = 0
 !    write(*,*) 'Nombre de processeurs : ',Nombre_Processeurs
 !    Write(*,*) 'Numero du processeurs : ',Numero_Processeur
-!
+
   end subroutine initialise_moduleMPI
 !
 ! termine le programme mpi
@@ -77,28 +70,13 @@ contains
   end subroutine erreur_mpi
 end module module_mpi
 
-
-
 MODULE Clock
+
   IMPLICIT NONE
   INTEGER :: rate
 
 CONTAINS
 
-!#ifdef PWR
-!  SUBROUTINE clck_temps(P_temps)
-!    INTEGER(8), INTENT(OUT) :: P_temps
-!    P_temps=irtc()
-!  END SUBROUTINE clck_temps
-
-!  SUBROUTINE clck_diff(P_temps1,P_temps2,P_diffTemps)
-!    INTEGER(8), INTENT(IN) :: P_temps1, P_temps2
-!    REAL(8), INTENT(OUT) :: P_diffTemps
-
-!    P_diffTemps=(P_temps2-P_temps1)/1000000000.0_8
-!  END SUBROUTINE clck_diff
-
-!#else
   SUBROUTINE clck_temps(P_temps)
     INTEGER, INTENT(OUT) :: P_temps
     call system_clock(COUNT=P_temps)
@@ -110,7 +88,6 @@ CONTAINS
     call system_clock(COUNT_RATE=rate)
     P_diffTemps=float(P_temps2-P_temps1)/rate
   END SUBROUTINE clck_diff
-!#endif
 
 END MODULE Clock
 
