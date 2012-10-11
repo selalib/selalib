@@ -40,25 +40,21 @@ MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
 MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 
 
-
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
-SET(CMAKE_MODULE_PATH ${SELALIB_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
+
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
 
-INCLUDE_DIRECTORIES(${SELALIB_DIR}/precision)
-INCLUDE_DIRECTORIES(${SELALIB_DIR}/assert)
-INCLUDE_DIRECTORIES(${SELALIB_DIR}/utilities)
-INCLUDE_DIRECTORIES(${SELALIB_DIR}/memory)
+SET( SLL_COMPONENTS 
+     precision utilities assert memory constants low_level_file_io)
 
-ADD_SUBDIRECTORY(${SELALIB_DIR}/precision ${PROJECT_BINARY_DIR}/precision)
-ADD_SUBDIRECTORY(${SELALIB_DIR}/utilities ${PROJECT_BINARY_DIR}/utilities)
-ADD_SUBDIRECTORY(${SELALIB_DIR}/assert ${PROJECT_BINARY_DIR}/assert)
-ADD_SUBDIRECTORY(${SELALIB_DIR}/memory ${PROJECT_BINARY_DIR}/memory)
-ADD_SUBDIRECTORY(${SELALIB_DIR}/constants ${PROJECT_BINARY_DIR}/constants)
-ADD_SUBDIRECTORY(${SELALIB_DIR}/low_level_file_io ${PROJECT_BINARY_DIR}/low_level_file_io)
+FOREACH( component ${SLL_COMPONENTS} )
+   MESSAGE(STATUS "${component}")
+   INCLUDE_DIRECTORIES(${SELALIB_DIR}/${component})
+   ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_SOURCE_DIR}/${component})
+ENDFOREACH()
 
 
 SET(CMAKE_Fortran_FLAGS "-ffree-line-length-none -fall-intrinsics")
