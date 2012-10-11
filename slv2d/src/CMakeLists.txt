@@ -11,10 +11,15 @@ SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
 SET(SILO_ENABLED          OFF CACHE BOOL  "Use SILO Library from LLNL      ")
 
 FIND_PACKAGE(LAPACK  REQUIRED)
-FIND_PACKAGE(ZLIB    REQUIRED)
-FIND_PACKAGE(FFTPACK REQUIRED)
+
+IF(FFTPACK_ENABLED)
+   FIND_PACKAGE(FFTPACK)
+ENDIF()
+
 IF(FFTPACK_FOUND)
    ADD_DEFINITIONS(-D_FFTPACK)
+ELSE()
+   ADD_DEFINITIONS(-D_SINE)
 ENDIF()
 
 IF(SILO_ENABLED) 
@@ -39,7 +44,6 @@ ENDIF(MPI_FOUND)
 MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
 MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 
-
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
@@ -47,8 +51,12 @@ SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2
 
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
 
-SET( SLL_COMPONENTS 
-     precision utilities assert memory constants low_level_file_io)
+SET( SLL_COMPONENTS precision 
+                    utilities 
+                    assert 
+                    memory 
+                    constants 
+                    low_level_file_io)
 
 FOREACH( component ${SLL_COMPONENTS} )
    MESSAGE(STATUS "${component}")
@@ -78,6 +86,8 @@ SET(SLV2D_SRC silo_module.F90
               vlasov2d.F90 )
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
+
+ADD_LIBRARY(sine vsint.f vsinti.f)
 
 SET(LIBS sll_low_level_file_io
          sll_constants
