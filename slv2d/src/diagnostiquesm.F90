@@ -5,7 +5,7 @@ module diagnostiquesm_module
 !    Author(s):     Pierre Navaro
 !    Creation:      08.01.2010
 !=========================================
-
+#include "selalib.h"
 use used_precision  
 use geometry_module
 use Module_MPI, my_num=>numero_processeur, num_threads=>nombre_processeurs
@@ -41,13 +41,15 @@ integer :: i,j,iv,jv
 real(wp) :: sum,sumloc
 character(2) :: icnum,icpro
 
-integer :: ifile, k
+integer :: ifile, k, file_id, error
 character(len=2), dimension(5) :: which 
 
+#ifdef _SILO
 !call write_domains(my_num,geomx,geomv,f,rho,ex,ey,bz,jx,jy,	&
 !		   numdiag,jstartx,jendx,jstartv,jendv)
 !
 !if (my_num == 0) call write_master(num_threads,numdiag)
+#endif
  
 which(1) = 'Ex'
 which(2) = 'Ey'
@@ -60,7 +62,7 @@ if (numdiag == 0) then
    if (dir_e) then
      write(*,*) "directory "//trim(outdir)//char(my_num+48)//" exists!"
    else
-     call system("mkdir -p "//trim(outdir)//char(my_num+48))
+     !call system("mkdir -p "//trim(outdir)//char(my_num+48))
    end if
 end if
 
@@ -75,20 +77,23 @@ kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
 dd  = char(kk4 + 48)
 fin = aa//bb//cc//dd
 
-open( 80, file = trim(outdir)//char(my_num+48)//"/"//fin//".dat" )
-   do i=jstartx,jendx
-      do j=1,geomx%ny
-         write(80,*) sngl(geomx%x0+(i-1)*geomx%dx), &
-                     sngl(geomx%y0+(j-1)*geomx%dy), &
-                     sngl(ex(i,j)), sngl(ey(i,j)),  &
-		     sngl(bz(i,j)),		    &
-                     sngl(jx(i,j)), sngl(jy(i,j))
-      end do
-      write(80,*) 
+call sll_new_file_id(file_id, error)
+
+open(file_id, file=trim(outdir)//char(my_num+48)//"/"//fin//".dat")
+
+do i=jstartx,jendx
+   do j=1,geomx%ny
+      write(file_id,*) sngl(geomx%x0+(i-1)*geomx%dx), &
+                       sngl(geomx%y0+(j-1)*geomx%dy), &
+                       sngl(ex(i,j)), sngl(ey(i,j)),  &
+                       sngl(bz(i,j)),		    &
+                       sngl(jx(i,j)), sngl(jy(i,j))
    end do
-close(80)
+   write(file_id,*) 
+end do
+close(file_id)
    
-if (my_num == 0) then
+if (my_num == MPI_MASTER) then
    do k = 1, 5
       ifile = 90+k
       open( ifile, file = which(k)//'.gnu', position="append" )
@@ -119,7 +124,7 @@ if (my_num == 0) then
 
 end if
 
-ifvxvy = my_num*1000+6
+ifvxvy = my_num*100+7
 if (my_num == 0) then
    open(ifvxvy, file = 'fvxvy.gnu', position="append" )
    if ( numdiag == 1 ) then

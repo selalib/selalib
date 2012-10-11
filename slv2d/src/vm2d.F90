@@ -3,8 +3,7 @@ program VM2D
 !  programme de simulation numerique d'un plasma electromagnetique 2D
 !  modelise par les equations de Vlasov-Maxwell
 !-------------------------------------------------------------------
-#include "sll_memory.h"
-#include "sll_working_precision.h"
+#include "selalib.h"
 use used_precision  
 use geometry_module
 use maxwell2dfdtd_module
@@ -17,7 +16,6 @@ use splinepy_class
 use vlasov1d_module
 use vm2dinit
 
-use sll_xdmf
 
 implicit none
 
@@ -30,45 +28,43 @@ type (splinepx)      :: splx       ! vlasov1d
 type (splinepy)      :: sply       ! vlasov1d
 
 
-real(wp), dimension(:,:,:,:), pointer :: f,f1     ! fonc de distribution
-real(wp), dimension(:,:),     pointer :: ex,ey ! champ electrique
-real(wp), dimension(:,:),     pointer :: ex1,ey1 ! champ electrique
-real(wp), dimension(:,:),     pointer :: jx,jy ! courant
-real(wp), dimension(:,:),     pointer :: bz,bz1    ! champ magnetique
-real(wp), dimension(:,:),     pointer :: rho   ! charge
-real(wp), dimension(:,:),     pointer :: Jx1,Jx2,Jy1,Jy2   ! courant partiel 
-real(wp), dimension(:,:),     pointer :: div   ! divergence E
+sll_real64, dimension(:,:,:,:), pointer :: f,f1     ! fonc de distribution
+sll_real64, dimension(:,:),     pointer :: ex,ey ! champ electrique
+sll_real64, dimension(:,:),     pointer :: ex1,ey1 ! champ electrique
+sll_real64, dimension(:,:),     pointer :: jx,jy ! courant
+sll_real64, dimension(:,:),     pointer :: bz,bz1    ! champ magnetique
+sll_real64, dimension(:,:),     pointer :: rho   ! charge
+sll_real64, dimension(:,:),     pointer :: Jx1,Jx2,Jy1,Jy2   ! courant partiel 
+sll_real64, dimension(:,:),     pointer :: div   ! divergence E
 
 ! donnees du probleme
-integer      :: nbiter         ! nombre d'iterations en temps
-real(wp)     :: dt             ! pas de temps
-integer      :: fdiag, fthdiag ! frequences des diagnostiques
-integer      :: iflag          ! indicateur d'erreur
-integer      :: iter,i,j,iv,jv ! variables de boucles       
-character(2) :: ichar   
+sll_int32      :: nbiter         ! nombre d'iterations en temps
+sll_real64     :: dt             ! pas de temps
+sll_int32      :: fdiag, fthdiag ! frequences des diagnostiques
+sll_int32      :: iflag          ! indicateur d'erreur
+sll_int32      :: iter,i,j,iv,jv ! variables de boucles       
+character(len=2) :: ichar   
 
-integer  :: jstartx, jendx, jstartv, jendv
-real(wp) :: nrj, omega, nd, md
-character(10) :: file_name = "test2d.xmf"
-character(6)  :: mesh_name = "grid2d"
-integer       :: file_id, error
+sll_int32  :: jstartx, jendx, jstartv, jendv
+sll_real64 :: nrj, omega, nd, md
+sll_int32       :: error
 
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: df
-
-
+sll_real64 :: tcpu1, tcpu2
 
 ! initialisation global
 
 call initialise_moduleMPI
-if (my_num.eq.0) then
+tcpu1 = MPI_WTIME()
+if (my_num == MPI_MASTER) then
    print*,'MPI Version of slv2d running on ',num_threads, ' processors'
 end if
 
 call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
   
-if (my_num.eq.0) then
+if (my_num == MPI_MASTER) then
    ! write some run data
    write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
    write(*,"(2(i3,1x),6(g13.3,1x))") 			&
@@ -101,9 +97,11 @@ call mpi_barrier(MPI_COMM_WORLD,iflag)
 
 call transposevx(vlas2d,f)
 
-allocate(div(geomx%nx,geomx%ny))
-allocate(Jx1(geomx%nx,geomx%ny),Jx2(geomx%nx,geomx%ny))
-allocate(Jy1(geomx%nx,geomx%ny),Jy2(geomx%nx,geomx%ny))
+SLL_ALLOCATE(div(geomx%nx,geomx%ny),error)
+SLL_ALLOCATE(Jx1(geomx%nx,geomx%ny),error)
+SLL_ALLOCATE(Jx2(geomx%nx,geomx%ny),error)
+SLL_ALLOCATE(Jy1(geomx%nx,geomx%ny),error)
+SLL_ALLOCATE(Jy2(geomx%nx,geomx%ny),error)
 
 SLL_ALLOCATE(x1(geomx%nx,geomx%ny),error)
 SLL_ALLOCATE(x2(geomx%nx,geomx%ny),error)
@@ -117,21 +115,12 @@ do j = 1, geomx%ny
    end do
 end do 
 
-
-call sll_xdmf_open(file_name,mesh_name,geomx%nx,geomx%ny,file_id,error)
-call sll_xdmf_write_array(mesh_name,x1,'x',error)
-call sll_xdmf_write_array(mesh_name,x2,'y',error)
-call sll_xdmf_write_array("test2d",df,"NodeVal",error,file_id,"Node")
-call sll_xdmf_close(file_id,error)
-
 do iter=1,nbiter	!Loop over time
 
    ! advection d'un demi-pas de temps en espace
    !call advection_x(vlas2d,f,.5*dt)
-   call advection1d_x(splx,f,0.5_wp*dt,Jx1)
-   call advection1d_y(sply,f,0.5_wp*dt,Jy1)
-
-!   print *,'fin advecx'
+   call advection1d_x(splx,f,0.5_f64*dt,Jx1)
+   call advection1d_y(sply,f,0.5_f64*dt,Jy1)
 
    !Recopie de f^(n,2) dans f1
    f1=f;ex1=ex;ey1=ey;bz1=bz
@@ -148,11 +137,10 @@ do iter=1,nbiter	!Loop over time
    ! Chercher la raison ...
    call densite_charge(vlas2d,rho)
    call densite_courant(vlas2d,jx,jy)
-!   print *,'calcul jx normal',sum(jx),sum(jy)
      
    ! calcul du champ magnetique Bz(k+1/2)
    if (iter == 1) then
-      call solve_faraday(maxw2dfdtd,ex,ey,bz,0.5_wp*dt)
+      call solve_faraday(maxw2dfdtd,ex,ey,bz,0.5_f64*dt)
    else
       call solve_faraday(maxw2dfdtd,ex,ey,bz,dt)
    end if
@@ -170,16 +158,10 @@ do iter=1,nbiter	!Loop over time
    call transposevx(vlas2d,f)
 
    ! advection d'un demi-pas de temps en espace     
-!      call advection_x(vlas2d,f,0.5_wp*dt)
-   call advection1d_x(splx,f,0.5_wp*dt,Jx2)
-   call advection1d_y(sply,f,0.5_wp*dt,Jy2)
+!      call advection_x(vlas2d,f,0.5_f64*dt)
+   call advection1d_x(splx,f,0.5_f64*dt,Jx2)
+   call advection1d_y(sply,f,0.5_f64*dt,Jy2)
 
-   !Calcul du J qui conserve la charge
-!   jx=geomx%dx*(Jx1+Jx2)/dt;jy=geomx%dy*(Jy1+Jy2)/dt
-
-!   print *,'fin prediction',sum(jx),sum(jy)
-!   print *,'j partiel',sum(Jx1),sum(Jx2),sum(Jy1),sum(Jy2)
-!stop
    f=f1;ex=ex1;ey=ey1;
 
    !################
@@ -188,7 +170,6 @@ do iter=1,nbiter	!Loop over time
    call cl_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
    !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
    call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
-!   print *,'ap ampere',sum(ex),sum(ey)
 
    ! transposition de la fonction de distribution
    call transposexv(vlas2d,f)
@@ -200,31 +181,62 @@ do iter=1,nbiter	!Loop over time
    call transposevx(vlas2d,f)
 
    ! advection d'un demi-pas de temps en espace     
-!      call advection_x(vlas2d,f,0.5_wp*dt)
-   call advection1d_x(splx,f,0.5_wp*dt,Jx1)
-   call advection1d_y(sply,f,0.5_wp*dt,Jy1)
-
-   !print *,'fin iter'
-
-   !#############
-   !Fin iteration
-   !#############
+!      call advection_x(vlas2d,f,0.5_f64*dt)
+   call advection1d_x(splx,f,0.5_f64*dt,Jx1)
+   call advection1d_y(sply,f,0.5_f64*dt,Jy1)
 
    !Diagnostic
    if (mod(iter,fdiag).eq.0) then 
+#ifdef _MPI
+#else
+      call plot_solution( f )
+#endif
       ! ecriture des resultats par le processeur 0
       call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
    endif
 
-   !write(*,*,advance='no') iter
+   write(*,*) iter
    if (mod(iter,fthdiag).eq.0) then 
       call thdiag(vlas2d,f,nrj,iter*dt)
    endif
 
 end do
+#ifdef _MPI
+tcpu2 = MPI_WTIME()
+if (my_num == MPI_MASTER) &
+   write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
+#endif
 
+print*,'PASSED'
 call termine_moduleMPI
 
-  print*,'PASSED'
+
+
+contains
+
+subroutine plot_solution( f )
+
+   sll_real64, dimension(:,:,:,:), intent(in) :: f
+   sll_int32 :: file_id
+   sll_int32, save :: iplot = 0
+   character(len=4) :: cplot
+
+   do j = 1, geomx%ny
+      do i = 1, geomx%nx
+         df(i,j) = sum(f(i,j,:,:))
+      end do
+   end do 
+
+   iplot = iplot+1
+   call int2string(iplot,cplot)
+
+   call sll_xdmf_open("f"//cplot//".xmf","mesh",geomx%nx,geomx%ny,file_id,error)
+   call sll_xdmf_write_array("mesh",x1,'x',error)
+   call sll_xdmf_write_array("mesh",x2,'y',error)
+   call sll_xdmf_write_array("fxy",df,"NodeVal",error,file_id,"Node")
+   call sll_xdmf_close(file_id,error)
+
+end subroutine plot_solution
+
 end program VM2D

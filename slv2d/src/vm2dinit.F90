@@ -1,5 +1,5 @@
 module vm2dinit
-
+#include "selalib.h"
 use geometry_module
 use vlasov2d_module
 use splinepx_class
@@ -18,34 +18,32 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 ! sert a l'initialisation globale du programme VP2D
 !-------------------------------------------------------
 type(geometry)  :: geomx, geomv  ! geometrie globale du probleme
-real(wp)     :: dt       ! pas de temps
-integer      :: nbiter   ! nombre d'iterations en temps
-integer      :: fdiag    ! frequences des diagnostiques
-integer      :: fthdiag    ! frequences des historiques en temps
-integer      :: nx, ny   ! dimensions de l'espace physique
-integer      :: nvx, nvy ! dimensions de l'espace des vitesses
-real(wp)     :: x0, y0   ! coordonnees debut du maillage espace physique
-real(wp)     :: vx0, vy0 ! coordonnees debut du maillage espace vitesses
-real(wp)     :: x1, y1   ! coordonnees fin du maillage espace physique
-real(wp)     :: vx1, vy1 ! coordonnees fin du maillage espace vitesses
-integer :: iflag,ierr  ! indicateur d'erreur
+sll_real64     :: dt       ! pas de temps
+sll_int32      :: nbiter   ! nombre d'iterations en temps
+sll_int32      :: fdiag    ! frequences des diagnostiques
+sll_int32      :: fthdiag    ! frequences des historiques en temps
+sll_int32      :: nx, ny   ! dimensions de l'espace physique
+sll_int32      :: nvx, nvy ! dimensions de l'espace des vitesses
+sll_real64     :: x0, y0   ! coordonnees debut du maillage espace physique
+sll_real64     :: vx0, vy0 ! coordonnees debut du maillage espace vitesses
+sll_real64     :: x1, y1   ! coordonnees fin du maillage espace physique
+sll_real64     :: vx1, vy1 ! coordonnees fin du maillage espace vitesses
+sll_int32 :: iflag,ierr  ! indicateur d'erreur
 ! definition of namelists
 namelist /time/ dt, nbiter
 namelist /diag/ fdiag, fthdiag! freq. of diags and time hist diags in steps
 namelist /phys_space/ x0,x1,y0,y1,nx,ny
 namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
    
-if (my_num.eq.0) then
-   ! open files
+if (my_num == MPI_MASTER) then
    call fichinit
-   ! read input data
    read(idata,NML=time)
    read(idata,NML=diag)
    read(idata,NML=phys_space)
    read(idata,NML=vel_space)
 end if
-call mpi_barrier(MPI_COMM_WORLD,ierr)
 
+call mpi_barrier(MPI_COMM_WORLD,ierr)
 call mpi_bcast(dt,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
 call mpi_bcast(nbiter,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
 call mpi_bcast(fdiag,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
@@ -63,14 +61,9 @@ call mpi_bcast(vy1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
 call mpi_bcast(nvx,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
 call mpi_bcast(nvy,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
 
-! initialisation de la geometrie de l'espace physique
-
 call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-if (iflag.ne.0) stop 'erreur dans l initialisation de geomx'
 
-! initialisation de la geometrie de l'espace des vitesses
 call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
-if (iflag.ne.0) stop 'erreur dans l initialisation de geomv'
 
 end subroutine initglobal
 
@@ -81,19 +74,19 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
 ! sert a l'initialisation en parallele du programme VP2D
 !-------------------------------------------------------
 type(geometry) :: geomx, geomv  ! geometrie globale du probleme
-integer :: jstartv,jendv,jstartx,jendx ! definition de la bande du proc
-real(wp), dimension(:,:,:,:),pointer :: f,f1
-real(wp), dimension(:,:),pointer :: rho,ex,ey,ex1,ey1,bz,bz1,jx,jy
-integer :: proc, mpierror
+sll_int32 :: jstartv,jendv,jstartx,jendx ! definition de la bande du proc
+sll_real64, dimension(:,:,:,:),pointer :: f,f1
+sll_real64, dimension(:,:),pointer :: rho,ex,ey,ex1,ey1,bz,bz1,jx,jy
+sll_int32 :: proc, mpierror
 type(vlasov2d) :: vlas2d
 type(splinepx) :: splx
 type(splinepy) :: sply
 type(maxwell2dfdtd) :: maxw2dfdtd
 type(poisson2dpp) :: poiss2dpp
 !variables locales
-integer :: ipiece_size_v, ipiece_size_x
-real(wp) :: xi,vx,vy,v2,x,y,eps,kx,ky,nrj
-integer :: i,j,iv,jv,iflag
+sll_int32 :: ipiece_size_v, ipiece_size_x
+sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky,nrj
+sll_int32 :: i,j,iv,jv,iflag
 
 ! cas sequentiel
 jstartv=1
@@ -113,42 +106,31 @@ jendv = min(jstartv - 1 + ipiece_size_v, geomv%ny)
 jstartx = my_num * ipiece_size_x + 1
 jendx = min(jstartx - 1 + ipiece_size_x, geomx%ny)
     
-if (jstartv > jendv) stop "error in vm2ddinit: negative size zone"
-if (jstartx > jendx) stop "error in vm2dinit: negative size zone"
+SLL_ASSERT(jstartv < jendv) 
+SLL_ASSERT(jstartx < jendx) 
 
 print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, &
 		           jstartv,jendv,ipiece_size_v
 
 ! allocation dynamique des tableaux
-allocate(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de f'
-allocate(f1(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de f1'
-!!$  allocate(rho(geomx%nx,jstartx:jendx),stat=iflag)
+SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
+SLL_ALLOCATE(f1(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
+!!$  SLL_ALLOCATE(rho(geomx%nx,jstartx:jendx),iflag)
 !!$  if (iflag.ne.0) stop 'erreur dans l allocation de rho'
-!!$  allocate(ex(geomx%nx,jstartx:jendx),stat=iflag)
+!!$  SLL_ALLOCATE(ex(geomx%nx,jstartx:jendx),iflag)
 !!$  if (iflag.ne.0) stop 'erreur dans l allocation de ex'
-!!$  allocate(ey(geomx%nx,jstartx:jendx),stat=iflag)
+!!$  SLL_ALLOCATE(ey(geomx%nx,jstartx:jendx),iflag)
 !!$  if (iflag.ne.0) stop 'erreur dans l allocation de ey'
 ! Poisson n'est pas parallele pour l'instant
-allocate(rho(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de rho'
-allocate(ex(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de ex'
-allocate(ey(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de ey'
-allocate(bz(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de bz'
-allocate(ex1(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de ex'
-allocate(ey1(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de ey'
-allocate(bz1(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de bz'
-allocate(jx(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de jx'
-allocate(jy(geomx%nx,geomx%ny),stat=iflag)
-if (iflag.ne.0) stop 'erreur dans l allocation de jy'
+SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(bz(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(ex1(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(ey1(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(bz1(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(jx(geomx%nx,geomx%ny),iflag)
+SLL_ALLOCATE(jy(geomx%nx,geomx%ny),iflag)
 
 ! initialisation parallele des tableaux globaux, 
 ! ce qui permet  de les distribuer sur les processeurs
