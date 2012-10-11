@@ -193,7 +193,7 @@ contains
     else
        nrj=-10**9
     endif
-    print *,'test fft',nrj,0.5_wp*log(0.08_wp*pi*pi),abs(nrj-0.5_wp*log(0.08_wp*pi*pi))
+    !print *,'test fft',nrj,0.5_wp*log(0.08_wp*pi*pi),abs(nrj-0.5_wp*log(0.08_wp*pi*pi))
 
     open(unit=10,file='exinitfft')
     do j=1,this%geomx%ny

@@ -1,4 +1,3 @@
-module diagnostiques_module
 !=========================================
 !    
 !    File:          diagnostiquep.F90
@@ -9,6 +8,7 @@ module diagnostiques_module
 !    
 !=========================================
 !=========================================
+module diagnostiques_module
 
   use used_precision  
   use geometry_module
@@ -40,6 +40,7 @@ contains
     integer :: i,j,iv,jv
     real(wp) :: sum,sumloc
     character(2) :: icnum,icpro
+
 #ifdef _OPENMP
     integer my_num
 
@@ -133,6 +134,7 @@ contains
 !    close(ifvxvy)
 
   end subroutine diagnostiques
+
   subroutine fichinit
     character(len=72) :: filename
     integer :: IO_stat ! indicateur d'erreur

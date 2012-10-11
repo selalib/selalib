@@ -3,15 +3,17 @@ program VP2D
   !  programme de simulation numerique d'un plasma electrostatique 2D
   !  modelise par les equations de Vlasov-Poisson
   !-------------------------------------------------------------------
-  use used_precision  
-  use geometry_module
-  use diagnostiques_module
-  use poisson2dpp_module
-  use vlasov2d_module
-  use splinepx_class
-  use splinepy_class
-  use vp2dinit
-  use Clock
+#include "selalib.h"
+use used_precision  
+use geometry_module
+use diagnostiques_module
+use poisson2dpp_module
+use vlasov2d_module
+use splinepx_class
+use splinepy_class
+use vp2dinit
+use Clock
+
 !#ifdef _MPI
 !  use Module_MPI, my_num=>numero_processeur, num_threads=>nombre_processeurs
 !#endif
@@ -24,25 +26,24 @@ program VP2D
   type (splinepx)    :: splx       ! vlasov1d
   type (splinepy)    :: sply       ! vlasov1d
 
-
-  real(wp), dimension(:,:,:,:), pointer :: f ! fonc de distribution
-  real(wp), dimension(:,:),     pointer :: rho  ! densite de charge
-  real(wp), dimension(:,:),     pointer :: ex,ey ! champ electrique
+  sll_real64, dimension(:,:,:,:), pointer :: f ! fonc de distribution
+  sll_real64, dimension(:,:),     pointer :: rho  ! densite de charge
+  sll_real64, dimension(:,:),     pointer :: ex,ey ! champ electrique
 
   ! donnees du probleme
-  integer      :: nbiter   ! nombre d'iterations en temps
-  real(wp)     :: dt       ! pas de temps
-  integer      :: fdiag, fthdiag    ! frequences des diagnostiques
+  sll_int32      :: nbiter   ! nombre d'iterations en temps
+  sll_real64     :: dt       ! pas de temps
+  sll_int32      :: fdiag, fthdiag    ! frequences des diagnostiques
 
-  integer      :: iflag    ! indicateur d'erreur
-  integer      :: iter,i,j,iv,jv ! variables de boucles       
+  sll_int32      :: iflag    ! indicateur d'erreur
+  sll_int32      :: iter,i,j,iv,jv ! variables de boucles       
   character(2) :: ichar   
 #ifdef _OPENMP
-  integer omp_get_thread_num,omp_num_threads, my_num
+  sll_int32 omp_get_thread_num,omp_num_threads, my_num
 #endif
-  integer  :: jstartx, jendx, jstartv, jendv
-  real(wp) :: nrj,durat,vtime(0:12),cumultime(0:12)
-  integer  :: g_a,g_b,l_a,l_b
+  sll_int32  :: jstartx, jendx, jstartv, jendv
+  sll_real64 :: nrj,durat,vtime(0:12),cumultime(0:12)
+  sll_int32  :: g_a,g_b,l_a,l_b
 
   ! initialisation global
 #ifdef _OPENMP
