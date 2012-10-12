@@ -792,6 +792,23 @@ contains
 
 
 
+  subroutine print2d(dom,ftab,Nx,Ny,visucase,step,filename)
+    sll_int32,intent(in)::Nx,Ny,visucase,step
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx,0:Ny),intent(in)::ftab
+    character(len=*),intent(in)::filename
+
+    if(visucase==0)then
+       !gnuplot
+       call printgp2d(dom,ftab,Nx,Ny,step,filename)
+    endif
+    if(visucase==1)then
+       !vtk
+       call printvtk2d(dom,ftab,Nx,Ny,step,filename)
+    endif
+  end subroutine print2d
+
+
 
   subroutine print2dper(dom,ftab,Nx,Ny,visucase,step,filename)
     sll_int32,intent(in)::Nx,Ny,visucase,step
@@ -847,6 +864,32 @@ contains
     write(900,*)''
     close(900)  
   end subroutine printgp2dper
+
+
+  subroutine printgp2d(dom,ftab,Nx,Ny,step,filename)
+    sll_int32,intent(in)::Nx,Ny,step
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx,0:Ny),intent(in)::ftab
+    sll_int32::i,j
+    sll_real64::z(0:1),dz(0:1)
+    character(len=*),intent(in)::filename
+    character(len=80)::str,str2
+    write(str2,*)step
+    str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.dat'
+
+    dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
+    open(unit=900,file=str)
+    do j=0,Ny
+       do i=0,Nx
+          z(0)=dom(0,0)+real(i,f64)*dz(0)
+          z(1)=dom(0,1)+real(j,f64)*dz(1)
+          write(900,*) z(0),z(1),ftab(i,j)
+       enddo
+       write(900,*) ''      
+    enddo
+    close(900)  
+  end subroutine printgp2d
+
 
   subroutine printvtk2dper(dom,ftab,Nx,Ny,step,filename)
     sll_int32,intent(in)::Nx,Ny
@@ -904,6 +947,49 @@ contains
     write(900,*) ftab(0,0)
     close(900)  
   end subroutine printvtk2dper
+
+  subroutine printvtk2d(dom,ftab,Nx,Ny,step,filename)
+    sll_int32,intent(in)::Nx,Ny
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx,0:Ny),intent(in)::ftab
+    sll_int32::i,j
+    sll_int32,intent(in):: step
+    sll_real64::z(0:1),dz(0:1)
+    character(len=*),intent(in)::filename
+    character(len=80)::str,str2
+    write(str2,*)step
+    !write(str,*) 'mv f.dat f'//trim(adjustl((str2)))//'.dat';call system(str)
+    write(str,*) 'f'//trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
+    str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
+    dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
+    !open(unit=900,file='f.vtk')
+    open(unit=900,file=str,form='formatted')
+    write(900,'(A)')                  '# vtk DataFile Version 2.0'
+    write(900,'(A)')                  'Exemple'
+    write(900,'(A)')                  'ASCII'
+    write(900,'(A)')                  'DATASET STRUCTURED_POINTS'
+    write(900,'(A,I0,A,I0,A,I0)') 'DIMENSIONS ', Nx+1,' ', Ny+1,' ', 1
+    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', floor(dom(0,0)+0.1),' ' , floor(dom(0,1)+0.1),' ' , 0
+    !write(900,'(A,F10.4,A,F10.4,A,F10.4)') 'SPACING ', dz(0),' ', dz(1),' ', 1. 
+    write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
+    write(900,*)
+    write(900,'(A,I0)')           'POINT_DATA ',(Nx+1)*(Ny+1)
+    write(900,'(A,I0)')           'SCALARS f float ',1
+    write(900,'(A)')                  'LOOKUP_TABLE default'
+
+    do j=0,Ny
+       do i=0,Nx
+          z(0)=dom(0,0)+real(i,f64)*dz(0)
+          z(1)=dom(0,1)+real(j,f64)*dz(1)
+          !write(900,'(F0.8)') ftab(i,j)
+          write(900,*) ftab(i,j)
+       enddo
+    enddo
+    close(900)  
+  end subroutine printvtk2d
+
+
+
 
 
 end module polar_advection
