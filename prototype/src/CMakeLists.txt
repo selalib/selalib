@@ -407,7 +407,7 @@ add_test(NAME remap_4d
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-set(PROCS 2)
+set(PROCS 16)
 add_test(NAME remap_6d
 	COMMAND
 	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
