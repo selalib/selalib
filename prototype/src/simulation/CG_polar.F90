@@ -176,8 +176,8 @@ program cg_polar
      end do
 
   else if (fcase==2) then
-     r1=4.0_f64
-     r2=5.0_f64
+     !r1=4.0_f64
+     !r2=5.0_f64
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
         if (r>=r1 .and. r<=r2) then
@@ -254,7 +254,7 @@ program cg_polar
   !call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write f in a file before calculations
-  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+  call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
 !!$  open(28,file='maillage.vtk')
 !!$  do i=1,nr+1
 !!$     r=rmin+real(i-1,f64)*dr
@@ -421,12 +421,12 @@ program cg_polar
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-5)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-5))
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
   t1 => start_time_mark(t1)
   do step=1,nb_step
@@ -515,19 +515,19 @@ program cg_polar
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-5)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-5))
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
      if ((step/500)*500==step) then
         print*,'#step',step
      end if
 
      if (step/visustep*visustep==step) then
-        call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+        call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
      end if
 
   end do
@@ -556,7 +556,7 @@ program cg_polar
 !!$  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write the final f in a file
-  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+  call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
   open (unit=21,file='CGrestart.dat')
   write(21,*)f
   close(21)
