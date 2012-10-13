@@ -68,7 +68,7 @@ FOREACH( component ${SLL_COMPONENTS} )
    INCLUDE_DIRECTORIES(${SELALIB_DIR}/${component})
    ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
 ENDFOREACH()
-
+INCLUDE_DIRECTORIES(${SELALIB_DIR}/../build/modules)
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics")
 
