@@ -26,11 +26,12 @@ module fft_module
       integer :: l 
       this%n = l 
       allocate(this%coefd(2*this%n+15))
-      call dffti(this%n,this%coefd)
 #if defined _SINE
       allocate(this%coefd(2*this%n+15))	
       allocate(this%workd(this%n*size(f,2)))
       call vsinqi(this%n,this%coefd)
+#elif defined _FFTPACK
+      call dffti(this%n,this%coefd)
 #endif
     end subroutine initdoubfft
 
@@ -83,7 +84,7 @@ module fft_module
     subroutine doubcfft(this,array)
       type(fftclass) :: this
       integer, parameter :: sign = -1   ! we choose this for direct transform
-      integer :: i, p, inc, lda
+      integer :: i,j, p, inc, lda
       double complex, dimension(:,:) :: array
 
       p = size(array,2)   ! number of 1d transforms
@@ -99,7 +100,7 @@ module fft_module
     subroutine doubfftinv(this,array)
       type(fftclass) :: this
       integer, parameter :: sign = 1   ! we choose this for inverse transform
-      integer :: i, p, inc, lda
+      integer :: i,j, p, inc, lda
       double precision, dimension(:,:) :: array
 
       double precision, dimension(size(array,2),size(array,1)) :: DX
