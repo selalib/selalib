@@ -273,12 +273,11 @@ contains
     ! aux points du maillage
     integer, intent(out) :: iflag    ! indicateur d erreur
     ! variables locales
-    integer i,j ! indices de boucle
+    integer i! indices de boucle
     integer ny, nyp2, nyp3  !  ny+2, ny+3
-    integer :: err ! error flag
 
     real(wp) :: aym1f(this%geomx%ny+1)  !ES +1-> +2
-    real(wp) :: det,gamma1,gamma2,M
+    real(wp) :: M
 
     ! initialisations
     iflag =0
@@ -328,9 +327,7 @@ contains
     real(wp), dimension(:), intent(out) :: fout
 
     ! variables locales
-    real(wp) :: sval   ! valeur de la fonction au point d'evaluation
     real(wp) :: bvaly1,bvaly2,bvaly3,bvaly4,dyy,dyyy,dyyy6,yd1,ydp1
-    real(wp) :: sval1, sval2, sval3, sval4
     integer :: intaysdy
     integer i1,i
 
