@@ -62,7 +62,7 @@ if (numdiag == 0) then
    if (dir_e) then
      write(*,*) "directory "//trim(outdir)//char(my_num+48)//" exists!"
    else
-     !call system("mkdir -p "//trim(outdir)//char(my_num+48))
+     call system("mkdir -p "//trim(outdir)//char(my_num+48))
    end if
 end if
 

@@ -4,7 +4,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
+SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/../../prototype/src/CMakeModules 
+                       ${CMAKE_SOURCE_DIR}/CMakeModules 
+                       ${CMAKE_MODULE_PATH} )
 
 SET(MPI_ENABLED           ON  CACHE BOOL  "Use parallel version of slv2d   ")
 SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
@@ -68,7 +70,6 @@ FOREACH( component ${SLL_COMPONENTS} )
    INCLUDE_DIRECTORIES(${SELALIB_DIR}/${component})
    ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
 ENDFOREACH()
-INCLUDE_DIRECTORIES(${SELALIB_DIR}/../build/modules)
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics")
 
@@ -91,6 +92,10 @@ SET(SLV2D_SRC silo_module.F90
               vlasov2d.F90 )
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
+ADD_DEPENDENCIES(slv2d sll_utilities
+                       sll_assertion
+                       sll_memory
+                       sll_low_level_file_io)
 
 SET(LIBS sll_low_level_file_io
          sll_utilities
