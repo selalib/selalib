@@ -4,9 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/../../prototype/src/CMakeModules 
-                       ${CMAKE_SOURCE_DIR}/CMakeModules 
-                       ${CMAKE_MODULE_PATH} )
+SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
 SET(MPI_ENABLED           ON  CACHE BOOL  "Use parallel version of slv2d   ")
 SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
@@ -55,7 +53,12 @@ MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 
-FIND_PACKAGE(HDF5 REQUIRED Fortran)
+IF (APPLE)
+   INCLUDE(${CMAKE_SOURCE_DIR}/../../prototype/src/CMakeModules/FindHDF5.cmake)
+ELSE()
+   FIND_PACKAGE(HDF5 REQUIRED Fortran)
+ENDIF()
+
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 
 SET( SLL_COMPONENTS precision 
