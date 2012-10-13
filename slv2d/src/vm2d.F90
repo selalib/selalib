@@ -42,11 +42,10 @@ sll_int32      :: nbiter         ! nombre d'iterations en temps
 sll_real64     :: dt             ! pas de temps
 sll_int32      :: fdiag, fthdiag ! frequences des diagnostiques
 sll_int32      :: iflag          ! indicateur d'erreur
-sll_int32      :: iter,i,j,iv,jv ! variables de boucles       
-character(len=2) :: ichar   
+sll_int32      :: iter,i,j       ! variables de boucles       
 
 sll_int32  :: jstartx, jendx, jstartv, jendv
-sll_real64 :: nrj, omega, nd, md
+sll_real64 :: nrj
 sll_int32       :: error
 
 sll_real64, allocatable, dimension(:,:) :: x1
@@ -67,31 +66,31 @@ call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 if (my_num == MPI_MASTER) then
    ! write some run data
    write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-   write(*,"(2(i3,1x),6(g13.3,1x))") 			&
-	geomx%nx, geomx%ny, geomx%x0, 			&
-        geomx%x0+(geomx%nx-1)*geomx%dx, 		&
-        geomx%y0, geomx%y0+(geomx%ny-1)*geomx%dy, 	&
-	geomx%dx, geomx%dy   
+   write(*,"(2(i3,1x),6(g13.3,1x))")&
+   geomx%nx, geomx%ny, geomx%x0,&
+   geomx%x0+(geomx%nx-1)*geomx%dx,&
+   geomx%y0, geomx%y0+(geomx%ny-1)*geomx%dy,&
+   geomx%dx, geomx%dy   
    write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-   write(*,"(2(i3,1x),6(g13.3,1x))") 			&
-	geomv%nx, geomv%ny, geomv%x0, 			&
-        geomv%x0+(geomv%nx-1)*geomv%dx, 		&
-        geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy, 	&
-	geomv%dx, geomv%dy
+   write(*,"(2(i3,1x),6(g13.3,1x))")&
+   geomv%nx, geomv%ny, geomv%x0,&
+   geomv%x0+(geomv%nx-1)*geomv%dx,&
+   geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy,&
+   geomv%dx, geomv%dy
    write(*,*) 'dt,nbiter,fdiag,fthdiag'
    write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
 endif
 
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
-       		f,f1,rho,ex,ey,ex1,ey1,bz,bz1,jx,jy,    &
-                vlas2d,maxw2dfdtd,poiss2dpp,splx,sply)
+               f,f1,rho,ex,ey,ex1,ey1,bz,bz1,jx,jy, &
+               vlas2d,maxw2dfdtd,poiss2dpp,splx,sply)
 
 ! ecriture des resultats par le processeur 0 a l'instant initial
 call mpi_barrier(MPI_COMM_WORLD,iflag)
 
 iter = 0
-call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv,	&
-		    jstartx,jendx,jstartv,jendv,iter)
+call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv,&
+jstartx,jendx,jstartv,jendv,iter)
 
 call mpi_barrier(MPI_COMM_WORLD,iflag)
 
@@ -115,7 +114,7 @@ do j = 1, geomx%ny
    end do
 end do 
 
-do iter=1,nbiter	!Loop over time
+do iter=1,nbiter
 
    ! advection d'un demi-pas de temps en espace
    !call advection_x(vlas2d,f,.5*dt)
@@ -210,8 +209,6 @@ if (my_num == MPI_MASTER) &
 
 print*,'PASSED'
 call termine_moduleMPI
-
-
 
 contains
 
