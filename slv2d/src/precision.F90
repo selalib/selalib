@@ -9,7 +9,7 @@ MODULE used_precision
   !    
   !=========================================
 
-  IMPLICIT NONE
+  implicit none
 
   Integer, Parameter :: wp = 8
 

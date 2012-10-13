@@ -35,7 +35,7 @@ contains
     integer :: nx! dimensions
     integer :: nxp1, nxp2,nxp3,Nbdr
     real(wp) :: aa1x, aa2x
-    integer i,j, info
+    integer i
 
     ! initialisation des variables locales
     iflag = 0
@@ -219,7 +219,7 @@ subroutine interpole_splinepdep(this,f,depx,G)
     ! aux points du maillage
     integer, intent(out) :: iflag    ! indicateur d erreur
     ! variables locales
-    integer i,j ! indices de boucle
+    integer i ! indices de boucle
     integer nx, nxp2, nxp3  !  nx+2, nx+3
     integer :: err ! error flag
 
@@ -269,12 +269,11 @@ subroutine interpole_splinepdep(this,f,depx,G)
     ! aux points du maillage
     integer, intent(out) :: iflag    ! indicateur d erreur
     ! variables locales
-    integer i,j ! indices de boucle
-    integer nx, nxp2, nxp3  !  nx+2, nx+3
-    integer :: err ! error flag
+    integer i! indices de boucle
+    integer nx   !  nx+2, nx+3
 
     real(wp) :: axm1f(this%geomx%nx+1)  !ES +1-> +2
-    real(wp) :: det,gamma1,gamma2,M
+    real(wp) :: det,M
 
     ! initialisations
     iflag =0

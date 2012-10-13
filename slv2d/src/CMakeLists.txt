@@ -70,7 +70,7 @@ FOREACH( component ${SLL_COMPONENTS} )
 ENDFOREACH()
 
 
-SET(CMAKE_Fortran_FLAGS "-ffree-line-length-none -fall-intrinsics")
+SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics")
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiquesm.F90
