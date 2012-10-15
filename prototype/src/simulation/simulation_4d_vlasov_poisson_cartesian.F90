@@ -4,6 +4,7 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 #include "sll_remap.h"
+#include "misc_utils.h"
   use sll_collective
   use numeric_constants
   use sll_cubic_spline_interpolator_1d
@@ -588,7 +589,11 @@ contains
        
        ! Diagnostics here... PIERRE!!!
 
+       
+
     end do ! main loop
+
+    call plot_solution(sim)
 
     
   end subroutine run_vp4d_cartesian
@@ -650,7 +655,7 @@ contains
     sll_int32 :: i, j, k, l
     
     delta4   = mesh%delta_x4
-    delta4   = mesh%delta_x3
+    delta3   = mesh%delta_x3
     partial(:,:,:) = 0.0
     numpts3 = mesh%num_cells3
     numpts4 = mesh%num_cells4
@@ -833,5 +838,122 @@ contains
        f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
     end do
   end subroutine advection_v_1d
+
+  subroutine plot_solution(my_sim)
+    use mpi
+    use hdf5
+    use sll_hdf5_io_parallel
+    use sll_xml_io
+    class(sll_simulation_4d_vlasov_poisson_cart), intent(in) :: my_sim
+    type(layout_2D), pointer :: my_layout
+    character(len=7),  parameter :: hdf_file = "data.h5"  ! File name
+    sll_real64 :: tcpu1, tcpu2
+    sll_int32  :: my_rank
+    sll_int32  :: world_size
+    sll_int32  :: mpi_info
+    sll_int32  :: comm_world
+    sll_int32  :: local_nx1
+    sll_int32  :: local_nx2
+    sll_int32  :: global_nx1
+    sll_int32  :: global_nx2
+    sll_int32  :: error
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: gi
+    sll_int32  :: gj
+    sll_int32,  dimension(2) :: global_indices
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_real64 :: x1_min
+    sll_real64 :: x1_max
+    sll_real64 :: x2_min
+    sll_real64 :: x2_max
+    sll_real64 :: x3_min
+    sll_real64 :: x3_max
+    sll_real64 :: x4_min
+    sll_real64 :: x4_max
+    sll_real64 :: delta_x1
+    sll_real64 :: delta_x2
+    sll_real64 :: delta_x3
+    sll_real64 :: delta_x4 
+
+    integer(HID_T)                  :: hdf_file_id
+    sll_int32                       :: xml_file_id
+    integer(HSIZE_T), dimension(2)  :: array_dims 
+    integer(HSSIZE_T), dimension(2) :: offset 
+
+    array_dims(1) = my_sim%nc_x1+1
+    array_dims(2) = my_sim%nc_x2+1
+    world_size    = sll_get_collective_size(sll_world_collective)
+    my_rank       = sll_get_collective_rank(sll_world_collective)
+    comm_world    = sll_world_collective%comm
+    mpi_info      = MPI_INFO_NULL
+
+    tcpu1 = MPI_WTIME()
+
+    my_layout => my_sim%rho_seq_x1
+
+    call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+    
+    SLL_ALLOCATE(x1(local_nx1,local_nx2),error)
+    SLL_ALLOCATE(x2(local_nx1,local_nx2),error)
+    
+    x1_min = my_sim%mesh4d%x1_min
+    x1_max = my_sim%mesh4d%x1_max
+    x2_min = my_sim%mesh4d%x2_min
+    x2_max = my_sim%mesh4d%x2_max
+    x3_min = my_sim%mesh4d%x2_min
+    x3_max = my_sim%mesh4d%x3_max
+    x4_min = my_sim%mesh4d%x4_min
+    x4_max = my_sim%mesh4d%x4_max
+
+    delta_x1 = my_sim%mesh4d%delta_x1
+    delta_x2 = my_sim%mesh4d%delta_x2
+    delta_x3 = my_sim%mesh4d%delta_x3
+    delta_x4 = my_sim%mesh4d%delta_x4
+
+    do j = 1, local_nx2
+       do i = 1, local_nx1
+          global_indices =  local_to_global_2D( my_layout, (/i, j/) )
+          gi = global_indices(1)
+          gj = global_indices(2)
+          x1(i,j) = x1_min + (gi-1._f64)*delta_x1
+          x2(i,j) = x2_min + (gj-1._f64)*delta_x2
+       end do
+    end do
+    
+    offset(1) =  get_layout_2D_i_min( my_layout, my_rank ) - 1
+    offset(2) =  get_layout_2D_j_min( my_layout, my_rank ) - 1
+    
+    call sll_hdf5_file_create(hdf_file,hdf_file_id,error)
+    call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
+    call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x2,"x2",error)
+    call sll_hdf5_write_array(hdf_file_id,array_dims,offset,my_sim%rho_x1,"rho_x1",error)
+    call sll_hdf5_file_close(hdf_file_id,error)
+
+    if (my_rank == 0) then
+       
+       global_nx1 = array_dims(1)
+       global_nx2 = array_dims(2)
+    
+       call sll_xml_file_create("rho_x1.xmf",xml_file_id,error)
+       call sll_xml_grid_geometry(xml_file_id,          &
+                                  "data.h5",global_nx1, &
+                                  "data.h5",global_nx2, &
+                                  "x1", "x2" )
+       call sll_xml_field(xml_file_id,'rho_x1',"data.h5:/rho_x1", &
+                          global_nx1, global_nx2,'HDF','Node')
+       call sll_xml_file_close(xml_file_id,error)
+       print *, 'Printing 2D layout: '
+       call sll_view_lims_2D( my_layout )
+       print *, '--------------------'
+
+    end if
+
+    tcpu2 = MPI_WTIME()
+    if (my_rank == 0) &
+       write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
+  
+  end subroutine plot_solution
 
 end module sll_simulation_4d_vlasov_poisson_cartesian

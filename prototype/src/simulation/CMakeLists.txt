@@ -140,7 +140,7 @@ add_dependencies( sll_simulations
   sll_remap
   sll_collective
   sll_constants
-  sll_low_level_file_io
+  sll_low_level_file_io_parallel
   sll_utilities
   sll_memory
   sll_assertion 	
@@ -160,7 +160,7 @@ target_link_libraries( test_vp4d_sim
   sll_remap
   sll_collective
   sll_constants
-  sll_low_level_file_io
+  sll_low_level_file_io_parallel
   sll_utilities
   sll_memory
   sll_assertion 	
