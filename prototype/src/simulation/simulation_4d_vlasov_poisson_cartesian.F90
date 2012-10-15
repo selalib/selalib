@@ -850,8 +850,6 @@ contains
     sll_real64 :: tcpu1, tcpu2
     sll_int32  :: my_rank
     sll_int32  :: world_size
-    sll_int32  :: mpi_info
-    sll_int32  :: comm_world
     sll_int32  :: local_nx1
     sll_int32  :: local_nx2
     sll_int32  :: global_nx1
@@ -882,12 +880,10 @@ contains
     integer(HSIZE_T), dimension(2)  :: array_dims 
     integer(HSSIZE_T), dimension(2) :: offset 
 
-    array_dims(1) = my_sim%nc_x1+1
-    array_dims(2) = my_sim%nc_x2+1
+    array_dims(1) = my_sim%nc_x1
+    array_dims(2) = my_sim%nc_x2
     world_size    = sll_get_collective_size(sll_world_collective)
     my_rank       = sll_get_collective_rank(sll_world_collective)
-    comm_world    = sll_world_collective%comm
-    mpi_info      = MPI_INFO_NULL
 
     tcpu1 = MPI_WTIME()
 
@@ -902,7 +898,7 @@ contains
     x1_max = my_sim%mesh4d%x1_max
     x2_min = my_sim%mesh4d%x2_min
     x2_max = my_sim%mesh4d%x2_max
-    x3_min = my_sim%mesh4d%x2_min
+    x3_min = my_sim%mesh4d%x3_min
     x3_max = my_sim%mesh4d%x3_max
     x4_min = my_sim%mesh4d%x4_min
     x4_max = my_sim%mesh4d%x4_max
@@ -929,6 +925,7 @@ contains
     call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
     call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x2,"x2",error)
     call sll_hdf5_write_array(hdf_file_id,array_dims,offset,my_sim%rho_x1,"rho_x1",error)
+    call sll_hdf5_write_array(hdf_file_id,array_dims,offset,my_sim%rho_x1,"rho_x2",error)
     call sll_hdf5_file_close(hdf_file_id,error)
 
     if (my_rank == 0) then
