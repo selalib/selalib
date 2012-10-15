@@ -114,7 +114,7 @@ contains
 
     type(sll_SL_polar), pointer :: this
     sll_real64 :: rmin,rmax,dr,dtheta,dt
-    sll_int32 :: nr,ntheta,bc
+    sll_int32 :: nr,ntheta,bc(2)
     sll_int32, intent(in) :: grad_case,time_scheme
 
     sll_int32 :: err
