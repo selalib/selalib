@@ -932,7 +932,7 @@ contains
              end do
           end do
        
-          call sll_hdf5_file_create("mesh_x1x2.h5",hdf_file_id,error)
+          call sll_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",hdf_file_id,error)
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x2,"x2",error)
           call sll_hdf5_file_close(hdf_file_id,error)
@@ -964,14 +964,15 @@ contains
    
        if (my_rank == 0) then
           
+          !Conversion int64 -> int32
           global_nx1 = transfer(array_dims(1),global_nx1)
           global_nx2 = transfer(array_dims(2),global_nx2)
        
           call sll_xml_file_create("fields_x"//c_layout//"-"//ctime//".xmf", &
                                    xml_file_id,error)
           call sll_xml_grid_geometry(xml_file_id,          &
-                                  "mesh_x1x2.h5",global_nx1, &
-                                  "mesh_x1x2.h5",global_nx2, &
+                                  "mesh_x"//c_layout//"seq.h5",global_nx1, &
+                                  "mesh_x"//c_layout//"seq.h5",global_nx2, &
                                   "x1", "x2" )
           call sll_xml_field(xml_file_id,'rho_x'//c_layout,  &
                              "fields_x"//c_layout//"-"//ctime//".h5:/rho_x"//c_layout, &
@@ -986,8 +987,8 @@ contains
    end do
 
    tcpu2 = MPI_WTIME()
-   if (my_rank == 0) &
-      write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
+   !if (my_rank == 0) &
+   !   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
   
   end subroutine plot_fields
 
