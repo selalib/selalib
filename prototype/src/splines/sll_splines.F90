@@ -87,6 +87,31 @@ module sll_splines
      module procedure delete_spline_1D, delete_spline_2D
   end interface
 
+  ! Some useful macros that should probably be put in a different file to 
+  ! make them more widely accessible. Here we use them to compute default
+  ! values for the slopes. 
+  ! Actually the proper way to factor this is with a function that takes 
+  ! an array segment of a certain length and returns the slope. Such
+  ! function(s) could be made to work in 1D or 2D by passing the right
+  ! array segment. Keep this in mind...
+
+    ! (-25/12, 4, -3, 4/3, -1/4) stencil
+#define FORWARD_FD_5PT( f, r_delta ) \
+    r_delta*(-(25.0_f64/12.0_f64)*f(1) + 4.0_f64*f(2) -3.0_f64*f(3) + (4.0_f64/3.0_f64)*f(4) - 0.25_f64*f(5))
+
+    ! (1/4, -4/3, 3, -4, 25/12) stencil
+#define BACKWARD_FD_5PT( f, r_delta, np ) \
+    r_delta*(-0.25_f64*f(np-4) + (4.0_f64/3.0_f64)*f(np-3) + 3.0_f64*f(np-2) - 4.0_f64*f(np-1) + (25.0_f64/12.0_f64)*f(np) )
+
+    ! (-3/2, 2, -1/2 ) stencil
+#define FORWARD_FD_3PT( f, r_delta ) \
+    r_delta*(-1.5_f64*f(1) + 2.0_f64*f(2) - 0.5_f64*f(3))
+
+    ! ( 1/2, -2, 3/2 ) stencil
+#define BACKWARD_FD_3PT( f, r_delta, np ) \
+    r_delta*(0.5_f64*f(np-2)-2.0_f64*f(np-1) +1.5_f64*f(np))
+
+
 contains  ! ****************************************************************
 
   ! The following could be changed to a direct access eventually, since it
@@ -528,11 +553,9 @@ contains  ! ****************************************************************
 
     if( spline%compute_slopes .eqv. .true. ) then
        ! Estimate numerically the values of the slopes based on the given
-       ! values of 'f'. Here we use a forward-difference scheme for the
-       ! first point (-3/2,2,-1/2)
-       slope_l = r_delta*(-1.5_f64*f(1) + 2.0_f64*f(2) - 0.5_f64*f(3))
-       ! and a backward-difference scheme for the last point (1/2,-2,3/2)
-       slope_r = r_delta*(0.5_f64*f(np-2)-2.0_f64*f(np-1) +1.5_f64*f(np))
+       ! values of 'f'. 
+       slope_l = FORWARD_FD_5PT( f, r_delta ) 
+       slope_r = BACKWARD_FD_5PT( f, r_delta, np )
     else
        slope_l = spline%slope_L
        slope_r = spline%slope_R
@@ -1409,21 +1432,34 @@ contains  ! ****************************************************************
 #endif
     r_x1_delta = 1.0_f64/spline%x1_delta
     if( spline%compute_slopes_x1_min .eqv. .true. ) then
-       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
-       ! at the first point based on the given data.
+       ! compute default value for the derivative at the first point based 
+       ! on the given data. Can't use the macros here... go figure...
        do j=1,npx2
-          spline%x1_min_slopes(j) = r_x1_delta*(-1.5_f64*data(1,j) + &
-                                                 2.0_f64*data(2,j) - &
-                                                 0.5_f64*data(3,j) )
+          spline%x1_min_slopes(j) = &
+               r_x1_delta*( -(25.0_f64/12.0_f64)*data(1,j) + &
+                                         4.0_f64*data(2,j) - &
+                                         3.0_f64*data(3,j) + &
+                               (4.0_f64/3.0_f64)*data(4,j) - &
+                                        0.25_f64*data(5,j) )
+! Earlier version (delete when happy with substitute):
+!!$          r_x1_delta*(-1.5_f64*data(1,j) + &
+!!$               2.0_f64*data(2,j) - &
+!!$               0.5_f64*data(3,j) )
        end do
     end if
     if( spline%compute_slopes_x1_max .eqv. .true. ) then
-       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
-       ! at the last point.
+       ! estimate the derivative at the last point.
        do j=1,npx2
-          spline%x1_max_slopes(j) = r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
-                                                 2.0_f64*data(npx1-1,j) + &
-                                                 1.5_f64*data(npx1,j) )
+          spline%x1_max_slopes(j) = &
+               r_x1_delta*(-0.25_f64*data(npx1-4,j) + &
+                   (4.0_f64/3.0_f64)*data(npx1-3,j) + &
+                             3.0_f64*data(npx1-2,j) - &
+                             4.0_f64*data(npx1-1,j) + &
+                 (25.0_f64/12.0_f64)*data(npx1,j) )
+!!$! Previous estimate:
+!!$          r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
+!!$               2.0_f64*data(npx1-1,j) + &
+!!$               1.5_f64*data(npx1,j) )
        end do
     end if
     ! At this point, the values of the slopes are available because either
@@ -1504,21 +1540,37 @@ contains  ! ****************************************************************
     ! Numerically compute the values of the slopes if the user has not given
     ! them.
     if( spline%compute_slopes_x2_min .eqv. .true. ) then
-       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! forward difference scheme to estimate the derivative
        ! at the first point based on the given data.
        do i=1,npx1
-          spline%x2_min_slopes(i) = r_x2_delta*(-1.5_f64*data(i,1) + &
-                                                 2.0_f64*data(i,2) - &
-                                                 0.5_f64*data(i,3) )
+          spline%x2_min_slopes(i) = &
+               r_x2_delta*(-(25.0_f64/12.0_f64)*data(i,1) + &
+               4.0_f64*data(i,2) - & 
+               3.0_f64*data(i,3) + &
+               (4.0_f64/3.0_f64)*data(i,4) - &
+               0.25_f64*data(i,5))
+
+!!$          ! previous estimate:
+!!$          r_x2_delta*(-1.5_f64*data(i,1) + &
+!!$               2.0_f64*data(i,2) - &
+!!$               0.5_f64*data(i,3) )
        end do
     end if
     if( spline%compute_slopes_x2_max .eqv. .true. ) then
-       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! backward difference scheme to estimate the derivative
        ! at the last point.
        do i=1,npx1
-          spline%x2_max_slopes(i) = r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
-                                                 2.0_f64*data(i,npx2-1) + &
-                                                 1.5_f64*data(i,npx2) )
+          spline%x2_max_slopes(i) = &
+               r_x2_delta*(-0.25_f64*data(i,npx2-4) + &
+                   (4.0_f64/3.0_f64)*data(i,npx2-3) + &
+                             3.0_f64*data(i,npx2-2) - &
+                             4.0_f64*data(i,npx2-1) + &
+                 (25.0_f64/12.0_f64)*data(i,npx2) )
+
+!!$          ! previous estimate (delete eventually)
+!!$          r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
+!!$               2.0_f64*data(i,npx2-1) + &
+!!$               1.5_f64*data(i,npx2) )
        end do
     end if
 
@@ -1595,40 +1647,72 @@ contains  ! ****************************************************************
 
     ! Compute the values of the slopes in case that they were not given.
     if( spline%compute_slopes_x1_min .eqv. .true. ) then
-       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! forward difference scheme to estimate the derivative
        ! at the first point based on the given data.
        do j=1,npx2
-          spline%x1_min_slopes(j) = r_x1_delta*(-1.5_f64*data(1,j) + &
-                                                 2.0_f64*data(2,j) - &
-                                                 0.5_f64*data(3,j) )
+          spline%x1_min_slopes(j) = &
+               r_x1_delta*(-(25.0_f64/12.0_f64)*data(1,j) + &
+                                        4.0_f64*data(2,j) - &
+                                        3.0_f64*data(3,j) + &
+                              (4.0_f64/3.0_f64)*data(4,j) - &
+                                       0.25_f64*data(5,j))
+
+!!$          ! previous estimate:
+!!$          r_x1_delta*(-1.5_f64*data(1,j) + &
+!!$               2.0_f64*data(2,j) - &
+!!$               0.5_f64*data(3,j) )
        end do
     end if
     if( spline%compute_slopes_x1_max .eqv. .true. ) then
-       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! backward difference scheme to estimate the derivative
        ! at the last point.
        do j=1,npx2
-          spline%x1_max_slopes(j) = r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
-                                                 2.0_f64*data(npx1-1,j) + &
-                                                 1.5_f64*data(npx1,j) )
+          spline%x1_max_slopes(j) = &
+               r_x1_delta*( -0.25_f64*data(npx1-4,j) + &
+                    (4.0_f64/3.0_f64)*data(npx1-3,j) + &
+                              3.0_f64*data(npx1-2,j) - &
+                              4.0_f64*data(npx1-1,j) + &
+                  (25.0_f64/12.0_f64)*data(npx1,j) )
+
+!!$          ! previous estimate:
+!!$          r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
+!!$               2.0_f64*data(npx1-1,j) + &
+!!$               1.5_f64*data(npx1,j) )
        end do
     end if
 
     if( spline%compute_slopes_x2_min .eqv. .true. ) then
-       ! forward difference scheme (-3/2, 2, -1/2) to estimate the derivative
+       ! forward difference scheme to estimate the derivative
        ! at the first point based on the given data.
        do i=1,npx1
-          spline%x2_min_slopes(i) = r_x2_delta*(-1.5_f64*data(i,1) + &
-                                                 2.0_f64*data(i,2) - &
-                                                 0.5_f64*data(i,3) )
+          spline%x2_min_slopes(i) = &
+               r_x2_delta*(-(25.0_f64/12.0_f64)*data(i,1) + &
+               4.0_f64*data(i,2) - &
+               3.0_f64*data(i,3) + &
+               (4.0_f64/3.0_f64)*data(i,4) - &
+               0.25_f64*data(i,5))
+
+!!$          !previous estimate:
+!!$          r_x2_delta*(-1.5_f64*data(i,1) + &
+!!$               2.0_f64*data(i,2) - &
+!!$               0.5_f64*data(i,3) )
        end do
     end if
     if( spline%compute_slopes_x2_max .eqv. .true. ) then
-       ! backward difference scheme (1/2,-2,3/2) to estimate the derivative
+       ! backward difference scheme to estimate the derivative
        ! at the last point.
        do i=1,npx1
-          spline%x2_max_slopes(i) = r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
-                                                 2.0_f64*data(i,npx2-1) + &
-                                                 1.5_f64*data(i,npx2) )
+          spline%x2_max_slopes(i) = &
+               r_x2_delta*(-0.25_f64*data(i,npx2-4) + &
+                   (4.0_f64/3.0_f64)*data(i,npx2-3) + &
+                             3.0_f64*data(i,npx2-2) - &
+                             4.0_f64*data(i,npx2-1) + &
+                 (25.0_f64/12.0_f64)*data(i,npx2) )
+
+!!$          !previous estimate
+!!$          r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
+!!$               2.0_f64*data(i,npx2-1) + &
+!!$               1.5_f64*data(i,npx2) )
        end do
     end if
 

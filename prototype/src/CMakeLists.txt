@@ -348,6 +348,7 @@ ENDIF()
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
+add_test(NAME lagrange COMMAND test_lagrange)
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
 add_test(NAME splines COMMAND test_splines #test_non_unif_splines 
   test_arbitrary_degree_splines)
