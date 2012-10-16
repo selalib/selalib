@@ -110,11 +110,7 @@ end subroutine dealloc_vlasov2d
 !>
 subroutine advection_x(this,f,dt)
    type(vlasov2d),intent(inout) :: this
-#ifdef _MPI
    sll_real64, dimension(:,:,:,this%jstartv:) :: f
-#else
-   sll_real64, dimension(:,:,:,:) :: f
-#endif
    sll_real64, intent(in) :: dt
 
    sll_real64 :: depx, depy   ! deplacement par rapport au maillage
@@ -142,12 +138,7 @@ subroutine advection_v(this,fx,fy,dt,bz)
 
    type(vlasov2d),intent(inout) :: this
 
-#ifdef _MPI
-!    sll_real64, dimension(:,this%jstartx:),intent(in)  :: fx, fy
    sll_real64, dimension(:,:), intent(in) :: fx, fy
-#else
-   sll_real64, dimension(:,:),intent(in)  :: fx,fy
-#endif
    sll_real64, dimension(:,:), optional, intent(in) :: bz
    sll_real64, intent(in) :: dt
 
@@ -207,13 +198,8 @@ end subroutine advection_v
 subroutine densite_charge(this, rho)
 
    type(vlasov2d),intent(inout) :: this
-#ifdef _MPI
-   !    sll_real64, dimension(:,this%jstartx:), intent(out)  :: rho
    integer :: mpierror
    sll_real64, dimension(:,:), intent(out)  :: rho
-#else
-   sll_real64, dimension(:,:), intent(out)  :: rho
-#endif
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locrho
    ! variables locales
    integer :: i,j,iv,jv,c   ! indices de boucles
@@ -249,13 +235,9 @@ end subroutine densite_charge
 subroutine densite_courant(this, jx, jy)
 
    type(vlasov2d),intent(inout) :: this
-#ifdef _MPI
    integer :: mpierror
    sll_real64, dimension(:,:), intent(out)  :: jx, jy
    sll_real64 :: vx, vy       ! vitesse du point courant
-#else
-   sll_real64, dimension(:,:), intent(out)  :: jx, jy
-#endif
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
    ! variables locales
@@ -299,31 +281,11 @@ end subroutine densite_courant
 subroutine transposexv(this,f)
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(in) :: f
-#ifndef _MPI
-    ! variables locales
-    integer :: i,j,iv,jv   ! indices de boucles
-#endif
-    
-#ifdef _MPI
    integer :: sizexy, sizevxvy
 
    sizexy = this%geomx%nx * this%geomx%ny
    sizevxvy = this%geomv%nx * this%geomv%ny
    call transpose(f, this%ft, sizexy, sizevxvy, num_threads)
-#else
-    ! on attend que tous les processeurs aient fait leur calcul
-
-    do jv=1,this%geomv%ny
-       do iv=1,this%geomv%nx
-          do j=this%jstartx,this%jendx
-             do i=1,this%geomx%nx  
-                this%ft(iv,jv,i,j) = f(i,j,iv,jv)
-             end do
-          end do
-       end do
-    end do
-
-#endif
 
 this%transpose=.true.
 
@@ -334,32 +296,11 @@ subroutine transposevx(this,f)
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(out) :: f
 
-#ifndef _MPI
-   ! variables locales
-   integer :: i,j,iv,jv   ! indices de boucles
-#endif
-#ifdef _MPI
    integer :: sizexy, sizevxvy
 
    sizexy = this%geomx%nx * this%geomx%ny
    sizevxvy = this%geomv%nx * this%geomv%ny
    call transpose(this%ft,f, sizevxvy, sizexy, num_threads)
-#else
-   ! on attend que tous les processeurs aient fait leur calcul
-
-   do j=this%jstartx,this%jendx
-      do i=1,this%geomx%nx
-         do jv=1,this%geomv%ny
-            do iv=1,this%geomv%nx
-               f(i,j,iv,jv) = this%ft(iv,jv,i,j)
-            end do
-         end do
-      end do
-   end do
-
-
-#endif
-
 
    this%transpose=.false.
 
@@ -368,13 +309,8 @@ end subroutine transposevx
 subroutine thdiag(this,f,nrj,t)
 
    type(vlasov2d),intent(inout) :: this
-#ifdef _MPI
    sll_real64, dimension(:,:,:,this%jstartv:),intent(in) :: f
    integer :: mpierror
-#else
-   sll_real64, dimension(:,:,:,:),intent(in) :: f
-   integer :: my_num,mp_get_thread_num
-#endif
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
    integer :: i,iv, j,jv   ! indices de boucles
@@ -417,17 +353,10 @@ subroutine thdiag(this,f,nrj,t)
    end do
    auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
 
-#ifdef _MPI
    call mpi_reduce(auxloc,aux,11,MPI_realtype,MPI_SUM,0,  &
                    MPI_COMM_WORLD, mpierror)
    call mpi_reduce(diagloc(2),diag(2),1,MPI_realtype,MPI_SUM,0, &
                    MPI_COMM_WORLD, mpierror)
-#else
-
-diag(2)=diag(2)+diagloc(2)
-aux=aux+auxloc
-
-#endif
 
 if (my_num==MPI_MASTER) then
    aux(13)=t

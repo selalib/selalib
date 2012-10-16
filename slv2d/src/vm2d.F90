@@ -9,7 +9,6 @@ use geometry_module
 use maxwell2dfdtd_module
 use poisson2dpp_module
 use diagnostiques_module
-use diagnostiquesm_module
 use vlasov2d_module
 use splinepx_class
 use splinepy_class
@@ -186,10 +185,6 @@ do iter=1,nbiter
 
    !Diagnostic
    if (mod(iter,fdiag).eq.0) then 
-#ifdef _MPI
-#else
-      call plot_solution( f )
-#endif
       ! ecriture des resultats par le processeur 0
       call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
@@ -201,11 +196,9 @@ do iter=1,nbiter
    endif
 
 end do
-#ifdef _MPI
 tcpu2 = MPI_WTIME()
 if (my_num == MPI_MASTER) &
    write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
-#endif
 
 print*,'PASSED'
 call termine_moduleMPI
