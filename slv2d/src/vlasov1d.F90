@@ -15,14 +15,9 @@ contains
     ! fait une advection en x sur un pas de temps dt
     !-----------------------------------------------
     type(splinepx),intent(inout) :: this
-#ifdef _MPI
     real(wp), dimension(:,:,:,this%jstartv:) :: f
     integer :: mpierror
     real(wp), dimension(:,:), intent(out)  :: Jx1
-#else
-    real(wp), dimension(:,:,:,:) :: f
-    real(wp), dimension(:,:), intent(out) :: Jx1
-#endif
     real(wp), intent(in) :: dt
     ! variables locales
     real(wp), dimension(1:this%geomx%nx) :: f1dx,flux
@@ -65,14 +60,9 @@ contains
     ! fait une advection en y sur un pas de temps dt
     !-----------------------------------------------
     type(splinepy),intent(inout) :: this
-#ifdef _MPI
     real(wp), dimension(:,:,:,this%jstartv:) :: f
     integer :: mpierror
     real(wp), dimension(:,:), intent(out)  :: Jy1
-#else
-    real(wp), dimension(:,:,:,:) :: f
-    real(wp), dimension(:,:), intent(out)  :: Jy1
-#endif
     real(wp), intent(in) :: dt
     ! variables locales
     real(wp), dimension(1:this%geomx%ny) :: f1dy,flux

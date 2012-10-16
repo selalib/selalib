@@ -36,13 +36,11 @@ sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
 ! initialisation global
-#ifdef _MPI
   tcpu1 = MPI_WTIME()
   call initialise_moduleMPI
   if (my_num.eq.0) then
      print*,'MPI Version of slv2d running on ',num_threads, ' processors'
   end if
-#endif
 
 call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
   
@@ -59,15 +57,6 @@ if (my_num == MPI_MASTER) then
    write(*,*) 'dt,nbiter,fdiag,fthdiag'
    write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
 endif
-
-#ifndef _MPI
-
-SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,geomv%ny),iflag)
-SLL_ALLOCATE(rho(geomx%nx+2,geomx%ny))
-SLL_ALLOCATE(ex(geomx%nx+2,geomx%ny))
-SLL_ALLOCATE(ey(geomx%nx+2,geomx%ny),iflag)
-
-#endif
 
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                f,rho,ex,ey,vlas2d,poiss2dpp,splx,sply)
@@ -106,11 +95,9 @@ do iter=1,nbiter
        call advection_x(vlas2d,f,dt)
    end if
 
-#ifdef _MPI
    tcpu2 = MPI_WTIME()
    if (my_num == MPI_MASTER) &
       write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
-#endif
 
 end do
 
