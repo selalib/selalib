@@ -20,12 +20,12 @@ program cg_polar
   sll_int32 :: fcase, scheme,carac,grad,visu
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0, re, im
-  sll_int32 :: mod,bc_top,bc_botom!, obs_mod
-  sll_real64 :: mode,temps,alpha
+  sll_int32 :: mod,bc(2)!, obs_mod
+  sll_real64 :: mode,temps,alpha,tmp
   sll_real64, dimension(2,2) :: dom
   character (len=16) :: f_file,bctop,bcbot
   !used for testing poisson with fcase=2
-  !sll_real64 :: c1,c2,c3,k1,k2,k3,x,y
+  sll_real64 :: c1,c2,c3,k1,k2,k3,x,y
 
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
@@ -66,8 +66,8 @@ program cg_polar
   read(27,*)visu
   read(27,*)f_file
   read(27,*)
-  read(27,*)bctop
-  read(27,*)bcbot
+  read(27,*)bc(1)
+  read(27,*)bc(2)
   close(27)
 
 !!$  rmin=1.0_f64
@@ -82,21 +82,32 @@ program cg_polar
   dr=real(rmax-rmin,f64)/real(nr,f64)
   dtheta=2.0_f64*sll_pi/real(ntheta,f64)
   print*,'#dr=',dr,'dtheta=',dtheta
+  
+  call print_defaultfftlib()
   dom(1,1)=rmin
   dom(1,2)=0.0_f64
   dom(2,1)=rmax
   dom(2,2)=2.0_f64*sll_pi
 
-  if (bctop=='TOP_DIRICHLET') then
-     bc_top=TOP_DIRICHLET
-  else if(bctop=='TOP_NEUMANN') then
-     bc_top=TOP_NEUMANN
-  end if
-  if (bcbot=='BOT_DIRICHLET') then
-     bc_botom=BOT_DIRICHLET
-  else if(bctop=='BOT_NEUMANN') then
-     bc_botom=BOT_NEUMANN
-  end if
+!  if (bctop=='TOP_DIRICHLET') then
+!     bc(2)=DIRICHLET
+!  end if
+!  if(bctop=='TOP_NEUMANN') then
+!     bc(2)=NEUMANN
+!  end if
+!  if(bctop=='TOP_NEUMANN_MODE0') then
+!     bc(2)=NEUMANN_MODE0
+!  end if
+!
+!  if (bcbot=='BOT_DIRICHLET') then
+!     bc(1)=DIRICHLET
+!  end if
+!  if(bcbot=='BOT_NEUMANN') then
+!     bc(1)=NEUMANN
+!  end if
+!  if(bcbot=='BOT_NEUMANN_MODE0') then
+!     bc(1)=NEUMANN_MODE0
+!  end if
 
   !choose the way to define dt, tf and nb_step
   !the tree ways are equivalent
@@ -157,7 +168,7 @@ program cg_polar
 !!$  ! 1 : vtk
 !!$  visu=0
 
-  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad,carac,(bc_top+bc_botom))
+  plan_sl => new_SL(rmin,rmax,dr,dtheta,dt,nr,ntheta,grad,carac,bc)
   SLL_ALLOCATE(div(nr+1,ntheta+1),i)
   SLL_ALLOCATE(f(nr+1,ntheta+1),i)
   SLL_ALLOCATE(g(ntheta+1,nr+1),i)
@@ -174,17 +185,19 @@ program cg_polar
      end do
 
   else if (fcase==2) then
-     r1=4.0_f64
-     r2=5.0_f64
+     !r1=4.0_f64
+     !r2=5.0_f64
      do i=1,nr+1
         r=rmin+real(i-1,f64)*dr
         if (r>=r1 .and. r<=r2) then
            do j=1,ntheta+1
               theta=real(j-1,f64)*dtheta
-              f(i,j)=1._f64+alpha*cos(mode*theta)
+              f(i,j)=1._f64+alpha*cos(mode*theta)              
            end do
-           g(j,i)=f(i,j)
         end if
+        do j=1,ntheta+1
+          g(j,i)=f(i,j)
+        enddo
      end do
 
   else if (fcase==3) then
@@ -252,7 +265,7 @@ program cg_polar
   !call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write f in a file before calculations
-  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+  call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
 !!$  open(28,file='maillage.vtk')
 !!$  do i=1,nr+1
 !!$     r=rmin+real(i-1,f64)*dr
@@ -263,48 +276,90 @@ program cg_polar
 !!$  end do
 !!$  close(28)
 !!$  stop
-!!$  k1=(r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-!!$  k2=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-!!$  k3=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
-!!$  c1=(2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax)+r1**2-r2**2)*log(rmin)/(-4.0_f64*log(rmin/rmax))
-!!$  c2=(2.0_f64*r2**2*log(rmin)*log(r2/rmax)+2.0_f64*r1**2*log(rmax)*log(rmin/r1)+r1**2*log(rmax)-r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
-!!$  c3=(r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin)+2.0_f64*r1**2*log(rmin/r1))*log(rmax)/(-4.0_f64*log(rmin/rmax))
-!!$  alpha=0
-!!$  l1=0.0_f64
-!!$  l2=0.0_f64
-!!$  open (unit=20,file='CGinit.dat')
-!!$  do i=1,nr+1
-!!$     r=rmin+real(i-1,f64)*dr
-!!$     if (r<r1) then
-!!$        temps=k1*log(r)+c1
-!!$     else if (r>r2) then
-!!$        temps=k3*log(r)+c3
-!!$     else
-!!$        temps=k2*log(r)-r**2/4.0_f64+c2
-!!$     end if
-!!$     do j=1,ntheta+1
-!!$        theta=real(j-1,f64)*dtheta
-!!$        x=r*cos(theta)
-!!$        y=r*sin(theta)
-!!$        !print*,plan_sl%phi(i,j)-temps
-!!$        write(20,*)r,theta,x,y,plan_sl%phi(i,j),temps,plan_sl%phi(i,j)-temps
-!!$        alpha=max(alpha,abs(plan_sl%phi(i,j)-temps))
-!!$        if (i==1 .or. i==nr+1) then
-!!$           l1=l1+abs(plan_sl%phi(i,j)-temps)*r/2.0_f64
-!!$           l2=l2+(plan_sl%phi(i,j)-temps)**2*r/2.0_f64
-!!$        else
-!!$           l1=l1+abs(plan_sl%phi(i,j)-temps)*r
-!!$           l2=l2+(plan_sl%phi(i,j)-temps)**2*r
-!!$        end if
-!!$     end do
-!!$     write(20,*)' '
-!!$  end do
-!!$  close(20)
-!!$  l1=l1*dr*dtheta
-!!$  l2=sqrt(l2*dr*dtheta)
-!!$  print*,nr,dr,alpha,l1,l2
 
+  !mode=1.5
+  
+  if(mode==0)then
+    k1=(r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
+    k2=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
+    k3=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
+    c1=(2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax)+r1**2-r2**2)*log(rmin)/(-4.0_f64*log(rmin/rmax))
+    c2=(2.0_f64*r2**2*log(rmin)*log(r2/rmax)+2.0_f64*r1**2*log(rmax)*log(rmin/r1)+r1**2*log(rmax)-r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
+    c3=(r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin)+2.0_f64*r1**2*log(rmin/r1))*log(rmax)/(-4.0_f64*log(rmin/rmax))
+  endif
+  
+  if(mode==3)then
+    k1=(r1*r2*(r2**5-r1**5)-5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+    k2=(r1*r2*(r2**5-r1**5)-5._f64*(rmin**6*r2-rmax**6*r1))/(30._f64*r2*r1*(rmin**6-rmax**6))    
+    k3=(-r1*r2*(r1**5-r2**5)-5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+    c1=(-r1*r2*(r2**5-r1**5)+5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+    c2=(-r1*r2*(rmin**6*r2**5-rmax**6*r1**5)+5._f64*(rmin*rmax)**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+    c3=rmax**6*(-r1*r2*(r2**5-r1**5)+5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+  endif
+  !we add the mode
+  !k1=k1+0.5_f64*real(mode,f64)**2*(log(rmax)**2-log(rmin)**2)/(-log(rmax)+log(rmin))
+  !k2=k2+0.5_f64*real(mode,f64)**2*(log(rmax)**2-log(rmin)**2)/(-log(rmax)+log(rmin))
+  !k3=k3+0.5_f64*real(mode,f64)**2*(log(rmax)**2-log(rmin)**2)/(-log(rmax)+log(rmin))
+  
+  !c1=c1+0.5_f64*real(mode,f64)**2*log(rmin)*log(rmax)*(log(rmin)-log(rmax))/(-log(rmax)+log(rmin))
+  !c2=c2+0.5_f64*real(mode,f64)**2*log(rmin)*log(rmax)*(log(rmin)-log(rmax))/(-log(rmax)+log(rmin))
+  !c3=c3+0.5_f64*real(mode,f64)**2*log(rmin)*log(rmax)*(log(rmin)-log(rmax))/(-log(rmax)+log(rmin))
 
+  
+  tmp=0
+  l1=0.0_f64
+  l2=0.0_f64
+
+  open (unit=20,file='CGinit.dat')
+  do i=1,nr+1
+     r=rmin+real(i-1,f64)*dr
+     if(mode==0)then
+       if (r<r1) then
+        temps=k1*log(r)+c1
+       else if (r>r2) then
+        temps=k3*log(r)+c3
+       else
+        temps=k2*log(r)+c2-r**2/4.0_f64
+       end if
+     end if
+
+     if(mode==3)then
+       if (r<r1) then
+        temps=k1*r**mode+c1/r**(mode)
+       else if (r>r2) then
+        temps=k3*r**mode+c3/r**mode
+       else
+        temps=k2*r**mode+c2/r**mode+r**2/(mode**2-4._f64)
+       end if
+     end if
+     
+     !temps=temps+real(mode,f64)**2*log(r)**2/2._f64
+     
+     temps=temps*alpha
+     do j=1,ntheta+1
+        theta=real(j-1,f64)*dtheta
+        x=r*cos(theta)
+        y=r*sin(theta)
+        !print*,plan_sl%phi(i,j)-temps
+        write(20,*)r,theta,x,y,plan_sl%phi(i,j),temps*cos(mode*theta),cos(mode*theta),0*plan_sl%phi(i,j)&
+&        -temps*(0+alpha*cos(mode*theta)/(mode**2))
+        tmp=max(tmp,abs(plan_sl%phi(i,j)-temps))
+        if (i==1 .or. i==nr+1) then
+           l1=l1+abs(plan_sl%phi(i,j)-temps)*r/2.0_f64
+           l2=l2+(plan_sl%phi(i,j)-temps)**2*r/2.0_f64
+        else
+           l1=l1+abs(plan_sl%phi(i,j)-temps)*r
+           l2=l2+(plan_sl%phi(i,j)-temps)**2*r
+        end if
+     end do
+     write(20,*)' '
+  end do
+  close(20)
+  l1=l1*dr*dtheta
+  l2=sqrt(l2*dr*dtheta)
+  print*,nr,dr,tmp,l1,l2
+
+  !stop
 
 
 
@@ -352,14 +407,14 @@ program cg_polar
      l20=l20+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
      e0=e0+rmin*(plan_sl%adv%field(1,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(1,nr+1,j))**2/2.0_f64+ &
           & rmin*(plan_sl%adv%field(2,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(2,nr+1,j))**2/2.0_f64
-     int_r(j)=(f(i,j)+f(nr+1,j))/2.0_f64
+     int_r(j)=(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
      do i=2,nr
         r=rmin+real(i-1,f64)*dr
         w0=w0+r*f(i,j)
         l10=l10+r*abs(f(i,j))
         l20=l20+r*f(i,j)**2
         e0=e0+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)
-        int_r(j)=int_r(j)+f(i,j)
+        int_r(j)=int_r(j)+f(i,j)*r
      end do
   end do
   w0=w0*dr*dtheta
@@ -377,12 +432,12 @@ program cg_polar
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,6)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,6)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,8)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,8)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,9)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,9)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,10)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,10))
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
   t1 => start_time_mark(t1)
   do step=1,nb_step
@@ -447,14 +502,14 @@ program cg_polar
              & rmin*(plan_sl%adv%field(2,1,j))**2/2.0_f64+rmax*(plan_sl%adv%field(2,nr+1,j))**2/2.0_f64
 !!$        e=e+rmin*(plan_sl%adv%field(1,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(1,nr+1,j)/2.0_f64)**2+ &
 !!$             & rmin*(plan_sl%adv%field(2,1,j)/2.0_f64)**2+rmax*(plan_sl%adv%field(2,nr+1,j)/2.0_f64)**2
-        int_r(j)=(f(1,j)+f(nr+1,j))/2.0_f64
+        int_r(j)=(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
         do i=2,nr
            r=rmin+real(i-1,f64)*dr
            w=w+r*f(i,j)
            l1=l1+r*abs(f(i,j))
            l2=l2+r*f(i,j)**2
            e=e+r*(plan_sl%adv%field(1,i,j)**2+plan_sl%adv%field(2,i,j)**2)
-           int_r(j)=int_r(j)+f(i,j)
+           int_r(j)=int_r(j)+f(i,j)*r
         end do
      end do
      w=w*dr*dtheta
@@ -471,19 +526,19 @@ program cg_polar
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,5)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,6)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,6)), &
        & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,8)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,8)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,9)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,9)), &
-       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,10)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,10))
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+       & real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)),aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
      if ((step/500)*500==step) then
         print*,'#step',step
      end if
 
      if (step/visustep*visustep==step) then
-        call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+        call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
      end if
 
   end do
@@ -512,7 +567,7 @@ program cg_polar
 !!$  call divergence_scalar_field(plan_sl%grad,plan_sl%adv%field,div)
 
   !write the final f in a file
-  call print2dper(dom,f(1:nr+1,1:ntheta),Nr+1,Ntheta,visu,step,"CG")
+  call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
   open (unit=21,file='CGrestart.dat')
   write(21,*)f
   close(21)
