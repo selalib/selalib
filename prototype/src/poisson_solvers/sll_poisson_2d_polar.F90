@@ -12,7 +12,7 @@ module poisson_polar
   type sll_plan_poisson_polar
      sll_real64 :: dr, rmin
      sll_int32 :: nr, ntheta
-     sll_int32 :: bc
+     sll_int32 :: bc(2)
      type(sll_fft_plan), pointer :: pfwd,pinv
      sll_real64, dimension(:,:), allocatable :: f_fft
      sll_comp64, dimension(:), allocatable :: fk,phik
@@ -24,10 +24,9 @@ module poisson_polar
   !flags for boundary conditions
   !>boundary conditions can be at TOP_ or BOT_ and take value NEUMANN or DIRICHLET
   !>ex : TOP_DIRICHLET or BOT_NEUMANN
-  integer, parameter :: TOP_DIRICHLET=1
-  integer, parameter :: TOP_NEUMANN=2
-  integer, parameter :: BOT_DIRICHLET=4
-  integer, parameter :: BOT_NEUMANN=8
+  integer, parameter :: DIRICHLET=1
+  integer, parameter :: NEUMANN=2
+  integer, parameter :: NEUMANN_MODE0=3
 
 contains
 
@@ -48,7 +47,7 @@ contains
 
     sll_real64 :: dr, rmin
     sll_int32 :: nr, ntheta
-    sll_int32, optional :: bc
+    sll_int32, optional :: bc(2)
     type(sll_plan_poisson_polar), pointer :: this
 
     sll_int32 :: err
@@ -73,7 +72,8 @@ contains
     if (present(bc)) then
        this%bc=bc
     else
-       this%bc=-1
+       this%bc(1)=-1
+       this%bc(2)=-1
     end if
 
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
@@ -127,7 +127,7 @@ contains
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
 
     sll_real64 :: rmin,dr
-    sll_int32 :: nr, ntheta
+    sll_int32 :: nr, ntheta,bc(2)
 
     sll_real64 :: r
     sll_int32::i,k,ind_k
@@ -138,6 +138,7 @@ contains
     rmin=plan%rmin
     dr=plan%dr
 
+    bc = plan%bc
     plan%f_fft=f
 
     do i=1,nr+1
@@ -175,68 +176,83 @@ contains
        plan%phik=0.0_f64
        !plan%a(1)=0.0_f64
        !plan%a(3*(nr-1))=0.0_f64
-       
 
-       !dirichlet aux deux bords
-        !Neuman at rmin for mode 0
-       if(k==0)then
-         plan%a(2)=plan%a(2)+plan%a(1)
-         plan%a(3*(nr-1))=0.0_f64
-       endif
-       
-       if(k/=0)then
-       select case(plan%bc)
-          case(6)
-             plan%a(1)=0.0_f64
-             !Neumann in rmax
-             plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
-          case(9)
-             plan%a(3*(nr-1))=0.0_f64
-             !Neuman in rmin
-             plan%a(2)=plan%a(2)+plan%a(1)
-          case(10)
-             !Neumann in rmin and rmax
-             plan%a(2)=plan%a(2)+plan%a(1)
-             plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
-          end select
-       endif
+        
+        !boundary condition at rmin
+        if(bc(1)==1)then !Dirichlet
+          plan%a(1)=0.0_f64
+        endif
+        if(bc(1)==2)then
+          plan%a(2)=plan%a(2)+plan%a(1) !Neumann
+        endif
+        if(bc(1)==3)then 
+          if(k==0)then!Neumann for mode zero
+            plan%a(2)=plan%a(2)+plan%a(1)
+          else !Dirichlet for other modes
+            plan%a(1)=0._f64
+          endif  
+        endif
+
+        !boundary condition at rmax
+        if(bc(2)==1)then !Dirichlet
+          plan%a(3*(nr-1))=0.0_f64
+        endif
+        if(bc(2)==2)then
+          plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
+        endif
+        if(bc(2)==3)then 
+          if(k==0)then!Neumann for mode zero
+            plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
+          else !Dirichlet for other modes
+            plan%a(3*(nr-1))=0.0_f64
+          endif  
+        endif
          
+          
        call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
        call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
 
-       select case(plan%bc)
-          case(5)
-             !Dirichlet in rmin and rmax
-             plan%phik(1)=0.0_f64
-             plan%phik(nr+1)=0.0_f64
-          case(6)
-             !Dirichlet in rmin, Neumann in rmax
-             plan%phik(1)=0.0_f64
-             plan%phik(nr+1)=plan%phik(nr)
-          case(9)
-             !Neumann in rmin, Dirichlet in rmax
-             plan%phik(1)=plan%phik(2)
-             plan%phik(nr+1)=0.0_f64
-          case(10)
-             !Neumann in rmin and rmax
-             plan%phik(1)=plan%phik(2)
-             plan%phik(nr+1)=plan%phik(nr)
-          case default
-             !Dirichlet in rmin and rmax
-             plan%phik(1)=0.0_f64
-             plan%phik(nr+1)=0.0_f64
-          end select
 
-        !Neuman at rmin for mode 0
-       if(k==0)then
-         plan%phik(1)=plan%phik(2)
-       endif
+
+        !boundary condition at rmin
+        if(bc(1)==1)then !Dirichlet
+          plan%phik(1)=0.0_f64
+        endif
+        if(bc(1)==2)then
+          plan%phik(1)=plan%phik(2) !Neumann
+        endif
+        if(bc(1)==3)then 
+          if(k==0)then!Neumann for mode zero
+            plan%phik(1)=plan%phik(2)
+          else !Dirichlet for other modes
+            plan%phik(1)=0.0_f64
+          endif  
+        endif
+
+        !boundary condition at rmax
+        if(bc(2)==1)then !Dirichlet
+          plan%phik(nr+1)=0.0_f64
+        endif
+        if(bc(2)==2)then
+          plan%phik(nr+1)=plan%phik(nr) !Neumann
+        endif
+        if(bc(2)==3)then 
+          if(k==0)then!Neumann for mode zero
+            plan%phik(nr+1)=plan%phik(nr)
+          else !Dirichlet for other modes
+            plan%phik(nr+1)=0.0_f64
+          endif  
+        endif
+
+
+
+
 
 
        do i=1,nr+1
           call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
        end do
-       !print *,k,'s',sum(abs(plan%phik(1:nr+1)))
+       !print *,k,'s',bc,sum(abs(plan%phik(1:nr+1)))
 
     end do
 
