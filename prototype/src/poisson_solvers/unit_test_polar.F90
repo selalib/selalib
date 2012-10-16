@@ -27,7 +27,7 @@ program test_poisson
   
   sll_real64, dimension(:,:), allocatable :: f, phi
   type(sll_plan_poisson_polar), pointer :: plan
-  sll_int32 :: nr,ntheta,i,j,err,bc
+  sll_int32 :: nr,ntheta,i,j,err,bc(2)
   sll_real64 :: dr,dtheta,rmin,rmax
   logical :: test
   sll_real64 :: tol,r,theta,a,l1,l2,linf
@@ -50,17 +50,18 @@ program test_poisson
   tol=1.0e-14_f64
   test= .true.
   mod=0
-  bc=TOP_DIRICHLET+BOT_DIRICHLET
+  bc(1)=DIRICHLET
+  bc(2)=DIRICHLET
 
   do while (test .and. mod<ntheta/2)
      do i =1,nr+1
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta
            theta=real(j-1,f64)*dtheta
-           if (bc==5) then
+           if (bc(1)+bc(2)==5) then
               a=rmax
               f(i,j)=-(2.0_f64+(2.0_f64*r-rmin-a)/r-(real(mod,f64)/r)**2*(r-rmin)*(r-a))*cos(real(mod,f64)*theta)
-           else if (bc==6) then
+           else if (bc(1)+bc(2)==6) then
               a=2*rmax-rmin
               f(i,j)=-(2.0_f64+(2.0_f64*r-rmin-a)/r-(real(mod,f64)/r)**2*(r-rmin)*(r-a))*cos(real(mod,f64)*theta)
            end if
@@ -95,8 +96,9 @@ program test_poisson
      end if
 
      mod=mod+1
-     if (mod==ntheta/2 .and. bc==5) then
-        bc=TOP_NEUMANN+BOT_DIRICHLET
+     if (mod==ntheta/2 .and. (bc(1)+bc(2)==5)) then
+        bc(1)=DIRICHLET
+        bc(2)=NEUMANN
         mod=0
      end if
   end do
@@ -106,10 +108,10 @@ program test_poisson
         r=rmin+real(i-1,f64)*dr
         do j=1,ntheta
            theta=real(j-1,f64)*dtheta
-           if (bc==5) then
+           if (bc(1)+bc(2)==5) then
               a=rmax
               f(i,j)=-(2.0_f64+(2.0_f64*r-rmin-a)/r-(real(mod,f64)/r)**2*(r-rmin)*(r-a))*sin(real(mod,f64)*theta)
-           else if (bc==6) then
+           else if (bc(1)+bc(2)==6) then
               a=2*rmax-rmin
               f(i,j)=-(2.0_f64+(2.0_f64*r-rmin-a)/r-(real(mod,f64)/r)**2*(r-rmin)*(r-a))*sin(real(mod,f64)*theta)
            end if
@@ -144,8 +146,9 @@ program test_poisson
      end if
 
      mod=mod+1
-     if (mod==ntheta/2 .and. bc==5) then
-        bc=TOP_NEUMANN+BOT_DIRICHLET
+     if (mod==ntheta/2 .and. bc(1)+bc(2)==5) then
+        bc(2)=NEUMANN
+        bc(1)=DIRICHLET
         mod=0
      end if
   end do
