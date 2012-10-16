@@ -34,11 +34,7 @@ subroutine transpose(a,at,nrow,ncol,nproc)
 
   include 'mpif.h'
 
-#ifdef _CRAY 
-  integer, parameter :: mpi_realtype = mpi_real
-#else 
   integer, parameter :: mpi_realtype = mpi_real8 !mpi_double_precision
-#endif
 
   ipiecesize = nrow/nproc
   jpiecesize = ncol/nproc
@@ -59,12 +55,9 @@ subroutine transpose(a,at,nrow,ncol,nproc)
 
   call reorder(a,at,ipiecesize,jpiecesize,nproc)
 
-#ifdef _MPI
   call mpi_alltoall(at,count,MPI_realtype,a,count,MPI_realtype, &
        MPI_COMM_WORLD,ierr)
-#else
-  call sharedmem(a,at,ipiecesize,jpiecesize,nproc)
-#endif
+
   if (mod(ipiecesize,64).eq.0) then
      call bloctransp(a,at,ipiecesize,ncol)
   else
