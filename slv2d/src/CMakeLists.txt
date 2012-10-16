@@ -6,7 +6,6 @@ INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-SET(MPI_ENABLED           ON  CACHE BOOL  "Use parallel version of slv2d   ")
 SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
 SET(SILO_ENABLED          OFF CACHE BOOL  "Use SILO Library from LLNL      ")
 
@@ -16,13 +15,7 @@ IF(FFTPACK_ENABLED)
    FIND_PACKAGE(FFTPACK)
 ENDIF()
 
-IF(FFTPACK_FOUND)
-   ADD_DEFINITIONS(-D_FFTPACK)
-ELSE()
-   ADD_LIBRARY(sine vsint.f vsinti.f)
-   ADD_DEFINITIONS(-D_SINE)
-   SET(FFTPACK_LIBRARIES sine)
-ENDIF()
+ADD_DEFINITIONS(-D_FFTPACK)
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -33,17 +26,8 @@ IF(SILO_ENABLED)
    ENDIF()
 ENDIF()
 
-IF(MPI_ENABLED)
-   FIND_PACKAGE(MPI REQUIRED Fortran)
-ENDIF()
-
-IF(MPI_FOUND)
-   MESSAGE(STATUS "MPI FOUND")
-   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-   ADD_DEFINITIONS(-D_MPI)
-ELSE(MPI_FOUND)
-   MESSAGE(STATUS "MPI NOT FOUND, BUILD SEQUENTIAL VERSION")
-ENDIF(MPI_FOUND)
+FIND_PACKAGE(MPI REQUIRED Fortran)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
 MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
@@ -77,13 +61,11 @@ ENDFOREACH()
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics")
 
 SET(SLV2D_SRC silo_module.F90
-              diagnostiquesm.F90
-              diagnostiquesp.F90
+              diagnostiques.F90
               fft_module.F90
               geometry.F90
               maxwell2dfdtd.F90
               module_mpi.F90
-              poisson2ddir.F90
               poisson2dpp.F90
               precision.F90
               splinenn.F90
@@ -116,21 +98,14 @@ TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} )
 ENABLE_TESTING()
 
 SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.dat)
-IF(MPI_FOUND)
-   SET(PROCS 4)
-   ADD_TEST(NAME test_vp2d COMMAND 
-            ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-            ./vp2d
-            ${MPIEXEC_POSTFLAGS} ${ARGS})
-   ADD_TEST(NAME test_vm2d COMMAND 
-            ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-            ./vm2d
-            ${MPIEXEC_POSTFLAGS} ${ARGS})
-ELSE()
-   ADD_TEST(NAME vm2d COMMAND ./vm2d ${ARGS})
-   ADD_TEST(NAME vp2d COMMAND ./vp2d ${ARGS})
-ENDIF()
-
+SET(PROCS 4)
+ADD_TEST(NAME test_vp2d COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ./vp2d
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
+ADD_TEST(NAME test_vm2d COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ./vm2d
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
 SET_TESTS_PROPERTIES(test_vp2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vm2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-

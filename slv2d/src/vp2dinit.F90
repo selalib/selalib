@@ -35,11 +35,7 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
    namelist /phys_space/ x0,x1,y0,y1,nx,ny
    namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
    
-#ifdef _MPI
-
    if (my_num == MPI_MASTER) then
-
-#endif
    
    call fichinit()
   
@@ -47,8 +43,6 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
    read(idata,NML=diag)
    read(idata,NML=phys_space)
    read(idata,NML=vel_space)
-
-#ifdef _MPI
 
   end if
 
@@ -69,8 +63,6 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
   call mpi_bcast(nvx,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
   call mpi_bcast(nvy,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
 
-#endif
-
   call new_geometry2(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
   call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
@@ -90,9 +82,7 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
    type(splinepy) :: sply
    type(poisson2dpp) :: poiss2dpp
   
-#if defined _MPI
    sll_int32 :: ipiece_size_v, ipiece_size_x
-#endif
 
    sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky
    sll_int32  :: i,j,iv,jv,iflag
@@ -101,8 +91,6 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
    jendv=geomv%nx
    jstartx=1
    jendx=geomx%ny
-
-#if defined _MPI
 
    ! initialisation of size of parallel zones 
    ! the total size of the vx zone is nvx
@@ -121,8 +109,6 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
    print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, jstartv,jendv,ipiece_size_v
 
    SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
-
-#endif
 
    SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
    SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
