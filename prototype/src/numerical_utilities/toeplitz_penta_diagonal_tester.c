@@ -41,16 +41,23 @@ main(void)
       }
 
       f[0] = a*x_exact[0] + b*x_exact[1] + c*x_exact[2]; 
-      f[1] = b*x_exact[0] + a*x_exact[1] + b*x_exact[2] + c*x_exact[3];
+      f[n-1] = c*x_exact[n-3] + b*x_exact[n-2] + a*x_exact[n-1];
+
+      if ( n > 3 )
+      {
+         f[1] = b*x_exact[0] + a*x_exact[1] + b*x_exact[2] + c*x_exact[3];
+         f[n-2] = c*x_exact[n-4] + b*x_exact[n-3] + a*x_exact[n-2] + b*x_exact[n-1];
+      }
+      else
+      {
+         f[1] = b*x_exact[0] + a*x_exact[1] + b*x_exact[2]
+      }
 
       for (i = 2; i < n-2; i++)
       {
         f[i] = c*x_exact[i-2] + b*x_exact[i-1] + a*x_exact[i] + 
                                b*x_exact[i+1] + c*x_exact[i+2];        
       }
-
-      f[n-2] = c*x_exact[n-4] + b*x_exact[n-3] + a*x_exact[n-2] + b*x_exact[n-1];
-      f[n-1] = c*x_exact[n-3] + b*x_exact[n-2] + a*x_exact[n-1];
 
       plan = new_toep_penta_diagonal(n);
       x = solve_toep_penta_diagonal(a, b, c, f, plan);
