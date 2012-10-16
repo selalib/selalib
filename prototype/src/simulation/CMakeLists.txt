@@ -130,7 +130,7 @@ set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library( sll_simulations STATIC simulation_base_class.F90 
   simulation_4d_vlasov_poisson_cartesian.F90 )
 
-IF(HDF5_ENABLE_PARALLEL) 
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 add_dependencies( sll_simulations
   sll_poisson_parallel
@@ -169,4 +169,4 @@ target_link_libraries( test_vp4d_sim
   sll_working_precision
   )
 
-ENDIF(HDF5_ENABLE_PARALLEL) 
+ENDIF() 
