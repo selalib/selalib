@@ -127,10 +127,11 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+
 add_library( sll_simulations STATIC simulation_base_class.F90 
   simulation_4d_vlasov_poisson_cartesian.F90 )
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 add_dependencies( sll_simulations
   sll_poisson_parallel
