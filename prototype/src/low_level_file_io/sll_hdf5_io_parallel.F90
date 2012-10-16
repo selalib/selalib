@@ -20,19 +20,15 @@
 !> This is control by the variable <code>NOHDF5</code>.
 !> HDF5 is set by default but il you prefer binary just add 
 !>
-!> <code> env.Append(CPPDEFINES=['NOHDF5']) </code>
-!>
-!> in your SCons script
-!>
 !> <h2>How to use this module: </h2>
 !>
-!> \code use sll_hdf5_io \endcode
+!> \code use sll_hdf5_io_parallel \endcode
 !>
 !> External links:
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 !
 ! REVISION HISTORY:
-! 05 12 2011 - Initial Version
+! 29 09 2012 - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_hdf5_io_parallel
@@ -45,19 +41,11 @@ module sll_hdf5_io_parallel
   
   implicit none
 
-  type :: phdf5_file
-     integer(hid_t) :: file_id      ! Property list identifier 
-  contains
-     procedure :: create => sll_hdf5_file_create
-     procedure :: close => sll_hdf5_file_close
-     procedure :: sll_hdf5_write_array_1d
-     procedure :: sll_hdf5_write_array_2d
-     procedure :: sll_hdf5_write_array_3d
-     generic   :: write_array => sll_hdf5_write_array_1d, &
-                                 sll_hdf5_write_array_2d, &
-                                 sll_hdf5_write_array_3d
-  end type
-  
+  interface sll_hdf5_write_array
+     module procedure sll_hdf5_write_array_1d
+     module procedure sll_hdf5_write_array_2d
+     module procedure sll_hdf5_write_array_3d
+  end interface
 
 
 contains
@@ -65,8 +53,7 @@ contains
   !> Create HDF5 file :
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
-  subroutine sll_hdf5_file_create(self, filename,error)
-    class(phdf5_file) :: self
+  subroutine sll_hdf5_file_create(filename, file_id, error)
     character(len=*) , intent(in)  :: filename  
     integer,           intent(out) :: error
     integer(hid_t)                 :: file_id   
@@ -86,15 +73,12 @@ contains
     call h5fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, error, access_prp = plist_id)
     call h5pclose_f(plist_id, error)
 
-    self%file_id  = file_id
-
   end subroutine sll_hdf5_file_create
 
   !> Open HDF5 file 
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
-  subroutine sll_hdf5_file_open(self,filename,error)
-    class(phdf5_file)              :: self
+  subroutine sll_hdf5_file_open(file_id,filename,error)
     character(len=*) , intent(in)  :: filename  
     integer(hid_t)                 :: file_id   
     integer(hid_t)                 :: plist_id   
@@ -114,28 +98,26 @@ contains
     call h5fopen_f(filename, H5F_ACC_RDONLY_F, file_id, error, access_prp = plist_id)
     call h5pclose_f(plist_id, error)
 
-    self%file_id  = file_id
-
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
-  subroutine sll_hdf5_file_close(self,error)
-    class(phdf5_file)              :: self
+
+  subroutine sll_hdf5_file_close(file_id,error)
+    integer(hid_t)                 :: file_id   
     integer :: error
 
     !
     ! Close property list and the file.
     !
-    call h5fclose_f(self%file_id, error)
+    call h5fclose_f(file_id, error)
     !
     ! Close FORTRAN interface
     !
     call h5close_f(error)
   end subroutine sll_hdf5_file_close
 
-#define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims) \
-  subroutine func_name(self,global_size,offset,array,dsetname,error);  \
-    class(phdf5_file)                      :: self;                    \
+#define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims)  \
+  subroutine func_name(file_id,global_size,offset,array,dsetname,error);  \
     character(len=*), intent(in)           :: dsetname;                \
     integer(hsize_t), intent(in)           :: global_size(dspace_dims);\
     sll_int32, intent(out)                 :: error;                   \
@@ -152,7 +134,6 @@ contains
     integer(HSSIZE_T)                      :: offset(dspace_dims);     \
     integer(HSIZE_T)                       :: stride(dspace_dims);     \
     integer(HSIZE_T)                       :: block(dspace_dims);      \
-    file_id  = self%file_id;                                           \
     rank = dspace_dims;                                                \
     do i = 1, rank;                                                    \
       array_dims(i) = size(array,i);                                   \
