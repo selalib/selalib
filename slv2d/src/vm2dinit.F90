@@ -4,8 +4,7 @@ use geometry_module
 use vlasov2d_module
 use splinepx_class
 use splinepy_class
-use diagnostiques_module, only: fichinit
-use diagnostiquesm_module
+use diagnostiques_module
 use poisson2dpp_module
 use maxwell2dfdtd_module
 
