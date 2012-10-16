@@ -590,17 +590,23 @@ contains
        ! Diagnostics here... PIERRE!!!
 
 <<<<<<< HEAD
+<<<<<<< HEAD
        
 
     end do ! main loop
 
     call plot_solution(sim)
 =======
+=======
+>>>>>>> origin/phdf5-3d
        call plot_fields(itime, sim)
 
     end do ! main loop
 
+<<<<<<< HEAD
 >>>>>>> prototype-devel
+=======
+>>>>>>> origin/phdf5-3d
 
     
   end subroutine run_vp4d_cartesian
@@ -847,23 +853,33 @@ contains
   end subroutine advection_v_1d
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   subroutine plot_solution(my_sim)
 =======
   subroutine plot_fields(itime, sim)
 >>>>>>> prototype-devel
+=======
+  subroutine plot_fields(itime, sim)
+>>>>>>> origin/phdf5-3d
     use mpi
     use hdf5
     use sll_hdf5_io_parallel
     use sll_xml_io
 <<<<<<< HEAD
+<<<<<<< HEAD
     class(sll_simulation_4d_vlasov_poisson_cart), intent(in) :: my_sim
 =======
+=======
+>>>>>>> origin/phdf5-3d
     sll_int32, intent(in) :: itime
     character(len=4)      :: ctime
     sll_int32             :: i_layout
     character(len=1)      :: c_layout
     class(sll_simulation_4d_vlasov_poisson_cart), intent(in) :: sim
+<<<<<<< HEAD
 >>>>>>> prototype-devel
+=======
+>>>>>>> origin/phdf5-3d
     type(layout_2D), pointer :: my_layout
     character(len=7),  parameter :: hdf_file = "data.h5"  ! File name
     sll_real64 :: tcpu1, tcpu2
@@ -900,17 +916,23 @@ contains
     integer(HSSIZE_T), dimension(2) :: offset 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     array_dims(1) = my_sim%nc_x1
     array_dims(2) = my_sim%nc_x2
 =======
     array_dims(1) = sim%nc_x1
     array_dims(2) = sim%nc_x2
 >>>>>>> prototype-devel
+=======
+    array_dims(1) = sim%nc_x1
+    array_dims(2) = sim%nc_x2
+>>>>>>> origin/phdf5-3d
     world_size    = sll_get_collective_size(sll_world_collective)
     my_rank       = sll_get_collective_rank(sll_world_collective)
 
     tcpu1 = MPI_WTIME()
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     my_layout => my_sim%rho_seq_x1
 
@@ -978,6 +1000,8 @@ contains
   
   end subroutine plot_solution
 =======
+=======
+>>>>>>> origin/phdf5-3d
     do i_layout = 1, 2
 
        if (i_layout == 1) then
@@ -1079,6 +1103,9 @@ contains
    !   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
   
   end subroutine plot_fields
+<<<<<<< HEAD
 >>>>>>> prototype-devel
+=======
+>>>>>>> origin/phdf5-3d
 
 end module sll_simulation_4d_vlasov_poisson_cartesian
