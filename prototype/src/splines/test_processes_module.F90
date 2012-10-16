@@ -453,7 +453,7 @@ contains
     SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
   end subroutine interpolator_tester_1d_prdc
 
-
+  ! Magic numbers inside this function should be converted to routine parameters
   subroutine test_spline_1d_hrmt ( &
     func_1d, &
     slope_l, &

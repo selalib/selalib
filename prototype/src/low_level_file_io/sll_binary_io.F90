@@ -4,25 +4,17 @@
 !
 ! MODULE: sll_binary_io
 !
-!> @author
-!> Pierre Navaro
-!>
-!
 ! DESCRIPTION: 
-!
+!> @namespace sll_binary_io
+!> @author Pierre Navaro
+!> @file sll_binary_io.F90
 !> @brief
 !> Implements the functions to write binary file to store heavy data
-!>
-!>@details
+!> @details
 !> one file = one dataset
-!>
 !> If HDF5 is not installed you can use this module.
-!> This is control by the variable <code>NOHDF5</code>.
-!> HDF5 is set by default but il you prefer binary just add 
-!>
-!> <code> env.Append(CPPDEFINES=['NOHDF5']) </code>
-!>
-!> in your SCons script
+!> This is control by the variable <code>HDF5_ENABLE</code>.
+!> HDF5 is set by default.
 !>
 !> <h2>How to use this module: </h2>
 !>
@@ -39,6 +31,7 @@ module sll_binary_io
   
   implicit none
   
+  !> @brief interface sll_binary_write_array
   interface sll_binary_write_array
      module procedure sll_binary_write_array_1d
      module procedure sll_binary_write_array_2d
@@ -49,8 +42,12 @@ module sll_binary_io
 contains
   
   !> Create binary file :
+  !>
   !>    - Find a free unit file number
   !>    - Create a new file using default properties
+  !> \param[in] file name
+  !> \param[in] unit number
+  !> \param[out] error code
   subroutine sll_binary_file_create(filename,file_id,error)
     character(len=*) , intent(in)  :: filename  
     sll_int32        , intent(out) :: file_id   

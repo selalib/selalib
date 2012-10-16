@@ -4,6 +4,7 @@
 !
 ! MODULE: sll_hdf5_io
 !
+!> @namespace sll_hdf5_io
 !> @author
 !> Pierre Navaro
 !>
@@ -13,19 +14,11 @@
 !> @brief
 !> Implements the functions to write hdf5 file to store heavy data
 !>
-!>@details
+!> @details
 !> With HDF5 you can store several datasets in a single file.
 !>
-!> If HDF5 is not installed you can build the library without it.
-!> This is control by the variable <code>NOHDF5</code>.
-!> HDF5 is set by default but il you prefer binary just add 
-!>
-!> <code> env.Append(CPPDEFINES=['NOHDF5']) </code>
-!>
-!> in your SCons script
-!>
-!> <h2>How to use this module: </h2>
-!>
+!> @remark
+!> import this module with
 !> \code use sll_hdf5_io \endcode
 !>
 !> External links:
@@ -33,7 +26,7 @@
 !
 ! REVISION HISTORY:
 ! 05 12 2011 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+! @todo - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_hdf5_io
 #include "sll_working_precision.h"
@@ -63,7 +56,7 @@ contains
     call H5Fcreate_f(filename,H5F_ACC_TRUNC_F,file_id,error)
   end subroutine sll_hdf5_file_create
 
-  !> Open HDF5 file 
+  !> Open HDF5 file :
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
   subroutine sll_hdf5_file_open(filename,file_id,error)
@@ -76,6 +69,8 @@ contains
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
+  !>    - Close fortran interface
+  !>    - Close a HDF5 file
   subroutine sll_hdf5_file_close(file_id,error)
     integer(hid_t), intent(in) :: file_id
     integer :: error
