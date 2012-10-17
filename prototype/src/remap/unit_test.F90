@@ -301,20 +301,6 @@ contains
     !integer, dimension(1:3) :: ind
     integer, dimension(1:3) :: theoretical_global_3D_indices
     integer, intent(in)     :: d, ni, nj
-!<<<<<<< HEAD
-!    if(mod(d,ni) /= 0) then
-!       ind(1) = mod(d,ni)
-!    else
-!       ind(1) = ni
-!    end if
-!    if (mod(d,ni*nj)/=0) then
-!       ind(3) = d/(ni*nj) + 1
-!    else
-!       ind(3) = d/(ni*nj)
-!    endif
-!    ind(2) = (d-ind(1))/ni - nj*(ind(3)-1) + 1
-
-!=======
     integer                 :: i, j, k
     integer                 :: q
     sll_real64              :: tmp
@@ -324,17 +310,16 @@ contains
     !          linear = i + ni*(j-1) + ni*nj*(k-1)
     !
     ! where i,j,k are the indices sought. We start by working backwards.
-    tmp = real(d)/real(ni*nj)
+    tmp = real(d,f64)/real(ni*nj,f64)
     k   = ceiling(tmp)
     ! reduce the size of the number we are working with
     q   = d - (k-1)*ni*nj
-    tmp = real(q)/real(ni)
+    tmp = real(q,f64)/real(ni,f64)
     j   = ceiling(tmp)
     ! reduce again
     q   = q - (j-1)*ni
     i   = q
     theoretical_global_3D_indices(1:3) = (/i,j,k/) 
-!>>>>>>> origin/prototype-devel
   end function theoretical_global_3D_indices
   
   subroutine two_power_rand_factorization(n, n1, n2, n3)

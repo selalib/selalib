@@ -41,6 +41,17 @@ target_link_libraries(test_remap_4d
 	sll_working_precision
 )
 
+#test remap 6d
+add_executable(test_remap_6d unit_test_6d.F90)
+target_link_libraries(test_remap_6d
+	sll_remap
+	sll_collective
+	sll_utilities
+	sll_memory
+	sll_assertion
+	sll_working_precision
+)
+
 
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
