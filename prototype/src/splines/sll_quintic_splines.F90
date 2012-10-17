@@ -6,7 +6,7 @@
 !> @brief 
 !> Selalib quintic splines interpolator
 !
-!> Last modification: September 28, 2012
+!> Last modification: October 03, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -21,7 +21,7 @@ use arbitrary_degree_splines
 implicit none
 
   type quintic_splines_plan_uniform
-    sll_int32                             :: n
+    sll_int32                             :: nb_cells
     sll_real64                            :: xmin
     sll_real64                            :: xmax
     sll_real64, dimension(:), allocatable :: b_at_node
@@ -53,9 +53,9 @@ contains
   !
   ! *************************************************************************
 
-  function new_quintic_splines_uniform(n, xmin, xmax, f) result(plan)
+  function new_quintic_splines_uniform(nb_cells, xmin, xmax, f) result(plan)
 
-    sll_int32                                   :: n, ierr
+    sll_int32                                   :: nb_cells, ierr
     sll_real64                                  :: xmin, xmax
     sll_real64, dimension(:)                    :: f
     type(quintic_splines_plan_uniform), pointer :: plan
@@ -63,9 +63,9 @@ contains
     ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
     ! plan component allocation
-    SLL_ALLOCATE(plan%coeffs(n+6), ierr)
+    SLL_ALLOCATE(plan%coeffs(nb_cells+6), ierr)
 
-    plan%n = n
+    plan%nb_cells = nb_cells
     plan%xmin = xmin
     plan%xmax = xmax
     plan%b_at_node = uniform_b_splines_at_x( 5, 0.d0 )
@@ -82,15 +82,15 @@ contains
     sll_real64, dimension(:)                        :: f
     type(quintic_splines_plan_uniform), pointer     :: plan_splines
     sll_real64                                      :: a, b, c
-    sll_int32                                       :: n
+    sll_int32                                       :: nb_cells
     type(toep_penta_diagonal_plan), pointer         :: plan_pent
 
-    n = plan_splines%n
+    nb_cells = plan_splines%nb_cells
     a = plan_splines%b_at_node(3)
     b = plan_splines%b_at_node(2)
     c = plan_splines%b_at_node(1)
 
-    plan_pent => new_toep_penta_diagonal(n+6)
+    plan_pent => new_toep_penta_diagonal(nb_cells+6)
     plan_splines%coeffs = solve_toep_penta_diagonal(a, b, c, f, plan_pent)
     call delete_toep_penta_diagonal(plan_pent)
 
@@ -100,15 +100,15 @@ contains
   ! The interpolator spline function
 
     type(quintic_splines_plan_uniform), pointer :: plan_splines
-    sll_int32                                   :: n, left, j
+    sll_int32                                   :: nb_cells, left, j
     sll_real64                                  :: x, xmin, xmax
     sll_real64                                  :: h, s, t0
     sll_real64, dimension(6)                    :: b
 
     xmin = plan_splines%xmin
     xmax = plan_splines%xmax
-    n = plan_splines%n
-    h = (xmax-xmin)/n
+    nb_cells = plan_splines%nb_cells
+    h = (xmax-xmin)/nb_cells
 
     t0 = (x-xmin)/h
     left = int(t0) ! Determine the leftmost support index 'i' of x
@@ -118,7 +118,7 @@ contains
     s = 0
 
     do j=left-5,left
-      if( (j>=-5) .and. (j<=n) ) then
+      if( (j>=-5) .and. (j<=nb_cells) ) then
         s = s + plan_splines%coeffs(j+6) * b(j-left+6)
       endif
     enddo
@@ -145,7 +145,7 @@ contains
   ! nb_pts = n + 1
   function new_quintic_splines_non_uni(knots, f) result(plan)
 
-    sll_int32                                   :: n, ierr
+    sll_int32                                   :: nb_pts, ierr
     sll_real64, dimension(:), intent(in)        :: knots
     sll_real64, dimension(:)                    :: f
     type(quintic_splines_plan_non_uni), pointer :: plan
@@ -153,9 +153,9 @@ contains
     ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
     ! plan component allocation
-    n = size(knots)
-    SLL_ALLOCATE(plan%coeffs(n+5), ierr)
-    plan%spline_obj=>new_arbitrary_degree_spline_1d(5, knots, n, 1)
+    nb_pts = size(knots)
+    SLL_ALLOCATE(plan%coeffs(nb_pts+5), ierr)
+    plan%spline_obj=>new_arbitrary_degree_spline_1d(5, knots, nb_pts, 1)
     call compute_coeffs_non_uni(f, plan)
 
   end function new_quintic_splines_non_uni
@@ -169,18 +169,18 @@ contains
     sll_real64, dimension(:)                        :: f
     type(quintic_splines_plan_non_uni), pointer     :: plan_splines
     sll_real64                                      :: a, b, c
-    sll_int32                                       :: n
+    sll_int32                                       :: nb_pts
     type(toep_penta_diagonal_plan), pointer         :: plan_pent
     sll_real64, dimension(6)                        :: b_at_x
 
-    n = plan_splines%spline_obj%num_pts
-    b_at_x = b_splines_at_x( plan_splines%spline_obj, n-1, &
+    nb_pts = plan_splines%spline_obj%num_pts
+    b_at_x = b_splines_at_x( plan_splines%spline_obj, nb_pts-1, &
                             plan_splines%spline_obj%xmax )
     a = b_at_x(3)
     b = b_at_x(2)
     c = b_at_x(1)
 
-    plan_pent => new_toep_penta_diagonal(n+5)
+    plan_pent => new_toep_penta_diagonal(nb_pts+5)
     plan_splines%coeffs = solve_toep_penta_diagonal(a, b, c, f, plan_pent)
     call delete_toep_penta_diagonal(plan_pent)
 
@@ -190,23 +190,23 @@ contains
   ! The interpolator spline function
 
     type(quintic_splines_plan_non_uni), pointer            :: plan_splines
-    sll_int32                                              :: n, cell, left, j
+    sll_int32                                              :: nb_pts, cell, left, j
     sll_real64                                             :: x, s
     sll_real64, dimension(6)                               :: b
     sll_real64, dimension(plan_splines%spline_obj%num_pts) :: knots
 
     knots = plan_splines%spline_obj%k
-    n = plan_splines%spline_obj%num_pts
+    nb_pts = plan_splines%spline_obj%num_pts
 
     cell = 1
-    do while(  ( (x<=knots(cell)) .or. (x>=knots(cell+1)) ) .and. (cell<n-1)  )
+    do while(  ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<nb_pts-1)  )
          cell = cell + 1
     enddo
 
     left = cell - 1
     s = 0
     do j=left-5,left
-      if( (j>=-5) .and. (j<=n-1) ) then
+      if( (j>=-5) .and. (j<=nb_pts-1) ) then
         s = s + plan_splines%coeffs(j+6) * b(j-left+6)
       endif
     enddo
