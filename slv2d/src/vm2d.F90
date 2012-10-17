@@ -207,6 +207,7 @@ contains
 
 subroutine plot_solution( f )
 
+   use sll_xdmf
    sll_real64, dimension(:,:,:,:), intent(in) :: f
    sll_int32 :: file_id
    sll_int32, save :: iplot = 0
