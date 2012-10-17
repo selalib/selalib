@@ -64,10 +64,10 @@ rho = -2_f64 * sin(x) * sin(y)
 global_dims = (/nx,ny/)
 offset = 0
 
-call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
-call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
-call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
-call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
+!call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
+!call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
+!call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
+!call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
 
 call new(poisson, rho, geom, error)
 
@@ -81,12 +81,12 @@ endif
 
 call solve(poisson,ex,ey,rho)
 
-call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
+!call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
 
-call sll_xdmf_write_array(prefix,global_dims, offset,&
-                          ey,"ey",error,file_id,"Node")
+!call sll_xdmf_write_array(prefix,global_dims, offset,&
+!                          ey,"ey",error,file_id,"Node")
 
-call sll_xdmf_close(file_id,error)
+!call sll_xdmf_close(file_id,error)
 
 print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
 print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
