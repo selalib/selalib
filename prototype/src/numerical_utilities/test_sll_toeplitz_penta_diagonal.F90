@@ -51,18 +51,20 @@ use sll_toep_penta_diagonal
       call random_number(x_exact)
 
       f(1) = a*x_exact(1) + b*x_exact(2) + c*x_exact(3)
-      f(2) = b*x_exact(1) + a*x_exact(2) + b*x_exact(3) + c*x_exact(4)
+      f(n) = c*x_exact(n-2) + b*x_exact(n-1) + a*x_exact(n)
+
+      if (n>3) then
+         f(2) = b*x_exact(1) + a*x_exact(2) + b*x_exact(3) + c*x_exact(4)
+         f(n-1) = c*x_exact(n-3) + b*x_exact(n-2) + &
+                        a*x_exact(n-1) + b*x_exact(n)
+      else
+         f(2) = b*x_exact(1) + a*x_exact(2) + b*x_exact(3)
+      endif
 
       do i=3,n-2
         f(i) = c*x_exact(i-2) + b*x_exact(i-1) + a*x_exact(i) + & 
                                   b*x_exact(i+1) + c*x_exact(i+2)      
       enddo
-
-      if (n>3) then
-         f(n-1) = c*x_exact(n-3) + b*x_exact(n-2) + &
-                        a*x_exact(n-1) + b*x_exact(n)
-      endif
-      f(n) = c*x_exact(n-2) + b*x_exact(n-1) + a*x_exact(n)
 
       plan => new_toep_penta_diagonal(n)
       x = solve_toep_penta_diagonal(a, b, c, f, plan)
