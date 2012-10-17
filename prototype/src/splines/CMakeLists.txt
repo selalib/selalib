@@ -5,7 +5,7 @@ add_library(sll_odd_degree_splines STATIC sll_odd_degree_splines.F90)
 add_library(sll_arbitrary_degree_splines STATIC sll_arbitrary_degree_splines.F90)
 
 set(SPL_LIBS sll_splines sll_quintic_splines sll_odd_degree_splines 
-sll_arbitrary_degree_splines sll_toep_penta_diagonal sll_tridiagonal 
+sll_arbitrary_degree_splines sll_toeplitz_penta_diagonal sll_tridiagonal 
 sll_memory sll_assertion sll_constants util_constants ${LAPACK_LIBRARIES})
 
 add_dependencies(sll_splines sll_arbitrary_degree_splines sll_memory sll_assertion sll_working_precision)
@@ -36,11 +36,11 @@ target_link_libraries(test_arbitrary_degree_splines ${SPL_LIBS})
 
 # add quintic splines test
 set(SRC_TEST4 test_sll_quintic_splines.F90 sll_quintic_splines.F90)
-add_executable(test_sll_quintic_splines ${SRC_TEST4})
-target_link_libraries(test_sll_quintic_splines ${SPL_LIBS})
+add_executable(test_quintic_splines ${SRC_TEST4})
+target_link_libraries(test_quintic_splines ${SPL_LIBS})
 
 # add any odd degree splines test
 set(SRC_TEST5 test_sll_odd_degree_splines.F90 sll_odd_degree_splines.F90)
-add_executable(test_sll_odd_degree_splines ${SRC_TEST5})
-target_link_libraries(test_sll_odd_degree_splines ${SPL_LIBS} -llapack)
+add_executable(test_odd_degree_splines ${SRC_TEST5})
+target_link_libraries(test_odd_degree_splines ${SPL_LIBS} -llapack)
 
