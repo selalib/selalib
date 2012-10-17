@@ -4,5 +4,5 @@
 use numeric_constants
 use sll_misc_utils
 use sll_io
-use sll_xdmf
+use sll_xdmf_parallel
 #define MPI_MASTER 0

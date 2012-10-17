@@ -37,19 +37,12 @@ MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -pedantic -std=f2003 -fall-intrinsics")
 
-SET( ON  CACHE BOOL "Enable HDF5 parallel")
-#IF (APPLE)
-#   INCLUDE(${SELALIB_DIR}/CMakeModules/FindHDF5.cmake)
-#ELSE()
-   FIND_PACKAGE(HDF5 REQUIRED Fortran)
-   SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
-   IF(HDF5_ENABLE_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-   ENDIF()
-#ENDIF()
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
-IF(HDF5_FOUND AND HDF5_ENABLE_PARALLEL) 
-   ADD_DEFINITIONS(-DHDF5_PARALLEL)
+FIND_PACKAGE(HDF5 REQUIRED Fortran)
+SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+IF(HDF5_ENABLE_PARALLEL) 
+   MESSAGE(STATUS "HDF5 parallel supported")
 ELSE()
    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
 ENDIF()
@@ -61,6 +54,7 @@ SET( SLL_COMPONENTS precision
                     assert 
                     memory 
                     constants 
+                    collective
                     low_level_file_io)
 
 FOREACH( component ${SLL_COMPONENTS} )
@@ -95,10 +89,12 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_constants
                        sll_memory
                        sll_low_level_file_io
+                       sll_collective
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_low_level_file_io_parallel
          sll_low_level_file_io
+         sll_collective
          sll_utilities
          sll_constants
          sll_memory
