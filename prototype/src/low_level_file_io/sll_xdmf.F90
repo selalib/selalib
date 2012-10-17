@@ -47,6 +47,9 @@ module sll_xdmf
   use sll_binary_io
 #else
   use sll_hdf5_io
+#ifdef HDF5_PARALLEL
+  use sll_hdf5_io_parallel
+#endif
 #endif
 
   use sll_ascii_io
@@ -61,6 +64,7 @@ module sll_xdmf
 
   interface sll_xdmf_write_array
      module procedure sll_xdmf_array_2d
+     module procedure sll_xdmf_array_2d_parallel
      module procedure sll_xdmf_array_3d
   end interface
   
@@ -151,7 +155,7 @@ contains
             'HDF',&
             center)
 #endif
-  end if
+     end if
   end subroutine sll_xdmf_array_2d
 
   !>Write 3d array in binary or hdf5 file and the matching line in XDMF file
@@ -203,9 +207,52 @@ contains
          center)
 #endif
 
-   end if
+     end if
 
   end subroutine sll_xdmf_array_3d
+
+  !>Write 2d array in parallel hdf5 file and the matching line in XDMF file
+  subroutine sll_xdmf_array_2d_parallel(mesh_name,global_dims, offset,&
+                                        array,array_name,error,&
+                                        xmffile_id,center)
+
+    character(len=*), intent(in)        :: mesh_name
+    sll_real64, intent(in)              :: array(:,:)
+    character(len=*), intent(in)        :: array_name
+    sll_int32, intent(in), dimension(2) :: global_dims
+    sll_int32, intent(in), dimension(2) :: offset
+    sll_int32                           :: file_id
+    sll_int32                           :: npoints_x1
+    sll_int32                           :: npoints_x2
+    sll_int32, intent(in), optional     :: xmffile_id
+    character(len=4), optional          :: center
+    sll_int32, intent(out)              :: error
+    
+    npoints_x1 = size(array,1)
+    npoints_x2 = size(array,2)
+
+#ifdef HDF5_PARALLEL
+
+    call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
+                              file_id,error)
+    call sll_hdf5_write_array(file_id,global_dims,offset, &
+                              array,"/"//trim(array_name),error)
+    call sll_hdf5_file_close(file_id, error)
+
+    if ( present(xmffile_id) .and. present(center)) then
+       call sll_xml_field( &
+            xmffile_id, &
+            trim(array_name), &
+            trim(mesh_name)//"-"//trim(array_name)//".h5:/"//trim(array_name), &
+            npoints_x1,&
+            npoints_x2,&
+            'HDF', &
+            center)
+    end if
+
+#endif
+
+  end subroutine sll_xdmf_array_2d_parallel
 
   !----------------------------------------------------------------------------
   !> Outputs an error message:

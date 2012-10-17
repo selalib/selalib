@@ -68,7 +68,7 @@ end subroutine initglobal
 
 subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                      f,f1,rho,ex,ey,ex1,ey1,bz,bz1,jx,jy,vlas2d,maxw2dfdtd,  &
-		     poiss2dpp,splx,sply)
+                     poiss2dpp,splx,sply)
 !-------------------------------------------------------
 ! sert a l'initialisation en parallele du programme VP2D
 !-------------------------------------------------------
@@ -76,7 +76,6 @@ type(geometry) :: geomx, geomv  ! geometrie globale du probleme
 sll_int32 :: jstartv,jendv,jstartx,jendx ! definition de la bande du proc
 sll_real64, dimension(:,:,:,:),pointer :: f,f1
 sll_real64, dimension(:,:),pointer :: rho,ex,ey,ex1,ey1,bz,bz1,jx,jy
-sll_int32 :: proc, mpierror
 type(vlasov2d) :: vlas2d
 type(splinepx) :: splx
 type(splinepy) :: sply
@@ -109,7 +108,7 @@ SLL_ASSERT(jstartv < jendv)
 SLL_ASSERT(jstartx < jendx) 
 
 print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, &
-		           jstartv,jendv,ipiece_size_v
+                    jstartv,jendv,ipiece_size_v
 
 ! allocation dynamique des tableaux
 SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
@@ -167,14 +166,14 @@ bz(:,:) = 0.0; bz1(:,:) = 0.0;
 rho(:,:) = 0.0
 
 !Initialisation du module poisson
-call new(poiss2dpp,rho,geomx,iflag,jstartx,jendx)
+call new(poiss2dpp,rho,geomx,iflag)
 !Initialisation du module vlasov
 call new(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 !Intitialisation du champ electrique
-call transposexv(vlas2d,f)		!Transposition
-call densite_charge(vlas2d,rho)		!calcul de rho
-call solve(poiss2dpp,ex,ey,rho,nrj)	!calcul de ex et ey
-!call solve(poiss2dpp,ex,rho,nrj)	!calcul de ex (cas 1d)
+call transposexv(vlas2d,f)
+call densite_charge(vlas2d,rho)
+call solve(poiss2dpp,ex,ey,rho,nrj)
+!call solve(poiss2dpp,ex,rho,nrj)
 
 open(15+my_num,file="r_init:"//char(48+my_num))
 open(16+my_num,file="e_init:"//char(48+my_num))
