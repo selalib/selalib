@@ -38,7 +38,7 @@ MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 
 IF (APPLE)
-   INCLUDE(${CMAKE_SOURCE_DIR}/../../prototype/src/CMakeModules/FindHDF5.cmake)
+   INCLUDE(${SELALIB_DIR}/CMakeModules/FindHDF5.cmake)
 ELSE()
    FIND_PACKAGE(HDF5 REQUIRED Fortran)
 ENDIF()
@@ -66,7 +66,8 @@ SET(SLV2D_SRC silo_module.F90
               geometry.F90
               maxwell2dfdtd.F90
               module_mpi.F90
-              poisson2dpp.F90
+              poisson2dpp_seq.F90
+              poisson2dpp_par.F90
               precision.F90
               splinenn.F90
               splinepp.F90
@@ -77,8 +78,10 @@ SET(SLV2D_SRC silo_module.F90
               vlasov2d.F90 )
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
-ADD_DEPENDENCIES(slv2d sll_utilities
+
+ADD_DEPENDENCIES(slv2d sll_precision
                        sll_assertion
+                       sll_constants
                        sll_memory
                        sll_low_level_file_io)
 
@@ -94,18 +97,30 @@ ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
 TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} )
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} )
+ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
+TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS} )
 
 ENABLE_TESTING()
 
-SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.dat)
 SET(PROCS 4)
+
+ADD_TEST(NAME test_poisson2d_par COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ./poisson2d_par
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.nml)
+
 ADD_TEST(NAME test_vp2d COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
          ./vp2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
+
 ADD_TEST(NAME test_vm2d COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
          ./vm2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
+
 SET_TESTS_PROPERTIES(test_vp2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vm2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
