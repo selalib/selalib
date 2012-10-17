@@ -7,6 +7,7 @@ use hdf5
 use module_mpi 
 use geometry_module
 use poisson2dpp_seq
+use sll_xdmf_parallel
 
 implicit none
 
