@@ -6,8 +6,8 @@ INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
-SET(SILO_ENABLED          OFF CACHE BOOL  "Use SILO Library from LLNL      ")
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
+SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 
 FIND_PACKAGE(LAPACK  REQUIRED)
 
@@ -35,12 +35,23 @@ MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
-SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -pedantic -std=f2003 -fall-intrinsics")
 
-IF (APPLE)
-   INCLUDE(${SELALIB_DIR}/CMakeModules/FindHDF5.cmake)
-ELSE()
+SET( ON  CACHE BOOL "Enable HDF5 parallel")
+#IF (APPLE)
+#   INCLUDE(${SELALIB_DIR}/CMakeModules/FindHDF5.cmake)
+#ELSE()
    FIND_PACKAGE(HDF5 REQUIRED Fortran)
+   SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+   IF(HDF5_ENABLE_PARALLEL) 
+      MESSAGE(STATUS "HDF5 parallel supported")
+   ENDIF()
+#ENDIF()
+
+IF(HDF5_FOUND AND HDF5_ENABLE_PARALLEL) 
+   ADD_DEFINITIONS(-DHDF5_PARALLEL)
+ELSE()
+   MESSAGE(SEND_ERROR "HDF5 parallel not supported")
 ENDIF()
 
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
@@ -83,9 +94,11 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_assertion
                        sll_constants
                        sll_memory
-                       sll_low_level_file_io)
+                       sll_low_level_file_io
+                       sll_low_level_file_io_parallel)
 
-SET(LIBS sll_low_level_file_io
+SET(LIBS sll_low_level_file_io_parallel
+         sll_low_level_file_io
          sll_utilities
          sll_constants
          sll_memory
@@ -102,13 +115,14 @@ TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS} )
 
 ENABLE_TESTING()
 
-SET(PROCS 4)
+SET(PROCS 1)
 
 ADD_TEST(NAME test_poisson2d_par COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./poisson2d_par
+         ./test_poisson2d_par
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
+SET(PROCS 4)
 SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.nml)
 
 ADD_TEST(NAME test_vp2d COMMAND 
