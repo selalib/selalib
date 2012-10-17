@@ -3,6 +3,7 @@ program test_poisson2d_par
 #include "selalib.h"
 
 use mpi
+use hdf5
 use module_mpi 
 use geometry_module
 use poisson2dpp_seq
@@ -28,8 +29,10 @@ sll_int32  :: num_threads
 sll_real64 :: tcpu1
 sll_real64 :: tcpu2
 
-character(len=4) :: prefix = "mesh"
-sll_int32 :: file_id
+character(len=4)  :: prefix = "mesh"
+sll_int32         :: file_id
+integer(HSSIZE_T) :: offset(2)
+integer(HSIZE_T)  :: global_dims(2)
 
 
 ! initialisation global
@@ -57,11 +60,13 @@ call new_geometry2(geom,x_min,y_min,x_max,y_max,nx,ny,error,"perxy")
 
 call meshgrid(geom%xgrid, geom%ygrid, x, y)
 rho = -2_f64 * sin(x) * sin(y)
+global_dims = (/nx,ny/)
+offset = 0
 
 call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
-call sll_xdmf_write_array(prefix,x,'x1',error)
-call sll_xdmf_write_array(prefix,y,'x2',error)
-call sll_xdmf_write_array(prefix,rho,"rho",error,file_id,"Node")
+call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
+call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
+call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
 
 call new(poisson, rho, geom, error)
 
@@ -75,8 +80,9 @@ endif
 
 call solve(poisson,ex,ey,rho)
 
-call sll_xdmf_write_array(prefix,ex,"ex",error,file_id,"Node")
-call sll_xdmf_write_array(prefix,(/nx,ny/), (/0,0/),&
+call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
+
+call sll_xdmf_write_array(prefix,global_dims, offset,&
                           ey,"ey",error,file_id,"Node")
 
 call sll_xdmf_close(file_id,error)
