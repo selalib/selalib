@@ -5,7 +5,7 @@ use vlasov2d_module
 use splinepx_class
 use splinepy_class
 use diagnostiques_module
-use poisson2dpp_module
+use poisson2dpp_seq
 use maxwell2dfdtd_module
 
 implicit none

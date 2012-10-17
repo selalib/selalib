@@ -7,7 +7,7 @@ program VM2D
 use used_precision  
 use geometry_module
 use maxwell2dfdtd_module
-use poisson2dpp_module
+use poisson2dpp_seq
 use diagnostiques_module
 use vlasov2d_module
 use splinepx_class

@@ -7,7 +7,7 @@ use geometry_module
 use vlasov2d_module
 use splinepx_class
 use splinepy_class
-use poisson2dpp_module
+use poisson2dpp_seq
 use diagnostiques_module
 
 implicit none
@@ -46,22 +46,22 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
   end if
 
-  call mpi_bcast(dt,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nbiter,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(fdiag,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(fthdiag,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(x0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(y0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(x1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(y1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nx,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(ny,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vx0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vy0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vx1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vy1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nvx,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nvy,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(dt,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(fdiag,   1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(fthdiag, 1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(x0,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(y0,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(x1,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(y1,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(nx,      1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(ny,      1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(vx0,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(vy0,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(vx1,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(vy1,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
 
   call new_geometry2(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
@@ -70,7 +70,7 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 end subroutine initglobal
 
 subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
-                     f,rho,ex,ey,vlas2d,poiss2dpp,splx,sply)
+                     f,rho,ex,ey,vlas2d,poisson,splx,sply)
 
    type(geometry) :: geomx, geomv  ! geometrie globale du probleme
    sll_int32 :: jstartv,jendv,jstartx,jendx ! definition de la bande du proc
@@ -80,33 +80,29 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
    type(vlasov2d) :: vlas2d
    type(splinepx) :: splx
    type(splinepy) :: sply
-   type(poisson2dpp) :: poiss2dpp
+   type(poisson2dpp) :: poisson
   
    sll_int32 :: ipiece_size_v, ipiece_size_x
 
    sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky
    sll_int32  :: i,j,iv,jv,iflag
 
-   jstartv=1
-   jendv=geomv%nx
-   jstartx=1
-   jendx=geomx%ny
-
    ! initialisation of size of parallel zones 
    ! the total size of the vx zone is nvx
    ! the total size of the y zone is ny
    ! ipiece_size = n/num_threads rounded up
-   ipiece_size_v = (geomv%ny + num_threads - 1) / num_threads
-   ipiece_size_x = (geomx%ny + (num_threads-1)) / num_threads
+   ipiece_size_v = (geomv%ny + num_threads-1) / num_threads
+   ipiece_size_x = (geomx%ny + num_threads-1) / num_threads
    ! zone a traiter en fonction du numero de process
    jstartv = my_num * ipiece_size_v + 1
    jendv = min(jstartv - 1 + ipiece_size_v, geomv%ny)
    jstartx = my_num * ipiece_size_x + 1
    jendx = min(jstartx - 1 + ipiece_size_x, geomx%ny)
     
-   if (jstartv.gt.jendv) stop "error in vp2ddinit: negative size zone"
-   if (jstartx.gt.jendx) stop "error in vp2dinit: negative size zone"
-   print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, jstartv,jendv,ipiece_size_v
+   SLL_ASSERT(jstartx<jendx)
+   SLL_ASSERT(jstartv<jendv)
+   print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, &
+                              jstartv,jendv,ipiece_size_v
 
    SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
 
@@ -114,10 +110,10 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
    SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
    SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
 
-   xi=0.90
-   eps=0.05
-   kx=2*pi/((geomx%nx)*geomx%dx)
-   ky=2*pi/((geomx%ny)*geomx%dy)
+   xi  = 0.90
+   eps = 0.05
+   kx  = 2*pi/((geomx%nx)*geomx%dx)
+   ky  = 2*pi/((geomx%ny)*geomx%dy)
    do jv=jstartv,jendv
       vy = geomv%y0+(jv-1)*geomv%dy
       do iv=1,geomv%nx
@@ -133,10 +129,10 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
       end do
    end do
 
-   call new(poiss2dpp,rho,geomx,iflag, jstartx, jendx)
-   call new(vlas2d,geomx,geomv,iflag,jstartx, jendx,jstartv,jendv)
-   call new(splx,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
-   call new(sply,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
+   call new(poisson, rho,   geomx, iflag, jstartx, jendx)
+   call new(vlas2d,  geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+   call new(splx,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+   call new(sply,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
 
 end subroutine initlocal
 

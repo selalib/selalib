@@ -1,4 +1,4 @@
-module poisson2dpp_module
+module poisson2dpp_seq
 
 #include "selalib.h"
 
@@ -14,8 +14,8 @@ type, public:: poisson2dpp
    complex(wp), dimension(:,:), pointer :: rhot, ext, eyt
    type(fftclass) :: fftx, ffty
    type(geometry) :: geomx
-   logical :: transpose
-   integer :: jstartx,jendx,istartk,iendk
+   logical :: transposed
+   sll_int32 :: jstartx,jendx,istartk,iendk
 end type poisson2dpp
 
 interface new
@@ -25,47 +25,46 @@ interface dealloc
    module procedure dealloc_poisson2dpp
 end interface
 interface solve
-   module procedure solve_poisson2dpp,solve_poisson1d
+   module procedure solve_poisson2dpp
 end interface
 
 contains
 
-subroutine new_poisson2dpp(this,rho,geomx,iflag, jstartx, jendx)
+subroutine new_poisson2dpp(this,rho,geomx,iflag)
 
    type(poisson2dpp),intent(out) :: this
-   real(wp), dimension(:,:), intent(in) :: rho
+   sll_real64, dimension(:,:), intent(in) :: rho
    type(geometry),intent(in)  :: geomx
-   integer, intent(out) :: iflag
-   integer, intent(in), optional ::  jstartx, jendx
+   sll_int32, intent(out) :: iflag
 
-   integer :: ierr ! indicateur d'erreur
-   integer :: nxh1
+   sll_int32 :: ierr ! indicateur d'erreur
+   sll_int32 :: nxh1
 
-    ! indicateur d'erreur
-    iflag = 0
-    ! on commence par utiliser la fonction rho(x,y)
-    this%transpose=.false.
+   ! indicateur d'erreur
+   iflag = 0
+   ! on commence par utiliser la fonction rho(x,y)
+   this%transposed=.false.
 
-    this%jstartx = 1
-    this%jendx = geomx%ny
+   this%jstartx = 1
+   this%jendx = geomx%ny
 
-    ! la taille totale de la zone en kx est nxh1
-    ! ATTENTION : les tableaux concernees par ce decoupage sont rhot,
-    ! ext et eyt. Ce sont des complexes. Pour cette raison leur taille est
-    ! la moitie de celle des tableaux reels correspondants.
-    nxh1 = geomx%nx/2
-    this%istartk = 1  ! cas sequentiel
-    this%iendk = nxh1+1 ! cas sequentiel
+   ! la taille totale de la zone en kx est nxh1
+   ! ATTENTION : les tableaux concernees par ce decoupage sont rhot,
+   ! ext et eyt. Ce sont des complexes. Pour cette raison leur taille est
+   ! la moitie de celle des tableaux reels correspondants.
+   nxh1 = geomx%nx/2
+   this%istartk = 1  ! cas sequentiel
+   this%iendk = nxh1+1 ! cas sequentiel
 
-    ! initialisation de la geometrie
-    this%geomx=geomx
-    ! allocation memoire
-    SLL_ALLOCATE(this%rhot(this%geomx%ny,this%istartk:this%iendk),ierr)
-    SLL_ALLOCATE(this%ext(this%geomx%ny,this%istartk:this%iendk),ierr)
-    SLL_ALLOCATE(this%eyt(this%geomx%ny,this%istartk:this%iendk),ierr)
-    ! initialisation des fft (le nombre de points pris en compte est n)
-    call initfft(this%fftx, rho, this%geomx%nx)
-    call initfft(this%ffty, this%rhot, this%geomx%ny)
+   ! initialisation de la geometrie
+   this%geomx=geomx
+   ! allocation memoire
+   SLL_ALLOCATE(this%rhot(this%geomx%ny,this%istartk:this%iendk),ierr)
+   SLL_ALLOCATE(this%ext(this%geomx%ny,this%istartk:this%iendk),ierr)
+   SLL_ALLOCATE(this%eyt(this%geomx%ny,this%istartk:this%iendk),ierr)
+   ! initialisation des fft (le nombre de points pris en compte est n)
+   call initfft(this%fftx, rho, this%geomx%nx)
+   call initfft(this%ffty, this%rhot, this%geomx%ny)
 
 end subroutine new_poisson2dpp
 
@@ -83,12 +82,12 @@ end subroutine dealloc_poisson2dpp
 subroutine solve_poisson2dpp(this,ex,ey,rho,nrj)
 
    type(poisson2dpp) :: this
-   real(wp), dimension(:,:) :: ex,ey,rho
-   real(wp), intent(out) :: nrj
-   integer :: ik,jk,i,j ! indices de boucle
-   integer :: istart
-   real(wp) :: kx0,ky0, kx,ky, kx2, k2
-   real(wp), dimension(size(rho,1),size(rho,2)) :: phi
+   sll_real64, dimension(:,:) :: ex,ey,rho
+   sll_real64, optional :: nrj
+   sll_int32 :: ik,jk,i,j ! indices de boucle
+   sll_int32 :: istart
+   sll_real64 :: kx0,ky0, kx,ky, kx2, k2
+   sll_real64, dimension(size(rho,1),size(rho,2)) :: phi
 
     ! faire une FFT dans la direction x de rho
    call fft(this%fftx,rho(:,this%jstartx:this%jendx))
@@ -100,18 +99,14 @@ subroutine solve_poisson2dpp(this,ex,ey,rho,nrj)
    call fft(this%ffty,this%rhot(:,this%istartk:this%iendk))
 
    ! calcul de la transformee de Fourier de E a partir de celle de rho
-   kx0=2*pi/(this%geomx%nx*this%geomx%dx)
-   ky0=2*pi/(this%geomx%ny*this%geomx%dy)
+   kx0=2*sll_pi/(this%geomx%nx*this%geomx%dx)
+   ky0=2*sll_pi/(this%geomx%ny*this%geomx%dy)
 
    ! pour jk=1
    jk = 1    
-   if (this%istartk.eq.1) then
-      this%ext(1,1)=0.
-      this%eyt(1,1)=0.
-      istart = 2
-   else
-      istart = this%istartk
-   end if
+   this%ext(1,1)=0.
+   this%eyt(1,1)=0.
+   istart = 2
 
    do ik=istart,this%iendk
       kx= (ik-1)*kx0
@@ -155,80 +150,30 @@ subroutine solve_poisson2dpp(this,ex,ey,rho,nrj)
     call fftinv(this%fftx,ey(:,this%jstartx:this%jendx))
     call fftinv(this%fftx,phi(:,this%jstartx:this%jendx))
 
-    nrj=0._wp
-    do i=1,this%geomx%nx
-       do j=1,this%geomx%ny
-          nrj=nrj+ex(i,j)*ex(i,j)+ey(i,j)*ey(i,j)          
+    if (present(nrj)) then 
+       nrj=0._wp
+       do i=1,this%geomx%nx
+          do j=1,this%geomx%ny
+             nrj=nrj+ex(i,j)*ex(i,j)+ey(i,j)*ey(i,j)          
+          enddo
        enddo
-    enddo
-
-    nrj=nrj*this%geomx%dx*this%geomx%dy
-    if (nrj>1.e-30) then 
-       nrj=0.5_wp*log(nrj)
-    else
-       nrj=-10**9
-    endif
+   
+       nrj=nrj*this%geomx%dx*this%geomx%dy
+       if (nrj>1.e-30) then 
+          nrj=0.5_wp*log(nrj)
+       else
+          nrj=-10**9
+       endif
+   end if
 
 end subroutine solve_poisson2dpp
-
-subroutine solve_poisson1d(this,ex,rho,nrj)
-
-   type(poisson2dpp) :: this
-   real(wp), dimension(:,:) :: ex,rho
-   real(wp), intent(out) :: nrj
-   real(wp), dimension(1:this%geomx%nx,1:this%geomx%ny) :: tmp
-   real(wp) :: avg
-   integer  :: im1
-   sll_int32 :: i
-   sll_int32 :: j
-
-   ex(1,2) = 0._8
-   avg=0._8
-   do i=2,this%geomx%nx
-      ex(i,2)=ex(i-1,2)+this%geomx%dx*(rho(i,2)-1._wp)                 !ex en x_{i+1/2} (cas 1D)
-      avg=avg+ex(i,2)
-   enddo
-   avg=-avg/(1._8*this%geomx%nx)
-
-   do i=1,this%geomx%nx
-      ex(i,2)=avg+ex(i,2)
-   enddo
-
-   tmp(1:this%geomx%nx,1:this%geomx%ny)=ex(1:this%geomx%nx,1:this%geomx%ny)
-   do i=this%geomx%nx,2,-1
-      im1=mod(i-1+this%geomx%nx,this%geomx%nx)
-      ex(i,2)=0.5_wp*(tmp(im1,2)+tmp(i,2))
-   enddo
-   ex(1,2)=0._wp 
-
-   do i=1,this%geomx%nx
-      do j=1,this%geomx%ny
-         ex(i,j)=ex(i,2)
-      enddo
-   enddo
-        
-   nrj=0._wp
-   do i=1,this%geomx%nx
-      do j=1,this%geomx%ny
-         nrj=nrj+ex(i,j)*ex(i,j)
-      enddo
-   enddo
-
-   nrj=nrj*this%geomx%dx*this%geomx%dy
-   if (nrj>1.e-30) then 
-      nrj=0.5_wp*log(nrj)
-   else
-      nrj=-10**9
-   endif
-
-end subroutine solve_poisson1d
 
 subroutine transposexy(this,rho)
 
    type(poisson2dpp) :: this
-   real(wp), dimension(:,:) :: rho
-   integer :: i,j ! indices de boucle
-   integer :: nxh1
+   sll_real64, dimension(:,:) :: rho
+   sll_int32 :: i,j ! indices de boucle
+   sll_int32 :: nxh1
 
    nxh1 = this%geomx%nx/2
    do i=max(this%istartk,2),this%iendk-1
@@ -252,9 +197,9 @@ end subroutine transposexy
 subroutine transposeyx(this,ex,ey,rho)
 
    type(poisson2dpp) :: this
-   real(wp), dimension(:,:) :: ex,ey,rho
-   integer :: i,j ! indices de boucle
-   integer :: nxh1
+   sll_real64, dimension(:,:) :: ex,ey,rho
+   sll_int32 :: i,j ! indices de boucle
+   sll_int32 :: nxh1
 
    ! transposition
    nxh1 = this%geomx%nx/2
@@ -279,6 +224,6 @@ subroutine transposeyx(this,ex,ey,rho)
       end do
    end do
 
- end subroutine transposeyx
+end subroutine transposeyx
 
-end module poisson2dpp_module
+end module poisson2dpp_seq
