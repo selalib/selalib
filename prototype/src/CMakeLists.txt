@@ -356,9 +356,16 @@ ENDIF()
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
+add_test(NAME lagrange COMMAND test_lagrange)
+
+add_test(NAME toeplitz_penta_diagonal COMMAND test_toeplitz_penta_diagonal)
+set_tests_properties(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
 add_test(NAME splines COMMAND test_splines #test_non_unif_splines 
   test_arbitrary_degree_splines)
+add_test(NAME quintic_splines COMMAND test_quintic_splines)
+add_test(NAME odd_degree_splines COMMAND test_odd_degree_splines)
 set_tests_properties(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
@@ -414,6 +421,15 @@ add_test(NAME remap_4d
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_4d
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+set(PROCS 16)
+add_test(NAME remap_6d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_6d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
 set(PROCS 16)
 add_test(NAME poisson_periodic_cartesian_par_2d
