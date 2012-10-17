@@ -7,7 +7,7 @@ use splinenn_class
 use splinepp_class
 use geometry_module
 use diagnostiques_module
-use Clock
+use clock
 
 implicit none
 private
@@ -19,10 +19,10 @@ type, public :: vlasov2d
    type (splinepp) :: splinex ! spline periodique pour X
    type (splinenn) :: splinev ! spline naturel pour V
    type (geometry) :: geomx, geomv
-   logical :: transpose       ! permet de definir si f ou ft est derniere 
+   logical :: transposed       ! permet de definir si f ou ft est derniere 
                                ! fonction de distribution mise a jour
-   integer :: jstartx, jendx
-   integer :: jstartv, jendv  ! definition de la bande de calcul
+   sll_int32 :: jstartx, jendx
+   sll_int32 :: jstartv, jendv  ! definition de la bande de calcul
 end type vlasov2d
 
 ! variables globales 
@@ -47,9 +47,9 @@ subroutine new_vlasov2d(this,geomx,geomv,iflag, jstartx, jendx, &
    type(vlasov2d),intent(out) :: this
    type(geometry),intent(in)  :: geomx, geomv
    sll_real64, optional  :: vz
-   integer, intent(out) :: iflag
-   integer, intent(in), optional ::  jstartx, jendx, jstartv, jendv
-   integer :: ierr ! indicateur d'erreur
+   sll_int32, intent(out) :: iflag
+   sll_int32, intent(in), optional ::  jstartx, jendx, jstartv, jendv
+   sll_int32 :: ierr ! indicateur d'erreur
 
    if (.not.(present(vz))) then
       vbeam = 1.0
@@ -60,7 +60,7 @@ subroutine new_vlasov2d(this,geomx,geomv,iflag, jstartx, jendx, &
    iflag = 0
 
    ! on commence par utiliser la fonction f(x,y,vx,vy)
-   this%transpose=.false.
+   this%transposed=.false.
    ! definition des bandes de calcul (en n'oubliant pas le cas sequentiel)
    if (.not.(present(jstartx))) then
       this%jstartx = 1
@@ -115,10 +115,10 @@ subroutine advection_x(this,f,dt)
 
    sll_real64 :: depx, depy   ! deplacement par rapport au maillage
    sll_real64 :: vx, vy       ! vitesse du point courant
-   integer :: iv, jv ! indices de boucle
+   sll_int32 :: iv, jv ! indices de boucle
 
    ! verifier que la transposition est a jours
-   if (this%transpose) stop 'advection_x: on travaille sur f et pas ft'
+   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
    do jv=this%jstartv,this%jendv
       vy = this%geomv%y0+(jv-1)*this%geomv%dy
       depy = vy*dt
@@ -143,11 +143,11 @@ subroutine advection_v(this,fx,fy,dt,bz)
    sll_real64, intent(in) :: dt
 
    sll_real64 :: depvx, depvy   ! deplacement par rapport au maillage
-   integer :: i, j ,iv, jv, im1! indices de boucle
+   sll_int32 :: i, j ,iv, jv, im1! indices de boucle
    sll_real64 :: ctheta, stheta, px, py
 
    ! verifier que la transposition est a jour
-   if (.not.(this%transpose)) stop 'advection_v: on travaille sur ft et pas f'
+   if (.not.(this%transposed)) stop 'advection_v: on travaille sur ft et pas f'
 
    if (present(bz)) then
 
@@ -198,15 +198,12 @@ end subroutine advection_v
 subroutine densite_charge(this, rho)
 
    type(vlasov2d),intent(inout) :: this
-   integer :: mpierror
+   sll_int32 :: mpierror
    sll_real64, dimension(:,:), intent(out)  :: rho
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locrho
-   ! variables locales
-   integer :: i,j,iv,jv,c   ! indices de boucles
+   sll_int32 :: i,j,iv,jv,c
 
-   ! verifier que la transposition est a jour
-   if (.not.(this%transpose)) &
-      stop 'densite_charge: on travaille sur ft et pas f'
+   SLL_ASSERT(this%transposed)
    
    rho(:,:) = 0.
    locrho(:,:) = 0.
@@ -235,16 +232,15 @@ end subroutine densite_charge
 subroutine densite_courant(this, jx, jy)
 
    type(vlasov2d),intent(inout) :: this
-   integer :: mpierror
+   sll_int32 :: mpierror
    sll_real64, dimension(:,:), intent(out)  :: jx, jy
    sll_real64 :: vx, vy       ! vitesse du point courant
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
-   ! variables locales
-   integer :: i,j,iv,jv,c   ! indices de boucles
+   sll_int32 :: i,j,iv,jv,c
 
    ! verifier que la transposition est a jour
-   if (.not.(this%transpose)) &
+   if (.not.(this%transposed)) &
       stop 'densite_courant: on travaille sur ft et pas f'
    !    rho(:,this%jstartx:this%jendx)=0.
    jx(:,:) = 0.; jy(:,:) = 0.
@@ -281,13 +277,13 @@ end subroutine densite_courant
 subroutine transposexv(this,f)
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(in) :: f
-   integer :: sizexy, sizevxvy
+   sll_int32 :: sizexy, sizevxvy
 
    sizexy = this%geomx%nx * this%geomx%ny
    sizevxvy = this%geomv%nx * this%geomv%ny
    call transpose(f, this%ft, sizexy, sizevxvy, num_threads)
 
-this%transpose=.true.
+this%transposed=.true.
 
 end subroutine transposexv
 
@@ -296,13 +292,13 @@ subroutine transposevx(this,f)
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(out) :: f
 
-   integer :: sizexy, sizevxvy
+   sll_int32 :: sizexy, sizevxvy
 
    sizexy = this%geomx%nx * this%geomx%ny
    sizevxvy = this%geomv%nx * this%geomv%ny
    call transpose(this%ft,f, sizevxvy, sizexy, num_threads)
 
-   this%transpose=.false.
+   this%transposed=.false.
 
 end subroutine transposevx
 
@@ -310,54 +306,54 @@ subroutine thdiag(this,f,nrj,t)
 
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,this%jstartv:),intent(in) :: f
-   integer :: mpierror
+   sll_int32 :: mpierror
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
-   integer :: i,iv, j,jv   ! indices de boucles
+   sll_int32 :: i,iv, j,jv   ! indices de boucles
    sll_real64 :: x, vx, y, vy
    sll_real64,dimension(7) :: diagloc
    sll_real64,dimension(11) :: auxloc
 
-   if (my_num.eq.0) then
+   if (my_num == MPI_MASTER) then
       diag=0.
       aux=0.
    end if
 
-   diagloc = 0._wp
-   auxloc  = 0._wp
-   do i = 1,this%geomx%nx
-      x = this%geomx%x0+(i-1)*this%geomx%dx
-      do j = 1,this%geomx%ny
-         y= this%geomx%y0+(j-1)*this%geomx%dy
-         do iv=1,this%geomv%nx
-            vx = this%geomv%x0+(iv-1)*this%geomv%dx
-            do jv=this%jstartv,this%jendv
-               vy = this%geomv%y0+(jv-1)*this%geomv%dy
-               diagloc(2) = diagloc(2) + f(i,j,iv,jv)*f(i,j,iv,jv)
-
-               auxloc(1) = auxloc(1) + f(i,j,iv,jv)         ! avg(f)
-               auxloc(2) = auxloc(2) + x*f(i,j,iv,jv)       ! avg(x)
-               auxloc(3) = auxloc(3) + vx*f(i,j,iv,jv)      ! avg(vx)
-               auxloc(4) = auxloc(4) + x*x*f(i,j,iv,jv)     ! avg(x^2)
-               auxloc(5) = auxloc(5) + vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
-               auxloc(6) = auxloc(6) + x*vx*f(i,j,iv,jv)    ! avg(x*vx)
-               auxloc(7) = auxloc(7) + y*f(i,j,iv,jv)       ! avg(y)
-               auxloc(8) = auxloc(8) + vy*f(i,j,iv,jv)      ! avg(vy)
-               auxloc(9) = auxloc(9) + y*y*f(i,j,iv,jv)     ! avg(y^2)
-               auxloc(10) = auxloc(10) + vy*vy*f(i,j,iv,jv) ! avg(vy^2)
-               auxloc(11) = auxloc(11) + y*vy*f(i,j,iv,jv)  ! avg(y*vy)
-
-            end do
-         end do
-      end do
-   end do
-   auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
-
-   call mpi_reduce(auxloc,aux,11,MPI_realtype,MPI_SUM,0,  &
-                   MPI_COMM_WORLD, mpierror)
-   call mpi_reduce(diagloc(2),diag(2),1,MPI_realtype,MPI_SUM,0, &
-                   MPI_COMM_WORLD, mpierror)
-
+!   diagloc = 0._wp
+!   auxloc  = 0._wp
+!   do i = 1,this%geomx%nx
+!      x = this%geomx%x0+(i-1)*this%geomx%dx
+!      do j = 1,this%geomx%ny
+!         y= this%geomx%y0+(j-1)*this%geomx%dy
+!         do iv=1,this%geomv%nx
+!            vx = this%geomv%x0+(iv-1)*this%geomv%dx
+!            do jv=this%jstartv,this%jendv
+!               vy = this%geomv%y0+(jv-1)*this%geomv%dy
+!               diagloc(2) = diagloc(2) + f(i,j,iv,jv)*f(i,j,iv,jv)
+!
+!               auxloc(1) = auxloc(1) + f(i,j,iv,jv)         ! avg(f)
+!               auxloc(2) = auxloc(2) + x*f(i,j,iv,jv)       ! avg(x)
+!               auxloc(3) = auxloc(3) + vx*f(i,j,iv,jv)      ! avg(vx)
+!               auxloc(4) = auxloc(4) + x*x*f(i,j,iv,jv)     ! avg(x^2)
+!               auxloc(5) = auxloc(5) + vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
+!               auxloc(6) = auxloc(6) + x*vx*f(i,j,iv,jv)    ! avg(x*vx)
+!               auxloc(7) = auxloc(7) + y*f(i,j,iv,jv)       ! avg(y)
+!               auxloc(8) = auxloc(8) + vy*f(i,j,iv,jv)      ! avg(vy)
+!               auxloc(9) = auxloc(9) + y*y*f(i,j,iv,jv)     ! avg(y^2)
+!               auxloc(10) = auxloc(10) + vy*vy*f(i,j,iv,jv) ! avg(vy^2)
+!               auxloc(11) = auxloc(11) + y*vy*f(i,j,iv,jv)  ! avg(y*vy)
+!
+!            end do
+!         end do
+!      end do
+!   end do
+!   auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
+!
+!   call mpi_reduce(auxloc,aux,11,MPI_realtype,MPI_SUM,0,  &
+!                   MPI_COMM_WORLD, mpierror)
+!   call mpi_reduce(diagloc(2),diag(2),1,MPI_realtype,MPI_SUM,0, &
+!                   MPI_COMM_WORLD, mpierror)
+!
 if (my_num==MPI_MASTER) then
    aux(13)=t
    aux(12)=nrj
