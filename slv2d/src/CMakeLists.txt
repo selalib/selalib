@@ -2,14 +2,18 @@ PROJECT(slv2d)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+#INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
 SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 
-FIND_PACKAGE(LAPACK  REQUIRED)
+IF(APPLE)
+   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
+ELSE()
+   FIND_PACKAGE(LAPACK  REQUIRED)
+ENDIF()
 
 IF(FFTPACK_ENABLED)
    FIND_PACKAGE(FFTPACK)
@@ -54,6 +58,9 @@ SET( SLL_COMPONENTS precision
                     assert 
                     memory 
                     constants 
+                    timer
+                    electric_field_accumulators
+                    remap
                     collective
                     low_level_file_io)
 
@@ -89,13 +96,12 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_constants
                        sll_memory
                        sll_low_level_file_io
+                       sll_timer
                        sll_collective
+                       sll_remap
                        sll_low_level_file_io_parallel)
 
-SET(LIBS sll_low_level_file_io_parallel
-         sll_low_level_file_io
-         sll_collective
-         sll_utilities
+SET(LIBS sll_utilities
          sll_constants
          sll_memory
          sll_assertion
@@ -103,11 +109,13 @@ SET(LIBS sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} ${FFTPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
-TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} )
+TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} sll_low_level_file_io)
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
-TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} )
+TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} sll_low_level_file_io)
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
-TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS} )
+TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS}  
+                                               sll_low_level_file_io_parallel
+                                               sll_collective )
 
 ENABLE_TESTING()
 
