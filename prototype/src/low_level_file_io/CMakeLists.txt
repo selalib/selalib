@@ -1,4 +1,3 @@
-#FILE(GLOB IO_SRC "sll_*.F90")
 SET(IO_SRC sll_ascii_io.F90 
            sll_binary_io.F90 
            sll_gnuplot.F90 
