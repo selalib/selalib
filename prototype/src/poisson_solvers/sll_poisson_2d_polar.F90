@@ -141,6 +141,7 @@ contains
     bc = plan%bc
     plan%f_fft=f
 
+
     do i=1,nr+1
        call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
@@ -172,6 +173,12 @@ contains
 !!$          plan%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
           plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
        enddo
+       
+       !if(k==0)then
+       !  print *,'second membre en input'
+       !  print *,plan%fk
+       !endif
+       
        !print *,k,sum(abs(plan%fk(1:nr+1)))
        plan%phik=0.0_f64
        !plan%a(1)=0.0_f64
@@ -179,30 +186,34 @@ contains
 
         
         !boundary condition at rmin
-        if(bc(1)==1)then !Dirichlet
+        if(bc(1)==DIRICHLET)then !Dirichlet
           plan%a(1)=0.0_f64
         endif
-        if(bc(1)==2)then
+        if(bc(1)==NEUMANN)then
           plan%a(2)=plan%a(2)+plan%a(1) !Neumann
+          plan%a(1)=0._f64
         endif
-        if(bc(1)==3)then 
+        if(bc(1)==NEUMANN_MODE0)then 
           if(k==0)then!Neumann for mode zero
             plan%a(2)=plan%a(2)+plan%a(1)
+            plan%a(1)=0._f64
           else !Dirichlet for other modes
             plan%a(1)=0._f64
           endif  
         endif
 
         !boundary condition at rmax
-        if(bc(2)==1)then !Dirichlet
+        if(bc(2)==DIRICHLET)then !Dirichlet
           plan%a(3*(nr-1))=0.0_f64
         endif
-        if(bc(2)==2)then
+        if(bc(2)==NEUMANN)then
           plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
+          plan%a(3*(nr-1))=0.0_f64
         endif
-        if(bc(2)==3)then 
+        if(bc(2)==NEUMANN_MODE0)then 
           if(k==0)then!Neumann for mode zero
             plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
+            plan%a(3*(nr-1))=0.0_f64
           else !Dirichlet for other modes
             plan%a(3*(nr-1))=0.0_f64
           endif  
@@ -253,6 +264,12 @@ contains
           call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
        end do
        !print *,k,'s',bc,sum(abs(plan%phik(1:nr+1)))
+
+       !if(k==0)then
+         !print *,'output'
+         !print *,plan%phik
+       !endif
+
 
     end do
 
