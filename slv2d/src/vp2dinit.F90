@@ -129,7 +129,7 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
       end do
    end do
 
-   call new(poisson, rho,   geomx, iflag, jstartx, jendx)
+   call new(poisson, rho,   geomx, iflag)
    call new(vlas2d,  geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
    call new(splx,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
    call new(sply,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
