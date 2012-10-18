@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_low_level_file_io
+!>@NAMESPACE: sll_xdmf
 !
 !> @author
 !> Pierre Navaro
@@ -20,10 +20,6 @@
 !>
 !> This is control by the variable <code>NOHDF5</code>.
 !> HDF5 is set by default but il you prefer binary just add 
-!>
-!> <code> env.Append(CPPDEFINES=['NOHDF5']) </code>
-!>
-!> in your SCons script
 !>
 !> <h2>How to use this module: </h2>
 !>
