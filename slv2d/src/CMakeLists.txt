@@ -2,7 +2,6 @@ PROJECT(slv2d)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-#INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
@@ -78,7 +77,6 @@ SET(SLV2D_SRC silo_module.F90
               fft_module.F90
               geometry.F90
               maxwell2dfdtd.F90
-              module_mpi.F90
               poisson2dpp_seq.F90
               poisson2dpp_par.F90
               precision.F90
@@ -107,6 +105,7 @@ SET(LIBS sll_utilities
          sll_memory
          sll_assertion
          sll_working_precision
+         sll_collective
          ${SILO_LIBRARIES} ${FFTPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
@@ -115,8 +114,8 @@ ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} sll_low_level_file_io)
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
 TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS}  
-                                               sll_low_level_file_io_parallel
-                                               sll_collective )
+                                               sll_remap
+                                               sll_low_level_file_io_parallel)
 
 ENABLE_TESTING()
 
@@ -140,6 +139,6 @@ ADD_TEST(NAME test_vm2d COMMAND
          ./vm2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
-SET_TESTS_PROPERTIES(test_vp2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(test_vm2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
