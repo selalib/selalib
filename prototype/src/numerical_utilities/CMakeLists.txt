@@ -1,3 +1,5 @@
+# how about coalescing these libraries into a single one??
+
 set(TRIDIAGONAL_SRC tridiagonal.F90)
 add_library(sll_tridiagonal STATIC tridiagonal.F90)
 add_dependencies(sll_tridiagonal sll_working_precision)
@@ -26,4 +28,18 @@ target_link_libraries(example_tridiagonal
 	sll_memory
 	sll_working_precision
 )
+
+# lagrange interpolator
+add_library( lagrange_interpolation STATIC lagrange_interpolation.F90 )
+add_dependencies( lagrange_interpolation
+  sll_working_precision
+  sll_assertion
+  )
+
+add_executable( test_lagrange unit_test_lagrange.F90 )
+target_link_libraries( test_lagrange 
+  lagrange_interpolation 
+  sll_working_precision 
+  sll_assertion 
+  )
 

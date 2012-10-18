@@ -356,8 +356,11 @@ ENDIF()
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
+add_test(NAME lagrange COMMAND test_lagrange)
+
 add_test(NAME toeplitz_penta_diagonal COMMAND test_toeplitz_penta_diagonal)
 set_tests_properties(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
 add_test(NAME splines COMMAND test_splines #test_non_unif_splines 
   test_arbitrary_degree_splines)
@@ -420,6 +423,15 @@ add_test(NAME remap_4d
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 set(PROCS 16)
+add_test(NAME remap_6d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_6d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+set(PROCS 16)
 add_test(NAME poisson_periodic_cartesian_par_2d
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
@@ -437,13 +449,15 @@ add_test(NAME time_splitting COMMAND test_time_splitting)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)
 add_test(NAME advection_field COMMAND test_advection_field)
-set(PROCS 8)
-add_test(NAME test_vp4d_sim
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+  set(PROCS 8)
+  add_test(NAME test_vp4d_sim
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF()
 #add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
