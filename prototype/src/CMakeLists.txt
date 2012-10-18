@@ -58,11 +58,8 @@ try_run( RUN_RESULT_VAR
 )
 
 
-set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-set(CMAKE_C_FLAGS "-lm")
-set(CMAKE_C_FLAGS "-llapack -lblas")
-
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
@@ -94,6 +91,17 @@ ENDIF()
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
+
+
+IF (APPLE)
+   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
+   FIND_LIBRARY(BLAS_LIBRARIES  blas)
+ELSE()
+   FIND_PACKAGE(LAPACK REQUIRED)
+   FIND_PACKAGE(BLAS   REQUIRED)
+ENDIF()
+
+SET(LINK_LIBRARIES  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # search for HDF5
 IF(HDF5_ENABLED)
@@ -165,7 +173,7 @@ ENDIF()
 # find out which compiler we are using.
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS " ")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
@@ -348,9 +356,16 @@ ENDIF()
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
+add_test(NAME lagrange COMMAND test_lagrange)
+
+add_test(NAME toeplitz_penta_diagonal COMMAND test_toeplitz_penta_diagonal)
+set_tests_properties(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
 add_test(NAME splines COMMAND test_splines #test_non_unif_splines 
   test_arbitrary_degree_splines)
+add_test(NAME quintic_splines COMMAND test_quintic_splines)
+add_test(NAME odd_degree_splines COMMAND test_odd_degree_splines)
 set_tests_properties(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
@@ -406,6 +421,15 @@ add_test(NAME remap_4d
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_4d
 	${MPIEXEC_POSTFLAGS} ${ARGS})
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+set(PROCS 16)
+add_test(NAME remap_6d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_6d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
 set(PROCS 16)
 add_test(NAME poisson_periodic_cartesian_par_2d
@@ -474,7 +498,6 @@ IF(PASTIX_ENABLED)
       set(PASTIX_ROOT $ENV{PASTIX_ROOT})
       set(MURGE_ROOT $ENV{PASTIX_ROOT})
    ENDIF()
-   find_package(BLAS QUIET)
    find_package(RT QUIET)
    find_package(SCOTCH QUIET)
    find_package(PTSCOTCH QUIET)
