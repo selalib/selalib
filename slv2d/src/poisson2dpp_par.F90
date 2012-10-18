@@ -43,6 +43,12 @@ subroutine new_poisson2dpp(this,rho,geomx,iflag, jstartx, jendx)
    sll_int32 :: ierr ! indicateur d'erreur
    sll_int32 :: nxh1
    sll_int32 :: ipiece_size             
+   sll_int32 :: my_num, num_threads, comm
+
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
+   comm   = sll_world_collective%comm
+
 
    ! indicateur d'erreur
    iflag = 0
@@ -112,6 +118,11 @@ subroutine solve_poisson2dpp(this,ex,ey,rho)
    sll_int32 :: ik,jk,i,j ! indices de boucle
    sll_int32 :: istart
    sll_real64 :: kx0,ky0, kx,ky, kx2, k2
+   sll_int32 :: my_num, num_threads, comm
+
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
+   comm   = sll_world_collective%comm
 
    ! sauvegarde de rho pour les diagnostiques
    this%rho(:,this%jstartx:this%jendx) = rho(:,this%jstartx:this%jendx) 
@@ -185,14 +196,19 @@ subroutine solve_poisson2dpp(this,ex,ey,rho)
 !!$           rho(i,j) = this%rho(i,j)
 !!$        end do
 !!$     end do
-    call mpi_barrier(MPI_COMM_WORLD,mpierror)
+    call mpi_barrier(comm,mpierror)
   end subroutine solve_poisson2dpp
   subroutine transposexy(this,rho)
     type(poisson2dpp) :: this
     sll_real64, dimension(:,:) :: rho
     sll_int32 :: i,j ! indices de boucle
     sll_int32 :: nxh1,iflag
-    call mpi_barrier(MPI_COMM_WORLD,iflag)
+    sll_int32 :: my_num, num_threads, comm
+
+    my_num = sll_get_collective_rank(sll_world_collective)
+    num_threads = sll_get_collective_size(sll_world_collective)
+    comm   = sll_world_collective%comm
+    call mpi_barrier(comm,iflag)
     ! transpose rho dans this%work
     call transpose(rho,this%work1, this%geomx%nx, this%geomx%ny, num_threads)
     ! convertit this%work en complexe
@@ -213,15 +229,20 @@ subroutine solve_poisson2dpp(this,ex,ey,rho)
           this%rhot(j,nxh1+1) = dcmplx(this%work1(j,2*nxh1),0.0)
        end do
     end if
-    call mpi_barrier(MPI_COMM_WORLD,iflag)
+    call mpi_barrier(comm,iflag)
   end subroutine transposexy
   subroutine transposeyx(this,ex,ey,rho)
     type(poisson2dpp) :: this
     sll_real64, dimension(:,:) :: ex,ey,rho
     sll_int32 :: i,j ! indices de boucle
     sll_int32 :: nxh1,iflag
+    sll_int32 :: my_num, num_threads, comm
 
-    call mpi_barrier(MPI_COMM_WORLD,iflag)
+    my_num = sll_get_collective_rank(sll_world_collective)
+    num_threads = sll_get_collective_size(sll_world_collective)
+    comm   = sll_world_collective%comm
+
+    call mpi_barrier(comm,iflag)
     nxh1 = this%geomx%nx/2
     ! convertit ext en reel 
     do j=1,this%geomx%ny
@@ -239,7 +260,7 @@ subroutine solve_poisson2dpp(this,ex,ey,rho)
 
     ! transpose this%work2 dans ex
     call transpose(this%work2,ex, this%geomx%ny, this%geomx%nx, num_threads)
-    call mpi_barrier(MPI_COMM_WORLD,iflag)
+    call mpi_barrier(comm,iflag)
     ! convertit eyt en reel
      do j=1,this%geomx%ny
        if (this%istartk.eq.1) then
@@ -255,7 +276,7 @@ subroutine solve_poisson2dpp(this,ex,ey,rho)
     end do
     ! transpose this%work2 dans ey
     call transpose(this%work2,ey, this%geomx%ny, this%geomx%nx, num_threads)
-    call mpi_barrier(MPI_COMM_WORLD,iflag)
+    call mpi_barrier(comm,iflag)
     ! convertit rhot en reel
     do j=1,this%geomx%ny
        if (this%istartk.eq.1) then
@@ -276,7 +297,7 @@ do j= 1,this%geomx%ny
 end do
     ! transpose this%work2 dans rho
     call transpose(this%work2,rho, this%geomx%ny, this%geomx%nx, num_threads)
-    call mpi_barrier(MPI_COMM_WORLD,iflag)
+    call mpi_barrier(comm,iflag)
 
  end subroutine transposeyx
 
