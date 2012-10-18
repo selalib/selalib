@@ -22,4 +22,8 @@ use remapper
 #define NEW_REMAP_PLAN_4D( arg1, arg2, array4D ) \
    new_remap_plan_4D( arg1, arg2, INT32_SIZEOF(array4D(1,1,1,1)) )
 
+#define NEW_REMAP_PLAN_6D( arg1, arg2, array6D ) \
+  new_remap_plan_6D( arg1, arg2, INT32_SIZEOF(array6D(1,1,1,1,1,1)) )
+
+
 #endif
