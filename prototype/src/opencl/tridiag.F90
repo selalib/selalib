@@ -246,7 +246,7 @@ subroutine trian3( tabi, tabd, tabs, m, n )
 integer, intent(in) :: m, n
 real(4), intent(in) :: tabi( n )
 real(4), intent(inout) :: tabd( n ),tabs ( n )
-integer :: m1, n1, i, k
+integer :: m1, n1, i
 
 m1 = m + 1
 n1 = n - 1

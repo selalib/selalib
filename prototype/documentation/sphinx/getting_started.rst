@@ -40,11 +40,9 @@ Display all branches with::
 
  git branch -a
 
-Choose the remote prototype branch:: 
+Create the local branch and merge the remote prototype branch:: 
 
- git branch prototype-devel
- git checkout prototype-devel
- git merge origin/prototype-devel
+ git checkout -b prototype-devel origin/prototype-devel
 
 More information available on document `An overview of GIT A short tutorial for SELALIB developers <https://gforge.inria.fr/docman/view.php/3042/7642/selalib_coding_guidelines.pdf>`_ by Edwin Chacon-Golcher.
 
