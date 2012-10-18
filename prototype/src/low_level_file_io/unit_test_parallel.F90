@@ -4,6 +4,7 @@ use mpi
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
+use sll_xdmf_parallel
 
 #include "sll_remap.h"
 #include "sll_memory.h"
@@ -81,9 +82,11 @@ contains
   type(layout_2D), pointer  :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
+  sll_int32      :: xml_id
   integer(HID_T) :: file_id
   integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
   integer(HSSIZE_T), dimension(2) :: offset 
+  character(len=4) :: prefix = "mesh"
   
   layout => new_layout_2D( sll_world_collective )        
 
@@ -111,13 +114,25 @@ contains
         gj = global_indices(2)
         xdata(i,j) = float(gi-1)/(nx-1)
         ydata(i,j) = float(gj-1)/(ny-1)
-        zdata(i,j) = myrank !* xdata(i,j) * ydata(i,j)
+        zdata(i,j) = (myrank+1) * xdata(i,j) * ydata(i,j)
      end do
   end do
   
   offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
   offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
   
+  !Begin high level version
+
+  call sll_xdmf_open("zdata.xmf",prefix,nx,ny,xml_id,error)
+  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
+  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
+  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_xdmf_close(xml_id,error)
+
+  !End high level version
+
+
+  !Begin low level version
   call sll_hdf5_file_create(xfile, file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
   call sll_hdf5_file_close(file_id,error)
@@ -141,6 +156,8 @@ contains
      print *, '--------------------'
 
   end if
+
+  !End low level version
   
   call delete_layout_2D( layout )
   
