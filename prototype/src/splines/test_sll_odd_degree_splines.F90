@@ -39,8 +39,8 @@ use arbitrary_degree_splines
 
   xmin = -10.d0
   xmax = 10.d0
-  degree_max = 25
-  pow_max = 3
+  degree_max = 11
+  pow_max = 2
   ok = 1
 
   do degree=1,degree_max,2
