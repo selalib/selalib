@@ -34,9 +34,16 @@ sll_int32  :: sx, ex, sv, ev
 sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
+sll_int32 :: my_num, num_threads, comm
+
+call sll_boot_collective()
+
+my_num = sll_get_collective_rank(sll_world_collective)
+num_threads = sll_get_collective_size(sll_world_collective)
+comm   = sll_world_collective%comm
+
 ! initialisation global
 tcpu1 = MPI_WTIME()
-call initialise_moduleMPI
 if (my_num == MPI_MASTER) then
    print*,'MPI Version of slv2d running on ',num_threads, ' processors'
 end if
@@ -105,7 +112,7 @@ tcpu2 = MPI_WTIME()
 if (my_num == MPI_MASTER) &
    write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
 
-call termine_moduleMPI
+call sll_halt_collective()
 
 print*,'PASSED'
 

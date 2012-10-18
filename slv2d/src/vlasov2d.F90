@@ -7,7 +7,7 @@ use splinenn_class
 use splinepp_class
 use geometry_module
 use diagnostiques_module
-use clock
+!use clock
 
 implicit none
 private
@@ -202,6 +202,9 @@ subroutine densite_charge(this, rho)
    sll_real64, dimension(:,:), intent(out)  :: rho
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locrho
    sll_int32 :: i,j,iv,jv,c
+   sll_int32 :: comm
+
+   comm   = sll_world_collective%comm
 
    SLL_ASSERT(this%transposed)
    
@@ -217,10 +220,10 @@ subroutine densite_charge(this, rho)
          end do
       end do
    end do
-   call mpi_barrier(MPI_COMM_WORLD,i)
+   call mpi_barrier(comm,i)
    c=this%geomx%nx*this%geomx%ny
    call mpi_allreduce(locrho,rho,c, &
-        MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+        MPI_REAL8,MPI_SUM,comm,mpierror)
 
 end subroutine densite_charge
 
@@ -238,6 +241,9 @@ subroutine densite_courant(this, jx, jy)
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
    sll_int32 :: i,j,iv,jv,c
+   sll_int32 :: comm
+
+   comm   = sll_world_collective%comm
 
    ! verifier que la transposition est a jour
    if (.not.(this%transposed)) &
@@ -260,12 +266,12 @@ subroutine densite_courant(this, jx, jy)
       end do
    end do
 
-   call mpi_barrier(MPI_COMM_WORLD,i)
+   call mpi_barrier(comm,i)
    c=this%geomx%nx*this%geomx%ny
    call mpi_allreduce(locjx,jx,c, &
-        MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+        MPI_REAL8,MPI_SUM,comm,mpierror)
    call mpi_allreduce(locjy,jy,c, &
-        MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+        MPI_REAL8,MPI_SUM,comm,mpierror)
 
 end subroutine densite_courant
 
@@ -278,6 +284,10 @@ subroutine transposexv(this,f)
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(in) :: f
    sll_int32 :: sizexy, sizevxvy
+   sll_int32 :: my_num, num_threads
+
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
 
    sizexy = this%geomx%nx * this%geomx%ny
    sizevxvy = this%geomv%nx * this%geomv%ny
@@ -293,6 +303,10 @@ subroutine transposevx(this,f)
    sll_real64, dimension(:,:,:,:),intent(out) :: f
 
    sll_int32 :: sizexy, sizevxvy
+   sll_int32 :: my_num, num_threads
+
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
 
    sizexy = this%geomx%nx * this%geomx%ny
    sizevxvy = this%geomv%nx * this%geomv%ny
@@ -313,6 +327,13 @@ subroutine thdiag(this,f,nrj,t)
    sll_real64 :: x, vx, y, vy
    sll_real64,dimension(7) :: diagloc
    sll_real64,dimension(11) :: auxloc
+   sll_int32 :: my_num, num_threads
+   sll_int32 :: comm
+
+   comm   = sll_world_collective%comm
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
+
 
    if (my_num == MPI_MASTER) then
       diag=0.
@@ -349,10 +370,10 @@ subroutine thdiag(this,f,nrj,t)
 !   end do
 !   auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
 !
-!   call mpi_reduce(auxloc,aux,11,MPI_realtype,MPI_SUM,0,  &
-!                   MPI_COMM_WORLD, mpierror)
-!   call mpi_reduce(diagloc(2),diag(2),1,MPI_realtype,MPI_SUM,0, &
-!                   MPI_COMM_WORLD, mpierror)
+!   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,0,  &
+!                   comm, mpierror)
+!   call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
+!                   comm, mpierror)
 !
 if (my_num==MPI_MASTER) then
    aux(13)=t

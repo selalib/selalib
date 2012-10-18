@@ -1,7 +1,6 @@
 module splinenn_class
   use used_precision
   use geometry_module
-  use clock
   implicit none
   private
   public :: new, interpole
@@ -225,19 +224,19 @@ contains
     integer ierr, l_a, l_b
     real(wp) durat, vtime(1:4)
 
-    if (aff) then 
-       call clck_temps(l_a)
-    end if
+    !if (aff) then 
+    !   call clck_temps(l_a)
+    !end if
     call nat_x(this,f,ierr)
     if (ierr.ne.0) then
        iflag = 10
        return
     end if
-    if (aff) then 
-       call clck_temps(l_b)
-       call clck_diff(l_a,l_b,vtime(1))
-       call clck_temps(l_a)
-    end if
+    !if (aff) then 
+    !   call clck_temps(l_b)
+    !   call clck_diff(l_a,l_b,vtime(1))
+    !   call clck_temps(l_a)
+    !end if
 
     call nat_y(this,ierr)
     
@@ -246,19 +245,19 @@ contains
        return
     end if
 
-    if (aff) then 
-       call clck_temps(l_b)
-       call clck_diff(l_a,l_b,vtime(2))
-       call clck_temps(l_a)
-    end if
+    !if (aff) then 
+    !   call clck_temps(l_b)
+    !   call clck_diff(l_a,l_b,vtime(2))
+    !   call clck_temps(l_a)
+    !end if
 
     call evaldep(this,depx,depy,f)  
 
-    if (aff) then 
-       call clck_temps(l_b)
-       call clck_diff(l_a,l_b,vtime(3))
-       write(*,'(A,3(1x,3E14.5))') "splinenn ",vtime(1:3)
-    end if
+    !if (aff) then 
+    !   call clck_temps(l_b)
+    !   call clck_diff(l_a,l_b,vtime(3))
+    !   write(*,'(A,3(1x,3E14.5))') "splinenn ",vtime(1:3)
+    !end if
 
   end subroutine interpole_splinenndep
 
