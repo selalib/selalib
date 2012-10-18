@@ -7,7 +7,7 @@ use sll_xml_io
 
 use geometry_module
 use poisson2dpp_seq
-!use sll_xdmf_parallel
+use sll_xdmf_parallel
 
 #include "sll_remap.h"
 #include "sll_memory.h"
@@ -82,10 +82,10 @@ global_dims(1) = nx
 global_dims(2) = ny
 offset = 0
 
-!call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
-!call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
-!call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
-!call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
+call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
+call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
+call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
+call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
 
 call new(poisson, rho, geom, error)
 
@@ -97,12 +97,12 @@ write(*,"(2(i3,1x),6(g13.3,1x))") geom%nx, geom%ny, geom%x0, &
 
 call solve(poisson,ex,ey,rho)
 
-!call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
+call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
 
-!call sll_xdmf_write_array(prefix,global_dims, offset,&
-!                          ey,"ey",error,file_id,"Node")
+call sll_xdmf_write_array(prefix,global_dims, offset,&
+                          ey,"ey",error,file_id,"Node")
 
-!call sll_xdmf_close(file_id,error)
+call sll_xdmf_close(file_id,error)
 
 print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
 print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
@@ -110,8 +110,6 @@ print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
 tcpu2 = MPI_WTIME()
 write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
 
-
-call plot_layout2d()
 
 tcpu2 = MPI_WTIME()
 if (myrank == 0) &
@@ -123,113 +121,6 @@ if( myrank .eq. 0) print *, 'PASSED'
 call sll_halt_collective()
   
 contains
-
-! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
-! the full array.
- subroutine plot_layout2d()
-
-  integer , parameter       :: nx = 512
-  integer , parameter       :: ny = 256
-  integer                   :: mx, my    ! Local sizes
-  integer                   :: npi, npj
-  sll_int32                 :: gi, gj
-  
-  sll_int32, dimension(2)   :: global_indices
-  type(layout_2D), pointer  :: layout
-  
-  real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
-  integer(HID_T) :: file_id
-  integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
-  integer(HSSIZE_T), dimension(2) :: offset 
-  
-  layout => new_layout_2D( sll_world_collective )        
-
-  call two_power_rand_factorization(colsz, npi, npj)
-  
-  if( myrank .eq. 0 ) then
-     print *, '2d layout configuration: ', npi, npj
-  end if
-  
-  call initialize_layout_with_distributed_2D_array( &
-       nx, ny, npi, npj, layout )
-       
-  call sll_collective_barrier(sll_world_collective)
-  
-  call compute_local_sizes_2d( layout, mx, my)        
-  
-  SLL_ALLOCATE(xdata(mx,my),error)
-  SLL_ALLOCATE(ydata(mx,my),error)
-  SLL_ALLOCATE(zdata(mx,my),error)
-  
-  do j = 1, my
-     do i = 1, mx
-        global_indices =  local_to_global_2D( layout, (/i, j/) )
-        gi = global_indices(1)
-        gj = global_indices(2)
-        xdata(i,j) = float(gi-1)/(nx-1)
-        ydata(i,j) = float(gj-1)/(ny-1)
-        zdata(i,j) = myrank !* xdata(i,j) * ydata(i,j)
-     end do
-  end do
-  
-  offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
-  offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
-  
-  call sll_hdf5_file_create(xfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
-  call sll_hdf5_file_close(file_id,error)
-  
-  call sll_hdf5_file_create(yfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
-  call sll_hdf5_file_close(file_id,error)
-  
-  call sll_hdf5_file_create(zfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,zdata,zdset,error)
-  call sll_hdf5_file_close(file_id,error)
-
-  if (myrank == 0) then
-  
-     call sll_xml_file_create("layout2d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, xfile, nx, yfile, ny, xdset, ydset )
-     call sll_xml_field(file_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-     call sll_xml_file_close(file_id,error)
-     print *, 'Printing 2D layout: '
-     call sll_view_lims_2D( layout )
-     print *, '--------------------'
-
-  end if
-  
-  call delete_layout_2D( layout )
-  
- end subroutine plot_layout2d
-
-  subroutine two_power_rand_factorization(n, n1, n2, n3)
-    sll_int64, intent(in) :: n
-    integer, intent(out) ::n1, n2
-    integer, intent(out), optional :: n3
-    integer   :: expo, expo1, expo2, expo3
-    sll_real64                :: rand_real
-    if (.not.is_power_of_two(colsz)) then   
-       print*, 'The number of processors must be a power of 2'
-       call sll_halt_collective()
-       stop
-    endif 
-    expo = int(log(real(n))/log(2.))  
-    call random_number(rand_real)
-    expo1 = int(rand_real*expo)
-    if (present(n3)) then
-       call random_number(rand_real)
-       expo2 = int(rand_real*(expo-expo1))
-       expo3 = expo - (expo1+expo2)
-       n3 = 2**expo3
-    else
-       expo2 = expo - expo1
-    end if
-
-    n1 = 2**expo1
-    n2 = 2**expo2
-
-  end subroutine two_power_rand_factorization
 
 subroutine meshgrid(eta1, eta2, x, y)
 

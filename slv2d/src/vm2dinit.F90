@@ -27,12 +27,19 @@ sll_real64     :: x0, y0   ! coordonnees debut du maillage espace physique
 sll_real64     :: vx0, vy0 ! coordonnees debut du maillage espace vitesses
 sll_real64     :: x1, y1   ! coordonnees fin du maillage espace physique
 sll_real64     :: vx1, vy1 ! coordonnees fin du maillage espace vitesses
-sll_int32 :: iflag,ierr  ! indicateur d'erreur
+sll_int32      :: iflag,ierr  ! indicateur d'erreur
+sll_int32      :: comm
+sll_int32 :: my_num, num_threads
+
 ! definition of namelists
 namelist /time/ dt, nbiter
 namelist /diag/ fdiag, fthdiag! freq. of diags and time hist diags in steps
 namelist /phys_space/ x0,x1,y0,y1,nx,ny
 namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
+
+num_threads  = sll_get_collective_size(sll_world_collective)
+my_num = sll_get_collective_rank(sll_world_collective)
+comm   = sll_world_collective%comm
    
 if (my_num == MPI_MASTER) then
    call fichinit
@@ -42,23 +49,23 @@ if (my_num == MPI_MASTER) then
    read(idata,NML=vel_space)
 end if
 
-call mpi_barrier(MPI_COMM_WORLD,ierr)
-call mpi_bcast(dt,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(nbiter,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(fdiag,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(fthdiag,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(x0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(y0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(x1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(y1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(nx,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(ny,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(vx0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(vy0,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(vx1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(vy1,1,mpi_realtype,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(nvx,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
-call mpi_bcast(nvy,1,MPI_INTEGER,ROOT,MPI_COMM_WORLD,ierr)
+call mpi_barrier(comm,ierr)
+call mpi_bcast(dt,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(nbiter,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(fdiag,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(fthdiag,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(x0,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(y0,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(x1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(y1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(nx,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(ny,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(vx0,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(vy0,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(vx1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(vy1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
+call mpi_bcast(nvx,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(nvy,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 
 call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
@@ -84,7 +91,13 @@ type(poisson2dpp) :: poiss2dpp
 !variables locales
 sll_int32 :: ipiece_size_v, ipiece_size_x
 sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky,nrj
-sll_int32 :: i,j,iv,jv,iflag
+sll_int32 :: i,j,iv,jv,iflag, comm
+sll_int32 :: my_num, num_threads
+
+my_num = sll_get_collective_rank(sll_world_collective)
+num_threads = sll_get_collective_size(sll_world_collective)
+
+comm   = sll_world_collective%comm
 
 ! cas sequentiel
 jstartv=1
