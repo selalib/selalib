@@ -46,9 +46,9 @@ contains
     call mpi_barrier(MPI_COMM_WORLD,i)
     c=this%geomx%nx*this%geomx%ny
 !    call mpi_allreduce(locJx1,Jx1,c, &
-!         MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+!         MPI_REAL8,MPI_SUM,MPI_COMM_WORLD,mpierror)
     call mpi_allreduce(locJx1,Jx1,c, &	
-         MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+         MPI_REAL8,MPI_SUM,MPI_COMM_WORLD,mpierror)
 !sequentiel
 !    Jx1(:,:)=locJx1(:,:)
 
@@ -92,9 +92,9 @@ contains
     call mpi_barrier(MPI_COMM_WORLD,i)
     c=this%geomx%nx*this%geomx%ny
 !    call mpi_allreduce(locJy1,Jy1,c, &
-!         MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+!         MPI_REAL8,MPI_SUM,MPI_COMM_WORLD,mpierror)
     call mpi_allreduce(locJy1,Jy1,c, &
-         MPI_realtype,MPI_SUM,MPI_COMM_WORLD,mpierror)
+         MPI_REAL8,MPI_SUM,MPI_COMM_WORLD,mpierror)
 !seq
 !    Jy1(:,:)=locJy1(:,:)
     
