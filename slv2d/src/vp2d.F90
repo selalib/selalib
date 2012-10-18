@@ -26,6 +26,7 @@ sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
 
+sll_int32  :: i, j, k, l
 sll_int32  :: nbiter  
 sll_real64 :: dt     
 sll_int32  :: fdiag, fthdiag  
@@ -34,7 +35,15 @@ sll_int32  :: sx, ex, sv, ev
 sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
-sll_int32 :: my_num, num_threads, comm
+sll_int32 :: my_num, num_threads, comm, error
+
+sll_real64, dimension(:,:),pointer :: f2d
+
+character(len=4)  :: prefix = "df4d"
+integer(HID_T)    :: file_id
+integer(HSSIZE_T) :: offset(2)
+integer(HSIZE_T)  :: global_dims(2)
+character(len=4)  :: counter
 
 call sll_boot_collective()
 
@@ -69,6 +78,15 @@ endif
 call initlocal(geomx,geomv,sv,ev,sx,ex, &
                f4d,rho,e_x,e_y,vlas2d,poisson,splx,sply)
 
+SLL_ALLOCATE(f2d(geomx%nx,geomx%ny),error)
+
+!call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+!call sll_hdf5_write_array(file_id,geomx%nx,0,geomx%xgrid,"/x",error)
+!call sll_hdf5_write_array(file_id,geomx%nx,0,geomx%ygrid,"/y",error)
+!call sll_hdf5_write_array(file_id,geomv%ny,0,geomv%xgrid,"/u",error)
+!call sll_hdf5_write_array(file_id,geomv%ny,0,geomv%ygrid,"/v",error)
+!call sll_hdf5_file_close(file_id, error)
+
 iter = 0
 call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv,sx,ex,sv,ev,iter)
  
@@ -89,6 +107,19 @@ do iter=1,nbiter
    if (mod(iter,fdiag) == 0) then 
 
        call advection_x(vlas2d,f4d,.5*dt)
+
+       offset = 0
+
+       call int2string(iter/fdiag,counter)
+       !call sll_hdf5_file_create("df4d"//counter//".h5",file_id,error)
+       
+       do j = 1, geomx%ny
+       do i = 1, geomx%nx
+          f2d(i,j) = sum(f4d(i,j,:,:))
+       end do
+       end do
+       !call sll_hdf5_write_array(file_id,global_dims,offset,f2d,"/fxy",error)
+       !call sll_hdf5_file_close(file_id, error)
 
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
               sx,ex,sv,ev,iter/fdiag)
