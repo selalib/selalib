@@ -114,6 +114,7 @@ ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} sll_low_level_file_io)
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
 TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS}  
+                                               sll_remap
                                                sll_low_level_file_io_parallel
                                                sll_collective )
 
@@ -139,6 +140,6 @@ ADD_TEST(NAME test_vm2d COMMAND
          ./vm2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
-SET_TESTS_PROPERTIES(test_vp2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(test_vm2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
