@@ -34,7 +34,13 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
    namelist /diag/ fdiag, fthdiag
    namelist /phys_space/ x0,x1,y0,y1,nx,ny
    namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
+   sll_int32 :: my_num, num_threads, comm
+
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
+   comm   = sll_world_collective%comm
    
+
    if (my_num == MPI_MASTER) then
    
    call fichinit()
@@ -46,22 +52,22 @@ subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
   end if
 
-  call mpi_bcast(dt,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(fdiag,   1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(fthdiag, 1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(x0,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(y0,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(x1,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(y1,      1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nx,      1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(ny,      1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vx0,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vy0,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vx1,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(vy1,     1,MPI_REALTYPE,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
-  call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,MPI_COMM_WORLD,ierr)
+  call mpi_bcast(dt,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(fdiag,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(fthdiag, 1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(x0,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(y0,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(x1,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(y1,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nx,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(ny,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vx0,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vy0,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vx1,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vy1,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
   call new_geometry2(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
@@ -86,6 +92,11 @@ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
 
    sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky
    sll_int32  :: i,j,iv,jv,iflag
+   sll_int32 :: my_num, num_threads, comm
+
+   my_num = sll_get_collective_rank(sll_world_collective)
+   num_threads = sll_get_collective_size(sll_world_collective)
+   comm   = sll_world_collective%comm
 
    ! initialisation of size of parallel zones 
    ! the total size of the vx zone is nvx

@@ -21,6 +21,8 @@ subroutine transpose(a,at,nrow,ncol,nproc)
   !   Both A and AT are split on the processors according to the columns
   !------------------------------------------------------------------------
   use used_precision
+  use mpi
+  use sll_collective
   implicit none
   
   real(wp), dimension(nrow,ncol/nproc) :: a   ! matrix
@@ -32,9 +34,9 @@ subroutine transpose(a,at,nrow,ncol,nproc)
   !local variables
   integer :: ierr,i, count, ipiecesize,jpiecesize
 
-  include 'mpif.h'
+  integer :: comm
 
-  integer, parameter :: mpi_realtype = mpi_real8 !mpi_double_precision
+  comm   = sll_world_collective%comm
 
   ipiecesize = nrow/nproc
   jpiecesize = ncol/nproc
@@ -44,19 +46,19 @@ subroutine transpose(a,at,nrow,ncol,nproc)
   if (nproc*ipiecesize.ne.nrow) then
      Write(*,*) 'Error in TRANSPOSE'
      write(*,*) 'number of rows on each processor must be the same'
-     call mpi_abort(MPI_COMM_WORLD,ierr)
+     call MPI_FINALIZE(ierr)
   end if
 
   if (nproc*jpiecesize.ne.ncol) then
      write(*,*) 'Error in TRANSPOSE'
      write(*,*) 'number of columns on each processor must be the same'
-     call mpi_abort(MPI_COMM_WORLD,ierr)
+     call MPI_FINALIZE(ierr)
   end if
 
   call reorder(a,at,ipiecesize,jpiecesize,nproc)
 
-  call mpi_alltoall(at,count,MPI_realtype,a,count,MPI_realtype, &
-       MPI_COMM_WORLD,ierr)
+  call mpi_alltoall(at,count,MPI_REAL8,a,count,MPI_REAL8, &
+       comm,ierr)
 
   if (mod(ipiecesize,64).eq.0) then
      call bloctransp(a,at,ipiecesize,ncol)

@@ -40,12 +40,12 @@ sll_real64, dimension(:,:),     pointer :: div   ! divergence E
 sll_int32      :: nbiter         ! nombre d'iterations en temps
 sll_real64     :: dt             ! pas de temps
 sll_int32      :: fdiag, fthdiag ! frequences des diagnostiques
-sll_int32      :: iflag          ! indicateur d'erreur
 sll_int32      :: iter,i,j       ! variables de boucles       
 
 sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj
 sll_int32       :: error
+sll_int32  :: comm, my_num, num_threads
 
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
@@ -54,7 +54,11 @@ sll_real64 :: tcpu1, tcpu2
 
 ! initialisation global
 
-call initialise_moduleMPI
+call sll_boot_collective()
+num_threads  = sll_get_collective_size(sll_world_collective)
+my_num = sll_get_collective_rank(sll_world_collective)
+comm   = sll_world_collective%comm
+
 tcpu1 = MPI_WTIME()
 if (my_num == MPI_MASTER) then
    print*,'MPI Version of slv2d running on ',num_threads, ' processors'
@@ -85,13 +89,13 @@ call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                vlas2d,maxw2dfdtd,poiss2dpp,splx,sply)
 
 ! ecriture des resultats par le processeur 0 a l'instant initial
-call mpi_barrier(MPI_COMM_WORLD,iflag)
+call mpi_barrier(comm,error)
 
 iter = 0
 call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv,&
 jstartx,jendx,jstartv,jendv,iter)
 
-call mpi_barrier(MPI_COMM_WORLD,iflag)
+call mpi_barrier(comm,error)
 
 call transposevx(vlas2d,f)
 
@@ -201,7 +205,8 @@ if (my_num == MPI_MASTER) &
    write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
 
 print*,'PASSED'
-call termine_moduleMPI
+call sll_halt_collective()
+
 
 contains
 

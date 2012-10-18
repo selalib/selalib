@@ -13,7 +13,6 @@ module diagnostiques_module
 #include "selalib.h"
 use used_precision  
 use geometry_module
-use Module_MPI, my_num=>numero_processeur, num_threads=>nombre_processeurs
 
 implicit none
 integer, parameter :: ithf=50
@@ -27,7 +26,7 @@ character(len=2) :: outdir = './'
 contains
 
   subroutine diagnostiques(f,rho,ex,ey,geomx,geomv, &
-	jstartx,jendx,jstartv,jendv,numdiag)
+                           jstartx,jendx,jstartv,jendv,numdiag)
 
     real(wp), dimension(:,:,:,jstartv:) :: f ! fonc de distribution
 !    real(wp), dimension(:,jstartx:)     :: rho  ! densite de charge
@@ -39,10 +38,15 @@ contains
     integer :: numdiag
 
     ! variables locales
-    integer :: iex,iey,irho,ifxvx,ifyvy,ifvxvy,mpierror
+    integer :: iex,iey,irho,ifxvx,ifyvy,ifvxvy
     integer :: i,j,iv,jv
     real(wp) :: sum,sumloc
-    character(2) :: icnum,icpro
+    !character(2) :: icnum,icpro
+    sll_int32 :: comm, my_num, num_threads
+
+    num_threads  = sll_get_collective_size(sll_world_collective)
+    my_num = sll_get_collective_rank(sll_world_collective)
+    comm = sll_world_collective%comm
 
     iex=my_num*1000+1
     iey=my_num*1000+2
@@ -80,7 +84,7 @@ contains
 !                sumloc=sumloc + f(i,j,iv,jv)
 !             end do
 !          end do
-!          call  mpi_reduce(sumloc,sum,1,MPI_realtype,MPI_SUM,0, &
+!          call  mpi_reduce(sumloc,sum,1,MPI_REAL8,MPI_SUM,0, &
 !               MPI_COMM_WORLD,mpierror)
 !          if (my_num.eq.0) then
 !             write(ifxvx,'(1x,g13.6e3)') sum !/(geomv%ny*geomx%ny)
@@ -104,7 +108,7 @@ contains
 !          sum=0.  ! initialisation de la somme
 !          do iv=1,geomv%nx
 !             do i=1,geomx%nx
-!               sum=sum + f(i,j,iv,jv)	
+!               sum=sum + f(i,j,iv,jv)  
 !             end do
 !          end do
 !          write(ifyvy,'(1x,g13.6e3)') sum !/(geomv%ny*geomx%ny)
@@ -161,7 +165,7 @@ contains
 
 
 subroutine diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv, &
-	                  jstartx,jendx,jstartv,jendv,numdiag)
+                          jstartx,jendx,jstartv,jendv,numdiag)
 
 real(wp), dimension(:,:,:,jstartv:) :: f ! fonc de distribution
 !    real(wp), dimension(:,jstartx:)     :: rho  ! densite de charge
@@ -182,10 +186,15 @@ character(2) :: icnum,icpro
 
 integer :: ifile, k, file_id, error
 character(len=2), dimension(5) :: which 
+sll_int32 :: comm, my_num, num_threads
+
+num_threads  = sll_get_collective_size(sll_world_collective)
+my_num = sll_get_collective_rank(sll_world_collective)
+comm = sll_world_collective%comm
 
 #ifdef _SILO
-!call write_domains(my_num,geomx,geomv,f,rho,ex,ey,bz,jx,jy,	&
-!		   numdiag,jstartx,jendx,jstartv,jendv)
+!call write_domains(my_num,geomx,geomv,f,rho,ex,ey,bz,jx,jy,    &
+!          numdiag,jstartx,jendx,jstartv,jendv)
 !
 !if (my_num == 0) call write_master(num_threads,numdiag)
 #endif
@@ -225,7 +234,7 @@ do i=jstartx,jendx
       write(file_id,*) sngl(geomx%x0+(i-1)*geomx%dx), &
                        sngl(geomx%y0+(j-1)*geomx%dy), &
                        sngl(ex(i,j)), sngl(ey(i,j)),  &
-                       sngl(bz(i,j)),		    &
+                       sngl(bz(i,j)),           &
                        sngl(jx(i,j)), sngl(jy(i,j))
    end do
    write(file_id,*) 
@@ -247,11 +256,11 @@ if (my_num == MPI_MASTER) then
          !write(ifile,*)"set term x11"
       end if
       write(ifile,*)"set title 'Time = ",numdiag,"'"
-      write(ifile,"(a)",advance='no')	&
+      write(ifile,"(a)",advance='no')   &
       "splot '"//trim(outdir)//"0/"//fin//".dat' u 1:2:"//char(50+k)//" w l "
       
       do j = 1, num_threads - 1
-         write(ifile,"(a)",advance='no')	&
+         write(ifile,"(a)",advance='no')    &
          ", '"//trim(outdir)//char(j+48)//"/"//fin//".dat' u 1:2:"//char(50+k)//" w l "
       end do
       write(ifile,*)
@@ -272,7 +281,7 @@ if (my_num == 0) then
    write(ifvxvy,*)"set title 'Time = ",numdiag,"'"
    write(ifvxvy,"(a)",advance='no') "splot '"//trim(outdir)//"0/fvxvy-"//fin//".dat' w l"
    do j = 1, num_threads - 1
-      write(ifvxvy,"(a)",advance='no')	&
+      write(ifvxvy,"(a)",advance='no')  &
       ", '"//trim(outdir)//char(j+48)//"/fvxvy-"//fin//".dat' w l "
    end do
    write(ifvxvy,*)
