@@ -145,9 +145,10 @@ contains
   ! nb_pts = n + 1
   function new_quintic_splines_non_uni(knots, f) result(plan)
 
-    sll_int32                                   :: nb_pts, ierr
+    sll_int32                                   :: nb_pts, ierr,i
     sll_real64, dimension(:), intent(in)        :: knots
     sll_real64, dimension(:)                    :: f
+    sll_real64, dimension(7)                    :: zz
     type(quintic_splines_plan_non_uni), pointer :: plan
 
     ! Plan allocation
@@ -155,7 +156,12 @@ contains
     ! plan component allocation
     nb_pts = size(knots)
     SLL_ALLOCATE(plan%coeffs(nb_pts+5), ierr)
-    plan%spline_obj=>new_arbitrary_degree_spline_1d(5, knots, nb_pts, 1)
+do i=1,7
+zz(i)=i-1
+enddo
+    plan%spline_obj=>new_arbitrary_degree_spline_1d(5, zz, 7, 1)
+print*, 'test', b_splines_at_x( plan%spline_obj, 1, &
+                            0.d0 ); stop
     call compute_coeffs_non_uni(f, plan)
 
   end function new_quintic_splines_non_uni
@@ -182,6 +188,7 @@ contains
 
     plan_pent => new_toep_penta_diagonal(nb_pts+5)
     plan_splines%coeffs = solve_toep_penta_diagonal(a, b, c, f, plan_pent)
+
     call delete_toep_penta_diagonal(plan_pent)
 
   end subroutine compute_coeffs_non_uni
@@ -195,7 +202,7 @@ contains
     sll_real64, dimension(6)                               :: b
     sll_real64, dimension(plan_splines%spline_obj%num_pts) :: knots
 
-    knots = plan_splines%spline_obj%k
+    knots = plan_splines%spline_obj%k(1:plan_splines%spline_obj%num_pts)
     nb_pts = plan_splines%spline_obj%num_pts
 
     cell = 1
