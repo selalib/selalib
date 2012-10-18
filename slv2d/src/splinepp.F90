@@ -1,7 +1,7 @@
 module splinepp_class
   use used_precision
   use geometry_module
-  use clock
+  !use clock
   implicit none
   private
   public :: new, interpole

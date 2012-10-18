@@ -4,7 +4,7 @@ module poisson2dpp_par
 use used_precision
 use geometry_module
 use fft_module
-use Module_MPI, my_num=>numero_processeur, num_threads=>nombre_processeurs
+!use Module_MPI, my_num=>numero_processeur, num_threads=>nombre_processeurs
 
 implicit none
 private
