@@ -39,16 +39,11 @@
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_xdmf
+module sll_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
-#ifdef NOHDF5
-  use sll_binary_io
-#else
-  use sll_hdf5_io
-#endif
-
+  use sll_hdf5_io_parallel
   use sll_ascii_io
   use sll_xml_io
   
@@ -108,50 +103,44 @@ contains
 
   end subroutine sll_xdmf_open_3d
   
-  !>Write 2d array in binary or hdf5 file and the matching line in XDMF file
-  subroutine sll_xdmf_array_2d(mesh_name,array,array_name,error,xmffile_id,center)
+  !>Write 2d array in parallel hdf5 file and the matching line in XDMF file
+  subroutine sll_xdmf_array_2d(mesh_name,global_dims, offset,&
+                               array,array_name,error,&
+                               xmffile_id,center)
 
-    character(len=*), intent(in)    :: mesh_name
-    sll_real64, intent(in)          :: array(:,:)
-    character(len=*), intent(in)    :: array_name
-    sll_int32, intent(out)          :: error
-    sll_int32                       :: file_id
-    sll_int32                       :: npoints_x1
-    sll_int32                       :: npoints_x2
-    sll_int32, intent(in), optional :: xmffile_id
-    character(len=4), optional      :: center
+    use hdf5
+    character(len=*), intent(in)        :: mesh_name
+    sll_real64, intent(in)              :: array(:,:)
+    character(len=*), intent(in)        :: array_name
+    integer(HSSIZE_T)                   :: offset(2)
+    integer(HSIZE_T)                    :: global_dims(2)
+    integer(HID_T)                      :: file_id
+    sll_int32                           :: npoints_x1
+    sll_int32                           :: npoints_x2
+    sll_int32, intent(in), optional     :: xmffile_id
+    character(len=4), optional          :: center
+    sll_int32, intent(out)              :: error
     
     npoints_x1 = size(array,1)
     npoints_x2 = size(array,2)
 
-#ifdef NOHDF5
-    call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
-                                file_id,error)
-    call sll_binary_write_array(file_id,array,error)
-    call sll_binary_file_close(file_id,error)
-#else
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                               file_id,error)
-    call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
+    call sll_hdf5_write_array(file_id,global_dims,offset, &
+                              array,"/"//trim(array_name),error)
     call sll_hdf5_file_close(file_id, error)
-#endif
 
     if ( present(xmffile_id) .and. present(center)) then
-#ifdef NOHDF5
-       call sll_xml_field(xmffile_id,trim(array_name), &
-                          trim(mesh_name)//"-"//trim(array_name)//".bin", &
-                          npoints_x1,npoints_x2,'Binary',center)
-#else
        call sll_xml_field( &
             xmffile_id, &
             trim(array_name), &
             trim(mesh_name)//"-"//trim(array_name)//".h5:/"//trim(array_name), &
             npoints_x1,&
             npoints_x2,&
-            'HDF',&
+            'HDF', &
             center)
-#endif
-     end if
+    end if
+
   end subroutine sll_xdmf_array_2d
 
   !>Write 3d array in binary or hdf5 file and the matching line in XDMF file
@@ -172,77 +161,19 @@ contains
     npoints_x2 = size(array,2)
     npoints_x3 = size(array,3)
 
-#ifdef NOHDF5
-    call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
-                                file_id,error)
-    call sll_binary_write_array(file_id,array,error)
-    call sll_binary_file_close(file_id,error)
-#else
-    call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                              file_id,error)
-    call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-    call sll_hdf5_file_close(file_id, error)
-#endif
-
+#warning sll_xdmf_array_3d is not implemented
+   !call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
+   !                          file_id,error)
+   !call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
+   !call sll_hdf5_file_close(file_id, error)
 
     if ( present(xmffile_id) .and. present(center)) then
 
-#ifdef NOHDF5
-    call sll_xml_field(xmffile_id,trim(array_name), &
-                       trim(mesh_name)//"-"//trim(array_name)//".bin", &
-                       npoints_x1,npoints_x2,npoints_x3,'Binary',center)
-#else
-    call sll_xml_field( &
-         xmffile_id, &
-         trim(array_name), &
-         trim(mesh_name)//"-"//trim(array_name)//".h5:/"//trim(array_name), &
-         npoints_x1,&
-         npoints_x2,&
-         npoints_x3,&
-         'HDF', &
-         center)
-#endif
-
-     end if
+       call sll_xml_field(xmffile_id,trim(array_name), &
+                          trim(mesh_name)//"-"//trim(array_name)//".bin", &
+                          npoints_x1,npoints_x2,npoints_x3,'Binary',center)
+    end if
 
   end subroutine sll_xdmf_array_3d
 
-  !----------------------------------------------------------------------------
-  !> Outputs an error message:
-  !>   - PRTFIL : unit number for print-out
-  !>   - SEVRTY : 'W' - Warning 'F' - Fatal
-  !>   - WHERE  : in which program or subroutine
-  !>   - ErrMsg : error message
-  subroutine errout( prtfil, sevrty, lwhere, ErrMsg )
-
-    sll_int32, intent(in) ::  prtfil
-    character(len=1),intent(in) :: sevrty 
-    character(len=*),intent(in) :: lwhere , ErrMsg
-    
-    write( prtfil, * )
-    select case ( sevrty )  !     *** Severity ***
-    case ( 'W' )
-       write(prtfil,"(/10x,a)") '*** WARNING ***'
-    case ( 'F' )
-       write(prtfil,"(/10x,a)") '*** FATAL ERROR ***'
-    case default
-       write(prtfil,"(/10x,a)") '*** FATAL ERROR ***'
-       write(prtfil,"(/10x,a)") &
-            'Error handler (ERROUT) called with unknown severity level: ', &
-            SEVRTY
-    end select
-    write( prtfil,"(/10x,a)") &
-         'Generated by program or subroutine: ', trim(lwhere)
-    write( prtfil,"(/10x,a)") trim(ErrMsg)
-    write( prtfil,"(/10x,a)")
-    
-    ! return or stop depending on severity
-    if ( sevrty == 'W' ) then
-       return
-    else
-       stop 'Fatal Error: See print file for details'
-    end if
-    
-  end subroutine errout
-  
-end module sll_xdmf
+end module sll_xdmf_parallel
