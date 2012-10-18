@@ -22,9 +22,11 @@ TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
                               sll_assertion
                               sll_working_precision)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-   SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90)
+   ADD_DEFINITIONS(-DHDF5_PARALLEL)
+   SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
+                        sll_xdmf_parallel.F90 )
    ADD_LIBRARY(sll_low_level_file_io_parallel STATIC ${IO_SRC})
    ADD_DEPENDENCIES(sll_low_level_file_io_parallel sll_utilities 
                                                    sll_collective)
