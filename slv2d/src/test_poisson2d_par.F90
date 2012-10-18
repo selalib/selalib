@@ -3,9 +3,11 @@ program test_poisson2d_par
 #include "selalib.h"
 
 use mpi
+use hdf5
 use module_mpi 
 use geometry_module
 use poisson2dpp_seq
+use sll_xdmf_parallel
 
 implicit none
 
@@ -28,6 +30,12 @@ sll_int32  :: num_threads
 sll_real64 :: tcpu1
 sll_real64 :: tcpu2
 
+character(len=4)  :: prefix = "mesh"
+sll_int32         :: file_id
+integer(HSSIZE_T) :: offset(2)
+integer(HSIZE_T)  :: global_dims(2)
+
+
 ! initialisation global
 tcpu1 = MPI_WTIME()
 call initialise_moduleMPI
@@ -45,7 +53,6 @@ y_max = 2.*sll_pi
 nx  = 64
 ny  = 64
 
-
 SLL_ALLOCATE(rho(nx,ny),error)
 SLL_ALLOCATE(ex(nx,ny),error)
 SLL_ALLOCATE(ey(nx,ny),error)
@@ -54,11 +61,13 @@ call new_geometry2(geom,x_min,y_min,x_max,y_max,nx,ny,error,"perxy")
 
 call meshgrid(geom%xgrid, geom%ygrid, x, y)
 rho = -2_f64 * sin(x) * sin(y)
-call plot_solution( x, y, rho, "rho" )
+global_dims = (/nx,ny/)
+offset = 0
 
-SLL_ALLOCATE(rho(geom%nx,geom%ny),error)
-SLL_ALLOCATE(ex(geom%nx,geom%ny),error)
-SLL_ALLOCATE(ey(geom%nx,geom%ny),error)
+!call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
+!call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
+!call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
+!call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
 
 call new(poisson, rho, geom, error)
 
@@ -72,12 +81,15 @@ endif
 
 call solve(poisson,ex,ey,rho)
 
-call plot_solution( x, y, ex, "ex" )
+!call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
 
-call plot_solution( x, y, ey, "ey" )
+!call sll_xdmf_write_array(prefix,global_dims, offset,&
+!                          ey,"ey",error,file_id,"Node")
 
-print*, " error ex : ", sum(abs(ex + cos(x)*cos(y)))/(nx*ny)
-print*, " error ey : ", sum(abs(ey - sin(x)*sin(y)))/(nx*ny)
+!call sll_xdmf_close(file_id,error)
+
+print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
+print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
 
 tcpu2 = MPI_WTIME()
 if (my_num == MPI_MASTER) &
@@ -91,22 +103,7 @@ print*,'PASSED'
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine plot_solution( x, y, z, field_name )
 
-   sll_real64, dimension(:,:), intent(in) :: x
-   sll_real64, dimension(:,:), intent(in) :: y
-   sll_real64, dimension(:,:), intent(in) :: z
-   character(len=*), intent(in) :: field_name
-   character(len=4) :: prefix = "mesh"
-   sll_int32 :: file_id
-
-   call sll_xdmf_open(field_name//".xmf",prefix,size(z,1),size(z,2),file_id,error)
-   call sll_xdmf_write_array(prefix,x,'x1',error)
-   call sll_xdmf_write_array(prefix,y,'x2',error)
-   call sll_xdmf_write_array(prefix,z,field_name,error,file_id,"Node")
-   call sll_xdmf_close(file_id,error)
-
-end subroutine plot_solution
 
 subroutine meshgrid(eta1, eta2, x, y)
 

@@ -2,14 +2,18 @@ PROJECT(slv2d)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+#INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-SET(FFTPACK_ENABLED       ON  CACHE BOOL  "Use dfftpack library            ")
-SET(SILO_ENABLED          OFF CACHE BOOL  "Use SILO Library from LLNL      ")
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
+SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 
-FIND_PACKAGE(LAPACK  REQUIRED)
+IF(APPLE)
+   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
+ELSE()
+   FIND_PACKAGE(LAPACK  REQUIRED)
+ENDIF()
 
 IF(FFTPACK_ENABLED)
    FIND_PACKAGE(FFTPACK)
@@ -35,21 +39,30 @@ MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
-SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -pedantic -std=f2003 -fall-intrinsics -fbounds-check")
 
-IF (APPLE)
-   INCLUDE(${SELALIB_DIR}/CMakeModules/FindHDF5.cmake)
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+FIND_PACKAGE(HDF5 REQUIRED Fortran)
+SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+IF(HDF5_ENABLE_PARALLEL) 
+   MESSAGE(STATUS "HDF5 parallel supported")
 ELSE()
-   FIND_PACKAGE(HDF5 REQUIRED Fortran)
+   MESSAGE(SEND_ERROR "HDF5 parallel not supported")
 ENDIF()
 
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
 
 SET( SLL_COMPONENTS precision 
                     utilities 
                     assert 
                     memory 
                     constants 
+                    timer
+                    electric_field_accumulators
+                    remap
+                    collective
                     low_level_file_io)
 
 FOREACH( component ${SLL_COMPONENTS} )
@@ -58,7 +71,7 @@ FOREACH( component ${SLL_COMPONENTS} )
    ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
 ENDFOREACH()
 
-SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics")
+SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
@@ -83,10 +96,13 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_assertion
                        sll_constants
                        sll_memory
-                       sll_low_level_file_io)
+                       sll_low_level_file_io
+                       sll_timer
+                       sll_collective
+                       sll_remap
+                       sll_low_level_file_io_parallel)
 
-SET(LIBS sll_low_level_file_io
-         sll_utilities
+SET(LIBS sll_utilities
          sll_constants
          sll_memory
          sll_assertion
@@ -94,21 +110,24 @@ SET(LIBS sll_low_level_file_io
          ${SILO_LIBRARIES} ${FFTPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
-TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} )
+TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} sll_low_level_file_io)
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
-TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} )
+TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} sll_low_level_file_io)
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
-TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS} )
+TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS}  
+                                               sll_low_level_file_io_parallel
+                                               sll_collective )
 
 ENABLE_TESTING()
 
-SET(PROCS 4)
+SET(PROCS 1)
 
 ADD_TEST(NAME test_poisson2d_par COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./poisson2d_par
+         ./test_poisson2d_par
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
+SET(PROCS 4)
 SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.nml)
 
 ADD_TEST(NAME test_vp2d COMMAND 
