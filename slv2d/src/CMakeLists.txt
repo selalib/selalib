@@ -106,16 +106,19 @@ SET(LIBS sll_utilities
          sll_assertion
          sll_working_precision
          sll_collective
-         ${SILO_LIBRARIES} ${FFTPACK_LIBRARIES} ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES})
+         sll_remap
+         sll_low_level_file_io_parallel
+         ${SILO_LIBRARIES} 
+         ${FFTPACK_LIBRARIES} 
+         ${LAPACK_LIBRARIES} 
+         ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
-TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} sll_low_level_file_io)
+TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS})
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
-TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} sll_low_level_file_io)
+TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
-TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS}  
-                                               sll_remap
-                                               sll_low_level_file_io_parallel)
+TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
 
 ENABLE_TESTING()
 
