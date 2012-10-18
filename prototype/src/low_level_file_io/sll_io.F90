@@ -24,8 +24,6 @@ module sll_io
   
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use sll_xdmf
-  use sll_gnuplot
 
 #ifdef STDF95
     integer, parameter :: SLL_IO_XDMF = 0, &
