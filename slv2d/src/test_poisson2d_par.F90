@@ -16,11 +16,7 @@ use sll_xdmf_parallel
 
 implicit none
 
-sll_int32   :: myrank
-sll_int64   :: colsz 
-sll_int32   :: comm, info
 sll_int32   :: error
-sll_int32   :: i, j, k
 sll_real64  :: tcpu1
 sll_real64  :: tcpu2
 
@@ -47,6 +43,7 @@ sll_real64, dimension(:,:),pointer :: ey
 
 sll_int32  :: my_num
 sll_int32  :: num_threads
+sll_int32  :: comm, info
 
 character(len=4)  :: prefix = "mesh"
 sll_int32         :: file_id
@@ -56,10 +53,10 @@ integer(HSIZE_T)  :: global_dims(2)
 ! Boot parallel environment
 call sll_boot_collective()
 
-colsz  = sll_get_collective_size(sll_world_collective)
-myrank = sll_get_collective_rank(sll_world_collective)
-comm   = sll_world_collective%comm
-info   = MPI_INFO_NULL
+num_threads  = sll_get_collective_size(sll_world_collective)
+my_num       = sll_get_collective_rank(sll_world_collective)
+comm         = sll_world_collective%comm
+info         = MPI_INFO_NULL
 
 tcpu1 = MPI_WTIME()
 
@@ -108,15 +105,10 @@ print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
 print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
 
 tcpu2 = MPI_WTIME()
-write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
-
-
-tcpu2 = MPI_WTIME()
-if (myrank == 0) &
-   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*colsz
-
-
-if( myrank .eq. 0) print *, 'PASSED'
+if (my_num == 0) then
+   write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
+   print *, 'PASSED'
+end if
 
 call sll_halt_collective()
   
