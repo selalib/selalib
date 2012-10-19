@@ -26,7 +26,6 @@ sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
 
-sll_int32  :: i, j, k, l
 sll_int32  :: nbiter  
 sll_real64 :: dt     
 sll_int32  :: fdiag, fthdiag  
@@ -36,16 +35,6 @@ sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
 sll_int32 :: my_num, num_threads, comm, error
-
-sll_real64, dimension(:,:),pointer :: fxu
-sll_real64, dimension(:,:),pointer :: fyv
-sll_real64 :: sumloc
-
-character(len=4)  :: prefix = "df4d"
-integer(HID_T)    :: file_id
-integer(HSSIZE_T) :: offset(2), offset_1d(1)
-integer(HSIZE_T)  :: global_dims(2), global_dim(1)
-character(len=4)  :: counter
 
 call sll_boot_collective()
 
@@ -85,20 +74,8 @@ ey = geomx%ny
 su = 1
 eu = geomv%nx
 
-SLL_ALLOCATE(fxu(sx:ex,su:eu),error)
-SLL_ALLOCATE(fyv(sy:ey,sv:ev),error)
 
-offset_1d = 0
-call sll_hdf5_file_create("mesh4d.h5",file_id,error)
-global_dim = geomx%nx
-call sll_hdf5_write_array(file_id,global_dim,offset_1d,geomx%xgrid,"/x",error)
-global_dim = geomx%ny
-call sll_hdf5_write_array(file_id,global_dim,offset_1d,geomx%ygrid,"/y",error)
-global_dim = geomv%nx
-call sll_hdf5_write_array(file_id,global_dim,offset_1d,geomv%xgrid,"/u",error)
-global_dim = geomv%ny
-call sll_hdf5_write_array(file_id,global_dim,offset_1d,geomv%ygrid,"/v",error)
-call sll_hdf5_file_close(file_id, error)
+call plot_mesh4d(geomx,geomv,sy,ey,sv,ev)
 
 iter = 0
 call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv,sx,ex,sv,ev,iter)
@@ -121,32 +98,9 @@ do iter=1,nbiter
 
        call advection_x(vlas2d,f4d,.5*dt)
 
-       offset = 0
-
-       call int2string(iter/fdiag,counter)
-       
-       do k=su,eu
-        do i=sx,ex
-         sumloc= sum(f4d(i,sy:ey,k,sv:ev))
-         call  mpi_reduce(sumloc,fxu(i,k),1,MPI_REAL8,MPI_SUM,0,comm,error)
-        end do
-       end do
-       do l=sv,ev
-        do j=sy,ey
-         fyv(j,l)= sum(f4d(sx:ex,j,su:eu,l))
-        end do
-       end do
-
-       call sll_hdf5_file_create(prefix//counter//".h5",file_id,error)
-       global_dims = (/ex-sx+1,eu-su+1/)
-       offset      = (/0, 0/)
-       call sll_hdf5_write_array(file_id,global_dims,offset,fxu,"/fxvx",error)
-       global_dims = (/ey-sy+1,ev-sv+1/)
-       offset      = (/0, sv-1/)
-       call sll_hdf5_write_array(file_id,global_dims,offset,fyv,"/fyvy",error)
-       call sll_hdf5_file_close(file_id, error)
-
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv,sx,ex,sv,ev,iter/fdiag)
+
+       call plot_df(f4d, iter/fdiag, geomx, geomv, sy, ey, sv, ev)
 
        if (mod(iter,fthdiag).eq.0) then
           call thdiag(vlas2d,f4d,nrj,iter*dt)    
@@ -170,5 +124,6 @@ if (my_num == MPI_MASTER) &
 call sll_halt_collective()
 
 print*,'PASSED'
+
 
 end program VP2D
