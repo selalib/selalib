@@ -187,10 +187,10 @@ contains
     if (plan%time_scheme==1) then
        !explicit Euler
        do i=1,nr+1
-          r=rmin+real(i-1,f64)*dr
+          
           do j=1,ntheta+1
              theta=real(j-1,f64)*dtheta
-
+             r=rmin+real(i-1,f64)*dr
              theta=theta-dt*plan%field(1,i,j)/r
              r=r+dt*plan%field(2,i,j)/r
 
@@ -223,7 +223,7 @@ contains
        do j=1,ntheta
           do i=1,nr+1
              !initialization for r interpolation
-             rr=rmin+real(i-1,f64)*dr-dt*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
+             rr=rmin+real(i-1,f64)*dr+dt*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
              r=0.0_f64
              iter=0
 
@@ -705,7 +705,7 @@ contains
   !> subroutine correction_theta(theta)
   !> correction of theta to stay in [0;2pi]
   !> theta : angle to correct
-  subroutine correction_theta(theta)
+  subroutine correction_theta2(theta)
 
     implicit none
 
@@ -733,7 +733,26 @@ contains
        print*,theta
     end if
 
+  end subroutine correction_theta2
+
+  subroutine correction_theta(theta)
+
+    implicit none
+
+    sll_real64, intent(inout) :: theta
+    sll_real64 :: th
+
+    th=theta
+    theta=theta-real(floor(theta/(2.0_f64*sll_pi)),f64)*2.0_f64*sll_pi
+    if (theta>2.0_f64*sll_pi) then
+       theta=theta-2.0_f64*sll_pi
+    end if
+    if (theta<0.0_f64) then
+       theta=theta+2.0_f64*sll_pi
+    end if
+
   end subroutine correction_theta
+
 
 
   !>subroutine SL_classic(plan,in,out)
@@ -751,7 +770,11 @@ contains
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    
+        
     call advect_CG_polar(plan%adv,in,out)
+
+    !print *,sum(abs(plan%adv%field(1,1,:)))
 
   end subroutine SL_classic
 
