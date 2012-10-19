@@ -32,7 +32,7 @@ subroutine transpose(a,at,nrow,ncol,nproc)
 
 
   !local variables
-  integer :: ierr,i, count, ipiecesize,jpiecesize
+  integer :: ierr, icount, ipiecesize,jpiecesize
 
   integer :: comm
 
@@ -40,7 +40,7 @@ subroutine transpose(a,at,nrow,ncol,nproc)
 
   ipiecesize = nrow/nproc
   jpiecesize = ncol/nproc
-  count=ipiecesize*jpiecesize
+  icount=ipiecesize*jpiecesize
 
   ! test for wrong dimension
   if (nproc*ipiecesize.ne.nrow) then
@@ -57,7 +57,7 @@ subroutine transpose(a,at,nrow,ncol,nproc)
 
   call reorder(a,at,ipiecesize,jpiecesize,nproc)
 
-  call mpi_alltoall(at,count,MPI_REAL8,a,count,MPI_REAL8, &
+  call mpi_alltoall(at,icount,MPI_REAL8,a,icount,MPI_REAL8, &
        comm,ierr)
 
   if (mod(ipiecesize,64).eq.0) then
@@ -85,32 +85,6 @@ subroutine reorder(f,ft,ipiecesize,jpiecesize,nproc)
   end do
 end subroutine reorder
 
-#ifdef _OPENMP
-subroutine sharedmem(f,ft,ipiecesize,jpiecesize,nproc)
- use used_precision
-
-  implicit none
-  integer :: ipiecesize,jpiecesize,nproc
-  real(wp),dimension(ipiecesize*nproc*jpiecesize) ::f
-  real(wp),dimension(ipiecesize*jpiecesize*nproc) ::ft
-  integer :: my_num, omp_get_thread_num
-  ! local variables
-  integer :: n,i,j
-
-  my_num=omp_get_thread_num()
-
-  do n=0,nproc-1
-     do j=1,jpiecesize
-        do i=1,ipiecesize
-           f(i+ipiecesize*(j-1)+n*ipiecesize*jpiecesize*nproc+ &
-             ipiecesize*jpiecesize*my_num)=ft(i+ipiecesize*(j-1)&
-             +n*ipiecesize*jpiecesize)
-        end do
-     end do
-  end do
-end subroutine sharedmem
-#endif
-
 subroutine loctransp(f,ft,sizex,sizey)
   use used_precision
   implicit none
@@ -118,7 +92,7 @@ subroutine loctransp(f,ft,sizex,sizey)
   real(wp),dimension(sizex,sizey) ::f
   real(wp),dimension(sizey,sizex) ::ft
   ! local variables	
-  integer :: i,j, i0,j0 , nblocs
+  !integer :: i,j, i0,j0 , nblocs
 
   ft=transpose(f)
 !!$  nblocs=2
