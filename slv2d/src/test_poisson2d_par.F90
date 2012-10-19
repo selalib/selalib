@@ -95,10 +95,7 @@ write(*,"(2(i3,1x),6(g13.3,1x))") geom%nx, geom%ny, geom%x0, &
 call solve(poisson,ex,ey,rho)
 
 call sll_xdmf_write_array(prefix,global_dims,offset,ex,"ex",error,file_id,"Node")
-
-call sll_xdmf_write_array(prefix,global_dims, offset,&
-                          ey,"ey",error,file_id,"Node")
-
+call sll_xdmf_write_array(prefix,global_dims,offset,ey,"ey",error,file_id,"Node")
 call sll_xdmf_close(file_id,error)
 
 print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
@@ -114,25 +111,26 @@ call sll_halt_collective()
   
 contains
 
-subroutine meshgrid(eta1, eta2, x, y)
+subroutine meshgrid(vec_x, vec_y, mat_x, mat_y)
 
-   sll_real64, dimension(:), intent(in) :: eta1
-   sll_real64, dimension(:), intent(in) :: eta2
-   sll_real64, dimension(:,:), intent(out), pointer :: x
-   sll_real64, dimension(:,:), intent(out), pointer :: y
+   sll_real64, dimension(:), intent(in) :: vec_x
+   sll_real64, dimension(:), intent(in) :: vec_y
+   sll_real64, dimension(:,:), intent(out), pointer :: mat_x
+   sll_real64, dimension(:,:), intent(out), pointer :: mat_y
    sll_int32 :: i, j, error
+   sll_int32 :: nx, ny
+
+   nx = size(vec_x)
+   ny = size(vec_y)
    
-   SLL_ALLOCATE(x(size(eta1),size(eta2)),error)
-   SLL_ALLOCATE(y(size(eta1),size(eta2)),error)
+   SLL_ALLOCATE(x(nx,ny),error)
+   SLL_ALLOCATE(y(nx,ny),error)
    
-   do j = 1, size(eta2)
-      do i = 1, size(eta2)
-         x(i,j) = eta1(i)
-         y(i,j) = eta2(j)
-      end do
-   end do
+   forall(i=1:nx,j=1:ny)
+      mat_x(i,j) = vec_x(i)
+      mat_y(i,j) = vec_y(i)
+   end forall
 
 end subroutine meshgrid
-
 
 end program test_io_parallel
