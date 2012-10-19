@@ -2,19 +2,19 @@ module Vlasov2d_module
 
 #include "selalib.h"
 
-use used_precision
-use splinenn_class
-use splinepp_class
-use geometry_module
-use diagnostiques_module
-!use clock
+ use used_precision
+ use splinenn_class
+ use splinepp_class
+ use geometry_module
+ use diagnostiques_module
+ !use clock
 
-implicit none
-private
-public :: new, dealloc,advection_x, advection_v,&
-          densite_charge,transposexv,transposevx,thdiag,densite_courant
+ implicit none
+ private
+ public :: new, dealloc,advection_x, advection_v,&
+           densite_charge,transposexv,transposevx,thdiag,densite_courant
 
-type, public :: vlasov2d
+ type, public :: vlasov2d
    sll_real64, dimension(:,:,:,:), pointer :: ft
    type (splinepp) :: splinex ! spline periodique pour X
    type (splinenn) :: splinev ! spline naturel pour V
@@ -23,170 +23,173 @@ type, public :: vlasov2d
                                ! fonction de distribution mise a jour
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv  ! definition de la bande de calcul
-end type vlasov2d
+ end type vlasov2d
 
-! variables globales 
-sll_real64,dimension(0:9) :: diag
-sll_real64,dimension(13) :: aux
-sll_real64 :: vbeam  ! beam velocity
-sll_real64, dimension(:,:),allocatable :: P_x, P_y
+ ! variables globales 
+ sll_real64,dimension(0:9) :: diag
+ sll_real64,dimension(13) :: aux
+ sll_real64 :: vbeam  ! beam velocity
+ sll_real64, dimension(:,:),allocatable :: P_x, P_y
 
-interface new
+ interface new
    module procedure new_vlasov2d
-end interface
+ end interface
 
-interface dealloc
+ interface dealloc
    module procedure dealloc_vlasov2d
-end interface
+ end interface
 
 contains
 
-subroutine new_vlasov2d(this,geomx,geomv,iflag, jstartx, jendx, &
+ subroutine new_vlasov2d(this,geomx,geomv,error, jstartx, jendx, &
                         jstartv, jendv,vz)
 
-   type(vlasov2d),intent(out) :: this
-   type(geometry),intent(in)  :: geomx, geomv
-   sll_real64, optional  :: vz
-   sll_int32, intent(out) :: iflag
-   sll_int32, intent(in), optional ::  jstartx, jendx, jstartv, jendv
-   sll_int32 :: ierr ! indicateur d'erreur
+  type(vlasov2d),intent(out)      :: this
+  type(geometry),intent(in)       :: geomx
+  type(geometry),intent(in)       :: geomv
+  sll_real64, optional            :: vz
+  sll_int32, intent(out)          :: error
+  sll_int32, intent(in), optional ::  jstartx
+  sll_int32, intent(in), optional ::  jendx
+  sll_int32, intent(in), optional ::  jstartv
+  sll_int32, intent(in), optional ::  jendv
 
-   if (.not.(present(vz))) then
-      vbeam = 1.0
-   else
-      vbeam = vz
-   end if
-   ! indicateur d'erreur
-   iflag = 0
+  if (.not.(present(vz))) then
+     vbeam = 1.0
+  else
+     vbeam = vz
+  end if
 
-   ! on commence par utiliser la fonction f(x,y,vx,vy)
-   this%transposed=.false.
-   ! definition des bandes de calcul (en n'oubliant pas le cas sequentiel)
-   if (.not.(present(jstartx))) then
-      this%jstartx = 1
-   else
-      this%jstartx = jstartx
-   end if
-   if (.not.(present(jendx))) then
-      this%jendx = geomx%ny
-   else
-      this%jendx = jendx
-   end if
-   if (.not.(present(jstartv))) then 
+  error = 0
+
+  ! on commence par utiliser la fonction f(x,y,vx,vy)
+  this%transposed=.false.
+  ! definition des bandes de calcul (en n'oubliant pas le cas sequentiel)
+  if (.not.(present(jstartx))) then
+     this%jstartx = 1
+  else
+     this%jstartx = jstartx
+  end if
+  if (.not.(present(jendx))) then
+     this%jendx = geomx%ny
+  else
+     this%jendx = jendx
+  end if
+  if (.not.(present(jstartv))) then 
       this%jstartv = 1
-   else
-      this%jstartv = jstartv
-   end if
-   if (.not.(present(jendv))) then
-      this%jendv = geomv%nx
-   else
-      this%jendv = jendv
-   end if
-   
-   ! initialisation de la geometrie
-   this%geomx=geomx
-   this%geomv=geomv
-   ! initialisation des splines de l'espace des vitesses
-   call new(this%splinev,geomv,iflag)
-   ! initialisation des splines de l'espace physique
-   call new(this%splinex,geomx,iflag)  
+  else
+     this%jstartv = jstartv
+  end if
+  if (.not.(present(jendv))) then
+     this%jendv = geomv%nx
+  else
+     this%jendv = jendv
+  end if
+  
+  ! initialisation de la geometrie
+  this%geomx=geomx
+  this%geomv=geomv
+  ! initialisation des splines de l'espace des vitesses
+  call new(this%splinev,geomv,error)
+  ! initialisation des splines de l'espace physique
+  call new(this%splinex,geomx,error)  
 
-   ! allocation memoire
-   SLL_ALLOCATE(this%ft(geomv%nx,geomv%ny,geomx%nx,this%jstartx:this%jendx),ierr)
+  ! allocation memoire
+  SLL_ALLOCATE(this%ft(geomv%nx,geomv%ny,geomx%nx,this%jstartx:this%jendx),error)
 
-   SLL_ALLOCATE(P_x(this%geomv%nx,this%geomv%ny),ierr)
-   SLL_ALLOCATE(P_y(this%geomv%nx,this%geomv%ny),ierr)
+  SLL_ALLOCATE(P_x(this%geomv%nx,this%geomv%ny),error)
+  SLL_ALLOCATE(P_y(this%geomv%nx,this%geomv%ny),error)
 
-end subroutine new_vlasov2d
+ end subroutine new_vlasov2d
 
-subroutine dealloc_vlasov2d(this)
-   type(vlasov2d),intent(out) :: this
-   sll_int32 :: error
-   SLL_DEALLOCATE(this%ft,error)
-end subroutine dealloc_vlasov2d
+ subroutine dealloc_vlasov2d(this)
+  type(vlasov2d),intent(out) :: this
+  sll_int32 :: error
+  SLL_DEALLOCATE(this%ft,error)
+ end subroutine dealloc_vlasov2d
 
-!>
-!> fait une advection en x sur un pas de temps dt
-!>
-subroutine advection_x(this,f,dt)
-   type(vlasov2d),intent(inout) :: this
-   sll_real64, dimension(:,:,:,this%jstartv:) :: f
-   sll_real64, intent(in) :: dt
+ !>
+ !> fait une advection en x sur un pas de temps dt
+ !>
+ subroutine advection_x(this,f,dt)
+  type(vlasov2d),intent(inout) :: this
+  sll_real64, dimension(:,:,:,this%jstartv:) :: f
+  sll_real64, intent(in) :: dt
 
-   sll_real64 :: depx, depy   ! deplacement par rapport au maillage
-   sll_real64 :: vx, vy       ! vitesse du point courant
-   sll_int32 :: iv, jv ! indices de boucle
+  sll_real64 :: depx, depy   ! deplacement par rapport au maillage
+  sll_real64 :: vx, vy       ! vitesse du point courant
+  sll_int32 :: iv, jv ! indices de boucle
 
-   ! verifier que la transposition est a jours
-   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
-   do jv=this%jstartv,this%jendv
-      vy = this%geomv%y0+(jv-1)*this%geomv%dy
-      depy = vy*dt
-      do iv=1,this%geomv%nx
-         vx = this%geomv%x0+(iv-1)*this%geomv%dx
-         depx = vx*dt
-         call interpole(this%splinex,f(:,:,iv,jv),depx,depy,jv==0)
+  ! verifier que la transposition est a jours
+  if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
+  do jv=this%jstartv,this%jendv
+     vy = this%geomv%y0+(jv-1)*this%geomv%dy
+     depy = vy*dt
+     do iv=1,this%geomv%nx
+        vx = this%geomv%x0+(iv-1)*this%geomv%dx
+        depx = vx*dt
+        call interpole(this%splinex,f(:,:,iv,jv),depx,depy,jv==0)
+     end do
+  end do
+
+ end subroutine advection_x
+
+ !>
+ !> fait une advection en v sur un pas de temps dt
+ !>
+ subroutine advection_v(this,fx,fy,dt,bz)
+
+  type(vlasov2d),intent(inout) :: this
+
+  sll_real64, dimension(:,:), intent(in) :: fx, fy
+  sll_real64, dimension(:,:), optional, intent(in) :: bz
+  sll_real64, intent(in) :: dt
+
+  sll_real64 :: depvx, depvy   ! deplacement par rapport au maillage
+  sll_int32 :: i, j ,iv, jv, im1! indices de boucle
+  sll_real64 :: ctheta, stheta, px, py
+
+  ! verifier que la transposition est a jour
+  if (.not.(this%transposed)) stop 'advection_v: on travaille sur ft et pas f'
+
+  if (present(bz)) then
+
+   do j=this%jstartx,this%jendx
+    do i=1,this%geomx%nx
+     ctheta = cos(bz(i,j)*dt)
+     stheta = sin(bz(i,j)*dt)
+     depvx  = -0.5*dt*fx(i,j)
+     depvy  = -0.5*dt*fy(i,j)
+     do jv=1,this%geomv%ny-1
+      py = this%geomv%y0+(jv-1)*this%geomv%dy
+      do iv=1,this%geomv%nx-1 
+       px = this%geomv%x0+(iv-1)*this%geomv%dx
+       P_x(iv,jv) = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
+       P_y(iv,jv) = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
       end do
+     end do
+
+     call interpole(this%splinev,this%ft(:,:,i,j),this%ft(:,:,i,j),P_x,P_y)
+
+    end do
    end do
 
-end subroutine advection_x
+  else
 
-!>
-!> fait une advection en v sur un pas de temps dt
-!>
-subroutine advection_v(this,fx,fy,dt,bz)
+   do j=this%jstartx,this%jendx
+    do i=1,this%geomx%nx
+     im1=mod(i-1+this%geomx%nx,this%geomx%nx)
+     !depvx = fx(i,j)*dt
+     !depvy = fy(i,j)*dt
+     depvx =  fx(i,j)*dt;depvy=0._wp
+     call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,j==0)
+     !call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,(j .eq. 3) .and. (i .eq. 3))
+    end do
+   end do
 
-   type(vlasov2d),intent(inout) :: this
-
-   sll_real64, dimension(:,:), intent(in) :: fx, fy
-   sll_real64, dimension(:,:), optional, intent(in) :: bz
-   sll_real64, intent(in) :: dt
-
-   sll_real64 :: depvx, depvy   ! deplacement par rapport au maillage
-   sll_int32 :: i, j ,iv, jv, im1! indices de boucle
-   sll_real64 :: ctheta, stheta, px, py
-
-   ! verifier que la transposition est a jour
-   if (.not.(this%transposed)) stop 'advection_v: on travaille sur ft et pas f'
-
-   if (present(bz)) then
-
-      do j=this%jstartx,this%jendx
-         do i=1,this%geomx%nx
-            ctheta = cos(bz(i,j)*dt)
-            stheta = sin(bz(i,j)*dt)
-            depvx  = -0.5*dt*fx(i,j)
-            depvy  = -0.5*dt*fy(i,j)
-            do jv=1,this%geomv%ny-1
-               py = this%geomv%y0+(jv-1)*this%geomv%dy
-               do iv=1,this%geomv%nx-1 
-                  px = this%geomv%x0+(iv-1)*this%geomv%dx
-                  P_x(iv,jv) = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
-                  P_y(iv,jv) = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
-               end do
-            end do
-
-            call interpole(this%splinev,this%ft(:,:,i,j),this%ft(:,:,i,j),P_x,P_y)
-
-         end do
-      end do
-
-   else
-
-       do j=this%jstartx,this%jendx
-          do i=1,this%geomx%nx
-             im1=mod(i-1+this%geomx%nx,this%geomx%nx)
-!             depvx = fx(i,j)*dt
-!             depvy = fy(i,j)*dt
-             depvx =  fx(i,j)*dt;depvy=0._wp
-             call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,j==0)
-             !call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,(j .eq. 3) .and. (i .eq. 3))
-          end do
-      end do
-
-   end if
+  end if
        
-end subroutine advection_v
+ end subroutine advection_v
 
 !>------------------------------------------------
 !> calcule la densite de charge rho a partir de ft
@@ -198,7 +201,7 @@ end subroutine advection_v
 subroutine densite_charge(this, rho)
 
    type(vlasov2d),intent(inout) :: this
-   sll_int32 :: mpierror
+   sll_int32 :: error
    sll_real64, dimension(:,:), intent(out)  :: rho
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locrho
    sll_int32 :: i,j,iv,jv,c
@@ -220,10 +223,9 @@ subroutine densite_charge(this, rho)
          end do
       end do
    end do
-   call mpi_barrier(comm,i)
+   call mpi_barrier(comm,error)
    c=this%geomx%nx*this%geomx%ny
-   call mpi_allreduce(locrho,rho,c, &
-        MPI_REAL8,MPI_SUM,comm,mpierror)
+   call mpi_allreduce(locrho,rho,c,MPI_REAL8,MPI_SUM,comm,error)
 
 end subroutine densite_charge
 
@@ -235,7 +237,7 @@ end subroutine densite_charge
 subroutine densite_courant(this, jx, jy)
 
    type(vlasov2d),intent(inout) :: this
-   sll_int32 :: mpierror
+   sll_int32 :: error
    sll_real64, dimension(:,:), intent(out)  :: jx, jy
    sll_real64 :: vx, vy       ! vitesse du point courant
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
@@ -266,12 +268,10 @@ subroutine densite_courant(this, jx, jy)
       end do
    end do
 
-   call mpi_barrier(comm,i)
+   call mpi_barrier(comm,error)
    c=this%geomx%nx*this%geomx%ny
-   call mpi_allreduce(locjx,jx,c, &
-        MPI_REAL8,MPI_SUM,comm,mpierror)
-   call mpi_allreduce(locjy,jy,c, &
-        MPI_REAL8,MPI_SUM,comm,mpierror)
+   call mpi_allreduce(locjx,jx,c, MPI_REAL8,MPI_SUM,comm,error)
+   call mpi_allreduce(locjy,jy,c, MPI_REAL8,MPI_SUM,comm,error)
 
 end subroutine densite_courant
 
@@ -320,7 +320,7 @@ subroutine thdiag(this,f,nrj,t)
 
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,this%jstartv:),intent(in) :: f
-   sll_int32 :: mpierror
+   sll_int32 :: error
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
    sll_int32 :: i,iv, j,jv   ! indices de boucles
@@ -371,9 +371,9 @@ subroutine thdiag(this,f,nrj,t)
 !   auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
 !
 !   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,0,  &
-!                   comm, mpierror)
+!                   comm, error)
 !   call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
-!                   comm, mpierror)
+!                   comm, error)
 !
 if (my_num==MPI_MASTER) then
    aux(13)=t

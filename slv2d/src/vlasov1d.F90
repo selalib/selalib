@@ -4,7 +4,7 @@ module Vlasov1d_module
   use splinepx_class
   use splinepy_class
   use geometry_module
-  use diagnostiques_module	
+  use diagnostiques_module
 
   implicit none
   
@@ -34,12 +34,12 @@ contains
        do iv=1,this%geomv%nx
           vx = this%geomv%x0+(iv-1)*this%geomv%dx
           depx = vx*dt
-	  do jx = 1,this%geomx%ny	
-	     f1dx(:)=f(:,jx,iv,jv)
+          do jx = 1,this%geomx%ny
+             f1dx(:)=f(:,jx,iv,jv)
              call interpole(this,f1dx,depx,flux)
              f(:,jx,iv,jv)=f1dx(:)
-	     locJx1(:,jx)=locJx1(:,jx)+flux(:)*this%geomv%dx*this%geomv%dy!*0.5_wp*vx
-	  enddo    
+             locJx1(:,jx)=locJx1(:,jx)+flux(:)*this%geomv%dx*this%geomv%dy!*0.5_wp*vx
+          enddo    
        end do
     end do
 !parallel
@@ -74,16 +74,16 @@ contains
     ! verifier que la transposition est a jours
     if (this%transpose) stop 'advection_x: on travaille sur f et pas ft'
 
-    Jy1(:,:)=0._wp;locJy1=0._wp	
+    Jy1(:,:)=0._wp;locJy1=0._wp
     do jv=this%jstartv,this%jendv
        vy = this%geomv%y0+(jv-1)*this%geomv%dy
        depy = vy*dt
        do iv=1,this%geomv%nx
           do ix=1,this%geomx%nx
-	     f1dy(:)=f(ix,:,iv,jv)
+             f1dy(:)=f(ix,:,iv,jv)
              call interpole(this,f1dy,depy,flux)
-	     f(ix,:,iv,jv)=f1dy(:)
-	     locJy1(ix,:)=locJy1(ix,:)+flux(:)*this%geomv%dx*this%geomv%dy!*vy*0.5_wp!
+             f(ix,:,iv,jv)=f1dy(:)
+             locJy1(ix,:)=locJy1(ix,:)+flux(:)*this%geomv%dx*this%geomv%dy!*vy*0.5_wp!
           enddo
        end do
     end do
@@ -102,5 +102,3 @@ contains
   end subroutine advection1d_y
 
 end module Vlasov1d_module
-
-
