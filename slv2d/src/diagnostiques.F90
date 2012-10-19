@@ -22,6 +22,11 @@ integer, private :: kk0, kk1, kk2, kk3, kk4
 character(len=4), private :: fin
 character(len=1), private :: aa,bb,cc,dd
 character(len=2) :: outdir = './'
+character(len=4)  :: prefix = "df4d"
+sll_real64, dimension(:,:),pointer :: fxvx
+sll_real64, dimension(:,:),pointer :: fyvy
+sll_int32, private :: i, j, k, l
+
 
 contains
 
@@ -179,10 +184,11 @@ integer :: jstartx,jendx,jstartv,jendv
 integer :: numdiag
 
 ! variables locales
-integer :: iex,iey,irho,ifxvx,ifyvy,ifvxvy,mpierror
+!integer :: iex,iey,irho,ifxvx,ifyvy,ifvxvy,mpierror
+integer :: ifvxvy
 integer :: i,j,iv,jv
-real(wp) :: sum,sumloc
-character(2) :: icnum,icpro
+real(wp) :: sum !,sumloc
+!character(2) :: icnum,icpro
 
 integer :: ifile, k, file_id, error
 character(len=2), dimension(5) :: which 
@@ -303,5 +309,129 @@ end do
 close(ifvxvy)
 
 end subroutine diagnostiquesm
+
+ subroutine plot_mesh4d(geomx, geomv, sy,ey,sv,ev)
+
+  type(geometry) :: geomx, geomv
+  integer(HID_T)    :: file_id
+  integer(HSSIZE_T) :: offset(1)
+  integer(HSIZE_T)  :: global_dims(1)
+  sll_int32, intent(in) :: sy, ey, sv, ev
+  sll_int32 :: nx, nvx, ny, nvy
+  sll_int32 :: error
+
+  nx  = geomx%nx; ny  = geomx%ny
+  nvx = geomv%nx; nvy = geomv%ny
+  SLL_ALLOCATE(fxvx(nx,nvx),error)
+  SLL_ALLOCATE(fyvy(sy:ey,sv:ev),error)
+
+  offset = 0
+  call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+  global_dims = geomx%nx
+  call sll_hdf5_write_array(file_id,global_dims,offset,geomx%xgrid,"/x",error)
+  global_dims = geomx%ny
+  call sll_hdf5_write_array(file_id,global_dims,offset,geomx%ygrid,"/y",error)
+  global_dims = geomv%nx
+  call sll_hdf5_write_array(file_id,global_dims,offset,geomv%xgrid,"/vx",error)
+  global_dims = geomv%ny
+  call sll_hdf5_write_array(file_id,global_dims,offset,geomv%ygrid,"/vy",error)
+  call sll_hdf5_file_close(file_id, error)
+
+ end subroutine plot_mesh4d
+
+ subroutine plot_df(f4d, iplot, geomx, geomv, sy, ey, sv, ev)
+
+  type(geometry), intent(in) :: geomx, geomv
+  sll_real64, intent(in) :: f4d(:,:,:,sv:)
+  sll_int32, intent(in)  :: sy, ey, sv, ev
+
+  sll_int32, intent(in) :: iplot
+  character(len=4)      :: cplot
+  integer(HID_T)    :: file_id
+  integer(HSSIZE_T) :: offset(2)
+  integer(HSIZE_T)  :: global_dims(2)
+  sll_real64        :: sumloc
+  sll_int32         :: nx , nvx, ny, nvy
+  sll_int32         :: my_num
+  sll_int32         :: error
+  sll_int32         :: comm
+
+  my_num = sll_get_collective_rank(sll_world_collective)
+  comm = sll_world_collective%comm
+
+  nx  = geomx%nx; ny  = geomx%ny
+  nvx = geomv%nx; nvy = geomv%ny
+
+  call int2string(iplot,cplot)
+
+  SLL_ASSERT(allocated(fxvx))
+  SLL_ASSERT(allocated(fyvy))
+
+  do k=1,nvx
+   do i=1,nx
+    sumloc= sum(f4d(i,sy:ey,k,sv:ev))
+    call mpi_reduce(sumloc,fxvx(i,k),1,MPI_REAL8,MPI_SUM,0,comm,error)
+   end do
+  end do
+  do l=sv,ev
+   do j=sy,ey
+    fyvy(j,l)= sum(f4d(:,j,:,l))
+   end do
+  end do
+
+  call sll_hdf5_file_create(prefix//cplot//".h5",file_id,error)
+  global_dims = (/geomx%nx,geomv%nx/)
+  offset      = (/0, 0/)
+  call sll_hdf5_write_array(file_id,global_dims,offset,fxvx,"/fxvx",error)
+  global_dims = (/geomx%ny,geomv%ny/)
+  offset      = (/0, sv-1/)
+  call sll_hdf5_write_array(file_id,global_dims,offset,fyvy,"/fyvy",error)
+  call sll_hdf5_file_close(file_id, error)
+
+  if (my_num == 0) then
+  
+   call write_xdmf("fxvx"//cplot//".xmf",prefix//cplot//".h5","x","vx","fxvx",nx,nvx)
+   call write_xdmf("fyvy"//cplot//".xmf",prefix//cplot//".h5","y","vy","fyvy",ny,nvy)
+
+  end if
+
+ end subroutine plot_df
+
+ subroutine write_xdmf(xdmffilename, datafilename, xname, yname, fname, nx, ny)
+
+  character(len=*), intent(in) :: xdmffilename
+  character(len=*), intent(in) :: datafilename
+  character(len=*), intent(in) :: xname
+  character(len=*), intent(in) :: yname
+  character(len=*), intent(in) :: fname
+
+  sll_int32, intent(in) :: nx
+  sll_int32, intent(in) :: ny
+  sll_int32 :: file_id
+  sll_int32 :: error
+
+  call sll_xml_file_create(xdmffilename,file_id,error)
+  write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+  write(file_id, &
+   "(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='",ny,nx,"'/>"
+  write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
+  write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx, &
+                           "' NumberType='Float' Precision='8' Format='HDF'>"
+  write(file_id,"(a)")"mesh4d.h5:/"//xname
+  write(file_id,"(a)")"</DataItem>"
+  write(file_id,"(a,i5,a)")"<DataItem Dimensions='",ny, &
+                           "' NumberType='Float' Precision='8' Format='HDF'>"
+  write(file_id,"(a)")"mesh4d.h5:/"//yname
+  write(file_id,"(a)")"</DataItem>"
+  write(file_id,"(a)")"</Geometry>"
+  write(file_id,"(a)")"<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
+  write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
+                            "' NumberType='Float' Precision='8' Format='HDF'>"
+  write(file_id,"(a)")datafilename//":/"//fname
+  write(file_id,"(a)")"</DataItem>"
+  write(file_id,"(a)")"</Attribute>"
+  call sll_xml_file_close(file_id,error)
+
+ end subroutine write_xdmf
 
 end module diagnostiques_module
