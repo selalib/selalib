@@ -21,7 +21,7 @@ program cg_polar
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0, re, im
   sll_int32 :: mod,bc(2)!, obs_mod
-  sll_real64 :: mode,temps,alpha,tmp
+  sll_real64 :: mode,temps,alpha,tmp,err_loc
   sll_real64, dimension(2,2) :: dom
   character (len=16) :: f_file,bctop,bcbot
   !used for testing poisson with fcase=2
@@ -46,7 +46,7 @@ program cg_polar
 
   !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
-  open(27,file='CG_data.dat',action="read")
+  open(27,file='CG_data.txt',action="read")
   read(27,*)rmin
   read(27,*)rmax
   read(27,*)nr
@@ -196,7 +196,9 @@ program cg_polar
            end do
         end if
         do j=1,ntheta+1
-          g(j,i)=f(i,j)
+          theta=real(j-1,f64)*dtheta
+          !f(i,j)=f(i,j)+alpha*cos(mode*theta)
+          !g(j,i)=f(i,j)
         enddo
      end do
 
@@ -279,23 +281,56 @@ program cg_polar
 
   !mode=1.5
   
-  if(mode==0)then
-    k1=(r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-    k2=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-    k3=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
-    c1=(2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax)+r1**2-r2**2)*log(rmin)/(-4.0_f64*log(rmin/rmax))
-    c2=(2.0_f64*r2**2*log(rmin)*log(r2/rmax)+2.0_f64*r1**2*log(rmax)*log(rmin/r1)+r1**2*log(rmax)-r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
-    c3=(r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin)+2.0_f64*r1**2*log(rmin/r1))*log(rmax)/(-4.0_f64*log(rmin/rmax))
+  if(mode==0)then 
+    if(bc(1)==DIRICHLET)then
+      k1=(r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
+      k2=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
+      k3=(r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1)+2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
+      c1=(2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax)+r1**2-r2**2)*log(rmin)/(-4.0_f64*log(rmin/rmax))
+      c2=(2.0_f64*r2**2*log(rmin)*log(r2/rmax)+2.0_f64*r1**2*log(rmax)*log(rmin/r1)+r1**2*log(rmax)-r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
+      c3=(r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin)+2.0_f64*r1**2*log(rmin/r1))*log(rmax)/(-4.0_f64*log(rmin/rmax))
+    endif
+    if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
+      k1=0._f64
+      k2=r1**2/2._f64
+      k3=r1**2/2._f64-r2**2/2._f64
+      c1=r1**2*log(r1)/2._f64+r2**2/4._f64-r2**2*log(r2)/2._f64
+      c1=c1-r1**2*log(rmax)/2._f64+r2**2*log(rmax)/2._f64-r1**2/4._f64
+      c2=r2**2/4._f64-r2**2*log(r2)/2._f64-r1**2*log(rmax)/2._f64+r2**2*log(rmax)/2._f64
+      c3=-log(rmax)*(r1**2-r2**2)/2._f64
+    endif    
   endif
   
   if(mode==3)then
-    k1=(r1*r2*(r2**5-r1**5)-5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-    k2=(r1*r2*(r2**5-r1**5)-5._f64*(rmin**6*r2-rmax**6*r1))/(30._f64*r2*r1*(rmin**6-rmax**6))    
-    k3=(-r1*r2*(r1**5-r2**5)-5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-    c1=(-r1*r2*(r2**5-r1**5)+5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-    c2=(-r1*r2*(rmin**6*r2**5-rmax**6*r1**5)+5._f64*(rmin*rmax)**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-    c3=rmax**6*(-r1*r2*(r2**5-r1**5)+5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+      k1=(r1*r2*(r2**5-r1**5)-5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+      k2=(r1*r2*(r2**5-r1**5)-5._f64*(rmin**6*r2-rmax**6*r1))/(30._f64*r2*r1*(rmin**6-rmax**6))    
+      k3=(-r1*r2*(r1**5-r2**5)-5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+      c1=(-r1*r2*(r2**5-r1**5)+5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+      c2=(-r1*r2*(rmin**6*r2**5-rmax**6*r1**5)+5._f64*(rmin*rmax)**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+      c3=rmax**6*(-r1*r2*(r2**5-r1**5)+5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
+    endif
   endif
+
+  if(mode==7)then
+    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+      k1=-5._f64*r1**5*r2**14+5._f64*r1**14*r2**5-9._f64*r1**5*rmax**14+9._f64*r2**5*rmax**14
+      k1=k1/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
+      k2=-5._f64*r1**5*r2**14+5._f64*r1**14*r2**5-9._f64*r2**5*rmin**14-9._f64*r1**5*rmax**14
+      k2=k2/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
+      k3=-5._f64*r1**5*r2**14+5._f64*r1**14*r2**5-9._f64*r2**5*rmin**14+9._f64*r1**5*rmin**14
+      k3=k3/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
+      c1=-5._f64*r1**5*r2**14+5._f64*r1**14*r2**5-9._f64*r1**5*rmax**14+9._f64*r2**5*rmax**14
+      c1=rmin**14*c1/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
+      c2=5._f64*rmin**14*r1**5*r2**14+9._f64*rmax**14*rmin**14*r1**5
+      c2=c2-9._f64*rmax**14*r2**5*rmin**14+5._f64*rmax**14*r1**14*r2**5
+      c2=-c2/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
+      c3=-5._f64*r1**5*r2**14+5._f64*r1**14*r2**5+9._f64*r1**5*rmin**14-9._f64*r2**5*rmin**14
+      c3=-rmax**14*c3/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
+    endif
+  endif
+
+
   !we add the mode
   !k1=k1+0.5_f64*real(mode,f64)**2*(log(rmax)**2-log(rmin)**2)/(-log(rmax)+log(rmin))
   !k2=k2+0.5_f64*real(mode,f64)**2*(log(rmax)**2-log(rmin)**2)/(-log(rmax)+log(rmin))
@@ -306,7 +341,7 @@ program cg_polar
   !c3=c3+0.5_f64*real(mode,f64)**2*log(rmin)*log(rmax)*(log(rmin)-log(rmax))/(-log(rmax)+log(rmin))
 
   
-  tmp=0
+  tmp=0._f64
   l1=0.0_f64
   l2=0.0_f64
 
@@ -323,7 +358,7 @@ program cg_polar
        end if
      end if
 
-     if(mode==3)then
+     if(mode>=3)then
        if (r<r1) then
         temps=k1*r**mode+c1/r**(mode)
        else if (r>r2) then
@@ -340,16 +375,17 @@ program cg_polar
         theta=real(j-1,f64)*dtheta
         x=r*cos(theta)
         y=r*sin(theta)
+        err_loc=abs(plan_sl%phi(i,j)-temps*cos(mode*theta))
         !print*,plan_sl%phi(i,j)-temps
         write(20,*)r,theta,x,y,plan_sl%phi(i,j),temps*cos(mode*theta),cos(mode*theta),0*plan_sl%phi(i,j)&
 &        -temps*(0+alpha*cos(mode*theta)/(mode**2))
-        tmp=max(tmp,abs(plan_sl%phi(i,j)-temps))
+        tmp=max(tmp,err_loc)
         if (i==1 .or. i==nr+1) then
-           l1=l1+abs(plan_sl%phi(i,j)-temps)*r/2.0_f64
-           l2=l2+(plan_sl%phi(i,j)-temps)**2*r/2.0_f64
+           l1=l1+err_loc*r/2.0_f64
+           l2=l2+err_loc**2*r/2.0_f64
         else
-           l1=l1+abs(plan_sl%phi(i,j)-temps)*r
-           l2=l2+(plan_sl%phi(i,j)-temps)**2*r
+           l1=l1+err_loc*r
+           l2=l2+err_loc**2*r
         end if
      end do
      write(20,*)' '
@@ -357,7 +393,7 @@ program cg_polar
   close(20)
   l1=l1*dr*dtheta
   l2=sqrt(l2*dr*dtheta)
-  print*,nr,dr,tmp,l1,l2
+  print*,"#error for phi in initialization",nr,dr,tmp,l1,l2
 
   !stop
 

@@ -56,7 +56,7 @@ contains
   subroutine sll_hdf5_file_create(filename, file_id, error)
     character(len=*) , intent(in)  :: filename  
     integer,           intent(out) :: error
-    integer(hid_t)                 :: file_id   
+    integer(hid_t), intent(out)    :: file_id   
     integer(hid_t)                 :: plist_id 
     integer                        :: comm, info
     integer                        :: mpi_size
