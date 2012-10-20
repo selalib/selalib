@@ -7,7 +7,7 @@ module vp2dinit
  use vlasov2d_module
  use splinepx_class
  use splinepy_class
- use poisson2dpp_seq
+ use poisson2d_periodic
  use diagnostiques_module
 
  implicit none
@@ -91,7 +91,7 @@ contains
   type(vlasov2d)    :: vlas2d
   type(splinepx)    :: splx
   type(splinepy)    :: sply
-  type(poisson2dpp) :: poisson
+  type(poisson2d) :: poisson
   
   sll_int32  :: ipiece_size_v
   sll_int32  :: ipiece_size_x
@@ -146,7 +146,7 @@ contains
      end do
   end do
 
-  call new(poisson, rho,   geomx, iflag)
+  call new(poisson, e_x, e_y,   geomx, iflag)
   call new(vlas2d,  geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
   call new(splx,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
   call new(sply,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
