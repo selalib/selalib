@@ -320,19 +320,19 @@ subroutine thdiag(this,f,nrj,t)
 
    type(vlasov2d),intent(inout) :: this
    sll_real64, dimension(:,:,:,this%jstartv:),intent(in) :: f
-   sll_int32 :: error
+   !sll_int32 :: error
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
    sll_int32 :: i,iv, j,jv   ! indices de boucles
    sll_real64 :: x, vx, y, vy
-   sll_real64,dimension(7) :: diagloc
-   sll_real64,dimension(11) :: auxloc
+   !sll_real64,dimension(7) :: diagloc
+   !sll_real64,dimension(11) :: auxloc
    sll_int32 :: my_num, num_threads
    sll_int32 :: comm
 
    comm   = sll_world_collective%comm
    my_num = sll_get_collective_rank(sll_world_collective)
-   num_threads = sll_get_collective_size(sll_world_collective)
+   !num_threads = sll_get_collective_size(sll_world_collective)
 
 
    if (my_num == MPI_MASTER) then
