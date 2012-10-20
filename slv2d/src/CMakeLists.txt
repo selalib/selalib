@@ -7,6 +7,7 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
 SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
+SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 
 IF(APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
@@ -38,6 +39,14 @@ IF(FFTPACK_ENABLED)
 ENDIF()
 IF(FFTPACK_FOUND)
    ADD_DEFINITIONS(-D_FFTPACK)
+ENDIF()
+
+IF(FFTW_ENABLED)
+   FIND_PACKAGE(FFTW)
+ENDIF()
+IF(FFTW_FOUND)
+   ADD_DEFINITIONS(-D_FFTW)
+   INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
 ENDIF()
 
 
@@ -82,6 +91,7 @@ SET(SLV2D_SRC silo_module.F90
               maxwell2dfdtd.F90
               poisson2dpp_seq.F90
               poisson2dpp_par.F90
+              poisson2d_periodic.F90
               precision.F90
               splinenn.F90
               splinepp.F90
@@ -114,6 +124,7 @@ SET(LIBS sll_utilities
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
          ${LAPACK_LIBRARIES} 
+         ${FFTW_LIBRARIES}
          ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
@@ -122,6 +133,11 @@ ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
 TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
+
+IF (FFTW_FOUND) 
+   ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
+   TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
+ENDIF()
 
 ENABLE_TESTING()
 
