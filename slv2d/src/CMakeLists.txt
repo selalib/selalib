@@ -44,11 +44,11 @@ ENDIF()
 IF(FFTW_ENABLED)
    FIND_PACKAGE(FFTW)
 ENDIF()
+
 IF(FFTW_FOUND)
    ADD_DEFINITIONS(-D_FFTW)
    INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
 ENDIF()
-
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -pedantic -std=f2003 -fall-intrinsics -fbounds-check")
 
@@ -71,8 +71,10 @@ SET( SLL_COMPONENTS precision
                     memory 
                     constants 
                     timer
+                    numerical_utilities
                     electric_field_accumulators
                     remap
+                    splines
                     collective
                     low_level_file_io)
 
@@ -120,7 +122,9 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_timer
                        sll_collective
                        sll_remap
+                       sll_splines
                        sll_interpolators
+                       sll_tridiagonal
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_utilities
@@ -130,7 +134,9 @@ SET(LIBS sll_utilities
          sll_working_precision
          sll_collective
          sll_interpolators
+         sll_splines
          sll_remap
+         sll_tridiagonal
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
@@ -144,6 +150,8 @@ ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
 TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
+ADD_EXECUTABLE(test_vp2d_selalib vp2d_selalib.F90)
+TARGET_LINK_LIBRARIES(test_vp2d_selalib slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
@@ -172,6 +180,12 @@ ADD_TEST(NAME test_vm2d COMMAND
          ./vm2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
+#ADD_TEST(NAME test_vp2_selalib COMMAND 
+#         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+#         ./vp2d_selalib
+#         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
 SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#SET_TESTS_PROPERTIES(test_vp2d_selalib  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
