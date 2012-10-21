@@ -84,6 +84,14 @@ ENDFOREACH()
 
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 
+ADD_LIBRARY(sll_interpolators STATIC 
+  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
+  ${SELALIB_DIR}/interpolators/sll_interpolators_1d_base.F90
+  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
+  ${SELALIB_DIR}/interpolators/sll_interpolators_2d_base.F90
+  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90)
+
+
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
               fft_module.F90
@@ -99,7 +107,8 @@ SET(SLV2D_SRC silo_module.F90
               splinepy.F90
               transpose.F90
               vlasov1d.F90
-              vlasov2d.F90 )
+              vlasov2d.F90
+              sll_vlasov2d.F90 )
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
@@ -111,6 +120,7 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_timer
                        sll_collective
                        sll_remap
+                       sll_interpolators
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_utilities
@@ -119,6 +129,7 @@ SET(LIBS sll_utilities
          sll_assertion
          sll_working_precision
          sll_collective
+         sll_interpolators
          sll_remap
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 

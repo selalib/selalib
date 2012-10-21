@@ -8,7 +8,7 @@ program VP2D
 use used_precision  
 use geometry_module
 use diagnostiques_module
-use poisson2d_periodic
+use poisson2dpp_seq
 use vlasov2d_module
 use vp2dinit
 
@@ -16,7 +16,7 @@ implicit none
 
 type (geometry)    :: geomx 
 type (geometry)    :: geomv 
-type (poisson2d)   :: poisson 
+type (poisson2dpp) :: poisson 
 type (vlasov2d)    :: vlas2d 
 type (splinepx)    :: splx 
 type (splinepy)    :: sply
