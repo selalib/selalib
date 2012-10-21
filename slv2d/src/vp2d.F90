@@ -106,7 +106,6 @@ do iter=1,nbiter
 
    end if
 
-
 end do
 
 tcpu2 = MPI_WTIME()

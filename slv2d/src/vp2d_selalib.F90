@@ -5,19 +5,20 @@ use used_precision
 use geometry_module
 use diagnostiques_module
 use poisson2d_periodic
-use vlasov2d_module
-use vp2dinit
+use sll_vlasov2d
 
 implicit none
 
-type (geometry)    :: geomx 
-type (geometry)    :: geomv 
-type (poisson2d)   :: poisson 
+type (geometry)   :: geomx 
+type (geometry)   :: geomv 
+type (poisson2d)  :: poisson 
+type (vlasov2d)   :: vlas2d 
 
 sll_real64, dimension(:,:,:,:), pointer :: f4d
 sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
+sll_real64, dimension(:,:),     pointer :: b_z 
 
 sll_int32  :: nbiter  
 sll_real64 :: dt     
@@ -60,11 +61,12 @@ if (my_num == MPI_MASTER) then
 endif
 
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
-               f4d,rho,e_x,e_y,vlas2d,poisson,splx,sply)
+               f4d,rho,e_x,e_y,vlas2d,poisson)
 
 call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
  
-call advection_x(vlas2d,f4d,.5*dt)
+call advection_x1(vlas2d,f4d,.5*dt)
+call advection_x2(vlas2d,f4d,.5*dt)
 
 do iter=1,nbiter
 
@@ -74,30 +76,32 @@ do iter=1,nbiter
 
    call solve(poisson,e_x,e_y,rho,nrj)
 
-   call advection_v(vlas2d,e_x,e_y,dt)
+   call advection_x4(vlas2d,e_y,0.5*dt)
+   call advection_x3(vlas2d,e_x,0.5*dt)
+   call advection_x2(vlas2d,f4d,.5*dt)
 
    call transposevx(vlas2d,f4d)
 
    if (mod(iter,fdiag) == 0) then 
 
-       call advection_x(vlas2d,f4d,.5*dt)
+       call advection_x1(vlas2d,f4d,.5*dt)
 
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
 
        call plot_df(f4d, iter/fdiag, geomx, geomv, jstartx, jendx, jstartv, jendv)
 
-       if (mod(iter,fthdiag).eq.0) then
-          call thdiag(vlas2d,f4d,nrj,iter*dt)    
-       end if
-
-       call advection_x(vlas2d,f4d,.5*dt)
+       call advection_x1(vlas2d,f4d,.5*dt)
 
    else 
 
-       call advection_x(vlas2d,f4d,dt)
+       call advection_x1(vlas2d,f4d,dt)
 
    end if
+
+   call advection_x2(vlas2d,f4d,.5*dt)
+   call advection_x3(vlas2d,e_x,0.5*dt)
+   call advection_x4(vlas2d,e_y,0.5*dt)
 
 
 end do
@@ -174,7 +178,7 @@ contains
  end subroutine initglobal
 
  subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
-                      f,rho,e_x,e_y,vlas2d,poisson,splx,sply)
+                      f,rho,e_x,e_y,vlas2d,poisson)
 
   type(geometry) :: geomx
   type(geometry) :: geomv  
@@ -189,8 +193,6 @@ contains
   sll_real64, dimension(:,:,:,:),pointer :: f
 
   type(vlasov2d)    :: vlas2d
-  type(splinepx)    :: splx
-  type(splinepy)    :: sply
   type(poisson2d) :: poisson
   
   sll_int32  :: ipiece_size_v
@@ -227,10 +229,6 @@ contains
   SLL_ALLOCATE(e_x(geomx%nx,geomx%ny),iflag)
   SLL_ALLOCATE(e_y(geomx%nx,geomx%ny),iflag)
 
-  xi  = 0.90
-  eps = 0.05
-  kx  = 2*pi/((geomx%nx)*geomx%dx)
-  ky  = 2*pi/((geomx%ny)*geomx%dy)
   do jv=jstartv,jendv
      vy = geomv%y0+(jv-1)*geomv%dy
      do iv=1,geomv%nx
@@ -240,7 +238,7 @@ contains
            y=geomx%y0+(j-1)*geomx%dy
            do i=1,geomx%nx
               x=geomx%x0+(i-1)*geomx%dx
-              f(i,j,iv,jv)=(1+eps*cos(kx*x))*1/(2*pi)*exp(-.5*v2)
+              f(i,j,iv,jv)=exp(-v2)
            end do
         end do
      end do
@@ -248,8 +246,8 @@ contains
 
   call new(poisson, e_x, e_y,   geomx, iflag)
   call new(vlas2d, geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
-  call new(splx,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
-  call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+  !call new(splx,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+  !call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
 
  end subroutine initlocal
 
