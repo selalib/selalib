@@ -88,7 +88,9 @@ contains  ! ****************************************************************
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
+#ifndef STDF95
     sll_real64,  intent(in)   :: alpha
+#endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
@@ -142,7 +144,7 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     call compute_spline_1D( data_array, interpolator%spline )
-#ifdef STD95
+#ifdef STDF95
   end subroutine cubic_spline_compute_interpolants
 #else
   end subroutine compute_interpolants_cs1d
