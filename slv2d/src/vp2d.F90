@@ -30,7 +30,7 @@ sll_int32  :: nbiter
 sll_real64 :: dt     
 sll_int32  :: fdiag, fthdiag  
 sll_int32  :: iter 
-sll_int32  :: sx, ex, sy, ey, su, eu, sv, ev
+sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
@@ -66,19 +66,10 @@ if (my_num == MPI_MASTER) then
    write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
 endif
 
-call initlocal(geomx,geomv,sv,ev,sx,ex, &
+call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                f4d,rho,e_x,e_y,vlas2d,poisson,splx,sply)
 
-sy = 1
-ey = geomx%ny
-su = 1
-eu = geomv%nx
-
-
-call plot_mesh4d(geomx,geomv,sy,ey,sv,ev)
-
-iter = 0
-call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv,sx,ex,sv,ev,iter)
+call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
  
 call advection_x(vlas2d,f4d,.5*dt)
 
@@ -98,9 +89,10 @@ do iter=1,nbiter
 
        call advection_x(vlas2d,f4d,.5*dt)
 
-       call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv,sx,ex,sv,ev,iter/fdiag)
+       call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
+                          jstartx,jendx,jstartv,jendv,iter/fdiag)
 
-       call plot_df(f4d, iter/fdiag, geomx, geomv, sy, ey, sv, ev)
+       call plot_df(f4d, iter/fdiag, geomx, geomv, jstartx, jendx, jstartv, jendv)
 
        if (mod(iter,fthdiag).eq.0) then
           call thdiag(vlas2d,f4d,nrj,iter*dt)    

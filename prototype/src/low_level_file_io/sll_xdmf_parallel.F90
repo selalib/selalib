@@ -2,33 +2,23 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_low_level_file_io
-!
-!> @author
-!> Pierre Navaro
+!> @namespace sll_xdmf_parallel
 !>
-!
-! DESCRIPTION: 
-!
+!> @author Pierre Navaro (navaro@math.unistra.fr)
+!>
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
 !>
 !>@details
 !> In <b> XDMF </b> (eXtensible Data Model and Format) the description of the 
 !> data is separate from the values themselves. Light data is stored using XML, 
-!> Heavy data is stored using HDF5 or Binary files. 
-!>
-!> This is control by the variable <code>NOHDF5</code>.
-!> HDF5 is set by default but il you prefer binary just add 
-!>
-!> <code> env.Append(CPPDEFINES=['NOHDF5']) </code>
-!>
-!> in your SCons script
+!> Heavy data is stored using Parallel HDF5. These files are readable by 
+!> Paraview.
 !>
 !> <h2>How to use this module: </h2>
 !>
-!> <p> Just use the module \a sll_low_level_file_io 
-!> \code use sll_low_level_file_io \endcode
+!> \code use sll_xdmf_parallel \endcode
+!> and link with sll_low_level_io_parallel library
 !>
 !> External links:
 !> - https://wci.llnl.gov/codes/visit/
@@ -131,8 +121,6 @@ contains
     character(len=4), optional          :: center
     sll_int32, intent(out)              :: error
     sll_int32                           :: myrank
-    
-    
 
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                               file_id,error)
@@ -143,8 +131,8 @@ contains
     myrank = sll_get_collective_rank(sll_world_collective)
 
     if ( present(xmffile_id) .and. present(center) .and. myrank==0) then
-       npoints_x1 = transfer(global_dims(1),1_i32)
-       npoints_x2 = transfer(global_dims(2),1_i32)
+       npoints_x1 = int(global_dims(1),4)
+       npoints_x2 = int(global_dims(2),4)
        call sll_xml_field( &
             xmffile_id, &
             trim(array_name), &
@@ -176,7 +164,6 @@ contains
     sll_int32                       :: npoints_x3
     sll_int32                       :: myrank
     
-
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                              file_id,error)
     call sll_hdf5_write_array(file_id,global_dims,offset,array, &
@@ -185,9 +172,9 @@ contains
 
     myrank = sll_get_collective_rank(sll_world_collective)
     if ( present(xmffile_id) .and. present(center) .and. myrank==0) then
-       npoints_x1 = transfer(global_dims(1),1_i32)
-       npoints_x2 = transfer(global_dims(2),1_i32)
-       npoints_x3 = transfer(global_dims(3),1_i32)
+       npoints_x1 = int(global_dims(1),4)
+       npoints_x2 = int(global_dims(2),4)
+       npoints_x3 = int(global_dims(3),4)
        call sll_xml_field(xmffile_id,trim(array_name), &
                           trim(mesh_name)//"-"//trim(array_name)//".bin", &
                           npoints_x1,npoints_x2,npoints_x3,'Binary',center)

@@ -147,9 +147,9 @@ contains
   end do
 
   call new(poisson, e_x, e_y,   geomx, iflag)
-  call new(vlas2d,  geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
-  call new(splx,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
-  call new(sply,    geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+  call new(vlas2d, geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+  call new(splx,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
+  call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
 
  end subroutine initlocal
 
