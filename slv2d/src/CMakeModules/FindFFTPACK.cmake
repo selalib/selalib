@@ -2,7 +2,7 @@ FIND_LIBRARY(FFTPACK_LIBRARIES
 		NAMES dfftpack
 		HINTS /usr/local
 		PATH_SUFFIXES lib 
-		DOC "PATH TO libdfftpack.a")
+		DOC "PATH TO libdfftpack")
 
 IF (FFTPACK_LIBRARIES)
    MESSAGE(STATUS "FFTPACK FOUND")

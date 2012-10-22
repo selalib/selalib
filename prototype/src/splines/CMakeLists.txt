@@ -8,7 +8,14 @@ set(SPL_LIBS sll_splines sll_quintic_splines sll_odd_degree_splines
 sll_arbitrary_degree_splines sll_toeplitz_penta_diagonal sll_tridiagonal 
 sll_memory sll_assertion sll_constants util_constants ${LAPACK_LIBRARIES})
 
-add_dependencies(sll_splines sll_arbitrary_degree_splines sll_memory sll_assertion sll_working_precision)
+add_dependencies(sll_arbitrary_degree_splines sll_working_precision 
+                                              sll_memory
+                                              sll_utilities)
+
+add_dependencies(sll_splines sll_arbitrary_degree_splines 
+                             sll_memory 
+                             sll_assertion 
+                             sll_working_precision)
 
 add_library(cubic_non_unif_splines STATIC cubic_nonuniform_splines.F90)
 add_dependencies(cubic_non_unif_splines sll_memory sll_assertion sll_working_precision
