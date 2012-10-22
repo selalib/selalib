@@ -34,7 +34,7 @@ sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
-sll_int32 :: my_num, num_threads, comm, error
+sll_int32 :: my_num, num_threads, comm
 
 call sll_boot_collective()
 
@@ -92,7 +92,7 @@ do iter=1,nbiter
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
 
-       call plot_df(f4d, iter/fdiag, geomx, geomv, jstartx, jendx, jstartv, jendv)
+       call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,YVY)
 
        if (mod(iter,fthdiag).eq.0) then
           call thdiag(vlas2d,f4d,nrj,iter*dt)    

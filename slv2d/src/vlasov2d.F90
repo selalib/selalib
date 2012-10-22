@@ -26,9 +26,6 @@ module Vlasov2d_module
  end type vlasov2d
 
  ! variables globales 
- sll_real64,dimension(0:9) :: diag
- sll_real64,dimension(13) :: aux
- sll_real64 :: vbeam  ! beam velocity
  sll_real64, dimension(:,:),allocatable :: P_x, P_y
 
  interface new
@@ -42,23 +39,16 @@ module Vlasov2d_module
 contains
 
  subroutine new_vlasov2d(this,geomx,geomv,error, jstartx, jendx, &
-                        jstartv, jendv,vz)
+                        jstartv, jendv)
 
   type(vlasov2d),intent(out)      :: this
   type(geometry),intent(in)       :: geomx
   type(geometry),intent(in)       :: geomv
-  sll_real64, optional            :: vz
   sll_int32, intent(out)          :: error
   sll_int32, intent(in), optional ::  jstartx
   sll_int32, intent(in), optional ::  jendx
   sll_int32, intent(in), optional ::  jstartv
   sll_int32, intent(in), optional ::  jendv
-
-  if (.not.(present(vz))) then
-     vbeam = 1.0
-  else
-     vbeam = vz
-  end if
 
   error = 0
 
@@ -323,17 +313,18 @@ subroutine thdiag(this,f,nrj,t)
    !sll_int32 :: error
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
-   sll_int32 :: i,iv, j,jv   ! indices de boucles
-   sll_real64 :: x, vx, y, vy
+   !sll_int32 :: i,iv, j,jv
+   !sll_real64 :: x, vx, y, vy
    !sll_real64,dimension(7) :: diagloc
    !sll_real64,dimension(11) :: auxloc
+   sll_real64,dimension(13) :: aux
+   sll_real64,dimension(0:9) :: diag
    sll_int32 :: my_num, num_threads
    sll_int32 :: comm
 
    comm   = sll_world_collective%comm
    my_num = sll_get_collective_rank(sll_world_collective)
-   !num_threads = sll_get_collective_size(sll_world_collective)
-
+   num_threads = sll_get_collective_size(sll_world_collective)
 
    if (my_num == MPI_MASTER) then
       diag=0.
