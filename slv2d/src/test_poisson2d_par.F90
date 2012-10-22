@@ -93,6 +93,9 @@ if (my_num == 0) then
    write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
    print *, 'PASSED'
 end if
+
+#ifdef _FFTW
+
 tcpu1 = MPI_WTIME()
 call solver_with_fftw3()
 tcpu2 = MPI_WTIME()
@@ -100,6 +103,8 @@ if (my_num == 0) then
    write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
    print *, 'PASSED'
 end if
+
+#endif
 
 call sll_xdmf_write_array(prefix,global_dims,offset,phi,"phi",error,file_id,"Node")
 call sll_xdmf_write_array(prefix,global_dims,offset,ex ,"ex" ,error,file_id,"Node")
@@ -129,6 +134,7 @@ end do
 
 end subroutine solver_with_fftpack
 
+#ifdef _FFTW
 subroutine solver_with_fftw3()
 use poisson2d_periodic
 type(poisson2d) :: poisson 
@@ -145,6 +151,7 @@ print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
 print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
 
 end subroutine solver_with_fftw3
+#endif
 
 subroutine meshgrid(vec_x, vec_y, mat_x, mat_y)
 
