@@ -115,8 +115,7 @@ SET(SLV2D_SRC silo_module.F90
               splinepy.F90
               transpose.F90
               vlasov1d.F90
-              vlasov2d.F90
-              sll_vlasov2d.F90 )
+              vlasov2d.F90 )
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
@@ -152,12 +151,19 @@ SET(LIBS sll_utilities
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
 TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS})
+
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
+
 ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
 TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
-ADD_EXECUTABLE(vp2d_selalib vp2d_selalib.F90)
+
+ADD_EXECUTABLE(vp2d_selalib vp2d_selalib.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_selalib slv2d ${LIBS})
+
+#ADD_DEFINITIONS(-DTWO_D)
+#ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
+#TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
