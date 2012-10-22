@@ -13,24 +13,22 @@ use sll_vlasov2d
 
 implicit none
 
-type (geometry)   :: geomx 
-type (geometry)   :: geomv 
-type (vlasov2d)   :: vlas2d 
-
-type (poisson2dpp)  :: poisson 
+type(geometry)   :: geomx 
+type(geometry)   :: geomv 
+type(vlasov2d)   :: vlas2d 
+type(poisson2dpp):: poisson 
 
 sll_real64, dimension(:,:,:,:), pointer :: f4d
 sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
 
-sll_int32  :: nbiter  
-sll_real64 :: dt     
+sll_int32  :: nbiter, iter 
 sll_int32  :: fdiag, fthdiag  
-sll_int32  :: iter 
 sll_int32  :: jstartx, jendx, jstartv, jendv
-sll_real64 :: nrj
-sll_real64 :: tcpu1, tcpu2
+
+sll_real64 :: dt     
+sll_real64 :: nrj, tcpu1, tcpu2
 
 sll_int32 :: my_num, num_threads, comm
 
@@ -89,26 +87,21 @@ do iter=1,nbiter
    call solve(poisson,e_x,e_y,rho,nrj)
 
    call advection_x3(vlas2d,e_x,0.5*dt)
-
-   call advection_x4(vlas2d,e_y,0.5*dt)
-
-   call densite_charge(vlas2d,rho)
-
-   call solve(poisson,e_x,e_y,rho,nrj)
-
-   if (mod(iter,fthdiag).eq.0) then
-      call thdiag(vlas2d,f4d,nrj,iter*dt)    
-   end if
-
-   call advection_x4(vlas2d,e_y,0.5*dt)
-
+   call advection_x4(vlas2d,e_y,dt)
    call advection_x3(vlas2d,e_x,0.5*dt)
 
    call transposevx(vlas2d,f4d)
 
-   call advection_x2(vlas2d,f4d,0.5*dt)
-
-   call advection_x1(vlas2d,f4d,0.5*dt)
+   if (mod(iter,fthdiag).eq.0) then
+      call advection_x1(vlas2d,f4d,0.5*dt)
+      call advection_x2(vlas2d,f4d,0.5*dt)
+      call thdiag(vlas2d,f4d,nrj,iter*dt)    
+      call advection_x2(vlas2d,f4d,0.5*dt)
+      call advection_x1(vlas2d,f4d,0.5*dt)
+   else
+      call advection_x2(vlas2d,f4d,1.0*dt)
+      call advection_x1(vlas2d,f4d,1.0*dt)
+   end if
 
 end do
 
