@@ -137,7 +137,7 @@ end subroutine solver_with_fftpack
 #ifdef _FFTW
 subroutine solver_with_fftw3()
 use poisson2d_periodic
-type(poisson2d) :: poisson 
+type(poisson2dpp) :: poisson 
 sll_int32 :: i, error
 
 call new(poisson,ex,ey,geom,error)
