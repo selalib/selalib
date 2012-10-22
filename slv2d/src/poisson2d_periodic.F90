@@ -18,22 +18,21 @@ interface solve
 end interface
 
 
-type :: poisson2d
+type :: poisson2dpp
    type(geometry)                       :: geom
    sll_comp64, dimension(:,:), pointer  :: rhot
    sll_comp64, dimension(:,:), pointer  :: ext
    sll_comp64, dimension(:,:), pointer  :: eyt
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
    type(C_PTR)                          :: fw, bw
-
-end type
+end type poisson2dpp
 
 sll_int32, parameter :: nthreads = 2
 
 contains
 
 subroutine new_potential(self, rho, geomx, error )
-   type(poisson2d)                           :: self
+   type(poisson2dpp)                         :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    type(geometry),intent(in)                 :: geomx
    sll_int32                                 :: error
@@ -77,7 +76,7 @@ subroutine new_potential(self, rho, geomx, error )
 end subroutine new_potential
 
 subroutine new_e_fields(self, ex, ey, geomx, error )
-   type(poisson2d) :: self
+   type(poisson2dpp) :: self
    sll_real64, dimension(:,:), intent(inout) :: ex
    sll_real64, dimension(:,:), intent(inout) :: ey
    type(geometry),intent(in)  :: geomx
@@ -131,7 +130,7 @@ end subroutine new_e_fields
 !> return potential.
 subroutine solve_potential(self, rho, phi)
 
-   type(poisson2d),intent(inout)  :: self
+   type(poisson2dpp),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: phi
    sll_int32                                 :: nx, ny
@@ -153,7 +152,7 @@ end subroutine solve_potential
 !> return electric fields.
 subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
 
-   type(poisson2d),intent(inout)  :: self
+   type(poisson2dpp),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: e_x
    sll_real64, dimension(:,:), intent(out)   :: e_y
@@ -191,7 +190,7 @@ subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
 end subroutine solve_e_fields
 
 subroutine free_poisson(self)
-type(poisson2d) :: self
+type(poisson2dpp) :: self
 sll_int32       :: error
 call dfftw_destroy_plan(self%fw)
 call dfftw_destroy_plan(self%bw)
