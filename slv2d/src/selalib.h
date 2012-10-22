@@ -8,5 +8,6 @@ use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
 use sll_cubic_spline_interpolator_1d
+use sll_cubic_spline_interpolator_2d
 
 #define MPI_MASTER 0

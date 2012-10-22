@@ -14,14 +14,16 @@ module sll_vlasov2d
 
  type, public :: vlasov2d
    sll_real64, dimension(:,:,:,:), pointer :: ft
-   type(cubic_spline_1d_interpolator) :: interp_x1
-   type(cubic_spline_1d_interpolator) :: interp_x2
-   type(cubic_spline_1d_interpolator) :: interp_x3
-   type(cubic_spline_1d_interpolator) :: interp_x4
    type (geometry) :: geomx, geomv
    logical :: transposed      
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv
+   type(cubic_spline_2d_interpolator) :: interp_x
+   type(cubic_spline_2d_interpolator) :: interp_v
+   type(cubic_spline_1d_interpolator) :: interp_x1
+   type(cubic_spline_1d_interpolator) :: interp_x2
+   type(cubic_spline_1d_interpolator) :: interp_x3
+   type(cubic_spline_1d_interpolator) :: interp_x4
  end type vlasov2d
 
  sll_int32, private :: i, j, k, l
@@ -80,10 +82,19 @@ contains
 
   SLL_ALLOCATE(this%ft(geomv%nx,geomv%ny,geomx%nx,this%jstartx:this%jendx),error)
 
+#ifdef TWO_D
+  call this%interp_x%initialize( nc_x1, nc_x2, &
+                                    x1_min, x1_max, x2_min, x2_max, &
+                                    PERIODIC_SPLINE, PERIODIC_SPLINE)
+  call this%interp_v%initialize( nc_x3, nc_x4, &
+                                    x3_min, x3_max, x4_min, x4_max, &
+                                    PERIODIC_SPLINE, PERIODIC_SPLINE)
+#else
   call this%interp_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
   call this%interp_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
   call this%interp_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
   call this%interp_x4%initialize( nc_x4, x4_min, x4_max, PERIODIC_SPLINE)
+#endif
 
  end subroutine new_vlasov2d
 
@@ -98,7 +109,7 @@ contains
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x2, nc_x3
-  sll_real64 :: alpha
+  sll_real64 :: alpha, x3_min, delta_x3
 
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
@@ -107,9 +118,12 @@ contains
   nc_x2    = this%geomx%ny
   nc_x3    = this%geomv%nx
 
+  x3_min   = this%geomv%x0
+  delta_x3 = this%geomv%dx
+
   do l=this%jstartv,this%jendv
      do k=1,nc_x3
-        alpha = this%geomv%xgrid(k)*dt
+        alpha = (x3_min +(k-1)*delta_x3)*dt
         do j=1,nc_x2
            f(:,j,k,l) = this%interp_x1%interpolate_array_disp( &
                                         nc_x1, f(:,j,k,l), alpha )
@@ -124,6 +138,7 @@ contains
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x2, nc_x3
+  sll_real64 :: x4_min, delta_x4
   sll_real64 :: alpha
 
   ! verifier que la transposition est a jours
@@ -133,8 +148,11 @@ contains
   nc_x2    = this%geomx%ny
   nc_x3    = this%geomv%nx
 
+  x4_min   = this%geomv%y0
+  delta_x4 = this%geomv%dy
+
   do l=this%jstartv,this%jendv
-    alpha = this%geomv%ygrid(l)*dt
+    alpha = (x4_min +(l-1)*delta_x4)*dt
     do k=1,nc_x3
         do i=1,nc_x1
            f(i,:,k,l) = this%interp_x2%interpolate_array_disp( &
@@ -198,13 +216,57 @@ contains
 
  end subroutine advection_x4
 
-!>------------------------------------------------
-!> calcule la densite de charge rho a partir de ft
-!> en fait le moment d'ordre 0 de f. Les constantes
-!> ne sont pas introduites
-!>------------------------------------------------
-!> Poisson n'est pas parallele on transmet donc rho
-!> a tous les processeurs
+#ifdef TWO_D
+
+ subroutine advection_x(this,f,dt)
+  type(vlasov2d),intent(inout) :: this
+  sll_real64, dimension(:,:,:,this%jstartv:) :: f
+  sll_real64, intent(in) :: dt
+  sll_int32  :: nc_x1, nc_x2
+  sll_real64 :: depx, depy 
+
+  SLL_ASSERT(.not. this%transposed)
+
+  nc_x1    = this%geomx%nx
+  nc_x2    = this%geomx%ny
+
+  do l=1,this%geomv%nx
+     depy = (this%geomv%y0+(l-1)*this%geomv%dy)*dt
+     do k=this%jstartv,this%jendv
+        depx = (this%geomv%x0+(k-1)*this%geomv%dx)*dt
+        f(:,:,k,l) = this%interp_x%interpolate_array_disp( &
+                     nc_x1, nc_x2, f(:,:,k,l), depx, depy )
+     end do
+  end do
+
+ end subroutine advection_x
+
+ subroutine advection_v(this,fx,fy,dt)
+
+  type(vlasov2d),intent(inout) :: this
+  sll_real64, dimension(:,:), intent(in) :: fx, fy
+  sll_real64, intent(in) :: dt
+  sll_int32  :: nc_x3, nc_x4
+  sll_real64 :: depvx, depvy  
+
+  SLL_ASSERT(this%transposed)
+
+  nc_x3    = this%geomv%nx
+  nc_x4    = this%geomv%ny
+
+  do j=this%jstartx,this%jendx
+    do i=1,this%geomx%nx
+      depvx = fx(i,j)*dt
+      depvy = fy(i,j)*dt
+      this%ft(:,:,i,j) = this%interp_v%interpolate_array_disp( &
+                         nc_x3, nc_x4, this%ft(:,:,i,j), depx, depy )
+    end do
+   end do
+
+ end subroutine advection_v
+
+#endif
+
 subroutine densite_charge(this, rho)
 
    type(vlasov2d),intent(inout) :: this
@@ -236,11 +298,6 @@ subroutine densite_charge(this, rho)
 
 end subroutine densite_charge
 
-!>------------------------------------------------
-!> calcule la densite de courant jx et jy a partir de ft
-!> en fait le moment d'ordre 0 de f. Les constantes
-!> ne sont pas introduites
-!>------------------------------------------------
 subroutine densite_courant(this, jx, jy)
 
    type(vlasov2d),intent(inout) :: this
@@ -331,62 +388,28 @@ subroutine thdiag(this,f,nrj,t)
    !sll_int32 :: i,iv, j,jv
    !sll_real64 :: x, vx, y, vy
    !sll_real64,dimension(7) :: diagloc
-   !sll_real64,dimension(11) :: auxloc
+   sll_real64,dimension(11) :: auxloc
    sll_int32 :: my_num, num_threads
    sll_real64,dimension(13) :: aux
    sll_real64,dimension(0:9) :: diag
-   sll_int32 :: comm
+   sll_int32 :: comm, error
 
    comm   = sll_world_collective%comm
    my_num = sll_get_collective_rank(sll_world_collective)
    num_threads = sll_get_collective_size(sll_world_collective)
 
+   auxloc(1) = sum(f) ! avg(f)
+
+   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,MPI_MASTER,comm, error)
+
    if (my_num == MPI_MASTER) then
       diag=0.
       aux=0.
+      aux(13)=t
+      aux(12)=nrj
+      write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
+      call time_history("thf","(13(1x,e15.6))",aux(1:13))
    end if
-
-!   diagloc = 0._wp
-!   auxloc  = 0._wp
-!   do i = 1,this%geomx%nx
-!      x = this%geomx%x0+(i-1)*this%geomx%dx
-!      do j = 1,this%geomx%ny
-!         y= this%geomx%y0+(j-1)*this%geomx%dy
-!         do iv=1,this%geomv%nx
-!            vx = this%geomv%x0+(iv-1)*this%geomv%dx
-!            do jv=this%jstartv,this%jendv
-!               vy = this%geomv%y0+(jv-1)*this%geomv%dy
-!               diagloc(2) = diagloc(2) + f(i,j,iv,jv)*f(i,j,iv,jv)
-!
-!               auxloc(1) = auxloc(1) + f(i,j,iv,jv)         ! avg(f)
-!               auxloc(2) = auxloc(2) + x*f(i,j,iv,jv)       ! avg(x)
-!               auxloc(3) = auxloc(3) + vx*f(i,j,iv,jv)      ! avg(vx)
-!               auxloc(4) = auxloc(4) + x*x*f(i,j,iv,jv)     ! avg(x^2)
-!               auxloc(5) = auxloc(5) + vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
-!               auxloc(6) = auxloc(6) + x*vx*f(i,j,iv,jv)    ! avg(x*vx)
-!               auxloc(7) = auxloc(7) + y*f(i,j,iv,jv)       ! avg(y)
-!               auxloc(8) = auxloc(8) + vy*f(i,j,iv,jv)      ! avg(vy)
-!               auxloc(9) = auxloc(9) + y*y*f(i,j,iv,jv)     ! avg(y^2)
-!               auxloc(10) = auxloc(10) + vy*vy*f(i,j,iv,jv) ! avg(vy^2)
-!               auxloc(11) = auxloc(11) + y*vy*f(i,j,iv,jv)  ! avg(y*vy)
-!
-!            end do
-!         end do
-!      end do
-!   end do
-!   auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
-!
-!   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,0,  &
-!                   comm, error)
-!   call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
-!                   comm, error)
-!
-if (my_num==MPI_MASTER) then
-   aux(13)=t
-   aux(12)=nrj
-   write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
-   call time_history("thf","(13(1x,e15.6))",aux(1:13))
-end if
 
 end subroutine thdiag
 
