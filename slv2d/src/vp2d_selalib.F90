@@ -11,8 +11,11 @@ implicit none
 
 type (geometry)   :: geomx 
 type (geometry)   :: geomv 
-type (poisson2d)  :: poisson 
 type (vlasov2d)   :: vlas2d 
+
+#ifdef _FFTW
+type (poisson2d)  :: poisson 
+#endif
 
 sll_real64, dimension(:,:,:,:), pointer :: f4d
 sll_real64, dimension(:,:),     pointer :: rho
@@ -60,8 +63,13 @@ if (my_num == MPI_MASTER) then
    write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
 endif
 
+#ifdef _FFTW
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                f4d,rho,e_x,e_y,vlas2d,poisson)
+#else
+call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
+               f4d,rho,e_x,e_y,vlas2d)
+#endif
 
 call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
  
@@ -74,7 +82,9 @@ do iter=1,nbiter
 
    call densite_charge(vlas2d,rho)
 
+#ifdef _FFTW
    call solve(poisson,e_x,e_y,rho,nrj)
+#endif
 
    call advection_x4(vlas2d,e_y,0.5*dt)
    call advection_x3(vlas2d,e_x,0.5*dt)
@@ -177,8 +187,13 @@ contains
 
  end subroutine initglobal
 
+#ifdef _FFTW
  subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                       f,rho,e_x,e_y,vlas2d,poisson)
+#else
+ subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
+                      f,rho,e_x,e_y,vlas2d)
+#endif
 
   type(geometry) :: geomx
   type(geometry) :: geomv  
@@ -193,7 +208,10 @@ contains
   sll_real64, dimension(:,:,:,:),pointer :: f
 
   type(vlasov2d)    :: vlas2d
+
+#ifdef _FFTW
   type(poisson2d) :: poisson
+#endif
   
   sll_int32  :: ipiece_size_v
   sll_int32  :: ipiece_size_x
@@ -244,7 +262,9 @@ contains
      end do
   end do
 
+#ifdef _FFTW
   call new(poisson, e_x, e_y,   geomx, iflag)
+#endif
   call new(vlas2d, geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
   !call new(splx,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
   !call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)

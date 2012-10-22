@@ -93,6 +93,12 @@ ADD_LIBRARY(sll_interpolators STATIC
   ${SELALIB_DIR}/interpolators/sll_interpolators_2d_base.F90
   ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90)
 
+ADD_DEPENDENCIES(sll_interpolators
+	         sll_working_precision
+	         sll_memory
+	         sll_assertion
+	         sll_splines)
+
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
