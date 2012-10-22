@@ -27,8 +27,8 @@ module sll_io
 
 #ifdef STDF95
     integer, parameter :: SLL_IO_XDMF = 0, &
-                  SLL_IO_VTK  = 1, &
-                  SLL_IO_GNUPLOT = 2
+                          SLL_IO_VTK  = 1, &
+                          SLL_IO_GNUPLOT = 2
 #else
   enum, bind(C)
     enumerator :: SLL_IO_XDMF = 0, &

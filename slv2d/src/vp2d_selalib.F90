@@ -7,7 +7,7 @@ use diagnostiques_module
 #ifdef _FFTW
 use poisson2d_periodic
 #else
-use poisson2dpp_module
+use poisson2dpp_seq
 #endif
 use sll_vlasov2d
 
@@ -23,7 +23,6 @@ sll_real64, dimension(:,:,:,:), pointer :: f4d
 sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
-sll_real64, dimension(:,:),     pointer :: b_z 
 
 sll_int32  :: nbiter  
 sll_real64 :: dt     
@@ -33,7 +32,7 @@ sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj
 sll_real64 :: tcpu1, tcpu2
 
-sll_int32 :: my_num, num_threads, comm, error
+sll_int32 :: my_num, num_threads, comm
 
 call sll_boot_collective()
 
@@ -69,11 +68,19 @@ call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                f4d,rho,e_x,e_y,vlas2d,poisson)
 
 call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
- 
-call advection_x1(vlas2d,f4d,.5*dt)
-call advection_x2(vlas2d,f4d,.5*dt)
 
+call advection_x1(vlas2d,f4d,0.5*dt)
+call advection_x2(vlas2d,f4d,0.5*dt)
+
+ 
 do iter=1,nbiter
+
+   if( my_num == MPI_MASTER) &
+      print"(a5,i3)","iter:",iter
+
+   if (mod(iter,fdiag) == 0) then 
+     !call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, YVY)
+   end if
 
    call transposexv(vlas2d,f4d)
 
@@ -81,33 +88,27 @@ do iter=1,nbiter
 
    call solve(poisson,e_x,e_y,rho,nrj)
 
-   call advection_x4(vlas2d,e_y,0.5*dt)
    call advection_x3(vlas2d,e_x,0.5*dt)
-   call advection_x2(vlas2d,f4d,.5*dt)
+
+   call advection_x4(vlas2d,e_y,0.5*dt)
+
+   call densite_charge(vlas2d,rho)
+
+   call solve(poisson,e_x,e_y,rho,nrj)
+
+   if (mod(iter,fthdiag).eq.0) then
+      call thdiag(vlas2d,f4d,nrj,iter*dt)    
+   end if
+
+   call advection_x4(vlas2d,e_y,0.5*dt)
+
+   call advection_x3(vlas2d,e_x,0.5*dt)
 
    call transposevx(vlas2d,f4d)
 
-   if (mod(iter,fdiag) == 0) then 
+   call advection_x2(vlas2d,f4d,0.5*dt)
 
-       call advection_x1(vlas2d,f4d,.5*dt)
-
-       call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
-                          jstartx,jendx,jstartv,jendv,iter/fdiag)
-
-       call plot_df(f4d, iter/fdiag, geomx, geomv, jstartx, jendx, jstartv, jendv)
-
-       call advection_x1(vlas2d,f4d,.5*dt)
-
-   else 
-
-       call advection_x1(vlas2d,f4d,dt)
-
-   end if
-
-   call advection_x2(vlas2d,f4d,.5*dt)
-   call advection_x3(vlas2d,e_x,0.5*dt)
-   call advection_x4(vlas2d,e_y,0.5*dt)
-
+   call advection_x1(vlas2d,f4d,0.5*dt)
 
 end do
 
@@ -176,8 +177,7 @@ contains
   call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
-  call new_geometry2(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-
+  call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
   call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
  end subroutine initglobal
@@ -204,9 +204,10 @@ contains
   sll_int32  :: ipiece_size_v
   sll_int32  :: ipiece_size_x
 
-  sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky
+  sll_real64 :: vx,vy,v2,x,y
   sll_int32  :: i,j,iv,jv,iflag
   sll_int32  :: my_num, num_threads, comm
+  sll_real64 :: xi, eps, kx, ky
 
   my_num      = sll_get_collective_rank(sll_world_collective)
   num_threads = sll_get_collective_size(sll_world_collective)
@@ -235,6 +236,10 @@ contains
   SLL_ALLOCATE(e_x(geomx%nx,geomx%ny),iflag)
   SLL_ALLOCATE(e_y(geomx%nx,geomx%ny),iflag)
 
+  xi  = 0.90_f64
+  eps = 0.05_f64
+  kx  = 2_f64*sll_pi/((geomx%nx)*geomx%dx)
+  ky  = 2_f64*sll_pi/((geomx%ny)*geomx%dy)
   do jv=jstartv,jendv
      vy = geomv%y0+(jv-1)*geomv%dy
      do iv=1,geomv%nx
@@ -244,7 +249,7 @@ contains
            y=geomx%y0+(j-1)*geomx%dy
            do i=1,geomx%nx
               x=geomx%x0+(i-1)*geomx%dx
-              f(i,j,iv,jv)=exp(-v2)
+              f(i,j,iv,jv)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
            end do
         end do
      end do
@@ -252,10 +257,11 @@ contains
 
 #ifdef _FFTW
   call new(poisson, e_x, e_y,   geomx, iflag)
+#else
+  call new(poisson, rho,   geomx, iflag)
 #endif
+
   call new(vlas2d, geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
-  !call new(splx,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
-  !call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
 
  end subroutine initlocal
 

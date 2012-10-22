@@ -465,8 +465,8 @@ contains
              do j=1,sim%mesh4d%num_cells2
                 vmin = sim%mesh4d%x3_min
                 delta = sim%mesh4d%delta_x3
-                alpha = (vmin + (j-1)*delta)*sim%dt
-                call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
+                alpha = (vmin + (k-1)*delta)*sim%dt
+                !call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(:,j,k,l) = sim%interp_x1%interpolate_array_disp( &
                      sim%nc_x1, &
@@ -482,8 +482,8 @@ contains
              do i=1,sim%mesh4d%num_cells1
                 vmin = sim%mesh4d%x4_min
                 delta = sim%mesh4d%delta_x4
-                alpha = (vmin + (j-1)*delta)*sim%dt
-                call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
+                alpha = (vmin + (l-1)*delta)*sim%dt
+                !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
                      sim%nc_x2, &
@@ -971,8 +971,8 @@ contains
           call sll_xml_file_create("fields_x"//c_layout//"-"//ctime//".xmf", &
                                    xml_file_id,error)
           call sll_xml_grid_geometry(xml_file_id,          &
-                                  "mesh_x"//c_layout//"seq.h5",global_nx1, &
-                                  "mesh_x"//c_layout//"seq.h5",global_nx2, &
+                                  "mesh_x"//c_layout//"_seq.h5",global_nx1, &
+                                  "mesh_x"//c_layout//"_seq.h5",global_nx2, &
                                   "x1", "x2" )
           call sll_xml_field(xml_file_id,'rho_x'//c_layout,  &
                              "fields_x"//c_layout//"-"//ctime//".h5:/rho_x"//c_layout, &
