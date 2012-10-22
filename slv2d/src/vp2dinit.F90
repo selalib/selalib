@@ -67,8 +67,7 @@ contains
   call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
-  call new_geometry2(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-
+  call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
   call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
  end subroutine initglobal
