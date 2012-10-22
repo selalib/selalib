@@ -119,23 +119,20 @@ contains
   type(vlasov2d),intent(inout) :: this
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
-
-  sll_real64 :: depx   ! deplacement par rapport au maillage
-  sll_real64 :: vx     ! vitesse du point courant
-  sll_int32 :: iv, jv ! indices de boucle
+  sll_real64 :: alpha
 
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
-  do l = 1, nc_x4
-  do k = 1, nc_x3 
-  do j = 1, nc_x2
-  do i = 1, nc_x1
-     vx = x3_min+(iv-1)*this%geomv%dx
-     depx = vx*dt
-  end do
-  end do
-  end do
+  do l=this%jstartv,this%jendv
+     do k=1,nc_x3
+        do j=1,nc_x2
+           alpha = (x3_min + (j-1)*delta_x3)*dt
+           call this%interp_x1%compute_interpolants(f(:,j,k,l))
+           f(:,j,k,l) = this%interp_x1%interpolate_array_disp( &
+                                        nc_x1, f(:,j,k,l), alpha )
+        end do
+     end do
   end do
 
  end subroutine advection_x1
@@ -144,72 +141,65 @@ contains
   type(vlasov2d),intent(inout) :: this
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
-
-  sll_real64 :: depx, depy   ! deplacement par rapport au maillage
-  sll_real64 :: vx, vy       ! vitesse du point courant
-  sll_int32 :: iv, jv ! indices de boucle
+  sll_real64 :: alpha
 
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed)
-  do l = 1, nc_x4
-  do k = 1, nc_x3 
-  do j = 1, nc_x2
-  do i = 1, nc_x1
-     vy = this%geomv%y0+(jv-1)*this%geomv%dy
-     depy = vy*dt
-     !call interpole(this%splinex,f(:,:,iv,jv),depx,depy,jv==0)
-  end do
-  end do
-  end do
+
+  do l=1,nc_x4
+    do k=1,nc_x3
+        do i=1,nc_x1
+           alpha = (x4_min + (j-1)*delta_x4)*dt
+           call this%interp_x1%compute_interpolants( f(i,:,k,l) )
+           f(i,:,k,l) = this%interp_x2%interpolate_array_disp( &
+                    nc_x2, f(i,:,k,l), alpha )
+       end do
+    end do
   end do
 
  end subroutine advection_x2
 
- subroutine advection_x3(this,fx,dt)
+ subroutine advection_x3(this,ex,dt)
 
   type(vlasov2d),intent(inout) :: this
 
-  sll_real64, dimension(:,:), intent(in) :: fx
+  sll_real64, dimension(:,:), intent(in) :: ex
   sll_real64, intent(in) :: dt
-
-  sll_real64 :: depvx, depvy   ! deplacement par rapport au maillage
-  sll_int32 :: i, j ,iv, jv, im1! indices de boucle
+  sll_real64 :: alpha
 
   SLL_ASSERT(this%transposed) 
 
-  do l = 1, nc_x4
-  do k = 1, nc_x3 
-  do j = 1, nc_x2
-     depvx =  fx(i,j)*dt
-     !call this%interp_x3%compute_interpolants( f(:,j,k,l) )
-     !f(:,j,k,l) = interp_x1%interpolate_array_disp(nc_x1,f(:,j,k,l),depvx ) 
-  end do
-  end do
-  end do
+  do j=this%jstartx,this%jendx
+     do i=1,nc_x1
+        do l=1,nc_x4
+           alpha = -ex(i,j)*dt
+           this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp( &
+                              nc_x3, this%ft(i,j,:,l), alpha )
+       end do
+    end do
+ end do
 
  end subroutine advection_x3
 
- subroutine advection_x4(this,fy,dt)
+ subroutine advection_x4(this,ey,dt)
 
   type(vlasov2d),intent(inout) :: this
-
-  sll_real64, dimension(:,:), intent(in) :: fy
+  sll_real64, dimension(:,:), intent(in) :: ey
   sll_real64, intent(in) :: dt
 
-  sll_real64 :: depvx, depvy   ! deplacement par rapport au maillage
-  sll_int32 :: i, j ,iv, jv, im1! indices de boucle
+  sll_real64 :: alpha
 
   SLL_ASSERT(this%transposed) 
 
-  do l = 1, nc_x4
-  do k = 1, nc_x3 
-  do i = 1, nc_x1
-     depvy = fy(i,j)*dt
-     !call this%interp_x3%compute_interpolants( f(:,j,k,l) )
-     !f(i,:,k,l) = interp_x1%interpolate_array_disp(nc_x1,f(:,j,k,l),depvx ) 
-  end do
-  end do
-  end do
+  do j=this%jstartx,this%jendx
+     do i=1,nc_x1
+        do k=1,nc_x3
+           alpha = -ey(i,j)*dt
+           this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp( &
+                              nc_x4, this%ft(i,j,k,:), alpha )
+       end do
+    end do
+ end do
 
  end subroutine advection_x4
 
@@ -339,66 +329,8 @@ subroutine transposevx(this,f)
 end subroutine transposevx
 
 
-!      do j=1,loc_sz_x2
-!         do i=1,loc_sz_x1
-!            do l=1,sim%mesh4d%num_cells4
-!               alpha = -sim%efield_split(i,j)%ex*0.5_f64*sim%dt
-!               ! interpolate_array_disp() has an interface that must be changed
-!               sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
-!                    sim%nc_x3, &
-!                    sim%f_x3x4(i,j,:,l), &
-!                    alpha )
-!            end do
-!         end do
-!      end do
 
-!      ! Continue with vy...(x4)
-!      do j=1,loc_sz_x2
-!         do i=1,loc_sz_x1
-!            do k=1,sim%mesh4d%num_cells3
-!               alpha = -sim%efield_split(i,j)%ey*0.5_f64*sim%dt
-!               ! interpolate_array_disp() has an interface that must be changed
-!               sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
-!                    sim%nc_x4, &
-!                    sim%f_x3x4(i,j,k,:), &
-!                    alpha )
-!            end do
-!         end do
-!      end do
-
-!      ! full time step advection in 'x' (x1)
-!      do l=1,loc_sz_x4
-!         do k=1,loc_sz_x3
-!            do j=1,sim%mesh4d%num_cells2
-!               vmin = sim%mesh4d%x3_min
-!               delta = sim%mesh4d%delta_x3
-!               alpha = (vmin + (j-1)*delta)*sim%dt
-!               call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
-!               ! interpolate_array_disp() has an interface that must be changed
-!               sim%f_x1x2(:,j,k,l) = sim%interp_x1%interpolate_array_disp( &
-!                    sim%nc_x1, &
-!                    sim%f_x1x2(:,j,k,l), &
-!                    alpha )
-!            end do
-!         end do
-!      end do
 !      
-!      ! full time step advection in 'y' (x2)
-!      do l=1,loc_sz_x4
-!         do k=1,loc_sz_x3
-!            do i=1,sim%mesh4d%num_cells1
-!               vmin = sim%mesh4d%x4_min
-!               delta = sim%mesh4d%delta_x4
-!               alpha = (vmin + (j-1)*delta)*sim%dt
-!               call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
-!               ! interpolate_array_disp() has an interface that must be changed
-!               sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
-!                    sim%nc_x2, &
-!                    sim%f_x1x2(i,:,k,l), &
-!                    alpha )
-!            end do
-!         end do
-!      end do
 !      
 
 
