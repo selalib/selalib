@@ -131,7 +131,7 @@ end subroutine new_e_fields
 !> return potential.
 subroutine solve_potential(self, rho, phi)
 
-   type(poisson2d),intent(in)  :: self
+   type(poisson2d),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: phi
    sll_int32                                 :: nx, ny
@@ -153,7 +153,7 @@ end subroutine solve_potential
 !> return electric fields.
 subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
 
-   type(poisson2d),intent(in)  :: self
+   type(poisson2d),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: e_x
    sll_real64, dimension(:,:), intent(out)   :: e_y
