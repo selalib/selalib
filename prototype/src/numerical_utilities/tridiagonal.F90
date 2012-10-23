@@ -566,8 +566,8 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      sll_comp64, target                     :: x(n)  
      sll_comp64, pointer, dimension(:)      :: bptr
      sll_comp64, pointer, dimension(:)      :: xptr  
-     sll_real64                             :: swp
-     sll_int32                              :: i
+     sll_comp64                             :: swp
+     sll_int32                              :: i,inew
      sll_real64, pointer                    :: d(:)
      sll_real64, pointer                    :: u(:)
      sll_real64, pointer                    :: v(:)
@@ -586,6 +586,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
 
      bptr =>b(1:n)
      xptr =>x(1:n)
+     
      ! FIX: ADD SOME ERROR CHECKING ON ARGUMENTS
      if( .not. associated(xptr, target=bptr) ) then
         do i=1,n
@@ -607,8 +608,8 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      x(i) = x(i)/d(i)
      i    = i-1
      x(i) = (x(i) - u(i)*x(i+1))/d(i)
-     i    = i-1
-     do i=i,1,-1
+     inew    = i-1
+     do i=inew,1,-1
         x(i) = (x(i)-(u(i)*x(i+1) + v(i)*x(i+2) + &
                       q(i)*x(n-1) + r(i)*x(n) ))/d(i)
      end do
