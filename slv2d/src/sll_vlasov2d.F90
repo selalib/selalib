@@ -18,12 +18,21 @@ module sll_vlasov2d
    logical :: transposed      
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv
+
    type(cubic_spline_2d_interpolator) :: interp_x
    type(cubic_spline_2d_interpolator) :: interp_v
+
+#ifdef QUINTIC
+   type(quintic_spline_1d_interpolator) :: interp_x1
+   type(quintic_spline_1d_interpolator) :: interp_x2
+   type(quintic_spline_1d_interpolator) :: interp_x3
+   type(quintic_spline_1d_interpolator) :: interp_x4
+#else
    type(cubic_spline_1d_interpolator) :: interp_x1
    type(cubic_spline_1d_interpolator) :: interp_x2
    type(cubic_spline_1d_interpolator) :: interp_x3
    type(cubic_spline_1d_interpolator) :: interp_x4
+#endif
  end type vlasov2d
 
  sll_int32, private :: i, j, k, l
@@ -90,6 +99,7 @@ contains
                                     x3_min, x3_max, x4_min, x4_max, &
                                     PERIODIC_SPLINE, PERIODIC_SPLINE)
 #else
+
   call this%interp_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
   call this%interp_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
   call this%interp_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)

@@ -131,7 +131,8 @@ contains
 
     sll_real64 :: r
     sll_int32::i,k,ind_k
-    sll_real64:: kval
+    sll_real64:: kval,err
+    sll_comp64::err_loc
 
     nr=plan%nr
     ntheta=plan%ntheta
@@ -147,7 +148,7 @@ contains
     end do
 
    ! poisson solver
-    do k=0,ntheta-1!ntheta/2
+    do k=0,ntheta/2!ntheta-1!ntheta/2
        
        ind_k=k
        !do i=1,nr+1
@@ -179,7 +180,7 @@ contains
        !  print *,plan%fk
        !endif
        
-       !print *,k,sum(abs(plan%fk(1:nr+1)))
+       !print *,'#',k,sum(abs(plan%fk(1:nr+1)))
        plan%phik=0.0_f64
        !plan%a(1)=0.0_f64
        !plan%a(3*(nr-1))=0.0_f64
@@ -218,13 +219,23 @@ contains
             plan%a(3*(nr-1))=0.0_f64
           endif  
         endif
-         
-          
+        
+        !do i=1,3*(nr-1)
+        !  plan%a(i)=0._f64
+        !enddo
+        !do i=1,nr-1
+        !  plan%a(2+3*(i-1))=1._f64
+        !enddo 
+                  
        call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
        call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
-
-
-
+       
+       !print *,'#complex:',sum(abs(aimag(plan%fk(2:nr)))),sum(abs(aimag(plan%phik(2:nr))))
+       !do i=2,nr
+       !  print *,i,plan%fk(i),plan%phik(i)
+       !enddo
+       !stop
+       
         !boundary condition at rmin
         if(bc(1)==1)then !Dirichlet
           plan%phik(1)=0.0_f64
@@ -256,6 +267,36 @@ contains
         endif
 
 
+       err=0._f64
+       do i=4,nr-4
+         r=rmin+real(i-1,f64)*dr
+         err_loc=(plan%phik(i+1)-2*plan%phik(i)+plan%phik(i-1))/dr**2
+         err_loc=err_loc+(plan%phik(i+1)-plan%phik(i-1))/(2._f64*r*dr)
+         err_loc=-err_loc+kval**2/r**2*plan%phik(i)
+         err_loc=(err_loc-plan%fk(i))
+         if(abs(err_loc)>err)then
+           err=abs(err_loc)
+         endif
+       enddo
+       
+       if(err>1e-12)then
+         print *,'#',k,err
+       endif
+
+       if(err>1e-4)then
+       do i=2,nr
+         r=rmin+real(i-1,f64)*dr
+         err_loc=(plan%phik(i+1)-2*plan%phik(i)+plan%phik(i-1))/dr**2
+         err_loc=err_loc+(plan%phik(i+1)-plan%phik(i-1))/(2._f64*r*dr)
+         err_loc=-err_loc+kval**2/r**2*plan%phik(i)
+         !err_loc=(err_loc-plan%fk(i))
+         print *,r,real(err_loc),aimag(err_loc),real(plan%fk(i)),aimag(plan%fk(i))
+       enddo
+       stop
+       endif
+
+
+
 
 
 
@@ -263,16 +304,19 @@ contains
        do i=1,nr+1
           call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
        end do
-       !print *,k,'s',bc,sum(abs(plan%phik(1:nr+1)))
+       !print *,'#',k,'s',bc,sum(abs(plan%phik(1:nr+1)))
 
-       !if(k==0)then
-         !print *,'output'
-         !print *,plan%phik
+       !if(k==1)then
+       !  print *,'#output'
+       !  do i=1,nr+1
+       !    print *,i,real(plan%phik(i))
+       !  enddo
+       !  !print *,plan%phik
        !endif
-
+    
 
     end do
-
+    
     ! FFT INVERSE
     do i=1,nr+1
        call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
