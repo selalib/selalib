@@ -86,9 +86,8 @@ do iter=1,nbiter
 
    call solve(poisson,e_x,e_y,rho,nrj)
 
-   call advection_x3(vlas2d,e_x,0.5*dt)
+   call advection_x3(vlas2d,e_x,dt)
    call advection_x4(vlas2d,e_y,dt)
-   call advection_x3(vlas2d,e_x,0.5*dt)
 
    call transposevx(vlas2d,f4d)
 
@@ -99,8 +98,8 @@ do iter=1,nbiter
       call advection_x2(vlas2d,f4d,0.5*dt)
       call advection_x1(vlas2d,f4d,0.5*dt)
    else
-      call advection_x2(vlas2d,f4d,1.0*dt)
       call advection_x1(vlas2d,f4d,1.0*dt)
+      call advection_x2(vlas2d,f4d,1.0*dt)
    end if
 
 end do
