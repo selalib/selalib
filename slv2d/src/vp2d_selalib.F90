@@ -72,7 +72,7 @@ call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
 do iter=1,nbiter
 
    if( my_num == MPI_MASTER) &
-      print"(a5,i3)","iter:",iter
+      print"(a5,i5)","iter:",iter
 
    if (mod(iter,fdiag) == 0) then 
      call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, YVY)
@@ -87,8 +87,17 @@ do iter=1,nbiter
 
    call solve(poisson,e_x,e_y,rho,nrj)
 
-   if (mod(iter,fthdiag).eq.0) then
-      call thdiag(vlas2d,f4d,nrj,iter*dt)    
+   if (mod(iter,fdiag) == 0) then 
+
+       call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
+                          jstartx,jendx,jstartv,jendv,iter/fdiag)
+
+       !call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,YVY)
+
+       if (mod(iter,fthdiag).eq.0) then
+          call thdiag(vlas2d,f4d,nrj,iter*dt)    
+       end if
+
    end if
 
    call advection_x3(vlas2d,e_x,0.5*dt)
