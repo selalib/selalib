@@ -20,11 +20,13 @@ end interface
 
 type :: poisson2dpp
    type(geometry)                       :: geom
-   sll_comp64, dimension(:,:), pointer  :: rhot
-   sll_comp64, dimension(:,:), pointer  :: ext
-   sll_comp64, dimension(:,:), pointer  :: eyt
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
    type(C_PTR)                          :: fw, bw
+   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
+   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: ext
+   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: eyt
+   integer(C_SIZE_T) :: sz_rhot, sz_ext, sz_eyt
+   type(C_PTR) :: p_rhot, p_ext, p_eyt
 end type poisson2dpp
 
 sll_int32, parameter :: nthreads = 2
@@ -47,7 +49,10 @@ subroutine new_potential(self, rho, geomx, error )
    ny = geomx%ny
 
    SLL_ALLOCATE(self%k2(nx/2+1,ny), error)
-   SLL_ALLOCATE(self%rhot(nx/2+1,ny), error)
+   self%sz_rhot = int((nx/2+1)*ny,C_SIZE_T)
+   self%p_rhot = fftw_alloc_complex(self%sz_rhot)
+   call c_f_pointer(self%p_rhot, self%rhot, [nx/2+1,ny])
+
    call dfftw_init_threads(error)
    if (error == 0) stop 'FFTW CAN''T USE THREADS'
    call dfftw_plan_with_nthreads(nthreads)
@@ -92,12 +97,25 @@ subroutine new_e_fields(self, ex, ey, geomx, error )
    dx = geomx%dx
    dy = geomx%dy
 
-   SLL_ALLOCATE(self%rhot(nx/2+1,ny), error)
-   SLL_ALLOCATE(self%ext(nx/2+1,ny), error)
-   SLL_ALLOCATE(self%eyt(nx/2+1,ny), error)
+   self%sz_rhot = int((nx/2+1)*ny,C_SIZE_T)
+   self%p_rhot = fftw_alloc_complex(self%sz_rhot)
+   call c_f_pointer(self%p_rhot, self%rhot, [nx/2+1,ny])
+
+   self%sz_ext = int((nx/2+1)*ny,C_SIZE_T)
+   self%p_ext = fftw_alloc_complex(self%sz_ext)
+   call c_f_pointer(self%p_ext, self%ext, [nx/2+1,ny])
+
+   self%sz_eyt = int((nx/2+1)*ny,C_SIZE_T)
+   self%p_eyt = fftw_alloc_complex(self%sz_eyt)
+   call c_f_pointer(self%p_eyt, self%eyt, [nx/2+1,ny])
+
    SLL_ALLOCATE(self%kx (nx/2+1,ny), error)
    SLL_ALLOCATE(self%ky (nx/2+1,ny), error)
    SLL_ALLOCATE(self%k2 (nx/2+1,ny), error)
+
+   call dfftw_init_threads(error)
+   if (error == 0) stop 'FFTW CAN''T USE THREADS'
+   call dfftw_plan_with_nthreads(nthreads)
 
    self%fw = fftw_plan_dft_r2c_2d(ny, nx, ex, self%ext, FFTW_ESTIMATE)
    self%bw = fftw_plan_dft_c2r_2d(ny, nx, self%eyt, ey, FFTW_ESTIMATE)
@@ -192,6 +210,9 @@ end subroutine solve_e_fields
 subroutine free_poisson(self)
 type(poisson2dpp) :: self
 sll_int32       :: error
+call fftw_free(self%p_rhot)
+if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
+if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
 call dfftw_destroy_plan(self%fw)
 call dfftw_destroy_plan(self%bw)
 if (nthreads > 1) then

@@ -213,7 +213,7 @@ contains
     grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
 
     !print *,sum(abs(phi(2,:)-phi(1,:)))
-    print *,sum(abs(grad_phi(1,1,:))),sum(abs(phi(1,:)))
+    !print *,'#',sum(abs(grad_phi(1,1,:))),sum(abs(phi(1,:)))
   end subroutine compute_grad_field
 
 
