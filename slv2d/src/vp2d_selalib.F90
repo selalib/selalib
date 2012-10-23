@@ -67,8 +67,6 @@ call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
 
 call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
 
-call advection_x1(vlas2d,f4d,0.5*dt)
-call advection_x2(vlas2d,f4d,0.5*dt)
 
  
 do iter=1,nbiter
@@ -77,8 +75,11 @@ do iter=1,nbiter
       print"(a5,i3)","iter:",iter
 
    if (mod(iter,fdiag) == 0) then 
-     !call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, YVY)
+     call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, YVY)
    end if
+
+   call advection_x1(vlas2d,f4d,0.5*dt)
+   call advection_x2(vlas2d,f4d,0.5*dt)
 
    call transposexv(vlas2d,f4d)
 
@@ -86,22 +87,18 @@ do iter=1,nbiter
 
    call solve(poisson,e_x,e_y,rho,nrj)
 
+   if (mod(iter,fthdiag).eq.0) then
+      call thdiag(vlas2d,f4d,nrj,iter*dt)    
+   end if
+
    call advection_x3(vlas2d,e_x,0.5*dt)
    call advection_x4(vlas2d,e_y,dt)
    call advection_x3(vlas2d,e_x,0.5*dt)
 
    call transposevx(vlas2d,f4d)
 
-   if (mod(iter,fthdiag).eq.0) then
-      call advection_x1(vlas2d,f4d,0.5*dt)
-      call advection_x2(vlas2d,f4d,0.5*dt)
-      call thdiag(vlas2d,f4d,nrj,iter*dt)    
-      call advection_x2(vlas2d,f4d,0.5*dt)
-      call advection_x1(vlas2d,f4d,0.5*dt)
-   else
-      call advection_x2(vlas2d,f4d,1.0*dt)
-      call advection_x1(vlas2d,f4d,1.0*dt)
-   end if
+   call advection_x2(vlas2d,f4d,0.5*dt)
+   call advection_x1(vlas2d,f4d,0.5*dt)
 
 end do
 
