@@ -21,14 +21,20 @@ sll_int32                           :: ik, jk
 sll_int32                           :: k
 
 sll_real64, dimension(:,:), allocatable :: kmod
+
 complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
 integer(C_SIZE_T) :: nxh1
 type(C_PTR) :: p_rhot
 
+sll_real64 :: tbegin, tend
+sll_int64  :: ncount, t0, tn
+
+sll_int32, parameter :: nthreads = 4
+
 eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
 eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
 
-nc_eta1 = 256; nc_eta2 = 256
+nc_eta1 = 1024; nc_eta2 = 512
 
 delta_eta1 = (eta1_max-eta1_min) / nc_eta1
 delta_eta2 = (eta2_max-eta2_min) / nc_eta2
@@ -57,11 +63,14 @@ dx = delta_eta1
 dy = delta_eta2
 
 nxh1 = int((nx/2+1)*ny,C_SIZE_T)
-
 p_rhot = fftw_alloc_complex(nxh1)
 call c_f_pointer(p_rhot, rhot, [nx/2+1,ny])
 
-fw = fftw_plan_dft_r2c_2d(ny, nx, rho(1:nx,1:ny), rhot, FFTW_ESTIMATE);
+call dfftw_init_threads(error)
+if (error == 0) stop 'FFTW CAN''T USE THREADS'
+call dfftw_plan_with_nthreads(nthreads)
+
+fw = fftw_plan_dft_r2c_2d(ny, nx, rho(1:nx,1:ny), rhot, FFTW_ESTIMATE)
 bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, phi(1:nx,1:ny), FFTW_ESTIMATE)
 
 kx0=2._f64*sll_pi/(eta1_max-eta1_min)
@@ -82,6 +91,10 @@ do ik=1,nx/2+1
 end do
 kmod(1,1) = 1.0_f64
 
+call system_clock(count=t0, count_rate=ncount)
+call cpu_time(tbegin)
+
+
 do k = 1, 100
 
    call fftw_execute_dft_r2c(fw, rho(1:nx,1:ny), rhot)
@@ -98,7 +111,13 @@ do k = 1, 100
    write(*,*) " E = ", maxval(phi_exact-phi)
 
 end do
+call system_clock(count=tn,count_rate=ncount)
+write(*,"(' elapsed time ', g15.5, ' s')") float(tn - t0)/ncount
+call cpu_time(tend)
+write(*,"(' cpu time ', g15.5, ' s')") tend-tbegin
 
+
+call dfftw_cleanup_threads(error)
 call fftw_free(p_rhot)
 call fftw_destroy_plan(fw)
 call fftw_destroy_plan(bw)

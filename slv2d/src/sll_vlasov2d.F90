@@ -98,12 +98,8 @@ contains
   call this%interp_v%initialize( nc_x3, nc_x4, &
                                     x3_min, x3_max, x4_min, x4_max, &
                                     PERIODIC_SPLINE, PERIODIC_SPLINE)
-#elif QUINTIC
-  call this%interp_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
-  call this%interp_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
-  call this%interp_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
-  call this%interp_x4%initialize( nc_x4, x4_min, x4_max, PERIODIC_SPLINE)
 #else
+
   call this%interp_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
   call this%interp_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
   call this%interp_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
