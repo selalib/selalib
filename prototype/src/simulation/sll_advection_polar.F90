@@ -74,6 +74,9 @@ contains
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
          & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
+   ! this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
+   !      & PERIODIC_SPLINE, PERIODIC_SPLINE)
+
   end function new_plan_adv_polar
 
 !===================================
@@ -155,11 +158,115 @@ contains
 !  advection
 !==============
 
+
+  subroutine advect_CG_polar2(plan,fn,fnp1,phi)
+
+    implicit none
+
+    type(sll_plan_adv_polar), intent(inout), pointer :: plan
+    sll_real64, dimension(:,:), intent(in) :: fn,phi
+    sll_real64, dimension(:,:), intent(out) :: fnp1
+
+    sll_int32 :: nr, ntheta
+    sll_real64 :: dt, dr, dtheta, rmin, rmax
+    sll_int32 :: i,j,maxiter,iter,kr,k
+    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
+
+    nr=plan%nr
+    ntheta=plan%ntheta
+    dt=plan%dt
+    dr=plan%dr
+    dtheta=plan%dtheta
+    rmin=plan%rmin
+    rmax=plan%rmax
+
+    !construction of spline coefficients for f
+    call compute_spline_2D(fn,plan%spl_f)
+
+    !if (plan%time_scheme==1) then
+       !explicit Euler
+       fnp1=fn
+       do i=1,nr
+          
+          do j=1,ntheta
+             theta=real(j-1,f64)*dtheta
+             r=rmin+real(i-1,f64)*dr
+             !theta=theta-dt*plan%field(1,i,j)/r
+             !r=r+dt*plan%field(2,i,j)/r
+
+             theta=theta-dt*(phi(i+1,j)-phi(i,j))/(r*dr)
+             r=r+dt*(phi(i,j+1)-phi(i,j))/(r*dtheta)
+
+
+             !call correction_r(r,rmin,rmax)
+             !call correction_theta2(theta)
+             
+             
+             
+             r=(r-rmin)/(rmax-rmin)
+             if(r>=1._f64)then
+               r=1._f64
+             endif
+             if(r<0._f64)then
+               r=0._f64
+             endif             
+             
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
+
+             theta=theta/(2._f64*sll_pi)
+             
+             do while(theta>=1._f64)
+               theta=theta-1._f64
+             enddo
+             do while(theta<0._f64)
+               theta=theta+1._f64
+             enddo
+             
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             
+             if(k==ntheta+1)then
+               k=ntheta
+               theta=1._f64               
+             endif
+             if(kr==nr+1)then
+               kr=nr
+               r=1._f64               
+             endif
+             
+             if(k>=ntheta+1)then
+               print *,'k=',k,theta
+             endif
+             if(kr>=nr+1)then
+               print *,'kr=',kr,r
+             endif
+
+
+             fnp1(i,j)=(1._f64-theta)*((1.-r)*fn(kr,k)+r*fn(kr+1,k))&
+             +theta*((1.-r)*fn(kr,k+1)+r*fn(kr+1,k+1))
+             
+             r=rmin+(real(kr,f64)-1._f64+r)*dr
+             theta=(real(k,f64)-1._f64+theta)*dtheta
+             fnp1(i,j)=interpolate_value_2D(r,theta,plan%spl_f)
+
+          end do
+       end do
+  fnp1(:,ntheta+1)=fnp1(:,1)
+  
+end subroutine advect_CG_polar2
+
+
   !>subroutine advect_CG_polar(plan,in,out)
   !>compute step for Center-Guide equation
   !>plan : sll_plan_adv_polar object
   !>in : distribution function at time t_n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time t_(n+1), size (nr+1)*(ntheta+1)
+
+
+
   subroutine advect_CG_polar(plan,fn,fnp1)
 
     implicit none
@@ -186,16 +293,71 @@ contains
 
     if (plan%time_scheme==1) then
        !explicit Euler
-       do i=1,nr+1
+       fnp1=fn
+       do i=1,nr
           
-          do j=1,ntheta+1
+          do j=1,ntheta
              theta=real(j-1,f64)*dtheta
              r=rmin+real(i-1,f64)*dr
              theta=theta-dt*plan%field(1,i,j)/r
              r=r+dt*plan%field(2,i,j)/r
 
-             call correction_r(r,rmin,rmax)
-             call correction_theta(theta)
+             !theta=theta-dt*(plan%phi(i+1,j)-plan%phi(i,j))/(r*dr)
+             !r=r+dt*(plan%phi(i,j+1)-plan%phi(i,j))/(r*dtheta)
+
+
+             !call correction_r(r,rmin,rmax)
+             !call correction_theta2(theta)
+             
+             
+             
+             r=(r-rmin)/(rmax-rmin)
+             if(r>=1._f64)then
+               r=1._f64
+             endif
+             if(r<0._f64)then
+               r=0._f64
+             endif             
+             
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
+
+             theta=theta/(2._f64*sll_pi)
+             
+             do while(theta>=1._f64)
+               theta=theta-1._f64
+             enddo
+             do while(theta<0._f64)
+               theta=theta+1._f64
+             enddo
+             
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             
+             if(k==ntheta+1)then
+               k=ntheta
+               theta=1._f64               
+             endif
+             if(kr==nr+1)then
+               kr=nr
+               r=1._f64               
+             endif
+             
+             if(k>=ntheta+1)then
+               print *,'k=',k,theta
+             endif
+             if(kr>=nr+1)then
+               print *,'kr=',kr,r
+             endif
+
+
+             fnp1(i,j)=(1._f64-theta)*((1.-r)*fn(kr,k)+r*fn(kr+1,k))&
+             +theta*((1.-r)*fn(kr,k+1)+r*fn(kr+1,k+1))
+             
+             r=rmin+(real(kr,f64)-1._f64+r)*dr
+             theta=(real(k,f64)-1._f64+theta)*dtheta
              fnp1(i,j)=interpolate_value_2D(r,theta,plan%spl_f)
 
           end do
