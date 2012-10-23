@@ -18,9 +18,12 @@ sll_real64                          :: dx,dy
 sll_real64                          :: kx0, kx
 sll_real64                          :: ky0, ky
 sll_int32                           :: ik, jk
+sll_int32                           :: k
 
 sll_real64, dimension(:,:), allocatable :: kmod
-sll_comp64, dimension(:,:), allocatable :: rhot
+complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
+integer(C_SIZE_T) :: nxh1
+type(C_PTR) :: p_rhot
 
 eta1_min = .0_f64; eta1_max = 2.0_f64*sll_pi
 eta2_min = .0_f64; eta2_max = 2.0_f64*sll_pi
@@ -53,12 +56,13 @@ ny = nc_eta2
 dx = delta_eta1
 dy = delta_eta2
 
-SLL_ALLOCATE(rhot(nx/2+1,ny), error)
+nxh1 = int((nx/2+1)*ny,C_SIZE_T)
+
+p_rhot = fftw_alloc_complex(nxh1)
+call c_f_pointer(p_rhot, rhot, [nx/2+1,ny])
 
 fw = fftw_plan_dft_r2c_2d(ny, nx, rho(1:nx,1:ny), rhot, FFTW_ESTIMATE);
 bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, phi(1:nx,1:ny), FFTW_ESTIMATE)
-
-call fftw_execute_dft_r2c(fw, rho(1:nx,1:ny), rhot)
 
 kx0=2._f64*sll_pi/(eta1_max-eta1_min)
 ky0=2._f64*sll_pi/(eta2_max-eta2_min)
@@ -78,18 +82,24 @@ do ik=1,nx/2+1
 end do
 kmod(1,1) = 1.0_f64
 
-rhot = rhot / kmod
+do k = 1, 100
 
-call fftw_execute_dft_c2r(bw,rhot,phi(1:nx,1:ny))
+   call fftw_execute_dft_r2c(fw, rho(1:nx,1:ny), rhot)
 
-!Normalize
-phi = phi / (nx*ny)
+   rhot = rhot / kmod
 
-phi(nx+1,:) = phi(1,:)
-phi(:,ny+1) = phi(:,1)
+   call fftw_execute_dft_c2r(bw,rhot,phi(1:nx,1:ny))
 
-write(*,*) " E = ", maxval(phi_exact-phi)
+   phi = phi / (nx*ny)
 
+   phi(nx+1,:) = phi(1,:)
+   phi(:,ny+1) = phi(:,1)
+
+   write(*,*) " E = ", maxval(phi_exact-phi)
+
+end do
+
+call fftw_free(p_rhot)
 call fftw_destroy_plan(fw)
 call fftw_destroy_plan(bw)
 
