@@ -31,7 +31,6 @@ module sll_maxwell_2d
 #include "sll_assert.h"
 
 use numeric_constants
-use sll_maxwell_fdtd_2d
 
 implicit none
 private
@@ -61,23 +60,24 @@ enum, bind(C)
    enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
 end enum
 
-enum, bind(C)
-   enumerator :: FDTD = 0, PSTD = 1
-end enum
-
 contains
 
-subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy, METHOD )
+subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy  )
 
    type(maxwell_2d) :: this
    sll_int32        :: ix, jx, iy, jy
    sll_real64       :: dx, dy
-   sll_int32        :: error
-   sll_int32        :: METHOD
+   !sll_int32        :: error
 
-   select case(METHOD)
-   case(FDTD)
-      call new_maxwell_2d_fdtd
+   this%c_light   = 1.0_f64
+   this%epsilon_0 = 1.0_f64
+   
+   this%dx = dx
+   this%dy = dy
+   this%ix = ix
+   this%jx = jx
+   this%iy = iy
+   this%jy = jy
 
 end subroutine new_maxwell_2d
 
@@ -97,8 +97,8 @@ subroutine solve_maxwell_2d(this, ex, ey, bz, dt)
 
 end subroutine solve_maxwell_2d
 
-subroutine delete_maxwell_2d(this)
-   type(maxwell_2d), pointer :: this
+subroutine delete_maxwell_2d()
+   !type(maxwell_2d), pointer :: this
   
 end subroutine delete_maxwell_2d
 
@@ -115,7 +115,6 @@ sll_real64 :: dex_dy, dey_dx
 sll_real64 :: dx, dy
 sll_int32  :: ix, jx, iy, jy
 
-csq = this%c_light * this%c_light
 dx  = this%dx
 dy  = this%dy
 
@@ -147,11 +146,10 @@ sll_int32 :: ix, jx, iy, jy
 sll_real64, dimension(:,:), intent(inout) :: ex, ey
 sll_real64, dimension(:,:), intent(in)    :: bz
 sll_int32 :: i, j
-sll_real64 :: dex_dx, dey_dy
-sll_real64 :: dex_dy, dey_dx
 sll_real64 :: dbz_dx, dbz_dy
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
+sll_real64 :: csq
 
 ix = this%ix
 jx = this%jx
@@ -190,12 +188,11 @@ subroutine cl_periodiques(this, ex, ey, bz, dt)
 type(maxwell_2d) :: this
 sll_int32 :: ix, jx, iy, jy
 sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
-sll_real64 :: dex_dx, dey_dy
-sll_real64 :: dex_dy, dey_dx
 sll_real64 :: dbz_dx, dbz_dy
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
 sll_int32 :: i, j
+sll_real64 :: csq
 
 ix = this%ix
 jx = this%jx
@@ -208,7 +205,7 @@ dy  = this%dy
 
 do i = ix, jx-1
    bz(i,jy) = bz(i,iy)
-end do1G1G
+end do
 do j = iy, jy-1
    bz(jx,j) = bz(ix,j)
 end do
@@ -229,7 +226,7 @@ end subroutine cl_periodiques
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine cl_condparfait(this, ex, ey, bz, t log side)
+subroutine cl_condparfait(this, ex, ey, bz, side)
 
 type(maxwell_2d) :: this
 sll_int32, intent(in) :: side

@@ -310,7 +310,8 @@ IF(MUDPACK_ENABLED)
    ENDIF(MPI_MODULE_ENABLED)
 ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
-#add_subdirectory(maxwell_solvers) #use old mesh_types 
+add_subdirectory(maxwell_solvers)
+
 #add_subdirectory(BSL) top
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
@@ -460,7 +461,10 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
-#add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
+
+add_test(maxwell_fdtd_2d COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d)
+set_tests_properties(maxwell_fdtd_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
 	add_test(NAME poisson_solvers COMMAND test_poisson_1d)
