@@ -22,12 +22,12 @@ use arbitrary_degree_splines
   implicit none
 
   type odd_degree_splines_plan
-    sll_int32                             :: n
-    sll_int32                             :: degree
-    sll_real64                            :: xmin
-    sll_real64                            :: xmax
-    sll_real64, dimension(:), allocatable :: b_at_node
-    sll_real64, dimension(:), allocatable :: coeffs
+    sll_int32                         :: n
+    sll_int32                         :: degree
+    sll_real64                        :: xmin
+    sll_real64                        :: xmax
+    sll_real64, dimension(:), pointer :: b_at_node
+    sll_real64, dimension(:), pointer :: coeffs
   end type odd_degree_splines_plan
 
 contains 

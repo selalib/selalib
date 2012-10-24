@@ -444,8 +444,10 @@ program collective_test
   !                                 sendbuf_int(:)
   
   
+#ifndef STDF95
   call sll_collective_alltoall_int( sendbuf_int ,1 ,1, &
                                    recvbuf_int, sll_world_collective)  
+#endif
 
   !PRINT *,'Moi, processus ',rank,', j''ai recu ',recvbuf_int
 
@@ -488,8 +490,10 @@ program collective_test
    sendcounts(1)=2
   endif
 
+#ifndef STDF95
    call sll_collective_alltoallV_int_simple( sendbuf_int, sendcounts, &
                                   recvbuf_int,sll_world_collective)
+#endif
 
  SLL_ALLOCATE(somme(1),ierr)
  call sll_collective_reduce_int(sll_world_collective,&
