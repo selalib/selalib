@@ -291,9 +291,7 @@ IF(MPI_MODULE_ENABLED)
    add_subdirectory(remap)
 ENDIF()
 
-IF(NOT STDF95)
-   add_subdirectory(poisson_solvers)
-ENDIF()
+add_subdirectory(poisson_solvers)
 add_subdirectory(electric_field_accumulators)
 
 #high-level
