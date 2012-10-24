@@ -2,7 +2,7 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_qns2d_with_finite_diff.F90
+! Module: sll_qns2d_with_finite_diff_seq.F90
 !
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
