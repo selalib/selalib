@@ -76,6 +76,6 @@ program test_sll_quintic_spline_interpolator_1d
   end do
   print*, '    error=',error
 
-  print *, 'Successful, exiting program.'
+  print *, 'PASSED'
 
 end program test_sll_quintic_spline_interpolator_1d

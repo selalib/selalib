@@ -113,7 +113,7 @@ contains
   !       <=>
   !> c_{i-degree}*b_{i-degree} + ... + c_i*b_i = f(x_i), i=-degree..n
   !> c_j=0 if j<i-degree or j>n  
-  function spline(x, plan) result(s) ! The interpolator spline function
+  function odd_degree_spline_interpolator(x, plan) result(s) ! The interpolator spline function
 
     sll_real64                             :: x, xmin, xmax
     sll_real64                             :: h, s
@@ -141,7 +141,7 @@ contains
        endif
     enddo
 
-  end function spline
+  end function odd_degree_spline_interpolator
 
 
   subroutine delete_odd_degree_splines(plan)
