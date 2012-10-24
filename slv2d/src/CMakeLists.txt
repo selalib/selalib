@@ -63,8 +63,6 @@ IF($ENV{FC} MATCHES "xlf")
   INCLUDE(IBMCompilers)
 ENDIF()
 
-SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -pedantic -std=f2003 -fall-intrinsics -fbounds-check")
-
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
@@ -97,7 +95,9 @@ FOREACH( component ${SLL_COMPONENTS} )
    ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
 ENDFOREACH()
 
+IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
+ENDIF()
 
 ADD_LIBRARY(sll_interpolators STATIC 
   ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
