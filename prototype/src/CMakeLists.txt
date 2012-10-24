@@ -193,7 +193,9 @@ ENDIF()
 
 SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 IF(${STDF95_ENABLED} AND ${Fortran_COMPILER} STREQUAL "GFORTRAN")
-   SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
+  SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
+  set(STDF95 YES)
+  add_definitions(-DSTDF95)
 ENDIF()
 
 find_package(FFTW QUIET)
