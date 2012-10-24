@@ -22,13 +22,13 @@
 !------------------------------------------------------------------------------
 module sll_io
   
-  use sll_xdmf
-  use sll_gnuplot
+#include "sll_working_precision.h"
+#include "sll_assert.h"
 
 #ifdef STDF95
     integer, parameter :: SLL_IO_XDMF = 0, &
-                  SLL_IO_VTK  = 1, &
-                  SLL_IO_GNUPLOT = 2
+                          SLL_IO_VTK  = 1, &
+                          SLL_IO_GNUPLOT = 2
 #else
   enum, bind(C)
     enumerator :: SLL_IO_XDMF = 0, &
@@ -36,5 +36,35 @@ module sll_io
                   SLL_IO_GNUPLOT = 2
   end enum
 #endif
+
+contains
+
+subroutine sll_new_file_id(file_id, error)
+
+   sll_int32, intent(out)               :: error
+   sll_int32, intent(out)               :: file_id
+   logical                              :: lopen
+   
+   error=1
+
+   do 100 file_id=20,99
+
+      inquire(unit=file_id,opened=lopen)
+      if(lopen) then
+         cycle
+      else
+         open(file_id,status='SCRATCH',err=100)
+         close(file_id,status='DELETE',err=100)
+         error=0
+         exit
+      end if
+ 
+   100 continue
+
+   SLL_ASSERT(error == 0)
+   
+
+end subroutine sll_new_file_id
+
   
 end module sll_io

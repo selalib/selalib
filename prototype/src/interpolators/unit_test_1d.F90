@@ -73,8 +73,6 @@ program unit_test
   end do
   print*, '    error=',error
 
-
-
 !!$  print*, 'WENO interpolation'
 !!$  weno = new_WENO_1D( n, x_min, x_max )
 !!$  interp => weno
@@ -87,8 +85,6 @@ program unit_test
 !!$  end do
 !!$  
 !!$  print*, '    error=',error
-
-
 
   print *, 'Successful, exiting program.'
 
