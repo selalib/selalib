@@ -14,11 +14,11 @@ module poisson_polar
      sll_int32 :: nr, ntheta
      sll_int32 :: bc(2)
      type(sll_fft_plan), pointer :: pfwd,pinv
-     sll_real64, dimension(:,:), allocatable :: f_fft
-     sll_comp64, dimension(:), allocatable :: fk,phik
+     sll_real64, dimension(:,:), pointer :: f_fft
+     sll_comp64, dimension(:), pointer :: fk,phik
      !for the tridiagonal solver
-     sll_real64, dimension(:), allocatable :: a,cts
-     sll_int32, dimension(:), allocatable :: ipiv
+     sll_real64, dimension(:), pointer :: a,cts
+     sll_int32, dimension(:), pointer :: ipiv
   end type sll_plan_poisson_polar
 
   !flags for boundary conditions
@@ -92,7 +92,7 @@ contains
 
     implicit none
 
-    type(sll_plan_poisson_polar), intent(inout), pointer :: this
+    type(sll_plan_poisson_polar), pointer :: this
     sll_int32 :: err
     if (associated(this)) then
        call fft_delete_plan(this%pfwd)
@@ -122,7 +122,7 @@ contains
 
     implicit none
 
-    type(sll_plan_poisson_polar), intent(inout), pointer :: plan
+    type(sll_plan_poisson_polar), pointer :: plan
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in) :: f
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
 
