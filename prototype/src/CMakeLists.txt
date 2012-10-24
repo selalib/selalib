@@ -181,6 +181,7 @@ ENDIF()
 
 # this checks the existing collection of compiler flags to find if the
 # fortran95 standard was requested. 
+
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
 IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
@@ -188,6 +189,11 @@ ELSE()
   set(STDF95 YES)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
   add_definitions(-DSTDF95)
+ENDIF()
+
+SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
+IF(${STDF95_ENABLED} AND ${Fortran_COMPILER} STREQUAL "GFORTRAN")
+   SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
 
 find_package(FFTW QUIET)
