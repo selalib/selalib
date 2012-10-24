@@ -102,6 +102,9 @@ ENDFOREACH()
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
 
 ADD_LIBRARY(sll_interpolators STATIC 
   ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
