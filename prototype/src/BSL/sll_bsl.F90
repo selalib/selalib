@@ -2,29 +2,27 @@ module sll_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_scalar_field_2d.h"
 
 use numeric_constants
 use sll_splines
-use distribution_function
 
 implicit none
 
-type bsl_workspace_1d
-   type (sll_spline_1D), pointer :: spl_eta
-end type bsl_workspace_1d
-
-type bsl_workspace_2d
-   type (sll_spline_1D), pointer :: spl_eta1
-   type (sll_spline_1D), pointer :: spl_eta2
-end type bsl_workspace_2d
-
-type bsl_workspace_4d
-   type (sll_spline_1D), pointer :: spl_eta1
-   type (sll_spline_1D), pointer :: spl_eta2
-   type (sll_spline_1D), pointer :: spl_eta3
-   type (sll_spline_1D), pointer :: spl_eta4
-end type bsl_workspace_4d
+!type bsl_workspace_1d
+!   type (sll_spline_1D), pointer :: spl_eta
+!end type bsl_workspace_1d
+!
+!type bsl_workspace_2d
+!   type (sll_spline_1D), pointer :: spl_eta1
+!   type (sll_spline_1D), pointer :: spl_eta2
+!end type bsl_workspace_2d
+!
+!type bsl_workspace_4d
+!   type (sll_spline_1D), pointer :: spl_eta1
+!   type (sll_spline_1D), pointer :: spl_eta2
+!   type (sll_spline_1D), pointer :: spl_eta3
+!   type (sll_spline_1D), pointer :: spl_eta4
+!end type bsl_workspace_4d
 
 sll_real64 :: global_eta1, global_eta2
 
@@ -49,7 +47,8 @@ contains
 function new_bsl_workspace_1d(advfield_1D)
 
 type (bsl_workspace_1d), pointer :: new_bsl_workspace_1d
-type (field_1d_vec1), pointer  :: advfield_1D 
+!type (field_1d_vec1), pointer  :: advfield_1D 
+sll_real64, dimension(:) :: advfield_1D
 
 sll_int32  :: ierr
 sll_int32  :: nc_eta
