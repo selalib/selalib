@@ -19,9 +19,7 @@ program test_sll_odd_degree_splines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 use numeric_constants
-use sll_odd_degree_splines, only:new_odd_degree_splines, &
-                                 odd_degree_splines_plan, &
-                                 spline, delete_odd_degree_splines
+use sll_odd_degree_splines
 use arbitrary_degree_splines
   implicit none
 
