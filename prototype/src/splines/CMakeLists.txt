@@ -21,6 +21,9 @@ add_dependencies(sll_quintic_splines sll_arbitrary_degree_splines
                  sll_toeplitz_penta_diagonal sll_working_precision 
                  sll_memory sll_utilities)
 
+add_dependencies(sll_odd_degree_splines sll_arbitrary_degree_splines
+                 sll_working_precision sll_memory sll_utilities)
+
 add_library(cubic_non_unif_splines STATIC cubic_nonuniform_splines.F90)
 add_dependencies(cubic_non_unif_splines sll_memory sll_assertion sll_working_precision
 sll_tridiagonal sll_splines)
