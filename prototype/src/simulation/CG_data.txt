@@ -3,7 +3,7 @@
 512	# nr
 256			# ntheta
 4.0000000000000		# r1 for distribution 2
-5.0000000000000		# r2 for distribution 2
+6.0000000000000		# r2 for distribution 2
 1e-6		# alpha, amplitude of the perturbation
 3			# mode
 20000			# nb_step
