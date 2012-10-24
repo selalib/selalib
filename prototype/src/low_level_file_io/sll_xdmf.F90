@@ -66,7 +66,9 @@ module sll_xdmf
   
 contains  
   
+  !>Open a XDMF format file for a 2d plot
   subroutine sll_xdmf_open_2d(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
+
     character(len=*), intent(in) :: file_name
     character(len=*), intent(in) :: mesh_name
     sll_int32, intent(out)       :: file_id
@@ -76,8 +78,10 @@ contains
     
     call sll_xml_file_create(trim(file_name),file_id,error)
     call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2)
+
   end subroutine sll_xdmf_open_2d
 
+  !>Open a XDMF format file for a 3d plot
   subroutine sll_xdmf_open_3d( &
     file_name, &
     mesh_name, &
@@ -94,29 +98,36 @@ contains
     sll_int32                    :: nnodes_x1
     sll_int32                    :: nnodes_x2
     sll_int32                    :: nnodes_x3
+
     call sll_xml_file_create(trim(file_name),file_id,error)
     call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2, nnodes_x3)
+
   end subroutine sll_xdmf_open_3d
   
+  !>Write 2d array in binary or hdf5 file and the matching line in XDMF file
   subroutine sll_xdmf_array_2d(mesh_name,array,array_name,error,xmffile_id,center)
-    character(len=*), intent(in) :: mesh_name
-    sll_real64, intent(in)       :: array(:,:)
-    character(len=*), intent(in) :: array_name
-    sll_int32, intent(out)       :: error
-    sll_int32                    :: file_id
-    sll_int32                    :: npoints_x1
-    sll_int32                    :: npoints_x2
+
+    character(len=*), intent(in)    :: mesh_name
+    sll_real64, intent(in)          :: array(:,:)
+    character(len=*), intent(in)    :: array_name
+    sll_int32, intent(out)          :: error
+    sll_int32                       :: file_id
+    sll_int32                       :: npoints_x1
+    sll_int32                       :: npoints_x2
     sll_int32, intent(in), optional :: xmffile_id
     character(len=4), optional      :: center
     
     npoints_x1 = size(array,1)
     npoints_x2 = size(array,2)
+
 #ifdef NOHDF5
-    call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin",file_id,error)
+    call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
+                                file_id,error)
     call sll_binary_write_array(file_id,array,error)
     call sll_binary_file_close(file_id,error)
 #else
-    call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5",file_id,error)
+    call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
+                              file_id,error)
     call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
     call sll_hdf5_file_close(file_id, error)
 #endif
@@ -124,8 +135,8 @@ contains
     if ( present(xmffile_id) .and. present(center)) then
 #ifdef NOHDF5
        call sll_xml_field(xmffile_id,trim(array_name), &
-            trim(mesh_name)//"-"//trim(array_name)//".bin", &
-            npoints_x1,npoints_x2,'Binary',center)
+                          trim(mesh_name)//"-"//trim(array_name)//".bin", &
+                          npoints_x1,npoints_x2,'Binary',center)
 #else
        call sll_xml_field( &
             xmffile_id, &
@@ -136,16 +147,17 @@ contains
             'HDF',&
             center)
 #endif
-  end if
+     end if
   end subroutine sll_xdmf_array_2d
 
-
+  !>Write 3d array in binary or hdf5 file and the matching line in XDMF file
   subroutine sll_xdmf_array_3d(mesh_name,array,array_name,error,xmffile_id,center)
-    character(len=*), intent(in) :: mesh_name
-    sll_real64, intent(in)       :: array(:,:,:)
-    character(len=*), intent(in) :: array_name
-    sll_int32, intent(out)       :: error
-    sll_int32                    :: file_id
+
+    character(len=*), intent(in)    :: mesh_name
+    sll_real64, intent(in)          :: array(:,:,:)
+    character(len=*), intent(in)    :: array_name
+    sll_int32, intent(out)          :: error
+    sll_int32                       :: file_id
     sll_int32, intent(in), optional :: xmffile_id
     character(len=4), optional      :: center
     sll_int32                       :: npoints_x1
@@ -157,11 +169,13 @@ contains
     npoints_x3 = size(array,3)
 
 #ifdef NOHDF5
-    call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin",file_id,error)
+    call sll_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
+                                file_id,error)
     call sll_binary_write_array(file_id,array,error)
     call sll_binary_file_close(file_id,error)
 #else
-    call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5",file_id,error)
+    call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
+                              file_id,error)
     call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
     call sll_hdf5_file_close(file_id, error)
 #endif
@@ -170,8 +184,9 @@ contains
     if ( present(xmffile_id) .and. present(center)) then
 
 #ifdef NOHDF5
-    call sll_xml_field(xmffile_id,trim(array_name),trim(mesh_name)//"-"//trim(array_name)//".bin", &
-         npoints_x1,npoints_x2,npoints_x3,'Binary',center)
+    call sll_xml_field(xmffile_id,trim(array_name), &
+                       trim(mesh_name)//"-"//trim(array_name)//".bin", &
+                       npoints_x1,npoints_x2,npoints_x3,'Binary',center)
 #else
     call sll_xml_field( &
          xmffile_id, &
@@ -184,7 +199,7 @@ contains
          center)
 #endif
 
-   end if
+     end if
 
   end subroutine sll_xdmf_array_3d
 
@@ -195,6 +210,7 @@ contains
   !>   - WHERE  : in which program or subroutine
   !>   - ErrMsg : error message
   subroutine errout( prtfil, sevrty, lwhere, ErrMsg )
+
     sll_int32, intent(in) ::  prtfil
     character(len=1),intent(in) :: sevrty 
     character(len=*),intent(in) :: lwhere , ErrMsg

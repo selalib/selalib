@@ -92,10 +92,9 @@ ENDIF()
 set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
-
 IF (APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
-   FIND_LIBRARY(BLAS_LIBRARIES  blas)
+   FIND_LIBRARY(BLAS_LIBRARIES    blas)
 ELSE()
    FIND_PACKAGE(LAPACK REQUIRED)
    FIND_PACKAGE(BLAS   REQUIRED)
@@ -115,8 +114,6 @@ IF(HDF5_ENABLED)
 	find_package(HDF5 QUIET)
 	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
-		include_directories(${HDF5_INCLUDE_DIRS})
-		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
 	ELSE()
 		add_definitions(-DNOHDF5)
 		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
@@ -313,7 +310,8 @@ IF(MUDPACK_ENABLED)
    ENDIF(MPI_MODULE_ENABLED)
 ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
-#add_subdirectory(maxwell_solvers) #use old mesh_types 
+add_subdirectory(maxwell_solvers)
+
 #add_subdirectory(BSL) top
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
@@ -463,7 +461,10 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
-#add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
+
+add_test(maxwell_fdtd_2d COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d)
+set_tests_properties(maxwell_fdtd_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
 	add_test(NAME poisson_solvers COMMAND test_poisson_1d)
