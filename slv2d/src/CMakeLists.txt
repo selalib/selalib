@@ -50,6 +50,13 @@ IF(FFTW_FOUND)
    INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
 ENDIF()
 
+#------------------------------------
+# Check if using IBM compilers
+#------------------------------------
+IF($ENV{FC} MATCHES "xlf")
+  INCLUDE(IBMCompilers)
+ENDIF()
+
 SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -pedantic -std=f2003 -fall-intrinsics -fbounds-check")
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
