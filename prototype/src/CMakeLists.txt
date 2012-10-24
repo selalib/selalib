@@ -291,9 +291,7 @@ IF(MPI_MODULE_ENABLED)
    add_subdirectory(remap)
 ENDIF()
 
-IF(NOT STDF95)
-   add_subdirectory(poisson_solvers)
-ENDIF()
+add_subdirectory(poisson_solvers)
 add_subdirectory(electric_field_accumulators)
 
 #high-level
@@ -473,8 +471,8 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-add_test(maxwell_fdtd_2d COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d)
-set_tests_properties(maxwell_fdtd_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(maxwell_2d_fdtd COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
