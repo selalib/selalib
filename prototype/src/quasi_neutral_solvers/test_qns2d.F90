@@ -14,7 +14,7 @@
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
 !***************************************************************************
-program qns_tester
+program test_qns2d
  
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -377,4 +377,4 @@ contains
   end subroutine test_qns2d
 
 
-end program qns_tester
+end program test_qns2d
