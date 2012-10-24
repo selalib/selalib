@@ -376,7 +376,6 @@ end subroutine diagnostiquesm
 
   select case (choice)
   case(0)
-  SLL_ASSERT(allocated(fxy)  )
   do j=1,ny
    do i=1,nx
     sumloc= sum(f4d(i,j,:,svy:evy))
@@ -391,7 +390,6 @@ end subroutine diagnostiquesm
                    prefix//cplot//".h5","x","y","fxy",nx,ny)
   case(1)
 
-  SLL_ASSERT(allocated(fxvx) )
   do k=1,nvx
    do i=1,nx
     sumloc= sum(f4d(i,:,k,svy:evy))
@@ -406,7 +404,6 @@ end subroutine diagnostiquesm
                    prefix//cplot//".h5","x","vx","fxvx",nx,nvx)
   case(2)
 
-  SLL_ASSERT(allocated(fyvy) )
   do l=svy,evy
    do j=sy,ey
     fyvy(j,l)= sum(f4d(:,j,:,l))
@@ -420,7 +417,6 @@ end subroutine diagnostiquesm
                    prefix//cplot//".h5","y","vy","fyvy",ny,nvy)
   case(3)
 
-  SLL_ASSERT(allocated(fvxvy))
   do l=svy,evy
    do k=1,nvx
       fvxvy(k,l)=sum(f4d(:,:,k,l))
