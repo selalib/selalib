@@ -63,6 +63,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(quintic_spline_1d_interpolator),  intent(in)       :: this
 #endif
+
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
@@ -72,8 +73,8 @@ contains  ! ****************************************************************
     sll_int32 :: ierr
     ! compute the interpolating spline coefficients
     call compute_coeffs_uniform( data, this%spline )
-    data_out =  quintic_splines_uniform_array( coordinates, num_points, &
-         this%spline )
+    data_out =  quintic_splines_interpolator_uniform_array( &
+                       coordinates, num_points, this%spline )
   end function 
 
 #ifdef STDF95
@@ -86,6 +87,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(quintic_spline_1d_interpolator),  intent(in)       :: this
 #endif
+
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64,  intent(in)   :: alpha
@@ -118,8 +120,8 @@ contains  ! ****************************************************************
        end do
     endif
 
-    data_out = quintic_splines_uniform_array( coordinates, num_points, &
-         this%spline )
+    data_out = quintic_splines_interpolator_uniform_array( coordinates, &
+                                                num_points, this%spline )
   end function
 
   ! Both versions F03 and F95 of compute_interpolants_qs1d should have the
@@ -158,8 +160,8 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
-    output_array = quintic_splines_uniform_array(vals_to_interpolate, num_pts, &
-                                                  interpolator%spline)
+    output_array = quintic_splines_interpolator_uniform_array( &
+              vals_to_interpolate, num_pts, interpolator%spline)
   end subroutine interpolate_values_qs1d
 
   subroutine interpolate_pointer_values_qs1d( &
@@ -173,8 +175,8 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
     sll_int32 :: ierr
-    output = quintic_splines_uniform_pointer(vals_to_interpolate, num_pts, &
-                                                    interpolator%spline)
+    output => quintic_splines_interpolator_uniform_pointer(&
+          vals_to_interpolate, num_pts, interpolator%spline)
   end subroutine interpolate_pointer_values_qs1d
 
 #ifdef STDF95
@@ -184,9 +186,11 @@ contains  ! ****************************************************************
   function interpolate_value_qs1d( interpolator, eta1 ) result(val)
     class(quintic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
+
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
-    val = quintic_splines_uniform( eta1, interpolator%spline )
+    val = quintic_splines_interpolator_uniform_value( eta1, interpolator%spline )
+
   end function
 
   ! Why is the name of this function changing depending on the standard?
