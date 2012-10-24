@@ -42,5 +42,5 @@ target_link_libraries(test_quintic_splines ${SPL_LIBS})
 # add any odd degree splines test
 set(SRC_TEST5 test_sll_odd_degree_splines.F90 sll_odd_degree_splines.F90)
 add_executable(test_odd_degree_splines ${SRC_TEST5})
-target_link_libraries(test_odd_degree_splines ${SPL_LIBS} -llapack)
+target_link_libraries(test_odd_degree_splines ${SPL_LIBS})
 
