@@ -38,7 +38,8 @@ implicit none
   end interface compute_coeffs
 
   interface quintic_splines
-     module procedure quintic_splines_uniform, quintic_splines_non_uni
+     module procedure quintic_splines_interpolator_uniform_value, &
+                         quintic_splines_interpolator_non_uni_value
   end interface quintic_splines
 
   interface delete_quintic_splines
@@ -98,7 +99,7 @@ contains
 
   end subroutine compute_coeffs_uniform
 
-  function quintic_splines_uniform(x, plan_splines) result(s)
+  function quintic_splines_interpolator_uniform_value(x, plan_splines) result(s)
   ! The interpolator spline function
 
     type(quintic_splines_plan_uniform), pointer :: plan_splines
@@ -125,9 +126,10 @@ contains
       endif
     enddo
 
-  end function quintic_splines_uniform
+  end function quintic_splines_interpolator_uniform_value
 
-  function quintic_splines_uniform_array(array, num_pts, plan_splines) result(res)
+  function quintic_splines_interpolator_uniform_array(array, &
+                            num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:)                    :: array
     type(quintic_splines_plan_uniform), pointer :: plan_splines
@@ -135,12 +137,14 @@ contains
     sll_real64, dimension(num_pts)               :: res
 
     do i=1,num_pts
-       res(i) = quintic_splines_uniform( array(i), plan_splines)
+       res(i) = quintic_splines_interpolator_uniform_value( &
+                                      array(i), plan_splines)
     enddo
 
-  end function quintic_splines_uniform_array
+  end function quintic_splines_interpolator_uniform_array
 
-  function quintic_splines_uniform_pointer(ptr, num_pts, plan_splines) result(res)
+  function quintic_splines_interpolator_uniform_pointer(ptr, &
+                            num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:), pointer           :: ptr
     type(quintic_splines_plan_uniform), pointer :: plan_splines
@@ -150,10 +154,11 @@ contains
     res => ptr
 
     do i=1,num_pts
-       res(i) = quintic_splines_uniform( ptr(i), plan_splines)
+       res(i) = quintic_splines_interpolator_uniform_value( &
+                                        ptr(i), plan_splines)
     enddo
 
-  end function quintic_splines_uniform_pointer
+  end function quintic_splines_interpolator_uniform_pointer
 
   subroutine delete_quintic_splines_uniform(plan)
 
@@ -219,7 +224,7 @@ contains
 
   end subroutine compute_coeffs_non_uni
 
-  function quintic_splines_non_uni(x, plan_splines) result(s)
+  function quintic_splines_interpolator_non_uni_value(x, plan_splines) result(s)
   ! The interpolator spline function
 
     type(quintic_splines_plan_non_uni), pointer            :: plan_splines
@@ -244,8 +249,39 @@ contains
       endif
     enddo
 
-  end function quintic_splines_non_uni
+  end function quintic_splines_interpolator_non_uni_value
 
+  function quintic_splines_interpolator_non_uni_array(array, &
+                            num_pts, plan_splines) result(res)
+  
+    sll_real64, dimension(:)                    :: array
+    type(quintic_splines_plan_non_uni), pointer :: plan_splines
+    sll_int32                                   :: i, num_pts
+    sll_real64, dimension(num_pts)              :: res
+
+    do i=1,num_pts
+       res(i) = quintic_splines_interpolator_non_uni_value( &
+                                      array(i), plan_splines)
+    enddo
+
+  end function quintic_splines_interpolator_non_uni_array
+
+  function quintic_splines_interpolator_non_uni_pointer(ptr, &
+                            num_pts, plan_splines) result(res)
+  
+    sll_real64, dimension(:), pointer           :: ptr
+    type(quintic_splines_plan_non_uni), pointer :: plan_splines
+    sll_int32                                   :: i, num_pts
+    sll_real64, dimension(:), pointer           :: res
+
+    res => ptr
+
+    do i=1,num_pts
+       res(i) = quintic_splines_interpolator_non_uni_value( &
+                                        ptr(i), plan_splines)
+    enddo
+
+  end function quintic_splines_interpolator_non_uni_pointer
 
   subroutine delete_quintic_splines_non_uni(plan)
 

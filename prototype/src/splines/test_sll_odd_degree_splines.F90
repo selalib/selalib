@@ -71,12 +71,12 @@ use arbitrary_degree_splines
         do i=0,n
 
            x = xmin + i*h
-           err1 = err1 + ( f(i+m) - spline(x, plan) )**2
+           err1 = err1 + ( f(i+m) - odd_degree_spline_interpolator(x, plan) )**2
 
            call random_number(x)
            x = xmin + x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
            y = exp( - ( x - mu )**2  )
-           err2 = err2 + ( y - spline(x, plan) )**2
+           err2 = err2 + ( y - odd_degree_spline_interpolator(x, plan) )**2
            norm = norm + y*y; 
 
         enddo
