@@ -18,7 +18,11 @@ SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 IF(APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
 ELSE()
-   INCLUDE(${CMAKE_MODULE_PATH}/FindLapack.cmake)
+   IF(Fortran_COMPILER STREQUAL "GFORTRAN")
+      FIND_PACKAGE(LAPACK)
+   ELSE()
+      INCLUDE(${CMAKE_MODULE_PATH}/FindLapack.cmake)
+   ENDIF()
 ENDIF()
 
 
