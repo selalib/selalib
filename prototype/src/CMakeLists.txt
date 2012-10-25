@@ -57,7 +57,6 @@ try_run( RUN_RESULT_VAR
          ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
-
 set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
