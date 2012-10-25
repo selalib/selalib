@@ -7,9 +7,7 @@ module sll_vlasov2d
  use diagnostiques_module
  use sll_splines
  use sll_cubic_spline_interpolator_1d
-!#ifdef _QUINTIC
-! use sll_quintic_spline_interpolator_1d
-!#endif
+ use sll_quintic_spline_interpolator_1d
 
 
  implicit none
@@ -33,13 +31,15 @@ module sll_vlasov2d
  type(cubic_spline_1d_interpolator), target :: spl_x1
  type(cubic_spline_1d_interpolator), target :: spl_x2
 
-!#ifdef _QUINTIC
-! type(quintic_spline_1d_interpolator), target :: spl_x3
-! type(quintic_spline_1d_interpolator), target :: spl_x4
-!#else
+#define QUINTIC
+
+#ifdef QUINTIC
+ type(quintic_spline_1d_interpolator), target :: spl_x3
+ type(quintic_spline_1d_interpolator), target :: spl_x4
+#else
  type(cubic_spline_1d_interpolator), target :: spl_x3
  type(cubic_spline_1d_interpolator), target :: spl_x4
-!#endif
+#endif
 
  sll_int32, private :: i, j, k, l
 
