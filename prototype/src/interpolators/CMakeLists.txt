@@ -2,7 +2,6 @@ IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
-add_library(geometry_functions STATIC ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
 
 add_dependencies(geometry_functions
 	sll_utilities
@@ -35,20 +34,22 @@ add_dependencies(sll_interpolators
         sll_quintic_splines
 )
 
-add_executable(test_interpolators_1d unit_test_1d.F90)
+add_executable(test_interpolators_1d unit_test_1d.F90
+               ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+
 target_link_libraries(test_interpolators_1d
 	sll_interpolators
-	geometry_functions
 	sll_splines
 	sll_constants
 	sll_assertion
 	sll_memory
 	sll_working_precision
 )
-add_executable(test_interpolators_2d unit_test.F90)
+add_executable(test_interpolators_2d unit_test.F90
+               ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+
 target_link_libraries(test_interpolators_2d
 	sll_interpolators
-	geometry_functions
 	sll_splines
 	sll_constants
 	sll_assertion
@@ -59,7 +60,6 @@ target_link_libraries(test_interpolators_2d
 #need to add test for finite difference 1D case.
 add_executable(test_quintic_interpolators_1d test_sll_quintic_spline_interpolator_1d.F90)
 target_link_libraries(test_quintic_interpolators_1d
-	geometry_functions
 	sll_interpolators
         sll_splines
         sll_numerical_utilities
