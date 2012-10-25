@@ -1,5 +1,18 @@
 # how about coalescing these libraries into a single one??
 
+set(NUMERICAL_UTILITIES_SRC tridiagonal.F90
+                            sll_toeplitz_penta_diagonal.F90)
+
+add_library(sll_numerical_utilities STATIC ${NUMERICAL_UTILITIES_SRC})
+
+add_dependencies(sll_numerical_utilities sll_memory
+                                         sll_assertion
+                                         sll_working_precision)
+
+target_link_libraries(sll_numerical_utilities sll_memory
+                                              sll_assertion
+	                                      sll_working_precision)
+
 set(TRIDIAGONAL_SRC tridiagonal.F90)
 add_library(sll_tridiagonal STATIC tridiagonal.F90)
 add_dependencies(sll_tridiagonal sll_working_precision)
