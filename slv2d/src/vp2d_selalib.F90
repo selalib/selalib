@@ -72,11 +72,8 @@ program vp2d_selalib
 
   do iter=1,nbiter
 
-     if( my_num == MPI_MASTER) &
-          print"(a5,i5)","iter:",iter
-
      if (mod(iter,fdiag) == 0) then 
-        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, YVY)
+        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, VXVY_VIEW)
      end if
 
      call transposexv(vlas2d,f4d)

@@ -118,8 +118,7 @@ ADD_DEPENDENCIES(sll_interpolators
 	         sll_working_precision
 	         sll_memory
 	         sll_assertion
-	         sll_splines
-                 sll_quintic_splines)
+	         sll_splines)
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
@@ -150,7 +149,7 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_remap
                        sll_splines
                        sll_interpolators
-                       sll_tridiagonal
+                       sll_numerical_utilities
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_utilities
@@ -162,7 +161,7 @@ SET(LIBS sll_utilities
          sll_interpolators
          sll_splines
          sll_remap
-         sll_tridiagonal
+         sll_numerical_utilities
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
@@ -182,9 +181,9 @@ TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
 ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
 
-#ADD_DEFINITIONS(-DQUINTIC)
-#ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
-#TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
+ADD_DEFINITIONS(-D_QUINTIC)
+ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
 
 #ADD_DEFINITIONS(-DTWO_D)
 #ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
