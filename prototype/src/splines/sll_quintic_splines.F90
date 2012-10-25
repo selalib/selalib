@@ -121,7 +121,7 @@ contains
     s = 0
 
     do j=left-5,left
-      if( (j>=-5) .and. (j<=num_pts) ) then
+      if( (j>=-5) .and. (j<=num_pts-1) ) then
         s = s + plan_splines%coeffs(j+6) * b(j-left+6)
       endif
     enddo
