@@ -34,6 +34,17 @@ add_dependencies(sll_interpolators
         sll_quintic_splines
 )
 
+add_executable(test_interpolators_1d unit_test_1d.F90)
+target_link_libraries(test_interpolators_1d
+	sll_interpolators
+	geometry_functions
+	sll_splines
+	util_constants
+	sll_constants
+	sll_assertion
+	sll_memory
+	sll_working_precision
+)
 add_executable(test_interpolators_2d unit_test.F90)
 target_link_libraries(test_interpolators_2d
 #	sll_weno
