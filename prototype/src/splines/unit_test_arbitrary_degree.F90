@@ -12,7 +12,7 @@ program arbitrary_degree_spline_tester
   print *, 'Testing arbitrary degree splines module: '
   print *, '*****************************************************************'
 
-  call test_uniform_b_splines_randomly( passed_test )
+!  call test_uniform_b_splines_randomly( passed_test )
   call  test_nonuniform_arb_deg_splines( passed_test )
 
   if( passed_test .eqv. .true. ) then
@@ -111,7 +111,7 @@ contains
     sll_real64, dimension(:,:), allocatable :: answer3
     type(arbitrary_degree_spline_1d), pointer :: spline
 
-    num_tests = 100000
+    num_tests = 1 !100000
     criterion = 1.0e-15
     degree  = 3
     min_val = 0.0
@@ -133,6 +133,7 @@ contains
          degree, &
          knots, &
          num_pts, &
+!OPEN_ARBITRARY_DEG_SPLINE )
          PERIODIC_ARBITRARY_DEG_SPLINE )
 
     do j=1,num_tests
