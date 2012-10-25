@@ -31,7 +31,7 @@ module sll_vlasov2d
  type(cubic_spline_1d_interpolator), target :: spl_x1
  type(cubic_spline_1d_interpolator), target :: spl_x2
 
-#define QUINTIC
+!#define QUINTIC
 
 #ifdef QUINTIC
  type(quintic_spline_1d_interpolator), target :: spl_x3
