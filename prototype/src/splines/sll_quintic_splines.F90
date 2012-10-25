@@ -6,7 +6,7 @@
 !> @brief 
 !> Selalib quintic splines interpolator
 !
-!> Last modification: October 03, 2012
+!> Last modification: October 25, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -100,18 +100,17 @@ contains
   end subroutine compute_coeffs_uniform
 
   function quintic_splines_interpolator_uniform_value(x, plan_splines) result(s)
-  ! The interpolator spline function
 
     type(quintic_splines_plan_uniform), pointer :: plan_splines
-    sll_int32                                   :: num_pts, left, j
+    sll_int32                                   :: n, left, j
     sll_real64                                  :: x, xmin, xmax
     sll_real64                                  :: h, s, t0
     sll_real64, dimension(6)                    :: b
 
     xmin = plan_splines%xmin
     xmax = plan_splines%xmax
-    num_pts = plan_splines%num_pts
-    h = (xmax-xmin)/(num_pts-1)
+    n = plan_splines%num_pts - 1
+    h = (xmax-xmin)/n
 
     t0 = (x-xmin)/h
     left = int(t0) ! Determine the leftmost support index 'i' of x
@@ -121,7 +120,7 @@ contains
     s = 0
 
     do j=left-5,left
-      if( (j>=-5) .and. (j<=num_pts-1) ) then
+      if( (j>=-5) .and. (j<=n) ) then
         s = s + plan_splines%coeffs(j+6) * b(j-left+6)
       endif
     enddo
@@ -209,7 +208,7 @@ contains
 
     num_pts = plan_splines%spline_obj%num_pts
     b_at_x = b_splines_at_x( plan_splines%spline_obj, num_pts-1, &
-                            plan_splines%spline_obj%xmax )
+                                    plan_splines%spline_obj%xmax )
     a = b_at_x(3)
     b = b_at_x(2)
     c = b_at_x(1)
@@ -225,26 +224,25 @@ contains
   end subroutine compute_coeffs_non_uni
 
   function quintic_splines_interpolator_non_uni_value(x, plan_splines) result(s)
-  ! The interpolator spline function
 
     type(quintic_splines_plan_non_uni), pointer            :: plan_splines
-    sll_int32                                              :: num_pts, cell, left, j
+    sll_int32                                              :: n, cell, left, j
     sll_real64                                             :: x, s
     sll_real64, dimension(6)                               :: b
     sll_real64, dimension(plan_splines%spline_obj%num_pts) :: knots
 
-    knots = plan_splines%spline_obj%k(1:plan_splines%spline_obj%num_pts)
-    num_pts = plan_splines%spline_obj%num_pts
+    n = plan_splines%spline_obj%num_pts - 1
+    knots = plan_splines%spline_obj%k(1:n+1)
 
     cell = 1
-    do while(  ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<num_pts-1)  )
+    do while( ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<n) )
          cell = cell + 1
     enddo
 
     left = cell - 1
     s = 0
     do j=left-5,left
-      if( (j>=-5) .and. (j<=num_pts-1) ) then
+      if( (j>=-5) .and. (j<=n) ) then
         s = s + plan_splines%coeffs(j+6) * b(j-left+6)
       endif
     enddo
