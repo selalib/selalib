@@ -5,6 +5,13 @@ module sll_vlasov2d
  use used_precision
  use geometry_module
  use diagnostiques_module
+ use sll_splines
+#ifdef QUINTIC
+use sll_quintic_spline_interpolator_1d
+#else
+use sll_cubic_spline_interpolator_1d
+#endif
+
 
  implicit none
  private
@@ -19,8 +26,8 @@ module sll_vlasov2d
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv
 
-   type(cubic_spline_2d_interpolator) :: interp_x
-   type(cubic_spline_2d_interpolator) :: interp_v
+   !type(cubic_spline_2d_interpolator) :: interp_x
+   !type(cubic_spline_2d_interpolator) :: interp_v
 
 #ifdef QUINTIC
    type(quintic_spline_1d_interpolator) :: interp_x1
