@@ -7,6 +7,9 @@ module sll_vlasov2d
  use diagnostiques_module
  use sll_splines
  use sll_cubic_spline_interpolator_1d
+!#ifdef _QUINTIC
+! use sll_quintic_spline_interpolator_1d
+!#endif
 
 
  implicit none
@@ -21,11 +24,22 @@ module sll_vlasov2d
    logical :: transposed      
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv
-   type(cubic_spline_1d_interpolator) :: interp_x1
-   type(cubic_spline_1d_interpolator) :: interp_x2
-   type(cubic_spline_1d_interpolator) :: interp_x3
-   type(cubic_spline_1d_interpolator) :: interp_x4
+   class(sll_interpolator_1d_base), pointer :: interp_x1
+   class(sll_interpolator_1d_base), pointer :: interp_x2
+   class(sll_interpolator_1d_base), pointer :: interp_x3
+   class(sll_interpolator_1d_base), pointer :: interp_x4
  end type vlasov2d
+
+ type(cubic_spline_1d_interpolator), target :: spl_x1
+ type(cubic_spline_1d_interpolator), target :: spl_x2
+
+!#ifdef _QUINTIC
+! type(quintic_spline_1d_interpolator), target :: spl_x3
+! type(quintic_spline_1d_interpolator), target :: spl_x4
+!#else
+ type(cubic_spline_1d_interpolator), target :: spl_x3
+ type(cubic_spline_1d_interpolator), target :: spl_x4
+!#endif
 
  sll_int32, private :: i, j, k, l
 
@@ -92,10 +106,16 @@ contains
                                     PERIODIC_SPLINE, PERIODIC_SPLINE)
 #else
 
-  call this%interp_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
-  call this%interp_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
-  call this%interp_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
-  call this%interp_x4%initialize( nc_x4, x4_min, x4_max, PERIODIC_SPLINE)
+  call spl_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
+  call spl_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
+  call spl_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
+  call spl_x4%initialize( nc_x4, x4_min, x4_max, PERIODIC_SPLINE)
+
+  this%interp_x1 => spl_x1
+  this%interp_x2 => spl_x2
+  this%interp_x3 => spl_x3
+  this%interp_x4 => spl_x4
+
 #endif
 
  end subroutine new_vlasov2d
