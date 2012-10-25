@@ -445,6 +445,10 @@ set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
+
+add_test(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
+set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
