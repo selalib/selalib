@@ -149,6 +149,7 @@ contains
         do j=1,nc_x2
            f(:,j,k,l) = this%interp_x1%interpolate_array_disp( &
                                         nc_x1, f(:,j,k,l), alpha )
+
         end do
      end do
   end do
@@ -203,8 +204,14 @@ contains
      do i=1,nc_x1
         do l=1,nc_x4
            alpha = ex(i,j)*dt
+#ifdef QUINTIC
+           this%interp_x3%compute_interpolants(this%ft(:,l,i,j))
+           this%ft(:,l,i,j) = this%interp_x3%interpolate_array( &
+                                (nc_x3, data, interpolation_points)
+#else
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array_disp( &
                               nc_x3, this%ft(:,l,i,j), alpha )
+#endif
        end do
     end do
  end do
