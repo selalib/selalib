@@ -1,33 +1,20 @@
 # use all sll_*F90 files
-add_library(sll_splines STATIC sll_splines.F90)
-add_library(sll_quintic_splines STATIC sll_quintic_splines.F90)
-add_library(sll_odd_degree_splines STATIC sll_odd_degree_splines.F90)
-add_library(sll_arbitrary_degree_splines STATIC sll_arbitrary_degree_splines.F90)
+add_library( sll_splines STATIC sll_splines.F90
+             cubic_nonuniform_splines.F90
+	     sll_quintic_splines.F90
+	     sll_odd_degree_splines.F90
+             sll_arbitrary_degree_splines.F90)
 
-set(SPL_LIBS sll_splines sll_quintic_splines sll_odd_degree_splines 
-sll_arbitrary_degree_splines sll_toeplitz_penta_diagonal sll_tridiagonal 
+set(SPL_LIBS sll_splines sll_toeplitz_penta_diagonal sll_tridiagonal 
 sll_memory sll_assertion sll_constants util_constants ${LAPACK_LIBRARIES})
 
-add_dependencies(sll_arbitrary_degree_splines sll_working_precision 
-                                              sll_memory
-                                              sll_utilities)
-
-add_dependencies(sll_splines sll_arbitrary_degree_splines 
-                             sll_memory 
-                             sll_assertion 
-                             sll_working_precision)
-
-add_dependencies(sll_quintic_splines sll_arbitrary_degree_splines
-                 sll_toeplitz_penta_diagonal sll_working_precision 
-                 sll_memory sll_utilities)
-
-add_dependencies(sll_odd_degree_splines sll_arbitrary_degree_splines
-                 sll_working_precision sll_memory sll_utilities)
-
-add_library(cubic_non_unif_splines STATIC cubic_nonuniform_splines.F90)
-add_dependencies(cubic_non_unif_splines sll_memory sll_assertion sll_working_precision
-sll_tridiagonal sll_splines)
-
+add_dependencies( sll_splines
+                  sll_working_precision 
+                  sll_memory
+                  sll_assertion
+                  sll_utilities
+                  sll_tridiagonal
+                  sll_toeplitz_penta_diagonal)
 
 add_library(util_constants STATIC util_constants.F90)
 add_dependencies(util_constants sll_constants sll_working_precision)
