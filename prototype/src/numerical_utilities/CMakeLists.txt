@@ -6,7 +6,8 @@ ADD_LIBRARY(sll_numerical_utilities STATIC ${NUMERICAL_UTILITIES_SRC})
 
 ADD_DEPENDENCIES(sll_numerical_utilities sll_memory
                                          sll_assertion
-                                         sll_working_precision)
+                                         sll_working_precision
+                                         sll_utilities)
 
 
 
