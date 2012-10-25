@@ -181,20 +181,12 @@ ENDIF()
 
 # this checks the existing collection of compiler flags to find if the
 # fortran95 standard was requested. 
-
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
 IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
 ELSE()
   set(STDF95 YES)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
-  add_definitions(-DSTDF95)
-ENDIF()
-
-SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
-IF(${STDF95_ENABLED} AND ${Fortran_COMPILER} STREQUAL "GFORTRAN")
-  SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
-  set(STDF95 YES)
   add_definitions(-DSTDF95)
 ENDIF()
 
@@ -291,7 +283,9 @@ IF(MPI_MODULE_ENABLED)
    add_subdirectory(remap)
 ENDIF()
 
-add_subdirectory(poisson_solvers)
+IF(NOT STDF95)
+   add_subdirectory(poisson_solvers)
+ENDIF()
 add_subdirectory(electric_field_accumulators)
 
 #high-level
@@ -376,9 +370,6 @@ set_tests_properties(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
 add_test(NAME odd_degree_splines COMMAND test_odd_degree_splines)
 set_tests_properties(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-add_test(NAME quintic_interpolator COMMAND test_quintic_interpolators_1d)
-set_tests_properties(quintic_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
 add_test(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
@@ -454,6 +445,10 @@ set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
+
+add_test(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
+set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
@@ -471,7 +466,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-add_test(maxwell_2d_fdtd COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+add_test(NAME maxwell_2d_fdtd COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
 set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
