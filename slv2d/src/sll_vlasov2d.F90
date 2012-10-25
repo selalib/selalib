@@ -6,11 +6,7 @@ module sll_vlasov2d
  use geometry_module
  use diagnostiques_module
  use sll_splines
-#ifdef QUINTIC
-use sll_quintic_spline_interpolator_1d
-#else
-use sll_cubic_spline_interpolator_1d
-#endif
+ use sll_cubic_spline_interpolator_1d
 
 
  implicit none
@@ -25,21 +21,10 @@ use sll_cubic_spline_interpolator_1d
    logical :: transposed      
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv
-
-   !type(cubic_spline_2d_interpolator) :: interp_x
-   !type(cubic_spline_2d_interpolator) :: interp_v
-
-#ifdef QUINTIC
-   type(quintic_spline_1d_interpolator) :: interp_x1
-   type(quintic_spline_1d_interpolator) :: interp_x2
-   type(quintic_spline_1d_interpolator) :: interp_x3
-   type(quintic_spline_1d_interpolator) :: interp_x4
-#else
    type(cubic_spline_1d_interpolator) :: interp_x1
    type(cubic_spline_1d_interpolator) :: interp_x2
    type(cubic_spline_1d_interpolator) :: interp_x3
    type(cubic_spline_1d_interpolator) :: interp_x4
-#endif
  end type vlasov2d
 
  sll_int32, private :: i, j, k, l
@@ -158,7 +143,6 @@ contains
   sll_real64 :: x4_min, delta_x4
   sll_real64 :: alpha
 
-  ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed)
 
   nc_x1    = this%geomx%nx
@@ -320,7 +304,7 @@ subroutine densite_courant(this, jx, jy)
    type(vlasov2d),intent(inout) :: this
    sll_int32 :: error
    sll_real64, dimension(:,:), intent(out)  :: jx, jy
-   sll_real64 :: vx, vy       ! vitesse du point courant
+   sll_real64 :: vx, vy 
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
    sll_int32 :: i,j,iv,jv,c
