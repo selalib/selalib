@@ -8,7 +8,7 @@ program test_sll_quintic_spline_interpolator_1d
 #ifndef STDF95
   use sll_module_interpolators_1d_base
 #endif
-  use WENO_interp
+  !use WENO_interp
   use sll_quintic_spline_interpolator_1d
     implicit none
 
@@ -19,7 +19,7 @@ program test_sll_quintic_spline_interpolator_1d
 #endif
 
   type(quintic_spline_1d_interpolator), target  :: spline
-  type(WENO_interp_1d), pointer               :: weno
+  !type(WENO_interp_1d), pointer               :: weno
 
   sll_real64                            :: error
   sll_real64                            :: phase
