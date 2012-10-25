@@ -8,7 +8,7 @@ program test_sll_quintic_spline_interpolator_1d
 #ifndef STDF95
   use sll_module_interpolators_1d_base
 #endif
-  use WENO_interp
+  !use WENO_interp
   use sll_quintic_spline_interpolator_1d
     implicit none
 
@@ -19,7 +19,7 @@ program test_sll_quintic_spline_interpolator_1d
 #endif
 
   type(quintic_spline_1d_interpolator), target  :: spline
-  type(WENO_interp_1d), pointer               :: weno
+  !type(WENO_interp_1d), pointer               :: weno
 
   sll_real64                            :: error
   sll_real64                            :: phase
@@ -28,11 +28,10 @@ program test_sll_quintic_spline_interpolator_1d
   sll_real64, allocatable, dimension(:) :: out
   sll_real64, allocatable, dimension(:) :: coordinates_d
   sll_real64, allocatable, dimension(:) :: data_interp
+  sll_int32                             :: ierr, i
+  sll_int32, parameter                  :: n = 512
+  sll_real64                            :: x_min, x_max, delta
   sll_real64                            :: mu
-
-  sll_int32 :: ierr, i
-  sll_int32, parameter :: n = 512
-  sll_real64  :: x_min, x_max, delta
 
   SLL_ALLOCATE(data(n), ierr)
   SLL_ALLOCATE(out(n), ierr)
@@ -42,14 +41,15 @@ program test_sll_quintic_spline_interpolator_1d
 
   print *, 'initialize data and interpolation_points array'
   x_min = -10.0_f64
-  x_max = 10.0_f64 * sll_pi
-  mu = (xmin+xmax)/2
+  x_max = 10.0_f64
+  mu = (x_min+x_max)/2
+
   delta = (x_max - x_min ) / real(n-1,f64) 
   phase = 0.0_f64
 
 
   do i=1,n
-     coordinates_d(i) = (i-1)*delta
+     coordinates_d(i) = x_min + (i-1)*delta 
      interpolation_points(i) = modulo(coordinates_d(i) - delta/3.0_f64,2.0_f64 * sll_pi)
      data(i)        = exp( - ( coordinates_d(i) - mu )**2  )
      data_interp(i) = exp( - ( interpolation_points(i) - mu )**2  )
@@ -71,10 +71,12 @@ program test_sll_quintic_spline_interpolator_1d
 
   error = 0.0_f64
   do i=1,n   
-     error = max(error, abs(data_interp(i) - out(i)))
+     error = error + (data_interp(i) - out(i))**2
      !print*, i, interpolation_points(i), data_interp(i) - out(i)
   end do
-  print*, '    error=',error
+
+  error = sqrt(error/sum(data_interp**2))
+  print*, '    error = ',error
 
   print *, 'PASSED'
 
