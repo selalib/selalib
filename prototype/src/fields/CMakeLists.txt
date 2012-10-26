@@ -2,6 +2,12 @@ IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
+ADD_LIBRARY(geometry_functions STATIC geometry_functions.F90)
+
+ADD_DEPENDENCIES( geometry_functions sll_assertion
+	                             sll_memory
+	                             sll_working_precision)
+
 add_library(sll_scalar_field_2d STATIC sll_scalar_field_2d.F90 
 		scalar_field_initializer_base.F90
 		landau_2d_initializer.F90
