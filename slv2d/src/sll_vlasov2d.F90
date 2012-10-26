@@ -31,9 +31,8 @@ module sll_vlasov2d
  type(cubic_spline_1d_interpolator), target :: spl_x1
  type(cubic_spline_1d_interpolator), target :: spl_x2
 
-!#define QUINTIC
 
-#ifdef QUINTIC
+#ifdef _QUINTIC
  type(quintic_spline_1d_interpolator), target :: spl_x3
  type(quintic_spline_1d_interpolator), target :: spl_x4
 #else
@@ -204,10 +203,10 @@ contains
      do i=1,nc_x1
         do l=1,nc_x4
            alpha = ex(i,j)*dt
-#ifdef QUINTIC
+#ifdef _QUINTIC
            this%interp_x3%compute_interpolants(this%ft(:,l,i,j))
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array( &
-                                (nc_x3, data, interpolation_points)
+                                (nc_x3, this%ft(:,l,i,j), alpha)
 #else
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array_disp( &
                               nc_x3, this%ft(:,l,i,j), alpha )
