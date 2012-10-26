@@ -192,6 +192,7 @@ contains
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x3, nc_x4
   sll_real64 :: alpha
+  sll_real64 :: depvx(this%geomv%nx)
 
   SLL_ASSERT(this%transposed) 
 
@@ -206,7 +207,7 @@ contains
 #ifdef _QUINTIC
            this%interp_x3%compute_interpolants(this%ft(:,l,i,j))
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array( &
-                                (nc_x3, this%ft(:,l,i,j), alpha)
+                                (nc_x3, this%ft(:,l,i,j), depvx)
 #else
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array_disp( &
                               nc_x3, this%ft(:,l,i,j), alpha )
