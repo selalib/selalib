@@ -311,7 +311,7 @@ ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
 add_subdirectory(maxwell_solvers)
 
-#add_subdirectory(BSL) top
+add_subdirectory(BSL)
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
@@ -465,8 +465,9 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-add_test(NAME maxwell_2d_fdtd COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+add_test(NAME maxwell_2d_fdtd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
 set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
 
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
@@ -476,7 +477,6 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(poisson_solvers poisson_solvers/test_poisson_3d_seq)
 #add_test(poisson_solvers mpirun -np 2 poisson_solvers/test_poisson_3d_par)
    #add_test(poisson_solvers poisson_solvers/unit_test)
-#add_test(BSL BSL/test_bsl)
 #add_test(BSL BSL/test_landau_4d)
 #add_test(BSL BSL/test_landau_2d)
    #add_test(CSL CSL/test_csl)

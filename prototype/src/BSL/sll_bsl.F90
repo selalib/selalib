@@ -8,10 +8,36 @@ use sll_splines
 
 implicit none
 
-!type bsl_workspace_1d
-!   type (sll_spline_1D), pointer :: spl_eta
-!end type bsl_workspace_1d
-!
+type :: mesh_1d
+   sll_real64 :: eta_min, eta_max
+   sll_real64 :: delta_eta
+   sll_real64 :: nc_eta
+end type
+
+type :: mesh_2d
+   sll_real64 :: eta1_min, eta1_max, eta2_min, eta2_max
+   sll_real64 :: delta_eta1, delta_eta2
+   sll_int32  :: nc_eta1, nc_eta2
+end type
+
+interface operator (*)
+   function z(x, y)
+      type(mesh_1d), intent(in)  :: x
+      type(mesh_1d), intent(in)  :: y
+      type(mesh_2d), intent(out) :: z
+
+      z%eta1_min   = x%eta_min
+      z%eta1_max   = x%eta_max
+      z%eta2_min   = y%eta_min
+      z%eta2_max   = y%eta_max
+      z%delta_eta1 = x%delta_eta
+      z%delta_eta2 = y%delta_eta
+      z%nc_eta1 = x%nc_eta
+      z%nc_eta2 = y%nc_eta
+   end function
+end interface
+
+
 !type bsl_workspace_2d
 !   type (sll_spline_1D), pointer :: spl_eta1
 !   type (sll_spline_1D), pointer :: spl_eta2
@@ -23,8 +49,6 @@ implicit none
 !   type (sll_spline_1D), pointer :: spl_eta3
 !   type (sll_spline_1D), pointer :: spl_eta4
 !end type bsl_workspace_4d
-
-sll_real64 :: global_eta1, global_eta2
 
 interface new_bsl_workspace
    module procedure new_bsl_workspace_1d
