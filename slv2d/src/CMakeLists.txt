@@ -80,6 +80,9 @@ ENDIF()
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
 
+#Pas trouver de meilleur moyen pour l'instant...
+FILE(COPY ${SELALIB_DIR}/fields/geometry_functions.F90 DESTINATION ${PROJECT_SOURCE_DIR}/fields/)
+
 SET( SLL_COMPONENTS precision 
                     utilities 
                     assert 
@@ -90,6 +93,8 @@ SET( SLL_COMPONENTS precision
                     electric_field_accumulators
                     remap
                     splines
+                    WENO
+                    interpolators
                     collective
                     low_level_file_io)
 
@@ -105,20 +110,6 @@ ENDIF()
 IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
-
-ADD_LIBRARY(sll_interpolators STATIC 
-  ${SELALIB_DIR}/interpolators/sll_interpolators_1d_base.F90
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
-  ${SELALIB_DIR}/interpolators/sll_quintic_spline_interpolator_1d.F90
-  ${SELALIB_DIR}/interpolators/sll_interpolators_2d_base.F90
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90)
-
-ADD_DEPENDENCIES(sll_interpolators
-                 sll_utilities 
-	         sll_working_precision
-	         sll_memory
-	         sll_assertion
-	         sll_splines)
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
