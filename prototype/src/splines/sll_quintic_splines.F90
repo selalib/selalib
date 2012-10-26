@@ -24,12 +24,21 @@ implicit none
     sll_int32                             :: nb_cells
     sll_real64                            :: xmin
     sll_real64                            :: xmax
+#ifdef STDF95
+    sll_real64, dimension(:), pointer :: b_at_node
+    sll_real64, dimension(:), pointer :: coeffs
+#else
     sll_real64, dimension(:), allocatable :: b_at_node
     sll_real64, dimension(:), allocatable :: coeffs
+#endif
   end type quintic_splines_plan_uniform
 
   type quintic_splines_plan_non_uni
+#ifdef STDF95
+    sll_real64, dimension(:), pointer :: coeffs
+#else
     sll_real64, dimension(:), allocatable     :: coeffs
+#endif
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
   end type quintic_splines_plan_non_uni  
 
