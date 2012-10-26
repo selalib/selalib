@@ -26,8 +26,13 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
+#ifdef STDF95
+    sll_real64, dimension(:), pointer :: b_at_node
+    sll_real64, dimension(:), pointer :: coeffs
+#else
     sll_real64, dimension(:), allocatable :: b_at_node
     sll_real64, dimension(:), allocatable :: coeffs
+#endif
   end type odd_degree_splines_plan
 
 contains 
