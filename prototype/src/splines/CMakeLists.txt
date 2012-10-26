@@ -47,11 +47,8 @@ TARGET_LINK_LIBRARIES(test_quintic_splines ${SPL_LIBS})
 
 #odd degree
 
-IF (${LAPACK_LIBRARIES})
-   ADD_EXECUTABLE(test_odd_degree_splines test_sll_odd_degree_splines.F90 
-                                          sll_odd_degree_splines.F90)
-   TARGET_LINK_LIBRARIES(test_odd_degree_splines ${SPL_LIBS} ${LAPACK_LIBRARIES})
-ELSE()
-   MESSAGE(STATUS "Install lapack to build test_odd_degree_splines")
-ENDIF()
+ADD_EXECUTABLE(test_odd_degree_splines test_sll_odd_degree_splines.F90 
+                                       sll_odd_degree_splines.F90)
+
+TARGET_LINK_LIBRARIES(test_odd_degree_splines ${SPL_LIBS} ${LAPACK_LIBRARIES})
 
