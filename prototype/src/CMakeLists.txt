@@ -250,7 +250,7 @@ else(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 set(FISHPACK_ENABLED OFF CACHE BOOL " ")
-set(MUDPACK_ENABLED OFF CACHE BOOL " ")
+set(MUDPACK_ENABLED ON CACHE BOOL " ")
 
 ######################################################################
 #  III. SUBDIRECTORY                                                 #
@@ -373,7 +373,10 @@ add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
 add_test(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 IF(FISHPACK_ENABLED)
-	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
+	add_test(NAME fishpack4 COMMAND tpois3d)
+	add_test(NAME fishpack3 COMMAND thwsssp)
+	add_test(NAME fishpack2 COMMAND thwsplr)
+	add_test(NAME fishpack1 COMMAND thwscyl)
 ENDIF()
 IF(MUDPACK_ENABLED)
         IF(MPI_MODULE_ENABLED)
