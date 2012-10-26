@@ -200,21 +200,36 @@ contains
   nc_x3    = this%geomv%nx
   nc_x4    = this%geomv%ny
 
+#ifdef _QUINTIC
+
+  x3_min = this%geomv%x0
+  x3_max = this%geomv%x1
   do j=this%jstartx,this%jendx
      do i=1,nc_x1
+        alpha = ex(i,j)*dt
+        do k=1,nc_x3
+           depvx(k) = x3_min + (k-1)*delta_x3 - alpha
+           if(depvx(k) < x3_min) then
+              depvx(k) = depvx(k) + x3_max-x1_min
+           else if (depvx(k) > x3_min) then
+              depvx(k) = depvx(k) - x3_max+x1_min
+           end if
+        end do 
         do l=1,nc_x4
-           alpha = ex(i,j)*dt
-#ifdef _QUINTIC
-           this%interp_x3%compute_interpolants(this%ft(:,l,i,j))
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array( &
                                 (nc_x3, this%ft(:,l,i,j), depvx)
+        end do
 #else
+  do j=this%jstartx,this%jendx
+     do i=1,nc_x1
+        alpha = ex(i,j)*dt
+        do l=1,nc_x4
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array_disp( &
                               nc_x3, this%ft(:,l,i,j), alpha )
-#endif
        end do
     end do
  end do
+#endif
 
  end subroutine advection_x3
 
