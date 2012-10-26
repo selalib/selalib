@@ -26,6 +26,7 @@ add_dependencies(sll_interpolators
 	sll_assertion
 	sll_splines
         sll_quintic_splines
+        sll_weno
 )
 
 add_executable(test_interpolators_1d unit_test_1d.F90
