@@ -181,10 +181,10 @@ TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
 ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
 
-FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
-ADD_DEFINITIONS(-D_QUINTIC)
-ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
-TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+#ADD_DEFINITIONS(-D_QUINTIC)
+#ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
+#TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
 
 #FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
 #ADD_DEFINITIONS(-DTWO_D)
@@ -223,10 +223,10 @@ ADD_TEST(NAME test_vp2d_cubic COMMAND
          ./vp2d_cubic
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
-ADD_TEST(NAME test_vp2d_quintic COMMAND 
-         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./vp2d_quintic
-         ${MPIEXEC_POSTFLAGS} ${ARGS})
+#ADD_TEST(NAME test_vp2d_quintic COMMAND 
+#         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+#         ./vp2d_quintic
+#         ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
