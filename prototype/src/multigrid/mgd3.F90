@@ -691,8 +691,8 @@ call MPI_TYPE_COMMIT(gtype(6),ierr)
 !------------------------------------------------------------------------
 ! datatype for one i=const plane
 !
-call MPI_TYPE_EXTENT(realtype,i,ierr)
-call MPI_TYPE_HVECTOR(ez-sz+1,1,(ex-sx+3)*(ey-sy+3)*i,gtype(5),gtype(1),ierr)
+call MPI_TYPE_EXTENT(realtype,int(i,8),ierr)
+call MPI_TYPE_HVECTOR(ez-sz+1,1,int((ex-sx+3)*(ey-sy+3)*i,8),gtype(5),gtype(1),ierr)
 call MPI_TYPE_COMMIT(gtype(1),ierr)
 !
 ! datatype for one j=const plane

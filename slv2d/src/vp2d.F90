@@ -92,7 +92,7 @@ do iter=1,nbiter
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
 
-       call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,YVY)
+       call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,VXVY_VIEW)
 
        if (mod(iter,fthdiag).eq.0) then
           call thdiag(vlas2d,f4d,nrj,iter*dt)    
