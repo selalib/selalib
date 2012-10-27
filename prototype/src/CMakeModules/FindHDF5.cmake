@@ -9,22 +9,22 @@ SET (HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
 
 
 find_path(HDF5_INCLUDE_DIRS NAMES hdf5.h
-	HINTS ${HDF5_ROOT}
+	HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
 	PATH_SUFFIXES include hdf5/include
 	DOC "PATH TO hdf5.h")
 
 find_path(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
-	HINTS ${HDF5_ROOT}
+	HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
 	PATH_SUFFIXES include hdf5/include include/fortran
 	DOC "PATH to hdf5.mod")
 
 find_library(HDF5_HDF5_LIBRARY NAMES hdf5
-	HINTS ${HDF5_ROOT}
+	HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
 	PATH_SUFFIXES lib hdf5/lib
 	DOC "PATH TO libhdf5.dylib")
 
 find_library(HDF5_HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
-	HINTS ${HDF5_ROOT}
+	HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
 	PATH_SUFFIXES lib hdf5/lib
 	DOC "PATH TO libhdf5_fortran.a")
 
@@ -44,6 +44,7 @@ IF ( HDF5_INCLUDE_DIRS         AND
      HDF5_HDF5_FORTRAN_LIBRARY AND
      ZLIB_FOUND )
   set(HDF5_FOUND YES)
+  INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
   IF(HDF5_INCLUDE_DIR_FORTRAN)
   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
   ELSE()
