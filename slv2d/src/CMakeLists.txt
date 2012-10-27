@@ -102,9 +102,10 @@ ENDFOREACH()
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+IF(Fortran_COMPILER STREQUAL "XLF")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
+MESSAGE(STATUS "fc " ${Fortran_COMPILER} "fc name " ${Fortran_COMPILER_NAME})
 
 ADD_LIBRARY(sll_interpolators STATIC 
   ${SELALIB_DIR}/interpolators/sll_interpolators_1d_base.F90
@@ -181,6 +182,9 @@ TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
 
 ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
+
+ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
 
 #ADD_DEFINITIONS(-DQUINTIC)
 #ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
