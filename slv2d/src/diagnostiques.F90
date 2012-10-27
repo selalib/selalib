@@ -30,7 +30,7 @@ sll_real64, dimension(:,:),pointer :: fvxvy
 sll_int32, private :: i, j, k, l
 
 enum, bind(C)
-enumerator :: XY = 0, XVX  = 1, YVY = 2, VXVY = 3
+enumerator :: XY_VIEW = 0, XVX_VIEW  = 1, YVY_VIEW = 2, VXVY_VIEW = 3
 end enum
 
 contains
@@ -429,7 +429,65 @@ end subroutine diagnostiquesm
            call write_xdmf("fvxvy"//cplot//".xmf", &
            prefix//cplot//".h5","vx","vy","fvxvy",nvx,nvy)
 
-   end select
+  select case (choice)
+  case(XY_VIEW)
+  do j=1,ny
+   do i=1,nx
+    sumloc= sum(f4d(i,j,:,svy:evy))
+    call mpi_reduce(sumloc,fxy(i,j),1,MPI_REAL8,MPI_SUM,0,comm,error)
+   end do
+  end do
+  global_dims = (/geomx%nx,geomx%ny/)
+  offset      = (/0, 0/)
+  call sll_hdf5_write_array(file_id,global_dims,offset,fxy,"/fxy",error)
+  if (my_num == 0) &
+   call write_xdmf("fxy"//cplot//".xmf",   &
+                   prefix//cplot//".h5","x","y","fxy",nx,ny)
+  case(XVX_VIEW)
+
+  do k=1,nvx
+   do i=1,nx
+    sumloc= sum(f4d(i,:,k,svy:evy))
+    call mpi_reduce(sumloc,fxvx(i,k),1,MPI_REAL8,MPI_SUM,0,comm,error)
+   end do
+  end do
+  global_dims = (/geomx%nx,geomv%nx/)
+  offset      = (/0, 0/)
+  call sll_hdf5_write_array(file_id,global_dims,offset,fxvx,"/fxvx",error)
+  if (my_num == 0) &
+   call write_xdmf("fxvx"//cplot//".xmf",  &
+                   prefix//cplot//".h5","x","vx","fxvx",nx,nvx)
+  case(YVY_VIEW)
+
+  do l=svy,evy
+   do j=sy,ey
+    fyvy(j,l)= sum(f4d(:,j,:,l))
+   end do
+  end do
+  global_dims = (/geomx%ny,geomv%ny/)
+  offset      = (/0, svy-1/)
+  call sll_hdf5_write_array(file_id,global_dims,offset,fyvy,"/fyvy",error)
+  if (my_num == 0) &
+   call write_xdmf("fyvy"//cplot//".xmf",  &
+                   prefix//cplot//".h5","y","vy","fyvy",ny,nvy)
+  case(VXVY_VIEW)
+
+  do l=svy,evy
+   do k=1,nvx
+      fvxvy(k,l)=sum(f4d(:,:,k,l))
+   end do
+  end do
+  global_dims = (/geomv%nx,geomv%ny/)
+  offset      = (/0, svy-1/)
+  call sll_hdf5_write_array(file_id,global_dims,offset,fvxvy,"/fvxvy",error)
+  if (my_num == 0) &
+   call write_xdmf("fvxvy"//cplot//".xmf", &
+                   prefix//cplot//".h5","vx","vy","fvxvy",nvx,nvy)
+  case default
+
+     stop 'mauvaise vue'
+  
+  end select
 
    call sll_hdf5_file_close(file_id, error)
 

@@ -76,7 +76,7 @@ program test_sll_quintic_spline_interpolator_1d
   end do
 
   error = sqrt(error/sum(data_interp**2))
-  print*, '    error = ',error
+  print*, '    error=',error
 
   print *, 'PASSED'
 

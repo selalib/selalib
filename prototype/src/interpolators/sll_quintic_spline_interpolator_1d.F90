@@ -110,12 +110,12 @@ contains  ! ****************************************************************
 
     if (alpha > 0 ) then 
        do i = 1, num_points
-          coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
+          coordinates(i) = this%interpolation_points(i)!max(this%interpolation_points(i) - alpha, xmin)
           SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
        end do
     else
        do i = 1, num_points
-          coordinates(i) = min(this%interpolation_points(i) - alpha, xmax)
+          coordinates(i) = this%interpolation_points(i)!min(this%interpolation_points(i) - alpha, xmax)
           SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
        end do
     endif
