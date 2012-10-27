@@ -57,7 +57,6 @@ try_run( RUN_RESULT_VAR
          ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
-
 set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
@@ -251,7 +250,7 @@ else(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 set(FISHPACK_ENABLED OFF CACHE BOOL " ")
-set(MUDPACK_ENABLED OFF CACHE BOOL " ")
+set(MUDPACK_ENABLED ON CACHE BOOL " ")
 
 ######################################################################
 #  III. SUBDIRECTORY                                                 #
@@ -304,16 +303,16 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-   IF(MPI_MODULE_ENABLED)
+   IF(MPI_MODULE_ENABLED AND HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 	add_subdirectory(multigrid)
-   ELSE(MPI_MODULE_ENABLED)
+   ELSE()
 	add_subdirectory(mudpack)
-   ENDIF(MPI_MODULE_ENABLED)
+   ENDIF()
 ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
 add_subdirectory(maxwell_solvers)
 
-#add_subdirectory(BSL) top
+add_subdirectory(BSL)
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
@@ -375,10 +374,13 @@ add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
 add_test(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 IF(FISHPACK_ENABLED)
-	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
+	add_test(NAME fishpack4 COMMAND tpois3d)
+	add_test(NAME fishpack3 COMMAND thwsssp)
+	add_test(NAME fishpack2 COMMAND thwsplr)
+	add_test(NAME fishpack1 COMMAND thwscyl)
 ENDIF()
 IF(MUDPACK_ENABLED)
-        IF(MPI_MODULE_ENABLED)
+        IF(MPI_MODULE_ENABLED AND HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
            set(PROCS 4)
            set(ARGS "")
 	   add_test(NAME multigrid COMMAND 
@@ -489,8 +491,9 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-add_test(NAME maxwell_2d_fdtd COMMAND  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+add_test(NAME maxwell_2d_fdtd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
 set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
 
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
@@ -500,7 +503,6 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(poisson_solvers poisson_solvers/test_poisson_3d_seq)
 #add_test(poisson_solvers mpirun -np 2 poisson_solvers/test_poisson_3d_par)
    #add_test(poisson_solvers poisson_solvers/unit_test)
-#add_test(BSL BSL/test_bsl)
 #add_test(BSL BSL/test_landau_4d)
 #add_test(BSL BSL/test_landau_2d)
    #add_test(CSL CSL/test_csl)

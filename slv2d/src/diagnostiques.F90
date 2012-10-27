@@ -30,7 +30,7 @@ sll_real64, dimension(:,:),pointer :: fvxvy
 sll_int32, private :: i, j, k, l
 
 enum, bind(C)
-enumerator :: XY = 0, XVX  = 1, YVY = 2, VXVY = 3
+enumerator :: XY_VIEW = 0, XVX_VIEW  = 1, YVY_VIEW = 2, VXVY_VIEW = 3
 end enum
 
 contains
@@ -375,7 +375,7 @@ end subroutine diagnostiquesm
   call sll_hdf5_file_create(prefix//cplot//".h5",file_id,error)
 
   select case (choice)
-  case(0)
+  case(XY_VIEW)
   do j=1,ny
    do i=1,nx
     sumloc= sum(f4d(i,j,:,svy:evy))
@@ -388,7 +388,7 @@ end subroutine diagnostiquesm
   if (my_num == 0) &
    call write_xdmf("fxy"//cplot//".xmf",   &
                    prefix//cplot//".h5","x","y","fxy",nx,ny)
-  case(1)
+  case(XVX_VIEW)
 
   do k=1,nvx
    do i=1,nx
@@ -402,7 +402,7 @@ end subroutine diagnostiquesm
   if (my_num == 0) &
    call write_xdmf("fxvx"//cplot//".xmf",  &
                    prefix//cplot//".h5","x","vx","fxvx",nx,nvx)
-  case(2)
+  case(YVY_VIEW)
 
   do l=svy,evy
    do j=sy,ey
@@ -415,7 +415,7 @@ end subroutine diagnostiquesm
   if (my_num == 0) &
    call write_xdmf("fyvy"//cplot//".xmf",  &
                    prefix//cplot//".h5","y","vy","fyvy",ny,nvy)
-  case(3)
+  case(VXVY_VIEW)
 
   do l=svy,evy
    do k=1,nvx
@@ -428,6 +428,10 @@ end subroutine diagnostiquesm
   if (my_num == 0) &
    call write_xdmf("fvxvy"//cplot//".xmf", &
                    prefix//cplot//".h5","vx","vy","fvxvy",nvx,nvy)
+  case default
+
+     stop 'mauvaise vue'
+  
   end select
 
   call sll_hdf5_file_close(file_id, error)
