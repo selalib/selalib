@@ -78,7 +78,9 @@ ELSE()
 ENDIF()
 
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+IF(APPLE)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
+ENDIF()
 
 #Pas trouver de meilleur moyen pour l'instant...
 FILE(COPY ${SELALIB_DIR}/fields/geometry_functions.F90 DESTINATION ${PROJECT_SOURCE_DIR}/fields/)
