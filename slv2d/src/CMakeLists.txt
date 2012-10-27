@@ -77,8 +77,16 @@ ELSE()
    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
 ENDIF()
 
+IF(HDF5_INCLUDE_DIRS)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS}/fortran)
+ENDIF()
+IF(HDF5_INCLUDE_DIR_FORTRAN)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
+ENDIF()
+
+#Pas trouver de meilleur moyen pour l'instant...
+FILE(COPY ${SELALIB_DIR}/fields/geometry_functions.F90 DESTINATION ${PROJECT_SOURCE_DIR}/fields/)
 
 SET( SLL_COMPONENTS precision 
                     utilities 
@@ -90,6 +98,8 @@ SET( SLL_COMPONENTS precision
                     electric_field_accumulators
                     remap
                     splines
+                    WENO
+                    interpolators
                     collective
                     low_level_file_io)
 
@@ -102,20 +112,9 @@ ENDFOREACH()
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
-
-ADD_LIBRARY(sll_interpolators STATIC 
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
-  ${SELALIB_DIR}/interpolators/sll_interpolators_1d_base.F90
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
-  ${SELALIB_DIR}/interpolators/sll_interpolators_2d_base.F90
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90)
-
-ADD_DEPENDENCIES(sll_interpolators
-	         sll_working_precision
-	         sll_memory
-	         sll_assertion
-	         sll_splines)
-
+IF(Fortran_COMPILER_NAME STREQUAL "xlf")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
@@ -146,7 +145,7 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_remap
                        sll_splines
                        sll_interpolators
-                       sll_tridiagonal
+                       sll_numerical_utilities
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_utilities
@@ -158,7 +157,7 @@ SET(LIBS sll_utilities
          sll_interpolators
          sll_splines
          sll_remap
-         sll_tridiagonal
+         sll_numerical_utilities
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
@@ -178,10 +177,12 @@ TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
 ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
 
-#ADD_DEFINITIONS(-DQUINTIC)
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+#ADD_DEFINITIONS(-D_QUINTIC)
 #ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
 #TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
 
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
 #ADD_DEFINITIONS(-DTWO_D)
 #ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
 #TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
@@ -227,4 +228,3 @@ SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vp2d_cubic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#SET_TESTS_PROPERTIES(test_vp2d_quintic  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

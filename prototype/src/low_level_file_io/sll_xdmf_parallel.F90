@@ -33,7 +33,7 @@ module sll_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   
-  use sll_collective
+  use sll_collective, only: sll_get_collective_rank,sll_world_collective
   use sll_hdf5_io_parallel
   use sll_ascii_io
   use sll_xml_io
