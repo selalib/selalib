@@ -192,7 +192,12 @@ contains
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x3, nc_x4
   sll_real64 :: alpha
+#ifdef _QUINTIC
   sll_real64 :: depvx(this%geomv%nx)
+  sll_real64 :: delta_x3
+  sll_real64 :: x3_min
+  sll_real64 :: x3_max
+#endif
 
   SLL_ASSERT(this%transposed) 
 
@@ -202,23 +207,28 @@ contains
 
 #ifdef _QUINTIC
 
+  delta_x3 = this%geomv%dx
+
   x3_min = this%geomv%x0
   x3_max = this%geomv%x1
+
   do j=this%jstartx,this%jendx
      do i=1,nc_x1
         alpha = ex(i,j)*dt
         do k=1,nc_x3
            depvx(k) = x3_min + (k-1)*delta_x3 - alpha
            if(depvx(k) < x3_min) then
-              depvx(k) = depvx(k) + x3_max-x1_min
-           else if (depvx(k) > x3_min) then
-              depvx(k) = depvx(k) - x3_max+x1_min
+              depvx(k) = depvx(k) + x3_max-x3_min
+           else if (depvx(k) > x3_max) then
+              depvx(k) = depvx(k) - x3_max+x3_min
            end if
         end do 
         do l=1,nc_x4
            this%ft(:,l,i,j) = this%interp_x3%interpolate_array( &
-                                (nc_x3, this%ft(:,l,i,j), depvx)
+                               nc_x3, this%ft(:,l,i,j), depvx)
         end do
+      end do
+   end do
 #else
   do j=this%jstartx,this%jendx
      do i=1,nc_x1
@@ -240,12 +250,44 @@ contains
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x3, nc_x4
   sll_real64 :: alpha
+#ifdef _QUINTIC
+  sll_real64 :: depvy(this%geomv%ny)
+  sll_real64 :: delta_x4
+  sll_real64 :: x4_min
+  sll_real64 :: x4_max
+#endif
 
   SLL_ASSERT(this%transposed) 
 
   nc_x1    = this%geomx%nx
   nc_x3    = this%geomv%nx
   nc_x4    = this%geomv%ny
+
+#ifdef _QUINTIC
+
+  delta_x4 = this%geomv%dy
+
+  x4_min = this%geomv%y0
+  x4_max = this%geomv%y1
+
+  do j=this%jstartx,this%jendx
+     do i=1,nc_x1
+        alpha = ey(i,j)*dt
+        do l=1,nc_x4
+           depvy(l) = x4_min + (l-1)*delta_x4 - alpha
+           if(depvy(l) < x4_min) then
+              depvy(l) = depvy(l) + x4_max-x4_min
+           else if (depvy(l) > x4_max) then
+              depvy(l) = depvy(l) - x4_max+x4_min
+           end if
+        end do 
+        do k=1,nc_x3
+           this%ft(k,:,i,j) = this%interp_x4%interpolate_array( &
+                               nc_x4, this%ft(k,:,i,j), depvy)
+        end do
+      end do
+   end do
+#else
 
   do j=this%jstartx,this%jendx
      do i=1,nc_x1
@@ -256,6 +298,8 @@ contains
        end do
     end do
  end do
+
+#endif
 
  end subroutine advection_x4
 
