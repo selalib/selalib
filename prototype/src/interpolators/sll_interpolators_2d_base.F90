@@ -13,7 +13,7 @@ module sll_module_interpolators_2d_base
   ! TO BE RESOLVED:
   ! Function names should be reviewed and improved. What is the best way to
   ! express that a derivative is in a particular direction? Why eta???
-  type, abstract :: interpolator_2d_base
+  type, abstract :: sll_interpolator_2d_base
    contains
      procedure(interpolator_2d_array_msg), deferred, pass(interpolator) :: &
           compute_interpolants
@@ -23,15 +23,16 @@ module sll_module_interpolators_2d_base
           interpolate_derivative_eta1
      procedure(interpolator_two_arg_msg), deferred, pass(interpolator) :: &
           interpolate_derivative_eta2
-  end type interpolator_2d_base
+     procedure(interpolate_2d_array), pass, deferred :: interpolate_array
+  end type sll_interpolator_2d_base
   
   ! Signature of the interpolating function  
   abstract interface
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
        use sll_working_precision
-       import :: interpolator_2d_base
+       import :: sll_interpolator_2d_base
        sll_real64                  :: val
-       class(interpolator_2d_base), intent(in) :: interpolator
+       class(sll_interpolator_2d_base), intent(in) :: interpolator
        sll_real64, intent(in)      :: eta1
        sll_real64, intent(in)      :: eta2
      end function interpolator_two_arg_msg
@@ -40,10 +41,26 @@ module sll_module_interpolators_2d_base
   abstract interface
      subroutine interpolator_2d_array_msg( interpolator, data_array )
        use sll_working_precision
-       import :: interpolator_2d_base
-       class(interpolator_2d_base), intent(inout) :: interpolator
+       import :: sll_interpolator_2d_base
+       class(sll_interpolator_2d_base), intent(inout) :: interpolator
        sll_real64, dimension(:,:), intent(in) :: data_array
      end subroutine interpolator_2d_array_msg
   end interface
-  
+
+  abstract interface
+     function interpolate_2d_array(this,num_points1,num_points2,data_in,eta1,eta2) &
+          result(res)
+
+       use sll_working_precision
+       import sll_interpolator_2d_base
+       class(sll_interpolator_2d_base), intent(in)     :: this
+       sll_int32, intent(in)  :: num_points1    ! size of output array
+       sll_int32, intent(in)  :: num_points2    ! size of output array
+       sll_real64, dimension(:,:), intent(in) :: data_in  ! data to be interpolated 
+       ! points where output is desired
+       sll_real64, dimension(:,:), intent(in) :: eta1, eta2  
+       sll_real64, dimension(num_points1,num_points2)    :: res
+     end function interpolate_2d_array
+  end interface
+
 end module sll_module_interpolators_2d_base
