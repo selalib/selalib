@@ -146,6 +146,7 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_splines
                        sll_interpolators
                        sll_numerical_utilities
+                       sll_low_level_file_io
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_utilities
@@ -158,6 +159,7 @@ SET(LIBS sll_utilities
          sll_splines
          sll_remap
          sll_numerical_utilities
+         sll_low_level_file_io
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
