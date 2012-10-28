@@ -664,7 +664,8 @@ integer :: gtype(7),realtype,sx,ex,sy,ey,sz,ez
 ! Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR,
 !             MPI_TYPE_EXTENT, MPI_TYPE_HVECTOR
 !------------------------------------------------------------------------
-integer :: i,ierr
+integer :: ierr
+INTEGER(KIND=MPI_ADDRESS_KIND) :: i, LB
 
 realtype = MPI_REAL8
 
@@ -691,8 +692,29 @@ call MPI_TYPE_COMMIT(gtype(6),ierr)
 !------------------------------------------------------------------------
 ! datatype for one i=const plane
 !
-call MPI_TYPE_EXTENT(realtype,int(i,8),ierr)
-call MPI_TYPE_HVECTOR(ez-sz+1,1,int((ex-sx+3)*(ey-sy+3)*i,8),gtype(5),gtype(1),ierr)
+!MPI_TYPE_EXTENT(DATATYPE, EXTENT, IERROR)
+!    INTEGER    DATATYPE, EXTENT, IERROR
+!call MPI_TYPE_EXTENT(realtype,i,ierr)
+
+!MPI_TYPE_GET_EXTENT(DATATYPE, LB, EXTENT, IERROR)
+!    INTEGER    DATATYPE, IERROR
+!    INTEGER(KIND=MPI_ADDRESS_KIND) LB, EXTENT
+
+call MPI_TYPE_GET_EXTENT(realtype, LB, i, IERR)
+
+!MPI_TYPE_HVECTOR(COUNT, BLOCKLENGTH, STRIDE, OLDTYPE, NEWTYPE,
+!        IERROR)
+!    INTEGER    COUNT, BLOCKLENGTH, STRIDE, OLDTYPE
+!    INTEGER    NEWTYPE, IERROR
+!call MPI_TYPE_HVECTOR(ez-sz+1,1,(ex-sx+3)*(ey-sy+3)*i,gtype(5),gtype(1),ierr)
+
+!MPI_TYPE_CREATE_HVECTOR(COUNT, BLOCKLENGTH, STRIDE, OLDTYPE,
+!    NEWTYPE, IERROR)
+!    INTEGER    COUNT, BLOCKLENGTH, OLDTYPE, NEWTYPE, IERROR
+!    INTEGER(KIND=MPI_ADDRESS_KIND) STRIDE
+
+call MPI_TYPE_CREATE_HVECTOR(ez-sz+1,1,(ex-sx+3)*(ey-sy+3)*i,gtype(5),gtype(1),ierr)
+
 call MPI_TYPE_COMMIT(gtype(1),ierr)
 !
 ! datatype for one j=const plane
