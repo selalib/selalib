@@ -2,19 +2,24 @@ program unit_test
 #include "sll_working_precision.h"
   use numeric_constants
   use geometry_functions
+  use sll_module_interpolators_2d_base
   use sll_cubic_spline_interpolator_2d
   implicit none
 
 #define NPTS1 65 
 #define NPTS2 65 
 
+  class(sll_interpolator_2d_base),    pointer   :: interp
+  type(cubic_spline_2d_interpolator), target    :: spline
   type(cubic_spline_2d_interpolator) :: cs2d
-  sll_real64, dimension(:,:), allocatable :: x1
-  sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
+  sll_real64, dimension(:,:), allocatable    :: x1
+  sll_real64, dimension(:), allocatable      :: x1_eta1_min
+  sll_real64, dimension(:), allocatable      :: x1_eta1_max
 
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
+
 
   print *,  'filling out discrete arrays for x1 '
   h1 = 1.0_f64/real(NPTS1-1,f64)
@@ -103,6 +108,12 @@ program unit_test
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
+
+  call spline%initialize(NPTS1, NPTS2, 0.0_f64, 1.0_f64, 0.0_f64, 1.0_f64, &
+                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+  interp =>  spline
+!  data_out = interp%interpolate_array(npts1, npts2, data_in, eta1, eta2)
+
 end program unit_test
 
  
