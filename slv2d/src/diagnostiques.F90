@@ -407,7 +407,7 @@ subroutine plot_df(f4d,iplot,geomx,geomv,jstartx,jendx,jstartv,jendv,choice)
         fyvy(j,l)= sum(f4d(:,j,:,l))
      end do
      end do
-     call write_fyvy(nvx,nvy,cplot,jstartv,jendv)
+     call write_fyvy(ny,nvy,cplot,jstartv,jendv)
      if (my_num == 0) &
      call write_xdmf("fyvy"//cplot//".xmf", &
                      'fyvy'//cplot//".h5","y","vy","fyvy",ny,nvy)
