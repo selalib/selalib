@@ -8,8 +8,6 @@ use numeric_constants
 use sll_misc_utils
 use sll_io, only:sll_new_file_id
 use sll_collective
-use hdf5
-use sll_hdf5_io_parallel
 use sll_xml_io
 
 #define MPI_MASTER 0
