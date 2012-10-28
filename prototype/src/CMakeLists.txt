@@ -284,6 +284,7 @@ ENDIF()
 
 IF(NOT STDF95)
    add_subdirectory(poisson_solvers)
+   add_subdirectory(quasi_neutral_solvers)
 ENDIF()
 add_subdirectory(electric_field_accumulators)
 
@@ -302,11 +303,11 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-   IF(MPI_MODULE_ENABLED)
+   IF(MPI_MODULE_ENABLED AND HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 	add_subdirectory(multigrid)
-   ELSE(MPI_MODULE_ENABLED)
+   ELSE()
 	add_subdirectory(mudpack)
-   ENDIF(MPI_MODULE_ENABLED)
+   ENDIF()
 ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
 add_subdirectory(maxwell_solvers)
@@ -379,7 +380,7 @@ IF(FISHPACK_ENABLED)
 	add_test(NAME fishpack1 COMMAND thwscyl)
 ENDIF()
 IF(MUDPACK_ENABLED)
-        IF(MPI_MODULE_ENABLED)
+        IF(MPI_MODULE_ENABLED AND HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
            set(PROCS 4)
            set(ARGS "")
 	   add_test(NAME multigrid COMMAND 
@@ -442,14 +443,36 @@ add_test(NAME poisson_periodic_cartesian_par_2d
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+set_tests_properties(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+add_test(NAME qns2d_with_finite_diff_seq COMMAND test_qns2d_with_finite_diff_seq)
+set_tests_properties(qns2d_with_finite_diff_seq PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME qns2d_angular_spectral_method_seq COMMAND test_qns2d_angular_spectral_method_seq)
+set_tests_properties(qns2d_angular_spectral_method_seq PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+set(PROCS 16)
+add_test(NAME qns2d_with_finite_diff_par
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_qns2d_with_finite_diff_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(qns2d_with_finite_diff_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+set(PROCS 16)
+add_test(NAME qns2d_angular_spectral_method_par
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_qns2d_angular_spectral_method_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(qns2d_angular_spectral_method_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
 
 add_test(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
-set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+set_tests_properties(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
