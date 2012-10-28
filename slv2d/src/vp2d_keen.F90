@@ -85,7 +85,7 @@ program vp2d_selalib
   do iter=1,nbiter
 
      call transposexv(vlas2d,f4d)
-     
+
      ! compute density (q is not applied)
      call densite_charge(vlas2d,rho)
 
@@ -114,14 +114,14 @@ program vp2d_selalib
         call advection_x2(vlas2d,f4d,0.5*dt)
         call thdiag(vlas2d,f4d,nrj,iter*dt)  
         if (mod(iter,fdiag) == 0) then 
-           call plot_df(f4d,iter/fdiag,geomx,geomv,geomx%nx,geomx%ny, &
-                jstartv,jendv, XY)
-           call plot_df(f4d,iter/fdiag,geomx,geomv,geomx%nx,geomx%ny, &
-                jstartv,jendv, XVX)
-           call plot_df(f4d,iter/fdiag,geomx,geomv,geomx%nx,geomx%ny, &
-                jstartv,jendv, YVY)
-           call plot_df(f4d,iter/fdiag,geomx,geomv,geomx%nx,geomx%ny, &
-                jstartv,jendv, VXVY)
+           call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
+                jstartv,jendv, XY_VIEW)
+           call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
+                jstartv,jendv, XVX_VIEW)
+           call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
+                jstartv,jendv, YVY_VIEW)
+           call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
+                jstartv,jendv, VXVY_VIEW)
         end if
         call advection_x2(vlas2d,f4d,0.5*dt)
         call advection_x1(vlas2d,f4d,0.5*dt)
@@ -187,7 +187,7 @@ contains
        read(idata,NML=phys_space)
        read(idata,NML=vel_space)
        read(idata,NML=drive)
-       
+
        dr_param%t0 = t0
        dr_param%twL = twL 
        dr_param%twR = twR
@@ -304,7 +304,7 @@ contains
 
   end subroutine initlocal
 
-subroutine PFenvelope(S, t, tflat, tL, tR, twL, twR, t0, &
+  subroutine PFenvelope(S, t, tflat, tL, tR, twL, twR, t0, &
        turn_drive_off)
 
     ! DESCRIPTION
