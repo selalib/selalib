@@ -20,7 +20,7 @@ TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
                               sll_assertion
                               sll_working_precision)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_PARALLEL_ENABLED)
 
    ADD_DEFINITIONS(-DHDF5_PARALLEL)
    SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
