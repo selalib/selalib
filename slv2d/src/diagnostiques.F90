@@ -403,7 +403,7 @@ subroutine plot_df(f4d,iplot,geomx,geomv,jstartx,jendx,jstartv,jendv,choice)
      SLL_ASSERT(size(f4d,2) == size(fyvy,1))
      SLL_ASSERT(size(f4d,4) == size(fyvy,2))
      do l=jstartv,jendv
-     do j=jstartx,jendx
+     do j=1,ny
         fyvy(j,l)= sum(f4d(:,j,:,l))
      end do
      end do
