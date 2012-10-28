@@ -73,10 +73,10 @@ program vp2d_selalib
   do iter=1,nbiter
 
      if (mod(iter,fdiag) == 0) then 
-        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, XY_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, XVX_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, YVY_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv, VXVY_VIEW)
+        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
+        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
+        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
+        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
      end if
 
      call transposexv(vlas2d,f4d)
