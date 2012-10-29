@@ -9,8 +9,6 @@ program unit_test
 #define NPTS1 65 
 #define NPTS2 65 
 
-  class(sll_interpolator_2d_base),    pointer   :: interp
-  type(cubic_spline_2d_interpolator), target    :: spline
   type(cubic_spline_2d_interpolator) :: cs2d
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
@@ -109,10 +107,54 @@ program unit_test
   print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
 
-  call spline%initialize(NPTS1, NPTS2, 0.0_f64, 1.0_f64, 0.0_f64, 1.0_f64, &
+  call test_interpolator_2d()
+
+contains
+
+subroutine test_interpolator_2d()
+  class(sll_interpolator_2d_base),    pointer   :: interp
+  type(cubic_spline_2d_interpolator), target    :: spline
+  sll_real64, dimension(NPTS1,NPTS2) :: xx1
+  sll_real64, dimension(NPTS1,NPTS2) :: xx2
+  sll_real64, dimension(NPTS1,NPTS2) :: data_in
+  sll_real64, dimension(NPTS1,NPTS2) :: data_out
+
+  call spline%initialize(NPTS1,NPTS2,0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
                          PERIODIC_SPLINE, PERIODIC_SPLINE )
   interp =>  spline
-!  data_out = interp%interpolate_array(npts1, npts2, data_in, eta1, eta2)
+  do j = 1, NPTS2
+  do i = 1, NPTS1
+     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1-1)
+     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2-1)
+  end do
+  end do
+  data_in = cos(xx1)*cos(xx2)
+
+  call init_random_seed()  
+  call random_number(xx1)
+  xx1 = xx1* 2.*sll_pi
+
+  call init_random_seed()  
+  call random_number(xx2)
+  xx2 = xx2* 2.*sll_pi
+
+  data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
+
+  print*, " error = ", maxval(data_out-cos(xx1)*sin(xx2))
+end subroutine test_interpolator_2d
+
+subroutine init_random_seed()
+  sll_int32 :: i, n, clock
+  sll_int32, dimension(:), allocatable :: seed
+  call random_seed(size = n)
+  print*, ' n = ', n
+  allocate(seed(n))
+  call system_clock(count=clock)
+  seed = clock + 37 * (/ (i - 1, i = 1, n) /)
+  call random_seed(put = seed)
+  deallocate(seed)
+end subroutine
+
 
 end program unit_test
 
