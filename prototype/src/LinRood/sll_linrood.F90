@@ -27,9 +27,12 @@ module sll_linrood
      type (weno_interp_1D), pointer  :: interp_eta2
      sll_int32  :: nc_eta1, nc_eta2
      sll_int32  :: order
-     sll_real64, dimension(:,:), allocatable   :: dist_func_2d
-     sll_real64, dimension(:,:), allocatable   :: advfield_1, advfield_2
-     sll_real64, dimension(:,:), allocatable   :: flux
+     sll_real64, dimension(:,:), pointer   :: dist_func_2d
+     sll_real64, dimension(:,:), pointer   :: advfield_1, advfield_2
+     sll_real64, dimension(:,:), pointer   :: flux
+!     sll_real64, dimension(:,:), allocatable   :: dist_func_2d
+!     sll_real64, dimension(:,:), allocatable   :: advfield_1, advfield_2
+!     sll_real64, dimension(:,:), allocatable   :: flux
   end type linrood_plan
 
 contains

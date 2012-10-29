@@ -1,5 +1,5 @@
 program remap_test_4d
-  use sll_collective
+  use sll_collective, only: sll_boot_collective, sll_halt_collective
 #include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"

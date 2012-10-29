@@ -20,24 +20,13 @@ implicit none
 
   type toep_penta_diagonal_plan  
     sll_int32                             :: n
-#ifdef STDF95
     sll_real64, dimension(:), pointer :: e1
-    sll_real64, dimension(:), pointer  :: e2
-    sll_real64, dimension(:), pointer  :: y
-    sll_real64, dimension(:), pointer  :: z
-    sll_real64, dimension(:), pointer  :: w
-    sll_real64, dimension(:), pointer  :: x
+    sll_real64, dimension(:), pointer :: e2
+    sll_real64, dimension(:), pointer :: y
+    sll_real64, dimension(:), pointer :: z
+    sll_real64, dimension(:), pointer :: w
+    sll_real64, dimension(:), pointer :: x
     sll_real64, dimension(:), pointer :: for_subsys
-
-#else
-    sll_real64, dimension(:), allocatable :: e1
-    sll_real64, dimension(:), allocatable :: e2
-    sll_real64, dimension(:), allocatable :: y
-    sll_real64, dimension(:), allocatable :: z
-    sll_real64, dimension(:), allocatable :: w
-    sll_real64, dimension(:), allocatable :: x
-    sll_real64, dimension(:), allocatable :: for_subsys
-#endif
   end type toep_penta_diagonal_plan
 
 contains 
