@@ -1,4 +1,4 @@
-program vp2d_selalib
+program vp2d_keen
 
 #include "selalib.h"
   use used_precision  
@@ -9,7 +9,10 @@ program vp2d_selalib
 #else
   use poisson2dpp_seq
 #endif
-  use sll_vlasov2d
+!  use sll_vlasov2d
+  use vlasov2d_module
+  use splinepp_class
+  use splinenn_class
 
   implicit none
 
@@ -27,6 +30,9 @@ program vp2d_selalib
   type(vlasov2d)    :: vlas2d 
   type(poisson2dpp) :: poisson 
   type(drive_param) :: dr_param
+  ! old version of splines
+  type (splinepp)    :: splx 
+  type (splinenn)    :: sply
 
   sll_real64, dimension(:,:,:,:), pointer :: f4d
   sll_real64, dimension(:,:),     pointer :: rho
@@ -79,8 +85,9 @@ program vp2d_selalib
 
   call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
 
-  call advection_x1(vlas2d,f4d,0.5*dt)
-  call advection_x2(vlas2d,f4d,0.5*dt)
+  !call advection_x1(vlas2d,f4d,0.5*dt)
+  !call advection_x2(vlas2d,f4d,0.5*dt)
+  call advection_x(vlas2d,f4d,.5*dt)
 
   do iter=1,nbiter
 
@@ -104,14 +111,16 @@ program vp2d_selalib
         enddo
      end do
 
-     call advection_x3(vlas2d,e_x,dt)
-     call advection_x4(vlas2d,e_y,dt)
-
+     !call advection_x3(vlas2d,e_x,dt)
+     !call advection_x4(vlas2d,e_y,dt)
+     call advection_v(vlas2d,e_x,e_y,dt)
+     
      call transposevx(vlas2d,f4d)
 
      if (mod(iter,fthdiag).eq.0) then
-        call advection_x1(vlas2d,f4d,0.5*dt)
-        call advection_x2(vlas2d,f4d,0.5*dt)
+        !call advection_x1(vlas2d,f4d,0.5*dt)
+        !call advection_x2(vlas2d,f4d,0.5*dt)
+        call advection_x(vlas2d,f4d,.5*dt)
         call thdiag(vlas2d,f4d,nrj,iter*dt)  
         if (mod(iter,fdiag) == 0) then 
            call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
@@ -123,11 +132,13 @@ program vp2d_selalib
            call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
                 jstartv,jendv, VXVY_VIEW)
         end if
-        call advection_x2(vlas2d,f4d,0.5*dt)
-        call advection_x1(vlas2d,f4d,0.5*dt)
+        !call advection_x2(vlas2d,f4d,0.5*dt)
+        !call advection_x1(vlas2d,f4d,0.5*dt)
+        call advection_x(vlas2d,f4d,.5*dt)
      else
-        call advection_x1(vlas2d,f4d,1.0*dt)
-        call advection_x2(vlas2d,f4d,1.0*dt)
+        !call advection_x1(vlas2d,f4d,1.0*dt)
+        !call advection_x2(vlas2d,f4d,1.0*dt)
+        call advection_x(vlas2d,f4d, dt)
      end if
 
   end do
@@ -342,4 +353,4 @@ contains
     return
   end subroutine PFenvelope
 
-end program vp2d_selalib
+end program vp2d_keen
