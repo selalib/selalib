@@ -20,7 +20,7 @@ TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
                               sll_assertion
                               sll_working_precision)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_PARALLEL_ENABLED)
 
    ADD_DEFINITIONS(-DHDF5_PARALLEL)
    SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
@@ -29,6 +29,8 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ADD_DEPENDENCIES(sll_low_level_file_io_parallel sll_utilities 
                                                    sll_collective)
    TARGET_LINK_LIBRARIES(sll_low_level_file_io_parallel ${HDF5_LIBRARIES} )
+ 
+   IF( NOT STDF95) 
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
    TARGET_LINK_LIBRARIES(test_io_parallel sll_low_level_file_io_parallel
                                           sll_remap
@@ -38,4 +40,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 	                                  sll_memory
 	                                  sll_assertion
 	                                  sll_working_precision)
+   ENDIF()
+
 ENDIF()

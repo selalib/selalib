@@ -25,17 +25,17 @@ module sll_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-#ifdef STDF95
+!#ifdef STDF95
     integer, parameter :: SLL_IO_XDMF = 0, &
                           SLL_IO_VTK  = 1, &
                           SLL_IO_GNUPLOT = 2
-#else
-  enum, bind(C)
-    enumerator :: SLL_IO_XDMF = 0, &
-                  SLL_IO_VTK  = 1, &
-                  SLL_IO_GNUPLOT = 2
-  end enum
-#endif
+!#else
+!  enum, bind(C)
+!    enumerator :: SLL_IO_XDMF = 0, &
+!                  SLL_IO_VTK  = 1, &
+!                  SLL_IO_GNUPLOT = 2
+!  end enum
+!#endif
 
 contains
 
