@@ -22,14 +22,11 @@ implicit none
 
   sll_real64, dimension(:), allocatable :: f_x, f_y
 
-  !class(sll_interpolator_2d_base), pointer    :: interp_xy
-  !class(sll_interpolator_2d_base), pointer    :: interp_vxvy
+  class(sll_interpolator_2d_base), pointer    :: interp_xy
+  class(sll_interpolator_2d_base), pointer    :: interp_vxvy
 
-  !type(cubic_spline_2d_interpolator), target  :: spline_xy
-  !type(cubic_spline_2d_interpolator), target  :: spline_vxvy
-
-  type(cubic_spline_2d_interpolator)  :: interp_xy
-  type(cubic_spline_2d_interpolator)  :: interp_vxvy
+  type(cubic_spline_2d_interpolator), target  :: spline_xy
+  type(cubic_spline_2d_interpolator), target  :: spline_vxvy
 
   print*,'*******************************'
   print*,' 2D case                       '
@@ -84,11 +81,11 @@ implicit none
 
   Print*, 'checking advection of a Gaussian in a uniform field'
   
-  !call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, PERIODIC_SPLINE )
-  !call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, PERIODIC_SPLINE )
+  call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, PERIODIC_SPLINE )
+  call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, PERIODIC_SPLINE )
 
-  !interp_xy   => spline_xy
-  !interp_vxvy => spline_vxvy
+  interp_xy   => spline_xy
+  interp_vxvy => spline_vxvy
 
   SLL_ALLOCATE(dx(n_x),info)
   SLL_ALLOCATE(dy(n_y),info)
@@ -122,8 +119,8 @@ implicit none
 contains
 
    subroutine advection_xy(df, interp_xy, dt)
-   type(cubic_spline_2d_interpolator)  :: interp_xy
-   !class(sll_interpolator_2d_base), pointer  :: interp_xy
+   !type(cubic_spline_2d_interpolator)  :: interp_xy
+   class(sll_interpolator_2d_base), pointer  :: interp_xy
    sll_real64, intent(inout), dimension(:,:) :: df
    sll_real64, intent(in) :: dt
 
@@ -139,7 +136,7 @@ contains
            dy(j) = y(1) + modulo(y(j)-y(1)-dt*vy(l),y(n_y)-y(1))
         end do
 
-        df(:,:,k,l) = interp_xy%interpolate_array( n_x, n_y, df(:,:,k,l), dx, dy )
+        !df(:,:,k,l) = interp_xy%interpolate_array( n_x, n_y, df(:,:,k,l), dx, dy )
 
      end do
    end do
@@ -147,8 +144,8 @@ contains
    end subroutine advection_xy
 
    subroutine advection_vxvy(df, interp_vxvy, dt)
-   type(cubic_spline_2d_interpolator)  :: interp_vxvy
-   !class(sll_interpolator_2d_base), pointer  :: interp_vxvy
+   !type(cubic_spline_2d_interpolator)  :: interp_vxvy
+   class(sll_interpolator_2d_base), pointer  :: interp_vxvy
    sll_real64, intent(inout), dimension(:,:) :: df
    sll_real64, intent(in) :: dt
 
@@ -162,7 +159,7 @@ contains
             dvy(l) = vy(l) + modulo(vy(l)-vy(1)-dt*f_y(j),vy(n_vy)-vy(1))
          end do
 
-         df(i,j,:,:) = interp_vxvy%interpolate_array( n_vx, n_vy, df(i,j,:,:), dvx, dvy )
+        ! df(i,j,:,:) = interp_vxvy%interpolate_array( n_vx, n_vy, df(i,j,:,:), dvx, dvy )
 
       end do
    end do
