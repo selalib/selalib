@@ -13,7 +13,7 @@ use sll_quintic_splines
 #else  
   type, extends(sll_interpolator_1d_base) :: quintic_spline_1d_interpolator
 #endif
-     sll_real64, dimension(:), allocatable        :: interpolation_points 
+     sll_real64, dimension(:), pointer            :: interpolation_points 
      sll_int32                                    :: num_points ! size
      sll_int32                                    :: bc_type
      type(quintic_splines_plan_uniform), pointer  :: spline
@@ -90,7 +90,11 @@ contains  ! ****************************************************************
 
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
+#ifdef STDF95
+    sll_real64                :: alpha
+#else
     sll_real64,  intent(in)   :: alpha
+#endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
@@ -138,7 +142,7 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     call compute_coeffs_uniform( data_array, interpolator%spline )
-#ifdef STD95
+#ifdef STDF95
   end subroutine quintic_spline_compute_interpolants
 #else
   end subroutine compute_interpolants_qs1d
@@ -154,8 +158,11 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator),  intent(in) :: interpolator
+#else
     class(quintic_spline_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -169,8 +176,11 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator),  intent(in) :: interpolator
+#else
     class(quintic_spline_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
@@ -179,11 +189,10 @@ contains  ! ****************************************************************
           vals_to_interpolate, num_pts, interpolator%spline)
   end subroutine interpolate_pointer_values_qs1d
 
+  function interpolate_value_qs1d( interpolator, eta1 ) result(val)
 #ifdef STDF95
-  function quintic_spline_interpolate_value( interpolator, eta1 ) result(val)
     type(quintic_spline_1d_interpolator), intent(inout) :: interpolator
 #else
-  function interpolate_value_qs1d( interpolator, eta1 ) result(val)
     class(quintic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
 
@@ -250,7 +259,11 @@ contains  ! ****************************************************************
   end function reconstruct_array
   
   subroutine delete_qs1d( obj )
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator) :: obj
+#else
     class(quintic_spline_1d_interpolator) :: obj
+#endif
     call delete_quintic_splines_uniform(obj%spline)
   end subroutine delete_qs1d
 
