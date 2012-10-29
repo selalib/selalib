@@ -18,7 +18,6 @@ module sll_toep_penta_diagonal
 #include "sll_memory.h"
 implicit none
 
-
   type toep_penta_diagonal_plan  
     sll_int32                             :: n
     sll_real64, dimension(:), pointer :: e1
