@@ -24,6 +24,7 @@ module sll_module_interpolators_2d_base
      procedure(interpolator_two_arg_msg), deferred, pass(interpolator) :: &
           interpolate_derivative_eta2
      procedure(interpolate_2d_array), pass, deferred :: interpolate_array
+     procedure(interpolate_2d_array_disp), pass, deferred :: interpolate_array_disp
   end type sll_interpolator_2d_base
   
   ! Signature of the interpolating function  
@@ -50,17 +51,29 @@ module sll_module_interpolators_2d_base
   abstract interface
      function interpolate_2d_array(this,num_points1,num_points2,data_in,eta1,eta2) &
           result(res)
-
        use sll_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(in)     :: this
-       sll_int32, intent(in)  :: num_points1    ! size of output array
-       sll_int32, intent(in)  :: num_points2    ! size of output array
-       sll_real64, dimension(:,:), intent(in) :: data_in  ! data to be interpolated 
-       ! points where output is desired
+       sll_int32, intent(in)  :: num_points1 
+       sll_int32, intent(in)  :: num_points2 
+       sll_real64, dimension(:,:), intent(in) :: data_in
        sll_real64, dimension(:,:), intent(in) :: eta1, eta2  
        sll_real64, dimension(num_points1,num_points2)    :: res
      end function interpolate_2d_array
+  end interface
+
+  abstract interface
+     function interpolate_2d_array_disp(this,num_points1,num_points2,data_in,alpha1,alpha2) &
+          result(res)
+       use sll_working_precision
+       import sll_interpolator_2d_base
+       class(sll_interpolator_2d_base), intent(in)     :: this
+       sll_int32, intent(in)  :: num_points1  
+       sll_int32, intent(in)  :: num_points2 
+       sll_real64, dimension(:,:), intent(in) :: data_in
+       sll_real64, dimension(:,:), intent(in) :: alpha1, alpha2  
+       sll_real64, dimension(num_points1,num_points2)    :: res
+     end function interpolate_2d_array_disp
   end interface
 
 end module sll_module_interpolators_2d_base

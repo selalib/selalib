@@ -131,26 +131,15 @@ contains
    do l = 1, n_vy
      do k = 1, n_vx
 
-        dx = x - dt * vx(k)
-        dy = y - dt * vy(l)
-
         do i = 1, n_x
-           if (dx(i) < x_min) then
-              dx(i) = dx(i) + x_max - x_min
-           else if (dx(i) > x_max) then
-              dx(i) = dx(i) - x_max + x_min
-           end if
+           dx(i) = x(1) + modulo(x(i)-x(1)-dt*vx(k),x(n_x)-x(1))
         end do
 
         do j = 1, n_y
-           if (dy(j) < y_min) then
-              dy(j) = dy(j) + y_max - y_min
-           else if (dx(i) > x_max) then
-              dy(j) = dy(j) - y_max + y_min
-           end if
+           dy(j) = y(1) + modulo(y(j)-y(1)-dt*vy(l),y(n_y)-y(1))
         end do
 
-        !df(:,:,k,l) = interp_xy%interpolate_array( n_x, n_y, df(:,:,k,l), dx, dy )
+        df(:,:,k,l) = interp_xy%interpolate_array( n_x, n_y, df(:,:,k,l), dx, dy )
 
      end do
    end do
@@ -166,26 +155,14 @@ contains
    do j = 1, n_y
       do i = 1, n_x
 
-         dvx = vx - dt * f_x(i)
-         dvy = vy - dt * f_y(j)
-
          do k = 1, n_vx
-            if (dvx(k) < vx_min) then
-               dvx(k) = dvx(k) + vx_max - vx_min
-            else if (dvx(k) > vx_max) then
-               dvx(k) = dvx(k) - vx_max + vx_min
-            end if
+            dvx(k) = vx(k) + modulo(vx(k)-vx(1)-dt*f_x(i),vx(n_vx)-vx(1))
          end do
-
          do l = 1, n_vy
-            if (dvy(l) < vx_min) then
-               dvy(l) = dvy(l) + vy_max - vx_min
-            else if (dvy(k) > vy_max) then
-               dvy(l) = dvy(l) - vy_max + vx_min
-            end if
+            dvy(l) = vy(l) + modulo(vy(l)-vy(1)-dt*f_y(j),vy(n_vy)-vy(1))
          end do
 
-         !df(i,j,:,:) = interp_vxvy%interpolate_array( n_vx, n_vy, df(i,j,:,:), dvx, dvy )
+         df(i,j,:,:) = interp_vxvy%interpolate_array( n_vx, n_vy, df(i,j,:,:), dvx, dvy )
 
       end do
    end do
