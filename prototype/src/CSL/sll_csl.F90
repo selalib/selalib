@@ -16,10 +16,13 @@ module sll_csl
   use ode_solvers
   use distribution_function
   implicit none
-  enum, bind(C)
-     enumerator :: PERIODIC = 0, COMPACT = 1
-  end enum
-
+!#ifdef STDF95
+  integer, parameter :: PERIODIC = 0,COMPACT = 1
+!#else
+!  enum, bind(C)
+!     enumerator :: PERIODIC = 0, COMPACT = 1
+!  end enum
+!#endif
 
 
 
@@ -486,11 +489,16 @@ endif
                                     boundary_type, &
                                     spline,        &
                                     xi_out)  
-    sll_real64, dimension(:), pointer, intent(inout) :: primitive
-    sll_real64, dimension(:), pointer, intent(in)    :: fieldn
-    sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
-    sll_real64, dimension(:), pointer, intent(in)    :: jacobian
-    sll_real64, dimension(:), allocatable            :: xi
+!    sll_real64, dimension(:), pointer, intent(inout) :: primitive
+!    sll_real64, dimension(:), pointer, intent(in)    :: fieldn
+!    sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
+!    sll_real64, dimension(:), pointer, intent(in)    :: jacobian
+!    sll_real64, dimension(:), allocatable            :: xi
+    sll_real64, dimension(:), pointer                :: primitive
+    sll_real64, dimension(:), pointer                :: fieldn
+    sll_real64, dimension(:), pointer                :: fieldnp1
+    sll_real64, dimension(:), pointer                :: jacobian
+    sll_real64, dimension(:), pointer                :: xi
     sll_int32, intent(in)                            :: order
     sll_real64, intent(in)                           :: deltat
     sll_int32, intent(in)                            :: nc_eta
