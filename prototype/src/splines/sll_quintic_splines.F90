@@ -142,7 +142,7 @@ contains
     sll_real64, dimension(:)                    :: array
     type(quintic_splines_plan_uniform), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
-    sll_real64, dimension(num_pts)               :: res
+    sll_real64, dimension(num_pts)              :: res
 
     do i=1,num_pts
        res(i) = quintic_splines_interpolator_uniform_value( &
