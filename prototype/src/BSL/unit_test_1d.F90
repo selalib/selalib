@@ -107,12 +107,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do i = 1, nc_x
-        dx(i) = x(i) - dt * advfield_x
-        if (dx(i) < x_min) then
-           dx(i) = dx(i) + x_max - x_min
-        else if (dx(i) > x_max) then
-           dx(i) = dx(i) - x_max + x_min
-        end if
+        dx(i) = x(1) + modulo(x(i)-x(1)-dt*advfield_x,x(nc_x)-x(1))
      end do
 
      do j = 1, nc_v
@@ -127,12 +122,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do j = 1, nc_v
-        dv(j) = v(j) - dt * advfield_v
-        if (dv(j) < v_min) then
-           dv(j) = dv(j) + v_max - v_min
-        else if (dv(j) > v_max) then
-           dv(j) = dv(j) - v_max + v_min
-        end if
+        dv(j) = v(1) + modulo(v(j)-v(1)-dt*advfield_v,v(nc_v)-v(1))
      end do
 
      do i = 1, nc_x
