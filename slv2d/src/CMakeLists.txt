@@ -114,7 +114,7 @@ ENDIF()
 IF(Fortran_COMPILER STREQUAL "XLF")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
-MESSAGE(STATUS "fc " ${Fortran_COMPILER} "fc name " ${Fortran_COMPILER_NAME})
+MESSAGE(STATUS " fc " ${Fortran_COMPILER} " fc name " ${Fortran_COMPILER_NAME})
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
