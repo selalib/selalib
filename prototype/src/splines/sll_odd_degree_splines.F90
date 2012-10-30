@@ -61,7 +61,7 @@ contains
   end function new_odd_degree_splines_uniform
 
 
-  subroutine compute_coeffs_uniform(f, plan)
+  subroutine compute_odd_degree_coeffs_uniform(f, plan)
 
     ! f is the vector of the values of the function 
     !  in the nodes of the mesh
@@ -110,7 +110,7 @@ contains
     plan%coeffs = g
     call DPBTRS( 'L', m, KD, 1, AB, LDAB, plan%coeffs, m, ierr )
 !print*, sum(f-matmul(A,plan%coeffs))
-  end subroutine compute_coeffs_uniform
+  end subroutine compute_odd_degree_coeffs_uniform
 
 
 
