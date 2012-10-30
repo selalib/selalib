@@ -1,8 +1,8 @@
-if(Fortran_COMPILER_NAME STREQUAL "gfortran")
+if(Fortran_COMPILER STREQUAL "GFORTRAN")
 set(CMAKE_Fortran_FLAGS "-O2 -funroll-loops -fexpensive-optimizations")
-elseif(Fortran_COMPILER_NAME STREQUAL "ifort")
+elseif(Fortran_COMPILER STREQUAL "ifort")
 	set(CMAKE_Fortran_FLAGS " ")
-elseif(Fortran_COMPILER_NAME STREQUAL "xlf")
+elseif(Fortran_COMPILER STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS " ")
 endif()
 
