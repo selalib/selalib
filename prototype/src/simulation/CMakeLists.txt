@@ -58,7 +58,10 @@ add_executable(CG_polar
 		sll_advection_polar.F90
 		sll_polar_operators.F90
 		)
+
+FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(CG_polar
+        sll_low_level_file_io
 	sll_fft
 	sll_tridiagonal
 	sll_constants
