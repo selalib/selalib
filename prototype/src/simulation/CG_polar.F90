@@ -755,7 +755,7 @@ contains
 
   call int2string(iplot,cplot)
   call sll_xdmf_open("f"//cplot//".xmf","polar_mesh",nnodes_x1,nnodes_x2,file_id,error)
-  call sll_xdmf_write_array("f",f,"values",error,file_id,"Node")
+  call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
   call sll_xdmf_close(file_id,error)
 
  end subroutine plot_f
