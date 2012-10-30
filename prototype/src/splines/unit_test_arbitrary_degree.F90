@@ -12,8 +12,9 @@ program arbitrary_degree_spline_tester
   print *, 'Testing arbitrary degree splines module: '
   print *, '*****************************************************************'
 
-!  call test_uniform_b_splines_randomly( passed_test )
-  call  test_nonuniform_arb_deg_splines( passed_test )
+  call test_uniform_b_splines_randomly( passed_test )
+  call test_nonuniform_arb_deg_splines_periodic( passed_test )
+!  call test_nonuniform_arb_deg_splines_open( passed_test )
 
   if( passed_test .eqv. .true. ) then
      print *, 'PASSED'
@@ -39,7 +40,7 @@ contains
 
     criterion          = 1.0e-15
     argument           = 0.0_f64
-    num_tests          = 100000
+    num_tests          = 10000
     argument_copy      = argument
     max_degree         = 12
  
@@ -91,12 +92,12 @@ contains
     end do
   end subroutine test_uniform_b_splines_randomly
 
-  subroutine test_nonuniform_arb_deg_splines( passed_test )
+  subroutine test_nonuniform_arb_deg_splines_periodic( passed_test )
     logical, intent(inout) :: passed_test
     sll_real64, dimension(:), allocatable :: knots
-    sll_int32 :: i,j
-    sll_int32 :: num_pts
-    sll_int32 :: degree
+    sll_int32  :: i,j
+    sll_int32  :: num_pts
+    sll_int32  :: degree
     sll_real64 :: min_val
     sll_int32  :: ierr
     sll_real64 :: rnd
@@ -111,9 +112,9 @@ contains
     sll_real64, dimension(:,:), allocatable :: answer3
     type(arbitrary_degree_spline_1d), pointer :: spline
 
-    num_tests = 1 !100000
+    num_tests = 10
     criterion = 1.0e-15
-    degree  = 3
+    degree  = 1
     min_val = 0.0
     num_pts = 10
     step    = 1.0
@@ -126,14 +127,17 @@ contains
     ! uniform spline functions.
     knots(1) = min_val
     do i=2,num_pts
-       knots(i) = knots(i-1) + step
+       call random_number(rnd)
+       knots(i) = knots(i-1) + rnd !step
     end do
+    print *, ' '
+    print *, 'knots array = ', knots(:)
+    print *, ' '
     ! fill spline object
     spline => new_arbitrary_degree_spline_1d( &
          degree, &
          knots, &
          num_pts, &
-!OPEN_ARBITRARY_DEG_SPLINE )
          PERIODIC_ARBITRARY_DEG_SPLINE )
 
     do j=1,num_tests
@@ -144,32 +148,24 @@ contains
        
        ! test spline values
        answer1(:) = b_splines_at_x(spline, cell, x)
-       answer2(:) = uniform_b_splines_at_x( degree, x-int(x) )
-       do i=1,degree+1
-          acc = acc + abs(answer1(i) - answer2(i))
-       end do
+       acc = abs(1.0_f64 - sum(answer1(1:degree+1)))
        passed_test = passed_test .and. (acc < criterion)
        if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure:'
+          print *, 'nonuniform splines test failure, spline values case:'
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer1(:)
-          print *, 'uniform: ', answer2(:)
           print *, 'accumulator = ', acc
        end if
        
        ! test spline derivatives
        acc = 0.0_f64
        answer1(:) = b_spline_derivatives_at_x(spline, cell, x)
-       answer2(:) = uniform_b_spline_derivatives_at_x( degree, x-int(x) )
-       do i=1,degree+1
-          acc = acc + abs(answer1(i) - answer2(i))
-       end do
+       acc = abs(sum(answer1(1:degree+1)))
        passed_test = passed_test .and. (acc < criterion)
        if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, derivatives case:'
+          print *, 'periodic nonuniform splines test failure, derivatives case:'
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer1(:)
-          print *, 'uniform: ', answer2(:)
           print *, 'accumulator = ', acc
        end if
        
@@ -177,15 +173,12 @@ contains
        acc  = 0.0_f64
        acc2 = 0.0_f64
        answer3(:,:) = b_splines_and_derivs_at_x(spline, cell, x)
-       answer1(:) = uniform_b_splines_at_x( degree, x-int(x) )
-       answer2(:) = uniform_b_spline_derivatives_at_x( degree, x-int(x) )
-       do i=1,degree+1
-          acc  = acc +  abs(answer3(1,i) - answer1(i))
-          acc2 = acc2 + abs(answer3(2,i) - answer2(i))
-       end do
-       passed_test = passed_test .and. (acc < criterion)
+       acc  = acc +  abs(sum(answer3(1,1:degree+1)))
+       acc2 = acc2 + abs(sum(answer3(2,1:degree+1)))
+       
+       passed_test = passed_test .and. ((1.0_f64 - acc) < criterion)
        if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, ',&
+          print *, 'periodic nonuniform splines test failure, ',&
                'values and derivatives case:'
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer3(:,:)
@@ -194,18 +187,120 @@ contains
        end if
        passed_test = passed_test .and. (acc2 < criterion)
        if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, ',&
+          print *, 'periodic nonuniform splines test failure, ',&
                'values and derivatives case:'
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer3(:,:)
-          print *, 'uniform: ', answer2(:)
           print *, 'accumulator = ', acc
        end if
     end do
     SLL_DEALLOCATE_ARRAY(answer1, ierr)
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
+    SLL_DEALLOCATE_ARRAY(answer3, ierr)
     call delete(spline)
-  end subroutine test_nonuniform_arb_deg_splines
+  end subroutine test_nonuniform_arb_deg_splines_periodic
+
+  ! The case of 'open' boundary condition yields spline values different
+  ! than in the 'periodic' case. Since we can not compare with the uniform
+  ! splines anymore to get the right answer, we need a different criterion.
+  ! For lack of something better, at this moment we only check that the 
+  ! different spline values, when added, will equal 1.0.
+  subroutine test_nonuniform_arb_deg_splines_open( passed_test )
+    logical, intent(inout) :: passed_test
+    sll_real64, dimension(:), allocatable :: knots
+    sll_int32  :: i,j
+    sll_int32  :: num_pts
+    sll_int32  :: degree
+    sll_real64 :: min_val
+    sll_int32  :: ierr
+    sll_real64 :: rnd
+    sll_real64 :: step
+    sll_int32  :: cell
+    sll_real64 :: x
+    sll_real64 :: acc, acc2
+    sll_real64 :: criterion
+    sll_int32  :: num_tests
+    sll_real64, dimension(:), allocatable     :: answer
+    sll_real64, dimension(:,:), allocatable   :: answer2
+    type(arbitrary_degree_spline_1d), pointer :: spline
+
+    num_tests = 10 !100000
+    criterion = 1.0e-15
+    degree  = 3
+    min_val = 0.0
+    num_pts = 10
+    step    = 1.0
+    SLL_ALLOCATE(knots(num_pts),ierr)
+    SLL_ALLOCATE(answer(degree+1),ierr)
+    SLL_ALLOCATE(answer2(2,degree+1),ierr)
+
+    ! fill knots array. Try first a uniform set of knots to compare with the
+    ! uniform spline functions.
+    knots(1) = min_val
+    do i=2,num_pts
+       call random_number(rnd)
+       knots(i) = knots(i-1) + rnd
+    end do
+    print *, 'knots array = ', knots(:)
+
+    ! fill spline object
+    spline => new_arbitrary_degree_spline_1d( &
+         degree, &
+         knots, &
+         num_pts, &
+         OPEN_ARBITRARY_DEG_SPLINE )
+
+    do j=1,num_tests
+       call random_number(rnd)
+       x = min_val + rnd*(knots(num_pts)-min_val)
+       cell = find_index( x, knots, num_pts )
+       acc = 0.0_f64
+       
+       ! test spline values
+       answer(:) = b_splines_at_x(spline, cell, x)
+       acc = sum(answer(1:degree+1))
+       passed_test = passed_test .and. (abs(1.0_f64 - acc) < criterion)
+       if( passed_test .eqv. .false. ) then
+          print *, 'nonuniform splines test failure:'
+          print *, 'cell = ', cell, 'x = ', x
+          print *, 'nonuniform: ', answer(:)
+          print *, 'accumulator = ', acc
+       end if
+       
+       ! test spline derivatives
+       acc = 0.0_f64
+       answer(:) = b_spline_derivatives_at_x(spline, cell, x)
+       acc = sum(answer(1:degree+1))
+       passed_test = passed_test .and. (abs(acc) < criterion)
+       if( passed_test .eqv. .false. ) then
+          print *, 'nonuniform splines test failure, derivatives case:'
+          print *, 'cell = ', cell, 'x = ', x
+          print *, 'derivatives: ', answer(:)
+          print *, 'accumulator = ', acc
+       end if
+       
+       ! test values and derivatives
+       acc  = 0.0_f64
+       acc2 = 0.0_f64
+       answer2(:,:) = b_splines_and_derivs_at_x(spline, cell, x)
+       acc  = sum(answer2(1,1:degree+1))
+       acc2 = sum(answer2(2,1:degree+1))
+       passed_test = passed_test .and. (abs(1.0_f64 - acc) < criterion)
+       passed_test = passed_test .and. (abs(acc2) < criterion)
+       if( passed_test .eqv. .false. ) then
+          print *, 'nonuniform splines test failure, ',&
+               'values and derivatives case:'
+          print *, 'cell = ', cell, 'x = ', x
+          print *, 'splines: ', answer2(1,:)
+          print *, 'derivatives: ', answer2(2,:)
+          print *, 'sum of splines = ', acc
+          print *, 'sum of derivatives = ', acc2
+       end if
+    end do
+    SLL_DEALLOCATE_ARRAY(answer, ierr)
+    SLL_DEALLOCATE_ARRAY(answer2, ierr)
+    call delete(spline)
+  end subroutine test_nonuniform_arb_deg_splines_open
 
   ! given an array of values ordered in ascending order and a value 'x', 
   ! find index returns the index 'i' of the array such that:
