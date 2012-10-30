@@ -481,6 +481,9 @@ add_test(NAME interpolators COMMAND test_interpolators_1d
 add_test(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
 set_tests_properties(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+add_test(NAME odd_degree_interpolators_1d COMMAND test_odd_degree_interpolators_1d)
+set_tests_properties(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
