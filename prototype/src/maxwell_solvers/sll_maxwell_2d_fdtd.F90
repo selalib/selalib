@@ -1,5 +1,5 @@
 !>
-!>@namespace sll_maxwell_fdtd_2d
+!>@namespace sll_maxwell_2d_fdtd
 !>
 !> @author
 !> Pierre Navaro Philippe Helluy
@@ -24,7 +24,7 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-module sll_maxwell_2d
+module sll_maxwell_2d_fdtd
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -35,26 +35,26 @@ use numeric_constants
 implicit none
 private
 
-interface new
- module procedure new_maxwell_2d
+interface initialize
+ module procedure new_maxwell_2d_fdtd
 end interface
 interface solve
- module procedure solve_maxwell_2d
+ module procedure solve_maxwell_2d_fdtd
 end interface
-interface delete
- module procedure delete_maxwell_2d
+interface free
+ module procedure delete_maxwell_2d_fdtd
 end interface
 
-public :: new, solve, delete
+public :: initialize, solve, free
 
 !> Object with data to solve Maxwell equation on 2d domain
 !> Maxwell in TE mode: (Ex,Ey,Hz)
-type, public :: maxwell_2d
+type, public :: maxwell_fdtd
   sll_real64 :: c_light
   sll_real64 :: epsilon_0
   sll_int32  :: ix, jx, iy, jy
   sll_real64 :: dx, dy
-end type maxwell_2d
+end type maxwell_fdtd
 
 enum, bind(C)
    enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
@@ -62,9 +62,9 @@ end enum
 
 contains
 
-subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy  )
+subroutine new_maxwell_2d_fdtd(this, ix, jx, iy, jy, dx, dy  )
 
-   type(maxwell_2d) :: this
+   type(maxwell_fdtd) :: this
    sll_int32        :: ix, jx, iy, jy
    sll_real64       :: dx, dy
    !sll_int32        :: error
@@ -79,11 +79,11 @@ subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy  )
    this%iy = iy
    this%jy = jy
 
-end subroutine new_maxwell_2d
+end subroutine new_maxwell_2d_fdtd
 
-subroutine solve_maxwell_2d(this, ex, ey, bz, dt)
+subroutine solve_maxwell_2d_fdtd(this, ex, ey, bz, dt)
 
-   type(maxwell_2d)          :: this
+   type(maxwell_fdtd)          :: this
    sll_real64 , intent(inout), dimension(:,:)   :: ex, ey, bz
    sll_real64 , intent(in)   :: dt
 
@@ -95,18 +95,18 @@ subroutine solve_maxwell_2d(this, ex, ey, bz, dt)
    !E(n)-->E(n+1) sur les pts interieurs
    call ampere_maxwell(this, ex, ey, bz, dt) 
 
-end subroutine solve_maxwell_2d
+end subroutine solve_maxwell_2d_fdtd
 
-subroutine delete_maxwell_2d()
-   !type(maxwell_2d), pointer :: this
+subroutine delete_maxwell_2d_fdtd( this)
+   type(maxwell_fdtd) :: this
   
-end subroutine delete_maxwell_2d
+end subroutine delete_maxwell_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine faraday( this, ex, ey, bz, dt )
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_real64, dimension(:,:), intent(in)    :: ex, ey
 sll_real64, dimension(:,:), intent(inout) :: bz
 sll_real64, intent(in) :: dt
@@ -141,7 +141,7 @@ end subroutine faraday
 
 subroutine ampere_maxwell( this, ex, ey, bz, dt )
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_int32 :: ix, jx, iy, jy
 sll_real64, dimension(:,:), intent(inout) :: ex, ey
 sll_real64, dimension(:,:), intent(in)    :: bz
@@ -185,7 +185,7 @@ end subroutine ampere_maxwell
 
 subroutine cl_periodiques(this, ex, ey, bz, dt)
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_int32 :: ix, jx, iy, jy
 sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
 sll_real64 :: dbz_dx, dbz_dy
@@ -228,7 +228,7 @@ end subroutine cl_periodiques
 
 subroutine cl_condparfait(this, ex, ey, bz, side)
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_int32, intent(in) :: side
 sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
 sll_int32 :: ix, jx, iy, jy
@@ -267,7 +267,7 @@ end subroutine cl_condparfait
 
 subroutine silver_muller( this, ex, ey, bz, ccall, dt )
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_int32, intent(in) :: ccall
 sll_int32 :: ix, jx, iy, jy
 sll_real64 :: a11,a12,a21,a22,b1,b2,dis
@@ -374,4 +374,4 @@ end subroutine silver_muller
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module sll_maxwell_2d
+end module sll_maxwell_2d_fdtd
