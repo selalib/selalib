@@ -9,6 +9,12 @@ ADD_DEPENDENCIES(sll_splines sll_memory
                              sll_working_precision
                              sll_numerical_utilities)
 
+#ADD_LIBRARY(cubic_nonuniform_splines STATIC cubic_nonuniform_splines.F90
+#                               sll_quintic_splines.F90
+#                               sll_odd_degree_splines.F90
+#                               sll_arbitrary_degree_splines.F90)
+
+
 #libs to link with tests
 
 SET(SPL_LIBS sll_splines 
