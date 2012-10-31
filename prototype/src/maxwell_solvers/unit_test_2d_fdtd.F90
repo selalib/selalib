@@ -1,4 +1,4 @@
-program test_maxwell_2d
+program test_maxwell_2d_pstd
   !-------------------------------------------------------------------
   !  test 1D Maxwell solver based on FFT
   !-------------------------------------------------------------------
@@ -7,7 +7,7 @@ program test_maxwell_2d
 #include "sll_assert.h"
 use numeric_constants
 
-use sll_maxwell_2d
+use sll_maxwell_2d_pstd
 
 implicit none
 
@@ -18,11 +18,10 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_2d)                        :: maxwell_TE
-sll_real64, dimension(:,:), allocatable :: ex
-sll_real64, dimension(:,:), allocatable :: ey
-sll_real64, dimension(:,:), allocatable :: bz
-sll_real64, dimension(:,:), allocatable :: bz_exact
+type(maxwell_pstd)                      :: maxwell_TM
+sll_real64, dimension(:,:), allocatable :: hx
+sll_real64, dimension(:,:), allocatable :: hy
+sll_real64, dimension(:,:), allocatable :: ez
 
 sll_int32                          :: i, j
 sll_real64                         :: omega
@@ -44,7 +43,8 @@ nc_eta1 = 127; nc_eta2 = 127
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
 
-call new(maxwell_TE, 1, nc_eta1+1, 1, nc_eta2+1, delta_eta1, delta_eta2)
+call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1+1, &
+                            eta2_min, eta2_max, nc_eta2+1, ez, error)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 nstep = 100
@@ -54,26 +54,21 @@ time  = 0.
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
 
-SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(bz_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_ALLOCATE(hx(nc_eta1+1,nc_eta2+1), error)
+SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
+SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 
 do istep = 1, nstep !*** Loop over time
 
    time = time + 0.5_f64*dt
 
-   do i=1,nc_eta1+1
-   do j=1,nc_eta2+1
-      bz_exact(i,j) =   - cos(mode*sll_pi*(i-0.5_f64)/nc_eta1)    &
+      ez_exact(i,j) =   - cos(mode*sll_pi*(i-0.5_f64)/nc_eta1)    &
                         * cos(mode*sll_pi*(j-0.5_f64)/nc_eta2)    &
                         * cos(omega*time)
-   end do  
-   end do  
 
    if (istep == 1) bz = bz_exact
 
-   call solve(maxwell_TE, ex, ey, bz, dt)
+   call solve(maxwell_TM, ex, ey, bz, dt)
 
    time = time + 0.5_f64*dt
 
@@ -93,4 +88,6 @@ DEALLOCATE(ey)
 DEALLOCATE(bz)
 DEALLOCATE(bz_exact)
 
-end program test_maxwell_2d
+call free(maxwell_TM)
+
+end program test_maxwell_2d_pstd
