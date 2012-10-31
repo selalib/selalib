@@ -42,13 +42,22 @@ module sll_maxwell_2d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+use, intrinsic :: iso_c_binding
 use numeric_constants
 
-use, intrinsic :: iso_c_binding
 implicit none
-include 'fftw3.f03'
 
-type :: maxwell_pstd
+interface initialize
+ module procedure new_maxwell_2d_pstd
+end interface
+interface solve
+ module procedure solve_maxwell_2d_pstd
+end interface
+interface free
+ module procedure free_maxwell_2d_pstd
+end interface
+
+type, public :: maxwell_pstd
    sll_int32                                          :: nx
    sll_int32                                          :: ny
    sll_real64, dimension(:,:), allocatable            :: rot
@@ -78,10 +87,11 @@ end type maxwell_pstd
 
 sll_int32, private :: i, j
 
+include 'fftw3.f03'
 
 contains
 
-subroutine init_maxwell_pstd(self, xmin, xmax, nx, &
+subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
                                      ymin, ymax, ny, &
                                      ez, error )
    type(maxwell_pstd)                         :: self
@@ -134,7 +144,7 @@ subroutine init_maxwell_pstd(self, xmin, xmax, nx, &
    end do
    self%ky(1) = 1.0_f64
 
-end subroutine init_maxwell_pstd
+end subroutine new_maxwell_2d_pstd
 
 subroutine solve_maxwell_2d_pstd(self, hx, hy, ez, dt)
 
@@ -170,14 +180,14 @@ subroutine faraday_pstd(self, hx, hy, ez, dt)
       call fftw_execute_dft_r2c(self%fwy, ez(i,:), self%ezt_y)
       self%ezt_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%ezt_y
       call fftw_execute_dft_c2r(self%bwy, self%ezt_y, self%rot(i,:))
-      hx(:,j) = hx(:,j) - dt * self%rot(:,j) / nx
+      hx(i,:) = hx(i,:) - dt * self%rot(i,:) / ny
    end do
 
    do j = 1, ny
       call fftw_execute_dft_r2c(self%fwx, ez(:,j), self%ezt_x)
-      self%ezt_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%ext_x
+      self%ezt_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%ezt_x
       call fftw_execute_dft_c2r(self%bwx, self%ezt_x, self%rot(:,j))
-      hy(i,:) = hy(i,:) + dt * self%rot(i,:) / ny
+      hy(:,j) = hy(:,j) + dt * self%rot(:,j) / nx
    end do
 
 end subroutine faraday_pstd
@@ -213,7 +223,7 @@ subroutine ampere_maxwell_pstd(self, hx, hy, ez, dt)
 end subroutine ampere_maxwell_pstd
 
 
-subroutine free_maxwell_pstd(self)
+subroutine free_maxwell_2d_pstd(self)
 type(maxwell_pstd) :: self
 !sll_int32       :: error
 
@@ -230,6 +240,6 @@ call dfftw_destroy_plan(self%bwy)
 !   call dfftw_cleanup_threads(error)
 !end if
 
-end subroutine free_maxwell_pstd
+end subroutine free_maxwell_2d_pstd
 
 end module sll_maxwell_2d_pstd
