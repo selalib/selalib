@@ -1,7 +1,7 @@
-program test_maxwell_2d
-  !-------------------------------------------------------------------
-  !  test 1D Maxwell solver based on FFT
-  !-------------------------------------------------------------------
+program test_maxwell_2d_pstd
+!-------------------------------------------------------------------
+!  test 2D Maxwell solver based on FFT
+!-------------------------------------------------------------------
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -66,8 +66,8 @@ SLL_ALLOCATE(eta2(nc_eta1+1,nc_eta2+1),error)
 
 do j = 1, nc_eta2+1
    do i = 1, nc_eta1+1
-      eta1(i,j) = eta1_min + i*delta_eta1
-      eta2(i,j) = eta2_min + j*delta_eta2
+      eta1(i,j) = eta1_min + (i-1)*delta_eta1
+      eta2(i,j) = eta2_min + (j-1)*delta_eta2
    end do
 end do
 
@@ -87,11 +87,11 @@ SLL_ALLOCATE(ez_exact(nc_eta2+1,nc_eta2+1), error)
 call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
                             eta2_min, eta2_max, nc_eta2, error)
 
-ez = cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)
 
 do istep = 1, nstep !*** Loop over time
 
    time = time + 0.5_f64*dt
+   ez = cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
 
    call solve(maxwell_TM, hx, hy, ez, dt)
 
@@ -114,4 +114,4 @@ DEALLOCATE(hx)
 DEALLOCATE(hy)
 DEALLOCATE(ez)
 
-end program test_maxwell_2d
+end program test_maxwell_2d_pstd
