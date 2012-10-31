@@ -209,7 +209,7 @@ subroutine ampere_maxwell_pstd(self, hx, hy, ez, dt)
    do j = 1, ny
       call fftw_execute_dft_r2c(self%fwx, hy(:,j), self%hyt_x)
       self%hyt_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%hyt_x
-      call fftw_execute_dft_c2r(self%bwx, self%hyt_x, hy)
+      call fftw_execute_dft_c2r(self%bwx, self%hyt_x, hy(:,j))
       ez(:,j) = ez(:,j) + dt * hy(:,j) / nx
    end do
 
