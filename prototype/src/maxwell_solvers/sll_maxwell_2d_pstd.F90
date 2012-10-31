@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-!> @namespace sll_maxwelle_2d_pstd
+!> @namespace sll_maxwell_2d_pstd
 !
 !> @author
 !> Pierre Navaro
@@ -30,13 +30,13 @@
 !------------------------------------------------------------------------------
 
 
-#define FFTW_ALLOCATE(array,sz_array,p_array)                             \
-self%sz_array = int((nx/2+1)*ny,C_SIZE_T);               \
-self%p_array = fftw_alloc_complex(self%sz_array);        \
-call c_f_pointer(self%p_array, self%array, [nx/2+1,ny])  \
+#define FFTW_ALLOCATE(array,array_size,sz_array,p_array) \
+sz_array = int((array_size/2+1),C_SIZE_T);       \
+p_array = fftw_alloc_complex(sz_array);        \
+call c_f_pointer(p_array, array, [array_size/2+1])  \
 
 
-program sll_maxwell_2d_pstd
+module sll_maxwell_2d_pstd
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -48,126 +48,49 @@ use, intrinsic :: iso_c_binding
 implicit none
 include 'fftw3.f03'
 
-type :: maxwell
+type :: maxwell_pstd
    sll_int32                                          :: nx
    sll_int32                                          :: ny
-   sll_real64                                         :: dx
-   sll_real64                                         :: dy
-   sll_real64, dimension(:,:), allocatable            :: kx
-   sll_real64, dimension(:,:), allocatable            :: ky
-   type(C_PTR)                                        :: fw
-   type(C_PTR)                                        :: bw
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: hxt
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: hyt
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: hzt
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: ext
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: eyt
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: ezt
-   integer(C_SIZE_T)                                  :: sz_hxt
-   integer(C_SIZE_T)                                  :: sz_hyt
-   integer(C_SIZE_T)                                  :: sz_ezt
-   integer(C_SIZE_T)                                  :: sz_ext
-   integer(C_SIZE_T)                                  :: sz_eyt
-   integer(C_SIZE_T)                                  :: sz_hzt
-   type(C_PTR)                                        :: p_hxt
-   type(C_PTR)                                        :: p_hyt
+   sll_real64, dimension(:,:), allocatable            :: rot
+   sll_real64, dimension(:), allocatable              :: kx
+   sll_real64, dimension(:), allocatable              :: ky
+   type(C_PTR)                                        :: fwx, fwy
+   type(C_PTR)                                        :: bwx, bwy
+   complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: hxt_x, hxt_y
+   complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: hyt_x, hyt_y
+   complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: hzt_x, hzt_y
+   complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: ext_x, ext_y
+   complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: eyt_x, eyt_y
+   complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: ezt_x, ezt_y
+   integer(C_SIZE_T)                                  :: sz_hxt_x, sz_hxt_y
+   integer(C_SIZE_T)                                  :: sz_hyt_x, sz_hyt_y
+   integer(C_SIZE_T)                                  :: sz_ezt_x, sz_ezt_y
+   integer(C_SIZE_T)                                  :: sz_ext_x, sz_ext_y
+   integer(C_SIZE_T)                                  :: sz_eyt_x, sz_eyt_y
+   integer(C_SIZE_T)                                  :: sz_hzt_x, sz_hzt_y
+   type(C_PTR)                                        :: p_hxt_y
+   type(C_PTR)                                        :: p_hyt_x
    type(C_PTR)                                        :: p_hzt
    type(C_PTR)                                        :: p_ext
    type(C_PTR)                                        :: p_eyt
-   type(C_PTR)                                        :: p_ezt
-end type maxwell
+   type(C_PTR)                                        :: p_ezt_x, p_ezt_y
+end type maxwell_pstd
 
-sll_int32, parameter :: nthreads = 2
+sll_int32, private :: i, j
 
-sll_real64, dimension(:,:), allocatable :: x
-sll_real64, dimension(:,:), allocatable :: y
-
-sll_real64, dimension(:,:), allocatable :: hx
-sll_real64, dimension(:,:), allocatable :: hy
-sll_real64, dimension(:,:), allocatable :: ez
-
-sll_real64, dimension(:,:), allocatable :: ex
-sll_real64, dimension(:,:), allocatable :: ey
-sll_real64, dimension(:,:), allocatable :: hz
-sll_real64 :: xmin, xmax, ymin, ymax
-sll_real64 :: omega, dt, cfl, time, dx, dy, dimx, dimy, tfinal
-sll_int32  :: nstep, istep, iplot, nstepmax, error
-sll_int32  :: nx, ny, i, j, md=2, nd=2, ik, jk
-
-type(maxwell) :: this
-
-nx = 128
-ny = 128
-
-SLL_ALLOCATE(ex(nx,ny), error)
-SLL_ALLOCATE(ey(nx,ny), error)
-SLL_ALLOCATE(ez(nx,ny), error)
-SLL_ALLOCATE(hx(nx,ny), error)
-SLL_ALLOCATE(hx(nx,ny), error)
-SLL_ALLOCATE(hz(nx,ny), error)
-
-xmin = 0.
-xmax = sll_pi
-ymin = 0.
-ymax = sll_pi
-
-dimx = xmax - xmin
-dimy = ymax - ymin
-
-call init_maxwell_solver(this, xmin, xmax, nx, &
-                               ymin, ymax, ny, &
-                               hx, hy, ez, error )                                
-
-do j = 1, ny
-   do i = 1, nx
-      x(i,j) = xmin + (i-0.5) / (xmax - xmin)
-      y(i,j) = ymin + (j-0.5) / (ymax - ymin)
-   end do
-end do
-
-dt = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) 
-nstep = floor(tfinal/dt)
-write(*,*)
-write(*,*) " dx = ", dx
-write(*,*) " dy = ", dy
-write(*,*) " dt = ", dt
-write(*,*)
-if( nstep > nstepmax ) nstep = nstepmax
-write(*,*) " Nombre d'iteration nstep = ", nstep
-
-time  = 0.
-iplot = 0
-
-omega = sqrt(2._f64)
-
-ex = 0.0d0
-ey = 0.0d0
-hz = - cos(x)*cos(y)*cos(omega*(-0.5*dt))
-
-!Polarisation TE
-!ex =  cos(x)*sin(y)*sin(omega*time)/omega
-!ey = -sin(x)*cos(y)*sin(omega*time)/omega
-!hz = -cos(x)*cos(y)*cos(omega*time)
-!
-!Polarisation TM
-!ez =  cos(x)*cos(y)*cos(omega*time)
-!hx =  cos(x)*sin(y)*sin(omega*time)/omega
-!hy = -sin(x)*cos(y)*sin(omega*time)/omega
 
 contains
 
-subroutine init_maxwell_solver(self, xmin, xmax, nx, &
+subroutine init_maxwell_pstd(self, xmin, xmax, nx, &
                                      ymin, ymax, ny, &
-                                     hx, hy, ez, error )
-   type(maxwell)                         :: self
+                                     ez, error )
+   type(maxwell_pstd)                         :: self
    sll_real64                                :: xmin
    sll_real64                                :: xmax
    sll_real64                                :: ymin
    sll_real64                                :: ymax
    sll_int32                                 :: nx
    sll_int32                                 :: ny
-   sll_real64, dimension(:,:), intent(inout) :: hx
-   sll_real64, dimension(:,:), intent(inout) :: hy
    sll_real64, dimension(:,:), intent(inout) :: ez
    !sll_real64, dimension(:,:), intent(inout) :: ex
    !sll_real64, dimension(:,:), intent(inout) :: ey
@@ -175,118 +98,138 @@ subroutine init_maxwell_solver(self, xmin, xmax, nx, &
    sll_int32                                 :: error
    sll_real64                                :: dx
    sll_real64                                :: dy
-   sll_real64                                :: kx0, kx
-   sll_real64                                :: ky0, ky
+   sll_real64                                :: kx0
+   sll_real64                                :: ky0
 
-   self%dx = (xmax-xmin) / (nx-1d0)
-   self%dy = (ymax-ymin) / (ny-1d0)
+   FFTW_ALLOCATE(self%hxt_y,ny/2+1,self%sz_hxt_y,self%p_hxt_y)
+   FFTW_ALLOCATE(self%hyt_x,nx/2+1,self%sz_hyt_x,self%p_hyt_x)
+   FFTW_ALLOCATE(self%ezt_x,nx/2+1,self%sz_ezt_x,self%p_ezt_x)
+   FFTW_ALLOCATE(self%ezt_y,ny/2+1,self%sz_ezt_y,self%p_ezt_y)
 
-   FFTW_ALLOCATE(hxt,sz_hxt,p_hxt)
-   FFTW_ALLOCATE(hyt,sz_hyt,p_hyt)
-   FFTW_ALLOCATE(ezt,sz_ezt,p_ezt)
-
-   call dfftw_init_threads(error)
-   if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   call dfftw_plan_with_nthreads(nthreads)
+   !call dfftw_init_threads(error)
+   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
+   !call dfftw_plan_with_nthreads(nthreads)
    
-   self%fw = fftw_plan_dft_r2c_2d(ny, nx, ez, self%ezt, FFTW_ESTIMATE)
-   self%bw = fftw_plan_dft_c2r_2d(ny, nx, self%ezt, ez, FFTW_ESTIMATE)
+   self%fwx = fftw_plan_dft_r2c_1d(nx, ez(:,1), self%ezt_x, FFTW_ESTIMATE)
+   self%bwx = fftw_plan_dft_c2r_1d(nx, self%ezt_x, ez(:,1), FFTW_ESTIMATE)
+   self%fwy = fftw_plan_dft_r2c_1d(ny, ez(1,:), self%ezt_y, FFTW_ESTIMATE)
+   self%bwy = fftw_plan_dft_c2r_1d(ny, self%ezt_y, ez(1,:), FFTW_ESTIMATE)
 
-   SLL_ALLOCATE(self%kx(nx/2+1,ny), error)
-   SLL_ALLOCATE(self%ky(nx/2+1,ny), error)
+   SLL_ALLOCATE(self%kx(nx/2+1), error)
+   SLL_ALLOCATE(self%ky(ny/2+1), error)
+   SLL_ALLOCATE(self%rot(nx,ny), error)
    
-   dx  = self%dx
-   dy  = self%dy
+   dx = (xmax-xmin) / (nx-1d0)
+   dy = (ymax-ymin) / (ny-1d0)
+
    kx0 = 2._f64*sll_pi/(nx*dx)
    ky0 = 2._f64*sll_pi/(ny*dy)
 
-   do ik=1,nx/2+1
-      kx = (ik-1)*kx0
-      do jk = 1, ny/2
-         ky = (jk-1)*ky0
-         self%kx(jk,ik) = kx
-         self%ky(jk,ik) = ky
-      end do
-      do jk = ny/2+1 , ny     
-         ky = (jk-1-ny)*ky0
-         self%kx(jk,ik) = kx
-         self%ky(jk,ik) = ky
-      end do
+   do i=1,nx/2+1
+      self%kx(i) = (i-1)*kx0
    end do
-   self%kx(1,1) = 1.0_f64
+   self%kx(1) = 1.0_f64
+   do j=1,ny/2+1
+      self%ky(j) = (j-1)*ky0
+   end do
+   self%ky(1) = 1.0_f64
 
-end subroutine init_maxwell_solver
+end subroutine init_maxwell_pstd
+
+subroutine solve_maxwell_2d_pstd(self, hx, hy, ez, dt)
+
+   type(maxwell_pstd)          :: self
+   sll_real64 , intent(inout), dimension(:,:)   :: hx, hy, ez
+   sll_real64 , intent(in)   :: dt
+
+   !H(n-1/2)--> H(n+1/2) sur les pts interieurs   
+   call faraday_pstd(self, hx, hy, ez, dt)   
+
+   !call cl_periodiques(self, hx, hy, ez, dt)
+
+   !E(n)-->E(n+1) sur les pts interieurs
+   call ampere_maxwell_pstd(self, hx, hy, ez, dt) 
+
+end subroutine solve_maxwell_2d_pstd
 
 !> Solve faraday 
-subroutine solve_faraday(self, hx, hy, ez)
+subroutine faraday_pstd(self, hx, hy, ez, dt)
 
-   type(maxwell),intent(inout)  :: self
+   type(maxwell_pstd),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: hx
-   sll_real64, dimension(:,:), intent(out)   :: hy
-   sll_real64, dimension(:,:), intent(out)   :: ez
-   sll_int32  :: nx, ny
-   sll_real64 :: dx, dy
+   sll_real64, dimension(:,:), intent(inout) :: hy
+   sll_real64, dimension(:,:), intent(inout) :: ez
+   sll_int32                                 :: nx
+   sll_int32                                 :: ny
+   sll_real64, intent(in)                    :: dt
 
    nx = self%nx
    ny = self%ny
 
-   call fftw_execute_dft_r2c(self%fw, ez, self%ezt)
+   do i = 1, nx
+      call fftw_execute_dft_r2c(self%fwy, ez(i,:), self%ezt_y)
+      self%ezt_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%ezt_y
+      call fftw_execute_dft_c2r(self%bwy, self%ezt_y, self%rot(i,:))
+      hx(:,j) = hx(:,j) - dt * self%rot(:,j) / nx
+   end do
 
-   call fftw_execute_dft_c2r(self%bw, self%ezt, ez)
+   do j = 1, ny
+      call fftw_execute_dft_r2c(self%fwx, ez(:,j), self%ezt_x)
+      self%ezt_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%ext_x
+      call fftw_execute_dft_c2r(self%bwx, self%ezt_x, self%rot(:,j))
+      hy(i,:) = hy(i,:) + dt * self%rot(i,:) / ny
+   end do
 
-   hx(i,j) = hx(i,j) - dt 
-
-   self%ext(1,1) = 0.0_f64
-   self%eyt(1,1) = 0.0_f64
-   self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%ext
-   self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%eyt
-
-
-
-end subroutine solve_faraday
+end subroutine faraday_pstd
 
 !> Solve ampere
-subroutine solve_ampere_maxwell(self, hx, hy, ez)
+subroutine ampere_maxwell_pstd(self, hx, hy, ez, dt)
 
-   type(maxwell),intent(inout)  :: self
+   type(maxwell_pstd),intent(inout)  :: self
    sll_int32                    :: nx
    sll_int32                    :: ny
    sll_real64, dimension(:,:)   :: hx
    sll_real64, dimension(:,:)   :: hy
    sll_real64, dimension(:,:)   :: ez
-
-   call fftw_execute_dft_r2c(self%fw, hx, self%hxt)
-   call fftw_execute_dft_r2c(self%fw, hy, self%hyt)
-
-
-   call fftw_execute_dft_c2r(self%bw, self%hxt, hx)
-   call fftw_execute_dft_c2r(self%bw, self%hyt, hy)
-   call fftw_execute_dft_c2r(self%bw, self%ezt, ez)
+   sll_real64                   :: dt
 
    nx = self%nx
    ny = self%ny
 
-   hx = hx / (nx*ny)     ! normalize
-   hy = hy / (nx*ny)     ! normalize
-   hz = hz / (nx*ny)     ! normalize
+   do j = 1, ny
+      call fftw_execute_dft_r2c(self%fwx, hy(:,j), self%hyt_x)
+      self%hyt_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%hyt_x
+      call fftw_execute_dft_c2r(self%bwx, self%hyt_x, hy)
+      ez(:,j) = ez(:,j) + dt * hy(:,j) / nx
+   end do
 
-end subroutine solve_ampere_maxwell
+   do i = 1, nx
+      call fftw_execute_dft_r2c(self%fwy, hx(i,:), self%hxt_y)
+      self%hxt_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%hxt_y
+      call fftw_execute_dft_c2r(self%bwy, self%hxt_y, hx(i,:))
+      ez(i,:) = ez(i,:) - dt * hx(i,:) / ny
+   end do
+   
+end subroutine ampere_maxwell_pstd
 
 
-subroutine free_maxwell(self)
-type(maxwell) :: self
-sll_int32       :: error
+subroutine free_maxwell_pstd(self)
+type(maxwell_pstd) :: self
+!sll_int32       :: error
 
-if (c_associated(self%p_hxt)) call fftw_free(self%p_hxt)
-if (c_associated(self%p_hyt)) call fftw_free(self%p_hyt)
-if (c_associated(self%p_ezt)) call fftw_free(self%p_ezt)
+if (c_associated(self%p_hxt_y)) call fftw_free(self%p_hxt_y)
+if (c_associated(self%p_hyt_x)) call fftw_free(self%p_hyt_x)
+if (c_associated(self%p_ezt_x)) call fftw_free(self%p_ezt_x)
+if (c_associated(self%p_ezt_y)) call fftw_free(self%p_ezt_y)
 
-call dfftw_destroy_plan(self%fw)
-call dfftw_destroy_plan(self%bw)
-if (nthreads > 1) then
-   call dfftw_cleanup_threads(error)
-end if
+call dfftw_destroy_plan(self%fwx)
+call dfftw_destroy_plan(self%fwy)
+call dfftw_destroy_plan(self%bwx)
+call dfftw_destroy_plan(self%bwy)
+!if (nthreads > 1) then
+!   call dfftw_cleanup_threads(error)
+!end if
 
-end subroutine free_maxwell
+end subroutine free_maxwell_pstd
 
-end program sll_maxwell_2d_pstd
+end module sll_maxwell_2d_pstd
