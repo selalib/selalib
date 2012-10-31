@@ -1,7 +1,7 @@
 program test_maxwell_2d_fdtd
-  !-------------------------------------------------------------------
-  !  test 1D Maxwell solver based on FFT
-  !-------------------------------------------------------------------
+!------------------------------------------------------------------------
+!  test 2D Maxwell solver based on finite differences on a staggered grid
+!------------------------------------------------------------------------
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
