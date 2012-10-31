@@ -93,7 +93,7 @@ contains
 
 subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
                                      ymin, ymax, ny, error )
-   type(maxwell_pstd)                         :: self
+   type(maxwell_pstd)                        :: self
    sll_real64                                :: xmin
    sll_real64                                :: xmax
    sll_real64                                :: ymin
@@ -120,10 +120,10 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
-   self%fwx = fftw_plan_dft_r2c_1d(nx, self%rot(:,1), self%ezt_x, FFTW_ESTIMATE)
-   self%bwx = fftw_plan_dft_c2r_1d(nx, self%ezt_x, self%rot(:,1), FFTW_ESTIMATE)
-   self%fwy = fftw_plan_dft_r2c_1d(ny, self%rot(1,:), self%ezt_y, FFTW_ESTIMATE)
-   self%bwy = fftw_plan_dft_c2r_1d(ny, self%ezt_y, self%rot(1,:), FFTW_ESTIMATE)
+   self%fwx = fftw_plan_dft_r2c_1d(nx, self%rot(:,1), self%ezt_x, FFTW_MEASURE)
+   self%bwx = fftw_plan_dft_c2r_1d(nx, self%ezt_x, self%rot(:,1), FFTW_MEASURE)
+   self%fwy = fftw_plan_dft_r2c_1d(ny, self%rot(1,:), self%ezt_y, FFTW_MEASURE)
+   self%bwy = fftw_plan_dft_c2r_1d(ny, self%ezt_y, self%rot(1,:), FFTW_MEASURE)
 
    SLL_ALLOCATE(self%kx(nx/2+1), error)
    SLL_ALLOCATE(self%ky(ny/2+1), error)
@@ -182,14 +182,8 @@ subroutine faraday_pstd(self, hx, hy, ez, dt)
       hx(i,1:ny) = hx(i,1:ny) - dt * self%rot(i,:) / ny
    end do
 
+   hx(nx+1,:) = hx(1,:) 
    hx(:,ny+1) = hx(:,1) 
-
-   do i = 1, nx+1
-      do j = 1, ny+1
-         write(10,*) i, j, ez(i,j), hx(i,j)
-      end do
-      write(10,*)
-   end do
 
    do j = 1, ny
       call fftw_execute_dft_r2c(self%fwx, ez(1:nx,j), self%ezt_x)
@@ -199,13 +193,8 @@ subroutine faraday_pstd(self, hx, hy, ez, dt)
    end do
 
    hy(nx+1,:) = hy(1,:)
+   hy(:,ny+1) = hy(:,1)
 
-   do i = 1, nx+1
-      do j = 1, ny+1
-         write(11,*) i, j, hx(i,j), hy(i,j)
-      end do
-      write(11,*)
-   end do
 end subroutine faraday_pstd
 
 !> Solve ampere
@@ -225,36 +214,21 @@ subroutine ampere_maxwell_pstd(self, hx, hy, ez, dt)
    do j = 1, ny
       call fftw_execute_dft_r2c(self%fwx, hy(1:nx,j), self%hyt_x)
       self%hyt_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%hyt_x
-      call fftw_execute_dft_c2r(self%bwx, self%hyt_x, hy(1:nx,j))
-      ez(1:nx,j) = ez(1:nx,j) + dt * hy(1:nx,j) / nx
+      call fftw_execute_dft_c2r(self%bwx, self%hyt_x, self%rot(:,j))
+      ez(1:nx,j) = ez(1:nx,j) + dt * self%rot(:,j) / nx
    end do
 
    ez(nx+1,:)   = ez(1,:)
 
-   do i = 1, nx+1
-      do j = 1, ny+1
-         write(12,*) i, j, ez(i,j), hy(i,j)
-      end do
-      write(12,*)
-   end do
-
    do i = 1, nx
       call fftw_execute_dft_r2c(self%fwy, hx(i,1:ny), self%hxt_y)
       self%hxt_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%hxt_y
-      call fftw_execute_dft_c2r(self%bwy, self%hxt_y, hx(i,1:ny))
-      ez(i,1:ny) = ez(i,1:ny) - dt * hx(i,1:ny) / ny
+      call fftw_execute_dft_c2r(self%bwy, self%hxt_y, self%rot(i,:))
+      ez(i,1:ny) = ez(i,1:ny) - dt * self%rot(i,:) / ny
    end do
 
    ez(:,ny+1)  = ez(:,1)
 
-   do i = 1, nx+1
-      do j = 1, ny+1
-         write(13,*) i, j, ez(i,j), hx(i,j)
-      end do
-      write(13,*)
-   end do
-   
-   
 end subroutine ampere_maxwell_pstd
 
 
