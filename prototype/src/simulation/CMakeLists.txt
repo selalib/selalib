@@ -17,6 +17,8 @@ add_library(sll_simulation_1d STATIC simulation_1d.F90
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
 add_dependencies( sll_simulation_1d
+  sll_splines
+  sll_fft
   sll_constants
   sll_utilities
   sll_memory
@@ -44,6 +46,8 @@ add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
 
 target_link_libraries( test_vp1d_fourier_fem
   sll_simulation_1d
+  sll_splines
+  sll_fft
   sll_constants
   sll_utilities
   sll_memory
