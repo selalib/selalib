@@ -84,9 +84,8 @@ SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez_exact(nc_eta2+1,nc_eta2+1), error)
 
-call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1+1, &
-                            eta2_min, eta2_max, nc_eta2+1, &
-                            ez, error)
+call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
+                            eta2_min, eta2_max, nc_eta2, error)
 
 ez = cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)
 
