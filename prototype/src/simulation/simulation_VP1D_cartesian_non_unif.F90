@@ -5,6 +5,7 @@ module simulation_VP1D_cartesian_non_unif
 #include "sll_memory.h"
 
   use sll_simulation_base
+  use cubic_nonuniform_splines
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
