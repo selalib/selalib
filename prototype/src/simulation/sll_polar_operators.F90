@@ -152,7 +152,7 @@ contains
 !!$          grad_phi(1,1,j)=0.0_f64
 !!$          grad_phi(1,nr+1,j)=0.0_f64
           grad_phi(1,1,j)=(phi(2,j)-phi(1,j))/dr
-          grad_phi(1,nr+1,j)=(phi(nr,j)-phi(nr+1,j))/dr
+          grad_phi(1,nr+1,j)=(phi(nr+1,j)-phi(nr,j))/dr
 !!$          grad_phi(1,1,j)=-(1.5_f64*phi(1,j)-2.0_f64*phi(2,j)+0.5_f64*phi(3,j))/dr
 !!$          grad_phi(1,nr+1,j)=-(1.5_f64*phi(nr+1,j)-2.0_f64*phi(nr,j)+0.5_f64*phi(nr-1,j))/dr
           grad_phi(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
@@ -212,6 +212,8 @@ contains
 
     grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
 
+    !print *,sum(abs(phi(2,:)-phi(1,:)))
+    !print *,'#',sum(abs(grad_phi(1,1,:))),sum(abs(phi(1,:)))
   end subroutine compute_grad_field
 
 

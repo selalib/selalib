@@ -13,7 +13,7 @@ use sll_splines
 #else  
   type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
 #endif
-     sll_real64, dimension(:), allocatable :: interpolation_points 
+     sll_real64, dimension(:), pointer     :: interpolation_points 
      sll_int32                     :: num_points ! size
      sll_int32                     :: bc_type
      type(sll_spline_1D), pointer  :: spline
@@ -88,7 +88,11 @@ contains  ! ****************************************************************
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
+#ifdef STDF95
+    sll_real64                :: alpha
+#else
     sll_real64,  intent(in)   :: alpha
+#endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
@@ -142,7 +146,7 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     call compute_spline_1D( data_array, interpolator%spline )
-#ifdef STD95
+#ifdef STDF95
   end subroutine cubic_spline_compute_interpolants
 #else
   end subroutine compute_interpolants_cs1d
@@ -158,8 +162,11 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#else
     class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -173,8 +180,11 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#else
     class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
@@ -189,8 +199,11 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#else
     class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -204,8 +217,11 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#else
     class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
@@ -243,13 +259,22 @@ contains  ! ****************************************************************
   end function interpolate_deriv1_cs1d
 #endif
 
-
+#ifdef STDF95
+  function cubic_spline_interpolate_derivative_f95( interpolator, eta1 ) result(val)
+    type(cubic_spline_1d_interpolator), intent(in) :: interpolator
+#else
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
     class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+#endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
+#ifdef STDF95
+  end function cubic_spline_interpolate_derivative_f95
+#else
   end function interpolate_derivative_f95
+#endif
+
 
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
@@ -316,9 +341,13 @@ contains  ! ****************************************************************
        sll_real64, dimension(num_points)    :: res
        res(:) = 0.0_f64
   end function reconstruct_array
-  
+
   subroutine delete_cs1d( obj )
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator) :: obj
+#else  
     class(cubic_spline_1d_interpolator) :: obj
+#endif
     call delete(obj%spline)
   end subroutine delete_cs1d
 

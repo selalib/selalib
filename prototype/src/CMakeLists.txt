@@ -57,12 +57,8 @@ try_run( RUN_RESULT_VAR
          ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
-
-set(CMAKE_Fortran_FLAGS "-llapack -lblas -g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-set(CMAKE_C_FLAGS "-lm")
-set(CMAKE_C_FLAGS "-llapack -lblas")
-
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
@@ -95,6 +91,16 @@ ENDIF()
 set(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 set(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
+IF (APPLE)
+   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
+   FIND_LIBRARY(BLAS_LIBRARIES    blas)
+ELSE()
+   FIND_PACKAGE(LAPACK REQUIRED)
+   FIND_PACKAGE(BLAS   REQUIRED)
+ENDIF()
+
+SET(LINK_LIBRARIES  ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+
 # search for HDF5
 IF(HDF5_ENABLED)
 	IF( DEFINED ENV{HDF5_ROOT} )
@@ -107,8 +113,6 @@ IF(HDF5_ENABLED)
 	find_package(HDF5 QUIET)
 	IF(HDF5_FOUND)
 		message(STATUS "HDF5 FOUND")
-		include_directories(${HDF5_INCLUDE_DIRS})
-		include_directories(${HDF5_INCLUDE_DIRS}/fortran)
 	ELSE()
 		add_definitions(-DNOHDF5)
 		set(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
@@ -165,7 +169,7 @@ ENDIF()
 # find out which compiler we are using.
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS " ")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
@@ -182,6 +186,13 @@ IF("${VAR}" STREQUAL "-1")
 ELSE()
   set(STDF95 YES)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+  add_definitions(-DSTDF95)
+ENDIF()
+
+SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
+IF(${STDF95_ENABLED} AND ${Fortran_COMPILER} STREQUAL "GFORTRAN")
+  SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
+  set(STDF95 YES)
   add_definitions(-DSTDF95)
 ENDIF()
 
@@ -246,7 +257,7 @@ else(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 set(FISHPACK_ENABLED OFF CACHE BOOL " ")
-set(MUDPACK_ENABLED OFF CACHE BOOL " ")
+set(MUDPACK_ENABLED ON CACHE BOOL " ")
 
 ######################################################################
 #  III. SUBDIRECTORY                                                 #
@@ -280,6 +291,7 @@ ENDIF()
 
 IF(NOT STDF95)
    add_subdirectory(poisson_solvers)
+   add_subdirectory(quasi_neutral_solvers)
 ENDIF()
 add_subdirectory(electric_field_accumulators)
 
@@ -298,15 +310,16 @@ IF(FISHPACK_ENABLED)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-   IF(MPI_MODULE_ENABLED)
+   IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED)
 	add_subdirectory(multigrid)
-   ELSE(MPI_MODULE_ENABLED)
+   ELSE()
 	add_subdirectory(mudpack)
-   ENDIF(MPI_MODULE_ENABLED)
+   ENDIF()
 ENDIF(MUDPACK_ENABLED)
 add_subdirectory(LinRood)
-#add_subdirectory(maxwell_solvers) #use old mesh_types 
-#add_subdirectory(BSL) top
+add_subdirectory(maxwell_solvers)
+
+add_subdirectory(BSL)
 add_subdirectory(CSL)
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
@@ -348,18 +361,33 @@ ENDIF()
 
 add_test(NAME timer COMMAND test_timer)
 add_test(NAME tridiagonal COMMAND test_tridiagonal)
+add_test(NAME lagrange COMMAND test_lagrange)
+
+add_test(NAME toeplitz_penta_diagonal COMMAND test_toeplitz_penta_diagonal)
+set_tests_properties(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME newton_raphson COMMAND test_newton_raphson)
-add_test(NAME splines COMMAND test_splines #test_non_unif_splines 
-  test_arbitrary_degree_splines)
+add_test(NAME splines COMMAND test_splines ) 
 set_tests_properties(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME splines_arbitrary_degree COMMAND test_arbitrary_degree_splines)
+set_tests_properties(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+# For Michel: add here the test_non_unif_splines... 
+add_test(NAME quintic_splines COMMAND test_quintic_splines)
+set_tests_properties(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME odd_degree_splines COMMAND test_odd_degree_splines)
+set_tests_properties(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME integration COMMAND test_integration)
 add_test(NAME fft COMMAND test_fft)
 add_test(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 IF(FISHPACK_ENABLED)
-	add_test(fishpack fishpack/thwscyl fishpack/thwsplr fishpack/thwsssp fishpack/tpois3d)
+	add_test(NAME fishpack4 COMMAND tpois3d)
+	add_test(NAME fishpack3 COMMAND thwsssp)
+	add_test(NAME fishpack2 COMMAND thwsplr)
+	add_test(NAME fishpack1 COMMAND thwscyl)
 ENDIF()
 IF(MUDPACK_ENABLED)
-        IF(MPI_MODULE_ENABLED)
+        IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED)
            set(PROCS 4)
            set(ARGS "")
 	   add_test(NAME multigrid COMMAND 
@@ -408,16 +436,54 @@ add_test(NAME remap_4d
 set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 set(PROCS 16)
+add_test(NAME remap_6d
+	COMMAND
+	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_6d
+	${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+set(PROCS 16)
 add_test(NAME poisson_periodic_cartesian_par_2d
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-set_tests_properties(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+set_tests_properties(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+add_test(NAME qns2d_with_finite_diff_seq COMMAND test_qns2d_with_finite_diff_seq)
+set_tests_properties(qns2d_with_finite_diff_seq PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME qns2d_angular_spectral_method_seq COMMAND test_qns2d_angular_spectral_method_seq)
+set_tests_properties(qns2d_angular_spectral_method_seq PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+set(PROCS 16)
+add_test(NAME qns2d_with_finite_diff_par
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_qns2d_with_finite_diff_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(qns2d_with_finite_diff_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+set(PROCS 16)
+add_test(NAME qns2d_angular_spectral_method_par
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_qns2d_angular_spectral_method_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+set_tests_properties(qns2d_angular_spectral_method_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
 add_test(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 add_test(NAME interpolators COMMAND test_interpolators_1d
 				    test_interpolators_2d)
+
+add_test(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
+set_tests_properties(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+add_test(NAME odd_degree_interpolators_1d COMMAND test_odd_degree_interpolators_1d)
+set_tests_properties(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 add_test(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 add_test(NAME fields COMMAND test_scalar_field)
@@ -425,14 +491,20 @@ add_test(NAME time_splitting COMMAND test_time_splitting)
 add_test(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 add_test(NAME distribution_function COMMAND test_distribution_function)
 add_test(NAME advection_field COMMAND test_advection_field)
-set(PROCS 8)
-add_test(NAME test_vp4d_sim
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+  set(PROCS 8)
+  add_test(NAME test_vp4d_sim
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#add_test(maxwell_solvers maxwell_solvers/test_maxwell_2d)
+  set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF()
+
+add_test(NAME maxwell_2d_fdtd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
+
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
 	add_test(NAME poisson_solvers COMMAND test_poisson_1d)
@@ -441,7 +513,6 @@ ENDIF(FFTPACK_ENABLED)
 #add_test(poisson_solvers poisson_solvers/test_poisson_3d_seq)
 #add_test(poisson_solvers mpirun -np 2 poisson_solvers/test_poisson_3d_par)
    #add_test(poisson_solvers poisson_solvers/unit_test)
-#add_test(BSL BSL/test_bsl)
 #add_test(BSL BSL/test_landau_4d)
 #add_test(BSL BSL/test_landau_2d)
    #add_test(CSL CSL/test_csl)
@@ -474,7 +545,6 @@ IF(PASTIX_ENABLED)
       set(PASTIX_ROOT $ENV{PASTIX_ROOT})
       set(MURGE_ROOT $ENV{PASTIX_ROOT})
    ENDIF()
-   find_package(BLAS QUIET)
    find_package(RT QUIET)
    find_package(SCOTCH QUIET)
    find_package(PTSCOTCH QUIET)

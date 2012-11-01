@@ -203,7 +203,7 @@ contains
     SLL_ASSERT(cell >= 1)
     SLL_ASSERT(cell <= spline_obj%num_pts - 1)
     ! This is checked always.
-    if( .not. (x >= spline_obj%k(cell)) .and. (x <= spline_obj%k(cell+1))) then
+    if( .not. ((x >= spline_obj%k(cell)).and.(x < spline_obj%k(cell+1)))) then
        print *, 'ERROR. b_splines_at_x(): the given value of x is not ', &
             'inside the specified cell.'
        STOP
@@ -215,7 +215,7 @@ contains
     ! splines(spline_degree+1) = 1.0.
     splines(:)     = 0.0
     splines(deg+1) = 1.0
-    
+
     ! Build the higher order splines. 
     last = 2*deg
     do j=1,deg
@@ -229,6 +229,17 @@ contains
           ! protection: What guarantees are there that these denominators
           ! will not be zero?? This should probably be error-checked, else
           ! one can just end up with an array of NaN's.
+#if 0
+          if( tipj == ti ) then
+             print *, 'calculation is shot... NaNs will be found'
+             print *, 'x = ', x
+             print *, 'current = ', current
+             print *, 'deg = ', deg
+             print *, 'cell = ', cell
+             print *, 'knot(cell) = ', spline_obj%k(cell)
+             print *, 'knot(cell+1) = ', spline_obj%k(cell+1)
+          end if
+#endif
           fac1       = (x - ti)/(tipj - ti)
           fac2       = (tipjp1 - x)/(tipjp1 - tip1)
           splines(i) = fac1*splines(i) + fac2*splines(i+1)
