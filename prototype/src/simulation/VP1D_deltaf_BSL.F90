@@ -18,6 +18,7 @@ program VP1d_deltaf
   use sll_tsi_2d_initializer
   use distribution_function
   use sll_poisson_1d_periodic
+  use omp_lib
   implicit none
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
@@ -232,10 +233,12 @@ program VP1d_deltaf
   write(eapp_diag,*) e_app
   write(adr_diag,*) istep*dt, adr
 
+
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
+!$omp parallel do private(alpha,f1d,v,j)
      do i = 1, Ncx+1
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
@@ -248,12 +251,16 @@ program VP1d_deltaf
            end do
         endif
      end do
+     !$omp end parallel do
      ! full time step advection in x
+     !$omp parallel do private(alpha,f1d)
      do j = 1, Ncv+1
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
+     !$omp end parallel do
+
      ! compute rho and electric field
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
      call solve(poisson_1d, efield, rho)
@@ -264,7 +271,9 @@ program VP1d_deltaf
            E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x - omegadr*istep*dt)
         enddo
      endif
+
      ! half time step advection in v
+     !$omp parallel do private(alpha,f1d,v,j)
      do i = 1, Ncx+1
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
@@ -277,6 +286,7 @@ program VP1d_deltaf
            end do
         end if
      end do
+     !$omp end parallel do
      ! diagnostics
      time = istep*dt
      mass = 0.
