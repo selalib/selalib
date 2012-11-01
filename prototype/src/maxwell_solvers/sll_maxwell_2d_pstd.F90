@@ -56,6 +56,8 @@ module sll_maxwell_2d_pstd
 
 use, intrinsic :: iso_c_binding
 use numeric_constants
+use physical_constants
+use sll_maxwell
 
 implicit none
 
@@ -69,9 +71,6 @@ interface free
  module procedure free_maxwell_2d_pstd
 end interface free
 
-enum, bind(C)
-   enumerator :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
-end enum
 
 type, public :: maxwell_pstd
    sll_int32                                          :: nx
@@ -86,6 +85,8 @@ type, public :: maxwell_pstd
    integer(C_SIZE_T)                                  :: sz_tmp_x, sz_tmp_y
    type(C_PTR)                                        :: p_tmp_x, p_tmp_y
    sll_int32                                          :: polarization
+   sll_real64                                         :: e_0
+   sll_real64                                         :: mu_0
 end type maxwell_pstd
 
 sll_int32, private :: i, j
@@ -93,8 +94,6 @@ sll_int32, private :: i, j
 include 'fftw3.f03'
 
 contains
-
-
 
 subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
                                      ymin, ymax, ny, &
@@ -116,6 +115,9 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    self%nx = nx
    self%ny = ny
    self%polarization = polarization
+
+   self%e_0  = 1._f64
+   self%mu_0 = 1._f64
 
    FFTW_ALLOCATE(self%tmp_x,nx/2+1,self%sz_tmp_x,self%p_tmp_x)
    FFTW_ALLOCATE(self%tmp_y,ny/2+1,self%sz_tmp_y,self%p_tmp_y)
@@ -153,10 +155,10 @@ end subroutine new_maxwell_2d_pstd
 
 subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
 
-   type(maxwell_pstd)          :: self
-   sll_real64 , intent(inout), dimension(:,:)   :: fx
-   sll_real64 , intent(inout), dimension(:,:)   :: fy
-   sll_real64 , intent(inout), dimension(:,:)   :: fz
+   type(maxwell_pstd)                         :: self
+   sll_real64 , intent(inout), dimension(:,:) :: fx
+   sll_real64 , intent(inout), dimension(:,:) :: fy
+   sll_real64 , intent(inout), dimension(:,:) :: fz
    sll_real64 , intent(in)   :: dt
 
    IF ( self%polarization == TM_POLARIZATION) then
@@ -202,19 +204,22 @@ subroutine faraday_tm(self, hx, hy, ez, dt)
    sll_int32                                 :: nx
    sll_int32                                 :: ny
    sll_real64, intent(in)                    :: dt
+   sll_real64                                :: dt_mu
 
    nx = self%nx
    ny = self%ny
 
+   dt_mu = dt / self%mu_0 
+
    do i = 1, nx+1
       D_DY(ez(i,1:ny))
-      hx(i,1:ny) = hx(i,1:ny) - dt * self%d_dy
+      hx(i,1:ny) = hx(i,1:ny) - dt_mu * self%d_dy
    end do
 
 
    do j = 1, ny+1
       D_DX(ez(1:nx,j))
-      hy(1:nx,j) = hy(1:nx,j) + dt * self%d_dx
+      hy(1:nx,j) = hy(1:nx,j) + dt_mu * self%d_dx
    end do
 
 
@@ -230,75 +235,93 @@ subroutine faraday_te(self, ex, ey, hz, dt)
    sll_int32                                 :: nx
    sll_int32                                 :: ny
    sll_real64, intent(in)                    :: dt
+   sll_real64                                :: dt_mu
 
    nx = self%nx
    ny = self%ny
 
+   dt_mu = dt / self%mu_0 
+
    do i = 1, nx+1
       D_DY(ex(i,1:ny))
-      hz(i,1:ny) = hz(i,1:ny) + dt * self%d_dy
+      hz(i,1:ny) = hz(i,1:ny) + dt_mu * self%d_dy
    end do
 
    do j = 1, ny+1
       D_DX(ey(1:nx,j))
-      hz(1:nx,j) = hz(1:nx,j) - dt * self%d_dx
+      hz(1:nx,j) = hz(1:nx,j) - dt_mu * self%d_dx
    end do
 
 end subroutine faraday_te
 
 !> Solve ampere
-subroutine ampere_maxwell_tm(self, hx, hy, ez, dt)
+subroutine ampere_maxwell_tm(self, hx, hy, ez, dt, jz)
 
-   type(maxwell_pstd),intent(inout)  :: self
-   sll_int32                    :: nx
-   sll_int32                    :: ny
-   sll_real64, dimension(:,:)   :: hx
-   sll_real64, dimension(:,:)   :: hy
-   sll_real64, dimension(:,:)   :: ez
-   sll_real64                   :: dt
+   type(maxwell_pstd),intent(inout)      :: self
+   sll_int32                             :: nx
+   sll_int32                             :: ny
+   sll_real64, dimension(:,:)            :: hx
+   sll_real64, dimension(:,:)            :: hy
+   sll_real64, dimension(:,:)            :: ez
+   sll_real64                            :: dt
+   sll_real64                            :: dt_e
+   sll_real64, dimension(:,:), optional  :: jz
 
    nx = self%nx
    ny = self%ny
 
+   dt_e = dt / self%e_0
+
    do j = 1, ny+1
       D_DX(hy(1:nx,j))
-      ez(1:nx,j) = ez(1:nx,j) + dt * self%d_dx
+      ez(1:nx,j) = ez(1:nx,j) + dt_e * self%d_dx
    end do
-
 
    do i = 1, nx+1
       D_DY(hx(i,1:ny))
-      ez(i,1:ny) = ez(i,1:ny) - dt * self%d_dy
+      ez(i,1:ny) = ez(i,1:ny) - dt_e * self%d_dy
    end do
 
+   if (present(jz)) then
+      ez = ez - dt_e * jz 
+   end if
 
 end subroutine ampere_maxwell_tm
 
 !> Solve ampere
-subroutine ampere_maxwell_te(self, ex, ey, hz, dt)
+subroutine ampere_maxwell_te(self, ex, ey, hz, dt, jx, jy)
 
-   type(maxwell_pstd),intent(inout)  :: self
-   sll_int32                    :: nx
-   sll_int32                    :: ny
-   sll_real64, dimension(:,:)   :: ex
-   sll_real64, dimension(:,:)   :: ey
-   sll_real64, dimension(:,:)   :: hz
-   sll_real64                   :: dt
+   type(maxwell_pstd),intent(inout)      :: self
+   sll_real64, dimension(:,:)            :: ex
+   sll_real64, dimension(:,:)            :: ey
+   sll_real64, dimension(:,:)            :: hz
+   sll_real64                            :: dt
+   sll_real64, dimension(:,:), optional  :: jx
+   sll_real64, dimension(:,:), optional  :: jy
+
+   sll_real64                            :: dt_e
+   sll_int32                             :: nx
+   sll_int32                             :: ny
 
    nx = self%nx
    ny = self%ny
 
+   dt_e = dt / self%e_0
+
    do j = 1, ny+1
       D_DX(hz(1:nx,j))
-      ey(1:nx,j) = ey(1:nx,j) - dt * self%d_dx
+      ey(1:nx,j) = ey(1:nx,j) - dt_e * self%d_dx
    end do
-
 
    do i = 1, nx+1
       D_DY(hz(i,1:ny))
-      ex(i,1:ny) = ex(i,1:ny) + dt * self%d_dy
+      ex(i,1:ny) = ex(i,1:ny) + dt_e * self%d_dy
    end do
 
+   if (present(jx) .and. present(jy)) then
+      ex = ex - dt_e * jx 
+      ey = ey - dt_e * jy 
+   end if
 
 end subroutine ampere_maxwell_te
 

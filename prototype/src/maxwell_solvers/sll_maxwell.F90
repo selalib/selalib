@@ -24,17 +24,24 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-module sll_maxwell_2d
+module sll_maxwell
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
 use numeric_constants
-use sll_maxwell_2d_fdtd
-use sll_maxwell_2d_pstd
 
 implicit none
+
+enum, bind(C)
+   enumerator :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
+end enum
+
+enum, bind(C)
+   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
+end enum
+
 !private
 !
 !interface new
@@ -151,4 +158,4 @@ open( 90, file = fname//'plots.gnu', position="append" )
 
 end subroutine plot_field
 
-end module sll_maxwell_2d
+end module sll_maxwell
