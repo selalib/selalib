@@ -7,7 +7,7 @@ program test_maxwell_2d_fdtd
 #include "sll_assert.h"
 use numeric_constants
 
-use sll_maxwell_2d
+use sll_maxwell
 use sll_maxwell_2d_fdtd
 
 implicit none
