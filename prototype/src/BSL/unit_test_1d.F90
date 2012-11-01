@@ -15,8 +15,7 @@ program unit_test_1d
   sll_real64 :: delta_t, error
   sll_int32  :: info
 
-  sll_real64, dimension(:)   , allocatable :: x, dx
-  sll_real64, dimension(:)   , allocatable :: v, dv
+  sll_real64 :: x, v
   sll_real64, dimension(:,:) , allocatable :: df
 
   sll_real64 :: advfield_x, advfield_v
@@ -37,23 +36,13 @@ program unit_test_1d
   v_min =  -5.0_f64; v_max =  5.0_f64 
 
   nc_x = 100; nc_v = 100
+  SLL_ALLOCATE(df(nc_x+1,nc_v+1), info)
 
-  SLL_ALLOCATE(x(nc_x), info)
-  SLL_ALLOCATE(v(nc_v), info)
-
-  do i = 1, nc_x
-     x(i) = x_min + (i-1)*(x_max-x_min)/(nc_x-1)
-  end do
-
-  do j = 1, nc_v
-     v(j) = v_min + (j-1)*(v_max-v_min)/(nc_v-1)
-  end do
-
-  SLL_ALLOCATE(df(nc_x,nc_v), info)
-
-  do j = 1, nc_v
-     do i = 1, nc_x
-        df(i,j) =  exp(-(x(i)**2+v(j)**2))
+  do j = 1, nc_v+1
+     do i = 1, nc_x+1
+        x = x_min + (i-1)*(x_max-x_min)/nc_x
+        v = v_min + (j-1)*(v_max-v_min)/nc_v
+        df(i,j) =  exp(-(x*x+v*v))
      end do
   end do
 
@@ -64,33 +53,32 @@ program unit_test_1d
 
   Print*, 'checking advection of a Gaussian in a uniform field'
   
-  call spline_x%initialize(nc_x, x_min, x_max, PERIODIC_SPLINE )
-  call spline_v%initialize(nc_v, v_min, v_max, PERIODIC_SPLINE )
+  call spline_x%initialize(nc_x+1, x_min, x_max, PERIODIC_SPLINE )
+  call spline_v%initialize(nc_v+1, v_min, v_max, PERIODIC_SPLINE )
 
   interp_x => spline_x
   interp_v => spline_v
-
-  SLL_ALLOCATE(dx(nc_x),info)
-  SLL_ALLOCATE(dv(nc_v),info)
 
   ! run BSL method using 10 time steps
   n_steps = 100
   delta_t = 10.0_f64/n_steps
   do it = 1, n_steps
 
-     !call plot_df( df, it )
+     call plot_df( it )
 
-     call advection_x(df, interp_x, 0.5*delta_t)
-     call advection_v(df, interp_v, delta_t)
-     call advection_x(df, interp_x, 0.5*delta_t)
+     call advection_x(0.5*delta_t)
+     call advection_v(    delta_t)
+     call advection_x(0.5*delta_t)
 
-     ! compute error when Gaussian arrives at center (t=1)
 
   end do
 
-  do j = 1, nc_v
-     do i = 1, nc_x
-        error = max(error,abs(df(i,j)-exp(-(x(i)**2+v(j)**2))))
+  ! compute error when Gaussian arrives at center (t=1)
+  do j = 1, nc_v+1
+     do i = 1, nc_x+1
+        x = x_min + (i-1)*(x_max-x_min)/nc_x
+        v = v_min + (j-1)*(v_max-v_min)/nc_v
+        error = max(error,abs(df(i,j)-exp(-(x*x+v*v))))
      end do
   end do
 
@@ -101,80 +89,55 @@ program unit_test_1d
 
 contains
 
-   subroutine advection_x(df, interp_x, dt)
-   class(sll_interpolator_1d_base), pointer  :: interp_x
-   sll_real64, intent(inout), dimension(:,:) :: df
+   subroutine advection_x(dt)
    sll_real64, intent(in) :: dt
 
-     do i = 1, nc_x
-        dx(i) = x(1) + modulo(x(i)-x(1)-dt*advfield_x,x(nc_x)-x(1))
-     end do
-
      do j = 1, nc_v
-        df(:,j) = interp_x%interpolate_array( nc_x, df(:,j), dx )
+        df(:,j) = interp_x%interpolate_array_disp(nc_x,df(:,j),dt*advfield_x)
      end do
 
    end subroutine advection_x
 
-   subroutine advection_v(df, interp_v, dt)
-   class(sll_interpolator_1d_base), pointer    :: interp_v
-   sll_real64, intent(inout), dimension(:,:) :: df
+   subroutine advection_v(dt)
    sll_real64, intent(in) :: dt
 
-     do j = 1, nc_v
-        dv(j) = v(1) + modulo(v(j)-v(1)-dt*advfield_v,v(nc_v)-v(1))
-     end do
-
      do i = 1, nc_x
-        df(i,:) = interp_v%interpolate_array( nc_v, df(i,:), dv )
+        df(i,:) = interp_v%interpolate_array_disp(nc_v,df(i,:),dt*advfield_v)
      end do
 
    end subroutine advection_v
 
+   subroutine plot_df(iplot)
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   integer :: iplot, i, j
+   character(len=4) :: cplot
+ 
+   call int2string(iplot,cplot)
 
-subroutine plot_df( df, iplot )
-
-sll_real64, dimension(:,:), intent(in) :: df
-integer :: iplot, i, j
-integer :: kk0, kk1, kk2, kk3, kk4
-character(len=4) :: fin
-character(len=1) :: aa,bb,cc,dd
-
-kk0 = iplot
-kk1 = kk0/1000
-aa  = char(kk1 + 48)
-kk2 = (kk0 - kk1*1000)/100
-bb  = char(kk2 + 48)
-kk3 = (kk0 - (kk1*1000) - (kk2*100))/10
-cc  = char(kk3 + 48)
-kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
-dd  = char(kk4 + 48)
-fin = aa//bb//cc//dd
-
-open(11, file="df-"//fin//".dat")
-do i = 1, size(x)
-   do j = 1, size(v)
-      write(11,*) x(i),v(j),df(i,j)
+   open(11, file="df-"//cplot//".dat")
+   do i = 1, size(df,1)
+      do j = 1, size(df,2)
+         x = x_min + (i-1)*(x_max-x_min)/nc_x
+         v = v_min + (j-1)*(v_max-v_min)/nc_v
+         write(11,*) x,v,df(i,j)
+      end do
+      write(11,*)
    end do
-   write(11,*)
-end do
-close(11)
+   close(11)
    
-open( 90, file = 'df.gnu', position="append" )
-if ( iplot == 1 ) then
-   rewind(90)
-   !write(90,*)"set cbrange[-1:1]"
-   !write(90,*)"set pm3d"
-   write(90,*)"set surf"
-   write(90,*)"set term x11"
-end if
+   open( 90, file = 'df.gnu', position="append" )
+   if ( iplot == 1 ) then
+      rewind(90)
+      !write(90,*)"set cbrange[-1:1]"
+      !write(90,*)"set pm3d"
+      write(90,*)"set surf"
+      write(90,*)"set term x11"
+   end if
 
-write(90,*)"set title 'step = ",iplot,"'"
-write(90,"(a)")"splot 'df-"//fin//".dat' u 1:2:3 w lines"
-close(90)
+   write(90,*)"set title 'step = ",iplot,"'"
+   write(90,"(a)")"splot 'df-"//cplot//".dat' u 1:2:3 w lines"
+   close(90)
 
-end subroutine plot_df
+   end subroutine plot_df
 
 end program unit_test_1d
