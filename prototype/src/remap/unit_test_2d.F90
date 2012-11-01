@@ -1,5 +1,5 @@
 program remap_2d_unit_test
-  use sll_collective
+  use sll_collective, only: sll_boot_collective, sll_halt_collective
 #include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -262,7 +262,7 @@ contains
     !          linear = i + ni*(j-1)
     !
     ! where i,j are the indices sought. We start by working backwards.
-    tmp = real(d)/real(ni)
+    tmp = real(d,f64)/real(ni,f64)
     j   = ceiling(tmp)
     ! reduce the size of the number we are working with
     q   = d - (j-1)*ni
