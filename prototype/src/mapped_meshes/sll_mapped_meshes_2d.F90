@@ -6,6 +6,8 @@ module sll_module_mapped_meshes_2d
 #ifdef STDF95
   use sll_cubic_spline_interpolator_2d
   use sll_io
+  use sll_xdmf
+  use sll_gnuplot
 #else
   use sll_module_mapped_meshes_2d_base
   use sll_module_interpolators_2d_base

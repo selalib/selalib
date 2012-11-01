@@ -8,7 +8,11 @@ program arbitrary_degree_spline_tester
   logical                                :: passed_test
   passed_test = .true.
 
-  call test_uniform_b_splines_randomly( passed_test )
+  print *, '*****************************************************************'
+  print *, 'Testing arbitrary degree splines module: '
+  print *, '*****************************************************************'
+
+!  call test_uniform_b_splines_randomly( passed_test )
   call  test_nonuniform_arb_deg_splines( passed_test )
 
   if( passed_test .eqv. .true. ) then
@@ -24,25 +28,26 @@ contains
     sll_real64                  :: criterion
     sll_real64                  :: argument
     sll_real64                  :: argument_copy
-    sll_real64, dimension(16)   :: results
-    sll_real64, dimension(16)   :: derivatives
-    sll_real64, dimension(2,16) :: sp_and_derivs
+    sll_real64, dimension(:), allocatable   :: results
+    sll_real64, dimension(:), allocatable   :: derivatives
+    sll_real64, dimension(:,:), allocatable :: sp_and_derivs
     sll_int32                   :: num_tests
     sll_int32                   :: i
     sll_int32                   :: j
     sll_int32                   :: max_degree
+    sll_int32                   :: ierr
 
     criterion          = 1.0e-15
-    results(:)         = 0.0_f64
-    derivatives(:)     = 0.0_f64
     argument           = 0.0_f64
-    sp_and_derivs(:,:) = 0.0_f64
     num_tests          = 100000
     argument_copy      = argument
     max_degree         = 12
  
-    do j=1, max_degree
+    do j=0, max_degree
        do i=1,num_tests
+          SLL_CLEAR_ALLOCATE(results(j+1),ierr)
+          SLL_CLEAR_ALLOCATE(derivatives(j+1),ierr)
+          SLL_CLEAR_ALLOCATE(sp_and_derivs(2,j+1),ierr)
           call random_number(argument)
           results(:) = uniform_b_splines_at_x(j, argument)
           derivatives(:) = uniform_b_spline_derivatives_at_x(j, argument)
@@ -78,6 +83,10 @@ contains
           results(:)         = 0.0_f64
           derivatives(:)     = 0.0_f64
           sp_and_derivs(:,:) = 0.0_f64
+
+          SLL_DEALLOCATE_ARRAY(results, ierr)
+          SLL_DEALLOCATE_ARRAY(derivatives, ierr)
+          SLL_DEALLOCATE_ARRAY(sp_and_derivs, ierr)
        end do
     end do
   end subroutine test_uniform_b_splines_randomly
@@ -102,7 +111,7 @@ contains
     sll_real64, dimension(:,:), allocatable :: answer3
     type(arbitrary_degree_spline_1d), pointer :: spline
 
-    num_tests = 100000
+    num_tests = 1 !100000
     criterion = 1.0e-15
     degree  = 3
     min_val = 0.0
@@ -124,6 +133,7 @@ contains
          degree, &
          knots, &
          num_pts, &
+!OPEN_ARBITRARY_DEG_SPLINE )
          PERIODIC_ARBITRARY_DEG_SPLINE )
 
     do j=1,num_tests

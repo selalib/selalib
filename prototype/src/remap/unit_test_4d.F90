@@ -1,5 +1,5 @@
 program remap_test_4d
-  use sll_collective
+  use sll_collective, only: sll_boot_collective, sll_halt_collective
 #include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -331,15 +331,15 @@ contains
     !          linear = i + ni*(j-1) + ni*nj*(k-1) + ni*nj*nk*(l-1)
     !
     ! where i,j,k,l are the indices sought. We start by working backwards.
-    tmp = real(d)/real(ni*nj*nk)
+    tmp = real(d,f64)/real(ni*nj*nk,f64)
     l   = ceiling(tmp)
     ! reduce the size of the number we are working with
     q   = d - (l-1)*ni*nj*nk
-    tmp = real(q)/real(ni*nj)
+    tmp = real(q,f64)/real(ni*nj,f64)
     k   = ceiling(tmp)
     ! reduce again
     q   = q - (k-1)*ni*nj
-    tmp = real(q)/real(ni)
+    tmp = real(q,f64)/real(ni,f64)
     j   = ceiling(tmp)
     ! final reduction
     q   = q - (j-1)*ni

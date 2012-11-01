@@ -1,9 +1,6 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_maxwell_2d
-!
+!>
+!>@namespace sll_maxwell_fdtd_2d
+!>
 !> @author
 !> Pierre Navaro Philippe Helluy
 !>
@@ -20,8 +17,6 @@
 !> - assert 
 !> - numerical_utilities
 !> - constants
-!> - mesh_types
-!> - diagnostics
 !> - sll_utilities
 !>
 ! REVISION HISTORY:
@@ -34,13 +29,12 @@ module sll_maxwell_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
 
 use numeric_constants
+use sll_maxwell_fdtd_2d
 
 implicit none
 private
-sll_real64 :: csq
 
 interface new
  module procedure new_maxwell_2d
@@ -57,105 +51,82 @@ public :: new, solve, delete
 !> Object with data to solve Maxwell equation on 2d domain
 !> Maxwell in TE mode: (Ex,Ey,Hz)
 type, public :: maxwell_2d
-  type(field_2d_vec3),      pointer :: fields
-  type(field_2d_vec3),      pointer :: dt_fields  
-  type(mesh_descriptor_2d), pointer :: descriptor
   sll_real64 :: c_light
   sll_real64 :: epsilon_0
+  sll_int32  :: ix, jx, iy, jy
+  sll_real64 :: dx, dy
 end type maxwell_2d
 
 enum, bind(C)
    enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
 end enum
 
+enum, bind(C)
+   enumerator :: FDTD = 0, PSTD = 1
+end enum
 
 contains
 
-function new_maxwell_2d(fields)
+subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy, METHOD )
 
-   type(maxwell_2d),         pointer :: new_maxwell_2d
-   type(field_2D_vec3),      pointer :: fields
-   type(mesh_descriptor_2d), pointer :: mesh
-   sll_int32                         :: nc_eta1
-   sll_int32                         :: nc_eta2
-   sll_int32                         :: error
+   type(maxwell_2d) :: this
+   sll_int32        :: ix, jx, iy, jy
+   sll_real64       :: dx, dy
+   sll_int32        :: error
+   sll_int32        :: METHOD
 
-   SLL_ASSERT(associated(fields))
+   select case(METHOD)
+   case(FDTD)
+      call new_maxwell_2d_fdtd
 
-   mesh => fields%descriptor
+end subroutine new_maxwell_2d
 
-   nc_eta1 = GET_MESH_NC_ETA1(mesh)
-   nc_eta2 = GET_MESH_NC_ETA2(mesh)
+subroutine solve_maxwell_2d(this, ex, ey, bz, dt)
 
-   SLL_ALLOCATE(new_maxwell_2d, error)
-   SLL_ALLOCATE(new_maxwell_2d%descriptor, error)
-
-   new_maxwell_2d%c_light   = 1.0_f64
-   new_maxwell_2d%epsilon_0 = 1.0_f64
-
-   SLL_ALLOCATE(new_maxwell_2d%dt_fields,error)
-   !new_maxwell_2d%dt_fields => new_field_2D_vec3(mesh)
-   new_maxwell_2d%fields => fields
-
-end function new_maxwell_2d
-
-subroutine solve_maxwell_2d(this,dt)
-
-   type(maxwell_2d), pointer :: this
+   type(maxwell_2d)          :: this
+   sll_real64 , intent(inout), dimension(:,:)   :: ex, ey, bz
    sll_real64 , intent(in)   :: dt
-   sll_int32                 :: nc_eta1
-   sll_int32                 :: nc_eta2
-
-   SLL_ASSERT(associated(this))
-   SLL_ASSERT(associated(this%fields))
-   nc_eta1 = this%fields%descriptor%nc_eta1
-   nc_eta2 = this%fields%descriptor%nc_eta2
 
    !B(n-1/2)--> B(n+1/2) sur les pts interieurs   
-   call faraday(this, 1, nc_eta1+1, 1, nc_eta2+1, dt)   
+   call faraday(this, ex, ey, bz, dt)   
 
-   call cl_periodiques(this, 1, nc_eta1+1, 1, nc_eta2+1, dt)
+   call cl_periodiques(this, ex, ey, bz, dt)
 
    !E(n)-->E(n+1) sur les pts interieurs
-   call ampere_maxwell(this, 1, nc_eta1+1, 1, nc_eta2+1, dt) 
+   call ampere_maxwell(this, ex, ey, bz, dt) 
 
- end subroutine solve_maxwell_2d
+end subroutine solve_maxwell_2d
 
-!> Delete the Maxwell object
 subroutine delete_maxwell_2d(this)
+   type(maxwell_2d), pointer :: this
   
-  type(maxwell_2d), pointer :: this
-
-  this => null()
-
 end subroutine delete_maxwell_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine faraday( this, ix, jx, iy, jy, dt )
+subroutine faraday( this, ex, ey, bz, dt )
 
-type(maxwell_2d), pointer :: this
-sll_int32, intent(in) :: ix, jx, iy, jy
-sll_real64, dimension(:,:), pointer :: ex, ey, bz
+type(maxwell_2d) :: this
+sll_real64, dimension(:,:), intent(in)    :: ex, ey
+sll_real64, dimension(:,:), intent(inout) :: bz
+sll_real64, intent(in) :: dt
 sll_int32 :: i, j
 sll_real64 :: dex_dy, dey_dx
-sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
-
-SLL_ASSERT(associated(this))
-SLL_ASSERT(associated(this%fields))
-
-ex => this%fields%data%v1 
-ey => this%fields%data%v2 
-bz => this%fields%data%v3 
+sll_int32  :: ix, jx, iy, jy
 
 csq = this%c_light * this%c_light
-dx  = this%fields%descriptor%delta_eta1
-dy  = this%fields%descriptor%delta_eta2
+dx  = this%dx
+dy  = this%dy
 
 !*** On utilise l'equation de Faraday sur un demi pas
 !*** de temps pour le calcul du champ magnetique  Bz 
 !*** a l'instant n puis n+1/2 
+
+ix = this%ix
+jx = this%jx
+iy = this%iy
+jy = this%jy
 
 do i=ix,jx-1
 do j=iy,jy-1
@@ -169,11 +140,12 @@ end subroutine faraday
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine ampere_maxwell( this, ix, jx, iy, jy, dt )
+subroutine ampere_maxwell( this, ex, ey, bz, dt )
 
-type(maxwell_2d), pointer :: this
-sll_int32, intent(in) :: ix, jx, iy, jy
-sll_real64, dimension(:,:), pointer :: ex, ey, bz
+type(maxwell_2d) :: this
+sll_int32 :: ix, jx, iy, jy
+sll_real64, dimension(:,:), intent(inout) :: ex, ey
+sll_real64, dimension(:,:), intent(in)    :: bz
 sll_int32 :: i, j
 sll_real64 :: dex_dx, dey_dy
 sll_real64 :: dex_dy, dey_dx
@@ -181,13 +153,14 @@ sll_real64 :: dbz_dx, dbz_dy
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
 
-ex => this%fields%data%v1 
-ey => this%fields%data%v2 
-bz => this%fields%data%v3 
+ix = this%ix
+jx = this%jx
+iy = this%iy
+jy = this%jy
 
 csq = this%c_light * this%c_light
-dx  = this%fields%descriptor%delta_eta1
-dy  = this%fields%descriptor%delta_eta2
+dx  = this%dx
+dy  = this%dy
 
 !*** Calcul du champ electrique E au temps n+1
 !*** sur les points internes du maillage
@@ -212,11 +185,11 @@ end subroutine ampere_maxwell
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine cl_periodiques(this, ix, jx, iy, jy, dt)
+subroutine cl_periodiques(this, ex, ey, bz, dt)
 
 type(maxwell_2d) :: this
-sll_int32, intent(in) :: ix, jx, iy, jy
-sll_real64, dimension(:,:), pointer :: ex, ey, bz
+sll_int32 :: ix, jx, iy, jy
+sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
 sll_real64 :: dex_dx, dey_dy
 sll_real64 :: dex_dy, dey_dx
 sll_real64 :: dbz_dx, dbz_dy
@@ -224,17 +197,18 @@ sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
 sll_int32 :: i, j
 
-ex => this%fields%data%v1 
-ey => this%fields%data%v2 
-bz => this%fields%data%v3 
+ix = this%ix
+jx = this%jx
+iy = this%iy
+jy = this%jy
 
 csq = this%c_light * this%c_light
-dx  = this%fields%descriptor%delta_eta1
-dy  = this%fields%descriptor%delta_eta2
+dx  = this%dx
+dy  = this%dy
 
 do i = ix, jx-1
    bz(i,jy) = bz(i,iy)
-end do
+end do1G1G
 do j = iy, jy-1
    bz(jx,j) = bz(ix,j)
 end do
@@ -255,17 +229,18 @@ end subroutine cl_periodiques
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine cl_condparfait(this, ix, jx, iy, jy, side)
+subroutine cl_condparfait(this, ex, ey, bz, t log side)
 
 type(maxwell_2d) :: this
 sll_int32, intent(in) :: side
-sll_int32, intent(in) :: ix, jx, iy, jy
+sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
+sll_int32 :: ix, jx, iy, jy
 sll_int32 :: i, j
-sll_real64, dimension(:,:), pointer :: ex, ey, bz
 
-ex => this%fields%data%v1 
-ey => this%fields%data%v2 
-bz => this%fields%data%v3 
+ix = this%ix
+jx = this%jx
+iy = this%iy
+jy = this%jy
 
 select case(side)
 case(SOUTH)
@@ -293,24 +268,26 @@ end subroutine cl_condparfait
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine silver_muller( this, ix, jx, iy, jy, ccall, dt )
+subroutine silver_muller( this, ex, ey, bz, ccall, dt )
 
 type(maxwell_2d) :: this
 sll_int32, intent(in) :: ccall
-sll_int32, intent(in) :: ix, jx, iy, jy
+sll_int32 :: ix, jx, iy, jy
 sll_real64 :: a11,a12,a21,a22,b1,b2,dis
 sll_int32 :: i, j
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy, c, csq
 sll_real64, dimension(:,:), pointer :: ex, ey, bz
 
-ex => this%fields%data%v1 
-ey => this%fields%data%v2 
-bz => this%fields%data%v3 
 c   = this%c_light 
 csq = c * c
-dx  = this%fields%descriptor%delta_eta1
-dy  = this%fields%descriptor%delta_eta2
+dx  = this%dx
+dy  = this%dy
+
+ix = this%ix
+jx = this%jx
+iy = this%iy
+jy = this%jy
 
 !Conditions de Silver-Muller
 !------------------------------------
@@ -338,7 +315,7 @@ case (NORTH)
          
       dis = a11*a22-a21*a12 
          
-      !fields%dataex(i,jy) = (b1*a22-b2*a12)/dis
+      !ex(i,jy) = (b1*a22-b2*a12)/dis
       bz(i,jy) = (a11*b2-a21*b1)/dis
          
    end do

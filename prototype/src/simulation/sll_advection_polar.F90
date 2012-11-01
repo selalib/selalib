@@ -74,6 +74,9 @@ contains
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
          & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
+   ! this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
+   !      & PERIODIC_SPLINE, PERIODIC_SPLINE)
+
   end function new_plan_adv_polar
 
 !===================================
@@ -114,7 +117,7 @@ contains
 
     type(sll_SL_polar), pointer :: this
     sll_real64 :: rmin,rmax,dr,dtheta,dt
-    sll_int32 :: nr,ntheta,bc
+    sll_int32 :: nr,ntheta,bc(2)
     sll_int32, intent(in) :: grad_case,time_scheme
 
     sll_int32 :: err
@@ -155,11 +158,115 @@ contains
 !  advection
 !==============
 
+
+  subroutine advect_CG_polar2(plan,fn,fnp1,phi)
+
+    implicit none
+
+    type(sll_plan_adv_polar), intent(inout), pointer :: plan
+    sll_real64, dimension(:,:), intent(in) :: fn,phi
+    sll_real64, dimension(:,:), intent(out) :: fnp1
+
+    sll_int32 :: nr, ntheta
+    sll_real64 :: dt, dr, dtheta, rmin, rmax
+    sll_int32 :: i,j,maxiter,iter,kr,k
+    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
+
+    nr=plan%nr
+    ntheta=plan%ntheta
+    dt=plan%dt
+    dr=plan%dr
+    dtheta=plan%dtheta
+    rmin=plan%rmin
+    rmax=plan%rmax
+
+    !construction of spline coefficients for f
+    call compute_spline_2D(fn,plan%spl_f)
+
+    !if (plan%time_scheme==1) then
+       !explicit Euler
+       fnp1=fn
+       do i=1,nr
+          
+          do j=1,ntheta
+             theta=real(j-1,f64)*dtheta
+             r=rmin+real(i-1,f64)*dr
+             !theta=theta-dt*plan%field(1,i,j)/r
+             !r=r+dt*plan%field(2,i,j)/r
+
+             theta=theta-dt*(phi(i+1,j)-phi(i,j))/(r*dr)
+             r=r+dt*(phi(i,j+1)-phi(i,j))/(r*dtheta)
+
+
+             !call correction_r(r,rmin,rmax)
+             !call correction_theta2(theta)
+             
+             
+             
+             r=(r-rmin)/(rmax-rmin)
+             if(r>=1._f64)then
+               r=1._f64
+             endif
+             if(r<0._f64)then
+               r=0._f64
+             endif             
+             
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
+
+             theta=theta/(2._f64*sll_pi)
+             
+             do while(theta>=1._f64)
+               theta=theta-1._f64
+             enddo
+             do while(theta<0._f64)
+               theta=theta+1._f64
+             enddo
+             
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             
+             if(k==ntheta+1)then
+               k=ntheta
+               theta=1._f64               
+             endif
+             if(kr==nr+1)then
+               kr=nr
+               r=1._f64               
+             endif
+             
+             if(k>=ntheta+1)then
+               print *,'k=',k,theta
+             endif
+             if(kr>=nr+1)then
+               print *,'kr=',kr,r
+             endif
+
+
+             fnp1(i,j)=(1._f64-theta)*((1.-r)*fn(kr,k)+r*fn(kr+1,k))&
+             +theta*((1.-r)*fn(kr,k+1)+r*fn(kr+1,k+1))
+             
+             r=rmin+(real(kr,f64)-1._f64+r)*dr
+             theta=(real(k,f64)-1._f64+theta)*dtheta
+             fnp1(i,j)=interpolate_value_2D(r,theta,plan%spl_f)
+
+          end do
+       end do
+  fnp1(:,ntheta+1)=fnp1(:,1)
+  
+end subroutine advect_CG_polar2
+
+
   !>subroutine advect_CG_polar(plan,in,out)
   !>compute step for Center-Guide equation
   !>plan : sll_plan_adv_polar object
   !>in : distribution function at time t_n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time t_(n+1), size (nr+1)*(ntheta+1)
+
+
+
   subroutine advect_CG_polar(plan,fn,fnp1)
 
     implicit none
@@ -186,16 +293,71 @@ contains
 
     if (plan%time_scheme==1) then
        !explicit Euler
-       do i=1,nr+1
-          r=rmin+real(i-1,f64)*dr
-          do j=1,ntheta+1
+       fnp1=fn
+       do i=1,nr
+          
+          do j=1,ntheta
              theta=real(j-1,f64)*dtheta
-
+             r=rmin+real(i-1,f64)*dr
              theta=theta-dt*plan%field(1,i,j)/r
              r=r+dt*plan%field(2,i,j)/r
 
-             call correction_r(r,rmin,rmax)
-             call correction_theta(theta)
+             !theta=theta-dt*(plan%phi(i+1,j)-plan%phi(i,j))/(r*dr)
+             !r=r+dt*(plan%phi(i,j+1)-plan%phi(i,j))/(r*dtheta)
+
+
+             !call correction_r(r,rmin,rmax)
+             !call correction_theta2(theta)
+             
+             
+             
+             r=(r-rmin)/(rmax-rmin)
+             if(r>=1._f64)then
+               r=1._f64
+             endif
+             if(r<0._f64)then
+               r=0._f64
+             endif             
+             
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
+
+             theta=theta/(2._f64*sll_pi)
+             
+             do while(theta>=1._f64)
+               theta=theta-1._f64
+             enddo
+             do while(theta<0._f64)
+               theta=theta+1._f64
+             enddo
+             
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             
+             if(k==ntheta+1)then
+               k=ntheta
+               theta=1._f64               
+             endif
+             if(kr==nr+1)then
+               kr=nr
+               r=1._f64               
+             endif
+             
+             if(k>=ntheta+1)then
+               print *,'k=',k,theta
+             endif
+             if(kr>=nr+1)then
+               print *,'kr=',kr,r
+             endif
+
+
+             fnp1(i,j)=(1._f64-theta)*((1.-r)*fn(kr,k)+r*fn(kr+1,k))&
+             +theta*((1.-r)*fn(kr,k+1)+r*fn(kr+1,k+1))
+             
+             r=rmin+(real(kr,f64)-1._f64+r)*dr
+             theta=(real(k,f64)-1._f64+theta)*dtheta
              fnp1(i,j)=interpolate_value_2D(r,theta,plan%spl_f)
 
           end do
@@ -223,7 +385,7 @@ contains
        do j=1,ntheta
           do i=1,nr+1
              !initialization for r interpolation
-             rr=rmin+real(i-1,f64)*dr-dt*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
+             rr=rmin+real(i-1,f64)*dr+dt*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
              r=0.0_f64
              iter=0
 
@@ -705,7 +867,7 @@ contains
   !> subroutine correction_theta(theta)
   !> correction of theta to stay in [0;2pi]
   !> theta : angle to correct
-  subroutine correction_theta(theta)
+  subroutine correction_theta2(theta)
 
     implicit none
 
@@ -733,7 +895,26 @@ contains
        print*,theta
     end if
 
+  end subroutine correction_theta2
+
+  subroutine correction_theta(theta)
+
+    implicit none
+
+    sll_real64, intent(inout) :: theta
+    sll_real64 :: th
+
+    th=theta
+    theta=theta-real(floor(theta/(2.0_f64*sll_pi)),f64)*2.0_f64*sll_pi
+    if (theta>2.0_f64*sll_pi) then
+       theta=theta-2.0_f64*sll_pi
+    end if
+    if (theta<0.0_f64) then
+       theta=theta+2.0_f64*sll_pi
+    end if
+
   end subroutine correction_theta
+
 
 
   !>subroutine SL_classic(plan,in,out)
@@ -751,7 +932,11 @@ contains
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    
+        
     call advect_CG_polar(plan%adv,in,out)
+
+    !print *,sum(abs(plan%adv%field(1,1,:)))
 
   end subroutine SL_classic
 
@@ -790,6 +975,23 @@ contains
 
 
 
+
+
+  subroutine print2d(dom,ftab,Nx,Ny,visucase,step,filename)
+    sll_int32,intent(in)::Nx,Ny,visucase,step
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx,0:Ny),intent(in)::ftab
+    character(len=*),intent(in)::filename
+
+    if(visucase==0)then
+       !gnuplot
+       call printgp2d(dom,ftab,Nx,Ny,step,filename)
+    endif
+    if(visucase==1)then
+       !vtk
+       call printvtk2d(dom,ftab,Nx,Ny,step,filename)
+    endif
+  end subroutine print2d
 
 
 
@@ -848,6 +1050,32 @@ contains
     close(900)  
   end subroutine printgp2dper
 
+
+  subroutine printgp2d(dom,ftab,Nx,Ny,step,filename)
+    sll_int32,intent(in)::Nx,Ny,step
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx,0:Ny),intent(in)::ftab
+    sll_int32::i,j
+    sll_real64::z(0:1),dz(0:1)
+    character(len=*),intent(in)::filename
+    character(len=80)::str,str2
+    write(str2,*)step
+    str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.dat'
+
+    dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
+    open(unit=900,file=str)
+    do j=0,Ny
+       do i=0,Nx
+          z(0)=dom(0,0)+real(i,f64)*dz(0)
+          z(1)=dom(0,1)+real(j,f64)*dz(1)
+          write(900,*) z(0),z(1),ftab(i,j)
+       enddo
+       write(900,*) ''      
+    enddo
+    close(900)  
+  end subroutine printgp2d
+
+
   subroutine printvtk2dper(dom,ftab,Nx,Ny,step,filename)
     sll_int32,intent(in)::Nx,Ny
     sll_real64,dimension(0:1,0:1),intent(in)::dom
@@ -904,6 +1132,49 @@ contains
     write(900,*) ftab(0,0)
     close(900)  
   end subroutine printvtk2dper
+
+  subroutine printvtk2d(dom,ftab,Nx,Ny,step,filename)
+    sll_int32,intent(in)::Nx,Ny
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    sll_real64,dimension(0:Nx,0:Ny),intent(in)::ftab
+    sll_int32::i,j
+    sll_int32,intent(in):: step
+    sll_real64::z(0:1),dz(0:1)
+    character(len=*),intent(in)::filename
+    character(len=80)::str,str2
+    write(str2,*)step
+    !write(str,*) 'mv f.dat f'//trim(adjustl((str2)))//'.dat';call system(str)
+    write(str,*) 'f'//trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
+    str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
+    dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
+    !open(unit=900,file='f.vtk')
+    open(unit=900,file=str,form='formatted')
+    write(900,'(A)')                  '# vtk DataFile Version 2.0'
+    write(900,'(A)')                  'Exemple'
+    write(900,'(A)')                  'ASCII'
+    write(900,'(A)')                  'DATASET STRUCTURED_POINTS'
+    write(900,'(A,I0,A,I0,A,I0)') 'DIMENSIONS ', Nx+1,' ', Ny+1,' ', 1
+    write(900,'(A,I0,A,I0,A,I0)') 'ORIGIN ', floor(dom(0,0)+0.1),' ' , floor(dom(0,1)+0.1),' ' , 0
+    !write(900,'(A,F10.4,A,F10.4,A,F10.4)') 'SPACING ', dz(0),' ', dz(1),' ', 1. 
+    write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
+    write(900,*)
+    write(900,'(A,I0)')           'POINT_DATA ',(Nx+1)*(Ny+1)
+    write(900,'(A,I0)')           'SCALARS f float ',1
+    write(900,'(A)')                  'LOOKUP_TABLE default'
+
+    do j=0,Ny
+       do i=0,Nx
+          z(0)=dom(0,0)+real(i,f64)*dz(0)
+          z(1)=dom(0,1)+real(j,f64)*dz(1)
+          !write(900,'(F0.8)') ftab(i,j)
+          write(900,*) ftab(i,j)
+       enddo
+    enddo
+    close(900)  
+  end subroutine printvtk2d
+
+
+
 
 
 end module polar_advection
