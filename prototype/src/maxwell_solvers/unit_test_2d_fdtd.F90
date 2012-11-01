@@ -82,7 +82,7 @@ do istep = 1, nstep !*** Loop over time
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' erreur L2 = ',g10.5)") sqrt(err_l2)
 
-   call plot_field(bz, bz_exact, istep, time)
+   call plot_field('bz',bz, bz_exact, istep, time)
 
 end do ! next time step
 
