@@ -19,6 +19,7 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
+type(maxwell_pstd)                 :: maxwell_TE
 type(maxwell_pstd)                 :: maxwell_TM
 sll_int32                          :: i, j
 sll_real64                         :: omega
@@ -37,10 +38,9 @@ sll_real64, dimension(:,:), allocatable :: hx
 sll_real64, dimension(:,:), allocatable :: hy
 sll_real64, dimension(:,:), allocatable :: ez, ez_exact
 
-!sll_real64, dimension(:,:), allocatable :: ex
-!sll_real64, dimension(:,:), allocatable :: ey
-!sll_real64, dimension(:,:), allocatable :: hz
-
+sll_real64, dimension(:,:), allocatable :: ex
+sll_real64, dimension(:,:), allocatable :: ey
+sll_real64, dimension(:,:), allocatable :: hz, hz_exact
 
 
 !Polarisation TE
@@ -84,20 +84,31 @@ SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez_exact(nc_eta2+1,nc_eta2+1), error)
 
-call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
-                            eta2_min, eta2_max, nc_eta2, error)
+!call initialize(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
+                            !eta2_min, eta2_max, nc_eta2, TM_POLARIZATION, error)
 
+!SLL_ALLOCATE(hx(nc_eta1+1,nc_eta2+1), error)
+!SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
+!SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
+!SLL_ALLOCATE(ez_exact(nc_eta2+1,nc_eta2+1), error)
+
+call initialize(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
+                            eta2_min, eta2_max, nc_eta2, TE_POLARIZATION, error)
 
 do istep = 1, nstep !*** Loop over time
 
    time = time + 0.5_f64*dt
    ez = cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
 
-   call solve(maxwell_TM, hx, hy, ez, dt)
+   call solve_tm(maxwell_TM, hx, hy, ez, dt)
+
+!   call solve(maxwell_TE, ex, ey, hz, dt)
 
    time = time + 0.5_f64*dt
 
-   ez_exact = cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
+   ez_exact =   cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
+   hz_exact = - cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
+
    err_l2 = maxval(abs(ez - ez_exact))
 
    write(*,"(10x,' istep = ',I6)",advance="no") istep
