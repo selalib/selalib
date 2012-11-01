@@ -503,6 +503,8 @@ ENDIF()
 
 add_test(NAME maxwell_2d_fdtd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
 set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+add_test(NAME maxwell_2d_pstd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
+set_tests_properties(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 add_test(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
 
    #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
