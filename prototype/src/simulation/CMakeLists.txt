@@ -1,5 +1,5 @@
 IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic -qsmp=omp ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
 add_library(sll_simulation_1d STATIC simulation_1d.F90)
