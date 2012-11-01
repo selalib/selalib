@@ -62,12 +62,9 @@ implicit none
 interface initialize
  module procedure new_maxwell_2d_pstd
 end interface initialize
-interface solve_tm
- module procedure solve_maxwell_2d_tm
-end interface solve_tm
-interface solve_te
- module procedure solve_maxwell_2d_te
-end interface solve_te
+interface solve
+ module procedure solve_maxwell_2d
+end interface solve
 interface free
  module procedure free_maxwell_2d_pstd
 end interface free
@@ -129,10 +126,10 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
-   self%fwx = fftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_MEASURE)
-   self%bwx = fftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_MEASURE)
-   self%fwy = fftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_MEASURE)
-   self%bwy = fftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_MEASURE)
+   self%fwx = fftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_ESTIMATE)
+   self%bwx = fftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_ESTIMATE)
+   self%fwy = fftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_ESTIMATE)
+   self%bwy = fftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_ESTIMATE)
 
    SLL_ALLOCATE(self%kx(nx/2+1), error)
    SLL_ALLOCATE(self%ky(ny/2+1), error)
@@ -154,37 +151,46 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
 
 end subroutine new_maxwell_2d_pstd
 
-subroutine solve_maxwell_2d_tm(self, hx, hy, ez, dt)
+subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
 
    type(maxwell_pstd)          :: self
-   sll_real64 , intent(inout), dimension(:,:)   :: hx, hy, ez
+   sll_real64 , intent(inout), dimension(:,:)   :: fx
+   sll_real64 , intent(inout), dimension(:,:)   :: fy
+   sll_real64 , intent(inout), dimension(:,:)   :: fz
    sll_real64 , intent(in)   :: dt
 
-   !H(n-1/2)--> H(n+1/2) sur les pts interieurs   
-   call faraday_tm(self, hx, hy, ez, dt)   
+   IF ( self%polarization == TM_POLARIZATION) then
+      call faraday_tm(self, fx, fy, fz, dt)   
+      call bc_periodic(self, fx, fy, fz)
+      call ampere_maxwell_tm(self, fx, fy, fz, dt) 
+   end if
 
-   !call cl_periodiques(self, hx, hy, ez, dt)
+   IF ( self%polarization == TE_POLARIZATION) then
+      call faraday_te(self, fx, fy, fz, dt)   
+      call bc_periodic(self, fx, fy, fz)
+      call ampere_maxwell_te(self, fx, fy, fz, dt) 
+   end if
 
-   !E(n)-->E(n+1) sur les pts interieurs
-   call ampere_maxwell_tm(self, hx, hy, ez, dt) 
+end subroutine solve_maxwell_2d
 
-end subroutine solve_maxwell_2d_tm
 
-subroutine solve_maxwell_2d_te(self, ex, ey, hz, dt)
-
+subroutine bc_periodic(self, fx, fy, fz)
    type(maxwell_pstd)          :: self
-   sll_real64 , intent(inout), dimension(:,:)   :: ex, ey, hz
-   sll_real64 , intent(in)   :: dt
+   sll_real64 , intent(inout), dimension(:,:) :: fx
+   sll_real64 , intent(inout), dimension(:,:) :: fy
+   sll_real64 , intent(inout), dimension(:,:) :: fz
+   sll_int32 :: nx, ny
 
-   !H(n-1/2)--> H(n+1/2) sur les pts interieurs   
-   call faraday_te(self, ex, ey, hz, dt)   
+   nx = self%nx
+   ny = self%ny
 
-   !call cl_periodiques(self, hx, hy, ez, dt)
+   fx(:,ny+1) = fx(:,1) 
+   fy(nx+1,:) = fy(1,:)
+   fz(nx+1,:) = fz(1,:)
+   fz(:,ny+1) = fz(:,1)
 
-   !E(n)-->E(n+1) sur les pts interieurs
-   call ampere_maxwell_te(self, ex, ey, hz, dt) 
+end subroutine bc_periodic
 
-end subroutine solve_maxwell_2d_te
 
 !> Solve faraday 
 subroutine faraday_tm(self, hx, hy, ez, dt)
@@ -200,21 +206,17 @@ subroutine faraday_tm(self, hx, hy, ez, dt)
    nx = self%nx
    ny = self%ny
 
-   do i = 1, nx
+   do i = 1, nx+1
       D_DY(ez(i,1:ny))
       hx(i,1:ny) = hx(i,1:ny) - dt * self%d_dy
    end do
 
-   hx(nx+1,:) = hx(1,:) 
-   hx(:,ny+1) = hx(:,1) 
 
-   do j = 1, ny
+   do j = 1, ny+1
       D_DX(ez(1:nx,j))
       hy(1:nx,j) = hy(1:nx,j) + dt * self%d_dx
    end do
 
-   hy(nx+1,:) = hy(1,:)
-   hy(:,ny+1) = hy(:,1)
 
 end subroutine faraday_tm
 
@@ -232,21 +234,15 @@ subroutine faraday_te(self, ex, ey, hz, dt)
    nx = self%nx
    ny = self%ny
 
-   do i = 1, nx
+   do i = 1, nx+1
       D_DY(ex(i,1:ny))
       hz(i,1:ny) = hz(i,1:ny) + dt * self%d_dy
    end do
 
-   hz(nx+1,:) = hz(1,:) 
-   hz(:,ny+1) = hz(:,1) 
-
-   do j = 1, ny
+   do j = 1, ny+1
       D_DX(ey(1:nx,j))
       hz(1:nx,j) = hz(1:nx,j) - dt * self%d_dx
    end do
-
-   hz(nx+1,:) = hz(1,:)
-   hz(:,ny+1) = hz(:,1)
 
 end subroutine faraday_te
 
@@ -264,19 +260,17 @@ subroutine ampere_maxwell_tm(self, hx, hy, ez, dt)
    nx = self%nx
    ny = self%ny
 
-   do j = 1, ny
+   do j = 1, ny+1
       D_DX(hy(1:nx,j))
       ez(1:nx,j) = ez(1:nx,j) + dt * self%d_dx
    end do
 
-   ez(nx+1,:)   = ez(1,:)
 
-   do i = 1, nx
+   do i = 1, nx+1
       D_DY(hx(i,1:ny))
       ez(i,1:ny) = ez(i,1:ny) - dt * self%d_dy
    end do
 
-   ez(:,ny+1)  = ez(:,1)
 
 end subroutine ampere_maxwell_tm
 
@@ -294,19 +288,17 @@ subroutine ampere_maxwell_te(self, ex, ey, hz, dt)
    nx = self%nx
    ny = self%ny
 
-   do j = 1, ny
+   do j = 1, ny+1
       D_DX(hz(1:nx,j))
       ey(1:nx,j) = ey(1:nx,j) - dt * self%d_dx
    end do
 
-   ey(nx+1,:)   = ey(1,:)
 
-   do i = 1, nx
+   do i = 1, nx+1
       D_DY(hz(i,1:ny))
       ex(i,1:ny) = ex(i,1:ny) + dt * self%d_dy
    end do
 
-   ex(:,ny+1)  = ex(:,1)
 
 end subroutine ampere_maxwell_te
 
