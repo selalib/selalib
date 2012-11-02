@@ -104,6 +104,7 @@ do i_step = 1, n_step
 
 end do
 
+print*,'PASSED'
 100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
 
 contains

@@ -108,8 +108,8 @@ do istep = 1, nstep !*** Loop over time
       hz = hz_exact
    end if
 
-   call plot_field('ez',ez, ez_exact, istep, time)
-   call plot_field('hz',hz, hz_exact, istep, time)
+   !call plot_field('ez',ez, ez_exact, istep, time)
+   !call plot_field('hz',hz, hz_exact, istep, time)
 
    err_tm = maxval(abs(ez - ez_exact))
    err_te = maxval(abs(hz - hz_exact))
