@@ -15,12 +15,15 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell
                                            sll_utilities 
                                            sll_fft )
 
-ADD_EXECUTABLE(test_maxwell_2d_pstd unit_test_2d_pstd.F90 )
+IF(FFTW_FOUND)
 
-TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd sll_maxwell
-                                           sll_assertion 
-                                           sll_constants 
-                                           sll_memory 
-                                           sll_collective 
-                                           sll_utilities 
-                                           sll_fft)
+   ADD_EXECUTABLE(test_maxwell_2d_pstd unit_test_2d_pstd.F90 )
+   
+   TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd sll_maxwell
+                                              sll_assertion 
+                                              sll_constants 
+                                              sll_memory 
+                                              sll_collective 
+                                              sll_utilities 
+                                              sll_fft)
+ENDIF(FFTW_FOUND)
