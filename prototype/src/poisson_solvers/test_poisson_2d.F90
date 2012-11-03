@@ -2,7 +2,7 @@ program test_poisson_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_2d.h"
+!#include "sll_field_2d.h"
 #include "sll_poisson_solvers.h"
 
    !-------------------------------------------------------------------
@@ -12,10 +12,9 @@ program test_poisson_2d
    use numeric_constants
    use sll_poisson_2D_periodic
    use geometry_functions
+
    use sll_module_mapped_meshes_2d_base
    use sll_module_mapped_meshes_2d_cartesian
-   use sll_scalar_field_2d
-   use sll_scalar_field_initializers_base
 
    implicit none
 
@@ -25,6 +24,7 @@ program test_poisson_2d
 
    type (sll_mapped_mesh_2d_cartesian), target :: mesh
    class(sll_mapped_mesh_2d_base), pointer     :: m
+
 !   type (scalar_field_2d)                      :: ex
 !   type (scalar_field_2d)                      :: ey
 !   type (scalar_field_2d)                      :: ex_exact
@@ -103,9 +103,12 @@ program test_poisson_2d
    end do
    close(13)
 
+#ifdef _FFTPACK
+
    call poisson%initialize( eta1_min, eta1_max, nc_eta1, &
                             eta2_min, eta2_max, nc_eta2, error) 
 
+
    call poisson%solve( phi, rho)
    write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
    call poisson%solve( phi, rho)
@@ -118,5 +121,25 @@ program test_poisson_2d
    call poisson%solve( ex, ey, rho)
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
+
+#else
+
+   call initialize( poisson, eta1_min, eta1_max, nc_eta1, &
+                    eta2_min, eta2_max, nc_eta2, rho, error) 
+
+   call solve( poisson, phi, rho)
+   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   call solve( poisson, phi, rho)
+   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+
+   call solve( poisson, ex, ey, rho)
+   write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
+   write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
+
+   call solve( poisson, ex, ey, rho)
+   write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
+   write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
+
+#endif
 
 end program test_poisson_2d

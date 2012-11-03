@@ -18,12 +18,10 @@ implicit none
 !Geometry
 sll_real64 :: eta1_min, eta1_max, eta2_min, eta2_max
 sll_real64 :: eta3_min, eta3_max, eta4_min, eta4_max
-type(geometry_2D), pointer :: geom_x, geom_v
 
 !Grids
 sll_int32  :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
-type(mesh_descriptor_2D), pointer :: mesh_x, mesh_v
 
 !Time domain
 sll_int32  :: i_step, n_step, j_step
@@ -31,14 +29,13 @@ sll_real64 :: delta_t
 sll_real64 :: time
 
 !Distribution function 4D
-type(sll_distribution_function_4D_t), pointer :: dist_func
-
-type (bsl_workspace_4d), pointer :: bsl
+sll_real64, dimension(:,:,:,:), allocatable :: dist_func
+sll_real64, dimension(:,:), allocatable :: ex
+sll_real64, dimension(:,:), allocatable :: ey
+sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
 type(poisson_2d_periodic), pointer :: poisson
-type(field_2D_vec2),       pointer :: exy
-type(field_2D_vec1),       pointer :: rho
 
 sll_real64, dimension(:), pointer  ::  eta1_out 
 sll_real64, dimension(:), pointer  ::  eta2_out
@@ -46,9 +43,9 @@ sll_real64, dimension(:), pointer  ::  eta3_out
 sll_real64, dimension(:), pointer  ::  eta4_out
 
 !Diagnostics and errors
-sll_int32                          :: error
+sll_int32                             :: error
 sll_real64, dimension(:), allocatable :: nrj
-character(len=4) :: counter
+character(len=4) :: cplot
 
 !Local indices
 sll_int32  :: i1, i2, i3, i4
@@ -57,34 +54,23 @@ sll_int32  :: i1, i2, i3, i4
 eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_pi
 eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_pi
 
-geom_x => new_geometry_2D('cartesian')
-
 nc_eta1 = 31; nc_eta2 = 31
 
-mesh_x => new_mesh_descriptor_2D(eta1_min, eta1_max, nc_eta1, &
-          PERIODIC, eta2_min, eta2_max, nc_eta2, PERIODIC, geom_x)
-
-delta_eta1 = GET_MESH_DELTA_ETA1(mesh_x)
-delta_eta2 = GET_MESH_DELTA_ETA2(mesh_x)
-
-call write_mesh_2d(mesh_x,"mesh_x")
+delta_eta1 = (eta1_max-eta1_min)/nc_eta1
+delta_eta2 = (eta2_max-eta2_min)/nc_eta2
 
 !v domain
 eta3_min = -6.0_f64; eta3_max = 6.0_f64 
 eta4_min = -6.0_f64; eta4_max = 6.0_f64 
 
-geom_v => new_geometry_2D('cartesian')
-
 nc_eta3 = 31; nc_eta4 = 31
 
-mesh_v => new_mesh_descriptor_2D(eta3_min, eta3_max, nc_eta3, &
-          PERIODIC, eta4_min, eta4_max, nc_eta4, PERIODIC, geom_v)
+delta_eta3 = (eta3_max-eta3_min)/nc_eta3
+delta_eta4 = (eta4_max-eta4_min)/nc_eta4
 
-delta_eta3 = GET_MESH_DELTA_ETA1(mesh_v)
-delta_eta4 = GET_MESH_DELTA_ETA2(mesh_v)
-
-rho     => new_field_2D_vec1(mesh_x)
-exy     => new_field_2D_vec2(mesh_x)
+SLL_ALLOCATE(rho(nc_eta1+1,nc_eta2+1)
+SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1)
+SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1)
 
 poisson   => new_poisson_2d_periodic(exy)
 
