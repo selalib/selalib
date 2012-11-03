@@ -127,15 +127,26 @@ program test_poisson_2d
    call initialize( poisson, eta1_min, eta1_max, nc_eta1, &
                     eta2_min, eta2_max, nc_eta2, rho, error) 
 
-   call solve( poisson, phi, rho)
-   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
-   call solve( poisson, phi, rho)
-   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   mode = 2
+   do i = 1, nc_eta1+1
+      do j = 1, nc_eta2+1
+         x1 = (i-1)*(eta1_max-eta1_min)/nc_eta1
+         x2 = (j-1)*(eta2_max-eta2_min)/nc_eta2
+         phi_exact(i,j) = mode * sin(mode*x1) * cos(mode*x2)
+         ex_exact(i,j)  =  1_f64*mode**2*cos(mode*x1)*cos(mode*x2)
+         ey_exact(i,j)  = -1_f64*mode**2*sin(mode*x1)*sin(mode*x2)
+         rho(i,j) = -2_f64 * mode**3 * sin(mode*x1)*cos(mode*x2)
+         write(14,*) x1, x2, rho(i,j)
+      end do
+   end do
 
+   call solve( poisson, phi, rho)
+   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   call solve( poisson, phi, rho)
+   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
    call solve( poisson, ex, ey, rho)
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
-
    call solve( poisson, ex, ey, rho)
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))

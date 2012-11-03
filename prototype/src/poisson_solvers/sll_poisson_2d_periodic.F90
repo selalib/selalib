@@ -315,7 +315,7 @@ subroutine initialize(self, x_min, x_max, nc_x, &
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, intent(in) :: x_min, x_max, y_min, y_max
    sll_int32  :: error
-   sll_int32                                 :: nc_x, nc_y
+   sll_int32  :: nc_x, nc_y
    sll_int32  :: ik, jk
    sll_real64 :: kx1, kx0, ky0
 
@@ -346,9 +346,9 @@ subroutine initialize(self, x_min, x_max, nc_x, &
    !call dfftw_plan_with_nthreads(nthreads)
 
    self%fw = fftw_plan_dft_r2c_2d(nc_y,nc_x,rho(1:nc_x,1:nc_y), &
-                                  self%ext,FFTW_ESTIMATE)
+                                  self%ext,FFTW_MEASURE)
    self%bw = fftw_plan_dft_c2r_2d(nc_y,nc_x,self%eyt,           &
-                                  rho(1:nc_x,1:nc_y),FFTW_ESTIMATE)
+                                  rho(1:nc_x,1:nc_y),FFTW_MEASURE)
 
    kx0 = 2._f64*sll_pi/(x_max-x_min)
    ky0 = 2._f64*sll_pi/(y_max-y_min)
@@ -370,29 +370,33 @@ subroutine initialize(self, x_min, x_max, nc_x, &
    self%kx = self%kx/self%k2
    self%ky = self%ky/self%k2
 
-   !SLL_DEALLOCATE(self%k2, error)
-
 end subroutine initialize
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.
-subroutine solve_potential(self, rho, phi)
+subroutine solve_potential(self, phi, rho)
 
    type(poisson_2d_periodic),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: phi
    sll_int32                                 :: nc_x, nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho, self%rhot)
+   nc_x = self%nc_x
+   nc_y = self%nc_y
+
+   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rhot)
 
    self%rhot = self%rhot / self%k2
 
-   call fftw_execute_dft_c2r(self%bw, self%rhot, phi)
+   call fftw_execute_dft_c2r(self%bw, self%rhot, phi(1:nc_x,1:nc_y))
 
    nc_x = self%nc_x
    nc_y = self%nc_y
 
    phi = phi / (nc_x*nc_y)     ! normalize
+
+   phi(nc_x+1,:) = phi(1,:)
+   phi(:,nc_y+1) = phi(:,1)
 
 end subroutine solve_potential
 
@@ -411,18 +415,23 @@ subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho, self%rhot)
+   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rhot)
 
    self%ext(1,1) = 0.0_f64
    self%eyt(1,1) = 0.0_f64
    self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%rhot
    self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%rhot
 
-   call fftw_execute_dft_c2r(self%bw, self%ext, e_x)
-   call fftw_execute_dft_c2r(self%bw, self%eyt, e_y)
+   call fftw_execute_dft_c2r(self%bw, self%ext, e_x(1:nc_x,1:nc_y))
+   call fftw_execute_dft_c2r(self%bw, self%eyt, e_y(1:nc_x,1:nc_y))
 
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
+
+   e_x(nc_x+1,:) = e_x(1,:)
+   e_x(:,nc_y+1) = e_x(:,1)
+   e_y(nc_x+1,:) = e_y(1,:)
+   e_y(:,nc_y+1) = e_y(:,1)
 
    if (present(nrj)) then 
       dx = self%dx
