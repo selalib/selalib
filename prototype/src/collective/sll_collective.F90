@@ -906,7 +906,7 @@ contains !************************** Operations **************************
    SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
    SLL_DEALLOCATE_ARRAY(send_displs,ierr)
    SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
-#endif
 end subroutine sll_collective_alltoallV_int_simple
+#endif
 
 end module sll_collective
