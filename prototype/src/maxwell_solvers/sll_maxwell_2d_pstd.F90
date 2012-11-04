@@ -25,8 +25,8 @@
 !> - sll_utilities
 !>
 ! REVISION HISTORY:
-! 09 01 2012 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+! 31 10 2012 - Initial Version with boundary conditions
+! 01 11 2012 - Implement absorbing and reflection boundary conditions
 !------------------------------------------------------------------------------
 
 
@@ -164,13 +164,13 @@ subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
    IF ( self%polarization == TM_POLARIZATION) then
       call faraday_tm(self, fx, fy, fz, dt)   
       call bc_periodic(self, fx, fy, fz)
-      call ampere_maxwell_tm(self, fx, fy, fz, dt) 
+      call ampere_tm(self, fx, fy, fz, dt) 
    end if
 
    IF ( self%polarization == TE_POLARIZATION) then
       call faraday_te(self, fx, fy, fz, dt)   
       call bc_periodic(self, fx, fy, fz)
-      call ampere_maxwell_te(self, fx, fy, fz, dt) 
+      call ampere_te(self, fx, fy, fz, dt) 
    end if
 
 end subroutine solve_maxwell_2d
@@ -255,7 +255,7 @@ subroutine faraday_te(self, ex, ey, hz, dt)
 end subroutine faraday_te
 
 !> Solve ampere
-subroutine ampere_maxwell_tm(self, hx, hy, ez, dt, jz)
+subroutine ampere_tm(self, hx, hy, ez, dt, jz)
 
    type(maxwell_pstd),intent(inout)      :: self
    sll_int32                             :: nx
@@ -286,10 +286,10 @@ subroutine ampere_maxwell_tm(self, hx, hy, ez, dt, jz)
       ez = ez - dt_e * jz 
    end if
 
-end subroutine ampere_maxwell_tm
+end subroutine ampere_tm
 
 !> Solve ampere
-subroutine ampere_maxwell_te(self, ex, ey, hz, dt, jx, jy)
+subroutine ampere_te(self, ex, ey, hz, dt, jx, jy)
 
    type(maxwell_pstd),intent(inout)      :: self
    sll_real64, dimension(:,:)            :: ex
@@ -323,7 +323,7 @@ subroutine ampere_maxwell_te(self, ex, ey, hz, dt, jx, jy)
       ey = ey - dt_e * jy 
    end if
 
-end subroutine ampere_maxwell_te
+end subroutine ampere_te
 
 subroutine free_maxwell_2d_pstd(self)
 type(maxwell_pstd) :: self
