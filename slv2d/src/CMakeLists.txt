@@ -21,7 +21,7 @@ ELSE()
    IF(Fortran_COMPILER STREQUAL "GFORTRAN")
       FIND_PACKAGE(LAPACK)
    ELSE()
-      INCLUDE(${CMAKE_MODULE_PATH}/FindLapack.cmake)
+      INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FindLapack.cmake)
    ENDIF()
 ENDIF()
 
@@ -114,7 +114,6 @@ ENDIF()
 IF(Fortran_COMPILER STREQUAL "XLF")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
-MESSAGE(STATUS " fc " ${Fortran_COMPILER} " fc name " ${Fortran_COMPILER_NAME})
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
