@@ -43,12 +43,12 @@ ENDIF()
 # this checks the existing collection of compiler flags to find if the
 # fortran95 standard was requested. 
 #STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
-IF("${VAR}" STREQUAL "-1")
+#IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
-ELSE()
-  set(STDF95 YES)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
-  add_definitions(-DSTDF95)
-ENDIF()
+#ELSE()
+#  set(STDF95 YES)
+#  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+#  add_definitions(-DSTDF95)
+#ENDIF()
 
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
