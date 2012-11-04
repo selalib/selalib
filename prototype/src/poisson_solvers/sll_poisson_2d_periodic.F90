@@ -70,7 +70,7 @@ interface solve
    module procedure solve_potential
    module procedure solve_e_fields
 end interface
-interface free
+interface delete
    module procedure free_poisson
 end interface
 

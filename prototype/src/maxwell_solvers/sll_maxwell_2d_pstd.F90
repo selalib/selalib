@@ -97,7 +97,7 @@ contains
 
 subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
                                      ymin, ymax, ny, &
-                                     polarization, error )
+                                     polarization )
    type(maxwell_pstd)                        :: self
    sll_real64                                :: xmin
    sll_real64                                :: xmax
@@ -153,6 +153,8 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
 
 end subroutine new_maxwell_2d_pstd
 
+!> this routine exists only for testing purpose. Use ampere and faraday
+!> in your appication.
 subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
 
    type(maxwell_pstd)                         :: self
@@ -162,15 +164,21 @@ subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
    sll_real64 , intent(in)   :: dt
 
    IF ( self%polarization == TM_POLARIZATION) then
-      call faraday_tm(self, fx, fy, fz, dt)   
+      call faraday_tm(self, fx, fy, fz, 0.5*dt)   
       call bc_periodic(self, fx, fy, fz)
       call ampere_tm(self, fx, fy, fz, dt) 
+      call bc_periodic(self, fx, fy, fz)
+      call faraday_tm(self, fx, fy, fz, 0.5*dt)   
+      call bc_periodic(self, fx, fy, fz)
    end if
 
    IF ( self%polarization == TE_POLARIZATION) then
-      call faraday_te(self, fx, fy, fz, dt)   
+      call faraday_te(self, fx, fy, fz, 0.5*dt)   
       call bc_periodic(self, fx, fy, fz)
       call ampere_te(self, fx, fy, fz, dt) 
+      call bc_periodic(self, fx, fy, fz)
+      call faraday_te(self, fx, fy, fz, 0.5*dt)   
+      call bc_periodic(self, fx, fy, fz)
    end if
 
 end subroutine solve_maxwell_2d

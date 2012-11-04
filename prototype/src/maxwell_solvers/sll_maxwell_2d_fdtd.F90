@@ -34,7 +34,7 @@ use sll_maxwell
 use numeric_constants
 
 implicit none
-private
+!private
 
 interface initialize
  module procedure new_maxwell_2d_fdtd
@@ -42,14 +42,12 @@ end interface
 interface solve
  module procedure solve_maxwell_2d_fdtd
 end interface
-interface free
- module procedure delete_maxwell_2d_fdtd
-end interface
 
-public :: initialize, solve, free
+public :: initialize, solve, ampere, faraday
 
-!> Object with data to solve Maxwell equation on 2d domain
+!> Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
+!> Only 2D  for now
 type, public :: maxwell_fdtd
   sll_real64 :: c
   sll_real64 :: e_0
@@ -81,6 +79,8 @@ subroutine new_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
 
 end subroutine new_maxwell_2d_fdtd
 
+!> this routine exists only for testing purpose. Use ampere and faraday
+!> in your appication.
 subroutine solve_maxwell_2d_fdtd(this, ex, ey, bz, dt)
 
    type(maxwell_fdtd)          :: this
@@ -88,19 +88,17 @@ subroutine solve_maxwell_2d_fdtd(this, ex, ey, bz, dt)
    sll_real64 , intent(in)   :: dt
 
    !B(n-1/2)--> B(n+1/2) sur les pts interieurs   
-   call faraday(this, ex, ey, bz, dt)   
-
+   call faraday(this, ex, ey, bz, 0.5*dt)   
    call cl_periodiques(this, ex, ey, bz, dt)
 
    !E(n)-->E(n+1) sur les pts interieurs
    call ampere(this, ex, ey, bz, dt) 
+   call cl_periodiques(this, ex, ey, bz, dt)
+
+   call faraday(this, ex, ey, bz, 0.5*dt)   
+   call cl_periodiques(this, ex, ey, bz, dt)
 
 end subroutine solve_maxwell_2d_fdtd
-
-subroutine delete_maxwell_2d_fdtd( this)
-   type(maxwell_fdtd) :: this
-  
-end subroutine delete_maxwell_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
