@@ -106,8 +106,8 @@ program vp2d_keen
           dr_param%t0, dr_param%turn_drive_off)
      do j = jstartx, jendx
         do i = 1, geomx%nx
-           e_x(i,j) = e_x(i,j) + dr_param%Edrmax * dr_param%adr * dr_param%kdr * &
-                sin(dr_param%kdr * (i-1) * geomx%dx - dr_param%omegadr*iter*dt)
+           e_y(i,j) = e_y(i,j) + dr_param%Edrmax * dr_param%adr * dr_param%kdr * &
+                sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
         enddo
      end do
 
