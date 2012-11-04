@@ -42,7 +42,7 @@ ENDIF()
 
 # this checks the existing collection of compiler flags to find if the
 # fortran95 standard was requested. 
-STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
+#STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
 IF("${VAR}" STREQUAL "-1")
   set(STDF95 NO)
 ELSE()
