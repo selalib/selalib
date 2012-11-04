@@ -80,6 +80,8 @@ SLL_ALLOCATE(nrj(n_step), error)
 print*, "set title'", delta_eta1, delta_eta2,"'"
 print*, 'set term x11'
 
+call advection_x(0.5*delta_t)
+
 do i_step = 1, n_step
 
    do i = 1, nc_eta1+1
@@ -88,12 +90,16 @@ do i_step = 1, n_step
 
    call solve(poisson, ex , rho)
 
-   call advection_x(0.5*delta_t)
    call advection_v(delta_t)
-   call advection_x(0.5*delta_t)
+   call advection_x(delta_t)
    
    nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
    
+   open(11, file='thf_2d.dat', position='append')
+   if (i_step == 1) rewind(11)
+   write(11,*) time, nrj(i_step)
+   close(11)
+
    time = time + delta_t
 
    write(*,100) .0,n_step*delta_t,-29.5,0.5

@@ -113,7 +113,7 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine plot_field(fname, f1, f2, iplot, time )
+subroutine plot_fields(fname, f1, f2, iplot, time )
 
 sll_real64, dimension(:,:), intent(in) :: f1, f2
 integer :: iplot, i, j
@@ -145,7 +145,7 @@ open( 90, file = fname//'plots.gnu', position="append" )
      rewind(90)
      !write(90,*)"set xr[-0.1:1.1]"
      !write(90,*)"set yr[-0.1:1.1]"
-     write(90,*)"set zr[-1.1:1.1]"
+     !write(90,*)"set zr[-1.1:1.1]"
      !write(90,*)"set cbrange[-1:1]"
      !write(90,*)"set pm3d"
      write(90,*)"set surf"
@@ -156,6 +156,6 @@ open( 90, file = fname//'plots.gnu', position="append" )
   write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
   close(90)
 
-end subroutine plot_field
+end subroutine plot_fields
 
 end module sll_maxwell

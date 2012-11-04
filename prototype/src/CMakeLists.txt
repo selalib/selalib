@@ -316,11 +316,14 @@ IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
    ENDIF()
 ENDIF(MUDPACK_ENABLED)
+
 add_subdirectory(LinRood)
+
 add_subdirectory(maxwell_solvers)
 
 add_subdirectory(BSL)
 add_subdirectory(CSL)
+
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
 #add_custom_target(install make selalib_low_level)
