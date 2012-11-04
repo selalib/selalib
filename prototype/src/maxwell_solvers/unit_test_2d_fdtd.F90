@@ -101,7 +101,7 @@ do istep = 1, nstep !*** Loop over time
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
 
-   !call plot_field('ez',ez, ez_exact, istep, time)
+   !call plot_fields('ez',ez, ez_exact, istep, time)
 
    call solve(maxwell_TE, ex, ey, bz, dt)
    call solve(maxwell_TM, bx, by, ez, dt)

@@ -67,7 +67,7 @@ IF(FFTPACK_ENABLED)
   )
 ELSE()
 
-   IF(FFTW_FOUND)
+IF(FFTW_FOUND)
      ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90)
      ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
      TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
