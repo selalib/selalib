@@ -82,7 +82,7 @@ program test_tridiag
         call random_number(a)
         call random_number(b)
         do i=1,max_n
-          b_complex(i) = complex(b(i),1._f64)
+          b_complex(i) = cmplx(b(i),1._f64)
         enddo
  !       print *, 'array a:'
  !       print *, a(:)
