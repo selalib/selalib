@@ -24,17 +24,24 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-module sll_maxwell_2d
+module sll_maxwell
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
 use numeric_constants
-use sll_maxwell_2d_fdtd
-use sll_maxwell_2d_pstd
 
 implicit none
+
+enum, bind(C)
+   enumerator :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
+end enum
+
+enum, bind(C)
+   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
+end enum
+
 !private
 !
 !interface new
@@ -106,11 +113,12 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine plot_field(f1, f2, iplot, time )
+subroutine plot_fields(fname, f1, f2, iplot, time )
 
 sll_real64, dimension(:,:), intent(in) :: f1, f2
 integer :: iplot, i, j
 sll_real64, intent(in) :: time
+character(len=*) :: fname
 character(len=4) :: cplot
 sll_int32 :: nx, ny
 
@@ -123,7 +131,7 @@ SLL_ASSERT(ny == size(f2,2))
 call int2string(iplot, cplot)
 
 !write domains
-open( 80, file = "f-"//cplot//".dat" )
+open( 80, file = fname//cplot//".dat" )
    do i=1,nx
       do j=1,ny
          write(80,*) i, j, sngl(f1(i,j)), sngl(f2(i,j))
@@ -132,22 +140,22 @@ open( 80, file = "f-"//cplot//".dat" )
    end do
 close(80)
    
-open( 90, file = 'plots.gnu', position="append" )
+open( 90, file = fname//'plots.gnu', position="append" )
   if ( iplot == 1 ) then
      rewind(90)
      !write(90,*)"set xr[-0.1:1.1]"
      !write(90,*)"set yr[-0.1:1.1]"
-     write(90,*)"set zr[-1.1:1.1]"
+     !write(90,*)"set zr[-1.1:1.1]"
      !write(90,*)"set cbrange[-1:1]"
      !write(90,*)"set pm3d"
      write(90,*)"set surf"
      write(90,*)"set term x11"
   end if
   write(90,*)"set title 'Time = ",time,"'"
-  write(90,"(a)",advance='no')"splot 'f-"//cplot//".dat' w lines"
-  write(90,"(a)",advance='no')",'f-"//cplot//".dat' u 1:2:4 w lines"
+  write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
+  write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
   close(90)
 
-end subroutine plot_field
+end subroutine plot_fields
 
-end module sll_maxwell_2d
+end module sll_maxwell
