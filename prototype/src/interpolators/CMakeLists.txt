@@ -1,7 +1,3 @@
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
-ENDIF()
-
 
 IF(STDF95)
   add_library( sll_interpolators STATIC
