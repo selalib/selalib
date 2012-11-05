@@ -345,7 +345,7 @@ program vp_non_unif_mesh
   !print *,node_positions_x1
   !print *,node_positions_x2
   
-  !stop
+  
   
 
   !construction of mesh
@@ -389,24 +389,35 @@ program vp_non_unif_mesh
   enddo
   
   
+  
   f = f_init
   
   !compute rho init  
   integration_points(1,1:N_x2+1) = x2_min+(x2_max-x2_min)*node_positions_x2(1:N_x2+1)   
   
+
   do i1 = 1, N_x1+1 
     integration_points(2,1:N_x2+1) = f(i1,1:N_x2+1) 
-    rho(i1) = compute_non_unif_integral(integration_points,N_x2+1,rho_case)
+    !rho(i1) = compute_non_unif_integral(integration_points,N_x2+1,rho_case)
   enddo
+ 
+  
+  
+  
   !compute E_init   
   call compute_spline_nonunif( rho, spl_per_x1_rho,node_positions_x1)  
+  
+
   call interpolate_array_value_nonunif( node_positions_x1_poisson, &
     E_fine, N_x1_poisson, spl_per_x1_rho)  
+  
+  stop
   call poisson1dpertrap(E_fine,x1_max-x1_min,N_x1_poisson)
   call compute_spline_nonunif( E_fine, spl_per_x1_E,node_positions_x1_poisson)
   call interpolate_array_value_nonunif( node_positions_x1, &
     E, N_x1, spl_per_x1_E)
-  !stop
+  
+  
     
   !do i1=1,N_x1+1
   !  print *,i1,rho(i1)

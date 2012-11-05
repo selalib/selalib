@@ -1,8 +1,64 @@
+#############################################################################################
+###      Sequential simulations
+#############################################################################################
 IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
-add_library(sll_simulation_1d STATIC simulation_1d.F90)
+#Here is defined the library containing the sequential simulations. 
+#Please add your new simulation_MYMETHOD.F90 
+############################################################
+
+add_library(sll_simulation_1d STATIC simulation_1d.F90
+            simulation_base_class.F90 
+            simulation_VP1D_cartesian_non_unif.F90
+            simulation_vp1d_fourier_fem.F90)
+
+#Add new dependencies concerning simulation_MYMETHOD.F90
+
+add_dependencies( sll_simulation_1d
+  sll_splines
+  sll_fft
+  sll_constants
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+#Here is defined the executables. 
+#Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
+#Add also the corresponding dependencies in a target_link_libraries() command
+###############################################################
+
+add_executable( test_VP1D_cartesian_non_unif unit_test_VP1D_cartesian_non_unif.F90 )
+
+target_link_libraries( test_VP1D_cartesian_non_unif
+  sll_simulation_1d
+  sll_constants
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
+
+target_link_libraries( test_vp1d_fourier_fem
+  sll_simulation_1d
+  sll_splines
+  sll_fft
+  sll_constants
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+
+
+#Commands to be updated in the above simulation class standard
+#############################################################
 
 #add_executable(test_simulation_1d user_geometry_functions.F90 unit_test.F90)
 add_executable(polar_SL polar_SL.F90)
@@ -126,15 +182,26 @@ target_link_libraries(VP1D_deltaf_cart
 
 ENDIF()
 
+#End of commands to be put in the class simulation standard
+###################################################
 
+
+#############################################################################################
+###      Parallel simulations
+#############################################################################################
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
+#Here is defined the library containing the parallel simulations. 
+#Please add your new simulation_MYMETHOD.F90 
+############################################################
+
 add_library( sll_simulations STATIC simulation_base_class.F90 
   simulation_4d_vlasov_poisson_cartesian.F90 )
 
+#Add new dependencies concerning simulation_MYMETHOD.F90
 
 add_dependencies( sll_simulations
   sll_poisson_parallel
@@ -152,6 +219,11 @@ add_dependencies( sll_simulations
   sll_assertion 	
   sll_working_precision
   )
+
+#Here is defined the executables. 
+#Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
+#Add also the corresponding dependencies in a target_link_libraries() command
+###############################################################
 
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 

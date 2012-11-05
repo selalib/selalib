@@ -712,7 +712,6 @@ program cg_polar
   t3 => delete_time_mark(t3)
   call delete_SL_polar(plan_sl)
 
-
 contains
 
  subroutine plot_f(iplot)
@@ -759,5 +758,7 @@ contains
   call sll_xdmf_close(file_id,error)
 
  end subroutine plot_f
+
+
 
 end program cg_polar

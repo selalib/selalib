@@ -61,7 +61,7 @@ use arbitrary_degree_splines
         enddo
 
         plan => new_odd_degree_splines_uniform(num_pts, degree, xmin, xmax)
-        call compute_coeffs_uniform(f, plan)
+        call compute_odd_degree_coeffs_uniform(f, plan)
 
         err1 = 0.d0
         err2 = 0.d0
