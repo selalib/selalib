@@ -9,10 +9,16 @@ ADD_DEPENDENCIES(sll_splines sll_memory
                              sll_working_precision
                              sll_numerical_utilities)
 
-#ADD_LIBRARY(cubic_nonuniform_splines STATIC cubic_nonuniform_splines.F90
-#                               sll_quintic_splines.F90
-#                               sll_odd_degree_splines.F90
-#                               sll_arbitrary_degree_splines.F90)
+ADD_LIBRARY(cubic_non_uniform_splines STATIC cubic_nonuniform_splines.F90)
+
+ADD_DEPENDENCIES(cubic_non_uniform_splines 
+                             sll_tridiagonal
+                             sll_splines
+                             sll_memory 
+                             sll_utilities
+                             sll_assertion 
+                             sll_working_precision
+                             sll_numerical_utilities)
 
 
 #libs to link with tests
@@ -35,9 +41,14 @@ TARGET_LINK_LIBRARIES(test_splines ${SPL_LIBS})
 #non uniform
 
 ADD_EXECUTABLE(test_non_unif_splines unit_test_nonuniform.F90 
-                                     cubic_nonuniform_splines.F90)
+                                     )
 
-TARGET_LINK_LIBRARIES(test_non_unif_splines ${SPL_LIBS})
+#ADD_EXECUTABLE(test_non_unif_splines unit_test_nonuniform.F90 
+#                                     cubic_nonuniform_splines.F90)
+
+
+TARGET_LINK_LIBRARIES(test_non_unif_splines 
+cubic_non_uniform_splines ${SPL_LIBS})
 
 #arbitrary degree
 
