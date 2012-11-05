@@ -30,7 +30,7 @@ IF(HDF5_PARALLEL_ENABLED)
                                                    sll_collective)
    TARGET_LINK_LIBRARIES(sll_low_level_file_io_parallel ${HDF5_LIBRARIES} )
  
-   IF( NOT STDF95) 
+   IF(NOT STDF95) 
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
    TARGET_LINK_LIBRARIES(test_io_parallel sll_low_level_file_io_parallel
                                           sll_remap
