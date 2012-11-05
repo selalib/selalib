@@ -168,7 +168,7 @@ contains
     sll_real64, dimension(:,:), intent(in)   :: data_in
     sll_real64, dimension(num_points1,num_points2) :: data_out
     ! local variables
-    sll_int32 :: i,j, ierr
+    sll_int32 :: i,j
     ! compute the interpolating spline coefficients
     call compute_spline_2D( data_in, this%spline )
     do j = 1, num_points2
@@ -192,7 +192,7 @@ contains
     sll_real64 :: eta1, eta1_min, eta1_max, delta_eta1
     sll_real64 :: eta2, eta2_min, eta2_max, delta_eta2
     ! local variables
-    sll_int32 :: i,j, ierr
+    sll_int32 :: i,j
     ! compute the interpolating spline coefficients
 
     eta1_min  = this%spline%x1_min 

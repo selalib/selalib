@@ -16,9 +16,9 @@ implicit none
   sll_real64 :: delta_t, error
   sll_int32  :: info
 
-  sll_real64, dimension(:)   , allocatable :: x, y, dx, dy
-  sll_real64, dimension(:)   , allocatable :: vx, dvx, vy, dvy
-  sll_real64, dimension(:,:,:,:) , allocatable :: df
+  sll_real64, dimension(:)      , allocatable :: x, y
+  sll_real64, dimension(:)      , allocatable :: vx, vy
+  sll_real64, dimension(:,:,:,:), allocatable :: df
 
   sll_real64, dimension(:), allocatable :: f_x, f_y
 
@@ -54,13 +54,13 @@ implicit none
      x(i)  = x_min  + (i-1)*(x_max-x_min)/(n_x-1)
   end do
   do j = 1, n_y
-     y(i)  = y_min  + (j-1)*(y_max-y_min)/(n_y-1)
+     y(j)  = y_min  + (j-1)*(y_max-y_min)/(n_y-1)
   end do
   do k = 1, n_vx
-     vx(j) = vx_min + (k-1)*(vx_max-vx_min)/(n_vx-1)
+     vx(k) = vx_min + (k-1)*(vx_max-vx_min)/(n_vx-1)
   end do
   do l = 1, n_vy
-     vy(j) = vy_min + (l-1)*(vy_max-vy_min)/(n_vy-1)
+     vy(l) = vy_min + (l-1)*(vy_max-vy_min)/(n_vy-1)
   end do
 
   SLL_ALLOCATE(df(n_x,n_y,n_vx,n_vy), info)
@@ -76,27 +76,26 @@ implicit none
      end do
   end do
 
-  f_x = 1_f64 
-  f_y = 0.0 
+  f_x = 1.0_f64 
+  f_y = 0.0_f64 
 
   Print*, 'checking advection of a Gaussian in a uniform field'
   
-  call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, PERIODIC_SPLINE )
-  call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, PERIODIC_SPLINE )
+  call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
+                            PERIODIC_SPLINE, PERIODIC_SPLINE )
 
+  call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
+                              PERIODIC_SPLINE, PERIODIC_SPLINE )
   interp_xy   => spline_xy
   interp_vxvy => spline_vxvy
-
-  SLL_ALLOCATE(dx(n_x),info)
-  SLL_ALLOCATE(dy(n_y),info)
-  SLL_ALLOCATE(dvx(n_vx),info)
-  SLL_ALLOCATE(dvy(n_vy),info)
 
   ! run BSL method using 10 time steps and second order splitting
   n_steps = 100
   delta_t = 10.0_f64/n_steps
   do it = 1, n_steps
 
+     call advection_xy(df, interp_xy, delta_t)
+     call advection_vxvy(df, interp_vxvy, delta_t)
 
   end do
 
@@ -121,23 +120,22 @@ contains
    subroutine advection_xy(df, interp_xy, dt)
    !type(cubic_spline_2d_interpolator)  :: interp_xy
    class(sll_interpolator_2d_base), pointer  :: interp_xy
-   sll_real64, intent(inout), dimension(:,:) :: df
+   sll_real64, intent(inout), dimension(:,:,:,:) :: df
    sll_real64, intent(in) :: dt
-
+   sll_real64 :: dx, dy
 
    do l = 1, n_vy
      do k = 1, n_vx
-
-        do i = 1, n_x
-           dx(i) = x(1) + modulo(x(i)-x(1)-dt*vx(k),x(n_x)-x(1))
-        end do
-
+        call interp_xy%compute_interpolants(df(:,:,k,l))
         do j = 1, n_y
-           dy(j) = y(1) + modulo(y(j)-y(1)-dt*vy(l),y(n_y)-y(1))
+           dy = y_min + modulo(y(j)-y_min-dt*vy(l),y_max-y_min)
+           do i = 1, n_x
+              dx = x_min + modulo(x(i)-x_min-dt*vx(k),x_max-x_min)
+              if( dx < x_min .or. dx > x_max) stop 'erreur x'
+              if( dy < y_min .or. dy > y_max) stop 'erreur y'
+              df(i,j,k,l) = interp_xy%interpolate_value(dx,dy)
+           end do
         end do
-
-        !df(:,:,k,l) = interp_xy%interpolate_array( n_x, n_y, df(:,:,k,l), dx, dy )
-
      end do
    end do
 
@@ -146,21 +144,20 @@ contains
    subroutine advection_vxvy(df, interp_vxvy, dt)
    !type(cubic_spline_2d_interpolator)  :: interp_vxvy
    class(sll_interpolator_2d_base), pointer  :: interp_vxvy
-   sll_real64, intent(inout), dimension(:,:) :: df
+   sll_real64, intent(inout), dimension(:,:,:,:) :: df
    sll_real64, intent(in) :: dt
+   sll_real64 :: dvx, dvy
 
    do j = 1, n_y
       do i = 1, n_x
-
+         call interp_vxvy%compute_interpolants(df(i,j,:,:))
          do k = 1, n_vx
-            dvx(k) = vx(k) + modulo(vx(k)-vx(1)-dt*f_x(i),vx(n_vx)-vx(1))
+            dvx = vx_min + modulo(vx(k)-vx_min-dt*f_x(i),vx_max-vx_min)
+            do l = 1, n_vy
+               dvy = vy_min + modulo(vy(l)-vy_min-dt*f_y(j),vy_max-vy_min)
+               df(i,j,k,l) = interp_vxvy%interpolate_value(dvx,dvy)
+            end do
          end do
-         do l = 1, n_vy
-            dvy(l) = vy(l) + modulo(vy(l)-vy(1)-dt*f_y(j),vy(n_vy)-vy(1))
-         end do
-
-        ! df(i,j,:,:) = interp_vxvy%interpolate_array( n_vx, n_vy, df(i,j,:,:), dvx, dvy )
-
       end do
    end do
 

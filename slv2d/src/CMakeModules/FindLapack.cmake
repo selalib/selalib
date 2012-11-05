@@ -7,7 +7,6 @@ set(BLAS_FOUND FALSE)
 set(MKL_FOUND FALSE)
 #
 #IF(NOT CMAKE_COMPILER_IS_GNUCXX)
-
 if(${CMAKE_C_COMPILER} MATCHES "icc")
   # Intel composer has everything, 
   if($ENV{MKLROOT} MATCHES "composer")
@@ -40,11 +39,13 @@ if(${CMAKE_C_COMPILER} MATCHES "icc")
       STRING(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" MKL_VERSION ${mkl_home})
 
       if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
-        if(${MKL_VERSION} MATCHES "10\\.3\\.[0-4]")
+#        if(${MKL_VERSION} MATCHES "10\\.3\\.[0-4]")
+if(${MKL_VERSION} MATCHES "2011.0.013")
           link_libraries(-L${mkl_home}/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm)
         else()
           if(${MKL_VERSION} MATCHES "10\\.[0-2]\\.[0-4]")
             link_libraries(-L${mkl_home}/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm)
+
           else()
             link_libraries(-L${mkl_home}/lib/em64t -lmkl_lapack -lmkl -lguide)
           endif()

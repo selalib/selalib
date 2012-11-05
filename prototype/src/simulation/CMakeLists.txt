@@ -2,7 +2,7 @@
 ###      Sequential simulations
 #############################################################################################
 IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic -qsmp=omp ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
 #Here is defined the library containing the sequential simulations. 

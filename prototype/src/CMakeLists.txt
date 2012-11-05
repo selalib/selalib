@@ -316,11 +316,14 @@ IF(MUDPACK_ENABLED)
 	add_subdirectory(mudpack)
    ENDIF()
 ENDIF(MUDPACK_ENABLED)
+
 add_subdirectory(LinRood)
+
 add_subdirectory(maxwell_solvers)
 
 add_subdirectory(BSL)
 add_subdirectory(CSL)
+
 #add_subdirectory(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
 #add_custom_target(install make selalib_low_level)
@@ -501,35 +504,44 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
+##########################################################
 add_test(NAME maxwell_2d_fdtd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
 set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-add_test(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
+add_test(NAME maxwell_2d_pstd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
+set_tests_properties(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+##########################################################
 
-   #add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
+##########################################################
+add_test(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
+set_tests_properties(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+##########################################################
+
+#add_test(NAME landau_2d COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_landau_2d)
+#set_tests_properties(landau_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+#add_test(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 IF(FFTPACK_ENABLED)
-	add_test(NAME poisson_solvers COMMAND test_poisson_1d)
+   add_test(NAME poisson_solvers COMMAND test_poisson_1d)
 ENDIF(FFTPACK_ENABLED)
+
 #add_test(poisson_solvers poisson_solvers/test_poisson_2d)
 #add_test(poisson_solvers poisson_solvers/test_poisson_3d_seq)
 #add_test(poisson_solvers mpirun -np 2 poisson_solvers/test_poisson_3d_par)
-   #add_test(poisson_solvers poisson_solvers/unit_test)
-#add_test(BSL BSL/test_landau_4d)
-#add_test(BSL BSL/test_landau_2d)
-   #add_test(CSL CSL/test_csl)
+#add_test(poisson_solvers poisson_solvers/unit_test)
+#add_test(CSL CSL/test_csl)
 #add_test(simulation_1d simulation/test_simulation_1d)
-
 
 set(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 # recherche de FORTRANCL
 IF(FORTRANCL_ENABLED)
-	find_package(FORTRANCL QUIET)
-	if (FORTRANCL_FOUND)
-	   message(STATUS "FORTRANCL FOUND")
-	   include_directories(${FORTRANCL_INCLUDE_DIRS})
-           add_subdirectory(opencl)
-           add_test(NAME opencl COMMAND test_opencl)
-           set_tests_properties(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-	endif(FORTRANCL_FOUND)
+  find_package(FORTRANCL QUIET)
+  if (FORTRANCL_FOUND)
+    message(STATUS "FORTRANCL FOUND")
+    include_directories(${FORTRANCL_INCLUDE_DIRS})
+    add_subdirectory(opencl)
+    add_test(NAME opencl COMMAND test_opencl)
+    set_tests_properties(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  endif(FORTRANCL_FOUND)
 ENDIF(FORTRANCL_ENABLED)
 
 ##########################################################
@@ -566,4 +578,3 @@ IF(PASTIX_ENABLED)
    ENDIF()
 ENDIF(PASTIX_ENABLED)
 ##########################################################
-
