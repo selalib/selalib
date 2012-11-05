@@ -4,10 +4,12 @@ program unit_test
 #include "sll_memory.h"
   use numeric_constants
   use geometry_functions
-  use sll_module_mapped_meshes_2d
-  use sll_gaussian_2d_initializer
   use distribution_function
   use sll_scalar_field_2d
+  use sll_module_mapped_meshes_2d_base
+  use sll_module_mapped_meshes_2d
+  use sll_scalar_field_initializers_base
+  use sll_gaussian_2d_initializer
   use sll_linrood
   use sll_cubic_spline_interpolator_1d
   implicit none

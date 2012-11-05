@@ -55,7 +55,7 @@ program remap_2d_unit_test
      print *, '--------------- REMAP test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush()
+     call flush(6)
   end if
 
   if (.not. is_power_of_two(colsz)) then     
@@ -65,7 +65,7 @@ program remap_2d_unit_test
   end if
 
   do, i_test=1, nbtest
-     call flush()
+     call flush(6)
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
@@ -160,7 +160,7 @@ program remap_2d_unit_test
               print*, 'program stopped by failure'
               stop
            end if
-           call flush()
+           call flush(6)
         end do
      end do
      
@@ -181,9 +181,9 @@ program remap_2d_unit_test
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush()
+        call flush(6)
      end if
-     call flush() 
+     call flush(6) 
        
      call sll_collective_barrier(sll_world_collective)
   
