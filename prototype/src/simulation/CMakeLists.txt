@@ -12,11 +12,14 @@ ENDIF()
 add_library(sll_simulation_1d STATIC simulation_1d.F90
             simulation_base_class.F90 
             simulation_VP1D_cartesian_non_unif.F90
+            simulation_VP1D_curvilinear_analytic.F90
             simulation_vp1d_fourier_fem.F90)
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
 add_dependencies( sll_simulation_1d
+  cubic_non_uniform_splines
+  sll_tridiagonal
   sll_splines
   sll_fft
   sll_constants
@@ -35,12 +38,30 @@ add_executable( test_VP1D_cartesian_non_unif unit_test_VP1D_cartesian_non_unif.F
 
 target_link_libraries( test_VP1D_cartesian_non_unif
   sll_simulation_1d
+  cubic_non_uniform_splines
+  sll_tridiagonal
   sll_constants
   sll_utilities
   sll_memory
   sll_assertion 	
   sll_working_precision
   )
+
+add_executable( test_VP1D_curvilinear_analytic unit_test_VP1D_curvilinear_analytic.F90 )
+
+target_link_libraries( test_VP1D_curvilinear_analytic
+  sll_simulation_1d
+  cubic_non_uniform_splines
+  sll_tridiagonal
+  sll_constants
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+
+
 
 add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
 
