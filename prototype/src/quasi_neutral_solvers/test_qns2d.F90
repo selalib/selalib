@@ -60,7 +60,7 @@ implicit none
      SLL_ALLOCATE(Te(NP_r), ierr)
      Te = 1.d0
      if (myrank==0) then
-        call flush()
+        call flush(6)
         print*, ' '
         print*, 'TESTING QUASINEUTRAL SOLVERS WITH ', BC
      endif
@@ -188,7 +188,7 @@ contains
 
     ! Test 2d qns
     if (myrank==0) then
-       call flush()
+       call flush(6)
        print*, ' '
        print*, '... IN SEQUENTIAL...'
     endif
@@ -203,24 +203,24 @@ contains
     average_err_bound = average_err_bound/(NP_r*NP_theta)
 
     if (myrank==0) then
-       call flush()
+       call flush(6)
        print*, ' '
-       call flush()
+       call flush(6)
        print*, 'sll_qns2d_with_finite_diff_seq average error:', average_err
-       call flush()
+       call flush(6)
        print*, 'sll_qns2d_angular_spect_method_seq average error:', average_err_spect
-       call flush()
+       call flush(6)
       print*, 'Boundary average error =', average_err_bound
     endif
 
     if ( average_err <= average_err_bound ) then
        if (myrank==0) then
-          call flush()
+          call flush(6)
           print*, ' '
           print*, 'sll_qns2d_with_finite_diff_seq: PASSED'
        endif
     else
-       call flush()
+       call flush(6)
        print*, ' '
        print*, 'Test stopped by sll_qns2d_with_finite_diff_seq failure'
        print*, ' '
@@ -229,12 +229,12 @@ contains
 
     if ( average_err_spect <= average_err_bound ) then
        if (myrank==0) then
-          call flush()
+          call flush(6)
           print*, ' '
           print*, 'sll_qns2d_angular_spect_method_seq: PASSED'
        endif
     else
-       call flush()
+       call flush(6)
        print*, ' '
        print*, 'Test stopped by sll_qns2d_angular_spect_method_seq failure'
        print*, ' '
@@ -244,9 +244,9 @@ contains
     ! Test sll_qns2d_with_finite_diff_par
 
     if (myrank==0) then
-       call flush()
+       call flush(6)
        print*, ' '
-       call flush()
+       call flush(6)
        print*, '...IN PARALLEL...'
     endif
 
@@ -306,42 +306,42 @@ contains
     seq_par_diff = seq_par_diff/(NP_r_loc*NP_theta_loc)
     seq_par_diff_spect = seq_par_diff_spect/(NP_r_loc*NP_theta_loc)
 
-    call flush()
+    call flush(6)
     print*, ' '
-    call flush()
+    call flush(6)
     print*, 'sll_qns2d_with_finite_diff_par average error',          &
                                     ' in proc', myrank, ':', average_err
-    call flush()
+    call flush(6)
     print*, 'sll_qns2d_angular_spect_method_par average error',       &
                               ' in proc', myrank, ':', average_err_spect
-    call flush()
+    call flush(6)
     print*, 'Boundary average error =', average_err_bound
-    call flush()
+    call flush(6)
     print*, 'sll_qns2d_with_finite_diff_par average diff(seq,par)',   &
                                    ' in proc', myrank, ':', seq_par_diff
-    call flush()
+    call flush(6)
     print*, 'sll_qns2d_angular_spect_method_par average diff(seq,par)',&
                              ' in proc', myrank, ':', seq_par_diff_spect
 
     if ( average_err > average_err_bound) then
-       call flush()
+       call flush(6)
        print*, ' '
-       call flush()
+       call flush(6)
        print*, 'Test stopped by sll_qns2d_with_finite_diff_par failure'
-       call flush()
+       call flush(6)
        print*, 'myrank=', myrank
-       call flush()
+       call flush(6)
        print*, ' '
        stop
     endif
     if ( average_err_spect > average_err_bound) then
-       call flush()
+       call flush(6)
        print*, ' '
-       call flush()
+       call flush(6)
        print*, 'Test stopped by sll_qns2d_angular_spect_method_par failure'
-       call flush()
+       call flush(6)
        print*, 'myrank=', myrank
-       call flush()
+       call flush(6)
        print*, ' '
        stop
     endif
@@ -350,12 +350,12 @@ contains
                                                   MPI_PROD, 0, prod4test )
     if (myrank==0) then
        if (prod4test(1)==1.d0) then
-          call flush()
+          call flush(6)
           print*, ' '
-          call flush()
+          call flush(6)
           print*, 'sll_qns2d_with_finite_diff_par: PASSED'
           print*, 'sll_qns2d_angular_spect_method_par: PASSED'
-          call flush()
+          call flush(6)
           print*, ' '
        endif
     endif

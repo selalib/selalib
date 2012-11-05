@@ -33,8 +33,9 @@ get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
   message(STATUS "gfortran compiler")
   add_definitions(-DGFORTRAN)
+  add_definitions(-DDEBUG)
 ENDIF()
-add_definitions(-DDEBUG -DMPIF90)
+add_definitions(-DMPIF90)
 
 # Define folder to be deleted by make clean
 #set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -172,6 +173,7 @@ IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS " ")
+        ADD_DEFINITIONS(-DINTEL)
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
 	set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e")
 ELSE()
@@ -259,6 +261,7 @@ endif(DOXYGEN_FOUND)
 set(FISHPACK_ENABLED OFF CACHE BOOL " ")
 set(MUDPACK_ENABLED ON CACHE BOOL " ")
 
+ENABLE_TESTING()
 ######################################################################
 #  III. SUBDIRECTORY                                                 #
 ######################################################################
@@ -309,17 +312,39 @@ IF(FISHPACK_ENABLED)
    add_subdirectory(fishpack)
 ENDIF()
 
-IF(MUDPACK_ENABLED)
+IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
    IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED)
-	add_subdirectory(multigrid)
+      ADD_SUBDIRECTORY(multigrid)
    ELSE()
-	add_subdirectory(mudpack)
+      ADD_SUBDIRECTORY(mudpack)
    ENDIF()
-ENDIF(MUDPACK_ENABLED)
+   IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED)
+      set(PROCS 4)
+      set(ARGS "")
+      add_test(NAME multigrid COMMAND 
+      ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
+      ${MPIEXEC_POSTFLAGS} ${ARGS})
+      set_tests_properties(multigrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ELSE()
+      add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
+      set_tests_properties(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ENDIF()
+ENDIF()
 
 add_subdirectory(LinRood)
 
-add_subdirectory(maxwell_solvers)
+##########################################################
+ADD_SUBDIRECTORY(maxwell_solvers)
+ADD_TEST(NAME maxwell_2d_fdtd 
+         COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+IF(FFTW_FOUND)
+   ADD_TEST(NAME maxwell_2d_pstd 
+            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
+ENDIF()
+SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+##########################################################
 
 add_subdirectory(BSL)
 add_subdirectory(CSL)
@@ -334,7 +359,6 @@ add_subdirectory(selalib_level EXCLUDE_FROM_ALL)
 #  IV. TEST                                                          #
 ######################################################################
 
-enable_testing()
 
 add_test(NAME memory COMMAND test_memory)
 set_tests_properties(memory PROPERTIES TIMEOUT 20)
@@ -388,20 +412,6 @@ IF(FISHPACK_ENABLED)
 	add_test(NAME fishpack3 COMMAND thwsssp)
 	add_test(NAME fishpack2 COMMAND thwsplr)
 	add_test(NAME fishpack1 COMMAND thwscyl)
-ENDIF()
-IF(MUDPACK_ENABLED)
-        IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED)
-           set(PROCS 4)
-           set(ARGS "")
-	   add_test(NAME multigrid COMMAND 
-	   ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_multigrid
-	   ${MPIEXEC_POSTFLAGS} ${ARGS})
-           set_tests_properties(multigrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-        ELSE()
-	   add_test(NAME mudpack COMMAND tmud34sp tmud24sp )
-           set_tests_properties(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-        ENDIF()
 ENDIF()
 
 # we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
@@ -504,11 +514,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   set_tests_properties(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-##########################################################
-add_test(NAME maxwell_2d_fdtd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
-set_tests_properties(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-add_test(NAME maxwell_2d_pstd COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
-set_tests_properties(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ##########################################################
 
 ##########################################################

@@ -55,10 +55,10 @@ implicit none
         BC = 'dirichlet'
      endif
      if (myrank==0) then
-        call flush()
+        call flush(6)
         print*, ' '
         print*, 'Testing sll_qns2d_with_finite_diff_par with ', BC
-        call flush()
+        call flush(6)
         print*, ' '
      endif
      SLL_ALLOCATE(Te(NP_r), ierr)
@@ -70,9 +70,9 @@ implicit none
 
   if (myrank==0) then
      if (prod4test(1)==1.d0) then
-        call flush()
+        call flush(6)
         print*, 'test_sll_qns2d_with_finite_diff_par: PASSED'
-        call flush()
+        call flush(6)
         print*, ' '
      endif
   endif
@@ -226,19 +226,19 @@ contains
     average_err  = average_err/(NP_r_loc*NP_theta_loc)
     average_err_bound = average_err_bound/(NP_r_loc*NP_theta_loc)
 
-    call flush()
+    call flush(6)
     print*, 'Error in proc', myrank, ':', average_err
-    call flush()
+    call flush(6)
     print*, 'Boundary error in proc', myrank, ':', average_err_bound
-    call flush()
+    call flush(6)
     print*, ' '
 
     if ( average_err > average_err_bound) then
-       call flush()
+       call flush(6)
        print*, 'test_sll_qns2d_with_finite_diff_par: FAILED'
-       call flush()
+       call flush(6)
        print*, 'myrank=', myrank
-       call flush()
+       call flush(6)
        print*, ' '
        stop
     endif

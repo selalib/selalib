@@ -1,7 +1,13 @@
 module mgd3
-use mpi 
-#include "mgd3.h"
+#ifdef INTEL
 implicit none
+include "mpif.h"
+#else
+use mpi 
+implicit none
+#endif
+
+#include "mgd3.h"
 
    integer, dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
    integer, dimension(20)   :: kpbgn,kcbgn
