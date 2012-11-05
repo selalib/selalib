@@ -118,6 +118,4 @@ DEALLOCATE(ey)
 DEALLOCATE(bz)
 DEALLOCATE(bz_exact)
 
-call free(maxwell_TE)
-
 end program test_maxwell_2d_fdtd

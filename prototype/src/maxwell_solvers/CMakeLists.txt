@@ -25,5 +25,5 @@ IF(FFTW_FOUND)
                                               sll_memory 
                                               sll_collective 
                                               sll_utilities 
-                                              sll_fft)
+                                              ${FFTW_LIBRARIES})
 ENDIF(FFTW_FOUND)
