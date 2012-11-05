@@ -111,8 +111,14 @@ module sll_collective
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+
+#ifdef INTEL
+  implicit none
+  include 'mpif.h'
+#else
   use mpi
   implicit none
+#endif
   ! This is the only place in the prototype that should have to include
   ! the mpi header file.
   !include 'mpif.h'
