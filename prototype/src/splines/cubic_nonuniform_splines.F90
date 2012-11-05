@@ -370,6 +370,7 @@ contains  ! ****************************************************************
   
   !> get spline interpolate at point x
   function interpolate_value_nonunif( x, spline )
+    !warning not tested, should not work->t o be adapted like array
     sll_real64                                     :: interpolate_value_nonunif
     sll_real64, intent(in)                         :: x
     type(cubic_nonunif_spline_1D), pointer      :: spline
@@ -421,12 +422,11 @@ contains  ! ****************************************************************
     sll_real64, dimension(1:n), intent(out) :: a_out
     sll_real64                         :: x
     type(cubic_nonunif_spline_1D), pointer      :: spline
-    sll_int32 :: i,j
+    sll_int32 :: i,j,shift=3
     sll_real64 ::xx
     sll_real64, dimension(:), pointer :: Xj
-    !sll_real64, pointer :: Xjj(1:)
     sll_real64, dimension(:), pointer :: coef
-    sll_real64 :: w(0:3)
+    sll_real64 :: w(4)
     
     x=a_in(1)
     xx = (x-spline%xmin)/(spline%xmax-spline%xmin)
@@ -470,33 +470,38 @@ contains  ! ****************************************************************
         endif  
       endif
       xx=x
-      Xj => spline%node_positions(j:)
+      Xj => spline%node_positions(j-shift:)
       
-      print *,i,Xj(0),xx,Xj(1)
-      stop
-      if(.not.((xx .ge. Xj(0)) .and. (xx .lt. Xj(1)))) then
+      !print *,i,Xj(0+shift),xx,Xj(1+shift)
+      !stop
+      if(.not.((xx .ge. Xj(0+shift)) .and. (xx .lt. Xj(1+shift)))) then
         if(xx.ne.1.0_f64) then
-          print *,Xj(0),xx,Xj(1)
+          print *,Xj(0+shift),xx,Xj(1+shift)
         
           stop
         endif  
       endif
-      SLL_ASSERT( (xx .ge. Xj(0)) .and. (xx .le. Xj(1) ))
-      SLL_ASSERT( (Xj(0)==spline%node_positions(j-1)) .and. (Xj(1)==spline%node_positions(j)))
+      SLL_ASSERT( (xx .ge. Xj(0+shift)) .and. (xx .le. Xj(1+shift) ))
+      SLL_ASSERT( (Xj(0+shift)==spline%node_positions(j-1)) .and. (Xj(1+shift)==spline%node_positions(j)))
     
       !compute weights
-      w(0)=(Xj(1)-xx)*(Xj(1)-xx)*(Xj(1)-xx)/((Xj(1)-Xj(0))*(Xj(1)-Xj(-1))*(Xj(1)-Xj(-2)));    
-      w(1)=(Xj(1)-xx)*(Xj(1)-xx)*(xx-Xj(-2))/((Xj(1)-Xj(0))*(Xj(1)-Xj(-1))*(Xj(1)-Xj(-2)));
-      w(1)=w(1)+(Xj(2)-xx)*(Xj(1)-xx)*(xx-Xj(-1))/((Xj(1)-Xj(0))*(Xj(1)-Xj(-1))*(Xj(2)-Xj(-1)));
-      w(1)=w(1)+(Xj(2)-xx)*(Xj(2)-xx)*(xx-Xj(0))/((Xj(1)-Xj(0))*(Xj(2)-Xj(0))*(Xj(2)-Xj(-1)));    
-      w(2)=(Xj(1)-xx)*(xx-Xj(-1))*(xx-Xj(-1))/((Xj(1)-Xj(0))*(Xj(1)-Xj(-1))*(Xj(2)-Xj(-1)));
-      w(2)=w(2)+(Xj(2)-xx)*(xx-Xj(-1))*(xx-Xj(0))/((Xj(1)-Xj(0))*(Xj(2)-Xj(0))*(Xj(2)-Xj(-1)));
-      w(2)=w(2)+(Xj(3)-xx)*(xx-Xj(0))*(xx-Xj(0))/((Xj(1)-Xj(0))*(Xj(2)-Xj(0))*(Xj(3)-Xj(0)));    
-      w(3)=(xx-Xj(0))*(xx-Xj(0))*(xx-Xj(0))/((Xj(1)-Xj(0))*(Xj(2)-Xj(0))*(Xj(3)-Xj(0)));
+      w(1)=(Xj(shift+1)-xx)*(Xj(shift+1)-xx)*(Xj(shift+1)-xx)/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+1)-Xj(shift-2)));    
+      w(2)=(Xj(shift+1)-xx)*(Xj(shift+1)-xx)*(xx-Xj(shift-2))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+1)-Xj(shift-2)));
+      w(2)=w(2)+(Xj(shift+2)-xx)*(Xj(shift+1)-xx)*(xx-Xj(shift-1))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+2)-Xj(shift-1)));
+      w(2)=w(2)+(Xj(shift+2)-xx)*(Xj(shift+2)-xx)*(xx-Xj(shift+0))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+2)-Xj(shift-1)));    
+      w(3)=(Xj(shift+1)-xx)*(xx-Xj(shift-1))*(xx-Xj(shift-1))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+2)-Xj(shift-1)));
+      w(3)=w(3)+(Xj(shift+2)-xx)*(xx-Xj(shift-1))*(xx-Xj(shift+0))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+2)-Xj(shift-1)));
+      w(3)=w(3)+(Xj(shift+3)-xx)*(xx-Xj(shift+0))*(xx-Xj(shift+0))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+3)-Xj(shift+0)));    
+      w(4)=(xx-Xj(shift+0))*(xx-Xj(shift+0))*(xx-Xj(shift+0))/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+3)-Xj(shift+0)));
     
-      coef => spline%coeffs(j-1:)
+      !coef => spline%coeffs(j-1:)
       !print *,i,xx,j,w(0),w(1),w(2),w(3),Xj(-2:3)
-      a_out(i) = w(0)*coef(0)+w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)
+      !a_out(i) = w(0)*coef(0)+w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)
+
+      coef => spline%coeffs(j-2:)
+      !print *,i,xx,j,w(0),w(1),w(2),w(3),Xj(-2:3)
+      a_out(i) = w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)+w(4)*coef(4)
+
     enddo  
   end subroutine interpolate_array_value_nonunif
 
