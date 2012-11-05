@@ -42,7 +42,7 @@ if( myrank .eq. 0) then
    print *, '--------------- HDF5 parallel test ---------------------'
    print *, ' '
    print"('Running a test on ',i4,' processes')", colsz
-   call flush()
+   call flush(6)
 end if
 
 if (.not. is_power_of_two(colsz)) then     

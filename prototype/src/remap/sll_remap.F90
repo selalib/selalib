@@ -1770,7 +1770,7 @@ contains  !******************************************************************
     print *, plan%send_displs(:)
     print *, plan%recv_counts(:)
     print *, plan%recv_displs(:)
-    call flush()
+    call flush(6)
 #endif
   end subroutine optimize_remap_plan_3D
 #endif
@@ -1978,7 +1978,7 @@ contains  !******************************************************************
     
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
-!    call flush()
+!    call flush(6)
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -1995,7 +1995,7 @@ contains  !******************************************************************
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush()
+!    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2098,7 +2098,7 @@ contains  !******************************************************************
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush()
+    call flush(6)
 #endif
     
     ! load the send buffer
@@ -2114,7 +2114,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2146,9 +2146,9 @@ contains  !******************************************************************
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush()
+    ! call flush(6)
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush()
+    !    call flush(6)
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -2167,7 +2167,7 @@ contains  !******************************************************************
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush()
+!    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2271,7 +2271,7 @@ contains  !******************************************************************
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush()
+    call flush(6)
 #endif
     
     ! load the send buffer
@@ -2287,7 +2287,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2319,9 +2319,9 @@ contains  !******************************************************************
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush()
+    ! call flush(6)
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush()
+    !    call flush(6)
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -2340,7 +2340,7 @@ contains  !******************************************************************
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush()
+!    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2444,7 +2444,7 @@ contains  !******************************************************************
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush()
+    call flush(6)
 #endif
     
     ! load the send buffer
@@ -2460,7 +2460,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2492,9 +2492,9 @@ contains  !******************************************************************
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush()
+    ! call flush(6)
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush()
+    !    call flush(6)
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -2513,7 +2513,7 @@ contains  !******************************************************************
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush()
+!    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2620,7 +2620,7 @@ contains  !******************************************************************
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush()
+    call flush(6)
 #endif
     
     ! load the send buffer
@@ -2636,7 +2636,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2672,9 +2672,9 @@ contains  !******************************************************************
     ! Comment the following when not debugging    
  !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
   !  print *, sb(0:(size(sb)-1))
-   ! call flush()
+   ! call flush(6)
 !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!    call flush()
+!    call flush(6)
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scntsi(0:col_sz-1), &
@@ -2690,7 +2690,7 @@ contains  !******************************************************************
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush()
+!    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -2800,7 +2800,7 @@ contains  !******************************************************************
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush()
+    call flush(6)
 #endif
     
     ! load the send buffer
@@ -2816,7 +2816,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -2856,9 +2856,9 @@ contains  !******************************************************************
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
-    ! call flush()
+    ! call flush(6)
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush()
+    !    call flush(6)
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
                                       scntsi(0:col_sz-1), &
@@ -2874,7 +2874,7 @@ contains  !******************************************************************
     end if
     !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
     !    print *, rb(0:size(rb)-1)
-    !    call flush()
+    !    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3033,7 +3033,7 @@ contains  !******************************************************************
     
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
-!    call flush()
+!    call flush(6)
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3050,7 +3050,7 @@ contains  !******************************************************************
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
 !    print *, rb(0:size(rb)-1)
-!    call flush()
+!    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3159,7 +3159,7 @@ contains  !******************************************************************
     print *, 'sdispi', sdispi(:)
     print *, 'rcntsi', rcntsi(:)
     print *, 'rdispi', rdispi(:)
-    call flush()
+    call flush(6)
 #endif
     
     ! load the send buffer
@@ -3175,7 +3175,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3227,9 +3227,9 @@ contains  !******************************************************************
 
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
-!!$    call flush()
+!!$    call flush(6)
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush()
+!!$    call flush(6)
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3247,7 +3247,7 @@ contains  !******************************************************************
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush()
+!!$    call flush(6)
 
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
@@ -3376,7 +3376,7 @@ contains  !******************************************************************
        print *, 'sdispi', sdispi(:)
        print *, 'rcntsi', rcntsi(:)
        print *, 'rdispi', rdispi(:)
-       call flush()
+       call flush(6)
     end if
 #endif
    
@@ -3394,7 +3394,7 @@ contains  !******************************************************************
                   'discrepancy between displs(i) and the loading index for ',&
                   'i = ', i, ' displs(i) = ', sdispi(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
-             call flush()
+             call flush(6)
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
@@ -3453,10 +3453,10 @@ contains  !******************************************************************
 !!$       print *, 'rcntsi: ', rcntsi(:)
 !!$       print *, 'rdispi: ', rdispi(:)
 !!$       print *, 'uniformity: ', plan%is_uniform
-!!$       call flush()
+!!$       call flush(6)
 !!$    end if
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    call flush()
+!!$    call flush(6)
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
@@ -3474,7 +3474,7 @@ contains  !******************************************************************
 
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
-!!$    call flush()
+!!$    call flush(6)
 
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
@@ -3887,7 +3887,7 @@ contains  !******************************************************************
     do i=0,sz-1
        call view_box_2D(get_layout_2D_box( layout, i ))
     end do
-    call flush()
+    call flush(6)
   end subroutine sll_view_lims_2D
 
 
@@ -3900,7 +3900,7 @@ contains  !******************************************************************
     do i=0,sz-1
        call view_box_3D(get_layout_3D_box( layout, i ))
     end do
-    call flush()
+    call flush(6)
   end subroutine sll_view_lims_3D
 
   subroutine sll_view_lims_4D( layout )
@@ -3912,7 +3912,7 @@ contains  !******************************************************************
     do i=0,sz-1
        call view_box_4D(get_layout_4D_box( layout, i ))
     end do
-    call flush()
+    call flush(6)
   end subroutine sll_view_lims_4D
 
   subroutine sll_view_lims_6D( layout )
@@ -3924,7 +3924,7 @@ contains  !******************************************************************
     do i=0,sz-1
        call view_box_6D(get_layout_6D_box( layout, i ))
     end do
-    call flush()
+    call flush(6)
   end subroutine sll_view_lims_6D
 
 

@@ -34,10 +34,14 @@ module sll_scalar_field_1d
 #include "sll_assert.h"
   use sll_io
   use numeric_constants
+  use sll_scalar_field_initializers_base
   use sll_module_mapped_meshes_1d_base
   use sll_misc_utils
   implicit none
-  integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
+  
+  !I removed this line because, it not exists in 2d version
+  !should be in base module
+  !integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
   type scalar_field_1d
 #ifdef STDF95
