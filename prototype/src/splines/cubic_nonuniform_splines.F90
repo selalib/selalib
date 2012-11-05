@@ -423,7 +423,9 @@ contains  ! ****************************************************************
     type(cubic_nonunif_spline_1D), pointer      :: spline
     sll_int32 :: i,j
     sll_real64 ::xx
-    sll_real64, dimension(:), pointer :: Xj,coef
+    sll_real64, dimension(:), pointer :: Xj
+    !sll_real64, pointer :: Xjj(1:)
+    sll_real64, dimension(:), pointer :: coef
     sll_real64 :: w(0:3)
     
     x=a_in(1)
@@ -470,7 +472,8 @@ contains  ! ****************************************************************
       xx=x
       Xj => spline%node_positions(j:)
       
-      !print *,i,Xj(0),xx,Xj(1)
+      print *,i,Xj(0),xx,Xj(1)
+      stop
       if(.not.((xx .ge. Xj(0)) .and. (xx .lt. Xj(1)))) then
         if(xx.ne.1.0_f64) then
           print *,Xj(0),xx,Xj(1)
