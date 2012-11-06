@@ -33,3 +33,13 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell
                                            sll_memory 
                                            sll_collective 
                                            sll_utilities )
+
+ADD_TEST(NAME maxwell_2d_fdtd 
+         COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
+SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+IF(FFTW_FOUND)
+   ADD_TEST(NAME maxwell_2d_pstd 
+            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
+   SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF()
