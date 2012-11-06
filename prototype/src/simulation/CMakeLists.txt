@@ -1,8 +1,11 @@
 #############################################################################################
 ###      Sequential simulations
 #############################################################################################
+# compile with openmp flag
 IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic -qsmp=omp ${CMAKE_Fortran_FLAGS}")
+ELSEIF(Fortran_COMPILER_NAME STREQUAL "gfortran")
+  set(CMAKE_Fortran_FLAGS "-fopenmp ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
 #Here is defined the library containing the sequential simulations. 

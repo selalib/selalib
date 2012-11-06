@@ -233,12 +233,15 @@ program VP1d_deltaf
   write(eapp_diag,*) e_app
   write(adr_diag,*) istep*dt, adr
 
+  !$omp parallel
+  print*, 'running with openmp using ', omp_get_num_threads(), ' threads'
+  !$omp end parallel
 
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-!$omp parallel do private(alpha,f1d,v,j)
+     !$omp parallel do private(alpha,f1d,v,j)
      do i = 1, Ncx+1
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
