@@ -106,6 +106,8 @@ program vp2d_keen
           dr_param%t0, dr_param%turn_drive_off)
      do j = jstartx, jendx
         do i = 1, geomx%nx
+           print*, 'eapp', my_num, jstartx, jendx, i,j,dr_param%Edrmax , dr_param%adr , dr_param%kdr !* &
+               ! sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
            e_y(i,j) = e_y(i,j) + dr_param%Edrmax * dr_param%adr * dr_param%kdr * &
                 sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
         enddo
@@ -198,18 +200,6 @@ contains
        read(idata,NML=phys_space)
        read(idata,NML=vel_space)
        read(idata,NML=drive)
-
-       dr_param%t0 = t0
-       dr_param%twL = twL 
-       dr_param%twR = twR
-       dr_param%tstart = tstart 
-       dr_param%tflat = tflat
-       dr_param%tL = tL
-       dr_param%tR = tR
-       dr_param%turn_drive_off = turn_drive_off
-       dr_param%Edrmax = Edrmax
-       dr_param%omegadr = omegadr
-       dr_param%kdr = kdr
     end if
 
     call mpi_bcast(dt,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
@@ -228,6 +218,30 @@ contains
     call mpi_bcast(vy1,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
     call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
     call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+
+    call mpi_bcast(t0,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(twL,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(twR,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(tstart,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(tflat,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(tL,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(tR,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(turn_drive_off, 1,MPI_LOGICAL,MPI_MASTER,comm,ierr)
+    call mpi_bcast(Edrmax,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(omegadr,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+    call mpi_bcast(kdr,     1,MPI_REAL8,MPI_MASTER,comm,ierr)
+
+    dr_param%t0 = t0
+    dr_param%twL = twL 
+    dr_param%twR = twR
+    dr_param%tstart = tstart 
+    dr_param%tflat = tflat
+    dr_param%tL = tL
+    dr_param%tR = tR
+    dr_param%turn_drive_off = turn_drive_off
+    dr_param%Edrmax = Edrmax
+    dr_param%omegadr = omegadr
+    dr_param%kdr = kdr
 
     call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
     call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
