@@ -308,14 +308,6 @@ ADD_SUBDIRECTORY(LinRood)
 ##########################################################
 
 ADD_SUBDIRECTORY(maxwell_solvers)
-ADD_TEST(NAME maxwell_2d_fdtd 
-         COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
-IF(FFTW_FOUND)
-   ADD_TEST(NAME maxwell_2d_pstd 
-            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
-ENDIF()
-SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ##########################################################
 
