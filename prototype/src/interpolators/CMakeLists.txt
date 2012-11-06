@@ -69,6 +69,5 @@ target_link_libraries( test_odd_degree_interpolators_1d
 	               sll_assertion
 	               sll_memory
 	               sll_working_precision
-                       ${LAPACK_LIBRARIES}
                      )
 

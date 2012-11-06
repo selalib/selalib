@@ -67,5 +67,8 @@ TARGET_LINK_LIBRARIES(test_quintic_splines ${SPL_LIBS})
 ADD_EXECUTABLE(test_odd_degree_splines test_sll_odd_degree_splines.F90 
                                        sll_odd_degree_splines.F90)
 
-TARGET_LINK_LIBRARIES(test_odd_degree_splines ${SPL_LIBS} ${LAPACK_LIBRARIES})
-
+IF(LAPACK_LIBRARIES)
+   TARGET_LINK_LIBRARIES(test_odd_degree_splines ${SPL_LIBS} ${LAPACK_LIBRARIES})
+ELSE()
+   TARGET_LINK_LIBRARIES(test_odd_degree_splines ${SPL_LIBS})
+ENDIF()
