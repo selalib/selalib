@@ -33,15 +33,15 @@ add_custom_target( clear
 		   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
-##########################################################
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FFTConfig.cmake)
-##########################################################
+
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/HDF5Config.cmake)
-##########################################################
+
+INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FFTConfig.cmake)
+
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/MPIConfig.cmake)
-##########################################################
+
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/DoxygenConfig.cmake)
-##########################################################
+
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 
 
