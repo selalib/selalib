@@ -55,8 +55,7 @@ INCLUDE_DIRECTORIES(remap
                     numerical_utilities 
                     precision 
                     fields 
-                    fft 
-                    remap) 
+                    fft) 
 
 
 
@@ -161,47 +160,6 @@ ADD_TEST(NAME fft COMMAND test_fft)
 IF(MPI_MODULE_ENABLED)
    ADD_SUBDIRECTORY(collective)
    ADD_SUBDIRECTORY(remap)
-   # we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
-   SET(PROCS 2)
-   SET(ARGS "")
-   ADD_TEST(NAME collective
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_collective
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(collective PROPERTIES FAIL_REGULAR_EXPRESSION "NOT PASS")
-
-   SET(PROCS 8)
-   SET(ARGS "")
-   ADD_TEST(NAME remap
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(remap PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-   ADD_TEST(NAME remap_2d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_2d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   # to make the test meaningful at higher dimensions, we need more processes...
-   SET(PROCS 16)
-   ADD_TEST(NAME remap_4d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_4d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-   SET(PROCS 16)
-   ADD_TEST(NAME remap_6d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_6d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET(PROCS 16)
    ADD_TEST(NAME poisson_periodic_cartesian_par_2d
@@ -209,7 +167,6 @@ IF(MPI_MODULE_ENABLED)
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
 ##########################################################
@@ -308,14 +265,6 @@ ADD_SUBDIRECTORY(LinRood)
 ##########################################################
 
 ADD_SUBDIRECTORY(maxwell_solvers)
-ADD_TEST(NAME maxwell_2d_fdtd 
-         COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
-IF(FFTW_FOUND)
-   ADD_TEST(NAME maxwell_2d_pstd 
-            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
-ENDIF()
-SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ##########################################################
 
