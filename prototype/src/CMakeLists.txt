@@ -95,18 +95,6 @@ ADD_TEST(NAME utilities COMMAND test_utilities)
 ##########################################################
 
 ADD_SUBDIRECTORY(low_level_file_io)
-ADD_TEST(NAME low_level_file_io COMMAND test_io)
-SET_TESTS_PROPERTIES(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-IF(HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
-   SET(PROCS 4)
-   SET(ARGS "")
-   ADD_TEST(NAME low_level_file_io_parallel COMMAND 
-            ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io_parallel
-            ${MPIEXEC_POSTFLAGS} ${ARGS})
-   SET_TESTS_PROPERTIES(low_level_file_io_parallel 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF()
 
 ##########################################################
 
