@@ -20,8 +20,6 @@ IF(APPLE)
 ELSE()
    IF(Fortran_COMPILER STREQUAL "INTEL")
       SET(BLA_VENDOR "Intel11")
-      FIND_PACKAGE(LAPACK)
-      SET(LAPACK_LIBRARIES ${LAPACK95_LIBRARIES})
    ENDIF()
    FIND_PACKAGE(LAPACK)
 ENDIF()
@@ -174,7 +172,6 @@ SET(LIBS sll_utilities
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
-         ${LAPACK_LIBRARIES} 
          ${FFTW_LIBRARIES}
          ${HDF5_LIBRARIES})
 
