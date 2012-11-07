@@ -1,7 +1,3 @@
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
-ENDIF()
-
 
 IF(STDF95)
   add_library( sll_interpolators STATIC
@@ -13,7 +9,7 @@ ELSE()
   add_library( sll_interpolators STATIC
 	       sll_interpolators_1d_base.F90
 	       sll_cubic_spline_interpolator_1d.F90
-	       sll_finite_difference_interpolator_1d.F90
+	       #sll_finite_difference_interpolator_1d.F90
 	       sll_interpolators_2d_base.F90
 	       sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90

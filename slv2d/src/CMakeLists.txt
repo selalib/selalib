@@ -18,13 +18,16 @@ SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 IF(APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
 ELSE()
-   IF(Fortran_COMPILER STREQUAL "GFORTRAN")
+   IF(Fortran_COMPILER STREQUAL "INTEL")
+      SET(BLA_VENDOR "Intel")
       FIND_PACKAGE(LAPACK)
-   ELSE()
-      INCLUDE(${CMAKE_MODULE_PATH}/FindLapack.cmake)
    ENDIF()
+   FIND_PACKAGE(LAPACK)
 ENDIF()
 
+IF(NOT LAPACK_FOUND)
+   INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
+ENDIF()
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -68,7 +71,11 @@ ENDIF()
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
+IF($ENV{HDF5_ROOT})
+   SET(HDF5_ROOT $ENV{HDF5_ROOT})
+ENDIF()
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
+
 SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
 IF(HDF5_ENABLE_PARALLEL) 
    MESSAGE(STATUS "HDF5 parallel supported")
@@ -114,7 +121,9 @@ ENDIF()
 IF(Fortran_COMPILER STREQUAL "XLF")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
-MESSAGE(STATUS " fc " ${Fortran_COMPILER} " fc name " ${Fortran_COMPILER_NAME})
+IF(Fortran_COMPILER STREQUAL "IFORT")
+
+ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
@@ -182,18 +191,15 @@ TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
 ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
 
-#ADD_DEFINITIONS(-DQUINTIC)
-
 #FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
 #ADD_DEFINITIONS(-D_QUINTIC)
-
 #ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
 #TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
 
-#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
-#ADD_DEFINITIONS(-DTWO_D)
-#ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
-#TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
+FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+ADD_DEFINITIONS(-D_TWO_D)
+ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)

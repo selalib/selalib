@@ -81,6 +81,10 @@ do iter=1,nbiter
 
    call solve(poisson,e_x,e_y,rho,nrj)
 
+   if (mod(iter,fthdiag).eq.0) then
+       call thdiag(vlas2d,f4d,nrj,iter*dt)    
+   end if
+
    call advection_v(vlas2d,e_x,e_y,dt)
 
    call transposevx(vlas2d,f4d)
@@ -94,9 +98,6 @@ do iter=1,nbiter
 
        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,VXVY_VIEW)
 
-       if (mod(iter,fthdiag).eq.0) then
-          call thdiag(vlas2d,f4d,nrj,iter*dt)    
-       end if
 
        call advection_x(vlas2d,f4d,.5*dt)
 

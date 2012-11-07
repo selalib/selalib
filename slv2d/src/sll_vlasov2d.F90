@@ -8,7 +8,7 @@ module sll_vlasov2d
  use sll_splines
  use sll_cubic_spline_interpolator_1d
  use sll_quintic_spline_interpolator_1d
-
+ use sll_cubic_spline_interpolator_2d
 
  implicit none
  private
@@ -26,18 +26,29 @@ module sll_vlasov2d
    class(sll_interpolator_1d_base), pointer :: interp_x2
    class(sll_interpolator_1d_base), pointer :: interp_x3
    class(sll_interpolator_1d_base), pointer :: interp_x4
+#ifdef _TWO_D
+   class(sll_interpolator_2d_base), pointer :: interp_x
+   class(sll_interpolator_2d_base), pointer :: interp_v
+#endif
  end type vlasov2d
 
- type(cubic_spline_1d_interpolator), target :: spl_x1
- type(cubic_spline_1d_interpolator), target :: spl_x2
 
 
 #ifdef _QUINTIC
+ type(cubic_spline_1d_interpolator),   target :: spl_x1
+ type(cubic_spline_1d_interpolator),   target :: spl_x2
  type(quintic_spline_1d_interpolator), target :: spl_x3
  type(quintic_spline_1d_interpolator), target :: spl_x4
 #else
+ type(cubic_spline_1d_interpolator), target :: spl_x1
+ type(cubic_spline_1d_interpolator), target :: spl_x2
  type(cubic_spline_1d_interpolator), target :: spl_x3
  type(cubic_spline_1d_interpolator), target :: spl_x4
+#endif
+
+#ifdef _TWO_D
+ type(cubic_spline_2d_interpolator),   target :: spl_x
+ type(cubic_spline_2d_interpolator),   target :: spl_v
 #endif
 
  sll_int32, private :: i, j, k, l
@@ -103,6 +114,8 @@ contains
   call this%interp_v%initialize( nc_x3, nc_x4, &
                                     x3_min, x3_max, x4_min, x4_max, &
                                     PERIODIC_SPLINE, PERIODIC_SPLINE)
+  this%interp_x => spl_x
+  this%interp_v => spl_v
 #else
 
   call spl_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)

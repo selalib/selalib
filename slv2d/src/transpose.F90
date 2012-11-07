@@ -21,7 +21,6 @@ subroutine transpose(a,at,nrow,ncol,nproc)
   !   Both A and AT are split on the processors according to the columns
   !------------------------------------------------------------------------
   use used_precision
-  use mpi
   use sll_collective
   implicit none
   

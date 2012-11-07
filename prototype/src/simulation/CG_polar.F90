@@ -671,6 +671,7 @@ program cg_polar
         call plot_f(step)
      end if
 
+
   end do
   write(23,*)' '
   write(23,*)' '
