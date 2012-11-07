@@ -155,6 +155,16 @@ IF(MPI_MODULE_ENABLED)
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+   SET(PROCS 16)
+   ADD_TEST(NAME poisson_3d_periodic_par
+         COMMAND
+	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_3d_periodic_par
+	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+   SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
+                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 ENDIF()
 
 ##########################################################
@@ -166,8 +176,9 @@ IF(NOT STDF95)
    ENDIF(FFTPACK_ENABLED)
 
 #ADD_TEST(poisson_solvers poisson_solvers/test_poisson_2d)
-#ADD_TEST(poisson_solvers poisson_solvers/test_poisson_3d_seq)
-#ADD_TEST(poisson_solvers mpirun -np 2 poisson_solvers/test_poisson_3d_par)
+ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
+   SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
+                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #ADD_TEST(poisson_solvers poisson_solvers/unit_test)
 
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
