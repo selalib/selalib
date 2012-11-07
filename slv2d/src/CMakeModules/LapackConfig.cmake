@@ -7,7 +7,6 @@ set(BLAS_FOUND FALSE)
 set(MKL_FOUND FALSE)
 #
 #IF(NOT CMAKE_COMPILER_IS_GNUCXX)
-
 if(${CMAKE_C_COMPILER} MATCHES "icc")
   # Intel composer has everything, 
   if($ENV{MKLROOT} MATCHES "composer")
@@ -40,11 +39,13 @@ if(${CMAKE_C_COMPILER} MATCHES "icc")
       STRING(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" MKL_VERSION ${mkl_home})
 
       if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
-        if(${MKL_VERSION} MATCHES "10\\.3\\.[0-4]")
+#        if(${MKL_VERSION} MATCHES "10\\.3\\.[0-4]")
+if(${MKL_VERSION} MATCHES "2011.0.013")
           link_libraries(-L${mkl_home}/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm)
         else()
           if(${MKL_VERSION} MATCHES "10\\.[0-2]\\.[0-4]")
             link_libraries(-L${mkl_home}/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm)
+
           else()
             link_libraries(-L${mkl_home}/lib/em64t -lmkl_lapack -lmkl -lguide)
           endif()
@@ -125,44 +126,3 @@ else(LAPACK_FOUND AND BLAS_FOUND)
     set(BLAS_FOUND TRUE)
   endif(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
 endif(LAPACK_FOUND AND BLAS_FOUND)
-
-#MARK_AS_ADVANCED(
-#  LAPACK_LIBRARIES 
-#  BLAS_LIBRARIES 
-#  )
-#IF(USE_SCALAPACK)
-#  SET(PNPATHS 
-#    ${MKL_PATHS}
-#    ${BLACS_HOME}/lib
-#    ${SCALAPACK_HOME}/lib
-#    /usr/lib
-#    /opt/lib
-#    /usr/local/lib
-#    /sw/lib
-#    )
-#
-#  IF(INTEL_MKL)
-#    FIND_LIBRARY(BLACSLIB mkl_blacs_${PLAT}_lp${QMC_BITS} PATHS  ${PNPATHS})
-#    FIND_LIBRARY(SCALAPACKLIB mkl_scalapack PATHS  ${PNPATHS})
-#  ENDIF(INTEL_MKL)
-#
-#  IF(NOT SCALAPACKLIB)
-#    FIND_LIBRARY(BLACSLIB blacs_MPI-${PLAT}-{BLACSDBGLVL} PATHS  ${PNPATHS})
-#    FIND_LIBRARY(BLACSCINIT blacsCinit_MPI-${PLAT}-{BLACSDBGLVL} PATHS  ${PNPATHS})
-#    FIND_LIBRARY(SCALAPACKLIB scalapack PATHS  ${PNPATHS})
-#  ENDIF(NOT SCALAPACKLIB)
-#
-#  IF(BLACSLIB AND SCALAPACKLIB)
-#    SET(FOUND_SCALAPACK 1 CACHE BOOL "Found scalapack library")
-#  ELSE(BLACSLIB AND SCALAPACKLIB)
-#    SET(FOUND_SCALAPACK 0 CACHE BOOL "Mising scalapack library")
-#  ENDIF(BLACSLIB AND SCALAPACKLIB)
-#
-#  MARK_AS_ADVANCED(
-#    BLACSCINIT
-#    BLACSLIB
-#    SCALAPACKLIB
-#    FOUND_SCALAPACK
-#    )
-#ENDIF(USE_SCALAPACK)
-

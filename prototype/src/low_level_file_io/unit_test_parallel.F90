@@ -1,6 +1,6 @@
 program test_io_parallel
 
-use mpi
+use hdf5
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
@@ -42,7 +42,7 @@ if( myrank .eq. 0) then
    print *, '--------------- HDF5 parallel test ---------------------'
    print *, ' '
    print"('Running a test on ',i4,' processes')", colsz
-   call flush()
+   call flush(6)
 end if
 
 if (.not. is_power_of_two(colsz)) then     
@@ -72,10 +72,10 @@ contains
 ! the full array.
  subroutine plot_layout2d()
 
-  integer , parameter       :: nx = 512
-  integer , parameter       :: ny = 256
-  integer                   :: mx, my    ! Local sizes
-  integer                   :: npi, npj
+  sll_int32 , parameter       :: nx = 512
+  sll_int32 , parameter       :: ny = 256
+  sll_int32                   :: mx, my    ! Local sizes
+  sll_int32                   :: npi, npj
   sll_int32                 :: gi, gj
   
   sll_int32, dimension(2)   :: global_indices
@@ -147,9 +147,9 @@ contains
 
   if (myrank == 0) then
   
-     call sll_xml_file_create("layout2d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, xfile, nx, yfile, ny, xdset, ydset )
-     call sll_xml_field(file_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
+     call sll_xml_file_create("layout2d.xmf",xml_id,error)
+     call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
+     call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
      call sll_xml_file_close(file_id,error)
      print *, 'Printing 2D layout: '
      call sll_view_lims_2D( layout )
@@ -170,29 +170,30 @@ contains
   sll_real64, dimension(:,:,:), allocatable :: local_array
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 32
-  integer , parameter                       :: nj = 64
-  integer , parameter                       :: nk = 128
+  sll_int32 , parameter                       :: ni = 32
+  sll_int32 , parameter                       :: nj = 64
+  sll_int32 , parameter                       :: nk = 128
   ! Local sizes
-  integer                                   :: loc_sz_i_init
-  integer                                   :: loc_sz_j_init
-  integer                                   :: loc_sz_k_init
+  sll_int32                                   :: loc_sz_i_init
+  sll_int32                                   :: loc_sz_j_init
+  sll_int32                                   :: loc_sz_k_init
 
   ! the process mesh
-  integer                                   :: npi
-  integer                                   :: npj
-  integer                                   :: npk
+  sll_int32                                   :: npi
+  sll_int32                                   :: npj
+  sll_int32                                   :: npk
   sll_int32                                 :: gi, gj, gk
 
   type(layout_3D), pointer                  :: layout
 
   sll_int32, dimension(3)                   :: global_indices
 
+  sll_int32      :: xml_id
   integer(HID_T) :: file_id       ! File identifier 
 
   integer(HSIZE_T), dimension(3) :: datadims = (/ni,nj,nk/) ! Dataset dimensions.
 
-  integer, PARAMETER :: rank = 3
+  sll_int32, PARAMETER :: rank = 3
 
   integer(HSSIZE_T), dimension(rank) :: offset 
 
@@ -254,14 +255,14 @@ contains
   call sll_hdf5_file_close(file_id, error)
 
   if (myrank == 0) then
-     call sll_xml_file_create("layout3d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, 'layout3d-x.h5', ni, &
+     call sll_xml_file_create("layout3d.xmf",xml_id,error)
+     call sll_xml_grid_geometry(xml_id, 'layout3d-x.h5', ni, &
                                          'layout3d-y.h5', nj, &
                                          'layout3d-z.h5', nk, &
                                          'x', 'y', 'z' )
-     call sll_xml_field(file_id,'values', "layout3d.h5:/array", &
+     call sll_xml_field(xml_id,'values', "layout3d.h5:/array", &
                         ni,nj,nk,'HDF','Node')
-     call sll_xml_file_close(file_id,error)
+     call sll_xml_file_close(xml_id,error)
 
      print *, 'Printing 3D layout: '
      call sll_view_lims_3D( layout )

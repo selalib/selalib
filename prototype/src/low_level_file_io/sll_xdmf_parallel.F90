@@ -61,8 +61,8 @@ contains
 
     character(len=*), intent(in) :: file_name
     character(len=*), intent(in) :: mesh_name
-    sll_int32, intent(out)       :: file_id
-    sll_int32, intent(out)       :: error
+    sll_int32                    :: file_id
+    sll_int32                    :: error
     sll_int32                    :: nnodes_x1
     sll_int32                    :: nnodes_x2
     sll_int32                    :: myrank

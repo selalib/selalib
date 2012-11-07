@@ -839,7 +839,7 @@ contains
   end subroutine advection_v_1d
 
   subroutine plot_fields(itime, sim)
-    use mpi
+    use sll_collective
     use hdf5
     use sll_hdf5_io_parallel
     use sll_xml_io
