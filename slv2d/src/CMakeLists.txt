@@ -171,6 +171,7 @@ SET(LIBS sll_utilities
          sll_low_level_file_io
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
+         ${LAPACK_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
          ${FFTW_LIBRARIES}
          ${HDF5_LIBRARIES})

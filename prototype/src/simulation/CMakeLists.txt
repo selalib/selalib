@@ -138,19 +138,20 @@ add_executable(CG_polar
 		sll_advection_polar.F90
 		sll_polar_operators.F90
 		)
+add_dependencies(CG_polar sll_low_level_file_io)
 
 FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(CG_polar
+	sll_splines
+	sll_poisson_2d_polar
         sll_low_level_file_io
 	sll_fft
 	sll_tridiagonal
 	sll_constants
-	sll_splines
 	sll_memory
 	sll_assertion
 	sll_timer
 	sll_utilities
-	sll_poisson_2d_polar
 	)
 	
 
