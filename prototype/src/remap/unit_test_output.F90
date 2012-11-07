@@ -70,7 +70,7 @@ use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
      print *, '--------------- layout output test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush()
+     call flush(6)
   end if
 
   if (.not. is_power_of_two(colsz)) then     

@@ -146,11 +146,11 @@ program test_poisson_3d_par
 
      average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
 
-     call flush(); print*, ' ------------------'
-     call flush(); print*, ' myrank ', myrank
-     call flush(); print*, 'local average error:', average_err
-     call flush(); print*, 'dx*dy*dz =', dx*dy*dz
-     call flush(); print*, ' ------------------'
+     call flush(6); print*, ' ------------------'
+     call flush(6); print*, ' myrank ', myrank
+     call flush(6); print*, 'local average error:', average_err
+     call flush(6); print*, 'dx*dy*dz =', dx*dy*dz
+     call flush(6); print*, ' ------------------'
 
      if (average_err> dx*dy*dz ) then
         print*, 'Test stopped by "sll_poisson_3d_periodic_par" failure'
@@ -166,11 +166,11 @@ program test_poisson_3d_par
      if (myrank==0) then
 
         if (prod4test(1)==1.) then
-           call flush()
+           call flush(6)
            print*, ' '
-           call flush()
+           call flush(6)
            print*, '"sll_poisson_3d_periodic_par" test: PASS'
-           call flush()
+           call flush(6)
            print*, ' '
         endif
      endif           

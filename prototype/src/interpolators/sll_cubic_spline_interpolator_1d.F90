@@ -112,7 +112,7 @@ contains  ! ****************************************************************
     if (this%bc_type == PERIODIC_SPLINE) then
        do i = 1, num_points      
           coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
-          SLL_ASSERT(xmin <= coordinates(i))
+          SLL_ASSERT(coordinates(i) >= xmin)
           SLL_ASSERT(coordinates(i) <= xmax)   
        end do
     else

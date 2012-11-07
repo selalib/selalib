@@ -30,7 +30,7 @@ IF(HDF5_PARALLEL_ENABLED)
                                                    sll_collective)
    TARGET_LINK_LIBRARIES(sll_low_level_file_io_parallel ${HDF5_LIBRARIES} )
  
-   IF( NOT STDF95) 
+   IF(NOT STDF95) 
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
    TARGET_LINK_LIBRARIES(test_io_parallel sll_low_level_file_io_parallel
                                           sll_remap
@@ -42,4 +42,17 @@ IF(HDF5_PARALLEL_ENABLED)
 	                                  sll_working_precision)
    ENDIF()
 
+ENDIF()
+
+ADD_TEST(NAME low_level_file_io COMMAND test_io)
+SET_TESTS_PROPERTIES(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+IF(HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+   SET(PROCS 4)
+   SET(ARGS "")
+   ADD_TEST(NAME low_level_file_io_parallel COMMAND 
+            ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_io_parallel
+            ${MPIEXEC_POSTFLAGS} ${ARGS})
+   SET_TESTS_PROPERTIES(low_level_file_io_parallel 
+                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()

@@ -2,6 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
   use numeric_constants
   use geometry_functions
+  use sll_module_interpolators_2d_base
   use sll_cubic_spline_interpolator_2d
   implicit none
 
@@ -9,12 +10,14 @@ program unit_test
 #define NPTS2 65 
 
   type(cubic_spline_2d_interpolator) :: cs2d
-  sll_real64, dimension(:,:), allocatable :: x1
-  sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
+  sll_real64, dimension(:,:), allocatable    :: x1
+  sll_real64, dimension(:), allocatable      :: x1_eta1_min
+  sll_real64, dimension(:), allocatable      :: x1_eta1_max
 
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
+
 
   print *,  'filling out discrete arrays for x1 '
   h1 = 1.0_f64/real(NPTS1-1,f64)
@@ -103,6 +106,43 @@ program unit_test
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
   print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
+
+  call test_interpolator_2d()
+
+contains
+
+subroutine test_interpolator_2d()
+  class(sll_interpolator_2d_base),    pointer   :: interp
+  type(cubic_spline_2d_interpolator), target    :: spline
+  sll_real64, dimension(NPTS1,NPTS2) :: xx1
+  sll_real64, dimension(NPTS1,NPTS2) :: xx2
+  sll_real64, dimension(NPTS1,NPTS2) :: data_in
+  sll_real64, dimension(NPTS1,NPTS2) :: data_out
+
+  call spline%initialize(NPTS1,NPTS2, &
+                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
+                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+  interp =>  spline
+  do j = 1, NPTS2
+  do i = 1, NPTS1
+     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1-1)
+     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2-1)
+  end do
+  end do
+  data_in = cos(xx1)*sin(xx2)
+
+  do j = 1, NPTS2
+  do i = 1, NPTS1
+     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1)
+     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
+  end do
+  end do
+
+  data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
+
+  print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
+end subroutine test_interpolator_2d
+
 end program unit_test
 
  
