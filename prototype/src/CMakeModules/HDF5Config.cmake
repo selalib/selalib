@@ -6,86 +6,102 @@ IF( DEFINED ENV{HDF5_ROOT} )
    SET(HDF5_ROOT $ENV{HDF5_ROOT})
 ENDIF()
 
-IF(HDF5_FOUND)
-   MESSAGE(STATUS "HDF5 FOUND")
-ELSE()
-   add_definitions(-DNOHDF5)
-   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-   SET(HDF5_LIBRARIES "")
-ENDIF()
+FIND_PACKAGE(HDF5 REQUIRED Fortran)
 
-SET(HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
-SET(HDF5_BUILD_FORTRAN   @HDF5_BUILD_FORTRAN@)
-SET(HDF5_ENABLE_F2003    @HDF5_ENABLE_F2003@)
-SET(HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
+IF(NOT HDF5_FOUND)
 
-FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.h
-	HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
-	PATH_SUFFIXES include hdf5/include
-	DOC "PATH TO hdf5.h")
+   MESSAGE(STATUS "CMake did not found your HDF5 installation")
+   MESSAGE(STATUS "Let me try this...")
 
-FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
-	HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
-	PATH_SUFFIXES include hdf5/include include/fortran
-	DOC "PATH to hdf5.mod")
+   FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.h
+   HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
+   PATH_SUFFIXES include hdf5/include
+   DOC "PATH TO hdf5.h")
 
-FIND_LIBRARY(HDF5_HDF5_LIBRARY NAMES hdf5
-	HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
-	PATH_SUFFIXES lib hdf5/lib
-	DOC "PATH TO libhdf5.dylib")
+   FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
+   HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
+   PATH_SUFFIXES include hdf5/include include/fortran
+   DOC "PATH to hdf5.mod")
 
-FIND_LIBRARY(HDF5_HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
-	HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
-	PATH_SUFFIXES lib hdf5/lib
-	DOC "PATH TO libhdf5_fortran.a")
+   FIND_LIBRARY(HDF5_HDF5_LIBRARY NAMES hdf5
+   HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
+   PATH_SUFFIXES lib hdf5/lib
+   DOC "PATH TO libhdf5")
 
-FIND_PACKAGE(ZLIB)
-IF (ZLIB_FOUND)
+   FIND_LIBRARY(HDF5_HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
+   HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
+   PATH_SUFFIXES lib hdf5/lib
+   DOC "PATH TO libhdf5_fortran")
 
-   SET(HDF5_LIBRARIES @HDF5_HDF5_FORTRAN_LIBRARY@;@HDF5_HDF5_LIBRARY@ ${ZLIB_LIBRARIES})
+   FIND_PACKAGE(ZLIB)
 
-ELSE()
-
-   FIND_LIBRARY(HDF5_Z_LIBRARY NAMES z
-	   HINTS ${HDF5_ROOT}
-	   PATH_SUFFIXES lib hdf5/lib
-	   DOC "PATH TO libz.dylib")
-   SET(HDF5_LIBRARIES @HDF5_HDF5_FORTRAN_LIBRARY@;@HDF5_HDF5_LIBRARY@;@HDF5_Z_LIBRARY@)
-
-ENDIF()
-
-IF ( HDF5_INCLUDE_DIRS         AND
-     HDF5_HDF5_LIBRARY         AND
-     HDF5_HDF5_FORTRAN_LIBRARY AND
-     ZLIB_FOUND )
-
-   SET(HDF5_FOUND YES)
-   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
-   IF(HDF5_INCLUDE_DIR_FORTRAN)
-      INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
+   IF (ZLIB_FOUND)
+      SET(HDF5_LIBRARIES @HDF5_HDF5_FORTRAN_LIBRARY@;@HDF5_HDF5_LIBRARY@ ${ZLIB_LIBRARIES})
    ELSE()
-      INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS}/fortran)
+      FIND_LIBRARY(HDF5_Z_LIBRARY NAMES z
+	           HINTS ${HDF5_ROOT}
+	           PATH_SUFFIXES lib hdf5/lib
+	           DOC "PATH TO libz.dylib")
    ENDIF()
 
+   IF ( HDF5_INCLUDE_DIRS         AND
+        HDF5_HDF5_LIBRARY         AND
+        HDF5_HDF5_FORTRAN_LIBRARY AND
+        HDF5_Z_LIBRARY )
+
+     MESSAGE(STATUS "Ok we have everything we need...")
+     
+     SET(HDF5_FOUND YES)
+     SET(HDF5_LIBRARIES @HDF5_HDF5_FORTRAN_LIBRARY@;@HDF5_HDF5_LIBRARY@;@HDF5_Z_LIBRARY@)
+     INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+     IF(HDF5_INCLUDE_DIR_FORTRAN)
+        INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
+     ELSE()
+        INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS}/fortran)
+     ENDIF()
+   ENDIF()
+
+ELSE()
+
+   MESSAGE(STATUS "CMake found your HDF5 installation")
+
 ENDIF()
 
-IF(HDF5_ENABLE_PARALLEL) 
-   MESSAGE(STATUS "HDF5 parallel supported")
-ELSE(HDF5_ENABLE_PARALLEL)
-   MESSAGE(STATUS "HDF5 parallel not supported")
-ENDIF()
-IF(HDF5_BUILD_FORTRAN)   
-   MESSAGE(STATUS "HDF5 was compiled with fortran on")
-ELSE(HDF5_BUILD_FORTRAN)   
-   MESSAGE(STATUS "HDF5 was compiled with fortran off")
-ENDIF()
-IF(HDF5_BUILD_HL_LIB)    
-   MESSAGE(STATUS "HDF5 was compiled with high level on")
-ELSE(HDF5_BUILD_HL_LIB)    
-   MESSAGE(STATUS "HDF5 was compiled with high level off")
-ENDIF()
-IF(HDF5_ENABLE_F2003)
-   MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard enabled")
-ELSE(HDF5_ENABLE_F2003)
-   MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard disabled")
+
+IF(HDF5_FOUND)
+
+   MESSAGE(STATUS "HDF5 FOUND")
+   SET(HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
+   SET(HDF5_BUILD_FORTRAN   @HDF5_BUILD_FORTRAN@)
+   SET(HDF5_ENABLE_F2003    @HDF5_ENABLE_F2003@)
+   SET(HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
+   
+   IF(HDF5_ENABLE_PARALLEL) 
+      MESSAGE(STATUS "HDF5 parallel supported")
+   ELSE(HDF5_ENABLE_PARALLEL)
+      MESSAGE(STATUS "HDF5 parallel not supported")
+   ENDIF()
+   IF(HDF5_BUILD_FORTRAN)   
+      MESSAGE(STATUS "HDF5 was compiled with fortran on")
+   ELSE(HDF5_BUILD_FORTRAN)   
+      MESSAGE(STATUS "HDF5 was compiled with fortran off")
+   ENDIF()
+   IF(HDF5_BUILD_HL_LIB)    
+      MESSAGE(STATUS "HDF5 was compiled with high level on")
+   ELSE(HDF5_BUILD_HL_LIB)    
+      MESSAGE(STATUS "HDF5 was compiled with high level off")
+   ENDIF()
+   IF(HDF5_ENABLE_F2003)
+      MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard enabled")
+   ELSE(HDF5_ENABLE_F2003)
+      MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard disabled")
+   ENDIF()
+
+ELSE()
+
+   MESSAGE(STATUS "Build SeLaLib without HDF5... binary output only for serial applications ")
+   ADD_DEFINITIONS(-DNOHDF5)
+   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
+   SET(HDF5_LIBRARIES "")
+
 ENDIF()
