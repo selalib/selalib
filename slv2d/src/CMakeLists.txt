@@ -59,6 +59,10 @@ IF(FFTW_ENABLED)
       ADD_DEFINITIONS(-D_FFTW)
       INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
    ENDIF()
+   IF(FFTW_MPI_LIBRARY)
+      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90)
+      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+   ENDIF()
 ENDIF()
 
 #------------------------------------
