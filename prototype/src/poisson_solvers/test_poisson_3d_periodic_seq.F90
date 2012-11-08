@@ -14,18 +14,15 @@
 !                                  
 !***************************************************************************
 
-program test_poisson_3d_seq
+program test_poisson_3d_periodic_seq
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
 #include "sll_poisson_solvers.h"
 #include "sll_remap.h"
-
   use numeric_constants
   use sll_poisson_3d_periodic_seq
-  use sll_diagnostics
 
   implicit none
 
@@ -69,7 +66,7 @@ program test_poisson_3d_seq
      end do
   end do
 
-  call write_mesh(x,y,z,nx,ny,nz,"mesh3d")
+  !call write_mesh(x,y,z,nx,ny,nz,"mesh3d")
 
   SLL_ALLOCATE(rho(nx,ny,nz),error)
   SLL_ALLOCATE(phi(nx,ny,nz),error)
@@ -112,18 +109,18 @@ program test_poisson_3d_seq
      end if
 
 
-     call write_vec1d(rho,nx,ny,nz,"rho"//char(i_test+48),"mesh3d",0)
-     call write_vec1d(phi,nx,ny,nz,"phi"//char(i_test+48),"mesh3d",0)
+     !call write_vec1d(rho,nx,ny,nz,"rho"//char(i_test+48),"mesh3d",0)
+     !call write_vec1d(phi,nx,ny,nz,"phi"//char(i_test+48),"mesh3d",0)
 
   end do
 
   call delete_poisson_3d_periodic_plan_seq(plan)
 
 
-  print*, 'sll_poisson_3d_periodic_seq test: PASS'
+  print*, 'sll_poisson_3d_periodic_seq test: PASSED'
 
   call cpu_time(time_2)
   print*, 'Total CPU time : ', time_2-time_0
 
 
-end program test_poisson_3d_seq
+end program test_poisson_3d_periodic_seq
