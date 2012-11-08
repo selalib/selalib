@@ -1,10 +1,12 @@
 IF(Fortran_COMPILER STREQUAL 'INTEL')
-   SET(BLA_VENDOR "Intel")
+  SET(BLA_VENDOR "Intel")
 ENDIF()
 
 IF (APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
    FIND_LIBRARY(BLAS_LIBRARIES    blas)
+ELSEIF($ENV{HOST} STREQUAL "hydra01")
+   SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core)
 ELSE()
    FIND_PACKAGE(LAPACK REQUIRED)
    FIND_PACKAGE(BLAS   REQUIRED)
