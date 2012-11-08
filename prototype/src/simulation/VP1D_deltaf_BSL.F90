@@ -33,7 +33,7 @@ program VP1d_deltaf
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
-  sll_real64, dimension(:), allocatable :: f1d
+  sll_real64, dimension(:), pointer     :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array
   sll_int32  :: Ncx, Ncv   ! number of cells
@@ -186,7 +186,7 @@ program VP1d_deltaf
   SLL_ALLOCATE(efield(Ncx+1),ierr)
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
 
-  SLL_ALLOCATE(f1d(max(Ncx+1,Ncv+1)),ierr)
+  !SLL_ALLOCATE(f1d(max(Ncx+1,Ncv+1)),ierr)
 
   ! initialization of distribution_function
   call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
@@ -241,8 +241,8 @@ program VP1d_deltaf
   !$omp parallel default(shared)
   num_threads =  omp_get_num_threads()
   print*, 'running with openmp using ', num_threads, ' threads'
-  ipiece_size_v = (Ncv+1 + num_threads-1) / num_threads
-  ipiece_size_x = (Ncx+1 + num_threads-1) / num_threads
+  ipiece_size_v = (Ncv + 1) / num_threads
+  ipiece_size_x = (Ncx + 1) / num_threads
   !$omp end parallel
 
   ! time loop
@@ -253,19 +253,22 @@ program VP1d_deltaf
      !$omp parallel default(shared) &
      !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, &
      !$omp& interp_v, interp_spline_v)
-     
      my_num = omp_get_thread_num()
      istartx = my_num * ipiece_size_x + 1
-     iendx   = min(istartx - 1 + ipiece_size_x, Ncx+1)
+     !print*, my_num, ' entering first parallel region'
+     if (my_num < num_threads-1) then
+        iendx   = istartx - 1 + ipiece_size_x
+     else
+        iendx = Ncx+1
+     end if
      !print*, my_num, istartx, iendx, ipiece_size_x
      ! define private interpolator
      call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
      interp_v => interp_spline_v
-
      do i = istartx, iendx
         !do i = 1, Ncx + 1
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-        f1d = FIELD_DATA(f) (i,:) 
+        f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
@@ -274,16 +277,19 @@ program VP1d_deltaf
               f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
            end do
         endif
-        FIELD_DATA(f) (i,:) = f1d(1:Ncv+1)
+        !FIELD_DATA(f) (i,:) = f1d(1:Ncv+1)
      end do
      !$omp end parallel
-
-     ! full time step advection in x
      !$omp parallel default(shared) &
      !$omp& private(j,alpha,f1d,my_num, jstartv, jendv, interp_x,interp_spline_x)
      my_num = omp_get_thread_num()
+!print*, my_num, ' entering second parallel region'
      jstartv = my_num * ipiece_size_v + 1
-     jendv   = min(jstartv - 1 + ipiece_size_v, Ncv+1)
+     if (my_num < num_threads-1) then
+        jendv   = jstartv - 1 + ipiece_size_v
+     else
+        jendv = Ncv+1
+     end if 
      !print*, my_num, jstartv, jendv, ipiece_size_v
 
      call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
@@ -291,9 +297,9 @@ program VP1d_deltaf
      !do j =  1, Ncv + 1
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
-        f1d(1:Ncx+1) = FIELD_DATA(f) (:,j) 
-        f1d(1:Ncx+1) = interp_x%interpolate_array_disp(Ncx+1, f1d(1:Ncx+1), alpha)
-        FIELD_DATA(f) (:,j) = f1d(1:Ncx+1)
+        f1d => FIELD_DATA(f) (:,j) 
+        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+        !FIELD_DATA(f) (:,j) = f1d(1:Ncx+1)
      end do
      !$omp end parallel
 
@@ -312,7 +318,11 @@ program VP1d_deltaf
      !$omp& interp_v, interp_spline_v)
      my_num = omp_get_thread_num()
      istartx = my_num * ipiece_size_x + 1
-     iendx   = min(istartx - 1 + ipiece_size_x, Ncx+1)
+     if (my_num < num_threads-1) then
+        iendx   = istartx - 1 + ipiece_size_x
+     else
+        iendx = Ncx+1
+     end if
      !print*, my_num, istartx, iendx, ipiece_size_x
      ! define private interpolator
      call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
@@ -321,7 +331,7 @@ program VP1d_deltaf
      do i = istartx, iendx
         !do i = 1, Ncx + 1
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-        f1d = FIELD_DATA(f) (i,:) 
+        f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
         if (is_delta_f==0) then
            ! add equilibrium contribution
@@ -330,7 +340,7 @@ program VP1d_deltaf
               f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
            end do
         end if
-        FIELD_DATA(f) (i,:) = f1d(1:Ncv+1)
+        !FIELD_DATA(f) (i,:) = f1d(1:Ncv+1)
      end do
      !$omp end parallel
      ! diagnostics
