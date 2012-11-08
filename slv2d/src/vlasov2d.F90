@@ -169,9 +169,9 @@ contains
    do j=this%jstartx,this%jendx
     do i=1,this%geomx%nx
      im1=mod(i-1+this%geomx%nx,this%geomx%nx)
-     !depvx = fx(i,j)*dt
-     !depvy = fy(i,j)*dt
-     depvx =  fx(i,j)*dt;depvy=0._wp
+     depvx = fx(i,j)*dt
+     depvy = fy(i,j)*dt
+     !depvx =  fx(i,j)*dt;depvy=0._wp
      call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,j==0)
      !call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,(j .eq. 3) .and. (i .eq. 3))
     end do
