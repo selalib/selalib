@@ -97,6 +97,8 @@ IF(HDF5_FOUND)
       MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard disabled")
    ENDIF()
 
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+
 ELSE()
 
    MESSAGE(STATUS "Build SeLaLib without HDF5... binary output only for serial applications ")
