@@ -49,7 +49,7 @@ end do
 
 eta1_min = mesh_1d%x1_at_node(1)
 eta1_max = mesh_1d%x1_at_node(nc_eta1+1)
-call initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
+call new(poisson, eta1_min, eta1_max, nc_eta1, error) 
 
 call solve(poisson, ex, rho)
     
