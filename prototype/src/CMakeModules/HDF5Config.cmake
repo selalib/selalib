@@ -10,7 +10,7 @@ FIND_PACKAGE(HDF5 REQUIRED Fortran)
 
 IF(NOT HDF5_FOUND)
 
-   MESSAGE(STATUS "CMake did not found your HDF5 installation")
+   MESSAGE(STATUS "CMake did not find your HDF5 installation")
    MESSAGE(STATUS "Let me try this...")
 
    FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.h
@@ -97,6 +97,8 @@ IF(HDF5_FOUND)
       MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard disabled")
    ENDIF()
 
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS}/fortran)
 ELSE()
 
    MESSAGE(STATUS "Build SeLaLib without HDF5... binary output only for serial applications ")
