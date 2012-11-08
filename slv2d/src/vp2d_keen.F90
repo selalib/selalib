@@ -104,10 +104,8 @@ program vp2d_keen
      call PFenvelope(dr_param%adr, iter*dt, dr_param%tflat, dr_param%tL, &
           dr_param%tR, dr_param%twL, dr_param%twR, &
           dr_param%t0, dr_param%turn_drive_off)
-     do j = jstartx, jendx
+     do j = 1, geomx%ny
         do i = 1, geomx%nx
-           print*, 'eapp', my_num, jstartx, jendx, i,j,dr_param%Edrmax , dr_param%adr , dr_param%kdr !* &
-               ! sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
            e_y(i,j) = e_y(i,j) + dr_param%Edrmax * dr_param%adr * dr_param%kdr * &
                 sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
         enddo
@@ -246,6 +244,7 @@ contains
     call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
     call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
+!print*, 'bcast ',my_num, t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr, kdr
   end subroutine initglobal
 
   subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &

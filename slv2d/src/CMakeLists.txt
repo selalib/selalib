@@ -6,7 +6,7 @@ MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules 
-                       ${SELALIB_DIR}/CMakeModules 
+                       ${SELALIB_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
@@ -19,8 +19,7 @@ IF(APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
 ELSE()
    IF(Fortran_COMPILER STREQUAL "INTEL")
-      SET(BLA_VENDOR "Intel")
-      FIND_PACKAGE(LAPACK)
+      SET(BLA_VENDOR "Intel11")
    ENDIF()
    FIND_PACKAGE(LAPACK)
 ENDIF()
@@ -71,11 +70,8 @@ ENDIF()
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
-IF($ENV{HDF5_ROOT})
-   SET(HDF5_ROOT $ENV{HDF5_ROOT})
-ENDIF()
+SET(HDF5_ROOT $ENV{HDF5_ROOT})
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
-
 SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
 IF(HDF5_ENABLE_PARALLEL) 
    MESSAGE(STATUS "HDF5 parallel supported")
@@ -116,11 +112,13 @@ FOREACH( component ${SLL_COMPONENTS} )
 ENDFOREACH()
 
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
+   SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
+
 IF(Fortran_COMPILER STREQUAL "XLF")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+   SET(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
+
 IF(Fortran_COMPILER STREQUAL "IFORT")
 
 ENDIF()
@@ -171,8 +169,8 @@ SET(LIBS sll_utilities
          sll_low_level_file_io
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
-         ${FFTPACK_LIBRARIES} 
          ${LAPACK_LIBRARIES} 
+         ${FFTPACK_LIBRARIES} 
          ${FFTW_LIBRARIES}
          ${HDF5_LIBRARIES})
 
