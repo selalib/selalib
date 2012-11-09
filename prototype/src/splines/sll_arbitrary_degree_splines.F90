@@ -194,6 +194,8 @@ contains
     sll_real64                                     :: tipjp1 ! t(i+j+1)
     sll_real64                                     :: fac1
     sll_real64                                     :: fac2
+    sll_real64                                     :: term1
+    sll_real64                                     :: term2
     sll_int32                                      :: current
 
     ! Run some checks on the arguments.
@@ -229,6 +231,10 @@ contains
           ! protection: What guarantees are there that these denominators
           ! will not be zero?? This should probably be error-checked, else
           ! one can just end up with an array of NaN's.
+          ! 10-29-12: well, apparently this can be protected against if we
+          ! force the terms to zero whenever this happens because the 
+          ! corresponding spline equals zero, hence the indetermination is 
+          ! always forced to zero.
 #if 0
           if( tipj == ti ) then
              print *, 'calculation is shot... NaNs will be found'
@@ -236,13 +242,27 @@ contains
              print *, 'current = ', current
              print *, 'deg = ', deg
              print *, 'cell = ', cell
-             print *, 'knot(cell) = ', spline_obj%k(cell)
-             print *, 'knot(cell+1) = ', spline_obj%k(cell+1)
+             print *, 'knot(current) = ', spline_obj%k(current)
+             print *, 'knot(current+1) = ', spline_obj%k(current+1)
           end if
 #endif
           fac1       = (x - ti)/(tipj - ti)
           fac2       = (tipjp1 - x)/(tipjp1 - tip1)
-          splines(i) = fac1*splines(i) + fac2*splines(i+1)
+          ! Super-ugly step to eliminate those cases where the denominator is
+          ! zero but the spline value is also zero, thus avoiding the 
+          ! indeterminate result ( NaN's ). 
+          if( splines(i) .ne. 0.0 ) then
+             term1 = fac1*splines(i)
+          else
+             term1 = 0.0_f64
+          end if
+          if( splines(i+1) .ne. 0.0 ) then
+             term2 = fac2*splines(i+1)
+          else
+             term2 = 0.0_f64
+          end if
+          splines(i) = term1 + term2
+!          splines(i) = fac1*splines(i) + fac2*splines(i+1)
        end do
        last = last - 1
     end do
@@ -273,8 +293,13 @@ contains
     sll_real64                                     :: tipjp1 ! t(i+j+1)
     sll_real64                                     :: fac1
     sll_real64                                     :: fac2
+    sll_real64                                     :: term1
+    sll_real64                                     :: term2
     sll_real64                                     :: delta_x
+    sll_real64                                     :: delta_left
+    sll_real64                                     :: delta_right
     sll_int32                                      :: current
+    sll_int32                                      :: num_pts
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -289,6 +314,13 @@ contains
        STOP
     end if
     deg = spline_obj%degree
+    num_pts = spline_obj%num_pts
+
+    ! for OPEN BC's, in a similar way that the end nodes are replicated beyond
+    ! the domain to carry out the calculations, for the derivatives we also 
+    ! extend the values of the cell spacings at both ends
+    delta_left  = spline_obj%k(2)       - spline_obj%k(1)
+    delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
 
     ! FIXME, MORTAL SIN: HERE WE HAVE DUPLICATED CODE WITH THE PREVIOUS
     ! FUNCTION AND EXPECT TO DUPLICATE THIS EVEN MORE WITH A FUNCTION
@@ -319,16 +351,38 @@ contains
           ! one can just end up with an array of NaN's.
           fac1       = (x - ti)/(tipj - ti)
           fac2       = (tipjp1 - x)/(tipjp1 - tip1)
-          splines(i) = fac1*splines(i) + fac2*splines(i+1)
+          ! AGAIN: Super-ugly step to eliminate those cases where the 
+          ! denominator is zero but the spline value is also zero, thus 
+          ! avoiding the indeterminate result ( NaN's ). 
+          if( splines(i) .ne. 0.0 ) then
+             term1 = fac1*splines(i)
+          else
+             term1 = 0.0_f64
+          end if
+          if( splines(i+1) .ne. 0.0 ) then
+             term2 = fac2*splines(i+1)
+          else
+             term2 = 0.0_f64
+          end if
+          splines(i) = term1 + term2
+!          splines(i) = fac1*splines(i) + fac2*splines(i+1)
        end do
        last = last - 1
     end do
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
+    print *, 'array to compute derivatives: ',splines(1:last)
     do i=1,last
        current = cell - deg + i - 1
        delta_x = spline_obj%k(current+1) - spline_obj%k(current)
+       if( delta_x == 0.0 ) then
+          if( current .le. 1 ) then
+             delta_x = delta_left
+          else if( current .ge. spline_obj%num_pts ) then
+             delta_x = delta_right
+          end if
+       end if
        derivs(i) = (splines(i) - splines(i+1))/delta_x
     end do
     b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
@@ -351,8 +405,13 @@ contains
     sll_real64                                     :: tipjp1 ! t(i+j+1)
     sll_real64                                     :: fac1
     sll_real64                                     :: fac2
+    sll_real64                                     :: term1
+    sll_real64                                     :: term2
     sll_real64                                     :: delta_x
+    sll_real64                                     :: delta_left
+    sll_real64                                     :: delta_right
     sll_int32                                      :: current
+    sll_int32                                      :: num_pts
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(spline_obj))
@@ -366,7 +425,15 @@ contains
             'inside the specified cell.'
        STOP
     end if
+
     deg = spline_obj%degree
+    num_pts = spline_obj%num_pts
+
+    ! for OPEN BC's, in a similar way that the end nodes are replicated beyond
+    ! the domain to carry out the calculations, for the derivatives we also 
+    ! extend the values of the cell spacings at both ends
+    delta_left  = spline_obj%k(2)       - spline_obj%k(1)
+    delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
 
     ! FIXME, MORTAL SIN: HERE WE HAVE DUPLICATED CODE WITH THE PREVIOUS
     ! FUNCTION AND EXPECT TO DUPLICATE THIS EVEN MORE WITH A FUNCTION
@@ -397,16 +464,38 @@ contains
           ! one can just end up with an array of NaN's.
           fac1       = (x - ti)/(tipj - ti)
           fac2       = (tipjp1 - x)/(tipjp1 - tip1)
-          splines(i) = fac1*splines(i) + fac2*splines(i+1)
+          ! AGAIN: Super-ugly step to eliminate those cases where the 
+          ! denominator is zero but the spline value is also zero, thus 
+          ! avoiding the indeterminate result ( NaN's ). 
+          if( splines(i) .ne. 0.0 ) then
+             term1 = fac1*splines(i)
+          else
+             term1 = 0.0_f64
+          end if
+          if( splines(i+1) .ne. 0.0 ) then
+             term2 = fac2*splines(i+1)
+          else
+             term2 = 0.0_f64
+          end if
+          splines(i) = term1 + term2
+!          splines(i) = fac1*splines(i) + fac2*splines(i+1)
        end do
        last = last - 1
     end do
+    print *, 'array to compute derivatives: ',splines(1:last)
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
     do i=1,last
        current = cell - deg + i - 1
        delta_x = spline_obj%k(current+1) - spline_obj%k(current)
+       if( delta_x == 0.0 ) then
+          if( current .le. 1 ) then
+             delta_x = delta_left
+          else if( current .ge. spline_obj%num_pts ) then
+             delta_x = delta_right
+          end if
+       end if
        derivs(i) = (splines(i) - splines(i+1))/delta_x
     end do
     b_splines_and_derivs_at_x(2,1:deg+1) = derivs(1:deg+1)
@@ -424,7 +513,21 @@ contains
        ! one can just end up with an array of NaN's.
        fac1       = (x - ti)/(tipj - ti)
        fac2       = (tipjp1 - x)/(tipjp1 - tip1)
-       splines(i) = fac1*splines(i) + fac2*splines(i+1)
+          ! AGAIN: Super-ugly step to eliminate those cases where the 
+          ! denominator is zero but the spline value is also zero, thus 
+          ! avoiding the indeterminate result ( NaN's ). 
+          if( splines(i) .ne. 0.0 ) then
+             term1 = fac1*splines(i)
+          else
+             term1 = 0.0_f64
+          end if
+          if( splines(i+1) .ne. 0.0 ) then
+             term2 = fac2*splines(i+1)
+          else
+             term2 = 0.0_f64
+          end if
+          splines(i) = term1 + term2
+!       splines(i) = fac1*splines(i) + fac2*splines(i+1)
     end do
     b_splines_and_derivs_at_x(1,1:deg+1) = splines(1:deg+1)
   end function b_splines_and_derivs_at_x
