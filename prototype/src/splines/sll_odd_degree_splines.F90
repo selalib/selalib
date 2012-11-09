@@ -140,6 +140,11 @@ contains
     degree = plan%degree
     h = (xmax-xmin)/n
 
+    ! Run some checks on the arguments.
+    SLL_ASSERT(associated(plan))
+    SLL_ASSERT(x >= xmin)
+    SLL_ASSERT(x <= xmax)
+
     t0 = (x-xmin)/h
     left = int(t0) ! Determine the leftmost support index 'i' of x
     t0 = t0 - left ! compute normalized_offset
@@ -288,6 +293,11 @@ contains
     sll_real64, dimension(6)                       :: b
     sll_real64, dimension(plan%spline_obj%num_pts) :: knots
     sll_int32                                      :: degree, ierr
+
+    ! Run some checks on the arguments.
+    SLL_ASSERT(associated(plan))
+    SLL_ASSERT(x >= plan%spline_obj%xmin)
+    SLL_ASSERT(x <= plan%spline_obj%xmax)
 
     n = plan%spline_obj%num_pts - 1
     knots = plan%spline_obj%k(1:n+1)
