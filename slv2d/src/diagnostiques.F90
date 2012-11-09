@@ -1,11 +1,11 @@
 !=========================================
-!    
+!   
 !    File:          diagnostiquep.F90
 !    Project:       vlasov
 !    Author(s):     Eric Sonnendrucker
 !    Creation:      09.03.1999
 !    Last modified: 10.03.1999
-!    
+!   
 !=========================================
 !=========================================
 module diagnostiques_module
@@ -22,7 +22,6 @@ integer, private :: kk0, kk1, kk2, kk3, kk4
 character(len=4), private :: fin
 character(len=1), private :: aa,bb,cc,dd
 character(len=2) :: outdir = './'
-character(len=4)  :: prefix = "df4d"
 sll_real64, dimension(:,:),pointer :: fxy
 sll_real64, dimension(:,:),pointer :: fxvx
 sll_real64, dimension(:,:),pointer :: fyvy
@@ -30,7 +29,7 @@ sll_real64, dimension(:,:),pointer :: fvxvy
 sll_int32, private :: i, j, k, l
 
 enum, bind(C)
-enumerator :: XY = 0, XVX  = 1, YVY = 2, VXVY = 3
+enumerator :: XY_VIEW = 0, XVX_VIEW  = 1, YVY_VIEW = 2, VXVY_VIEW = 3
 end enum
 
 contains
@@ -315,125 +314,160 @@ close(ifvxvy)
 
 end subroutine diagnostiquesm
 
- subroutine plot_mesh4d(geomx, geomv, sy,ey,svy,evy)
+ subroutine plot_mesh4d(geomx, geomv, jstartx,jendx,jstartv,jendv)
 
+  use sll_hdf5_io
   type(geometry) :: geomx, geomv
-  integer(HID_T)    :: file_id
-  integer(HSSIZE_T) :: offset(1)
-  integer(HSIZE_T)  :: global_dims(1)
-  sll_int32, intent(in) :: sy, ey, svy, evy
+  sll_int32    :: file_id
+  sll_int32, intent(in) :: jstartx, jendx, jstartv, jendv
   sll_int32 :: nx, nvx, ny, nvy
   sll_int32 :: error
+  sll_int32 :: my_num
 
   nx  = geomx%nx; ny  = geomx%ny
   nvx = geomv%nx; nvy = geomv%ny
   SLL_ALLOCATE(fxy(nx,ny),error)
   SLL_ALLOCATE(fxvx(nx,nvx),error)
-  SLL_ALLOCATE(fyvy(sy:ey,svy:evy),error)
-  SLL_ALLOCATE(fvxvy(nvx,svy:evy),error)
+  SLL_ALLOCATE(fyvy(ny,jstartv:jendv),error)
+  SLL_ALLOCATE(fvxvy(nvx,jstartv:jendv),error)
 
-  offset = 0
-  call sll_hdf5_file_create("mesh4d.h5",file_id,error)
-  global_dims = geomx%nx
-  call sll_hdf5_write_array(file_id,global_dims,offset,geomx%xgrid,"/x",error)
-  global_dims = geomx%ny
-  call sll_hdf5_write_array(file_id,global_dims,offset,geomx%ygrid,"/y",error)
-  global_dims = geomv%nx
-  call sll_hdf5_write_array(file_id,global_dims,offset,geomv%xgrid,"/vx",error)
-  global_dims = geomv%ny
-  call sll_hdf5_write_array(file_id,global_dims,offset,geomv%ygrid,"/vy",error)
-  call sll_hdf5_file_close(file_id, error)
+  my_num = sll_get_collective_rank(sll_world_collective)
+
+  if (my_num == MPI_MASTER) then
+     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+     call sll_hdf5_write_array(file_id,geomx%xgrid,"/x",error)
+     call sll_hdf5_write_array(file_id,geomx%ygrid,"/y",error)
+     call sll_hdf5_write_array(file_id,geomv%xgrid,"/vx",error)
+     call sll_hdf5_write_array(file_id,geomv%ygrid,"/vy",error)
+     call sll_hdf5_file_close(file_id, error)
+  end if
 
  end subroutine plot_mesh4d
 
- subroutine plot_df(f4d, iplot, geomx, geomv, sy, ey, svy, evy, choice)
-
+subroutine plot_df(f4d,iplot,geomx,geomv,jstartx,jendx,jstartv,jendv,choice)
+  
+  use sll_hdf5_io
   type(geometry), intent(in) :: geomx, geomv
-  sll_real64, intent(in) :: f4d(:,:,:,svy:)
-  sll_int32, intent(in)  :: sy, ey, svy, evy
-
+  sll_real64, intent(in) :: f4d(:,:,:,jstartv:)
+  sll_int32, intent(in)  :: jstartx, jendx, jstartv, jendv
+  
   sll_int32, intent(in) :: iplot
   character(len=4)      :: cplot
-  integer(HID_T)    :: file_id
-  integer(HSSIZE_T) :: offset(2)
-  integer(HSIZE_T)  :: global_dims(2)
+  sll_int32         :: file_id
   sll_real64        :: sumloc
   sll_int32         :: nx , nvx, ny, nvy
   sll_int32         :: my_num
   sll_int32         :: error
   sll_int32         :: comm
   sll_int32         :: choice
-
+  
   my_num = sll_get_collective_rank(sll_world_collective)
   comm = sll_world_collective%comm
-
+  
   nx  = geomx%nx; ny  = geomx%ny
   nvx = geomv%nx; nvy = geomv%ny
-
+  
   call int2string(iplot,cplot)
-
-  call sll_hdf5_file_create(prefix//cplot//".h5",file_id,error)
-
+  
+  
   select case (choice)
-  case(0)
-  do j=1,ny
-   do i=1,nx
-    sumloc= sum(f4d(i,j,:,svy:evy))
-    call mpi_reduce(sumloc,fxy(i,j),1,MPI_REAL8,MPI_SUM,0,comm,error)
-   end do
-  end do
-  global_dims = (/geomx%nx,geomx%ny/)
-  offset      = (/0, 0/)
-  call sll_hdf5_write_array(file_id,global_dims,offset,fxy,"/fxy",error)
-  if (my_num == 0) &
-   call write_xdmf("fxy"//cplot//".xmf",   &
-                   prefix//cplot//".h5","x","y","fxy",nx,ny)
-  case(1)
-
-  do k=1,nvx
-   do i=1,nx
-    sumloc= sum(f4d(i,:,k,svy:evy))
-    call mpi_reduce(sumloc,fxvx(i,k),1,MPI_REAL8,MPI_SUM,0,comm,error)
-   end do
-  end do
-  global_dims = (/geomx%nx,geomv%nx/)
-  offset      = (/0, 0/)
-  call sll_hdf5_write_array(file_id,global_dims,offset,fxvx,"/fxvx",error)
-  if (my_num == 0) &
-   call write_xdmf("fxvx"//cplot//".xmf",  &
-                   prefix//cplot//".h5","x","vx","fxvx",nx,nvx)
-  case(2)
-
-  do l=svy,evy
-   do j=sy,ey
-    fyvy(j,l)= sum(f4d(:,j,:,l))
-   end do
-  end do
-  global_dims = (/geomx%ny,geomv%ny/)
-  offset      = (/0, svy-1/)
-  call sll_hdf5_write_array(file_id,global_dims,offset,fyvy,"/fyvy",error)
-  if (my_num == 0) &
-   call write_xdmf("fyvy"//cplot//".xmf",  &
-                   prefix//cplot//".h5","y","vy","fyvy",ny,nvy)
-  case(3)
-
-  do l=svy,evy
-   do k=1,nvx
-      fvxvy(k,l)=sum(f4d(:,:,k,l))
-   end do
-  end do
-  global_dims = (/geomv%nx,geomv%ny/)
-  offset      = (/0, svy-1/)
-  call sll_hdf5_write_array(file_id,global_dims,offset,fvxvy,"/fvxvy",error)
-  if (my_num == 0) &
-   call write_xdmf("fvxvy"//cplot//".xmf", &
-                   prefix//cplot//".h5","vx","vy","fvxvy",nvx,nvy)
+  case(XY_VIEW)
+     SLL_ASSERT(size(f4d,1) == size(fxy,1))
+     SLL_ASSERT(size(f4d,2) == size(fxy,2))
+     do j=1,ny
+        do i=1,nx
+           sumloc= sum(f4d(i,j,:,jstartv:jendv))
+           call mpi_reduce(sumloc,fxy(i,j),1,MPI_REAL8,MPI_SUM,0,comm,error)
+        end do
+     end do
+     if (my_num == 0) then
+        call sll_hdf5_file_create('fxy'//cplot//".h5",file_id,error)
+        call sll_hdf5_write_array(file_id,fxy,"/fxy",error)
+        call write_xdmf("fxy"//cplot//".xmf", &
+                        'fxy'//cplot//".h5","x","y","fxy",nx,ny)
+        call sll_hdf5_file_close(file_id, error)
+     end if
+  case(XVX_VIEW)
+     SLL_ASSERT(size(f4d,1) == size(fxvx,1))
+     SLL_ASSERT(size(f4d,3) == size(fxvx,2))
+     do k=1,nvx
+        do i=1,nx
+           sumloc= sum(f4d(i,:,k,jstartv:jendv))
+           call mpi_reduce(sumloc,fxvx(i,k),1,MPI_REAL8,MPI_SUM,0,comm,error)
+        end do
+     end do
+     if (my_num == 0) then
+        call sll_hdf5_file_create('fxvx'//cplot//".h5",file_id,error)
+        call sll_hdf5_write_array(file_id,fxvx,"/fxvx",error)
+        call write_xdmf("fxvx"//cplot//".xmf", &
+                        'fxvx'//cplot//".h5","x","vx","fxvx",nx,nvx)
+        call sll_hdf5_file_close(file_id, error)
+     end if
+  case(YVY_VIEW)
+     SLL_ASSERT(size(f4d,2) == size(fyvy,1))
+     SLL_ASSERT(size(f4d,4) == size(fyvy,2))
+     do l=jstartv,jendv
+     do j=1,ny
+        fyvy(j,l)= sum(f4d(:,j,:,l))
+     end do
+     end do
+     call write_fyvy(ny,nvy,cplot,jstartv,jendv)
+     if (my_num == 0) &
+     call write_xdmf("fyvy"//cplot//".xmf", &
+                     'fyvy'//cplot//".h5","y","vy","fyvy",ny,nvy)
+  case(VXVY_VIEW)
+     SLL_ASSERT(size(f4d,3) == size(fvxvy,1))
+     SLL_ASSERT(size(f4d,4) == size(fvxvy,2))
+     do l=jstartv,jendv
+        do k=1,nvx
+           fvxvy(k,l)=sum(f4d(:,:,k,l))
+        end do
+     end do
+     call write_fvxvy(nvx,nvy,cplot,jstartv,jendv)
+     if (my_num == 0) &
+     call write_xdmf("fvxvy"//cplot//".xmf",'fvxvy'//cplot//".h5", &
+                     "vx","vy","fvxvy",nvx,nvy)
   end select
+  
+end subroutine plot_df
 
-  call sll_hdf5_file_close(file_id, error)
+ subroutine write_fyvy(ny,nvy,cplot,jstartv, jendv)
 
+ use hdf5
+ use sll_hdf5_io_parallel
+ character(len=4) :: cplot
+ integer(HID_T)    :: pfile_id
+ integer(HSSIZE_T) :: offset(2)
+ integer(HSIZE_T)  :: global_dims(2)
+ sll_int32, intent(in)  :: ny,nvy,jstartv, jendv
+ sll_int32 :: error
 
- end subroutine plot_df
+ global_dims = (/ny,nvy/)
+ offset      = (/0, jstartv-1/)
+ call sll_hdf5_file_create('fyvy'//cplot//".h5",pfile_id,error)
+ call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fyvy,"/fyvy",error)
+ call sll_hdf5_file_close(pfile_id, error)
+
+ end subroutine write_fyvy
+
+ subroutine write_fvxvy(nvx,nvy,cplot,jstartv,jendv)
+
+ use hdf5
+ use sll_hdf5_io_parallel
+ character(len=4) :: cplot
+ integer(HID_T)    :: pfile_id
+ integer(HSSIZE_T) :: offset(2)
+ integer(HSIZE_T)  :: global_dims(2)
+ sll_int32, intent(in)  :: nvx, nvy, jstartv, jendv
+ sll_int32 :: error
+
+ global_dims = (/nvx,nvy/)
+ offset      = (/0, jstartv-1/)
+ call sll_hdf5_file_create('fvxvy'//cplot//".h5",pfile_id,error)
+ call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fvxvy,"/fvxvy",error)
+ call sll_hdf5_file_close(pfile_id, error)
+
+ end subroutine write_fvxvy
 
  subroutine write_xdmf(xdmffilename, datafilename, xname, yname, fname, nx, ny)
 

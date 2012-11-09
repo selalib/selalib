@@ -12,9 +12,13 @@
 !****************************************************************************
 
 program test_layout_output
-use sll_collective
-use sll_hdf5_io_parallel
+use sll_collective, only: sll_boot_collective, &
+                          sll_halt_collective
 
+use hdf5
+use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
+                                sll_hdf5_write_array, &
+                                sll_hdf5_file_close
 #include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -66,7 +70,7 @@ use sll_hdf5_io_parallel
      print *, '--------------- layout output test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush()
+     call flush(6)
   end if
 
   if (.not. is_power_of_two(colsz)) then     

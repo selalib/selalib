@@ -666,9 +666,11 @@ program cg_polar
         print*,'#step',step
      end if
 
-     if (step/visustep*visustep==step) then
-        call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
+     if (step==1 .or. step/visustep*visustep==step) then
+        !call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
+        call plot_f(step)
      end if
+
 
   end do
   write(23,*)' '
@@ -709,5 +711,55 @@ program cg_polar
   t2 => delete_time_mark(t2)
   t3 => delete_time_mark(t3)
   call delete_SL_polar(plan_sl)
+
+contains
+
+ subroutine plot_f(iplot)
+
+  use sll_xdmf
+  use sll_hdf5_io
+  sll_int32 :: file_id
+  sll_int32 :: error
+  sll_real64, dimension(:,:), allocatable :: x1
+  sll_real64, dimension(:,:), allocatable :: x2
+  sll_int32 :: i, j
+  sll_int32, intent(in) :: iplot
+  character(len=4)      :: cplot
+  sll_int32             :: nnodes_x1, nnodes_x2
+
+  nnodes_x1 = nr+1
+  nnodes_x2 = ntheta+1
+
+  if (iplot == 1) then
+
+     SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+     SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+     do j=1,nnodes_x2
+     do i=1,nnodes_x1
+        r     = rmin+real(i-1,f32)*dr
+        theta = real(j-1,f32)*dtheta
+        x1(i,j) = r*cos(theta)
+        x2(i,j) = r*sin(theta)
+     end do
+     end do
+     call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
+     call sll_hdf5_write_array(file_id,x1,"/x1",error)
+     call sll_hdf5_file_close(file_id, error)
+     call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+     call sll_hdf5_write_array(file_id,x2,"/x2",error)
+     call sll_hdf5_file_close(file_id, error)
+     deallocate(x1)
+     deallocate(x2)
+
+  end if
+
+  call int2string(iplot,cplot)
+  call sll_xdmf_open("f"//cplot//".xmf","polar_mesh",nnodes_x1,nnodes_x2,file_id,error)
+  call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
+  call sll_xdmf_close(file_id,error)
+
+ end subroutine plot_f
+
+
 
 end program cg_polar

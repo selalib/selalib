@@ -46,8 +46,8 @@ module sll_poisson_2d_periodic_cartesian_par
      sll_int32                                 :: seq_x1_local_sz_x2
      sll_int32                                 :: seq_x2_local_sz_x1
      sll_int32                                 :: seq_x2_local_sz_x2
-     sll_comp64, dimension(:,:), allocatable   :: fft_x_array
-     sll_comp64, dimension(:,:), allocatable   :: fft_y_array
+     sll_comp64, dimension(:,:), pointer       :: fft_x_array
+     sll_comp64, dimension(:,:), pointer       :: fft_y_array
      type(remap_plan_2D), pointer              :: rmp_xy
      type(remap_plan_2D), pointer              :: rmp_yx
   end type poisson_2d_periodic_plan_cartesian_par

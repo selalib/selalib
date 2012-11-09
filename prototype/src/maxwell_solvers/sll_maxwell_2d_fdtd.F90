@@ -1,5 +1,5 @@
 !>
-!>@namespace sll_maxwell_fdtd_2d
+!>@namespace sll_maxwell_2d_fdtd
 !>
 !> @author
 !> Pierre Navaro Philippe Helluy
@@ -21,99 +21,104 @@
 !>
 ! REVISION HISTORY:
 ! 03 02 2012 - Initial Version  (fevrier)
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
+! 01 11 2012 - Silver Muller BC are not implemented for TM polarization
 !------------------------------------------------------------------------------
 
-module sll_maxwell_2d
+module sll_maxwell_2d_fdtd
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+use sll_maxwell
 use numeric_constants
 
 implicit none
-private
+!private
 
-interface new
- module procedure new_maxwell_2d
+interface initialize
+ module procedure new_maxwell_2d_fdtd
 end interface
 interface solve
- module procedure solve_maxwell_2d
-end interface
-interface delete
- module procedure delete_maxwell_2d
+ module procedure solve_maxwell_2d_fdtd
 end interface
 
-public :: new, solve, delete
+public :: initialize, solve, ampere, faraday
 
-!> Object with data to solve Maxwell equation on 2d domain
-!> Maxwell in TE mode: (Ex,Ey,Hz)
-type, public :: maxwell_2d
-  sll_real64 :: c_light
-  sll_real64 :: epsilon_0
-  sll_int32  :: ix, jx, iy, jy
+!> Object with data to solve Maxwell equation 
+!> Maxwell in TE mode: (Ex,Ey,Bz)
+!> Only 2D  for now
+type, public :: maxwell_fdtd
+  sll_real64 :: c
+  sll_real64 :: e_0
+  sll_int32  :: i1, j1, i2, j2
   sll_real64 :: dx, dy
-end type maxwell_2d
-
-enum, bind(C)
-   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
-end enum
+  sll_int32  :: polarization
+end type maxwell_fdtd
 
 contains
 
-subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy  )
+subroutine new_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
 
-   type(maxwell_2d) :: this
-   sll_int32        :: ix, jx, iy, jy
+   type(maxwell_fdtd) :: this
+   sll_int32        :: i1, j1, i2, j2
    sll_real64       :: dx, dy
+   sll_int32        :: polarization
    !sll_int32        :: error
 
-   this%c_light   = 1.0_f64
-   this%epsilon_0 = 1.0_f64
+   this%c   = 1.0_f64
+   this%e_0 = 1.0_f64
    
    this%dx = dx
    this%dy = dy
-   this%ix = ix
-   this%jx = jx
-   this%iy = iy
-   this%jy = jy
+   this%i1 = i1
+   this%j1 = j1
+   this%i2 = i2
+   this%j2 = j2
+   this%polarization = polarization
 
-end subroutine new_maxwell_2d
+end subroutine new_maxwell_2d_fdtd
 
-subroutine solve_maxwell_2d(this, ex, ey, bz, dt)
+!> this routine exists only for testing purpose. Use ampere and faraday
+!> in your appication.
+subroutine solve_maxwell_2d_fdtd(this, ex, ey, bz, dt)
 
-   type(maxwell_2d)          :: this
+   type(maxwell_fdtd)          :: this
    sll_real64 , intent(inout), dimension(:,:)   :: ex, ey, bz
    sll_real64 , intent(in)   :: dt
 
    !B(n-1/2)--> B(n+1/2) sur les pts interieurs   
-   call faraday(this, ex, ey, bz, dt)   
-
+   call faraday(this, ex, ey, bz, 0.5*dt)   
    call cl_periodiques(this, ex, ey, bz, dt)
 
    !E(n)-->E(n+1) sur les pts interieurs
-   call ampere_maxwell(this, ex, ey, bz, dt) 
+   call ampere(this, ex, ey, bz, dt) 
+   call cl_periodiques(this, ex, ey, bz, dt)
 
-end subroutine solve_maxwell_2d
+   call faraday(this, ex, ey, bz, 0.5*dt)   
+   call cl_periodiques(this, ex, ey, bz, dt)
 
-subroutine delete_maxwell_2d()
-   !type(maxwell_2d), pointer :: this
-  
-end subroutine delete_maxwell_2d
+end subroutine solve_maxwell_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine faraday( this, ex, ey, bz, dt )
+subroutine faraday( this, fx, fy, fz, dt )
 
-type(maxwell_2d) :: this
-sll_real64, dimension(:,:), intent(in)    :: ex, ey
-sll_real64, dimension(:,:), intent(inout) :: bz
+type(maxwell_fdtd) :: this
+sll_real64, dimension(:,:), target :: fx
+sll_real64, dimension(:,:), target :: fy
+sll_real64, dimension(:,:), target :: fz
 sll_real64, intent(in) :: dt
 sll_int32 :: i, j
-sll_real64 :: dex_dy, dey_dx
+sll_real64 :: dex_dy, dey_dx, dez_dx, dez_dy
 sll_real64 :: dx, dy
-sll_int32  :: ix, jx, iy, jy
+sll_int32  :: i1, j1, i2, j2
+sll_real64, dimension(:,:), pointer :: ex
+sll_real64, dimension(:,:), pointer :: ey
+sll_real64, dimension(:,:), pointer :: ez
+sll_real64, dimension(:,:), pointer :: bx
+sll_real64, dimension(:,:), pointer :: by
+sll_real64, dimension(:,:), pointer :: bz
 
 dx  = this%dx
 dy  = this%dy
@@ -122,41 +127,73 @@ dy  = this%dy
 !*** de temps pour le calcul du champ magnetique  Bz 
 !*** a l'instant n puis n+1/2 
 
-ix = this%ix
-jx = this%jx
-iy = this%iy
-jy = this%jy
+i1 = this%i1
+j1 = this%j1
+i2 = this%i2
+j2 = this%j2
 
-do i=ix,jx-1
-do j=iy,jy-1
-   dex_dy  = (ex(i,j+1)-ex(i,j)) / dy
-   dey_dx  = (ey(i+1,j)-ey(i,j)) / dx
-   bz(i,j) = bz(i,j) + dt * (dex_dy - dey_dx)
-end do
-end do
+if (this%polarization == TE_POLARIZATION) then
+
+   ex => fx; ey => fy; bz => fz
+   do i=i1,j1-1
+   do j=i2,j2-1
+      dex_dy  = (ex(i,j+1)-ex(i,j)) / dy
+      dey_dx  = (ey(i+1,j)-ey(i,j)) / dx
+      bz(i,j) = bz(i,j) + dt * (dex_dy - dey_dx)
+   end do
+   end do
+
+end if
+
+if (this%polarization == TM_POLARIZATION) then
+
+   bx => fx; by => fy; ez => fz
+   do i=i1,j1
+   do j=i2+1,j2
+      dez_dy  = (ez(i,j)-ez(i,j-1)) / dy
+      bx(i,j) = bx(i,j) - dt * dez_dy 
+   end do
+   end do
+   
+   do i=i1+1,j1
+   do j=i2,j2
+      dez_dx  = (ez(i,j)-ez(i-1,j)) / dx
+      by(i,j) = by(i,j) + dt * dez_dx 
+   end do
+   end do
+
+end if
 
 end subroutine faraday
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine ampere_maxwell( this, ex, ey, bz, dt )
+subroutine ampere( this, fx, fy, fz, dt, jx, jy )
 
-type(maxwell_2d) :: this
-sll_int32 :: ix, jx, iy, jy
-sll_real64, dimension(:,:), intent(inout) :: ex, ey
-sll_real64, dimension(:,:), intent(in)    :: bz
+type(maxwell_fdtd) :: this
+sll_int32 :: i1, j1, i2, j2
+sll_real64, dimension(:,:), intent(inout), target :: fx
+sll_real64, dimension(:,:), intent(inout), target :: fy
+sll_real64, dimension(:,:), intent(inout), target :: fz
+sll_real64, dimension(:,:), intent(in), optional :: jx, jy
 sll_int32 :: i, j
-sll_real64 :: dbz_dx, dbz_dy
+sll_real64 :: dbz_dx, dbz_dy, dbx_dy, dby_dx
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
 sll_real64 :: csq
+sll_real64, dimension(:,:), pointer :: ex
+sll_real64, dimension(:,:), pointer :: ey
+sll_real64, dimension(:,:), pointer :: ez
+sll_real64, dimension(:,:), pointer :: bx
+sll_real64, dimension(:,:), pointer :: by
+sll_real64, dimension(:,:), pointer :: bz
 
-ix = this%ix
-jx = this%jx
-iy = this%iy
-jy = this%jy
+i1 = this%i1
+j1 = this%j1
+i2 = this%i2
+j2 = this%j2
 
-csq = this%c_light * this%c_light
+csq = this%c * this%c
 dx  = this%dx
 dy  = this%dy
 
@@ -165,126 +202,176 @@ dy  = this%dy
 !*** Ex aux points (i+1/2,j)
 !*** Ey aux points (i,j+1/2)
 
-do i=ix,jx
-do j=iy+1,jy
-   dbz_dy  = (bz(i,j)-bz(i,j-1)) / dy
-   ex(i,j) = ex(i,j) + dt*csq*dbz_dy 
-end do
-end do
+if (this%polarization == TE_POLARIZATION) then
 
-do i=ix+1,jx
-do j=iy,jy
-   dbz_dx  = (bz(i,j)-bz(i-1,j)) / dx
-   ey(i,j) = ey(i,j) - dt*csq*dbz_dx 
-end do
-end do
+   ex => fx; ey => fy; bz => fz
 
-end subroutine ampere_maxwell
+   do i=i1,j1
+   do j=i2+1,j2
+      dbz_dy  = (bz(i,j)-bz(i,j-1)) / dy
+      ex(i,j) = ex(i,j) + dt*csq*dbz_dy 
+   end do
+   end do
+   
+   do i=i1+1,j1
+   do j=i2,j2
+      dbz_dx  = (bz(i,j)-bz(i-1,j)) / dx
+      ey(i,j) = ey(i,j) - dt*csq*dbz_dx 
+   end do
+   end do
+
+   if (present(jx) .and. present(jy)) then
+
+      ex(i1:j1,i2+1:j2) = ex(i1:j1,i2+1:j2) - dt * jx(i1:j1,i2+1:j2) / this%e_0
+      ey(i1+1:j1,i2:j2) = ey(i1+1:j1,i2:j2) - dt * jy(i1+1:j1,i2:j2) / this%e_0
+
+   endif
+
+end if
+
+if (this%polarization == TM_POLARIZATION) then
+
+   bx => fx; by => fy; ez => fz
+
+   do i=i1,j1-1
+   do j=i2,j2-1
+      dbx_dy  = (bx(i,j+1)-bx(i,j)) / dy
+      dby_dx  = (by(i+1,j)-by(i,j)) / dx
+      ez(i,j) = ez(i,j) - dt * (dbx_dy - dby_dx)
+   end do
+   end do
+
+   if (present(jx) .and. .not. present(jy)) then
+
+      ez(i1:j1-1,i2:j2-1) = ez(i1:j1-1,i2:j2-1) - dt * jx(i1:j1-1,i2:j2-1) / this%e_0
+
+   endif
+
+end if
+
+end subroutine ampere
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine cl_periodiques(this, ex, ey, bz, dt)
+subroutine cl_periodiques(this, fx, fy, fz, dt)
 
-type(maxwell_2d) :: this
-sll_int32 :: ix, jx, iy, jy
-sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
-sll_real64 :: dbz_dx, dbz_dy
+type(maxwell_fdtd) :: this
+sll_int32 :: i1, j1, i2, j2
+sll_real64, dimension(:,:), intent(inout) :: fx, fy, fz
+sll_real64 :: dbz_dx, dbz_dy, dez_dx, dez_dy
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy
 sll_int32 :: i, j
 sll_real64 :: csq
 
-ix = this%ix
-jx = this%jx
-iy = this%iy
-jy = this%jy
+i1 = this%i1
+j1 = this%j1
+i2 = this%i2
+j2 = this%j2
 
-csq = this%c_light * this%c_light
+csq = this%c * this%c
 dx  = this%dx
 dy  = this%dy
 
-do i = ix, jx-1
-   bz(i,jy) = bz(i,iy)
-end do
-do j = iy, jy-1
-   bz(jx,j) = bz(ix,j)
-end do
+fz(i1:j1-1,j2) = fz(i1:j1-1,i2)
+fz(j1,i2:j2-1) = fz(i1,i2:j2-1)
 
-bz(jx,jy) = bz(ix,iy)
+fz(j1,j2) = fz(i1,i2)
 
-do i = ix, jx
-   dbz_dy = (bz(i,iy)-bz(i,jy-1)) / dy
-   ex(i,iy) = ex(i,jy) + dt*csq*dbz_dy 
-end do
+if ( this%polarization == TE_POLARIZATION) then
+   do i = i1, j1
+      dbz_dy = (fz(i,i2)-fz(i,j2-1)) / dy
+      fx(i,i2) = fx(i,j2) + dt*csq*dbz_dy 
+   end do
      
-do j = iy, jy
-   dbz_dx = (bz(ix,j)-bz(jx-1,j)) / dx
-   ey(ix,j) = ey(jx,j) - dt*csq*dbz_dx 
-end do
+   do j = i2, j2
+      dbz_dx = (fz(i1,j)-fz(j1-1,j)) / dx
+      fy(i1,j) = fy(j1,j) - dt*csq*dbz_dx 
+   end do
+end if
+
+if ( this%polarization == TM_POLARIZATION) then
+   do i = i1, j1
+      dez_dy = (fz(i,i2)-fz(i,j2-1)) / dy
+      fx(i,i2) = fx(i,j2) - dt*csq*dez_dy 
+   end do
+     
+   do j = i2, j2
+      dez_dx = (fz(i1,j)-fz(j1-1,j)) / dx
+      fy(i1,j) = fy(j1,j) + dt*csq*dez_dx 
+   end do
+end if
 
 end subroutine cl_periodiques
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine cl_condparfait(this, ex, ey, bz, side)
+subroutine cl_condparfait(this, fx, fy, fz, side)
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_int32, intent(in) :: side
-sll_real64, dimension(:,:), intent(inout) :: ex, ey, bz
-sll_int32 :: ix, jx, iy, jy
-sll_int32 :: i, j
+sll_real64, dimension(:,:), target  :: fx, fy, fz
+sll_real64, dimension(:,:), pointer :: bx, by, ez
+sll_real64, dimension(:,:), pointer :: ex, ey, bz
+sll_int32 :: i1, j1, i2, j2
 
-ix = this%ix
-jx = this%jx
-iy = this%iy
-jy = this%jy
+i1 = this%i1
+j1 = this%j1
+i2 = this%i2
+j2 = this%j2
 
-select case(side)
-case(SOUTH)
-   do i = ix, jx
-      ex(i,iy) = 0.d0
-   end do
-case(NORTH)
-   do i = ix, jx
-      ex(i,jy) = 0.d0
-      bz(i,jy) = bz(i,jy-1)
-   end do
-case(WEST)
-   do j = iy, jy
-      ey(ix,j) = 0.d0
-   end do
-case(EAST)
-   do j = iy, jy
-      ey(jx,j) = 0.d0
-      bz(jx,j) = bz(jx-1,j)
-   end do
-end select
+if (this%polarization == TE_POLARIZATION) then
+   ex => fx; ey => fy; bz => fz
+   select case(side)
+   case(SOUTH)
+      ex(i1:j1,i2) = 0.d0
+   case(NORTH)
+      bz(i1:j1,j2) = bz(i1:j1,j2-1)
+   case(WEST)
+      ey(i1,i2:j2) = 0.d0
+   case(EAST)
+      bz(j1,i2:j2) = bz(j1-1,i2:j2)
+   end select
+end if
+
+if (this%polarization == TM_POLARIZATION) then
+   bx => fx; by => fy; ez => fz
+   select case(side)
+   case(SOUTH)
+      bx(i1:j1,i2) = 0.0_f64
+   case(NORTH)
+      ez(i1:j1,j2) = ez(i1:j1,j2-1)
+   case(WEST)
+      by(i1,i2:j2) = 0.d0
+   case(EAST)
+      ez(j1,i2:j2) = ez(j1-1,i2:j2)
+   end select
+end if
 
 end subroutine cl_condparfait
-
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine silver_muller( this, ex, ey, bz, ccall, dt )
 
-type(maxwell_2d) :: this
+type(maxwell_fdtd) :: this
 sll_int32, intent(in) :: ccall
-sll_int32 :: ix, jx, iy, jy
+sll_int32 :: i1, j1, i2, j2
 sll_real64 :: a11,a12,a21,a22,b1,b2,dis
 sll_int32 :: i, j
 sll_real64, intent(in) :: dt
 sll_real64 :: dx, dy, c, csq
 sll_real64, dimension(:,:), pointer :: ex, ey, bz
 
-c   = this%c_light 
+c   = this%c
 csq = c * c
 dx  = this%dx
 dy  = this%dy
 
-ix = this%ix
-jx = this%jx
-iy = this%iy
-jy = this%jy
+i1 = this%i1
+j1 = this%j1
+i2 = this%i2
+j2 = this%j2
 
 !Conditions de Silver-Muller
 !------------------------------------
@@ -303,68 +390,68 @@ select case (ccall)
 
 case (NORTH)
    !Frontiere Nord : Ex = -c Bz 
-   do i = ix, jx
+   do i = i1, j1
          
       a11 = 1.; a12 = + c
       a21 = 1./dt; a22 = - csq / dy
-      b1  = - ex(i,jy) - c * bz(i,jy-1)
-      b2  =   ex(i,jy)/dt - csq/dy*bz(i,jy-1)
+      b1  = - ex(i,j2) - c * bz(i,j2-1)
+      b2  =   ex(i,j2)/dt - csq/dy*bz(i,j2-1)
          
       dis = a11*a22-a21*a12 
          
-      !ex(i,jy) = (b1*a22-b2*a12)/dis
-      bz(i,jy) = (a11*b2-a21*b1)/dis
+      !ex(i,j2) = (b1*a22-b2*a12)/dis
+      bz(i,j2) = (a11*b2-a21*b1)/dis
          
    end do
       
 case (SOUTH)
 
    !Frontiere Sud : Ex =  c Bz
-   do i = ix, jx
+   do i = i1, j1
          
       a11 = 1.; a12 = - c
       a21 = 1./dt; a22 = csq / dy
-      b1  = - ex(i,iy) + c * bz(i,iy+1)
-      b2  = ex(i,iy)/dt + csq / dy * bz(i,iy+1) 
+      b1  = - ex(i,i2) + c * bz(i,i2+1)
+      b2  = ex(i,i2)/dt + csq / dy * bz(i,i2+1) 
          
       dis = a11*a22-a21*a12 
          
-      ex(i,iy) = (b1*a22-b2*a12)/dis
-      !bz(i,iy) = (a11*b2-a21*b1)/dis
+      ex(i,i2) = (b1*a22-b2*a12)/dis
+      !bz(i,i2) = (a11*b2-a21*b1)/dis
          
    end do
       
 case (EAST)
 
    !Frontiere Est : Ey =  c Bz
-   do j = iy, jy
+   do j = i2, j2
          
       a11 = 1.; a12 = - c
       a21 = 1./dt; a22 = + csq / dx
-      b1  = - ey(jx,j) + c * bz(jx-1,j)
-      b2  = ey(jx,j)/dt + csq/dx*bz(jx-1,j) 
+      b1  = - ey(j1,j) + c * bz(j1-1,j)
+      b2  = ey(j1,j)/dt + csq/dx*bz(j1-1,j) 
          
       dis = a11*a22-a21*a12 
          
-      !ey(jx,j) = (b1*a22-b2*a12)/dis
-      bz(jx,j) = (a11*b2-a21*b1)/dis
+      !ey(j1,j) = (b1*a22-b2*a12)/dis
+      bz(j1,j) = (a11*b2-a21*b1)/dis
       
    end do
       
 case (WEST)
 
    !Frontiere Ouest : Ey = -c Bz
-   do j = iy, jy
+   do j = i2, j2
       
       a11 = 1.; a12 = + c
       a21 = 1./dt; a22 = - csq / dx
-      b1  = - ey(ix,j) - c * bz(ix+1,j)
-      b2  =   ey(ix,j)/dt - csq/dx*bz(ix+1,j) 
+      b1  = - ey(i1,j) - c * bz(i1+1,j)
+      b2  =   ey(i1,j)/dt - csq/dx*bz(i1+1,j) 
       
       dis = a11*a22-a21*a12 
    
-      ey(ix,j) = (b1*a22-b2*a12)/dis
-      !bz(ix,j) = (a11*b2-a21*b1)/dis
+      ey(i1,j) = (b1*a22-b2*a12)/dis
+      !bz(i1,j) = (a11*b2-a21*b1)/dis
       
    end do
 
@@ -374,4 +461,4 @@ end subroutine silver_muller
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module sll_maxwell_2d
+end module sll_maxwell_2d_fdtd

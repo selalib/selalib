@@ -14,13 +14,12 @@
 !                                  
 !************************************************************************
 
-program test_poisson_3d_par
+program test_poisson_3d_periodic_par
 
 #include "sll_remap.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_mesh_types.h"
 #include "sll_poisson_solvers.h"
 
   use numeric_constants
@@ -44,7 +43,7 @@ program test_poisson_3d_par
   sll_int32, dimension(1:3)                    :: global
   sll_int32                                    :: gi, gj, gk
   sll_int32                                    :: myrank
-  type(layout_3D_t), pointer                   :: layout
+  type(layout_3D), pointer                     :: layout
   sll_int64                                    :: colsz ! collective size
   sll_int32                                    :: i_test
   sll_int32                                    :: npx, npy, npz
@@ -146,11 +145,11 @@ program test_poisson_3d_par
 
      average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
 
-     call flush(); print*, ' ------------------'
-     call flush(); print*, ' myrank ', myrank
-     call flush(); print*, 'local average error:', average_err
-     call flush(); print*, 'dx*dy*dz =', dx*dy*dz
-     call flush(); print*, ' ------------------'
+     call flush(6); print*, ' ------------------'
+     call flush(6); print*, ' myrank ', myrank
+     call flush(6); print*, 'local average error:', average_err
+     call flush(6); print*, 'dx*dy*dz =', dx*dy*dz
+     call flush(6); print*, ' ------------------'
 
      if (average_err> dx*dy*dz ) then
         print*, 'Test stopped by "sll_poisson_3d_periodic_par" failure'
@@ -166,11 +165,11 @@ program test_poisson_3d_par
      if (myrank==0) then
 
         if (prod4test(1)==1.) then
-           call flush()
+           call flush(6)
            print*, ' '
-           call flush()
-           print*, '"sll_poisson_3d_periodic_par" test: PASS'
-           call flush()
+           call flush(6)
+           print*, '"sll_poisson_3d_periodic_par" test: PASSED'
+           call flush(6)
            print*, ' '
         endif
      endif           
@@ -181,4 +180,4 @@ program test_poisson_3d_par
   SLL_DEALLOCATE_ARRAY(rho, ierr)
   call sll_halt_collective()
 
-end program test_poisson_3d_par
+end program test_poisson_3d_periodic_par
