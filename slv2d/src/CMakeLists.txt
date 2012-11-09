@@ -6,7 +6,7 @@ MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules 
-                       ${SELALIB_DIR}/CMakeModules 
+                       ${SELALIB_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
@@ -18,13 +18,15 @@ SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 IF(APPLE)
    FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
 ELSE()
-   IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-      FIND_PACKAGE(LAPACK)
-   ELSE()
-      INCLUDE(${CMAKE_MODULE_PATH}/FindLapack.cmake)
+   IF(Fortran_COMPILER STREQUAL "INTEL")
+      SET(BLA_VENDOR "Intel11")
    ENDIF()
+   FIND_PACKAGE(LAPACK)
 ENDIF()
 
+IF(NOT LAPACK_FOUND)
+   INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
+ENDIF()
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -46,18 +48,21 @@ MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 IF(FFTPACK_ENABLED)
    FIND_PACKAGE(FFTPACK)
-ENDIF()
-IF(FFTPACK_FOUND)
-   ADD_DEFINITIONS(-D_FFTPACK)
+   IF(FFTPACK_FOUND)
+      ADD_DEFINITIONS(-D_FFTPACK)
+   ENDIF()
 ENDIF()
 
 IF(FFTW_ENABLED)
    FIND_PACKAGE(FFTW)
-ENDIF()
-
-IF(FFTW_FOUND)
-   ADD_DEFINITIONS(-D_FFTW)
-   INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
+   IF(FFTW_FOUND)
+      ADD_DEFINITIONS(-D_FFTW)
+      INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
+   ENDIF()
+   IF(FFTW_MPI_LIBRARY)
+      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90)
+      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+   ENDIF()
 ENDIF()
 
 #------------------------------------
@@ -69,6 +74,7 @@ ENDIF()
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
+SET(HDF5_ROOT $ENV{HDF5_ROOT})
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
 SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
 IF(HDF5_ENABLE_PARALLEL) 
@@ -77,8 +83,16 @@ ELSE()
    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
 ENDIF()
 
-INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
+IF(HDF5_INCLUDE_DIRS)
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS}/fortran)
+ENDIF()
+IF(HDF5_INCLUDE_DIR_FORTRAN)
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
+ENDIF()
+
+#Pas trouver de meilleur moyen pour l'instant...
+FILE(COPY ${SELALIB_DIR}/fields/geometry_functions.F90 DESTINATION ${PROJECT_SOURCE_DIR}/fields/)
 
 SET( SLL_COMPONENTS precision 
                     utilities 
@@ -90,6 +104,8 @@ SET( SLL_COMPONENTS precision
                     electric_field_accumulators
                     remap
                     splines
+                    WENO
+                    interpolators
                     collective
                     low_level_file_io)
 
@@ -100,22 +116,16 @@ FOREACH( component ${SLL_COMPONENTS} )
 ENDFOREACH()
 
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
+   SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
 
-ADD_LIBRARY(sll_interpolators STATIC 
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
-  ${SELALIB_DIR}/interpolators/sll_interpolators_1d_base.F90
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
-  ${SELALIB_DIR}/interpolators/sll_interpolators_2d_base.F90
-  ${SELALIB_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90)
+IF(Fortran_COMPILER STREQUAL "XLF")
+   SET(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
 
-ADD_DEPENDENCIES(sll_interpolators
-	         sll_working_precision
-	         sll_memory
-	         sll_assertion
-	         sll_splines)
+IF(Fortran_COMPILER STREQUAL "IFORT")
 
+ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
@@ -146,7 +156,8 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_remap
                        sll_splines
                        sll_interpolators
-                       sll_tridiagonal
+                       sll_numerical_utilities
+                       sll_low_level_file_io
                        sll_low_level_file_io_parallel)
 
 SET(LIBS sll_utilities
@@ -158,11 +169,12 @@ SET(LIBS sll_utilities
          sll_interpolators
          sll_splines
          sll_remap
-         sll_tridiagonal
+         sll_numerical_utilities
+         sll_low_level_file_io
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
-         ${FFTPACK_LIBRARIES} 
          ${LAPACK_LIBRARIES} 
+         ${FFTPACK_LIBRARIES} 
          ${FFTW_LIBRARIES}
          ${HDF5_LIBRARIES})
 
@@ -178,13 +190,18 @@ TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
 ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90 sll_vlasov2d.F90)
 TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
 
-#ADD_DEFINITIONS(-DQUINTIC)
+ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
+
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+#ADD_DEFINITIONS(-D_QUINTIC)
 #ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
 #TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
 
-#ADD_DEFINITIONS(-DTWO_D)
-#ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
-#TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
+FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+ADD_DEFINITIONS(-D_TWO_D)
+ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
@@ -194,7 +211,6 @@ ENDIF()
 ENABLE_TESTING()
 
 SET(PROCS 1)
-
 ADD_TEST(NAME test_poisson2d_par COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
          ./test_poisson2d_par
@@ -227,4 +243,3 @@ SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vp2d_cubic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#SET_TESTS_PROPERTIES(test_vp2d_quintic  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

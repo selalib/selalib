@@ -89,11 +89,11 @@ program test_poisson_2d_periodic_cart_par
      
   average_err  = average_err/(ncx*ncy)
 
-  call flush(); print*, ' ------------------'
-  call flush(); print*, ' myrank ', myrank
-  call flush(); print*, 'local average error:', average_err
-  call flush(); print*, 'dx*dy =', dx*dy
-  call flush(); print*, ' ------------------'
+  call flush(6); print*, ' ------------------'
+  call flush(6); print*, ' myrank ', myrank
+  call flush(6); print*, 'local average error:', average_err
+  call flush(6); print*, 'dx*dy =', dx*dy
+  call flush(6); print*, ' ------------------'
 
   if (average_err> 1.0e-15 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
@@ -109,11 +109,11 @@ program test_poisson_2d_periodic_cart_par
   if (myrank==0) then
 
      if (prod4test(1)==1.) then
-        call flush()
+        call flush(6)
         print*, ' '
-        call flush()
+        call flush(6)
         print*, '"sll_poisson_2d_periodic_cart_par" test: PASS'
-        call flush()
+        call flush(6)
         print*, ' '
      endif
   endif

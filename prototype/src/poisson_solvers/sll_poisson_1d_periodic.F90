@@ -16,9 +16,6 @@ module sll_poisson_1d_periodic
      sll_real64                        :: eta1_max
      sll_real64, dimension(:), pointer :: wsave
      sll_real64, dimension(:), pointer :: work
-  contains
-     procedure :: initialize => new_poisson_1d_periodic
-     procedure :: solve => solve_poisson_1d_periodic
   end type poisson_1d_periodic
 
   interface new
@@ -32,7 +29,7 @@ module sll_poisson_1d_periodic
 contains
 
   subroutine new_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
-    class(poisson_1d_periodic),intent(out) :: this
+    type(poisson_1d_periodic),intent(out) :: this
     sll_int32,intent(in)                   :: nc_eta1
     sll_int32, intent(out)                 :: error 
     sll_real64, intent(in)                 :: eta1_min
@@ -55,7 +52,7 @@ contains
 
 
   subroutine solve_poisson_1d_periodic(this, field, rhs)
-    class(poisson_1d_periodic)                :: this
+    type(poisson_1d_periodic),intent(inout) :: this
     sll_real64, dimension(:), intent(out)     :: field
     sll_real64, dimension(:), intent(in)      :: rhs
     sll_int32                                 :: ik

@@ -1,9 +1,33 @@
-add_library(sll_bsl STATIC sll_bsl.F90)
-add_executable(test_bsl unit_test.F90)
-target_link_libraries(test_bsl sll_bsl sll_fft sll_constants sll_splines sll_distribution_function sll_memory sll_mesh_types sll_diagnostics sll_utilities sll_assertion)
+SET(BSL_LIB_DEPS sll_interpolators
+                 sll_splines 
+                 sll_memory 
+	         sll_working_precision
+                 sll_utilities 
+                 sll_assertion)
 
-add_executable(test_landau_4d landau_4d.F90)
-target_link_libraries(test_landau_4d sll_bsl sll_poisson_2d_periodic sll_constants sll_splines sll_distribution_function sll_memory sll_mesh_types sll_diagnostics sll_utilities fftpack_module sll_assertion)
+ADD_EXECUTABLE(test_bsl_1d unit_test_1d.F90)
+ADD_DEPENDENCIES(test_bsl_1d ${BSL_LIB_DEPS})
+TARGET_LINK_LIBRARIES(test_bsl_1d ${BSL_LIB_DEPS})
 
-add_executable(test_landau_2d landau_2d.F90)
-target_link_libraries(test_landau_2d sll_bsl sll_poisson_1d_periodic sll_constants sll_splines sll_distribution_function sll_memory sll_mesh_types sll_diagnostics sll_utilities fftpack_module sll_assertion)
+ADD_EXECUTABLE(test_bsl_2d unit_test_2d.F90)
+ADD_DEPENDENCIES(test_bsl_2d ${BSL_LIB_DEPS})
+TARGET_LINK_LIBRARIES(test_bsl_2d ${BSL_LIB_DEPS})
+
+IF(FFTPACK_ENABLED)
+   ADD_EXECUTABLE(test_bsl_landau_2d landau_2d.F90)
+   ADD_DEPENDENCIES(test_bsl_landau_2d ${BSL_LIB_DEPS})
+   TARGET_LINK_LIBRARIES(test_bsl_landau_2d ${BSL_LIB_DEPS} 
+                                            sll_poisson_1d_periodic
+                                            fftpack_module)
+ENDIF()
+
+IF(FFTW_FOUND)
+   ADD_EXECUTABLE(test_bsl_landau_4d landau_4d.F90)
+   ADD_DEPENDENCIES(test_bsl_landau_4d ${BSL_LIB_DEPS})
+   TARGET_LINK_LIBRARIES(test_bsl_landau_4d ${BSL_LIB_DEPS}
+                                            sll_maxwell
+                                            ${FFTW_LIBRARIES})
+ENDIF()
+
+#ADD_LIBRARY(sll_bsl STATIC sll_bsl.F90)
+

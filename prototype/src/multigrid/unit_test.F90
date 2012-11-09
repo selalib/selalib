@@ -370,7 +370,7 @@ call gerr()
 !-----------------------------------------------------------------------
 close(8)
 
-!if (myid==0) print*,"PASSED"
+if (myid==0) print*,"PASSED"
 
 call sll_halt_collective()
 

@@ -35,7 +35,6 @@ module sll_hdf5_io_parallel
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
-  use mpi
   use hdf5
   use sll_collective
   

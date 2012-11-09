@@ -1,6 +1,5 @@
 program test_io_parallel
 
-use mpi
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io

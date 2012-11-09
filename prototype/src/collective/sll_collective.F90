@@ -111,8 +111,14 @@ module sll_collective
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+
+#ifdef INTEL
+  implicit none
+  include 'mpif.h'
+#else
   use mpi
   implicit none
+#endif
   ! This is the only place in the prototype that should have to include
   ! the mpi header file.
   !include 'mpif.h'
@@ -836,69 +842,77 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
  end subroutine sll_collective_alltoallV_int
 
+!
+!FOR SOME REASON THIS ARGUMENT OF THIS FUNCTION IS DECLARED ALLOCATBLE AND 
+!POSING PROBLEM WITH F95 STANDARD. WE SHOULD COME BACK TO THIS
+!
+#warning sll_collective_alltoallV_int_simple is not fixed
+#ifndef STDF95
   ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
-  subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
-                                             recv_buf,col )
-#ifdef STDF95
-    sll_int32, dimension(:), intent(in) :: send_buf
-    sll_int32, dimension(:), intent(in) :: send_cnts
-    sll_int32, dimension(:), intent(out) :: recv_buf
-    type(sll_collective_t), pointer     :: col
+ subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
+                                            recv_buf,col )
+!#ifdef STDF95
+!    sll_int32, dimension(:), intent(in) :: send_buf
+!    sll_int32, dimension(:), intent(in) :: send_cnts
+!    sll_int32, dimension(:), intent(out) :: recv_buf
+!    type(sll_collective_t), pointer     :: col
+!
+!    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
+!    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
+!#else
+   sll_int32, dimension(:), intent(in) :: send_buf
+   sll_int32, dimension(:), intent(in) :: send_cnts
+   sll_int32, allocatable, dimension(:) :: recv_buf
+   sll_int32, allocatable, dimension(:) :: send_displs
+   sll_int32, allocatable, dimension(:) :: recv_cnts
+   sll_int32, allocatable, dimension(:) :: recv_displs
+   type(sll_collective_t), pointer     :: col
+   sll_int32                          :: ierr,size_comm,i,sendcnts_size
+   sll_int32                          :: dum
+   sendcnts_size = size(send_cnts)
 
-    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
-    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
-#else
-    sll_int32, dimension(:), intent(in) :: send_buf
-    sll_int32, dimension(:), intent(in) :: send_cnts
-    sll_int32, allocatable, dimension(:), intent(out) :: recv_buf
-    sll_int32, allocatable, dimension(:) :: send_displs
-    sll_int32, allocatable, dimension(:) :: recv_cnts
-    sll_int32, allocatable, dimension(:) :: recv_displs
-    type(sll_collective_t), pointer     :: col
-    sll_int32                          :: ierr,size_comm,i,sendcnts_size
-    sendcnts_size = size(send_cnts)
+   ! FIXME: ARG CHECKING!
+   call sll_check_collective_ptr( col )
+   call MPI_BARRIER( col%comm, ierr )
+   call sll_test_mpi_error( ierr, &
+        'sll_collective_alltoallV_int(): MPI_BARRIER()' )
 
-    ! FIXME: ARG CHECKING!
-    call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_test_mpi_error( ierr, &
-         'sll_collective_alltoallV_int(): MPI_BARRIER()' )
+   size_comm = sll_get_collective_size(col)
+   SLL_ASSERT( sendcnts_size .eq. size_comm )
+     
+   ! Define RECV_CNTS
+   SLL_ALLOCATE(recv_cnts(size_comm),ierr)
+   call sll_collective_alltoall_int( send_cnts ,1 ,1, &
+                                  recv_cnts, col)
 
-    size_comm = sll_get_collective_size(col)
-    SLL_ASSERT( sendcnts_size .eq. size_comm )
-      
-    ! Define RECV_CNTS
-    SLL_ALLOCATE(recv_cnts(size_comm),ierr)
-    call sll_collective_alltoall_int( send_cnts ,1 ,1, &
-                                   recv_cnts, col)
+   ! Define RECV_BUF
+   dum = SUM(recv_cnts)
+   SLL_ALLOCATE(recv_buf(dum),ierr)
 
-    ! Define RECV_BUF
-    SLL_ALLOCATE(recv_buf(SUM(recv_cnts)),ierr)
+   ! Define SEND_DISPLS
+   SLL_ALLOCATE(send_displs(size_comm),ierr)
+   send_displs(1)=0
+   do i=2,size_comm
+     send_displs(i)=send_displs(i-1)+send_cnts(i-1)
+   enddo
 
-    ! Define SEND_DISPLS
-    SLL_ALLOCATE(send_displs(size_comm),ierr)
-    send_displs(1)=0
-    do i=2,size_comm
-      send_displs(i)=send_displs(i-1)+send_cnts(i-1)
-    enddo
+   ! Define RECV_DISPLS
+   SLL_ALLOCATE(recv_displs(size_comm),ierr)
+   recv_displs(1)=0
+   do i=2,size_comm
+     recv_displs(i)=recv_displs(i-1)+recv_cnts(i-1)
+   enddo
 
-    ! Define RECV_DISPLS
-    SLL_ALLOCATE(recv_displs(size_comm),ierr)
-    recv_displs(1)=0
-    do i=2,size_comm
-      recv_displs(i)=recv_displs(i-1)+recv_cnts(i-1)
-    enddo
-
-    call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
-                        recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
-                        col%comm, ierr )
-    call sll_test_mpi_error( ierr, &
-         'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
-    SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
-    SLL_DEALLOCATE_ARRAY(send_displs,ierr)
-    SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
+   call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
+                       recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
+                       col%comm, ierr )
+   call sll_test_mpi_error( ierr, &
+        'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
+   call MPI_BARRIER( col%comm, ierr )
+   SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
+   SLL_DEALLOCATE_ARRAY(send_displs,ierr)
+   SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
+end subroutine sll_collective_alltoallV_int_simple
 #endif
- end subroutine sll_collective_alltoallV_int_simple
 
 end module sll_collective
