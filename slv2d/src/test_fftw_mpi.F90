@@ -29,18 +29,23 @@ alloc_local = fftw_mpi_local_size_2d(ny, nx, MPI_COMM_WORLD, &
 cdata = fftw_alloc_complex(alloc_local)
 call c_f_pointer(cdata, data, [nx,local_ny])
 
-fw_plan = fftw_mpi_plan_dft(2, nx, data, data, MPI_COMM_WORLD, FFTW_FORWARD, FFTW_MEASURE)
-bw_plan = fftw_mpi_plan_dft(2, nx, data, data, MPI_COMM_WORLD, FFTW_FORWARD, FFTW_MEASURE)
-
+fw_plan = fftw_mpi_plan_dft_2d(nx,ny,data,data, &
+                               MPI_COMM_WORLD,FFTW_FORWARD,FFTW_MEASURE)
+bw_plan = fftw_mpi_plan_dft_2d(nx,ny,data,data, &
+                               MPI_COMM_WORLD,FFTW_BACKWARD,FFTW_MEASURE)
 do j = 1, local_ny
    do i = 1, nx
      data(i, j) = i*j + local_j_offset
    end do
 end do
 
-call fftw_mpi_execute_dft(plan, data, data)
 
-call fftw_destroy_plan(plan)
+
+call fftw_mpi_execute_dft(fw_plan, data, data)
+call fftw_mpi_execute_dft(bw_plan, data, data)
+
+call fftw_destroy_plan(fw_plan)
+call fftw_destroy_plan(bw_plan)
 call fftw_free(cdata)
 call fftw_mpi_cleanup()
 call MPI_FINALIZE(ierr)
