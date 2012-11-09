@@ -3,7 +3,7 @@ program test_lagrange
   use lagrange_interpolation
   implicit none
 
-#define NP 4
+#define NP 20
 #define XMIN  0.0_f64
 #define DELTA 1.0_f64
 

@@ -2,7 +2,6 @@ module vp2dinit
 
 #include "selalib.h"
 
- use mpi
  use geometry_module
  use vlasov2d_module
  use splinepx_class

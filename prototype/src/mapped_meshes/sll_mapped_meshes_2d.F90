@@ -113,8 +113,8 @@ module sll_module_mapped_meshes_2d
      type(cubic_spline_2d_interpolator), pointer            :: x2_interp
 #else
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
-     class(interpolator_2d_base), pointer                   :: x1_interp
-     class(interpolator_2d_base), pointer                   :: x2_interp
+     class(sll_interpolator_2d_base), pointer                   :: x1_interp
+     class(sll_interpolator_2d_base), pointer                   :: x2_interp
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
      !procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
@@ -725,9 +725,9 @@ contains
     type(cubic_spline_2d_interpolator), target  :: x2_interpolator
     type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
 #else
-    class(interpolator_2d_base), target  :: x1_interpolator
-    class(interpolator_2d_base), target  :: x2_interpolator
-    class(interpolator_2d_base), target  :: jacobians_n_interpolator
+    class(sll_interpolator_2d_base), target  :: x1_interpolator
+    class(sll_interpolator_2d_base), target  :: x2_interpolator
+    class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
 #endif 
     sll_real64, dimension(:,:), optional :: jacobians_node
     sll_real64, dimension(:,:), optional :: jacobians_cell

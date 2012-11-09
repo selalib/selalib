@@ -2,7 +2,7 @@
 !***************************************************************************
 !
 ! Selalib 2012     
-! Module: sll_qns2d_with_finite_diff.F90
+! Module: sll_qns2d_with_finite_diff_seq.F90
 !
 !> @brief 
 !> Selalib 2D (r, theta) quasi-neutral solver with finite differences
@@ -63,10 +63,10 @@ contains
     plan%rmax     = rmax
 
     ! For FFTs in theta-direction
-    plan%fft_plan => new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
+    plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
 
     ! For inverse FFTs in theta-direction
-    plan%inv_fft_plan => new_plan_c2c_1d( NP_theta, x, x, FFT_INVERSE )
+    plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_INVERSE )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
@@ -99,11 +99,11 @@ contains
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-    call apply_fft_c2c_1d( plan%fft_plan, hat_f, hat_f )
-    call apply_fft_c2c_1d( plan%fft_plan, hat_g, hat_g )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
     
-    call apply_fft_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
-    call apply_fft_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(1,:), hat_rho(1,:) )
+    call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(NP_r,:), hat_rho(NP_r,:) )
 
     if (plan%bc=='neumann') then
        hat_rho(1,:)  = hat_rho(1,:) + (c(1)-2/dr)*hat_f 
@@ -114,7 +114,7 @@ contains
     endif
 
     do i=2,NP_r-1
-       call apply_fft_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
+       call fft_apply_plan_c2c_1d( plan%fft_plan, hat_rho(i,:), hat_rho(i,:) ) 
     enddo
 
     do j=1,NP_theta
@@ -130,7 +130,7 @@ contains
     ! Solution phi of the Quasi-neutral equation is given by taking the inverse
     ! FFT in the k-direction of Tild_phi (storaged in phi)  
     do i=1,NP_r
-       call apply_fft_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
+       call fft_apply_plan_c2c_1d( plan%inv_fft_plan, hat_phi(i,:), hat_phi(i,:) ) 
     enddo
 
     phi = real(hat_phi, f64)/NP_theta
@@ -147,8 +147,8 @@ contains
        ! for instance
        SLL_ASSERT( associated(plan) )
 
-       call delete_fft_plan1d(plan%fft_plan)
-       call delete_fft_plan1d(plan%inv_fft_plan)
+       call fft_delete_plan(plan%fft_plan)
+       call fft_delete_plan(plan%inv_fft_plan)
 
        SLL_DEALLOCATE(plan, ierr)
 
