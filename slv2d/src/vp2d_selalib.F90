@@ -88,8 +88,6 @@ program vp2d_selalib
      call advection_x3(vlas2d,e_x,dt)
      call advection_x4(vlas2d,e_y,dt)
 
-
-
      call transposevx(vlas2d,f4d)
 
      if (mod(iter,fthdiag).eq.0) then
