@@ -1,6 +1,6 @@
-project(sll)
-enable_language(Fortran)
-cmake_minimum_required(VERSION 2.8)
+PROJECT(sll)
+ENABLE_LANGUAGE(Fortran)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -13,27 +13,28 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 # make sure that the default is a RELEASE. Here is where we need to set
 # the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
 # turn on assertions.
-SET(CMAKE_BUILD_TYPE DEBUG)
-if (NOT CMAKE_BUILD_TYPE)
-  SET (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
+#SET(CMAKE_BUILD_TYPE DEBUG)
+#if (NOT CMAKE_BUILD_TYPE)
+#  SET (CMAKE_BUILD_TYPE RELEASE CACHE STRING
+#      "Choose the type of build, options are: None Debug Release."
+#      FORCE)
+#ndif (NOT CMAKE_BUILD_TYPE)
 
 # Define folder to be deleted by make clean
-#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
-#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
-add_custom_target( clear
-                   COMMAND find . -name *.mod -delete
-		   COMMAND find . -name *.a -delete
-		   COMMAND find . -name *.o -delete
-		   COMMAND find . -name *.cmake -delete
-		   COMMAND rm -rf bin
-		   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
+ADD_CUSTOM_TARGET( clear
+   COMMAND find . -name *.mod -delete
+   COMMAND find . -name *.a -delete
+   COMMAND find . -name *.o -delete
+   COMMAND find . -name *.cmake -delete
+   COMMAND rm -rf bin
+   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
+
+#INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/HDF5Config.cmake)
 
