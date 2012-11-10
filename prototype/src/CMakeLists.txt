@@ -13,7 +13,7 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 # make sure that the default is a RELEASE. Here is where we need to set
 # the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
 # turn on assertions.
-SET(CMAKE_BUILD_TYPE DEBUG)
+#SET(CMAKE_BUILD_TYPE DEBUG)
 if (NOT CMAKE_BUILD_TYPE)
   SET (CMAKE_BUILD_TYPE RELEASE CACHE STRING
       "Choose the type of build, options are: None Debug Release."
