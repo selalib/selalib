@@ -16,7 +16,22 @@ SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 
-INCLUDE(${SELALIB_DIR}/CMakeModules/FortranConfig.cmake)
+IF($ENV{FC} MATCHES "xlf")
+  INCLUDE(IBMCompilers)
+ENDIF()
+
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+IF(CMAKE_Fortran_COMPILER MATCHES gfortran)
+   ADD_DEFINITIONS(-DGFORTRAN)
+   SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
+ELSEIF(CMAKE_Fortran_COMPILER MATCHES "xlf")
+   SET(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic")
+ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+   SET(CMAKE_Fortran_FLAGS "-C")
+ENDIF()
+
 INCLUDE(${SELALIB_DIR}/CMakeModules/LapackConfig.cmake)
 
 IF(SILO_ENABLED) 
@@ -27,15 +42,6 @@ IF(SILO_ENABLED)
       SET(CMAKE_EXE_LINKER_FLAGS "-lsupc++")
    ENDIF()
 ENDIF()
-
-FIND_PACKAGE(MPI REQUIRED Fortran)
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
-MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
-MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
-
-SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
-MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 IF(FFTPACK_ENABLED)
    FIND_PACKAGE(FFTPACK)
@@ -52,12 +58,18 @@ IF(FFTW_ENABLED)
    ENDIF()
 ENDIF()
 
-#------------------------------------
-# Check if using IBM compilers
-#------------------------------------
-IF($ENV{FC} MATCHES "xlf")
-  INCLUDE(IBMCompilers)
+FIND_PACKAGE(MPI REQUIRED Fortran)
+IF(MPI_FOUND)
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+ELSE()
+   MESSAGE(SEND_ERROR "MPI not installed")
 ENDIF()
+
+MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
+MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
+
+SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
+MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
@@ -102,17 +114,6 @@ FOREACH( component ${SLL_COMPONENTS} )
    ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
 ENDFOREACH()
 
-IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-   SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
-ENDIF()
-
-IF(Fortran_COMPILER STREQUAL "XLF")
-   SET(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
-ENDIF()
-
-IF(Fortran_COMPILER STREQUAL "IFORT")
-
-ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90

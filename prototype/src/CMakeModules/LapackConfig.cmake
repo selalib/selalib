@@ -2,13 +2,8 @@ IF(Fortran_COMPILER STREQUAL 'INTEL')
   SET(BLA_VENDOR "Intel")
 ENDIF()
 
-IF (APPLE)
-
-   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
-   FIND_LIBRARY(BLAS_LIBRARIES    blas)
-
-ELSEIF($ENV{HOST} STREQUAL "hydra01")
-
+IF($ENV{HOST} MATCHES "hydra01") 
+                                      
    SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core)
    SET(LAPACK_FOUND TRUE)
    SET(BLAS_FOUND TRUE)
@@ -40,11 +35,12 @@ ENDIF()
 
 IF(LAPACK_FOUND AND BLAS_FOUND)
 
-  MESSAGE(STATUS "LAPACK and BLAS libraries are ${LAPACK_LIBRARIES}")
+  MESSAGE(STATUS "LAPACK and BLAS libraries are ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}")
 
 ELSE(LAPACK_FOUND AND BLAS_FOUND)
 
-  MESSAGE(STATUS "Failed to link LAPACK, BLAS, ATLAS libraries with environments. Going to search standard paths.")
+  MESSAGE(STATUS "Failed to link LAPACK, BLAS, ATLAS libraries with environments")
+  MESSAGE(STATUS "Going to search LAPACK standard paths.")
   FIND_LIBRARY(LAPACK_LIBRARIES lapack)
   FIND_LIBRARY(BLAS_LIBRARIES blas)
 
@@ -55,8 +51,16 @@ ELSE(LAPACK_FOUND AND BLAS_FOUND)
     SET(LAPACK_FOUND TRUE)
     SET(BLAS_FOUND TRUE)
 
+  ELSE()
+
+     SET(LAPACK_LIBRARIES " ")
+     SET(BLAS_LIBRARIES " ")
+ 
   ENDIF(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
 
 ENDIF(LAPACK_FOUND AND BLAS_FOUND)
+
+MARK_AS_ADVANCED( LAPACK_LIBRARIES
+                  BLAS_LIBRARIES    )
 
 SET(LINK_LIBRARIES ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
