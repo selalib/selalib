@@ -1,5 +1,4 @@
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-#set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -fall-intrinsics")
 IF(HDF5_INCLUDE_DIRS)
    include_directories(${HDF5_INCLUDE_DIRS})
 ENDIF()
