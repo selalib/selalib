@@ -23,7 +23,7 @@ use arbitrary_degree_splines
   implicit none
   
   type(quintic_splines_uniform_plan), pointer :: plan1
-  !type(quintic_splines_plan_non_uni), pointer :: plan2
+  !type(quintic_splines_non_uni_plan), pointer :: plan2
   sll_real64, dimension(:), allocatable       :: f1!, f2, x2
   ! f1: test function for uniform case
   ! f2: test function for non uniform case
