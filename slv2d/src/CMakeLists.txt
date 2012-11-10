@@ -9,8 +9,6 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules
                        ${SELALIB_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
-
 SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
