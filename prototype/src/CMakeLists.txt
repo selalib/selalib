@@ -46,7 +46,6 @@ INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/DoxygenConfig.cmake)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 
-
 # include's .h files
 INCLUDE_DIRECTORIES(remap 
                     poisson_solvers 
@@ -58,7 +57,6 @@ INCLUDE_DIRECTORIES(remap
                     precision 
                     fields 
                     fft) 
-
 
 
 ENABLE_TESTING()
@@ -105,7 +103,6 @@ ADD_TEST(NAME timer COMMAND test_timer)
 
 ##########################################################
 
-#mid-level
 ADD_SUBDIRECTORY(numerical_utilities)
 ADD_TEST(NAME tridiagonal COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange COMMAND test_lagrange)
@@ -139,9 +136,6 @@ ADD_TEST(NAME integration COMMAND test_integration)
 IF(FFTPACK_ENABLED)
    ADD_SUBDIRECTORY(fftpack)
 ENDIF()
-
-##########################################################
-
 ADD_SUBDIRECTORY(fft)
 ADD_TEST(NAME fft COMMAND test_fft)
 
@@ -177,11 +171,9 @@ IF(NOT STDF95)
       ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
    ENDIF(FFTPACK_ENABLED)
 
-#ADD_TEST(poisson_solvers poisson_solvers/test_poisson_2d)
-ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
+   ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#ADD_TEST(poisson_solvers poisson_solvers/unit_test)
+                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_TEST(NAME qns2d_with_finite_diff_seq 
@@ -216,7 +208,6 @@ ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
 ##########################################################
-#high-level
 ADD_SUBDIRECTORY(interpolators)
 ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
