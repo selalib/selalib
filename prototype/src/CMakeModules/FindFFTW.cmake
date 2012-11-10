@@ -7,17 +7,22 @@ SET(TRIAL_PATHS
                 $ENV{FFTW_HOME}/include
                 /usr/include
                 /usr/local/include
+                /usr/lib64/mpich2/include 
+                /usr/lib64/openmpi/include
                 /opt/local/include
                 /usr/apps/include
  )
 
+
  SET(TRIAL_LIBRARY_PATHS
-                          $ENV{FFTW_ROOT}/lib
-                          $ENV{FFTW_HOME}/lib
-                          /usr/lib
-                          /usr/local/lib
-                          /opt/local/lib
-                          /sw/lib
+                $ENV{FFTW_ROOT}/lib
+                $ENV{FFTW_HOME}/lib
+                /usr/lib
+                /usr/local/lib
+                /usr/lib64/mpich2/lib 
+                /usr/lib64/openmpi/lib
+                /opt/local/lib
+                /sw/lib
  )
 
 FIND_PATH(FFTW_INCLUDE_DIR fftw3.f03 ${TRIAL_PATHS})
