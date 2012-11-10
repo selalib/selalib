@@ -1,12 +1,8 @@
 # set the output directory for library and include
-file(MAKE_DIRECTORY ${sll_BINARY_DIR}/lib)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${sll_BINARY_DIR}/lib)
-file(MAKE_DIRECTORY ${sll_BINARY_DIR}/include)
-set(CMAKE_Fortran_MODULE_DIRECTORY ${sll_BINARY_DIR}/include)
-
-# set the compiler flag for the build.
-# set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -fall-intrinsics")
-
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
+set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
 
 # copy the main header files in the include directory 
 file(COPY
@@ -48,18 +44,15 @@ set(LOW_LEVEL_SOURCE_FILES
 # copy all low level include files in the include directory
 file(COPY ${LOW_LEVEL_INCLUDE_FILES} DESTINATION ${CMAKE_BINARY_DIR}/include/)
 
-add_library(selalib_low_level STATIC ${LOW_LEVEL_SOURCE_FILES})
+add_library(selalib STATIC ${LOW_LEVEL_SOURCE_FILES})
 
-#################################################################
-# DEFINE MID LEVEL STUFF
-#################################################################
-set(MID_LEVEL_INCLUDE_FILES
+set(HIGH_LEVEL_INCLUDE_FILES
 	${CMAKE_SOURCE_DIR}/remap/sll_remap.h
 	)
 
 # Attention always use selalib fft, need to be fix!
 # There are no poisson solver because the dependencies aren't obvious. 
-set(MID_LEVEL_SOURCE_FILES
+set(HIGH_LEVEL_SOURCE_FILES
 	${CMAKE_SOURCE_DIR}/numerical_utilities/tridiagonal.F90
 	${CMAKE_SOURCE_DIR}/non_linear_solvers/newton_raphson.F90
 	${CMAKE_SOURCE_DIR}/splines/util_constants.F90
@@ -76,6 +69,6 @@ set(MID_LEVEL_SOURCE_FILES
 	)
 
 # copy all law level include files in the include directory
-file(COPY ${MID_LEVEL_INCLUDE_FILES} DESTINATION ${CMAKE_BINARY_DIR}/include/)
+file(COPY ${HIGH_LEVEL_INCLUDE_FILES} DESTINATION ${CMAKE_BINARY_DIR}/include/)
 
-add_library(selalib_mid_level STATIC ${MID_LEVEL_SOURCE_FILES} ${LOW_LEVEL_SOURCE_FILES})
+add_library(selalib_hl STATIC ${HIGH_LEVEL_SOURCE_FILES} ${LOW_LEVEL_SOURCE_FILES})

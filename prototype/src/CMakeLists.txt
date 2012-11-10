@@ -13,12 +13,12 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 # make sure that the default is a RELEASE. Here is where we need to set
 # the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
 # turn on assertions.
-#SET(CMAKE_BUILD_TYPE DEBUG)
-#if (NOT CMAKE_BUILD_TYPE)
-#  SET (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-#      "Choose the type of build, options are: None Debug Release."
-#      FORCE)
-#ndif (NOT CMAKE_BUILD_TYPE)
+# default to debug-builds
+
+IF (NOT CMAKE_BUILD_TYPE)
+   SET (CMAKE_BUILD_TYPE Debug CACHE STRING
+    "Choose the type of build, options are: None, Debug, Release, RelWithDebInfo and MinSizeRel." FORCE)
+ENDIF (NOT CMAKE_BUILD_TYPE)
 
 # Define folder to be deleted by make clean
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -34,7 +34,7 @@ ADD_CUSTOM_TARGET( clear
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
-#INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/HDF5Config.cmake)
 
@@ -61,11 +61,10 @@ INCLUDE_DIRECTORIES(remap
 
 ENABLE_TESTING()
 
-######################################################################
-#  III. SUBDIRECTORY                                                 #
-######################################################################
+#################################################################
+#  SUBDIRECTORY                                                 #
+#################################################################
 
-#low-level
 ADD_SUBDIRECTORY(memory)
 ADD_TEST(NAME memory COMMAND test_memory)
 SET_TESTS_PROPERTIES(memory PROPERTIES TIMEOUT 20)
@@ -73,7 +72,6 @@ SET_TESTS_PROPERTIES(memory PROPERTIES TIMEOUT 20)
 ##########################################################
 
 ADD_SUBDIRECTORY(precision)
-#ADD_TEST(precision precision/test_precision) #too long
 
 ##########################################################
 
@@ -270,11 +268,11 @@ SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ##########################################################
 
 ADD_SUBDIRECTORY(CSL)
-#ADD_TEST(CSL CSL/test_csl)
-#ADD_TEST(simulation_1d simulation/test_simulation_1d)
+#ADD_TEST(NAME CSL CSL/test_csl)
+#ADD_TEST(NAME simulation_1d simulation/test_simulation_1d)
 
 #ADD_SUBDIRECTORY(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
-#ADD_TEST(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
+#ADD_TEST(NAME quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 
 ##########################################################
 
@@ -297,7 +295,7 @@ ENDIF()
 ##########################################################
 
 SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
-# recherche de FORTRANCL
+
 IF(FORTRANCL_ENABLED)
   FIND_PACKAGE(FORTRANCL QUIET)
   IF(FORTRANCL_FOUND)
