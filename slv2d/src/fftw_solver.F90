@@ -70,8 +70,8 @@ call dfftw_init_threads(error)
 if (error == 0) stop 'FFTW CAN''T USE THREADS'
 call dfftw_plan_with_nthreads(nthreads)
 
-fw = fftw_plan_dft_r2c_2d(ny, nx, rho(1:nx,1:ny), rhot, FFTW_ESTIMATE)
-bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, phi(1:nx,1:ny), FFTW_ESTIMATE)
+fw = fftw_plan_dft_r2c_2d(ny, nx, rho(1:nx,1:ny), rhot, FFTW_PATIENT)
+bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, phi(1:nx,1:ny), FFTW_PATIENT)
 
 kx0=2._f64*sll_pi/(eta1_max-eta1_min)
 ky0=2._f64*sll_pi/(eta2_max-eta2_min)
