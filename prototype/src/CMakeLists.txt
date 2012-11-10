@@ -134,6 +134,9 @@ ADD_TEST(NAME integration COMMAND test_integration)
 IF(FFTPACK_ENABLED)
    ADD_SUBDIRECTORY(fftpack)
 ENDIF()
+
+##########################################################
+
 ADD_SUBDIRECTORY(fft)
 ADD_TEST(NAME fft COMMAND test_fft)
 
