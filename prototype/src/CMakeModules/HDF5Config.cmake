@@ -1,8 +1,11 @@
 # add the cache entry HDF5_ENABLED for enable/disable hdf5
 SET(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
-# search for HDF5
-IF( DEFINED ENV{HDF5_ROOT} )
+
+SET(HDF5_USE_STATIC_LIBRARIES YES)
+IF($ENV{HOSTNAME} MATCHES "hpc-f0*")
+   SET(HDF5_ROOT "/home/math/navaro/local/bin")
+ELSE()
    SET(HDF5_ROOT $ENV{HDF5_ROOT})
 ENDIF()
 
@@ -13,22 +16,22 @@ IF(NOT HDF5_FOUND)
    MESSAGE(STATUS "CMake did not find your HDF5 installation")
 
    FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.h
-   HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
+   HINTS ${HDF5_ROOT}/../include /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
    PATH_SUFFIXES include hdf5/include
    DOC "PATH TO hdf5.h")
 
    FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
-   HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
+   HINTS ${HDF5_ROOT}/../include /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
    PATH_SUFFIXES include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
    FIND_LIBRARY(HDF5_HDF5_LIBRARY NAMES hdf5
-   HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
+   HINTS ${HDF5_ROOT}/../lib /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
    PATH_SUFFIXES lib hdf5/lib
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
-   HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
+   HINTS ${HDF5_ROOT}/../lib /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
    PATH_SUFFIXES lib hdf5/lib
    DOC "PATH TO libhdf5_fortran")
 

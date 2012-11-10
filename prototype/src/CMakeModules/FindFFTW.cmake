@@ -52,6 +52,11 @@ ENDIF()
 
 SET(FFTW_FOUND FALSE)
 
+IF($ENV{HOSTNAME} MATCHES "hpc*")
+   SET(FFTW_INCLUDE_DIR "/home/math/navaro/local/include")
+   SET(FFTW_LIBRARIES "/home/math/navaro/local/lib/libfftw3.a" "/home/math/navaro/local/lib/libfftw3_threads.a" "/home/math/navaro/local/lib/libfftw3_mpi.a")
+ENDIF()
+
 IF(FFTW_INCLUDE_DIR AND FFTW_LIBRARIES)
    MESSAGE(STATUS "FFTW_INCLUDE_DIRS=${FFTW_INCLUDE_DIR}")
    MESSAGE(STATUS "FFTW_LIBRARIES=${FFTW_LIBRARIES}")
