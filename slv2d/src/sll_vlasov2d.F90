@@ -139,7 +139,7 @@ contains
  end subroutine dealloc_vlasov2d
 
  subroutine advection_x1(this,f,dt)
-  type(vlasov2d),intent(inout) :: this
+  type(vlasov2d) :: this
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x2, nc_x3
