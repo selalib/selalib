@@ -21,6 +21,8 @@ IF (NOT CMAKE_BUILD_TYPE)
     "Choose the type of build, options are: None, Debug, Release, RelWithDebInfo and MinSizeRel." FORCE)
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
+ADD_DEFINITIONS(-D${CMAKE_BUILD_TYPE})
+
 # Define folder to be deleted by make clean
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
@@ -77,9 +79,11 @@ ADD_SUBDIRECTORY(precision)
 ##########################################################
 
 ADD_SUBDIRECTORY(assert)
-ADD_TEST(NAME assert COMMAND test_assert)
-SET(passRegex "Assertion error triggered in file")
-SET_TESTS_PROPERTIES(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
+IF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
+   ADD_TEST(NAME assert COMMAND test_assert)
+   SET(passRegex "Assertion error triggered in file")
+   SET_TESTS_PROPERTIES(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
+ENDIF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
 
 ##########################################################
 
