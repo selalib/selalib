@@ -4,11 +4,12 @@ ENDIF()
 
 IF($ENV{HOST} MATCHES "hydra01") 
                                       
-   SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core)
+   SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 
+                        -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core)
    SET(LAPACK_FOUND TRUE)
    SET(BLAS_FOUND TRUE)
 
-ELSEIF($ENV{HOST} MATCHES "hpc*")
+ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
 
    SET(MKLPATH  "/opt/intel/Compiler/11.1/072/mkl/lib/em64t")
    SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread)
