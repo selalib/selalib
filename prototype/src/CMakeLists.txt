@@ -10,16 +10,12 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # the list of directories in which to search for CMake modules.
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-# make sure that the default is a RELEASE. Here is where we need to set
-# the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
-# turn on assertions.
-# default to debug-builds
-
-SET (CMAKE_BUILD_TYPE DEBUG)
-IF (NOT CMAKE_BUILD_TYPE)
-   SET (CMAKE_BUILD_TYPE Debug CACHE STRING
-    "Choose the type of build, options are: None, Debug, Release, RelWithDebInfo and MinSizeRel." FORCE)
-ENDIF (NOT CMAKE_BUILD_TYPE)
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build, options are: DEBUG RELEASE.")
+ELSE()
+   # default to debug-builds before first release.
+   SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Choose the type of build, options are: DEBUG RELEASE.")
+ENDIF()
 
 ADD_DEFINITIONS(-D${CMAKE_BUILD_TYPE})
 
