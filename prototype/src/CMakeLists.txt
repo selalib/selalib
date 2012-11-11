@@ -33,17 +33,12 @@ ADD_CUSTOM_TARGET( clear
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/HDF5Config.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FFTConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/MPIConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/DoxygenConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
+INCLUDE(FortranConfig)
+INCLUDE(HDF5Config)
+INCLUDE(FFTConfig)
+INCLUDE(MPIConfig)
+INCLUDE(DoxygenConfig)
+INCLUDE(LapackConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(remap 
@@ -56,7 +51,6 @@ INCLUDE_DIRECTORIES(remap
                     precision 
                     fields 
                     fft) 
-
 
 ENABLE_TESTING()
 
