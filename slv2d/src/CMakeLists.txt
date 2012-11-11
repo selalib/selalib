@@ -1,6 +1,5 @@
 
-PROJECT(slv2d)
-ENABLE_LANGUAGE(Fortran)
+PROJECT(slv2d Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_BUILD_TYPE None)
 
@@ -12,13 +11,33 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules
                        ${SELALIB_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
-SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
-SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-IF($ENV{FC} MATCHES "xlf")
-  INCLUDE(IBMCompilers)
+IF(CMAKE_Fortran_COMPILER MATCHES "gfortran")
+
+   ADD_DEFINITIONS(-DGFORTRAN)
+   SET(CMAKE_Fortran_FLAGS "-O3 -ffree-line-length-none")
+
+ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+
+   SET(CMAKE_Fortran_FLAGS "-O3")
+   ADD_DEFINITIONS(-DINTEL)
+
+ELSEIF(CMAKE_Fortran_COMPILER_NAME MATCHES "xlf")
+
+   SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+
 ENDIF()
+
+FIND_PACKAGE(LAPACK)
+IF( NOT LAPACK_FOUND)
+   INCLUDE(${SELALIB_DIR}/CmakeModules/LapackConfig.cmake)
+ENDIF( NOT LAPACK_FOUND)
+
+SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
+SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -45,11 +64,7 @@ IF(FFTW_ENABLED)
 ENDIF()
 
 FIND_PACKAGE(MPI REQUIRED Fortran)
-IF(MPI_FOUND)
-   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ELSE()
-   MESSAGE(SEND_ERROR "MPI not installed")
-ENDIF()
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
 MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
@@ -66,6 +81,7 @@ IF(HDF5_ENABLE_PARALLEL)
    MESSAGE(STATUS "HDF5 parallel supported")
 ELSE()
    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+   MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
 ENDIF()
 
 IF(HDF5_INCLUDE_DIRS)
