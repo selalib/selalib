@@ -60,6 +60,7 @@ ELSE()
 
 ENDIF()
 
+MESSAGE(STATUS "Fortran_COMPILER:${Fortran_COMPILER}")
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
    ADD_DEFINITIONS(-DGFORTRAN)
    SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
