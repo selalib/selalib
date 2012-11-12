@@ -315,6 +315,7 @@ program VP1d_deltaf
      end do
      !$omp barrier
      !$omp single
+     if (mod(istep,freqdiag)==0) then
      ! diagnostics
      if (mod(istep,freqdiag)==0) then
      time = istep*dt
