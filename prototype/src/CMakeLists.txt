@@ -10,13 +10,8 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # the list of directories in which to search for CMake modules.
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-IF(DEFINED CMAKE_BUILD_TYPE)
-   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build, options are: DEBUG RELEASE.")
-ELSE()
-   # default to debug-builds before first release.
-   SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Choose the type of build, options are: DEBUG RELEASE.")
-ENDIF()
-
+# default to debug-builds before first release.
+SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Choose the type of build, DEBUG or RELEASE.")
 ADD_DEFINITIONS(-D${CMAKE_BUILD_TYPE})
 
 # Define folder to be deleted by make clean
@@ -372,3 +367,5 @@ IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
       SET(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ENDIF()
 ENDIF()
+
+
