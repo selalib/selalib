@@ -1,18 +1,23 @@
-PROJECT(slv2d)
+PROJECT(SLV2D)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_BUILD_TYPE None)
 
-MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
-MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
-SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
-MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
-SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules 
-                       ${SELALIB_DIR}/CMakeModules
+MESSAGE( STATUS "SLV2D_BINARY_DIR: ${SLV2D_BINARY_DIR}" )
+MESSAGE( STATUS "SLV2D_SOURCE_DIR: ${SLV2D_SOURCE_DIR}" )
+MESSAGE( STATUS "SLL_SOURCE_DIR: ${SLL_SOURCE_DIR}" )
+MESSAGE( STATUS "SELALIB_SOURCE_DIR: ${SELALIB_SOURCE_DIR}" )
+
+MESSAGE( STATUS "PROTOTYPE_SOURCE_DIR: " ${PROTOTYPE_SOURCE_DIR} )
+SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules 
+                       ${SLL_SOURCE_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+
+INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
 
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER_ID:${CMAKE_Fortran_COMPILER_ID}")
@@ -35,12 +40,12 @@ ENDIF()
 
 FIND_PACKAGE(LAPACK)
 IF( NOT LAPACK_FOUND)
-   INCLUDE(${SELALIB_DIR}/CMakeModules/LapackConfig.cmake)
+   INCLUDE(${SLL_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 ENDIF( NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
-SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       " FORCE)
+SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " FORCE )
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -48,6 +53,7 @@ IF(SILO_ENABLED)
       ADD_DEFINITIONS(-D_SILO)
       INCLUDE_DIRECTORIES(${SILO_INCLUDE_DIRS})
       SET(CMAKE_EXE_LINKER_FLAGS "-lsupc++")
+      MESSAGE(STATUS "SILO_LIBRARIES:${SILO_LIBRARIES}")
    ENDIF()
 ENDIF()
 
@@ -56,6 +62,7 @@ IF(FFTPACK_ENABLED)
    IF(FFTPACK_FOUND)
       ADD_DEFINITIONS(-D_FFTPACK)
    ENDIF()
+   MESSAGE(STATUS "FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
 ENDIF()
 
 IF(FFTW_ENABLED)
@@ -64,16 +71,11 @@ IF(FFTW_ENABLED)
       ADD_DEFINITIONS(-D_FFTW)
       INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
    ENDIF()
+   MESSAGE(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 ENDIF()
 
 FIND_PACKAGE(MPI REQUIRED Fortran)
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
-MESSAGE( STATUS "PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR} )
-MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
-
-SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
-MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
@@ -96,28 +98,30 @@ IF(HDF5_INCLUDE_DIR_FORTRAN)
 ENDIF()
 
 #Pas trouver de meilleur moyen pour l'instant...
-FILE(COPY ${SELALIB_DIR}/fields/geometry_functions.F90 DESTINATION ${PROJECT_SOURCE_DIR}/fields/)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/selalib_level/selalib.h DESTINATION ${SLV2D_SOURCE_DIR})
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/fields/geometry_functions.F90 DESTINATION ${SLV2D_SOURCE_DIR}/fields/)
 
-SET( SLL_COMPONENTS precision 
-                    utilities 
-                    assert 
-                    memory 
-                    constants 
-                    timer
-                    numerical_utilities
-                    electric_field_accumulators
-                    remap
-                    splines
-                    WENO
-                    interpolators
-                    collective
-                    low_level_file_io)
+#SET( SLL_COMPONENTS precision 
+#                    utilities 
+#                    assert 
+#                    memory 
+#                    constants 
+#                    timer
+#                    numerical_utilities
+#                    electric_field_accumulators
+#                    remap
+#                    splines
+#                    WENO
+#                    interpolators
+#                    collective
+#                    low_level_file_io)
+#
+#FOREACH( component ${SLL_COMPONENTS} )
+#   MESSAGE(STATUS "${component}")
+#   INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/${component})
+#   ADD_SUBDIRECTORY(${SLL_SOURCE_DIR}/${component} ${SLV2D_BINARY_DIR}/${component})
+#ENDFOREACH()
 
-FOREACH( component ${SLL_COMPONENTS} )
-   MESSAGE(STATUS "${component}")
-   INCLUDE_DIRECTORIES(${SELALIB_DIR}/${component})
-   ADD_SUBDIRECTORY(${SELALIB_DIR}/${component} ${PROJECT_BINARY_DIR}/${component})
-ENDFOREACH()
 
 
 SET(SLV2D_SRC silo_module.F90
@@ -139,37 +143,40 @@ SET(SLV2D_SRC silo_module.F90
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
-ADD_DEPENDENCIES(slv2d sll_precision
-                       sll_assertion
-                       sll_constants
-                       sll_memory
-                       sll_low_level_file_io
-                       sll_timer
-                       sll_collective
-                       sll_remap
-                       sll_splines
-                       sll_interpolators
-                       sll_numerical_utilities
-                       sll_low_level_file_io
-                       sll_low_level_file_io_parallel)
+#ADD_DEPENDENCIES(slv2d sll_precision
+#                       sll_assertion
+#                       sll_constants
+#                       sll_memory
+#                       sll_low_level_file_io
+#                       sll_timer
+#                       sll_collective
+#                       sll_remap
+#                       sll_splines
+#                       sll_interpolators
+#                       sll_numerical_utilities
+#                       sll_low_level_file_io
+#                       sll_low_level_file_io_parallel)
 
-SET(LIBS sll_utilities
-         sll_constants
-         sll_memory
-         sll_assertion
-         sll_working_precision
-         sll_collective
-         sll_interpolators
-         sll_splines
-         sll_remap
-         sll_numerical_utilities
-         sll_low_level_file_io
-         sll_low_level_file_io_parallel
-         ${SILO_LIBRARIES} 
-         ${LAPACK_LIBRARIES} 
-         ${FFTPACK_LIBRARIES} 
-         ${FFTW_LIBRARIES}
-         ${HDF5_LIBRARIES})
+#SET(LIBS sll_utilities
+#         sll_constants
+#         sll_memory
+#         sll_assertion
+#         sll_working_precision
+#         sll_collective
+#         sll_interpolators
+#         sll_splines
+#         sll_remap
+#         sll_numerical_utilities
+#         sll_low_level_file_io
+#         sll_low_level_file_io_parallel
+#         ${SILO_LIBRARIES} 
+#         ${LAPACK_LIBRARIES} 
+#         ${FFTPACK_LIBRARIES} 
+#         ${FFTW_LIBRARIES}
+#         ${HDF5_LIBRARIES})
+
+SET(LIBS selalib ${SILO_LIBRARIES} ${LAPACK_LIBRARIES} 
+    ${FFTPACK_LIBRARIES} ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
 TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS})

@@ -1,38 +1,53 @@
 
-SET(SELALIB_INCLUDE_FILES
-	${CMAKE_SOURCE_DIR}/memory/sll_memory.h
-	${CMAKE_SOURCE_DIR}/precision/sll_working_precision.h
-	${CMAKE_SOURCE_DIR}/assert/sll_assert.h
-	${CMAKE_SOURCE_DIR}/utilities/misc_utils.h
+SET(SLL_INCLUDE_FILES
+	${SLL_SOURCE_DIR}/memory/sll_memory.h
+	${SLL_SOURCE_DIR}/memory/sll_memory.h
+	${SLL_SOURCE_DIR}/precision/sll_working_precision.h
+	${SLL_SOURCE_DIR}/assert/sll_assert.h
+	${SLL_SOURCE_DIR}/utilities/misc_utils.h
 	)
 
-INSTALL(FILES ${CMAKE_SOURCE_DIR}/selalib_level/selalib.h
-              ${SELALIB_INCLUDE_FILES}
+FILE(COPY ${SLL_INCLUDE_FILES}
+     DESTINATION
+     ${CMAKE_CURRENT_SOURCE_DIR})
+
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
+              ${SLL_INCLUDE_FILES}
         DESTINATION include)
 
-SET(SELALIB_SOURCE_FILES
-	${CMAKE_SOURCE_DIR}/memory/sll_strings.F90
-	${CMAKE_SOURCE_DIR}/memory/sll_memory.F90
-	${CMAKE_SOURCE_DIR}/precision/sll_working_precision.F90
-	${CMAKE_SOURCE_DIR}/assert/sll_assert.F90
-	${CMAKE_SOURCE_DIR}/constants/numeric_constants.F90
-	${CMAKE_SOURCE_DIR}/constants/physical_constants.F90
-	${CMAKE_SOURCE_DIR}/utilities/misc_utils.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_ascii_io.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_binary_io.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_gnuplot.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_hdf5_io.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_io.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_xdmf.F90
-	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_xml_io.F90
-	${CMAKE_SOURCE_DIR}/timer/sll_timer.F90
-	)
+SET(SLL_SOURCE_FILES
+	${SLL_SOURCE_DIR}/memory/sll_strings.F90
+	${SLL_SOURCE_DIR}/memory/sll_memory.F90
+	${SLL_SOURCE_DIR}/precision/sll_working_precision.F90
+	${SLL_SOURCE_DIR}/assert/sll_assert.F90
+	${SLL_SOURCE_DIR}/constants/numeric_constants.F90
+	${SLL_SOURCE_DIR}/constants/physical_constants.F90
+	${SLL_SOURCE_DIR}/utilities/misc_utils.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_ascii_io.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_binary_io.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_gnuplot.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_hdf5_io.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_io.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_xdmf.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_xml_io.F90
+	${SLL_SOURCE_DIR}/timer/sll_timer.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_hdf5_io_parallel.F90
+	${SLL_SOURCE_DIR}/low_level_file_io/sll_xdmf_parallel.F90 
+	${SLL_SOURCE_DIR}/collective/sll_collective.F90
+        ${SLL_SOURCE_DIR}/splines/sll_splines.F90
+        ${SLL_SOURCE_DIR}/splines/sll_quintic_splines.F90
+        ${SLL_SOURCE_DIR}/splines/sll_odd_degree_splines.F90
+        ${SLL_SOURCE_DIR}/splines/sll_arbitrary_degree_splines.F90
+        ${SLL_SOURCE_DIR}/interpolators/sll_interpolators_1d_base.F90
+        ${SLL_SOURCE_DIR}/interpolators/sll_odd_degree_spline_interpolator_1d.F90
+        ${SLL_SOURCE_DIR}/interpolators/sll_quintic_spline_interpolator_1d.F90
+        ${SLL_SOURCE_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
+        ${SLL_SOURCE_DIR}/interpolators/sll_interpolators_2d_base.F90
+        ${SLL_SOURCE_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90)
 
-ADD_LIBRARY(selalib STATIC ${SELALIB_SOURCE_FILES})
+ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
 
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib)
-
-
 
 ## set the output directory for library and include
 #file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

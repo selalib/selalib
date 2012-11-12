@@ -27,7 +27,7 @@ add_dependencies( sll_interpolators
                 )
 
 add_executable(test_interpolators_1d unit_test_1d.F90
-               ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+               ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 
 target_link_libraries( test_interpolators_1d
 		       sll_interpolators
@@ -38,7 +38,7 @@ target_link_libraries( test_interpolators_1d
 	               sll_working_precision
                      )
 add_executable(test_interpolators_2d unit_test.F90
-               ${CMAKE_SOURCE_DIR}/fields/geometry_functions.F90)
+               ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 
 target_link_libraries( test_interpolators_2d
 	               sll_interpolators
