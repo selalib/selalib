@@ -14,22 +14,22 @@ IF(NOT HDF5_FOUND)
    MESSAGE(STATUS "Let me try this...")
 
    FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.h
-   HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
+   HINTS ${HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
    PATH_SUFFIXES include hdf5/include
    DOC "PATH TO hdf5.h")
 
    FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
-   HINTS ${HDF5_ROOT} /usr/include /usr/lib64/mpich2/include /usr/lib64/openmpi/include /usr/local/include
+   HINTS ${HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
    PATH_SUFFIXES include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
    FIND_LIBRARY(HDF5_HDF5_LIBRARY NAMES hdf5
-   HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
+   HINTS ${HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
    PATH_SUFFIXES lib hdf5/lib
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
-   HINTS ${HDF5_ROOT} /usr/lib /usr/lib64/mpich2/lib /usr/lib64/openmpi/lib /usr/local/lib
+   HINTS ${HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
    PATH_SUFFIXES lib hdf5/lib
    DOC "PATH TO libhdf5_fortran")
 
