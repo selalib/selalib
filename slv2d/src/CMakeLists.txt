@@ -13,6 +13,7 @@ SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules
                        ${SLL_SOURCE_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
@@ -45,7 +46,7 @@ ENDIF( NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       " FORCE)
-SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " FORCE )
+SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " )
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -93,36 +94,19 @@ IF(HDF5_INCLUDE_DIRS)
    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS}/fortran)
 ENDIF()
+
 IF(HDF5_INCLUDE_DIR_FORTRAN)
    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR_FORTRAN})
 ENDIF()
 
-#Pas trouver de meilleur moyen pour l'instant...
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/selalib_level/selalib.h DESTINATION ${SLV2D_SOURCE_DIR})
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/fields/geometry_functions.F90 DESTINATION ${SLV2D_SOURCE_DIR}/fields/)
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/assert)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/memory)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/precision)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/utilities)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
 
-#SET( SLL_COMPONENTS precision 
-#                    utilities 
-#                    assert 
-#                    memory 
-#                    constants 
-#                    timer
-#                    numerical_utilities
-#                    electric_field_accumulators
-#                    remap
-#                    splines
-#                    WENO
-#                    interpolators
-#                    collective
-#                    low_level_file_io)
-#
-#FOREACH( component ${SLL_COMPONENTS} )
-#   MESSAGE(STATUS "${component}")
-#   INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/${component})
-#   ADD_SUBDIRECTORY(${SLL_SOURCE_DIR}/${component} ${SLV2D_BINARY_DIR}/${component})
-#ENDFOREACH()
-
-
+ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
@@ -143,37 +127,7 @@ SET(SLV2D_SRC silo_module.F90
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
-#ADD_DEPENDENCIES(slv2d sll_precision
-#                       sll_assertion
-#                       sll_constants
-#                       sll_memory
-#                       sll_low_level_file_io
-#                       sll_timer
-#                       sll_collective
-#                       sll_remap
-#                       sll_splines
-#                       sll_interpolators
-#                       sll_numerical_utilities
-#                       sll_low_level_file_io
-#                       sll_low_level_file_io_parallel)
-
-#SET(LIBS sll_utilities
-#         sll_constants
-#         sll_memory
-#         sll_assertion
-#         sll_working_precision
-#         sll_collective
-#         sll_interpolators
-#         sll_splines
-#         sll_remap
-#         sll_numerical_utilities
-#         sll_low_level_file_io
-#         sll_low_level_file_io_parallel
-#         ${SILO_LIBRARIES} 
-#         ${LAPACK_LIBRARIES} 
-#         ${FFTPACK_LIBRARIES} 
-#         ${FFTW_LIBRARIES}
-#         ${HDF5_LIBRARIES})
+ADD_DEPENDENCIES(slv2d selalib)
 
 SET(LIBS selalib ${SILO_LIBRARIES} ${LAPACK_LIBRARIES} 
     ${FFTPACK_LIBRARIES} ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
@@ -219,30 +173,30 @@ ENABLE_TESTING()
 SET(PROCS 1)
 ADD_TEST(NAME test_poisson2d_par COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./test_poisson2d_par
+         ./bin/test_poisson2d_par
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 SET(PROCS 4)
-SET(ARGS ${CMAKE_SOURCE_DIR}/../input/slv2d.nml)
+SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml)
 
 ADD_TEST(NAME test_vp2d COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./vp2d
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vp2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 ADD_TEST(NAME test_vm2d COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./vm2d
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vm2d
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 ADD_TEST(NAME test_vp2d_cubic COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./vp2d_cubic
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vp2d_cubic
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 #ADD_TEST(NAME test_vp2d_quintic COMMAND 
 #         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-#         ./vp2d_quintic
+#         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vp2d_quintic
 #         ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
