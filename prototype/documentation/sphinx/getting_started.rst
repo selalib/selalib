@@ -88,3 +88,8 @@ Details about principle parameters
 |                        | FFTW           | around 3 libraries, fftpack, fftw and|
 |                        |                | his own implementation (see XXX)     |
 +------------------------+----------------+--------------------------------------+
+|  HDF5_ROOT             | /usr/local     | For output we need to link the lib   |
+|                        | /opt/local     | with HDF5. Parallel version is       |
+|                        | /usr           | better but serial works. With this   |
+|                        | ...            | you can use your own implementation  |
++------------------------+----------------+--------------------------------------+

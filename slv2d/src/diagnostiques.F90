@@ -322,6 +322,7 @@ end subroutine diagnostiquesm
   sll_int32, intent(in) :: jstartx, jendx, jstartv, jendv
   sll_int32 :: nx, nvx, ny, nvy
   sll_int32 :: error
+  sll_int32 :: my_num
 
   nx  = geomx%nx; ny  = geomx%ny
   nvx = geomv%nx; nvy = geomv%ny
@@ -330,13 +331,16 @@ end subroutine diagnostiquesm
   SLL_ALLOCATE(fyvy(ny,jstartv:jendv),error)
   SLL_ALLOCATE(fvxvy(nvx,jstartv:jendv),error)
 
-  call sll_hdf5_file_create("mesh4d.h5",file_id,error)
-  call sll_hdf5_write_array(file_id,geomx%xgrid,"/x",error)
-  call sll_hdf5_write_array(file_id,geomx%ygrid,"/y",error)
-  call sll_hdf5_write_array(file_id,geomv%xgrid,"/vx",error)
-  call sll_hdf5_write_array(file_id,geomv%ygrid,"/vy",error)
-  call sll_hdf5_file_close(file_id, error)
+  my_num = sll_get_collective_rank(sll_world_collective)
 
+  if (my_num == MPI_MASTER) then
+     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+     call sll_hdf5_write_array(file_id,geomx%xgrid,"/x",error)
+     call sll_hdf5_write_array(file_id,geomx%ygrid,"/y",error)
+     call sll_hdf5_write_array(file_id,geomv%xgrid,"/vx",error)
+     call sll_hdf5_write_array(file_id,geomv%ygrid,"/vy",error)
+     call sll_hdf5_file_close(file_id, error)
+  end if
 
  end subroutine plot_mesh4d
 

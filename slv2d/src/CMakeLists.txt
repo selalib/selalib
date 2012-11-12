@@ -6,28 +6,17 @@ MESSAGE( STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR} )
 SET(SELALIB_DIR ${PROJECT_SOURCE_DIR}/../../prototype/src)
 MESSAGE( STATUS "SELALIB_DIR: " ${SELALIB_DIR} )
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules 
-                       ${SELALIB_DIR}/CMakeModules 
+                       ${SELALIB_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
+MESSAGE(STATUS "Fortran_COMPILER:${Fortran_COMPILER}")
 
 SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 
-IF(APPLE)
-   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
-ELSE()
-   IF(Fortran_COMPILER STREQUAL "INTEL")
-      SET(BLA_VENDOR "Intel")
-      FIND_PACKAGE(LAPACK)
-   ENDIF()
-   FIND_PACKAGE(LAPACK)
-ENDIF()
-
-IF(NOT LAPACK_FOUND)
-   INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
-ENDIF()
+INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -60,6 +49,10 @@ IF(FFTW_ENABLED)
       ADD_DEFINITIONS(-D_FFTW)
       INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
    ENDIF()
+   IF(FFTW_MPI_LIBRARY)
+      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90)
+      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+   ENDIF()
 ENDIF()
 
 #------------------------------------
@@ -71,11 +64,8 @@ ENDIF()
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
-IF($ENV{HDF5_ROOT})
-   SET(HDF5_ROOT $ENV{HDF5_ROOT})
-ENDIF()
+SET(HDF5_ROOT $ENV{HDF5_ROOT})
 FIND_PACKAGE(HDF5 REQUIRED Fortran)
-
 SET (HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
 IF(HDF5_ENABLE_PARALLEL) 
    MESSAGE(STATUS "HDF5 parallel supported")
@@ -116,13 +106,16 @@ FOREACH( component ${SLL_COMPONENTS} )
 ENDFOREACH()
 
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
+   SET(CMAKE_Fortran_FLAGS "-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check")
 ENDIF()
-IF(Fortran_COMPILER STREQUAL "XLF")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
-ENDIF()
-IF(Fortran_COMPILER STREQUAL "IFORT")
 
+IF(Fortran_COMPILER STREQUAL "XLF")
+   SET(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
+ENDIF()
+
+IF(Fortran_COMPILER STREQUAL "INTEL")
+   ADD_DEFINITIONS(-DINTEL)
+   SET(CMAKE_BUILD_TYPE "RELEASE")
 ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
@@ -171,8 +164,8 @@ SET(LIBS sll_utilities
          sll_low_level_file_io
          sll_low_level_file_io_parallel
          ${SILO_LIBRARIES} 
-         ${FFTPACK_LIBRARIES} 
          ${LAPACK_LIBRARIES} 
+         ${FFTPACK_LIBRARIES} 
          ${FFTW_LIBRARIES}
          ${HDF5_LIBRARIES})
 

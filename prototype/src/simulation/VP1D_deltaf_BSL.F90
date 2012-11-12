@@ -33,7 +33,7 @@ program VP1d_deltaf
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
-  sll_real64, dimension(:), pointer :: f1d
+  sll_real64, dimension(:), pointer     :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array
   sll_int32  :: Ncx, Ncv   ! number of cells
@@ -61,6 +61,9 @@ program VP1d_deltaf
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
   sll_real64 :: adr, Edrmax
   logical    :: turn_drive_off
+  sll_int32  :: istartx, iendx, jstartv, jendv
+  sll_int32  :: num_threads, my_num
+  sll_int32  :: ipiece_size_x, ipiece_size_v
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
@@ -172,16 +175,17 @@ program VP1d_deltaf
        )
   mesh2d_base => mesh2d
 
-  ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-  interp_x => interp_spline_x
-  interp_v => interp_spline_v
-
   ! allocate rho and phi
   SLL_ALLOCATE(rho(Ncx+1),ierr)
   SLL_ALLOCATE(efield(Ncx+1),ierr)
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
+
+  ! open files for time history diagnostics
+  open(unit = th_diag, file = 'thdiag.dat') 
+  open(unit = ex_diag, file = 'exdiag.dat')
+  open(unit = rho_diag, file = 'rhodiag.dat') 
+  open(unit = eapp_diag, file = 'eappdiag.dat')
+  open(unit = adr_diag, file = 'adrdiag.dat') 
 
   ! initialization of distribution_function
   call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
@@ -192,6 +196,36 @@ program VP1d_deltaf
      p_init_f => init_tsi
   end if
 
+  !$omp parallel default(shared) &
+  !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, &
+  !$omp& interp_v, interp_spline_v, &
+  !$omp& jstartv, jendv, interp_x,interp_spline_x)
+  my_num = omp_get_thread_num()
+  num_threads =  omp_get_num_threads()
+  print*, 'running with openmp using ', num_threads, ' threads'
+  ipiece_size_v = (Ncv + 1) / num_threads
+  ipiece_size_x = (Ncx + 1) / num_threads
+
+  istartx = my_num * ipiece_size_x + 1
+  if (my_num < num_threads-1) then
+     iendx   = istartx - 1 + ipiece_size_x
+  else
+     iendx = Ncx+1
+  end if
+  jstartv = my_num * ipiece_size_v + 1
+  if (my_num < num_threads-1) then
+     jendv   = jstartv - 1 + ipiece_size_v
+  else
+     jendv = Ncv+1
+  end if
+
+  ! initialize interpolators
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
+  interp_x => interp_spline_x
+  interp_v => interp_spline_v
+
+  !$omp single
   fname = 'dist_func'
   call initialize_distribution_function_2d( &
        f, &
@@ -220,29 +254,19 @@ program VP1d_deltaf
      enddo
   endif
 
-  ! open files for time history diagnostics
-  open(unit = th_diag, file = 'thdiag.dat') 
-  open(unit = ex_diag, file = 'exdiag.dat')
-  open(unit = rho_diag, file = 'rhodiag.dat') 
-  open(unit = eapp_diag, file = 'eappdiag.dat')
-  open(unit = adr_diag, file = 'adrdiag.dat') 
-
   ! write initial fields
   write(ex_diag,*) efield
   write(rho_diag,*) rho
   write(eapp_diag,*) e_app
   write(adr_diag,*) istep*dt, adr
-
-  !$omp parallel
-  print*, 'running with openmp using ', omp_get_num_threads(), ' threads'
-  !$omp end parallel
+  
+  !$omp end single
 
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-     !$omp parallel do private(alpha,f1d,v,j)
-     do i = 1, Ncx+1
+     do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
@@ -254,16 +278,16 @@ program VP1d_deltaf
            end do
         endif
      end do
-     !$omp end parallel do
-     ! full time step advection in x
-     !$omp parallel do private(alpha,f1d)
-     do j = 1, Ncv+1
+     !$omp barrier
+
+     do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
-     !$omp end parallel do
+     !$omp barrier
 
+     !$omp single
      ! compute rho and electric field
      rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
      call solve(poisson_1d, efield, rho)
@@ -271,13 +295,12 @@ program VP1d_deltaf
         call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
         do i = 1, Ncx + 1
-           E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x - omegadr*istep*dt)
+           E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x &
+                - omegadr*istep*dt)
         enddo
      endif
-
-     ! half time step advection in v
-     !$omp parallel do private(alpha,f1d,v,j)
-     do i = 1, Ncx+1
+     !$omp end single
+     do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
@@ -289,7 +312,9 @@ program VP1d_deltaf
            end do
         end if
      end do
-     !$omp end parallel do
+     !$omp barrier
+     !$omp single
+     if (mod(istep,freqdiag)==0) then
      ! diagnostics
      time = istep*dt
      mass = 0.
@@ -318,14 +343,18 @@ program VP1d_deltaf
      write(rho_diag,*) rho
      write(eapp_diag,*) e_app
      write(adr_diag,*) istep*dt, adr
-     if (mod(istep,freqdiag)==0) then
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
+     !$omp end single
   end do
 
+  call delete(interp_spline_x)
+  call delete(interp_spline_v)
+  !$omp end parallel
   close(th_diag)
   close(ex_diag)
+  
   print*, 'VP1D_deltaf_cart has exited normally'
 contains
   elemental function f_equilibrium(v)
