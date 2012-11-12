@@ -6,8 +6,8 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 # Add the modules directory to the list of include directories
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+MESSAGE(STATUS "CMAKE_Fortran_COMPILER_NAME:${CMAKE_Fortran_COMPILER}")
 
 
 ##########################################################
