@@ -16,6 +16,7 @@
 module sll_quintic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
 use sll_toep_penta_diagonal
 use arbitrary_degree_splines
 implicit none

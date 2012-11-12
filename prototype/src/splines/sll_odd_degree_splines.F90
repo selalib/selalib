@@ -18,6 +18,7 @@ module sll_odd_degree_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 use arbitrary_degree_splines
   implicit none
 
@@ -141,9 +142,9 @@ contains
     h = (xmax-xmin)/n
 
     ! Run some checks on the arguments.
-    !SLL_ASSERT(associated(plan))
-    !SLL_ASSERT(x >= xmin)
-    !SLL_ASSERT(x <= xmax)
+    SLL_ASSERT(associated(plan)) 
+    SLL_ASSERT(x >= xmin)
+    SLL_ASSERT(x <= xmax)
 
     t0 = (x-xmin)/h
     left = int(t0) ! Determine the leftmost support index 'i' of x
@@ -295,9 +296,9 @@ contains
     sll_int32                                      :: degree, ierr
 
     ! Run some checks on the arguments.
-    !SLL_ASSERT(associated(plan))
-    !SLL_ASSERT(x >= plan%spline_obj%xmin)
-    !SLL_ASSERT(x <= plan%spline_obj%xmax)
+    SLL_ASSERT(associated(plan))
+    SLL_ASSERT(x >= plan%spline_obj%xmin)
+    SLL_ASSERT(x <= plan%spline_obj%xmax)
 
     n = plan%spline_obj%num_pts - 1
     knots = plan%spline_obj%k(1:n+1)
