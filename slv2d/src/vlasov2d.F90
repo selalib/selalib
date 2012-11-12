@@ -110,7 +110,7 @@ contains
   sll_real64 :: vx, vy       ! vitesse du point courant
   sll_int32 :: iv, jv ! indices de boucle
 
-  ! verifier que la transposition est a jours
+  ! verifier que la transposition est a jour
   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
   do jv=this%jstartv,this%jendv
      vy = this%geomv%y0+(jv-1)*this%geomv%dy
@@ -169,9 +169,9 @@ contains
    do j=this%jstartx,this%jendx
     do i=1,this%geomx%nx
      im1=mod(i-1+this%geomx%nx,this%geomx%nx)
-     !depvx = fx(i,j)*dt
-     !depvy = fy(i,j)*dt
-     depvx =  fx(i,j)*dt;depvy=0._wp
+     depvx = fx(i,j)*dt
+     depvy = fy(i,j)*dt
+     !depvx =  fx(i,j)*dt;depvy=0._wp
      call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,j==0)
      !call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,(j .eq. 3) .and. (i .eq. 3))
     end do

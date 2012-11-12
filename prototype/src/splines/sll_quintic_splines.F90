@@ -16,6 +16,7 @@
 module sll_quintic_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
 use sll_toep_penta_diagonal
 use arbitrary_degree_splines
 implicit none
@@ -33,14 +34,14 @@ implicit none
 #endif
   end type quintic_splines_uniform_plan
 
-  type quintic_splines_plan_non_uni
+  type quintic_splines_non_uni_plan
 #ifdef STDF95
     sll_real64, dimension(:), pointer :: coeffs
 #else
     sll_real64, dimension(:), allocatable     :: coeffs
 #endif
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
-  end type quintic_splines_plan_non_uni  
+  end type quintic_splines_non_uni_plan  
 
   interface compute_quintic_coeffs
      module procedure compute_quintic_coeffs_uniform, compute_quintic_coeffs_non_uni
@@ -121,6 +122,11 @@ contains
     n = plan_splines%num_pts - 1
     h = (xmax-xmin)/n
 
+    ! Run some checks on the arguments.
+    SLL_ASSERT(associated(plan_splines))
+    SLL_ASSERT(x >= xmin)
+    SLL_ASSERT(x <= xmax)
+
     t0 = (x-xmin)/h
     left = int(t0) ! Determine the leftmost support index 'i' of x
     t0 = t0 - left ! compute normalized_offset
@@ -189,7 +195,7 @@ contains
 
     sll_int32                                   :: num_pts, ierr
     sll_real64, dimension(:), intent(in)        :: knots
-    type(quintic_splines_plan_non_uni), pointer :: plan
+    type(quintic_splines_non_uni_plan), pointer :: plan
 
     ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
@@ -208,7 +214,7 @@ contains
   !  in the nodes of the mesh*/
 
     sll_real64, dimension(:)                    :: f
-    type(quintic_splines_plan_non_uni), pointer :: plan_splines
+    type(quintic_splines_non_uni_plan), pointer :: plan_splines
     sll_real64, dimension(size(f)+5)            :: g
     sll_real64                                  :: a, b, c
     sll_int32                                   :: num_pts
@@ -234,19 +240,26 @@ contains
 
   function quintic_splines_interpolator_non_uni_value(x, plan_splines) result(s)
 
-    type(quintic_splines_plan_non_uni), pointer            :: plan_splines
+    type(quintic_splines_non_uni_plan), pointer            :: plan_splines
     sll_int32                                              :: n, cell, left, j
     sll_real64                                             :: x, s
     sll_real64, dimension(6)                               :: b
     sll_real64, dimension(plan_splines%spline_obj%num_pts) :: knots
+    sll_int32                                              :: ierr
+
+    ! Run some checks on the arguments.
+    SLL_ASSERT(associated(plan_splines))
+    SLL_ASSERT(x >= plan_splines%spline_obj%xmin)
+    SLL_ASSERT(x <= plan_splines%spline_obj%xmax)
 
     n = plan_splines%spline_obj%num_pts - 1
     knots = plan_splines%spline_obj%k(1:n+1)
 
-    cell = 1
-    do while( ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<n) )
-         cell = cell + 1
-    enddo
+    !cell = 1
+    !do while( ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<n) )
+    !     cell = cell + 1
+    !enddo
+    call find_cell(x, knots, (/(j, j=0,n)/), cell, ierr)
 
     left = cell - 1
     s = 0
@@ -258,11 +271,38 @@ contains
 
   end function quintic_splines_interpolator_non_uni_value
 
+  !> indices is array containing the indices of the mesh: 0, 1,..., num_pts-1
+  recursive subroutine find_cell(x, knots, indices, cell, ierr)
+
+    double precision               :: x
+    double precision, dimension(:) :: knots
+    integer, dimension(:)          :: indices
+    integer                        :: num_pts, n, cell, ierr
+
+    num_pts = size(knots)
+    n = num_pts / 2
+    ierr = 0
+
+    if ( num_pts > 2 ) then
+       call find_cell( x, knots(1:n), indices(1:n), cell, ierr )
+       if (ierr==0) then
+          call find_cell( x, knots(n+1:num_pts), &
+                indices(n+1:num_pts), cell, ierr )
+       endif
+    else
+       if ( (knots(1)<=x) .and. (x<=knots(2)) ) then
+          cell = indices(2)
+          ierr = 1
+       endif
+    endif
+
+  end subroutine find_cell
+
   function quintic_splines_interpolator_non_uni_array(array, &
                             num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:)                    :: array
-    type(quintic_splines_plan_non_uni), pointer :: plan_splines
+    type(quintic_splines_non_uni_plan), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(num_pts)              :: res
 
@@ -277,7 +317,7 @@ contains
                             num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:), pointer           :: ptr
-    type(quintic_splines_plan_non_uni), pointer :: plan_splines
+    type(quintic_splines_non_uni_plan), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(:), pointer           :: res
 
@@ -292,7 +332,7 @@ contains
 
   subroutine delete_quintic_splines_non_uni(plan)
 
-    type(quintic_splines_plan_non_uni), pointer :: plan
+    type(quintic_splines_non_uni_plan), pointer :: plan
     sll_int32                                   :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
