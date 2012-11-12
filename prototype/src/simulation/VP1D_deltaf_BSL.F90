@@ -314,6 +314,7 @@ program VP1d_deltaf
      end do
      !$omp barrier
      !$omp single
+     if (mod(istep,freqdiag)==0) then
      ! diagnostics
      time = istep*dt
      mass = 0.
@@ -342,7 +343,6 @@ program VP1d_deltaf
      write(rho_diag,*) rho
      write(eapp_diag,*) e_app
      write(adr_diag,*) istep*dt, adr
-     if (mod(istep,freqdiag)==0) then
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
