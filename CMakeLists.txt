@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 
-project (SELALIB)
+PROJECT(SELALIB)
+
 
 # local modules path
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
+                      ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
 # Tests+Dashboard configuration
 enable_testing()

@@ -15,7 +15,7 @@ MESSAGE(STATUS "CMAKE_Fortran_COMPILER_NAME:${CMAKE_Fortran_COMPILER}")
 TRY_RUN( RUN_RESULT_VAR
 	 COMPILE_RESULT_VAR
          ${CMAKE_BINARY_DIR}
-         ${CMAKE_SOURCE_DIR}/check_compiler.F90
+         ${CMAKE_CURRENT_SOURCE_DIR}/check_compiler.F90
 )
 
 set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")

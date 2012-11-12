@@ -1,16 +1,8 @@
 program test_io_parallel
 
-use sll_collective
-use sll_hdf5_io_parallel
-use sll_xml_io
-
+#include "selalib.h"
+use hdf5
 use geometry_module
-use sll_xdmf_parallel
-
-#include "sll_remap.h"
-#include "sll_memory.h"
-#include "sll_working_precision.h"
-#include "misc_utils.h"
 
 implicit none
 

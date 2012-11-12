@@ -9,6 +9,7 @@ use sll_misc_utils
 use sll_io, only:sll_new_file_id
 use sll_collective
 use sll_xml_io
+use sll_xdmf_parallel
 
 #define MPI_MASTER 0
 
