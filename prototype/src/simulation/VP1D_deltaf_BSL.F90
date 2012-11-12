@@ -152,7 +152,8 @@ program VP1d_deltaf
   print*, '   number of iterations=', nbiter
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
-  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
+  write(param_out,'(A6,2f10.3,I5,2f10.3,I5,f10.3,I8,I5,I2,f10.3)') &
+       trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
        dt, nbiter, freqdiag, is_delta_f, kmode
   close(param_out)
 
@@ -315,6 +316,7 @@ program VP1d_deltaf
      !$omp barrier
      !$omp single
      ! diagnostics
+     if (mod(istep,freqdiag)==0) then
      time = istep*dt
      mass = 0.
      momentum = 0.
@@ -336,13 +338,12 @@ program VP1d_deltaf
      momentum = momentum * delta_x * delta_v
      kinetic_energy = kinetic_energy * delta_x * delta_v
      potential_energy =   0.5_f64 * sum(efield**2) * delta_x
-     write(th_diag,*) time, mass, l1norm, momentum, l2norm, &
+     write(th_diag,'(8f10.3)') time, mass, l1norm, momentum, l2norm, &
           kinetic_energy, potential_energy, kinetic_energy + potential_energy
      write(ex_diag,*) efield
      write(rho_diag,*) rho
      write(eapp_diag,*) e_app
      write(adr_diag,*) istep*dt, adr
-     if (mod(istep,freqdiag)==0) then
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if

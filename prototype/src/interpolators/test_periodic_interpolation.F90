@@ -6,8 +6,9 @@ program test_periodic_interp
   
   sll_int32, parameter    :: N0 = 16
   sll_real64               :: u(16*N0), u_exact(16*N0), u_out(16*N0)
-  type(sll_periodic_interpolator_1d)           :: interp_per
+  type(periodic_1d_interpolator), target       :: interp_per
   class(sll_interpolator_1d_base), pointer     :: interp
+  sll_real64, parameter :: xmin = 0., xmax=1.   
   sll_real64 :: alpha, error, old_error
   sll_int32 :: i, p, N, i0, mode 
 
@@ -17,7 +18,7 @@ program test_periodic_interp
   N = N0
   do p=1,4
      N= 2*N 
-     alpha = 0.05_8
+     alpha = 0.05_8/N
      
      ! Interpolate non trivial smooth periodic function
      mode = 3
@@ -27,10 +28,9 @@ program test_periodic_interp
         !u(i+1) = cos(mode*twopi*i/N)
         !u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
-
-     call initialize_periodic_interp(interp_per, N, SPLINE, 12)
+     call interp_per%initialize( N, xmin, xmax, SPLINE, 12)
      interp => interp_per
-     u_out=interp%interpolate_array_disp(N, u, alpha)
+     u_out(1:N)=interp%interpolate_array_disp(N, u, alpha)
      
      old_error = error
      error = maxval(abs(u_out(1:N)-u_exact(1:N)))

@@ -284,6 +284,7 @@ contains  ! ****************************************************************
     
     interpolator%num_points = num_points
     interpolator%cell_size  = (xmax-xmin) / num_points
+
     call initialize_periodic_interp(interpolator%per_interp, num_points, &
          type, order)
   end subroutine
