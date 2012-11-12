@@ -18,6 +18,8 @@ else(PIPOL_IMAGE)
   set(BUILDNAME "CMAKE-SeLaLib-${CMAKE_GENERATOR}-${CMAKE_CXX_COMPILER}-${CMAKE_SYSTEM_NAME}")
 endif(PIPOL_IMAGE)
 
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
+SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 
@@ -38,7 +40,6 @@ install(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
 
 include(DartConfig)
 include(Dart)
-
 
 # Packages generation
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeLaLib prototype")

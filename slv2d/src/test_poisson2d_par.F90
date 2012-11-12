@@ -2,6 +2,7 @@ program test_io_parallel
 
 #include "selalib.h"
 use hdf5
+use sll_xdmf_parallel
 use geometry_module
 
 implicit none
