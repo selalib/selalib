@@ -5,7 +5,7 @@ program test_periodic_interp
   
   sll_int32, parameter    :: N0 = 16
   sll_real64               :: u(16*N0), u_exact(16*N0), u_out(16*N0)
-  type(periodic_interp_work) :: interp
+  type(periodic_interp_work), pointer :: interp
   sll_real64 :: alpha, error, old_error
   sll_int32 :: i, p, N, i0, mode 
 

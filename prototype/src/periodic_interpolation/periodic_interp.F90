@@ -31,7 +31,7 @@ module periodic_interp_module
 
 contains
   subroutine initialize_periodic_interp(this,N,interpolator,order)
-    type(periodic_interp_work) :: this 
+    type(periodic_interp_work), pointer :: this 
     sll_int32 :: N ! number of cells
     sll_int32 :: interpolator  ! kind of interpolator
     sll_int32 :: order  ! order of method
@@ -42,6 +42,7 @@ contains
     sll_real64, dimension(order) :: biatx
     sll_real64 :: mode, val
 
+    SLL_ALLOCATE( this, ierr )
     this%N = N
     this%interpolator = interpolator
     !if (present(order)) then 
