@@ -13,8 +13,8 @@ program arbitrary_degree_spline_tester
   print *, '*****************************************************************'
 
   call test_uniform_b_splines_randomly( passed_test )
-  call test_nonuniform_arb_deg_splines_periodic( passed_test )
-!  call test_nonuniform_arb_deg_splines_open( passed_test )
+  !call test_nonuniform_arb_deg_splines_periodic( passed_test )
+  call test_nonuniform_arb_deg_splines_open( passed_test )
 
   if( passed_test .eqv. .true. ) then
      print *, 'PASSED'
@@ -239,7 +239,7 @@ contains
     knots(1) = min_val
     do i=2,num_pts
        call random_number(rnd)
-       knots(i) = knots(i-1) + rnd
+       knots(i) = knots(i-1) + 1.e-3 + rnd/1000
     end do
     print *, 'knots array = ', knots(:)
 
@@ -265,6 +265,8 @@ contains
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer(:)
           print *, 'accumulator = ', acc
+          print *, 'Exiting...'
+          stop
        end if
        
        ! test spline derivatives
@@ -277,6 +279,8 @@ contains
           print *, 'cell = ', cell, 'x = ', x
           print *, 'derivatives: ', answer(:)
           print *, 'accumulator = ', acc
+          print*, 'Exiting...'
+          stop
        end if
        
        ! test values and derivatives
@@ -295,6 +299,8 @@ contains
           print *, 'derivatives: ', answer2(2,:)
           print *, 'sum of splines = ', acc
           print *, 'sum of derivatives = ', acc2
+          print*, 'Exiting...'
+          stop
        end if
     end do
     SLL_DEALLOCATE_ARRAY(answer, ierr)

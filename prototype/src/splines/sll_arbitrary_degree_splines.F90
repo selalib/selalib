@@ -375,6 +375,7 @@ contains
     print *, 'array to compute derivatives: ',splines(1:last)
     do i=1,last
        current = cell - deg + i - 1
+print*, 'test:', x, current
        delta_x = spline_obj%k(current+1) - spline_obj%k(current)
        if( delta_x == 0.0 ) then
           if( current .le. 1 ) then
@@ -383,7 +384,7 @@ contains
              delta_x = delta_right
           end if
        end if
-       derivs(i) = (splines(i) - splines(i+1))/delta_x
+       derivs(i) = ( splines(i+1) - splines(i) ) / delta_x
     end do
     b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
   end function b_spline_derivatives_at_x
