@@ -49,7 +49,7 @@ module sll_scalar_field_1d
 
   type scalar_field_1d
 #ifdef STDF95
-     type(sll_mapped_mesh_1d_analytic), pointer :: mesh
+     type(sll_mapped_mesh_1d_discrete), pointer :: mesh
 #else
      class(sll_mapped_mesh_1d_base), pointer :: mesh
 #endif
@@ -79,7 +79,7 @@ contains   ! *i****************************************************************
     init_function)
 
     type(scalar_field_1d), intent(inout)               :: this
-    type(sll_mapped_mesh_1d_analytic), pointer             :: mesh
+    type(sll_mapped_mesh_1d_discrete), pointer             :: mesh
     sll_real64, optional             :: init_function
 #else
   subroutine initialize_scalar_field_1d( &
@@ -112,7 +112,11 @@ contains   ! *i****************************************************************
        SLL_ALLOCATE(this%data(num_pts1), ierr)
        if (present(init_function)) then
           do i1 = 1, num_pts1
+#ifdef STDF95
+             this%data(i1) = init_function( x1_at_node(mesh, i1) )
+#else
              this%data(i1) = init_function( mesh%x1_at_node(i1) )
+#endif
           end do
        else 
           this%data = 0.0_f64 ! initialize to zero
@@ -123,7 +127,11 @@ contains   ! *i****************************************************************
           delta1 = 1.0_f64/real(num_cells1,f64)
           eta1   = 0.5_f64 * delta1
           do i1 = 1, num_cells1
+#ifdef STDF95
+             this%data(i1) = init_function( x1_discrete_1d(mesh, eta1) )
+#else
              this%data(i1) = init_function( mesh%x1(eta1) )
+#endif
              eta1 = eta1 + delta1
           end do
        else 
