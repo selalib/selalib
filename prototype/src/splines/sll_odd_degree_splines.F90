@@ -338,7 +338,7 @@ contains
           call find_cell( x, knots(n+1:num_pts), &
                 indices(n+1:num_pts), cell, ierr )
        endif
-    else
+    elseif (num_pts==2) then
        if ( (knots(1)<=x) .and. (x<=knots(2)) ) then
           cell = indices(2)
           ierr = 1
