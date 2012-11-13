@@ -228,7 +228,7 @@ contains
     criterion = 1.0e-15
     degree  = 3
     min_val = 0.0
-    num_pts = 10
+    num_pts = 1000
     step    = 1.0
     SLL_ALLOCATE(knots(num_pts),ierr)
     SLL_ALLOCATE(answer(degree+1),ierr)
@@ -239,7 +239,7 @@ contains
     knots(1) = min_val
     do i=2,num_pts
        call random_number(rnd)
-       knots(i) = knots(i-1) + 1.e-3 + rnd/1000
+       knots(i) = knots(i-1) + rnd/1000
     end do
     print *, 'knots array = ', knots(:)
 

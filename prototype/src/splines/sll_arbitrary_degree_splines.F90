@@ -205,7 +205,7 @@ contains
     SLL_ASSERT(cell >= 1)
     SLL_ASSERT(cell <= spline_obj%num_pts - 1)
     ! This is checked always.
-    if( .not. ((x >= spline_obj%k(cell)).and.(x < spline_obj%k(cell+1)))) then
+    if( .not. ((x >= spline_obj%k(cell)).and.(x <= spline_obj%k(cell+1)))) then
        print *, 'ERROR. b_splines_at_x(): the given value of x is not ', &
             'inside the specified cell.'
        STOP
@@ -246,6 +246,11 @@ contains
              print *, 'knot(current+1) = ', spline_obj%k(current+1)
           end if
 #endif
+  !
+  !               x-t(i)                       t(i+j+1)-x
+  ! B[j,i](x) = ----------- * B[j-1,i](x) + ----------------* B[j-1,i+1](x)
+  !             t(i+j)-t(i)                  t(i+j+1)-t(i+1)
+
           fac1       = (x - ti)/(tipj - ti)
           fac2       = (tipjp1 - x)/(tipjp1 - tip1)
           ! Super-ugly step to eliminate those cases where the denominator is
@@ -375,7 +380,6 @@ contains
     print *, 'array to compute derivatives: ',splines(1:last)
     do i=1,last
        current = cell - deg + i - 1
-print*, 'test:', x, current
        delta_x = spline_obj%k(current+1) - spline_obj%k(current)
        if( delta_x == 0.0 ) then
           if( current .le. 1 ) then
@@ -386,7 +390,10 @@ print*, 'test:', x, current
        end if
        derivs(i) = ( splines(i+1) - splines(i) ) / delta_x
     end do
-    b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
+    !b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
+    b_spline_derivatives_at_x =  ( b_splines_at_x( spline_obj, cell+1, spline_obj%k(cell+1) )&
+                                 - b_splines_at_x( spline_obj, cell, x ) ) / (spline_obj%k(cell+1)-x)
+print*, 'test', (spline_obj%k(cell+1)-x)
   end function b_spline_derivatives_at_x
 
   function b_splines_and_derivs_at_x( spline_obj, cell, x )

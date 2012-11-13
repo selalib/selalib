@@ -208,33 +208,80 @@ contains
   end function new_quintic_splines_non_uni
 
 
-  subroutine compute_quintic_coeffs_non_uni(f, plan_splines)
+  subroutine compute_quintic_coeffs_non_uni(f, plan)
 
   ! f is the vector of the values of the function 
   !  in the nodes of the mesh*/
 
     sll_real64, dimension(:)                    :: f
-    type(quintic_splines_non_uni_plan), pointer :: plan_splines
+    type(quintic_splines_non_uni_plan), pointer :: plan
     sll_real64, dimension(size(f)+5)            :: g
-    sll_real64                                  :: a, b, c
-    sll_int32                                   :: num_pts
-    type(toep_penta_diagonal_plan), pointer     :: plan_pent
+    sll_real64, dimension(size(f)+5,size(f)+5)  :: A, AB 
+    sll_int32                                   :: num_pts, i, ierr
     sll_real64, dimension(6)                    :: b_at_x
+    sll_int32                                   :: KD, m, beginning, ending
+    sll_int32                                   :: j, LDAB
 
-    num_pts = plan_splines%spline_obj%num_pts
-    b_at_x = b_splines_at_x( plan_splines%spline_obj, num_pts-1, &
-                                    plan_splines%spline_obj%xmax )
-    a = b_at_x(3)
-    b = b_at_x(2)
-    c = b_at_x(1)
-
+    num_pts = plan%spline_obj%num_pts
     g = 0.d0
     g(3:num_pts+2) = f
+    m = size(g)
+    KD = 2 ! called KD for lapack use
 
-    plan_pent => new_toep_penta_diagonal(num_pts+5)
-    plan_splines%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan_pent)
+    do i=-1, num_pts+3
 
-    call delete_toep_penta_diagonal(plan_pent)
+       if ( i == -1 ) then
+          b_at_x = b_splines_at_x( plan%spline_obj, 1, plan%spline_obj%k(1) )
+          beginning = 0
+          ending = KD+1
+       endif
+       if (i ==0 ) then
+          b_at_x = b_splines_at_x( plan%spline_obj, 1, plan%spline_obj%k(1) )
+          beginning = -1
+          ending = KD+1
+       endif
+       if ( i == num_pts+1 ) then
+          b_at_x = b_splines_at_x( plan%spline_obj, num_pts-1, plan%spline_obj%k(num_pts) )
+print*, 'num_pts =', num_pts, 'b_at_x =', b_at_x
+          beginning = -KD
+          ending = 2
+       endif
+       if ( i == num_pts+2 ) then
+          b_at_x = b_splines_at_x( plan%spline_obj, num_pts-1, plan%spline_obj%k(num_pts) )
+          beginning = -KD
+          ending = 1
+       endif
+       if ( i == num_pts+3 ) then
+          b_at_x = b_splines_at_x( plan%spline_obj, num_pts-1, plan%spline_obj%k(num_pts) )
+          beginning = -KD
+          ending = 0
+       endif
+       if ( 1<=i .and. i<= num_pts) then
+          b_at_x = b_splines_at_x( plan%spline_obj, i-i/num_pts, plan%spline_obj%k(i) )
+          beginning = -KD
+          ending = KD+1
+       endif
+
+       do j= beginning, ending
+          if ( (i+j>0) .and. (i+j<=m) ) then
+             A(i+KD,i+j) = b_at_x(j+KD+1) 
+          endif
+       enddo
+    enddo
+
+    ! Solve the linear system with LAPACK
+    do j=1,m
+       do i=j,min(m,j+KD)
+          AB(1+i-j,j) = A(i,j)
+       enddo
+    enddo
+
+    LDAB = size(AB,1)
+    ! Cholesky factorization
+    call DPBTRF( 'L', m, KD, AB, LDAB, ierr )
+    ! Solve the linear system with Cholesky factorization
+    plan%coeffs = g
+    call DPBTRS( 'L', m, KD, 1, AB, LDAB, plan%coeffs, m, ierr )
 
   end subroutine compute_quintic_coeffs_non_uni
 
@@ -289,7 +336,7 @@ contains
           call find_cell( x, knots(n+1:num_pts), &
                 indices(n+1:num_pts), cell, ierr )
        endif
-    else
+    elseif (num_pts==2) then
        if ( (knots(1)<=x) .and. (x<=knots(2)) ) then
           cell = indices(2)
           ierr = 1
