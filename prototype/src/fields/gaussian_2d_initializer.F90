@@ -5,24 +5,42 @@ module sll_gaussian_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use numeric_constants
+#ifdef STDF95
+  use sll_module_mapped_meshes_2d
+#else
   use sll_module_mapped_meshes_2d_base
+#endif
   use sll_scalar_field_initializers_base
   implicit none
 
+#ifdef STDF95
+  type :: init_gaussian_2d
+    sll_int32   :: data_position
+    type(sll_mapped_mesh_2d_discrete), pointer :: mesh 
+#else
   type, extends(scalar_field_2d_initializer_base) :: init_gaussian_2d
+    class(sll_mapped_mesh_2d_base), pointer :: mesh 
+#endif
     sll_real64 :: xc, yc
     sll_real64 :: sigma_x, sigma_y
-    class(sll_mapped_mesh_2d_base), pointer :: mesh 
+#ifndef STDF95
   contains
     procedure, pass(init_obj) :: initialize => initialize_gaussian_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_gaussian_2d
+#endif
  end type init_gaussian_2d
 
 contains
 
+#ifdef STDF95
+  subroutine init_gaussian_2d_initialiaze( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
+    type(init_gaussian_2d), intent(inout)  :: init_obj
+    type(sll_mapped_mesh_2d_discrete), intent(in), target :: mesh
+#else
   subroutine initialize_gaussian_2d( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
     class(init_gaussian_2d), intent(inout)  :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
+#endif
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: xc, yc, sigma_x, sigma_y 
     init_obj%data_position = data_position
@@ -48,13 +66,19 @@ contains
     else
        init_obj%sigma_y = 1.0_f64 ! default radius is 1
     end if
-  end subroutine initialize_gaussian_2d
+  end subroutine 
 
+#ifdef STDF95
+  subroutine init_gaussiand_2d_f_of_x1x2( init_obj, data_out )
+    type(init_gaussian_2d), intent(inout)       :: init_obj
+    type(sll_mapped_mesh_2d_discrete), pointer :: mesh
+#else
   subroutine f_x1x2_gaussian_2d( init_obj, data_out )
     class(init_gaussian_2d), intent(inout)       :: init_obj
+    class(sll_mapped_mesh_2d_base), pointer      :: mesh
+#endif
     sll_real64, dimension(:,:), intent(out)    :: data_out
 
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -79,8 +103,13 @@ contains
     if (init_obj%data_position == NODE_CENTERED_FIELD) then
        do j=1,num_pts2
           do i=1, num_pts1
+#ifdef STDF95
+             y = x2_at_node(mesh, i,j)
+             x = x1_at_node(mesh, i,j)
+#else
              y = mesh%x2_at_node(i,j)
              x = mesh%x1_at_node(i,j)
+#endif
              data_out(i,j) = &
                   1.0_f64/(2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
@@ -101,6 +130,6 @@ contains
           end do
        end do
     end if
-  end subroutine f_x1x2_gaussian_2d
+  end subroutine
 
 end module sll_gaussian_2d_initializer
