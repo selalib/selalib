@@ -142,7 +142,7 @@ contains
     h = (xmax-xmin)/n
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(plan))
+    SLL_ASSERT(associated(plan)) 
     SLL_ASSERT(x >= xmin)
     SLL_ASSERT(x <= xmax)
 
