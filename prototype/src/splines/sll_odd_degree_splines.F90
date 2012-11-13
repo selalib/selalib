@@ -18,6 +18,7 @@ module sll_odd_degree_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 use arbitrary_degree_splines
   implicit none
 
