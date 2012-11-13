@@ -220,7 +220,7 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 #Here is defined the library containing the parallel simulations. 
 #Please add your new simulation_MYMETHOD.F90 
