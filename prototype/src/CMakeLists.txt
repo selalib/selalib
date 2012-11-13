@@ -285,7 +285,7 @@ ADD_SUBDIRECTORY(selalib_level EXCLUDE_FROM_ALL)
 ##########################################################
 
 ADD_SUBDIRECTORY(simulation)
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   SET(PROCS 8)
   ADD_TEST(NAME test_vp4d_sim
          COMMAND
