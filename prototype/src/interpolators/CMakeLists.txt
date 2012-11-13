@@ -34,7 +34,6 @@ add_executable(test_interpolators_1d unit_test_1d.F90
 target_link_libraries( test_interpolators_1d
 		       sll_interpolators
 	               sll_splines
-		       sll_periodic_interp
 	               sll_constants
 	               sll_assertion
 	               sll_memory
