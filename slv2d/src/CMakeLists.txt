@@ -105,7 +105,8 @@ IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/precision)
    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/utilities)
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
-
+ELSE()
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
@@ -173,7 +174,7 @@ ENABLE_TESTING()
 SET(PROCS 1)
 ADD_TEST(NAME test_poisson2d_par COMMAND 
          ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-         ./bin/test_poisson2d_par
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson2d_par
          ${MPIEXEC_POSTFLAGS} ${ARGS})
 
 SET(PROCS 4)
