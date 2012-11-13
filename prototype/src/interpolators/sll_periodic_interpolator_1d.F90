@@ -15,6 +15,7 @@ use periodic_interp_module
 #endif
      sll_int32                            :: num_points ! size
      sll_real64                           :: cell_size
+     sll_real64                           :: domain_size   ! length of interval
      type(periodic_interp_work), pointer  :: per_interp
 #ifdef STDF95
 #else
@@ -93,7 +94,8 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
-    call periodic_interp(this%per_interp, data_out, data, alpha/this%cell_size)
+    call periodic_interp(this%per_interp, data_out, data, &
+         alpha/this%cell_size/this%domain_size)
   end function per_interpolate1d_disp
 
   ! Both versions F03 and F95 of compute_interpolants_per1d should have the
@@ -284,6 +286,7 @@ contains  ! ****************************************************************
     
     interpolator%num_points = num_points
     interpolator%cell_size  = (xmax-xmin) / num_points
+    interpolator%domain_size = xmax-xmin
 
     call initialize_periodic_interp(interpolator%per_interp, num_points, &
          type, order)
