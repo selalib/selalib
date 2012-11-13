@@ -152,7 +152,8 @@ program VP1d_deltaf
   print*, '   number of iterations=', nbiter
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
-  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
+  write(param_out,'(A6,2f10.3,I5,2f10.3,I5,f10.3,I8,I5,I2,f10.3)') &
+       trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
        dt, nbiter, freqdiag, is_delta_f, kmode
   close(param_out)
 
@@ -242,6 +243,7 @@ program VP1d_deltaf
 
   ! initialize Poisson
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  rho = 0.0_f64
   call solve(poisson_1d, efield, rho)
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
@@ -259,7 +261,7 @@ program VP1d_deltaf
   write(rho_diag,*) rho
   write(eapp_diag,*) e_app
   write(adr_diag,*) istep*dt, adr
-  
+
   !$omp end single
 
   ! time loop
@@ -289,7 +291,11 @@ program VP1d_deltaf
 
      !$omp single
      ! compute rho and electric field
-     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     if (is_delta_f==0) then
+        rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     else
+        rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     endif
      call solve(poisson_1d, efield, rho)
      if (driven) then
         call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
@@ -314,35 +320,35 @@ program VP1d_deltaf
      end do
      !$omp barrier
      !$omp single
-     if (mod(istep,freqdiag)==0) then
      ! diagnostics
-     time = istep*dt
-     mass = 0.
-     momentum = 0.
-     l1norm = 0.
-     l2norm = 0.
-     kinetic_energy = 0.
-     potential_energy = 0.
-     do i = 1, Ncx 
-        mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
-        l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
-        l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-        momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
-        kinetic_energy = kinetic_energy + 0.5_f64 * &
-             sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
-     end do
-     mass = mass * delta_x * delta_v 
-     l1norm = l1norm  * delta_x * delta_v
-     l2norm = l2norm  * delta_x * delta_v
-     momentum = momentum * delta_x * delta_v
-     kinetic_energy = kinetic_energy * delta_x * delta_v
-     potential_energy =   0.5_f64 * sum(efield**2) * delta_x
-     write(th_diag,*) time, mass, l1norm, momentum, l2norm, &
-          kinetic_energy, potential_energy, kinetic_energy + potential_energy
-     write(ex_diag,*) efield
-     write(rho_diag,*) rho
-     write(eapp_diag,*) e_app
-     write(adr_diag,*) istep*dt, adr
+     if (mod(istep,freqdiag)==0) then
+        time = istep*dt
+        mass = 0.
+        momentum = 0.
+        l1norm = 0.
+        l2norm = 0.
+        kinetic_energy = 0.
+        potential_energy = 0.
+        do i = 1, Ncx 
+           mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
+           l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
+           l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
+           momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
+           kinetic_energy = kinetic_energy + 0.5_f64 * &
+                sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
+        end do
+        mass = mass * delta_x * delta_v 
+        l1norm = l1norm  * delta_x * delta_v
+        l2norm = l2norm  * delta_x * delta_v
+        momentum = momentum * delta_x * delta_v
+        kinetic_energy = kinetic_energy * delta_x * delta_v
+        potential_energy =   0.5_f64 * sum(efield**2) * delta_x
+        write(th_diag,'(f12.5,7g20.14)') time, mass, l1norm, momentum, l2norm, &
+             kinetic_energy, potential_energy, kinetic_energy + potential_energy
+        write(ex_diag,*) efield
+        write(rho_diag,*) rho
+        write(eapp_diag,*) e_app
+        write(adr_diag,*) istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
@@ -354,7 +360,7 @@ program VP1d_deltaf
   !$omp end parallel
   close(th_diag)
   close(ex_diag)
-  
+
   print*, 'VP1D_deltaf_cart has exited normally'
 contains
   elemental function f_equilibrium(v)

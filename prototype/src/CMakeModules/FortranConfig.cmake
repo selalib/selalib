@@ -7,7 +7,12 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-MESSAGE(STATUS "CMAKE_Fortran_COMPILER_NAME:${CMAKE_Fortran_COMPILER}")
+IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
+  message(STATUS "gfortran compiler")
+  add_definitions(-DGFORTRAN)
+  #add_definitions(-DDEBUG)
+ENDIF()
+add_definitions(-DMPIF90)
 
 
 ##########################################################
@@ -18,7 +23,7 @@ TRY_RUN( RUN_RESULT_VAR
          ${CMAKE_CURRENT_SOURCE_DIR}/check_compiler.F90
 )
 
-set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+#set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
