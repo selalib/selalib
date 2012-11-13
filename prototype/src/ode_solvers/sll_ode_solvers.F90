@@ -5,9 +5,9 @@ module ode_solvers
 #include "sll_field_2d.h"
   
   implicit none
-  enum, bind(C)
-     enumerator :: PERIODIC_ODE = 0, COMPACT_ODE = 1
-  end enum
+  
+  integer, parameter :: PERIODIC_ODE = 0, COMPACT_ODE = 1
+
 
   abstract interface
      function scalar_function_1D( eta )

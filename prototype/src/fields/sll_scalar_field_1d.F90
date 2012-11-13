@@ -35,7 +35,11 @@ module sll_scalar_field_1d
   use sll_io
   use numeric_constants
   use sll_scalar_field_initializers_base
+#ifdef STDF95
+  use sll_module_mapped_meshes_1d
+#else
   use sll_module_mapped_meshes_1d_base
+#endif
   use sll_misc_utils
   implicit none
   
@@ -45,7 +49,7 @@ module sll_scalar_field_1d
 
   type scalar_field_1d
 #ifdef STDF95
-     type(sll_mapped_mesh_1d_base), pointer :: mesh
+     type(sll_mapped_mesh_1d_analytic), pointer :: mesh
 #else
      class(sll_mapped_mesh_1d_base), pointer :: mesh
 #endif
@@ -54,6 +58,7 @@ module sll_scalar_field_1d
      character(len=64)                       :: name
   end type scalar_field_1d
 
+#ifndef STDF95
   abstract interface
      function scalar_function_1D( eta1 )
        use sll_working_precision
@@ -61,8 +66,9 @@ module sll_scalar_field_1d
        sll_real64, intent(in)  :: eta1
      end function scalar_function_1D
   end interface
+#endif
 
-contains   ! *****************************************************************  
+contains   ! *i****************************************************************  
   ! this used to be new_scalar_field_1d
 #ifdef STDF95
   subroutine scalar_field_1d_initialize_scalar_field_1d( &
@@ -73,7 +79,8 @@ contains   ! *****************************************************************
     init_function)
 
     type(scalar_field_1d), intent(inout)               :: this
-    type(sll_mapped_mesh_1d_base), pointer             :: mesh
+    type(sll_mapped_mesh_1d_analytic), pointer             :: mesh
+    sll_real64, optional             :: init_function
 #else
   subroutine initialize_scalar_field_1d( &
     this, &
@@ -84,10 +91,10 @@ contains   ! *****************************************************************
 
     class(scalar_field_1d), intent(inout)               :: this
     class(sll_mapped_mesh_1d_base), pointer             :: mesh
+    procedure(scalar_function_1D), optional             :: init_function
 #endif
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_1D), optional             :: init_function
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_pts1

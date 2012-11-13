@@ -847,8 +847,8 @@ contains
 
     sll_int32 :: i, j, ierr
     sll_real64, dimension(:,:), allocatable :: data
-!    sll_real64, dimension(:), allocatable   :: eta1_min_slopes
-!    sll_real64, dimension(:), allocatable   :: eta1_max_slopes
+    sll_real64, dimension(:), allocatable   :: eta1_min_slopes
+    sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_spline_2D), pointer :: spline
 
@@ -865,13 +865,13 @@ contains
     end do
 
     ! allocate and fill out the bc data
-!    SLL_ALLOCATE(eta1_min_slopes(NPX2),ierr)
-!    SLL_ALLOCATE(eta1_max_slopes(NPX2),ierr)
-!    do j=0,NPX2-1
-!       eta2 = real(j,f64)*h2
-!       eta1_min_slopes(j+1) = eta1_min_slope_func(0.0_f64,eta2)
-!       eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
-!    end do
+    SLL_ALLOCATE(eta1_min_slopes(NPX2),ierr)
+    SLL_ALLOCATE(eta1_max_slopes(NPX2),ierr)
+    do j=0,NPX2-1
+       eta2 = real(j,f64)*h2
+       eta1_min_slopes(j+1) = eta1_min_slope_func(0.0_f64,eta2)
+       eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
+    end do
 
     spline =>new_spline_2D( &
          NPX1, &
@@ -911,8 +911,8 @@ contains
        test_passed = .false.
     end if
     SLL_DEALLOCATE_ARRAY(data,ierr)
- !   SLL_DEALLOCATE_ARRAY(eta1_min_slopes,ierr)
- !   SLL_DEALLOCATE_ARRAY(eta1_max_slopes,ierr)
+    SLL_DEALLOCATE_ARRAY(eta1_min_slopes,ierr)
+    SLL_DEALLOCATE_ARRAY(eta1_max_slopes,ierr)
   end subroutine test_2d_spline_hrmt_prdc_no_slopes
 
 
@@ -1025,8 +1025,8 @@ contains
 
     sll_int32 :: i, j, ierr
     sll_real64, dimension(:,:), allocatable :: data
-!    sll_real64, dimension(:), allocatable   :: eta2_min_slopes
-!    sll_real64, dimension(:), allocatable   :: eta2_max_slopes
+    sll_real64, dimension(:), allocatable   :: eta2_min_slopes
+    sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_spline_2D), pointer :: spline
 
@@ -1043,14 +1043,14 @@ contains
     end do
 
     ! allocate and fill out the bc data
- !   SLL_ALLOCATE(eta2_min_slopes(NPX1),ierr)
- !   SLL_ALLOCATE(eta2_max_slopes(NPX1),ierr)
- !   do i=0,NPX1-1
- !      eta1 = real(i,f64)*h1
- !      eta2 = 0.0_f64
- !      eta2_min_slopes(i+1) = eta2_min_slope_func(eta1,eta2)
- !      eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
- !   end do
+    SLL_ALLOCATE(eta2_min_slopes(NPX1),ierr)
+    SLL_ALLOCATE(eta2_max_slopes(NPX1),ierr)
+    do i=0,NPX1-1
+       eta1 = real(i,f64)*h1
+       eta2 = 0.0_f64
+       eta2_min_slopes(i+1) = eta2_min_slope_func(eta1,eta2)
+       eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
+    end do
 
     spline =>new_spline_2D( &
          NPX1, &
@@ -1090,8 +1090,8 @@ contains
        test_passed = .false.
     end if
     SLL_DEALLOCATE_ARRAY(data,ierr)
- !   SLL_DEALLOCATE_ARRAY(eta2_min_slopes,ierr)
- !   SLL_DEALLOCATE_ARRAY(eta2_max_slopes,ierr)
+    SLL_DEALLOCATE_ARRAY(eta2_min_slopes,ierr)
+    SLL_DEALLOCATE_ARRAY(eta2_max_slopes,ierr)
   end subroutine test_2d_spline_prdc_hrmt_no_slopes
 
 

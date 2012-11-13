@@ -26,7 +26,10 @@ module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
   use sll_module_mapped_meshes_2d_base
   implicit none
+#ifdef STDF95
+  integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
+#else
   ! Enumerator is valid for any dimension
   enum, bind(C)
      enumerator :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
@@ -77,6 +80,6 @@ module sll_scalar_field_initializers_base
      end subroutine scalar_field_4d_initializer
   end interface
 
-
+#endif
   
 end module sll_scalar_field_initializers_base

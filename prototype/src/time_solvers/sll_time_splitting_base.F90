@@ -9,6 +9,12 @@ module sll_time_splitting
 #include "sll_assert.h"
 
   implicit none
+
+#ifdef STDF95
+  type :: time_splitting
+    sll_real64 :: current_time = 0.0_f64
+  end type time_splitting 
+#else
   type, abstract :: time_splitting
      sll_real64 :: current_time = 0.0_f64
    contains 
@@ -68,5 +74,6 @@ module sll_time_splitting
       call this%operator2(dt)
       call this%operator1(0.5_f64*dt)
     end subroutine strang_splitting
+#endif
 
 end module sll_time_splitting
