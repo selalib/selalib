@@ -126,6 +126,11 @@ ADD_TEST(NAME integration COMMAND test_integration)
 
 ##########################################################
 
+ADD_SUBDIRECTORY(periodic_interpolation)
+ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
+
+##########################################################
+
 IF(FFTPACK_ENABLED)
    ADD_SUBDIRECTORY(fftpack)
 ENDIF()
