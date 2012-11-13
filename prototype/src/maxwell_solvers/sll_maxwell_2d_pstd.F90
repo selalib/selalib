@@ -54,7 +54,9 @@ module sll_maxwell_2d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+#ifndef STDF95
 use, intrinsic :: iso_c_binding
+#endif
 use numeric_constants
 use physical_constants
 use sll_maxwell
@@ -75,14 +77,19 @@ end interface free
 type, public :: maxwell_pstd
    sll_int32                                          :: nx
    sll_int32                                          :: ny
-   sll_real64, dimension(:), allocatable              :: d_dx
-   sll_real64, dimension(:), allocatable              :: d_dy
-   sll_real64, dimension(:), allocatable              :: kx
-   sll_real64, dimension(:), allocatable              :: ky
+   sll_real64, dimension(:), pointer                  :: d_dx
+   sll_real64, dimension(:), pointer                  :: d_dy
+   sll_real64, dimension(:), pointer                  :: kx
+   sll_real64, dimension(:), pointer                  :: ky
    type(C_PTR)                                        :: fwx, fwy
    type(C_PTR)                                        :: bwx, bwy
+#ifdef STDF95
+   complex, dimension(:), pointer              :: tmp_x, tmp_y
+   sll_int32                                          :: sz_tmp_x, sz_tmp_y
+#else
    complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: tmp_x, tmp_y
    integer(C_SIZE_T)                                  :: sz_tmp_x, sz_tmp_y
+#endif
    type(C_PTR)                                        :: p_tmp_x, p_tmp_y
    sll_int32                                          :: polarization
    sll_real64                                         :: e_0

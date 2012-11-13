@@ -94,7 +94,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
     call periodic_interp(this%per_interp, data_out, data, alpha/this%cell_size)
-  end function per_interpolate1d_disp
+  end function 
 
   ! Both versions F03 and F95 of compute_interpolants_per1d should have the
   ! same name. In the F95 we should add a generic interface around this

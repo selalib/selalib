@@ -6,7 +6,17 @@ use sll_io
 use sll_gnuplot
 
   implicit none
-  
+
+#ifdef STDF95
+
+  type :: sll_mapped_mesh_1d_base
+     sll_int32   :: nc_eta1
+     sll_real64  :: delta_eta1
+     character(len=64) :: label
+     logical           :: written = .false.
+  end type sll_mapped_mesh_1d_base
+
+#else  
   ! A single abstract base class is defined which will further be extended
   ! by its subclasses. The two main types of mapped meshes are those
   ! represented by an analytic transformation and those represented by a
@@ -98,5 +108,5 @@ contains
     call sll_gnuplot_write(x1_array,mesh%label,error)
     SLL_DEALLOCATE_ARRAY(x1_array,error)
   end subroutine
-
+#endif
 end module sll_module_mapped_meshes_1d_base

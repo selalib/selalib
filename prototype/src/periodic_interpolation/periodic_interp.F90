@@ -7,7 +7,12 @@ module periodic_interp_module
 
   sll_real64, parameter    :: pi = 3.1415926535897932385_8
   sll_real64, parameter    :: twopi = 6.2831853071795864769_8
+  integer, parameter    ::  TRIGO = 0, SPLINE = 1
+#ifdef STDF95
+  complex(8), parameter :: ii =(0.0, 1.0)
+#else
   complex(8), parameter :: ii = complex(0.0_8, 1.0_8)
+#endif
   type :: periodic_interp_work
      sll_int32          :: N ! number of cells
      sll_int32          :: interpolator ! what interpolator is used
@@ -24,10 +29,6 @@ module periodic_interp_module
   interface delete
      module procedure delete_periodic_interp_work
   end interface delete
-
-  enum, bind(C)
-     enumerator :: TRIGO = 0, SPLINE = 1
-  end enum
 
 contains
   subroutine initialize_periodic_interp(this,N,interpolator,order)

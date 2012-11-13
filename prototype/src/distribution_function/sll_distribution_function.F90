@@ -41,7 +41,21 @@ module distribution_function
   use sll_misc_utils   ! for int2string
   use sll_scalar_field_initializers_base
   implicit none
-  
+
+#ifdef STDF95
+  type  :: sll_distribution_function_2D
+       sll_real64      :: pmass
+       sll_real64      :: pcharge           
+       sll_real64      :: average 
+     type(sll_mapped_mesh_2d_base), pointer  :: mesh
+    ! type(sll_interpolator_1d_base), pointer :: eta1_interpolator
+    ! type(sll_interpolator_1d_base), pointer :: eta2_interpolator
+     sll_real64, dimension(:,:), pointer      :: data
+     sll_int32                                :: data_position
+     character(len=64)                        :: name
+     sll_int32                                :: plot_counter
+  end type  sll_distribution_function_2D
+#else  
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
   type, extends(extended_type) :: new_df_type;                       \
      sll_real64      :: pmass;                                       \
@@ -61,9 +75,9 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 !!$  end interface
 
 #undef NEW_TYPE_FOR_DF
+#endif
 
-
-
+#ifndef STDF95
 contains
 
 #if 1
@@ -115,7 +129,6 @@ contains
        end do
     endif
   end subroutine sll_new_distribution_function_2d
-#endif
 
   subroutine initialize_distribution_function_2d( &
     this, &
@@ -150,6 +163,9 @@ contains
          eta2_interpolator, &
          initializer )
   end subroutine initialize_distribution_function_2d
+#endif
+#endif
+
 
 
 !!$  function sll_new_distribution_function_4D( mesh_descriptor_x,  &
