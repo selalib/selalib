@@ -1,4 +1,3 @@
-
 ADD_LIBRARY(geometry_functions STATIC geometry_functions.F90)
 
 ADD_DEPENDENCIES( geometry_functions sll_assertion
@@ -53,6 +52,7 @@ add_dependencies( sll_scalar_field_4d
 		  sll_working_precision
 )
 
+IF (NOT STDF95)
 add_executable(test_scalar_field unit_test.F90)
 target_link_libraries(test_scalar_field
 	sll_scalar_field_2d
@@ -67,3 +67,4 @@ target_link_libraries(test_scalar_field
 	sll_memory
 	sll_working_precision
 )
+ENDIF(NOT STDF95)

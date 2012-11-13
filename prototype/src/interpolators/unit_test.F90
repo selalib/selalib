@@ -2,7 +2,9 @@ program unit_test
 #include "sll_working_precision.h"
   use numeric_constants
   use geometry_functions
+#ifndef STDF95
   use sll_module_interpolators_2d_base
+#endif
   use sll_cubic_spline_interpolator_2d
   implicit none
 
@@ -112,16 +114,26 @@ program unit_test
 contains
 
 subroutine test_interpolator_2d()
+#ifdef STDF95
+  type(cubic_spline_2d_interpolator), pointer   :: interp
+#else
   class(sll_interpolator_2d_base),    pointer   :: interp
+#endif
   type(cubic_spline_2d_interpolator), target    :: spline
   sll_real64, dimension(NPTS1,NPTS2) :: xx1
   sll_real64, dimension(NPTS1,NPTS2) :: xx2
   sll_real64, dimension(NPTS1,NPTS2) :: data_in
   sll_real64, dimension(NPTS1,NPTS2) :: data_out
 
+#ifdef STDF95
+  call cubic_spline_initialize(spline,NPTS1,NPTS2, &
+                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
+                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+#else
   call spline%initialize(NPTS1,NPTS2, &
                          0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
                          PERIODIC_SPLINE, PERIODIC_SPLINE )
+#endif
   interp =>  spline
   do j = 1, NPTS2
   do i = 1, NPTS1
@@ -137,8 +149,11 @@ subroutine test_interpolator_2d()
      xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
   end do
   end do
-
+#ifdef STDF95
+  data_out = cubic_spline_interpolate_array(interp,NPTS1, NPTS2, data_in, xx1, xx2)
+#else
   data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
+#endif
 
   print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
 end subroutine test_interpolator_2d

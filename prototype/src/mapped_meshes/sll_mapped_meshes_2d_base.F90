@@ -6,7 +6,24 @@ use sll_io
 use sll_xdmf
 
   implicit none
-  
+
+#ifdef STDF95
+
+  type :: sll_mapped_mesh_2d_base
+     sll_int32  :: nc_eta1
+     sll_int32  :: nc_eta2
+     sll_real64 :: delta_eta1
+     sll_real64 :: delta_eta2
+     sll_real64, dimension(:,:), pointer :: x1_cell
+     sll_real64, dimension(:,:), pointer :: x2_cell
+     sll_real64, dimension(:,:), pointer :: jacobians_n
+     sll_real64, dimension(:,:), pointer :: jacobians_c
+     character(len=64) :: label
+     logical           :: written! = .false.
+  end type sll_mapped_mesh_2d_base
+
+#else
+
   ! A single abstract base class is defined which will further be extended
   ! by its subclasses. The two main types of mapped meshes are those
   ! represented by an analytic transformation and those represented by a
@@ -146,6 +163,7 @@ use sll_xdmf
       end subroutine write_to_file_signature
    end interface
 
+
 contains
 
   subroutine write_mapped_mesh_2d_base(mesh,output_format)
@@ -206,5 +224,7 @@ contains
     mesh%written = .true.
 
   end subroutine write_mapped_mesh_2d_base
+
+#endif
 
  end module sll_module_mapped_meshes_2d_base

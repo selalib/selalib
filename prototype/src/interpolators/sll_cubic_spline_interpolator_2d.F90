@@ -157,10 +157,17 @@ contains
     val = interpolate_x2_derivative_2D(eta1,eta2,interpolator%spline)
   end function
 
+#ifdef STDF95
+  function cubic_spline_interpolate_array(this, num_points1, num_points2, data_in, &
+                                eta1, eta2) &
+       result(data_out)
+    type(cubic_spline_2d_interpolator),  intent(in)       :: this
+#else
   function spline_interpolate2d(this, num_points1, num_points2, data_in, &
                                 eta1, eta2) &
        result(data_out)
     class(cubic_spline_2d_interpolator),  intent(in)       :: this
+#endif
     sll_int32,  intent(in)                 :: num_points1
     sll_int32,  intent(in)                 :: num_points2
     sll_real64, dimension(:,:), intent(in)   :: eta1
@@ -173,16 +180,27 @@ contains
     call compute_spline_2D( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
+#ifdef STDF95
+        data_out(i,j) = cubic_spline_interpolate_value(this,eta1(i,j),eta2(i,j))     
+#else
         data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
+#endif
     end do
     end do
 
   end function 
 
+#ifdef STDF95
+  function cubic_spline_interpolate2d_disp(this, num_points1, num_points2, data_in, &
+                                alpha1, alpha2) &
+       result(data_out)
+    type(cubic_spline_2d_interpolator),  intent(in)       :: this
+#else
   function spline_interpolate2d_disp(this, num_points1, num_points2, data_in, &
                                 alpha1, alpha2) &
        result(data_out)
     class(cubic_spline_2d_interpolator),  intent(in)       :: this
+#endif
     sll_int32,  intent(in)                 :: num_points1
     sll_int32,  intent(in)                 :: num_points2
     sll_real64, dimension(:,:), intent(in)   :: alpha1
@@ -208,7 +226,11 @@ contains
         do i = 1, num_points1
            eta1 = eta1_min + modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
            eta2 = eta2_min + modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
+#ifdef STDF95
+           data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+#else
            data_out(i,j) = this%interpolate_value(eta1,eta2)
+#endif
        end do
     end do
 

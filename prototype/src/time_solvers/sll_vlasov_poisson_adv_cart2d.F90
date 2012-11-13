@@ -4,7 +4,9 @@ module sll_vp_cartesian_2d
 #include "sll_assert.h"
 #include "sll_field_2d.h"
   use sll_time_splitting
+#ifndef STDF95
   use sll_module_interpolators_1d_base
+#endif
   use distribution_function
   use sll_poisson_1d_periodic
   implicit none
@@ -15,19 +17,26 @@ module sll_vp_cartesian_2d
      logical    :: turn_drive_off, driven
   end type app_field_params
 
+#ifdef STDF95
+  type  :: vp_cartesian_2d
+    sll_real64 :: current_time = 0.0_f64
+#else
   type, extends(time_splitting) :: vp_cartesian_2d
-     
+     class(sll_interpolator_1d_base), pointer    :: interpx, interpv
+#endif
      type(sll_distribution_function_2d), pointer   :: dist_func
      type(poisson_1d_periodic), pointer            :: poisson_1d
      sll_int32 :: Ncx, Ncv
-     class(sll_interpolator_1d_base), pointer    :: interpx, interpv
      type(app_field_params)  :: params
+#ifndef STDF95
    contains
      procedure, pass(this) :: operator1 => advection_x
      procedure, pass(this) :: operator2 => advection_v
+#endif
   end type vp_cartesian_2d
 
 contains
+#ifndef STDF95
   subroutine initialize(this, dist_func, poisson_1d, Ncx, Ncv, interpx, interpv, params)
     type(vp_cartesian_2d) :: this 
     type(sll_distribution_function_2d), target   :: dist_func
@@ -104,6 +113,7 @@ contains
         f1d = this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement)
      end do
   end subroutine advection_v
+#endif
 
   elemental function f_equilibrium(v)
     sll_real64, intent(in) :: v
