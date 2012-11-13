@@ -94,7 +94,7 @@ SET( SLL_COMPONENTS precision
                     electric_field_accumulators
                     remap
                     splines
-		    periodic_interpolation
+		    #periodic_interpolation
                     WENO
 		    fftpack
                     interpolators
@@ -148,7 +148,7 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_collective
                        sll_remap
                        sll_splines
-		       sll_periodic_interp
+		       #sll_periodic_interp
                        sll_interpolators
                        sll_numerical_utilities
                        sll_low_level_file_io
