@@ -4,7 +4,6 @@
 
 SET(TRIAL_PATHS 
                 $ENV{FFTW_ROOT}/include
-                $ENV{FFTW_HOME}/include
                 /usr/include
                 /usr/local/include
                 /usr/lib64/mpich2/include 
@@ -16,7 +15,6 @@ SET(TRIAL_PATHS
 
  SET(TRIAL_LIBRARY_PATHS
                 $ENV{FFTW_ROOT}/lib
-                $ENV{FFTW_HOME}/lib
                 /usr/lib
                 /usr/local/lib
                 /usr/lib64/mpich2/lib 
