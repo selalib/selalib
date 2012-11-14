@@ -3,11 +3,6 @@ module sll_test_4d_initializer
 #include "sll_assert.h"
 #include "sll_memory.h"
   use numeric_constants
-#ifdef STDF95
-  use sll_module_mapped_meshes_2d
-#else
-  use sll_module_mapped_meshes_2d_base
-#endif
   use sll_scalar_field_initializers_base
   use sll_collective
 #include "sll_remap.h"
