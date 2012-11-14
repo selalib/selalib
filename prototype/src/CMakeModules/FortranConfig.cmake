@@ -1,19 +1,12 @@
 
 # Determine how-to install the modules. CMAKE_BINARY_DIR is the directory
 # in which the make command is invoked.
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # Add the modules directory to the list of include directories
-include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
-  message(STATUS "gfortran compiler")
-  add_definitions(-DGFORTRAN)
-  #add_definitions(-DDEBUG)
-ENDIF()
-add_definitions(-DMPIF90)
-
+GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 
 ##########################################################
 # Try to determine the compiler
@@ -23,8 +16,7 @@ TRY_RUN( RUN_RESULT_VAR
          ${CMAKE_CURRENT_SOURCE_DIR}/check_compiler.F90
 )
 
-#set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
@@ -73,7 +65,7 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
    SET(CMAKE_Fortran_FLAGS "-C")
    ADD_DEFINITIONS(-DINTEL)
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
-   set(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
 ELSE()
    MESSAGE(STATUS "NO KNOWN FORTRAN COMPILER FOUND")
 ENDIF()
@@ -81,10 +73,10 @@ ENDIF()
 
 STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
 IF("${VAR}" STREQUAL "-1")
-  set(STDF95_ENABLED OFF)
+  SET(STDF95_ENABLED OFF)
 ELSE()
-  set(STDF95_ENABLED ON)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+  SET(STDF95_ENABLED ON)
+  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
   add_definitions(-DSTDF95)
 ENDIF()
 
@@ -93,5 +85,3 @@ IF(${STDF95_ENABLED} AND ${Fortran_COMPILER} STREQUAL "GFORTRAN")
   SET(STDF95 YES)
   ADD_DEFINITIONS(-DSTDF95)
 ENDIF()
-
-ADD_DEFINITIONS(-DMPIF90)
