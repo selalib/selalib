@@ -23,7 +23,7 @@ LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER_ID:${CMAKE_Fortran_COMPILER_ID}")
 
-IF(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+IF(CMAKE_Fortran_COMPILER MATCHES "gfortran")
 
    ADD_DEFINITIONS(-DGFORTRAN)
    SET(CMAKE_Fortran_FLAGS "-O3 -ffree-line-length-none")
@@ -38,6 +38,8 @@ ELSEIF(CMAKE_Fortran_COMPILER_NAME MATCHES "xlf")
    SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
 
 ENDIF()
+
+MESSAGE(STATUS "CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
 
 FIND_PACKAGE(LAPACK)
 IF( NOT LAPACK_FOUND)
