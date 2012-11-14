@@ -44,16 +44,17 @@ module distribution_function
 
 #ifdef STDF95
   type  :: sll_distribution_function_2D
-       sll_real64      :: pmass
-       sll_real64      :: pcharge           
-       sll_real64      :: average 
-     type(sll_mapped_mesh_2d_base), pointer  :: mesh
-    ! type(sll_interpolator_1d_base), pointer :: eta1_interpolator
-    ! type(sll_interpolator_1d_base), pointer :: eta2_interpolator
-     sll_real64, dimension(:,:), pointer      :: data
-     sll_int32                                :: data_position
-     character(len=64)                        :: name
-     sll_int32                                :: plot_counter
+   !  type(sll_mapped_mesh_2d_discrete), pointer  :: mesh
+   !  type(cubic_spline_1d_interpolator), pointer :: eta1_interpolator
+   !  type(cubic_spline_1d_interpolator), pointer :: eta2_interpolator
+   !  sll_real64, dimension(:,:), pointer      :: data
+   !  sll_int32                                :: data_position
+   !  character(len=64)                        :: name
+   !  sll_int32                                :: plot_counter
+     type(scalar_field_2d) :: extend_type
+     sll_real64        :: pmass
+     sll_real64        :: pcharge           
+     sll_real64        :: average 
   end type  sll_distribution_function_2D
 #else  
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
@@ -77,7 +78,6 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 #undef NEW_TYPE_FOR_DF
 #endif
 
-#ifndef STDF95
 contains
 
 #if 1
@@ -88,41 +88,72 @@ contains
     name, &
     data_func ) 
     
+#ifdef STDF95
+    type(sll_distribution_function_2D)   :: this
+    type(sll_mapped_mesh_2d_discrete), target  :: mesh
+    sll_real64           :: data_func
+#else
     class(sll_distribution_function_2D)   :: this
     class(sll_mapped_mesh_2d_base), target  :: mesh
+    procedure(scalar_function_2D)           :: data_func
+#endif
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
-    procedure(scalar_function_2D)           :: data_func
     ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
+#ifdef STDF95
+    this%extend_type%mesh => mesh
+    this%extend_type%plot_counter = 0
+    this%extend_type%name = name
+    this%extend_type%data_position = data_position
+    this%pcharge = 1.0_f64
+    this%pmass = 1.0_f64
+    if (data_position == NODE_CENTERED_FIELD) then
+       SLL_ALLOCATE(this%extend_type%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+#else
     this%mesh => mesh
+    this%plot_counter = 0
+    this%name = name
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
-    this%plot_counter = 0
-    this%name = name
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+#endif
        do i2 = 1, mesh%nc_eta2+1
           do i1 = 1, mesh%nc_eta1+1
+#ifdef STDF95
+             this%extend_type%data(i1,i2) = data_func(x1_at_node(mesh, i1,i2), &
+                  x2_at_node(mesh, i1,i2))
+          end do
+       end do
+    else if (data_position == CELL_CENTERED_FIELD) then
+       SLL_ALLOCATE(this%extend_type%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+#else
              this%data(i1,i2) = data_func(mesh%x1_at_node(i1,i2), &
                   mesh%x2_at_node(i1,i2))
           end do
        end do
     else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+#endif
        delta1 = 1.0_f64/mesh%nc_eta1
        delta2 = 1.0_f64/mesh%nc_eta2
        eta2 = 0.5_f64 * delta2
        do i2 = 1, mesh%nc_eta2
           eta1 = 0.5_f64 * delta1
           do i1 = 1, mesh%nc_eta1
+#ifdef STDF95
+             this%extend_type%data(i1,i2) = data_func(x1_discrete(mesh, eta1,eta2), &
+                  x2_discrete(mesh, eta1,eta2)) * jacobian_2d_discrete(mesh, eta1,eta2)
+#else
              this%data(i1,i2) = data_func(mesh%x1(eta1,eta2), &
                   mesh%x2(eta1,eta2)) * mesh%jacobian(eta1,eta2)
+#endif
              eta1 = eta1 + delta1
           end do
           eta2 = eta2 + delta2
@@ -141,21 +172,32 @@ contains
     eta2_interpolator, &
     initializer )
 
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete), pointer             :: mesh
+    type(cubic_spline_1d_interpolator), pointer            :: eta1_interpolator
+    type(cubic_spline_1d_interpolator), pointer            :: eta2_interpolator
+    type(scalar_field_2d_initializer_base), pointer, optional :: initializer
+#else
+    class(sll_mapped_mesh_2d_base), pointer             :: mesh
+    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
+    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
+#endif
     type(sll_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass
     sll_real64, intent(in)                              :: charge
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
 
     this%pmass = mass
     this%pcharge = charge
 
     call initialize_scalar_field_2d( &
+#ifdef STDF95
+         this%extend_type, &
+#else
          this, &
+#endif
          field_name, &
          mesh, &
          data_position, &
@@ -163,7 +205,6 @@ contains
          eta2_interpolator, &
          initializer )
   end subroutine initialize_distribution_function_2d
-#endif
 #endif
 
 
