@@ -35,10 +35,8 @@ module sll_scalar_field_2d
   use sll_io
   use numeric_constants
 #ifdef STDF95
-  use sll_module_mapped_meshes_2d
   use sll_cubic_spline_interpolator_1d
 #else
-  use sll_module_mapped_meshes_2d_base
   use sll_module_interpolators_1d_base
 #endif
   use sll_misc_utils

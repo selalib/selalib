@@ -5,11 +5,6 @@ module sll_gaussian_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use numeric_constants
-#ifdef STDF95
-  use sll_module_mapped_meshes_2d
-#else
-  use sll_module_mapped_meshes_2d_base
-#endif
   use sll_scalar_field_initializers_base
   implicit none
 
