@@ -28,7 +28,8 @@ ENDIF()
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 
    ADD_DEFINITIONS(-DGFORTRAN)
-   SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
+   #SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
+   SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
    ADD_DEFINITIONS(-DDEBUG -DMPIF90)
 
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
