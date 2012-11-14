@@ -24,7 +24,9 @@
 
 module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
+#ifndef STDF95
   use sll_module_mapped_meshes_2d_base
+#endif
   implicit none
   integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 

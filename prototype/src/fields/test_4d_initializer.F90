@@ -3,7 +3,11 @@ module sll_test_4d_initializer
 #include "sll_assert.h"
 #include "sll_memory.h"
   use numeric_constants
+#ifdef STDF95
+  use sll_module_mapped_meshes_2d
+#else
   use sll_module_mapped_meshes_2d_base
+#endif
   use sll_scalar_field_initializers_base
   use sll_collective
 #include "sll_remap.h"
@@ -29,13 +33,21 @@ module sll_test_4d_initializer
   ! information. How to deal with this in 4D? Do we pass multiple 2D
   ! meshes? As something tentative, here we just write an ad hoc 4D
   ! cartesian mesh.
+
+#ifdef STDF95
+  type :: init_test_4d_par
+     sll_int32 :: data_position
+#else
   type, extends(scalar_field_4d_initializer_base) :: init_test_4d_par
+#endif
      sll_real64 :: v_thermal
      type(layout_4D), pointer :: data_layout
      type(simple_cartesian_4d_mesh), pointer :: mesh_4d
+#ifndef STDF95
    contains
      procedure, pass(init_obj) :: initialize => load_test_4d_initializer
      procedure, pass(init_obj) :: f_of_4args => compact_4d_field
+#endif
   end type init_test_4d_par
   
   ! This has to end up somewhere else, if it is to stay in the library
@@ -114,6 +126,16 @@ contains
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_cartesian_4d_mesh
 
+#ifdef STDF95
+  subroutine init_test_4d_par_initialize( &
+    init_obj, &
+    data_position, &
+    mesh_4d, &
+    v_thermal, &
+    layout )
+
+    type(init_test_4d_par), intent(inout)  :: init_obj
+#else
   subroutine load_test_4d_initializer( &
     init_obj, &
     data_position, &
@@ -122,6 +144,7 @@ contains
     layout )
 
     class(init_test_4d_par), intent(inout)  :: init_obj
+#endif
     sll_int32                               :: data_position
     sll_real64, intent(in)                  :: v_thermal
     type(layout_4D), pointer                :: layout
@@ -141,10 +164,15 @@ contains
     init_obj%mesh_4d       => mesh_4d
     init_obj%v_thermal     =  v_thermal
     init_obj%data_layout   => layout
-  end subroutine load_test_4d_initializer
+  end subroutine 
 
+#ifdef STDF95
+  subroutine init_test_4d_par_f_of_4args( init_obj, data_out )
+    type(init_test_4d_par), intent(inout)      :: init_obj
+#else
   subroutine compact_4d_field( init_obj, data_out )
     class(init_test_4d_par), intent(inout)      :: init_obj
+#endif
     sll_real64, dimension(:,:,:,:), intent(out) :: data_out
     type(layout_4D), pointer                    :: layout
     sll_int32  :: i
@@ -239,6 +267,6 @@ contains
        end do
     end do
 
-  end subroutine compact_4d_field
+  end subroutine 
 
 end module sll_test_4d_initializer
