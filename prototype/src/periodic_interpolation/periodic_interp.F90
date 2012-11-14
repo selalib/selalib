@@ -46,9 +46,8 @@ contains
     SLL_ALLOCATE( this, ierr )
     this%N = N
     this%interpolator = interpolator
-    !if (present(order)) then 
-       this%order = order 
-    !end if
+    this%order = order 
+
     ! Allocate arrays
     SLL_ALLOCATE(this%wsave(15+4*N),ierr)
     SLL_ALLOCATE(this%ufft(N),ierr)
