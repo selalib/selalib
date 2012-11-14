@@ -75,6 +75,7 @@ module sll_scalar_field_2d
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
+  ! initializer is not use whith fortran95
   subroutine initialize_scalar_field_2d( &
     this, &
     field_name, &
@@ -140,22 +141,31 @@ contains   ! *****************************************************************
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
+#ifdef STDF95
+          this%data = 0.0_f64
+#else
        if (present(initializer)) then
           call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
+#endif
     else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_cells1,num_cells2), ierr)
        delta1 = 1.0_f64/real(num_cells1,f64)
        delta2 = 1.0_f64/real(num_cells2,f64)
        eta1   = 0.5_f64 * delta1
        eta2   = 0.5_f64 * delta2
+#ifdef STDF95
+          this%data = 0.0_f64
+
+#else
        if (present(initializer)) then
           call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
+#endif
     endif
     this%plot_counter = 0
   end subroutine initialize_scalar_field_2d
@@ -226,7 +236,11 @@ contains   ! *****************************************************************
 
     SLL_ASSERT(associated(mesh))  
     if (.not. mesh%written) then
+#ifdef STDF95
+       call write_to_file_2d_discrete(mesh, local_format)
+#else
        call mesh%write_to_file(local_format)
+#endif
     end if
 
     num_pts1 = mesh%nc_eta1+1
@@ -246,7 +260,11 @@ contains   ! *****************************************************************
           do i2 = 1, mesh%nc_eta2
              eta1 = 0.5_f64 * mesh%delta_eta1
              do i1 = 1, mesh%nc_eta1
+#ifdef STDF95
+                val(i1,i2) = scalar_field%data(i1,i2) / jacobian_2d_discrete(mesh, eta1, eta2)
+#else
                 val(i1,i2) = scalar_field%data(i1,i2) / mesh%jacobian(eta1, eta2)
+#endif
                 eta1 = eta1 + mesh%delta_eta1
              end do
              eta2 = eta2 + mesh%delta_eta2
