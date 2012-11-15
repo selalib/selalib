@@ -24,7 +24,7 @@ program VP1d_deltaf
   implicit none
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
-  type(periodic_1d_interpolator), target      :: interp_per_x, interp_per_v
+  type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 

@@ -9,9 +9,9 @@ use periodic_interp_module
   implicit none
 
 #ifdef STDF95
-  type                                    ::  periodic_1d_interpolator
+  type                                    ::  per_1d_interpolator
 #else  
-  type, extends(sll_interpolator_1d_base) ::  periodic_1d_interpolator
+  type, extends(sll_interpolator_1d_base) ::  per_1d_interpolator
 #endif
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
@@ -36,7 +36,7 @@ use periodic_interp_module
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
      procedure, pass:: reconstruct_array
 #endif
-  end type periodic_1d_interpolator
+  end type per_1d_interpolator
 
   interface delete
      module procedure delete_per1d
@@ -59,11 +59,11 @@ contains  ! ****************************************************************
 #ifdef STDF95
   function per_interpolate_array(this, num_points, data, coordinates) &
        result(data_out)
-    type(periodic_1d_interpolator),  intent(in)       :: this
+    type(per_1d_interpolator),  intent(in)       :: this
 #else
   function per_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
-    class(periodic_1d_interpolator),  intent(in)       :: this
+    class(per_1d_interpolator),  intent(in)       :: this
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
@@ -82,11 +82,11 @@ contains  ! ****************************************************************
   function per_interpolate_array_at_displacement(this, num_points, &
        data, alpha) &
        result(data_out)
-    type(periodic_1d_interpolator),  intent(in)       :: this
+    type(per_1d_interpolator),  intent(in)       :: this
 #else
   function per_interpolate1d_disp(this, num_points, data, alpha) &
        result(data_out)
-    class(periodic_1d_interpolator),  intent(in)       :: this
+    class(per_1d_interpolator),  intent(in)       :: this
 #endif
     sll_int32,  intent(in)                 :: num_points
 #ifdef STDF95
@@ -112,10 +112,10 @@ contains  ! ****************************************************************
   ! the per1d at initialization time.  
 #ifdef STDF95
   subroutine periodic_compute_interpolants( interpolator, data_array )
-    type(periodic_1d_interpolator), intent(inout)  :: interpolator
+    type(per_1d_interpolator), intent(inout)  :: interpolator
 #else
   subroutine compute_interpolants_per1d( interpolator, data_array )
-    class(periodic_1d_interpolator), intent(inout) :: interpolator
+    class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     print*, 'compute_interpolants_per1d:', &
@@ -138,9 +138,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output_array )
 #ifdef STDF95
-    type(periodic_1d_interpolator),  intent(in) :: interpolator
+    type(per_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(periodic_1d_interpolator),  intent(in) :: interpolator
+    class(per_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
@@ -157,9 +157,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output )
 #ifdef STDF95
-    type(periodic_1d_interpolator),  intent(in) :: interpolator
+    type(per_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(periodic_1d_interpolator),  intent(in) :: interpolator
+    class(per_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
@@ -177,9 +177,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output_array )
 #ifdef STDF95
-    type(periodic_1d_interpolator),  intent(in) :: interpolator
+    type(per_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(periodic_1d_interpolator),  intent(in) :: interpolator
+    class(per_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
@@ -196,9 +196,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output )
 #ifdef STDF95
-    type(periodic_1d_interpolator),  intent(in) :: interpolator
+    type(per_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(periodic_1d_interpolator),  intent(in) :: interpolator
+    class(per_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
@@ -211,10 +211,10 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function periodic_interpolate_value( interpolator, eta1 ) result(val)
-    type(periodic_1d_interpolator), intent(inout) :: interpolator
+    type(per_1d_interpolator), intent(inout) :: interpolator
 #else
   function interpolate_value_per1d( interpolator, eta1 ) result(val)
-    class(periodic_1d_interpolator), intent(inout) :: interpolator
+    class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -226,10 +226,10 @@ contains  ! ****************************************************************
 #ifdef STDF95
   function periodic_interpolate_derivative_eta1( interpolator, eta1 ) &
        result(val)
-    type(periodic_1d_interpolator), intent(inout)  :: interpolator
+    type(per_1d_interpolator), intent(inout)  :: interpolator
 #else
   function interpolate_deriv1_per1d( interpolator, eta1 ) result(val)
-    class(periodic_1d_interpolator), intent(inout) :: interpolator
+    class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
@@ -244,10 +244,10 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function periodic_interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    type(periodic_1d_interpolator), intent(in) :: interpolator
+    type(per_1d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(periodic_1d_interpolator), intent(in) :: interpolator
+    class(per_1d_interpolator), intent(in) :: interpolator
 #endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -278,9 +278,9 @@ contains  ! ****************************************************************
     order)
 
 #ifdef STDF95
-    type(periodic_1d_interpolator),  intent(inout)  :: interpolator 
+    type(per_1d_interpolator),  intent(inout)  :: interpolator 
 #else
-    class(periodic_1d_interpolator),  intent(inout) :: interpolator 
+    class(per_1d_interpolator),  intent(inout) :: interpolator 
 #endif
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
@@ -305,9 +305,9 @@ contains  ! ****************************************************************
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
 #ifdef STDF95
-    type(periodic_1d_interpolator), intent(in)      :: this
+    type(per_1d_interpolator), intent(in)      :: this
 #else
-    class(periodic_1d_interpolator), intent(in)     :: this
+    class(per_1d_interpolator), intent(in)     :: this
 #endif
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
@@ -317,9 +317,9 @@ contains  ! ****************************************************************
 
   subroutine delete_per1d( obj )
 #ifdef STDF95
-    type(periodic_1d_interpolator) :: obj
+    type(per_1d_interpolator) :: obj
 #else  
-    class(periodic_1d_interpolator) :: obj
+    class(per_1d_interpolator) :: obj
 #endif
     call delete(obj%per_interp)
   end subroutine delete_per1d
