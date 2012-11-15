@@ -15,17 +15,14 @@
 !                                  
 !***************************************************************************
 program test_sll_qns2d_angular_spect_method_seq
- 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_remap.h"
-
   use numeric_constants
   use sll_collective
   use sll_qns2d_angular_spect_method_seq
-implicit none
-
+  implicit none
+  
   character(len=100)                    :: BC ! Boundary_conditions
   sll_int32                             :: NP_r, NP_theta
   ! NP_r and NP_theta are the numbers of points in directions r and 

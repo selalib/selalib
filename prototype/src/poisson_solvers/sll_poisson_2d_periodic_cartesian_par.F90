@@ -15,8 +15,7 @@ module sll_poisson_2d_periodic_cartesian_par
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_assert.h"
-#include "sll_remap.h"
-
+  use remapper
   use sll_fft
   use numeric_constants
   use sll_collective
@@ -48,8 +47,8 @@ module sll_poisson_2d_periodic_cartesian_par
      sll_int32                                 :: seq_x2_local_sz_x2
      sll_comp64, dimension(:,:), pointer       :: fft_x_array
      sll_comp64, dimension(:,:), pointer       :: fft_y_array
-     type(remap_plan_2D), pointer              :: rmp_xy
-     type(remap_plan_2D), pointer              :: rmp_yx
+     type(remap_plan_2D_comp64), pointer       :: rmp_xy
+     type(remap_plan_2D_comp64), pointer       :: rmp_yx
   end type poisson_2d_periodic_plan_cartesian_par
 
 contains
@@ -148,7 +147,7 @@ contains
          plan%layout_seq_x2, &
          loc_sz_x1, &
          loc_sz_x2 )
-
+print *, 'inside new plan: ', loc_sz_x1, loc_sz_x2
     plan%seq_x2_local_sz_x1 = loc_sz_x1
     plan%seq_x2_local_sz_x2 = loc_sz_x2
     SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
@@ -172,9 +171,9 @@ contains
          FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
 
     plan%rmp_xy => &
-     NEW_REMAP_PLAN_2D(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
+     new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
     plan%rmp_yx => &
-     NEW_REMAP_PLAN_2D(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
+     new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
   end function new_poisson_2d_periodic_plan_cartesian_par
 
   subroutine solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
@@ -213,6 +212,7 @@ contains
 
     ! The input is handled internally as complex arrays
     plan%fft_x_array = -cmplx(rho, 0_f64, kind=f64)
+
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
 
     ! FFTs in y-direction
@@ -222,11 +222,11 @@ contains
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
  
     call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
-
+print *, 'inside solve, ffty array = ', plan%fft_y_array
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
 
-    ! Apply the kernel to the rest of the values.
+    ! Apply the kernel 
     do j=1, npy_loc
        do i=1, npx_loc
           ! Make sure that the first mode is set to zero so that we get an
