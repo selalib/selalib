@@ -13,6 +13,9 @@ use periodic_interp_module
 #else  
   type, extends(sll_interpolator_1d_base) ::  periodic_1d_interpolator
 #endif
+    ! Be careful here. For consistency with the other interpolators
+    ! num_points is the number of nodes (including both boundaries)
+    ! and not the number of cells as used in the periodic interpolator module.
      sll_int32                            :: num_points ! size
      sll_real64                           :: cell_size
      sll_real64                           :: domain_size   ! length of interval
@@ -93,9 +96,13 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
-    ! local variables
+    ! Be careful here. For consistency with the other interpolators
+    ! num_points is the number of nodes (including both boundaries)
+    ! and not the number of cells as used in the periodic interpolator module.
     call periodic_interp(this%per_interp, data_out, data, &
-         alpha/this%cell_size/this%domain_size)
+         alpha/this%cell_size)
+    ! complete by periodicity
+    data_out(num_points) = data_out(1)
   end function per_interpolate1d_disp
 
   ! Both versions F03 and F95 of compute_interpolants_per1d should have the
@@ -284,11 +291,14 @@ contains  ! ****************************************************************
     sll_int32  :: i  
     sll_real64 :: delta
     
-    interpolator%num_points = num_points
-    interpolator%cell_size  = (xmax-xmin) / num_points
+    ! Be careful here. For consistency with the other interpolators
+    ! num_points is the number of nodes (including both boundaries)
+    ! and not the number of cells as used in the periodic interpolator module.
+    interpolator%num_points = num_points - 1
+    interpolator%cell_size  = (xmax-xmin) / (num_points-1)
     interpolator%domain_size = xmax-xmin
 
-    call initialize_periodic_interp(interpolator%per_interp, num_points, &
+    call initialize_periodic_interp(interpolator%per_interp, num_points-1, &
          type, order)
   end subroutine
 

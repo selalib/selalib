@@ -206,6 +206,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_assertion 	
 	sll_poisson_1d_periodic
 	fftpack_module
+	${LAPACK_LIBRARIES}
 	)
 
 ENDIF()
