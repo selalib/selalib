@@ -70,7 +70,6 @@ program unit_test_1d
      call advection_v(    delta_t)
      call advection_x(0.5*delta_t)
 
-
   end do
 
   ! compute error when Gaussian arrives at center (t=1)

@@ -42,13 +42,42 @@
 
 HOST=`hostname -s`
 echo "${HOST}"
+ARCH=`uname -s`
 
-if [[ -d $PIPOL_HOMEDIR ]] ; then
-   echo "PIPOL_HOMEDIR:$PIPOL_HOMEDIR"
-elif [ "$HOST" = "m-navaro" ] ; then
-   HOMEDIR=${HOME}/Codes
+if [[ $PIPOL_IMAGE_NAME ]]; then
+   echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
 else
+   echo "ARCH:${ARCH}"
+fi
+
+if [[ $PIPOL_WDIR ]] ; then
+   echo "PIPOL_WDIR:$PIPOL_WDIR"
+   WORKDIR=$PIPOL_WDIR
+elif [[ "$HOST" == *-navaro* ]]; then
+   WORKDIR="/tmp"
+elif [[ "$HOST" == *-doct-* ]]; then
+   WORKDIR="/Users/irma"
+elif [[ "$HOST" == *irma-* ]]; then
+   WORKDIR="/scratch/navaro"
+else
+   WORKDIR="./"
+fi
+
+echo "WORDIR:$WORKDIR"
+cd $WORKDIR
+
+if [[ $PIPOL_HOMEDIR ]] ; then
+   echo "PIPOL_HOMEDIR:$PIPOL_HOMEDIR"
+   echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
+   HOMEDIR=$PIPOL_HOMEDIR
+elif [[ "$HOST" == *-navaro* ]] ; then
+   HOMEDIR="${HOME}/Codes"
+elif [[ "$HOST" == *-doct-* ]]; then
+   HOMEDIR="/Users/irma"
+elif [[ "$HOST" == *irma-* ]]; then
    HOMEDIR=${HOME}/Vlasov
+else
+   echo "wtf?"
 fi
 
 echo "HOMEDIR:${HOMEDIR}"
@@ -64,8 +93,6 @@ cd ${HOMEDIR}/selalib; {
    sed -e 's/>Date:   \([0-9]*-[0-9]*-[0-9]*\)/>\t\1/g' | \
    sed -e 's/^\(.*\) \(\)\t\(.*\)/\3    \1    \2/g' > ChangeLog
 }; cd -
-
-echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
 
 if [[ $PIPOL_IMAGE_NAME == *-fedora-* ]]; then
    echo "Fedora core"
@@ -106,3 +133,6 @@ cd build; {
 
 # 3) with cmake test results can be seen on 
 # http://cdash.inria.fr/CDash/index.php?project=Pipol
+
+exit 0
+
