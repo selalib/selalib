@@ -47,9 +47,7 @@ INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 
 
 # include's .h files
-INCLUDE_DIRECTORIES(remap 
-                    poisson_solvers 
-                    utilities 
+INCLUDE_DIRECTORIES(utilities 
                     memory 
                     assert 
                     splines 
@@ -150,7 +148,7 @@ IF(MPI_MODULE_ENABLED)
    ADD_SUBDIRECTORY(collective)
    ADD_SUBDIRECTORY(remap)
 
-   SET(PROCS 16)
+   SET(PROCS 1)
    ADD_TEST(NAME poisson_periodic_cartesian_par_2d
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
