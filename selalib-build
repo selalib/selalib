@@ -65,14 +65,13 @@ cd ${HOMEDIR}/selalib; {
    sed -e 's/^\(.*\) \(\)\t\(.*\)/\3    \1    \2/g' > ChangeLog
 }; cd -
 
+echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
+
 if [[ $PIPOL_IMAGE_NAME == *-fedora-* ]]; then
-   echo " Fedora core "
-   echo "module load openmpi-x86_64"
+   echo "Fedora core"
    module load openmpi-x86_64
 fi
 
-echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
-exit 0
 if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    echo "Configuration pour MACOS SNOWLEOPARD"
    export PATH=/usr/local/bin:${PATH}
@@ -84,7 +83,6 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export HDF5_ROOT=/usr/local
    export FFTW_ROOT=/usr/local
 fi
-
 
 mkdir build
 cd build; { 
