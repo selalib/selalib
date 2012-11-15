@@ -4,4 +4,3 @@ SET(DROP_METHOD "http")
 SET(DROP_SITE "cdash.inria.fr")
 SET(DROP_LOCATION "/CDash/submit.php?project=Pipol")
 SET(DROP_SITE_CDASH TRUE)
-
