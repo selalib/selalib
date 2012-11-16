@@ -125,10 +125,10 @@ cd build; {
     make NightlyTest
 
     ## 2.4) submission on a dashboard
-    make NightlySubmit
+    #make NightlySubmit
 
     ## 2.4) packaging: PIPOL_CPACK_G and PIPOL_PACK_EXT are set by PIPOL
-    cpack -G $PIPOL_CPACK_G .
+    #cpack -G $PIPOL_CPACK_G .
 }; cd -
 
 # 3) with cmake test results can be seen on 
