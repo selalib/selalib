@@ -41,8 +41,8 @@ program test_poisson_2d_periodic_cart_par
   call sll_boot_collective()
 
   ! Number of cells is equal to number of points in this case
-  ncx = 16 !512
-  ncy = 16 !512
+  ncx = 512
+  ncy = 512
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 

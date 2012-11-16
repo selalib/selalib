@@ -2276,8 +2276,8 @@ contains  !******************************************************************
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_2D), pointer                :: init_layout  => NULL()
-    type(layout_2D), pointer                :: final_layout => NULL()
+    type(layout_2D), pointer                  :: init_layout  => NULL()
+    type(layout_2D), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2303,6 +2303,13 @@ contains  !******************************************************************
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
+#if 0
+print *, 'remap 2d complex:'
+    print *, 'scnts = ', scnts(:)
+    print *, 'rcnts = ', rcnts(:)
+    print *, 'sdisp = ', sdisp(:)
+    print *, 'rdisp = ', rdisp(:)
+#endif
     ! load the send buffer
     loc = 0             ! first loading is at position zero
     do i = 0, col_sz-1
@@ -2343,11 +2350,12 @@ contains  !******************************************************************
        end if
     end do
     ! Comment the following when not debugging    
-    !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
-    !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
-    !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+!!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
+!!$    print *, sb(0:(size(sb)-1))
+!!$    call flush(6)
+!!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
+!!$    call flush(6)
+
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
@@ -2364,9 +2372,11 @@ contains  !******************************************************************
                                       rcnts(0), &
                                       rb(:), col )
     end if
-!    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
-!    print *, rb(0:size(rb)-1)
-!    call flush(6)
+
+    ! Comment when not debugging:
+!!$    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
+!!$    print *, rb(0:size(rb)-1)
+!!$    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1

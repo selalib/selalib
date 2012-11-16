@@ -810,8 +810,8 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoall_complex_double(): MPI_BARRIER()' )
-    call MPI_ALLTOALL( send_buf, send_count, MPI_COMPLEX, &
-                       recv_buf, recv_count, MPI_COMPLEX, &
+    call MPI_ALLTOALL( send_buf, send_count, MPI_DOUBLE_COMPLEX, &
+                       recv_buf, recv_count, MPI_DOUBLE_COMPLEX, &
                        col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoall_complex_double(): MPI_ALLTOALL()' )
@@ -916,9 +916,9 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_complex_double(): MPI_BARRIER()' )
     call MPI_ALLTOALLV( send_buf, send_cnts, send_displs, &
-                        MPI_COMPLEX, &
+                        MPI_DOUBLE_COMPLEX, &
                         recv_buf, recv_cnts, recv_displs, &
-                        MPI_COMPLEX, &
+                        MPI_DOUBLE_COMPLEX, &
                         col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_complex_double(): MPI_ALLTOALLV()' )
