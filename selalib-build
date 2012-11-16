@@ -94,6 +94,8 @@ cd ${HOMEDIR}/selalib; {
 
 if [[ $PIPOL_IMAGE_NAME == *-fedora-* ]]; then
    echo "Fedora core"
+   echo "Try to load module "
+   source /etc/profile.d/modules.sh 
    module load openmpi-x86_64
 fi
 
@@ -108,7 +110,7 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export HDF5_ROOT=/usr/local
    export FFTW_ROOT=/usr/local
 fi
-
+rm -rf build
 mkdir build
 cd build; { 
     ## 2.1) configuration
@@ -133,4 +135,3 @@ cd build; {
 # http://cdash.inria.fr/CDash/index.php?project=Pipol
 
 exit 0
-
