@@ -31,7 +31,6 @@
 # (4)  Some options, please read the documentation for more details
 
 #PIPOL amd64_2010-linux-debian-testing 1:00 
-#PIPOL amd64_2010-linux-debian-squeeze 1:00 
 #PIPOL amd64_2010-linux-fedora-core16 1:00
 #PIPOL amd64-linux-fedora-core16 1:00
 #PIPOL amd64-linux-ubuntu-oneiric 1:00
