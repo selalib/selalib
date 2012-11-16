@@ -60,6 +60,7 @@ target_link_libraries( test_quintic_interpolators_1d
 	               sll_assertion
 	               sll_memory
 	               sll_working_precision
+                       ${LAPACK_LIBRARIES}
                      )
 
 add_executable(test_odd_degree_interpolators_1d test_sll_odd_degree_spline_interpolator_1d.F90)
