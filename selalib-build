@@ -33,9 +33,7 @@
 #PIPOL amd64_2010-linux-debian-testing 1:00 
 #PIPOL amd64_2010-linux-debian-squeeze 1:00 
 #PIPOL amd64_2010-linux-fedora-core16 1:00
-#PIPOL amd64-linux-fedora-core15 1:00
 #PIPOL amd64-linux-fedora-core16 1:00
-#PIPOL amd64-linux-ubuntu-natty 1:00
 #PIPOL amd64-linux-ubuntu-oneiric 1:00
 #PIPOL amd64-linux-ubuntu-precise 1:00
 #PIPOL x86_64_mac-mac-osx-server-snow-leopard 2:00
@@ -125,10 +123,10 @@ cd build; {
     make NightlyTest
 
     ## 2.4) submission on a dashboard
-    #make NightlySubmit
+    make NightlySubmit
 
     ## 2.4) packaging: PIPOL_CPACK_G and PIPOL_PACK_EXT are set by PIPOL
-    #cpack -G $PIPOL_CPACK_G .
+    cpack -G $PIPOL_CPACK_G .
 }; cd -
 
 # 3) with cmake test results can be seen on 
