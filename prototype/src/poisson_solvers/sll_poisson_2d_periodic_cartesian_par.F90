@@ -147,7 +147,7 @@ contains
          plan%layout_seq_x2, &
          loc_sz_x1, &
          loc_sz_x2 )
-print *, 'inside new plan: ', loc_sz_x1, loc_sz_x2
+
     plan%seq_x2_local_sz_x1 = loc_sz_x1
     plan%seq_x2_local_sz_x2 = loc_sz_x2
     SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
@@ -220,9 +220,9 @@ print *, 'inside new plan: ', loc_sz_x1, loc_sz_x2
     npy_loc = plan%seq_x2_local_sz_x2
  
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
- 
+
     call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
-print *, 'inside solve, ffty array = ', plan%fft_y_array
+
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
 

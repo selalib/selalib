@@ -18,7 +18,7 @@ program remap_2d_unit_test
   ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
   ! the full array.
   integer , parameter                       :: ni = 512
-  integer , parameter                       :: nj = 128
+  integer , parameter                       :: nj = 512
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init
@@ -32,10 +32,12 @@ program remap_2d_unit_test
   integer                                   :: ierr
   integer                                   :: myrank
   sll_int64                                 :: colsz        ! collective size
+  sll_real64                                :: val
   ! Remap stuff
   type(layout_2D), pointer                  :: layout1
   type(layout_2D), pointer                  :: layout2
-  type(remap_plan_2D_real64), pointer              :: rmp2
+  type(remap_plan_2D_real64), pointer       :: rmp2
+  type(remap_plan_2D_comp64), pointer       :: rmp2c
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -198,13 +200,14 @@ program remap_2d_unit_test
      SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
   enddo
 
+#if 0
   if (myrank==0) then
      if (prod4test(1)==1.) then
         print*, 'PASSED'
      endif
   endif
-  
-#if 0
+#endif
+
   !**************************************************************************
   ! Test complex data type case
   !
@@ -247,7 +250,8 @@ program remap_2d_unit_test
            global_indices =  local_to_global_2D( layout1, (/i, j/) )
            gi = global_indices(1)
            gj = global_indices(2)
-           local_array1c(i,j) = gi + (gj-1)*ni
+           val = gi + (gj-1)*ni
+           local_array1c(i,j) = cmplx(val, val, f64)
         enddo
      enddo
      
@@ -273,11 +277,11 @@ program remap_2d_unit_test
 
      SLL_ALLOCATE( local_array2c(loc_sz_i_final, loc_sz_j_final), ierr )
     
-     rmp2 => NEW_REMAP_PLAN_2D( layout1, layout2, local_array1)     
+     rmp2c => NEW_REMAP_PLAN( layout1, layout2, local_array1c)     
 
-     call apply_remap_2D( rmp2, local_array1, local_array2 ) 
+     call apply_remap_2D( rmp2c, local_array1c, local_array2c ) 
 
-     SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final),ierr ) 
+     SLL_ALLOCATE(arrays_diffc(loc_sz_i_final,loc_sz_j_final),ierr ) 
 #if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
@@ -292,19 +296,19 @@ program remap_2d_unit_test
            global_indices =  local_to_global_2D( layout2, (/i, j/) )
            gi = global_indices(1)
            gj = global_indices(2)
-           arrays_diff(i,j) = local_array2(i,j) - (gi + (gj-1)*ni)
-           if (arrays_diff(i,j)/=0) then
+           arrays_diffc(i,j) = local_array2c(i,j) - (gi + (gj-1)*ni)
+           if (arrays_diffc(i,j)/=0) then
               test_passed = .false.
               print*, i_test, myrank, '"remap" unit test: FAIL'
               print *, i_test, myrank, 'local indices: ', '(', i, j, ')'
               print *, 'global indices wrt target layout'
               print*, myrank, 'in global indices: (',gi,',', gj,')'
-              print*, myrank, 'local array1(',gi,',', gj,')=', local_array1(i,j)
-              print*, myrank, 'local array2(',gi,',', gj,')=', local_array2(i,j)
-              g = theoretical_global_2D_indices(int(local_array2(i,j),i32), ni)
+              print*, myrank,'local array1c(',gi,',', gj,')=',local_array1c(i,j)
+              print*, myrank,'local array2c(',gi,',', gj,')=',local_array2c(i,j)
+              g = theoretical_global_2D_indices(int(local_array2c(i,j),i32), ni)
               print*, 'Theoretical indices: (',g(1), ',', g(2),')'
               !     if(myrank .eq. 1) then
-              print *, local_array2(:,:)
+              print *, local_array2c(:,:)
               !    end if
               print *, i_test, myrank, 'Printing layout1: '
               call sll_view_lims_2D( layout1 )
@@ -343,9 +347,11 @@ program remap_2d_unit_test
   
      call delete_layout_2D( layout1 )
      call delete_layout_2D( layout2 )
-     SLL_DEALLOCATE_ARRAY(local_array1, ierr)
-     SLL_DEALLOCATE_ARRAY(local_array2, ierr)
-     SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
+
+     SLL_DEALLOCATE_ARRAY(local_array1c, ierr)
+     SLL_DEALLOCATE_ARRAY(local_array2c, ierr)
+     SLL_DEALLOCATE_ARRAY(arrays_diffc, ierr)
+
   enddo
 
   if (myrank==0) then
@@ -353,10 +359,6 @@ program remap_2d_unit_test
         print*, 'PASSED'
      endif
   endif
-
-#endif
-
-
 
   call sll_halt_collective()
   
