@@ -6,7 +6,7 @@
 !> @brief 
 !> Selalib quintic splines interpolator
 !
-!> Last modification: October 25, 2012
+!> Last modification: Nov 16, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -32,6 +32,7 @@ implicit none
     sll_real64, dimension(:), allocatable :: b_at_node
     sll_real64, dimension(:), allocatable :: coeffs
 #endif
+    type(toep_penta_diagonal_plan), pointer :: plan_pentadiagonal
   end type quintic_splines_uniform_plan
 
   type quintic_splines_non_uni_plan
@@ -79,51 +80,48 @@ contains
     plan%xmin = xmin
     plan%xmax = xmax
     plan%b_at_node = uniform_b_splines_at_x( 5, 0.d0 )
+    plan%plan_pentadiagonal => new_toep_penta_diagonal(num_pts+5)
 
   end function new_quintic_splines_uniform
 
 
-  subroutine compute_quintic_coeffs_uniform(f, plan_splines)
+  subroutine compute_quintic_coeffs_uniform(f, plan)
 
   ! f is the vector of the values of the function 
   !  in the nodes of the mesh*/
 
-    sll_real64, dimension(:)                        :: f
-    type(quintic_splines_uniform_plan), pointer     :: plan_splines
-    sll_real64, dimension(plan_splines%num_pts+5)   :: g
-    sll_real64                                      :: a, b, c
-    sll_int32                                       :: num_pts
-    type(toep_penta_diagonal_plan), pointer         :: plan_pent
+    sll_real64, dimension(:)                    :: f
+    type(quintic_splines_uniform_plan), pointer :: plan
+    sll_real64, dimension(plan%num_pts+5)       :: g
+    sll_real64                                  :: a, b, c
+    sll_int32                                   :: num_pts
 
-    num_pts = plan_splines%num_pts
-    a = plan_splines%b_at_node(3)
-    b = plan_splines%b_at_node(2)
-    c = plan_splines%b_at_node(1)
+    num_pts = plan%num_pts
+    a = plan%b_at_node(3)
+    b = plan%b_at_node(2)
+    c = plan%b_at_node(1)
 
     g = 0.d0
     g(3:num_pts+2) = f
-
-    plan_pent => new_toep_penta_diagonal(num_pts+5)
-    plan_splines%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan_pent)
-    call delete_toep_penta_diagonal(plan_pent)
+    plan%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan%plan_pentadiagonal)
 
   end subroutine compute_quintic_coeffs_uniform
 
-  function quintic_splines_interpolator_uniform_value(x, plan_splines) result(s)
+  function quintic_splines_interpolator_uniform_value(x, plan) result(s)
 
-    type(quintic_splines_uniform_plan), pointer :: plan_splines
+    type(quintic_splines_uniform_plan), pointer :: plan
     sll_int32                                   :: n, left, j
     sll_real64                                  :: x, xmin, xmax
     sll_real64                                  :: h, s, t0
     sll_real64, dimension(6)                    :: b
 
-    xmin = plan_splines%xmin
-    xmax = plan_splines%xmax
-    n = plan_splines%num_pts - 1
+    xmin = plan%xmin
+    xmax = plan%xmax
+    n = plan%num_pts - 1
     h = (xmax-xmin)/n
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(plan_splines))
+    SLL_ASSERT(associated(plan))
     SLL_ASSERT(x >= xmin)
     SLL_ASSERT(x <= xmax)
 
@@ -132,44 +130,40 @@ contains
     t0 = t0 - left ! compute normalized_offset
 
     b = uniform_b_splines_at_x( 5, t0 )
-    s = 0
+    s = 0.d0
 
     do j=left-5,left
       if( (j>=-5) .and. (j<=n) ) then
-        s = s + plan_splines%coeffs(j+6) * b(j-left+6)
+        s = s + plan%coeffs(j+6) * b(j-left+6)
       endif
     enddo
 
   end function quintic_splines_interpolator_uniform_value
 
-  function quintic_splines_interpolator_uniform_array(array, &
-                            num_pts, plan_splines) result(res)
+  function quintic_splines_interpolator_uniform_array(array, num_pts, plan) result(res)
   
     sll_real64, dimension(:)                    :: array
-    type(quintic_splines_uniform_plan), pointer :: plan_splines
+    type(quintic_splines_uniform_plan), pointer :: plan
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(num_pts)              :: res
 
     do i=1,num_pts
-       res(i) = quintic_splines_interpolator_uniform_value( &
-                                      array(i), plan_splines)
+       res(i) = quintic_splines_interpolator_uniform_value(array(i), plan)
     enddo
 
   end function quintic_splines_interpolator_uniform_array
 
-  function quintic_splines_interpolator_uniform_pointer(ptr, &
-                            num_pts, plan_splines) result(res)
+  function quintic_splines_interpolator_uniform_pointer(ptr, num_pts, plan) result(res)
   
     sll_real64, dimension(:), pointer           :: ptr
-    type(quintic_splines_uniform_plan), pointer :: plan_splines
+    type(quintic_splines_uniform_plan), pointer :: plan
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(:), pointer           :: res
 
     res => ptr
 
     do i=1,num_pts
-       res(i) = quintic_splines_interpolator_uniform_value( &
-                                        ptr(i), plan_splines)
+       res(i) = quintic_splines_interpolator_uniform_value(ptr(i), plan)
     enddo
 
   end function quintic_splines_interpolator_uniform_pointer
@@ -179,6 +173,7 @@ contains
     type(quintic_splines_uniform_plan), pointer :: plan
     sll_int32                                   :: ierr
 
+    call delete_toep_penta_diagonal(plan%plan_pentadiagonal)
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  

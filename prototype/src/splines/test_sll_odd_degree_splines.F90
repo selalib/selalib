@@ -41,7 +41,7 @@ use arbitrary_degree_splines
   xmax = 10.d0
   mu = (xmin+xmax)/2
   degree_max = 11
-  pow_max = 2
+  pow_max = 3
   ok = 1
 
   do degree=1,degree_max,2
