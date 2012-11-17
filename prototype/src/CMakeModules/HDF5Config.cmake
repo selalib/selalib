@@ -1,31 +1,31 @@
 SET(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
-IF (Fortran_COMPILER_ID MATCHES "Intel")
-   MESSAGE(STATUS "Fortran_COMPILER_ID:${Fortran_COMPILER_ID}")
-ELSE()
+IF (NOT Fortran_COMPILER MATCHES "INTEL")
    FIND_PACKAGE(HDF5 REQUIRED Fortran)
 ENDIF()
 
 IF(NOT HDF5_FOUND)
 
+   SET(HDF5_PATHS $ENV{HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local)
+
    FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.mod
-   HINTS $ENV{HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
+   HINTS ${HDF5_PATHS} 
    PATH_SUFFIXES include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
    FIND_LIBRARY(HDF5_C_LIBRARY NAMES hdf5
-   HINTS $ENV{HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
+   HINTS ${HDF5_PATHS} 
    PATH_SUFFIXES lib hdf5/lib
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
-   HINTS $ENV{HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local
+   HINTS ${HDF5_PATHS} 
    PATH_SUFFIXES lib hdf5/lib
    DOC "PATH TO libhdf5_fortran")
 
    FIND_LIBRARY(ZLIB_LIBRARIES NAMES z
-                HINTS $ENV{HDF5_ROOT}
+                HINTS ${HDF5_PATHS} 
 	        PATH_SUFFIXES lib hdf5/lib
 	        DOC "PATH TO libz.dylib")
 
@@ -45,13 +45,14 @@ ENDIF()
 IF(HDF5_FOUND)
 
    MESSAGE(STATUS "HDF5 FOUND")
+   SET(HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
    SET(HDF5_BUILD_FORTRAN   @HDF5_BUILD_FORTRAN@)
    SET(HDF5_ENABLE_F2003    @HDF5_ENABLE_F2003@)
    SET(HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
    
-   IF(HDF5_IS_PARALLEL) 
+   IF(HDF5_ENABLE_PARALLEL) 
       MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE(HDF5_IS_PARALLEL)
+   ELSE(HDF5_ENABLE_PARALLEL)
       MESSAGE(STATUS "HDF5 parallel not supported")
    ENDIF()
    IF(HDF5_BUILD_FORTRAN)   

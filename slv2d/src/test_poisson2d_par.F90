@@ -1,9 +1,10 @@
-program test_io_parallel
+program test_2d_poisson_par
 
 #include "selalib.h"
 use hdf5
 use sll_xdmf_parallel
 use geometry_module
+use poisson2dpp_seq
 
 implicit none
 
@@ -169,4 +170,4 @@ subroutine meshgrid(vec_x, vec_y, mat_x, mat_y)
 
 end subroutine meshgrid
 
-end program test_io_parallel
+end program test_2d_poisson_par
