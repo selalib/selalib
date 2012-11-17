@@ -30,7 +30,9 @@
 # (3)  The reservation is for two hours
 # (4)  Some options, please read the documentation for more details
 
-#PIPOL amd64_2010-linux-debian-testing 1:00 
+#PIPOL amd64_2010-linux-debian-testing 1:30 
+#PIPOL amd64_kvm-linux-debian-testing 1:30 
+#PIPOL amd64-linux-debian-testing 1:30 
 #PIPOL amd64_2010-linux-fedora-core16 1:00
 #PIPOL amd64-linux-fedora-core16 1:00
 #PIPOL amd64-linux-ubuntu-oneiric 1:00
@@ -109,26 +111,23 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export HDF5_ROOT=/usr/local
    export FFTW_ROOT=/usr/local
 fi
-rm -rf build
-mkdir build
-cd build; { 
-    ## 2.1) configuration
-    cmake -DCMAKE_INSTALL_PREFIX=/usr/local ${HOMEDIR}/selalib
-    make NightlyUpdate
-    make NightlyConfigure
 
-    ## 2.2) build
-    make NightlyBuild
+## 2.1) configuration
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local ${HOMEDIR}/selalib
+make NightlyUpdate
+make NightlyConfigure
 
-    ## 2.3) test
-    make NightlyTest
+## 2.2) build
+make NightlyBuild
 
-    ## 2.4) submission on a dashboard
-    make NightlySubmit
+## 2.3) test
+make NightlyTest
 
-    ## 2.4) packaging: PIPOL_CPACK_G and PIPOL_PACK_EXT are set by PIPOL
-    cpack -G $PIPOL_CPACK_G .
-}; cd -
+## 2.4) submission on a dashboard
+make NightlySubmit
+
+## 2.4) packaging: PIPOL_CPACK_G and PIPOL_PACK_EXT are set by PIPOL
+cpack -G $PIPOL_CPACK_G .
 
 # 3) with cmake test results can be seen on 
 # http://cdash.inria.fr/CDash/index.php?project=Pipol
