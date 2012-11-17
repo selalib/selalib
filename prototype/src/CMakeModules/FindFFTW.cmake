@@ -3,33 +3,23 @@
 # FFTW_FOUND = true if FFTW3 is found
 
 SET(TRIAL_PATHS 
-                $ENV{FFTW_ROOT}/include
-                /usr/include
-                /usr/local/include
-                /usr/lib64/mpich2/include 
-                /usr/lib64/openmpi/include
-                /opt/local/include
-                /usr/apps/include
+                $ENV{FFTW_ROOT}
+                /usr
+                /usr/local
+                /usr/lib64/mpich2
+                /usr/lib64/openmpi
+                /opt/local
  )
 
+FIND_PATH(FFTW_INCLUDE_DIRS NAMES fftw3.f03 HINTS ${TRIAL_PATHS} PATH_SUFFIXES include DOC "path tp fftw3.f03")
+FIND_PATH(FFTW_MPI_INCLUDE_DIR NAMES fftw3-mpi.f03 HINTS ${TRIAL_PATHS} PATH_SUFFIXES include DOC "path to fftw3-mpi.f03")
+IF(FFTW_MPI_INCLUDE_DIR)
+   SET(FFTW_INCLUDE_DIRS ${FFTW_INCLUDE_DIRS} ${FFTW_MPI_INCLUDE_DIR})
+ENDIF(FFTW_MPI_INCLUDE_DIR)
 
- SET(TRIAL_LIBRARY_PATHS
-                $ENV{FFTW_ROOT}/lib
-                /usr/lib
-                /usr/local/lib
-                /usr/lib64/mpich2/lib 
-                /usr/lib64/openmpi/lib
-                /opt/local/lib
-                /sw/lib
- )
-
-FIND_PATH(FFTW_INCLUDE_DIR fftw3.f03 ${TRIAL_PATHS})
-FIND_PATH(FFTW_MPI_INCLUDE_DIR fftw3-mpi.f03 ${TRIAL_PATHS})
-SET(FFTW_INCLUDE_DIRS ${FFTW_INCLUDE_DIR} ${FFTW_MPI_INCLUDE_DIR})
-
-FIND_LIBRARY(FFTW_LIBRARY fftw3 ${TRIAL_LIBRARY_PATHS})
-FIND_LIBRARY(FFTW_THREADS_LIBRARY fftw3_threads ${TRIAL_LIBRARY_PATHS})
-FIND_LIBRARY(FFTW_MPI_LIBRARY fftw3_mpi ${TRIAL_LIBRARY_PATHS})
+FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 HINTS ${TRIAL_PATHS} PATH_SUFFIXES lib lib64)
+FIND_LIBRARY(FFTW_THREADS_LIBRARY NAMES fftw3_threads HINTS ${TRIAL_PATHS} PATH_SUFFIXES lib lib64)
+FIND_LIBRARY(FFTW_MPI_LIBRARY NAMES fftw3_mpi HINTS ${TRIAL_PATHS} PATH_SUFFIXES lib lib64)
 
 IF(FFTW_LIBRARY)
    SET(FFTW_LIBRARIES ${FFTW_LIBRARY})

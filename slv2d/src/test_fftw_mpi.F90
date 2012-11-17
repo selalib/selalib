@@ -1,9 +1,9 @@
 program test_fftw_mpi
 
-use mpi
 use fftw3
 
 implicit none
+include "mpif.h"
 
 integer(C_INTPTR_T), parameter :: nx = 128
 integer(C_INTPTR_T), parameter :: ny = 256
