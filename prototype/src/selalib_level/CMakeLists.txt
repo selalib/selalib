@@ -48,7 +48,6 @@ SET(SLL_SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/../numerical_utilities/sll_toeplitz_penta_diagonal.F90
         ${CMAKE_CURRENT_SOURCE_DIR}/../numerical_utilities/lagrange_interpolation.F90 )
 
-
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
 
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib)
