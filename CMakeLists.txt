@@ -13,7 +13,6 @@ include(Pipol)
 
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS --version OUTPUT_VARIABLE source_path)
-MESSAGE("${source_path}")
 string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 MESSAGE("Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
 
