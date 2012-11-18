@@ -113,6 +113,8 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export FFTW_ROOT=/usr/local
 fi
 
+mkdir build
+cd build; {
 ## 2.1) configuration
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local ${HOMEDIR}/selalib
 make NightlyUpdate
@@ -133,4 +135,7 @@ cpack -G $PIPOL_CPACK_G .
 # 3) with cmake test results can be seen on 
 # http://cdash.inria.fr/CDash/index.php?project=Pipol
 
+}; cd -
+
+rm -rf build
 exit 0
