@@ -58,7 +58,8 @@ if [[ $PIPOL_WDIR ]] ; then
 elif [[ "$HOST" = *-navaro* ]]; then
    WORKDIR="/tmp"
    HOMEDIR="${HOME}/Codes"
-elif [[ "$HOST" = *vpn-irma* ]]; then
+elif [[ "$HOST" =~ "vpn-irma" ]]; then
+   HOMEDIR="${HOME}/Codes"
    WORKDIR="/tmp"
 elif [[ "$HOST" = *-doct-* ]]; then
    WORKDIR="/Users/irma"
