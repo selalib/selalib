@@ -6,15 +6,16 @@ PROJECT(SELALIB)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
                       ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
+include(CTest)
 # Tests+Dashboard configuration
 enable_testing()
 include(Pipol)
 
 if(PIPOL_IMAGE)
-  set(BUILDNAME "CMAKE-selalib-${CMAKE_GENERATOR}-${Fortran_COMPILER_NAME}-${PIPOL_IMAGE_NAME}")
+  set(BUILDNAME "${CMAKE_GENERATOR}-${CMAKE_Fortran_COMPILER_ID}-${PIPOL_IMAGE_NAME}")
   set(SITE "${PIPOL_SITE}")
 else(PIPOL_IMAGE)
-  set(BUILDNAME "CMAKE-selalib-${CMAKE_GENERATOR}-${Fortran_COMPILER_NAME}-${CMAKE_SYSTEM_NAME}")
+  set(BUILDNAME "${CMAKE_Fortran_COMPILER_ID}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 endif(PIPOL_IMAGE)
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
