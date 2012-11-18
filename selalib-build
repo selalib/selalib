@@ -52,35 +52,29 @@ fi
 if [[ $PIPOL_WDIR ]] ; then
    echo "PIPOL_WDIR:$PIPOL_WDIR"
    WORKDIR=$PIPOL_WDIR
-elif [[ "$HOST" == *-navaro* ]]; then
+   echo "PIPOL_HOMEDIR:$PIPOL_HOMEDIR"
+   echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
+   HOMEDIR=$PIPOL_HOMEDIR
+elif [[ "$HOST" = *-navaro* ]]; then
    WORKDIR="/tmp"
-elif [[ "$HOST" == *-doct-* ]]; then
+   HOMEDIR="${HOME}/Codes"
+elif [[ "$HOST" = *vpn-irma* ]]; then
+   WORKDIR="/tmp"
+elif [[ "$HOST" = *-doct-* ]]; then
    WORKDIR="/Users/irma"
-elif [[ "$HOST" == *irma-* ]]; then
+   HOMEDIR="/Users/irma"
+elif [[ "$HOST" = *irma-* ]]; then
    WORKDIR="/scratch/navaro"
+   HOMEDIR=${HOME}/Vlasov
 else
+   HOMEDIR="./"
    mkdir ./build
    WORKDIR="./build"
 fi
 
+echo "HOMEDIR:$HOMEDIR"
 echo "WORDIR:$WORKDIR"
 cd $WORKDIR
-
-if [[ $PIPOL_HOMEDIR ]] ; then
-   echo "PIPOL_HOMEDIR:$PIPOL_HOMEDIR"
-   echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
-   HOMEDIR=$PIPOL_HOMEDIR
-elif [[ "$HOST" == *-navaro* ]] ; then
-   HOMEDIR="${HOME}/Codes"
-elif [[ "$HOST" == *-doct-* ]]; then
-   HOMEDIR="/Users/irma"
-elif [[ "$HOST" == *irma-* ]]; then
-   HOMEDIR=${HOME}/Vlasov
-else
-   HOMEDIR="./"
-fi
-
-echo "HOMEDIR:${HOMEDIR}"
 
 cd ${HOMEDIR}/selalib; {
    git log --date-order --date=short | \
