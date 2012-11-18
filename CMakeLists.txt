@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 PROJECT(SELALIB)
+ENABLE_LANGUAGE(Fortran)
 
 # local modules path
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
@@ -11,11 +12,12 @@ include(CTest)
 enable_testing()
 include(Pipol)
 
-get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS --version OUTPUT_VARIABLE source_path)
 string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
-MESSAGE("Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
+MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
 
+MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 if(PIPOL_IMAGE)
   set(BUILDNAME "${CMAKE_GENERATOR}-${Fortran_COMPILER_NAME}-${PIPOL_IMAGE_NAME}")
   set(SITE "${PIPOL_SITE}")
