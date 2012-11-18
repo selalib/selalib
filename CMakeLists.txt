@@ -38,7 +38,7 @@ install(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
         DESTINATION share/doc/pipol/)
 
 include(DartConfig)
-#include(Dart)
+include(Dart)
 
 # Packages generation
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeLaLib prototype")
