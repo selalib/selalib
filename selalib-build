@@ -83,9 +83,6 @@ fi
 echo "HOMEDIR:${HOMEDIR}"
 
 cd ${HOMEDIR}/selalib; {
-   git fetch origin
-   git checkout phdf5-3d
-   git merge origin/phdf5-3d
    git log --date-order --date=short | \
    sed -e '/^commit.*$/d' | \
    awk '/^Author/ {sub(/\\$/,""); getline t; print $0 t; next}; 1' | \
@@ -115,25 +112,16 @@ fi
 
 mkdir build
 cd build; {
-## 2.1) configuration
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local ${HOMEDIR}/selalib
 make NightlyUpdate
 make NightlyConfigure
-
-## 2.2) build
 make NightlyBuild
-
-## 2.3) test
 make NightlyTest
-
-## 2.4) submission on a dashboard
 make NightlySubmit
-
-## 2.4) packaging: PIPOL_CPACK_G and PIPOL_PACK_EXT are set by PIPOL
 cpack -G $PIPOL_CPACK_G .
 
-# 3) with cmake test results can be seen on 
-# http://cdash.inria.fr/CDash/index.php?project=Pipol
+# cmake test results can be seen on 
+# http://irma-webhpc/CDash/index.php?project=Pipol
 
 }; cd -
 
