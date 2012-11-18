@@ -11,10 +11,10 @@ enable_testing()
 include(Pipol)
 
 if(PIPOL_IMAGE)
-  set(BUILDNAME "CMAKE-selalib-${CMAKE_GENERATOR}-${Fortran_COMPILER_ID}-${PIPOL_IMAGE_NAME}")
+  set(BUILDNAME "CMAKE-selalib-${CMAKE_GENERATOR}-${Fortran_COMPILER_NAME}-${PIPOL_IMAGE_NAME}")
   set(SITE "${PIPOL_SITE}")
 else(PIPOL_IMAGE)
-  set(BUILDNAME "CMAKE-selalib-${CMAKE_GENERATOR}-${Fortran_COMPILER_ID}-${CMAKE_SYSTEM_NAME}")
+  set(BUILDNAME "CMAKE-selalib-${CMAKE_GENERATOR}-${Fortran_COMPILER_NAME}-${CMAKE_SYSTEM_NAME}")
 endif(PIPOL_IMAGE)
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
@@ -35,10 +35,10 @@ endforeach(_f ${nightly_files})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 install(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
-  DESTINATION share/doc/pipol/)
+        DESTINATION share/doc/pipol/)
 
 include(DartConfig)
-include(Dart)
+#include(Dart)
 
 # Packages generation
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeLaLib prototype")
