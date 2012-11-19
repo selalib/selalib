@@ -18,12 +18,12 @@ program remap_test_6d
   sll_real64, dimension(:,:,:,:,:,:), allocatable :: arrays_diff
 !!$  sll_int32, dimension(:,:,:,:,:,:), allocatable :: arrays_diff
   ! Dimensions of the 6d array (global dimensions)
-  integer, parameter                       :: ni = 16
-  integer, parameter                       :: nj = 16
-  integer, parameter                       :: nk = 16   ! change
-  integer, parameter                       :: nl = 16   ! change
-  integer, parameter                       :: nm = 16   ! change
-  integer, parameter                       :: nn = 16   ! change
+  integer, parameter                       :: ni = 8
+  integer, parameter                       :: nj = 8
+  integer, parameter                       :: nk = 8   ! change
+  integer, parameter                       :: nl = 8   ! change
+  integer, parameter                       :: nm = 8   ! change
+  integer, parameter                       :: nn = 8   ! change
 !!$  integer, parameter                       :: ni = 4
 !!$  integer, parameter                       :: nj = 4
 !!$  integer, parameter                       :: nk = 4   ! change

@@ -76,7 +76,7 @@ target_link_libraries(test_remap_6d
 	sll_working_precision
 )
 
-SET(PROCS 16)
+SET(PROCS 8)
 ADD_TEST(NAME remap_6d
 	COMMAND
 	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
