@@ -15,7 +15,7 @@ use sll_odd_degree_splines
 #endif
      sll_real64, dimension(:), pointer            :: interpolation_points 
      sll_int32                                    :: num_points ! size
-     sll_int32                                    :: bc_type
+!     sll_int32                                    :: bc_type
      type(odd_degree_splines_uniform_plan), pointer  :: spline
 #ifdef STDF95
 #else
@@ -215,7 +215,7 @@ contains  ! ****************************************************************
     num_points, &
     xmin, &
     xmax, &
-    bc_type, &
+!    bc_type, &
     degree, &
     slope_left, &
     slope_right &
@@ -229,7 +229,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)           :: num_points
     sll_real64, intent(in)           :: xmin
     sll_real64, intent(in)           :: xmax
-    sll_int32,  intent(in)           :: bc_type
+!    sll_int32,  intent(in)           :: bc_type
     sll_real64, intent(in), optional :: slope_left
     sll_real64, intent(in), optional :: slope_right
     sll_int32,  intent(in), optional :: degree

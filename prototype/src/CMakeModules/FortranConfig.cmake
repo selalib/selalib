@@ -13,7 +13,7 @@ get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER_NAME STREQUAL "gfortran")
   message(STATUS "gfortran compiler")
   add_definitions(-DGFORTRAN)
-  add_definitions(-DDEBUG)
+  #add_definitions(-DDEBUG)
 ENDIF()
 add_definitions(-DMPIF90)
 
@@ -25,7 +25,7 @@ try_run( RUN_RESULT_VAR
          ${CMAKE_SOURCE_DIR}/check_compiler.F90
 )
 
-set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
+#set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
@@ -58,7 +58,8 @@ ENDIF()
 # find out which compiler we are using.
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
-	set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
+	#set(CMAKE_Fortran_FLAGS "-g -fopenmp -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
+	set(CMAKE_Fortran_FLAGS "-O3 -fopenmp -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics")
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 	set(CMAKE_Fortran_FLAGS "-C")
         ADD_DEFINITIONS(-DINTEL)
