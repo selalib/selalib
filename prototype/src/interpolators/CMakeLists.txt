@@ -5,7 +5,7 @@ IF(STDF95)
 	       sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d.F90
-	       sll_periodic_interpolator_1d.F90
+	       #sll_periodic_interpolator_1d.F90
              )
 ELSE()
   add_library( sll_interpolators STATIC

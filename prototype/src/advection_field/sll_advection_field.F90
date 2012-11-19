@@ -42,7 +42,12 @@ module sll_advection_field
   use sll_misc_utils   ! for int2string
   implicit none
   
+#ifdef STDF95
+  type  :: hamiltonian_advection_field_2d
+     type(scalar_field_2d) :: extend_type
+#else
   type, extends(scalar_field_2d) :: hamiltonian_advection_field_2d
+#endif
      sll_real64      :: pmass
      sll_real64      :: pcharge
   end type hamiltonian_advection_field_2d
@@ -64,17 +69,28 @@ contains
     sll_real64, intent(in)                              :: mass
     sll_real64, intent(in)                              :: charge
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
+#ifdef STDF95
+    type(scalar_field_2d_initializer_base), pointer, optional :: initializer
+    type(cubic_spline_1d_interpolator), pointer            :: eta1_interpolator
+    type(cubic_spline_1d_interpolator), pointer            :: eta2_interpolator
+    type(sll_mapped_mesh_2d_discrete), pointer             :: mesh
+#else
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(sll_mapped_mesh_2d_base), pointer             :: mesh
+#endif
 
 
     this%pmass = mass
     this%pcharge = charge
     call initialize_scalar_field_2d( &
+#ifdef STDF95
+         this%extend_type, &
+#else
          this, &
+#endif
          field_name, &
          mesh, &
          data_position, &
@@ -95,13 +111,22 @@ contains
     sll_int32 :: i1, i2
     sll_real64 :: mass
 
+#ifdef STDF95
+    nc_eta1 = GET_FIELD_NC_ETA1( this%extend_type ) 
+    nc_eta2 = GET_FIELD_NC_ETA2( this%extend_type )     
+#else
     nc_eta1 = GET_FIELD_NC_ETA1( this ) 
-    nc_eta2 = GET_FIELD_NC_ETA2( this )     
+    nc_eta2 = GET_FIELD_NC_ETA2( this ) 
+#endif
     mass    = this%pmass    
     if (present(phi_external)) then 
        do i1 = 1, nc_eta1+1
-          do i2 = 1, nc_eta2+1 
+          do i2 = 1, nc_eta2+1
+#ifdef STDF95
+             this%extend_type%data(i1,i2) = 0.5_f64*mass * x2_at_node(this%extend_type%mesh, i1,i2)**2 &
+#else 
              this%data(i1,i2) = 0.5_f64*mass * this%mesh%x2_at_node(i1,i2)**2 &
+#endif
                   + this%pcharge*(FIELD_1D_AT_I(phi_self,i1)  &
                   + FIELD_1D_AT_I(phi_external,i1))
           end do
@@ -109,7 +134,11 @@ contains
     else 
        do i1 = 1, nc_eta1
           do i2 = 1, nc_eta2
+#ifdef STDF95
+             this%extend_type%data(i1,i2) = 0.5_f64*mass * x2_at_node(this%extend_type%mesh, i1,i2)**2 &
+#else
              this%data(i1,i2) = 0.5_f64*mass * this%mesh%x2_at_node(i1,i2)**2 &
+#endif
                   + this%pcharge*FIELD_1D_AT_I(phi_self,i1)
           end do
        end do

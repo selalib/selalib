@@ -4,7 +4,9 @@ program unit_test_2d
 #include "sll_assert.h"
 
 use numeric_constants
+#ifndef STDF95
 use sll_module_interpolators_2d_base
+#endif
 use sll_cubic_spline_interpolator_2d
 
 implicit none
@@ -22,8 +24,13 @@ implicit none
 
   sll_real64, dimension(:), allocatable :: f_x, f_y
 
+#ifdef STDF95
+  type(cubic_spline_2d_interpolator), pointer    :: interp_xy
+  type(cubic_spline_2d_interpolator), pointer    :: interp_vxvy
+#else
   class(sll_interpolator_2d_base), pointer    :: interp_xy
   class(sll_interpolator_2d_base), pointer    :: interp_vxvy
+#endif
 
   type(cubic_spline_2d_interpolator), target  :: spline_xy
   type(cubic_spline_2d_interpolator), target  :: spline_vxvy
@@ -80,12 +87,20 @@ implicit none
   f_y = 0.0_f64 
 
   Print*, 'checking advection of a Gaussian in a uniform field'
-  
+ 
+#ifdef STDF95
+  call cubic_spline_initialize(spline_xy, n_x, n_y, x_min, x_max, y_min, y_max, &
+                            PERIODIC_SPLINE, PERIODIC_SPLINE )
+
+  call cubic_spline_initialize(spline_vxvy, n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
+                              PERIODIC_SPLINE, PERIODIC_SPLINE )
+#else 
   call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
                             PERIODIC_SPLINE, PERIODIC_SPLINE )
 
   call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
                               PERIODIC_SPLINE, PERIODIC_SPLINE )
+#endif
   interp_xy   => spline_xy
   interp_vxvy => spline_vxvy
 
@@ -119,21 +134,33 @@ contains
 
    subroutine advection_xy(df, interp_xy, dt)
    !type(cubic_spline_2d_interpolator)  :: interp_xy
+#ifdef STDF95
+   type(cubic_spline_2d_interpolator), pointer  :: interp_xy
+#else
    class(sll_interpolator_2d_base), pointer  :: interp_xy
+#endif
    sll_real64, intent(inout), dimension(:,:,:,:) :: df
    sll_real64, intent(in) :: dt
    sll_real64 :: dx, dy
 
    do l = 1, n_vy
      do k = 1, n_vx
+#ifdef STDF95
+        call cubic_spline_compute_interpolants(interp_xy, df(:,:,k,l))
+#else
         call interp_xy%compute_interpolants(df(:,:,k,l))
+#endif
         do j = 1, n_y
            dy = y_min + modulo(y(j)-y_min-dt*vy(l),y_max-y_min)
            do i = 1, n_x
               dx = x_min + modulo(x(i)-x_min-dt*vx(k),x_max-x_min)
               if( dx < x_min .or. dx > x_max) stop 'erreur x'
               if( dy < y_min .or. dy > y_max) stop 'erreur y'
+#ifdef STDF95
+              df(i,j,k,l) = cubic_spline_interpolate_value(interp_xy,dx,dy)
+#else
               df(i,j,k,l) = interp_xy%interpolate_value(dx,dy)
+#endif
            end do
         end do
      end do
@@ -143,19 +170,31 @@ contains
 
    subroutine advection_vxvy(df, interp_vxvy, dt)
    !type(cubic_spline_2d_interpolator)  :: interp_vxvy
+#ifdef STDF95
+   type(cubic_spline_2d_interpolator), pointer :: interp_vxvy
+#else
    class(sll_interpolator_2d_base), pointer  :: interp_vxvy
+#endif
    sll_real64, intent(inout), dimension(:,:,:,:) :: df
    sll_real64, intent(in) :: dt
    sll_real64 :: dvx, dvy
 
    do j = 1, n_y
       do i = 1, n_x
+#ifdef STDF95
+        call cubic_spline_compute_interpolants(interp_vxvy,df(i,j,:,:))
+#else
          call interp_vxvy%compute_interpolants(df(i,j,:,:))
+#endif
          do k = 1, n_vx
             dvx = vx_min + modulo(vx(k)-vx_min-dt*f_x(i),vx_max-vx_min)
             do l = 1, n_vy
                dvy = vy_min + modulo(vy(l)-vy_min-dt*f_y(j),vy_max-vy_min)
+#ifdef STDF95
+               df(i,j,k,l) = cubic_spline_interpolate_value(interp_vxvy, dvx,dvy)
+#else
                df(i,j,k,l) = interp_vxvy%interpolate_value(dvx,dvy)
+#endif
             end do
          end do
       end do

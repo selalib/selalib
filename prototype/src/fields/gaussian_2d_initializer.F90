@@ -28,7 +28,7 @@ module sll_gaussian_2d_initializer
 contains
 
 #ifdef STDF95
-  subroutine init_gaussian_2d_initialiaze( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
+  subroutine init_gaussian_2d_initialize( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
     type(init_gaussian_2d), intent(inout)  :: init_obj
     type(sll_mapped_mesh_2d_discrete), intent(in), target :: mesh
 #else

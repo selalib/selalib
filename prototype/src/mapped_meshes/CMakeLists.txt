@@ -2,6 +2,7 @@ IF(STDF95)
  add_library(sll_mapped_meshes STATIC
 	sll_mapped_meshes_1d.F90
 	sll_mapped_meshes_2d.F90
+	sll_mapped_meshes_2d_cartesian.F90
   )
 ELSE()
  add_library(sll_mapped_meshes STATIC
