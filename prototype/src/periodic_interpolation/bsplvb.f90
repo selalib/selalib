@@ -97,7 +97,8 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   real ( kind = 8 ), save, dimension ( jmax ) :: deltar
   integer i
   integer index
-  integer, save :: j = 1
+  !integer, save :: j = 1
+  integer :: j
   integer left
   real ( kind = 8 ) saved
   real ( kind = 8 ) t(left+jhigh)
@@ -123,7 +124,8 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
     stop
   end if
 
-  do
+!  do
+  do j = 1, jhigh - 1
 
     deltar(j) = t(left+j) - x
     deltal(j) = x - t(left+1-j)
@@ -136,11 +138,11 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
     end do
 
     biatx(j+1) = saved
-    j = j + 1
+!    j = j + 1
 
-    if ( jhigh <= j ) then
-      exit
-    end if
+ !   if ( jhigh <= j ) then
+ !     exit
+ !   end if
 
   end do
 
