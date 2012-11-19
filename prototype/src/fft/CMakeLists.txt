@@ -16,7 +16,7 @@ ENDIF()
 
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
   set(FFT_SRC sll_fft_mod_through_fftpack.F90)
-  set(DEPENDENCIES fftpack_module ${DEPENDENCIES})
+  set(DEPENDENCIES ${DEPENDENCIES} fftpack_module)
   add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
 ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
   set(FFT_SRC sll_fft_mod_through_fftw.F90)
