@@ -1,6 +1,6 @@
 program remap_test_6d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-#include "sll_remap.h"
+  use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -58,7 +58,7 @@ program remap_test_6d
   ! Remap stuff
   type(layout_6D), pointer                  :: layout1
   type(layout_6D), pointer                  :: layout2
-  type(remap_plan_6D), pointer              :: rmp6
+  type(remap_plan_6D_real64), pointer       :: rmp6
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -295,7 +295,7 @@ program remap_test_6d
 
      SLL_ALLOCATE(local_array2(loc_sz_i_final, loc_sz_j_final, loc_sz_k_final, loc_sz_l_final, loc_sz_m_final, loc_sz_n_final), ierr )
     
-     rmp6 => NEW_REMAP_PLAN_6D( layout1, layout2, local_array1)     
+     rmp6 => new_remap_plan( layout1, layout2, local_array1 )     
 
 !!$     if( myrank .eq. RANK_TO_PRINT ) then
 !!$        print *, myrank, 'just before remap, local_array1:'

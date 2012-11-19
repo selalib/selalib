@@ -5,8 +5,7 @@ use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
 use sll_xdmf_parallel
-
-#include "sll_remap.h"
+use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
