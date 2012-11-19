@@ -78,7 +78,7 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function cubic_spline_interpolate_array_at_displacement(this, num_points, &
-       data, coordinates) &
+       data, alpha ) & ! coordinates) &
        result(data_out)
     type(cubic_spline_1d_interpolator),  intent(in)       :: this
 #else
@@ -88,11 +88,10 @@ contains  ! ****************************************************************
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
-#ifdef STDF95
-    sll_real64                :: alpha
-#else
+!#ifdef STDF95
+!    sll_real64                :: alpha
+!#else
     sll_real64,  intent(in)   :: alpha
-#endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
@@ -281,7 +280,7 @@ contains  ! ****************************************************************
 
   !> initialize cubic spline interpolator
 #ifdef STDF95
-  subroutine cubic_spline_initialize( &
+  subroutine cubic_spline_1d_interpolator_initialize( &
 #else
   subroutine initialize_cs1d_interpolator( &
 #endif

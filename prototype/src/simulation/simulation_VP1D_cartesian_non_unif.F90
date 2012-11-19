@@ -13,17 +13,25 @@ module simulation_VP1D_cartesian_non_unif
 #include "sll_assert.h"
 #include "sll_memory.h"
 
+#ifndef STDF95
   use sll_simulation_base
+#endif
   use cubic_nonuniform_splines
   use numeric_constants
   implicit none
 
+#ifdef STDF95
+  type :: sll_simulation_VP1D_cartesian_non_unif
+#else
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_VP1D_cartesian_non_unif
+#endif
     ! Numerical parameters
     sll_real64 :: dt
+#ifndef STDF95
   contains
     procedure, pass(sim) :: run => run_VP1D_cartesian_non_unif
+#endif
   end type sll_simulation_VP1D_cartesian_non_unif
 
 contains
@@ -34,7 +42,11 @@ contains
   ! directly, but this should be cleaned up.
   subroutine run_VP1D_cartesian_non_unif(sim)
     implicit none
+#ifdef STDF95
+    type(sll_simulation_VP1D_cartesian_non_unif), intent(inout) :: sim
+#else
     class(sll_simulation_VP1D_cartesian_non_unif), intent(inout) :: sim
+#endif
     
     type(cubic_nonunif_spline_1D), pointer :: spl_per_x1,spl_per_x2,spl_per_x1_poisson
     sll_int32 :: N_x1,N_x2,N_x1_poisson,N,nb_step

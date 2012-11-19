@@ -14,11 +14,18 @@ ENDIF()
 #Please add your new simulation_MYMETHOD.F90 
 ############################################################
 
+IF (STDF95)
+add_library(sll_simulation_1d STATIC simulation_1d.F90
+            simulation_VP1D_cartesian_non_unif.F90
+            simulation_VP1D_curvilinear_analytic.F90
+            simulation_vp1d_fourier_fem.F90)
+ELSE()
 add_library(sll_simulation_1d STATIC simulation_1d.F90
             simulation_base_class.F90 
             simulation_VP1D_cartesian_non_unif.F90
             simulation_VP1D_curvilinear_analytic.F90
             simulation_vp1d_fourier_fem.F90)
+ENDIF (STDF95)
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 

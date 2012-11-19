@@ -20,9 +20,20 @@ program unit_test
   sll_int32 :: i1, i2, it, n_steps
   sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, deltat, val, error, error1 
   sll_real64 :: alpha1, alpha2
+#ifdef STDF95
+  sll_real64, pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
+  type(sll_mapped_mesh_2d_discrete), pointer   :: m
+  type(scalar_field_2d_initializer_base), pointer    :: p_init_f
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr
+#else
   procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
-  type(sll_mapped_mesh_2d_cartesian),target :: mesh_c,mesh_f
   class(sll_mapped_mesh_2d_base), pointer   :: m
+  class(scalar_field_2d_initializer_base), pointer    :: p_init_f
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+#endif
+  type(sll_mapped_mesh_2d_cartesian),target :: mesh_c,mesh_f
   !type(geometry_2D), pointer :: geomc, geomf
   !type(mesh_descriptor_2D), pointer :: coarse_mesh
   !type(mesh_descriptor_2D), pointer :: fine_mesh
@@ -32,11 +43,8 @@ program unit_test
   type(csl_workspace), pointer :: csl_work
   character(32),parameter  :: name = 'distribution_function'
   type(init_gaussian_2d),target :: pgaussian
-  class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
-  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
 
   
   eta1_min =  -8.0_f64
@@ -47,27 +55,40 @@ program unit_test
   nc_eta2_coarse = 100
   
   
-  
+#ifdef STDF95
+  call mapped_mesh_2d_cartesian_initialize( &
+    mesh_c,           &
+#else  
   call mesh_c%initialize( &
+#endif
     !mesh_c           &
-    "mesh_c",          &
+    "mesh_c",         & 
     eta1_min,         &
     eta1_max,         &
-    nc_eta1_coarse+1,          &
+    nc_eta1_coarse+1, &
     eta2_min,         &
     eta2_max,         &
-    nc_eta2_coarse+1           &
+    nc_eta2_coarse+1  &
    )
   
   m => mesh_c
-  
+
+#ifdef STDF95
+  call init_gaussian_2d_initialize(pgaussian, m, CELL_CENTERED_FIELD)
+#else
   call pgaussian%initialize( m, CELL_CENTERED_FIELD)
-  
+#endif  
+
   p_init_f => pgaussian
   
   ! Set up the interpolators for the distribution function
+#ifdef STDF95
+  call cubic_spline_1d_interpolator_initialize(interp_eta1, nc_eta1_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(interp_eta2, nc_eta2_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+#else
   call interp_eta1%initialize( nc_eta1_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
   call interp_eta2%initialize( nc_eta2_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+#endif
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
