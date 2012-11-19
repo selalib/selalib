@@ -171,7 +171,8 @@ module sll_collective
   !> @brief Gathers together values from a group of processes.
   interface sll_collective_gather
      !> @brief Gathers together values of real type from a group of processes.
-     module procedure sll_collective_gather_real
+     module procedure sll_collective_gather_real32, &
+          sll_collective_gather_real64
   end interface
   
   !> @brief Gathers data from all tasks and distribute the combined 
@@ -218,7 +219,9 @@ module sll_collective
 
   !> @brief Sends data from all to all processes.
   interface sll_collective_alltoall
-     module procedure sll_collective_alltoall_int
+     module procedure sll_collective_alltoall_int, &
+          sll_collective_alltoall_double, &
+          sll_collective_alltoall_complex_double
   end interface
 
   !> @brief Sends data from all to all processes; each process may send a
@@ -226,7 +229,9 @@ module sll_collective
   !!        input and output data.
   interface sll_collective_alltoallV
      module procedure sll_collective_alltoallV_int, &
-                      sll_collective_alltoallV_real
+                      sll_collective_alltoallV_real, &
+                      sll_collective_alltoallV_double, &
+                      sll_collective_alltoallV_complex_double
   end interface
 
 contains !************************** Operations **************************
@@ -436,7 +441,7 @@ contains !************************** Operations **************************
   !> @param[in] send_sz number of elements in send buffer
   !> @param[in] root rank of broadcast root
   !> @param[out] rec_buf address of receive buffer
-  subroutine sll_collective_gather_real( col, send_buf, send_sz, root, &
+  subroutine sll_collective_gather_real32( col, send_buf, send_sz, root, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
@@ -453,7 +458,26 @@ contains !************************** Operations **************************
          MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
-  end subroutine sll_collective_gather_real
+  end subroutine sll_collective_gather_real32
+
+  subroutine sll_collective_gather_real64( col, send_buf, send_sz, root, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    sll_real64, dimension(:), intent(in) :: send_buf ! what would change...
+    sll_int32                            :: send_sz
+    sll_real64, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    !sll_int32                            :: rec_count ! size of receive buf
+    ! FIXME: add some argument checking here
+    !rec_count = send_sz*col%size
+    !Note that the 5th argument at the root indicates the number of items
+    !it receives from each task. It is not the total number of items received.
+    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, send_sz, &
+         MPI_REAL, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_gather_real(): MPI_GATHER()' )
+  end subroutine sll_collective_gather_real64
 
   !> @brief Gathers real values into specified locations from all processes in a group
   !> @param[in] col Wrapper around the communicator
@@ -750,6 +774,53 @@ contains !************************** Operations **************************
          'sll_collective_alltoall_int(): MPI_BARRIER()' )
   end subroutine sll_collective_alltoall_int
 
+  subroutine sll_collective_alltoall_double( send_buf, send_count, &
+                                             recv_count, recv_buf, col )
+    sll_real64, dimension(:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: send_count
+    sll_int32, intent(in)                 :: recv_count
+    sll_real64, dimension(:), intent(out) :: recv_buf
+    type(sll_collective_t), pointer       :: col
+    sll_int32                             :: ierr
+    call sll_check_collective_ptr( col )
+    ! FIXME: MORE ARG CHECKING
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoall_double(): MPI_BARRIER()' )
+    call MPI_ALLTOALL( send_buf, send_count, MPI_DOUBLE_PRECISION, &
+                       recv_buf, recv_count, MPI_DOUBLE_PRECISION, &
+                       col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoall_double(): MPI_ALLTOALL()' )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoall_double(): MPI_BARRIER()' )
+  end subroutine sll_collective_alltoall_double
+
+  subroutine sll_collective_alltoall_complex_double( send_buf, send_count, &
+                                                     recv_count, recv_buf, col )
+    sll_comp64, dimension(:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: send_count
+    sll_int32, intent(in)                 :: recv_count
+    sll_comp64, dimension(:), intent(out) :: recv_buf
+    type(sll_collective_t), pointer       :: col
+    sll_int32                             :: ierr
+    call sll_check_collective_ptr( col )
+    ! FIXME: MORE ARG CHECKING
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoall_complex_double(): MPI_BARRIER()' )
+    call MPI_ALLTOALL( send_buf, send_count, MPI_DOUBLE_COMPLEX, &
+                       recv_buf, recv_count, MPI_DOUBLE_COMPLEX, &
+                       col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoall_complex_double(): MPI_ALLTOALL()' )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoall_complex_double(): MPI_BARRIER()' )
+  end subroutine sll_collective_alltoall_complex_double
+
+
   ! Explore making this effectively typeless... need a macro implementation;
   ! pointer arguments won't work...
   !> @brief Sends real data from all to all processes; each process may send a
@@ -797,6 +868,66 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_real(): MPI_BARRIER()' )
   end subroutine sll_collective_alltoallV_real
+
+  subroutine sll_collective_alltoallV_double( send_buf, send_cnts, &
+                                              send_displs, &
+                                              recv_buf, recv_cnts, &
+                                              recv_displs, col )
+    sll_real64, dimension(:), intent(in)  :: send_buf
+    sll_int32,  dimension(:), intent(in)  :: send_cnts
+    sll_int32,  dimension(:), intent(in)  :: send_displs
+    sll_real64, dimension(:), intent(out) :: recv_buf
+    sll_int32,  dimension(:), intent(in)  :: recv_cnts
+    sll_int32,  dimension(:), intent(in)  :: recv_displs
+    type(sll_collective_t), pointer       :: col
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_double(): MPI_BARRIER()' )
+    call MPI_ALLTOALLV( send_buf, send_cnts, send_displs, &
+                        MPI_DOUBLE_PRECISION, &
+                        recv_buf, recv_cnts, recv_displs, &
+                        MPI_DOUBLE_PRECISION, &
+                        col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_double(): MPI_ALLTOALLV()' )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_double(): MPI_BARRIER()' )
+  end subroutine sll_collective_alltoallV_double
+
+  subroutine sll_collective_alltoallV_complex_double( send_buf, send_cnts, &
+                                                      send_displs, &
+                                                      recv_buf, recv_cnts, &
+                                                      recv_displs, col )
+    sll_comp64, dimension(:), intent(in)  :: send_buf
+    sll_int32,  dimension(:), intent(in)  :: send_cnts
+    sll_int32,  dimension(:), intent(in)  :: send_displs
+    sll_comp64, dimension(:), intent(out) :: recv_buf
+    sll_int32,  dimension(:), intent(in)  :: recv_cnts
+    sll_int32,  dimension(:), intent(in)  :: recv_displs
+    type(sll_collective_t), pointer       :: col
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_complex_double(): MPI_BARRIER()' )
+    call MPI_ALLTOALLV( send_buf, send_cnts, send_displs, &
+                        MPI_DOUBLE_COMPLEX, &
+                        recv_buf, recv_cnts, recv_displs, &
+                        MPI_DOUBLE_COMPLEX, &
+                        col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_complex_double(): MPI_ALLTOALLV()' )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_complex_double(): MPI_BARRIER()' )
+  end subroutine sll_collective_alltoallV_complex_double
+
+
 
   !> @brief Sends integer data from all to all processes; each process may 
   !!         send a different amount of data and provide displacements for the
