@@ -21,13 +21,13 @@ module sll_qns2d_angular_spect_method_par
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_assert.h"
-#include "sll_remap.h"
+!#include "sll_remap.h"
 
   use numeric_constants
   use sll_fft
   use sll_tridiagonal
   use sll_collective
-
+  use remapper
   implicit none
 
 
@@ -46,8 +46,8 @@ module sll_qns2d_angular_spect_method_par
      sll_comp64, dimension(:,:,:), allocatable :: array_fft
      sll_comp64, dimension(:,:,:), allocatable :: array_lin_sys
      sll_comp64, dimension(:,:,:), allocatable :: c_remap, Te_remap
-     type(remap_plan_3D), pointer              :: rmp3_1
-     type(remap_plan_3D), pointer              :: rmp3_2
+     type(remap_plan_3D_comp64), pointer       :: rmp3_1
+     type(remap_plan_3D_comp64), pointer       :: rmp3_2
   end type qns2d_angular_spect_method_par
 
 contains
@@ -125,10 +125,10 @@ contains
     SLL_ALLOCATE(plan%c_remap(NP_r,NP_theta_loc,1), ierr)
     SLL_ALLOCATE(plan%Te_remap(NP_r,NP_theta_loc,1), ierr)
 
-    plan%rmp3_1 => new_remap_plan_3D( plan%layout_fft, plan%layout_lin_sys, &
-                                                       size(plan%array_fft) )
-    plan%rmp3_2 => new_remap_plan_3D( plan%layout_lin_sys,plan%layout_fft, &
-                                                  size(plan%array_lin_sys) )
+    plan%rmp3_1 => new_remap_plan( plan%layout_fft, plan%layout_lin_sys, &
+                                   plan%array_fft )
+    plan%rmp3_2 => new_remap_plan( plan%layout_lin_sys,plan%layout_fft, &
+                                   plan%array_lin_sys )
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
