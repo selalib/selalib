@@ -192,15 +192,13 @@ target_link_libraries(VP1D_cart
 	)
 
 
-IF(FFTPACK_ENABLED)
-
 add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 target_link_libraries(VP1D_deltaf_cart
 	sll_mapped_meshes
 	sll_interpolators
-	sll_fft
-	sll_splines
 	sll_periodic_interp
+	sll_splines
+	sll_fft
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
@@ -213,8 +211,6 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
-ENDIF()
-
 
 ENDIF()
 
