@@ -6,7 +6,7 @@ program remap_test_6d
 #include "misc_utils.h"
   implicit none
 
-#define RANK_TO_PRINT 8
+#define RANK_TO_PRINT 0
 
   ! Test of the 6D remapper takes a 6D array whose global size is
   ! N1*N2*N3*N4*N5*N6 and is distributed among NPi*NPj*NPk*NPl*NPm*NPn
@@ -330,8 +330,8 @@ program remap_test_6d
               do k=1,loc_sz_k_final
                  do j=1,loc_sz_j_final 
                     do i=1,loc_sz_i_final
-                       global_indices = &
-                            local_to_global_6D( layout2, (/i,j,k,l,m,n/) )
+                       tmp_array(:) = (/i,j,k,l,m,n/)
+                       global_indices = local_to_global_6D( layout2, tmp_array )
                        gi = global_indices(1)
                        gj = global_indices(2)
                        gk = global_indices(3)
