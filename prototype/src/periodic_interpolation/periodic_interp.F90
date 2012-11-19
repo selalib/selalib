@@ -3,6 +3,7 @@ module periodic_interp_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 use arbitrary_degree_splines
+use sll_fft
 
   implicit none
 
@@ -20,6 +21,7 @@ use arbitrary_degree_splines
      complex(8), dimension(:), pointer :: ufft   ! Fourier transform of function
      sll_real64, dimension(:), pointer :: buf  ! workspace for lagrange interpolation
      sll_int32          :: sizebuf ! size of workspace for lagrange interpolation
+     type(sll_fft_plan), pointer :: pinv,pfwd ! type for lagrange_fft_selalib interpolation
    end type periodic_interp_work
 
   interface delete
@@ -27,7 +29,7 @@ use arbitrary_degree_splines
   end interface delete
 
   enum, bind(C)
-     enumerator :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2
+     enumerator :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, LAGRANGE_FFT_SELALIB = 3
   end enum
 
 contains
@@ -42,6 +44,7 @@ contains
     sll_int32 :: icoarse  ! coarsening factor for stabilization of trigonometric interpolation
     sll_real64, dimension(order) :: biatx
     sll_real64 :: mode, val
+    sll_real64, dimension(:), allocatable :: buf !for fft_selalib
 
     SLL_ALLOCATE( this, ierr )
     this%N = N
@@ -59,8 +62,7 @@ contains
 
     ! set up spline parameters
     if ((order/2) /= int(order/2.0)) then
-       print*, 'initialize_periodic_interp: order of interpolators needs &
-            to be even.', &
+       print*, 'initialize_periodic_interp: order of interpolators needs to be even.', &
             'Order here is: ', Order
        stop
     end if
@@ -92,6 +94,11 @@ contains
        end do
     case (LAGRANGE)
        call dffti(N,this%buf(N:3*N+14))
+    case (LAGRANGE_FFT_SELALIB)
+       SLL_ALLOCATE(buf(N),ierr)
+       this%pfwd => fft_new_plan(N,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
+       this%pinv => fft_new_plan(N,buf,buf,FFT_INVERSE)
+       SLL_DEALLOCATE_ARRAY(buf,ierr)       
     case default
        print*, 'periodic_interp_module:interpolator ',interpolator, ' not implemented'
        stop
@@ -178,6 +185,10 @@ contains
        u_out = u
        call fourier1dperlagodd(this%buf,this%sizebuf,u_out,this%N, &
             alpha/this%N,this%order/2 - 1 )
+    case (LAGRANGE_FFT_SELALIB)
+       u_out = u
+       call fft_apply_plan(this%pfwd,u_out,u_out)
+       call fft_apply_plan(this%pinv,u_out,u_out)        
     case default
        print*, 'periodic_interp_module:interpolator ',this%interpolator, ' not implemented'
        stop
