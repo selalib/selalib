@@ -59,7 +59,7 @@ program remap_test
   sll_int32, dimension(3)                   :: global_indices, g
   sll_real32   , dimension(1)               :: prod4test
   integer                                   :: ok
-
+  sll_int32, dimension(3)                   :: tmpa
 
   ! Boot parallel environment
   call sll_boot_collective()
@@ -116,7 +116,8 @@ program remap_test
      do k=1,loc_sz_k_init
         do j=1,loc_sz_j_init 
            do i=1,loc_sz_i_init
-              global_indices =  local_to_global_3D( layout1, (/i, j, k/) )
+              tmpa(:) = (/i, j, k/)
+              global_indices =  local_to_global_3D( layout1, tmpa )
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
@@ -169,7 +170,8 @@ program remap_test
      do k=1,loc_sz_k_final
         do j=1,loc_sz_j_final 
            do i=1,loc_sz_i_final
-              global_indices =  local_to_global_3D( layout2, (/i, j, k/) )
+              tmpa(:) = (/i, j, k/)
+              global_indices =  local_to_global_3D( layout2, tmpa )
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
