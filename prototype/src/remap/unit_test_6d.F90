@@ -69,6 +69,7 @@ program remap_test_6d
   integer                                   :: ok
   sll_int32                                 :: lin_index
   sll_int32, dimension(6)                   :: theo_index
+  sll_int32, dimension(6)                   :: tmp_array
 
   ! Boot parallel environment
   print *, 'Booting parallel environment...'
@@ -159,8 +160,8 @@ program remap_test_6d
               do k=1,loc_sz_k_init
                  do j=1,loc_sz_j_init 
                     do i=1,loc_sz_i_init
-                       global_indices = &
-                            local_to_global_6D( layout1, (/i, j, k, l, m, n/) )
+                       tmp_array(:) = (/i, j, k, l, m, n/)
+                       global_indices = local_to_global_6D(layout1, tmp_array)
                        gi = global_indices(1)
                        gj = global_indices(2)
                        gk = global_indices(3)
