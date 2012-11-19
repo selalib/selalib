@@ -378,7 +378,7 @@ print*, 'num_pts =', num_pts, 'b_at_x =', b_at_x
     sll_int32                                   :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
-    call delete_arbitrary_order_spline_1d( plan%spline_obj )
+    call delete( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
   end subroutine delete_quintic_splines_non_uni
