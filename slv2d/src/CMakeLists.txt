@@ -10,23 +10,13 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
 INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
+MESSAGE(STATUS "Fortran_COMPILER:${Fortran_COMPILER}")
 
 SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       ")
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       ")
 
-IF(APPLE)
-   FIND_LIBRARY(LAPACK_LIBRARIES  lapack)
-ELSE()
-   IF(Fortran_COMPILER STREQUAL "INTEL")
-      SET(BLA_VENDOR "Intel11")
-   ENDIF()
-   FIND_PACKAGE(LAPACK)
-ENDIF()
-
-IF(NOT LAPACK_FOUND)
-   INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
-ENDIF()
+INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -104,7 +94,9 @@ SET( SLL_COMPONENTS precision
                     electric_field_accumulators
                     remap
                     splines
+		    #periodic_interpolation
                     WENO
+		    fftpack
                     interpolators
                     collective
                     low_level_file_io)
@@ -123,8 +115,9 @@ IF(Fortran_COMPILER STREQUAL "XLF")
    SET(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
-IF(Fortran_COMPILER STREQUAL "IFORT")
-
+IF(Fortran_COMPILER STREQUAL "INTEL")
+   ADD_DEFINITIONS(-DINTEL)
+   SET(CMAKE_BUILD_TYPE "RELEASE")
 ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
@@ -155,6 +148,7 @@ ADD_DEPENDENCIES(slv2d sll_precision
                        sll_collective
                        sll_remap
                        sll_splines
+		       #sll_periodic_interp
                        sll_interpolators
                        sll_numerical_utilities
                        sll_low_level_file_io
