@@ -399,7 +399,7 @@ contains
     sll_int32                                   :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
-    call delete_arbitrary_order_spline_1d( plan%spline_obj )
+    call delete( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
   end subroutine delete_odd_degree_splines_non_uni
