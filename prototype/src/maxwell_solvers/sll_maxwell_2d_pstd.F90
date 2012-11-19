@@ -81,8 +81,15 @@ type, public :: maxwell_pstd
    sll_real64, dimension(:), pointer                  :: d_dy
    sll_real64, dimension(:), pointer                  :: kx
    sll_real64, dimension(:), pointer                  :: ky
+#ifdef STDF95
+   integer :: fwx, fwy, dfftw_plan_dft_r2c_1d, dfftw_plan_dft_c2r_1d
+   integer :: bwx, bwy
+   integer :: p_tmp_x, p_tmp_y
+#else
    type(C_PTR)                                        :: fwx, fwy
    type(C_PTR)                                        :: bwx, bwy
+   type(C_PTR)                                        :: p_tmp_x, p_tmp_y
+#endif
 #ifdef STDF95
    complex, dimension(:), pointer              :: tmp_x, tmp_y
    sll_int32                                          :: sz_tmp_x, sz_tmp_y
@@ -90,7 +97,6 @@ type, public :: maxwell_pstd
    complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: tmp_x, tmp_y
    integer(C_SIZE_T)                                  :: sz_tmp_x, sz_tmp_y
 #endif
-   type(C_PTR)                                        :: p_tmp_x, p_tmp_y
    sll_int32                                          :: polarization
    sll_real64                                         :: e_0
    sll_real64                                         :: mu_0
@@ -98,7 +104,9 @@ end type maxwell_pstd
 
 sll_int32, private :: i, j
 
+#ifndef STDF95
 include 'fftw3.f03'
+#endif
 
 contains
 
@@ -135,10 +143,17 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
+#ifdef STDF95
+   self%fwx = dfftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_ESTIMATE)
+   self%bwx = dfftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_ESTIMATE)
+   self%fwy = dfftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_ESTIMATE)
+   self%bwy = dfftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_ESTIMATE)
+#else
    self%fwx = fftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_ESTIMATE)
    self%bwx = fftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_ESTIMATE)
    self%fwy = fftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_ESTIMATE)
    self%bwy = fftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_ESTIMATE)
+#endif
 
    SLL_ALLOCATE(self%kx(nx/2+1), error)
    SLL_ALLOCATE(self%ky(ny/2+1), error)

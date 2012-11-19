@@ -175,7 +175,7 @@ ENDIF()
 
 ##########################################################
 
-IF(NOT STDF95)
+#IF(NOT STDF95)
    ADD_SUBDIRECTORY(poisson_solvers)
    IF(FFTPACK_ENABLED)
       ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
@@ -214,7 +214,7 @@ ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
    SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_par 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-ENDIF()
+#ENDIF()
 
 ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)

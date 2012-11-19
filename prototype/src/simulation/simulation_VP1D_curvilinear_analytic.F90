@@ -9,17 +9,25 @@ module simulation_VP1D_curvilinear_analytic
 #include "sll_assert.h"
 #include "sll_memory.h"
 
+#ifndef STDF95
   use sll_simulation_base
+#endif
   use cubic_nonuniform_splines
   use numeric_constants
   implicit none
 
+#ifdef STDF95
+  type :: sll_simulation_VP1D_curvilinear_analytic
+#else
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_VP1D_curvilinear_analytic
+#endif
     ! Numerical parameters
     sll_real64 :: dt
+#ifndef STDF95
   contains
     procedure, pass(sim) :: run => run_VP1D_curvilinear_analytic
+#endif
   end type sll_simulation_VP1D_curvilinear_analytic
 
 contains
@@ -30,7 +38,11 @@ contains
   ! directly, but this should be cleaned up.
   subroutine run_VP1D_curvilinear_analytic(sim)
     implicit none
+#ifdef STDF95
+    type(sll_simulation_VP1D_curvilinear_analytic), intent(inout) :: sim
+#else
     class(sll_simulation_VP1D_curvilinear_analytic), intent(inout) :: sim
+#endif
     type(cubic_nonunif_spline_1D), pointer :: spl_per_x1,spl_per_x2
     sll_int32 :: nc_eta1,nc_eta2,N_x1_poisson,N,nb_step
     sll_int32:: mesh_case,test_case,rho_case,div_Case

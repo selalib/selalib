@@ -43,9 +43,9 @@ module sll_qns2d_with_finite_diff_par
      type(sll_fft_plan), pointer               :: inv_fft_plan
      type(layout_3D),  pointer                 :: layout_fft
      type(layout_3D),  pointer                 :: layout_lin_sys
-     sll_comp64, dimension(:,:,:), allocatable :: array_fft
-     sll_comp64, dimension(:,:,:), allocatable :: array_lin_sys
-     sll_comp64, dimension(:,:,:), allocatable :: c_remap, Te_remap
+     sll_comp64, dimension(:,:,:), pointer :: array_fft
+     sll_comp64, dimension(:,:,:), pointer :: array_lin_sys
+     sll_comp64, dimension(:,:,:), pointer :: c_remap, Te_remap
      type(remap_plan_3D), pointer              :: rmp3_1
      ! rmp3_1: remap plan for fft to linear sytem (for rho)
      type(remap_plan_3D), pointer              :: rmp3_2

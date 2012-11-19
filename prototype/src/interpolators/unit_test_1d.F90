@@ -54,7 +54,7 @@ program unit_test
 
   print*, 'Cubic spline interpolation'
 #ifdef STDF95
-  call cubic_spline_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
 #else
   call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
 #endif
