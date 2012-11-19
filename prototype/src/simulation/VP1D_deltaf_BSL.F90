@@ -14,12 +14,8 @@ program VP1d_deltaf
   use numeric_constants
   use sll_module_mapped_meshes_2d_cartesian
   use sll_cubic_spline_interpolator_1d
-<<<<<<< HEAD
   use sll_periodic_interpolator_1d
   use sll_odd_degree_spline_interpolator_1d
-=======
-!  use sll_periodic_interpolator_1d
->>>>>>> prototype-devel
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
@@ -28,12 +24,8 @@ program VP1d_deltaf
   implicit none
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
-<<<<<<< HEAD
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
-=======
- ! type(periodic_1d_interpolator), target      :: interp_per_x, interp_per_v
->>>>>>> prototype-devel
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
   class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
@@ -240,21 +232,11 @@ program VP1d_deltaf
   ! initialize interpolators
   call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
   call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-<<<<<<< HEAD
   call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
   call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
   call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
   !interp_x => interp_spline_x
   interp_v => interp_spline_v
-=======
-  !call interp_per_x%initialize( Ncx, xmin, xmax, TRIGO, 12)
-  !call interp_per_v%initialize( Ncv, vmin, vmax, TRIGO, 12)
-  interp_x => interp_spline_x
-  interp_v => interp_spline_v
- ! interp_x => interp_per_x
- ! interp_v => interp_per_v
-
->>>>>>> prototype-devel
 
   interp_x => interp_per_x
 !  interp_v => interp_per_v
