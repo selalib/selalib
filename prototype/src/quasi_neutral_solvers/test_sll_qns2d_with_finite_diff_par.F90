@@ -15,12 +15,10 @@
 !                                  
 !***************************************************************************
 program test_sll_qns2d_with_finite_diff_par
- 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_remap.h"
-
+  use remapper
   use numeric_constants
   use sll_collective
   use sll_qns2d_with_finite_diff_par

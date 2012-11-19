@@ -54,7 +54,7 @@ add_library(selalib_low_level STATIC ${LOW_LEVEL_SOURCE_FILES})
 # DEFINE MID LEVEL STUFF
 #################################################################
 set(MID_LEVEL_INCLUDE_FILES
-	${CMAKE_SOURCE_DIR}/remap/sll_remap.h
+#	${CMAKE_SOURCE_DIR}/remap/sll_remap.h
 	)
 
 # Attention always use selalib fft, need to be fix!

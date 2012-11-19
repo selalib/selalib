@@ -1,6 +1,6 @@
 program remap_test_4d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-#include "sll_remap.h"
+  use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -37,7 +37,7 @@ program remap_test_4d
   ! Remap stuff
   type(layout_4D), pointer                  :: layout1
   type(layout_4D), pointer                  :: layout2
-  type(remap_plan_4D), pointer              :: rmp4
+  type(remap_plan_4D_real64), pointer       :: rmp4
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -154,7 +154,7 @@ program remap_test_4d
 
      SLL_ALLOCATE(local_array2(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final,loc_sz_l_final), ierr )
     
-     rmp4 => NEW_REMAP_PLAN_4D( layout1, layout2, local_array1)     
+     rmp4 => new_remap_plan( layout1, layout2, local_array1)     
 
      call apply_remap_4D( rmp4, local_array1, local_array2 ) 
 
