@@ -6,6 +6,7 @@ IF(STDF95)
                sll_quintic_spline_interpolator_1d.F90
              )
 ELSE()
+IF(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
 	       sll_interpolators_1d_base.F90
 	       sll_cubic_spline_interpolator_1d.F90
@@ -16,9 +17,23 @@ ELSE()
                sll_quintic_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d.F90
              )
+ELSE()	       
+  add_library( sll_interpolators STATIC
+	       sll_interpolators_1d_base.F90
+	       sll_cubic_spline_interpolator_1d.F90
+	       #sll_periodic_interpolator_1d.F90
+	       #sll_finite_difference_interpolator_1d.F90
+	       sll_interpolators_2d_base.F90
+	       sll_cubic_spline_interpolator_2d.F90
+               sll_quintic_spline_interpolator_1d.F90
+               sll_odd_degree_spline_interpolator_1d.F90
+             )
+
+ENDIF()             
 ENDIF()
 
 add_dependencies( sll_interpolators
+	          sll_fft
 	          sll_working_precision
 	          sll_memory
 	          sll_assertion
@@ -33,6 +48,7 @@ add_executable(test_interpolators_1d unit_test_1d.F90
 
 target_link_libraries( test_interpolators_1d
 		       sll_interpolators
+	               sll_fft
 	               sll_splines
 	               sll_constants
 	               sll_assertion
@@ -79,6 +95,7 @@ add_executable(test_periodic_interpolators_1d test_periodic_interpolation.F90)
 target_link_libraries( test_periodic_interpolators_1d
                        sll_interpolators
 	               sll_periodic_interp
+		       sll_fft
 		       sll_splines
                        sll_assertion
 	               sll_memory
