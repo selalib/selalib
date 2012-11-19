@@ -7,11 +7,16 @@ SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
 IF(NOT HDF5_FOUND)
 
-   SET(HDF5_PATHS $ENV{HDF5_ROOT} /usr /usr/lib64/mpich2 /usr/lib64/openmpi /usr/local /opt/local)
+   SET(HDF5_PATHS $ENV{HDF5_ROOT} 
+                  /usr 
+                  /usr/lib64/mpich2 
+                  /usr/lib64/openmpi 
+                  /usr/local 
+                  /opt/local)
 
    FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.mod
-   HINTS ${HDF5_PATHS} 
-   PATH_SUFFIXES include hdf5/include include/fortran
+   HINTS ${HDF5_PATHS} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64
+   PATH_SUFFIXES / include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
    FIND_LIBRARY(HDF5_C_LIBRARY NAMES hdf5
