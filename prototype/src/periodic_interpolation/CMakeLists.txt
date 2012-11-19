@@ -17,13 +17,13 @@ IF(FFTPACK_ENABLED)
     sll_working_precision
     sll_splines)
   target_link_libraries(test_periodic_interp sll_periodic_interp
+      sll_splines
+      sll_fft
       fftpack_module
       sll_utilities
-      sll_fft
       sll_assertion
       sll_memory
       sll_working_precision
-      sll_splines
   )
 
   add_definitions(-D_FFTPACK)
