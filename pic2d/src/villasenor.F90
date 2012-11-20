@@ -1,11 +1,11 @@
 module villasenor
-
+#include "selalib.h"
 use zone
 
 implicit none
 
-integer, private :: i, j
-integer, private :: ipart
+sll_int32, private :: i, j
+sll_int32, private :: ipart
 
 contains
 
@@ -15,8 +15,8 @@ subroutine calcul_j_villa( ele, tm )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-real(kind=prec) :: x1, y1, x2, y2, xint, yint
-integer :: i1, j1, i2, j2, iint, jint
+sll_real64 :: x1, y1, x2, y2, xint, yint
+sll_int32 :: i1, j1, i2, j2, iint, jint
 
 tm%jx = 0.; tm%jy = 0.
 
@@ -154,7 +154,7 @@ subroutine quatre_frontieres(i1,j1,xold,yold,xnew,ynew,tm,ele)
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-integer :: i1, j1
+sll_int32 :: i1, j1
 real(kind = prec):: xold,yold,xnew,ynew
 real(kind = prec) :: Jx1,Jx2,Jy1,Jy2,dum
 
@@ -189,7 +189,7 @@ subroutine sept_frontieres( i1, j1, i2, j2, x1, y1, x2, y2, tm, ele )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-integer :: i2, j2, i1, j1
+sll_int32 :: i2, j2, i1, j1
 real(kind = prec) :: x1, y1, x2, y2
 real(kind = prec) :: xinter, yinter
 
@@ -231,9 +231,9 @@ subroutine dix_frontieres( i1, j1, i2, j2, x1, y1, x2, y2, tm, ele )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-real(kind=prec) :: x2, y2, x1, y1, xinter, yinter
-integer :: i2, j2, jinter
-integer :: i1, j1
+sll_real64 :: x2, y2, x1, y1, xinter, yinter
+sll_int32 :: i2, j2, jinter
+sll_int32 :: i1, j1
 
 if (i2.eq.i1+1.and.j2.eq.j1+1) then
        
@@ -323,7 +323,7 @@ subroutine quatre_frontieres_period(i1,j1,xold,yold,xnew,ynew,tm,ele)
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-integer :: i1,j1
+sll_int32 :: i1,j1
 real(kind = prec):: xold,yold,xnew,ynew
 real(kind = prec) :: Jx1,Jx2,Jy1,Jy2,dum
 
@@ -358,7 +358,7 @@ subroutine sept_frontieres_period(i1, j1, i2, j2, x1, y1, x2, y2, tm, ele)
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-integer :: i1, j1, i2, j2
+sll_int32 :: i1, j1, i2, j2
 real(kind = prec) :: x1, y1, x2, y2
 real(kind = prec) :: xinter,yinter
 
@@ -400,9 +400,9 @@ subroutine dix_frontieres_period( i1, j1, i2, j2, x1, y1, x2, y2, tm, ele )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-real(kind=prec) :: x2, y2, x1, y1, xinter, yinter
-integer :: i2, j2, jinter
-integer :: i1, j1
+sll_real64 :: x2, y2, x1, y1, xinter, yinter
+sll_int32 :: i2, j2, jinter
+sll_int32 :: i1, j1
 
 if (i2.eq.i1+1.and.j2.eq.j1+1) then
        

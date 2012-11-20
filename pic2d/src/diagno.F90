@@ -1,10 +1,10 @@
 module diagno
-
+#include "selalib.h"
 use zone
 
 implicit none
 
-integer, private :: i, j, k
+sll_int32, private :: i, j, k
 
 contains
 
@@ -13,10 +13,10 @@ contains
 subroutine comparaisons( tm, sol, time, iplot )
 
 type(tm_mesh_fields) :: tm, sol
-real(kind=prec) :: time, erreur
-integer :: iplot
+sll_real64 :: time, erreur
+sll_int32 :: iplot
 
-integer :: kk0, kk1, kk2, kk3, kk4
+sll_int32 :: kk0, kk1, kk2, kk3, kk4
 character(len=4) :: fin
 character(len=1) :: aa,bb,cc,dd
 
@@ -95,7 +95,7 @@ end subroutine comparaisons
 subroutine ordre( tm, sol )
 
 type(tm_mesh_fields) :: tm, sol
-real(kind=prec) :: max, hxmax
+sll_real64 :: max, hxmax
 
 max  = 0.d0
 hxmax = 0.d0
@@ -119,8 +119,8 @@ end subroutine ordre
 subroutine plot_part( ele, time, iplot )
 
 type (particle) :: ele
-integer :: iplot
-real(kind=prec) :: time, umod
+sll_int32 :: iplot
+sll_real64 :: time, umod
 
 if (nomcas == 'viry__') then
    open(40, file="viry.dat", position="append")
@@ -143,9 +143,9 @@ subroutine diag_coc( tm, ele, time, iplot )
 
 type (tm_mesh_fields) :: tm
 type(particle) :: ele
-real(kind=prec) :: time
-real(kind=prec) :: aux, aux1, aux2, aux3
-integer :: iplot
+sll_real64 :: time
+sll_real64 :: aux, aux1, aux2, aux3
+sll_int32 :: iplot
 
 
 open(16, file="cocL2", position="append" )
@@ -216,8 +216,8 @@ end subroutine diag_coc
 subroutine diag_champ_part( ele, time, iplot )
 
 type(particle) :: ele
-real(kind=prec) :: time
-integer :: iplot
+sll_real64 :: time
+sll_int32 :: iplot
 
 if ( nbpart > 0 ) then
 
@@ -238,10 +238,10 @@ end subroutine diag_champ_part
 subroutine plot_champ( tm, iplot, time )
 
 type(tm_mesh_fields) :: tm
-integer :: iplot
-real(kind=prec) :: time
+sll_int32 :: iplot
+sll_real64 :: time
 
-integer :: kk0, kk1, kk2, kk3, kk4
+sll_int32 :: kk0, kk1, kk2, kk3, kk4
 character(len=4) :: fin
 character(len=1) :: aa,bb,cc,dd
 
@@ -330,10 +330,10 @@ end subroutine plot_champ
 subroutine plot_phases( ele, iplot, time )
 
 type(particle) :: ele
-integer :: iplot, ipart
-real(kind=prec) :: time
-real(kind=prec) :: gama, aux, speed
-integer :: kk0, kk1, kk2, kk3, kk4, k, l
+sll_int32 :: iplot, ipart
+sll_real64 :: time
+sll_real64 :: gama, aux, speed
+sll_int32 :: kk0, kk1, kk2, kk3, kk4, k, l
 character(len=4) :: fin
 character(len=1) :: aa,bb,cc,dd
 
@@ -393,12 +393,12 @@ end subroutine plot_phases
 
 subroutine distribution_v(ele, iplot, time)  
 
-integer :: i, ipart, iplot
-real(kind=prec), dimension(:,:), allocatable :: densite
+sll_int32 :: i, ipart, iplot
+sll_real64, dimension(:,:), allocatable :: densite
 type(particle) :: ele
-real(kind=prec) :: speed, time, vx, vy, aux, vth=1.
-real(kind=prec) :: pas_v, vmin, vmax
-integer :: kk0, kk1, kk2, kk3, kk4, nv=100
+sll_real64 :: speed, time, vx, vy, aux, vth=1.
+sll_real64 :: pas_v, vmin, vmax
+sll_int32 :: kk0, kk1, kk2, kk3, kk4, nv=100
 character(len=4) :: fin
 character(len=1) :: aa,bb,cc,dd
 
@@ -487,11 +487,11 @@ end subroutine distribution_v
 
 subroutine distribution_x(ele, iplot, time)  
 
-integer :: i, ipart, iplot
-real(kind=prec), dimension(100,100) :: densite
+sll_int32 :: i, ipart, iplot
+sll_real64, dimension(100,100) :: densite
 type(particle) :: ele
-real(kind=prec) :: time, x, y, pas_x, pas_y
-integer :: kk0, kk1, kk2, kk3, kk4
+sll_real64 :: time, x, y, pas_x, pas_y
+sll_int32 :: kk0, kk1, kk2, kk3, kk4
 character(len=4) :: fin
 character(len=1) :: aa,bb,cc,dd
 
@@ -552,8 +552,8 @@ end subroutine distribution_x
 subroutine modeE( tm, iplot, time )
 
 type(tm_mesh_fields) :: tm, sol
-real(kind=prec) :: time, aux
-integer :: iplot
+sll_real64 :: time, aux
+sll_int32 :: iplot
 
 aux =0.d0
 do i=0,nx-1
