@@ -6,7 +6,7 @@
 !> @brief 
 !> Selalib quintic splines interpolator
 !
-!> Last modification: October 25, 2012
+!> Last modification: Nov. 20, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -22,91 +22,80 @@ use arbitrary_degree_splines
 implicit none
 
   type quintic_splines_uniform_plan
-    sll_int32                             :: num_pts
-    sll_real64                            :: xmin
-    sll_real64                            :: xmax
-#ifdef STDF95
+    sll_int32                         :: num_pts
+    sll_real64                        :: xmin
+    sll_real64                        :: xmax
     sll_real64, dimension(:), pointer :: b_at_node
     sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable :: b_at_node
-    sll_real64, dimension(:), allocatable :: coeffs
-#endif
   end type quintic_splines_uniform_plan
 
-  type quintic_splines_non_uni_plan
-#ifdef STDF95
+  type quintic_splines_nonuniform_plan
     sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable     :: coeffs
-#endif
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
-  end type quintic_splines_non_uni_plan  
+  end type quintic_splines_nonuniform_plan  
 
   interface compute_quintic_coeffs
-     module procedure compute_quintic_coeffs_uniform, compute_quintic_coeffs_non_uni
+     module procedure compute_quintic_coeffs_uniform, &
+          compute_quintic_coeffs_nonuniform
   end interface compute_quintic_coeffs
 
+  ! What is this?
   interface quintic_splines
      module procedure quintic_splines_interpolator_uniform_value, &
-                         quintic_splines_interpolator_non_uni_value
+                         quintic_splines_interpolator_nonuniform_value
   end interface quintic_splines
 
-  interface delete_quintic_splines
-     module procedure delete_quintic_splines_uniform, delete_quintic_splines_non_uni
-  end interface delete_quintic_splines
+  interface delete
+     module procedure delete_quintic_splines_uniform, &
+          delete_quintic_splines_nonuniform
+  end interface delete
 
 contains
 
   ! *************************************************************************
   !
-  !                    UNIFORM QUINTIC SPLINES STUFFS
+  !                       UNIFORM QUINTIC SPLINES
   !
   ! *************************************************************************
 
-  function new_quintic_splines_uniform(num_pts, xmin, xmax) result(plan)
-
-    sll_int32                                   :: num_pts, ierr
-    sll_real64                                  :: xmin, xmax
+  function new_quintic_spline_uniform(num_pts, xmin, xmax) result(plan)
     type(quintic_splines_uniform_plan), pointer :: plan
+    sll_int32, intent(in)                       :: num_pts
+    sll_real64                                  :: xmin
+    sll_real64                                  :: xmax
+    sll_int32                                   :: ierr
 
-    ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
-    ! plan component allocation
     SLL_ALLOCATE(plan%coeffs(num_pts+5), ierr)
+    SLL_ALLOCATE(plan%b_at_node(6), ierr)
 
-    plan%num_pts = num_pts
-    plan%xmin = xmin
-    plan%xmax = xmax
-    plan%b_at_node = uniform_b_splines_at_x( 5, 0.d0 )
+    plan%num_pts   = num_pts
+    plan%xmin      = xmin
+    plan%xmax      = xmax
+    plan%b_at_node = uniform_b_splines_at_x( 5, 0.0_f64 )  !! ?????
+  end function new_quintic_spline_uniform
 
-  end function new_quintic_splines_uniform
+  ! COMMENTS ON WHAT IS THE STRUCTURE OF THE MATRIX IN TERMS OF A, B, C,...
+  subroutine compute_quintic_coeffs_uniform(f, spline_obj)
+  ! f is the vector of the values of the function on the nodes of the mesh
+    sll_real64, intent(in), dimension(:)          :: f
+    type(quintic_splines_uniform_plan), pointer   :: spline_obj
+    sll_real64, dimension(spline_obj%num_pts+5)   :: g
+    sll_real64                                    :: a, b, c
+    sll_int32                                     :: num_pts
+    type(toep_penta_diagonal_plan), pointer       :: plan_pent
 
+    num_pts = spline_obj%num_pts
+    a = spline_obj%b_at_node(3)
+    b = spline_obj%b_at_node(2)
+    c = spline_obj%b_at_node(1)
 
-  subroutine compute_quintic_coeffs_uniform(f, plan_splines)
-
-  ! f is the vector of the values of the function 
-  !  in the nodes of the mesh*/
-
-    sll_real64, dimension(:)                        :: f
-    type(quintic_splines_uniform_plan), pointer     :: plan_splines
-    sll_real64, dimension(plan_splines%num_pts+5)   :: g
-    sll_real64                                      :: a, b, c
-    sll_int32                                       :: num_pts
-    type(toep_penta_diagonal_plan), pointer         :: plan_pent
-
-    num_pts = plan_splines%num_pts
-    a = plan_splines%b_at_node(3)
-    b = plan_splines%b_at_node(2)
-    c = plan_splines%b_at_node(1)
-
-    g = 0.d0
-    g(3:num_pts+2) = f
+    g = 0.0_f64  
+    g(3:num_pts+2) = f 
 
     plan_pent => new_toep_penta_diagonal(num_pts+5)
-    plan_splines%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan_pent)
+    spline_obj%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan_pent)
     call delete_toep_penta_diagonal(plan_pent)
-
   end subroutine compute_quintic_coeffs_uniform
 
   function quintic_splines_interpolator_uniform_value(x, plan_splines) result(s)
@@ -186,16 +175,16 @@ contains
 
   ! *************************************************************************
   !
-  !                  NON UNIFORM QUINTIC SPLINES STUFFS
+  !                     NON UNIFORM QUINTIC SPLINES
   !
   ! *************************************************************************
 
   ! num_pts = nb_cells + 1
-  function new_quintic_splines_non_uni(knots) result(plan)
+  function new_quintic_splines_nonuniform(knots) result(plan)
 
     sll_int32                                   :: num_pts, ierr
     sll_real64, dimension(:), intent(in)        :: knots
-    type(quintic_splines_non_uni_plan), pointer :: plan
+    type(quintic_splines_nonuniform_plan), pointer :: plan
 
     ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
@@ -205,16 +194,16 @@ contains
 
     plan%spline_obj=>new_arbitrary_degree_spline_1d(5, knots, num_pts, 1)
 
-  end function new_quintic_splines_non_uni
+  end function new_quintic_splines_nonuniform
 
 
-  subroutine compute_quintic_coeffs_non_uni(f, plan_splines)
+  subroutine compute_quintic_coeffs_nonuniform(f, plan_splines)
 
   ! f is the vector of the values of the function 
   !  in the nodes of the mesh*/
 
     sll_real64, dimension(:)                    :: f
-    type(quintic_splines_non_uni_plan), pointer :: plan_splines
+    type(quintic_splines_nonuniform_plan), pointer :: plan_splines
     sll_real64, dimension(size(f)+5)            :: g
     sll_real64                                  :: a, b, c
     sll_int32                                   :: num_pts
@@ -236,11 +225,12 @@ contains
 
     call delete_toep_penta_diagonal(plan_pent)
 
-  end subroutine compute_quintic_coeffs_non_uni
+  end subroutine compute_quintic_coeffs_nonuniform
 
-  function quintic_splines_interpolator_non_uni_value(x, plan_splines) result(s)
+  function quintic_splines_interpolator_nonuniform_value(x, plan_splines) &
+    result(s)
 
-    type(quintic_splines_non_uni_plan), pointer            :: plan_splines
+    type(quintic_splines_nonuniform_plan), pointer            :: plan_splines
     sll_int32                                              :: n, cell, left, j
     sll_real64                                             :: x, s
     sll_real64, dimension(6)                               :: b
@@ -269,7 +259,7 @@ contains
       endif
     enddo
 
-  end function quintic_splines_interpolator_non_uni_value
+  end function quintic_splines_interpolator_nonuniform_value
 
   !> indices is array containing the indices of the mesh: 0, 1,..., num_pts-1
   recursive subroutine find_cell(x, knots, indices, cell, ierr)
@@ -298,47 +288,47 @@ contains
 
   end subroutine find_cell
 
-  function quintic_splines_interpolator_non_uni_array(array, &
+  function quintic_splines_interpolator_nonuniform_array(array, &
                             num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:)                    :: array
-    type(quintic_splines_non_uni_plan), pointer :: plan_splines
+    type(quintic_splines_nonuniform_plan), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(num_pts)              :: res
 
     do i=1,num_pts
-       res(i) = quintic_splines_interpolator_non_uni_value( &
+       res(i) = quintic_splines_interpolator_nonuniform_value( &
                                       array(i), plan_splines)
     enddo
 
-  end function quintic_splines_interpolator_non_uni_array
+  end function quintic_splines_interpolator_nonuniform_array
 
-  function quintic_splines_interpolator_non_uni_pointer(ptr, &
+  function quintic_splines_interpolator_nonuniform_pointer(ptr, &
                             num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:), pointer           :: ptr
-    type(quintic_splines_non_uni_plan), pointer :: plan_splines
+    type(quintic_splines_nonuniform_plan), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(:), pointer           :: res
 
     res => ptr
 
     do i=1,num_pts
-       res(i) = quintic_splines_interpolator_non_uni_value( &
+       res(i) = quintic_splines_interpolator_nonuniform_value( &
                                         ptr(i), plan_splines)
     enddo
 
-  end function quintic_splines_interpolator_non_uni_pointer
+  end function quintic_splines_interpolator_nonuniform_pointer
 
-  subroutine delete_quintic_splines_non_uni(plan)
+  subroutine delete_quintic_splines_nonuniform(plan)
 
-    type(quintic_splines_non_uni_plan), pointer :: plan
+    type(quintic_splines_nonuniform_plan), pointer :: plan
     sll_int32                                   :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     call delete_arbitrary_order_spline_1d( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
-  end subroutine delete_quintic_splines_non_uni
+  end subroutine delete_quintic_splines_nonuniform
 
 end module sll_quintic_splines
