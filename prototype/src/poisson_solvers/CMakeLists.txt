@@ -141,3 +141,9 @@ ENDIF()
                          sll_timer sll_utilities sll_assertion)
 
 ENDIF()
+
+
+add_executable(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
+
+target_link_libraries( test_poisson_2d_fem sll_memory sll_assertion ${LAPACK_LIBRARIES})
+
