@@ -103,4 +103,6 @@ do istep = 1, nstep
 
 end do
 
+print*,'PASSED'
+
 end program test_pic2d

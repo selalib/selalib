@@ -36,11 +36,11 @@ fin = aa//bb//cc//dd
 open( 34, file='ex.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(34)
 write(34,"(A18,G10.3,A1)") "set title 'Time = ",time,"'"
-write(34,*) "splot  '=RES/ex_"//fin//"' w l"
+write(34,*) "splot  'ex_"//fin//"' w l"
 write(34,*)"pause 1"
 close(34)
 
-open(31,file='=RES/ex_'//fin)
+open(31,file='ex_'//fin)
 rewind(31)
 do i=0,nx-1
    do j=0,ny
@@ -55,11 +55,11 @@ close(31)
 open( 35, file='ey.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(35)
 write(35,"(A18,G10.3,A1)") "set title 'Time = ",time,"'"
-write(35,*) "splot  '=RES/ey_"//fin//"' w l"
+write(35,*) "splot  'ey_"//fin//"' w l"
 write(35,*)"pause 1"
 close(35)
 
-open(32,file='=RES/ey_'//fin)
+open(32,file='ey_'//fin)
 rewind(32)
 do i=0,nx
    do j=0,ny-1
@@ -74,11 +74,11 @@ close(32)
 open( 36, file='bz.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(36)
 write(36,"(A18,G10.3,A1)") "set title 'Time = ",time,"'"
-write(36,*) "splot  '=RES/bz_"//fin//"' w l"
+write(36,*) "splot  'bz_"//fin//"' w l"
 write(36,*)"pause 1"
 close(36)
 
-open(33,file='=RES/bz_'//fin)
+open(33,file='bz_'//fin)
 rewind(33)
 do i=0,nx-1
    do j=0,ny-1
@@ -148,8 +148,8 @@ real(kind=prec) :: aux, aux1, aux2, aux3
 integer :: iplot
 
 
-open(16, file="=RES/cocL2", position="append" )
-open(14, file="=RES/divEL2", position="append" )
+open(16, file="cocL2", position="append" )
+open(14, file="divEL2", position="append" )
 
 if( iplot == 1 )then
    rewind(16)
@@ -221,7 +221,7 @@ integer :: iplot
 
 if ( nbpart > 0 ) then
 
-   open(17, file="=RES/chpart", position="append"  )
+   open(17, file="chpart", position="append"  )
    if( iplot == 1 ) rewind(17)
    
    write(17,*) sngl(time), sngl(ele%epx(1)), &
@@ -276,22 +276,22 @@ open(  15, file = 'jy.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(15)
 write(15,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-write(11,*)"splot  '=RES/ex_"//fin//"' w l"!, '=RES/ex_"//fin//"' u 1:2:4 w l"
+write(11,*)"splot  'ex_"//fin//"' w l"!, 'ex_"//fin//"' u 1:2:4 w l"
 write(11,*)"pause 1"
-write(12,*)"splot  '=RES/ey_"//fin//"' w l"!, '=RES/ey_"//fin//"' u 1:2:4 w l"
+write(12,*)"splot  'ey_"//fin//"' w l"!, 'ey_"//fin//"' u 1:2:4 w l"
 write(12,*)"pause 1"
-write(13,*)"splot  '=RES/bz_"//fin//"' w l"!, '=RES/bz_"//fin//"' u 1:2:4 w l"
+write(13,*)"splot  'bz_"//fin//"' w l"!, 'bz_"//fin//"' u 1:2:4 w l"
 write(13,*)"pause 1"
-write(14,*)"splot  '=RES/jx_"//fin//"' w l"!, '=RES/jx_"//fin//"' u 1:2:4 w l"
+write(14,*)"splot  'jx_"//fin//"' w l"!, 'jx_"//fin//"' u 1:2:4 w l"
 write(14,*)"pause 1"
-write(15,*)"splot  '=RES/jy_"//fin//"' w l"!, '=RES/jy_"//fin//"' u 1:2:4 w l"
+write(15,*)"splot  'jy_"//fin//"' w l"!, 'jy_"//fin//"' u 1:2:4 w l"
 write(15,*)"pause 1"
 
-open( 16, file = '=RES/ex_'//fin )
-open( 17, file = '=RES/ey_'//fin )
-open( 18, file = '=RES/bz_'//fin )
-open( 19, file = '=RES/jx_'//fin )
-open( 20, file = '=RES/jy_'//fin )
+open( 16, file = 'ex_'//fin )
+open( 17, file = 'ey_'//fin )
+open( 18, file = 'bz_'//fin )
+open( 19, file = 'jx_'//fin )
+open( 20, file = 'jy_'//fin )
 
 do i=0,nx-1
    do j=0,ny
@@ -366,16 +366,16 @@ if ( iplot .eq. 1 ) then
 end if
 
 write(11,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(11,*)"plot '=RES/part_"//nomcas//jname//fin//"' w d "
+write(11,*)"plot 'part_"//nomcas//jname//fin//"' w d "
 close(11)
 write(12,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(12,*)"plot '=RES/part_"//nomcas//jname//fin//"' u 1:3 w d "
+write(12,*)"plot 'part_"//nomcas//jname//fin//"' u 1:3 w d "
 close(12)
 write(13,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(13,*)"plot '=RES/part_"//nomcas//jname//fin//"' u 2:4 w d "
+write(13,*)"plot 'part_"//nomcas//jname//fin//"' u 2:4 w d "
 close(13)
 
-open( 14, file = '=RES/part_'//nomcas//jname//fin )
+open( 14, file = 'part_'//nomcas//jname//fin )
 do ipart=1,nbpart
    speed = sqrt( ele%vit(ipart,1)*ele%vit(ipart,1) + &
         &        ele%vit(ipart,2)*ele%vit(ipart,2) )
@@ -437,9 +437,9 @@ open( 27, file = 'densite_v.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(27)
 write(27,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-open( 28, file = '=RES/densite_v_'//nomcas//jname//fin )
+open( 28, file = 'densite_v_'//nomcas//jname//fin )
 
-write(27,*)"splot  '=RES/densite_v_"//nomcas//jname//fin//"' w l, '=RES/densitetheo_"//nomcas//jname//"' w l"
+write(27,*)"splot  'densite_v_"//nomcas//jname//fin//"' w l, 'densitetheo_"//nomcas//jname//"' w l"
 write(27,*)"pause 1"
 
 do i=1,nv
@@ -459,9 +459,9 @@ if ( iplot .eq. 1 ) then
    rewind(37)
    write(37,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-   open( 38, file = '=RES/densitetheo_'//nomcas//jname )
+   open( 38, file = 'densitetheo_'//nomcas//jname )
 
-   write(37,*)"splot  '=RES/densitetheo_"//nomcas//jname//"' w l"
+   write(37,*)"splot  'densitetheo_"//nomcas//jname//"' w l"
    write(37,*)"pause 1"
 
    do i=1,nv
@@ -528,9 +528,9 @@ open( 27, file = 'densite_x.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(27)
 write(27,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 
-open( 28, file = '=RES/densite_x_'//nomcas//jname//fin )
+open( 28, file = 'densite_x_'//nomcas//jname//fin )
 
-write(27,*)"splot  '=RES/densite_x_"//nomcas//jname//fin//"' w l"
+write(27,*)"splot  'densite_x_"//nomcas//jname//fin//"' w l"
 write(27,*)"pause 1"
 
 do i=1,100  
