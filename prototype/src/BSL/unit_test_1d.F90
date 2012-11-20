@@ -1,4 +1,4 @@
-program unit_test_1d
+program test_bsl_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -81,10 +81,10 @@ program unit_test_1d
      call advection_v(    delta_t)
      call advection_x(0.5*delta_t)
 
-
   end do
 
   ! compute error when Gaussian arrives at center (t=1)
+  error = 0.0
   do j = 1, nc_v+1
      do i = 1, nc_x+1
         x = x_min + (i-1)*(x_max-x_min)/nc_x
@@ -159,4 +159,4 @@ contains
 
    end subroutine plot_df
 
-end program unit_test_1d
+end program test_bsl_1d
