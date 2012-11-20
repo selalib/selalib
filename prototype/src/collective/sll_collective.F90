@@ -267,6 +267,22 @@ contains !************************** Operations **************************
 
   ! Following what is exposed to the users of the module.
 
+  ! The following function is a little tricky. The only test of equality we
+  ! use is the identifier of the underlying communicator. Can the collective
+  ! differ in any other way?
+  function collectives_are_same( col1, col2 )
+    logical :: collectives_are_same
+    type(sll_collective_t), pointer :: col1
+    type(sll_collective_t), pointer :: col2
+    SLL_ASSERT( associated(col1) )
+    SLL_ASSERT( associated(col2) )
+    if( col1%comm == col2%comm ) then
+       collectives_are_same = .true.
+    else
+       collectives_are_same = .false.
+    end if
+  end function collectives_are_same
+
   ! sll_boot_collective allocates and initializes the global variable 
   ! sll_world_collective and boots the MPI environment.
 

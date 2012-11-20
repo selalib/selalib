@@ -1236,7 +1236,8 @@ contains  !******************************************************************
     type(layout_type), pointer      :: initial; \
     type(layout_type), pointer      :: final; \
     array_type, array_dim           :: array; \
-    type(sll_collective_t), pointer :: col; \
+    type(sll_collective_t), pointer :: coli; \
+    type(sll_collective_t), pointer :: colf; \
     type(box_type)                  :: ibox, fbox, inters; \
     sll_int32                       :: i, f; \
     sll_int32                       :: my_rank; \
@@ -1250,14 +1251,16 @@ contains  !******************************************************************
        print *, 'ERROR: un-initialized arguments given to sll_new_remap_plan'; \
        stop; \
     end if; \
-    if( .not. associated(get_layout_collective(initial), target=get_layout_collective(final)) ) then; \
+    coli => get_layout_collective(initial); \
+    colf => get_layout_collective(final); \
+    if( .not. collectives_are_same( coli, colf ) ) then; \
        print *, 'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'; \
        stop; \
     end if; \
     acc = 0; \
-    col => get_layout_collective(initial); \
-    my_rank  = sll_get_collective_rank( col ); \
-    col_size = sll_get_collective_size( col ); \
+    coli => get_layout_collective(initial); \
+    my_rank  = sll_get_collective_rank( coli ); \
+    col_size = sll_get_collective_size( coli ); \
     SLL_ALLOCATE( fname, ierr ); \
     SLL_ALLOCATE( fname%send_displs(0:col_size-1), ierr ); \
     fname%send_displs(:) = 0; \
@@ -1974,6 +1977,7 @@ contains  !******************************************************************
     sll_int32                                :: my_rank
     sll_int32                                :: loc
     sll_int32, dimension(1:3)                :: local_lo, local_hi
+    sll_int32, dimension(1:3)                :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2007,8 +2011,10 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( init_layout, tmpa)
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2066,8 +2072,10 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( final_layout, tmpa )
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
@@ -2103,6 +2111,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:2)                 :: local_lo, local_hi
+    sll_int32, dimension(1:2)                 :: tmpa
 
 !!$    ! to load the MPI function and send integers, we have a separate set of
 !!$    ! arrays to store this information for now.
@@ -2150,7 +2159,7 @@ contains  !******************************************************************
 !!$    print *, 'rdispi', rdispi(:)
 !!$    call flush(6)
 !!$#endif
-    
+
     ! load the send buffer
     loc = 0             ! first loading is at position zero
 !!$    ! This step is obviously not needed for integers themselves. We put this
@@ -2177,8 +2186,13 @@ contains  !******************************************************************
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( init_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( init_layout, tmpa )
+
+!!$          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
+!!$          local_hi = global_to_local_2D( init_layout, (/hii,hij/)  )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2190,13 +2204,14 @@ contains  !******************************************************************
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
 !!$                sb(loc:) = transfer(data_in(id,jd),(/1_i32/))
-                sb(loc:) = data_in(id,jd)
+                sb(loc) = data_in(id,jd)
 !!$                loc      = loc + int32_data_size
                 loc      = loc + 1
              end do
           end do
        end if
     end do
+
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
@@ -2246,8 +2261,10 @@ contains  !******************************************************************
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( final_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( final_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( final_layout, tmpa )
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
 !!$                data_out(id,jd) = transfer(rb(loc:),data_out(1,1))
@@ -2288,6 +2305,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:2)                 :: local_lo, local_hi
+    sll_int32, dimension(1:2)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2331,8 +2349,10 @@ print *, 'remap 2d complex:'
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( init_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2393,8 +2413,10 @@ print *, 'remap 2d complex:'
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( final_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( final_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( final_layout, tmpa )
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
                 data_out(id,jd) = rb(loc)
@@ -2606,7 +2628,8 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:3)                 :: local_lo, local_hi
-  
+    sll_int32, dimension(1:3)                 :: tmpa
+
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
     sdisp        => plan%send_displs
@@ -2647,8 +2670,10 @@ print *, 'remap 2d complex:'
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2707,8 +2732,10 @@ print *, 'remap 2d complex:'
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( final_layout, tmpa )
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
@@ -2744,6 +2771,7 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:4)                 :: local_lo, local_hi
+    sll_int32, dimension(1:4)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2787,8 +2815,10 @@ print *, 'remap 2d complex:'
           hij = get_box_4D_j_max(sbox)
           hik = get_box_4D_k_max(sbox)
           hil = get_box_4D_l_max(sbox)
-          local_lo = global_to_local_4D( init_layout, (/loi,loj,lok,lol/) )
-          local_hi = global_to_local_4D( init_layout, (/hii,hij,hik,hil/) )
+          tmpa(:)  = (/loi,loj,lok,lol/)
+          local_lo = global_to_local_4D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil/)
+          local_hi = global_to_local_4D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2851,8 +2881,10 @@ print *, 'remap 2d complex:'
           hij = get_box_4D_j_max(sbox)
           hik = get_box_4D_k_max(sbox)
           hil = get_box_4D_l_max(sbox)
-          local_lo = global_to_local_4D( final_layout, (/loi,loj,lok,lol/) )
-          local_hi = global_to_local_4D( final_layout, (/hii,hij,hik,hil/) )
+          tmpa(:)  = (/loi,loj,lok,lol/)
+          local_lo = global_to_local_4D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil/)
+          local_hi = global_to_local_4D( final_layout, tmpa )
           do ld = local_lo(4), local_hi(4)
              do kd = local_lo(3), local_hi(3)
                 do jd = local_lo(2), local_hi(2)
@@ -2890,6 +2922,7 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:3)                 :: local_lo, local_hi
+    sll_int32, dimension(1:3)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2924,8 +2957,10 @@ print *, 'remap 2d complex:'
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2983,8 +3018,10 @@ print *, 'remap 2d complex:'
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( final_layout, tmpa )
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
@@ -3020,6 +3057,7 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:6)                 :: local_lo, local_hi
+    sll_int32, dimension(1:6)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -3067,10 +3105,10 @@ print *, 'remap 2d complex:'
           hil = get_box_6D_l_max(sbox)
           him = get_box_6D_m_max(sbox)
           hin = get_box_6D_n_max(sbox)
-          local_lo = &
-               global_to_local_6D( init_layout,(/loi,loj,lok,lol,lom,lon/))
-          local_hi = &
-               global_to_local_6D( init_layout,(/hii,hij,hik,hil,him,hin/))
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D( init_layout, tmpa)
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -3145,10 +3183,10 @@ print *, 'remap 2d complex:'
           hil = get_box_6D_l_max(sbox)
           him = get_box_6D_m_max(sbox)
           hin = get_box_6D_n_max(sbox)
-          local_lo = &
-               global_to_local_6D(final_layout, (/loi,loj,lok,lol,lom,lon/))
-          local_hi = &
-               global_to_local_6D(final_layout, (/hii,hij,hik,hil,him,hin/))
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D(final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D(final_layout, tmpa)
           do nd = local_lo(6), local_hi(6)
              do md = local_lo(5), local_hi(5)
                 do ld = local_lo(4), local_hi(4)
@@ -3251,7 +3289,7 @@ print *, 'remap 2d complex:'
                    do kd = local_lo(3), local_hi(3)
                       do jd = local_lo(2), local_hi(2)
                          do id = local_lo(1), local_hi(1)
-                            sb(loc:) = data_in(id,jd,kd,ld,md,nd)
+                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
                             loc      = loc + 1
                          end do
                       end do

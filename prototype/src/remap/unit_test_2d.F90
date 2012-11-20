@@ -47,7 +47,7 @@ program remap_2d_unit_test
   sll_real32   , dimension(1)               :: prod4test
   logical                                   :: test_passed
   integer                                   :: ok
-
+  sll_int32, dimension(2)                   :: tmp_array
   test_passed = .true.
 
   ! Boot parallel environment
@@ -96,7 +96,8 @@ program remap_2d_unit_test
      ! initialize the local data    
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
-           global_indices =  local_to_global_2D( layout1, (/i, j/) )
+           tmp_array(:) = (/i, j/)
+           global_indices =  local_to_global_2D( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            local_array1(i,j) = gi + (gj-1)*ni
@@ -124,11 +125,11 @@ program remap_2d_unit_test
           loc_sz_j_final )
 
      SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final), ierr )
-    
+    print *, 'will create new remap plan...'
      rmp2 => NEW_REMAP_PLAN( layout1, layout2, local_array1)     
-
+print *, 'created plan, proceeding to apply plan...'
      call apply_remap_2D( rmp2, local_array1, local_array2 ) 
-
+print *, 'applied plan'
      SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final),ierr ) 
 #if 0
      if( myrank .eq. 0 ) then
@@ -141,7 +142,8 @@ program remap_2d_unit_test
      ! compare results with expected data
      do j=1,loc_sz_j_final 
         do i=1,loc_sz_i_final
-           global_indices =  local_to_global_2D( layout2, (/i, j/) )
+           tmp_array(:) = (/i, j/)
+           global_indices =  local_to_global_2D( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            arrays_diff(i,j) = local_array2(i,j) - (gi + (gj-1)*ni)
@@ -247,7 +249,8 @@ program remap_2d_unit_test
      ! initialize the local data    
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
-           global_indices =  local_to_global_2D( layout1, (/i, j/) )
+           tmp_array(:)   = (/i, j/)
+           global_indices =  local_to_global_2D( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            val = gi + (gj-1)*ni
@@ -293,7 +296,8 @@ program remap_2d_unit_test
      ! compare results with expected data
      do j=1,loc_sz_j_final 
         do i=1,loc_sz_i_final
-           global_indices =  local_to_global_2D( layout2, (/i, j/) )
+           tmp_array(:)   = (/i, j/)
+           global_indices =  local_to_global_2D( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            arrays_diffc(i,j) = local_array2c(i,j) - (gi + (gj-1)*ni)
