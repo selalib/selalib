@@ -1,0 +1,201 @@
+PROJECT(SLV2D)
+ENABLE_LANGUAGE(Fortran)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+SET(CMAKE_BUILD_TYPE None)
+
+MESSAGE( STATUS "SLV2D_BINARY_DIR: ${SLV2D_BINARY_DIR}" )
+MESSAGE( STATUS "SLV2D_SOURCE_DIR: ${SLV2D_SOURCE_DIR}" )
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
+   SET(SLL_SOURCE_DIR "${SLV2D_SOURCE_DIR}/../../prototype/src")
+ENDIF()
+MESSAGE( STATUS "SLL_SOURCE_DIR: ${SLL_SOURCE_DIR}" )
+
+SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules 
+                       ${SLL_SOURCE_DIR}/CMakeModules
+                       ${CMAKE_MODULE_PATH} )
+
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+
+INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+
+MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+
+IF(CMAKE_Fortran_COMPILER MATCHES "gfortran")
+
+   ADD_DEFINITIONS(-DGFORTRAN)
+   SET(CMAKE_Fortran_FLAGS "-O3 -ffree-line-length-none")
+
+ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+
+   SET(CMAKE_Fortran_FLAGS "-O3")
+   ADD_DEFINITIONS(-DINTEL)
+
+ELSEIF(CMAKE_Fortran_COMPILER_NAME MATCHES "xlf")
+
+   SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+
+ENDIF()
+
+MESSAGE(STATUS "CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
+
+FIND_PACKAGE(LAPACK)
+IF( NOT LAPACK_FOUND)
+   INCLUDE(${SLL_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
+ENDIF( NOT LAPACK_FOUND)
+
+SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       " FORCE)
+SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " )
+
+IF(SILO_ENABLED) 
+   FIND_PACKAGE(SILO  REQUIRED)
+   IF(SILO_FOUND)
+      ADD_DEFINITIONS(-D_SILO)
+      INCLUDE_DIRECTORIES(${SILO_INCLUDE_DIRS})
+      SET(CMAKE_EXE_LINKER_FLAGS "-lsupc++")
+      MESSAGE(STATUS "SILO_LIBRARIES:${SILO_LIBRARIES}")
+   ENDIF()
+ENDIF()
+
+IF(FFTPACK_ENABLED)
+   FIND_PACKAGE(FFTPACK)
+   IF(FFTPACK_FOUND)
+      ADD_DEFINITIONS(-D_FFTPACK)
+   ENDIF()
+   MESSAGE(STATUS "FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
+ENDIF()
+
+IF(FFTW_ENABLED AND NOT FFTW_FOUND)
+   FIND_PACKAGE(FFTW)
+   IF(FFTW_FOUND)
+      ADD_DEFINITIONS(-D_FFTW)
+      INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
+   ENDIF()
+   MESSAGE(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
+ENDIF()
+
+IF(NOT MPI_FOUND)
+   FIND_PACKAGE(MPI REQUIRED Fortran)
+ENDIF(NOT MPI_FOUND)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+IF(NOT HDF5_FOUND)
+   INCLUDE(HDF5Config)
+   IF(HDF5_ENABLE_PARALLEL) 
+      MESSAGE(STATUS "HDF5 parallel supported")
+   ELSE()
+      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+   ENDIF()
+ENDIF(NOT HDF5_FOUND)
+
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/assert)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/memory)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/precision)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/utilities)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
+ELSE()
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+ENDIF()
+
+SET(SLV2D_SRC silo_module.F90
+              diagnostiques.F90
+              fft_module.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              poisson2dpp_par.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d.F90 )
+
+ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
+
+ADD_DEPENDENCIES(slv2d selalib)
+
+SET(LIBS selalib ${SILO_LIBRARIES} ${LAPACK_LIBRARIES} 
+    ${FFTPACK_LIBRARIES} ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
+
+ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
+TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS})
+
+ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
+TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
+
+ADD_EXECUTABLE(test_poisson2d_par test_poisson2d_par.F90)
+TARGET_LINK_LIBRARIES(test_poisson2d_par slv2d ${LIBS})
+
+ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
+
+ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
+
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+#ADD_DEFINITIONS(-D_QUINTIC)
+#ADD_EXECUTABLE(vp2d_quintic vp2d_selalib.F90 sll_vlasov2d.F90)
+#TARGET_LINK_LIBRARIES(vp2d_quintic slv2d ${LIBS})
+
+FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+ADD_DEFINITIONS(-D_TWO_D)
+ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
+TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
+
+IF (FFTW_FOUND) 
+   ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
+   TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
+   IF(FFTW_MPI_LIBRARY)
+      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
+      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+      ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
+      TARGET_LINK_LIBRARIES(fftw_solver_mpi ${FFTW_LIBRARIES} sll_memory)
+   ENDIF()
+ENDIF()
+
+ENABLE_TESTING()
+
+SET(PROCS 1)
+ADD_TEST(NAME test_poisson2d_par COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson2d_par
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+SET(PROCS 4)
+SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml)
+
+ADD_TEST(NAME test_vp2d COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vp2d
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+ADD_TEST(NAME test_vm2d COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vm2d
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+ADD_TEST(NAME test_vp2d_cubic COMMAND 
+         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vp2d_cubic
+         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+#ADD_TEST(NAME test_vp2d_quintic COMMAND 
+#         ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+#         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vp2d_quintic
+#         ${MPIEXEC_POSTFLAGS} ${ARGS})
+
+SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_poisson2d_par PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vp2d_cubic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

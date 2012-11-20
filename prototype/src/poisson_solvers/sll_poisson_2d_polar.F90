@@ -14,11 +14,11 @@ module poisson_polar
      sll_int32 :: nr, ntheta
      sll_int32 :: bc(2)
      type(sll_fft_plan), pointer :: pfwd,pinv
-     sll_real64, dimension(:,:), allocatable :: f_fft
-     sll_comp64, dimension(:), allocatable :: fk,phik
+     sll_real64, dimension(:,:), pointer :: f_fft
+     sll_comp64, dimension(:), pointer :: fk,phik
      !for the tridiagonal solver
-     sll_real64, dimension(:), allocatable :: a,cts
-     sll_int32, dimension(:), allocatable :: ipiv
+     sll_real64, dimension(:), pointer :: a,cts
+     sll_int32, dimension(:), pointer :: ipiv
   end type sll_plan_poisson_polar
 
   !flags for boundary conditions
@@ -92,7 +92,7 @@ contains
 
     implicit none
 
-    type(sll_plan_poisson_polar), intent(inout), pointer :: this
+    type(sll_plan_poisson_polar), pointer :: this
     sll_int32 :: err
     if (associated(this)) then
        call fft_delete_plan(this%pfwd)
@@ -122,7 +122,7 @@ contains
 
     implicit none
 
-    type(sll_plan_poisson_polar), intent(inout), pointer :: plan
+    type(sll_plan_poisson_polar), pointer :: plan
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in) :: f
     sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
 
@@ -131,7 +131,8 @@ contains
 
     sll_real64 :: r
     sll_int32::i,k,ind_k
-    sll_real64:: kval
+    sll_real64:: kval,err
+    sll_comp64::err_loc
 
     nr=plan%nr
     ntheta=plan%ntheta
@@ -141,12 +142,13 @@ contains
     bc = plan%bc
     plan%f_fft=f
 
+
     do i=1,nr+1
        call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
 
    ! poisson solver
-    do k=0,ntheta-1!ntheta/2
+    do k=0,ntheta/2!ntheta-1!ntheta/2
        
        ind_k=k
        !do i=1,nr+1
@@ -172,48 +174,68 @@ contains
 !!$          plan%a(3*i-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
           plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
        enddo
-       !print *,k,sum(abs(plan%fk(1:nr+1)))
+       
+       !if(k==0)then
+       !  print *,'second membre en input'
+       !  print *,plan%fk
+       !endif
+       
+       !print *,'#',k,sum(abs(plan%fk(1:nr+1)))
        plan%phik=0.0_f64
        !plan%a(1)=0.0_f64
        !plan%a(3*(nr-1))=0.0_f64
 
         
         !boundary condition at rmin
-        if(bc(1)==1)then !Dirichlet
+        if(bc(1)==DIRICHLET)then !Dirichlet
           plan%a(1)=0.0_f64
         endif
-        if(bc(1)==2)then
+        if(bc(1)==NEUMANN)then
           plan%a(2)=plan%a(2)+plan%a(1) !Neumann
+          plan%a(1)=0._f64
         endif
-        if(bc(1)==3)then 
+        if(bc(1)==NEUMANN_MODE0)then 
           if(k==0)then!Neumann for mode zero
             plan%a(2)=plan%a(2)+plan%a(1)
+            plan%a(1)=0._f64
           else !Dirichlet for other modes
             plan%a(1)=0._f64
           endif  
         endif
 
         !boundary condition at rmax
-        if(bc(2)==1)then !Dirichlet
+        if(bc(2)==DIRICHLET)then !Dirichlet
           plan%a(3*(nr-1))=0.0_f64
         endif
-        if(bc(2)==2)then
+        if(bc(2)==NEUMANN)then
           plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
+          plan%a(3*(nr-1))=0.0_f64
         endif
-        if(bc(2)==3)then 
+        if(bc(2)==NEUMANN_MODE0)then 
           if(k==0)then!Neumann for mode zero
             plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
+            plan%a(3*(nr-1))=0.0_f64
           else !Dirichlet for other modes
             plan%a(3*(nr-1))=0.0_f64
           endif  
         endif
-         
-          
+        
+        !do i=1,3*(nr-1)
+        !  plan%a(i)=0._f64
+        !enddo
+        !do i=1,nr-1
+        !  plan%a(2+3*(i-1))=1._f64
+        !enddo 
+                  
        call setup_cyclic_tridiag(plan%a,nr-1,plan%cts,plan%ipiv)
        call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
-
-
-
+       
+       !print *,'#complex:',sum(abs(aimag(plan%fk(2:nr)))),sum(abs(aimag(plan%phik(2:nr))))
+       !do i=2,nr
+       !  print *,i,plan%fk(i),plan%phik(i)
+       !enddo
+       !stop
+       
         !boundary condition at rmin
         if(bc(1)==1)then !Dirichlet
           plan%phik(1)=0.0_f64
@@ -245,6 +267,36 @@ contains
         endif
 
 
+       err=0._f64
+       do i=4,nr-4
+         r=rmin+real(i-1,f64)*dr
+         err_loc=(plan%phik(i+1)-2*plan%phik(i)+plan%phik(i-1))/dr**2
+         err_loc=err_loc+(plan%phik(i+1)-plan%phik(i-1))/(2._f64*r*dr)
+         err_loc=-err_loc+kval**2/r**2*plan%phik(i)
+         err_loc=(err_loc-plan%fk(i))
+         if(abs(err_loc)>err)then
+           err=abs(err_loc)
+         endif
+       enddo
+       
+       if(err>1e-12)then
+         print *,'#',k,err
+       endif
+
+       if(err>1e-4)then
+       do i=2,nr
+         r=rmin+real(i-1,f64)*dr
+         err_loc=(plan%phik(i+1)-2*plan%phik(i)+plan%phik(i-1))/dr**2
+         err_loc=err_loc+(plan%phik(i+1)-plan%phik(i-1))/(2._f64*r*dr)
+         err_loc=-err_loc+kval**2/r**2*plan%phik(i)
+         !err_loc=(err_loc-plan%fk(i))
+         print *,r,real(err_loc),aimag(err_loc),real(plan%fk(i)),aimag(plan%fk(i))
+       enddo
+       stop
+       endif
+
+
+
 
 
 
@@ -252,10 +304,19 @@ contains
        do i=1,nr+1
           call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
        end do
-       !print *,k,'s',bc,sum(abs(plan%phik(1:nr+1)))
+       !print *,'#',k,'s',bc,sum(abs(plan%phik(1:nr+1)))
+
+       !if(k==1)then
+       !  print *,'#output'
+       !  do i=1,nr+1
+       !    print *,i,real(plan%phik(i))
+       !  enddo
+       !  !print *,plan%phik
+       !endif
+    
 
     end do
-
+    
     ! FFT INVERSE
     do i=1,nr+1
        call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))

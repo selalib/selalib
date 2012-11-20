@@ -766,7 +766,9 @@ contains
   subroutine Solve_Runge_K4(mu,xi,X,Phi,dx,Neq,Diff_Eq,Y,C)
     use numeric_constants
     implicit none
-    !External Diff_Eq 
+#ifdef INTEL
+    External Diff_Eq 
+#endif
     sll_int   :: Neq
     sll_real64   :: x, phi(Neq), dx,mu,xi,y,c
     sll_real64     :: Step1(Neq),Step2(Neq),Step3(Neq), Step4(Neq), phi_temp(Neq)

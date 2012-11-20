@@ -1,6 +1,7 @@
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-#set(CMAKE_Fortran_FLAGS "-g -Wall -cpp -ffree-line-length-none -fall-intrinsics")
-include_directories(${HDF5_INCLUDE_DIRS})
+IF(HDF5_INCLUDE_DIRS)
+   include_directories(${HDF5_INCLUDE_DIRS})
+ENDIF()
 add_library(multigrid STATIC 
 mgdend.F90 
 mgdkcyc.F90
@@ -23,7 +24,7 @@ mgdsetf.F90
 mgdrtrsf.F90
 write_xdmf_3d.F90
 )
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    add_executable(test_multigrid unit_test.F90)
    target_link_libraries(test_multigrid multigrid 
                                         sll_low_level_file_io_parallel
