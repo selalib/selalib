@@ -1,7 +1,13 @@
 subroutine mgdend(ngrid)
 use mgd3
+#ifdef INTEL
+implicit none
+include "mpif.h"
+#else
 use mpi
 implicit none
+#endif
+
 #include "mgd3.h"
 
 integer :: ngrid
