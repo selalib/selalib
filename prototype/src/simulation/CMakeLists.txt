@@ -199,15 +199,13 @@ target_link_libraries(VP1D_cart
 	)
 
 
-IF(FFTPACK_ENABLED)
-
 add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 target_link_libraries(VP1D_deltaf_cart
 	sll_mapped_meshes
 	sll_interpolators
-	sll_fft
-	sll_splines
 	sll_periodic_interp
+	sll_splines
+	sll_fft
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
@@ -220,8 +218,6 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
-ENDIF()
-
 
 ENDIF()
 
@@ -235,7 +231,7 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 #Here is defined the library containing the parallel simulations. 
 #Please add your new simulation_MYMETHOD.F90 
