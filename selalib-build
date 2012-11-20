@@ -30,13 +30,15 @@
 # (3)  The reservation is for two hours
 # (4)  Some options, please read the documentation for more details
 
-#PIPOL amd64_2010-linux-debian-testing 1:30 
-#PIPOL amd64_kvm-linux-debian-testing 1:30 
-#PIPOL amd64-linux-debian-testing 1:30 
+#PIPOL amd64_2010-linux-debian-testing 1:00 
+#PIPOL amd64_kvm-linux-debian-testing 1:00 
+#PIPOL amd64-linux-debian-testing 1:00 
 #PIPOL amd64_2010-linux-fedora-core16 1:00
+#PIPOL amd64_2010-linux-fedora-core17 1:00
 #PIPOL amd64-linux-fedora-core16 1:00
 #PIPOL amd64-linux-ubuntu-oneiric 1:00
 #PIPOL amd64-linux-ubuntu-precise 1:00
+#PIPOL amd64-linux-ubuntu-quantal 1:00
 #PIPOL x86_64_mac-mac-osx-server-snow-leopard 2:00
 
 HOST=`hostname -s`
@@ -76,7 +78,7 @@ fi
 echo "HOMEDIR:$HOMEDIR"
 echo "WORDIR:$WORKDIR"
 
-if [[ $(($(stat -f --format="%a*%S" $WORKDIR))) == 0]]; then
+if [[ $(($(stat -f --format="%a*%S" $WORKDIR))) == 0 ]]; then
    cd /tmp
 else
    cd $WORKDIR
