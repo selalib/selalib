@@ -14,13 +14,18 @@ program VP1d_deltaf
   use numeric_constants
   use sll_module_mapped_meshes_2d_cartesian
   use sll_cubic_spline_interpolator_1d
+  use sll_periodic_interpolator_1d
+  use sll_odd_degree_spline_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
   use sll_poisson_1d_periodic
+  use omp_lib
   implicit none
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
+  type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
+  type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
   class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
@@ -32,7 +37,7 @@ program VP1d_deltaf
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
-  sll_real64, dimension(:), pointer :: f1d
+  sll_real64, dimension(:), pointer     :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array
   sll_int32  :: Ncx, Ncv   ! number of cells
@@ -44,12 +49,14 @@ program VP1d_deltaf
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
+  sll_int32  :: interpol_x, order_x, interpol_v, order_v
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
   sll_int32  :: freqdiag
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
   sll_real64 :: l1norm, l2norm
+  sll_real64 :: equilibrium_contrib
   character(len=32) :: fname, case
   sll_int32  :: istep
   sll_int32  :: nbox
@@ -60,9 +67,13 @@ program VP1d_deltaf
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
   sll_real64 :: adr, Edrmax
   logical    :: turn_drive_off
+  sll_int32  :: istartx, iendx, jstartv, jendv
+  sll_int32  :: num_threads, my_num
+  sll_int32  :: ipiece_size_x, ipiece_size_v
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
+  namelist / interpolator / interpol_x, order_x, interpol_v, order_v
   namelist / time_iterations / dt, nbiter, freqdiag
   namelist / landau / kmode, eps, is_delta_f, driven 
   namelist / tsi / kmode, eps, v0 
@@ -148,7 +159,8 @@ program VP1d_deltaf
   print*, '   number of iterations=', nbiter
   print*, ' '
   open(unit = param_out, file = 'param_out.dat') 
-  write(param_out,*) trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
+  write(param_out,'(A6,2f10.3,I5,2f10.3,I5,f10.3,I8,I5,I2,f10.3)') &
+       trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
        dt, nbiter, freqdiag, is_delta_f, kmode
   close(param_out)
 
@@ -171,26 +183,65 @@ program VP1d_deltaf
        )
   mesh2d_base => mesh2d
 
-  ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-  interp_x => interp_spline_x
-  interp_v => interp_spline_v
-
   ! allocate rho and phi
   SLL_ALLOCATE(rho(Ncx+1),ierr)
   SLL_ALLOCATE(efield(Ncx+1),ierr)
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
 
+  ! open files for time history diagnostics
+  open(unit = th_diag, file = 'thdiag.dat') 
+  open(unit = ex_diag, file = 'exdiag.dat')
+  open(unit = rho_diag, file = 'rhodiag.dat') 
+  open(unit = eapp_diag, file = 'eappdiag.dat')
+  open(unit = adr_diag, file = 'adrdiag.dat') 
+
   ! initialization of distribution_function
-  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
-  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, is_delta_f)
+  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, &
+       is_delta_f)
+  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, &
+       is_delta_f)
   if (case == "landau") then
      p_init_f => init_landau
   else if (case == "tsi") then
      p_init_f => init_tsi
   end if
 
+  !$omp parallel default(shared) &
+  !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
+  !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
+  !$omp& interp_per_x, interp_per_v)
+  my_num = omp_get_thread_num()
+  num_threads =  omp_get_num_threads()
+  print*, 'running with openmp using ', num_threads, ' threads'
+  ipiece_size_v = (Ncv + 1) / num_threads
+  ipiece_size_x = (Ncx + 1) / num_threads
+
+  istartx = my_num * ipiece_size_x + 1
+  if (my_num < num_threads-1) then
+     iendx   = istartx - 1 + ipiece_size_x
+  else
+     iendx = Ncx+1
+  end if
+  jstartv = my_num * ipiece_size_v + 1
+  if (my_num < num_threads-1) then
+     jendv   = jstartv - 1 + ipiece_size_v
+  else
+     jendv = Ncv+1
+  end if
+
+  ! initialize interpolators
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
+  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
+  !interp_x => interp_spline_x
+  interp_v => interp_spline_v
+
+  interp_x => interp_per_x
+!  interp_v => interp_per_v
+  !$omp barrier
+  !$omp single
   fname = 'dist_func'
   call initialize_distribution_function_2d( &
        f, &
@@ -207,6 +258,11 @@ program VP1d_deltaf
 
   ! initialize Poisson
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  if (is_delta_f==0) then
+     rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
+  else
+     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+  endif
   call solve(poisson_1d, efield, rho)
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
@@ -219,24 +275,19 @@ program VP1d_deltaf
      enddo
   endif
 
-  ! open files for time history diagnostics
-  open(unit = th_diag, file = 'thdiag.dat') 
-  open(unit = ex_diag, file = 'exdiag.dat')
-  open(unit = rho_diag, file = 'rhodiag.dat') 
-  open(unit = eapp_diag, file = 'eappdiag.dat')
-  open(unit = adr_diag, file = 'adrdiag.dat') 
-
   ! write initial fields
   write(ex_diag,*) efield
   write(rho_diag,*) rho
   write(eapp_diag,*) e_app
   write(adr_diag,*) istep*dt, adr
+  !$omp end single
+
 
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-     do i = 1, Ncx+1
+     do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
@@ -244,28 +295,38 @@ program VP1d_deltaf
            ! add equilibrium contribution
            do j=1, Ncv + 1
               v = vmin + (j-1) * delta_v
-              f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
+              equilibrium_contrib = f_equilibrium(v-alpha) - f_equilibrium(v)
+              f1d(j) = f1d(j) + equilibrium_contrib
            end do
         endif
      end do
-     ! full time step advection in x
-     do j = 1, Ncv+1
+     !$omp barrier
+
+     do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
+     !$omp barrier
+
+     !$omp single
      ! compute rho and electric field
-     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     if (is_delta_f==0) then
+        rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     else
+        rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     endif
      call solve(poisson_1d, efield, rho)
      if (driven) then
         call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
         do i = 1, Ncx + 1
-           E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x - omegadr*istep*dt)
+           E_app(i) = Edrmax * adr * kmode * sin(kmode * (i-1) * delta_x &
+                - omegadr*istep*dt)
         enddo
      endif
-     ! half time step advection in v
-     do i = 1, Ncx+1
+     !$omp end single
+     do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
@@ -273,46 +334,56 @@ program VP1d_deltaf
            ! add equilibrium contribution
            do j=1, Ncv + 1
               v = vmin + (j-1) * delta_v
-              f1d(j) = f1d(j) + f_equilibrium(v-alpha) - f_equilibrium(v)
+              equilibrium_contrib = f_equilibrium(v-alpha) - f_equilibrium(v)
+              f1d(j) = f1d(j) + equilibrium_contrib
            end do
         end if
      end do
+     !$omp barrier
+     !$omp single
      ! diagnostics
-     time = istep*dt
-     mass = 0.
-     momentum = 0.
-     l1norm = 0.
-     l2norm = 0.
-     kinetic_energy = 0.
-     potential_energy = 0.
-     do i = 1, Ncx 
-        mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
-        l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
-        l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-        momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
-        kinetic_energy = kinetic_energy + 0.5_f64 * &
-             sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
-     end do
-     mass = mass * delta_x * delta_v 
-     l1norm = l1norm  * delta_x * delta_v
-     l2norm = l2norm  * delta_x * delta_v
-     momentum = momentum * delta_x * delta_v
-     kinetic_energy = kinetic_energy * delta_x * delta_v
-     potential_energy =   0.5_f64 * sum(efield**2) * delta_x
-     write(th_diag,*) time, mass, l1norm, momentum, l2norm, &
-          kinetic_energy, potential_energy, kinetic_energy + potential_energy
-     write(ex_diag,*) efield
-     write(rho_diag,*) rho
-     write(eapp_diag,*) e_app
-     write(adr_diag,*) istep*dt, adr
      if (mod(istep,freqdiag)==0) then
+        time = istep*dt
+        mass = 0.
+        momentum = 0.
+        l1norm = 0.
+        l2norm = 0.
+        kinetic_energy = 0.
+        potential_energy = 0.
+        do i = 1, Ncx 
+           mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
+           l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
+           l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
+           momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
+           kinetic_energy = kinetic_energy + 0.5_f64 * &
+                sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
+        end do
+        mass = mass * delta_x * delta_v 
+        l1norm = l1norm  * delta_x * delta_v
+        l2norm = l2norm  * delta_x * delta_v
+        momentum = momentum * delta_x * delta_v
+        kinetic_energy = kinetic_energy * delta_x * delta_v
+        potential_energy =   0.5_f64 * sum(efield**2) * delta_x
+        write(th_diag,'(f12.5,7g20.14)') time, mass, l1norm, momentum, l2norm, &
+             kinetic_energy, potential_energy, kinetic_energy + potential_energy
+        write(ex_diag,*) efield
+        write(rho_diag,*) rho
+        write(eapp_diag,*) e_app
+        write(adr_diag,*) istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
+     !$omp end single
   end do
 
+  call delete(interp_spline_x)
+  call delete(interp_spline_v)
+  call delete(interp_per_x)
+  call delete(interp_per_v)
+  !$omp end parallel
   close(th_diag)
   close(ex_diag)
+
   print*, 'VP1D_deltaf_cart has exited normally'
 contains
   elemental function f_equilibrium(v)

@@ -3,6 +3,7 @@ module sll_module_mapped_meshes_2d_base
 #include "sll_working_precision.h"
 
 use sll_io
+use sll_xdmf
 
   implicit none
   

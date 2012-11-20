@@ -35,7 +35,6 @@ module sll_hdf5_io_parallel
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
-  use mpi
   use hdf5
   use sll_collective
   
@@ -56,7 +55,7 @@ contains
   subroutine sll_hdf5_file_create(filename, file_id, error)
     character(len=*) , intent(in)  :: filename  
     integer,           intent(out) :: error
-    integer(hid_t)                 :: file_id   
+    integer(hid_t), intent(out)    :: file_id   
     integer(hid_t)                 :: plist_id 
     integer                        :: comm, info
     integer                        :: mpi_size

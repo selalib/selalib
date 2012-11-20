@@ -1,11 +1,11 @@
 program test_io_parallel
 
-use mpi
+use hdf5
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
-
-#include "sll_remap.h"
+use sll_xdmf_parallel
+use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -41,7 +41,7 @@ if( myrank .eq. 0) then
    print *, '--------------- HDF5 parallel test ---------------------'
    print *, ' '
    print"('Running a test on ',i4,' processes')", colsz
-   call flush()
+   call flush(6)
 end if
 
 if (.not. is_power_of_two(colsz)) then     
@@ -71,19 +71,21 @@ contains
 ! the full array.
  subroutine plot_layout2d()
 
-  integer , parameter       :: nx = 512
-  integer , parameter       :: ny = 256
-  integer                   :: mx, my    ! Local sizes
-  integer                   :: npi, npj
+  sll_int32 , parameter       :: nx = 512
+  sll_int32 , parameter       :: ny = 256
+  sll_int32                   :: mx, my    ! Local sizes
+  sll_int32                   :: npi, npj
   sll_int32                 :: gi, gj
   
   sll_int32, dimension(2)   :: global_indices
   type(layout_2D), pointer  :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
+  sll_int32      :: xml_id
   integer(HID_T) :: file_id
   integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
   integer(HSSIZE_T), dimension(2) :: offset 
+  character(len=4) :: prefix = "mesh"
   
   layout => new_layout_2D( sll_world_collective )        
 
@@ -111,13 +113,25 @@ contains
         gj = global_indices(2)
         xdata(i,j) = float(gi-1)/(nx-1)
         ydata(i,j) = float(gj-1)/(ny-1)
-        zdata(i,j) = myrank !* xdata(i,j) * ydata(i,j)
+        zdata(i,j) = (myrank+1) * xdata(i,j) * ydata(i,j)
      end do
   end do
   
   offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
   offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
   
+  !Begin high level version
+
+  call sll_xdmf_open("zdata.xmf",prefix,nx,ny,xml_id,error)
+  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
+  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
+  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_xdmf_close(xml_id,error)
+
+  !End high level version
+
+
+  !Begin low level version
   call sll_hdf5_file_create(xfile, file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
   call sll_hdf5_file_close(file_id,error)
@@ -132,15 +146,17 @@ contains
 
   if (myrank == 0) then
   
-     call sll_xml_file_create("layout2d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, xfile, nx, yfile, ny, xdset, ydset )
-     call sll_xml_field(file_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
+     call sll_xml_file_create("layout2d.xmf",xml_id,error)
+     call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
+     call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
      call sll_xml_file_close(file_id,error)
      print *, 'Printing 2D layout: '
      call sll_view_lims_2D( layout )
      print *, '--------------------'
 
   end if
+
+  !End low level version
   
   call delete_layout_2D( layout )
   
@@ -153,29 +169,30 @@ contains
   sll_real64, dimension(:,:,:), allocatable :: local_array
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
-  integer , parameter                       :: ni = 32
-  integer , parameter                       :: nj = 64
-  integer , parameter                       :: nk = 128
+  sll_int32 , parameter                       :: ni = 32
+  sll_int32 , parameter                       :: nj = 64
+  sll_int32 , parameter                       :: nk = 128
   ! Local sizes
-  integer                                   :: loc_sz_i_init
-  integer                                   :: loc_sz_j_init
-  integer                                   :: loc_sz_k_init
+  sll_int32                                   :: loc_sz_i_init
+  sll_int32                                   :: loc_sz_j_init
+  sll_int32                                   :: loc_sz_k_init
 
   ! the process mesh
-  integer                                   :: npi
-  integer                                   :: npj
-  integer                                   :: npk
+  sll_int32                                   :: npi
+  sll_int32                                   :: npj
+  sll_int32                                   :: npk
   sll_int32                                 :: gi, gj, gk
 
   type(layout_3D), pointer                  :: layout
 
   sll_int32, dimension(3)                   :: global_indices
 
+  sll_int32      :: xml_id
   integer(HID_T) :: file_id       ! File identifier 
 
   integer(HSIZE_T), dimension(3) :: datadims = (/ni,nj,nk/) ! Dataset dimensions.
 
-  integer, PARAMETER :: rank = 3
+  sll_int32, PARAMETER :: rank = 3
 
   integer(HSSIZE_T), dimension(rank) :: offset 
 
@@ -237,14 +254,14 @@ contains
   call sll_hdf5_file_close(file_id, error)
 
   if (myrank == 0) then
-     call sll_xml_file_create("layout3d.xmf",file_id,error)
-     call sll_xml_grid_geometry(file_id, 'layout3d-x.h5', ni, &
+     call sll_xml_file_create("layout3d.xmf",xml_id,error)
+     call sll_xml_grid_geometry(xml_id, 'layout3d-x.h5', ni, &
                                          'layout3d-y.h5', nj, &
                                          'layout3d-z.h5', nk, &
                                          'x', 'y', 'z' )
-     call sll_xml_field(file_id,'values', "layout3d.h5:/array", &
+     call sll_xml_field(xml_id,'values', "layout3d.h5:/array", &
                         ni,nj,nk,'HDF','Node')
-     call sll_xml_file_close(file_id,error)
+     call sll_xml_file_close(xml_id,error)
 
      print *, 'Printing 3D layout: '
      call sll_view_lims_3D( layout )
