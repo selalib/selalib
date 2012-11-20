@@ -179,10 +179,10 @@ contains
        a,      &
        a_np1 ) 
     intrinsic  :: floor, present
-    sll_int32  :: order
-    sll_real64 :: deltat   
-    sll_int32  :: ncx   ! number of cells of uniform grid
-    sll_int32  :: bt    ! boundary_type
+    sll_int32, intent(in)  :: order
+    sll_real64, intent(in) :: deltat   
+    sll_int32, intent(in)  :: ncx   ! number of cells of uniform grid
+    sll_int32, intent(in)  :: bt    ! boundary_type
     sll_real64, dimension(:) :: xin(:)  
     ! solution for all initial conditions
     sll_real64, dimension(:)                     :: xout   
@@ -201,6 +201,7 @@ contains
     zeros(:) = 0.0_f64
     ! check order. The implementation with a 'select' construct permits
     ! to extend this solver to higher orders more conveniently.
+
     select case (order)
     case (1)
        c = 1.0_f64
@@ -226,54 +227,57 @@ contains
     ! case of periodic boundary conditions
     !-------------------------------------
     if (bt == PERIODIC_ODE) then
-      !begin modif 
-      tmp = 0._f64  
-      do i=1,ncx
-        tmp = tmp+abs(a(i))
-      enddo
-      tmp = tmp/real(ncx,f64)
-      if(tmp<1.e-14)then
-        xout = xin
-        return
-      endif
-      !end modif
+       !begin modif 
+       tmp = 0._f64  
+       do i=1,ncx
+          tmp = tmp+abs(a(i))
+       enddo
+       tmp = tmp/real(ncx,f64)
+       if(tmp<1.e-14)then
+          xout = xin
+          return
+       endif
+       !end modif
        x1 = xin(1)
        period = xin(ncx+1)-x1
-
+       
        do i = 1, ncx
           xi = xin(i)  ! current grid point
           ! check that displacement is less than 1 period for first point
-          ! localize cell [i0, i0+1] containing origin of characteristic ending at xin(1)
-          ! we consider the mesh of the same period consisting of the points yi0 = xi0 + c*deltat*( a(i0) + b(i) )
-          ! modulo n. If there was no periodicity the sequence would be strictly increasing
+          ! localize cell [i0, i0+1] containing origin of characteristic 
+          ! ending at xin(1)
+          ! we consider the mesh of the same period consisting of the points 
+          ! yi0 = xi0 + c*deltat*( a(i0) + b(i) )
+          ! modulo n. If there was no periodicity the sequence would be 
+          ! strictly increasing
           ! we first look for i0 such that y(i0+1) < y(i0) due to periodicity
           if ( a(1) + b(i) > 0 ) then
              ! y(ncx+1) > x(1) in this case so we look backward 
              i0 = ncx + 1
-             yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) )-x1, period)+x1
              i0 = ncx
              yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
              do while ( yi0p1 > yi0 ) 
                 i0 = i0 - 1
                 yi0p1 = yi0
-                yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+                yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) )-x1, period)+x1
              end do
           else 
              ! search on the right
              i0 = 1
              yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
-             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1)+b(i) )-x1, period)+x1
              do while (yi0p1 > yi0) 
                 i0 = i0 + 1
                 yi0 = yi0p1
-                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                yi0p1 = modulo(xin(i0+1)+c*deltat*(a(i0+1)+b(i))-x1, period)+x1
              end do
           end if
           
           if ((i0 < 1 ) .or. (i0 > ncx)) then ! yi0 is strictly increasing
              i0 = 1
              yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
-             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*(a(i0+1)+b(i))-x1, period)+x1
           end if
           imax = i0
           ! find cell which contains origin of characteristic
@@ -281,11 +285,11 @@ contains
              i0 = modulo(i0,ncx) + 1
              if (i0 == imax) then
                 yi0 = yi0p1
-                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                yi0p1 = modulo(xin(i0+1)+c*deltat*(a(i0+1)+b(i))-x1, period)+x1
                 exit
              else
                 yi0 = yi0p1
-                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                yi0p1 = modulo(xin(i0+1)+c*deltat*(a(i0+1)+b(i))-x1, period)+x1
              end if
           end do
 
@@ -312,10 +316,12 @@ contains
           xout(i) = modulo(xout(i)-xin(1),xin(ncx+1)-xin(1)) + xin(1) 
           SLL_ASSERT((xout(i) >= xin(1) ) .and. (xout(i) <= xin(ncx+1))) 
        end do
-       ! due to periodicity, origin of last point is same as origin of first point
+       ! due to periodicity, origin of last point is same as origin of first 
+       ! point
        xout(ncx+1) = xout(1)
     else if (bt == COMPACT_ODE) then
-       ! localize cell [i0, i0+1] containing origin of characteristic ending at xmin
+       ! localize cell [i0, i0+1] containing origin of characteristic ending 
+       ! at xmin
        i = 1
        if ( a(i) + b(i) > 0 ) then
           i0 = 1
@@ -327,6 +333,7 @@ contains
           end do
           i0 = i0 - 1
        end if
+
        do i = 1, ncx + 1
           xi = xin(i)  ! current grid point
           ! find cell which contains origin of characteristic
@@ -347,6 +354,7 @@ contains
                 !print*, 'i0 ', i, i0, yi0, xin(i0), xi, modulo(xi - y1, period) + y1
              end do
           end if
+
           ileft = i0
           iright = i0 + 1
           SLL_ASSERT((ileft>=1).and.(ileft<= ncx))
