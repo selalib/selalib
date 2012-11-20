@@ -75,7 +75,12 @@ fi
 
 echo "HOMEDIR:$HOMEDIR"
 echo "WORDIR:$WORKDIR"
-cd $WORKDIR
+
+if [[ $(($(stat -f --format="%a*%S" $WORKDIR))) == 0]]; then
+   cd /tmp
+else
+   cd $WORKDIR
+fi
 
 cd ${HOMEDIR}/selalib; {
    git log --date-order --date=short | \
