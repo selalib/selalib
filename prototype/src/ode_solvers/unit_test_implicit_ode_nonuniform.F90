@@ -42,6 +42,7 @@ program unit_test_implicit_ode_nonuniform
   print*, 'testing order 1:'
   order = 1
   call implicit_ode_nonuniform( order, deltat, xin, ncells, COMPACT_ODE, xout,  a_n ) 
+print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
