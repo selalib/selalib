@@ -4,10 +4,9 @@ $donnees
   nx     = 120			!nombre de pts suivant x
   ny     = 10   		!nombre de pts suivant y
   cfl    = 0.9 			!nombre de Courant-Friedrich-Levy
-  tfinal = 50. !20.   		!temps final
-  nstepmax  = 20000000		!nbre d'iterations maxi
+  tfinal = 2.0   		!temps final
+  nstepmax  = 20		!nbre d'iterations maxi
   nomcas = 'plasma'		!nom du cas traite (6 lettres)
-  nomcor = 'aucune'		!nature de la correction
   jname  = 'jcico1'		!methode de calcul des courants
   icrea  = 1			!frequence d'emission des particules
   idiag  = 10    		!frequence des sorties graphiques
