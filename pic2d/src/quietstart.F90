@@ -1,5 +1,5 @@
 module quietstart
-
+#include "selalib.h"
 use zone
 
 implicit none
@@ -8,10 +8,10 @@ CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-real(kind=8) function bit_reversing( n )
+sll_real64 function bit_reversing( n )
 
-integer :: n, deci, k, div
-real(kind=8) :: miroir
+sll_int32 :: n, deci, k, div
+sll_real64 :: miroir
 
 !a = 0
 k = 25
@@ -39,10 +39,10 @@ end function bit_reversing
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-real(kind=8) function trinary_reversing( n )
+sll_real64 function trinary_reversing( n )
 
-integer :: deci, k, div, n
-real(kind=8) :: miroir
+sll_int32 :: deci, k, div, n
+sll_real64 :: miroir
 
 !a = 0
 k = 16
@@ -74,10 +74,10 @@ end function trinary_reversing
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-real(kind=8) function penta_reversing( n )
+sll_real64 function penta_reversing( n )
 
-integer :: deci, k, div, n
-real(kind=8) :: miroir
+sll_int32 :: deci, k, div, n
+sll_real64 :: miroir
 
 !a = 0
 k = 11

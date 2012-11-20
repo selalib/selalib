@@ -1,10 +1,10 @@
 module initialisation
-
+#include "selalib.h"
 use zone
 
 implicit none
 
-integer, private :: i, j
+sll_int32, private :: i, j
 
 contains
 
@@ -15,7 +15,7 @@ contains
 subroutine init( tm )
 
 type (tm_mesh_fields) :: tm
-real(kind=prec) :: time, aux1, aux2
+sll_real64 :: time, aux1, aux2
 
 select case (nomcas)
 
@@ -76,7 +76,7 @@ end subroutine init
 subroutine sol_exacte( sol, time )
 
 type (tm_mesh_fields) :: sol
-real(kind=prec) :: time
+sll_real64 :: time
 
 select case (nomcas)
 
@@ -106,9 +106,9 @@ end subroutine sol_exacte
 subroutine statio( sol, time )
 
 type (tm_mesh_fields) :: sol
-real(kind=prec), parameter :: mm=4, nn=2
-real(kind=prec) :: time
-real(kind=prec) :: omega, alpha, beta
+sll_real64, parameter :: mm=4, nn=2
+sll_real64 :: time
+sll_real64 :: omega, alpha, beta
 
 ! cas periodique en temps et en espace
 !
@@ -148,9 +148,9 @@ end subroutine statio
 subroutine entran( sol, time )
 
 type (tm_mesh_fields) ::  sol
-real(kind=prec) :: time
-integer, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
-real(kind=prec) :: alpha, omega
+sll_real64 :: time
+sll_int32, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
+sll_real64 :: alpha, omega
 
 !onde entrant dans le guide d'onde    
 !Ex = - c**2*n*pi/(w*dimy)*sin(n*pi*y/dimy)*sin(wt-kx)  
@@ -184,9 +184,9 @@ end subroutine entran
 subroutine Eincom( sol, time )
 
 type (tm_mesh_fields) ::  sol
-real(kind=prec) :: time
-integer, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
-real(kind=prec) :: alpha
+sll_real64 :: time
+sll_int32, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
+sll_real64 :: alpha
 
 !onde entrant dans le guide d'onde par l'est  
 
@@ -212,9 +212,9 @@ end subroutine Eincom
 subroutine Sincom( sol, time )
 
 type (tm_mesh_fields) ::  sol
-real(kind=prec) :: time
-integer, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
-real(kind=prec) :: alpha
+sll_real64 :: time
+sll_int32, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
+sll_real64 :: alpha
 
 !onde entrant dans le guide d'onde par le sud 
 
@@ -240,9 +240,9 @@ end subroutine Sincom
 subroutine Nincom( sol, time )
 
 type (tm_mesh_fields) ::  sol
-real(kind=prec) :: time
-integer, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
-real(kind=prec) :: alpha
+sll_real64 :: time
+sll_int32, parameter :: mm=1 !si modif, faire aussi dans CL (maxwell.f90)
+sll_real64 :: alpha
 
 !onde entrant dans le guide d'onde par le nord
 

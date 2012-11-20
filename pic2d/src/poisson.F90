@@ -1,10 +1,10 @@
 module poisson
-
+#include "selalib.h"
 use zone
 
 implicit none
 
-integer, private :: i, j, ii, jj
+sll_int32, private :: i, j, ii, jj
 
 contains
 
@@ -15,17 +15,18 @@ contains
 subroutine E_initial( tm )
  
 type( tm_mesh_fields ) :: tm
-real(kind=prec), dimension(:,:), allocatable :: div, lap, phi 
-real(kind=prec), dimension(:), allocatable ::  rho
-real(kind=prec) :: aux, ddx, ddy
-integer :: i, j, indice, info
+sll_real64, dimension(:,:), allocatable :: div, lap, phi 
+sll_real64, dimension(:), allocatable ::  rho
+sll_real64 :: aux, ddx, ddy
+sll_int32 :: i, j, indice, info
+sll_int32 :: error
 
 ! calcul de E verifiant div E = rho/e0
 
-allocate( phi( 0:nx, 0:ny ) )
-allocate( rho( (nx-1)*(ny-1) ) )
-allocate( div( 0:nx , 0:ny ) )
-allocate( lap( ny , (nx-1)*(ny-1) ) )
+SLL_ALLOCATE( phi( 0:nx, 0:ny ) , error)
+SLL_ALLOCATE( rho( (nx-1)*(ny-1) ), error )
+SLL_ALLOCATE( div( 0:nx , 0:ny ), error )
+SLL_ALLOCATE( lap( ny , (nx-1)*(ny-1) ), error )
 
 ! second membre :
 ! vecteur -(r22,r23,...,r2ny-1,r32,...,r3ny-1,....rnx-1ny-1)/e0
@@ -86,14 +87,14 @@ end subroutine E_initial
 subroutine poisson_clnulles( tm )
 
 type(tm_mesh_fields) :: tm
-real(kind=prec), dimension(4,4) :: Axelem, Ayelem, Melem
-real(kind=prec), dimension((nx-1)*(ny-1),(nx-1)*(ny-1)) :: A, M
-real(kind=prec), dimension(nx+1,(nx-1)*(ny-1)) :: mat
-real(kind=prec), dimension((nx-1)*(ny-1)) :: b
-real(kind=prec), dimension(0:nx,0:ny) :: phi
-real(kind=prec) :: dum, aux1, aux2
-integer :: Iel, info
-integer, dimension(4) :: Isom
+sll_real64, dimension(4,4) :: Axelem, Ayelem, Melem
+sll_real64, dimension((nx-1)*(ny-1),(nx-1)*(ny-1)) :: A, M
+sll_real64, dimension(nx+1,(nx-1)*(ny-1)) :: mat
+sll_real64, dimension((nx-1)*(ny-1)) :: b
+sll_real64, dimension(0:nx,0:ny) :: phi
+sll_real64 :: dum, aux1, aux2
+sll_int32 :: Iel, info
+sll_int32, dimension(4) :: Isom
 
 
 !** Construction des matrices elementaires
