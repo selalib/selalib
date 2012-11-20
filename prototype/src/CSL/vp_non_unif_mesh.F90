@@ -5,7 +5,7 @@ program vp_non_unif_mesh
 !contact: mehrenbe@math.unistra.fr for this  program
 
   use numeric_constants
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use bgk_mesh_construction
   use contrib_rho_module
   use classical_conservative_semi_lagrangian
