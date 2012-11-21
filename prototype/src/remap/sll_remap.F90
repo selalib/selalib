@@ -87,7 +87,7 @@ module remapper
   ! amount of data is going to be sent to all the processes in a 
   ! communicator (sender included). This is important to know because we can
   ! then replace the call to alltoallv by a call to alltoall.
-#define MAKE_REMAP_PLAN( type_name, layout_type, box_type )   \
+#define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
   type type_name;                                             \
      type(layout_type), pointer            :: initial_layout; \
      type(layout_type), pointer            :: final_layout;   \
@@ -98,15 +98,27 @@ module remapper
      type(box_type), dimension(:), pointer :: send_boxes;     \
      type(box_type), dimension(:), pointer :: recv_boxes;     \
      type(sll_collective_t), pointer       :: collective;     \
-     sll_int32, dimension(:), pointer      :: send_buffer;    \
-     sll_int32, dimension(:), pointer      :: recv_buffer;    \
+     data_type, dimension(:), pointer      :: send_buffer;    \
+     data_type, dimension(:), pointer      :: recv_buffer;    \
      logical                               :: is_uniform;     \
   end type type_name
 
-  MAKE_REMAP_PLAN(remap_plan_2D, layout_2D, box_2D)
-  MAKE_REMAP_PLAN(remap_plan_3D, layout_3D, box_3D)
-  MAKE_REMAP_PLAN(remap_plan_4D, layout_4D, box_4D)
-  MAKE_REMAP_PLAN(remap_plan_6D, layout_6D, box_6D)
+  ! 2D Remap types:
+  MAKE_REMAP_PLAN(remap_plan_2D_int32, layout_2D, box_2D, sll_int32)
+  MAKE_REMAP_PLAN(remap_plan_2D_real64, layout_2D, box_2D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_2D_comp64, layout_2D, box_2D, sll_comp64)
+  ! 3D Remap types:
+  MAKE_REMAP_PLAN(remap_plan_3D_int32, layout_3D, box_3D, sll_int32)
+  MAKE_REMAP_PLAN(remap_plan_3D_real64, layout_3D, box_3D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_3D_comp64, layout_3D, box_3D, sll_comp64)
+  ! 4D Remap types:
+  MAKE_REMAP_PLAN(remap_plan_4D_int32, layout_4D, box_4D, sll_int32)
+  MAKE_REMAP_PLAN(remap_plan_4D_real64, layout_4D, box_4D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_4D_comp64, layout_4D, box_4D, sll_comp64)
+  ! 6D Remap types:
+  MAKE_REMAP_PLAN(remap_plan_6D_int32, layout_6D, box_6D, sll_int32)
+  MAKE_REMAP_PLAN(remap_plan_6D_real64, layout_6D, box_6D, sll_real64)
+  MAKE_REMAP_PLAN(remap_plan_6D_comp64, layout_6D, box_6D, sll_comp64)
 
  interface get_layout_i_min
      module procedure get_layout_2D_i_min, get_layout_3D_i_min, &
@@ -247,18 +259,40 @@ module remapper
   end interface intersect_boxes
 
   interface optimize_remap_plan
-     module procedure optimize_remap_plan_2D, optimize_remap_plan_3D, &
-          optimize_remap_plan_4D, optimize_remap_plan_6D
+     module procedure &
+          optimize_remap_plan_2D_int32, &
+          optimize_remap_plan_2D_real64, &
+          optimize_remap_plan_2D_comp64, &
+          optimize_remap_plan_3D_int32, &
+          optimize_remap_plan_3D_real64, &
+          optimize_remap_plan_3D_comp64, &
+          optimize_remap_plan_4D_int32, &
+          optimize_remap_plan_4D_real64, &
+          optimize_remap_plan_4D_comp64, &
+          optimize_remap_plan_6D_int32, &
+          optimize_remap_plan_6D_real64, &
+          optimize_remap_plan_6D_comp64
   end interface optimize_remap_plan
 
   interface new_remap_plan
-     module procedure new_remap_plan_2d, new_remap_plan_3d, new_remap_plan_4d, &
-          new_remap_plan_6d
+     module procedure &
+          new_remap_plan_2d_int32, &
+          new_remap_plan_2d_real64, &
+          new_remap_plan_2d_comp64, &
+          new_remap_plan_3d_int32, &
+          new_remap_plan_3d_real64, &
+          new_remap_plan_3d_comp64, &
+          new_remap_plan_4d_int32, &
+          new_remap_plan_4d_real64, &
+          new_remap_plan_4d_comp64, &
+          new_remap_plan_6d_int32, &
+          new_remap_plan_6d_real64, &
+          new_remap_plan_6d_comp64
   end interface new_remap_plan
 
   interface apply_remap_2D
-     module procedure apply_remap_2D_double, apply_remap_2d_complex, &
-          apply_remap_2d_efield
+     module procedure apply_remap_2D_double, apply_remap_2d_complex !, &
+!          apply_remap_2d_efield
   end interface apply_remap_2D
 
   interface apply_remap_3D
@@ -276,8 +310,19 @@ module remapper
 
   interface delete
      module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
-          delete_layout_5D, delete_remap_2D, delete_remap_3D, delete_remap_4D, &
-          delete_layout_6D, delete_remap_6D
+          delete_layout_5D, delete_layout_6D, &
+          delete_remap_2D_int32, &
+          delete_remap_2D_real64, &
+          delete_remap_2D_comp64, &
+          delete_remap_3D_int32, &
+          delete_remap_3D_real64, &
+          delete_remap_3D_comp64, &
+          delete_remap_4D_int32, &
+          delete_remap_4D_real64, &
+          delete_remap_4D_comp64, &
+          delete_remap_6D_int32, &
+          delete_remap_6D_real64, &
+          delete_remap_6D_comp64
   end interface delete
 
   interface compute_local_sizes
@@ -1184,14 +1229,15 @@ contains  !******************************************************************
   ! that we would need to use the transfer() function to store and retrieve
   ! data from the buffers, which is inefficient. The alternative is to
   ! have type-dependent plans...
-#define MAKE_NEW_REMAP_PLAN_FUNCTION(fname, remap_type, layout_type, box_type) \
-  function fname( initial, final, int32_data_size ); \
+#define MAKE_NEW_REMAP_PLAN_FUNCTION(fname, remap_type, layout_type, box_type, array_type, array_dim) \
+  function fname( initial, final, array ); \
     intrinsic                       :: associated; \
     type(remap_type), pointer       :: fname; \
     type(layout_type), pointer      :: initial; \
     type(layout_type), pointer      :: final; \
-    sll_int32, intent(in)           :: int32_data_size; \
-    type(sll_collective_t), pointer :: col; \
+    array_type, array_dim           :: array; \
+    type(sll_collective_t), pointer :: coli; \
+    type(sll_collective_t), pointer :: colf; \
     type(box_type)                  :: ibox, fbox, inters; \
     sll_int32                       :: i, f; \
     sll_int32                       :: my_rank; \
@@ -1205,14 +1251,16 @@ contains  !******************************************************************
        print *, 'ERROR: un-initialized arguments given to sll_new_remap_plan'; \
        stop; \
     end if; \
-    if( .not. associated(get_layout_collective(initial), target=get_layout_collective(final)) ) then; \
+    coli => get_layout_collective(initial); \
+    colf => get_layout_collective(final); \
+    if( .not. collectives_are_same( coli, colf ) ) then; \
        print *, 'ERROR: init and final configurations given to new_remap_plan do not refer to the same collective.'; \
        stop; \
     end if; \
     acc = 0; \
-    col => get_layout_collective(initial); \
-    my_rank  = sll_get_collective_rank( col ); \
-    col_size = sll_get_collective_size( col ); \
+    coli => get_layout_collective(initial); \
+    my_rank  = sll_get_collective_rank( coli ); \
+    col_size = sll_get_collective_size( coli ); \
     SLL_ALLOCATE( fname, ierr ); \
     SLL_ALLOCATE( fname%send_displs(0:col_size-1), ierr ); \
     fname%send_displs(:) = 0; \
@@ -1245,7 +1293,7 @@ contains  !******************************************************************
           fname%send_boxes(f)  = inters; \
        end if; \
     end do; \
-    SLL_ALLOCATE(fname%send_buffer(0:(acc*int32_data_size-1)),ierr); \
+    SLL_ALLOCATE(fname%send_buffer(0:(acc-1)),ierr); \
     acc          = 0; \
     disp_counter = 0; \
     fbox = get_layout_box(final, my_rank); \
@@ -1264,14 +1312,27 @@ contains  !******************************************************************
           fname%recv_boxes(i)  = inters; \
        end if; \
     end do; \
-    SLL_ALLOCATE(fname%recv_buffer(0:(acc*int32_data_size-1)),ierr); \
+    SLL_ALLOCATE(fname%recv_buffer(0:(acc-1)),ierr); \
     fname%is_uniform = .false.; \
+    call optimize_remap_plan(fname); \
   end function fname
-!    call optimize_remap_plan(fname); \ put this back!!!! just before macro end
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D,remap_plan_2D,layout_2D,box_2D)
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D,remap_plan_3D,layout_3D,box_3D)
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D,remap_plan_4D,layout_4D,box_4D)
-  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D,remap_plan_6D,layout_6D,box_6D)
+
+  ! 2D remaps
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_int32,remap_plan_2D_int32,layout_2D,box_2D, sll_int32, dimension(:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_real64,remap_plan_2D_real64,layout_2D,box_2D, sll_real64, dimension(:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_2D_comp64,remap_plan_2D_comp64,layout_2D,box_2D, sll_comp64, dimension(:,:) )
+  ! 3D remaps
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_int32,remap_plan_3D_int32,layout_3D,box_3D, sll_int32, dimension(:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_real64,remap_plan_3D_real64,layout_3D, box_3D, sll_real64, dimension(:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_3D_comp64,remap_plan_3D_comp64,layout_3D,box_3D, sll_comp64, dimension(:,:,:) )
+  ! 4D remaps
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_int32,remap_plan_4D_int32,layout_4D,box_4D, sll_int32, dimension(:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_real64,remap_plan_4D_real64,layout_4D,box_4D, sll_real64, dimension(:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_4D_comp64,remap_plan_4D_comp64,layout_4D,box_4D, sll_comp64, dimension(:,:,:,:) )
+  ! 6D remaps
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_int32,remap_plan_6D_int32,layout_6D,box_6D, sll_int32, dimension(:,:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_real64,remap_plan_6D_real64,layout_6D,box_6D, sll_real64, dimension(:,:,:,:,:,:) )
+  MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_comp64,remap_plan_6D_comp64,layout_6D,box_6D, sll_comp64, dimension(:,:,:,:,:,:) )
 
 
  ! Try to fix the name of the subroutine in the print statement by stringifying
@@ -1295,10 +1356,18 @@ contains  !******************************************************************
    SLL_DEALLOCATE(plan, ierr); \
  end subroutine fname
 
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D, remap_plan_2D )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D, remap_plan_3D )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D, remap_plan_4D )
- MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D, remap_plan_6D )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_int32, remap_plan_2D_int32 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_real64, remap_plan_2D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_2D_comp64, remap_plan_2D_comp64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_int32, remap_plan_3D_int32 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_real64, remap_plan_3D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_3D_comp64, remap_plan_3D_comp64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_int32, remap_plan_4D_int32 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_real64, remap_plan_4D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_4D_comp64, remap_plan_4D_comp64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_int32, remap_plan_6D_int32 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_real64, remap_plan_6D_real64 )
+ MAKE_DELETE_REMAP_SUBROUTINE( delete_remap_6D_comp64, remap_plan_6D_comp64 )
 
 #if 0
   ! We leave this function here for reference, as it was the original and
@@ -1572,10 +1641,18 @@ contains  !******************************************************************
     plan%is_uniform = is_uniform_collective(1); \
   end subroutine fname
 
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D, remap_plan_2D, box_2D)
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D, remap_plan_3D, box_3D)
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D, remap_plan_4D, box_4D)
-  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D, remap_plan_6D, box_6D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D_int32, remap_plan_2D_int32,box_2D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D_real64, remap_plan_2D_real64,box_2D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_2D_comp64, remap_plan_2D_comp64,box_2D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D_int32, remap_plan_3D_int32,box_3D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D_real64, remap_plan_3D_real64,box_3D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_3D_comp64, remap_plan_3D_comp64,box_3D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D_int32, remap_plan_4D_int32,box_4D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D_real64, remap_plan_4D_real64,box_4D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_4D_comp64, remap_plan_4D_comp64,box_4D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D_int32, remap_plan_6D_int32,box_6D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D_real64, remap_plan_6D_real64,box_6D)
+  MAKE_REMAP_OPTIMIZER(optimize_remap_plan_6D_comp64, remap_plan_6D_comp64,box_6D)
 
 #if 0
   ! We leave this here for reference, as it was the original and has comments.
@@ -1800,10 +1877,18 @@ contains  !******************************************************************
     fname => plan%initial_layout; \
   end function fname
 
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout, layout_2D, remap_plan_2D)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout, layout_3D, remap_plan_3D)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout, layout_4D, remap_plan_4D)
-  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout, layout_6D, remap_plan_6D)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_int32, layout_2D, remap_plan_2D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_real64, layout_2D, remap_plan_2D_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_2D_initial_layout_comp64, layout_2D, remap_plan_2D_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_int32, layout_3D, remap_plan_3D_int32)
+ MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_real64, layout_3D, remap_plan_3D_real64)
+ MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_3D_initial_layout_comp64, layout_3D, remap_plan_3D_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_int32, layout_4D, remap_plan_4D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_real64, layout_4D, remap_plan_4D_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_4D_initial_layout_comp64, layout_4D, remap_plan_4D_comp64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_int32, layout_6D, remap_plan_6D_int32)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_real64, layout_6D, remap_plan_6D_real64)
+  MAKE_GET_REMAP_INITIAL_LAYOUT(get_remap_6D_initial_layout_comp64, layout_6D, remap_plan_6D_comp64)
 
 #define MAKE_GET_REMAP_FINAL_LAYOUT( fname, layout_type, remap_type ) \
   function fname( plan ); \
@@ -1816,10 +1901,18 @@ contains  !******************************************************************
     fname => plan%final_layout; \
   end function fname
 
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout,layout_2D,remap_plan_2d)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout,layout_3D,remap_plan_3d)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout,layout_4D,remap_plan_4d)
-  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout,layout_6D,remap_plan_6d)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_int32,layout_2D,remap_plan_2d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_real64,layout_2D,remap_plan_2d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_2D_final_layout_comp64,layout_2D,remap_plan_2d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_int32,layout_3D,remap_plan_3d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_real64,layout_3D,remap_plan_3d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_3D_final_layout_comp64,layout_3D,remap_plan_3d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_int32,layout_4D,remap_plan_4d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_real64,layout_4D,remap_plan_4d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_4D_final_layout_comp64,layout_4D,remap_plan_4d_comp64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_int32,layout_6D,remap_plan_6d_int32)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_real64,layout_6D,remap_plan_6d_real64)
+  MAKE_GET_REMAP_FINAL_LAYOUT(get_remap_6D_final_layout_comp64,layout_6D,remap_plan_6d_comp64)
 
   ! In this implementation, the user provides the memory location where the
   ! result of the remap operation will end up. The remap functions are
@@ -1862,8 +1955,7 @@ contains  !******************************************************************
   !
   ! **********************************************************************
   subroutine apply_remap_3D_int( plan, data_in, data_out )
-    intrinsic                                :: transfer
-    type(remap_plan_3D), pointer           :: plan
+    type(remap_plan_3D_int32), pointer             :: plan
     sll_int32, dimension(:,:,:), intent(in)  :: data_in
     sll_int32, dimension(:,:,:), intent(out) :: data_out
     sll_int32, dimension(:), pointer         :: sb       ! send buffer
@@ -1873,8 +1965,8 @@ contains  !******************************************************************
     sll_int32, dimension(:), pointer         :: scnts    ! send counts
     sll_int32, dimension(:), pointer         :: rcnts    ! receive counts
     type(sll_collective_t), pointer          :: col      ! collective
-    type(layout_3D), pointer               :: init_layout  => NULL()
-    type(layout_3D), pointer               :: final_layout => NULL()
+    type(layout_3D), pointer                 :: init_layout  => NULL()
+    type(layout_3D), pointer                 :: final_layout => NULL()
     sll_int32                                :: id, jd, kd
     sll_int32                                :: i
     sll_int32                                :: col_sz
@@ -1885,14 +1977,7 @@ contains  !******************************************************************
     sll_int32                                :: my_rank
     sll_int32                                :: loc
     sll_int32, dimension(1:3)                :: local_lo, local_hi
-    sll_int32                                :: int32_data_size
-
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+    sll_int32, dimension(1:3)                :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -1902,46 +1987,17 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_3D_initial_layout(plan)
-    final_layout => get_remap_3D_final_layout(plan)
+    init_layout  => get_remap_3D_initial_layout_int32(plan)
+    final_layout => get_remap_3D_final_layout_int32(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
-
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
-
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
-#if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, scntsi(:)
-    print *, sdispi(:)
-    print *, rcntsi(:)
-    print *, rdispi(:)
-#endif
-    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1,1) )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
-             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdispi(i)
+          if( loc .ne. sdisp(i) ) then
+             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              stop 'apply_remap(): loading error'
           end if
@@ -1955,8 +2011,10 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( init_layout, tmpa)
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -1968,8 +2026,8 @@ contains  !******************************************************************
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
-                   sb(loc:) = transfer(data_in(id,jd,kd),(/1_i32/))
-                   loc      = loc + int32_data_size
+                   sb(loc) = data_in(id,jd,kd)
+                   loc     = loc + 1
                 end do
              end do
           end do
@@ -1982,15 +2040,15 @@ contains  !******************************************************************
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
@@ -2000,9 +2058,9 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
-                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+                  'ERROR: discrepancy between rdisp(i) and index for i = ', i
              stop 'unpacking error'
           end if
           ! get the information on the box to receive, get the limits, and 
@@ -2014,13 +2072,15 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( final_layout, tmpa )
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
-                   data_out(id,jd,kd) = transfer(rb(loc:),data_out(1,1,1))
-                   loc                = loc + int32_data_size
+                   data_out(id,jd,kd) = rb(loc)
+                   loc                = loc + 1
                 end do
              end do
           end do
@@ -2029,19 +2089,18 @@ contains  !******************************************************************
   end subroutine apply_remap_3D_int
 
   subroutine apply_remap_2D_double( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_2D), pointer              :: plan
+    type(remap_plan_2D_real64), pointer       :: plan
     sll_real64, dimension(:,:), intent(in)    :: data_in
     sll_real64, dimension(:,:), intent(out)   :: data_out
-    sll_int32, dimension(:), pointer          :: sb     ! send buffer
-    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_2D), pointer                :: init_layout  => NULL()
-    type(layout_2D), pointer                :: final_layout => NULL()
+    type(layout_2D), pointer                  :: init_layout  => NULL()
+    type(layout_2D), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2052,14 +2111,14 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:2)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
+    sll_int32, dimension(1:2)                 :: tmpa
 
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+!!$    ! to load the MPI function and send integers, we have a separate set of
+!!$    ! arrays to store this information for now.
+!!$    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
+!!$    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
+!!$    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
+!!$    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2069,50 +2128,52 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_2D_initial_layout(plan)
-    final_layout => get_remap_2D_final_layout(plan)
+    init_layout  => get_remap_2D_initial_layout_real64(plan)
+    final_layout => get_remap_2D_final_layout_real64(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+!!$    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
+!!$    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
+!!$    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
+!!$    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
 
     ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
+!!$#if 1
+!!$    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), sdisp, &
+!!$         col_sz, sdispi)
+!!$    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rdisp, &
+!!$         col_sz, rdispi)
+!!$    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), scnts, &
+!!$         col_sz, scntsi)
+!!$    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rcnts, &
+!!$         col_sz, rcntsi)
+!!$#endif
     
-#if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, 'scntsi', scntsi(:)
-    print *, 'sdispi', sdispi(:)
-    print *, 'rcntsi', rcntsi(:)
-    print *, 'rdispi', rdispi(:)
-    call flush(6)
-#endif
-    
+!!$#if 0
+!!$    write (*,'(a,i4)') 'parameters from rank ', my_rank
+!!$    print *, 'scntsi', scntsi(:)
+!!$    print *, 'sdispi', sdispi(:)
+!!$    print *, 'rcntsi', rcntsi(:)
+!!$    print *, 'rdispi', rdispi(:)
+!!$    call flush(6)
+!!$#endif
+
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1) )
+!!$    ! This step is obviously not needed for integers themselves. We put this
+!!$    ! here for generality.
+!!$    int32_data_size = INT32_SIZEOF( data_in(1,1) )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
+!!$          if( loc .ne. sdispi(i) ) then
+          if( loc .ne. sdisp(i) ) then
              print *, 'ERROR DETECTED in process: ', my_rank
              print *, 'apply_remap_2D_double() ERROR: ', &
                   'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdispi(i)
+!!$                  'i = ', i, ' displs(i) = ', sdispi(i)
+                  'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              call flush(6)
              stop 'apply_remap(): loading error'
@@ -2125,8 +2186,13 @@ contains  !******************************************************************
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( init_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( init_layout, tmpa )
+
+!!$          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
+!!$          local_hi = global_to_local_2D( init_layout, (/hii,hij/)  )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2137,12 +2203,15 @@ contains  !******************************************************************
           ! the index at that point.
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
-                sb(loc:) = transfer(data_in(id,jd),(/1_i32/))
-                loc      = loc + int32_data_size
+!!$                sb(loc:) = transfer(data_in(id,jd),(/1_i32/))
+                sb(loc) = data_in(id,jd)
+!!$                loc      = loc + int32_data_size
+                loc      = loc + 1
              end do
           end do
        end if
     end do
+
     ! Comment the following when not debugging    
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
@@ -2154,15 +2223,22 @@ contains  !******************************************************************
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+!!$                                      scntsi(0:col_sz-1), &
+!!$                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+!!$                                      rcntsi(0:col_sz-1), &
+!!$                                      rdispi(0:col_sz-1), &
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), &
+                                      col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+!!$                                      scntsi(0), &
+!!$                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
@@ -2172,9 +2248,10 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+!!$          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
-                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+                  'ERROR: discrepancy between rdisp(i) and index for i = ', i
              stop 'unpacking error'
           end if
           ! get the information on the box to receive, get the limits, and 
@@ -2184,37 +2261,40 @@ contains  !******************************************************************
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( final_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( final_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( final_layout, tmpa )
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
-                data_out(id,jd) = transfer(rb(loc:),data_out(1,1))
-                loc                = loc + int32_data_size
+!!$                data_out(id,jd) = transfer(rb(loc:),data_out(1,1))
+                data_out(id,jd) = rb(loc)
+!!$                loc                = loc + int32_data_size
+                loc                = loc + 1
              end do
           end do
        end if
     end do
-    ! And why weren't these arrays part of the plan anyway??
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
+!!$    ! And why weren't these arrays part of the plan anyway??
+!!$    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
+!!$    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
+!!$    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
+!!$    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_2D_double
 
   subroutine apply_remap_2D_complex( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_2D), pointer              :: plan
+    type(remap_plan_2D_comp64), pointer       :: plan
     sll_comp64, dimension(:,:), intent(in)    :: data_in
     sll_comp64, dimension(:,:), intent(out)   :: data_out
-    sll_int32, dimension(:), pointer          :: sb     ! send buffer
-    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_comp64, dimension(:), pointer         :: sb     ! send buffer
+    sll_comp64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_2D), pointer                :: init_layout  => NULL()
-    type(layout_2D), pointer                :: final_layout => NULL()
+    type(layout_2D), pointer                  :: init_layout  => NULL()
+    type(layout_2D), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2225,14 +2305,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:2)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
-
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+    sll_int32, dimension(1:2)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2242,50 +2315,28 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_2D_initial_layout(plan)
-    final_layout => get_remap_2D_final_layout(plan)
+    init_layout  => get_remap_2D_initial_layout_comp64(plan)
+    final_layout => get_remap_2D_final_layout_comp64(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
-
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
 #if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, 'scntsi', scntsi(:)
-    print *, 'sdispi', sdispi(:)
-    print *, 'rcntsi', rcntsi(:)
-    print *, 'rdispi', rdispi(:)
-    call flush(6)
+print *, 'remap 2d complex:'
+    print *, 'scnts = ', scnts(:)
+    print *, 'rcnts = ', rcnts(:)
+    print *, 'sdisp = ', sdisp(:)
+    print *, 'rdisp = ', rdisp(:)
 #endif
-    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1) )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
+          if( loc .ne. sdisp(i) ) then
              print *, 'ERROR DETECTED in process: ', my_rank
              print *, 'apply_remap_2D_complex() ERROR: ', &
                   'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdispi(i)
+                  'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              call flush(6)
              stop 'apply_remap(): loading error'
@@ -2298,8 +2349,10 @@ contains  !******************************************************************
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( init_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( init_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2310,42 +2363,45 @@ contains  !******************************************************************
           ! the index at that point.
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
-                sb(loc:) = transfer(data_in(id,jd),(/1_i32/))
-                loc      = loc + int32_data_size
+                sb(loc) = data_in(id,jd)
+                loc     = loc + 1
              end do
           end do
        end if
     end do
     ! Comment the following when not debugging    
-    !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
-    !  print *, sb(0:(size(sb)-1))
-    ! call flush(6)
-    !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-    !    call flush(6)
+!!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
+!!$    print *, sb(0:(size(sb)-1))
+!!$    call flush(6)
+!!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
+!!$    call flush(6)
+
    if( plan%is_uniform .eqv. .false. ) then 
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
-!    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
-!    print *, rb(0:size(rb)-1)
-!    call flush(6)
+
+    ! Comment when not debugging:
+!!$    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
+!!$    print *, rb(0:size(rb)-1)
+!!$    call flush(6)
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
@@ -2357,23 +2413,24 @@ contains  !******************************************************************
           loj = get_box_2D_j_min(sbox)
           hii = get_box_2D_i_max(sbox)
           hij = get_box_2D_j_max(sbox)
-          local_lo = global_to_local_2D( final_layout, (/loi,loj/) )
-          local_hi = global_to_local_2D( final_layout, (/hii,hij/) )
+          tmpa(:)  = (/loi,loj/)
+          local_lo = global_to_local_2D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij/)
+          local_hi = global_to_local_2D( final_layout, tmpa )
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
-                data_out(id,jd) = transfer(rb(loc:),data_out(1,1))
-                loc                = loc + int32_data_size
+                data_out(id,jd) = rb(loc)
+                loc             = loc + 1
              end do
           end do
        end if
     end do
-    ! And why weren't these arrays part of the plan anyway??
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_2D_complex
 
+#if 0
+  ! This function stopped being viable if the transfer function is taken out,
+  ! unless a way is found to ship around arbitrary data types passed from a
+  ! high-level call.
   subroutine apply_remap_2D_efield( plan, data_in, data_out )
     intrinsic                                 :: transfer
     type(remap_plan_2D), pointer              :: plan
@@ -2546,22 +2603,21 @@ contains  !******************************************************************
     SLL_DEALLOCATE_ARRAY(scntsi, ierr)
     SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_2D_efield
-
+#endif
 
   subroutine apply_remap_3D_double( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_3D), pointer            :: plan
+    type(remap_plan_3D_real64), pointer              :: plan
     sll_real64, dimension(:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:), intent(out) :: data_out
-    sll_int32, dimension(:), pointer          :: sb     ! send buffer
-    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer          :: sb     ! send buffer
+    sll_real64, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_3D), pointer                :: init_layout  => NULL()
-    type(layout_3D), pointer                :: final_layout => NULL()
+    type(layout_3D), pointer                  :: init_layout  => NULL()
+    type(layout_3D), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2572,14 +2628,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:3)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
-
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+    sll_int32, dimension(1:3)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2589,52 +2638,24 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_3D_initial_layout(plan)
-    final_layout => get_remap_3D_final_layout(plan)
+    init_layout  => get_remap_3D_initial_layout_real64(plan)
+    final_layout => get_remap_3D_final_layout_real64(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
     ! print *, 'from rank ', my_rank, 'loading parameters: ', sdisp, rdisp, &
     ! scnts, rcnts
 
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
-#if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, 'scntsi', scntsi(:)
-    print *, 'sdispi', sdispi(:)
-    print *, 'rcntsi', rcntsi(:)
-    print *, 'rdispi', rdispi(:)
-    call flush(6)
-#endif
-    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1,1) )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
+          if( loc .ne. sdisp(i) ) then
              print *, 'ERROR DETECTED in process: ', my_rank
              print *, 'apply_remap_3D_double() ERROR: ', &
                   'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdispi(i)
+                  'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              call flush(6)
              stop 'apply_remap(): loading error'
@@ -2649,8 +2670,10 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2662,8 +2685,8 @@ contains  !******************************************************************
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
-                   sb(loc:) = transfer(data_in(id,jd,kd),(/1_i32/))
-                   loc      = loc + int32_data_size
+                   sb(loc) = data_in(id,jd,kd)
+                   loc     = loc + 1
                 end do
              end do
           end do
@@ -2677,15 +2700,15 @@ contains  !******************************************************************
 !    call flush(6)
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
@@ -2695,7 +2718,7 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
@@ -2709,32 +2732,28 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( final_layout, tmpa )
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
-                   data_out(id,jd,kd) = transfer(rb(loc:),data_out(1,1,1))
-                   loc                = loc + int32_data_size
+                   data_out(id,jd,kd) = rb(loc)
+                   loc                = loc + 1
                 end do
              end do
           end do
        end if
     end do
-
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_3D_double
 
   subroutine apply_remap_4D_double( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_4D), pointer              :: plan
+    type(remap_plan_4D_real64), pointer                :: plan
     sll_real64, dimension(:,:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:,:), intent(out) :: data_out
-    sll_int32, dimension(:), pointer          :: sb     ! send buffer
-    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
@@ -2752,14 +2771,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:4)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
-
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+    sll_int32, dimension(1:4)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2769,52 +2781,24 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_4D_initial_layout(plan)
-    final_layout => get_remap_4D_final_layout(plan)
+    init_layout  => get_remap_4D_initial_layout_real64(plan)
+    final_layout => get_remap_4D_final_layout_real64(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
     ! print *, 'from rank ', my_rank, 'loading parameters: ', sdisp, rdisp, &
     ! scnts, rcnts
 
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
-#if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, 'scntsi', scntsi(:)
-    print *, 'sdispi', sdispi(:)
-    print *, 'rcntsi', rcntsi(:)
-    print *, 'rdispi', rdispi(:)
-    call flush(6)
-#endif
-    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1,1,1) )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
+          if( loc .ne. sdisp(i) ) then
              print *, 'ERROR DETECTED in process: ', my_rank
              print *, 'apply_remap_4D_double() ERROR: ', &
                   'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdispi(i)
+                  'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              call flush(6)
              stop 'apply_remap(): loading error'
@@ -2831,8 +2815,10 @@ contains  !******************************************************************
           hij = get_box_4D_j_max(sbox)
           hik = get_box_4D_k_max(sbox)
           hil = get_box_4D_l_max(sbox)
-          local_lo = global_to_local_4D( init_layout, (/loi,loj,lok,lol/) )
-          local_hi = global_to_local_4D( init_layout, (/hii,hij,hik,hil/) )
+          tmpa(:)  = (/loi,loj,lok,lol/)
+          local_lo = global_to_local_4D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil/)
+          local_hi = global_to_local_4D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -2845,8 +2831,8 @@ contains  !******************************************************************
              do kd = local_lo(3), local_hi(3)
                 do jd = local_lo(2), local_hi(2)
                    do id = local_lo(1), local_hi(1)
-                      sb(loc:) = transfer(data_in(id,jd,kd,ld),(/1_i32/))
-                      loc      = loc + int32_data_size
+                      sb(loc) = data_in(id,jd,kd,ld)
+                      loc     = loc + 1
                    end do
                 end do
              end do
@@ -2861,15 +2847,15 @@ contains  !******************************************************************
     !    call flush(6)
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
     !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
@@ -2879,7 +2865,7 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
@@ -2895,41 +2881,37 @@ contains  !******************************************************************
           hij = get_box_4D_j_max(sbox)
           hik = get_box_4D_k_max(sbox)
           hil = get_box_4D_l_max(sbox)
-          local_lo = global_to_local_4D( final_layout, (/loi,loj,lok,lol/) )
-          local_hi = global_to_local_4D( final_layout, (/hii,hij,hik,hil/) )
+          tmpa(:)  = (/loi,loj,lok,lol/)
+          local_lo = global_to_local_4D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil/)
+          local_hi = global_to_local_4D( final_layout, tmpa )
           do ld = local_lo(4), local_hi(4)
              do kd = local_lo(3), local_hi(3)
                 do jd = local_lo(2), local_hi(2)
                    do id = local_lo(1), local_hi(1)
-                      data_out(id,jd,kd,ld)=transfer(rb(loc:),data_out(1,1,1,1))
-                      loc                = loc + int32_data_size
+                      data_out(id,jd,kd,ld) = rb(loc)
+                      loc                   = loc + 1
                    end do
                 end do
              end do
           end do
        end if
     end do
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_4D_double
 
-
   subroutine apply_remap_3D_complex( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_3D), pointer            :: plan
+    type(remap_plan_3D_comp64), pointer              :: plan
     sll_comp64, dimension(:,:,:), intent(in)  :: data_in
     sll_comp64, dimension(:,:,:), intent(out) :: data_out
-    sll_int32, dimension(:), pointer          :: sb     ! send buffer
-    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_comp64, dimension(:), pointer          :: sb     ! send buffer
+    sll_comp64, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_collective_t), pointer           :: col    ! collective
-    type(layout_3D), pointer                :: init_layout  => NULL()
-    type(layout_3D), pointer                :: final_layout => NULL()
+    type(layout_3D), pointer                  :: init_layout  => NULL()
+    type(layout_3D), pointer                  :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -2940,14 +2922,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:3)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
-
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+    sll_int32, dimension(1:3)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -2957,46 +2932,18 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_3D_initial_layout(plan)
-    final_layout => get_remap_3D_final_layout(plan)
+    init_layout  => get_remap_3D_initial_layout_comp64(plan)
+    final_layout => get_remap_3D_final_layout_comp64(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
-
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
-#if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, scntsi(:)
-    print *, sdispi(:)
-    print *, rcntsi(:)
-    print *, rdispi(:)
-#endif
-    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1,1) )
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
-             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdispi(i)
+          if( loc .ne. sdisp(i) ) then
+             write (*,'(a,i4,a,i16)') 'apply_remap_3D_int() ERROR: discrepancy between displs(i) and the loading index for i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              stop 'apply_remap(): loading error'
           end if
@@ -3010,8 +2957,10 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( init_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( init_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( init_layout, tmpa )
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -3023,8 +2972,8 @@ contains  !******************************************************************
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
-                   sb(loc:) = transfer(data_in(id,jd,kd),(/1_i32/))
-                   loc      = loc + int32_data_size
+                   sb(loc) = data_in(id,jd,kd)
+                   loc     = loc + 1
                 end do
              end do
           end do
@@ -3037,15 +2986,15 @@ contains  !******************************************************************
  
    if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
 !    write (*,'(a, i4)') 'the receive buffer in rank: ', my_rank
@@ -3055,7 +3004,7 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
@@ -3069,32 +3018,28 @@ contains  !******************************************************************
           hii = get_box_3D_i_max(sbox)
           hij = get_box_3D_j_max(sbox)
           hik = get_box_3D_k_max(sbox)
-          local_lo = global_to_local_3D( final_layout, (/loi,loj,lok/) )
-          local_hi = global_to_local_3D( final_layout, (/hii,hij,hik/) )
+          tmpa(:)  = (/loi,loj,lok/)
+          local_lo = global_to_local_3D( final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik/)
+          local_hi = global_to_local_3D( final_layout, tmpa )
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
                 do id = local_lo(1), local_hi(1)
-                   data_out(id,jd,kd) = transfer(rb(loc:),data_out(1,1,1))
-                   loc                = loc + int32_data_size
+                   data_out(id,jd,kd) = rb(loc)
+                   loc                = loc + 1
                 end do
              end do
           end do
        end if
     end do
-
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_3D_complex
 
   subroutine apply_remap_6D_double( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_6D), pointer              :: plan
+    type(remap_plan_6D_real64), pointer              :: plan
     sll_real64, dimension(:,:,:,:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:,:,:,:), intent(out) :: data_out
-    sll_int32, dimension(:), pointer          :: sb     ! send buffer
-    sll_int32, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer          :: sb     ! send buffer
+    sll_real64, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
@@ -3112,13 +3057,7 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:6)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
+    sll_int32, dimension(1:6)                 :: tmpa
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -3128,52 +3067,24 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_6D_initial_layout(plan)
-    final_layout => get_remap_6D_final_layout(plan)
+    init_layout  => get_remap_6D_initial_layout_real64(plan)
+    final_layout => get_remap_6D_final_layout_real64(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
     ! print *, 'from rank ', my_rank, 'loading parameters: ', sdisp, rdisp, &
     ! scnts, rcnts
 
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
-#if 0
-    write (*,'(a,i4)') 'parameters from rank ', my_rank
-    print *, 'scntsi', scntsi(:)
-    print *, 'sdispi', sdispi(:)
-    print *, 'rcntsi', rcntsi(:)
-    print *, 'rdispi', rdispi(:)
-    call flush(6)
-#endif
-    
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1,1,1,1,1) )
     do i = 0, col_sz-1
-       if( scntsi(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+          if( loc .ne. sdisp(i) ) then
              print *, 'ERROR DETECTED in process: ', my_rank
              print *, 'apply_remap_6D_double() ERROR: ', &
                   'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdispi(i)
+                  'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              call flush(6)
              stop 'apply_remap(): exchange buffer loading error'
@@ -3194,10 +3105,10 @@ contains  !******************************************************************
           hil = get_box_6D_l_max(sbox)
           him = get_box_6D_m_max(sbox)
           hin = get_box_6D_n_max(sbox)
-          local_lo = &
-               global_to_local_6D( init_layout,(/loi,loj,lok,lol,lom,lon/))
-          local_hi = &
-               global_to_local_6D( init_layout,(/hii,hij,hik,hil,him,hin/))
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D( init_layout, tmpa)
 
           ! The plan to load the send buffer is to traverse the integer
           ! array with a single index (loc). When we load the buffer, each
@@ -3212,9 +3123,8 @@ contains  !******************************************************************
                    do kd = local_lo(3), local_hi(3)
                       do jd = local_lo(2), local_hi(2)
                          do id = local_lo(1), local_hi(1)
-                            sb(loc:) = &
-                                 transfer(data_in(id,jd,kd,ld,md,nd),(/1_i32/))
-                            loc      = loc + int32_data_size
+                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
+                            loc     = loc + 1
                          end do
                       end do
                    end do
@@ -3233,15 +3143,15 @@ contains  !******************************************************************
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
 
@@ -3253,7 +3163,7 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'exchange buffer unpacking error'
@@ -3273,19 +3183,18 @@ contains  !******************************************************************
           hil = get_box_6D_l_max(sbox)
           him = get_box_6D_m_max(sbox)
           hin = get_box_6D_n_max(sbox)
-          local_lo = &
-               global_to_local_6D(final_layout, (/loi,loj,lok,lol,lom,lon/))
-          local_hi = &
-               global_to_local_6D(final_layout, (/hii,hij,hik,hil,him,hin/))
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D(final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D(final_layout, tmpa)
           do nd = local_lo(6), local_hi(6)
              do md = local_lo(5), local_hi(5)
                 do ld = local_lo(4), local_hi(4)
                    do kd = local_lo(3), local_hi(3)
                       do jd = local_lo(2), local_hi(2)
                          do id = local_lo(1), local_hi(1)
-                            data_out(id,jd,kd,ld,md,nd) = &
-                                 transfer(rb(loc:),data_out(1,1,1,1,1,1))
-                            loc                   = loc + int32_data_size
+                            data_out(id,jd,kd,ld,md,nd) = rb(loc)
+                            loc                         = loc + 1
                          end do
                       end do
                    end do
@@ -3294,15 +3203,10 @@ contains  !******************************************************************
           end do
        end if
     end do
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_6D_double
 
   subroutine apply_remap_6D_int( plan, data_in, data_out )
-    intrinsic                                 :: transfer
-    type(remap_plan_6D), pointer              :: plan
+    type(remap_plan_6D_int32), pointer              :: plan
     sll_int32, dimension(:,:,:,:,:,:), intent(in)  :: data_in
     sll_int32, dimension(:,:,:,:,:,:), intent(out) :: data_out
     sll_int32, dimension(:), pointer          :: sb     ! send buffer
@@ -3324,13 +3228,6 @@ contains  !******************************************************************
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
     sll_int32, dimension(1:6)                 :: local_lo, local_hi
-    sll_int32                                 :: int32_data_size
-    ! to load the MPI function and send integers, we have a separate set of
-    ! arrays to store this information for now.
-    sll_int32, dimension(:), allocatable     :: sdispi  ! send displacements
-    sll_int32, dimension(:), allocatable     :: rdispi  ! receive displacements
-    sll_int32, dimension(:), allocatable     :: scntsi  ! send counts
-    sll_int32, dimension(:), allocatable     :: rcntsi  ! receive counts
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -3340,59 +3237,21 @@ contains  !******************************************************************
     rcnts        => plan%recv_counts
     col          => plan%collective
     col_sz       =  sll_get_collective_size(col)
-    init_layout  => get_remap_6D_initial_layout(plan)
-    final_layout => get_remap_6D_final_layout(plan)
+    init_layout  => get_remap_6D_initial_layout_int32(plan)
+    final_layout => get_remap_6D_final_layout_int32(plan)
     my_rank      =  sll_get_collective_rank(col)
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    ! Why is this allocation done here anyway??
-    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
-
-    ! Comment when not debugging...
-!!$    print *, my_rank, ': the collective size is: ', col_sz
-!!$    print *, 'from rank ', my_rank, 'loading parameters: ', scnts, sdisp, &
-!!$         rcnts, rdisp
-
-    ! Translate the amounts into integers
-#if 1
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), sdisp, &
-         col_sz, sdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), rdisp, &
-         col_sz, rdispi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), scnts, &
-         col_sz, scntsi)
-    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1,1,1,1,1)), rcnts, &
-         col_sz, rcntsi)
-#endif
-    
-#if 0
-    if(my_rank == 1) then
-       write (*,'(a,i4)') 'parameters from rank ', my_rank
-       print *, 'scntsi', scntsi(:)
-       print *, 'sdispi', sdispi(:)
-       print *, 'rcntsi', rcntsi(:)
-       print *, 'rdispi', rdispi(:)
-       call flush(6)
-    end if
-#endif
-   
     ! load the send buffer
     loc = 0             ! first loading is at position zero
-    ! This step is obviously not needed for integers themselves. We put this
-    ! here for generality.
-    int32_data_size = INT32_SIZEOF( data_in(1,1,1,1,1,1) )
     do i = 0, col_sz-1
-       ! Warning: in following line we had a scnts instead of scntsi.
-       if( scntsi(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdispi(i) ) then
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+          if( loc .ne. sdisp(i) ) then
              print *, 'ERROR DETECTED in process: ', my_rank
              print *, 'apply_remap_6D_double() ERROR: ', &
                   'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdispi(i)
+                  'i = ', i, ' displs(i) = ', sdisp(i)
              write(*,'(a,i8)') 'col_sz = ', col_sz
              call flush(6)
              stop 'apply_remap(): exchange buffer loading error'
@@ -3430,9 +3289,8 @@ contains  !******************************************************************
                    do kd = local_lo(3), local_hi(3)
                       do jd = local_lo(2), local_hi(2)
                          do id = local_lo(1), local_hi(1)
-                            sb(loc:) = &
-                                 transfer(data_in(id,jd,kd,ld,md,nd),(/1_i32/))
-                            loc      = loc + int32_data_size
+                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
+                            loc      = loc + 1
                          end do
                       end do
                    end do
@@ -3460,15 +3318,15 @@ contains  !******************************************************************
 
     if( plan%is_uniform .eqv. .false. ) then 
        call sll_collective_alltoallV( sb(:),       &
-                                      scntsi(0:col_sz-1), &
-                                      sdispi(0:col_sz-1), &
+                                      scnts(0:col_sz-1), &
+                                      sdisp(0:col_sz-1), &
                                       rb(:),       &
-                                      rcntsi(0:col_sz-1), &
-                                      rdispi(0:col_sz-1), col )
+                                      rcnts(0:col_sz-1), &
+                                      rdisp(0:col_sz-1), col )
     else
        call sll_collective_alltoall ( sb(:), &
-                                      scntsi(0), &
-                                      rcntsi(0), &
+                                      scnts(0), &
+                                      rcnts(0), &
                                       rb(:), col )
     end if
 
@@ -3480,7 +3338,7 @@ contains  !******************************************************************
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdispi(i) ) then
+          if( loc .ne. rdisp(i) ) then
              write (*,'(a,i4)') &
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'exchange buffer unpacking error'
@@ -3510,9 +3368,8 @@ contains  !******************************************************************
                    do kd = local_lo(3), local_hi(3)
                       do jd = local_lo(2), local_hi(2)
                          do id = local_lo(1), local_hi(1)
-                            data_out(id,jd,kd,ld,md,nd) = &
-                                 transfer(rb(loc:),data_out(1,1,1,1,1,1))
-                            loc                   = loc + int32_data_size
+                            data_out(id,jd,kd,ld,md,nd) = rb(loc)
+                            loc                         = loc + 1
                          end do
                       end do
                    end do
@@ -3521,12 +3378,7 @@ contains  !******************************************************************
           end do
        end if
     end do
-    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
   end subroutine apply_remap_6D_int
-
 
   ! Placeholder: the load/unload subroutines for the send and receive buffers
   ! should ideally be abstracted out. This means that we need to probably
