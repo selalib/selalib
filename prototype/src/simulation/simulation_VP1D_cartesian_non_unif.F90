@@ -16,7 +16,7 @@ module simulation_VP1D_cartesian_non_unif
 #ifndef STDF95
   use sll_simulation_base
 #endif
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
 
   use numeric_constants
   implicit none
