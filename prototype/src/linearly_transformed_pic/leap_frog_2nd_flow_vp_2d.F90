@@ -1,3 +1,8 @@
+!> \file leap_frog_2nd_flow_2d.F90
+!> \namespace sll_leap_frog_2nd_flow_2d
+!> \authors                    
+!> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
+
 module sll_leap_frog_2nd_flow_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
