@@ -26,6 +26,7 @@ target_link_libraries(unit_test_polar
 	sll_splines
 	)
 
+MESSAGE(STATUS "FFTPACK_ENABLED:${FFTPACK_ENABLED}")
 
 IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
@@ -68,12 +69,13 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
      ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
      TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
                                            sll_mapped_meshes
-	                                   sll_constants
+                                   sll_constants
 	                                   sll_working_precision
                                            sll_assertion 
                                            sll_memory 
                                            sll_low_level_file_io	
                                            sll_utilities
+                                           sll_fft
                                            ${FFTW_LIBRARIES}
   )
 
@@ -139,3 +141,9 @@ ENDIF()
                          sll_timer sll_utilities sll_assertion)
 
 ENDIF()
+
+
+add_executable(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
+
+target_link_libraries( test_poisson_2d_fem sll_memory sll_assertion ${LAPACK_LIBRARIES})
+
