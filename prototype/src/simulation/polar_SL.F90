@@ -4,7 +4,7 @@ program radial_1d_SL
 #include "sll_memory.h"
 
   use sll_splines
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use numeric_constants
   implicit none
   
