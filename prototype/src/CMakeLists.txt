@@ -38,11 +38,11 @@ ADD_CUSTOM_TARGET( clear
 SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
 INCLUDE(FortranConfig)
+INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 INCLUDE(DoxygenConfig)
-INCLUDE(LapackConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
