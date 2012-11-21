@@ -50,10 +50,6 @@ module sll_xdmf_parallel
      module procedure sll_xdmf_array_3d
   end interface
   
-  interface sll_xdmf_close
-     module procedure sll_xml_file_close
-  end interface
-  
 contains  
   
   !>Open a XDMF format file for a 2d plot
@@ -181,5 +177,16 @@ contains
     end if
 
   end subroutine sll_xdmf_array_3d
+
+  subroutine sll_xdmf_close(file_id,error)
+  sll_int32, intent(in) :: file_id
+  sll_int32, intent(out) :: error
+  sll_int32 :: myrank
+  myrank = sll_get_collective_rank(sll_world_collective)
+  if (myrank==0) then
+     call sll_xml_file_close(file_id,error)
+  end if
+  end subroutine sll_xdmf_close
+
 
 end module sll_xdmf_parallel
