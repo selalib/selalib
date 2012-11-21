@@ -10,7 +10,7 @@ program test_periodic_interp
   sll_real64               :: u(16*N0+1), u_exact(16*N0+1), u_out(16*N0+1)
   type(per_1d_interpolator), target       :: interp_per
   class(sll_interpolator_1d_base), pointer     :: interp
-  sll_real64, parameter :: xmin = 0., xmax=3.   
+  sll_real64, parameter :: xmin = -8.0, xmax=8.   
   sll_real64 :: alpha, error, old_error, L, xi
   sll_int32 :: i, p, N, i0, mode 
 
@@ -27,8 +27,12 @@ program test_periodic_interp
      mode = 3
      do  i=0, N
         xi = xmin+i*L/N
-        u(i+1) = 1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*xi))
-        u_exact(i+1) =  1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
+        ! Gaussian vanishing on boundary
+        u(i+1) = exp(-.5_8*xi*xi)
+        u_exact(i+1) = exp(-.5_8*(xi-alpha)**2)
+        ! periodic function
+        !u(i+1) = 1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*xi))
+        !u_exact(i+1) =  1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
         !u(i+1) = cos(mode*twopi*i/N)
         !u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do

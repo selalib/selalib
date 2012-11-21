@@ -94,7 +94,7 @@ contains  ! ****************************************************************
     do ic_temp = 1, num_points
        i_temp  = ceiling((coordinate_o(ic_temp) -fWENO%xmin-fWENO%delta/2.0_f64)*fWENO%rdelta)+1
        xi_temp = (coordinate_o(ic_temp)-(fWENO%xmin+fWENO%delta/2.0_f64+(i_temp-1.0_f64)*fWENO%delta))*fWENO%rdelta
-       if(xi_temp.ge.eps)then
+        if(xi_temp.ge.eps)then
           write(*,*) 'something wrong in locating i_temp'
        elseif(xi_temp.le.-1.-eps)then
           write(*,*) 'something wrong in locating i_temp'
@@ -165,7 +165,8 @@ contains  ! ****************************************************************
           f_out(ic_temp) = w1*g1 + w2*g2 + w3*g3   
 
        else
-          print *, 'other order options not available.'
+          print *, 'interpolate_WENO_1D: other order options not available.'
+          stop
        endif
     enddo
 
