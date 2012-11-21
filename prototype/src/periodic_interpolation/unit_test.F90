@@ -1,6 +1,7 @@
 program test_periodic_interp
 #include "sll_working_precision.h"
   use periodic_interp_module
+  !use sll_fft
   implicit none 
   
   sll_int32, parameter    :: N0 = 16

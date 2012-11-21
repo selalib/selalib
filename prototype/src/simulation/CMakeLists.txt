@@ -177,6 +177,7 @@ add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
 	sll_mapped_meshes
 	sll_interpolators
+	sll_fft
 	sll_splines
 	geometry_functions
 	sll_distribution_function
@@ -190,10 +191,14 @@ target_link_libraries(VP1D_cart
 	fftpack_module
 	)
 
+
+IF(FFTPACK_ENABLED)
+
 add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 target_link_libraries(VP1D_deltaf_cart
 	sll_mapped_meshes
 	sll_interpolators
+	sll_fft
 	sll_splines
 	sll_periodic_interp
 	geometry_functions
@@ -208,6 +213,8 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
+ENDIF()
+
 
 ENDIF()
 
