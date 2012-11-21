@@ -23,7 +23,7 @@ use arbitrary_degree_splines
   implicit none
   
   type(quintic_splines_uniform_plan), pointer :: plan1
-  type(quintic_splines_non_uni_plan), pointer :: plan2
+  type(quintic_splines_nonuniform_plan), pointer :: plan2
   sll_real64, dimension(:), allocatable       :: f1, f2, x2
   ! f1: test function for uniform case
   ! f2: test function for non uniform case
@@ -71,8 +71,8 @@ use arbitrary_degree_splines
 
      plan1 => new_quintic_splines_uniform(num_pts, xmin, xmax)
      call compute_quintic_coeffs_uniform(f1, plan1)
-     plan2 => new_quintic_splines_non_uni(x2)
-     call compute_quintic_coeffs_non_uni(f2, plan2)
+     plan2 => new_quintic_splines_nonuniform(x2)
+     call compute_quintic_coeffs_nonuniform(f2, plan2)
 
      err11 = 0.d0
      err12 = 0.d0

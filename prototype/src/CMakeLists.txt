@@ -35,6 +35,8 @@ ADD_CUSTOM_TARGET( clear
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
+SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
+
 INCLUDE(FortranConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
@@ -169,6 +171,7 @@ IF(MPI_MODULE_ENABLED)
 ENDIF()
 
 ##########################################################
+
 
 IF(NOT STDF95)
    ADD_SUBDIRECTORY(poisson_solvers)
