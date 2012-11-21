@@ -1,6 +1,6 @@
-project(sll)
-enable_language(Fortran)
-cmake_minimum_required(VERSION 2.8)
+PROJECT(SLL)
+ENABLE_LANGUAGE(Fortran)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -22,30 +22,27 @@ endif (NOT CMAKE_BUILD_TYPE)
 ADD_DEFINITIONS(-DDEBUG)
 
 # Define folder to be deleted by make clean
-#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
-#set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
-add_custom_target( clear
-                   COMMAND find . -name *.mod -delete
-		   COMMAND find . -name *.a -delete
-		   COMMAND find . -name *.o -delete
-		   COMMAND find . -name *.cmake -delete
-		   COMMAND rm -rf bin
-		   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-		   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/bin/)
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FortranConfig.cmake)
+ADD_CUSTOM_TARGET( clear
+   COMMAND find . -name *.mod -delete
+   COMMAND find . -name *.a -delete
+   COMMAND find . -name *.o -delete
+   COMMAND find . -name *.cmake -delete
+   COMMAND rm -rf bin
+   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/HDF5Config.cmake)
+SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/FFTConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/MPIConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/DoxygenConfig.cmake)
-
-INCLUDE(${CMAKE_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
-
+INCLUDE(FortranConfig)
+INCLUDE(HDF5Config)
+INCLUDE(FFTConfig)
+INCLUDE(MPIConfig)
+INCLUDE(DoxygenConfig)
+INCLUDE(LapackConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
@@ -57,15 +54,12 @@ INCLUDE_DIRECTORIES(utilities
                     fields 
                     fft) 
 
-
-
 ENABLE_TESTING()
 
-######################################################################
-#  III. SUBDIRECTORY                                                 #
-######################################################################
+#################################################################
+#  SUBDIRECTORY                                                 #
+#################################################################
 
-#low-level
 ADD_SUBDIRECTORY(memory)
 ADD_TEST(NAME memory COMMAND test_memory)
 SET_TESTS_PROPERTIES(memory PROPERTIES TIMEOUT 20)
@@ -73,14 +67,15 @@ SET_TESTS_PROPERTIES(memory PROPERTIES TIMEOUT 20)
 ##########################################################
 
 ADD_SUBDIRECTORY(precision)
-#ADD_TEST(precision precision/test_precision) #too long
 
 ##########################################################
 
 ADD_SUBDIRECTORY(assert)
-ADD_TEST(NAME assert COMMAND test_assert)
-SET(passRegex "Assertion error triggered in file")
-SET_TESTS_PROPERTIES(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
+IF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
+   ADD_TEST(NAME assert COMMAND test_assert)
+   SET(passRegex "Assertion error triggered in file")
+   SET_TESTS_PROPERTIES(assert PROPERTIES PASS_REGULAR_EXPRESSION "${passRegex}")
+ENDIF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
 
 ##########################################################
 
@@ -103,7 +98,6 @@ ADD_TEST(NAME timer COMMAND test_timer)
 
 ##########################################################
 
-#mid-level
 ADD_SUBDIRECTORY(numerical_utilities)
 ADD_TEST(NAME tridiagonal COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange COMMAND test_lagrange)
@@ -178,17 +172,16 @@ ENDIF()
 
 ##########################################################
 
+
 IF(NOT STDF95)
    ADD_SUBDIRECTORY(poisson_solvers)
    IF(FFTPACK_ENABLED)
       ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
    ENDIF(FFTPACK_ENABLED)
 
-#ADD_TEST(poisson_solvers poisson_solvers/test_poisson_2d)
-ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
+   ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#ADD_TEST(poisson_solvers poisson_solvers/unit_test)
+                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_TEST(NAME qns2d_with_finite_diff_seq 
@@ -223,7 +216,6 @@ ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
 ##########################################################
-#high-level
 ADD_SUBDIRECTORY(interpolators)
 ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
@@ -286,11 +278,11 @@ SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ##########################################################
 
 ADD_SUBDIRECTORY(CSL)
-#ADD_TEST(CSL CSL/test_csl)
-#ADD_TEST(simulation_1d simulation/test_simulation_1d)
+#ADD_TEST(NAME CSL CSL/test_csl)
+#ADD_TEST(NAME simulation_1d simulation/test_simulation_1d)
 
 #ADD_SUBDIRECTORY(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
-#ADD_TEST(quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
+#ADD_TEST(NAME quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
 
 ##########################################################
 
@@ -300,7 +292,7 @@ ADD_SUBDIRECTORY(selalib_level EXCLUDE_FROM_ALL)
 ##########################################################
 
 ADD_SUBDIRECTORY(simulation)
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   SET(PROCS 8)
   ADD_TEST(NAME test_vp4d_sim
          COMMAND
@@ -313,7 +305,7 @@ ENDIF()
 ##########################################################
 
 SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
-# recherche de FORTRANCL
+
 IF(FORTRANCL_ENABLED)
   FIND_PACKAGE(FORTRANCL QUIET)
   IF(FORTRANCL_FOUND)
@@ -392,3 +384,5 @@ IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
       SET(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ENDIF()
 ENDIF()
+
+
