@@ -13,7 +13,8 @@
 !
 
 program check_gcc_version
-  implicit none
+
+implicit none
 
 #define gfortran_minimum_version 40600
 #define intel_minimum_version 1100

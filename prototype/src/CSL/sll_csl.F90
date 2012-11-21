@@ -12,7 +12,7 @@ module sll_csl
 
   use numeric_constants
   !use sll_splines
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use ode_solvers
   use distribution_function
   implicit none
