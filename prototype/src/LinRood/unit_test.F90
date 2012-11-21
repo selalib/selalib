@@ -15,14 +15,16 @@ program unit_test
   implicit none
 
   sll_int32 :: nc_eta1, nc_eta2
-  type(sll_mapped_mesh_2d_analytic), target :: mesh2d
+  type(sll_mapped_mesh_2d_analytic), target :: mesh2d, mesh2d_cart
   class(sll_mapped_mesh_2d_base), pointer   :: m
   type(sll_distribution_function_2d)   :: df 
   character(32)  :: name = 'dist_func'
   character(len=4) :: cstep
+  sll_real64 :: deltat
+  sll_int32 :: iter, nbiter 
   type(init_gaussian_2d), target :: init_gaussian
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
-  type(scalar_field_2d) :: uniform_field, rotating_field 
+  type(scalar_field_2d) :: uniform_field, rotating_field, incompressible_field 
   type(linrood_plan) :: linrood
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
@@ -46,6 +48,7 @@ program unit_test
   ! Define mapped mesh
   nc_eta1 = 100
   nc_eta2 = 100
+
   call mesh2d%initialize( &
        "mesh2d",      &
        nc_eta1+1,     &
@@ -56,11 +59,24 @@ program unit_test
        sinprod_jac12, &
        sinprod_jac21, &
        sinprod_jac22 )
-  m => mesh2d
+
+ call mesh2d_cart%initialize( &
+       "mesh2d_cart",      &
+       nc_eta1+1,     &
+       nc_eta2+1,     &
+       identity_x1,    &
+       identity_x2,    &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22 )
+
+ ! m => mesh2d
+  m => mesh2d_cart
 
   print*, 'initialization of distribution_function'
 
-  call init_gaussian%initialize( m, CELL_CENTERED_FIELD, 0.5_f64, 0.5_f64, 0.1_f64, 0.1_f64 )
+  call init_gaussian%initialize( m, CELL_CENTERED_FIELD, 0.4_f64, 0.4_f64, 0.1_f64, 0.1_f64 )
   p_init_f => init_gaussian
 
  ! Set up the interpolators for the distribution function
@@ -92,12 +108,21 @@ program unit_test
        interp_eta2_ptr, &
        p_init_f )
 
-  print*, 'write mesh and distribution function'
+!!$   ! jacobian times distribution function is stored
+!!$       do j=1,num_pts2
+!!$          do i=1, num_pts1
+!!$             y = m%x2_cell(i,j)
+!!$             x = m%x1_cell(i,j)
+!!$             jac = m%jacobians_c(i,j)
+!!$             data_out(i,j) = &
+!!$                  jac / (2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
+!!$                  (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
+!!$                  (y-init_obj%yc)**2/init_obj%sigma_y**2))
+!!$          end do
+!!$       end do
 
-  istep = 0
-  call int2string(istep,cstep)
-  df%name = trim(name)//cstep
-  
+  print*, 'write mesh and distribution function'
+ 
   call write_scalar_field_2d(df)!,multiply_by_jacobian=.true.) 
 
   ! Initialize Linrood plan
@@ -115,8 +140,8 @@ program unit_test
        interp_eta2_ptr_sf )
 
   ! components of field
-  alpha1 = 0.0_f64
-  alpha2 = 10.0_f64
+  alpha1 = 1.0_f64
+  alpha2 = 1.0_f64
   do i1 = 1, nc_eta1 
      do i2 = 1, nc_eta2
         FIELD_2D_AT_I( uniform_field, i1, i2 ) = alpha1 * m%x2_cell(i1,i2) &
@@ -141,7 +166,30 @@ program unit_test
      end do
   end do
 
+ print*, 'checking advection in incompressible swirling deformation field' 
+  ! define incompressible field
+  call initialize_scalar_field_2d(incompressible_field, "incompressible_field", &
+       m, CELL_CENTERED_FIELD, interp_eta1_ptr_rf, interp_eta2_ptr_rf )
+  do i1 = 1, nc_eta1
+     do i2 = 1, nc_eta2
+        FIELD_2D_AT_I( incompressible_field, i1, i2 ) = &
+            (cos(sll_pi*2.0_f64*m%x1_cell(i1,i2)) &
+             *cos(sll_pi*2.0_f64*m%x2_cell(i1,i2)) &
+             -cos(sll_pi*2.0_f64*m%x1_cell(i1,i2)) & 
+             -cos(sll_pi*2.0_f64*m%x2_cell(i1,i2))) & 
+             /sll_pi/4.0_f64
+     end do
+  end do
 
+  deltat = m%delta_eta1*.1_f64
+
+  nbiter = 600
+  do istep = 1, nbiter
+     call linrood_step(linrood, df, incompressible_field, 0._8, deltat)
+ 
+     call write_scalar_field_2d(df)!,multiply_by_jacobian=.true.)
+     call write_scalar_field_2d(incompressible_field) 
+  end do
   print *, 'Successful, exiting program.'
 
 end program unit_test
