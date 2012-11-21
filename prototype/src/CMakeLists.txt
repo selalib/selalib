@@ -122,6 +122,10 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 
 ##########################################################
 
+ADD_SUBDIRECTORY(linearly_transformed_pic)
+
+##########################################################
+
 ADD_SUBDIRECTORY(WENO)
 ADD_SUBDIRECTORY(integration)
 ADD_TEST(NAME integration COMMAND test_integration)
