@@ -10,7 +10,9 @@ module sll_lin_trans_pic_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_flow_base
-  
+  use sll_scalar_field_initializers_base
+!  use sll_tsi_2d_initializer
+    
   implicit none
   
   type  ::  lin_trans_pic_2d
@@ -29,7 +31,7 @@ module sll_lin_trans_pic_2d
      sll_real64                        :: qi_grid_xmax
      sll_real64                        :: qi_grid_vmin
      sll_real64                        :: qi_grid_vmax
-     sll_real64                        :: nc_poisson_mesh
+     sll_int32                         :: nc_poisson_mesh   ! number of cells
      sll_real64                        :: xmin_poisson_mesh
      sll_real64                        :: dx_poisson_mesh
      sll_real64                        :: elementary_charge
@@ -45,7 +47,7 @@ module sll_lin_trans_pic_2d
 
      sll_real64, dimension(:,:), pointer :: qi_coefs
      sll_real64, dimension(:,:), pointer :: qi_data ! e.g., the data to be approximated (quasi-interpolated) by the particles
-  end type sll_spline_2D
+  end type lin_trans_pic_2d
 
 
 #ifdef STDF95
@@ -88,12 +90,14 @@ contains
     sll_real64, intent(in)              :: xmin_poisson_mesh
     sll_real64, intent(in)              :: xmax_poisson_mesh
     sll_real64, intent(in)              :: elementary_charge
+    sll_int32,  intent(in)              :: bc_type
     sll_real64, dimension(:), pointer   :: qi_coefs_1d
-    sll_real64                          :: qi_st_radius
+    sll_int32                           :: qi_st_radius
     sll_real64                          :: hx_parts
     sll_real64                          :: hv_parts
     sll_int32                           :: i
     sll_int32                           :: j
+    sll_int32                           :: ierr
                 
     SLL_ASSERT( xmin < xmax )        
     SLL_ASSERT( vmin < vmax )        
@@ -194,8 +198,8 @@ contains
   ! note: we don't distinguish here between the periodic and the open_domain cases. In principle the target should be periodic
   !       in the periodic case, but for simplicity we do not use that property here (and don't check it, either).  
   subroutine load_ltpic_2d( target_density_initializer, ltpic_object )
-    class(scalar_field_2d_initializer_base), intent(in), pointer :: target_density_initializer   ! intial field to be approximated
-    type(lin_trans_pic_2d),                              pointer :: ltpic_object
+    class(scalar_field_2d_initializer_base), intent(inout), pointer :: target_density_initializer   ! intial field to be approximated
+    type(lin_trans_pic_2d),                                 pointer :: ltpic_object
 
     call target_density_initializer%f_of_x1x2(ltpic_object%qi_data)   ! writes the target density values on the 'qi_data' array        
     call approximate_qi_data( ltpic_object )
@@ -206,11 +210,11 @@ contains
   ! (as above we don't distinguish between the periodic and the open_domain cases)
   subroutine remap_ltpic_2d( ltpic_object )
     type(lin_trans_pic_2d),                              pointer :: ltpic_object
-
+         
     call write_f_on_grid (                                                                                 &
                             ltpic_object%qi_grid_xmin,ltpic_object%qi_grid_xmax,ltpic_object%qi_grid_npx,  &
                             ltpic_object%qi_grid_vmin,ltpic_object%qi_grid_vmax,ltpic_object%qi_grid_npv,  &
-                            ltpic_object%qi_data,ltpic_object 
+                            ltpic_object%qi_data,ltpic_object                                              &
                          )
     call approximate_qi_data( ltpic_object )
 
@@ -275,25 +279,25 @@ contains
     sll_real64, dimension(:), intent(inout)   :: rho
     type(lin_trans_pic_2d), pointer           :: ltpic_object
 
-    sll_float64                               :: x
-    sll_float64                               :: v
-    sll_float64                               :: inv_hx_pm
-    sll_float64                               :: hx_pm
-    sll_float64                               :: xmin_pm
-    sll_float64                               :: charge
-    sll_float64                               :: x_i
-    sll_int32                                 :: npx
-    sll_int32                                 :: npv
-    sll_int32                                 :: k_x
-    sll_int32                                 :: k_v
-    sll_int32                                 :: i_min
-    sll_int32                                 :: i_max
-    sll_int32                                 :: i
-    sll_int32                                 :: i_per
-    sll_int32                                 :: nc_pm
-    sll_int32                                 :: cp
-    sll_int32                                 :: degree
-    logical                                   :: periodic
+    sll_real64                               :: x
+    sll_real64                               :: v
+    sll_real64                               :: inv_hx_pm
+    sll_real64                               :: hx_pm
+    sll_real64                               :: xmin_pm
+    sll_real64                               :: charge
+    sll_real64                               :: x_i
+    sll_int32                                :: npx
+    sll_int32                                :: npv
+    sll_int32                                :: k_x
+    sll_int32                                :: k_v
+    sll_int32                                :: i_min
+    sll_int32                                :: i_max
+    sll_int32                                :: i
+    sll_int32                                :: i_rho
+    sll_int32                                :: nc_pm
+    sll_int32                                :: cp
+    sll_int32                                :: degree
+    logical                                  :: periodic
     
     hx_pm                 = ltpic_object%dx_poisson_mesh
     inv_hx_pm             = 1./hx_pm
@@ -304,7 +308,7 @@ contains
     periodic              = (ltpic_object%bc_type == PERIODIC_LTPIC)
 
     ! Check that rho vector is associated to the poisson mesh
-    SLL_ASSERT( size(rh0)==nc_pm+1 )
+    SLL_ASSERT( size(rho)==nc_pm+1 )
 
     ! loop over the particles
     npx = ltpic_object%num_particles_x
@@ -315,7 +319,7 @@ contains
           v = ltpic_object%coord_v(k_x,k_v)
           charge = ltpic_object%elementary_charge*ltpic_object%weight(k_x,k_v)
           
-          if( charge .neq. 0 ) then
+          if( charge .ne. 0 ) then
              ! loop over i such that Bspline_h(x_i - x) does not vanish: ie, such that x_i (see above) is in ]x-hx*cp,x+hx*cp[
              i_min = 1 + int(floor  ( inv_hx_pm*(x-xmin_pm)-cp )) + 1
              i_max = 1 + int(ceiling( inv_hx_pm*(x-xmin_pm)+cp )) - 1
@@ -342,12 +346,12 @@ contains
 
   subroutine write_f_on_grid ( xmin_grid,xmax_grid,npx_grid,vmin_grid,vmax_grid,npv_grid,grid_values,ltpic_object )
     type(lin_trans_pic_2d), pointer             :: ltpic_object
-    sll_int32, intent(in)                       :: xmin_grid
-    sll_int32, intent(in)                       :: xmax_grid
-    sll_int32, intent(in)                       :: npx_grid
-    sll_int32, intent(in)                       :: vmin_grid
-    sll_int32, intent(in)                       :: vmax_grid
-    sll_int32, intent(in)                       :: npv_grid
+    sll_real64, intent(in)                      :: xmin_grid
+    sll_real64, intent(in)                      :: xmax_grid
+    sll_int32,  intent(in)                      :: npx_grid
+    sll_real64, intent(in)                      :: vmin_grid
+    sll_real64, intent(in)                      :: vmax_grid
+    sll_int32,  intent(in)                      :: npv_grid
     sll_real64, dimension(:,:), intent(inout)   :: grid_values
     sll_int32                                   :: npx
     sll_int32                                   :: npv
@@ -374,6 +378,7 @@ contains
     sll_real64                                  :: D_xv
     sll_real64                                  :: D_vx
     sll_real64                                  :: D_vv
+    sll_real64                                  :: weight
     sll_real64                                  :: part_radius_x
     sll_real64                                  :: part_radius_v
     sll_real64                                  :: x_im
@@ -445,11 +450,12 @@ contains
                       if( iv >= 1 .and. iv <= npv_grid ) then
                           v_i = vmin_grid + (iv-1) * hv_grid
                           grid_values(ix,iv) = grid_values(ix,iv)                                                                  &
-                                 + weight * inv_hx_parts * b_spline_1d(degree,inv_hx_parts*(D_xx*(x_im-x) + Dxv*(v_i-v)))          &
-                                          * inv_hv_parts * b_spline_1d(degree,inv_hv_parts*(D_vx*(x_im-x) + Dvv*(v_i-v)))
+                                 + weight * inv_hx_parts * b_spline_1d(degree,inv_hx_parts*(D_xx*(x_im-x) + D_xv*(v_i-v)))         &
+                                          * inv_hv_parts * b_spline_1d(degree,inv_hv_parts*(D_vx*(x_im-x) + D_vv*(v_i-v)))
                       end if
                   end do
-              end if
+               end if
+             end do
           end do
        end do
     end do
@@ -525,7 +531,7 @@ contains
           b_spline_1d = 0.0416666666667 *(x_aux**5) - 1.0 *(x_aux**4) + 9.5 *(x_aux**3) - 44.5 *(x_aux**2) + 102.25 *(x_aux) - 91.45
           return 
        end if
-       b_spline = -0.008333333333333333 * ((x_aux-6.)**5)
+       b_spline_1d = -0.008333333333333333 * ((x_aux-6.)**5)
        return
     
     case default
@@ -536,36 +542,37 @@ contains
   end function b_spline_1d
 
   subroutine transport_ltpic_2d ( flow, ltpic_object )
-    class(flow_base), intent(in),  pointer    :: flow
-    type(lin_trans_pic_2d), pointer           :: ltpic_object
-    sll_int32                                 :: npx
-    sll_int32                                 :: npv
-    sll_real64                                :: hx_parts
-    sll_real64                                :: hv_parts
-    sll_real64                                :: inv_2hx
-    sll_real64                                :: inv_2hv
-    sll_real64                                :: fx
-    sll_real64                                :: fv
-    sll_real64                                :: fx_plus_h
-    sll_real64                                :: fv_plus_h
-    sll_real64                                :: fx_minus_h
-    sll_real64                                :: fv_minus_h
-    sll_real64                                :: fwd_jcbn_mtrx_xx
-    sll_real64                                :: fwd_jcbn_mtrx_vx
-    sll_real64                                :: fwd_jcbn_mtrx_xv
-    sll_real64                                :: fwd_jcbn_mtrx_vv
-    sll_real64                                :: bck_jcbn_mtrx_xx
-    sll_real64                                :: bck_jcbn_mtrx_vx
-    sll_real64                                :: bck_jcbn_mtrx_xv
-    sll_real64                                :: bck_jcbn_mtrx_vv
-    sll_real64                                :: dfrm_mtrx_xx
-    sll_real64                                :: dfrm_mtrx_xv
-    sll_real64                                :: dfrm_mtrx_vx
-    sll_real64                                :: dfrm_mtrx_vv
-    sll_real64                                :: new_dfrm_mtrx_xx
-    sll_real64                                :: new_dfrm_mtrx_xv
-    sll_real64                                :: new_dfrm_mtrx_vx
-    sll_real64                                :: new_dfrm_mtrx_vv
+    class(flow_base_class), intent(in), pointer   :: flow
+    type(lin_trans_pic_2d), pointer               :: ltpic_object
+    sll_int32                                     :: k_x
+    sll_int32                                     :: k_v
+    sll_int32                                     :: npx
+    sll_int32                                     :: npv
+    sll_real64                                    :: hx_parts
+    sll_real64                                    :: hv_parts
+    sll_real64                                    :: inv_2hx
+    sll_real64                                    :: inv_2hv
+    sll_real64                                    :: x
+    sll_real64                                    :: v
+    sll_real64                                    :: fx
+    sll_real64                                    :: fv
+    sll_real64                                    :: fx_plus_h
+    sll_real64                                    :: fv_plus_h
+    sll_real64                                    :: fx_minus_h
+    sll_real64                                    :: fv_minus_h
+    sll_real64                                    :: fwd_jcbn_mtrx_xx
+    sll_real64                                    :: fwd_jcbn_mtrx_vx
+    sll_real64                                    :: fwd_jcbn_mtrx_xv
+    sll_real64                                    :: fwd_jcbn_mtrx_vv
+    sll_real64                                    :: bck_jcbn_mtrx_xx
+    sll_real64                                    :: bck_jcbn_mtrx_vx
+    sll_real64                                    :: bck_jcbn_mtrx_xv
+    sll_real64                                    :: bck_jcbn_mtrx_vv
+    sll_real64                                    :: sqrt_det_jcbn_mtrx
+    sll_real64                                    :: prev_dfrm_mtrx_xx
+    sll_real64                                    :: prev_dfrm_mtrx_xv
+    sll_real64                                    :: prev_dfrm_mtrx_vx
+    sll_real64                                    :: prev_dfrm_mtrx_vv
 
     
     hx_parts = (ltpic_object%xmax-ltpic_object%xmin)/ltpic_object%num_particles_x
@@ -604,22 +611,22 @@ contains
           bck_jcbn_mtrx_vv =  sqrt_det_jcbn_mtrx*fwd_jcbn_mtrx_xx
 
           ! update the particle deformation matrix
-          dfrm_mtrx_xx = ltpic_object%deform_matrix_xx
-          dfrm_mtrx_xv = ltpic_object%deform_matrix_xv
-          dfrm_mtrx_vx = ltpic_object%deform_matrix_vx
-          dfrm_mtrx_vv = ltpic_object%deform_matrix_vv
-          ltpic_object%deform_matrix_xx = dfrm_mtrx_xx*bck_jcbn_mtrx_xx + dfrm_mtrx_xv*bck_jcbn_mtrx_vx
-          ltpic_object%deform_matrix_xv = dfrm_mtrx_xx*bck_jcbn_mtrx_xv + dfrm_mtrx_xv*bck_jcbn_mtrx_vv
-          ltpic_object%deform_matrix_vx = dfrm_mtrx_vx*bck_jcbn_mtrx_xx + dfrm_mtrx_vv*bck_jcbn_mtrx_vx
-          ltpic_object%deform_matrix_vv = dfrm_mtrx_vx*bck_jcbn_mtrx_xv + dfrm_mtrx_vv*bck_jcbn_mtrx_vv
+          prev_dfrm_mtrx_xx = ltpic_object%deform_matrix_xx(k_x,k_v)
+          prev_dfrm_mtrx_xv = ltpic_object%deform_matrix_xv(k_x,k_v)
+          prev_dfrm_mtrx_vx = ltpic_object%deform_matrix_vx(k_x,k_v)
+          prev_dfrm_mtrx_vv = ltpic_object%deform_matrix_vv(k_x,k_v)
+          ltpic_object%deform_matrix_xx(k_x,k_v) = prev_dfrm_mtrx_xx*bck_jcbn_mtrx_xx + prev_dfrm_mtrx_xv*bck_jcbn_mtrx_vx
+          ltpic_object%deform_matrix_xv(k_x,k_v) = prev_dfrm_mtrx_xx*bck_jcbn_mtrx_xv + prev_dfrm_mtrx_xv*bck_jcbn_mtrx_vv
+          ltpic_object%deform_matrix_vx(k_x,k_v) = prev_dfrm_mtrx_vx*bck_jcbn_mtrx_xx + prev_dfrm_mtrx_vv*bck_jcbn_mtrx_vx
+          ltpic_object%deform_matrix_vv(k_x,k_v) = prev_dfrm_mtrx_vx*bck_jcbn_mtrx_xv + prev_dfrm_mtrx_vv*bck_jcbn_mtrx_vv
 
        end do
     end do
   
   end subroutine transport_ltpic_2d
   
-  subroutine plot_density(label,n_time,ltpic_object)  ! todo
-  end subroutine
+!  subroutine plot_density(label,n_time,ltpic_object)  ! todo...
+!  end subroutine
   
   
   
