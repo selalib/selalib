@@ -1,6 +1,6 @@
 program remap_test_4d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-#include "sll_remap.h"
+  use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -37,7 +37,7 @@ program remap_test_4d
   ! Remap stuff
   type(layout_4D), pointer                  :: layout1
   type(layout_4D), pointer                  :: layout2
-  type(remap_plan_4D), pointer              :: rmp4
+  type(remap_plan_4D_real64), pointer       :: rmp4
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -46,6 +46,7 @@ program remap_test_4d
   sll_int32, dimension(4)                   :: global_indices, g
   sll_real32   , dimension(1)               :: prod4test
   integer                                   :: ok
+  sll_int32, dimension(4)                   :: tmpa
 
 
   ! Boot parallel environment
@@ -109,7 +110,8 @@ program remap_test_4d
         do k=1,loc_sz_k_init
            do j=1,loc_sz_j_init 
               do i=1,loc_sz_i_init
-                 global_indices =  local_to_global_4D( layout1, (/i, j, k, l/) )
+                 tmpa(:) = (/i, j, k, l/)
+                 global_indices =  local_to_global_4D( layout1, tmpa )
                  gi = global_indices(1)
                  gj = global_indices(2)
                  gk = global_indices(3)
@@ -154,7 +156,7 @@ program remap_test_4d
 
      SLL_ALLOCATE(local_array2(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final,loc_sz_l_final), ierr )
     
-     rmp4 => NEW_REMAP_PLAN_4D( layout1, layout2, local_array1)     
+     rmp4 => new_remap_plan( layout1, layout2, local_array1)     
 
      call apply_remap_4D( rmp4, local_array1, local_array2 ) 
 
@@ -173,7 +175,8 @@ program remap_test_4d
         do k=1,loc_sz_k_final
            do j=1,loc_sz_j_final 
               do i=1,loc_sz_i_final
-                 global_indices =  local_to_global_4D( layout2, (/i,j,k,l/) )
+                 tmpa(:) = (/i,j,k,l/)
+                 global_indices =  local_to_global_4D( layout2, tmpa )
                  gi = global_indices(1)
                  gj = global_indices(2)
                  gk = global_indices(3)

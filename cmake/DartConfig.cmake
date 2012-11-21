@@ -1,0 +1,6 @@
+SET(PROJECT_NAME "SeLaLib")
+SET(NIGHTLY_START_TIME "00:00:00 EST")
+SET(DROP_SITE_CDASH TRUE)
+SET(DROP_METHOD "http")
+SET(DROP_SITE "irma-webhpc.u-strasbg.fr")
+SET(DROP_LOCATION "/submit.php?project=SeLaLib")

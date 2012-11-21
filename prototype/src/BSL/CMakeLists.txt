@@ -14,6 +14,7 @@ ADD_DEPENDENCIES(test_bsl_2d ${BSL_LIB_DEPS})
 TARGET_LINK_LIBRARIES(test_bsl_2d ${BSL_LIB_DEPS})
 
 IF(FFTPACK_ENABLED)
+   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../poisson_solvers)
    ADD_EXECUTABLE(test_bsl_landau_2d landau_2d.F90)
    ADD_DEPENDENCIES(test_bsl_landau_2d ${BSL_LIB_DEPS})
    TARGET_LINK_LIBRARIES(test_bsl_landau_2d ${BSL_LIB_DEPS} 

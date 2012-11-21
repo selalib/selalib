@@ -5,7 +5,7 @@
 !> simple array.
 !> contact: mehrenbe@math.unistra.fr for this module
 !> 
-module cubic_nonuniform_splines
+module cubic_non_uniform_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -507,5 +507,5 @@ contains  ! ****************************************************************
 
 
 
-end module cubic_nonuniform_splines
+end module cubic_non_uniform_splines
 
