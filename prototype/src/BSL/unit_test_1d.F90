@@ -105,9 +105,9 @@ contains
 
      do j = 1, nc_v
 #ifdef STDF95
-        df(:,j) = cubic_spline_interpolate_array_at_displacement(interp_x,nc_x,df(:,j),dt*advfield_x)
+        df(:,j) = cubic_spline_interpolate_array_at_displacement(interp_x,nc_x+1,df(:,j),dt*advfield_x)
 #else
-        df(:,j) = interp_x%interpolate_array_disp(nc_x,df(:,j),dt*advfield_x)
+        df(:,j) = interp_x%interpolate_array_disp(nc_x+1,df(:,j),dt*advfield_x)
 #endif
      end do
 
@@ -118,9 +118,9 @@ contains
 
      do i = 1, nc_x
 #ifdef STDF95
-        df(i,:) = cubic_spline_interpolate_array_at_displacement(interp_v,nc_v,df(i,:),dt*advfield_v)
+        df(i,:) = cubic_spline_interpolate_array_at_displacement(interp_v+1,nc_v,df(i,:),dt*advfield_v)
 #else
-        df(i,:) = interp_v%interpolate_array_disp(nc_v,df(i,:),dt*advfield_v)
+        df(i,:) = interp_v%interpolate_array_disp(nc_v+1,df(i,:),dt*advfield_v)
 #endif
      end do
 
