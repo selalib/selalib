@@ -32,7 +32,7 @@ set(QNS_LIBS     sll_fft
                  sll_timer 
                  sll_assertion )
 
-add_dependencies(sll_qns2d_seq  
+add_dependencies(sll_qns2d_par  
                  sll_remap   
                  sll_collective 
                  ${QNS_LIBS})
