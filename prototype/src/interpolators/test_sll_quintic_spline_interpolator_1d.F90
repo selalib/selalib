@@ -8,7 +8,7 @@ program test_sll_quintic_spline_interpolator_1d
 #ifndef STDF95
   use sll_module_interpolators_1d_base
 #endif
-  use WENO_interp
+  use WENO_interp   ! what is weno doing here???
   use sll_quintic_spline_interpolator_1d
     implicit none
 
@@ -35,6 +35,7 @@ program test_sll_quintic_spline_interpolator_1d
 
   SLL_ALLOCATE(data(n), ierr)
   SLL_ALLOCATE(out(n), ierr)
+  SLL_ALLOCATE(out_disp(n), ierr)
   SLL_ALLOCATE(interpolation_points(n), ierr)
   SLL_ALLOCATE(coordinates_d(n), ierr)
   SLL_ALLOCATE(coordinates_disp(n), ierr)

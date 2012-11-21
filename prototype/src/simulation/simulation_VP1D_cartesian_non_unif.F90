@@ -14,7 +14,7 @@ module simulation_VP1D_cartesian_non_unif
 #include "sll_memory.h"
 
   use sll_simulation_base
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use numeric_constants
   implicit none
 
@@ -264,7 +264,7 @@ contains
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
     use numeric_constants
-    use cubic_nonuniform_splines
+    use cubic_non_uniform_splines
     implicit none
     
     sll_real64,dimension(:),pointer::f,Xstar,node_positions
