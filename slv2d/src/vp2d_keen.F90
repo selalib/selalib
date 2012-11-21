@@ -45,6 +45,7 @@ program vp2d_keen
 
   sll_real64 :: dt     
   sll_real64 :: nrj, tcpu1, tcpu2
+  sll_real64 :: xx, hypergaussian
 
   sll_int32  :: i,j 
 
@@ -106,7 +107,11 @@ program vp2d_keen
           dr_param%t0, dr_param%turn_drive_off)
      do j = 1, geomx%ny
         do i = 1, geomx%nx
-           e_y(i,j) = e_y(i,j) + dr_param%Edrmax * dr_param%adr * dr_param%kdr * &
+           ! use normalized hypergaussian envelope in x
+           xx = geomx%x0 + (i-1)*geomx%dx
+           hypergaussian = exp(-0.5_8 * xx * xx) ** 3 / 1.4472025  
+           e_y(i,j) = e_y(i,j) +  hypergaussian * dr_param%Edrmax * &
+                dr_param%adr * dr_param%kdr * &
                 sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
         enddo
      end do

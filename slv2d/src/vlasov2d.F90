@@ -110,7 +110,7 @@ contains
   sll_real64 :: vx, vy       ! vitesse du point courant
   sll_int32 :: iv, jv ! indices de boucle
 
-  ! verifier que la transposition est a jours
+  ! verifier que la transposition est a jour
   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
   do jv=this%jstartv,this%jendv
      vy = this%geomv%y0+(jv-1)*this%geomv%dy
