@@ -71,8 +71,8 @@ contains
 ! the full array.
  subroutine plot_layout2d()
 
-  sll_int32 , parameter       :: nx = 512
-  sll_int32 , parameter       :: ny = 256
+  sll_int32 , parameter       :: nx = 32
+  sll_int32 , parameter       :: ny = 64
   sll_int32                   :: mx, my    ! Local sizes
   sll_int32                   :: npi, npj
   sll_int32                 :: gi, gj
