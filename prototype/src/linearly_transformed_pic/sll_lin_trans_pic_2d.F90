@@ -1,5 +1,7 @@
 !> \file sll_lin_trans_pic_2d.F90
 !> \namespace sll_lin_trans_pic_2d
+!> \authors                    
+!> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 !> \brief  
 !> The ltpic module provides capabilities for the linearly-transformed pic method. More details to come (this version is not functional yet).
 !>
@@ -42,7 +44,7 @@ module sll_lin_trans_pic_2d
      sll_real64, dimension(:,:), pointer :: deform_matrix_vv
 
      sll_real64, dimension(:,:), pointer :: qi_coefs
-     sll_real64, dimension(:,:), pointer :: data ! e.g., the data to be approximated by the particles
+     sll_real64, dimension(:,:), pointer :: qi_data ! e.g., the data to be approximated (quasi-interpolated) by the particles
   end type sll_spline_2D
 
 
@@ -182,7 +184,7 @@ contains
     SLL_ALLOCATE( new_ltpic_2d%deform_matrix_vx(num_particles_x,num_particles_v),   ierr )
     SLL_ALLOCATE( new_ltpic_2d%deform_matrix_vv(num_particles_x,num_particles_v),   ierr )
 
-    SLL_ALLOCATE( new_ltpic_2d%data            (new_ltpic_2d%qi_grid_npx,new_ltpic_2d%qi_grid_npv),   ierr )
+    SLL_ALLOCATE( new_ltpic_2d%qi_data         (new_ltpic_2d%qi_grid_npx,new_ltpic_2d%qi_grid_npv),   ierr )
 
   end function new_ltpic_2d
 
@@ -193,26 +195,30 @@ contains
   !       in the periodic case, but for simplicity we do not use that property here (and don't check it, either).  
   subroutine load_ltpic_2d( target_density_initializer, ltpic_object )
     class(scalar_field_2d_initializer_base), intent(in), pointer :: target_density_initializer   ! intial field to be approximated
-    type(lin_trans_pic_2d), pointer      :: ltpic_object
+    type(lin_trans_pic_2d),                              pointer :: ltpic_object
 
-    call target_density_initializer%f_of_x1x2(ltpic_object%data)   ! writes the target density values on the 'data' array        
-    call approximate_data( ltpic_object )
+    call target_density_initializer%f_of_x1x2(ltpic_object%qi_data)   ! writes the target density values on the 'qi_data' array        
+    call approximate_qi_data( ltpic_object )
+
   end subroutine load_ltpic_2d
-
 
   ! here we (re-)initialize the particles, so that the new density approximates the present one
   ! (as above we don't distinguish between the periodic and the open_domain cases)
   subroutine remap_ltpic_2d( ltpic_object )
-     call write_f_on_grid (                                                                                &
+    type(lin_trans_pic_2d),                              pointer :: ltpic_object
+
+    call write_f_on_grid (                                                                                 &
                             ltpic_object%qi_grid_xmin,ltpic_object%qi_grid_xmax,ltpic_object%qi_grid_npx,  &
                             ltpic_object%qi_grid_vmin,ltpic_object%qi_grid_vmax,ltpic_object%qi_grid_npv,  &
-                            ltpic_object%data, ltpic_object )
-     call approximate_data( ltpic_object )
+                            ltpic_object%qi_data,ltpic_object 
+                         )
+    call approximate_qi_data( ltpic_object )
+
   end subroutine remap_ltpic_2d
   
   
-  ! reset the object as a (new) collection of particles with cartesian nodes and weights computed to approximate the stored data
-  subroutine approximate_data( ltpic_object )
+  ! reset the object as a (new) collection of particles with cartesian nodes and weights computed to approximate the stored qi_data
+  subroutine approximate_qi_data( ltpic_object )
     type(lin_trans_pic_2d), pointer      :: ltpic_object
     sll_int32                            :: npx
     sll_int32                            :: npv
@@ -252,15 +258,15 @@ contains
           qi_weight = 0
           do l_x = -qi_st_radius, qi_st_radius
              do l_v = -qi_st_radius, qi_st_radius
-                ! due to the quasi-interpolation stencils there are more nodes (in the data grid) than particles -- hence the offset
-                qi_weight = qi_weight + qi_coefs(l_x,l_v) * ltpic_object%data( k_x+l_x + qi_st_radius, k_v+l_v + qi_st_radius )
+                ! due to the quasi-interpolation stencils there are more nodes (in qi_data) than particles -- hence the offset
+                qi_weight = qi_weight + qi_coefs(l_x,l_v) * ltpic_object%qi_data( k_x+l_x + qi_st_radius, k_v+l_v + qi_st_radius )
              end do
           end do
           ltpic_object%weight(k_x,k_v) = qi_weight          
        end do
     end do
 
-  end subroutine approximate_data
+  end subroutine approximate_qi_data
 
 
   ! deposit the charges with a PIC-like (point particle) algorithm, on the poisson grid
@@ -330,6 +336,7 @@ contains
     if (periodic) then
        rho(nc_pm+1) = rho(1)
     end if
+    
   end subroutine deposit_charges
 
 
@@ -446,29 +453,8 @@ contains
           end do
        end do
     end do
+    
   end subroutine write_f_on_grid
-
-
-  ! computes the phase-space density carried by one (weighted) particle, 
-  ! i.e., computes w_k * \varphi_h(D_k(x-x_k,v-v_k))   where  \varphi_h(x,v) = 1/h**2 * bspline_1d(x/h) * bspline_1d(v/h)
-  function particle_value ( x,v,w_k,x_k,v_k,Dxx_k,Dxv_k,Dvx_k,Dvv_k,inv_h_x,inv_h_v )
-    sll_real64                                :: particle_value
-    sll_real64, intent(in)                    :: x
-    sll_real64, intent(in)                    :: v
-    sll_real64, intent(in)                    :: w_k
-    sll_real64, intent(in)                    :: x_k
-    sll_real64, intent(in)                    :: v_k
-    sll_real64, intent(in)                    :: Dxx_k
-    sll_real64, intent(in)                    :: Dxv_k
-    sll_real64, intent(in)                    :: Dvx_k
-    sll_real64, intent(in)                    :: Dvv_k
-    sll_real64, intent(in)                    :: inv_h_x
-    sll_real64, intent(in)                    :: inv_h_v
-
-    particle_value = w_k * inv_h_x * b_spline_1d(degree,inv_h_x*(Dxx*(x-x_k) + Dxv*(v-v_k)))            &
-                         * inv_h_v * b_spline_1d(degree,inv_h_v*(Dvx*(x-x_k) + Dvv*(v-v_k)))
-
-  end function particle_value
 
 
   function b_spline_1d (degree, x)
@@ -546,6 +532,7 @@ contains
        print *, 'ERROR: b_spline_1d(): this degree not implemented in the ltpic module -- value =', degree
        STOP
     end select
+    
   end function b_spline_1d
 
   subroutine transport_ltpic_2d ( flow, ltpic_object )
@@ -630,6 +617,11 @@ contains
     end do
   
   end subroutine transport_ltpic_2d
+  
+  subroutine plot_density(label,n_time,ltpic_object)  ! todo
+  end subroutine
+  
+  
   
 end module sll_lin_trans_pic_2d
 
