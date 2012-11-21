@@ -300,8 +300,8 @@ contains
     sll_real64                                     :: fac2
     sll_real64                                     :: term1
     sll_real64                                     :: term2
-    sll_real64                                     :: delta_x
     sll_real64                                     :: delta_left
+    sll_real64                                     :: delta1, delta2
     sll_real64                                     :: delta_right
     sll_int32                                      :: current
     sll_int32                                      :: num_pts
@@ -377,24 +377,48 @@ contains
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
-    print *, 'array to compute derivatives: ',splines(1:last)
     do i=1,last
        current = cell - deg + i - 1
-       delta_x = spline_obj%k(current+1) - spline_obj%k(current)
-       if( delta_x == 0.0 ) then
-          if( current .le. 1 ) then
-             delta_x = delta_left
-          else if( current .ge. spline_obj%num_pts ) then
-             delta_x = delta_right
-          end if
-       end if
-       derivs(i) = ( splines(i+1) - splines(i) ) / delta_x
+       delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
+       delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1)
+       call check_if_delta_is_equal_to_zero(delta1, current, spline_obj)
+       call check_if_delta_is_equal_to_zero(delta2, current, spline_obj)
+       derivs(i) = ( deg*splines(i)/delta1 - deg*splines(i+1)/delta2 )
+       !delta_x = spline_obj%k(current+1) - spline_obj%k(current)
+       !if( delta_x == 0.0 ) then
+       !   if( current .le. 1 ) then
+       !      delta_x = delta_left
+       !   else if( current .ge. spline_obj%num_pts ) then
+       !      delta_x = delta_right
+       !   end if
+       !end if
+       !derivs(i) = (splines(i) - splines(i+1))/delta_x
     end do
-    !b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
-    b_spline_derivatives_at_x =  ( b_splines_at_x( spline_obj, cell+1, spline_obj%k(cell+1) )&
-                                 - b_splines_at_x( spline_obj, cell, x ) ) / (spline_obj%k(cell+1)-x)
-print*, 'test', (spline_obj%k(cell+1)-x)
+    b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
+
   end function b_spline_derivatives_at_x
+
+  subroutine check_if_delta_is_equal_to_zero(delta, current, spline_obj)
+
+    sll_real64, intent(inout)                 :: delta
+    sll_int32, intent(in)                     :: current
+    sll_int32                                 :: num_pts
+    type(arbitrary_degree_spline_1d), pointer :: spline_obj
+    sll_real64                                :: delta_left, delta_right
+
+    num_pts = spline_obj%num_pts
+    delta_left  = spline_obj%k(2)       - spline_obj%k(1)
+    delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
+
+    if ( delta == 0.0 ) then
+       if ( current .le. 1 ) then
+          delta = delta_left
+       else if( current .ge. num_pts ) then
+          delta = delta_right
+       end if
+    end if
+
+  end subroutine check_if_delta_is_equal_to_zero
 
   function b_splines_and_derivs_at_x( spline_obj, cell, x )
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
@@ -415,7 +439,7 @@ print*, 'test', (spline_obj%k(cell+1)-x)
     sll_real64                                     :: fac2
     sll_real64                                     :: term1
     sll_real64                                     :: term2
-    sll_real64                                     :: delta_x
+    sll_real64                                     :: delta1, delta2
     sll_real64                                     :: delta_left
     sll_real64                                     :: delta_right
     sll_int32                                      :: current
@@ -496,15 +520,20 @@ print*, 'test', (spline_obj%k(cell+1)-x)
     ! spline_degree.
     do i=1,last
        current = cell - deg + i - 1
-       delta_x = spline_obj%k(current+1) - spline_obj%k(current)
-       if( delta_x == 0.0 ) then
-          if( current .le. 1 ) then
-             delta_x = delta_left
-          else if( current .ge. spline_obj%num_pts ) then
-             delta_x = delta_right
-          end if
-       end if
-       derivs(i) = (splines(i) - splines(i+1))/delta_x
+       delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
+       delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1) 
+       derivs(i) = ( deg*splines(i)/delta1 - deg*splines(i+1)/delta2 )
+       call check_if_delta_is_equal_to_zero(delta1, current, spline_obj)
+       call check_if_delta_is_equal_to_zero(delta2, current, spline_obj)
+       !delta_x = spline_obj%k(current+1) - spline_obj%k(current)
+       !if( delta_x == 0.0 ) then
+       !   if( current .le. 1 ) then
+       !      delta_x = delta_left
+       !   else if( current .ge. spline_obj%num_pts ) then
+       !      delta_x = delta_right
+       !   end if
+       !end if
+       !derivs(i) = (splines(i) - splines(i+1))/delta_x
     end do
     b_splines_and_derivs_at_x(2,1:deg+1) = derivs(1:deg+1)
     ! Finish computing the splines for the desired degree
@@ -604,11 +633,8 @@ print*, 'test', (spline_obj%k(cell+1)-x)
           fac2       = (-temp + jreal - normalized_offset)*r_jreal
           splines(i) = fac1*splines(i) + fac2*splines(i+1)
        end do
-       ! print *, 'splines: ', j,  splines(:)
        last = last - 1
     end do
-    ! check: splines must add to 1.0
-    !     print *,  'sum = ', sum(splines(1:spline_degree+1))
     uniform_b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
   end function uniform_b_splines_at_x
 
@@ -656,7 +682,6 @@ print*, 'test', (spline_obj%k(cell+1)-x)
           fac2       = (-temp + jreal - normalized_offset)*r_jreal
           splines(i) = fac1*splines(i) + fac2*splines(i+1)
        end do
-       ! print *, 'splines: ', j,  splines(:)
        last = last - 1
     end do
     ! check: splines must add to 1.0
@@ -716,7 +741,6 @@ print*, 'test', (spline_obj%k(cell+1)-x)
           fac2       = (-temp + jreal - normalized_offset)*r_jreal
           splines(i) = fac1*splines(i) + fac2*splines(i+1)
        end do
-       ! print *, 'splines: ', j,  splines(:)
        last = last - 1
     end do
     ! At this moment, we have an array with values of the splines up to
@@ -739,7 +763,6 @@ print*, 'test', (spline_obj%k(cell+1)-x)
        fac2       = (-temp + jreal - normalized_offset)*r_jreal
        splines(i) = fac1*splines(i) + fac2*splines(i+1)
     end do
-    ! print *, 'splines: ', j,  splines(:)
     uniform_b_splines_and_derivs_at_x(1,1:degree+1) = splines(1:degree+1)
   end function uniform_b_splines_and_derivs_at_x
 
