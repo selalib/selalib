@@ -13,7 +13,7 @@ program arbitrary_degree_spline_tester
   print *, '*****************************************************************'
 
   call test_uniform_b_splines_randomly( passed_test )
-  !call test_nonuniform_arb_deg_splines_periodic( passed_test )
+  call test_nonuniform_arb_deg_splines_periodic( passed_test )
   call test_nonuniform_arb_deg_splines_open( passed_test )
 
   if( passed_test .eqv. .true. ) then
@@ -60,6 +60,7 @@ contains
              print *, 'Test_uniform_b_splines, values: wrong result for x = ', &
                   argument
              print *, 'Degree = ', j, 'Reduction = ', sum(results)
+             print*, 'Exiting...'
              stop
           end if
 
@@ -69,6 +70,7 @@ contains
              print *, 'Test_uniform_b_splines, derivs: wrong result for x = ', &
                   argument
              print *, 'Degree = ', j, 'Reduction = ', sum(derivatives)
+             print*, 'Exiting...'
              stop
           end if
 
@@ -79,6 +81,7 @@ contains
              print *, 'Test_uniform_b_splines, vals and derivs: ', &
                   'wrong result for x = ', argument
              print *, 'Degree = ', j, 'Reduction = ', sum(sp_and_derivs)
+             print*, 'Exiting...'
              stop
           end if
           results(:)         = 0.0_f64
@@ -114,7 +117,7 @@ contains
 
     num_tests = 10
     criterion = 1.0e-15
-    degree  = 1
+    degree  = 3
     min_val = 0.0
     num_pts = 10
     step    = 1.0
@@ -155,6 +158,8 @@ contains
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer1(:)
           print *, 'accumulator = ', acc
+          print*, 'Exiting...'
+          stop
        end if
        
        ! test spline derivatives
@@ -167,6 +172,8 @@ contains
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer1(:)
           print *, 'accumulator = ', acc
+          print*, 'Exiting...'
+          stop
        end if
        
        ! test values and derivatives
@@ -184,6 +191,8 @@ contains
           print *, 'nonuniform: ', answer3(:,:)
           print *, 'uniform: ', answer1(:)
           print *, 'accumulator = ', acc
+          print*, 'Exiting...'
+          stop
        end if
        passed_test = passed_test .and. (acc2 < criterion)
        if( passed_test .eqv. .false. ) then
@@ -192,6 +201,8 @@ contains
           print *, 'cell = ', cell, 'x = ', x
           print *, 'nonuniform: ', answer3(:,:)
           print *, 'accumulator = ', acc
+          print*, 'Exiting...'
+          stop
        end if
     end do
     SLL_DEALLOCATE_ARRAY(answer1, ierr)
@@ -228,7 +239,7 @@ contains
     criterion = 1.0e-15
     degree  = 3
     min_val = 0.0
-    num_pts = 1000
+    num_pts = 10
     step    = 1.0
     SLL_ALLOCATE(knots(num_pts),ierr)
     SLL_ALLOCATE(answer(degree+1),ierr)
@@ -239,7 +250,7 @@ contains
     knots(1) = min_val
     do i=2,num_pts
        call random_number(rnd)
-       knots(i) = knots(i-1) + rnd/1000
+       knots(i) = knots(i-1) + step + rnd
     end do
     print *, 'knots array = ', knots(:)
 
