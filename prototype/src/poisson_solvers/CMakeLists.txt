@@ -111,9 +111,11 @@ IF(MPI_MODULE_ENABLED)
 
   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-  add_library( sll_poisson_parallel STATIC 
-    sll_poisson_3d_periodic_par.F90 
-    sll_poisson_2d_periodic_cartesian_par.F90 )
+  add_library(sll_poisson_parallel STATIC 
+              sll_poisson_3d_periodic_par.F90 
+              sll_poisson_2d_periodic_cartesian_par.F90 )
+
+   ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
   
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   # This test has hdf5 diagnostics. Maybe these should only be turned on
