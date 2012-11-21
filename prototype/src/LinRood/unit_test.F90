@@ -6,38 +6,61 @@ program unit_test
   use geometry_functions
   use distribution_function
   use sll_scalar_field_2d
-  use sll_module_mapped_meshes_2d_base
+!  use sll_module_mapped_meshes_2d_base
   use sll_module_mapped_meshes_2d
   use sll_scalar_field_initializers_base
   use sll_gaussian_2d_initializer
   use sll_linrood
   use sll_cubic_spline_interpolator_1d
   implicit none
-
+ 
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic), target :: mesh2d
+#ifdef STDF95
+  type(sll_mapped_mesh_2d_analytic), pointer   :: m
+#else
   class(sll_mapped_mesh_2d_base), pointer   :: m
+#endif
   type(sll_distribution_function_2d)   :: df 
   character(32)  :: name = 'dist_func'
   character(len=4) :: cstep
   type(init_gaussian_2d), target :: init_gaussian
+#ifdef STDF95
+  type(scalar_field_2d_initializer_base), pointer    :: p_init_f
+#else
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
+#endif
   type(scalar_field_2d) :: uniform_field, rotating_field 
   type(linrood_plan) :: linrood
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
+#ifdef STDF95
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr
+#else
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+#endif
   ! interpolators for scalar field
   type(cubic_spline_1d_interpolator), target  :: interp_eta1_sf 
   type(cubic_spline_1d_interpolator), target  :: interp_eta2_sf
+#ifdef STDF95
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr_sf
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr_sf
+#else
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr_sf
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr_sf
+#endif
   ! interpolators for rotating field
   type(cubic_spline_1d_interpolator), target  :: interp_eta1_rf
   type(cubic_spline_1d_interpolator), target  :: interp_eta2_rf
+#ifdef STDF95
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr_rf
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr_rf
+#else
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr_rf
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr_rf
+#endif
 
   sll_int32  :: ierr, istep
   sll_int32 :: i1, i2
