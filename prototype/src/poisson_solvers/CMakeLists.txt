@@ -26,6 +26,7 @@ target_link_libraries(unit_test_polar
 	sll_splines
 	)
 
+MESSAGE(STATUS "FFTPACK_ENABLED:${FFTPACK_ENABLED}")
 
 IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
@@ -68,12 +69,13 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
      ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
      TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
                                            sll_mapped_meshes
-	                                   sll_constants
+                                   sll_constants
 	                                   sll_working_precision
                                            sll_assertion 
                                            sll_memory 
                                            sll_low_level_file_io	
                                            sll_utilities
+                                           sll_fft
                                            ${FFTW_LIBRARIES}
   )
 
@@ -113,6 +115,9 @@ IF(MPI_MODULE_ENABLED)
     sll_poisson_3d_periodic_par.F90 
     sll_poisson_2d_periodic_cartesian_par.F90 )
   
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+  # This test has hdf5 diagnostics. Maybe these should only be turned on
+  # when debugging this specific module.
   add_executable( test_poisson_2d_per_cart_par 
     test_poisson_2d_periodic_cartesian_par.F90 )
 
@@ -120,11 +125,14 @@ IF(MPI_MODULE_ENABLED)
     sll_poisson_parallel
     sll_remap
     sll_collective
+    sll_low_level_file_io_parallel
     sll_fft
     sll_memory
     sll_timer
     sll_utilities
     sll_assertion )
+
+ENDIF()
 
   add_executable(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
 

@@ -173,6 +173,7 @@ contains
     type(quintic_splines_uniform_plan), pointer :: plan
     sll_int32                                   :: ierr
 
+    SLL_ASSERT(associated(plan))
     call delete_toep_penta_diagonal(plan%plan_pentadiagonal)
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
@@ -290,9 +291,9 @@ print*, 'num_pts =', num_pts, 'b_at_x =', b_at_x
     sll_int32                                              :: ierr
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(plan_splines))
-    SLL_ASSERT(x >= plan_splines%spline_obj%xmin)
-    SLL_ASSERT(x <= plan_splines%spline_obj%xmax)
+    !SLL_ASSERT(associated(plan_splines))
+    !SLL_ASSERT(x >= plan_splines%spline_obj%xmin)
+    !SLL_ASSERT(x <= plan_splines%spline_obj%xmax)
 
     n = plan_splines%spline_obj%num_pts - 1
     knots = plan_splines%spline_obj%k(1:n+1)
@@ -377,6 +378,7 @@ print*, 'num_pts =', num_pts, 'b_at_x =', b_at_x
     type(quintic_splines_non_uni_plan), pointer :: plan
     sll_int32                                   :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     call delete( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)

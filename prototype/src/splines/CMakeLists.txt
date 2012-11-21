@@ -2,7 +2,7 @@ ADD_LIBRARY( sll_splines STATIC sll_splines.F90
                                 sll_quintic_splines.F90
                                 sll_odd_degree_splines.F90
                                 sll_arbitrary_degree_splines.F90
-                                deboor_arbitrary_degree_splines.F90
+                                deboor_arbitrary_degree_splines.f90
            )
 
 ADD_DEPENDENCIES(sll_splines sll_memory 
@@ -82,7 +82,7 @@ ENDIF()
 
 #Comparing selalib arbitrary splines to Deboor's ones
 ADD_EXECUTABLE( compare_selalib_splines_2_deboors 
-                compare_selalib_splines_2_deboors.F90
+                compare_selalib_splines_2_deboors.f90
               )
 
 TARGET_LINK_LIBRARIES(compare_selalib_splines_2_deboors ${SPL_LIBS})
