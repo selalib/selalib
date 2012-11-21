@@ -218,11 +218,7 @@ contains
   ! initialize_mapped_mesh_2D_general() allocates all the memory needed by 
   ! the 2D map. 
 
-!#ifdef STDF95
-!  subroutine mma_initialize( &
-!#else
   subroutine initialize_mesh_2d_analytic( &
-!#endif
     mesh,           &
     label,          &
     npts1,          &
