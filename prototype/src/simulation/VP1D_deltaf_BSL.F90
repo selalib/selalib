@@ -49,7 +49,8 @@ program VP1d_deltaf
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
-  sll_int32  :: interpol_x, order_x, interpol_v, order_v
+  sll_int32  :: interpol_x, interpol_v  ! type of interpolator
+  sll_int32  :: order_x, order_v   ! order of interpolator
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
@@ -76,7 +77,7 @@ program VP1d_deltaf
   namelist / interpolator / interpol_x, order_x, interpol_v, order_v
   namelist / time_iterations / dt, nbiter, freqdiag
   namelist / landau / kmode, eps, is_delta_f, driven 
-  namelist / tsi / kmode, eps, v0 
+  namelist / tsi / kmode, eps, v0, is_delta_f
   namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
 
 
@@ -86,6 +87,7 @@ program VP1d_deltaf
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.txt')
      read(input_file, geom) 
+     read(input_file, interpolator) 
      read(input_file, time_iterations)
      read(input_file, landau)
      if (driven) then
@@ -96,6 +98,7 @@ program VP1d_deltaf
   else if (case == "tsi") then
      open(unit = input_file, file = 'tsi_input.txt')
      read(input_file, geom) 
+     read(input_file, interpolator)
      read(input_file, time_iterations)
      read(input_file,tsi)
      close(input_file)
@@ -158,6 +161,8 @@ program VP1d_deltaf
   print*, '   dt=', dt
   print*, '   number of iterations=', nbiter
   print*, ' '
+  print*, 'interpolator in x', interpol_x, order_x
+  print*, 'interpolator in v', interpol_v, order_v
   open(unit = param_out, file = 'param_out.dat') 
   write(param_out,'(A6,2f10.3,I5,2f10.3,I5,f10.3,I8,I5,I2,f10.3)') &
        trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
@@ -230,16 +235,36 @@ program VP1d_deltaf
   end if
 
   ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
-  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
-  !interp_x => interp_spline_x
-  interp_v => interp_spline_v
-
-  interp_x => interp_per_x
-!  interp_v => interp_per_v
+  select case (interpol_x)
+  case (1) ! periodic cubic spline
+     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
+     interp_x => interp_spline_x
+  case (2) ! arbitrary order periodic splines
+     call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
+     interp_x => interp_per_x
+  case(3) ! arbitrary order Lagrange periodic interpolation
+     call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
+     interp_x => interp_per_x
+  case default
+     print*,'interpolation in x number ', interpol_x, ' not implemented' 
+  end select
+     select case (interpol_v)
+  case (1) ! hermite cubic spline
+     call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
+     interp_v => interp_spline_v
+ case (2) ! arbitrary order periodic splines
+     call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
+     interp_v => interp_per_v
+  case(3) ! arbitrary order Lagrange periodic interpolation
+     call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
+     interp_v => interp_per_v
+  case(4) ! arbitrary order open spline interpolation   
+     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
+  case default
+     print*,'interpolation in x number ', interpol_v, ' not implemented' 
+  end select
+ 
+ 
   !$omp barrier
   !$omp single
   fname = 'dist_func'
@@ -376,10 +401,6 @@ program VP1d_deltaf
      !$omp end single
   end do
 
-  call delete(interp_spline_x)
-  call delete(interp_spline_v)
-  call delete(interp_per_x)
-  call delete(interp_per_v)
   !$omp end parallel
   close(th_diag)
   close(ex_diag)

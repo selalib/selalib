@@ -9,8 +9,8 @@ program vp2d_keen
 #else
   use poisson2dpp_seq
 #endif
-!  use sll_vlasov2d
-  use vlasov2d_module
+  use sll_vlasov2d
+!  use vlasov2d_module
   use splinepp_class
   use splinenn_class
 
@@ -31,8 +31,8 @@ program vp2d_keen
   type(poisson2dpp) :: poisson 
   type(drive_param) :: dr_param
   ! old version of splines
-  type (splinepp)    :: splx 
-  type (splinenn)    :: sply
+ ! type (splinepp)    :: splx 
+ ! type (splinenn)    :: sply
 
   sll_real64, dimension(:,:,:,:), pointer :: f4d
   sll_real64, dimension(:,:),     pointer :: rho
