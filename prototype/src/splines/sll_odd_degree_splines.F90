@@ -213,6 +213,7 @@ contains
     type(odd_degree_splines_uniform_plan), pointer :: plan
     sll_int32                                      :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan%matrix, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
@@ -398,8 +399,9 @@ contains
     type(odd_degree_splines_non_uni_plan), pointer :: plan
     sll_int32                                   :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
-    call delete_arbitrary_order_spline_1d( plan%spline_obj )
+    call delete( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
   end subroutine delete_odd_degree_splines_non_uni
