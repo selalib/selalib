@@ -29,7 +29,7 @@ program test_periodic_interp
 
      !call initialize_periodic_interp(interp, N, SPLINE, 8)
      !call initialize_periodic_interp(interp, N, LAGRANGE_FFT_SELALIB, 8)
-     call initialize_periodic_interp(interp, N, LAGRANGE, 4)
+     call initialize_periodic_interp(interp, N, LAGRANGE, 16)
      call periodic_interp(interp, u_out,  u, alpha)
      
      old_error = error
