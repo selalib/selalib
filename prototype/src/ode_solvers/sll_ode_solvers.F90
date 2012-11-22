@@ -203,6 +203,7 @@ contains
     ! check order. The implementation with a 'select' construct permits
     ! to extend this solver to higher orders more conveniently.
 
+    yi0 = 0._f64
     select case (order)
     case (1)
        c = 1.0_f64
