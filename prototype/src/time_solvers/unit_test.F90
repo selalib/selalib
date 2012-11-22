@@ -12,9 +12,13 @@ program test_time_splitting
 #define XMIN (-1.0_f64)
 #define XMAX 1.0_f64
   type(const_coef_advection_2d), target :: const_adv
+#ifdef STDF95
+  type(const_coef_advection_2d), pointer :: time_split
+#else
   class(time_splitting), pointer :: time_split
+#endif
   sll_real64, dimension(N1,N2) :: data
-  sll_real64 :: x1, x2
+  sll_real64 :: x_1, x_2
   sll_int32 :: i, j
   sll_real64 :: dt
   sll_int32 :: ierr, file_id
@@ -22,32 +26,50 @@ program test_time_splitting
 
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
+#ifdef STDF95
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr
+#else
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+#endif
 
   ! initialize interpolator
+#ifdef STDF95
+  call cubic_spline_1d_interpolator_initialize(interp_eta1, N1, XMIN, XMAX, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(interp_eta2, N2, XMIN, XMAX, PERIODIC_SPLINE )
+#else
   call interp_eta1%initialize( N1, XMIN, XMAX, PERIODIC_SPLINE )
   call interp_eta2%initialize( N2, XMIN, XMAX, PERIODIC_SPLINE )
+#endif
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
   ! initialize data
   do j=1, N2
-     x2 = XMIN + (j-1)*(XMAX-XMIN)/(N2-1)
+     x_2 = XMIN + (j-1)*(XMAX-XMIN)/(N2-1)
      do i=1, N1
-        x1 =  XMIN + (i-1)*(XMAX-XMIN)/(N1-1)
-        data(i,j) = exp(-10*(x1*x1+x2*x2))
+        x_1 =  XMIN + (i-1)*(XMAX-XMIN)/(N1-1)
+        data(i,j) = exp(-10*(x_1*x_1+x_2*x_2))
      end do
   end do
 
   ! initialize time splitting method
+#ifdef STDF95
+  call const_coef_advection_2d_initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
+#else
   call initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
+#endif
        interp_eta1_ptr, interp_eta2_ptr)
   time_split => const_adv
 
   ! do some steps of lie_splitting
   dt = 0.5
+#ifdef STDF95
+  call lie_splitting(time_split, dt, 4)
+#else
   call time_split%lie_splitting(dt, 4)
+#endif
 
 #ifndef NOHDF5
   ! save results

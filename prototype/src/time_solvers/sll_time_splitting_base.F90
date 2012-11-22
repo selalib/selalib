@@ -10,11 +10,6 @@ module sll_time_splitting
 
   implicit none
 
-#ifdef STDF95
-  type :: time_splitting
-    sll_real64 :: current_time = 0.0_f64
-  end type time_splitting 
-#else
   type, abstract :: time_splitting
      sll_real64 :: current_time = 0.0_f64
    contains 
@@ -62,7 +57,7 @@ module sll_time_splitting
       sll_int32, intent(in)   :: number_steps
       ! local variables
       sll_int32  :: i
-      
+     
       call this%operator1(0.5_f64*dt)
       do i = 1, number_steps - 2
          call this%operator2(dt)
@@ -74,6 +69,5 @@ module sll_time_splitting
       call this%operator2(dt)
       call this%operator1(0.5_f64*dt)
     end subroutine strang_splitting
-#endif
 
 end module sll_time_splitting
