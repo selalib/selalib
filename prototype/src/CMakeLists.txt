@@ -38,11 +38,11 @@ ADD_CUSTOM_TARGET( clear
 SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
 INCLUDE(FortranConfig)
+INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 INCLUDE(DoxygenConfig)
-INCLUDE(LapackConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
@@ -149,15 +149,18 @@ ADD_TEST(NAME fft COMMAND test_fft)
 ##########################################################
 
 IF(MPI_MODULE_ENABLED)
+
    ADD_SUBDIRECTORY(collective)
    ADD_SUBDIRECTORY(remap)
 
+ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    SET(PROCS 1)
    ADD_TEST(NAME poisson_periodic_cartesian_par_2d
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+ ENDIF()
 
    SET(PROCS 16)
    ADD_TEST(NAME poisson_3d_periodic_par
