@@ -1,31 +1,35 @@
-IF(Fortran_COMPILER STREQUAL 'INTEL')
-  SET(BLA_VENDOR "Intel")
-ENDIF()
+MESSAGE(STATUS "LAPACK:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 
-IF($ENV{HOST} MATCHES "hydra01") 
+IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+
+   SET(BLA_VENDOR "Intel")
+
+   IF($ENV{MKLROOT} MATCHES "composer")
+      MESSAGE(STATUS "MKLROOT:$ENV{MKLROOT}")
+      INCLUDE_DIRECTORIES($ENV{MKLROOT}/include)
+      IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
+         SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib/intel64 -mkl=sequential)
+      ELSE()
+         SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib/ia32 -mkl=sequential)
+      ENDIF()
+      SET(LAPACK_FOUND TRUE)
+      SET(BLAS_FOUND TRUE)
+
+   ELSEIF($ENV{HOST} MATCHES "hydra01") 
                                       
-   SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 
+      SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 
                         -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core)
-   SET(LAPACK_FOUND TRUE)
-   SET(BLAS_FOUND TRUE)
+      SET(LAPACK_FOUND TRUE)
+      SET(BLAS_FOUND TRUE)
 
-ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
+   ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
 
-   SET(MKLPATH  "/opt/intel/Compiler/11.1/072/mkl/lib/em64t")
-   SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread)
-   SET(LAPACK_FOUND TRUE)
-   SET(BLAS_FOUND TRUE)
+      SET(MKLPATH  "/opt/intel/Compiler/11.1/072/mkl/lib/em64t")
+      SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread)
+      SET(LAPACK_FOUND TRUE)
+      SET(BLAS_FOUND TRUE)
 
-ELSEIF($ENV{MKLROOT} MATCHES "composer")
-
-   INCLUDE_DIRECTORIES($ENV{MKLROOT}/include)
-   IF(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
-      SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib/intel64 -mkl=sequential)
-   ELSE()
-      SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib/ia32 -mkl=sequential)
    ENDIF()
-   SET(LAPACK_FOUND TRUE)
-   SET(BLAS_FOUND TRUE)
 
 ELSE()
 
