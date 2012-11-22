@@ -5,6 +5,10 @@ program test_time_splitting
 #include "sll_field_2d.h"
   use sll_const_coef_advection_2d
   use sll_cubic_spline_interpolator_1d
+#ifndef STDF95
+  use sll_module_interpolators_1d_base
+  use sll_time_splitting
+#endif
   use sll_hdf5_io
   implicit none
 #define N1 50
@@ -55,11 +59,7 @@ program test_time_splitting
   end do
 
   ! initialize time splitting method
-#ifdef STDF95
   call const_coef_advection_2d_initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
-#else
-  call initialize(const_adv, data, N1, N2, 0.1_f64, 0.2_f64, &
-#endif
        interp_eta1_ptr, interp_eta2_ptr)
   time_split => const_adv
 
