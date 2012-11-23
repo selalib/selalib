@@ -32,7 +32,7 @@ use arbitrary_degree_splines
 #else
     sll_real64, dimension(:), allocatable :: coeffs
 #endif
-    sll_real64, dimension(:), pointer     :: matrix_elements
+    sll_real64, dimension(:,:), allocatable :: matrix
    end type odd_degree_splines_uniform_plan
 
   type odd_degree_splines_non_uni_plan
@@ -53,6 +53,9 @@ contains
     type(odd_degree_splines_uniform_plan), pointer :: plan
     sll_int32                                      :: ierr, num_pts, degree
     sll_real64                                     :: xmin, xmax
+    sll_real64, dimension(:), allocatable          :: matrix_elements
+    sll_real64, dimension(:,:), allocatable        :: A
+    sll_int32                                      :: KD, i, j, m, LDAB
 
     if (mod(degree,2) == 0) then
        print*, 'This needs to run with odd spline degree'
@@ -60,15 +63,45 @@ contains
        stop
     endif
 
+    m = num_pts+degree
+    KD = degree/2 ! called KD for lapack use
+
     SLL_ALLOCATE(plan, ierr)
-    SLL_ALLOCATE(plan%matrix_elements(degree+1), ierr)
-    SLL_ALLOCATE(plan%coeffs(num_pts+degree), ierr)
+    SLL_ALLOCATE(matrix_elements(degree+1), ierr)
+    SLL_ALLOCATE(A(m,m), ierr)
+    SLL_ALLOCATE(plan%matrix(m,m), ierr)
+    SLL_ALLOCATE(plan%coeffs(m), ierr)
 
     plan%num_pts = num_pts
     plan%degree = degree
     plan%xmin = xmin
     plan%xmax = xmax
-    plan%matrix_elements = uniform_b_splines_at_x( degree, 0.d0 )
+
+    matrix_elements = uniform_b_splines_at_x( degree, 0.d0 ) 
+
+    A = 0.d0
+    do i=1,m
+       do j= -KD, KD
+          if ( (i+j>0) .and. (i+j<=m) ) then
+             A(i,i+j) = matrix_elements(j+KD+1) 
+          endif
+       enddo
+    enddo
+
+    ! For Lapack use
+
+    do j=1,m
+       do i=j,min(m,j+KD)
+          plan%matrix(1+i-j,j) = A(i,j)
+       enddo
+    enddo
+
+    LDAB = size(plan%matrix,1)
+    ! Cholesky factorization with
+    call DPBTRF( 'L', m, KD, plan%matrix, LDAB, ierr )
+
+    SLL_DEALLOCATE_ARRAY(matrix_elements, ierr)
+    SLL_DEALLOCATE_ARRAY(A, ierr)
 
   end function new_odd_degree_splines_uniform
 
@@ -80,43 +113,25 @@ contains
 
     sll_real64, dimension(:)                        :: f
     type(odd_degree_splines_uniform_plan), pointer  :: plan
-    sll_real64, dimension(plan%num_pts+plan%degree) :: g
-    sll_int32                                       :: degree, n, m, i, j
-    sll_real64, dimension(size(g),size(g))          :: A, AB
+    sll_int32                                       :: degree, n, m
     sll_int32                                       :: KD, LDAB, ierr
     
     degree = plan%degree
     n = plan%num_pts - 1
 
-    g = 0.d0
-    g(degree/2+1:n+degree/2+1) = f
+    ! plan%coeffs is the solution vector of the linear system
+    ! It is inout for lapack routine
+    plan%coeffs = 0.d0
+    plan%coeffs(degree/2+1:n+degree/2+1) = f
 
     ! Solve the linear system with LAPACK
 
-    m = size(g)
-    KD = degree/2 ! called KD for lapack use
+    m = size(plan%coeffs)
+    KD = degree/2
+    LDAB = size(plan%matrix,1)
 
-    A = 0.d0
-    do i=1,m
-       do j= -KD, KD
-          if ( (i+j>0) .and. (i+j<=m) ) then
-             A(i,i+j) = plan%matrix_elements(j+KD+1) 
-          endif
-       enddo
-    enddo
-
-    do j=1,m
-       do i=j,min(m,j+KD)
-          AB(1+i-j,j) = A(i,j)
-       enddo
-    enddo
-
-    LDAB = size(AB,1)
-    ! Cholesky factorization
-    call DPBTRF( 'L', m, KD, AB, LDAB, ierr )
     ! Solve the linear system with Cholesky factorization
-    plan%coeffs = g
-    call DPBTRS( 'L', m, KD, 1, AB, LDAB, plan%coeffs, m, ierr )
+    call DPBTRS( 'L', m, KD, 1, plan%matrix, LDAB, plan%coeffs, m, ierr )
 
   end subroutine compute_odd_degree_coeffs_uniform
 
@@ -200,7 +215,7 @@ contains
     sll_int32                                      :: ierr
 
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
-    SLL_DEALLOCATE_ARRAY(plan%matrix_elements, ierr)
+    SLL_DEALLOCATE_ARRAY(plan%matrix, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
 
   end subroutine delete_odd_degree_splines_uniform
