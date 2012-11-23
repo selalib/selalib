@@ -39,6 +39,7 @@ MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
+SET(FFTPACK_ENABLED       ON CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)
