@@ -91,14 +91,15 @@ do istep = 1, nstep
 
    if ( istep==1 .or. mod(istep,idiag) == 0 .or. istep==nstep ) then
       iplot = iplot + 1
-      if (nomcas=='viry__') call plot_part( p, time, iplot )
+      call plot_particle_density( p, iplot, time)  
+      !if (nomcas=='viry__') call plot_part( p, time, iplot )
      ! call diag_coc( f0, p, time, iplot )
      ! call diag_champ_part( p, time, iplot )
      !call plot_champ( f0, iplot, time )
-      call plot_phases( p, iplot, time )
+     ! call plot_phases( p, iplot, time )
      ! call distribution_v( p, iplot, time )  
      ! call distribution_x( p, iplot, time )
-      if (nomcas == 'plasma') call modeE( f0, iplot, time )
+      !if (nomcas == 'plasma') call modeE( f0, iplot, time )
    endif
 
 end do
