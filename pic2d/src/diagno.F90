@@ -15,21 +15,9 @@ subroutine comparaisons( tm, sol, time, iplot )
 type(tm_mesh_fields) :: tm, sol
 sll_real64 :: time, erreur
 sll_int32 :: iplot
-
-sll_int32 :: kk0, kk1, kk2, kk3, kk4
 character(len=4) :: fin
-character(len=1) :: aa,bb,cc,dd
 
-kk0 = iplot
-kk1 = kk0/1000
-aa  = char(kk1 + 48)
-kk2 = (kk0 - kk1*1000)/100
-bb  = char(kk2 + 48)
-kk3 = (kk0 - (kk1*1000) - (kk2*100))/10
-cc  = char(kk3 + 48)
-kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
-dd  = char(kk4 + 48)
-fin = aa//bb//cc//dd
+call int2string(iplot,fin)
 
 !-------diag Ex-------------
 
@@ -122,18 +110,16 @@ type (particle) :: ele
 sll_int32 :: iplot
 sll_real64 :: time, umod
 
-if (nomcas == 'viry__') then
-   open(40, file="viry.dat", position="append")
-   if( iplot == 1 ) rewind(40)
+open(40, file="viry.dat", position="append")
+if( iplot == 1 ) rewind(40)
    
-   umod = sqrt(ele%vit(1,1)**2+ele%vit(1,2)**2)
+umod = sqrt(ele%vit(1,1)**2+ele%vit(1,2)**2)
    
-   write(40,"(G15.3,1X,5F12.7)") sngl(time)	&
-        ,sngl(ele%pos(1,1)), sngl(ele%pos(1,2))    &
-        ,sngl(ele%vit(1,1)), sngl(ele%vit(1,2))    &
-        ,umod
-   close(40)
-end if
+write(40,"(G15.3,1X,5F12.7)") sngl(time)	&
+      ,sngl(ele%pos(1,1)), sngl(ele%pos(1,2))    &
+      ,sngl(ele%vit(1,1)), sngl(ele%vit(1,2))    &
+      ,umod
+close(40)
 
 end subroutine plot_part
 
@@ -241,21 +227,9 @@ type(tm_mesh_fields) :: tm
 sll_int32 :: iplot
 sll_real64 :: time
 
-sll_int32 :: kk0, kk1, kk2, kk3, kk4
 character(len=4) :: fin
-character(len=1) :: aa,bb,cc,dd
 
-kk0 = iplot
-kk1 = kk0/1000
-aa  = char(kk1 + 48)
-kk2 = (kk0 - kk1*1000)/100
-bb  = char(kk2 + 48)
-kk3 = (kk0 - (kk1*1000) - (kk2*100))/10
-cc  = char(kk3 + 48)
-kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
-dd  = char(kk4 + 48)
-fin = aa//bb//cc//dd
-   
+call int2string(iplot,fin)
 open(  11, file = 'ex.gnu', position="append" )
 if ( iplot .eq. 1 ) rewind(11)
 write(11,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
@@ -333,25 +307,14 @@ type(particle) :: ele
 sll_int32 :: iplot, ipart
 sll_real64 :: time
 sll_real64 :: gama, aux, speed
-sll_int32 :: kk0, kk1, kk2, kk3, kk4, k, l
+sll_int32 :: k, l
 character(len=4) :: fin
-character(len=1) :: aa,bb,cc,dd
 
-kk0 = iplot
-kk1 = kk0/1000
-aa  = char(kk1 + 48)
-kk2 = (kk0 - kk1*1000)/100
-bb  = char(kk2 + 48)
-kk3 = (kk0 - (kk1*1000) - (kk2*100))/10
-cc  = char(kk3 + 48)
-kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
-dd  = char(kk4 + 48)
-fin = aa//bb//cc//dd
+call int2string(iplot, fin)
 
 open( 11, file = 'part_'//nomcas//jname//'.gnu', position="append" )
 open( 12, file = 'xvx_'//nomcas//jname//'.gnu', position="append" )
 open( 13, file = 'yvy_'//nomcas//jname//'.gnu', position="append" )
-
 
 if ( iplot .eq. 1 ) then
    rewind(11)
@@ -398,20 +361,10 @@ sll_real64, dimension(:,:), allocatable :: densite
 type(particle) :: ele
 sll_real64 :: speed, time, vx, vy, aux, vth=1.
 sll_real64 :: pas_v, vmin, vmax
-sll_int32 :: kk0, kk1, kk2, kk3, kk4, nv=100
 character(len=4) :: fin
-character(len=1) :: aa,bb,cc,dd
+sll_int32, parameter :: nv = 64
 
-kk0 = iplot
-kk1 = kk0/1000
-aa  = char(kk1 + 48)
-kk2 = (kk0 - kk1*1000)/100
-bb  = char(kk2 + 48)
-kk3 = (kk0 - (kk1*1000) - (kk2*100))/10
-cc  = char(kk3 + 48)
-kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
-dd  = char(kk4 + 48)
-fin = aa//bb//cc//dd
+call int2string(iplot,fin)
 
 allocate(densite(nv,nv))
 
@@ -491,21 +444,9 @@ sll_int32 :: i, ipart, iplot
 sll_real64, dimension(100,100) :: densite
 type(particle) :: ele
 sll_real64 :: time, x, y, pas_x, pas_y
-sll_int32 :: kk0, kk1, kk2, kk3, kk4
 character(len=4) :: fin
-character(len=1) :: aa,bb,cc,dd
 
-kk0 = iplot
-kk1 = kk0/1000
-aa  = char(kk1 + 48)
-kk2 = (kk0 - kk1*1000)/100
-bb  = char(kk2 + 48)
-kk3 = (kk0 - (kk1*1000) - (kk2*100))/10
-cc  = char(kk3 + 48)
-kk4 = (kk0 - (kk1*1000) - (kk2*100) - (kk3*10))/1
-dd  = char(kk4 + 48)
-fin = aa//bb//cc//dd
-
+call int2string(iplot, fin)
 
 densite = 0.d0
 pas_x = dimx/100
@@ -571,5 +512,57 @@ close(34)
 end subroutine modeE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine plot_particle_density( ele, iplot, time)  
+sll_int32 :: i, ipart, iplot
+sll_int32, parameter :: nx = 50, ny = 50
+sll_real64, dimension(nx,ny) :: densite
+type(particle) :: ele
+sll_real64 :: time, x, y, pas_x, pas_y
+character(len=4) :: fin
+sll_int32, save :: gnu_id
+sll_int32 :: file_id, error
+
+call int2string(iplot, fin)
+
+densite = 0.d0
+pas_x = dimx/(nx-1)
+pas_y = dimy/(ny-1)
+do ipart=1,nbpart
+   do i=1,ny
+      if ((i-1)*pas_x <= ele%pos(ipart,1) .and. ele%pos(ipart,1) < i*pas_x) then
+         do j=1,ny
+            if((j-1)*pas_y <= ele%pos(ipart,2) .and. ele%pos(ipart,2) < j*pas_y) then
+               densite(i,j) = densite(i,j) + ele%p(ipart)
+            end if
+         enddo
+      endif
+   enddo
+enddo
+
+call sll_gnuplot_rect_2d(0._f64, dimx, 40, 0._f64, dimy, 40, densite, 'density', iplot, error)  
+
+!ASCII version just in case of problem with binary format
+call sll_xml_file_create("densite_"//fin//".xmf",file_id,error)
+write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
+                          nx,ny,"'/>"
+write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+write(file_id,"(2f12.5)") 0._f64, 0.0_f64
+write(file_id,"(a)")"</DataItem>"
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+write(file_id,"(2f12.5)") pas_x, pas_y
+write(file_id,"(a)")"</DataItem>"
+write(file_id,"(a)")"</Geometry>"
+write(file_id,"(a)")"<Attribute Name='NodesVal' AttributeType='Scalar' Center='Node'>"
+write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx,ny, &
+                          "' NumberType='Float' Precision='4' Format='XML'>"
+call sll_ascii_write_array(file_id,densite,error)
+write(file_id,"(a)")"</DataItem>"
+write(file_id,"(a)")"</Attribute>"
+call sll_xml_file_close(file_id,error)
+
+end subroutine plot_particle_density
 
 end module diagno
