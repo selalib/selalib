@@ -13,7 +13,7 @@ contains
 subroutine comparaisons( tm, sol, time, iplot )
 
 type(tm_mesh_fields) :: tm, sol
-sll_real64 :: time, erreur
+sll_real64 :: time
 sll_int32 :: iplot
 character(len=4) :: fin
 
@@ -115,7 +115,7 @@ if( iplot == 1 ) rewind(40)
    
 umod = sqrt(ele%vit(1,1)**2+ele%vit(1,2)**2)
    
-write(40,"(G15.3,1X,5F12.7)") sngl(time)	&
+write(40,"(G15.3,1X,5F12.7)") sngl(time)         &
       ,sngl(ele%pos(1,1)), sngl(ele%pos(1,2))    &
       ,sngl(ele%vit(1,1)), sngl(ele%vit(1,2))    &
       ,umod
@@ -130,7 +130,8 @@ subroutine diag_coc( tm, ele, time, iplot )
 type (tm_mesh_fields) :: tm
 type(particle) :: ele
 sll_real64 :: time
-sll_real64 :: aux, aux1, aux2, aux3
+sll_real64 :: aux
+!sll_real64 :: aux, aux1, aux2, aux3
 sll_int32 :: iplot
 
 
@@ -306,8 +307,8 @@ subroutine plot_phases( ele, iplot, time )
 type(particle) :: ele
 sll_int32 :: iplot, ipart
 sll_real64 :: time
-sll_real64 :: gama, aux, speed
-sll_int32 :: k, l
+!sll_real64 :: gama, aux
+sll_real64 :: speed
 character(len=4) :: fin
 
 call int2string(iplot, fin)
@@ -359,7 +360,7 @@ subroutine distribution_v(ele, iplot, time)
 sll_int32 :: i, ipart, iplot
 sll_real64, dimension(:,:), allocatable :: densite
 type(particle) :: ele
-sll_real64 :: speed, time, vx, vy, aux, vth=1.
+sll_real64 :: time, vx, vy, aux, vth=1.
 sll_real64 :: pas_v, vmin, vmax
 character(len=4) :: fin
 sll_int32, parameter :: nv = 64
@@ -492,7 +493,7 @@ end subroutine distribution_x
 
 subroutine modeE( tm, iplot, time )
 
-type(tm_mesh_fields) :: tm, sol
+type(tm_mesh_fields) :: tm
 sll_real64 :: time, aux
 sll_int32 :: iplot
 
@@ -513,15 +514,45 @@ end subroutine modeE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine plot_particle_density( ele, iplot, time)  
+subroutine plot_particles_center( p, time)! xmin, xmax, ymin, ymax )
+
+type(particle), intent(in) :: p
+sll_real64, intent(in) :: time
+sll_real64 :: xmin, xmax, ymin, ymax
+
+xmin = 0.
+xmax = 1.
+ymin = 0.
+ymax = 1.
+
+!if (present(xmin)) then; continue; else; xmin = 0.; end if
+!if (present(xmax)) then; continue; else; xmax = 1.; end if
+!if (present(ymin)) then; continue; else; ymin = 0.; end if
+!if (present(ymax)) then; continue; else; ymax = 1.; end if
+
+print*, "set title'time=",time,"'"
+print*, 'set term x11'
+
+write(*,100) xmin,xmax,ymin,ymax
+do k = 1, nbpart
+   print*, p%pos(k,1), p%pos(k,2)
+end do
+print*, 'e'
+
+100 format('p [',f7.3,':',f7.3,'][',f7.3,':',f7.3,'] ''-'' w d')
+
+end subroutine plot_particles_center
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine plot_particle_density( ele, iplot)  
 sll_int32 :: i, ipart, iplot
 sll_int32, parameter :: nx = 50, ny = 50
 sll_real64, dimension(nx,ny) :: densite
 type(particle) :: ele
-sll_real64 :: time, x, y, pas_x, pas_y
+sll_real64 :: pas_x, pas_y
 character(len=4) :: fin
-sll_int32, save :: gnu_id
-sll_int32 :: file_id, error
+sll_int32 :: error
 
 call int2string(iplot, fin)
 
@@ -541,27 +572,6 @@ do ipart=1,nbpart
 enddo
 
 call sll_gnuplot_rect_2d(0._f64, dimx, 40, 0._f64, dimy, 40, densite, 'density', iplot, error)  
-
-!ASCII version just in case of problem with binary format
-call sll_xml_file_create("densite_"//fin//".xmf",file_id,error)
-write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
-write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
-                          nx,ny,"'/>"
-write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
-write(file_id,"(2f12.5)") 0._f64, 0.0_f64
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
-write(file_id,"(2f12.5)") pas_x, pas_y
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a)")"</Geometry>"
-write(file_id,"(a)")"<Attribute Name='NodesVal' AttributeType='Scalar' Center='Node'>"
-write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx,ny, &
-                          "' NumberType='Float' Precision='4' Format='XML'>"
-call sll_ascii_write_array(file_id,densite,error)
-write(file_id,"(a)")"</DataItem>"
-write(file_id,"(a)")"</Attribute>"
-call sll_xml_file_close(file_id,error)
 
 end subroutine plot_particle_density
 
