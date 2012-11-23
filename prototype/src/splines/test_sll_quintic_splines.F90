@@ -48,7 +48,7 @@ use arbitrary_degree_splines
 
   do pow=0,pow_max
 
-     num_pts = 5*10**pow + 1
+     num_pts = 3!5*10**pow + 1
      h = (xmax-xmin) / (num_pts-1)
 
      SLL_ALLOCATE( f1(num_pts), ierr)
@@ -61,13 +61,19 @@ use arbitrary_degree_splines
      enddo
 
      x2(1) = xmin
-     f2(1) = exp( - ( x2(1) - mu )**2  )
      do i=2,num_pts-1
         call random_number(x)
+        ! To avoid duplicated points
+        if (num_pts < 5) then
+           x = x/num_pts
+        else
+           x = 5*x/num_pts 
+        endif 
         x2(i) = x2(i-1) + x*( xmax - x2(i-1))
-        f2(i) = exp( - ( x2(i) - mu )**2  )
      enddo
      x2(num_pts) = xmax
+
+     f2 = exp( - ( x2 - mu )**2  )
 
      plan1 => new_quintic_splines_uniform(num_pts, xmin, xmax)
      call compute_quintic_coeffs_uniform(f1, plan1)

@@ -80,8 +80,8 @@ ELSE()
 ENDIF()
 
 #Comparing selalib arbitrary splines to Deboor's ones
-ADD_EXECUTABLE( compare_selalib_splines_2_deboors 
-                compare_selalib_splines_2_deboors.f90
-              )
+#ADD_EXECUTABLE( compare_selalib_splines_2_deboors 
+#                compare_selalib_splines_2_deboors.f90
+#              )
 
-TARGET_LINK_LIBRARIES(compare_selalib_splines_2_deboors ${SPL_LIBS})
+#TARGET_LINK_LIBRARIES(compare_selalib_splines_2_deboors ${SPL_LIBS})
