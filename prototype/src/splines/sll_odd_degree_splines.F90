@@ -86,7 +86,7 @@ contains
     A = 0.d0
     do i=1,m
        do j= -KD, KD
-          if ( (i+j>0) .and. (i+j<=m) ) then
+          if ( (i+j>=1) .and. (i+j<=m) ) then
              A(i,i+j) = b_at_x(j+KD+1) 
           endif
        enddo
