@@ -90,12 +90,19 @@ contains
     sll_int32                                   :: num_pts
 
     num_pts = plan%num_pts
+    ! a is the value to be duplicated in the principal diagonal of the matrix
+    ! b for the diagonals -1 and 1
+    ! c for the diagonals -2 and 2
     a = plan%b_at_node(3)
     b = plan%b_at_node(2)
     c = plan%b_at_node(1)
 
+    ! To solve the linear system, we need to include the values of f outside 
+    ! the domain which are 0 because f is compact. We storage all values of 
+    ! f (inside the domain and outside) in g.
     g = 0.d0
     g(3:num_pts+2) = f
+
     plan%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan%plan_pentadiagonal)
 
   end subroutine compute_quintic_coeffs_uniform
@@ -202,75 +209,62 @@ contains
   ! f is the vector of the values of the function 
   !  in the nodes of the mesh*/
 
-    sll_real64, dimension(:)                    :: f
+    sll_real64, dimension(:)                       :: f
     type(quintic_splines_nonuniform_plan), pointer :: plan
-    sll_real64, dimension(size(f)+5)            :: g
-    sll_real64, dimension(size(f)+5,size(f)+5)  :: A, AB 
-    sll_int32                                   :: num_pts, i, ierr
-    sll_real64, dimension(6)                    :: b_at_x
-    sll_int32                                   :: KD, m, beginning, ending
-    sll_int32                                   :: j, LDAB
+    sll_real64, dimension(size(f)+3)               :: g, ipiv
+    sll_real64, dimension(size(f)+3,size(f)+3)     :: A, AB 
+    sll_int32                                      :: num_pts, i, ierr
+    sll_real64, dimension(6)                       :: b_at_x
+    sll_int32                                      :: KL, KU, m, j, LDAB
 
     num_pts = plan%spline_obj%num_pts
-    g = 0.d0
-    g(3:num_pts+2) = f
     m = size(g)
-    KD = 2 ! called KD for lapack use
+
+    ! To solve the linear system, we need to include the values of f outside 
+    ! the domain which are 0 because f is compact. We storage all values of 
+    ! f (inside the domain and outside) in g.
+    g = 0.d0
+    g(2:num_pts+1) = f
+    m = size(g)
+
+    ! called for lapack use
+    KL = 2
+    KU = 2
+    A = 0.d0
 
     do i=-1, num_pts+3
 
-       if ( i == -1 ) then
+       if ( i <= 1 ) then
           b_at_x = b_splines_at_x( plan%spline_obj, 1, plan%spline_obj%k(1) )
-          beginning = 0
-          ending = KD+1
-       endif
-       if (i ==0 ) then
-          b_at_x = b_splines_at_x( plan%spline_obj, 1, plan%spline_obj%k(1) )
-          beginning = -1
-          ending = KD+1
-       endif
-       if ( i == num_pts+1 ) then
+       elseif ( i >= num_pts ) then
           b_at_x = b_splines_at_x( plan%spline_obj, num_pts-1, plan%spline_obj%k(num_pts) )
-print*, 'num_pts =', num_pts, 'b_at_x =', b_at_x
-          beginning = -KD
-          ending = 2
-       endif
-       if ( i == num_pts+2 ) then
-          b_at_x = b_splines_at_x( plan%spline_obj, num_pts-1, plan%spline_obj%k(num_pts) )
-          beginning = -KD
-          ending = 1
-       endif
-       if ( i == num_pts+3 ) then
-          b_at_x = b_splines_at_x( plan%spline_obj, num_pts-1, plan%spline_obj%k(num_pts) )
-          beginning = -KD
-          ending = 0
-       endif
-       if ( 1<=i .and. i<= num_pts) then
-          b_at_x = b_splines_at_x( plan%spline_obj, i-i/num_pts, plan%spline_obj%k(i) )
-          beginning = -KD
-          ending = KD+1
+print*, b_at_x; stop
+       else
+          b_at_x = b_splines_at_x( plan%spline_obj, i, plan%spline_obj%k(i) )
+
        endif
 
-       do j= beginning, ending
-          if ( (i+j>0) .and. (i+j<=m) ) then
-             A(i+KD,i+j) = b_at_x(j+KD+1) 
+       do j= -KL, KL
+          if ( (i+KL+j>=1) .and. (i+KL+j<=m) ) then
+             A(i+KL,i+KL+j) = b_at_x(j+KL+1) 
           endif
        enddo
     enddo
 
     ! Solve the linear system with LAPACK
     do j=1,m
-       do i=j,min(m,j+KD)
-          AB(1+i-j,j) = A(i,j)
+       do i=max(1,j-ku), min(m,j+kl)
+          AB(kl+ku+1+i-j,j) = A(i,j)
        enddo
     enddo
 
     LDAB = size(AB,1)
-    ! Cholesky factorization
-    call DPBTRF( 'L', m, KD, AB, LDAB, ierr )
+    ! LU factorization
+    call DGBTRF( m, m, KL, KU, AB, LDAB, IPIV, ierr )
+if (ierr/=0) print*, a, ierr; stop
     ! Solve the linear system with Cholesky factorization
     plan%coeffs = g
-    call DPBTRS( 'L', m, KD, 1, AB, LDAB, plan%coeffs, m, ierr )
+    call DGBTRS( 'N', m, KL, KU, 1, AB, LDAB, IPIV, plan%coeffs, m, ierr)
 
   end subroutine compute_quintic_coeffs_nonuniform
 
@@ -285,9 +279,9 @@ print*, 'num_pts =', num_pts, 'b_at_x =', b_at_x
     sll_int32                                              :: ierr
 
     ! Run some checks on the arguments.
-    !SLL_ASSERT(associated(plan_splines))
-    !SLL_ASSERT(x >= plan_splines%spline_obj%xmin)
-    !SLL_ASSERT(x <= plan_splines%spline_obj%xmax)
+    SLL_ASSERT(associated(plan_splines))
+    SLL_ASSERT(x >= plan_splines%spline_obj%xmin)
+    SLL_ASSERT(x <= plan_splines%spline_obj%xmax)
 
     n = plan_splines%spline_obj%num_pts - 1
     knots = plan_splines%spline_obj%k(1:n+1)
