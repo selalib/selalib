@@ -85,7 +85,6 @@ contains
 
     sll_real64, dimension(:)                    :: f
     type(quintic_splines_uniform_plan), pointer :: plan
-    sll_real64, dimension(plan%num_pts+5)       :: g
     sll_real64                                  :: a, b, c
     sll_int32                                   :: num_pts
 
@@ -99,11 +98,12 @@ contains
 
     ! To solve the linear system, we need to include the values of f outside 
     ! the domain which are 0 because f is compact. We storage all values of 
-    ! f (inside the domain and outside) in g.
-    g = 0.d0
-    g(3:num_pts+2) = f
+    ! f (inside the domain and outside) in the right side vector of the linear system.
+    ! This vector is inout for the linear system solver
+    plan%coeffs = 0.d0
+    plan%coeffs(3:num_pts+2) = f
 
-    plan%coeffs = solve_toep_penta_diagonal(a, b, c, g, plan%plan_pentadiagonal)
+    plan%coeffs = solve_toep_penta_diagonal(a, b, c, plan%coeffs, plan%plan_pentadiagonal)
 
   end subroutine compute_quintic_coeffs_uniform
 
