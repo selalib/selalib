@@ -11,6 +11,7 @@ use sll_collective
 use sll_ascii_io
 use sll_xml_io
 use sll_gnuplot
+use sll_xdmf
 
 #define MPI_MASTER 0
 
