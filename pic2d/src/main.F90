@@ -91,8 +91,11 @@ do istep = 1, nstep
 
    if ( istep==1 .or. mod(istep,idiag) == 0 .or. istep==nstep ) then
       iplot = iplot + 1
-      call plot_particles_center( p, time)  
-      call plot_particle_density( p, iplot)  
+      !call plot_particles_center( p, time)  
+      !call plot_particle_density( p, iplot)  
+      call plot_particles_points3d(p, iplot)
+      call plot_particles_xmdv( p, iplot)  
+      stop
       !if (nomcas=='viry__') call plot_part( p, time, iplot )
      ! call diag_coc( f0, p, time, iplot )
      ! call diag_champ_part( p, time, iplot )
