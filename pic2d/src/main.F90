@@ -14,7 +14,7 @@ implicit none
 type(tm_mesh_fields) :: f0, f1
 type(particle) :: p
 
-real(kind=prec) :: time
+sll_real64 :: time, xmin, xmax, ymin, ymax
 integer :: istep, iplot
 integer :: iargc, n, i
 character(len=72) :: argv
@@ -49,6 +49,9 @@ if( nstep > nstepmax ) nstep = nstepmax
 istep = 1
 
 call init( f0 )                 !initialisation des champs et densites
+
+xmin = 0.0; xmax = dimx
+ymin = 0.0; ymax = dimy
 
 do istep = 1, nstep
 
@@ -94,8 +97,7 @@ do istep = 1, nstep
       !call plot_particles_center( p, time)  
       !call plot_particle_density( p, iplot)  
       call plot_particles_points3d(p, iplot)
-      call plot_particles_xmdv( p, iplot)  
-      stop
+      call plot_particles_xmdv( p, iplot, xmin, xmax, ymin, ymax)  
       !if (nomcas=='viry__') call plot_part( p, time, iplot )
      ! call diag_coc( f0, p, time, iplot )
      ! call diag_champ_part( p, time, iplot )
