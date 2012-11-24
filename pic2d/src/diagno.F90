@@ -574,7 +574,7 @@ character(len=4) :: fin
 sll_int32 :: file_id, error
 sll_real64 :: xmin, xmax, ymin, ymax
 sll_real64 :: vxmin, vxmax, vymin, vymax
-sll_real64 :: pmin, pmax, zmin = 0., zmax = 0.
+sll_real64 :: pmin, pmax
 
 call int2string(iplot, fin)
 
