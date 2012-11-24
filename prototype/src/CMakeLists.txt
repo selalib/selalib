@@ -122,6 +122,7 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 
 ##########################################################
 
+ADD_SUBDIRECTORY(visu_pic)
 ADD_SUBDIRECTORY(linearly_transformed_pic)
 
 ##########################################################
