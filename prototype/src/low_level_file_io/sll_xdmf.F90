@@ -266,7 +266,7 @@ contains
     call sll_xml_file_create(file_name//".xmf",file_id,error)
     write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
     write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
-                          nx1,nx2,"'/>"
+                          nx2,nx1,"'/>"
     write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"
     write(file_id,"(a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
     write(file_id,"(2f12.5)") eta1_min, eta2_min
@@ -283,7 +283,7 @@ contains
 !       call sll_hdf5_file_close(file_id, error)
 #endif
     else
-       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx1,nx2, &
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                                  "' NumberType='Float' Precision='4' Format='XML'>"
        call sll_ascii_write_array(file_id,array,error)
     end if
@@ -319,7 +319,7 @@ contains
     call sll_xml_file_create(file_name//".xmf",file_id,error)
     write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
     write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='", &
-                          nx1,nx2,"'/>"
+                          nx2,nx1,"'/>"
     write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
     write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx1,"' NumberType='Float' Format='XML'>"
     write(file_id,*) (eta1(i),i=1,nx1)
@@ -336,7 +336,7 @@ contains
 !       call sll_hdf5_file_close(file_id, error)
 #endif
     else
-       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx1,nx2, &
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                                  "' NumberType='Float' Precision='4' Format='XML'>"
        call sll_ascii_write_array(file_id,array,error)
     end if
