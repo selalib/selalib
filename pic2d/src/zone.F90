@@ -55,33 +55,32 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine readin( tm, filename )
+subroutine readin( filename )
 
 implicit none
 
 character(len=*) :: filename
-type(tm_mesh_fields) :: tm
 
 namelist/donnees/ dimx,  &      !dimensions du domaine
                   dimy,  & 
                     nx,  &      !nbre de pas
                     ny,  &
-                   cfl,  &      !nbre de Courant
-                tfinal,  &      !duree maxi
-	      nstepmax,  &	!nbre d'iterations maxi
+                  cfl,  &      !nbre de Courant
+               tfinal,  &      !duree maxi
+      nstepmax,  &	!nbre d'iterations maxi
                 nomcas,  &      !nom du cas ce calcul
                  jname,  &      !calcul de j   
-		 icrea,  &	!frequence d'emission des particules
-		 idiag,  &	!frequence des diagnostics
-		 bcname, & 	!type de conditions limites
-		 exext,	 &	!champ electrique exterieur
-		 eyext,	 &	!champ electrique exterieur
-		 bzext,  &	!champ magnetique exterieur
-                 charge, &	!charge d'une macroparticule
-                 masse,  &      !masse d'une macroparticule
-                     c,  &      !vitesse de la lumiere
-                    e0,  &      !permittivite du vide
-                 relativ        !calcul relativiste de la vitesse
+ icrea,  &	!frequence d'emission des particules
+ idiag,  &	!frequence des diagnostics
+ bcname, & 	!type de conditions limites
+ exext,&	!champ electrique exterieur
+ eyext,&	!champ electrique exterieur
+ bzext,&	!champ magnetique exterieur
+               charge, &	!charge d'une macroparticule
+                masse,  &      !masse d'une macroparticule
+                    c,  &      !vitesse de la lumiere
+                   e0,  &      !permittivite du vide
+                relativ        !calcul relativiste de la vitesse
 
 !***Initialisation  des valeurs pas default
 
@@ -176,11 +175,11 @@ dt    = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 
 nstep = floor(tfinal/dt)
 
-write(*,*) " cfl = ", cfl
-write(*,*) " dx = ", dx, " dy = ", dy, " dt = ", dt
-if( nstep > nstepmax ) nstep = nstepmax
-write(*,*) " Nombre d'iteration nstep = ", nstep
-write(*,*)
+!write(*,*) " cfl = ", cfl
+!write(*,*) " dx = ", dx, " dy = ", dy, " dt = ", dt
+!if( nstep > nstepmax ) nstep = nstepmax
+!write(*,*) " Nombre d'iteration nstep = ", nstep
+!write(*,*)
 
 end subroutine readin
 
