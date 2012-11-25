@@ -23,7 +23,7 @@ enable_testing()
 include(Pipol)
 
 EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS --version OUTPUT_VARIABLE source_path)
-IF(CMAKE_Fortran_COMPILER MATCHES "gfortran)
+IF(CMAKE_Fortran_COMPILER MATCHES "gfortran")
    string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ELSE()
    string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
