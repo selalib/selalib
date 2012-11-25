@@ -41,21 +41,25 @@ contains
 subroutine plot_test_2d()
 sll_real64, allocatable, dimension(:,:) :: density
 sll_int32 :: error
-!character(6) :: file_name = "pic_xv"
 !sll_int32  :: file_id
 sll_int32  :: iplot
 sll_real64 :: xmin, xmax, vmin, vmax
 sll_real64 :: time
 
+xmin = -12; xmax = 12
+vmin = -12; vmax = 12
 nx = 32
 nv = 64
 SLL_ALLOCATE(density(nx,nv), error)
 
 iplot = 1
 time = 0._f64
-
-call particles_center_gnuplot( x, v, xmin, xmax, vmin, vmax, iplot, time )
-
+call particles_center_gnuplot( "pic_xv", x, v, xmin, xmax, vmin, vmax, iplot, time )
+call distribution_gnuplot( "df_xv", x, v, xmin, xmax, nx, vmin, vmax, nv, iplot, time)  
+call xv_particles_center_gnuplot_inline( x, v, xmin, xmax, vmin, vmax, time )
+call plot_format_points3d( "pic_xv", x, v, iplot)
+call plot_format_xmdv( "pic_xv", x, v, iplot, xmin, xmax, vmin, vmax)
+call distribution_xdmf("df_xv", x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)  
 
 end subroutine plot_test_2d
 
