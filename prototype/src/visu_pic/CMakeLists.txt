@@ -7,7 +7,7 @@ ADD_DEPENDENCIES(sll_visu_pic  sll_assertion
                                sll_utilities
                                sll_low_level_file_io)
 
-ADD_EXECUTABLE(test_visu_pic unit_test.F90)
+ADD_EXECUTABLE(test_visu_pic unit_test.F90 biot_savart.F90)
 
 TARGET_LINK_LIBRARIES(test_visu_pic sll_visu_pic
                                     sll_low_level_file_io
