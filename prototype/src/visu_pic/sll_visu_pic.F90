@@ -23,6 +23,12 @@ interface distribution_gnuplot
    module procedure distribution_xv_gnuplot
 end interface distribution_gnuplot
 
+interface plot_format_points3d
+   module procedure pq_plot_format_points3d
+   module procedure pqr_plot_format_points3d
+   module procedure pqrs_plot_format_points3d
+end interface plot_format_points3d
+
 sll_int32, private :: i, j, k
 
 contains
@@ -125,7 +131,7 @@ end subroutine distribution_xv_gnuplot
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Call this function inline with | gnuplot
-subroutine xv_particles_center_gnuplot_inline( x, v, xmin, xmax, ymin, ymax, time )
+subroutine particles_center_gnuplot_inline( x, v, xmin, xmax, ymin, ymax, time )
 sll_real64, dimension(:), intent(in) :: x, v
 sll_real64, intent(in) :: time
 sll_real64 :: xmin, xmax, ymin, ymax
@@ -143,13 +149,13 @@ print*, 'e'
 
 100 format('p [',f7.3,':',f7.3,'][',f7.3,':',f7.3,'] ''-'' w d')
 
-end subroutine xv_particles_center_gnuplot_inline
+end subroutine particles_center_gnuplot_inline
 
 !> point3D format http://www.visitusers.org/index.php?title=Reading_point_data 
 !> This format is designed to plot x,y,z particles with one weight (only four
 !> characteristics)
 !> This format is readable by VisIt
-subroutine plot_format_points3d( plot_name, x, v, iplot)
+subroutine pq_plot_format_points3d( plot_name, x, v, iplot)
 character(len=*), intent(in) :: plot_name
 sll_real64, dimension(:), intent(in) :: x, v
 sll_int32, intent(in) :: iplot
@@ -162,13 +168,66 @@ call int2string(iplot, fin)
 call sll_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
 nbpart = size(x)
 SLL_ASSERT( size(v) == nbpart)
-write(file_id,"(a)") 'x v val1 val2'
+write(file_id,"(a)") 'x v zero zero'
 do k = 1, nbpart
-  write(file_id,"(4e15.3)")x(k),v(k), 1., 1.
+  write(file_id,"(4e15.3)")x(k),v(k), 0., 0.
 end do
 close(file_id)
 
-end subroutine plot_format_points3d
+end subroutine pq_plot_format_points3d
+
+!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data 
+!> This format is designed to plot x,y,z particles with one weight (only four
+!> characteristics)
+!> This format is readable by VisIt
+subroutine pqr_plot_format_points3d( plot_name, x, y, z, iplot)
+character(len=*), intent(in) :: plot_name
+sll_real64, dimension(:), intent(in) :: x, y, z
+sll_int32, intent(in) :: iplot
+character(len=4) :: fin
+sll_int32 :: file_id, error
+sll_int32 :: nbpart
+
+call int2string(iplot, fin)
+
+call sll_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
+nbpart = size(x)
+SLL_ASSERT( size(y) == nbpart)
+SLL_ASSERT( size(z) == nbpart)
+write(file_id,"(a)") 'x y z zero'
+do k = 1, nbpart
+  write(file_id,"(4e15.3)")x(k),y(k),z(k), 0.
+end do
+close(file_id)
+
+end subroutine pqr_plot_format_points3d
+
+!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data 
+!> This format is designed to plot x,y,z particles with one weight (only four
+!> characteristics)
+!> This format is readable by VisIt
+subroutine pqrs_plot_format_points3d( plot_name, p, q, r, s, iplot)
+character(len=*), intent(in) :: plot_name
+sll_real64, dimension(:), intent(in) :: p, q, r, s
+sll_int32, intent(in) :: iplot
+character(len=4) :: fin
+sll_int32 :: file_id, error
+sll_int32 :: nbpart
+
+call int2string(iplot, fin)
+
+call sll_ascii_file_create(plot_name//"_"//fin//".3D", file_id, error)
+nbpart = size(p)
+SLL_ASSERT( size(q) == nbpart)
+SLL_ASSERT( size(r) == nbpart)
+SLL_ASSERT( size(s) == nbpart)
+write(file_id,"(a)") 'x y z val'
+do k = 1, nbpart
+  write(file_id,"(4e15.3)")p(k),q(k),r(k),s(k)
+end do
+close(file_id)
+
+end subroutine pqrs_plot_format_points3d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
