@@ -115,11 +115,11 @@ fi
 if [[ `hostname` == "irma-spare" ]]; then
   source /opt/intel/composerxe/bin/compilervars.sh intel64
   source /opt/intel/mkl/bin/mklvars.sh intel64
-  export FC=mpif90
-  export F77=mpif90
-  export CC=mpicc
-  export CXX=mpic++
-  export F9X=mpif90
+  export FC=ifort
+  export F77=ifort
+  export CC=icc
+  export CXX=icpc
+  export F9X=ifort
   export MPICH_FC=ifort
   export MPICH_F90=ifort
   export MPICH_CC=icc
