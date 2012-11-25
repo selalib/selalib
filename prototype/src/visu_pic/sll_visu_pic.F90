@@ -8,6 +8,10 @@
 module sll_visu_pic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+use sll_io
+use sll_ascii_io
+use sll_gnuplot
+use sll_xdmf
 
 implicit none
 
@@ -35,7 +39,7 @@ call int2string(iplot, fin)
 
 call sll_new_file_id(file_id, error)
 open( file_id, file = 'pxv.gnu', position="append" )
-if ( iplot == 1 ) then
+if ( iplot <= 1 ) then
    rewind(file_id)
    write(file_id,"('set xr[',g15.3,':',g15.3,']')") xmin, xmax
    write(file_id,"('set yr[',g15.3,':',g15.3,']')") vmin, vmax
