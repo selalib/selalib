@@ -15,8 +15,8 @@ subroutine calcul_j_villa( ele, tm )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-sll_real64 :: x1, y1, x2, y2, xint, yint
-sll_int32 :: i1, j1, i2, j2, iint, jint
+sll_real64 :: x1, y1, x2, y2
+sll_int32 :: i1, j1, i2, j2
 
 tm%jx = 0.; tm%jy = 0.
 
