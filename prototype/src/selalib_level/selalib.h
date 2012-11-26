@@ -8,7 +8,10 @@ use numeric_constants
 use sll_misc_utils
 use sll_io, only:sll_new_file_id
 use sll_collective
+use sll_ascii_io
 use sll_xml_io
+use sll_gnuplot
+use sll_xdmf
 
 #define MPI_MASTER 0
 
