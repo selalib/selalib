@@ -17,7 +17,7 @@ subroutine E_initial( tm )
 type( tm_mesh_fields ) :: tm
 sll_real64, dimension(:,:), allocatable :: div, lap, phi 
 sll_real64, dimension(:), allocatable ::  rho
-sll_real64 :: aux, ddx, ddy
+sll_real64 :: ddx, ddy
 sll_int32 :: i, j, indice, info
 sll_int32 :: error
 
@@ -92,7 +92,7 @@ sll_real64, dimension((nx-1)*(ny-1),(nx-1)*(ny-1)) :: A, M
 sll_real64, dimension(nx+1,(nx-1)*(ny-1)) :: mat
 sll_real64, dimension((nx-1)*(ny-1)) :: b
 sll_real64, dimension(0:nx,0:ny) :: phi
-sll_real64 :: dum, aux1, aux2
+sll_real64 :: dum
 sll_int32 :: Iel, info
 sll_int32, dimension(4) :: Isom
 

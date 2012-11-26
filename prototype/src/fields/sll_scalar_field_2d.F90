@@ -308,6 +308,32 @@ contains   ! *****************************************************************
                                  "Node")
        call sll_xdmf_close(file_id,ierr)
 
+    case (SLL_IO_VTK)
+
+       call sll_ascii_file_create(trim(name)//".vtr", file_id, ierr)
+
+       write(file_id,"(a)")"<VTKFile type='RectilinearGrid'>"
+       write(file_id,"(a,6i5,a)")"<RectilinearGrid WholeExtent='",1, num_pts1,1,num_pts2,1,1,"'>"
+       write(file_id,"(a,6i5,a)")"<Piece Extent='",1, num_pts1,1,num_pts2,1,1,"'>"
+       write(file_id,"(a)")"<PointData>"
+       write(file_id,"(a)")"<DataArray type='Float64' Name='"//scalar_field%name//"' format='ascii'>"
+       write(file_id,"(a)")"</DataArray>"
+       write(file_id,"(a)")"</PointData>"
+       write(file_id,"(a)")"<Coordinates>"
+       write(file_id,"(a)")"<DataArray type='Float64' Name='"//scalar_field%name//"' format='ascii'>"
+       write(file_id,"(a)")"</DataArray>"
+       write(file_id,"(a)")"</Coordinates>"
+       write(file_id,"(a)")"</Piece>"
+       write(file_id,"(a)")"</RectilinearGrid>"
+       write(file_id,"(a)")"</VTKFile>"
+
+       close(file_id)
+
+    case (SLL_IO_GNUPLOT)
+       call sll_ascii_file_create(trim(name)//".vtr", file_id, ierr)
+       call sll_ascii_write_array_2d(file_id, val, ierr)
+       close(file_id)
+
     case default
 
        print*, "write_scalar_field_2d: requested output format not recognized."
