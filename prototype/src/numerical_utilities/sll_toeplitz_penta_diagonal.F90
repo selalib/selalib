@@ -124,17 +124,27 @@ contains
     sll_real64, dimension(:) :: b
     sll_int32                :: n, i
     sll_real64, dimension(n) :: x, y
+    sll_real64 :: tmp
      
     y(1) = b(1)
     y(2) = b(2) - l1*y(1)
+    
     do i=3,n
-      y(i) = b(i) - ( l2*y(i-2) + l1*y(i-1) )
+      tmp=b(i) - ( l2*y(i-2) + l1*y(i-1) )
+      if(abs(tmp)<1e-30)then
+        tmp=0._f64
+      endif
+      y(i) = tmp
     enddo
 
     x(n) = y(n)
     x(n-1) = y(n-1) - l1*y(n)
     do i=n-2,1,-1
-      x(i) = y(i) - ( l1*x(i+1) + l2*x(i+2) )
+      tmp = y(i) - ( l1*x(i+1) + l2*x(i+2) )
+      if(abs(tmp)<1e-30)then
+        tmp=0._f64
+      endif      
+      x(i) = tmp
     enddo
 
   end function solve_subsystem
