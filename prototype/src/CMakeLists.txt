@@ -122,10 +122,6 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 
 ##########################################################
 
-ADD_SUBDIRECTORY(linearly_transformed_pic)
-
-##########################################################
-
 ADD_SUBDIRECTORY(WENO)
 ADD_SUBDIRECTORY(integration)
 ADD_TEST(NAME integration COMMAND test_integration)
@@ -281,6 +277,11 @@ SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #ADD_TEST(NAME landau_2d COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_landau_2d)
 #SET_TESTS_PROPERTIES(landau_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+##########################################################
+
+ADD_SUBDIRECTORY(linearly_transformed_pic)
+ADD_TEST(NAME lin_trans_pic COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_ltpic ) 
+#SET_TESTS_PROPERTIES(lin_trans_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ##########################################################
 
