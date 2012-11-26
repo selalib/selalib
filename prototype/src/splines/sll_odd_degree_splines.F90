@@ -27,12 +27,8 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
-#ifdef STDF95
-    sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable :: coeffs
-#endif
-    sll_real64, dimension(:,:), allocatable :: matrix
+    sll_real64, dimension(:), pointer     :: coeffs
+    sll_real64, dimension(:,:), pointer   :: matrix
    end type odd_degree_splines_uniform_plan
 
   type odd_degree_splines_non_uni_plan
