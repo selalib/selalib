@@ -7,7 +7,8 @@ SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
 IF(NOT HDF5_FOUND)
 
-   SET(HDF5_PATHS $ENV{HDF5_ROOT} 
+   SET(HDF5_PATHS $ENV{HDF5_HOME}
+                  $ENV{HDF5_ROOT} 
                   /usr 
                   /usr/lib64/mpich2 
                   /usr/lib64/openmpi 
