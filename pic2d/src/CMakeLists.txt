@@ -1,3 +1,11 @@
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
+build, options are: Debug Release.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
+options are: Debug Release.")
+ENDIF()
+
 PROJECT(PIC2D)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -10,7 +18,7 @@ IF (CMAKE_PROJECT_NAME MATCHES "PIC2D")
 ENDIF()
 MESSAGE( STATUS "SLL_SOURCE_DIR: ${SLL_SOURCE_DIR}" )
 
-SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules 
+SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake 
                        ${SLL_SOURCE_DIR}/CMakeModules
                        ${CMAKE_MODULE_PATH} )
 
@@ -22,23 +30,7 @@ INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
 LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
 
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
-
-IF(CMAKE_Fortran_COMPILER MATCHES "gfortran")
-
-   ADD_DEFINITIONS(-DGFORTRAN)
-   SET(CMAKE_Fortran_FLAGS "-O3 -ffree-line-length-none")
-
-ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
-
-   SET(CMAKE_Fortran_FLAGS "-O3")
-   ADD_DEFINITIONS(-DINTEL)
-
-ELSEIF(CMAKE_Fortran_COMPILER_NAME MATCHES "xlf")
-
-   SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
-
-ENDIF()
-
+INCLUDE(F90FLAGS)
 MESSAGE(STATUS "CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
 
 FIND_PACKAGE(LAPACK)
@@ -46,8 +38,8 @@ IF( NOT LAPACK_FOUND)
    INCLUDE(${SLL_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
 ENDIF( NOT LAPACK_FOUND)
 
-SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " )
+SET(SILO_ENABLED OFF CACHE BOOL "Use SILO Library from LLNL ")
+SET(FFTW_ENABLED OFF CACHE BOOL "Use fftw library       " )
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
