@@ -3,6 +3,7 @@
 # FFTW_FOUND = true if FFTW3 is found
 
 SET(TRIAL_PATHS 
+                $ENV{FFTW_HOME}
                 $ENV{FFTW_ROOT}
                 /usr
                 /usr/local
