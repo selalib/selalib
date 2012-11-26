@@ -40,6 +40,8 @@ module sll_poisson_3d_periodic_seq
      type(sll_fft_plan), pointer :: px_inv
      type(sll_fft_plan), pointer :: py_inv
      type(sll_fft_plan), pointer :: pz_inv
+     sll_comp64, dimension(:,:,:), allocatable :: hat_rho
+     sll_comp64, dimension(:,:,:), allocatable :: hat_phi
   end type poisson_3d_periodic_plan_seq
 
 contains
@@ -58,6 +60,8 @@ contains
     type (poisson_3d_periodic_plan_seq), pointer :: plan
 
     SLL_ALLOCATE(plan, ierr)
+    SLL_ALLOCATE(plan%hat_rho(nx,ny,nz), ierr)
+    SLL_ALLOCATE(plan%hat_phi(nx,ny,nz), ierr)
 
     ! Geometry informations
     plan%nx = nx
@@ -84,7 +88,6 @@ contains
 
     type (poisson_3d_periodic_plan_seq), pointer   :: plan
     sll_real64, dimension(:,:,:)                   :: rho, phi
-    sll_comp64, dimension(plan%nx,plan%ny,plan%nz) :: hat_rho, hat_phi
     sll_int32                                      :: nx, ny, nz
     ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
     sll_int32                                      :: i, j, k
@@ -107,28 +110,28 @@ contains
     Lz = plan%Lz
 
     ! FFTs in x-direction
-    hat_rho = cmplx(rho, 0_f64, kind=f64)
+    plan%hat_rho = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz
        do j=1,ny
-          call fft_apply_plan( plan%px, hat_rho(:,j,k), hat_rho(:,j,k) )
+          call fft_apply_plan( plan%px, plan%hat_rho(:,j,k), plan%hat_rho(:,j,k) )
        enddo
     enddo
 
     ! FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call fft_apply_plan( plan%py, hat_rho(i,:,k), hat_rho(i,:,k) )
+          call fft_apply_plan( plan%py, plan%hat_rho(i,:,k), plan%hat_rho(i,:,k) )
        enddo
     enddo
 
     ! FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call fft_apply_plan( plan%pz, hat_rho(i,j,:), hat_rho(i,j,:) )
+          call fft_apply_plan( plan%pz, plan%hat_rho(i,j,:), plan%hat_rho(i,j,:) )
        enddo
     enddo
 
-    hat_rho = hat_rho/(nx*ny*nz)
+    plan%hat_rho = plan%hat_rho/(nx*ny*nz)
 
     ! Compute hat_phi, phi = inv_fft(hat_phi)
     do k=1,nz
@@ -150,10 +153,10 @@ contains
                 ind_z = real(nz-(k-1),f64)
              endif
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
-                hat_phi(i,j,k) = 0.d0
+                plan%hat_phi(i,j,k) = 0.d0
              else
-                hat_phi(i,j,k) = hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
-                                              + (ind_y/Ly)**2+(ind_z/Lz)**2))
+                plan%hat_phi(i,j,k) = plan%hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
+                                                        + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
        enddo
@@ -162,25 +165,25 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny
        do i=1,nx
-          call fft_apply_plan( plan%pz_inv, hat_phi(i,j,:), hat_phi(i,j,:) )
+          call fft_apply_plan( plan%pz_inv, plan%hat_phi(i,j,:), plan%hat_phi(i,j,:) )
        enddo
     enddo
 
     ! Inverse FFTs in y-direction
     do k=1,nz
        do i=1,nx
-          call fft_apply_plan( plan%py_inv, hat_phi(i,:,k), hat_phi(i,:,k) )
+          call fft_apply_plan( plan%py_inv, plan%hat_phi(i,:,k), plan%hat_phi(i,:,k) )
        enddo
     enddo
 
     ! Inverse FFTs in x-direction
     do k=1,nz
        do j=1,ny
-          call fft_apply_plan( plan%px_inv, hat_phi(:,j,k), hat_phi(:,j,k) )
+          call fft_apply_plan( plan%px_inv, plan%hat_phi(:,j,k), plan%hat_phi(:,j,k) )
        enddo
     enddo
 
-    phi = real(hat_phi, f64)
+    phi = real(plan%hat_phi, f64)
 
   end subroutine solve_poisson_3d_periodic_seq
 
@@ -202,6 +205,8 @@ contains
     call fft_delete_plan(plan%py_inv)
     call fft_delete_plan(plan%pz_inv)
 
+    SLL_DEALLOCATE_ARRAY(plan%hat_rho, ierr)
+    SLL_DEALLOCATE_ARRAY(plan%hat_phi, ierr)
     SLL_DEALLOCATE(plan, ierr)
 
   end subroutine delete_poisson_3d_periodic_plan_seq

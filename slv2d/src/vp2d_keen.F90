@@ -126,7 +126,7 @@ program vp2d_keen
         !call advection_x1(vlas2d,f4d,0.5*dt)
         !call advection_x2(vlas2d,f4d,0.5*dt)
         call advection_x(vlas2d,f4d,.5*dt)
-        call thdiag(vlas2d,f4d,nrj,iter*dt)  
+        call thdiag(vlas2d,f4d,nrj,iter*dt,jstartv)  
         if (mod(iter,fdiag) == 0) then 
            call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx, &
                 jstartv,jendv, XY_VIEW)
