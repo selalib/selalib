@@ -156,8 +156,8 @@ MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}               ####")
 MESSAGE(STATUS "####                                      ####")
 MESSAGE(STATUS "##############################################")
 
-IF ($ENV{HOST} MATCHES "hydra")
-   INCLUDE(POELaunchTests)
-ELSE()
-   INCLUDE(ClassicLaunchTests)
+INCLUDE(SequentialTests)
+
+IF(MPI_MODULE_ENABLED)
+   INCLUDE(ParallelTests)
 ENDIF()

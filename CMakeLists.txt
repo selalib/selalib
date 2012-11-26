@@ -96,8 +96,8 @@ include(CPack)
 
 FIND_PROGRAM(FORCHECK_EXECUTABLE
   NAMES forchk
-  PATHS /usr/bin /bin /usr/local/bin /afs/@cell/common/soft/forcheck/14.2.19/bin
-  DOC "Performs a full static analysis of separate program units, groups of program units, or integral Fortran programs."
+  PATHS $ENV{FCKDIR}/bin /usr/bin /bin /usr/local/bin
+  DOC "Performs a full static analysis of Fortran programs."
 )
 
 IF (FORCHECK_EXECUTABLE)
@@ -109,16 +109,28 @@ MARK_AS_ADVANCED(
   FORCHECK_EXECUTABLE
   )
 
-if(FORCHECK_FOUND)
-   get_filename_component(FORCHECK_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
-   set(FORCHECK_OUTPUT_DIR "${FORCHECK_OUTPUT_DIR}/documentation/")
-   message(STATUS "The documentation is in ${FORCHECK_OUTPUT_DIR}")
-   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in 
-   ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-   add_custom_target(doc ${FORCHECK_EXECUTABLE} 
-   ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY 
-   ${CMAKE_CURRENT_BINARY_DIR} 
-   COMMENT "Generating API documentation with Doxygen" VERBATIM)
-else(FORCHECK_FOUND)
-   MESSAGE(STATUS "FORCHECK NOT FOUND")
-endif(FORCHECK_FOUND)
+IF(FORCHECK_FOUND)
+
+   FILE(GLOB_RECURSE SRCS_LIST *.F90)
+   FOREACH(F90FILE ${SRCS_LIST}) 
+      IF(DEFINED SRCS)
+         SET(SRCS "${SRCS} ${F90FILE}")
+      ELSE()
+         SET(SRCS "${F90FILE}")
+      ENDIF()
+   ENDFOREACH(F90FILE) 
+
+   GET_PROPERTY(INCS_DIRS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/prototype/src PROPERTY INCLUDE_DIRECTORIES)
+
+   FOREACH(DIR ${INCS_DIRS})
+      IF(DEFINED INCS)
+         SET(INCS "${INCS},${DIR}")
+      ELSE()
+         SET(INCS "${DIR}")
+      ENDIF()
+   ENDFOREACH()
+
+   ADD_CUSTOM_TARGET(forcheck -define DEBUG,GFORTRAN ${FORCHECK_EXECUTABLE} -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb  COMMENT "Forcheck the source code" VERBATIM)
+
+ENDIF(FORCHECK_FOUND)
+
