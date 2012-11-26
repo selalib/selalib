@@ -45,7 +45,8 @@ contains
     type(sll_mapped_mesh_2d_cartesian), target        :: mesh
     class(sll_mapped_mesh_2d_base),     pointer       :: mesh_base
     type(leap_frog_1st_flow_2d),        target        :: lf_1st_flow
-    class(flow_base),                   pointer       :: flow
+    type(leap_frog_2nd_flow_2d),        target        :: lf_2nd_flow
+    class(flow_base_class),             pointer       :: flow
     type(poisson_1d_periodic)                         :: poisson
     sll_real64, dimension(:),           allocatable   :: rho
                                                       
@@ -102,7 +103,7 @@ contains
                                     xmin_poisson_mesh,                      &
                                     xmax_poisson_mesh,                      &
                                     elementary_charge,                      &
-                                    PERIODIC_LTPIC
+                                    PERIODIC_LTPIC                          &
                                   )
 
     print *, 'building a mesh for the initializer...'
@@ -118,11 +119,11 @@ contains
     call init_tsi%initialize(mesh_base,NODE_CENTERED_FIELD,sim%epsilon,sim%kx,0_f64)
 
     print *, 'initializing the leap-frog flows...'
-    init_lf_1st_flow( lf_1st_flow, sim%dt )
+    call init_lf_1st_flow( lf_1st_flow, sim%dt )
     ! MCP -- here, the array describing the electric field coefficients is a member of the lf_2nd_flow object. 
     ! but I think it should rather have a specific type -- and be a member of some poisson solver class ? 
     ! (then passed as an argument to the flow initializer?)
-    init_lf_2nd_flow( lf_2nd_flow, sim%dt, sim%nc_poisson_mesh, sim%xmin_poisson_mesh, sim%xmax_poisson_mesh)
+    call init_lf_2nd_flow( lf_2nd_flow, sim%dt, sim%nc_poisson_mesh, sim%xmin_poisson_mesh, sim%xmax_poisson_mesh)
 
     print *, 'initializing the poisson solver...'
     SLL_ALLOCATE(rho(sim%nc_poisson_mesh+1),  ierr)
@@ -142,7 +143,6 @@ contains
     
     print *, 'plotting the initial particle density...'
     call plot_density( 'initial_density',n_time,sim%particles )
-
 
     ! ------------------------------------------------------------------------
     !
@@ -172,7 +172,7 @@ contains
       end if
     end do ! main loop
 
-    print *, 'plotting the initial particle density...'
+    print *, 'plotting the final particle density...'
     call plot_density( 'final_density',n_time,sim%particles )
 
     print *, 'done.'

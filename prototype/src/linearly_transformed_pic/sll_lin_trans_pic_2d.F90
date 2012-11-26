@@ -266,7 +266,7 @@ contains
                 qi_weight = qi_weight + qi_coefs(l_x,l_v) * ltpic_object%qi_data( k_x+l_x + qi_st_radius, k_v+l_v + qi_st_radius )
              end do
           end do
-          ltpic_object%weight(k_x,k_v) = qi_weight          
+          ltpic_object%weight(k_x,k_v) = hx_parts * hv_parts* qi_weight          
        end do
     end do
 
@@ -325,7 +325,7 @@ contains
              i_max = 1 + int(ceiling( inv_hx_pm*(x-xmin_pm)+cp )) - 1
              do i = i_min, i_max
                 if (periodic) then
-                   i_rho = 1 + mod( i-1 + 2*nc_pm, nc_pm )    ! periodic boundary conditions                
+                   i_rho = 1 + modulo( i-1, nc_pm )    ! periodic boundary conditions                
                 else
                    i_rho = i
                 end if
