@@ -1,5 +1,6 @@
 module Vlasov1d_module
 
+#include "selalib.h"
   use used_precision
   use splinepx_class
   use splinepy_class
