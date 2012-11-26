@@ -130,6 +130,8 @@ if [[ `hostname` == "irma-spare" ]]; then
   export CXXFLAGS='-O3 -xHost -ip'
   export FFLAGS='-O3 -xHost -ip'
   export F90FLAGS='-O3 -xHost -ip'
+  export HDF5_HOME=/opt/local
+  export FFTW_HOME=/opt/local
   mpd &
 fi
 
