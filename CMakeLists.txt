@@ -1,4 +1,13 @@
-cmake_minimum_required(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
+build, options are: Debug Release.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
+options are: Debug Release.")
+ENDIF()
+
 
 PROJECT(SELALIB)
 ENABLE_LANGUAGE(Fortran)
@@ -14,7 +23,11 @@ enable_testing()
 include(Pipol)
 
 EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS --version OUTPUT_VARIABLE source_path)
-string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+IF(CMAKE_Fortran_COMPILER MATCHES "gfortran")
+   string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+ELSE()
+   string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+ENDIF()
 MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
 
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
@@ -26,8 +39,11 @@ else(PIPOL_IMAGE)
   set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 endif(PIPOL_IMAGE)
 
+MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
+
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
+SET(FFTPACK_ENABLED       ON CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)

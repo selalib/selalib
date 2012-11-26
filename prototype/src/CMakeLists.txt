@@ -1,3 +1,11 @@
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
+build, options are: Debug Release.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
+options are: Debug Release.")
+ENDIF()
+
 PROJECT(SLL)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -10,16 +18,9 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # the list of directories in which to search for CMake modules.
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-# make sure that the default is a RELEASE. Here is where we need to set
-# the parameters for the DEBUG or RELEASE versions. For instance, DEBUG should
-# turn on assertions.
-#SET(CMAKE_BUILD_TYPE DEBUG)
-if (NOT CMAKE_BUILD_TYPE)
-  SET (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-ADD_DEFINITIONS(-DDEBUG)
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+   ADD_DEFINITIONS(-DDEBUG)
+ENDIF()
 
 # Define folder to be deleted by make clean
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -38,11 +39,11 @@ ADD_CUSTOM_TARGET( clear
 SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
 INCLUDE(FortranConfig)
+INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 INCLUDE(DoxygenConfig)
-INCLUDE(LapackConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
@@ -149,15 +150,18 @@ ADD_TEST(NAME fft COMMAND test_fft)
 ##########################################################
 
 IF(MPI_MODULE_ENABLED)
+
    ADD_SUBDIRECTORY(collective)
    ADD_SUBDIRECTORY(remap)
 
+ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    SET(PROCS 1)
    ADD_TEST(NAME poisson_periodic_cartesian_par_2d
          COMMAND
 	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
 	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_poisson_2d_per_cart_par
 	 ${MPIEXEC_POSTFLAGS} ${ARGS})
+ ENDIF()
 
    SET(PROCS 16)
    ADD_TEST(NAME poisson_3d_periodic_par
@@ -385,4 +389,9 @@ IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
    ENDIF()
 ENDIF()
 
+MESSAGE(STATUS "##############################################")
+MESSAGE(STATUS "####                                      ####")
+MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}               ####")
+MESSAGE(STATUS "####                                      ####")
+MESSAGE(STATUS "##############################################")
 

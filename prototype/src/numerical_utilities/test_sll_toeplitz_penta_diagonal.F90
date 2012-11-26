@@ -34,7 +34,7 @@ use sll_toep_penta_diagonal
   print*,' '
 
   n_max = 1000
-  nb_test = 100
+  nb_test = 10
 
   do i_test=1,nb_test
   
