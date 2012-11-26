@@ -14,8 +14,8 @@ implicit none
 type(tm_mesh_fields) :: f0, f1
 type(particle) :: p
 
-real(kind=prec) :: time
-integer :: istep, icall, iplot
+sll_real64 :: time, xmin, xmax, ymin, ymax
+integer :: istep, iplot
 integer :: iargc, n, i
 character(len=72) :: argv
 sll_int32 :: error
@@ -23,10 +23,10 @@ sll_int32 :: error
 n = iargc()
 if (n == 0) stop 'Usage: ./bin/test_pic2d fichier-de-donnees.nml'
 do i = 1, n
-   call getarg( i, argv); write(*,'(i2, 1x, a)') i, argv
+   call getarg( i, argv); !write(*,'(i2, 1x, a)') i, argv
 end do
 
-call readin( f0, trim(argv) )
+call readin( trim(argv) )
 
 SLL_ALLOCATE(f0%ex(0:nx-1,0:ny),error)
 SLL_ALLOCATE(f0%ey(0:nx,0:ny-1),error)
@@ -50,19 +50,21 @@ istep = 1
 
 call init( f0 )                 !initialisation des champs et densites
 
+xmin = 0.0; xmax = dimx
+ymin = 0.0; ymax = dimy
+
 do istep = 1, nstep
 
    if ((nomcas == "faisce") .or. istep == 1) then
       call creapa( p, time ) !creation des particules
    endif
    if (istep > 1) then
-      call faraday( f0 ) 	!Calcul de B(n-1/2) --> B(n)			
+      call faraday( f0 )     !Calcul de B(n-1/2) --> B(n)			
    end if
 
    call decalage( f0, f1 )
    call interpol_eb( f1, p )
 
-   write(*,*) p%pos(1,1:2), p%vit(1,1:2)
    call avancee_vitesse( p )
 
    if (jname == 'jcico1') then
@@ -87,18 +89,23 @@ do istep = 1, nstep
    call conditions_limites( f0, time )
 
    time = time + dt
-   print*,'time = ',time, ' nbpart = ', nbpart
+
+   !call plot_particles_center( p )
 
    if ( istep==1 .or. mod(istep,idiag) == 0 .or. istep==nstep ) then
       iplot = iplot + 1
-      if (nomcas=='viry__') call plot_part( p, time, iplot )
+      !call plot_particles_center( p, time)  
+      !call plot_particle_density( p, iplot)  
+      call plot_particles_points3d(p, iplot)
+      call plot_particles_xmdv( p, iplot, xmin, xmax, ymin, ymax)  
+      !if (nomcas=='viry__') call plot_part( p, time, iplot )
      ! call diag_coc( f0, p, time, iplot )
      ! call diag_champ_part( p, time, iplot )
      !call plot_champ( f0, iplot, time )
-      call plot_phases( p, iplot, time )
+     ! call plot_phases( p, iplot, time )
      ! call distribution_v( p, iplot, time )  
      ! call distribution_x( p, iplot, time )
-      if (nomcas == 'plasma') call modeE( f0, iplot, time )
+      !if (nomcas == 'plasma') call modeE( f0, iplot, time )
    endif
 
 end do
