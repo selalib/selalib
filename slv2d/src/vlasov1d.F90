@@ -15,16 +15,16 @@ contains
     ! fait une advection en x sur un pas de temps dt
     !-----------------------------------------------
     type(splinepx),intent(inout) :: this
-    real(wp), dimension(:,:,:,this%jstartv:) :: f
-    integer :: mpierror
-    real(wp), dimension(:,:), intent(out)  :: Jx1
-    real(wp), intent(in) :: dt
+    sll_real64, dimension(:,:,:,this%jstartv:) :: f
+    sll_int32 :: mpierror
+    sll_real64, dimension(:,:), intent(out)  :: Jx1
+    sll_real64, intent(in) :: dt
     ! variables locales
-    real(wp), dimension(1:this%geomx%nx) :: f1dx,flux
-    real(wp), dimension(this%geomx%nx,this%geomx%ny) :: locJx1
-    real(wp) :: depx      ! deplacement par rapport au maillage
-    real(wp) :: vx       ! vitesse du point courant
-    integer :: i, jx, iv, jv, c ! indices de boucle
+    sll_real64, dimension(1:this%geomx%nx) :: f1dx,flux
+    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locJx1
+    sll_real64 :: depx      ! deplacement par rapport au maillage
+    sll_real64 :: vx       ! vitesse du point courant
+    sll_int32 :: i, jx, iv, jv, c ! indices de boucle
 
     ! verifier que la transposition est a jours
     if (this%transpose) stop 'advection_x: on travaille sur f et pas ft'
@@ -60,16 +60,16 @@ contains
     ! fait une advection en y sur un pas de temps dt
     !-----------------------------------------------
     type(splinepy),intent(inout) :: this
-    real(wp), dimension(:,:,:,this%jstartv:) :: f
-    integer :: mpierror
-    real(wp), dimension(:,:), intent(out)  :: Jy1
-    real(wp), intent(in) :: dt
+    sll_real64, dimension(:,:,:,this%jstartv:) :: f
+    sll_int32 :: mpierror
+    sll_real64, dimension(:,:), intent(out)  :: Jy1
+    sll_real64, intent(in) :: dt
     ! variables locales
-    real(wp), dimension(1:this%geomx%ny) :: f1dy,flux
-    real(wp), dimension(this%geomx%nx,this%geomx%ny) :: locJy1
-    real(wp) :: depy      ! deplacement par rapport au maillage
-    real(wp) :: vy       ! vitesse du point courant
-    integer :: i, ix, iv, jv, c ! indices de boucle
+    sll_real64, dimension(1:this%geomx%ny) :: f1dy,flux
+    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locJy1
+    sll_real64 :: depy      ! deplacement par rapport au maillage
+    sll_real64 :: vy       ! vitesse du point courant
+    sll_int32 :: i, ix, iv, jv, c ! indices de boucle
 
     ! verifier que la transposition est a jours
     if (this%transpose) stop 'advection_x: on travaille sur f et pas ft'
