@@ -6,11 +6,7 @@ IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic -qsmp=omp ${CMAKE_Fortran_FLAGS}")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "gfortran")
   set(CMAKE_Fortran_FLAGS "-fopenmp ${CMAKE_Fortran_FLAGS}")
-<<<<<<< HEAD
 ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
-=======
-ELSEIF(Fortran_COMPILER MATCHES "INTEL")
->>>>>>> origin/prototype-devel
   set(CMAKE_Fortran_FLAGS "-openmp ${CMAKE_Fortran_FLAGS}")
 ENDIF()
 
