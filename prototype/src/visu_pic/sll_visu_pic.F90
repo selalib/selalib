@@ -289,6 +289,8 @@ call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x,
 
 end subroutine distribution_xdmf
 
+!>Compute grid field from particles distribution with the CIC scheme (Cloud In
+!Cell)
 subroutine compute_df_cic(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)  
 sll_real64, dimension(:), intent(in) :: xp, yp, wp
 sll_real64, intent(in) :: xmin, xmax, ymin, ymax
