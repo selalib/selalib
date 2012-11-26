@@ -94,3 +94,32 @@ ENDIF(PIPOL_IMAGE)
 set(CPACK_PACKAGE_CONTACT "Pierre Navaro 0368850173")
 
 include(CPack)
+
+FIND_PROGRAM(FORCHECK_EXECUTABLE
+  NAMES forchk
+  PATHS /usr/bin /bin /usr/local/bin /afs/@cell/common/soft/forcheck/14.2.19/bin
+  DOC "Performs a full static analysis of separate program units, groups of program units, or integral Fortran programs."
+)
+
+IF (FORCHECK_EXECUTABLE)
+  SET (FORCHECK_FOUND "YES")
+ENDIF (FORCHECK_EXECUTABLE)
+
+MARK_AS_ADVANCED(
+  FORCHECK_FOUND
+  FORCHECK_EXECUTABLE
+  )
+
+if(FORCHECK_FOUND)
+   get_filename_component(FORCHECK_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PATH)
+   set(FORCHECK_OUTPUT_DIR "${FORCHECK_OUTPUT_DIR}/documentation/")
+   message(STATUS "The documentation is in ${FORCHECK_OUTPUT_DIR}")
+   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in 
+   ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+   add_custom_target(doc ${FORCHECK_EXECUTABLE} 
+   ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY 
+   ${CMAKE_CURRENT_BINARY_DIR} 
+   COMMENT "Generating API documentation with Doxygen" VERBATIM)
+else(FORCHECK_FOUND)
+   MESSAGE(STATUS "FORCHECK NOT FOUND")
+endif(FORCHECK_FOUND)
