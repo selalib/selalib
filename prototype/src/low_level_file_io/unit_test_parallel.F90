@@ -5,8 +5,7 @@ use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
 use sll_xdmf_parallel
-
-#include "sll_remap.h"
+use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -72,8 +71,8 @@ contains
 ! the full array.
  subroutine plot_layout2d()
 
-  sll_int32 , parameter       :: nx = 512
-  sll_int32 , parameter       :: ny = 256
+  sll_int32 , parameter       :: nx = 32
+  sll_int32 , parameter       :: ny = 64
   sll_int32                   :: mx, my    ! Local sizes
   sll_int32                   :: npi, npj
   sll_int32                 :: gi, gj

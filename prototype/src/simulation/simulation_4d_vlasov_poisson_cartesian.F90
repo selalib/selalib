@@ -3,15 +3,14 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_remap.h"
 #include "misc_utils.h"
   use sll_collective
+  use remapper
   use numeric_constants
   use sll_cubic_spline_interpolator_1d
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
-  use sll_electric_field_2d_accumulator
   use sll_simulation_base
   implicit none
 
@@ -57,23 +56,23 @@ module sll_simulation_4d_vlasov_poisson_cartesian
      type(layout_2D), pointer :: rho_seq_x1
      type(layout_2D), pointer :: rho_seq_x2
      type(layout_2D), pointer :: split_rho_layout ! not sequential in any dir.
-     type(remap_plan_2D), pointer :: split_to_seqx1
-     type(remap_plan_2D), pointer :: seqx1_to_seqx2
+     type(remap_plan_2D_real64), pointer :: split_to_seqx1
+     type(remap_plan_2D_real64), pointer :: seqx1_to_seqx2
      ! remaps for the electric field data
 !     type(remap_plan_2D), pointer :: efld_split_to_seqx1
-     type(remap_plan_2D), pointer :: efld_seqx1_to_seqx2
-     type(remap_plan_2D), pointer :: efld_seqx2_to_split
-     type(remap_plan_4D), pointer :: seqx1x2_to_seqx3x4
-     type(remap_plan_4D), pointer :: seqx3x4_to_seqx1x2
+     type(remap_plan_2D_comp64), pointer :: efld_seqx1_to_seqx2
+     type(remap_plan_2D_comp64), pointer :: efld_seqx2_to_split
+     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
+     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
      type(cubic_spline_1d_interpolator) :: interp_x1
      type(cubic_spline_1d_interpolator) :: interp_x2
      type(cubic_spline_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! Field accumulator
-     type(efield_2d_point), dimension(:,:), allocatable :: efield_x1
-     type(efield_2d_point), dimension(:,:), allocatable :: efield_x2
-     type(efield_2d_point), dimension(:,:), allocatable :: efield_split
+     sll_comp64, dimension(:,:), allocatable :: efield_x1
+     sll_comp64, dimension(:,:), allocatable :: efield_x2
+     sll_comp64, dimension(:,:), allocatable :: efield_split
    contains
      procedure, pass(sim) :: run => run_vp4d_cartesian
   end type sll_simulation_4d_vlasov_poisson_cart
@@ -106,6 +105,8 @@ contains
     sll_int32  :: ierr
     sll_int32  :: itime
     sll_int32  :: num_iterations  ! this should go in the simulation type
+    sll_real64 :: ex
+    sll_real64 :: ey
 
     sim%dt = 0.01 ! should be initialized elsewhere
     num_iterations = 20
@@ -308,7 +309,7 @@ contains
     ! Re-arrange rho_split in a way that permits sequential operations in x1, to
     ! feed to the Poisson solver.
     sim%split_to_seqx1 => &
-         NEW_REMAP_PLAN_2D(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
+         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
     
     ! We are in a position now to compute the electric potential.
@@ -341,9 +342,9 @@ contains
     ! note that we are 'recycling' the layouts used for the other arrays because
     ! they represent an identical configuration.
     sim%efld_seqx1_to_seqx2 => &
-         NEW_REMAP_PLAN_2D( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
+         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
     sim%seqx1_to_seqx2 => &
-         NEW_REMAP_PLAN_2D( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
+         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
     call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
     call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
     call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
@@ -357,7 +358,7 @@ contains
     ! But now, to make the electric field data configuration compatible with
     ! the sequential operations in x2x3 we need still another remap operation.
     sim%efld_seqx2_to_split => &
-         NEW_REMAP_PLAN_2D( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
+         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
     call apply_remap_2D( &
          sim%efld_seqx2_to_split, &
          sim%efield_x2, &
@@ -408,10 +409,10 @@ contains
     ! ------------------------------------------------------------------------
 
        sim%seqx3x4_to_seqx1x2 => &
-           NEW_REMAP_PLAN_4D(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
+           NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
 
        sim%seqx1x2_to_seqx3x4 => &
-           NEW_REMAP_PLAN_4D(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
+           NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
 
     do itime=1, num_iterations
@@ -426,7 +427,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do l=1,sim%mesh4d%num_cells4
-                alpha = -sim%efield_split(i,j)%ex*0.5_f64*sim%dt
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      sim%nc_x3, &
@@ -440,7 +442,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do k=1,sim%mesh4d%num_cells3
-                alpha = -sim%efield_split(i,j)%ey*0.5_f64*sim%dt
+                ey    = aimag(sim%efield_split(i,j))
+                alpha = -ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      sim%nc_x4, &
@@ -563,7 +566,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do l=1,sim%mesh4d%num_cells4
-                alpha = -sim%efield_split(i,j)%ex*0.5_f64*sim%dt
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      sim%nc_x3, &
@@ -577,7 +581,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do k=1,sim%mesh4d%num_cells3
-                alpha = -sim%efield_split(i,j)%ey*0.5_f64*sim%dt
+                ey    = real(sim%efield_split(i,j),f64)
+                alpha = -ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      sim%nc_x4, &
@@ -586,15 +591,9 @@ contains
              end do
           end do
        end do
-       
-       ! Diagnostics here... PIERRE!!!
-
        call plot_fields(itime, sim)
 
     end do ! main loop
-
-
-    
   end subroutine run_vp4d_cartesian
 
   subroutine delete_vp4d_par_cart( sim )
@@ -730,15 +729,17 @@ contains
        num_pts_x2, &
        delta_x1, &
        efield_x1 )
-    
+
+    intrinsic                               :: cmplx
     sll_real64, dimension(:,:), intent(in)  :: phi_x1
     sll_int32, intent(in)                   :: num_pts_x1
     sll_int32, intent(in)                   :: num_pts_x2
     sll_real64, intent(in)                  :: delta_x1
-    type(efield_2d_point), dimension(:,:), intent(out) :: efield_x1
+    sll_comp64, dimension(:,:), intent(out) :: efield_x1
     sll_int32                               :: i
     sll_int32                               :: j
     sll_real64                              :: r_delta
+    sll_real64                              :: ex
     ! FIXME: arg checking
     
     r_delta = 1.0_f64/delta_x1
@@ -746,23 +747,32 @@ contains
     ! Compute the electric field values on the left and right edges.
     do j=1,num_pts_x2
        ! left:
-       efield_x1(1,j)%ex = r_delta*( -1.5_f64*phi_x1(1,j) + &
-            2.0_f64*phi_x1(2,j) - &
-            0.5_f64*phi_x1(3,j) )
+       ex = r_delta*(-1.5_f64*phi_x1(1,j) + &
+                      2.0_f64*phi_x1(2,j) - &
+                      0.5_f64*phi_x1(3,j) )
+       efield_x1(1,j) = cmplx(ex,f64)  
        ! right:
-       efield_x1(num_pts_x1,j)%ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
-            2.0_f64*phi_x1(num_pts_x1-1,j)+&
-            1.5_f64*phi_x1(num_pts_x1,j) )
+       ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
+                     2.0_f64*phi_x1(num_pts_x1-1,j)+&
+                     1.5_f64*phi_x1(num_pts_x1,j) )
+       efield_x1(num_pts_x1,j) = cmplx(ex,f64) 
     end do
     
     ! Electric field in interior points
     do j=1,num_pts_x2
        do i=2, num_pts_x1-1
-          efield_x1(i,j)%ex = r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
+          ex = r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
+          efield_x1(i,j) = cmplx(ex,f64)
        end do
     end do
   end subroutine compute_electric_field_x1
   
+  ! This function only sets the Ey component of the electric field. NOTE: This
+  ! and the above function have a terrible flaw: they are not independent. 
+  ! compute_electric_field_x2 assumes that compute_electric_field_x1 has been
+  ! called first, thus the ex values have been computed. 
+  ! compute_electric_field_x1() does not have a similar assumption. It would
+  ! be good to change things in order to get rid of these functions.
   subroutine compute_electric_field_x2( &
        phi_x2, &
        num_pts_x1, &
@@ -770,15 +780,18 @@ contains
        delta_x2, &
        efield_x2 )
     
+    intrinsic                               :: cmplx
     sll_real64, dimension(:,:), intent(in)  :: phi_x2
     sll_int32, intent(in)                   :: num_pts_x1
     sll_int32, intent(in)                   :: num_pts_x2
     sll_real64, intent(in)                  :: delta_x2
-    type(efield_2d_point), dimension(:,:), intent(out) :: efield_x2
+    sll_comp64, dimension(:,:), intent(out) :: efield_x2
     sll_int32                               :: i
     sll_int32                               :: j
     sll_real64                              :: r_delta
-    
+    sll_real64                              :: ex
+    sll_real64                              :: ey
+
     ! FIXME: arg checking
     
     r_delta = 1.0_f64/delta_x2
@@ -786,19 +799,25 @@ contains
     ! Compute the electric field values on the bottom and top edges.
     do i=1,num_pts_x1
        ! bottom:
-       efield_x2(i,1)%ey = r_delta*(-1.5_f64*phi_x2(i,1) + &
-            2.0_f64*phi_x2(i,2) - &
-            0.5_f64*phi_x2(i,3))
+       ! ... there has to be a better way to do this in fortran :-(
+       ex = real(efield_x2(i,1),f64)
+       ey = r_delta*(-1.5_f64*phi_x2(i,1) + 2.0_f64*phi_x2(i,2) - &
+                      0.5_f64*phi_x2(i,3))
+       efield_x2(i,1) = cmplx(ex,ey,f64)
        ! top:
-       efield_x2(i,num_pts_x1)%ey = r_delta*(0.5_f64*phi_x2(i,num_pts_x1-2)-&
-            2.0_f64*phi_x2(i,num_pts_x1-1)+&
-            1.5_f64*phi_x2(i,num_pts_x1))
+       ex = real(efield_x2(i,num_pts_x1),f64)
+       ey = r_delta*(0.5_f64*phi_x2(i,num_pts_x1-2) - &
+                     2.0_f64*phi_x2(i,num_pts_x1-1)+&
+                     1.5_f64*phi_x2(i,num_pts_x1))
+       efield_x2(i,num_pts_x1) = cmplx(ex,ey,f64) 
     end do
     
     ! Electric field in interior points
     do j=2,num_pts_x2-1
        do i=1, num_pts_x1
-          efield_x2(i,j)%ey = r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
+          ex = real(efield_x2(i,j),f64)
+          ey = r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
+          efield_x2(i,j) = cmplx(ex,ey,f64) 
        end do
     end do
   end subroutine compute_electric_field_x2
