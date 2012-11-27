@@ -1,6 +1,6 @@
 module fft_module
   implicit none
-  private
+  public :: initdfft, initcfft, fft, fftinv
   type, public :: fftclass
      real, dimension(:), pointer ::  coefc, work, workc
      double precision, dimension(:), pointer :: coefd, workd, coefcd
@@ -19,7 +19,6 @@ module fft_module
      module procedure doubfftinv,  doubcfftinv
   end interface
 
-  public :: initdfft, initcfft, fft, fftinv
   contains
 
     subroutine initdoubfft(this,l)

@@ -1,4 +1,4 @@
-program unit_test_1d
+program test_bsl_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -70,10 +70,10 @@ program unit_test_1d
      call advection_v(    delta_t)
      call advection_x(0.5*delta_t)
 
-
   end do
 
   ! compute error when Gaussian arrives at center (t=1)
+  error = 0.0
   do j = 1, nc_v+1
      do i = 1, nc_x+1
         x = x_min + (i-1)*(x_max-x_min)/nc_x
@@ -93,7 +93,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do j = 1, nc_v
-        df(:,j) = interp_x%interpolate_array_disp(nc_x,df(:,j),dt*advfield_x)
+        df(:,j) = interp_x%interpolate_array_disp(nc_x+1,df(:,j),dt*advfield_x)
      end do
 
    end subroutine advection_x
@@ -102,7 +102,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do i = 1, nc_x
-        df(i,:) = interp_v%interpolate_array_disp(nc_v,df(i,:),dt*advfield_v)
+        df(i,:) = interp_v%interpolate_array_disp(nc_v+1,df(i,:),dt*advfield_v)
      end do
 
    end subroutine advection_v
@@ -140,4 +140,4 @@ contains
 
    end subroutine plot_df
 
-end program unit_test_1d
+end program test_bsl_1d

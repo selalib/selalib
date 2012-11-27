@@ -33,6 +33,7 @@ program test_sll_odd_degree_spline_interpolator_1d
 
   SLL_ALLOCATE(data(n), ierr)
   SLL_ALLOCATE(out(n), ierr)
+  SLL_ALLOCATE(out_disp(n), ierr)
   SLL_ALLOCATE(interpolation_points(n), ierr)
   SLL_ALLOCATE(coordinates_d(n), ierr)
   SLL_ALLOCATE(coordinates_disp(n), ierr)

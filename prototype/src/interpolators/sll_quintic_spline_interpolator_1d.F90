@@ -242,7 +242,7 @@ contains  ! ****************************************************************
        interpolator%interpolation_points(i) = &
             interpolator%interpolation_points(i-1) + delta
     end do
-    interpolator%spline => new_quintic_splines_uniform(num_points, xmin, xmax)
+    interpolator%spline => new_quintic_spline_uniform(num_points, xmin, xmax)
   end subroutine
 
   function reconstruct_array(this, num_points, data) result(res)
