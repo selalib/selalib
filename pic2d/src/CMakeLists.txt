@@ -1,9 +1,7 @@
 IF(DEFINED CMAKE_BUILD_TYPE)
-   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
-build, options are: Debug Release.")
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build, options are: Debug Release.")
 ELSE()
-   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
-options are: Debug Release.")
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
 PROJECT(PIC2D)
@@ -57,7 +55,6 @@ IF(FFTW_ENABLED AND NOT FFTW_FOUND)
       ADD_DEFINITIONS(-D_FFTW)
       INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
    ENDIF()
-   MESSAGE(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 ENDIF()
 
 IF(NOT MPI_FOUND)
@@ -67,6 +64,7 @@ SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
+MESSAGE(STATUS "HDF5_FOUND:${HDF5_FOUND}")
 IF(NOT HDF5_FOUND)
    INCLUDE(HDF5Config)
    IF(HDF5_ENABLE_PARALLEL) 
