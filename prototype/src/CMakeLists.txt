@@ -159,5 +159,6 @@ MESSAGE(STATUS "##############################################")
 INCLUDE(SequentialTests)
 
 IF(MPI_MODULE_ENABLED)
+   INCLUDE(POEConfig)
    INCLUDE(ParallelTests)
 ENDIF()
