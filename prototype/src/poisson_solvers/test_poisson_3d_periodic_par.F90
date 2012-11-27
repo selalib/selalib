@@ -15,13 +15,11 @@
 !************************************************************************
 
 program test_poisson_3d_periodic_par
-
-#include "sll_remap.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_poisson_solvers.h"
-
+  use remapper
   use numeric_constants
   use sll_poisson_3d_periodic_par
   use sll_collective

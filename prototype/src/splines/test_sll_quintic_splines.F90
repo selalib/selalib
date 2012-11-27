@@ -69,7 +69,7 @@ use arbitrary_degree_splines
      !enddo
      !x2(num_pts) = xmax
 
-     plan1 => new_quintic_splines_uniform(num_pts, xmin, xmax)
+     plan1 => new_quintic_spline_uniform(num_pts, xmin, xmax)
      call compute_quintic_coeffs_uniform(f1, plan1)
 
      !plan2 => new_quintic_splines_non_uni(x2)
@@ -118,7 +118,7 @@ use arbitrary_degree_splines
      SLL_DEALLOCATE_ARRAY(f1, ierr)          
      !SLL_DEALLOCATE_ARRAY(f2, ierr)
      !SLL_DEALLOCATE_ARRAY(x2, ierr)
-     call delete_quintic_splines(plan1)
+     call delete(plan1)
      !call delete_quintic_splines(plan2)
 
   enddo

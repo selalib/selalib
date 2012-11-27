@@ -4,7 +4,7 @@ module cg_csl_uniform_module
 #include "sll_memory.h"
 
   use numeric_constants
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   !use utils
   implicit none
 

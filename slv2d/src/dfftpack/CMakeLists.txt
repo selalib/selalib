@@ -1,9 +1,9 @@
-if(Fortran_COMPILER STREQUAL "GFORTRAN")
+if(CMAKE_Fortran_COMPILER MATCHES "gfortran")
 set(CMAKE_Fortran_FLAGS "-O2 -funroll-loops -fexpensive-optimizations")
-elseif(Fortran_COMPILER STREQUAL "ifort")
-	set(CMAKE_Fortran_FLAGS " ")
-elseif(Fortran_COMPILER STREQUAL "xlf")
-	set(CMAKE_Fortran_FLAGS " ")
+elseif(CMAKE_Fortran_COMPILER MATCHES "ifort")
+	set(CMAKE_Fortran_FLAGS "-O2")
+elseif(CMAKE_Fortran_COMPILER MATCHES "xlf")
+	set(CMAKE_Fortran_FLAGS "-O2")
 endif()
 
 SET(DFFTPACK_SRCS zfftb.f
