@@ -264,7 +264,6 @@ program VP1d_deltaf
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select
  
- 
   !$omp barrier
   !$omp single
   fname = 'dist_func'

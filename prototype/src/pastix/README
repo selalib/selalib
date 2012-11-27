@@ -68,6 +68,7 @@ EXTRALIB   := $(EXTRALIB) -L$(SCOTCH_LIB) -lptscotch -lscotcherrexit
 
 make
 make examples
+make murge
 example/bin/fmurge 1000 3
 sudo make install
 

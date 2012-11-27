@@ -260,5 +260,5 @@ contains
 
   end subroutine test_poisson_3d
 
-end program test_poisson_solvers
 
+end program test_poisson_solvers

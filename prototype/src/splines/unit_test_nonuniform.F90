@@ -18,7 +18,7 @@ program nonuniform_spline_tester
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use numeric_constants
   !use sort_module
   implicit none

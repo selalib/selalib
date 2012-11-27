@@ -1,6 +1,7 @@
 program remap_2d_unit_test
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-#include "sll_remap.h"
+  use remapper
+!#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -10,11 +11,14 @@ program remap_2d_unit_test
   ! distributed among NPi*NPj processors.
   sll_real64, dimension(:,:), allocatable :: local_array1
   sll_real64, dimension(:,:), allocatable :: local_array2
+  sll_comp64, dimension(:,:), allocatable :: local_array1c 
+  sll_comp64, dimension(:,:), allocatable :: local_array2c
   sll_real64, dimension(:,:), allocatable ::  arrays_diff
+  sll_real64, dimension(:,:), allocatable ::  arrays_diffc
   ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
   ! the full array.
   integer , parameter                       :: ni = 512
-  integer , parameter                       :: nj = 128
+  integer , parameter                       :: nj = 512
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init
@@ -28,10 +32,12 @@ program remap_2d_unit_test
   integer                                   :: ierr
   integer                                   :: myrank
   sll_int64                                 :: colsz        ! collective size
+  sll_real64                                :: val
   ! Remap stuff
   type(layout_2D), pointer                  :: layout1
   type(layout_2D), pointer                  :: layout2
-  type(remap_plan_2D), pointer              :: rmp2
+  type(remap_plan_2D_real64), pointer       :: rmp2
+  type(remap_plan_2D_comp64), pointer       :: rmp2c
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -41,7 +47,7 @@ program remap_2d_unit_test
   sll_real32   , dimension(1)               :: prod4test
   logical                                   :: test_passed
   integer                                   :: ok
-
+  sll_int32, dimension(2)                   :: tmp_array
   test_passed = .true.
 
   ! Boot parallel environment
@@ -90,7 +96,8 @@ program remap_2d_unit_test
      ! initialize the local data    
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
-           global_indices =  local_to_global_2D( layout1, (/i, j/) )
+           tmp_array(:) = (/i, j/)
+           global_indices =  local_to_global_2D( layout1, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            local_array1(i,j) = gi + (gj-1)*ni
@@ -118,11 +125,11 @@ program remap_2d_unit_test
           loc_sz_j_final )
 
      SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final), ierr )
-    
-     rmp2 => NEW_REMAP_PLAN_2D( layout1, layout2, local_array1)     
-
+    print *, 'will create new remap plan...'
+     rmp2 => NEW_REMAP_PLAN( layout1, layout2, local_array1)     
+print *, 'created plan, proceeding to apply plan...'
      call apply_remap_2D( rmp2, local_array1, local_array2 ) 
-
+print *, 'applied plan'
      SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final),ierr ) 
 #if 0
      if( myrank .eq. 0 ) then
@@ -135,7 +142,8 @@ program remap_2d_unit_test
      ! compare results with expected data
      do j=1,loc_sz_j_final 
         do i=1,loc_sz_i_final
-           global_indices =  local_to_global_2D( layout2, (/i, j/) )
+           tmp_array(:) = (/i, j/)
+           global_indices =  local_to_global_2D( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
            arrays_diff(i,j) = local_array2(i,j) - (gi + (gj-1)*ni)
@@ -194,12 +202,168 @@ program remap_2d_unit_test
      SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
   enddo
 
+#if 0
   if (myrank==0) then
      if (prod4test(1)==1.) then
         print*, 'PASSED'
      endif
   endif
+#endif
+
+  !**************************************************************************
+  ! Test complex data type case
+  !
+  !**************************************************************************
+
+  if( myrank .eq. 0) then
+     print *, ' '
+     print *, '--------------- REMAP 2D test: complex case ------------------'
+     print *, ' '
+     print *, 'Running a test on ', colsz, 'processes'
+     call flush(6)
+  end if
+
+  do, i_test=1, nbtest
+     call flush(6)
+     if( myrank .eq. 0 ) then
+        print *, 'Iteration ', i_test, ' of ', nbtest
+     end if
+     layout1  => new_layout_2D( sll_world_collective )        
+     call factorize_in_random_2powers_2d(colsz, npi, npj)
+
+     if( myrank .eq. 0 ) then
+        print *, 'source configuration: ', npi, npj
+     end if
+
+     call initialize_layout_with_distributed_2D_array( &
+          ni, &
+          nj, &
+          npi, &
+          npj, &
+          layout1 )
+     
+     call compute_local_sizes_2d( layout1, loc_sz_i_init, loc_sz_j_init)        
+
+     SLL_ALLOCATE(local_array1c(loc_sz_i_init,loc_sz_j_init),ierr)
+ 
+     ! initialize the local data    
+     do j=1,loc_sz_j_init 
+        do i=1,loc_sz_i_init
+           tmp_array(:)   = (/i, j/)
+           global_indices =  local_to_global_2D( layout1, tmp_array )
+           gi = global_indices(1)
+           gj = global_indices(2)
+           val = gi + (gj-1)*ni
+           local_array1c(i,j) = cmplx(val, val, f64)
+        enddo
+     enddo
+     
+     layout2  => new_layout_2D( sll_world_collective )
+     call factorize_in_random_2powers_2d(colsz, npi, npj)
+     if( myrank .eq. 0 ) then
+        print *, 'target configuration: ', npi, npj
+     end if
+
+     call initialize_layout_with_distributed_2D_array( &
+          ni, &
+          nj, &
+          npi, &
+          npj, &
+          layout2 )
+
+     call reorganize_randomly_2d(layout2)
+     
+     call compute_local_sizes_2d( &
+          layout2, &
+          loc_sz_i_final, &
+          loc_sz_j_final )
+
+     SLL_ALLOCATE( local_array2c(loc_sz_i_final, loc_sz_j_final), ierr )
+    
+     rmp2c => NEW_REMAP_PLAN( layout1, layout2, local_array1c)     
+
+     call apply_remap_2D( rmp2c, local_array1c, local_array2c ) 
+
+     SLL_ALLOCATE(arrays_diffc(loc_sz_i_final,loc_sz_j_final),ierr ) 
+#if 0
+     if( myrank .eq. 0 ) then
+        print *, i_test, myrank, 'Printing layout1: '
+        call sll_view_lims_2D( layout1 )
+        print *, i_test, myrank, 'Printing layout2: '
+        call sll_view_lims_2D( layout2 )
+     end if
+#endif
+     ! compare results with expected data
+     do j=1,loc_sz_j_final 
+        do i=1,loc_sz_i_final
+           tmp_array(:)   = (/i, j/)
+           global_indices =  local_to_global_2D( layout2, tmp_array )
+           gi = global_indices(1)
+           gj = global_indices(2)
+           arrays_diffc(i,j) = local_array2c(i,j) - (gi + (gj-1)*ni)
+           if (arrays_diffc(i,j)/=0) then
+              test_passed = .false.
+              print*, i_test, myrank, '"remap" unit test: FAIL'
+              print *, i_test, myrank, 'local indices: ', '(', i, j, ')'
+              print *, 'global indices wrt target layout'
+              print*, myrank, 'in global indices: (',gi,',', gj,')'
+              print*, myrank,'local array1c(',gi,',', gj,')=',local_array1c(i,j)
+              print*, myrank,'local array2c(',gi,',', gj,')=',local_array2c(i,j)
+              g = theoretical_global_2D_indices(int(local_array2c(i,j),i32), ni)
+              print*, 'Theoretical indices: (',g(1), ',', g(2),')'
+              !     if(myrank .eq. 1) then
+              print *, local_array2c(:,:)
+              !    end if
+              print *, i_test, myrank, 'Printing layout1: '
+              call sll_view_lims_2D( layout1 )
+              print *, i_test, myrank, 'Printing layout2: '
+              call sll_view_lims_2D( layout2 )
+              
+              print*, 'program stopped by failure'
+              stop
+           end if
+           call flush(6)
+        end do
+     end do
+     
+     ! As the difference described above is null in each point, the sum of the 
+     ! corresponding absolute values must be null. Each processor compute a 
+     ! local sum and all local sums are finally added and the result is sent to 
+     ! processor 0 which will check if equal 0 to validate the test. (*)
+     ok = 1
+     call sll_collective_reduce_real( &
+          sll_world_collective, &
+          (/ real(ok) /), & 
+          1, &
+          MPI_PROD, &
+          0, &
+          prod4test )
+
+     if( myrank .eq. 0) then
+        print *, ' '
+        print *, '-------------------------------------------'
+        print *, ' '
+        call flush(6)
+     end if
+     call flush(6) 
+       
+     call sll_collective_barrier(sll_world_collective)
   
+     call delete_layout_2D( layout1 )
+     call delete_layout_2D( layout2 )
+
+     SLL_DEALLOCATE_ARRAY(local_array1c, ierr)
+     SLL_DEALLOCATE_ARRAY(local_array2c, ierr)
+     SLL_DEALLOCATE_ARRAY(arrays_diffc, ierr)
+
+  enddo
+
+  if (myrank==0) then
+     if (prod4test(1)==1.) then
+        print*, 'PASSED'
+     endif
+  endif
+
   call sll_halt_collective()
   
 contains
