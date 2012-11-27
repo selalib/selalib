@@ -6,7 +6,7 @@ module sll_test_4d_initializer
   use sll_module_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   use sll_collective
-#include "sll_remap.h"
+  use remapper
   implicit none
 
 

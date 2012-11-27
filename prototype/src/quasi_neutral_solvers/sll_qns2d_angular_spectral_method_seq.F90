@@ -16,13 +16,10 @@
 !***************************************************************************
 
 module sll_qns2d_angular_spect_method_seq
-
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_assert.h"
-#include "sll_remap.h"
-
   use numeric_constants
   use sll_fft
   use sll_tridiagonal

@@ -1,12 +1,12 @@
 program remap_test_6d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-#include "sll_remap.h"
+  use remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
   implicit none
 
-#define RANK_TO_PRINT 8
+#define RANK_TO_PRINT 0
 
   ! Test of the 6D remapper takes a 6D array whose global size is
   ! N1*N2*N3*N4*N5*N6 and is distributed among NPi*NPj*NPk*NPl*NPm*NPn
@@ -18,12 +18,12 @@ program remap_test_6d
   sll_real64, dimension(:,:,:,:,:,:), allocatable :: arrays_diff
 !!$  sll_int32, dimension(:,:,:,:,:,:), allocatable :: arrays_diff
   ! Dimensions of the 6d array (global dimensions)
-  integer, parameter                       :: ni = 16
-  integer, parameter                       :: nj = 16
-  integer, parameter                       :: nk = 16   ! change
-  integer, parameter                       :: nl = 16   ! change
-  integer, parameter                       :: nm = 16   ! change
-  integer, parameter                       :: nn = 16   ! change
+  integer, parameter                       :: ni = 8
+  integer, parameter                       :: nj = 8
+  integer, parameter                       :: nk = 8   ! change
+  integer, parameter                       :: nl = 8   ! change
+  integer, parameter                       :: nm = 8   ! change
+  integer, parameter                       :: nn = 8   ! change
 !!$  integer, parameter                       :: ni = 4
 !!$  integer, parameter                       :: nj = 4
 !!$  integer, parameter                       :: nk = 4   ! change
@@ -58,7 +58,7 @@ program remap_test_6d
   ! Remap stuff
   type(layout_6D), pointer                  :: layout1
   type(layout_6D), pointer                  :: layout2
-  type(remap_plan_6D), pointer              :: rmp6
+  type(remap_plan_6D_real64), pointer       :: rmp6
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -69,6 +69,7 @@ program remap_test_6d
   integer                                   :: ok
   sll_int32                                 :: lin_index
   sll_int32, dimension(6)                   :: theo_index
+  sll_int32, dimension(6)                   :: tmp_array
 
   ! Boot parallel environment
   print *, 'Booting parallel environment...'
@@ -159,8 +160,8 @@ program remap_test_6d
               do k=1,loc_sz_k_init
                  do j=1,loc_sz_j_init 
                     do i=1,loc_sz_i_init
-                       global_indices = &
-                            local_to_global_6D( layout1, (/i, j, k, l, m, n/) )
+                       tmp_array(:) = (/i, j, k, l, m, n/)
+                       global_indices = local_to_global_6D(layout1, tmp_array)
                        gi = global_indices(1)
                        gj = global_indices(2)
                        gk = global_indices(3)
@@ -295,7 +296,7 @@ program remap_test_6d
 
      SLL_ALLOCATE(local_array2(loc_sz_i_final, loc_sz_j_final, loc_sz_k_final, loc_sz_l_final, loc_sz_m_final, loc_sz_n_final), ierr )
     
-     rmp6 => NEW_REMAP_PLAN_6D( layout1, layout2, local_array1)     
+     rmp6 => new_remap_plan( layout1, layout2, local_array1 )     
 
 !!$     if( myrank .eq. RANK_TO_PRINT ) then
 !!$        print *, myrank, 'just before remap, local_array1:'
@@ -329,8 +330,8 @@ program remap_test_6d
               do k=1,loc_sz_k_final
                  do j=1,loc_sz_j_final 
                     do i=1,loc_sz_i_final
-                       global_indices = &
-                            local_to_global_6D( layout2, (/i,j,k,l,m,n/) )
+                       tmp_array(:) = (/i,j,k,l,m,n/)
+                       global_indices = local_to_global_6D( layout2, tmp_array )
                        gi = global_indices(1)
                        gj = global_indices(2)
                        gk = global_indices(3)

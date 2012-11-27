@@ -14,7 +14,8 @@
 
 program remap_test
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-#include "sll_remap.h"
+  use remapper
+!#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -49,7 +50,7 @@ program remap_test
   ! Remap stuff
   type(layout_3D), pointer                  :: layout1
   type(layout_3D), pointer                  :: layout2
-  type(remap_plan_3D), pointer              :: rmp3
+  type(remap_plan_3D_real64), pointer       :: rmp3
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -58,7 +59,7 @@ program remap_test
   sll_int32, dimension(3)                   :: global_indices, g
   sll_real32   , dimension(1)               :: prod4test
   integer                                   :: ok
-
+  sll_int32, dimension(3)                   :: tmpa
 
   ! Boot parallel environment
   call sll_boot_collective()
@@ -115,7 +116,8 @@ program remap_test
      do k=1,loc_sz_k_init
         do j=1,loc_sz_j_init 
            do i=1,loc_sz_i_init
-              global_indices =  local_to_global_3D( layout1, (/i, j, k/) )
+              tmpa(:) = (/i, j, k/)
+              global_indices =  local_to_global_3D( layout1, tmpa )
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
@@ -151,7 +153,7 @@ program remap_test
 
      SLL_ALLOCATE( local_array2(loc_sz_i_final, loc_sz_j_final, loc_sz_k_final), ierr )
     
-     rmp3 => NEW_REMAP_PLAN_3D( layout1, layout2, local_array1)     
+     rmp3 => NEW_REMAP_PLAN( layout1, layout2, local_array1)     
 
      call apply_remap_3D( rmp3, local_array1, local_array2 ) 
 
@@ -168,7 +170,8 @@ program remap_test
      do k=1,loc_sz_k_final
         do j=1,loc_sz_j_final 
            do i=1,loc_sz_i_final
-              global_indices =  local_to_global_3D( layout2, (/i, j, k/) )
+              tmpa(:) = (/i, j, k/)
+              global_indices =  local_to_global_3D( layout2, tmpa )
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
