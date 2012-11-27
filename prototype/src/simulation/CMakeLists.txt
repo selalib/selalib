@@ -154,7 +154,6 @@ target_link_libraries(CG_polar
 	sll_assertion
 	sll_timer
 	sll_utilities
-        ${HDF5_LIBRARIES}
 	)
 	
 

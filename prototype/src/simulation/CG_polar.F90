@@ -718,7 +718,8 @@ contains
 
   use sll_xdmf
   use sll_hdf5_io
-  sll_int32 :: file_id
+  use hdf5
+  integer(hid_t) :: file_id
   sll_int32 :: error
   sll_real64, dimension(:,:), allocatable :: x1
   sll_real64, dimension(:,:), allocatable :: x2
