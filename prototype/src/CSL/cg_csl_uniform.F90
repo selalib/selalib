@@ -5,7 +5,7 @@ program cg_csl_uniform
 !contact: mehrenbe@math.unistra.fr for this  program
 
   use numeric_constants
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use cg_csl_uniform_module
   implicit none
   

@@ -31,15 +31,17 @@ IF(HDF5_PARALLEL_ENABLED)
    TARGET_LINK_LIBRARIES(sll_low_level_file_io_parallel ${HDF5_LIBRARIES} )
  
    IF(NOT STDF95) 
-   ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
-   TARGET_LINK_LIBRARIES(test_io_parallel sll_low_level_file_io_parallel
-                                          sll_remap
-                                          sll_collective
-	                                  sll_utilities
-	                                  sll_constants
-	                                  sll_memory
-	                                  sll_assertion
-	                                  sll_working_precision)
+
+      ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
+
+      TARGET_LINK_LIBRARIES(test_io_parallel sll_low_level_file_io_parallel
+                                             sll_remap
+                                             sll_collective
+	                                     sll_utilities
+	                                     sll_constants
+	                                     sll_memory
+	                                     sll_assertion
+	                                     sll_working_precision)
    ENDIF()
 
 ENDIF()
