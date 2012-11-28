@@ -9,7 +9,6 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
 
 ADD_TEST(NAME constants COMMAND test_constants)
 
-ADD_TEST(NAME utilities COMMAND test_utilities)
 
 ADD_TEST(NAME timer COMMAND test_timer)
 
@@ -45,6 +44,7 @@ ENDIF()
 ADD_TEST(NAME fft COMMAND test_fft)
 
 IF(NOT STDF95)
+   ADD_TEST(NAME utilities COMMAND test_utilities)
    IF(FFTPACK_ENABLED)
       ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
    ENDIF(FFTPACK_ENABLED)
@@ -61,14 +61,24 @@ IF(NOT STDF95)
             COMMAND test_qns2d_angular_spectral_method_seq)
    SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_seq 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
+
+   ADD_TEST(NAME fields COMMAND test_scalar_field)
+   ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
+   ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
+   ADD_TEST(NAME advection_field COMMAND test_advection_field)
+
+   IF(FFTW_FOUND)
+      ADD_TEST(NAME maxwell_2d_pstd 
+            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
+      SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ENDIF()
 
 ENDIF()
 
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
 ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
-ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
-				    test_interpolators_2d)
 
 ADD_TEST(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
 SET_TESTS_PROPERTIES(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -79,15 +89,11 @@ SET_TESTS_PROPERTIES(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESS
 ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 
-ADD_TEST(NAME fields COMMAND test_scalar_field)
 
-ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
 
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
-ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
 
-ADD_TEST(NAME advection_field COMMAND test_advection_field)
 
 
 ADD_TEST(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
@@ -99,12 +105,6 @@ SET_TESTS_PROPERTIES(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSE
 ADD_TEST(NAME maxwell_2d_fdtd 
          COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_fdtd)
 SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-IF(FFTW_FOUND)
-   ADD_TEST(NAME maxwell_2d_pstd 
-            COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_maxwell_2d_pstd)
-   SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF()
 
 IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)

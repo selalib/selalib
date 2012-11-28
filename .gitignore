@@ -6,3 +6,5 @@ unit_test
 *.swp
 *.h5
 *.xmf
+ChangeLog
+.DS_Store

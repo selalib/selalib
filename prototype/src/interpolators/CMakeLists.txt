@@ -79,6 +79,7 @@ add_dependencies( sll_interpolators
 ENDIF()
                 
 
+IF(NOT STDF95)
 add_executable(test_interpolators_1d unit_test_1d.F90
                ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 
@@ -94,6 +95,7 @@ target_link_libraries( test_interpolators_1d
 	               sll_memory
 	               sll_working_precision
                      )
+ENDIF()
 add_executable(test_interpolators_2d unit_test.F90
                ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 

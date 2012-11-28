@@ -109,13 +109,13 @@ namelist/donnees/nstep, dt, imov, amach, nray, r0, delta
 
 sll_int32, parameter :: nsec0 = 6
 sll_int32 :: nstep, imov, idm, nbpart, nray, nsec, nr
-sll_real64, dimension(:), allocatable :: xp
-sll_real64, dimension(:), allocatable :: yp
-sll_real64, dimension(:), allocatable :: op
+sll_real64, dimension(:), pointer :: xp
+sll_real64, dimension(:), pointer :: yp
+sll_real64, dimension(:), pointer :: op
 
-sll_real64, dimension(:), allocatable :: rf
-sll_real64, dimension(:), allocatable :: zf
-sll_real64, dimension(:), allocatable :: gam
+sll_real64, dimension(:), pointer :: rf
+sll_real64, dimension(:), pointer :: zf
+sll_real64, dimension(:), pointer :: gam
 
 sll_real64 :: circ, al, ur, tau, aom, u0, r0
 sll_real64 :: amach, delta, dt
