@@ -87,6 +87,8 @@ target_link_libraries( test_interpolators_1d
 	               sll_fft
                        sll_utilities
 	               sll_splines
+	               cubic_non_uniform_splines
+	               sll_numerical_utilities
 	               sll_constants
 	               sll_assertion
 	               sll_memory
@@ -126,6 +128,10 @@ target_link_libraries( test_odd_degree_interpolators_1d
 	               sll_working_precision
                        ${LAPACK_LIBRARIES}
                      )
+
+
+                     
+                     
 IF(FFTPACK_ENABLED)
 add_executable(test_periodic_interpolators_1d test_periodic_interpolation.F90)
 target_link_libraries( test_periodic_interpolators_1d
