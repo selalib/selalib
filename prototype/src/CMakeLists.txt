@@ -244,8 +244,10 @@ ADD_TEST(NAME fields COMMAND test_scalar_field)
 
 ##########################################################
 
+IF(NOT STDF95)
 ADD_SUBDIRECTORY(time_solvers)
 ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
+ENDIF(NOT STDF95)
 
 ##########################################################
 
@@ -254,17 +256,23 @@ ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
 ##########################################################
 
+IF (NOT STDF95)
 ADD_SUBDIRECTORY(distribution_function)
 ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
+ENDIF (NOT STDF95)
 
 ##########################################################
 
+IF(NOT STDF95)
 ADD_SUBDIRECTORY(advection_field)
 ADD_TEST(NAME advection_field COMMAND test_advection_field)
+ENDIF(NOT STDF95)
 
 ##########################################################
 
+IF(NOT STDF95)
 ADD_SUBDIRECTORY(LinRood)
+ENDIF(NOT STDF95)
 
 ##########################################################
 
@@ -281,12 +289,14 @@ SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ##########################################################
 
+IF(NOT STDF95)
 ADD_SUBDIRECTORY(CSL)
 #ADD_TEST(NAME CSL CSL/test_csl)
 #ADD_TEST(NAME simulation_1d simulation/test_simulation_1d)
 
 #ADD_SUBDIRECTORY(quasi_neutral_solvers) don't compile problem with fftw3_thread! top
 #ADD_TEST(NAME quasi_neutral_solvers quasi_neutral_solvers/test_quasi_neutral_solver)
+ENDIF(NOT STDF95)
 
 ##########################################################
 
@@ -395,3 +405,15 @@ MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}               ####")
 MESSAGE(STATUS "####                                      ####")
 MESSAGE(STATUS "##############################################")
 
+
+IF(STDF95)
+MESSAGE(STATUS " ")
+MESSAGE(STATUS "####################  F95  ###################")
+MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
+MESSAGE(STATUS "## advection_field                          ##")
+MESSAGE(STATUS "## Linrood                                  ##")
+MESSAGE(STATUS "## distribution_function                    ##")
+MESSAGE(STATUS "## time_solvers                             ##")
+MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
+MESSAGE(STATUS "##############################################")
+ENDIF()

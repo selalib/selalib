@@ -118,8 +118,8 @@ target_link_libraries(polar_SL
 	sll_interpolators
 	sll_splines
 	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
+#	sll_distribution_function
+#	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -132,8 +132,8 @@ target_link_libraries(polar_SL
 	sll_interpolators
 	sll_splines
 	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
+#	sll_distribution_function
+#	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -180,6 +180,7 @@ target_link_libraries(Poisson_solver
 ENDIF()
 
 IF(FFTPACK_ENABLED)
+IF(NOT STDF95)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
 	sll_mapped_meshes
@@ -218,7 +219,7 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
-
+ENDIF(NOT STDF95)
 ENDIF()
 
 #End of commands to be put in the class simulation standard

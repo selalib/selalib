@@ -35,11 +35,7 @@ module sll_scalar_field_1d
   use sll_io
   use numeric_constants
   use sll_scalar_field_initializers_base
-#ifdef STDF95
-  use sll_module_mapped_meshes_1d
-#else
   use sll_module_mapped_meshes_1d_base
-#endif
   use sll_misc_utils
   implicit none
   
@@ -48,17 +44,12 @@ module sll_scalar_field_1d
   !integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
   type scalar_field_1d
-#ifdef STDF95
-     type(sll_mapped_mesh_1d_discrete), pointer :: mesh
-#else
      class(sll_mapped_mesh_1d_base), pointer :: mesh
-#endif
      sll_real64, dimension(:), pointer       :: data
      sll_int32                               :: data_position
      character(len=64)                       :: name
   end type scalar_field_1d
 
-#ifndef STDF95
   abstract interface
      function scalar_function_1D( eta1 )
        use sll_working_precision
@@ -66,22 +57,9 @@ module sll_scalar_field_1d
        sll_real64, intent(in)  :: eta1
      end function scalar_function_1D
   end interface
-#endif
 
 contains   ! *i****************************************************************  
   ! this used to be new_scalar_field_1d
-#ifdef STDF95
-  subroutine scalar_field_1d_initialize_scalar_field_1d( &
-    this, &
-    field_name, &
-    mesh, &
-    data_position, &
-    init_function)
-
-    type(scalar_field_1d), intent(inout)               :: this
-    type(sll_mapped_mesh_1d_discrete), pointer             :: mesh
-    sll_real64, optional             :: init_function
-#else
   subroutine initialize_scalar_field_1d( &
     this, &
     field_name, &
@@ -92,7 +70,6 @@ contains   ! *i****************************************************************
     class(scalar_field_1d), intent(inout)               :: this
     class(sll_mapped_mesh_1d_base), pointer             :: mesh
     procedure(scalar_function_1D), optional             :: init_function
-#endif
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
     sll_int32  :: ierr
@@ -112,11 +89,7 @@ contains   ! *i****************************************************************
        SLL_ALLOCATE(this%data(num_pts1), ierr)
        if (present(init_function)) then
           do i1 = 1, num_pts1
-#ifdef STDF95
-             this%data(i1) = init_function( x1_at_node(mesh, i1) )
-#else
              this%data(i1) = init_function( mesh%x1_at_node(i1) )
-#endif
           end do
        else 
           this%data = 0.0_f64 ! initialize to zero
@@ -127,23 +100,14 @@ contains   ! *i****************************************************************
           delta1 = 1.0_f64/real(num_cells1,f64)
           eta1   = 0.5_f64 * delta1
           do i1 = 1, num_cells1
-#ifdef STDF95
-             this%data(i1) = init_function( x1_discrete_1d(mesh, eta1) )
-#else
              this%data(i1) = init_function( mesh%x1(eta1) )
-#endif
              eta1 = eta1 + delta1
           end do
        else 
           this%data = 0.0_f64 ! initialize to zero
        end if
     endif
-#ifdef STDF95
-  end subroutine scalar_field_1d_initialize_scalar_field_1d
-
-#else
   end subroutine initialize_scalar_field_1d
-#endif
 
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
@@ -160,11 +124,7 @@ contains   ! *i****************************************************************
     multiply_by_jacobian, &
     output_file_name, &
     output_format)
-#ifdef STDF95
-    type(scalar_field_1d)                  :: scalar_field
-#else
     class(scalar_field_1d)                  :: scalar_field
-#endif
     sll_real64, dimension(:), pointer      :: x1_array
     logical, optional                       :: multiply_by_jacobian 
     sll_int32, optional                     :: output_format 
