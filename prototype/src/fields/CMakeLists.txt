@@ -4,6 +4,7 @@ ADD_DEPENDENCIES( geometry_functions sll_assertion
 	                             sll_memory
 	                             sll_working_precision)
 
+IF(NOT STDF95)
 add_library(sll_scalar_field_2d STATIC sll_scalar_field_2d.F90 
 		scalar_field_initializer_base.F90
 		landau_2d_initializer.F90
@@ -52,7 +53,6 @@ add_dependencies( sll_scalar_field_4d
 		  sll_working_precision
 )
 
-IF (NOT STDF95)
 add_executable(test_scalar_field unit_test.F90)
 target_link_libraries(test_scalar_field
 	sll_scalar_field_2d

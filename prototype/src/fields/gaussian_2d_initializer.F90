@@ -8,34 +8,20 @@ module sll_gaussian_2d_initializer
   use sll_scalar_field_initializers_base
   implicit none
 
-#ifdef STDF95
-  type :: init_gaussian_2d
-    sll_int32   :: data_position
-    type(sll_mapped_mesh_2d_discrete), pointer :: mesh 
-#else
   type, extends(scalar_field_2d_initializer_base) :: init_gaussian_2d
     class(sll_mapped_mesh_2d_base), pointer :: mesh 
-#endif
     sll_real64 :: xc, yc
     sll_real64 :: sigma_x, sigma_y
-#ifndef STDF95
   contains
     procedure, pass(init_obj) :: initialize => initialize_gaussian_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_gaussian_2d
-#endif
  end type init_gaussian_2d
 
 contains
 
-#ifdef STDF95
-  subroutine init_gaussian_2d_initialize( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
-    type(init_gaussian_2d), intent(inout)  :: init_obj
-    type(sll_mapped_mesh_2d_discrete), intent(in), target :: mesh
-#else
   subroutine initialize_gaussian_2d( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
     class(init_gaussian_2d), intent(inout)  :: init_obj
     class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
-#endif
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: xc, yc, sigma_x, sigma_y 
     init_obj%data_position = data_position
@@ -63,15 +49,9 @@ contains
     end if
   end subroutine 
 
-#ifdef STDF95
-  subroutine init_gaussiand_2d_f_of_x1x2( init_obj, data_out )
-    type(init_gaussian_2d), intent(inout)       :: init_obj
-    type(sll_mapped_mesh_2d_discrete), pointer :: mesh
-#else
   subroutine f_x1x2_gaussian_2d( init_obj, data_out )
     class(init_gaussian_2d), intent(inout)       :: init_obj
     class(sll_mapped_mesh_2d_base), pointer      :: mesh
-#endif
     sll_real64, dimension(:,:), intent(out)    :: data_out
 
     sll_int32  :: i
@@ -98,13 +78,8 @@ contains
     if (init_obj%data_position == NODE_CENTERED_FIELD) then
        do j=1,num_pts2
           do i=1, num_pts1
-#ifdef STDF95
-             y = x2_at_node(mesh, i,j)
-             x = x1_at_node(mesh, i,j)
-#else
              y = mesh%x2_at_node(i,j)
              x = mesh%x1_at_node(i,j)
-#endif
              data_out(i,j) = &
                   1.0_f64/(2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &

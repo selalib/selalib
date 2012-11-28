@@ -12,19 +12,11 @@ program unit_test
  
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
-#ifdef STDF95
-  type(sll_mapped_mesh_2d_analytic), pointer      :: pm2d
-  type(sll_mapped_mesh_1d_analytic), pointer      :: pm1d
-  type(scalar_field_2d_initializer_base), pointer    :: pfinit
-  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr
-  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr
-#else
   class(sll_mapped_mesh_2d_base), pointer      :: pm2d
   class(sll_mapped_mesh_1d_base), pointer      :: pm1d
   class(scalar_field_2d_initializer_base), pointer    :: pfinit
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
-#endif
   type(hamiltonian_advection_field_2d)         :: adv_field
   type(sll_mapped_mesh_1d_analytic), target    :: mesh1d
   type(scalar_field_1d)                        :: phi_self
@@ -44,12 +36,7 @@ program unit_test
 
   print*, 'initialization of mesh'
 
-#ifdef STDF95
-  call initialize_mesh_2d_analytic( &
-       mesh2d, &
-#else
   call mesh2d%initialize( &
-#endif
        "mesh2d",  &
        nc_eta1+1, &
        nc_eta2+1, &
@@ -62,13 +49,8 @@ program unit_test
   pm2d => mesh2d
 
   ! Set up the interpolators for the field
-#ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(interp_eta1, nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call cubic_spline_1d_interpolator_initialize(interp_eta2, nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-#else
   call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
   call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-#endif
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
@@ -87,12 +69,7 @@ program unit_test
        eta2_interpolator=interp_eta2_ptr )
   
   print*, 'define 1d mesh in x for potential'
-#ifdef STDF95
-  call initialize_mesh_1d_analytic( &
-       mesh1d, &
-#else
   call mesh1d%initialize( &
-#endif
        "mesh1d",  &
        nc_eta1+1, &
        linear_map_f,        &
@@ -107,19 +84,11 @@ program unit_test
        NODE_CENTERED_FIELD_COPY)
 
   do ix = 1, nc_eta1
-#ifdef STDF95
-     phi_self%data(ix) = x1_node_analytic_1d(pm1d, ix)**2
-#else
      phi_self%data(ix) = pm1d%x1_at_node(ix)**2
-#endif
   end do
 
   call compute_hamiltonian(adv_field, phi_self)
-#ifdef STDF95
-  call write_scalar_field_2d(adv_field%extend_type) 
-#else
   call write_scalar_field_2d(adv_field) 
-#endif
 
     
   print *, 'Successful, exiting program.'

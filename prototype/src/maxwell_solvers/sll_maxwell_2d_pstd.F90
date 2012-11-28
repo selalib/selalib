@@ -91,7 +91,7 @@ type, public :: maxwell_pstd
    type(C_PTR)                                        :: p_tmp_x, p_tmp_y
 #endif
 #ifdef STDF95
-   complex, dimension(:), pointer              :: tmp_x, tmp_y
+   complex, dimension(:), pointer                     :: tmp_x, tmp_y
    sll_int32                                          :: sz_tmp_x, sz_tmp_y
 #else
    complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: tmp_x, tmp_y

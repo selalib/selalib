@@ -11,7 +11,8 @@ use numeric_constants
   sll_real64, parameter    :: pi = 3.1415926535897932385_8
   sll_real64, parameter    :: twopi = 6.2831853071795864769_8
 
-  integer, parameter    ::  TRIGO = 0, SPLINE = 1, LAGRANGE = 2, LAGRANGE_FFT_SELALIB = 3
+  integer, parameter  ::  TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
+  integer, parameter   :: TRIGO_REAL = 4
 #ifdef STDF95
   complex(8), parameter :: ii =(0.0, 1.0)
 #else
@@ -36,13 +37,7 @@ use numeric_constants
      module procedure delete_periodic_interp_work
   end interface delete
 
-<<<<<<< HEAD
-=======
-  enum, bind(C)
-     enumerator :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3, TRIGO_REAL = 4
-  end enum
 
->>>>>>> origin/prototype-devel
 contains
   subroutine initialize_periodic_interp(this,N,interpolator,order)
     type(periodic_interp_work), pointer :: this 
