@@ -34,33 +34,22 @@ module sll_scalar_field_2d
 #include "sll_assert.h"
   use sll_io
   use numeric_constants
-#ifdef STDF95
-  use sll_cubic_spline_interpolator_1d
-#else
   use sll_module_interpolators_1d_base
-#endif
   use sll_misc_utils
   use sll_scalar_field_initializers_base
 
   implicit none
 
   type scalar_field_2d
-#ifdef STDF95
-     type(sll_mapped_mesh_2d_discrete), pointer  :: mesh
-     type(cubic_spline_1d_interpolator), pointer :: eta1_interpolator
-     type(cubic_spline_1d_interpolator), pointer :: eta2_interpolator
-#else
      class(sll_mapped_mesh_2d_base), pointer  :: mesh
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
-#endif
      sll_real64, dimension(:,:), pointer      :: data
      sll_int32                                :: data_position
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
   end type scalar_field_2d
 
-#ifndef STDF95
   abstract interface
      function scalar_function_2D( eta1, eta2 )
        use sll_working_precision
@@ -69,7 +58,6 @@ module sll_scalar_field_2d
        sll_real64, intent(in)  :: eta2
      end function scalar_function_2D
   end interface
-#endif
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
@@ -83,19 +71,11 @@ contains   ! *****************************************************************
     eta2_interpolator, &
     initializer )
 
-#ifdef STDF95
-    type(scalar_field_2d), intent(inout)               :: this
-    type(sll_mapped_mesh_2d_discrete), pointer             :: mesh
-    type(cubic_spline_1d_interpolator), pointer            :: eta1_interpolator
-    type(cubic_spline_1d_interpolator), pointer            :: eta2_interpolator
-    type(scalar_field_2d_initializer_base), pointer, optional :: initializer
-#else
     class(scalar_field_2d), intent(inout)               :: this
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
-#endif
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
 
@@ -139,31 +119,22 @@ contains   ! *****************************************************************
     this%data_position = data_position
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
-#ifdef STDF95
-          this%data = 0.0_f64
-#else
        if (present(initializer)) then
           call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
-#endif
     else if (data_position == CELL_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(num_cells1,num_cells2), ierr)
        delta1 = 1.0_f64/real(num_cells1,f64)
        delta2 = 1.0_f64/real(num_cells2,f64)
        eta1   = 0.5_f64 * delta1
        eta2   = 0.5_f64 * delta2
-#ifdef STDF95
-          this%data = 0.0_f64
-
-#else
        if (present(initializer)) then
           call initializer%f_of_x1x2(this%data)
        else 
           this%data = 0.0_f64
        end if
-#endif
     endif
     this%plot_counter = 0
   end subroutine initialize_scalar_field_2d
@@ -197,13 +168,8 @@ contains   ! *****************************************************************
     output_file_name, &
     output_format)
 
-#ifdef STDF95
-    type(scalar_field_2d) :: scalar_field
-    type(sll_mapped_mesh_2d_discrete), pointer :: mesh
-#else
     class(scalar_field_2d) :: scalar_field
     class(sll_mapped_mesh_2d_base), pointer :: mesh
-#endif
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
@@ -234,11 +200,7 @@ contains   ! *****************************************************************
 
     SLL_ASSERT(associated(mesh))  
     if (.not. mesh%written) then
-#ifdef STDF95
-       call write_to_file_2d_discrete(mesh, local_format)
-#else
        call mesh%write_to_file(local_format)
-#endif
     end if
 
     num_pts1 = mesh%nc_eta1+1
@@ -258,11 +220,7 @@ contains   ! *****************************************************************
           do i2 = 1, mesh%nc_eta2
              eta1 = 0.5_f64 * mesh%delta_eta1
              do i1 = 1, mesh%nc_eta1
-#ifdef STDF95
-                val(i1,i2) = scalar_field%data(i1,i2) / jacobian_2d_discrete(mesh, eta1, eta2)
-#else
                 val(i1,i2) = scalar_field%data(i1,i2) / mesh%jacobian(eta1, eta2)
-#endif
                 eta1 = eta1 + mesh%delta_eta1
              end do
              eta2 = eta2 + mesh%delta_eta2

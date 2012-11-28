@@ -88,9 +88,6 @@ contains  ! ****************************************************************
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
-!#ifdef STDF95
-!    sll_real64                :: alpha
-!#else
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
