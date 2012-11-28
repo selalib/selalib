@@ -1,4 +1,4 @@
-IF(FFTW_FOUND)
+IF(FFTW_FOUND AND NOT STDF95)
 
    ADD_LIBRARY(sll_maxwell STATIC sll_maxwell.F90
                                   sll_maxwell_2d_fdtd.F90
