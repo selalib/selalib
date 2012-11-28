@@ -112,10 +112,8 @@ subroutine dealloc_poisson2dpp(this)
 subroutine solve_poisson2dpp(this,ex,ey,rho)
    type(poisson2dpp) :: this
    sll_real64, dimension(:,this%jstartx:) :: ex,ey,rho
-   sll_int32, dimension(MPI_STATUS_SIZE) :: status
-   sll_int32 :: tag, mpierror
-   sll_real64,dimension(this%geomx%nx) :: phib
-   sll_int32 :: ik,jk,i,j ! indices de boucle
+   sll_int32 :: mpierror
+   sll_int32 :: ik, jk
    sll_int32 :: istart
    sll_real64 :: kx0,ky0, kx,ky, kx2, k2
    sll_int32 :: my_num, num_threads, comm
