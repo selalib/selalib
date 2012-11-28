@@ -24,12 +24,14 @@ include(Pipol)
 
 EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS --version OUTPUT_VARIABLE source_path)
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+MESSAGE(STATUS "${source_path}")
 if (${CMAKE_Fortran_COMPILER} MATCHES 'ifort')
-string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 else()
-string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 endif()
 MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
+#MESSAGE(SEND_ERROR "VERSION NOT FOUND")
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 if(PIPOL_IMAGE)
   set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${PIPOL_IMAGE_NAME}")
@@ -93,3 +95,44 @@ ENDIF(PIPOL_IMAGE)
 set(CPACK_PACKAGE_CONTACT "Pierre Navaro 0368850173")
 
 include(CPack)
+
+FIND_PROGRAM(FORCHECK_EXECUTABLE
+  NAMES forchk
+  PATHS $ENV{FCKDIR}/bin /usr/bin /bin /usr/local/bin
+  DOC "Performs a full static analysis of Fortran programs."
+)
+
+IF (FORCHECK_EXECUTABLE)
+  SET (FORCHECK_FOUND "YES")
+ENDIF (FORCHECK_EXECUTABLE)
+
+MARK_AS_ADVANCED(
+  FORCHECK_FOUND
+  FORCHECK_EXECUTABLE
+  )
+
+IF(FORCHECK_FOUND)
+
+   FILE(GLOB_RECURSE SRCS_LIST *.F90)
+   FOREACH(F90FILE ${SRCS_LIST}) 
+      IF(DEFINED SRCS)
+         SET(SRCS "${SRCS} ${F90FILE}")
+      ELSE()
+         SET(SRCS "${F90FILE}")
+      ENDIF()
+   ENDFOREACH(F90FILE) 
+
+   GET_PROPERTY(INCS_DIRS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/prototype/src PROPERTY INCLUDE_DIRECTORIES)
+
+   FOREACH(DIR ${INCS_DIRS})
+      IF(DEFINED INCS)
+         SET(INCS "${INCS},${DIR}")
+      ELSE()
+         SET(INCS "${DIR}")
+      ENDIF()
+   ENDFOREACH()
+
+   ADD_CUSTOM_TARGET(forcheck -define DEBUG,GFORTRAN ${FORCHECK_EXECUTABLE} -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb  COMMENT "Forcheck the source code" VERBATIM)
+
+ENDIF(FORCHECK_FOUND)
+
