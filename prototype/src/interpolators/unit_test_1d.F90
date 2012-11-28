@@ -10,7 +10,9 @@ program unit_test
 #endif
   !use WENO_interp
   use sll_cubic_spline_interpolator_1d
-    implicit none
+  use sll_quintic_spline_interpolator_1d
+  use cubic_non_uniform_spline_interpolator_1d
+  implicit none
 
 #ifdef STDF95
   type(cubic_spline_1d_interpolator), pointer  :: interp
@@ -19,6 +21,8 @@ program unit_test
 #endif
 
   type(cubic_spline_1d_interpolator), target  :: spline
+  type(quintic_spline_1d_interpolator), target :: quintic_spline
+  type(cubic_non_uniform_spline_1d_interpolator), target  :: cubic_nonunif_spline
   !type(WENO_interp_1d), pointer               :: weno
 
   sll_real64                            :: error
@@ -57,9 +61,13 @@ program unit_test
   call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
 #else
   call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
+  call quintic_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
+  call cubic_nonunif_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
 #endif
 
   interp =>  spline
+  !interp =>  quintic_spline
+  interp =>  cubic_nonunif_spline
 #ifdef STDF95
   out = cubic_spline_interpolate_array(interp, n, data, interpolation_points)
 #else
