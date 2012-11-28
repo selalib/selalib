@@ -142,7 +142,7 @@ add_executable(CG_polar
 		)
 add_dependencies(CG_polar sll_low_level_file_io)
 
-FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
+#FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(CG_polar
 	sll_splines
 	sll_poisson_2d_polar
