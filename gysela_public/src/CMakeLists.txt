@@ -43,7 +43,7 @@ IF(NOT HDF5_FOUND)
       MESSAGE(STATUS "HDF5 parallel supported")
    ELSE()
       MESSAGE(SEND_ERROR "HDF5 parallel not supported")
-      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpiF90")
    ENDIF()
 ENDIF(NOT HDF5_FOUND)
 
@@ -57,36 +57,41 @@ ELSE()
    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 ENDIF()
 
-SET(GYSELA_SRCS1 prec_const.f90 globals.f90 clock.f90 mem_alloc.f90 
-	          utils.f90 MPIutils.f90 OMPutils.f90 
-	          geometry.f90 gys_alloc.f90 local_spline.f90)
+ADD_DEFINITIONS(-DCTIMER -DUSE_R3_INFO_MPI -DNORMAL)
 
-SET(GYSELA_SRCS2 HDF5_io.f90 resu3D_saving.f90 f5D_saving.f90)
 
-SET(GYSELA_SRCS3 bessel.f90 LUsolving.f90 read_data.f90 spline1d.f90 
-	          interpolation.f90 coord_system.f90 integration.f90
-	          read_profile.f90 init_profile.f90 init_current.f90 
-	          init_magnetic.f90 
-	          fft_NRF90.f90 fft.f90 gyroaverage.f90 
-	          fequil4d.f90 fdistribu5d.f90 
-	          poisson.f90 efield.f90 
-	          filter.f90 advec1D_BSL.f90 
-	          advec2D_BSL.f90 
-	          diag3D.f90 Pcross_section.f90 physics.f90)
+SET(GYSELA_SRCS1 prec_const.F90 globals.F90 clock.F90 mem_alloc.F90 
+	          utils.F90 MPIutils.F90 OMPutils.F90 
+	          geometry.F90 gys_alloc.F90 local_spline.F90)
 
-SET(GYSELA_SRCS4 read_write.f90 output_saving.f90)
+SET(GYSELA_SRCS2 HDF5_io.F90 resu3D_saving.F90 f5D_saving.F90)
+
+SET(GYSELA_SRCS3 bessel.F90 LUsolving.F90 read_data.F90 spline1d.F90 
+	          interpolation.F90 coord_system.F90 integration.F90
+	          read_profile.F90 init_profile.F90 init_current.F90 
+	          init_magnetic.F90 
+	          fft_NRF90.F90 fft.F90 gyroaverage.F90 
+	          fequil4d.F90 fdistribu5d.F90 
+	          poisson.F90 efield.F90 
+	          filter.F90 advec1D_BSL.F90 
+	          advec2D_BSL.F90 
+	          diag3D.F90 Pcross_section.F90 physics.F90)
+
+SET(GYSELA_SRCS4 read_write.F90 output_saving.F90)
+
+SET(GYSELA_SRCSC ctime.c)
 
 IF (NOT HDF5_FOUND)
-   SET(GYSELA_SRCS ${GYSELA_SRCS1} ${GYSELA_SRCS3} ${GYSELA_SRCS4})
+   SET(GYSELA_SRCS ${GYSELA_SRCS1} ${GYSELA_SRCS3} ${GYSELA_SRCS4} ${GYSELA_SRCSC})
    ADD_DEFINITIONS(-DNOHDF5)
 ELSE()
-   SET(GYSELA_SRCS ${GYSELA_SRCS1} ${GYSELA_SRCS2} ${GYSELA_SRCS3} ${GYSELA_SRCS4})
+   SET(GYSELA_SRCS ${GYSELA_SRCS1} ${GYSELA_SRCS2} ${GYSELA_SRCS3} ${GYSELA_SRCS4} ${GYSELA_SRCSC})
 ENDIF() 
 ADD_LIBRARY(gysela_public STATIC ${GYSELA_SRCS})
 
 ADD_DEPENDENCIES(gysela_public selalib)
 
-ADD_EXECUTABLE(gysela diagnostics.f90 vlasov_solving.f90 gysela.f90)
+ADD_EXECUTABLE(gysela diagnostics.F90 vlasov_solving.F90 gysela.F90)
 TARGET_LINK_LIBRARIES(gysela gysela_public selalib ${HDF5_LIBRARIES})
 
 ENABLE_TESTING()
