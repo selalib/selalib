@@ -6,6 +6,10 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
+IF(SLL_CONFIGURE_OPTIONS_FILE)
+INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
+ENDIF()
+
 PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
