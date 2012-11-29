@@ -102,7 +102,9 @@ IF(NOT STDF95)
 ENDIF(NOT STDF95)
  ADD_SUBDIRECTORY(selalib_level EXCLUDE_FROM_ALL)
  ADD_SUBDIRECTORY(simulation)
+IF(NOT STDF95)
  ADD_SUBDIRECTORY(visu_pic)
+ENDIF(NOT STDF95)
 
 SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 
@@ -171,6 +173,7 @@ MESSAGE(STATUS "## Linrood                                  ##")
 MESSAGE(STATUS "## distribution_function                    ##")
 MESSAGE(STATUS "## time_solvers                             ##")
 MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
+MESSAGE(STATUS "## visu_pic                                 ##")
 MESSAGE(STATUS "##############################################")
 ENDIF(STDF95)
 
