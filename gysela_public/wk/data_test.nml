@@ -1,7 +1,7 @@
 &PARALLEL
   Nbproc_r     = 2
   Nbproc_theta = 1
-  Nbproc_mu    = 8
+  Nbproc_mu    = 2
   bloc_phi     = 2
   Nbthread     = 2
   transpose4D  = .false.,
