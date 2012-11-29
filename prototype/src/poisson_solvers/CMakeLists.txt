@@ -64,7 +64,7 @@ IF(FFTPACK_ENABLED)
 #  )
 ENDIF()
 
-IF(FFTW_FOUND AND FFTW_ENABLED)
+IF(FFTW_FOUND AND FFTW_ENABLED AND NOT STDF95)
      ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90)
      ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
      TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
