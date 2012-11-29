@@ -47,6 +47,7 @@ SET(FFTPACK_ENABLED       ON CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)
+add_subdirectory (gysela_public/src)
 
 # Pipol rc and nightly files are installed under share/pipol
 file(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
