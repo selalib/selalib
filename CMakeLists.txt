@@ -131,7 +131,7 @@ IF(FORCHECK_FOUND)
       ENDIF()
    ENDFOREACH()
 
-   ADD_CUSTOM_TARGET(forcheck -define DEBUG,GFORTRAN ${FORCHECK_EXECUTABLE} -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb  COMMENT "Forcheck the source code" VERBATIM)
+   ADD_CUSTOM_TARGET(forcheck "${FORCHECK_EXECUTABLE} -define DEBUG,GFORTRAN -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb"  COMMENT "Forcheck the source code" VERBATIM)
 
 ENDIF(FORCHECK_FOUND)
 
