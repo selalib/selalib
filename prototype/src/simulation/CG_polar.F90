@@ -26,7 +26,14 @@ program cg_polar
   character (len=16) :: f_file,bctop,bcbot
   !used for testing poisson with fcase=2
   sll_real64 :: c1,c2,c3,k1,k2,k3,x,y,c1_mode,c2_mode,c3_mode,k1_mode,k2_mode,k3_mode
-
+  LOGICAL :: file_exists
+  INQUIRE(FILE="CG_data.txt", EXIST=file_exists) 
+  
+  if(file_exists .eqv. .false.)then
+    print *,'file CG_data.txt does not exist; please copy from ../src/simulation/CG_data.txt'
+    stop
+  endif
+  
   !python script for fcase=3
   !modes is used to test the fft with f(r)*cos(mode*theta)
   !namelist /nnr/ obs_mod
@@ -44,7 +51,7 @@ program cg_polar
   t2 => new_time_mark()
   t3 => new_time_mark()
 
-  !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
+  !>file 'CG_data.txt'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
   open(27,file='CG_data.txt',action="read")
   read(27,*)rmin
@@ -718,7 +725,8 @@ contains
 
   use sll_xdmf
   use sll_hdf5_io
-  sll_int32 :: file_id
+  use hdf5
+  integer(hid_t) :: file_id
   sll_int32 :: error
   sll_real64, dimension(:,:), allocatable :: x1
   sll_real64, dimension(:,:), allocatable :: x2
