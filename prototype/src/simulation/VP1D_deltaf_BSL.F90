@@ -20,6 +20,7 @@ program VP1d_deltaf
   use sll_tsi_2d_initializer
   use distribution_function
   use sll_poisson_1d_periodic
+  use sll_timer
   use omp_lib
   implicit none
 
@@ -71,6 +72,9 @@ program VP1d_deltaf
   sll_int32  :: istartx, iendx, jstartv, jendv
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
+  type(time_mark), pointer :: time0 => NULL()
+ ! type(time_mark), pointer :: t1 => NULL()
+  sll_real64 :: time1
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
@@ -79,7 +83,6 @@ program VP1d_deltaf
   namelist / landau / kmode, eps, is_delta_f, driven 
   namelist / tsi / kmode, eps, v0, is_delta_f
   namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
-
 
   ! determine what case is being run
   call GET_COMMAND_ARGUMENT(1,case)
@@ -214,7 +217,7 @@ program VP1d_deltaf
   !$omp parallel default(shared) &
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
-  !$omp& interp_per_x, interp_per_v)
+  !$omp& interp_per_x, interp_per_v, time1, time0)
   my_num = omp_get_thread_num()
   num_threads =  omp_get_num_threads()
   print*, 'running with openmp using ', num_threads, ' threads'
@@ -306,7 +309,9 @@ program VP1d_deltaf
   write(adr_diag,*) istep*dt, adr
   !$omp end single
 
-
+  ! initialize timer
+  time0 => new_time_mark()
+  time0 => start_time_mark(time0)
   ! time loop
   !----------
   ! half time step advection in v
@@ -325,13 +330,18 @@ program VP1d_deltaf
         endif
      end do
      !$omp barrier
-
+     time1 = time_elapsed_since(time0)
+     print*, 'time adv_v1 ', time1 
+     time0 => reset_time_mark(time0)
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
      !$omp barrier
+     time1 = time_elapsed_since(time0)
+     print*, 'time adv_x ', time1 
+     time0 => reset_time_mark(time0)
 
      !$omp single
      ! compute rho and electric field
