@@ -205,6 +205,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
+	sll_timer
 	sll_memory
 	sll_assertion 	
 	sll_poisson_1d_periodic
