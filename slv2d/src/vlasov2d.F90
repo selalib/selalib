@@ -366,7 +366,7 @@ subroutine thdiag(this,f,nrj,t,jstartv)
 !                   comm, error)
 !   call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
 !                   comm, error)
-!
+
 if (my_num==MPI_MASTER) then
    aux(13)=t
    aux(12)=nrj
