@@ -316,6 +316,7 @@ program VP1d_deltaf
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
+     time0 => reset_time_mark(time0)
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
