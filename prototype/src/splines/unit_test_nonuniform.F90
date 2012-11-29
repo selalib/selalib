@@ -25,9 +25,7 @@ program nonuniform_spline_tester
   
   
   
-  
-
-
+  logical                                :: test_passed
   sll_int32 :: err
   sll_int32 :: N,i,N_new,j1,j
   sll_real64,dimension(:), pointer :: node_positions,f_per,f_hrmt,f
@@ -41,6 +39,13 @@ program nonuniform_spline_tester
   sll_real64 :: node_uniformity_min,node_uniformity_max,unif_val_min,unif_val_max
   sll_int32 :: test,nb_test,ival,N_test1,N_test2,index_max_err(6),unif_case,bdr_case
   sll_real64 :: max_err(6)
+
+
+  test_passed = .true.
+  
+
+
+
   
   xmin_val = -10._f64
   xmax_val = 10._f64
@@ -50,6 +55,10 @@ program nonuniform_spline_tester
   
   unif_val_max = 2._f64
   unif_val_min= 1._f64/unif_val_max !has to be always the case
+  
+  ! results heavily depend on the value unif_val_max
+  ! if unif_val_max=1, we return to the uniform case
+  ! 
   
     
   unif_case = 1 ! only this case for the moment
@@ -80,6 +89,9 @@ program nonuniform_spline_tester
   spl_per =>  new_cubic_nonunif_spline_1D( N, PERIODIC_SPLINE)
 
   spl_hrmt =>  new_cubic_nonunif_spline_1D( N, HERMITE_SPLINE)
+  
+  
+  do bdr_case=1,2
   
   if(bdr_case==1)then 
     spl => spl_per
@@ -451,10 +463,60 @@ program nonuniform_spline_tester
     
   enddo
   
-  print *,'#', max_err(1),max_err(2),max_err(3),max_err(4),max_err(5),max_err(6)
-  print *,'#',index_max_err(1),index_max_err(2),index_max_err(3),index_max_err(4),index_max_err(5),index_max_err(6)
+  print *,'#boundary_case',bdr_case
+  print *,'#error: node,C0,C1,C2', max_err(1),max_err(2),max_err(3),max_err(4)
+  print *,'#non uniformity',max_err(5),max_err(6)
+  print *,'#index',index_max_err(1),index_max_err(2),index_max_err(3),index_max_err(4),index_max_err(5),index_max_err(6)
+  
+  if(max_err(1)>1.e-13)then
+    print *,'#problem with node interpolation', max_err(1)
+    print *,'#bdr_case=',bdr_case
+    test_passed = .false.
+  endif
+
+  if(max_err(2)>1.e-12)then
+    print *,'#problem with continuity', max_err(2)  
+    print *,'#bdr_case=',bdr_case
+    test_passed = .false.
+  endif
+
+  if(max_err(3)>1.e-10)then
+    print *,'#problem with continuity of derivative', max_err(3)  
+    print *,'#bdr_case=',bdr_case
+    test_passed = .false.
+  endif
+
+  if(max_err(4)>1.e-10)then
+    print *,'#problem with continuity of second derivative', max_err(4)  
+    print *,'#bdr_case=',bdr_case
+    test_passed = .false.
+  endif
+  
+  if(abs(max_err(5)/unif_val_max-1._f64)>1.e-2)then
+    print *,'#problem with random non uniformity',unif_val_max,max_err(5)
+    print *,'#bdr_case=',bdr_case
+    test_passed = .false.
+  endif
+
+  if(abs(max_err(6)/unif_val_max-1._f64)>1.e-2)then
+    print *,'#problem with random non uniformity',unif_val_max,max_err(6)
+    print *,'#bdr_case=',bdr_case
+    test_passed = .false.
+  endif
   
   
+enddo  
+  
+   if (test_passed .eqv. .true.) then
+     print *, '#'
+     print *, '# cubic_non_uniform_splines unit test: PASSED'
+     print *, '# '
+  else
+     print *, ' '
+     print *, 'cubic_non_uniform_splines unit test: FAILED'
+     print *, ' '
+  endif
+ 
   
   
 end program nonuniform_spline_tester
