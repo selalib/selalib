@@ -142,7 +142,7 @@ add_executable(CG_polar
 		)
 add_dependencies(CG_polar sll_low_level_file_io)
 
-FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
+#FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(CG_polar
 	sll_splines
 	sll_poisson_2d_polar
@@ -224,7 +224,7 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 #Here is defined the library containing the parallel simulations. 
 #Please add your new simulation_MYMETHOD.F90 
