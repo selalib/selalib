@@ -17,7 +17,7 @@ ELSE()
 
    ADD_LIBRARY(sll_maxwell STATIC sll_maxwell.F90 sll_maxwell_2d_fdtd.F90)
 
-ENDIF(FFTW_FOUND)
+ENDIF(FFTW_FOUND AND NOT STDF95)
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 
