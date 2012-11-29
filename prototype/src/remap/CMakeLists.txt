@@ -20,16 +20,6 @@ target_link_libraries(test_remap_2d
 	sll_working_precision
 )
 
-SET(PROCS 8)
-SET(ARGS "")
-ADD_TEST(NAME remap_2d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_2d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-SET_TESTS_PROPERTIES(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-# test remap 3d
 add_executable(test_remap_3d unit_test_3d.F90)
 target_link_libraries(test_remap_3d
 	sll_remap
@@ -40,17 +30,6 @@ target_link_libraries(test_remap_3d
 	sll_working_precision
 )
 
-SET(PROCS 8)
-SET(ARGS "")
-ADD_TEST(NAME remap_3d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_3d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-SET_TESTS_PROPERTIES(remap_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
-#test remap 4d
 add_executable(test_remap_4d unit_test_4d.F90)
 target_link_libraries(test_remap_4d
 	sll_remap
@@ -61,15 +40,6 @@ target_link_libraries(test_remap_4d
 	sll_working_precision
 )
 
-SET(PROCS 16)
-ADD_TEST(NAME remap_4d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_4d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-SET_TESTS_PROPERTIES(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-#test remap 6d
 add_executable(test_remap_6d unit_test_6d.F90)
 target_link_libraries(test_remap_6d
 	sll_remap
@@ -79,15 +49,6 @@ target_link_libraries(test_remap_6d
 	sll_assertion
 	sll_working_precision
 )
-
-SET(PROCS 8)
-ADD_TEST(NAME remap_6d
-	COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_remap_6d
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
 
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
