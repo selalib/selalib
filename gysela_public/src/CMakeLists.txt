@@ -97,7 +97,7 @@ TARGET_LINK_LIBRARIES(gysela gysela_public selalib ${HDF5_LIBRARIES})
 ENABLE_TESTING()
 
 INCLUDE(POEConfig)
-SET(PROCS 16)
+SET(PROCS 4)
 SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../wk/data_test.nml)
 
 ADD_MPI_TEST(test_gysela gysela ${PROCS} ${ARGS})
