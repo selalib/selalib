@@ -9,7 +9,7 @@
 
 &MESH
   Nr             = 63
-  Ntheta         = 128
+  Ntheta         = 64
   Nphi           = 32
   Nvpar          = 15
   Nmu            = 1
