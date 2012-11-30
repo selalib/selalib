@@ -76,9 +76,9 @@ module advec2D_BSL_module
   !******************************
   contains
   !******************************
-#include "remap_inline.f90"
-#include "Bstar_inline.f90"
-#include "velocities_inline.f90"
+#include "remap_inline.F90"
+#include "Bstar_inline.F90"
+#include "velocities_inline.F90"
       
   !------------------------------------------------------------
   !   computation of the derivates of u

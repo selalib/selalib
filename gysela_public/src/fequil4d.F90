@@ -51,8 +51,8 @@ module fequil4d_module
   !******************************
   contains
   !******************************
-#include "Bstar_inline.f90"
-#include "velocities_inline.f90"
+#include "Bstar_inline.F90"
+#include "velocities_inline.F90"
       
   !*********************************************************
   ! EQUILIBRIUM PART OF THE DISTRIBUTION FUNCTION
