@@ -79,7 +79,7 @@ module poisson_class
   !******************************
   contains
   !******************************
-#include "Bstar_inline.f90"
+#include "Bstar_inline.F90"
       
   !----------------------------------------------------- 
   ! constructor for the poisson type

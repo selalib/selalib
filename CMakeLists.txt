@@ -16,6 +16,7 @@ ENABLE_LANGUAGE(Fortran)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
                       ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
+include(F90FLAGS)
 include(CTest)
 set(CTEST_DROP_SITE_CDASH TRUE)
 # Tests+Dashboard configuration
@@ -43,10 +44,11 @@ MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
-SET(FFTPACK_ENABLED       ON CACHE BOOL "Use fftpack library " FORCE)
+SET(FFTPACK_ENABLED       OFF CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)
+add_subdirectory (gysela_public/src)
 
 # Pipol rc and nightly files are installed under share/pipol
 file(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
