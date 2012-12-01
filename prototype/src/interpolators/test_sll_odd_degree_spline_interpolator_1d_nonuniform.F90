@@ -1,4 +1,4 @@
-program test_sll_odd_degree_spline_interpolator_1d
+program test_sll_odd_degree_spline_interpolator_1d_nonuniform
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -8,16 +8,16 @@ program test_sll_odd_degree_spline_interpolator_1d
 #ifndef STDF95
   use sll_module_interpolators_1d_base
 #endif
-  use sll_odd_degree_spline_interpolator_1d
+  use sll_odd_degree_spline_interpolator_1d_nonuniform
     implicit none
 
 #ifdef STDF95
-  type(odd_degree_spline_1d_interpolator), pointer  :: interp
+  type(odd_degree_spline_1d_interpolator_nonuniform), pointer  :: interp
 #else
   class(sll_interpolator_1d_base), pointer     :: interp
 #endif
 
-  type(odd_degree_spline_1d_interpolator), target :: spline
+  type(odd_degree_spline_1d_interpolator_nonuniform), target :: spline
 
   sll_real64                            :: error, error_disp
   sll_real64                            :: phase
@@ -27,8 +27,8 @@ program test_sll_odd_degree_spline_interpolator_1d
   sll_real64, allocatable, dimension(:) :: coordinates_d, coordinates_disp
   sll_real64, allocatable, dimension(:) :: data_interp, data_interp_disp
   sll_int32                             :: ierr, i, degree, degree_max
-  sll_int32, parameter                  :: n = 512
-  sll_real64                            :: x_min, x_max, delta
+  sll_int32, parameter                  :: n = 512 ! num_pts
+  sll_real64                            :: x_min, x_max, delta, x
   sll_real64                            :: mu, alpha
 
   SLL_ALLOCATE(data(n), ierr)
@@ -46,16 +46,37 @@ program test_sll_odd_degree_spline_interpolator_1d
   x_min = -10.0_f64
   x_max = 10.0_f64
   mu = (x_min+x_max)/2
-  delta = (x_max - x_min ) / real(n-1,f64) 
+
+  delta = (x_max - x_min ) 
   phase = 0.0_f64
 
   do degree=1,degree_max,2
+  coordinates_d(1) = x_min
+  do i=2,n-1
+
+     call random_number(x)
+     ! To avoid duplicated points
+     if (n < degree) then
+        x = x/n
+     else
+        x = degree*x/n
+     endif 
+     coordinates_d(i) = coordinates_d(i-1) + x*( xmax - coordinates_d(i-1))
+
+     if ( coordinates_d(i)-coordinates_d(i-1) < delta ) then
+        delta = coordinates_d(i) - coordinates_d(i-1)
+     endif
+     
+  enddo
+  coordinates_d(n) = x_max
+  if ( coordinates_d(n)-coordinates_d(n-1) < delta ) then
+     delta = coordinates_d(n) - coordinates_d(n-1)
+  endif
 
   call random_number(alpha)
   alpha = alpha * delta
 
-  do i=1,n
-     coordinates_d(i) = x_min + (i-1)*delta 
+  do i=1,n 
      interpolation_points(i) = coordinates_d(i) 
      data(i)        = exp( - ( coordinates_d(i) - mu )**2  )
      data_interp(i) = exp( - ( interpolation_points(i) - mu )**2  )
@@ -63,17 +84,15 @@ program test_sll_odd_degree_spline_interpolator_1d
 
   print*, 'odd_degree spline interpolation'
 #ifdef STDF95
-!  call odd_degree_spline_initialize(spline, n, x_min, x_max, 2, degree )
-  call odd_degree_spline_initialize(spline, n, x_min, x_max, degree )
+  call odd_degree_spline_initialize_nonuniform(degree, coordinates_d, spline, n, x_min, x_max, 2 )
 #else
-!  call spline%initialize(n, x_min, x_max, 2, degree )
-  call spline%initialize(n, x_min, x_max, degree )
+  call spline%initialize(degree, coordinates_d, n, x_min, x_max, 2 )
 #endif
 
   interp =>  spline
 #ifdef STDF95
-  out = odd_degree_spline_interpolate_array(interp, n, data, interpolation_points)
-  out_disp = odd_degree_spline_interpolate_array_at_displacement(interp, n, &
+  out = odd_degree_spline_interpolate_array_nonuniform(interp, n, data, interpolation_points)
+  out_disp = odd_degree_spline_interpolate_array_at_displacement_nonuniform(interp, n, &
                                                    data, coordinates_disp)
 #else
   out = interp%interpolate_array(n, data, interpolation_points)
@@ -126,4 +145,4 @@ program test_sll_odd_degree_spline_interpolator_1d
 
   print *, 'PASSED'
 
-end program test_sll_odd_degree_spline_interpolator_1d
+end program test_sll_odd_degree_spline_interpolator_1d_nonuniform

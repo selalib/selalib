@@ -67,7 +67,8 @@ use sll_toep_penta_diagonal
       enddo
 
       plan => new_toep_penta_diagonal(n)
-      x = solve_toep_penta_diagonal(a, b, c, f, plan)
+      call  solve_toep_penta_diagonal(a, b, c, f, plan)
+      x = plan%solution
 
       error = 0.d0
       norm = 0.d0
