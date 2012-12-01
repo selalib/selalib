@@ -75,3 +75,4 @@ IF (LAPACK_LIBRARIES)
 ELSE()
    TARGET_LINK_LIBRARIES(test_odd_degree_splines ${SPL_LIBS})
 ENDIF()
+
