@@ -1,3 +1,4 @@
+MESSAGE(STATUS "DFFTPACK:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 if(CMAKE_Fortran_COMPILER MATCHES "gfortran")
    set(CMAKE_Fortran_FLAGS "-O2 -funroll-loops -fexpensive-optimizations")
 elseif(CMAKE_Fortran_COMPILER MATCHES "ifort")
@@ -5,6 +6,7 @@ elseif(CMAKE_Fortran_COMPILER MATCHES "ifort")
 elseif(CMAKE_Fortran_COMPILER MATCHES "xlf")
    set(CMAKE_Fortran_FLAGS "-O2")
 endif()
+MESSAGE(STATUS "DFFTPACK:CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
 
 SET(DFFTPACK_SRCS zfftb.f
 cfftb1.f
