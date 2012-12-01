@@ -48,7 +48,7 @@ To build the library, she reads the CMakeQuickstart.txt in this directory...
 
 * She has conflict, no problem just do :
  git mergetool
-It will open a nice editor and help her to choose which his the right version. Close the editor and commit.
+It will open a nice editor and help her to choose the right version. Close the editor and commit.
  git commit -m 'Merge with prototype-devel and fixed conflicts'
 
 *She implemented a new algorithm. To save it :
