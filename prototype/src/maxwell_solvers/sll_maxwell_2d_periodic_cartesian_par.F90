@@ -169,33 +169,38 @@ contains
      new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
     plan%rmp_yx => &
      new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
+
   end function new_maxwell_2d_periodic_plan_cartesian_par
 
+!********************************************************************************
+
   subroutine solve_maxwell_2d_periodic_cartesian_par(plan, fx, fy, fz, equation)
+
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan
-    sll_real64, dimension(:,:), pointer            :: fx
-    sll_real64, dimension(:,:), pointer            :: fy
-    sll_real64, dimension(:,:), pointer            :: fz
-    sll_real64, dimension(:,:), target             :: ex
-    sll_real64, dimension(:,:), target             :: ey
-    sll_real64, dimension(:,:), target             :: bz
-    sll_int32, intent(in)                          :: equation
+
+    sll_real64, dimension(:,:), target            :: fx
+    sll_real64, dimension(:,:), target            :: fy
+    sll_real64, dimension(:,:), target            :: fz
+    sll_real64, dimension(:,:), pointer           :: ex
+    sll_real64, dimension(:,:), pointer           :: ey
+    sll_real64, dimension(:,:), pointer           :: bz
+    sll_int32, intent(in)                         :: equation
     ! global sizes
-    sll_int32                                      :: ncx, ncy
-    sll_int32                                      :: npx_loc, npy_loc
-    sll_int32                                      :: i, j
-    sll_int32                                      :: ierr
+    sll_int32                                     :: ncx, ncy
+    sll_int32                                     :: npx_loc, npy_loc
+    sll_int32                                     :: i, j
+    sll_int32                                     :: ierr
     ! Reciprocals of domain lengths.
-    sll_real64                                     :: r_Lx, r_Ly
-    sll_real64                                     :: kx, ky
-    sll_comp64                                     :: val
-    sll_real64                                     :: normalization
-    sll_int32                                      :: myrank
-    sll_int64                                      :: colsz ! collective size
-    type(layout_2D), pointer                       :: layout_x
-    type(layout_2D), pointer                       :: layout_y
-    sll_int32, dimension(1:2)                      :: global
-    sll_int32                                      :: gi, gj
+    sll_real64                                    :: r_Lx, r_Ly
+    sll_real64                                    :: kx, ky
+    sll_comp64                                    :: val
+    sll_real64                                    :: normalization
+    sll_int32                                     :: myrank
+    sll_int64                                     :: colsz ! collective size
+    type(layout_2D), pointer                      :: layout_x
+    type(layout_2D), pointer                      :: layout_y
+    sll_int32, dimension(1:2)                     :: global
+    sll_int32                                     :: gi, gj
 
     ex => fx
     ey => fy
@@ -215,7 +220,7 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     ! The input is handled internally as complex arrays
-    plan%fft_x_array = -cmplx(rho, 0_f64, kind=f64)
+    plan%fft_x_array = -cmplx(bz, 0_f64, kind=f64)
 
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
 
@@ -272,7 +277,7 @@ contains
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
-    phi = real(plan%fft_x_array, f64)
+    bz = real(plan%fft_x_array, f64)
   end subroutine solve_maxwell_2d_periodic_cartesian_par
 
 
@@ -315,7 +320,7 @@ contains
     call compute_local_sizes_2d( layout, n(1), n(2) )
 
     do i=1,2
-       if ( (n(i)/=size(ex,i)) .or. (n(i)/=size(ey,i)) .or.  (n(i)/=size(bz,i))  ) then
+       if ( (n(i)/=size(fx,i)) .or. (n(i)/=size(fy,i)) .or.  (n(i)/=size(fz,i))  ) then
           print*, 'ERROR: solve_maxwell_2d_periodic_cartesian_par()', &
                'size of either ex,ey or bz does not match expected size. '
           if (i==1) then
