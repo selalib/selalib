@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: October 25, 2012
+!> Last modification: Nov 16, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -32,7 +32,8 @@ use arbitrary_degree_splines
 #else
     sll_real64, dimension(:), allocatable :: coeffs
 #endif
-    sll_real64, dimension(:,:), allocatable :: matrix
+    sll_real64, dimension(:,:), allocatable :: matrix 
+   ! matrix will be the result of Choleski factorization
    end type odd_degree_splines_uniform_plan
 
   type odd_degree_splines_non_uni_plan
@@ -96,8 +97,8 @@ contains
        enddo
     enddo
 
-    LDAB = size(plan%matrix,1)
     ! Cholesky factorization with
+    LDAB = size(plan%matrix,1)
     call DPBTRF( 'L', m, KD, plan%matrix, LDAB, ierr )
 
     SLL_DEALLOCATE_ARRAY(matrix_elements, ierr)
@@ -157,7 +158,7 @@ contains
     h = (xmax-xmin)/n
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(plan)) 
+    SLL_ASSERT(associated(plan))
     SLL_ASSERT(x >= xmin)
     SLL_ASSERT(x <= xmax)
 
@@ -214,6 +215,7 @@ contains
     type(odd_degree_splines_uniform_plan), pointer :: plan
     sll_int32                                      :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan%matrix, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
@@ -353,7 +355,7 @@ contains
           call find_cell( x, knots(n+1:num_pts), &
                 indices(n+1:num_pts), cell, ierr )
        endif
-    else
+    elseif (num_pts==2) then
        if ( (knots(1)<=x) .and. (x<=knots(2)) ) then
           cell = indices(2)
           ierr = 1
@@ -399,8 +401,9 @@ contains
     type(odd_degree_splines_non_uni_plan), pointer :: plan
     sll_int32                                   :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
-    call delete_arbitrary_order_spline_1d( plan%spline_obj )
+    call delete( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
   end subroutine delete_odd_degree_splines_non_uni
