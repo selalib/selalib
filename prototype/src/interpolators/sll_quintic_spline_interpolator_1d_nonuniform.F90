@@ -1,44 +1,44 @@
-module sll_odd_degree_spline_interpolator_1d
+module sll_quintic_spline_interpolator_1d_nonuniform
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #ifndef STDF95
 use sll_module_interpolators_1d_base
 #endif
-use sll_odd_degree_splines
+use sll_quintic_splines
   implicit none
 
 #ifdef STDF95
-  type                                    :: odd_degree_spline_1d_interpolator
+  type                                    :: quintic_spline_1d_interpolator_nonuniform
 #else  
-  type, extends(sll_interpolator_1d_base) :: odd_degree_spline_1d_interpolator
+  type, extends(sll_interpolator_1d_base) :: quintic_spline_1d_interpolator_nonuniform
 #endif
      sll_real64, dimension(:), pointer            :: interpolation_points 
      sll_int32                                    :: num_points ! size
-!     sll_int32                                    :: bc_type
-     type(odd_degree_splines_uniform_plan), pointer  :: spline
+     sll_int32                                    :: bc_type
+     type(quintic_splines_nonuniform_plan), pointer  :: spline
 #ifdef STDF95
 #else
    contains
-     procedure, pass(interpolator) :: initialize => initialize_qs1d_interpolator
-     procedure :: compute_interpolants => compute_interpolants_qs1d
-     procedure :: interpolate_value => interpolate_value_qs1d
-     procedure :: interpolate_derivative_eta1 => interpolate_value_qs1d ! Is not used
-     procedure :: interpolate_array_values => interpolate_values_qs1d
-     procedure :: interpolate_pointer_values => interpolate_pointer_values_qs1d
-     procedure :: interpolate_array_derivatives => interpolate_values_qs1d ! Is not used
+     procedure, pass(interpolator) :: initialize => initialize_qs1d_interpolator_nonuniform
+     procedure :: compute_interpolants => compute_interpolants_qs1d_nonuniform
+     procedure :: interpolate_value => interpolate_value_qs1d_nonuniform
+     procedure :: interpolate_derivative_eta1 => interpolate_value_qs1d_nonuniform ! Is not used
+     procedure :: interpolate_array_values => interpolate_values_qs1d_nonuniform
+     procedure :: interpolate_pointer_values => interpolate_pointer_values_qs1d_nonuniform
+     procedure :: interpolate_array_derivatives => interpolate_values_qs1d_nonuniform ! Is not used
      procedure :: interpolate_pointer_derivatives => &
-          interpolate_pointer_values_qs1d ! Is not used
-     procedure, pass:: interpolate_array => spline_interpolate1d
-     procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
+          interpolate_pointer_values_qs1d_nonuniform ! Is not used
+     procedure, pass:: interpolate_array => spline_interpolate1d_nonuniform
+     procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp_nonuniform
      procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_qs1d_interpolato
 #endif
-  end type odd_degree_spline_1d_interpolator
+  end type quintic_spline_1d_interpolator_nonuniform
 
-  interface delete
-     module procedure delete_qs1d
-  end interface delete
+  interface delete_nonuniform
+     module procedure delete_qs1d_nonuniform
+  end interface delete_nonuniform
   
 contains  ! ****************************************************************
 
@@ -55,13 +55,13 @@ contains  ! ****************************************************************
   !   and some copy operation might be involved when "catching" the results.
 
 #ifdef STDF95
-  function odd_degree_spline_interpolate_array(this, num_points, data, coordinates) &
+  function quintic_spline_interpolate_array_nonuniform(this, num_points, data, coordinates) &
        result(data_out)
-    type(odd_degree_spline_1d_interpolator),  intent(in)       :: this
+    type(quintic_spline_1d_interpolator_nonuniform),  intent(in)       :: this
 #else
-  function spline_interpolate1d(this, num_points, data, coordinates) &
+  function spline_interpolate1d_nonuniform(this, num_points, data, coordinates) &
        result(data_out)
-    class(odd_degree_spline_1d_interpolator),  intent(in)       :: this
+    class(quintic_spline_1d_interpolator_nonuniform),  intent(in)       :: this
 #endif
 
     !class(sll_spline_1D),  intent(in)      :: this
@@ -70,21 +70,22 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
+    sll_int32 :: ierr
     ! compute the interpolating spline coefficients
-    call compute_odd_degree_coeffs_uniform( data, this%spline )
-    data_out =  odd_degree_splines_interpolator_uniform_array( &
+    call compute_quintic_coeffs_nonuniform( data, this%spline )
+    data_out =  quintic_splines_interpolator_nonuniform_array( &
                        coordinates, num_points, this%spline )
   end function 
 
 #ifdef STDF95
-  function odd_degree_spline_interpolate_array_at_displacement(this, num_points, &
+  function quintic_spline_interpolate_array_at_displacement_nonuniform(this, num_points, &
        data, coordinates) &
        result(data_out)
-    type(odd_degree_spline_1d_interpolator),  intent(in)       :: this
+    type(quintic_spline_1d_interpolator_nonuniform),  intent(in)       :: this
 #else
-  function spline_interpolate1d_disp(this, num_points, data, alpha) &
+  function spline_interpolate1d_disp_nonuniform(this, num_points, data, alpha) &
        result(data_out)
-    class(odd_degree_spline_1d_interpolator),  intent(in)       :: this
+    class(quintic_spline_1d_interpolator_nonuniform),  intent(in)       :: this
 #endif
 
     !class(sll_spline_1D),  intent(in)      :: this
@@ -101,8 +102,9 @@ contains  ! ****************************************************************
     sll_real64 :: length, delta
     sll_real64 :: xmin, xmax 
     sll_int32 :: i
-    ! compute the interpolating spline coefficients
-    call compute_odd_degree_coeffs_uniform( data, this%spline )
+    sll_int32 :: ierr
+    ! compute_quintic the interpolating spline coefficients
+    call compute_quintic_coeffs_nonuniform( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_points) - &
              this%interpolation_points(1)
@@ -122,28 +124,28 @@ contains  ! ****************************************************************
        end do
     endif
 
-    data_out = odd_degree_splines_interpolator_uniform_array( coordinates, &
+    data_out = quintic_splines_interpolator_nonuniform_array( coordinates, &
                                                 num_points, this%spline )
   end function
 
   ! Both versions F03 and F95 of compute_interpolants_qs1d should have the
   ! same name. In the F95 we should add a generic interface around this
   ! subroutine, selecting on the type of interpolator. In the F03 case the
-  ! interface is the compute_interpolants routine which gets assigned to
+  ! interface is the compute_quintic_interpolants routine which gets assigned to
   ! the qs1d at initialization time.  
 #ifdef STDF95
-  subroutine odd_degree_spline_compute_interpolants( interpolator, data_array )
-    type(odd_degree_spline_1d_interpolator), intent(inout)  :: interpolator
+  subroutine quintic_spline_compute_interpolants_nonuniform( interpolator, data_array )
+    type(quintic_spline_1d_interpolator_nonuniform), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_qs1d( interpolator, data_array )
-    class(odd_degree_spline_1d_interpolator), intent(inout) :: interpolator
+  subroutine compute_interpolants_qs1d_nonuniform( interpolator, data_array )
+    class(quintic_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
-    call compute_odd_degree_coeffs_uniform( data_array, interpolator%spline )
+    call compute_quintic_coeffs_nonuniform( data_array, interpolator%spline )
 #ifdef STDF95
-  end subroutine odd_degree_spline_compute_interpolants
+  end subroutine quintic_spline_compute_interpolants_nonuniform
 #else
-  end subroutine compute_interpolants_qs1d
+  end subroutine compute_interpolants_qs1d_nonuniform
 #endif
 
   ! Alternative implementation for the function meant to interpolate a
@@ -151,111 +153,103 @@ contains  ! ****************************************************************
   ! function. Furthermore, it separates the operation into the more
   ! elementary steps: one is supposed to first compute the interpolants, 
   ! then request to interpolate array values.
-  subroutine interpolate_values_qs1d( &
+  subroutine interpolate_values_qs1d_nonuniform( &
     interpolator, &
     num_pts, &
     vals_to_interpolate, &
     output_array )
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator),  intent(in) :: interpolator
+    type(quintic_spline_1d_interpolator_nonuniform),  intent(in) :: interpolator
 #else
-    class(odd_degree_spline_1d_interpolator),  intent(in) :: interpolator
+    class(quintic_spline_1d_interpolator_nonuniform),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    output_array = odd_degree_splines_interpolator_uniform_array( &
+    sll_int32 :: ierr
+    output_array = quintic_splines_interpolator_nonuniform_array( &
               vals_to_interpolate, num_pts, interpolator%spline)
-  end subroutine interpolate_values_qs1d
+  end subroutine interpolate_values_qs1d_nonuniform
 
-  subroutine interpolate_pointer_values_qs1d( &
+  subroutine interpolate_pointer_values_qs1d_nonuniform( &
     interpolator, &
     num_pts, &
     vals_to_interpolate, &
     output )
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator),  intent(in) :: interpolator
+    type(quintic_spline_1d_interpolator_nonuniform),  intent(in) :: interpolator
 #else
-    class(odd_degree_spline_1d_interpolator),  intent(in) :: interpolator
+    class(quintic_spline_1d_interpolator_nonuniform),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
-    output => odd_degree_splines_interpolator_uniform_pointer(&
+    sll_int32 :: ierr
+    output => quintic_splines_interpolator_nonuniform_pointer(&
           vals_to_interpolate, num_pts, interpolator%spline)
-  end subroutine interpolate_pointer_values_qs1d
+  end subroutine interpolate_pointer_values_qs1d_nonuniform
 
-  function interpolate_value_qs1d( interpolator, eta1 ) result(val)
+  function interpolate_value_qs1d_nonuniform( interpolator, eta1 ) result(val)
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator), intent(inout) :: interpolator
+    type(quintic_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
 #else
-    class(odd_degree_spline_1d_interpolator), intent(inout) :: interpolator
+    class(quintic_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
 #endif
 
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
-    val = odd_degree_splines_interpolator_uniform_value( eta1, interpolator%spline )
+    val = quintic_splines_interpolator_nonuniform_value( eta1, interpolator%spline )
 
   end function
 
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 
-  !> initialize odd_degree spline interpolator
+  !> initialize quintic spline interpolator
 #ifdef STDF95
-  subroutine odd_degree_spline_initialize( &
+  subroutine quintic_spline_initialize_nonuniform( &
 #else
-  subroutine initialize_qs1d_interpolator( &
+  subroutine initialize_qs1d_interpolator_nonuniform( &
 #endif
+    knots, &
     interpolator, &
     num_points, &
     xmin, &
     xmax, &
-!    bc_type, &
-    degree, &
+    bc_type, &
     slope_left, &
-    slope_right &
- )
+    slope_right )
 
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator),  intent(inout)  :: interpolator 
+    type(quintic_spline_1d_interpolator_nonuniform),  intent(inout)  :: interpolator 
 #else
-    class(odd_degree_spline_1d_interpolator),  intent(inout) :: interpolator 
+    class(quintic_spline_1d_interpolator_nonuniform),  intent(inout) :: interpolator 
 #endif
     sll_int32,  intent(in)           :: num_points
     sll_real64, intent(in)           :: xmin
     sll_real64, intent(in)           :: xmax
-!    sll_int32,  intent(in)           :: bc_type
+    sll_int32,  intent(in)           :: bc_type
     sll_real64, intent(in), optional :: slope_left
     sll_real64, intent(in), optional :: slope_right
-    sll_int32,  intent(in), optional :: degree
-    sll_int32                        :: ierr, deg
+    sll_int32                        :: ierr
     sll_int32  :: i  
-    sll_real64 :: delta
-
-    if ( present(degree) ) then
-       deg = degree
-    else
-       deg = 5 ! degree is by default 5
-    endif
+    sll_real64, intent(in), dimension(:) :: knots
     
     interpolator%num_points = num_points
     SLL_ALLOCATE(interpolator%interpolation_points(num_points),ierr)
     interpolator%interpolation_points(1) = xmin
-    delta = (xmax - xmin) / (num_points - 1)
     do i = 2, num_points
-       interpolator%interpolation_points(i) = &
-            interpolator%interpolation_points(i-1) + delta
+       interpolator%interpolation_points(i) = knots(i)
     end do
-    interpolator%spline => new_odd_degree_splines_uniform(num_points, deg, xmin, xmax)
+    interpolator%spline => new_quintic_splines_nonuniform(knots)
   end subroutine
 
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator), intent(in)      :: this
+    type(quintic_spline_1d_interpolator_nonuniform), intent(in)      :: this
 #else
-    class(odd_degree_spline_1d_interpolator), intent(in)     :: this
+    class(quintic_spline_1d_interpolator_nonuniform), intent(in)     :: this
 #endif
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
@@ -263,13 +257,13 @@ contains  ! ****************************************************************
        res(:) = 0.0_f64
   end function reconstruct_array
   
-  subroutine delete_qs1d( obj )
+  subroutine delete_qs1d_nonuniform( obj )
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator) :: obj
+    type(quintic_spline_1d_interpolator_nonuniform) :: obj
 #else
-    class(odd_degree_spline_1d_interpolator) :: obj
+    class(quintic_spline_1d_interpolator_nonuniform) :: obj
 #endif
-    call delete_odd_degree_splines_uniform(obj%spline)
-  end subroutine delete_qs1d
+    call delete_quintic_splines_nonuniform(obj%spline)
+  end subroutine delete_qs1d_nonuniform
 
-end module sll_odd_degree_spline_interpolator_1d
+end module sll_quintic_spline_interpolator_1d_nonuniform
