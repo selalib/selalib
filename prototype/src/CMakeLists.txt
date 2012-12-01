@@ -226,9 +226,13 @@ ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
 
 ADD_TEST(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
 SET_TESTS_PROPERTIES(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME quintic_interpolators_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
+SET_TESTS_PROPERTIES(quintic_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME odd_degree_interpolators_1d COMMAND test_odd_degree_interpolators_1d)
 SET_TESTS_PROPERTIES(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME odd_degree_interpolators_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
+SET_TESTS_PROPERTIES(odd_degree_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ##########################################################
 
