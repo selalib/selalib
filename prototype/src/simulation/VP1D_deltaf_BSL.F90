@@ -310,13 +310,13 @@ program VP1d_deltaf
   !$omp end single
 
   ! initialize timer
-  time0 => new_time_mark()
-  time0 => start_time_mark(time0)
+! time0 => new_time_mark()
+! time0 => start_time_mark(time0)
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-     time0 => reset_time_mark(time0)
+!     time0 => reset_time_mark(time0)
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
@@ -331,18 +331,18 @@ program VP1d_deltaf
         endif
      end do
      !$omp barrier
-     time1 = time_elapsed_since(time0)
-     print*, 'time adv_v1 ', time1 
-     time0 => reset_time_mark(time0)
+!    time1 = time_elapsed_since(time0)
+!    print*, 'time adv_v1 ', time1 
+!    time0 => reset_time_mark(time0)
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
      !$omp barrier
-     time1 = time_elapsed_since(time0)
-     print*, 'time adv_x ', time1 
-     time0 => reset_time_mark(time0)
+!    time1 = time_elapsed_since(time0)
+!    print*, 'time adv_x ', time1 
+!    time0 => reset_time_mark(time0)
 
      !$omp single
      ! compute rho and electric field
@@ -399,7 +399,7 @@ program VP1d_deltaf
         momentum = momentum * delta_x * delta_v
         kinetic_energy = kinetic_energy * delta_x * delta_v
         potential_energy =   0.5_f64 * sum(efield**2) * delta_x
-        write(th_diag,'(f12.5,7g20.14)') time, mass, l1norm, momentum, l2norm, &
+        write(th_diag,'(f12.5,7g20.12)') time, mass, l1norm, momentum, l2norm, &
              kinetic_energy, potential_energy, kinetic_energy + potential_energy
         write(ex_diag,*) efield
         write(rho_diag,*) rho
