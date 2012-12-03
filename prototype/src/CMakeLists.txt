@@ -6,6 +6,10 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
+IF(SLL_CONFIGURE_OPTIONS_FILE)
+INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
+ENDIF()
+
 PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
@@ -84,6 +88,23 @@ IF(NOT STDF95)
 ENDIF()
 ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_SUBDIRECTORY(interpolators)
+
+ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
+ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
+				    test_interpolators_2d)
+
+ADD_TEST(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
+SET_TESTS_PROPERTIES(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME quintic_interpolators_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
+SET_TESTS_PROPERTIES(quintic_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_TEST(NAME odd_degree_interpolators_1d COMMAND test_odd_degree_interpolators_1d)
+SET_TESTS_PROPERTIES(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME odd_degree_interpolators_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
+SET_TESTS_PROPERTIES(odd_degree_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+##########################################################
+
 ADD_SUBDIRECTORY(mapped_meshes)
 ADD_SUBDIRECTORY(fields)
 ADD_SUBDIRECTORY(time_solvers)
@@ -150,13 +171,20 @@ IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
    ENDIF()
 ENDIF()
 
-MESSAGE(STATUS "##############################################")
-MESSAGE(STATUS "####                                      ####")
-MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}               ####")
-MESSAGE(STATUS "####                                      ####")
-MESSAGE(STATUS "##############################################")
+MESSAGE(STATUS "############################################################")
+MESSAGE(STATUS "####")
+MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
+MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+MESSAGE(STATUS "#### Fortran FLAGS ")
+IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
+MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
+ELSE()
+MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
+ENDIF()
+MESSAGE(STATUS "####")
+MESSAGE(STATUS "############################################################")
 
-INCLUDE(SequentialTests)
+#INCLUDE(SequentialTests)
 
 IF(MPI_MODULE_ENABLED)
    INCLUDE(POEConfig)

@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator tester
 !
 !> Start date: July 26, 2012
-!> Last modification: October 25, 2012
+!> Last modification: Nov. 29, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -23,13 +23,18 @@ use sll_odd_degree_splines
 use arbitrary_degree_splines
   implicit none
 
-  type(odd_degree_splines_uniform_plan), pointer :: plan
-  sll_real64, dimension(:), allocatable          :: f
+  type(odd_degree_splines_uniform_plan), pointer    :: plan1
+  type(odd_degree_splines_nonuniform_plan), pointer :: plan2
+  sll_real64, dimension(:), allocatable             :: f1, f2, x2
+  ! f1: test function for uniform case
+  ! f2: test function for non uniform case
+  ! x2: array coordinates for non uniform case
   sll_real64                                     :: xmin, xmax, h
   sll_real64                                     :: x, y, mu
-  sll_real64                                     :: err1, err2, norm
-  ! err1 is the relative error in the nodes
-  ! err2 is the relative error in random points
+  sll_real64                                     :: err11, err12
+  sll_real64                                     :: err21, err22, norm
+  ! err11, err21 are the relative errors in the nodes for f1, f2 resp
+  ! err12, 22 are the relative errors in random points for f1, f2 resp
   sll_int32                                      :: num_pts, i, pow, pow_max
   sll_int32                                      :: degree, degree_max, ierr, ok
 
@@ -41,7 +46,7 @@ use arbitrary_degree_splines
   xmax = 10.d0
   mu = (xmin+xmax)/2
   degree_max = 11
-  pow_max = 2
+  pow_max = 3
   ok = 1
 
   do degree=1,degree_max,2
@@ -53,54 +58,82 @@ use arbitrary_degree_splines
         num_pts = degree*10**pow + 1
         h = (xmax-xmin)/(num_pts-1)
 
-        SLL_ALLOCATE( f(num_pts), ierr)
+        SLL_ALLOCATE( f1(num_pts), ierr)
+        SLL_ALLOCATE( f2(num_pts), ierr)
+        SLL_ALLOCATE( x2(num_pts), ierr)
 
-        do i=1,num_pts
-           x = xmin + (i-1)*h
-           f(i) = exp( - ( x - mu )**2  )
+        do i=0,num_pts-1
+           x = xmin + i*h
+           f1(i+1) = exp( - ( x - mu )**2  )
         enddo
 
-        plan => new_odd_degree_splines_uniform(num_pts, degree, xmin, xmax)
-print*, 'test00'
-        call compute_odd_degree_coeffs_uniform(f, plan)
-print*, 'test01'
-        err1 = 0.d0
-        err2 = 0.d0
+        x2(1) = xmin
+        do i=2,num_pts-1
+           call random_number(x)
+           ! To avoid duplicated points
+           if (num_pts < degree) then
+              x = x/num_pts
+           else
+              x = degree*x/num_pts 
+           endif 
+           x2(i) = x2(i-1) + x*( xmax - x2(i-1))
+        enddo
+        x2(num_pts) = xmax
+
+        f2 = exp( - ( x2 - mu )**2  )
+
+        plan1 => new_odd_degree_splines_uniform(num_pts, degree, xmin, xmax)
+        call compute_odd_degree_coeffs_uniform(f1, plan1)
+        plan2 => new_odd_degree_splines_nonuniform(degree, x2)
+        call compute_odd_degree_coeffs_nonuniform(f2, plan2)
+
+        err11 = 0.d0
+        err12 = 0.d0
+        err21 = 0.d0
+        err22 = 0.d0
         norm = 0.d0
 
-        do i=1,num_pts
+        do i=0,num_pts-1
 
-           x = xmin + (i-1)*h
-           err1 = err1 + ( f(i) - odd_degree_splines_interpolator_uniform_value( &
-                                                                     x, plan) )**2
+           x = xmin + i*h
+           err11 = err11 + ( f1(i+1) - odd_degree_splines(x, plan1) )**2
+           err21 = err21 + ( f2(i+1) - odd_degree_splines(x2(i+1), plan2) )**2
 
            call random_number(x)
            x = xmin + x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
            y = exp( - ( x - mu )**2  )
-           err2 = err2 + ( y - odd_degree_splines_interpolator_uniform_value( &
-                                                                 x, plan) )**2
+           err12 = err12 + ( y - odd_degree_splines(x, plan1) )**2
+           err22 = err22 + ( y - odd_degree_splines(x, plan2) )**2
            norm = norm + y*y; 
 
         enddo
 
-        err1 = sqrt( err1/sum( f(1:num_pts)**2 ) )
-        err2 = sqrt( err2/norm )
-        print*, 'Nb_points =', num_pts, ', err1 = ', err1, ', err2 =', err2
+        err11 = sqrt( err11/sum( f1**2 ) )
+        err21 = sqrt( err21/sum( f2**2 ) )
+        err12 = sqrt( err12/norm )
+        err22 = sqrt( err22/norm )
 
-        if ( (err1 >= 1.e-13) ) then
+        print*, 'Nb_points =', num_pts
+        print*, 'Uniform case: err11 = ', err11, ', err12 =', err12
+        print*, 'Non uniform case: err21 = ', err21, ', err22 =', err22
+        print*, '--------------------------------------------------', &
+                '------------------------------------'
+        if ( (err11 >= 1.e-13) .or. (err21 >= 1.e-13) ) then
            print*, 'sll_odd_degree_splines: FAILED'
            ok = 0
            print*, 'Exiting...'
            stop
         endif
-            
-        SLL_DEALLOCATE_ARRAY(f, ierr)
-        call delete_odd_degree_splines_uniform(plan)
+
+        SLL_DEALLOCATE_ARRAY(f1, ierr)          
+        SLL_DEALLOCATE_ARRAY(f2, ierr)
+        SLL_DEALLOCATE_ARRAY(x2, ierr)
+        call delete_odd_degree_splines(plan1)
+        call delete_odd_degree_splines(plan2)
+
+        print*, ' '
 
      enddo
-
-     print*, ' '
-
   enddo
 
   if (ok==1) then
