@@ -82,7 +82,6 @@ type, public :: maxwell_pstd
    type(C_PTR)                                        :: fwx, fwy
    type(C_PTR)                                        :: bwx, bwy
    complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: tmp_x, tmp_y
-   integer(C_SIZE_T)                                  :: sz_tmp_x, sz_tmp_y
    type(C_PTR)                                        :: p_tmp_x, p_tmp_y
    sll_int32                                          :: polarization
    sll_real64                                         :: e_0
@@ -111,6 +110,7 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    sll_real64                                :: kx0
    sll_real64                                :: ky0
    sll_int32                                 :: polarization
+   integer(C_SIZE_T)                         :: sz_tmp_x, sz_tmp_y
 
    self%nx = nx
    self%ny = ny
@@ -119,8 +119,8 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx/2+1,self%sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny/2+1,self%sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
 
@@ -150,6 +150,7 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
       self%ky(j) = (j-1)*ky0
    end do
    self%ky(1) = 1.0_f64
+
 
 end subroutine new_maxwell_2d_pstd
 
@@ -337,9 +338,9 @@ subroutine free_maxwell_2d_pstd(self)
 type(maxwell_pstd) :: self
 !sll_int32       :: error
 
+
 if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
 if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
-
 call dfftw_destroy_plan(self%fwx)
 call dfftw_destroy_plan(self%fwy)
 call dfftw_destroy_plan(self%bwx)
