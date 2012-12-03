@@ -4,7 +4,9 @@ IF(STDF95)
 	       sll_cubic_spline_interpolator_1d.F90
 	       sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
+               sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
+               sll_odd_degree_spline_interpolator_1d_nonuniform.F90
              )
 ELSE()
 IF(FFTPACK_ENABLED)
@@ -17,7 +19,9 @@ IF(FFTPACK_ENABLED)
 	       sll_interpolators_2d_base.F90
 	       sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
+               sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
+               sll_odd_degree_spline_interpolator_1d_nonuniform.F90
              )
 ELSE()	       
   add_library( sll_interpolators STATIC
@@ -29,7 +33,9 @@ ELSE()
 	       sll_interpolators_2d_base.F90
 	       sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
+               sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
+               sll_odd_degree_spline_interpolator_1d_nonuniform.F90
              )
 
 ENDIF()             
@@ -74,10 +80,13 @@ target_link_libraries( test_interpolators_1d
 	               sll_fft
                        sll_utilities
 	               sll_splines
+	               cubic_non_uniform_splines
+	               sll_numerical_utilities
 	               sll_constants
 	               sll_assertion
 	               sll_memory
-	               sll_working_precision
+	               sll_working_precision 
+                       ${LAPACK_LIBRARIES}
                      )
 add_executable(test_interpolators_2d unit_test.F90
                ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
@@ -100,6 +109,33 @@ target_link_libraries( test_quintic_interpolators_1d
 	               sll_assertion
 	               sll_memory
 	               sll_working_precision
+                       ${LAPACK_LIBRARIES}
+                     )
+
+add_executable(test_quintic_interpolators_1d_nonuniform 
+               test_sll_quintic_spline_interpolator_1d_nonuniform.F90)
+target_link_libraries( test_quintic_interpolators_1d_nonuniform
+	               sll_interpolators
+                       sll_splines
+                       sll_numerical_utilities
+	               sll_constants
+	               sll_assertion
+	               sll_memory
+	               sll_working_precision
+                       ${LAPACK_LIBRARIES}
+                     )
+
+add_executable(test_odd_degree_interpolators_1d_nonuniform
+              test_sll_odd_degree_spline_interpolator_1d_nonuniform.F90)
+target_link_libraries( test_odd_degree_interpolators_1d_nonuniform
+	               sll_interpolators
+                       sll_splines
+                       sll_numerical_utilities
+	               sll_constants
+	               sll_assertion
+	               sll_memory
+	               sll_working_precision
+                       ${LAPACK_LIBRARIES}
                      )
 
 add_executable(test_odd_degree_interpolators_1d test_sll_odd_degree_spline_interpolator_1d.F90)
@@ -113,6 +149,7 @@ target_link_libraries( test_odd_degree_interpolators_1d
 	               sll_working_precision
                        ${LAPACK_LIBRARIES}
                      )
+
 IF(FFTPACK_ENABLED)
 add_executable(test_periodic_interpolators_1d test_periodic_interpolation.F90)
 target_link_libraries( test_periodic_interpolators_1d

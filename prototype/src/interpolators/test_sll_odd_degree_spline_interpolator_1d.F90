@@ -105,9 +105,10 @@ program test_sll_odd_degree_spline_interpolator_1d
      !print*, coordinates_disp(i), data_interp_disp(i) , out_disp(i)
   end do
 
-  print*, ''
   error = sqrt( error / sum( data_interp**2 ) )
   error_disp = sqrt( error_disp/sum( data_interp_disp**2 ) )
+
+  print*, ''
   print*, '    splines degree =', degree
   print*, '    error =', error
   print*, '    error_disp =', error_disp

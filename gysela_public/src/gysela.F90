@@ -468,7 +468,9 @@ program gysela
     close(uout_res)
   end if
       
+  print*,'PASSED'
   !*** end of the parallelisation ***
   call ppexit()
   if (.not.run) call exit(status)
+
 end program gysela
