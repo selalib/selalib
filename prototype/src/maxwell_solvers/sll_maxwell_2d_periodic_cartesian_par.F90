@@ -9,17 +9,39 @@
 !                                  
 !**************************************************************************
 
+#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
+sz_array = int((array_size/2+1),C_SIZE_T);                \
+p_array = fftw_alloc_complex(sz_array);                   \
+call c_f_pointer(p_array, array, [array_size/2+1])        \
+
+#define D_DX(field)                                           \
+call fftw_execute_dft_r2c(plan%fwx, field, plan%fft_x_array);       \
+plan%fft_x_array = -cmplx(0.0_f64,plan%kx,kind=f64)*plan%fft_x_array;     \
+call fftw_execute_dft_c2r(plan%bwx, plan%fft_x_array, plan%d_dx);   \
+plan%d_dx = plan%d_dx / nx
+
+#define D_DY(field)                                           \
+call fftw_execute_dft_r2c(plan%fwy, field, plan%fft_y_array);       \
+plan%fft_y_array = -cmplx(0.0_f64,plan%ky,kind=f64)*plan%fft_y_array;     \
+call fftw_execute_dft_c2r(plan%bwy, plan%fft_y_array, plan%d_dy);    \
+plan%d_dy = plan%d_dy / ny
+
+#define MPI_MASTER 0
+
 module sll_maxwell_2d_periodic_cartesian_par
+
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_assert.h"
 
+  use, intrinsic :: iso_c_binding
   use remapper
   use sll_fft
   use numeric_constants
   use sll_collective
+  use sll_maxwell
 
   implicit none
 
@@ -30,21 +52,26 @@ module sll_maxwell_2d_periodic_cartesian_par
      sll_int32                                 :: ncy   ! number of cells
      sll_real64                                :: Lx    ! domain length 
      sll_real64                                :: Ly    ! domain length
-     type(sll_fft_plan), pointer               :: px
-     type(sll_fft_plan), pointer               :: py
-     type(sll_fft_plan), pointer               :: px_inv
-     type(sll_fft_plan), pointer               :: py_inv
-     type(layout_2D),  pointer                 :: layout_seq_x1
-     type(layout_2D),  pointer                 :: layout_seq_x2
-     sll_int32                                 :: seq_x1_local_sz_x1
-     sll_int32                                 :: seq_x1_local_sz_x2
-     sll_int32                                 :: seq_x2_local_sz_x1
-     sll_int32                                 :: seq_x2_local_sz_x2
-     sll_comp64, dimension(:,:), pointer       :: fft_x_array
-     sll_comp64, dimension(:,:), pointer       :: fft_y_array
+     type(C_PTR), pointer                      :: fwx
+     type(C_PTR), pointer                      :: fwy
+     type(C_PTR), pointer                      :: bwx
+     type(C_PTR), pointer                      :: bwy
+     type(layout_2D),  pointer                 :: layout_x
+     type(layout_2D),  pointer                 :: layout_y
+     sll_int32                                 :: npx_loc
+     sll_int32                                 :: npy_loc
+     sll_real64, dimension(:), pointer         :: d_dx
+     sll_real64, dimension(:), pointer         :: d_dy
+     sll_comp64, dimension(:), pointer         :: fft_x_array
+     sll_comp64, dimension(:), pointer         :: fft_y_array
      type(remap_plan_2D_comp64), pointer       :: rmp_xy
      type(remap_plan_2D_comp64), pointer       :: rmp_yx
+     sll_real64                                :: mu_0
+     type(C_PTR)                               :: p_x_array
+     type(C_PTR)                               :: p_y_array
   end type maxwell_2d_periodic_plan_cartesian_par
+
+include 'fftw3.f03'
 
 contains
 
@@ -64,22 +91,21 @@ contains
     sll_int32                                    :: ncy
     sll_real64                                   :: Lx
     sll_real64                                   :: Ly
-    sll_int64                                    :: colsz ! collective size
+    sll_int64                                    :: prank
+    sll_int64                                    :: psize
     type(sll_collective_t), pointer              :: collective
-    ! number of processors
-    sll_int64                                    :: nprocx1
-    sll_int64                                    :: nprocx2
+    sll_int64                                    :: nprocx
+    sll_int64                                    :: nprocy
     sll_int32                                    :: ierr 
-    sll_int32                                    :: loc_sz_x1
-    sll_int32                                    :: loc_sz_x2
-    sll_int32                                    :: seq_x1_local_sz_x1
-    sll_int32                                    :: seq_x1_local_sz_x2
-    sll_int32                                    :: seq_x2_local_sz_x1
-    sll_int32                                    :: seq_x2_local_sz_x2
+    sll_int32                                    :: npx_loc
+    sll_int32                                    :: npy_loc
+
+    integer(C_SIZE_T) :: sz_x_array
+    integer(C_SIZE_T) :: sz_y_array
 
     ! The collective to be used is the one that comes with the given layout.
-    collective => get_layout_collective( start_layout )
-    colsz      = sll_get_collective_size( collective )
+    prank = sll_get_collective_rank( sll_world_collective )
+    psize = sll_get_collective_size( sll_world_collective )
 
     if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
          (.not.is_power_of_two(int(ncy,i64))) ) then     
@@ -89,6 +115,8 @@ contains
        stop
     end if
 
+    SLL_ALLOCATE(plan%d_dx(ncx), ierr)
+    SLL_ALLOCATE(plan%d_dy(ncy), ierr)
     SLL_ALLOCATE(plan, ierr)
 
     ! Geometry
@@ -97,84 +125,42 @@ contains
     plan%Lx  = Lx
     plan%Ly  = Ly
 
+    FFTW_ALLOCATE(plan%fft_x_array,ncx/2+1,sz_x_array,plan%p_x_array)
+    FFTW_ALLOCATE(plan%fft_y_array,ncy/2+1,sz_y_array,plan%p_y_array)
+
+    plan%fwx = fftw_plan_dft_r2c_1d(ncx, plan%d_dx,  plan%fft_x_array, FFTW_ESTIMATE)
+    plan%bwx = fftw_plan_dft_c2r_1d(ncx, plan%fft_x_array, plan%d_dx,  FFTW_ESTIMATE)
+    plan%fwy = fftw_plan_dft_r2c_1d(ncy, plan%d_dy,  plan%fft_y_array, FFTW_ESTIMATE)
+    plan%bwy = fftw_plan_dft_c2r_1d(ncy, plan%fft_y_array, plan%d_dy,  FFTW_ESTIMATE)
+
     ! Layout and local sizes for FFTs in x-direction
-    plan%layout_seq_x1 => start_layout
-    call compute_local_sizes_2d( &
-         plan%layout_seq_x1, &
-         loc_sz_x1, &
-         loc_sz_x2 )
+    plan%layout_x => start_layout
+    call compute_local_sizes_2d( plan%layout_x, npx_loc, npy_loc )
+    plan%npy_loc = npy_loc
 
-    plan%seq_x1_local_sz_x1 = loc_sz_x1
-    plan%seq_x1_local_sz_x2 = loc_sz_x2
-
-    SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
-
-    ! For FFTs (in x-direction)
-    plan%px => fft_new_plan( &
-         loc_sz_x1, &
-         loc_sz_x2, &
-         plan%fft_x_array, &
-         plan%fft_x_array, &
-         FFT_FORWARD, &
-         FFT_ONLY_FIRST_DIRECTION)!+FFT_NORMALIZE )
-
-    plan%px_inv => fft_new_plan( &
-         loc_sz_x1, &
-         loc_sz_x2, &
-         plan%fft_x_array, &
-         plan%fft_x_array, &
-         FFT_INVERSE, &
-         FFT_ONLY_FIRST_DIRECTION) !+FFT_NORMALIZE )
-
-    ! Layout and local sizes for FFTs in y-direction (x2)
-    plan%layout_seq_x2 => new_layout_2D( collective )
-    nprocx1 = colsz
-    nprocx2 = 1
+    ! Layout and local sizes for FFTs in y-direction
+    plan%layout_y => new_layout_2D( collective )
+    nprocx = psize
+    nprocy = 1
 
     call initialize_layout_with_distributed_2D_array( &
          ncx, &
          ncy, &
-         int(nprocx1,i32), &
-         int(nprocx2,i32), &
-         plan%layout_seq_x2 )
+         int(nprocx,i32), &
+         int(nprocy,i32), &
+         plan%layout_y )
 
-    call compute_local_sizes_2d( &
-         plan%layout_seq_x2, &
-         loc_sz_x1, &
-         loc_sz_x2 )
+    call compute_local_sizes_2d(plan%layout_y,npx_loc,npy_loc )
+    plan%npx_loc = npx_loc
 
-    plan%seq_x2_local_sz_x1 = loc_sz_x1
-    plan%seq_x2_local_sz_x2 = loc_sz_x2
-    SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
-
-    ! For FFTs (in y-direction)
-
-    plan%py => fft_new_plan( &
-         loc_sz_x1, &
-         loc_sz_x2, &
-         plan%fft_y_array, &
-         plan%fft_y_array, &
-         FFT_FORWARD, &
-         FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
-
-    plan%py_inv => fft_new_plan( &
-         loc_sz_x1, &
-         loc_sz_x2, &
-         plan%fft_y_array, &
-         plan%fft_y_array, &
-         FFT_INVERSE, &
-         FFT_ONLY_SECOND_DIRECTION)! + FFT_NORMALIZE )
-
-    plan%rmp_xy => &
-     new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
-    plan%rmp_yx => &
-     new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
+    !plan%rmp_xy => new_remap_plan(plan%layout_x, plan%layout_y, plan%fft_x_array)
+    !plan%rmp_yx => new_remap_plan(plan%layout_y, plan%layout_x, plan%fft_y_array)
 
   end function new_maxwell_2d_periodic_plan_cartesian_par
 
 !********************************************************************************
 
-  subroutine solve_maxwell_2d_periodic_cartesian_par(plan, fx, fy, fz, equation)
+  subroutine solve_maxwell_2d_periodic_cartesian_par(plan, dt, fx, fy, fz, equation)
 
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan
 
@@ -195,12 +181,17 @@ contains
     sll_real64                                    :: kx, ky
     sll_comp64                                    :: val
     sll_real64                                    :: normalization
-    sll_int32                                     :: myrank
-    sll_int64                                     :: colsz ! collective size
+    sll_int32                                     :: prank
+    sll_int64                                     :: psize
     type(layout_2D), pointer                      :: layout_x
     type(layout_2D), pointer                      :: layout_y
     sll_int32, dimension(1:2)                     :: global
     sll_int32                                     :: gi, gj
+    sll_real64, intent(in)                        :: dt
+    sll_real64                                    :: dt_mu
+
+    prank = sll_get_collective_rank( sll_world_collective )
+    psize = sll_get_collective_size( sll_world_collective )
 
     ex => fx
     ey => fy
@@ -211,73 +202,33 @@ contains
     r_Lx = 1.0_f64/plan%Lx
     r_Ly = 1.0_f64/plan%Ly
     ! Get layouts to compute FFTs (in each direction)
-    layout_x => plan%layout_seq_x1
-    layout_y => plan%layout_seq_x2
+    layout_x => plan%layout_x
+    layout_y => plan%layout_y
     call verify_argument_sizes_par(layout_x, ex, ey, bz)
 
     ! FFTs in x-direction
-    npx_loc = plan%seq_x1_local_sz_x1 
-    npy_loc = plan%seq_x1_local_sz_x2 
+    npx_loc = plan%npx_loc 
+    npy_loc = plan%npy_loc 
 
-    ! The input is handled internally as complex arrays
-    plan%fft_x_array = -cmplx(bz, 0_f64, kind=f64)
+    dt_mu = dt / plan%mu_0 
 
-    call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
+    do i = 1, npx_loc
+      global = local_to_global_2D( layout_y, (/i, j/))
+      gi = global(1)
+      gj = global(2)
+      !D_DY(ex(i,1:ny))
+      !bz(i,1:ny) = hz(i,1:ny) + dt * plan%d_dy
+    end do
 
-    ! FFTs in y-direction
-    npx_loc = plan%seq_x2_local_sz_x1
-    npy_loc = plan%seq_x2_local_sz_x2
- 
-    call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
+    do j = 1, npy_loc
+      !D_DX(ey(1:nx,j))
+      !bz(1:nx,j) = bz(1:nx,j) - dt * plan%d_dx
+    end do
 
-    call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
+    !call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
 
-    ! This should be inside the FFT plan...
-    normalization = 1.0_f64/(ncx*ncy)
+    !call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
 
-    ! Apply the kernel 
-    do j=1, npy_loc
-       do i=1, npx_loc
-          
-          global = local_to_global_2D( layout_y, (/i, j/))
-          gi = global(1)
-          gj = global(2)
-          
-          if( (gi == 1) .and. (gj == 1) ) then
-             call fft_set_mode_complx_2d( &
-                  plan%py,&
-                  plan%fft_y_array,&
-                  (0.0_f64,0.0_f64),&
-                  1,&
-                  1)
-          else
-             kx  = real(gi-1,f64)
-             ky  = real(gj-1,f64)
-             if( kx .ge. ncx/2 ) then
-                kx = kx - ncx
-             end if
-
-             if( ky .ge. ncy/2 ) then
-                ky = ky - ncy
-             end if
-
-              val = -plan%fft_y_array(i,j)*normalization / &
-                  ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_pi**2)
-              call fft_set_mode_complx_2d(plan%py,plan%fft_y_array,val,i,j)
-          end if
-       enddo
-    enddo
-
-    ! Inverse FFTs in y-direction
-    call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
-
-    ! Prepare to take inverse FFTs in x-direction
-    call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
-
-    npx_loc = plan%seq_x1_local_sz_x1 
-    npy_loc = plan%seq_x1_local_sz_x2 
-    call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
-    bz = real(plan%fft_x_array, f64)
   end subroutine solve_maxwell_2d_periodic_cartesian_par
 
 
@@ -291,19 +242,21 @@ contains
        STOP
     end if
 
-    call fft_delete_plan(plan%px)
-    call fft_delete_plan(plan%py)
-    call fft_delete_plan(plan%px_inv)
-    call fft_delete_plan(plan%py_inv)
+    if (c_associated(plan%p_x_array)) call fftw_free(plan%p_x_array)
+    if (c_associated(plan%p_y_array)) call fftw_free(plan%p_y_array)
+    call dfftw_destroy_plan(plan%fwx)
+    call dfftw_destroy_plan(plan%fwy)
+    call dfftw_destroy_plan(plan%bwx)
+    call dfftw_destroy_plan(plan%bwy)
 
-!    call delete( plan%layout_x ) ! can't delete this, the plan does not own it
-    call delete( plan%layout_seq_x1 )
-    call delete( plan%layout_seq_x2 )
+    call delete( plan%layout_x )
+    call delete( plan%layout_y )
     SLL_DEALLOCATE_ARRAY(plan%fft_x_array, ierr)
     SLL_DEALLOCATE_ARRAY(plan%fft_y_array, ierr)
     call delete( plan%rmp_xy )
     call delete( plan%rmp_yx )
     SLL_DEALLOCATE(plan, ierr)
+
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 
   subroutine verify_argument_sizes_par(layout, fx, fy, fz)

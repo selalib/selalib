@@ -1,14 +1,11 @@
-module sll_vlasov2d
+module sll_vlasov4d
 
 #include "selalib.h"
 
  use used_precision
  use geometry_module
  use diagnostiques_module
- use sll_splines
- use sll_cubic_spline_interpolator_1d
- use sll_quintic_spline_interpolator_1d
- use sll_cubic_spline_interpolator_2d
+ use sll_module_interpolators_1d_base
 
  implicit none
  private
@@ -16,7 +13,7 @@ module sll_vlasov2d
  public :: advection_x1, advection_x2, advection_x3, advection_x4
  public :: thdiag
 
- type, public :: vlasov2d
+ type, public :: vlasov4d
    sll_real64, dimension(:,:,:,:), pointer :: ft
    type (geometry) :: geomx, geomv
    logical :: transposed      
@@ -26,53 +23,35 @@ module sll_vlasov2d
    class(sll_interpolator_1d_base), pointer :: interp_x2
    class(sll_interpolator_1d_base), pointer :: interp_x3
    class(sll_interpolator_1d_base), pointer :: interp_x4
-#ifdef _TWO_D
-   class(sll_interpolator_2d_base), pointer :: interp_x
-   class(sll_interpolator_2d_base), pointer :: interp_v
-#endif
- end type vlasov2d
-
-
-
-#ifdef _QUINTIC
- type(cubic_spline_1d_interpolator),   target :: spl_x1
- type(cubic_spline_1d_interpolator),   target :: spl_x2
- type(quintic_spline_1d_interpolator), target :: spl_x3
- type(quintic_spline_1d_interpolator), target :: spl_x4
-#else
- type(cubic_spline_1d_interpolator), target :: spl_x1
- type(cubic_spline_1d_interpolator), target :: spl_x2
- type(cubic_spline_1d_interpolator), target :: spl_x3
- type(cubic_spline_1d_interpolator), target :: spl_x4
-#endif
-
-#ifdef _TWO_D
- type(cubic_spline_2d_interpolator),   target :: spl_x
- type(cubic_spline_2d_interpolator),   target :: spl_v
-#endif
+ end type vlasov4d
 
  sll_int32, private :: i, j, k, l
 
  interface new
-   module procedure new_vlasov2d
+   module procedure new_vlasov4d
  end interface
 
  interface dealloc
-   module procedure dealloc_vlasov2d
+   module procedure dealloc_vlasov4d
  end interface
 
 contains
 
- subroutine new_vlasov2d(this,geomx,geomv,jstartx, jendx,jstartv,jendv,error)
+ subroutine new_vlasov4d(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,&
+                         jstartx,jendx,jstartv,jendv,error)
 
-  type(vlasov2d),intent(out)      :: this
-  type(geometry),intent(in)       :: geomx
-  type(geometry),intent(in)       :: geomv
-  sll_int32, intent(out)          :: error
-  sll_int32, intent(in)           :: jstartx
-  sll_int32, intent(in)           :: jendx
-  sll_int32, intent(in)           :: jstartv
-  sll_int32, intent(in)           :: jendv
+  type(vlasov4d),intent(out)              :: this
+  type(geometry),intent(in)               :: geomx
+  type(geometry),intent(in)               :: geomv
+  sll_int32, intent(out)                  :: error
+  sll_int32, intent(in)                   :: jstartx
+  sll_int32, intent(in)                   :: jendx
+  sll_int32, intent(in)                   :: jstartv
+  sll_int32, intent(in)                   :: jendv
+  class(sll_interpolator_1d_base), target :: interp_x1
+  class(sll_interpolator_1d_base), target :: interp_x2
+  class(sll_interpolator_1d_base), target :: interp_x3
+  class(sll_interpolator_1d_base), target :: interp_x4
 
   sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4
   sll_real64 :: x1_min, x2_min, x3_min, x4_min
@@ -106,39 +85,21 @@ contains
 
   SLL_ALLOCATE(this%ft(geomv%nx,geomv%ny,geomx%nx,this%jstartx:this%jendx),error)
 
-#ifdef TWO_D
-  call this%interp_x%initialize( nc_x1, nc_x2, &
-                                    x1_min, x1_max, x2_min, x2_max, &
-                                    PERIODIC_SPLINE, PERIODIC_SPLINE)
-  call this%interp_v%initialize( nc_x3, nc_x4, &
-                                    x3_min, x3_max, x4_min, x4_max, &
-                                    PERIODIC_SPLINE, PERIODIC_SPLINE)
-  this%interp_x => spl_x
-  this%interp_v => spl_v
-#else
+  this%interp_x1 => interp_x1
+  this%interp_x2 => interp_x2
+  this%interp_x3 => interp_x3
+  this%interp_x4 => interp_x4
 
-  call spl_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
-  call spl_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
-  call spl_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
-  call spl_x4%initialize( nc_x4, x4_min, x4_max, PERIODIC_SPLINE)
+ end subroutine new_vlasov4d
 
-  this%interp_x1 => spl_x1
-  this%interp_x2 => spl_x2
-  this%interp_x3 => spl_x3
-  this%interp_x4 => spl_x4
-
-#endif
-
- end subroutine new_vlasov2d
-
- subroutine dealloc_vlasov2d(this)
-  type(vlasov2d),intent(out) :: this
+ subroutine dealloc_vlasov4d(this)
+  type(vlasov4d),intent(out) :: this
   sll_int32 :: error
   SLL_DEALLOCATE(this%ft,error)
- end subroutine dealloc_vlasov2d
+ end subroutine dealloc_vlasov4d
 
  subroutine advection_x1(this,f,dt)
-  type(vlasov2d) :: this
+  type(vlasov4d) :: this
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x2, nc_x3
@@ -158,9 +119,7 @@ contains
      do k=1,nc_x3
         alpha = (x3_min +(k-1)*delta_x3)*dt
         do j=1,nc_x2
-           f(:,j,k,l) = this%interp_x1%interpolate_array_disp( &
-                                        nc_x1, f(:,j,k,l), alpha )
-
+           f(:,j,k,l) = this%interp_x1%interpolate_array_disp(nc_x1,f(:,j,k,l),alpha)
         end do
      end do
   end do
@@ -168,7 +127,7 @@ contains
  end subroutine advection_x1
 
  subroutine advection_x2(this,f,dt)
-  type(vlasov2d),intent(inout) :: this
+  type(vlasov4d),intent(inout) :: this
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x2, nc_x3
@@ -187,9 +146,8 @@ contains
   do l=this%jstartv,this%jendv
     alpha = (x4_min +(l-1)*delta_x4)*dt
     do k=1,nc_x3
-        do i=1,nc_x1
-           f(i,:,k,l) = this%interp_x2%interpolate_array_disp( &
-                    nc_x2, f(i,:,k,l), alpha )
+       do i=1,nc_x1
+          f(i,:,k,l) = this%interp_x2%interpolate_array_disp(nc_x2,f(i,:,k,l),alpha)
        end do
     end do
   end do
@@ -198,18 +156,12 @@ contains
 
  subroutine advection_x3(this,ex,dt)
 
-  type(vlasov2d),intent(inout) :: this
+  type(vlasov4d),intent(inout) :: this
 
   sll_real64, dimension(:,:), intent(in) :: ex
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x3, nc_x4
   sll_real64 :: alpha
-#ifdef _QUINTIC
-  sll_real64 :: depvx(this%geomv%nx)
-  sll_real64 :: delta_x3
-  sll_real64 :: x3_min
-  sll_real64 :: x3_max
-#endif
 
   SLL_ASSERT(this%transposed) 
 
@@ -217,57 +169,24 @@ contains
   nc_x3    = this%geomv%nx
   nc_x4    = this%geomv%ny
 
-#ifdef _QUINTIC
-
-  delta_x3 = this%geomv%dx
-
-  x3_min = this%geomv%x0
-  x3_max = this%geomv%x1
-
   do j=this%jstartx,this%jendx
      do i=1,nc_x1
-        alpha = ex(i,j)*dt
-        do k=1,nc_x3
-           depvx(k) = x3_min + (k-1)*delta_x3 - alpha
-           if(depvx(k) < x3_min) then
-              depvx(k) = depvx(k) + x3_max-x3_min
-           else if (depvx(k) > x3_max) then
-              depvx(k) = depvx(k) - x3_max+x3_min
-           end if
-        end do 
-        do l=1,nc_x4
-           this%ft(:,l,i,j) = this%interp_x3%interpolate_array( &
-                               nc_x3, this%ft(:,l,i,j), depvx)
-        end do
-      end do
-   end do
-#else
-  do j=this%jstartx,this%jendx
-     do i=1,nc_x1
-        alpha = ex(i,j)*dt
-        do l=1,nc_x4
-           this%ft(:,l,i,j) = this%interp_x3%interpolate_array_disp( &
-                              nc_x3, this%ft(:,l,i,j), alpha )
+       alpha = ex(i,j)*dt
+       do l=1,nc_x4
+          this%ft(:,l,i,j) = this%interp_x3%interpolate_array_disp(nc_x3,this%ft(:,l,i,j),alpha)
        end do
     end do
  end do
-#endif
 
  end subroutine advection_x3
 
  subroutine advection_x4(this,ey,dt)
 
-  type(vlasov2d),intent(inout) :: this
+  type(vlasov4d),intent(inout) :: this
   sll_real64, dimension(:,:), intent(in) :: ey
   sll_real64, intent(in) :: dt
   sll_int32  :: nc_x1, nc_x3, nc_x4
   sll_real64 :: alpha
-#ifdef _QUINTIC
-  sll_real64 :: depvy(this%geomv%ny)
-  sll_real64 :: delta_x4
-  sll_real64 :: x4_min
-  sll_real64 :: x4_max
-#endif
 
   SLL_ASSERT(this%transposed) 
 
@@ -275,105 +194,28 @@ contains
   nc_x3    = this%geomv%nx
   nc_x4    = this%geomv%ny
 
-#ifdef _QUINTIC
-
-  delta_x4 = this%geomv%dy
-
-  x4_min = this%geomv%y0
-  x4_max = this%geomv%y1
-
-  do j=this%jstartx,this%jendx
-     do i=1,nc_x1
-        alpha = ey(i,j)*dt
-        do l=1,nc_x4
-           depvy(l) = x4_min + (l-1)*delta_x4 - alpha
-           if(depvy(l) < x4_min) then
-              depvy(l) = depvy(l) + x4_max-x4_min
-           else if (depvy(l) > x4_max) then
-              depvy(l) = depvy(l) - x4_max+x4_min
-           end if
-        end do 
-        do k=1,nc_x3
-           this%ft(k,:,i,j) = this%interp_x4%interpolate_array( &
-                               nc_x4, this%ft(k,:,i,j), depvy)
-        end do
-      end do
-   end do
-#else
-
   do j=this%jstartx,this%jendx
      do i=1,nc_x1
         do k=1,nc_x3
            alpha = ey(i,j)*dt
-           this%ft(k,:,i,j) = this%interp_x4%interpolate_array_disp( &
-                              nc_x4, this%ft(k,:,i,j), alpha )
+           this%ft(k,:,i,j) = this%interp_x4%interpolate_array_disp(nc_x4,this%ft(k,:,i,j),alpha)
        end do
     end do
  end do
 
-#endif
-
  end subroutine advection_x4
-
-#ifdef TWO_D
-
- subroutine advection_x(this,f,dt)
-  type(vlasov2d),intent(inout) :: this
-  sll_real64, dimension(:,:,:,this%jstartv:) :: f
-  sll_real64, intent(in) :: dt
-  sll_int32  :: nc_x1, nc_x2
-  sll_real64 :: depx, depy 
-
-  SLL_ASSERT(.not. this%transposed)
-
-  nc_x1    = this%geomx%nx
-  nc_x2    = this%geomx%ny
-
-  do l=1,this%geomv%nx
-     depy = (this%geomv%y0+(l-1)*this%geomv%dy)*dt
-     do k=this%jstartv,this%jendv
-        depx = (this%geomv%x0+(k-1)*this%geomv%dx)*dt
-        f(:,:,k,l) = this%interp_x%interpolate_array_disp( &
-                     nc_x1, nc_x2, f(:,:,k,l), depx, depy )
-     end do
-  end do
-
- end subroutine advection_x
-
- subroutine advection_v(this,fx,fy,dt)
-
-  type(vlasov2d),intent(inout) :: this
-  sll_real64, dimension(:,:), intent(in) :: fx, fy
-  sll_real64, intent(in) :: dt
-  sll_int32  :: nc_x3, nc_x4
-  sll_real64 :: depvx, depvy  
-
-  SLL_ASSERT(this%transposed)
-
-  nc_x3    = this%geomv%nx
-  nc_x4    = this%geomv%ny
-
-  do j=this%jstartx,this%jendx
-    do i=1,this%geomx%nx
-      depvx = fx(i,j)*dt
-      depvy = fy(i,j)*dt
-      this%ft(:,:,i,j) = this%interp_v%interpolate_array_disp( &
-                         nc_x3, nc_x4, this%ft(:,:,i,j), depx, depy )
-    end do
-   end do
-
- end subroutine advection_v
-
-#endif
 
 subroutine densite_charge(this, rho)
 
-   type(vlasov2d),intent(inout) :: this
+   type(vlasov4d),intent(inout) :: this
    sll_int32 :: error
    sll_real64, dimension(:,:), intent(out)  :: rho
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locrho
    sll_int32 :: i,j,iv,jv,c
    sll_int32 :: comm
+   sll_real64 :: dxy
+
+   dxy = this%geomv%dx*this%geomv%dy
 
    comm   = sll_world_collective%comm
 
@@ -385,8 +227,7 @@ subroutine densite_charge(this, rho)
       do i=1,this%geomx%nx
          do jv=1,this%geomv%ny-1
             do iv=1,this%geomv%nx-1 
-               locrho(i,j) = locrho(i,j) + this%geomv%dx*this%geomv%dy* &
-                    this%ft(iv,jv,i,j) 
+               locrho(i,j) = locrho(i,j) + dxy*this%ft(iv,jv,i,j) 
             end do
          end do
       end do
@@ -399,7 +240,7 @@ end subroutine densite_charge
 
 subroutine densite_courant(this, jx, jy)
 
-   type(vlasov2d),intent(inout) :: this
+   type(vlasov4d),intent(inout) :: this
    sll_int32 :: error
    sll_real64, dimension(:,:), intent(out)  :: jx, jy
    sll_real64 :: vx, vy 
@@ -407,6 +248,9 @@ subroutine densite_courant(this, jx, jy)
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
    sll_int32 :: i,j,iv,jv,c
    sll_int32 :: comm
+   sll_real64 :: dxy
+
+   dxy = this%geomv%dx*this%geomv%dy
 
    comm   = sll_world_collective%comm
 
@@ -420,10 +264,8 @@ subroutine densite_courant(this, jx, jy)
             vy = this%geomv%y0+(jv-1)*this%geomv%dy
             do iv=1,this%geomv%nx-1 
                vx = this%geomv%x0+(iv-1)*this%geomv%dx
-               locjx(i,j) = locjx(i,j) + this%geomv%dx*this%geomv%dy* &
-                    this%ft(iv,jv,i,j) * vx
-               locjy(i,j) = locjy(i,j) + this%geomv%dx*this%geomv%dy* &
-                    this%ft(iv,jv,i,j) * vy
+               locjx(i,j) = locjx(i,j) + dxy*this%ft(iv,jv,i,j) * vx
+               locjy(i,j) = locjy(i,j) + dxy*this%ft(iv,jv,i,j) * vy
             end do
          end do
       end do
@@ -442,7 +284,7 @@ end subroutine densite_courant
 !> communications entre les processeurs.
 !>---------------------------------------------
 subroutine transposexv(this,f)
-   type(vlasov2d),intent(inout) :: this
+   type(vlasov4d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(in) :: f
    sll_int32 :: sizexy, sizevxvy
    sll_int32 :: my_num, num_threads
@@ -460,7 +302,7 @@ end subroutine transposexv
 
 subroutine transposevx(this,f)
 
-   type(vlasov2d),intent(inout) :: this
+   type(vlasov4d),intent(inout) :: this
    sll_real64, dimension(:,:,:,:),intent(out) :: f
 
    sll_int32 :: sizexy, sizevxvy
@@ -479,15 +321,10 @@ end subroutine transposevx
 
 subroutine thdiag(this,f,nrj,t,jstartv)
 
-   type(vlasov2d),intent(inout) :: this
+   type(vlasov4d),intent(inout) :: this
    sll_real64, dimension(:,:,:,jstartv:),intent(in) :: f
    sll_int32 :: jstartv
-   !sll_int32 :: error
-   sll_real64, intent(in) :: t,nrj   ! current time
-   ! variables locales
-   !sll_int32 :: i,iv, j,jv
-   !sll_real64 :: x, vx, y, vy
-   !sll_real64,dimension(7) :: diagloc
+   sll_real64, intent(in) :: t,nrj  
    sll_real64,dimension(11) :: auxloc
    sll_int32 :: my_num, num_threads
    sll_real64,dimension(13) :: aux
@@ -518,4 +355,4 @@ subroutine thdiag(this,f,nrj,t,jstartv)
 
 end subroutine thdiag
 
-end module sll_vlasov2d
+end module sll_vlasov4d

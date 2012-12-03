@@ -1,7 +1,10 @@
+#define MPI_MASTER 0
 program test_maxwell_2d_periodic_cart_par
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+
   use remapper
   use numeric_constants
   use sll_maxwell_2d_periodic_cartesian_par
@@ -35,6 +38,7 @@ program test_maxwell_2d_periodic_cart_par
   sll_int32                                    :: e
   sll_real32                                   :: ok 
   sll_real32, dimension(1)                     :: prod4test
+  sll_real64                                   :: dt
 
   ok = 1.0
 
@@ -81,7 +85,7 @@ program test_maxwell_2d_periodic_cart_par
         gj = global(2)
         x  = (gi-1)*dx
         y  = (gj-1)*dy
-        bz_an(i,j) = cos(x)*sin(y) 
+        bz_an(i,j) = cos(x)*cos(y) 
      end do
   end do
 
@@ -89,8 +93,8 @@ program test_maxwell_2d_periodic_cart_par
 
   call parallel_hdf5_write_array_2d( 'bz_init.h5', ncx, ncy, bz, 'bz', layout_x)
 
-  call solve_maxwell_2d_periodic_cartesian_par(plan, ex, ey, bz, faraday)
-  call solve_maxwell_2d_periodic_cartesian_par(plan, ex, ey, bz, ampere)
+  call solve_maxwell_2d_periodic_cartesian_par(plan, dt, ex, ey, bz, faraday)
+  call solve_maxwell_2d_periodic_cartesian_par(plan, dt, ex, ey, bz, ampere)
 
 
   call parallel_hdf5_write_array_2d( 'bz_analytical.h5', ncx, ncy, bz_an, 'bz_an', layout_x)
@@ -122,7 +126,7 @@ program test_maxwell_2d_periodic_cart_par
 
   call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
        1, MPI_PROD, 0, prod4test )
-  if (myrank==0) then
+  if (myrank==MPI_MASTER) then
 
      if (prod4test(1)==1.) then
         call flush(6)
