@@ -35,6 +35,8 @@ SET(SLL_SOURCE_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_xdmf_parallel.F90 
 	${CMAKE_CURRENT_SOURCE_DIR}/../timer/sll_timer.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../collective/sll_collective.F90
+	${CMAKE_CURRENT_SOURCE_DIR}/../remap/sll_remap.F90
+	${CMAKE_CURRENT_SOURCE_DIR}/../electric_field_accumulators/electric_field_2d.F90
         ${CMAKE_CURRENT_SOURCE_DIR}/../splines/sll_splines.F90
         ${CMAKE_CURRENT_SOURCE_DIR}/../splines/sll_quintic_splines.F90
         ${CMAKE_CURRENT_SOURCE_DIR}/../splines/sll_odd_degree_splines.F90
@@ -47,7 +49,10 @@ SET(SLL_SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/../interpolators/sll_cubic_spline_interpolator_1d.F90
         ${CMAKE_CURRENT_SOURCE_DIR}/../numerical_utilities/tridiagonal.F90
         ${CMAKE_CURRENT_SOURCE_DIR}/../numerical_utilities/sll_toeplitz_penta_diagonal.F90
-        ${CMAKE_CURRENT_SOURCE_DIR}/../numerical_utilities/lagrange_interpolation.F90 )
+        ${CMAKE_CURRENT_SOURCE_DIR}/../numerical_utilities/lagrange_interpolation.F90
+        ${CMAKE_CURRENT_SOURCE_DIR}/../maxwell_solvers/sll_maxwell.F90
+        ${CMAKE_CURRENT_SOURCE_DIR}/../maxwell_solvers/sll_maxwell_2d_fdtd.F90
+        ${CMAKE_CURRENT_SOURCE_DIR}/../maxwell_solvers/sll_maxwell_2d_pstd.F90)
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
 

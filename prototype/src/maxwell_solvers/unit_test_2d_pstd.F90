@@ -41,8 +41,9 @@ sll_real64, dimension(:,:), allocatable :: ez, ez_exact
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
 sll_real64, dimension(:,:), allocatable :: hz, hz_exact
+sll_real64 :: tstart, tend
 
-
+call cpu_time(tstart)
 !Polarisation TE
 !ex =  cos(x)*sin(y)*sin(omega*time)/omega
 !ey = -sin(x)*cos(y)*sin(omega*time)/omega
@@ -126,6 +127,8 @@ do istep = 1, nstep !*** Loop over time
 
 end do ! next time step
 
+call cpu_time(tend)
+print"('CPU time : ',g15.3)", tend-tstart
 print*,'PASSED'
 
 DEALLOCATE(hx)

@@ -194,7 +194,6 @@ do iter=1,nbiter
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
    endif
 
-   write(*,*) iter
    if (mod(iter,fthdiag).eq.0) then 
       call thdiag(vlas2d,f,nrj,iter*dt,jstartv)
    endif
