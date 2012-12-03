@@ -1,7 +1,7 @@
 &PARALLEL
   Nbproc_r     = 2
   Nbproc_theta = 1
-  Nbproc_mu    = 8
+  Nbproc_mu    = 2
   bloc_phi     = 2
   Nbthread     = 2
   transpose4D  = .false.,
@@ -9,10 +9,10 @@
 
 &MESH
   Nr             = 63
-  Ntheta         = 128
+  Ntheta         = 64
   Nphi           = 32
   Nvpar          = 15
-  Nmu            = 7
+  Nmu            = 1
   a              = 100.
   rhomin         = 0.2
   rhomax         = 0.8
@@ -64,8 +64,6 @@
   deltar_shear   = 0.05,
 /
 
-  
-
 &ALGORITHM
   leapfrog       = .true.
   LF_average     = 2
@@ -81,7 +79,6 @@
   diag_nbstep    = 2
   refresh_nbstep = 2
 /
-
 
 &TEST
   memory_test       = .false.
@@ -100,15 +97,15 @@
 /
 
 &OUTPUT
-  integration_CS    = .true.
+  integration_CS    = .false.
   diag_level        = 5
   Phi3D_saving      = .true.
-  FMoments3D_saving = .true.
+  FMoments3D_saving = .false.
   f5D_saving        = .false.
   CalviExp_saving   = .false.
   Phi3D_nbstep      = 2
   FMoments3D_nbstep = 2
   f5D_nbstep        = 4
   CalviExp_nbstep   = 4
-  rst_saving        = .true.,
+  rst_saving        = .false.,
 /
