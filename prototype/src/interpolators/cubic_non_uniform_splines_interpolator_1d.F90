@@ -10,18 +10,19 @@ use sll_splines
   implicit none
 
 #ifdef STDF95
-  type                                    ::  cubic_non_uniform_splines_1d_interpolator
+  type                                    ::  cubic_non_uniform_spline_1d_interpolator
 #else  
-  type, extends(sll_interpolator_1d_base) ::  cubic_non_uniform_splines_1d_interpolator
+  type, extends(sll_interpolator_1d_base) ::  cubic_non_uniform_spline_1d_interpolator
 #endif
      sll_real64, dimension(:), pointer     :: interpolation_points 
      sll_int32                     :: num_points ! size
      sll_int32                     :: bc_type
      type(sll_spline_1D), pointer  :: spline
+     type(cubic_nonunif_spline_1D), pointer  :: nonunif_spline
 #ifdef STDF95
 #else
    contains
-     procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
+     procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator2
      procedure :: compute_interpolants => compute_interpolants_cs1d
      procedure :: interpolate_value => interpolate_value_cs1d
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
@@ -35,7 +36,7 @@ use sll_splines
      procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
 #endif
-  end type cubic_non_uniform_splines_1d_interpolator
+  end type cubic_non_uniform_spline_1d_interpolator
 
   interface delete
      module procedure delete_cs1d
@@ -58,11 +59,11 @@ contains  ! ****************************************************************
 #ifdef STDF95
   function cubic_spline_interpolate_array(this, num_points, data, coordinates) &
        result(data_out)
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(in)       :: this
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #else
   function spline_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(in)       :: this
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
@@ -81,11 +82,11 @@ contains  ! ****************************************************************
   function cubic_spline_interpolate_array_at_displacement(this, num_points, &
        data, coordinates) &
        result(data_out)
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(in)       :: this
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #else
   function spline_interpolate1d_disp(this, num_points, data, alpha) &
        result(data_out)
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(in)       :: this
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
@@ -140,10 +141,10 @@ contains  ! ****************************************************************
   ! the cs1d at initialization time.  
 #ifdef STDF95
   subroutine cubic_spline_compute_interpolants( interpolator, data_array )
-    type(cubic_non_uniform_splines_1d_interpolator), intent(inout)  :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
   subroutine compute_interpolants_cs1d( interpolator, data_array )
-    class(cubic_non_uniform_splines_1d_interpolator), intent(inout) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     call compute_spline_1D( data_array, interpolator%spline )
@@ -164,9 +165,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output_array )
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
@@ -182,9 +183,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output )
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
@@ -201,9 +202,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output_array )
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
@@ -219,9 +220,9 @@ contains  ! ****************************************************************
     vals_to_interpolate, &
     output )
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #else
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(in) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
 #endif
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
@@ -233,10 +234,10 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function cubic_spline_interpolate_value( interpolator, eta1 ) result(val)
-    type(cubic_non_uniform_splines_1d_interpolator), intent(inout) :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
 #else
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
-    class(cubic_non_uniform_splines_1d_interpolator), intent(inout) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -246,10 +247,10 @@ contains  ! ****************************************************************
 #ifdef STDF95
   function cubic_spline_interpolate_derivative_eta1( interpolator, eta1 ) &
        result(val)
-    type(cubic_non_uniform_splines_1d_interpolator), intent(inout)  :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
-    class(cubic_non_uniform_splines_1d_interpolator), intent(inout) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
@@ -262,10 +263,10 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function cubic_spline_interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    type(cubic_non_uniform_splines_1d_interpolator), intent(in) :: interpolator
+    type(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(cubic_non_uniform_splines_1d_interpolator), intent(in) :: interpolator
+    class(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
 #endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -284,7 +285,7 @@ contains  ! ****************************************************************
 #ifdef STDF95
   subroutine cubic_spline_initialize( &
 #else
-  subroutine initialize_cs1d_interpolator( &
+  subroutine initialize_cs1d_interpolator2( &
 #endif
     interpolator, &
     num_points, &
@@ -295,9 +296,9 @@ contains  ! ****************************************************************
     slope_right )
 
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator),  intent(inout)  :: interpolator 
+    type(cubic_non_uniform_spline_1d_interpolator),  intent(inout)  :: interpolator 
 #else
-    class(cubic_non_uniform_splines_1d_interpolator),  intent(inout) :: interpolator 
+    class(cubic_non_uniform_spline_1d_interpolator),  intent(inout) :: interpolator 
 #endif
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
@@ -333,9 +334,9 @@ contains  ! ****************************************************************
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator), intent(in)      :: this
+    type(cubic_non_uniform_spline_1d_interpolator), intent(in)      :: this
 #else
-    class(cubic_non_uniform_splines_1d_interpolator), intent(in)     :: this
+    class(cubic_non_uniform_spline_1d_interpolator), intent(in)     :: this
 #endif
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
@@ -345,9 +346,9 @@ contains  ! ****************************************************************
 
   subroutine delete_cs1d( obj )
 #ifdef STDF95
-    type(cubic_non_uniform_splines_1d_interpolator) :: obj
+    type(cubic_non_uniform_spline_1d_interpolator) :: obj
 #else  
-    class(cubic_non_uniform_splines_1d_interpolator) :: obj
+    class(cubic_non_uniform_spline_1d_interpolator) :: obj
 #endif
     call delete(obj%spline)
   end subroutine delete_cs1d

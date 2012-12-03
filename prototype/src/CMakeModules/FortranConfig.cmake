@@ -61,23 +61,24 @@ MESSAGE(STATUS "Fortran_COMPILER:${Fortran_COMPILER}")
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
    ADD_DEFINITIONS(-DGFORTRAN)
 
-   IF(CMAKE_BUILD_TYPE MATCHES Release)
-      SET(CMAKE_Fortran_FLAGS "-fomit-frame-pointer -Wall -cpp -ffree-line-length-none -fall-intrinsics -O3")
-   ELSE()
-      SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0")
-   ENDIF()
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0")
 
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
+
    ADD_DEFINITIONS(-DINTEL)
-   IF(CMAKE_BUILD_TYPE MATCHES Release)
-      SET(CMAKE_Fortran_FLAGS "-O3 -xHost -ip")
-   ELSE()
-      SET(CMAKE_Fortran_FLAGS "-O0 -check all -fpe0 -traceback -ftrapuv ")
-   ENDIF()
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all -fpe0 -traceback -ftrapuv")
+
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
-   SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+
 ELSE()
+
    MESSAGE(STATUS "NO KNOWN FORTRAN COMPILER FOUND")
+
 ENDIF()
 
 
@@ -86,12 +87,11 @@ ENDIF()
 #  SET(STDF95_ENABLED OFF)
 #ELSE()
 IF(STDF95_ENABLED)
-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
   add_definitions(-DSTDF95)
   IF(${Fortran_COMPILER} STREQUAL "GFORTRAN")
-     SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
+     SET(CMAKE_Fortran_FLAGS_DEBUG "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
      SET(STDF95 YES)
      ADD_DEFINITIONS(-DSTDF95)
   ENDIF()
 ENDIF()
-

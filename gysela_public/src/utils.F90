@@ -55,7 +55,7 @@ module utils_module
     integer                    , intent(in)    :: n
     real(RKIND), dimension(0:n), intent(in)    :: x
     real(RKIND)                , intent(in)    :: h
-    character (LEN=50)         , intent(in)    :: subp
+    character (LEN=*)         , intent(in)    :: subp
     integer                    , intent(inout) :: ipos_left
     
     if (h.eq.0._RKIND) then
@@ -90,7 +90,7 @@ module utils_module
     real(RKIND)               , intent(in)  :: xstar
     integer                   , intent(in)  :: n
     real(RKIND), dimension(0:), intent(in)  :: x
-    character (LEN=50)        , intent(in)  :: subp
+    character (LEN=*)        , intent(in)  :: subp
     integer                   , intent(out) :: ipos_left 
     
     integer :: first_indx
