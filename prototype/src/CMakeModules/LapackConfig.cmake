@@ -1,3 +1,4 @@
+
 MESSAGE(STATUS "LAPACK:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 
 IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
@@ -14,11 +15,13 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
       ENDIF()
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
+      SET(BLAS_LIBRARIES  " ")
 
-   ELSEIF($ENV{HOST} MATCHES "hydra01") 
+   ELSEIF($ENV{HOSTNAME} MATCHES "hydra") 
                                       
-      SET(LAPACK_LIBRARIES -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64 
-                        -lmkl_lapack95_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core)
+      INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
+      SET(BLAS_LIBRARIES "-Xlinker -rpath -Xlinker $ENV{MKLROOT}/lib/intel64 -L$ENV{MKLROOT}/lib/intel64 -lmkl_blas95_lp64")
+      SET(LAPACK_LIBRARIES "-Xlinker -rpath -Xlinker $ENV{MKLROOT}/lib/intel64 -L$ENV{MKLROOT}/lib/intel64 -lmkl_lapack95_lp64 -lmkl_rt -lpthread -lm")
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
 
@@ -28,6 +31,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
       SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread)
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
+      SET(BLAS_LIBRARIES  " ")
 
    ENDIF()
 
@@ -40,7 +44,8 @@ ENDIF()
 
 IF(LAPACK_FOUND AND BLAS_FOUND)
 
-  MESSAGE(STATUS "LAPACK and BLAS libraries are ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}")
+  MESSAGE(STATUS "BLAS libraries are ${BLAS_LIBRARIES}")
+  MESSAGE(STATUS "LAPACK libraries are ${LAPACK_LIBRARIES}")
 
 ELSE(LAPACK_FOUND AND BLAS_FOUND)
 
@@ -58,6 +63,7 @@ ELSE(LAPACK_FOUND AND BLAS_FOUND)
 
   ELSE()
 
+     MESSAGE(SEND_ERROR "LAPACK NOT FOUND")
      SET(LAPACK_LIBRARIES " ")
      SET(BLAS_LIBRARIES " ")
  

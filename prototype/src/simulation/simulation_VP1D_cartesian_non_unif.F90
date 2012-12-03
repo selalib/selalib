@@ -54,10 +54,10 @@ contains
     sll_real64 :: val,x1,x2,tmp
     
     !initialization of parameters
-    N_x1=64
+    N_x1=256
     N_x2=N_x1
     N_x1_poisson=1024
-    mesh_case=1 !1: uniform case 2: non_unif_scale perturbation
+    mesh_case=2 !1: uniform case 2: non_unif_scale perturbation
     test_case=1 !1: landau damping
     rho_case=1  !1: trap 2: splines 3: gaussian 4: gaussian sym 
                 !5: spline_per
