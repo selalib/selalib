@@ -48,10 +48,20 @@ subroutine parallel_data
   integer            :: position
   integer, parameter :: lbuffer = 1024
   character*1        :: buffer(lbuffer)
+  integer            :: iargc, error
+  character(len=72)  :: argv
       
   if (pglobal_id.eq.outputproc) then    
-    open(UNIT=21,FILE='DATA') 
-    read(21,PARALLEL)
+
+    if (iargc() == 0) stop 'Usage: ./bin/gysela fichier-de-donnees.nml'
+    call getarg( 1, argv) 
+
+    open(UNIT=21,FILE=trim(argv)) 
+    read(21,PARALLEL,iostat=error) 
+    if(error /= 0) then
+        write(*,*)"namelist PARALLEL mising"
+        write(*,*)"default values"
+    endif
     write(uout_res,PARALLEL)
     position = 0
     CALL MPI_PACK(Nbproc_r,1,MPI_INTEGER,buffer,lbuffer, &
@@ -123,10 +133,21 @@ subroutine mesh_data
   integer            :: position
   integer, parameter :: lbuffer = 1024
   character*1        :: buffer(lbuffer)
+  integer            :: iargc, error
+  character(len=72)  :: argv
       
   if (pglobal_id.eq.outputproc) then
-    open(UNIT=21,FILE='DATA') 
-    read(21,MESH)
+      
+
+    if (iargc() == 0) stop 'Usage: ./bin/gysela fichier-de-donnees.nml'
+    call getarg( 1, argv) 
+
+    open(UNIT=21,FILE=trim(argv)) 
+    read(21,MESH,iostat=error)
+    if(error /= 0) then
+        write(*,*)"namelist MESH mising"
+        write(*,*)"default values"
+    endif
     write(uout_res,MESH)
     position = 0
     CALL MPI_PACK(Nr,1,MPI_INTEGER,buffer,lbuffer,position, &
@@ -324,10 +345,20 @@ subroutine equil_data
   integer            :: position
   integer, parameter :: lbuffer = 1024
   character*1        :: buffer(lbuffer)
+  integer            :: iargc, error
+  character(len=72)  :: argv
+      
       
   if (pglobal_id.eq.0) then
-    open(UNIT=21,FILE='DATA') 
-    read(21,EQUIL)
+    if (iargc() == 0) stop 'Usage: ./bin/gysela fichier-de-donnees.nml'
+    call getarg( 1, argv) 
+    open(UNIT=21,FILE=trim(argv)) 
+    read(21,EQUIL,iostat=error) 
+    if(error /= 0) then
+        write(*,*)"namelist EQUIL mising"
+        write(*,*)"default values"
+    endif
+
     write(uout_res,EQUIL)
     position = 0
     CALL MPI_PACK(plasma_current,1,MPI_LOGICAL,buffer,lbuffer, &
@@ -562,10 +593,19 @@ subroutine algorithm_data
   integer            :: position
   integer, parameter :: lbuffer = 1024
   character*1        :: buffer(lbuffer)
+  integer            :: iargc, error
+  character(len=72)  :: argv
   
   if (pglobal_id.eq.0) then
-    open(UNIT=21,FILE='DATA') 
-    read(21,ALGORITHM)
+    if (iargc() == 0) stop 'Usage: ./bin/gysela fichier-de-donnees.nml'
+    call getarg( 1, argv) 
+    open(UNIT=21,FILE=trim(argv)) 
+    read(21,ALGORITHM,iostat=error) 
+    if(error /= 0) then
+        write(*,*)"namelist ALGORITHM mising"
+        write(*,*)"default values"
+    endif
+
     write(uout_res,ALGORITHM)
     position = 0
     CALL MPI_PACK(leapfrog,1,MPI_LOGICAL,buffer,lbuffer, &
@@ -656,10 +696,19 @@ subroutine test_data
   integer            :: position
   integer, parameter :: lbuffer = 1024
   character*1        :: buffer(lbuffer)
+  integer            :: iargc, error
+  character(len=72)  :: argv
   
-  if (pglobal_id.eq.outputproc) then
-    open(UNIT=21,FILE='DATA') 
-    read(21,TEST)
+  if (pglobal_id.eq.0) then
+    if (iargc() == 0) stop 'Usage: ./bin/gysela fichier-de-donnees.nml'
+    call getarg( 1, argv) 
+    open(UNIT=21,FILE=trim(argv)) 
+    read(21,TEST,iostat=error) 
+    if(error /= 0) then
+        write(*,*)"namelist TEST mising"
+        write(*,*)"default values"
+    endif
+
     write(uout_res,TEST)
     position = 0
     CALL MPI_PACK(memory_test,1,MPI_LOGICAL,buffer,lbuffer, &
@@ -775,10 +824,19 @@ subroutine output_data
   integer            :: position
   integer, parameter :: lbuffer = 1024
   character*1        :: buffer(lbuffer)
+  integer            :: iargc, error
+  character(len=72)  :: argv
   
   if (pglobal_id.eq.0) then
-    open(UNIT=21,FILE='DATA') 
-    read(21,OUTPUT)
+    if (iargc() == 0) stop 'Usage: ./bin/gysela fichier-de-donnees.nml'
+    call getarg( 1, argv) 
+    open(UNIT=21,FILE=trim(argv)) 
+    read(21,OUTPUT,iostat=error) 
+    if(error /= 0) then
+        write(*,*)"namelist OUTPUT mising"
+        write(*,*)"default values"
+    endif
+
     write(uout_res,OUTPUT)
     position = 0
     CALL MPI_PACK(integration_CS,1,MPI_LOGICAL,buffer,lbuffer, &

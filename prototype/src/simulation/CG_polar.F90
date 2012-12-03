@@ -675,7 +675,7 @@ program cg_polar
 
      if (step==1 .or. step/visustep*visustep==step) then
         !call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CG")
-        call plot_f(step)
+        call plot_f(step/visustep)
      end if
 
 

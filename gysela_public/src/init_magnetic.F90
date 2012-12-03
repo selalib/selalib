@@ -65,7 +65,7 @@ module init_magnetic_class
   !******************************
   contains
   !******************************
-#include "Bstar_inline.f90"
+#include "Bstar_inline.F90"
      
   !---------------------------------------------------- 
   ! Constructor for magnetic field configuration 

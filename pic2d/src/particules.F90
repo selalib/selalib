@@ -19,20 +19,19 @@ subroutine creapa( ele, time )
 
 type  (particle) :: ele
 sll_real64 :: time
-sll_int32  :: error
 
 select case (nomcas)
 
 case ("viry__")
 
    nbpart = 1
-   SLL_ALLOCATE(ele%pos(nbpart,2),error)
-   SLL_ALLOCATE(ele%case(nbpart,2),error)
-   SLL_ALLOCATE(ele%vit(nbpart,2),error)
-   SLL_ALLOCATE(ele%epx(nbpart),error)
-   SLL_ALLOCATE(ele%epy(nbpart),error)
-   SLL_ALLOCATE(ele%bpz(nbpart),error)
-   SLL_ALLOCATE(ele%p(nbpart),error)
+   allocate(ele%pos(nbpart,2))
+   allocate(ele%case(nbpart,2))
+   allocate(ele%vit(nbpart,2))
+   allocate(ele%epx(nbpart))
+   allocate(ele%epy(nbpart))
+   allocate(ele%bpz(nbpart))
+   allocate(ele%p(nbpart))
    
    ele%pos(1,1) = 0.1*dimx 
    ele%pos(1,2) = 0.1*dimy

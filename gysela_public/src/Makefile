@@ -21,13 +21,13 @@
 #**************************************************************
 
 # HDF5 librariries root
-BASEHDF5=/usr/local/hdf5
+BASEHDF5=${HDF5_HOME}
 
 # MPI fortran
-F90=/opt/intel9/openmpi/bin/mpif90
+F90=mpiifort
 
 # Fortran compiler options
-F90FLAGS = -cpp -O3 -DCTIMER -I$(BASEHDF5)/lib
+F90FLAGS = -cpp -O3 -DCTIMER 
 
 # preprocessor directive
 TIMERFLAG = -DTIMER
@@ -39,7 +39,7 @@ OMPFLAG = -openmp
 R3FLAG = -DUSE_R3_INFO_MPI
 
 # MPICH library
-LIBS = -L/opt/intel9/openmpi/lib -lmpi
+LIBS = 
 
 # zlib libray used by HDF5 functions
 LDFLAGS = ${OMPFLAG} -lz 
@@ -48,7 +48,7 @@ LDFLAGS = ${OMPFLAG} -lz
 CFLAGS = -O3 -DNORMAL
 
 # HDF5 libraries
-HDF5INCLUDE = -I$(BASEHDF5)/lib
+HDF5INCLUDE = -I$(BASEHDF5)/include
 HDF5LIB     = $(BASEHDF5)/lib/libhdf5_fortran.a $(BASEHDF5)/lib/libhdf5.a 
 NOHDF5FLAG  = -DNOHDF5
 
