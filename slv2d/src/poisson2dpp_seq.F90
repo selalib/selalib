@@ -1,13 +1,12 @@
 module poisson2dpp_seq
 
-#include "selalib.h"
-
 use used_precision
 use geometry_module
 use fft_module
+#include "selalib.h"
+
 
 implicit none
-private
 public :: new, dealloc, solve, transposexy, transposeyx
 
 type, public:: poisson2dpp
