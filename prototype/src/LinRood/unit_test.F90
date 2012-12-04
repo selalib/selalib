@@ -94,9 +94,9 @@ program unit_test
 
   print*, 'write mesh and distribution function'
 
-  istep = 0
-  call int2string(istep,cstep)
-  df%name = trim(name)//cstep
+  !istep = 0
+  !call int2string(istep,cstep)
+  !df%name = trim(name)//cstep
   
   call write_scalar_field_2d(df)!,multiply_by_jacobian=.true.) 
 
@@ -140,7 +140,7 @@ program unit_test
              + m%x2_cell(i1,i2)**2)
      end do
   end do
-
+  call write_scalar_field_2d(df)
 
   print *, 'Successful, exiting program.'
 
