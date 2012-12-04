@@ -1,9 +1,9 @@
 if(CMAKE_Fortran_COMPILER MATCHES "gfortran")
-set(CMAKE_Fortran_FLAGS "-O2 -funroll-loops -fexpensive-optimizations")
+   set(CMAKE_Fortran_FLAGS "-O2 -funroll-loops -fexpensive-optimizations")
 elseif(CMAKE_Fortran_COMPILER MATCHES "ifort")
-	set(CMAKE_Fortran_FLAGS "-O2")
+   set(CMAKE_Fortran_FLAGS "-O2")
 elseif(CMAKE_Fortran_COMPILER MATCHES "xlf")
-	set(CMAKE_Fortran_FLAGS "-O2")
+   set(CMAKE_Fortran_FLAGS "-O2")
 endif()
 
 SET(DFFTPACK_SRCS zfftb.f
@@ -57,3 +57,5 @@ sint1.f
 dsinti.f)
 
 ADD_LIBRARY(dfftpack STATIC ${DFFTPACK_SRCS})
+
+set(CMAKE_Fortran_FLAGS "")

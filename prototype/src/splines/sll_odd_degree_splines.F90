@@ -7,7 +7,7 @@
 !> Selalib odd degree splines interpolator
 !
 !> Start date: July 26, 2012
-!> Last modification: October 25, 2012
+!> Last modification: Nov 30, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -29,18 +29,39 @@ use arbitrary_degree_splines
     sll_real64                            :: xmax
     sll_real64, dimension(:), pointer     :: coeffs
     sll_real64, dimension(:,:), pointer   :: matrix
+   ! matrix will be the result of Choleski factorization
    end type odd_degree_splines_uniform_plan
 
-  type odd_degree_splines_non_uni_plan
+  type odd_degree_splines_nonuniform_plan
+    sll_int32                             :: num_pts
     sll_int32                             :: degree
+    sll_real64                            :: xmin
+    sll_real64                            :: xmax
 #ifdef STDF95
     sll_real64, dimension(:), pointer :: coeffs
 #else
     sll_real64, dimension(:), allocatable     :: coeffs
 #endif
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
-    sll_real64, dimension(:), pointer     :: matrix_elements
-  end type odd_degree_splines_non_uni_plan 
+    sll_real64, dimension(:), allocatable     :: b_spline
+    sll_real64, dimension(:,:),allocatable    :: matrix
+    sll_real64, dimension(:), allocatable     :: ipiv ! for matrix LU solving
+  end type odd_degree_splines_nonuniform_plan 
+
+  interface compute_odd_degree_coeffs
+     module procedure compute_odd_degree_coeffs_uniform, &
+          compute_odd_degree_coeffs_nonuniform
+  end interface compute_odd_degree_coeffs
+
+  interface odd_degree_splines
+     module procedure odd_degree_splines_interpolator_uniform_value, &
+                         odd_degree_splines_interpolator_nonuniform_value
+  end interface odd_degree_splines
+
+  interface delete_odd_degree_splines
+     module procedure delete_odd_degree_splines_uniform, &
+          delete_odd_degree_splines_nonuniform
+  end interface delete_odd_degree_splines
 
 contains 
 
@@ -66,7 +87,7 @@ contains
     SLL_ALLOCATE(matrix_elements(degree+1), ierr)
     SLL_ALLOCATE(A(m,m), ierr)
     SLL_ALLOCATE(plan%matrix(m,m), ierr)
-    SLL_ALLOCATE(plan%coeffs(m), ierr)
+    SLL_ALLOCATE(plan%coeffs(-degree:num_pts-1), ierr)
 
     plan%num_pts = num_pts
     plan%degree = degree
@@ -92,8 +113,8 @@ contains
        enddo
     enddo
 
-    LDAB = size(plan%matrix,1)
     ! Cholesky factorization with
+    LDAB = size(plan%matrix,1)
     call DPBTRF( 'L', m, KD, plan%matrix, LDAB, ierr )
 
     SLL_DEALLOCATE_ARRAY(matrix_elements, ierr)
@@ -109,21 +130,21 @@ contains
 
     sll_real64, dimension(:)                        :: f
     type(odd_degree_splines_uniform_plan), pointer  :: plan
-    sll_int32                                       :: degree, n, m
+    sll_int32                                       :: deg, n, m
     sll_int32                                       :: KD, LDAB, ierr
     
-    degree = plan%degree
+    deg = plan%degree
     n = plan%num_pts - 1
 
     ! plan%coeffs is the solution vector of the linear system
     ! It is inout for lapack routine
     plan%coeffs = 0.d0
-    plan%coeffs(degree/2+1:n+degree/2+1) = f
+    plan%coeffs(deg/2-deg:deg/2-deg+n) = f
 
     ! Solve the linear system with LAPACK
 
     m = size(plan%coeffs)
-    KD = degree/2
+    KD = deg/2
     LDAB = size(plan%matrix,1)
 
     ! Solve the linear system with Cholesky factorization
@@ -142,33 +163,27 @@ contains
     sll_real64                                     :: x, xmin, xmax
     sll_real64                                     :: h, s
     type(odd_degree_splines_uniform_plan), pointer :: plan
-    sll_int32                                      :: n, j, left, degree
+    sll_int32                                      :: n, left, deg
     sll_real64, dimension(plan%degree+1)           :: b
     sll_real64                                     :: t0
 
     xmin = plan%xmin
     xmax = plan%xmax
     n = plan%num_pts - 1
-    degree = plan%degree
+    deg = plan%degree
     h = (xmax-xmin)/n
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(plan)) 
+    SLL_ASSERT(associated(plan))
     SLL_ASSERT(x >= xmin)
     SLL_ASSERT(x <= xmax)
 
     t0 = (x-xmin)/h
     left = int(t0) ! Determine the leftmost support index 'i' of x
     t0 = t0 - left ! compute normalized_offset
+    b = uniform_b_splines_at_x( deg, t0 )
 
-    b = uniform_b_splines_at_x( degree, t0 )
-    s = 0.d0
-
-    do j=left-degree,left
-       if ( (j>=-degree) .and. (j<=n) ) then
-          s = s + plan%coeffs(j+degree+1) * b(j-left+degree+1)
-       endif
-    enddo
+    s = dot_product( plan%coeffs(left-deg:left), b )
 
   end function odd_degree_splines_interpolator_uniform_value
 
@@ -210,6 +225,7 @@ contains
     type(odd_degree_splines_uniform_plan), pointer :: plan
     sll_int32                                      :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
     SLL_DEALLOCATE_ARRAY(plan%matrix, ierr)
     SLL_DEALLOCATE_ARRAY(plan, ierr)
@@ -223,88 +239,120 @@ contains
   ! *************************************************************************
 
   ! num_pts = nb_cells + 1
-  function new_odd_degree_splines_non_uni(degree, knots) result(plan)
+  function new_odd_degree_splines_nonuniform(degree, knots) result(plan)
 
-    sll_int32                                      :: degree, num_pts, ierr
-    sll_real64, dimension(:), intent(in)           :: knots
-    type(odd_degree_splines_non_uni_plan), pointer :: plan
+    sll_int32                                         :: degree , num_pts, ierr
+    sll_real64, dimension(:), intent(in)              :: knots
+    sll_real64, dimension(:), allocatable             :: knots_fictive
+    type(odd_degree_splines_nonuniform_plan), pointer :: plan
+    sll_real64, dimension(:,:), allocatable           :: A
+    sll_int32                                         :: i, ii, j, m, cell
+    sll_int32                                         :: KL, KU, LDAB
 
-    if (mod(degree,2) == 0) then
-       print*, 'This needs to run with odd spline degree'
-       print*, 'Exiting...'
-       stop
+    num_pts = size(knots)
+    m = num_pts + degree
+
+    if( num_pts < degree+1 ) then
+       print *, 'ERROR, new_odd_degree_splines_nonuniform: Because of the algorithm used, ', &
+                 'this function is meant to be used with arrays that are at ', &
+                 'least of size = ', degree+1
+       STOP 'new_odd_degree_splines_nonuniform'
     endif
 
     ! Plan allocation
     SLL_ALLOCATE(plan, ierr)
+
+    plan%num_pts = num_pts
+    plan%xmin = knots(1)
+    plan%xmax = knots(num_pts)
+    plan%degree = degree
+
     ! plan component allocation
-    num_pts = size(knots)
-    SLL_ALLOCATE(plan%coeffs(num_pts+degree), ierr)
-    SLL_ALLOCATE(plan%matrix_elements(degree+1), ierr)
+    SLL_ALLOCATE(plan%coeffs(-degree:num_pts-1), ierr)
+    SLL_ALLOCATE(plan%ipiv(m), ierr)
+    SLL_ALLOCATE(knots_fictive(-degree:num_pts-1+degree+1/degree), ierr) ! When degree = 1,
+    ! adding 1 point beyond xmax would be not enough
+    ! So instead of 1 point beyond xmax, we add 2 points, for degree 1
+    SLL_ALLOCATE(A(m,m), ierr)
+    SLL_ALLOCATE(plan%matrix(m,m), ierr)
+    SLL_ALLOCATE(plan%b_spline(degree+1), ierr)
 
-    plan%spline_obj=>new_arbitrary_degree_spline_1d(degree, knots, num_pts, 1)
+    do i=-degree,-1
+       knots_fictive(i) = 2*knots(1) - knots(-i+1)
+    enddo
+    knots_fictive(0:num_pts-1) = knots
+    do i=num_pts,num_pts-1+degree+1/degree
+       knots_fictive(i) = 2*knots(num_pts) - knots(2*num_pts-i-1+1/degree) + 1/degree
+    enddo
 
-    plan%matrix_elements = b_splines_at_x( plan%spline_obj, num_pts-1, &
-                                                  plan%spline_obj%xmax )
+    plan%spline_obj=>new_arbitrary_degree_spline_1d(degree, knots_fictive, &
+                                                     size(knots_fictive), 1)
 
-  end function new_odd_degree_splines_non_uni
-
-
-  subroutine compute_odd_degree_coeffs_non_uni(f, plan)
-
-    ! f is the vector of the values of the function 
-    !  in the nodes of the mesh
-
-    sll_real64, dimension(:)                                   :: f
-    type(odd_degree_splines_non_uni_plan), pointer             :: plan
-    sll_real64, dimension(plan%spline_obj%num_pts+plan%degree) :: g
-    sll_int32                                                  :: degree, n, m, i, j
-    sll_real64, dimension(size(g),size(g))                     :: A, AB
-    sll_int32                                                  :: KD, LDAB, ierr
-    
-    degree = plan%degree
-    n = plan%spline_obj%num_pts - 1
-
-    g = 0.d0
-    g(degree/2+1:n+degree/2+1) = f
-
-    ! Solve the linear system with LAPACK
-
-    m = size(g)
-    KD = degree/2 ! called KD for lapack use
-
+    KL = degree/2 ! for LAPACK use
+    KU = degree/2 ! for LAPACK use
     A = 0.d0
-    do i=1,m
-       do j= -KD, KD
-          if ( (i+j>0) .and. (i+j<=m) ) then
-             A(i,i+j) = plan%matrix_elements(j+KD+1) 
+
+    do i=degree/2-degree+1,num_pts+degree/2
+       cell = i+degree+1
+       if ( i+degree+1 == size (knots_fictive) ) then
+          cell = cell - 1
+       endif
+       plan%b_spline = b_splines_at_x( plan%spline_obj, cell, knots_fictive(i) )
+       ii = i + degree - degree/2
+       do j= -KL, KU
+          if ( (ii+j>0) .and. (ii+j<=m) ) then
+             A(ii,ii+j) = plan%b_spline(j+KL+1) 
           endif
        enddo
-    enddo
+    enddo    
 
+    ! For linear system solving with LAPACK
     do j=1,m
-       do i=j,min(m,j+KD)
-          AB(1+i-j,j) = A(i,j)
+       do i=max(1,j-ku), min(m,j+kl)
+          plan%matrix(kl+ku+1+i-j,j) = A(i,j)
        enddo
     enddo
+    LDAB = size(plan%matrix,1)
+    ! LAPACK's LU factorization
+    call DGBTRF( m, m, KL, KU, plan%matrix, LDAB, plan%IPIV, ierr )
 
-    LDAB = size(AB,1)
-    ! Cholesky factorization
-    call DPBTRF( 'L', m, KD, AB, LDAB, ierr )
-    ! Solve the linear system with Cholesky factorization
-    plan%coeffs = g
-    call DPBTRS( 'L', m, KD, 1, AB, LDAB, plan%coeffs, m, ierr )
+    SLL_DEALLOCATE_ARRAY(A, ierr)
+    SLL_DEALLOCATE_ARRAY(knots_fictive, ierr)
 
-  end subroutine compute_odd_degree_coeffs_non_uni
+  end function new_odd_degree_splines_nonuniform
 
-  function odd_degree_splines_interpolator_non_uni_value(x, plan) result(s)
 
-    type(odd_degree_splines_non_uni_plan), pointer :: plan
-    sll_int32                                      :: n, cell, left, j
-    sll_real64                                     :: x, s
-    sll_real64, dimension(6)                       :: b
-    sll_real64, dimension(plan%spline_obj%num_pts) :: knots
-    sll_int32                                      :: degree, ierr
+  subroutine compute_odd_degree_coeffs_nonuniform(f, plan)
+
+  ! f is the vector of the values of the function 
+  !  in the nodes of the mesh*/
+
+    sll_real64, dimension(:)                          :: f
+    type(odd_degree_splines_nonuniform_plan), pointer :: plan
+    sll_int32                                         :: n, ierr, deg
+    sll_int32                                         :: KL, KU, LDAB, m
+
+    deg = plan%degree
+    n = plan%num_pts - 1
+    m = size(plan%coeffs)
+    KL = deg/2 ! for LAPACK use
+    KU = deg/2 ! for LAPACK use
+    LDAB = size(plan%matrix,1) ! for LAPACK use
+
+    ! Solve the linear system with LAPACK's LU
+    plan%coeffs = 0.d0
+    plan%coeffs(deg/2-deg:deg/2-deg+n) = f
+
+    call DGBTRS( 'N', m, KL, KU, 1, plan%matrix, LDAB, plan%IPIV, plan%coeffs, m, ierr)
+
+  end subroutine compute_odd_degree_coeffs_nonuniform
+
+  function odd_degree_splines_interpolator_nonuniform_value(x, plan) result(s)
+
+    type(odd_degree_splines_nonuniform_plan), pointer :: plan
+    sll_int32                                         :: n, cell, left
+    sll_real64                                        :: x, s
+    sll_int32                                         :: deg
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(plan))
@@ -312,93 +360,67 @@ contains
     SLL_ASSERT(x <= plan%spline_obj%xmax)
 
     n = plan%spline_obj%num_pts - 1
-    knots = plan%spline_obj%k(1:n+1)
-    degree = plan%degree
+    deg = plan%degree
 
-    !cell = 1
-    !do while( ( (x<knots(cell)) .or. (x>knots(cell+1)) ) .and. (cell<n) )
-    !     cell = cell + 1
-    !enddo
-    call find_cell(x, knots, (/(j, j=0,n)/), cell, ierr)
-
-    left = cell - 1
-    s = 0
-    do j=left-degree,left
-      if( (j>=-degree) .and. (j<=n) ) then
-        s = s + plan%coeffs(j+degree+1) * b(j-left+degree+1)
-      endif
+    ! This is for finding the cell containing x. It has to be improved regarding the computing time:
+    !--------------------------------------------------------------------------
+    cell = 1
+    do while( x < plan%spline_obj%k(cell) .or. x >= plan%spline_obj%k(cell+1) )
+         cell = cell + 1
     enddo
+    !--------------------------------------------------------------------------
 
-  end function odd_degree_splines_interpolator_non_uni_value
+    plan%b_spline = b_splines_at_x( plan%spline_obj, cell, x )
+    left = cell - (deg+1) ! left in the real mesh and not in the fictive one.
+    ! In fact, cell is the cell number of x in the fictive mesh and left
+    ! have to be for the left node in the real mesh.
 
-  !> indices is array containing the indices of the mesh: 0, 1,..., num_pts-1
-  recursive subroutine find_cell(x, knots, indices, cell, ierr)
+    s = dot_product( plan%coeffs(left-deg:left), plan%b_spline )
 
-    double precision               :: x
-    double precision, dimension(:) :: knots
-    integer, dimension(:)          :: indices
-    integer                        :: num_pts, n, cell, ierr
+  end function odd_degree_splines_interpolator_nonuniform_value
 
-    num_pts = size(knots)
-    n = num_pts / 2
-    ierr = 0
-
-    if ( num_pts > 2 ) then
-       call find_cell( x, knots(1:n), indices(1:n), cell, ierr )
-       if (ierr==0) then
-          call find_cell( x, knots(n+1:num_pts), &
-                indices(n+1:num_pts), cell, ierr )
-       endif
-    else
-       if ( (knots(1)<=x) .and. (x<=knots(2)) ) then
-          cell = indices(2)
-          ierr = 1
-       endif
-    endif
-
-  end subroutine find_cell
-
-  function odd_degree_splines_interpolator_non_uni_array(array, &
+  function odd_degree_splines_interpolator_nonuniform_array(array, &
                             num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:)                    :: array
-    type(odd_degree_splines_non_uni_plan), pointer :: plan_splines
+    type(odd_degree_splines_nonuniform_plan), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(num_pts)              :: res
 
     do i=1,num_pts
-       res(i) = odd_degree_splines_interpolator_non_uni_value( &
+       res(i) = odd_degree_splines_interpolator_nonuniform_value( &
                                          array(i), plan_splines)
     enddo
 
-  end function odd_degree_splines_interpolator_non_uni_array
+  end function odd_degree_splines_interpolator_nonuniform_array
 
-  function odd_degree_splines_interpolator_non_uni_pointer(ptr, &
+  function odd_degree_splines_interpolator_nonuniform_pointer(ptr, &
                             num_pts, plan_splines) result(res)
   
     sll_real64, dimension(:), pointer           :: ptr
-    type(odd_degree_splines_non_uni_plan), pointer :: plan_splines
+    type(odd_degree_splines_nonuniform_plan), pointer :: plan_splines
     sll_int32                                   :: i, num_pts
     sll_real64, dimension(:), pointer           :: res
 
     res => ptr
 
     do i=1,num_pts
-       res(i) = odd_degree_splines_interpolator_non_uni_value( &
+       res(i) = odd_degree_splines_interpolator_nonuniform_value( &
                                            ptr(i), plan_splines)
     enddo
 
-  end function odd_degree_splines_interpolator_non_uni_pointer
+  end function odd_degree_splines_interpolator_nonuniform_pointer
 
-  subroutine delete_odd_degree_splines_non_uni(plan)
+  subroutine delete_odd_degree_splines_nonuniform(plan)
 
-    type(odd_degree_splines_non_uni_plan), pointer :: plan
+    type(odd_degree_splines_nonuniform_plan), pointer :: plan
     sll_int32                                   :: ierr
 
+    SLL_ASSERT(associated(plan))
     SLL_DEALLOCATE_ARRAY(plan%coeffs, ierr)
-    call delete_arbitrary_order_spline_1d( plan%spline_obj )
+    call delete( plan%spline_obj )
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
-  end subroutine delete_odd_degree_splines_non_uni
+  end subroutine delete_odd_degree_splines_nonuniform
 
 end module sll_odd_degree_splines
