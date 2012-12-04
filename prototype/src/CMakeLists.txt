@@ -89,7 +89,6 @@ ENDIF()
  ADD_SUBDIRECTORY(mapped_meshes)
  ADD_SUBDIRECTORY(fields)
 IF(NOT STDF95)
-<<<<<<< HEAD
  ADD_SUBDIRECTORY(time_solvers)
 ENDIF(NOT STDF95)
  ADD_SUBDIRECTORY(ode_solvers)
@@ -189,7 +188,6 @@ ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
-<<<<<<< HEAD
 IF(STDF95)
 MESSAGE(STATUS " ")
 MESSAGE(STATUS "####################  F95  ###################")
@@ -202,10 +200,8 @@ MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
 MESSAGE(STATUS "##############################################")
 ENDIF(STDF95)
 
-INCLUDE(SequentialTests)
-=======
 #INCLUDE(SequentialTests)
->>>>>>> origin/prototype-devel
+
 
 IF(MPI_MODULE_ENABLED)
    INCLUDE(POEConfig)
