@@ -89,6 +89,7 @@ ENDIF()
  ADD_SUBDIRECTORY(mapped_meshes)
  ADD_SUBDIRECTORY(fields)
 IF(NOT STDF95)
+<<<<<<< HEAD
  ADD_SUBDIRECTORY(time_solvers)
 ENDIF(NOT STDF95)
  ADD_SUBDIRECTORY(ode_solvers)
@@ -105,6 +106,23 @@ ENDIF(NOT STDF95)
  ADD_SUBDIRECTORY(selalib_level EXCLUDE_FROM_ALL)
  ADD_SUBDIRECTORY(simulation)
  ADD_SUBDIRECTORY(visu_pic)
+
+ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
+ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
+				    test_interpolators_2d)
+
+ADD_TEST(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
+SET_TESTS_PROPERTIES(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME quintic_interpolators_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
+SET_TESTS_PROPERTIES(quintic_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_TEST(NAME odd_degree_interpolators_1d COMMAND test_odd_degree_interpolators_1d)
+SET_TESTS_PROPERTIES(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME odd_degree_interpolators_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
+SET_TESTS_PROPERTIES(odd_degree_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+##########################################################
+
 
 SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 
@@ -171,6 +189,7 @@ ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
+<<<<<<< HEAD
 IF(STDF95)
 MESSAGE(STATUS " ")
 MESSAGE(STATUS "####################  F95  ###################")
@@ -184,6 +203,9 @@ MESSAGE(STATUS "##############################################")
 ENDIF(STDF95)
 
 INCLUDE(SequentialTests)
+=======
+#INCLUDE(SequentialTests)
+>>>>>>> origin/prototype-devel
 
 IF(MPI_MODULE_ENABLED)
    INCLUDE(POEConfig)

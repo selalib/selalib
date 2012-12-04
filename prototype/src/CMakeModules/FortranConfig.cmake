@@ -61,13 +61,13 @@ MESSAGE(STATUS "Fortran_COMPILER:${Fortran_COMPILER}")
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
    ADD_DEFINITIONS(-DGFORTRAN)
 
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-fomit-frame-pointer -Wall -cpp -ffree-line-length-none -fall-intrinsics -O3")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0")
 
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 
    ADD_DEFINITIONS(-DINTEL)
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-O3 -xHost -ip")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all -fpe0 -traceback -ftrapuv")
 
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
