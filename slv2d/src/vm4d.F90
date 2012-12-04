@@ -12,24 +12,21 @@ program vm4d
 
   implicit none
 
-  type(geometry)   :: geomx 
-  type(geometry)   :: geomv 
-  type(vlasov4d)   :: vlas4d 
+  type(geometry)       :: geomx 
+  type(geometry)       :: geomv 
+  type(vlasov4d)       :: vlas4d 
   type (maxwell2dfdtd) :: maxw2dfdtd 
-  type(poisson2dpp):: poisson 
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
   type(cubic_spline_1d_interpolator), target :: spl_x2
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
 
-  sll_real64, dimension(:,:,:,:), pointer :: f4d
   sll_real64, dimension(:,:),     pointer :: bz
   sll_real64, dimension(:,:),     pointer :: ex
   sll_real64, dimension(:,:),     pointer :: ey 
   sll_real64, dimension(:,:),     pointer :: jx
   sll_real64, dimension(:,:),     pointer :: jy 
-  sll_real64, dimension(:,:),     pointer :: rho 
 
   sll_int32  :: nbiter, iter 
   sll_int32  :: fdiag, fthdiag  
@@ -41,27 +38,16 @@ program vm4d
   sll_int32  :: prank, comm
   sll_int64  :: psize
 
-  sll_real64, dimension(:,:,:,:), allocatable :: local_array1
-  sll_real64, dimension(:,:,:,:), allocatable :: local_array2
-  sll_int32                                   :: loc_sz_i_init
-  sll_int32                                   :: loc_sz_j_init
-  sll_int32                                   :: loc_sz_k_init
-  sll_int32                                   :: loc_sz_l_init
-  sll_int32                                   :: loc_sz_i_final
-  sll_int32                                   :: loc_sz_j_final
-  sll_int32                                   :: loc_sz_k_final
-  sll_int32                                   :: loc_sz_l_final
-  sll_int32                                   :: npi
-  sll_int32                                   :: npj
-  sll_int32                                   :: npk
-  sll_int32                                   :: npl
-  sll_int32                                 :: gi, gj, gk, gl
+  sll_int32                                   :: loc_sz_i
+  sll_int32                                   :: loc_sz_j
+  sll_int32                                   :: loc_sz_k
+  sll_int32                                   :: loc_sz_l
   sll_int32                                   :: ierr
-  type(layout_4D), pointer                  :: layout1
-  type(layout_4D), pointer                  :: layout2
-  type(remap_plan_4D_real64), pointer       :: rmp4
-  sll_int32, dimension(4)                   :: global_indices, g
-
+  sll_real64, dimension(:,:,:,:),  pointer    :: f
+  type(layout_4D), pointer                    :: layout_x
+  type(layout_4D), pointer                    :: layout_v
+  type(remap_plan_4D_real64), pointer         :: x_to_v 
+  type(remap_plan_4D_real64), pointer         :: v_to_x
 
   call sll_boot_collective()
   prank = sll_get_collective_rank(sll_world_collective)
@@ -96,99 +82,28 @@ program vm4d
      write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
   endif
 
-  layout1  => new_layout_4D( sll_world_collective )        
-  call factorize_in_random_2powers_4d(psize, npi, npj, npk, npl)
-  if( prank .eq. 0 ) then
-     print *, 'source configuration: ', npi, npj, npk, npl
-  end if
-
-  call initialize_layout_with_distributed_4D_array( &
-          geomx%nx, &
-          geomx%ny, &
-          geomv%nx, &
-          geomv%ny, &
-          npi, &
-          npj, &
-          npk, &
-          npl, &
-          layout1 )
-
-  call compute_local_sizes_4d(layout1,       &
-                              loc_sz_i_init, &
-                              loc_sz_j_init, &
-                              loc_sz_k_init, &
-                              loc_sz_l_init )        
-
-  SLL_ALLOCATE(local_array1(loc_sz_i_init,loc_sz_j_init,loc_sz_k_init,loc_sz_l_init),ierr)
- 
-  layout2  => new_layout_4D( sll_world_collective )
-  call factorize_in_random_2powers_4d(psize, npi, npj, npk, npl)
-
-  if( prank .eq. 0 ) then
-     print *, 'target configuration: ', npi, npj, npk, npl
-  end if
-
-  call initialize_layout_with_distributed_4D_array( &
-          geomx%nx, &
-          geomx%ny, &
-          geomv%nx, &
-          geomv%ny, &
-          npi, &
-          npj, &
-          npk, &
-          npl, &
-          layout2 )
-
-  call compute_local_sizes_4d(layout2, &
-                              loc_sz_i_final, &
-                              loc_sz_j_final, &
-                              loc_sz_k_final, &
-                              loc_sz_l_final )
-
-  SLL_ALLOCATE(local_array2(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final,loc_sz_l_final), ierr )
-   
-  rmp4 => new_remap_plan( layout1, layout2, local_array1)     
-
-  call apply_remap_4D( rmp4, local_array1, local_array2 ) 
-
-  print *, prank, 'Printing layout1: '
-  call sll_view_lims_4D( layout1 )
-  print *, prank, 'Printing layout2: '
-  call sll_view_lims_4D( layout2 )
-
-  call delete_layout_4D( layout1 )
-  call delete_layout_4D( layout2 )
-  SLL_DEALLOCATE_ARRAY(local_array1, ierr)
-  SLL_DEALLOCATE_ARRAY(local_array2, ierr)
-
-
-
-      
-
 
   call initlocal(jstartv,jendv,jstartx,jendx)
 
   call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
 
-  call transposevx(vlas4d,f4d)
-  call advection_x1(vlas4d,f4d,0.5*dt)
-  call advection_x2(vlas4d,f4d,0.5*dt)
+  call apply_remap_4D( v_to_x, vlas4d%ft, f )
+  call advection_x1(vlas4d,f,0.5*dt)
+  call advection_x2(vlas4d,f,0.5*dt)
 
   do iter=1,nbiter
 
      if (mod(iter,fdiag) == 0) then 
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
+        call plot_df(f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
+        call plot_df(f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
+        call plot_df(f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
+        call plot_df(f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
      end if
 
-     call transposexv(vlas4d,f4d)
+     call apply_remap_4D( x_to_v, f, vlas4d%ft )
 
-     call densite_charge(vlas4d,rho)
      call densite_courant(vlas4d,jx,jy)
      
-     !call solve(poisson,ex,ey,rho,nrj)
      if (iter == 1) then
      !   call solve_faraday(maxw2dfdtd,ex,ey,bz,0.5_f64*dt)
          call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,0.5_f64*dt)
@@ -202,13 +117,13 @@ program vm4d
      call advection_x3(vlas4d,ex,dt)
      call advection_x4(vlas4d,ey,dt)
 
-     call transposevx(vlas4d,f4d)
+     call apply_remap_4D( v_to_x, vlas4d%ft, f )
 
-     call advection_x1(vlas4d,f4d,dt)
-     call advection_x2(vlas4d,f4d,dt)
+     call advection_x1(vlas4d,f,dt)
+     call advection_x2(vlas4d,f,dt)
 
      if (mod(iter,fthdiag).eq.0) then 
-      call thdiag(vlas4d,f4d,nrj,iter*dt,jstartv)
+      call thdiag(vlas4d,f,nrj,iter*dt,jstartv)
      endif
 
   end do
@@ -216,6 +131,11 @@ program vm4d
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
+
+  call delete_layout_4D( layout_x )
+  call delete_layout_4D( layout_v )
+  SLL_DEALLOCATE_ARRAY(f, ierr)
+  SLL_DEALLOCATE_ARRAY(vlas4d%ft, ierr)
 
   call sll_halt_collective()
 
@@ -245,7 +165,6 @@ contains
     namelist /diag/ fdiag, fthdiag
     namelist /phys_space/ x0,x1,y0,y1,nx,ny
     namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
-    sll_int32 :: prank, psize, comm
 
     prank = sll_get_collective_rank(sll_world_collective)
     psize = sll_get_collective_size(sll_world_collective)
@@ -279,45 +198,65 @@ contains
     call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
     call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
+    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"perxy")
 
   end subroutine initglobal
 
   subroutine initlocal(jstartv,jendv,jstartx,jendx )
 
-    sll_int32      :: jstartv
-    sll_int32      :: jendv
-    sll_int32      :: jstartx
-    sll_int32      :: jendx
-
-    sll_int32  :: ipiece_size_v
-    sll_int32  :: ipiece_sizex
+    sll_int32  :: jstartv
+    sll_int32  :: jendv
+    sll_int32  :: jstartx
+    sll_int32  :: jendx
 
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,iv,jv,iflag
-    sll_int32  :: prank, psize, comm
     sll_real64 :: xi, eps, kx, ky
 
+    type(poisson2dpp):: poisson 
+    sll_real64, dimension(:,:),     pointer :: rho 
+    sll_int32 :: psize
 
-
-    prank      = sll_get_collective_rank(sll_world_collective)
+    prank = sll_get_collective_rank(sll_world_collective)
     psize = sll_get_collective_size(sll_world_collective)
-    comm        = sll_world_collective%comm
+    comm  = sll_world_collective%comm
 
-    ipiece_size_v = (geomv%ny + psize-1) / psize
-    ipiece_sizex = (geomx%ny + psize-1) / psize
+    layout_x => new_layout_4D( sll_world_collective )        
+    layout_v => new_layout_4D( sll_world_collective )
 
-    jstartv = prank * ipiece_size_v + 1
-    jendv   = min(jstartv - 1 + ipiece_size_v, geomv%ny)
-    jstartx = prank * ipiece_sizex + 1
-    jendx   = min(jstartx - 1 + ipiece_sizex, geomx%ny)
+    call initialize_layout_with_distributed_4D_array( &
+              geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
+              1,1,1,int(psize,4),layout_x)
+  
+    print *, prank, 'Printing layout x: '
+    call sll_view_lims_4D( layout_x )
+
+    call initialize_layout_with_distributed_4D_array( &
+                geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
+                1,int(psize,4),1,1,layout_v)
+
+    print *, prank, 'Printing layout v: '
+    call sll_view_lims_4D( layout_v )
+
+    call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+    SLL_ALLOCATE(f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+
+    call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ 
+    SLL_ALLOCATE(vlas4d%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr )
+
+    x_to_v => new_remap_plan( layout_x, layout_v, f)     
+    v_to_x => new_remap_plan( layout_v, layout_x, vlas4d%ft)     
+
+    jstartx = get_layout_4D_j_min( layout_v, prank )
+    jendx   = get_layout_4D_j_max( layout_v, prank )
+    jstartv = get_layout_4D_l_min( layout_x, prank )
+    jendv   = get_layout_4D_l_max( layout_x, prank )
 
     SLL_ASSERT(jstartx<jendx)
     SLL_ASSERT(jstartv<jendv)
-    print*,'init zone ',prank,jstartx,jendx,ipiece_sizex, &
-         jstartv,jendv,ipiece_size_v
-
-    SLL_ALLOCATE(f4d(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
+    print*,'init zone ',prank,jstartx,jendx,jstartv,jendv
 
     SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
     SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
@@ -339,7 +278,7 @@ contains
              y=geomx%y0+(j-1)*geomx%dy
              do i=1,geomx%nx
                 x=geomx%x0+(i-1)*geomx%dx
-                f4d(i,j,iv,jv)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+                f(i,j,iv,jv)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
              end do
           end do
        end do
@@ -352,36 +291,12 @@ contains
     call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,jstartx,jendx,jstartv,jendv,iflag)
 
     call new(poisson, ex, ey, geomx, iflag)
-    call transposexv(vlas4d,f4d)
+    call apply_remap_4D( x_to_v, f, vlas4d%ft )
     call densite_charge(vlas4d,rho)
     call solve(poisson,ex,ey,rho,nrj)
+    call free(poisson)
     call new(maxw2dfdtd,geomx,iflag, jstartx, jendx)
 
-!    call free(poisson)
-
   end subroutine initlocal
-
-  subroutine factorize_in_random_2powers_4d(n, n1, n2, n3, n4)
-    sll_int64, intent(in) :: n
-    sll_int32, intent(out) ::n1, n2, n3, n4
-    sll_int32   :: expo, expo1, expo2, expo3, expo4
-    sll_real32 ::  rand_real
-    if (.not.is_power_of_two(n)) then   
-       print*, 'The number of processors must be a power of 2'
-       stop
-    endif 
-    expo = int(log(real(n))/log(2.))  
-    call random_number(rand_real)
-    expo1 = int(rand_real*expo)
-    call random_number(rand_real)
-    expo2 = int(rand_real*(expo-expo1))
-    call random_number(rand_real)
-    expo3 = int(rand_real*(expo-(expo1+expo2)))
-    expo4 = expo - (expo1 + expo2 + expo3)
-    n1 = 2**expo1
-    n2 = 2**expo2
-    n3 = 2**expo3
-    n4 = 2**expo4
-  end subroutine factorize_in_random_2powers_4d
 
 end program vm4d
