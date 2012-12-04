@@ -6,5 +6,9 @@ unit_test
 *.swp
 *.h5
 *.xmf
+<<<<<<< HEAD
 ChangeLog
 .DS_Store
+=======
+*.exe
+>>>>>>> origin/prototype-devel
