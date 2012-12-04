@@ -89,19 +89,6 @@ ENDIF()
 ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_SUBDIRECTORY(interpolators)
 
-ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
-ADD_TEST(NAME interpolators COMMAND test_interpolators_1d
-				    test_interpolators_2d)
-
-ADD_TEST(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
-SET_TESTS_PROPERTIES(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME quintic_interpolators_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
-SET_TESTS_PROPERTIES(quintic_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-ADD_TEST(NAME odd_degree_interpolators_1d COMMAND test_odd_degree_interpolators_1d)
-SET_TESTS_PROPERTIES(odd_degree_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME odd_degree_interpolators_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
-SET_TESTS_PROPERTIES(odd_degree_interpolators_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ##########################################################
 
@@ -184,7 +171,7 @@ ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
-#INCLUDE(SequentialTests)
+INCLUDE(SequentialTests)
 
 IF(MPI_MODULE_ENABLED)
    INCLUDE(POEConfig)
