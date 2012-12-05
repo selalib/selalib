@@ -289,7 +289,7 @@ contains
         depvx  = -0.5*dt*ex(gi,gj)
         depvy  = -0.5*dt*ey(gi,gj)
         alpha  = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
-        this%ft(i,j,k,l) = this%interp_x3%interpolate_array_value(this%ft(i,j,k,l),alpha)
+        this%ft(i,j,k,l) = this%interp_x3%interpolate_value(this%ft(i,j,k,l),alpha)
 
      end do
      end do

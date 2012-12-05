@@ -265,7 +265,6 @@ contains
     call transposexv(vlas4d)
     call densite_charge(vlas4d,rho)
     call solve(poisson,ex,ey,rho,nrj)
-    write(*,*) "NRJ =",nrj
     call free(poisson)
 
     jstartx = get_layout_4D_j_min( vlas4d%layout_v, prank )
