@@ -27,10 +27,10 @@ SET(SLL_SOURCE_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_binary_io.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_gnuplot.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_hdf5_io.F90
-	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_io.F90
-	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_ascii_io.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_xdmf.F90
+	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_ascii_io.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_xml_io.F90
+	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_io.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../timer/sll_timer.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_hdf5_io_parallel.F90
 	${CMAKE_CURRENT_SOURCE_DIR}/../low_level_file_io/sll_xdmf_parallel.F90 
