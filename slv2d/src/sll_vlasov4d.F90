@@ -13,7 +13,7 @@ module sll_vlasov4d
  public :: new, free, densite_charge, densite_courant
  public :: transposexv, transposevx
  public :: advection_x1, advection_x2, advection_x3, advection_x4
- public :: thdiag
+ public :: thdiag, write_xmf_file
 
  type, public :: vlasov4d
    type (geometry)                          :: geomx
@@ -48,6 +48,7 @@ contains
 
  subroutine new_vlasov4d(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,error)
 
+  use sll_hdf5_io
   type(vlasov4d),intent(out)              :: this
   type(geometry),intent(in)               :: geomx
   type(geometry),intent(in)               :: geomv
@@ -61,7 +62,7 @@ contains
   sll_real64 :: x1_min, x2_min, x3_min, x4_min
   sll_real64 :: x1_max, x2_max, x3_max, x4_max
 
-  sll_int32 :: psize, prank, comm
+  sll_int32 :: psize, prank, comm, file_id
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -118,6 +119,15 @@ contains
     call sll_view_lims_4D(this%layout_x)
     print *,'Printing layout v: '
     call sll_view_lims_4D(this%layout_v)
+  end if
+
+  if (prank == MPI_MASTER) then
+     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+     call sll_hdf5_write_array(file_id,this%geomx%xgrid,"/x",error)
+     call sll_hdf5_write_array(file_id,this%geomx%ygrid,"/y",error)
+     call sll_hdf5_write_array(file_id,this%geomv%xgrid,"/vx",error)
+     call sll_hdf5_write_array(file_id,this%geomv%ygrid,"/vy",error)
+     call sll_hdf5_file_close(file_id, error)
   end if
 
  end subroutine new_vlasov4d
@@ -321,15 +331,15 @@ contains
    type(vlasov4d),intent(inout) :: this
    sll_real64, intent(in) :: t,nrj  
    sll_real64,dimension(11) :: auxloc
-   sll_int32 :: my_num, num_threads
+   sll_int32 :: prank, psize
    sll_real64,dimension(13) :: aux
    sll_real64,dimension(0:9) :: diag
    sll_int32 :: comm, error
    sll_real64 :: cell_volume
 
-   comm   = sll_world_collective%comm
-   my_num = sll_get_collective_rank(sll_world_collective)
-   num_threads = sll_get_collective_size(sll_world_collective)
+   comm  = sll_world_collective%comm
+   prank = sll_get_collective_rank(sll_world_collective)
+   psize = sll_get_collective_size(sll_world_collective)
 
    auxloc = 0.0
    cell_volume = this%geomx%dx * this%geomx%dy * this%geomv%dx * this%geomv%dy
@@ -339,7 +349,7 @@ contains
    
    call mpi_reduce(auxloc,aux(1:11),11,MPI_REAL8,MPI_SUM,MPI_MASTER,comm, error)
 
-   if (my_num == MPI_MASTER) then
+   if (prank == MPI_MASTER) then
       diag=0.
       aux=0.
       aux(13)=t
@@ -365,6 +375,87 @@ contains
    call apply_remap_4D( this%v_to_x, this%ft, this%f )
 
  end subroutine transposevx
+
+ subroutine write_xmf_file(this, iplot)
+
+  use hdf5
+  use sll_hdf5_io_parallel
+  type(vlasov4d),intent(in) :: this
+  sll_int32, intent(in) :: iplot
+
+  integer(HID_T)        :: pfile_id
+  integer(HSSIZE_T)     :: offset(2)
+  integer(HSIZE_T)      :: global_dims(2)
+  sll_int32             :: error
+  character(len=4)      :: cplot
+  sll_real64            :: sumloc
+  sll_int32             :: comm
+  sll_int32             :: prank
+  sll_int32, parameter  :: one = 1
+  sll_int32             :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
+  sll_real64, dimension(:,:), pointer :: fij, fik, fjl, fkl
+
+  prank = sll_get_collective_rank(sll_world_collective)
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+  SLL_ALLOCATE(fij(loc_sz_i,loc_sz_j),error)
+  SLL_ALLOCATE(fik(loc_sz_i,loc_sz_k),error)
+  SLL_ALLOCATE(fjl(loc_sz_j,loc_sz_l),error)
+  SLL_ALLOCATE(fkl(loc_sz_k,loc_sz_l),error)
+
+  call int2string(iplot,cplot)
+
+  prank = sll_get_collective_rank(sll_world_collective)
+  comm = sll_world_collective%comm
+
+  call sll_hdf5_file_create('fvalues_'//cplot//".h5",pfile_id,error)
+
+  do j=1,loc_sz_j
+     do i=1,loc_sz_i
+        sumloc= sum(this%f(i,j,:,:))
+        call mpi_reduce(sumloc,fij(i,j),one,MPI_REAL8,MPI_SUM,MPI_MASTER,comm,error)
+     end do
+  end do
+
+  global_dims = (/this%geomx%ny,this%geomv%ny/)
+  offset(1) = get_layout_4D_i_min( this%layout_x, prank ) - 1
+  offset(2) = get_layout_4D_j_min( this%layout_x, prank ) - 1
+  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fij,"/xy",error)
+
+  do k=1,loc_sz_k
+     do i=1,loc_sz_i
+        sumloc= sum(this%f(i,:,k,:))
+        call mpi_reduce(sumloc,fik(i,k),one,MPI_REAL8,MPI_SUM,MPI_MASTER,comm,error)
+     end do
+  end do
+  global_dims = (/this%geomx%nx,this%geomv%nx/)
+  offset(1) = get_layout_4D_i_min( this%layout_x, prank ) - 1
+  offset(2) = get_layout_4D_k_min( this%layout_x, prank ) - 1
+  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fik,"/xvx",error)
+
+  do l=1,loc_sz_l
+     do j=1,loc_sz_j
+        fjl(j,l)= sum(this%f(:,j,:,l))
+     end do
+  end do
+  global_dims = (/this%geomx%ny,this%geomv%ny/)
+  offset(1) = get_layout_4D_j_min( this%layout_x, prank ) - 1
+  offset(2) = get_layout_4D_l_min( this%layout_x, prank ) - 1
+  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/yvy",error)
+
+  do l=1,loc_sz_l
+     do k=1,loc_sz_k
+        fkl(k,l)=sum(this%f(:,:,k,l))
+     end do
+  end do
+  global_dims = (/this%geomv%nx,this%geomv%ny/)
+  offset(1) = get_layout_4D_k_min( this%layout_x, prank ) - 1
+  offset(2) = get_layout_4D_l_min( this%layout_x, prank ) - 1
+  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/vxvy",error)
+
+  call sll_hdf5_file_close(pfile_id, error)
+ 
+ end subroutine write_xmf_file
 
 end module sll_vlasov4d
 
