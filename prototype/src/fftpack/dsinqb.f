@@ -1,6 +1,6 @@
       SUBROUTINE DSINQB (N,X,WSAVE)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DIMENSION       X(1)       ,WSAVE(1)
+      DIMENSION       X(*)       ,WSAVE(*)
       IF (N .GT. 1) GO TO 101
       X(1) = 4.0D0*X(1)
       RETURN
