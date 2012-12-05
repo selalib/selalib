@@ -11,4 +11,9 @@ ChangeLog
 .DS_Store
 =======
 *.exe
+<<<<<<< HEAD
 >>>>>>> origin/prototype-devel
+=======
+.DS_Store
+ChangeLog
+>>>>>>> prototype-devel

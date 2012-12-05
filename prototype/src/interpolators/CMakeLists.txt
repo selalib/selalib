@@ -8,18 +8,10 @@ IF(FFTPACK_ENABLED)
 	       sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d.F90
-)
-ELSE(FFTPACK_ENABLED)
-  add_library( sll_interpolators STATIC
-	       sll_cubic_spline_interpolator_1d.F90
-	       sll_cubic_spline_interpolator_2d.F90
-               sll_quintic_spline_interpolator_1d.F90
-	       cubic_non_uniform_splines_interpolator_1d.F90
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
-	     )
-ENDIF(FFTPACK_ENABLED)
+             )
 ELSE()
 IF(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
