@@ -10,8 +10,7 @@ program VP1d_deltaf
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_timer.h"
-  !use sll_timer
+  use sll_timer
  
   use numeric_constants
   use sll_module_mapped_meshes_2d_cartesian
@@ -25,6 +24,10 @@ program VP1d_deltaf
   use omp_lib
   implicit none
 
+  type(time_mark), pointer :: t1 => NULL()
+  type(time_mark), pointer :: t2 => NULL()
+  type(time_mark), pointer :: t3 => NULL()
+  double precision :: timer
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
@@ -72,6 +75,10 @@ program VP1d_deltaf
   sll_int32  :: istartx, iendx, jstartv, jendv
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
+
+!Début du timer t1
+t1 => new_time_mark()
+t1 => start_time_mark()
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
@@ -398,6 +405,11 @@ program VP1d_deltaf
   close(ex_diag)
 
   print*, 'VP1D_deltaf_cart has exited normally'
+  timer = time_elapsed_since(t1)
+  print*, "Temps d'execution du programme : ", timer
+
+
+
 contains
   elemental function f_equilibrium(v)
     sll_real64, intent(in) :: v
