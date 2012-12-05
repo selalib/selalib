@@ -7,3 +7,5 @@ unit_test
 *.h5
 *.xmf
 *.exe
+.DS_Store
+ChangeLog
