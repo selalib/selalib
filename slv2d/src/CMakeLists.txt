@@ -109,7 +109,8 @@ SET(SLV2D_SRC silo_module.F90
               transpose.F90
               vlasov1d.F90
               vlasov2d.F90 
-              sll_vlasov2d.F90)
+              sll_vlasov2d.F90
+              vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
