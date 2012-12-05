@@ -1,6 +1,7 @@
 program vm4d
 
 #include "selalib.h"
+
   use used_precision  
   use geometry_module
   use diagnostiques_module
@@ -82,8 +83,6 @@ program vm4d
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
-  call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
-
   call transposevx(vlas4d)
   call advection_x1(vlas4d,0.5*dt)
   call advection_x2(vlas4d,0.5*dt)
@@ -91,10 +90,11 @@ program vm4d
   do iter=1,nbiter
 
      if (mod(iter,fdiag) == 0) then 
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
+  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
+  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
+  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
+  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
+        call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
      call transposexv(vlas4d)

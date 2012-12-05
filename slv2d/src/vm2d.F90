@@ -9,6 +9,7 @@ use geometry_module
 use maxwell2dfdtd_module
 use poisson2dpp_seq
 use diagnostiques_module
+use vlasov4d_plot
 use vlasov2d_module
 use splinepx_class
 use splinepy_class

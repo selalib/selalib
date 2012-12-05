@@ -3,6 +3,7 @@ program vp4d
 #include "selalib.h"
   use used_precision  
   use geometry_module
+  use vlasov4d_plot
   use diagnostiques_module
   use sll_vlasov4d
   use sll_cubic_spline_interpolator_1d
@@ -21,16 +22,14 @@ program vp4d
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
 
-  sll_real64, dimension(:,:), pointer :: bz
   sll_real64, dimension(:,:), pointer :: ex
   sll_real64, dimension(:,:), pointer :: ey 
-  sll_real64, dimension(:,:), pointer :: jx
-  sll_real64, dimension(:,:), pointer :: jy 
   sll_real64, dimension(:,:), pointer :: rho 
 
   sll_int32  :: nbiter, iter, fdiag, fthdiag  
   sll_real64 :: dt, nrj, tcpu1, tcpu2
-  sll_int32  :: prank, comm, psize
+  sll_int32  :: prank, comm
+  sll_int64  :: psize
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
   sll_int32  :: jstartx, jendx, jstartv, jendv   
 
@@ -224,9 +223,6 @@ contains
 
     SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
     SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(jx(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(jy(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(bz(geomx%nx,geomx%ny),iflag)
     SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
 
     call new(poisson, ex, ey, geomx, iflag)
