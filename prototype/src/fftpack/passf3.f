@@ -1,7 +1,7 @@
       SUBROUTINE PASSF3 (IDO,L1,CC,CH,WA1,WA2)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z) 
       DIMENSION       CC(IDO,3,L1)           ,CH(IDO,L1,3)           ,
-     1                WA1(1)     ,WA2(1)
+     1                WA1(*)     ,WA2(*)
 C     *** TAUI IS -SQRT(3)/2 ***
       DATA TAUR,TAUI /-0.5D0,-0.86602540378443864676D0/
       IF (IDO .NE. 2) GO TO 102
