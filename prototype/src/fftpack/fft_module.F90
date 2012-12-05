@@ -1,5 +1,6 @@
 module fft_module
   implicit none
+  private
   type, public :: fftclass
      real, dimension(:), pointer ::  coefc, work, workc
      double precision, dimension(:), pointer :: coefd, workd, coefcd
@@ -16,7 +17,7 @@ module fft_module
      module procedure doubfftinv,  doubcfftinv
   end interface
 
-  public :: initfft, fft, fftinv, fftclass
+  public :: initfft, fft, fftinv
   contains
 
     subroutine initdoubfft(this,f,l)
@@ -37,7 +38,7 @@ module fft_module
 
     subroutine initdoubcfft(this,f,l)
       type(fftclass) :: this
-      double complex, dimension(:,:) :: f
+      complex(16), dimension(:,:) :: f
       integer :: l 
       this%n = l
       allocate(this%coefcd(4*this%n+15))
@@ -84,7 +85,7 @@ module fft_module
       type(fftclass) :: this
       integer, parameter :: sign = -1   ! we choose this for direct transform
       integer :: i,j, p, inc, lda
-      double complex, dimension(:,:) :: array
+      complex(16), dimension(:,:) :: array
 
       p = size(array,2)   ! number of 1d transforms
       inc = 1             ! all data are samples
@@ -131,7 +132,7 @@ module fft_module
       type(fftclass) :: this
       integer, parameter :: sign = 1   ! we choose this for inverse transform
       integer :: i, p, inc, lda
-      double complex, dimension(:,:) :: array
+      complex(16), dimension(:,:) :: array
 
       p = size(array,2)   ! number of 1d transforms
       inc = 1             ! all data are samples

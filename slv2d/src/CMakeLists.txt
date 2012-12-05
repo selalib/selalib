@@ -21,10 +21,9 @@ SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
-
 INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
-LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+#INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+#LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
 
 MESSAGE(STATUS "SLV2D:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 INCLUDE(F90FLAGS)
@@ -38,8 +37,8 @@ IF(NOT LAPACK_FOUND)
 ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       " FORCE)
-SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " )
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library " FORCE)
+SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library " )
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -109,7 +108,8 @@ SET(SLV2D_SRC silo_module.F90
               splinepy.F90
               transpose.F90
               vlasov1d.F90
-              vlasov2d.F90 )
+              vlasov2d.F90 
+              sll_vlasov2d.F90)
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
@@ -124,12 +124,16 @@ TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS})
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
 TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
 
-ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90 sll_vlasov2d.F90)
+ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90)
+TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
+
+ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90)
 TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
 
-ADD_DEFINITIONS(-D_TWO_D)
-ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90 sll_vlasov2d.F90)
-TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+#ADD_DEFINITIONS(-D_TWO_D)
+#ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90)
+#TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
