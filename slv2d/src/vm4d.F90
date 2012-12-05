@@ -111,8 +111,10 @@ program vm4d
      
      call cl_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
 
-     call advection_x3(vlas4d,dt,ex,bz)
-     call advection_x4(vlas4d,dt,ey,bz)
+     call advection_x3(vlas4d,dt,ex)
+     call advection_x4(vlas4d,dt,ey)
+     !call advection_x3(vlas4d,dt,ex,bz)
+     !call advection_x4(vlas4d,dt,ey,bz)
 
      call transposevx(vlas4d)
 
