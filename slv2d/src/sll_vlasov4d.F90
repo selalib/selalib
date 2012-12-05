@@ -10,7 +10,7 @@ module sll_vlasov4d
 
  implicit none
  private
- public :: new, free, densite_charge,densite_courant
+ public :: new, free, densite_charge, densite_courant
  public :: transposexv, transposevx
  public :: advection_x1, advection_x2, advection_x3, advection_x4
  public :: thdiag
@@ -69,7 +69,7 @@ contains
 
   error = 0
 
-  this%transposed=.false.
+  this%transposed = .false.
 
   nc_x1  = geomx%nx
   nc_x2  = geomx%ny
@@ -108,16 +108,16 @@ contains
               1,int(psize,4),1,1,this%layout_v)
 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr )
+  SLL_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
   this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
   
   if(prank == MPI_MASTER) then
     print *,'Printing layout x: '
-    call sll_view_lims_4D( this%layout_x )
+    call sll_view_lims_4D(this%layout_x)
     print *,'Printing layout v: '
-    call sll_view_lims_4D( this%layout_v )
+    call sll_view_lims_4D(this%layout_v)
   end if
 
  end subroutine new_vlasov4d
@@ -188,131 +188,55 @@ contains
 
  end subroutine advection_x2
 
- subroutine advection_x3(this,dt,ex,ey,bz)
+ subroutine advection_x3(this,dt,ex)
 
   type(vlasov4d), intent(inout)          :: this
   sll_real64, dimension(:,:), intent(in) :: ex
-  sll_real64, dimension(:,:), optional   :: ey
-  sll_real64, dimension(:,:), optional   :: bz
   sll_real64, intent(in) :: dt
-  sll_real64 :: x3_min, delta_x3
-  sll_real64 :: x4_min, delta_x4
   sll_real64 :: alpha
-  sll_real64 :: depvx, depvy, px, py, ctheta, stheta
 
   SLL_ASSERT(this%transposed) 
-
-  x3_min   = this%geomv%x0
-  delta_x3 = this%geomv%dx
-  x4_min   = this%geomv%y0
-  delta_x4 = this%geomv%dy
-
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-  if(present(bz) .and. present(ey)) then
+  do l=1,loc_sz_l
+  do j=1,loc_sz_j
+  do i=1,loc_sz_i
 
-     do l=1,loc_sz_l
-     do k=1,loc_sz_k
-     do j=1,loc_sz_j
-     do i=1,loc_sz_i
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     gi = global_indices(1)
+     gj = global_indices(2)
+     alpha = ex(gi,gj)*dt
+     this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
 
-        global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
-        gi = global_indices(1)
-        gj = global_indices(2)
-        gk = global_indices(3)
-        gl = global_indices(4)
-        px = x3_min+(gk-1)*delta_x3
-        py = x4_min+(gl-1)*delta_x4
-        ctheta = cos(bz(gi,gj)*dt)
-        stheta = sin(bz(gi,gj)*dt)
-        depvx  = -0.5*dt*ex(gi,gj)
-        depvy  = -0.5*dt*ey(gi,gj)
-        alpha  = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
-        this%ft(i,j,k,l) = this%interp_x3%interpolate_array_value(this%ft(i,j,k,l),alpha)
-
-     end do
-     end do
-     end do
-     end do
-
-  else
-
-     do l=1,loc_sz_l
-     do j=1,loc_sz_j
-     do i=1,loc_sz_i
-
-        global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
-        gi = global_indices(1)
-        gj = global_indices(2)
-        alpha = ex(gi,gj)*dt
-        this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
-
-     end do
-     end do
-     end do
-
- end if
+  end do
+  end do
+  end do
 
  end subroutine advection_x3
 
- subroutine advection_x4(this,dt,ey,ex,bz)
+ subroutine advection_x4(this,dt,ey)
 
   type(vlasov4d),intent(inout) :: this
   sll_real64, dimension(:,:), intent(in) :: ey
-  sll_real64, dimension(:,:), optional   :: ex
-  sll_real64, dimension(:,:), optional   :: bz
   sll_real64, intent(in) :: dt
-  sll_real64 :: x3_min, delta_x3
-  sll_real64 :: x4_min, delta_x4
   sll_real64 :: alpha
-  sll_real64 :: depvx, depvy, px, py, ctheta, stheta
 
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-  if (present(bz) .and. present(ex)) then
+  do k=1,loc_sz_k
+  do j=1,loc_sz_j
+  do i=1,loc_sz_i
 
-     do l=1,loc_sz_l
-     do k=1,loc_sz_k
-     do j=1,loc_sz_j
-     do i=1,loc_sz_i
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     gi = global_indices(1)
+     gj = global_indices(2)
+     alpha = ey(gi,gj)*dt
+     this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp(loc_sz_l,this%ft(i,j,k,:),alpha)
 
-        global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
-        gi = global_indices(1)
-        gj = global_indices(2)
-        gk = global_indices(3)
-        gl = global_indices(4)
-        px = x3_min+(gk-1)*delta_x3
-        py = x4_min+(gl-1)*delta_x4
-        ctheta = cos(bz(gi,gj)*dt)
-        stheta = sin(bz(gi,gj)*dt)
-        depvx  = -0.5*dt*ex(gi,gj)
-        depvy  = -0.5*dt*ey(gi,gj)
-        alpha  = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
-        this%ft(i,j,k,l) = this%interp_x3%interpolate_value(this%ft(i,j,k,l),alpha)
-
-     end do
-     end do
-     end do
-     end do
-
-  else
-
-     do k=1,loc_sz_k
-     do j=1,loc_sz_j
-     do i=1,loc_sz_i
-
-        global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
-        gi = global_indices(1)
-        gj = global_indices(2)
-        alpha = ey(gi,gj)*dt
-        this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp(loc_sz_l,this%ft(i,j,k,:),alpha)
-
-    end do
-    end do
-    end do
-
-  end if
+  end do
+  end do
+  end do
 
  end subroutine advection_x4
 
@@ -443,3 +367,28 @@ contains
  end subroutine transposevx
 
 end module sll_vlasov4d
+
+!     do l=1,loc_sz_l
+!     do k=1,loc_sz_k
+!     do j=1,loc_sz_j
+!     do i=1,loc_sz_i
+!
+!        global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
+!        gi = global_indices(1)
+!        gj = global_indices(2)
+!        gk = global_indices(3)
+!        gl = global_indices(4)
+!        px = x3_min+(gk-1)*delta_x3
+!        py = x4_min+(gl-1)*delta_x4
+!        ctheta = cos(bz(gi,gj)*dt)
+!        stheta = sin(bz(gi,gj)*dt)
+!        depvx  = -0.5*dt*ex(gi,gj)
+!        depvy  = -0.5*dt*ey(gi,gj)
+!        alpha  = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
+!        alpha  = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
+!        this%ft(i,j,k,l) = this%interp_x3%interpolate_array_value(this%ft(i,j,k,l),alpha)
+!
+!     end do
+!     end do
+!     end do
+!     end do
