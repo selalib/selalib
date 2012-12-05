@@ -16,7 +16,7 @@ module fft_module
      module procedure doubfftinv,  doubcfftinv
   end interface
 
-  public :: initfft, fft, fftinv, fftclass
+  public :: initfft, fft, fftinv
   contains
 
     subroutine initdoubfft(this,f,l)
