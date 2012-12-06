@@ -1,7 +1,7 @@
       SUBROUTINE RADF2 (IDO,L1,CC,CH,WA1)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION       CH(IDO,2,L1)           ,CC(IDO,L1,2)           ,
-     1                WA1(1)
+     1                WA1(*)
       DO 101 K=1,L1
          CH(1,1,K) = CC(1,K,1)+CC(1,K,2)
          CH(IDO,2,K) = CC(1,K,1)-CC(1,K,2)
