@@ -303,15 +303,20 @@ program VP1d_deltaf
   endif
 
   ! write initial fields
-  write(ex_diag,*) efield
-  write(rho_diag,*) rho
-  write(eapp_diag,*) e_app
+  do i = 1, Ncx+1
+     write(ex_diag,"(g15.5)",advance="no") efield(i)
+     write(rho_diag,"(g15.5)",advance="no") rho(i)
+     write(eapp_diag,"(g15.5)",advance="no") e_app(i)
+  end do
+  write(ex_diag,*)
+  write(rho_diag,*)
+  write(eapp_diag,*)
   write(adr_diag,*) istep*dt, adr
   !$omp end single
 
   ! initialize timer
-  time0 => new_time_mark()
-  time0 => start_time_mark(time0)
+!  time0 => new_time_mark()
+!  time0 => start_time_mark(time0)
   ! time loop
   !----------
   ! half time step advection in v
@@ -330,18 +335,18 @@ program VP1d_deltaf
         endif
      end do
      !$omp barrier
-     time1 = time_elapsed_since(time0)
-     print*, 'time adv_v1 ', time1 
-     time0 => reset_time_mark(time0)
+!     time1 = time_elapsed_since(time0)
+!     print*, 'time adv_v1 ', time1 
+!     time0 => reset_time_mark(time0)
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
      end do
      !$omp barrier
-     time1 = time_elapsed_since(time0)
-     print*, 'time adv_x ', time1 
-     time0 => reset_time_mark(time0)
+!     time1 = time_elapsed_since(time0)
+!     print*, 'time adv_x ', time1 
+!     time0 => reset_time_mark(time0)
 
      !$omp single
      ! compute rho and electric field
@@ -400,9 +405,15 @@ program VP1d_deltaf
         potential_energy =   0.5_f64 * sum(efield**2) * delta_x
         write(th_diag,'(f12.5,7g20.14)') time, mass, l1norm, momentum, l2norm, &
              kinetic_energy, potential_energy, kinetic_energy + potential_energy
-        write(ex_diag,*) efield
-        write(rho_diag,*) rho
-        write(eapp_diag,*) e_app
+        do i = 1, Ncx+1
+           write(ex_diag,"(g15.5)",advance="no") efield(i)
+           write(rho_diag,"(g15.5)",advance="no") rho(i)
+           write(eapp_diag,"(g15.5)",advance="no") e_app(i)
+        end do
+        write(ex_diag,*)
+        write(rho_diag,*)
+        write(eapp_diag,*)
+        
         write(adr_diag,*) istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
