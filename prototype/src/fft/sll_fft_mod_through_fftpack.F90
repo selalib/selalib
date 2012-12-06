@@ -18,11 +18,18 @@ module sll_fft
   end type sll_fft_plan
 
   interface fft_new_plan
-    module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d
+    module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d , &
+                    ! à implémenter
+                      fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d !, &
+                    ! fftpack_new_plan_c2r_2d, fftpack_new_plan_r2c_2d, &
+                    ! fftpack_new plan_c2c_2d
   end interface
 
   interface fft_apply_plan
-    module procedure fftpack_apply_plan_c2c_1d, fftpack_apply_plan_r2r_1d
+    module procedure fftpack_apply_plan_c2c_1d, fftpack_apply_plan_r2r_1d , &
+                     fftpack_apply_plan_r2c_1d, fftpack_apply_plan_c2r_1d !, &
+                    ! fftpack_apply_plan_c2r_2d, fftpack_apply_plan_r2c_2d , &
+                    ! fftpack_apply_plan_c2c_2d
   end interface 
  
   integer, parameter :: FFT_FORWARD = -1
@@ -231,6 +238,47 @@ contains
     endif
   end subroutine
 ! END REAL
+
+  function fftpack_new_plan_r2c_1d(nx,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                        :: nx
+    sll_real64, dimension(:)                     :: array_in
+    sll_comp64, dimension(:)                     :: array_out
+    sll_int32, optional,  intent(in)             :: flags
+    type(sll_fft_plan), pointer                  :: plan
+    sll_int32                                    :: ierr
+
+
+  end function
+
+  subroutine fftpack_apply_plan_r2c_1d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer                     :: plan
+    sll_real64, dimension(0:), intent(inout)        :: array_in
+    sll_comp64, dimension(0:), intent(out)          :: array_out
+    sll_int32                                       :: nx, i
+    sll_real64 :: factor
+
+  end subroutine
+
+  function fftpack_new_plan_c2r_1d(nx,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                        :: nx
+    sll_real64, dimension(:)                     :: array_out
+    sll_comp64, dimension(:)                     :: array_in
+    sll_int32, optional,  intent(in)             :: flags
+    type(sll_fft_plan), pointer                  :: plan
+    sll_int32                                    :: ierr
+
+
+  end function
+
+  subroutine fftpack_apply_plan_c2r_1d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer                     :: plan
+    sll_real64, dimension(0:), intent(inout)        :: array_out
+    sll_comp64, dimension(0:), intent(out)          :: array_in
+    sll_int32                                       :: nx, i
+    sll_real64 :: factor
+
+  end subroutine
+
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK

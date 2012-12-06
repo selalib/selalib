@@ -76,10 +76,6 @@ program VP1d_deltaf
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
 
-!Début du timer t1
-t1 => new_time_mark()
-t1 => start_time_mark()
-
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
   namelist / interpolator / interpol_x, order_x, interpol_v, order_v
@@ -88,6 +84,9 @@ t1 => start_time_mark()
   namelist / tsi / kmode, eps, v0 
   namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
 
+!Début du timer t1
+t1 => new_time_mark()
+t1 => start_time_mark(t1)
 
   ! determine what case is being run
   call GET_COMMAND_ARGUMENT(1,case)
@@ -247,8 +246,15 @@ t1 => start_time_mark()
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
 
+!Début du timer t2
+t2 => new_time_mark()
+t2 => start_time_mark(t2)
+
   call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
   call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
+
+timer = time_elapsed_since(t2)
+print*, "Temps d'execution de initialize : ", timer
 
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
