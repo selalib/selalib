@@ -155,7 +155,6 @@ target_link_libraries(CG_polar
 	sll_timer
 	sll_utilities
 	)
-	
 
 IF (0)
 add_executable(Poisson_solver
