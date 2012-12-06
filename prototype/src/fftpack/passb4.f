@@ -1,7 +1,7 @@
       SUBROUTINE PASSB4 (IDO,L1,CC,CH,WA1,WA2,WA3)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z) 
       DIMENSION       CC(IDO,4,L1)           ,CH(IDO,L1,4)           ,
-     1                WA1(1)     ,WA2(1)     ,WA3(1)
+     1                WA1(*)     ,WA2(*)     ,WA3(*)
       IF (IDO .NE. 2) GO TO 102
       DO 101 K=1,L1
          TI1 = CC(2,1,K)-CC(2,3,K)
