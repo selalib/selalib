@@ -6,47 +6,36 @@ program vm4d
   use geometry_module
   use diagnostiques_module
   use sll_vlasov4d
+  use vlasov4d_plot
   use sll_cubic_spline_interpolator_1d
-  use maxwell2dfdtd_module
+  use sll_cubic_spline_interpolator_2d
+  use sll_maxwell
+  use sll_maxwell_2d_pstd
   use poisson2d_periodic
   use remapper
 
   implicit none
 
-  type(geometry)       :: geomx 
-  type(geometry)       :: geomv 
-  type(vlasov4d)       :: vlas4d 
-  type (maxwell2dfdtd) :: maxw2dfdtd 
+  type(geometry)     :: geomx 
+  type(geometry)     :: geomv 
+  type(vlasov4d)     :: vlas4d 
+  type(maxwell_pstd) :: maxwell
+  type(poisson2dpp)  :: poisson 
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
   type(cubic_spline_1d_interpolator), target :: spl_x2
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
+  type(cubic_spline_2d_interpolator), target :: spl_x3x4
 
-  sll_real64, dimension(:,:),     pointer :: bz
-  sll_real64, dimension(:,:),     pointer :: ex
-  sll_real64, dimension(:,:),     pointer :: ey 
-  sll_real64, dimension(:,:),     pointer :: jx
-  sll_real64, dimension(:,:),     pointer :: jy 
-
-  sll_int32  :: nbiter, iter 
-  sll_int32  :: fdiag, fthdiag  
-
-  sll_real64 :: dt     
-  sll_real64 :: nrj, tcpu1, tcpu2
+  sll_int32  :: nbiter, iter , fdiag, fthdiag  
+  sll_real64 :: dt, nrj, tcpu1, tcpu2
 
   sll_int32  :: prank, comm
   sll_int64  :: psize
 
-  sll_int32                                   :: loc_sz_i
-  sll_int32                                   :: loc_sz_j
-  sll_int32                                   :: loc_sz_k
-  sll_int32                                   :: loc_sz_l
-
-  sll_int32                                   :: jstartx 
-  sll_int32                                   :: jendx 
-  sll_int32                                   :: jstartv
-  sll_int32                                   :: jendv   
+  sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
+  sll_int32  :: jstartx, jendx, jstartv, jendv   
 
   call sll_boot_collective()
   prank = sll_get_collective_rank(sll_world_collective)
@@ -54,11 +43,6 @@ program vm4d
   comm   = sll_world_collective%comm
 
   tcpu1 = MPI_WTIME()
-  if (.not. is_power_of_two(psize)) then     
-     print *, 'This test needs to run in a number of processes which is ',&
-          'a power of 2.'
-     stop
-  end if
   if (prank == MPI_MASTER) then
      print*,'MPI Version of slv2d running on ',psize, ' processors'
   end if
@@ -83,46 +67,66 @@ program vm4d
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
-  call transposevx(vlas4d)
-  call advection_x1(vlas4d,0.5*dt)
-  call advection_x2(vlas4d,0.5*dt)
-
   do iter=1,nbiter
 
-     if (mod(iter,fdiag) == 0) then 
-  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
-  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
-  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
-  !      call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
+     if (iter ==1 .or. mod(iter,fdiag) == 0) then 
+        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
+        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
+        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
+        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
         call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
+     call advection_x1(vlas4d,0.5*dt)
+     call advection_x2(vlas4d,0.5*dt)
+
+     !Recopie de f^(n,2) dans f1
+     !f1=f;ex1=ex;ey1=ey;bz1=bz
+
      call transposexv(vlas4d)
 
-     call densite_courant(vlas4d,jx,jy)
+     !prediction 
+
+     !call densite_charge(vlas4d,rho)
+     call densite_courant(vlas4d)
      
      if (iter == 1) then
-     !   call solve_faraday(maxw2dfdtd,ex,ey,bz,0.5_f64*dt)
-         call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,0.5_f64*dt)
+       !call faraday_te(maxwell, ex, ey, bz, 0.5*dt)   
      else
-     !   call solve_faraday(maxw2dfdtd,ex,ey,bz,dt)
-         call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
+       !call faraday_te(maxwell, ex, ey, bz, 0.5*dt)   
      end if
-     
-     call cl_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
 
-     call advection_x3(vlas4d,dt,ex)
-     call advection_x4(vlas4d,dt,ey)
-     !call advection_x3(vlas4d,dt,ex,bz)
-     !call advection_x4(vlas4d,dt,ey,bz)
+     !call bc_periodic(maxwell, ex, ey, bz)
+
+     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
+     call bc_periodic(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz)
+
+     call advection_x3x4(vlas4d,dt)
 
      call transposevx(vlas4d)
 
-     call advection_x1(vlas4d,dt)
-     call advection_x2(vlas4d,dt)
+     call advection_x1(vlas4d,0.5_f64*dt)
+     call advection_x2(vlas4d,0.5_f64*dt)
 
+     !f=f1;ex=ex1;ey=ey1;
+
+     !correction
+
+     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz, dt,vlas4d%jx,vlas4d%jy) 
+     call bc_periodic(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz)
+     call transposexv(vlas4d)
+
+     call advection_x3x4(vlas4d,dt)
+
+     call transposevx(vlas4d)
+
+     call advection_x1(vlas4d,0.5_f64*dt)
+     call advection_x2(vlas4d,0.5_f64*dt)
+     
      if (mod(iter,fthdiag).eq.0) then 
-      call thdiag(vlas4d,nrj,iter*dt)
+        nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
+        nrj=0.5_wp*log(nrj)
+        call thdiag(vlas4d,nrj,iter*dt)
      endif
 
   end do
@@ -132,6 +136,7 @@ program vm4d
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
 
+  call free(poisson)
   call sll_halt_collective()
 
   print*,'PASSED'
@@ -139,6 +144,8 @@ program vm4d
 !####################################################################################
 
 contains
+
+!####################################################################################
 
   subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
@@ -154,7 +161,7 @@ contains
     sll_real64      :: vx0, vy0    ! coordonnees debut du maillage espace vitesses
     sll_real64      :: x1, y1      ! coordonnees fin du maillage espace physique
     sll_real64      :: vx1, vy1    ! coordonnees fin du maillage espace vitesses
-    sll_int32       :: iflag,ierr  ! indicateur d'erreur
+    sll_int32       :: error,ierr  ! indicateur d'erreur
 
     namelist /time/ dt, nbiter
     namelist /diag/ fdiag, fthdiag
@@ -192,8 +199,8 @@ contains
     call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
     call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
-    call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"perxy")
+    call new(geomx,x0,y0,x1,y1,nx,ny,error,"perxy")
+    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,error,"perxy")
 
   end subroutine initglobal
 
@@ -204,13 +211,11 @@ contains
     sll_int32  :: jstartv
     sll_int32  :: jendv   
     sll_real64 :: vx,vy,v2,x,y
-    sll_int32  :: i,j,k,l,iflag
+    sll_int32  :: i,j,k,l,error
     sll_real64 :: xi, eps, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
 
-    type(poisson2dpp) :: poisson 
-    sll_real64, dimension(:,:), pointer :: rho 
     sll_int32 :: psize
 
     prank = sll_get_collective_rank(sll_world_collective)
@@ -222,7 +227,11 @@ contains
     call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, PERIODIC_SPLINE)
     call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, PERIODIC_SPLINE)
 
-    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,iflag)
+    call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
+    &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
+    &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
+
+    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,spl_x3x4,error)
 
     call compute_local_sizes_4d(vlas4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
@@ -248,7 +257,6 @@ contains
        vy = geomv%y0+(gl-1)*geomv%dy
 
        v2 = vx*vx+vy*vy
-
        vlas4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
 
     end do
@@ -256,25 +264,19 @@ contains
     end do
     end do
 
-    SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(jx(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(jy(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(bz(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
+    call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx-1, &
+                             geomx%y0, geomx%y1, geomx%ny-1, TE_POLARIZATION)
 
-    call new(poisson, ex, ey, geomx, iflag)
+    call new(poisson, vlas4d%ex, vlas4d%ey, geomx, error)
     call transposexv(vlas4d)
-    call densite_charge(vlas4d,rho)
-    call solve(poisson,ex,ey,rho,nrj)
-    call free(poisson)
+    call densite_charge(vlas4d)
+    call transposevx(vlas4d)
+    call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
 
     jstartx = get_layout_4D_j_min( vlas4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlas4d%layout_v, prank )
     jstartv = get_layout_4D_l_min( vlas4d%layout_x, prank )
     jendv   = get_layout_4D_l_max( vlas4d%layout_x, prank )
-
-    call new(maxw2dfdtd, geomx, iflag, jstartx, jendx)
 
   end subroutine initlocal
 
