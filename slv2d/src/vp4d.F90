@@ -3,7 +3,6 @@ program vp4d
 #include "selalib.h"
   use used_precision  
   use geometry_module
-  use vlasov4d_plot
   use diagnostiques_module
   use sll_vlasov4d
   use sll_cubic_spline_interpolator_1d
@@ -22,22 +21,18 @@ program vp4d
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
 
-  sll_real64, dimension(:,:), pointer :: ex
-  sll_real64, dimension(:,:), pointer :: ey 
-  sll_real64, dimension(:,:), pointer :: rho 
-
   sll_int32  :: nbiter, iter, fdiag, fthdiag  
-  sll_real64 :: dt, nrj, tcpu1, tcpu2
   sll_int32  :: prank, comm
-  sll_int64  :: psize
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
   sll_int32  :: jstartx, jendx, jstartv, jendv   
+  sll_int64  :: psize
+  sll_real64 :: dt, nrj, tcpu1, tcpu2
 
   call sll_boot_collective()
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
-  comm   = sll_world_collective%comm
+  comm  = sll_world_collective%comm
 
   tcpu1 = MPI_WTIME()
   if (.not. is_power_of_two(psize)) then     
@@ -69,27 +64,22 @@ program vp4d
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
-  call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
-
   call advection_x1(vlas4d,0.5*dt)
   call advection_x2(vlas4d,0.5*dt)
 
   do iter=1,nbiter
 
-     if (mod(iter,fdiag) == 0) then 
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
+     if (iter == 1 .or. mod(iter,fdiag) == 0) then 
+        call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
      call transposexv(vlas4d)
 
-     call densite_charge(vlas4d,rho)
-     call solve(poisson,ex,ey,rho,nrj)
+     call densite_charge(vlas4d)
+     call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
 
-     call advection_x3(vlas4d,dt,ex)
-     call advection_x4(vlas4d,dt,ey)
+     call advection_x3(vlas4d,dt)
+     call advection_x4(vlas4d,dt)
 
      call transposevx(vlas4d)
 
@@ -128,7 +118,7 @@ contains
     sll_real64      :: vx0, vy0    ! coordonnees debut du maillage espace vitesses
     sll_real64      :: x1, y1      ! coordonnees fin du maillage espace physique
     sll_real64      :: vx1, vy1    ! coordonnees fin du maillage espace vitesses
-    sll_int32       :: iflag,ierr  ! indicateur d'erreur
+    sll_int32       :: error,ierr  ! indicateur d'erreur
 
     namelist /time/ dt, nbiter
     namelist /diag/ fdiag, fthdiag
@@ -165,8 +155,8 @@ contains
     call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
     call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
-    call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"perxy")
+    call new(geomx,x0,y0,x1,y1,nx,ny,error,"perxy")
+    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,error,"perxy")
 
   end subroutine initglobal
 
@@ -174,7 +164,7 @@ contains
 
     sll_int32  :: jstartx, jendx, jstartv, jendv   
     sll_real64 :: vx,vy,v2,x,y
-    sll_int32  :: i,j,k,l,iflag
+    sll_int32  :: i,j,k,l,error
     sll_real64 :: xi, eps, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
@@ -187,7 +177,7 @@ contains
     call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, PERIODIC_SPLINE)
     call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, PERIODIC_SPLINE)
 
-    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,iflag)
+    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,error)
 
     call compute_local_sizes_4d(vlas4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
@@ -221,11 +211,7 @@ contains
     end do
     end do
 
-    SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
-    SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
-
-    call new(poisson, ex, ey, geomx, iflag)
+    call new(poisson, vlas4d%ex, vlas4d%ey, geomx, error)
 
     jstartx = get_layout_4D_j_min( vlas4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlas4d%layout_v, prank )

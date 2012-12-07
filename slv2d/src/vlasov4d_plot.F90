@@ -37,7 +37,7 @@ contains
   my_num = sll_get_collective_rank(sll_world_collective)
 
   if (my_num == MPI_MASTER) then
-     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+     call sll_hdf5_file_create("grid4d.h5",file_id,error)
      call sll_hdf5_write_array(file_id,geomx%xgrid,"/x",error)
      call sll_hdf5_write_array(file_id,geomx%ygrid,"/y",error)
      call sll_hdf5_write_array(file_id,geomv%xgrid,"/vx",error)
@@ -191,11 +191,11 @@ end subroutine plot_df
   write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
   write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx, &
                            "' NumberType='Float' Precision='8' Format='HDF'>"
-  write(file_id,"(a)")"mesh4d.h5:/"//xname
+  write(file_id,"(a)")"grid4d.h5:/"//xname
   write(file_id,"(a)")"</DataItem>"
   write(file_id,"(a,i5,a)")"<DataItem Dimensions='",ny, &
                            "' NumberType='Float' Precision='8' Format='HDF'>"
-  write(file_id,"(a)")"mesh4d.h5:/"//yname
+  write(file_id,"(a)")"grid4d.h5:/"//yname
   write(file_id,"(a)")"</DataItem>"
   write(file_id,"(a)")"</Geometry>"
   write(file_id,"(a)")"<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
@@ -204,6 +204,7 @@ end subroutine plot_df
   write(file_id,"(a)")datafilename//":/"//fname
   write(file_id,"(a)")"</DataItem>"
   write(file_id,"(a)")"</Attribute>"
+  !write(file_id,"(a)")"</Grid>"
   call sll_xml_file_close(file_id,error)
 
  end subroutine write_xdmf
