@@ -173,8 +173,9 @@ program VP1d_deltaf
   close(param_out)
 
   if (driven) then
+     tstart = t0  ! is this parameter actually necessary ? 
      open(unit = param_out_drive, file = 'param_out_drive.dat') 
-     write(param_out_drive,*) t0, twL, twR, tstart, tflat, tL, tR, &
+     write(param_out_drive,'(9g15.5)') t0, twL, twR, tstart, tflat, tL, tR, &
           Edrmax, omegadr
      close(param_out_drive)
   end if
@@ -311,7 +312,7 @@ program VP1d_deltaf
   write(ex_diag,*)
   write(rho_diag,*)
   write(eapp_diag,*)
-  write(adr_diag,*) istep*dt, adr
+  write(adr_diag,'(2g15.5)') istep*dt, adr
   !$omp end single
 
   ! initialize timer
@@ -407,7 +408,7 @@ program VP1d_deltaf
         write(rho_diag,*)
         write(eapp_diag,*)
         
-        write(adr_diag,*) istep*dt, adr
+        write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
