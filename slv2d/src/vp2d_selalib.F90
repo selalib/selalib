@@ -4,7 +4,6 @@ program vp2d_selalib
   use used_precision  
   use geometry_module
   use diagnostiques_module
-  use vlasov4d_plot
 #ifdef _FFTW
   use poisson2d_periodic
 #else

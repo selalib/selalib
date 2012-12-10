@@ -63,7 +63,8 @@ module sll_vlasov2d
 
 contains
 
- subroutine new_vlasov2d(this,geomx,geomv,jstartx, jendx,jstartv,jendv,error)
+ subroutine new_vlasov2d(this,geomx,geomv,error, jstartx, jendx, &
+                        jstartv, jendv)
 
   type(vlasov2d),intent(out)      :: this
   type(geometry),intent(in)       :: geomx
