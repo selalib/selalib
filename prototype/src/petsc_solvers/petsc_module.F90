@@ -1,8 +1,17 @@
 module petsc_module
-#include "finclude/petscdef.h"
-use petsc
+#include <finclude/petscdmdef.h>
+use petscdmdef
+!#include "finclude/petscdef.h"
+!use petsc
 implicit none
 
+type, public    :: userctx
+   DM           :: da
+   PetscInt     :: xs,xe,xm,gxs,gxe,gxm
+   PetscInt     :: ys,ye,ym,gys,gye,gym
+   PetscInt     :: mx,my
+   PetscMPIInt  :: rank
+end type userctx
 
 contains
 
