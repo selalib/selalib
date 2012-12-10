@@ -195,12 +195,12 @@ contains
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
 
-    eta1_min  = this%spline%x1_min 
-    eta1_max  = this%spline%x1_max 
-    eta2_min  = this%spline%x2_min 
-    eta2_max  = this%spline%x2_max 
-    delta_eta1 =this%spline%x1_delta  
-    delta_eta2 =this%spline%x2_delta  
+    eta1_min   = this%spline%x1_min 
+    eta1_max   = this%spline%x1_max 
+    eta2_min   = this%spline%x2_min 
+    eta2_max   = this%spline%x2_max 
+    delta_eta1 = this%spline%x1_delta  
+    delta_eta2 = this%spline%x2_delta  
     
     call compute_spline_2D( data_in, this%spline )
 
