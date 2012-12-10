@@ -82,7 +82,7 @@ contains
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
-  if (psize < 4 .or. .not. is_power_of_two(int(psize,i64))) then     
+  if (.not. is_power_of_two(int(psize,i64))) then     
      print *, 'This test needs to run in a number of processes which is ',&
           'greater than 4 and a power of 2.'
      call sll_halt_collective()
@@ -562,6 +562,7 @@ contains
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
+  sll_int32  :: prank
 
   x3_min   = this%geomv%x0
   x3_max   = this%geomv%x1
@@ -570,8 +571,10 @@ contains
   x4_max   = this%geomv%y1
   delta_x4 = this%geomv%dy
 
+  prank = sll_get_collective_rank(sll_world_collective)
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
 
   do i=1,loc_sz_i
   do j=1,loc_sz_j
@@ -590,15 +593,14 @@ contains
         stheta = sin(this%bz(gi,gj)*dt)
         depvx  = -0.5*dt*this%ex(gi,gj)
         depvy  = -0.5*dt*this%ey(gi,gj)
-        alpha_x(k,l)  = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
-        alpha_y(k,l)  = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
+        alpha_x(k,l) = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
+        alpha_y(k,l) = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
 
      end do
      end do
 
      this%ft(i,j,:,:) = this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
                                                  this%ft(i,j,:,:),alpha_x,alpha_y)
-
   end do
   end do
 
