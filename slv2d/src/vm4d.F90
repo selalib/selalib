@@ -6,7 +6,6 @@ program vm4d
   use geometry_module
   use diagnostiques_module
   use sll_vlasov4d
-  use vlasov4d_plot
   use sll_cubic_spline_interpolator_1d
   use sll_cubic_spline_interpolator_2d
   use sll_maxwell
@@ -40,7 +39,7 @@ program vm4d
   call sll_boot_collective()
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
-  comm   = sll_world_collective%comm
+  comm  = sll_world_collective%comm
 
   tcpu1 = MPI_WTIME()
   if (prank == MPI_MASTER) then
@@ -70,10 +69,6 @@ program vm4d
   do iter=1,nbiter
 
      if (iter ==1 .or. mod(iter,fdiag) == 0) then 
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
-        call plot_df(vlas4d%f,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
         call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
@@ -120,8 +115,8 @@ program vm4d
 
      call transposevx(vlas4d)
 
-     call advection_x1(vlas4d,0.5_f64*dt)
      call advection_x2(vlas4d,0.5_f64*dt)
+     call advection_x1(vlas4d,0.5_f64*dt)
      
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
