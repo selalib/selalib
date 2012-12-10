@@ -1,55 +1,51 @@
-module f90module
-#include <finclude/petscdmdef.h>
-use petscdmdef
-type userctx
-   type(DM)     :: da
-   PetscInt     :: xs,xe,xm,gxs,gxe,gxm
-   PetscInt     :: ys,ye,ym,gys,gye,gym
-   PetscInt     :: mx,my
-   PetscMPIInt  :: rank
-end type userctx
-
-end module f90module
-
+#define PETSC_USE_FORTRAN_MODULES 1
 program main
 #include <finclude/petscdef.h>
 use petsc
-use f90module
+use petsc_module
 implicit none
 
-MPI_Comm                :: comm
-type(Vec)               :: X,F,localF
-type(Mat)               :: J
-type(KSP)               :: ksp
-PetscInt                :: Nx,Ny,N,mx,my,ifive,ithree
-PetscBool               :: flg
+MPI_Comm            :: comm
+Vec                 :: X,F,U
+Mat                 :: J
+KSP                 :: ksp
+PetscInt            :: Nx,Ny,mx,my,ifive,ithree
+PetscBool           :: flg
 
-double precision        :: rtol
-PetscInt                :: max_nonlin_its,one
-PetscInt                :: lin_its
-PetscInt                :: m
-PetscScalar             :: mone
-PetscErrorCode          :: ierr
-type(userctx)           :: user
-type(userctx), pointer  :: puser
+PetscInt            :: one
+PetscInt            :: its
+PetscScalar         :: mone
+PetscErrorCode      :: ierr
+type(userctx)       :: user
+PetscViewer         :: viewer
+PetscScalar         :: xmin, xmax, ymin, ymax
+double precision    :: norm
+PetscLogDouble      :: t1, t2
+PetscInt            :: psize, prank
+character(len=72)   :: chaine
 
 mone           = -1.d0
-rtol           = 1.d-8
-max_nonlin_its = 10
 one            = 1
 ifive          = 5
 ithree         = 3
 
 call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+call PetscGetCPUTime(t1, ierr)
 comm = PETSC_COMM_WORLD
-call MPI_Comm_rank(PETSC_COMM_WORLD,user%rank,ierr)
+call MPI_Comm_rank(PETSC_COMM_WORLD,prank,ierr)
+call MPI_Comm_size(PETSC_COMM_WORLD,psize,ierr)
+
+user%rank = prank
+
+write(chaine,"('Hello World from node',2i3)") prank, psize
+call PetscSynchronizedPrintf(PETSC_COMM_WORLD, trim(chaine)//'\n', ierr)
+call PetscSynchronizedFlush(PETSC_COMM_WORLD,ierr)
 
 
-mx = 4
-my = 4
+mx = 32
+my = 32
 call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-mx',user%mx,flg,ierr)
 call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-my',user%my,flg,ierr)
-N = mx*my
 
 call KSPCreate(comm,ksp,ierr)
 
@@ -69,15 +65,10 @@ call DMDAGetInfo(user%da,PETSC_NULL_INTEGER,user%mx,user%my,    &
 &               PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,          &
 &               PETSC_NULL_INTEGER,ierr)
 
-!
-!   Visualize the distribution of the array across the processors
-!
-call DMView(user%da,PETSC_VIEWER_DRAW_WORLD,ierr)
-
-
 !  Get local grid boundaries (for 2-dimensional DMDA)
 call DMDAGetCorners(user%da,user%xs,user%ys,PETSC_NULL_INTEGER, &
 &     user%xm,user%ym,PETSC_NULL_INTEGER,ierr)
+
 call DMDAGetGhostCorners(user%da,user%gxs,user%gys,             &
 &     PETSC_NULL_INTEGER,user%gxm,user%gym,                     &
 &     PETSC_NULL_INTEGER,ierr)
@@ -96,44 +87,60 @@ user%gxe = user%gxs+user%gxm-1
 
 call DMCreateGlobalVector(user%da,X,ierr)
 call VecDuplicate(X,F,ierr)
-call DMCreateLocalVector(user%da,localF,ierr)
+call VecDuplicate(X,U,ierr)
+call DMCreateMatrix(user%da,MATAIJ,J,ierr)
 
-call VecGetLocalSize(X,m,ierr)
-!call DMCreateMatrix(user%da,MATAIJ,J,ierr)
-
-call MatCreateAIJ(comm,m,m,N,N,ifive,PETSC_NULL_INTEGER,ithree, &
-&                 PETSC_NULL_INTEGER,J,ierr)
-  
-!Set runtime options (e.g., -ksp_monitor -ksp_rtol <rtol> -ksp_type <type>)
+!Multigrid
+!call DMSetFunction(da,ComputeRHS,ierr)
+!call DMSetJacobian(da,ComputeMatrix,ierr)
+!call KSPSetDM(ksp,da,ierr)
+!call KSPSetFromOptions(ksp,ierr)
+!call KSPSolve(ksp,PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,ierr)
+!call KSPGetSolution(ksp,x,ierr)
   
 call KSPSetFromOptions(ksp,ierr)
-
 call ComputeRHS(F,user,ierr)
+call ComputeSolution(U,user,ierr)
 call ComputeMatrix(J,user,ierr)
-
 call KSPSetOperators(ksp,J,J,SAME_NONZERO_PATTERN,ierr)
 call KSPSolve(ksp,F,X,ierr)
+call KSPGetIterationNumber(ksp,its,ierr)
 
-call KSPGetIterationNumber(ksp,lin_its,ierr)
-print*,'linear solve iterations = ',lin_its
-
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     VTK print out
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+xmin = 0.; xmax = 1.
+ymin = 0.; ymax = 1.
 call PetscViewerCreate(comm, viewer, ierr)
 call PetscViewerSetType(viewer, PETSCVIEWERASCII, ierr)
-call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK, ierr)
 call PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK, ierr)
 call PetscViewerFileSetName(viewer, "laplacien.vtk", ierr)
 call DMDASetUniformCoordinates(user%da, xmin, xmax, ymin, ymax, &
                              PETSC_NULL_SCALAR, PETSC_NULL_SCALAR, ierr)
 call DMView(user%da,viewer,ierr)
 call VecView(X,viewer,ierr)
+call VecView(U,viewer,ierr)
+call VecView(F,viewer,ierr)
 call PetscViewerDestroy(viewer, ierr)
+
+!  Check the error
+call VecAXPY(X,mone,U,ierr)
+call VecNorm(X,NORM_2,norm,ierr)
+if (user%rank .eq. 0) then
+   if (norm .gt. 1.e-12) then
+       write(6,100) norm,its
+   else
+      write(6,110) its
+   endif
+endif
+100 format('Norm of error ',e11.4,' iterations ',i5)
+110 format('Norm of error < 1.e-12,iterations ',i5)
+
+call PetscGetCPUTime(t2, ierr)
+write(chaine,"('KSP code took', f15.3,' CPU seconds \n')") (t2-t1)*psize
+call PetscPrintf(PETSC_COMM_WORLD, chaine, ierr)
 
 call MatDestroy(J,ierr)
 call VecDestroy(X,ierr)
-call VecDestroy(localF,ierr)
+call VecDestroy(U,ierr)
 call VecDestroy(F,ierr)
 call KSPDestroy(ksp,ierr)
 call DMDestroy(user%da,ierr)
@@ -143,25 +150,28 @@ end
 subroutine ComputeMatrix(lap,user,ierr)
 #include <finclude/petscdef.h>
 use petsc
-use f90module
+use petsc_module
 implicit none
 
 Mat            :: lap
 PetscErrorCode :: ierr
 PetscInt       :: i,j
-PetscInt       :: row,ione
-PetscInt       :: col(5),ifive
+PetscInt       :: row
+PetscInt       :: ione
+PetscInt       :: col(5)
+PetscInt       :: ifive
 PetscScalar    :: two,one
-PetscScalar    :: v(5),hx,hy,hxdhy
-PetscScalar    :: hydhx
+PetscScalar    :: v(5)
+PetscScalar    :: hydhx,hxdhy
+PetscScalar    :: hx,hy
 type (userctx) :: user
 
 ione   = 1
 ifive  = 5
 one    = 1.d0
 two    = 2.d0
-hx     = one/(mx-1)
-hy     = one/(my-1)
+hx     = one/(dble(user%mx-1))
+hy     = one/(dble(user%my-1))
 hxdhy  = hx/hy        
 hydhx  = hy/hx
 
@@ -191,14 +201,18 @@ end do
 
 call MatAssemblyBegin(lap,MAT_FINAL_ASSEMBLY,ierr)
 call MatAssemblyEnd(lap,MAT_FINAL_ASSEMBLY,ierr)
+
 return 
 end
+
 
 subroutine ComputeRHS(F,user,ierr)
 #include <finclude/petscdef.h>
 use petsc
+use petsc_module
+implicit none
 
-type(Vec)           :: X,F
+Vec                 :: F
 PetscErrorCode      :: ierr
 type (userctx)      :: user
 PetscScalar,pointer :: lf_v(:)
@@ -211,10 +225,11 @@ call VecRestoreArrayF90(F,lf_v,ierr)
 
 end subroutine ComputeRHS
 
-subroutine ComputeRHSLocal(x,f,user,ierr)
+subroutine ComputeRHSLocal(f,user,ierr)
 #include <finclude/petscsysdef.h>
 use petscsys
-use f90module
+use petsc_module
+implicit none
 type (userctx) :: user
 PetscScalar    :: f(user%xs:user%xe,user%ys:user%ye)
 PetscErrorCode :: ierr
@@ -230,13 +245,52 @@ hydhx  = hy/hx
 
 do j=user%ys,user%ye
    do i=user%xs,user%xe
-      if (i == 1 .or. j == 1 .or. i == user%mx .or. j == user%my) then
-         f(i,j) = 1.0
-      else
-         f(i,j) = 1.0
-      endif
+      f(i,j) = 8*PETSC_PI*PETSC_PI*sin(2*PETSC_PI*(i-1)*hx)*sin(2*PETSC_PI*(j-1)*hy)*hx*hy
    end do
 end do
 ierr = 0
+return
+end
+
+subroutine ComputeSolution(U,user,ierr)
+#include <finclude/petscdef.h>
+use petsc
+use petsc_module
+implicit none
+Vec                 :: U
+PetscErrorCode      :: ierr
+type (userctx)      :: user
+PetscScalar,pointer :: pu(:)
+
+call VecGetArrayF90(U,pu,ierr)
+call ComputeSolutionLocal(pu,user,ierr)
+call VecRestoreArrayF90(U,pu,ierr)
+
+ierr = 0
+return
+end
+
+subroutine ComputeSolutionLocal(u,user,ierr)
+#include <finclude/petscsysdef.h>
+use petscsys
+use petsc_module
+implicit none
+type (userctx) :: user
+PetscScalar    :: u(user%xs:user%xe,user%ys:user%ye)
+PetscErrorCode :: ierr
+PetscScalar    :: one,hx,hy
+PetscInt       :: i,j
+
+one    = 1.0
+hx     = one/dble(user%mx-1)
+hy     = one/dble(user%my-1)
+
+do j=user%ys,user%ye
+   do i=user%xs,user%xe
+      u(i,j) = sin(2*PETSC_PI*(i-1)*hx)*sin(2*PETSC_PI*(j-1)*hy)
+   end do
+end do
+ierr = 0
+
 return
 end
