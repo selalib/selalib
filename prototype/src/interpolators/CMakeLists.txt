@@ -88,7 +88,7 @@ target_link_libraries( test_interpolators_1d
 	               sll_working_precision 
                        ${LAPACK_LIBRARIES}
                      )
-add_executable(test_interpolators_2d unit_test.F90
+add_executable(test_interpolators_2d unit_test_2d.F90
                ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 
 target_link_libraries( test_interpolators_2d
