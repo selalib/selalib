@@ -66,33 +66,22 @@ program vm4d
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
+  call advection_x1(vlas4d,0.5*dt)
+  call advection_x2(vlas4d,0.5*dt)
+  call transposexv(vlas4d)
+  call densite_courant(vlas4d)
+  !call faraday_te(maxwell, ex, ey, bz, 0.5*dt)   
+
   do iter=1,nbiter
 
      if (iter ==1 .or. mod(iter,fdiag) == 0) then 
         call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
-     call advection_x1(vlas4d,0.5*dt)
-     call advection_x2(vlas4d,0.5*dt)
-
-     !Recopie de f^(n,2) dans f1
-     !f1=f;ex1=ex;ey1=ey;bz1=bz
-
-     call transposexv(vlas4d)
-
-     !prediction 
-
-     !call densite_charge(vlas4d,rho)
-     call densite_courant(vlas4d)
-     
-     if (iter == 1) then
-       !call faraday_te(maxwell, ex, ey, bz, 0.5*dt)   
-     else
-       !call faraday_te(maxwell, ex, ey, bz, 0.5*dt)   
-     end if
-
+     !call faraday_te(maxwell, vlas4d%ex, vlas4d%ey, vlas4d%bz, 0.5*dt)   
      !call bc_periodic(maxwell, ex, ey, bz)
 
+     call densite_courant(vlas4d)
      call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
      call bc_periodic(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz)
 
@@ -100,23 +89,10 @@ program vm4d
 
      call transposevx(vlas4d)
 
-     call advection_x1(vlas4d,0.5_f64*dt)
-     call advection_x2(vlas4d,0.5_f64*dt)
+     call advection_x1(vlas4d,dt)
+     call advection_x2(vlas4d,dt)
 
-     !f=f1;ex=ex1;ey=ey1;
-
-     !correction
-
-     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz, dt,vlas4d%jx,vlas4d%jy) 
-     call bc_periodic(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz)
      call transposexv(vlas4d)
-
-     call advection_x3x4(vlas4d,dt)
-
-     call transposevx(vlas4d)
-
-     call advection_x2(vlas4d,0.5_f64*dt)
-     call advection_x1(vlas4d,0.5_f64*dt)
      
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
