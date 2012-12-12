@@ -56,9 +56,8 @@ module sll_module_interpolators_2d_base
        class(sll_interpolator_2d_base), intent(in)     :: this
        sll_int32, intent(in)  :: num_points1 
        sll_int32, intent(in)  :: num_points2 
-       sll_real64, dimension(num_points1,num_points2), intent(in) :: data_in
-       sll_real64, dimension(num_points1,num_points2), intent(in) :: eta1
-       sll_real64, dimension(num_points1,num_points2), intent(in) :: eta2  
+       sll_real64, dimension(:,:), intent(in) :: data_in
+       sll_real64, dimension(:,:), intent(in) :: eta1, eta2  
        sll_real64, dimension(num_points1,num_points2)    :: res
      end function interpolate_2d_array
   end interface
@@ -71,10 +70,9 @@ module sll_module_interpolators_2d_base
        class(sll_interpolator_2d_base), intent(in)     :: this
        sll_int32, intent(in)  :: num_points1  
        sll_int32, intent(in)  :: num_points2 
-       sll_real64, dimension(num_points1,num_points2), intent(in) :: data_in
-       sll_real64, dimension(num_points1,num_points2), intent(in) :: alpha1
-       sll_real64, dimension(num_points1,num_points2), intent(in) :: alpha2
-       sll_real64, dimension(num_points1,num_points2)  :: res
+       sll_real64, dimension(:,:), intent(in) :: data_in
+       sll_real64, dimension(:,:), intent(in) :: alpha1, alpha2  
+       sll_real64, dimension(num_points1,num_points2)    :: res
      end function interpolate_2d_array_disp
   end interface
 
