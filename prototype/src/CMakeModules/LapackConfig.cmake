@@ -21,7 +21,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
                                       
       INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
       SET(BLAS_LIBRARIES "")
-      SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm")
+      SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
 
