@@ -82,18 +82,19 @@ program vm4d_spectral
 
      !call densite_charge(vlas4d,rho)
      call transposexv(vlas4d)
-     call densite_courant(vlas4d)
-     
-     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
+     !call densite_courant(vlas4d)
+     !call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
+     call densite_charge(vlas4d)
+     call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
 
-
-     call advection_x3x4(vlas4d,dt)
+     call advection_x3(vlas4d,dt)
+     call advection_x4(vlas4d,dt)
+     !call advection_x3x4(vlas4d,dt)
 
      call transposevx(vlas4d)
 
      call advection_x1(vlas4d,dt)
      call advection_x2(vlas4d,dt)
-
 
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
@@ -203,8 +204,7 @@ contains
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
     &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
 
-    !call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,spl_x3x4,error)
-    call new(vlas4d,geomx,geomv,spl_x3x4,error)
+    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,spl_x3x4,error)
 
     call compute_local_sizes_4d(vlas4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 

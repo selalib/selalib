@@ -595,11 +595,8 @@ contains
         stheta = sin(this%bz(gi,gj)*dt)
         depvx  = 0.5*dt*this%ex(gi,gj)
         depvy  = 0.5*dt*this%ey(gi,gj)
-        alpha_x(k,l) = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
-        alpha_y(k,l) = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
-
-        alpha_x(k,l) = dt*this%ex(gi,gj)
-        alpha_y(k,l) = dt*this%ey(gi,gj)
+        alpha_x(k,l) = px - (depvx+(px+depvx)*ctheta-(py+depvy)*stheta)
+        alpha_y(k,l) = py - (depvy+(px+depvx)*stheta+(py+depvy)*ctheta)
 
      end do
      end do
