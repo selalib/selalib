@@ -149,7 +149,7 @@ IF (FFTW_FOUND)
    TARGET_LINK_LIBRARIES(vp4d slv2d ${LIBS})
    ADD_EXECUTABLE(vm4d vm4d.F90 sll_vlasov4d.F90)
    TARGET_LINK_LIBRARIES(vm4d slv2d ${LIBS})
-   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90 spectral_vlasov4d.F90)
+   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90 sll_vlasov4d_spectral.F90)
    TARGET_LINK_LIBRARIES(vm4d_spectral slv2d ${LIBS})
 ENDIF()
 
