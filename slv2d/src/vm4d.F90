@@ -70,10 +70,8 @@ program vm4d
   call densite_charge(vlas4d)
   call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
   call transposevx(vlas4d)
-
   call advection_x1(vlas4d,0.5*dt)
   call advection_x2(vlas4d,0.5*dt)
-
 
   do iter=1,nbiter
 
