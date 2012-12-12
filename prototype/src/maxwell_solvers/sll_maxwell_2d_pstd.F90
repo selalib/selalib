@@ -215,12 +215,12 @@ subroutine faraday_tm(self, hx, hy, ez, dt)
 
    dt_mu = dt / self%mu_0 
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(ez(i,1:ny))
       hx(i,1:ny) = hx(i,1:ny) - dt_mu * self%d_dy
    end do
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(ez(1:nx,j))
       hy(1:nx,j) = hy(1:nx,j) + dt_mu * self%d_dx
    end do
@@ -244,12 +244,12 @@ subroutine faraday_te(self, ex, ey, hz, dt)
 
    dt_mu = dt / self%mu_0 
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(ex(i,1:ny))
       hz(i,1:ny) = hz(i,1:ny) + dt_mu * self%d_dy
    end do
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(ey(1:nx,j))
       hz(1:nx,j) = hz(1:nx,j) - dt_mu * self%d_dx
    end do
@@ -274,12 +274,12 @@ subroutine ampere_tm(self, hx, hy, ez, dt, jz)
 
    dt_e = dt / self%e_0
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(hy(1:nx,j))
       ez(1:nx,j) = ez(1:nx,j) + dt_e * self%d_dx
    end do
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(hx(i,1:ny))
       ez(i,1:ny) = ez(i,1:ny) - dt_e * self%d_dy
    end do
@@ -310,12 +310,12 @@ subroutine ampere_te(self, ex, ey, hz, dt, jx, jy)
 
    dt_e = dt / self%e_0
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(hz(1:nx,j))
       ey(1:nx,j) = ey(1:nx,j) - dt_e * self%d_dx
    end do
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(hz(i,1:ny))
       ex(i,1:ny) = ex(i,1:ny) + dt_e * self%d_dy
    end do

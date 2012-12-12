@@ -1,11 +1,11 @@
-program vm4d
+program vm4d_spectral
 
 #include "selalib.h"
 
   use used_precision  
   use geometry_module
   use diagnostiques_module
-  use sll_vlasov4d
+  use sll_vlasov4d_spectral
   use sll_cubic_spline_interpolator_1d
   use sll_cubic_spline_interpolator_2d
   use sll_maxwell
@@ -69,11 +69,10 @@ program vm4d
   call transposexv(vlas4d)
   call densite_charge(vlas4d)
   call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
-  call transposevx(vlas4d)
 
+  call transposevx(vlas4d)
   call advection_x1(vlas4d,0.5*dt)
   call advection_x2(vlas4d,0.5*dt)
-
 
   do iter=1,nbiter
 
@@ -81,19 +80,20 @@ program vm4d
         call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
-     !call faraday_te(maxwell, vlas4d%ex, vlas4d%ey, vlas4d%bz, 0.5*dt)   
-     !call densite_courant(vlas4d)
+     !call densite_charge(vlas4d,rho)
+     call transposexv(vlas4d)
+     call densite_courant(vlas4d)
+     
      call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
 
-     call transposexv(vlas4d)
-     call densite_charge(vlas4d)
-     call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
+
      call advection_x3x4(vlas4d,dt)
-     !call advection_x3(vlas4d,dt)
-     !call advection_x4(vlas4d,dt)
+
      call transposevx(vlas4d)
+
      call advection_x1(vlas4d,dt)
      call advection_x2(vlas4d,dt)
+
 
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
@@ -106,6 +106,7 @@ program vm4d
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
+
 
   call free(poisson)
   call sll_halt_collective()
@@ -194,7 +195,7 @@ contains
     comm  = sll_world_collective%comm
 
     call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, PERIODIC_SPLINE)
-    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, PERIODIC_SPLINE)
+    call spl_x2%initialize(geomx%nx, geomx%y0, geomx%y1, PERIODIC_SPLINE)
     call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, PERIODIC_SPLINE)
     call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, PERIODIC_SPLINE)
 
@@ -202,7 +203,8 @@ contains
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
     &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
 
-    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,spl_x3x4,error)
+    !call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,spl_x3x4,error)
+    call new(vlas4d,geomx,geomv,spl_x3x4,error)
 
     call compute_local_sizes_4d(vlas4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
@@ -247,4 +249,4 @@ contains
 
   end subroutine initlocal
 
-end program vm4d
+end program vm4d_spectral
