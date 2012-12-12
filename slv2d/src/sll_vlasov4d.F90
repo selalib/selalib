@@ -275,7 +275,6 @@ contains
   end do
   end do
   end do
-  stop
 
  end subroutine advection_x3
 
