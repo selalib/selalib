@@ -206,6 +206,8 @@ contains
 
     do j = 1, num_points2
         do i = 1, num_points1
+           eta1 = eta1_min + (i-1)*delta_eta1
+           eta2 = eta2_min + (j-1)*delta_eta2
            eta1 = eta1_min + modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
            eta2 = eta2_min + modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
            data_out(i,j) = this%interpolate_value(eta1,eta2)
