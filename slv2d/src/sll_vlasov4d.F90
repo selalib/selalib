@@ -155,6 +155,10 @@ contains
   SLL_ALLOCATE(this%ey(geomx%nx,geomx%ny),error)
   SLL_ALLOCATE(this%rho(geomx%nx,geomx%ny),error)
 
+  nullify(this%bz)
+  nullify(this%jx)
+  nullify(this%jy)
+
  end subroutine new_vlasov4d_poisson
 
 
@@ -448,6 +452,7 @@ contains
   prank = sll_get_collective_rank(sll_world_collective)
   if (prank == MPI_MASTER) then
 
+     
      if(associated(this%ex)) then
         call sll_hdf5_file_create('ex_'//cplot//".h5",file_id,error)
         call sll_hdf5_write_array(file_id,this%ex,"/values",error)
@@ -463,7 +468,7 @@ contains
         call sll_hdf5_write_array(file_id,this%rho,"/values",error)
         call sll_hdf5_file_close(file_id, error)
      end if
-     if(associated(this%jx)) then
+     if(size(this%jx,1) > 1) then
         call sll_hdf5_file_create('jx_'//cplot//".h5",file_id,error)
         call sll_hdf5_write_array(file_id,this%jx,"/values",error)
         call sll_hdf5_file_close(file_id, error)
@@ -562,7 +567,6 @@ contains
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
-  sll_int32  :: prank
 
   x3_min   = this%geomv%x0
   x3_max   = this%geomv%x1
@@ -571,10 +575,8 @@ contains
   x4_max   = this%geomv%y1
   delta_x4 = this%geomv%dy
 
-  prank = sll_get_collective_rank(sll_world_collective)
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-
 
   do i=1,loc_sz_i
   do j=1,loc_sz_j
@@ -591,10 +593,13 @@ contains
         py = x4_min+(gl-1)*delta_x4
         ctheta = cos(this%bz(gi,gj)*dt)
         stheta = sin(this%bz(gi,gj)*dt)
-        depvx  = -0.5*dt*this%ex(gi,gj)
-        depvy  = -0.5*dt*this%ey(gi,gj)
+        depvx  = 0.5*dt*this%ex(gi,gj)
+        depvy  = 0.5*dt*this%ey(gi,gj)
         alpha_x(k,l) = depvx+(px+depvx)*ctheta-(py+depvy)*stheta
         alpha_y(k,l) = depvy+(px+depvx)*stheta+(py+depvy)*ctheta
+
+        alpha_x(k,l) = dt*this%ex(gi,gj)
+        alpha_y(k,l) = dt*this%ey(gi,gj)
 
      end do
      end do
