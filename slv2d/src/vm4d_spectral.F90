@@ -67,12 +67,13 @@ program vm4d_spectral
   call initlocal(jstartx,jendx,jstartv,jendv)
 
   call transposexv(vlas4d)
+
   call densite_charge(vlas4d)
   call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
 
   call transposevx(vlas4d)
-  call advection_x1(vlas4d,0.5*dt)
-  call advection_x2(vlas4d,0.5*dt)
+!  call advection_x1(vlas4d,0.5*dt)
+!  call advection_x2(vlas4d,0.5*dt)
 
   do iter=1,nbiter
 
@@ -80,21 +81,60 @@ program vm4d_spectral
         call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
+!modif NC
+     call transposexv(vlas4d)
+     call densite_courantx(vlas4d)
+     call transposevx(vlas4d)
+!fin
+
+     call advection_x1(vlas4d,0.5*dt)
+
+!modif NC
+     call transposexv(vlas4d)
+     call densite_couranty(vlas4d)
+     call transposevx(vlas4d)
+!fin
+
+     call advection_x2(vlas4d,0.5*dt)
+
+
      !call densite_charge(vlas4d,rho)
      call transposexv(vlas4d)
-     !call densite_courant(vlas4d)
-     !call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
-     call densite_charge(vlas4d)
-     call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
+     call densite_courant(vlas4d)
+     vlas4d%exn=vlas4d%ex;vlas4d%eyn=vlas4d%ey;
+     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
 
      call advection_x3(vlas4d,dt)
      call advection_x4(vlas4d,dt)
      !call advection_x3x4(vlas4d,dt)
 
+
+!modif NC
+     call densite_courant(vlas4d)
+     vlas4d%jy=0.5_f64*(vlas4d%jy+vlas4d%jy1)
+!fin
+
      call transposevx(vlas4d)
 
-     call advection_x1(vlas4d,dt)
-     call advection_x2(vlas4d,dt)
+!     call advection_x1(vlas4d,dt)
+!     call advection_x2(vlas4d,dt)
+
+     call advection_x2(vlas4d,0.5*dt)
+
+!modif NC
+     call transposexv(vlas4d)
+     call densite_courant(vlas4d)
+     vlas4d%jx=0.5_f64*(vlas4d%jx+vlas4d%jx1)
+     call transposevx(vlas4d)
+!fin
+
+     call advection_x1(vlas4d,0.5*dt)
+
+!modif NC
+     call ampere_te(maxwell,vlas4d%exn,vlas4d%eyn,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
+     vlas4d%ex=vlas4d%exn;vlas4d%ey=vlas4d%eyn
+!fin
+
 
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)

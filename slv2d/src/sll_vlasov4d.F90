@@ -260,6 +260,7 @@ contains
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
+  print*,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
   do l=1,loc_sz_l
   do j=1,loc_sz_j
   do i=1,loc_sz_i
@@ -268,11 +269,13 @@ contains
      gi = global_indices(1)
      gj = global_indices(2)
      alpha = this%ex(gi,gj)*dt
+     !print*,i,j,l
      this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
 
   end do
   end do
   end do
+  stop
 
  end subroutine advection_x3
 
