@@ -32,6 +32,8 @@ module sll_cubic_spline_interpolator_2d
 #endif
   end type cubic_spline_2d_interpolator
 
+  sll_int32, private :: i, j
+
 contains
 
   ! We allow to use the enumerators of the splines module in this interpolator
@@ -168,8 +170,6 @@ contains
     sll_real64, dimension(num_points1,num_points2), intent(in) :: eta2
     sll_real64, dimension(num_points1,num_points2), intent(in) :: data_in
     sll_real64, dimension(num_points1,num_points2)             :: data_out
-    ! local variables
-    sll_int32 :: i,j
 
     ! compute the interpolating spline coefficients
 
