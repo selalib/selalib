@@ -76,17 +76,16 @@ program vm4d
   do iter=1,nbiter
 
      if (iter ==1 .or. mod(iter,fdiag) == 0) then 
-        call write_xmf_file(vlas4d,iter/fdiag)
+        !call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
      !call faraday_te(maxwell, vlas4d%ex, vlas4d%ey, vlas4d%bz, 0.5*dt)   
+     call transposexv(vlas4d)
      call densite_courant(vlas4d)
      call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
 
-     call transposexv(vlas4d)
      !call advection_x3x4(vlas4d,dt)
      call advection_x3(vlas4d,dt)
-     stop
      call advection_x4(vlas4d,dt)
      call transposevx(vlas4d)
      call advection_x1(vlas4d,dt)

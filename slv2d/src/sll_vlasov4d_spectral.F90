@@ -3,17 +3,7 @@ sz_array = int((array_size/2+1),C_SIZE_T);                \
 p_array = fftw_alloc_complex(sz_array);                   \
 call c_f_pointer(p_array, array, [array_size/2+1])        \
 
-#define D_DX(field,nx)                                           \
-call fftw_execute_dft_r2c(this%fwx, field, this%tmp_x);       \
-this%tmp_x = -cmplx(0.0_f64,this%kx,kind=f64)*this%tmp_x;     \
-call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx);   \
-this%d_dx = this%d_dx / nx
 
-#define D_DY(field,ny)                                           \
-call fftw_execute_dft_r2c(this%fwy, field, this%tmp_y);       \
-this%tmp_y = -cmplx(0.0_f64,this%ky,kind=f64)*this%tmp_y;     \
-call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy);    \
-this%d_dy = this%d_dy / ny
 
 module sll_vlasov4d_spectral
 
@@ -29,7 +19,7 @@ module sll_vlasov4d_spectral
 
  implicit none
  private
- public :: new, free, densite_charge, densite_courant
+ public :: new, free, densite_charge, densite_courant, densite_courantx, densite_couranty
  public :: transposexv, transposevx
  public :: advection_x1, advection_x2
  public :: advection_x3, advection_x4
@@ -54,10 +44,10 @@ module sll_vlasov4d_spectral
    type(remap_plan_4D_real64), pointer      :: x_to_v 
    type(remap_plan_4D_real64), pointer      :: v_to_x
 
-   sll_real64, dimension(:,:), pointer      :: ex
-   sll_real64, dimension(:,:), pointer      :: ey
-   sll_real64, dimension(:,:), pointer      :: jx
-   sll_real64, dimension(:,:), pointer      :: jy
+   sll_real64, dimension(:,:), pointer      :: ex,exn
+   sll_real64, dimension(:,:), pointer      :: ey,eyn
+   sll_real64, dimension(:,:), pointer      :: jx,jx1,jx2
+   sll_real64, dimension(:,:), pointer      :: jy,jy1,jy2
    sll_real64, dimension(:,:), pointer      :: bz
    sll_real64, dimension(:,:), pointer      :: rho
    sll_real64, dimension(:), allocatable    :: d_dx
@@ -185,10 +175,16 @@ contains
 
   SLL_ALLOCATE(this%ex(nc_x1,nc_x2),error)
   SLL_ALLOCATE(this%ey(nc_x1,nc_x2),error)
+  SLL_ALLOCATE(this%exn(nc_x1,nc_x2),error)
+  SLL_ALLOCATE(this%eyn(nc_x1,nc_x2),error)
   SLL_ALLOCATE(this%bz(nc_x1,nc_x2),error)
   SLL_ALLOCATE(this%rho(nc_x1,nc_x2),error)
   SLL_ALLOCATE(this%jx(nc_x1,nc_x2),error)
+  SLL_ALLOCATE(this%jx1(nc_x1,nc_x2),error)
+  SLL_ALLOCATE(this%jx2(nc_x1,nc_x2),error)
   SLL_ALLOCATE(this%jy(nc_x1,nc_x2),error)
+  SLL_ALLOCATE(this%jy1(nc_x1,nc_x2),error)
+  SLL_ALLOCATE(this%jy2(nc_x1,nc_x2),error)
   
   FFTW_ALLOCATE(this%tmp_x,nc_x1/2+1,sz_tmp_x,this%p_tmp_x)
   FFTW_ALLOCATE(this%tmp_y,nc_x2/2+1,sz_tmp_y,this%p_tmp_y)
@@ -258,11 +254,27 @@ contains
      gk = global_indices(3)
      vx = (x3_min +(gk-1)*delta_x3)*dt
      do j=1,loc_sz_j
-        D_DX(this%f(:,j,k,l),this%geomx%nx)
-        this%f(:,j,k,l) = this%f(:,j,k,l)- vx*this%d_dx
+        call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
+!exact
+!        this%tmp_x = this%tmp_x*exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
+!Euler explicite
+!        this%tmp_x = this%tmp_x*(1._f64-cmplx(0.0_f64,this%kx,kind=f64)*vx)
+!Euler implicite
+!        this%tmp_x = this%tmp_x/(1._f64+cmplx(0.0_f64,this%kx,kind=f64)*vx)
+!crank-nicolson
+!        this%tmp_x = this%tmp_x/(1._f64+cmplx(0.0_f64,this%kx,kind=f64)*vx*0.5_f64)
+!        this%tmp_x = this%tmp_x*(1._f64-cmplx(0.0_f64,this%kx,kind=f64)*vx*0.5_f64)
+!Euler cn modified
+        this%tmp_x = this%tmp_x*(1._f64-cmplx(0.0_f64,this%kx,kind=f64)*vx-0.5_f64*(this%kx*vx)**2)
+        call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
+        this%f(:,j,k,l)= this%d_dx / loc_sz_i
      end do
   end do
   end do
+
+!comments NC: il faudrait calculer le courantx de ftmp donnee par 
+
+
 
  end subroutine advection_x1
 
@@ -286,8 +298,20 @@ contains
 
     do k=1,loc_sz_k
     do i=1,loc_sz_i
-       D_DY(this%f(i,:,k,l),this%geomx%ny)
-       this%f(i,:,k,l) = this%f(i,:,k,l)-vy*this%d_dy
+       call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
+!exact
+!       this%tmp_y = this%tmp_y*exp(-cmplx(0.0_f64,this%ky,kind=f64)*vy)
+!euler explicite
+!       this%tmp_y = this%tmp_y*(1._f64-cmplx(0.0_f64,this%ky,kind=f64)*vy)
+!euler implicite
+!       this%tmp_y = this%tmp_y/(1._f64+cmplx(0.0_f64,this%ky,kind=f64)*vy)
+!crank-nicolson
+!       this%tmp_y = this%tmp_y/(1._f64+cmplx(0.0_f64,this%ky,kind=f64)*vy*0.5_f64)
+!       this%tmp_y = this%tmp_y*(1._f64-cmplx(0.0_f64,this%ky,kind=f64)*vy*0.5_f64)
+!Euler cn modified
+       this%tmp_y = this%tmp_y*(1._f64-cmplx(0.0_f64,this%ky,kind=f64)*vy-0.5_f64*(this%ky*vy)**2)
+       call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
+       this%f(i,:,k,l) = this%d_dy / loc_sz_j
     end do
     end do
 
@@ -360,6 +384,7 @@ contains
    end do
    end do
 
+!   write(*,*) size(this%jx,1), size(this%jx,2),size(this%jy,1), size(this%jy,2)
    this%jx(:,:) = 0.; this%jy(:,:) = 0.
    comm   = sll_world_collective%comm
    call mpi_barrier(comm,error)
@@ -368,6 +393,85 @@ contains
    call mpi_allreduce(locjy,this%jy,c, MPI_REAL8,MPI_SUM,comm,error)
 
  end subroutine densite_courant
+
+ subroutine densite_courantx(this)
+
+   type(vlasov4d),intent(inout) :: this
+   sll_int32 :: error
+   sll_real64 :: vx 
+   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
+   sll_int32  :: c
+   sll_int32  :: comm
+   sll_real64 :: dxy
+
+   dxy = this%geomv%dx*this%geomv%dy
+   SLL_ASSERT(this%transposed)
+   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+   locjx(:,:) = 0.
+   do l=1,loc_sz_l
+   do k=1,loc_sz_k
+   do j=1,loc_sz_j
+   do i=1,loc_sz_i
+      global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
+      gi = global_indices(1)
+      gj = global_indices(2)
+      gk = global_indices(3)
+      gl = global_indices(4)
+      vx = this%geomv%x0+(gk-1)*this%geomv%dx
+      locjx(gi,gj) = locjx(gi,gj) + dxy*this%ft(i,j,k,l) * vx
+   end do
+   end do
+   end do
+   end do
+
+   this%jx1(:,:) = 0.
+   comm   = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   c=this%geomx%nx*this%geomx%ny
+   call mpi_allreduce(locjx,this%jx1,c, MPI_REAL8,MPI_SUM,comm,error)
+
+ end subroutine densite_courantx
+
+ subroutine densite_couranty(this)
+
+   type(vlasov4d),intent(inout) :: this
+   sll_int32 :: error
+   sll_real64 :: vy 
+   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
+   sll_int32  :: c
+   sll_int32  :: comm
+   sll_real64 :: dxy
+
+   dxy = this%geomv%dx*this%geomv%dy
+   SLL_ASSERT(this%transposed)
+   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+   locjy(:,:) = 0.
+   do l=1,loc_sz_l
+   do k=1,loc_sz_k
+   do j=1,loc_sz_j
+   do i=1,loc_sz_i
+      global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
+      gi = global_indices(1)
+      gj = global_indices(2)
+      gk = global_indices(3)
+      gl = global_indices(4)
+      vy = this%geomv%y0+(gl-1)*this%geomv%dy
+      locjy(gi,gj) = locjy(gi,gj) + dxy*this%ft(i,j,k,l) * vy
+   end do
+   end do
+   end do
+   end do
+
+   this%jy1(:,:) = 0.
+   comm   = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   c=this%geomx%nx*this%geomx%ny
+   call mpi_allreduce(locjy,this%jy1,c, MPI_REAL8,MPI_SUM,comm,error)
+
+ end subroutine densite_couranty
+
 
  subroutine thdiag(this,nrj,t)
 
