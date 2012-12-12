@@ -532,7 +532,7 @@ contains
   write(file_id,"(a)")"<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
-  write(file_id,"(a)")"f"//xname//yname//"_"//cplot//".h5:/values"
+  write(file_id,"(a)")fname//"_"//xname//yname//"_"//cplot//".h5:/values"
   write(file_id,"(a)")"</DataItem>"
   write(file_id,"(a)")"</Attribute>"
 
