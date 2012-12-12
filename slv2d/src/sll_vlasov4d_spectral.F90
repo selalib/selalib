@@ -32,6 +32,7 @@ module sll_vlasov4d_spectral
  public :: new, free, densite_charge, densite_courant
  public :: transposexv, transposevx
  public :: advection_x1, advection_x2
+ public :: advection_x3, advection_x4
  public :: advection_x3x4
  public :: thdiag, write_xmf_file
 
@@ -42,6 +43,10 @@ module sll_vlasov4d_spectral
    logical                                  :: transposed      
    sll_real64, dimension(:,:,:,:),  pointer :: f
    sll_real64, dimension(:,:,:,:),  pointer :: ft
+   class(sll_interpolator_1d_base), pointer :: interp_x1
+   class(sll_interpolator_1d_base), pointer :: interp_x2
+   class(sll_interpolator_1d_base), pointer :: interp_x3
+   class(sll_interpolator_1d_base), pointer :: interp_x4
    class(sll_interpolator_2d_base), pointer :: interp_x3x4
 
    type(layout_4D), pointer                 :: layout_x
@@ -83,13 +88,17 @@ include 'fftw3.f03'
 
 contains
 
- subroutine new_vlasov4d(this,geomx,geomv,interp_x3x4,error)
+ subroutine new_vlasov4d(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,interp_x3x4,error)
 
   use sll_hdf5_io
 
   type(vlasov4d),intent(inout)            :: this
   type(geometry),intent(in)               :: geomx
   type(geometry),intent(in)               :: geomv
+  class(sll_interpolator_1d_base), target :: interp_x1
+  class(sll_interpolator_1d_base), target :: interp_x2
+  class(sll_interpolator_1d_base), target :: interp_x3
+  class(sll_interpolator_1d_base), target :: interp_x4
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
@@ -132,6 +141,10 @@ contains
   this%geomx=geomx
   this%geomv=geomv
 
+  this%interp_x1 => interp_x1
+  this%interp_x2 => interp_x2
+  this%interp_x3 => interp_x3
+  this%interp_x4 => interp_x4
   this%interp_x3x4 => interp_x3x4
 
   this%layout_x => new_layout_4D( sll_world_collective )        
@@ -704,5 +717,55 @@ contains
  call sll_hdf5_file_close(pfile_id, error)
 
  end subroutine write_fx3x4
+
+ subroutine advection_x3(this,dt)
+
+  type(vlasov4d), intent(inout) :: this
+  sll_real64, intent(in) :: dt
+  sll_real64 :: alpha
+
+  SLL_ASSERT(this%transposed) 
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+  do l=1,loc_sz_l
+  do j=1,loc_sz_j
+  do i=1,loc_sz_i
+
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     gi = global_indices(1)
+     gj = global_indices(2)
+     alpha = this%ex(gi,gj)*dt
+     this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
+
+  end do
+  end do
+  end do
+
+ end subroutine advection_x3
+
+ subroutine advection_x4(this,dt)
+
+  type(vlasov4d),intent(inout) :: this
+  sll_real64, intent(in) :: dt
+  sll_real64 :: alpha
+
+  SLL_ASSERT(this%transposed) 
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+  do k=1,loc_sz_k
+  do j=1,loc_sz_j
+  do i=1,loc_sz_i
+
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     gi = global_indices(1)
+     gj = global_indices(2)
+     alpha = this%ey(gi,gj)*dt
+     this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp(loc_sz_l,this%ft(i,j,k,:),alpha)
+
+  end do
+  end do
+  end do
+
+ end subroutine advection_x4
 
 end module sll_vlasov4d_spectral
