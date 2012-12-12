@@ -66,11 +66,14 @@ program vm4d
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
+  call transposexv(vlas4d)
+  call densite_charge(vlas4d)
+  call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
+  call transposevx(vlas4d)
+
   call advection_x1(vlas4d,0.5*dt)
   call advection_x2(vlas4d,0.5*dt)
-  call transposexv(vlas4d)
-  call densite_courant(vlas4d)
-  !call faraday_te(maxwell, ex, ey, bz, 0.5*dt)   
+
 
   do iter=1,nbiter
 
@@ -79,21 +82,19 @@ program vm4d
      end if
 
      !call faraday_te(maxwell, vlas4d%ex, vlas4d%ey, vlas4d%bz, 0.5*dt)   
-     !call bc_periodic(maxwell, ex, ey, bz)
+     !call densite_courant(vlas4d)
+     !call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
 
-     call densite_courant(vlas4d)
-     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
-     call bc_periodic(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz)
-
+     call transposexv(vlas4d)
+     call densite_charge(vlas4d)
+     call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
      call advection_x3x4(vlas4d,dt)
-
+     !call advection_x3(vlas4d,dt)
+     !call advection_x4(vlas4d,dt)
      call transposevx(vlas4d)
-
      call advection_x1(vlas4d,dt)
      call advection_x2(vlas4d,dt)
 
-     call transposexv(vlas4d)
-     
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
         nrj=0.5_wp*log(nrj)
@@ -105,7 +106,6 @@ program vm4d
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
-
 
   call free(poisson)
   call sll_halt_collective()
@@ -239,10 +239,6 @@ contains
                              geomx%y0, geomx%y1, geomx%ny-1, TE_POLARIZATION)
 
     call new(poisson, vlas4d%ex, vlas4d%ey, geomx, error)
-    call transposexv(vlas4d)
-    call densite_charge(vlas4d)
-    call transposevx(vlas4d)
-    call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
 
     jstartx = get_layout_4D_j_min( vlas4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlas4d%layout_v, prank )
