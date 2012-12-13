@@ -37,7 +37,7 @@ IF(NOT LAPACK_FOUND)
 ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library " FORCE)
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library ")
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library " )
 
 IF(SILO_ENABLED) 
@@ -137,20 +137,36 @@ TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS} ${LAPACK_LIBRARIES})
 #TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
+
+   ADD_LIBRARY(sll_vlasov4d STATIC sll_vlasov4d_spectral.F90
+                                   sll_vlasov4d_maxwell.F90
+                                   sll_vlasov4d_poisson.F90
+                                   sll_vlasov4d_base.F90)
+
+   ADD_DEPENDENCIES(sll_vlasov4d slv2d)
+                              
+
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
    TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
+
+   ADD_EXECUTABLE(vp4d          vp4d.F90)
+   ADD_EXECUTABLE(vm4d          vm4d.F90)
+   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90)
+
+   TARGET_LINK_LIBRARIES(vp4d          sll_vlasov4d slv2d ${LIBS})
+   TARGET_LINK_LIBRARIES(vm4d          sll_vlasov4d slv2d ${LIBS})
+   TARGET_LINK_LIBRARIES(vm4d_spectral sll_vlasov4d slv2d ${LIBS})
+
    IF(FFTW_MPI_LIBRARY)
+
       ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
       TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
       ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
       TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib ${FFTW_LIBRARIES})
+
    ENDIF()
-   ADD_EXECUTABLE(vp4d vp4d.F90 sll_vlasov4d.F90)
-   TARGET_LINK_LIBRARIES(vp4d slv2d ${LIBS})
-   ADD_EXECUTABLE(vm4d vm4d.F90 sll_vlasov4d.F90)
-   TARGET_LINK_LIBRARIES(vm4d slv2d ${LIBS})
-   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90 sll_vlasov4d.F90 sll_vlasov4d_spectral.F90)
-   TARGET_LINK_LIBRARIES(vm4d_spectral slv2d ${LIBS})
+
+
 ENDIF()
 
 ENABLE_TESTING()
