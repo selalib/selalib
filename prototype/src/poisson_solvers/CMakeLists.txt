@@ -64,11 +64,12 @@ IF(FFTPACK_ENABLED)
 ENDIF()
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
-     ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90)
+     ADD_DEFINITIONS(-D_FFTW)
+     ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
      ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
      TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
                                            sll_mapped_meshes
-                                   sll_constants
+                                           sll_constants
 	                                   sll_working_precision
                                            sll_assertion 
                                            sll_memory 
