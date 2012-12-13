@@ -122,7 +122,7 @@ contains
 
 
   call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%layout_v => new_layout_4D( sll_world_collective )
   call initialize_layout_with_distributed_4D_array( &
@@ -130,7 +130,7 @@ contains
               1,int(psize,4),1,1,this%layout_v)
 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
   this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
@@ -151,9 +151,9 @@ contains
 
   end if
 
-  SLL_ALLOCATE(this%ex(geomx%nx,geomx%ny),error)
-  SLL_ALLOCATE(this%ey(geomx%nx,geomx%ny),error)
-  SLL_ALLOCATE(this%rho(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%ex(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%ey(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%rho(geomx%nx,geomx%ny),error)
 
   nullify(this%bz)
   nullify(this%jx)
@@ -173,14 +173,16 @@ contains
   class(sll_interpolator_1d_base), target :: interp_x4
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
+  sll_int32  :: prank
 
   this%interp_x3x4 => interp_x3x4
 
   call new_vlasov4d_poisson(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,error)
+  prank = sll_get_collective_rank(sll_world_collective)
   
-  SLL_ALLOCATE(this%jx(geomx%nx,geomx%ny),error)
-  SLL_ALLOCATE(this%jy(geomx%nx,geomx%ny),error)
-  SLL_ALLOCATE(this%bz(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%jx(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%jy(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%bz(geomx%nx,geomx%ny),error); this%bz = 0.0_f64
 
  end subroutine new_vlasov4d_maxwell
 
@@ -256,20 +258,18 @@ contains
   type(vlasov4d), intent(inout) :: this
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
-
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-  print*,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
   do l=1,loc_sz_l
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,l/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      alpha = this%ex(gi,gj)*dt
-     !print*,i,j,l
+
      this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
 
   end do
@@ -624,7 +624,7 @@ contains
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fij(loc_sz_i,loc_sz_j),error)
+ SLL_CLEAR_ALLOCATE(fij(loc_sz_i,loc_sz_j),error)
  do j=1,loc_sz_j
     do i=1,loc_sz_i
        sumloc = sum(this%f(i,j,:,:))
@@ -652,7 +652,7 @@ contains
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fik(loc_sz_i,loc_sz_k),error)
+ SLL_CLEAR_ALLOCATE(fik(loc_sz_i,loc_sz_k),error)
  do k=1,loc_sz_k
     do i=1,loc_sz_i
        sumloc= sum(this%f(i,:,k,:))
@@ -680,7 +680,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fjl(loc_sz_j,loc_sz_l),error)
+ SLL_CLEAR_ALLOCATE(fjl(loc_sz_j,loc_sz_l),error)
  do l=1,loc_sz_l
     do j=1,loc_sz_j
        fjl(j,l) = sum(this%f(:,j,:,l))
@@ -709,7 +709,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fkl(loc_sz_k,loc_sz_l),error)
+ SLL_CLEAR_ALLOCATE(fkl(loc_sz_k,loc_sz_l),error)
  do l=1,loc_sz_l
     do k=1,loc_sz_k
        fkl(k,l) = sum(this%f(:,:,k,l))
