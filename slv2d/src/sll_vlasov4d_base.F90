@@ -15,6 +15,7 @@ module sll_vlasov4d_base
  public :: compute_charge, compute_current
  public :: transposexv, transposevx
  public :: thdiag, write_xmf_file
+ public :: initglobal
 
  type, public :: vlasov4d_base
    type(geometry)                           :: geomx

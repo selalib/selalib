@@ -7,7 +7,6 @@ program vm4d_spectral
   use diagnostiques_module
   use sll_vlasov4d_base
   use sll_vlasov4d_spectral
-  use sll_cubic_spline_interpolator_1d
   use sll_cubic_spline_interpolator_2d
   use sll_maxwell
   use sll_maxwell_2d_pstd
@@ -22,8 +21,6 @@ program vm4d_spectral
   type(poisson_2d_periodic)  :: poisson 
   type(vlasov4d_spectral)    :: vlasov4d 
 
-  type(cubic_spline_1d_interpolator), target :: spl_x3
-  type(cubic_spline_1d_interpolator), target :: spl_x4
   type(cubic_spline_2d_interpolator), target :: spl_x3x4
 
   sll_int32  :: nbiter, iter , fdiag, fthdiag  
@@ -33,7 +30,6 @@ program vm4d_spectral
   sll_int64  :: psize
 
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
-  sll_int32  :: jstartx, jendx, jstartv, jendv   
 
   call sll_boot_collective()
   prank = sll_get_collective_rank(sll_world_collective)
@@ -63,7 +59,7 @@ program vm4d_spectral
      write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
   endif
 
-  call initlocal(jstartx,jendx,jstartv,jendv)
+  call initlocal()
 
   call transposexv(vlasov4d)
 
@@ -94,17 +90,13 @@ program vm4d_spectral
 
      call advection_x2(vlasov4d,0.5*dt)
 
-
      !call compute_charge(vlasov4d,rho)
      call transposexv(vlasov4d)
      call compute_current(vlasov4d)
      vlasov4d%exn=vlasov4d%ex;vlasov4d%eyn=vlasov4d%ey;
      call ampere_te(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
 
-     call advection_x3(vlasov4d,dt)
-     call advection_x4(vlasov4d,dt)
-     !call advection_x3x4(vlasov4d,dt)
-
+     call advection_x3x4(vlasov4d,dt)
 
 !modif NC
      call compute_current(vlasov4d)
@@ -112,9 +104,6 @@ program vm4d_spectral
 !fin
 
      call transposevx(vlasov4d)
-
-!     call advection_x1(vlasov4d,dt)
-!     call advection_x2(vlasov4d,dt)
 
      call advection_x2(vlasov4d,0.5*dt)
 
@@ -132,7 +121,6 @@ program vm4d_spectral
      vlasov4d%ex=vlasov4d%exn;vlasov4d%ey=vlasov4d%eyn
 !fin
 
-
      if (mod(iter,fthdiag).eq.0) then 
         nrj=sum(vlasov4d%ex*vlasov4d%ex+vlasov4d%ey*vlasov4d%ey)*(vlasov4d%geomx%dx)*(vlasov4d%geomx%dy)
         nrj=0.5_wp*log(nrj)
@@ -142,9 +130,9 @@ program vm4d_spectral
   end do
 
   tcpu2 = MPI_WTIME()
-  if (prank == MPI_MASTER) &
+  if (prank == MPI_MASTER) then
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
-
+  end if
 
   call free(poisson)
   call sll_halt_collective()
@@ -157,38 +145,31 @@ contains
 
 !####################################################################################
 
-  subroutine initlocal(jstartx,jendx,jstartv,jendv)
+  subroutine initlocal()
 
-    sll_int32  :: jstartx 
-    sll_int32  :: jendx 
-    sll_int32  :: jstartv
-    sll_int32  :: jendv   
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
     sll_real64 :: xi, eps, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
-
     sll_int32 :: psize
 
     prank = sll_get_collective_rank(sll_world_collective)
     psize = sll_get_collective_size(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, PERIODIC_SPLINE)
-    call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, PERIODIC_SPLINE)
     call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
     &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
 
-    call new(vlasov4d,geomx,geomv,spl_x3,spl_x4,spl_x3x4,error)
+    call new(vlasov4d,geomx,geomv,spl_x3x4,error)
 
     call compute_local_sizes_4d(vlasov4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
     eps = 0.05_f64
-    kx  = 2_f64*sll_pi/((geomx%nx)*geomx%dx)
-    ky  = 2_f64*sll_pi/((geomx%ny)*geomx%dy)
+    kx  = 2_f64*sll_pi/(geomx%nx*geomx%dx)
+    ky  = 2_f64*sll_pi/(geomx%ny*geomx%dy)
 
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
@@ -219,11 +200,6 @@ contains
 
     call new(poisson, geomx%x0, geomx%x1, geomx%nx, &
                       geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
-
-    jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
-    jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )
-    jstartv = get_layout_4D_l_min( vlasov4d%layout_x, prank )
-    jendv   = get_layout_4D_l_max( vlasov4d%layout_x, prank )
 
   end subroutine initlocal
 
