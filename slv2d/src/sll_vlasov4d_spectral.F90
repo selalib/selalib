@@ -144,7 +144,7 @@ contains
 
 
   call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%layout_v => new_layout_4D( sll_world_collective )
   call initialize_layout_with_distributed_4D_array( &
@@ -152,7 +152,7 @@ contains
               1,int(psize,4),1,1,this%layout_v)
 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
   this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
@@ -173,31 +173,31 @@ contains
 
   end if
 
-  SLL_ALLOCATE(this%ex(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%ey(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%exn(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%eyn(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%bz(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%rho(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%jx(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%jx1(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%jx2(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%jy(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%jy1(nc_x1,nc_x2),error)
-  SLL_ALLOCATE(this%jy2(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%exn(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%eyn(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(nc_x1,nc_x2),error); this%bz = 0.0_f64
+  SLL_CLEAR_ALLOCATE(this%rho(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx1(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx2(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jy1(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jy2(nc_x1,nc_x2),error)
   
   FFTW_ALLOCATE(this%tmp_x,nc_x1/2+1,sz_tmp_x,this%p_tmp_x)
   FFTW_ALLOCATE(this%tmp_y,nc_x2/2+1,sz_tmp_y,this%p_tmp_y)
-  SLL_ALLOCATE(this%d_dx(nc_x1), error)
-  SLL_ALLOCATE(this%d_dy(nc_x2), error)
+  SLL_CLEAR_ALLOCATE(this%d_dx(nc_x1), error)
+  SLL_CLEAR_ALLOCATE(this%d_dy(nc_x2), error)
 
   this%fwx = fftw_plan_dft_r2c_1d(nc_x1, this%d_dx,  this%tmp_x, FFTW_ESTIMATE)
   this%bwx = fftw_plan_dft_c2r_1d(nc_x1, this%tmp_x, this%d_dx,  FFTW_ESTIMATE)
   this%fwy = fftw_plan_dft_r2c_1d(nc_x2, this%d_dy,  this%tmp_y, FFTW_ESTIMATE)
   this%bwy = fftw_plan_dft_c2r_1d(nc_x2, this%tmp_y, this%d_dy,  FFTW_ESTIMATE)
 
-  SLL_ALLOCATE(this%kx(nc_x1/2+1), error)
-  SLL_ALLOCATE(this%ky(nc_x2/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%kx(nc_x1/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%ky(nc_x2/2+1), error)
    
   dx = geomx%dx
   dy = geomx%dy
@@ -722,7 +722,7 @@ contains
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fij(loc_sz_i,loc_sz_j),error)
+ SLL_CLEAR_ALLOCATE(fij(loc_sz_i,loc_sz_j),error)
  do j=1,loc_sz_j
     do i=1,loc_sz_i
        sumloc = sum(this%f(i,j,:,:))
@@ -750,7 +750,7 @@ contains
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fik(loc_sz_i,loc_sz_k),error)
+ SLL_CLEAR_ALLOCATE(fik(loc_sz_i,loc_sz_k),error)
  do k=1,loc_sz_k
     do i=1,loc_sz_i
        sumloc= sum(this%f(i,:,k,:))
@@ -778,7 +778,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fjl(loc_sz_j,loc_sz_l),error)
+ SLL_CLEAR_ALLOCATE(fjl(loc_sz_j,loc_sz_l),error)
  do l=1,loc_sz_l
     do j=1,loc_sz_j
        fjl(j,l) = sum(this%f(:,j,:,l))
@@ -807,7 +807,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_ALLOCATE(fkl(loc_sz_k,loc_sz_l),error)
+ SLL_CLEAR_ALLOCATE(fkl(loc_sz_k,loc_sz_l),error)
  do l=1,loc_sz_l
     do k=1,loc_sz_k
        fkl(k,l) = sum(this%f(:,:,k,l))
