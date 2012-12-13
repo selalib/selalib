@@ -51,6 +51,8 @@ IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
 add_executable( test_macro_fftpack test_macro_fftpack.F90)
 target_link_libraries( test_macro_fftpack
         sll_fft
+	sll_utilities 
+	sll_working_precision
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
