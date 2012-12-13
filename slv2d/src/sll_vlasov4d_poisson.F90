@@ -29,11 +29,11 @@ module sll_vlasov4d_poisson
  sll_int32, private :: ierr
 
  interface new
-   module procedure :: new_vlasov4d_poisson
+   module procedure new_vlasov4d_poisson
  end interface new
 
  interface free
-   module procedure :: free_vlasov4d_poisson
+   module procedure free_vlasov4d_poisson
  end interface free
 
 contains

@@ -49,10 +49,10 @@ module sll_vlasov4d_spectral
 include 'fftw3.f03'
 
  interface new
-    module procedure :: new_vlasov4d_spectral
+    module procedure new_vlasov4d_spectral
  end interface new
  interface free
-    module procedure :: free_vlasov4d_spectral
+    module procedure free_vlasov4d_spectral
  end interface free
 
 contains
