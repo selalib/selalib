@@ -5,6 +5,7 @@ program vm4d_spectral
   use used_precision  
   use geometry_module
   use diagnostiques_module
+  use sll_vlasov4d, only: thdiag
   use sll_vlasov4d_spectral
   use sll_cubic_spline_interpolator_1d
   use sll_cubic_spline_interpolator_2d
@@ -15,11 +16,11 @@ program vm4d_spectral
 
   implicit none
 
-  type(geometry)     :: geomx 
-  type(geometry)     :: geomv 
-  type(vlasov4d)     :: vlas4d 
-  type(maxwell_pstd) :: maxwell
-  type(poisson2dpp)  :: poisson 
+  type(geometry)          :: geomx 
+  type(geometry)          :: geomv 
+  type(maxwell_pstd)      :: maxwell
+  type(poisson2dpp)       :: poisson 
+  type(vlasov4d_spectral) :: vlas4d 
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
   type(cubic_spline_1d_interpolator), target :: spl_x2

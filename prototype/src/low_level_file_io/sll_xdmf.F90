@@ -331,9 +331,9 @@ contains
     write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
     if(present(file_format) .and. file_format == "HDF5") then
 #ifndef NOHDF5
-!       call sll_hdf5_file_create(trim(array_name)//".h5", file_id,error)
-!       call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-!       call sll_hdf5_file_close(file_id, error)
+       call sll_hdf5_file_create(trim(array_name)//".h5", file_id,error)
+       call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
+       call sll_hdf5_file_close(file_id, error)
 #endif
     else
        write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &

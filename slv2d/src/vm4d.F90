@@ -77,7 +77,7 @@ program vm4d
   do iter=1,nbiter
 
      if (iter ==1 .or. mod(iter,fdiag) == 0) then 
-        !call write_xmf_file(vlas4d,iter/fdiag)
+        call write_xmf_file(vlas4d,iter/fdiag)
      end if
 
      call transposexv(vlas4d)

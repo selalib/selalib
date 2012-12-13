@@ -1,4 +1,4 @@
-module sll_vlasov4d
+module sll_vlasov4d_poisson
 
 #include "selalib.h"
 
@@ -17,41 +17,28 @@ module sll_vlasov4d
  public :: advection_x3x4
  public :: thdiag, write_xmf_file
 
- type, public :: vlasov4d
-   type(geometry)                           :: geomx
-   type(geometry)                           :: geomv
-   logical                                  :: transposed      
-   sll_real64, dimension(:,:,:,:),  pointer :: f
-   sll_real64, dimension(:,:,:,:),  pointer :: ft
+ type, public, extends(vlasov4d_base)       :: vlasov4d_poisson
+
    class(sll_interpolator_1d_base), pointer :: interp_x1
    class(sll_interpolator_1d_base), pointer :: interp_x2
    class(sll_interpolator_1d_base), pointer :: interp_x3
    class(sll_interpolator_1d_base), pointer :: interp_x4
-   class(sll_interpolator_2d_base), pointer :: interp_x1x2
-   class(sll_interpolator_2d_base), pointer :: interp_x3x4
-
-   type(layout_4D), pointer                 :: layout_x
-   type(layout_4D), pointer                 :: layout_v
-   type(remap_plan_4D_real64), pointer      :: x_to_v 
-   type(remap_plan_4D_real64), pointer      :: v_to_x
 
    sll_real64, dimension(:,:), pointer      :: ex
    sll_real64, dimension(:,:), pointer      :: ey
-   sll_real64, dimension(:,:), pointer      :: jx
-   sll_real64, dimension(:,:), pointer      :: jy
-   sll_real64, dimension(:,:), pointer      :: bz
    sll_real64, dimension(:,:), pointer      :: rho
- end type vlasov4d
+
+ contains
+
+   procedure, pass :: new => new_vlasov4d_poisson
+
+ end type vlasov4d_poisson
 
  sll_int32, private :: i, j, k, l
  sll_int32, private :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
 
- interface new
-   module procedure new_vlasov4d_poisson
-   module procedure new_vlasov4d_maxwell
- end interface
 
  interface free
    module procedure dealloc_vlasov4d
@@ -63,7 +50,7 @@ contains
 
   use sll_hdf5_io
 
-  type(vlasov4d),intent(inout)            :: this
+  type(vlasov4d_poisson),intent(inout)    :: this
   type(geometry),intent(in)               :: geomx
   type(geometry),intent(in)               :: geomv
   class(sll_interpolator_1d_base), target :: interp_x1
@@ -155,40 +142,12 @@ contains
   SLL_CLEAR_ALLOCATE(this%ey(geomx%nx,geomx%ny),error)
   SLL_CLEAR_ALLOCATE(this%rho(geomx%nx,geomx%ny),error)
 
-  nullify(this%bz)
-  nullify(this%jx)
-  nullify(this%jy)
-
  end subroutine new_vlasov4d_poisson
 
 
- subroutine new_vlasov4d_maxwell(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,interp_x3x4,error)
+ subroutine dealloc_vlasov4d_poisson(this)
 
-  type(vlasov4d),intent(inout)            :: this
-  type(geometry),intent(in)               :: geomx
-  type(geometry),intent(in)               :: geomv
-  class(sll_interpolator_1d_base), target :: interp_x1
-  class(sll_interpolator_1d_base), target :: interp_x2
-  class(sll_interpolator_1d_base), target :: interp_x3
-  class(sll_interpolator_1d_base), target :: interp_x4
-  class(sll_interpolator_2d_base), target :: interp_x3x4
-  sll_int32                               :: error
-  sll_int32  :: prank
-
-  this%interp_x3x4 => interp_x3x4
-
-  call new_vlasov4d_poisson(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,error)
-  prank = sll_get_collective_rank(sll_world_collective)
-  
-  SLL_CLEAR_ALLOCATE(this%jx(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%jy(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%bz(geomx%nx,geomx%ny),error); this%bz = 0.0_f64
-
- end subroutine new_vlasov4d_maxwell
-
- subroutine dealloc_vlasov4d(this)
-
-  type(vlasov4d),intent(out) :: this
+  class(vlasov4d_base),intent(out) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)
@@ -198,7 +157,7 @@ contains
  end subroutine dealloc_vlasov4d
 
  subroutine advection_x1(this,dt)
-  type(vlasov4d), intent(inout) :: this
+  class(vlasov4d_base), intent(inout) :: this
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha, x3_min, delta_x3
 
@@ -224,7 +183,7 @@ contains
  end subroutine advection_x1
 
  subroutine advection_x2(this,dt)
-  type(vlasov4d),intent(inout) :: this
+  class(vlasov4d_base),intent(inout) :: this
   sll_real64, intent(in) :: dt
   sll_real64 :: x4_min, delta_x4
   sll_real64 :: alpha
@@ -255,7 +214,7 @@ contains
 
  subroutine advection_x3(this,dt)
 
-  type(vlasov4d), intent(inout) :: this
+  class(vlasov4d_base), intent(inout) :: this
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
   SLL_ASSERT(this%transposed) 
@@ -280,7 +239,7 @@ contains
 
  subroutine advection_x4(this,dt)
 
-  type(vlasov4d),intent(inout) :: this
+  class(vlasov4d_base),intent(inout) :: this
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
 
@@ -302,134 +261,6 @@ contains
   end do
 
  end subroutine advection_x4
-
- subroutine densite_charge(this)
-
-   type(vlasov4d),intent(inout) :: this
-   sll_int32 :: error
-   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locrho
-   sll_int32  :: c
-   sll_int32  :: comm
-   sll_real64 :: dxy
-
-   dxy = this%geomv%dx*this%geomv%dy
-
-   SLL_ASSERT(this%transposed)
-   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-   
-   locrho(:,:) = 0.
-   do j=1,loc_sz_j
-   do i=1,loc_sz_i
-      global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
-      gi = global_indices(1)
-      gj = global_indices(2)
-      locrho(gi,gj) = sum(this%ft(i,j,:,:))*dxy 
-   end do
-   end do
-   this%rho(:,:) = 0.
-   comm  = sll_world_collective%comm
-   call mpi_barrier(comm,error)
-   c=this%geomx%nx*this%geomx%ny
-   call mpi_allreduce(locrho,this%rho,c,MPI_REAL8,MPI_SUM,comm,error)
-
- end subroutine densite_charge
-
- subroutine densite_courant(this)
-
-   type(vlasov4d),intent(inout) :: this
-   sll_int32 :: error
-   sll_real64 :: vx, vy 
-   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
-   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
-   sll_int32  :: c
-   sll_int32  :: comm
-   sll_real64 :: dxy
-
-   dxy = this%geomv%dx*this%geomv%dy
-   SLL_ASSERT(this%transposed)
-   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-
-   locjx(:,:) = 0.; locjy(:,:) = 0.
-   do l=1,loc_sz_l
-   do k=1,loc_sz_k
-   do j=1,loc_sz_j
-   do i=1,loc_sz_i
-      global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
-      gi = global_indices(1)
-      gj = global_indices(2)
-      gk = global_indices(3)
-      gl = global_indices(4)
-      vx = this%geomv%x0+(gk-1)*this%geomv%dx
-      vy = this%geomv%y0+(gl-1)*this%geomv%dy
-      locjx(gi,gj) = locjx(gi,gj) + dxy*this%ft(i,j,k,l) * vx
-      locjy(gi,gj) = locjy(gi,gj) + dxy*this%ft(i,j,k,l) * vy
-   end do
-   end do
-   end do
-   end do
-
-   this%jx(:,:) = 0.; this%jy(:,:) = 0.
-   comm   = sll_world_collective%comm
-   call mpi_barrier(comm,error)
-   c=this%geomx%nx*this%geomx%ny
-   call mpi_allreduce(locjx,this%jx,c, MPI_REAL8,MPI_SUM,comm,error)
-   call mpi_allreduce(locjy,this%jy,c, MPI_REAL8,MPI_SUM,comm,error)
-
- end subroutine densite_courant
-
- subroutine thdiag(this,nrj,t)
-
-   type(vlasov4d),intent(inout) :: this
-   sll_real64, intent(in) :: t,nrj  
-   sll_real64,dimension(11) :: auxloc
-   sll_int32 :: prank, psize
-   sll_real64,dimension(13) :: aux
-   sll_real64,dimension(0:9) :: diag
-   sll_int32 :: comm, error
-   sll_real64 :: cell_volume
-
-   comm  = sll_world_collective%comm
-   prank = sll_get_collective_rank(sll_world_collective)
-   psize = sll_get_collective_size(sll_world_collective)
-
-   auxloc = 0.0
-   cell_volume = this%geomx%dx * this%geomx%dy * this%geomv%dx * this%geomv%dy
-   auxloc(1) = cell_volume * sum(this%f) ! avg(f)
-   auxloc(2) = cell_volume * sum(abs(this%f)) ! L1 norm
-   auxloc(3) = cell_volume * sum(this%f*this%f) ! L2 norm
-   
-   call mpi_reduce(auxloc,aux(1:11),11,MPI_REAL8,MPI_SUM,MPI_MASTER,comm, error)
-
-   if (prank == MPI_MASTER) then
-      diag=0.
-      aux=0.
-      aux(13)=t
-      aux(12)=nrj
-      write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
-      call time_history("thf","(13(1x,e15.6))",aux(1:13))
-   end if
-
- end subroutine thdiag
-
- subroutine transposexv(this)
-
-   type(vlasov4d),intent(inout) :: this
-
-   SLL_ASSERT(.not. this%transposed)
-   call apply_remap_4D( this%x_to_v, this%f, this%ft )
-   this%transposed = .true.
-
- end subroutine transposexv
-
- subroutine transposevx(this)
-
-   type(vlasov4d),intent(inout) :: this
-
-   SLL_ASSERT(this%transposed)
-   call apply_remap_4D( this%v_to_x, this%ft, this%f )
-   this%transposed = .false.
-
- end subroutine transposevx
 
  subroutine write_xmf_file(this, iplot)
 
@@ -525,36 +356,41 @@ contains
   write(file_id,"(a)")"</Geometry>"
   if (xname == "x1" .and. yname == "x2") then
      if(associated(this%ex)) &
-     call write_attribute(file_id,nx,ny,"ex",xname,yname,cplot)
+     call write_attribute(file_id,nx,ny,"ex",cplot)
      if(associated(this%ey)) &
-     call write_attribute(file_id,nx,ny,"ey",xname,yname,cplot)
+     call write_attribute(file_id,nx,ny,"ey",cplot)
      if(associated(this%rho)) &
-     call write_attribute(file_id,nx,ny,"rho",xname,yname,cplot)
+     call write_attribute(file_id,nx,ny,"rho",cplot)
      if(associated(this%bz)) &
-     call write_attribute(file_id,nx,ny,"bz",xname,yname,cplot)
+     call write_attribute(file_id,nx,ny,"bz",cplot)
      if(associated(this%jx)) &
-     call write_attribute(file_id,nx,ny,"jx",xname,yname,cplot)
+     call write_attribute(file_id,nx,ny,"jx",cplot)
      if(associated(this%jy)) &
-     call write_attribute(file_id,nx,ny,"jy",xname,yname,cplot)
+     call write_attribute(file_id,nx,ny,"jy",cplot)
   end if
-  call write_attribute(file_id,nx,ny,"df",xname,yname,cplot)
+  call write_attribute(file_id,nx,ny,"df",cplot,xname,yname)
   write(file_id,"(a)")"</Grid>"
 
  end subroutine write_grid
 
- subroutine write_attribute(file_id,nx,ny,fname,xname,yname,cplot)
- sll_int32                    :: file_id
- sll_int32                    :: nx
- sll_int32                    :: ny
- character(len=*), intent(in) :: fname
- character(len=*), intent(in) :: xname
- character(len=*), intent(in) :: yname
- character(len=*), intent(in) :: cplot
+ subroutine write_attribute(file_id,nx,ny,fname,cplot,xname,yname)
+
+  sll_int32                    :: file_id
+  sll_int32                    :: nx
+  sll_int32                    :: ny
+  character(len=*), intent(in) :: fname
+  character(len=*), intent(in) :: cplot
+  character(len=*), optional   :: xname
+  character(len=*), optional   :: yname
 
   write(file_id,"(a)")"<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
-  write(file_id,"(a)")"f"//xname//yname//"_"//cplot//".h5:/values"
+  if( present(xname) .and. present(yname)) then
+     write(file_id,"(a)")fname//xname//yname//"_"//cplot//".h5:/values"
+  else
+     write(file_id,"(a)")fname//"_"//cplot//".h5:/values"
+  end if
   write(file_id,"(a)")"</DataItem>"
   write(file_id,"(a)")"</Attribute>"
 
