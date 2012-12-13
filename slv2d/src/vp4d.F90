@@ -45,7 +45,7 @@ program vp4d
      print*,'MPI Version of slv2d running on ',psize, ' processors'
   end if
 
-  call initglobal(dt,nbiter,fdiag,fthdiag)
+  call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
   if (prank == MPI_MASTER) then
      ! write some run data
@@ -107,59 +107,6 @@ program vp4d
 
 contains
 
-  subroutine initglobal(dt,nbiter,fdiag,fthdiag)
-
-    sll_real64      :: dt          ! pas de temps
-    sll_int32       :: nbiter      ! nombre d'iterations en temps
-    sll_int32       :: fdiag       ! frequences des diagnostiques
-    sll_int32       :: fthdiag     ! frequences des historiques en temps
-    sll_int32       :: nx, ny      ! dimensions de l'espace physique
-    sll_int32       :: nvx, nvy    ! dimensions de l'espace des vitesses
-    sll_real64      :: x0, y0      ! coordonnees debut du maillage espace physique
-    sll_real64      :: vx0, vy0    ! coordonnees debut du maillage espace vitesses
-    sll_real64      :: x1, y1      ! coordonnees fin du maillage espace physique
-    sll_real64      :: vx1, vy1    ! coordonnees fin du maillage espace vitesses
-    sll_int32       :: error,ierr  ! indicateur d'erreur
-
-    namelist /time/ dt, nbiter
-    namelist /diag/ fdiag, fthdiag
-    namelist /phys_space/ x0,x1,y0,y1,nx,ny
-    namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
-
-    prank = sll_get_collective_rank(sll_world_collective)
-    comm  = sll_world_collective%comm
-
-    if (prank == MPI_MASTER) then
-
-       call fichinit()
-       read(idata,NML=time)
-       read(idata,NML=diag)
-       read(idata,NML=phys_space)
-       read(idata,NML=vel_space)
-
-    end if
-
-    call mpi_bcast(dt,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(fdiag,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(fthdiag, 1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(x0,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(y0,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(x1,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(y1,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(nx,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(ny,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(vx0,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(vy0,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(vx1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(vy1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-    call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-
-    call new(geomx,x0,y0,x1,y1,nx,ny,error,"perxy")
-    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,error,"perxy")
-
-  end subroutine initglobal
 
   subroutine initlocal(jstartx,jendx,jstartv,jendv)
 
