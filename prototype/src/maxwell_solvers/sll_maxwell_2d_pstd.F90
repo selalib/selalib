@@ -58,9 +58,9 @@ use sll_maxwell
 
 implicit none
 
-interface initialize
+interface new
  module procedure new_maxwell_2d_pstd
-end interface initialize
+end interface new
 interface solve
  module procedure solve_maxwell_2d
 end interface solve
