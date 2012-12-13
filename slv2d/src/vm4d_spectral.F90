@@ -5,25 +5,23 @@ program vm4d_spectral
   use used_precision  
   use geometry_module
   use diagnostiques_module
-  use sll_vlasov4d, only: thdiag
+  use sll_vlasov4d_base
   use sll_vlasov4d_spectral
   use sll_cubic_spline_interpolator_1d
   use sll_cubic_spline_interpolator_2d
   use sll_maxwell
   use sll_maxwell_2d_pstd
-  use poisson2d_periodic
+  use sll_poisson_2d_periodic
   use remapper
 
   implicit none
 
-  type(geometry)          :: geomx 
-  type(geometry)          :: geomv 
-  type(maxwell_pstd)      :: maxwell
-  type(poisson2dpp)       :: poisson 
-  type(vlasov4d_spectral) :: vlas4d 
+  type(geometry)             :: geomx 
+  type(geometry)             :: geomv 
+  type(maxwell_pstd)         :: maxwell
+  type(poisson_2d_periodic)  :: poisson 
+  type(vlasov4d_spectral)    :: vlasov4d 
 
-  type(cubic_spline_1d_interpolator), target :: spl_x1
-  type(cubic_spline_1d_interpolator), target :: spl_x2
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
   type(cubic_spline_2d_interpolator), target :: spl_x3x4
@@ -67,80 +65,78 @@ program vm4d_spectral
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
-  call transposexv(vlas4d)
+  call transposexv(vlasov4d)
 
-  call densite_charge(vlas4d)
-  call solve(poisson,vlas4d%ex,vlas4d%ey,vlas4d%rho,nrj)
+  call compute_charge(vlasov4d)
+  call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
 
-  call transposevx(vlas4d)
-!  call advection_x1(vlas4d,0.5*dt)
-!  call advection_x2(vlas4d,0.5*dt)
+  call transposevx(vlasov4d)
 
   do iter=1,nbiter
 
      if (iter ==1 .or. mod(iter,fdiag) == 0) then 
-        call write_xmf_file(vlas4d,iter/fdiag)
+        call write_xmf_file(vlasov4d,iter/fdiag)
      end if
 
 !modif NC
-     call transposexv(vlas4d)
-     call densite_courantx(vlas4d)
-     call transposevx(vlas4d)
+     call transposexv(vlasov4d)
+     call densite_courantx(vlasov4d)
+     call transposevx(vlasov4d)
 !fin
 
-     call advection_x1(vlas4d,0.5*dt)
+     call advection_x1(vlasov4d,0.5*dt)
 
 !modif NC
-     call transposexv(vlas4d)
-     call densite_couranty(vlas4d)
-     call transposevx(vlas4d)
+     call transposexv(vlasov4d)
+     call densite_couranty(vlasov4d)
+     call transposevx(vlasov4d)
 !fin
 
-     call advection_x2(vlas4d,0.5*dt)
+     call advection_x2(vlasov4d,0.5*dt)
 
 
-     !call densite_charge(vlas4d,rho)
-     call transposexv(vlas4d)
-     call densite_courant(vlas4d)
-     vlas4d%exn=vlas4d%ex;vlas4d%eyn=vlas4d%ey;
-     call ampere_te(maxwell,vlas4d%ex,vlas4d%ey,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
+     !call compute_charge(vlasov4d,rho)
+     call transposexv(vlasov4d)
+     call compute_current(vlasov4d)
+     vlasov4d%exn=vlasov4d%ex;vlasov4d%eyn=vlasov4d%ey;
+     call ampere_te(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
 
-     call advection_x3(vlas4d,dt)
-     call advection_x4(vlas4d,dt)
-     !call advection_x3x4(vlas4d,dt)
+     call advection_x3(vlasov4d,dt)
+     call advection_x4(vlasov4d,dt)
+     !call advection_x3x4(vlasov4d,dt)
 
 
 !modif NC
-     call densite_courant(vlas4d)
-     vlas4d%jy=0.5_f64*(vlas4d%jy+vlas4d%jy1)
+     call compute_current(vlasov4d)
+     vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
 !fin
 
-     call transposevx(vlas4d)
+     call transposevx(vlasov4d)
 
-!     call advection_x1(vlas4d,dt)
-!     call advection_x2(vlas4d,dt)
+!     call advection_x1(vlasov4d,dt)
+!     call advection_x2(vlasov4d,dt)
 
-     call advection_x2(vlas4d,0.5*dt)
+     call advection_x2(vlasov4d,0.5*dt)
 
 !modif NC
-     call transposexv(vlas4d)
-     call densite_courant(vlas4d)
-     vlas4d%jx=0.5_f64*(vlas4d%jx+vlas4d%jx1)
-     call transposevx(vlas4d)
+     call transposexv(vlasov4d)
+     call compute_current(vlasov4d)
+     vlasov4d%jx=0.5_f64*(vlasov4d%jx+vlasov4d%jx1)
+     call transposevx(vlasov4d)
 !fin
 
-     call advection_x1(vlas4d,0.5*dt)
+     call advection_x1(vlasov4d,0.5*dt)
 
 !modif NC
-     call ampere_te(maxwell,vlas4d%exn,vlas4d%eyn,vlas4d%bz,dt,vlas4d%jx,vlas4d%jy) 
-     vlas4d%ex=vlas4d%exn;vlas4d%ey=vlas4d%eyn
+     call ampere_te(maxwell,vlasov4d%exn,vlasov4d%eyn,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
+     vlasov4d%ex=vlasov4d%exn;vlasov4d%ey=vlasov4d%eyn
 !fin
 
 
      if (mod(iter,fthdiag).eq.0) then 
-        nrj=sum(vlas4d%ex*vlas4d%ex+vlas4d%ey*vlas4d%ey)*(vlas4d%geomx%dx)*(vlas4d%geomx%dy)
+        nrj=sum(vlasov4d%ex*vlasov4d%ex+vlasov4d%ey*vlasov4d%ey)*(vlasov4d%geomx%dx)*(vlasov4d%geomx%dy)
         nrj=0.5_wp*log(nrj)
-        call thdiag(vlas4d,nrj,iter*dt)
+        call thdiag(vlasov4d,nrj,iter*dt)
      endif
 
   end do
@@ -236,18 +232,15 @@ contains
     psize = sll_get_collective_size(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, PERIODIC_SPLINE)
-    call spl_x2%initialize(geomx%nx, geomx%y0, geomx%y1, PERIODIC_SPLINE)
     call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, PERIODIC_SPLINE)
     call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, PERIODIC_SPLINE)
-
     call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
     &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
 
-    call new(vlas4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,spl_x3x4,error)
+    call new(vlasov4d,geomx,geomv,spl_x3,spl_x4,spl_x3x4,error)
 
-    call compute_local_sizes_4d(vlas4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+    call compute_local_sizes_4d(vlasov4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
     eps = 0.05_f64
@@ -259,19 +252,19 @@ contains
     do j=1,loc_sz_j
     do i=1,loc_sz_i
 
-       global_indices = local_to_global_4D(vlas4d%layout_x,(/i,j,k,l/)) 
-       gi = global_indices(1)
-       gj = global_indices(2)
-       gk = global_indices(3)
-       gl = global_indices(4)
+        global_indices = local_to_global_4D(vlasov4d%layout_x,(/i,j,k,l/)) 
+        gi = global_indices(1)
+        gj = global_indices(2)
+        gk = global_indices(3)
+        gl = global_indices(4)
 
-       x  = geomx%x0+(gi-1)*geomx%dx
-       y  = geomx%y0+(gj-1)*geomx%dy
-       vx = geomv%x0+(gk-1)*geomv%dx
-       vy = geomv%y0+(gl-1)*geomv%dy
+        x  = geomx%x0+(gi-1)*geomx%dx
+        y  = geomx%y0+(gj-1)*geomx%dy
+        vx = geomv%x0+(gk-1)*geomv%dx
+        vy = geomv%y0+(gl-1)*geomv%dy
 
-       v2 = vx*vx+vy*vy
-       vlas4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+        v2 = vx*vx+vy*vy
+        vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
 
     end do
     end do
@@ -281,12 +274,13 @@ contains
     call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx, &
                              geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
-    call new(poisson, vlas4d%ex, vlas4d%ey, geomx, error)
+    call new(poisson, geomx%x0, geomx%x1, geomx%nx, &
+                      geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
 
-    jstartx = get_layout_4D_j_min( vlas4d%layout_v, prank )
-    jendx   = get_layout_4D_j_max( vlas4d%layout_v, prank )
-    jstartv = get_layout_4D_l_min( vlas4d%layout_x, prank )
-    jendv   = get_layout_4D_l_max( vlas4d%layout_x, prank )
+    jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
+    jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )
+    jstartv = get_layout_4D_l_min( vlasov4d%layout_x, prank )
+    jendv   = get_layout_4D_l_max( vlasov4d%layout_x, prank )
 
   end subroutine initlocal
 

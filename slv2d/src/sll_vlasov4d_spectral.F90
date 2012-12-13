@@ -14,27 +14,30 @@ module sll_vlasov4d_spectral
  use sll_module_interpolators_1d_base
  use sll_module_interpolators_2d_base
  use remapper
- use sll_vlasov4d, only: vlasov4d
+ use sll_vlasov4d_base
 
  implicit none
  private
  public :: new, free, densite_courantx, densite_couranty
- public :: advection_x1, advection_x2
+ public :: advection_x1, advection_x2, advection_x3, advection_x4
 
- type, public, extends(vlasov4d) :: vlasov4d_spectral
+ type, public, extends(vlasov4d_base) :: vlasov4d_spectral
 
    sll_real64, dimension(:,:), pointer               :: exn
    sll_real64, dimension(:,:), pointer               :: eyn
    sll_real64, dimension(:,:), pointer               :: jx1,jx2
    sll_real64, dimension(:,:), pointer               :: jy1,jy2
-   sll_real64, dimension(:), allocatable             :: d_dx
-   sll_real64, dimension(:), allocatable             :: d_dy
-   sll_real64, dimension(:), allocatable             :: kx
-   sll_real64, dimension(:), allocatable             :: ky
+   sll_real64, dimension(:),   allocatable           :: d_dx
+   sll_real64, dimension(:),   allocatable           :: d_dy
+   sll_real64, dimension(:),   allocatable           :: kx
+   sll_real64, dimension(:),   allocatable           :: ky
    type(C_PTR)                                       :: fwx, fwy
    type(C_PTR)                                       :: bwx, bwy
    type(C_PTR)                                       :: p_tmp_x, p_tmp_y
    complex(C_DOUBLE_COMPLEX), dimension(:),  pointer :: tmp_x, tmp_y
+   class(sll_interpolator_1d_base), pointer          :: interp_x3
+   class(sll_interpolator_1d_base), pointer          :: interp_x4
+   class(sll_interpolator_2d_base), pointer          :: interp_x3x4
 
  end type vlasov4d_spectral
 
@@ -43,112 +46,43 @@ module sll_vlasov4d_spectral
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
 
- interface new
-   module procedure new_vlasov4d
- end interface
-
- interface free
-   module procedure dealloc_vlasov4d
- end interface
-
 include 'fftw3.f03'
+
+ interface new
+    module procedure :: new_vlasov4d_spectral
+ end interface new
+ interface free
+    module procedure :: free_vlasov4d_spectral
+ end interface free
 
 contains
 
- subroutine new_vlasov4d(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,interp_x3x4,error)
+ subroutine new_vlasov4d_spectral(this,geomx,geomv,interp_x3,interp_x4,interp_x3x4,error)
 
   use sll_hdf5_io
 
-  type(vlasov4d_spectral),intent(inout)            :: this
+  class(vlasov4d_spectral),intent(inout)   :: this
   type(geometry),intent(in)               :: geomx
   type(geometry),intent(in)               :: geomv
-  class(sll_interpolator_1d_base), target :: interp_x1
-  class(sll_interpolator_1d_base), target :: interp_x2
   class(sll_interpolator_1d_base), target :: interp_x3
   class(sll_interpolator_1d_base), target :: interp_x4
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
-  sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4
-  sll_real64 :: x1_min, x2_min, x3_min, x4_min
-  sll_real64 :: x1_max, x2_max, x3_max, x4_max
-  sll_int32  :: psize, prank, comm, file_id
-  sll_real64 :: dx, dy, kx0, ky0
+  sll_int32         :: nc_x1, nc_x2, nc_x3, nc_x4
+  sll_real64        :: dx, dy, kx0, ky0
   integer(C_SIZE_T) :: sz_tmp_x, sz_tmp_y
 
-  prank = sll_get_collective_rank(sll_world_collective)
-  psize = sll_get_collective_size(sll_world_collective)
-  comm  = sll_world_collective%comm
-
-  if (.not. is_power_of_two(int(psize,i64))) then     
-     print *, 'This test needs to run in a number of processes which is ',&
-          'greater than 4 and a power of 2.'
-     call sll_halt_collective()
-     stop
-  end if
-
-  error = 0
-
-  this%transposed = .false.
-
-  nc_x1  = geomx%nx
-  nc_x2  = geomx%ny
-  nc_x3  = geomv%nx
-  nc_x4  = geomv%ny
-
-  x1_min = geomx%x0
-  x1_max = geomx%x1
-  x2_min = geomx%y0
-  x2_max = geomx%y1
-  x3_min = geomv%x0
-  x3_max = geomv%x1
-  x4_min = geomv%y0
-  x4_max = geomv%y1
-
-  this%geomx=geomx
-  this%geomv=geomv
-
-  this%interp_x1 => interp_x1
-  this%interp_x2 => interp_x2
-  this%interp_x3 => interp_x3
-  this%interp_x4 => interp_x4
+  this%interp_x3   => interp_x3
+  this%interp_x4   => interp_x4
   this%interp_x3x4 => interp_x3x4
 
-  this%layout_x => new_layout_4D( sll_world_collective )        
-  call initialize_layout_with_distributed_4D_array( &
-             geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
-             1,1,1,int(psize,4),this%layout_x)
+  call new_vlasov4d_base(this,geomx,geomv,error)
 
-
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_CLEAR_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
-
-  this%layout_v => new_layout_4D( sll_world_collective )
-  call initialize_layout_with_distributed_4D_array( &
-              geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
-              1,int(psize,4),1,1,this%layout_v)
-
-  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_CLEAR_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
-
-  this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
-  this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
-  
-  if(prank == MPI_MASTER) then
-
-     print *,'Printing layout x: '
-     call sll_view_lims_4D(this%layout_x)
-     print *,'Printing layout v: '
-     call sll_view_lims_4D(this%layout_v)
-
-     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
-     call sll_hdf5_write_array(file_id,this%geomx%xgrid,"/x1",error)
-     call sll_hdf5_write_array(file_id,this%geomx%ygrid,"/x2",error)
-     call sll_hdf5_write_array(file_id,this%geomv%xgrid,"/x3",error)
-     call sll_hdf5_write_array(file_id,this%geomv%ygrid,"/x4",error)
-     call sll_hdf5_file_close(file_id, error)
-
-  end if
+  nc_x1 = this%geomx%nx
+  nc_x2 = this%geomx%ny
+  nc_x3 = this%geomv%nx
+  nc_x4 = this%geomv%ny
 
   SLL_CLEAR_ALLOCATE(this%ex(nc_x1,nc_x2),error)
   SLL_CLEAR_ALLOCATE(this%ey(nc_x1,nc_x2),error)
@@ -191,11 +125,11 @@ contains
   end do
   this%ky(1) = 1.0_f64
 
- end subroutine new_vlasov4d
+ end subroutine new_vlasov4d_spectral
 
- subroutine dealloc_vlasov4d(this)
+ subroutine free_vlasov4d_spectral(this)
 
-  type(vlasov4d_spectral),intent(out) :: this
+  class(vlasov4d_spectral) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)
@@ -208,10 +142,12 @@ contains
   call dfftw_destroy_plan(this%bwx)
   call dfftw_destroy_plan(this%bwy)
 
- end subroutine dealloc_vlasov4d
+ end subroutine free_vlasov4d_spectral
 
  subroutine advection_x1(this,dt)
-  type(vlasov4d_spectral), intent(inout) :: this
+
+  class(vlasov4d_spectral), intent(inout) :: this
+
   sll_real64, intent(in) :: dt
   sll_real64 :: vx, x3_min, delta_x3
 
@@ -252,7 +188,9 @@ contains
  end subroutine advection_x1
 
  subroutine advection_x2(this,dt)
-  type(vlasov4d_spectral),intent(inout) :: this
+
+  class(vlasov4d_spectral),intent(inout) :: this
+
   sll_real64, intent(in) :: dt
   sll_real64 :: x4_min, delta_x4
   sll_real64 :: vy
@@ -292,9 +230,61 @@ contains
 
  end subroutine advection_x2
 
+ subroutine advection_x3(this,dt)
+
+  class(vlasov4d_spectral), intent(inout) :: this
+  sll_real64, intent(in) :: dt
+  sll_real64 :: alpha
+  SLL_ASSERT(this%transposed) 
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+  do l=1,loc_sz_l
+  do j=1,loc_sz_j
+  do i=1,loc_sz_i
+
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,l/)) 
+     gi = global_indices(1)
+     gj = global_indices(2)
+     alpha = this%ex(gi,gj)*dt
+
+     this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
+
+  end do
+  end do
+  end do
+
+ end subroutine advection_x3
+
+ subroutine advection_x4(this,dt)
+
+  class(vlasov4d_spectral),intent(inout) :: this
+  sll_real64, intent(in) :: dt
+  sll_real64 :: alpha
+
+  SLL_ASSERT(this%transposed) 
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+  do k=1,loc_sz_k
+  do j=1,loc_sz_j
+  do i=1,loc_sz_i
+
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     gi = global_indices(1)
+     gj = global_indices(2)
+     alpha = this%ey(gi,gj)*dt
+     this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp(loc_sz_l,this%ft(i,j,k,:),alpha)
+
+  end do
+  end do
+  end do
+
+ end subroutine advection_x4
+
+
  subroutine densite_courantx(this)
 
-   type(vlasov4d_spectral),intent(inout) :: this
+   class(vlasov4d_spectral),intent(inout) :: this
+
    sll_int32 :: error
    sll_real64 :: vx 
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
@@ -333,7 +323,8 @@ contains
 
  subroutine densite_couranty(this)
 
-   type(vlasov4d_spectral),intent(inout) :: this
+   class(vlasov4d_spectral),intent(inout) :: this
+
    sll_int32 :: error
    sll_real64 :: vy 
    sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
