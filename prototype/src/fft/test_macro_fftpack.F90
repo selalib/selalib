@@ -2,11 +2,16 @@ program test_time
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "misc_utils.h"
+  use testbidon
   use sll_timer
   use sll_fft
+  use sll_collective
+  use sll_electric_field_2d_accumulator
 
 implicit none
 sll_real64, dimension (:), allocatable :: listcoord, val, test
+sll_real64 :: valeurtest
 sll_int32 :: nbpoint
 integer :: i, j, verification
 type(time_mark), pointer :: t1 => NULL()
@@ -18,12 +23,12 @@ sll_comp64 :: mode
 print*,"Nombre de point sur un coté ? :"
 read*, nbpoint
 
-!#define GET_MODE0 (mode,data) \
-!      mode = cmplx(data(0),0.0_f64,kind=f64) 
-#define GET_MODE0 (mode) mode=cmplx(0.0_f64,0.0_f64,kind=f64) 
+#define GET_MODE0 (data) \
+       cmplx(data,0) 
 
 #define SET_MODE0 (mode,data) \
       data(0) = real(mode,kind=f64)
+
 
 !Debut du timer t1
 t1 => new_time_mark()
@@ -45,8 +50,6 @@ do i=0, nbpoint-1
   val(i*nbpoint+j)=func(listcoord(j),listcoord(i))
  end do
 end do
-
-mode=0
 
 !forward = -1  inverse = 1
 print*,"fft forward ..."
@@ -74,22 +77,23 @@ timeracces = time_elapsed_since(t2)
 t2 => reset_time_mark(t2)
 
 !Acces mod with macro
-GET_MODE0(mode)
-mode=mode*2 
-SET_MODE0(mode,test)
-do i=1,nbpoint*nbpoint-1
-mode = fftpack_get_mode_real_1d(plan,test,i)
-mode = mode*2
-call fftpack_set_mode_real_1d(plan,test,mode,i)
-end do
-GET_MODE0(mode,test)
-mode=mode/2
-SET_MODE0(mode,test)
-do i=1,nbpoint*nbpoint-1
-mode = fftpack_get_mode_real_1d(plan,test,i)
-mode = mode/2
-call fftpack_set_mode_real_1d(plan,test,mode,i)
-end do
+!valeurtest=test(0)
+!mode = GET_MODE0(valeurtest)
+!mode=mode*2 
+!SET_MODE0(mode,test)
+!do i=1,nbpoint*nbpoint-1
+!mode = fftpack_get_mode_real_1d(plan,test,i)
+!mode = mode*2
+!call fftpack_set_mode_real_1d(plan,test,mode,i)
+!end do
+!GET_MODE0(mode,test)
+!mode=mode/2
+!SET_MODE0(mode,test)
+!do i=1,nbpoint*nbpoint-1
+!mode = fftpack_get_mode_real_1d(plan,test,i)
+!mode = mode/2
+!call fftpack_set_mode_real_1d(plan,test,mode,i)
+!end do
 
 timeraccesmacro = time_elapsed_since(t2)
 t2 => reset_time_mark(t2)
