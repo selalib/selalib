@@ -229,7 +229,7 @@ contains
       aux=0.
       aux(13)=t
       aux(12)=nrj
-      write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
+      write(*,"('time ', g12.3,' test nrj',f10.5)") t, nrj
       call time_history("thf","(13(1x,e15.6))",aux(1:13))
    end if
 
