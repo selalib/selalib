@@ -11,11 +11,12 @@ module sll_vlasov4d_base
 
  implicit none
  private
- public :: new, free, densite_charge, densite_courant
+ public :: new_vlasov4d_base, free_vlasov4d_base
+ public :: compute_charge, compute_current
  public :: transposexv, transposevx
  public :: thdiag, write_xmf_file
 
- type, public :: vlasov_4d_base
+ type, public :: vlasov4d_base
    type(geometry)                           :: geomx
    type(geometry)                           :: geomv
    logical                                  :: transposed      
@@ -25,11 +26,12 @@ module sll_vlasov4d_base
    type(layout_4D), pointer                 :: layout_v
    type(remap_plan_4D_real64), pointer      :: x_to_v 
    type(remap_plan_4D_real64), pointer      :: v_to_x
- contains
-   procedure, deferred, pass :: new
-   procedure, pass :: compute_charge_density
-   procedure, pass :: compute_current_density
-   procedure, deferred, pass :: free
+   sll_real64, dimension(:,:), pointer      :: ex
+   sll_real64, dimension(:,:), pointer      :: ey
+   sll_real64, dimension(:,:), pointer      :: jx
+   sll_real64, dimension(:,:), pointer      :: jy
+   sll_real64, dimension(:,:), pointer      :: bz
+   sll_real64, dimension(:,:), pointer      :: rho
  end type vlasov4d_base
 
  sll_int32, private :: i, j, k, l
@@ -39,7 +41,91 @@ module sll_vlasov4d_base
 
 contains
 
- subroutine compute_charge_density(this)
+ subroutine new_vlasov4d_base(this,geomx,geomv,error)
+
+  use sll_hdf5_io
+
+  class(vlasov4d_base),intent(inout) :: this
+  type(geometry),intent(in)          :: geomx
+  type(geometry),intent(in)          :: geomv
+  sll_int32                          :: error
+  sll_int32  :: psize, prank, comm, file_id
+
+  prank = sll_get_collective_rank(sll_world_collective)
+  psize = sll_get_collective_size(sll_world_collective)
+  comm  = sll_world_collective%comm
+
+  if (.not. is_power_of_two(int(psize,i64))) then     
+     print *, 'This test needs to run in a number of processes which is ',&
+          'greater than 4 and a power of 2.'
+     call sll_halt_collective()
+     stop
+  end if
+
+  error = 0
+
+  this%transposed = .false.
+
+  this%geomx=geomx
+  this%geomv=geomv
+
+  this%layout_x => new_layout_4D( sll_world_collective )        
+  call initialize_layout_with_distributed_4D_array( &
+             geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
+             1,1,1,int(psize,4),this%layout_x)
+
+
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  SLL_CLEAR_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+
+  this%layout_v => new_layout_4D( sll_world_collective )
+  call initialize_layout_with_distributed_4D_array( &
+              geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
+              1,int(psize,4),1,1,this%layout_v)
+
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  SLL_CLEAR_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+
+  this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
+  this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
+  
+  if(prank == MPI_MASTER) then
+
+     print *,'Printing layout x: '
+     call sll_view_lims_4D(this%layout_x)
+     print *,'Printing layout v: '
+     call sll_view_lims_4D(this%layout_v)
+
+     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
+     call sll_hdf5_write_array(file_id,this%geomx%xgrid,"/x1",error)
+     call sll_hdf5_write_array(file_id,this%geomx%ygrid,"/x2",error)
+     call sll_hdf5_write_array(file_id,this%geomv%xgrid,"/x3",error)
+     call sll_hdf5_write_array(file_id,this%geomv%ygrid,"/x4",error)
+     call sll_hdf5_file_close(file_id, error)
+
+  end if
+
+  nullify(this%ex)
+  nullify(this%ey)
+  nullify(this%bz)
+  nullify(this%jx)
+  nullify(this%jy)
+  nullify(this%rho)
+
+ end subroutine new_vlasov4d_base
+
+ subroutine free_vlasov4d_base(this)
+
+  class(vlasov4d_base),intent(out) :: this
+
+  call delete_layout_4D(this%layout_x)
+  call delete_layout_4D(this%layout_v)
+  SLL_DEALLOCATE_ARRAY(this%f, ierr)
+  SLL_DEALLOCATE_ARRAY(this%ft, ierr)
+
+ end subroutine free_vlasov4d_base
+
+ subroutine compute_charge(this)
 
    class(vlasov4d_base),intent(inout)                 :: this
    sll_int32                                          :: error
@@ -68,9 +154,9 @@ contains
    c=this%geomx%nx*this%geomx%ny
    call mpi_allreduce(locrho,this%rho,c,MPI_REAL8,MPI_SUM,comm,error)
 
- end subroutine compute_charge_density
+ end subroutine compute_charge
 
- subroutine compute_current_density(this)
+ subroutine compute_current(this)
 
    class(vlasov4d_base),intent(inout)                 :: this
    sll_int32                                          :: error
@@ -112,7 +198,7 @@ contains
    call mpi_allreduce(locjx,this%jx,c, MPI_REAL8,MPI_SUM,comm,error)
    call mpi_allreduce(locjy,this%jy,c, MPI_REAL8,MPI_SUM,comm,error)
 
- end subroutine compute_current_density
+ end subroutine compute_current
 
  subroutine thdiag(this,nrj,t)
 
@@ -206,7 +292,7 @@ contains
         call sll_hdf5_write_array(file_id,this%rho,"/values",error)
         call sll_hdf5_file_close(file_id, error)
      end if
-     if(size(this%jx,1) > 1) then
+     if(associated(this%jx)) then
         call sll_hdf5_file_create('jx_'//cplot//".h5",file_id,error)
         call sll_hdf5_write_array(file_id,this%jx,"/values",error)
         call sll_hdf5_file_close(file_id, error)
@@ -303,7 +389,7 @@ contains
 
  subroutine write_fx1x2(this,cplot)
  use sll_hdf5_io
- type(vlasov4d),intent(in)           :: this
+ class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
  sll_int32                           :: file_id
@@ -331,7 +417,7 @@ contains
 
  subroutine write_fx1x3(this,cplot)
  use sll_hdf5_io
- type(vlasov4d),intent(in)           :: this
+ class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
  sll_int32                           :: file_id
@@ -360,7 +446,7 @@ contains
  subroutine write_fx2x4(this,cplot)
  use hdf5
  use sll_hdf5_io_parallel
- type(vlasov4d),intent(in)           :: this
+ class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  integer(HID_T)                      :: pfile_id
  integer(HSSIZE_T)                   :: offset(2)
@@ -389,7 +475,7 @@ contains
  subroutine write_fx3x4(this,cplot)
  use hdf5
  use sll_hdf5_io_parallel
- type(vlasov4d),intent(in)           :: this
+ class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  integer(HID_T)                      :: pfile_id
  integer(HSSIZE_T)                   :: offset(2)
