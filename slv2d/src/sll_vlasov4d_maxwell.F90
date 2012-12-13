@@ -31,11 +31,11 @@ module sll_vlasov4d_maxwell
  sll_int32, private :: ierr
  
  interface new
-   module procedure :: new_vlasov4d_maxwell
+   module procedure new_vlasov4d_maxwell
  end interface new
 
  interface free
-   module procedure :: free_vlasov4d_maxwell
+   module procedure free_vlasov4d_maxwell
  end interface free
 
 contains
