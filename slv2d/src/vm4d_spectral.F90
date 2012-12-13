@@ -60,7 +60,7 @@ program vm4d_spectral
           geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy, &
           geomv%dx, geomv%dy
      write(*,*) 'dt,nbiter,fdiag,fthdiag'
-     write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
+     write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
   endif
 
   call initlocal(jstartx,jendx,jstartv,jendv)
@@ -271,7 +271,7 @@ contains
     end do
     end do
 
-    call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx, &
+    call new(maxwell, geomx%x0, geomx%x1, geomx%nx, &
                              geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call new(poisson, geomx%x0, geomx%x1, geomx%nx, &
