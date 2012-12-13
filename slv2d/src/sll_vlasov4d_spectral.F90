@@ -91,25 +91,25 @@ contains
   call initialize_layout_with_distributed_2D_array( &
              geomx%nx,geomx%ny,1,int(psize,4),this%layout_x1)
 
-  call compute_local_sizes_2d(this%layout_x1,loc_sz_i,loc_sz_j)        
-  SLL_CLEAR_ALLOCATE(this%jx1(loc_sz_i,loc_sz_j),error)
+!  call compute_local_sizes_2d(this%layout_x1,loc_sz_i,loc_sz_j)        
+!  SLL_CLEAR_ALLOCATE(this%jx1(loc_sz_i,loc_sz_j),error)
 
   this%layout_x2 => new_layout_2D( sll_world_collective )
   call initialize_layout_with_distributed_2D_array( &
               geomx%nx,geomx%ny,int(psize,4),1,this%layout_x2)
 
-  call compute_local_sizes_2d(this%layout_x2,loc_sz_i,loc_sz_j)        
-  SLL_CLEAR_ALLOCATE(this%jx2(loc_sz_i,loc_sz_j),ierr)
+!  call compute_local_sizes_2d(this%layout_x2,loc_sz_i,loc_sz_j)        
+!  SLL_CLEAR_ALLOCATE(this%jx2(loc_sz_i,loc_sz_j),ierr)
 
-  this%x1_to_x2 => new_remap_plan( this%layout_x1, this%layout_x2, this%jx1)     
-  this%x2_to_x1 => new_remap_plan( this%layout_x2, this%layout_x1, this%jx2)     
+!  this%x1_to_x2 => new_remap_plan( this%layout_x1, this%layout_x2, this%jx1)     
+!  this%x2_to_x1 => new_remap_plan( this%layout_x2, this%layout_x1, this%jx2)     
   
   if(prank == MPI_MASTER) then
 
      print *,'Printing layout x1: '
      call sll_view_lims_2D(this%layout_x1)
      print *,'Printing layout x2: '
-     call sll_view_lims_4D(this%layout_v)
+     call sll_view_lims_2D(this%layout_x2)
 
   end if
 
@@ -117,10 +117,15 @@ contains
   SLL_CLEAR_ALLOCATE(this%ey(nc_x1,nc_x2),error)
   SLL_CLEAR_ALLOCATE(this%exn(nc_x1,nc_x2),error)
   SLL_CLEAR_ALLOCATE(this%eyn(nc_x1,nc_x2),error)
+
   SLL_CLEAR_ALLOCATE(this%bz(nc_x1,nc_x2),error); this%bz = 0.0_f64
   SLL_CLEAR_ALLOCATE(this%rho(nc_x1,nc_x2),error)
+
   SLL_CLEAR_ALLOCATE(this%jx(nc_x1,nc_x2),error)
   SLL_CLEAR_ALLOCATE(this%jy(nc_x1,nc_x2),error)
+
+  SLL_CLEAR_ALLOCATE(this%jx1(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx2(nc_x1,nc_x2),error)
   SLL_CLEAR_ALLOCATE(this%jy1(nc_x1,nc_x2),error)
   SLL_CLEAR_ALLOCATE(this%jy2(nc_x1,nc_x2),error)
   
@@ -203,14 +208,14 @@ contains
 !        this%tmp_x = this%tmp_x/(1._f64+cmplx(0.0_f64,this%kx,kind=f64)*vx*0.5_f64)
 !        this%tmp_x = this%tmp_x*(1._f64-cmplx(0.0_f64,this%kx,kind=f64)*vx*0.5_f64)
 !Euler cn modified
-        this%tmp_x = this%tmp_x*(1._f64-cmplx(0.0_f64,this%kx,kind=f64)*vx-0.5_f64*(this%kx*vx)**2)
+        this%tmp_x = this%tmp_x*(1._f64-0.5*vx*cmplx(0.0_f64,this%kx,kind=f64))
+        !comments NC: il faudrait calculer le courantx de ftmp donnee par 
+        this%tmp_x = this%tmp_x*(1._f64-vx*(cmplx(0.0_f64,this%kx,kind=f64))
         call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
         this%f(:,j,k,l)= this%d_dx / loc_sz_i
      end do
   end do
   end do
-
-!comments NC: il faudrait calculer le courantx de ftmp donnee par 
 
  end subroutine advection_x1
 
