@@ -213,6 +213,27 @@ target_link_libraries(VP1D_deltaf_cart
 	${LAPACK_LIBRARIES}
 	)
 
+add_executable(VP1D_mm VP1D_mm.F90)
+target_link_libraries(VP1D_mm
+	sll_mapped_meshes
+	sll_interpolators
+	sll_periodic_interp
+	sll_splines
+	sll_fft
+	geometry_functions
+	sll_distribution_function
+	sll_scalar_field_2d	
+	sll_constants
+	sll_low_level_file_io
+  	sll_utilities
+	sll_timer
+	sll_memory
+	sll_assertion 	
+	sll_poisson_1d_periodic
+	fftpack_module
+	${LAPACK_LIBRARIES}
+	)
+
 ENDIF()
 
 #End of commands to be put in the class simulation standard
