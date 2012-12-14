@@ -46,50 +46,9 @@ target_link_libraries(test_fft
 	${DEPENDENCIES}
 )
 
-
-IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
-add_executable( test_macro_fftpack test_macro_fftpack.F90)
-target_link_libraries( test_macro_fftpack
-        sll_fft
-	sll_utilities 
-	sll_working_precision
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-        sll_assertion
-	fftpack_module
-	${LAPACK_LIBRARIES}
-        sll_timer
-  )
-ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
-add_executable( test_macro_fftw test_macro_fftw.F90)
-target_link_libraries( test_macro_fftw
-	sll_constants
-        sll_fft
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-        sll_assertion
-	sll_memory
-	fftpack_module
-	${LAPACK_LIBRARIES}
-        sll_timer
-  )
-ELSE()
-add_executable( test_macro_fftselalib test_macro_fftselalib.F90)
-target_link_libraries( test_macro_fftselalib
-	sll_constants
-        sll_fft
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-        sll_assertion
-	sll_constants
-	fftpack_module
-	${LAPACK_LIBRARIES}
-        sll_timer
-  )
-ENDIF()
+add_executable(test_macro test_macro_fft.F90)
+target_link_libraries( test_macro
+	sll_fft
+	${DEPENDENCIES}
+)
 
