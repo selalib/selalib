@@ -331,7 +331,7 @@ timer5 = 0
         f1d => FIELD_DATA(f) (i,:) 
 t3 => reset_time_mark(t3)
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-timer3 = time_elapsed_since(t3)+timer3
+timer3 = timer3+time_elapsed_since(t3)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -348,7 +348,7 @@ timer3 = time_elapsed_since(t3)+timer3
         f1d => FIELD_DATA(f) (:,j)
 t4 => reset_time_mark(t4)
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
-timer4 = time_elapsed_since(t4)+timer4
+timer4 = timer4+time_elapsed_since(t4)
      end do
      !$omp barrier
 
@@ -374,7 +374,7 @@ timer4 = time_elapsed_since(t4)+timer4
         f1d => FIELD_DATA(f) (i,:) 
 t5 => reset_time_mark(t5)
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-timer5 = time_elapsed_since(t5)+timer5
+timer5 = timer5+time_elapsed_since(t5)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
