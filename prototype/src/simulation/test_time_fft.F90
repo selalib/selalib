@@ -27,7 +27,9 @@ program VP1d_deltaf
   type(time_mark), pointer :: t1 => NULL()
   type(time_mark), pointer :: t2 => NULL()
   type(time_mark), pointer :: t3 => NULL()
-  double precision :: timer
+  type(time_mark), pointer :: t4 => NULL()
+  type(time_mark), pointer :: t5 => NULL()
+  double precision :: timer,timer2,timer3,timer4,timer5
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
@@ -243,22 +245,22 @@ t1 => start_time_mark(t1)
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
 
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
-
 !Début du timer t2
 t2 => new_time_mark()
 t2 => start_time_mark(t2)
 
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
+ ! call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
+ ! call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
 
-timer = time_elapsed_since(t2)
-print*, "Temps d'execution de initialize : ", timer
+!  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
+!  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
 
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
 
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
+
+
+timer2 = time_elapsed_since(t2)
 
   call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
   !interp_x => interp_spline_x
@@ -309,6 +311,17 @@ print*, "Temps d'execution de initialize : ", timer
   !$omp end single
 
 
+!Début des timer pour fft
+t3 => new_time_mark()
+t3 => start_time_mark(t3)
+t4 => new_time_mark()
+t4 => start_time_mark(t4)
+t5 => new_time_mark()
+t5 => start_time_mark(t5)
+timer3 = 0
+timer4 = 0
+timer5 = 0
+
   ! time loop
   !----------
   ! half time step advection in v
@@ -316,7 +329,9 @@ print*, "Temps d'execution de initialize : ", timer
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
+t3 => reset_time_mark(t3)
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+timer3 = time_elapsed_since(t3)+timer3
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -330,8 +345,10 @@ print*, "Temps d'execution de initialize : ", timer
 
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
-        f1d => FIELD_DATA(f) (:,j) 
+        f1d => FIELD_DATA(f) (:,j)
+t4 => reset_time_mark(t4)
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
+timer4 = time_elapsed_since(t4)+timer4
      end do
      !$omp barrier
 
@@ -355,7 +372,9 @@ print*, "Temps d'execution de initialize : ", timer
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
+t5 => reset_time_mark(t5)
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
+timer5 = time_elapsed_since(t5)+timer5
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -412,8 +431,11 @@ print*, "Temps d'execution de initialize : ", timer
 
   print*, 'VP1D_deltaf_cart has exited normally'
   timer = time_elapsed_since(t1)
-  print*, "Temps d'execution du programme : ", timer
-
+  print*, "Temps d'execution du programme  : ", timer
+  print*, "Temps d'execution de initialize : ", timer2
+  print*, "Temps des fft pour interp_x     : ", timer4
+  print*, "Temps des fft pour interp_v (1) : ", timer3
+  print*, "Temps des fft pour interp_v (2) : ", timer5
 
 
 contains
