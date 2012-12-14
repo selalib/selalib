@@ -16,6 +16,7 @@ ENABLE_LANGUAGE(Fortran)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
                       ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
+include(F90FLAGS)
 include(CTest)
 set(CTEST_DROP_SITE_CDASH TRUE)
 # Tests+Dashboard configuration
@@ -43,10 +44,11 @@ MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
-SET(FFTPACK_ENABLED       ON CACHE BOOL "Use fftpack library " FORCE)
+SET(FFTPACK_ENABLED       OFF CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)
+add_subdirectory (gysela_public/src)
 
 # Pipol rc and nightly files are installed under share/pipol
 file(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
@@ -94,44 +96,4 @@ ENDIF(PIPOL_IMAGE)
 set(CPACK_PACKAGE_CONTACT "Pierre Navaro 0368850173")
 
 include(CPack)
-
-FIND_PROGRAM(FORCHECK_EXECUTABLE
-  NAMES forchk
-  PATHS $ENV{FCKDIR}/bin /usr/bin /bin /usr/local/bin
-  DOC "Performs a full static analysis of Fortran programs."
-)
-
-IF (FORCHECK_EXECUTABLE)
-  SET (FORCHECK_FOUND "YES")
-ENDIF (FORCHECK_EXECUTABLE)
-
-MARK_AS_ADVANCED(
-  FORCHECK_FOUND
-  FORCHECK_EXECUTABLE
-  )
-
-IF(FORCHECK_FOUND)
-
-   FILE(GLOB_RECURSE SRCS_LIST *.F90)
-   FOREACH(F90FILE ${SRCS_LIST}) 
-      IF(DEFINED SRCS)
-         SET(SRCS "${SRCS} ${F90FILE}")
-      ELSE()
-         SET(SRCS "${F90FILE}")
-      ENDIF()
-   ENDFOREACH(F90FILE) 
-
-   GET_PROPERTY(INCS_DIRS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/prototype/src PROPERTY INCLUDE_DIRECTORIES)
-
-   FOREACH(DIR ${INCS_DIRS})
-      IF(DEFINED INCS)
-         SET(INCS "${INCS},${DIR}")
-      ELSE()
-         SET(INCS "${DIR}")
-      ENDIF()
-   ENDFOREACH()
-
-   ADD_CUSTOM_TARGET(forcheck "${FORCHECK_EXECUTABLE} -define DEBUG,GFORTRAN -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb"  COMMENT "Forcheck the source code" VERBATIM)
-
-ENDIF(FORCHECK_FOUND)
 

@@ -10,7 +10,6 @@ x2 = h5file['x2'].value
 h5file.close()
 
 nfile = len(glob.glob1('.',"f*-values.h5"))-1
-
 h5filename = "f%04d-values.h5" % (nfile)
 print h5filename
 h5file = h5py.File(h5filename,"r")
@@ -19,12 +18,4 @@ h5file.close()
 
 surf = pl.contourf(x1,x2,f)
 cb = pl.colorbar(surf, shrink=0.5, aspect=10)
-
-
 pl.show()
-
-
-#for i in range(nfile):
-#   h5file.close()
-#   pl.contourf(x1,x2,f)
-#   pl.draw()

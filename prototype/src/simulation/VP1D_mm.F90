@@ -352,7 +352,7 @@ program VP1d_deltaf
      !compute density on coarse grid
      rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
   endif
-!  call solve(poisson_1d, efield, rho)
+  call solve(poisson_1d, efield, rho)
   efield=0._f64
 
   ! Ponderomotive force at initial time. We use a sine wave
@@ -485,7 +485,7 @@ program VP1d_deltaf
         !compute density on coarse grid
         rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
      endif
-!     call solve(poisson_1d, efield, rho)
+     call solve(poisson_1d, efield, rho)
      if (driven) then
         call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
