@@ -6,6 +6,10 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
+IF(SLL_CONFIGURE_OPTIONS_FILE)
+INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
+ENDIF()
+
 PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
@@ -84,6 +88,10 @@ IF(NOT STDF95)
 ENDIF()
 ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_SUBDIRECTORY(interpolators)
+
+
+##########################################################
+
 ADD_SUBDIRECTORY(mapped_meshes)
 ADD_SUBDIRECTORY(fields)
 ADD_SUBDIRECTORY(time_solvers)
@@ -150,11 +158,18 @@ IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
    ENDIF()
 ENDIF()
 
-MESSAGE(STATUS "##############################################")
-MESSAGE(STATUS "####                                      ####")
-MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}               ####")
-MESSAGE(STATUS "####                                      ####")
-MESSAGE(STATUS "##############################################")
+MESSAGE(STATUS "############################################################")
+MESSAGE(STATUS "####")
+MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
+MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+MESSAGE(STATUS "#### Fortran FLAGS ")
+IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
+MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
+ELSE()
+MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
+ENDIF()
+MESSAGE(STATUS "####")
+MESSAGE(STATUS "############################################################")
 
 INCLUDE(SequentialTests)
 
