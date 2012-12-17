@@ -40,8 +40,8 @@ module sll_poisson_3d_periodic_seq
      type(sll_fft_plan), pointer :: px_inv
      type(sll_fft_plan), pointer :: py_inv
      type(sll_fft_plan), pointer :: pz_inv
-     sll_comp64, dimension(:,:,:), allocatable :: hat_rho
-     sll_comp64, dimension(:,:,:), allocatable :: hat_phi
+     sll_comp64, dimension(:,:,:), pointer :: hat_rho
+     sll_comp64, dimension(:,:,:), pointer :: hat_phi
   end type poisson_3d_periodic_plan_seq
 
 contains
