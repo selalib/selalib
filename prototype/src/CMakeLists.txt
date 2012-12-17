@@ -187,7 +187,7 @@ MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
 MESSAGE(STATUS "##############################################")
 ENDIF(STDF95)
 
-#INCLUDE(SequentialTests)
+INCLUDE(SequentialTests)
 
 
 IF(MPI_MODULE_ENABLED)

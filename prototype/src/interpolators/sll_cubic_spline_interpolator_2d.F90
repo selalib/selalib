@@ -173,6 +173,7 @@ contains
        result(data_out)
 
     class(cubic_spline_2d_interpolator),  intent(in) :: this
+#endif
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: eta1
@@ -206,6 +207,7 @@ contains
        result(data_out)
 
     class(cubic_spline_2d_interpolator),  intent(in) :: this
+#endif
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: alpha1
