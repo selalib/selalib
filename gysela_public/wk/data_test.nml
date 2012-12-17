@@ -97,15 +97,15 @@
 /
 
 &OUTPUT
-  integration_CS    = .false.
+  integration_CS    = .true.
   diag_level        = 5
   Phi3D_saving      = .true.
-  FMoments3D_saving = .false.
+  FMoments3D_saving = .true.
   f5D_saving        = .false.
   CalviExp_saving   = .false.
   Phi3D_nbstep      = 2
   FMoments3D_nbstep = 2
   f5D_nbstep        = 4
   CalviExp_nbstep   = 4
-  rst_saving        = .false.,
+  rst_saving        = .true.,
 /
