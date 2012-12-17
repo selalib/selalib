@@ -4,7 +4,10 @@ module sll_cubic_spline_interpolator_2d
   use sll_module_interpolators_2d_base
 #endif
   use sll_splines
+
   implicit none
+
+  sll_int32, private                               :: i,j
 
   ! The spline-based interpolator is only a wrapper around the capabilities
   ! of the cubic splines. All interpolators share a common interface with
@@ -154,19 +157,22 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+
     val = interpolate_x2_derivative_2D(eta1,eta2,interpolator%spline)
+
   end function
 
   function spline_interpolate2d(this, num_points1, num_points2, data_in, &
                                 eta1, eta2) &
        result(data_out)
-    class(cubic_spline_2d_interpolator),  intent(in)       :: this
-    sll_int32,  intent(in)                 :: num_points1
-    sll_int32,  intent(in)                 :: num_points2
-    sll_real64, dimension(:,:), intent(in)   :: eta1
-    sll_real64, dimension(:,:), intent(in)   :: eta2
-    sll_real64, dimension(:,:), intent(in)   :: data_in
-    sll_real64, dimension(num_points1,num_points2) :: data_out
+
+    class(cubic_spline_2d_interpolator),  intent(in) :: this
+    sll_int32,  intent(in)                           :: num_points1
+    sll_int32,  intent(in)                           :: num_points2
+    sll_real64, dimension(:,:), intent(in)           :: eta1
+    sll_real64, dimension(:,:), intent(in)           :: eta2
+    sll_real64, dimension(:,:), intent(in)           :: data_in
+    sll_real64, dimension(num_points1,num_points2)   :: data_out
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
@@ -177,22 +183,21 @@ contains
     end do
     end do
 
-  end function 
+  end function spline_interpolate2d
 
   function spline_interpolate2d_disp(this, num_points1, num_points2, data_in, &
                                 alpha1, alpha2) &
        result(data_out)
-    class(cubic_spline_2d_interpolator),  intent(in)       :: this
-    sll_int32,  intent(in)                 :: num_points1
-    sll_int32,  intent(in)                 :: num_points2
-    sll_real64, dimension(:,:), intent(in)   :: alpha1
-    sll_real64, dimension(:,:), intent(in)   :: alpha2
-    sll_real64, dimension(:,:), intent(in)   :: data_in
-    sll_real64, dimension(num_points1,num_points2) :: data_out
-    sll_real64 :: eta1, eta1_min, eta1_max, delta_eta1
-    sll_real64 :: eta2, eta2_min, eta2_max, delta_eta2
-    ! local variables
-    sll_int32 :: i,j
+
+    class(cubic_spline_2d_interpolator),  intent(in) :: this
+    sll_int32,  intent(in)                           :: num_points1
+    sll_int32,  intent(in)                           :: num_points2
+    sll_real64, dimension(:,:), intent(in)           :: alpha1
+    sll_real64, dimension(:,:), intent(in)           :: alpha2
+    sll_real64, dimension(:,:), intent(in)           :: data_in
+    sll_real64, dimension(num_points1,num_points2)   :: data_out
+    sll_real64                                       :: eta1, eta1_min, eta1_max, delta_eta1
+    sll_real64                                       :: eta2, eta2_min, eta2_max, delta_eta2
     ! compute the interpolating spline coefficients
 
     eta1_min  = this%spline%x1_min 
@@ -206,12 +211,14 @@ contains
 
     do j = 1, num_points2
         do i = 1, num_points1
+           eta1 = eta1_min + (i-1)*delta_eta1
+           eta2 = eta2_min + (j-1)*delta_eta2
            eta1 = eta1_min + modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
            eta2 = eta2_min + modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
            data_out(i,j) = this%interpolate_value(eta1,eta2)
        end do
     end do
 
-  end function 
+  end function spline_interpolate2d_disp
 
 end module sll_cubic_spline_interpolator_2d

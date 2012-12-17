@@ -109,13 +109,25 @@ contains  ! ****************************************************************
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
+
     if (this%bc_type == PERIODIC_SPLINE) then
-       do i = 1, num_points      
-          coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
-          SLL_ASSERT(coordinates(i) >= xmin)
-          SLL_ASSERT(coordinates(i) <= xmax)   
-       end do
-    else
+       ! The case alpha = 0.0 is problematic. We need to further try to make
+       ! this computation in general more efficient, minimize the use of modulo
+       ! and even explore a uniform grid representation...
+       if( alpha == 0.0_f64 ) then
+          coordinates(:) = this%interpolation_points(:)
+       else ! alpha != 0.0
+          do i = 1, num_points      
+             coordinates(i) = xmin + &
+                  modulo(this%interpolation_points(i) - xmin - alpha, length)
+!!$             write (*,'(a,z,f21.16,a,i,a,z,f21.16)') 'xmin = ', &
+!!$                  xmin, xmin, '  coordinates(',i,') = ', coordinates(i), &
+!!$                  coordinates(i)
+             SLL_ASSERT(coordinates(i) >= xmin)
+             SLL_ASSERT(coordinates(i) <= xmax)   
+          end do
+       end if
+    else ! any other BC? better a case statement
        if (alpha > 0 ) then 
           do i = 1, num_points
              coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)

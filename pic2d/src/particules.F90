@@ -1,15 +1,15 @@
 module particules
-
+#include "selalib.h"
 use zone
 use marsaglia
 use quietstart
 
 implicit none
 
-integer, private :: ipart 
-integer, private :: i, j, k
-integer, private :: ivarx, ivary
-real(kind=prec), private :: varx, vary
+sll_int32, private :: ipart 
+sll_int32, private :: i, j, k
+sll_int32, private :: ivarx, ivary
+sll_real64, private :: varx, vary
 
 CONTAINS
 
@@ -18,7 +18,7 @@ CONTAINS
 subroutine creapa( ele, time )
 
 type  (particle) :: ele
-real(kind=prec) :: time
+sll_real64 :: time
 
 select case (nomcas)
 
@@ -114,10 +114,9 @@ end subroutine interpol_eb
 subroutine avancee_vitesse( ele )
 
 type (particle) :: ele
-real(kind=prec) :: dum, u2
-real(kind=prec) :: tantheta, sintheta
-real(kind=prec) :: xpp, ypp
-real(kind=prec) :: gamma
+sll_real64 :: dum, u2
+sll_real64 :: tantheta, sintheta
+sll_real64 :: gamma
 
 do ipart = 1, nbpart
 
@@ -125,8 +124,8 @@ do ipart = 1, nbpart
 
    if( relativ ) then
 
-      u2    =   ele%vit(ipart,1)*ele%vit(ipart,1)	&
-           + ele%vit(ipart,2)*ele%vit(ipart,2)
+      u2  = ele%vit(ipart,1)*ele%vit(ipart,1) &
+          + ele%vit(ipart,2)*ele%vit(ipart,2)
       if ( u2 >= csq ) then 
          print*,'Erreur : u2 >= c2 dans le calcul de la vitesse'
          print*,'ipart = ',ipart,' vx = ',ele%vit(ipart,1),' vy = ',ele%vit(ipart,2)
@@ -171,7 +170,7 @@ do ipart = 1, nbpart
 
    if( relativ ) then
 
-      u2 =   ele%vit(ipart,1)*ele%vit(ipart,1)	&
+      u2 =   ele%vit(ipart,1)*ele%vit(ipart,1) &
            + ele%vit(ipart,2)*ele%vit(ipart,2)
 
       gamma = sqrt( 1. + u2/csq )
@@ -190,7 +189,7 @@ end subroutine avancee_vitesse
 subroutine avancee_part( ele, coef )  !Avancee de coef * dt
 
 type(particle) :: ele
-real(kind=prec) :: coef
+sll_real64 :: coef
 
 do ipart=1,nbpart     
    ele%pos(ipart,1) = ele%pos(ipart,1) + ele%vit(ipart,1)*dt*coef
@@ -236,17 +235,17 @@ if (bcname == 'period') then
 else
    ipart = 1
    do while ( ipart <= nbpart )  
-      if (      ele%pos(ipart,1) < 0.0	        &
-           .or. ele%pos(ipart,1) >= dimx     	&	
-           .or. ele%pos(ipart,2) < 0.         	&
-           .or. ele%pos(ipart,2) >= dimy ) then	
+      if (      ele%pos(ipart,1) < 0.0        &
+           .or. ele%pos(ipart,1) >= dimx      &	
+           .or. ele%pos(ipart,2) < 0.         &
+           .or. ele%pos(ipart,2) >= dimy ) then
          !*** Recuperation du trou laisse par la particule sortie
          ele%pos(ipart,1) = ele%pos(nbpart,1)
          ele%pos(ipart,2) = ele%pos(nbpart,2)
          ele%vit(ipart,1) = ele%vit(nbpart,1)
          ele%vit(ipart,2) = ele%vit(nbpart,2)
          ele%p(ipart)     = ele%p(nbpart)
-	 nbpart = nbpart - 1
+         nbpart = nbpart - 1
          if (nbpart == 0) stop 'plus de particule'
       else
          ipart = ipart + 1
@@ -278,8 +277,8 @@ subroutine calcul_rho( ele, tm )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-real(kind=prec) :: a1, a2, a3, a4, dum, xp, yp
-real(kind=prec) :: rho_total
+sll_real64 :: a1, a2, a3, a4, dum, xp, yp
+sll_real64 :: rho_total
 
 tm%r0 = tm%r1   
 tm%r1 = 0.d0    
@@ -340,8 +339,8 @@ subroutine calcul_j_cic( ele, tm )
 
 type(particle) :: ele
 type(tm_mesh_fields) :: tm
-real(kind=prec) :: a1, a2, a3, a4, dum, xp, yp
-real(kind=prec), dimension(0:nx,0:ny) :: jx, jy
+sll_real64 :: a1, a2, a3, a4, dum, xp, yp
+sll_real64, dimension(0:nx,0:ny) :: jx, jy
 
 jx = 0.d0
 jy = 0.d0
@@ -403,27 +402,27 @@ end subroutine calcul_j_cic
 subroutine faisceau_aleatoire( ele, time )
 
 type (particle) :: ele
-real(kind=prec) :: time, vitesse, intensite, y0, y1
-integer, parameter :: maxnbpart=100000
-integer :: nbnewpart
-real(kind=prec) :: aux
+sll_real64 :: time, vitesse, intensite, y0, y1
+sll_int32, parameter :: maxnbpart=100000
+sll_int32 :: nbnewpart, error
+sll_real64 :: aux
 
 intensite = 1.d0
 vitesse = 0.2
 y0 = 0.4*dimy 
 y1 = 0.6*dimy
 nbnewpart = 30 !int( intensite/nx/vitesse )
-print*,'nb de nouvelles particules = ',nbnewpart
+!print*,'nb de nouvelles particules = ',nbnewpart
 
 if( time == 0. ) then
 
-   allocate(ele%pos(maxnbpart,2))
-   allocate(ele%case(maxnbpart,2))
-   allocate(ele%vit(maxnbpart,2))
-   allocate(ele%epx(maxnbpart))
-   allocate(ele%epy(maxnbpart))
-   allocate(ele%bpz(maxnbpart))
-   allocate(ele%p(maxnbpart))
+   SLL_ALLOCATE(ele%pos(maxnbpart,2),error)
+   SLL_ALLOCATE(ele%case(maxnbpart,2),error)
+   SLL_ALLOCATE(ele%vit(maxnbpart,2),error)
+   SLL_ALLOCATE(ele%epx(maxnbpart),error)
+   SLL_ALLOCATE(ele%epy(maxnbpart),error)
+   SLL_ALLOCATE(ele%bpz(maxnbpart),error)
+   SLL_ALLOCATE(ele%p(maxnbpart),error)
 
 end if
 
@@ -450,9 +449,9 @@ end subroutine faisceau_aleatoire
 subroutine faisceau_regulier( ele, time )
 
 type (particle) :: ele
-real(kind=prec) :: time, vitesse
-integer, parameter :: maxnbpart=100000
-integer :: aux, nbnewpart
+sll_real64 :: time, vitesse
+sll_int32, parameter :: maxnbpart=100000
+sll_int32 :: nbnewpart, error
 
 vitesse = 0.5d0
 nbnewpart = 0
@@ -460,13 +459,13 @@ print*,'nb de nouvelles particules = ',nbnewpart
 
 if( time == 0. ) then
 
-   allocate(ele%pos(maxnbpart,2))
-   allocate(ele%case(maxnbpart,2))
-   allocate(ele%vit(maxnbpart,2))
-   allocate(ele%epx(maxnbpart))
-   allocate(ele%epy(maxnbpart))
-   allocate(ele%bpz(maxnbpart))
-   allocate(ele%p(maxnbpart))
+   SLL_ALLOCATE(ele%pos(maxnbpart,2),error)
+   SLL_ALLOCATE(ele%case(maxnbpart,2),error)
+   SLL_ALLOCATE(ele%vit(maxnbpart,2),error)
+   SLL_ALLOCATE(ele%epx(maxnbpart),error)
+   SLL_ALLOCATE(ele%epy(maxnbpart),error)
+   SLL_ALLOCATE(ele%bpz(maxnbpart),error)
+   SLL_ALLOCATE(ele%p(maxnbpart),error)
 
 end if
 
@@ -492,8 +491,8 @@ end subroutine faisceau_regulier
 subroutine gaussienne( ele, time )
 
 type (particle) :: ele
-real(kind=prec) :: time, speed, theta, vth, n,aux
-integer :: k
+sll_real64 :: time, speed, theta, vth, n, aux
+sll_int32 :: k, error
 
 if( time == 0 ) then
  
@@ -501,13 +500,13 @@ if( time == 0 ) then
    nbpart = 100*nx*ny !je joue sur le nb de part/maille
    n = 1.d0/nbpart
 
-   allocate(ele%pos(nbpart,2))
-   allocate(ele%case(nbpart,2))
-   allocate(ele%vit(nbpart,2))
-   allocate(ele%epx(nbpart))
-   allocate(ele%epy(nbpart))
-   allocate(ele%bpz(nbpart))
-   allocate(ele%p(nbpart))
+   SLL_ALLOCATE(ele%pos(nbpart,2),error)
+   SLL_ALLOCATE(ele%case(nbpart,2),error)
+   SLL_ALLOCATE(ele%vit(nbpart,2),error)
+   SLL_ALLOCATE(ele%epx(nbpart),error)
+   SLL_ALLOCATE(ele%epy(nbpart),error)
+   SLL_ALLOCATE(ele%bpz(nbpart),error)
+   SLL_ALLOCATE(ele%p(nbpart),error)
 
 
    do k=0,nbpart-1
@@ -549,9 +548,9 @@ end subroutine gaussienne
 subroutine plasma( ele, time )
 
 type (particle) :: ele
-real(kind=prec) :: time, speed, theta, vth, n, aux
-real(kind=prec) :: a, b, eps, R
-integer :: k
+sll_real64 :: time, speed, theta, vth, n
+sll_real64 :: a, b, eps, R
+sll_int32 :: k, error
 
 if( time == 0 ) then
 
@@ -561,13 +560,13 @@ if( time == 0 ) then
    nbpart = 100*(nx)*(ny)
    n = 1.d0/nbpart
 
-   allocate(ele%pos(nbpart,2))
-   allocate(ele%case(nbpart,2))
-   allocate(ele%vit(nbpart,2))
-   allocate(ele%epx(nbpart))
-   allocate(ele%epy(nbpart))
-   allocate(ele%bpz(nbpart))
-   allocate(ele%p(nbpart))
+   SLL_ALLOCATE(ele%pos(nbpart,2),error)
+   SLL_ALLOCATE(ele%case(nbpart,2),error)
+   SLL_ALLOCATE(ele%vit(nbpart,2),error)
+   SLL_ALLOCATE(ele%epx(nbpart),error)
+   SLL_ALLOCATE(ele%epy(nbpart),error)
+   SLL_ALLOCATE(ele%bpz(nbpart),error)
+   SLL_ALLOCATE(ele%p(nbpart),error)
 
    do k=0,nbpart-1
 
