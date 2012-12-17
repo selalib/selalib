@@ -994,7 +994,6 @@ contains !************************** Operations **************************
 !POSING PROBLEM WITH F95 STANDARD. WE SHOULD COME BACK TO THIS
 !
 #warning sll_collective_alltoallV_int_simple is not fixed
-#ifndef STDF95
   ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
  subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
                                             recv_buf,col )
@@ -1009,7 +1008,8 @@ contains !************************** Operations **************************
 !#else
    sll_int32, dimension(:), intent(in) :: send_buf
    sll_int32, dimension(:), intent(in) :: send_cnts
-   sll_int32, allocatable, dimension(:) :: recv_buf
+   !sll_int32, ,allocatable dimension(:) :: recv_buf
+   sll_int32, pointer, dimension(:) :: recv_buf
    sll_int32, allocatable, dimension(:) :: send_displs
    sll_int32, allocatable, dimension(:) :: recv_cnts
    sll_int32, allocatable, dimension(:) :: recv_displs
@@ -1060,6 +1060,5 @@ contains !************************** Operations **************************
    SLL_DEALLOCATE_ARRAY(send_displs,ierr)
    SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
 end subroutine sll_collective_alltoallV_int_simple
-#endif
 
 end module sll_collective
