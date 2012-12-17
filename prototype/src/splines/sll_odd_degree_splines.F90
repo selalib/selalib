@@ -27,12 +27,8 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
-#ifdef STDF95
-    sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable :: coeffs
-#endif
-    sll_real64, dimension(:,:), allocatable :: matrix 
+    sll_real64, dimension(:), pointer     :: coeffs
+    sll_real64, dimension(:,:), pointer   :: matrix
    ! matrix will be the result of Choleski factorization
    end type odd_degree_splines_uniform_plan
 
@@ -41,15 +37,11 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
-#ifdef STDF95
-    sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable     :: coeffs
-#endif
+    sll_real64, dimension(:), pointer       :: coeffs
+    sll_real64, dimension(:), pointer       :: b_spline
+    sll_real64, dimension(:,:), pointer     :: matrix
+    sll_real64, dimension(:), pointer       :: ipiv ! for matrix LU solving
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
-    sll_real64, dimension(:), allocatable     :: b_spline
-    sll_real64, dimension(:,:),allocatable    :: matrix
-    sll_real64, dimension(:), allocatable     :: ipiv ! for matrix LU solving
   end type odd_degree_splines_nonuniform_plan 
 
   interface compute_odd_degree_coeffs

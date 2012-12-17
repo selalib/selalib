@@ -37,7 +37,7 @@ IF(NOT LAPACK_FOUND)
 ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library " FORCE)
+SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library ")
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library " )
 
 IF(SILO_ENABLED) 
@@ -100,7 +100,6 @@ SET(SLV2D_SRC silo_module.F90
               geometry.F90
               maxwell2dfdtd.F90
               poisson2dpp_seq.F90
-              poisson2dpp_par.F90
               poisson2d_periodic.F90
               precision.F90
               splinenn.F90
@@ -110,26 +109,27 @@ SET(SLV2D_SRC silo_module.F90
               transpose.F90
               vlasov1d.F90
               vlasov2d.F90 
-              sll_vlasov2d.F90)
+              sll_vlasov2d.F90
+              vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
 ADD_DEPENDENCIES(slv2d selalib)
 
-SET(LIBS selalib ${SILO_LIBRARIES} ${LAPACK_LIBRARIES} 
+SET(LIBS selalib ${SILO_LIBRARIES} 
     ${FFTPACK_LIBRARIES} ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
-TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS})
+TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} ${LAPACK_LIBRARIES})
 
 ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
-TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS})
+TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} ${LAPACK_LIBRARIES})
 
 ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90)
 TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
 
 ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90)
-TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
+TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS} ${LAPACK_LIBRARIES})
 
 #FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
 #ADD_DEFINITIONS(-D_TWO_D)
@@ -137,14 +137,36 @@ TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS})
 #TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
 
 IF (FFTW_FOUND) 
+
+   ADD_LIBRARY(sll_vlasov4d STATIC sll_vlasov4d_spectral.F90
+                                   sll_vlasov4d_maxwell.F90
+                                   sll_vlasov4d_poisson.F90
+                                   sll_vlasov4d_base.F90)
+
+   ADD_DEPENDENCIES(sll_vlasov4d slv2d)
+                              
+
    ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
    TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
+
+   ADD_EXECUTABLE(vp4d          vp4d.F90)
+   ADD_EXECUTABLE(vm4d          vm4d.F90)
+   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90)
+
+   TARGET_LINK_LIBRARIES(vp4d          sll_vlasov4d slv2d ${LIBS})
+   TARGET_LINK_LIBRARIES(vm4d          sll_vlasov4d slv2d ${LIBS})
+   TARGET_LINK_LIBRARIES(vm4d_spectral sll_vlasov4d slv2d ${LIBS})
+
    IF(FFTW_MPI_LIBRARY)
+
       ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
       TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
       ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
-      TARGET_LINK_LIBRARIES(fftw_solver_mpi ${FFTW_LIBRARIES} sll_memory)
+      TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib ${FFTW_LIBRARIES})
+
    ENDIF()
+
+
 ENDIF()
 
 ENABLE_TESTING()
