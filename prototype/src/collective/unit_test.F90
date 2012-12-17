@@ -19,10 +19,12 @@ program collective_test
   sll_real32, ALLOCATABLE, DIMENSION(:) :: somme
 
   sll_real32, allocatable, dimension(:) :: sendbuf_real, recvbuf_real
-  sll_int32, allocatable, dimension(:) :: sendbuf_int, recvbuf_int
+  sll_int32, allocatable, dimension(:) :: sendbuf_int!, recvbuf_int
+  sll_int32, pointer, dimension(:) :: recvbuf_int
   logical, allocatable, dimension(:) :: sendbuf_log, recvbuf_log
   sll_int32, allocatable, dimension(:) :: sendcounts, recvcounts
   sll_int32, allocatable, dimension(:) :: sdispls, rdispls
+  
 
   call sll_boot_collective()
   rank = sll_get_collective_rank( sll_world_collective )
@@ -462,10 +464,8 @@ program collective_test
   !                                 sendbuf_int(:)
   
   
-#ifndef STDF95
   call sll_collective_alltoall_int( sendbuf_int ,1 ,1, &
                                    recvbuf_int, sll_world_collective)  
-#endif
 
   !PRINT *,'Moi, processus ',rank,', j''ai recu ',recvbuf_int
 
@@ -508,10 +508,8 @@ program collective_test
    sendcounts(1)=2
   endif
 
-#ifndef STDF95
    call sll_collective_alltoallV_int_simple( sendbuf_int, sendcounts, &
                                   recvbuf_int,sll_world_collective)
-#endif
 
  SLL_ALLOCATE(somme(1),ierr)
  call sll_collective_reduce_int(sll_world_collective,&

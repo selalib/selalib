@@ -1,46 +1,59 @@
-
 IF(STDF95)
+IF(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
-	       sll_cubic_spline_interpolator_1d.F90
-	       sll_cubic_spline_interpolator_2d.F90
+               sll_cubic_spline_interpolator_1d.F90
+               cubic_non_uniform_splines_interpolator_1d.F90
+               sll_periodic_interpolator_1d.F90
+               #sll_finite_difference_interpolator_1d.F90
+               sll_cubic_spline_interpolator_2d.F90
+               sll_quintic_spline_interpolator_1d.F90
+               sll_quintic_spline_interpolator_1d_nonuniform.F90
+               sll_odd_degree_spline_interpolator_1d.F90
+               sll_odd_degree_spline_interpolator_1d_nonuniform.F90
+)
+ELSE(FFTPACK_ENABLED)
+  add_library( sll_interpolators STATIC
+               sll_cubic_spline_interpolator_1d.F90
+               sll_cubic_spline_interpolator_2d.F90
+               sll_quintic_spline_interpolator_1d.F90
+               cubic_non_uniform_splines_interpolator_1d.F90
+               sll_quintic_spline_interpolator_1d_nonuniform.F90
+               sll_odd_degree_spline_interpolator_1d.F90
+               sll_odd_degree_spline_interpolator_1d_nonuniform.F90
+             )
+ENDIF(FFTPACK_ENABLED)
+ELSE()
+IF(FFTPACK_ENABLED)
+  add_library( sll_interpolators STATIC
+               sll_interpolators_1d_base.F90
+               sll_cubic_spline_interpolator_1d.F90
+               cubic_non_uniform_splines_interpolator_1d.F90
+               sll_periodic_interpolator_1d.F90
+               #sll_finite_difference_interpolator_1d.F90
+               sll_interpolators_2d_base.F90
+               sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
              )
 ELSE()
-IF(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
-	       sll_interpolators_1d_base.F90
-	       sll_cubic_spline_interpolator_1d.F90
-	       cubic_non_uniform_splines_interpolator_1d.F90
-	       sll_periodic_interpolator_1d.F90
-	       #sll_finite_difference_interpolator_1d.F90
-	       sll_interpolators_2d_base.F90
-	       sll_cubic_spline_interpolator_2d.F90
-               sll_quintic_spline_interpolator_1d.F90
-               sll_quintic_spline_interpolator_1d_nonuniform.F90
-               sll_odd_degree_spline_interpolator_1d.F90
-               sll_odd_degree_spline_interpolator_1d_nonuniform.F90
-             )
-ELSE()	       
-  add_library( sll_interpolators STATIC
-	       sll_interpolators_1d_base.F90
-	       sll_cubic_spline_interpolator_1d.F90
-	       cubic_non_uniform_splines_interpolator_1d.F90
-	       #sll_periodic_interpolator_1d.F90
-	       #sll_finite_difference_interpolator_1d.F90
-	       sll_interpolators_2d_base.F90
-	       sll_cubic_spline_interpolator_2d.F90
+               sll_interpolators_1d_base.F90
+               sll_cubic_spline_interpolator_1d.F90
+               cubic_non_uniform_splines_interpolator_1d.F90
+               #sll_periodic_interpolator_1d.F90
+               #sll_finite_difference_interpolator_1d.F90
+               sll_interpolators_2d_base.F90
+               sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
              )
 
-ENDIF()             
 ENDIF()
-
+ENDIF()
 
 IF(FFTPACK_ENABLED)
 
@@ -72,6 +85,7 @@ add_dependencies( sll_interpolators
 ENDIF()
                 
 
+IF(NOT STDF95)
 add_executable(test_interpolators_1d unit_test_1d.F90
                ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 
@@ -88,6 +102,7 @@ target_link_libraries( test_interpolators_1d
 	               sll_working_precision 
                        ${LAPACK_LIBRARIES}
                      )
+ENDIF()
 add_executable(test_interpolators_2d unit_test.F90
                ${CMAKE_CURRENT_SOURCE_DIR}/../fields/geometry_functions.F90)
 
