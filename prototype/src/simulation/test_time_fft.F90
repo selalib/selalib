@@ -340,7 +340,6 @@ t3 => reset_time_mark(t3)
            end do
         endif
      end do
-print*,timer3
 timer3 = timer3+time_elapsed_since(t3)
      !$omp barrier
 
