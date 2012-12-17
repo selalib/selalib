@@ -65,11 +65,11 @@ end subroutine plot_test_2d
 
 subroutine test_animation_2d()
 integer :: nbpart, iplot, istep, imov, nstep
-sll_real64, dimension(:), allocatable :: xp
-sll_real64, dimension(:), allocatable :: yp
-sll_real64, dimension(:), allocatable :: op
-sll_real64, dimension(:), allocatable :: up
-sll_real64, dimension(:), allocatable :: vp
+sll_real64, dimension(:), pointer :: xp
+sll_real64, dimension(:), pointer :: yp
+sll_real64, dimension(:), pointer :: op
+sll_real64, dimension(:), pointer :: up
+sll_real64, dimension(:), pointer :: vp
 sll_real64 :: time
 sll_real64 :: t0, t1, tcpu
 sll_real64 :: xmin, xmax, ymin, ymax
