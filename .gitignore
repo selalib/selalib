@@ -6,14 +6,7 @@ unit_test
 *.swp
 *.h5
 *.xmf
-<<<<<<< HEAD
-ChangeLog
-.DS_Store
-=======
 *.exe
-<<<<<<< HEAD
->>>>>>> origin/prototype-devel
-=======
 .DS_Store
 ChangeLog
->>>>>>> prototype-devel
+.AppleDouble

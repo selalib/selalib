@@ -264,9 +264,6 @@ end subroutine advect_CG_polar2
   !>plan : sll_plan_adv_polar object
   !>in : distribution function at time t_n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time t_(n+1), size (nr+1)*(ntheta+1)
-
-
-
   subroutine advect_CG_polar(plan,fn,fnp1)
 
     implicit none
@@ -956,8 +953,8 @@ end subroutine advect_CG_polar2
 
     sll_real64 :: dt
 
-    dt=plan%adv%dt
-    plan%adv%dt=dt/2.0_f64
+    dt          = plan%adv%dt
+    plan%adv%dt = dt/2.0_f64
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
@@ -966,9 +963,8 @@ end subroutine advect_CG_polar2
     call poisson_solve_polar(plan%poisson,out,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     !we just obtained E^(n+1/2)
-    plan%adv%dt=dt
+    plan%adv%dt = dt
     call advect_CG_polar(plan%adv,in,out)
-
   end subroutine SL_ordre_2
 
 
