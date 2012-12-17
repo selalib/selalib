@@ -1,13 +1,13 @@
 module Maxwell
-
+#include "selalib.h"
 use zone
 implicit none
 
 integer, private :: i, j
 
-real(kind=prec), private :: dex_dx, dey_dy
-real(kind=prec), private :: dex_dy, dey_dx
-real(kind=prec), private :: dbz_dx, dbz_dy
+sll_real64, private :: dex_dx, dey_dy
+sll_real64, private :: dex_dy, dey_dx
+sll_real64, private :: dbz_dx, dbz_dy
 
 contains
 
@@ -64,8 +64,8 @@ end subroutine ampere
 subroutine conditions_limites( tm, time )
 
 type( tm_mesh_fields ) :: tm
-real(kind=prec) :: a11,a12,a21,a22,b1,b2,dis
-real(kind=prec) :: time, alpha, omega
+sll_real64 :: a11,a12,a21,a22,b1,b2,dis
+sll_real64 :: time, alpha, omega
 integer :: mm=1 !parametre du cas entran
 
 select case ( bcname )

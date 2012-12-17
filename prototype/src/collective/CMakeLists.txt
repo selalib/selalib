@@ -18,12 +18,3 @@ target_link_libraries(test_collective
 	sll_working_precision
 )
 
-# we can call ${MPIEXEC_MAX_NUMPROCS} to have the number of procs
-SET(PROCS 2)
-SET(ARGS "")
-ADD_TEST(NAME collective
-         COMMAND
-	${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_collective
-	${MPIEXEC_POSTFLAGS} ${ARGS})
-SET_TESTS_PROPERTIES(collective PROPERTIES FAIL_REGULAR_EXPRESSION "NOT PASS")
