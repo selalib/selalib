@@ -35,8 +35,8 @@ implicit none
     sll_real64                                :: xmin
     sll_real64                                :: xmax
     sll_real64, dimension(:), pointer         :: coeffs
-    sll_real64, dimension(:,:), allocatable   :: matrix
-    sll_real64, dimension(:), allocatable     :: ipiv ! for matrix LU solving
+    sll_real64, dimension(:,:), pointer       :: matrix
+    sll_real64, dimension(:), pointer         :: ipiv ! for matrix LU solving
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
   end type quintic_splines_nonuniform_plan  
 
