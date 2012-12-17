@@ -326,12 +326,11 @@ timer5 = 0
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
+t3 => reset_time_mark(t3)
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-t3 => reset_time_mark(t3)
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-timer3 = timer3+time_elapsed_since(t3)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -341,15 +340,17 @@ timer3 = timer3+time_elapsed_since(t3)
            end do
         endif
      end do
+print*,timer3
+timer3 = timer3+time_elapsed_since(t3)
      !$omp barrier
 
+t4 => reset_time_mark(t4)
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j)
-t4 => reset_time_mark(t4)
         f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
-timer4 = timer4+time_elapsed_since(t4)
      end do
+timer4 = timer4+time_elapsed_since(t4)
      !$omp barrier
 
      !$omp single
@@ -369,12 +370,11 @@ timer4 = timer4+time_elapsed_since(t4)
         enddo
      endif
      !$omp end single
+t5 => reset_time_mark(t5)
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
-t5 => reset_time_mark(t5)
         f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-timer5 = timer5+time_elapsed_since(t5)
         if (is_delta_f==0) then
            ! add equilibrium contribution
            do j=1, Ncv + 1
@@ -384,6 +384,7 @@ timer5 = timer5+time_elapsed_since(t5)
            end do
         end if
      end do
+timer5 = timer5+time_elapsed_since(t5)
      !$omp barrier
      !$omp single
      ! diagnostics
@@ -436,7 +437,12 @@ timer5 = timer5+time_elapsed_since(t5)
   print*, "Temps des fft pour interp_x     : ", timer4
   print*, "Temps des fft pour interp_v (1) : ", timer3
   print*, "Temps des fft pour interp_v (2) : ", timer5
-
+  timer2=timer3+timer4+timer5
+  if(timer2>timer)then
+   print*,"ERREUR"
+  else
+   print*,"Test OK"
+  end if
 
 contains
   elemental function f_equilibrium(v)
