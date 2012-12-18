@@ -18,6 +18,7 @@ module sll_fft
   end type sll_fft_plan
 
   interface fft_new_plan
+<<<<<<< HEAD
     module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d , &
                     ! à implémenter
                       fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d !, &
@@ -30,8 +31,22 @@ module sll_fft
                      fftpack_apply_plan_r2c_1d, fftpack_apply_plan_c2r_1d !, &
                     ! fftpack_apply_plan_c2r_2d, fftpack_apply_plan_r2c_2d , &
                     ! fftpack_apply_plan_c2c_2d
+=======
+    module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d, &
+                    ! à implémenter
+                     fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d , &
+                     fftpack_new_plan_c2r_2d, fftpack_new_plan_r2c_2d, &
+                     fftpack_new_plan_c2c_2d
+  end interface
+
+  interface fft_apply_plan
+    module procedure fftpack_apply_plan_c2c_1d, fftpack_apply_plan_r2r_1d, &
+                     fftpack_apply_plan_r2c_1d, fftpack_apply_plan_c2r_1d , &
+                     fftpack_apply_plan_c2r_2d, fftpack_apply_plan_r2c_2d , &
+                     fftpack_apply_plan_c2c_2d
+>>>>>>> origin/prototype-devel
   end interface 
- 
+  
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
 
@@ -247,7 +262,11 @@ contains
     type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: ierr
 
+<<<<<<< HEAD
 
+=======
+    print*,"function fftpack_new_plan_r2c_1d is not implemented"
+>>>>>>> origin/prototype-devel
   end function
 
   subroutine fftpack_apply_plan_r2c_1d(plan,array_in,array_out)
@@ -257,6 +276,10 @@ contains
     sll_int32                                       :: nx, i
     sll_real64 :: factor
 
+<<<<<<< HEAD
+=======
+    print*,"subroutine fftpack_apply_plan_r2c_1d is not implemented"
+>>>>>>> origin/prototype-devel
   end subroutine
 
   function fftpack_new_plan_c2r_1d(nx,array_in,array_out,flags) result(plan)
@@ -267,7 +290,11 @@ contains
     type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: ierr
 
+<<<<<<< HEAD
 
+=======
+    print*,"function fftpack_new_plan_c2r_1d is not implemented"
+>>>>>>> origin/prototype-devel
   end function
 
   subroutine fftpack_apply_plan_c2r_1d(plan,array_in,array_out)
@@ -277,8 +304,82 @@ contains
     sll_int32                                       :: nx, i
     sll_real64 :: factor
 
+<<<<<<< HEAD
   end subroutine
 
+=======
+    print*,"subroutine fftpack_apply_plan_c2r_1d is not implemented"
+  end subroutine
+
+  function fftpack_new_plan_c2c_2d(NX,NY,array_in,array_out,direction,flags) &
+    result(plan)
+
+    sll_int32, intent(in)                            :: NX,NY
+    sll_comp64, dimension(0:,0:), target, intent(in) :: array_in, array_out
+    sll_int32, intent(in)                            :: direction
+    sll_int32, optional,  intent(in)                 :: flags
+    type(sll_fft_plan), pointer                      :: plan
+    sll_int32                                        :: ierr    
+    !true if dft in the two directions, false otherwise.    
+    logical                                          :: two_direction
+   
+    print*,"function fftpack_new_plan_c2c_2d is not implemented"
+  end function fftpack_new_plan_c2c_2d
+
+  subroutine fftpack_apply_plan_c2c_2d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer                     :: plan
+    sll_comp64, dimension(0:,0:), intent(inout)     :: array_in, array_out
+    sll_int32                                       :: i, nx, ny
+    sll_int32, dimension(2)                         :: fft_shape
+    logical                                         :: two_direction
+
+    print*,"subroutine fftpack_apply_plan_c2c_2d is not implemented"
+  end subroutine fftpack_apply_plan_c2c_2d
+
+  function fftpack_new_plan_c2r_2d(nx,ny,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                        :: nx,ny
+    sll_comp64, dimension(:,:), intent(in)       :: array_in
+    sll_real64, dimension(:,:), intent(in)       :: array_out
+    sll_int32, optional,  intent(in)             :: flags
+    type(sll_fft_plan), pointer                  :: plan
+    sll_int32                                    :: ierr
+
+   print*,"function fftpack_new_plan_c2r_2d is no implemented"
+  end function fftpack_new_plan_c2r_2d
+
+  subroutine fftpack_apply_plan_c2r_2d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer                     :: plan
+    sll_comp64, dimension(0:,0:), intent(inout)     :: array_in
+    sll_real64, dimension(0:,0:), intent(out)       :: array_out
+    sll_int32                                       :: nx, i, ny, k, j
+    sll_real64 :: factor
+
+   print*,"subroutine fftpack_apply_plan_c2r_2d is not implemented"
+  end subroutine fftpack_apply_plan_c2r_2d
+
+  function fftpack_new_plan_r2c_2d(nx,ny,array_in,array_out,flags) result(plan)
+    sll_int32, intent(in)                        :: nx,ny
+    sll_real64, dimension(:,:), intent(in)       :: array_in
+    sll_comp64, dimension(:,:), intent(in)       :: array_out
+    sll_int32, optional,  intent(in)             :: flags
+    type(sll_fft_plan), pointer                  :: plan
+    sll_int32                                    :: ierr
+
+   print*,"function fftpack_new_plan_r2c_2d is not implemented"
+  end function
+
+  subroutine fftpack_apply_plan_r2c_2d(plan,array_in,array_out)
+    type(sll_fft_plan), pointer                     :: plan
+    sll_real64, dimension(0:,0:), intent(inout)     :: array_in
+    sll_comp64, dimension(0:,0:), intent(out)       :: array_out
+    sll_int32                                       :: nx, i, ny, k
+    sll_real64 :: factor
+
+   print*,"subroutine fftpack_apply_plan_r2c_2d is not implemented"
+  end subroutine fftpack_apply_plan_r2c_2d
+
+
+>>>>>>> origin/prototype-devel
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK

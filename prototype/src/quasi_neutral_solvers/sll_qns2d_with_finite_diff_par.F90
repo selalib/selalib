@@ -43,10 +43,10 @@ module sll_qns2d_with_finite_diff_par
      type(sll_fft_plan), pointer               :: inv_fft_plan
      type(layout_3D),  pointer                 :: layout_fft
      type(layout_3D),  pointer                 :: layout_lin_sys
-     sll_comp64, dimension(:,:,:), allocatable :: array_fft
-     sll_comp64, dimension(:,:,:), allocatable :: array_lin_sys
-     sll_comp64, dimension(:,:,:), allocatable :: c_remap, Te_remap
-     type(remap_plan_3D_comp64), pointer       :: rmp3_1
+     sll_comp64, dimension(:,:,:), pointer :: array_fft
+     sll_comp64, dimension(:,:,:), pointer :: array_lin_sys
+     sll_comp64, dimension(:,:,:), pointer :: c_remap, Te_remap
+     type(remap_plan_3D_comp64), pointer              :: rmp3_1
      ! rmp3_1: remap plan for fft to linear sytem (for rho)
      type(remap_plan_3D_comp64), pointer       :: rmp3_2
      ! rmp3_2: remap plan for linear sytem to inverse fft (for phi)
@@ -111,11 +111,11 @@ contains
     plan%rmax   = rmax
 
     ! For FFTs in theta-direction
-   ! plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
+    !plan%fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_FORWARD )
     plan%fft_plan => fft_new_plan( NP_theta, x, x, FFT_FORWARD )
 
     ! For inverse FFTs in theta-direction
-   ! plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_INVERSE )
+    !plan%inv_fft_plan => fft_new_plan_c2c_1d( NP_theta, x, x, FFT_INVERSE )
     plan%inv_fft_plan => fft_new_plan( NP_theta, x, x, FFT_INVERSE )
 
     ! Layout for FFTs-Inv_FFT in theta-direction
@@ -184,13 +184,13 @@ contains
     hat_f = cmplx(f, 0_f64, kind=f64)
     hat_g = cmplx(g, 0_f64, kind=f64)
 
-   ! call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
-   ! call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
+    !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_f, hat_f )
+    !call fft_apply_plan_c2c_1d( plan%fft_plan, hat_g, hat_g )
     call fft_apply_plan( plan%fft_plan, hat_f, hat_f )
     call fft_apply_plan( plan%fft_plan, hat_g, hat_g )
 
     do i=1,NP_r_loc
-      ! call fft_apply_plan_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
+       !call fft_apply_plan_c2c_1d( plan%fft_plan, plan%array_fft(i,:,1), &
        call fft_apply_plan( plan%fft_plan, plan%array_fft(i,:,1), &
                                               plan%array_fft(i,:,1) )
        global = local_to_global_3D( plan%layout_fft, (/i, 1, 1/))
@@ -248,7 +248,7 @@ contains
 
     ! Inverse FFTs (in the theta-direction)
     do i=1,NP_r_loc
-      ! call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
+       !call fft_apply_plan_c2c_1d( plan%inv_fft_plan, plan%array_fft(i,:,1), &
        call fft_apply_plan( plan%inv_fft_plan, plan%array_fft(i,:,1), &
                                                   plan%array_fft(i,:,1) ) 
     enddo
