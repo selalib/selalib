@@ -39,9 +39,10 @@ module sll_mesh_types
   use geometry_functions 
   implicit none
 
-  enum, bind(C)
-     enumerator :: PERIODIC = 0, COMPACT = 1
-  end enum
+  integer, parameter :: PERIODIC = 0, COMPACT = 1
+  !enum, bind(C)
+  !   enumerator :: PERIODIC = 0, COMPACT = 1
+  !end enum
 
   abstract interface
      function scalar_function_2D( eta1, eta2 )

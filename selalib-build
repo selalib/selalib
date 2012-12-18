@@ -31,7 +31,6 @@
 # (4)  Some options, please read the documentation for more details
 
 #PIPOL amd64_2010-linux-debian-testing 1:00 
-#PIPOL amd64_kvm-linux-debian-testing 1:00 
 #PIPOL amd64-linux-debian-testing 1:00 
 #PIPOL amd64_2010-linux-fedora-core16 1:00
 #PIPOL amd64_2010-linux-fedora-core17 1:00
@@ -110,6 +109,29 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export OMPI_CC=/usr/local/bin/gcc
    export HDF5_ROOT=/usr/local
    export FFTW_ROOT=/usr/local
+fi
+
+if [[ `hostname` == "irma-spare" ]]; then
+  source /opt/intel/composerxe/bin/compilervars.sh intel64
+  source /opt/intel/mkl/bin/mklvars.sh intel64
+  export FC=ifort
+  export F77=ifort
+  export CC=icc
+  export CXX=icpc
+  export F9X=ifort
+  export MPICH_FC=ifort
+  export MPICH_F90=ifort
+  export MPICH_CC=icc
+  export MPICH_CXX=icpc
+  export HDF5_ROOT=/opt/local
+  export FFTW_ROOT=/opt/local
+  export CFLAGS='-O3 -xHost -ip'
+  export CXXFLAGS='-O3 -xHost -ip'
+  export FFLAGS='-O3 -xHost -ip'
+  export F90FLAGS='-O3 -xHost -ip'
+  export HDF5_HOME=/opt/local
+  export FFTW_HOME=/opt/local
+  mpd &
 fi
 
 mkdir build

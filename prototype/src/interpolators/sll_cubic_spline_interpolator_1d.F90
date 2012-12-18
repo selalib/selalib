@@ -78,7 +78,7 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function cubic_spline_interpolate_array_at_displacement(this, num_points, &
-       data, coordinates) &
+       data, alpha ) & ! coordinates) &
        result(data_out)
     type(cubic_spline_1d_interpolator),  intent(in)       :: this
 #else
@@ -88,11 +88,7 @@ contains  ! ****************************************************************
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
-#ifdef STDF95
-    sll_real64                :: alpha
-#else
     sll_real64,  intent(in)   :: alpha
-#endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
@@ -109,13 +105,25 @@ contains  ! ****************************************************************
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
+
     if (this%bc_type == PERIODIC_SPLINE) then
-       do i = 1, num_points      
-          coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
-          SLL_ASSERT(coordinates(i) >= xmin)
-          SLL_ASSERT(coordinates(i) <= xmax)   
-       end do
-    else
+       ! The case alpha = 0.0 is problematic. We need to further try to make
+       ! this computation in general more efficient, minimize the use of modulo
+       ! and even explore a uniform grid representation...
+       if( alpha == 0.0_f64 ) then
+          coordinates(:) = this%interpolation_points(:)
+       else ! alpha != 0.0
+          do i = 1, num_points      
+             coordinates(i) = xmin + &
+                  modulo(this%interpolation_points(i) - xmin - alpha, length)
+!!$             write (*,'(a,z,f21.16,a,i,a,z,f21.16)') 'xmin = ', &
+!!$                  xmin, xmin, '  coordinates(',i,') = ', coordinates(i), &
+!!$                  coordinates(i)
+             SLL_ASSERT(coordinates(i) >= xmin)
+             SLL_ASSERT(coordinates(i) <= xmax)   
+          end do
+       end if
+    else ! any other BC? better a case statement
        if (alpha > 0 ) then 
           do i = 1, num_points
              coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
@@ -281,7 +289,7 @@ contains  ! ****************************************************************
 
   !> initialize cubic spline interpolator
 #ifdef STDF95
-  subroutine cubic_spline_initialize( &
+  subroutine cubic_spline_1d_interpolator_initialize( &
 #else
   subroutine initialize_cs1d_interpolator( &
 #endif

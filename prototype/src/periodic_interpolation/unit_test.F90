@@ -1,7 +1,7 @@
 program test_periodic_interp
 #include "sll_working_precision.h"
   use periodic_interp_module
-  !use sll_fft
+  use sll_fft
   implicit none 
   
   sll_int32, parameter    :: N0 = 16
@@ -27,12 +27,21 @@ program test_periodic_interp
         !u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
 
+     
      call initialize_periodic_interp(interp, N, SPLINE, 8)
+     !call initialize_periodic_interp(interp, N, TRIGO_FFT_SELALIB, 8)
+     !call initialize_periodic_interp(interp, N, TRIGO, 8)
+     !call initialize_periodic_interp(interp, N, LAGRANGE, 16)
      call periodic_interp(interp, u_out,  u, alpha)
      
      old_error = error
      error = maxval(abs(u_out(1:N)-u_exact(1:N)))
-     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8) 
+     
+     
+!!$     if (p>1) then
+!!$        print*, 'N=',N, 'error=', error, 'numerical order=', &
+!!$             log(old_error/error)/log(2.0_8) 
+!!$     endif
   end do
  
 

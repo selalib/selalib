@@ -2,13 +2,13 @@ module ode_solvers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_2d.h"
+!#include "sll_field_2d.h"
   
   implicit none
-  enum, bind(C)
-     enumerator :: PERIODIC_ODE = 0, COMPACT_ODE = 1
-  end enum
+  
+  integer, parameter :: PERIODIC_ODE = 0, COMPACT_ODE = 1
 
+#ifndef STDF95
   abstract interface
      function scalar_function_1D( eta )
        use sll_working_precision
@@ -16,6 +16,7 @@ module ode_solvers
        sll_real64, intent(in)  :: eta
      end function scalar_function_1D
   end interface
+#endif
 
 contains
 
@@ -179,10 +180,10 @@ contains
        a,      &
        a_np1 ) 
     intrinsic  :: floor, present
-    sll_int32  :: order
-    sll_real64 :: deltat   
-    sll_int32  :: ncx   ! number of cells of uniform grid
-    sll_int32  :: bt    ! boundary_type
+    sll_int32, intent(in)  :: order
+    sll_real64, intent(in) :: deltat   
+    sll_int32, intent(in)  :: ncx   ! number of cells of uniform grid
+    sll_int32, intent(in)  :: bt    ! boundary_type
     sll_real64, dimension(:) :: xin(:)  
     ! solution for all initial conditions
     sll_real64, dimension(:)                     :: xout   
@@ -201,6 +202,8 @@ contains
     zeros(:) = 0.0_f64
     ! check order. The implementation with a 'select' construct permits
     ! to extend this solver to higher orders more conveniently.
+
+    yi0 = 0._f64
     select case (order)
     case (1)
        c = 1.0_f64
@@ -226,54 +229,57 @@ contains
     ! case of periodic boundary conditions
     !-------------------------------------
     if (bt == PERIODIC_ODE) then
-      !begin modif 
-      tmp = 0._f64  
-      do i=1,ncx
-        tmp = tmp+abs(a(i))
-      enddo
-      tmp = tmp/real(ncx,f64)
-      if(tmp<1.e-14)then
-        xout = xin
-        return
-      endif
-      !end modif
+       !begin modif 
+       tmp = 0._f64  
+       do i=1,ncx
+          tmp = tmp+abs(a(i))
+       enddo
+       tmp = tmp/real(ncx,f64)
+       if(tmp<1.e-14)then
+          xout = xin
+          return
+       endif
+       !end modif
        x1 = xin(1)
        period = xin(ncx+1)-x1
-
+       
        do i = 1, ncx
           xi = xin(i)  ! current grid point
           ! check that displacement is less than 1 period for first point
-          ! localize cell [i0, i0+1] containing origin of characteristic ending at xin(1)
-          ! we consider the mesh of the same period consisting of the points yi0 = xi0 + c*deltat*( a(i0) + b(i) )
-          ! modulo n. If there was no periodicity the sequence would be strictly increasing
+          ! localize cell [i0, i0+1] containing origin of characteristic 
+          ! ending at xin(1)
+          ! we consider the mesh of the same period consisting of the points 
+          ! yi0 = xi0 + c*deltat*( a(i0) + b(i) )
+          ! modulo n. If there was no periodicity the sequence would be 
+          ! strictly increasing
           ! we first look for i0 such that y(i0+1) < y(i0) due to periodicity
           if ( a(1) + b(i) > 0 ) then
              ! y(ncx+1) > x(1) in this case so we look backward 
              i0 = ncx + 1
-             yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) )-x1, period)+x1
              i0 = ncx
              yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
              do while ( yi0p1 > yi0 ) 
                 i0 = i0 - 1
                 yi0p1 = yi0
-                yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
+                yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) )-x1, period)+x1
              end do
           else 
              ! search on the right
              i0 = 1
              yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
-             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1)+b(i) )-x1, period)+x1
              do while (yi0p1 > yi0) 
                 i0 = i0 + 1
                 yi0 = yi0p1
-                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                yi0p1 = modulo(xin(i0+1)+c*deltat*(a(i0+1)+b(i))-x1, period)+x1
              end do
           end if
           
           if ((i0 < 1 ) .or. (i0 > ncx)) then ! yi0 is strictly increasing
              i0 = 1
              yi0 = modulo(xin(i0) + c*deltat*( a(i0) + b(i) ) - x1, period) + x1
-             yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+             yi0p1 = modulo(xin(i0+1) + c*deltat*(a(i0+1)+b(i))-x1, period)+x1
           end if
           imax = i0
           ! find cell which contains origin of characteristic
@@ -281,11 +287,11 @@ contains
              i0 = modulo(i0,ncx) + 1
              if (i0 == imax) then
                 yi0 = yi0p1
-                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                yi0p1 = modulo(xin(i0+1)+c*deltat*(a(i0+1)+b(i))-x1, period)+x1
                 exit
              else
                 yi0 = yi0p1
-                yi0p1 = modulo(xin(i0+1) + c*deltat*( a(i0+1) + b(i) ) - x1, period) + x1
+                yi0p1 = modulo(xin(i0+1)+c*deltat*(a(i0+1)+b(i))-x1, period)+x1
              end if
           end do
 
@@ -312,10 +318,12 @@ contains
           xout(i) = modulo(xout(i)-xin(1),xin(ncx+1)-xin(1)) + xin(1) 
           SLL_ASSERT((xout(i) >= xin(1) ) .and. (xout(i) <= xin(ncx+1))) 
        end do
-       ! due to periodicity, origin of last point is same as origin of first point
+       ! due to periodicity, origin of last point is same as origin of first 
+       ! point
        xout(ncx+1) = xout(1)
     else if (bt == COMPACT_ODE) then
-       ! localize cell [i0, i0+1] containing origin of characteristic ending at xmin
+       ! localize cell [i0, i0+1] containing origin of characteristic ending 
+       ! at xmin
        i = 1
        if ( a(i) + b(i) > 0 ) then
           i0 = 1
@@ -327,6 +335,7 @@ contains
           end do
           i0 = i0 - 1
        end if
+
        do i = 1, ncx + 1
           xi = xin(i)  ! current grid point
           ! find cell which contains origin of characteristic
@@ -347,6 +356,7 @@ contains
                 !print*, 'i0 ', i, i0, yi0, xin(i0), xi, modulo(xi - y1, period) + y1
              end do
           end if
+
           ileft = i0
           iright = i0 + 1
           SLL_ASSERT((ileft>=1).and.(ileft<= ncx))
@@ -622,9 +632,14 @@ contains
     sll_real64 :: delta_eta
     sll_int32  :: bt    ! boundary_type
     ! solution for all initial conditions:
-    sll_real64, dimension(:)                     :: eta_out   
+    sll_real64, dimension(:)                     :: eta_out  
+#ifdef STDF95
+    sll_real64 :: xfunc
+    sll_real64 :: xprimefunc
+#else 
     procedure(scalar_function_1D), pointer       :: xfunc
     procedure(scalar_function_1D), pointer       :: xprimefunc
+#endif
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
@@ -722,20 +737,28 @@ contains
     ! solution for all initial conditions:
     sll_real64, dimension(:)                     :: eta_out   
     sll_real64, dimension(:)                     :: a     ! rhs of ode
+#ifdef STDF95
+    sll_real64, optional :: jac
+    !local variables
+    sll_real64           :: jacobian
+#else
     procedure(scalar_function_1D), pointer, optional  :: jac
     ! local variables
     procedure(scalar_function_1D), pointer  :: jacobian
+#endif
     sll_real64 :: eta_max
     sll_real64 :: eta_i, eta_k, eta_kp1
     sll_real64 :: deltatsub
     sll_real64 :: a_n, a_np1, alpha, k2
     sll_int32  :: i, id, isub
 
+#ifndef STDF95
     if (present(jac)) then
        jacobian => jac 
     else 
        jacobian => f_one
     end if
+#endif
 
     SLL_ASSERT(size(a)==nc_eta+1)
     SLL_ASSERT(size(eta_out)==nc_eta+1)
@@ -745,7 +768,15 @@ contains
        eta_i = eta_min + (i-1)*delta_eta  ! current grid point
        ! loop over substeps
        eta_k = eta_i
+#ifdef STDF95
+       if(present(jac)) then
+          a_n = a(i)/ jac(eta_i)
+       else
+          a_n = a(i) / 1.0_f64
+       endif
+#else
        a_n = a(i) / jacobian(eta_i)
+#endif
        deltatsub = deltat / nsubsteps
        do isub = 1, nsubsteps
           ! first stage
@@ -769,7 +800,15 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac)) then
+             a_np1 = a_np1 / jac(eta_kp1)
+          else
+             a_np1 = a_np1 / 1.0_f64
+          endif
+#else
           a_np1 = a_np1 / jacobian(eta_kp1)
+#endif
           ! compute cubic Lagrange interpolation of a at eta_k
           !a_np1 = -alpha*(alpha-1)*(alpha-2)/6 * a(id) + (alpha+1)*(alpha-1)*(alpha-2)/2 * a(id+1) &
           !     - (alpha+1)*alpha*(alpha-2)/2 * a(id+2) + (alpha+1)*alpha*(alpha-1)/6 * a(id+3) 
@@ -795,7 +834,15 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac)) then
+             a_np1 = a_np1 / jac(eta_kp1)
+          else
+             a_np1 = a_np1 / 1.0_f64
+          endif
+#else
           a_np1 = a_np1 / jacobian(eta_kp1)
+#endif
           ! update
           eta_k = eta_kp1
           a_n = a_np1
@@ -828,20 +875,28 @@ contains
     ! solution for all initial conditions:
     sll_real64, dimension(:)                     :: eta_out   
     sll_real64, dimension(:)                     :: a     ! rhs of ode
+#ifdef STDF95
+    sll_real64, optional :: jac
+    !local variables
+    sll_real64           :: jacobian
+#else
     procedure(scalar_function_1D), pointer, optional  :: jac
     ! local variables
     procedure(scalar_function_1D), pointer  :: jacobian
+#endif
     sll_real64 :: eta_max
     sll_real64 :: eta_i, eta_k, eta_kp1
     sll_real64 :: deltatsub
     sll_real64 :: a_n, a_np1, alpha, k2, k3, k4
     sll_int32  :: i, id, isub
 
+#ifndef STDF95
     if (present(jac)) then
        jacobian => jac 
     else 
        jacobian => f_one
     end if
+#endif
 
     SLL_ASSERT(size(a)==nc_eta+1)
     SLL_ASSERT(size(eta_out)==nc_eta+1)
@@ -851,7 +906,15 @@ contains
        eta_i = eta_min + (i-1)*delta_eta  ! current grid point
        ! loop over substeps
        eta_k = eta_i
+#ifdef STDF95
+       if(present(jac)) then
+          a_n = a(i)/ jac(eta_i)
+       else
+          a_n = a(i) / 1.0_f64
+       endif
+#else
        a_n = a(i) / jacobian(eta_i)
+#endif
        deltatsub = deltat / nsubsteps
        do isub = 1, nsubsteps
           ! second stage
@@ -874,7 +937,15 @@ contains
           ! compute linear interpolation of a at eta_k
           k2 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac))then
+             k2 = k2 / jac(eta_kp1)
+          else
+             k2 = k2 / 1.0_f64
+          end if
+#else
           k2 = k2 / jacobian(eta_kp1)
+#endif
  
          ! third stage
           eta_kp1 = eta_k + 0.5_f64*deltatsub * k2
@@ -896,7 +967,15 @@ contains
           ! compute linear interpolation of a at eta_k
           k3 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac))then
+             k3 = k3 / jac(eta_kp1)
+          else
+             k3 = k3 / 1.0_f64
+          end if
+#else
           k3 = k3 / jacobian(eta_kp1)
+#endif
 
           ! fourth stage
           eta_kp1 = eta_k + deltatsub * k3
@@ -918,8 +997,15 @@ contains
           ! compute linear interpolation of a at eta_k
           k4 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac))then
+             k4 = k4 / jac(eta_kp1)
+          else
+             k4 = k4 / 1.0_f64
+          end if
+#else
           k4 = k4 / jacobian(eta_kp1)
-
+#endif
 
 
           ! compute solution of ode for current grid point 
@@ -944,7 +1030,15 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac)) then
+             a_np1 = a_np1 / jac(eta_kp1)
+          else
+             a_np1 = a_np1 / 1.0_f64
+          endif
+#else
           a_np1 = a_np1 / jacobian(eta_kp1)
+#endif
           ! update
           eta_k = eta_kp1
           a_n = a_np1
@@ -1097,8 +1191,6 @@ contains
        SLL_ASSERT((eta_out(i) >= eta_min ) .and. (eta_out(i) <= eta_max)) 
     end do
   end subroutine rk4_non_unif
-
-
 
 
 end module ode_solvers

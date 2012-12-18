@@ -22,7 +22,6 @@ SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 # RUN_RESULT_VAR is a string that represent the exit status
 # message(STATUS "TRY_RUN_STATUS : ${COMPILE_RESULT_VAR}, EXIT_STATUS : ${RUN_RESULT_VAR}")
 
-SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
 IF(COMPILE_RESULT_VAR)
 
@@ -58,30 +57,41 @@ ELSE()
 ENDIF()
 
 MESSAGE(STATUS "Fortran_COMPILER:${Fortran_COMPILER}")
+
 IF(Fortran_COMPILER STREQUAL "GFORTRAN")
    ADD_DEFINITIONS(-DGFORTRAN)
-   SET(CMAKE_Fortran_FLAGS "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check")
+
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0")
+
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
-   SET(CMAKE_Fortran_FLAGS "-C")
+
    ADD_DEFINITIONS(-DINTEL)
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv")
+
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
-   SET(CMAKE_Fortran_FLAGS "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+
 ELSE()
+
    MESSAGE(STATUS "NO KNOWN FORTRAN COMPILER FOUND")
+
 ENDIF()
 
 
-STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
-IF("${VAR}" STREQUAL "-1")
-  SET(STDF95_ENABLED OFF)
-ELSE()
-  SET(STDF95_ENABLED ON)
-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
+#STRING(FIND ${CMAKE_Fortran_FLAGS} "-std=f95" VAR)
+#IF("${VAR}" STREQUAL "-1")
+#  SET(STDF95_ENABLED OFF)
+#ELSE()
+IF(STDF95_ENABLED)
+  SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS} -fmax-identifier-length=63")
   add_definitions(-DSTDF95)
-ENDIF()
-
-IF(${STDF95_ENABLED} AND ${Fortran_COMPILER} STREQUAL "GFORTRAN")
-  SET(CMAKE_Fortran_FLAGS "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
-  SET(STDF95 YES)
-  ADD_DEFINITIONS(-DSTDF95)
+  IF(${Fortran_COMPILER} STREQUAL "GFORTRAN")
+     SET(CMAKE_Fortran_FLAGS_DEBUG "-pedantic -std=f95 -fmax-identifier-length=63 -g -Wall -cpp -ffree-line-length-none -fall-intrinsics -fbounds-check")
+     SET(STDF95 YES)
+     ADD_DEFINITIONS(-DSTDF95)
+  ENDIF()
 ENDIF()
