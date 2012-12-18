@@ -1,15 +1,13 @@
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
-!
 !> @namespace sll_maxwell_2d_pstd
-!
 !> @author
 !> Pierre Navaro
 !>
-!
+!------------------------------------------------------------------------------
 ! DESCRIPTION: 
-!
+!------------------------------------------------------------------------------
 !> @brief
 !> Implements the Maxwell solver in 2D with periodic boundary conditions
 !>
@@ -29,11 +27,10 @@
 ! 01 11 2012 - Implement absorbing and reflection boundary conditions
 !------------------------------------------------------------------------------
 
-
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
-sz_array = int((array_size/2+1),C_SIZE_T);                \
-p_array = fftw_alloc_complex(sz_array);                   \
-call c_f_pointer(p_array, array, [array_size/2+1])        \
+#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)      \
+sz_array = int((array_size/2+1),C_SIZE_T);                    \
+p_array = fftw_alloc_complex(sz_array);                       \
+call c_f_pointer(p_array, array, [array_size/2+1])            \
 
 #define D_DX(field)                                           \
 call fftw_execute_dft_r2c(self%fwx, field, self%tmp_x);       \
@@ -44,7 +41,7 @@ self%d_dx = self%d_dx / nx
 #define D_DY(field)                                           \
 call fftw_execute_dft_r2c(self%fwy, field, self%tmp_y);       \
 self%tmp_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%tmp_y;     \
-call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);    \
+call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / ny
 
 
@@ -54,16 +51,18 @@ module sll_maxwell_2d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+#ifndef STDF95
 use, intrinsic :: iso_c_binding
+#endif
 use numeric_constants
 use physical_constants
 use sll_maxwell
 
 implicit none
 
-interface initialize
+interface new
  module procedure new_maxwell_2d_pstd
-end interface initialize
+end interface new
 interface solve
  module procedure solve_maxwell_2d
 end interface solve
@@ -71,19 +70,29 @@ interface free
  module procedure free_maxwell_2d_pstd
 end interface free
 
-
 type, public :: maxwell_pstd
    sll_int32                                          :: nx
    sll_int32                                          :: ny
-   sll_real64, dimension(:), allocatable              :: d_dx
-   sll_real64, dimension(:), allocatable              :: d_dy
-   sll_real64, dimension(:), allocatable              :: kx
-   sll_real64, dimension(:), allocatable              :: ky
+   sll_real64, dimension(:), pointer                  :: d_dx
+   sll_real64, dimension(:), pointer                  :: d_dy
+   sll_real64, dimension(:), pointer                  :: kx
+   sll_real64, dimension(:), pointer                  :: ky
+#ifdef STDF95
+   integer :: fwx, fwy, dfftw_plan_dft_r2c_1d, dfftw_plan_dft_c2r_1d
+   integer :: bwx, bwy
+   integer :: p_tmp_x, p_tmp_y
+#else
    type(C_PTR)                                        :: fwx, fwy
    type(C_PTR)                                        :: bwx, bwy
+   type(C_PTR)                                        :: p_tmp_x, p_tmp_y
+#endif
+#ifdef STDF95
+   complex, dimension(:), pointer                     :: tmp_x, tmp_y
+   sll_int32                                          :: sz_tmp_x, sz_tmp_y
+#else
    complex(C_DOUBLE_COMPLEX), dimension(:),   pointer :: tmp_x, tmp_y
    integer(C_SIZE_T)                                  :: sz_tmp_x, sz_tmp_y
-   type(C_PTR)                                        :: p_tmp_x, p_tmp_y
+#endif
    sll_int32                                          :: polarization
    sll_real64                                         :: e_0
    sll_real64                                         :: mu_0
@@ -91,26 +100,28 @@ end type maxwell_pstd
 
 sll_int32, private :: i, j
 
+#ifndef STDF95
 include 'fftw3.f03'
+#endif
 
 contains
 
-subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
-                                     ymin, ymax, ny, &
-                                     polarization )
-   type(maxwell_pstd)                        :: self
-   sll_real64                                :: xmin
-   sll_real64                                :: xmax
-   sll_real64                                :: ymin
-   sll_real64                                :: ymax
-   sll_int32                                 :: nx
-   sll_int32                                 :: ny
-   sll_int32                                 :: error
-   sll_real64                                :: dx
-   sll_real64                                :: dy
-   sll_real64                                :: kx0
-   sll_real64                                :: ky0
-   sll_int32                                 :: polarization
+subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
+
+   type(maxwell_pstd)  :: self
+   sll_real64          :: xmin
+   sll_real64          :: xmax
+   sll_real64          :: ymin
+   sll_real64          :: ymax
+   sll_int32           :: nx
+   sll_int32           :: ny
+   sll_int32           :: error
+   sll_real64          :: dx
+   sll_real64          :: dy
+   sll_real64          :: kx0
+   sll_real64          :: ky0
+   sll_int32           :: polarization
+   integer(C_SIZE_T)   :: sz_tmp_x, sz_tmp_y
 
    self%nx = nx
    self%ny = ny
@@ -119,8 +130,8 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx/2+1,self%sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny/2+1,self%sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
 
@@ -128,10 +139,17 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
+#ifdef STDF95
+   self%fwx = dfftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_ESTIMATE)
+   self%bwx = dfftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_ESTIMATE)
+   self%fwy = dfftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_ESTIMATE)
+   self%bwy = dfftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_ESTIMATE)
+#else
    self%fwx = fftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_ESTIMATE)
    self%bwx = fftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_ESTIMATE)
    self%fwy = fftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_ESTIMATE)
    self%bwy = fftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_ESTIMATE)
+#endif
 
    SLL_ALLOCATE(self%kx(nx/2+1), error)
    SLL_ALLOCATE(self%ky(ny/2+1), error)
@@ -142,11 +160,11 @@ subroutine new_maxwell_2d_pstd(self, xmin, xmax, nx, &
    kx0 = 2._f64*sll_pi/(nx*dx)
    ky0 = 2._f64*sll_pi/(ny*dy)
 
-   do i=1,nx/2+1
+   do i=2,nx/2+1
       self%kx(i) = (i-1)*kx0
    end do
    self%kx(1) = 1.0_f64
-   do j=1,ny/2+1
+   do j=2,ny/2+1
       self%ky(j) = (j-1)*ky0
    end do
    self%ky(1) = 1.0_f64
@@ -185,6 +203,7 @@ end subroutine solve_maxwell_2d
 
 
 subroutine bc_periodic(self, fx, fy, fz)
+
    type(maxwell_pstd)          :: self
    sll_real64 , intent(inout), dimension(:,:) :: fx
    sll_real64 , intent(inout), dimension(:,:) :: fy
@@ -219,17 +238,15 @@ subroutine faraday_tm(self, hx, hy, ez, dt)
 
    dt_mu = dt / self%mu_0 
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(ez(i,1:ny))
       hx(i,1:ny) = hx(i,1:ny) - dt_mu * self%d_dy
    end do
 
-
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(ez(1:nx,j))
       hy(1:nx,j) = hy(1:nx,j) + dt_mu * self%d_dx
    end do
-
 
 end subroutine faraday_tm
 
@@ -250,12 +267,12 @@ subroutine faraday_te(self, ex, ey, hz, dt)
 
    dt_mu = dt / self%mu_0 
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(ex(i,1:ny))
       hz(i,1:ny) = hz(i,1:ny) + dt_mu * self%d_dy
    end do
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(ey(1:nx,j))
       hz(1:nx,j) = hz(1:nx,j) - dt_mu * self%d_dx
    end do
@@ -280,12 +297,12 @@ subroutine ampere_tm(self, hx, hy, ez, dt, jz)
 
    dt_e = dt / self%e_0
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(hy(1:nx,j))
       ez(1:nx,j) = ez(1:nx,j) + dt_e * self%d_dx
    end do
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(hx(i,1:ny))
       ez(i,1:ny) = ez(i,1:ny) - dt_e * self%d_dy
    end do
@@ -316,12 +333,12 @@ subroutine ampere_te(self, ex, ey, hz, dt, jx, jy)
 
    dt_e = dt / self%e_0
 
-   do j = 1, ny+1
+   do j = 1, ny
       D_DX(hz(1:nx,j))
       ey(1:nx,j) = ey(1:nx,j) - dt_e * self%d_dx
    end do
 
-   do i = 1, nx+1
+   do i = 1, nx
       D_DY(hz(i,1:ny))
       ex(i,1:ny) = ex(i,1:ny) + dt_e * self%d_dy
    end do
@@ -335,11 +352,9 @@ end subroutine ampere_te
 
 subroutine free_maxwell_2d_pstd(self)
 type(maxwell_pstd) :: self
-!sll_int32       :: error
 
 if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
 if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
-
 call dfftw_destroy_plan(self%fwx)
 call dfftw_destroy_plan(self%fwy)
 call dfftw_destroy_plan(self%bwx)

@@ -1,6 +1,5 @@
 module poisson2d_periodic
 
-#ifdef _FFTW
 #include "selalib.h"
 
 use geometry_module
@@ -12,11 +11,15 @@ interface new
    module procedure new_potential
    module procedure new_e_fields
 end interface
+
 interface solve
    module procedure solve_potential
    module procedure solve_e_fields
 end interface
 
+interface free
+   module procedure free_poisson
+end interface free
 
 type :: poisson2dpp
    type(geometry)                       :: geom
@@ -222,5 +225,4 @@ end if
 end subroutine
 
 
-#endif
 end module poisson2d_periodic
