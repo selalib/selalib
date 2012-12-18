@@ -5,20 +5,27 @@
 IF(Fortran_COMPILER_NAME STREQUAL "xlf")
   set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic -qsmp=omp ${CMAKE_Fortran_FLAGS}")
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "gfortran")
-  set(CMAKE_Fortran_FLAGS "-fopenmp ${CMAKE_Fortran_FLAGS}")
-ELSEIF(Fortran_COMPILER_NAME STREQUAL "ifort")
-  set(CMAKE_Fortran_FLAGS "-openmp ${CMAKE_Fortran_FLAGS}")
+  set(CMAKE_Fortran_FLAGS "-fopenmp")
+ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+  set(CMAKE_Fortran_FLAGS "-openmp")
 ENDIF()
 
 #Here is defined the library containing the sequential simulations. 
 #Please add your new simulation_MYMETHOD.F90 
 ############################################################
 
+IF (STDF95)
+add_library(sll_simulation_1d STATIC simulation_1d.F90
+            simulation_VP1D_cartesian_non_unif.F90
+            simulation_VP1D_curvilinear_analytic.F90
+            simulation_vp1d_fourier_fem.F90)
+ELSE()
 add_library(sll_simulation_1d STATIC simulation_1d.F90
             simulation_base_class.F90 
             simulation_VP1D_cartesian_non_unif.F90
             simulation_VP1D_curvilinear_analytic.F90
             simulation_vp1d_fourier_fem.F90)
+ENDIF (STDF95)
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
@@ -111,8 +118,8 @@ target_link_libraries(polar_SL
 	sll_interpolators
 	sll_splines
 	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
+#	sll_distribution_function
+#	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -125,8 +132,8 @@ target_link_libraries(polar_SL
 	sll_interpolators
 	sll_splines
 	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
+#	sll_distribution_function
+#	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -142,7 +149,7 @@ add_executable(CG_polar
 		)
 add_dependencies(CG_polar sll_low_level_file_io)
 
-FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
+#FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(CG_polar
 	sll_splines
 	sll_poisson_2d_polar
@@ -173,6 +180,7 @@ target_link_libraries(Poisson_solver
 ENDIF()
 
 IF(FFTPACK_ENABLED)
+IF(NOT STDF95)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
 	sll_mapped_meshes
@@ -211,7 +219,7 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
-
+ENDIF(NOT STDF95)
 ENDIF()
 
 #End of commands to be put in the class simulation standard
@@ -224,7 +232,7 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 #Here is defined the library containing the parallel simulations. 
 #Please add your new simulation_MYMETHOD.F90 

@@ -1,6 +1,5 @@
 module fft_module
   implicit none
-  private
   type, public :: fftclass
      real, dimension(:), pointer ::  coefc, work, workc
      double precision, dimension(:), pointer :: coefd, workd, coefcd
@@ -42,7 +41,9 @@ module fft_module
       integer :: l 
       this%n = l
       allocate(this%coefcd(4*this%n+15))
+#ifdef _FFTPACK
       call zffti(this%n,this%coefcd)
+#endif
     end subroutine initdoubcfft
 
     subroutine doubfft(this,array)
@@ -91,9 +92,11 @@ module fft_module
       inc = 1             ! all data are samples
       lda = size(array,1) ! leading dimension of array
 
+#ifdef _FFTPACK
       do i=1,p
          call zfftf( this%n, array(:,i), this%coefcd)
       end do
+#endif
       array = array /this%n      ! normalize FFT
     end subroutine doubcfft
 
@@ -138,9 +141,11 @@ module fft_module
       inc = 1             ! all data are samples
       lda = size(array,1) ! leading dimension of array
 
+#ifdef _FFTPACK
       do i=1,p
          call zfftb( this%n, array(:,i),  this%coefcd )
       end do
+#endif
     end subroutine doubcfftinv
 
   end module fft_module

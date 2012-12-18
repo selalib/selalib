@@ -25,6 +25,8 @@ sll_int32 :: nnodes_x1, nnodes_x2
 sll_int32 :: ncells_x1, ncells_x2
 
 sll_real64 :: angle, xt, vt, R
+sll_real64, allocatable, dimension(:) :: theta
+sll_real64, allocatable, dimension(:) :: ray
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: df
@@ -37,15 +39,19 @@ nnodes_x2 = 64
 ncells_x1 = nnodes_x1 - 1
 ncells_x2 = nnodes_x2 - 1
 
+SLL_ALLOCATE(theta(nnodes_x2),error)
+SLL_ALLOCATE(ray(nnodes_x1),error)
 SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2),error)
 SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2),error)
 
 do j = 1, nnodes_x2
    vt = real(j-1)/(nnodes_x2-1)
    angle = vt * 2. * sll_pi
+   theta(j) = angle
    do i = 1, nnodes_x1
       xt = real(i-1) / float(nnodes_x1-1)
       R =  1 + xt
+      ray(i) = R
       x1(i,j) = R * cos(angle)
       x2(i,j) = R * sin(angle)
    end do
@@ -87,6 +93,17 @@ call sll_ascii_write_array(file_id,df,error)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
 call sll_xml_file_close(file_id,error)
+
+!>The field is describe on a cartesian mesh
+!>Axis are perpendicular and spacing is constant
+call sll_xdmf_corect2d_nodes( "test_corect2d", df, "d_f1", &
+                              ray(1), (ray(nnodes_x1)-ray(1))/(nnodes_x1-1), &
+                              theta(1), (theta(nnodes_x2)-theta(1))/(nnodes_x2-1), &
+                              "HDF5") 
+
+!>The field is describe on a cartesian mesh
+!>Axis are perpendicular and spacing is define by eta1 and eta2 arrays
+call sll_xdmf_rect2d_nodes( "test_rect2d", df, "d_f2", ray, theta, "HDF5") 
 
 end subroutine test_2d
 

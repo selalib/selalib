@@ -2,6 +2,8 @@ program unit_test_implicit_ode_nonuniform
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use ode_solvers
+  use numeric_constants
+
   implicit none
   
   sll_int32 :: i, ncells, ierr, order
@@ -42,6 +44,7 @@ program unit_test_implicit_ode_nonuniform
   print*, 'testing order 1:'
   order = 1
   call implicit_ode_nonuniform( order, deltat, xin, ncells, COMPACT_ODE, xout,  a_n ) 
+print *, 'do I see this?'
   error = 0.0_f64
   do i = 1, ncells
      x = xin(i)
