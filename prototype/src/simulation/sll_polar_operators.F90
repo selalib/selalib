@@ -17,7 +17,7 @@ module polar_operators
      sll_int32 :: grad_case
      type(sll_spline_2D), pointer :: spl_phi
      type(sll_fft_plan), pointer :: pfwd,pinv
-     sll_comp64, dimension(:,:), allocatable :: grad_fft
+     sll_comp64, dimension(:,:), pointer :: grad_fft
   end type plan_polar_op
 
 contains
@@ -119,7 +119,7 @@ contains
 
     implicit none
 
-    type(plan_polar_op), intent(inout), pointer :: plan
+    type(plan_polar_op), pointer              :: plan
     sll_real64, dimension(:,:), intent(inout) :: phi
     !phi is inout because when I wrote the code it needed to be inout in fft_apply_plan
     sll_real64, dimension(:,:,:), intent(out) :: grad_phi
@@ -226,9 +226,9 @@ contains
 
     implicit none
 
-    type(plan_polar_op), intent(in), pointer :: plan
+    type(plan_polar_op), pointer             :: plan
     sll_real64, dimension(:,:,:), intent(in) :: field
-    sll_real64, dimension(:,:), intent(out) :: div
+    sll_real64, dimension(:,:), intent(out)  :: div
 
     sll_real64 :: dr,dtheta,rmin,rmax
     sll_int32 :: nr,ntheta

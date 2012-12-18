@@ -9,6 +9,7 @@ use geometry_module
 use maxwell2dfdtd_module
 use poisson2dpp_seq
 use diagnostiques_module
+use vlasov4d_plot
 use vlasov2d_module
 use splinepx_class
 use splinepy_class
@@ -194,9 +195,8 @@ do iter=1,nbiter
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
    endif
 
-   write(*,*) iter
    if (mod(iter,fthdiag).eq.0) then 
-      call thdiag(vlas2d,f,nrj,iter*dt)
+      call thdiag(vlas2d,f,nrj,iter*dt,jstartv)
    endif
 
 end do
