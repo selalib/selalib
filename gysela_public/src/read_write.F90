@@ -172,12 +172,17 @@ module read_write_module
       deltat, nbiter_prev, nb_restart, nb_diag, &
       Phi3D_nb_diag, FMoments3D_nb_diag, f5D_nb_diag , &
       num_restart
-    use MPI
     use prec_const
     use clock_module
     use fdistribu5d_class
       
+#ifdef INTEL
     implicit none
+    include "mpif.h"
+#else
+    use MPI
+    implicit none
+#endif
       
 !R3 #include "r3_info.h" !R3
     real(RKIND)      , intent(in) :: initial_time

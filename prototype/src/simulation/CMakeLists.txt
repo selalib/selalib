@@ -14,11 +14,18 @@ ENDIF()
 #Please add your new simulation_MYMETHOD.F90 
 ############################################################
 
+IF (STDF95)
+add_library(sll_simulation_1d STATIC simulation_1d.F90
+            simulation_VP1D_cartesian_non_unif.F90
+            simulation_VP1D_curvilinear_analytic.F90
+            simulation_vp1d_fourier_fem.F90)
+ELSE()
 add_library(sll_simulation_1d STATIC simulation_1d.F90
             simulation_base_class.F90 
             simulation_VP1D_cartesian_non_unif.F90
             simulation_VP1D_curvilinear_analytic.F90
             simulation_vp1d_fourier_fem.F90)
+ENDIF (STDF95)
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
@@ -111,8 +118,8 @@ target_link_libraries(polar_SL
 	sll_interpolators
 	sll_splines
 	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
+#	sll_distribution_function
+#	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -125,8 +132,8 @@ target_link_libraries(polar_SL
 	sll_interpolators
 	sll_splines
 	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
+#	sll_distribution_function
+#	sll_scalar_field_2d	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -172,6 +179,7 @@ target_link_libraries(Poisson_solver
 ENDIF()
 
 IF(FFTPACK_ENABLED)
+IF(NOT STDF95)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
 	sll_mapped_meshes
@@ -232,6 +240,7 @@ target_link_libraries( test_time_fft
         sll_timer
   )
 
+ENDIF(NOT STDF95)
 ENDIF()
 
 #End of commands to be put in the class simulation standard
