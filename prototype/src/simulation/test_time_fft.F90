@@ -252,12 +252,12 @@ t2 => start_time_mark(t2)
  ! call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
  ! call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
 
-!  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
-!  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
 
 
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
+ ! call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
+ ! call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
 
 
 timer2 = time_elapsed_since(t2)
