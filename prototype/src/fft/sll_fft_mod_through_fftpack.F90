@@ -18,20 +18,6 @@ module sll_fft
   end type sll_fft_plan
 
   interface fft_new_plan
-<<<<<<< HEAD
-    module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d , &
-                    ! à implémenter
-                      fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d !, &
-                    ! fftpack_new_plan_c2r_2d, fftpack_new_plan_r2c_2d, &
-                    ! fftpack_new plan_c2c_2d
-  end interface
-
-  interface fft_apply_plan
-    module procedure fftpack_apply_plan_c2c_1d, fftpack_apply_plan_r2r_1d , &
-                     fftpack_apply_plan_r2c_1d, fftpack_apply_plan_c2r_1d !, &
-                    ! fftpack_apply_plan_c2r_2d, fftpack_apply_plan_r2c_2d , &
-                    ! fftpack_apply_plan_c2c_2d
-=======
     module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d, &
                     ! à implémenter
                      fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d , &
@@ -44,7 +30,6 @@ module sll_fft
                      fftpack_apply_plan_r2c_1d, fftpack_apply_plan_c2r_1d , &
                      fftpack_apply_plan_c2r_2d, fftpack_apply_plan_r2c_2d , &
                      fftpack_apply_plan_c2c_2d
->>>>>>> origin/prototype-devel
   end interface 
   
   integer, parameter :: FFT_FORWARD = -1
@@ -262,11 +247,7 @@ contains
     type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: ierr
 
-<<<<<<< HEAD
-
-=======
     print*,"function fftpack_new_plan_r2c_1d is not implemented"
->>>>>>> origin/prototype-devel
   end function
 
   subroutine fftpack_apply_plan_r2c_1d(plan,array_in,array_out)
@@ -276,10 +257,7 @@ contains
     sll_int32                                       :: nx, i
     sll_real64 :: factor
 
-<<<<<<< HEAD
-=======
     print*,"subroutine fftpack_apply_plan_r2c_1d is not implemented"
->>>>>>> origin/prototype-devel
   end subroutine
 
   function fftpack_new_plan_c2r_1d(nx,array_in,array_out,flags) result(plan)
@@ -290,11 +268,7 @@ contains
     type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: ierr
 
-<<<<<<< HEAD
-
-=======
     print*,"function fftpack_new_plan_c2r_1d is not implemented"
->>>>>>> origin/prototype-devel
   end function
 
   subroutine fftpack_apply_plan_c2r_1d(plan,array_in,array_out)
@@ -304,10 +278,6 @@ contains
     sll_int32                                       :: nx, i
     sll_real64 :: factor
 
-<<<<<<< HEAD
-  end subroutine
-
-=======
     print*,"subroutine fftpack_apply_plan_c2r_1d is not implemented"
   end subroutine
 
@@ -379,7 +349,6 @@ contains
   end subroutine fftpack_apply_plan_r2c_2d
 
 
->>>>>>> origin/prototype-devel
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
 ! FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK FFTPACK
