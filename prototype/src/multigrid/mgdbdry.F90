@@ -82,3 +82,64 @@ end if
 
 return
 end
+      subroutine mgdbdry(sxm,exm,sym,eym,phi,bd,phibc,IOUT)
+# include "compdir.inc"
+      include "mpif.h"
+      integer sxm,exm,sym,eym,bd(8),IOUT
+      REALN phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
+c------------------------------------------------------------------------
+c Enforce the Neumann and Dirichlet boundary conditions
+c
+c Code      : mgd2, 2-D parallel multigrid solver
+c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+c Called in : mgdrelax, mgdsolver
+c Calls     : --
+c------------------------------------------------------------------------
+      integer i,j
+# if cdebug
+      double precision tinitial
+      tinitial=MPI_WTIME()
+# endif
+c
+      if (bd(1).eq.1) then
+        do j=sym-1,eym+1
+          phi(exm+1,j)=phi(exm,j)
+        end do
+      else if (bd(1).eq.2) then
+        do j=sym-1,eym+1
+          phi(exm+1,j)=2.0d0*phibc(1)-phi(exm,j)
+        end do
+      end if
+      if (bd(5).eq.1) then
+        do j=sym-1,eym+1
+          phi(sxm-1,j)=phi(sxm,j)
+        end do
+      else if (bd(5).eq.2) then
+        do j=sym-1,eym+1
+          phi(sxm-1,j)=2.0d0*phibc(3)-phi(sxm,j)
+        end do
+      end if
+      if (bd(3).eq.1) then
+        do i=sxm-1,exm+1
+          phi(i,sym-1)=phi(i,sym)
+        end do
+      else if (bd(3).eq.2) then
+        do i=sxm-1,exm+1
+          phi(i,sym-1)=2.0d0*phibc(2)-phi(i,sym)
+        end do
+      end if
+      if (bd(7).eq.1) then
+        do i=sxm-1,exm+1
+          phi(i,eym+1)=phi(i,eym)
+        end do
+      else if (bd(7).eq.2) then
+        do i=sxm-1,exm+1
+          phi(i,eym+1)=2.0d0*phibc(4)-phi(i,eym)
+        end do
+      end if
+c
+# if cdebug
+      timing(93)=timing(93)+MPI_WTIME()-tinitial
+# endif
+      return
+      end
