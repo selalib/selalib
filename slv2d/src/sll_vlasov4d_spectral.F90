@@ -208,9 +208,9 @@ contains
 !        this%tmp_x = this%tmp_x/(1._f64+cmplx(0.0_f64,this%kx,kind=f64)*vx*0.5_f64)
 !        this%tmp_x = this%tmp_x*(1._f64-cmplx(0.0_f64,this%kx,kind=f64)*vx*0.5_f64)
 !Euler cn modified
-        this%tmp_x = this%tmp_x*(1._f64-0.5*vx*cmplx(0.0_f64,this%kx,kind=f64))
+        this%tmp_x=this%tmp_x*(1._f64-0.5*vx*cmplx(0.0_f64,this%kx,kind=f64))
         !comments NC: il faudrait calculer le courantx de ftmp donnee par 
-        this%tmp_x = this%tmp_x*(1._f64-vx*(cmplx(0.0_f64,this%kx,kind=f64))
+        this%tmp_x=this%tmp_x*(1._f64-vx*(cmplx(0.0_f64,this%kx,kind=f64)))
         call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
         this%f(:,j,k,l)= this%d_dx / loc_sz_i
      end do

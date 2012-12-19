@@ -194,7 +194,7 @@ contains
     end do
     end do
 
-  end function spline_interpolate2d
+  end function !spline_interpolate2d
 
 #ifdef STDF95
   function cubic_spline_interpolate2d_disp(this, num_points1, num_points2, data_in, &
@@ -241,6 +241,6 @@ contains
        end do
     end do
 
-  end function spline_interpolate2d_disp
+  end function !spline_interpolate2d_disp
 
 end module sll_cubic_spline_interpolator_2d
