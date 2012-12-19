@@ -166,45 +166,39 @@ do j=1,nbpoint
 
  n = plan%problem_shape(1)
  n_2 = n/2 !ishft(n,-1)
+
  GET_MODE0(mode,data_out)
  mode = mode*2
  SET_MODE0(mode,data_out)
+ GET_MODE_N_2(mode,data_out)
+ mode=mode*2
+ GET_MODE_N_2(mode,data_out)
+ do i=1,n_2-1 
+  GET_MODE_LT_N_2(mode,data_out,i)
+  mode=mode*2
+  SET_MODE_LT_N_2(mode,data_out,i)
+ end do
+ do i=n_2+1,nbpoint-1
+  GET_MODE_GT_N_2(mode,data_out,i)
+  mode=mode*2
+  SET_MODE_GT_N_2(mode,data_out,i)
+ end do
+
  GET_MODE0(mode,data_out)
  mode = mode/2
  SET_MODE0(mode,data_out)
- do i=1,nbpoint-1
-  if(i.eq. n_2)then
-   GET_MODE_N_2(mode,data_out)
-  elseif(i.gt.n_2)then
-   GET_MODE_GT_N_2(mode,data_out,i)
-  else
-   GET_MODE_LT_N_2(mode,data_out,i)
-  end if
-  mode=mode*2
-  if(i.eq. n_2)then
-   SET_MODE_N_2(mode,data_out)
-  elseif(i.gt.n_2)then
-   SET_MODE_GT_N_2(mode,data_out,i)
-  else
-   SET_MODE_LT_N_2(mode,data_out,i)
-  end if
- end do
- do i=1,nbpoint-1
-  if(i.eq. n_2)then
-   GET_MODE_N_2(mode,data_out)
-  elseif(i.gt.n_2)then
-   GET_MODE_GT_N_2(mode,data_out,i)
-  else
-   GET_MODE_LT_N_2(mode,data_out,i)
-  end if
+ GET_MODE_N_2(mode,data_out)
+ mode=mode/2
+ GET_MODE_N_2(mode,data_out)
+ do i=1,n_2-1 
+  GET_MODE_LT_N_2(mode,data_out,i)
   mode=mode/2
-  if(i.eq. n_2)then
-   SET_MODE_N_2(mode,data_out)
-  elseif(i.gt.n_2)then
-   SET_MODE_GT_N_2(mode,data_out,i)
-  else
-   SET_MODE_LT_N_2(mode,data_out,i)
-  end if
+  SET_MODE_LT_N_2(mode,data_out,i)
+ end do
+ do i=n_2+1,nbpoint-1
+  GET_MODE_GT_N_2(mode,data_out,i)
+  mode=mode/2
+  SET_MODE_GT_N_2(mode,data_out,i)
  end do
 
  timer4=timer4+time_elapsed_since(t4)
