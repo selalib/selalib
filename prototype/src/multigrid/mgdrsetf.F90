@@ -25,3 +25,34 @@ end do
 
 return
 end
+      subroutine mgdrsetf(sxf,exf,syf,eyf,rf,r,IOUT)
+# include "compdir.inc"
+      include "mpif.h"
+      integer sxf,exf,syf,eyf,IOUT
+      REALN rf(sxf-1:exf+1,syf-1:eyf+1),r(sxf-1:exf+1,syf-1:eyf+1)
+c------------------------------------------------------------------------
+c For the old version of the multigrid code, set the fine grid values 
+c of the density in the work vector
+c
+c Code      : mgd2, 2-D parallel multigrid solver
+c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+c Called in : mgdsolver
+c Calls     : --
+c------------------------------------------------------------------------
+      integer i,j
+# if cdebug
+      double precision tinitial
+      tinitial=MPI_WTIME()
+# endif
+c
+      do j=syf-1,eyf+1
+        do i=sxf-1,exf+1
+          rf(i,j)=r(i,j)
+        end do
+      end do
+c
+# if cdebug
+      timing(85)=timing(85)+MPI_WTIME()-tinitial
+# endif
+      return
+      end

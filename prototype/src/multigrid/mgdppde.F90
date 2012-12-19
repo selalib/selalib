@@ -59,3 +59,65 @@ end do
 
 return
 end
+      subroutine mgdppde(sxm,exm,sym,eym,nxm,nym,cof,
+     1                   sxf,exf,syf,eyf,rf,xl,yl,bd,IOUT)
+# include "compdir.inc"
+      include "mpif.h"
+      integer sxm,exm,sym,eym,nxm,nym,sxf,exf,syf,eyf,bd(8),IOUT
+      REALN cof(sxm-1:exm+1,sym-1:eym+1,6)
+      REALN rf(sxf-1:exf+1,syf-1:eyf+1),xl,yl
+c------------------------------------------------------------------------
+c For the old version of the multigrid code, determine coefficients 
+c for the pressure equation at all grid levels but the finest one.
+c The coefficients are determined from the values of the density
+c at integer nodes (i,j). Works only for periodic boundary conditions.
+c
+c cof array:
+c
+c         cof(4)
+c           |
+c           |
+c cof(1)--cof(5)--cof(2)
+c           |
+c           |
+c         cof(3)
+c
+c Code      : mgd2, 2-D parallel multigrid solver
+c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+c Called in : mgdsolver
+c Calls     : --
+c------------------------------------------------------------------------
+      REALN dlx,odlxx,dly,odlyy
+      integer i,j,is,js
+# if cdebug
+      double precision tinitial
+      tinitial=MPI_WTIME()
+# endif
+c
+c calculate off-diagonal terms
+c
+      dlx=xl/float(nxm-1)
+      odlxx=1.0d0/(dlx*dlx)
+      dly=yl/float(nym-1)
+      odlyy=1.0d0/(dly*dly)
+      do j=sym,eym
+        js=2*j-1
+        do i=sxm,exm
+          is=2*i-1
+          C1=odlxx/rf(is-1,js)
+          C2=odlxx/rf(is+1,js)
+          C3=odlyy/rf(is,js-1)
+          C4=odlyy/rf(is,js+1)
+          cof(i,j,1)=C1
+          cof(i,j,2)=C2
+          cof(i,j,3)=C3
+          cof(i,j,4)=C4
+          cof(i,j,5)=-(C1+C2+C3+C4)
+        end do
+      end do
+c
+# if cdebug
+      timing(87)=timing(87)+MPI_WTIME()-tinitial
+# endif
+      return
+      end
