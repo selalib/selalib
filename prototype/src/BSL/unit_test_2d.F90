@@ -134,11 +134,11 @@ contains
    call int2string(iplot,cplot)
 
    open(11, file="df-"//cplot//".dat")
-   do i = 1, size(df,1)
-      do j = 1, size(df,2)
-         x = x_min + (i-1)*(x_max-x_min)/nc_x
-         v = v_min + (j-1)*(v_max-v_min)/nc_v
-         write(11,*) x,v,df(i,j)
+   do j = 1, size(df,2)
+      do i = 1, size(df,1)
+         x = x_min + (i-1)*(x_max-x_min)/(nc_x)
+         v = v_min + (j-1)*(v_max-v_min)/(nc_v)
+         write(11,*) sngl(x),sngl(v),sngl(df(i,j))
       end do
       write(11,*)
    end do
