@@ -1,7 +1,7 @@
 
 ##########################################################
 # add the cache entry FFT_DEFAULT_LIBRARY to define the default library use by sll_fft
-SET(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft")
+SET(FFT_DEFAULT_LIBRARY SLLFFT CACHE STRING "specify the library use in sll_fft, options are : FFTPACK, FFTW or SLLFFT")
 
 
 # add the cache entry FFTPACK_ENABLED for enable/disable fftpack
