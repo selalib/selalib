@@ -1,82 +1,84 @@
-      subroutine mgdsolver(isol,sx,ex,sy,ey,phif,rhsf,r,ngrid,work,
-     1                     maxcy,tolmax,kcycle,iprer,ipost,iresw,
-     2                     xl,yl,rro,nx,ny,comm2d,myid,neighbor,
-     3                     bd,phibc,iter,nprscr,IOUT,nerror)
-# include "compdir.inc"
-      include "mpif.h"
-      integer isol,sx,ex,sy,ey,ngrid,nx,ny,IOUT
-      integer maxcy,kcycle,iprer,ipost,iresw
-      REALN phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
-      REALN r(sx-1:ex+1,sy-1:ey+1)
-      REALN work(*),tolmax,xl,yl,rro,phibc(4,20)
-      integer comm2d,myid,neighbor(8),bd(8),iter,nerror
-      logical nprscr
-c 
-      integer nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-      integer ikdatatype,jkdatatype,ijkdatatype
-      integer sxi,exi,syi,eyi
-      integer nxr,nyr,sxr,exr,syr,eyr
-      integer irdatatype,jrdatatype,ijrdatatype
-      common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),
-     1           kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20),
-     2           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),
-     3           nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20),
-     4           irdatatype(20),jrdatatype(20),ijrdatatype(20)
-c------------------------------------------------------------------------
-c Parallel multigrid solver in 2-D cartesian coordinates for the
-c elliptic equation:      div(cof(grad(phif)))=rhsf
-c
-c isol=1 -> density
-c isol=2 -> pressure
-c 
-c Written for periodic, wall (Neumann), and constant value
-c (Dirichlet) BCs. Tested roughly for all these BCs. There are 
-c two versions of the multigrid code, which are separated by the 
-c compiler directive WMGD set in 'compdir.inc'. The old version 
-c (WMGD=0) corresponds to the original, "traditional" grid setup, 
-c and works well when all boundary conditions are periodic. When one 
-c of the BCs is not periodic, must compile with the new version 
-c (WMGD=1), which uses a different grid setup and new restriction 
-c and correction operators (see 'mgdinit' for more details). It is 
-c less accurate (or ,equivalently, slower to converge) for the case 
-c of all-periodic BCs than the old version, but is better able to 
-c handle wall BCs.
-c
-c Notes: - the values of the rhs contained in the array rhsf are
-c          transferred to the work vector and the memory of the 
-c          rhsf array is then used to store the residuals at the
-c          different levels; therefore, it does not preserve its
-c          initial values
-c        - with the initialization and clean-up routines mgdinit
-c          and mgdend, this multigrid code is self-standing
-c
-c Code      : mgd2, 2-D parallel multigrid solver
-c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-c Called in : main
-c Calls     : mgdrpde, mgdpfpde, mgdphpde, mgdrsetf, mgdppde, mgdrtrsf,
-c              -> discretize the pde
-c             mgdsetf
-c               -> set the initial guesses and the right-hand side
-c             mgdkcyc, mgderr,
-c               -> do the actual cycling
-c             gscale, gxch1lin, gxch1cor,
-c               -> rescale pressure and density around average values
-c------------------------------------------------------------------------
-      REALN avo,acorr
-      integer sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
-      integer ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
-      integer itype,jtype,ijtype,lev,ir1,ir2
+subroutine mgdsolver(isol,sx,ex,sy,ey,phif,rhsf,r,ngrid,work, &
+                     maxcy,tolmax,kcycle,iprer,ipost,iresw, &
+                     xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
+                     bd,phibc,iter,nprscr,IOUT,nerror)
+
+#include "mgd2.h"
+include "mpif.h"
+integer isol,sx,ex,sy,ey,ngrid,nx,ny,IOUT
+integer maxcy,kcycle,iprer,ipost,iresw
+REALN phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
+REALN r(sx-1:ex+1,sy-1:ey+1)
+REALN work(*),tolmax,xl,yl,rro,phibc(4,20)
+integer comm2d,myid,neighbor(8),bd(8),iter,nerror
+logical nprscr
+
+integer nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
+integer ikdatatype,jkdatatype,ijkdatatype
+integer sxi,exi,syi,eyi
+integer nxr,nyr,sxr,exr,syr,eyr
+integer irdatatype,jrdatatype,ijrdatatype
+common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),  &
+           kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20),  &
+           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),  &
+           nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20),  &
+           irdatatype(20),jrdatatype(20),ijrdatatype(20)
+
+!------------------------------------------------------------------------
+! Parallel multigrid solver in 2-D cartesian coordinates for the
+! elliptic equation:      div(cof(grad(phif)))=rhsf
+!
+! isol=1 -> density
+! isol=2 -> pressure
+! 
+! Written for periodic, wall (Neumann), and constant value
+! (Dirichlet) BCs. Tested roughly for all these BCs. There are 
+! two versions of the multigrid code, which are separated by the 
+! compiler directive WMGD set in 'compdir.inc'. The old version 
+! (WMGD=0) corresponds to the original, "traditional" grid setup, 
+! and works well when all boundary conditions are periodic. When one 
+! of the BCs is not periodic, must compile with the new version 
+! (WMGD=1), which uses a different grid setup and new restriction 
+! and correction operators (see 'mgdinit' for more details). It is 
+! less accurate (or ,equivalently, slower to converge) for the case 
+! of all-periodic BCs than the old version, but is better able to 
+! handle wall BCs.
+!
+! Notes: - the values of the rhs contained in the array rhsf are
+!          transferred to the work vector and the memory of the 
+!          rhsf array is then used to store the residuals at the
+!          different levels; therefore, it does not preserve its
+!          initial values
+!        - with the initialization and clean-up routines mgdinit
+!          and mgdend, this multigrid code is self-standing
+!
+! Code      : mgd2, 2-D parallel multigrid solver
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+! Called in : main
+! Calls     : mgdrpde, mgdpfpde, mgdphpde, mgdrsetf, mgdppde, mgdrtrsf,
+!              -> discretize the pde
+!             mgdsetf
+!               -> set the initial guesses and the right-hand side
+!             mgdkcyc, mgderr,
+!               -> do the actual cycling
+!             gscale, gxch1lin, gxch1cor,
+!               -> rescale pressure and density around average values
+!------------------------------------------------------------------------
+REALN avo,acorr
+integer sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
+integer ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
+integer itype,jtype,ijtype,lev,ir1,ir2
 # if cdebug
-      double precision tinitial
-      tinitial=MPI_WTIME()
+double precision tinitial
+tinitial=MPI_WTIME()
 # endif
-c------------------------------------------------------------------------
-c discretize pde at all levels
-c
+!------------------------------------------------------------------------
+! discretize pde at all levels
+!
       if (isol.eq.1) then
-c
-c density: only have to set geometric factors
-c
+!
+! density: only have to set geometric factors
+!
         do k=1,ngrid
           sxm=sxk(k)
           exm=exk(k)
@@ -88,16 +90,16 @@ c
           call mgdrpde(sxm,exm,sym,eym,nxm,nym,work(ic),xl,yl,bd,IOUT)
         end do
       else
-c
-c pressure: have to do a lot more work. The coefficients in the new
-c           and old versions of the multigrid code are located at
-c           different places on the grid.
-c Note: the code requires that corasifying takes place in all 
-c directions between levels ngrid and ngrid-1
-c
-c determine coefficients at finest grid level (mid-point values) from
-c two neighboring density points
-c
+!
+! pressure: have to do a lot more work. The coefficients in the new
+!           and old versions of the multigrid code are located at
+!           different places on the grid.
+! Note: the code requires that corasifying takes place in all 
+! directions between levels ngrid and ngrid-1
+!
+! determine coefficients at finest grid level (mid-point values) from
+! two neighboring density points
+!
         sxf=sxk(ngrid)
         exf=exk(ngrid)
         syf=syk(ngrid)
@@ -108,12 +110,12 @@ c
         call mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,work(icf),r,xl,yl,bd,
      1                IOUT)
 # if WMGD
-c
-c new version: determine coefficients at coarser grid levels from
-c four neighboring density points; no communication of boundary data
-c is involved because of the grid setup, under the condition that
-c mod(nx,nxprocs)=mod(ny,nyprocs)=0
-c
+!
+! new version: determine coefficients at coarser grid levels from
+! four neighboring density points; no communication of boundary data
+! is involved because of the grid setup, under the condition that
+! mod(nx,nxprocs)=mod(ny,nyprocs)=0
+!
         do k=ngrid-1,1,-1
           sxm=sxk(k)
           exm=exk(k)
@@ -127,12 +129,12 @@ c
         end do
 # else
         if (ngrid.gt.1) then
-c
-c old version: use two locations ir1 and ir2 in the work vector to
-c store the density on the different grid levels. First set r in 
-c work(ir1) at the finest grid level; this is used to determine the 
-c coefficients at level k=ngrid-1
-c
+!
+! old version: use two locations ir1 and ir2 in the work vector to
+! store the density on the different grid levels. First set r in 
+! work(ir1) at the finest grid level; this is used to determine the 
+! coefficients at level k=ngrid-1
+!
           ir1=kpbgn(ngrid)
           ir2=kcbgn(ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
           sxf=sxr(ngrid-1)
@@ -143,13 +145,13 @@ c
           nyf=nyr(ngrid-1)
           lev=1
           call mgdrsetf(sxf,exf,syf,eyf,work(ir1),r,IOUT)
-c
-c for the levels k=ngrid-1,1, calculate the coefficients from the
-c densities stored in the arrays work(ir1) and work(ir2)
-c for the levels k=ngrid-1,2, transfer to the level below the values
-c of the density needed there to determine the coefficients; exchange
-c of the boundary density data is necessary
-c
+!
+! for the levels k=ngrid-1,1, calculate the coefficients from the
+! densities stored in the arrays work(ir1) and work(ir2)
+! for the levels k=ngrid-1,2, transfer to the level below the values
+! of the density needed there to determine the coefficients; exchange
+! of the boundary density data is necessary
+!
           do k=ngrid-1,1,-1
             sxm=sxk(k)
             exm=exk(k)
@@ -196,9 +198,9 @@ c
         end if
 # endif
       end if
-c------------------------------------------------------------------------
-c set phi,rhsf in work at the finest grid level
-c
+!------------------------------------------------------------------------
+! set phi,rhsf in work at the finest grid level
+!
       sxf=sxk(ngrid)
       exf=exk(ngrid)
       syf=syk(ngrid)
@@ -206,9 +208,9 @@ c
       ipf=kpbgn(ngrid)
       irf=kcbgn(ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
       call mgdsetf(sxf,exf,syf,eyf,work(ipf),work(irf),phif,rhsf,IOUT)
-c------------------------------------------------------------------------
-c cycling at kcur=ngrid level
-c
+!------------------------------------------------------------------------
+! cycling at kcur=ngrid level
+!
       kcur=ngrid
       do iter=1,maxcy
         call mgdkcyc(work,rhsf,kcur,kcycle,iprer,ipost,iresw,
@@ -221,41 +223,41 @@ c
         call mgderr(relmax,sxm,exm,sym,eym,phif,work(ip),comm2d,IOUT)
         if (relmax.le.tolmax) goto 1000
       end do
-c------------------------------------------------------------------------
-c if not converged in maxcy cycles, issue an error message and quit
-c
+!------------------------------------------------------------------------
+! if not converged in maxcy cycles, issue an error message and quit
+!
       if (myid.eq.0) write(IOUT,100) maxcy,relmax
 100   format('WARNING: failed to achieve convergence in ',i5,
      1       ' cycles  error=',e12.5)
       nerror=1
       return
-c------------------------------------------------------------------------
-c converged
-c
+!------------------------------------------------------------------------
+! converged
+!
 1000  continue
-c
-c rescale phif
-c
+!
+! rescale phif
+!
       if (isol.eq.1) then
         avo=rro
       else
         avo=0.0d0
       end if
       call gscale(sx,ex,sy,ey,phif,avo,acorr,comm2d,nx,ny,IOUT)
-c
-c exchange boundary data and impose periodic BCs
-c
+!
+! exchange boundary data and impose periodic BCs
+!
       call gxch1lin(phif,comm2d,sx,ex,sy,ey,neighbor,bd,
      1              ikdatatype(ngrid),jkdatatype(ngrid),IOUT)
       call gxch1cor(phif,comm2d,sxm,exm,sym,eym,neighbor,bd,
      1              ijkdatatype(ngrid),IOUT)
 # if WMGD
-c
-c impose wall and Dirichlet BCs
-c
+!
+! impose wall and Dirichlet BCs
+!
       call mgdbdry(sx,ex,sy,ey,phif,bd,vbc,IOUT)
 # endif
-c
+!
       if (isol.eq.1) then
         if (nprscr.and.myid.eq.0) write(IOUT,110) relmax,iter,acorr
 110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
@@ -269,7 +271,7 @@ c
         timing(96)=timing(96)+MPI_WTIME()-tinitial
 # endif
       end if
-c
+!
       return
       end
       subroutine gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny,IOUT)
@@ -277,19 +279,19 @@ c
       include "mpif.h"
       integer sx,ex,sy,ey,comm2d,IOUT,nx,ny
       REALN p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,pi
-c-----------------------------------------------------------------------
-c Calculate the error between the numerical and exact solution to
-c the test problem.
-c
-c Code      : tmgd2
-c Called in : main
-c Calls     : MPI_ALLREDUCE
-c-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+! Calculate the error between the numerical and exact solution to
+! the test problem.
+!
+! Code      : tmgd2
+! Called in : main
+! Calls     : MPI_ALLREDUCE
+!-----------------------------------------------------------------------
       integer i,j,ierr
       REALN errloc,err,cx,cy,exact
-c
-c calculate local error
-c
+!
+! calculate local error
+!
       cx=2.0d0*pi*wk
       cy=2.0d0*pi*wk
       errloc=0.0d0
@@ -301,9 +303,9 @@ c
           errloc=errloc+abs(p(i,j)-exact)
         end do
       end do
-c
-c calculate global error
-c
+!
+! calculate global error
+!
 # if double_precision
       call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      1                   comm2d,ierr)
@@ -316,22 +318,22 @@ c
       return
       end
       subroutine ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi,IOUT)
-# include "compdir.inc"
+# include "mgd2.h"
       include "mpif.h"
       integer sx,ex,sy,ey,IOUT
       REALN p(sx-1:ex+1,sy-1:ey+1),r(sx-1:ex+1,sy-1:ey+1),
      1      f(sx-1:ex+1,sy-1:ey+1),hxi,hyi,wk,pi
-c-----------------------------------------------------------------------
-c Initialize the pressure, density, and right-hand side of the
-c elliptic equation div(1/r*grad(p))=f
-c
-c Code      : tmgd2
-c Called in : main
-c Calls     : --
-c-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+! Initialize the pressure, density, and right-hand side of the
+! elliptic equation div(1/r*grad(p))=f
+!
+! Code      : tmgd2
+! Called in : main
+! Calls     : --
+!-----------------------------------------------------------------------
       integer i,j
       REALN cnst,cx,cy,xi,yj
-c
+!
       do j=sy-1,ey+1
         do i=sx-1,ex+1
           p(i,j)=0.0d0
@@ -349,7 +351,7 @@ c
           f(i,j)=cnst*sin(cx*xi)*sin(cy*yj)
         end do
       end do
-c
+!
       return
       end
       subroutine grid1_type(itype,jtype,ijtype,realtype,sx,ex,sy,ey,
@@ -357,36 +359,36 @@ c
 # include "compdir.inc"
       include "mpif.h"
       integer itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
-c------------------------------------------------------------------------
-c Define the 3 derived datatypes needed to communicate the boundary
-c data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
-c neighbors
-c
-c Code      : tmgd2
-c Called in : mgdinit
-c Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR
-c------------------------------------------------------------------------
+!------------------------------------------------------------------------
+! Define the 3 derived datatypes needed to communicate the boundary
+! data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
+! neighbors
+!
+! Code      : tmgd2
+! Called in : mgdinit
+! Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR
+!------------------------------------------------------------------------
       integer ier
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
 # endif
-c
-c datatype for one row
-c
+!
+! datatype for one row
+!
       call MPI_TYPE_CONTIGUOUS(ex-sx+1,realtype,itype,ierr)
       call MPI_TYPE_COMMIT(itype,ierr)
-c
-c datatype for one column
-c
+!
+! datatype for one column
+!
       call MPI_TYPE_VECTOR(ey-sy+1,1,ex-sx+3,realtype,jtype,ierr)
       call MPI_TYPE_COMMIT(jtype,ierr)
-c
-c datatype for one 1*1 corner
-c
+!
+! datatype for one 1*1 corner
+!
       call MPI_TYPE_CONTIGUOUS(1,realtype,ijtype,ierr)
       call MPI_TYPE_COMMIT(ijtype,ierr)
-c
+!
 # if cdebug
       timing(7)=timing(7)+MPI_WTIME()-tinitial
 # endif
@@ -397,17 +399,17 @@ c
       integer n, numprocs, myid, s, e
       integer nlocal
       integer deficit
-c------------------------------------------------------------------------
-c  From the MPE library
-c  This file contains a routine for producing a decomposition of a 1-d 
-c  array when given a number of processors.  It may be used in "direct" 
-c  product decomposition.  The values returned assume a "global" domain 
-c  in [1:n]
-c
-c Code      : tmgd2
-c Called in : main
-c Calls     : --
-c------------------------------------------------------------------------
+!------------------------------------------------------------------------
+!  From the MPE library
+!  This file contains a routine for producing a decomposition of a 1-d 
+!  array when given a number of processors.  It may be used in "direct" 
+!  product decomposition.  The values returned assume a "global" domain 
+!  in [1:n]
+!
+! Code      : tmgd2
+! Called in : main
+! Calls     : --
+!------------------------------------------------------------------------
       nlocal  = n / numprocs
       s	      = myid * nlocal + 1
       deficit = mod(n,numprocs)
@@ -439,78 +441,78 @@ c
      2           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),
      3           nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20),
      4           irdatatype(20),jrdatatype(20),ijrdatatype(20)
-c------------------------------------------------------------------------
-c Initialize the parallel multigrid solver: subdomain indices and
-c MPI datatypes.
-c
-c The multigrid code comes in two versions. With the WMGD compiler
-c directive set to 0, the grid setup is vertex-centered:
-c
-c WMGD=0
-c 
-c  |------|-----|-----|-----|-----|            fine
-c  1      2     3     4     5     6 
-c
-c  |------------|-----------|-----------|      coarse
-c  1            2           3           4
-c
-c With WMGD set to 1, it is cell-centered:
-c
-c WMGD=1   
-c           |                       |
-c        |--|--|-----|-----|-----|--|--|       fine
-c        1  |  2     3     4     5  |  6
-c           |                       |
-c     |-----|-----|-----------|-----|-----|    coarse
-c     1     |     2           3     |     4
-c           |                       |
-c          wall                    wall
-c
-c For WMGD=0, the restriction and correction operators are standard
-c (choice of full or half weighting for the restriction, bilinear
-c interpolation for the correction). This works fine for periodic
-c boundary conditions. However, when there are Neumann (wall) or
-c Dirichlet BCs, this grid setup results in a loss of accuracy near
-c the boundaries when the grid is staggered (the discretization of
-c the relaxation operator is first-order locally there). With the
-c grid setup corresponding to WMGD=1, accuracy remains second-order
-c all the time. As the grid gets coarser, it remains centered on the
-c domain instead of "shifting to the right". This option works for
-c periodic, Neumann, and Dirichlet BCs, although only periodic and
-c Neumann BCs have been tested thoroughly. There is one catch, though.
-c For a problem with purely periodic BCs, WMGD=0 converges in less
-c cycles than WMGD=1 and requires less CPU time (the penalty is
-c apparently between 10 and 50%). This can be attributed to the loss
-c of accuracy in the restriction and correction operators due to the
-c fact that WMGD=0 uses a support of 3 points in each direction 
-c whereas WMGD=1 uses only 2 points.
-c
-c Both versions offer the option to coarsify in one direction and
-c not the other, except at the finest grid level, where coarsifying
-c MUST take place along all axes. However, it is possible to have
-c ngrid=iex=jey=1, with ixp=nx and jyq=ny. In this case, the code
-c never enters 'mgdrestr' and 'mgdcor' and all it does is Gauss-Seidel
-c iterate at the finest grid level. This can be useful as a preliminary
-c check.
-c
-c Note: some memory could be saved by noting that the cof arrays
-c need be dimensioned (sxm:exm,sym:eym) and not
-c (sxm-1:exm+1,sym-1:eym+1)... Probably not too difficult to
-c make the change
-c
-c Code      : mgd2, 2-D parallel multigrid solver
-c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-c Called in : main
-c Calls     : grid1_type
-c------------------------------------------------------------------------
+!------------------------------------------------------------------------
+! Initialize the parallel multigrid solver: subdomain indices and
+! MPI datatypes.
+!
+! The multigrid code comes in two versions. With the WMGD compiler
+! directive set to 0, the grid setup is vertex-centered:
+!
+! WMGD=0
+! 
+!  |------|-----|-----|-----|-----|            fine
+!  1      2     3     4     5     6 
+!
+!  |------------|-----------|-----------|      coarse
+!  1            2           3           4
+!
+! With WMGD set to 1, it is cell-centered:
+!
+! WMGD=1   
+!           |                       |
+!        |--|--|-----|-----|-----|--|--|       fine
+!        1  |  2     3     4     5  |  6
+!           |                       |
+!     |-----|-----|-----------|-----|-----|    coarse
+!     1     |     2           3     |     4
+!           |                       |
+!          wall                    wall
+!
+! For WMGD=0, the restriction and correction operators are standard
+! (choice of full or half weighting for the restriction, bilinear
+! interpolation for the correction). This works fine for periodic
+! boundary conditions. However, when there are Neumann (wall) or
+! Dirichlet BCs, this grid setup results in a loss of accuracy near
+! the boundaries when the grid is staggered (the discretization of
+! the relaxation operator is first-order locally there). With the
+! grid setup corresponding to WMGD=1, accuracy remains second-order
+! all the time. As the grid gets coarser, it remains centered on the
+! domain instead of "shifting to the right". This option works for
+! periodic, Neumann, and Dirichlet BCs, although only periodic and
+! Neumann BCs have been tested thoroughly. There is one catch, though.
+! For a problem with purely periodic BCs, WMGD=0 converges in less
+! cycles than WMGD=1 and requires less CPU time (the penalty is
+! apparently between 10 and 50%). This can be attributed to the loss
+! of accuracy in the restriction and correction operators due to the
+! fact that WMGD=0 uses a support of 3 points in each direction 
+! whereas WMGD=1 uses only 2 points.
+!
+! Both versions offer the option to coarsify in one direction and
+! not the other, except at the finest grid level, where coarsifying
+! MUST take place along all axes. However, it is possible to have
+! ngrid=iex=jey=1, with ixp=nx and jyq=ny. In this case, the code
+! never enters 'mgdrestr' and 'mgdcor' and all it does is Gauss-Seidel
+! iterate at the finest grid level. This can be useful as a preliminary
+! check.
+!
+! Note: some memory could be saved by noting that the cof arrays
+! need be dimensioned (sxm:exm,sym:eym) and not
+! (sxm-1:exm+1,sym-1:eym+1)... Probably not too difficult to
+! make the change
+!
+! Code      : mgd2, 2-D parallel multigrid solver
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+! Called in : main
+! Calls     : grid1_type
+!------------------------------------------------------------------------
       integer i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
 # endif
-c------------------------------------------------------------------------
-c set /mgd/ variables to zero
-c
+!------------------------------------------------------------------------
+! set /mgd/ variables to zero
+!
       do k=1,20
         nxk(k)=0
         nyk(k)=0
@@ -537,18 +539,18 @@ c
         syr(k)=0
         eyr(k)=0
       end do
-c------------------------------------------------------------------------
-c make a number of checks
-c
+!------------------------------------------------------------------------
+! make a number of checks
+!
 # if WMGD
-c
-c check that, for the new version, the number of processes in each
-c direction divides the number of points in that direction (the
-c determination of the pressure coefficients in 'mgdphpde' and the
-c restriction in 'mgdrestr' would not be complete and would require
-c doing some inter-process data communication - warning: would
-c be very complex because of the pressure coefficients)
-c
+!
+! check that, for the new version, the number of processes in each
+! direction divides the number of points in that direction (the
+! determination of the pressure coefficients in 'mgdphpde' and the
+! restriction in 'mgdrestr' would not be complete and would require
+! doing some inter-process data communication - warning: would
+! be very complex because of the pressure coefficients)
+!
       if (mod(nxp2-2,nxprocs).ne.0) then
         write(IOUT,100) nxp2-2,nxprocs
         nerror=1
@@ -566,9 +568,9 @@ c
      1       'nyprocs=',i3,/,'cannot use the new version of the ',
      2       'multigrid code',/)
 # else
-c
-c check that the old version is not used with non-periodic BCs
-c
+!
+! check that the old version is not used with non-periodic BCs
+!
       if (ibdry.ne.0.or.jbdry.ne.0) then
         write(IOUT,120) ibdry,jbdry
         nerror=1
@@ -580,9 +582,9 @@ c
      3       /,'-> change compiler directive to 1 in compdir.inc',
      4       /,'   and recompile the multigrid code',/)
 # endif
-c
-c check that the dimensions are correct
-c
+!
+! check that the dimensions are correct
+!
       i=ixp*2**(iex-1)+1
       if ((nxp2-1).ne.i) then
         write(IOUT,130) nxp2-1,i
@@ -601,10 +603,10 @@ c
 140   format(/,'ERROR in mgdinit: nyp1=',i3,' <> jyq*2**(jey-1)+1=',
      1       i3,/,'-> adjust the multigrid parameters jyq and jey',
      2       ' in main',/)
-c
-c check that the number of points at the coarser level is not smaller
-c than the number of processes in either direction
-c
+!
+! check that the number of points at the coarser level is not smaller
+! than the number of processes in either direction
+!
       if (ixp.lt.nxprocs) then
         write(IOUT,150) ixp,nxprocs
         nerror=1
@@ -625,10 +627,10 @@ c
      2       'coarsest grid level',/,
      3       '-> increase jyq and decrease jey correspondingly',
      4       ' in main',/)
-c
-c check that coarsifying takes place in all directions at the finest
-c grid level
-c
+!
+! check that coarsifying takes place in all directions at the finest
+! grid level
+!
       if (ngrid.gt.1) then
         if (iex.eq.1) then
           write(IOUT,170) ngrid,iex
@@ -647,22 +649,22 @@ c
 180   format(/,'ERROR in mgdinit: ngrid=',i3,' jey=',i3,
      1       /,'no coarsifying at the finest grid level in y-direction',
      2       /,'this is not allowed by the mutligrid code',/)
-c------------------------------------------------------------------------
-c define all grid levels
-c I have adopted the same notations as in Mudpack as far as possible.
-c When a confusion was possible, I added a suffix 'm' to the name
-c of the variables. For example, nxm is nxp2-1 for the multigrid
-c code whereas nx means nxp2-2 in the rest of the code.
-c
+!------------------------------------------------------------------------
+! define all grid levels
+! I have adopted the same notations as in Mudpack as far as possible.
+! When a confusion was possible, I added a suffix 'm' to the name
+! of the variables. For example, nxm is nxp2-1 for the multigrid
+! code whereas nx means nxp2-2 in the rest of the code.
+!
       do k=1,ngrid
         nxk(k)=ixp*2**(max(k+iex-ngrid,1)-1)+1
         nyk(k)=jyq*2**(max(k+jey-ngrid,1)-1)+1
       end do
-c
-c for all grid levels, set the indices of the subdomain the process
-c 'myid' work on, as well as the datatypes needed for the exchange
-c of boundary data
-c
+!
+! for all grid levels, set the indices of the subdomain the process
+! 'myid' work on, as well as the datatypes needed for the exchange
+! of boundary data
+!
       nxf=nxk(ngrid)
       nyf=nyk(ngrid)
       sxk(ngrid)=sx
@@ -694,10 +696,10 @@ c
      1                  realtype,sxk(k),exk(k),syk(k),eyk(k),IOUT)
       end do
 # if xdebug1
-c
-c print out the indices and determine the size of the MPI messages
-c as a rough check
-c 
+!
+! print out the indices and determine the size of the MPI messages
+! as a rough check
+! 
       write(IOUT,*) 'size of the multigrid phi-messages'
       do k=ngrid,1,-1
         call MPI_TYPE_SIZE(ikdatatype(k),nsiz1,ierr)
@@ -708,10 +710,10 @@ c
      2                ' size of datatypes: ',nsiz1,nsiz2,nsiz3
       end do
 # endif
-c
-c set work space indices for phi, cof at each grid level
-c check that there is sufficient work space
-c
+!
+! set work space indices for phi, cof at each grid level
+! check that there is sufficient work space
+!
       kps=1
       do k=ngrid,1,-1
         sxm=sxk(k)
@@ -739,23 +741,23 @@ c
      4           'to the value of kps',/)
       end if
 # if WMGD
-c------------------------------------------------------------------------
-c For the new version of the multigrid code, set the boundary values 
-c to be used for the Dirichlet boundaries. It is possible to assign
-c 4 different constant values to the 4 different sides. The values are
-c assigned at the finest grid level, zero is assigned at all levels
-c below
-c 
-c vbc, phibc:
-c
-c       -----vbc(4)------ 
-c       |               |
-c       |               |
-c     vbc(3)----------vbc(1)
-c       |               |
-c       |               |
-c       ------vbc(2)-----
-c
+!------------------------------------------------------------------------
+! For the new version of the multigrid code, set the boundary values 
+! to be used for the Dirichlet boundaries. It is possible to assign
+! 4 different constant values to the 4 different sides. The values are
+! assigned at the finest grid level, zero is assigned at all levels
+! below
+! 
+! vbc, phibc:
+!
+!       -----vbc(4)------ 
+!       |               |
+!       |               |
+!     vbc(3)----------vbc(1)
+!       |               |
+!       |               |
+!       ------vbc(2)-----
+!
       do j=1,4
         phibc(j,ngrid)=vbc(j)
       end do
@@ -765,27 +767,27 @@ c
         end do
       end do
 # else
-c------------------------------------------------------------------------
-c set indices for range of ic and jc on coarser grid level which are
-c supported on finer grid level, i.e. for which the points
-c (x(2*ic-1,2*jc-1),y(2*ic-1,2*jc-1)) are defined in the subdomain
-c of process 'myid'. This allows to avoid having any communication
-c after the interpolation (or prolongation) step; it should be used
-c in that operation only. 
-c
-c example:
-c   a)  - - -|-----------|-----------|-----------|
-c                                  exf=8      exf+1=9
-c
-c       - ---------------|-----------------------|
-c                      exc=4                  exc+1=5
-c
-c   b)  - - -|-----------|
-c          exf=5      exf+1=6
-c
-c       - - -|-----------------------|
-c          exc=3                  exc+1=4
-c
+!------------------------------------------------------------------------
+! set indices for range of ic and jc on coarser grid level which are
+! supported on finer grid level, i.e. for which the points
+! (x(2*ic-1,2*jc-1),y(2*ic-1,2*jc-1)) are defined in the subdomain
+! of process 'myid'. This allows to avoid having any communication
+! after the interpolation (or prolongation) step; it should be used
+! in that operation only. 
+!
+! example:
+!   a)  - - -|-----------|-----------|-----------|
+!                                  exf=8      exf+1=9
+!
+!       - ---------------|-----------------------|
+!                      exc=4                  exc+1=5
+!
+!   b)  - - -|-----------|
+!          exf=5      exf+1=6
+!
+!       - - -|-----------------------|
+!          exc=3                  exc+1=4
+!
       
       sxi(ngrid)=sxk(ngrid)-1
       exi(ngrid)=exk(ngrid)+1
@@ -817,38 +819,38 @@ c
         nxf=nxc
         nyf=nyc
       end do
-c------------------------------------------------------------------------
-c set indices for determining the coefficients in the elliptic
-c equation div(cof*grad(P))=rhs. Used only when solving for the
-c pressure. When setting these coefficients at level k, need
-c the values of the density at midpoints, i.e. at level k+1
-c (if coarsifying takes place between the levels k and k+1).
-c If coarsifying took place at all levels, the array cof could
-c be used as temporary storage space for the densities, with
-c cof(*,*,6) at level k+1 giving the values cof(*,*,1->5) at level
-c k, and the already defined datatypes could be used for the 
-c exchange of the boundary values. However, this does not work
-c in case there is coarsifying in one direction between two levels.
-c
-c Example: - - -|----------|----------|----------|- -  
-c               3          4          5          6    \
-c                                                      | coarsifying
-c                          |                     |     |
-c                          |                     |    /
-c                          V                     V
-c          - - -|---------------------|---------------------|- -
-c               2          r          3          r   \      4
-c                                                     |
-c                          |                     |    | no coarsifying
-c                          |                     |    /
-c                          V                     V
-c          - - -|---------------------|---------------------|- -
-c               2          r          3          r          4
-c
-c At the finest grid level, the coefficients are determined by a 
-c special procedure directly from r, so that no value needs to be
-c assigned to the indices at level ngrid.
-c
+!------------------------------------------------------------------------
+! set indices for determining the coefficients in the elliptic
+! equation div(cof*grad(P))=rhs. Used only when solving for the
+! pressure. When setting these coefficients at level k, need
+! the values of the density at midpoints, i.e. at level k+1
+! (if coarsifying takes place between the levels k and k+1).
+! If coarsifying took place at all levels, the array cof could
+! be used as temporary storage space for the densities, with
+! cof(*,*,6) at level k+1 giving the values cof(*,*,1->5) at level
+! k, and the already defined datatypes could be used for the 
+! exchange of the boundary values. However, this does not work
+! in case there is coarsifying in one direction between two levels.
+!
+! Example: - - -|----------|----------|----------|- -  
+!               3          4          5          6    \
+!                                                      | coarsifying
+!                          |                     |     |
+!                          |                     |    /
+!                          V                     V
+!          - - -|---------------------|---------------------|- -
+!               2          r          3          r   \      4
+!                                                     |
+!                          |                     |    | no coarsifying
+!                          |                     |    /
+!                          V                     V
+!          - - -|---------------------|---------------------|- -
+!               2          r          3          r          4
+!
+! At the finest grid level, the coefficients are determined by a 
+! special procedure directly from r, so that no value needs to be
+! assigned to the indices at level ngrid.
+!
       do k=ngrid-1,1,-1
         nxf=nxk(k+1)
         nyf=nyk(k+1)
@@ -897,10 +899,10 @@ c
      1                  realtype,sxr(k),exr(k),syr(k),eyr(k),IOUT)
       end do
 # if xdebug1
-c
-c print out the indices and determine the size of the MPI messages
-c as a rough check
-c 
+!
+! print out the indices and determine the size of the MPI messages
+! as a rough check
+! 
       write(IOUT,*) 'size of the r-messages'
       do k=ngrid-1,1,-1
         call MPI_TYPE_SIZE(irdatatype(k),nsiz1,ierr)

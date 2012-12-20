@@ -75,8 +75,8 @@ IF(NOT STDF95)
    ENDIF()
 
 ENDIF()
-ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 
+ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 ADD_TEST(NAME quintic_interpolators_1d COMMAND test_quintic_interpolators_1d)
 SET_TESTS_PROPERTIES(quintic_interpolators_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_TEST(NAME quintic_interpolators_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
@@ -92,14 +92,9 @@ ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
 
-
-
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
-
-
-
-ADD_TEST(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_1d)
+ADD_TEST(NAME BSL COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_bsl_2d)
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME low_level_file_io COMMAND test_io)
