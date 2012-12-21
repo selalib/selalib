@@ -241,6 +241,10 @@ program VP1d_deltaf
   call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
   call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
 
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, 18)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, 18)
+
+
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
 
@@ -387,6 +391,7 @@ program VP1d_deltaf
      !$omp end single
   end do
 
+  
   call delete(interp_spline_x)
   call delete(interp_spline_v)
   call delete(interp_per_x)
@@ -394,6 +399,17 @@ program VP1d_deltaf
   !$omp end parallel
   close(th_diag)
   close(ex_diag)
+
+  open(unit=900,file='f_save.dat')
+  write(900,*) Ncx
+  write(900,*) Ncv
+  do j=1,Ncv+1
+    do i=1,Ncx+1
+      write(900,*) FIELD_DATA(f) (i,j)
+    enddo
+  enddo
+  close(900)
+
 
   print*, 'VP1D_deltaf_cart has exited normally'
 contains
