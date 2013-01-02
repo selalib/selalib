@@ -241,8 +241,8 @@ program VP1d_deltaf
   call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
   call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
 
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, 18)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, 18)
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, 10)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, 10)
 
 
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
@@ -250,11 +250,11 @@ program VP1d_deltaf
 
 
   call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
-  !interp_x => interp_spline_x
-  !interp_v => interp_spline_v
+  interp_x => interp_spline_x
+  interp_v => interp_spline_v
 
-  interp_x => interp_per_x
-  interp_v => interp_per_v
+  !interp_x => interp_per_x
+  !interp_v => interp_per_v
   !$omp barrier
   !$omp single
   fname = 'dist_func'
