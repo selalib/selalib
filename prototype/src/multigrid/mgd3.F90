@@ -594,7 +594,7 @@ return
 130 format(/,'ERROR in mgdinit: ibdry=',i2,' jbdry=',i2,' kbdry=',i2, &
     &       /,'cannot use the old version of the multigrid code',     &
     &       /,'boundary conditions that are not periodic',            &
-    &       /,'-> change compiler directive to 1 in compdir.inc',     &
+    &       /,'-> change compiler directive to 1 in mgd3.h',          &
     &       /,'   and recompile the multigrid code',/)
 140 format(/,'ERROR in mgdinit: nxp1=',i3,' <> ixp*2**(iex-1)+1=', &
     &       i3,/,'-> adjust the multigrid parameters ixp and iex', &
@@ -763,7 +763,7 @@ type(mg_solver) :: my_mg
 ! 
 ! Written for periodic, wall (Neumann), and constant value (Dirichlet)
 ! BCs. There are two versions of the multigrid code, which are 
-! separated by the compiler directive WMGD set in 'compdir.inc'. 
+! separated by the compiler directive WMGD set in 'mgd3.h'. 
 ! The old version (WMGD=0) corresponds to the original, "traditional" 
 ! grid setup, and works well when all boundary conditions are 
 ! periodic. When one of the BCs is not periodic, must compile with 
@@ -831,7 +831,6 @@ ey       = my_block%ey
 ez       = my_block%ez
 
 ngrid    = my_block%ngrid
-
 
 myid     = my_block%id
 

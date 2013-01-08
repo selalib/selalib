@@ -1,13 +1,10 @@
-module gscale_m
-
-interface gscale
-module procedure gscale_2d
-module procedure gscale_3d
-end interface gscale
+module gscale
+#include "sll_working_precision.h"
+use mpi
 
 contains
 
-subroutine gscale_2d(sx,ex,sy,ey,sz,ez,a,avo,acorr,comm3d,nx,ny,nz)
+subroutine gscale_3d(sx,ex,sy,ey,sz,ez,a,avo,acorr,comm3d,nx,ny,nz)
 
 use mpi
 implicit none 
@@ -23,7 +20,7 @@ integer :: comm3d
 ! eliminate the numerical overshoots and undershoots in the solution,
 ! so that can consider higher density ratios; this feature is active
 ! only if the compiler directive UNDERSHOOT is set to 1 in the
-! "compdir.inc" file.
+! "mgd2.h" file.
 !
 ! Code      : tmgd3, test program for 3D parallel multigrid solver
 ! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
@@ -62,15 +59,13 @@ do k=sz,ez
   end do
 end do
 
-return
-end 
+end subroutine
 
-subroutine gscale_3d(sx,ex,sy,ey,a,avo,acorr,comm2d,nx,ny,IOUT)
-# include "compdir.inc"
-include "mpif.h"
-integer sx,ex,sy,ey,nx,ny,IOUT
+subroutine gscale_2d(sx,ex,sy,ey,a,avo,acorr,comm2d,nx,ny)
+# include "mgd2.h"
+integer :: sx,ex,sy,ey,nx,ny
 REALN a(sx-1:ex+1,sy-1:ey+1),avo,acorr
-integer comm2d
+integer :: comm2d
 !------------------------------------------------------------------------
 ! Rescale the field a so that its average inside the domain
 ! remains constant and equal to avo. For the density,avo should
@@ -123,7 +118,7 @@ end do
 # if cdebug
 timing(49)=timing(49)+MPI_WTIME()-tinitial
 # endif
-return
-end 
 
-end module gscale_m
+end subroutine 
+
+end module gscale
