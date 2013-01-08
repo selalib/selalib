@@ -18,11 +18,13 @@ double precision :: timerforward,timerinverse,timeraccess
 double precision :: timeraccessmacro,timertotal,timertotalmacro
 sll_comp64 :: mode
 
+#define GET_MODE0(mode,data) \
+      mode = cmplx(data(0),0.0_f64,kind=f64)
+#define SET_MODE0(new_value,data) \
+      data(0) = real(new_value,kind=f64)
 print*,""
 if(_DEFAULTFFTLIB==0) then
  print*,"librairie fft : SLLFFT"
-!#define GET_MODE0(mode,data) \
-!        mode = cmplx(data(0),0.0_f64,kind=f64)
 !#define GET_MODE_N_2(mode,data) \
 !        mode = cmplx(data(1),0.0_f64,kind=f64)
 !#define GET_MODE_GT_N_2(mode,data,k) \
@@ -30,8 +32,6 @@ if(_DEFAULTFFTLIB==0) then
 !#define GET_MODE_LT_N_2(mode,data,k) \        
 !        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)
 !
-!#define SET_MODE0(new_value,data) \
-!        data(0) = real(new_value,kind=f64)
 !#define SET_MODE_N_2(new_value,data) \
 !        data(1) = real(new_value,kind=f64)
 !#define SET_MODE_GT_N_2(new_value,data,k) \
@@ -43,8 +43,6 @@ if(_DEFAULTFFTLIB==0) then
 
 elseif(_DEFAULTFFTLIB==100) then
  print*,"librairie fft : FFTPACK"
-#define GET_MODE0(mode,data) \
-      mode = cmplx(data(0),0.0_f64,kind=f64)
 #define GET_MODE_N_2(mode,data) \
       mode = cmplx(data(n-1),0.0_f64,kind=f64)
 #define GET_MODE_GT_N_2(mode,data,k) \
@@ -52,8 +50,6 @@ elseif(_DEFAULTFFTLIB==100) then
 #define GET_MODE_LT_N_2(mode,data,k) \   
       mode = cmplx( data(2*k-1) , data(2*k) ,kind=f64)     
 
-#define SET_MODE0(new_value,data) \
-      data(0) = real(new_value,kind=f64)
 #define SET_MODE_N_2(new_value,data) \
       data(n-1) = real(new_value,kind=f64)
 #define SET_MODE_GT_N_2(new_value,data,k) \
@@ -65,8 +61,6 @@ elseif(_DEFAULTFFTLIB==100) then
 
 elseif(_DEFAULTFFTLIB==1000000000)then
  print*,"librairie fft : FFTW"
-!#define GET_MODE0(mode,data) \
-!        mode = cmplx(data(0),0.0_f64,kind=f64)
 !#define GET_MODE_N_2(mode,data) \
 !        mode = cmplx(data(n_2),0.0_f64,kind=f64)
 !#define GET_MODE_GT_N_2(mode,data,k) \
@@ -74,8 +68,6 @@ elseif(_DEFAULTFFTLIB==1000000000)then
 !#define GET_MODE_LT_N_2(mode,data,k) \ 
 !        mode = cmplx( data(k) , data(n-k) ,kind=f64)  
 !
-!#define SET_MODE0(new_value,data) \
-!        data(0) = real(new_value,kind=f64)
 !#define SET_MODE_N_2(new_value,data) \
 !        data(n_2) = real(new_value,kind=f64)
 !#define SET_MODE_GT_N_2(new_value,data,k) \
@@ -145,7 +137,7 @@ do j=1,nbpoint
  call fft_apply_plan(plan,data_in,data_out)
  timerforward = timerforward+time_elapsed_since(t1)
 
- !acces mode SANS macro
+ !access mode SANS macro
  t3 => reset_time_mark(t3)
 
  do i=0,nbpoint-1
@@ -185,7 +177,7 @@ do j=1,nbpoint
  call fft_apply_plan(plan,data_in,data_out)
  timerforward = timerforward+time_elapsed_since(t1)
 
- !acces mode AVEC macro
+ !access mode AVEC macro
  t4 => reset_time_mark(t4)
  n = plan%problem_shape(1)
  n_2 = n/2 !ishft(n,-1)
@@ -255,12 +247,18 @@ timertotalmacro = time_elapsed_since(t6)
 
 print*,""
 print*,"Temps d'execution  :"
-print*," fft forward	   : ",timerforward*0.5
-print*," fft inverse	   : ",timerinverse*0.5
-print*," acces mode	   : ",timeraccess
-print*," acces mode macro  : ",timeraccessmacro
-print*," temps total       : ",timertotal
-print*," temps total macro : ",timertotalmacro
+!print*," fft forward	    : ",timerforward*0.5
+!print*," fft inverse	    : ",timerinverse*0.5
+print*," access mode	    : ",timeraccess
+print*," access mode macro  : ",timeraccessmacro
+print*," temps total        : ",timertotal
+print*," temps total macro  : ",timertotalmacro
+print*,""
+!print*," difference entre les temps : ", timertotal-timertotalmacro
+!print*," difference entre les access mode : ", timeraccess-timeraccessmacro
+!print*,""
+print*," rapport des temps : ", timertotal/timertotalmacro
+print*," rapport des temps des access : ", timeraccess/timeraccessmacro
 
 deallocate(data_out)
 deallocate(data_in)
