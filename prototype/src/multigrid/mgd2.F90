@@ -1,3 +1,7 @@
+module mgd2
+
+contains
+
 subroutine mgdsolver(isol,sx,ex,sy,ey,phif,rhsf,r,ngrid,work, &
                      maxcy,tolmax,kcycle,iprer,ipost,iresw, &
                      xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
@@ -5,19 +9,19 @@ subroutine mgdsolver(isol,sx,ex,sy,ey,phif,rhsf,r,ngrid,work, &
 
 #include "mgd2.h"
 include "mpif.h"
-integer isol,sx,ex,sy,ey,ngrid,nx,ny,IOUT
-integer maxcy,kcycle,iprer,ipost,iresw
-REALN phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
-REALN r(sx-1:ex+1,sy-1:ey+1)
-REALN work(*),tolmax,xl,yl,rro,phibc(4,20)
-integer comm2d,myid,neighbor(8),bd(8),iter,nerror
+sll_int32  :: isol,sx,ex,sy,ey,ngrid,nx,ny,IOUT
+sll_int32  :: maxcy,kcycle,iprer,ipost,iresw
+sll_real64 :: phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
+sll_real64 :: r(sx-1:ex+1,sy-1:ey+1)
+sll_real64 :: work(*),tolmax,xl,yl,rro,phibc(4,20)
+sll_int32  :: comm2d,myid,neighbor(8),bd(8),iter,nerror
 logical nprscr
 
-integer nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-integer ikdatatype,jkdatatype,ijkdatatype
-integer sxi,exi,syi,eyi
-integer nxr,nyr,sxr,exr,syr,eyr
-integer irdatatype,jrdatatype,ijrdatatype
+sll_int32 :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
+sll_int32 :: ikdatatype,jkdatatype,ijkdatatype
+sll_int32 :: sxi,exi,syi,eyi
+sll_int32 :: nxr,nyr,sxr,exr,syr,eyr
+sll_int32 :: irdatatype,jrdatatype,ijrdatatype
 common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),  &
            kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20),  &
            ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),  &
@@ -34,7 +38,7 @@ common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),  &
 ! Written for periodic, wall (Neumann), and constant value
 ! (Dirichlet) BCs. Tested roughly for all these BCs. There are 
 ! two versions of the multigrid code, which are separated by the 
-! compiler directive WMGD set in 'compdir.inc'. The old version 
+! compiler directive WMGD set in 'mgd2.h'. The old version 
 ! (WMGD=0) corresponds to the original, "traditional" grid setup, 
 ! and works well when all boundary conditions are periodic. When one 
 ! of the BCs is not periodic, must compile with the new version 
@@ -64,10 +68,10 @@ common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),  &
 !             gscale, gxch1lin, gxch1cor,
 !               -> rescale pressure and density around average values
 !------------------------------------------------------------------------
-REALN avo,acorr
-integer sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
-integer ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
-integer itype,jtype,ijtype,lev,ir1,ir2
+sll_real64 :: avo,acorr
+sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
+sll_int32  :: ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
+sll_int32  :: itype,jtype,ijtype,lev,ir1,ir2
 # if cdebug
 double precision tinitial
 tinitial=MPI_WTIME()
@@ -273,11 +277,12 @@ return
 110 format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
 120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
 end
+
 subroutine gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny,IOUT)
-# include "compdir.inc"
+# include "mgd2.h"
 include "mpif.h"
-integer sx,ex,sy,ey,comm2d,IOUT,nx,ny
-REALN p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,pi
+sll_int32  :: sx,ex,sy,ey,comm2d,IOUT,nx,ny
+sll_real64 :: p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,pi
 !-----------------------------------------------------------------------
 ! Calculate the error between the numerical and exact solution to
 ! the test problem.
@@ -286,8 +291,8 @@ REALN p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,pi
 ! Called in : main
 ! Calls     : MPI_ALLREDUCE
 !-----------------------------------------------------------------------
-integer i,j,ierr
-REALN errloc,err,cx,cy,exact
+sll_int32  :: i,j,ierr
+sll_real64 :: errloc,err,cx,cy,exact
 !
 ! calculate local error
 !
@@ -316,12 +321,13 @@ write(IOUT,100) errloc/float(nx*ny),err/float(nx*ny)
 
 return
 end
+
 subroutine ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi,IOUT)
 # include "mgd2.h"
 include "mpif.h"
-integer sx,ex,sy,ey,IOUT
-REALN p(sx-1:ex+1,sy-1:ey+1),r(sx-1:ex+1,sy-1:ey+1)
-REALN f(sx-1:ex+1,sy-1:ey+1),hxi,hyi,wk,pi
+sll_int32  :: sx,ex,sy,ey,IOUT
+sll_real64 :: p(sx-1:ex+1,sy-1:ey+1),r(sx-1:ex+1,sy-1:ey+1)
+sll_real64 :: f(sx-1:ex+1,sy-1:ey+1),hxi,hyi,wk,pi
 !-----------------------------------------------------------------------
 ! Initialize the pressure, density, and right-hand side of the
 ! elliptic equation div(1/r*grad(p))=f
@@ -330,8 +336,8 @@ REALN f(sx-1:ex+1,sy-1:ey+1),hxi,hyi,wk,pi
 ! Called in : main
 ! Calls     : --
 !-----------------------------------------------------------------------
-integer i,j
-REALN cnst,cx,cy,xi,yj
+sll_int32 :: i,j
+sll_real64 ::  cnst,cx,cy,xi,yj
 !
 do j=sy-1,ey+1
   do i=sx-1,ex+1
@@ -355,9 +361,9 @@ return
 end
 
 subroutine grid1_type(itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT)
-# include "compdir.inc"
+# include "mgd2.h"
 include "mpif.h"
-integer itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
+sll_int32 :: itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
 !------------------------------------------------------------------------
 ! Define the 3 derived datatypes needed to communicate the boundary
 ! data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
@@ -367,7 +373,7 @@ integer itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
 ! Called in : mgdinit
 ! Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR
 !------------------------------------------------------------------------
-integer ier
+sll_int32 :: ier
 # if cdebug
 double precision tinitial
 tinitial=MPI_WTIME()
@@ -394,10 +400,10 @@ timing(7)=timing(7)+MPI_WTIME()-tinitial
 return
 end
 subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
-# include "compdir.inc"
-integer n, numprocs, myid, s, e
-integer nlocal
-integer deficit
+# include "mgd2.h"
+sll_int32 :: n, numprocs, myid, s, e
+sll_int32 :: nlocal
+sll_int32 :: deficit
 !------------------------------------------------------------------------
 !  From the MPE library
 !  This file contains a routine for producing a decomposition of a 1-d 
@@ -424,18 +430,18 @@ end
 subroutine mgdinit(vbc,phibc,ixp,jyq,iex,jey,ngrid,nxp2,nyp2,  &
                    sx,ex,sy,ey,realtype,nxprocs,nyprocs,nwork, &
                    ibdry,jbdry,myid,IOUT,nerror)
-# include "compdir.inc"
+# include "mgd2.h"
 include "mpif.h"
-integer ixp,jyq,iex,jey,ngrid,nxp2,nyp2,sx,ex,sy,ey
-integer realtype,nxprocs,nyprocs,nwork,ibdry,jbdry
-integer myid,IOUT,nerror
-REALN vbc(4),phibc(4,20)
+sll_int32  :: ixp,jyq,iex,jey,ngrid,nxp2,nyp2,sx,ex,sy,ey
+sll_int32  :: realtype,nxprocs,nyprocs,nwork,ibdry,jbdry
+sll_int32  :: myid,IOUT,nerror
+sll_real64 ::  vbc(4),phibc(4,20)
 
-integer nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-integer ikdatatype,jkdatatype,ijkdatatype
-integer sxi,exi,syi,eyi
-integer nxr,nyr,sxr,exr,syr,eyr
-integer irdatatype,jrdatatype,ijrdatatype
+sll_int32 :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
+sll_int32 :: ikdatatype,jkdatatype,ijkdatatype
+sll_int32 :: sxi,exi,syi,eyi
+sll_int32 :: nxr,nyr,sxr,exr,syr,eyr
+sll_int32 :: irdatatype,jrdatatype,ijrdatatype
 common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),     &
            kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20),   &
            ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),     &
@@ -505,7 +511,7 @@ common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),     &
 ! Called in : main
 ! Calls     : grid1_type
 !------------------------------------------------------------------------
-integer i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
+sll_int32 :: i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
 # if cdebug
 double precision tinitial
 tinitial=MPI_WTIME()
@@ -579,7 +585,7 @@ end if
 120 format(/,'ERROR in mgdinit: ibdry=',i2,' jbdry=',i2, &
            /,'cannot use the old version of the multigrid code', &
            /,'boundary conditions that are not periodic', &
-           /,'-> change compiler directive to 1 in compdir.inc', &
+           /,'-> change compiler directive to 1 in mgd2.h', &
            /,'   and recompile the multigrid code',/)
 # endif
 !
@@ -922,3 +928,4 @@ timing(81)=timing(81)+MPI_WTIME()-tinitial
 return
 end
 
+end module mgd2

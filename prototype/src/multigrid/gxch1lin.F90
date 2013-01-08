@@ -1,11 +1,16 @@
-subroutine gxch1lin(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
-                    bd,linetype,req,ireq,IOUT)
-
+module gxch1lin
+#include "sll_working_precision.h"
 use mpi
 implicit none 
-integer :: sx,ex,sy,ey,sz,ez,comm3d
-integer :: neighbor(26),bd(26),linetype(3),req(52),ireq,IOUT
-real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
+
+contains
+
+subroutine gxch1lin_3d(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
+                    bd,linetype,req,ireq)
+
+sll_int32  :: sx,ex,sy,ey,sz,ez,comm3d
+sll_int32  :: neighbor(26),bd(26),linetype(3),req(52),ireq
+sll_real64 :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
 !------------------------------------------------------------------------
 ! Subroutine to exchange lines of thickness 1 of boundary data between
 ! 'myid' and the 12 processes in the directions (i+,j+), (i+,j-),
@@ -44,7 +49,7 @@ real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
 ! Calls     : MPI_ISEND, MPI_IRECV (non-blocking version)
 !             MPI_SENDRECV (blocking version)
 !------------------------------------------------------------------------
-integer :: ierr
+sll_int32 :: ierr
 !--------------------------non-blocking----------------------------------
 ! lines (i=constant,j=constant)
 ! 
@@ -244,16 +249,14 @@ if (bd(2).eq.0) then
                  17,comm3d,req(ireq),ierr)
 end if
 
-return
-end
+end subroutine
 
-subroutine gxch1lin(a,comm2d,sx,ex,sy,ey,neighbor,bd,
-                    idatatype,jdatatype,IOUT)
+subroutine gxch1lin_2d(a,comm2d,sx,ex,sy,ey,neighbor,bd, &
+                    idatatype,jdatatype)
 #include "mgd2.h"
-include "mpif.h"
-integer sx,ex,sy,ey,IOUT
-REALN a(sx-1:ex+1,sy-1:ey+1)
-integer comm2d,neighbor(8),bd(8),idatatype,jdatatype
+sll_int32  :: sx,ex,sy,ey
+sll_real64 :: a(sx-1:ex+1,sy-1:ey+1)
+sll_int32  :: comm2d,neighbor(8),bd(8),idatatype,jdatatype
 !------------------------------------------------------------------------
 ! Subroutine to exchange one-lines (one row and one column) of 
 ! boundary data between "directly" neighboring processes. This subroutine 
@@ -286,13 +289,13 @@ integer comm2d,neighbor(8),bd(8),idatatype,jdatatype
 !             MPI_SENDRECV (blocking version)
 !------------------------------------------------------------------------
 # if NBLOCKGR
-integer req(8),status(MPI_STATUS_SIZE,8),ireq,ierr
+sll_int32 :: req(8),status(MPI_STATUS_SIZE,8),ireq,ierr
 # else
-integer status(MPI_STATUS_SIZE),ierr
+sll_int32 :: status(MPI_STATUS_SIZE),ierr
 # endif
 # if cdebug
 # if NBLOCKGR
-integer nc
+sll_int32 :: nc
 # endif
 double precision tinitial
 tinitial=MPI_WTIME()
@@ -403,9 +406,11 @@ call MPI_SENDRECV(a(sx,ey),1,idatatype,neighbor(7),0, &
 nsendrecv(1,1)=nsendrecv(1,1)+4
 # endif
 # endif
-c
+
 # if cdebug
 timing(59)=timing(59)+MPI_WTIME()-tinitial
 # endif
-return
-end
+
+end subroutine
+
+end module gxch1lin

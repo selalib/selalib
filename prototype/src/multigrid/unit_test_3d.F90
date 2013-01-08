@@ -1,4 +1,4 @@
-program test_multigrid
+program test_multigrid_3d
 use mgd3
 use sll_collective
 use sll_hdf5_io_parallel
@@ -474,4 +474,4 @@ write(6,100) my_block%id,errloc/float(my_mg%nx*my_mg%ny*my_mg%nz),err/float(my_m
 return
 end subroutine gerr
 
-end program test_multigrid
+end program test_multigrid_3d
