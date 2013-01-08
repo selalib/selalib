@@ -1,10 +1,15 @@
-subroutine gxch1cor(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
-                    bd,cornertype,req,ireq,IOUT)
+module gxch1cor
+#include "sll_working_precision.h"
 use mpi
+
+contains
+
+subroutine gxch1cor_3d(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
+                       bd,cornertype,req,ireq)
 implicit none
 #include "mgd3.h"
 integer :: sx,ex,sy,ey,sz,ez,comm3d
-integer :: neighbor(26),bd(26),cornertype,req(52),ireq,IOUT
+integer :: neighbor(26),bd(26),cornertype,req(52),ireq
 real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
 !------------------------------------------------------------------------
 ! Subroutine to exchange 1*1*1 corners (i.e. points) of boundary data 
@@ -175,15 +180,14 @@ if (bd(22).eq.0) then
   &              25,comm3d,req(ireq),ierr)
 end if
 return
-end
+end subroutine 
 
 
-subroutine gxch1cor(a,comm2d,sx,ex,sy,ey,neighbor,bd,ijdatatype,IOUT)
+subroutine gxch1cor_2d(a,comm2d,sx,ex,sy,ey,neighbor,bd,ijdatatype)
 # include "mgd2.h"
-include "mpif.h"
-integer sx,ex,sy,ey,IOUT
+sll_int32 :: sx,ex,sy,ey
 REALN a(sx-1:ex+1,sy-1:ey+1)
-integer comm2d,neighbor(8),bd(8),ijdatatype
+sll_int32 :: comm2d,neighbor(8),bd(8),ijdatatype
 !------------------------------------------------------------------------
 ! Subroutine to exchange one corner point of boundary data between 
 ! "diagonally" neighboring processes. This subroutineccan be used to 
@@ -335,4 +339,6 @@ nsendrecv(2,1)=nsendrecv(2,1)+4
 timing(60)=timing(60)+MPI_WTIME()-tinitial
 # endif
 return
-end
+end subroutine
+
+end module gxch1cor

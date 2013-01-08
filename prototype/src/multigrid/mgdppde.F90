@@ -1,11 +1,16 @@
-subroutine mgdppde(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,cof, &
-                   sxf,exf,syf,eyf,szf,ezf,rf,xl,yl,zl,IOUT)
-
-
+module mgdppde
+#include "sll_working_precision.h"
 use mpi
 implicit none 
+
+contains
+
+subroutine mgdppde_3d(sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm,cof, &
+                   sxf,exf,syf,eyf,szf,ezf,rf,xl,yl,zl)
+
+
 integer :: sxm,exm,sym,eym,szm,ezm,nxm,nym,nzm 
-integer :: sxf,exf,syf,eyf,szf,ezf,IOUT
+integer :: sxf,exf,syf,eyf,szf,ezf
 real(8) :: cof(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1,8)
 real(8) :: rf(sxf-1:exf+1,syf-1:eyf+1,szf-1:ezf+1),xl,yl,zl
 !------------------------------------------------------------------------
@@ -57,67 +62,70 @@ do k=szm,ezm
   end do
 end do
 
-return
-end
-      subroutine mgdppde(sxm,exm,sym,eym,nxm,nym,cof,
-     1                   sxf,exf,syf,eyf,rf,xl,yl,bd,IOUT)
-# include "compdir.inc"
-      include "mpif.h"
-      integer sxm,exm,sym,eym,nxm,nym,sxf,exf,syf,eyf,bd(8),IOUT
-      REALN cof(sxm-1:exm+1,sym-1:eym+1,6)
-      REALN rf(sxf-1:exf+1,syf-1:eyf+1),xl,yl
-c------------------------------------------------------------------------
-c For the old version of the multigrid code, determine coefficients 
-c for the pressure equation at all grid levels but the finest one.
-c The coefficients are determined from the values of the density
-c at integer nodes (i,j). Works only for periodic boundary conditions.
-c
-c cof array:
-c
-c         cof(4)
-c           |
-c           |
-c cof(1)--cof(5)--cof(2)
-c           |
-c           |
-c         cof(3)
-c
-c Code      : mgd2, 2-D parallel multigrid solver
-c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-c Called in : mgdsolver
-c Calls     : --
-c------------------------------------------------------------------------
-      REALN dlx,odlxx,dly,odlyy
-      integer i,j,is,js
+end subroutine
+
+subroutine mgdppde_2d(sxm,exm,sym,eym,nxm,nym,cof,     &
+                   sxf,exf,syf,eyf,rf,xl,yl,bd)
+#include "mgd2.h"
+
+integer sxm,exm,sym,eym,nxm,nym,sxf,exf,syf,eyf,bd(8)
+sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
+sll_real64 :: rf(sxf-1:exf+1,syf-1:eyf+1),xl,yl
+!------------------------------------------------------------------------
+! For the old version of the multigrid code, determine coefficients 
+! for the pressure equation at all grid levels but the finest one.
+! The coefficients are determined from the values of the density
+! at integer nodes (i,j). Works only for periodic boundary conditions.
+!
+! cof array:
+!
+!         cof(4)
+!           |
+!           |
+! cof(1)--cof(5)--cof(2)
+!           |
+!           |
+!         cof(3)
+!
+! Code      : mgd2, 2-D parallel multigrid solver
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+! Called in : mgdsolver
+! Calls     : --
+!------------------------------------------------------------------------
+sll_real64 :: dlx,odlxx,dly,odlyy
+sll_int32  :: i,j,is,js
+sll_real64 :: c1, c2, c3, c4
 # if cdebug
-      double precision tinitial
-      tinitial=MPI_WTIME()
+sll_real64 ::  tinitial
+tinitial=MPI_WTIME()
 # endif
-c
-c calculate off-diagonal terms
-c
-      dlx=xl/float(nxm-1)
-      odlxx=1.0d0/(dlx*dlx)
-      dly=yl/float(nym-1)
-      odlyy=1.0d0/(dly*dly)
-      do j=sym,eym
-        js=2*j-1
-        do i=sxm,exm
-          is=2*i-1
-          C1=odlxx/rf(is-1,js)
-          C2=odlxx/rf(is+1,js)
-          C3=odlyy/rf(is,js-1)
-          C4=odlyy/rf(is,js+1)
-          cof(i,j,1)=C1
-          cof(i,j,2)=C2
-          cof(i,j,3)=C3
-          cof(i,j,4)=C4
-          cof(i,j,5)=-(C1+C2+C3+C4)
-        end do
-      end do
-c
+!
+! calculate off-diagonal terms
+!
+dlx=xl/float(nxm-1)
+odlxx=1.0d0/(dlx*dlx)
+dly=yl/float(nym-1)
+odlyy=1.0d0/(dly*dly)
+do j=sym,eym
+  js=2*j-1
+  do i=sxm,exm
+    is=2*i-1
+    C1=odlxx/rf(is-1,js)
+    C2=odlxx/rf(is+1,js)
+    C3=odlyy/rf(is,js-1)
+    C4=odlyy/rf(is,js+1)
+    cof(i,j,1)=C1
+    cof(i,j,2)=C2
+    cof(i,j,3)=C3
+    cof(i,j,4)=C4
+    cof(i,j,5)=-(C1+C2+C3+C4)
+  end do
+end do
+
 # if cdebug
-      timing(87)=timing(87)+MPI_WTIME()-tinitial
+timing(87)=timing(87)+MPI_WTIME()-tinitial
 # endif
-      return
-      end
+
+end subroutine
+
+end module
