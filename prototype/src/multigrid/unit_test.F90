@@ -1,4 +1,4 @@
-program test_multigrid_3d
+program test_multigrid
 use mgd3
 use sll_collective
 use sll_hdf5_io_parallel
@@ -43,15 +43,15 @@ implicit none
 !-----------------------------------------------------------------------
 
 logical :: periods(3)
-sll_int32 :: nxdim, nydim, nzdim
-sll_int32 :: numprocs, comm3d, comm3dp, comm3dl, comm3dc
-sll_int32 :: sx, ex, sy, ey, sz, ez, neighbor(26), bd(26)
-sll_int32 :: ngb(3), myid, info
-sll_int32 :: ierr, nerror, dims(3), coords(3)
+integer :: nxdim, nydim, nzdim
+integer :: numprocs, comm3d, comm3dp, comm3dl, comm3dc
+integer :: sx, ex, sy, ey, sz, ez, neighbor(26), bd(26)
+integer :: ngb(3), myid, info
+integer :: ierr, nerror, dims(3), coords(3)
 
-sll_real64, allocatable :: p(:,:,:), f(:,:,:), r(:,:,:)
+real(8), allocatable :: p(:,:,:), f(:,:,:), r(:,:,:)
 
-sll_real64 :: hxi, hyi, hzi, wk
+real(8) :: hxi, hyi, hzi, wk
 
 type(block) :: my_block
 type(mg_solver) :: my_mg
@@ -112,7 +112,7 @@ my_block%id = myid
 
 
 if (numprocs.ne.(my_mg%nxprocs*my_mg%nyprocs*my_mg%nzprocs)) then
-  write(6,100)
+  write(iout,100)
 100     format(/,'ERROR: numprocs <> (nxprocs*nyprocs*nzprocs)',/)
   stop
 end if
@@ -408,8 +408,8 @@ implicit none
 ! Calls     : --
 !-----------------------------------------------------------------------
 
-sll_int32  :: i,j,k
-sll_real64 :: cnst,cx,cy,cz,xi,yj,zk
+integer :: i,j,k
+real(8) :: cnst,cx,cy,cz,xi,yj,zk
 
 p = 0.0d0
 r = 1.0d0
@@ -444,8 +444,8 @@ implicit none
 ! Called in : main
 ! Calls     : MPI_ALLREDUCE
 !-----------------------------------------------------------------------
-sll_int32  :: i,j,k,ierr
-sll_real64 :: errloc,err,cx,cy,cz,exact,zk,yj,xi
+integer :: i,j,k,ierr
+real(8) :: errloc,err,cx,cy,cz,exact,zk,yj,xi
 !
 ! calculate local error
 !
@@ -474,4 +474,4 @@ write(6,100) my_block%id,errloc/float(my_mg%nx*my_mg%ny*my_mg%nz),err/float(my_m
 return
 end subroutine gerr
 
-end program test_multigrid_3d
+end program test_multigrid
