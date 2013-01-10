@@ -1,10 +1,8 @@
-subroutine gxch1pla(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
-                    bd,planetype,req,ireq,IOUT)
+subroutine gxch1pla_3d(sx,ex,sy,ey,sz,ez,a,comm3d,neighbor, &
+                    bd,planetype,req,ireq)
 
-use mpi
-implicit none 
 integer :: sx,ex,sy,ey,sz,ez,comm3d
-integer :: neighbor(26),bd(26),planetype(3),req(52),ireq,IOUT
+integer :: neighbor(26),bd(26),planetype(3),req(52),ireq
 real(8) :: a(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1)
 !------------------------------------------------------------------------
 ! Subroutine to exchange planes of thickness 1 of boundary data between
@@ -145,5 +143,5 @@ if (bd(7).eq.0) then
   call MPI_IRECV(a(sx,sy,ez+1),1,planetype(3),neighbor(7), &
                  5,comm3d,req(ireq),ierr)
 end if
-return
-end
+
+end subroutine

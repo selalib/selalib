@@ -1,13 +1,8 @@
-module mgdbdry
-#include "sll_working_precision.h"
+subroutine mgdbdry(sxm,exm,sym,eym,szm,ezm,phi,bd,phibc,IOUT)
+
 use mpi
 implicit none 
-
-contains
-
-subroutine mgdbdry_3d(sxm,exm,sym,eym,szm,ezm,phi,bd,phibc)
-
-integer :: sxm,exm,sym,eym,szm,ezm,bd(26)
+integer :: sxm,exm,sym,eym,szm,ezm,bd(26),IOUT
 real(8) :: phi(sxm-1:exm+1,sym-1:eym+1,szm-1:ezm+1),phibc(6)
 !------------------------------------------------------------------------
 ! Enforce the Neumann and Dirichlet boundary conditions
@@ -85,68 +80,5 @@ else if (bd(18).eq.2) then
   end do
 end if
 
-end subroutine
-
-subroutine mgdbdry_2d(sxm,exm,sym,eym,phi,bd,phibc)
-#include "mgd2.h"
-
-integer sxm,exm,sym,eym,bd(8)
-sll_real64 ::  phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
-!------------------------------------------------------------------------
-! Enforce the Neumann and Dirichlet boundary conditions
-!
-! Code      : mgd2, 2-D parallel multigrid solver
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-! Called in : mgdrelax, mgdsolver
-! Calls     : --
-!------------------------------------------------------------------------
-integer i,j
-# if cdebug
-double precision tinitial
-tinitial=MPI_WTIME()
-# endif
-
-if (bd(1).eq.1) then
-   do j=sym-1,eym+1
-      phi(exm+1,j)=phi(exm,j)
-   end do
-else if (bd(1).eq.2) then
-   do j=sym-1,eym+1
-      phi(exm+1,j)=2.0d0*phibc(1)-phi(exm,j)
-   end do
-end if
-if (bd(5).eq.1) then
-   do j=sym-1,eym+1
-      phi(sxm-1,j)=phi(sxm,j)
-   end do
-else if (bd(5).eq.2) then
-   do j=sym-1,eym+1
-      phi(sxm-1,j)=2.0d0*phibc(3)-phi(sxm,j)
-   end do
-end if
-if (bd(3).eq.1) then
-   do i=sxm-1,exm+1
-      phi(i,sym-1)=phi(i,sym)
-   end do
-else if (bd(3).eq.2) then
-   do i=sxm-1,exm+1
-      phi(i,sym-1)=2.0d0*phibc(2)-phi(i,sym)
-   end do
-end if
-if (bd(7).eq.1) then
-   do i=sxm-1,exm+1
-      phi(i,eym+1)=phi(i,eym)
-   end do
-else if (bd(7).eq.2) then
-   do i=sxm-1,exm+1
-      phi(i,eym+1)=2.0d0*phibc(4)-phi(i,eym)
-   end do
-end if
-
-# if cdebug
-timing(93)=timing(93)+MPI_WTIME()-tinitial
-# endif
-
-end subroutine
-
-end module mgdbdry
+return
+end
