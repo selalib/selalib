@@ -238,21 +238,21 @@ t1 => start_time_mark(t1)
   else
      jendv = Ncv+1
   end if
-print*,"avant spline initialize"
+!print*,"avant spline initialize"
   ! initialize interpolators
   call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
   call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
 
-print*,"avant debut timer"
+!print*,"avant debut timer"
 !Début du timer t2
 t2 => new_time_mark()
 t2 => start_time_mark(t2)
 
  ! call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
  ! call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
-print*,"avant interp initialize"
+!print*,"avant interp initialize"
   call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
   call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
 
@@ -262,7 +262,7 @@ print*,"avant interp initialize"
 
 
 timer2 = time_elapsed_since(t2)
-print*,"avant initialize interp_com_v"
+!print*,"avant initialize interp_com_v"
   call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
   !interp_x => interp_spline_x
   !interp_v => interp_spline_v
@@ -272,7 +272,7 @@ print*,"avant initialize interp_com_v"
   !$omp barrier
   !$omp single
   fname = 'dist_func'
-print*,"avant initialize distribution function 2d"
+!print*,"avant initialize distribution function 2d"
   call initialize_distribution_function_2d( &
        f, &
        1.0_f64, &
@@ -284,11 +284,11 @@ print*,"avant initialize distribution function 2d"
        interp_v, &
        p_init_f )
   ! write mesh and initial distribution function
-print*,"avant write scalar field 2d"
+!print*,"avant write scalar field 2d"
   call write_scalar_field_2d(f) 
 
   ! initialize Poisson
-print*,"avant new(poisson"
+!print*,"avant new(poisson"
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
@@ -330,7 +330,7 @@ timer5 = 0
   !----------
   ! half time step advection in v
 
-print*,"avant la boucle temporelle"
+!print*,"avant la boucle temporelle"
   do istep = 1, nbiter
 t3 => reset_time_mark(t3)
      do i = istartx, iendx
