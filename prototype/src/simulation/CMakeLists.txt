@@ -231,7 +231,8 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 ############################################################
 
 add_library( sll_simulations STATIC simulation_base_class.F90 
-  simulation_4d_vlasov_poisson_cartesian.F90 )
+  simulation_4d_vlasov_poisson_cartesian.F90
+  simulation_6d_vlasov_poisson_cartesian.F90 )
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
@@ -252,7 +253,7 @@ add_dependencies( sll_simulations
   sll_working_precision
   )
 
-#Here is defined the executables. 
+#Define the executables/tests here.
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
@@ -276,5 +277,27 @@ target_link_libraries( test_vp4d_sim
   sll_assertion 	
   sll_working_precision
   )
+
+add_executable( test_vp6d_sim unit_test_6d.F90 )
+
+target_link_libraries( test_vp6d_sim
+  sll_simulations
+  sll_poisson_parallel
+  sll_fft
+  sll_electric_field_accumulators
+  sll_scalar_field_4d
+  sll_interpolators
+  sll_splines
+  sll_remap
+  sll_collective
+  sll_constants
+  sll_low_level_file_io_parallel
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+
 
 ENDIF() 
