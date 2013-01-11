@@ -1,11 +1,3 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_binary_io
-!
-! DESCRIPTION: 
-!> @namespace sll_binary_io
 !> @author Pierre Navaro
 !> @file sll_binary_io.F90
 !> @brief
@@ -20,11 +12,6 @@
 !>
 !> \code use sll_binary_io \endcode
 !>
-!
-! REVISION HISTORY:
-! 05 12 2011 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module sll_binary_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -42,10 +29,9 @@ module sll_binary_io
 contains
   
   !> Create binary file :
-  !>
-  !>    - Find a free unit file number
-  !>    - Create a new file using default properties
-  !> \param[in] file name
+  !> - Find a free unit file number
+  !> - Create a new file using default properties
+  !> \param[in] filename file name
   !> \param[in] unit number
   !> \param[out] error code
   subroutine sll_binary_file_create(filename,file_id,error)
@@ -84,6 +70,8 @@ contains
      end subroutine sll_binary_file_create
 
      !> Close the binary file :
+     !> \param[in]  file_id unit number
+     !> \param[out] error   error code
      subroutine sll_binary_file_close(file_id,error)
        sll_int32, intent(in)  :: file_id
        sll_int32, intent(out) :: error

@@ -71,14 +71,14 @@ contains
 ! the full array.
  subroutine plot_layout2d()
 
-  sll_int32 , parameter       :: nx = 32
-  sll_int32 , parameter       :: ny = 64
-  sll_int32                   :: mx, my    ! Local sizes
-  sll_int32                   :: npi, npj
-  sll_int32                 :: gi, gj
-  
-  sll_int32, dimension(2)   :: global_indices
-  type(layout_2D), pointer  :: layout
+  sll_int32 , parameter    :: nx = 32
+  sll_int32 , parameter    :: ny = 64
+  sll_int32                :: mx, my    ! Local sizes
+  sll_int32                :: npi, npj
+  sll_int32                :: gi, gj
+ 
+  sll_int32, dimension(2)  :: global_indices
+  type(layout_2D), pointer :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
   sll_int32      :: xml_id
@@ -130,8 +130,10 @@ contains
 
   !End high level version
 
+!---------------------------------------------------------------------------------!
 
   !Begin low level version
+
   call sll_hdf5_file_create(xfile, file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
   call sll_hdf5_file_close(file_id,error)

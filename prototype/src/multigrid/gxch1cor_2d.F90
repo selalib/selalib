@@ -38,7 +38,7 @@ integer :: req(8),status(MPI_STATUS_SIZE,8),ireq,ierr
 # else
 integer :: status(MPI_STATUS_SIZE),ierr
 # endif
-# if cdebug
+# if DEBUG
 # if NBLOCKGR
 integer :: nc
 # endif
@@ -116,7 +116,7 @@ end if
 ! wait for all the messages to be sent and received before going on.
 !
 call MPI_WAITALL(ireq,req,status,ierr)
-# if cdebug
+# if DEBUG
 nc=4-(bd(2)+bd(4)+bd(6)+bd(8))
 nisend(2,1)=nisend(2,1)+nc
 nirecv(2,1)=nirecv(2,1)+nc
@@ -147,12 +147,12 @@ call MPI_SENDRECV(a(sx,ey),1,ijdatatype,neighbor(6),1,      &
 call MPI_SENDRECV(a(ex,ey),1,ijdatatype,neighbor(8),0,      &
                   a(sx-1,sy-1),1,ijdatatype,neighbor(4),0,  &
                   comm2d,status,ierr)
-# if cdebug
+# if DEBUG
 nsendrecv(2,1)=nsendrecv(2,1)+4
 # endif
 # endif
 
-# if cdebug
+# if DEBUG
 timing(60)=timing(60)+MPI_WTIME()-tinitial
 # endif
 return

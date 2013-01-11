@@ -1,21 +1,25 @@
-module mgd2
+!> Multigrid solver in 2 dimensions on a cartesian grid
+!> \authors Pierre Navaro
+!> \remark this a refactored version of Bernard Bunner code (http://cs-www.cs.yale.edu/homes/douglas-craig/mgnet-codes-bunner.html)
+module sll_mgd2
 use mpi
 #include "sll_working_precision.h"
+
+sll_int32 :: nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20)
+sll_int32 :: kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20)
+sll_int32 :: ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20)
+sll_int32 :: nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20)
+sll_int32 :: irdatatype(20),jrdatatype(20),ijrdatatype(20)
 
 contains
 
 
-!>------------------------------------------------------------------------
-!>  From the MPE library
-!>  This file contains a routine for producing a decomposition of a 1-d 
-!>  array when given a number of processors.  It may be used in "direct" 
-!>  product decomposition.  The values returned assume a "global" domain 
+!>  \function
+!>  From the MPE library \n
+!>  This file contains a routine for producing a decomposition of a 1-d  \n
+!>  array when given a number of processors.  It may be used in "direct"  \n
+!>  product decomposition.  The values returned assume a "global" domain  \n
 !>  in [1:n]
-!>
-!> Code      : tmgd2
-!> Called in : main
-!> Calls     : --
-!>------------------------------------------------------------------------
 subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
 #include "sll_working_precision.h"
 #include "mgd2.h"
@@ -35,7 +39,6 @@ if (e .gt. n .or. myid .eq. numprocs-1) e = n
 return
 end subroutine
 
-!>------------------------------------------------------------------------
 !> Initialize the parallel multigrid solver: subdomain indices and
 !> MPI datatypes.
 !>
@@ -94,11 +97,7 @@ end subroutine
 !> (sxm-1:exm+1,sym-1:eym+1)... Probably not too difficult to
 !> make the change
 !>
-!> Code      : mgd2, 2-D parallel multigrid solver
 !> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-!> Called in : main
-!> Calls     : grid1_type
-!>------------------------------------------------------------------------
 subroutine mgdinit(vbc,phibc,ixp,jyq,iex,jey,ngrid,nxp2,nyp2, &
                    sx,ex,sy,ey,realtype,nxprocs,nyprocs,nwork, &
                    ibdry,jbdry,myid,nerror)
@@ -109,20 +108,13 @@ sll_int32  :: realtype,nxprocs,nyprocs,nwork,ibdry,jbdry
 sll_int32  :: myid,nerror
 sll_real64 :: vbc(4),phibc(4,20)
 
-sll_int32  :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-sll_int32  :: ikdatatype,jkdatatype,ijkdatatype
-sll_int32  :: sxi,exi,syi,eyi
-sll_int32  :: nxr,nyr,sxr,exr,syr,eyr
-sll_int32  :: irdatatype,jrdatatype,ijrdatatype
-
-common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),   &
-           kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20),   &
-           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),   &
-           nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20),   &
-           irdatatype(20),jrdatatype(20),ijrdatatype(20)
-
+!sll_int32  :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
+!sll_int32  :: ikdatatype,jkdatatype,ijkdatatype
+!sll_int32  :: sxi,exi,syi,eyi
+!sll_int32  :: nxr,nyr,sxr,exr,syr,eyr
+!sll_int32  :: irdatatype,jrdatatype,ijrdatatype
 sll_int32  :: i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
-# if cdebug
+# if DEBUG
 sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
@@ -531,7 +523,7 @@ end do
 # endif
 # endif
 
-# if cdebug
+# if DEBUG
 timing(81)=timing(81)+MPI_WTIME()-tinitial
 # endif
 return
@@ -584,29 +576,20 @@ subroutine mgdsolver(isol,sx,ex,sy,ey,phif,rhsf,r,ngrid,work, &
 #include "mgd2.h"
 sll_int32  :: isol,sx,ex,sy,ey,ngrid,nx,ny
 sll_int32  :: maxcy,kcycle,iprer,ipost,iresw
-REALN phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
-REALN r(sx-1:ex+1,sy-1:ey+1)
-REALN work(*),tolmax,xl,yl,rro,phibc(4,20)
+sll_real64 :: phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
+sll_real64 :: r(sx-1:ex+1,sy-1:ey+1)
+sll_real64 :: work(*),tolmax,xl,yl,rro,phibc(4,20)
 sll_int32  :: comm2d,myid,neighbor(8),bd(8),iter,nerror
-logical nprscr
+
+logical    :: nprscr
 
 sll_int32  :: k, icf
-sll_int32  :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-sll_int32  :: ikdatatype,jkdatatype,ijkdatatype
-sll_int32  :: sxi,exi,syi,eyi
-sll_int32  :: nxr,nyr,sxr,exr,syr,eyr
-sll_int32  :: irdatatype,jrdatatype,ijrdatatype
-common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20), &
-           kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20), &
-           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20), &
-           nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20), &
-           irdatatype(20),jrdatatype(20),ijrdatatype(20)
-REALN avo,acorr, relmax
+sll_real64 :: avo,acorr, relmax
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
 sll_int32  :: ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
 sll_int32  :: itype,jtype,ijtype,lev,ir1,ir2
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 !------------------------------------------------------------------------
@@ -797,13 +780,13 @@ call mgdbdry(sx,ex,sy,ey,phif,bd,vbc)
 if (isol.eq.1) then
   if (nprscr.and.myid.eq.0) write(6,110) relmax,iter,acorr
 110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
-# if cdebug
+# if DEBUG
   timing(95)=timing(95)+MPI_WTIME()-tinitial
 # endif
 else
   if (nprscr.and.myid.eq.0) write(6,120) relmax,iter,acorr
 120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
-# if cdebug
+# if DEBUG
   timing(96)=timing(96)+MPI_WTIME()-tinitial
 # endif
 end if
@@ -811,21 +794,15 @@ end if
 return
 end subroutine
 
-!>------------------------------------------------------------------------
 !> Define the 3 derived datatypes needed to communicate the boundary
 !> data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
 !> neighbors
-!>
-!> Code      : tmgd2
-!> Called in : mgdinit
-!> Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR
-!>------------------------------------------------------------------------
 subroutine grid1_type(itype,jtype,ijtype,realtype,sx,ex,sy,ey)
 #include "mgd2.h"
 sll_int32  :: itype,jtype,ijtype,realtype,sx,ex,sy,ey,ierr
 sll_int32  :: ier
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 !
@@ -844,10 +821,10 @@ call MPI_TYPE_COMMIT(jtype,ierr)
 call MPI_TYPE_CONTIGUOUS(1,realtype,ijtype,ierr)
 call MPI_TYPE_COMMIT(ijtype,ierr)
 
-# if cdebug
+# if DEBUG
 timing(7)=timing(7)+MPI_WTIME()-tinitial
 # endif
 return
 end subroutine
 
-end module mgd2
+end module sll_mgd2
