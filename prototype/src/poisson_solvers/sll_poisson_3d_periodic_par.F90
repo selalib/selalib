@@ -197,7 +197,7 @@ contains
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
 
-    ! Get geometry informations
+    ! Get geometry information
     nx = plan%ncx
     ny = plan%ncy
     nz = plan%ncz
@@ -241,9 +241,11 @@ contains
     call apply_remap_3D( plan%rmp3_yz, plan%array_y, plan%array_z ) 
     do j=1,ny_loc
        do i=1,nx_loc
-          call fft_apply_plan( plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:) )
+          call fft_apply_plan(plan%pz, plan%array_z(i,j,:), plan%array_z(i,j,:))
        enddo
     enddo
+
+    ! move this normalization elsewhere where the modes are modified
     plan%array_z = plan%array_z/(nx*ny*nz)
 
     ! Compute hat_phi, phi = inv_fft(hat_phi)
@@ -254,30 +256,37 @@ contains
              gi = global(1)
              gj = global(2)
              gk = global(3)
-             if (gi<=nx/2) then
-                ind_x = real(gi-1,f64)
+             if( (gi==1) .and. (gj==1) .and. (gk==1) ) then
+                call fft_set_mode_complx( &
+                     plan%pz, &
+                     plan%array_z, &
+                     (0.0_f64,0.0_f64), &
+                     1)
              else
-                ind_x = real(nx-(gi-1),f64)
-             endif
-             if (gj<=ny/2) then
-                ind_y = real(gj-1,f64)
-             else
-                ind_y = real(ny-(gj-1),f64)
-             endif
-             if (gk<=nz/2) then
-                ind_z = real(gk-1,f64)
-             else
-                ind_z = real(nz-(gk-1),f64)
-             endif
-             if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
-                 if ( rho(i,j,k) /= 0.d0 ) then     
-                    print *, '3D periodic poisson cannot be solved without', &
-                                                        ' global_rho(1,1,1)=0'
-                    print *, 'Exiting...'
-                    stop
+                if (gi<=nx/2) then
+                   ind_x = real(gi-1,f64)
+                else
+                   ind_x = real(nx-(gi-1),f64)
                 endif
-                plan%array_z(i,j,k) = 0.d0
-             else
+                if (gj<=ny/2) then
+                   ind_y = real(gj-1,f64)
+                else
+                   ind_y = real(ny-(gj-1),f64)
+                endif
+                if (gk<=nz/2) then
+                   ind_z = real(gk-1,f64)
+                else
+                   ind_z = real(nz-(gk-1),f64)
+                endif
+!!$             if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
+!!$                 if ( rho(i,j,k) /= 0.d0 ) then     
+!!$                    print *, '3D periodic poisson cannot be solved without', &
+!!$                                                        ' global_rho(1,1,1)=0'
+!!$                    print *, 'Exiting...'
+!!$                    stop
+!!$                endif
+!!$                plan%array_z(i,j,k) = 0.d0
+!!$             else
                 plan%array_z(i,j,k) = plan%array_z(i,j,k)/(4*sll_pi**2 * &
                             ((ind_x/Lx)**2 + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif

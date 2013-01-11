@@ -41,7 +41,7 @@ module sll_distribution_function_6d_initializer
      type(simple_cartesian_6d_mesh), pointer :: mesh_6d
    contains
      procedure, pass(init_obj) :: initialize => load_test_6d_initializer
-     procedure, pass(init_obj) :: f_of_6args => compact_4d_field
+     procedure, pass(init_obj) :: f_of_6args => compact_6d_field
   end type init_test_6d_par
   
   ! This has to end up somewhere else, if it is to stay in the library. Put

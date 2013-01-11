@@ -40,11 +40,12 @@ add_dependencies(sll_scalar_field_1d
 	sll_working_precision
 )
 
-add_library(sll_scalar_field_4d STATIC scalar_field_initializer_base.F90 
-                                       distribution_function_initializer_4d.F90
+add_library(sll_scalar_field STATIC scalar_field_initializer_base.F90 
+  distribution_function_initializer_4d.F90
+  distribution_function_initializer_6d.F90
 )
 
-add_dependencies( sll_scalar_field_4d
+add_dependencies( sll_scalar_field
                   sll_remap
                   sll_constants
 		  sll_utilities
