@@ -478,10 +478,11 @@ subroutine transposevx(this,f)
 
 end subroutine transposevx
 
-subroutine thdiag(this,f,nrj,t)
+subroutine thdiag(this,f,nrj,t,jstartv)
 
    type(vlasov2d),intent(inout) :: this
-   sll_real64, dimension(:,:,:,this%jstartv:),intent(in) :: f
+   sll_real64, dimension(:,:,:,jstartv:),intent(in) :: f
+   sll_int32 :: jstartv
    !sll_int32 :: error
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
@@ -499,13 +500,13 @@ subroutine thdiag(this,f,nrj,t)
    my_num = sll_get_collective_rank(sll_world_collective)
    num_threads = sll_get_collective_size(sll_world_collective)
 
+   auxloc = 0.0
    cell_volume = this%geomx%dx * this%geomx%dy * this%geomv%dx * this%geomv%dy
    auxloc(1) = cell_volume * sum(f) ! avg(f)
    auxloc(2) = cell_volume * sum(abs(f)) ! L1 norm
    auxloc(3) = cell_volume * sum(f*f) ! L2 norm
    
-
-   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,MPI_MASTER,comm, error)
+   call mpi_reduce(auxloc,aux(1:11),11,MPI_REAL8,MPI_SUM,MPI_MASTER,comm, error)
 
    if (my_num == MPI_MASTER) then
       diag=0.

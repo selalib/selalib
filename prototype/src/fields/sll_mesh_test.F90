@@ -6,10 +6,11 @@ module sll_mesh_2d
   use numeric_constants
   use geometry_functions 
   implicit none
-
-  enum, bind(C)
-     enumerator :: PERIODIC_MESH = 0, COMPACT_MESH = 1
-  end enum
+  
+  integer, parameter :: PERIODIC_MESH = 0, COMPACT_MESH = 1
+  !enum, bind(C)
+  !   enumerator :: PERIODIC_MESH = 0, COMPACT_MESH = 1
+  !end enum
 
   type, abstract :: mesh_2d
      sll_int32  :: nc_eta1

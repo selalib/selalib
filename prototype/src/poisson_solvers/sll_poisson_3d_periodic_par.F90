@@ -42,13 +42,13 @@ module sll_poisson_3d_periodic_par
      type(layout_3D),  pointer                 :: layout_y
      type(layout_3D),  pointer                 :: layout_z
      sll_int32, dimension(3,3)                 :: loc_sizes
-     sll_comp64, dimension(:,:,:), allocatable :: array_x
-     sll_comp64, dimension(:,:,:), allocatable :: array_y
-     sll_comp64, dimension(:,:,:), allocatable :: array_z
-     type(remap_plan_3D_comp64), pointer       :: rmp3_xy
-     type(remap_plan_3D_comp64), pointer       :: rmp3_yz
-     type(remap_plan_3D_comp64), pointer       :: rmp3_zy
-     type(remap_plan_3D_comp64), pointer       :: rmp3_yx
+     sll_comp64, dimension(:,:,:), pointer :: array_x
+     sll_comp64, dimension(:,:,:), pointer :: array_y
+     sll_comp64, dimension(:,:,:), pointer :: array_z
+     type(remap_plan_3D_comp64), pointer            :: rmp3_xy
+     type(remap_plan_3D_comp64), pointer            :: rmp3_yz
+     type(remap_plan_3D_comp64), pointer            :: rmp3_zy
+     type(remap_plan_3D_comp64), pointer            :: rmp3_yx
   end type poisson_3d_periodic_plan_par
 
 contains
