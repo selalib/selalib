@@ -5,14 +5,13 @@ module sll_gaussian_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use numeric_constants
-  use sll_module_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   implicit none
 
   type, extends(scalar_field_2d_initializer_base) :: init_gaussian_2d
+    class(sll_mapped_mesh_2d_base), pointer :: mesh 
     sll_real64 :: xc, yc
     sll_real64 :: sigma_x, sigma_y
-    class(sll_mapped_mesh_2d_base), pointer :: mesh 
   contains
     procedure, pass(init_obj) :: initialize => initialize_gaussian_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_gaussian_2d
@@ -48,13 +47,13 @@ contains
     else
        init_obj%sigma_y = 1.0_f64 ! default radius is 1
     end if
-  end subroutine initialize_gaussian_2d
+  end subroutine 
 
   subroutine f_x1x2_gaussian_2d( init_obj, data_out )
     class(init_gaussian_2d), intent(inout)       :: init_obj
+    class(sll_mapped_mesh_2d_base), pointer      :: mesh
     sll_real64, dimension(:,:), intent(out)    :: data_out
 
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -101,6 +100,6 @@ contains
           end do
        end do
     end if
-  end subroutine f_x1x2_gaussian_2d
+  end subroutine
 
 end module sll_gaussian_2d_initializer

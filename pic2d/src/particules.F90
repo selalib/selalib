@@ -19,20 +19,19 @@ subroutine creapa( ele, time )
 
 type  (particle) :: ele
 sll_real64 :: time
-sll_int32  :: error
 
 select case (nomcas)
 
 case ("viry__")
 
    nbpart = 1
-   SLL_ALLOCATE(ele%pos(nbpart,2),error)
-   SLL_ALLOCATE(ele%case(nbpart,2),error)
-   SLL_ALLOCATE(ele%vit(nbpart,2),error)
-   SLL_ALLOCATE(ele%epx(nbpart),error)
-   SLL_ALLOCATE(ele%epy(nbpart),error)
-   SLL_ALLOCATE(ele%bpz(nbpart),error)
-   SLL_ALLOCATE(ele%p(nbpart),error)
+   allocate(ele%pos(nbpart,2))
+   allocate(ele%case(nbpart,2))
+   allocate(ele%vit(nbpart,2))
+   allocate(ele%epx(nbpart))
+   allocate(ele%epy(nbpart))
+   allocate(ele%bpz(nbpart))
+   allocate(ele%p(nbpart))
    
    ele%pos(1,1) = 0.1*dimx 
    ele%pos(1,2) = 0.1*dimy
@@ -117,7 +116,6 @@ subroutine avancee_vitesse( ele )
 type (particle) :: ele
 sll_real64 :: dum, u2
 sll_real64 :: tantheta, sintheta
-sll_real64 :: xpp, ypp
 sll_real64 :: gamma
 
 do ipart = 1, nbpart
@@ -126,8 +124,8 @@ do ipart = 1, nbpart
 
    if( relativ ) then
 
-      u2    =   ele%vit(ipart,1)*ele%vit(ipart,1)	&
-           + ele%vit(ipart,2)*ele%vit(ipart,2)
+      u2  = ele%vit(ipart,1)*ele%vit(ipart,1) &
+          + ele%vit(ipart,2)*ele%vit(ipart,2)
       if ( u2 >= csq ) then 
          print*,'Erreur : u2 >= c2 dans le calcul de la vitesse'
          print*,'ipart = ',ipart,' vx = ',ele%vit(ipart,1),' vy = ',ele%vit(ipart,2)
@@ -172,7 +170,7 @@ do ipart = 1, nbpart
 
    if( relativ ) then
 
-      u2 =   ele%vit(ipart,1)*ele%vit(ipart,1)	&
+      u2 =   ele%vit(ipart,1)*ele%vit(ipart,1) &
            + ele%vit(ipart,2)*ele%vit(ipart,2)
 
       gamma = sqrt( 1. + u2/csq )
@@ -237,17 +235,17 @@ if (bcname == 'period') then
 else
    ipart = 1
    do while ( ipart <= nbpart )  
-      if (      ele%pos(ipart,1) < 0.0	        &
-           .or. ele%pos(ipart,1) >= dimx     	&	
-           .or. ele%pos(ipart,2) < 0.         	&
-           .or. ele%pos(ipart,2) >= dimy ) then	
+      if (      ele%pos(ipart,1) < 0.0        &
+           .or. ele%pos(ipart,1) >= dimx      &	
+           .or. ele%pos(ipart,2) < 0.         &
+           .or. ele%pos(ipart,2) >= dimy ) then
          !*** Recuperation du trou laisse par la particule sortie
          ele%pos(ipart,1) = ele%pos(nbpart,1)
          ele%pos(ipart,2) = ele%pos(nbpart,2)
          ele%vit(ipart,1) = ele%vit(nbpart,1)
          ele%vit(ipart,2) = ele%vit(nbpart,2)
          ele%p(ipart)     = ele%p(nbpart)
-	 nbpart = nbpart - 1
+         nbpart = nbpart - 1
          if (nbpart == 0) stop 'plus de particule'
       else
          ipart = ipart + 1
@@ -414,7 +412,7 @@ vitesse = 0.2
 y0 = 0.4*dimy 
 y1 = 0.6*dimy
 nbnewpart = 30 !int( intensite/nx/vitesse )
-print*,'nb de nouvelles particules = ',nbnewpart
+!print*,'nb de nouvelles particules = ',nbnewpart
 
 if( time == 0. ) then
 
@@ -453,7 +451,7 @@ subroutine faisceau_regulier( ele, time )
 type (particle) :: ele
 sll_real64 :: time, vitesse
 sll_int32, parameter :: maxnbpart=100000
-sll_int32 :: aux, nbnewpart, error
+sll_int32 :: nbnewpart, error
 
 vitesse = 0.5d0
 nbnewpart = 0
@@ -493,7 +491,7 @@ end subroutine faisceau_regulier
 subroutine gaussienne( ele, time )
 
 type (particle) :: ele
-sll_real64 :: time, speed, theta, vth, n,aux
+sll_real64 :: time, speed, theta, vth, n, aux
 sll_int32 :: k, error
 
 if( time == 0 ) then
@@ -550,7 +548,7 @@ end subroutine gaussienne
 subroutine plasma( ele, time )
 
 type (particle) :: ele
-sll_real64 :: time, speed, theta, vth, n, aux
+sll_real64 :: time, speed, theta, vth, n
 sll_real64 :: a, b, eps, R
 sll_int32 :: k, error
 

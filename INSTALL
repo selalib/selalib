@@ -1,12 +1,8 @@
-  installation with cmake
+Install Dependencies
+====================
 
-mkdir build
-cd  build
-cmake ..
-make
-make test
-
-* RHEL with Intel compilers
+RHEL with Intel compilers
+***************************
 
 yum update
 yum install -y git
@@ -64,7 +60,8 @@ cd fftw-3.3.2; {
 }; cd -
 rm -rf fftw-3.3.2
 
-* Debian testing
+* Debian testing with GNU compilers
+***********************************
 
 apt-get -y update
 apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev doxygen  liblapack-dev
@@ -204,4 +201,4 @@ rm -rf fftw-3.3.2
 *Ubuntu
 
 apt-get -y update
-apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev libfftw3-dev doxygen liblapack-dev <&-
+apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev libfftw3-mpi-dev doxygen liblapack-dev <&-

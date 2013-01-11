@@ -33,14 +33,15 @@ module sll_maxwell
 use numeric_constants
 
 implicit none
+integer, parameter ::  NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
+integer, parameter :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
 
-enum, bind(C)
-   enumerator :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
-end enum
-
-enum, bind(C)
-   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
-end enum
+!enum, bind(C)
+!   enumerator :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
+!end enum
+!enum, bind(C)
+!   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
+!end enum
 
 !private
 !

@@ -240,5 +240,117 @@ contains
     end if
     
   end subroutine errout
+
+  !>Subroutine to write a 2D array in xdmf format
+  !>The field is describe on a cartesian mesh
+  !>Axis are perpendicular and spacing is constant
+  subroutine sll_xdmf_corect2d_nodes( file_name, array, array_name, &
+                                      eta1_min, delta_eta1, eta2_min, delta_eta2, file_format) 
+
+    sll_real64, intent(in)          :: array(:,:)
+    character(len=*), intent(in)    :: file_name
+    character(len=*), intent(in)    :: array_name
+    sll_int32                       :: error
+    sll_real64                      :: eta1_min
+    sll_real64                      :: eta2_min
+    sll_real64                      :: delta_eta1
+    sll_real64                      :: delta_eta2
+    sll_int32                       :: file_id, hfile_id
+    sll_int32                       :: nx1
+    sll_int32                       :: nx2
+    character(len=4), optional      :: file_format
+    
+    nx1 = size(array,1)
+    nx2 = size(array,2)
+
+    call sll_xml_file_create(file_name//".xmf",file_id,error)
+    write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+    write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
+                          nx2,nx1,"'/>"
+    write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"
+    write(file_id,"(a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+    write(file_id,"(2f12.5)") eta1_min, eta2_min
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a)")"<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+    write(file_id,"(2f12.5)") delta_eta1, delta_eta2
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a)")"</Geometry>"
+    write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
+    if(present(file_format) .and. file_format == "HDF5") then
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)")array_name//".h5:/node_values"
+#ifndef NOHDF5
+       call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
+       call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
+       call sll_hdf5_file_close(hfile_id, error)
+#endif
+    else
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='8' Format='XML'>"
+       call sll_ascii_write_array(file_id,array,error)
+    end if
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a)")"</Attribute>"
+    call sll_xml_file_close(file_id,error)
+
+  end subroutine sll_xdmf_corect2d_nodes
+
+  !>Subroutine to write a 2D array in xdmf format
+  !>The field is describe on a cartesian mesh
+  !>Axis are perpendicular and spacing is define by eta1 and eta2 arrays
+  subroutine sll_xdmf_rect2d_nodes( file_name, array, array_name, eta1, eta2, file_format) 
+
+    sll_real64, intent(in)          :: array(:,:)
+    sll_real64, intent(in)          :: eta1(:)
+    sll_real64, intent(in)          :: eta2(:)
+    character(len=*), intent(in)    :: file_name
+    character(len=*), intent(in)    :: array_name
+    sll_int32                       :: error
+    sll_int32                       :: file_id, hfile_id
+    sll_int32                       :: nx1
+    sll_int32                       :: nx2
+    character(len=4), optional      :: file_format
+    sll_int32                       :: i, j
+    
+    nx1 = size(array,1)
+    nx2 = size(array,2)
+
+    SLL_ASSERT(nx1 == size(eta1))
+    SLL_ASSERT(nx2 == size(eta2))
+
+    call sll_xml_file_create(file_name//".xmf",file_id,error)
+    write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+    write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='", &
+                          nx2,nx1,"'/>"
+    write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
+    write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx1,"' NumberType='Float' Format='XML'>"
+    write(file_id,*) (eta1(i),i=1,nx1)
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx2,"' NumberType='Float' Format='XML'>"
+    write(file_id,*) (eta2(j),j=1,nx2)
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a)")"</Geometry>"
+    write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
+    if(present(file_format) .and. file_format == "HDF5") then
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)")array_name//".h5:/node_values"
+#ifndef NOHDF5
+       call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
+       call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
+       call sll_hdf5_file_close(hfile_id, error)
+#endif
+    else
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='4' Format='XML'>"
+       call sll_ascii_write_array(file_id,array,error)
+    end if
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a)")"</Attribute>"
+    call sll_xml_file_close(file_id,error)
+
+  end subroutine sll_xdmf_rect2d_nodes
+
   
 end module sll_xdmf

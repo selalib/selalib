@@ -306,10 +306,11 @@ subroutine transposevx(this,f)
 
 end subroutine transposevx
 
-subroutine thdiag(this,f,nrj,t)
+subroutine thdiag(this,f,nrj,t,jstartv)
 
    type(vlasov2d),intent(inout) :: this
-   sll_real64, dimension(:,:,:,this%jstartv:),intent(in) :: f
+   sll_int32, intent(in) :: jstartv
+   sll_real64, dimension(:,:,:,jstartv:),intent(in) :: f
    !sll_int32 :: error
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
@@ -365,7 +366,7 @@ subroutine thdiag(this,f,nrj,t)
 !                   comm, error)
 !   call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
 !                   comm, error)
-!
+
 if (my_num==MPI_MASTER) then
    aux(13)=t
    aux(12)=nrj

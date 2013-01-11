@@ -34,18 +34,18 @@ module sll_scalar_field_2d
 #include "sll_assert.h"
   use sll_io
   use numeric_constants
-  use sll_module_mapped_meshes_2d_base
-  use sll_scalar_field_initializers_base
-  use sll_misc_utils
   use sll_module_interpolators_1d_base
+  use sll_misc_utils
+  use sll_scalar_field_initializers_base
+
   implicit none
 
   type scalar_field_2d
      class(sll_mapped_mesh_2d_base), pointer  :: mesh
-     sll_real64, dimension(:,:), pointer      :: data
-     sll_int32                                :: data_position
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
+     sll_real64, dimension(:,:), pointer      :: data
+     sll_int32                                :: data_position
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
   end type scalar_field_2d
@@ -61,6 +61,7 @@ module sll_scalar_field_2d
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
+  ! initializer is not use whith fortran95
   subroutine initialize_scalar_field_2d( &
     this, &
     field_name, &
@@ -71,12 +72,12 @@ contains   ! *****************************************************************
     initializer )
 
     class(scalar_field_2d), intent(inout)               :: this
-    character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
-    sll_int32, intent(in)                               :: data_position
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
+    character(len=*), intent(in)                        :: field_name
+    sll_int32, intent(in)                               :: data_position
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -168,10 +169,10 @@ contains   ! *****************************************************************
     output_format)
 
     class(scalar_field_2d) :: scalar_field
+    class(sll_mapped_mesh_2d_base), pointer :: mesh
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32              :: local_format 
 
     sll_int32  :: i1
@@ -264,6 +265,32 @@ contains   ! *****************************************************************
                                  scalar_field%name,ierr,file_id, &
                                  "Node")
        call sll_xdmf_close(file_id,ierr)
+
+    case (SLL_IO_VTK)
+
+       call sll_ascii_file_create(trim(name)//".vtr", file_id, ierr)
+
+       write(file_id,"(a)")"<VTKFile type='RectilinearGrid'>"
+       write(file_id,"(a,6i5,a)")"<RectilinearGrid WholeExtent='",1, num_pts1,1,num_pts2,1,1,"'>"
+       write(file_id,"(a,6i5,a)")"<Piece Extent='",1, num_pts1,1,num_pts2,1,1,"'>"
+       write(file_id,"(a)")"<PointData>"
+       write(file_id,"(a)")"<DataArray type='Float64' Name='"//scalar_field%name//"' format='ascii'>"
+       write(file_id,"(a)")"</DataArray>"
+       write(file_id,"(a)")"</PointData>"
+       write(file_id,"(a)")"<Coordinates>"
+       write(file_id,"(a)")"<DataArray type='Float64' Name='"//scalar_field%name//"' format='ascii'>"
+       write(file_id,"(a)")"</DataArray>"
+       write(file_id,"(a)")"</Coordinates>"
+       write(file_id,"(a)")"</Piece>"
+       write(file_id,"(a)")"</RectilinearGrid>"
+       write(file_id,"(a)")"</VTKFile>"
+
+       close(file_id)
+
+    case (SLL_IO_GNUPLOT)
+       call sll_ascii_file_create(trim(name)//".vtr", file_id, ierr)
+       call sll_ascii_write_array_2d(file_id, val, ierr)
+       close(file_id)
 
     case default
 
