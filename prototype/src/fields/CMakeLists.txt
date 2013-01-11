@@ -41,7 +41,7 @@ add_dependencies(sll_scalar_field_1d
 )
 
 add_library(sll_scalar_field_4d STATIC scalar_field_initializer_base.F90 
-                                       test_4d_initializer.F90
+                                       distribution_function_initializer_4d.F90
 )
 
 add_dependencies( sll_scalar_field_4d

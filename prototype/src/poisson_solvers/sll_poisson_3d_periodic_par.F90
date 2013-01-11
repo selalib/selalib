@@ -24,10 +24,11 @@ module sll_poisson_3d_periodic_par
   implicit none
 
   type poisson_3d_periodic_plan_par
-     sll_int32                                 :: nx
-     sll_int32                                 :: ny
-     sll_int32                                 :: nz
-     ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
+     ! number of cells, which in this periodic case is equal to the number
+     ! of points.
+     sll_int32                                 :: ncx
+     sll_int32                                 :: ncy
+     sll_int32                                 :: ncz
      sll_real64                                :: Lx
      sll_real64                                :: Ly
      sll_real64                                :: Lz
@@ -53,101 +54,131 @@ module sll_poisson_3d_periodic_par
 contains
 
 
-  function new_poisson_3d_periodic_plan_par(start_layout, nx, ny, nz, Lx, &
-                                                       Ly, Lz) result(plan)
+  function new_poisson_3d_periodic_plan_par( &
+    start_layout, &
+    ncx, &
+    ncy, &
+    ncz, &
+    Lx, &
+    Ly, &
+    Lz) result(plan)
 
-    type(layout_3D),  pointer                  :: start_layout
-    sll_int32                                    :: nx, ny, nz
-    ! nx, ny, nz are the numbers of points - 1 in directions x, y, z
-    sll_comp64,                    dimension(nx) :: x
-    sll_comp64,                    dimension(ny) :: y
-    sll_comp64,                    dimension(nz) :: z
+    type(layout_3D),  pointer                    :: start_layout
+    ! number of cells in each direction
+    sll_int32                                    :: ncx, ncy, ncz
+    ! what the heck is this???
+    sll_comp64,                   dimension(ncx) :: x
+    sll_comp64,                   dimension(ncy) :: y
+    sll_comp64,                   dimension(ncz) :: z
     sll_real64                                   :: Lx, Ly, Lz
     sll_int64                                    :: colsz ! collective size
-    sll_int32                                    :: npx, npy, npz
+    type(sll_collective_t), pointer              :: collective
     ! npx, npy, npz are the numbers of processors in directions x, y, z
+    sll_int32                                    :: npx, npy, npz
     sll_int32                                    :: e
     sll_int32                                    :: ierr
     type (poisson_3d_periodic_plan_par), pointer :: plan
     sll_int32, dimension(3,3)                    :: loc_sizes
 
-    colsz  = sll_get_collective_size(sll_world_collective)
+    collective => get_layout_collective(start_layout)
+    colsz      = sll_get_collective_size(collective)
 
-    if ( colsz > min(nx,ny,nz) ) then     
+    if ( colsz > min(ncx,ncy,ncz) ) then     
        print *, 'This test needs to run in a number of processes which',  &
-                ' is less than or equal', min(nx,ny,nz)
+                ' is less than or equal', min(ncx,ncy,ncz), ' in order to ', &
+                'be able properly split the arrays.'
        print *, 'Exiting...'
        stop
     end if
-    if ( (.not.is_power_of_two(int(nx,i64))) .and. (.not.is_power_of_two( &
-               int(ny,i64))) .and.(.not.is_power_of_two(int(nz,i64)))) then     
-       print *, 'This test needs to run in numbers of points which are',  &
+    if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
+         (.not.is_power_of_two(int(ncy,i64))) .and. &
+         (.not.is_power_of_two(int(ncz,i64))) ) then     
+       print *, 'This test needs to run on numbers of cells which are',  &
                 'powers of 2.'
        print *, 'Exiting...'
        stop
     end if
 
     SLL_ALLOCATE(plan, ierr)
-
-    ! Geometry informations
-    plan%nx = nx
-    plan%ny = ny
-    plan%nz = nz
-    plan%Lx = Lx
-    plan%Ly = Ly
-    plan%Lz = Lz
+    plan%ncx = ncx
+    plan%ncy = ncy
+    plan%ncz = ncz
+    plan%Lx  = Lx
+    plan%Ly  = Ly
+    plan%Lz  = Lz
 
     ! For FFTs (in each direction)
-    plan%px => fft_new_plan( nx, x, x, FFT_FORWARD )
-    plan%py => fft_new_plan( ny, y, y, FFT_FORWARD )
-    plan%pz => fft_new_plan( nz, z, z, FFT_FORWARD )
+    plan%px => fft_new_plan( ncx, x, x, FFT_FORWARD )
+    plan%py => fft_new_plan( ncy, y, y, FFT_FORWARD )
+    plan%pz => fft_new_plan( ncz, z, z, FFT_FORWARD )
 
     ! For inverse FFTs (in each direction)
-    plan%px_inv => fft_new_plan( nx, x, x, FFT_INVERSE )
-    plan%py_inv => fft_new_plan( ny, y, y, FFT_INVERSE )
-    plan%pz_inv => fft_new_plan( nz, z, z, FFT_INVERSE )
+    plan%px_inv => fft_new_plan( ncx, x, x, FFT_INVERSE )
+    plan%py_inv => fft_new_plan( ncy, y, y, FFT_INVERSE )
+    plan%pz_inv => fft_new_plan( ncz, z, z, FFT_INVERSE )
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => start_layout
-    call compute_local_sizes( plan%layout_x, loc_sizes(1,1),  &
-                              loc_sizes(1,2), loc_sizes(1,3)  )
+    call compute_local_sizes_3d( &
+         plan%layout_x, &
+         loc_sizes(1,1), &
+         loc_sizes(1,2), &
+         loc_sizes(1,3)  )
 
     ! Layout and local sizes for FFTs in y-direction
+    plan%layout_y => new_layout_3D( collective )
     e = int(log(real(colsz))/log(2.))
-    plan%layout_y => new_layout_3D( sll_world_collective )
     npx = 2**(e/2)
     npy = 1
-    npz = int(colsz)/npx
-    call initialize_layout_with_distributed_3D_array( nx, ny, &
-                             nz, npx, npy, npz, plan%layout_y )
-    call compute_local_sizes( plan%layout_y, loc_sizes(2,1),  &
-                               loc_sizes(2,2), loc_sizes(2,3) )
+    npz = 2**(e-e/2)  ! int(colsz)/npx
+    call initialize_layout_with_distributed_3D_array( &
+         ncx, &
+         ncy, &
+         ncz, &
+         npx, &
+         npy, &
+         npz, &
+         plan%layout_y )
+
+    call compute_local_sizes( &
+         plan%layout_y,  &
+         loc_sizes(2,1), &
+         loc_sizes(2,2), &
+         loc_sizes(2,3) )
 
     ! Layout and local sizes for FFTs in z-direction
-    plan%layout_z => new_layout_3D( sll_world_collective )
+    plan%layout_z => new_layout_3D( collective )
+    ! npx remains the same. Exchange npy and npz.
     npy = npz
     npz = 1
-    call initialize_layout_with_distributed_3D_array( nx, ny, &
-                             nz, npx, npy, npz, plan%layout_z )
-    call compute_local_sizes( plan%layout_z, loc_sizes(3,1),  &
-                               loc_sizes(3,2), loc_sizes(3,3) )
+    call initialize_layout_with_distributed_3D_array( &
+         ncx, &
+         ncy, &
+         ncz, &
+         npx, &
+         npy, &
+         npz, &
+         plan%layout_z )
+
+    call compute_local_sizes( &
+         plan%layout_z, &
+         loc_sizes(3,1), &
+         loc_sizes(3,2), &
+         loc_sizes(3,3) )
 
     plan%loc_sizes = loc_sizes
 
-    SLL_ALLOCATE( plan%array_x(loc_sizes(1,1),loc_sizes(1,2),loc_sizes(1,3)),ierr)
-    SLL_ALLOCATE( plan%array_y(loc_sizes(2,1),loc_sizes(2,2),loc_sizes(2,3)),ierr)
-    SLL_ALLOCATE( plan%array_z(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
+    SLL_ALLOCATE(plan%array_x(loc_sizes(1,1),loc_sizes(1,2),loc_sizes(1,3)),ierr)
+    SLL_ALLOCATE(plan%array_y(loc_sizes(2,1),loc_sizes(2,2),loc_sizes(2,3)),ierr)
+    SLL_ALLOCATE(plan%array_z(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
 
     plan%rmp3_xy => NEW_REMAP_PLAN(plan%layout_x, plan%layout_y, plan%array_x)
     plan%rmp3_yz => NEW_REMAP_PLAN(plan%layout_y, plan%layout_z, plan%array_y)
     plan%rmp3_zy => NEW_REMAP_PLAN(plan%layout_z, plan%layout_y, plan%array_z)
     plan%rmp3_yx => NEW_REMAP_PLAN(plan%layout_y, plan%layout_x, plan%array_y)
-
   end function new_poisson_3d_periodic_plan_par
 
-
   subroutine solve_poisson_3d_periodic_par(plan, rho, phi)
-
     type (poisson_3d_periodic_plan_par), pointer :: plan
     sll_real64, dimension(:,:,:)                 :: rho
     sll_real64, dimension(:,:,:)                 :: phi
@@ -167,9 +198,9 @@ contains
     sll_int32                                    :: gi, gj, gk
 
     ! Get geometry informations
-    nx = plan%nx
-    ny = plan%ny
-    nz = plan%nz
+    nx = plan%ncx
+    ny = plan%ncy
+    nz = plan%ncz
     Lx = plan%Lx
     Ly = plan%Ly
     Lz = plan%Lz
@@ -188,7 +219,7 @@ contains
     plan%array_x = cmplx(rho, 0_f64, kind=f64)
     do k=1,nz_loc
        do j=1,ny_loc
-          call fft_apply_plan( plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k) )
+          call fft_apply_plan(plan%px, plan%array_x(:,j,k), plan%array_x(:,j,k))
        enddo
     enddo
 
@@ -199,7 +230,7 @@ contains
     call apply_remap_3D( plan%rmp3_xy, plan%array_x, plan%array_y ) 
     do k=1,nz_loc
        do i=1,nx_loc
-          call fft_apply_plan( plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k) )
+          call fft_apply_plan(plan%py, plan%array_y(i,:,k), plan%array_y(i,:,k))
        enddo
     enddo
 
@@ -257,7 +288,10 @@ contains
     ! Inverse FFTs in z-direction
     do j=1,ny_loc
        do i=1,nx_loc
-          call fft_apply_plan(plan%pz_inv,plan%array_z(i,j,:),plan%array_z(i,j,:))
+          call fft_apply_plan( &
+               plan%pz_inv, &
+               plan%array_z(i,j,:), &
+               plan%array_z(i,j,:))
        enddo
     enddo
 
@@ -268,7 +302,10 @@ contains
     call apply_remap_3D( plan%rmp3_zy, plan%array_z, plan%array_y )
     do k=1,nz_loc
        do i=1,nx_loc
-          call fft_apply_plan( plan%py_inv, plan%array_y(i,:,k), plan%array_y(i,:,k) )
+          call fft_apply_plan( &
+               plan%py_inv, &
+               plan%array_y(i,:,k), &
+               plan%array_y(i,:,k) )
        enddo
     enddo
 
@@ -279,7 +316,10 @@ contains
     call apply_remap_3D( plan%rmp3_yx, plan%array_y, plan%array_x ) 
     do k=1,nz_loc
        do j=1,ny_loc
-          call fft_apply_plan( plan%px_inv, plan%array_x(:,j,k), plan%array_x(:,j,k) )
+          call fft_apply_plan( &
+               plan%px_inv, &
+               plan%array_x(:,j,k), &
+               plan%array_x(:,j,k) )
        enddo
     enddo
 
@@ -289,7 +329,6 @@ contains
 
 
   subroutine delete_poisson_3d_periodic_plan_par(plan)
-
     type (poisson_3d_periodic_plan_par), pointer :: plan
     sll_int32                                    :: ierr
 
@@ -312,14 +351,10 @@ contains
     SLL_DEALLOCATE_ARRAY(plan%array_x, ierr)
     SLL_DEALLOCATE_ARRAY(plan%array_y, ierr)
     SLL_DEALLOCATE_ARRAY(plan%array_z, ierr)
-
     SLL_DEALLOCATE(plan, ierr)
-
   end subroutine delete_poisson_3d_periodic_plan_par
 
   subroutine verify_argument_sizes_par(layout, rho, phi)
-
-
     type(layout_3D), pointer   :: layout
     sll_real64, dimension(:,:,:) :: rho
     sll_real64, dimension(:,:,:) :: phi
