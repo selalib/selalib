@@ -4,17 +4,18 @@ program VM2D
 !  modelise par les equations de Vlasov-Maxwell
 !-------------------------------------------------------------------
 #include "selalib.h"
+
 use used_precision  
 use geometry_module
 use maxwell2dfdtd_module
 use poisson2dpp_seq
 use diagnostiques_module
+use vlasov4d_plot
 use vlasov2d_module
 use splinepx_class
 use splinepy_class
 use vlasov1d_module
 use vm2dinit
-
 
 implicit none
 
@@ -25,7 +26,6 @@ type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
 type (vlasov2d)      :: vlas2d     ! vlasov
 type (splinepx)      :: splx       ! vlasov1d
 type (splinepy)      :: sply       ! vlasov1d
-
 
 sll_real64, dimension(:,:,:,:), pointer :: f,f1     ! fonc de distribution
 sll_real64, dimension(:,:),     pointer :: ex,ey ! champ electrique
@@ -44,7 +44,7 @@ sll_int32      :: iter,i,j       ! variables de boucles
 
 sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj
-sll_int32       :: error
+sll_int32  :: error, iplot
 sll_int32  :: comm, my_num, num_threads
 
 sll_real64, allocatable, dimension(:,:) :: x1
@@ -194,9 +194,8 @@ do iter=1,nbiter
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
    endif
 
-   write(*,*) iter
    if (mod(iter,fthdiag).eq.0) then 
-      call thdiag(vlas2d,f,nrj,iter*dt)
+      call thdiag(vlas2d,f,nrj,iter*dt,jstartv)
    endif
 
 end do
@@ -207,15 +206,12 @@ if (my_num == MPI_MASTER) &
 print*,'PASSED'
 call sll_halt_collective()
 
-
 contains
 
-subroutine plot_solution( f )
+subroutine plot_solution( )
 
    use sll_xdmf
-   sll_real64, dimension(:,:,:,:), intent(in) :: f
    sll_int32 :: file_id
-   sll_int32, save :: iplot = 0
    character(len=4) :: cplot
 
    do j = 1, geomx%ny

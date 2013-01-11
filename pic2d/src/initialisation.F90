@@ -15,7 +15,7 @@ contains
 subroutine init( tm )
 
 type (tm_mesh_fields) :: tm
-sll_real64 :: time, aux1, aux2
+sll_real64 :: aux1, aux2
 
 select case (nomcas)
 
@@ -166,7 +166,7 @@ do i=0,nx-1
       
       sol%ey(i,j) = cos(omega*time - alpha*x(i))
    
-      sol%bz(i,j) = cos(omega*time - alpha*0.5*(x(i)+x(i+1)))	
+      sol%bz(i,j) = cos(omega*time - alpha*0.5*(x(i)+x(i+1)))
    end do
    sol%ex(i,ny) = 0.d0
 end do
@@ -196,7 +196,7 @@ do i=0,nx-1
    do j=0,ny-1
       sol%ex(i,j) = 0.d0
       sol%ey(i,j) = cos(alpha*(time + x(i)))
-      sol%bz(i,j) = -cos(alpha*(time + 0.5*(x(i)+x(i+1))))	
+      sol%bz(i,j) = -cos(alpha*(time + 0.5*(x(i)+x(i+1))))
    end do
    sol%ex(i,ny) = 0.d0
 end do
@@ -224,7 +224,7 @@ do i=0,nx-1
    do j=0,ny-1
       sol%ex(i,j) = cos(alpha*(time - y(j)))
       sol%ey(i,j) = 0.d0
-      sol%bz(i,j) = -cos(alpha*(time - 0.5*(y(j)+y(j+1))))	
+      sol%bz(i,j) = -cos(alpha*(time - 0.5*(y(j)+y(j+1))))
    end do
    sol%ex(i,ny) = cos(alpha*(time - dimy))
 end do
@@ -252,7 +252,7 @@ do i=0,nx-1
    do j=0,ny-1
       sol%ex(i,j) = cos(alpha*(time + y(j)))
       sol%ey(i,j) = 0.d0
-      sol%bz(i,j) = cos(alpha*(time + 0.5*(y(j)+y(j+1))))	
+      sol%bz(i,j) = cos(alpha*(time + 0.5*(y(j)+y(j+1))))
    end do
    sol%ex(i,ny) = cos(alpha*(time + dimy))
 end do

@@ -1,0 +1,107 @@
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build, options are: Debug Release.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build, options are: Debug Release.")
+ENDIF()
+
+PROJECT(GYSELA)
+ENABLE_LANGUAGE(Fortran)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+MESSAGE( STATUS "GYSELA_BINARY_DIR: ${GYSELA_BINARY_DIR}" )
+MESSAGE( STATUS "GYSELA_SOURCE_DIR: ${GYSELA_SOURCE_DIR}" )
+IF (CMAKE_PROJECT_NAME MATCHES "GYSELA")
+   SET(SLL_SOURCE_DIR "${GYSELA_SOURCE_DIR}/../../prototype/src")
+ENDIF()
+MESSAGE( STATUS "SLL_SOURCE_DIR: ${SLL_SOURCE_DIR}" )
+
+SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake 
+                       ${SLL_SOURCE_DIR}/CMakeModules
+                       ${CMAKE_MODULE_PATH} )
+
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+
+INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+
+MESSAGE(STATUS "GYSELA:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+INCLUDE(F90FLAGS)
+MESSAGE(STATUS "GYSELA:CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
+
+IF(NOT MPI_FOUND)
+   INCLUDE(MPIConfig)
+ENDIF(NOT MPI_FOUND)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+IF(NOT HDF5_FOUND)
+   INCLUDE(HDF5Config)
+   IF(HDF5_ENABLE_PARALLEL) 
+      MESSAGE(STATUS "HDF5 parallel supported")
+   ELSE()
+      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+   ENDIF()
+ENDIF(NOT HDF5_FOUND)
+
+IF (CMAKE_PROJECT_NAME MATCHES "GYSELA")
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/assert)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/memory)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/precision)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/utilities)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
+ELSE()
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+ENDIF()
+
+ADD_DEFINITIONS(-DCTIMER -DUSE_R3_INFO_MPI -DNORMAL)
+
+SET(GYSELA_SRCS1 prec_const.F90 globals.F90 clock.F90 mem_alloc.F90 
+	          utils.F90 MPIutils.F90 OMPutils.F90 
+	          geometry.F90 gys_alloc.F90 local_spline.F90)
+
+SET(GYSELA_SRCS2 HDF5_io.F90 resu3D_saving.F90 f5D_saving.F90)
+
+SET(GYSELA_SRCS3 bessel.F90 LUsolving.F90 read_data.F90 spline1d.F90 
+	          interpolation.F90 coord_system.F90 integration.F90
+	          read_profile.F90 init_profile.F90 init_current.F90 
+	          init_magnetic.F90 
+	          fft_NRF90.F90 fft.F90 gyroaverage.F90 
+	          fequil4d.F90 fdistribu5d.F90 
+	          poisson.F90 efield.F90 
+	          filter.F90 advec1D_BSL.F90 
+	          advec2D_BSL.F90 
+	          diag3D.F90 Pcross_section.F90 physics.F90)
+
+SET(GYSELA_SRCS4 read_write.F90 output_saving.F90)
+
+SET(GYSELA_SRCSC ctime.c)
+
+IF (NOT HDF5_FOUND)
+   SET(GYSELA_SRCS ${GYSELA_SRCS1} ${GYSELA_SRCS3} ${GYSELA_SRCS4} ${GYSELA_SRCSC})
+   ADD_DEFINITIONS(-DNOHDF5)
+ELSE()
+   SET(GYSELA_SRCS ${GYSELA_SRCS1} ${GYSELA_SRCS2} ${GYSELA_SRCS3} ${GYSELA_SRCS4} ${GYSELA_SRCSC})
+ENDIF() 
+ADD_LIBRARY(gysela_public STATIC ${GYSELA_SRCS})
+
+ADD_DEPENDENCIES(gysela_public selalib)
+
+ADD_EXECUTABLE(gysela diagnostics.F90 vlasov_solving.F90 gysela.F90)
+TARGET_LINK_LIBRARIES(gysela gysela_public selalib ${HDF5_LIBRARIES})
+
+ENABLE_TESTING()
+
+INCLUDE(POEConfig)
+SET(PROCS 4)
+SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../wk/data_test.nml)
+
+ADD_MPI_TEST(test_gysela gysela ${PROCS} ${ARGS})
+
+SET_TESTS_PROPERTIES(test_gysela PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_gysela PROPERTIES TIMEOUT 120)
+
+INCLUDE(Forcheck)

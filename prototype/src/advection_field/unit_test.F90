@@ -13,18 +13,18 @@ program unit_test
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
   class(sll_mapped_mesh_2d_base), pointer      :: pm2d
+  class(sll_mapped_mesh_1d_base), pointer      :: pm1d
+  class(scalar_field_2d_initializer_base), pointer    :: pfinit
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   type(hamiltonian_advection_field_2d)         :: adv_field
   type(sll_mapped_mesh_1d_analytic), target    :: mesh1d
-  class(sll_mapped_mesh_1d_base), pointer      :: pm1d
   type(scalar_field_1d)                        :: phi_self
   character(len=32)                            :: name = 'adv_field'
   character(len=4)                             :: cstep
 
-  class(scalar_field_2d_initializer_base), pointer    :: pfinit
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
-  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
 
 
   sll_int32                                    :: ierr, istep

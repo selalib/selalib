@@ -1,4 +1,13 @@
-cmake_minimum_required(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
+build, options are: Debug Release.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
+options are: Debug Release.")
+ENDIF()
+
 
 PROJECT(SELALIB)
 ENABLE_LANGUAGE(Fortran)
@@ -7,17 +16,22 @@ ENABLE_LANGUAGE(Fortran)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
                       ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
+include(F90FLAGS)
 include(CTest)
 set(CTEST_DROP_SITE_CDASH TRUE)
 # Tests+Dashboard configuration
 enable_testing()
 include(Pipol)
 
-EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS --version OUTPUT_VARIABLE source_path)
-string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
-MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
-
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+if (${CMAKE_Fortran_COMPILER} MATCHES "ifort")
+  EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "-v" OUTPUT_VARIABLE source_path)
+  string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+else()
+  EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
+  string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+endif()
+MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 if(PIPOL_IMAGE)
   set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${PIPOL_IMAGE_NAME}")
@@ -26,11 +40,16 @@ else(PIPOL_IMAGE)
   set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 endif(PIPOL_IMAGE)
 
+MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
+
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
+ADD_DEFINITIONS(-D_FFTW)
+SET(FFTPACK_ENABLED       OFF CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)
+add_subdirectory (gysela_public/src)
 
 # Pipol rc and nightly files are installed under share/pipol
 file(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
@@ -78,3 +97,4 @@ ENDIF(PIPOL_IMAGE)
 set(CPACK_PACKAGE_CONTACT "Pierre Navaro 0368850173")
 
 include(CPack)
+

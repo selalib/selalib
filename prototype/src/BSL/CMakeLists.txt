@@ -13,6 +13,7 @@ ADD_EXECUTABLE(test_bsl_2d unit_test_2d.F90)
 ADD_DEPENDENCIES(test_bsl_2d ${BSL_LIB_DEPS})
 TARGET_LINK_LIBRARIES(test_bsl_2d ${BSL_LIB_DEPS})
 
+IF(NOT STDF95)
 IF(FFTPACK_ENABLED)
    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../poisson_solvers)
    ADD_EXECUTABLE(test_bsl_landau_2d landau_2d.F90)
@@ -29,6 +30,7 @@ IF(FFTW_FOUND)
                                             sll_maxwell
                                             ${FFTW_LIBRARIES})
 ENDIF()
+ENDIF(NOT STDF95)
 
 #ADD_LIBRARY(sll_bsl STATIC sll_bsl.F90)
 

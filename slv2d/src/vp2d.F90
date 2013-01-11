@@ -8,6 +8,7 @@ program VP2D
 use used_precision  
 use geometry_module
 use diagnostiques_module
+use vlasov4d_plot
 use poisson2dpp_seq
 use vlasov2d_module
 use vp2dinit
@@ -82,7 +83,7 @@ do iter=1,nbiter
    call solve(poisson,e_x,e_y,rho,nrj)
 
    if (mod(iter,fthdiag).eq.0) then
-       call thdiag(vlas2d,f4d,nrj,iter*dt)    
+       call thdiag(vlas2d,f4d,nrj,iter*dt,jstartv)    
    end if
 
    call advection_v(vlas2d,e_x,e_y,dt)
