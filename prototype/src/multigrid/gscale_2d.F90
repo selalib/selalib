@@ -18,8 +18,8 @@ sll_int32  :: comm2d
 !------------------------------------------------------------------------
 sll_real64 :: avloc,av
 sll_int32  :: i,j,ierr
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 !
@@ -34,13 +34,8 @@ end do
 !
 ! global reduce across all process
 !
-# if double_precision
-call MPI_ALLREDUCE(avloc,av,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-                   comm2d,ierr)
-# else
-call MPI_ALLREDUCE(avloc,av,1,MPI_REAL,MPI_SUM,comm2d,ierr)
-# endif
-# if cdebug
+call MPI_ALLREDUCE(avloc,av,1,MPI_REAL8,MPI_SUM,comm2d,ierr)
+# if DEBUG
 nallreduce=nallreduce+1
 # endif
 av=av/float(nx*ny)
@@ -54,7 +49,7 @@ do j=sy,ey
   end do
 end do
 
-# if cdebug
+# if DEBUG
 timing(49)=timing(49)+MPI_WTIME()-tinitial
 # endif
 

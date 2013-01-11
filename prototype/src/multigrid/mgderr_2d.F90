@@ -16,7 +16,7 @@ sll_real64 :: phio(sxm-1:exm+1,sym-1:eym+1),phin(sxm-1:exm+1,sym-1:eym+1)
 !------------------------------------------------------------------------
 sll_real64 :: phloc,reloc
 sll_int32  :: i,j,ierr
-# if cdebug
+# if DEBUG
 double precision tinitial
 tinitial=MPI_WTIME()
 # endif
@@ -39,8 +39,8 @@ end if
 !
 ! global reduce across all processes
 !
-call MPI_ALLREDUCE(reloc,relmax,1,MPI_DOUBLE_PRECISION,MPI_MAX,comm2d,ierr)
-# if cdebug
+call MPI_ALLREDUCE(reloc,relmax,1,MPI_REAL8,MPI_MAX,comm2d,ierr)
+# if DEBUG
 nallreduce=nallreduce+1
 # endif
 
@@ -52,7 +52,7 @@ do j=sym-1,eym+1
   end do
 end do
 
-# if cdebug
+# if DEBUG
 timing(94)=timing(94)+MPI_WTIME()-tinitial
 # endif
 

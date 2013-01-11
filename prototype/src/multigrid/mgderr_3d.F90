@@ -34,7 +34,7 @@ end do
 !
 ! global reduce across all processes
 !
-call MPI_ALLREDUCE(locval,totval,2,MPI_DOUBLE_PRECISION,MPI_MAX,comm3d,ierr)
+call MPI_ALLREDUCE(locval,totval,2,MPI_REAL8,MPI_MAX,comm3d,ierr)
 
 if (totval(1).gt.0.0) then
   relmax=totval(2)/totval(1)

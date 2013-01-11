@@ -1,23 +1,16 @@
 subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
                    comm2d,myid,neighbor,bd,phibc)
 
+use mpi
 #include "sll_working_precision.h"
+use sll_mgd2, only: nxk,nyk,sxk,exk,syk,eyk,           &
+                    kpbgn,kcbgn,ikdatatype,jkdatatype, &
+                    ijkdatatype,sxi,exi,syi,eyi
 #include "mgd2.h"
 
 sll_int32  :: kcur,kcycle,iprer,ipost,iresw
 sll_int32  :: comm2d,myid,neighbor(8),bd(8)
 sll_real64 :: work(*),res(*),phibc(4,*)
-
-sll_int32 :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-sll_int32 :: ikdatatype,jkdatatype,ijkdatatype
-sll_int32 :: sxi,exi,syi,eyi
-sll_int32 :: nxr,nyr,sxr,exr,syr,eyr
-sll_int32 :: irdatatype,jrdatatype,ijrdatatype
-common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),   &
-           kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20), &
-           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),   &
-           nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20),   &
-           irdatatype(20),jrdatatype(20),ijrdatatype(20)
 
 !------------------------------------------------------------------------
 ! Do one multigrid K-cycle
@@ -33,8 +26,8 @@ sll_int32 :: sxf,exf,syf,eyf,nxf,nyf,ipf,icf
 sll_int32 :: sxc,exc,syc,eyc,nxc,nyc,ipc,irc
 sll_int32 :: klevel,itype,jtype,ijtype,kount(20),l,nrel
 sll_int32 :: sx1,ex1,sy1,ey1
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 
@@ -251,7 +244,7 @@ call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),ipost, &
               comm2d,myid,neighbor,bd,phibc(1,kcur),     &
               itype,jtype)
 
-# if cdebug
+# if DEBUG
 timing(89)=timing(89)+MPI_WTIME()-tinitial
 # endif
 

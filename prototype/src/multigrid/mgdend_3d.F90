@@ -1,31 +1,13 @@
+!> Free the MPI datatypes associated witht the multigrid code
+!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 subroutine mgdend(ngrid)
 use mgd3
-#ifdef INTEL
-implicit none
-include "mpif.h"
-#else
 use mpi
+#include "sll_working_precision.h"
 implicit none
-#endif
-
 #include "mgd3.h"
-
 integer :: ngrid
-
-!------------------------------------------------------------------------
-! Free the MPI datatypes associated witht the multigrid code
-!
-! Code      : mgd3, 3-D parallel multigrid solver
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-! Called in : main
-! Calls     : MPI_TYPE_FREE
-!------------------------------------------------------------------------
-
-integer j,k,ierr
-# if cdebug
-double precision tinitial
-tinitial=MPI_WTIME()
-# endif
+sll_int32 :: j,k,ierr
 
 do k=1,ngrid-1
   do j=1,7
@@ -36,8 +18,5 @@ do k=1,ngrid-1
   end do
 end do
 
-# if cdebug
-timing(97)=timing(97)+MPI_WTIME()-tinitial
-# endif
 return
 end

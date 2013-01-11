@@ -1,42 +1,26 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_hdf5_io
-!
-!> @namespace sll_hdf5_io
-!> @author
-!> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
-!> @brief
-!> Implements the functions to write hdf5 file to store heavy data
-!>
-!> @details
+!> \brief
+!>Implements the functions to write hdf5 file to store heavy data.
+!> \details
 !> With HDF5 you can store several datasets in a single file.
-!>
-!> @remark
-!> import this module with
-!> \code use sll_hdf5_io \endcode
-!>
-!> External links:
-!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
-!
-! REVISION HISTORY:
-! 05 12 2011 - Initial Version
-! @todo - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module sll_hdf5_io
 #include "sll_working_precision.h"
   
+!! import this module with
+!! \code use sll_hdf5_io \endcode
+!! \author Pierre Navaro
+!! External links:
+!! - HDF5 file (http://www.hdfgroup.org/HDF5/)
 #ifndef NOHDF5
 
 use hdf5
   
   implicit none
   
+  !> Write a nD array of float in double precision in a HDF5 file 
+  !>\param[in]  file_id file unit number
+  !>\param[in]  array array
+  !>\param[in]  dsetname dataset name
+  !>\param[out] error dataset error code
   interface sll_hdf5_write_array
      module procedure sll_hdf5_write_array_1d
      module procedure sll_hdf5_write_array_2d
@@ -45,36 +29,30 @@ use hdf5
 
 contains
   
-  !> Create HDF5 file :
-  !>    - Initialize fortran interface
-  !>    - Create a new file using default properties
+  !> Create HDF5 file
   subroutine sll_hdf5_file_create(filename,file_id,error)
-    character(len=*) , intent(in)  :: filename  
-    integer(hid_t)   , intent(out) :: file_id   
-    integer,           intent(out) :: error
+    character(len=*) , intent(in)  :: filename  !< file name
+    integer(hid_t)   , intent(out) :: file_id   !< unit number
+    integer,           intent(out) :: error     !< error code
     
     call H5open_f(error)
     call H5Fcreate_f(filename,H5F_ACC_TRUNC_F,file_id,error)
   end subroutine sll_hdf5_file_create
 
-  !> Open HDF5 file :
-  !>    - Initialize fortran interface
-  !>    - Open a HDF5 file
+  !> Open HDF5 file
   subroutine sll_hdf5_file_open(filename,file_id,error)
-    character(len=*) , intent(in)  :: filename  
-    integer(hid_t)   , intent(out) :: file_id   
-    integer,           intent(out) :: error
+    character(len=*) , intent(in)  :: filename  !< file name
+    integer(hid_t)   , intent(out) :: file_id   !< unit number
+    integer,           intent(out) :: error     !< error code
     
     call H5open_f(error)
     call H5Fopen_f(filename,H5F_ACC_RDONLY_F,file_id,error)
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
-  !>    - Close fortran interface
-  !>    - Close a HDF5 file
   subroutine sll_hdf5_file_close(file_id,error)
-    integer(hid_t), intent(in) :: file_id
-    integer :: error
+    integer(hid_t), intent(in) :: file_id  !< file unit number
+    integer, intent(out) :: error          !< error code
 
     call H5Fclose_f(file_id,error)
   end subroutine sll_hdf5_file_close
@@ -105,22 +83,13 @@ contains
     call H5Dclose_f(dataset_id,error);                                    \
   end subroutine func_name
 
-!> Write a 1D array of float in double precision in a HDF5 file: 
-!>    - Create a dataspace with 1 dimension
-!>    - Write the dataset
-!>    - Close dataset and dataspace
+!> Write a 1D array of float in double precision in a HDF5 file 
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_1d, 1, array(:))
 
-!> Write a 2D array of float in double precision in a HDF5 file: 
-!>    - Create a dataspace with 2 dimensions
-!>    - Write the dataset
-!>    - Close dataset and dataspace
+!> Write a 2D array of float in double precision in a HDF5 file 
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_2d, 2, array(:,:))
 
-!> Write a 3D array of float in double precision in a HDF5 file: 
-!>    - Create a dataspace with 3 dimensions
-!>    - Write the dataset
-!>    - Close dataset and dataspace
+!> Write a 3D array of float in double precision in a HDF5 file
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
 
 !Gysela functions that can be useful for future

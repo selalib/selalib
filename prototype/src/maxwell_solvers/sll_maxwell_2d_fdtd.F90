@@ -2,7 +2,7 @@
 !>@namespace sll_maxwell_2d_fdtd
 !>
 !> @author
-!> Pierre Navaro Philippe Helluy
+!> Pierre Navaro 
 !>
 !
 ! DESCRIPTION: 
@@ -46,8 +46,17 @@ end interface
 public :: initialize, solve, ampere, faraday
 
 !> Object with data to solve Maxwell equation 
-!> Maxwell in TE mode: (Ex,Ey,Bz)
-!> Only 2D  for now
+!! Maxwell in TE mode: (Ex,Ey,Bz)
+!! Only 2D  for now
+!!@param c light speed
+!!@param e_0 electric conductivity 
+!!@param i1 first indice of the block dimesnion 1
+!!@param i2 last indice of the block dimension 1
+!!@param j1 first indice of the block dimesnion 2
+!!@param j2 last indice of the block dimension 2
+!!@param dx step size along dimension 1
+!!@param dy step size along dimension 2
+!!@param polarization polarization type (TE or TM)
 type, public :: maxwell_fdtd
   sll_real64 :: c
   sll_real64 :: e_0
@@ -58,6 +67,7 @@ end type maxwell_fdtd
 
 contains
 
+!>Initilialize the maxwell solver
 subroutine new_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
 
    type(maxwell_fdtd) :: this

@@ -11,6 +11,7 @@
 subroutine mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,rc,            &
                        sxf,exf,syf,eyf,nxf,nyf,rf,            &
                        comm2d,myid,neighbor,bd,itype,jtype)
+use mpi
 #include "sll_working_precision.h"
 #include "mgd2.h"
 sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,sxf,exf,syf,eyf,nxf,nyf
@@ -21,8 +22,8 @@ sll_real64 :: rf(sxf-1:exf+1,syf-1:eyf+1)
 
 sll_int32  :: i,j,ic,jc,i1,i2,j1,j2
 
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 
@@ -52,7 +53,7 @@ end do
 !
 call gxch1lin(rc,comm2d,sxc,exc,syc,eyc,neighbor,bd,itype,jtype)
 
-# if cdebug
+# if DEBUG
 timing(86)=timing(86)+MPI_WTIME()-tinitial
 # endif
 

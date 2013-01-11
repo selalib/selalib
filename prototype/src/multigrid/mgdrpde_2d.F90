@@ -1,4 +1,5 @@
 subroutine mgdrpde(sxm,exm,sym,eym,nxm,nym,cof,xl,yl,bd)
+use mpi
 #include "sll_working_precision.h"
 #include "mgd2.h"
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,bd(8)
@@ -24,8 +25,8 @@ sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),xl,yl
 !------------------------------------------------------------------------
 sll_real64 :: dlx,odlxx,dly,odlyy
 sll_int32  :: i,j
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 !
@@ -75,7 +76,7 @@ do j=sym,eym
   end do
 end do
 
-# if cdebug
+# if DEBUG
 timing(82)=timing(82)+MPI_WTIME()-tinitial
 # endif
 

@@ -17,6 +17,7 @@
 ! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 !------------------------------------------------------------------------
 subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
+use mpi
 #include "sll_working_precision.h"
 #include "mgd2.h"
 
@@ -25,8 +26,8 @@ sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
 sll_real64 :: r(sxf-1:exf+1,syf-1:eyf+1),xl,yl
 sll_real64 :: dlx,todlxx,dly,todlyy,rij
 sll_int32  :: i,j
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 
@@ -75,7 +76,7 @@ do j=syf,eyf
   end do
 end do
 
-# if cdebug
+# if DEBUG
 timing(84)=timing(84)+MPI_WTIME()-tinitial
 # endif
 
