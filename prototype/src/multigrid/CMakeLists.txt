@@ -59,6 +59,11 @@ IF(HDF5_PARALLEL_ENABLED)
 
    ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90)
 
-   TARGET_LINK_LIBRARIES(test_mgd2 sll_mgd2) 
-
+   TARGET_LINK_LIBRARIES(test_mgd2 sll_mgd2 
+                                   sll_low_level_file_io_parallel
+	                           sll_collective
+	                           sll_utilities
+	                           sll_memory
+	                           sll_assertion
+                                   ${HDF5_LIBRARIES})
 ENDIF()

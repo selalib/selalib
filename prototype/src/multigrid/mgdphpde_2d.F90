@@ -1,5 +1,6 @@
 subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,         &
                     sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl)
+use mpi
 #include "sll_working_precision.h"
 #include "mgd2.h"
 
@@ -31,8 +32,8 @@ sll_real64 :: r(sx-1:ex+1,sy-1:ey+1),xl,yl
 !------------------------------------------------------------------------
 sll_real64 :: dlx,fodlxx,dly,fodlyy
 sll_int32  :: i,j,im,jm,is,js,istep,jstep
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 !
@@ -92,7 +93,7 @@ do j=sym,eym
   end do
 end do
 
-# if cdebug
+# if DEBUG
 timing(83)=timing(83)+MPI_WTIME()-tinitial
 # endif
 

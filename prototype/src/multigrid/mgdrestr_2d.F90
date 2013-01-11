@@ -3,6 +3,7 @@ subroutine mgdrestr(sxc,exc,syc,eyc,nxc,nyc,phic,rhsc,   &
                     resf,iresw,comm2d,myid,neighbor,bd,  &
                     itype,jtype,ijtype)
 
+use mpi
 #include "sll_working_precision.h"
 #include "mgd2.h"
 
@@ -25,8 +26,8 @@ sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
 ! Calls     : gxch1lin, gxch1cor
 !------------------------------------------------------------------------
 sll_int32 :: i,j,isrt,jsrt,iinc,jinc,ic,jc
-# if cdebug
-double precision tinitial
+# if DEBUG
+sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
 !------------------------------------------------------------------------
@@ -143,7 +144,7 @@ else if (iresw.eq.2) then
 end if
 # endif
 
-# if cdebug
+# if DEBUG
 timing(91)=timing(91)+MPI_WTIME()-tinitial
 # endif
 

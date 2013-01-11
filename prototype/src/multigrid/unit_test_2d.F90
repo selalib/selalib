@@ -1,4 +1,3 @@
-!>-----------------------------------------------------------------------
 !> Test problem for 2D multigrid parallel code mgd2. mgd2 solves the
 !> non-separable elliptic equation div(1/r*grad(p))=f on a rectangular
 !> domain with a staggered uniform grid and either periodic or Neumann
@@ -20,25 +19,21 @@
 !> parameters. Once this is done, mgdsolver can be called any number
 !> of times, the variables are not overwritten.
 !>
-!> Input     : none
-!> Outputs   : messages -> out* files
-!> Code      : tmgd2, 2-D parallel multigrid solver
-!> Calls     : MPI_INIT, MPI_COMM_RANK, MPI_COMM_SIZE, MPI_CART_CREATE,
-!>             MPI_COMM_RANK, MPI_CART_SHIFT, MPI_BARRIER, MPI_SENDRECV,
-!>             MPI_CART_GET, MPE_DECOMP1D, 
-!>             mgdinit, ginit, mgdsolver, gerr
-!>-----------------------------------------------------------------------
-!>
 program test_mgd2
 use mpi
-use mgd2
+use hdf5
+use sll_xdmf_parallel
+
+use sll_mgd2
 #include "sll_working_precision.h"
+#include "sll_memory.h"
 #include "mgd2.h"
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: maxcy,kcycle,iprer,ipost,iresw,nwork
 sll_int32  :: ngrid,nxdim,nydim
 sll_real64 :: tolmax
+
 parameter( nxp2=66, nyp2=66)
 parameter( nx=nxp2-2, ny=nyp2-2)
 parameter( nxprocs=2, nyprocs=2)
@@ -50,34 +45,46 @@ parameter( ngrid=max(iex,jey))
 parameter( nxdim=int(float(nxp2-2)/float(nxprocs)+0.99)+2)
 parameter( nydim=int(float(nyp2-2)/float(nyprocs)+0.99)+2)
 
-
-
-logical nprscr,periods(2)
-sll_int32  :: numprocs,myid,comm2d,sx,ex,sy,ey,neighbor(8),bd(8),iter
-sll_int32  :: realtype,ibdry,jbdry
-sll_int32  :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
-sll_int32  :: status(MPI_STATUS_SIZE),nbrright,nbrbottom,nbrleft,nbrtop
-sll_real64 :: p(nxdim,nydim),r(nxdim,nydim),f(nxdim,nydim),work(nwork)
-sll_real64 :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro,err,pi
+logical           :: nprscr,periods(2)
+sll_int32         :: numprocs,myid,comm2d,sx,ex,sy,ey,neighbor(8),bd(8),iter
+sll_int32         :: realtype,ibdry,jbdry
+sll_int32         :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
+sll_int32         :: status(MPI_STATUS_SIZE),nbrright,nbrbottom,nbrleft,nbrtop
+sll_real64        :: p(nxdim,nydim),r(nxdim,nydim),f(nxdim,nydim),work(nwork)
+sll_real64        :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro,pi
 character(len=20) :: outfile
 character(len=1)  :: num(10)
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
+
+sll_real64, dimension(:,:), allocatable :: xdata
+sll_real64, dimension(:,:), allocatable :: ydata
+sll_real64, dimension(:,:), allocatable :: zdata
+sll_int32 :: xml_id
+sll_int32 :: error
+
+integer(HID_T)                  :: file_id
+integer(HSIZE_T),  dimension(2) :: datadims
+integer(HSSIZE_T), dimension(2) :: offset 
+
+character(len=8), parameter :: xfile = "xdata.h5" 
+character(len=8), parameter :: yfile = "ydata.h5"
+character(len=8), parameter :: zfile = "zdata.h5"
+character(len=8), parameter :: xdset = "xdataset"
+character(len=8), parameter :: ydset = "ydataset"
+character(len=8), parameter :: zdset = "zdataset"
+
 pi=4.0d0*atan(1.0d0)
-!-----------------------------------------------------------------------
+
 ! initialize MPI and create a datatype for real numbers
-!
+
 call MPI_INIT(ierr)
 call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
-# if double_precision
-realtype=MPI_DOUBLE_PRECISION
-# else
-realtype=MPI_REAL
-# endif
-!-----------------------------------------------------------------------
+realtype=MPI_REAL8
+
 ! open file for output of messages and check that the number of 
 ! processes is correct
-!
+
 outfile='out'
 outfile(4:5)='_'
 m1=mod(myid,10)+1
@@ -176,9 +183,7 @@ end do
            ' -> put the parameter formula for nydim in main.F in ', &
            'comments and'/,'     assign to nydim the maximum ', &
            'value of ey-sy+3',/)
-!-----------------------------------------------------------------------
-! initialize mgd2
-!
+
 call mgdinit(vbc,phibc,ixp,jyq,iex,jey,ngrid,nxp2,nyp2, &
              sx,ex,sy,ey,realtype,nxprocs,nyprocs,nwork, &
              ibdry,jbdry,myid,nerror)
@@ -198,21 +203,64 @@ hxi=float(nxp2-2)/xl
 hyi=float(nyp2-2)/yl
 write(6,*) 'hxi=',hxi,' hyi=',hyi
 call ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi)
-!-----------------------------------------------------------------------
-! solve using mgd2
-!
+
 call mgdsolver(2,sx,ex,sy,ey,p,f,r,ngrid,work, &
                maxcy,tolmax,kcycle,iprer,ipost,iresw, &
                xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
                bd,phibc,iter,.true.,nerror)
+
 if (nerror.eq.1) goto 1000
-!-----------------------------------------------------------------------
 ! compare numerical and exact solutions
-!
 call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny)
-!-----------------------------------------------------------------------
+
+SLL_ALLOCATE(xdata(sx:ex,sy:ey),error)
+SLL_ALLOCATE(ydata(sx:ex,sy:ey),error)
+SLL_ALLOCATE(zdata(sx:ex,sy:ey),error)
+do j = sy, ey
+   do i = sx, ex
+      xdata(i,j) = float(i-1)/(nx-1)
+      ydata(i,j) = float(j-1)/(ny-1)
+      zdata(i,j) = myid
+   end do
+end do
+  
+offset(1) =  sx - 1
+offset(2) =  sy - 1
+  
+datadims(1) = nx
+datadims(2) = ny
+write(*,"(7i5)") myid, sx, ex, sy, ey, nx, ny
+call sll_xdmf_open("mgd2.xmf","mesh2d",nx,ny,xml_id,error)
+call sll_xdmf_write_array("mesh2d",datadims,offset,xdata,'x1',error)
+call sll_xdmf_write_array("mesh2d",datadims,offset,ydata,'x2',error)
+call sll_xdmf_write_array("mesh2d",datadims,offset,p(sx:ex,sy:ey),"p", &
+                          error,xml_id,"Node")
+call sll_xdmf_close(xml_id,error)
+
+call sll_hdf5_file_create(xfile, file_id, error)
+call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
+call sll_hdf5_file_close(file_id,error)
+  
+call sll_hdf5_file_create(yfile, file_id, error)
+call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
+call sll_hdf5_file_close(file_id,error)
+  
+call sll_hdf5_file_create(zfile, file_id, error)
+call sll_hdf5_write_array(file_id, datadims,offset,zdata,zdset,error)
+call sll_hdf5_file_close(file_id,error)
+
+if (myid == 0) then
+  
+   call sll_xml_file_create("mgd2.xmf",xml_id,error)
+   call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
+   call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
+   call sll_xml_file_close(file_id,error)
+
+end if
+
 close(8)
 call mgdend(ngrid)
+print*,"PASSED"
 stop
 1000  write(6,200)
 200   format(/,'ERROR in multigrid code',/)
@@ -231,16 +279,14 @@ sll_real64 :: f(sx-1:ex+1,sy-1:ey+1),hxi,hyi,wk,pi
 sll_int32  :: i,j
 sll_real64 :: cnst,cx,cy,xi,yj
 
-do j=sy-1,ey+1
-  do i=sx-1,ex+1
-    p(i,j)=0.0d0
-    r(i,j)=1.0d0
-    f(i,j)=0.0d0
-  end do
-end do
-cnst=-8.0d0*(pi*wk)**2
-cx=2.0d0*pi*wk
-cy=2.0d0*pi*wk
+p = 0.0d0
+r = 1.0d0
+f = 0.0d0
+
+cnst = -8.0d0*(pi*wk)**2
+cx   = 2.0d0*pi*wk
+cy   = 2.0d0*pi*wk
+
 do j=sy,ey
   yj=(float(j)-1.5d0)/hyi
   do i=sx,ex
@@ -275,11 +321,7 @@ end do
 !
 ! calculate global error
 !
-# if double_precision
-call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM,comm2d,ierr)
-# else
-call MPI_ALLREDUCE(errloc,err,1,MPI_REAL,MPI_SUM,comm2d,ierr)
-# endif
+call MPI_ALLREDUCE(errloc,err,1,MPI_REAL8,MPI_SUM,comm2d,ierr)
 write(6,100) errloc/float(nx*ny),err/float(nx*ny)
 100   format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
 

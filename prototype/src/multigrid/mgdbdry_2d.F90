@@ -12,7 +12,7 @@ use mpi
 sll_int32  :: sxm,exm,sym,eym,bd(8)
 sll_real64 :: phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
 sll_int32 :: i,j
-# if cdebug
+# if DEBUG
 double precision tinitial
 tinitial=MPI_WTIME()
 # endif
@@ -54,7 +54,7 @@ else if (bd(7).eq.2) then
    end do
 end if
 
-# if cdebug
+# if DEBUG
 timing(93)=timing(93)+MPI_WTIME()-tinitial
 # endif
 

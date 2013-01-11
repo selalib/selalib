@@ -258,8 +258,5 @@ icf=kcbgn(kcur)
 call mgdrelax(sxf,exf,syf,eyf,szf,ezf,work(ipf),work(icf),ipost, &
               comm3dp,neighbor,bd,phibc(1,kcur),kdatatype(1,kcur),IOUT)
 
-# if cdebug
-timing(89)=timing(89)+MPI_WTIME()-tinitial
-# endif
 return
 end

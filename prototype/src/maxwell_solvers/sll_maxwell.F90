@@ -1,29 +1,8 @@
-!>
-!>@namespace sll_maxwell_2d
-!>
-!> @author
-!> Pierre Navaro Philippe Helluy
-!>
-!
-! DESCRIPTION: 
-!
-!> @brief
-!> Implements the Maxwell solver in 2D
-!>
-!>@details
-!>This module depends on:
-!> - memory
-!> - precision
-!> - assert 
-!> - numerical_utilities
-!> - constants
-!> - sll_utilities
-!>
-! REVISION HISTORY:
-! 03 02 2012 - Initial Version  (fevrier)
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
+!> \author
+!> Pierre Navaro navaro@math.unistra.fr
 
+!> \details
+!> Common data for Maxwell solvers
 module sll_maxwell
 
 #include "sll_working_precision.h"

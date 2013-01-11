@@ -373,6 +373,7 @@ close(8)
 if (myid==0) print*,"PASSED"
 
 call sll_halt_collective()
+print*,"PASSED"
 
 stop
 1000  write(6,200)
