@@ -1,25 +1,6 @@
-!------------------------------------------------------------------------------
-! Selalib
-!------------------------------------------------------------------------------
-! MODULE: sll_ascii_io
-!
-! DESCRIPTION:
-!> @file sll_ascii_io.F90
-!> @namespace sll_ascii_io
-!> @author Pierre Navaro IRMA http://www-irma.u-strasbg.fr
-!> @brief Module that contains routine to write data in file in ASCII 
-!! format
-!> @details 
-!> Don't forget to open a file before using these routines
-!>
+!> Module that contains routine to write data in file in ASCII format
+!> \author Pierre Navaro IRMA http://www-irma.u-strasbg.fr
 !> \remark use it for GNUplot
-!!         
-!>
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
-
 module sll_ascii_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"

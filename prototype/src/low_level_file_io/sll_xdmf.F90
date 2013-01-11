@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-!>@NAMESPACE: sll_xdmf
+!>\namespace sll_xdmf
 !
 !> @author
 !> Pierre Navaro
