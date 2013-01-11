@@ -232,10 +232,9 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 #Here is defined the library containing the parallel simulations. 
-#Please add your new simulation_MYMETHOD.F90 
+#Please add there your new simulation_MYMETHOD.F90 
 ############################################################
 
 add_library( sll_simulations STATIC simulation_base_class.F90 
@@ -248,7 +247,7 @@ add_dependencies( sll_simulations
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
   sll_remap
@@ -266,6 +265,7 @@ add_dependencies( sll_simulations
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
 
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 
 target_link_libraries( test_vp4d_sim
@@ -273,7 +273,7 @@ target_link_libraries( test_vp4d_sim
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
   sll_remap
@@ -285,6 +285,8 @@ target_link_libraries( test_vp4d_sim
   sll_assertion 	
   sll_working_precision
   )
+
+
 
 add_executable( test_vp6d_sim unit_test_6d.F90 )
 
@@ -293,7 +295,7 @@ target_link_libraries( test_vp6d_sim
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
   sll_remap
@@ -305,7 +307,6 @@ target_link_libraries( test_vp6d_sim
   sll_assertion 	
   sll_working_precision
   )
+ENDIF()
 
 
-
-ENDIF() 

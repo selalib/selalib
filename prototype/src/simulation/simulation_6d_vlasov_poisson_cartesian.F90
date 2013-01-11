@@ -38,7 +38,7 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      sll_int32  :: nc_x5
      sll_int32  :: nc_x6
      ! for initializers
-     type(init_test_6d_par)                      :: init_4d
+     type(init_test_6d_par)                      :: init_6d
      type(simple_cartesian_6d_mesh), pointer     :: mesh6d
      type(poisson_3d_periodic_plan_par), pointer :: poisson_plan
 
@@ -47,7 +47,7 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      ! allows sequential operations in one given direction. f_x1x2x3 should 
      ! permit to carry out sequential operations in x1, x2 and x3 for example.
      sll_real64, dimension(:,:,:,:,:,:), pointer     :: f_x1x2x3 
-     sll_real64, dimension(:,:,:,:,:,:), pointer     :: f_x3x4x5
+     sll_real64, dimension(:,:,:,:,:,:), pointer     :: f_x4x5x6
      sll_real64, dimension(:,:,:,:,:), allocatable   :: partial_reduction
      sll_real64, dimension(:,:,:), allocatable       :: rho_x1 
      sll_real64, dimension(:,:,:), allocatable       :: rho_x2 
@@ -73,7 +73,6 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      type(remap_plan_3D_real64), pointer :: seqx1_to_seqx2
      type(remap_plan_3D_real64), pointer :: seqx2_to_seqx3
      ! remaps for the electric field data
-!     type(remap_plan_2D), pointer :: efld_split_to_seqx1
      type(remap_plan_3D_real64), pointer :: ex_x1_to_split
      type(remap_plan_3D_real64), pointer :: ey_x2_to_split
      type(remap_plan_3D_real64), pointer :: ez_x3_to_split
@@ -86,16 +85,12 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      type(cubic_spline_1d_interpolator) :: interp_x4
      type(cubic_spline_1d_interpolator) :: interp_x5
      type(cubic_spline_1d_interpolator) :: interp_x6
-     ! electric field
-     sll_real64, dimension(:,:,:), allocatable :: efield_x1
-     sll_real64, dimension(:,:,:), allocatable :: efield_x2
-     sll_real64, dimension(:,:,:), allocatable :: efield_split
    contains
      procedure, pass(sim) :: run => run_vp6d_cartesian
   end type sll_simulation_6d_vlasov_poisson_cart
 
   interface delete
-     module procedure delete_vp4d_par_cart
+     module procedure delete_vp6d_par_cart
   end interface delete
 
 contains
@@ -123,6 +118,7 @@ contains
     sll_int32  :: num_iterations  ! this should go in the simulation type
     sll_real64 :: ex
     sll_real64 :: ey
+    sll_real64 :: ez
     sll_int32  :: itmp1
     sll_int32  :: itmp2
 
@@ -155,12 +151,12 @@ contains
     ! three. This should be set up at initialization.
     sim%power2 = int(log(real(sim%world_size))/log(2.0))
     call factorize_in_three_powers_of_two( sim%world_size, &
-         sim%proc_x1, &
-         sim%proc_x2, &
-         sim%proc_x3 )
-    sim%proc_x4 = 1
-    sim%proc_x5 = 1
-    sim%proc_x6 = 1
+         sim%nproc_x1, &
+         sim%nproc_x2, &
+         sim%nproc_x3 )
+    sim%nproc_x4 = 1
+    sim%nproc_x5 = 1
+    sim%nproc_x6 = 1
     
     call initialize_layout_with_distributed_6D_array( &
          sim%nc_x1, &
@@ -513,7 +509,7 @@ contains
     do itime=1, num_iterations
        ! Carry out a 'dt/2' advection in the velocities.
        ! Start with vx...(x4)
-       call compute_local_sizes_4d( sim%sequential_x4x5x6, &
+       call compute_local_sizes_6d( sim%sequential_x4x5x6, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4, loc_sz_x5, loc_sz_x6 )
  
        do n=1, sim%mesh6d%num_cells6
@@ -617,7 +613,7 @@ contains
                       vmin = sim%mesh6d%x5_min
                       delta = sim%mesh6d%delta_x5
                       alpha = (vmin + (l-1)*delta)*sim%dt
-                      sim%f_x1x2(i,:,k,l,m,n) = &
+                      sim%f_x1x2x3(i,:,k,l,m,n) = &
                            sim%interp_x2%interpolate_array_disp( &
                              sim%nc_x2, &
                              sim%f_x1x2x3(i,:,k,l,m,n), &
@@ -801,7 +797,7 @@ contains
     sll_int32  :: exponent
     sll_int32  :: tmpi
 
-    SLL_ASSERT( is_power_of_two(num_procs) )
+    SLL_ASSERT( is_power_of_two(int(num_procs,f64)) )
     exponent = int(log(real(num_procs))/log(2.0))
     if( (exponent > 0) .and. divisible_by_three(exponent) ) then
        tmpi = exponent/3
@@ -838,7 +834,7 @@ contains
     sll_int32  :: exponent
     sll_int32  :: tmpi
 
-    SLL_ASSERT( is_power_of_two(num_procs) )
+    SLL_ASSERT( is_power_of_two(int(num_procs,f64)) )
     exponent = int(log(real(num_procs))/log(2.0))
     if( (exponent > 0) .and. divisible_by_two(exponent) ) then
        tmpi = exponent/2
@@ -854,38 +850,49 @@ contains
           f2   = 2**((exponent+1)/2)
        end if
     end if
-  end subroutine factorize_in_three_powers_of_two
+  end subroutine factorize_in_two_powers_of_two
 
 
-  subroutine delete_vp4d_par_cart( sim )
-    class(sll_simulation_4d_vlasov_poisson_cart) :: sim
+  subroutine delete_vp6d_par_cart( sim )
+    class(sll_simulation_6d_vlasov_poisson_cart) :: sim
     sll_int32 :: ierr
-    SLL_DEALLOCATE( sim%f_x1x2, ierr )
-    SLL_DEALLOCATE( sim%f_x3x4, ierr )
+    SLL_DEALLOCATE( sim%f_x1x2x3, ierr )
+    SLL_DEALLOCATE( sim%f_x4x5x6, ierr )
     SLL_DEALLOCATE_ARRAY( sim%partial_reduction, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x2, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%rho_x3, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
-    call delete( sim%sequential_x1x2 )
-    call delete( sim%sequential_x3x4 )
+    SLL_DEALLOCATE_ARRAY( sim%phi_x3, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%ex_x1, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%ex_split, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%ey_x2, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%ey_split, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%ez_x3, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%ez_split, ierr )
+    call delete( sim%sequential_x1x2x3 )
+    call delete( sim%sequential_x4x5x6 )
     call delete( sim%rho_seq_x1 )
     call delete( sim%rho_seq_x2 )
+    call delete( sim%rho_seq_x3 )
     call delete( sim%split_rho_layout )
     call delete( sim%split_to_seqx1 )
-    call delete( sim%efld_seqx1_to_seqx2 )
-    call delete( sim%efld_seqx2_to_split )
-    call delete( sim%seqx1x2_to_seqx3x4 )
-    call delete( sim%seqx3x4_to_seqx1x2 )
+    call delete( sim%seqx1_to_seqx2 )
+    call delete( sim%seqx2_to_seqx3 )
+    call delete( sim%ex_x1_to_split )
+    call delete( sim%ey_x2_to_split )
+    call delete( sim%ez_x3_to_split )
+    call delete( sim%seqx1x2x3_to_seqx4x5x6 )
+    call delete( sim%seqx4x5x6_to_seqx1x2x3 )
     call delete( sim%interp_x1 )
     call delete( sim%interp_x2 )
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )
-    SLL_DEALLOCATE_ARRAY( sim%efield_x1, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%efield_x2, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%efield_split, ierr )
-  end subroutine delete_vp4d_par_cart
+    call delete( sim%interp_x5 )
+    call delete( sim%interp_x6 )
+  end subroutine delete_vp6d_par_cart
 
   ! we put the reduction functions here for now, since we are only using
   ! simple data for the distribution function. This should go elsewhere.
@@ -977,12 +984,12 @@ contains
        do j=1,numpts2
           do i=1,numpts1
              do l=1,numpts4
-                rho(i,j,k) = rho(i,j,k) + partial(i,j,k,l)*delta4
+                rho(i,j,k) = rho(i,j,k) + partial(i,j,k,l,1)*delta4
              end do
           end do
        end do
     end do
-  end subroutine compute_charge_density
+  end subroutine compute_charge_density_6d
   
   ! Temporary utility to compute the values of the electric field given 
   ! a pointer to an array of double precision values. It uses 
@@ -1032,7 +1039,7 @@ contains
     sll_int32, intent(in)                     :: num_pts_x2
     sll_int32, intent(in)                     :: num_pts_x3
     sll_real64, intent(in)                    :: delta_x1
-    sll_comp64, dimension(:,:,:), intent(out) :: efield_x1
+    sll_real64, dimension(:,:,:), intent(out) :: efield_x1
     sll_int32                                 :: i
     sll_int32                                 :: j
     sll_int32                                 :: k
@@ -1083,7 +1090,7 @@ contains
     sll_int32, intent(in)                     :: num_pts_x2
     sll_int32, intent(in)                     :: num_pts_x3
     sll_real64, intent(in)                    :: delta_x2
-    sll_comp64, dimension(:,:,:), intent(out) :: efield_x2
+    sll_real64, dimension(:,:,:), intent(out) :: efield_x2
     sll_int32                                 :: i
     sll_int32                                 :: j
     sll_int32                                 :: k
@@ -1134,7 +1141,7 @@ contains
     sll_int32, intent(in)                     :: num_pts_x2
     sll_int32, intent(in)                     :: num_pts_x3
     sll_real64, intent(in)                    :: delta_x3
-    sll_comp64, dimension(:,:,:), intent(out) :: efield_x3
+    sll_real64, dimension(:,:,:), intent(out) :: efield_x3
     sll_int32                                 :: i
     sll_int32                                 :: j
     sll_int32                                 :: k
@@ -1384,4 +1391,4 @@ contains
     
   end subroutine plot_fields
   
-end module sll_simulation_4d_vlasov_poisson_cartesian
+end module sll_simulation_6d_vlasov_poisson_cartesian
