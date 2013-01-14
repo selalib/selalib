@@ -73,8 +73,8 @@ program VP1d_deltaf
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
   type(time_mark), pointer :: time0 => NULL()
- ! type(time_mark), pointer :: t1 => NULL()
-  sll_real64 :: time1
+  ! type(time_mark), pointer :: t1 => NULL()
+  sll_real64 :: time1, som
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
@@ -252,11 +252,11 @@ program VP1d_deltaf
   case default
      print*,'interpolation in x number ', interpol_x, ' not implemented' 
   end select
-     select case (interpol_v)
+  select case (interpol_v)
   case (1) ! hermite cubic spline
      call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
      interp_v => interp_spline_v
- case (2) ! arbitrary order periodic splines
+  case (2) ! arbitrary order periodic splines
      call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
      interp_v => interp_per_v
   case(3) ! arbitrary order Lagrange periodic interpolation
@@ -267,7 +267,7 @@ program VP1d_deltaf
   case default
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select
- 
+
   !$omp barrier
   !$omp single
   fname = 'dist_func'
@@ -303,7 +303,40 @@ program VP1d_deltaf
      enddo
   endif
 
-  ! write initial fields
+!!$  do i= 1, Ncx
+!!$     som = 0.
+!!$     do j = 1, Ncv/2
+!!$        som = som + FIELD_DATA(f)(i,j)*v_array(j) + FIELD_DATA(f)(i,Ncv+2-j)*v_array(Ncv+2-j)
+!!$     end do
+!!$     write(*,'(I5,2g24.17)'), i, sum(FIELD_DATA(f)(i,:)*v_array), som
+!!$  end do
+!!$ 
+!!$  write(*,*), 'rho * e', sum (rho(1:Ncx)*efield(1:Ncx))
+  ! write diagnostics at time 0
+  time = 0.
+  mass = 0.
+  momentum = 0.
+  l1norm = 0.
+  l2norm = 0.
+  kinetic_energy = 0.
+  potential_energy = 0.
+  do i = 1, Ncx 
+     mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
+     l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
+     l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
+     momentum = momentum + sum((FIELD_DATA(f)(i,1:Ncv/2) &
+                -(FIELD_DATA(f)(i,Ncv+1:Ncv/2:-1)))*v_array(1:Ncv/2))
+     kinetic_energy = kinetic_energy + 0.5_f64 * &
+          sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
+  end do
+  mass = mass * delta_x * delta_v 
+  l1norm = l1norm  * delta_x * delta_v
+  l2norm = l2norm  * delta_x * delta_v
+  momentum = momentum * delta_x * delta_v
+  kinetic_energy = kinetic_energy * delta_x * delta_v
+  potential_energy =  0.5_f64 * sum(efield(1:Ncx)**2) * delta_x
+  write(th_diag,'(f12.5,7g20.12)') time, mass, l1norm, momentum, l2norm, &
+       kinetic_energy, potential_energy, kinetic_energy + potential_energy
   do i = 1, Ncx+1
      write(ex_diag,"(g15.5)",advance="no") efield(i)
      write(rho_diag,"(g15.5)",advance="no") rho(i)
@@ -320,7 +353,7 @@ program VP1d_deltaf
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-!     time0 => reset_time_mark(time0)
+     !     time0 => reset_time_mark(time0)
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
@@ -387,7 +420,8 @@ program VP1d_deltaf
            mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
            l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
            l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-           momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
+           momentum = momentum + sum((FIELD_DATA(f)(i,1:Ncv/2) &
+                -(FIELD_DATA(f)(i,Ncv+1:Ncv/2:-1)))*v_array(1:Ncv/2))
            kinetic_energy = kinetic_energy + 0.5_f64 * &
                 sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
         end do
@@ -407,7 +441,7 @@ program VP1d_deltaf
         write(ex_diag,*)
         write(rho_diag,*)
         write(eapp_diag,*)
-        
+
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
