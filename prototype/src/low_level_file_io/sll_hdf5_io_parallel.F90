@@ -1,36 +1,9 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_hdf5_io
-!
-!> @author
-!> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
+!> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write hdf5 file to store heavy data
-!>
-!>@details
+!> @details
 !> With HDF5 you can store several datasets in a single file.
-!>
-!> If HDF5 is not installed you can build the library without it.
-!> This is control by the variable <code>NOHDF5</code>.
-!> HDF5 is set by default but il you prefer binary just add 
-!>
-!> <h2>How to use this module: </h2>
-!>
-!> \code use sll_hdf5_io_parallel \endcode
-!>
-!> External links:
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
-!
-! REVISION HISTORY:
-! 29 09 2012 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module sll_hdf5_io_parallel
 #include "sll_working_precision.h"
   
@@ -53,13 +26,13 @@ contains
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
   subroutine sll_hdf5_file_create(filename, file_id, error)
-    character(len=*) , intent(in)  :: filename  
-    integer,           intent(out) :: error
-    integer(hid_t), intent(out)    :: file_id   
-    integer(hid_t)                 :: plist_id 
-    integer                        :: comm, info
-    integer                        :: mpi_size
-    integer                        :: mpi_rank
+    character(len=*), intent(in)  :: filename   !< file name
+    integer,          intent(out) :: error      !< error code
+    integer(hid_t),   intent(out) :: file_id    !< file unit number
+    integer(hid_t)                :: plist_id   
+    integer                       :: comm, info
+    integer                       :: mpi_size
+    integer                       :: mpi_rank
 
     comm     = sll_world_collective%comm
     info     = MPI_INFO_NULL
@@ -74,14 +47,14 @@ contains
 
   end subroutine sll_hdf5_file_create
 
-  !> Open HDF5 file 
+  !> Open HDF5 file :
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
   subroutine sll_hdf5_file_open(file_id,filename,error)
-    character(len=*) , intent(in)  :: filename  
-    integer(hid_t)                 :: file_id   
-    integer(hid_t)                 :: plist_id   
-    integer,           intent(out) :: error
+    character(len=*) , intent(in)  :: filename    !< file name
+    integer(hid_t)                 :: file_id     !< file unit number
+    integer,           intent(out) :: error       !< error code
+    integer(hid_t)                 :: plist_id    
     integer                        :: comm, info
     integer                        :: mpi_size
     integer                        :: mpi_rank
@@ -100,10 +73,9 @@ contains
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
-
   subroutine sll_hdf5_file_close(file_id,error)
-    integer(hid_t)                 :: file_id   
-    integer :: error
+    integer(hid_t), intent(in)     :: file_id   !< file unit number
+    integer, intent(out)           :: error     !< error code
 
     !
     ! Close property list and the file.
@@ -163,19 +135,19 @@ contains
     call h5dclose_f(dset_id, error);                                   \
   end subroutine func_name
 
-!> Write a 1D array of float in double precision in a HDF5 file: 
+!> Write a 1D array of float in double precision in a HDF5 file : 
 !>    - Create a dataspace with 1 dimension
 !>    - Write the dataset
 !>    - Close dataset and dataspace
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_1d, 1, array(:))
 
-!> Write a 2D array of float in double precision in a HDF5 file: 
+!> Write a 2D array of float in double precision in a HDF5 file : 
 !>    - Create a dataspace with 2 dimensions
 !>    - Write the dataset
 !>    - Close dataset and dataspace
 NEW_HDF5_FUNCTION(sll_hdf5_write_array_2d, 2, array(:,:))
 
-!> Write a 3D array of float in double precision in a HDF5 file: 
+!> Write a 3D array of float in double precision in a HDF5 file : 
 !>    - Create a dataspace with 3 dimensions
 !>    - Write the dataset
 !>    - Close dataset and dataspace
