@@ -1,40 +1,16 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-!>\namespace sll_xdmf
-!
-!> @author
-!> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
+!> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
-!>
-!>@details
+!> @details
 !> In <b> XDMF </b> (eXtensible Data Model and Format) the description of the 
 !> data is separate from the values themselves. Light data is stored using XML, 
-!> Heavy data is stored using HDF5 or Binary files. 
-!>
-!> This is control by the variable <code>NOHDF5</code>.
-!> HDF5 is set by default but il you prefer binary just add 
-!>
-!> <h2>How to use this module: </h2>
-!>
-!> <p> Just use the module \a sll_low_level_file_io 
+!> Heavy data is stored using HDF5 or Binary files. \n
 !> \code use sll_low_level_file_io \endcode
 !>
 !> External links:
 !> - https://wci.llnl.gov/codes/visit/
 !> - http://www.xdmf.org/index.php/Main_Page
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module sll_xdmf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -50,16 +26,19 @@ module sll_xdmf
   
   implicit none
   
+  !> Create a xmf file 
   interface sll_xdmf_open
      module procedure sll_xdmf_open_2d
      module procedure sll_xdmf_open_3d
   end interface
 
+  ! Write the field in xdmf format
   interface sll_xdmf_write_array
      module procedure sll_xdmf_array_2d
      module procedure sll_xdmf_array_3d
   end interface
   
+  ! Close the xmf file
   interface sll_xdmf_close
      module procedure sll_xml_file_close
   end interface
@@ -69,12 +48,12 @@ contains
   !>Open a XDMF format file for a 2d plot
   subroutine sll_xdmf_open_2d(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
 
-    character(len=*), intent(in) :: file_name
-    character(len=*), intent(in) :: mesh_name
-    sll_int32, intent(out)       :: file_id
-    sll_int32, intent(out)       :: error
-    sll_int32                    :: nnodes_x1
-    sll_int32                    :: nnodes_x2
+    character(len=*), intent(in) :: file_name  !< xmf file name
+    character(len=*), intent(in) :: mesh_name  !< mesh file name
+    sll_int32, intent(in)        :: nnodes_x1  !< x node number
+    sll_int32, intent(in)        :: nnodes_x2  !< y node number
+    sll_int32, intent(out)       :: file_id    !< file unit number
+    sll_int32, intent(out)       :: error      !< error code
     
     call sll_xml_file_create(trim(file_name),file_id,error)
     call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2)
@@ -91,13 +70,13 @@ contains
     file_id,   &
     error)
     
-    character(len=*), intent(in) :: file_name
-    character(len=*), intent(in) :: mesh_name
-    sll_int32, intent(out)       :: file_id
-    sll_int32, intent(out)       :: error
-    sll_int32                    :: nnodes_x1
-    sll_int32                    :: nnodes_x2
-    sll_int32                    :: nnodes_x3
+    character(len=*), intent(in) :: file_name  !< xmf file name
+    character(len=*), intent(in) :: mesh_name  !< mesh name
+    sll_int32, intent(out)       :: file_id    !< file unit number
+    sll_int32, intent(out)       :: error      !< error code
+    sll_int32, intent(in)        :: nnodes_x1  !< x nodes number
+    sll_int32, intent(in)        :: nnodes_x2  !< y nodes number
+    sll_int32, intent(in)        :: nnodes_x3  !< z nodes number
 
     call sll_xml_file_create(trim(file_name),file_id,error)
     call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2, nnodes_x3)
@@ -107,15 +86,15 @@ contains
   !>Write 2d array in binary or hdf5 file and the matching line in XDMF file
   subroutine sll_xdmf_array_2d(mesh_name,array,array_name,error,xmffile_id,center)
 
-    character(len=*), intent(in)    :: mesh_name
-    sll_real64, intent(in)          :: array(:,:)
-    character(len=*), intent(in)    :: array_name
-    sll_int32, intent(out)          :: error
-    sll_int32                       :: file_id
-    sll_int32                       :: npoints_x1
-    sll_int32                       :: npoints_x2
-    sll_int32, intent(in), optional :: xmffile_id
-    character(len=4), optional      :: center
+    character(len=*), intent(in)    :: mesh_name   !< mesh name
+    sll_real64, intent(in)          :: array(:,:)  !< data array
+    character(len=*), intent(in)    :: array_name  !< array name (hdf5 dataset)
+    sll_int32, intent(out)          :: error       !< error code
+    sll_int32, intent(in)           :: file_id     !< hdf5 file unit number
+    sll_int32                       :: npoints_x1  !< x nodes number
+    sll_int32                       :: npoints_x2  !< y nodes number
+    sll_int32, intent(in), optional :: xmffile_id  !< xmf file unit number
+    character(len=4), optional      :: center      !< "Node" or "Cell"
     
     npoints_x1 = size(array,1)
     npoints_x2 = size(array,2)

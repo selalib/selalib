@@ -1,15 +1,15 @@
+!> \author Pierre Navaro
 !> \brief
-!>Implements the functions to write hdf5 file to store heavy data.
+!> Implements the functions to write hdf5 file to store heavy data.
 !> \details
 !> With HDF5 you can store several datasets in a single file.
+!> import this module with
+!> \code use sll_hdf5_io \endcode
+!> External links:
+!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 module sll_hdf5_io
 #include "sll_working_precision.h"
   
-!! import this module with
-!! \code use sll_hdf5_io \endcode
-!! \author Pierre Navaro
-!! External links:
-!! - HDF5 file (http://www.hdfgroup.org/HDF5/)
 #ifndef NOHDF5
 
 use hdf5

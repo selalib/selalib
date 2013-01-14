@@ -1,29 +1,7 @@
-!>
-!>@namespace sll_maxwell_2d_fdtd
-!>
 !> @author
 !> Pierre Navaro 
-!>
-!
-! DESCRIPTION: 
-!
 !> @brief
-!> Implements the Maxwell solver in 2D
-!>
-!>@details
-!>This module depends on:
-!> - memory
-!> - precision
-!> - assert 
-!> - numerical_utilities
-!> - constants
-!> - sll_utilities
-!>
-! REVISION HISTORY:
-! 03 02 2012 - Initial Version  (fevrier)
-! 01 11 2012 - Silver Muller BC are not implemented for TM polarization
-!------------------------------------------------------------------------------
-
+!> Implements the Maxwell solver in 2D with FDTD method
 module sll_maxwell_2d_fdtd
 
 #include "sll_working_precision.h"

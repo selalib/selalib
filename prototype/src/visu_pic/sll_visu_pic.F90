@@ -1,10 +1,6 @@
-!> \file sll_visu_pic.F90
-!> \namespace sll_visu_pic
-!> \authors                    
-!> Pierre Navaro (navaro@math.unistra.fr) 
+!> \author Pierre Navaro
 !> \brief  
 !> This module provides some routines for plotting during PIC simulations.
-!>
 module sll_visu_pic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -15,14 +11,17 @@ use sll_xdmf
 
 implicit none
 
+!> plot particles centers with gnuplot
 interface particles_center_gnuplot
    module procedure xv_particles_center_gnuplot
 end interface particles_center_gnuplot
 
+!> plot particles distribution with gnuplot
 interface distribution_gnuplot
    module procedure distribution_xv_gnuplot
 end interface distribution_gnuplot
 
+!> write point3d file to plot particles characteristics
 interface plot_format_points3d
    module procedure pq_plot_format_points3d
    module procedure pqr_plot_format_points3d
