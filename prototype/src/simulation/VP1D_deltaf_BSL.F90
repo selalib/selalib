@@ -5,6 +5,8 @@
 !> driven simulations (i.e. with an external force or non driven can
 !> be performed
 
+#define DIAG
+
 program VP1d_deltaf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -61,7 +63,7 @@ program VP1d_deltaf
   sll_int32  :: istep
   sll_int32  :: nbox
   sll_real64 :: eps
-  sll_real64 :: v, v0
+  sll_real64 :: x,v, v0
   sll_int32  :: i, j
   sll_int32  :: ierr   ! error flag 
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
@@ -189,12 +191,13 @@ program VP1d_deltaf
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
 
   ! open files for time history diagnostics
+#ifdef DIAG
   open(unit = th_diag, file = 'thdiag.dat') 
   open(unit = ex_diag, file = 'exdiag.dat')
   open(unit = rho_diag, file = 'rhodiag.dat') 
   open(unit = eapp_diag, file = 'eappdiag.dat')
   open(unit = adr_diag, file = 'adrdiag.dat') 
-
+#endif
   ! initialization of distribution_function
   call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, &
        is_delta_f)
@@ -232,17 +235,17 @@ program VP1d_deltaf
   ! initialize interpolators
   call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
   call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 4)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 4)
 
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
 
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
 
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, 10)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, 10)
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, 18)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, 18)
 
 
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
@@ -250,11 +253,11 @@ program VP1d_deltaf
 
 
   call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
-  interp_x => interp_spline_x
-  interp_v => interp_spline_v
+  !interp_x => interp_spline_x
+  !interp_v => interp_spline_v
 
-  !interp_x => interp_per_x
-  !interp_v => interp_per_v
+  interp_x => interp_per_x
+  interp_v => interp_per_v
   !$omp barrier
   !$omp single
   fname = 'dist_func'
@@ -269,8 +272,9 @@ program VP1d_deltaf
        interp_v, &
        p_init_f )
   ! write mesh and initial distribution function
+#ifdef DIAG
   call write_scalar_field_2d(f) 
-
+#endif
   ! initialize Poisson
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
@@ -291,10 +295,12 @@ program VP1d_deltaf
   endif
 
   ! write initial fields
+#ifdef DIAG
   write(ex_diag,*) efield
   write(rho_diag,*) rho
   write(eapp_diag,*) e_app
   write(adr_diag,*) istep*dt, adr
+#endif
   !$omp end single
 
 
@@ -379,6 +385,7 @@ program VP1d_deltaf
         momentum = momentum * delta_x * delta_v
         kinetic_energy = kinetic_energy * delta_x * delta_v
         potential_energy =   0.5_f64 * sum(efield**2) * delta_x
+#ifdef DIAG
         write(th_diag,'(f12.5,7g20.14)') time, mass, l1norm, momentum, l2norm, &
              kinetic_energy, potential_energy, kinetic_energy + potential_energy
         write(ex_diag,*) efield
@@ -387,6 +394,7 @@ program VP1d_deltaf
         write(adr_diag,*) istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
+#endif
      end if
      !$omp end single
   end do
@@ -397,19 +405,36 @@ program VP1d_deltaf
   call delete(interp_per_x)
   call delete(interp_per_v)
   !$omp end parallel
+#ifdef DIAG
   close(th_diag)
   close(ex_diag)
+
+  open(unit=900,file='E_final_sll.dat')
+  do i=1,Ncx
+    x = xmin+(i-1)*delta_x
+    write(900,*) x,efield(i)+e_app(i),efield(i),e_app(i)
+  enddo
+  close(900)
 
   open(unit=900,file='f_save.dat')
   write(900,*) Ncx
   write(900,*) Ncv
-  do j=1,Ncv+1
-    do i=1,Ncx+1
-      write(900,*) FIELD_DATA(f) (i,j)
+  if(is_delta_f==0)then
+    do j=1,Ncv+1
+      do i=1,Ncx+1
+        write(900,*) FIELD_DATA(f) (i,j)
+      enddo
     enddo
-  enddo
+  else
+    do j=1,Ncv+1
+      v = vmin + (j-1) * delta_v
+      do i=1,Ncx+1
+        write(900,*) FIELD_DATA(f) (i,j)- f_equilibrium(v)
+      enddo
+    enddo  
+  endif  
   close(900)
-
+#endif
 
   print*, 'VP1D_deltaf_cart has exited normally'
 contains
