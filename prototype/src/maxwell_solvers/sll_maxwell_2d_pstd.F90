@@ -1,31 +1,3 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!> @namespace sll_maxwell_2d_pstd
-!> @author
-!> Pierre Navaro
-!>
-!------------------------------------------------------------------------------
-! DESCRIPTION: 
-!------------------------------------------------------------------------------
-!> @brief
-!> Implements the Maxwell solver in 2D with periodic boundary conditions
-!>
-!>@details
-!>This module depends on:
-!> - memory
-!> - precision
-!> - assert 
-!> - numerical_utilities
-!> - constants
-!> - mesh_types
-!> - diagnostics
-!> - sll_utilities
-!>
-! REVISION HISTORY:
-! 31 10 2012 - Initial Version with boundary conditions
-! 01 11 2012 - Implement absorbing and reflection boundary conditions
-!------------------------------------------------------------------------------
 
 #define FFTW_ALLOCATE(array,array_size,sz_array,p_array)      \
 sz_array = int((array_size/2+1),C_SIZE_T);                    \
@@ -45,8 +17,12 @@ call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / ny
 
 
+!> @author
+!> Pierre Navaro
+!> @brief
+!> Implements the Maxwell solver in 2D with periodic boundary conditions
+!> with PSTD method
 module sll_maxwell_2d_pstd
-
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"

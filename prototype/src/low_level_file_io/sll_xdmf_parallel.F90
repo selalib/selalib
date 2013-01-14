@@ -1,10 +1,4 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-!> @namespace sll_xdmf_parallel
-!>
-!> @author Pierre Navaro (navaro@math.unistra.fr)
+!> @author Pierre Navaro
 !>
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
@@ -15,7 +9,7 @@
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
 !>
-!> <h2>How to use this module: </h2>
+!> <b>How to use this module: </b>
 !>
 !> \code use sll_xdmf_parallel \endcode
 !> and link with sll_low_level_io_parallel library
@@ -24,11 +18,6 @@
 !> - https://wci.llnl.gov/codes/visit/
 !> - http://www.xdmf.org/index.php/Main_Page
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module sll_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -40,6 +29,7 @@ module sll_xdmf_parallel
   
   implicit none
   
+  !Create the xdmf file
   interface sll_xdmf_open
      module procedure sll_xdmf_open_2d
      module procedure sll_xdmf_open_3d
