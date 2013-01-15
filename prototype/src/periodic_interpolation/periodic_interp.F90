@@ -221,49 +221,90 @@ contains
        call fourier1dper(this%buf,this%sizebuf,u_out,this%N,alpha/this%N)
             
     case (TRIGO_FFT_SELALIB)
+
 #define GET_MODE0(mode,data) \
       mode = cmplx(data(1),0.0_f64,kind=f64)
 #define SET_MODE0(new_value,data) \
       data(1) = real(new_value,kind=f64)
 
+#ifdef SLLFFT
 #define GET_MODE_N_2(mode,data) \
-      mode = cmplx(data(this%N),0.0_f64,kind=f64)
+        mode = cmplx(data(2),0.0_f64,kind=f64)
 #define GET_MODE_GT_N_2(mode,data,k) \
-      mode = cmplx( data(2*(this%N-k)) , -data(2*(n-k)) ,kind=f64)
-#define GET_MODE_LT_N_2(mode,data,k) \   
-      mode = cmplx( data(2*k) , data(2*k) ,kind=f64)     
-
+        mode = cmplx( data(2*(this%N-k)+1) , -data(2*(this%N-k)+2),kind=f64)
+#define GET_MODE_LT_N_2(mode,data,k) \        
+        mode = cmplx( data(2*k+1) , data(2*k+2) ,kind=f64)
 #define SET_MODE_N_2(new_value,data) \
-      data(this%N) = real(new_value,kind=f64)
+        data(2) = real(new_value,kind=f64)
 #define SET_MODE_GT_N_2(new_value,data,k) \
-      data(2*(this%N-k)) = real(new_value,kind=f64); \
-      data(2*(this%N-k)+1) = -dimag(new_value)
+        data(2*(this%N-k)+1) = real(new_value,kind=f64); \
+        data(2*(this%N-k)+2) = -dimag(new_value)
 #define SET_MODE_LT_N_2(new_value,data,k) \
-      data(2*k) = real(new_value,kind=f64); \
-      data(2*k+1) = dimag(new_value)
+        data(2*k+1) = real(new_value,kind=f64); \
+        data(2*k+2) = dimag(new_value)
+#endif
 
+#ifdef FFTPACK
+#define GET_MODE_N_2(mode,data) \
+        mode = cmplx(data(this%N),0.0_f64,kind=f64)
+#define GET_MODE_GT_N_2(mode,data,k) \
+        mode = cmplx( data(2*(this%N-k)) , -data(2*(n-k)+1) ,kind=f64)
+#define GET_MODE_LT_N_2(mode,data,k) \   
+        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)     
+#define SET_MODE_N_2(new_value,data) \
+        data(this%N) = real(new_value,kind=f64)
+#define SET_MODE_GT_N_2(new_value,data,k) \
+        data(2*(this%N-k)) = real(new_value,kind=f64); \
+        data(2*(this%N-k)+1) = -dimag(new_value)
+#define SET_MODE_LT_N_2(new_value,data,k) \
+        data(2*k) = real(new_value,kind=f64); \
+        data(2*k+1) = dimag(new_value)
+#endif
+
+#ifdef FFTW
+#define GET_MODE_N_2(mode,data) \
+        mode = cmplx(data(this%N/2+1),0.0_f64,kind=f64)
+#define GET_MODE_GT_N_2(mode,data,k) \
+        mode = cmplx( data(this%N-k+1) , -data(k+1) ,kind=f64)
+#define GET_MODE_LT_N_2(mode,data,k) \ 
+        mode = cmplx( data(k+1) , data(this%N-k+1) ,kind=f64)  
+#define SET_MODE_N_2(new_value,data) \
+        data(this%N/2+1) = real(new_value,kind=f64)
+#define SET_MODE_GT_N_2(new_value,data,k) \
+        data(this%N-k+1) = real(new_value,kind=f64); \
+        data(k+1) = -dimag(new_value)
+#define SET_MODE_LT_N_2(new_value,data,k) \
+        data(k+1) = real(new_value,kind=f64); \
+        data(this%N-k+1) = dimag(new_value)
+#endif
        u_out = u
        call fft_apply_plan(this%pfwd,u_out,u_out)
        tmp2=-ii*2._f64*sll_pi/this%N*alpha
-!*** Partie avec macro 
-  !       GET_MODE0(tmp,u_out)
-  !       tmp=tmp*exp(tmp2*real(0,f64))
-  !       SET_MODE0(tmp,u_out)
-  !       GET_MODE_N_2(tmp,u_out)
-  !       tmp=tmp*exp(tmp2*real(this%N/2,f64))
-  !       SET_MODE_N_2(tmp,u_out)
-  !     do i=1,this%N/2-1
-  !       GET_MODE_N_2(tmp,u_out)
-  !       tmp=tmp*exp(tmp2*real(i,f64))
-  !       SET_MODE_N_2(tmp,u_out)
-  !     enddo
-!*** Partie sans macro
-       do i=0,this%N/2
-         tmp=fft_get_mode(this%pfwd,u_out,i)
+
+         GET_MODE0(tmp,u_out)
+         tmp=tmp*exp(tmp2*real(0,f64))
+         SET_MODE0(tmp,u_out)
+       do i=1,this%N/2-1
+         GET_MODE_LT_N_2(tmp,u_out,i)
          tmp=tmp*exp(tmp2*real(i,f64))
-         call fft_set_mode(this%pfwd,u_out,tmp,i)
-        !print *,i,tmp,this%N/2,this%N,this%pfwd%problem_shape 
+         SET_MODE_LT_N_2(tmp,u_out,i)
        enddo
+         GET_MODE_N_2(tmp,u_out)
+         tmp=tmp*exp(tmp2*real(this%N/2,f64))
+         SET_MODE_N_2(tmp,u_out)
+
+!*** Partie sans macro
+      ! do i=0,this%N/2
+      !   tmp=fft_get_mode(this%pfwd,u_out,i)
+      !   !print *,i,tmp,alpha
+      !   !tmp=tmp*exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+      !   tmp=tmp*exp(tmp2*real(i,f64))
+      !   !print *,i,tmp,exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+      !   call fft_set_mode(this%pfwd,u_out,tmp,i)
+      !   !tmp=fft_get_mode(this%pfwd,u_out,i)
+      !   !print *,i,tmp
+      ! enddo
+
        call fft_apply_plan(this%pinv,u_out,u_out)        
     case default
        print*, 'periodic_interp_module:interpolator ',this%interpolator, ' not implemented'

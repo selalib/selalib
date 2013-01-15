@@ -18,11 +18,12 @@ double precision :: timerforward,timerinverse,timeraccess
 double precision :: timeraccessmacro,timertotal,timertotalmacro
 sll_comp64 :: mode
 
+
 #define GET_MODE0(mode,data) \
       mode = cmplx(data(0),0.0_f64,kind=f64)
 #define SET_MODE0(new_value,data) \
       data(0) = real(new_value,kind=f64)
-print*,""
+
 if(_DEFAULTFFTLIB==0) then
  print*,"librairie fft : SLLFFT"
 !#define GET_MODE_N_2(mode,data) \
