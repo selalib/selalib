@@ -1,23 +1,28 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !> @author Pierre Navaro
-!>
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
-!>
-!>@details
+!> @details
 !> In <b> XDMF </b> (eXtensible Data Model and Format) the description of the 
 !> data is separate from the values themselves. Light data is stored using XML, 
 !> Heavy data is stored using Parallel HDF5. These files are readable by 
 !> Paraview.
-!>
-!> <b>How to use this module: </b>
-!>
-!> \code use sll_xdmf_parallel \endcode
-!> and link with sll_low_level_io_parallel library
-!>
-!> External links:
-!> - https://wci.llnl.gov/codes/visit/
-!> - http://www.xdmf.org/index.php/Main_Page
-!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 module sll_xdmf_parallel
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -29,12 +34,13 @@ module sll_xdmf_parallel
   
   implicit none
   
-  !Create the xdmf file
+  !>Create the xdmf file
   interface sll_xdmf_open
      module procedure sll_xdmf_open_2d
      module procedure sll_xdmf_open_3d
   end interface
 
+  !> Write and array in an xmf file
   interface sll_xdmf_write_array
      module procedure sll_xdmf_array_2d
      module procedure sll_xdmf_array_3d

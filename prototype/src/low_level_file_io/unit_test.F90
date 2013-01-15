@@ -105,6 +105,10 @@ call sll_xdmf_corect2d_nodes( "test_corect2d", df, "d_f1", &
 !>Axis are perpendicular and spacing is define by eta1 and eta2 arrays
 call sll_xdmf_rect2d_nodes( "test_rect2d", df, "d_f2", ray, theta, "HDF5") 
 
+!>The field is describe on a structured curvilinear mesh.
+!>Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
+call sll_xdmf_curv2d_nodes( "test_curv2d", df, "d_f3", x1, x2, "HDF5") 
+
 end subroutine test_2d
 
 subroutine test_3d()
