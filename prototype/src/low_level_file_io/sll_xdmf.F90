@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write xdmf file plotable by VisIt
@@ -5,12 +22,6 @@
 !> In <b> XDMF </b> (eXtensible Data Model and Format) the description of the 
 !> data is separate from the values themselves. Light data is stored using XML, 
 !> Heavy data is stored using HDF5 or Binary files. \n
-!> \code use sll_low_level_file_io \endcode
-!>
-!> External links:
-!> - https://wci.llnl.gov/codes/visit/
-!> - http://www.xdmf.org/index.php/Main_Page
-!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 module sll_xdmf
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -90,7 +101,7 @@ contains
     sll_real64, intent(in)          :: array(:,:)  !< data array
     character(len=*), intent(in)    :: array_name  !< array name (hdf5 dataset)
     sll_int32, intent(out)          :: error       !< error code
-    sll_int32, intent(in)           :: file_id     !< hdf5 file unit number
+    sll_int32                       :: file_id     !< hdf5 file unit number
     sll_int32                       :: npoints_x1  !< x nodes number
     sll_int32                       :: npoints_x2  !< y nodes number
     sll_int32, intent(in), optional :: xmffile_id  !< xmf file unit number
@@ -132,16 +143,16 @@ contains
   !>Write 3d array in binary or hdf5 file and the matching line in XDMF file
   subroutine sll_xdmf_array_3d(mesh_name,array,array_name,error,xmffile_id,center)
 
-    character(len=*), intent(in)    :: mesh_name
-    sll_real64, intent(in)          :: array(:,:,:)
-    character(len=*), intent(in)    :: array_name
-    sll_int32, intent(out)          :: error
-    sll_int32                       :: file_id
-    sll_int32, intent(in), optional :: xmffile_id
-    character(len=4), optional      :: center
-    sll_int32                       :: npoints_x1
-    sll_int32                       :: npoints_x2
-    sll_int32                       :: npoints_x3
+    character(len=*), intent(in)    :: mesh_name    !< mesh name
+    sll_real64, intent(in)          :: array(:,:,:) !< data array
+    character(len=*), intent(in)    :: array_name   !< hdf5 dataset name
+    sll_int32, intent(out)          :: error        !< error code
+    sll_int32                       :: file_id      !< hdf5 file unit number
+    sll_int32, intent(in), optional :: xmffile_id   !< xmf file unit number
+    character(len=4), optional      :: center       !< "Node" or "Cell"
+    sll_int32                       :: npoints_x1   !< x nodes number
+    sll_int32                       :: npoints_x2   !< y nodes number
+    sll_int32                       :: npoints_x3   !< z nodes number
     
     npoints_x1 = size(array,1)
     npoints_x2 = size(array,2)
@@ -182,7 +193,6 @@ contains
 
   end subroutine sll_xdmf_array_3d
 
-  !----------------------------------------------------------------------------
   !> Outputs an error message:
   !>   - PRTFIL : unit number for print-out
   !>   - SEVRTY : 'W' - Warning 'F' - Fatal
@@ -190,9 +200,10 @@ contains
   !>   - ErrMsg : error message
   subroutine errout( prtfil, sevrty, lwhere, ErrMsg )
 
-    sll_int32, intent(in) ::  prtfil
-    character(len=1),intent(in) :: sevrty 
-    character(len=*),intent(in) :: lwhere , ErrMsg
+    sll_int32, intent(in) ::  prtfil      !< output file unit number
+    character(len=1),intent(in) :: sevrty !< "W" or "F" : Warning or Fatal
+    character(len=*),intent(in) :: lwhere !< subroutine where the error appends
+    character(len=*),intent(in) :: ErrMsg !< error message
     
     write( prtfil, * )
     select case ( sevrty )  !     *** Severity ***
@@ -223,21 +234,23 @@ contains
   !>Subroutine to write a 2D array in xdmf format
   !>The field is describe on a cartesian mesh
   !>Axis are perpendicular and spacing is constant
-  subroutine sll_xdmf_corect2d_nodes( file_name, array, array_name, &
-                                      eta1_min, delta_eta1, eta2_min, delta_eta2, file_format) 
+  subroutine sll_xdmf_corect2d_nodes( file_name,array,array_name, &
+                                      eta1_min,delta_eta1,        &
+                                      eta2_min, delta_eta2, file_format) 
 
-    sll_real64, intent(in)          :: array(:,:)
-    character(len=*), intent(in)    :: file_name
-    character(len=*), intent(in)    :: array_name
-    sll_int32                       :: error
-    sll_real64                      :: eta1_min
-    sll_real64                      :: eta2_min
-    sll_real64                      :: delta_eta1
-    sll_real64                      :: delta_eta2
-    sll_int32                       :: file_id, hfile_id
-    sll_int32                       :: nx1
-    sll_int32                       :: nx2
-    character(len=4), optional      :: file_format
+    sll_real64, intent(in)          :: array(:,:)  !< data array
+    character(len=*), intent(in)    :: file_name   !< xmf file name
+    character(len=*), intent(in)    :: array_name  !< field name
+    sll_int32                       :: error       !< error code
+    sll_real64                      :: eta1_min    !< x min
+    sll_real64                      :: eta2_min    !< y min
+    sll_real64                      :: delta_eta1  !< dx
+    sll_real64                      :: delta_eta2  !< dy
+    sll_int32                       :: file_id     !< xmf file unit number
+    sll_int32                       :: hfile_id    !< h5 file unit number
+    sll_int32                       :: nx1         !< x nodes number
+    sll_int32                       :: nx2         !< y nodes number
+    character(len=4), optional      :: file_format !< "HDF5" or "Binary"
     
     nx1 = size(array,1)
     nx2 = size(array,2)
@@ -275,21 +288,23 @@ contains
 
   end subroutine sll_xdmf_corect2d_nodes
 
-  !>Subroutine to write a 2D array in xdmf format
-  !>The field is describe on a cartesian mesh
-  !>Axis are perpendicular and spacing is define by eta1 and eta2 arrays
-  subroutine sll_xdmf_rect2d_nodes( file_name, array, array_name, eta1, eta2, file_format) 
+  !>Subroutine to write a 2D array in xdmf format.
+  !>The field is describe on a cartesian mesh.
+  !>Axis are perpendicular and spacing is define by eta1 and eta2 arrays.
+  subroutine sll_xdmf_rect2d_nodes( file_name, array, array_name,  &
+                                    eta1, eta2, file_format) 
 
-    sll_real64, intent(in)          :: array(:,:)
-    sll_real64, intent(in)          :: eta1(:)
-    sll_real64, intent(in)          :: eta2(:)
-    character(len=*), intent(in)    :: file_name
-    character(len=*), intent(in)    :: array_name
-    sll_int32                       :: error
-    sll_int32                       :: file_id, hfile_id
-    sll_int32                       :: nx1
-    sll_int32                       :: nx2
-    character(len=4), optional      :: file_format
+    sll_real64, intent(in)          :: array(:,:) !< data array
+    sll_real64, intent(in)          :: eta1(:)    !< x data
+    sll_real64, intent(in)          :: eta2(:)    !< y data
+    character(len=*), intent(in)    :: file_name  !< xmf file name
+    character(len=*), intent(in)    :: array_name !< array name
+    sll_int32                       :: error      !< error code
+    sll_int32                       :: file_id    !< xmf file unit number
+    sll_int32                       :: hfile_id   !< h5 file unit number
+    sll_int32                       :: nx1        !< x nodes number
+    sll_int32                       :: nx2        !< y nodes number
+    character(len=4), optional      :: file_format!< file format "HDF5" or "Binary"
     sll_int32                       :: i, j
     
     nx1 = size(array,1)
@@ -303,10 +318,12 @@ contains
     write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
     write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
-    write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx1,"' NumberType='Float' Format='XML'>"
+    write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx1, &
+                             "' NumberType='Float' Format='XML'>"
     write(file_id,*) (eta1(i),i=1,nx1)
     write(file_id,"(a)")"</DataItem>"
-    write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx2,"' NumberType='Float' Format='XML'>"
+    write(file_id,"(a,i5,a)")"<DataItem Dimensions='",nx2, &
+                             "' NumberType='Float' Format='XML'>"
     write(file_id,*) (eta2(j),j=1,nx2)
     write(file_id,"(a)")"</DataItem>"
     write(file_id,"(a)")"</Geometry>"
@@ -331,5 +348,90 @@ contains
 
   end subroutine sll_xdmf_rect2d_nodes
 
-  
+  !>Subroutine to write a 2D array in xdmf format.
+  !>The field is describe on a cartesian mesh.
+  !>Nodes coordinates are defined by x and y (2d arrays).
+  subroutine sll_xdmf_curv2d_nodes( file_name, array, array_name,  &
+                                    eta1, eta2, file_format) 
+    sll_real64, intent(in)          :: array(:,:) !< data array
+    sll_real64, intent(in)          :: eta1(:,:)  !< x data
+    sll_real64, intent(in)          :: eta2(:,:)  !< y data
+    character(len=*), intent(in)    :: file_name  !< xmf file name
+    character(len=*), intent(in)    :: array_name !< array name
+    sll_int32                       :: error      !< error code
+    sll_int32                       :: file_id    !< xmf file unit number
+    sll_int32                       :: hfile_id   !< h5 file unit number
+    sll_int32                       :: nx1        !< x nodes number
+    sll_int32                       :: nx2        !< y nodes number
+    character(len=4), optional      :: file_format!< file format "HDF5" or "Binary"
+    
+    nx1 = size(array,1)
+    nx2 = size(array,2)
+
+    SLL_ASSERT(nx1 == size(eta1,1))
+    SLL_ASSERT(nx2 == size(eta2,2))
+
+    call sll_xml_file_create(file_name//".xmf",file_id,error)
+    write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+    write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
+                          nx2,nx1,"'/>"
+    write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
+
+    if(present(file_format) .and. file_format == "HDF5") then
+
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)")array_name//".h5:/x1_values"
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)")array_name//".h5:/x2_values"
+       write(file_id,"(a)")"</DataItem>"
+#ifndef NOHDF5
+       call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
+       call sll_hdf5_write_array(hfile_id,eta1,"/x1_values",error)
+       call sll_hdf5_write_array(hfile_id,eta2,"/x2_values",error)
+#endif
+
+    else
+
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='4' Format='XML'>"
+       call sll_ascii_write_array(file_id,eta1,error)
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='4' Format='XML'>"
+       call sll_ascii_write_array(file_id,eta2,error)
+       write(file_id,"(a)")"</DataItem>"
+
+    end if
+
+    write(file_id,"(a)")"</Geometry>"
+    write(file_id,"(a)") &
+    "<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
+
+    if(present(file_format) .and. file_format == "HDF5") then
+
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)")array_name//".h5:/node_values"
+#ifndef NOHDF5
+       call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
+       call sll_hdf5_file_close(hfile_id, error)
+#endif
+
+    else
+
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                 "' NumberType='Float' Precision='4' Format='XML'>"
+       call sll_ascii_write_array(file_id,array,error)
+
+    end if
+
+    write(file_id,"(a)")"</DataItem>"
+    write(file_id,"(a)")"</Attribute>"
+    call sll_xml_file_close(file_id,error)
+
+  end subroutine sll_xdmf_curv2d_nodes
+
 end module sll_xdmf

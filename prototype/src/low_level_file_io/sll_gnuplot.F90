@@ -1,9 +1,23 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write data file plotable by GNUplot
-!> @details
-!> External links:
-!> - http://www.gnuplot.info
 module sll_gnuplot
 #include "sll_working_precision.h"
 #include "sll_assert.h"
