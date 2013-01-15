@@ -1,12 +1,25 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !> \author Pierre Navaro
 !> \brief
 !> Implements the functions to write hdf5 file to store heavy data.
 !> \details
 !> With HDF5 you can store several datasets in a single file.
-!> import this module with
-!> \code use sll_hdf5_io \endcode
-!> External links:
-!> - HDF5 file (http://www.hdfgroup.org/HDF5/)
 module sll_hdf5_io
 #include "sll_working_precision.h"
   

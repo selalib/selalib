@@ -1,10 +1,20 @@
-#define NEW_FUNCTION(func_name, dataspace_dimension, array_name_and_dims) \
-     subroutine func_name(file_id,array,error);                           \
-       sll_int32 , intent(in)       :: file_id;                           \
-       sll_int32 , intent(out)      :: error;                             \
-       sll_real64, intent(in)       :: array_name_and_dims;               \
-       write(file_id,IOSTAT=error) array;                                 \
-end subroutine func_name
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 
 !> @author Pierre Navaro
 !> @brief
@@ -76,6 +86,13 @@ close(file_id, IOSTAT=error)
      
 end subroutine sll_binary_file_close
 
+#define NEW_FUNCTION(func_name, dataspace_dimension, array_name_and_dims) \
+     subroutine func_name(file_id,array,error);                           \
+       sll_int32 , intent(in)       :: file_id;                           \
+       sll_int32 , intent(out)      :: error;                             \
+       sll_real64, intent(in)       :: array_name_and_dims;               \
+       write(file_id,IOSTAT=error) array;                                 \
+end subroutine func_name
 
 !> Write a 1D array in the binary file file_id
 NEW_FUNCTION(sll_binary_write_array_1d, 1, array(:))
