@@ -1,32 +1,28 @@
-program unit_test
-
+!> @author Pierre Navaro
+!> tests I/O functions 
+module test_io
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 use sll_xdmf
 use numeric_constants
 
-implicit none
-
-sll_int32 :: i, j, k
-sll_int32 :: error
-sll_int32 :: file_id
-
-call test_2d()
-
-call test_3d()
-
-print*,"PASSED"
+sll_int32, private :: i, j, k !< indices
+sll_int32 :: error            !< error code
+sll_int32 :: file_id          !< file unit number
+sll_int32 :: iplot            !< plot counter
+character(len=4) :: cplot     !< plot counter
 
 contains
 
-subroutine test_2d()
+!>Unit test program for xdmf outputs in 2d
+subroutine test_io_2d()
 
 sll_int32 :: nnodes_x1, nnodes_x2
 sll_int32 :: ncells_x1, ncells_x2
 
 sll_real64 :: angle, xt, vt, R
-sll_real64, allocatable, dimension(:) :: theta
-sll_real64, allocatable, dimension(:) :: ray
+sll_real64, allocatable, dimension(:)   :: theta
+sll_real64, allocatable, dimension(:)   :: ray
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: df
@@ -57,7 +53,6 @@ do j = 1, nnodes_x2
    end do
 end do 
 
-! Create the scalar data.
 SLL_ALLOCATE(df(nnodes_x1,nnodes_x2),error)
 
 df = cos(2.*x1)*exp(-x2*x2)
@@ -70,8 +65,8 @@ call sll_xdmf_write_array("test2d",df(1:ncells_x1,1:ncells_x2),"CellVal",error,f
 call sll_xdmf_close(file_id,error)
 
 
-!ASCII version just in case of problem with binary format
 
+!ASCII version just in case of problem with binary format
 call sll_xml_file_create("test_ascii.xmf",file_id,error)
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
@@ -94,24 +89,44 @@ write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
 call sll_xml_file_close(file_id,error)
 
-!>The field is describe on a cartesian mesh
-!>Axis are perpendicular and spacing is constant
+!The field is describe on a cartesian mesh
+!Axis are perpendicular and spacing is constant
 call sll_xdmf_corect2d_nodes( "test_corect2d", df, "d_f1", &
                               ray(1), (ray(nnodes_x1)-ray(1))/(nnodes_x1-1), &
                               theta(1), (theta(nnodes_x2)-theta(1))/(nnodes_x2-1), &
                               "HDF5") 
-
-!>The field is describe on a cartesian mesh
-!>Axis are perpendicular and spacing is define by eta1 and eta2 arrays
+!The field is describe on a cartesian mesh
+!Axis are perpendicular and spacing is define by eta1 and eta2 arrays
 call sll_xdmf_rect2d_nodes( "test_rect2d", df, "d_f2", ray, theta, "HDF5") 
 
-!>The field is describe on a structured curvilinear mesh.
-!>Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
+!The field is describe on a structured curvilinear mesh.
+!Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
 call sll_xdmf_curv2d_nodes( "test_curv2d", df, "d_f3", x1, x2, "HDF5") 
 
-end subroutine test_2d
 
-subroutine test_3d()
+!Init step, create h5 files with mesh coordinates
+call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
+call sll_hdf5_write_array(file_id,x1,"/x1",error)
+call sll_hdf5_file_close(file_id, error)
+call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+call sll_hdf5_write_array(file_id,x2,"/x2",error)
+call sll_hdf5_file_close(file_id, error)
+
+!plot 10 fields using mesh coordinates written before
+do iplot = 1, 10
+   call int2string(iplot,cplot)
+   call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
+                      nnodes_x1,nnodes_x2,file_id,error)
+   df = cos(2.*x1)*exp(-x2*x2)*sin(2*sll_pi*iplot/10.)
+   call sll_xdmf_write_array("f"//cplot,df,"f_values",error,file_id,"Node")
+   call sll_xdmf_close(file_id,error)
+end do
+
+
+end subroutine test_io_2d
+
+!> Unit test program for xdmf outputs in 3d
+subroutine test_io_3d()
 sll_int32  :: nnodes_x1, nnodes_x2, nnodes_x3
 sll_int32  :: ncells_x1, ncells_x2, ncells_x3
 sll_real64 :: theta, a, b, phi
@@ -151,7 +166,6 @@ do k = 1, nnodes_x3
    phi = phi + 2._f64*sll_pi / (nnodes_x3-1)
 end do 
 
-
 call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,nnodes_x3,file_id,error)
 call sll_xdmf_write_array(mesh_name,x1,'x1',error)
 call sll_xdmf_write_array(mesh_name,x2,'x2',error)
@@ -161,6 +175,22 @@ call sll_xdmf_write_array("field3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
                           "CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
 
-end subroutine test_3d
+end subroutine test_io_3d
 
-end program unit_test
+end module test_io
+
+!>Unit test program for xdmf outputs
+program test_io_module
+
+use test_io
+
+implicit none
+
+
+call test_io_2d()
+
+call test_io_3d()
+
+print*,"PASSED"
+
+end program test_io_module

@@ -174,9 +174,10 @@ contains
 
   end subroutine sll_xdmf_array_3d
 
+!> Close the XML file and finish to write last lines.
   subroutine sll_xdmf_close(file_id,error)
-  sll_int32, intent(in) :: file_id
-  sll_int32, intent(out) :: error
+  sll_int32, intent(in) :: file_id !< file unit number
+  sll_int32, intent(out) :: error  !< error code
   sll_int32 :: myrank
   myrank = sll_get_collective_rank(sll_world_collective)
   if (myrank==0) then
