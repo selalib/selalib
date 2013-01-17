@@ -23,19 +23,19 @@ module sll_ascii_io
 #include "sll_assert.h"
   implicit none
   
-  !> Write nD array in ascii file 
-  !> \param[in] file_id file unit number
-  !> \param[in] array array
-  !> \param[out] error error code
-  interface sll_ascii_write_array
-     module procedure sll_ascii_write_array_1d 
-     module procedure sll_ascii_write_array_2d
-     module procedure sll_ascii_write_array_3d
-  end interface
+!> Write nD array in ascii file 
+!> \param[in] file_id file unit number
+!> \param[in] array array
+!> \param[out] error error code
+interface sll_ascii_write_array
+   module procedure sll_ascii_write_array_1d 
+   module procedure sll_ascii_write_array_2d
+   module procedure sll_ascii_write_array_3d
+end interface
   
 contains
 
-!>Create ASCII file
+!> Create ASCII file
 subroutine sll_ascii_file_create(file_name, file_id, error)
 
    character(len=*), intent(in)         :: file_name !< file name
@@ -66,18 +66,29 @@ subroutine sll_ascii_file_create(file_name, file_id, error)
 
 end subroutine sll_ascii_file_create
 
-#define NEW_FUNCTION(func_name, array_name_and_dims) \
-subroutine func_name(file_id,array,error);           \
-sll_int32 , intent(in)  :: file_id;                  \
-sll_int32 , intent(out) :: error;                    \
-sll_real64, intent(in)  :: array_name_and_dims;      \
-write(file_id,*,IOSTAT=error) array;                 \
-end subroutine func_name
 
-NEW_FUNCTION(sll_ascii_write_array_1d,array(:))
+!> Write a 1d array ASCII format
+subroutine sll_ascii_write_array_1d(file_id,array,error)
+sll_int32 , intent(in)  :: file_id
+sll_int32 , intent(out) :: error
+sll_real64, intent(in)  :: array(:)
+write(file_id,*,IOSTAT=error) array
+end subroutine
 
-NEW_FUNCTION(sll_ascii_write_array_2d,array(:,:))
+!> Write a 2d array ASCII format
+subroutine sll_ascii_write_array_2d(file_id,array,error)
+sll_int32 , intent(in)  :: file_id
+sll_int32 , intent(out) :: error
+sll_real64, intent(in)  :: array(:,:)
+write(file_id,*,IOSTAT=error) array
+end subroutine
 
-NEW_FUNCTION(sll_ascii_write_array_3d,array(:,:,:))
+!> Write a 3d array ASCII format
+subroutine sll_ascii_write_array_3d(file_id,array,error)
+sll_int32 , intent(in)  :: file_id
+sll_int32 , intent(out) :: error
+sll_real64, intent(in)  :: array(:,:,:)
+write(file_id,*,IOSTAT=error) array
+end subroutine
 
 end module sll_ascii_io
