@@ -1,3 +1,4 @@
+!> Unit test for parallel output
 program test_io_parallel
 
 use hdf5
@@ -20,12 +21,12 @@ sll_int32   :: i, j, k
 sll_real64  :: tcpu1
 sll_real64  :: tcpu2
 
-character(len=8), parameter :: xfile = "xdata.h5" ! File name
-character(len=8), parameter :: yfile = "ydata.h5" ! File name
-character(len=8), parameter :: zfile = "zdata.h5" ! File name
-character(len=8), parameter :: xdset = "xdataset" ! Dataset name
-character(len=8), parameter :: ydset = "ydataset" ! Dataset name
-character(len=8), parameter :: zdset = "zdataset" ! Dataset name
+character(len=8), parameter :: xfile = "xdata.h5" !< File x coordinates
+character(len=8), parameter :: yfile = "ydata.h5" !< File y coordinates
+character(len=8), parameter :: zfile = "zdata.h5" !< File z coordinates
+character(len=8), parameter :: xdset = "xdataset" !< x dataset name
+character(len=8), parameter :: ydset = "ydataset" !< y dataset name
+character(len=8), parameter :: zdset = "zdataset" !< z dataset name
 
 
 ! Boot parallel environment
@@ -67,8 +68,8 @@ call sll_halt_collective()
   
 contains
 
-! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
-! the full array.
+!> Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
+!> the full array.
  subroutine plot_layout2d()
 
   sll_int32 , parameter    :: nx = 32

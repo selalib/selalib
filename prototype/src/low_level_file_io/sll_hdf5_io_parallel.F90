@@ -30,6 +30,7 @@ module sll_hdf5_io_parallel
   
   implicit none
 
+  !> Write array in hdf5 file
   interface sll_hdf5_write_array
      module procedure sll_hdf5_write_array_1d
      module procedure sll_hdf5_write_array_2d
@@ -39,7 +40,7 @@ module sll_hdf5_io_parallel
 
 contains
   
-  !> Create HDF5 file :
+  !> Create HDF5 file
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
   subroutine sll_hdf5_file_create(filename, file_id, error)
@@ -64,7 +65,7 @@ contains
 
   end subroutine sll_hdf5_file_create
 
-  !> Open HDF5 file :
+  !> Open HDF5 file
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
   subroutine sll_hdf5_file_open(file_id,filename,error)
@@ -104,72 +105,161 @@ contains
     call h5close_f(error)
   end subroutine sll_hdf5_file_close
 
-#define NEW_HDF5_FUNCTION(func_name, dspace_dims, array_name_and_dims)  \
-  subroutine func_name(file_id,global_size,offset,array,dsetname,error);  \
-    character(len=*), intent(in)           :: dsetname;                \
-    integer(hsize_t), intent(in)           :: global_size(dspace_dims);\
-    sll_int32, intent(out)                 :: error;                   \
-    sll_real64, intent(in)                 :: array_name_and_dims;     \
-    integer(hid_t)                         :: file_id;                 \
-    integer(hid_t)                         :: plist_id;                \
-    sll_int32                              :: rank, i;                 \
-    integer(hsize_t)                       :: array_dims(dspace_dims); \
-    integer(hid_t)                         :: dset_id;                 \
-    integer(hid_t)                         :: memspace;                \
-    integer(hid_t)                         :: filespace;               \
-    integer(HSIZE_T)                       :: dimsfi(dspace_dims);     \
-    integer(HSIZE_T)                       :: count(dspace_dims);      \
-    integer(HSSIZE_T)                      :: offset(dspace_dims);     \
-    integer(HSIZE_T)                       :: stride(dspace_dims);     \
-    integer(HSIZE_T)                       :: block(dspace_dims);      \
-    rank = dspace_dims;                                                \
-    do i = 1, rank;                                                    \
-      array_dims(i) = size(array,i);                                   \
-    end do;                                                            \
-    dimsfi = global_size;                                              \
-    call h5screate_simple_f(rank, global_size, filespace, error);      \
-    call h5screate_simple_f(rank, array_dims, memspace, error);        \
-    call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error);           \
-    call h5pset_chunk_f(plist_id, rank, array_dims, error);            \
-    call h5dcreate_f(file_id, dsetname, H5T_NATIVE_DOUBLE, filespace,  \
-                     dset_id, error, plist_id);                        \
-    call h5pclose_f(plist_id, error);                                  \
-    call h5sclose_f(filespace, error);                                 \
-    stride = 1;                                                        \
-    count  = 1;                                                        \
-    block  = array_dims;                                               \
-    call h5dget_space_f(dset_id, filespace, error);                    \
-    call h5sselect_hyperslab_f (filespace, H5S_SELECT_SET_F,           \
-                                offset, count, error, stride, block);  \
-    call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error);             \
-    call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error);  \
-    call h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, array, dimsfi, error,  \
-                    file_space_id = filespace, mem_space_id = memspace,\
-                    xfer_prp = plist_id);                              \
-    call h5pclose_f(plist_id, error);                                  \
-    call h5sclose_f(filespace, error);                                 \
-    call h5sclose_f(memspace, error);                                  \
-    call h5dclose_f(dset_id, error);                                   \
-  end subroutine func_name
+  !> Write a 1D array of float in double precision in a HDF5 file
+  !> - Create a dataspace with 1 dimensions
+  !> - Write the dataset
+  !> - Close dataset and dataspace
+  subroutine sll_hdf5_write_array_1d(file_id,global_size,offset,array,dsetname,error)
+    integer, parameter                     :: dspace_dims=1
+    character(len=*), intent(in)           :: dsetname
+    integer(hsize_t), intent(in)           :: global_size(dspace_dims)
+    sll_int32, intent(out)                 :: error
+    sll_real64, intent(in)                 :: array(:)
+    integer(hid_t)                         :: file_id
+    integer(hid_t)                         :: plist_id
+    sll_int32                              :: rank, i
+    integer(hsize_t)                       :: array_dims(dspace_dims)
+    integer(hid_t)                         :: dset_id
+    integer(hid_t)                         :: memspace
+    integer(hid_t)                         :: filespace
+    integer(HSIZE_T)                       :: dimsfi(dspace_dims)
+    integer(HSIZE_T)                       :: count(dspace_dims)
+    integer(HSSIZE_T)                      :: offset(dspace_dims)
+    integer(HSIZE_T)                       :: stride(dspace_dims)
+    integer(HSIZE_T)                       :: block(dspace_dims)
+    rank = dspace_dims
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    dimsfi = global_size
+    call h5screate_simple_f(rank, global_size, filespace, error)
+    call h5screate_simple_f(rank, array_dims, memspace, error)
+    call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
+    call h5pset_chunk_f(plist_id, rank, array_dims, error)
+    call h5dcreate_f(file_id, dsetname, H5T_NATIVE_DOUBLE, filespace,  &
+                     dset_id, error, plist_id)
+    call h5pclose_f(plist_id, error)
+    call h5sclose_f(filespace, error)
+    stride = 1
+    count  = 1
+    block  = array_dims
+    call h5dget_space_f(dset_id, filespace, error)
+    call h5sselect_hyperslab_f (filespace, H5S_SELECT_SET_F,           &
+                                offset, count, error, stride, block)
+    call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+    call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+    call h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, array, dimsfi, error,  &
+                    file_space_id = filespace, mem_space_id = memspace,&
+                    xfer_prp = plist_id)
+    call h5pclose_f(plist_id, error)
+    call h5sclose_f(filespace, error)
+    call h5sclose_f(memspace, error)
+    call h5dclose_f(dset_id, error)
+  end subroutine 
 
-!> Write a 1D array of float in double precision in a HDF5 file : 
-!>    - Create a dataspace with 1 dimension
-!>    - Write the dataset
-!>    - Close dataset and dataspace
-NEW_HDF5_FUNCTION(sll_hdf5_write_array_1d, 1, array(:))
+  !> Write a 2D array of float in double precision in a HDF5 file
+  !> - Create a dataspace with 2 dimensions
+  !> - Write the dataset
+  !> - Close dataset and dataspace
+  subroutine sll_hdf5_write_array_2d(file_id,global_size,offset,array,dsetname,error)
+    integer, parameter                     :: dspace_dims=2
+    character(len=*), intent(in)           :: dsetname
+    integer(hsize_t), intent(in)           :: global_size(dspace_dims)
+    sll_int32, intent(out)                 :: error
+    sll_real64, intent(in)                 :: array(:,:)
+    integer(hid_t)                         :: file_id
+    integer(hid_t)                         :: plist_id
+    sll_int32                              :: rank, i
+    integer(hsize_t)                       :: array_dims(dspace_dims)
+    integer(hid_t)                         :: dset_id
+    integer(hid_t)                         :: memspace
+    integer(hid_t)                         :: filespace
+    integer(HSIZE_T)                       :: dimsfi(dspace_dims)
+    integer(HSIZE_T)                       :: count(dspace_dims)
+    integer(HSSIZE_T)                      :: offset(dspace_dims)
+    integer(HSIZE_T)                       :: stride(dspace_dims)
+    integer(HSIZE_T)                       :: block(dspace_dims)
+    rank = dspace_dims
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    dimsfi = global_size
+    call h5screate_simple_f(rank, global_size, filespace, error)
+    call h5screate_simple_f(rank, array_dims, memspace, error)
+    call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
+    call h5pset_chunk_f(plist_id, rank, array_dims, error)
+    call h5dcreate_f(file_id, dsetname, H5T_NATIVE_DOUBLE, filespace,  &
+                     dset_id, error, plist_id)
+    call h5pclose_f(plist_id, error)
+    call h5sclose_f(filespace, error)
+    stride = 1
+    count  = 1
+    block  = array_dims
+    call h5dget_space_f(dset_id, filespace, error)
+    call h5sselect_hyperslab_f (filespace, H5S_SELECT_SET_F,           &
+                                offset, count, error, stride, block)
+    call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+    call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+    call h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, array, dimsfi, error,  &
+                    file_space_id = filespace, mem_space_id = memspace,&
+                    xfer_prp = plist_id)
+    call h5pclose_f(plist_id, error)
+    call h5sclose_f(filespace, error)
+    call h5sclose_f(memspace, error)
+    call h5dclose_f(dset_id, error)
+  end subroutine 
 
-!> Write a 2D array of float in double precision in a HDF5 file : 
-!>    - Create a dataspace with 2 dimensions
-!>    - Write the dataset
-!>    - Close dataset and dataspace
-NEW_HDF5_FUNCTION(sll_hdf5_write_array_2d, 2, array(:,:))
-
-!> Write a 3D array of float in double precision in a HDF5 file : 
-!>    - Create a dataspace with 3 dimensions
-!>    - Write the dataset
-!>    - Close dataset and dataspace
-NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
-
+  !> Write a 3D array of float in double precision in a HDF5 file
+  !> - Create a dataspace with 3 dimensions
+  !> - Write the dataset
+  !> - Close dataset and dataspace
+  subroutine sll_hdf5_write_array_3d(file_id,global_size,offset,array,dsetname,error)
+    integer, parameter                     :: dspace_dims=3
+    character(len=*), intent(in)           :: dsetname
+    integer(hsize_t), intent(in)           :: global_size(dspace_dims)
+    sll_int32, intent(out)                 :: error
+    sll_real64, intent(in)                 :: array(:,:,:)
+    integer(hid_t)                         :: file_id
+    integer(hid_t)                         :: plist_id
+    sll_int32                              :: rank, i
+    integer(hsize_t)                       :: array_dims(dspace_dims)
+    integer(hid_t)                         :: dset_id
+    integer(hid_t)                         :: memspace
+    integer(hid_t)                         :: filespace
+    integer(HSIZE_T)                       :: dimsfi(dspace_dims)
+    integer(HSIZE_T)                       :: count(dspace_dims)
+    integer(HSSIZE_T)                      :: offset(dspace_dims)
+    integer(HSIZE_T)                       :: stride(dspace_dims)
+    integer(HSIZE_T)                       :: block(dspace_dims)
+    rank = dspace_dims
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    dimsfi = global_size
+    call h5screate_simple_f(rank, global_size, filespace, error)
+    call h5screate_simple_f(rank, array_dims, memspace, error)
+    call h5pcreate_f(H5P_DATASET_CREATE_F, plist_id, error)
+    call h5pset_chunk_f(plist_id, rank, array_dims, error)
+    call h5dcreate_f(file_id, dsetname, H5T_NATIVE_DOUBLE, filespace,  &
+                     dset_id, error, plist_id)
+    call h5pclose_f(plist_id, error)
+    call h5sclose_f(filespace, error)
+    stride = 1
+    count  = 1
+    block  = array_dims
+    call h5dget_space_f(dset_id, filespace, error)
+    call h5sselect_hyperslab_f (filespace, H5S_SELECT_SET_F,           &
+                                offset, count, error, stride, block)
+    call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+    call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
+    call h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, array, dimsfi, error,  &
+                    file_space_id = filespace, mem_space_id = memspace,&
+                    xfer_prp = plist_id)
+    call h5pclose_f(plist_id, error)
+    call h5sclose_f(filespace, error)
+    call h5sclose_f(memspace, error)
+    call h5dclose_f(dset_id, error)
+  end subroutine 
 !Gysela functions that can be useful for future
 !  ! HDF5 saving for an integer
 !  subroutine HDF5_integer_saving(file_id,int,dsetname)
