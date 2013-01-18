@@ -1,7 +1,22 @@
-!> \author
-!> Pierre Navaro navaro@math.unistra.fr
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
 
-!> \details
+!> \author
+!> Pierre Navaro 
 !> Common data for Maxwell solvers
 module sll_maxwell
 
@@ -12,15 +27,12 @@ module sll_maxwell
 use numeric_constants
 
 implicit none
-integer, parameter ::  NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
-integer, parameter :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
-
-!enum, bind(C)
-!   enumerator :: TE_POLARIZATION = 0, TM_POLARIZATION = 1
-!end enum
-!enum, bind(C)
-!   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
-!end enum
+integer, parameter ::  NORTH = 0           !< parameter for boundary in 2d
+integer, parameter ::  EAST  = 1           !< parameter for boundary in 2d
+integer, parameter ::  SOUTH = 2           !< parameter for boundary in 2d
+integer, parameter ::  WEST  = 3           !< parameter for boundary in 2d
+integer, parameter ::  TE_POLARIZATION = 0 !< we solve ex,ey,bz
+integer, parameter ::  TM_POLARIZATION = 1 !< we solve bx,by,ez
 
 !private
 !
@@ -93,12 +105,15 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!> write files to visualize 2d fields with gnuplot
 subroutine plot_fields(fname, f1, f2, iplot, time )
 
-sll_real64, dimension(:,:), intent(in) :: f1, f2
-integer :: iplot, i, j
-sll_real64, intent(in) :: time
-character(len=*) :: fname
+sll_real64, dimension(:,:), intent(in) :: f1 !< first field 2d
+sll_real64, dimension(:,:), intent(in) :: f2 !< second field 2d
+integer :: iplot !< plot counter
+integer :: i, j
+sll_real64, intent(in) :: time !< time
+character(len=*) :: fname !< output file name
 character(len=4) :: cplot
 sll_int32 :: nx, ny
 
