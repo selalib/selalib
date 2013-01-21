@@ -58,8 +58,10 @@ module sll_maxwell_2d_periodic_cartesian_par
 
   implicit none
 
-  !sll_int32, public, parameter :: FARADAY = 0  
-  !sll_int32, public, parameter :: AMPERE  = 1
+  !> solve subroutine parameter to compute electric field
+  sll_int32, public, parameter :: FARADAY = 0  
+  !> solve subroutine parameter to compute magnetic field
+  sll_int32, public, parameter :: AMPERE  = 1
 
   !> Maxwell solver object
   type maxwell_2d_periodic_plan_cartesian_par
