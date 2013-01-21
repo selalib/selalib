@@ -44,7 +44,7 @@ public :: initialize, solve, ampere, faraday
 !> Object with data to solve Maxwell equation 
 !! Maxwell in TE mode: (Ex,Ey,Bz)
 !! Only 2D  for now
-!! @param polarization polarization type (TE or TM)
+!! 
 type, public :: maxwell_fdtd
   sll_real64 :: c !< light speed
   sll_real64 :: e_0 !< electric conductivity
@@ -54,7 +54,7 @@ type, public :: maxwell_fdtd
   sll_int32  :: j2 !< last indice of the block dimension 2
   sll_real64 :: dx !< step size along dimension 1
   sll_real64 :: dy !< step size along dimension 2
-  sll_int32  :: polarization !< TE or TM 
+  sll_int32  :: polarization !< polarization type (TE or TM)
 end type maxwell_fdtd
 
 contains
