@@ -237,7 +237,8 @@ set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 #Please add there your new simulation_MYMETHOD.F90 
 ############################################################
 
-add_library( sll_simulations STATIC simulation_base_class.F90 
+add_library( sll_simulations STATIC 
+  simulation_base_class.F90 
   simulation_4d_vlasov_poisson_cartesian.F90
   simulation_6d_vlasov_poisson_cartesian.F90 )
 
@@ -266,6 +267,7 @@ add_dependencies( sll_simulations
 ###############################################################
 
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 
 target_link_libraries( test_vp4d_sim
