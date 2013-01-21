@@ -266,7 +266,7 @@ add_dependencies( sll_simulations
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
 
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 
