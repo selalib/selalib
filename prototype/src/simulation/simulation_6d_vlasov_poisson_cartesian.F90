@@ -378,6 +378,7 @@ contains
          1.0_f64 )     ! parametrize with mesh values
     
     ! solve for the electric potential
+print *,'just about to call the 3d poisson...'
     call solve_poisson_3d_periodic_par( &
          sim%poisson_plan, &
          sim%rho_x1, &
@@ -759,8 +760,8 @@ contains
              end do
           end do
        end do
-
-       call plot_fields(itime, sim)
+       ! The following function needs to be modified for the 3D case
+  !     call plot_fields(itime, sim)
 
     end do ! main loop
 
