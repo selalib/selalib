@@ -223,14 +223,15 @@ ENDIF()
 # ATTENTION: From here below, the simulations/tests are parallel
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 #Here is defined the library containing the parallel simulations. 
-#Please add your new simulation_MYMETHOD.F90 
+#Please add there your new simulation_MYMETHOD.F90 
 ############################################################
 
-add_library( sll_simulations STATIC simulation_base_class.F90 
-  simulation_4d_vlasov_poisson_cartesian.F90 )
+add_library( sll_simulations STATIC 
+  simulation_base_class.F90 
+  simulation_4d_vlasov_poisson_cartesian.F90
+  simulation_6d_vlasov_poisson_cartesian.F90 )
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
@@ -238,7 +239,7 @@ add_dependencies( sll_simulations
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
   sll_remap
@@ -251,10 +252,12 @@ add_dependencies( sll_simulations
   sll_working_precision
   )
 
-#Here is defined the executables. 
+#Define the executables/tests here.
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
+
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 
@@ -263,7 +266,7 @@ target_link_libraries( test_vp4d_sim
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
   sll_remap
@@ -276,4 +279,27 @@ target_link_libraries( test_vp4d_sim
   sll_working_precision
   )
 
-ENDIF() 
+
+
+add_executable( test_vp6d_sim unit_test_6d.F90 )
+
+target_link_libraries( test_vp6d_sim
+  sll_simulations
+  sll_poisson_parallel
+  sll_fft
+  sll_electric_field_accumulators
+  sll_scalar_field
+  sll_interpolators
+  sll_splines
+  sll_remap
+  sll_collective
+  sll_constants
+  sll_low_level_file_io_parallel
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+ENDIF()
+
+
