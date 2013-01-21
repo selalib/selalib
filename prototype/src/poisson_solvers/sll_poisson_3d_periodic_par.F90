@@ -15,8 +15,6 @@ module sll_poisson_3d_periodic_par
 #include "sll_working_precision.h"
 #include "misc_utils.h"
 #include "sll_assert.h"
-!#include "sll_remap.h"
-
   use sll_fft
   use numeric_constants
   use sll_collective
@@ -196,7 +194,8 @@ contains
     type(layout_3D), pointer                   :: layout_z
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
-
+print *, 'Did I enter this function (solve_poisson_3d_periodic_par)???'
+call flush()
     ! Get geometry information
     nx = plan%ncx
     ny = plan%ncy
@@ -257,9 +256,9 @@ contains
              gj = global(2)
              gk = global(3)
              if( (gi==1) .and. (gj==1) .and. (gk==1) ) then
-                call fft_set_mode_complx( &
+                call fft_set_mode_complx_1d( &
                      plan%pz, &
-                     plan%array_z, &
+                     plan%array_z(1,1,:), &
                      (0.0_f64,0.0_f64), &
                      1)
              else
@@ -278,15 +277,15 @@ contains
                 else
                    ind_z = real(nz-(gk-1),f64)
                 endif
-!!$             if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
-!!$                 if ( rho(i,j,k) /= 0.d0 ) then     
-!!$                    print *, '3D periodic poisson cannot be solved without', &
-!!$                                                        ' global_rho(1,1,1)=0'
-!!$                    print *, 'Exiting...'
-!!$                    stop
-!!$                endif
-!!$                plan%array_z(i,j,k) = 0.d0
-!!$             else
+!!$           if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
+!!$               if ( rho(i,j,k) /= 0.d0 ) then     
+!!$                  print *,'3D: periodic poisson cannot be solved without', &
+!!$                                                      ' global_rho(1,1,1)=0'
+!!$                  print *, 'Exiting...'
+!!$                  stop
+!!$              endif
+!!$              plan%array_z(i,j,k) = 0.d0
+!!$           else
                 plan%array_z(i,j,k) = plan%array_z(i,j,k)/(4*sll_pi**2 * &
                             ((ind_x/Lx)**2 + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif

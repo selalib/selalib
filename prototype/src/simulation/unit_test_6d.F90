@@ -10,9 +10,11 @@ program vlasov_poisson_6d
 
   type(sll_simulation_6d_vlasov_poisson_cart) :: simulation
 
-  print *, 'Booting parallel environment...'
+  print *, 'Booting parallel environment for 6D simulation...'
   call sll_boot_collective() ! Wrap this up in something else
   ! call simulation%read_from_file("whatever") or something similar here
+  print *, 'Proceed to run simulation.'
+  call flush()
   call simulation%run( )
 
   print *, 'reached end of vp4d test'
