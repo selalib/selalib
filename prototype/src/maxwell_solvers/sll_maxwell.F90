@@ -48,8 +48,8 @@ integer, parameter ::  TM_POLARIZATION = 1 !< we solve bx,by,ez
 !
 !public :: new, solve, delete
 
-!> Object with data to solve Maxwell equation on 2d domain
-!> Maxwell in TE mode: (Ex,Ey,Hz)
+!Object with data to solve Maxwell equation on 2d domain
+!Maxwell in TE mode: (Ex,Ey,Hz)
 !type, public :: maxwell_2d
 !  sll_real64 :: c_light
 !  sll_real64 :: epsilon_0
@@ -146,10 +146,10 @@ open( 90, file = fname//'plots.gnu', position="append" )
      write(90,*)"set surf"
      write(90,*)"set term x11"
   end if
-  write(90,*)"set title 'Time = ",time,"'"
-  write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
-  write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
-  close(90)
+write(90,*)"set title 'Time = ",time,"'"
+write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
+write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
+close(90)
 
 end subroutine plot_fields
 
