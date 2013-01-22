@@ -37,11 +37,8 @@ plan%d_dy = plan%d_dy / ny
 
 !> @brief 
 !> Selalib periodic 2D maxwell solver for cartesian coordinates.
-!> Start date: Nov. 30, 2012
-!> Last modification: Dec. 07, 2012
 !   
-!> @authors                    
-!> Edwin Chacon-Golcher 
+!> @author                    
 !> Pierre Navaro 
 module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_memory.h"
@@ -290,13 +287,10 @@ contains
     sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
     sll_int32                      :: i
 
-    ! Note that this checks for strict sizes, not an array being bigger
-    ! than a certain size, but exactly a desired size... This may be a bit
-    ! too stringent.
     call compute_local_sizes_2d( layout, n(1), n(2) )
 
     do i=1,2
-       if ( (n(i)/=size(fx,i)) .or. (n(i)/=size(fy,i)) .or.  (n(i)/=size(fz,i))  ) then
+       if (n(i)/=size(fx,i) .or. n(i)/=size(fy,i) .or. n(i)/=size(fz,i)) then
           print*, 'ERROR: solve_maxwell_2d_periodic_cartesian_par()', &
                'size of either ex,ey or bz does not match expected size. '
           if (i==1) then

@@ -221,6 +221,8 @@ ENDIF()
 ###      Parallel simulations
 #############################################################################
 # ATTENTION: From here below, the simulations/tests are parallel
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 
@@ -257,7 +259,6 @@ add_dependencies( sll_simulations
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 
