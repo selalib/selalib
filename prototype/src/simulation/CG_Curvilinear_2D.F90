@@ -15,9 +15,9 @@ program cg_curvilinear_2D
   type(sll_SL_curvilinear), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2
   sll_real64, dimension (:,:), allocatable :: f,fp1,g,f_init !,phi_ref,div
-  sll_int32 :: i,j,step,visustep,hh,minn,ss
+  sll_int32 :: i,j,step,visu_step,hh,minn,ss
   sll_int32 :: N_eta1, N_eta2, nb_step
-  sll_int32 :: fcase,carac_case,visu,phi_case
+  sll_int32 :: f_case,carac_case,visu_case,phi_case
   sll_int32 :: bc(2),err
   sll_int32 :: bc1_type, bc2_type
   sll_int32 :: grad_case,mesh_case,time_scheme
@@ -37,86 +37,54 @@ program cg_curvilinear_2D
 
   !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
-  open(27,file='CG_Curvilinear_data.txt',action="read")
-  read(27,*)eta1_min
-  read(27,*)eta1_max
-  read(27,*)eta2_min
-  read(27,*)eta2_max
-  read(27,*)N_eta1
-  read(27,*)N_eta2
-  read(27,*)nb_step
-  read(27,*)dt
-  read(27,*)visustep
-  read(27,*)
-  read(27,*)carac_case
-  read(27,*)grad_case
-  read(27,*)fcase
-  read(27,*)alpha_mesh
-  read(27,*)mesh_case
-  read(27,*)time_scheme
-  read(27,*)visu
-  read(27,*)f_file
-  read(27,*)
-  read(27,*)bc(1)
-  read(27,*)bc(2)
-  close(27)
-
- grad_case=1
- carac_case=5
- phi_case=1
- a1=4._f64*0.01_f64
- a2=1._f64*0.01_f64
- bc1_type=PERIODIC_SPLINE
- bc2_type=PERIODIC_SPLINE
+!  open(27,file='CG_Curvilinear_data.txt',action="read")
+!  read(27,*)eta1_min
+!  read(27,*)eta1_max
+!  read(27,*)eta2_min
+!  read(27,*)eta2_max
+!  read(27,*)N_eta1
+!  read(27,*)N_eta2
+!  read(27,*)nb_step
+!  read(27,*)dt
+!  read(27,*)visu_step
+!  read(27,*)
+!  read(27,*)carac_case
+!  read(27,*)grad_case
+!  read(27,*)f_case
+!  read(27,*)alpha_mesh
+!  read(27,*)mesh_case
+!  read(27,*)time_scheme
+!  read(27,*)visu_case
+!  read(27,*)f_file
+!  read(27,*)
+!  read(27,*)bc(1)
+!  read(27,*)bc(2)
+!  close(27)
+!
+  visu_case = 1
+  visu_step = 5
+  mesh_case = 1
+  f_case = 1  
+  grad_case = 1
+  carac_case = 5
+  phi_case = 1
+  time_scheme = 1
   
+  a1 = 4._f64*0.01_f64
+  a2 = 1._f64*0.01_f64
+  bc1_type=PERIODIC_SPLINE
+  bc2_type=PERIODIC_SPLINE
+  N_eta1 = 128
+  N_eta2 = 128
+  dt = 0.1
+  nb_step = 100
+  alpha_mesh = 0._f64
+  eta1_min = 0._f64
+  eta1_max = 1._f64
+  eta2_min = 0._f64
+  eta2_max = 1._f64
 
-  geom_eta(1,1)=eta1_min
-  geom_eta(2,1)=eta1_max
-  geom_eta(1,2)=eta2_min
-  geom_eta(2,2)=eta2_max
 
-  delta_eta1=real(eta1_max-eta1_min,f64)/real(N_eta1,f64)
-  delta_eta2=real(eta2_max-eta2_min,f64)/real(N_eta2,f64)
-  
-  print*,'# Pas en direction eta1: delta_eta1=',delta_eta1
-  print*,'# Pas en direction eta2: delta_eta2=',delta_eta2
-  print*,'# carac_case',carac_case
-  print*,'# grad_case', grad_case
-  print*,'# mesh_case', mesh_case
-  ! mesh type
-   if (mesh_case > 4) then
-    print*,'Non existing case'
-    print*,'mesh_case = 1:cartesian, 2:polar, 3:polar-like or 4:Collela or 5: Collela2'
-    STOP
-  endif
-  ! distribution function
-  if (fcase > 5) then
-    print*,'Non existing case'
-    print*,'test_case = 1 :f=1, 2 : cos(eta2), 3 :gaussian in eta1,'
-    print*,'4 :centered gaussian in eta1 and eta2 depending on the mesh type or 5 :centered dirac'
-    STOP
-  endif
-  ! advection field
-  if (phi_case > 4) then
-    print*,'Non existing case'
-    print*,'field_case = 1 : translation, 2 :rotation, 3 :non homogeneous rotation'  
-    STOP
-  endif
-
-  print*,'# alpha_mesh', alpha_mesh
-  print*,'# bc1_type, bc2_type = 1:HERMITE, 0:PERIODIC', bc1_type,bc2_type
- 
-
-  !choose the way to define dt, tf and nb_step
-  !the tree ways are equivalent
-  !we should have dt<=0.1*dr
-
-!!$  !definition of dt=tf/nb_step
-  tf=dt*real(nb_step,f64)
-
-  print*,'# nb_step =',nb_step
-  print*,'# Pas de temps: dt =',dt
-  print*,'# Temps final: tf =',tf
 
   ! ---- * Construction of the mesh * ----
   
@@ -158,8 +126,58 @@ program cg_curvilinear_2D
     bc1_type = PERIODIC_SPLINE
     bc2_type = PERIODIC_SPLINE
     
-    alpha_mesh = 1._f64/100._f64
+    alpha_mesh = 0.01_f64
   endif
+
+  
+  
+  
+
+  geom_eta(1,1)=eta1_min
+  geom_eta(2,1)=eta1_max
+  geom_eta(1,2)=eta2_min
+  geom_eta(2,2)=eta2_max
+
+  delta_eta1=real(eta1_max-eta1_min,f64)/real(N_eta1,f64)
+  delta_eta2=real(eta2_max-eta2_min,f64)/real(N_eta2,f64)
+  
+  print*,'# Pas en direction eta1: delta_eta1=',delta_eta1
+  print*,'# Pas en direction eta2: delta_eta2=',delta_eta2
+  print*,'# carac_case',carac_case
+  print*,'# grad_case', grad_case
+  print*,'# mesh_case', mesh_case
+  ! mesh type
+   if (mesh_case > 4) then
+    print*,'Non existing case'
+    print*,'mesh_case = 1:cartesian, 2:polar, 3:polar-like or 4:Collela or 5: Collela2'
+    STOP
+  endif
+  ! distribution function
+  if (f_case > 5) then
+    print*,'Non existing case'
+    print*,'test_case = 1 :f=1, 2 : cos(eta2), 3 :gaussian in eta1,'
+    print*,'4 :centered gaussian in eta1 and eta2 depending on the mesh type or 5 :centered dirac'
+    STOP
+  endif
+  ! advection field
+  if (phi_case > 4) then
+    print*,'Non existing case'
+    print*,'field_case = 1 : translation, 2 :rotation, 3 :non homogeneous rotation'  
+    STOP
+  endif
+
+  print*,'# alpha_mesh', alpha_mesh
+  print*,'# bc1_type, bc2_type = 1:HERMITE, 0:PERIODIC', bc1_type,bc2_type
+ 
+
+
+!!$  !definition of dt=tf/nb_step
+  tf=dt*real(nb_step,f64)
+
+  print*,'# nb_step =',nb_step
+  print*,'# Pas de temps: dt =',dt
+  print*,'# Temps final: tf =',tf
+
 
  call construct_mesh_transF(N_eta1,N_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
@@ -186,8 +204,8 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
   fp1=0.0_f64
   phi_exact=0.0_f64
 
-  call init_distribution(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
-       & delta_eta1,delta_eta2,fcase,f,mesh_case,eta1_tab,eta2_tab,1)
+  call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
+       & delta_eta1,delta_eta2,f_case,f,mesh_case)
   f_init=f
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2)
 !  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
@@ -195,7 +213,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
  
 
 !  !write f in a file before calculations
-  call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu,step,"CG")
+  call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CG")
 ! !***************************************
 
 
@@ -203,7 +221,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
 !
  do step=1,nb_step
 
-    print*,'Step:',step
+    !print*,'#Step:',step
 
     select case (time_scheme)
 
@@ -228,19 +246,19 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
              end if
             g=f
       case default
-           print*,'no scheme define'
+           print*,'#no scheme defined'
     end select
 
-    fp1(:,N_eta2+1)=fp1(:,1) !!!periodique
+    fp1(:,N_eta2+1)=fp1(:,1) !!!periodic
     fp1(N_eta1+1,:)=fp1(1,:)
     f=fp1
 
- call init_distribution(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
-             & delta_eta1,delta_eta2,fcase,f,mesh_case,eta1_tab,eta2_tab,2)
+ call init_distribution_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
+             & delta_eta1,delta_eta2,f_case,f,mesh_case,eta1_tab,eta2_tab)
 
     
-    if (step==1 .or. step/visustep*visustep==step) then
-       !!call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu,step,"CGC")
+    if (step==1 .or. step/visu_step*visu_step==step) then
+       !!call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu_case,step,"CGC")
     ! call plot_f(step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
     end if
    
@@ -269,7 +287,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
 
 
  !write the final f in a file
- call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu,step,"CGC")
+ call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGC")
  open (unit=21,file='CGCrestart.dat')
  write(21,*)f
  close(21)
@@ -315,7 +333,7 @@ end program cg_curvilinear_2D
 !!!$  ! 3 : test distribution for poisson solver
 !!!$  ! 4 : (gaussian in r)*(1+cos(theta))
 !!!$  ! 5 : read f in a file with syntax : r theta x y f(i,j)
-!!!$  fcase=2
+!!!$  f_case=2
 !!!$  !f_file='CGfinal04.dat' !not working
 !!!$
 !!!$  !choose the way to compute

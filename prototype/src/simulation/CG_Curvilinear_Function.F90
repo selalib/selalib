@@ -10,15 +10,14 @@ contains
 
 !!!****************************************************************************************
 
-subroutine init_distribution(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
-           & delta_eta1,delta_eta2,fcase,f,mesh_case,eta1_tab,eta2_tab,path)
+subroutine init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+           & delta_eta1,delta_eta2,fcase,f,mesh_case)
 
 implicit none
 
 
   sll_real64, dimension (:,:), allocatable, intent(inout) :: f
-  sll_real64, dimension (:,:), pointer, intent(in) :: eta1_tab,eta2_tab
-  sll_int32 :: i, j,path
+  sll_int32 :: i, j
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32, intent(in):: fcase,mesh_case
   sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
@@ -30,7 +29,6 @@ implicit none
 
 ! test-function
     
-if(path==1) then
 
   select case (fcase)
    case(1)
@@ -102,7 +100,30 @@ if(path==1) then
      stop
 
    end select 
-else
+
+end subroutine init_distribution_cartesian
+
+
+subroutine init_distribution_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+           & delta_eta1,delta_eta2,fcase,f,mesh_case,eta1_tab,eta2_tab)
+
+implicit none
+
+
+  sll_real64, dimension (:,:), allocatable, intent(inout) :: f
+  sll_real64, dimension (:,:), pointer, intent(in) :: eta1_tab,eta2_tab
+  sll_int32 :: i, j
+  sll_int32, intent(in) :: N_eta1,N_eta2
+  sll_int32, intent(in):: fcase,mesh_case
+  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
+  sll_real64 :: eta1,eta2,eta1c,eta2c
+
+
+  eta1c = 0.5_f64*(eta1_max+eta1_min)
+  eta2c = 0.5_f64*(eta2_max+eta2_min)
+
+! test-function
+    
  select case (fcase)
   case(1)
 
@@ -162,8 +183,11 @@ else
      stop
 
   end select 
-endif
-end subroutine init_distribution
+  
+end subroutine init_distribution_curvilinear
+
+
+
 
 
 !!***********************************************************************
@@ -364,8 +388,8 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2)
           end do
        end do
    case default
-    print*,'no phi define'
-    print*,'phi_case =1'
+    print*,'#no phi define'
+    print*,'#phi_case =1'
    end select
     
   end subroutine phi_analytique
