@@ -2,7 +2,9 @@ subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
                    comm3dp,comm3dl,comm3dc,neighbor,bd,phibc)
 
 use mpi
-use mgd3
+use mgd3, only: sxk,exk,syk,eyk,ezk,szk,nxk,nyk,nzk, &
+                sxi,exi,syi,eyi,ezi,szi,iout,kpbgn,  &
+                kcbgn, kdatatype
 
 implicit none
 #include "mgd3.h"
@@ -256,8 +258,5 @@ icf=kcbgn(kcur)
 call mgdrelax(sxf,exf,syf,eyf,szf,ezf,work(ipf),work(icf),ipost, &
               comm3dp,neighbor,bd,phibc(1,kcur),kdatatype(1,kcur),IOUT)
 
-# if cdebug
-timing(89)=timing(89)+MPI_WTIME()-tinitial
-# endif
 return
 end
