@@ -1,0 +1,54 @@
+0.0000000000000		# eta1_min
+1.000000000000		# eta1_max
+0.0000000000000		# eta2_min
+1.000000000000		# eta2_max
+20	                # N_eta1
+20			# N_eta2
+0.0000000000000		# x1_min
+1.0000000000000		# x1_max
+0.0000000000000		# x2_min
+1.0000000000000		# x2_max
+50			# nb_step
+0.0500000000		# dt
+5			# visualization step
+
+4			# computation of caracteristics
+3			# computation of gradient
+2			# distribution function
+1                       # mode
+1		        # alpha_mesh, mesh parameter
+1e-6		        # alpha, amplitude of the perturbation
+2			# scheme
+1			# visualization
+CGCrestart.dat		# file if f is read in a file
+
+3		        # boundary condition in r_min 1: Dirichlet 2: Neumann 3: Neumann for mode 0
+1	                # boundary condition in r_max 
+
+scheme to compute caracteristics
+1 : using explicit Euler method
+2 : rotation, rotation speed = -1
+3 : using symplectic Euler with linear interpolation
+4 : using symplectic Verlet with linear interpolation
+5 : using mid point method (par defaut)
+6 : using modified symplectic Euler
+7 : using modified symplectic Verlet
+8 : using modified mid point
+
+scheme to compute gradient
+1 : finit differences in r and theta
+2 : fft in theta, finit differences in r
+3 : splines in r and theta
+
+distribution function
+1 : gaussian in r, constant in theta
+2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
+3 : test distribution for poisson solver
+4 : (gaussian in r)*(1+cos(theta))
+5 : read f in a file with syntax
+
+choose the way to compute
+1 : Semi-Lagrangian scheme order 1
+2 : Semi-Lagrangian scheme order 2
+3 : leap-frog scheme
+

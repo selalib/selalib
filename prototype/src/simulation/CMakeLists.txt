@@ -9,12 +9,22 @@ IF (STDF95)
 add_library(sll_simulation_1d STATIC simulation_1d.F90
             simulation_VP1D_cartesian_non_unif.F90
             simulation_VP1D_curvilinear_analytic.F90
+## for cg2d_curvilinear branch begin
+            CG_Curvilinear_2D_advection.F90
+            CG_Curvilinear_2D_structure.F90
+            CG_Curvilinear_Function.F90
+## for cg2d_curvilinear branch end
             simulation_vp1d_fourier_fem.F90)
 ELSE()
 add_library(sll_simulation_1d STATIC simulation_1d.F90
             simulation_base_class.F90 
             simulation_VP1D_cartesian_non_unif.F90
             simulation_VP1D_curvilinear_analytic.F90
+## for cg2d_curvilinear branch begin
+            CG_Curvilinear_2D_advection.F90
+            CG_Curvilinear_2D_structure.F90
+            CG_Curvilinear_Function.F90
+## for cg2d_curvilinear branch end
             simulation_vp1d_fourier_fem.F90)
 ENDIF (STDF95)
 
@@ -78,6 +88,25 @@ target_link_libraries( test_vp1d_fourier_fem
   sll_assertion 	
   sll_working_precision
   )
+
+## for cg2d_curvilinear branch begin
+
+add_executable( test_cg_curvilinear CG_Curvilinear_2D.F90 )
+
+target_link_libraries( test_cg_curvilinear
+  sll_simulation_1d
+  sll_splines
+  sll_fft
+  sll_constants
+  sll_utilities
+  sll_low_level_file_io
+  sll_timer
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+## for cg2d_curvilinear branch end
 
 
 
