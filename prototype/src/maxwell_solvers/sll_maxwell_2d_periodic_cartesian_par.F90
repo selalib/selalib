@@ -1,13 +1,20 @@
-!> @brief 
-!> Selalib periodic 2D maxwell solver for cartesian coordinates.
-!> Start date: Nov. 30, 2012
-!> Last modification: Dec. 07, 2012
-!   
-!> @authors                    
-!> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
-!> Pierre Navaro (pierre.navaro@math.unistra.fr), 
-!                                  
-!**************************************************************************
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 
 #define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
 sz_array = int((array_size/2+1),C_SIZE_T);                \
@@ -28,9 +35,12 @@ plan%d_dy = plan%d_dy / ny
 
 #define MPI_MASTER 0
 
+!> @brief 
+!> Selalib periodic 2D maxwell solver for cartesian coordinates.
+!   
+!> @author                    
+!> Pierre Navaro 
 module sll_maxwell_2d_periodic_cartesian_par
-
-
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "misc_utils.h"
@@ -45,39 +55,43 @@ module sll_maxwell_2d_periodic_cartesian_par
 
   implicit none
 
-  sll_int32, public, parameter :: FARADAY = 0, AMPERE = 1
+  !> solve subroutine parameter to compute electric field
+  sll_int32, public, parameter :: FARADAY = 0  
+  !> solve subroutine parameter to compute magnetic field
+  sll_int32, public, parameter :: AMPERE  = 1
 
+  !> Maxwell solver object
   type maxwell_2d_periodic_plan_cartesian_par
-     sll_int32                                 :: ncx   ! number of cells  
-     sll_int32                                 :: ncy   ! number of cells
-     sll_real64                                :: Lx    ! domain length 
-     sll_real64                                :: Ly    ! domain length
-     type(C_PTR), pointer                      :: fwx
-     type(C_PTR), pointer                      :: fwy
-     type(C_PTR), pointer                      :: bwx
-     type(C_PTR), pointer                      :: bwy
-     type(layout_2D),  pointer                 :: layout_x
-     type(layout_2D),  pointer                 :: layout_y
-     sll_int32                                 :: npx_loc
-     sll_int32                                 :: npy_loc
-     sll_real64, dimension(:), pointer         :: d_dx
-     sll_real64, dimension(:), pointer         :: d_dy
-     sll_comp64, dimension(:), pointer         :: fft_x_array
-     sll_comp64, dimension(:), pointer         :: fft_y_array
-     type(remap_plan_2D_comp64), pointer       :: rmp_xy
-     type(remap_plan_2D_comp64), pointer       :: rmp_yx
-     sll_real64                                :: mu_0
-     type(C_PTR)                               :: p_x_array
-     type(C_PTR)                               :: p_y_array
+     sll_int32                           :: ncx         !< number of cells x
+     sll_int32                           :: ncy         !< number of cells y
+     sll_real64                          :: Lx          !< domain length 
+     sll_real64                          :: Ly          !< domain length
+     type(C_PTR), pointer                :: fwx         !< fftw plan forward x
+     type(C_PTR), pointer                :: fwy         !< fftw plan forward y
+     type(C_PTR), pointer                :: bwx         !< fftw plan backward x
+     type(C_PTR), pointer                :: bwy         !< fftw plan backward y
+     type(layout_2D),  pointer           :: layout_x    !< layout sequential in x
+     type(layout_2D),  pointer           :: layout_y    !< layout sequential in y
+     sll_int32                           :: npx_loc     !< local points number x
+     sll_int32                           :: npy_loc     !< local points number y
+     sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
+     sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
+     sll_comp64, dimension(:), pointer   :: fft_x_array !< fft x transform
+     sll_comp64, dimension(:), pointer   :: fft_y_array !< fft y transform
+     type(remap_plan_2D_comp64), pointer :: rmp_xy      !< remap x->y pointer
+     type(remap_plan_2D_comp64), pointer :: rmp_yx      !< remap y->x pointer
+     sll_real64                          :: mu_0        !< magnetic permeability
+     type(C_PTR)                         :: p_x_array   !< x pointer to memory
+     type(C_PTR)                         :: p_y_array   !< y pointer to memory
   end type maxwell_2d_periodic_plan_cartesian_par
 
 include 'fftw3.f03'
 
 contains
 
-  ! Presently, this function receives the geometric information as 
-  ! individual arguments. We should consider passing the 'simple geometry'
-  ! object that we have for the cartesian cases.
+  !> Presently, this function receives the geometric information as 
+  !> individual arguments. We should consider passing the 'simple geometry'
+  !> object that we have for the cartesian cases.
   function new_maxwell_2d_periodic_plan_cartesian_par( &
     start_layout, &
     ncx, &
@@ -85,19 +99,19 @@ contains
     Lx, &
     Ly ) result(plan)
 
-    type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan
-    type(layout_2D), pointer                     :: start_layout
-    sll_int32                                    :: ncx
-    sll_int32                                    :: ncy
-    sll_real64                                   :: Lx
-    sll_real64                                   :: Ly
-    sll_int64                                    :: prank
-    sll_int64                                    :: psize
-    type(sll_collective_t), pointer              :: collective
-    sll_int64                                    :: nprocx
-    sll_int64                                    :: nprocy
-    sll_int32                                    :: ierr 
-    sll_int32                                    :: npx_loc
+    type(maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
+    type(layout_2D), pointer                     :: start_layout  !< layout
+    sll_int32                                    :: ncx           !< x cell number
+    sll_int32                                    :: ncy           !< y cell number
+    sll_real64                                   :: Lx            !< domain x size
+    sll_real64                                   :: Ly            !< domain y size
+    sll_int64                                    :: prank         !< processor rank
+    sll_int64                                    :: psize         !< processor size
+    type(sll_collective_t), pointer              :: collective    !< mpi object
+    sll_int64                                    :: nprocx        !< procs number x
+    sll_int64                                    :: nprocy        !< procs number y
+    sll_int32                                    :: ierr          !< error code
+    sll_int32                                    :: npx_loc       !< x local points
     sll_int32                                    :: npy_loc
 
     integer(C_SIZE_T) :: sz_x_array
@@ -160,21 +174,25 @@ contains
 
 !********************************************************************************
 
+  !> Solve maxwell equations
   subroutine solve_maxwell_2d_periodic_cartesian_par(plan, dt, fx, fy, fz, equation)
 
-    type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan
+    type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
 
-    sll_real64, dimension(:,:), target            :: fx
-    sll_real64, dimension(:,:), target            :: fy
-    sll_real64, dimension(:,:), target            :: fz
+    sll_real64, dimension(:,:), target            :: fx !< Ex or Bx
+    sll_real64, dimension(:,:), target            :: fy !< Ey or By
+    sll_real64, dimension(:,:), target            :: fz !< Bz or Ez
     sll_real64, dimension(:,:), pointer           :: ex
     sll_real64, dimension(:,:), pointer           :: ey
     sll_real64, dimension(:,:), pointer           :: bz
-    sll_int32, intent(in)                         :: equation
+    sll_int32, intent(in)                         :: equation !< ampere-maxwell or faraday
     ! global sizes
-    sll_int32                                     :: ncx, ncy
-    sll_int32                                     :: npx_loc, npy_loc
-    sll_int32                                     :: i, j
+    sll_int32                                     :: ncx     !< global x cell number
+    sll_int32                                     :: ncy     !< global y cell number
+    sll_int32                                     :: npx_loc !< local  x cell number
+    sll_int32                                     :: npy_loc !< local  y cell number
+    sll_int32                                     :: i
+    sll_int32                                     :: j
     sll_int32                                     :: ierr
     ! Reciprocals of domain lengths.
     sll_real64                                    :: r_Lx, r_Ly
@@ -187,7 +205,7 @@ contains
     type(layout_2D), pointer                      :: layout_y
     sll_int32, dimension(1:2)                     :: global
     sll_int32                                     :: gi, gj
-    sll_real64, intent(in)                        :: dt
+    sll_real64, intent(in)                        :: dt     !< time step
     sll_real64                                    :: dt_mu
 
     prank = sll_get_collective_rank( sll_world_collective )
@@ -232,6 +250,7 @@ contains
   end subroutine solve_maxwell_2d_periodic_cartesian_par
 
 
+  !> Delete maxwell solver object
   subroutine delete_maxwell_2d_periodic_plan_cartesian_par(plan)
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan
     sll_int32                                              :: ierr
@@ -259,6 +278,7 @@ contains
 
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 
+  !> Check array size.
   subroutine verify_argument_sizes_par(layout, fx, fy, fz)
     type(layout_2D), pointer       :: layout
     sll_real64, dimension(:,:)     :: fx
@@ -267,13 +287,10 @@ contains
     sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
     sll_int32                      :: i
 
-    ! Note that this checks for strict sizes, not an array being bigger
-    ! than a certain size, but exactly a desired size... This may be a bit
-    ! too stringent.
     call compute_local_sizes_2d( layout, n(1), n(2) )
 
     do i=1,2
-       if ( (n(i)/=size(fx,i)) .or. (n(i)/=size(fy,i)) .or.  (n(i)/=size(fz,i))  ) then
+       if (n(i)/=size(fx,i) .or. n(i)/=size(fy,i) .or. n(i)/=size(fz,i)) then
           print*, 'ERROR: solve_maxwell_2d_periodic_cartesian_par()', &
                'size of either ex,ey or bz does not match expected size. '
           if (i==1) then

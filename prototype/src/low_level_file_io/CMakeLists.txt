@@ -18,7 +18,8 @@ TARGET_LINK_LIBRARIES(test_io sll_low_level_file_io
                               sll_constants
                               sll_memory
                               sll_assertion
-                              sll_working_precision)
+                              sll_working_precision
+	                      sll_utilities)
 
 IF(HDF5_PARALLEL_ENABLED)
 
