@@ -38,7 +38,7 @@ end do
 !
 ! global reduce across all process
 !
-call MPI_ALLREDUCE(avloc,av,1,MPI_DOUBLE_PRECISION,MPI_SUM,comm3d,ierr)
+call MPI_ALLREDUCE(avloc,av,1,MPI_REAL8,MPI_SUM,comm3d,ierr)
 
 av=av/float(nx*ny*nz)
 !

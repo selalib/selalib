@@ -1,206 +1,162 @@
-program unit_test_2d
+program test_bsl_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+  use numeric_constants
+  use sll_cubic_spline_interpolator_1d
 #ifndef STDF95
-use sll_module_interpolators_2d_base
+  use sll_module_interpolators_1d_base
 #endif
-use sll_cubic_spline_interpolator_2d
 
-implicit none
+  implicit none
 
-  sll_int32  :: n_x, n_vx, n_y, n_vy
-  sll_int32  :: i, j, k, l, it, n_steps
-  sll_real64 :: x_min, x_max, y_min, y_max
-  sll_real64 :: vx_min, vx_max, vy_min, vy_max
+  sll_int32  :: nc_x, nc_v
+  sll_int32  :: i, j, it, n_steps
+  sll_real64 :: x_min, x_max, v_min, v_max
   sll_real64 :: delta_t, error
   sll_int32  :: info
 
-  sll_real64, dimension(:)      , allocatable :: x, y
-  sll_real64, dimension(:)      , allocatable :: vx, vy
-  sll_real64, dimension(:,:,:,:), allocatable :: df
+  sll_real64 :: x, v
+  sll_real64, dimension(:,:) , allocatable :: df
 
-  sll_real64, dimension(:), allocatable :: f_x, f_y
+  sll_real64 :: advfield_x, advfield_v
 
 #ifdef STDF95
-  type(cubic_spline_2d_interpolator), pointer    :: interp_xy
-  type(cubic_spline_2d_interpolator), pointer    :: interp_vxvy
+  type(cubic_spline_1d_interpolator), pointer  :: interp_x
+  type(cubic_spline_1d_interpolator), pointer  :: interp_v
 #else
-  class(sll_interpolator_2d_base), pointer    :: interp_xy
-  class(sll_interpolator_2d_base), pointer    :: interp_vxvy
+  class(sll_interpolator_1d_base), pointer    :: interp_x
+  class(sll_interpolator_1d_base), pointer    :: interp_v
 #endif
 
-  type(cubic_spline_2d_interpolator), target  :: spline_xy
-  type(cubic_spline_2d_interpolator), target  :: spline_vxvy
+  type(cubic_spline_1d_interpolator), target  :: spline_x
+  type(cubic_spline_1d_interpolator), target  :: spline_v
 
-  print*,'*******************************'
-  print*,' 2D case                       '
-  print*,' 2D in (x,y) and 2D in (vx,vy) '
-  print*,'*******************************'
+  print*,'*********************'
+  print*,' 1D case             '
+  print*,' 1D in x and 1D in v '
+  print*,'*********************'
 
   print*, 'set domain size'
   x_min =  -5.0_f64; x_max =  5.0_f64
-  y_min =  -5.0_f64; y_max =  5.0_f64
-  vx_min =  -5.0_f64; vx_max =  5.0_f64 
-  vy_min =  -5.0_f64; vy_max =  5.0_f64 
+  v_min =  -5.0_f64; v_max =  5.0_f64 
 
-  n_x  = 40; n_y  = 40
-  n_vx = 40; n_vy = 40
+  nc_x = 100; nc_v = 100
+  SLL_ALLOCATE(df(nc_x+1,nc_v+1), info)
 
-  print*, 'create 1d meshes in x and v'
-  SLL_ALLOCATE(x(n_x),   info)
-  SLL_ALLOCATE(y(n_y),   info)
-  SLL_ALLOCATE(f_x(n_x), info)
-  SLL_ALLOCATE(f_y(n_y), info)
-  SLL_ALLOCATE(vx(n_vx), info)
-  SLL_ALLOCATE(vy(n_vy), info)
-
-  do i = 1, n_x
-     x(i)  = x_min  + (i-1)*(x_max-x_min)/(n_x-1)
-  end do
-  do j = 1, n_y
-     y(j)  = y_min  + (j-1)*(y_max-y_min)/(n_y-1)
-  end do
-  do k = 1, n_vx
-     vx(k) = vx_min + (k-1)*(vx_max-vx_min)/(n_vx-1)
-  end do
-  do l = 1, n_vy
-     vy(l) = vy_min + (l-1)*(vy_max-vy_min)/(n_vy-1)
-  end do
-
-  SLL_ALLOCATE(df(n_x,n_y,n_vx,n_vy), info)
-
-  print*, 'initialize 4d distribution function f(x,y,vx,vy) gaussian'
-  do l = 1, n_vy
-     do k = 1, n_vx
-        do j = 1, n_y
-           do i = 1, n_x
-              df(i,j,k,l) = exp(-(vx(k)**2+vy(l)**2))
-           end do
-        end do
+  do j = 1, nc_v+1
+     do i = 1, nc_x+1
+        x = x_min + (i-1)*(x_max-x_min)/nc_x
+        v = v_min + (j-1)*(v_max-v_min)/nc_v
+        df(i,j) =  exp(-(x*x+v*v))
      end do
   end do
 
-  f_x = 1.0_f64 
-  f_y = 0.0_f64 
+  advfield_x = 1_f64 
+  advfield_v = 0.0 
+
+  print*, 'initialize 2d distribution function f(x,v) gaussian'
 
   Print*, 'checking advection of a Gaussian in a uniform field'
- 
 #ifdef STDF95
-  call cubic_spline_initialize(spline_xy, n_x, n_y, x_min, x_max, y_min, y_max, &
-                            PERIODIC_SPLINE, PERIODIC_SPLINE )
-
-  call cubic_spline_initialize(spline_vxvy, n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              PERIODIC_SPLINE, PERIODIC_SPLINE )
-#else 
-  call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
-                            PERIODIC_SPLINE, PERIODIC_SPLINE )
-
-  call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              PERIODIC_SPLINE, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, PERIODIC_SPLINE )
+#else  
+  call spline_x%initialize(nc_x+1, x_min, x_max, PERIODIC_SPLINE )
+  call spline_v%initialize(nc_v+1, v_min, v_max, PERIODIC_SPLINE )
 #endif
-  interp_xy   => spline_xy
-  interp_vxvy => spline_vxvy
 
-  ! run BSL method using 10 time steps and second order splitting
+  interp_x => spline_x
+  interp_v => spline_v
+
+  ! run BSL method using 10 time steps
   n_steps = 100
   delta_t = 10.0_f64/n_steps
   do it = 1, n_steps
 
-     call advection_xy(df, interp_xy, delta_t)
-     call advection_vxvy(df, interp_vxvy, delta_t)
+     call plot_df( it )
+
+     call advection_x(0.5*delta_t)
+     call advection_v(    delta_t)
+     call advection_x(0.5*delta_t)
 
   end do
 
-  do l=1, n_vy
-     do k=1, n_vx
-        do j=1, n_y
-           do i=1, n_y
-              error = max(error,abs(df(i,j,k,l)-exp(-(vx(k)**2+vy(l)**2))))
-           end do
-        end do
+  ! compute error when Gaussian arrives at center (t=1)
+  error = 0.0
+  do j = 1, nc_v+1
+     do i = 1, nc_x+1
+        x = x_min + (i-1)*(x_max-x_min)/nc_x
+        v = v_min + (j-1)*(v_max-v_min)/nc_v
+        error = max(error,abs(df(i,j)-exp(-(x*x+v*v))))
      end do
   end do
 
   print*, ' 100 nodes, ', it, ' time steps. Error= ', error
-
 
   print *, 'Successful, exiting program.'
   print *, 'PASSED'
 
 contains
 
-   subroutine advection_xy(df, interp_xy, dt)
-   !type(cubic_spline_2d_interpolator)  :: interp_xy
-#ifdef STDF95
-   type(cubic_spline_2d_interpolator), pointer  :: interp_xy
-#else
-   class(sll_interpolator_2d_base), pointer  :: interp_xy
-#endif
-   sll_real64, intent(inout), dimension(:,:,:,:) :: df
+   subroutine advection_x(dt)
    sll_real64, intent(in) :: dt
-   sll_real64 :: dx, dy
 
-   do l = 1, n_vy
-     do k = 1, n_vx
+     do j = 1, nc_v
 #ifdef STDF95
-        call cubic_spline_compute_interpolants(interp_xy, df(:,:,k,l))
+        df(:,j) = cubic_spline_interpolate_array_at_displacement(interp_x,nc_x+1,df(:,j),dt*advfield_x)
 #else
-        call interp_xy%compute_interpolants(df(:,:,k,l))
+        df(:,j) = interp_x%interpolate_array_disp(nc_x+1,df(:,j),dt*advfield_x)
 #endif
-        do j = 1, n_y
-           dy = y_min + modulo(y(j)-y_min-dt*vy(l),y_max-y_min)
-           do i = 1, n_x
-              dx = x_min + modulo(x(i)-x_min-dt*vx(k),x_max-x_min)
-              if( dx < x_min .or. dx > x_max) stop 'erreur x'
-              if( dy < y_min .or. dy > y_max) stop 'erreur y'
-#ifdef STDF95
-              df(i,j,k,l) = cubic_spline_interpolate_value(interp_xy,dx,dy)
-#else
-              df(i,j,k,l) = interp_xy%interpolate_value(dx,dy)
-#endif
-           end do
-        end do
      end do
-   end do
 
-   end subroutine advection_xy
+   end subroutine advection_x
 
-   subroutine advection_vxvy(df, interp_vxvy, dt)
-   !type(cubic_spline_2d_interpolator)  :: interp_vxvy
-#ifdef STDF95
-   type(cubic_spline_2d_interpolator), pointer :: interp_vxvy
-#else
-   class(sll_interpolator_2d_base), pointer  :: interp_vxvy
-#endif
-   sll_real64, intent(inout), dimension(:,:,:,:) :: df
+   subroutine advection_v(dt)
    sll_real64, intent(in) :: dt
-   sll_real64 :: dvx, dvy
 
-   do j = 1, n_y
-      do i = 1, n_x
+     do i = 1, nc_x
 #ifdef STDF95
-        call cubic_spline_compute_interpolants(interp_vxvy,df(i,j,:,:))
+        df(i,:) = cubic_spline_interpolate_array_at_displacement(interp_v,nc_v+1,df(i,:),dt*advfield_v)
 #else
-         call interp_vxvy%compute_interpolants(df(i,j,:,:))
+        df(i,:) = interp_v%interpolate_array_disp(nc_v+1,df(i,:),dt*advfield_v)
 #endif
-         do k = 1, n_vx
-            dvx = vx_min + modulo(vx(k)-vx_min-dt*f_x(i),vx_max-vx_min)
-            do l = 1, n_vy
-               dvy = vy_min + modulo(vy(l)-vy_min-dt*f_y(j),vy_max-vy_min)
-#ifdef STDF95
-               df(i,j,k,l) = cubic_spline_interpolate_value(interp_vxvy, dvx,dvy)
-#else
-               df(i,j,k,l) = interp_vxvy%interpolate_value(dvx,dvy)
-#endif
-            end do
-         end do
+     end do
+
+   end subroutine advection_v
+
+   subroutine plot_df(iplot)
+
+   integer :: iplot, i, j
+   character(len=4) :: cplot
+ 
+   call int2string(iplot,cplot)
+
+   open(11, file="df-"//cplot//".dat")
+   do j = 1, size(df,2)
+      do i = 1, size(df,1)
+         x = x_min + (i-1)*(x_max-x_min)/(nc_x)
+         v = v_min + (j-1)*(v_max-v_min)/(nc_v)
+         write(11,*) sngl(x),sngl(v),sngl(df(i,j))
       end do
+      write(11,*)
    end do
+   close(11)
+   
+   open( 90, file = 'df.gnu', position="append" )
+   if ( iplot == 1 ) then
+      rewind(90)
+      !write(90,*)"set cbrange[-1:1]"
+      !write(90,*)"set pm3d"
+      write(90,*)"set surf"
+      write(90,*)"set term x11"
+   end if
 
-   end subroutine advection_vxvy
+   write(90,*)"set title 'step = ",iplot,"'"
+   write(90,"(a)")"splot 'df-"//cplot//".dat' u 1:2:3 w lines"
+   close(90)
 
+   end subroutine plot_df
 
-end program unit_test_2d
+end program test_bsl_1d

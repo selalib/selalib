@@ -32,17 +32,16 @@ sll_real64, dimension(:,:), allocatable :: by
 sll_real64, dimension(:,:), allocatable :: ez
 sll_real64, dimension(:,:), allocatable :: ez_exact
 
-sll_int32                          :: i, j
-sll_real64                         :: omega
-sll_real64                         :: time
-sll_int32                          :: istep, nstep
-sll_real64                         :: err_te
-sll_real64                         :: err_tm
-sll_real64                         :: dt
-sll_real64                         :: cfl = 0.5
+sll_int32                               :: i, j
+sll_real64                              :: omega
+sll_real64                              :: time
+sll_int32                               :: istep, nstep
+sll_real64                              :: err_te
+sll_real64                              :: err_tm
+sll_real64                              :: dt
+sll_real64                              :: cfl = 0.5
 
-sll_int32,  parameter              :: mode = 2
-
+sll_int32,  parameter                   :: mode = 2
 
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64

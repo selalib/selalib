@@ -1,3 +1,4 @@
+!> Unit test for parallel output
 program test_io_parallel
 
 use hdf5
@@ -20,12 +21,12 @@ sll_int32   :: i, j, k
 sll_real64  :: tcpu1
 sll_real64  :: tcpu2
 
-character(len=8), parameter :: xfile = "xdata.h5" ! File name
-character(len=8), parameter :: yfile = "ydata.h5" ! File name
-character(len=8), parameter :: zfile = "zdata.h5" ! File name
-character(len=8), parameter :: xdset = "xdataset" ! Dataset name
-character(len=8), parameter :: ydset = "ydataset" ! Dataset name
-character(len=8), parameter :: zdset = "zdataset" ! Dataset name
+character(len=8), parameter :: xfile = "xdata.h5" !< File x coordinates
+character(len=8), parameter :: yfile = "ydata.h5" !< File y coordinates
+character(len=8), parameter :: zfile = "zdata.h5" !< File z coordinates
+character(len=8), parameter :: xdset = "xdataset" !< x dataset name
+character(len=8), parameter :: ydset = "ydataset" !< y dataset name
+character(len=8), parameter :: zdset = "zdataset" !< z dataset name
 
 
 ! Boot parallel environment
@@ -67,18 +68,18 @@ call sll_halt_collective()
   
 contains
 
-! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
-! the full array.
+!> Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
+!> the full array.
  subroutine plot_layout2d()
 
-  sll_int32 , parameter       :: nx = 32
-  sll_int32 , parameter       :: ny = 64
-  sll_int32                   :: mx, my    ! Local sizes
-  sll_int32                   :: npi, npj
-  sll_int32                 :: gi, gj
-  
-  sll_int32, dimension(2)   :: global_indices
-  type(layout_2D), pointer  :: layout
+  sll_int32 , parameter    :: nx = 32
+  sll_int32 , parameter    :: ny = 64
+  sll_int32                :: mx, my    ! Local sizes
+  sll_int32                :: npi, npj
+  sll_int32                :: gi, gj
+ 
+  sll_int32, dimension(2)  :: global_indices
+  type(layout_2D), pointer :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
   sll_int32      :: xml_id
@@ -130,8 +131,10 @@ contains
 
   !End high level version
 
+!---------------------------------------------------------------------------------!
 
   !Begin low level version
+
   call sll_hdf5_file_create(xfile, file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
   call sll_hdf5_file_close(file_id,error)

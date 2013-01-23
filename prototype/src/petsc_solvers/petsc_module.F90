@@ -4,6 +4,7 @@ use petscdmdef
 !#include "finclude/petscdef.h"
 !use petsc
 implicit none
+private
 
 type, public    :: userctx
    DM           :: da
@@ -12,6 +13,8 @@ type, public    :: userctx
    PetscInt     :: mx,my
    PetscMPIInt  :: rank
 end type userctx
+
+public :: hello_petsc
 
 contains
 
