@@ -11,9 +11,8 @@ program test_maxwell_2d_periodic_cart_par
   use sll_collective
   use hdf5
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
-       sll_hdf5_write_array, &
-       sll_hdf5_file_close
-
+                                  sll_hdf5_write_array, &
+                                  sll_hdf5_file_close
   implicit none
 
   sll_int32                                    :: ncx, ncy
@@ -31,9 +30,9 @@ program test_maxwell_2d_periodic_cart_par
   sll_real64                                   :: average_err
   sll_int32, dimension(1:2)                    :: global
   sll_int32                                    :: gi, gj
-  sll_int32                                    :: myrank
+  sll_int32                                    :: prank
   type(layout_2D), pointer                     :: layout_x
-  sll_int64                                    :: colsz ! collective size
+  sll_int64                                    :: psize ! collective size
   sll_int32                                    :: nprocx, nprocy
   sll_int32                                    :: e
   sll_real32                                   :: ok 
@@ -51,14 +50,14 @@ program test_maxwell_2d_periodic_cart_par
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
-  colsz  = sll_get_collective_size(sll_world_collective)
-  myrank = sll_get_collective_rank(sll_world_collective)
+  psize = sll_get_collective_size(sll_world_collective)
+  prank = sll_get_collective_rank(sll_world_collective)
 
   dx = Lx/ncx
   dy = Ly/ncy
 
-  colsz  = sll_get_collective_size(sll_world_collective)
-  e      = int(log(real(colsz))/log(2.))
+  psize  = sll_get_collective_size(sll_world_collective)
+  e      = int(log(real(psize))/log(2.))
   print *, 'running on ', 2**e, 'processes'
 
   ! Layout and local sizes for FFTs in x-direction
@@ -68,6 +67,13 @@ program test_maxwell_2d_periodic_cart_par
   call initialize_layout_with_distributed_2D_array( ncx, ncy, &
        nprocx, nprocy, layout_x )
 
+  if (prank == MPI_MASTER) print *, 'Printing 2D layout: '
+  call sll_view_lims_2D( layout_x )
+  call flush(6)
+  if (prank == MPI_MASTER) print *, '--------------------'
+  call sll_halt_collective()
+  stop
+
   plan => new_maxwell_2d_periodic_plan_cartesian_par(layout_x, ncx, ncy, Lx, Ly)
 
   call compute_local_sizes( layout_x, nx_loc, ny_loc )
@@ -76,6 +82,7 @@ program test_maxwell_2d_periodic_cart_par
   SLL_ALLOCATE(ex(nx_loc,ny_loc), ierr)
   SLL_ALLOCATE(ey(nx_loc,ny_loc), ierr)
   SLL_ALLOCATE(bz(nx_loc,ny_loc), ierr)
+  stop
 
   ! initialize reference array
   do j=1,ny_loc
@@ -109,7 +116,7 @@ program test_maxwell_2d_periodic_cart_par
   average_err  = average_err/(ncx*ncy)
 
   call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
+  call flush(6); print*, ' prank ', prank
   call flush(6); print*, 'local average error:', average_err
   call flush(6); print*, 'dx*dy =', dx*dy
   call flush(6); print*, ' ------------------'
@@ -126,7 +133,7 @@ program test_maxwell_2d_periodic_cart_par
 
   call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
        1, MPI_PROD, 0, prod4test )
-  if (myrank==MPI_MASTER) then
+  if (prank==MPI_MASTER) then
 
      if (prod4test(1)==1.) then
         call flush(6)
@@ -165,18 +172,19 @@ contains
     sll_int32                              :: file_id
     integer(HSIZE_T), dimension(1:2)       :: offset
     type(sll_collective_t), pointer        :: col
-    sll_int32                              :: myrank
+    sll_int32                              :: prank
 
     SLL_ASSERT( associated(layout) )
     col => get_layout_collective( layout )
-    myrank = sll_get_collective_rank( col )
+    prank = sll_get_collective_rank( col )
     global_dims(:) = (/ n_pts1,n_pts2 /)
 
-    offset(1) = get_layout_i_min( layout, myrank ) - 1
-    offset(2) = get_layout_j_min( layout, myrank ) - 1
+    offset(1) = get_layout_i_min( layout, prank ) - 1
+    offset(2) = get_layout_j_min( layout, prank ) - 1
 
     call sll_hdf5_file_create(trim(filename),file_id,error)
-    call sll_hdf5_write_array(file_id,global_dims,offset,dble(array),trim(dataset_name),error)
+    call sll_hdf5_write_array(file_id,global_dims,offset, &
+                              dble(array),trim(dataset_name),error)
     call sll_hdf5_file_close(file_id,error)
   end subroutine parallel_hdf5_write_array_2d
 
