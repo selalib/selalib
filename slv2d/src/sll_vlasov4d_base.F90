@@ -1,6 +1,6 @@
 module sll_vlasov4d_base
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 
  use used_precision
  use geometry_module
