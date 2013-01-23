@@ -61,23 +61,23 @@ program cg_curvilinear_2D
 !  read(27,*)bc(2)
 !  close(27)
 !
-  visu_case = 1
+  visu_case = 0
   visu_step = 5
   mesh_case = 1
-  f_case = 1  
+  f_case = 4  
   grad_case = 1
-  carac_case = 5
+  carac_case = 1
   phi_case = 1
   time_scheme = 1
   
-  a1 = 4._f64*0.01_f64
-  a2 = 1._f64*0.01_f64
+  a1 = 1._f64*0.01_f64
+  a2 = 0._f64*0.01_f64
   bc1_type=PERIODIC_SPLINE
   bc2_type=PERIODIC_SPLINE
-  N_eta1 = 128
-  N_eta2 = 128
-  dt = 0.1
-  nb_step = 100
+  N_eta1 = 30
+  N_eta2 = 30
+  dt = 0.01
+  nb_step = 200
   alpha_mesh = 0._f64
   eta1_min = 0._f64
   eta1_max = 1._f64
@@ -249,8 +249,9 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
            print*,'#no scheme defined'
     end select
 
-    fp1(:,N_eta2+1)=fp1(:,1) !!!periodic
-    fp1(N_eta1+1,:)=fp1(1,:)
+    if(bc2_type==PERIODIC_SPLINE) fp1(:,N_eta2+1)=fp1(:,1) !!!periodic
+    if(bc1_type==PERIODIC_SPLINE) fp1(N_eta1+1,:)=fp1(1,:)
+    
     f=fp1
 
  call init_distribution_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
