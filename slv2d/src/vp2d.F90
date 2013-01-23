@@ -4,7 +4,7 @@
 !-------------------------------------------------------------------
 program VP2D
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 use used_precision  
 use geometry_module
 use diagnostiques_module

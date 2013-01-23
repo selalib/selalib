@@ -1,6 +1,6 @@
 module vlasov4d_plot
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 use used_precision  
 use geometry_module
 
