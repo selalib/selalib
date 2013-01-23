@@ -3,7 +3,7 @@ program VM2D
 !  programme de simulation numerique d'un plasma electromagnetique 2D
 !  modelise par les equations de Vlasov-Maxwell
 !-------------------------------------------------------------------
-#include "selalib.h"
+#include "selalib-mpi.h"
 
 use used_precision  
 use geometry_module
@@ -37,10 +37,10 @@ sll_real64, dimension(:,:),     pointer :: Jx1,Jx2,Jy1,Jy2   ! courant partiel
 sll_real64, dimension(:,:),     pointer :: div   ! divergence E
 
 ! donnees du probleme
-sll_int32      :: nbiter         ! nombre d'iterations en temps
-sll_real64     :: dt             ! pas de temps
-sll_int32      :: fdiag, fthdiag ! frequences des diagnostiques
-sll_int32      :: iter,i,j       ! variables de boucles       
+sll_int32  :: nbiter         ! nombre d'iterations en temps
+sll_real64 :: dt             ! pas de temps
+sll_int32  :: fdiag, fthdiag ! frequences des diagnostiques
+sll_int32  :: iter,i,j       ! variables de boucles       
 
 sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj
@@ -52,12 +52,10 @@ sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: df
 sll_real64 :: tcpu1, tcpu2
 
-! initialisation global
-
 call sll_boot_collective()
 num_threads  = sll_get_collective_size(sll_world_collective)
-my_num = sll_get_collective_rank(sll_world_collective)
-comm   = sll_world_collective%comm
+my_num       = sll_get_collective_rank(sll_world_collective)
+comm         = sll_world_collective%comm
 
 tcpu1 = MPI_WTIME()
 if (my_num == MPI_MASTER) then
