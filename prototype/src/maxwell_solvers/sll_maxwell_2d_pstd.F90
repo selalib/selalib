@@ -50,6 +50,7 @@ use physical_constants
 use sll_maxwell
 
 implicit none
+private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
 interface new
@@ -65,6 +66,8 @@ end interface solve
 interface free
  module procedure free_maxwell_2d_pstd
 end interface free
+
+public :: new, free, solve, ampere_te, faraday_te, ampere_tm, faraday_tm
 
 !> Maxwell solver object
 type, public :: maxwell_pstd
@@ -121,8 +124,8 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nx,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny,sz_tmp_y,self%p_tmp_y)
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
 

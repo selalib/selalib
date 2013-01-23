@@ -1,5 +1,5 @@
 module vm2dinit
-#include "selalib.h"
+#include "selalib-mpi.h"
 use geometry_module
 use vlasov2d_module
 use splinepx_class
