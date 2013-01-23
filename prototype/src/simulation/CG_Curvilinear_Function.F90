@@ -402,7 +402,7 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2  
     sll_int32  :: bc1_type,bc2_type
      
-   
+  
 ! --- Corrections on the BC ---
         if (bc1_type.eq.HERMITE_SPLINE) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
