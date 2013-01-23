@@ -12,7 +12,7 @@ module module_cg_curvi_structure
   type sll_plan_adv_curvilinear
      sll_real64 :: eta1_min,eta1_max,delta_eta1
      sll_real64 :: eta2_min,eta2_max,delta_eta2
-     sll_int32 :: N_eta1,N_eta2
+     sll_int32 :: N_eta1,N_eta2,bc1_type,bc2_type
      sll_real64 :: dt
      type(sll_spline_2D), pointer :: spl_f
      sll_int32 :: carac_case
