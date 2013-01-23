@@ -137,11 +137,17 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ENDIF()
 
-  add_executable(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
+add_executable(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
 
-  target_link_libraries( test_poisson_3d_periodic_par sll_poisson_parallel 
-                         sll_remap sll_collective sll_fft sll_memory 
-                         sll_timer sll_utilities sll_assertion)
+target_link_libraries( test_poisson_3d_periodic_par 
+  sll_poisson_parallel 
+  sll_remap 
+  sll_collective 
+  sll_fft 
+  sll_memory 
+  sll_timer 
+  sll_utilities 
+  sll_assertion)
 
 ENDIF()
 ENDIF()
