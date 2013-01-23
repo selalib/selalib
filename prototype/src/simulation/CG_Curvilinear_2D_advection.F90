@@ -159,7 +159,7 @@ contains
     sll_real64, dimension(:,:), intent(in) :: fn
     sll_real64, dimension(:,:), intent(out) :: fnp1
     sll_real64, dimension(:,:), pointer, intent(inout):: jac_array,eta1_tab,eta2_tab
-    sll_real64 :: r,theta,eta1,eta1n,eta2,eta20,eta2n,tolr,a_eta1,a_eta2,eta10,eta2_min,eta2_max !,tolth
+    sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr,a_eta1,a_eta2,eta10,eta2_min,eta2_max !,tolth
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
     sll_int32 :: N_eta1, N_eta2
     sll_int32 :: i,j,maxiter,iter,k_eta1,k_eta2
@@ -187,80 +187,183 @@ contains
        tolr=1e-10
        eta1n=0.0_f64
        eta2n=0.0_f64
-       k_eta1=1
-       k_eta2=1
+       !k_eta1=1
+       !k_eta2=1
 
        do j=1,N_eta2+1
           eta20=eta2_min+real(j-1,f64)*delta_eta2
           eta2=eta20
+          k_eta2=j
           do i=1,N_eta1+1
              eta10=eta1_min+real(i-1,f64)*delta_eta1
              eta1=eta10
-             r=0.0_f64
-             theta=0.0_f64
+             eta1_loc=0.0_f64
+             eta2_loc=0.0_f64
              k_eta1=i
              a_eta1=0.0_f64
              a_eta2=0.0_f64
              iter=0
 
-             do while ((iter<maxiter) .and. (abs((eta1n-eta1))+abs((eta2n-eta2))>tolr))
-                r=(eta1-eta1_min)/(eta1_max-eta1_min)
-print*,r, eta1 
-                r=r-real(floor(r),f64)
-                k_eta1=floor(r*N_eta1)+1
-                r=r*real(N_eta1,f64)-real(k_eta1-1,f64)
-                theta=(eta2-eta2_min)/(eta2_max-eta2_min)
-                theta=theta-real(floor(theta),f64)
-                theta=theta*real(N_eta2,f64)
-                k_eta2=floor(theta)+1
-                theta=theta-real(k_eta2-1,f64)
-print*,k_eta1,k_eta2
-                if (k_eta2==N_eta2+1 .and. k_eta1<N_eta1+1) then 
-                a_eta1=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,k_eta1,k_eta2)+ & 
-                      & r*plan%field(2,k_eta1+1,k_eta2)))/jac_array(k_eta1,k_eta2)
-                a_eta2=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,k_eta1,k_eta2)+ &
-                      & r*plan%field(1,k_eta1+1,k_eta2)))/jac_array(k_eta1,k_eta2)
+             do while (((iter<maxiter) .and. (abs((eta1n-eta1))+abs((eta2n-eta2))>tolr)).or.(iter==0))
                 
-                elseif (k_eta1==N_eta1+1 .and. k_eta2<N_eta2+1) then
-                 a_eta1=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,k_eta1,k_eta2)+ &
-                       & theta*((1.0_f64-r)*plan%field(2,k_eta1,k_eta2+1))))/jac_array(k_eta1,k_eta2)
-                 a_eta2=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,k_eta1,k_eta2)+ &
-                       & theta*((1.0_f64-r)*plan%field(1,k_eta1,k_eta2+1))))/jac_array(k_eta1,k_eta2)
+                eta1_loc=(eta1-eta1_min)/(eta1_max-eta1_min)
+                eta1_loc=eta1_loc*real(N_eta1,f64)
+                !print*,r, eta1 
+                !r=r-real(floor(r),f64)
+                k_eta1=floor(eta1_loc)+1
+                eta1_loc=eta1_loc-real(k_eta1-1,f64)
+                if(((k_eta1-1).gt.(N_eta1)).or.((k_eta1-1).lt.0))then
+                  print *,"#bad value of k_eta1=",k_eta1,N_eta1
+                endif
+                if((k_eta1-1)==N_eta1)then
+                  k_eta1=N_eta1
+                  print *,'#eta1_loc=',eta1_loc
+                  eta1_loc=1._f64
+                endif
                 
-                elseif (k_eta1==N_eta1+1 .and. k_eta2==N_eta2+1) then 
-                   a_eta1=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,k_eta1,k_eta2)/jac_array(k_eta1,k_eta2)))
-                   a_eta2=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,k_eta1,k_eta2)/jac_array(k_eta1,k_eta2)))
-                else
+                eta2_loc=(eta2-eta2_min)/(eta2_max-eta2_min)
+                eta2_loc=eta2_loc*real(N_eta2,f64)
+                !print*,r, eta2 
+                !r=r-real(floor(r),f64)
+                k_eta2=floor(eta2_loc)+1
+                eta2_loc=eta2_loc-real(k_eta2-1,f64)
+                if(((k_eta2-1).gt.(N_eta2)).or.((k_eta2-1).lt.0))then
+                  print *,"#bad value of k_eta2=",k_eta2,N_eta2
+                endif
+                if((k_eta2-1)==N_eta2)then
+                  k_eta2=N_eta2
+                  print *,'#eta2_loc=',eta2_loc
+                  eta2_loc=1._f64
+                endif
+
    
-             a_eta1=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,k_eta1,k_eta2) &
-             &+r*plan%field(2,k_eta1+1,k_eta2)) +theta*((1.0_f64-r)* &
-             & plan%field(2,k_eta1,k_eta2+1)+r*plan%field(2,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
+             a_eta1=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(2,k_eta1,k_eta2) &
+             &+eta1_loc*plan%field(2,k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
+             & plan%field(2,k_eta1,k_eta2+1)+eta1_loc*plan%field(2,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
 
-             a_eta2=0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,k_eta1,k_eta2)+ & 
-             & r*plan%field(1,k_eta1+1,k_eta2))+theta*((1.0_f64-r)* & 
-             & plan%field(1,k_eta1,k_eta2+1)+r*plan%field(1,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
+             a_eta2=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(1,k_eta1,k_eta2)+ & 
+             & eta1_loc*plan%field(1,k_eta1+1,k_eta2))+eta2_loc*((1.0_f64-eta1_loc)* & 
+             & plan%field(1,k_eta1,k_eta2+1)+eta1_loc*plan%field(1,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
 
-                end if
                 eta1n=eta1
                 eta2n=eta2
                 eta1=eta10-a_eta1
                 eta2=eta20-a_eta2
-                eta1_tab(i,j)=eta1
-                eta2_tab(i,j)=eta2
+                call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+                &eta1,eta2)               
                 iter=iter+1
+                
              end do
 
              if (iter==maxiter .and. abs((eta1n-eta1))+abs((eta2n-eta2))>tolr) then
-                print*,'no convergence in fixe point methode',i,j
+                print*,'#no convergence in fixed point methode',i,j
              end if
 
              eta1=eta10-2.0_f64*a_eta1
              eta2=eta20-2.0_f64*a_eta2
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2)    
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+             eta1_tab(i,j)=eta1
+             eta2_tab(i,j)=eta2
           end do
 
        end do
+
+    if (plan%carac_case==6) then
+       !using fixed point method
+    
+       !initialization
+       maxiter=20
+       tolr=1e-10
+       eta1n=0.0_f64
+       eta2n=0.0_f64
+       !k_eta1=1
+       !k_eta2=1
+
+       do j=1,N_eta2+1
+          eta20=eta2_min+real(j-1,f64)*delta_eta2
+          eta2=eta20
+          k_eta2=j
+          do i=1,N_eta1+1
+             eta10=eta1_min+real(i-1,f64)*delta_eta1
+             eta1=eta10
+             eta1_loc=0.0_f64
+             eta2_loc=0.0_f64
+             k_eta1=i
+             a_eta1=0.0_f64
+             a_eta2=0.0_f64
+             iter=0
+
+             do while (((iter<maxiter) .and. (abs((eta1n-eta1))+abs((eta2n-eta2))>tolr)).or.(iter==0))
+                
+                
+                
+                !localization
+                eta1_loc=(eta1-eta1_min)/(eta1_max-eta1_min)
+                eta1_loc=eta1_loc*real(N_eta1,f64)
+                !print*,r, eta1 
+                !r=r-real(floor(r),f64)
+                k_eta1=floor(eta1_loc)+1
+                eta1_loc=eta1_loc-real(k_eta1-1,f64)
+                if(((k_eta1-1).gt.(N_eta1)).or.((k_eta1-1).lt.0))then
+                  print *,"#bad value of k_eta1=",k_eta1,N_eta1
+                endif
+                if((k_eta1-1)==N_eta1)then
+                  k_eta1=N_eta1
+                  print *,'#eta1_loc=',eta1_loc
+                  eta1_loc=1._f64
+                endif
+                
+                eta2_loc=(eta2-eta2_min)/(eta2_max-eta2_min)
+                eta2_loc=eta2_loc*real(N_eta2,f64)
+                !print*,r, eta2 
+                !r=r-real(floor(r),f64)
+                k_eta2=floor(eta2_loc)+1
+                eta2_loc=eta2_loc-real(k_eta2-1,f64)
+                if(((k_eta2-1).gt.(N_eta2)).or.((k_eta2-1).lt.0))then
+                  print *,"#bad value of k_eta2=",k_eta2,N_eta2
+                endif
+                if((k_eta2-1)==N_eta2)then
+                  k_eta2=N_eta2
+                  print *,'#eta2_loc=',eta2_loc
+                  eta2_loc=1._f64
+                endif
+
+   
+             a_eta1=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(2,k_eta1,k_eta2) &
+             &+eta1_loc*plan%field(2,k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
+             & plan%field(2,k_eta1,k_eta2+1)+eta1_loc*plan%field(2,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
+
+             a_eta2=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(1,k_eta1,k_eta2)+ & 
+             & eta1_loc*plan%field(1,k_eta1+1,k_eta2))+eta2_loc*((1.0_f64-eta1_loc)* & 
+             & plan%field(1,k_eta1,k_eta2+1)+eta1_loc*plan%field(1,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
+
+                eta1n=eta1
+                eta2n=eta2
+                eta1=eta10-a_eta1
+                eta2=eta20-a_eta2
+                !call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+                !&eta1,eta2)               
+                iter=iter+1
+                
+             end do
+
+             if (iter==maxiter .and. abs((eta1n-eta1))+abs((eta2n-eta2))>tolr) then
+                print*,'#no convergence in fixed point methode',i,j
+             end if
+
+             eta1=eta10-2.0_f64*a_eta1
+             eta2=eta20-2.0_f64*a_eta2
+             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2)    
+             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+             eta1_tab(i,j)=eta1
+             eta2_tab(i,j)=eta2
+          end do
+
+       end do
+
+
+
 
   end if
   plan%field(2,:,:)=-plan%field(2,:,:)  
