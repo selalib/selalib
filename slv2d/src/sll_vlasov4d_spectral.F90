@@ -5,15 +5,12 @@ call c_f_pointer(p_array, array, [array_size/2+1])        \
 
 module sll_vlasov4d_spectral
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 
  use, intrinsic :: iso_c_binding
  use used_precision
  use geometry_module
  use diagnostiques_module
- use sll_module_interpolators_1d_base
- use sll_module_interpolators_2d_base
- use remapper
  use sll_vlasov4d_base
 
  implicit none
