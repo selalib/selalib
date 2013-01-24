@@ -178,11 +178,11 @@ contains
     eta2_max=plan%eta2_max
     bc1_type=plan%bc1_type
     bc2_type=plan%bc2_type
-
+   
     !construction of spline coefficients for f
     call compute_spline_2D(fn,plan%spl_f)
     plan%field(2,:,:)=-plan%field(2,:,:)
-  
+   
     if (plan%carac_case==1) then
        !explicit Euler
        fnp1=fn
@@ -244,17 +244,15 @@ contains
     
        !initialization
        maxiter=20
-       tolr=1e-10
+       tolr=1e-12
        eta1n=0.0_f64
        eta2n=0.0_f64
-       !k_eta1=1
-       !k_eta2=1
 
-       do j=1,N_eta2+1
+       do j=1,N_eta2+1 !N_eta2+1
           eta20=eta2_min+real(j-1,f64)*delta_eta2
           eta2=eta20
           k_eta2=j
-          do i=1,N_eta1+1
+          do i=1,N_eta1+1 !N_eta1+1
              eta10=eta1_min+real(i-1,f64)*delta_eta1
              eta1=eta10
              eta1_loc=0.0_f64
@@ -263,9 +261,8 @@ contains
              a_eta1=0.0_f64
              a_eta2=0.0_f64
              iter=0
-
-             do while (((iter<maxiter) .and. (abs((eta1n-eta1))+abs((eta2n-eta2))>tolr)).or.(iter==0))
-                
+ 
+             do while (((iter<maxiter) .and. (abs((eta1n-eta1))+abs((eta2n-eta2))>tolr)).or.(iter==0))          
                 eta1_loc=(eta1-eta1_min)/(eta1_max-eta1_min)
                 eta1_loc=eta1_loc*real(N_eta1,f64)
                 !print*,r, eta1 
@@ -276,11 +273,10 @@ contains
                   print *,"#bad value of k_eta1=",k_eta1,N_eta1,eta1_loc,eta1,i,j,iter
                 endif
                 if((k_eta1-1)==N_eta1)then
-                  k_eta1=N_eta1
+                  k_eta1= N_eta1
                   if (abs(eta1_loc)>1.e-13) print *,'#eta1_loc=',eta1_loc
-                  eta1_loc=1._f64
-                endif
-                
+                  eta1_loc=1._f64 
+                endif               
                 eta2_loc=(eta2-eta2_min)/(eta2_max-eta2_min)
                 eta2_loc=eta2_loc*real(N_eta2,f64)
                 !print*,r, eta2 
@@ -293,9 +289,8 @@ contains
                 if((k_eta2-1)==N_eta2)then
                   k_eta2=N_eta2
                   if (abs(eta2_loc)>1.e-13) print *,'#eta2_loc=',eta2_loc
-                  eta2_loc=1._f64
+                  eta2_loc=1._f64 
                 endif
-
    
              a_eta1=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(2,k_eta1,k_eta2) &
              &+eta1_loc*plan%field(2,k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
@@ -318,7 +313,6 @@ contains
              if (iter==maxiter .and. abs((eta1n-eta1))+abs((eta2n-eta2))>tolr) then
                 print*,'#no convergence in fixed point methode',i,j
              end if
-
              eta1=eta10-2.0_f64*a_eta1
              eta2=eta20-2.0_f64*a_eta2
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2)    
@@ -330,7 +324,8 @@ contains
        end do
   end if
 
-
+    !if(bc2_type==PERIODIC_SPLINE) fnp1(:,N_eta2+1)=fnp1(:,1) 
+    !if(bc1_type==PERIODIC_SPLINE) fnp1(N_eta1+1,:)=fnp1(1,:)
   plan%field(2,:,:)=-plan%field(2,:,:)  
 
   end subroutine advect_CG_curvilinear
@@ -341,7 +336,7 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_classic(plan,inn,outt,jac_array,eta1_tab,eta2_tab)
+  subroutine SL_order_1(plan,inn,outt,jac_array,eta1_tab,eta2_tab)
 
     implicit none
 
@@ -357,7 +352,7 @@ contains
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,eta1_tab,eta2_tab)
     
 
-  end subroutine SL_classic
+  end subroutine SL_order_1
 
 !!*********************************************************************************
   !>subroutine SL_ordre_2(plan,in,out)
@@ -365,7 +360,7 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_ordre_2(plan,inn,outt,jac_array,eta1_tab,eta2_tab)
+  subroutine SL_order_2(plan,inn,outt,jac_array,eta1_tab,eta2_tab)
 
     implicit none
 
@@ -394,7 +389,7 @@ contains
     plan%adv%dt=dt
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,eta1_tab,eta2_tab)
 
-  end subroutine SL_ordre_2
+  end subroutine SL_order_2
 
 
 
