@@ -64,18 +64,18 @@ program cg_curvilinear_2D
   visu_case = 0
   visu_step = 5
   mesh_case = 1
-  f_case = 4  
+  f_case = 1  
   grad_case = 1
-  carac_case = 1
+  carac_case = 5
   phi_case = 1
   time_scheme = 1
   
   a1 = 1._f64*0.01_f64
-  a2 = 0._f64*0.01_f64
+  a2 = 1._f64*0.01_f64
   bc1_type=PERIODIC_SPLINE
   bc2_type=PERIODIC_SPLINE
-  N_eta1 = 30
-  N_eta2 = 30
+  N_eta1 = 50
+  N_eta2 = 50
   dt = 0.01
   nb_step = 200
   alpha_mesh = 0._f64
@@ -105,8 +105,8 @@ program cg_curvilinear_2D
   ! domain    : disc of radius eta1_max with a hole of radius eta1_min
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
-    eta1_min = 0.2_f64
-    eta1_max = 0.8_f64
+    eta1_min = 0.1_f64
+    eta1_max = 1._f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
 
@@ -213,7 +213,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
  
 
 !  !write f in a file before calculations
-  call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CG")
+  call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGC")
 ! !***************************************
 
 
@@ -221,23 +221,21 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
 !
  do step=1,nb_step
 
-    !print*,'#Step:',step
-
     select case (time_scheme)
 
       case(1) 
             
             !classical semi-Lagrangian scheme (order 1)
-            call SL_classic(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
+            call SL_order_1(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
            
       case(2) 
            !semi-Lagrangian predictive-corrective scheme
-            call SL_ordre_2(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
+            call SL_order_2(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
 
       case(3)
            !leap-frog scheme
              if (step==1) then
-                call SL_ordre_2(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
+                call SL_order_2(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
                 plan_sl%adv%dt=2.0_f64*dt
              else 
                !call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
@@ -249,13 +247,11 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
            print*,'#no scheme defined'
     end select
 
-    if(bc2_type==PERIODIC_SPLINE) fp1(:,N_eta2+1)=fp1(:,1) !!!periodic
-    if(bc1_type==PERIODIC_SPLINE) fp1(N_eta1+1,:)=fp1(1,:)
+    !if(bc2_type==PERIODIC_SPLINE) fp1(:,N_eta2+1)=fp1(:,1) 
+    !if(bc1_type==PERIODIC_SPLINE) fp1(N_eta1+1,:)=fp1(1,:)
+    
     
     f=fp1
-
- call init_distribution_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
-             & delta_eta1,delta_eta2,f_case,f,mesh_case,eta1_tab,eta2_tab)
 
     
     if (step==1 .or. step/visu_step*visu_step==step) then
@@ -263,8 +259,13 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
     ! call plot_f(step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
     end if
    
- end do        !!**************End of time loop
+ end do 
+       !!**************End of time loop
 
+ call init_distribution_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
+             & delta_eta1,delta_eta2,f_case,f_init,mesh_case,eta1_tab,eta2_tab)
+ !write f_init in a file after calculations
+  call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGCFN")
 ! L^\infty
   error = 0._f64
   open(unit=800,file='conv_CG',position="append")
