@@ -91,17 +91,17 @@ call sll_xml_file_close(file_id,error)
 
 !The field is describe on a cartesian mesh
 !Axis are perpendicular and spacing is constant
-call sll_xdmf_corect2d_nodes( "test_corect2d", df, "d_f1", &
+call sll_xdmf_corect2d_nodes( "test_corect2d", df, "f1_2d", &
                               ray(1), (ray(nnodes_x1)-ray(1))/(nnodes_x1-1), &
                               theta(1), (theta(nnodes_x2)-theta(1))/(nnodes_x2-1), &
                               "HDF5") 
 !The field is describe on a cartesian mesh
 !Axis are perpendicular and spacing is define by eta1 and eta2 arrays
-call sll_xdmf_rect2d_nodes( "test_rect2d", df, "d_f2", ray, theta, "HDF5") 
+call sll_xdmf_rect2d_nodes( "test_rect2d", df, "f2_2d", ray, theta, "HDF5") 
 
 !The field is describe on a structured curvilinear mesh.
 !Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
-call sll_xdmf_curv2d_nodes( "test_curv2d", df, "d_f3", x1, x2, "HDF5") 
+call sll_xdmf_curv2d_nodes( "test_curv2d", df, "f3_2d", x1, x2, "HDF5") 
 
 
 !Init step, create h5 files with mesh coordinates
@@ -127,9 +127,11 @@ end subroutine test_io_2d
 
 !> Unit test program for xdmf outputs in 3d
 subroutine test_io_3d()
+implicit none
 sll_int32  :: nnodes_x1, nnodes_x2, nnodes_x3
 sll_int32  :: ncells_x1, ncells_x2, ncells_x3
-sll_real64 :: theta, a, b, phi
+sll_real64 :: a, b, phi , theta
+sll_real64, allocatable, dimension(:) :: vx, vy, vz
 sll_real64, allocatable, dimension(:,:,:) :: x1, x2, x3, df
 
 character(6)  :: mesh_name = "mesh3d"
@@ -148,6 +150,10 @@ SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2,nnodes_x3),error)
 SLL_ALLOCATE(x3(nnodes_x1,nnodes_x2,nnodes_x3),error)
 SLL_ALLOCATE(df(nnodes_x1,nnodes_x2,nnodes_x3),error)
 
+SLL_ALLOCATE(vx(nnodes_x1),error)
+SLL_ALLOCATE(vy(nnodes_x2),error)
+SLL_ALLOCATE(vz(nnodes_x3),error)
+
 a = 3
 phi = 0
 do k = 1, nnodes_x3
@@ -159,10 +165,13 @@ do k = 1, nnodes_x3
          x2(i,j,k) =  (a + b*cos(phi))*sin(theta)
          x3(i,j,k) =  b*sin(phi)
          df(i,j,k) =  phi*theta
+         vx(i) = b
          b = b + 1._f64/(nnodes_x1-1)
       end do
+      vy(j) = theta
       theta = theta + 2._f64*sll_pi / (nnodes_x2-1)
    end do 
+   vz(k) = phi
    phi = phi + 2._f64*sll_pi / (nnodes_x3-1)
 end do 
 
@@ -174,6 +183,22 @@ call sll_xdmf_write_array("field3d",df,"NodeVal",error,file_id,"Node")
 call sll_xdmf_write_array("field3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
                           "CellVal",error,file_id,"Cell")
 call sll_xdmf_close(file_id,error)
+
+!The field is describe on a cartesian mesh
+!Axis are perpendicular and spacing is constant
+call sll_xdmf_corect3d_nodes( "test_corect3d", df, "f1_3d", &
+                              vx(1), (vx(nnodes_x1)-vx(1))/(nnodes_x1-1), &
+                              vy(1), (vy(nnodes_x2)-vy(1))/(nnodes_x2-1), &
+                              vz(1), (vz(nnodes_x2)-vz(1))/(nnodes_x3-1), &
+                              "HDF5") 
+
+!The field is describe on a cartesian mesh
+!Axis are perpendicular and spacing is define by eta1 and eta2 arrays
+call sll_xdmf_rect3d_nodes( "test_rect3d", df, "f2_3d", vx, vy, vz, "HDF5") 
+
+!The field is describe on a structured curvilinear mesh.
+!Nodes coordinates are defined by eta1 and eta2 that are 2d arrays.
+call sll_xdmf_curv3d_nodes( "test_curv3d", df, "f3_3d", x1, x2, x3, "HDF5") 
 
 end subroutine test_io_3d
 

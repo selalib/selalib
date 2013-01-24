@@ -64,6 +64,7 @@ end type poisson_2d_periodic
 
 use, intrinsic :: iso_c_binding
 implicit none
+private
 include 'fftw3.f03'
 
 interface new
@@ -79,7 +80,9 @@ interface free
    module procedure free_poisson
 end interface
 
-type :: poisson_2d_periodic
+public :: new, solve, free, initialize
+
+type, public :: poisson_2d_periodic
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
    type(C_PTR)                          :: fw, bw
    complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
