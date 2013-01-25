@@ -37,7 +37,7 @@ plan%d_dy = plan%d_dy / plan%ncy
 
 !> @brief 
 !> Selalib periodic 2D maxwell solver for cartesian coordinates.
-!   
+!>   
 !> @author                    
 !> Pierre Navaro 
 module sll_maxwell_2d_periodic_cartesian_par
@@ -54,11 +54,6 @@ module sll_maxwell_2d_periodic_cartesian_par
   use sll_maxwell
 
   implicit none
-
-  !> solve subroutine parameter to compute electric field
-  sll_int32, public, parameter :: FARADAY = 0  
-  !> solve subroutine parameter to compute magnetic field
-  sll_int32, public, parameter :: AMPERE  = 1
 
   !> Maxwell solver object
   type maxwell_2d_periodic_plan_cartesian_par
@@ -80,8 +75,8 @@ module sll_maxwell_2d_periodic_cartesian_par
      sll_real64                          :: mu_0        !< magnetic permeability
      type(C_PTR)                         :: p_x_array   !< x pointer to memory
      type(C_PTR)                         :: p_y_array   !< y pointer to memory
-     sll_real64, dimension(:,:), pointer :: bz_x        !< array sequential in x
-     sll_real64, dimension(:,:), pointer :: bz_y        !< array sequential in y
+     sll_real64, dimension(:,:), pointer :: fz_x        !< array sequential in x
+     sll_real64, dimension(:,:), pointer :: fz_y        !< array sequential in y
      sll_real64, dimension(:), pointer   :: kx          !< x wave number
      sll_real64, dimension(:), pointer   :: ky          !< y wave number
   end type maxwell_2d_periodic_plan_cartesian_par
@@ -150,15 +145,15 @@ contains
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => layout_x
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
-    SLL_CLEAR_ALLOCATE(plan%bz_x(nx_loc,ny_loc),error)
+    SLL_CLEAR_ALLOCATE(plan%fz_x(nx_loc,ny_loc),error)
 
     ! Layout and local sizes for FFTs in y-direction
     plan%layout_y => layout_y
     call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
-    SLL_CLEAR_ALLOCATE(plan%bz_y(nx_loc,ny_loc),error)
+    SLL_CLEAR_ALLOCATE(plan%fz_y(nx_loc,ny_loc),error)
 
-    plan%rmp_xy => new_remap_plan(plan%layout_x, plan%layout_y, plan%bz_x)
-    plan%rmp_yx => new_remap_plan(plan%layout_y, plan%layout_x, plan%bz_y)
+    plan%rmp_xy => new_remap_plan(plan%layout_x, plan%layout_y, plan%fz_x)
+    plan%rmp_yx => new_remap_plan(plan%layout_y, plan%layout_x, plan%fz_y)
 
     SLL_ALLOCATE(plan%kx(ncx/2+1), error)
     SLL_ALLOCATE(plan%ky(ncy/2+1), error)
@@ -212,15 +207,15 @@ contains
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(ey(:,j))
-       plan%bz_x(:,j) = plan%bz_x(:,j) - dt * plan%d_dx
+       plan%fz_x(:,j) = plan%fz_x(:,j) - dt * plan%d_dx
     end do
 
-    call apply_remap_2D( plan%rmp_xy,plan%bz_x,plan%bz_y)
+    call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
     call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(ex(i,:))
-       plan%bz_y(i,:) = plan%bz_y(i,:) + dt * plan%d_dy
+       plan%fz_y(i,:) = plan%fz_y(i,:) + dt * plan%d_dy
     end do
       
   end subroutine faraday_te
@@ -251,19 +246,111 @@ contains
 
     call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
-       D_DY(plan%bz_y(i,:))
+       D_DY(plan%fz_y(i,:))
        ex(i,:) = ex(i,:) + dt_e * plan%d_dy
     end do
 
-    call apply_remap_2D( plan%rmp_xy,plan%bz_x,plan%bz_y)
+    call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
-       D_DX(plan%bz_x(:,j))
+       D_DX(plan%fz_x(:,j))
        ey(:,j) = ey(:,j) - dt_e * plan%d_dx
     end do
 
   end subroutine ampere_te
+
+  !> Solve faraday equation (TE mode)
+  subroutine ampere_tm(plan,dt,bx,by,jz)
+
+    type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
+
+    sll_real64, dimension(:,:) :: bx !> electric field sequential in y
+    sll_real64, dimension(:,:) :: by !> electric field sequential in x
+    sll_real64, dimension(:,:), optional :: jz !> current density sequential in 	
+    sll_int32                  :: ncx      !< global x cell number
+    sll_int32                  :: ncy      !< global y cell number
+    sll_int32                  :: nx_loc   !< local  x cell number
+    sll_int32                  :: ny_loc   !< local  y cell number
+    sll_int32                  :: prank
+    sll_int64                  :: psize
+    sll_real64, intent(in)     :: dt       !< time step
+    sll_real64                 :: dt_e
+
+    prank = sll_get_collective_rank( sll_world_collective )
+    psize = sll_get_collective_size( sll_world_collective )
+
+    ncx  = plan%ncx
+    ncy  = plan%ncy
+
+#ifdef DEBUG
+    call verify_argument_sizes_par(plan%layout_x, ey)
+    call verify_argument_sizes_par(plan%layout_y, ex)
+#endif
+
+    dt_e = dt / plan%e_0
+
+    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    do j = 1, ny_loc
+      D_DX(by(:,j))
+      plan%fz_x(:,j) = plan%fz_x(:,j) + dt_e * plan%d_dx
+    end do
+
+    call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
+
+    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    do i = 1, nx_loc
+      D_DY(bx(i,:))
+      plan%fz_y(i,:) = plan%fz_y(i,:) - dt_e * plan%d_dy
+    end do
+
+    if (present(jz)) then
+      plan%fz_y = plan%fz_y - dt_e * jz 
+    end if
+      
+  end subroutine ampere_tm
+
+  !> Solve Ampere-Maxwell equation (TE mode)
+  subroutine faraday_tm(plan,dt,bx,by)
+
+    type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
+
+    sll_real64, dimension(:,:), intent(inout) :: bx     !< Bx field
+    sll_real64, dimension(:,:), intent(inout) :: by     !< By field
+    sll_real64, intent(in)                    :: dt     !< time step
+    sll_int32                                 :: nx_loc !< local  x cell number
+    sll_int32                                 :: ny_loc !< local  y cell number
+    sll_int32                                 :: prank
+    sll_int64                                 :: psize
+    sll_real64                                :: dt_mu
+
+    prank = sll_get_collective_rank( sll_world_collective )
+    psize = sll_get_collective_size( sll_world_collective )
+
+#ifdef DEBUG
+    call verify_argument_sizes_par(plan%layout_x, by)
+    call verify_argument_sizes_par(plan%layout_y, bx)
+#endif
+
+    dt_mu = dt / plan%mu_0
+
+    call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
+    do i = 1, nx_loc
+       D_DY(plan%fz_y(i,:))
+       bx(i,:) = bx(i,:) - dt_mu * plan%d_dy
+    end do
+
+    call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
+
+    call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
+    do j = 1, ny_loc
+       D_DX(plan%fz_x(:,j))
+       by(:,j) = by(:,j) + dt_mu * plan%d_dx
+    end do
+
+  end subroutine faraday_tm
+
+  !> Delete maxwell solver object
 
   !> Delete maxwell solver object
   subroutine delete_maxwell_2d_periodic_plan_cartesian_par(plan)
@@ -287,8 +374,6 @@ contains
     call delete( plan%rmp_yx )
     call delete( plan%layout_x )
     call delete( plan%layout_y )
-    SLL_DEALLOCATE_ARRAY(plan%bz_x, error)
-    SLL_DEALLOCATE_ARRAY(plan%bz_y, error)
 
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 

@@ -43,12 +43,13 @@ program test_maxwell_2d_periodic_cart_par
 
   type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan
 
-  type(layout_2D), pointer                     :: layout_x
-  type(layout_2D), pointer                     :: layout_y
-  sll_real64, dimension(:,:), allocatable      :: ex
-  sll_real64, dimension(:,:), allocatable      :: ey
-  sll_int32, dimension(1:2)                    :: global
-  character(len=4)                             :: cstep
+  type(layout_2D), pointer            :: layout_x
+  type(layout_2D), pointer            :: layout_y
+  sll_real64, dimension(:,:), pointer :: ex
+  sll_real64, dimension(:,:), pointer :: ey
+  sll_real64, dimension(:,:), pointer :: bz
+  sll_int32, dimension(1:2)           :: global
+  character(len=4)                    :: cstep
 
   ok = 1.0
 
@@ -103,6 +104,8 @@ program test_maxwell_2d_periodic_cart_par
   plan%e_0  = 1.0_f64 
   plan%mu_0 = 1.0_f64 
 
+  bz => plan%fz_x
+
   !Ex si sequential along y
   call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
   SLL_CLEAR_ALLOCATE(ex(nx_loc,ny_loc), error)
@@ -116,7 +119,7 @@ program test_maxwell_2d_periodic_cart_par
         global = local_to_global_2D( layout_x, (/i, j/))
         gi = global(1); gj = global(2)
         x  = (gi-1)*dx; y  = (gj-1)*dy
-        plan%bz_x(i,j) = - cos(mode*(i-1)*dx) &
+        plan%fz_x(i,j) = - cos(mode*(i-1)*dx) &
                          * cos(mode*(j-1)*dy) &
                          * cos(omega*time)
      end do
@@ -144,7 +147,7 @@ program test_maxwell_2d_periodic_cart_par
         global = local_to_global_2D( layout_x, (/i, j/))
         gi = global(1); gj = global(2)
         x  = (gi-1)*dx; y  = (gj-1)*dy
-        err_l2 = err_l2 + abs(plan%bz_x(i,j) + cos(mode*(i-1)*dx) &
+        err_l2 = err_l2 + abs(bz(i,j) + cos(mode*(i-1)*dx) &
                  * cos(mode*(j-1)*dy) * cos(omega*time))
      end do
      end do
@@ -187,14 +190,12 @@ contains
     offset(2) = get_layout_j_min(layout_y,prank) - 1
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ex,'ex_values',error)
-    call sll_hdf5_write_array(file_id,global_dims,offset, &
-                              plan%bz_y,'bz_y_values',error)
     offset(1) = get_layout_i_min(layout_x,prank) - 1
     offset(2) = get_layout_j_min(layout_x,prank) - 1
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ey,'ey_values',error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
-                              plan%bz_x,'bz_x_values',error)
+                              bz,'bz_values',error)
     call sll_hdf5_file_close(file_id,error)
 
   end subroutine write_fields
