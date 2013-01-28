@@ -221,19 +221,20 @@ contains
                   eta2_loc=1._f64
                 endif
 
-             eta2=eta20-dt*plan%field(1,i,j)/jac_array(k_eta1,k_eta2)
-             eta1=eta10-dt*plan%field(2,i,j)/jac_array(k_eta1,k_eta2)
+             eta2=eta20-dt*plan%field(1,i,j)/jac_array(i,j)
+             eta1=eta10-dt*plan%field(2,i,j)/jac_array(i,j)
 
-             fnp1(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*fn(k_eta1,k_eta2) &
-             &+eta1_loc*fn(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
-             & fn(k_eta1,k_eta2+1)+eta1_loc*fn(k_eta1+1,k_eta2+1))
-             
-              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
-                &eta1,eta2)                             
-         
+             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+                &eta1,eta2)
+
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+             !fnp1(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*fn(k_eta1,k_eta2) &
+             !&+eta1_loc*fn(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
+             !& fn(k_eta1,k_eta2+1)+eta1_loc*fn(k_eta1+1,k_eta2+1))
+                                                         
              eta1_tab(i,j)=eta1
              eta2_tab(i,j)=eta2
+   
           end do
 
        end do
@@ -324,8 +325,8 @@ contains
        end do
   end if
 
-    !if(bc2_type==PERIODIC_SPLINE) fnp1(:,N_eta2+1)=fnp1(:,1) 
-    !if(bc1_type==PERIODIC_SPLINE) fnp1(N_eta1+1,:)=fnp1(1,:)
+    if(bc2_type==PERIODIC_SPLINE) fnp1(:,N_eta2+1)=fnp1(:,1) 
+    if(bc1_type==PERIODIC_SPLINE) fnp1(N_eta1+1,:)=fnp1(1,:)
   plan%field(2,:,:)=-plan%field(2,:,:)  
 
   end subroutine advect_CG_curvilinear
@@ -336,7 +337,7 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_1(plan,inn,outt,jac_array,eta1_tab,eta2_tab)
+  subroutine SL_order_1(plan,inn,outt,jac_array,eta1_tab,eta2_tab,step)
 
     implicit none
 
@@ -344,14 +345,20 @@ contains
     sll_real64, dimension(:,:), intent(inout) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
     sll_real64,dimension(:,:),pointer,intent(inout)::jac_array,eta1_tab,eta2_tab
+    sll_int :: step,i,j
 
     !call poisson_solve_curvilinear(plan%poisson,inn,plan%phi)
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field1)
     
    
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,eta1_tab,eta2_tab)
-    
-
+  if(step==30) then
+     do i=1,plan%adv%N_eta1+1
+    do j=1,plan%adv%N_eta2+1
+      write(200,*) eta1_tab(i,j),plan%adv%eta1_min+(i-1)*plan%adv%delta_eta1,eta2_tab(i,j),plan%adv%eta1_min+(j-1)*plan%adv%delta_eta2
+    enddo
+  enddo  
+  endif
   end subroutine SL_order_1
 
 !!*********************************************************************************

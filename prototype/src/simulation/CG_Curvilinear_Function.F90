@@ -66,7 +66,7 @@ implicit none
         do j=1,N_eta2+1
          eta2=eta2_min+real(j-1,f64)*delta_eta2
               if ((mesh_case==1).or.(mesh_case==4)) then
-                 f(i,j) = exp(-2_f64*(eta1-eta1c)**2)*exp(-2_f64*(eta2-eta2c)**2)
+                 f(i,j) = exp(-5_f64*(eta1-eta1c)**2)*exp(-5_f64*(eta2-eta2c)**2)
               endif
               if ((mesh_case==2).or.(mesh_case==3)) then
                 f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
@@ -116,7 +116,7 @@ implicit none
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32, intent(in):: fcase,mesh_case
   sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
-  sll_real64 :: eta1,eta2,eta1c,eta2c
+  sll_real64 :: eta1c,eta2c
 
 
   eta1c = 0.5_f64*(eta1_max+eta1_min)
@@ -194,7 +194,7 @@ end subroutine init_distribution_curvilinear
 
 subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh)
+   &geom_eta,alpha_mesh,x1c,x2c)
 
     implicit none
     sll_int32,intent(in) :: nc_eta1,nc_eta2,mesh_case
@@ -203,6 +203,7 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     sll_real64,dimension(:,:),pointer,intent(out) :: jac_array
     sll_int32  :: i1,i2,err
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2
+    sll_real64,intent(out) :: x1c,x2c
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta2
     
     
@@ -230,6 +231,8 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
       x1_max=eta1_max
       x2_min=eta2_min
       x2_max=eta2_max
+      x1c=(x1_min+x1_max)/2
+      x2c=(x2_min+x2_max)/2
       
       delta_x1 = (x1_max-x1_min)/real(nc_eta1,f64)
       delta_x2 = (x2_max-x2_min)/real(nc_eta2,f64)
@@ -243,7 +246,9 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     endif
   
     ! polar mesh
-      if (mesh_case==2) then
+      if (mesh_case==2) then 
+        x1c=(eta1_min+eta1_max)/2
+        x2c=(eta2_min+eta2_max)/2
         do i1= 1, nc_eta1 + 1
             eta1 = eta1_min + real(i1-1,f64)*delta_eta1
            do i2= 1, nc_eta2 + 1
@@ -275,6 +280,8 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
        x1_max = eta1_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
        x2_min = eta2_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
        x2_max = eta2_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
+       x1c=(x1_min+x1_max)/2
+       x2c=(x2_min+x2_max)/2
       do i1= 1, nc_eta1 + 1
          eta1 = eta1_min + real(i1-1,f64)*delta_eta1
          do i2 = 1, nc_eta2 + 1
@@ -300,6 +307,8 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
      x1_max = eta1_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)**2
      x2_min = eta2_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
      x2_max = eta2_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
+     x1c=(x1_min+x1_max)/2
+     x2c=(x2_min+x2_max)/2
      do i1= 1, nc_eta1 + 1
        eta1 = eta1_min + real(i1-1,f64)*delta_eta1
         do i2 = 1, nc_eta2 + 1
@@ -340,7 +349,7 @@ end subroutine construct_mesh_transF
 
 
 !!!************************************************************************
-subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2)
+subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c,x2c)
 
     implicit none
 
@@ -349,6 +358,7 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2)
     type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
     sll_int32 :: i,j,N_eta1,N_eta2
     sll_int32, intent(in) :: phi_case
+    sll_real64,intent(inout) :: x1c,x2c
     sll_real64 :: delta_eta1,delta_eta2,eta1,eta2,eta1_min,eta2_min,eta1_max,eta2_max
     sll_real64 :: a1,a2
     
@@ -361,6 +371,8 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2)
     N_eta2 = plan%N_eta2
     delta_eta1 = plan%delta_eta1
     delta_eta2 = plan%delta_eta2
+  
+    
 
     select case(phi_case)
     case(1) ! translation
@@ -374,9 +386,11 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2)
     case(2) !rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            phi_exact(i,j)=(x1n_array(i,j)**2+x2n_array(i,j)**2)*0.5
-            plan%field(1,i,j)= -x1n_array(i,j)
-            plan%field(2,i,j)= -x2n_array(i,j)
+            x1c=0._f64
+            x2c=0._f64
+            phi_exact(i,j)=((x1n_array(i,j)-x1c)**2+(x2n_array(i,j)-x2c)**2)*0.5
+            plan%field(1,i,j)= -(x1n_array(i,j)-x1c)
+            plan%field(2,i,j)= -(x2n_array(i,j)-x2c)
           end do
        end do
     case(3) !non homogeneous equation
