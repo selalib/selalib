@@ -69,9 +69,9 @@ program cg_curvilinear_2D
   mesh_case = 1 ! 1: cartesian 2: polar 3: r^2 modified polar 4: colella 
   f_case = 4  ! 1: constant function 4: gaussian in x and y
   grad_case = 1
-  carac_case = 1
-  phi_case = 2 ! 1: translation 2: rotation
-  time_scheme = 1
+  carac_case = 5 ! 1 : Explicite Euleur 5: Fixe point
+  phi_case = 2 ! 1: translation 2: rotation 3: anisotropic rotation
+  time_scheme = 2 ! 1: SL_order 1  2: SL order 2 (Predictor-Corrector) 3: SL order 2 (Leap-Frog)
   
   a1 = 1._f64 !*0.01_f64
   a2 = 1._f64 !*0.01_f64
@@ -234,7 +234,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
             call SL_order_1(plan_sl,f,fp1,jac_array,step)
            
       case(2) 
-           !semi-Lagrangian predictive-corrective scheme
+           !semi-Lagrangian predictor-corrector scheme
             call SL_order_2(plan_sl,f,fp1,jac_array)
 
       case(3)
