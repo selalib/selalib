@@ -284,8 +284,8 @@ contains
     ncy  = plan%ncy
 
 #ifdef DEBUG
-    call verify_argument_sizes_par(plan%layout_x, ey)
-    call verify_argument_sizes_par(plan%layout_y, ex)
+    call verify_argument_sizes_par(plan%layout_x, by)
+    call verify_argument_sizes_par(plan%layout_y, bx)
 #endif
 
     dt_e = dt / plan%e_0
