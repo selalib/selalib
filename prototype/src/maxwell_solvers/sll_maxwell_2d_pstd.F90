@@ -38,7 +38,25 @@ self%d_dy = self%d_dy / ny
 !> Pierre Navaro
 !> @brief
 !> Implements the Maxwell solver in 2D with periodic boundary conditions
-!> with PSTD method
+!> with PSTD method.
+!> @details
+!> Field derivative is made using Fast Fourier Transform.
+!>
+!>\f$ \displaystyle
+!>\frac{\partial \psi}{\partial x} \Big|_i = F_x^{-1} [ -jk_xF_x(\psi)]_i,
+!>\f$
+!>
+!> For Maxwell system the scheme is
+!>
+!>\f$ \displaystyle
+!>H_u\Big|^{n+1/2}_{i,j,k} = H_u\Big|^{n-1/2}_{i,j,k}  - \frac{\Delta t}{\mu} \Big\{F_v^{-1}[-jk_vF_v(E_w)]|_{i,j,k}^n -F_w^{-1}[-jk_wF_w(E_v)]|_{i,j,k}^{n}\Big\},
+!>\f$
+!>
+!>\f$ \displaystyle
+!>E_u\Big|^{n+1}_{i,j,k} = E_u\Big|^{n}_{i,j,k}  + \frac{\Delta t}{\varepsilon} \Big\{F_v^{-1}[-jk_vF_v(H_w)]|_{i,j,k}^{n+1/2} -F_w^{-1}[-jk_wF_w(H_v)]|_{i,j,k}^{n+1/2}\Big\},
+!>\f$
+!>
+!>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 module sll_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -50,6 +68,7 @@ use physical_constants
 use sll_maxwell
 
 implicit none
+private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
 interface new
@@ -65,6 +84,8 @@ end interface solve
 interface free
  module procedure free_maxwell_2d_pstd
 end interface free
+
+public :: new, free, solve, ampere_te, faraday_te, ampere_tm, faraday_tm
 
 !> Maxwell solver object
 type, public :: maxwell_pstd
@@ -121,8 +142,8 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nx,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny,sz_tmp_y,self%p_tmp_y)
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
 
