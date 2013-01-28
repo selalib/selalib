@@ -24,6 +24,7 @@ program cg_curvilinear_2D
   sll_real64 :: delta_eta1, delta_eta2
   sll_real64 :: eta1_min, eta1_max,eta2_min, eta2_max, dt, tf
   sll_real64 :: temps,a1,a2,error
+  sll_real64 :: x1c,x2c
   sll_real64 :: geom_eta(2,2),alpha_mesh
   sll_real64, dimension(:,:), pointer :: x1n_array,x2n_array,eta1_tab,eta2_tab  !,x1c_array,x2c_array
   sll_real64, dimension(:,:), pointer :: jac_array
@@ -62,22 +63,22 @@ program cg_curvilinear_2D
 !  close(27)
 !
   visu_case = 0
-  visu_step = 5
-  mesh_case = 1
-  f_case = 1  
+  visu_step = 100
+  mesh_case = 2
+  f_case = 4  
   grad_case = 1
-  carac_case = 5
-  phi_case = 1
+  carac_case = 1
+  phi_case = 2
   time_scheme = 1
   
-  a1 = 1._f64*0.01_f64
-  a2 = 1._f64*0.01_f64
+  a1 = 1._f64 !*0.01_f64
+  a2 = 1._f64 !*0.01_f64
   bc1_type=PERIODIC_SPLINE
   bc2_type=PERIODIC_SPLINE
   N_eta1 = 50
   N_eta2 = 50
   dt = 0.01
-  nb_step = 200
+  nb_step = 400
   alpha_mesh = 0._f64
   eta1_min = 0._f64
   eta1_max = 1._f64
@@ -97,15 +98,15 @@ program cg_curvilinear_2D
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
 
-    bc1_type = PERIODIC_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    bc1_type =PERIODIC_SPLINE
+    bc2_type =PERIODIC_SPLINE
   endif
   
   ! mesh type : polar or polar-like
   ! domain    : disc of radius eta1_max with a hole of radius eta1_min
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
-    eta1_min = 0.1_f64
+    eta1_min = 0.2_f64
     eta1_max = 1._f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
@@ -181,7 +182,7 @@ program cg_curvilinear_2D
 
  call construct_mesh_transF(N_eta1,N_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh)
+   &geom_eta,alpha_mesh,x1c,x2c)
  
 
 !********************************* 
@@ -207,7 +208,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
   call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
        & delta_eta1,delta_eta2,f_case,f,mesh_case)
   f_init=f
-  call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2)
+  call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c,x2c)
 !  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
 !  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
  
@@ -226,7 +227,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
       case(1) 
             
             !classical semi-Lagrangian scheme (order 1)
-            call SL_order_1(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab)
+            call SL_order_1(plan_sl,f,fp1,jac_array,eta1_tab,eta2_tab,step)
            
       case(2) 
            !semi-Lagrangian predictive-corrective scheme
@@ -247,15 +248,15 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
            print*,'#no scheme defined'
     end select
 
-    !if(bc2_type==PERIODIC_SPLINE) fp1(:,N_eta2+1)=fp1(:,1) 
-    !if(bc1_type==PERIODIC_SPLINE) fp1(N_eta1+1,:)=fp1(1,:)
+   ! if(bc2_type==PERIODIC_SPLINE) fp1(:,N_eta2+1)=fp1(:,1) 
+   ! if(bc1_type==PERIODIC_SPLINE) fp1(N_eta1+1,:)=fp1(1,:)
     
     
     f=fp1
 
     
     if (step==1 .or. step/visu_step*visu_step==step) then
-       !!call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta,visu_case,step,"CGC")
+       call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGCF")
     ! call plot_f(step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
     end if
    
@@ -266,6 +267,13 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
              & delta_eta1,delta_eta2,f_case,f_init,mesh_case,eta1_tab,eta2_tab)
  !write f_init in a file after calculations
   call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGCFN")
+!open(unit=800,file='conv_CG',position="append")
+  do i=1,N_eta1+1
+    do j=1,N_eta2+1
+      write(100,*) eta1_tab(i,j),eta1_min+(i-1)*delta_eta1
+    enddo
+  enddo  
+ 
 ! L^\infty
   error = 0._f64
   open(unit=800,file='conv_CG',position="append")
