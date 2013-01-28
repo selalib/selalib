@@ -221,12 +221,14 @@ contains
   end subroutine faraday_te
 
   !> Solve Ampere-Maxwell equation (TE mode)
-  subroutine ampere_te(plan,dt,ex,ey)
+  subroutine ampere_te(plan,dt,ex,ey,jx,jy)
 
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
 
     sll_real64, dimension(:,:), intent(inout) :: ex     !< Ex field
     sll_real64, dimension(:,:), intent(inout) :: ey     !< Ey field
+    sll_real64, dimension(:,:), optional      :: jx     !< Jx field
+    sll_real64, dimension(:,:), optional      :: jy     !< Jy field
     sll_real64, intent(in)                    :: dt     !< time step
     sll_int32                                 :: nx_loc !< local  x cell number
     sll_int32                                 :: ny_loc !< local  y cell number
@@ -250,6 +252,13 @@ contains
        ex(i,:) = ex(i,:) + dt_e * plan%d_dy
     end do
 
+    if (present(jx)) then
+#ifdef DEBUG
+       call verify_argument_sizes_par(plan%layout_y, jx)
+#endif
+       ex(:,:) = ex(:,:) - dt * jx(:,:) / plan%e_0
+    end if
+
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
 
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
@@ -257,6 +266,14 @@ contains
        D_DX(plan%fz_x(:,j))
        ey(:,j) = ey(:,j) - dt_e * plan%d_dx
     end do
+
+    if (present(jy)) then
+#ifdef DEBUG
+       call verify_argument_sizes_par(plan%layout_x, jy)
+#endif
+       ey(:,:) = ey(:,:) - dt * jy(:,:) / plan%e_0
+    endif
+
 
   end subroutine ampere_te
 
@@ -284,8 +301,8 @@ contains
     ncy  = plan%ncy
 
 #ifdef DEBUG
-    call verify_argument_sizes_par(plan%layout_x, ey)
-    call verify_argument_sizes_par(plan%layout_y, ex)
+    call verify_argument_sizes_par(plan%layout_x, by)
+    call verify_argument_sizes_par(plan%layout_y, bx)
 #endif
 
     dt_e = dt / plan%e_0
@@ -305,6 +322,9 @@ contains
     end do
 
     if (present(jz)) then
+#ifdef DEBUG
+    call verify_argument_sizes_par(plan%layout_y, jz)
+#endif
       plan%fz_y = plan%fz_y - dt_e * jz 
     end if
       
