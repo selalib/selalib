@@ -1,5 +1,5 @@
 !> \brief Implements a conservative and consistant algorithm based on an idea by Lin and Rood
-!> for the solution in 2D of $\partial_t u + \partial_x (au) = 0$, with a divergence free.
+!> for the solution in 2D of \f$\partial_t u + \partial_x (au) = 0\f$, with a divergence free.
 !> This algorithm is based on an advective backward semi-Lagrangian method for predicting 
 !> the fluxes in a conservative finite difference scheme which leads to conservativity
 !> Consitancy (conservation of constant states) is achieved by prediction using 
