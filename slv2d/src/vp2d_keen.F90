@@ -1,6 +1,6 @@
 program vp2d_keen
 
-#include "selalib.h"
+#include "selalib-mpi.h"
   use used_precision  
   use geometry_module
   use diagnostiques_module
