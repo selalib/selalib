@@ -35,6 +35,8 @@ module sll_fft
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
 
+#define TEST () print*,"Je suis dans fftw"
+
 ! Flags to pass when we create a new plan
 ! We can define 31 different flags.
 ! The value assigned to the flag can only be a power of two.

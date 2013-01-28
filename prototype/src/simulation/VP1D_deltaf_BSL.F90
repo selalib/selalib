@@ -171,6 +171,8 @@ program VP1d_deltaf
      close(param_out_drive)
   end if
 
+TEST()
+
   call initialize_mesh_2d_cartesian( &
        mesh2d,           &
        "mesh2d_cart",       &
