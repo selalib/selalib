@@ -190,25 +190,25 @@ target_link_libraries(VP1D_cart
 	)
 
 
-add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
-target_link_libraries(VP1D_deltaf_cart
-	sll_mapped_meshes
-	sll_interpolators
-	sll_periodic_interp
-	sll_splines
-	sll_fft
-	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-	sll_assertion 	
-	sll_poisson_1d_periodic
-	fftpack_module
-	${LAPACK_LIBRARIES}
-	)
+#add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
+#target_link_libraries(VP1D_deltaf_cart
+#	sll_mapped_meshes
+#	sll_interpolators
+#	sll_periodic_interp
+#	sll_splines
+#	sll_fft
+#	geometry_functions
+#	sll_distribution_function
+#	sll_scalar_field_2d	
+#	sll_constants
+#	sll_low_level_file_io
+#  	sll_utilities
+#	sll_memory
+#	sll_assertion 	
+#	sll_poisson_1d_periodic
+#	fftpack_module
+#	${LAPACK_LIBRARIES}
+#	)
 
 ENDIF(NOT STDF95)
 ENDIF()
