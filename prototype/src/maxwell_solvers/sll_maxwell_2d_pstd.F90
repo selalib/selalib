@@ -38,7 +38,25 @@ self%d_dy = self%d_dy / ny
 !> Pierre Navaro
 !> @brief
 !> Implements the Maxwell solver in 2D with periodic boundary conditions
-!> with PSTD method
+!> with PSTD method.
+!> @details
+!> Field derivative is made using Fast Fourier Transform.
+!>
+!>\f$ \displaystyle
+!>\frac{\partial \psi}{\partial x} \Big|_i = F_x^{-1} [ -jk_xF_x(\psi)]_i,
+!>\f$
+!>
+!> For Maxwell system the scheme is
+!>
+!>\f$ \displaystyle
+!>H_u\Big|^{n+1/2}_{i,j,k} = H_u\Big|^{n-1/2}_{i,j,k}  - \frac{\Delta t}{\mu} \Big\{F_v^{-1}[-jk_vF_v(E_w)]|_{i,j,k}^n -F_w^{-1}[-jk_wF_w(E_v)]|_{i,j,k}^{n}\Big\},
+!>\f$
+!>
+!>\f$ \displaystyle
+!>E_u\Big|^{n+1}_{i,j,k} = E_u\Big|^{n}_{i,j,k}  + \frac{\Delta t}{\varepsilon} \Big\{F_v^{-1}[-jk_vF_v(H_w)]|_{i,j,k}^{n+1/2} -F_w^{-1}[-jk_wF_w(H_v)]|_{i,j,k}^{n+1/2}\Big\},
+!>\f$
+!>
+!>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 module sll_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
