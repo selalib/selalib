@@ -18,6 +18,25 @@
 !> Pierre Navaro 
 !> @brief
 !> Implements the Maxwell solver in 2D with FDTD method
+!>
+!> @details
+!> Equation
+!>
+!>\f$ \displaystyle \frac{\partial E_x}{\partial t} = {c^2} \frac{\partial B_z}{\partial y} \f$,
+!>
+!>\f$\displaystyle \frac{\partial E_y}{\partial t} = -{c^2} \frac{\partial B_z}{\partial x} \f$
+!>
+!>\f$\displaystyle \frac{\partial B_z}{\partial t} =  \frac{\partial E_x}{\partial y} - \frac{\partial E_y}{\partial x}  \f$.
+!>
+!>FDTD scheme
+!>
+!>\f$\displaystyle B_{z}^{n+1/2} = B_z^{n-1/2} - \Delta t \big( \frac{\partial E_y^n}{\partial x}
+!>- \frac{\partial E_x^n}{\partial y} \big)\f$
+!>
+!>\f$\displaystyle E_x^{n+1} = E_x^{n} + c^2\Delta t  \frac{\partial B_z^{n+1/2}}{\partial y} \f$
+!>
+!>\f$\displaystyle E_y^{n+1} = E_y^{n} - c^2\Delta t  \frac{\partial B_z^{n+1/2}}{\partial x} \f$
+!>
 module sll_maxwell_2d_fdtd
 
 #include "sll_working_precision.h"
