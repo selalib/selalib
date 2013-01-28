@@ -153,14 +153,14 @@ contains
 
 
 
-  subroutine advect_CG_curvilinear(plan,fn,fnp1,jac_array,eta1_tab,eta2_tab)
+  subroutine advect_CG_curvilinear(plan,fn,fnp1,jac_array)
 
     implicit none
 
     type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(in) :: fn
     sll_real64, dimension(:,:), intent(out) :: fnp1
-    sll_real64, dimension(:,:), pointer, intent(inout):: jac_array,eta1_tab,eta2_tab
+    sll_real64, dimension(:,:), pointer, intent(inout):: jac_array
     sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr,a_eta1,a_eta2,eta10,eta2_min,eta2_max !,tolth
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
     sll_int32 :: N_eta1, N_eta2
@@ -232,8 +232,6 @@ contains
              !&+eta1_loc*fn(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
              !& fn(k_eta1,k_eta2+1)+eta1_loc*fn(k_eta1+1,k_eta2+1))
                                                          
-             eta1_tab(i,j)=eta1
-             eta2_tab(i,j)=eta2
    
           end do
 
@@ -318,8 +316,6 @@ contains
              eta2=eta20-2.0_f64*a_eta2
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2)    
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
-             eta1_tab(i,j)=eta1
-             eta2_tab(i,j)=eta2
           end do
 
        end do
@@ -337,28 +333,28 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_1(plan,inn,outt,jac_array,eta1_tab,eta2_tab,step)
+  subroutine SL_order_1(plan,inn,outt,jac_array,step)
 
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(inout) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
-    sll_real64,dimension(:,:),pointer,intent(inout)::jac_array,eta1_tab,eta2_tab
+    sll_real64,dimension(:,:),pointer,intent(inout)::jac_array
     sll_int :: step,i,j
 
     !call poisson_solve_curvilinear(plan%poisson,inn,plan%phi)
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field1)
     
    
-    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,eta1_tab,eta2_tab)
-  if(step==30) then
-     do i=1,plan%adv%N_eta1+1
-    do j=1,plan%adv%N_eta2+1
-      write(200,*) eta1_tab(i,j),plan%adv%eta1_min+(i-1)*plan%adv%delta_eta1,eta2_tab(i,j),plan%adv%eta1_min+(j-1)*plan%adv%delta_eta2
-    enddo
-  enddo  
-  endif
+    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array)
+!  if(step==30) then
+!     do i=1,plan%adv%N_eta1+1
+!    do j=1,plan%adv%N_eta2+1
+!      write(200,*) eta1_tab(i,j),plan%adv%eta1_min+(i-1)*plan%adv%delta_eta1,eta2_tab(i,j),plan%adv%eta1_min+(j-1)*plan%adv%delta_eta2
+!    enddo
+!  enddo  
+!  endif
   end subroutine SL_order_1
 
 !!*********************************************************************************
@@ -367,14 +363,14 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_2(plan,inn,outt,jac_array,eta1_tab,eta2_tab)
+  subroutine SL_order_2(plan,inn,outt,jac_array)
 
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(inout) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
-    sll_real64,dimension(:,:),pointer, intent(inout)::jac_array,eta1_tab,eta2_tab
+    sll_real64,dimension(:,:),pointer, intent(inout)::jac_array
 
 
     sll_real64 :: dt
@@ -386,7 +382,7 @@ contains
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     
     
-    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,eta1_tab,eta2_tab)
+    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array)
     
     
     !!we just obtained f^(n+1/2)
@@ -394,7 +390,7 @@ contains
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     !!we just obtained E^(n+1/2)
     plan%adv%dt=dt
-    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,eta1_tab,eta2_tab)
+    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array)
 
   end subroutine SL_order_2
 

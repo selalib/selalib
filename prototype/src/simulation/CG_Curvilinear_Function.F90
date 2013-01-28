@@ -24,8 +24,12 @@ implicit none
   sll_real64 :: eta1,eta2,eta1c,eta2c
 
 
-  eta1c = 0.5_f64*(eta1_max+eta1_min)
-  eta2c = 0.5_f64*(eta2_max+eta2_min)
+!  eta1c = 0.5_f64*(eta1_max+eta1_min)
+!  eta2c = 0.5_f64*(eta2_max+eta2_min)
+
+  eta1c = 0.25_f64*eta1_max+0.75_f64*eta1_min
+  eta2c = 0.25_f64*eta2_max+0.75_f64*eta2_min
+
 
 ! test-function
     
@@ -104,23 +108,25 @@ implicit none
 end subroutine init_distribution_cartesian
 
 
-subroutine init_distribution_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
-           & delta_eta1,delta_eta2,fcase,f,mesh_case,eta1_tab,eta2_tab)
+subroutine init_distribution_curvilinear(N_eta1,N_eta2, fcase,f,mesh_case,x1_tab,x2_tab,x1c,x2c)
 
 implicit none
 
 
   sll_real64, dimension (:,:), allocatable, intent(inout) :: f
-  sll_real64, dimension (:,:), pointer, intent(in) :: eta1_tab,eta2_tab
+  sll_real64, dimension (:,:), pointer, intent(in) :: x1_tab,x2_tab
   sll_int32 :: i, j
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32, intent(in):: fcase,mesh_case
-  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
-  sll_real64 :: eta1c,eta2c
+  sll_real64,intent(in) :: x1c,x2c
 
 
-  eta1c = 0.5_f64*(eta1_max+eta1_min)
-  eta2c = 0.5_f64*(eta2_max+eta2_min)
+  !eta1c = 0.5_f64*(eta1_max+eta1_min)
+  !eta2c = 0.5_f64*(eta2_max+eta2_min)
+
+  !eta1c = 0.25_f64*eta1_max+0.75_f64*eta1_min
+  !eta2c = 0.25_f64*eta2_max+0.75_f64*eta2_min
+
 
 ! test-function
     
@@ -138,7 +144,7 @@ implicit none
 
      do i=1,N_eta1+1
            do j=1,N_eta2+1
-              f(i,j) = cos(eta2_tab(i,j))
+              f(i,j) = cos(x2_tab(i,j))
            end do
      end do
      
@@ -147,7 +153,7 @@ implicit none
 
      do i=1,N_eta1+1
         do j=1,N_eta2+1
-          f(i,j) = exp(-100._f64*(eta1_tab(i,j)-eta1c)**2) 
+          f(i,j) = exp(-100._f64*(x1_tab(i,j)-x1c)**2) 
         end do
      end do
 
@@ -156,10 +162,10 @@ implicit none
      do i=1,N_eta1+1
         do j=1,N_eta2+1
               if ((mesh_case==1).or.(mesh_case==4)) then
-                 f(i,j) = exp(-2_f64*(eta1_tab(i,j)-eta1c)**2)*exp(-2_f64*(eta2_tab(i,j)-eta2c)**2)
+                 f(i,j) = exp(-5_f64*(x1_tab(i,j)-x1c)**2)*exp(-5_f64*(x2_tab(i,j)-x2c)**2)
               endif
               if ((mesh_case==2).or.(mesh_case==3)) then
-                f(i,j) = exp(-100._f64*(eta1_tab(i,j)-eta1c)**2)*exp(-30._f64*(eta2_tab(i,j)-eta2c)**2)
+                f(i,j) = exp(-100._f64*(x1_tab(i,j)-x1c)**2)*exp(-30._f64*(x2_tab(i,j)-x2c)**2)
               endif
         end do
      end do
@@ -359,20 +365,12 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c,
     sll_int32 :: i,j,N_eta1,N_eta2
     sll_int32, intent(in) :: phi_case
     sll_real64,intent(inout) :: x1c,x2c
-    sll_real64 :: delta_eta1,delta_eta2,eta1,eta2,eta1_min,eta2_min,eta1_max,eta2_max
     sll_real64 :: a1,a2
     
     
-    eta1_min=plan%eta1_min
-    eta2_min=plan%eta2_min
-    eta1_max=plan%eta1_max
-    eta2_max=plan%eta2_max
     N_eta1 = plan%N_eta1
     N_eta2 = plan%N_eta2
-    delta_eta1 = plan%delta_eta1
-    delta_eta2 = plan%delta_eta2
-  
-    
+      
 
     select case(phi_case)
     case(1) ! translation
@@ -386,19 +384,19 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c,
     case(2) !rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            x1c=0._f64
-            x2c=0._f64
+            !x1c=0._f64
+            !x2c=0._f64
             phi_exact(i,j)=((x1n_array(i,j)-x1c)**2+(x2n_array(i,j)-x2c)**2)*0.5
             plan%field(1,i,j)= -(x1n_array(i,j)-x1c)
             plan%field(2,i,j)= -(x2n_array(i,j)-x2c)
           end do
        end do
-    case(3) !non homogeneous equation
+    case(3) !anisotropic rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            phi_exact(i,j)=a1*x1n_array(i,j)**2+a2*x2n_array(i,j)**2
-            plan%field(1,i,j)= -2*a1*x1n_array(i,j)
-            plan%field(2,i,j)= -2*a2*x2n_array(i,j)
+            phi_exact(i,j)=0.5_f64*(a1*(x1n_array(i,j)-x1c)**2+a2*(x2n_array(i,j)-x2c)**2)
+            plan%field(1,i,j)= -a1*(x1n_array(i,j)-x1c)
+            plan%field(2,i,j)= -a2*(x2n_array(i,j)-x2c)
           end do
        end do
    case default
@@ -407,6 +405,70 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c,
    end select
     
   end subroutine phi_analytique
+
+!!!************************************************************************
+subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c,x2c,&
+  x1_tab,x2_tab,t)
+
+    implicit none
+
+    !sll_real64, dimension(:,:), intent(inout), pointer :: phi_exact
+    sll_real64, dimension(:,:), intent(in), pointer:: x1n_array,x2n_array 
+    sll_real64, dimension(:,:), intent(out), pointer:: x1_tab,x2_tab 
+    !type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
+    sll_int32 :: i,j
+    sll_int32, intent(in) :: phi_case,N_eta1,N_eta2
+    sll_real64,intent(inout) :: x1c,x2c
+    sll_real64,intent(in)  :: t
+    sll_real64 :: a1,a2
+    
+    
+  
+    
+
+    select case(phi_case)
+    case(1) ! translation
+       do i=1,N_eta1+1
+          do j=1,N_eta2+1
+            !phi_exact(i,j)=a1*x1n_array(i,j)+a2*x2n_array(i,j)
+            !plan%field(1,i,j)= -a1
+            !plan%field(2,i,j)= -a2
+            x1_tab(i,j) = x1n_array(i,j) -a2*t 
+            x2_tab(i,j) = x2n_array(i,j) +a1*t 
+          end do
+       end do
+    case(2) !rotation
+       do i=1,N_eta1+1
+          do j=1,N_eta2+1
+            !x1c=0._f64
+            !x2c=0._f64
+            !phi_exact(i,j)=((x1n_array(i,j)-x1c)**2+(x2n_array(i,j)-x2c)**2)*0.5
+            !plan%field(1,i,j)= -(x1n_array(i,j)-x1c)
+            !plan%field(2,i,j)= -(x2n_array(i,j)-x2c)
+            x1_tab(i,j) = x1c+cos(t)*(x1n_array(i,j)-x1c)-sin(t)*(x2n_array(i,j)-x2c)
+            x2_tab(i,j) = x2c+cos(t)*(x2n_array(i,j)-x2c)+sin(t)*(x1n_array(i,j)-x1c)
+          end do
+       end do
+    case(3) !anisotropic rotation
+       do i=1,N_eta1+1
+          do j=1,N_eta2+1
+            !phi_exact(i,j)=0.5_f64*a1*(x1n_array(i,j)-x1c)**2+0.5_f64*a2*(x2n_array(i,j)-x2c)**2
+            !plan%field(1,i,j)= -a1*(x1n_array(i,j)-x1c)
+            !plan%field(2,i,j)= -a2*(x2n_array(i,j)-x2c)
+            x1_tab(i,j) = a1*x1c+a1*cos(t)*(x1n_array(i,j)-x1c)-a2*sin(t)*(x2n_array(i,j)-x2c)
+            x2_tab(i,j) = a2*x2c+a2*cos(t)*(x2n_array(i,j)-x2c)+a1*sin(t)*(x1n_array(i,j)-x1c)            
+          end do
+       end do
+   case default
+    print*,'#no phi define'
+    print*,'#phi_case =1'
+   end select
+    
+  end subroutine carac_analytique
+
+
+
+
 
 !!!************************************************************************
 subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2)
