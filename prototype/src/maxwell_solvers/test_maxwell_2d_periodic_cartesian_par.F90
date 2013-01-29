@@ -20,11 +20,16 @@ program test_maxwell_2d_periodic_cart_par
   sll_int32   :: nx_loc
   sll_int32   :: ny_loc
   sll_int32   :: error
-  sll_real64  :: Lx, Ly
-  sll_real64  :: dx, dy
-  sll_real64  :: x, y
-  sll_int32   :: i, j
-  sll_int32   :: gi, gj
+  sll_real64  :: Lx
+  sll_real64  :: Ly
+  sll_real64  :: dx
+  sll_real64  :: dy
+  sll_real64  :: x
+  sll_real64  :: y
+  sll_int32   :: i
+  sll_int32   :: j
+  sll_int32   :: gi
+  sll_int32   :: gj
   sll_int32   :: prank
   sll_int64   :: psize 
   sll_int32   :: nprocx
@@ -84,13 +89,13 @@ program test_maxwell_2d_periodic_cart_par
                                                     ncy, &
                                                       1, &
                                                  nprocy, &
-                                                 layout_x )
+                                                layout_x )
 
   call initialize_layout_with_distributed_2D_array( ncx, &
                                                     ncy, &
                                                  nprocx, &
                                                       1, &
-                                                 layout_y )
+                                                layout_y )
   call flush(6)
   call sll_view_lims_2D( layout_x )
   call flush(6)
