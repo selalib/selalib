@@ -107,7 +107,7 @@ implicit none
 
 end subroutine init_distribution_cartesian
 
-
+!!***************************************************************************************
 subroutine init_distribution_curvilinear(N_eta1,N_eta2, fcase,f,mesh_case,x1_tab,x2_tab,x1c,x2c)
 
 implicit none
@@ -124,8 +124,7 @@ implicit none
   !eta1c = 0.5_f64*(eta1_max+eta1_min)
   !eta2c = 0.5_f64*(eta2_max+eta2_min)
 
-  !eta1c = 0.25_f64*eta1_max+0.75_f64*eta1_min
-  !eta2c = 0.25_f64*eta2_max+0.75_f64*eta2_min
+  
 
 
 ! test-function
@@ -165,7 +164,7 @@ implicit none
                  f(i,j) = exp(-5_f64*(x1_tab(i,j)-x1c)**2)*exp(-5_f64*(x2_tab(i,j)-x2c)**2)
               endif
               if ((mesh_case==2).or.(mesh_case==3)) then
-                f(i,j) = exp(-100._f64*(x1_tab(i,j)-x1c)**2)*exp(-30._f64*(x2_tab(i,j)-x2c)**2)
+                f(i,j) = exp(-5._f64*(x1_tab(i,j)-x1c)**2)*exp(-5._f64*(x2_tab(i,j)-x2c)**2)
               endif
         end do
      end do
@@ -200,11 +199,12 @@ end subroutine init_distribution_curvilinear
 
 subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh,x1c,x2c)
+   &geom_eta,alpha_mesh,x1c,x2c,geom_x)
 
     implicit none
     sll_int32,intent(in) :: nc_eta1,nc_eta2,mesh_case
     sll_real64,intent(in) :: geom_eta(2,2),alpha_mesh
+    sll_real64,intent(out) :: geom_x(2,2)
     sll_real64,dimension(:,:),pointer,intent(out) :: x1n_array,x2n_array  
     sll_real64,dimension(:,:),pointer,intent(out) :: jac_array
     sll_int32  :: i1,i2,err
@@ -253,8 +253,12 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
   
     ! polar mesh
       if (mesh_case==2) then 
-        x1c=(eta1_min+eta1_max)/2
-        x2c=(eta2_min+eta2_max)/2
+         x1_min=0._f64
+         x1_max=eta1_max
+         x2_min=0._f64
+         x2_max=eta2_max
+        x1c=((eta1_min+eta1_max)/2)*cos((eta2_min+eta2_max)/2)
+        x2c=((eta1_min+eta1_max)/2)*sin((eta2_min+eta2_max)/2)
         do i1= 1, nc_eta1 + 1
             eta1 = eta1_min + real(i1-1,f64)*delta_eta1
            do i2= 1, nc_eta2 + 1
@@ -343,8 +347,11 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     enddo
   close(900)
 
+    geom_x(1,1)=x1_min
+    geom_x(2,1)=x1_max
+    geom_x(1,2)=x2_min
+    geom_x(2,2)=x2_max
 
-  
 end subroutine construct_mesh_transF  
   
 
@@ -364,13 +371,14 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c,
     type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
     sll_int32 :: i,j,N_eta1,N_eta2
     sll_int32, intent(in) :: phi_case
-    sll_real64,intent(inout) :: x1c,x2c
+    sll_real64,intent(in) :: x1c,x2c
     sll_real64 :: a1,a2
-    
+   
+  
     
     N_eta1 = plan%N_eta1
     N_eta2 = plan%N_eta2
-      
+     
 
     select case(phi_case)
     case(1) ! translation
@@ -384,8 +392,6 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c,
     case(2) !rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            !x1c=0._f64
-            !x2c=0._f64
             phi_exact(i,j)=((x1n_array(i,j)-x1c)**2+(x2n_array(i,j)-x2c)**2)*0.5
             plan%field(1,i,j)= -(x1n_array(i,j)-x1c)
             plan%field(2,i,j)= -(x2n_array(i,j)-x2c)
@@ -422,7 +428,7 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     sll_real64,intent(in)  :: t
     sll_real64 :: a1,a2
     
-    
+   
   
     
 
