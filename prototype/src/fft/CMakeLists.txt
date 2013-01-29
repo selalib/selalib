@@ -45,11 +45,3 @@ target_link_libraries(test_fft
 	sll_fft
 	${DEPENDENCIES}
 )
-
-#add_executable(test_macro test_macro_fft.F90)
-#target_link_libraries( test_macro
-#	sll_fft
-#	${DEPENDENCIES}
-#)
-
-#add_library(sll_macro_fft STATIC sll_macro_fft.h)

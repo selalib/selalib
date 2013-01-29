@@ -1,8 +1,7 @@
 program test_time
 #include "sll_working_precision.h"
-#include "sll_macro_fft.h"
+#include "sll_fft.h"
  use sll_timer
- use sll_fft
 
 implicit none
 sll_real64, dimension(:), allocatable ::valeur, data_in, data_out,test,test2
