@@ -184,7 +184,7 @@ contains
     plan%field(2,:,:)=-plan%field(2,:,:)
    
     if (plan%carac_case==1) then
-       !explicit Euler
+       !explicit Euler with linear interpolation
        fnp1=fn
        do j=1,N_eta2+1
           do i=1,N_eta1+1
@@ -227,11 +227,32 @@ contains
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
                 &eta1,eta2)
 
-             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
-             !fnp1(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*fn(k_eta1,k_eta2) &
-             !&+eta1_loc*fn(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
-             !& fn(k_eta1,k_eta2+1)+eta1_loc*fn(k_eta1+1,k_eta2+1))
+             
+             fnp1(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*fn(k_eta1,k_eta2) &
+             &+eta1_loc*fn(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
+             & fn(k_eta1,k_eta2+1)+eta1_loc*fn(k_eta1+1,k_eta2+1))
                                                          
+   
+          end do
+
+       end do
+  end if
+
+  if (plan%carac_case==2) then
+       !explicit Euler with "Spline interpolation"
+       fnp1=fn
+       do j=1,N_eta2+1
+          do i=1,N_eta1+1
+             eta10=eta1_min+real(i-1,f64)*delta_eta1
+             eta20=eta2_min+real(j-1,f64)*delta_eta2
+        
+             eta2=eta20-dt*plan%field(1,i,j)/jac_array(i,j)
+             eta1=eta10-dt*plan%field(2,i,j)/jac_array(i,j)
+
+             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+                &eta1,eta2)
+
+             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
    
           end do
 
@@ -242,8 +263,8 @@ contains
        !using fixed point method
     
        !initialization
-       maxiter=20
-       tolr=1e-12
+       maxiter=25
+       tolr=1e-10
        eta1n=0.0_f64
        eta2n=0.0_f64
 
@@ -310,7 +331,7 @@ contains
              end do
 
              if (iter==maxiter .and. abs((eta1n-eta1))+abs((eta2n-eta2))>tolr) then
-                print*,'#no convergence in fixed point methode',i,j
+                print*,'#no convergence in fixed point methode',i,j !,step
              end if
              eta1=eta10-2.0_f64*a_eta1
              eta2=eta20-2.0_f64*a_eta2
@@ -491,7 +512,7 @@ contains
        do i=0,Nx
           z(0)=dom(0,0)+real(i,f64)*dz(0)
           z(1)=dom(0,1)+real(j,f64)*dz(1)
-          write(900,*) z(0),z(1),ftab(i,j)
+          write(900,*) z(0),z(1),z(0)*cos(z(1)),z(0)*sin(z(1)),ftab(i,j)
        enddo
        write(900,*) ''      
     enddo
