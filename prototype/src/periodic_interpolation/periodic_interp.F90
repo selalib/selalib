@@ -2,6 +2,7 @@ module periodic_interp_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_macro_fft.h"
 use arbitrary_degree_splines
 use sll_fft
 use numeric_constants
@@ -221,62 +222,6 @@ contains
        call fourier1dper(this%buf,this%sizebuf,u_out,this%N,alpha/this%N)
             
     case (TRIGO_FFT_SELALIB)
-
-#define GET_MODE0(mode,data) \
-      mode = cmplx(data(1),0.0_f64,kind=f64)
-#define SET_MODE0(new_value,data) \
-      data(1) = real(new_value,kind=f64)
-
-#ifdef SLLFFT
-#define GET_MODE_N_2(mode,data) \
-        mode = cmplx(data(2),0.0_f64,kind=f64)
-#define GET_MODE_GT_N_2(mode,data,k) \
-        mode = cmplx( data(2*(this%N-k)+1) , -data(2*(this%N-k)+2),kind=f64)
-#define GET_MODE_LT_N_2(mode,data,k) \        
-        mode = cmplx( data(2*k+1) , data(2*k+2) ,kind=f64)
-#define SET_MODE_N_2(new_value,data) \
-        data(2) = real(new_value,kind=f64)
-#define SET_MODE_GT_N_2(new_value,data,k) \
-        data(2*(this%N-k)+1) = real(new_value,kind=f64); \
-        data(2*(this%N-k)+2) = -dimag(new_value)
-#define SET_MODE_LT_N_2(new_value,data,k) \
-        data(2*k+1) = real(new_value,kind=f64); \
-        data(2*k+2) = dimag(new_value)
-#endif
-
-#ifdef FFTPACK
-#define GET_MODE_N_2(mode,data) \
-        mode = cmplx(data(this%N),0.0_f64,kind=f64)
-#define GET_MODE_GT_N_2(mode,data,k) \
-        mode = cmplx( data(2*(this%N-k)) , -data(2*(n-k)+1) ,kind=f64)
-#define GET_MODE_LT_N_2(mode,data,k) \   
-        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)     
-#define SET_MODE_N_2(new_value,data) \
-        data(this%N) = real(new_value,kind=f64)
-#define SET_MODE_GT_N_2(new_value,data,k) \
-        data(2*(this%N-k)) = real(new_value,kind=f64); \
-        data(2*(this%N-k)+1) = -dimag(new_value)
-#define SET_MODE_LT_N_2(new_value,data,k) \
-        data(2*k) = real(new_value,kind=f64); \
-        data(2*k+1) = dimag(new_value)
-#endif
-
-#ifdef FFTW
-#define GET_MODE_N_2(mode,data) \
-        mode = cmplx(data(this%N/2+1),0.0_f64,kind=f64)
-#define GET_MODE_GT_N_2(mode,data,k) \
-        mode = cmplx( data(this%N-k+1) , -data(k+1) ,kind=f64)
-#define GET_MODE_LT_N_2(mode,data,k) \ 
-        mode = cmplx( data(k+1) , data(this%N-k+1) ,kind=f64)  
-#define SET_MODE_N_2(new_value,data) \
-        data(this%N/2+1) = real(new_value,kind=f64)
-#define SET_MODE_GT_N_2(new_value,data,k) \
-        data(this%N-k+1) = real(new_value,kind=f64); \
-        data(k+1) = -dimag(new_value)
-#define SET_MODE_LT_N_2(new_value,data,k) \
-        data(k+1) = real(new_value,kind=f64); \
-        data(this%N-k+1) = dimag(new_value)
-#endif
        u_out = u
        call fft_apply_plan(this%pfwd,u_out,u_out)
        tmp2=-ii*2._f64*sll_pi/this%N*alpha
@@ -287,7 +232,7 @@ contains
        do i=1,this%N/2-1
          GET_MODE_LT_N_2(tmp,u_out,i)
          tmp=tmp*exp(tmp2*real(i,f64))
-         SET_MODE_LT_N_2(tmp,u_out,i)
+         SET_MODE_LT_N_2(tmp,u_out,i,this%N)
        enddo
          GET_MODE_N_2(tmp,u_out)
          tmp=tmp*exp(tmp2*real(this%N/2,f64))

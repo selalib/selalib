@@ -1,6 +1,6 @@
 program test_time
 #include "sll_working_precision.h"
-#include "macro_fft.h"
+#include "sll_macro_fft.h"
  use sll_timer
  use sll_fft
 
