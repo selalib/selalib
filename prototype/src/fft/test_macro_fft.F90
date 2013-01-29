@@ -1,5 +1,6 @@
 program test_time
 #include "sll_working_precision.h"
+#include "macro_fft.h"
  use sll_timer
  use sll_fft
 
@@ -19,71 +20,72 @@ double precision :: timeraccessmacro,timertotal,timertotalmacro
 sll_comp64 :: mode
 
 
-#define GET_MODE0(mode,data) \
-      mode = cmplx(data(0),0.0_f64,kind=f64)
-#define SET_MODE0(new_value,data) \
-      data(0) = real(new_value,kind=f64)
+!  #define GET_MODE0(mode,data) \
+!        mode = cmplx(data(0),0.0_f64,kind=f64)
+!  #define SET_MODE0(new_value,data) \
+!        data(0) = real(new_value,kind=f64)
+!  
+!  if(_DEFAULTFFTLIB==0) then
+!   print*,"librairie fft : SLLFFT"
+!  #define GET_MODE_N_2(mode,data) \
+!          mode = cmplx(data(1),0.0_f64,kind=f64)
+!  #define GET_MODE_GT_N_2(mode,data,k) \
+!          mode = cmplx( data(2*(n-k)) , -data(2*(n-k)+1),kind=f64)
+!  #define GET_MODE_LT_N_2(mode,data,k) \        
+!          mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)
+!  
+!  #define SET_MODE_N_2(new_value,data) \
+!          data(1) = real(new_value,kind=f64)
+!  #define SET_MODE_GT_N_2(new_value,data,k) \
+!          data(2*(n-k)) = real(new_value,kind=f64); \
+!          data(2*(n-k)+1) = -dimag(new_value)
+!  #define SET_MODE_LT_N_2(new_value,data,k) \
+!          data(2*k) = real(new_value,kind=f64); \
+!          data(2*k+1) = dimag(new_value)
+!  
+!  elseif(_DEFAULTFFTLIB==100) then
+!   print*,"librairie fft : FFTPACK"
+!  !#define GET_MODE_N_2(mode,data) \
+!  !      mode = cmplx(data(n-1),0.0_f64,kind=f64)
+!  !#define GET_MODE_GT_N_2(mode,data,k) \
+!  !      mode = cmplx( data(2*(n-k)-1) , -data(2*(n-k)) ,kind=f64)
+!  !#define GET_MODE_LT_N_2(mode,data,k) \   
+!  !      mode = cmplx( data(2*k-1) , data(2*k) ,kind=f64)     
+!  !
+!  !#define SET_MODE_N_2(new_value,data) \
+!  !      data(n-1) = real(new_value,kind=f64)
+!  !#define SET_MODE_GT_N_2(new_value,data,k) \
+!  !      data(2*(n-k)-1) = real(new_value,kind=f64); \
+!  !      data(2*(n-k)) = -dimag(new_value)
+!  !#define SET_MODE_LT_N_2(new_value,data,k) \
+!  !      data(2*k-1) = real(new_value,kind=f64); \
+!  !      data(2*k) = dimag(new_value)
+!  
+!  elseif(_DEFAULTFFTLIB==1000000000)then
+!   print*,"librairie fft : FFTW"
+!  !#define GET_MODE_N_2(mode,data) \
+!  !        mode = cmplx(data(n_2),0.0_f64,kind=f64)
+!  !#define GET_MODE_GT_N_2(mode,data,k) \
+!  !        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
+!  !#define GET_MODE_LT_N_2(mode,data,k) \ 
+!  !        mode = cmplx( data(k) , data(n-k) ,kind=f64)  
+!  !
+!  !#define SET_MODE_N_2(new_value,data) \
+!  !        data(n_2) = real(new_value,kind=f64)
+!  !#define SET_MODE_GT_N_2(new_value,data,k) \
+!  !        data(n-k) = real(new_value,kind=f64); \
+!  !        data(k) = -dimag(new_value)
+!  !#define SET_MODE_LT_N_2(new_value,data,k) \
+!  !        data(k) = real(new_value,kind=f64); \
+!  !        data(n-k) = dimag(new_value)
+!  
+!  else
+!   print*,"librairie fft non reconnue"
+!   print*,"arret du test"
+!   STOP
+!  endif
 
-if(_DEFAULTFFTLIB==0) then
- print*,"librairie fft : SLLFFT"
-!#define GET_MODE_N_2(mode,data) \
-!        mode = cmplx(data(1),0.0_f64,kind=f64)
-!#define GET_MODE_GT_N_2(mode,data,k) \
-!        mode = cmplx( data(2*(n-k)) , -data(2*(n-k)+1),kind=f64)
-!#define GET_MODE_LT_N_2(mode,data,k) \        
-!        mode = cmplx( data(2*k) , data(2*k+1) ,kind=f64)
-!
-!#define SET_MODE_N_2(new_value,data) \
-!        data(1) = real(new_value,kind=f64)
-!#define SET_MODE_GT_N_2(new_value,data,k) \
-!        data(2*(n-k)) = real(new_value,kind=f64); \
-!        data(2*(n-k)+1) = -dimag(new_value)
-!#define SET_MODE_LT_N_2(new_value,data,k) \
-!        data(2*k) = real(new_value,kind=f64); \
-!        data(2*k+1) = dimag(new_value)
-
-elseif(_DEFAULTFFTLIB==100) then
- print*,"librairie fft : FFTPACK"
-#define GET_MODE_N_2(mode,data) \
-      mode = cmplx(data(n-1),0.0_f64,kind=f64)
-#define GET_MODE_GT_N_2(mode,data,k) \
-      mode = cmplx( data(2*(n-k)-1) , -data(2*(n-k)) ,kind=f64)
-#define GET_MODE_LT_N_2(mode,data,k) \   
-      mode = cmplx( data(2*k-1) , data(2*k) ,kind=f64)     
-
-#define SET_MODE_N_2(new_value,data) \
-      data(n-1) = real(new_value,kind=f64)
-#define SET_MODE_GT_N_2(new_value,data,k) \
-      data(2*(n-k)-1) = real(new_value,kind=f64); \
-      data(2*(n-k)) = -dimag(new_value)
-#define SET_MODE_LT_N_2(new_value,data,k) \
-      data(2*k-1) = real(new_value,kind=f64); \
-      data(2*k) = dimag(new_value)
-
-elseif(_DEFAULTFFTLIB==1000000000)then
- print*,"librairie fft : FFTW"
-!#define GET_MODE_N_2(mode,data) \
-!        mode = cmplx(data(n_2),0.0_f64,kind=f64)
-!#define GET_MODE_GT_N_2(mode,data,k) \
-!        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
-!#define GET_MODE_LT_N_2(mode,data,k) \ 
-!        mode = cmplx( data(k) , data(n-k) ,kind=f64)  
-!
-!#define SET_MODE_N_2(new_value,data) \
-!        data(n_2) = real(new_value,kind=f64)
-!#define SET_MODE_GT_N_2(new_value,data,k) \
-!        data(n-k) = real(new_value,kind=f64); \
-!        data(k) = -dimag(new_value)
-!#define SET_MODE_LT_N_2(new_value,data,k) \
-!        data(k) = real(new_value,kind=f64); \
-!        data(n-k) = dimag(new_value)
-
-else
- print*,"librairie fft non reconnue"
- print*,"arret du test"
- STOP
-endif
-
+TEST
 
 if(_DEFAULTFFTLIB==0) then
  print*,"Nombre de points sur un coté ? (puissance de 2) :"
