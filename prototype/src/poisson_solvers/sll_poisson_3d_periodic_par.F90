@@ -194,8 +194,7 @@ contains
     type(layout_3D), pointer                   :: layout_z
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
-print *, 'Did I enter this function (solve_poisson_3d_periodic_par)???'
-call flush()
+
     ! Get geometry information
     nx = plan%ncx
     ny = plan%ncy

@@ -16,6 +16,7 @@ add_dependencies(sll_scalar_field_2d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	sll_low_level_file_io
 	sll_constants
 	sll_utilities
@@ -31,6 +32,7 @@ add_dependencies(sll_scalar_field_1d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	sll_low_level_file_io
 	sll_constants
 	sll_utilities
@@ -60,6 +62,7 @@ target_link_libraries(test_scalar_field
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	sll_low_level_file_io
 	sll_constants
 	sll_utilities
