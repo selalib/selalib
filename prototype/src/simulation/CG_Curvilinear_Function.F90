@@ -10,105 +10,106 @@ contains
 
 !!!****************************************************************************************
 
-subroutine init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
-           & delta_eta1,delta_eta2,fcase,f,mesh_case)
-
-implicit none
-
-
-  sll_real64, dimension (:,:), allocatable, intent(inout) :: f
-  sll_int32 :: i, j
-  sll_int32, intent(in) :: N_eta1,N_eta2
-  sll_int32, intent(in):: fcase,mesh_case
-  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
-  sll_real64 :: eta1,eta2,eta1c,eta2c
-
-
-!  eta1c = 0.5_f64*(eta1_max+eta1_min)
-!  eta2c = 0.5_f64*(eta2_max+eta2_min)
-
-  eta1c = 0.25_f64*eta1_max+0.75_f64*eta1_min
-  eta2c = 0.25_f64*eta2_max+0.75_f64*eta2_min
-
-
-! test-function
-    
-
-  select case (fcase)
-   case(1)
-
-     do i=1,N_eta1+1
-        do j=1,N_eta2+1
-        f(i,j)=1.0_f64
-        enddo
-     enddo
-
-
-   case(2)
-
-     do i=1,N_eta1+1
-           do j=1,N_eta2+1
-              eta2=eta2_min+real(j-1,f64)*delta_eta2
-              f(i,j) = cos(eta2)
-           end do
-     end do
-     
-
-   case(3)
-
-     do i=1,N_eta1+1
-         eta1=eta1_min+real(i-1,f64)*delta_eta1
-        do j=1,N_eta2+1
-          f(i,j) = exp(-100._f64*(eta1-eta1c)**2) 
-        end do
-     end do
-
-   case(4) 
-     
-     do i=1,N_eta1+1
-         eta1=eta1_min+real(i-1,f64)*delta_eta1
-        do j=1,N_eta2+1
-         eta2=eta2_min+real(j-1,f64)*delta_eta2
-              if ((mesh_case==1).or.(mesh_case==4)) then
-                 f(i,j) = exp(-5_f64*(eta1-eta1c)**2)*exp(-5_f64*(eta2-eta2c)**2)
-              endif
-              if ((mesh_case==2).or.(mesh_case==3)) then
-                f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
-              endif
-        end do
-     end do
-
-   case(5)
-     
-     do i=1,N_eta1+1
-       do j=1,N_eta2+1
-        f(i,j) = 0._f64
-        if ((i==(N_eta1+1)/2).and.(j==(N_eta2+1)/2)) then
-          f(i,j) = 1._f64
-        endif
-       enddo
-     enddo
-   
-  !case(6) 
-
-    ! open(25,file=f_file,action="read")
-    ! read(25,*)f
-    ! close(25)
-
-   case default 
-
-     print*,"f is not defined"
-     print*,'see variable "fcase" in file selalib/prototype/src/simulation/CG_polar.F90'
-     print*,'can not go any further'
-     print*,'exiting...'
-     stop
-
-   end select 
-
-end subroutine init_distribution_cartesian
+!subroutine init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+!           & delta_eta1,delta_eta2,fcase,f,mesh_case)
+!
+!implicit none
+!
+!
+!  sll_real64, dimension (:,:), allocatable, intent(inout) :: f
+!  sll_int32 :: i, j
+!  sll_int32, intent(in) :: N_eta1,N_eta2
+!  sll_int32, intent(in):: fcase,mesh_case
+!  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
+!  sll_real64 :: eta1,eta2,eta1c,eta2c
+!
+!
+!!  eta1c = 0.5_f64*(eta1_max+eta1_min)
+!!  eta2c = 0.5_f64*(eta2_max+eta2_min)
+!
+!  eta1c = 0.25_f64*eta1_max+0.75_f64*eta1_min
+!  eta2c = 0.25_f64*eta2_max+0.75_f64*eta2_min
+!
+!
+!! test-function
+!    
+!
+!  select case (fcase)
+!   case(1)
+!
+!     do i=1,N_eta1+1
+!        do j=1,N_eta2+1
+!        f(i,j)=1.0_f64
+!        enddo
+!     enddo
+!
+!
+!   case(2)
+!
+!     do i=1,N_eta1+1
+!           do j=1,N_eta2+1
+!              eta2=eta2_min+real(j-1,f64)*delta_eta2
+!              f(i,j) = cos(eta2)
+!           end do
+!     end do
+!     
+!
+!   case(3)
+!
+!     do i=1,N_eta1+1
+!         eta1=eta1_min+real(i-1,f64)*delta_eta1
+!        do j=1,N_eta2+1
+!          f(i,j) = exp(-100._f64*(eta1-eta1c)**2) 
+!        end do
+!     end do
+!
+!   case(4) 
+!     
+!     do i=1,N_eta1+1
+!         eta1=eta1_min+real(i-1,f64)*delta_eta1
+!        do j=1,N_eta2+1
+!         eta2=eta2_min+real(j-1,f64)*delta_eta2
+!              if ((mesh_case==1).or.(mesh_case==4)) then
+!                 f(i,j) = exp(-5_f64*(eta1-eta1c)**2)*exp(-5_f64*(eta2-eta2c)**2)
+!              endif
+!              if ((mesh_case==2).or.(mesh_case==3)) then
+!                f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
+!              endif
+!        end do
+!     end do
+!
+!   case(5)
+!     
+!     do i=1,N_eta1+1
+!       do j=1,N_eta2+1
+!        f(i,j) = 0._f64
+!        if ((i==(N_eta1+1)/2).and.(j==(N_eta2+1)/2)) then
+!          f(i,j) = 1._f64
+!        endif
+!       enddo
+!     enddo
+!   
+!  !case(6) 
+!
+!    ! open(25,file=f_file,action="read")
+!    ! read(25,*)f
+!    ! close(25)
+!
+!   case default 
+!
+!     print*,"f is not defined"
+!     print*,'see variable "fcase" in file selalib/prototype/src/simulation/CG_polar.F90'
+!     print*,'can not go any further'
+!     print*,'exiting...'
+!     stop
+!
+!   end select 
+!
+!end subroutine init_distribution_cartesian
 
 !!***************************************************************************************
-subroutine init_distribution_curvilinear(N_eta1,N_eta2, fcase,f,mesh_case,x1_tab,x2_tab,x1c,x2c)
+subroutine init_distribution_curvilinear(N_eta1,N_eta2, fcase,f,mesh_case,&
+  &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
 
 implicit none
 
@@ -118,7 +119,7 @@ implicit none
   sll_int32 :: i, j
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32, intent(in):: fcase,mesh_case
-  sll_real64,intent(in) :: x1c,x2c
+  sll_real64,intent(in) :: x1c,x2c,sigma_x1,sigma_x2
 
 
   !eta1c = 0.5_f64*(eta1_max+eta1_min)
@@ -160,12 +161,7 @@ implicit none
      
      do i=1,N_eta1+1
         do j=1,N_eta2+1
-              if ((mesh_case==1).or.(mesh_case==4)) then
-                 f(i,j) = exp(-5_f64*(x1_tab(i,j)-x1c)**2)*exp(-5_f64*(x2_tab(i,j)-x2c)**2)
-              endif
-              if ((mesh_case==2).or.(mesh_case==3)) then
-                f(i,j) = exp(-5._f64*(x1_tab(i,j)-x1c)**2)*exp(-5._f64*(x2_tab(i,j)-x2c)**2)
-              endif
+          f(i,j) = exp(-sigma_x1*(x1_tab(i,j)-x1c)**2)*exp(-sigma_x2*(x2_tab(i,j)-x2c)**2)
         end do
      end do
 
@@ -199,7 +195,7 @@ end subroutine init_distribution_curvilinear
 
 subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh,x1c,x2c,geom_x)
+   &geom_eta,alpha_mesh,geom_x)
 
     implicit none
     sll_int32,intent(in) :: nc_eta1,nc_eta2,mesh_case
@@ -209,7 +205,7 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     sll_real64,dimension(:,:),pointer,intent(out) :: jac_array
     sll_int32  :: i1,i2,err
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2
-    sll_real64,intent(out) :: x1c,x2c
+    sll_real64 :: x1c,x2c
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta2
     sll_real64 :: eta1_n,eta2_n
     
@@ -237,8 +233,6 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
       x1_max=eta1_max
       x2_min=eta2_min
       x2_max=eta2_max
-      x1c=(x1_min+x1_max)/2
-      x2c=(x2_min+x2_max)/2
       
       delta_x1 = (x1_max-x1_min)/real(nc_eta1,f64)
       delta_x2 = (x2_max-x2_min)/real(nc_eta2,f64)
@@ -257,8 +251,6 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
          x1_max=eta1_max
          x2_min=-eta1_max
          x2_max=eta1_max
-        x1c=((eta1_min+eta1_max)/2)*cos((eta2_min+eta2_max)/2)
-        x2c=((eta1_min+eta1_max)/2)*sin((eta2_min+eta2_max)/2)
         do i1= 1, nc_eta1 + 1
             eta1 = eta1_min + real(i1-1,f64)*delta_eta1
            do i2= 1, nc_eta2 + 1
@@ -290,8 +282,6 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
        x1_max = eta1_max
        x2_min = eta2_min
        x2_max = eta2_max
-       x1c=(x1_min+x1_max)/2
-       x2c=(x2_min+x2_max)/2
       do i1= 1, nc_eta1 + 1
          eta1 = eta1_min + real(i1-1,f64)*delta_eta1
          eta1_n=real(i1-1,f64)/real(nc_eta1,f64)
@@ -320,8 +310,6 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
      x1_max = eta1_max! + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)**2
      x2_min = eta2_min! + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
      x2_max = eta2_max! + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
-     x1c=(x1_min+x1_max)/2
-     x2c=(x2_min+x2_max)/2
      do i1= 1, nc_eta1 + 1
        eta1 = eta1_min + real(i1-1,f64)*delta_eta1
         do i2 = 1, nc_eta2 + 1
@@ -472,6 +460,8 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     print*,'#no phi define'
     print*,'#phi_case =1'
    end select
+   
+   
     
   end subroutine carac_analytique
 
