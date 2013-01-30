@@ -455,6 +455,7 @@ contains
     ! of cells than points. Is this properly handled by the interpolators??
     ! The interpolators need the number of points and always consider that
     ! num_cells = num_pts - 1. This is a possible source of confusion.
+
     call sim%interp_x1%initialize( &
          sim%nc_x1, &
          sim%mesh6d%x1_min, &
@@ -633,7 +634,7 @@ contains
        ! 3. Reconfigure charge density to feed to Poisson solver
        call apply_remap_6D( sim%seqx1x2x3_to_seqx4x5x6, &
             sim%f_x1x2x3, sim%f_x4x5x6 )
-print *, 'marker ', 7
+
        call compute_charge_density_6d( &
             sim%mesh6d, &
             size(sim%f_x4x5x6,1), &
@@ -642,17 +643,17 @@ print *, 'marker ', 7
             sim%f_x4x5x6, &
             sim%partial_reduction, &
             sim%rho_split )
-print *, 'marker ', 8
+
        ! 3d charge density is 'fully split', no sequential operations can be
        ! fully done. Thus a remap is needed.
        call apply_remap_3D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-print *, 'marker ', 9
+
        ! Compute the electric potential.
        call solve_poisson_3d_periodic_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
-print *, 'marker ', 10
+
        ! compute the values of the electric field. rho is configured for 
        ! sequential operations in x1, thus we start by computing the E_x 
        ! component.
@@ -665,11 +666,11 @@ print *, 'marker ', 10
             sim%phi_x1, &
             loc_sz_x1, &
             loc_sz_x2, &
-            loc_sz_x2, &
+            loc_sz_x3, &
             sim%mesh6d%delta_x1, &
             sim%ex_x1 )
        call apply_remap_3D( sim%ex_x1_to_split, sim%ex_x1, sim%ex_split )
-print *, 'marker ', 11
+
        call compute_local_sizes_3d(sim%rho_seq_x2,loc_sz_x1,loc_sz_x2,loc_sz_x3)
        call compute_electric_field_x2_3d( &
             sim%phi_x2, &
@@ -681,7 +682,7 @@ print *, 'marker ', 11
 
        ! it would be nice if the next call were executed by another thread...
        call apply_remap_3D( sim%ey_x2_to_split, sim%ey_x2, sim%ey_split )
-print *, 'marker ', 12
+
        call compute_local_sizes_3d(sim%rho_seq_x3,loc_sz_x1,loc_sz_x2,loc_sz_x3)
        call compute_electric_field_x3_3d( &
             sim%phi_x3, &
@@ -690,11 +691,11 @@ print *, 'marker ', 12
             loc_sz_x3, &
             sim%mesh6d%delta_x3, &
             sim%ez_x3 )
-print *, 'marker ', 13
+
        ! But now, to make the Ez field data configuration compatible with
        ! the sequential operations in x4x5x6...
        call apply_remap_3D( sim%ez_x3_to_split, sim%ez_x3, sim%ez_split )
-print *, 'marker ', 14
+
        ! ...and another half time step advection in the velocities.
        ! Start with vx...(x4)
        call compute_local_sizes_6d( sim%sequential_x4x5x6, &
@@ -719,7 +720,7 @@ print *, 'marker ', 14
              end do
           end do
        end do
-print *, 'marker ', 15
+
        ! Continue with vy...(x5)
        do n=1, sim%mesh6d%num_cells6
           do l=1, sim%mesh6d%num_cells4
@@ -740,7 +741,7 @@ print *, 'marker ', 15
              end do
           end do
        end do
-print *, 'marker ', 16
+
        ! Continue with vz...(x6)
        do m=1, sim%mesh6d%num_cells5
           do l=1, sim%mesh6d%num_cells4
@@ -763,7 +764,7 @@ print *, 'marker ', 16
        end do
        ! The following function needs to be modified for the 3D case
   !     call plot_fields(itime, sim)
-print *, 'marker ', 17
+
     end do ! main loop
 
   end subroutine run_vp6d_cartesian
