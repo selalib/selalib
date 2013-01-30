@@ -211,7 +211,7 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2
     sll_real64,intent(out) :: x1c,x2c
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta2
-    
+    sll_real64 :: eta1_n,eta2_n
     
     
 
@@ -253,10 +253,10 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
   
     ! polar mesh
       if (mesh_case==2) then 
-         x1_min=0._f64
+         x1_min=-eta1_max
          x1_max=eta1_max
-         x2_min=0._f64
-         x2_max=eta2_max
+         x2_min=-eta1_max
+         x2_max=eta1_max
         x1c=((eta1_min+eta1_max)/2)*cos((eta2_min+eta2_max)/2)
         x2c=((eta1_min+eta1_max)/2)*sin((eta2_min+eta2_max)/2)
         do i1= 1, nc_eta1 + 1
@@ -286,37 +286,40 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
 
      ! Collela mesh
     if(mesh_case==4)then
-       x1_min = eta1_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
-       x1_max = eta1_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
-       x2_min = eta2_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
-       x2_max = eta2_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
+       x1_min = eta1_min
+       x1_max = eta1_max
+       x2_min = eta2_min
+       x2_max = eta2_max
        x1c=(x1_min+x1_max)/2
        x2c=(x2_min+x2_max)/2
       do i1= 1, nc_eta1 + 1
          eta1 = eta1_min + real(i1-1,f64)*delta_eta1
+         eta1_n=real(i1-1,f64)/real(nc_eta1,f64)
          do i2 = 1, nc_eta2 + 1
            eta2 = eta2_min + real(i2-1,f64)*delta_eta2
-           x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-           x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-
-           jac_array(i1,i2) = (1.0_f64 + alpha_mesh *2._f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)) * &
-           & (1.0_f64 + alpha_mesh *2._f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)) - &
-           & alpha_mesh *2._f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2) * &
-           & alpha_mesh *2._f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+           eta2_n=real(i2-1,f64)/real(nc_eta2,f64)
+           x1n_array(i1,i2) = eta1_n + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
+           x2n_array(i1,i2) = eta2_n + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
+           
+           jac_array(i1,i2) = (1.0_f64 + alpha_mesh *(2._f64 *sll_pi/(eta1_max-eta1_min)) * &
+           &cos (2*sll_pi*eta1_n) * sin (2*sll_pi*eta2_n)) * &
+           & (1.0_f64 + alpha_mesh *2._f64 * sll_pi/(eta2_max-eta2_min) * sin (2*sll_pi*eta1_n) * cos (2*sll_pi*eta2_n)) - &
+           & alpha_mesh *2._f64 *sll_pi/(eta2_max-eta2_min) * sin (2*sll_pi*eta1_n) * cos (2*sll_pi*eta2_n) * &
+           & alpha_mesh *2._f64 * sll_pi/(eta1_max-eta1_min) * cos (2*sll_pi*eta1_n) * sin (2*sll_pi*eta2_n)
         
-        !x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
-        !x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
-        !jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+          x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+          x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+          !jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
       end do
     end do
 
   endif
 
   if(mesh_case==5)then
-     x1_min = eta1_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)**2
-     x1_max = eta1_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)**2
-     x2_min = eta2_min + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
-     x2_max = eta2_max + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
+     x1_min = eta1_min! + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)**2
+     x1_max = eta1_max! + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)**2
+     x2_min = eta2_min! + alpha_mesh * sin(2*sll_pi*eta1_min) * sin(2*sll_pi*eta2_min)
+     x2_max = eta2_max! + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
      x1c=(x1_min+x1_max)/2
      x2c=(x2_min+x2_max)/2
      do i1= 1, nc_eta1 + 1
