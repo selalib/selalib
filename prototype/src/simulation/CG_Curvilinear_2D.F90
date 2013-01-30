@@ -64,12 +64,12 @@ program cg_curvilinear_2D
 !  close(27)
 !
  !namelist /param/ N_eta1,N_eta2,dt
-  visu_case = 0 ! 0 : gnuplot 
+  visu_case = 1 ! 0 : gnuplot 
                 ! 1 : vtk
 
-  visu_step = 10
+  visu_step = 100
 
-  mesh_case = 2 ! 1 : cartesian 
+  mesh_case = 1 ! 1 : cartesian 
                 ! 2 : polar 
                 ! 3 : r^2 modified polar 
                 ! 4 : colella 
@@ -79,9 +79,9 @@ program cg_curvilinear_2D
 
   grad_case = 1
 
-  carac_case = 5 ! 1 : Explicite Euleur with linear interpolation
-                 ! 2 : Explicite Euleur with spline interpolation  
-                 ! 5 : Fixe point
+  carac_case = 5 ! 1 : Explicit Euler with linear interpolation
+                 ! 2 : Explicit Euler with spline interpolation  
+                 ! 5 : Fixed point (midpoint)
 
   phi_case = 2 ! 1: translation 
                ! 2: rotation 
@@ -95,8 +95,8 @@ program cg_curvilinear_2D
   a2 = 1._f64 !*0.01_f64
   bc1_type=PERIODIC_SPLINE
   bc2_type=PERIODIC_SPLINE
-  N_eta1 = 50
-  N_eta2 = 50
+  N_eta1 = 100
+  N_eta2 = 100
   dt = 0.01
   nb_step = 100
   alpha_mesh = 0._f64
@@ -116,10 +116,16 @@ program cg_curvilinear_2D
   ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
   ! BC        : periodic-periodic
   if (mesh_case==1) then
-    eta1_min = 0._f64
-    eta1_max = 2._f64*sll_pi
-    eta2_min = 0._f64
-    eta2_max = 2._f64*sll_pi
+    !eta1_min = 0._f64
+    !eta1_max = 2._f64*sll_pi
+    !eta2_min = 0._f64
+    !eta2_max = 2._f64*sll_pi
+
+    eta1_min = -1._f64
+    eta1_max = 1._f64
+    eta2_min = -1._f64
+    eta2_max = 1._f64
+
 
     bc1_type =PERIODIC_SPLINE
     bc2_type =PERIODIC_SPLINE
@@ -129,12 +135,19 @@ program cg_curvilinear_2D
   ! domain    : disc of radius eta1_max with a hole of radius eta1_min
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
+!    eta1_min = 0.2_f64
+!    eta1_max = 2._f64*sll_pi !1._f64
+!    eta2_min = 0._f64
+!    eta2_max = 2._f64*sll_pi
+
     eta1_min = 0.2_f64
-    eta1_max = 2._f64*sll_pi !1._f64
+    eta1_max = 0.8_f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
 
-    bc1_type = PERIODIC_SPLINE !HERMITE_SPLINE
+
+    bc1_type = PERIODIC_SPLINE 
+    !bc1_type = HERMITE_SPLINE
     bc2_type = PERIODIC_SPLINE
   endif
   
@@ -142,10 +155,15 @@ program cg_curvilinear_2D
   ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
   ! BC        : periodic-periodic
   if (mesh_case==4) then
-    eta1_min = 0._f64
-    eta1_max = 2._f64*sll_pi
-    eta2_min = 0._f64
-    eta2_max = 2._f64*sll_pi
+!    eta1_min = 0._f64
+!    eta1_max = 2._f64*sll_pi
+!    eta2_min = 0._f64
+!    eta2_max = 2._f64*sll_pi
+
+    eta1_min = -1._f64
+    eta1_max = 1._f64
+    eta2_min = -1._f64
+    eta2_max = 1._f64
     
     bc1_type = PERIODIC_SPLINE
     bc2_type = PERIODIC_SPLINE
@@ -238,7 +256,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
  
 
 !  !write f in a file before calculations
-  call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGC")
+  call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
 ! !***************************************
 
 
@@ -279,8 +297,9 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
     f=fp1
 
     
-    if (step==1 .or. step/visu_step*visu_step==step) then
-       call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGCF")
+    !if (step==1 .or. step/visu_step*visu_step==step) then
+    if (step/visu_step*visu_step==step) then
+       call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"f")
     ! call plot_f(step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
     end if
    
@@ -293,7 +312,7 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,x1_tab,x2_tab,x1c,x2c)
 
  !write f_init in a file after calculations
-  call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGCFN")
+  call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,nb_step,"fexact")
 !open(unit=800,file='conv_CG',position="append")
   !do i=1,N_eta1+1
   !  do j=1,N_eta2+1
@@ -324,10 +343,10 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
 
 
  !write the final f in a file
- call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"CGC")
- open (unit=21,file='CGCrestart.dat')
- write(21,*)f
- close(21)
+ !call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"f")
+ !open (unit=21,file='CGCrestart.dat')
+ !write(21,*)f
+ !close(21)
 
  !SLL_DEALLOCATE_ARRAY(div,err)
  SLL_DEALLOCATE_ARRAY(f,err)
