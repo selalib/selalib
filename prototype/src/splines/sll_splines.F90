@@ -586,7 +586,7 @@ contains  ! ****************************************************************
             spline%n_points, ' . Passed size: ', size(f)
        STOP
     end if
-
+    np = spline%n_points
     if( spline%use_fast_algorithm .eqv. .false. ) then
        call solve_cyclic_tridiag_double( &
             spline%cts, &
@@ -600,7 +600,6 @@ contains  ! ****************************************************************
        spline%coeffs(np+2) = spline%coeffs(3)
     else
        fp     => f
-       np     =  spline%n_points
        d      => spline%d
        coeffs => spline%coeffs(0:np+2)
        ! Remember that now coeffs(1) refers to spline%coeffs(0)
