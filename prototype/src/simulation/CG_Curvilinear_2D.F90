@@ -24,7 +24,7 @@ program cg_curvilinear_2D
   sll_real64 :: delta_eta1, delta_eta2
   sll_real64 :: eta1_min, eta1_max,eta2_min, eta2_max, dt, tf
   sll_real64 :: temps,a1,a2,error
-  sll_real64 :: x1c,x2c,x1c_r,x2c_r
+  sll_real64 :: x1c,x2c,x1c_r,x2c_r,sigma_x1,sigma_x2
   sll_real64 :: geom_eta(2,2),geom_x(2,2),alpha_mesh
   sll_real64, dimension(:,:), pointer :: x1n_array,x2n_array,x1_tab,x2_tab  !,x1c_array,x2c_array
   sll_real64, dimension(:,:), pointer :: jac_array
@@ -69,7 +69,7 @@ program cg_curvilinear_2D
 
   visu_step = 100
 
-  mesh_case = 1 ! 1 : cartesian 
+  mesh_case = 2 ! 1 : cartesian 
                 ! 2 : polar 
                 ! 3 : r^2 modified polar 
                 ! 4 : colella 
@@ -97,15 +97,21 @@ program cg_curvilinear_2D
   bc2_type=PERIODIC_SPLINE
   N_eta1 = 100
   N_eta2 = 100
-  dt = 0.01
+  dt = -0.001
   nb_step = 100
   alpha_mesh = 0._f64
   eta1_min = 0._f64
   eta1_max = 1._f64
   eta2_min = 0._f64
   eta2_max = 1._f64
-  x1c_r=0._f64
+  x1c_r=0._f64  ! center for rotation
   x2c_r=0._f64
+  x1c = 0.5_f64 ! center of gaussian 
+  x2c = 0.5_f64
+  sigma_x1 = 10._f64  ! variance for gaussian (exp(-sigma*(x-x1c)^2))
+  sigma_x2 = 10._f64
+
+
 
   !read(*,NML=param)
 
@@ -126,6 +132,15 @@ program cg_curvilinear_2D
     eta2_min = -1._f64
     eta2_max = 1._f64
 
+    x1c_r=0._f64
+    x2c_r=0._f64
+
+    x1c = 0.5_f64
+    x2c = 0.5_f64
+    
+    sigma_x1 = 20._f64
+    sigma_x2 = 20._f64
+    
 
     bc1_type =PERIODIC_SPLINE
     bc2_type =PERIODIC_SPLINE
@@ -141,9 +156,18 @@ program cg_curvilinear_2D
 !    eta2_max = 2._f64*sll_pi
 
     eta1_min = 0.2_f64
-    eta1_max = 0.8_f64
+    eta1_max = 1.8_f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
+   
+    x1c_r=0._f64
+    x2c_r=0._f64
+   
+    x1c = 0.5_f64
+    x2c = 0.5_f64
+
+    sigma_x1 = 40._f64
+    sigma_x2 = 40._f64
 
 
     bc1_type = PERIODIC_SPLINE 
@@ -164,6 +188,18 @@ program cg_curvilinear_2D
     eta1_max = 1._f64
     eta2_min = -1._f64
     eta2_max = 1._f64
+    
+
+    x1c_r=0._f64
+    x2c_r=0._f64
+
+
+    x1c = 0.5_f64
+    x2c = 0.5_f64
+
+    sigma_x1 = 20._f64
+    sigma_x2 = 20._f64
+    
     
     bc1_type = PERIODIC_SPLINE
     bc2_type = PERIODIC_SPLINE
@@ -223,7 +259,7 @@ program cg_curvilinear_2D
 
  call construct_mesh_transF(N_eta1,N_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh,x1c,x2c,geom_x)
+   &geom_eta,alpha_mesh,geom_x)
  
 
 !********************************* 
@@ -248,7 +284,8 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
 
   !call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
   !     & delta_eta1,delta_eta2,f_case,f,mesh_case)
-  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,x1n_array,x2n_array,x1c,x2c)
+  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
+  &x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
   f_init=f
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r)
 !  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
@@ -309,8 +346,8 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
  call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
   x1_tab,x2_tab,real(nb_step)*dt)
 
- call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,x1_tab,x2_tab,x1c,x2c)
-
+ call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,&
+   &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
  !write f_init in a file after calculations
   call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,nb_step,"fexact")
 !open(unit=800,file='conv_CG',position="append")
