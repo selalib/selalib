@@ -20,6 +20,7 @@ add_dependencies(sll_time_splitting
         sll_distribution_function
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	sll_low_level_file_io
 	sll_memory
 	sll_assertion
@@ -32,6 +33,7 @@ target_link_libraries(test_time_splitting
 	sll_interpolators
 	sll_low_level_file_io
 	sll_splines
+        sll_numerical_utilities	
 	sll_memory
 	sll_assertion
 	sll_working_precision
@@ -47,6 +49,7 @@ IF(FFTPACK_ENABLED)
     sll_distribution_function
     sll_scalar_field_2d
     sll_time_splitting
+    sll_numerical_utilities	
     sll_constants
     sll_low_level_file_io
     sll_memory
