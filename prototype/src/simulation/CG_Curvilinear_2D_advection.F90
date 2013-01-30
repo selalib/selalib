@@ -546,7 +546,7 @@ contains
     write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
     write(900,*)
     write(900,'(A,I0)')           'POINT_DATA ',(Nx+1)*(Ny+1)
-    write(900,'(A,I0)')           'SCALa_eta1S f float ',1
+    write(900,'(A,I0)')           'SCALARS f float ',1
     write(900,'(A)')                  'LOOKUP_TABLE default'
 
     do j=0,Ny-1
@@ -604,7 +604,7 @@ contains
     write(900,*) 'SPACING ', dz(0),' ', dz(1),' ', 1. 
     write(900,*)
     write(900,'(A,I0)')           'POINT_DATA ',(Nx+1)*(Ny+1)
-    write(900,'(A,I0)')           'SCALa_eta1S f float ',1
+    write(900,'(A,I0)')           'SCALARS f float ',1
     write(900,'(A)')                  'LOOKUP_TABLE default'
 
     do j=0,Ny
