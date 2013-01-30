@@ -13,6 +13,7 @@ module sll_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+  use sll_tridiagonal  ! Used for 'slow' algorithm implementation
   implicit none
   
   type  ::  sll_spline_1D
@@ -22,6 +23,7 @@ module sll_splines
      sll_real64                        :: xmin
      sll_real64                        :: xmax
      sll_int32                         :: bc_type  ! periodic, hermite
+     ! check: the following pointer is not used!
      sll_real64, dimension(:), pointer :: data     ! data for the spline fit
      sll_real64, dimension(:), pointer :: d        ! scratch space D (L*D = F),
                                                    ! refer to algorithm below.
@@ -29,7 +31,16 @@ module sll_splines
      sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
      sll_real64                        :: slope_L  ! left slope, for Hermite
      sll_real64                        :: slope_R  ! right slope, for Hermite
-     logical                           :: compute_slopes
+     logical                           :: compute_slope_L
+     logical                           :: compute_slope_R
+     ! Data required for the 'slow' algorithm based on a standard
+     ! tridiagonal system solution. Note that we use the same nomenclature
+     ! as in the sll_tridiagonal module.
+     logical                           :: use_fast_algorithm
+     sll_real64, dimension(:), pointer :: a
+     sll_real64, dimension(:), pointer :: cts
+     sll_int32, dimension(:), pointer  :: ipiv 
+     sll_real64, dimension(:), pointer :: f_aux ! Hermite needs extended f array
   end type sll_spline_1D
 
   ! Are x1 and x2 the coordinates that we should use? Or are eta1 and eta2
@@ -101,7 +112,7 @@ module sll_splines
 
     ! (1/4, -4/3, 3, -4, 25/12) stencil
 #define BACKWARD_FD_5PT( f, r_delta, np ) \
-    r_delta*(-0.25_f64*f(np-4) + (4.0_f64/3.0_f64)*f(np-3) + 3.0_f64*f(np-2) - 4.0_f64*f(np-1) + (25.0_f64/12.0_f64)*f(np) )
+    r_delta*(0.25_f64*f(np-4) - (4.0_f64/3.0_f64)*f(np-3) + 3.0_f64*f(np-2) - 4.0_f64*f(np-1) + (25.0_f64/12.0_f64)*f(np) )
 
     ! (-3/2, 2, -1/2 ) stencil
 #define FORWARD_FD_3PT( f, r_delta ) \
@@ -114,38 +125,6 @@ module sll_splines
 
 contains  ! ****************************************************************
 
-  ! The following could be changed to a direct access eventually, since it
-  ! is hard to conceive that the slopes would ever be anything different than
-  ! a double precision value at the top of the sll_spline_1D object. For now,
-  ! these are the only slots inside the spline that are meant to be modified
-  ! outside of the initialization or spline computation functions.
-#if 0
-  !> set_slope_left
-  !> \param[in] spline object
-  !> \param[in] value  set derivative on left hand side to value
-  subroutine set_slope_left(spline, value)
-    type(sll_spline_1D), pointer :: spline
-    sll_real64, intent(in)       :: value
-    if( .not. associated(spline) ) then
-       print *, 'set_slope_left(): not associated spline objet passed.'
-       STOP
-    end if
-    spline%slope_l = value
-  end subroutine set_slope_left
-  
-  !> set slope on right hand side for hermite boundary conditions
-  !> \param[in] spline object
-  !> \param[in] value to which set the derivative on the right hand side
-  subroutine set_slope_right(spline, value)
-    type(sll_spline_1D), pointer :: spline
-    sll_real64, intent(in)       :: value
-    if( .not. associated(spline) ) then
-       print *, 'set_slope_left(): not associated spline objet passed.'
-       STOP
-    end if
-    spline%slope_r = value
-  end subroutine set_slope_right
-#endif  
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
   ! a uniform grid" (unpublished).
@@ -154,7 +133,10 @@ contains  ! ****************************************************************
   ! at the ends (i.e.: 0, NP+1, NP+2) store coefficients whose values are
   ! determined by the type of boundary condition used. This is invisible
   ! to the user, who should not be concerned with this implementation detail.
-  
+
+  ! The following parameter determines the problem size at which the alternative
+  ! spline algorithm is used.
+#define NUM_TERMS 27  
   !> create new spline object
   function new_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_spline_1D), pointer         :: new_spline_1D
@@ -165,6 +147,8 @@ contains  ! ****************************************************************
     sll_real64, intent(in), optional     :: sl
     sll_real64, intent(in), optional     :: sr
     sll_int32                            :: ierr
+    sll_int32                            :: i
+
     SLL_ALLOCATE( new_spline_1D, ierr )
     new_spline_1D%n_points = num_points
     new_spline_1D%xmin     = xmin
@@ -172,11 +156,10 @@ contains  ! ****************************************************************
     new_spline_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
     new_spline_1D%rdelta   = 1.0_f64/new_spline_1D%delta
     new_spline_1D%bc_type  = bc_type
-    if( num_points .le. 28 ) then
-       print *, 'ERROR, new_spline_1D: Because of the algorithm used, ', &
-            'this function is meant to be used with arrays that are at ', &
-            'least of size = 28'
-       STOP 'new_spline_1D()'
+    if( num_points .lt. NUM_TERMS ) then
+       new_spline_1D%use_fast_algorithm = .false.
+    else
+       new_spline_1D%use_fast_algorithm = .true.
     end if
     if( xmin .gt. xmax ) then
        print *, 'ERROR, new_spline_1D: xmin is greater than xmax, ', &
@@ -198,26 +181,89 @@ contains  ! ****************************************************************
           new_spline_1D%slope_L = 0.0
           new_spline_1D%slope_R = 0.0
        end if
+       if( new_spline_1D%use_fast_algorithm .eqv. .false. ) then
+          SLL_ALLOCATE(new_spline_1D%a(3*num_points),ierr)
+          SLL_ALLOCATE(new_spline_1D%cts(7*num_points),ierr)
+          SLL_ALLOCATE(new_spline_1D%ipiv(num_points),ierr)
+          new_spline_1D%f_aux => null()
+          ! Initialize and factorize the tridiagonal system. See detailed
+          ! comment below regarding the structure of this matrix.
+          new_spline_1D%a(1) = 1.0_f64/6.0_f64
+          new_spline_1D%a(2) = 4.0_f64/6.0_f64
+          new_spline_1D%a(3) = 1.0_f64/6.0_f64
+          new_spline_1D%a(3*num_points-2) = 1.0_f64/6.0_f64
+          new_spline_1D%a(3*num_points-1) = 4.0_f64/6.0_f64
+          new_spline_1D%a(3*num_points  ) = 1.0_f64/6.0_f64
+          do i=1,num_points-2
+             new_spline_1D%a(3*i+1) = 1.0_f64/6.0_f64
+             new_spline_1D%a(3*i+2) = 4.0_f64/6.0_f64
+             new_spline_1D%a(3*i+3) = 1.0_f64/6.0_f64
+          end do
+          call setup_cyclic_tridiag( &
+               new_spline_1D%a, &
+               num_points, &
+               new_spline_1D%cts, &
+               new_spline_1D%ipiv )
+       else
+          new_spline_1D%a => null()
+          new_spline_1D%cts => null()
+          new_spline_1D%ipiv => null()
+          new_spline_1D%f_aux => null()
+       end if
     case (HERMITE_SPLINE)
        if( present(sl) ) then
           new_spline_1D%slope_L = sl
-          new_spline_1D%compute_slopes = .false.
+          new_spline_1D%compute_slope_L = .false.
        else
           new_spline_1D%slope_L = 0.0           ! just a filler value
-          new_spline_1D%compute_slopes = .true.
+          new_spline_1D%compute_slope_L = .true.
        end if
        if( present(sr) ) then
           new_spline_1D%slope_R = sr
-          new_spline_1D%compute_slopes = .false.
+          new_spline_1D%compute_slope_R = .false.
        else
           new_spline_1D%slope_R = 0.0           ! just a filler value
-          new_spline_1D%compute_slopes = .true.
+          new_spline_1D%compute_slope_R = .true.
+       end if
+       if( new_spline_1D%use_fast_algorithm .eqv. .false. ) then
+          SLL_ALLOCATE(new_spline_1D%a(3*(num_points+2)),ierr)
+          SLL_ALLOCATE(new_spline_1D%cts(7*(num_points+2)),ierr)
+          SLL_ALLOCATE(new_spline_1D%ipiv(num_points+2),ierr)
+          SLL_ALLOCATE(new_spline_1D%f_aux(num_points+2),ierr)
+          ! Initialize and factorize the tridiagonal system. See detailed
+          ! comment below regarding the structure of this matrix. Matrix 'a'
+          ! is (np+2)X(np+2)
+          new_spline_1D%a(1) = 0.0_f64
+          new_spline_1D%a(2) = 4.0_f64/6.0_f64
+          new_spline_1D%a(3) = 2.0_f64/6.0_f64
+          new_spline_1D%a(3*(num_points+2)-2) = 2.0_f64/6.0_f64
+          new_spline_1D%a(3*(num_points+2)-1) = 4.0_f64/6.0_f64
+          new_spline_1D%a(3*(num_points+2)  ) = 0.0_f64
+          do i=1,num_points
+             new_spline_1D%a(3*i+1) = 1.0_f64/6.0_f64
+             new_spline_1D%a(3*i+2) = 4.0_f64/6.0_f64
+             new_spline_1D%a(3*i+3) = 1.0_f64/6.0_f64
+          end do
+          call setup_cyclic_tridiag( &
+               new_spline_1D%a, &
+               num_points+2, &
+               new_spline_1D%cts, &
+               new_spline_1D%ipiv )
+       else
+          new_spline_1D%a => null()
+          new_spline_1D%cts => null()
+          new_spline_1D%ipiv => null()
+          new_spline_1D%f_aux => null()
        end if
     case default
        print *, 'ERROR: new_spline_1D(): not recognized boundary condition'
        STOP
     end select
-    SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
+    if( new_spline_1D%use_fast_algorithm .eqv. .true. ) then
+       SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
+    else
+       new_spline_1D%d => null()
+    end if
     ! note how the indexing of the coefficients array includes the end-
     ! points 0, num_points, num_points+1, num_points+2. These are meant to 
     ! store the boundary condition-specific data. The 'periodic' BC does
@@ -302,6 +348,34 @@ contains  ! ****************************************************************
   ! And the rest of the terms, starting with C(N-1) and working backwards:
   !
   !  c(i) = 1/a*(d(i) - b*c(i+1))
+  !
+  ! The algorithm above is not implemented whenever the number of points is
+  ! smaller than 28. In such cases we fall back to a more straightforward but
+  ! also more costly implementation using a standard tridiagonal system
+  ! solver.
+  !
+  ! In the periodic case, we are solving the problem A*C=F, where
+  !
+  !                + 4  1              1 +         1
+  !                | 1  4  1             |
+  !             1  |    .  .  .          |         .
+  !       A =  --- |       .  .  .       |         .
+  !             6  |          .  .  .    |         .
+  !                |             1  4  1 |
+  !                + 1              1  4 +      num_points
+  !
+  ! In the Hermite BC case, the problem is modified as follows:
+  !
+  !    + 4  2                + + c_0    +   + 6*f_0+2*delta*f_0´          +  0
+  !    | 1  4  1             | |        |   | 6*f_1                       |  1
+  !    |    .  .  .          | |    .   |   |    .                        |  .
+  ! A =|       .  .  .       |*|    .   | = |    .                        |  .
+  !    |          .  .  .    | |    .   |   |    .                        |  .
+  !    |             1  4  1 | |        |   | 6*f_np                      |  np
+  !    +                2  4 + +c_(np+1)+   + 6*f_(np+1)+2*delta*f_(np+1)'+ np+1
+
+
+
   !> compute spline coefficients
 
   !> compute_spline_1D() computes the spline coefficients using the parameters
@@ -328,7 +402,7 @@ contains  ! ****************************************************************
     end select
   end subroutine compute_spline_1D
 
-#define NUM_TERMS 27
+
   ! The following auxiliary functions:
   ! compute_spline_1D_periodic_aux() 
   ! compute_spline_1D_hermite_aux()
@@ -482,8 +556,11 @@ contains  ! ****************************************************************
 !!$    coeffs(0)    = coeffs(2)    - 2.0 * delta * slope_l
 !!$    coeffs(np+1) = coeffs(np-1) + 2.0 * delta * slope_r
 !!$    coeffs(np+2) = 0.0 !coeffs(np-2)  ! not used
+! debugging...
     coeffs(1)    = coeffs(3)  - 2.0 * delta * slope_l
     coeffs(np+2) = coeffs(np) + 2.0 * delta * slope_r
+!    coeffs(1)    = coeffs(3)  + 2.0 * delta * slope_l
+!    coeffs(np+2) = coeffs(np) - 2.0 * delta * slope_r
     coeffs(np+3) = 0.0 !coeffs(np-2)  ! not used
   end subroutine compute_spline_1D_hermite_aux
 
@@ -509,15 +586,27 @@ contains  ! ****************************************************************
             spline%n_points, ' . Passed size: ', size(f)
        STOP
     end if
-    fp     => f
-    np     =  spline%n_points
-    d      => spline%d
-    coeffs => spline%coeffs(0:np+2)
-    ! Remember that now coeffs(1) refers to spline%coeffs(0)
-    call compute_spline_1D_periodic_aux( fp, np, d, coeffs )
+
+    if( spline%use_fast_algorithm .eqv. .false. ) then
+       call solve_cyclic_tridiag_double( &
+            spline%cts, &
+            spline%ipiv, &
+            f, &
+            spline%n_points, &
+            spline%coeffs(1:np) )
+       ! and set the periodic BC by setting the coefficient values
+       spline%coeffs(0)    = spline%coeffs(np-1)
+       spline%coeffs(np+1) = spline%coeffs(2)
+       spline%coeffs(np+2) = spline%coeffs(3)
+    else
+       fp     => f
+       np     =  spline%n_points
+       d      => spline%d
+       coeffs => spline%coeffs(0:np+2)
+       ! Remember that now coeffs(1) refers to spline%coeffs(0)
+       call compute_spline_1D_periodic_aux( fp, np, d, coeffs )
+    end if
   end subroutine compute_spline_1D_periodic
-
-
 
   subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
@@ -551,16 +640,35 @@ contains  ! ****************************************************************
     delta   = spline%delta
     r_delta = 1.0_f64/delta
 
-    if( spline%compute_slopes .eqv. .true. ) then
-       ! Estimate numerically the values of the slopes based on the given
-       ! values of 'f'. 
+    ! Estimate numerically the values of the slopes based on the given
+    ! values of 'f' if the user did not provide values initially.
+    if( spline%compute_slope_L .eqv. .true. ) then
        slope_l = FORWARD_FD_5PT( f, r_delta ) 
-       slope_r = BACKWARD_FD_5PT( f, r_delta, np )
     else
        slope_l = spline%slope_L
+    end if
+    if( spline%compute_slope_R .eqv. .true. ) then
+       slope_r = BACKWARD_FD_5PT( f, r_delta, np )
+    else
        slope_r = spline%slope_R
     end if
-    call compute_spline_1D_hermite_aux(fp,np,d, slope_l,slope_r, delta, coeffs)
+
+    if( spline%use_fast_algorithm .eqv. .false. ) then
+       ! load the source term.
+       spline%f_aux(2:np+1) = f(1:np)
+       ! set the end-points to reflect the slope information
+       spline%f_aux(1)    = f(1)  + (1.0_f64/3.0_f64)*delta*slope_l
+       spline%f_aux(np+2) = f(np) - (1.0_f64/3.0_f64)*delta*slope_r
+       call solve_cyclic_tridiag_double( &
+            spline%cts, &
+            spline%ipiv, &
+            spline%f_aux, &
+            np+2, &
+            spline%coeffs )
+    else
+       call compute_spline_1D_hermite_aux( &
+            fp,np,d, slope_l,slope_r, delta, coeffs)
+    end if
   end subroutine compute_spline_1D_hermite
 
 
@@ -971,9 +1079,17 @@ contains  ! ****************************************************************
     ! Fixme: some error checking, whether the spline pointer is associated
     ! for instance
     SLL_ASSERT( associated(spline) )
-    SLL_DEALLOCATE( spline%d, ierr )
+    if( spline%use_fast_algorithm .eqv. .true. ) then
+       SLL_DEALLOCATE( spline%d, ierr )
+    end if
     SLL_DEALLOCATE( spline%coeffs, ierr )
     spline%data => null()
+    if( spline%use_fast_algorithm .eqv. .false. ) then
+       SLL_DEALLOCATE( spline%a, ierr )
+       SLL_DEALLOCATE( spline%cts, ierr )
+       SLL_DEALLOCATE( spline%ipiv, ierr )
+       SLL_DEALLOCATE( spline%f_aux, ierr )
+    end if
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_spline_1D
 

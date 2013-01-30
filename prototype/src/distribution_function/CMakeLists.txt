@@ -22,6 +22,7 @@ target_link_libraries(test_distribution_function
 	sll_low_level_file_io
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	sll_mapped_meshes
 	sll_utilities
 	sll_memory
