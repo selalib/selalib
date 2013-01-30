@@ -22,6 +22,7 @@ target_link_libraries(test_advection_field
 	sll_splines
 	geometry_functions
 	sll_mapped_meshes
+        sll_numerical_utilities	
 	sll_utilities
 	sll_memory
 	sll_assertion
