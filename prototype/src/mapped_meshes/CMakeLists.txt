@@ -16,6 +16,7 @@ ENDIF()
 add_dependencies(sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_constants
 	sll_low_level_file_io
@@ -30,6 +31,7 @@ target_link_libraries(test_mapped_meshes_1d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_constants
 	sll_low_level_file_io
@@ -44,6 +46,7 @@ target_link_libraries(test_mapped_meshes_2d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_utilities
 	sll_constants
@@ -59,6 +62,7 @@ IF(NOT STDF95)
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_utilities
 	sll_constants
