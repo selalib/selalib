@@ -24,6 +24,7 @@ add_dependencies( sll_simulation_1d
   cubic_non_uniform_splines
   sll_tridiagonal
   sll_splines
+  sll_numerical_utilities	
   sll_fft
   sll_constants
   sll_utilities
@@ -32,7 +33,7 @@ add_dependencies( sll_simulation_1d
   sll_working_precision
   )
 
-#Here is defined the executables. 
+# Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
@@ -71,6 +72,7 @@ add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
 target_link_libraries( test_vp1d_fourier_fem
   sll_simulation_1d
   sll_splines
+  sll_numerical_utilities	
   sll_fft
   sll_constants
   sll_utilities
@@ -108,6 +110,7 @@ target_link_libraries(polar_SL
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 #	sll_distribution_function
 #	sll_scalar_field_2d	
@@ -125,6 +128,7 @@ target_link_libraries(polar_SL
 	geometry_functions
 #	sll_distribution_function
 #	sll_scalar_field_2d	
+        sll_numerical_utilities	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -145,8 +149,9 @@ target_link_libraries(CG_polar
 	sll_splines
 	sll_poisson_2d_polar
         sll_low_level_file_io
+        sll_numerical_utilities	
 	sll_fft
-	sll_tridiagonal
+#	sll_tridiagonal
 	sll_constants
 	sll_memory
 	sll_assertion
@@ -161,7 +166,8 @@ add_executable(Poisson_solver
 		)
 target_link_libraries(Poisson_solver
 	sll_fft
-	sll_tridiagonal
+        sll_numerical_utilities	
+#	sll_tridiagonal
 	sll_constants
 	sll_memory
 	sll_assertion
@@ -180,6 +186,7 @@ target_link_libraries(VP1D_cart
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
+        sll_numerical_utilities	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -200,6 +207,7 @@ target_link_libraries(VP1D_deltaf_cart
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
+        sll_numerical_utilities	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -244,6 +252,7 @@ add_dependencies( sll_simulations
   sll_scalar_field
   sll_interpolators
   sll_splines
+  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
@@ -270,6 +279,7 @@ target_link_libraries( test_vp4d_sim
   sll_scalar_field
   sll_interpolators
   sll_splines
+  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
@@ -290,6 +300,7 @@ target_link_libraries( test_vp6d_sim
   sll_scalar_field
   sll_interpolators
   sll_splines
+  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
