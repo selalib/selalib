@@ -17,6 +17,7 @@ target_link_libraries(test_linrood
 	sll_interpolators
 	sll_splines
 	sll_mapped_meshes
+        sll_numerical_utilities	
 	sll_utilities
 	sll_memory
 	sll_assertion
