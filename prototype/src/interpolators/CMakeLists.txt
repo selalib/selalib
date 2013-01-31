@@ -64,6 +64,7 @@ add_dependencies( sll_interpolators
 	          sll_memory
 	          sll_assertion
 	          sll_splines
+                  sll_numerical_utilities	
 	          cubic_non_uniform_splines
                   sll_quintic_splines
                   sll_weno
@@ -77,6 +78,7 @@ add_dependencies( sll_interpolators
 	          sll_memory
 	          sll_assertion
 	          sll_splines
+                  sll_numerical_utilities	
                   sll_quintic_splines
                   sll_weno
 		  #sll_periodic_interp
@@ -109,6 +111,7 @@ add_executable(test_interpolators_2d unit_test.F90
 target_link_libraries( test_interpolators_2d
 	               sll_interpolators
 	               sll_splines
+                       sll_numerical_utilities	
 	               sll_constants
 	               sll_assertion
 	               sll_memory
@@ -171,6 +174,7 @@ target_link_libraries( test_periodic_interpolators_1d
                        sll_interpolators
 	               sll_periodic_interp
 		       sll_splines
+                       sll_numerical_utilities	
 		       sll_fft
                        sll_utilities
                        sll_assertion
