@@ -196,7 +196,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_interpolators
 	sll_periodic_interp
 	sll_splines
-#	sll_fft
+	sll_fft
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
