@@ -19,6 +19,7 @@ program cg_curvilinear_2D
   sll_int32 :: N_eta1, N_eta2, nb_step
   sll_int32 :: f_case,carac_case,visu_case,phi_case
   sll_int32 :: bc(2),err
+  sll_int32 :: PERIODIC_B,HERMITE_B
   sll_int32 :: bc1_type, bc2_type
   sll_int32 :: grad_case,mesh_case,time_scheme
   sll_real64 :: delta_eta1, delta_eta2
@@ -31,8 +32,9 @@ program cg_curvilinear_2D
   sll_real64, dimension(:,:), pointer :: phi_exact
   character (len=16) :: f_file !,bctop,bcbot
   character (len=8) :: conv_CG
-
   
+  PERIODIC_B=0
+  HERMITE_B=1
 
   t1 => new_time_mark()
   t2 => new_time_mark()
@@ -64,7 +66,7 @@ program cg_curvilinear_2D
 !  close(27)
 !
  !namelist /param/ N_eta1,N_eta2,dt
-  visu_case = 1 ! 0 : gnuplot 
+  visu_case = 0 ! 0 : gnuplot 
                 ! 1 : vtk
 
   visu_step = 100
@@ -83,7 +85,7 @@ program cg_curvilinear_2D
                  ! 2 : Explicit Euler with spline interpolation  
                  ! 5 : Fixed point (midpoint)
 
-  phi_case = 2 ! 1: translation 
+  phi_case = 1 ! 1: translation 
                ! 2: rotation 
                ! 3: anisotropic rotation
 
@@ -91,14 +93,14 @@ program cg_curvilinear_2D
                   ! 2 : SL order 2 (Predictor-Corrector) 
                   ! 3 : SL order 2 (Leap-Frog)
   
-  a1 = 1._f64 !*0.01_f64
-  a2 = 1._f64 !*0.01_f64
-  bc1_type=PERIODIC_SPLINE
-  bc2_type=PERIODIC_SPLINE
-  N_eta1 = 100
-  N_eta2 = 100
-  dt = -0.001
-  nb_step = 100
+  a1 = 1._f64 *0.3_f64
+  a2 = 1._f64 *0.3_f64
+  bc1_type=PERIODIC_B
+  bc2_type=PERIODIC_B
+  N_eta1 = 50
+  N_eta2 = 50
+  dt = 0.01
+  nb_step = 700
   alpha_mesh = 0._f64
   eta1_min = 0._f64
   eta1_max = 1._f64
@@ -108,7 +110,7 @@ program cg_curvilinear_2D
   x2c_r=0._f64
   x1c = 0.5_f64 ! center of gaussian 
   x2c = 0.5_f64
-  sigma_x1 = 10._f64  ! variance for gaussian (exp(-sigma*(x-x1c)^2))
+  sigma_x1 = 10._f64  ! variance for gaussian (exp(-(x-x1c)^2/(2*sigma_1^2)))
   sigma_x2 = 10._f64
 
 
@@ -122,28 +124,33 @@ program cg_curvilinear_2D
   ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
   ! BC        : periodic-periodic
   if (mesh_case==1) then
-    !eta1_min = 0._f64
-    !eta1_max = 2._f64*sll_pi
-    !eta2_min = 0._f64
-    !eta2_max = 2._f64*sll_pi
+    eta1_min = 0._f64
+    eta1_max = 4._f64
+    eta2_min = 0._f64
+    eta2_max = 4._f64
 
-    eta1_min = -1._f64
-    eta1_max = 1._f64
-    eta2_min = -1._f64
-    eta2_max = 1._f64
+    x1c_r=2._f64
+    x2c_r=2._f64
 
-    x1c_r=0._f64
-    x2c_r=0._f64
-
-    x1c = 0.5_f64
-    x2c = 0.5_f64
+    x1c = 1.5_f64
+    x2c = 1.5_f64
     
-    sigma_x1 = 20._f64
-    sigma_x2 = 20._f64
+    sigma_x1 = 0.16_f64
+    sigma_x2 = 0.16_f64
     
+    !eta1_min = -1._f64
+    !eta1_max = 1._f64
+    !eta2_min = -1._f64
+    !eta2_max = 1._f64
+    !x1c_r=0._f64
+    !x2c_r=0._f64
+    !x1c = 0.5_f64
+    !x2c = 0.5_f64
+    !sigma_x1 = 0.16_f64
+    !sigma_x2 = 0.16_f64
 
-    bc1_type =PERIODIC_SPLINE
-    bc2_type =PERIODIC_SPLINE
+    bc1_type =PERIODIC_B
+    bc2_type =PERIODIC_B
   endif
   
   ! mesh type : polar or polar-like
@@ -156,53 +163,59 @@ program cg_curvilinear_2D
 !    eta2_max = 2._f64*sll_pi
 
     eta1_min = 0.2_f64
-    eta1_max = 1.8_f64
+    eta1_max = 2._f64*sll_pi
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
    
-    x1c_r=0._f64
-    x2c_r=0._f64
+    x1c_r=3._f64
+    x2c_r=3._f64
    
-    x1c = 0.5_f64
-    x2c = 0.5_f64
+    x1c = 2._f64
+    x2c = 2._f64
 
-    sigma_x1 = 40._f64
-    sigma_x2 = 40._f64
+    sigma_x1 = 0.2
+    sigma_x2 = 0.2
 
 
-    bc1_type = PERIODIC_SPLINE 
-    !bc1_type = HERMITE_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    !bc1_type = PERIODIC_B
+    bc1_type = HERMITE_B
+    bc2_type = PERIODIC_B
   endif
   
   ! mesh type : Collela
   ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
   ! BC        : periodic-periodic
   if (mesh_case==4) then
-!    eta1_min = 0._f64
-!    eta1_max = 2._f64*sll_pi
-!    eta2_min = 0._f64
-!    eta2_max = 2._f64*sll_pi
 
-    eta1_min = -1._f64
-    eta1_max = 1._f64
-    eta2_min = -1._f64
-    eta2_max = 1._f64
+    eta1_min = 0._f64
+    eta1_max = 4._f64
+    eta2_min = 0._f64
+    eta2_max = 4._f64
+
+    x1c_r=2._f64
+    x2c_r=2._f64
+
+
+    x1c = 1.5_f64
+    x2c = 1.5_f64
+
+    sigma_x1 = 0.16_f64
+    sigma_x2 = 0.16_f64
+
+    !eta1_min = -1._f64
+    !eta1_max = 1._f64
+    !eta2_min = -1._f64
+    !eta2_max = 1._f64
+    !x1c_r=0._f64
+    !x2c_r=0._f64
+    !x1c = 0.5_f64
+    !x2c = 0.5_f64
+    !sigma_x1 = 0.16_f64
+    !sigma_x2 = 0.16_f64
     
-
-    x1c_r=0._f64
-    x2c_r=0._f64
-
-
-    x1c = 0.5_f64
-    x2c = 0.5_f64
-
-    sigma_x1 = 20._f64
-    sigma_x2 = 20._f64
     
-    
-    bc1_type = PERIODIC_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    bc1_type = PERIODIC_B
+    bc2_type = PERIODIC_B
     
     alpha_mesh = 0.01_f64
   endif
@@ -287,10 +300,11 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
   call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
   &x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
   f_init=f
+print*,'!!**************Begin of time loop3'
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r)
 !  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
 !  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
- 
+ print*,'!!**************Begin of time loop4'
 
 !  !write f in a file before calculations
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
@@ -327,17 +341,17 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
            print*,'#no scheme defined'
     end select
 
-   ! if(bc2_type==PERIODIC_SPLINE) fp1(:,N_eta2+1)=fp1(:,1) 
-   ! if(bc1_type==PERIODIC_SPLINE) fp1(N_eta1+1,:)=fp1(1,:)
+   ! if(bc2_type==PERIODIC_B) fp1(:,N_eta2+1)=fp1(:,1) 
+   ! if(bc1_type==PERIODIC_B) fp1(N_eta1+1,:)=fp1(1,:)
     
     
     f=fp1
 
     
-    !if (step==1 .or. step/visu_step*visu_step==step) then
+   
     if (step/visu_step*visu_step==step) then
        call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"f")
-    ! call plot_f(step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
+    !call plot_f(f,x1n_array,x2n_array,step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
     end if
    
  end do 
@@ -345,7 +359,6 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
  
  call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
   x1_tab,x2_tab,real(nb_step)*dt)
-
  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,&
    &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
  !write f_init in a file after calculations

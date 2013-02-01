@@ -153,15 +153,15 @@ implicit none
 
      do i=1,N_eta1+1
         do j=1,N_eta2+1
-          f(i,j) = exp(-100._f64*(x1_tab(i,j)-x1c)**2) 
+          f(i,j) = exp(-(x1_tab(i,j)-x1c)**2/(2*sigma_x1**2)) 
         end do
      end do
 
   case(4) 
-     
+   
      do i=1,N_eta1+1
         do j=1,N_eta2+1
-          f(i,j) = exp(-sigma_x1*(x1_tab(i,j)-x1c)**2)*exp(-sigma_x2*(x2_tab(i,j)-x2c)**2)
+          f(i,j) = exp(-(x1_tab(i,j)-x1c)**2/(2*sigma_x1**2))*exp(-(x2_tab(i,j)-x2c)**2/(2*sigma_x2**2))
         end do
      end do
 
@@ -312,18 +312,20 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
      x2_max = eta2_max! + alpha_mesh * sin(2*sll_pi*eta1_max) * sin(2*sll_pi*eta2_max)
      do i1= 1, nc_eta1 + 1
        eta1 = eta1_min + real(i1-1,f64)*delta_eta1
+       eta1_n=real(i1-1,f64)/real(nc_eta1,f64)
         do i2 = 1, nc_eta2 + 1
            eta2 = eta2_min + real(i2-1,f64)*delta_eta2
-           x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)**2
-           x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-           jac_array(i1,i2) = 1._f64+2._f64*sll_pi*alpha_mesh*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)&
-           +2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1)&
-           -2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)**2&
-           -4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)*cos(2._f64*sll_pi*eta1)&
-           +4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)**3*cos(2._f64*sll_pi*eta1)
-           eta2 = eta2 + delta_eta2
-           !x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
-           !x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+           eta2_n=real(i2-1,f64)/real(nc_eta2,f64)
+           x1n_array(i1,i2) = eta1_n + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)**2
+           x2n_array(i1,i2) = eta2_n + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
+          ! a refaire
+          ! jac_array(i1,i2) = 1._f64+2._f64*sll_pi*alpha_mesh*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)&
+          ! +2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1)&
+          ! -2._f64*sll_pi*alpha_mesh*cos(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)**2&
+          ! -4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)*cos(2._f64*sll_pi*eta1)&
+          !+4._f64*sll_pi**2*alpha_mesh**2*sin(2._f64*sll_pi*eta1)*cos(2._f64*sll_pi*eta2)**3*cos(2._f64*sll_pi*eta1)
+           x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+           x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
            !jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
         end do
       end do
@@ -504,14 +506,15 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
   end subroutine correction_BC    
 !!!************************************************************************
 
-subroutine plot_f(iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
+subroutine plot_f(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
 
   use sll_xdmf
   use sll_hdf5_io
   sll_int32 :: file_id
   sll_int32 :: error
-  sll_real64, dimension(:,:), allocatable :: x1
-  sll_real64, dimension(:,:), allocatable :: x2
+  sll_real64, dimension (:,:), allocatable :: f
+  sll_real64, dimension(:,:), pointer :: x1 !allocatable :: x1
+  sll_real64, dimension(:,:), pointer :: x2 !allocatable :: x2
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32 :: i, j
   sll_int32, intent(in) :: iplot
@@ -524,30 +527,31 @@ subroutine plot_f(iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
 
   if (iplot == 1) then
 
-     SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-     SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-     do j=1,nnodes_x2
-     do i=1,nnodes_x1
-        eta1 = eta1_min+real(i-1,f32)*delta_eta1
-        eta2 = eta2_min+real(j-1,f32)*delta_eta2
-        x1(i,j) = eta1*cos(eta2)
-        x2(i,j) = eta1*sin(eta2)
-     end do
-     end do
+    ! SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+    ! SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+     !do j=1,nnodes_x2
+     !do i=1,nnodes_x1
+        !eta1 = eta1_min+real(i-1,f32)*delta_eta1
+        !eta2 = eta2_min+real(j-1,f32)*delta_eta2
+        !x1(i,j) = eta1*cos(eta2)
+        !x2(i,j) = eta1*sin(eta2)
+
+     !end do
+     !end do
      call sll_hdf5_file_create("curvilinear_mesh-x1.h5",file_id,error)
      call sll_hdf5_write_array(file_id,x1,"/x1",error)
      call sll_hdf5_file_close(file_id, error)
      call sll_hdf5_file_create("curvilinear_mesh-x2.h5",file_id,error)
      call sll_hdf5_write_array(file_id,x2,"/x2",error)
      call sll_hdf5_file_close(file_id, error)
-     deallocate(x1)
-     deallocate(x2)
+    ! deallocate(x1)
+    ! deallocate(x2)
 
   end if
 
   call int2string(iplot,cplot)
   call sll_xdmf_open("f"//cplot//".xmf","curvilinear_mesh",nnodes_x1,nnodes_x2,file_id,error)
-  !call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
+  call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
   call sll_xdmf_close(file_id,error)
 
  end subroutine plot_f
