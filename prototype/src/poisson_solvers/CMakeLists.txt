@@ -105,6 +105,8 @@ target_link_libraries(test_poisson_3d_periodic_seq
 #
 # ****************************************************************************
 
+IF(NOT${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
+
 #MPI_MODULE_ENABLED flag implies MPI_FOUND
 IF(MPI_MODULE_ENABLED)
 
@@ -147,6 +149,7 @@ target_link_libraries( test_poisson_3d_periodic_par
   sll_utilities 
   sll_assertion)
 
+ENDIF()
 ENDIF()
 
 add_executable(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
