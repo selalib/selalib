@@ -44,14 +44,14 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
   ADD_LIBRARY(sll_maxwell_parallel STATIC 
-              sll_maxwell_2d_periodic_cartesian_par.F90 )
+              sll_maxwell_2d_pstd_parallel.F90 )
 
   ADD_DEPENDENCIES(sll_maxwell_parallel sll_remap sll_collective)
   
-  ADD_EXECUTABLE(test_maxwell_2d_per_cart_par 
-                 test_maxwell_2d_periodic_cartesian_par.F90 )
+  ADD_EXECUTABLE(test_maxwell_2d_pstd_parallel 
+                 unit_test_2d_pstd_parallel.F90 )
 
-  TARGET_LINK_LIBRARIES(test_maxwell_2d_per_cart_par 
+  TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd_parallel 
                         sll_maxwell_parallel
                         sll_remap
                         sll_low_level_file_io_parallel
