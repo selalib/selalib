@@ -207,7 +207,7 @@ contains
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(ey(:,j))
-       plan%fz_x(:,j) = plan%fz_x(:,j) - dt * plan%d_dx
+       plan%fz_x(:,j) = plan%fz_x(:,j) - dt_mu * plan%d_dx
     end do
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
@@ -215,7 +215,7 @@ contains
     call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(ex(i,:))
-       plan%fz_y(i,:) = plan%fz_y(i,:) + dt * plan%d_dy
+       plan%fz_y(i,:) = plan%fz_y(i,:) + dt_mu * plan%d_dy
     end do
       
   end subroutine faraday_te
@@ -256,7 +256,7 @@ contains
 #ifdef DEBUG
        call verify_argument_sizes_par(plan%layout_y, jx)
 #endif
-       ex(:,:) = ex(:,:) - dt * jx(:,:) / plan%e_0
+       ex(:,:) = ex(:,:) - dt_e * jx(:,:) 
     end if
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)

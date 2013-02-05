@@ -52,7 +52,7 @@ program test_maxwell_2d_periodic_cart_par
   type(layout_2D), pointer            :: layout_y
   sll_real64, dimension(:,:), pointer :: ex
   sll_real64, dimension(:,:), pointer :: ey
-  sll_real64, dimension(:,:), pointer :: bz
+  sll_real64, dimension(:,:), pointer :: hz
   sll_int32, dimension(1:2)           :: global
   character(len=4)                    :: cstep
 
@@ -109,7 +109,7 @@ program test_maxwell_2d_periodic_cart_par
   plan%e_0  = 1.0_f64 
   plan%mu_0 = 1.0_f64 
 
-  bz => plan%fz_x
+  hz => plan%fz_x
 
   !Ex si sequential along y
   call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
@@ -152,7 +152,7 @@ program test_maxwell_2d_periodic_cart_par
         global = local_to_global_2D( layout_x, (/i, j/))
         gi = global(1); gj = global(2)
         x  = (gi-1)*dx; y  = (gj-1)*dy
-        err_l2 = err_l2 + abs(bz(i,j) + cos(mode*(i-1)*dx) &
+        err_l2 = err_l2 + abs(hz(i,j) + cos(mode*(i-1)*dx) &
                  * cos(mode*(j-1)*dy) * cos(omega*time))
      end do
      end do
@@ -200,7 +200,7 @@ contains
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ey,'ey_values',error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
-                              bz,'bz_values',error)
+                              hz,'hz_values',error)
     call sll_hdf5_file_close(file_id,error)
 
   end subroutine write_fields
