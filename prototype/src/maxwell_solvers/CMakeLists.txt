@@ -2,7 +2,8 @@ IF(FFTW_FOUND AND NOT STDF95)
 
    ADD_LIBRARY(sll_maxwell STATIC sll_maxwell.F90
                                   sll_maxwell_2d_fdtd.F90
-                                  sll_maxwell_2d_pstd.F90)
+                                  sll_maxwell_2d_pstd.F90
+                                  sll_maxwell_3d_pstd.F90)
 
    ADD_EXECUTABLE(test_maxwell_2d_pstd unit_test_2d_pstd.F90 )
    

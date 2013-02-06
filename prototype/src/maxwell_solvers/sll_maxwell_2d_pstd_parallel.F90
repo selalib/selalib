@@ -375,7 +375,6 @@ contains
   !> Delete maxwell solver object
   subroutine delete_maxwell_2d_periodic_plan_cartesian_par(plan)
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
-    sll_int32                                              :: error
 
     if( .not. associated(plan) ) then
        print *, 'ERROR, delete_maxwell_3d_periodic_plan_par(): ', &
@@ -390,10 +389,10 @@ contains
     call dfftw_destroy_plan(plan%bwx)
     call dfftw_destroy_plan(plan%bwy)
 
-    call delete( plan%rmp_xy )
-    call delete( plan%rmp_yx )
-    call delete( plan%layout_x )
-    call delete( plan%layout_y )
+    call delete(plan%rmp_xy)
+    call delete(plan%rmp_yx)
+    call delete(plan%layout_x)
+    call delete(plan%layout_y)
 
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 
