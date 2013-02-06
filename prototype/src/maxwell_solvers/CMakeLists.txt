@@ -36,9 +36,7 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell
 
 
 # ****************************************************************************
-#
 #                           PARALLEL MAXWELL SOLVERS
-#
 # ****************************************************************************
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
