@@ -12,6 +12,8 @@ add_dependencies(sll_distribution_function
 	sll_assertion
 	sll_scalar_field_2d
 )
+
+#IF (NOT STDF95)
 add_executable(test_distribution_function unit_test.F90)
 target_link_libraries(test_distribution_function
 	sll_distribution_function
@@ -20,6 +22,7 @@ target_link_libraries(test_distribution_function
 	sll_low_level_file_io
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	sll_mapped_meshes
 	sll_utilities
 	sll_memory
@@ -27,3 +30,4 @@ target_link_libraries(test_distribution_function
 	sll_constants
 	sll_working_precision
 )
+#ENDIF (NOT STDF95)

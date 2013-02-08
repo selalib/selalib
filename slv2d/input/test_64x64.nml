@@ -1,4 +1,4 @@
 &time dt=0.01, nbiter=10/
 &diag fdiag=10, fthdiag=10/
-&phys_space x0=0., x1=12.566370614359172, y0=0., y1=12.566370614359172, nx=64, ny=64/
-&vel_space vx0=-6.0, vx1=6.0, vy0=-6.0, vy1=6.0, nvx=64, nvy=64/
+&phys_space  x0=-4.,  x1=4.,  y0=-4.,  y1=4., nx=64,  ny=64  /
+&vel_space  vx0=-4., vx1=4., vy0=-4., vy1=4., nvx=64, nvy=64 /

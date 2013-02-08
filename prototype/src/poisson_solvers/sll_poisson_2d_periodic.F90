@@ -37,7 +37,7 @@ module sll_poisson_2d_periodic
 
 use numeric_constants
 
-#ifdef _FFTPACK
+#ifndef _FFTW
 
 use fft_module
 
@@ -64,17 +64,25 @@ end type poisson_2d_periodic
 
 use, intrinsic :: iso_c_binding
 implicit none
+private
 include 'fftw3.f03'
+
+interface new
+  module procedure initialize
+end interface
 
 interface solve
    module procedure solve_potential
    module procedure solve_e_fields
 end interface
-interface delete
+
+interface free
    module procedure free_poisson
 end interface
 
-type :: poisson_2d_periodic
+public :: new, solve, free, initialize
+
+type, public :: poisson_2d_periodic
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
    type(C_PTR)                          :: fw, bw
    complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
@@ -91,7 +99,7 @@ end type poisson_2d_periodic
 
 contains
 
-#ifdef _FFTPACK
+#ifndef _FFTW
 !> Create an object to solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:
 subroutine initialize(this, x_min, x_max, nc_x, &
@@ -428,10 +436,10 @@ subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
 
-   e_x(nc_x+1,:) = e_x(1,:)
-   e_x(:,nc_y+1) = e_x(:,1)
-   e_y(nc_x+1,:) = e_y(1,:)
-   e_y(:,nc_y+1) = e_y(:,1)
+   !e_x(nc_x+1,:) = e_x(1,:)
+   !e_x(:,nc_y+1) = e_x(:,1)
+   !e_y(nc_x+1,:) = e_y(1,:)
+   !e_y(:,nc_y+1) = e_y(:,1)
 
    if (present(nrj)) then 
       dx = self%dx

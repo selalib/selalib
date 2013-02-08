@@ -201,4 +201,4 @@ rm -rf fftw-3.3.2
 *Ubuntu
 
 apt-get -y update
-apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev libfftw3-dev doxygen liblapack-dev <&-
+apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev libfftw3-mpi-dev doxygen liblapack-dev <&-

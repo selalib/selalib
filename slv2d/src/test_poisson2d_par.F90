@@ -120,8 +120,8 @@ do i = 1, 2
    rho = -2_f64 * sin(x) * sin(y)
    phi = 0_f64
    call solve(poisson,ex,ey,rho)
-   print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
-   print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
+   print*, " error ex : ", sum(abs(ex-cos(x)*sin(y)))/(nx*ny)
+   print*, " error ey : ", sum(abs(ey-sin(x)*cos(y)))/(nx*ny)
 end do
 
 
@@ -140,8 +140,8 @@ do i = 1, 50
    call solve(poisson, ex,ey,rho)
 end do
 
-print*, " error ex : ", sum(abs(ex - cos(x)*sin(y)))/(nx*ny)
-print*, " error ey : ", sum(abs(ey - sin(x)*cos(y)))/(nx*ny)
+print*, " error ex : ", sum(abs(ex-cos(x)*sin(y)))/(nx*ny)
+print*, " error ey : ", sum(abs(ey-sin(x)*cos(y)))/(nx*ny)
 
 end subroutine solver_with_fftw3
 #endif
