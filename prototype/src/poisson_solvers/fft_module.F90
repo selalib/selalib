@@ -1,4 +1,7 @@
 module fft_module
+
+#ifndef _FFTW
+
   implicit none
   public :: initdfft, initcfft, fft, fftinv
   type, public :: fftclass
@@ -94,5 +97,7 @@ module fft_module
          call zfftb( this%n, array(:,i),  this%coefcd )
       end do
     end subroutine doubcfftinv
+
+#endif
 
   end module fft_module

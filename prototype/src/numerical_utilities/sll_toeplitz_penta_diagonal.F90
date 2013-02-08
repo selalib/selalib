@@ -19,14 +19,13 @@ module sll_toep_penta_diagonal
 implicit none
 
   type toep_penta_diagonal_plan  
-    sll_int32                             :: n
+    sll_int32                         :: n
     sll_real64, dimension(:), pointer :: e1
     sll_real64, dimension(:), pointer :: e2
     sll_real64, dimension(:), pointer :: y
     sll_real64, dimension(:), pointer :: z
     sll_real64, dimension(:), pointer :: w
-    sll_real64, dimension(:), pointer :: x
-    sll_real64, dimension(:), pointer :: for_subsys
+    sll_real64, dimension(:), pointer :: solution
   end type toep_penta_diagonal_plan
 
 contains 
@@ -50,19 +49,20 @@ contains
     SLL_ALLOCATE(plan%e1(n), ierr)
     SLL_ALLOCATE(plan%e2(n), ierr)
     SLL_ALLOCATE(plan%y(n), ierr)
-    SLL_ALLOCATE(plan%x(n), ierr)
+    SLL_ALLOCATE(plan%z(n), ierr)
+    SLL_ALLOCATE(plan%w(n), ierr)
+    SLL_ALLOCATE(plan%solution(n), ierr)
 
   end function new_toep_penta_diagonal
 
 
-  function solve_toep_penta_diagonal(a, b, c, f, plan) result(x)
+  subroutine solve_toep_penta_diagonal(a, b, c, f, plan) ! The solution will be set in plan%solution
 
     sll_real64                              :: a, b, c
     sll_real64, dimension(:)                :: f
     type(toep_penta_diagonal_plan), pointer :: plan
     sll_real64                              :: s, t, p, l1, l2
     sll_real64                              :: d, d1, d2
-    sll_real64, dimension(plan%n)           :: e1, e2, x, y, z, w
     sll_int32                               :: n, i, sign_of_a=0
 
     if ( abs(a) <= 2*(abs(b)+abs(c)) ) then   
@@ -72,11 +72,7 @@ contains
       stop
     endif
 
-    e1  = plan%e1
-    e2  = plan%e2
-    y   = plan%y
-    x   = plan%x
-    n   = plan%n
+    n = plan%n
 
     s = (a/2+c)*(a/2+c) - b*b
     t = a*a/2 - b*b - 2*c*c
@@ -91,31 +87,31 @@ contains
     l2 = c/p
 
     do i=1,n
-      y(i) = f(i)/p
-      e1(i) = 0.d0
-      e2(i) = 0.d0
+      plan%y(i) = f(i)/p
+      plan%e1(i) = 0.d0
+      plan%e2(i) = 0.d0
     enddo
-    e1(1) = 1.d0
-    e2(2) = 1.d0
+    plan%e1(1) = 1.d0
+    plan%e2(2) = 1.d0
 
-    y = solve_subsystem(l1, l2, y, n)
-    z = solve_subsystem(l1, l2, e1,  n)
-    w = solve_subsystem(l1, l2, e2,  n)
+    plan%y = solve_subsystem(l1, l2, plan%y, n)
+    plan%z = solve_subsystem(l1, l2, plan%e1,  n)
+    plan%w = solve_subsystem(l1, l2, plan%e2,  n)
 
-    d = 1.d0 + l1*l2*(z(2)+w(1)) + l2*l2*(z(1)+w(2)) + &
-                l1*l1*z(1) + l2**4*(z(1)*w(2)-z(2)*w(1))
+    d = 1.d0 + l1*l2*(plan%z(2)+plan%w(1)) + l2*l2*(plan%z(1)+plan%w(2)) + &
+           l1*l1*plan%z(1) + l2**4*(plan%z(1)*plan%w(2)-plan%z(2)*plan%w(1))
 
-    d1 = l2**4*(y(1)*w(2)-y(2)*w(1)) + &
-         (l1*l1+l2*l2)*y(1) + l1*l2*y(2)
+    d1 = l2**4*(plan%y(1)*plan%w(2)-plan%y(2)*plan%w(1)) + &
+                   (l1*l1+l2*l2)*plan%y(1) + l1*l2*plan%y(2)
 
-    d2 = l2**4*(y(2)*z(1)-y(1)*z(2)) + &
-                 l1*l2*y(1) + l2*l2*y(2)
+    d2 = l2**4*(plan%y(2)*plan%z(1)-plan%y(1)*plan%z(2)) + &
+                           l1*l2*plan%y(1) + l2*l2*plan%y(2)
 
     do i=1,n
-      x(i) = y(i) - (d1*z(i)+d2*w(i))/d   
+      plan%solution(i) = plan%y(i) - (d1*plan%z(i)+d2*plan%w(i))/d   
     enddo
 
-  end function solve_toep_penta_diagonal
+  end subroutine solve_toep_penta_diagonal
 
 
   function solve_subsystem(l1, l2, b, n) result (x)
@@ -159,6 +155,9 @@ contains
     SLL_DEALLOCATE_ARRAY(plan%e1, ierr)
     SLL_DEALLOCATE_ARRAY(plan%e2, ierr)
     SLL_DEALLOCATE_ARRAY(plan%y, ierr)
+    SLL_DEALLOCATE_ARRAY(plan%z, ierr)
+    SLL_DEALLOCATE_ARRAY(plan%w, ierr)
+    SLL_DEALLOCATE_ARRAY(plan%solution, ierr)
 
     ! Plan deallocation
     SLL_DEALLOCATE_ARRAY(plan, ierr)

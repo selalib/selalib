@@ -2,6 +2,7 @@ IF(STDF95)
  add_library(sll_mapped_meshes STATIC
 	sll_mapped_meshes_1d.F90
 	sll_mapped_meshes_2d.F90
+	sll_mapped_meshes_2d_cartesian.F90
   )
 ELSE()
  add_library(sll_mapped_meshes STATIC
@@ -15,6 +16,7 @@ ENDIF()
 add_dependencies(sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_constants
 	sll_low_level_file_io
@@ -29,6 +31,7 @@ target_link_libraries(test_mapped_meshes_1d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_constants
 	sll_low_level_file_io
@@ -43,6 +46,7 @@ target_link_libraries(test_mapped_meshes_2d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_utilities
 	sll_constants
@@ -58,6 +62,7 @@ IF(NOT STDF95)
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_utilities
 	sll_constants

@@ -10,6 +10,8 @@ add_dependencies(sll_advection_field
 	sll_assertion
 	sll_scalar_field_2d
 	sll_scalar_field_1d)
+
+IF (NOT STDF95)
 add_executable(test_advection_field unit_test.F90)
 target_link_libraries(test_advection_field
 	sll_advection_field
@@ -20,8 +22,10 @@ target_link_libraries(test_advection_field
 	sll_splines
 	geometry_functions
 	sll_mapped_meshes
+        sll_numerical_utilities	
 	sll_utilities
 	sll_memory
 	sll_assertion
 	sll_constants
 	sll_working_precision)
+ENDIF (NOT STDF95)

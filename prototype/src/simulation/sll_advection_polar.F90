@@ -17,7 +17,7 @@ module polar_advection
      sll_int32 :: nr,ntheta
      type(sll_spline_2D), pointer :: spl_f
      sll_int32 :: time_scheme
-     sll_real64, dimension(:,:,:), allocatable :: field
+     sll_real64, dimension(:,:,:), pointer :: field
   end type sll_plan_adv_polar
 
   !>type sll_SL_polar
@@ -27,7 +27,7 @@ module polar_advection
      type(sll_plan_adv_polar), pointer :: adv
      type(plan_polar_op), pointer :: grad
      type(sll_plan_poisson_polar), pointer :: poisson
-     sll_real64, dimension(:,:), allocatable :: phi
+     sll_real64, dimension(:,:), pointer :: phi
   end type sll_SL_polar
 
 contains
@@ -89,7 +89,7 @@ contains
 
     implicit none
 
-    type(sll_plan_adv_polar), intent(inout), pointer :: this
+    type(sll_plan_adv_polar), pointer :: this
 
     sll_int32 :: err
 
@@ -141,7 +141,7 @@ contains
 
     implicit none
 
-    type(sll_SL_polar), intent(inout), pointer :: this
+    type(sll_SL_polar), pointer :: this
 
     sll_int32 :: err
 
@@ -163,8 +163,8 @@ contains
 
     implicit none
 
-    type(sll_plan_adv_polar), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(in) :: fn,phi
+    type(sll_plan_adv_polar), pointer       :: plan
+    sll_real64, dimension(:,:), intent(in)  :: fn,phi
     sll_real64, dimension(:,:), intent(out) :: fnp1
 
     sll_int32 :: nr, ntheta
@@ -264,15 +264,12 @@ end subroutine advect_CG_polar2
   !>plan : sll_plan_adv_polar object
   !>in : distribution function at time t_n, size (nr+1)*(ntheta+1)
   !>out : distribution function at time t_(n+1), size (nr+1)*(ntheta+1)
-
-
-
   subroutine advect_CG_polar(plan,fn,fnp1)
 
     implicit none
 
-    type(sll_plan_adv_polar), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(in) :: fn
+    type(sll_plan_adv_polar),pointer        :: plan
+    sll_real64, dimension(:,:), intent(in)  :: fn
     sll_real64, dimension(:,:), intent(out) :: fnp1
 
     sll_int32 :: nr, ntheta
@@ -926,9 +923,9 @@ end subroutine advect_CG_polar2
 
     implicit none
 
-    type(sll_SL_polar), intent(inout), pointer :: plan
+    type(sll_SL_polar), pointer               :: plan
     sll_real64, dimension(:,:), intent(inout) :: in
-    sll_real64, dimension(:,:), intent(out) :: out
+    sll_real64, dimension(:,:), intent(out)   :: out
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
@@ -950,14 +947,14 @@ end subroutine advect_CG_polar2
 
     implicit none
 
-    type(sll_SL_polar), intent(inout), pointer :: plan
+    type(sll_SL_polar), pointer               :: plan
     sll_real64, dimension(:,:), intent(inout) :: in
-    sll_real64, dimension(:,:), intent(out) :: out
+    sll_real64, dimension(:,:), intent(out)   :: out
 
     sll_real64 :: dt
 
-    dt=plan%adv%dt
-    plan%adv%dt=dt/2.0_f64
+    dt          = plan%adv%dt
+    plan%adv%dt = dt/2.0_f64
 
     call poisson_solve_polar(plan%poisson,in,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
@@ -966,9 +963,8 @@ end subroutine advect_CG_polar2
     call poisson_solve_polar(plan%poisson,out,plan%phi)
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     !we just obtained E^(n+1/2)
-    plan%adv%dt=dt
+    plan%adv%dt = dt
     call advect_CG_polar(plan%adv,in,out)
-
   end subroutine SL_ordre_2
 
 

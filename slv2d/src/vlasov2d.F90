@@ -1,6 +1,6 @@
 module Vlasov2d_module
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 
  use used_precision
  use splinenn_class

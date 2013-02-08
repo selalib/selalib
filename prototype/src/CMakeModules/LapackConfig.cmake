@@ -20,8 +20,8 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
    ELSEIF($ENV{HOSTNAME} MATCHES "hydra") 
                                       
       INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
-      SET(BLAS_LIBRARIES "-Xlinker -rpath -Xlinker $ENV{MKLROOT}/lib/intel64 -L$ENV{MKLROOT}/lib/intel64 -lmkl_blas95_lp64")
-      SET(LAPACK_LIBRARIES "-Xlinker -rpath -Xlinker $ENV{MKLROOT}/lib/intel64 -L$ENV{MKLROOT}/lib/intel64 -lmkl_lapack95_lp64 -lmkl_rt -lpthread -lm")
+      SET(BLAS_LIBRARIES "")
+      SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
 

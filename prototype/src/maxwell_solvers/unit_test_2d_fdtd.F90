@@ -1,3 +1,17 @@
+!>$L_x,L_y$ domain dimensions and M,N are integers.
+!>$
+!>\omega = \sqrt{(\frac{M\pi}{L_x})^2+(\frac{N\pi}{L_y})^2}
+!>$
+!>$
+!>B_z(x,y,t) =   - \cos(M \pi \frac{x}{L_x})  \cos(N \pi \frac{y}{L_y}) \cos(\omega t) 
+!>$
+!>$
+!>E_x(x,y,t) = \frac{c^2 N \pi }{\omega Ly} cos(M \pi \frac{x}{L_x}) \sin(N \pi  \frac{y}{L_y}) \sin(\omega t) 
+!>$
+!>$
+!>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
+!>$
+!>
 program test_maxwell_2d_fdtd
 !------------------------------------------------------------------------
 !  test 2D Maxwell solver based on finite differences on a staggered grid
@@ -32,17 +46,16 @@ sll_real64, dimension(:,:), allocatable :: by
 sll_real64, dimension(:,:), allocatable :: ez
 sll_real64, dimension(:,:), allocatable :: ez_exact
 
-sll_int32                          :: i, j
-sll_real64                         :: omega
-sll_real64                         :: time
-sll_int32                          :: istep, nstep
-sll_real64                         :: err_te
-sll_real64                         :: err_tm
-sll_real64                         :: dt
-sll_real64                         :: cfl = 0.5
+sll_int32                               :: i, j
+sll_real64                              :: omega
+sll_real64                              :: time
+sll_int32                               :: istep, nstep
+sll_real64                              :: err_te
+sll_real64                              :: err_tm
+sll_real64                              :: dt
+sll_real64                              :: cfl = 0.5
 
-sll_int32,  parameter              :: mode = 2
-
+sll_int32,  parameter                   :: mode = 2
 
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64

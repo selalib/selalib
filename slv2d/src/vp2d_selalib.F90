@@ -1,6 +1,7 @@
 program vp2d_selalib
 
-#include "selalib.h"
+#include "selalib-mpi.h"
+
   use used_precision  
   use geometry_module
   use diagnostiques_module
@@ -65,7 +66,7 @@ program vp2d_selalib
   call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
        f4d,rho,e_x,e_y,vlas2d,poisson)
 
-  call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
+  !call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
 
   call advection_x1(vlas2d,f4d,0.5*dt)
   call advection_x2(vlas2d,f4d,0.5*dt)
@@ -73,10 +74,10 @@ program vp2d_selalib
   do iter=1,nbiter
 
      if (mod(iter,fdiag) == 0) then 
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
-        call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
+        !call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XY_VIEW)
+        !call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, XVX_VIEW)
+        !call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, YVY_VIEW)
+        !call plot_df(f4d,iter/fdiag,geomx,geomv,1,geomx%ny,jstartv,jendv, VXVY_VIEW)
      end if
 
      call transposexv(vlas2d,f4d)
