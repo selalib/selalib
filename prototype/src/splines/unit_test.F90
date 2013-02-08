@@ -77,11 +77,8 @@ program spline_tester
   ! value of the OK flag, this should be fixed. The OK flag should be a
   ! logical variable...
   print *, 'test_spline_1d_hrmt, linear function case: '
-  call test_spline_1d_hrmt( line, 1.0_f64, 1.0_f64, test_flag )
+  call test_spline_1d_hrmt( line, test_flag )
   call test_error_flag( test_flag, test_passed, 'test_spline_1d_hrmt')
-
-  call test_spline_1d_hrmt_no_slopes( line, test_flag )
-  call test_error_flag( test_flag, test_passed,'test_spline_1d_hrmt_no_slopes')
 
   print *, ' '
   print *, 'interpolator_tester_1D_prdc(), cos(x), normal values'
@@ -107,6 +104,18 @@ program spline_tester
        test_flag, &
        6.0e-6_f64)
   call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_prdc')
+
+  print *, ' '
+  print *, 'interpolator_tester_1D_hrmt(), cos(x), derivatives test'
+  call interpolator_tester_1d_hrmt( &
+       mycos, &
+       dmycos, &
+       interpolate_derivative, &
+       0.0_f64, &
+       2.0_f64*sll_pi, &
+       test_flag )
+  call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_hrmt')
+
 
   print *, ' '
   print *, 'interpolator_tester_2d(), cos(x)*cos(y) case, deriv in X1: '
@@ -149,7 +158,6 @@ program spline_tester
        test_flag )
   call test_error_flag( test_flag, test_passed, &
        'test_2d_spline_hrmt_prdc_no_slopes')
-
   print *, ' '
   print *, 'hrmt_prdc on polar_y, deriv1:'
   call test_2d_spline_hrmt_prdc( &

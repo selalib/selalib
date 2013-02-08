@@ -4,10 +4,11 @@
 !-------------------------------------------------------------------
 program VP2D
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 use used_precision  
 use geometry_module
 use diagnostiques_module
+use vlasov4d_plot
 use poisson2dpp_seq
 use vlasov2d_module
 use vp2dinit

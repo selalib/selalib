@@ -1,27 +1,23 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_gnuplot
-!
-!> @author
-!> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write data file plotable by GNUplot
-!>
-!>@details
-!>
-!> External links:
-!> - http://www.gnuplot.info
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module sll_gnuplot
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -30,20 +26,22 @@ use sll_ascii_io
 
 implicit none
 
+!> write file pltable by gnuplot to visualize 2d field
 interface sll_gnuplot_field_2d
 module procedure sll_gnuplot_rect_2d
 end interface
 
 contains  
 
+!> write an array
 subroutine sll_gnuplot_write(array,array_name,error)
 
-   sll_real64, dimension(:), intent(in) :: array
-   character(len=*), intent(in)         :: array_name
-   sll_int32, intent(out)               :: error
-   sll_int32                            :: file_id
-   sll_int32                            :: ipoints
+   sll_real64, dimension(:), intent(in) :: array      !< data
+   character(len=*), intent(in)         :: array_name !< field name
+   sll_int32, intent(out)               :: error      !< error code
+   sll_int32                            :: file_id    !< file unit number
    sll_int32                            :: npoints
+   sll_int32                            :: ipoints    
    logical                              :: lopen
    
    npoints = size(array)
@@ -79,15 +77,22 @@ subroutine sll_gnuplot_write(array,array_name,error)
 
 end subroutine sll_gnuplot_write
 
-subroutine sll_gnuplot_rect_2d(xmin, xmax, nx, ymin, ymax, ny, array, array_name, iplot, error)  
-sll_real64 :: xmin, xmax, ymin, ymax
-sll_int32  :: nx, ny
-sll_real64, dimension(nx,ny) :: array
-character(len=*) :: array_name
-character(len=4) :: fin
-sll_int32 :: iplot
+!> write a data file plotable by gnuplot to visualize a 2d field
+subroutine sll_gnuplot_rect_2d(xmin, xmax, nx, ymin, ymax, ny, &
+                               array, array_name, iplot, error)  
+sll_real64                   :: xmin       !< Box corners
+sll_real64                   :: xmax       !< Box corners
+sll_real64                   :: ymin       !< Box corners
+sll_real64                   :: ymax       !< Box corners
+sll_int32                    :: nx         !< x points number
+sll_int32                    :: ny         !< y points number
+sll_real64, dimension(nx,ny) :: array      !< data
+character(len=*)             :: array_name !< field name
+character(len=4)             :: fin   
+sll_int32                    :: iplot      !< plot counter
 sll_int32, save :: gnu_id
-sll_int32 :: file_id, error
+sll_int32 :: file_id
+sll_int32 :: error                         !< error code
 sll_int32 :: i, j
 sll_real64 :: dx, dy, x, y
 
@@ -98,7 +103,7 @@ if ( iplot == 1 ) then
 end if
 
 open(gnu_id,file=array_name//".gnu", position="append")
-write(gnu_id,*)"splot  '"//array_name//"_"//fin//".dat' w l"
+write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
 close(gnu_id)
 
 call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )

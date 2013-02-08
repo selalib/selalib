@@ -1,7 +1,9 @@
 program test_periodic_interp
 #include "sll_working_precision.h"
   use sll_periodic_interpolator_1d
+#ifndef STDF95
   use sll_module_interpolators_1d_base
+#endif
   use numeric_constants
   !use util_constants
   implicit none 
@@ -9,7 +11,11 @@ program test_periodic_interp
   sll_int32, parameter    :: N0 = 16
   sll_real64               :: u(16*N0+1), u_exact(16*N0+1), u_out(16*N0+1)
   type(per_1d_interpolator), target       :: interp_per
+#ifdef STDF95
+  type(per_1d_interpolator), pointer     :: interp
+#else
   class(sll_interpolator_1d_base), pointer     :: interp
+#endif
   sll_real64, parameter :: xmin = 0., xmax=3.   
   sll_real64 :: alpha, error, old_error, L, xi
   sll_int32 :: i, p, N, i0, mode 
@@ -32,9 +38,17 @@ program test_periodic_interp
         !u(i+1) = cos(mode*twopi*i/N)
         !u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
+#ifdef STDF95
+     call periodic_initialize(interp, N+1, xmin, xmax, SPLINE, 12)
+#else
      call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
+#endif
      interp => interp_per
+#ifdef STDF95
+     u_out(1:N)=per_interpolate_array_at_displacement(interp, N+1, u(1:N+1), alpha)
+#else
      u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+#endif
      
      old_error = error
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))

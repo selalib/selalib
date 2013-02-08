@@ -32,9 +32,10 @@ IF(FFTPACK_ENABLED)
   add_executable(test_poisson_1d test_poisson_1d.F90)
   target_link_libraries(test_poisson_1d
       sll_poisson_1d_periodic
-      sll_scalar_field_1d
+      #sll_scalar_field_1d
       sll_mapped_meshes
       geometry_functions
+      sll_splines
       sll_interpolators
       sll_low_level_file_io
       fftpack_module
@@ -63,12 +64,13 @@ IF(FFTPACK_ENABLED)
 #  )
 ENDIF()
 
-IF(FFTW_FOUND AND FFTW_ENABLED)
+IF(FFTW_FOUND AND FFTW_ENABLED AND NOT STDF95)
+     ADD_DEFINITIONS(-D_FFTW)
      ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90)
      ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
      TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
                                            sll_mapped_meshes
-                                   sll_constants
+                                           sll_constants
 	                                   sll_working_precision
                                            sll_assertion 
                                            sll_memory 
@@ -103,6 +105,8 @@ target_link_libraries(test_poisson_3d_periodic_seq
 #
 # ****************************************************************************
 
+IF(NOT${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
+
 #MPI_MODULE_ENABLED flag implies MPI_FOUND
 IF(MPI_MODULE_ENABLED)
 
@@ -133,12 +137,19 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ENDIF()
 
-  add_executable(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
+add_executable(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
 
-  target_link_libraries( test_poisson_3d_periodic_par sll_poisson_parallel 
-                         sll_remap sll_collective sll_fft sll_memory 
-                         sll_timer sll_utilities sll_assertion)
+target_link_libraries( test_poisson_3d_periodic_par 
+  sll_poisson_parallel 
+  sll_remap 
+  sll_collective 
+  sll_fft 
+  sll_memory 
+  sll_timer 
+  sll_utilities 
+  sll_assertion)
 
+ENDIF()
 ENDIF()
 
 add_executable(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
