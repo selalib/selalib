@@ -158,7 +158,6 @@ target_link_libraries(CG_polar
 	sll_timer
 	sll_utilities
 	)
-	
 
 IF (0)
 add_executable(Poisson_solver
@@ -218,6 +217,7 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
+
 ENDIF(NOT STDF95)
 ENDIF()
 
@@ -290,8 +290,6 @@ target_link_libraries( test_vp4d_sim
   sll_working_precision
   )
 
-
-
 add_executable( test_vp6d_sim unit_test_6d.F90 )
 
 target_link_libraries( test_vp6d_sim
@@ -313,5 +311,3 @@ target_link_libraries( test_vp6d_sim
   sll_working_precision
   )
 ENDIF()
-
-
