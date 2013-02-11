@@ -22,7 +22,7 @@ program cg_curvilinear_2D
   sll_int32 :: PERIODIC_B,HERMITE_B
   sll_int32 :: bc1_type, bc2_type
   sll_int32 :: grad_case,mesh_case,time_scheme
-  sll_real64 :: delta_eta1, delta_eta2
+  sll_real64 :: delta_eta1, delta_eta2,error2,error3,error4,error5
   sll_real64 :: eta1_min, eta1_max,eta2_min, eta2_max, dt, tf
   sll_real64 :: temps,a1,a2,error
   sll_real64 :: x1c,x2c,x1c_r,x2c_r,sigma_x1,sigma_x2
@@ -32,6 +32,8 @@ program cg_curvilinear_2D
   sll_real64, dimension(:,:), pointer :: phi_exact
   character (len=16) :: f_file !,bctop,bcbot
   character (len=8) :: conv_CG
+
+  namelist /param/ N_eta1,N_eta2,dt
   
   PERIODIC_B=0
   HERMITE_B=1
@@ -39,39 +41,13 @@ program cg_curvilinear_2D
   t1 => new_time_mark()
   t2 => new_time_mark()
 
-  !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
-  !>copy it in the same directory as the executable
-!  open(27,file='CG_Curvilinear_data.txt',action="read")
-!  read(27,*)eta1_min
-!  read(27,*)eta1_max
-!  read(27,*)eta2_min
-!  read(27,*)eta2_max
-!  read(27,*)N_eta1
-!  read(27,*)N_eta2
-!  read(27,*)nb_step
-!  read(27,*)dt
-!  read(27,*)visu_step
-!  read(27,*)
-!  read(27,*)carac_case
-!  read(27,*)grad_case
-!  read(27,*)f_case
-!  read(27,*)alpha_mesh
-!  read(27,*)mesh_case
-!  read(27,*)time_scheme
-!  read(27,*)visu_case
-!  read(27,*)f_file
-!  read(27,*)
-!  read(27,*)bc(1)
-!  read(27,*)bc(2)
-!  close(27)
-!
- !namelist /param/ N_eta1,N_eta2,dt
-  visu_case = 0 ! 0 : gnuplot 
+ 
+  visu_case = 1 ! 0 : gnuplot 
                 ! 1 : vtk
 
-  visu_step = 100
+  visu_step = 10
 
-  mesh_case = 2 ! 1 : cartesian 
+  mesh_case = 4 ! 1 : cartesian 
                 ! 2 : polar 
                 ! 3 : r^2 modified polar 
                 ! 4 : colella 
@@ -81,7 +57,7 @@ program cg_curvilinear_2D
 
   grad_case = 1
 
-  carac_case = 5 ! 1 : Explicit Euler with linear interpolation
+  carac_case = 2 ! 1 : Explicit Euler with linear interpolation
                  ! 2 : Explicit Euler with spline interpolation  
                  ! 5 : Fixed point (midpoint)
 
@@ -89,18 +65,18 @@ program cg_curvilinear_2D
                ! 2: rotation 
                ! 3: anisotropic rotation
 
-  time_scheme = 2 ! 1 : SL_order 1  
+  time_scheme = 1 ! 1 : SL_order 1  
                   ! 2 : SL order 2 (Predictor-Corrector) 
                   ! 3 : SL order 2 (Leap-Frog)
   
-  a1 = 1._f64 *0.3_f64
-  a2 = 1._f64 *0.3_f64
+  a1 = 1._f64 *0.1_f64
+  a2 = 1._f64 *0.1_f64
   bc1_type=PERIODIC_B
   bc2_type=PERIODIC_B
-  N_eta1 = 50
-  N_eta2 = 50
-  dt = 0.01
-  nb_step = 700
+  N_eta1 = 100
+  N_eta2 = 100
+  dt = 0.001
+  nb_step = 10
   alpha_mesh = 0._f64
   eta1_min = 0._f64
   eta1_max = 1._f64
@@ -113,9 +89,8 @@ program cg_curvilinear_2D
   sigma_x1 = 10._f64  ! variance for gaussian (exp(-(x-x1c)^2/(2*sigma_1^2)))
   sigma_x2 = 10._f64
 
-
-
-  !read(*,NML=param)
+ 
+  read(*,NML=param)
 
 
   ! ---- * Construction of the mesh * ----
@@ -125,18 +100,18 @@ program cg_curvilinear_2D
   ! BC        : periodic-periodic
   if (mesh_case==1) then
     eta1_min = 0._f64
-    eta1_max = 4._f64
+    eta1_max = 8._f64
     eta2_min = 0._f64
-    eta2_max = 4._f64
+    eta2_max = 8._f64
 
-    x1c_r=2._f64
-    x2c_r=2._f64
+    x1c_r=4._f64
+    x2c_r=4._f64
 
-    x1c = 1.5_f64
-    x2c = 1.5_f64
+    x1c = 4._f64
+    x2c = 4._f64
     
-    sigma_x1 = 0.16_f64
-    sigma_x2 = 0.16_f64
+    sigma_x1 = 0.2_f64
+    sigma_x2 = 0.2_f64
     
     !eta1_min = -1._f64
     !eta1_max = 1._f64
@@ -163,15 +138,15 @@ program cg_curvilinear_2D
 !    eta2_max = 2._f64*sll_pi
 
     eta1_min = 0.2_f64
-    eta1_max = 2._f64*sll_pi
+    eta1_max = 8._f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
    
-    x1c_r=3._f64
-    x2c_r=3._f64
+    x1c_r=-5._f64
+    x2c_r=0._f64
    
-    x1c = 2._f64
-    x2c = 2._f64
+    x1c = -3.5_f64
+    x2c = 0._f64
 
     sigma_x1 = 0.2
     sigma_x2 = 0.2
@@ -188,20 +163,19 @@ program cg_curvilinear_2D
   if (mesh_case==4) then
 
     eta1_min = 0._f64
-    eta1_max = 4._f64
+    eta1_max = 8._f64
     eta2_min = 0._f64
-    eta2_max = 4._f64
+    eta2_max = 8._f64
 
     x1c_r=2._f64
     x2c_r=2._f64
 
 
-    x1c = 1.5_f64
-    x2c = 1.5_f64
-
-    sigma_x1 = 0.16_f64
-    sigma_x2 = 0.16_f64
-
+    x1c = 4._f64
+    x2c = 4._f64
+    
+    sigma_x1 = 0.2_f64
+    sigma_x2 = 0.2_f64
     !eta1_min = -1._f64
     !eta1_max = 1._f64
     !eta2_min = -1._f64
@@ -229,8 +203,8 @@ program cg_curvilinear_2D
   geom_eta(1,2)=eta2_min
   geom_eta(2,2)=eta2_max
 
-  delta_eta1=real(eta1_max-eta1_min,f64)/real(N_eta1,f64)
-  delta_eta2=real(eta2_max-eta2_min,f64)/real(N_eta2,f64)
+  delta_eta1= (eta1_max-eta1_min)/real(N_eta1,f64)
+  delta_eta2= (eta2_max-eta2_min)/real(N_eta2,f64)
   
   print*,'# Pas en direction eta1: delta_eta1=',delta_eta1
   print*,'# Pas en direction eta2: delta_eta2=',delta_eta2
@@ -276,8 +250,8 @@ program cg_curvilinear_2D
  
 
 !********************************* 
-plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, &
-  & N_eta1,N_eta2,grad_case,carac_case,bc,bc1_type,bc2_type)
+plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
+                  & N_eta1,N_eta2,grad_case,carac_case,bc,bc1_type,bc2_type)
 
 
 !  !SLL_ALLOCATE(div(N_eta1+1,N_eta2+1),i)
@@ -295,16 +269,14 @@ plan_sl => new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt, 
   fp1=0.0_f64
   phi_exact=0.0_f64
 
-  !call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, & 
-  !     & delta_eta1,delta_eta2,f_case,f,mesh_case)
+  
   call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
-  &x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
+                                     & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
   f_init=f
-print*,'!!**************Begin of time loop3'
+
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r)
 !  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
-!  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
- print*,'!!**************Begin of time loop4'
+  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1, N_eta2)
 
 !  !write f in a file before calculations
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
@@ -320,32 +292,37 @@ print*,'!!**************Begin of time loop3'
       case(1) 
             
             !classical semi-Lagrangian scheme (order 1)
-            call SL_order_1(plan_sl,f,fp1,jac_array,step)
+            call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
+                                  & x1_tab,x2_tab,dt)
+            call SL_order_1(plan_sl,f,fp1,jac_array,step,x1_tab,x2_tab,mesh_case)
            
       case(2) 
-           !semi-Lagrangian predictor-corrector scheme
-            call SL_order_2(plan_sl,f,fp1,jac_array)
+           !semi-Lagrangian predictor-corrector scheme  
+            call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
+                                  & x1_tab,x2_tab,dt)
+            call SL_order_2(plan_sl,f,fp1,jac_array,x1_tab,x2_tab,mesh_case)
 
       case(3)
            !leap-frog scheme
              if (step==1) then
-                call SL_order_2(plan_sl,f,fp1,jac_array)
+                call SL_order_2(plan_sl,f,fp1,jac_array,x1_tab,x2_tab,mesh_case)
                 plan_sl%adv%dt=2.0_f64*dt
              else 
                !call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
                !call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field)
-               call advect_CG_curvilinear(plan_sl%adv,g,fp1,jac_array)
+               call advect_CG_curvilinear(plan_sl%adv,g,fp1,jac_array,x1_tab,x2_tab,mesh_case)
              end if
             g=f
       case default
            print*,'#no scheme defined'
     end select
 
-   ! if(bc2_type==PERIODIC_B) fp1(:,N_eta2+1)=fp1(:,1) 
-   ! if(bc1_type==PERIODIC_B) fp1(N_eta1+1,:)=fp1(1,:)
+    if(bc2_type==PERIODIC_B) fp1(:,N_eta2+1)=fp1(:,1) 
+    if(bc1_type==PERIODIC_B) fp1(N_eta1+1,:)=fp1(1,:)
     
     
     f=fp1
+     
 
     
    
@@ -356,13 +333,26 @@ print*,'!!**************Begin of time loop3'
    
  end do 
  print*,'!!**************End of time loop'
- 
+
+
  call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
-  x1_tab,x2_tab,real(nb_step)*dt)
+                       &x1_tab,x2_tab,real(nb_step,f64)*dt)
+!**************
+ if(mesh_case==1) then 
+   do i=1,N_eta1+1
+    do j=1,N_eta1+1
+      call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,x1_tab(i,j),x2_tab(i,j))
+    end do
+   end do
+ end if
+!************
+
  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,&
-   &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
+                                    &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
  !write f_init in a file after calculations
   call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,nb_step,"fexact")
+  call print2d(geom_eta,&
+   &f(2:(N_eta1),2:(N_eta2))-f_init(2:(N_eta1),2:(N_eta2)),N_eta1-2,N_eta2-2,visu_case,nb_step,"ferr")
 !open(unit=800,file='conv_CG',position="append")
   !do i=1,N_eta1+1
   !  do j=1,N_eta2+1
@@ -372,13 +362,30 @@ print*,'!!**************Begin of time loop3'
 
 ! L^\infty
   error = 0._f64
-  open(unit=800,file='conv_CG',position="append")
-  do i=1,N_eta1+1
-    do j=1,N_eta2+1
+  error2=0._f64
+  error3=0._f64
+  error4=0._f64
+  error5=0._f64
+  open(unit=800,file='conv_CG.dat',position="append")
+  do i=1,N_eta1+1 !(N_eta1/4),(3*N_eta1/4)
+    do j=1,N_eta2+1 !(N_eta1/4),(3*N_eta1/4)     
       error = max(error,abs(f(i,j)-f_init(i,j)))
     enddo
   enddo  
-  write(800,*) N_eta1,error
+  write(800,*) N_eta1,dt,error
+
+
+    do j=1,N_eta1+1     !5,N_eta2-3
+      error2 = max(error2,abs(f(1,j)))
+      error3 = max(error3,abs(f(N_eta1+1,j)))
+    enddo
+   do i=1,N_eta1+1     !5,N_eta2-3
+      error4 = max(error4,abs(f(i,1)))
+      error5 = max(error5,abs(f(i,N_eta1+1)))
+    enddo
+
+  write(160,*) error2,error3,error4,error5
+
 
  write(23,*)' '
  write(23,*)' '
@@ -416,43 +423,33 @@ print*,'!!**************Begin of time loop3'
 end program cg_curvilinear_2D
 !
 !
-!!!$  !scheme to compute caracteristics
-!!!$  ! 1 : using explicit Euler method
-!!!$  ! 2 : rotation, rotation speed = -1
-!!!$  ! 3 : using symplectic Euler with linear interpolation
-!!!$  ! 4 : using symplectic Verlet with linear interpolation
-!!!$  ! 5 : using fixed point method
-!!!$  ! 6 : using modified symplectic Euler
-!!!$  ! 7 : using modified symplectic Verlet
-!!!$  ! 8 : using modified fixed point
-!!!$  carac_case=4
-!!!$
-!!!$  !scheme to compute gradient
-!!!$  ! 1 : finit differences in r and theta
-!!!$  ! 2 : fft in theta, finit differences in r
-!!!$  ! 3 : splines in r and theta
-!!!$  grad=3
-!!!$
-!!!$  !distribution function
-!!!$  ! 1 : gaussian in r, constant in theta
-!!!$  ! 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
-!!!$  ! 3 : test distribution for poisson solver
-!!!$  ! 4 : (gaussian in r)*(1+cos(theta))
-!!!$  ! 5 : read f in a file with syntax : r theta x y f(i,j)
-!!!$  f_case=2
-!!!$  !f_file='CGfinal04.dat' !not working
-!!!$
-!!!$  !choose the way to compute
-!!!$  ! 1 : Semi-Lagrangian scheme order 1
-!!!$  ! 2 : Semi-Lagrangian scheme order 2
-!!!$  ! 3 : leap-frog scheme
-!!!$  scheme=2
-!!!$
-!!!$  !choose the visualization
-!!!$  ! 0 : gnuplot
-!!!$  ! 1 : vtk
-!!!$  visu=0
+! !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
+  !>copy it in the same directory as the executable
+!  open(27,file='CG_Curvilinear_data.txt',action="read")
+!  read(27,*)eta1_min
+!  read(27,*)eta1_max
+!  read(27,*)eta2_min
+!  read(27,*)eta2_max
+!  read(27,*)N_eta1
+!  read(27,*)N_eta2
+!  read(27,*)nb_step
+!  read(27,*)dt
+!  read(27,*)visu_step
+!  read(27,*)
+!  read(27,*)carac_case
+!  read(27,*)grad_case
+!  read(27,*)f_case
+!  read(27,*)alpha_mesh
+!  read(27,*)mesh_case
+!  read(27,*)time_scheme
+!  read(27,*)visu_case
+!  read(27,*)f_file
+!  read(27,*)
+!  read(27,*)bc(1)
+!  read(27,*)bc(2)
+!  close(27)
 !
+ 
 !
 !
 !
