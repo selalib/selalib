@@ -45,4 +45,3 @@ target_link_libraries(test_fft
 	sll_fft
 	${DEPENDENCIES}
 )
-

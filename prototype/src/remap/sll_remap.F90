@@ -2609,8 +2609,8 @@ print *, 'remap 2d complex:'
     type(remap_plan_3D_real64), pointer              :: plan
     sll_real64, dimension(:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:), intent(out) :: data_out
-    sll_real64, dimension(:), pointer          :: sb     ! send buffer
-    sll_real64, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
@@ -3110,10 +3110,9 @@ print *, 'remap 2d complex:'
           tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
           local_hi = global_to_local_6D( init_layout, tmpa)
 
-          ! The plan to load the send buffer is to traverse the integer
-          ! array with a single index (loc). When we load the buffer, each
-          ! data element may occupy multiple integer 'slots', hence the
-          ! loading index needs to be manually increased. As an advantage,
+          ! The plan to load the send buffer is to traverse the send buffer
+          ! array with a single index (loc). We manually increment the loading
+          ! index. As an advantage,
           ! we can do some error checking every time we send data to a 
           ! different process, as we know what is the expected value of 
           ! the index at that point.
@@ -3134,7 +3133,6 @@ print *, 'remap 2d complex:'
        end if
     end do
     ! Comment the following when not debugging    
-
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
 !!$    call flush(6)
@@ -3158,7 +3156,6 @@ print *, 'remap 2d complex:'
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
 !!$    call flush(6)
-
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1

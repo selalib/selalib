@@ -123,7 +123,7 @@ contains
     sll_int32  :: itmp2
 
     sim%dt = 0.01 ! should be initialized elsewhere
-    num_iterations = 20
+    num_iterations = 5
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
@@ -139,12 +139,12 @@ contains
     ! of points is the same as the number of cells in all directions. This
     ! is hardwired here but should be initialized somewhere else, maybe
     ! by reading from a file.
-    sim%nc_x1 = 32 
-    sim%nc_x2 = 32
-    sim%nc_x3 = 32
-    sim%nc_x4 = 32
-    sim%nc_x5 = 32
-    sim%nc_x6 = 32
+    sim%nc_x1 = 16 
+    sim%nc_x2 = 16
+    sim%nc_x3 = 16
+    sim%nc_x4 = 16
+    sim%nc_x5 = 16
+    sim%nc_x6 = 16
 
     ! layout for sequential operations in x4, x5 and x6. Make an even split for
     ! x1, x2 and x3, or as close as even if the power of 2 is not divisible by
@@ -359,7 +359,7 @@ contains
          sim%f_x4x5x6, &
          sim%partial_reduction, &
          sim%rho_split )
-    
+ 
     ! Re-arrange rho_split in a way that permits sequential operations in x1, to
     ! feed to the Poisson solver.
     sim%split_to_seqx1 => &
@@ -378,7 +378,6 @@ contains
          1.0_f64 )     ! parametrize with mesh values
     
     ! solve for the electric potential
-print *,'just about to call the 3d poisson...'
     call solve_poisson_3d_periodic_par( &
          sim%poisson_plan, &
          sim%rho_x1, &
@@ -409,8 +408,8 @@ print *,'just about to call the 3d poisson...'
          NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
     ! it would be nice if the next call were executed by another thread...
     call apply_remap_3D( sim%ex_x1_to_split, sim%ex_x1, sim%ex_split )
-
     call apply_remap_3D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
+
     call compute_local_sizes_3d( sim%rho_seq_x2,loc_sz_x1,loc_sz_x2,loc_sz_x3 )
     call compute_electric_field_x2_3d( &
          sim%phi_x2, &
@@ -421,14 +420,14 @@ print *,'just about to call the 3d poisson...'
          sim%ey_x2 )
 
     sim%ey_x2_to_split => &
-         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%split_rho_layout, sim%ey_x2)
+         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout, sim%ey_x2)
     ! to reconfigure the potential to compute the electric field in X3.
     sim%seqx2_to_seqx3 => &
          NEW_REMAP_PLAN( sim%rho_seq_x2, sim%rho_seq_x3, sim%phi_x2 )
     ! it would be nice if the next call were executed by another thread...
     call apply_remap_3D( sim%ey_x2_to_split, sim%ey_x2, sim%ey_split )
-
     call apply_remap_3D( sim%seqx2_to_seqx3, sim%phi_x2, sim%phi_x3 )
+
     call compute_local_sizes_3d( sim%rho_seq_x3,loc_sz_x1,loc_sz_x2,loc_sz_x3 )
     call compute_electric_field_x3_3d( &
          sim%phi_x3, &
@@ -456,6 +455,7 @@ print *,'just about to call the 3d poisson...'
     ! of cells than points. Is this properly handled by the interpolators??
     ! The interpolators need the number of points and always consider that
     ! num_cells = num_pts - 1. This is a possible source of confusion.
+
     call sim%interp_x1%initialize( &
          sim%nc_x1, &
          sim%mesh6d%x1_min, &
@@ -508,14 +508,16 @@ print *,'just about to call the 3d poisson...'
 
 
     do itime=1, num_iterations
+       if (sim%my_rank == 0) then
+          print *, 'Iteration ', itime, ' of ', num_iterations
+       end if
        ! Carry out a 'dt/2' advection in the velocities.
        ! Start with vx...(x4)
        call compute_local_sizes_6d( sim%sequential_x4x5x6, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4, loc_sz_x5, loc_sz_x6 )
- 
        do n=1, sim%mesh6d%num_cells6
           do m=1, sim%mesh6d%num_cells5
-             do k=1, loc_sz_x2 
+             do k=1, loc_sz_x3 
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ex    =  sim%ex_split(i,j,k)
@@ -536,7 +538,7 @@ print *,'just about to call the 3d poisson...'
        ! Continue with vy...(x5)
        do n=1, sim%mesh6d%num_cells6
           do l=1, sim%mesh6d%num_cells4
-             do k=1, loc_sz_x2 
+             do k=1, loc_sz_x3
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ey    = sim%ey_split(i,j,k)
@@ -557,7 +559,7 @@ print *,'just about to call the 3d poisson...'
        ! Continue with vz...(x6)
        do m=1, sim%mesh6d%num_cells5
           do l=1, sim%mesh6d%num_cells4
-             do k=1, loc_sz_x2 
+             do k=1, loc_sz_x3 
                 do j=1,loc_sz_x2
                    do i=1,loc_sz_x1
                       ez    =  sim%ez_split(i,j,k)
@@ -579,7 +581,7 @@ print *,'just about to call the 3d poisson...'
        ! Reconfigure data for sequential operations in x, y, and z:
        call apply_remap_6D( sim%seqx4x5x6_to_seqx1x2x3, &
             sim%f_x4x5x6, sim%f_x1x2x3 )
-       
+
        ! what are the new local limits on x4, x5 and x6? It is bothersome to 
        ! have to make these calls...
        call compute_local_sizes_6d( sim%sequential_x1x2x3, &
@@ -604,7 +606,7 @@ print *,'just about to call the 3d poisson...'
              end do
           end do
        end do
-       
+
        ! full time step advection in 'y' (x2)
        do n=1, loc_sz_x6
           do m=1, loc_sz_x5
@@ -624,7 +626,7 @@ print *,'just about to call the 3d poisson...'
              end do
           end do
        end do
-       
+
        ! Compute the fields:
        ! 1. Reconfigure data for sequential operations in x4, x5 and x6 in order
        !    to compute the charge density.
@@ -632,7 +634,7 @@ print *,'just about to call the 3d poisson...'
        ! 3. Reconfigure charge density to feed to Poisson solver
        call apply_remap_6D( sim%seqx1x2x3_to_seqx4x5x6, &
             sim%f_x1x2x3, sim%f_x4x5x6 )
-       
+
        call compute_charge_density_6d( &
             sim%mesh6d, &
             size(sim%f_x4x5x6,1), &
@@ -641,17 +643,17 @@ print *,'just about to call the 3d poisson...'
             sim%f_x4x5x6, &
             sim%partial_reduction, &
             sim%rho_split )
-       
+
        ! 3d charge density is 'fully split', no sequential operations can be
        ! fully done. Thus a remap is needed.
        call apply_remap_3D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-       
+
        ! Compute the electric potential.
        call solve_poisson_3d_periodic_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
-       
+
        ! compute the values of the electric field. rho is configured for 
        ! sequential operations in x1, thus we start by computing the E_x 
        ! component.
@@ -664,7 +666,7 @@ print *,'just about to call the 3d poisson...'
             sim%phi_x1, &
             loc_sz_x1, &
             loc_sz_x2, &
-            loc_sz_x2, &
+            loc_sz_x3, &
             sim%mesh6d%delta_x1, &
             sim%ex_x1 )
        call apply_remap_3D( sim%ex_x1_to_split, sim%ex_x1, sim%ex_split )
