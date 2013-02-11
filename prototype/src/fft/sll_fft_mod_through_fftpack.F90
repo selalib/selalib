@@ -35,6 +35,7 @@ module sll_fft
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
 
+
 ! Flags to pass when we create a new plan
 ! We can define 31 different flags.
 ! The value assigned to the flag can only be a power of two.
@@ -165,7 +166,11 @@ contains
   end function
 
   subroutine fftpack_apply_plan_c2c_1d(plan,array_in,array_out)
+#ifdef STDF95
+    type(sll_fft_plan), pointer                   :: plan
+#else
     type(sll_fft_plan), pointer, intent(in)       :: plan
+#endif
     sll_comp64, dimension(:), intent(inout)       :: array_in, array_out
     sll_int32  :: nx
     sll_real64 :: factor
@@ -215,7 +220,11 @@ contains
   end function
 
   subroutine fftpack_apply_plan_r2r_1d(plan,array_in,array_out)
+#ifdef STDF95
+    type(sll_fft_plan), pointer                     :: plan
+#else
     type(sll_fft_plan), pointer, intent(in)         :: plan
+#endif
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
     sll_int32  :: nx
     sll_real64 :: factor
