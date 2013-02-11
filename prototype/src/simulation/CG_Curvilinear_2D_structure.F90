@@ -24,10 +24,17 @@ module module_cg_curvi_structure
   !>contains other types for the routines called in SL routines
   type sll_SL_curvilinear
      type(sll_plan_adv_curvilinear), pointer :: adv
-     !type(plan_curvilinear_op), pointer :: grad
+     type(plan_curvilinear_op), pointer :: grad
      !type(sll_plan_poisson_curvilinear), pointer :: poisson
      sll_real64, dimension(:,:), allocatable :: phi
   end type sll_SL_curvilinear
+
+  !>type plan_curvilinear_op
+  type plan_curvilinear_op
+     sll_int32 :: grad_case
+     type(sll_spline_2D), pointer :: spl_phi
+  end type plan_curvilinear_op
+
 
 end module module_cg_curvi_structure
 
