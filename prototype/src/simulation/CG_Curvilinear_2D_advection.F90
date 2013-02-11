@@ -27,11 +27,13 @@ contains
   !>                   6 : using modified symplectic Euler
   !>                   7 : using modified symplectic Verlet
   !>                   8 : using modified fixed point
-  function new_plan_adv_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,&  
+  function new_plan_adv_curvilinear(geom_eta,delta_eta1,&  
  &delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type) result(plan_sl)
 
     type(sll_plan_adv_curvilinear), pointer :: plan_sl
-    sll_real64, intent(in) :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt
+    sll_real64, intent(in) :: delta_eta1,delta_eta2,dt
+    sll_real64, intent(in) :: geom_eta(2,2)
+    sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
     sll_int32, intent(in) :: N_eta1,N_eta2
     sll_int32, intent(in) :: carac_case,bc1_type,bc2_type
 
@@ -39,7 +41,11 @@ contains
 
     SLL_ALLOCATE(plan_sl,err)
     SLL_ALLOCATE(plan_sl%field(2,N_eta1+1,N_eta2+1),err)
-
+    
+    eta1_min=geom_eta(1,1)
+    eta1_max=geom_eta(2,1)
+    eta2_min=geom_eta(1,2)
+    eta2_max=geom_eta(2,2)
     
     plan_sl%field=0.0_f64
     plan_sl%eta1_min=eta1_min
@@ -91,18 +97,19 @@ contains
   end subroutine delete_plan_adv_curvilinear
 
 !======================================================================================================
-!  creation of sll_SL_pola_eta1 type
+!  creation of sll_SL_curvilinear type
 !======================================================================================================
 
   !>grad_case : integer, see function new_pola_eta1_op
   !>carac_case : integer, see function new_plan_adv_pola_eta1
-  function new_SL(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt,& 
+  function new_SL(geom_eta,delta_eta1,delta_eta2,dt,& 
  & N_eta1,N_eta2,grad_case,carac_case,bc,bc1_type,bc2_type) result(plan_sl)
 
     type(sll_SL_curvilinear), pointer :: plan_sl
-    sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
+    sll_real64 :: geom_eta(2,2)
     sll_real64 :: delta_eta1,delta_eta2,dt
-    sll_int32 :: N_eta1,N_eta2,bc(2)
+    sll_int32, intent(in):: N_eta1,N_eta2 
+    sll_int32 :: bc(2)
     sll_int32, intent(in) :: grad_case,carac_case,bc1_type,bc2_type
     !sll_real64,dimension(:,:),pointer::jac_array
 
@@ -113,8 +120,8 @@ contains
 
     
     !plan_sl%poisson => new_plan_poisson_curvilinea_eta1(delta_eta1,delta_eta2,eta1_min,eta2_min,N_eta1,N_eta2,bc)
-    !plan_sl%grad => new_curvilinear_op(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,N_eta1,N_eta2,grad_case)
-     plan_sl%adv => new_plan_adv_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
+     plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
+     plan_sl%adv => new_plan_adv_curvilinear(geom_eta,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
 
   end function new_SL
 
@@ -135,7 +142,7 @@ contains
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
        !call delete_plan_poisson_curvilinear(plan_sl%poisson)
-       !call delete_plan_curvilinear_op(plan_sl%grad)
+       call delete_plan_curvilinear_op(plan_sl%grad)
        SLL_DEALLOCATE(plan_sl,err)
     end if
 
@@ -153,20 +160,22 @@ contains
 
 
 
-  subroutine advect_CG_curvilinear(plan,fn,fnp1,jac_array)
+  subroutine advect_CG_curvilinear(plan,fn,fnp1,jac_array,x1_tab,x2_tab,mesh_case)
 
     implicit none
 
     type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(in) :: fn
     sll_real64, dimension(:,:), intent(out) :: fnp1
+    sll_real64, dimension(:,:), pointer,intent(in) :: x1_tab,x2_tab
     sll_real64, dimension(:,:), pointer, intent(inout):: jac_array
     sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr,a_eta1,a_eta2,eta10,eta2_min,eta2_max !,tolth
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
     sll_int32 :: N_eta1, N_eta2
     sll_int32 :: i,j,maxiter,iter,k_eta1,k_eta2
-    sll_int32 :: bc1_type,bc2_type
-
+    sll_int32 :: bc1_type,bc2_type,mesh_case
+   
+    
     N_eta1=plan%N_eta1
     N_eta2=plan%N_eta2
     dt=plan%dt
@@ -188,12 +197,14 @@ contains
        fnp1=fn
        do j=1,N_eta2+1
           do i=1,N_eta1+1
-             eta10=eta1_min+real(i-1,f64)*delta_eta1
-             eta20=eta2_min+real(j-1,f64)*delta_eta2
-             eta1=eta10
-             eta2=eta20
-             eta1_loc=0.0_f64
-             eta2_loc=0.0_f64
+             eta1=eta1_min+real(i-1,f64)*delta_eta1
+             eta2=eta2_min+real(j-1,f64)*delta_eta2
+      
+             eta2=eta2-dt*plan%field(1,i,j)/jac_array(i,j)
+             eta1=eta1-dt*plan%field(2,i,j)/jac_array(i,j)
+
+             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+                &eta1,eta2)
 
                 eta1_loc=(eta1-eta1_min)/(eta1_max-eta1_min)
                 eta1_loc=eta1_loc*real(N_eta1,f64)
@@ -221,18 +232,12 @@ contains
                   eta2_loc=1._f64
                 endif
 
-             eta2=eta20-dt*plan%field(1,i,j)/jac_array(i,j)
-             eta1=eta10-dt*plan%field(2,i,j)/jac_array(i,j)
-
-             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
-                &eta1,eta2)
-
              
              fnp1(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*fn(k_eta1,k_eta2) &
              &+eta1_loc*fn(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
              & fn(k_eta1,k_eta2+1)+eta1_loc*fn(k_eta1+1,k_eta2+1))
-                                                         
-   
+            
+           
           end do
 
        end do
@@ -240,31 +245,54 @@ contains
 
   if (plan%carac_case==2) then
        !explicit Euler with "Spline interpolation"
-       fnp1=fn
-       do j=1,N_eta2+1
-          do i=1,N_eta1+1
+       do i=1,N_eta1+1
+          do j=1,N_eta2+1
              eta10=eta1_min+real(i-1,f64)*delta_eta1
              eta20=eta2_min+real(j-1,f64)*delta_eta2
         
-             eta2=eta20-dt*plan%field(1,i,j)/jac_array(i,j)
-             eta1=eta10-dt*plan%field(2,i,j)/jac_array(i,j)
+             eta2=eta20-(dt*plan%field(1,i,j)/jac_array(i,j))
+             eta1=eta10-(dt*plan%field(2,i,j)/jac_array(i,j))
 
-             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
-                &eta1,eta2)
-
+            ! call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+             !   &eta1,eta2)
+ 
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
    
           end do
-
        end do
   end if
+
+    if(plan%carac_case==3) then
+     do i=1,N_eta1+1
+          do j=1,N_eta2+1
+              if (mesh_case==1) then
+                 eta1 = x1_tab(i,j)
+                 eta2 = x2_tab(i,j)
+              endif
+              if (mesh_case==2) then
+                 eta1 = sqrt(x1_tab(i,j)**2+x2_tab(i,j)**2)
+                 if (x2_tab(i,j)>=0) then
+                   eta2 = acos(x1_tab(i,j)/eta1)
+                 else
+                   eta2 = 2._f64*sll_pi-acos(x1_tab(i,j)/eta1)
+                 endif
+              endif
+           call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+              &eta1,eta2)
+
+             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+      
+         end do
+    end do
+
+    endif
 
     if (plan%carac_case==5) then
        !using fixed point method
     
        !initialization
        maxiter=25
-       tolr=1e-10
+       tolr=1e-12
        eta1n=0.0_f64
        eta2n=0.0_f64
 
@@ -284,9 +312,13 @@ contains
  
              do while (((iter<maxiter) .and. (abs((eta1n-eta1))+abs((eta2n-eta2))>tolr)).or.(iter==0))          
                 eta1_loc=(eta1-eta1_min)/(eta1_max-eta1_min)
+                !do while(eta1_loc>=1._f64)
+                !   eta1_loc=eta1_loc-1._f64
+                !enddo
+                !do while(eta1_loc<0._f64)
+                !   eta1_loc=eta1_loc+1._f64
+                !enddo
                 eta1_loc=eta1_loc*real(N_eta1,f64)
-                !print*,r, eta1 
-                !r=r-real(floor(r),f64)
                 k_eta1=floor(eta1_loc)+1
                 eta1_loc=eta1_loc-real(k_eta1-1,f64)
                 if(((k_eta1-1).gt.(N_eta1)).or.((k_eta1-1).lt.0))then
@@ -296,13 +328,20 @@ contains
                   k_eta1= N_eta1
                   if (abs(eta1_loc)>1.e-13) print *,'#eta1_loc=',eta1_loc
                   eta1_loc=1._f64 
-                endif               
+                endif  
+
+             
                 eta2_loc=(eta2-eta2_min)/(eta2_max-eta2_min)
+                !do while(eta2_loc>=1._f64)
+                !   eta2_loc=eta2_loc-1._f64
+                !enddo
+                !do while(eta2_loc<0._f64)
+                !   eta2_loc=eta2_loc+1._f64
+                !enddo
                 eta2_loc=eta2_loc*real(N_eta2,f64)
-                !print*,r, eta2 
-                !r=r-real(floor(r),f64)
                 k_eta2=floor(eta2_loc)+1
                 eta2_loc=eta2_loc-real(k_eta2-1,f64)
+                
                 if(((k_eta2-1).gt.(N_eta2)).or.((k_eta2-1).lt.0))then
                   print *,"#bad value of k_eta2=",k_eta2,N_eta2
                 endif
@@ -349,26 +388,27 @@ contains
   end subroutine advect_CG_curvilinear
 
 !!!****************************************************************************
+!!!****************************************************************************
   !>subroutine SL_classic(plan,in,out)
   !>computes the classic semi-Lagrangian scheme for Vlasov-Poisson equation
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_1(plan,inn,outt,jac_array,step)
+  subroutine SL_order_1(plan,inn,outt,jac_array,step,x1_tab,x2_tab,mesh_case)
 
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
     sll_real64, dimension(:,:), intent(inout) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
-    sll_real64,dimension(:,:),pointer,intent(inout)::jac_array
-    sll_int :: step,i,j
+    sll_real64,dimension(:,:),pointer,intent(inout)::jac_array,x1_tab,x2_tab
+    sll_int :: step,i,j,mesh_case
 
     !call poisson_solve_curvilinear(plan%poisson,inn,plan%phi)
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field1)
     
    
-    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array)
+    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
 !  if(step==30) then
 !     do i=1,plan%adv%N_eta1+1
 !    do j=1,plan%adv%N_eta2+1
@@ -384,35 +424,37 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_2(plan,inn,outt,jac_array)
+  subroutine SL_order_2(plan,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
 
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(inout) :: inn
+    sll_real64, dimension(:,:), intent(in) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
-    sll_real64,dimension(:,:),pointer, intent(inout)::jac_array
+    sll_real64,dimension(:,:),pointer, intent(inout)::jac_array,x1_tab,x2_tab
+    sll_int32, intent(in) :: mesh_case
 
 
     sll_real64 :: dt
 
     dt=plan%adv%dt
+    
     plan%adv%dt=dt/2.0_f64
 
     !call poisson_solve_culvilinear(plan%poisson,inn,plan%phi)
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     
     
-    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array)
-    
+    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
+  
     
     !!we just obtained f^(n+1/2)
-    !call poisson_solve_curvilinea_eta1(plan%poisson,outt,plan%phi)
+    !call poisson_solve_curviliner(plan%poisson,outt,plan%phi)
     !call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     !!we just obtained E^(n+1/2)
     plan%adv%dt=dt
-    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array)
-
+    call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
+    
   end subroutine SL_order_2
 
 
