@@ -1,12 +1,19 @@
-program test_lagrange
+program lagrange_test
 #include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
  use sll_lagrange_interpolation
 implicit none
-sll_int32 :: i,j
+sll_int32  :: i,j,degree
 sll_real64 :: res,diff
-sll_real64,dimension(1:4) ::xi,fi,coord,wj
+sll_real64,dimension(:),allocatable ::xi,fi,coord
+type(sll_lagrange_interpolation_1D),pointer ::l_i
 
-
+degree=3
+allocate(xi(1:degree+1))
+allocate(fi(1:degree+1))
+allocate(coord(1:degree+1))
+!data initialization
 coord(1)=1.3_f64
 coord(2)=2.5_f64
 coord(3)=3.2_f64
@@ -15,36 +22,27 @@ do i=1,4
  xi(i)=i
  fi(i)=f(xi(i))
 end do 
-
-!indirect
 diff=0.0_f64
-wj=lagrange_interpolation_wj(xi,3)
-do i=1,4
- res=compute_lagrange_interpolation(coord(i),xi,fi,wj,3)
- print*,"interpolated value = ", res, " , Correct value = ",f(coord(i))
- diff=diff+abs(f(coord(i))-res)
+
+l_i => new_lagrange_interpolation_1D(xi,fi,degree)
+
+do i=1,degree+1
+ call compute_lagrange_interpolation_1D(coord(i),l_i)
+ print*,"interpolated value = ", l_i%result, " , Correct value = ",f(coord(i))
+ diff=max(diff,abs(f(coord(i))-l_i%result))
 end do
 
 if(diff<1e-5) then
- print*,"Lagrange interpolation indirect is OK"
+ print*,"PASSED "
+ print*,"error is :",diff
 else
- print*,"Error : lagrange interpolation indirect"
+ print*,"Fail"
+ print*,"error is : ",diff
 end if
 
-!direct
-diff=0.0_f64
-do i=1,4
- res=lagrange_interpolation_direct(coord(i),xi,fi,3)
- print*,"interpolated value = ", res, " , Correct value = ",f(coord(i))
- diff=diff+abs(f(coord(i))-res)
-end do
-
-if(diff<1e-5) then
- print*,"Lagrange interpolation direct is OK"
-else
- print*,"Error : lagrange interpolation direct"
-end if
-
+deallocate(xi)
+deallocate(fi)
+deallocate(coord)
 
 contains 
 
