@@ -32,12 +32,14 @@ do i=1,degree+1
  diff=max(diff,abs(f(coord(i))-l_i%result))
 end do
 
-if(diff<1e-5) then
- print*,"PASSED "
- print*,"error is :",diff
+if(diff<1e-10) then
+ print *, ' '
+ print *, 'Lagrange interpolation unit test: PASSED'
+ print *, ' '
 else
- print*,"Fail"
- print*,"error is : ",diff
+ print *, ' '
+ print *, 'Lagrange interpolation unit test: FAILED'
+ print *, ' '
 end if
 
 deallocate(xi)
