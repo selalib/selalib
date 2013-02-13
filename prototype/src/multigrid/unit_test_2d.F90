@@ -73,6 +73,8 @@ character(len=8), parameter :: xdset = "xdataset"
 character(len=8), parameter :: ydset = "ydataset"
 character(len=8), parameter :: zdset = "zdataset"
 
+type(block) :: my_block
+
 pi=4.0d0*atan(1.0d0)
 
 ! initialize MPI and create a datatype for real numbers
@@ -184,9 +186,23 @@ end do
            'comments and'/,'     assign to nydim the maximum ', &
            'value of ey-sy+3',/)
 
-call mgdinit(vbc,phibc,ixp,jyq,iex,jey,ngrid,nxp2,nyp2, &
-             sx,ex,sy,ey,realtype,nxprocs,nyprocs,nwork, &
-             ibdry,jbdry,myid,nerror)
+my_block%id = myid
+my_block%sx = sx
+my_block%ex = ex
+my_block%sy = sy
+my_block%ey = ey
+my_block%ngrid = ngrid
+my_block%neighbor = neighbor
+my_block%bd = bd
+
+my_block%ixp = ixp
+my_block%jyq = jyq
+my_block%iex = iex
+my_block%jey = jey
+
+call initialize(my_block,vbc,phibc,nxp2,nyp2, &
+                realtype,nxprocs,nyprocs,nwork, &
+                ibdry,jbdry,nerror)
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -204,10 +220,11 @@ hyi=float(nyp2-2)/yl
 write(6,*) 'hxi=',hxi,' hyi=',hyi
 call ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi)
 
-call mgdsolver(2,sx,ex,sy,ey,p,f,r,ngrid,work, &
+
+call mgdsolver(2,my_block,p,f,r,work, &
                maxcy,tolmax,kcycle,iprer,ipost,iresw, &
-               xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
-               bd,phibc,iter,.true.,nerror)
+               xl,yl,rro,nx,ny,comm2d, &
+               phibc,iter,.true.,nerror)
 
 if (nerror.eq.1) goto 1000
 ! compare numerical and exact solutions
