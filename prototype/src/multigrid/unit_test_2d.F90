@@ -49,7 +49,7 @@ logical           :: nprscr,periods(2)
 sll_int32         :: numprocs,myid,comm2d,sx,ex,sy,ey,neighbor(8),bd(8),iter
 sll_int32         :: realtype,ibdry,jbdry
 sll_int32         :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
-sll_int32         :: status(MPI_STATUS_SIZE),nbrright,nbrbottom,nbrleft,nbrtop
+sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
 sll_real64        :: p(nxdim,nydim),r(nxdim,nydim),f(nxdim,nydim),work(nwork)
 sll_real64        :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro,pi
 character(len=20) :: outfile
@@ -73,16 +73,25 @@ character(len=8), parameter :: xdset = "xdataset"
 character(len=8), parameter :: ydset = "ydataset"
 character(len=8), parameter :: zdset = "zdataset"
 
-type(block) :: my_block
+type(block)     :: my_block
+type(mg_solver) :: my_mg
+
+integer :: status(MPI_STATUS_SIZE)
 
 pi=4.0d0*atan(1.0d0)
 
 ! initialize MPI and create a datatype for real numbers
 
-call MPI_INIT(ierr)
-call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
-call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
-realtype=MPI_REAL8
+!call MPI_INIT(ierr)
+!call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
+!call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
+
+call sll_boot_collective()
+
+numprocs  = sll_get_collective_size(sll_world_collective)
+myid      = sll_get_collective_rank(sll_world_collective)
+comm2d    = sll_world_collective%comm
+realtype  = MPI_REAL8
 
 ! open file for output of messages and check that the number of 
 ! processes is correct
@@ -200,9 +209,16 @@ my_block%jyq = jyq
 my_block%iex = iex
 my_block%jey = jey
 
-call initialize(my_block,vbc,phibc,nxp2,nyp2, &
-                realtype,nxprocs,nyprocs,nwork, &
-                ibdry,jbdry,nerror)
+my_mg%vbc     = vbc
+my_mg%phibc   = phibc
+my_mg%nx      = nx
+my_mg%ny      = ny
+my_mg%nxprocs = nxprocs
+my_mg%nyprocs = nyprocs
+my_mg%ibdry   = ibdry
+my_mg%jbdry   = jbdry
+my_mg%comm2d  = comm2d
+call initialize(my_block,my_mg,nerror)
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -215,16 +231,23 @@ xl=1.0d0
 yl=1.0d0
 wk=5.0d0
 rro=1.0d0
-hxi=float(nxp2-2)/xl
-hyi=float(nyp2-2)/yl
+hxi=float(nx)/xl
+hyi=float(ny)/yl
 write(6,*) 'hxi=',hxi,' hyi=',hyi
 call ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi)
 
+my_mg%xl     = xl
+my_mg%yl     = yl
+my_mg%tolmax = tolmax
+my_mg%kcycle = kcycle
+my_mg%maxcy  = maxcy
+my_mg%iprer  = iprer
+my_mg%ipost  = ipost
+my_mg%iresw  = iresw
+my_mg%isol   = 2
 
-call mgdsolver(2,my_block,p,f,r,work, &
-               maxcy,tolmax,kcycle,iprer,ipost,iresw, &
-               xl,yl,rro,nx,ny,comm2d, &
-               phibc,iter,.true.,nerror)
+call mgdsolver(my_block,my_mg,p,f,r,work, &
+               rro, iter,.true.,nerror)
 
 if (nerror.eq.1) goto 1000
 ! compare numerical and exact solutions
@@ -248,11 +271,13 @@ datadims(1) = nx
 datadims(2) = ny
 write(*,"(7i5)") myid, sx, ex, sy, ey, nx, ny
 call sll_xdmf_open("mgd2.xmf","mesh2d",nx,ny,xml_id,error)
-call sll_xdmf_write_array("mesh2d",datadims,offset,xdata,'x1',error)
-call sll_xdmf_write_array("mesh2d",datadims,offset,ydata,'x2',error)
-call sll_xdmf_write_array("mesh2d",datadims,offset,p(sx:ex,sy:ey),"p", &
-                          error,xml_id,"Node")
+!call sll_xdmf_write_array("mesh2d",datadims,offset,xdata,'x1',error)
+!call sll_xdmf_write_array("mesh2d",datadims,offset,ydata,'x2',error)
+!call sll_xdmf_write_array("mesh2d",datadims,offset,p(sx:ex,sy:ey),"p", &
+!                          error,xml_id,"Node")
 call sll_xdmf_close(xml_id,error)
+call sll_halt_collective()
+stop
 
 call sll_hdf5_file_create(xfile, file_id, error)
 call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
@@ -276,7 +301,7 @@ if (myid == 0) then
 end if
 
 close(8)
-call mgdend(ngrid)
+!call mgdend(ngrid)
 print*,"PASSED"
 stop
 1000  write(6,200)
@@ -321,9 +346,8 @@ sll_int32  :: sx,ex,sy,ey,comm2d,nx,ny
 sll_real64 :: p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,pi,xi,yj
 sll_int32  :: i,j,ierr
 sll_real64 :: errloc,err,cx,cy,exact
-!
+
 ! calculate local error
-!
 cx=2.0d0*pi*wk
 cy=2.0d0*pi*wk
 errloc=0.0d0
@@ -335,9 +359,8 @@ do j=sy,ey
     errloc=errloc+abs(p(i,j)-exact)
   end do
 end do
-!
+
 ! calculate global error
-!
 call MPI_ALLREDUCE(errloc,err,1,MPI_REAL8,MPI_SUM,comm2d,ierr)
 write(6,100) errloc/float(nx*ny),err/float(nx*ny)
 100   format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
