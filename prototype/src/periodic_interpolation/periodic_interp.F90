@@ -238,7 +238,7 @@ contains
          tmp=tmp*exp(tmp2*real(n/2,f64))
          SET_MODE_N_2(tmp,u_out,n)
 
-!*** Partie sans macro
+!*** Without macro
       ! do i=0,this%N/2
       !   tmp=fft_get_mode(this%pfwd,u_out,i)
       !   !print *,i,tmp,alpha
