@@ -10,7 +10,8 @@ use sll_module_interpolators_1d_base
 implicit none
 
  type,extends(sll_interpolator_1d_base) :: lagrange_1d_interpolator
-   type(sll_lagrange_interpolation_1D), pointer :: lagrange 
+   type(sll_lagrange_interpolation_1D), pointer :: lagrange
+   sll_int32                                    :: bc_type 
    contains
    procedure,pass(interpolator) :: initialize => initialize_li1d_interpolator
    procedure :: compute_interpolants => compute_interpolants_li1d
@@ -30,19 +31,28 @@ implicit none
  end interface
 contains  !**********************************************************
  
- subroutine initialize_li1d_interpolator(interpolator)
-  class(lagrange_1d_interpolator) :: interpolator
-
-  print*,"pas encore"
+ subroutine initialize_li1d_interpolator(interpolator,xi,fi,degree,bc_type)
+  class(lagrange_1d_interpolator),intent(inout) :: interpolator
+    sll_int32,intent(in)                        :: degree
+    sll_real64,dimension(1:degree+1),intent(in) :: xi,fi
+    sll_int32,  intent(in)                      :: bc_type
+    
+    interpolator%bc_type = bc_type
+    interpolator%lagrange => new_lagrange_interpolation_1D( &
+           xi, &
+           fi, &
+           degree, &
+           bc_type)
  end subroutine initialize_li1d_interpolator
 
-!  subroutine compute_interpolants_li1d(data_array, interpolator)
-!   class(lagrange_1d_interpolator)         :: interpolator
-!   sll_real64, dimension(:), intent(in)    :: data_array
-!   print*,"pas encore"
-!  end subroutine compute_interpolants_li1d
+ subroutine compute_interpolants_li1d(interpolator, data_array)
+  class(lagrange_1d_interpolator), intent(inout) :: interpolator
+  sll_real64, dimension(:), intent(in)           :: data_array
+  print*,"pas encore"
+ ! call compute_lagrange_interpolation_1D(data_array,interpolator)
+ end subroutine compute_interpolants_li1d
 
-DEFINE_NULL_INTERP_1D_ARRAY_MSG(lagrange_1d_interpolator, compute_interpolants_li1d)
+!DEFINE_NULL_INTERP_1D_ARRAY_MSG(lagrange_1d_interpolator, compute_interpolants_li1d)
 DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_derivatives_li1d)
 DEFINE_NULL_INTERP_1D_ARRAY(lagrange_1d_interpolator, interpolate_array_li1d)
 DEFINE_NULL_INTERPOLATE_1D_DISP(lagrange_1d_interpolator, interpolate_array_disp_li1d)

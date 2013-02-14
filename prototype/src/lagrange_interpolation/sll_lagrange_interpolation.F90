@@ -15,7 +15,7 @@ implicit none
    sll_real64,dimension(:),pointer      :: fi ! fi(i)=function(xi(i))
  end type sll_lagrange_interpolation_1D
 
- integer, parameter :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
+ integer, parameter :: DEFAULT = 0,PERIODIC_LAGRANGE = 1, HERMITE_LAGRANGE = 2
 
 interface delete
   module procedure delete_lagrange_interpolation_1D
@@ -24,14 +24,21 @@ end interface
 contains  !*****************************************************************************
 
 
-function new_lagrange_interpolation_1D(xi,fi,degree)
+function new_lagrange_interpolation_1D(xi,fi,degree,bc_type)
 type(sll_lagrange_interpolation_1D), pointer :: new_lagrange_interpolation_1D
 sll_int32 ::i,j,ierr
 sll_int32,intent(in) :: degree
+sll_int32,intent(in),optional :: bc_type
 sll_real64,dimension(1:degree+1),intent(in) :: xi,fi
 sll_real64,dimension(1:degree+1) :: wj
 
 SLL_ALLOCATE( new_lagrange_interpolation_1D, ierr )
+
+if(present(bc_type))then
+ new_lagrange_interpolation_1D%bc_type=bc_type
+else
+ new_lagrange_interpolation_1D%bc_type=0
+end if
 
 wj=1.0_f64
 do j=1,degree+1
@@ -54,20 +61,31 @@ end function new_lagrange_interpolation_1D
 
 subroutine compute_lagrange_interpolation_1D(x,lagrange_interpolation)
 type(sll_lagrange_interpolation_1D), pointer :: lagrange_interpolation
-sll_int32 ::i
+sll_int32 ::i,bc_type
 sll_real64, intent(in) :: x
 sll_real64 :: sum1,sum2,result
 
 lagrange_interpolation%x=x
 lagrange_interpolation%result=result
+bc_type=lagrange_interpolation%bc_type
 
-sum1=0.0_f64
-sum2=0.0_f64
-do i=1,lagrange_interpolation%degree+1
- sum1=sum1+lagrange_interpolation%fi(i)*lagrange_interpolation%wj(i)/(x-lagrange_interpolation%xi(i))
- sum2=sum2+lagrange_interpolation%wj(i)/(x-lagrange_interpolation%xi(i))
-end do
-lagrange_interpolation%result=sum1/sum2
+select case(bc_type)
+case(DEFAULT)
+ sum1=0.0_f64
+ sum2=0.0_f64
+ do i=1,lagrange_interpolation%degree+1
+  sum1=sum1+lagrange_interpolation%fi(i)*lagrange_interpolation%wj(i)/(x-lagrange_interpolation%xi(i))
+  sum2=sum2+lagrange_interpolation%wj(i)/(x-lagrange_interpolation%xi(i))
+ end do
+ lagrange_interpolation%result=sum1/sum2
+case (PERIODIC_LAGRANGE)
+ print*,"pas encore de periodique"
+case (HERMITE_LAGRANGE)
+ print*,"pas encore d'Hermite"
+case default
+   print *, 'ERROR: compute_lagrange_interpolation_1D(): not recognized boundary condition'
+   STOP
+end select
 end subroutine compute_lagrange_interpolation_1D
 
 subroutine delete_lagrange_interpolation_1D( lagrange_interpolation )
