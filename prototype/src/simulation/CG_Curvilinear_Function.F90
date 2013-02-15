@@ -98,13 +98,14 @@ end subroutine init_distribution_curvilinear
 
 subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh,geom_x)
+   &geom_eta,alpha_mesh,geom_x,jac_matrix)
 
     implicit none
     sll_int32,intent(in) :: nc_eta1,nc_eta2,mesh_case
     sll_real64,intent(in) :: geom_eta(2,2),alpha_mesh
     sll_real64,intent(out) :: geom_x(2,2)
     sll_real64,dimension(:,:),pointer,intent(out) :: x1n_array,x2n_array  
+    sll_real64,dimension(:,:,:),pointer,intent(out) :: jac_matrix
     sll_real64,dimension(:,:),pointer,intent(out) :: jac_array
     sll_int32  :: i1,i2,err
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2
@@ -116,6 +117,7 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
 
     SLL_ALLOCATE(x1n_array(nc_eta1+1, nc_eta2+1), err)
     SLL_ALLOCATE(x2n_array(nc_eta1+1, nc_eta2+1), err)
+    SLL_ALLOCATE(jac_matrix(4,nc_eta1+1, nc_eta2+1), err); jac_matrix=0._f64
     SLL_ALLOCATE(jac_array(nc_eta1+1, nc_eta2+1), err); jac_array=0.0_f64
 
    
@@ -144,6 +146,7 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
           x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
           x2n_array(i1,i2) = x2_min+real(i2-1,f64)*delta_x2
           jac_array(i1,i2) = 1.0_f64 !(x1_max-x1_min)*(x2_max-x2_min)
+          jac_matrix(:,i1,i2)=1._f64
         enddo
       enddo 
     endif
@@ -161,6 +164,11 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
             x1n_array(i1,i2) = eta1*cos(eta2)
             x2n_array(i1,i2) = eta1*sin(eta2)
             jac_array(i1,i2) = eta1
+
+            jac_matrix(1,i1,i2)=cos(eta2)         !dx/deta1
+            jac_matrix(2,i1,i2)=-eta1*sin(eta2)   !dx/deta2
+            jac_matrix(3,i1,i2)=sin(eta2)         !dy/deta1
+            jac_matrix(4,i1,i2)=eta1*cos(eta2)    !dy/deta2
            end do
         end do
 
@@ -174,7 +182,12 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
               eta2 = eta2_min + real(i2-1,f64)*delta_eta2
               x1n_array(i1,i2) = eta1*eta1*cos(eta2)
               x2n_array(i1,i2) = eta1*eta1*sin(eta2)
-             jac_array(i1,i2) = 2._f64*eta1*eta1*eta1
+              jac_array(i1,i2) = 2._f64*eta1*eta1*eta1
+
+            jac_matrix(1,i1,i2)=2*eta1*cos(eta2)         !dx/deta1
+            jac_matrix(2,i1,i2)=-eta1*eta1*sin(eta2)     !dx/deta2
+            jac_matrix(3,i1,i2)=2*eta1*sin(eta2)         !dy/deta1
+            jac_matrix(4,i1,i2)=eta1*eta1*cos(eta2)      !dy/deta2
            end do
         end do
       endif
@@ -191,18 +204,35 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
          do i2 = 1, nc_eta2 + 1
            eta2 = eta2_min + real(i2-1,f64)*delta_eta2
            eta2_n=real(i2-1,f64)/real(nc_eta2,f64)
-           x1n_array(i1,i2) = eta1_n + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
-           x2n_array(i1,i2) = eta2_n + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
+           x1n_array(i1,i2) = eta1 + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
+           x2n_array(i1,i2) = eta2 + alpha_mesh * sin(2*sll_pi*eta1_n) * sin(2*sll_pi*eta2_n)
            
-           jac_array(i1,i2) = (1.0_f64 + alpha_mesh *(2._f64 *sll_pi/(eta1_max-eta1_min)) * &
+           jac_array(i1,i2) = (1.0_f64+ alpha_mesh *(2._f64 *sll_pi/(eta1_max-eta1_min)) * &
            &cos (2*sll_pi*eta1_n) * sin (2*sll_pi*eta2_n)) * &
-           & (1.0_f64 + alpha_mesh *2._f64 * sll_pi/(eta2_max-eta2_min)*sin(2*sll_pi*eta1_n)*cos(2*sll_pi*eta2_n)) - &
+           & (1.0_f64 + alpha_mesh *2._f64 * sll_pi/(eta2_max-eta2_min)* & 
+           & sin(2*sll_pi*eta1_n)*cos(2*sll_pi*eta2_n)) - &
            & alpha_mesh *2._f64 *sll_pi/(eta2_max-eta2_min) * sin (2*sll_pi*eta1_n) * cos (2*sll_pi*eta2_n) * &
            & alpha_mesh *2._f64 * sll_pi/(eta1_max-eta1_min) * cos (2*sll_pi*eta1_n) * sin (2*sll_pi*eta2_n)
         
-          x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
-          x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
-          !!jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+          !x1n_array(i1,i2) = x1_min+x1n_array(i1,i2)*(x1_max-x1_min)
+          !x2n_array(i1,i2) = x2_min+x2n_array(i1,i2)*(x2_max-x2_min)
+          !jac_array(i1,i2) = jac_array(i1,i2)*(x1_max-x1_min)*(x2_max-x2_min)
+
+            jac_matrix(1,i1,i2)= 1. + alpha_mesh *(2._f64 *sll_pi/(eta1_max-eta1_min)) * &
+                                 &cos (2*sll_pi*eta1_n) * sin (2*sll_pi*eta2_n)       !dx/deta1
+            jac_matrix(2,i1,i2)= alpha_mesh *2._f64 *sll_pi/(eta2_max-eta2_min)*sin(2*sll_pi*eta1_n)* & 
+                                 & cos (2*sll_pi*eta2_n)                              !dx/deta2
+            jac_matrix(3,i1,i2)= alpha_mesh *2._f64 * sll_pi/(eta1_max-eta1_min) * cos (2*sll_pi*eta1_n)* & 
+                                 & sin (2*sll_pi*eta2_n)                              !dy/deta1
+            jac_matrix(4,i1,i2)=1. + alpha_mesh *2._f64 * sll_pi/(eta2_max-eta2_min)* & 
+                                 & sin(2*sll_pi*eta1_n)*cos(2*sll_pi*eta2_n)          !dy/deta2
+
+            
+            !jac_matrix(1,i1,i2)= jac_matrix(1,i1,i2)*(x1_max-x1_min)  !dx/deta1
+            !jac_matrix(2,i1,i2)= jac_matrix(1,i1,i2)*(x1_max-x1_min)  !dx/deta2
+            !jac_matrix(3,i1,i2)= jac_matrix(1,i1,i2)*(x2_max-x2_min)  !dy/deta1
+            !jac_matrix(4,i1,i2)= jac_matrix(1,i1,i2)*(x2_max-x2_min)  !dy/deta2
+          
       end do
     end do
 
@@ -258,47 +288,54 @@ end subroutine construct_mesh_transF
 
 
 !!!************************************************************************
-subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r)
+subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
 
     implicit none
 
     sll_real64, dimension(:,:), intent(inout), pointer :: phi_exact
     sll_real64, dimension(:,:), intent(in), pointer:: x1n_array,x2n_array 
+    sll_real64,dimension(:,:,:),pointer,intent(in) :: jac_matrix
     type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
     sll_int32 :: i,j,N_eta1,N_eta2
     sll_int32, intent(in) :: phi_case
     sll_real64,intent(in) :: x1c_r,x2c_r
-    sll_real64 :: a1,a2
+    sll_real64 :: a1,a2,eta1_min,eta2_min,delta_eta1,delta_eta2,eta1,eta2
    
   
     
     N_eta1 = plan%N_eta1
     N_eta2 = plan%N_eta2
+    eta1_min=plan%eta1_min
+    eta2_min=plan%eta2_min
+    delta_eta1=plan%delta_eta1
+    delta_eta2=plan%delta_eta2
     
+    !-dphi/deta1=-(dx/deta1*dphi/dx+dy/deta1*dphi/dy)
+    ! dphi/deta2=(dx/deta2*dphi/dx+dy/deta2*dphi/dy)
 
     select case(phi_case)
     case(1) ! translation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
             phi_exact(i,j)=a1*x1n_array(i,j)+a2*x2n_array(i,j)
-            plan%field(1,i,j)= -a1
-            plan%field(2,i,j)= -a2
+            plan%field(1,i,j)= -(a1*jac_matrix(1,i,j)+a2*jac_matrix(3,i,j))      
+            plan%field(2,i,j)= a1*jac_matrix(2,i,j)+a2*jac_matrix(4,i,j)
           end do
        end do
     case(2) !rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            phi_exact(i,j)=((x1n_array(i,j)-x1c_r)**2+(x2n_array(i,j)-x2c_r)**2)*0.5
-            plan%field(1,i,j)= -(x1n_array(i,j)-x1c_r)
-            plan%field(2,i,j)= -(x2n_array(i,j)-x2c_r)
+            phi_exact(i,j)=((x1n_array(i,j)-x1c_r)**2+(x2n_array(i,j)-x2c_r)**2)*0.5_f64
+            plan%field(1,i,j)= -((x1n_array(i,j)-x1c_r)*jac_matrix(1,i,j)+ (x2n_array(i,j)-x2c_r)*jac_matrix(3,i,j))
+            plan%field(2,i,j)= (x1n_array(i,j)-x1c_r)*jac_matrix(2,i,j)+(x2n_array(i,j)-x2c_r)*jac_matrix(4,i,j)
           end do
        end do
     case(3) !anisotropic rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
             phi_exact(i,j)=0.5_f64*(a1*(x1n_array(i,j)-x1c_r)**2+a2*(x2n_array(i,j)-x2c_r)**2)
-            plan%field(1,i,j)= -a1*(x1n_array(i,j)-x1c_r)
-            plan%field(2,i,j)= -a2*(x2n_array(i,j)-x2c_r)
+            plan%field(1,i,j)= -(a1*(x1n_array(i,j)-x1c_r)*jac_matrix(1,i,j)+ a2*(x2n_array(i,j)-x2c_r)*jac_matrix(3,i,j))
+            plan%field(2,i,j)= a1*(x1n_array(i,j)-x1c_r)*jac_matrix(2,i,j)+a2*(x2n_array(i,j)-x2c_r)*jac_matrix(4,i,j)
           end do
        end do
    case default

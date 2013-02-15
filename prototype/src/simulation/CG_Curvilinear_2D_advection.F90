@@ -120,7 +120,7 @@ contains
 
     
     !plan_sl%poisson => new_plan_poisson_curvilinea_eta1(delta_eta1,delta_eta2,eta1_min,eta2_min,N_eta1,N_eta2,bc)
-     plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
+    !plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
      plan_sl%adv => new_plan_adv_curvilinear(geom_eta,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
 
   end function new_SL
@@ -129,8 +129,8 @@ contains
 !  deletion of sll_SL_pola_eta1
 !=================================================================================================
 
-  !>subroutine delete_SL_pola_eta1(plan_sl)
-  !>deletion of sll_SL_pola_eta1 object
+  !>subroutine delete_SL_curvilinear(plan_sl)
+  !>deletion of sll_SL_curvilinear object
   subroutine delete_SL_curvilinear(plan_sl)
 
     implicit none
@@ -142,7 +142,7 @@ contains
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
        !call delete_plan_poisson_curvilinear(plan_sl%poisson)
-       call delete_plan_curvilinear_op(plan_sl%grad)
+       !call delete_plan_curvilinear_op(plan_sl%grad)
        SLL_DEALLOCATE(plan_sl,err)
     end if
 
@@ -190,7 +190,7 @@ contains
    
     !construction of spline coefficients for f
     call compute_spline_2D(fn,plan%spl_f)
-    plan%field(2,:,:)=-plan%field(2,:,:)
+    !plan%field(2,:,:)=-plan%field(2,:,:)
    
     if (plan%carac_case==1) then
        !explicit Euler with linear interpolation
@@ -383,7 +383,7 @@ contains
 
     if(bc2_type==PERIODIC_SPLINE) fnp1(:,N_eta2+1)=fnp1(:,1) 
     if(bc1_type==PERIODIC_SPLINE) fnp1(N_eta1+1,:)=fnp1(1,:)
-  plan%field(2,:,:)=-plan%field(2,:,:)  
+  !plan%field(2,:,:)=-plan%field(2,:,:)  
 
   end subroutine advect_CG_curvilinear
 
