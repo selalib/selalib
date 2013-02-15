@@ -97,6 +97,7 @@ add_executable( test_cg_curvilinear CG_Curvilinear_2D.F90 )
 
 target_link_libraries( test_cg_curvilinear
   sll_simulation_1d
+  sll_tridiagonal
   sll_splines
   sll_fft
   sll_constants
