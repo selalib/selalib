@@ -29,11 +29,12 @@ program cg_curvilinear_2D
   sll_real64 :: geom_eta(2,2),geom_x(2,2),alpha_mesh
   sll_real64, dimension(:,:), pointer :: x1n_array,x2n_array,x1_tab,x2_tab  !,x1c_array,x2c_array
   sll_real64, dimension(:,:), pointer :: jac_array
+  sll_real64,dimension(:,:,:),pointer :: jac_matrix
   sll_real64, dimension(:,:), pointer :: phi_exact
   character (len=16) :: f_file !,bctop,bcbot
   character (len=8) :: conv_CG
 
-  namelist /param/ N_eta1,N_eta2,dt
+  namelist /param/ N_eta1,N_eta2,dt,nb_step
   
   PERIODIC_B=0
   HERMITE_B=1
@@ -45,7 +46,7 @@ program cg_curvilinear_2D
   visu_case = 1 ! 0 : gnuplot 
                 ! 1 : vtk
 
-  visu_step = 10
+  visu_step = 100
 
   mesh_case = 4 ! 1 : cartesian 
                 ! 2 : polar 
@@ -57,7 +58,7 @@ program cg_curvilinear_2D
 
   grad_case = 1
 
-  carac_case = 2 ! 1 : Explicit Euler with linear interpolation
+  carac_case = 5 ! 1 : Explicit Euler with linear interpolation
                  ! 2 : Explicit Euler with spline interpolation  
                  ! 5 : Fixed point (midpoint)
 
@@ -69,13 +70,13 @@ program cg_curvilinear_2D
                   ! 2 : SL order 2 (Predictor-Corrector) 
                   ! 3 : SL order 2 (Leap-Frog)
   
-  a1 = 1._f64 *0.1_f64
-  a2 = 1._f64 *0.1_f64
+  a1 = 1._f64 !*0.01_f64
+  a2 = 1._f64 !*0.01_f64
   bc1_type=PERIODIC_B
   bc2_type=PERIODIC_B
   N_eta1 = 100
   N_eta2 = 100
-  dt = 0.001
+  dt = 0.01
   nb_step = 10
   alpha_mesh = 0._f64
   eta1_min = 0._f64
@@ -191,7 +192,7 @@ program cg_curvilinear_2D
     bc1_type = PERIODIC_B
     bc2_type = PERIODIC_B
     
-    alpha_mesh = 0.01_f64
+    alpha_mesh = 0.1_f64
   endif
 
   
@@ -246,7 +247,7 @@ program cg_curvilinear_2D
 
  call construct_mesh_transF(N_eta1,N_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
-   &geom_eta,alpha_mesh,geom_x)
+   &geom_eta,alpha_mesh,geom_x,jac_matrix)
  
 
 !********************************* 
@@ -274,9 +275,9 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
                                      & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
   f_init=f
 
-  call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r)
+  call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
 !  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
-  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1, N_eta2)
+!  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1, N_eta2)
 
 !  !write f in a file before calculations
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
@@ -353,12 +354,6 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,nb_step,"fexact")
   call print2d(geom_eta,&
    &f(2:(N_eta1),2:(N_eta2))-f_init(2:(N_eta1),2:(N_eta2)),N_eta1-2,N_eta2-2,visu_case,nb_step,"ferr")
-!open(unit=800,file='conv_CG',position="append")
-  !do i=1,N_eta1+1
-  !  do j=1,N_eta2+1
-  !    write(100,*) x1_tab(i,j),eta1_min+(i-1)*delta_eta1
-  !  enddo
-  !enddo  
 
 ! L^\infty
   error = 0._f64
@@ -411,10 +406,13 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  SLL_DEALLOCATE_ARRAY(fp1,err)
  SLL_DEALLOCATE_ARRAY(g,err)
  SLL_DEALLOCATE_ARRAY(jac_array,err)
+ SLL_DEALLOCATE_ARRAY(jac_matrix,err)
  SLL_DEALLOCATE_ARRAY(x1n_array,err)
  SLL_DEALLOCATE_ARRAY(x2n_array,err)
  SLL_DEALLOCATE_ARRAY(x1_tab,err)
  SLL_DEALLOCATE_ARRAY(x2_tab,err)
+ SLL_DEALLOCATE_ARRAY(phi_exact,err)
+ 
  t1 => delete_time_mark(t1)
  t2 => delete_time_mark(t2)
  call delete_SL_curvilinear(plan_sl)
