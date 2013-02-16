@@ -34,7 +34,7 @@ program cg_curvilinear_2D
   character (len=16) :: f_file !,bctop,bcbot
   character (len=8) :: conv_CG
 
-  namelist /param/ N_eta1,N_eta2,dt,nb_step
+  namelist /param/ N_eta1,N_eta2,dt,nb_step,carac_case
   
   PERIODIC_B=0
   HERMITE_B=1
@@ -48,7 +48,7 @@ program cg_curvilinear_2D
 
   visu_step = 100
 
-  mesh_case = 4 ! 1 : cartesian 
+  mesh_case = 2 ! 1 : cartesian 
                 ! 2 : polar 
                 ! 3 : r^2 modified polar 
                 ! 4 : colella 
@@ -62,7 +62,7 @@ program cg_curvilinear_2D
                  ! 2 : Explicit Euler with spline interpolation  
                  ! 5 : Fixed point (midpoint)
 
-  phi_case = 1 ! 1: translation 
+  phi_case = 2 ! 1: translation 
                ! 2: rotation 
                ! 3: anisotropic rotation
 
@@ -276,7 +276,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   f_init=f
 
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
-!  call poisson_solve_curvilivear(plan_sl%poisson,f,plan_sl%phi)
+!  call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
 !  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1, N_eta2)
 
 !  !write f in a file before calculations
