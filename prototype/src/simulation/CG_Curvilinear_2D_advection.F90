@@ -173,7 +173,8 @@ contains
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
     sll_int32 :: N_eta1, N_eta2
     sll_int32 :: i,j,maxiter,iter,k_eta1,k_eta2
-    sll_int32 :: bc1_type,bc2_type,mesh_case
+    sll_int32 :: bc1_type,bc2_type,mesh_case,ii,jj
+    sll_real64 :: phi_loc(2,2) 
    
     
     N_eta1=plan%N_eta1
@@ -253,13 +254,14 @@ contains
              eta2=eta20-(dt*plan%field(1,i,j)/jac_array(i,j))
              eta1=eta10-(dt*plan%field(2,i,j)/jac_array(i,j))
 
-            ! call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
-             !   &eta1,eta2)
+             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
+                &eta1,eta2)
+             !print *,i,j,eta1,eta2,eta1_min,eta1_max,eta2_min,eta2_max
  
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
-   
           end do
        end do
+       stop
   end if
 
     if(plan%carac_case==3) then
@@ -286,6 +288,8 @@ contains
     end do
 
     endif
+
+
 
     if (plan%carac_case==5) then
        !using fixed point method
@@ -350,14 +354,29 @@ contains
                   if (abs(eta2_loc)>1.e-13) print *,'#eta2_loc=',eta2_loc
                   eta2_loc=1._f64 
                 endif
-   
-             a_eta1=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(2,k_eta1,k_eta2) &
-             &+eta1_loc*plan%field(2,k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
-             & plan%field(2,k_eta1,k_eta2+1)+eta1_loc*plan%field(2,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
+             
+               do jj=0,1
+                 do ii=0,1               
+                   phi_loc(1+ii,1+jj) = plan%field(2,k_eta1+ii,k_eta2+jj)/jac_array(k_eta1+ii,k_eta2+jj)
+                 enddo
+               enddo
+               phi_loc(1,1) = (1.0_f64-eta1_loc)*phi_loc(1,1) + eta1_loc*phi_loc(2,1)
+               phi_loc(1,2) = (1.0_f64-eta1_loc)*phi_loc(1,2) + eta1_loc*phi_loc(2,2)
+               a_eta1 = (1.0_f64-eta2_loc)*phi_loc(1,1) + eta2_loc*phi_loc(1,2)
+               a_eta1 = 0.5_f64*dt*a_eta1
 
-             a_eta2=0.5_f64*dt*((1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*plan%field(1,k_eta1,k_eta2)+ & 
-             & eta1_loc*plan%field(1,k_eta1+1,k_eta2))+eta2_loc*((1.0_f64-eta1_loc)* & 
-             & plan%field(1,k_eta1,k_eta2+1)+eta1_loc*plan%field(1,k_eta1+1,k_eta2+1)))/jac_array(k_eta1,k_eta2)
+               do jj=0,1
+                 do ii=0,1               
+                   phi_loc(1+ii,1+jj) = plan%field(1,k_eta1+ii,k_eta2+jj)/jac_array(k_eta1+ii,k_eta2+jj)
+                 enddo
+               enddo
+               phi_loc(1,1) = (1.0_f64-eta1_loc)*phi_loc(1,1) + eta1_loc*phi_loc(2,1)
+               phi_loc(1,2) = (1.0_f64-eta1_loc)*phi_loc(1,2) + eta1_loc*phi_loc(2,2)
+               a_eta2 = (1.0_f64-eta2_loc)*phi_loc(1,1) + eta2_loc*phi_loc(1,2)
+               a_eta2 = 0.5_f64*dt*a_eta2
+
+             
+
 
                 eta1n=eta1
                 eta2n=eta2
@@ -370,7 +389,7 @@ contains
              end do
 
              if (iter==maxiter .and. abs((eta1n-eta1))+abs((eta2n-eta2))>tolr) then
-                print*,'#no convergence in fixed point methode',i,j !,step
+                print*,'#no convergence in fixed point method',i,j !,step
              end if
              eta1=eta10-2.0_f64*a_eta1
              eta2=eta20-2.0_f64*a_eta2
@@ -380,6 +399,9 @@ contains
 
        end do
   end if
+
+
+
 
     if(bc2_type==PERIODIC_SPLINE) fnp1(:,N_eta2+1)=fnp1(:,1) 
     if(bc1_type==PERIODIC_SPLINE) fnp1(N_eta1+1,:)=fnp1(1,:)
