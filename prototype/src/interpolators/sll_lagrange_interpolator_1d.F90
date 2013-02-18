@@ -31,40 +31,60 @@ implicit none
  end interface
 contains  !**********************************************************
  
- subroutine initialize_li1d_interpolator(interpolator,xi,fi,degree,bc_type)
-  class(lagrange_1d_interpolator),intent(inout) :: interpolator
-    sll_int32,intent(in)                        :: degree
-    sll_real64,dimension(1:degree+1),intent(in) :: xi,fi
-    sll_int32,  intent(in)                      :: bc_type
-    
-    interpolator%bc_type = bc_type
+subroutine initialize_li1d_interpolator(interpolator,xi,fi,degree,num_pts,bc_type)
+  class(lagrange_1d_interpolator), intent(inout) :: interpolator
+    sll_int32, intent(in)                        :: degree,num_pts
+    sll_real64,dimension(1:num_pts+1),intent(in) :: xi,fi
+    sll_int32, intent(in), optional              :: bc_type
+
+    if(present(bc_type))then
+        interpolator%bc_type = bc_type
+    else
+        interpolator%bc_type = 0
+    end if
     interpolator%lagrange => new_lagrange_interpolation_1D( &
            xi, &
            fi, &
            degree, &
+           num_pts, &
            bc_type)
- end subroutine initialize_li1d_interpolator
+end subroutine initialize_li1d_interpolator
 
- subroutine compute_interpolants_li1d(interpolator, data_array)
+subroutine compute_interpolants_li1d(interpolator, data_array)
   class(lagrange_1d_interpolator), intent(inout) :: interpolator
   sll_real64, dimension(:), intent(in)           :: data_array
-  print*,"pas encore"
- ! call compute_lagrange_interpolation_1D(data_array,interpolator)
- end subroutine compute_interpolants_li1d
 
-!DEFINE_NULL_INTERP_1D_ARRAY_MSG(lagrange_1d_interpolator, compute_interpolants_li1d)
+  call compute_lagrange_interpolation_1D(data_array,interpolator%lagrange)
+end subroutine compute_interpolants_li1d
+
+function interpolate_array_li1d(this, num_points, data, coordinates) result(data_out)
+  class(lagrange_1d_interpolator), intent(in)     :: this
+  sll_int32, intent(in)  :: num_points    ! size of output array
+  sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
+  sll_real64, dimension(:), intent(in) :: coordinates  
+  sll_real64, dimension(1:num_points)    :: data_out
+
+  call compute_lagrange_interpolation_1D(coordinates,this%lagrange)
+  call interpolate_array_values(data,this%lagrange)
+  data_out=this%lagrange%data_out
+end function interpolate_array_li1d
+
+
+DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_values_li1d)
 DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_derivatives_li1d)
-DEFINE_NULL_INTERP_1D_ARRAY(lagrange_1d_interpolator, interpolate_array_li1d)
 DEFINE_NULL_INTERPOLATE_1D_DISP(lagrange_1d_interpolator, interpolate_array_disp_li1d)
 DEFINE_NULL_INTERP_1D_POINTER_SUB(lagrange_1d_interpolator, interpolate_pointer_derivatives_li1d)
 DEFINE_NULL_INTERP_ONE_ARG_MSG(lagrange_1d_interpolator, interpolate_derivative_eta1_li1d)
 DEFINE_NULL_INTERP_1D_POINTER_SUB(lagrange_1d_interpolator, interpolate_pointer_values_li1d)
-DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_values_li1d)
 DEFINE_NULL_INTERP_ONE_ARG_MSG(lagrange_1d_interpolator, interpolate_value_li1d)
 DEFINE_NULL_RECONSTRUCT_1D_ARRAY(lagrange_1d_interpolator, reconstruct_array_li1d)
+!DEFINE_NULL_INTERP_1D_ARRAY_MSG(lagrange_1d_interpolator, compute_interpolants_li1d)
+!DEFINE_NULL_INTERP_1D_ARRAY(lagrange_1d_interpolator, interpolate_array_li1d)
 
- subroutine delete_li1d (obj)
+subroutine delete_li1d (obj)
   class(lagrange_1d_interpolator) :: obj
   call delete(obj%lagrange)
- end subroutine delete_li1d
+end subroutine delete_li1d
+
+
 end module sll_lagrange_interpolator_1d
