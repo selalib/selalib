@@ -6,16 +6,17 @@ module sll_lagrange_interpolation
 implicit none
 
  type :: sll_lagrange_interpolation_1D
-   sll_real64                           :: result !result=p(x) where p is the polynomial of interpolation
-   sll_real64                           :: x
    sll_int32                            :: degree
+   sll_int32                            :: num_points
    sll_int32                            :: bc_type
-   sll_real64,dimension(:),pointer      :: wj 
-   sll_real64,dimension(:),pointer      :: xi 
-   sll_real64,dimension(:),pointer      :: fi ! fi(i)=function(xi(i))
+   sll_real64, dimension(:), pointer    :: wj 
+   sll_real64, dimension(:), pointer    :: xi 
+   sll_real64, dimension(:), pointer    :: x
+   sll_real64, dimension(:), pointer    :: fi ! fi(i)=function(xi(i))
+   sll_real64, dimension(:), pointer    :: data_out !result=p(x) where p is the polynomial of interpolation
  end type sll_lagrange_interpolation_1D
 
- integer, parameter :: DEFAULT = 0,PERIODIC_LAGRANGE = 1, HERMITE_LAGRANGE = 2
+ integer, parameter :: DEFAULT_LAGRANGE = 0, PERIODIC_LAGRANGE = 1, HERMITE_LAGRANGE = 2
 
 interface delete
   module procedure delete_lagrange_interpolation_1D
@@ -24,13 +25,12 @@ end interface
 contains  !*****************************************************************************
 
 
-function new_lagrange_interpolation_1D(xi,fi,degree,bc_type)
+function new_lagrange_interpolation_1D(xi,fi,degree,num_points,bc_type)
 type(sll_lagrange_interpolation_1D), pointer :: new_lagrange_interpolation_1D
 sll_int32 ::i,j,ierr
-sll_int32,intent(in) :: degree
+sll_int32,intent(in) :: degree, num_points
 sll_int32,intent(in),optional :: bc_type
 sll_real64,dimension(1:degree+1),intent(in) :: xi,fi
-sll_real64,dimension(1:degree+1) :: wj
 
 SLL_ALLOCATE( new_lagrange_interpolation_1D, ierr )
 
@@ -40,9 +40,28 @@ else
  new_lagrange_interpolation_1D%bc_type=0
 end if
 
+SLL_ALLOCATE(new_lagrange_interpolation_1D%xi(degree),ierr)
+SLL_ALLOCATE(new_lagrange_interpolation_1D%fi(degree),ierr)
+SLL_ALLOCATE(new_lagrange_interpolation_1D%wj(degree),ierr)
+SLL_ALLOCATE(new_lagrange_interpolation_1D%x(num_points),ierr)
+SLL_ALLOCATE(new_lagrange_interpolation_1D%data_out(num_points),ierr)
+new_lagrange_interpolation_1D%degree=degree
+new_lagrange_interpolation_1D%num_points=num_points
+new_lagrange_interpolation_1D%xi=xi
+new_lagrange_interpolation_1D%fi=fi
+end function new_lagrange_interpolation_1D
+
+
+subroutine compute_lagrange_interpolation_1D(xi,lagrange)
+type(sll_lagrange_interpolation_1D), pointer :: lagrange
+sll_int32 :: i,j
+sll_real64,dimension(1:lagrange%degree+1),intent(in) :: xi
+sll_real64,dimension(1:lagrange%degree+1) :: wj
+
+
 wj=1.0_f64
-do j=1,degree+1
- do i=1,degree+1
+do j=1,lagrange%degree+1
+ do i=1,lagrange%degree+1
   if(i/=j) then
    wj(j)=wj(j)*(xi(j)-xi(i))
   end if
@@ -50,34 +69,30 @@ do j=1,degree+1
  wj(j)=1/wj(j)
 end do
 
-SLL_ALLOCATE(new_lagrange_interpolation_1D%xi(degree),ierr)
-SLL_ALLOCATE(new_lagrange_interpolation_1D%fi(degree),ierr)
-SLL_ALLOCATE(new_lagrange_interpolation_1D%wj(degree),ierr)
-new_lagrange_interpolation_1D%degree=degree
-new_lagrange_interpolation_1D%xi=xi
-new_lagrange_interpolation_1D%fi=fi
-new_lagrange_interpolation_1D%wj=wj
-end function new_lagrange_interpolation_1D
+lagrange%wj=wj
+end subroutine compute_lagrange_interpolation_1D
 
-subroutine compute_lagrange_interpolation_1D(x,lagrange_interpolation)
-type(sll_lagrange_interpolation_1D), pointer :: lagrange_interpolation
-sll_int32 ::i,bc_type
-sll_real64, intent(in) :: x
-sll_real64 :: sum1,sum2,result
 
-lagrange_interpolation%x=x
-lagrange_interpolation%result=result
-bc_type=lagrange_interpolation%bc_type
+subroutine interpolate_array_values(x,lagrange)
+type(sll_lagrange_interpolation_1D), pointer :: lagrange
+sll_int32 ::i,j,bc_type
+sll_real64,dimension(1:lagrange%num_points), intent(in) :: x
+sll_real64 :: sum1,sum2
+
+bc_type=lagrange%bc_type
+lagrange%x=x
 
 select case(bc_type)
-case(DEFAULT)
- sum1=0.0_f64
- sum2=0.0_f64
- do i=1,lagrange_interpolation%degree+1
-  sum1=sum1+lagrange_interpolation%fi(i)*lagrange_interpolation%wj(i)/(x-lagrange_interpolation%xi(i))
-  sum2=sum2+lagrange_interpolation%wj(i)/(x-lagrange_interpolation%xi(i))
+case(DEFAULT_LAGRANGE)
+ do j=1,lagrange%num_points
+  sum1=0.0_f64
+  sum2=0.0_f64
+  do i=1,lagrange%degree+1
+   sum1=sum1+lagrange%fi(i)*lagrange%wj(i)/(x(j)-lagrange%xi(i))
+   sum2=sum2+lagrange%wj(i)/(x(j)-lagrange%xi(i))
+  end do
+  lagrange%data_out(j)=sum1/sum2
  end do
- lagrange_interpolation%result=sum1/sum2
 case (PERIODIC_LAGRANGE)
  print*,"pas encore de periodique"
 case (HERMITE_LAGRANGE)
@@ -86,7 +101,8 @@ case default
    print *, 'ERROR: compute_lagrange_interpolation_1D(): not recognized boundary condition'
    STOP
 end select
-end subroutine compute_lagrange_interpolation_1D
+end subroutine interpolate_array_values 
+
 
 subroutine delete_lagrange_interpolation_1D( lagrange_interpolation )
 type(sll_lagrange_interpolation_1D), pointer :: lagrange_interpolation
