@@ -13,6 +13,7 @@ program unit_test
   use sll_cubic_spline_interpolator_1d
   use sll_quintic_spline_interpolator_1d
   use cubic_non_uniform_spline_interpolator_1d
+  use sll_periodic_interpolator_1d
   implicit none
 
 #ifdef STDF95
@@ -21,8 +22,9 @@ program unit_test
   class(sll_interpolator_1d_base), pointer     :: interp
 #endif
 
-  type(lagrange_1d_interpolator), target       :: lagrange
-  type(cubic_spline_1d_interpolator), target   :: spline
+  type(per_1d_interpolator), target            :: per
+ ! type(lagrange_1d_interpolator), target       :: lagrange
+ ! type(cubic_spline_1d_interpolator), target   :: spline
   type(quintic_spline_1d_interpolator), target :: quintic_spline
   type(cubic_non_uniform_spline_1d_interpolator), target  :: cubic_nonunif_spline
   !type(WENO_interp_1d), pointer               :: weno
@@ -62,21 +64,24 @@ program unit_test
 #ifdef STDF95
   call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
 #else
-  call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
+!  call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
   call quintic_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
   call cubic_nonunif_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  call lagrange%initialize(coordinates_d,data,n-1,n-1)
+!  call lagrange%initialize(coordinates_d,data,n-1,n-1)
+  call per%initialize(n,x_min,x_max,SPLINE,n)
 #endif
 
-  interp =>  spline
+!  interp =>  spline
   interp =>  quintic_spline
   interp =>  cubic_nonunif_spline
-  interp =>  lagrange
+!  interp =>  lagrange
+  interp => per
 #ifdef STDF95
   out = cubic_spline_interpolate_array(interp, n, data, interpolation_points)
 #else
   !out = interp%interpolate_array(n, data, interpolation_points)
-  out = interp%interpolate_array(n, data,coordinates_d)
+  out = interp%interpolate_array_disp(n, data,real(0,8))  !pour periodic_interp
+  !out = interp%interpolate_array(n, data,coordinates_d)   !pour lagrange, car on interpolle aux noeuds
 #endif
 
   error = 0.0_f64

@@ -110,6 +110,7 @@ target_link_libraries( test_interpolators_1d
 	               sll_working_precision 
                        ${LAPACK_LIBRARIES}
 		       sll_lagrange_interpolation
+                       sll_periodic_interp
                      )
 ENDIF()
 add_executable(test_interpolators_2d unit_test.F90
