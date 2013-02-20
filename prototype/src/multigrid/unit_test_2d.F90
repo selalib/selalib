@@ -20,11 +20,24 @@
 !> of times, the variables are not overwritten.
 !>
 program test_mgd2
-use mpi
-use hdf5
-use sll_xdmf_parallel
+use hdf5, only:HID_T,HSIZE_T,HSSIZE_T
+use sll_collective, only: sll_boot_collective,      &
+                          sll_world_collective,     &
+                          sll_halt_collective,      &
+                          sll_get_collective_rank,  &
+                          sll_get_collective_size
+use sll_xdmf_parallel, only: sll_hdf5_file_create,  &
+                             sll_hdf5_write_array,  &
+                             sll_hdf5_file_close,   &
+                             sll_xdmf_open,         &
+                             sll_xdmf_close,        &
+                             sll_xml_file_create,   &
+                             sll_xml_grid_geometry, &
+                             sll_xml_field,         &
+                             sll_xml_file_close
 
 use sll_mgd2
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "mgd2.h"
@@ -76,15 +89,11 @@ character(len=8), parameter :: zdset = "zdataset"
 type(block)     :: my_block
 type(mg_solver) :: my_mg
 
-integer :: status(MPI_STATUS_SIZE)
+integer :: statut(MPI_STATUS_SIZE)
 
 pi=4.0d0*atan(1.0d0)
 
 ! initialize MPI and create a datatype for real numbers
-
-!call MPI_INIT(ierr)
-!call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
-!call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
 
 call sll_boot_collective()
 
@@ -151,16 +160,16 @@ neighbor(7)=nbrtop
 call MPI_BARRIER(comm2d,ierr)
 call MPI_SENDRECV(neighbor(3),1,MPI_INTEGER,nbrright,0, &
                   neighbor(4),1,MPI_INTEGER,nbrleft,0, &
-                  comm2d,status,ierr)
+                  comm2d,statut,ierr)
 call MPI_SENDRECV(neighbor(7),1,MPI_INTEGER,nbrright,1, &
                   neighbor(6),1,MPI_INTEGER,nbrleft,1, &
-                  comm2d,status,ierr)
+                  comm2d,statut,ierr)
 call MPI_SENDRECV(neighbor(3),1,MPI_INTEGER,nbrleft,0, &
                   neighbor(2),1,MPI_INTEGER,nbrright,0, &
-                  comm2d,status,ierr)
+                  comm2d,statut,ierr)
 call MPI_SENDRECV(neighbor(7),1,MPI_INTEGER,nbrleft,1, &
                   neighbor(8),1,MPI_INTEGER,nbrright,1, &
-                  comm2d,status,ierr)
+                  comm2d,statut,ierr)
 !-----------------------------------------------------------------------
 ! find indices of subdomain and check that dimensions of arrays are
 ! sufficient
