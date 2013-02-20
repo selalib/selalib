@@ -1,6 +1,6 @@
 module sll_vlasov4d_base
 
-#include "selalib.h"
+#include "selalib-mpi.h"
 
  use used_precision
  use geometry_module
@@ -76,7 +76,8 @@ contains
              1,1,1,int(psize,4),this%layout_x)
 
 
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x, &
+                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%layout_v => new_layout_4D( sll_world_collective )
@@ -84,7 +85,8 @@ contains
               geomx%nx,geomx%ny,geomv%nx, geomv%ny, &
               1,int(psize,4),1,1,this%layout_v)
 
-  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_v, &
+                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
 
   this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     

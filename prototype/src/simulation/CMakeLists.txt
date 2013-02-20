@@ -24,6 +24,7 @@ add_dependencies( sll_simulation_1d
   cubic_non_uniform_splines
   sll_tridiagonal
   sll_splines
+  sll_numerical_utilities	
   sll_fft
   sll_constants
   sll_utilities
@@ -32,7 +33,7 @@ add_dependencies( sll_simulation_1d
   sll_working_precision
   )
 
-#Here is defined the executables. 
+# Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
@@ -71,6 +72,7 @@ add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
 target_link_libraries( test_vp1d_fourier_fem
   sll_simulation_1d
   sll_splines
+  sll_numerical_utilities	
   sll_fft
   sll_constants
   sll_utilities
@@ -108,6 +110,7 @@ target_link_libraries(polar_SL
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 #	sll_distribution_function
 #	sll_scalar_field_2d	
@@ -125,6 +128,7 @@ target_link_libraries(polar_SL
 	geometry_functions
 #	sll_distribution_function
 #	sll_scalar_field_2d	
+        sll_numerical_utilities	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -145,15 +149,15 @@ target_link_libraries(CG_polar
 	sll_splines
 	sll_poisson_2d_polar
         sll_low_level_file_io
+        sll_numerical_utilities	
 	sll_fft
-	sll_tridiagonal
+#	sll_tridiagonal
 	sll_constants
 	sll_memory
 	sll_assertion
 	sll_timer
 	sll_utilities
 	)
-	
 
 IF (0)
 add_executable(Poisson_solver
@@ -162,7 +166,8 @@ add_executable(Poisson_solver
 		)
 target_link_libraries(Poisson_solver
 	sll_fft
-	sll_tridiagonal
+        sll_numerical_utilities	
+#	sll_tridiagonal
 	sll_constants
 	sll_memory
 	sll_assertion
@@ -181,6 +186,7 @@ target_link_libraries(VP1D_cart
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
+        sll_numerical_utilities	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -201,6 +207,7 @@ target_link_libraries(VP1D_deltaf_cart
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
+        sll_numerical_utilities	
 	sll_constants
 	sll_low_level_file_io
   	sll_utilities
@@ -210,6 +217,7 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
+
 ENDIF(NOT STDF95)
 ENDIF()
 
@@ -221,16 +229,19 @@ ENDIF()
 ###      Parallel simulations
 #############################################################################
 # ATTENTION: From here below, the simulations/tests are parallel
-set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+
 #Here is defined the library containing the parallel simulations. 
-#Please add your new simulation_MYMETHOD.F90 
+#Please add there your new simulation_MYMETHOD.F90 
 ############################################################
 
-add_library( sll_simulations STATIC simulation_base_class.F90 
-  simulation_4d_vlasov_poisson_cartesian.F90 )
+add_library( sll_simulations STATIC 
+  simulation_base_class.F90 
+  simulation_4d_vlasov_poisson_cartesian.F90
+  simulation_6d_vlasov_poisson_cartesian.F90 )
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
@@ -238,9 +249,10 @@ add_dependencies( sll_simulations
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
+  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
@@ -251,10 +263,11 @@ add_dependencies( sll_simulations
   sll_working_precision
   )
 
-#Here is defined the executables. 
+#Define the executables/tests here.
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
+
 
 add_executable( test_vp4d_sim unit_test_4d.F90 )
 
@@ -263,9 +276,10 @@ target_link_libraries( test_vp4d_sim
   sll_poisson_parallel
   sll_fft
   sll_electric_field_accumulators
-  sll_scalar_field_4d
+  sll_scalar_field
   sll_interpolators
   sll_splines
+  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
@@ -276,4 +290,24 @@ target_link_libraries( test_vp4d_sim
   sll_working_precision
   )
 
-ENDIF() 
+add_executable( test_vp6d_sim unit_test_6d.F90 )
+
+target_link_libraries( test_vp6d_sim
+  sll_simulations
+  sll_poisson_parallel
+  sll_fft
+  sll_electric_field_accumulators
+  sll_scalar_field
+  sll_interpolators
+  sll_splines
+  sll_numerical_utilities	
+  sll_remap
+  sll_collective
+  sll_constants
+  sll_low_level_file_io_parallel
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+ENDIF()
