@@ -1,10 +1,14 @@
 program test_multigrid_3d
+use hdf5, only:HID_T,HSIZE_T,HSSIZE_T
 use mgd3
-use sll_collective
+use sll_collective, only: sll_boot_collective,      &
+                          sll_world_collective,     &
+                          sll_halt_collective,      &
+                          sll_get_collective_rank,  &
+                          sll_get_collective_size,  &
+                          sll_collective_barrier
 use sll_hdf5_io_parallel
 use sll_xml_io
-use mpi
-use hdf5
 use numeric_constants
 #include "mgd3.h"
 #include "sll_memory.h"
