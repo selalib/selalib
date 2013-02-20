@@ -1,16 +1,17 @@
 SET(BSL_LIB_DEPS sll_interpolators
                  sll_splines 
+                 sll_numerical_utilities	
                  sll_memory 
 	         sll_working_precision
                  sll_utilities 
                  sll_assertion)
 
-IF(NOT STDF95)
 
    ADD_EXECUTABLE(test_bsl_2d unit_test_2d.F90)
    ADD_DEPENDENCIES(test_bsl_2d ${BSL_LIB_DEPS})
    TARGET_LINK_LIBRARIES(test_bsl_2d ${BSL_LIB_DEPS})
 
+IF(NOT STDF95)
    ADD_EXECUTABLE(test_bsl_4d unit_test_4d.F90)
    ADD_DEPENDENCIES(test_bsl_4d ${BSL_LIB_DEPS})
    TARGET_LINK_LIBRARIES(test_bsl_4d ${BSL_LIB_DEPS})

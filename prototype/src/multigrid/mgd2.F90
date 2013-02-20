@@ -1,6 +1,7 @@
 !> Multigrid solver in 2 dimensions on a cartesian grid
 !> \authors Pierre Navaro
-!> \remark this a refactored version of Bernard Bunner code (http://cs-www.cs.yale.edu/homes/douglas-craig/mgnet-codes-bunner.html)
+!> \remark this a refactored version of Bernard Bunner code 
+!> (http://cs-www.cs.yale.edu/homes/douglas-craig/mgnet-codes-bunner.html)
 module sll_mgd2
 use mpi
 #include "sll_working_precision.h"
@@ -11,8 +12,32 @@ sll_int32 :: ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20)
 sll_int32 :: nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20)
 sll_int32 :: irdatatype(20),jrdatatype(20),ijrdatatype(20)
 
-contains
+type, public :: block
+   sll_int32  :: id
+   sll_int32  :: sx, ex
+   sll_int32  :: sy, ey
+   sll_int32  :: ixp, jyq
+   sll_int32  :: iex, jey
+   sll_int32  :: ngrid
+   sll_int32  :: neighbor(8),bd(8)
+end type block
 
+type, public :: mg_solver
+   sll_int32  :: nx, ny
+   sll_int32  :: ibdry
+   sll_int32  :: jbdry
+   sll_int32  :: nxprocs
+   sll_int32  :: nyprocs
+   sll_real64 :: vbc(4),phibc(4,20)
+   sll_int32  :: comm2d
+   sll_real64 :: tolmax
+   sll_real64 :: xl,yl
+   sll_int32  :: maxcy, kcycle, iprer, ipost, iresw
+   sll_int32  :: isol
+end type mg_solver
+
+
+contains
 
 !>  \function
 !>  From the MPE library \n
@@ -98,15 +123,12 @@ end subroutine
 !> make the change
 !>
 !> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-subroutine mgdinit(vbc,phibc,ixp,jyq,iex,jey,ngrid,nxp2,nyp2, &
-                   sx,ex,sy,ey,realtype,nxprocs,nyprocs,nwork, &
-                   ibdry,jbdry,myid,nerror)
+subroutine initialize(my_block, my_mg, nerror)
 #include "mgd2.h"
 
-sll_int32  :: ixp,jyq,iex,jey,ngrid,nxp2,nyp2,sx,ex,sy,ey
-sll_int32  :: realtype,nxprocs,nyprocs,nwork,ibdry,jbdry
-sll_int32  :: myid,nerror
-sll_real64 :: vbc(4),phibc(4,20)
+sll_int32       :: nerror
+type(block)     :: my_block
+type(mg_solver) :: my_mg
 
 !sll_int32  :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
 !sll_int32  :: ikdatatype,jkdatatype,ijkdatatype
@@ -114,6 +136,7 @@ sll_real64 :: vbc(4),phibc(4,20)
 !sll_int32  :: nxr,nyr,sxr,exr,syr,eyr
 !sll_int32  :: irdatatype,jrdatatype,ijrdatatype
 sll_int32  :: i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
+
 # if DEBUG
 sll_real64 :: tinitial
 tinitial=MPI_WTIME()
@@ -122,30 +145,30 @@ tinitial=MPI_WTIME()
 ! set /mgd/ variables to zero
 !
 do k=1,20
-  nxk(k)=0
-  nyk(k)=0
-  sxk(k)=0
-  exk(k)=0
-  syk(k)=0
-  eyk(k)=0
-  kpbgn(k)=0
-  kcbgn(k)=0
-  ikdatatype(k)=MPI_DATATYPE_NULL
-  jkdatatype(k)=MPI_DATATYPE_NULL
-  ijkdatatype(k)=MPI_DATATYPE_NULL
-  irdatatype(k)=MPI_DATATYPE_NULL
-  jrdatatype(k)=MPI_DATATYPE_NULL
-  ijrdatatype(k)=MPI_DATATYPE_NULL
-  sxi(k)=0
-  exi(k)=0
-  syi(k)=0
-  eyi(k)=0
-  nxr(k)=0
-  nyr(k)=0
-  sxr(k)=0
-  exr(k)=0
-  syr(k)=0
-  eyr(k)=0
+  nxk(k)         = 0
+  nyk(k)         = 0
+  sxk(k)         = 0
+  exk(k)         = 0
+  syk(k)         = 0
+  eyk(k)         = 0
+  kpbgn(k)       = 0
+  kcbgn(k)       = 0
+  ikdatatype(k)  = MPI_DATATYPE_NULL
+  jkdatatype(k)  = MPI_DATATYPE_NULL
+  ijkdatatype(k) = MPI_DATATYPE_NULL
+  irdatatype(k)  = MPI_DATATYPE_NULL
+  jrdatatype(k)  = MPI_DATATYPE_NULL
+  ijrdatatype(k) = MPI_DATATYPE_NULL
+  sxi(k)         = 0
+  exi(k)         = 0
+  syi(k)         = 0
+  eyi(k)         = 0
+  nxr(k)         = 0
+  nyr(k)         = 0
+  sxr(k)         = 0
+  exr(k)         = 0
+  syr(k)         = 0
+  eyr(k)         = 0
 end do
 !------------------------------------------------------------------------
 ! make a number of checks
@@ -159,28 +182,28 @@ end do
 ! doing some inter-process data communication - warning: would
 ! be very complex because of the pressure coefficients)
 !
-if (mod(nxp2-2,nxprocs).ne.0) then
-  write(6,100) nxp2-2,nxprocs
+if (mod(my_mg%nx,my_mg%nxprocs).ne.0) then
+  write(6,100) my_mg%nx,my_mg%nxprocs
   nerror=1
   return
 end if
-if (mod(nyp2-2,nyprocs).ne.0) then
-  write(6,110) nyp2-2,nyprocs
+if (mod(my_mg%ny,my_mg%nyprocs).ne.0) then
+  write(6,110) my_mg%ny,my_mg%nyprocs
   nerror=1
   return
 end if
-100  format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
-            'nxprocs=',i3,/,'cannot use the new version of the ', &
-            'multigrid code',/)
-110  format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
-            'nyprocs=',i3,/,'cannot use the new version of the ', &
-            'multigrid code',/)
+100 format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
+           'nxprocs=',i3,/,'cannot use the new version of the ',  &
+           'multigrid code',/)
+110 format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
+           'nyprocs=',i3,/,'cannot use the new version of the ',  &
+           'multigrid code',/)
 # else
 !
 ! check that the old version is not used with non-periodic BCs
 !
-if (ibdry.ne.0.or.jbdry.ne.0) then
-  write(6,120) ibdry,jbdry
+if (my_mg%ibdry.ne.0.or.my_mg%jbdry.ne.0) then
+  write(6,120) my_mg%ibdry,my_mg%jbdry
   nerror=1
   return
 end if
@@ -193,15 +216,15 @@ end if
 !
 ! check that the dimensions are correct
 !
-i=ixp*2**(iex-1)+1
-if ((nxp2-1).ne.i) then
-  write(6,130) nxp2-1,i
+i=my_block%ixp*2**(my_block%iex-1)+1
+if ((my_mg%nx+1).ne.i) then
+  write(6,130) my_mg%nx+1,i
   nerror=1
   return
 end if
-j=jyq*2**(jey-1)+1
-if ((nyp2-1).ne.j) then
-  write(6,140) nyp2-1,j
+j=my_block%jyq*2**(my_block%jey-1)+1
+if ((my_mg%ny+1).ne.j) then
+  write(6,140) my_mg%ny+1,j
   nerror=1
   return
 end if
@@ -215,13 +238,13 @@ end if
 ! check that the number of points at the coarser level is not smaller
 ! than the number of processes in either direction
 !
-if (ixp.lt.nxprocs) then
-  write(6,150) ixp,nxprocs
+if (my_block%ixp.lt.my_mg%nxprocs) then
+  write(6,150) my_block%ixp,my_mg%nxprocs
   nerror=1
   return
 end if
-if (jyq.lt.nyprocs) then
-  write(6,160) jyq,nyprocs
+if (my_block%jyq.lt.my_mg%nyprocs) then
+  write(6,160) my_block%jyq,my_mg%nyprocs
   nerror=1
   return
 end if
@@ -239,14 +262,14 @@ end if
 ! check that coarsifying takes place in all directions at the finest
 ! grid level
 !
-if (ngrid.gt.1) then
-  if (iex.eq.1) then
-    write(6,170) ngrid,iex
+if (my_block%ngrid.gt.1) then
+  if (my_block%iex.eq.1) then
+    write(6,170) my_block%ngrid,my_block%iex
     nerror=1
     return
   end if
-  if (jey.eq.1) then
-    write(6,180) ngrid,jey
+  if (my_block%jey.eq.1) then
+    write(6,180) my_block%ngrid,my_block%jey
     nerror=1
     return
   end if
@@ -261,27 +284,32 @@ end if
 ! define all grid levels
 ! I have adopted the same notations as in Mudpack as far as possible.
 ! When a confusion was possible, I added a suffix 'm' to the name
-! of the variables. For example, nxm is nxp2-1 for the multigrid
+! of the variables. For example, nxm is nx+1 for the multigrid
 ! code whereas nx means nxp2-2 in the rest of the code.
 !
-do k=1,ngrid
-  nxk(k)=ixp*2**(max(k+iex-ngrid,1)-1)+1
-  nyk(k)=jyq*2**(max(k+jey-ngrid,1)-1)+1
+do k=1,my_block%ngrid
+  nxk(k)=my_block%ixp*2**(max(k+my_block%iex-my_block%ngrid,1)-1)+1
+  nyk(k)=my_block%jyq*2**(max(k+my_block%jey-my_block%ngrid,1)-1)+1
 end do
 
 ! for all grid levels, set the indices of the subdomain the process
 ! 'myid' work on, as well as the datatypes needed for the exchange
 ! of boundary data
 
-nxf=nxk(ngrid)
-nyf=nyk(ngrid)
-sxk(ngrid)=sx
-exk(ngrid)=ex
-syk(ngrid)=sy
-eyk(ngrid)=ey
-call grid1_type(ikdatatype(ngrid),jkdatatype(ngrid), &
-                ijkdatatype(ngrid),realtype,sx,ex,sy,ey)
-do k=ngrid-1,1,-1
+nxf=nxk(my_block%ngrid)
+nyf=nyk(my_block%ngrid)
+sxk(my_block%ngrid)=my_block%sx
+exk(my_block%ngrid)=my_block%ex
+syk(my_block%ngrid)=my_block%sy
+eyk(my_block%ngrid)=my_block%ey
+call grid1_type(my_block,ikdatatype(my_block%ngrid), &
+                         jkdatatype(my_block%ngrid), &
+                         ijkdatatype(my_block%ngrid),&
+                         my_block%sx, &
+                         my_block%ex, &
+                         my_block%sy, &
+                         my_block%ey)
+do k=my_block%ngrid-1,1,-1
   nxm=nxk(k)
   nym=nyk(k)
   if (nxm.lt.nxf) then
@@ -300,8 +328,8 @@ do k=ngrid-1,1,-1
   end if
   nxf=nxm
   nyf=nym
-  call grid1_type(ikdatatype(k),jkdatatype(k),ijkdatatype(k), &
-                  realtype,sxk(k),exk(k),syk(k),eyk(k))
+  call grid1_type(my_block,ikdatatype(k),jkdatatype(k),ijkdatatype(k), &
+                  sxk(k),exk(k),syk(k),eyk(k))
 end do
 # if xdebug1
 !
@@ -309,11 +337,11 @@ end do
 ! as a rough check
 ! 
 write(6,*) 'size of the multigrid phi-messages'
-do k=ngrid,1,-1
+do k=my_block%ngrid,1,-1
   call MPI_TYPE_SIZE(ikdatatype(k),nsiz1,ierr)
   call MPI_TYPE_SIZE(jkdatatype(k),nsiz2,ierr)
   call MPI_TYPE_SIZE(ijkdatatype(k),nsiz3,ierr)
-  write(6,*) 'myid: ',myid,' k=',k,' sxk=',sxk(k),' exk=', &
+  write(6,*) 'myid: ',my_block%id,' k=',k,' sxk=',sxk(k),' exk=', &
                 exk(k),' syk=',syk(k),' eyk=',eyk(k), &
                 ' size of datatypes: ',nsiz1,nsiz2,nsiz3
 end do
@@ -323,7 +351,7 @@ end do
 ! check that there is sufficient work space
 !
 kps=1
-do k=ngrid,1,-1
+do k=my_block%ngrid,1,-1
   sxm=sxk(k)
   exm=exk(k)
   sym=syk(k)
@@ -332,22 +360,25 @@ do k=ngrid,1,-1
   kcbgn(k)=kpbgn(k)+(exm-sxm+3)*(eym-sym+3)
   kps=kcbgn(k)+6*(exm-sxm+3)*(eym-sym+3)
 end do
-if (kps.gt.nwork) then
-  write(6,200) kps,nwork,myid
-  nerror=1
-  return
-200 format(/,'ERROR in mgdinit: not enough work space',/, &
-    ' kps=',i10,' nwork=',i10,' myid: ',i3,/, &
-    '-> put the formula for nwork in main in ', &
-    'comments',/,'   and set nwork to the value of kps',/)
-else
-  write(6,210) kps,nwork
-210 format(/,'WARNING in mgdinit: kps=',i10,' nwork=',i10, &
-         /,'can optimize the amount of memory needed by ', &
-           'the multigrid code',/,'by putting the formula ', &
-           'for nwork into comments and setting',/,'nwork ', &
-           'to the value of kps',/)
-end if
+
+!if (kps.gt.nwork) then
+!  write(6,200) kps,nwork,my_block%id
+!  nerror=1
+!  return
+!else
+!  write(6,210) kps,nwork
+!end if
+
+!200 format(/,'ERROR in mgdinit: not enough work space',/, &
+!    ' kps=',i10,' nwork=',i10,' myid: ',i3,/, &
+!    '-> put the formula for nwork in main in ', &
+!    'comments',/,'   and set nwork to the value of kps',/)
+!210 format(/,'WARNING in mgdinit: kps=',i10,' nwork=',i10, &
+!         /,'can optimize the amount of memory needed by ', &
+!           'the multigrid code',/,'by putting the formula ', &
+!           'for nwork into comments and setting',/,'nwork ', &
+!           'to the value of kps',/)
+
 # if WMGD
 !------------------------------------------------------------------------
 ! For the new version of the multigrid code, set the boundary values 
@@ -367,11 +398,11 @@ end if
 !       ------vbc(2)-----
 !
 do j=1,4
-  phibc(j,ngrid)=vbc(j)
+  my_mg%phibc(j,my_block%ngrid)=my_mg%vbc(j)
 end do
-do k=ngrid-1,1,-1
+do k=my_block%ngrid-1,1,-1
   do j=1,4
-    phibc(j,k)=0.0d0
+    my_mg%phibc(j,k)=0.0d0
   end do
 end do
 # else
@@ -397,13 +428,13 @@ end do
 !          exc=3                  exc+1=4
 !
       
-sxi(ngrid)=sxk(ngrid)-1
-exi(ngrid)=exk(ngrid)+1
-syi(ngrid)=syk(ngrid)-1
-eyi(ngrid)=eyk(ngrid)+1
-nxf=nxk(ngrid)
-nyf=nyk(ngrid)
-do k=ngrid-1,1,-1
+sxi(my_block%ngrid)=sxk(my_block%ngrid)-1
+exi(my_block%ngrid)=exk(my_block%ngrid)+1
+syi(my_block%ngrid)=syk(my_block%ngrid)-1
+eyi(my_block%ngrid)=eyk(my_block%ngrid)+1
+nxf=nxk(my_block%ngrid)
+nyf=nyk(my_block%ngrid)
+do k=my_block%ngrid-1,1,-1
   nxc=nxk(k)
   nyc=nyk(k)
   if (nxc.lt.nxf) then
@@ -421,7 +452,7 @@ do k=ngrid-1,1,-1
     eyi(k)=eyk(k)+1
   end if
 # if xdebug1
-  write(6,*) 'myid: ',myid,' k=',k,' sxi=',sxi(k),' exi=', &
+  write(6,*) 'myid: ',my_block%id,' k=',k,' sxi=',sxi(k),' exi=', &
                 exi(k),' syi=',syi(k),' eyi=',eyi(k)
 # endif
   nxf=nxc
@@ -459,7 +490,7 @@ end do
 ! special procedure directly from r, so that no value needs to be
 ! assigned to the indices at level ngrid.
 !
-do k=ngrid-1,1,-1
+do k=my_block%ngrid-1,1,-1
   nxf=nxk(k+1)
   nyf=nyk(k+1)
   nxc=nxk(k)
@@ -472,8 +503,8 @@ do k=ngrid-1,1,-1
     exm=exr(k)
     nxm=nxr(k)
   else
-    if (k.eq.(ngrid-1)) then
-      write(6,300) ngrid,ngrid-1
+    if (k.eq.(my_block%ngrid-1)) then
+      write(6,300) my_block%ngrid,my_block%ngrid-1
 300   format('ERROR in mgdinit: no coarsifying between level ', &
              i3,' and level ',i3,/,', the current version of ', &
              'the code cannot cope with that',/, &
@@ -494,8 +525,8 @@ do k=ngrid-1,1,-1
     eym=eyr(k)
     nym=nyr(k)
   else
-    if (k.eq.(ngrid-1)) then
-      write(6,300) ngrid,ngrid-1
+    if (k.eq.(my_block%ngrid-1)) then
+      write(6,300) my_block%ngrid,my_block%ngrid-1
       nerror=1
       return
     end if
@@ -503,8 +534,8 @@ do k=ngrid-1,1,-1
     eyr(k)=eym
     nyr(k)=nym
   end if
-  call grid1_type(irdatatype(k),jrdatatype(k),ijrdatatype(k), &
-                  realtype,sxr(k),exr(k),syr(k),eyr(k))
+  call grid1_type(my_block,irdatatype(k),jrdatatype(k),ijrdatatype(k), &
+                  sxr(k),exr(k),syr(k),eyr(k))
 end do
 # if xdebug1
 !
@@ -512,11 +543,11 @@ end do
 ! as a rough check
 ! 
 write(6,*) 'size of the r-messages'
-do k=ngrid-1,1,-1
+do k=my_block%ngrid-1,1,-1
   call MPI_TYPE_SIZE(irdatatype(k),nsiz1,ierr)
   call MPI_TYPE_SIZE(jrdatatype(k),nsiz2,ierr)
   call MPI_TYPE_SIZE(ijrdatatype(k),nsiz3,ierr)
-  write(6,*) 'myid: ',myid,' k=',k,' sxr=',sxr(k),' exr=', &
+  write(6,*) 'myid: ',my_block%id,' k=',k,' sxr=',sxr(k),' exr=', &
                 exr(k),' syr=',syr(k),' eyr=',eyr(k), &
                 ' size of datatypes: ',nsiz1,nsiz2,nsiz3
 end do
@@ -569,17 +600,15 @@ end subroutine
 !>             gscale, gxch1lin, gxch1cor,
 !>               -> rescale pressure and density around average values
 !>------------------------------------------------------------------------
-subroutine mgdsolver(isol,sx,ex,sy,ey,phif,rhsf,r,ngrid,work, &
-                     maxcy,tolmax,kcycle,iprer,ipost,iresw, &
-                     xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
-                     bd,phibc,iter,nprscr,nerror)
+subroutine mgdsolver(my_block,my_mg,phif,rhsf,r,work, &
+                     rro,iter,nprscr,nerror)
 #include "mgd2.h"
-sll_int32  :: isol,sx,ex,sy,ey,ngrid,nx,ny
-sll_int32  :: maxcy,kcycle,iprer,ipost,iresw
-sll_real64 :: phif(sx-1:ex+1,sy-1:ey+1),rhsf(sx-1:ex+1,sy-1:ey+1)
-sll_real64 :: r(sx-1:ex+1,sy-1:ey+1)
-sll_real64 :: work(*),tolmax,xl,yl,rro,phibc(4,20)
-sll_int32  :: comm2d,myid,neighbor(8),bd(8),iter,nerror
+sll_real64      :: phif(:,:),rhsf(:,:)
+sll_real64      :: r(:,:)
+sll_real64      :: work(*),rro
+sll_int32       :: iter,nerror
+type(block)     :: my_block
+type(mg_solver) :: my_mg
 
 logical    :: nprscr
 
@@ -595,11 +624,11 @@ tinitial=MPI_WTIME()
 !------------------------------------------------------------------------
 ! discretize pde at all levels
 !
-if (isol.eq.1) then
+if (my_mg%isol.eq.1) then
 !
 ! density: only have to set geometric factors
 !
-  do k=1,ngrid
+  do k=1,my_block%ngrid
     sxm=sxk(k)
     exm=exk(k)
     sym=syk(k)
@@ -607,7 +636,8 @@ if (isol.eq.1) then
     nxm=nxk(k)
     nym=nyk(k)
     ic=kcbgn(k)
-    call mgdrpde(sxm,exm,sym,eym,nxm,nym,work(ic),xl,yl,bd)
+    call mgdrpde(sxm,exm,sym,eym,nxm,nym,work(ic), &
+                 my_mg%xl,my_mg%yl,my_block%bd)
   end do
 else
 !
@@ -620,14 +650,14 @@ else
 ! determine coefficients at finest grid level (mid-point values) from
 ! two neighboring density points
 !
-  sxf=sxk(ngrid)
-  exf=exk(ngrid)
-  syf=syk(ngrid)
-  eyf=eyk(ngrid)
-  nxf=nxk(ngrid)
-  nyf=nyk(ngrid)
-  icf=kcbgn(ngrid)
-  call mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,work(icf),r,xl,yl,bd)
+  sxf=sxk(my_block%ngrid)
+  exf=exk(my_block%ngrid)
+  syf=syk(my_block%ngrid)
+  eyf=eyk(my_block%ngrid)
+  nxf=nxk(my_block%ngrid)
+  nyf=nyk(my_block%ngrid)
+  icf=kcbgn(my_block%ngrid)
+  call mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,work(icf),r,my_mg%xl,my_mg%yl,my_block%bd)
 # if WMGD
 !
 ! new version: determine coefficients at coarser grid levels from
@@ -635,7 +665,7 @@ else
 ! is involved because of the grid setup, under the condition that
 ! mod(nx,nxprocs)=mod(ny,nyprocs)=0
 !
-  do k=ngrid-1,1,-1
+  do k=my_block%ngrid-1,1,-1
     sxm=sxk(k)
     exm=exk(k)
     sym=syk(k)
@@ -644,24 +674,24 @@ else
     nym=nyk(k)
     ic=kcbgn(k)
     call mgdphpde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                  sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl)
+                  sx,ex,sy,ey,nxf,nyf,r,my_block%bd,my_mg%xl,my_mg%yl)
   end do
 # else
-  if (ngrid.gt.1) then
+  if (my_block%ngrid.gt.1) then
 !
 ! old version: use two locations ir1 and ir2 in the work vector to
 ! store the density on the different grid levels. First set r in 
 ! work(ir1) at the finest grid level; this is used to determine the 
 ! coefficients at level k=ngrid-1
 !
-    ir1=kpbgn(ngrid)
-    ir2=kcbgn(ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
-    sxf=sxr(ngrid-1)
-    exf=exr(ngrid-1)
-    syf=syr(ngrid-1)
-    eyf=eyr(ngrid-1)
-    nxf=nxr(ngrid-1)
-    nyf=nyr(ngrid-1)
+    ir1=kpbgn(my_block%ngrid)
+    ir2=kcbgn(my_block%ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
+    sxf=sxr(my_block%ngrid-1)
+    exf=exr(my_block%ngrid-1)
+    syf=syr(my_block%ngrid-1)
+    eyf=eyr(my_block%ngrid-1)
+    nxf=nxr(my_block%ngrid-1)
+    nyf=nyr(my_block%ngrid-1)
     lev=1
     call mgdrsetf(sxf,exf,syf,eyf,work(ir1),r)
 !
@@ -671,7 +701,7 @@ else
 ! of the density needed there to determine the coefficients; exchange
 ! of the boundary density data is necessary
 !
-    do k=ngrid-1,1,-1
+    do k=my_block%ngrid-1,1,-1
       sxm=sxk(k)
       exm=exk(k)
       sym=syk(k)
@@ -681,10 +711,10 @@ else
       ic=kcbgn(k)
       if (lev.eq.1) then
         call mgdppde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                     sxf,exf,syf,eyf,work(ir1),xl,yl,bd)
+                     sxf,exf,syf,eyf,work(ir1),my_mg%xl,my_mg%yl,my_block%bd)
       else
         call mgdppde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                     sxf,exf,syf,eyf,work(ir2),xl,yl,bd)
+                     sxf,exf,syf,eyf,work(ir2),my_mg%xl,my_mg%yl,my_block%bd)
       end if
       if (k.gt.1) then
         sxc=sxr(k-1)
@@ -698,12 +728,12 @@ else
         if (lev.eq.1) then
           call mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,work(ir2), &
                         sxf,exf,syf,eyf,nxf,nyf,work(ir1), &
-                        comm2d,myid,neighbor,bd,itype,jtype)
+                        my_mg%comm2d,my_block%id,my_block%neighbor,my_block%bd,itype,jtype)
           lev=2
         else
           call mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,work(ir1), &
                         sxf,exf,syf,eyf,nxf,nyf,work(ir2), &
-                        comm2d,myid,neighbor,bd,itype,jtype)
+                        my_mg%comm2d,my_block%id,my_block%neighbor,my_block%bd,itype,jtype)
           lev=1
         end if
         sxf=sxc
@@ -720,32 +750,32 @@ else
 !------------------------------------------------------------------------
 ! set phi,rhsf in work at the finest grid level
 !
-sxf=sxk(ngrid)
-exf=exk(ngrid)
-syf=syk(ngrid)
-eyf=eyk(ngrid)
-ipf=kpbgn(ngrid)
-irf=kcbgn(ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
+sxf = sxk(my_block%ngrid)
+exf = exk(my_block%ngrid)
+syf = syk(my_block%ngrid)
+eyf = eyk(my_block%ngrid)
+ipf = kpbgn(my_block%ngrid)
+irf = kcbgn(my_block%ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
 call mgdsetf(sxf,exf,syf,eyf,work(ipf),work(irf),phif,rhsf)
 !------------------------------------------------------------------------
 ! cycling at kcur=ngrid level
 !
-kcur=ngrid
-do iter=1,maxcy
-  call mgdkcyc(work,rhsf,kcur,kcycle,iprer,ipost,iresw, &
-               comm2d,myid,neighbor,bd,phibc)
-  sxm=sxk(ngrid)
-  exm=exk(ngrid)
-  sym=syk(ngrid)
-  eym=eyk(ngrid)
-  ip=kpbgn(ngrid)
-  call mgderr(relmax,sxm,exm,sym,eym,phif,work(ip),comm2d)
-  if (relmax.le.tolmax) goto 1000
+kcur=my_block%ngrid
+do iter=1,my_mg%maxcy
+  call mgdkcyc(work,rhsf,kcur,my_mg%kcycle,my_mg%iprer,my_mg%ipost,my_mg%iresw, &
+               my_mg%comm2d,my_block%id,my_block%neighbor,my_block%bd,my_mg%phibc)
+  sxm=sxk(my_block%ngrid)
+  exm=exk(my_block%ngrid)
+  sym=syk(my_block%ngrid)
+  eym=eyk(my_block%ngrid)
+  ip=kpbgn(my_block%ngrid)
+  call mgderr(relmax,sxm,exm,sym,eym,phif,work(ip),my_mg%comm2d)
+  if (relmax.le.my_mg%tolmax) goto 1000
 end do
 !------------------------------------------------------------------------
 ! if not converged in maxcy cycles, issue an error message and quit
 !
-if (myid.eq.0) write(6,100) maxcy,relmax
+if (my_block%id.eq.0) write(6,100) my_mg%maxcy,relmax
 100   format('WARNING: failed to achieve convergence in ',i5, &
        ' cycles  error=',e12.5)
 nerror=1
@@ -757,34 +787,34 @@ return
 !
 ! rescale phif
 !
-if (isol.eq.1) then
+if (my_mg%isol.eq.1) then
   avo=rro
 else
   avo=0.0d0
 end if
-call gscale(sx,ex,sy,ey,phif,avo,acorr,comm2d,nx,ny)
+call gscale(my_block%sx,my_block%ex,my_block%sy,my_block%ey,phif,avo,acorr,my_mg%comm2d,my_mg%nx,my_mg%ny)
 !
 ! exchange boundary data and impose periodic BCs
 !
-call gxch1lin(phif,comm2d,sx,ex,sy,ey,neighbor,bd, &
-              ikdatatype(ngrid),jkdatatype(ngrid))
-call gxch1cor(phif,comm2d,sxm,exm,sym,eym,neighbor,bd, &
-              ijkdatatype(ngrid))
+call gxch1lin(phif,my_mg%comm2d,my_block%sx,my_block%ex,my_block%sy,my_block%ey,my_block%neighbor,my_block%bd, &
+              ikdatatype(my_block%ngrid),jkdatatype(my_block%ngrid))
+call gxch1cor(phif,my_mg%comm2d,sxm,exm,sym,eym,my_block%neighbor,my_block%bd, &
+              ijkdatatype(my_block%ngrid))
 # if WMGD
 !
 ! impose wall and Dirichlet BCs
 !
-call mgdbdry(sx,ex,sy,ey,phif,bd,vbc)
+call mgdbdry(sx,ex,sy,ey,phif,my_block%bd,my_mg%vbc)
 # endif
 
-if (isol.eq.1) then
-  if (nprscr.and.myid.eq.0) write(6,110) relmax,iter,acorr
+if (my_mg%isol.eq.1) then
+  if (nprscr.and.my_block%id.eq.0) write(6,110) relmax,iter,acorr
 110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
 # if DEBUG
   timing(95)=timing(95)+MPI_WTIME()-tinitial
 # endif
 else
-  if (nprscr.and.myid.eq.0) write(6,120) relmax,iter,acorr
+  if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
 120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
 # if DEBUG
   timing(96)=timing(96)+MPI_WTIME()-tinitial
@@ -797,14 +827,16 @@ end subroutine
 !> Define the 3 derived datatypes needed to communicate the boundary
 !> data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
 !> neighbors
-subroutine grid1_type(itype,jtype,ijtype,realtype,sx,ex,sy,ey)
+subroutine grid1_type(my_block,itype,jtype,ijtype,sx,ex,sy,ey)
 #include "mgd2.h"
 sll_int32  :: itype,jtype,ijtype,realtype,sx,ex,sy,ey,ierr
 sll_int32  :: ier
+type(block) :: my_block
 # if DEBUG
 sll_real64 :: tinitial
 tinitial=MPI_WTIME()
 # endif
+realtype = MPI_REAL8
 !
 ! datatype for one row
 !

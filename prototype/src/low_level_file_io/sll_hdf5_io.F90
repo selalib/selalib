@@ -1,15 +1,30 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!> \author Pierre Navaro
 !> \brief
-!>Implements the functions to write hdf5 file to store heavy data.
+!> Implements the functions to write hdf5 file to store heavy data.
 !> \details
 !> With HDF5 you can store several datasets in a single file.
+!> @note 
+!> link with sll_low_level_file_io
 module sll_hdf5_io
 #include "sll_working_precision.h"
   
-!! import this module with
-!! \code use sll_hdf5_io \endcode
-!! \author Pierre Navaro
-!! External links:
-!! - HDF5 file (http://www.hdfgroup.org/HDF5/)
 #ifndef NOHDF5
 
 use hdf5
@@ -57,40 +72,83 @@ contains
     call H5Fclose_f(file_id,error)
   end subroutine sll_hdf5_file_close
 
-#define NEW_HDF5_FUNCTION(func_name, dataspace_dimension, array_name_and_dims) \
-  subroutine func_name(file_id,array,dsetname,error);                     \
-    integer(hid_t)  , intent(in)           :: file_id;                    \
-    character(len=*), intent(in)           :: dsetname;                   \
-    sll_int32, intent(out)                 :: error;                      \
-    sll_int32                              :: rank, i;                    \
-    sll_real64, intent(in)                 :: array_name_and_dims;        \
-    integer(hsize_t)                       :: array_dims(dataspace_dimension); \
-    integer(hid_t)                         :: dataset_id;                 \
-    integer(hid_t)                         :: dataspace_id;               \
-    rank = dataspace_dimension;                                           \
-    do i = 1, rank;                                                       \
-      array_dims(i) = size(array,i);                                      \
-    end do;                                                               \
-    call H5Screate_simple_f(rank,array_dims,dataspace_id,error);          \
-    call H5Dcreate_f(file_id,                                             \
-                     dsetname,                                            \
-                     H5T_NATIVE_DOUBLE,                                   \
-                     dataspace_id,                                        \
-                     dataset_id,                                          \
-                     error);                                              \
-    call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error); \
-    call H5Sclose_f(dataspace_id,error);                                  \
-    call H5Dclose_f(dataset_id,error);                                    \
-  end subroutine func_name
+  !> Write a 1d array in hdf5 file
+  subroutine sll_hdf5_write_array_1d(file_id,array,dsetname,error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    sll_int32                    :: rank, i
+    sll_real64, intent(in)       :: array(:)     !< data array
+    integer(hsize_t)             :: array_dims(1)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+    rank = 1      
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_DOUBLE,                                  &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+    call H5Sclose_f(dataspace_id,error)
+    call H5Dclose_f(dataset_id,error)
+  end subroutine sll_hdf5_write_array_1d
 
-!> Write a 1D array of float in double precision in a HDF5 file 
-NEW_HDF5_FUNCTION(sll_hdf5_write_array_1d, 1, array(:))
+  !> Write a 2d array in hdf5 file
+  subroutine sll_hdf5_write_array_2d(file_id,array,dsetname,error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    sll_int32                    :: rank, i
+    sll_real64, intent(in)       :: array(:,:)   !< data array
+    integer(hsize_t)             :: array_dims(2)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+    rank = 2
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_DOUBLE,                                  &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+    call H5Sclose_f(dataspace_id,error)
+    call H5Dclose_f(dataset_id,error)
+  end subroutine sll_hdf5_write_array_2d
 
-!> Write a 2D array of float in double precision in a HDF5 file 
-NEW_HDF5_FUNCTION(sll_hdf5_write_array_2d, 2, array(:,:))
-
-!> Write a 3D array of float in double precision in a HDF5 file
-NEW_HDF5_FUNCTION(sll_hdf5_write_array_3d, 3, array(:,:,:))
+  !> Write a 3d array in hdf5 file
+  subroutine sll_hdf5_write_array_3d(file_id,array,dsetname,error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    sll_int32                    :: rank, i
+    sll_real64, intent(in)       :: array(:,:,:) !< data array
+    integer(hsize_t)             :: array_dims(3)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+    rank = 3
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_DOUBLE,                                  &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+    call H5Sclose_f(dataspace_id,error)
+    call H5Dclose_f(dataset_id,error)
+  end subroutine sll_hdf5_write_array_3d
 
 !Gysela functions that can be useful for future
 !  ! HDF5 saving for an integer
