@@ -46,6 +46,7 @@ module sll_fft
  
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
+
   
   ! Flags to pass when we create a new plan
   ! We can define 31 different flags.
@@ -138,10 +139,8 @@ contains
     array(k) = new_value
   end subroutine
 
-  ! The original choice of having the array be 0-indexed was an extremely bad
-  ! one. Furthermore, this function never checked anything and gave lots of 
-  ! troubles. The change to 1-index will have repercussions in many places... 
-  ! All this needs to be addressed.
+  ! Since one is inquiring on the modes, it is acceptable to have zero-based
+  ! arrays.
   subroutine fft_set_mode_complx_2d(plan,array,new_value,k,l)
     type(sll_fft_plan), pointer :: plan
 !    sll_comp64, dimension(0:,0:)  :: array
