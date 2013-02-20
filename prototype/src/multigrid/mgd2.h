@@ -1,5 +1,3 @@
-implicit none
-
 # define WMGD 0
 # define double_precision 1
 
