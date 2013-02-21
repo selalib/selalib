@@ -24,7 +24,7 @@ do i=1,4
  fi(i)=f(xi(i))
 end do 
 diff=0.0_f64
-l_i => new_lagrange_interpolation_1D(xi,fi,degree,5)
+l_i => new_lagrange_interpolation_1D(xi,fi,degree,5,real(0,8))
 call compute_lagrange_interpolation_1D(xi,l_i)
 call interpolate_array_values(coord,l_i)
 do i=1,5
