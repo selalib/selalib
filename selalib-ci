@@ -16,11 +16,11 @@ cmake ..
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
-make NightlyTest
-make NightlySubmit
+make NightlyTest || true
 if [ -f Testing/TAG ] ; then
    xsltproc ../cmake/ctest2junix.xsl Testing/`head -n 1 < Testing/TAG`/Test.xml > CTestResults.xml
 fi
+make NightlySubmit
 }; cd -
 rm -rf build
 exit 0
