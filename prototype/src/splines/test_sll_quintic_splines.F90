@@ -26,13 +26,13 @@ implicit none
 type(quintic_splines_uniform_plan), pointer    :: plan1
 type(quintic_splines_nonuniform_plan), pointer :: plan2
 sll_real64, dimension(:), allocatable          :: x1, f1 ! uniform
-sll_real64, dimension(:), allocatable          :: x2 ! non uniform
+sll_real64, dimension(:), allocatable          :: x2, f2 ! non uniform
 
 ! f1: test function for uniform case
 ! f2: test function for non uniform case
 ! x2: array coordinates for non uniform case
 sll_real64 :: xmin, xmax, h
-sll_real64 :: x, y, mu, norm
+sll_real64 :: x, y, norm
 sll_real64 :: err11, err12, err21, err22
 ! err11, err21 are the relative errors in the nodes for f1, f2 resp
 ! err12, 22 are the relative errors in random points for f1, f2 resp
@@ -45,7 +45,6 @@ print*,' '
 
 xmin    = -10.d0
 xmax    = 10.d0
-mu      = 0.5*(xmin+xmax)
 ok      = 1
 
 num_pts = 501
@@ -54,12 +53,14 @@ h = (xmax-xmin) / (num_pts-1)
 
 SLL_CLEAR_ALLOCATE( f1(num_pts), ierr)
 SLL_CLEAR_ALLOCATE( f2(num_pts), ierr)
+SLL_CLEAR_ALLOCATE( x1(num_pts), ierr)
 SLL_CLEAR_ALLOCATE( x2(num_pts), ierr)
 
-do i=0,num_pts-1
-   x = xmin + i*h
-   f1(i+1) = exp( - ( x - mu )**2  )
+do i=1,num_pts
+   x1(i) = xmin + (i-1)*h
 enddo
+
+f1 = exp( - x1*x1  )
 
 x2(1) = xmin
 do i=2,num_pts-1
@@ -67,11 +68,9 @@ do i=2,num_pts-1
    x = 5*x/num_pts 
    x2(i) = x2(i-1) + x*( xmax - x2(i-1))
 enddo
-
 x2(num_pts) = xmax
-f2 = exp( - ( x2 - mu )**2  )
 
-do i = 
+f2 = exp( - x2*x2  )
 
 plan1 => new_quintic_splines_uniform(num_pts, xmin, xmax)
 call compute_quintic_coeffs_uniform(f1, plan1)
@@ -85,15 +84,14 @@ err21 = 0.d0
 err22 = 0.d0
 norm  = 0.d0
 
-do i=0,num_pts-1
+do i=1,num_pts
 
-   x = xmin + i*h
-   err11 = err11 + ( f1(i+1) - quintic_splines(x, plan1) )**2
-   err21 = err21 + ( f2(i+1) - quintic_splines(x2(i+1), plan2) )**2
+   err11 = err11 + ( f1(i) - quintic_splines(x1(i), plan1) )**2
+   err21 = err21 + ( f2(i) - quintic_splines(x2(i), plan2) )**2
 
    call random_number(x)
    x = xmin + x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
-   y = exp( - ( x - mu )**2  )
+   y = exp( - x*x  )
    err12 = err12 + ( y - quintic_splines(x, plan1) )**2
    err22 = err22 + ( y - quintic_splines(x, plan2) )**2
    norm = norm + y*y; 
@@ -120,6 +118,7 @@ endif
 
 SLL_DEALLOCATE_ARRAY(f1, ierr)          
 SLL_DEALLOCATE_ARRAY(f2, ierr)
+SLL_DEALLOCATE_ARRAY(x1, ierr)
 SLL_DEALLOCATE_ARRAY(x2, ierr)
 call delete_quintic_splines(plan1)
 call delete_quintic_splines(plan2)
