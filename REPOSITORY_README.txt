@@ -5,10 +5,10 @@ structure like this:
                       ________________
                      |    Selalib     |
                      |________________|
-           __________________|_________________________________
-    ______|________   _______|_________   ______|________   ___|___
-   |   prototype   | |     selalib     | | gysela_public | | slv2d |
-   |_______________| |_________________| |_______________| |_______|
+           __________________|___________________________________________
+    ______|________   _______|_________   ______|________   ___|___   __|____
+   |   prototype   | |     selalib     | | gysela_public | | slv2d | | pic2d |
+   |_______________| |_________________| |_______________| |_______| |_______|
 
 The 'prototype' directory will contain the files related with the preliminary
 testing and development of an architecture for Selalib. During the initial
@@ -26,6 +26,9 @@ repository.
 
 'slv2d' is a code written by Eric Sonnendrucker that contains all functions
 we need to have in selalib. This part of the code will be used for testing purpose
+
+'pic2d' is a code written by Regine Bartheleme that contains a test case using PIC 
+method. This part of the code will be used for testing purpose of PIC features of selalib.
 
 AVAILABLE BRANCHES:
 
