@@ -11,7 +11,6 @@ IF(FFTW_FOUND AND NOT STDF95)
                                               sll_assertion 
                                               sll_constants 
                                               sll_memory 
-                                              sll_collective 
                                               sll_utilities 
                                               ${FFTW_LIBRARIES})
 ELSE()
@@ -25,16 +24,16 @@ ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 ADD_DEPENDENCIES(sll_maxwell sll_assertion 
                              sll_constants 
                              sll_memory 
-                             sll_collective 
                              sll_utilities )
 
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell
                                            sll_assertion 
                                            sll_constants 
                                            sll_memory 
-                                           sll_collective 
                                            sll_utilities )
 
+ADD_EXECUTABLE(test_allocate test.F90)
+TARGET_LINK_LIBRARIES(test_allocate sll_memory)
 
 # ****************************************************************************
 #                           PARALLEL MAXWELL SOLVERS
