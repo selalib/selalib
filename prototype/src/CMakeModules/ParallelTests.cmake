@@ -1,3 +1,4 @@
+
 SET(ARGS " ")
 SET(PROCS 2)
 ADD_MPI_TEST(collective test_collective ${PROCS} ${ARGS})
