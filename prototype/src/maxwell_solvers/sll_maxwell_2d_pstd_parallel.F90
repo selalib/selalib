@@ -1,5 +1,5 @@
 !**************************************************************
-!  Copyright INRIA
+!  Copyright INRIA, CNRS
 !  Authors : 
 !     Pierre Navaro 
 !  
@@ -46,45 +46,45 @@ module sll_maxwell_2d_periodic_cartesian_par
 #include "misc_utils.h"
 #include "sll_assert.h"
 
-  use, intrinsic :: iso_c_binding
-  use remapper
-  use sll_fft
-  use numeric_constants
-  use sll_collective
-  use sll_maxwell
+use, intrinsic :: iso_c_binding
+use remapper
+use sll_fft
+use numeric_constants
+use sll_collective
+use sll_maxwell
 
-  implicit none
+implicit none
 
-  !> Maxwell solver object
-  type maxwell_2d_periodic_plan_cartesian_par
-     sll_int32                           :: ncx         !< number of cells x
-     sll_int32                           :: ncy         !< number of cells y
-     type(C_PTR)                         :: fwx         !< fftw plan forward x
-     type(C_PTR)                         :: fwy         !< fftw plan forward y
-     type(C_PTR)                         :: bwx         !< fftw plan backward x
-     type(C_PTR)                         :: bwy         !< fftw plan backward y
-     type(layout_2D),  pointer           :: layout_x    !< layout sequential in x
-     type(layout_2D),  pointer           :: layout_y    !< layout sequential in y
-     sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
-     sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
-     sll_comp64, dimension(:), pointer   :: fft_x_array !< fft x transform
-     sll_comp64, dimension(:), pointer   :: fft_y_array !< fft y transform
-     type(remap_plan_2D_real64), pointer :: rmp_xy      !< remap x->y pointer
-     type(remap_plan_2D_real64), pointer :: rmp_yx      !< remap y->x pointer
-     sll_real64                          :: e_0         !< electric conductibility
-     sll_real64                          :: mu_0        !< magnetic permeability
-     type(C_PTR)                         :: p_x_array   !< x pointer to memory
-     type(C_PTR)                         :: p_y_array   !< y pointer to memory
-     sll_real64, dimension(:,:), pointer :: fz_x        !< array sequential in x
-     sll_real64, dimension(:,:), pointer :: fz_y        !< array sequential in y
-     sll_real64, dimension(:), pointer   :: kx          !< x wave number
-     sll_real64, dimension(:), pointer   :: ky          !< y wave number
-  end type maxwell_2d_periodic_plan_cartesian_par
+!> Maxwell solver 2D object, PSTD scheme
+type maxwell_2d_periodic_plan_cartesian_par
+   sll_int32                           :: ncx         !< number of cells x
+   sll_int32                           :: ncy         !< number of cells y
+   type(C_PTR)                         :: fwx         !< fftw plan forward x
+   type(C_PTR)                         :: fwy         !< fftw plan forward y
+   type(C_PTR)                         :: bwx         !< fftw plan backward x
+   type(C_PTR)                         :: bwy         !< fftw plan backward y
+   type(layout_2D),  pointer           :: layout_x    !< layout sequential in x
+   type(layout_2D),  pointer           :: layout_y    !< layout sequential in y
+   sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
+   sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
+   sll_comp64, dimension(:), pointer   :: fft_x_array !< fft x transform
+   sll_comp64, dimension(:), pointer   :: fft_y_array !< fft y transform
+   type(remap_plan_2D_real64), pointer :: rmp_xy      !< remap x->y pointer
+   type(remap_plan_2D_real64), pointer :: rmp_yx      !< remap y->x pointer
+   sll_real64                          :: e_0         !< electric conductibility
+   sll_real64                          :: mu_0        !< magnetic permeability
+   type(C_PTR)                         :: p_x_array   !< x pointer to memory
+   type(C_PTR)                         :: p_y_array   !< y pointer to memory
+   sll_real64, dimension(:,:), pointer :: fz_x        !< array sequential in x
+   sll_real64, dimension(:,:), pointer :: fz_y        !< array sequential in y
+   sll_real64, dimension(:), pointer   :: kx          !< x wave number
+   sll_real64, dimension(:), pointer   :: ky          !< y wave number
+end type maxwell_2d_periodic_plan_cartesian_par
 
 include 'fftw3.f03'
 
-  sll_int32, private         :: i
-  sll_int32, private         :: j
+sll_int32, private :: i
+sll_int32, private :: j
 
 contains
 
@@ -207,7 +207,7 @@ contains
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
     do j = 1, ny_loc
        D_DX(ey(:,j))
-       plan%fz_x(:,j) = plan%fz_x(:,j) - dt * plan%d_dx
+       plan%fz_x(:,j) = plan%fz_x(:,j) - dt_mu * plan%d_dx
     end do
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
@@ -215,7 +215,7 @@ contains
     call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
     do i = 1, nx_loc
        D_DY(ex(i,:))
-       plan%fz_y(i,:) = plan%fz_y(i,:) + dt * plan%d_dy
+       plan%fz_y(i,:) = plan%fz_y(i,:) + dt_mu * plan%d_dy
     end do
       
   end subroutine faraday_te
@@ -256,7 +256,7 @@ contains
 #ifdef DEBUG
        call verify_argument_sizes_par(plan%layout_y, jx)
 #endif
-       ex(:,:) = ex(:,:) - dt * jx(:,:) / plan%e_0
+       ex(:,:) = ex(:,:) - dt_e * jx(:,:) 
     end if
 
     call apply_remap_2D( plan%rmp_xy,plan%fz_x,plan%fz_y)
@@ -375,7 +375,6 @@ contains
   !> Delete maxwell solver object
   subroutine delete_maxwell_2d_periodic_plan_cartesian_par(plan)
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
-    sll_int32                                              :: error
 
     if( .not. associated(plan) ) then
        print *, 'ERROR, delete_maxwell_3d_periodic_plan_par(): ', &
@@ -390,10 +389,10 @@ contains
     call dfftw_destroy_plan(plan%bwx)
     call dfftw_destroy_plan(plan%bwy)
 
-    call delete( plan%rmp_xy )
-    call delete( plan%rmp_yx )
-    call delete( plan%layout_x )
-    call delete( plan%layout_y )
+    call delete(plan%rmp_xy)
+    call delete(plan%rmp_yx)
+    call delete(plan%layout_x)
+    call delete(plan%layout_y)
 
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 
