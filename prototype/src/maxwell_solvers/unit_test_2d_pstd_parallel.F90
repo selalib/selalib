@@ -10,6 +10,7 @@ program test_maxwell_2d_periodic_cart_par
   use sll_maxwell_2d_periodic_cartesian_par
   use sll_collective
   use hdf5
+  use sll_xml_io
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
                                   sll_hdf5_write_array, &
                                   sll_hdf5_file_close
@@ -20,12 +21,6 @@ program test_maxwell_2d_periodic_cart_par
   sll_int32   :: nx_loc
   sll_int32   :: ny_loc
   sll_int32   :: error
-  sll_real64  :: Lx
-  sll_real64  :: Ly
-  sll_real64  :: dx
-  sll_real64  :: dy
-  sll_real64  :: x
-  sll_real64  :: y
   sll_int32   :: i
   sll_int32   :: j
   sll_int32   :: gi
@@ -35,14 +30,21 @@ program test_maxwell_2d_periodic_cart_par
   sll_int32   :: nprocx
   sll_int32   :: nprocy
   sll_int32   :: e
-  sll_real32  :: ok 
-  sll_real64  :: dt
   sll_int32   :: istep
   sll_int32   :: nstep
+  sll_int32   :: mode = 1
+  sll_real32  :: ok 
+  sll_real64  :: dt
   sll_real64  :: time = 0.0
   sll_real64  :: omega
   sll_real64  :: err_l2
-  sll_int32   :: mode = 1
+  sll_real64  :: err_glob
+  sll_real64  :: Lx
+  sll_real64  :: Ly
+  sll_real64  :: dx
+  sll_real64  :: dy
+  sll_real64  :: x
+  sll_real64  :: y
   sll_real64  :: tcpu1
   sll_real64  :: tcpu2
 
@@ -52,8 +54,8 @@ program test_maxwell_2d_periodic_cart_par
   type(layout_2D), pointer            :: layout_y
   sll_real64, dimension(:,:), pointer :: ex
   sll_real64, dimension(:,:), pointer :: ey
-  sll_real64, dimension(:,:), pointer :: bz
-  sll_int32, dimension(1:2)           :: global
+  sll_real64, dimension(:,:), pointer :: hz
+  sll_int32, dimension(2)             :: global
   character(len=4)                    :: cstep
 
   ok = 1.0
@@ -62,8 +64,8 @@ program test_maxwell_2d_periodic_cart_par
   call sll_boot_collective()
 
   ! Number of cells is equal to number of points in this case
-  ncx = 512
-  ncy = 512
+  ncx = 64
+  ncy = 64
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
@@ -97,9 +99,9 @@ program test_maxwell_2d_periodic_cart_par
                                                       1, &
                                                 layout_y )
   call flush(6)
-  call sll_view_lims_2D( layout_x )
+  call sll_view_lims_2D(layout_x)
   call flush(6)
-  call sll_view_lims_2D( layout_y )
+  call sll_view_lims_2D(layout_y)
   call flush(6)
 
   plan => new_maxwell_2d_periodic_plan_cartesian_par(layout_x, &
@@ -109,7 +111,7 @@ program test_maxwell_2d_periodic_cart_par
   plan%e_0  = 1.0_f64 
   plan%mu_0 = 1.0_f64 
 
-  bz => plan%fz_x
+  hz => plan%fz_x
 
   !Ex si sequential along y
   call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
@@ -122,18 +124,20 @@ program test_maxwell_2d_periodic_cart_par
   do j=1,ny_loc
      do i=1,nx_loc
         global = local_to_global_2D( layout_x, (/i, j/))
-        gi = global(1); gj = global(2)
-        x  = (gi-1)*dx; y  = (gj-1)*dy
-        plan%fz_x(i,j) = - cos(mode*(i-1)*dx) &
-                         * cos(mode*(j-1)*dy) &
-                         * cos(omega*time)
+        gi = global(1)
+        gj = global(2)
+        x  = (gi-1)*dx
+        y  = (gj-1)*dy
+        hz(i,j) = - cos(mode*x) * cos(mode*y) * cos(omega*time)
      end do
   end do
 
+  call write_fields_2d('fields-0000')
+
   tcpu1 = MPI_WTIME()
 
-  nstep = 100
-  dt = 0.5 / sqrt (1./(dx*dx)+1./(dy*dy))
+  nstep = 1000
+  dt = .5 / sqrt (1./(dx*dx)+1./(dy*dy))
   print*, ' dt = ', dt
   call faraday_te(plan,0.5*dt,ex,ey)
   time = 0.5*dt
@@ -144,23 +148,27 @@ program test_maxwell_2d_periodic_cart_par
      call ampere_te(plan,dt,ex,ey)
      time = time + dt
      call faraday_te(plan,dt,ex,ey)
-     call write_fields('fields-'//cstep)
+     call write_fields_2d('fields-'//cstep)
 
      err_l2 = 0.0
      do j=1,ny_loc
      do i=1,nx_loc
         global = local_to_global_2D( layout_x, (/i, j/))
-        gi = global(1); gj = global(2)
-        x  = (gi-1)*dx; y  = (gj-1)*dy
-        err_l2 = err_l2 + abs(bz(i,j) + cos(mode*(i-1)*dx) &
-                 * cos(mode*(j-1)*dy) * cos(omega*time))
+        gi = global(1)
+        gj = global(2)
+        x  = (gi-1)*dx
+        y  = (gj-1)*dy
+        err_l2 = err_l2 + abs(hz(i,j) + cos(mode*x)*cos(mode*y)*cos(omega*time))
      end do
      end do
+
+     call mpi_reduce(err_l2,err_glob,1,mpi_real8,MPI_SUM,0, &
+                     sll_world_collective%comm, error)
 
      if ( prank == MPI_MASTER ) then
         write(*,"(10x,' istep = ',I6)",advance="no") istep
         write(*,"(' time = ',g12.3,' sec')",advance="no") time
-        write(*,"(' L2 error = ',g15.5)") err_l2 / (ncx*ncy)
+        write(*,"(' L2 error = ',g15.5)") err_glob / (ncx*ncy)
      end if
 
   end do
@@ -180,7 +188,7 @@ program test_maxwell_2d_periodic_cart_par
 contains
 
   !> Experimental interface for an hdf5 array writer in parallel
-  subroutine write_fields( file_name )
+  subroutine write_fields_2d( file_name )
 
     character(len=*), intent(in)     :: file_name
     integer(HSIZE_T), dimension(1:2) :: global_dims
@@ -200,9 +208,53 @@ contains
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               ey,'ey_values',error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
-                              bz,'bz_values',error)
+                              hz,'hz_values',error)
     call sll_hdf5_file_close(file_id,error)
 
-  end subroutine write_fields
+    if (prank == MPI_MASTER) then
+
+       call sll_xml_file_create(file_name//".xmf",file_id,error)
+       write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+       write(file_id,"(a,2i5,a)") &
+          "<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
+          ncy,ncx,"'/>"
+       write(file_id,"(a)")  &
+          "<Geometry GeometryType='ORIGIN_DXDY'>"
+       write(file_id,"(a)")  &
+          "<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+       write(file_id,"(2f12.5)") 0., 0.
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a)")  &
+          "<DataItem Dimensions='2' NumberType='Float' Format='XML'>"
+       write(file_id,"(2f12.5)") dx, dy
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a)")"</Geometry>"
+       write(file_id,"(a)")  &
+          "<Attribute Name='Ex' AttributeType='Scalar' Center='Node'>"
+       write(file_id,"(a,2i5,a)") &
+          "<DataItem Dimensions='",ncy,ncx, &
+          "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)") file_name//".h5:/ex_values"
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a)")"</Attribute>"
+       write(file_id,"(a)")  &
+          "<Attribute Name='Ey' AttributeType='Scalar' Center='Node'>"
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ncy,ncx, &
+          "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)") file_name//".h5:/ey_values"
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a)")"</Attribute>"
+       write(file_id,"(a)")  &
+          "<Attribute Name='Hz' AttributeType='Scalar' Center='Node'>"
+       write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ncy,ncx, &
+          "' NumberType='Float' Precision='8' Format='HDF'>"
+       write(file_id,"(a)") file_name//".h5:/hz_values"
+       write(file_id,"(a)")"</DataItem>"
+       write(file_id,"(a)")"</Attribute>"
+       call sll_xml_file_close(file_id,error)
+
+    end if
+
+  end subroutine write_fields_2d
 
 end program test_maxwell_2d_periodic_cart_par

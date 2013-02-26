@@ -2,7 +2,8 @@ IF(FFTW_FOUND AND NOT STDF95)
 
    ADD_LIBRARY(sll_maxwell STATIC sll_maxwell.F90
                                   sll_maxwell_2d_fdtd.F90
-                                  sll_maxwell_2d_pstd.F90)
+                                  sll_maxwell_2d_pstd.F90
+                                  sll_maxwell_3d_pstd.F90)
 
    ADD_EXECUTABLE(test_maxwell_2d_pstd unit_test_2d_pstd.F90 )
    
@@ -10,7 +11,6 @@ IF(FFTW_FOUND AND NOT STDF95)
                                               sll_assertion 
                                               sll_constants 
                                               sll_memory 
-                                              sll_collective 
                                               sll_utilities 
                                               ${FFTW_LIBRARIES})
 ELSE()
@@ -24,34 +24,32 @@ ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 ADD_DEPENDENCIES(sll_maxwell sll_assertion 
                              sll_constants 
                              sll_memory 
-                             sll_collective 
                              sll_utilities )
 
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell
                                            sll_assertion 
                                            sll_constants 
                                            sll_memory 
-                                           sll_collective 
                                            sll_utilities )
 
+ADD_EXECUTABLE(test_allocate test.F90)
+TARGET_LINK_LIBRARIES(test_allocate sll_memory)
 
 # ****************************************************************************
-#
 #                           PARALLEL MAXWELL SOLVERS
-#
 # ****************************************************************************
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
   ADD_LIBRARY(sll_maxwell_parallel STATIC 
-              sll_maxwell_2d_periodic_cartesian_par.F90 )
+              sll_maxwell_2d_pstd_parallel.F90 )
 
   ADD_DEPENDENCIES(sll_maxwell_parallel sll_remap sll_collective)
   
-  ADD_EXECUTABLE(test_maxwell_2d_per_cart_par 
-                 test_maxwell_2d_periodic_cartesian_par.F90 )
+  ADD_EXECUTABLE(test_maxwell_2d_pstd_parallel 
+                 unit_test_2d_pstd_parallel.F90 )
 
-  TARGET_LINK_LIBRARIES(test_maxwell_2d_per_cart_par 
+  TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd_parallel 
                         sll_maxwell_parallel
                         sll_remap
                         sll_low_level_file_io_parallel

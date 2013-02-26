@@ -88,7 +88,8 @@ contains
   x3_min   = this%geomv%x0
   delta_x3 = this%geomv%dx
 
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x, &
+                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
   do k=1,loc_sz_k
@@ -96,7 +97,9 @@ contains
      gk = global_indices(3)
      alpha = (x3_min +(gk-1)*delta_x3)*dt
      do j=1,loc_sz_j
-        this%f(:,j,k,l) = this%interp_x1%interpolate_array_disp(loc_sz_i,this%f(:,j,k,l),alpha)
+        this%f(:,j,k,l) = this%interp_x1%interpolate_array_disp(loc_sz_i, &
+                                                                this%f(:,j,k,l), &
+                                                                alpha)
      end do
   end do
   end do
@@ -113,8 +116,8 @@ contains
 
   x4_min   = this%geomv%y0
   delta_x4 = this%geomv%dy
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-
+  call compute_local_sizes_4d(this%layout_x, &
+                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
 
     global_indices = local_to_global_4D(this%layout_x,(/1,1,1,l/)) 
@@ -124,7 +127,9 @@ contains
     do k=1,loc_sz_k
     do i=1,loc_sz_i
 
-       this%f(i,:,k,l) = this%interp_x2%interpolate_array_disp(loc_sz_j,this%f(i,:,k,l),alpha)
+       this%f(i,:,k,l) = this%interp_x2%interpolate_array_disp(loc_sz_j, &
+                                                               this%f(i,:,k,l), &
+                                                               alpha)
 
     end do
     end do
@@ -151,7 +156,8 @@ contains
   delta_x4 = this%geomv%dy
 
   SLL_ASSERT(this%transposed) 
-  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_v, &
+                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do i=1,loc_sz_i
   do j=1,loc_sz_j
