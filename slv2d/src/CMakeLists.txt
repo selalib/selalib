@@ -84,15 +84,16 @@ IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
 ELSE()
    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/prototype/src/fftpack ${CMAKE_BINARY_DIR}/fftpack)
    SET(FFTPACK_LIBRARIES "fftpack_module")
 ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
-              fft_module.F90
               geometry.F90
               maxwell2dfdtd.F90
               poisson2dpp_seq.F90
+              fft_module.F90
               poisson2d_periodic.F90
               precision.F90
               splinenn.F90

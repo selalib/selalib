@@ -106,24 +106,20 @@ end subroutine new_maxwell_2d_fdtd
 
 !> this routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.
-subroutine solve_maxwell_2d_fdtd(this, ex, ey, bz, dt)
+subroutine solve_maxwell_2d_fdtd(this, fx, fy, fz, dt)
 
-   type(maxwell_fdtd)          :: this              !< maxwell object
-   sll_real64 , intent(inout), dimension(:,:) :: ex !< electric field x
-   sll_real64 , intent(inout), dimension(:,:) :: ey !< electric field y
-   sll_real64 , intent(inout), dimension(:,:) :: bz !< magnetic field z
-   sll_real64 , intent(in)   :: dt  !< time step
+   type(maxwell_fdtd)         :: this !< maxwell object
+   sll_real64, dimension(:,:) :: fx   !< Ex or Bx
+   sll_real64, dimension(:,:) :: fy   !< Ey or By
+   sll_real64, dimension(:,:) :: fz   !< Bz or Ez
+   sll_real64, intent(in)     :: dt   !< time step
 
-   !B(n-1/2)--> B(n+1/2) sur les pts interieurs   
-   call faraday(this, ex, ey, bz, 0.5*dt)   
-   call cl_periodiques(this, ex, ey, bz, dt)
-
-   !E(n)-->E(n+1) sur les pts interieurs
-   call ampere(this, ex, ey, bz, dt) 
-   call cl_periodiques(this, ex, ey, bz, dt)
-
-   call faraday(this, ex, ey, bz, 0.5*dt)   
-   call cl_periodiques(this, ex, ey, bz, dt)
+   call faraday(this, fx, fy, fz, 0.5*dt)   
+   call cl_periodiques(this, fx, fy, fz, dt)
+   call ampere(this, fx, fy, fz, dt) 
+   call cl_periodiques(this, fx, fy, fz, dt)
+   call faraday(this, fx, fy, fz, 0.5*dt)   
+   call cl_periodiques(this, fx, fy, fz, dt)
 
 end subroutine solve_maxwell_2d_fdtd
 

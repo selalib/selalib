@@ -10,11 +10,11 @@ program vm4d_spectral
 
   implicit none
 
-  type(geometry)             :: geomx 
-  type(geometry)             :: geomv 
-  type(maxwell_pstd)         :: maxwell
-  type(poisson_2d_periodic)  :: poisson 
-  type(vlasov4d_spectral)    :: vlasov4d 
+  type(geometry)            :: geomx 
+  type(geometry)            :: geomv 
+  type(maxwell_pstd)        :: maxwell
+  type(poisson_2d_periodic) :: poisson 
+  type(vlasov4d_spectral)   :: vlasov4d 
 
   type(cubic_spline_2d_interpolator), target :: spl_x3x4
 
@@ -88,8 +88,16 @@ program vm4d_spectral
      !call compute_charge(vlasov4d,rho)
      call transposexv(vlasov4d)
      call compute_current(vlasov4d)
-     vlasov4d%exn=vlasov4d%ex;vlasov4d%eyn=vlasov4d%ey;
-     call ampere_te(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
+
+     vlasov4d%exn=vlasov4d%ex
+     vlasov4d%eyn=vlasov4d%ey;
+
+     call ampere_te(maxwell,vlasov4d%ex, &
+                            vlasov4d%ey, &
+                            vlasov4d%bz, &
+                            dt,          &
+                            vlasov4d%jx, &
+                            vlasov4d%jy) 
 
      call advection_x3x4(vlasov4d,dt)
 
@@ -112,12 +120,20 @@ program vm4d_spectral
      call advection_x1(vlasov4d,0.5*dt)
 
 !modif NC
-     call ampere_te(maxwell,vlasov4d%exn,vlasov4d%eyn,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
-     vlasov4d%ex=vlasov4d%exn;vlasov4d%ey=vlasov4d%eyn
+     call ampere_te(maxwell, vlasov4d%exn,  &
+                             vlasov4d%eyn,  &
+                             vlasov4d%bz,   &
+                             dt,            &
+                             vlasov4d%jx,   &
+                             vlasov4d%jy) 
+
+     vlasov4d%ex=vlasov4d%exn;
+     vlasov4d%ey=vlasov4d%eyn
 !fin
 
      if (mod(iter,fthdiag).eq.0) then 
-        nrj=sum(vlasov4d%ex*vlasov4d%ex+vlasov4d%ey*vlasov4d%ey)*(vlasov4d%geomx%dx)*(vlasov4d%geomx%dy)
+        nrj=sum(vlasov4d%ex*vlasov4d%ex+vlasov4d%ey*vlasov4d%ey) &
+           *(vlasov4d%geomx%dx)*(vlasov4d%geomx%dy)
         nrj=0.5_wp*log(nrj)
         call thdiag(vlasov4d,nrj,iter*dt)
      endif

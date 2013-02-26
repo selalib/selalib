@@ -21,6 +21,7 @@ do k=1,ngrid-1
 # endif
 end do
 
-call MPI_FINALIZE(ierr)
+!call MPI_FINALIZE(ierr)
+
 
 end subroutine
