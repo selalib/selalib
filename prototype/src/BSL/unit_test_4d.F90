@@ -42,11 +42,11 @@ implicit none
   n_x  = 32; n_y  = 32
   n_vx = 32; n_vy = 32
 
-  SLL_CLEAR_ALLOCATE(x(n_x)         , info)
-  SLL_CLEAR_ALLOCATE(y(n_y)         , info)
-  SLL_CLEAR_ALLOCATE(vx(n_vx)       , info)
-  SLL_CLEAR_ALLOCATE(vy(n_vy)       , info)
-  SLL_CLEAR_ALLOCATE(df(n_x,n_y,n_vx,n_vy), info)
+  SLL_CLEAR_ALLOCATE(x(1:n_x)         , info)
+  SLL_CLEAR_ALLOCATE(y(1:n_y)         , info)
+  SLL_CLEAR_ALLOCATE(vx(1:n_vx)       , info)
+  SLL_CLEAR_ALLOCATE(vy(1:n_vy)       , info)
+  SLL_CLEAR_ALLOCATE(df(1:n_x,1:n_y,1:n_vx,1:n_vy), info)
 
   !$OMP PARALLEL NUM_THREADS(1) &
   !$OMP DEFAULT(SHARED)           &

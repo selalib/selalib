@@ -84,7 +84,6 @@ IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
 ELSE()
    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/prototype/src/fftpack ${CMAKE_BINARY_DIR}/fftpack_module)
    SET(FFTPACK_LIBRARIES "fftpack_module")
 ENDIF()
 

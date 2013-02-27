@@ -51,10 +51,10 @@ num_pts = 501
 
 h = (xmax-xmin) / (num_pts-1)
 
-SLL_CLEAR_ALLOCATE( f1(num_pts), ierr)
-SLL_CLEAR_ALLOCATE( f2(num_pts), ierr)
-SLL_CLEAR_ALLOCATE( x1(num_pts), ierr)
-SLL_CLEAR_ALLOCATE( x2(num_pts), ierr)
+SLL_CLEAR_ALLOCATE( f1(1:num_pts), ierr)
+SLL_CLEAR_ALLOCATE( f2(1:num_pts), ierr)
+SLL_CLEAR_ALLOCATE( x1(1:num_pts), ierr)
+SLL_CLEAR_ALLOCATE( x2(1:num_pts), ierr)
 
 do i=1,num_pts
    x1(i) = xmin + (i-1)*h
