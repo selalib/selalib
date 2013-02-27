@@ -6,14 +6,35 @@ SET(BSL_LIB_DEPS sll_interpolators
                  sll_utilities 
                  sll_assertion)
 
+ADD_EXECUTABLE(bsl_1d_cubic_uniform_periodic test_1d_cubic_uniform_periodic.F90)
+ADD_DEPENDENCIES(bsl_1d_cubic_uniform_periodic ${BSL_LIB_DEPS})
+TARGET_LINK_LIBRARIES(bsl_1d_cubic_uniform_periodic ${BSL_LIB_DEPS})
 
-ADD_EXECUTABLE(bsl_1d_periodic unit_test_1d_periodic.F90)
-ADD_DEPENDENCIES(bsl_1d_periodic ${BSL_LIB_DEPS})
-TARGET_LINK_LIBRARIES(bsl_1d_periodic ${BSL_LIB_DEPS})
+ADD_EXECUTABLE(bsl_1d_cubic_uniform_compact test_1d_cubic_uniform_compact.F90)
+ADD_DEPENDENCIES(bsl_1d_cubic_uniform_compact ${BSL_LIB_DEPS})
+TARGET_LINK_LIBRARIES(bsl_1d_cubic_uniform_compact ${BSL_LIB_DEPS})
 
-ADD_EXECUTABLE(bsl_1d_compact unit_test_1d_compact.F90)
-ADD_DEPENDENCIES(bsl_1d_compact ${BSL_LIB_DEPS})
-TARGET_LINK_LIBRARIES(bsl_1d_compact ${BSL_LIB_DEPS})
+ADD_EXECUTABLE(bsl_1d_cubic_nonuniform_periodic test_1d_cubic_nonuniform_periodic.F90)
+ADD_DEPENDENCIES(bsl_1d_cubic_nonuniform_periodic ${BSL_LIB_DEPS})
+TARGET_LINK_LIBRARIES(bsl_1d_cubic_nonuniform_periodic ${BSL_LIB_DEPS})
+
+ADD_EXECUTABLE(bsl_1d_cubic_nonuniform_compact test_1d_cubic_nonuniform_compact.F90)
+ADD_DEPENDENCIES(bsl_1d_cubic_nonuniform_compact ${BSL_LIB_DEPS})
+TARGET_LINK_LIBRARIES(bsl_1d_cubic_nonuniform_compact ${BSL_LIB_DEPS})
+
+ADD_EXECUTABLE(bsl_1d_quintic_uniform_compact test_1d_quintic_uniform_compact.F90)
+ADD_DEPENDENCIES(bsl_1d_quintic_uniform_compact ${BSL_LIB_DEPS})
+ADD_EXECUTABLE(bsl_1d_quintic_nonuniform_compact test_1d_quintic_nonuniform_compact.F90)
+ADD_DEPENDENCIES(bsl_1d_quintic_nonuniform_compact ${BSL_LIB_DEPS})
+
+IF (LAPACK_LIBRARIES)
+   TARGET_LINK_LIBRARIES(bsl_1d_quintic_uniform_compact ${BSL_LIB_DEPS} ${LAPACK_LIBRARIES})
+   TARGET_LINK_LIBRARIES(bsl_1d_quintic_nonuniform_compact ${BSL_LIB_DEPS} ${LAPACK_LIBRARIES})
+ELSE()
+   TARGET_LINK_LIBRARIES(bsl_1d_quintic_uniform_compact ${BSL_LIB_DEPS})
+   TARGET_LINK_LIBRARIES(bsl_1d_quintic_nonuniform_compact ${BSL_LIB_DEPS})
+ENDIF()
+
 
 IF(NOT STDF95)
 
