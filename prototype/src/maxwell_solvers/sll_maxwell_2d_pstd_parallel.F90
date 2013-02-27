@@ -124,8 +124,8 @@ contains
     end if
 
     SLL_ALLOCATE(plan,                 error)
-    SLL_CLEAR_ALLOCATE(plan%d_dx(ncx), error)
-    SLL_CLEAR_ALLOCATE(plan%d_dy(ncy), error)
+    SLL_CLEAR_ALLOCATE(plan%d_dx(1:ncx), error)
+    SLL_CLEAR_ALLOCATE(plan%d_dy(1:ncy), error)
 
     plan%ncx = ncx
     plan%ncy = ncy
@@ -145,12 +145,12 @@ contains
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => layout_x
     call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
-    SLL_CLEAR_ALLOCATE(plan%fz_x(nx_loc,ny_loc),error)
+    SLL_CLEAR_ALLOCATE(plan%fz_x(1:nx_loc,1:ny_loc),error)
 
     ! Layout and local sizes for FFTs in y-direction
     plan%layout_y => layout_y
     call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
-    SLL_CLEAR_ALLOCATE(plan%fz_y(nx_loc,ny_loc),error)
+    SLL_CLEAR_ALLOCATE(plan%fz_y(1:nx_loc,1:ny_loc),error)
 
     plan%rmp_xy => new_remap_plan(plan%layout_x, plan%layout_y, plan%fz_x)
     plan%rmp_yx => new_remap_plan(plan%layout_y, plan%layout_x, plan%fz_y)

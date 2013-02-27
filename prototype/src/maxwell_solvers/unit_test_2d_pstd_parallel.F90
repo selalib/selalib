@@ -115,11 +115,11 @@ program test_maxwell_2d_periodic_cart_par
 
   !Ex si sequential along y
   call compute_local_sizes_2d(plan%layout_y,nx_loc,ny_loc)
-  SLL_CLEAR_ALLOCATE(ex(nx_loc,ny_loc), error)
+  SLL_CLEAR_ALLOCATE(ex(1:nx_loc,1:ny_loc), error)
 
   !Ey si sequential along x
   call compute_local_sizes_2d(plan%layout_x,nx_loc,ny_loc)
-  SLL_CLEAR_ALLOCATE(ey(nx_loc,ny_loc), error)
+  SLL_CLEAR_ALLOCATE(ey(1:nx_loc,1:ny_loc), error)
 
   do j=1,ny_loc
      do i=1,nx_loc
