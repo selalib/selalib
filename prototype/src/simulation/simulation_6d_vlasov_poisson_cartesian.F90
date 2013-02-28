@@ -1221,6 +1221,7 @@ contains
     use hdf5
     use sll_hdf5_io_parallel
     use sll_xml_io
+    use sll_xdmf_parallel
     sll_int32, intent(in) :: itime
     character(len=4)      :: ctime
     sll_int32             :: i_layout
@@ -1327,7 +1328,7 @@ contains
                    gk = global_indices(3)
                    x1(i,j,k) = x1_min + (gi-1._f64)*delta_x1
                    x2(i,j,k) = x2_min + (gj-1._f64)*delta_x2
-                   x2(i,j,k) = x3_min + (gk-1._f64)*delta_x3
+                   x3(i,j,k) = x3_min + (gk-1._f64)*delta_x3
                 end do
              end do
           end do
@@ -1362,6 +1363,12 @@ contains
        end if
 
        call sll_hdf5_file_close(hdf_file_id,error)
+
+       call sll_xdmf_open("test.xmf","test.h5",array_dims(1), &
+                          array_dims(2),array_dims(3),xml_file_id,error)
+       call sll_xdmf_write_array("test.h5",array_dims,offset,sim%rho_x1,"rho",error,xml_file_id,"Node")
+       call sll_xdmf_close(xml_file_id,error)
+       stop
    
        if (my_rank == 0) then
           
@@ -1385,6 +1392,8 @@ contains
           call sll_xml_file_close(xml_file_id,error)
 
        end if
+
+
 
     end do
 
