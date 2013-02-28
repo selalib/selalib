@@ -23,9 +23,8 @@ implicit none
   sll_real64 :: dvx, dvy
 !  sll_real64 :: t0,t1,t2
 
-  sll_real64, dimension(:), allocatable :: x, y
-  sll_real64, dimension(:), allocatable :: vx, vy
-
+  sll_real64, dimension(:),       allocatable :: x, y
+  sll_real64, dimension(:),       allocatable :: vx, vy
   sll_real64, dimension(:,:,:,:), allocatable :: df
 
   class(sll_interpolator_2d_base), pointer    :: interp_xy

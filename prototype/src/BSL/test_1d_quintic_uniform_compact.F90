@@ -54,9 +54,9 @@ nc_x = 100; nc_v = 100
 delta_x = (x_max-x_min)/nc_x
 delta_v = (v_max-v_min)/nc_v
 
-SLL_ALLOCATE(df(nc_x+1,nc_v+1), info)
-SLL_ALLOCATE(advfield_x(nc_x+1,nc_v+1), info)
-SLL_ALLOCATE(advfield_v(nc_x+1,nc_v+1), info)
+SLL_CLEAR_ALLOCATE(df(1:nc_x+1,1:nc_v+1), info)
+SLL_CLEAR_ALLOCATE(advfield_x(1:nc_x+1,1:nc_v+1), info)
+SLL_CLEAR_ALLOCATE(advfield_v(1:nc_x+1,1:nc_v+1), info)
 
 do j = 1, nc_v+1
    do i = 1, nc_x+1
@@ -115,69 +115,69 @@ print *, 'PASSED'
 
 contains
 
-   subroutine advection_x(dt)
-   sll_real64, intent(in) :: dt
-   sll_real64 :: eta
+subroutine advection_x(dt)
+sll_real64, intent(in) :: dt
+sll_real64 :: eta
 
-   do j = 1, nc_v
-     call interp_x%compute_interpolants( df(:,j) )
-     do i = 1, nc_x
-        eta = x_min + (i-1)*delta_x - dt*advfield_x(i,j)
-        eta = max(eta, x_min)
-        eta = min(eta, x_max)
-        df(i,j) = interp_x%interpolate_value(eta)
-     end do
-   end do
-
-   end subroutine advection_x
-
-   subroutine advection_v(dt)
-   sll_real64, intent(in) :: dt
-   sll_real64 :: eta
-
+do j = 1, nc_v
+   call interp_x%compute_interpolants( df(:,j) )
    do i = 1, nc_x
-      call interp_v%compute_interpolants( df(i,:) )
-      do j = 1, nc_v
-        eta = v_min + (j-1)*delta_v - dt*advfield_v(i,j)
-        eta = max(eta, v_min)
-        eta = min(eta, v_max)
-        df(i,j) = interp_v%interpolate_value(eta)
-     end do
+      eta = x_min + (i-1)*delta_x - dt*advfield_x(i,j)
+      eta = max(eta, x_min)
+      eta = min(eta, x_max)
+      df(i,j) = interp_x%interpolate_value(eta)
    end do
+end do
 
-   end subroutine advection_v
+end subroutine advection_x
 
-   subroutine plot_df(iplot)
+subroutine advection_v(dt)
+sll_real64, intent(in) :: dt
+sll_real64 :: eta
 
-   integer :: iplot, i, j
-   character(len=4) :: cplot
+do i = 1, nc_x
+   call interp_v%compute_interpolants( df(i,:) )
+   do j = 1, nc_v
+      eta = v_min + (j-1)*delta_v - dt*advfield_v(i,j)
+      eta = max(eta, v_min)
+      eta = min(eta, v_max)
+      df(i,j) = interp_v%interpolate_value(eta)
+   end do
+end do
+
+end subroutine advection_v
+
+subroutine plot_df(iplot)
+
+integer :: iplot, i, j
+character(len=4) :: cplot
  
-   call int2string(iplot,cplot)
+call int2string(iplot,cplot)
 
-   open(11, file="df-"//cplot//".dat")
-   do j = 1, size(df,2)
-      do i = 1, size(df,1)
-         x = x_min + (i-1)*(x_max-x_min)/(nc_x)
-         v = v_min + (j-1)*(v_max-v_min)/(nc_v)
-         write(11,*) sngl(x),sngl(v),sngl(df(i,j))
-      end do
-      write(11,*)
+open(11, file="df-"//cplot//".dat")
+do j = 1, size(df,2)
+   do i = 1, size(df,1)
+      x = x_min + (i-1)*(x_max-x_min)/(nc_x)
+      v = v_min + (j-1)*(v_max-v_min)/(nc_v)
+      write(11,*) sngl(x),sngl(v),sngl(df(i,j))
    end do
-   close(11)
+   write(11,*)
+end do
+close(11)
    
-   open( 90, file = 'df.gnu', position="append" )
-   if ( iplot == 1 ) then
-      rewind(90)
-      !write(90,*)"set cbrange[-1:1]"
-      !write(90,*)"set pm3d"
-      write(90,*)"set surf"
-      write(90,*)"set term x11"
-   end if
+open( 90, file = 'df.gnu', position="append" )
+if ( iplot == 1 ) then
+   rewind(90)
+   !write(90,*)"set cbrange[-1:1]"
+   !write(90,*)"set pm3d"
+   write(90,*)"set surf"
+   write(90,*)"set term x11"
+end if
 
-   write(90,*)"set title 'step = ",iplot,"'"
-   write(90,"(a)")"splot 'df-"//cplot//".dat' u 1:2:3 w lines"
-   close(90)
+write(90,*)"set title 'step = ",iplot,"'"
+write(90,"(a)")"splot 'df-"//cplot//".dat' u 1:2:3 w lines"
+close(90)
 
-   end subroutine plot_df
+end subroutine plot_df
 
 end program bsl_1d_quintic_compact
