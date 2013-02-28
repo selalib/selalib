@@ -79,11 +79,11 @@ contains
     
     character(len=*), intent(in) :: file_name  !< xml file name
     character(len=*), intent(in) :: mesh_name  !< file name that contains data coordinates
-    sll_int32, intent(out)       :: file_id    !< file unit number
-    sll_int32, intent(out)       :: error      !< error code
     sll_int32                    :: nnodes_x1  !< nodes number x
     sll_int32                    :: nnodes_x2  !< nodes number y
     sll_int32                    :: nnodes_x3  !< nodes number z
+    sll_int32, intent(out)       :: file_id    !< file unit number
+    sll_int32, intent(out)       :: error      !< error code
     sll_int32                    :: myrank
     
     myrank = sll_get_collective_rank(sll_world_collective)
@@ -125,6 +125,8 @@ contains
     if ( present(xmffile_id) .and. present(center) .and. myrank==0) then
        npoints_x1 = int(global_dims(1),4)
        npoints_x2 = int(global_dims(2),4)
+
+#ifndef NOHDF5
        call sll_xml_field( &
             xmffile_id, &
             trim(array_name), &
@@ -133,6 +135,11 @@ contains
             npoints_x2,&
             'HDF', &
             center)
+#else
+       call sll_xml_field(xmffile_id,trim(array_name), &
+                          trim(mesh_name)//"-"//trim(array_name)//".bin", &
+                          npoints_x1,npoints_x2,'Binary',center)
+#endif
     end if
 
   end subroutine sll_xdmf_array_2d
@@ -153,6 +160,7 @@ contains
     sll_int32                       :: npoints_x3     !< nodes number z
     sll_int32, intent(in), optional :: xmffile_id     !< xml file unit number
     character(len=4), optional      :: center         !< "Node" or "Cell"
+    sll_int32, intent(out)          :: error          !< error code
     sll_int32                       :: myrank
     
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
@@ -166,9 +174,22 @@ contains
        npoints_x1 = int(global_dims(1),4)
        npoints_x2 = int(global_dims(2),4)
        npoints_x3 = int(global_dims(3),4)
+
+#ifndef NOHDF5
+       call sll_xml_field( &
+            xmffile_id, &
+            trim(array_name), &
+            trim(mesh_name)//"-"//trim(array_name)//".h5:/"//trim(array_name), &
+            npoints_x1,&
+            npoints_x2,&
+            npoints_x3,&
+            'HDF', &
+            center)
+#else
        call sll_xml_field(xmffile_id,trim(array_name), &
                           trim(mesh_name)//"-"//trim(array_name)//".bin", &
                           npoints_x1,npoints_x2,npoints_x3,'Binary',center)
+#endif
     end if
 
   end subroutine sll_xdmf_array_3d
