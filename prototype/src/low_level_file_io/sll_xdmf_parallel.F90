@@ -51,13 +51,13 @@ contains
   !>Open a XDMF format file for a 2d plot
   subroutine sll_xdmf_open_2d(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
 
-    character(len=*), intent(in) :: file_name
-    character(len=*), intent(in) :: mesh_name
-    sll_int32                    :: file_id
-    sll_int32                    :: error
-    sll_int32                    :: nnodes_x1
-    sll_int32                    :: nnodes_x2
-    sll_int32                    :: myrank
+    character(len=*), intent(in) :: file_name !< xmf file name 
+    character(len=*), intent(in) :: mesh_name !< file name that contains mesh coordinates
+    sll_int32                    :: file_id   !< file unit number
+    sll_int32                    :: error     !< error code
+    sll_int32                    :: nnodes_x1 !< nodes number x
+    sll_int32                    :: nnodes_x2 !< nodes number y
+    sll_int32                    :: myrank    
     
     myrank = sll_get_collective_rank(sll_world_collective)
     if (myrank == 0) then
@@ -77,13 +77,13 @@ contains
     file_id,   &
     error)
     
-    character(len=*), intent(in) :: file_name
-    character(len=*), intent(in) :: mesh_name
-    sll_int32, intent(out)       :: file_id
-    sll_int32, intent(out)       :: error
-    sll_int32                    :: nnodes_x1
-    sll_int32                    :: nnodes_x2
-    sll_int32                    :: nnodes_x3
+    character(len=*), intent(in) :: file_name  !< xml file name
+    character(len=*), intent(in) :: mesh_name  !< file name that contains data coordinates
+    sll_int32, intent(out)       :: file_id    !< file unit number
+    sll_int32, intent(out)       :: error      !< error code
+    sll_int32                    :: nnodes_x1  !< nodes number x
+    sll_int32                    :: nnodes_x2  !< nodes number y
+    sll_int32                    :: nnodes_x3  !< nodes number z
     sll_int32                    :: myrank
     
     myrank = sll_get_collective_rank(sll_world_collective)
@@ -101,18 +101,18 @@ contains
                                xmffile_id,center)
 
     use hdf5
-    character(len=*), intent(in)        :: mesh_name
-    sll_real64, intent(in)              :: array(:,:)
-    character(len=*), intent(in)        :: array_name
-    integer(HSSIZE_T)                   :: offset(2)
-    integer(HSIZE_T)                    :: global_dims(2)
-    integer(HID_T)                      :: file_id
-    sll_int32                           :: npoints_x1
-    sll_int32                           :: npoints_x2
-    sll_int32, intent(in), optional     :: xmffile_id
-    character(len=4), optional          :: center
-    sll_int32, intent(out)              :: error
-    sll_int32                           :: myrank
+    character(len=*), intent(in)     :: mesh_name      !< file with mesh coordinates
+    sll_real64, intent(in)           :: array(:,:)     !< data array
+    character(len=*), intent(in)     :: array_name     !< name of the field
+    integer(HSSIZE_T)                :: offset(2)      !< offset
+    integer(HSIZE_T)                 :: global_dims(2) !< global dimensions
+    integer(HID_T)                   :: file_id        !< data file unit number
+    sll_int32                        :: npoints_x1     !< nodes number x
+    sll_int32                        :: npoints_x2     !< nodes number y
+    sll_int32, intent(in), optional  :: xmffile_id     !< xml file unit number
+    character(len=4), optional       :: center         !< "Node" or "Cell"
+    sll_int32, intent(out)           :: error          !< error code
+    sll_int32                        :: myrank
 
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                               file_id,error)
@@ -142,18 +142,17 @@ contains
                                array,array_name,error,xmffile_id,center)
 
     use hdf5
-    character(len=*), intent(in)    :: mesh_name
-    sll_real64, intent(in)          :: array(:,:,:)
-    character(len=*), intent(in)    :: array_name
-    sll_int32, intent(out)          :: error
-    integer(HSSIZE_T)               :: offset(3)
-    integer(HSIZE_T)                :: global_dims(3)
-    integer(HID_T)                  :: file_id
-    sll_int32, intent(in), optional :: xmffile_id
-    character(len=4), optional      :: center
-    sll_int32                       :: npoints_x1
-    sll_int32                       :: npoints_x2
-    sll_int32                       :: npoints_x3
+    character(len=*), intent(in)    :: mesh_name      !< file with mesh coordinates
+    sll_real64, intent(in)          :: array(:,:,:)   !< data array
+    character(len=*), intent(in)    :: array_name     !< name of the field
+    integer(HSSIZE_T)               :: offset(3)      !< offset
+    integer(HSIZE_T)                :: global_dims(3) !< global dimensions
+    integer(HID_T)                  :: file_id        !< data file unit number
+    sll_int32                       :: npoints_x1     !< nodes number x
+    sll_int32                       :: npoints_x2     !< nodes number y
+    sll_int32                       :: npoints_x3     !< nodes number z
+    sll_int32, intent(in), optional :: xmffile_id     !< xml file unit number
+    character(len=4), optional      :: center         !< "Node" or "Cell"
     sll_int32                       :: myrank
     
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
