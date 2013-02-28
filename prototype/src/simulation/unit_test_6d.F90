@@ -17,6 +17,8 @@ program vlasov_poisson_6d
   call flush()
   call simulation%run( )
 
+  call test_write(simulation)
+
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
   call delete_vp6d_par_cart(simulation)
