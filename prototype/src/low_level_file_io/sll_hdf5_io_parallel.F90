@@ -27,7 +27,7 @@ module sll_hdf5_io_parallel
 #ifndef NOHDF5
   use hdf5
   use sll_collective
-  
+
   implicit none
 
   !> Write array in hdf5 file
@@ -36,7 +36,6 @@ module sll_hdf5_io_parallel
      module procedure sll_hdf5_write_array_2d
      module procedure sll_hdf5_write_array_3d
   end interface
-
 
 contains
   
