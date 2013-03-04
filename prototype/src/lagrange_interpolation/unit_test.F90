@@ -4,27 +4,30 @@ program lagrange_test
 #include "sll_memory.h"
  use sll_lagrange_interpolation
 implicit none
-sll_int32  :: i,j,degree
+sll_int32  :: i,j,d,num_points
 sll_real64 :: res,diff
 sll_real64,dimension(:),allocatable ::xi,fi,coord
 type(sll_lagrange_interpolation_1D),pointer ::l_i
 
-degree=3
-allocate(xi(1:degree+1))
-allocate(fi(1:degree+1))
-allocate(coord(1:degree+2))
+d=3
+num_points=5
+allocate(xi(1:num_points))
+allocate(fi(1:num_points))
+allocate(coord(1:num_points))
 !data initialization
 coord(1)=1.3_f64
 coord(2)=2.5_f64
 coord(3)=3.2_f64
 coord(4)=4.5_f64
 coord(5)=0.32_f64
-do i=1,4
- xi(i)=i
+do i=1,num_points
+ xi(i)=i-1
  fi(i)=f(xi(i))
 end do 
 diff=0.0_f64
-l_i => new_lagrange_interpolation_1D(xi,fi,degree,5,real(0,8))
+
+!test de l'indice en fonction de alpha
+l_i => new_lagrange_interpolation_1D(xi,fi,d,num_points,real(0.2,8),HERMITE_LAGRANGE)
 call compute_lagrange_interpolation_1D(xi,l_i)
 call interpolate_array_values(coord,l_i)
 do i=1,5
@@ -50,7 +53,7 @@ contains
 
 function f(x)
 sll_real64 :: x,f
-f=3*x*x+2*x+1.0_f64
+f=2*x+1.0_f64
 end function
 
 end program
