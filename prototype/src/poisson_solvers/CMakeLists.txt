@@ -34,6 +34,7 @@ IF(FFTPACK_ENABLED)
       sll_poisson_1d_periodic
       #sll_scalar_field_1d
       sll_mapped_meshes
+      sll_tridiagonal
       geometry_functions
       sll_splines
       sll_interpolators

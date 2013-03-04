@@ -31,9 +31,10 @@ implicit none
  end interface
 contains  !**********************************************************
  
-subroutine initialize_li1d_interpolator(interpolator,xi,fi,degree,num_pts,bc_type)
+subroutine initialize_li1d_interpolator(interpolator,xi,fi,degree,num_pts,alpha,bc_type)
   class(lagrange_1d_interpolator), intent(inout) :: interpolator
     sll_int32, intent(in)                        :: degree,num_pts
+    sll_real64, intent(in)                       :: alpha
     sll_real64,dimension(1:num_pts+1),intent(in) :: xi,fi
     sll_int32, intent(in), optional              :: bc_type
 
@@ -47,6 +48,7 @@ subroutine initialize_li1d_interpolator(interpolator,xi,fi,degree,num_pts,bc_typ
            fi, &
            degree, &
            num_pts, &
+           alpha, &
            bc_type)
 end subroutine initialize_li1d_interpolator
 
