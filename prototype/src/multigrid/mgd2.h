@@ -1,9 +1,8 @@
-implicit none
-
 # define WMGD 0
 # define double_precision 1
 
 # define NBLOCKGR 1
+
 # if DEBUG
 # if NBLOCKGR
 sll_int32  :: nisend,nirecv,nreduce,nallreduce,nalltoall,nwait,nwaitall
