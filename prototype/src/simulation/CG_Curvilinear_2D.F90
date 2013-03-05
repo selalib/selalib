@@ -29,12 +29,12 @@ program cg_curvilinear_2D
   sll_real64 :: geom_eta(2,2),geom_x(2,2),alpha_mesh
   sll_real64, dimension(:,:), pointer :: x1n_array,x2n_array,x1_tab,x2_tab  !,x1c_array,x2c_array
   sll_real64, dimension(:,:), pointer :: jac_array
-  sll_real64,dimension(:,:,:),pointer :: jac_matrix
+  sll_real64, dimension(:,:,:), pointer :: jac_matrix
   sll_real64, dimension(:,:), pointer :: phi_exact
   character (len=16) :: f_file !,bctop,bcbot
   character (len=8) :: conv_CG
 
-  namelist /param/ N_eta1,N_eta2,dt,nb_step,carac_case
+  namelist /param/ N_eta1,N_eta2,dt,nb_step,carac_case,mesh_case,visu_case,phi_case
   
   PERIODIC_B=0
   HERMITE_B=1
@@ -46,7 +46,7 @@ program cg_curvilinear_2D
   visu_case = 1 ! 0 : gnuplot 
                 ! 1 : vtk
 
-  visu_step = 100
+  visu_step = 50
 
   mesh_case = 2 ! 1 : cartesian 
                 ! 2 : polar 
@@ -56,13 +56,14 @@ program cg_curvilinear_2D
   f_case = 4  ! 1 : constant function 
               ! 4 : gaussian in x and y
 
-  grad_case = 1
+  grad_case = 2
 
   carac_case = 5 ! 1 : Explicit Euler with linear interpolation
                  ! 2 : Explicit Euler with spline interpolation  
+                 ! 3 : Analytics caracteristics (cartisian,polar,collela)
                  ! 5 : Fixed point (midpoint)
 
-  phi_case = 2 ! 1: translation 
+  phi_case = 1 ! 1: translation 
                ! 2: rotation 
                ! 3: anisotropic rotation
 
@@ -70,8 +71,8 @@ program cg_curvilinear_2D
                   ! 2 : SL order 2 (Predictor-Corrector) 
                   ! 3 : SL order 2 (Leap-Frog)
   
-  a1 = 1._f64 !*0.01_f64
-  a2 = 1._f64 !*0.01_f64
+  a1 = 0.25_f64 !*0.01_f64
+  a2 = 0.25_f64 !*0.01_f64
   bc1_type=PERIODIC_B
   bc2_type=PERIODIC_B
   N_eta1 = 100
@@ -101,30 +102,19 @@ program cg_curvilinear_2D
   ! BC        : periodic-periodic
   if (mesh_case==1) then
     eta1_min = 0._f64
-    eta1_max = 8._f64
+    eta1_max = 6._f64
     eta2_min = 0._f64
-    eta2_max = 8._f64
+    eta2_max = 6._f64
 
-    x1c_r=4._f64
-    x2c_r=4._f64
+    x1c_r=3._f64
+    x2c_r=3._f64
 
-    x1c = 4._f64
-    x2c = 4._f64
+    x1c = 2._f64
+    x2c = 2._f64
     
-    sigma_x1 = 0.2_f64
-    sigma_x2 = 0.2_f64
+    sigma_x1 = 0.15_f64
+    sigma_x2 = 0.15_f64
     
-    !eta1_min = -1._f64
-    !eta1_max = 1._f64
-    !eta2_min = -1._f64
-    !eta2_max = 1._f64
-    !x1c_r=0._f64
-    !x2c_r=0._f64
-    !x1c = 0.5_f64
-    !x2c = 0.5_f64
-    !sigma_x1 = 0.16_f64
-    !sigma_x2 = 0.16_f64
-
     bc1_type =PERIODIC_B
     bc2_type =PERIODIC_B
   endif
@@ -133,17 +123,13 @@ program cg_curvilinear_2D
   ! domain    : disc of radius eta1_max with a hole of radius eta1_min
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
-!    eta1_min = 0.2_f64
-!    eta1_max = 2._f64*sll_pi !1._f64
-!    eta2_min = 0._f64
-!    eta2_max = 2._f64*sll_pi
 
-    eta1_min = 0.2_f64
+    eta1_min = 0.5_f64
     eta1_max = 8._f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
    
-    x1c_r=-5._f64
+    x1c_r=0._f64
     x2c_r=0._f64
    
     x1c = -3.5_f64
@@ -153,8 +139,8 @@ program cg_curvilinear_2D
     sigma_x2 = 0.2
 
 
-    !bc1_type = PERIODIC_B
-    bc1_type = HERMITE_B
+    bc1_type = PERIODIC_B
+    !bc1_type = HERMITE_B
     bc2_type = PERIODIC_B
   endif
   
@@ -168,26 +154,15 @@ program cg_curvilinear_2D
     eta2_min = 0._f64
     eta2_max = 8._f64
 
-    x1c_r=2._f64
-    x2c_r=2._f64
+    x1c_r=4._f64
+    x2c_r=4._f64
 
 
-    x1c = 4._f64
-    x2c = 4._f64
+    x1c = 2._f64
+    x2c = 2._f64
     
-    sigma_x1 = 0.2_f64
-    sigma_x2 = 0.2_f64
-    !eta1_min = -1._f64
-    !eta1_max = 1._f64
-    !eta2_min = -1._f64
-    !eta2_max = 1._f64
-    !x1c_r=0._f64
-    !x2c_r=0._f64
-    !x1c = 0.5_f64
-    !x2c = 0.5_f64
-    !sigma_x1 = 0.16_f64
-    !sigma_x2 = 0.16_f64
-    
+    sigma_x1 = 0.15_f64
+    sigma_x2 = 0.15_f64
     
     bc1_type = PERIODIC_B
     bc2_type = PERIODIC_B
@@ -277,7 +252,9 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
 
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
 !  call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
-!  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1, N_eta2)
+  plan_sl%phi=phi_exact
+  plan_sl%adv%field=0
+  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1,N_eta2)
 
 !  !write f in a file before calculations
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
@@ -339,17 +316,19 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
                        &x1_tab,x2_tab,real(nb_step,f64)*dt)
 !**************
- if(mesh_case==1) then 
-   do i=1,N_eta1+1
-    do j=1,N_eta1+1
-      call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,x1_tab(i,j),x2_tab(i,j))
-    end do
-   end do
- end if
+! if(mesh_case==1) then 
+!   do i=1,N_eta1+1
+!    do j=1,N_eta1+1
+!      call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,x1_tab(i,j),x2_tab(i,j))
+!    end do
+!   end do
+! end if
 !************
 
  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,&
                                     &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
+    if(bc2_type==PERIODIC_B) f(:,N_eta2+1)=f(:,1) 
+    if(bc1_type==PERIODIC_B) f(N_eta1+1,:)=f(1,:)
  !write f_init in a file after calculations
   call print2d(geom_eta,f_init(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,nb_step,"fexact")
   call print2d(geom_eta,&

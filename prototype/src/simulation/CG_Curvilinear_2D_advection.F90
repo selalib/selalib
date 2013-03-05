@@ -7,7 +7,7 @@ module curvilinear_2D_advection
   !use poisson_Curvilinear
   use module_cg_curvi_function
   use module_cg_curvi_structure
-  use numeric_constants
+  use numeric_constants 
   use sll_splines
   implicit none
 
@@ -120,7 +120,7 @@ contains
 
     
     !plan_sl%poisson => new_plan_poisson_curvilinea_eta1(delta_eta1,delta_eta2,eta1_min,eta2_min,N_eta1,N_eta2,bc)
-    !plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
+     plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
      plan_sl%adv => new_plan_adv_curvilinear(geom_eta,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
 
   end function new_SL
@@ -142,7 +142,7 @@ contains
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
        !call delete_plan_poisson_curvilinear(plan_sl%poisson)
-       !call delete_plan_curvilinear_op(plan_sl%grad)
+       call delete_plan_curvilinear_op(plan_sl%grad)
        SLL_DEALLOCATE(plan_sl,err)
     end if
 
@@ -174,9 +174,10 @@ contains
     sll_int32 :: N_eta1, N_eta2
     sll_int32 :: i,j,maxiter,iter,k_eta1,k_eta2
     sll_int32 :: bc1_type,bc2_type,mesh_case,ii,jj
-    sll_real64 :: phi_loc(2,2) 
+    sll_real64 :: phi_loc(2,2) ,x1n,x2n,tmp1,tmp2,errN,alpha_mesh
+  
    
-    
+    alpha_mesh=0.1
     N_eta1=plan%N_eta1
     N_eta2=plan%N_eta2
     dt=plan%dt
@@ -245,7 +246,7 @@ contains
   end if
 
   if (plan%carac_case==2) then
-       !explicit Euler with "Spline interpolation"
+      !explicit Euler with "Spline interpolation"
        do i=1,N_eta1+1
           do j=1,N_eta2+1
              eta10=eta1_min+real(i-1,f64)*delta_eta1
@@ -261,7 +262,7 @@ contains
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
           end do
        end do
-       stop
+       
   end if
 
     if(plan%carac_case==3) then
@@ -278,6 +279,42 @@ contains
                  else
                    eta2 = 2._f64*sll_pi-acos(x1_tab(i,j)/eta1)
                  endif
+                 ! if((x1_tab(i,j)>0.).and.(x2_tab(i,j)>=0.)) then
+                 !    eta2=atan(x2_tab(i,j)/x1_tab(i,j))
+                 ! elseif((x1_tab(i,j)>0.).and.(x2_tab(i,j)<0.)) then
+                 !    eta2=atan(x2_tab(i,j)/x1_tab(i,j))+2._f64*sll_pi
+                 ! elseif(x1_tab(i,j)<0.) then
+                 !    eta2=atan(x2_tab(i,j)/x1_tab(i,j))+ sll_pi
+                 ! elseif((x1_tab(i,j)==0.).and.(x2_tab(i,j)>0.)) then
+                 !    eta2=sll_pi/2
+                 ! elseif((x1_tab(i,j)==0.).and.(x2_tab(i,j)<0.)) then
+                 !    eta2=1.5_f64 * sll_pi
+                 ! endif
+                  
+              endif
+              
+               if (mesh_case==4) then
+                  !initialization
+                   maxiter=20
+                   tolr=1e-10
+                   eta1=0.0_f64
+                   eta2=0.0_f64
+                   iter=0
+                      do while ((errN.ge.tolr).and.(iter.le.maxiter))
+                        iter = iter+1
+                        eta1=(eta1-eta1_min)/(eta1_max-eta1_min)
+                        eta2=(eta2-eta2_min)/(eta2_max-eta2_min)
+                        eta1n = x1_tab(i,j) - alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+                        eta2n = x2_tab(i,j) - alpha_mesh*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+                        errN = max(abs(eta1-eta1n),abs(eta2-eta2n))
+                        eta1 = eta1n
+                        eta2 = eta2n
+                      end do
+      
+                      if ((iter==maxiter).and.(errN>tolr)) then
+                        print*,'#no convergence in fixed point method on analytic solution-carac_3'
+                        print*,i,j
+                      endif
               endif
            call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
               &eta1,eta2)
@@ -285,7 +322,7 @@ contains
              fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
       
          end do
-    end do
+      end do
 
     endif
 
@@ -375,9 +412,6 @@ contains
                a_eta2 = (1.0_f64-eta2_loc)*phi_loc(1,1) + eta2_loc*phi_loc(1,2)
                a_eta2 = 0.5_f64*dt*a_eta2
 
-             
-
-
                 eta1n=eta1
                 eta2n=eta2
                 eta1=eta10-a_eta1
@@ -427,17 +461,11 @@ contains
     sll_int :: step,i,j,mesh_case
 
     !call poisson_solve_curvilinear(plan%poisson,inn,plan%phi)
-    !call compute_grad_field(plan%grad,plan%phi,plan%adv%field1)
+   ! call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
     
    
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
-!  if(step==30) then
-!     do i=1,plan%adv%N_eta1+1
-!    do j=1,plan%adv%N_eta2+1
-!      write(200,*) eta1_tab(i,j),plan%adv%eta1_min+(i-1)*plan%adv%delta_eta1,eta2_tab(i,j),plan%adv%eta1_min+(j-1)*plan%adv%delta_eta2
-!    enddo
-!  enddo  
-!  endif
+
   end subroutine SL_order_1
 
 !!*********************************************************************************
@@ -657,6 +685,7 @@ contains
     str=trim(adjustl((filename)))//trim(adjustl((str2)))//'.vtk';!call system(str)
     dz(0)=(dom(1,0)-dom(0,0))/real(Nx,f64);dz(1)=(dom(1,1)-dom(0,1))/real(Ny,f64)
     !open(unit=900,file='f.vtk')
+  
     open(unit=900,file=str,form='formatted')
     write(900,'(A)')                  '# vtk DataFile Version 2.0'
     write(900,'(A)')                  'Exemple'
@@ -670,7 +699,7 @@ contains
     write(900,'(A,I0)')           'POINT_DATA ',(Nx+1)*(Ny+1)
     write(900,'(A,I0)')           'SCALARS f float ',1
     write(900,'(A)')                  'LOOKUP_TABLE default'
-
+    
     do j=0,Ny
        do i=0,Nx
           z(0)=dom(0,0)+real(i,f64)*dz(0)
