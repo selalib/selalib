@@ -17,9 +17,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
                       ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
 include(F90FLAGS)
-include(CTest)
-set(CTEST_DROP_SITE_CDASH TRUE)
 # Tests+Dashboard configuration
+include(CTest)
+SET(CTEST_DROP_SITE_CDASH TRUE)
 enable_testing()
 include(Pipol)
 
