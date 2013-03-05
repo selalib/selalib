@@ -93,14 +93,14 @@ contains
              geomx%nx,geomx%ny,1,int(psize,4),this%layout_x1)
 
 !  call compute_local_sizes_2d(this%layout_x1,loc_sz_i,loc_sz_j)        
-!  SLL_CLEAR_ALLOCATE(this%jx1(loc_sz_i,loc_sz_j),error)
+!  SLL_CLEAR_ALLOCATE(this%jx1(1:loc_sz_i,1:loc_sz_j),error)
 
   this%layout_x2 => new_layout_2D( sll_world_collective )
   call initialize_layout_with_distributed_2D_array( &
               geomx%nx,geomx%ny,int(psize,4),1,this%layout_x2)
 
 !  call compute_local_sizes_2d(this%layout_x2,loc_sz_i,loc_sz_j)        
-!  SLL_CLEAR_ALLOCATE(this%jx2(loc_sz_i,loc_sz_j),ierr)
+!  SLL_CLEAR_ALLOCATE(this%jx2(1:loc_sz_i,1:loc_sz_j),ierr)
 
 !  this%x1_to_x2 => new_remap_plan( this%layout_x1, this%layout_x2, this%jx1)     
 !  this%x2_to_x1 => new_remap_plan( this%layout_x2, this%layout_x1, this%jx2)     
@@ -114,34 +114,34 @@ contains
 
   end if
 
-  SLL_CLEAR_ALLOCATE(this%ex(nc_x1,nc_x2),error);  this%ex  = 0.0_f64
-  SLL_CLEAR_ALLOCATE(this%ey(nc_x1,nc_x2),error);  this%ey  = 0.0_f64
-  SLL_CLEAR_ALLOCATE(this%exn(nc_x1,nc_x2),error); this%exn = 0.0_f64
-  SLL_CLEAR_ALLOCATE(this%eyn(nc_x1,nc_x2),error); this%eyn = 0.0_f64
+  SLL_CLEAR_ALLOCATE(this%ex(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%exn(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%eyn(1:nc_x1,1:nc_x2),error)
 
-  SLL_CLEAR_ALLOCATE(this%bz(nc_x1,nc_x2),error);  this%bz  = 0.0_f64
-  SLL_CLEAR_ALLOCATE(this%rho(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:nc_x1,1:nc_x2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx(nc_x1,nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:nc_x1,1:nc_x2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx1(nc_x1,nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jx2(nc_x1,nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy1(nc_x1,nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy2(nc_x1,nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx1(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx2(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jy1(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jy2(1:nc_x1,1:nc_x2),error)
   
   FFTW_ALLOCATE(this%tmp_x,nc_x1/2+1,sz_tmp_x,this%p_tmp_x)
   FFTW_ALLOCATE(this%tmp_y,nc_x2/2+1,sz_tmp_y,this%p_tmp_y)
-  SLL_CLEAR_ALLOCATE(this%d_dx(nc_x1),error)
-  SLL_CLEAR_ALLOCATE(this%d_dy(nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%d_dx(1:nc_x1),error)
+  SLL_CLEAR_ALLOCATE(this%d_dy(1:nc_x2),error)
 
   this%fwx = fftw_plan_dft_r2c_1d(nc_x1,this%d_dx, this%tmp_x,FFTW_ESTIMATE)
   this%bwx = fftw_plan_dft_c2r_1d(nc_x1,this%tmp_x,this%d_dx, FFTW_ESTIMATE)
   this%fwy = fftw_plan_dft_r2c_1d(nc_x2,this%d_dy, this%tmp_y,FFTW_ESTIMATE)
   this%bwy = fftw_plan_dft_c2r_1d(nc_x2,this%tmp_y,this%d_dy, FFTW_ESTIMATE)
 
-  SLL_CLEAR_ALLOCATE(this%kx(nc_x1/2+1), error)
-  SLL_CLEAR_ALLOCATE(this%ky(nc_x2/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%kx(1:nc_x1/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%ky(1:nc_x2/2+1), error)
    
   dx = geomx%dx
   dy = geomx%dy
@@ -160,11 +160,11 @@ contains
 
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_CLEAR_ALLOCATE(this%f_star(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%f_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
   call compute_local_sizes_4d(this%layout_v, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_CLEAR_ALLOCATE(this%ft_star(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%ft_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
  end subroutine new_vlasov4d_spectral
 
