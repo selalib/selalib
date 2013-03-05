@@ -13,13 +13,13 @@ contains
 
 !!***************************************************************************************
 subroutine init_distribution_curvilinear(N_eta1,N_eta2, fcase,f,mesh_case,&
-  &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
+  &x1_array,x2_array,x1c,x2c,sigma_x1,sigma_x2)
 
 implicit none
 
 
   sll_real64, dimension (:,:), allocatable, intent(inout) :: f
-  sll_real64, dimension (:,:), pointer, intent(in) :: x1_tab,x2_tab
+  sll_real64, dimension (:,:), pointer, intent(in) :: x1_array,x2_array
   sll_int32 :: i, j
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32, intent(in):: fcase,mesh_case
@@ -44,7 +44,7 @@ implicit none
 
      do i=1,N_eta1+1
            do j=1,N_eta2+1
-              f(i,j) = cos(x2_tab(i,j))
+              f(i,j) = cos(x2_array(i,j))
            end do
      end do
      
@@ -53,7 +53,7 @@ implicit none
 
      do i=1,N_eta1+1
         do j=1,N_eta2+1
-          x=(x1_tab(i,j)-x1c)/sigma_x1
+          x=(x1_array(i,j)-x1c)/sigma_x1
           f(i,j) = exp(-0.5*x**2) 
         end do
      end do
@@ -62,9 +62,9 @@ implicit none
    
      do i=1,N_eta1+1
         do j=1,N_eta2+1
-          x=(x1_tab(i,j)-x1c)/sigma_x1
-          y=(x2_tab(i,j)-x2c)/sigma_x2
-          f(i,j) = exp(-0.5*(x**2+y**2))
+          x=(x1_array(i,j)-x1c)/sigma_x1
+          y=(x2_array(i,j)-x2c)/sigma_x2
+          f(i,j) = exp(-0.5*(x**2+y**2))+1
         end do
      end do
 
@@ -109,9 +109,9 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     sll_real64,dimension(:,:),pointer,intent(out) :: jac_array
     sll_int32  :: i1,i2,err
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2
-    sll_real64 :: x1c,x2c
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta2
     sll_real64 :: eta1_n,eta2_n
+    !sll_real64, intent(inout) :: x1c,x2c
     
     
 
@@ -138,6 +138,7 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
       x1_max=eta1_max
       x2_min=eta2_min
       x2_max=eta2_max
+  
       
       delta_x1 = (x1_max-x1_min)/real(nc_eta1,f64)
       delta_x2 = (x2_max-x2_min)/real(nc_eta2,f64)
@@ -146,7 +147,11 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
           x1n_array(i1,i2) = x1_min+real(i1-1,f64)*delta_x1
           x2n_array(i1,i2) = x2_min+real(i2-1,f64)*delta_x2
           jac_array(i1,i2) = 1.0_f64 !(x1_max-x1_min)*(x2_max-x2_min)
-          jac_matrix(:,i1,i2)=1._f64
+
+          jac_matrix(1,i1,i2)=1._f64
+          jac_matrix(2,i1,i2)=0._f64
+          jac_matrix(3,i1,i2)=0._f64
+          jac_matrix(4,i1,i2)=1._f64
         enddo
       enddo 
     endif
@@ -300,6 +305,7 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c_
     sll_int32, intent(in) :: phi_case
     sll_real64,intent(in) :: x1c_r,x2c_r
     sll_real64 :: a1,a2,eta1_min,eta2_min,delta_eta1,delta_eta2,eta1,eta2
+    
    
   
     
@@ -319,16 +325,18 @@ subroutine phi_analytique(phi_exact,plan,phi_case,x1n_array,x2n_array,a1,a2,x1c_
           do j=1,N_eta2+1
             phi_exact(i,j)=a1*x1n_array(i,j)+a2*x2n_array(i,j)
             plan%field(1,i,j)= -(a1*jac_matrix(1,i,j)+a2*jac_matrix(3,i,j))      
-            plan%field(2,i,j)= a1*jac_matrix(2,i,j)+a2*jac_matrix(4,i,j)
+            plan%field(2,i,j)= a1*jac_matrix(2,i,j)+a2*jac_matrix(4,i,j) 
           end do
        end do
+
     case(2) !rotation
-       do i=1,N_eta1+1
+       do i=1,N_eta1+1 
           do j=1,N_eta2+1
             phi_exact(i,j)=((x1n_array(i,j)-x1c_r)**2+(x2n_array(i,j)-x2c_r)**2)*0.5_f64
             plan%field(1,i,j)= -((x1n_array(i,j)-x1c_r)*jac_matrix(1,i,j)+ (x2n_array(i,j)-x2c_r)*jac_matrix(3,i,j))
-            plan%field(2,i,j)= (x1n_array(i,j)-x1c_r)*jac_matrix(2,i,j)+(x2n_array(i,j)-x2c_r)*jac_matrix(4,i,j)
-          end do
+            plan%field(2,i,j)= (x1n_array(i,j)-x1c_r)*jac_matrix(2,i,j)+(x2n_array(i,j)-x2c_r)*jac_matrix(4,i,j)   
+           !write(500,*) eta1_min+(i-1)*delta_eta1,phi_exact(i,j),(eta1_min+(i-1)*delta_eta1)*(eta1_min+(i-1)*delta_eta1)
+          end do  
        end do
     case(3) !anisotropic rotation
        do i=1,N_eta1+1
@@ -355,36 +363,37 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     sll_real64, dimension(:,:), intent(in), pointer:: x1n_array,x2n_array 
     sll_real64, dimension(:,:), intent(out), pointer:: x1_tab,x2_tab 
     !type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
+    !sll_real64,dimension(:,:),pointer,intent(in) :: jac_array
     sll_int32 :: i,j
     sll_int32, intent(in) :: phi_case,N_eta1,N_eta2
     sll_real64,intent(inout) :: x1c,x2c
     sll_real64,intent(in)  :: t
-    sll_real64 :: a1,a2
+    sll_real64 :: a1,a2,t1
     
-   
   
-    
+  
+ t1=t  
 
     select case(phi_case)
     case(1) ! translation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            x1_tab(i,j) = x1n_array(i,j) -a2*t 
-            x2_tab(i,j) = x2n_array(i,j) +a1*t 
+            x1_tab(i,j) = x1n_array(i,j) -a2*t1
+            x2_tab(i,j) = x2n_array(i,j) +a1*t1
           end do
        end do
     case(2) !rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            x1_tab(i,j) = x1c+cos(t)*(x1n_array(i,j)-x1c)-sin(t)*(x2n_array(i,j)-x2c)
-            x2_tab(i,j) = x2c+cos(t)*(x2n_array(i,j)-x2c)+sin(t)*(x1n_array(i,j)-x1c)
+            x1_tab(i,j) = x1c+cos(t1)*(x1n_array(i,j)-x1c)-sin(t1)*(x2n_array(i,j)-x2c)
+            x2_tab(i,j) = x2c+cos(t1)*(x2n_array(i,j)-x2c)+sin(t1)*(x1n_array(i,j)-x1c)
           end do
        end do
     case(3) !anisotropic rotation
        do i=1,N_eta1+1
           do j=1,N_eta2+1
-            x1_tab(i,j) = a1*x1c+a1*cos(t)*(x1n_array(i,j)-x1c)-a2*sin(t)*(x2n_array(i,j)-x2c)
-            x2_tab(i,j) = a2*x2c+a2*cos(t)*(x2n_array(i,j)-x2c)+a1*sin(t)*(x1n_array(i,j)-x1c)            
+            x1_tab(i,j) = a1*x1c+a1*cos(t1)*(x1n_array(i,j)-x1c)-a2*sin(t1)*(x2n_array(i,j)-x2c)
+            x2_tab(i,j) = a2*x2c+a2*cos(t1)*(x2n_array(i,j)-x2c)+a1*sin(t1)*(x1n_array(i,j)-x1c)            
           end do
        end do
    case default
@@ -514,7 +523,7 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
 
     
     else if (plan%grad_case==2) then
-       ! using splines for r and theta
+       ! using splines for eta1 and eta2
 
        call compute_spline_2D(phi,plan%spl_phi)
 
@@ -530,9 +539,16 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     else
        print*,'no choosen way to compute grad'
     end if
+     
+    
+     do j=1,N_eta2+1
+        do i=1,N_eta1+1
+           grad_phi(1,i,j)=-grad_phi(1,i,j)
+        end do
+     end do
 
-    if(bc1_type==PERIODIC_SPLINE) grad_phi(:,N_eta1+1,:)=grad_phi(:,1,:)
-    if(bc2_type==PERIODIC_SPLINE) grad_phi(:,:,N_eta2+1)=grad_phi(:,:,1)
+    !if(bc1_type==PERIODIC_SPLINE) grad_phi(:,N_eta1+1,:)=grad_phi(:,1,:)
+    !if(bc2_type==PERIODIC_SPLINE) grad_phi(:,:,N_eta2+1)=grad_phi(:,:,1)
 
   end subroutine compute_grad_field
 
