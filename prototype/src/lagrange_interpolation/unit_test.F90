@@ -5,32 +5,30 @@ program lagrange_test
  use sll_lagrange_interpolation
 implicit none
 sll_int32  :: i,j,d,num_points
-sll_real64 :: res,diff
+sll_real64 :: res,diff,alpha
 sll_real64,dimension(:),allocatable ::xi,fi,coord
 type(sll_lagrange_interpolation_1D),pointer ::l_i
 
-d=3
-num_points=5
+d=4
+num_points=50
+alpha=0.2
 allocate(xi(1:num_points))
 allocate(fi(1:num_points))
 allocate(coord(1:num_points))
 !data initialization
-coord(1)=1.3_f64
-coord(2)=2.5_f64
-coord(3)=3.2_f64
-coord(4)=4.5_f64
-coord(5)=0.32_f64
 do i=1,num_points
  xi(i)=i-1
  fi(i)=f(xi(i))
+ coord(i)=alpha+i-1
 end do 
 diff=0.0_f64
 
 !test de l'indice en fonction de alpha
-l_i => new_lagrange_interpolation_1D(xi,fi,d,num_points,real(0.2,8),HERMITE_LAGRANGE)
+!l_i => new_lagrange_interpolation_1D(xi,fi,d,num_points,alpha,HERMITE_LAGRANGE)
+l_i => new_lagrange_interpolation_1D(xi,fi,d,num_points,alpha,PERIODIC_LAGRANGE)
 call compute_lagrange_interpolation_1D(xi,l_i)
 call interpolate_array_values(coord,l_i)
-do i=1,5
+do i=1,num_points
  print*,"interpolated value = ", l_i%data_out(i), " , Correct value = ",f(coord(i))
  diff=max(diff,abs(f(coord(i))-l_i%data_out(i)))
 end do
