@@ -211,6 +211,7 @@ INCLUDE(SequentialTests)
 
 
 IF(MPI_MODULE_ENABLED)
+   INCLUDE(ProcessorCount)
    INCLUDE(POEConfig)
    INCLUDE(ParallelTests)
 ENDIF()
