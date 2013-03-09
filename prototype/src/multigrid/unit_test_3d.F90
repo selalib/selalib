@@ -1,10 +1,14 @@
 program test_multigrid_3d
+use hdf5, only:HID_T,HSIZE_T,HSSIZE_T
 use mgd3
-use sll_collective
+use sll_collective, only: sll_boot_collective,      &
+                          sll_world_collective,     &
+                          sll_halt_collective,      &
+                          sll_get_collective_rank,  &
+                          sll_get_collective_size,  &
+                          sll_collective_barrier
 use sll_hdf5_io_parallel
 use sll_xml_io
-use mpi
-use hdf5
 use numeric_constants
 #include "mgd3.h"
 #include "sll_memory.h"
@@ -46,7 +50,7 @@ logical :: periods(3)
 sll_int32 :: nxdim, nydim, nzdim
 sll_int32 :: numprocs, comm3d, comm3dp, comm3dl, comm3dc
 sll_int32 :: sx, ex, sy, ey, sz, ez, neighbor(26), bd(26)
-sll_int32 :: ngb(3), myid, info
+sll_int32 :: ngb(3), myid
 sll_int32 :: ierr, nerror, dims(3), coords(3)
 
 sll_real64, allocatable :: p(:,:,:), f(:,:,:), r(:,:,:)
@@ -72,7 +76,6 @@ call sll_boot_collective()
 numprocs  = sll_get_collective_size(sll_world_collective)
 myid      = sll_get_collective_rank(sll_world_collective)
 comm3d    = sll_world_collective%comm
-info      = MPI_INFO_NULL
 
 if( myid .eq. 0) print *, ' '
 

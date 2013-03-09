@@ -26,7 +26,7 @@ program memory_tester
   print *, 'array after clearing:'
   print *, b(:,:,:)
   print *, 'allocate and initialize to zero a large array'
-  SLL_CLEAR_ALLOCATE(c(100000000),err)
+  SLL_CLEAR_ALLOCATE(c(1:100000000),err)
   do i=1,size(c)
      if (c(i) .ne. 0.0) then
         print *, 'non zero value found in cleared array. ERROR!'
