@@ -79,15 +79,16 @@ time  = 0.
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
 
-SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(bz_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_CLEAR_ALLOCATE(ex(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ey(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 
-SLL_ALLOCATE(bx(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(by(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_CLEAR_ALLOCATE(bx(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(by(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ez(1:nc_eta1+1,1:nc_eta2+1),error)
+
+SLL_CLEAR_ALLOCATE(bz_exact(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ez_exact(1:nc_eta1+1,1:nc_eta2+1),error)
 
 do istep = 1, nstep !*** Loop over time
 
@@ -104,15 +105,20 @@ do istep = 1, nstep !*** Loop over time
    ez_exact = - bz_exact
 
    if (istep == 1) then
+
       bz = bz_exact
       ez = ez_exact
-   end if
 
-   err_te = maxval(abs(bz_exact - bz))
-   err_tm = maxval(abs(ez_exact - ez))
-   write(*,"(10x,' istep = ',I6)",advance="no") istep
-   write(*,"(' time = ',g12.3,' sec')",advance="no") time
-   write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
+   else
+
+      err_te = maxval(bz-bz_exact)
+      err_tm = maxval(ez-ez_exact)
+   
+      write(*,"(10x,' istep = ',I6)",advance="no") istep
+      write(*,"(' time = ',g12.3,' sec')",advance="no") time
+      write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
+
+   end if
 
    !call plot_fields('ez',ez, ez_exact, istep, time)
 
