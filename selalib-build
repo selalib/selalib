@@ -50,6 +50,22 @@ else
    echo "ARCH:${ARCH}"
 fi
 
+if [[ `hostname` == "irma-hpc" ]]; then
+  source /opt/intel/composerxe/bin/compilervars.sh intel64
+  source /opt/intel/mkl/bin/mklvars.sh intel64
+  export PATH=/opt/local/bin:${PATH}
+  export FC=ifort
+  export F77=ifort
+  export CC=icc
+  export CXX=icpc
+  export F9X=ifort
+  export OMPI_FC=ifort
+  export OMPI_CC=icc
+  export OMPI_CXX=icpc
+  export HDF5_ROOT=/opt/intel
+  export FFTW_ROOT=/opt/local
+fi
+
 if [[ $PIPOL_WDIR ]] ; then
    echo "PIPOL_WDIR:$PIPOL_WDIR"
    WORKDIR=$PIPOL_WDIR
@@ -145,7 +161,7 @@ make NightlySubmit
 cpack -G $PIPOL_CPACK_G .
 
 # cmake test results can be seen on 
-# http://irma-webhpc/CDash/index.php?project=Pipol
+# http://irma-webhpc/CDash/index.php?project=SeLaLib
 
 }; cd -
 

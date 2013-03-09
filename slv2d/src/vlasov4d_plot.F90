@@ -137,7 +137,7 @@ end subroutine plot_df
 
  use hdf5
  use sll_hdf5_io_parallel
- character(len=4) :: cplot
+ character(len=4)  :: cplot
  integer(HID_T)    :: pfile_id
  integer(HSSIZE_T) :: offset(2)
  integer(HSIZE_T)  :: global_dims(2)
@@ -156,6 +156,7 @@ end subroutine plot_df
 
  use hdf5
  use sll_hdf5_io_parallel
+
  character(len=4) :: cplot
  integer(HID_T)    :: pfile_id
  integer(HSSIZE_T) :: offset(2)
