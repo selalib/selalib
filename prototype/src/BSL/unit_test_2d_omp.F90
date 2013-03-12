@@ -110,7 +110,7 @@ implicit none
 
 #ifndef DEBUG
      !$OMP BARRIER
-     t0=OMP_GET_WTIME()
+  !   t0=OMP_GET_WTIME()
 #endif
 
      !$OMP DO 
@@ -136,7 +136,7 @@ implicit none
 
 #ifndef DEBUG
      !$OMP BARRIER
-     t1=OMP_GET_WTIME()
+  !   t1=OMP_GET_WTIME()
 #endif
 
      do j = 1, n_y
@@ -161,10 +161,10 @@ implicit none
 
 #ifndef DEBUG
      !$OMP BARRIER
-     t2=OMP_GET_WTIME()
+    ! t2=OMP_GET_WTIME()
 
      !$OMP CRITICAL
-     print *, it,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM(),t1-t0,t2-t1
+     !print *, it,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM(),t1-t0,t2-t1
      !$OMP END CRITICAL
 #endif
 
