@@ -8,8 +8,8 @@ use sll_cubic_spline_interpolator_2d
 
 implicit none
 
-  integer :: OMP_GET_NUM_THREADS, OMP_GET_THREAD_NUM
-  real(8) :: OMP_GET_WTIME
+!  integer :: OMP_GET_NUM_THREADS, OMP_GET_THREAD_NUM
+!  real(8) :: OMP_GET_WTIME
 
   sll_int32  :: n_x, n_vx, n_y, n_vy
   sll_int32  :: i, j, k, l, it, n_steps
@@ -21,11 +21,10 @@ implicit none
   sll_real64 :: delta_x, delta_y, delta_vx, delta_vy
   sll_real64 :: dx, dy
   sll_real64 :: dvx, dvy
-  sll_real64 :: t0,t1,t2
+!  sll_real64 :: t0,t1,t2
 
-  sll_real64, dimension(:)  , allocatable :: x, y
-  sll_real64, dimension(:)  , allocatable :: vx, vy
-
+  sll_real64, dimension(:),       allocatable :: x, y
+  sll_real64, dimension(:),       allocatable :: vx, vy
   sll_real64, dimension(:,:,:,:), allocatable :: df
 
   class(sll_interpolator_2d_base), pointer    :: interp_xy
