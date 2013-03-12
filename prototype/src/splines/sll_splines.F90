@@ -1087,7 +1087,7 @@ contains  ! ****************************************************************
        SLL_DEALLOCATE( spline%a, ierr )
        SLL_DEALLOCATE( spline%cts, ierr )
        SLL_DEALLOCATE( spline%ipiv, ierr )
-       SLL_DEALLOCATE( spline%f_aux, ierr )
+       if (associated(spline%f_aux)) SLL_DEALLOCATE( spline%f_aux, ierr )
     end if
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_spline_1D
