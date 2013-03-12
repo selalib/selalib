@@ -10,11 +10,9 @@ sll_real64 :: res,diff,alpha,xmin,xmax,l
 sll_real64,dimension(:),allocatable ::xi,fi,coord
 type(sll_lagrange_interpolation_1D),pointer ::l_i
 
-print*,sll_pi
-
 d=6
 num_points=256
-alpha=0.2
+alpha=0.02
 allocate(xi(1:num_points))
 allocate(fi(1:num_points))
 allocate(coord(1:num_points))
