@@ -10,7 +10,12 @@
 !> - HDF5    http://www.hdfgroup.org/HDF5/
 !>
 !> link with <code>sll_low_level_io</code> library
-!>
+!> - Modules available
+!>      + sll_xml_io
+!>      + sll_ascii_io
+!>      + sll_binary_io
+!>      + sll_hdf5_io
+!>      + sll_xdmf
 !> - import the module :
 !> \code
 !> use sll_xdmf
