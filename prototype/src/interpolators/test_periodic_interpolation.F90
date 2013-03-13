@@ -33,9 +33,6 @@ program test_periodic_interp
   ! loop on N 
   N = N0
   do p=1,4
-!!!rajout raf
-u_exact=0.0_f64
-u_out=0.0_f64
      N= 2*N 
 
      ! Interpolate non trivial smooth periodic function
@@ -68,7 +65,7 @@ u_out=0.0_f64
      old_error = error
      !error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
      error = maxval(abs((u_out(1:N+1)-u_exact(1:N+1))/u_exact(1:N+1)))
-     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8) 
+     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8)
   end do
 
 
@@ -107,5 +104,6 @@ u_out=0.0_f64
      error = maxval(abs((u_out(1:N+1)-u_exact(1:N+1))/u_exact(1:N+1)))
      print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8) 
   end do
+
 
 end program test_periodic_interp
