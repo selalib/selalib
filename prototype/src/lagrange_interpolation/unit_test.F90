@@ -23,6 +23,7 @@ l=xmax-xmin
 do i=1,num_points
  xi(i)=i-1
  fi(i)=f(xi(i))
+ !fi(i)=f2(xi(i),l)
  coord(i)=xi(i)+alpha
 end do 
 diff=0.0_f64

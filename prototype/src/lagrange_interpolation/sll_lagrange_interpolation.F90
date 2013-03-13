@@ -16,7 +16,6 @@ implicit none
    sll_real64, dimension(:,:), pointer  :: wj
    sll_real64, dimension(:), pointer    :: xiadd 
    sll_real64, dimension(:), pointer    :: fiadd 
-   sll_real64, dimension(:), pointer    :: xi 
    sll_real64, dimension(:), pointer    :: data_out !result=p(x) where p is the polynomial of interpolation
  end type sll_lagrange_interpolation_1D
 
@@ -49,7 +48,7 @@ new_lagrange_interpolation_1D%xmax=xmax
 new_lagrange_interpolation_1D%num_points=num_points
 end function new_lagrange_interpolation_1D
 
-!compute donne un tableau avec les wj, qui permettent de calculer le polynome
+!compute_lagrange_interpolation_1D écrit les wj, qui permettent de calculer le polynome
 subroutine compute_lagrange_interpolation_1D(fi,alpha,lagrange)
 type(sll_lagrange_interpolation_1D), pointer :: lagrange
 sll_int32 :: i,j,k,indice_decalage
@@ -61,13 +60,10 @@ sll_real64,dimension(1:lagrange%d*2-1+lagrange%num_points) :: xiadd,fiadd
 sll_real64,dimension(1:2*lagrange%d,1:lagrange%num_points) :: wj
 
 
-!compute h
 h=(lagrange%xmax-lagrange%xmin)/(lagrange%num_points-1)
-!compute xi
 do i=0,lagrange%num_points-1
 xi(i+1)=lagrange%xmin+i*h
 end do
-!calcul d'indice_decalage en fonction de alpha
 if(alpha<0)then
 indice_decalage=alpha/h-1
 else
