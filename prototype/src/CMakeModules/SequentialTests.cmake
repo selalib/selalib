@@ -86,7 +86,13 @@ ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
-ADD_TEST(NAME BSL COMMAND test_bsl_2d)
+ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
+                          bsl_1d_cubic_nonuniform_periodic
+                          bsl_1d_cubic_uniform_compact
+                          bsl_1d_cubic_nonuniform_compact
+                          bsl_1d_quintic_uniform_compact
+                          bsl_1d_quintic_nonuniform_compact)
+
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME low_level_file_io COMMAND test_io)

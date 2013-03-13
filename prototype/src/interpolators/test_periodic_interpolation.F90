@@ -37,7 +37,7 @@ program test_periodic_interp
 u_exact=0.0_f64
 u_out=0.0_f64
      N= 2*N 
-     
+
      ! Interpolate non trivial smooth periodic function
      mode = 3
      do  i=0, N
@@ -108,6 +108,4 @@ u_out=0.0_f64
      print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8) 
   end do
 
-
 end program test_periodic_interp
-
