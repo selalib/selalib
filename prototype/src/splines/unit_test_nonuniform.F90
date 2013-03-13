@@ -435,7 +435,6 @@ program nonuniform_spline_tester
       !endif  
     enddo
     
-    
     !print *,test,min(linf_err(1)/linf(1),linf(1)),min(linf_err(2)/linf(2),linf(2)),min(linf_err(3)/linf(3),linf(3)),min(linf_err(4)/linf(4),linf(4)),1._f64/node_uniformity_min,node_uniformity_max
     
     do j=1,4
@@ -456,10 +455,7 @@ program nonuniform_spline_tester
         index_max_err(6)=test
       endif
     
-        
-    
     call interpolate_array_value_nonunif( new_node_positions, f_new,N_new, spl)
-    
     
   enddo
   
