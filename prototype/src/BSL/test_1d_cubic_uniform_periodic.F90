@@ -1,4 +1,4 @@
-program test_bsl_1d
+program bsl_1d_cubic_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -159,4 +159,4 @@ contains
 
    end subroutine plot_df
 
-end program test_bsl_1d
+end program bsl_1d_cubic_periodic

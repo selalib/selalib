@@ -1077,7 +1077,9 @@ contains
           end do
        end do
     end do
+
   end subroutine compute_electric_field_x1_3d
+
   
   ! This function only sets the Ey component of the electric field.
   subroutine compute_electric_field_x2_3d( &
@@ -1216,6 +1218,87 @@ contains
     end do
   end subroutine advection_v_1d
 
+  subroutine test_write(sim)
+    use sll_xdmf_parallel
+    class(sll_simulation_6d_vlasov_poisson_cart), intent(in) :: sim
+    type(layout_3D), pointer :: my_layout
+    integer(HSIZE_T), dimension(3)  :: array_dims 
+    integer(HSSIZE_T), dimension(3) :: offset 
+    sll_int32,  dimension(3) :: global_indices
+    sll_real64, dimension(:,:,:), allocatable :: x1
+    sll_real64, dimension(:,:,:), allocatable :: x2
+    sll_real64, dimension(:,:,:), allocatable :: x3
+    sll_int32  :: file_id
+    sll_int32  :: my_rank
+    sll_int32  :: world_size
+    sll_int32  :: error
+    sll_real64 :: delta_x1
+    sll_real64 :: delta_x2
+    sll_real64 :: delta_x3
+    sll_int32  :: local_nx1
+    sll_int32  :: local_nx2
+    sll_int32  :: local_nx3
+    sll_real64 :: x1_min
+    sll_real64 :: x2_min
+    sll_real64 :: x3_min
+    sll_int32  :: i, j, k, gi, gj, gk
+
+    array_dims(1) =  sim%nc_x1
+    array_dims(2) =  sim%nc_x2
+    array_dims(3) =  sim%nc_x3
+
+    world_size    =  sll_get_collective_size(sll_world_collective)
+    my_rank       =  sll_get_collective_rank(sll_world_collective)
+
+    my_layout     => sim%rho_seq_x1
+    offset(1)     =  get_layout_i_min( my_layout, my_rank ) - 1
+    offset(2)     =  get_layout_j_min( my_layout, my_rank ) - 1
+    offset(3)     =  get_layout_k_min( my_layout, my_rank ) - 1
+
+    call compute_local_sizes_3d(my_layout, local_nx1, local_nx2, local_nx3)
+    SLL_ALLOCATE(x1(local_nx1,local_nx2,local_nx3),error)
+    SLL_ALLOCATE(x2(local_nx1,local_nx2,local_nx3),error)
+    SLL_ALLOCATE(x3(local_nx1,local_nx2,local_nx3),error)
+
+    x1_min   = sim%mesh6d%x1_min
+    x2_min   = sim%mesh6d%x2_min
+    x3_min   = sim%mesh6d%x3_min
+
+    delta_x1 = sim%mesh6d%delta_x1
+    delta_x2 = sim%mesh6d%delta_x2
+    delta_x3 = sim%mesh6d%delta_x3
+
+    do k = 1, local_nx3
+       do j = 1, local_nx2
+          do i = 1, local_nx1
+             global_indices = local_to_global_3D( my_layout, (/i, j, k/) )
+             gi = global_indices(1)
+             gj = global_indices(2)
+             gk = global_indices(3)
+             x1(i,j,k) = x1_min + (gi-1._f64)*delta_x1
+             x2(i,j,k) = x2_min + (gj-1._f64)*delta_x2
+             x3(i,j,k) = x3_min + (gk-1._f64)*delta_x3
+          end do
+       end do
+    end do
+       
+    call sll_xdmf_open("test.xmf","grid",               &
+                       sim%nc_x1,sim%nc_x2,sim%nc_x3,   &
+                       file_id,error)
+    call sll_xdmf_write_array("grid",array_dims,offset,x1,'x1',error)
+    call sll_xdmf_write_array("grid",array_dims,offset,x2,'x2',error)
+    call sll_xdmf_write_array("grid",array_dims,offset,x3,'x3',error)
+    call sll_xdmf_write_array("grid",array_dims,     &
+                              offset,sim%rho_x1,"rho",error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+
+    deallocate(x1)
+    deallocate(x2)
+    deallocate(x3)
+
+  end subroutine test_write
+
+
   subroutine plot_fields(itime, sim)
     use sll_collective
     use hdf5
@@ -1297,7 +1380,7 @@ contains
        if (itime == 1) then
           SLL_ALLOCATE(x1(local_nx1,local_nx2,local_nx3),error)
           SLL_ALLOCATE(x2(local_nx1,local_nx2,local_nx3),error)
-          SLL_ALLOCATE(x2(local_nx1,local_nx2,local_nx3),error)
+          SLL_ALLOCATE(x3(local_nx1,local_nx2,local_nx3),error)
           x1_min = sim%mesh6d%x1_min
           x1_max = sim%mesh6d%x1_max
           x2_min = sim%mesh6d%x2_min
@@ -1315,8 +1398,8 @@ contains
           delta_x2 = sim%mesh6d%delta_x2
           delta_x3 = sim%mesh6d%delta_x3
           delta_x4 = sim%mesh6d%delta_x4
-          delta_x4 = sim%mesh6d%delta_x5
-          delta_x4 = sim%mesh6d%delta_x6
+          delta_x5 = sim%mesh6d%delta_x5
+          delta_x6 = sim%mesh6d%delta_x6
    
           do k = 1, local_nx3
              do j = 1, local_nx2
@@ -1327,7 +1410,7 @@ contains
                    gk = global_indices(3)
                    x1(i,j,k) = x1_min + (gi-1._f64)*delta_x1
                    x2(i,j,k) = x2_min + (gj-1._f64)*delta_x2
-                   x2(i,j,k) = x3_min + (gk-1._f64)*delta_x3
+                   x3(i,j,k) = x3_min + (gk-1._f64)*delta_x3
                 end do
              end do
           end do
@@ -1385,6 +1468,8 @@ contains
           call sll_xml_file_close(xml_file_id,error)
 
        end if
+
+
 
     end do
 
