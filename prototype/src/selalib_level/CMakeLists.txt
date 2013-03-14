@@ -52,9 +52,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/fft_module.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90)
 
-ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES} selalib.F90)
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib)
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
@@ -68,6 +69,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    INSTALL(TARGETS selalib-mpi ARCHIVE DESTINATION lib)
    FILE(COPY selalib-mpi.h DESTINATION ${CMAKE_BINARY_DIR}/include)
    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h DESTINATION include)
+   INSTALL(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/selalib.mod DESTINATION include)
 
 ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 

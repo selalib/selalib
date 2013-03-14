@@ -197,6 +197,8 @@ target_link_libraries(VP1D_cart
 	)
 
 
+IF(CMAKE_BUILD_TYPE MATCHES "Release")
+
 add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 target_link_libraries(VP1D_deltaf_cart
 	sll_mapped_meshes
@@ -217,6 +219,8 @@ target_link_libraries(VP1D_deltaf_cart
 	fftpack_module
 	${LAPACK_LIBRARIES}
 	)
+
+ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 ENDIF(NOT STDF95)
 ENDIF()

@@ -1,13 +1,5 @@
-program landau_2d
-#include "sll_assert.h"
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_poisson_solvers.h"
-
-use numeric_constants
-use sll_module_interpolators_1d_base
-use sll_cubic_spline_interpolator_1d
-use sll_poisson_1d_periodic
+program landau_1d
+#include "selalib.h"
 
 implicit none
   
@@ -129,4 +121,4 @@ contains
     end do
    end subroutine advection_v
 
-end program landau_2d
+end program landau_1d
