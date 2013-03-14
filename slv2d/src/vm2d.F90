@@ -145,7 +145,7 @@ do iter=1,nbiter
       call solve_faraday(maxw2dfdtd,ex,ey,bz,dt)
    end if
 
-   call cl_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
+   call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
    !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
 
    call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
@@ -167,7 +167,7 @@ do iter=1,nbiter
    !################
    !Phase correction
    !################
-   call cl_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
+   call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
    !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
    call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
 
