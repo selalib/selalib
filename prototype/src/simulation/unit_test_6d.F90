@@ -15,12 +15,11 @@ program vlasov_poisson_6d
   ! call simulation%read_from_file("whatever") or something similar here
   print *, 'Proceed to run simulation.'
   call flush()
+  call simulation%init_from_file("vpsim6d_input.txt")
   call simulation%run( )
-
+  call delete_vp6d_par_cart(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
-  call delete_vp6d_par_cart(simulation)
-
   call sll_halt_collective()
 
 end program vlasov_poisson_6d
