@@ -30,6 +30,7 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      sll_int32  :: nproc_x6
      ! Physics parameters
      sll_real64 :: dt
+     sll_int32  :: num_iterations
      ! Mesh parameters
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
@@ -87,6 +88,7 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      type(cubic_spline_1d_interpolator) :: interp_x6
    contains
      procedure, pass(sim) :: run => run_vp6d_cartesian
+     procedure, pass(sim) :: init_from_file => init_vp6d_par_cart
   end type sll_simulation_6d_vlasov_poisson_cart
 
   interface delete
@@ -94,6 +96,43 @@ module sll_simulation_6d_vlasov_poisson_cartesian
   end interface delete
 
 contains
+
+  subroutine init_vp6d_par_cart( sim, filename )
+    intrinsic :: trim
+    class(sll_simulation_6d_vlasov_poisson_cart), intent(inout) :: sim
+    character(len=*), intent(in)                                :: filename
+    sll_real64            :: dt
+    sll_int32             :: number_iterations
+    sll_int32             :: num_cells_x1
+    sll_int32             :: num_cells_x2
+    sll_int32             :: num_cells_x3
+    sll_int32             :: num_cells_x4
+    sll_int32             :: num_cells_x5
+    sll_int32             :: num_cells_x6
+    sll_int32, parameter  :: input_file = 99
+
+    namelist /sim_params/ dt, number_iterations
+    namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3
+    namelist /grid_dims/ num_cells_x4, num_cells_x5, num_cells_x6
+    ! Try to add here other parameters to initialize the mesh values like
+    ! xmin, xmax and also for the distribution function initializer.
+    open(unit = input_file, file=trim(filename))
+    read(input_file, sim_params)
+    read(input_file,grid_dims)
+    close(input_file)
+
+    sim%dt = dt
+    sim%num_iterations = number_iterations
+    ! In this particular simulation, since the system is periodic, the number
+    ! of points is the same as the number of cells in all directions.
+    sim%nc_x1 = num_cells_x1
+    sim%nc_x2 = num_cells_x2
+    sim%nc_x3 = num_cells_x3
+    sim%nc_x4 = num_cells_x4
+    sim%nc_x3 = num_cells_x5
+    sim%nc_x4 = num_cells_x6
+  end subroutine init_vp6d_par_cart
+
 
   subroutine run_vp6d_cartesian(sim)
     class(sll_simulation_6d_vlasov_poisson_cart), intent(inout) :: sim
@@ -115,15 +154,12 @@ contains
     sll_int32  :: itemp
     sll_int32  :: ierr
     sll_int32  :: itime
-    sll_int32  :: num_iterations  ! this should go in the simulation type
     sll_real64 :: ex
     sll_real64 :: ey
     sll_real64 :: ez
     sll_int32  :: itmp1
     sll_int32  :: itmp2
 
-    sim%dt = 0.01 ! should be initialized elsewhere
-    num_iterations = 5
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
@@ -134,17 +170,6 @@ contains
     sim%rho_seq_x2       => new_layout_3D( sll_world_collective )
     sim%rho_seq_x3       => new_layout_3D( sll_world_collective )
     sim%split_rho_layout => new_layout_3D( sll_world_collective )
-
-    ! In this particular simulation, since the system is periodic, the number
-    ! of points is the same as the number of cells in all directions. This
-    ! is hardwired here but should be initialized somewhere else, maybe
-    ! by reading from a file.
-    sim%nc_x1 = 16 
-    sim%nc_x2 = 16
-    sim%nc_x3 = 16
-    sim%nc_x4 = 16
-    sim%nc_x5 = 16
-    sim%nc_x6 = 16
 
     ! layout for sequential operations in x4, x5 and x6. Make an even split for
     ! x1, x2 and x3, or as close as even if the power of 2 is not divisible by
@@ -507,9 +532,9 @@ contains
        NEW_REMAP_PLAN(sim%sequential_x1x2x3,sim%sequential_x4x5x6,sim%f_x1x2x3)
 
 
-    do itime=1, num_iterations
+    do itime=1, sim%num_iterations
        if (sim%my_rank == 0) then
-          print *, 'Iteration ', itime, ' of ', num_iterations
+          print *, 'Iteration ', itime, ' of ', sim%num_iterations
        end if
        ! Carry out a 'dt/2' advection in the velocities.
        ! Start with vx...(x4)
