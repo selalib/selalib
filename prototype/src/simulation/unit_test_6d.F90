@@ -23,7 +23,6 @@ program vlasov_poisson_6d
   call getarg(1, filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
-  call test_write(simulation)
   call simulation%run( )
   call delete_vp6d_par_cart(simulation)
   print *, 'reached end of vp4d test'
