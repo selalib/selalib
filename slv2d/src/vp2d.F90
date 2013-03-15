@@ -4,7 +4,11 @@
 !-------------------------------------------------------------------
 program VP2D
 
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+
 use used_precision  
 use geometry_module
 use diagnostiques_module
