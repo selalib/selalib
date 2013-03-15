@@ -89,6 +89,7 @@ contains
     intrinsic :: trim
     class(sll_simulation_4d_vlasov_poisson_cart), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
+    sll_int32             :: IO_stat
     sll_real64            :: dt
     sll_int32             :: number_iterations
     sll_int32             :: num_cells_x1
@@ -101,7 +102,11 @@ contains
     namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3, num_cells_x4
     ! Try to add here other parameters to initialize the mesh values like
     ! xmin, xmax and also for the distribution function initializer.
-    open(unit = input_file, file=trim(filename))
+    open(unit = input_file, file=trim(filename),IOStat=IO_stat)
+    if( IO_stat /= 0 ) then
+       print *, 'init_vp4d_par_cart() failed to open file ', filename
+       STOP
+    end if
     read(input_file, sim_params)
     read(input_file,grid_dims)
     close(input_file)
