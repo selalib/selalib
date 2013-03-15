@@ -25,8 +25,9 @@ module sll_simulation_4d_vlasov_poisson_cartesian
      sll_int32  :: nproc_x2
      sll_int32  :: nproc_x3
      sll_int32  :: nproc_x4 
-     ! Physics parameters
+     ! Physics/numerical parameters
      sll_real64 :: dt
+     sll_int32  :: num_iterations
      ! Mesh parameters
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
@@ -75,6 +76,7 @@ module sll_simulation_4d_vlasov_poisson_cartesian
      sll_comp64, dimension(:,:), allocatable :: efield_split
    contains
      procedure, pass(sim) :: run => run_vp4d_cartesian
+     procedure, pass(sim) :: init_from_file => init_vp4d_par_cart
   end type sll_simulation_4d_vlasov_poisson_cart
 
   interface delete
@@ -83,11 +85,46 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 
 contains
 
+  subroutine init_vp4d_par_cart( sim, filename )
+    intrinsic :: trim
+    class(sll_simulation_4d_vlasov_poisson_cart), intent(inout) :: sim
+    character(len=*), intent(in)                                :: filename
+    sll_int32             :: IO_stat
+    sll_real64            :: dt
+    sll_int32             :: number_iterations
+    sll_int32             :: num_cells_x1
+    sll_int32             :: num_cells_x2
+    sll_int32             :: num_cells_x3
+    sll_int32             :: num_cells_x4
+    sll_int32, parameter  :: input_file = 99
+
+    namelist /sim_params/ dt, number_iterations
+    namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3, num_cells_x4
+    ! Try to add here other parameters to initialize the mesh values like
+    ! xmin, xmax and also for the distribution function initializer.
+    open(unit = input_file, file=trim(filename),IOStat=IO_stat)
+    if( IO_stat /= 0 ) then
+       print *, 'init_vp4d_par_cart() failed to open file ', filename
+       STOP
+    end if
+    read(input_file, sim_params)
+    read(input_file,grid_dims)
+    close(input_file)
+
+    sim%dt = dt
+    sim%num_iterations = number_iterations
+    ! In this particular simulation, since the system is periodic, the number
+    ! of points is the same as the number of cells in all directions.
+    sim%nc_x1 = num_cells_x1
+    sim%nc_x2 = num_cells_x2
+    sim%nc_x3 = num_cells_x3
+    sim%nc_x4 = num_cells_x4
+  end subroutine init_vp4d_par_cart
+
 
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here
   ! directly, but this should be cleaned up.
-
   subroutine run_vp4d_cartesian(sim)
     class(sll_simulation_4d_vlasov_poisson_cart), intent(inout) :: sim
     sll_int32  :: loc_sz_x1
@@ -104,12 +141,9 @@ contains
     sll_int32  :: itemp
     sll_int32  :: ierr
     sll_int32  :: itime
-    sll_int32  :: num_iterations  ! this should go in the simulation type
     sll_real64 :: ex
     sll_real64 :: ey
 
-    sim%dt = 0.01 ! should be initialized elsewhere
-    num_iterations = 20
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
@@ -119,14 +153,6 @@ contains
     sim%rho_seq_x1       => new_layout_2D( sll_world_collective )
     sim%rho_seq_x2       => new_layout_2D( sll_world_collective )
     sim%split_rho_layout => new_layout_2D( sll_world_collective )
-
-    ! In this particular simulation, since the system is periodic, the number
-    ! of points is the same as the number of cells in all directions. This
-    ! is hardwired here but should be initialized somewhere else.
-    sim%nc_x1 = 32 
-    sim%nc_x2 = 32
-    sim%nc_x3 = 32
-    sim%nc_x4 = 32
 
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
@@ -415,7 +441,7 @@ contains
            NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
 
-    do itime=1, num_iterations
+    do itime=1, sim%num_iterations
        ! Carry out a 'dt/2' advection in the velocities.
        ! Start with vx...(x3)
        ! Note: Since the Ex and Ey values are used separately, the proposed
