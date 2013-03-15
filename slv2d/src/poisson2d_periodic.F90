@@ -1,6 +1,8 @@
 module poisson2d_periodic
 
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+use numeric_constants
 
 use geometry_module
 use, intrinsic :: iso_c_binding
