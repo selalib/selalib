@@ -48,13 +48,16 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
 
    SET(PROCS 8)
+   SET(ARGS ${CMAKE_SOURCE_DIR}/simulation/vpsim4d_input.txt)
    ADD_MPI_TEST(vp4d_sim test_vp4d_sim ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET(PROCS 8)
+   SET(ARGS ${CMAKE_SOURCE_DIR}/simulation/vpsim6d_input.txt)
    ADD_MPI_TEST(vp6d_sim test_vp6d_sim ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+   SET(ARGS "")
    IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
       SET(PROCS 4)
       ADD_MPI_TEST(multigrid_2d test_mgd2 ${PROCS} ${ARGS})

@@ -110,13 +110,18 @@ contains
     sll_int32             :: num_cells_x5
     sll_int32             :: num_cells_x6
     sll_int32, parameter  :: input_file = 99
+    sll_int32             :: IO_stat
 
     namelist /sim_params/ dt, number_iterations
     namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3
     namelist /grid_dims/ num_cells_x4, num_cells_x5, num_cells_x6
     ! Try to add here other parameters to initialize the mesh values like
     ! xmin, xmax and also for the distribution function initializer.
-    open(unit = input_file, file=trim(filename))
+    open(unit = input_file, file=trim(filename),IOStat=IO_stat)
+    if( IO_stat /= 0 ) then
+       print *, 'init_vp6d_par_cart() failed to open file ', filename
+       STOP
+    end if
     read(input_file, sim_params)
     read(input_file,grid_dims)
     close(input_file)
@@ -129,8 +134,8 @@ contains
     sim%nc_x2 = num_cells_x2
     sim%nc_x3 = num_cells_x3
     sim%nc_x4 = num_cells_x4
-    sim%nc_x3 = num_cells_x5
-    sim%nc_x4 = num_cells_x6
+    sim%nc_x5 = num_cells_x5
+    sim%nc_x6 = num_cells_x6
   end subroutine init_vp6d_par_cart
 
 
