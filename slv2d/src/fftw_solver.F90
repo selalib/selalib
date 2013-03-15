@@ -1,5 +1,8 @@
 program fftw_solver
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_misc_utils.h"
+use numeric_constants
 use, intrinsic :: iso_c_binding
 implicit none
 include 'fftw3.f03'
