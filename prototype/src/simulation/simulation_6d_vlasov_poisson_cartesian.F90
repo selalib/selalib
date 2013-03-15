@@ -797,6 +797,9 @@ contains
 
     end do ! main loop
 
+    ! Test graphical output
+    call test_write(sim)
+
   end subroutine run_vp6d_cartesian
 
   function divisible_by_two( num )
