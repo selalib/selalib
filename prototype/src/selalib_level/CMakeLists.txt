@@ -12,7 +12,6 @@ FILE(COPY ${SLL_INCLUDE_FILES}
     DESTINATION
     ${CMAKE_BINARY_DIR}/include)
 
-
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
