@@ -1,6 +1,8 @@
 module sll_vlasov4d_poisson
 
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
  use used_precision
  use geometry_module

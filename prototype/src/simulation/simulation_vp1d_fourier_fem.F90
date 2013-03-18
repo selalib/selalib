@@ -25,15 +25,26 @@ module simulation_vp1d_fourier_fem
 #ifndef STDF95
   contains
     procedure, pass(sim) :: run => run_vp1d_fourier_fem
+    procedure, pass(sim) :: init_from_file => VP1D_fourier_fem_init
 #endif
   end type sll_simulation_vp1d_fourier_fem
 
 contains
 
+  subroutine VP1D_fourier_fem_init(sim, filename)
+#ifdef STDF95
+    type(sll_simulation_vp1d_fourier_fem), intent(inout)  :: sim
+#else
+    class(sll_simulation_vp1d_fourier_fem), intent(inout) :: sim
+#endif
+    character(len=*), intent(in)                                 :: filename
+    ! Declare here the variables to be read in through a namelist and that
+    ! are to be kept inside the sim object. Look at the parallel vp4d simulation
+    ! for an example.
+    print *, 'This is a dummy function. Needs implementation.'
+  end subroutine VP1D_fourier_fem_init
 
-  ! Note that the following function has no local variables, which is silly...
-  ! This just happened since the guts of the unit test were transplanted here
-  ! directly, but this should be cleaned up.
+
   subroutine run_vp1d_fourier_fem(sim)
 #ifdef STDF95
     type(sll_simulation_vp1d_fourier_fem), intent(inout) :: sim
