@@ -5,16 +5,12 @@ SET(SLL_INCLUDE_FILES
 	${SLL_DIR}/memory/sll_memory.h
 	${SLL_DIR}/precision/sll_working_precision.h
 	${SLL_DIR}/assert/sll_assert.h
-	${SLL_DIR}/utilities/misc_utils.h
+	${SLL_DIR}/utilities/sll_misc_utils.h
 	)
 
 FILE(COPY ${SLL_INCLUDE_FILES}
     DESTINATION
     ${CMAKE_BINARY_DIR}/include)
-
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
-              ${SLL_INCLUDE_FILES}
-        DESTINATION include)
 
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
@@ -52,10 +48,18 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/fft_module.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90)
 
-ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES} selalib.F90)
+
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h ${SLL_INCLUDE_FILES}
+        DESTINATION include)
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib)
+INSTALL(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/selalib.mod DESTINATION include)
+INSTALL(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_memory.mod DESTINATION include)
+INSTALL(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_assert.mod DESTINATION include)
+INSTALL(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_misc_utils.mod DESTINATION include)
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
@@ -94,7 +98,7 @@ ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 #	${CMAKE_SOURCE_DIR}/memory/sll_memory.h
 #	${CMAKE_SOURCE_DIR}/precision/sll_working_precision.h
 #	${CMAKE_SOURCE_DIR}/assert/sll_assert.h
-#	${CMAKE_SOURCE_DIR}/utilities/misc_utils.h
+#	${CMAKE_SOURCE_DIR}/utilities/sll_misc_utils.h
 #	)
 #
 #set(LOW_LEVEL_SOURCE_FILES
