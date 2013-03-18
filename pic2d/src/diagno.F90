@@ -1,5 +1,6 @@
 module diagno
-#include "selalib.h"
+#include "sll_working_precision.h"
+use sll_visu_pic
 use zone
 
 implicit none
