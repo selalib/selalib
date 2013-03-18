@@ -1,6 +1,9 @@
 module sll_vlasov4d_base
 
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
  use used_precision
  use geometry_module
@@ -8,6 +11,7 @@ module sll_vlasov4d_base
  use sll_module_interpolators_1d_base
  use sll_module_interpolators_2d_base
  use remapper
+use sll_xml_io
 
  implicit none
  private

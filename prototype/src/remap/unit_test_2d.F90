@@ -4,7 +4,7 @@ program remap_2d_unit_test
 !#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_misc_utils.h"
   implicit none
 
   ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,
