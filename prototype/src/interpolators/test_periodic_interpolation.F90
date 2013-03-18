@@ -25,7 +25,7 @@ program test_periodic_interp
 
   alpha = 0.05_8
  ! alpha = 0.1_8
- ! alpha = 0.0001_8
+  alpha = 0.0001_8
 
   L = xmax - xmin
   error = 0.0_8
@@ -59,8 +59,6 @@ program test_periodic_interp
 #else
      u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
 #endif
-!end periodic_interp
-
      
      old_error = error
      !error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
