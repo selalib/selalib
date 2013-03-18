@@ -252,9 +252,9 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
 
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
 !  call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
-  plan_sl%phi=phi_exact
-  plan_sl%adv%field=0
-  call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1,N_eta2)
+ ! plan_sl%phi=phi_exact
+ ! plan_sl%adv%field=0
+ ! call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1,N_eta2)
 
 !  !write f in a file before calculations
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
