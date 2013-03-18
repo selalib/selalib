@@ -8,33 +8,43 @@ use sll_module_interpolators_1d_base
 use sll_splines
   implicit none
 
+!> Object for 1d cubic spline interpolation on uniform mesh
 #ifdef STDF95
-  type                                    ::  cubic_spline_1d_interpolator
-#else  
-  type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
-#endif
-     sll_real64, dimension(:), pointer     :: interpolation_points 
-     sll_int32                     :: num_points ! size
-     sll_int32                     :: bc_type
-     type(sll_spline_1D), pointer  :: spline
-#ifdef STDF95
+
+type ::  cubic_spline_1d_interpolator
+   sll_real64, dimension(:), pointer :: interpolation_points !< points positions
+   sll_int32                         :: num_points           !< size
+   sll_int32                         :: bc_type              !< boundary condition
+   type(sll_spline_1D), pointer      :: spline               !< spline object
+end type cubic_spline_1d_interpolator
+
 #else
-   contains
-     procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
-     procedure :: compute_interpolants => compute_interpolants_cs1d
-     procedure :: interpolate_value => interpolate_value_cs1d
-     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
-     procedure :: interpolate_array_values => interpolate_values_cs1d
-     procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
-     procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
-     procedure :: interpolate_pointer_derivatives => &
-          interpolate_pointer_derivatives_cs1d
-     procedure, pass:: interpolate_array => spline_interpolate1d
-     procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
-     procedure, pass:: reconstruct_array
-     !generic :: initialize => initialize_cs1d_interpolator
+
+type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
+
+   sll_real64, dimension(:), pointer :: interpolation_points !< points position
+   sll_int32                         :: num_points           !< size
+   sll_int32                         :: bc_type              !< boundary condition
+   type(sll_spline_1D), pointer      :: spline               !< spline object
+
+contains
+
+procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
+procedure :: compute_interpolants => compute_interpolants_cs1d
+procedure :: interpolate_value => interpolate_value_cs1d
+procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+procedure :: interpolate_array_values => interpolate_values_cs1d
+procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
+procedure, pass:: interpolate_array => spline_interpolate1d
+procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
+procedure, pass:: reconstruct_array
+!generic :: initialize => initialize_cs1d_interpolator
+
+end type cubic_spline_1d_interpolator
+
 #endif
-  end type cubic_spline_1d_interpolator
 
   interface delete
      module procedure delete_cs1d

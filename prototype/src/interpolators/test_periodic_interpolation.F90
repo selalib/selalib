@@ -28,7 +28,6 @@ program test_periodic_interp
   do p=1,4
      N= 2*N 
      alpha = 0.05_8
-     
      ! Interpolate non trivial smooth periodic function
      mode = 3
      do  i=0, N
@@ -55,6 +54,4 @@ program test_periodic_interp
      print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8) 
   end do
  
-
 end program test_periodic_interp
-

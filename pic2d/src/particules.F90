@@ -1,5 +1,6 @@
 module particules
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
 use zone
 use marsaglia
 use quietstart

@@ -1,6 +1,17 @@
 program vm4d_spectral
 
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+use sll_collective
+use remapper
+use sll_module_interpolators_2d_base
+use sll_cubic_spline_interpolator_2d
+use sll_poisson_2d_periodic
+use sll_maxwell
+use sll_maxwell_2d_pstd
+
 
   use used_precision  
   use geometry_module

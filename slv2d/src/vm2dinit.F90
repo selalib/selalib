@@ -1,5 +1,8 @@
 module vm2dinit
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
 use geometry_module
 use vlasov2d_module
 use splinepx_class
