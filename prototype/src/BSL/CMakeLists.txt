@@ -44,10 +44,10 @@ IF(NOT STDF95)
 
    IF(FFTPACK_ENABLED)
 
-      INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../poisson_solvers)
+      INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../selalib_level)
       ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
-      ADD_DEPENDENCIES(bsl_landau_1d ${BSL_LIB_DEPS})
-      TARGET_LINK_LIBRARIES(bsl_landau_1d ${BSL_LIB_DEPS} sll_poisson_1d_periodic fftpack_module)
+      ADD_DEPENDENCIES(bsl_landau_1d selalib)
+      TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)
 
    ENDIF()
 

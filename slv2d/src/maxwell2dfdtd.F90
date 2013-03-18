@@ -85,7 +85,7 @@ end do
 end do
 end subroutine solve_faraday2dfdtd
 
-subroutine cl_periodiques(this,ex,ey,bz,jx,jy,dt)
+subroutine c_l_periodiques(this,ex,ey,bz,jx,jy,dt)
 type(maxwell2dfdtd) :: this
 sll_real64, intent(in) :: dt
 sll_real64, dimension(:,:) :: ex,ey,bz,jx,jy
@@ -107,7 +107,7 @@ do j = 1, my
    ey(1,j) = ey(mx,j) - dt*csq*dbz_dx - dt*jy(mx,j)/e0
 end do
 
-end subroutine cl_periodiques
+end subroutine c_l_periodiques
 
 subroutine solve_ampere2dfdtd(this,ex,ey,bz,jx,jy,nrj,dt)
 
@@ -147,7 +147,7 @@ end subroutine solve_ampere2dfdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine silver_muller(this, ex, ey, bz, jx, jy, dt)
+subroutine cl_silver_muller(this, ex, ey, bz, jx, jy, dt)
 
 type(maxwell2dfdtd) :: this
 real(8) :: a11,a12,a21,a22,b1,b2,dis,dt
@@ -235,6 +235,6 @@ do j = 1, my
       
 end do
 
-end subroutine silver_muller
+end subroutine cl_silver_muller
 
 end module maxwell2dfdtd_module 
