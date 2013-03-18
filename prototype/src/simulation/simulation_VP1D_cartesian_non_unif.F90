@@ -68,9 +68,6 @@ contains
     
     
     
-    
-    
-    
     !initialization of parameters
     N_x1=256
     N_x2=N_x1
