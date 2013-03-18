@@ -5,7 +5,16 @@ call c_f_pointer(p_array, array, [array_size/2+1])        \
 
 module sll_vlasov4d_spectral
 
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+use sll_module_interpolators_1d_base
+use sll_module_interpolators_2d_base
+use sll_collective
+use remapper
+use numeric_constants
+
 
  use, intrinsic :: iso_c_binding
  use used_precision
