@@ -2,7 +2,7 @@ module remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "misc_utils.h"
+#include "sll_misc_utils.h"
   use sll_collective
   use sll_electric_field_2d_accumulator ! terrible dependency here...
   implicit none
@@ -1016,8 +1016,9 @@ contains  !******************************************************************
        .not. (global_npx4 .gt. 0) .or. &
        .not. (global_npx5 .gt. 0) .or. &
        .not. (global_npx6 .gt. 0) ) then
-       print *, 'ERROR: distribute_6D_array() needs that the array dimensions',&
-            'be greater than zero.'
+       print *, 'ERROR: distribute_6D_array() needs that the array ', &
+            'dimensions be greater than zero. Passed:', global_npx1, &
+            global_npx2, global_npx3, global_npx4, global_npx5, global_npx6
        STOP
     end if
 
