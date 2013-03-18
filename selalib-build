@@ -161,7 +161,7 @@ make NightlySubmit
 cpack -G $PIPOL_CPACK_G .
 
 # cmake test results can be seen on 
-# http://irma-webhpc/CDash/index.php?project=SeLaLib
+# http://cdash.inria.fr/CDash/index.php?project=Selalib
 
 }; cd -
 
