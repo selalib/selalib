@@ -102,9 +102,9 @@ program cg_curvilinear_2D
   ! BC        : periodic-periodic
   if (mesh_case==1) then
     eta1_min = 0._f64
-    eta1_max = 6._f64
+    eta1_max = 2._f64*sll_pi !6._f64
     eta2_min = 0._f64
-    eta2_max = 6._f64
+    eta2_max = 2._f64*sll_pi !6._f64
 
     x1c_r=3._f64
     x2c_r=3._f64
@@ -249,11 +249,19 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
                                      & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
   f_init=f
-
+ 
+   call system('./quasi_neutre')
+   !open(unit=29,file='fort.29',position="append")
+   !do j=1,
+   !do i=1,
+  ! read(29,*)  plan_sl%phi(i,j)
+  ! enddo
+  ! enddo
+ 
   call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
 !  call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
- ! plan_sl%phi=phi_exact
- ! plan_sl%adv%field=0
+ !  plan_sl%phi=phi_exact
+ !  plan_sl%adv%field=0
  ! call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1,N_eta2)
 
 !  !write f in a file before calculations
