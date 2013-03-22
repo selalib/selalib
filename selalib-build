@@ -63,7 +63,7 @@ if [[ `hostname` == "irma-hpc" ]]; then
   export OMPI_CC=icc
   export OMPI_CXX=icpc
   export HDF5_ROOT=/opt/intel
-  export FFTW_ROOT=/opt/local
+  export FFTW_ROOT=/opt/intel
 fi
 
 if [[ $PIPOL_WDIR ]] ; then
@@ -152,18 +152,27 @@ fi
 
 mkdir build
 cd build; {
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local ${HOMEDIR}/selalib
+cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Debug
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
 make NightlyTest
 make NightlySubmit
-cpack -G $PIPOL_CPACK_G .
-
-# cmake test results can be seen on 
-# http://cdash.inria.fr/CDash/index.php?project=Selalib
-
+#cpack -G $PIPOL_CPACK_G .
 }; cd -
-
 rm -rf build
+
+mkdir build
+cd build; {
+cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
+make NightlyUpdate
+make NightlyConfigure
+make NightlyBuild
+make NightlyTest
+make NightlySubmit
+#cpack -G $PIPOL_CPACK_G .
+}; cd -
+rm -rf build
+
+
 exit 0
