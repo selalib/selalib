@@ -18,17 +18,15 @@ program test_periodic_interp
 #else
   class(sll_interpolator_1d_base), pointer     :: interp
 #endif
-  sll_real64, parameter :: xmin = 0., xmax=3.   
- ! sll_real64, parameter :: xmin = 0., xmax=2.   
-  sll_real64 :: alpha, error, old_error, L, xi
-  sll_int32 :: i, p, N, i0, mode ,j
+  sll_real64, parameter :: xmin = 0.0_f64, xmax=3.0_f64   
+  sll_real64 :: alpha, error, old_error, L, xi,mode
+  sll_int32 :: i, p, N, i0, j
 
-  alpha = 0.05_8
- ! alpha = 0.1_8
-  alpha = 0.0001_8
-
+  alpha = 0.05_f64
+  mode = 3.0_f64
   L = xmax - xmin
-  error = 0.0_8
+
+  error = 0.0_f64
   print*, 'Testing order of periodic interpolation'
   ! loop on N 
   N = N0
@@ -36,17 +34,12 @@ program test_periodic_interp
      N= 2*N 
 
      ! Interpolate non trivial smooth periodic function
-     mode = 3
      do  i=0, N
-        xi = xmin+i*L/N
-        u(i+1) = 1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*xi))
-        u_exact(i+1) =  1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
+        xi = xmin+real(i,f64)*L/real(N,f64)
+        u(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*xi))
+        u_exact(i+1) =  1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
 !        u(i+1) = cos(mode*twopi*i/N)
 !        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
-!        u(i+1)=2.0_f64*xi*xi+1.0_f64
-!        u_exact(i+1)=2.0_f64*(xi-alpha)*(xi-alpha)+1.0_f64
-!        u(i+1)= 2.0_f64*(sin(xi) + 2.5_f64 + cos(xi))
-!        u_exact(i+1)=2.0_f64*(sin(xi-alpha) + 2.5_f64 + cos(xi-alpha))
      end do
 #ifdef STDF95
      call periodic_initialize(interp, N+1, xmin, xmax, SPLINE, 12)
@@ -61,9 +54,8 @@ program test_periodic_interp
 #endif
      
      old_error = error
-     !error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
-     error = maxval(abs((u_out(1:N+1)-u_exact(1:N+1))/u_exact(1:N+1)))
-     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8)
+     error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
+     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64)
   end do
 
 
@@ -76,31 +68,26 @@ program test_periodic_interp
      N= 2*N 
      
      ! Interpolate non trivial smooth periodic function
-     mode = 3
      do  i=0, N
-        xi = xmin+i*L/N
-        u(i+1) = 1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*xi))
-        u_exact(i+1) =  1.0_8 / (2 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
+        xi = xmin+real(i,f64)*L/real(N,f64)
+        u(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*xi))
+        u_exact(i+1) =  1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
 !        u(i+1) = cos(mode*twopi*i/N)
 !        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
-!        u(i+1)=2.0_f64*xi*xi+1.0_f64
-!        u_exact(i+1)=2.0_f64*(xi-alpha)*(xi-alpha)+1.0_f64
-!        u(i+1)= 2.0_f64*(sin(xi) + 2.5_f64 + cos(xi))
-!        u_exact(i+1)=2.0_f64*(sin(xi-alpha) + 2.5_f64 + cos(xi-alpha))
      end do
 
-#ifdef STDF95
-     call interp_lagrange_intialize(interp, N+1, xmin, xmax, PERIODIC_LAGRANGE,6)
-#else
      call interp_lagrange%initialize( N+1,xmin,xmax,PERIODIC_LAGRANGE,6)
-#endif
      interp => interp_lagrange
      u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), -alpha)
 
      old_error = error
-     !error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
-     error = maxval(abs((u_out(1:N+1)-u_exact(1:N+1))/u_exact(1:N+1)))
-     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_8) 
+     error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
+     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64) 
+
+!if(p==1)then
+!print*,"u-ue"
+!print*,u_out-u_exact
+!end if
   end do
 
 

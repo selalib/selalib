@@ -79,7 +79,7 @@ contains  ! ****************************************************************
   end function 
 
 #ifdef STDF95
-  function cubic_spline_interpolate_array_at_displacement(this, num_points, &
+  function cubic_non_uniform_spline_interpolate_array_at_displacement(this, num_points, &
        data, coordinates) &
        result(data_out)
     type(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
