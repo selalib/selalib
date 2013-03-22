@@ -51,8 +51,8 @@ function interpolate_array_disp_li1d(this, num_points, data, alpha) result(data_
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
   sll_real64, dimension(1:num_points)    :: data_out
 
-call compute_lagrange_interpolation_1D(data,alpha,this%lagrange)
-call interpolate_array_values(this%lagrange)
+call compute_lagrange_interpolation_1D(alpha,this%lagrange)
+call interpolate_array_values(data,this%lagrange)
 data_out=this%lagrange%data_out
 
 end function interpolate_array_disp_li1d

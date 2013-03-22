@@ -103,7 +103,7 @@ sll_real64, intent(in) :: dt
 #ifdef STDF95
 
 do j = 1, nc_v
-   df(:,j) = cubic_spline_interpolate_array_at_displacement(interp_x,nc_x+1,df(:,j),dt*advfield_x)
+   df(:,j) = cubic_non_uniform_spline_interpolate_array_at_displacement(interp_x,nc_x+1,df(:,j),dt*advfield_x)
 end do
 
 #else
@@ -122,7 +122,7 @@ sll_real64, intent(in) :: dt
 #ifdef STDF95
 
 do i = 1, nc_x
-   df(i,:) = cubic_spline_interpolate_array_at_displacement(interp_v,nc_v+1,df(i,:),dt*advfield_v)
+   df(i,:) = cubic_non_uniform_spline_interpolate_array_at_displacement(interp_v,nc_v+1,df(i,:),dt*advfield_v)
 end do
 
 #else
