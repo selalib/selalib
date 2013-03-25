@@ -31,13 +31,13 @@ implicit none
  end interface
 contains  !**********************************************************
  
-subroutine initialize_li1d_interpolator(interpolator,num_pts,xmin,xmax,bc_type,d)
+subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_type,d)
   class(lagrange_1d_interpolator), intent(inout) :: interpolator
-    sll_int32, intent(in)                        :: d,num_pts,bc_type
+    sll_int32, intent(in)                        :: d,num_points,bc_type
     sll_real64, intent(in)                       :: xmin,xmax
 
     interpolator%lagrange => new_lagrange_interpolation_1D( &
-           num_pts, &
+           num_points, &
            xmin, &
            xmax, &
            bc_type, &
