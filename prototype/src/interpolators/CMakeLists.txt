@@ -188,5 +188,6 @@ target_link_libraries( test_periodic_interpolators_1d
 	               sll_working_precision
 		       fftpack_module
 		       sll_lagrange_interpolation
+		       sll_lagrange2
                      )
 ENDIF()
