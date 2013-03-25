@@ -26,22 +26,21 @@ end interface
 contains  !*****************************************************************************
 
 
-function new_lagrange_interpolation_1D(nb_cell,xmin,xmax,bc_type,d)
+function new_lagrange_interpolation_1D(num_points,xmin,xmax,bc_type,d)
 type(sll_lagrange_interpolation_1D), pointer :: new_lagrange_interpolation_1D
 sll_int32 ::i,j,ierr
-sll_int32,intent(in) :: d, nb_cell
-sll_int32,intent(in),optional :: bc_type
+sll_int32,intent(in) :: d, num_points,bc_type
 sll_real64 :: xmin,xmax
 
 SLL_ALLOCATE( new_lagrange_interpolation_1D, ierr )
 
 
 SLL_ALLOCATE(new_lagrange_interpolation_1D%wj(2*d),ierr)
-SLL_ALLOCATE(new_lagrange_interpolation_1D%data_out(nb_cell+1),ierr)
+SLL_ALLOCATE(new_lagrange_interpolation_1D%data_out(num_points),ierr)
 new_lagrange_interpolation_1D%d=d
 new_lagrange_interpolation_1D%xmin=xmin
 new_lagrange_interpolation_1D%xmax=xmax
-new_lagrange_interpolation_1D%nb_cell=nb_cell
+new_lagrange_interpolation_1D%nb_cell=num_points-1
 end function new_lagrange_interpolation_1D
 
 !compute_lagrange_interpolation_1D écrit les wj, qui permettent de calculer le polynome
@@ -52,15 +51,15 @@ sll_real64 :: h
 sll_real64, intent(in) :: alpha
 sll_int32,dimension(1:4*lagrange%d-2) :: tableautest
 sll_real64,dimension(1:2*lagrange%d) :: wj
-!sll_real64,dimension(1:2*lagrange%d,1:lagrange%nb_cell+1) :: wj
 
 
 h=(lagrange%xmax-lagrange%xmin)/(lagrange%nb_cell)
 if(alpha<0)then
-indice_decalage=alpha/h-1.0_f64
+indice_decalage=alpha/h-1
 else
 indice_decalage=alpha/h
 end if
+
 
 select case(lagrange%bc_type)
 case (PERIODIC_LAGRANGE)
@@ -82,7 +81,9 @@ end do
 do i=1,lagrange%d
  wj(i+lagrange%d)=-wj(lagrange%d-i+1)
 end do
-!print*,"wj",wj
+wj=1.0_f64/wj
+
+print*,"wj dans principale",wj
 
 case (HERMITE_LAGRANGE)
 
@@ -128,29 +129,34 @@ sll_int32 ::i,j,indice_decalage
 sll_real64 :: sum1,sum2,beta,h
 sll_real64,dimension(1:lagrange%nb_cell+1),intent(in) :: fi
 
-sum1=0.0_f64
-sum2=0.0_f64
 
 select case(lagrange%bc_type)
 case (PERIODIC_LAGRANGE)
 h=(lagrange%xmax-lagrange%xmin)/(lagrange%nb_cell)
-beta=mod(lagrange%alpha,h)
-!print*,"h",h,"alpha",lagrange%alpha,"beta",beta
 if(lagrange%alpha<0)then
-indice_decalage=lagrange%alpha/h-1.0_f64
+indice_decalage=lagrange%alpha/h-1
+beta=h+mod(lagrange%alpha,h)
 else
 indice_decalage=lagrange%alpha/h
+beta=mod(lagrange%alpha,h)
 end if
 
+print*,"h",h,"alpha",lagrange%alpha,"beta",beta
+
 do j=1,2*lagrange%d
- lagrange%wj(j)=lagrange%wj(j)/(beta+lagrange%d-j)
+ lagrange%wj(j)=lagrange%wj(j)/(beta+real(lagrange%d,f64)-real(j,f64))
 end do
 
 do i=1,lagrange%nb_cell+1
+sum1=0.0_f64
+sum2=0.0_f64
  do j=1,lagrange%d*2
-  sum1=sum1+lagrange%wj(j)*fi(modulo(indice_decalage+i-1-(lagrange%d-1)+(j-1),lagrange%nb_cell+1)+1)
+  sum1=sum1+lagrange%wj(j)*fi(modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1)
   sum2=sum2+lagrange%wj(j)
+!print*,"dans 1 fi",fi(modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1),"modulo",modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1
+!print*,"dans normal wj/bla",lagrange%wj(j),"sum1",sum1,"sum2",sum2
  end do
+!print*,""
 lagrange%data_out(i)=sum1/sum2
 end do
 
