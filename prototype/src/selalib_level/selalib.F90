@@ -24,11 +24,8 @@ use sll_quintic_spline_interpolator_1d
 use sll_cubic_spline_interpolator_2d
 use sll_module_interpolators_2d_base
 use sll_cubic_spline_interpolator_1d
-use sll_maxwell
-use sll_maxwell_2d_fdtd
-use sll_maxwell_2d_pstd
+use sll_maxwell_solvers
+use sll_poisson_solvers
 use fft_module
-use sll_poisson_1d_periodic
-use sll_poisson_2d_periodic
 
 end module selalib
