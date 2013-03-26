@@ -5,6 +5,7 @@ module test_io
 #include "sll_working_precision.h"
 use sll_xdmf
 use numeric_constants
+use sll_utilities, only: int2string
 
 sll_int32, private :: i, j, k !< indices
 sll_int32 :: error            !< error code

@@ -4,7 +4,7 @@ program test_visu_pic
 #include "sll_memory.h"
 use numeric_constants
 use sll_visu_pic
-use sll_misc_utils
+use sll_utilities
 use biot_savart
 
 implicit none

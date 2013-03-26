@@ -5,6 +5,7 @@ program bsl_1d_cubic_nonuniform_periodic
 
 use numeric_constants
 use cubic_non_uniform_spline_interpolator_1d
+use sll_utilities, only: int2string
 
 #ifndef STDF95
 use sll_module_interpolators_1d_base

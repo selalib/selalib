@@ -13,7 +13,7 @@ use numeric_constants
 #include "mgd3.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
 implicit none
 !-----------------------------------------------------------------------
 ! Test problem for 3D multigrid parallel code mgd3. mgd3 solves the

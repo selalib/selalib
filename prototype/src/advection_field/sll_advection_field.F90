@@ -39,7 +39,7 @@ module sll_advection_field
 #include "sll_field_2d.h"
 #include "sll_field_1d.h"
   use numeric_constants
-  use sll_misc_utils   ! for int2string
+  use sll_utilities   ! for int2string
   implicit none
   
 !#ifdef STDF95

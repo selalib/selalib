@@ -58,7 +58,9 @@ INCLUDE_DIRECTORIES(utilities
                     numerical_utilities 
                     precision 
                     fields 
-                    fft) 
+                    low_level_file_io
+                    fft
+                    maxwell_solvers) 
 ENABLE_TESTING()
 
  ADD_SUBDIRECTORY(memory)
@@ -105,27 +107,6 @@ ENDIF(NOT STDF95)
  ADD_SUBDIRECTORY(selalib_level)
  ADD_SUBDIRECTORY(visu_pic)
  ADD_SUBDIRECTORY(simulation)
-
-##########################################################
-
-#ADD_SUBDIRECTORY(simulation)
-#IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
-#  SET(PROCS 8)
-#  ADD_TEST(NAME test_vp4d_sim
-#         COMMAND
-#	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-#	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
-#	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-#  SET_TESTS_PROPERTIES(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#  SET(PROCS 16)
-#  ADD_TEST(NAME test_vp6d_sim
-#         COMMAND
-#	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-#	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp6d_sim
-#	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-#  SET_TESTS_PROPERTIES(test_vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-#ENDIF()
 
 ##########################################################
 
