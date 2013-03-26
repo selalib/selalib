@@ -3,7 +3,7 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
   use sll_collective
   use remapper
   use numeric_constants

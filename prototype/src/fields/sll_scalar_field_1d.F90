@@ -36,7 +36,7 @@ module sll_scalar_field_1d
   use numeric_constants
   use sll_scalar_field_initializers_base
   use sll_module_mapped_meshes_1d_base
-  use sll_misc_utils
+  use sll_utilities
   implicit none
   
   !I removed this line because, it not exists in 2d version

@@ -1,8 +1,8 @@
 module sll_module_mapped_meshes_2d_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_io.h"
 
-use sll_io
 use sll_xdmf
 
   implicit none

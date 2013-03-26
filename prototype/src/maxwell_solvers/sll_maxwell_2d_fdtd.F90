@@ -42,8 +42,8 @@ module sll_maxwell_2d_fdtd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_maxwell_solvers.h"
 
-use sll_maxwell
 use numeric_constants
 
 implicit none

@@ -5,6 +5,7 @@ program unit_test_4d
 
 use numeric_constants
 use sll_cubic_spline_interpolator_2d
+use sll_utilities, only: int2string
 
 implicit none
 

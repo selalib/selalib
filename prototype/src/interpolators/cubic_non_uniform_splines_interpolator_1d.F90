@@ -6,7 +6,7 @@ module cubic_non_uniform_spline_interpolator_1d
 use sll_module_interpolators_1d_base
 #endif
 use cubic_non_uniform_splines
-use sll_splines
+use sll_cubic_splines
   implicit none
 
 #ifdef STDF95
@@ -17,7 +17,7 @@ use sll_splines
      sll_real64, dimension(:), pointer     :: interpolation_points 
      sll_int32                     :: num_points ! size
      sll_int32                     :: bc_type
-     type(sll_spline_1D), pointer  :: spline
+     type(sll_cubic_spline_1D), pointer  :: spline
      type(cubic_nonunif_spline_1D), pointer  :: nonunif_spline
 #ifdef STDF95
 #else
@@ -65,7 +65,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #endif
-    !class(sll_spline_1D),  intent(in)      :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
@@ -88,7 +88,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #endif
-    !class(sll_spline_1D),  intent(in)      :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
 #ifdef STDF95
     sll_real64                :: alpha

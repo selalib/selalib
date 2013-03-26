@@ -6,7 +6,7 @@ module polar_advection
   use polar_operators
   use poisson_polar
   use numeric_constants
-  use sll_splines
+  use sll_cubic_splines
   implicit none
 
   !>type sll_plan_adv_polar
@@ -15,7 +15,7 @@ module polar_advection
   type sll_plan_adv_polar
      sll_real64 :: rmin,rmax,dr,dtheta,dt
      sll_int32 :: nr,ntheta
-     type(sll_spline_2D), pointer :: spl_f
+     type(sll_cubic_spline_2D), pointer :: spl_f
      sll_int32 :: time_scheme
      sll_real64, dimension(:,:,:), pointer :: field
   end type sll_plan_adv_polar
