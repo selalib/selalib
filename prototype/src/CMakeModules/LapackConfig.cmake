@@ -28,7 +28,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
    ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
 
       SET(MKLPATH  "/opt/intel/Compiler/11.1/072/mkl/lib/em64t")
-      SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp -lpthread)
+      SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp )
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
       SET(BLAS_LIBRARIES  " ")
