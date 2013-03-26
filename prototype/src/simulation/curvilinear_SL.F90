@@ -3,11 +3,11 @@ program radial_1d_SL
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_splines
+  use sll_cubic_splines
   use numeric_constants
   implicit none
 
-  type(sll_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
+  type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
   sll_int32  :: i,j,bc1_type,bc2_type,err,it
   sll_int32  :: i1,i2,i3

@@ -5,7 +5,7 @@ module sll_cubic_spline_interpolator_1d
 #ifndef STDF95
 use sll_module_interpolators_1d_base
 #endif
-use sll_splines
+use sll_cubic_splines
   implicit none
 
 !> Object for 1d cubic spline interpolation on uniform mesh
@@ -15,7 +15,7 @@ type ::  cubic_spline_1d_interpolator
    sll_real64, dimension(:), pointer :: interpolation_points !< points positions
    sll_int32                         :: num_points           !< size
    sll_int32                         :: bc_type              !< boundary condition
-   type(sll_spline_1D), pointer      :: spline               !< spline object
+   type(sll_cubic_spline_1D), pointer      :: spline               !< spline object
 end type cubic_spline_1d_interpolator
 
 #else
@@ -25,7 +25,7 @@ type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
    sll_real64, dimension(:), pointer :: interpolation_points !< points position
    sll_int32                         :: num_points           !< size
    sll_int32                         :: bc_type              !< boundary condition
-   type(sll_spline_1D), pointer      :: spline               !< spline object
+   type(sll_cubic_spline_1D), pointer      :: spline               !< spline object
 
 contains
 
@@ -73,7 +73,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(cubic_spline_1d_interpolator),  intent(in)       :: this
 #endif
-    !class(sll_spline_1D),  intent(in)      :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
@@ -96,7 +96,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(cubic_spline_1d_interpolator),  intent(in)       :: this
 #endif
-    !class(sll_spline_1D),  intent(in)      :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data

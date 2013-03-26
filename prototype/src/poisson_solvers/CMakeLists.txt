@@ -1,3 +1,5 @@
+ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_solvers.F90)
+
 add_library(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 
 add_library(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)

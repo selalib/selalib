@@ -2,7 +2,7 @@ module remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
   use sll_collective
   use sll_electric_field_2d_accumulator ! terrible dependency here...
   implicit none
