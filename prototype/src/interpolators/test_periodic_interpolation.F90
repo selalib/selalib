@@ -70,7 +70,7 @@ program test_periodic_interp
   print*, 'Testing order of lagrange interpolation'
   ! loop on N 
   N = N0
-  do p=1,1!4
+  do p=1,4
      N= 2*N 
      
      ! Interpolate non trivial smooth periodic function
@@ -91,10 +91,6 @@ program test_periodic_interp
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
      print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64) 
 
-if(p==1)then
-print*,"u-ue"
-print*,u_out(1:N+1)-u_exact(1:N+1)
-end if
   end do
 
 
@@ -104,7 +100,7 @@ end if
   print*, 'Testing order of lagrange interpolation TESTTTT'
   ! loop on N 
   N = N0
-  do p=1,1!4
+  do p=1,4
      N= 2*N 
      
      ! Interpolate non trivial smooth periodic function
@@ -125,10 +121,6 @@ end if
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
      print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64) 
 
-if(p==1)then
-print*,"u-ue"
-print*,u_out(1:N+1)-u_exact(1:N+1)
-end if
   end do
 
 
