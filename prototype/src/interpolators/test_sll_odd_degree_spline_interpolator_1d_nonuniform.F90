@@ -40,14 +40,6 @@ program test_sll_odd_degree_spline_interpolator_1d_nonuniform
   SLL_ALLOCATE(data_interp(n), ierr)
   SLL_ALLOCATE(data_interp_disp(n), ierr)
 
-!PN I removed this test because of numerical errors
-#warning The test for odd degree spline interpolator for non uniform mesh
-#warning is disabled because of numerical errors in splines directory. PN
-
-  print *, "This test is DISABLED and should be fixed"
-  print *, 'PASSED'
-  stop
-
   print *, 'initialize data and interpolation_points array'
 
   degree_max = 11
