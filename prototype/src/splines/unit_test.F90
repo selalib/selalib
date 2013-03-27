@@ -255,7 +255,7 @@ program spline_tester
   call test_error_flag( test_flag, test_passed, &
        'test_2d_spline_hrmt_hrmt')
 
-  print *, ' '
+  !print *, 'test_passed : ', test_passed
   print *, 'test default slope values, hermite-hermite case'
   call test_2d_spline_hrmt_hrmt_no_slopes( &
        plane3, &

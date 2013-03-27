@@ -42,13 +42,6 @@ program test_sll_quintic_spline_interpolator_1d_nonuniform
 
   print *, 'initialize data and interpolation_points array'
 
-!PN This test is bypassed because of numerical errors in splines directory
-#warning non uniform test for non uniform quintic splines interpolator is
-#warning disabled. PN.
-
-  print *, 'PASSED'
-  stop
-
   x_min = -10.0_f64
   x_max = 10.0_f64
   mu = (x_min+x_max)/2
