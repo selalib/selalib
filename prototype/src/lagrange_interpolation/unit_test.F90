@@ -25,15 +25,14 @@ l=xmax-xmin
 do i=1,num_points
  xi(i)=i-1
  fi(i)=f(xi(i),num_points)
- !fi(i)=f2(xi(i),l)
+ !fi(i)=f2(xi(i))
  coord(i)=xi(i)+alpha
 end do 
 diff=0.0_f64
 diff2=0.0_f64
 
-!l_i => new_lagrange_interpolation_1D(num_points,xmin,xmax,HERMITE_LAGRANGE,d)
-l_i => new_lagrange_interpolation_1D(num_points,xmin,xmax,0,d)!PERIODIC_LAGRANGE,d)
-l_i2 => new_lagrange_interpolation_1D2(num_points,xmin,xmax,0,d)!PERIODIC_LAGRANGE,d)
+l_i => new_lagrange_interpolation_1D(num_points,xmin,xmax,1,d)!PERIODIC_LAGRANGE,d)
+l_i2 => new_lagrange_interpolation_1D2(num_points,xmin,xmax,1,d)!PERIODIC_LAGRANGE,d)
 call compute_lagrange_interpolation_1D(alpha,l_i)
 call compute_lagrange_interpolation_1D2(fi,alpha,l_i2)
 call interpolate_array_values(fi,l_i)
@@ -64,13 +63,12 @@ contains
 function f(x,num_points)
 sll_int32 :: num_points
 sll_real64 :: x,f
-!f=x*x+2*x
 f=cos(2*sll_pi*x/(num_points-1.0))
 end function
 
-function f2(x,l)
-sll_real64 :: x,f2,l
-f2=1.0_8 / (2 + sin(6._f64*sll_pi/l*x))
+function f2(x)
+sll_real64 :: x,f2
+f2=sll_pi
 end function
 
 end program

@@ -41,15 +41,16 @@ new_lagrange_interpolation_1D%d=d
 new_lagrange_interpolation_1D%xmin=xmin
 new_lagrange_interpolation_1D%xmax=xmax
 new_lagrange_interpolation_1D%nb_cell=num_points-1
+new_lagrange_interpolation_1D%bc_type=bc_type
 end function new_lagrange_interpolation_1D
 
 !compute_lagrange_interpolation_1D écrit les wj, qui permettent de calculer le polynome
 subroutine compute_lagrange_interpolation_1D(alpha,lagrange)
 type(sll_lagrange_interpolation_1D), pointer :: lagrange
-sll_int32 :: i,j,k,indice_decalage
+sll_int32 :: i,j,indice_decalage
 sll_real64 :: h
 sll_real64, intent(in) :: alpha
-sll_int32,dimension(1:4*lagrange%d-2) :: tableautest
+sll_int32,dimension(1:4*lagrange%d-2) :: table
 sll_real64,dimension(1:2*lagrange%d) :: wj
 
 
@@ -60,62 +61,27 @@ else
 indice_decalage=alpha/h
 end if
 
-
-select case(lagrange%bc_type)
-case (PERIODIC_LAGRANGE)
-
 do i=i,2*lagrange%d-1
-tableautest(i)=2*lagrange%d-1-(i-1)
-tableautest(i+2*lagrange%d-1)=i
+table(i)=2*lagrange%d-1-(i-1)
+table(i+2*lagrange%d-1)=i
 end do
-!print*,"tableau test",tableautest
 
 !remplissage de wj
 wj(:)=1.0_f64
 do i=1,lagrange%d
  do j=1,2*lagrange%d-1
-  wj(i)=wj(i)*tableautest(i+j-1)
+  wj(i)=wj(i)*table(i+j-1)
  end do
- wj(i)=((-1)**(lagrange%d+i))*(h**(lagrange%d-1))*wj(i)
+ wj(i)=((-1.0_f64)**(lagrange%d+i))*(h**(2*lagrange%d-1))*wj(i)
 end do
 do i=1,lagrange%d
  wj(i+lagrange%d)=-wj(lagrange%d-i+1)
 end do
 wj=1.0_f64/wj
 
-print*,"wj dans principale",wj
-
-case (HERMITE_LAGRANGE)
-
-print*,"not yet"
-
-!  !remplissage de xiadd en ajoutant les noeuds fictifs à xi
-!  do i=1,lagrange%d-1
-!  xiadd(i)=xi(1)-(lagrange%d-i)*h+indice_decalage
-!  end do
-!  do i=lagrange%d,lagrange%d+lagrange%num_points-1
-!  xiadd(i)=xi(i-lagrange%d+1)+indice_decalage
-!  end do
-!  do i=lagrange%d+lagrange%num_points,lagrange%num_points+2*lagrange%d-1
-!  xiadd(i)=xi(lagrange%num_points)+(i-lagrange%d-lagrange%num_points+1)*h+indice_decalage
-!  end do
-!  !remplissage du tableau fiadd
-!  j=1
-!  do i=1,lagrange%num_points+2*lagrange%d-1
-!   if(xiadd(i).lt.xi(1))then
-!    fiadd(i)=fi(1)
-!   else if(xiadd(i).gt.xi(lagrange%num_points))then
-!    fiadd(i)=fi(lagrange%num_points)
-!   else
-!    fiadd(i)=fi(j)
-!    j=j+1
-!   end if
-!  end do
-
-case default
-  print *, 'ERROR: compute_lagrange_interpolation_1D(): not recognized boundary condition'
-  STOP
-end select
+print*,"wj dans 1"
+print*,wj
+print*,""
 
 lagrange%wj=wj
 lagrange%alpha=alpha
@@ -132,46 +98,48 @@ sll_real64,dimension(1:lagrange%nb_cell+1),intent(in) :: fi
 
 select case(lagrange%bc_type)
 case (PERIODIC_LAGRANGE)
-h=(lagrange%xmax-lagrange%xmin)/(lagrange%nb_cell)
-if(lagrange%alpha<0)then
-indice_decalage=lagrange%alpha/h-1
-beta=h+mod(lagrange%alpha,h)
-else
-indice_decalage=lagrange%alpha/h
-beta=mod(lagrange%alpha,h)
-end if
 
-print*,"h",h,"alpha",lagrange%alpha,"beta",beta
-
-do j=1,2*lagrange%d
- lagrange%wj(j)=lagrange%wj(j)/(beta+real(lagrange%d,f64)-real(j,f64))
-end do
-
-do i=1,lagrange%nb_cell+1
-sum1=0.0_f64
-sum2=0.0_f64
- do j=1,lagrange%d*2
-  sum1=sum1+lagrange%wj(j)*fi(modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1)
-  sum2=sum2+lagrange%wj(j)
-!print*,"dans 1 fi",fi(modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1),"modulo",modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1
-!print*,"dans normal wj/bla",lagrange%wj(j),"sum1",sum1,"sum2",sum2
+ h=(lagrange%xmax-lagrange%xmin)/(lagrange%nb_cell)
+ if(lagrange%alpha<0)then
+ indice_decalage=lagrange%alpha/h-1
+ beta=h+mod(lagrange%alpha,h)
+ else
+ indice_decalage=lagrange%alpha/h
+ beta=mod(lagrange%alpha,h)
+ end if
+ 
+ do j=1,2*lagrange%d
+  lagrange%wj(j)=lagrange%wj(j)/(beta+real(lagrange%d-j,f64)*h)
  end do
-!print*,""
-lagrange%data_out(i)=sum1/sum2
-end do
-
-
-! do i=1,lagrange%nb_cell+1
-!  do j=1,lagrange%d*2
-!   sum1=sum1+lagrange%wj(j)/(beta+lagrange%d-j)*fi(modulo(indice_decalage+i-1-(lagrange%d-1)+(j-1),lagrange%nb_cell+1)+1)
-!   sum2=sum2+lagrange%wj(j)/(beta+lagrange%d-j)
-!  end do
-! lagrange%data_out(i)=sum1/sum2
-! end do
-
+ 
+ do i=1,lagrange%nb_cell+1
+ sum1=0.0_f64
+ sum2=0.0_f64
+  do j=1,lagrange%d*2
+   sum1=sum1+lagrange%wj(j)*fi(modulo(indice_decalage+(i-1)+(j-1)-(lagrange%d-1),lagrange%nb_cell)+1)
+   sum2=sum2+lagrange%wj(j)
+  end do
+ lagrange%data_out(i)=sum1/sum2
+ end do
 
 case(HERMITE_LAGRANGE)
-print*,"not yet"
+
+ do i=1,lagrange%nb_cell+1
+ sum1=0.0_f64
+ sum2=0.0_f64
+  do j=1,lagrange%d*2
+   if(indice_decalage+(i-1)+(j-1)-(lagrange%d-1)<0)then
+    sum1=sum1+lagrange%wj(j)*fi(0)
+   else if(indice_decalage+(i-1)+(j-1)-(lagrange%d-1) > lagrange%nb_cell+1)then
+    sum1=sum1+lagrange%wj(j)*fi(lagrange%nb_cell+1)
+   else
+    sum1=sum1+lagrange%wj(j)*fi(indice_decalage+(i-1)+(j-1)-(lagrange%d-1))
+   end if
+!   sum1=sum1+lagrange%wj(j)*fi
+   sum2=sum2+lagrange%wj(j)
+  end do
+ lagrange%data_out(i)=sum1/sum2
+ end do
 
 ! do k=1,lagrange%num_points
 !  sum1=0.0_f64
