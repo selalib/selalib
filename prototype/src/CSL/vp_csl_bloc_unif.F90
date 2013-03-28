@@ -3,7 +3,7 @@ program vp_csl_bloc_unif
 #include "sll_working_precision.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   !use distribution_function
   !use sll_diagnostics
   use bgk_mesh_construction

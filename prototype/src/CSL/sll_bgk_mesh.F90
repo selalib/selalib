@@ -2,7 +2,7 @@ module bgk_mesh_construction
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   !use utils
   implicit none
@@ -11,7 +11,7 @@ contains
   subroutine construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
    &geom_x,geom_eta,alpha_mesh,N_x1,N_x2)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_int32,intent(in)::nc_eta1,nc_eta2,mesh_case,n_x1,n_x2
     sll_real64,intent(in)::geom_x(2,2),geom_eta(2,2),alpha_mesh
@@ -577,7 +577,7 @@ contains
   end subroutine construct_bgk_mesh  
   
   subroutine compute_bgk_phi(L,Nx,mu,xi,tab_phi,tab_dphi)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_real64,intent(in) ::L,mu,xi
     sll_int,intent(in) :: Nx
@@ -764,7 +764,7 @@ contains
 !  Subroutine: To solve  the differential Equation with Runge Kutta 4 method             *
 !*****************************************************************************************
   subroutine Solve_Runge_K4(mu,xi,X,Phi,dx,Neq,Diff_Eq,Y,C)
-    use numeric_constants
+    use sll_constants
     implicit none
 #ifdef INTEL
     External Diff_Eq 
@@ -796,7 +796,7 @@ contains
 !  Subroutine: To define  the differential Equation                                      *
 !*****************************************************************************************
   subroutine Diff_Eq(mu,xi,X,Phi,Dphi, Neq,Y,C)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_real64   :: mu,xi,y,c
     sll_int  :: Neq

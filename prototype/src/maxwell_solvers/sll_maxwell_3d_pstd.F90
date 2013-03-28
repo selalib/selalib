@@ -70,7 +70,7 @@ module sll_maxwell_3d_pstd
 #include "sll_maxwell_solvers.h"
 
 use, intrinsic :: iso_c_binding
-use numeric_constants
+use sll_constants
 use physical_constants
 
 implicit none

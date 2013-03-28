@@ -4,7 +4,7 @@ program test_periodic_interp
 #ifndef STDF95
   use sll_module_interpolators_1d_base
 #endif
-  use numeric_constants
+  use sll_constants
   !use util_constants
   implicit none 
   

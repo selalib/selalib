@@ -4,7 +4,7 @@ program landau_4d
 #include "sll_memory.h"
 #include "sll_maxwell_solvers.h"
 
-use numeric_constants
+use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
 !use sll_poisson_2d_periodic

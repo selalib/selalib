@@ -19,7 +19,7 @@ program nonuniform_spline_tester
 #include "sll_memory.h"
 
   use cubic_non_uniform_splines
-  use numeric_constants
+  use sll_constants
   !use sort_module
   implicit none
   

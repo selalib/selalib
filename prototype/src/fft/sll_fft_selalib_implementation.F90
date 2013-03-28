@@ -3,7 +3,7 @@ module sll_fft
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
-  use numeric_constants
+  use sll_constants
   use fft_utils
   implicit none
   

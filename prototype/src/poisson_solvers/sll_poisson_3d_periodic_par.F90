@@ -16,7 +16,7 @@ module sll_poisson_3d_periodic_par
 #include "sll_utilities.h"
 #include "sll_assert.h"
   use sll_fft
-  use numeric_constants
+  use sll_constants
   use sll_collective
   use remapper
   implicit none

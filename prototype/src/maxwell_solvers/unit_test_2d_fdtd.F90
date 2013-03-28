@@ -20,7 +20,7 @@ program test_maxwell_2d_fdtd
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers.h"
-use numeric_constants
+use sll_constants
 
 use sll_maxwell_2d_fdtd
 

@@ -13,7 +13,7 @@ module sll_linrood
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
+  use sll_constants
   use weno_recon
   use weno_interp
   use sll_advection_field

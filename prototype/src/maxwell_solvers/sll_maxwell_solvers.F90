@@ -24,7 +24,7 @@ module sll_maxwell_solvers
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+use sll_constants
 
 implicit none
 integer, parameter ::  NORTH = 0           !< parameter for boundary in 2d

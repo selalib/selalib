@@ -5,9 +5,6 @@ module sll_visu_pic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 use sll_io
-use sll_ascii_io
-use sll_gnuplot
-use sll_xdmf
 
 implicit none
 

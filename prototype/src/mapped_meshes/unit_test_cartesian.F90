@@ -1,6 +1,6 @@
 program unit_test
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
   use sll_module_mapped_meshes_2d_cartesian
   implicit none
 

@@ -16,7 +16,7 @@ module test_processes_module
 #include "sll_assert.h"
 #include "sll_memory.h"
   use sll_cubic_splines
-  use numeric_constants
+  use sll_constants
   use util_constants
   use test_func_module
   implicit none
