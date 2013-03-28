@@ -5,7 +5,7 @@ module polar_advection
 
   use polar_operators
   use poisson_polar
-  use numeric_constants
+  use sll_constants
   use sll_cubic_splines
   implicit none
 

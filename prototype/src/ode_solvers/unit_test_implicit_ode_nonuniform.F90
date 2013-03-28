@@ -2,7 +2,7 @@ program unit_test_implicit_ode_nonuniform
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use ode_solvers
-  use numeric_constants
+  use sll_constants
 
   implicit none
   

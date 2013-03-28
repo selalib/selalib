@@ -3,7 +3,7 @@ program unit_test_4d
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+use sll_constants
 use sll_cubic_spline_interpolator_2d
 use sll_utilities, only: int2string
 

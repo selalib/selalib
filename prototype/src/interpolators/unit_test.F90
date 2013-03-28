@@ -1,6 +1,6 @@
 program unit_test
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
   use geometry_functions
 #ifndef STDF95
   use sll_module_interpolators_2d_base

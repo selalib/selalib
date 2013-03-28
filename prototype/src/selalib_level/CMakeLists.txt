@@ -17,8 +17,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
     ${SLL_DIR}/constants/sll_constants.F90
-    ${SLL_DIR}/constants/numeric_constants.F90
-    ${SLL_DIR}/constants/physical_constants.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/low_level_file_io/sll_ascii_io.F90
     ${SLL_DIR}/low_level_file_io/sll_binary_io.F90
@@ -57,15 +55,16 @@ SET(SLL_SOURCE_FILES
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES} selalib.F90)
 
 SET(SLL_MODULES
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_memory.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_working_precision.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_assert.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_utilities.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_constants.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_maxwell_solvers.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_poisson_solvers.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_interpolators.mod
-	${CMAKE_Fortran_MODULE_DIRECTORY}/sll_splines.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/selalib.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_memory.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_working_precision.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_assert.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_utilities.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_constants.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_maxwell_solvers.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_poisson_solvers.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_interpolators.mod
+	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_splines.mod
 	)
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h ${SLL_INCLUDE_FILES}
@@ -84,7 +83,8 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    INSTALL(TARGETS selalib-mpi ARCHIVE DESTINATION lib)
    FILE(COPY selalib-mpi.h DESTINATION ${CMAKE_BINARY_DIR}/include)
-   INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h DESTINATION include)
+   INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h   DESTINATION include)
+   #INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.mod DESTINATION include)
 
 ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
@@ -119,8 +119,7 @@ ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 #	${CMAKE_SOURCE_DIR}/memory/sll_memory.F90
 #	${CMAKE_SOURCE_DIR}/precision/sll_working_precision.F90
 #	${CMAKE_SOURCE_DIR}/assert/sll_assert.F90
-#	${CMAKE_SOURCE_DIR}/constants/numeric_constants.F90
-#	${CMAKE_SOURCE_DIR}/constants/physical_constants.F90
+#	${CMAKE_SOURCE_DIR}/constants/sll_constants.F90
 #	${CMAKE_SOURCE_DIR}/utilities/utilities.F90
 #	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_ascii_io.F90
 #	${CMAKE_SOURCE_DIR}/low_level_file_io/sll_binary_io.F90

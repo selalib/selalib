@@ -35,7 +35,7 @@ module sll_poisson_2d_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+use sll_constants
 
 #ifndef _FFTW
 

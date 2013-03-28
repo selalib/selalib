@@ -4,7 +4,7 @@ module sll_poisson_1d_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use numeric_constants
+  use sll_constants
 
   implicit none
   private

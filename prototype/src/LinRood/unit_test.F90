@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use geometry_functions
   use distribution_function
   use sll_scalar_field_2d

@@ -8,7 +8,7 @@ program cg_polar
   use polar_advection
   use sll_fft
   !use poisson_polar
-  use numeric_constants
+  use sll_constants
   implicit none
 
   type(sll_SL_polar), pointer :: plan_sl

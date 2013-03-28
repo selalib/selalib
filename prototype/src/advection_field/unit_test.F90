@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-  use numeric_constants
+  use sll_constants
   use sll_advection_field
   use sll_module_mapped_meshes_2d
   use sll_module_mapped_meshes_1d

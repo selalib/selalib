@@ -4,7 +4,7 @@ module contrib_rho_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   !use utils
   implicit none

@@ -4,7 +4,7 @@ program bsl_1d_cubic_compact
 #include "sll_assert.h"
 
 use sll_utilities, only: int2string
-use numeric_constants
+use sll_constants
 use sll_cubic_spline_interpolator_1d
 #ifndef STDF95
 use sll_module_interpolators_1d_base

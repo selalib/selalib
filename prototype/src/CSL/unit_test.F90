@@ -3,7 +3,7 @@ program unit_test
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use distribution_function
   !use sll_diagnostics
   use sll_io

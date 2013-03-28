@@ -21,7 +21,7 @@ program spline_tester
   
 #define PRINT_SPLINE_COEFFS 0
   use sll_splines
-  use numeric_constants
+  use sll_constants
   use util_constants
   use test_processes_module
   implicit none

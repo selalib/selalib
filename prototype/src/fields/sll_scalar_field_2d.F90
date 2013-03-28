@@ -34,7 +34,7 @@ module sll_scalar_field_2d
 #include "sll_assert.h"
 #include "sll_io.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_module_interpolators_1d_base
   use sll_utilities
   use sll_scalar_field_initializers_base
