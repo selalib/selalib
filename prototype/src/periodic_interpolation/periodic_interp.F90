@@ -4,7 +4,7 @@ module periodic_interp_module
 #include "sll_memory.h"
 #include "sll_fft.h"
 use arbitrary_degree_splines
-use numeric_constants
+use sll_constants
 
   implicit none
 

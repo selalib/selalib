@@ -13,7 +13,7 @@ module simulation_VP1D_curvilinear_analytic
   use sll_simulation_base
 #endif
   use cubic_non_uniform_splines
-  use numeric_constants
+  use sll_constants
   implicit none
 
 #ifdef STDF95
@@ -239,7 +239,7 @@ contains
 
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use numeric_constants
+    use sll_constants
     use cubic_non_uniform_splines
     implicit none
     
@@ -340,7 +340,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -479,7 +479,7 @@ end subroutine compute_rho_mapped_mesh2
 
 subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -1088,7 +1088,7 @@ end subroutine advect_classical_csl
    subroutine construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
    &geom_x,geom_eta,alpha_mesh)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_int32,intent(in)::nc_eta1,nc_eta2,mesh_case
     sll_real64,intent(in)::geom_x(2,2),geom_eta(2,2),alpha_mesh

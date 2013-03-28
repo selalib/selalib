@@ -1,6 +1,6 @@
 program gauss_legendre_tester
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
   use gauss_legendre_integration
   use test_function_module
   implicit none

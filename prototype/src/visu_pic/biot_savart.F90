@@ -5,7 +5,7 @@ module biot_savart
 #include "sll_assert.h"
 
 use sll_utilities
-use numeric_constants
+use sll_constants
 use sll_io
 
 implicit none

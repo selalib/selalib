@@ -17,7 +17,7 @@ module sll_poisson_2d_periodic_cartesian_par
 #include "sll_assert.h"
   use remapper
   use sll_fft
-  use numeric_constants
+  use sll_constants
   use sll_collective
 
   implicit none

@@ -4,7 +4,7 @@ program radial_1d_SL
 #include "sll_memory.h"
 
   use sll_cubic_splines
-  use numeric_constants
+  use sll_constants
   implicit none
 
   type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc

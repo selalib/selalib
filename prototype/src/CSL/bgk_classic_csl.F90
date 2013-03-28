@@ -4,7 +4,7 @@ program bgk_classic_csl
 #include "sll_memory.h"
 !contact: mehrenbe@math.unistra.fr for this  program
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   use bgk_mesh_construction
   use contrib_rho_module

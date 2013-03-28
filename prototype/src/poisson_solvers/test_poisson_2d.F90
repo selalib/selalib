@@ -9,7 +9,7 @@ program test_poisson_2d
    !  test 2D Poisson solver based on FFT
    !-------------------------------------------------------------------
 
-   use numeric_constants
+   use sll_constants
    use sll_poisson_2D_periodic
    use geometry_functions
 

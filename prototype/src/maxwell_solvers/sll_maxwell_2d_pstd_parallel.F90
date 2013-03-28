@@ -50,7 +50,7 @@ module sll_maxwell_2d_periodic_cartesian_par
 use, intrinsic :: iso_c_binding
 use remapper
 use sll_fft
-use numeric_constants
+use sll_constants
 use sll_collective
 
 implicit none

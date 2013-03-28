@@ -23,7 +23,7 @@ module sll_qns2d_with_finite_diff_par
 #include "sll_assert.h"
 !#include "sll_remap.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_fft
   use sll_tridiagonal
   use sll_collective

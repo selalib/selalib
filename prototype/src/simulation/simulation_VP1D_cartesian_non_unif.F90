@@ -18,7 +18,7 @@ module simulation_VP1D_cartesian_non_unif
 #endif
   use cubic_non_uniform_splines
 
-  use numeric_constants
+  use sll_constants
   implicit none
 
 #ifdef STDF95
@@ -289,7 +289,7 @@ contains
 
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use numeric_constants
+    use sll_constants
     use cubic_non_uniform_splines
     implicit none
     
@@ -393,7 +393,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
