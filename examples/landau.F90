@@ -1,5 +1,7 @@
 program landau_1d
 #include "selalib.h"
+#include "sll_poisson_solvers.h"
+use sll_poisson_solvers
 
 implicit none
   
@@ -17,23 +19,23 @@ sll_int32  :: error
 
 sll_real64, dimension(:), allocatable :: eta1, eta2
 
-!class(sll_interpolator_1d_base), pointer    :: interp_x
-!class(sll_interpolator_1d_base), pointer    :: interp_v
+class(sll_interpolator_1d_base), pointer    :: interp_x
+class(sll_interpolator_1d_base), pointer    :: interp_v
+
+type(cubic_spline_1d_interpolator), target  :: spline_x
+type(cubic_spline_1d_interpolator), target  :: spline_v
 !
-!type(cubic_spline_1d_interpolator), target  :: spline_x
-!type(cubic_spline_1d_interpolator), target  :: spline_v
-!
-!sll_real64, dimension(:), allocatable :: ex
-!sll_real64, dimension(:), allocatable :: rho
-!type (poisson_1d_periodic)            :: poisson
-!sll_real64 :: eps, kx
-!
-!interp_x => spline_x
-!interp_v => spline_v
-!
-!eta1_min = 0.0_f64
-!eta1_max = 4.0_f64*sll_pi
-!nc_eta1  = 256
+sll_real64, dimension(:), allocatable :: ex
+sll_real64, dimension(:), allocatable :: rho
+type (poisson_1d_periodic)            :: poisson
+sll_real64 :: eps, kx
+
+interp_x => spline_x
+interp_v => spline_v
+
+eta1_min = 0.0_f64
+eta1_max = 4.0_f64*sll_pi
+nc_eta1  = 256
 
 !eta2_min = -6.0_f64
 !eta2_max = +6.0_f64

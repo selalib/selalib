@@ -71,7 +71,6 @@ module sll_maxwell_3d_pstd
 
 use, intrinsic :: iso_c_binding
 use sll_constants
-use physical_constants
 
 implicit none
 private
