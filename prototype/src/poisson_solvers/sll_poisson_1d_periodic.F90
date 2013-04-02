@@ -29,6 +29,7 @@ module sll_poisson_1d_periodic
 contains
 
   subroutine new_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+
     type(poisson_1d_periodic),intent(out) :: this
     sll_int32,intent(in)                   :: nc_eta1
     sll_int32, intent(out)                 :: error 
@@ -50,8 +51,8 @@ contains
 
   end subroutine new_poisson_1d_periodic
 
-
   subroutine solve_poisson_1d_periodic(this, field, rhs)
+
     type(poisson_1d_periodic),intent(inout) :: this
     sll_real64, dimension(:), intent(out)     :: field
     sll_real64, dimension(:), intent(in)      :: rhs
