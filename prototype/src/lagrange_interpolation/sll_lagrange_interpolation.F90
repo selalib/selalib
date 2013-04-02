@@ -2,7 +2,6 @@ module sll_lagrange_interpolation
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
 implicit none
 
  type :: sll_lagrange_interpolation_1D
@@ -28,7 +27,7 @@ contains  !*********************************************************************
 
 function new_lagrange_interpolation_1D(num_points,xmin,xmax,bc_type,d)
  type(sll_lagrange_interpolation_1D), pointer :: new_lagrange_interpolation_1D
- sll_int32 ::i,j,ierr
+ sll_int32 ::ierr
  sll_int32,intent(in) :: d, num_points,bc_type
  sll_real64 :: xmin,xmax
  
@@ -59,12 +58,12 @@ subroutine compute_lagrange_interpolation_1D(alpha,lagrange)
  index_gap=alpha/h
  end if
  
- do i=i,2*lagrange%d-1
+ do i=1,2*lagrange%d-1
  table(i)=2*lagrange%d-1-(i-1)
  table(i+2*lagrange%d-1)=i
  end do
  
- wj(:)=1.0_f64
+ wj=1.0_f64
  do i=1,lagrange%d
   do j=1,2*lagrange%d-1
    wj(i)=wj(i)*table(i+j-1)
@@ -74,8 +73,7 @@ subroutine compute_lagrange_interpolation_1D(alpha,lagrange)
  do i=1,lagrange%d
   wj(i+lagrange%d)=-wj(lagrange%d-i+1)
  end do
- wj=1.0_f64/wj
- 
+ wj=1.0_f64/wj 
  
  lagrange%wj=wj
  lagrange%alpha=alpha

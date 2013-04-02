@@ -5,8 +5,8 @@ program lagrange_test
  use sll_lagrange_interpolation
  use numeric_constants
 implicit none
-sll_int32  :: i,j,d,num_points
-sll_real64 :: res,diff,alpha,xmin,xmax,l
+sll_int32  :: i,d,num_points
+sll_real64 :: diff,alpha,xmin,xmax,l
 sll_real64,dimension(:),allocatable ::xi,fi,coord
 type(sll_lagrange_interpolation_1D),pointer ::l_i
 
@@ -34,6 +34,7 @@ do i=1,num_points
  !print*,"interpolated value = ", l_i%data_out(i), " , Correct value = ",f(coord(i),num_points)
  diff=max(diff,abs(f(coord(i),num_points)-l_i%data_out(i)))
 end do
+
 
 if(diff<0.0001) then
  print *, ""
