@@ -69,8 +69,6 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
-    ! local variables
-    sll_int32 :: ierr
     ! compute the interpolating spline coefficients
     call compute_quintic_coeffs_nonuniform( data, this%spline )
     data_out =  quintic_splines_interpolator_nonuniform_array( &
@@ -97,12 +95,10 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
-    ! local variables
     sll_real64, dimension(num_points)      :: coordinates
     sll_real64 :: length, delta
     sll_real64 :: xmin, xmax 
     sll_int32 :: i
-    sll_int32 :: ierr
     ! compute_quintic the interpolating spline coefficients
     call compute_quintic_coeffs_nonuniform( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
@@ -166,7 +162,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
     output_array = quintic_splines_interpolator_nonuniform_array( &
               vals_to_interpolate, num_pts, interpolator%spline)
   end subroutine interpolate_values_qs1d_nonuniform
