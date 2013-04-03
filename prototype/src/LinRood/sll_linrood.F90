@@ -90,7 +90,6 @@ contains
    ! local variables
    sll_int32 :: i1, i2
    sll_int32 :: nc_eta1, nc_eta2
-   sll_int32 :: i_weno
    sll_real64 :: eta1, eta2
    sll_real64 :: delta_eta1, delta_eta2
    sll_real64, dimension(max(plan%nc_eta1, plan%nc_eta2)) :: adt

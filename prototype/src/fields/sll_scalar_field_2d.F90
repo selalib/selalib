@@ -85,7 +85,7 @@ contains   ! *****************************************************************
     sll_int32  :: num_cells2
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
-    sll_int32  :: i1, i2
+    !sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
@@ -180,7 +180,7 @@ contains   ! *****************************************************************
     sll_int32  :: i2
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: avg
+    !sll_real64 :: avg
     sll_int32  :: ierr
     sll_real64, dimension(:,:), allocatable :: val
     sll_int32  :: num_pts1

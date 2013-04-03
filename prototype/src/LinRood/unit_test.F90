@@ -62,7 +62,7 @@ program unit_test
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr_rf
 #endif
 
-  sll_int32  :: ierr, istep
+  sll_int32  :: istep
   sll_int32 :: i1, i2
   sll_real64 :: alpha1, alpha2
 

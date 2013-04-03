@@ -30,8 +30,7 @@ program unit_test
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
 
-  sll_int32  :: ierr, istep
-  sll_int32 :: ix, iv, nnode_x1, nnode_v1
+  sll_int32 :: istep
 
   nc_eta1 = 100
   nc_eta2 = 100

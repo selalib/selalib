@@ -28,11 +28,8 @@ program spline_tester
 
   intrinsic :: cos
 
-  sll_int32                              :: err, ok
-  sll_int32                              :: i, i_test, j_test
+  sll_int32                              :: ok
  
-  sll_real64, dimension(1:100)           :: spline_vals
-  sll_real64                             :: rnd
 
   sll_int32, parameter                   :: nbtest = 12
   logical                                :: test_passed

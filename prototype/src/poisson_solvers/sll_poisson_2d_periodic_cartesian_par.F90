@@ -77,10 +77,10 @@ contains
     sll_int32                                    :: ierr 
     sll_int32                                    :: loc_sz_x1
     sll_int32                                    :: loc_sz_x2
-    sll_int32                                    :: seq_x1_local_sz_x1
-    sll_int32                                    :: seq_x1_local_sz_x2
-    sll_int32                                    :: seq_x2_local_sz_x1
-    sll_int32                                    :: seq_x2_local_sz_x2
+    !sll_int32                                    :: seq_x1_local_sz_x1
+    !sll_int32                                    :: seq_x1_local_sz_x2
+    !sll_int32                                    :: seq_x2_local_sz_x1
+    !sll_int32                                    :: seq_x2_local_sz_x2
 
     ! The collective to be used is the one that comes with the given layout.
     collective => get_layout_collective( start_layout )
@@ -184,14 +184,11 @@ contains
     sll_int32                                      :: ncx, ncy
     sll_int32                                      :: npx_loc, npy_loc
     sll_int32                                      :: i, j
-    sll_int32                                      :: ierr
     ! Reciprocals of domain lengths.
     sll_real64                                     :: r_Lx, r_Ly
     sll_real64                                     :: kx, ky
     sll_comp64                                     :: val
     sll_real64                                     :: normalization
-    sll_int32                                      :: myrank
-    sll_int64                                      :: colsz ! collective size
     type(layout_2D), pointer                       :: layout_x
     type(layout_2D), pointer                       :: layout_y
     sll_int32, dimension(1:2)                      :: global

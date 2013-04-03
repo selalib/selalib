@@ -19,11 +19,11 @@ contains
     sll_real64,dimension(:,:),pointer::jac_array
     sll_real64,dimension(:,:,:),pointer::integration_points
     sll_int32  :: i1,i2,err,i
-    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1,x2,x1c,x2c
+    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
     sll_real64 :: val,tmp
     sll_real64 :: slope_mesh1,slope_mesh2,wk,ll,dxx,slope_mesh3
-    sll_int    ::Nzon,Nzon2,Nzon3
+    sll_int    ::Nzon,Nzon2
     sll_real64 , dimension(4)         :: ws
     sll_int , dimension(4)         :: Ns
 
@@ -582,7 +582,7 @@ contains
     sll_real64,intent(in) ::L,mu,xi
     sll_int,intent(in) :: Nx
     sll_real64 :: xmin,xmax,x,dx,k2,phi(2)
-    sll_int:: i,j
+    sll_int:: j
     sll_real64,dimension(:), pointer :: tab_phi,tab_dphi 
     xmin = 0._f64
     xmax = L/2._f64
