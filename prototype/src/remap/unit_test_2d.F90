@@ -300,8 +300,9 @@ print *, 'applied plan'
            global_indices =  local_to_global_2D( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
-           arrays_diffc(i,j) = local_array2c(i,j) - (gi + (gj-1)*ni)
-           if (arrays_diffc(i,j)/=0) then
+           val = gi + (gj-1)*ni
+           arrays_diffc(i,j) = local_array2c(i,j) - cmplx(val,val,f64)
+           if (arrays_diffc(i,j)/= (0,0)) then
               test_passed = .false.
               print*, i_test, myrank, '"remap" unit test: FAIL'
               print *, i_test, myrank, 'local indices: ', '(', i, j, ')'

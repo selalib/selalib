@@ -10,6 +10,8 @@ SET(SLL_MACROS
 	${SLL_DIR}/utilities/sll_utilities.h
 	${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
 	${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
+	${SLL_DIR}/interpolators/sll_interpolators.h
+	${SLL_DIR}/splines/sll_splines.h
 	)
 
 SET(SLL_SOURCE_FILES
