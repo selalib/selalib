@@ -19,8 +19,8 @@ program radial_1d_SL
   sll_real64,dimension(:,:), pointer :: f,fh_bsl,fh_bsl_nc,fh_fsl,fh_fsl_nc
   sll_real64,dimension(:,:), pointer :: x1_array,x2_array,jac_array,eta1feet,eta2feet,eta1tot,eta2tot,x1tot,x2tot
   sll_real64,dimension(:,:), pointer :: diag
-  character*20 :: conv_name, mass_name
-  character*3  :: mesh_name, field_name, time_name
+  character(len=20) :: conv_name, mass_name
+  character(len=3)  :: mesh_name, field_name, time_name
   
   ! ---- * Parameters * ----
   
@@ -827,9 +827,9 @@ program radial_1d_SL
       field_name = "rnh"
   END SELECT
   
-  i1 = T/100
-  i2 =(T-100*i1)/10
-  i3 = T-100*i1-10*i2
+  i1 = int(T)/100
+  i2 =(int(T)-100*i1)/10
+  i3 = int(T)-100*i1-10*i2
   time_name = char(i1+48)//char(i2+48)//char(i3+48)
   
   conv_name = 'Conv_'//mesh_name//'_'//field_name//'_'//time_name//'.dat'

@@ -169,8 +169,8 @@ contains
 
     sll_int32 :: nr, ntheta
     sll_real64 :: dt, dr, dtheta, rmin, rmax
-    sll_int32 :: i,j,maxiter,iter,kr,k
-    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
+    sll_int32 :: i,j,kr,k
+    sll_real64 :: r,theta
 
     nr=plan%nr
     ntheta=plan%ntheta

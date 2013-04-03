@@ -26,7 +26,7 @@ program unit_test
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
 
 
-  sll_int32                                    :: ix, nnode_x1
+  sll_int32                                    :: ix
   sll_int32, parameter                         :: NODE_CENTERED_FIELD_COPY = 0
 
   nc_eta1 = 100

@@ -495,7 +495,7 @@ function compute_non_unif_integral_spline_old(integration_points,N_points,Nb)
   sll_real64,dimension(:,:),pointer :: integration_points_fine
   sll_int,intent(in) :: N_points,Nb
   sll_int :: i,N_points_fine,ierr,j
-  sll_real64 :: tmp,x1,x2,fval1,fval2
+  sll_real64 :: x1,x2
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline_old = 0._f64
   if(N_points<=1)then
@@ -544,7 +544,7 @@ function compute_non_unif_integral_spline(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_middle
   sll_int,intent(in) :: N_points
-  sll_int :: i,ierr,j
+  sll_int :: i,ierr
   sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline = 0._f64
@@ -585,7 +585,7 @@ function compute_non_unif_integral_spline_per(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_middle
   sll_int,intent(in) :: N_points
-  sll_int :: i,ierr,j
+  sll_int :: i,ierr
   sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline_per = 0._f64

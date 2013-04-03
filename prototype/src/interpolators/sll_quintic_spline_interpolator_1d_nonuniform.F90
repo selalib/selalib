@@ -179,7 +179,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
-    sll_int32 :: ierr
     output => quintic_splines_interpolator_nonuniform_pointer(&
           vals_to_interpolate, num_pts, interpolator%spline)
   end subroutine interpolate_pointer_values_qs1d_nonuniform
