@@ -1,6 +1,8 @@
 module sll_vlasov4d_poisson
 
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
  use used_precision
  use geometry_module
@@ -57,9 +59,9 @@ contains
 
   call new_vlasov4d_base(this,geomx,geomv,error)
 
-  SLL_CLEAR_ALLOCATE(this%ex(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%ey(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%rho(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:geomx%nx,1:geomx%ny),error)
 
  end subroutine new_vlasov4d_poisson
 

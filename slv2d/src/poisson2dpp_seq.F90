@@ -3,8 +3,9 @@ module poisson2dpp_seq
 use used_precision
 use geometry_module
 use fft_module
-
-#include "selalib.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+use numeric_constants
 
 
 implicit none

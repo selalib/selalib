@@ -19,7 +19,7 @@
 program test_layout_output
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_misc_utils.h"
 
   use sll_collective, only: sll_boot_collective, &
        sll_halt_collective
