@@ -83,7 +83,7 @@ contains
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_real64 :: eps
-    sll_real64 :: xi
+    !sll_real64 :: xi
     sll_real64 :: v0
     sll_real64 :: kx
     sll_real64 :: x

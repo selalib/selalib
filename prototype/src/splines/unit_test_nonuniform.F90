@@ -27,13 +27,13 @@ program nonuniform_spline_tester
   
   logical                                :: test_passed
   sll_int32 :: err
-  sll_int32 :: N,i,N_new,j1,j
+  sll_int32 :: N,i,N_new,j
   sll_real64,dimension(:), pointer :: node_positions,f_per,f_hrmt,f
   sll_real64,dimension(:), pointer :: new_node_positions,f_new
   sll_real64,dimension(:), pointer :: fine_node_positions,f_fine
   sll_real64,dimension(:,:,:), pointer :: f_deriv
   type(cubic_nonunif_spline_1D), pointer :: spl_per, spl_hrmt, spl 
-  sll_real64 :: x,val,sl,sr,xmin,xmax,dx,shift,dt,velocity,M,tmp,linf_err(4),linf(4),nb_period
+  sll_real64 :: x,xmin,xmax,tmp,linf_err(4),linf(4)
   sll_real64 :: xmin_val,xmax_val,slope_left,slope_right,fmin_val,fmax_val,local_xval(4)
   sll_real64 :: p(4),pp(4),w(4),fp(4)
   sll_real64 :: node_uniformity_min,node_uniformity_max,unif_val_min,unif_val_max

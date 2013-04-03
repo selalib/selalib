@@ -14,7 +14,7 @@ program remap_2d_unit_test
   sll_comp64, dimension(:,:), allocatable :: local_array1c 
   sll_comp64, dimension(:,:), allocatable :: local_array2c
   sll_real64, dimension(:,:), allocatable ::  arrays_diff
-  sll_real64, dimension(:,:), allocatable ::  arrays_diffc
+  sll_comp64, dimension(:,:), allocatable ::  arrays_diffc
   ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
   ! the full array.
   integer , parameter                       :: ni = 512

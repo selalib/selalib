@@ -78,8 +78,6 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
-    ! local variables
-    sll_int32 :: ierr
     ! compute the interpolating spline coefficients
     call compute_spline_1D( data, this%spline )
     call interpolate_array_values( coordinates, data_out, num_points, &
@@ -106,7 +104,6 @@ contains  ! ****************************************************************
     sll_real64 :: length, delta
     sll_real64 :: xmin, xmax 
     sll_int32 :: i
-    sll_int32 :: ierr
     ! compute the interpolating spline coefficients
     call compute_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
@@ -118,7 +115,7 @@ contains  ! ****************************************************************
 
     if (this%bc_type == PERIODIC_SPLINE) then
        ! The case alpha = 0.0 is problematic. We need to further try to make
-       ! this computation in general more efficient, minimize the use of modulo
+       ! this computation in general m re efficient, minimize the use of modulo
        ! and even explore a uniform grid representation...
        if( alpha == 0.0_f64 ) then
           coordinates(:) = this%interpolation_points(:)
@@ -188,7 +185,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
     call interpolate_array_values( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
@@ -206,7 +202,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
-    sll_int32 :: ierr
     call interpolate_pointer_values( vals_to_interpolate, output, &
          num_pts, interpolator%spline )
   end subroutine interpolate_pointer_values_cs1d
@@ -225,7 +220,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
     call interpolate_array_derivatives( vals_to_interpolate, num_pts, &
          output_array, interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
@@ -243,7 +237,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
-    sll_int32 :: ierr
     call interpolate_pointer_derivatives( vals_to_interpolate, num_pts, &
          output, interpolator%spline )
   end subroutine interpolate_pointer_derivatives_cs1d

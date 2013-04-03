@@ -396,7 +396,7 @@ contains
            ! hard to subdivide. In such case one may end up with less intervals
            ! and this is a problem since the number of processors is fixed from
            ! the beginning.
-           mid = (hi+lo)/2 + gaussian_dev()*spread
+           mid = (hi+lo)/2 + int(gaussian_dev())*spread
            !       mid = int(rand*(hi-lo))+lo
            call split_interval_randomly_aux( lo,   mid, gen+1, lim, loadi, ans )
            call split_interval_randomly_aux( mid+1, hi, gen+1, lim, loadi, ans )

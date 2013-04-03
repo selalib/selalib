@@ -125,7 +125,7 @@ contains   ! *i****************************************************************
     output_file_name, &
     output_format)
     class(scalar_field_1d)                  :: scalar_field
-    sll_real64, dimension(:), pointer      :: x1_array
+    !sll_real64, dimension(:), pointer      :: x1_array
     logical, optional                       :: multiply_by_jacobian 
     sll_int32, optional                     :: output_format 
     character(len=*), optional              :: output_file_name
