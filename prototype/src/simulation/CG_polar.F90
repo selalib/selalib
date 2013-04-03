@@ -20,11 +20,11 @@ program cg_polar
   sll_int32  :: fcase, scheme, carac, grad, visu
   sll_int32  :: ierr_poiss
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
-  sll_real64 :: w0, w, l10, l1, l20, l2, e, e0, re, im
+  sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32  :: mod, bc(2)
   sll_real64 :: mode, temps, temps_mode, alpha, tmp, err_loc
   sll_real64, dimension(2,2) :: dom
-  character (len=16) :: f_file,bctop,bcbot
+  character (len=16) :: f_file!,bctop,bcbot
   !used for testing poisson with fcase=2
   sll_real64 :: c1, c2, c3, k1, k2, k3, x, y
   sll_real64 :: c1_mode, c2_mode, c3_mode, k1_mode, k2_mode, k3_mode
