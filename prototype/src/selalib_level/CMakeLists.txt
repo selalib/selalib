@@ -6,6 +6,7 @@ SET(SLL_MACROS
 	${SLL_DIR}/memory/sll_memory.h
 	${SLL_DIR}/precision/sll_working_precision.h
 	${SLL_DIR}/assert/sll_assert.h
+	${SLL_DIR}/constants/sll_constants.h
 	${SLL_DIR}/utilities/sll_utilities.h
 	${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
 	${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
