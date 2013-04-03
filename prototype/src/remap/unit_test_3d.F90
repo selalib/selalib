@@ -18,7 +18,7 @@ program remap_test
 !#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_misc_utils.h"
   implicit none
 
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,

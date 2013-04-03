@@ -4,7 +4,11 @@
 !-------------------------------------------------------------------
 program VP2D
 
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+
 use used_precision  
 use geometry_module
 use diagnostiques_module
@@ -64,7 +68,7 @@ if (my_num == MPI_MASTER) then
                                      geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy, &
                                      geomv%dx, geomv%dy
    write(*,*) 'dt,nbiter,fdiag,fthdiag'
-   write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
+   write(*,"(g13.3,1x,3i6)") dt,nbiter,fdiag,fthdiag
 endif
 
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &

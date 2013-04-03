@@ -1,6 +1,9 @@
 module sll_vlasov4d_base
 
-#include "selalib-mpi.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
  use used_precision
  use geometry_module
@@ -8,6 +11,7 @@ module sll_vlasov4d_base
  use sll_module_interpolators_1d_base
  use sll_module_interpolators_2d_base
  use remapper
+use sll_xml_io
 
  implicit none
  private
@@ -78,7 +82,7 @@ contains
 
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_CLEAR_ALLOCATE(this%f(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%f(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
   this%layout_v => new_layout_4D( sll_world_collective )
   call initialize_layout_with_distributed_4D_array( &
@@ -87,7 +91,7 @@ contains
 
   call compute_local_sizes_4d(this%layout_v, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-  SLL_CLEAR_ALLOCATE(this%ft(loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l),ierr)
+  SLL_CLEAR_ALLOCATE(this%ft(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
   this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
   this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
@@ -404,7 +408,7 @@ contains
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_CLEAR_ALLOCATE(fij(loc_sz_i,loc_sz_j),error)
+ SLL_CLEAR_ALLOCATE(fij(1:loc_sz_i,1:loc_sz_j),error)
  do j=1,loc_sz_j
     do i=1,loc_sz_i
        sumloc = sum(this%f(i,j,:,:))
@@ -432,7 +436,7 @@ contains
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_CLEAR_ALLOCATE(fik(loc_sz_i,loc_sz_k),error)
+ SLL_CLEAR_ALLOCATE(fik(1:loc_sz_i,1:loc_sz_k),error)
  do k=1,loc_sz_k
     do i=1,loc_sz_i
        sumloc= sum(this%f(i,:,k,:))
@@ -460,7 +464,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_CLEAR_ALLOCATE(fjl(loc_sz_j,loc_sz_l),error)
+ SLL_CLEAR_ALLOCATE(fjl(1:loc_sz_j,1:loc_sz_l),error)
  do l=1,loc_sz_l
     do j=1,loc_sz_j
        fjl(j,l) = sum(this%f(:,j,:,l))
@@ -489,7 +493,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
- SLL_CLEAR_ALLOCATE(fkl(loc_sz_k,loc_sz_l),error)
+ SLL_CLEAR_ALLOCATE(fkl(1:loc_sz_k,1:loc_sz_l),error)
  do l=1,loc_sz_l
     do k=1,loc_sz_k
        fkl(k,l) = sum(this%f(:,:,k,l))

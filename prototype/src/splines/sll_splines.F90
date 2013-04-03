@@ -185,7 +185,7 @@ contains  ! ****************************************************************
           SLL_ALLOCATE(new_spline_1D%a(3*num_points),ierr)
           SLL_ALLOCATE(new_spline_1D%cts(7*num_points),ierr)
           SLL_ALLOCATE(new_spline_1D%ipiv(num_points),ierr)
-          new_spline_1D%f_aux => null()
+          new_spline_1D%f_aux => null() ! not needed in periodic case
           ! Initialize and factorize the tridiagonal system. See detailed
           ! comment below regarding the structure of this matrix.
           new_spline_1D%a(1) = 1.0_f64/6.0_f64
@@ -1087,7 +1087,9 @@ contains  ! ****************************************************************
        SLL_DEALLOCATE( spline%a, ierr )
        SLL_DEALLOCATE( spline%cts, ierr )
        SLL_DEALLOCATE( spline%ipiv, ierr )
-       SLL_DEALLOCATE( spline%f_aux, ierr )
+       if( spline%bc_type == HERMITE_SPLINE ) then
+          SLL_DEALLOCATE( spline%f_aux, ierr )
+       end if
     end if
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_spline_1D
