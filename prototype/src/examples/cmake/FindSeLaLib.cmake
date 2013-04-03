@@ -8,7 +8,7 @@
 #  Usage:
 #  find_package(SeLaLib)
 #
-SET(TRIAL_PATHS $ENV{SELALIB_ROOT}
+SET(TRIAL_PATHS $ENV{SELALIB_ROOT}/usr
                 /usr/local)
 
 FIND_PATH (SELALIB_ROOT include/selalib.h
