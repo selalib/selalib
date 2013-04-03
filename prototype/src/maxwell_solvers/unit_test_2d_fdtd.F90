@@ -79,15 +79,16 @@ time  = 0.
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
 
-SLL_CLEAR_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error); ex = 0.0_f64
-SLL_CLEAR_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
-SLL_CLEAR_ALLOCATE(bz(nc_eta1+1,nc_eta2+1), error)
-SLL_CLEAR_ALLOCATE(bz_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_CLEAR_ALLOCATE(ex(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ey(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 
-SLL_CLEAR_ALLOCATE(bx(nc_eta1+1,nc_eta2+1), error)
-SLL_CLEAR_ALLOCATE(by(nc_eta1+1,nc_eta2+1), error)
-SLL_CLEAR_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
-SLL_CLEAR_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_CLEAR_ALLOCATE(bx(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(by(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ez(1:nc_eta1+1,1:nc_eta2+1),error)
+
+SLL_CLEAR_ALLOCATE(bz_exact(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ez_exact(1:nc_eta1+1,1:nc_eta2+1),error)
 
 do istep = 1, nstep !*** Loop over time
 

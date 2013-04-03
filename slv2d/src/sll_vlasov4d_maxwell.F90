@@ -1,6 +1,8 @@
 module sll_vlasov4d_maxwell
 
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
  use used_precision
  use geometry_module
@@ -56,13 +58,13 @@ contains
   this%interp_x2   => interp_x2
   this%interp_x3x4 => interp_x3x4
 
-  SLL_CLEAR_ALLOCATE(this%ex(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%ey(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%jx(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%jy(geomx%nx,geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%bz(geomx%nx,geomx%ny),error); this%bz = 0.0_f64
+  SLL_CLEAR_ALLOCATE(this%ex(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:geomx%nx,1:geomx%ny),error)
 
-  SLL_CLEAR_ALLOCATE(this%rho(geomx%nx,geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:geomx%nx,1:geomx%ny),error)
 
  end subroutine new_vlasov4d_maxwell
 

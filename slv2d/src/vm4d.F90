@@ -1,6 +1,18 @@
 program vm4d
 
-#include "selalib-mpi.h"
+
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+use sll_collective
+use remapper
+use sll_poisson_2d_periodic
+use sll_maxwell
+use sll_maxwell_2d_pstd
+use sll_cubic_spline_interpolator_1d
+use sll_cubic_spline_interpolator_2d
+use sll_xml_io
 
   use used_precision  
   use geometry_module
