@@ -240,6 +240,7 @@ program VP1d_deltaf
   SLL_ALLOCATE(ff1(Ncx+1,Ncvh+1),ierr)
   SLL_ALLOCATE(ff2(Ncx+1,Ncvh+1),ierr)
 
+#ifdef toto
   !$omp parallel default(shared) &
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
@@ -249,7 +250,7 @@ program VP1d_deltaf
   print*, 'running with openmp using ', num_threads, ' threads'
   ipiece_size_v = (Ncv + 1) / num_threads
   ipiece_size_x = (Ncx + 1) / num_threads
-
+  
   istartx = my_num * ipiece_size_x + 1
   if (my_num < num_threads-1) then
      iendx   = istartx - 1 + ipiece_size_x
@@ -262,6 +263,7 @@ program VP1d_deltaf
   else
      jendv = Ncv+1
   end if
+#endif
 
   ! initialize interpolators
   select case (interpol_x)
@@ -282,6 +284,9 @@ program VP1d_deltaf
   case (1) ! hermite cubic spline
       interp_spline_v => new_spline_1d( Ncv + 1,vmin, vmax, HERMITE_SPLINE )
       interp_spline_vh => new_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), HERMITE_SPLINE )
+      print *,'SPLINE',Ncv+1,vmin,vmax
+      print *,'SPLINE-H',Ncvh+1,vh_array(1),vh_array(Ncvh+1)
+!      stop
   case (2) ! arbitrary order periodic splines
      call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
      interp_v => interp_per_v
@@ -294,9 +299,11 @@ program VP1d_deltaf
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select
  
+#ifdef toto
   !$omp barrier
   !$omp single
   fname = 'dist_func'
+#endif
 
   ! write mesh and initial distribution function
 !  call write_scalar_field_2d(f) --> remplacer par une ecriture hdf5
@@ -329,6 +336,7 @@ program VP1d_deltaf
         mass=mass+ff(i,j)
      enddo
      ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
+
   enddo
   !compute f on the fine mesh
   ff=ff1+ff
@@ -344,7 +352,6 @@ program VP1d_deltaf
   close(12)
 
   ! initialize Poisson
-  print *,is_delta_f
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(f, DIM = 2)
@@ -353,7 +360,6 @@ program VP1d_deltaf
      rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
   endif
   call solve(poisson_1d, efield, rho)
-  efield=0._f64
 
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
@@ -376,17 +382,20 @@ program VP1d_deltaf
   write(rho_diag,*)
   write(eapp_diag,*)
   write(adr_diag,'(2g15.5)') istep*dt, adr
+#ifdef toto
   !$omp end single
+#endif
 
   ! initialize timer
   ! time loop
   !----------
 
-  do istep = 1, nbiter
+
+  do istep = 1,nbiter
 !     time0 => reset_time_mark(time0)
 
      ! half time step advection in v
-     do i = istartx, iendx
+     do i = 1,Ncx+1 !istartx, iendx
 
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
@@ -406,6 +415,7 @@ program VP1d_deltaf
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
         call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
 
+
         !compute fg on the fine mesh -> ff1
         call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
 
@@ -418,7 +428,12 @@ program VP1d_deltaf
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call compute_spline_1D(ff(i,:), interp_spline_vh)
+        call compute_spline_1D(ff(i,:),interp_spline_vh)
+
+        !     if (sum(abs(fg(i,:)-ff1(i,:)))<1.e-10) then 
+!        if (sum(abs(ff(i,:)))>1.e-10) then 
+!           print *,'ARG-1V',i,sum(abs(ff(i,:))),istep
+!        endif
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -434,9 +449,16 @@ program VP1d_deltaf
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
         ff(i,:)=ff2(i,:)+ff(i,:)
+
+!        if (sum(abs(ff(i,:)-fg(i,:)))>1.e-10) then 
+!           print *,'ARG-1V2',i,sum(abs(ff(i,:)-fg(i,:))),istep
+!        endif
+
      enddo
 
+#ifdef toto
      !$omp barrier
+#endif
 
      ! advection in x
      do j=1,Ncv+1 
@@ -473,11 +495,19 @@ program VP1d_deltaf
            endif
         enddo
         call interpolate_array_values(xg_array, ff(:,j), Ncx+1, interp_spline_x)
+
+!        if (sum(abs(ff(:,j)-fg(:,j)))>1.e-8) then 
+!           print *,'ARG-1X',j,sum(abs(ff(:,j)-fg(:,j))),istep
+!        endif
+
      enddo
 
+#ifdef toto
      !$omp barrier
 
      !$omp single
+#endif
+
      ! compute rho and electric field
      if (is_delta_f==0) then
         rho = - delta_v * sum(f, DIM = 2)
@@ -486,6 +516,9 @@ program VP1d_deltaf
         rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
      endif
      call solve(poisson_1d, efield, rho)
+
+     print *,'masse',sum(rho(1:Ncx)),sum(efield(1:Ncx)),sqrt(sum(efield(1:Ncx)**2)),(istep-1.0_f64)*dt
+
      if (driven) then
         call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
@@ -494,14 +527,16 @@ program VP1d_deltaf
                 - omegadr*istep*dt)
         enddo
      endif
-     !$omp end single
 
-     
-     do i = istartx, iendx
+#ifdef toto
+     !$omp end single
+#endif     
+
+     do i = 1,Ncx+1 !istartx, iendx !1,Ncx+1 !
         
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call compute_spline_1D(fg(i,:), interp_spline_v)
+        call compute_spline_1D(fg(i,:),interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -514,8 +549,18 @@ program VP1d_deltaf
         enddo
         call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
 
+      
         !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
         call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+        !!! Attention: only if vh_array==vg_array
+!        call interpolate_array_values(vg_array,ff2(i,:),Ncv+1,interp_spline_v)
+
+
+!PROBLEM: ff2 and fg are not the same when vg_array=vh_array+alpha !!
+!        if (sum(abs(ff2(i,:)-fg(i,:)))>1.e-10) then 
+!           print *,'ARG-2V0',i,sum(abs(ff2(i,:)-fg(i,:))),istep,sum(abs(v_array(:)-vh_array(:))),Ncv,Ncvh,shape(ff2),shape(fg)
+!        endif
+
 
         !compute fg on the fine mesh -> ff1
         call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
@@ -530,6 +575,13 @@ program VP1d_deltaf
 
         !compute splines coef associated to ff 
         call compute_spline_1D(ff(i,:), interp_spline_vh)
+
+!PROBLEM: ff is not zero (up to machine precision): about 1e-11 !!
+!        if (sum(abs(ff(i,:)))>1.e-10) then 
+!           print *,'ARG-2V1',i,sum(abs(ff(i,:))),istep, mass
+!           print *,' '
+!        endif
+
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
            if (vhg_array(j)<vh_array(1)) then 
@@ -541,14 +593,30 @@ program VP1d_deltaf
         enddo
 
         call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+!only if v_array==vh_array
+!        call interpolate_array_values(vg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+
+
         !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
         !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
         ff(i,:)=ff2(i,:)+ff(i,:)
+
+!PROBLEM: ff and fg are not the same when vg_array=vh_array !!
+
+!        if (sum(abs(ff(i,:)-fg(i,:)))>1.e-10) then 
+!           print *,'ARG-2V2',i,sum(abs(ff(i,:)-fg(i,:))),istep
+!           print *,sum(abs(vg_array(:)-vhg_array(:))),sum(abs(v_array(:)-vh_array(:))),vh_array(Ncvh+1),vmax,vh_array(1),vmin
+!           print *,maxval(ff(i,:))
+!        endif
+
      enddo
 
 
+#ifdef toto
      !$omp barrier
      !$omp single
+#endif
+
      ! diagnostics
      if (mod(istep,freqdiag)==0) then
         time = istep*dt
@@ -588,9 +656,13 @@ program VP1d_deltaf
         print*, 'iteration: ', istep
 !        call write_scalar_field_2d(f) 
      end if
-     !$omp end single
-     
 
+#ifdef toto
+     !$omp end single
+#endif     
+
+
+     print *,'ITERATION',istep
   end do
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
@@ -602,7 +674,7 @@ program VP1d_deltaf
   open(12, file="ffinalh")
   do i=1,Ncx+1
      do j=1,Ncvh+1
-        write(12,*) i,j,ff(i,j),ff1(i,j)
+        write(12,*) x_array(i),vh_array(j),ff(i,j),ff1(i,j)
      enddo
      write(12,*) 
   enddo
@@ -611,13 +683,16 @@ program VP1d_deltaf
   open(12, file="ffinal")
   do i=1,Ncx+1
      do j=1,Ncv+1
-        write(12,*) i,j,fg(i,j)
+        write(12,*) x_array(i),v_array(j),fg(i,j)
      enddo
      write(12,*) 
   enddo
   close(12)
 
+#ifdef toto
   !$omp end parallel
+#endif
+
   close(th_diag)
   close(ex_diag)
 
