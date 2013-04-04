@@ -1,7 +1,6 @@
 program landau_1d
 #include "selalib.h"
 #include "sll_poisson_solvers.h"
-use sll_poisson_solvers
 
 implicit none
   

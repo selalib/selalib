@@ -1,3 +1,6 @@
 module sll_poisson_solvers
 
+use sll_poisson_1d_periodic
+use sll_poisson_2d_periodic
+
 end module sll_poisson_solvers
