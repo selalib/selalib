@@ -5,7 +5,7 @@ module sll_lagrange_interpolation
 implicit none
 
  type :: sll_lagrange_interpolation_1D
-   sll_int32                            :: d !moitié du stencil
+   sll_int32                            :: d !half of stencil
    sll_int32                            :: nb_cell 
    sll_int32                            :: bc_type
    sll_int32                            :: index_gap
