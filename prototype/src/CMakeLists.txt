@@ -92,7 +92,6 @@ IF(MPI_MODULE_ENABLED)
 
 ENDIF()
 
-ADD_SUBDIRECTORY(poisson_solvers)
 ADD_SUBDIRECTORY(quasi_neutral_solvers)
 ADD_SUBDIRECTORY(electric_field_accumulators)
 ADD_SUBDIRECTORY(interpolators)
@@ -102,31 +101,19 @@ ADD_SUBDIRECTORY(fields)
 IF(NOT STDF95)
 
    ADD_SUBDIRECTORY(time_solvers)
-
-ENDIF(NOT STDF95)
-
-ADD_SUBDIRECTORY(ode_solvers)
-
-IF (NOT STDF95)
-
+   ADD_SUBDIRECTORY(ode_solvers)
    ADD_SUBDIRECTORY(distribution_function)
    ADD_SUBDIRECTORY(advection_field)
    ADD_SUBDIRECTORY(LinRood)
-
-ENDIF(NOT STDF95)
-
-ADD_SUBDIRECTORY(maxwell_solvers)
-ADD_SUBDIRECTORY(BSL)
-
-IF(NOT STDF95)
-
+   ADD_SUBDIRECTORY(poisson_solvers)
+   ADD_SUBDIRECTORY(maxwell_solvers)
+   ADD_SUBDIRECTORY(BSL)
    ADD_SUBDIRECTORY(CSL)
+   ADD_SUBDIRECTORY(selalib_level)
+   ADD_SUBDIRECTORY(visu_pic)
+   ADD_SUBDIRECTORY(simulation)
 
 ENDIF(NOT STDF95)
-
-ADD_SUBDIRECTORY(selalib_level)
-ADD_SUBDIRECTORY(visu_pic)
-ADD_SUBDIRECTORY(simulation)
 
 ##########################################################
 
