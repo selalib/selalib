@@ -37,6 +37,7 @@ IF(FFTPACK_ENABLED)
       sll_tridiagonal
       geometry_functions
       sll_splines
+      sll_tridiagonal
       sll_interpolators
       sll_low_level_file_io
       fftpack_module

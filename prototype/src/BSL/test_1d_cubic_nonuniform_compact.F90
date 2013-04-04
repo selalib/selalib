@@ -119,8 +119,8 @@ contains
    sll_real64 :: eta
 
    do j = 1, nc_v
-#ifdef STDF95 
-     call cubic_spline_compute_interpolants(interp_x, df(:,j) )
+#ifdef STDF95
+     call cubic_spline_compute_interpolants(interp_x,df(:,j) )
 #else
      call interp_x%compute_interpolants( df(:,j) )
 #endif
@@ -129,7 +129,7 @@ contains
         eta = max(eta, x_min)
         eta = min(eta, x_max)
 #ifdef STDF95
-        df(i,j) = cubic_spline_interpolate_value (interp_x,eta)
+        df(i,j) = cubic_spline_interpolate_value(interp_x,eta)
 #else
         df(i,j) = interp_x%interpolate_value(eta)
 #endif
@@ -144,7 +144,7 @@ contains
 
    do i = 1, nc_x
 #ifdef STDF95
-      call cubic_spline_compute_interpolants(interp_v, df(i,:) )
+      call cubic_spline_compute_interpolants(interp_v,df(i,:) )
 #else
       call interp_v%compute_interpolants( df(i,:) )
 #endif
