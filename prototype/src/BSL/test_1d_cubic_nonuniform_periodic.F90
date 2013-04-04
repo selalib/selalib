@@ -3,8 +3,9 @@ program bsl_1d_cubic_nonuniform_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+use sll_constants
 use cubic_non_uniform_spline_interpolator_1d
+use sll_utilities, only: int2string
 
 #ifndef STDF95
 use sll_module_interpolators_1d_base

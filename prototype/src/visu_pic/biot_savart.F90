@@ -4,8 +4,8 @@ module biot_savart
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use sll_misc_utils
-use numeric_constants
+use sll_utilities
+use sll_constants
 use sll_io
 
 implicit none

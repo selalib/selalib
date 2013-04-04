@@ -18,13 +18,13 @@
 !> \author
 !> Pierre Navaro 
 !> Common data for Maxwell solvers
-module sll_maxwell
+module sll_maxwell_solvers
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+use sll_constants
 
 implicit none
 integer, parameter ::  NORTH = 0           !< parameter for boundary in 2d
@@ -153,4 +153,4 @@ close(90)
 
 end subroutine plot_fields
 
-end module sll_maxwell
+end module sll_maxwell_solvers

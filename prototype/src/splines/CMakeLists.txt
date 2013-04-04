@@ -1,4 +1,5 @@
 ADD_LIBRARY( sll_splines STATIC sll_splines.F90
+                                sll_cubic_splines.F90
                                 sll_quintic_splines.F90
                                 sll_odd_degree_splines.F90
                                 sll_arbitrary_degree_splines.F90

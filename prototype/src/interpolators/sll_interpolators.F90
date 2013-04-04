@@ -1,0 +1,16 @@
+module sll_interpolators
+
+use sll_module_interpolators_1d_base
+use sll_cubic_spline_interpolator_1d
+use sll_quintic_spline_interpolator_1d
+use sll_odd_degree_spline_interpolator_1d
+
+use sll_module_interpolators_2d_base
+use sll_cubic_spline_interpolator_2d
+
+use sll_splines
+use sll_quintic_splines
+use sll_odd_degree_splines
+
+end module sll_interpolators
+

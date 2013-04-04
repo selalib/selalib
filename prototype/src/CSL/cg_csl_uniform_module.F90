@@ -3,7 +3,7 @@ module cg_csl_uniform_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   !use utils
   implicit none
@@ -12,7 +12,7 @@ contains
   
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N,interp_case)
     !Xstar and node_positions are normalized to [0,1]
-    use numeric_constants
+    use sll_constants
     use cubic_nonuniform_splines
     implicit none
     
