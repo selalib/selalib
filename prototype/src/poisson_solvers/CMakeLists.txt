@@ -26,6 +26,22 @@ TARGET_LINK_LIBRARIES(unit_test_polar sll_fft
 MESSAGE(STATUS "FFTPACK_ENABLED:${FFTPACK_ENABLED}")
 
 IF(FFTPACK_ENABLED)
+  add_executable(test_poisson_1d test_poisson_1d.F90)
+  target_link_libraries(test_poisson_1d
+      sll_poisson_1d_periodic
+      #sll_scalar_field_1d
+      sll_mapped_meshes
+      geometry_functions
+      sll_splines
+      sll_tridiagonal
+      sll_interpolators
+      sll_low_level_file_io
+      fftpack_module
+      sll_utilities
+      sll_assertion
+      sll_memory
+      sll_working_precision
+  )
 
   ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90)
   TARGET_LINK_LIBRARIES(test_poisson_1d sll_poisson_1d_periodic
