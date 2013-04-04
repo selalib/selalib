@@ -18,17 +18,19 @@ use sll_timer
 use sll_splines
 use sll_quintic_splines
 use sll_odd_degree_splines
-use sll_module_interpolators_1d_base
 use sll_odd_degree_spline_interpolator_1d
 use sll_quintic_spline_interpolator_1d
 use sll_cubic_spline_interpolator_2d
-use sll_module_interpolators_2d_base
 use sll_cubic_spline_interpolator_1d
 use sll_maxwell
 use sll_maxwell_2d_fdtd
-use sll_maxwell_2d_pstd
 use fft_module
 use sll_poisson_1d_periodic
+#ifndef STDF95
+use sll_module_interpolators_1d_base
+use sll_module_interpolators_2d_base
 use sll_poisson_2d_periodic
+use sll_maxwell_2d_pstd
+#endif
 
 end module selalib
