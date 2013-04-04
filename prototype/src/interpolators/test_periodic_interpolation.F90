@@ -14,13 +14,14 @@ program test_periodic_interp
   sll_int32, parameter    :: N0 = 16
   sll_real64               :: u(16*N0+1), u_exact(16*N0+1), u_out(16*N0+1)
 #ifdef STDF95
-  type(per_1d_interpolator), pointer     :: interp
+  type(per_1d_interpolator), pointer      :: interp
+  type(lagrange_1d_interpolator), pointer :: interl
 #else
   class(sll_interpolator_1d_base), pointer     :: interp
 #endif
   sll_real64, parameter :: xmin = 0.0_f64, xmax=3.0_f64   
   sll_real64 :: alpha, error, old_error, L, xi,mode
-  sll_int32 :: i, p, N, i0, j
+  sll_int32 :: i, p, N
 
   alpha = 0.05_f64
   mode = 3.0_f64
@@ -42,14 +43,12 @@ program test_periodic_interp
 !        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
 #ifdef STDF95
-     call periodic_initialize(interp, N+1, xmin, xmax, SPLINE, 12)
-#else
-     call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
-#endif
+     call periodic_initialize(interp_per, N+1, xmin, xmax, SPLINE, 12)
      interp => interp_per
-#ifdef STDF95
      u_out(1:N)=per_interpolate_array_at_displacement(interp, N+1, u(1:N+1), alpha)
 #else
+     call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
+     interp => interp_per
      u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
 #endif
      
@@ -77,9 +76,15 @@ program test_periodic_interp
 !        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
 
+#ifdef STDF95
+     call lagrange_interpolation_1d_initialize_interpolator(interp_lagrange,N+1,xmin,xmax,PERIODIC_LAGRANGE,6)
+     interl => interp_lagrange
+     u_out(1:N+1)=lagrange_interpolation_1d_interpolate_array_disp(interl,N+1, u(1:N+1), -alpha)
+#else
      call interp_lagrange%initialize( N+1,xmin,xmax,PERIODIC_LAGRANGE,6)
      interp => interp_lagrange
      u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), -alpha)
+#endif
 
      old_error = error
      error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
