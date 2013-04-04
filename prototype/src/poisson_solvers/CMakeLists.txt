@@ -1,5 +1,3 @@
-ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_solvers.F90)
-
 ADD_LIBRARY(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 
 ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
@@ -70,12 +68,17 @@ IF(FFTW_FOUND AND FFTW_ENABLED AND NOT STDF95)
    TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
                                          sll_mapped_meshes
                                          sll_constants
-	                                      sll_working_precision
+	                                 sll_working_precision
                                          sll_assertion 
                                          sll_memory 
                                          sll_low_level_file_io	
                                          sll_utilities
                                          ${FFTW_LIBRARIES})
+
+   ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_solvers.F90
+                                          sll_poisson_1d_periodic.F90
+                                          sll_poisson_2d_periodic.F90)
+
 
 ENDIF()
 
