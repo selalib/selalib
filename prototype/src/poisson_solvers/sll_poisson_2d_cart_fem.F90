@@ -1,7 +1,7 @@
 program sll_poisson_2d_cart_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use numeric_constants
+use sll_constants
 implicit none
 
 sll_int32 :: i, j, ii, jj

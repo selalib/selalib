@@ -3,7 +3,7 @@ program test_poisson_2d_periodic_cart_par
 #include "sll_memory.h"
 #include "sll_assert.h"
   use remapper
-  use numeric_constants
+  use sll_constants
   use sll_poisson_2d_periodic_cartesian_par
   use sll_collective
   use hdf5

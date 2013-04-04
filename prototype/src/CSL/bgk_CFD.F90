@@ -4,7 +4,7 @@ program bgk_CFD
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use distribution_function
   use sll_diagnostics
   use sll_csl

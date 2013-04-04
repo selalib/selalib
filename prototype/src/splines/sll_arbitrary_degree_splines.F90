@@ -1,7 +1,7 @@
 ! This module attempts to replace the functionalities of the arbitrary
 ! degree spline functions by deBoor. 
 
-module arbitrary_degree_splines
+module sll_arbitrary_degree_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -771,4 +771,4 @@ contains
 
 
 
-end module arbitrary_degree_splines
+end module sll_arbitrary_degree_splines

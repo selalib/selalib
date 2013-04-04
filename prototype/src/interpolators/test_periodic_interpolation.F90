@@ -3,6 +3,8 @@ program test_periodic_interp
 #ifndef STDF95
   use sll_module_interpolators_1d_base
 #endif
+
+  use sll_constants
   !use util_constants
   use numeric_constants
   use sll_periodic_interpolator_1d

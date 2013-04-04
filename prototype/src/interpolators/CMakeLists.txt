@@ -1,6 +1,7 @@
 IF(STDF95)
 IF(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
+               sll_interpolators.F90
                sll_cubic_spline_interpolator_1d.F90
                cubic_non_uniform_splines_interpolator_1d.F90
                sll_periodic_interpolator_1d.F90
@@ -14,6 +15,7 @@ IF(FFTPACK_ENABLED)
 )
 ELSE(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
+               sll_interpolators.F90
                sll_cubic_spline_interpolator_1d.F90
                sll_cubic_spline_interpolator_2d.F90
                sll_quintic_spline_interpolator_1d.F90
@@ -27,6 +29,7 @@ ENDIF(FFTPACK_ENABLED)
 ELSE()
 IF(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
+               sll_interpolators.F90
                sll_interpolators_1d_base.F90
                sll_cubic_spline_interpolator_1d.F90
                cubic_non_uniform_splines_interpolator_1d.F90
@@ -42,6 +45,7 @@ IF(FFTPACK_ENABLED)
              )
 ELSE()
   add_library( sll_interpolators STATIC
+               sll_interpolators.F90
                sll_interpolators_1d_base.F90
                sll_cubic_spline_interpolator_1d.F90
                cubic_non_uniform_splines_interpolator_1d.F90
