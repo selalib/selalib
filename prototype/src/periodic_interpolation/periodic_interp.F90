@@ -3,7 +3,7 @@ module periodic_interp_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_fft.h"
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
 use sll_constants
 
   implicit none
