@@ -12,6 +12,49 @@ FILE(COPY ${SLL_INCLUDE_FILES}
     DESTINATION
     ${CMAKE_BINARY_DIR}/include)
 
+IF(STDF95)
+SET(SLL_SOURCE_FILES
+    ${SLL_DIR}/memory/sll_strings.F90
+    ${SLL_DIR}/memory/sll_memory.F90
+    ${SLL_DIR}/precision/sll_working_precision.F90
+    ${SLL_DIR}/assert/sll_assert.F90
+    ${SLL_DIR}/constants/numeric_constants.F90
+    ${SLL_DIR}/constants/physical_constants.F90
+    ${SLL_DIR}/utilities/misc_utils.F90
+    ${SLL_DIR}/low_level_file_io/sll_ascii_io.F90
+    ${SLL_DIR}/low_level_file_io/sll_binary_io.F90
+    ${SLL_DIR}/low_level_file_io/sll_gnuplot.F90
+    ${SLL_DIR}/low_level_file_io/sll_hdf5_io.F90
+    ${SLL_DIR}/low_level_file_io/sll_xdmf.F90
+    ${SLL_DIR}/low_level_file_io/sll_ascii_io.F90
+    ${SLL_DIR}/low_level_file_io/sll_xml_io.F90
+    ${SLL_DIR}/low_level_file_io/sll_io.F90
+    ${SLL_DIR}/visu_pic/sll_visu_pic.F90
+    ${SLL_DIR}/timer/sll_timer.F90
+    ${SLL_DIR}/electric_field_accumulators/electric_field_2d.F90
+    ${SLL_DIR}/splines/sll_splines.F90
+    ${SLL_DIR}/splines/sll_quintic_splines.F90
+    ${SLL_DIR}/splines/sll_odd_degree_splines.F90
+    ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
+   # ${SLL_DIR}/interpolators/sll_interpolators_1d_base.F90
+    ${SLL_DIR}/interpolators/sll_odd_degree_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_quintic_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
+   # ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
+    ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
+    ${SLL_DIR}/numerical_utilities/tridiagonal.F90
+    ${SLL_DIR}/numerical_utilities/sll_toeplitz_penta_diagonal.F90
+    ${SLL_DIR}/numerical_utilities/lagrange_interpolation.F90
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell.F90
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
+   # ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
+    ${SLL_DIR}/poisson_solvers/fft_module.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
+   # ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90
+								)
+
+ELSE()
+
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
@@ -50,6 +93,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/fft_module.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90)
+
+ENDIF()
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES} selalib.F90)
 

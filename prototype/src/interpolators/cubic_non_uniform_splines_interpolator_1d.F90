@@ -57,7 +57,7 @@ contains  ! ****************************************************************
   !   and some copy operation might be involved when "catching" the results.
 
 #ifdef STDF95
-  function cubic_spline_interpolate_array(this, num_points, data, coordinates) &
+  function cubic_non_uniform_spline_interpolate_array(this, num_points, data, coordinates) &
        result(data_out)
     type(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #else
@@ -79,8 +79,8 @@ contains  ! ****************************************************************
   end function 
 
 #ifdef STDF95
-  function cubic_spline_interpolate_array_at_displacement(this, num_points, &
-       data, coordinates) &
+  function cubic_non_uniform_spline_interpolate_array_at_displacement(this, num_points, &
+       data, alpha) &
        result(data_out)
     type(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
 #else
@@ -90,11 +90,7 @@ contains  ! ****************************************************************
 #endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
-#ifdef STDF95
-    sll_real64                :: alpha
-#else
     sll_real64,  intent(in)   :: alpha
-#endif
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
@@ -140,7 +136,7 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the cs1d at initialization time.  
 #ifdef STDF95
-  subroutine cubic_spline_compute_interpolants( interpolator, data_array )
+  subroutine cubic_non_uniform_spline_compute_interpolants( interpolator, data_array )
     type(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
   subroutine compute_interpolants_cs1d( interpolator, data_array )
@@ -148,11 +144,7 @@ contains  ! ****************************************************************
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
     call compute_spline_1D( data_array, interpolator%spline )
-#ifdef STDF95
-  end subroutine cubic_spline_compute_interpolants
-#else
-  end subroutine compute_interpolants_cs1d
-#endif
+  end subroutine
 
   ! Alternative implementation for the function meant to interpolate a
   ! whole array. This implementation fixes some problems in the previous
@@ -233,7 +225,7 @@ contains  ! ****************************************************************
   end subroutine interpolate_pointer_derivatives_cs1d
 
 #ifdef STDF95
-  function cubic_spline_interpolate_value( interpolator, eta1 ) result(val)
+  function cubic_non_uniform_spline_interpolate_value( interpolator, eta1 ) result(val)
     type(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
 #else
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
@@ -245,7 +237,7 @@ contains  ! ****************************************************************
   end function
   
 #ifdef STDF95
-  function cubic_spline_interpolate_derivative_eta1( interpolator, eta1 ) &
+  function cubic_non_uniform_spline_interpolate_derivative_eta1( interpolator, eta1 ) &
        result(val)
     type(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
@@ -255,14 +247,10 @@ contains  ! ****************************************************************
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
-#ifdef STDF95
-  end function cubic_spline_interpolate_derivative_eta1
-#else
-  end function interpolate_deriv1_cs1d
-#endif
+  end function
 
 #ifdef STDF95
-  function cubic_spline_interpolate_derivative_f95( interpolator, eta1 ) result(val)
+  function cubic_non_uniform_spline_interpolate_derivative_f95( interpolator, eta1 ) result(val)
     type(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
@@ -271,19 +259,14 @@ contains  ! ****************************************************************
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
-#ifdef STDF95
-  end function cubic_spline_interpolate_derivative_f95
-#else
-  end function interpolate_derivative_f95
-#endif
-
+  end function
 
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 
   !> initialize cubic spline interpolator
 #ifdef STDF95
-  subroutine cubic_spline_initialize( &
+  subroutine cubic_non_uniform_spline_1d_initialize( &
 #else
   subroutine initialize_cs1d_interpolator2( &
 #endif
