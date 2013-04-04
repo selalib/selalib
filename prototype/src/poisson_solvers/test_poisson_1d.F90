@@ -7,7 +7,7 @@ program test_poisson_1d
 use sll_constants
 use sll_module_mapped_meshes_1d
 use geometry_functions
-
+use sll_splines
 use sll_poisson_1D_periodic
 
 implicit none

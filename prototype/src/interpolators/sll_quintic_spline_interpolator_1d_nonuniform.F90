@@ -183,10 +183,11 @@ contains  ! ****************************************************************
           vals_to_interpolate, num_pts, interpolator%spline)
   end subroutine interpolate_pointer_values_qs1d_nonuniform
 
-  function interpolate_value_qs1d_nonuniform( interpolator, eta1 ) result(val)
 #ifdef STDF95
+  function quintic_spline_non_uniform_1d_interpolate_value( interpolator, eta1 ) result(val)
     type(quintic_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
 #else
+  function interpolate_value_qs1d_nonuniform( interpolator, eta1 ) result(val)
     class(quintic_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
 #endif
 
