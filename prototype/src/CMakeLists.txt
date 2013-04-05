@@ -53,6 +53,7 @@ INCLUDE(DoxygenConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
+                    constants
                     memory 
                     assert 
                     splines 

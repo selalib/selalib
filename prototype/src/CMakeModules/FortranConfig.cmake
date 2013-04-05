@@ -16,8 +16,6 @@ TRY_RUN( RUN_RESULT_VAR
          ${CMAKE_CURRENT_SOURCE_DIR}/check_compiler.F90
 )
 
-SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
 # message(STATUS "TRY_RUN_STATUS : ${COMPILE_RESULT_VAR}, EXIT_STATUS : ${RUN_RESULT_VAR}")
@@ -68,7 +66,7 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 
    ADD_DEFINITIONS(-DINTEL)
    SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -openmp")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
 
 ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
 

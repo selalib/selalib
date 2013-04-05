@@ -83,6 +83,7 @@ add_dependencies( sll_interpolators
 	          sll_assertion
 	          sll_splines
                   sll_numerical_utilities	
+                  sll_cubic_splines
                   sll_quintic_splines
                   sll_weno
 		  #sll_periodic_interp
