@@ -3,7 +3,7 @@ program lagrange_test
 #include "sll_assert.h"
 #include "sll_memory.h"
  use sll_lagrange_interpolation
- use numeric_constants
+ use sll_constants
 implicit none
 sll_int32  :: i,d,num_points
 sll_real64 :: diff,alpha,xmin,xmax,l

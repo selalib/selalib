@@ -6,7 +6,6 @@ program test_periodic_interp
 
   use sll_constants
   !use util_constants
-  use numeric_constants
   use sll_periodic_interpolator_1d
   use sll_lagrange_interpolator_1d
   implicit none 
