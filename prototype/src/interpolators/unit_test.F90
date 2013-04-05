@@ -1,12 +1,10 @@
 program unit_test
 #include "sll_working_precision.h"
-  use sll_constants
-  use geometry_functions
-#ifndef STDF95
-  use sll_module_interpolators_2d_base
-#endif
-  use sll_cubic_spline_interpolator_2d
-  implicit none
+#include "sll_constants.h"
+#include "sll_interpolators.h"
+use geometry_functions
+
+implicit none
 
 #define NPTS1 65 
 #define NPTS2 65 
