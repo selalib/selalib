@@ -22,12 +22,12 @@ IF(PROCESSOR_COUNT GREATER 1)
    ADD_MPI_TEST(remap_6d test_remap_6d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   SET(PROCS 16)
-   ADD_MPI_TEST(poisson_3d_periodic_par test_poisson_3d_periodic_par ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
-                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
    IF(NOT STDF95)
+
+      SET(PROCS 16)
+      ADD_MPI_TEST(poisson_3d_periodic_par test_poisson_3d_periodic_par ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
+                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 16)
       ADD_MPI_TEST(qns2d_with_finite_diff_par test_qns2d_with_finite_diff_par ${PROCS} ${ARGS})
