@@ -11,6 +11,7 @@ IF(FFTPACK_ENABLED)
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
+	       sll_lagrange_interpolator_1d.F90
 )
 ELSE(FFTPACK_ENABLED)
   add_library( sll_interpolators STATIC
@@ -22,6 +23,7 @@ ELSE(FFTPACK_ENABLED)
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
+	       sll_lagrange_interpolator_1d.F90
              )
 ENDIF(FFTPACK_ENABLED)
 ELSE()
@@ -39,6 +41,7 @@ IF(FFTPACK_ENABLED)
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
+	       sll_lagrange_interpolator_1d.F90
              )
 ELSE()
   add_library( sll_interpolators STATIC
@@ -54,6 +57,7 @@ ELSE()
                sll_quintic_spline_interpolator_1d_nonuniform.F90
                sll_odd_degree_spline_interpolator_1d.F90
                sll_odd_degree_spline_interpolator_1d_nonuniform.F90
+	       sll_lagrange_interpolator_1d.F90
              )
 
 ENDIF()
@@ -72,6 +76,7 @@ add_dependencies( sll_interpolators
 	          cubic_non_uniform_splines
                   sll_quintic_splines
                   sll_weno
+		  sll_lagrange_interpolation
                 )
 
 ELSE()	       
@@ -88,6 +93,7 @@ add_dependencies( sll_interpolators
                   sll_weno
 		  #sll_periodic_interp
 		  cubic_non_uniform_splines
+		  sll_lagrange_interpolation
                 )
 ENDIF()
                 
@@ -186,5 +192,6 @@ target_link_libraries( test_periodic_interpolators_1d
 	               sll_memory
 	               sll_working_precision
 		       fftpack_module
+		       sll_lagrange_interpolation
                      )
 ENDIF()
