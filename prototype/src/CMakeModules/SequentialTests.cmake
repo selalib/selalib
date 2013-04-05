@@ -81,7 +81,7 @@ ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
 ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
-
+IF(NOT STDF95)
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
 ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
@@ -92,12 +92,15 @@ ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
                           bsl_1d_quintic_nonuniform_compact)
 
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF()
 
 ADD_TEST(NAME low_level_file_io COMMAND test_io)
 SET_TESTS_PROPERTIES(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+IF(NOT STDF95)
 ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
 SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF()
 
 IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)
