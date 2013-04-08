@@ -17,9 +17,9 @@ program test_sll_quintic_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use numeric_constants
+use sll_constants
 use sll_quintic_splines
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
 
 implicit none
   
@@ -75,11 +75,11 @@ f2 = exp( - x2*x2  )
 plan1 => new_quintic_splines_uniform(num_pts, xmin, xmax)
 call compute_quintic_coeffs_uniform(f1, plan1)
 
-#warning Non uniform test for quintic splines is not fixed
-!PN Pierre
-!PN I remove the non uniform test because of numerical errors
-!PN plan2 => new_quintic_splines_nonuniform(x2)
-!PN call compute_quintic_coeffs_nonuniform(f2, plan2)
+
+
+
+plan2 => new_quintic_splines_nonuniform(x2)
+call compute_quintic_coeffs_nonuniform(f2, plan2)
 
 err11 = 0.d0
 err12 = 0.d0
@@ -90,13 +90,13 @@ norm  = 0.d0
 do i=1,num_pts
 
    err11 = err11 + ( f1(i) - quintic_splines(x1(i), plan1) )**2
-!PN   err21 = err21 + ( f2(i) - quintic_splines(x2(i), plan2) )**2
+   err21 = err21 + ( f2(i) - quintic_splines(x2(i), plan2) )**2
 
    call random_number(x)
    x = xmin + x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
    y = exp( - x*x  )
    err12 = err12 + ( y - quintic_splines(x, plan1) )**2
-!PN    err22 = err22 + ( y - quintic_splines(x, plan2) )**2
+   err22 = err22 + ( y - quintic_splines(x, plan2) )**2
    norm = norm + y*y; 
 
 enddo
@@ -109,11 +109,10 @@ err22 = sqrt( err22/norm )
 
 print*, 'Nb_points =', num_pts
 print*, 'Uniform case: err11 = ', err11, ', err12 =', err12
-!PN print*, 'Non uniform case: err21 = ', err21, ', err22 =', err22
+print*, 'Non uniform case: err21 = ', err21, ', err22 =', err22
 print*, '--------------------------------------------------', &
         '------------------------------------'
-!PN if ( (err11 >= 1.e-13) .or. (err21 >= 1.e-13) ) then
-if ( err11 >= 1.e-13) then
+if ( (err11 >= 1.e-13) .or. (err21 >= 1.e-13) ) then
    print*, 'sll_quintic_splines: FAILED'
    ok = 0
    print*, 'Exiting...'
@@ -125,7 +124,7 @@ SLL_DEALLOCATE_ARRAY(f2, ierr)
 SLL_DEALLOCATE_ARRAY(x1, ierr)
 SLL_DEALLOCATE_ARRAY(x2, ierr)
 call delete_quintic_splines(plan1)
-!PN call delete_quintic_splines(plan2)
+call delete_quintic_splines(plan2)
 
 if (ok==1) then
    print*, ' '

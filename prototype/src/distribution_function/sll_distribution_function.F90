@@ -37,8 +37,8 @@ module distribution_function
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use numeric_constants
-  use sll_misc_utils   ! for int2string
+  use sll_constants
+  use sll_utilities   ! for int2string
   use sll_scalar_field_initializers_base
   implicit none
 

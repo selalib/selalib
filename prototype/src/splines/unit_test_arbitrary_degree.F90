@@ -2,7 +2,7 @@ program arbitrary_degree_spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use arbitrary_degree_splines
+  use sll_arbitrary_degree_splines
   implicit none
 
   logical                                :: passed_test
@@ -15,16 +15,16 @@ program arbitrary_degree_spline_tester
   call test_nonuniform_arb_deg_splines_periodic( passed_test )
 
 
-!PN Commented out because of 
-!PN Floating-point exception - erroneous arithmetic operation.
-!PN call test_uniform_b_splines_randomly( passed_test )
-!PN call test_nonuniform_arb_deg_splines_open( passed_test )
+! Floating-point exception - erroneous arithmetic operation.
+! in these following tests
+ call test_uniform_b_splines_randomly( passed_test )
+ call test_nonuniform_arb_deg_splines_open( passed_test )
 
-  if( passed_test .eqv. .true. ) then
-     print *, 'PASSED'
-  else
-     print *, 'FAILED'
-  end if
+ if( passed_test .eqv. .true. ) then
+    print *, 'PASSED'
+ else
+    print *, 'FAILED'
+ end if
 
 contains
 

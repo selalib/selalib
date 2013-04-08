@@ -21,8 +21,9 @@
 module sll_gnuplot
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-use sll_io
+
 use sll_ascii_io
+use sll_utilities, only: sll_new_file_id, int2string
 
 implicit none
 

@@ -5,7 +5,7 @@ program test_poisson
 
   use polar_operators
   use poisson_polar
-  use numeric_constants
+  use sll_constants
   implicit none
 
   !this code should become part of the unit_test for the Poisson solver in polar coordinates
