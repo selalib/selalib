@@ -18,7 +18,7 @@ program test_sll_qns2d_with_finite_diff_seq
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use numeric_constants
+  use sll_constants
   use sll_collective
   use sll_qns2d_with_finite_diff_seq
 implicit none
