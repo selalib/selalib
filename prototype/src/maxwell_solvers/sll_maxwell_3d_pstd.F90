@@ -67,11 +67,10 @@ module sll_maxwell_3d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_maxwell_solvers.h"
 
 use, intrinsic :: iso_c_binding
-use numeric_constants
-use physical_constants
-use sll_maxwell
+use sll_constants
 
 implicit none
 private

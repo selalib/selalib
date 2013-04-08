@@ -19,11 +19,11 @@ module sll_qns2d_angular_spect_method_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
 #include "sll_assert.h"
 !#include "sll_remap.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_fft
   use sll_tridiagonal
   use sll_collective

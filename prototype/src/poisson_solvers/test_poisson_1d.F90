@@ -4,10 +4,10 @@ program test_poisson_1d
 #include "sll_assert.h"
 !#include "sll_field_1d.h"
 #include "sll_poisson_solvers.h"
-use numeric_constants
+use sll_constants
 use sll_module_mapped_meshes_1d
 use geometry_functions
-
+use sll_splines
 use sll_poisson_1D_periodic
 
 implicit none

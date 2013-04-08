@@ -12,7 +12,7 @@ program test_lagrange
   sll_real64, dimension(1:NP) :: yi
   sll_real64                  :: res
   sll_real64                  :: tmp
-  sll_real64 :: p012, p123
+!  sll_real64 :: p012, p123
 
   do i=1,NP
      xi(i) = XMIN + real(i-1,f64)*DELTA
