@@ -6,6 +6,7 @@ module module_cg_curvi_structure
 
 
   use sll_splines 
+  use poisson_polar
 !>type sll_plan_adv_polar
   !>type for advection with center-guide equations
   !>the field and other needed data/object are within
@@ -25,7 +26,7 @@ module module_cg_curvi_structure
   type sll_SL_curvilinear
      type(sll_plan_adv_curvilinear), pointer :: adv
      type(plan_curvilinear_op), pointer :: grad
-     !type(sll_plan_poisson_curvilinear), pointer :: poisson
+     type(sll_plan_poisson_polar), pointer :: poisson
      sll_real64, dimension(:,:), allocatable :: phi
   end type sll_SL_curvilinear
 

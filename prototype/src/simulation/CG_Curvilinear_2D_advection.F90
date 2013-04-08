@@ -9,6 +9,8 @@ module curvilinear_2D_advection
   use module_cg_curvi_structure
   use numeric_constants 
   use sll_splines
+  use poisson_polar
+  use sll_fft
   implicit none
 
   
@@ -108,6 +110,7 @@ contains
     type(sll_SL_curvilinear), pointer :: plan_sl
     sll_real64 :: geom_eta(2,2)
     sll_real64 :: delta_eta1,delta_eta2,dt
+    sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
     sll_int32, intent(in):: N_eta1,N_eta2 
     sll_int32 :: bc(2)
     sll_int32, intent(in) :: grad_case,carac_case,bc1_type,bc2_type
@@ -118,8 +121,12 @@ contains
     SLL_ALLOCATE(plan_sl,err)
     SLL_ALLOCATE(plan_sl%phi(N_eta1+1,N_eta2+1),err)
 
+    eta1_min=geom_eta(1,1)
+    eta1_max=geom_eta(1,2)
+    eta2_min=geom_eta(2,1)
+    eta2_max=geom_eta(2,2)
     
-    !plan_sl%poisson => new_plan_poisson_curvilinea_eta1(delta_eta1,delta_eta2,eta1_min,eta2_min,N_eta1,N_eta2,bc)
+     plan_sl%poisson => new_plan_poisson_polar(delta_eta1,eta1_min,N_eta1,N_eta2,bc)
      plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
      plan_sl%adv => new_plan_adv_curvilinear(geom_eta,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
 
@@ -141,7 +148,7 @@ contains
 
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
-       !call delete_plan_poisson_curvilinear(plan_sl%poisson)
+       call delete_plan_poisson_polar(plan_sl%poisson)
        call delete_plan_curvilinear_op(plan_sl%grad)
        SLL_DEALLOCATE(plan_sl,err)
     end if
@@ -279,18 +286,7 @@ contains
                  else
                    eta2 = 2._f64*sll_pi-acos(x1_tab(i,j)/eta1)
                  endif
-                 ! if((x1_tab(i,j)>0.).and.(x2_tab(i,j)>=0.)) then
-                 !    eta2=atan(x2_tab(i,j)/x1_tab(i,j))
-                 ! elseif((x1_tab(i,j)>0.).and.(x2_tab(i,j)<0.)) then
-                 !    eta2=atan(x2_tab(i,j)/x1_tab(i,j))+2._f64*sll_pi
-                 ! elseif(x1_tab(i,j)<0.) then
-                 !    eta2=atan(x2_tab(i,j)/x1_tab(i,j))+ sll_pi
-                 ! elseif((x1_tab(i,j)==0.).and.(x2_tab(i,j)>0.)) then
-                 !    eta2=sll_pi/2
-                 ! elseif((x1_tab(i,j)==0.).and.(x2_tab(i,j)<0.)) then
-                 !    eta2=1.5_f64 * sll_pi
-                 ! endif
-                  
+             
               endif
               
                if (mesh_case==4) then
@@ -394,7 +390,7 @@ contains
              
                do jj=0,1
                  do ii=0,1               
-                   phi_loc(1+ii,1+jj) = plan%field(2,k_eta1+ii,k_eta2+jj)/jac_array(k_eta1+ii,k_eta2+jj)
+              phi_loc(1+ii,1+jj) = plan%field(2,k_eta1+ii,k_eta2+jj)/jac_array(k_eta1+ii,k_eta2+jj)
                  enddo
                enddo
                phi_loc(1,1) = (1.0_f64-eta1_loc)*phi_loc(1,1) + eta1_loc*phi_loc(2,1)
@@ -450,7 +446,7 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_1(plan,inn,outt,jac_array,step,x1_tab,x2_tab,mesh_case)
+  subroutine SL_order_1(plan,inn,outt,jac_array,step,x1_tab,x2_tab,mesh_case,N_eta1,N_eta2,geom_eta)
 
     implicit none
 
@@ -458,10 +454,13 @@ contains
     sll_real64, dimension(:,:), intent(inout) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
     sll_real64,dimension(:,:),pointer,intent(inout)::jac_array,x1_tab,x2_tab
+    sll_real64, intent(in) :: geom_eta(2,2)
+    sll_int32, intent(in) :: N_eta1, N_eta2
     sll_int :: step,i,j,mesh_case
 
-    !call poisson_solve_curvilinear(plan%poisson,inn,plan%phi)
-   ! call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    call poisson_solve_polar(plan%poisson,inn,plan%phi)
+    !!call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
     
    
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
@@ -474,7 +473,7 @@ contains
   !>plan : sll_SL_pola_eta1 object, contains plan for Poisso, gradient and advection
   !>in : distribution function at time n, size (N_eta1+1)*(N_eta2+1)
   !>out : distribution function at time n+1, size (N_eta1+1)*(N_eta2+1)
-  subroutine SL_order_2(plan,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
+  subroutine SL_order_2(plan,inn,outt,jac_array,x1_tab,x2_tab,mesh_case,N_eta1,N_eta2,geom_eta)
 
     implicit none
 
@@ -482,6 +481,8 @@ contains
     sll_real64, dimension(:,:), intent(in) :: inn
     sll_real64, dimension(:,:), intent(out) :: outt
     sll_real64,dimension(:,:),pointer, intent(inout)::jac_array,x1_tab,x2_tab
+    sll_real64, intent(in) :: geom_eta(2,2)
+    sll_int32, intent(in) :: N_eta1, N_eta2
     sll_int32, intent(in) :: mesh_case
 
 
@@ -491,16 +492,16 @@ contains
     
     plan%adv%dt=dt/2.0_f64
 
-    !call poisson_solve_culvilinear(plan%poisson,inn,plan%phi)
-    !call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    call poisson_solve_polar(plan%poisson,inn,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
     
     
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
   
     
     !!we just obtained f^(n+1/2)
-    !call poisson_solve_curviliner(plan%poisson,outt,plan%phi)
-    !call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+    call poisson_solve_polar(plan%poisson,outt,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
     !!we just obtained E^(n+1/2)
     plan%adv%dt=dt
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
