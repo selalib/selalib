@@ -33,7 +33,7 @@ module sll_field_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_diagnostics
   use sll_mapped_mesh_base
   use sll_io

@@ -4,9 +4,9 @@
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
   use sll_timer
-  use numeric_constants
+  use sll_constants
   use sll_io
 
 #endif 

@@ -110,7 +110,7 @@ contains
     sll_real64 :: displacement
     sll_real64 :: adr
     sll_real64 :: arg
-    sll_int32 :: i,j
+    sll_int32 :: i
     sll_real64 :: xmin, xmax, delta_x
     sll_real64 :: vmin, vmax, delta_v
 
@@ -183,8 +183,7 @@ contains
     sll_real64, intent(in) :: t
     type(app_field_params)  :: params
     ! local variables
-    sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
-    sll_int32 :: i 
+    sll_real64 :: t0, twL, twR, tflat, tL, tR
     sll_real64 :: epsilon
 
     tflat = params%tflat

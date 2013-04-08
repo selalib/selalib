@@ -18,9 +18,10 @@ program test_sll_odd_degree_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use numeric_constants
+use sll_constants
 use sll_odd_degree_splines
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
+
   implicit none
 
   type(odd_degree_splines_uniform_plan), pointer    :: plan1
@@ -84,10 +85,10 @@ use arbitrary_degree_splines
 
         plan1 => new_odd_degree_splines_uniform(num_pts, degree, xmin, xmax)
         call compute_odd_degree_coeffs_uniform(f1, plan1)
-!PN remove non uniform test 
-!PN numerical errors happen
-!PN     plan2 => new_odd_degree_splines_nonuniform(degree, x2)
-!PN     call compute_odd_degree_coeffs_nonuniform(f2, plan2)
+
+
+        plan2 => new_odd_degree_splines_nonuniform(degree, x2)
+        call compute_odd_degree_coeffs_nonuniform(f2, plan2)
 
         err11 = 0.d0
         err12 = 0.d0
@@ -99,13 +100,13 @@ use arbitrary_degree_splines
 
            x = xmin + i*h
            err11 = err11 + ( f1(i+1) - odd_degree_splines(x, plan1) )**2
-!PN        err21 = err21 + ( f2(i+1) - odd_degree_splines(x2(i+1), plan2) )**2
+           err21 = err21 + ( f2(i+1) - odd_degree_splines(x2(i+1), plan2) )**2
 
            call random_number(x)
            x = xmin + x*(xmax-xmin) ! generate randomly x in [xmin, xmax]            
            y = exp( - ( x - mu )**2  )
            err12 = err12 + ( y - odd_degree_splines(x, plan1) )**2
-!PN        err22 = err22 + ( y - odd_degree_splines(x, plan2) )**2
+           err22 = err22 + ( y - odd_degree_splines(x, plan2) )**2
            norm = norm + y*y; 
 
         enddo
@@ -131,7 +132,7 @@ use arbitrary_degree_splines
         SLL_DEALLOCATE_ARRAY(f2, ierr)
         SLL_DEALLOCATE_ARRAY(x2, ierr)
         call delete_odd_degree_splines(plan1)
-!PN     call delete_odd_degree_splines(plan2)
+        call delete_odd_degree_splines(plan2)
 
         print*, ' '
 
