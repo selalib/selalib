@@ -4,7 +4,7 @@ module geometry_functions
 #include "sll_assert.h"
 
 !  use sll_splines
-  use numeric_constants
+  use sll_constants
   implicit none
   
   sll_real64, parameter :: c1_test = 0.1_f64
