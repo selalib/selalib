@@ -2,7 +2,7 @@ module remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
   use sll_collective
   use sll_electric_field_2d_accumulator ! terrible dependency here...
   implicit none
@@ -1971,7 +1971,6 @@ contains  !******************************************************************
     sll_int32                                :: id, jd, kd
     sll_int32                                :: i
     sll_int32                                :: col_sz
-    sll_int32                                :: ierr
     sll_int32                                :: loi, loj, lok
     sll_int32                                :: hii, hij, hik
     type(box_3D)                             :: sbox
@@ -2105,7 +2104,6 @@ contains  !******************************************************************
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj
     sll_int32                                 :: hii, hij
     type(box_2D)                              :: sbox
@@ -2299,7 +2297,6 @@ contains  !******************************************************************
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj
     sll_int32                                 :: hii, hij
     type(box_2D)                              :: sbox
@@ -2622,7 +2619,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok
     sll_int32                                 :: hii, hij, hik
     type(box_3D)                              :: sbox
@@ -2765,7 +2761,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd, ld
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok, lol
     sll_int32                                 :: hii, hij, hik, hil
     type(box_4D)                              :: sbox
@@ -2916,7 +2911,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok
     sll_int32                                 :: hii, hij, hik
     type(box_3D)                              :: sbox
@@ -3051,7 +3045,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok, lol, lom, lon
     sll_int32                                 :: hii, hij, hik, hil, him, hin
     type(box_6D)                              :: sbox
@@ -3219,7 +3212,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok, lol, lom, lon
     sll_int32                                 :: hii, hij, hik, hil, him, hin
     type(box_6D)                              :: sbox

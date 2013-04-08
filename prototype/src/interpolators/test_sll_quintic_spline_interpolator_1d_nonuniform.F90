@@ -2,7 +2,7 @@ program test_sll_quintic_spline_interpolator_1d_nonuniform
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use util_constants
 
 #ifndef STDF95
@@ -41,13 +41,6 @@ program test_sll_quintic_spline_interpolator_1d_nonuniform
   SLL_ALLOCATE(data_interp_disp(n), ierr)
 
   print *, 'initialize data and interpolation_points array'
-
-!PN This test is bypassed because of numerical errors in splines directory
-#warning non uniform test for non uniform quintic splines interpolator is
-#warning disabled. PN.
-
-  print *, 'PASSED'
-  stop
 
   x_min = -10.0_f64
   x_max = 10.0_f64

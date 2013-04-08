@@ -53,15 +53,11 @@ fi
 if [[ `hostname` == "irma-hpc" ]]; then
   source /opt/intel/composerxe/bin/compilervars.sh intel64
   source /opt/intel/mkl/bin/mklvars.sh intel64
-  export PATH=/opt/local/bin:${PATH}
+  source /opt/intel/impi/4.1.0.024/intel64/bin/mpivars.sh
   export FC=ifort
-  export F77=ifort
   export CC=icc
-  export CXX=icpc
-  export F9X=ifort
-  export OMPI_FC=ifort
-  export OMPI_CC=icc
-  export OMPI_CXX=icpc
+  export I_MPI_F90=ifort
+  export I_MPI_CC=icc
   export HDF5_ROOT=/opt/intel
   export FFTW_ROOT=/opt/intel
 fi
@@ -152,18 +148,27 @@ fi
 
 mkdir build
 cd build; {
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local ${HOMEDIR}/selalib
+cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Debug
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
 make NightlyTest
 make NightlySubmit
-cpack -G $PIPOL_CPACK_G .
-
-# cmake test results can be seen on 
-# http://cdash.inria.fr/CDash/index.php?project=Selalib
-
+#cpack -G $PIPOL_CPACK_G .
 }; cd -
-
 rm -rf build
+
+mkdir build
+cd build; {
+cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
+make NightlyUpdate
+make NightlyConfigure
+make NightlyBuild
+make NightlyTest
+make NightlySubmit
+#cpack -G $PIPOL_CPACK_G .
+}; cd -
+rm -rf build
+
+
 exit 0

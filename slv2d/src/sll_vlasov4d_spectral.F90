@@ -13,7 +13,7 @@ use sll_module_interpolators_1d_base
 use sll_module_interpolators_2d_base
 use sll_collective
 use remapper
-use numeric_constants
+use sll_constants
 
 
  use, intrinsic :: iso_c_binding
