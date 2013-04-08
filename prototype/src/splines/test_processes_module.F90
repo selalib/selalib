@@ -4,7 +4,7 @@
 ! Module: test_processes_module.F90
 !
 !> @brief 
-!> Module of test processes for sll_splines unit test
+!> Module of test processes for sll_cubic_splines unit test
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -15,8 +15,8 @@ module test_processes_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_splines
-  use numeric_constants
+  use sll_cubic_splines
+  use sll_constants
   use util_constants
   use test_func_module
   implicit none
@@ -44,10 +44,10 @@ module test_processes_module
   abstract interface
      function spline_interpolator_1d(  x, spline )
        use sll_working_precision
-       use sll_splines
+       use sll_cubic_splines
        sll_real64 :: spline_interpolator_1d
        sll_real64, intent(in) :: x
-       type(sll_spline_1D), pointer :: spline
+       type(sll_cubic_spline_1D), pointer :: spline
      end function spline_interpolator_1d
   end interface
 
@@ -55,11 +55,11 @@ module test_processes_module
   abstract interface
      function spline_interpolator_2d(  x, y, spline )
        use sll_working_precision
-       use sll_splines
+       use sll_cubic_splines
        sll_real64 :: spline_interpolator_2d
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y
-       type(sll_spline_2D), pointer :: spline
+       type(sll_cubic_spline_2D), pointer :: spline
      end function spline_interpolator_2d
   end interface
 #endif
@@ -71,8 +71,8 @@ contains
     implicit none
 
     sll_int32                             :: i_test, ok, i, err 
-    type(sll_spline_1d), pointer         :: sp1
-    type(sll_spline_1d), pointer         :: sp2
+    type(sll_cubic_spline_1d), pointer         :: sp1
+    type(sll_cubic_spline_1d), pointer         :: sp2
     sll_real64                            :: x
     sll_real64                            :: phase
     sll_real64, allocatable, dimension(:) :: coordinates
@@ -227,10 +227,10 @@ contains
 
     sll_int32                               :: i_test, j_test, ok
     sll_int32                               :: i, j, err
-    type(sll_spline_2d), pointer            :: sp2d_1
-    type(sll_spline_2d), pointer            :: sp2d_2
-    type(sll_spline_2d), pointer            :: sp2d_3
-    type(sll_spline_2d), pointer            :: sp2d_4
+    type(sll_cubic_spline_2d), pointer            :: sp2d_1
+    type(sll_cubic_spline_2d), pointer            :: sp2d_2
+    type(sll_cubic_spline_2d), pointer            :: sp2d_3
+    type(sll_cubic_spline_2d), pointer            :: sp2d_4
     sll_real64                              :: phase_x1, phase_x2
     sll_real64                              :: acc_2D, x1, x2
     sll_real64, allocatable, dimension(:,:) :: data_2d
@@ -405,7 +405,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_spline_1d), pointer :: spline
+    type(sll_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
  
     if(present(criterion)) then
@@ -485,7 +485,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_spline_1d), pointer :: spline
+    type(sll_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
  
     if(present(criterion)) then
@@ -567,7 +567,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_spline_1d), pointer :: spline
+    type(sll_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
     sll_int32, parameter :: np_min = 9
     sll_int32, parameter :: np_max = 129
@@ -644,7 +644,7 @@ contains
     sll_real64 :: h1, h2 ! cell spacings
     sll_real64 :: x1, x2
     sll_real64 :: acc, val
-    type(sll_spline_2d), pointer :: spline
+    type(sll_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
     h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
     h2 = (X2MAX - X2MIN)/real(NPX2-1,f64)
@@ -722,7 +722,7 @@ contains
     sll_real64 :: h1, h2 ! cell spacings
     sll_real64 :: x1, x2
     sll_real64 :: acc, val, err, min_err, max_err
-    type(sll_spline_2d), pointer :: spline
+    type(sll_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
     h1  = 1.0_f64/real(NPX1-1,f64)
     h2  = 1.0_f64/real(NPX2-1,f64)
@@ -818,7 +818,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta1_min_slopes
     sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -907,7 +907,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta1_min_slopes
     sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -996,7 +996,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1085,7 +1085,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1182,7 +1182,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1271,7 +1271,7 @@ contains
     sll_int32 :: i, j, ierr
     sll_real64, dimension(:,:), allocatable :: data
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)

@@ -13,7 +13,7 @@ program VP1d_deltaf
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_module_mapped_meshes_2d_cartesian
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d

@@ -321,7 +321,6 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: cts!, a
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
     !sll_real64 :: linf_err,tmp
-    sll_int32 :: i
     !a    => buf(1:3*N) 
     cts  => buf(3*N+1:10*N)
     ipiv => ibuf(1:N)
@@ -348,7 +347,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: lift(4,2)
     sll_real64, dimension(:), pointer :: cts
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
-    sll_int32 :: i,Np
+    sll_int32 :: Np
     Np=N+1
     cts  => buf(3*Np+1:10*Np)
     ipiv => ibuf(1:Np)

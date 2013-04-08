@@ -2,33 +2,13 @@ module selalib
 
 use sll_memory
 use sll_working_precision
-use sll_misc_utils
-use numeric_constants
-use physical_constants
-use sll_ascii_io
-use sll_binary_io
-use sll_gnuplot
-use sll_hdf5_io
-use sll_xdmf
-use sll_ascii_io
-use sll_xml_io
+use sll_utilities
+use sll_constants
 use sll_io
 use sll_visu_pic
 use sll_timer
-use sll_splines
-use sll_quintic_splines
-use sll_odd_degree_splines
-use sll_module_interpolators_1d_base
-use sll_odd_degree_spline_interpolator_1d
-use sll_quintic_spline_interpolator_1d
-use sll_cubic_spline_interpolator_2d
-use sll_module_interpolators_2d_base
-use sll_cubic_spline_interpolator_1d
-use sll_maxwell
-use sll_maxwell_2d_fdtd
-use sll_maxwell_2d_pstd
-use fft_module
-use sll_poisson_1d_periodic
-use sll_poisson_2d_periodic
+use sll_interpolators
+use sll_maxwell_solvers
+use sll_poisson_solvers
 
 end module selalib

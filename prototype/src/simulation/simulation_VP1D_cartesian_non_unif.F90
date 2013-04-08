@@ -15,7 +15,7 @@ module simulation_VP1D_cartesian_non_unif
   use sll_simulation_base
 #endif
   use cubic_non_uniform_splines
-
+  use sll_constants
   implicit none
 
 #ifdef STDF95
@@ -291,7 +291,7 @@ contains
 
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use numeric_constants
+    use sll_constants
     use cubic_non_uniform_splines
     implicit none
     
@@ -395,7 +395,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -497,7 +497,7 @@ function compute_non_unif_integral_spline_old(integration_points,N_points,Nb)
   sll_real64,dimension(:,:),pointer :: integration_points_fine
   sll_int,intent(in) :: N_points,Nb
   sll_int :: i,N_points_fine,ierr,j
-  sll_real64 :: tmp,x1,x2,fval1,fval2
+  sll_real64 :: x1,x2
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline_old = 0._f64
   if(N_points<=1)then
@@ -546,7 +546,7 @@ function compute_non_unif_integral_spline(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_middle
   sll_int,intent(in) :: N_points
-  sll_int :: i,ierr,j
+  sll_int :: i,ierr
   sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline = 0._f64
@@ -587,7 +587,7 @@ function compute_non_unif_integral_spline_per(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_middle
   sll_int,intent(in) :: N_points
-  sll_int :: i,ierr,j
+  sll_int :: i,ierr
   sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline_per = 0._f64
