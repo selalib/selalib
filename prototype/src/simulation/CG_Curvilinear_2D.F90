@@ -4,21 +4,21 @@ program cg_curvilinear_2D
 #include "sll_assert.h"
 
   use sll_timer
+  use sll_fft
   use module_cg_curvi_structure
- !use curvilinear_2D_operators
   use curvilinear_2D_advection
   use module_cg_curvi_function
-  !use poisson_curvilinear
+  use poisson_polar
   use numeric_constants
   implicit none
 
   type(sll_SL_curvilinear), pointer :: plan_sl
   type(time_mark), pointer :: t1,t2
-  sll_real64, dimension (:,:), allocatable :: f,fp1,g,f_init !,phi_ref,div
+  sll_real64, dimension (:,:), allocatable :: f,fp1,g,f_init !,phi_ref !,div
   sll_int32 :: i,j,step,visu_step,hh,minn,ss
   sll_int32 :: N_eta1, N_eta2, nb_step
   sll_int32 :: f_case,carac_case,visu_case,phi_case
-  sll_int32 :: bc(2),err
+  sll_int32 :: bc(2),err,mode
   sll_int32 :: PERIODIC_B,HERMITE_B
   sll_int32 :: bc1_type, bc2_type
   sll_int32 :: grad_case,mesh_case,time_scheme
@@ -33,7 +33,11 @@ program cg_curvilinear_2D
   sll_real64, dimension(:,:), pointer :: phi_exact
   character (len=16) :: f_file !,bctop,bcbot
   character (len=8) :: conv_CG
-
+!!**Diagnostic:
+sll_real64, dimension (:,:)  , allocatable :: phi_ref
+sll_real64, dimension (:)  , allocatable :: int_r
+sll_real :: l10,l20,e0,alpha,r1,r2
+!!********
   namelist /param/ N_eta1,N_eta2,dt,nb_step,carac_case,mesh_case,visu_case,phi_case
   
   PERIODIC_B=0
@@ -71,14 +75,15 @@ program cg_curvilinear_2D
                   ! 2 : SL order 2 (Predictor-Corrector) 
                   ! 3 : SL order 2 (Leap-Frog)
   
+  
   a1 = 0.25_f64 !*0.01_f64
   a2 = 0.25_f64 !*0.01_f64
   bc1_type=PERIODIC_B
   bc2_type=PERIODIC_B
-  N_eta1 = 100
-  N_eta2 = 100
+  N_eta1 = 32
+  N_eta2 = 32
   dt = 0.01
-  nb_step = 10
+  nb_step = 100
   alpha_mesh = 0._f64
   eta1_min = 0._f64
   eta1_max = 1._f64
@@ -124,8 +129,8 @@ program cg_curvilinear_2D
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
 
-    eta1_min = 0.5_f64
-    eta1_max = 8._f64
+    eta1_min = 1._f64!0.5_f64
+    eta1_max = 10._f64
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
    
@@ -139,9 +144,15 @@ program cg_curvilinear_2D
     sigma_x2 = 0.2
 
 
-    bc1_type = PERIODIC_B
-    !bc1_type = HERMITE_B
+    !bc1_type = PERIODIC_B
+    bc1_type = HERMITE_B
     bc2_type = PERIODIC_B
+    bc(1)=3
+    bc(2)=1
+    mode=7
+    alpha=1.e-6
+    r1=6._f64
+    r2=7._f64
   endif
   
   ! mesh type : Collela
@@ -167,7 +178,7 @@ program cg_curvilinear_2D
     bc1_type = PERIODIC_B
     bc2_type = PERIODIC_B
     
-    alpha_mesh = 0.1_f64
+    alpha_mesh = 0.02_f64
   endif
 
   
@@ -184,7 +195,7 @@ program cg_curvilinear_2D
   
   print*,'# Pas en direction eta1: delta_eta1=',delta_eta1
   print*,'# Pas en direction eta2: delta_eta2=',delta_eta2
-  print*,'# carac_case',carac_case
+  print*,'# carac_case', carac_case
   print*,'# grad_case', grad_case
   print*,'# mesh_case', mesh_case
   ! mesh type
@@ -226,6 +237,7 @@ program cg_curvilinear_2D
  
 
 !********************************* 
+
 plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
                   & N_eta1,N_eta2,grad_case,carac_case,bc,bc1_type,bc2_type)
 
@@ -238,37 +250,46 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   SLL_ALLOCATE(phi_exact(N_eta1+1,N_eta2+1),err)
   SLL_ALLOCATE(x1_tab(N_eta1+1,N_eta2+1),err)
   SLL_ALLOCATE(x2_tab(N_eta1+1,N_eta2+1),err)
+  SLL_ALLOCATE(int_r(N_eta2),err)
+  SLL_ALLOCATE(phi_ref(N_eta1+1,N_eta2+1),err)
 !
   step=0 !*****************************$Solution of the poisson equation at t=0
   f=0.0_f64
   f_init=0.0_f64
   fp1=0.0_f64
   phi_exact=0.0_f64
-
   
-  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
-                                     & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
+  
+ !call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
+ !                                     & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
+  call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+           & delta_eta1,delta_eta2,f_case,f,mesh_case,mode,alpha,r1,r2)
   f_init=f
  
-   call system('./quasi_neutre')
+  ! call system('./quasi_neutre')
    !open(unit=29,file='fort.29',position="append")
-   !do j=1,
+ 
    !do i=1,
-  ! read(29,*)  plan_sl%phi(i,j)
-  ! enddo
+  ! read(29,*)  
   ! enddo
  
-  call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,jac_matrix)
-!  call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
- !  plan_sl%phi=phi_exact
- !  plan_sl%adv%field=0
- ! call compute_grad_field(geom_eta,plan_sl%grad,plan_sl%phi,plan_sl%adv%field,bc1_type,bc2_type,N_eta1,N_eta2)
+ !call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array, & 
+ !                    & a1,a2,x1c_r,x2c_r,jac_matrix)
+
+  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+
+!   plan_sl%phi=phi_exact
+!   plan_sl%adv%field=0
+  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field,N_eta1,N_eta2,geom_eta)
 
 !  !write f in a file before calculations
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
 ! !***************************************
-
-
+!!*********Diag: *****
+ call diagnostic_1(f,plan_sl,phi_ref,int_r,bc,eta1_min,eta1_max,delta_eta1,& 
+ & delta_eta2,N_eta1,N_eta2,nb_step,f_case,time_scheme,carac_case,grad_case,mode,& 
+       & l10,l20,e0,dt,alpha,r1,r2)
+!!********
   t1 => start_time_mark(t1)
 !
  do step=1,nb_step
@@ -280,18 +301,21 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
             !classical semi-Lagrangian scheme (order 1)
             call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
                                   & x1_tab,x2_tab,dt)
-            call SL_order_1(plan_sl,f,fp1,jac_array,step,x1_tab,x2_tab,mesh_case)
+            call SL_order_1(plan_sl,f,fp1,jac_array,step,x1_tab,x2_tab& 
+                                  & ,mesh_case,N_eta1,N_eta2,geom_eta)
            
       case(2) 
            !semi-Lagrangian predictor-corrector scheme  
             call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
                                   & x1_tab,x2_tab,dt)
-            call SL_order_2(plan_sl,f,fp1,jac_array,x1_tab,x2_tab,mesh_case)
+            call SL_order_2(plan_sl,f,fp1,jac_array,x1_tab,x2_tab,mesh_case &
+                                  & ,N_eta1,N_eta2,geom_eta)
 
       case(3)
            !leap-frog scheme
              if (step==1) then
-                call SL_order_2(plan_sl,f,fp1,jac_array,x1_tab,x2_tab,mesh_case)
+                call SL_order_2(plan_sl,f,fp1,jac_array,x1_tab,x2_tab,mesh_case,& 
+                                 & N_eta1,N_eta2,geom_eta)
                 plan_sl%adv%dt=2.0_f64*dt
              else 
                !call poisson_solve_curvilinear(plan_sl%poisson,f,plan_sl%phi)
@@ -305,16 +329,23 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
 
     if(bc2_type==PERIODIC_B) fp1(:,N_eta2+1)=fp1(:,1) 
     if(bc1_type==PERIODIC_B) fp1(N_eta1+1,:)=fp1(1,:)
-    
-    
+ 
     f=fp1
-     
-
-    
    
-    if (step/visu_step*visu_step==step) then
+
+     !---> poisson solving
+    call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+  
+    !---> Computation of the field
+    call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field,N_eta1,N_eta2,geom_eta)
+
+    !!**Diag:****
+  call diagnostic_2(f,plan_sl,phi_ref,int_r,eta1_min,eta1_max,delta_eta1,delta_eta2, &
+       & N_eta1,N_eta2,step,l10,l20,e0,mode,dt,alpha)
+   !********
+    if (step==1 .or. step/visu_step*visu_step==step) then
        call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"f")
-    !call plot_f(f,x1n_array,x2n_array,step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
+    call plot_f1(f,x1n_array,x2n_array,step,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
     end if
    
  end do 
@@ -335,6 +366,8 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
 
  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,&
                                     &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
+ ! call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+ !          & delta_eta1,delta_eta2,f_case,f,mesh_case)
     if(bc2_type==PERIODIC_B) f(:,N_eta2+1)=f(:,1) 
     if(bc1_type==PERIODIC_B) f(N_eta1+1,:)=f(1,:)
  !write f_init in a file after calculations
@@ -399,12 +432,13 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  SLL_DEALLOCATE_ARRAY(x1_tab,err)
  SLL_DEALLOCATE_ARRAY(x2_tab,err)
  SLL_DEALLOCATE_ARRAY(phi_exact,err)
+ SLL_DEALLOCATE_ARRAY(phi_ref,err)
+ SLL_DEALLOCATE_ARRAY(int_r,err)
  
  t1 => delete_time_mark(t1)
  t2 => delete_time_mark(t2)
  call delete_SL_curvilinear(plan_sl)
-
-
+ 
 end program cg_curvilinear_2D
 !
 !
