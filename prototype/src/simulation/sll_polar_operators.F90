@@ -6,7 +6,7 @@ module polar_operators
 
   use poisson_polar
   use sll_fft
-  use sll_splines
+  use sll_cubic_splines
   implicit none
 
   !>type plan_polar_op
@@ -15,7 +15,7 @@ module polar_operators
      sll_real64 :: rmin,rmax,dr,dtheta
      sll_int32 :: nr,ntheta
      sll_int32 :: grad_case
-     type(sll_spline_2D), pointer :: spl_phi
+     type(sll_cubic_spline_2D), pointer :: spl_phi
      type(sll_fft_plan), pointer :: pfwd,pinv
      sll_comp64, dimension(:,:), pointer :: grad_fft
   end type plan_polar_op

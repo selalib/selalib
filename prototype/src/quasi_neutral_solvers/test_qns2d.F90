@@ -22,7 +22,7 @@ program test_qns2d
 #include "sll_mesh_types.h"
 #include "sll_remap.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_collective
   use sll_qns2d_with_finite_diff_seq
   use sll_qns2d_with_finite_diff_par

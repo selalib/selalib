@@ -14,6 +14,7 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr")
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -58,74 +59,62 @@ INCLUDE_DIRECTORIES(utilities
                     numerical_utilities 
                     precision 
                     fields 
-                    fft) 
+                    low_level_file_io
+                    fft
+                    maxwell_solvers) 
 ENABLE_TESTING()
 
- ADD_SUBDIRECTORY(memory)
- ADD_SUBDIRECTORY(precision)
- ADD_SUBDIRECTORY(assert)
- ADD_SUBDIRECTORY(constants)
- ADD_SUBDIRECTORY(utilities)
- ADD_SUBDIRECTORY(low_level_file_io)
- ADD_SUBDIRECTORY(timer)
- ADD_SUBDIRECTORY(numerical_utilities)
- ADD_SUBDIRECTORY(non_linear_solvers)
- ADD_SUBDIRECTORY(splines)
- ADD_SUBDIRECTORY(WENO)
- ADD_SUBDIRECTORY(integration)
- ADD_SUBDIRECTORY(fft)
+ADD_SUBDIRECTORY(memory)
+ADD_SUBDIRECTORY(precision)
+ADD_SUBDIRECTORY(assert)
+ADD_SUBDIRECTORY(constants)
+ADD_SUBDIRECTORY(utilities)
+ADD_SUBDIRECTORY(low_level_file_io)
+ADD_SUBDIRECTORY(timer)
+ADD_SUBDIRECTORY(numerical_utilities)
+ADD_SUBDIRECTORY(non_linear_solvers)
+ADD_SUBDIRECTORY(splines)
+ADD_SUBDIRECTORY(lagrange_interpolation)
+ADD_SUBDIRECTORY(WENO)
+ADD_SUBDIRECTORY(integration)
+ADD_SUBDIRECTORY(fft)
+
 IF(FFTPACK_ENABLED)
+
    ADD_SUBDIRECTORY(fftpack)
    ADD_SUBDIRECTORY(periodic_interpolation)
+
 ENDIF()
+
 IF(MPI_MODULE_ENABLED)
+
    ADD_SUBDIRECTORY(collective)
    ADD_SUBDIRECTORY(remap)
+
 ENDIF()
- ADD_SUBDIRECTORY(poisson_solvers)
- ADD_SUBDIRECTORY(quasi_neutral_solvers)
- ADD_SUBDIRECTORY(electric_field_accumulators)
- ADD_SUBDIRECTORY(interpolators)
- ADD_SUBDIRECTORY(mapped_meshes)
- ADD_SUBDIRECTORY(fields)
+
+ADD_SUBDIRECTORY(quasi_neutral_solvers)
+ADD_SUBDIRECTORY(electric_field_accumulators)
+ADD_SUBDIRECTORY(interpolators)
+ADD_SUBDIRECTORY(mapped_meshes)
+ADD_SUBDIRECTORY(fields)
+
 IF(NOT STDF95)
- ADD_SUBDIRECTORY(time_solvers)
-ENDIF(NOT STDF95)
- ADD_SUBDIRECTORY(ode_solvers)
-IF (NOT STDF95)
- ADD_SUBDIRECTORY(distribution_function)
- ADD_SUBDIRECTORY(advection_field)
- ADD_SUBDIRECTORY(LinRood)
-ENDIF(NOT STDF95)
- ADD_SUBDIRECTORY(maxwell_solvers)
- ADD_SUBDIRECTORY(BSL)
-IF(NOT STDF95)
- ADD_SUBDIRECTORY(CSL)
-ENDIF(NOT STDF95)
- ADD_SUBDIRECTORY(selalib_level)
- ADD_SUBDIRECTORY(visu_pic)
- ADD_SUBDIRECTORY(simulation)
 
-##########################################################
+   ADD_SUBDIRECTORY(time_solvers)
+   ADD_SUBDIRECTORY(ode_solvers)
+   ADD_SUBDIRECTORY(distribution_function)
+   ADD_SUBDIRECTORY(advection_field)
+   ADD_SUBDIRECTORY(LinRood)
+   ADD_SUBDIRECTORY(poisson_solvers)
+   ADD_SUBDIRECTORY(maxwell_solvers)
+   ADD_SUBDIRECTORY(BSL)
+   ADD_SUBDIRECTORY(CSL)
+   ADD_SUBDIRECTORY(selalib_level)
+   ADD_SUBDIRECTORY(visu_pic)
+   ADD_SUBDIRECTORY(simulation)
 
-#ADD_SUBDIRECTORY(simulation)
-#IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
-#  SET(PROCS 8)
-#  ADD_TEST(NAME test_vp4d_sim
-#         COMMAND
-#	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-#	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp4d_sim
-#	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-#  SET_TESTS_PROPERTIES(test_vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#  SET(PROCS 16)
-#  ADD_TEST(NAME test_vp6d_sim
-#         COMMAND
-#	 ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-#	 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_vp6d_sim
-#	 ${MPIEXEC_POSTFLAGS} ${ARGS})
-#  SET_TESTS_PROPERTIES(test_vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-#ENDIF()
+ENDIF(NOT STDF95)
 
 ##########################################################
 
@@ -200,8 +189,16 @@ MESSAGE(STATUS "####################  F95  ###################")
 MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
 MESSAGE(STATUS "## advection_field                          ##")
 MESSAGE(STATUS "## Linrood                                  ##")
+MESSAGE(STATUS "## BSL                                      ##")
+MESSAGE(STATUS "## CSL                                      ##")
 MESSAGE(STATUS "## distribution_function                    ##")
+MESSAGE(STATUS "## maxwel_solvers                           ##")
+MESSAGE(STATUS "## ode_solvers                              ##")
+MESSAGE(STATUS "## poisson_solvers                          ##")
 MESSAGE(STATUS "## time_solvers                             ##")
+MESSAGE(STATUS "## selalib_level                            ##")
+MESSAGE(STATUS "## simulation                               ##")
+MESSAGE(STATUS "## visu_pic                                 ##")
 MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
 MESSAGE(STATUS "##############################################")
 ENDIF(STDF95)
