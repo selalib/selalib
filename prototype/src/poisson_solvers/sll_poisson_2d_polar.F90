@@ -64,11 +64,12 @@ contains
     SLL_ALLOCATE(this%a(3*(nr-1)),err)
     SLL_ALLOCATE(this%cts(7*(nr-1)),err)
     SLL_ALLOCATE(this%ipiv(nr-1),err)
-
+    
     this%dr=dr
     this%rmin=rmin
     this%nr=nr
     this%ntheta=ntheta
+
     if (present(bc)) then
       this%bc=bc
     else
@@ -140,7 +141,7 @@ contains
     ntheta = plan%ntheta
     rmin   = plan%rmin
     dr     = plan%dr
-
+    
     bc         = plan%bc
     plan%f_fft = f
 

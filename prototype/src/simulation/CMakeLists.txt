@@ -94,13 +94,15 @@ target_link_libraries( test_vp1d_fourier_fem
 ## for cg2d_curvilinear branch begin
 
 add_executable( test_cg_curvilinear CG_Curvilinear_2D.F90 )
-
+add_dependencies( test_cg_curvilinear sll_low_level_file_io)
 target_link_libraries( test_cg_curvilinear
   sll_simulation_1d
   sll_tridiagonal
   sll_splines
+  sll_poisson_2d_polar
   sll_fft
   sll_constants
+  sll_numerical_utilities
   sll_utilities
   sll_low_level_file_io
   sll_timer
