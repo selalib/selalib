@@ -2,8 +2,8 @@ module sll_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_misc_utils.h"
-  use numeric_constants
+#include "sll_utilities.h"
+  use sll_constants
   use fft_utils
   implicit none
   

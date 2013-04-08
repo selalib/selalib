@@ -1,4 +1,4 @@
-module sll_misc_utils
+module sll_utilities
 #include "sll_working_precision.h"
   implicit none
 !  intrinsic :: selected_int_kind ! this line gives an error, why?
@@ -51,7 +51,6 @@ contains
     end if
   end function is_even
 
-
   subroutine int2string( istep, cstep )
     integer, intent(in) :: istep
     character(len=4), intent(out) :: cstep
@@ -70,4 +69,31 @@ contains
 
   end subroutine int2string
 
-end module sll_misc_utils
+!> Get a file unit number free before creating a file
+  subroutine sll_new_file_id(file_id, error)
+   
+    sll_int32, intent(out) :: error     !< error code
+    sll_int32, intent(out) :: file_id   !< file unit number
+    logical                :: lopen    
+      
+    error=1
+
+    do 100 file_id=20,99
+  
+       inquire(unit=file_id,opened=lopen)
+       if(lopen) then
+          cycle
+       else
+          open(file_id,status='SCRATCH',err=100)
+          close(file_id,status='DELETE',err=100)
+          error=0
+          exit
+       end if
+ 
+    100 continue
+
+    !SLL_ASSERT(error == 0)
+   
+  end subroutine sll_new_file_id
+
+end module sll_utilities

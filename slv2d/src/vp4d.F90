@@ -7,7 +7,7 @@ program vp4d
 use sll_collective
 use remapper
 use sll_poisson_2d_periodic
-use numeric_constants
+use sll_constants
 use sll_cubic_spline_interpolator_1d
 
 

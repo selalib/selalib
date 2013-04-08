@@ -10,7 +10,7 @@ module sll_csl
 !#include "sll_mesh_types.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
+  use sll_constants
   !use sll_splines
   use cubic_non_uniform_splines
   use ode_solvers
