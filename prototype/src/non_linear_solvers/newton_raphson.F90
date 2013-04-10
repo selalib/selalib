@@ -116,7 +116,7 @@ contains
     if (present(tolx)) then
        tolf_local = tolf
     else
-       tolf_local = 1.e-44
+       tolf_local = epsilon(1.0_f64)
     endif
   
     ! Initialization

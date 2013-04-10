@@ -1,5 +1,5 @@
-program misc_utils_tester
-#include "misc_utils.h"
+program utils_tester
+#include "sll_utilities.h"
 #include "sll_working_precision.h"
   implicit none
 
@@ -53,4 +53,4 @@ program misc_utils_tester
      print *, 'FAILED TEST'
   end if
 
-end program misc_utils_tester
+end program utils_tester

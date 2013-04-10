@@ -8,6 +8,8 @@ module sll_module_mapped_meshes_1d
   ! in the subclass in the F95 case
   ! (it's define in the abstract class in the 2003 case)
   use sll_io
+  use sll_xdmf
+  use sll_gnuplot
 #else 
   use sll_module_interpolators_1d_base
   use sll_module_mapped_meshes_1d_base

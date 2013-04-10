@@ -16,10 +16,10 @@ ENDIF()
 
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
   set(FFT_SRC sll_fft_mod_through_fftpack.F90)
-  set(DEPENDENCIES fftpack_module ${DEPENDENCIES})
+  set(DEPENDENCIES ${DEPENDENCIES} fftpack_module)
   add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
 ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
-  set(FFT_SRC sll_fft_mod_through_fftw.F90)
+  set(FFT_SRC sll_fft_mod_through_legacy_fftw.F90)
   add_definitions(-D_DEFAULTFFTLIB=FFTW_MOD)
 ELSE()
   set(FFT_SRC sll_fft_selalib_implementation.F90)
@@ -45,4 +45,3 @@ target_link_libraries(test_fft
 	sll_fft
 	${DEPENDENCIES}
 )
-

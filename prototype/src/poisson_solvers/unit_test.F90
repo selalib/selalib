@@ -24,7 +24,7 @@ program test_poisson_solvers
 #include "sll_poisson_solvers.h"
 #include "sll_remap.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_poisson_1d_periodic
   use sll_poisson_2d_periodic
   use sll_poisson_3d_periodic_seq
@@ -260,5 +260,5 @@ contains
 
   end subroutine test_poisson_3d
 
-end program test_poisson_solvers
 
+end program test_poisson_solvers

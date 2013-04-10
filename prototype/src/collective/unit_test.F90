@@ -5,15 +5,26 @@ program collective_test
   implicit none
   intrinsic :: int
 
+  ! NOTE: some poor choices were made when implementing this test. For example,
+  ! the sendbuf, recvbuf, etc. arrays are continually allocated and 
+  ! deallocated throughout for each individual function test. While this is
+  ! OK and probably necessary, things get complicated when doing these
+  ! allocations/deallocations by hand and without documenting why some choices
+  ! of sizes were made. Some compilers, like gfortran do not seem to care if
+  ! some of these arrays are not allocated if they don't play an active role,
+  ! like the send buffers in the receiving process of a gather operation, but
+  ! an Intel compiler will complain...
   sll_int32 :: rank, size, i, ierr
   LOGICAL, DIMENSION(1) :: logic,logic2
   sll_real32, ALLOCATABLE, DIMENSION(:) :: somme
 
   sll_real32, allocatable, dimension(:) :: sendbuf_real, recvbuf_real
-  sll_int32, allocatable, dimension(:) :: sendbuf_int, recvbuf_int
+  sll_int32, allocatable, dimension(:) :: sendbuf_int!, recvbuf_int
+  sll_int32, pointer, dimension(:) :: recvbuf_int
   logical, allocatable, dimension(:) :: sendbuf_log, recvbuf_log
   sll_int32, allocatable, dimension(:) :: sendcounts, recvcounts
   sll_int32, allocatable, dimension(:) :: sdispls, rdispls
+  
 
   call sll_boot_collective()
   rank = sll_get_collective_rank( sll_world_collective )
@@ -168,11 +179,15 @@ program collective_test
   if(rank==0) print *,'-----------------------------'  
   call sll_collective_barrier(sll_world_collective)
 
+  SLL_ALLOCATE(sendbuf_real(size),ierr)
+
   if(rank==0) then
-   SLL_ALLOCATE(sendbuf_real(size),ierr)
-   sendbuf_real(:)=(/(0.+i,i=0,size-1)/)
-   !PRINT *,'(SCATTER REAL) ', 'Me, process ',rank,'send the values : ',send_buf
+     ! Intel compilers complain if only process 0 allocates the send_buffer
+     !   SLL_ALLOCATE(sendbuf_real(size),ierr)
+     sendbuf_real(:)=(/(0.+i,i=0,size-1)/)
+     !PRINT *,'(SCATTER REAL) ', 'Me, process ',rank,'send the values : ',send_buf
   endif
+
   SLL_ALLOCATE(recvbuf_real(1),ierr)
   SLL_ALLOCATE(somme(1),ierr)
   
@@ -253,8 +268,9 @@ program collective_test
 
   if(rank==0) then
    print *,'-----------------------------'
-   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
+!   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   endif
+   SLL_DEALLOCATE_ARRAY(sendbuf_real,ierr)
   call sll_collective_barrier(sll_world_collective)
 !___________________________________________________________________
 
@@ -279,6 +295,9 @@ program collective_test
     recvcounts(2:size)=1
   else
     SLL_ALLOCATE(sendbuf_real(1),ierr)
+    SLL_ALLOCATE(recvbuf_real(size),ierr) 
+    SLL_ALLOCATE(recvcounts(size),ierr)
+    SLL_ALLOCATE(sdispls(size),ierr)
     sendbuf_real(:)=rank
     sendcounts(1)=1
   endif
@@ -305,19 +324,20 @@ program collective_test
 
   if(rank==0) then
    print *,'-----------------------------'
-   SLL_DEALLOCATE_ARRAY(sdispls,ierr)
-   SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
-   SLL_DEALLOCATE_ARRAY(recvcounts,ierr)
   endif
+
   call sll_collective_barrier(sll_world_collective)
 
+  SLL_DEALLOCATE_ARRAY(recvbuf_real,ierr)
   SLL_ALLOCATE(sendbuf_real(2),ierr)
   SLL_ALLOCATE(recvbuf_real(size*2),ierr)
+  SLL_DEALLOCATE_ARRAY(recvcounts,ierr)
+   SLL_DEALLOCATE_ARRAY(sdispls,ierr)
   sendbuf_real(:)=(/ rank*2. , rank*2. + 1.0 /)
   !PRINT *,'(GATHER) ', 'Me, process ', rank, 'send the values : ', sendbuf_real, &
   !         'to the process 0'
   
-  call sll_collective_gather_real( sll_world_collective, sendbuf_real, 2, 0,&
+  call sll_collective_gather( sll_world_collective, sendbuf_real, 2, 0,&
                                   recvbuf_real )
 
   SLL_ALLOCATE(somme(1),ierr)
