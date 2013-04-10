@@ -1,10 +1,14 @@
 module sll_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 #ifndef STDF95
   use sll_module_interpolators_2d_base
 #endif
-  use sll_splines
+  use sll_cubic_splines
+
   implicit none
+
+  sll_int32, private                               :: i,j
 
   ! The spline-based interpolator is only a wrapper around the capabilities
   ! of the cubic splines. All interpolators share a common interface with
@@ -14,11 +18,14 @@ module sll_cubic_spline_interpolator_2d
 #ifdef STDF95
   type                                :: cubic_spline_2d_interpolator
 #else
-  type, extends(interpolator_2d_base) :: cubic_spline_2d_interpolator
+  type, extends(sll_interpolator_2d_base) :: cubic_spline_2d_interpolator
 #endif
-     sll_int32                    :: npts1
-     sll_int32                    :: npts2
-     type(sll_spline_2D), pointer :: spline
+     sll_int32                           :: npts1
+     sll_int32                           :: npts2
+     type(sll_cubic_spline_2D), pointer        :: spline
+     sll_int32                           :: bc_type1
+     sll_int32                           :: bc_type2
+     sll_real64, dimension(:,:), pointer :: interpolation_points 
 #ifdef STDF95
 #else
    contains
@@ -27,6 +34,8 @@ module sll_cubic_spline_interpolator_2d
      procedure :: interpolate_value => interpolate_value_cs2d
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs2d
      procedure :: interpolate_derivative_eta2 => interpolate_deriv2_cs2d
+     procedure, pass:: interpolate_array => spline_interpolate2d
+     procedure, pass:: interpolate_array_disp => spline_interpolate2d_disp
 #endif
   end type cubic_spline_2d_interpolator
 
@@ -86,6 +95,8 @@ contains
 
     interpolator%npts1 = npts1
     interpolator%npts2 = npts2
+    interpolator%bc_type1 = eta1_bc_type
+    interpolator%bc_type2 = eta2_bc_type
     interpolator%spline => new_spline_2D( &
          npts1, &
          npts2, &
@@ -152,7 +163,148 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+
     val = interpolate_x2_derivative_2D(eta1,eta2,interpolator%spline)
+
   end function
+
+#ifdef STDF95
+  function cubic_spline_interpolate_array(this, num_points1, num_points2, data_in, &
+                                eta1, eta2) &
+       result(data_out)
+    type(cubic_spline_2d_interpolator),  intent(in)       :: this
+#else
+  function spline_interpolate2d(this, num_points1, num_points2, data_in, &
+                                eta1, eta2) &
+       result(data_out)
+
+    class(cubic_spline_2d_interpolator),  intent(in) :: this
+#endif
+    sll_int32,  intent(in)                           :: num_points1
+    sll_int32,  intent(in)                           :: num_points2
+    sll_real64, dimension(:,:), intent(in)           :: eta1
+    sll_real64, dimension(:,:), intent(in)           :: eta2
+    sll_real64, dimension(:,:), intent(in)           :: data_in
+    sll_real64, dimension(num_points1,num_points2)   :: data_out
+    ! local variables
+    sll_int32 :: i,j
+    ! compute the interpolating spline coefficients
+    call compute_spline_2D( data_in, this%spline )
+    do j = 1, num_points2
+    do i = 1, num_points1
+#ifdef STDF95
+        data_out(i,j) = cubic_spline_interpolate_value(this,eta1(i,j),eta2(i,j))     
+#else
+        data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
+#endif
+    end do
+    end do
+
+  end function !spline_interpolate2d
+
+#ifdef STDF95
+
+  function cubic_spline_interpolate2d_disp(this,        &
+                                           num_points1, &
+                                           num_points2, &
+                                           data_in,     &
+                                           alpha1,      &
+                                           alpha2) result(data_out)
+
+    type(cubic_spline_2d_interpolator), intent(in) :: this
+
+#else
+
+  function spline_interpolate2d_disp(this,        &
+                                     num_points1, &
+                                     num_points2, &
+                                     data_in,     &
+                                     alpha1,      &
+                                     alpha2) result(data_out)
+
+    class(cubic_spline_2d_interpolator),  intent(in) :: this
+
+#endif
+
+    sll_int32,  intent(in)                         :: num_points1
+    sll_int32,  intent(in)                         :: num_points2
+    sll_real64, dimension(:,:), intent(in)         :: alpha1
+    sll_real64, dimension(:,:), intent(in)         :: alpha2
+    sll_real64, dimension(:,:), intent(in)         :: data_in
+    sll_real64, dimension(num_points1,num_points2) :: data_out
+    sll_real64                                     :: eta1
+    sll_real64                                     :: eta1_min
+    sll_real64                                     :: eta1_max
+    sll_real64                                     :: delta_eta1
+    sll_real64                                     :: eta2
+    sll_real64                                     :: eta2_min
+    sll_real64                                     :: eta2_max
+    sll_real64                                     :: delta_eta2
+
+    eta1_min   = this%spline%x1_min 
+    eta1_max   = this%spline%x1_max 
+    eta2_min   = this%spline%x2_min 
+    eta2_max   = this%spline%x2_max 
+    delta_eta1 = this%spline%x1_delta  
+    delta_eta2 = this%spline%x2_delta  
+    
+    call compute_spline_2D( data_in, this%spline )
+
+    if(this%bc_type1 == PERIODIC_SPLINE .and. &
+       this%bc_type2 == PERIODIC_SPLINE ) then
+       
+       do j = 1, num_points2
+       do i = 1, num_points1
+          eta1 = eta1_min + (i-1)*delta_eta1
+          eta2 = eta2_min + (j-1)*delta_eta2
+          eta1 = eta1_min + modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
+          eta2 = eta2_min + modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
+#ifdef STDF95
+          data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+#else
+          data_out(i,j) = this%interpolate_value(eta1,eta2)
+#endif
+       end do
+       end do
+
+    else if(this%bc_type1 == HERMITE_SPLINE .and. &
+            this%bc_type2 == HERMITE_SPLINE ) then
+       
+       do j = 1, num_points2
+       do i = 1, num_points1
+          eta1 = eta1_min + (i-1)*delta_eta1
+          eta2 = eta2_min + (j-1)*delta_eta2
+          eta1 = min(eta1,eta1_max)
+          eta2 = min(eta2,eta2_max)
+          eta1 = max(eta1,eta1_min)
+          eta2 = max(eta2,eta2_min)
+#ifdef STDF95
+          data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+#else
+          data_out(i,j) = this%interpolate_value(eta1,eta2)
+#endif
+       end do
+       end do
+
+    else
+
+       do j = 1, num_points2
+       do i = 1, num_points1
+          eta1 = eta1_min + (i-1)*delta_eta1 - alpha1(i,j)
+          eta2 = eta2_min + (j-1)*delta_eta2 - alpha2(i,j)
+          SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
+          SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
+#ifdef STDF95
+          data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+#else
+          data_out(i,j) = this%interpolate_value(eta1,eta2)
+#endif
+       end do
+       end do
+
+    end if
+
+  end function !spline_interpolate2d_disp
+
 
 end module sll_cubic_spline_interpolator_2d

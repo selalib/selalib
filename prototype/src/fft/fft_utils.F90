@@ -1,6 +1,6 @@
 module fft_utils
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
   implicit none

@@ -1,50 +1,51 @@
 module mgd3
+#include "sll_working_precision.h"
 use mpi 
-#include "mgd3.h"
 implicit none
 
-   integer, dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
-   integer, dimension(20)   :: kpbgn,kcbgn
-   integer, dimension(7,20) :: kdatatype
-   integer, dimension(20)   :: sxi,exi,syi,eyi,szi,ezi
-   integer, dimension(20)   :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
-   integer, dimension(7,20) :: rdatatype
-   integer, parameter :: iout=60
+#include "mgd3.h"
+
+   sll_int32 , dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
+   sll_int32 , dimension(20)   :: kpbgn,kcbgn
+   sll_int32 , dimension(7,20) :: kdatatype
+   sll_int32 , dimension(20)   :: sxi,exi,syi,eyi,szi,ezi
+   sll_int32 , dimension(20)   :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
+   sll_int32 , dimension(7,20) :: rdatatype
+   sll_int32 , parameter :: iout=60
 
    type, public :: block
-      integer :: id
-      integer :: sx, ex
-      integer :: sy, ey
-      integer :: sz, ez
-      integer :: ixp, jyq, kzr
-      integer :: iex, jey, kez
-      integer :: ngrid
-      integer :: neighbor(26),bd(26)
+      sll_int32  :: id
+      sll_int32  :: sx, ex
+      sll_int32  :: sy, ey
+      sll_int32  :: sz, ez
+      sll_int32  :: ixp, jyq, kzr
+      sll_int32  :: iex, jey, kez
+      sll_int32  :: ngrid
+      sll_int32  :: neighbor(26),bd(26)
    end type block
 
    type, public :: mg_solver
-      integer :: nx, ny, nz
-      integer :: ibdry
-      integer :: jbdry
-      integer :: kbdry
-      integer :: nxprocs
-      integer :: nyprocs
-      integer :: nzprocs
-      real(8) :: vbc(6),phibc(6,20)
-      integer :: comm3d,comm3dp,comm3dl,comm3dc
-      real(8) :: tolmax
-      real(8) :: xl,yl,zl
-      integer :: maxcy, kcycle, iprer, ipost, iresw
-      integer :: isol
+      sll_int32  :: nx, ny, nz
+      sll_int32  :: ibdry
+      sll_int32  :: jbdry
+      sll_int32  :: kbdry
+      sll_int32  :: nxprocs
+      sll_int32  :: nyprocs
+      sll_int32  :: nzprocs
+      sll_real64 :: vbc(6),phibc(6,20)
+      sll_int32  :: comm3d,comm3dp,comm3dl,comm3dc
+      sll_real64 :: tolmax
+      sll_real64 :: xl,yl,zl
+      sll_int32  :: maxcy, kcycle, iprer, ipost, iresw
+      sll_int32  :: isol
    end type mg_solver
 
-   real(8), private, allocatable :: work(:)
+   sll_real64, private, allocatable :: work(:)
 
    private grid1_type
-   real(8), parameter, private :: rro=1.0d0
+   sll_real64, parameter, private :: rro=1.0d0
 
 contains
-
 
 subroutine initialize(my_block,my_mg,nerror)
 
@@ -664,7 +665,8 @@ integer :: gtype(7),realtype,sx,ex,sy,ey,sz,ez
 ! Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR,
 !             MPI_TYPE_EXTENT, MPI_TYPE_HVECTOR
 !------------------------------------------------------------------------
-integer :: i,ierr
+integer :: ierr
+INTEGER(KIND=MPI_ADDRESS_KIND) :: i, LB
 
 realtype = MPI_REAL8
 
@@ -691,8 +693,29 @@ call MPI_TYPE_COMMIT(gtype(6),ierr)
 !------------------------------------------------------------------------
 ! datatype for one i=const plane
 !
-call MPI_TYPE_EXTENT(realtype,i,ierr)
-call MPI_TYPE_HVECTOR(ez-sz+1,1,(ex-sx+3)*(ey-sy+3)*i,gtype(5),gtype(1),ierr)
+!MPI_TYPE_EXTENT(DATATYPE, EXTENT, IERROR)
+!    INTEGER    DATATYPE, EXTENT, IERROR
+!call MPI_TYPE_EXTENT(realtype,i,ierr)
+
+!MPI_TYPE_GET_EXTENT(DATATYPE, LB, EXTENT, IERROR)
+!    INTEGER    DATATYPE, IERROR
+!    INTEGER(KIND=MPI_ADDRESS_KIND) LB, EXTENT
+
+call MPI_TYPE_GET_EXTENT(realtype, LB, i, IERR)
+
+!MPI_TYPE_HVECTOR(COUNT, BLOCKLENGTH, STRIDE, OLDTYPE, NEWTYPE,
+!        IERROR)
+!    INTEGER    COUNT, BLOCKLENGTH, STRIDE, OLDTYPE
+!    INTEGER    NEWTYPE, IERROR
+!call MPI_TYPE_HVECTOR(ez-sz+1,1,(ex-sx+3)*(ey-sy+3)*i,gtype(5),gtype(1),ierr)
+
+!MPI_TYPE_CREATE_HVECTOR(COUNT, BLOCKLENGTH, STRIDE, OLDTYPE,
+!    NEWTYPE, IERROR)
+!    INTEGER    COUNT, BLOCKLENGTH, OLDTYPE, NEWTYPE, IERROR
+!    INTEGER(KIND=MPI_ADDRESS_KIND) STRIDE
+
+call MPI_TYPE_CREATE_HVECTOR(ez-sz+1,1,(ex-sx+3)*(ey-sy+3)*i,gtype(5),gtype(1),ierr)
+
 call MPI_TYPE_COMMIT(gtype(1),ierr)
 !
 ! datatype for one j=const plane

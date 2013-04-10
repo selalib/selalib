@@ -3,14 +3,14 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-#include "sll_remap.h"
+#include "sll_utilities.h"
   use sll_collective
-  use numeric_constants
+  use remapper
+  use sll_constants
   use sll_cubic_spline_interpolator_1d
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
-  use sll_electric_field_2d_accumulator
   use sll_simulation_base
   implicit none
 
@@ -25,8 +25,9 @@ module sll_simulation_4d_vlasov_poisson_cartesian
      sll_int32  :: nproc_x2
      sll_int32  :: nproc_x3
      sll_int32  :: nproc_x4 
-     ! Physics parameters
+     ! Physics/numerical parameters
      sll_real64 :: dt
+     sll_int32  :: num_iterations
      ! Mesh parameters
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
@@ -56,25 +57,26 @@ module sll_simulation_4d_vlasov_poisson_cartesian
      type(layout_2D), pointer :: rho_seq_x1
      type(layout_2D), pointer :: rho_seq_x2
      type(layout_2D), pointer :: split_rho_layout ! not sequential in any dir.
-     type(remap_plan_2D), pointer :: split_to_seqx1
-     type(remap_plan_2D), pointer :: seqx1_to_seqx2
+     type(remap_plan_2D_real64), pointer :: split_to_seqx1
+     type(remap_plan_2D_real64), pointer :: seqx1_to_seqx2
      ! remaps for the electric field data
 !     type(remap_plan_2D), pointer :: efld_split_to_seqx1
-     type(remap_plan_2D), pointer :: efld_seqx1_to_seqx2
-     type(remap_plan_2D), pointer :: efld_seqx2_to_split
-     type(remap_plan_4D), pointer :: seqx1x2_to_seqx3x4
-     type(remap_plan_4D), pointer :: seqx3x4_to_seqx1x2
+     type(remap_plan_2D_comp64), pointer :: efld_seqx1_to_seqx2
+     type(remap_plan_2D_comp64), pointer :: efld_seqx2_to_split
+     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
+     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
      type(cubic_spline_1d_interpolator) :: interp_x1
      type(cubic_spline_1d_interpolator) :: interp_x2
      type(cubic_spline_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! Field accumulator
-     type(efield_2d_point), dimension(:,:), allocatable :: efield_x1
-     type(efield_2d_point), dimension(:,:), allocatable :: efield_x2
-     type(efield_2d_point), dimension(:,:), allocatable :: efield_split
+     sll_comp64, dimension(:,:), allocatable :: efield_x1
+     sll_comp64, dimension(:,:), allocatable :: efield_x2
+     sll_comp64, dimension(:,:), allocatable :: efield_split
    contains
      procedure, pass(sim) :: run => run_vp4d_cartesian
+     procedure, pass(sim) :: init_from_file => init_vp4d_par_cart
   end type sll_simulation_4d_vlasov_poisson_cart
 
   interface delete
@@ -83,11 +85,46 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 
 contains
 
+  subroutine init_vp4d_par_cart( sim, filename )
+    intrinsic :: trim
+    class(sll_simulation_4d_vlasov_poisson_cart), intent(inout) :: sim
+    character(len=*), intent(in)                                :: filename
+    sll_int32             :: IO_stat
+    sll_real64            :: dt
+    sll_int32             :: number_iterations
+    sll_int32             :: num_cells_x1
+    sll_int32             :: num_cells_x2
+    sll_int32             :: num_cells_x3
+    sll_int32             :: num_cells_x4
+    sll_int32, parameter  :: input_file = 99
+
+    namelist /sim_params/ dt, number_iterations
+    namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3, num_cells_x4
+    ! Try to add here other parameters to initialize the mesh values like
+    ! xmin, xmax and also for the distribution function initializer.
+    open(unit = input_file, file=trim(filename),IOStat=IO_stat)
+    if( IO_stat /= 0 ) then
+       print *, 'init_vp4d_par_cart() failed to open file ', filename
+       STOP
+    end if
+    read(input_file, sim_params)
+    read(input_file,grid_dims)
+    close(input_file)
+
+    sim%dt = dt
+    sim%num_iterations = number_iterations
+    ! In this particular simulation, since the system is periodic, the number
+    ! of points is the same as the number of cells in all directions.
+    sim%nc_x1 = num_cells_x1
+    sim%nc_x2 = num_cells_x2
+    sim%nc_x3 = num_cells_x3
+    sim%nc_x4 = num_cells_x4
+  end subroutine init_vp4d_par_cart
+
 
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here
   ! directly, but this should be cleaned up.
-
   subroutine run_vp4d_cartesian(sim)
     class(sll_simulation_4d_vlasov_poisson_cart), intent(inout) :: sim
     sll_int32  :: loc_sz_x1
@@ -104,10 +141,9 @@ contains
     sll_int32  :: itemp
     sll_int32  :: ierr
     sll_int32  :: itime
-    sll_int32  :: num_iterations  ! this should go in the simulation type
+    sll_real64 :: ex
+    sll_real64 :: ey
 
-    sim%dt = 0.01 ! should be initialized elsewhere
-    num_iterations = 20
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
@@ -117,14 +153,6 @@ contains
     sim%rho_seq_x1       => new_layout_2D( sll_world_collective )
     sim%rho_seq_x2       => new_layout_2D( sll_world_collective )
     sim%split_rho_layout => new_layout_2D( sll_world_collective )
-
-    ! In this particular simulation, since the system is periodic, the number
-    ! of points is the same as the number of cells in all directions. This
-    ! is hardwired here but should be initialized somewhere else.
-    sim%nc_x1 = 32 
-    sim%nc_x2 = 32
-    sim%nc_x3 = 32
-    sim%nc_x4 = 32
 
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
@@ -307,7 +335,7 @@ contains
     ! Re-arrange rho_split in a way that permits sequential operations in x1, to
     ! feed to the Poisson solver.
     sim%split_to_seqx1 => &
-         NEW_REMAP_PLAN_2D(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
+         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
     
     ! We are in a position now to compute the electric potential.
@@ -340,9 +368,9 @@ contains
     ! note that we are 'recycling' the layouts used for the other arrays because
     ! they represent an identical configuration.
     sim%efld_seqx1_to_seqx2 => &
-         NEW_REMAP_PLAN_2D( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
+         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
     sim%seqx1_to_seqx2 => &
-         NEW_REMAP_PLAN_2D( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
+         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
     call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
     call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
     call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
@@ -356,7 +384,7 @@ contains
     ! But now, to make the electric field data configuration compatible with
     ! the sequential operations in x2x3 we need still another remap operation.
     sim%efld_seqx2_to_split => &
-         NEW_REMAP_PLAN_2D( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
+         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
     call apply_remap_2D( &
          sim%efld_seqx2_to_split, &
          sim%efield_x2, &
@@ -407,25 +435,39 @@ contains
     ! ------------------------------------------------------------------------
 
        sim%seqx3x4_to_seqx1x2 => &
-           NEW_REMAP_PLAN_4D(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
+           NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
 
        sim%seqx1x2_to_seqx3x4 => &
-           NEW_REMAP_PLAN_4D(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
+           NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
 
-    do itime=1, num_iterations
-       ! Carry out a 'dt/2' advection in the velocities.
-       ! Start with vx...(x3)
+    do itime=1, sim%num_iterations
+       ! The splitting scheme used here is meant to attain a dt^2 accuracy.
+       ! We use:
+       !
+       ! dt/2 in vx
+       ! dt/2 in vy
+       ! dt/4 in vx
+       ! dt/2 in y
+       ! dt   in x
+       ! dt/2 in y
+       ! dt/4 in vx
+       ! dt/2 in vy
+       !
+       ! Note that two dt/4 in vx have been joined in the first step.
+
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
+       ! Start with dt/2 in vx...(x3)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do l=1,sim%mesh4d%num_cells4
-                alpha = -sim%efield_split(i,j)%ex*0.5_f64*sim%dt
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      sim%nc_x3, &
@@ -435,11 +477,12 @@ contains
           end do
        end do
 
-       ! Continue with vy...(x4)
+       ! dt/2 in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do k=1,sim%mesh4d%num_cells3
-                alpha = -sim%efield_split(i,j)%ey*0.5_f64*sim%dt
+                ey    = aimag(sim%efield_split(i,j))
+                alpha = -ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      sim%nc_x4, &
@@ -449,40 +492,38 @@ contains
           end do
        end do
 
+       ! dt/4 in vx:
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do l=1,sim%mesh4d%num_cells4
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.25_f64*sim%dt
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                     sim%nc_x3, &
+                     sim%f_x3x4(i,j,:,l), &
+                     alpha )
+             end do
+          end do
+       end do
+
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
-       ! Reconfigure data (remember to initialize the remap plan elsewhere):
+       ! Reconfigure data. 
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
-       
-       ! full time step advection in 'x' (x1)
-       do l=1,loc_sz_x4
-          do k=1,loc_sz_x3
-             do j=1,sim%mesh4d%num_cells2
-                vmin = sim%mesh4d%x3_min
-                delta = sim%mesh4d%delta_x3
-                alpha = (vmin + (j-1)*delta)*sim%dt
-                call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
-                ! interpolate_array_disp() has an interface that must be changed
-                sim%f_x1x2(:,j,k,l) = sim%interp_x1%interpolate_array_disp( &
-                     sim%nc_x1, &
-                     sim%f_x1x2(:,j,k,l), &
-                     alpha )
-             end do
-          end do
-       end do
-       
-       ! full time step advection in 'y' (x2)
+
+       ! dt/2 in 'y' (x2)
        do l=1,loc_sz_x4
           do k=1,loc_sz_x3
              do i=1,sim%mesh4d%num_cells1
                 vmin = sim%mesh4d%x4_min
                 delta = sim%mesh4d%delta_x4
-                alpha = (vmin + (j-1)*delta)*sim%dt
-                call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
+                alpha = (vmin + (l-1)*delta)*sim%dt*0.5_f64
+                !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
                      sim%nc_x2, &
@@ -492,12 +533,81 @@ contains
           end do
        end do
        
-       ! Compute the fields:
-       ! 1. Reconfigure data for sequential operations in x3 and x4 in order
-       !    to compute the charge density.
-       ! 2. Compute charge density.
-       ! 3. Reconfigure charge density to feed to Poisson solver
+       ! dt in 'x' (x1)
+       do l=1,loc_sz_x4
+          do k=1,loc_sz_x3
+             do j=1,sim%mesh4d%num_cells2
+                vmin = sim%mesh4d%x3_min
+                delta = sim%mesh4d%delta_x3
+                alpha = (vmin + (k-1)*delta)*sim%dt
+                !call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x1x2(:,j,k,l) = sim%interp_x1%interpolate_array_disp( &
+                     sim%nc_x1, &
+                     sim%f_x1x2(:,j,k,l), &
+                     alpha )
+             end do
+          end do
+       end do
+       
+       ! dt/2 in 'y' (x2)
+       do l=1,loc_sz_x4
+          do k=1,loc_sz_x3
+             do i=1,sim%mesh4d%num_cells1
+                vmin = sim%mesh4d%x4_min
+                delta = sim%mesh4d%delta_x4
+                alpha = (vmin + (l-1)*delta)*sim%dt*0.5_f64
+                !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
+                     sim%nc_x2, &
+                     sim%f_x1x2(i,:,k,l), &
+                     alpha )
+             end do
+          end do
+       end do
+       
+       ! And reconfigure the data for the last set of advections in vx and vy.
+       ! This will also help for the calculation of the charge density later
+       ! on.
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
+
+       call compute_local_sizes_4d( sim%sequential_x3x4, &
+            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+
+       ! dt/4 in vx
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do l=1,sim%mesh4d%num_cells4
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.25_f64*sim%dt
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                     sim%nc_x3, &
+                     sim%f_x3x4(i,j,:,l), &
+                     alpha )
+             end do
+          end do
+       end do
+
+       ! dt/2 in vy...(x4)
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do k=1,sim%mesh4d%num_cells3
+                ey    = aimag(sim%efield_split(i,j))
+                alpha = -ey*0.5_f64*sim%dt
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                     sim%nc_x4, &
+                     sim%f_x3x4(i,j,k,:), &
+                     alpha )
+             end do
+          end do
+       end do
+
+       ! Compute the fields:
+       ! 1. Compute charge density.
+       ! 2. Reconfigure charge density to feed to Poisson solver
        
        call compute_charge_density( &
             sim%mesh4d, &
@@ -562,7 +672,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do l=1,sim%mesh4d%num_cells4
-                alpha = -sim%efield_split(i,j)%ex*0.5_f64*sim%dt
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      sim%nc_x3, &
@@ -576,7 +687,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do k=1,sim%mesh4d%num_cells3
-                alpha = -sim%efield_split(i,j)%ey*0.5_f64*sim%dt
+                ey    = real(sim%efield_split(i,j),f64)
+                alpha = -ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      sim%nc_x4, &
@@ -585,12 +697,9 @@ contains
              end do
           end do
        end do
-       
-       ! Diagnostics here... PIERRE!!!
+       call plot_fields(itime, sim)
 
     end do ! main loop
-
-    
   end subroutine run_vp4d_cartesian
 
   subroutine delete_vp4d_par_cart( sim )
@@ -650,7 +759,7 @@ contains
     sll_int32 :: i, j, k, l
     
     delta4   = mesh%delta_x4
-    delta4   = mesh%delta_x3
+    delta3   = mesh%delta_x3
     partial(:,:,:) = 0.0
     numpts3 = mesh%num_cells3
     numpts4 = mesh%num_cells4
@@ -726,15 +835,17 @@ contains
        num_pts_x2, &
        delta_x1, &
        efield_x1 )
-    
+
+    intrinsic                               :: cmplx
     sll_real64, dimension(:,:), intent(in)  :: phi_x1
     sll_int32, intent(in)                   :: num_pts_x1
     sll_int32, intent(in)                   :: num_pts_x2
     sll_real64, intent(in)                  :: delta_x1
-    type(efield_2d_point), dimension(:,:), intent(out) :: efield_x1
+    sll_comp64, dimension(:,:), intent(out) :: efield_x1
     sll_int32                               :: i
     sll_int32                               :: j
     sll_real64                              :: r_delta
+    sll_real64                              :: ex
     ! FIXME: arg checking
     
     r_delta = 1.0_f64/delta_x1
@@ -742,23 +853,32 @@ contains
     ! Compute the electric field values on the left and right edges.
     do j=1,num_pts_x2
        ! left:
-       efield_x1(1,j)%ex = r_delta*( -1.5_f64*phi_x1(1,j) + &
-            2.0_f64*phi_x1(2,j) - &
-            0.5_f64*phi_x1(3,j) )
+       ex = r_delta*(-1.5_f64*phi_x1(1,j) + &
+                      2.0_f64*phi_x1(2,j) - &
+                      0.5_f64*phi_x1(3,j) )
+       efield_x1(1,j) = cmplx(ex,f64)  
        ! right:
-       efield_x1(num_pts_x1,j)%ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
-            2.0_f64*phi_x1(num_pts_x1-1,j)+&
-            1.5_f64*phi_x1(num_pts_x1,j) )
+       ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
+                     2.0_f64*phi_x1(num_pts_x1-1,j)+&
+                     1.5_f64*phi_x1(num_pts_x1,j) )
+       efield_x1(num_pts_x1,j) = cmplx(ex,f64) 
     end do
     
     ! Electric field in interior points
     do j=1,num_pts_x2
        do i=2, num_pts_x1-1
-          efield_x1(i,j)%ex = r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
+          ex = r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
+          efield_x1(i,j) = cmplx(ex,f64)
        end do
     end do
   end subroutine compute_electric_field_x1
   
+  ! This function only sets the Ey component of the electric field. NOTE: This
+  ! and the above function have a terrible flaw: they are not independent. 
+  ! compute_electric_field_x2 assumes that compute_electric_field_x1 has been
+  ! called first, thus the ex values have been computed. 
+  ! compute_electric_field_x1() does not have a similar assumption. It would
+  ! be good to change things in order to get rid of these functions.
   subroutine compute_electric_field_x2( &
        phi_x2, &
        num_pts_x1, &
@@ -766,15 +886,18 @@ contains
        delta_x2, &
        efield_x2 )
     
+    intrinsic                               :: cmplx
     sll_real64, dimension(:,:), intent(in)  :: phi_x2
     sll_int32, intent(in)                   :: num_pts_x1
     sll_int32, intent(in)                   :: num_pts_x2
     sll_real64, intent(in)                  :: delta_x2
-    type(efield_2d_point), dimension(:,:), intent(out) :: efield_x2
+    sll_comp64, dimension(:,:), intent(out) :: efield_x2
     sll_int32                               :: i
     sll_int32                               :: j
     sll_real64                              :: r_delta
-    
+    sll_real64                              :: ex
+    sll_real64                              :: ey
+
     ! FIXME: arg checking
     
     r_delta = 1.0_f64/delta_x2
@@ -782,19 +905,25 @@ contains
     ! Compute the electric field values on the bottom and top edges.
     do i=1,num_pts_x1
        ! bottom:
-       efield_x2(i,1)%ey = r_delta*(-1.5_f64*phi_x2(i,1) + &
-            2.0_f64*phi_x2(i,2) - &
-            0.5_f64*phi_x2(i,3))
+       ! ... there has to be a better way to do this in fortran :-(
+       ex = real(efield_x2(i,1),f64)
+       ey = r_delta*(-1.5_f64*phi_x2(i,1) + 2.0_f64*phi_x2(i,2) - &
+                      0.5_f64*phi_x2(i,3))
+       efield_x2(i,1) = cmplx(ex,ey,f64)
        ! top:
-       efield_x2(i,num_pts_x1)%ey = r_delta*(0.5_f64*phi_x2(i,num_pts_x1-2)-&
-            2.0_f64*phi_x2(i,num_pts_x1-1)+&
-            1.5_f64*phi_x2(i,num_pts_x1))
+       ex = real(efield_x2(i,num_pts_x1),f64)
+       ey = r_delta*(0.5_f64*phi_x2(i,num_pts_x1-2) - &
+                     2.0_f64*phi_x2(i,num_pts_x1-1)+&
+                     1.5_f64*phi_x2(i,num_pts_x1))
+       efield_x2(i,num_pts_x1) = cmplx(ex,ey,f64) 
     end do
     
     ! Electric field in interior points
     do j=2,num_pts_x2-1
        do i=1, num_pts_x1
-          efield_x2(i,j)%ey = r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
+          ex = real(efield_x2(i,j),f64)
+          ey = r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
+          efield_x2(i,j) = cmplx(ex,ey,f64) 
        end do
     end do
   end subroutine compute_electric_field_x2
@@ -833,5 +962,159 @@ contains
        f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
     end do
   end subroutine advection_v_1d
+
+  subroutine plot_fields(itime, sim)
+    use sll_collective
+    use hdf5
+    use sll_hdf5_io_parallel
+    use sll_xml_io
+    sll_int32, intent(in) :: itime
+    character(len=4)      :: ctime
+    sll_int32             :: i_layout
+    character(len=1)      :: c_layout
+    class(sll_simulation_4d_vlasov_poisson_cart), intent(in) :: sim
+    type(layout_2D), pointer :: my_layout
+    character(len=7),  parameter :: hdf_file = "data.h5"  ! File name
+    sll_real64 :: tcpu1, tcpu2
+    sll_int32  :: my_rank
+    sll_int32  :: world_size
+    sll_int32  :: local_nx1
+    sll_int32  :: local_nx2
+    sll_int32  :: global_nx1
+    sll_int32  :: global_nx2
+    sll_int32  :: error
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: gi
+    sll_int32  :: gj
+    sll_int32,  dimension(2) :: global_indices
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_real64 :: x1_min
+    sll_real64 :: x1_max
+    sll_real64 :: x2_min
+    sll_real64 :: x2_max
+    sll_real64 :: x3_min
+    sll_real64 :: x3_max
+    sll_real64 :: x4_min
+    sll_real64 :: x4_max
+    sll_real64 :: delta_x1
+    sll_real64 :: delta_x2
+    sll_real64 :: delta_x3
+    sll_real64 :: delta_x4 
+
+    integer(HID_T)                  :: hdf_file_id
+    sll_int32                       :: xml_file_id
+    integer(HSIZE_T), dimension(2)  :: array_dims 
+    integer(HSSIZE_T), dimension(2) :: offset 
+
+    array_dims(1) = sim%nc_x1
+    array_dims(2) = sim%nc_x2
+    world_size    = sll_get_collective_size(sll_world_collective)
+    my_rank       = sll_get_collective_rank(sll_world_collective)
+
+    tcpu1 = MPI_WTIME()
+
+    do i_layout = 1, 2
+
+       if (i_layout == 1) then
+          my_layout => sim%rho_seq_x1
+       else
+          my_layout => sim%rho_seq_x2
+       end if
+
+       call compute_local_sizes_2d( my_layout, local_nx1, local_nx2)        
+    
+       offset(1) =  get_layout_2D_i_min( my_layout, my_rank ) - 1
+       offset(2) =  get_layout_2D_j_min( my_layout, my_rank ) - 1
+
+       if (itime == 1) then
+
+          SLL_ALLOCATE(x1(local_nx1,local_nx2),error)
+          SLL_ALLOCATE(x2(local_nx1,local_nx2),error)
+       
+          x1_min = sim%mesh4d%x1_min
+          x1_max = sim%mesh4d%x1_max
+          x2_min = sim%mesh4d%x2_min
+          x2_max = sim%mesh4d%x2_max
+          x3_min = sim%mesh4d%x3_min
+          x3_max = sim%mesh4d%x3_max
+          x4_min = sim%mesh4d%x4_min
+          x4_max = sim%mesh4d%x4_max
+   
+          delta_x1 = sim%mesh4d%delta_x1
+          delta_x2 = sim%mesh4d%delta_x2
+          delta_x3 = sim%mesh4d%delta_x3
+          delta_x4 = sim%mesh4d%delta_x4
+   
+          do j = 1, local_nx2
+             do i = 1, local_nx1
+                global_indices =  local_to_global_2D( my_layout, (/i, j/) )
+                gi = global_indices(1)
+                gj = global_indices(2)
+                x1(i,j) = x1_min + (gi-1._f64)*delta_x1
+                x2(i,j) = x2_min + (gj-1._f64)*delta_x2
+             end do
+          end do
+       
+          call sll_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",hdf_file_id,error)
+          call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
+          call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x2,"x2",error)
+          call sll_hdf5_file_close(hdf_file_id,error)
+
+          deallocate(x1)
+          deallocate(x2)
+
+       end if
+
+       call int2string(itime, ctime)
+       c_layout = char(i_layout+48)
+
+       call sll_hdf5_file_create("fields_x"//c_layout//"-"//ctime//".h5", &
+                                 hdf_file_id,error)
+
+       if (i_layout == 1) then
+          call sll_hdf5_write_array(hdf_file_id,array_dims,offset,sim%rho_x1, &
+                                    "rho_x"//c_layout,error)
+          call sll_hdf5_write_array(hdf_file_id,array_dims,offset,sim%phi_x1, &
+                                    "phi_x"//c_layout,error)
+       else
+          call sll_hdf5_write_array(hdf_file_id,array_dims,offset,sim%rho_x2, &
+                                    "rho_x"//c_layout,error)
+          call sll_hdf5_write_array(hdf_file_id,array_dims,offset,sim%phi_x2, &
+                                    "phi_x"//c_layout,error)
+       end if
+
+       call sll_hdf5_file_close(hdf_file_id,error)
+   
+       if (my_rank == 0) then
+          
+          !Conversion int64 -> int32
+          global_nx1 = transfer(array_dims(1),global_nx1)
+          global_nx2 = transfer(array_dims(2),global_nx2)
+       
+          call sll_xml_file_create("fields_x"//c_layout//"-"//ctime//".xmf", &
+                                   xml_file_id,error)
+          call sll_xml_grid_geometry(xml_file_id,          &
+                                  "mesh_x"//c_layout//"_seq.h5",global_nx1, &
+                                  "mesh_x"//c_layout//"_seq.h5",global_nx2, &
+                                  "x1", "x2" )
+          call sll_xml_field(xml_file_id,'rho_x'//c_layout,  &
+                             "fields_x"//c_layout//"-"//ctime//".h5:/rho_x"//c_layout, &
+                             global_nx1, global_nx2,'HDF','Node')
+          call sll_xml_field(xml_file_id,'phi_x'//c_layout,  &
+                             "fields_x"//c_layout//"-"//ctime//".h5:/phi_x"//c_layout, &
+                          global_nx1, global_nx2,'HDF','Node')
+          call sll_xml_file_close(xml_file_id,error)
+
+       end if
+
+   end do
+
+   tcpu2 = MPI_WTIME()
+   !if (my_rank == 0) &
+   !   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
+  
+  end subroutine plot_fields
 
 end module sll_simulation_4d_vlasov_poisson_cartesian

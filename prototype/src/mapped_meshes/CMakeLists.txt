@@ -1,11 +1,8 @@
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic ${CMAKE_Fortran_FLAGS}")
-ENDIF()
-
 IF(STDF95)
  add_library(sll_mapped_meshes STATIC
 	sll_mapped_meshes_1d.F90
 	sll_mapped_meshes_2d.F90
+	sll_mapped_meshes_2d_cartesian.F90
   )
 ELSE()
  add_library(sll_mapped_meshes STATIC
@@ -19,10 +16,11 @@ ENDIF()
 add_dependencies(sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
-	sll_utilities
 	sll_constants
 	sll_low_level_file_io
+	sll_utilities
 	sll_memory
 	sll_assertion
 	sll_working_precision
@@ -33,10 +31,11 @@ target_link_libraries(test_mapped_meshes_1d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
-	sll_utilities
 	sll_constants
 	sll_low_level_file_io
+	sll_utilities
 	sll_memory
 	sll_assertion
 	sll_working_precision
@@ -47,6 +46,7 @@ target_link_libraries(test_mapped_meshes_2d
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_utilities
 	sll_constants
@@ -62,6 +62,7 @@ IF(NOT STDF95)
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
+        sll_numerical_utilities	
 	geometry_functions
 	sll_utilities
 	sll_constants

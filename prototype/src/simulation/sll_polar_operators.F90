@@ -6,7 +6,7 @@ module polar_operators
 
   use poisson_polar
   use sll_fft
-  use sll_splines
+  use sll_cubic_splines
   implicit none
 
   !>type plan_polar_op
@@ -15,9 +15,9 @@ module polar_operators
      sll_real64 :: rmin,rmax,dr,dtheta
      sll_int32 :: nr,ntheta
      sll_int32 :: grad_case
-     type(sll_spline_2D), pointer :: spl_phi
+     type(sll_cubic_spline_2D), pointer :: spl_phi
      type(sll_fft_plan), pointer :: pfwd,pinv
-     sll_comp64, dimension(:,:), allocatable :: grad_fft
+     sll_comp64, dimension(:,:), pointer :: grad_fft
   end type plan_polar_op
 
 contains
@@ -119,7 +119,7 @@ contains
 
     implicit none
 
-    type(plan_polar_op), intent(inout), pointer :: plan
+    type(plan_polar_op), pointer              :: plan
     sll_real64, dimension(:,:), intent(inout) :: phi
     !phi is inout because when I wrote the code it needed to be inout in fft_apply_plan
     sll_real64, dimension(:,:,:), intent(out) :: grad_phi
@@ -152,7 +152,7 @@ contains
 !!$          grad_phi(1,1,j)=0.0_f64
 !!$          grad_phi(1,nr+1,j)=0.0_f64
           grad_phi(1,1,j)=(phi(2,j)-phi(1,j))/dr
-          grad_phi(1,nr+1,j)=(phi(nr,j)-phi(nr+1,j))/dr
+          grad_phi(1,nr+1,j)=(phi(nr+1,j)-phi(nr,j))/dr
 !!$          grad_phi(1,1,j)=-(1.5_f64*phi(1,j)-2.0_f64*phi(2,j)+0.5_f64*phi(3,j))/dr
 !!$          grad_phi(1,nr+1,j)=-(1.5_f64*phi(nr+1,j)-2.0_f64*phi(nr,j)+0.5_f64*phi(nr-1,j))/dr
           grad_phi(2,1,j)=(phi(1,modulo(j+1-1+ntheta,ntheta)+1)-phi(1,modulo(j-1-1+ntheta,ntheta)+1))/(2*dtheta)
@@ -212,6 +212,8 @@ contains
 
     grad_phi(:,:,ntheta+1)=grad_phi(:,:,1)
 
+    !print *,sum(abs(phi(2,:)-phi(1,:)))
+    !print *,'#',sum(abs(grad_phi(1,1,:))),sum(abs(phi(1,:)))
   end subroutine compute_grad_field
 
 
@@ -224,9 +226,9 @@ contains
 
     implicit none
 
-    type(plan_polar_op), intent(in), pointer :: plan
+    type(plan_polar_op), pointer             :: plan
     sll_real64, dimension(:,:,:), intent(in) :: field
-    sll_real64, dimension(:,:), intent(out) :: div
+    sll_real64, dimension(:,:), intent(out)  :: div
 
     sll_real64 :: dr,dtheta,rmin,rmax
     sll_int32 :: nr,ntheta

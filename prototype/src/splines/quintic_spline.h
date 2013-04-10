@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "toep_penta_diagonal.h"
+#include "toeplitz_penta_diagonal.h"
 
 typedef struct quintic_spline
 

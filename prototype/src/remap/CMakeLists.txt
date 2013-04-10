@@ -8,16 +8,6 @@ add_dependencies(sll_remap
   sll_working_precision
   )
 
-# test remap 3d
-add_executable(test_remap unit_test.F90)
-target_link_libraries(test_remap
-	sll_remap
-	sll_utilities
-	sll_collective
-	sll_memory
-	sll_assertion
-	sll_working_precision
-)
 
 #test remap 2d
 add_executable(test_remap_2d unit_test_2d.F90)
@@ -30,7 +20,16 @@ target_link_libraries(test_remap_2d
 	sll_working_precision
 )
 
-#test remap 4d
+add_executable(test_remap_3d unit_test_3d.F90)
+target_link_libraries(test_remap_3d
+	sll_remap
+	sll_utilities
+	sll_collective
+	sll_memory
+	sll_assertion
+	sll_working_precision
+)
+
 add_executable(test_remap_4d unit_test_4d.F90)
 target_link_libraries(test_remap_4d
 	sll_remap
@@ -41,9 +40,17 @@ target_link_libraries(test_remap_4d
 	sll_working_precision
 )
 
+add_executable(test_remap_6d unit_test_6d.F90)
+target_link_libraries(test_remap_6d
+	sll_remap
+	sll_collective
+	sll_utilities
+	sll_memory
+	sll_assertion
+	sll_working_precision
+)
 
-
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_DEPENDENCIES(sll_remap sll_low_level_file_io_parallel)
    TARGET_LINK_LIBRARIES(sll_remap ${HDF5_LIBRARIES})
@@ -57,3 +64,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 	                                    sll_assertion
 	                                    sll_working_precision)
 ENDIF()
+
+
+

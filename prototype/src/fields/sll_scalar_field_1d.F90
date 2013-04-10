@@ -33,14 +33,15 @@ module sll_scalar_field_1d
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_io
-  use numeric_constants
+  use sll_constants
+  use sll_scalar_field_initializers_base
   use sll_module_mapped_meshes_1d_base
-  use sll_misc_utils
+  use sll_utilities
   implicit none
-
-  enum, bind(C)
-     enumerator :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
-  end enum
+  
+  !I removed this line because, it not exists in 2d version
+  !should be in base module
+  !integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
   type scalar_field_1d
      class(sll_mapped_mesh_1d_base), pointer :: mesh
@@ -57,7 +58,7 @@ module sll_scalar_field_1d
      end function scalar_function_1D
   end interface
 
-contains   ! *****************************************************************  
+contains   ! *i****************************************************************  
   ! this used to be new_scalar_field_1d
   subroutine initialize_scalar_field_1d( &
     this, &
@@ -67,10 +68,10 @@ contains   ! *****************************************************************
     init_function)
 
     class(scalar_field_1d), intent(inout)               :: this
-    character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_1d_base), pointer             :: mesh
-    sll_int32, intent(in)                               :: data_position
     procedure(scalar_function_1D), optional             :: init_function
+    character(len=*), intent(in)                        :: field_name
+    sll_int32, intent(in)                               :: data_position
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_pts1
@@ -117,20 +118,20 @@ contains   ! *****************************************************************
     SLL_DEALLOCATE(this%data, ierr)
   end subroutine delete_scalar_field_1d
 
+
   subroutine write_scalar_field_1d( &
     scalar_field, &
     multiply_by_jacobian, &
     output_file_name, &
     output_format)
-
     class(scalar_field_1d)                  :: scalar_field
+    !sll_real64, dimension(:), pointer      :: x1_array
     logical, optional                       :: multiply_by_jacobian 
     sll_int32, optional                     :: output_format 
     character(len=*), optional              :: output_file_name
     character(len=64)                       :: file_name
 
     sll_int32                               :: error
-    sll_real64, dimension(:), allocatable   :: x1_array 
 
     if(present(multiply_by_jacobian))then
       print*,'multiply_by_jacobian option is not implemented'

@@ -10,18 +10,13 @@ module sll_csl
 !#include "sll_mesh_types.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
+  use sll_constants
   !use sll_splines
-  use cubic_nonuniform_splines
+  use cubic_non_uniform_splines
   use ode_solvers
   use distribution_function
   implicit none
-  enum, bind(C)
-     enumerator :: PERIODIC = 0, COMPACT = 1
-  end enum
-
-
-
+  integer, parameter :: PERIODIC = 0,COMPACT = 1
 
   type csl_workspace
      type (cubic_nonunif_spline_1D), pointer :: spl_eta1
@@ -51,10 +46,17 @@ contains
     SLL_ALLOCATE(new_csl_workspace,ierr)
 
     ! get dimensions
+#ifdef STDF95
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
+    eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D%extend_type )
+    eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D%extend_type )
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
+#else
     nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
     eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D )
     eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D )
     nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+#endif
     eta2_min   = 0._f64!get_df_eta2_min( dist_func_2D )
     eta2_max   = 1._f64!get_df_eta2_max( dist_func_2D )
     boundary1_type = COMPACT!get_df_boundary1_type( dist_func_2D )
@@ -189,12 +191,21 @@ contains
     SLL_ASSERT(associated(advfield_new))
 
     ! get dimensions
+#ifdef STDF95
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
+    delta_eta1 = GET_FIELD_DELTA_ETA1( dist_func_2D%extend_type )
+    eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D%etend_type )
+    eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D%extend_type )
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
+    delta_eta2 = GET_FIELD_DELTA_ETA2( dist_func_2D%extend_type )
+#else
     nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
     delta_eta1 = GET_FIELD_DELTA_ETA1( dist_func_2D )
     eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D )
     eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D )
     nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
     delta_eta2 = GET_FIELD_DELTA_ETA2( dist_func_2D )
+#endif
     eta2_min   = 0._f64!get_df_eta2_min( dist_func_2D )
     eta2_max   = 1._f64!get_df_eta2_max( dist_func_2D )
     boundary1_type = COMPACT!get_df_boundary1_type( dist_func_2D )
@@ -207,7 +218,11 @@ contains
     SLL_ALLOCATE(jacobian(nc_eta1+1),ierr)
 
     !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+#ifdef STDF95
+    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D%extend_type )
+#else
     df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+#endif
     !do i2=1,nc_eta2
     !  do i1=1,nc_eta1
     !    df_jac_at_i(i1,i2) = FIELD_2D_JACOBIAN_AT_I( dist_func_2D ,i1,i2)
@@ -273,7 +288,11 @@ endif
           end if
           ! compute primitive of distribution function along this line
           primitive1 ( i1 ) = primitive1 ( i1-1 ) &
+#ifdef STDF95
+               + delta_eta1 * FIELD_2D_AT_I( dist_func_2D%extend_type, i1-1, i2 )
+#else
                + delta_eta1 * FIELD_2D_AT_I( dist_func_2D, i1-1, i2 )
+#endif
           eta1 = eta1 + delta_eta1
           jacobian(i1) = df_jac_at_i( i1-1, i2 )
        end do
@@ -354,12 +373,21 @@ endif
     SLL_ASSERT(associated(advfield_new))
 
     ! get dimensions
+#ifdef STDF95
+    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
+    delta_eta1 = GET_FIELD_DELTA_ETA1( dist_func_2D%extend_type )
+    eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D%extend_type )
+    eta1_max   = 1._f64!get_df_eta1_max( dist_func_2Dextend_type )
+    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
+    delta_eta2 = GET_FIELD_DELTA_ETA2( dist_func_2D%extend_type )
+#else
     nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
     delta_eta1 = GET_FIELD_DELTA_ETA1( dist_func_2D )
     eta1_min   = 0._f64!get_df_eta1_min( dist_func_2D )
     eta1_max   = 1._f64!get_df_eta1_max( dist_func_2D )
     nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
     delta_eta2 = GET_FIELD_DELTA_ETA2( dist_func_2D )
+#endif
     eta2_min   = 0._f64!get_df_eta2_min( dist_func_2D )
     eta2_max   = 1._f64!get_df_eta2_max( dist_func_2D )
     boundary2_type = PERIODIC!get_df_boundary2_type( dist_func_2D )
@@ -371,11 +399,20 @@ endif
     SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta2+1),ierr)
 
+#ifdef STDF95
+    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D%extend_type )
+    !x1c_at_i => get_df_x1c_at_i( dist_func_2D%extend_type )        
+    !x2c_at_i => get_df_x2c_at_i( dist_func_2D%extend_type )
+    x1c_at_i => FIELD_X1_CELL( dist_func_2D%extend_type )
+    x2c_at_i => FIELD_X2_CELL( dist_func_2D%extend_type )
+#else
     df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
     !x1c_at_i => get_df_x1c_at_i( dist_func_2D )        
     !x2c_at_i => get_df_x2c_at_i( dist_func_2D )
     x1c_at_i => FIELD_X1_CELL( dist_func_2D )
     x2c_at_i => FIELD_X2_CELL( dist_func_2D )
+#endif
+
     
     ! advection along the second direction
     eta1 = eta1_min + 0.5_f64*delta_eta1 ! cell centered
@@ -433,7 +470,11 @@ endif
           end if
           ! compute primitive of distribution function along this line
           primitive2 (i2) = primitive2 (i2-1) &
+#ifdef STDF95
+               + delta_eta2 * FIELD_2D_AT_I( dist_func_2D%extend_type, i1, i2-1 )
+#else
                + delta_eta2 * FIELD_2D_AT_I( dist_func_2D, i1, i2-1 )
+#endif
           jacobian(i2) = df_jac_at_i( i1, i2-1 )
        end do
        !i2 = nc_eta2+1
@@ -486,11 +527,16 @@ endif
                                     boundary_type, &
                                     spline,        &
                                     xi_out)  
-    sll_real64, dimension(:), pointer, intent(inout) :: primitive
-    sll_real64, dimension(:), pointer, intent(in)    :: fieldn
-    sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
-    sll_real64, dimension(:), pointer, intent(in)    :: jacobian
-    sll_real64, dimension(:), allocatable            :: xi
+!    sll_real64, dimension(:), pointer, intent(inout) :: primitive
+!    sll_real64, dimension(:), pointer, intent(in)    :: fieldn
+!    sll_real64, dimension(:), pointer, intent(in)    :: fieldnp1
+!    sll_real64, dimension(:), pointer, intent(in)    :: jacobian
+!    sll_real64, dimension(:), allocatable            :: xi
+    sll_real64, dimension(:), pointer                :: primitive
+    sll_real64, dimension(:), pointer                :: fieldn
+    sll_real64, dimension(:), pointer                :: fieldnp1
+    sll_real64, dimension(:), pointer                :: jacobian
+    sll_real64, dimension(:), pointer                :: xi
     sll_int32, intent(in)                            :: order
     sll_real64, intent(in)                           :: deltat
     sll_int32, intent(in)                            :: nc_eta
