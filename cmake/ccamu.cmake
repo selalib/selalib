@@ -1,0 +1,8 @@
+SET(CMAKE_Fortran_COMPILER  "/softs/intel/composer_xe_2011_sp1.6.233/bin/intel64/ifort")
+SET(FFTW_INCLUDE_DIRS  "/softs/fftw/intel/3.3/include")
+SET(FFTW_LIBRARY  "/softs/fftw/intel/3.3/lib/libfftw3.a")
+SET(HDF5_C_LIBRARY  "/softs/hdf5/intel/1.8.8/lib/libhdf5.a")
+SET(HDF5_FORTRAN_LIBRARY  "/softs/hdf5/intel/1.8.8/lib/libhdf5_fortran.a")
+SET(HDF5_INCLUDE_DIRS  "/softs/hdf5/intel/1.8.8/include")
+SET(MPI_Fortran_COMPILER "/softs/mpich2/intel/1.4.1/bin/mpif90")
+SET(MPIEXEC "/softs/mpich2/intel/1.4.1/bin/mpirun")

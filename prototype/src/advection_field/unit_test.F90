@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-  use numeric_constants
+  use sll_constants
   use sll_advection_field
   use sll_module_mapped_meshes_2d
   use sll_module_mapped_meshes_1d
@@ -14,21 +14,19 @@ program unit_test
   type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
   class(sll_mapped_mesh_2d_base), pointer      :: pm2d
   class(sll_mapped_mesh_1d_base), pointer      :: pm1d
-  class(scalar_field_2d_initializer_base), pointer    :: pfinit
+  !class(scalar_field_2d_initializer_base), pointer    :: pfinit
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   type(hamiltonian_advection_field_2d)         :: adv_field
   type(sll_mapped_mesh_1d_analytic), target    :: mesh1d
   type(scalar_field_1d)                        :: phi_self
   character(len=32)                            :: name = 'adv_field'
-  character(len=4)                             :: cstep
 
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
 
 
-  sll_int32                                    :: ierr, istep
-  sll_int32                                    :: ix, iv, nnode_x1, nnode_v1
+  sll_int32                                    :: ix
   sll_int32, parameter                         :: NODE_CENTERED_FIELD_COPY = 0
 
   nc_eta1 = 100

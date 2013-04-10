@@ -9,7 +9,7 @@ use remapper
 use sll_module_interpolators_2d_base
 use sll_cubic_spline_interpolator_2d
 use sll_poisson_2d_periodic
-use sll_maxwell
+use sll_maxwell_solvers
 use sll_maxwell_2d_pstd
 
 

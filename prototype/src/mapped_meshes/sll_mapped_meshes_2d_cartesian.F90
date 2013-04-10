@@ -153,12 +153,12 @@ contains
 
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: delta_2  ! cell spacing in eta2 
-    sll_real64 :: eta_1
-    sll_real64 :: eta_2
-    sll_real64 :: jacobian_val
-    sll_int32  :: i
-    sll_int32  :: j
-    sll_int32  :: ierr
+    !sll_real64 :: eta_1
+    !sll_real64 :: eta_2
+    !sll_real64 :: jacobian_val
+    !sll_int32  :: i
+    !sll_int32  :: j
+    !sll_int32  :: ierr
 
     mesh%label   = trim(label)
     mesh%nc_eta1 = npts1-1
@@ -198,10 +198,10 @@ contains
 #endif
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64             :: j11
-    sll_real64             :: j12
-    sll_real64             :: j21
-    sll_real64             :: j22
+    !sll_real64             :: j11
+    !sll_real64             :: j12
+    !sll_real64             :: j21
+    !sll_real64             :: j22
    
 #ifdef STDF95
     mapped_mesh_2d_cartesian_jacobian_matrix(1,1) = mesh%l1

@@ -1,7 +1,14 @@
-
-module physical_constants
+module sll_constants
 #include "sll_working_precision.h"
+
   implicit none
+
+
+  sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64
+  ! sll_kx is the fundamental mode in the x-direction. 
+  ! It should be set at mesh initialization
+  sll_real64            :: sll_kx = 2*sll_pi 
+
 
   sll_real64, parameter :: sll_c = 2.99792458D8            ! speed of light in vacuum (def) m/s  
   sll_real64, parameter :: sll_epsilon_0 = 8.854187817D-12 ! permittivity of free space F/m      
@@ -11,4 +18,4 @@ module physical_constants
   sll_real64, parameter :: sll_proton_mass = 1.6726231D-27 ! proton mass (10) kg                    
   sll_real64, parameter :: sll_g = 9.80665D0               ! standard grav. accel., sea level m/s^2 
 
-end module physical_constants
+end module sll_constants
