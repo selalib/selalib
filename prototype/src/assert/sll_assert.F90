@@ -2,7 +2,7 @@
 ! SELALIB
 !------------------------------------------------------------------------------
 !
-! MODULE: sll_assertion
+! MODULE: sll_assert
 !
 !> @author
 !> Module Author Name and Affiliation
@@ -19,7 +19,7 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 
-module sll_assertion
+module sll_assert
   implicit none
 
 contains
@@ -41,7 +41,7 @@ contains
    !> @param[in] line line number of the call
    !---------------------------------------------------------------------------
 
-subroutine sll_assert(msg, file, line)
+subroutine sll_assertion(msg, file, line)
   intrinsic :: trim
   character(len=*), intent(in) :: msg
   character(len=*), intent(in) :: file
@@ -50,6 +50,6 @@ subroutine sll_assert(msg, file, line)
   write(local_line, '(i8)') line ! hoping that I could trim this later, but no..
   write (*,'(a, a, a, a, a)') msg, ': Assertion error triggered in file ', file, ' in line ', trim(local_line)
   stop ':  ASSERTION FAILURE'
-end subroutine sll_assert
+end subroutine sll_assertion
 
-end module sll_assertion
+end module sll_assert

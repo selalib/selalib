@@ -2,10 +2,11 @@ module sll_module_mapped_meshes_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_io.h"
+
   use sll_splines
 #ifdef STDF95
   use sll_cubic_spline_interpolator_2d
-  use sll_io
   use sll_xdmf
   use sll_gnuplot
 #else
@@ -488,9 +489,8 @@ contains
 
     if ( .not. mesh%written ) then
 
-       select case(local_format)
+       if (local_format == SLL_IO_XDMF) then
 
-       case (SLL_IO_XDMF)
           SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
           SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
           eta1 = 0.0_f64
@@ -510,11 +510,11 @@ contains
           call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
 
-       case default
+       else
           print*, 'Not recognized format to write this mesh'
           stop
 
-       end select
+       end if
 
     else
 
@@ -963,9 +963,7 @@ contains
 
     if ( .not. mesh%written ) then
 
-       select case(local_format)
-
-       case (SLL_IO_XDMF)
+       if (local_format == SLL_IO_XDMF) then
           SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
           SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
           eta1 = 0.0_f64
@@ -985,11 +983,11 @@ contains
           call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
 
-       case default
+       else
           print*, 'Not recognized format to write this mesh'
           stop
 
-       end select
+       end if
 
     else
 

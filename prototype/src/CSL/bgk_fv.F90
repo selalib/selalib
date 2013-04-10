@@ -3,7 +3,7 @@ module finite_volume
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   !use utils
   implicit none
@@ -11,7 +11,7 @@ module finite_volume
 contains 
 subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -607,7 +607,7 @@ program bgk_fv
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use distribution_function
   use sll_diagnostics
   use sll_csl
@@ -1469,7 +1469,7 @@ program bgk_fv
 end program
 
 subroutine Compute_flux2(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
-  use numeric_constants
+  use sll_constants
   implicit none
   
   
@@ -2175,7 +2175,7 @@ end subroutine compute_flux2
 
 subroutine compute_psi2(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -2683,7 +2683,7 @@ end subroutine compute_psi2
 
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -2720,7 +2720,7 @@ end subroutine poisson1dpertrap
 
 
 subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
-  use numeric_constants
+  use sll_constants
   implicit none
   
   
