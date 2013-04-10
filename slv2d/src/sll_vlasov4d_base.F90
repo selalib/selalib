@@ -123,7 +123,7 @@ contains
 
  subroutine free_vlasov4d_base(this)
 
-  class(vlasov4d_base),intent(out) :: this
+  class(vlasov4d_base),intent(inout) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)
