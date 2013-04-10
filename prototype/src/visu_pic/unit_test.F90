@@ -2,9 +2,9 @@ program test_visu_pic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-use numeric_constants
+use sll_constants
 use sll_visu_pic
-use sll_misc_utils
+use sll_utilities
 use biot_savart
 
 implicit none

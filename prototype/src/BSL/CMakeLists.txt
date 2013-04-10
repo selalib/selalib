@@ -55,7 +55,7 @@ IF(NOT STDF95)
 
       ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
       ADD_DEPENDENCIES(bsl_landau_2d ${BSL_LIB_DEPS})
-      TARGET_LINK_LIBRARIES(bsl_landau_2d ${BSL_LIB_DEPS} sll_maxwell ${FFTW_LIBRARIES})
+      TARGET_LINK_LIBRARIES(bsl_landau_2d ${BSL_LIB_DEPS} sll_maxwell_solvers ${FFTW_LIBRARIES})
 
    ENDIF()
 

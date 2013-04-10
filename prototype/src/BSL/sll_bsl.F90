@@ -3,7 +3,7 @@ module sll_bsl
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use numeric_constants
+use sll_constants
 use sll_splines
 
 implicit none
