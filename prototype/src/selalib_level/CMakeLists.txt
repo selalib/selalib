@@ -61,18 +61,10 @@ SET(SLL_SOURCE_FILES
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES} selalib.F90)
 
-SET(SLL_MODULES
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/selalib.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_memory.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_working_precision.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_assert.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_utilities.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_constants.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_maxwell_solvers.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_poisson_solvers.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_interpolators.mod
-	 ${CMAKE_Fortran_MODULE_DIRECTORY}/sll_splines.mod
-	)
+FILE(GLOB SLL_MODULES "${CMAKE_Fortran_MODULE_DIRECTORY}/sll_*.mod")
+
+SET(SLL_MODULES ${CMAKE_Fortran_MODULE_DIRECTORY}/selalib.mod
+	             ${SLL_MODULES})
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h ${SLL_INCLUDE_FILES}
         DESTINATION include)
