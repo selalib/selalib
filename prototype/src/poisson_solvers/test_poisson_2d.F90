@@ -2,20 +2,14 @@ program test_poisson_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_2d.h"
 #include "sll_poisson_solvers.h"
 
-   !-------------------------------------------------------------------
-   !  test 2D Poisson solver based on FFT
-   !-------------------------------------------------------------------
-
-   use numeric_constants
+   use sll_constants
    use sll_poisson_2D_periodic
    use geometry_functions
+
    use sll_module_mapped_meshes_2d_base
    use sll_module_mapped_meshes_2d_cartesian
-   use sll_scalar_field_2d
-   use sll_scalar_field_initializers_base
 
    implicit none
 
@@ -25,13 +19,7 @@ program test_poisson_2d
 
    type (sll_mapped_mesh_2d_cartesian), target :: mesh
    class(sll_mapped_mesh_2d_base), pointer     :: m
-!   type (scalar_field_2d)                      :: ex
-!   type (scalar_field_2d)                      :: ey
-!   type (scalar_field_2d)                      :: ex_exact
-!   type (scalar_field_2d)                      :: ey_exact
-!   type (scalar_field_2d)                      :: rho
-!   type (scalar_field_2d)                      :: phi
-!   type (scalar_field_2d)                      :: phi_exact
+
    sll_real64, dimension(:,:),allocatable      :: ex
    sll_real64, dimension(:,:),allocatable      :: ey
    sll_real64, dimension(:,:),allocatable      :: ex_exact
@@ -56,27 +44,6 @@ program test_poisson_2d
    call mesh%write_to_file()
    m => mesh
 
-!   call initialize_scalar_field_2d( rho, "rho", &
-!                                    m, NODE_CENTERED_FIELD)
-!
-!   call initialize_scalar_field_2d( phi, "phi", &
-!                                    m, NODE_CENTERED_FIELD)
-!
-!   call initialize_scalar_field_2d( phi_exact, "phi_exact", &
-!                                    m, NODE_CENTERED_FIELD)
-!
-!   call initialize_scalar_field_2d( ex, "ex", &
-!                                    m, NODE_CENTERED_FIELD)
-!
-!   call initialize_scalar_field_2d( ex_exact, "ex_exact", &
-!                                    m, NODE_CENTERED_FIELD)
-!
-!   call initialize_scalar_field_2d( ey, "ey", &
-!                                    m, NODE_CENTERED_FIELD)
-!
-!   call initialize_scalar_field_2d( ey_exact, "ey_exact", &
-!                                    m, NODE_CENTERED_FIELD)
-
    SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
    SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
    SLL_ALLOCATE(ex_exact(nc_eta1+1,nc_eta2+1),error)
@@ -88,6 +55,7 @@ program test_poisson_2d
    write(*,*) " eta1_min, eta1_max, nc_eta1 ", eta1_min, eta1_max, nc_eta1
    write(*,*) " eta2_min, eta2_max, nc_eta2 ", eta2_min, eta2_max, nc_eta2
 
+   open(13, file="test_poisson_2d_phi.dat")
    mode = 2
    do i = 1, nc_eta1+1
       do j = 1, nc_eta2+1
@@ -103,19 +71,31 @@ program test_poisson_2d
    end do
    close(13)
 
-   call poisson%initialize( eta1_min, eta1_max, nc_eta1, &
-                            eta2_min, eta2_max, nc_eta2, error) 
+   call initialize( poisson, eta1_min, eta1_max, nc_eta1, &
+                    eta2_min, eta2_max, nc_eta2, rho, error) 
 
-   call poisson%solve( phi, rho)
-   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
-   call poisson%solve( phi, rho)
-   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   open(14, file="test_poisson_2d_rho.dat")
+   mode = 2
+   do i = 1, nc_eta1+1
+      do j = 1, nc_eta2+1
+         x1 = (i-1)*(eta1_max-eta1_min)/nc_eta1
+         x2 = (j-1)*(eta2_max-eta2_min)/nc_eta2
+         phi_exact(i,j) = mode * sin(mode*x1) * cos(mode*x2)
+         ex_exact(i,j)  =  1_f64*mode**2*cos(mode*x1)*cos(mode*x2)
+         ey_exact(i,j)  = -1_f64*mode**2*sin(mode*x1)*sin(mode*x2)
+         rho(i,j) = -2_f64 * mode**3 * sin(mode*x1)*cos(mode*x2)
+         write(14,*) x1, x2, rho(i,j)
+      end do
+   end do
 
-   call poisson%solve( ex, ey, rho)
+   call solve( poisson, phi, rho)
+   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   call solve( poisson, phi, rho)
+   write(*,*) " Po Error = " , maxval(abs(phi_exact+phi))
+   call solve( poisson, ex, ey, rho)
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
-
-   call poisson%solve( ex, ey, rho)
+   call solve( poisson, ex, ey, rho)
    write(*,*) " Ex Error = " , maxval(abs(ex_exact-ex))
    write(*,*) " Ey Error = " , maxval(abs(ey_exact-ey))
 

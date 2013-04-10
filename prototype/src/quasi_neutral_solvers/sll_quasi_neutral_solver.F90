@@ -18,9 +18,9 @@
     use sll_collective
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_mesh_types.h"
+!#include "sll_mesh_types.h"
 #include "sll_remap.h"
-    use numeric_constants
+    use sll_constants
     implicit none
     
     type quasi_neutral_plan

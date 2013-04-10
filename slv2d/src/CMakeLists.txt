@@ -1,0 +1,184 @@
+IF(DEFINED CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build, options are: Debug Release.")
+ELSE()
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build, options are: Debug Release.")
+ENDIF()
+
+PROJECT(SLV2D)
+ENABLE_LANGUAGE(Fortran)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+MESSAGE( STATUS "SLV2D_BINARY_DIR: ${SLV2D_BINARY_DIR}" )
+MESSAGE( STATUS "SLV2D_SOURCE_DIR: ${SLV2D_SOURCE_DIR}" )
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
+   SET(SLL_SOURCE_DIR "${SLV2D_SOURCE_DIR}/../../prototype/src")
+ENDIF()
+MESSAGE( STATUS "SLL_SOURCE_DIR: ${SLL_SOURCE_DIR}" )
+
+SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake 
+                       ${SLL_SOURCE_DIR}/CMakeModules
+                       ${CMAKE_MODULE_PATH} )
+
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+
+MESSAGE(STATUS "SLV2D:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+INCLUDE(F90FLAGS)
+MESSAGE(STATUS "SLV2D:CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
+
+IF(NOT LAPACK_FOUND)
+   FIND_PACKAGE(LAPACK)
+ENDIF(NOT LAPACK_FOUND)
+IF(NOT LAPACK_FOUND)
+   INCLUDE(${SLL_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
+ENDIF(NOT LAPACK_FOUND)
+
+SET(SILO_ENABLED OFF CACHE BOOL "Use SILO Library from LLNL ")
+SET(FFTW_ENABLED ON CACHE BOOL "Use fftw library " )
+
+IF(SILO_ENABLED) 
+   FIND_PACKAGE(SILO  REQUIRED)
+   IF(SILO_FOUND)
+      ADD_DEFINITIONS(-D_SILO)
+      INCLUDE_DIRECTORIES(${SILO_INCLUDE_DIRS})
+      SET(CMAKE_EXE_LINKER_FLAGS "-lsupc++")
+   ENDIF()
+ENDIF()
+
+IF(FFTW_ENABLED)
+   FIND_PACKAGE(FFTW)
+   IF(FFTW_FOUND)
+      ADD_DEFINITIONS(-D_FFTW)
+      INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
+   ENDIF()
+ENDIF()
+
+IF(NOT MPI_FOUND)
+   INCLUDE(MPIConfig)
+ENDIF(NOT MPI_FOUND)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+IF(NOT HDF5_FOUND)
+   INCLUDE(HDF5Config)
+   IF(HDF5_ENABLE_PARALLEL) 
+      MESSAGE(STATUS "HDF5 parallel supported")
+   ELSE()
+      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+   ENDIF()
+ENDIF(NOT HDF5_FOUND)
+
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
+   FIND_PACKAGE(FFTPACK)
+   ADD_DEFINITIONS(-D_FFTPACK)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/assert)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/memory)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/precision)
+   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/utilities)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level EXCLUDE_FROM_ALL)
+ELSE()
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+   IF(NOT FFTPACK_LIBRARIES)
+      SET(FFTPACK_LIBRARIES "fftpack_module")
+   ENDIF(NOT FFTPACK_LIBRARIES)
+ENDIF()
+
+SET(SLV2D_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d.F90 
+              sll_vlasov2d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
+
+ADD_DEPENDENCIES(slv2d selalib-mpi)
+
+MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
+MESSAGE(STATUS "SLV2D:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
+MESSAGE(STATUS "SLV2D:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
+MESSAGE(STATUS "SLV2D:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
+SET(LIBS selalib-mpi ${SILO_LIBRARIES} 
+                     ${FFTPACK_LIBRARIES} 
+                     ${FFTW_LIBRARIES} 
+                     ${HDF5_LIBRARIES})
+
+#ADD_EXECUTABLE(vp2d vp2dinit.F90 vp2d.F90)
+#TARGET_LINK_LIBRARIES(vp2d slv2d ${LIBS} ${LAPACK_LIBRARIES})
+
+ADD_EXECUTABLE(vm2d vm2dinit.F90 vm2d.F90)
+TARGET_LINK_LIBRARIES(vm2d slv2d ${LIBS} ${LAPACK_LIBRARIES})
+
+ADD_EXECUTABLE(vp2d_cubic vp2d_selalib.F90)
+TARGET_LINK_LIBRARIES(vp2d_cubic slv2d ${LIBS})
+
+ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90)
+TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS} ${LAPACK_LIBRARIES})
+
+#FILE(REMOVE ${CMAKE_BINARY_DIR}/modules/sll_vlasov2d.mod)
+#ADD_DEFINITIONS(-D_TWO_D)
+#ADD_EXECUTABLE(vp2d_sll_interp2d vp2d_selalib.F90)
+#TARGET_LINK_LIBRARIES(vp2d_sll_interp2d slv2d ${LIBS})
+
+IF (FFTW_FOUND) 
+
+   ADD_LIBRARY(sll_vlasov4d STATIC sll_vlasov4d_spectral.F90
+                                   sll_vlasov4d_maxwell.F90
+                                   sll_vlasov4d_poisson.F90
+                                   sll_vlasov4d_base.F90)
+
+   ADD_DEPENDENCIES(sll_vlasov4d slv2d)
+                              
+
+   #ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
+   #TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
+
+   ADD_EXECUTABLE(vp4d          vp4d.F90)
+   ADD_EXECUTABLE(vm4d          vm4d.F90)
+   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90)
+
+   TARGET_LINK_LIBRARIES(vp4d          sll_vlasov4d slv2d ${LIBS})
+   TARGET_LINK_LIBRARIES(vm4d          sll_vlasov4d slv2d ${LIBS})
+   TARGET_LINK_LIBRARIES(vm4d_spectral sll_vlasov4d slv2d ${LIBS})
+
+   IF(FFTW_MPI_LIBRARY)
+
+      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
+      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+      ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
+      TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib-mpi ${FFTW_LIBRARIES})
+
+   ENDIF()
+
+
+ENDIF()
+
+ENABLE_TESTING()
+
+INCLUDE(POEConfig)
+SET(PROCS 4)
+SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml)
+
+#ADD_MPI_TEST(test_vp2d vp2d ${PROCS} ${ARGS})
+ADD_MPI_TEST(test_vm2d vm2d ${PROCS} ${ARGS})
+ADD_MPI_TEST(test_vp2d_cubic vp2d_cubic ${PROCS} ${ARGS})
+
+#SET_TESTS_PROPERTIES(test_vp2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#SET_TESTS_PROPERTIES(test_vm2d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(test_vp2d_cubic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+INCLUDE(Forcheck)

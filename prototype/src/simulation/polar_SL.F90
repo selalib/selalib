@@ -3,12 +3,12 @@ program radial_1d_SL
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_splines
-  use cubic_nonuniform_splines
-  use numeric_constants
+  use sll_cubic_splines
+  use cubic_non_uniform_splines
+  use sll_constants
   implicit none
   
-  type(sll_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
+  type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Nr,Ntheta,i,j,err,test_case,step,nb_step,visu_step,field_case
   sll_real64 :: rmin,rmax,r,dr,x,y,dt,theta,dtheta,val,val_bsl,val_bsl_nc,val_fsl,val_fsl_nc,tmp1,tmp2
   sll_real64 :: a1,a2,rr,thetath,k1r,k2r,k3r,k4r,k1theta,k2theta,k3theta,k4theta

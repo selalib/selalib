@@ -2,7 +2,7 @@ program bgk_fv_unif
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use distribution_function
   use sll_diagnostics
   use sll_csl
@@ -382,7 +382,7 @@ end program
 
 
  subroutine Compute_flux(a1,a2,f,f_store,Flux,N_x1,N_x2,x1_min,x2_min,delta_x1,delta_x2,order)
-  use numeric_constants
+  use sll_constants
   implicit none
   
   
@@ -630,7 +630,7 @@ end subroutine compute_flux
 subroutine compute_translate_nodes_periodic(alpha,N_cells,old_node_positions,new_node_positions)
   ! compute displaced nodes in the case of a translation
   ! the nodes are put in [x_min,x_max] by periodicity
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int,intent(in) :: N_cells
@@ -661,7 +661,7 @@ end subroutine compute_translate_nodes_periodic
 
 
 subroutine compute_non_unif_integral(x_points,f_points,N_points,val)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_real64,intent(out) :: val
   sll_int,intent(in) :: N_points
@@ -691,7 +691,7 @@ end  subroutine compute_non_unif_integral
 
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E

@@ -4,8 +4,8 @@ program vp_non_unif_mesh
 #include "sll_memory.h"
 !contact: mehrenbe@math.unistra.fr for this  program
 
-  use numeric_constants
-  use cubic_nonuniform_splines
+  use sll_constants
+  use cubic_non_uniform_splines
   use bgk_mesh_construction
   use contrib_rho_module
   use classical_conservative_semi_lagrangian
@@ -26,13 +26,13 @@ program vp_non_unif_mesh
   sll_real64,dimension(:), pointer :: node_positions_x1_dual,node_positions_x2_dual
   sll_real64,dimension(:), pointer :: node_positions_x1_poisson
   sll_real64,dimension(:,:),pointer::f,f_init,f_store
-  sll_real64,dimension(:,:),pointer::x1n_array,x2n_array,x1c_array,x2c_array
-  sll_real64,dimension(:,:),pointer::jac_array
+  !sll_real64,dimension(:,:),pointer::x2n_array,x2c_array
+  !sll_real64,dimension(:,:),pointer::jac_array
   sll_real64, dimension(:,:), pointer :: a1,a2,psi
   sll_real64,dimension(:,:),pointer::integration_points
-  sll_int32  :: i1,i2,ierr,i,step,k,NN,N_alpha_x2,j1,N_x1_poisson,dual_case_x1,dual_case_x2
-  sll_real64 :: delta_x1,delta_x2,x1,x2,x1c,x2c
-  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
+  sll_int32  :: i1,i2,i,step,N_alpha_x2,j1,N_x1_poisson,dual_case_x1,dual_case_x2
+  sll_real64 :: delta_x1,delta_x2,x1,x2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2
   sll_real64 :: val,tmp,tmp0
   sll_real64 :: alpha_x2,shift
   sll_real64,dimension(:), pointer :: node_positions_x1_tmp,node_positions_x2_tmp  
@@ -345,7 +345,7 @@ program vp_non_unif_mesh
   !print *,node_positions_x1
   !print *,node_positions_x2
   
-  !stop
+  
   
 
   !construction of mesh
@@ -389,24 +389,35 @@ program vp_non_unif_mesh
   enddo
   
   
+  
   f = f_init
   
   !compute rho init  
   integration_points(1,1:N_x2+1) = x2_min+(x2_max-x2_min)*node_positions_x2(1:N_x2+1)   
   
+
   do i1 = 1, N_x1+1 
     integration_points(2,1:N_x2+1) = f(i1,1:N_x2+1) 
-    rho(i1) = compute_non_unif_integral(integration_points,N_x2+1,rho_case)
+    !rho(i1) = compute_non_unif_integral(integration_points,N_x2+1,rho_case)
   enddo
+ 
+  
+  
+  
   !compute E_init   
   call compute_spline_nonunif( rho, spl_per_x1_rho,node_positions_x1)  
+  
+
   call interpolate_array_value_nonunif( node_positions_x1_poisson, &
     E_fine, N_x1_poisson, spl_per_x1_rho)  
+  
+  stop
   call poisson1dpertrap(E_fine,x1_max-x1_min,N_x1_poisson)
   call compute_spline_nonunif( E_fine, spl_per_x1_E,node_positions_x1_poisson)
   call interpolate_array_value_nonunif( node_positions_x1, &
     E, N_x1, spl_per_x1_E)
-  !stop
+  
+  
     
   !do i1=1,N_x1+1
   !  print *,i1,rho(i1)

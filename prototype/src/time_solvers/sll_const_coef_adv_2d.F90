@@ -2,23 +2,24 @@ module sll_const_coef_advection_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_time_splitting
   use sll_module_interpolators_1d_base
+  use sll_time_splitting
 
   implicit none
 
   type, extends(time_splitting) :: const_coef_advection_2d
+     class(sll_interpolator_1d_base), pointer    :: interp1, interp2
      sll_real64, dimension(:,:), pointer :: data
      sll_int32 :: n1, n2
      sll_real64 :: a1, a2
-     class(sll_interpolator_1d_base), pointer    :: interp1, interp2
    contains
      procedure, pass(this) :: operator1 => adv1
      procedure, pass(this) :: operator2 => adv2
   end type const_coef_advection_2d
 
+
 contains
-  subroutine initialize(this, data, n1, n2, a1, a2, interp1, interp2)
+  subroutine const_coef_advection_2d_initialize(this, data, n1, n2, a1, a2, interp1, interp2)
     type(const_coef_advection_2d) :: this 
     sll_real64, dimension(:,:), target :: data
     sll_int32 :: n1, n2
@@ -31,7 +32,7 @@ contains
     this%a2 = a2
     this%interp1 => interp1
     this%interp2 => interp2
-  end subroutine initialize
+  end subroutine 
 
   subroutine adv1(this, dt)
     class(const_coef_advection_2d) :: this 
@@ -46,7 +47,7 @@ contains
        f1d => this%data(:,j)
        f1d = this%interp1%interpolate_array_disp(this%n1, f1d, displacement)
     end do
-  end subroutine adv1
+  end subroutine
 
   subroutine adv2(this, dt)
     class(const_coef_advection_2d) :: this 
@@ -61,5 +62,7 @@ contains
        f1d => this%data(i,:)
        f1d = this%interp2%interpolate_array_disp(this%n2, f1d, displacement)
     end do
-  end subroutine adv2
+  end subroutine
+
+
 end module sll_const_coef_advection_2d

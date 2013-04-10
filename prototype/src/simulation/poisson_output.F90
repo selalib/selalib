@@ -4,7 +4,7 @@ program poisson_output
 #include "sll_assert.h"
 
   use poisson_polar
-  use numeric_constants
+  use sll_constants
   implicit none
 
   type(sll_plan_poisson_polar), pointer :: plan
