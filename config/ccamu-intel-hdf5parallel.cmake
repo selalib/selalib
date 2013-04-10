@@ -11,5 +11,3 @@ SET(FFTW_ENABLED ON CACHE BOOL "" FORCE)
 SET(FFTW_INCLUDE_DIRS "/softs/fftw/openmpi/intel/3.3/include" CACHE PATH " " FORCE)
 SET(FFTW_LIBRARY "/softs/fftw/openmpi/intel/3.3/lib/libfftw3.a" CACHE FILEPATH " " FORCE)
 SET(FFTW_MPI_INCLUDE_DIR "/softs/fftw/openmpi/intel/3.3/lib"  CACHE PATH " " FORCE)
-
-SET(MPI_Fortran_COMPILER "/softs/openmpi/intel/3.3/lib"  CACHE PATH " " FORCE)
