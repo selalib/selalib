@@ -71,19 +71,19 @@ call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 if (my_num == MPI_MASTER) then
    ! write some run data
    write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-   write(*,"(2(i3,1x),6(g13.3,1x))")&
+   write(*,"(2(i5,1x),6(g15.3,1x))")&
    geomx%nx, geomx%ny, geomx%x0,&
    geomx%x0+(geomx%nx-1)*geomx%dx,&
    geomx%y0, geomx%y0+(geomx%ny-1)*geomx%dy,&
    geomx%dx, geomx%dy   
    write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-   write(*,"(2(i3,1x),6(g13.3,1x))")&
+   write(*,"(2(i6,1x),6(g15.3,1x))")&
    geomv%nx, geomv%ny, geomv%x0,&
    geomv%x0+(geomv%nx-1)*geomv%dx,&
    geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy,&
    geomv%dx, geomv%dy
    write(*,*) 'dt,nbiter,fdiag,fthdiag'
-   write(*,"(g13.3,1x,3i3)") dt,nbiter,fdiag,fthdiag
+   write(*,"(g15.3,1x,3i6)") dt,nbiter,fdiag,fthdiag
 endif
 
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
