@@ -20,7 +20,7 @@ utilities and will include higher-level functionality as time progresses.
 
 'gysela_public' will contain the baseline public version of Gysela, whose 
 capabilities we intend to keep compatible with our other developments. However,
-since the public version of Gysela is derived from the propietary version
+since the public version of Gysela is derived from the proprietary version
 owned by the CEA, only the CEA personnel will work updating this part of the
 repository.
 
