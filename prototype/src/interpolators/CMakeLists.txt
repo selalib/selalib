@@ -134,7 +134,7 @@ IF(FFTPACK_ENABLED)
                           sll_assertion
                           sll_memory
                           sll_working_precision
-                          fftpack_module
+                          dfftpack
                           sll_lagrange_interpolation
                         )
 ENDIF()
