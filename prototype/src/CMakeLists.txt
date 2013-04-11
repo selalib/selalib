@@ -117,6 +117,10 @@ IF(NOT STDF95)
 
 ENDIF(NOT STDF95)
 
+# I do not know the exact good place to put it so for now it is there
+# Eric Madaule
+add_subdirectory(DG) 
+
 ##########################################################
 
 SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
