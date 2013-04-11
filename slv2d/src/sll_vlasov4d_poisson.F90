@@ -67,7 +67,7 @@ contains
 
  subroutine free_vlasov4d_poisson(this)
 
-  class(vlasov4d_poisson),intent(out) :: this
+  class(vlasov4d_poisson),intent(inout) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)
