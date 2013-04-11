@@ -19,7 +19,7 @@ IF(FFTPACK_ENABLED)
   target_link_libraries(test_periodic_interp sll_periodic_interp
       sll_splines
       sll_fft
-      fftpack_module
+      dfftpack
       sll_utilities
       sll_assertion
       sll_memory
