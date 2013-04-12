@@ -1,4 +1,4 @@
-module remapper
+module sll_remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -4390,4 +4390,4 @@ print *, 'remap 2d complex:'
   end function layout_2D_from_layout_4D
 #endif
 
-end module remapper
+end module sll_remapper

@@ -5,7 +5,7 @@ program vp4d
 #include "sll_assert.h"
 #include "sll_memory.h"
 use sll_collective
-use remapper
+use sll_remapper
 use sll_poisson_2d_periodic
 use sll_constants
 use sll_cubic_spline_interpolator_1d
