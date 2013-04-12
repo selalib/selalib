@@ -17,7 +17,7 @@ ELSE()
    MESSAGE(STATUS "FFTPACK NOT FOUND ... BUILD SOURCE")
    ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/../../prototype/src/fftpack 
                     ${PROJECT_BINARY_DIR}/dfftpack)
-   SET(FFTPACK_LIBRARIES fftpack_module)
+   SET(FFTPACK_LIBRARIES dfftpack)
 
 ENDIF(FFTPACK_LIBRARIES)
 
