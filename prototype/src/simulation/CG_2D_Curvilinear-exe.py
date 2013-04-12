@@ -2,7 +2,7 @@ import os
 from pylab import *
 import numpy as n
 
-N_x1_tab=[30] #arange(32,65,32)#[64,128]
+N_x1_tab=[31] #arange(32,65,32)#[64,128]
 N_x2_tab=N_x1_tab#[32,64]
 execu=1
 

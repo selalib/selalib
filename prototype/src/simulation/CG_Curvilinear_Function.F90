@@ -5,7 +5,7 @@ module module_cg_curvi_function
 #include "sll_assert.h"
 
    use module_cg_curvi_structure
-   use numeric_constants
+   use sll_constants
    use sll_splines
    use sll_fft
    use poisson_polar
@@ -662,7 +662,7 @@ subroutine plot_f1(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,et
  end subroutine plot_f1
 !!!****************************************************************************************
 subroutine init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
-           & delta_eta1,delta_eta2,fcase,f,mesh_case,mode,alpha,eta1_r,eta1_rm)
+           & delta_eta1,delta_eta2,fcase,f,mesh_case,mode,alpha,eta1_r,eta1_rm,sigma_x1,sigma_x2)
 
 implicit none
 
@@ -671,7 +671,7 @@ implicit none
   sll_int32 :: i, j,mode
   sll_int32, intent(in) :: N_eta1,N_eta2
   sll_int32, intent(in):: fcase,mesh_case
-  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2
+  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2,sigma_x1,sigma_x2
   sll_real64 :: eta1,eta2,eta1c,eta2c
   sll_real64 :: eta1_r,eta1_rm,alpha
 
@@ -685,8 +685,8 @@ implicit none
 !! test-function
 !    
 !
- ! select case (fcase)
-  ! case(1)
+  select case (fcase)
+   case(1)
 
      print*,'eta1_r', eta1_r
      do j=1,N_eta2+1
@@ -699,52 +699,46 @@ implicit none
            endif
         enddo
      enddo
+
 !
+  case(2)
+     do j=1,N_eta2+1
+           do i=1,N_eta1+1
+              eta1=eta1_min+real(i-1,f64)*delta_eta1
+              f(i,j) = cos(eta1)
+           end do
+     end do
+
 !
-!  case(2)
+  ! case(3)
 !
-!     do i=1,N_eta1+1
-!           do j=1,N_eta2+1
-!              eta2=eta2_min+real(j-1,f64)*delta_eta2
-!              f(i,j) = cos(eta2)
-!           end do
-!     end do
-!     
-!
-!   case(3)
-!
-!     do i=1,N_eta1+1
-!         eta1=eta1_min+real(i-1,f64)*delta_eta1
-!        do j=1,N_eta2+1
-!          f(i,j) = exp(-100._f64*(eta1-eta1c)**2) 
-!        end do
-!     end do
-!
-!   case(4) 
-!     
-!     do i=1,N_eta1+1
-!         eta1=eta1_min+real(i-1,f64)*delta_eta1
-!        do j=1,N_eta2+1
-!         eta2=eta2_min+real(j-1,f64)*delta_eta2
-!              if ((mesh_case==1).or.(mesh_case==4)) then
-!                 f(i,j) = exp(-5_f64*(eta1-eta1c)**2)*exp(-5_f64*(eta2-eta2c)**2)
-!              endif
-!              if ((mesh_case==2).or.(mesh_case==3)) then
-!                f(i,j) = exp(-100._f64*(eta1-eta1c)**2)*exp(-30._f64*(eta2-eta2c)**2)
-!              endif
-!        end do
-!     end do
-!
-!   case(5)
-!     
-!     do i=1,N_eta1+1
-!       do j=1,N_eta2+1
-!        f(i,j) = 0._f64
-!        if ((i==(N_eta1+1)/2).and.(j==(N_eta2+1)/2)) then
-!          f(i,j) = 1._f64
-!        endif
-!       enddo
-!     enddo
+    ! do i=1,N_eta1+1
+    !     eta1=eta1_min+real(i-1,f64)*delta_eta1
+    !    do j=1,N_eta2+1
+    !      f(i,j) = exp(-100._f64*(eta1-eta1c)**2) 
+    !    end do
+    ! end do
+
+   case(4) 
+     
+     do i=1,N_eta1+1
+         eta1=eta1_min+real(i-1,f64)*delta_eta1
+        do j=1,N_eta2+1
+         eta2=eta2_min+real(j-1,f64)*delta_eta2
+                 f(i,j) = exp(-((eta1-eta1c)/sigma_x1)**2)*exp(-((eta2-eta2c)/sigma_x2)**2)
+        end do
+     end do
+
+   case(5)
+     
+     do i=1,N_eta1+1
+       do j=1,N_eta2+1
+        f(i,j) = 0._f64
+        if ((i==(N_eta1+1)/2).and.(j==(N_eta2+1)/2)) then
+          f(i,j) = 1._f64
+        endif
+       enddo
+     enddo
 !   
 !  !case(6) 
 !
@@ -752,15 +746,12 @@ implicit none
 !    ! read(25,*)f
 !    ! close(25)
 !
-!   case default 
+   case default 
+
+     print*,"f is not defined"
+     stop
 !
-!     print*,"f is not defined"
-!     print*,'see variable "fcase" in file selalib/prototype/src/simulation/CG_polar.F90'
-!     print*,'can not go any further'
-!     print*,'exiting...'
-!     stop
-!
-!   end select 
+   end select 
 !
 end subroutine init_distribution_cartesian
 
@@ -1158,6 +1149,37 @@ do i = 1,nr+1
     plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)*r
   end do
 end subroutine diagnostic_2
+!*****************************************************************************************
+subroutine lire_appel(phi,f,N_eta1,N_eta2)
+implicit none
+
+  sll_real64, dimension (:,:), allocatable, intent(inout) :: f
+  sll_real64, dimension (:,:), allocatable, intent(inout) :: phi
+  sll_real64, dimension (:), allocatable :: vec_phi
+  sll_int32 :: i, j,err
+  sll_int32, intent(in) :: N_eta1,N_eta2
+
+SLL_ALLOCATE(vec_phi((N_eta1+1)*(N_eta2+1)),err)
+open (unit=28,file="file_rho.dat",action="write",status="old")
+      do i=1,N_eta1+1
+          do j=1,N_eta2+1 
+             write(28,*) f(i,j)
+          enddo
+      enddo
+   close(28)
+   call system('./quasi_neutre')
+   open(unit=29,file='values_U.dat',action="read",status="old")
+    do i = 1,(N_eta1+1)*(N_eta2+1)
+         read (unit=29,fmt=*) vec_phi(i)
+    enddo 
+    close(unit=29)
+    !vec_phi=0.
+    phi(1:(N_eta1+1),1:(N_eta2+1))=reshape(vec_phi,(/(N_eta1+1),(N_eta2+1)/))
+
+SLL_DEALLOCATE_ARRAY(vec_phi,err) 
+end subroutine lire_appel
+!***************************************************************************
+
 
 end module module_cg_curvi_function
 
