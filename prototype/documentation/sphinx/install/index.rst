@@ -30,6 +30,9 @@ You can also use one of selalib capabilities separately, headers file available 
    #include "sll_constants.h"
    #include "sll_utilities.h"
    #include "sll_interpolators.h"
+
+To use solvers::
+
    #include "sll_poisson_solvers.h"
    #include "sll_maxwell_solvers.h"
 
