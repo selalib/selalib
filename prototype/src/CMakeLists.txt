@@ -14,7 +14,7 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE BOOL "Installation directory of the library" FORCE )
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE )
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
