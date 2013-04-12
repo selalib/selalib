@@ -43,7 +43,7 @@ IF(FFTPACK_ENABLED)
                                             sll_working_precision
                                             sll_utilities
                                             sll_poisson_1d_periodic
-                                            fftpack_module)
+                                            dfftpack)
 
 
 ENDIF()
