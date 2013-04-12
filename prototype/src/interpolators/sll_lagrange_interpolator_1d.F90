@@ -2,7 +2,7 @@ module sll_lagrange_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_interpolators_1d_base_macros.h"
+!#include "sll_interpolators_1d_base_macros.h"
 #ifndef STDF95
 use sll_module_interpolators_1d_base
 #endif
@@ -97,6 +97,7 @@ subroutine interpolate_array_values_li1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
+    output_array = 0.0
     print*, 'interpolate_array_values:', &
          ' not implemented for lagrange interpolation'
     stop
@@ -117,6 +118,7 @@ subroutine interpolate_array_derivatives_li1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
+    output_array = 0.0
      print*, 'interpolate_array_derivatives: ', &
          'not implemented for lagrange interpolation'
     stop
