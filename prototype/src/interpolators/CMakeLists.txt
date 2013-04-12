@@ -7,7 +7,8 @@ SET( INTERPOLATORS_SRC_FILES
         sll_quintic_spline_interpolator_1d_nonuniform.F90
         sll_odd_degree_spline_interpolator_1d.F90
         sll_odd_degree_spline_interpolator_1d_nonuniform.F90
-        sll_lagrange_interpolator_1d.F90 )
+        sll_lagrange_interpolator_1d.F90 
+        sll_periodic_interpolator_1d.F90 )
 
 IF( NOT STDF95)
 
@@ -17,12 +18,6 @@ IF( NOT STDF95)
 
 ENDIF(NOT STDF95)
 
-IF(FFTPACK_ENABLED)
-
-   SET( INTERPOLATORS_SRC_FILES ${INTERPOLATORS_SRC_FILES} 
-        sll_periodic_interpolator_1d.F90 )
-
-ENDIF(FFTPACK_ENABLED)
 
 ADD_LIBRARY( sll_interpolators STATIC ${INTERPOLATORS_SRC_FILES} )
 
@@ -120,21 +115,17 @@ TARGET_LINK_LIBRARIES( test_odd_degree_interpolators_1d
                        sll_working_precision
                        ${LAPACK_LIBRARIES} )
 
-IF(FFTPACK_ENABLED)
+ADD_EXECUTABLE(test_periodic_interpolators_1d test_periodic_interpolation.F90)
 
-   ADD_EXECUTABLE(test_periodic_interpolators_1d test_periodic_interpolation.F90)
-
-   TARGET_LINK_LIBRARIES( test_periodic_interpolators_1d
-                          sll_interpolators
-                          sll_periodic_interp
-                          sll_splines
-                          sll_numerical_utilities  
-                          sll_fft
-                          sll_utilities
-                          sll_assertion
-                          sll_memory
-                          sll_working_precision
-                          dfftpack
-                          sll_lagrange_interpolation
-                        )
-ENDIF()
+TARGET_LINK_LIBRARIES( test_periodic_interpolators_1d
+                       sll_interpolators
+                       sll_periodic_interp
+                       sll_splines
+                       sll_numerical_utilities  
+                       sll_fft
+                       sll_utilities
+                       sll_assertion
+                       sll_memory
+                       sll_working_precision
+                       dfftpack
+                       sll_lagrange_interpolation)
