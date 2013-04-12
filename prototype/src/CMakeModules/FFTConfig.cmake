@@ -11,9 +11,6 @@ ELSE()
   add_definitions(-DSLLFFT)
 ENDIF()
 
-# add the cache entry FFTPACK_ENABLED for enable/disable fftpack
-SET(FFTPACK_ENABLED OFF CACHE BOOL " ")
-
 # recherche le package FFTW
 SET(FFTW_ENABLED ON CACHE BOOL " ")
 
@@ -34,10 +31,6 @@ ELSE(FFTW_FOUND)
    add_definitions(-D_NOFFTW)
    SET(FFT_ADD_MODULE dfftpack)
 ENDIF(FFTW_FOUND)
-
-IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK" AND NOT FFTPACK_ENABLED)
-   MESSAGE("Please put on FFTPACK_ENABLED to use fftpack")
-ENDIF()
 
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW" AND NOT FFTW_FOUND)
    MESSAGE("You can't use fftw library because it's not installed")

@@ -78,11 +78,6 @@ Details about principle parameters
 | DISABLED_MPI_MODULE    | ON/OFF         | When set to ON disable all reference |
 |                        |                | to mpi and run SeLaLib in sequential.|
 +------------------------+----------------+--------------------------------------+
-|   FFTPACK_ENABLED      | ON/OFF         | By default OFF. SeLaLib provide a    |
-|                        |                | version of fftpack but not compiled  |
-|                        |                | by default. If set to ON, fftpack is |
-|                        |                | compiled (need a Fortran 77 compiler)|
-+------------------------+----------------+--------------------------------------+
 |  FFT_DEFAULT_LIBRARY   | SLLFFT         | By default SLLFFT. SeLaLib provide   |
 |                        | FFTPACK        | a fast fourier transform module      |
 |                        | FFTW           | around 3 libraries, fftpack, fftw and|
