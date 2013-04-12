@@ -48,7 +48,7 @@ module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_maxwell_solvers.h"
 
 use, intrinsic :: iso_c_binding
-use remapper
+use sll_remapper
 use sll_fft
 use sll_constants
 use sll_collective
