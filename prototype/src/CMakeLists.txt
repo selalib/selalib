@@ -62,7 +62,8 @@ INCLUDE_DIRECTORIES(utilities
                     fields 
                     low_level_file_io
                     fft
-                    maxwell_solvers) 
+                    maxwell_solvers
+                    visu_pic) 
 ENABLE_TESTING()
 
 ADD_SUBDIRECTORY(memory)
@@ -79,13 +80,8 @@ ADD_SUBDIRECTORY(lagrange_interpolation)
 ADD_SUBDIRECTORY(WENO)
 ADD_SUBDIRECTORY(integration)
 ADD_SUBDIRECTORY(fft)
-
-IF(FFTPACK_ENABLED)
-
-   ADD_SUBDIRECTORY(fftpack)
-   ADD_SUBDIRECTORY(periodic_interpolation)
-
-ENDIF()
+ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(periodic_interpolation)
 
 IF(MPI_MODULE_ENABLED)
 
