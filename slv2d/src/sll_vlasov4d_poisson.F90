@@ -9,7 +9,7 @@ module sll_vlasov4d_poisson
  use diagnostiques_module
  use sll_module_interpolators_1d_base
  use sll_vlasov4d_base
- use remapper
+ use sll_remapper
 
  implicit none
  private

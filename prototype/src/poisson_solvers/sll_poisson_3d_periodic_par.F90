@@ -18,7 +18,7 @@ module sll_poisson_3d_periodic_par
   use sll_fft
   use sll_constants
   use sll_collective
-  use remapper
+  use sll_remapper
   implicit none
 
   type poisson_3d_periodic_plan_par
