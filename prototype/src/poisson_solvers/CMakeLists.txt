@@ -36,7 +36,7 @@ IF(FFTPACK_ENABLED)
                                         sll_splines
                                         sll_interpolators
                                         sll_low_level_file_io
-                                        fftpack_module
+                                        dfftpack
                                         sll_utilities
                                         sll_assertion
                                         sll_memory
@@ -44,8 +44,8 @@ IF(FFTPACK_ENABLED)
                                     )
 
 #  add_definitions(-D_FFTPACK)
-#  ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
-#  add_executable(test_poisson_2d test_poisson_2d.F90)
+#  ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic_fftpack.F90 )
+#  add_executable(test_poisson_2d test_poisson_2d_fftpack.F90)
 #  target_link_libraries(test_poisson_2d 
 #                      sll_poisson_2d_periodic 
 #	              sll_scalar_field_2d
