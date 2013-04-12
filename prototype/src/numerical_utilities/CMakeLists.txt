@@ -14,7 +14,7 @@ ADD_DEPENDENCIES(sll_numerical_utilities sll_memory
 ADD_LIBRARY(sll_tridiagonal STATIC tridiagonal.F90)
 add_dependencies(sll_tridiagonal sll_working_precision)
 
-add_executable(test_tridiagonal unit_test.F90)
+add_executable(test_tridiagonal unit_test_tridiag.F90)
 
 target_link_libraries(test_tridiagonal sll_tridiagonal 
                      sll_memory sll_working_precision)

@@ -70,7 +70,7 @@ contains
 
  subroutine free_vlasov4d_maxwell(this)
 
-  class(vlasov4d_maxwell),intent(out) :: this
+  class(vlasov4d_maxwell),intent(inout) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)

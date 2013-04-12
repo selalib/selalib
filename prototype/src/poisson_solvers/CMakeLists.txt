@@ -23,29 +23,23 @@ TARGET_LINK_LIBRARIES(unit_test_polar sll_fft
 	                                   sll_splines
 	                                   )
 
-MESSAGE(STATUS "FFTPACK_ENABLED:${FFTPACK_ENABLED}")
-
-IF(FFTPACK_ENABLED)
-
-
-  ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90)
-  TARGET_LINK_LIBRARIES(test_poisson_1d sll_poisson_1d_periodic
-                                        #sll_scalar_field_1d
-                                        sll_mapped_meshes
-                                        geometry_functions
-                                        sll_splines
-                                        sll_interpolators
-                                        sll_low_level_file_io
-                                        fftpack_module
-                                        sll_utilities
-                                        sll_assertion
-                                        sll_memory
-                                        sll_working_precision
+ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90)
+TARGET_LINK_LIBRARIES(test_poisson_1d sll_poisson_1d_periodic
+                                      sll_mapped_meshes
+                                      geometry_functions
+                                      sll_splines
+                                      sll_interpolators
+                                      sll_low_level_file_io
+                                      dfftpack
+                                      sll_utilities
+                                      sll_assertion
+                                      sll_memory
+                                      sll_working_precision
                                     )
 
 #  add_definitions(-D_FFTPACK)
-#  ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90 fft_module.F90)
-#  add_executable(test_poisson_2d test_poisson_2d.F90)
+#  ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic_fftpack.F90 )
+#  add_executable(test_poisson_2d test_poisson_2d_fftpack.F90)
 #  target_link_libraries(test_poisson_2d 
 #                      sll_poisson_2d_periodic 
 #	              sll_scalar_field_2d
@@ -60,7 +54,6 @@ IF(FFTPACK_ENABLED)
 #                      sll_utilities
 #                      ${FFTPACK_LIBRARIES}
 #  )
-ENDIF()
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
