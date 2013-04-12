@@ -119,7 +119,7 @@ ENDIF(NOT STDF95)
 
 # I do not know the exact good place to put it so for now it is there
 # Eric Madaule
-add_subdirectory(DG) 
+add_subdirectory(discontinuous_galerkin) 
 
 ##########################################################
 
