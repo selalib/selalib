@@ -49,6 +49,5 @@ sint1.f
 dsinti.f)
 
 ADD_DEFINITIONS(-D_FFTPACK)
-ADD_LIBRARY(fftpack_module STATIC fft_module.F90 ${DFFTPACK_SRCS})
 ADD_LIBRARY(dfftpack STATIC ${DFFTPACK_SRCS})
 SET(FFTPACK_LIBRARIES dfftpack)
