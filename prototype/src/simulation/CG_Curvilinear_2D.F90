@@ -9,7 +9,7 @@ program cg_curvilinear_2D
   use curvilinear_2D_advection
   use module_cg_curvi_function
   use poisson_polar
-  use numeric_constants
+  use sll_constants
   implicit none
 
   type(sll_SL_curvilinear), pointer :: plan_sl
@@ -38,6 +38,8 @@ sll_real64, dimension (:,:)  , allocatable :: phi_ref
 sll_real64, dimension (:)  , allocatable :: int_r
 sll_real :: l10,l20,e0,alpha,r1,r2
 !!********
+!!sll_real64, dimension (:)  , allocatable :: vec_phi
+!!*******
   namelist /param/ N_eta1,N_eta2,dt,nb_step,carac_case,mesh_case,visu_case,phi_case
   
   PERIODIC_B=0
@@ -129,10 +131,10 @@ sll_real :: l10,l20,e0,alpha,r1,r2
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
 
-    eta1_min = 1._f64!0.5_f64
-    eta1_max = 10._f64
-    eta2_min = 0._f64
-    eta2_max = 2._f64*sll_pi
+    eta2_min = 0.5_f64!0.5_f64
+    eta2_max = 5._f64
+    eta1_min = 0._f64
+    eta1_max = 2._f64*sll_pi
    
     x1c_r=0._f64
     x2c_r=0._f64
@@ -144,9 +146,9 @@ sll_real :: l10,l20,e0,alpha,r1,r2
     sigma_x2 = 0.2
 
 
-    !bc1_type = PERIODIC_B
-    bc1_type = HERMITE_B
-    bc2_type = PERIODIC_B
+    bc1_type = PERIODIC_B
+    bc2_type = HERMITE_B
+   ! bc2_type = PERIODIC_B
     bc(1)=3
     bc(2)=1
     mode=7
@@ -231,12 +233,14 @@ sll_real :: l10,l20,e0,alpha,r1,r2
   print*,'# Temps final: tf =',tf
 
 
+
  call construct_mesh_transF(N_eta1,N_eta2,mesh_case,&
    &x1n_array,x2n_array,jac_array,&
    &geom_eta,alpha_mesh,geom_x,jac_matrix)
  
 
 !********************************* 
+
 
 plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
                   & N_eta1,N_eta2,grad_case,carac_case,bc,bc1_type,bc2_type)
@@ -252,6 +256,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   SLL_ALLOCATE(x2_tab(N_eta1+1,N_eta2+1),err)
   SLL_ALLOCATE(int_r(N_eta2),err)
   SLL_ALLOCATE(phi_ref(N_eta1+1,N_eta2+1),err)
+
 !
   step=0 !*****************************$Solution of the poisson equation at t=0
   f=0.0_f64
@@ -262,21 +267,19 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   
  !call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
  !                                     & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
-  call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
-           & delta_eta1,delta_eta2,f_case,f,mesh_case,mode,alpha,r1,r2)
+
+
+ call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+           & delta_eta1,delta_eta2,f_case,f,mesh_case,mode,alpha,r1,r2,sigma_x1,sigma_x2)
   f_init=f
  
-  ! call system('./quasi_neutre')
-   !open(unit=29,file='fort.29',position="append")
+ call lire_appel(plan_sl%phi,f,N_eta1,N_eta2)
  
-   !do i=1,
-  ! read(29,*)  
-  ! enddo
  
  !call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array, & 
  !                    & a1,a2,x1c_r,x2c_r,jac_matrix)
 
-  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+ !   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
 
 !   plan_sl%phi=phi_exact
 !   plan_sl%adv%field=0
@@ -286,15 +289,16 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
 ! !***************************************
 !!*********Diag: *****
- call diagnostic_1(f,plan_sl,phi_ref,int_r,bc,eta1_min,eta1_max,delta_eta1,& 
- & delta_eta2,N_eta1,N_eta2,nb_step,f_case,time_scheme,carac_case,grad_case,mode,& 
-       & l10,l20,e0,dt,alpha,r1,r2)
+! call diagnostic_1(f,plan_sl,phi_ref,int_r,bc,eta1_min,eta1_max,delta_eta1,& 
+! & delta_eta2,N_eta1,N_eta2,nb_step,f_case,time_scheme,carac_case,grad_case,mode,& 
+!       & l10,l20,e0,dt,alpha,r1,r2)
 !!********
   t1 => start_time_mark(t1)
 !
+
  do step=1,nb_step
     if(step==1) print*,'!!**************Begin of time loop'
-    select case (time_scheme)
+   select case (time_scheme)
 
       case(1) 
             
@@ -303,7 +307,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
                                   & x1_tab,x2_tab,dt)
             call SL_order_1(plan_sl,f,fp1,jac_array,step,x1_tab,x2_tab& 
                                   & ,mesh_case,N_eta1,N_eta2,geom_eta)
-           
+ 
       case(2) 
            !semi-Lagrangian predictor-corrector scheme  
             call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
@@ -334,14 +338,14 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
    
 
      !---> poisson solving
-    call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
-  
+ !   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+     call lire_appel(plan_sl%phi,f,N_eta1,N_eta2)
     !---> Computation of the field
-    call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field,N_eta1,N_eta2,geom_eta)
+     call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field,N_eta1,N_eta2,geom_eta)
 
     !!**Diag:****
-  call diagnostic_2(f,plan_sl,phi_ref,int_r,eta1_min,eta1_max,delta_eta1,delta_eta2, &
-       & N_eta1,N_eta2,step,l10,l20,e0,mode,dt,alpha)
+ ! call diagnostic_2(f,plan_sl,phi_ref,int_r,eta1_min,eta1_max,delta_eta1,delta_eta2, &
+ !       & N_eta1,N_eta2,step,l10,l20,e0,mode,dt,alpha)
    !********
     if (step==1 .or. step/visu_step*visu_step==step) then
        call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"f")
@@ -367,7 +371,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f_init,mesh_case,&
                                     &x1_tab,x2_tab,x1c,x2c,sigma_x1,sigma_x2)
  ! call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
- !          & delta_eta1,delta_eta2,f_case,f,mesh_case)
+ !          & delta_eta1,delta_eta2,f_case,f,mesh_case,sigma_x1,sigma_x2)
     if(bc2_type==PERIODIC_B) f(:,N_eta2+1)=f(:,1) 
     if(bc1_type==PERIODIC_B) f(N_eta1+1,:)=f(1,:)
  !write f_init in a file after calculations
@@ -377,10 +381,6 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
 
 ! L^\infty
   error = 0._f64
-  error2=0._f64
-  error3=0._f64
-  error4=0._f64
-  error5=0._f64
   open(unit=800,file='conv_CG.dat',position="append")
   do i=1,N_eta1+1 !(N_eta1/4),(3*N_eta1/4)
     do j=1,N_eta2+1 !(N_eta1/4),(3*N_eta1/4)     
@@ -388,18 +388,6 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
     enddo
   enddo  
   write(800,*) N_eta1,dt,error
-
-
-    do j=1,N_eta1+1     !5,N_eta2-3
-      error2 = max(error2,abs(f(1,j)))
-      error3 = max(error3,abs(f(N_eta1+1,j)))
-    enddo
-   do i=1,N_eta1+1     !5,N_eta2-3
-      error4 = max(error4,abs(f(i,1)))
-      error5 = max(error5,abs(f(i,N_eta1+1)))
-    enddo
-
-  write(160,*) error2,error3,error4,error5
 
 
  write(23,*)' '
@@ -434,7 +422,8 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  SLL_DEALLOCATE_ARRAY(phi_exact,err)
  SLL_DEALLOCATE_ARRAY(phi_ref,err)
  SLL_DEALLOCATE_ARRAY(int_r,err)
- 
+
+ !SLL_DEALLOCATE_ARRAY(vec_phi,err) 
  t1 => delete_time_mark(t1)
  t2 => delete_time_mark(t2)
  call delete_SL_curvilinear(plan_sl)

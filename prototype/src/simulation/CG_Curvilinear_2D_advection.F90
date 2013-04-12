@@ -3,11 +3,10 @@ module curvilinear_2D_advection
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  !use Curvilinear_operators
-  !use poisson_Curvilinear
+ 
   use module_cg_curvi_function
   use module_cg_curvi_structure
-  use numeric_constants 
+  use sll_constants 
   use sll_splines
   use poisson_polar
   use sll_fft
@@ -125,8 +124,8 @@ contains
     eta1_max=geom_eta(1,2)
     eta2_min=geom_eta(2,1)
     eta2_max=geom_eta(2,2)
-    
-     plan_sl%poisson => new_plan_poisson_polar(delta_eta1,eta1_min,N_eta1,N_eta2,bc)
+
+     !plan_sl%poisson => new_plan_poisson_polar(delta_eta1,eta1_min,N_eta1,N_eta2,bc)
      plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
      plan_sl%adv => new_plan_adv_curvilinear(geom_eta,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
 
@@ -148,7 +147,7 @@ contains
 
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
-       call delete_plan_poisson_polar(plan_sl%poisson)
+       !call delete_plan_poisson_polar(plan_sl%poisson)
        call delete_plan_curvilinear_op(plan_sl%grad)
        SLL_DEALLOCATE(plan_sl,err)
     end if
@@ -196,11 +195,12 @@ contains
     eta2_max=plan%eta2_max
     bc1_type=plan%bc1_type
     bc2_type=plan%bc2_type
-   
+ 
     !construction of spline coefficients for f
     call compute_spline_2D(fn,plan%spl_f)
     !plan%field(2,:,:)=-plan%field(2,:,:)
    
+    
     if (plan%carac_case==1) then
        !explicit Euler with linear interpolation
        fnp1=fn
@@ -451,20 +451,20 @@ contains
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(inout) :: inn
-    sll_real64, dimension(:,:), intent(out) :: outt
+    sll_real64, dimension(:,:), intent(inout), allocatable :: inn
+    sll_real64, dimension(:,:), intent(out), allocatable :: outt
     sll_real64,dimension(:,:),pointer,intent(inout)::jac_array,x1_tab,x2_tab
     sll_real64, intent(in) :: geom_eta(2,2)
     sll_int32, intent(in) :: N_eta1, N_eta2
     sll_int :: step,i,j,mesh_case
-
-    call poisson_solve_polar(plan%poisson,inn,plan%phi)
-    !!call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
+    print*,'pass10'
+    !call poisson_solve_polar(plan%poisson,inn,plan%phi)
+    call lire_appel(plan%phi,inn,N_eta1,N_eta2)
     
-   
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
+  
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
-
+ 
   end subroutine SL_order_1
 
 !!*********************************************************************************
@@ -605,7 +605,7 @@ contains
        do i=0,Nx
           z(0)=dom(0,0)+real(i,f64)*dz(0)
           z(1)=dom(0,1)+real(j,f64)*dz(1)
-          write(900,*) z(0),z(1),z(0)*cos(z(1)),z(0)*sin(z(1)),ftab(i,j)
+          write(900,*) z(0),z(1),z(1)*cos(z(0)),z(1)*sin(z(0)),ftab(i,j)
        enddo
        write(900,*) ''      
     enddo

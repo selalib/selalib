@@ -15,7 +15,7 @@ module module_cg_curvi_structure
      sll_real64 :: eta2_min,eta2_max,delta_eta2
      sll_int32 :: N_eta1,N_eta2,bc1_type,bc2_type
      sll_real64 :: dt
-     type(sll_spline_2D), pointer :: spl_f
+     type(sll_cubic_spline_2D), pointer :: spl_f
      sll_int32 :: carac_case
      sll_real64, dimension(:,:,:), allocatable :: field 
   end type sll_plan_adv_curvilinear
@@ -33,7 +33,7 @@ module module_cg_curvi_structure
   !>type plan_curvilinear_op
   type plan_curvilinear_op
      sll_int32 :: grad_case
-     type(sll_spline_2D), pointer :: spl_phi
+     type(sll_cubic_spline_2D), pointer :: spl_phi
   end type plan_curvilinear_op
 
 
