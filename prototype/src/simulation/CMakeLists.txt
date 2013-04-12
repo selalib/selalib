@@ -175,7 +175,6 @@ target_link_libraries(Poisson_solver
 	)
 ENDIF()
 
-IF(FFTPACK_ENABLED)
 IF(NOT STDF95)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
@@ -223,7 +222,6 @@ target_link_libraries(VP1D_deltaf_cart
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 ENDIF(NOT STDF95)
-ENDIF()
 
 #End of commands to be put in the class simulation standard
 ###################################################
