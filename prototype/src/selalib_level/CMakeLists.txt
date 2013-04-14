@@ -7,10 +7,12 @@ SET(SLL_MACROS
 	 ${SLL_DIR}/assert/sll_assert.h
 	 ${SLL_DIR}/constants/sll_constants.h
 	 ${SLL_DIR}/utilities/sll_utilities.h
+	 ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
 	 ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
 	 ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
 	 ${SLL_DIR}/interpolators/sll_interpolators.h
 	 ${SLL_DIR}/splines/sll_splines.h
+	 ${SLL_DIR}/low_level_file_io/sll_io.h
 	)
 
 FILE(COPY        ${SLL_MACROS}
