@@ -4,16 +4,11 @@
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-
-use sll_memory
-use sll_working_precision
-use sll_utilities
-use sll_constants
-use sll_io
-use sll_visu_pic
-use sll_timer
-use sll_interpolators
-use sll_maxwell_solvers
-use sll_poisson_solvers
+#include "sll_utilities.h"
+#include "sll_constants.h"
+#include "sll_io.h"
+#include "sll_interpolators.h"
+#include "sll_maxwell_solvers.h"
+#include "sll_poisson_solvers.h"
 
 #endif
