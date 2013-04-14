@@ -1,4 +1,4 @@
-!> @namespace sll_low_level_file_io
+!> @namespace sll_file_io
 !> @author Pierre Navaro
 !> @brief 
 !> Library to create files readable by visualization softwares.

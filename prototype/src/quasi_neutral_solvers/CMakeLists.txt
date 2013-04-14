@@ -24,7 +24,6 @@ add_library(sll_qns2d_par STATIC sll_qns2d_with_finite_diff_par.F90
 
 
 set(QNS_LIBS     sll_fft 
-                 sll_numerical_utilities
                  sll_memory 
                  sll_constants 
                  sll_utilities 
