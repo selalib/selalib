@@ -1,6 +1,5 @@
 SET(BSL_LIB_DEPS sll_interpolators
                  sll_splines 
-                 sll_numerical_utilities	
                  sll_memory 
 	         sll_working_precision
                  sll_utilities 

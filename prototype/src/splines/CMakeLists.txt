@@ -1,5 +1,4 @@
-ADD_LIBRARY( sll_splines STATIC sll_splines.F90
-                                sll_cubic_splines.F90
+ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
                                 sll_quintic_splines.F90
                                 sll_odd_degree_splines.F90
                                 sll_arbitrary_degree_splines.F90
@@ -8,25 +7,22 @@ ADD_LIBRARY( sll_splines STATIC sll_splines.F90
 ADD_DEPENDENCIES(sll_splines sll_memory 
                              sll_utilities
                              sll_assertion 
-                             sll_working_precision
-                             sll_numerical_utilities)
+                             sll_working_precision)
 
 ADD_LIBRARY(cubic_non_uniform_splines STATIC cubic_nonuniform_splines.F90)
 
 ADD_DEPENDENCIES(cubic_non_uniform_splines 
                              sll_tridiagonal
-                             sll_splines
                              sll_memory 
                              sll_utilities
                              sll_assertion 
-                             sll_working_precision
-                             sll_numerical_utilities)
+                             sll_working_precision)
 
 
 #libs to link with tests
 
 SET(SPL_LIBS sll_splines 
-             sll_numerical_utilities 
+             sll_utilities 
              sll_memory 
              sll_assertion 
              sll_constants )

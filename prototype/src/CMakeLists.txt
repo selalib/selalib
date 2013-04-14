@@ -14,7 +14,8 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE )
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
+SET(BUILD_LIBRARY_ONLY "NO" CACHE BOOL "Build library without test programs")
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -57,10 +58,9 @@ INCLUDE_DIRECTORIES(utilities
                     memory 
                     assert 
                     splines 
-                    numerical_utilities 
                     precision 
                     fields 
-                    low_level_file_io
+                    file_io
                     fft
                     interpolators
                     poisson_solvers
@@ -68,14 +68,19 @@ INCLUDE_DIRECTORIES(utilities
                     visu_pic) 
 ENABLE_TESTING()
 
+IF(BUILD_LIBRARY_ONLY)
+
+   ADD_SUBDIRECTORY(selalib_level)
+
+ELSE(BUILD_LIBRARY_ONLY)
+
 ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(precision)
 ADD_SUBDIRECTORY(assert)
 ADD_SUBDIRECTORY(constants)
 ADD_SUBDIRECTORY(utilities)
-ADD_SUBDIRECTORY(low_level_file_io)
+ADD_SUBDIRECTORY(file_io)
 ADD_SUBDIRECTORY(timer)
-ADD_SUBDIRECTORY(numerical_utilities)
 ADD_SUBDIRECTORY(non_linear_solvers)
 ADD_SUBDIRECTORY(splines)
 ADD_SUBDIRECTORY(lagrange_interpolation)
@@ -112,12 +117,12 @@ IF(NOT STDF95)
    ADD_SUBDIRECTORY(selalib_level)
    ADD_SUBDIRECTORY(visu_pic)
    ADD_SUBDIRECTORY(simulation)
+   ADD_SUBDIRECTORY(discontinuous_galerkin) 
 
 ENDIF(NOT STDF95)
 
-# I do not know the exact good place to put it so for now it is there
-# Eric Madaule
-add_subdirectory(discontinuous_galerkin) 
+ENDIF(BUILD_LIBRARY_ONLY)
+
 
 ##########################################################
 
@@ -223,3 +228,5 @@ IF(PETSC_ENABLED)
       ADD_SUBDIRECTORY(petsc_solvers)
    ENDIF(PETSC_FOUND)
 ENDIF()
+
+MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

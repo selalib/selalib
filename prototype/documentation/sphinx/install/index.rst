@@ -5,11 +5,14 @@ Change the variable CMAKE_BUILD_TYPE to "Release".
 
 Set the variable CMAKE_INSTALL_PREFIX to the path where you want to install selalib.
 
+Set the variable BUILD_LIBRARY_ONLY to "ON" to reduce the building time.
+
 Fortran modules, header files and library will be installed to this path.
 Just type::
 
+   cmake -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="install_dir" -DBUILD_LIBRARY_ONLY=1 selalib/prototype/src
+   make 
    make install
-
 
 
 Use selalib
