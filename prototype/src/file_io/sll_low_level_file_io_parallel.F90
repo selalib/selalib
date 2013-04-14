@@ -1,4 +1,4 @@
-!> @namespace sll_low_level_file_io_parallel
+!> @namespace sll_file_io_parallel
 !> @author Pierre Navaro
 !> @brief 
 !> Library to create parallel files readable by visualization softwares.
