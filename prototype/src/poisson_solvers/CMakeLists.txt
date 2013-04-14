@@ -68,8 +68,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                          sll_utilities
                                          ${FFTW_LIBRARIES})
 
-   ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_solvers.F90
-                                          sll_poisson_1d_periodic.F90
+   ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_1d_periodic.F90
                                           sll_poisson_2d_periodic.F90)
 
 
@@ -100,9 +99,6 @@ TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq
 #
 # ****************************************************************************
 
-#IF(NOT${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
-
-#MPI_MODULE_ENABLED flag implies MPI_FOUND
 IF(MPI_MODULE_ENABLED)
 
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
@@ -113,6 +109,20 @@ IF(MPI_MODULE_ENABLED)
 
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
   
+
+   ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
+
+   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par 
+                          sll_poisson_parallel 
+                          sll_remap 
+                          sll_collective 
+                          sll_fft 
+                          sll_memory 
+                          sll_timer 
+                          sll_utilities 
+                          sll_assertion)
+ENDIF()
+
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    # This test has hdf5 diagnostics. Maybe these should only be turned on
    # when debugging this specific module.
@@ -131,20 +141,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                          sll_assertion )
 
 ENDIF()
-
-ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
-
-TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par 
-                       sll_poisson_parallel 
-                       sll_remap 
-                       sll_collective 
-                       sll_fft 
-                       sll_memory 
-                       sll_timer 
-                       sll_utilities 
-                       sll_assertion)
-ENDIF()
-#ENDIF()
 
 ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
 

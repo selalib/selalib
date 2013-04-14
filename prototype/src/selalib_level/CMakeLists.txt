@@ -51,10 +51,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/numerical_utilities/tridiagonal.F90
     ${SLL_DIR}/numerical_utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/numerical_utilities/lagrange_interpolation.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90
    )
