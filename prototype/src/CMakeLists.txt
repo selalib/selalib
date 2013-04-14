@@ -62,6 +62,8 @@ INCLUDE_DIRECTORIES(utilities
                     fields 
                     low_level_file_io
                     fft
+                    interpolators
+                    poisson_solvers
                     maxwell_solvers
                     visu_pic) 
 ENABLE_TESTING()
