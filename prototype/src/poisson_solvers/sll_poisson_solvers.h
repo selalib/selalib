@@ -9,6 +9,7 @@
 #define SET_POISSON_MESH_DESCRIPTOR( p, m )     p%descriptor => m
 #define SET_POISSON_RHS( p, f )    p%rhs => f
 
-use sll_poisson_solvers
+use sll_poisson_1d_periodic
+use sll_poisson_2d_periodic
 
 #endif
