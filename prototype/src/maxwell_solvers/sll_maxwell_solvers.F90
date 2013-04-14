@@ -17,6 +17,7 @@
 
 !> \author
 !> Pierre Navaro 
+!> @namespace sll_maxwell_solvers
 !> Common data for Maxwell solvers
 module sll_maxwell_solvers
 
