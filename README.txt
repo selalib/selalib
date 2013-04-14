@@ -5,7 +5,13 @@ As part of french action Fusion, Calvi INRIA projetct developed in collaboration
 Sign in to the INRIA GForge and Subscribe to the project selalib by sending a email
 to navaro@math.unistra.fr
 
+To develop in Selalib please read :
+   - GitQuickstart.txt
+   - CMakeQuickstart.txt
+
+
 The selalib-build script runs 
+------------------------------------------
 
      1. architecture reservation, OS deployement, OS configuration on pipol platform
      2. git pull of the sources from gforge 
@@ -14,8 +20,20 @@ The selalib-build script runs
      5. packages generation
      6. packages upload on the gforge
 
+selalib compilation, installation
+------------------------------------------
+
+mkdir build 
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release                                    \
+      -DBUILD_LIBRARY_ONLY=1                                        \
+      -DCMAKE_INSTALL_PREFIX=<path where selalib will be installed> \
+      <the path of this directory>/prototype/src 
+make install
+
 selalib compilation, testing and packaging
------------
+------------------------------------------
+
 
 mkdir build
 cd build
@@ -26,3 +44,5 @@ To display results from outside of IRMA network you need to connect your VPN cli
 
 For package generation
 cpack -G <the cpack generator for your system : DEB, RPM, ... >
+AUTHORS
+
