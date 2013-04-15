@@ -34,7 +34,6 @@ add_dependencies( sll_simulation_1d
   cubic_non_uniform_splines
   sll_tridiagonal
   sll_splines
-  sll_numerical_utilities	
   sll_fft
   sll_constants
   sll_utilities
@@ -82,7 +81,6 @@ add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
 target_link_libraries( test_vp1d_fourier_fem
   sll_simulation_1d
   sll_splines
-  sll_numerical_utilities	
   sll_fft
   sll_constants
   sll_utilities
@@ -131,7 +129,7 @@ add_executable(curvilinear_SL curvilinear_SL.F90)
 #	sll_distribution_function
 #	sll_scalar_field_2d	
 #	sll_constants
-#	sll_low_level_file_io
+#	sll_file_io
 # 	sll_utilities
 #	sll_memory
 #	sll_assertion
@@ -142,12 +140,11 @@ target_link_libraries(polar_SL
 	sll_mapped_meshes
 	sll_interpolators
 	sll_splines
-        sll_numerical_utilities	
 	geometry_functions
 #	sll_distribution_function
 #	sll_scalar_field_2d	
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
   	sll_utilities
 	sll_memory
 	sll_assertion
@@ -160,9 +157,8 @@ target_link_libraries(polar_SL
 	geometry_functions
 #	sll_distribution_function
 #	sll_scalar_field_2d	
-        sll_numerical_utilities	
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
   	sll_utilities
 	sll_memory
 	sll_assertion
@@ -174,14 +170,13 @@ add_executable(CG_polar
 		sll_advection_polar.F90
 		sll_polar_operators.F90
 		)
-add_dependencies(CG_polar sll_low_level_file_io)
+add_dependencies(CG_polar sll_file_io)
 
 #FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(CG_polar
 	sll_splines
 	sll_poisson_2d_polar
-        sll_low_level_file_io
-        sll_numerical_utilities	
+        sll_file_io
 	sll_fft
 #	sll_tridiagonal
 	sll_constants
@@ -198,7 +193,6 @@ add_executable(Poisson_solver
 		)
 target_link_libraries(Poisson_solver
 	sll_fft
-        sll_numerical_utilities	
 #	sll_tridiagonal
 	sll_constants
 	sll_memory
@@ -207,7 +201,6 @@ target_link_libraries(Poisson_solver
 	)
 ENDIF()
 
-IF(FFTPACK_ENABLED)
 IF(NOT STDF95)
 add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
 target_link_libraries(VP1D_cart
@@ -218,14 +211,13 @@ target_link_libraries(VP1D_cart
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
-        sll_numerical_utilities	
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
   	sll_utilities
 	sll_memory
 	sll_assertion 	
 	sll_poisson_1d_periodic
-	fftpack_module
+	dfftpack
 	)
 
 
@@ -241,21 +233,19 @@ target_link_libraries(VP1D_deltaf_cart
 	geometry_functions
 	sll_distribution_function
 	sll_scalar_field_2d	
-        sll_numerical_utilities	
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
   	sll_utilities
 	sll_memory
 	sll_assertion 	
 	sll_poisson_1d_periodic
-	fftpack_module
+	dfftpack
 	${LAPACK_LIBRARIES}
 	)
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 ENDIF(NOT STDF95)
-ENDIF()
 
 #End of commands to be put in the class simulation standard
 ###################################################
@@ -288,11 +278,10 @@ add_dependencies( sll_simulations
   sll_scalar_field
   sll_interpolators
   sll_splines
-  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
-  sll_low_level_file_io_parallel
+  sll_file_io_parallel
   sll_utilities
   sll_memory
   sll_assertion 	
@@ -315,11 +304,10 @@ target_link_libraries( test_vp4d_sim
   sll_scalar_field
   sll_interpolators
   sll_splines
-  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
-  sll_low_level_file_io_parallel
+  sll_file_io_parallel
   sll_utilities
   sll_memory
   sll_assertion 	
@@ -336,11 +324,10 @@ target_link_libraries( test_vp6d_sim
   sll_scalar_field
   sll_interpolators
   sll_splines
-  sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
-  sll_low_level_file_io_parallel
+  sll_file_io_parallel
   sll_utilities
   sll_memory
   sll_assertion 	

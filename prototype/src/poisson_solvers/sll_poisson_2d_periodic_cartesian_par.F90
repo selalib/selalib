@@ -15,7 +15,7 @@ module sll_poisson_2d_periodic_cartesian_par
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-  use remapper
+  use sll_remapper
   use sll_fft
   use sll_constants
   use sll_collective

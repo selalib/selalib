@@ -18,7 +18,7 @@ program test_sll_qns2d_with_finite_diff_par
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use remapper
+  use sll_remapper
   use sll_constants
   use sll_collective
   use sll_qns2d_with_finite_diff_par

@@ -5,7 +5,7 @@ module sll_simulation_4d_vlasov_poisson_cartesian
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
   use sll_collective
-  use remapper
+  use sll_remapper
   use sll_constants
   use sll_cubic_spline_interpolator_1d
   use sll_test_4d_initializer
@@ -442,14 +442,27 @@ contains
 
 
     do itime=1, sim%num_iterations
-       ! Carry out a 'dt/2' advection in the velocities.
-       ! Start with vx...(x3)
+       ! The splitting scheme used here is meant to attain a dt^2 accuracy.
+       ! We use:
+       !
+       ! dt/2 in vx
+       ! dt/2 in vy
+       ! dt/4 in vx
+       ! dt/2 in y
+       ! dt   in x
+       ! dt/2 in y
+       ! dt/4 in vx
+       ! dt/2 in vy
+       !
+       ! Note that two dt/4 in vx have been joined in the first step.
+
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
+       ! Start with dt/2 in vx...(x3)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do l=1,sim%mesh4d%num_cells4
@@ -464,7 +477,7 @@ contains
           end do
        end do
 
-       ! Continue with vy...(x4)
+       ! dt/2 in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do k=1,sim%mesh4d%num_cells3
@@ -479,16 +492,48 @@ contains
           end do
        end do
 
+       ! dt/4 in vx:
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do l=1,sim%mesh4d%num_cells4
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.25_f64*sim%dt
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                     sim%nc_x3, &
+                     sim%f_x3x4(i,j,:,l), &
+                     alpha )
+             end do
+          end do
+       end do
+
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
-       ! Reconfigure data (remember to initialize the remap plan elsewhere):
+       ! Reconfigure data. 
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
+
+       ! dt/2 in 'y' (x2)
+       do l=1,loc_sz_x4
+          do k=1,loc_sz_x3
+             do i=1,sim%mesh4d%num_cells1
+                vmin = sim%mesh4d%x4_min
+                delta = sim%mesh4d%delta_x4
+                alpha = (vmin + (l-1)*delta)*sim%dt*0.5_f64
+                !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
+                     sim%nc_x2, &
+                     sim%f_x1x2(i,:,k,l), &
+                     alpha )
+             end do
+          end do
+       end do
        
-       ! full time step advection in 'x' (x1)
+       ! dt in 'x' (x1)
        do l=1,loc_sz_x4
           do k=1,loc_sz_x3
              do j=1,sim%mesh4d%num_cells2
@@ -505,13 +550,13 @@ contains
           end do
        end do
        
-       ! full time step advection in 'y' (x2)
+       ! dt/2 in 'y' (x2)
        do l=1,loc_sz_x4
           do k=1,loc_sz_x3
              do i=1,sim%mesh4d%num_cells1
                 vmin = sim%mesh4d%x4_min
                 delta = sim%mesh4d%delta_x4
-                alpha = (vmin + (l-1)*delta)*sim%dt
+                alpha = (vmin + (l-1)*delta)*sim%dt*0.5_f64
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
@@ -522,12 +567,47 @@ contains
           end do
        end do
        
-       ! Compute the fields:
-       ! 1. Reconfigure data for sequential operations in x3 and x4 in order
-       !    to compute the charge density.
-       ! 2. Compute charge density.
-       ! 3. Reconfigure charge density to feed to Poisson solver
+       ! And reconfigure the data for the last set of advections in vx and vy.
+       ! This will also help for the calculation of the charge density later
+       ! on.
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
+
+       call compute_local_sizes_4d( sim%sequential_x3x4, &
+            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+
+       ! dt/4 in vx
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do l=1,sim%mesh4d%num_cells4
+                ex    = real(sim%efield_split(i,j),f64)
+                alpha = -ex*0.25_f64*sim%dt
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                     sim%nc_x3, &
+                     sim%f_x3x4(i,j,:,l), &
+                     alpha )
+             end do
+          end do
+       end do
+
+       ! dt/2 in vy...(x4)
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do k=1,sim%mesh4d%num_cells3
+                ey    = aimag(sim%efield_split(i,j))
+                alpha = -ey*0.5_f64*sim%dt
+                ! interpolate_array_disp() has an interface that must be changed
+                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                     sim%nc_x4, &
+                     sim%f_x3x4(i,j,k,:), &
+                     alpha )
+             end do
+          end do
+       end do
+
+       ! Compute the fields:
+       ! 1. Compute charge density.
+       ! 2. Reconfigure charge density to feed to Poisson solver
        
        call compute_charge_density( &
             sim%mesh4d, &
