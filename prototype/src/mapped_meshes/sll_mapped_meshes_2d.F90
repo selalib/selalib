@@ -4,7 +4,7 @@ module sll_module_mapped_meshes_2d
 #include "sll_assert.h"
 #include "sll_file_io.h"
 
-  use sll_splines
+  use sll_cubic_splines
 #ifdef STDF95
   use sll_cubic_spline_interpolator_2d
   use sll_xdmf

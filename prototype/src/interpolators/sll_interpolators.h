@@ -13,9 +13,7 @@ use sll_module_interpolators_2d_base
 #endif
 use sll_cubic_spline_interpolator_2d
 
-use sll_splines
-use sll_quintic_splines
-use sll_odd_degree_splines
+#include "sll_splines.h"
 
 #endif
  

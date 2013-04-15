@@ -8,6 +8,7 @@
 #include "sll_constants.h"
 #include "sll_file_io.h"
 #include "sll_interpolators.h"
+#include "sll_splines.h"
 #include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
 
