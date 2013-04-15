@@ -8,7 +8,7 @@ module sll_vlasov4d
  use used_precision
  use geometry_module
  use diagnostiques_module
- use sll_splines
+ use sll_cubic_splines
  use sll_cubic_spline_interpolator_1d
  use sll_quintic_spline_interpolator_1d
  use sll_cubic_spline_interpolator_2d

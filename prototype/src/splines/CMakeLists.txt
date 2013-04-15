@@ -1,8 +1,7 @@
 ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
                                 sll_quintic_splines.F90
                                 sll_odd_degree_splines.F90
-                                sll_arbitrary_degree_splines.F90
-           )
+                                sll_arbitrary_degree_splines.F90)
 
 ADD_DEPENDENCIES(sll_splines sll_memory 
                              sll_utilities
@@ -12,6 +11,7 @@ ADD_DEPENDENCIES(sll_splines sll_memory
 ADD_LIBRARY(cubic_non_uniform_splines STATIC cubic_nonuniform_splines.F90)
 
 ADD_DEPENDENCIES(cubic_non_uniform_splines 
+                             sll_splines
                              sll_tridiagonal
                              sll_memory 
                              sll_utilities
