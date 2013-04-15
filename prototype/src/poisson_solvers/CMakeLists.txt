@@ -1,14 +1,13 @@
 SET(POISSON_LIBS sll_fft
-	              sll_file_io	
-                 sll_memory
-	              sll_timer
-	              sll_utilities
-	              sll_assertion
                  sll_mapped_meshes
                  geometry_functions
                  sll_splines
                  sll_interpolators
                  sll_file_io
+	              sll_utilities
+                 sll_memory
+	              sll_assertion
+	              sll_timer
                  dfftpack)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
