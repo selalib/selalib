@@ -25,8 +25,8 @@ module sll_nu_cart_mesh
      !>          contains number of cells in each direction, each cell size in each direction
      !>                   and position of each nodes
      sll_int32 :: n_etat1,n_etat2
-     sll_real64,dimension(:),allocatable :: d_etat1,d_etat2
-     sll_real64,dimension(:),allocatable :: etat1,etat2
+     sll_real64,dimension(:),pointer :: d_etat1,d_etat2
+     sll_real64,dimension(:),pointer :: etat1,etat2
      ! position of node j in direction i, can be usefull for computation, but I'm nor sure
      ! see if we keep this in some more developed version
      logical :: unif1, unif2 ! .true. if the meshing is uniform, just for optimization, .fale. else
