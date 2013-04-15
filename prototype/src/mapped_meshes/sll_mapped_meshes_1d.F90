@@ -2,7 +2,7 @@ module sll_module_mapped_meshes_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_splines
+use sll_cubic_splines
 #ifdef STDF95
   ! We need sll_file_io because the function write_mesh is write
   ! in the subclass in the F95 case

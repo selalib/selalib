@@ -7,4 +7,3 @@ use sll_odd_degree_splines
 use sll_arbitrary_degree_splines
 
 #endif
- 
