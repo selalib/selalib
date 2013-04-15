@@ -14,7 +14,7 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE BOOL "Installation directory of the library" FORCE )
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE )
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -53,6 +53,7 @@ INCLUDE(DoxygenConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
+                    constants
                     memory 
                     assert 
                     splines 
@@ -61,7 +62,8 @@ INCLUDE_DIRECTORIES(utilities
                     fields 
                     low_level_file_io
                     fft
-                    maxwell_solvers) 
+                    maxwell_solvers
+                    visu_pic) 
 ENABLE_TESTING()
 
 ADD_SUBDIRECTORY(memory)
@@ -78,13 +80,8 @@ ADD_SUBDIRECTORY(lagrange_interpolation)
 ADD_SUBDIRECTORY(WENO)
 ADD_SUBDIRECTORY(integration)
 ADD_SUBDIRECTORY(fft)
-
-IF(FFTPACK_ENABLED)
-
-   ADD_SUBDIRECTORY(fftpack)
-   ADD_SUBDIRECTORY(periodic_interpolation)
-
-ENDIF()
+ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(periodic_interpolation)
 
 IF(MPI_MODULE_ENABLED)
 
@@ -118,7 +115,7 @@ ENDIF(NOT STDF95)
 
 # I do not know the exact good place to put it so for now it is there
 # Eric Madaule
-add_subdirectory(DG) 
+add_subdirectory(discontinuous_galerkin) 
 
 ##########################################################
 
