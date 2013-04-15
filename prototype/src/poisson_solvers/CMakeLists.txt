@@ -1,47 +1,34 @@
+SET(POISSON_LIBS sll_fft
+	              sll_file_io	
+                 sll_memory
+	              sll_timer
+	              sll_utilities
+	              sll_assertion
+                 sll_mapped_meshes
+                 geometry_functions
+                 sll_splines
+                 sll_interpolators
+                 sll_file_io
+                 dfftpack)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
                                sll_poisson_2d_polar.F90
 	                            ../simulation/sll_polar_operators.F90)
 
-TARGET_LINK_LIBRARIES(unit_test_polar sll_fft
-	                                   sll_constants
-	                                   sll_memory
-	                                   sll_assertion
-	                                   sll_utilities
-	                                   sll_splines)
+TARGET_LINK_LIBRARIES(unit_test_polar ${POISSON_LIBS})
 
 ADD_LIBRARY(sll_poisson_1d_periodic STATIC sll_poisson_1d_periodic.F90)
 ADD_LIBRARY(sll_poisson_2d_polar    STATIC sll_poisson_2d_polar.F90)
+ADD_LIBRARY(sll_poisson_3d_periodic STATIC sll_poisson_3d_periodic_seq.F90)
+
+ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90)
+
+TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq sll_poisson_3d_periodic
+                                                   ${POISSON_LIBS})
 
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
 
-TARGET_LINK_LIBRARIES(test_poisson_1d sll_mapped_meshes
-                                      geometry_functions
-                                      sll_splines
-                                      sll_interpolators
-                                      sll_file_io
-                                      dfftpack
-                                      sll_utilities
-                                      sll_assertion
-                                      sll_memory
-                                      sll_working_precision)
-
-#  ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic_fftpack.F90 )
-#  add_executable(test_poisson_2d test_poisson_2d_fftpack.F90)
-#  target_link_libraries(test_poisson_2d 
-#                        sll_poisson_2d_periodic 
-#	                      sll_scalar_field_2d
-#	                      sll_constants
-#	                      sll_working_precision
-#                        sll_assertion 
-#                        sll_memory 
-#                        sll_mapped_meshes
-#                        sll_scalar_field_1d
-#                        geometry_functions	 
-#                        sll_file_io	
-#                        sll_utilities
-#                        ${FFTPACK_LIBRARIES}
-#  )
+TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
@@ -50,19 +37,12 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
    ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
 
    TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
-                                         sll_mapped_meshes
-                                         sll_constants
-                                         sll_working_precision
-                                         sll_assertion 
-                                         sll_memory 
-                                         sll_file_io	
-                                         sll_utilities
+                                         ${POISSON_LIBS}
                                          ${FFTW_LIBRARIES})
 
    ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_1d_periodic.F90
                                           sll_poisson_2d_periodic.F90
                                           sll_poisson_2d_polar.F90)
-
 
 ENDIF()
 
@@ -72,18 +52,6 @@ IF(FISHPACK_ENABLED)
    TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assertion fishpack)
 
 ENDIF()
-
-ADD_LIBRARY(sll_poisson_3d_periodic_seq STATIC sll_poisson_3d_periodic_seq.F90)
-ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90)
-TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq
-	                      sll_poisson_3d_periodic_seq
-	                      sll_fft
-	                      sll_file_io	
-                         sll_memory
-	                      sll_timer
-	                      sll_utilities
-	                      sll_assertion
-)
 
 # ****************************************************************************
 #
@@ -99,7 +67,6 @@ IF(MPI_MODULE_ENABLED)
 
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
   
-
    ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
 
    TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par 
