@@ -245,6 +245,7 @@ set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library( sll_simulations STATIC 
   simulation_base_class.F90 
   simulation_4d_vlasov_poisson_cartesian.F90
+  simulation_4d_vlasov_poisson_general.F90
   simulation_6d_vlasov_poisson_cartesian.F90 )
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
@@ -283,6 +284,29 @@ target_link_libraries( test_vp4d_sim
   sll_scalar_field
   sll_interpolators
   sll_splines
+  sll_numerical_utilities	
+  sll_remap
+  sll_collective
+  sll_constants
+  sll_low_level_file_io_parallel
+  sll_utilities
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+add_executable( test_vp4d_sim_general unit_test_4d_vp_general.F90 )
+
+target_link_libraries( test_vp4d_sim_general
+  sll_simulations
+  sll_poisson_parallel
+  sll_fft
+  sll_electric_field_accumulators
+  sll_scalar_field
+  sll_mapped_meshes
+  sll_interpolators
+  sll_splines
+  geometry_functions
   sll_numerical_utilities	
   sll_remap
   sll_collective
