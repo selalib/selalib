@@ -11,5 +11,6 @@
 
 use sll_poisson_1d_periodic
 use sll_poisson_2d_periodic
+use sll_poisson_2d_polar
 
 #endif
