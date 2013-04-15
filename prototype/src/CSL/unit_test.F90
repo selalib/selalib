@@ -3,10 +3,10 @@ program unit_test
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use sll_constants
+#include "sll_constants.h"
+#include "sll_file_io.h"
+
   use distribution_function
-  !use sll_diagnostics
-  use sll_io
   use sll_csl
   use sll_module_mapped_meshes_2d_cartesian
   use sll_gaussian_2d_initializer

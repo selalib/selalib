@@ -4,7 +4,7 @@
 module sll_visu_pic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-use sll_io
+#include "sll_file_io.h"
 
 implicit none
 

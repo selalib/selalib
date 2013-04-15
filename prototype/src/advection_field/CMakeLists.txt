@@ -17,12 +17,11 @@ target_link_libraries(test_advection_field
 	sll_advection_field
 	sll_scalar_field_2d
         sll_scalar_field_1d
-	sll_low_level_file_io
+	sll_file_io
 	sll_interpolators
 	sll_splines
 	geometry_functions
 	sll_mapped_meshes
-        sll_numerical_utilities	
 	sll_utilities
 	sll_memory
 	sll_assertion

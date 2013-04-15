@@ -10,7 +10,7 @@ module sll_vlasov4d_base
  use diagnostiques_module
  use sll_module_interpolators_1d_base
  use sll_module_interpolators_2d_base
- use remapper
+ use sll_remapper
 use sll_xml_io
 
  implicit none
@@ -123,7 +123,7 @@ contains
 
  subroutine free_vlasov4d_base(this)
 
-  class(vlasov4d_base),intent(out) :: this
+  class(vlasov4d_base),intent(inout) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)

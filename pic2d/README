@@ -1,5 +1,14 @@
-All inromations about pic2d are available here
+All informations about pic2d are available here
 
 http://www-irma.u-strasbg.fr/irmawiki/index.php/Code_PIC_pour_Vlasov-Maxwell_sur_maillage_structuré
 
 Pierre
+
+To build this code
+
+mkdir build
+cd build
+cmake ../src
+make
+./bin/test_pic2d ../input/data.nml
+
