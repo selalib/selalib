@@ -10,8 +10,9 @@ Selalib documentation
 .. toctree::
    :maxdepth: 2
 
-   Prototype <installation>
-   License <license>
+   Installation <install/index>
+   Prototype <prototype/getting_started>
+   Building Tools <prototype/guide_tools>
 
 Some pages of this documentation display equations via the `jsMath
 <http://www.math.union.edu/~dpvc/jsMath/welcome.html>`_ package. They should

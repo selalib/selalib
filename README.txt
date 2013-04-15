@@ -21,7 +21,7 @@ mkdir build
 cd build
 cmake <the path of this directory>
 make Experimental
-(the test result goes to http://irma-webhpc.u-strasbg.fr/index.php?project=SeLaLib)
+(the test result goes to http://cdash.inria.fr/CDash/index.php?project=Selalib)
 To display results from outside of IRMA network you need to connect your VPN client.
 
 For package generation

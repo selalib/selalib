@@ -39,7 +39,7 @@ clean:
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -f *~ *.*~
-	rsync -vurz -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
+	rsync -vurz --delete -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
 
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
