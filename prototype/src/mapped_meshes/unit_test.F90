@@ -11,6 +11,7 @@ program unit_test
 
   type(sll_mapped_mesh_2d_analytic)    :: map_a    ! analytic map
   type(sll_mapped_mesh_2d_discrete)    :: map_d    ! discrete map
+  type(sll_mapped_mesh_2d_analytic), pointer :: map_a_ptr !test
   ! for the discrete case...
   type(cubic_spline_2d_interpolator)   :: x1_interp
   type(cubic_spline_2d_interpolator)   :: x2_interp
@@ -82,6 +83,19 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        deriv_x2_polar_f_eta1, &
        deriv_x2_polar_f_eta2 )
   print *, 'initialized analytic map'
+
+  ! The following pointer is not used but wanted to test the 'new' function
+  ! wrapper.
+  map_a_ptr => new_mesh_2d_analytic( &
+       "map_a", &
+       NPTS1, &
+       NPTS2, &
+       x1_polar_f, &
+       x2_polar_f, &
+       deriv_x1_polar_f_eta1, &
+       deriv_x1_polar_f_eta2, &
+       deriv_x2_polar_f_eta1, &
+       deriv_x2_polar_f_eta2 )
 
 #ifdef STDF95
   print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', &
