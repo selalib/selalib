@@ -35,6 +35,6 @@
 #define INT32_SIZEOF( var ) size(transfer(var, (/1_i32/)))
 
 use sll_utilities
-
+use sll_tridiagonal
 
 #endif

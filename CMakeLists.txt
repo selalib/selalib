@@ -45,11 +45,12 @@ MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
 ADD_DEFINITIONS(-D_FFTW)
-SET(FFTPACK_ENABLED       OFF CACHE BOOL "Use fftpack library " FORCE)
 add_subdirectory (prototype/src)
+IF(NOT STDF95)
 add_subdirectory (slv2d/src)
 add_subdirectory (pic2d/src)
 add_subdirectory (gysela_public/src)
+ENDIF(NOT STDF95)
 
 # Pipol rc and nightly files are installed under share/pipol
 file(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
@@ -84,7 +85,7 @@ set(CPACK_PACKAGE_DESCRIPTION
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.txt")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
 
-set(CPACK_PACKAGE_NAME "selalib-prototype")
+set(CPACK_PACKAGE_NAME "selalib")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 1)
 set(CPACK_PACKAGE_VERSION_MINOR 0)
