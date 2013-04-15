@@ -590,7 +590,7 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 #ifdef STDF95
-    val = cubic_spline_interpolate_value(mesh%x1_interp,eta1, eta2)
+    val = cubic_spline_2d_interpolate_value(mesh%x1_interp,eta1, eta2)
 #else
     val = mesh%x1_interp%interpolate_value(eta1, eta2)
 #endif
@@ -606,7 +606,7 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 #ifdef STDF95
-    val = cubic_spline_interpolate_value(mesh%x2_interp, eta1, eta2)
+    val = cubic_spline_2d_interpolate_value(mesh%x2_interp, eta1, eta2)
 #else
     val = mesh%x2_interp%interpolate_value(eta1, eta2)
 #endif
@@ -626,10 +626,10 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
 #ifdef STDF95
-    j11 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
-    j12 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
-    j21 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
-    j22 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j11 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j12 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j21 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j22 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
 #else
     j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
@@ -669,10 +669,10 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
 #ifdef STDF95
-    j11 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
-    j12 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
-    j21 = cubic_spline_interpolate_derivative_eta1( mesh%x2_interp, eta1, eta2 )
-    j22 = cubic_spline_interpolate_derivative_eta2( mesh%x2_interp, eta1, eta2 )
+    j11 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j12 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j21 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x2_interp, eta1, eta2 )
+    j22 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x2_interp, eta1, eta2 )
 #else
     j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
@@ -827,8 +827,8 @@ contains
 
     ! Compute the spline coefficients
 #ifdef STDF95
-    call cubic_spline_compute_interpolants( x1_interpolator, mesh%x1_node )
-    call cubic_spline_compute_interpolants( x2_interpolator, mesh%x2_node )
+    call cubic_spline_2d_compute_interpolants( x1_interpolator, mesh%x1_node )
+    call cubic_spline_2d_compute_interpolants( x2_interpolator, mesh%x2_node )
 #else
     call x1_interpolator%compute_interpolants( mesh%x1_node )
     call x2_interpolator%compute_interpolants( mesh%x2_node )
