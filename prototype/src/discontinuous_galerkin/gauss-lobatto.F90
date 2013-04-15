@@ -36,7 +36,7 @@ module gausslobatto_mod
      !>          TheseThe firsts are allocatable array. Use the construction subroutine to build
      !>          it. Only degree is a scalar. It is the degree of corresponding polynomials.
      !>          Only jac must be filled manually (but it is allocated in the constructor)
-     sll_real64,dimension(:),allocatable :: node,weight,jac
+     sll_real64,dimension(:),pointer :: node,weight,jac
      sll_int32 :: degree
   end type gausslobatto1D
 
