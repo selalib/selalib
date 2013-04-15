@@ -3,7 +3,6 @@ BLAS_f77blas_LIBRARY:FILEPATH=/usr/lib/libf77blas.so.3gf
 CMAKE_Fortran_COMPILER:FILEPATH=/usr/bin/gfortran
 CMAKE_Fortran_FLAGS_DEBUG:STRING=-g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0
 CMAKE_Fortran_FLAGS_RELEASE:STRING=-w -ffree-line-length-none -fall-intrinsics -O3
-FFTPACK_ENABLED:BOOL=ON
 FFTW_ENABLED:BOOL=ON
 FFTW_INCLUDE_DIRS:PATH=/usr/include
 FFTW_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libfftw3.so

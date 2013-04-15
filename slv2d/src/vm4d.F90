@@ -6,7 +6,7 @@ program vm4d
 #include "sll_assert.h"
 #include "sll_memory.h"
 use sll_collective
-use remapper
+use sll_remapper
 use sll_poisson_2d_periodic
 use sll_maxwell_solvers
 use sll_maxwell_2d_pstd

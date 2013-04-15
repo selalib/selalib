@@ -28,7 +28,7 @@ program test_layout_output
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
        sll_hdf5_write_array, &
        sll_hdf5_file_close
-  use remapper
+  use sll_remapper
 
 
   implicit none
