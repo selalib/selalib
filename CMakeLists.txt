@@ -19,6 +19,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 include(F90FLAGS)
 # Tests+Dashboard configuration
 include(CTest)
+
+
+
 SET(CTEST_DROP_SITE_CDASH TRUE)
 enable_testing()
 include(Pipol)
@@ -33,6 +36,7 @@ else()
 endif()
 MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+
 if(PIPOL_IMAGE)
   set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${PIPOL_IMAGE_NAME}-${CMAKE_BUILD_TYPE}")
   set(SITE "${PIPOL_SITE}")
@@ -49,6 +53,12 @@ ADD_DEFINITIONS(-D_FFTW)
 SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build package only")
 
 IF(SLL_BUILD_PACKAGE)
+   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+   FIND_PACKAGE(MPI REQUIRED Fortran)
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+   INCLUDE(HDF5Config)
+   FIND_PACKAGE(FFTW)
    add_subdirectory (prototype/src/package)
    # Packages generation
    include(CPackConfig) 

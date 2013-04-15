@@ -28,6 +28,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/utilities/lagrange_interpolation.F90
+    ${SLL_DIR}/fft/fftw_module.F90
+    ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90
+    ${SLL_DIR}/fft/fft_utils.F90
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
