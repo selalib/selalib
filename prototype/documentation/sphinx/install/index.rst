@@ -12,7 +12,7 @@ Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX="install_dir" \
-         -DBUILD_LIBRARY_ONLY=1 selalib/prototype/src
+         -DSLL_BUILD_PACKAGE=1 selalib/prototype/src
    make 
    make install
 
