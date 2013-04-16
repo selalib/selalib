@@ -15,7 +15,7 @@ PROJECT(SLL)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
-SET(BUILD_LIBRARY_ONLY "NO" CACHE BOOL "Build library without test programs")
+SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -68,11 +68,11 @@ INCLUDE_DIRECTORIES(utilities
                     visu_pic) 
 ENABLE_TESTING()
 
-IF(BUILD_LIBRARY_ONLY)
+IF(SLL_BUILD_PACKAGE)
 
    ADD_SUBDIRECTORY(package)
 
-ELSE(BUILD_LIBRARY_ONLY)
+ELSE(SLL_BUILD_PACKAGE)
 
 ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(precision)
@@ -120,7 +120,7 @@ IF(NOT STDF95)
 
 ENDIF(NOT STDF95)
 
-ENDIF(BUILD_LIBRARY_ONLY)
+ENDIF(SLL_BUILD_PACKAGE)
 
 
 ##########################################################
