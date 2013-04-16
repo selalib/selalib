@@ -49,7 +49,6 @@ module sll_maxwell_2d_periodic_cartesian_par
 
 use, intrinsic :: iso_c_binding
 use sll_remapper
-use sll_fft
 use sll_constants
 use sll_collective
 

@@ -20,8 +20,6 @@ include(F90FLAGS)
 # Tests+Dashboard configuration
 include(CTest)
 
-
-
 SET(CTEST_DROP_SITE_CDASH TRUE)
 enable_testing()
 include(Pipol)
@@ -49,10 +47,12 @@ MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
 ADD_DEFINITIONS(-D_FFTW)
+SET(FFT_DEFAULT_LIBRARY "FFTW" CACHE STRING "fft library used" FORCE)
 
 SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build package only")
 
 IF(SLL_BUILD_PACKAGE)
+
    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
    INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
    FIND_PACKAGE(MPI REQUIRED Fortran)
@@ -62,7 +62,9 @@ IF(SLL_BUILD_PACKAGE)
    add_subdirectory (prototype/src/package)
    # Packages generation
    include(CPackConfig) 
+
 ELSE()
+
    add_subdirectory (prototype/src)
 
    IF(NOT STDF95)
