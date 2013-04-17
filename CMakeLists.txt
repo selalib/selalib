@@ -8,7 +8,7 @@ ELSE()
    "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
-PROJECT(SELALIB)
+PROJECT(selalib)
 ENABLE_LANGUAGE(Fortran)
 
 # local modules path
@@ -53,10 +53,13 @@ SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build package only")
 IF(SLL_BUILD_PACKAGE)
 
    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
-   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/INCLUDE)
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
    FIND_PACKAGE(MPI REQUIRED Fortran)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    INCLUDE(HDF5Config)
+   IF(NOT ${HDF5_IS_PARALLEL})
+      MESSAGE(SEND_ERROR "HDF5 must be parallel")
+   ENDIF()
    FIND_PACKAGE(FFTW)
    ADD_SUBDIRECTORY (prototype/src/package)
    # Packages generation
