@@ -5,13 +5,13 @@ Change the variable CMAKE_BUILD_TYPE to "Release".
 
 Set the variable CMAKE_INSTALL_PREFIX to the path where you want to install selalib.
 
-Set the variable BUILD_LIBRARY_ONLY to "ON" to reduce the building time.
+Set the variable SLL_BUILD_PACKAGE to "ON" to reduce the building time.
 
 Fortran modules, header files and library will be installed to this path.
 Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
-         -DCMAKE_INSTALL_PREFIX="install_dir" \
+         -DCMAKE_INSTALL_PREFIX=<install_dir> \
          -DSLL_BUILD_PACKAGE=1 selalib/prototype/src
    make 
    make install
@@ -45,6 +45,9 @@ To use solvers::
    #include "sll_maxwell_solvers.h"
 
 Be careful, you could have to link with HDF5, FFTW, LAPACK, etc ...
+
+Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, just add
+the compilation flag *-ffree-line-length-none*.
 
 Find this example in directory : prototype/src/examples
 
