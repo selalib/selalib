@@ -28,10 +28,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/utilities/lagrange_interpolation.F90
-    ${SLL_DIR}/fft/fftw_module.F90
-    ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90
-    ${SLL_DIR}/fft/fft_utils.F90
-    ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
     ${SLL_DIR}/file_io/sll_hdf5_io.F90
@@ -56,7 +52,20 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
+    ${SLL_DIR}/fft/fft_utils.F90 
    )
+
+IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+  ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
+ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+  ${SLL_DIR}/fft/fftw_module.F90
+  ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
+ELSE()
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+  ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
+ENDIF()
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
 
