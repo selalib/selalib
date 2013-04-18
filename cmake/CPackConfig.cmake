@@ -28,6 +28,7 @@ IF (NOT SELALIB_NO_PACKAGES)
 
   SET (CPACK_PACKAGING_INSTALL_PREFIX "/usr")
   SET (CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE ON)
+  SET (CPACK_COMPONENTS_ALL libraries headers fortheaders)
 
   SET (CPACK_PACKAGE_MAINTAINER "selalib-user@lists.gforge.inria.fr")
   SET (CPACK_PACKAGE_CONTACT "pierre.navaror@inria.fr")
