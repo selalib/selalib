@@ -61,6 +61,7 @@ IF(SLL_BUILD_PACKAGE)
       MESSAGE(SEND_ERROR "HDF5 must be parallel")
    ENDIF()
    FIND_PACKAGE(FFTW)
+   ADD_SUBDIRECTORY (prototype/src/fftpack)
    ADD_SUBDIRECTORY (prototype/src/package)
    # Packages generation
    INCLUDE(CPackConfig) 
