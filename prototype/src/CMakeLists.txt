@@ -14,7 +14,7 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
 SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
 
 # Specify the output for binary
