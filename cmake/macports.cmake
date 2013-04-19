@@ -1,0 +1,6 @@
+SET(CMAKE_Fortran_COMPILER "/opt/local/bin/gfortran-mp-4.8")
+SET(FFTW_LIBRARY "/opt/local/lib/libfftw3.a")
+SET(HDF5_C_LIBRARY "/opt/local/lib/libhdf5.a")
+SET(HDF5_INCLUDE_DIRS "/opt/local/include")
+SET(MPI_Fortran_COMPILER "/opt/local/bin/mpif90")
+SET(MPI_Fortran_INCLUDE_PATH "/opt/local/include;/opt/local/lib")
