@@ -1,0 +1,23 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+PortGroup           cmake 1.0
+
+name                selalib
+version             1.0.0
+categories          science
+platforms           darwin
+license             GPL
+maintainers         navaro
+description         Semi-lagrangian library
+long_description    Modular library for the gyrokinetic simulation \
+                    model by a semi-Lagrangian method.
+homepage            http://selalib.gforge.inria.fr
+master_sites        http://selalib.gforge.inria.fr/releases
+
+depends_lib         port:cmake \
+                    port:gfortran
+
+configure.args      --enable-perl-site-install \
+                    --mandir=${prefix}/share/man
