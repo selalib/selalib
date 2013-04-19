@@ -150,14 +150,14 @@ IF (FFTW_FOUND)
    TARGET_LINK_LIBRARIES(vm4d          sll_vlasov4d slv2d ${LIBS})
    TARGET_LINK_LIBRARIES(vm4d_spectral sll_vlasov4d slv2d ${LIBS})
 
-   IF(FFTW_MPI_LIBRARY)
-
-      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
-      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
-      ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
-      TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib-mpi ${FFTW_LIBRARIES})
-
-   ENDIF()
+   #IF(FFTW_MPI_LIBRARY)
+   #
+   #   ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
+   #   TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+   #   ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
+   #   TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib-mpi ${FFTW_LIBRARIES})
+   #
+   #ENDIF()
 
 
 ENDIF()
