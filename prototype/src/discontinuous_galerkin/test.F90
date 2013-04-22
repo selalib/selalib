@@ -135,11 +135,11 @@ program test_DG
   !print*,d1%n,d1%m
   !print*,matmul((/(1.0d0,i=1,ne*ng)/),transpose(tri2col(d1)))
 
-  open(12,file='file')
-  call write_octave(tri2col(d1),'d1',12)
-  call write_octave(tri2col(d2),'d2',12)
-  call write_octave(tri2col(d4),'d3',12)
-  close(12)
+!!$  open(12,file='file')
+!!$  call write_octave(tri2col(d1),'d1',12)
+!!$  call write_octave(tri2col(d2),'d2',12)
+!!$  call write_octave(tri2col(d3),'d3',12)
+!!$  close(12)
 
 !mesh
 
