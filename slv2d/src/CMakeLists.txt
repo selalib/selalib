@@ -76,9 +76,12 @@ ENDIF(NOT HDF5_FOUND)
 SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+
 IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack ${CMAKE_BINARY_DIR}/dfftpack)
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package ${CMAKE_BINARY_DIR}/package)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
+                    ${CMAKE_BINARY_DIR}/package)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
+                    ${CMAKE_BINARY_DIR}/dfftpack)
 ENDIF()
 
 

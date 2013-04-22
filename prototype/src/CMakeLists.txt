@@ -14,8 +14,8 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
-SET(BUILD_LIBRARY_ONLY "NO" CACHE BOOL "Build library without test programs")
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
+SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -68,61 +68,57 @@ INCLUDE_DIRECTORIES(utilities
                     visu_pic) 
 ENABLE_TESTING()
 
-IF(BUILD_LIBRARY_ONLY)
+IF(NOT SLL_BUILD_PACKAGE)
 
-   ADD_SUBDIRECTORY(package)
+   ADD_SUBDIRECTORY(memory)
+   ADD_SUBDIRECTORY(precision)
+   ADD_SUBDIRECTORY(assert)
+   ADD_SUBDIRECTORY(constants)
+   ADD_SUBDIRECTORY(utilities)
+   ADD_SUBDIRECTORY(file_io)
+   ADD_SUBDIRECTORY(timer)
+   ADD_SUBDIRECTORY(non_linear_solvers)
+   ADD_SUBDIRECTORY(splines)
+   ADD_SUBDIRECTORY(lagrange_interpolation)
+   ADD_SUBDIRECTORY(WENO)
+   ADD_SUBDIRECTORY(integration)
+   ADD_SUBDIRECTORY(fft)
+   ADD_SUBDIRECTORY(fftpack)
+   ADD_SUBDIRECTORY(periodic_interpolation)
+   
+   IF(MPI_MODULE_ENABLED)
+   
+      ADD_SUBDIRECTORY(collective)
+      ADD_SUBDIRECTORY(remap)
+   
+   ENDIF()
+   
+   ADD_SUBDIRECTORY(quasi_neutral_solvers)
+   ADD_SUBDIRECTORY(electric_field_accumulators)
+   ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(mapped_meshes)
+   ADD_SUBDIRECTORY(fields)
+   
+   IF(NOT STDF95)
+   
+      ADD_SUBDIRECTORY(time_solvers)
+      ADD_SUBDIRECTORY(ode_solvers)
+      ADD_SUBDIRECTORY(distribution_function)
+      ADD_SUBDIRECTORY(advection_field)
+      ADD_SUBDIRECTORY(LinRood)
+      ADD_SUBDIRECTORY(poisson_solvers)
+      ADD_SUBDIRECTORY(maxwell_solvers)
+      ADD_SUBDIRECTORY(BSL)
+      ADD_SUBDIRECTORY(CSL)
+      ADD_SUBDIRECTORY(visu_pic)
+      ADD_SUBDIRECTORY(simulation)
+      ADD_SUBDIRECTORY(discontinuous_galerkin) 
+   
+   ENDIF(NOT STDF95)
 
-ELSE(BUILD_LIBRARY_ONLY)
+ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(memory)
-ADD_SUBDIRECTORY(precision)
-ADD_SUBDIRECTORY(assert)
-ADD_SUBDIRECTORY(constants)
-ADD_SUBDIRECTORY(utilities)
-ADD_SUBDIRECTORY(file_io)
-ADD_SUBDIRECTORY(timer)
-ADD_SUBDIRECTORY(non_linear_solvers)
-ADD_SUBDIRECTORY(splines)
-ADD_SUBDIRECTORY(lagrange_interpolation)
-ADD_SUBDIRECTORY(WENO)
-ADD_SUBDIRECTORY(integration)
-ADD_SUBDIRECTORY(fft)
-ADD_SUBDIRECTORY(fftpack)
-ADD_SUBDIRECTORY(periodic_interpolation)
-
-IF(MPI_MODULE_ENABLED)
-
-   ADD_SUBDIRECTORY(collective)
-   ADD_SUBDIRECTORY(remap)
-
-ENDIF()
-
-ADD_SUBDIRECTORY(quasi_neutral_solvers)
-ADD_SUBDIRECTORY(electric_field_accumulators)
-ADD_SUBDIRECTORY(interpolators)
-ADD_SUBDIRECTORY(mapped_meshes)
-ADD_SUBDIRECTORY(fields)
-
-IF(NOT STDF95)
-
-   ADD_SUBDIRECTORY(time_solvers)
-   ADD_SUBDIRECTORY(ode_solvers)
-   ADD_SUBDIRECTORY(distribution_function)
-   ADD_SUBDIRECTORY(advection_field)
-   ADD_SUBDIRECTORY(LinRood)
-   ADD_SUBDIRECTORY(poisson_solvers)
-   ADD_SUBDIRECTORY(maxwell_solvers)
-   ADD_SUBDIRECTORY(BSL)
-   ADD_SUBDIRECTORY(CSL)
-   ADD_SUBDIRECTORY(package)
-   ADD_SUBDIRECTORY(visu_pic)
-   ADD_SUBDIRECTORY(simulation)
-   ADD_SUBDIRECTORY(discontinuous_galerkin) 
-
-ENDIF(NOT STDF95)
-
-ENDIF(BUILD_LIBRARY_ONLY)
-
+ADD_SUBDIRECTORY(package)
 
 ##########################################################
 

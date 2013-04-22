@@ -1,10 +1,9 @@
-set(DEPENDENCIES
-	sll_utilities
-	sll_timer
-	sll_constants
-	sll_memory
-	sll_assertion
-	sll_working_precision
+set(DEPENDENCIES sll_utilities
+	              sll_timer
+	              sll_constants
+	             sll_memory
+	              sll_assertion
+	              sll_working_precision
 )
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
