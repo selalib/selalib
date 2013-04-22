@@ -9,7 +9,7 @@ version             1.0.0
 categories          science
 platforms           darwin
 license             GPL
-maintainers         navaro
+maintainers         pnavaro
 description         Semi-lagrangian library
 long_description    Modular library for the gyrokinetic simulation \
                     model by a semi-Lagrangian method.
@@ -19,5 +19,14 @@ master_sites        http://selalib.gforge.inria.fr/releases
 depends_lib         port:cmake \
                     port:gfortran
 
-configure.args      --enable-perl-site-install \
-                    --mandir=${prefix}/share/man
+configure.pre_args
+configure.args      -DCMAKE_BUILD_TYPE:STRING=Release \
+                    -DCMAKE_CXX_COMPILER:FILEPATH=/opt/local/bin/g++-mp-4.6 \
+                    -DCMAKE_C_COMPILER:FILEPATH=/opt/local/bin/gcc-mp-4.6 \
+                    -DCMAKE_INSTALL_PREFIX:PATH=/opt/local \
+                    -DHDF5_ENABLED:BOOL=ON \
+                    -DHDF5_PARALLEL_ENABLED:BOOL=OFF \
+                    -DMPI_CXX_COMPILER:FILEPATH=/opt/local/bin/openmpicxx \
+                    -DMPI_C_COMPILER:FILEPATH=/opt/local/bin/openmpicc \
+                    -DMPI_Fortran_COMPILER:FILEPATH=/opt/local/bin/openmpif90 \
+                    -DMPI_LIBRARY:FILEPATH=/opt/local/lib/libmpi_cxx.dylib
