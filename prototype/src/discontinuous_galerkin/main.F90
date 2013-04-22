@@ -3,7 +3,7 @@ program VP_DG
 
   use sll_nu_cart_mesh
   use gausslobatto
-  use poisson4dg
+  !use poisson4dg
   use mod_sparse
 
   implicit none

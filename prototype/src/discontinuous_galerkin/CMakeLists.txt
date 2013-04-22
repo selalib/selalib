@@ -4,6 +4,7 @@ add_executable(VP_DG
   gauss-lobatto.F90
   lob.f
   gauss.f
+  mod_sparse.F90
 	)
 add_dependencies(VP_DG sll_file_io)
 target_link_libraries(VP_DG

@@ -5,7 +5,7 @@ program test_DG
   use gausslobatto
   use mod_sparse
 
-  use mod_octave_io_sparse
+  !use mod_octave_io_sparse
 
   implicit none
 
@@ -123,8 +123,15 @@ program test_DG
   d2%ti=d2%ti-1
   d2%tj=d2%tj-1
 
+  d1%tx=-d1%tx
   !d3=col2tri(tri2col(d2+transpose(d1)))
   d3=col2tri(tri2col(d2+d1))
+
+  do i=1,d3%nz
+     if (d3%tx(i)<=0.001d0) then
+        d3%tx(i)=0.0d0
+     end if
+  end do
 
 !!$  do i=1,d3%nz
 !!$     if (d3%tx(i) /= 0.0d0 )then
@@ -140,6 +147,8 @@ program test_DG
 !!$  call write_octave(tri2col(d2),'d2',12)
 !!$  call write_octave(tri2col(d3),'d3',12)
 !!$  close(12)
+!!$
+!!$  print*,' '
 
 !mesh
 
