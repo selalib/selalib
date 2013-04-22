@@ -19,11 +19,11 @@ add_executable(test_DG
   lob.f
   gauss.f
   mod_sparse.F90
-#  mod_octave_io.f90
-#  mod_octave_io_sparse.f90
+  mod_octave_io.f90
+  mod_octave_io_sparse.f90
 	)
-add_dependencies(VP_DG sll_file_io)
-target_link_libraries(VP_DG
+add_dependencies(test_DG sll_file_io)
+target_link_libraries(test_DG
   sll_working_precision
 	sll_constants
 	)

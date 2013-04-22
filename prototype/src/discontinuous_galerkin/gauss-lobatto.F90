@@ -122,7 +122,7 @@ contains
 !!$    !---------------------------------------------------------------------------
 !!$    !> @brief construction of the derivative matrix for Gauss-Lobatto 1D
 !!$    !> @details Construction of the derivative matrix for Gauss-Lobatto 1D,
-!!$    !>          The matrix must be already allocated of size (nomber of point)^2.
+!!$    !>          The matrix must be already allocated of size (number of point)^2.
 !!$    !> @param[INOUT] gl_obj the object to delete
 
     !derivative on the shape function
