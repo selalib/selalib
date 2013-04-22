@@ -1,4 +1,4 @@
-Installation
+installation
 ************
        
 Change the variable CMAKE_BUILD_TYPE to "Release".
