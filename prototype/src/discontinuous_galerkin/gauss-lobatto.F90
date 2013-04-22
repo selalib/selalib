@@ -8,173 +8,100 @@
 !> @namespace gausslobatto
 !> @author Madaule Eric
 !> @brief Gauss-Lobatto interpolation tools
-!> @details Here are several of the Gauss-Lobatto tools :
-!>            ·Gauss-Lobatto points and weight,
-!>            ·Gauss-Lobatto bases functions and the integral of their product,
+!> @details Here are several of the Gauss-Lobatto tools :\\
+!>            ·Gauss-Lobatto points and weight,\\
+!>            ·Gauss-Lobatto bases functions and the integral of their product,\\
 !>            ·integral of product of Gauss-Lobatto function and their derivative.
-!>          This module will first be limited to 1D and should extend as people will have the need for
-!>          higher dimension (and so have time to write it).
-!>          Note that for the construction in 1D the code is based on pseudo code given by David A.
-!>          Kopriva in his book <EM>Implementing Spectral Methods for Partial Differential Equations</EM> .
+!>
+!>          The mass matrix (which is the integral of \phi_i \times \phi_j) is simply 
+!>          diag(weigh), so there is no need to store it more than just the weigh.
+!>
+!>          We also need the derivative matrix D.
+!>          \f[ D_{i,j}=\int \pih_i \phi^'_j f]
+!>
+!>          This module will first be limited to 1D and should extend as people will
+!>          have the need for higher dimension (and so have time to write it).
+!>         
 !------------------------------------------------------------------------------
-module gausslobatto_mod
+module gausslobatto
 #include "sll_working_precision.h"
-#include "sll_memory.h"
 
   use sll_constants
-
+  
   implicit none
 
   type gausslobatto1D
      !---------------------------------------------------------------------------
      !> @brief Gauss-Lobatto
-     !> @details Gauss-Lobatto nodes and weith on a reference element [-1;1] in 1D.
-     !>          This also contains Jacobian of the transformation between real element
-     !>          and reference element
+     !> @details Gauss-Lobatto nodes and weigh on a reference element [-1;1] in 1D.
+     !>          This also includes the degree of polynomials and the matrix of derivatives
+     !>          D_{i,j}=\int(\Psi_i\Psi'_j)=w_i\sum_{l/=j}1/(x_j-x_l)\prod_{m/=j,m/=l}(x_i-x_m)/(x_j-x_m)
      !> 
      !>          A gausslobatto1d object contains node, weight, jac and degree.
-     !>          TheseThe firsts are allocatable array. Use the construction subroutine to build
-     !>          it. Only degree is a scalar. It is the degree of corresponding polynomials.
-     !>          Only jac must be filled manually (but it is allocated in the constructor)
-     sll_real64,dimension(:),pointer :: node,weight,jac
+     !>          These are allocatable array. Use the construction subroutine
+     !>          to build it. Only degree is a scalar. It is the degree of corresponding
+     !>          polynomials. Only jac must be filled manually (but it is allocated in
+     !>          the constructor)
+     sll_real64,dimension(:),allocatable :: node,weigh
      sll_int32 :: degree
+     sll_real64,dimension(:,:),allocatable :: der
   end type gausslobatto1D
 
 contains
-  ! some routines here have a number
-  ! this number is the number in the book of D. A. Kopriva :
-  ! Implementing Spectral Methods for Partial Differential Equations
 
   subroutine init_gausslobatto_1d(size,gl_obj)
     !---------------------------------------------------------------------------
-    !> @brief Construction of Gauss-Lobatto nodes and weights
-    !> @details Construction of Gauss-Lobatto nodes and weights.
-    !>          This routine fill the node and weight but you have to fill the Jacobian with
-    !>          the transformation you consider
-    !>          This should be extended as I will complete the type.
-    !> @param[IN] size number of Gauss-Lobatto points, should be at least 2 (if 1, then piecewise constant)
+    !< @brief Construction of Gauss-Lobatto nodes and weights
+    !! @details Construction of Gauss-Lobatto nodes and weights.
+    !!          This routine fill the node and weight but you have to fill the Jacobian with
+    !!          the transformation you consider
+    !!          This should be extended as I will complete the type.
+    !!          I can't deal very well with fortran 77 interface. To change between simple
+    !!          and double precision you have to go into the file and change some comments
+    !!          (very easy, it is explained in the file) and compile again (sorry)
+    !! @param[IN] size number of Gauss-Lobatto points, should be at least 2 (if 1,
+    !!                 then piecewise constant => Gauss-Lobatto is impossible)
     !> @param[OUT] gl_obj Gauss-Lobatto object to build
 
     sll_int32,intent(in) :: size
+    !> Gauss-Lobatto object to build
     type(gausslobatto1D),intent(out) :: gl_obj
 
-    sll_int32 :: err
+    sll_int32 :: err,i
+    sll_real64,dimension(0:size-1) :: alpha,beta
+    sll_real64,dimension(size) :: e,a,b
 
-    if (size<1) then
+    if (size<=1) then
        print*,"not enought points to build the Gauss-Lobatto interpolator"
        print*,"exiting..."
        stop
     end if
 
-    SLL_ALLOCATE(gl_obj%node(size),err)
-    SLL_ALLOCATE(gl_obj%weight(size),err)
-    SLL_ALLOCATE(gl_obj%jac(size),err)
+    ALLOCATE(gl_obj%node(size))
+    ALLOCATE(gl_obj%weigh(size))
+    ALLOCATE(gl_obj%der(size,size))
 
+    gl_obj%node=0.0d0
+    gl_obj%weigh=0.0d0
     gl_obj%degree=size-1
 
-    call LGL_NodesAndWeight(gl_obj%node,gl_obj%weight)
+    do i=0,size-1
+       alpha(i)=0.0d0
+       beta(i)=real(i,kind(gl_obj%degree))**2/((2.0d0*i+1.0d0)*(2.0d0*i-1.0d0))
+    end do
+    !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
+    !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
+    !polynomials and Gauss-type quadrature rules* by _Walter Gautschi_
+    beta(0)=2.0d0
+
+    !for single precision, comment the first line and uncomment the second
+    !for double precision, comment the second line and uncomment the first
+    call dlob(size-2,alpha,beta,-1.0d0,1.0d0,gl_obj%node,gl_obj%weigh,err,e,a,b)
+    !call lob(size-2,alpha,beta,-1.0,1.0,gl_obj%node,gl_obj%weigh,err,e,a,b)
+
+    call derivative_matrix_1d(gl_obj)
 
   end subroutine init_gausslobatto_1d
-
-  !intermediary procedure for computation of Gauss-Lobatto Nodes and Weights
-  !algo 24
-  subroutine qAndlEvaluation(n,x,q,qp,ln)
-
-    sll_int32, intent(in) :: n
-    sll_real64, intent(in) :: x
-
-    sll_real64, intent(out) :: q,qp,ln
-
-    sll_int32 :: k
-    sll_real64 :: lm2,lm1,lpm2,lpm1,lnp,lp1,lpp1
-
-    k=2
-    lm2=1.0d0
-    lm1=x
-    lpm2=0.0d0
-    lpm1=1.0d0
-
-    do k=2,n
-       ln=real(2*k-1,kind(x))/real(k,kind(x))*x*lm1-real(k-1,kind(x))/real(k,kind(x))*lm2
-       lnp=lpm2+real(2*k-1,kind(x))*lm1
-       lm2=lm1
-       lm1=ln
-       lpm2=lpm1
-       lpm1=lnp
-    end do
-    k=n+1
-    lp1=real(2*k-1,kind(x))/real(k,kind(x))*x*ln-real(k-1,kind(x))/real(k,kind(x))*lm1
-    lpp1=lpm1+real(2*k-1,kind(x))*ln
-    q=lp1-lm1
-    qp=lpp1-lpm1
-
-  end subroutine qAndlEvaluation
-
-  !computation of Gauss-Lobatto nodes and weights
-  !algo 25
-  subroutine LGL_NodesAndWeight(node,weight)
-
-    sll_real64, dimension(0:), intent(out) :: node,weight
-
-    sll_int32 :: n
-    !for loops
-    sll_int32 :: j,k,nit
-    sll_real64 :: tol
-    !variables for calculus
-    sll_real64 :: q,qp,ln,delta
-
-    nit=10000
-    tol=4.0d0*epsilon(real(1,kind(tol)))
-
-    n=size(node)
-    if (n/=size(weight) ) then
-       print*,"array dimension error in LegendreGaussLobattoNodesAndWeight"
-       print*,"in and out array must have the same size"
-       print*,"exiting the program"
-       stop
-    end if
-    n=n-1 !so arrays go from 0 to n
-
-    if (n==1) then
-       node(0)=-1.0d0
-       node(1)=1.0d0
-       weight(0)=1.0d0
-       weight(1)=weight(0)
-    else
-       node(0)=-1.0d0
-       weight(0)=2.0d0/real(n*(n+1),kind(tol))
-       node(n)=1.0d0
-       weight(n)=weight(0)
-       
-       do j=1,(n+1)/2-1
-          node(j)=-cos( (real(j,kind(tol))+0.25d0)*sll_pi/real(n,kind(tol))-3.0d0/(real(8*n,kind(tol))*sll_pi)* &
-               & 1.0d0/(real(j,kind(tol))+0.25d0) )
-          
-          k=0
-          delta=tol*2.0d0+1.0d0
-          do while ( k<=nit .and. abs(delta)>=tol*abs(node(j)) )
-             call qAndlEvaluation(n,node(j),q,qp,ln)
-             delta=-q/qp
-             node(j)=node(j)+delta
-             print*,node(j)
-             k=k+1
-          end do
-
-          call qAndlEvaluation(n,node(j),q,qp,ln)
-          node(n-j)=-node(j)
-          weight(j)=2.0d0/(real(n*(n+1),kind(tol))*ln**2)
-          weight(n-j)= weight(j)
-       end do
-
-       if (modulo(n,2)==0) then
-          call qAndlEvaluation(n,0.0d0,q,qp,ln)
-          node(n/2)=0.0d0
-          weight(n/2)=2.0d0/(real(n*n+n,kind(tol))*ln**2)
-       end if
-
-    end if
-
-  end subroutine LGL_NodesAndWeight
 
   subroutine delete_gausslobatto_1d(gl_obj)
     !---------------------------------------------------------------------------
@@ -185,26 +112,69 @@ contains
     type(gausslobatto1D),intent(inout) :: gl_obj
 
     DEALLOCATE(gl_obj%node)
-    DEALLOCATE(gl_obj%weight)
-    DEALLOCATE(gl_obj%jac)
+    DEALLOCATE(gl_obj%weigh)
+    DEALLOCATE(gl_obj%der)
 
   end subroutine delete_gausslobatto_1d
 
-  subroutine gl_massmatrix_1d(gl_obj,massmat)
-    !---------------------------------------------------------------------------
-    !> @brief Computation of diagonal mass matrix with Gauss-Lobatto points
-    !> @details Computation of diagonal mass matrix with Gauss-Lobatto points.
-    !> @param[INOUT] gl_obj the object to delete
+  subroutine derivative_matrix_1d(gl_obj)
+    !called by Gauss-Lobatto 1D constructor
+!!$    !---------------------------------------------------------------------------
+!!$    !> @brief construction of the derivative matrix for Gauss-Lobatto 1D
+!!$    !> @details Construction of the derivative matrix for Gauss-Lobatto 1D,
+!!$    !>          The matrix must be already allocated of size (nomber of point)^2.
+!!$    !> @param[INOUT] gl_obj the object to delete
 
-    type(gausslobatto1D),intent(in) :: gl_obj
-    sll_real64,dimension(gl_obj%degree+1),intent(out) :: massmat
+    !derivative on the shape function
 
-    sll_int32 :: i
+    type(gausslobatto1D),intent(inout) :: gl_obj
 
-    do i=1,size(massmat)
-       massmat(i)=gl_obj%weight(i)*gl_obj%jac(i)
+    sll_int32 :: nb_pts,i,j,l,m
+    sll_real64 :: prod
+
+    nb_pts=gl_obj%degree+1
+
+    gl_obj%der=0.0d0
+
+    !loop on all element of D
+    !loop on columns
+    do j=1,nb_pts
+       !loop on rows
+       do i=1,nb_pts
+          !loop on all the derivatives
+          !the code is writen so there is no if
+          do l=1,j-1
+             prod=1.0d0
+             do m=1,min(j,l)-1
+                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
+             end do
+             do m=min(j,l)+1,max(j,l)-1
+                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
+             end do
+             do m=max(j,l)+1,nb_pts
+                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
+             end do
+             prod=prod/(gl_obj%node(j)-gl_obj%node(l))
+             gl_obj%der(i,j)=gl_obj%der(i,j)+prod
+          end do
+          do l=j+1,nb_pts
+             prod=1.0d0
+             do m=1,min(j,l)-1
+                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
+             end do
+             do m=min(j,l)+1,max(j,l)-1
+                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
+             end do
+             do m=max(j,l)+1,nb_pts
+                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
+             end do
+             prod=prod/(gl_obj%node(j)-gl_obj%node(l))
+             gl_obj%der(i,j)=gl_obj%der(i,j)+prod
+          end do
+          gl_obj%der(i,j)=gl_obj%der(i,j)*gl_obj%weigh(i)
+       end do
     end do
 
-  end subroutine gl_massmatrix_1d
+  end subroutine derivative_matrix_1d
 
-end module gausslobatto_mod
+end module gausslobatto
