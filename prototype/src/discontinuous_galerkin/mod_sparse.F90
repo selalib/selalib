@@ -88,6 +88,7 @@ module mod_sparse
        tri2col_skeleton_part, &
                                 ! overloaded operators
        operator(+), &
+       operator(-), &
        operator(*), &
        sum,         &
        transpose,   &
@@ -240,6 +241,11 @@ module mod_sparse
      module procedure plus_tri, plus_col, &
           plus_col_tri, plus_tri_col
   end interface operator(+)
+
+  interface operator(-)
+     module procedure minus_tri, minus_col, &
+          minus_col_tri, minus_tri_col
+  end interface operator(-)
 
   interface operator(*)
      module procedure extract_column_col, extract_row_col, &
@@ -809,6 +815,37 @@ contains
 
   end function plus_col
 
+  !----------------------------------------------------------------------
+
+
+  pure function minus_tri(x,y) result(z)
+    ! -
+    type(t_tri) :: z
+    type(t_tri), intent(in) :: x,y
+
+    if( (x%n.ne.y%n).or.(x%m.ne.y%m) ) then
+       z = new_tri(0,0,0)
+       z%ierr = wrong_dim
+    else
+       z = new_tri(x%n,x%m,     &
+            (/ x%ti , y%ti /), &
+            (/ x%tj , y%tj /), &
+            (/ x%tx , -y%tx /))
+    endif
+
+  end function minus_tri
+
+  !-----------------------------------------------------------------------
+
+  pure function minus_col(x,y) result(z)
+    ! -
+    type(t_col) :: z
+    type(t_col), intent(in) :: x,y
+
+    z = tri2col(col2tri(x)-col2tri(y))
+
+  end function minus_col
+
   !-----------------------------------------------------------------------
 
   pure function scal_mult_col(x,y) result(z)
@@ -844,6 +881,30 @@ contains
     z = y + x
 
   end function plus_tri_col
+
+  !-----------------------------------------------------------------------
+
+  pure function minus_col_tri(x,y) result(z)
+    ! -
+    type(t_col) :: z
+    type(t_col), intent(in) :: x
+    type(t_tri), intent(in) :: y
+
+    z = tri2col(col2tri(x)-y)
+
+  end function minus_col_tri
+
+  !-----------------------------------------------------------------------
+
+  pure function minus_tri_col(x,y) result(z)
+    ! -
+    type(t_col) :: z
+    type(t_tri), intent(in) :: x
+    type(t_col), intent(in) :: y
+
+    z = y - x
+
+  end function minus_tri_col
 
   !-----------------------------------------------------------------------
 
@@ -920,407 +981,401 @@ contains
 
   !-----------------------------------------------------------------------
 
-  pure &
-                                !$ subroutine omp_dummy_1(); end subroutine omp_dummy_1
-       function matmul_col(x,a) result(b)
-  ! Matrix vector multiplication. The most natural way when the matrix
-  ! is in column major order is  b = x^T * A
-  sll_real64, intent(in) :: x(:)
-  type(t_col), intent(in) :: a
-  sll_real64 :: b(a%m)
-
-  integer :: j
-
-  if(size(x).ne.a%n) then
-     b = huge(0.0d0)
-  else
-     !$ if(detailed_timing_omp) then
-     !$   call omput_push_key("MatmulCol")
-     !$   call omput_start_timer()
-     !$ endif
-     !$omp parallel do schedule(static) &
-     !$omp    default(none) private(j) shared(a,x,b)
-     do j=1,a%m
-        b(j) = dot_product(x(nz_col_i(a,j-1)+1),nz_col(a,j-1))
-     enddo
-     !$omp end parallel do
-     !$ if(detailed_timing_omp) then
-     !$   call omput_write_time()
-     !$   call omput_close_timer()
-     !$   call omput_pop_key()
-     !$ endif
-  endif
-
-end function matmul_col
-
-!-----------------------------------------------------------------------
-
-pure &
-                                !$ subroutine omp_dummy_2(); end subroutine omp_dummy_2
-     function matmul_col_transp(aa,x) result(b)
-type(t_col), intent(in) :: aa
-sll_real64, intent(in) :: x(:)
-sll_real64 :: b(aa%n)
-
-b = matmul(x,transpose(aa))
-end function matmul_col_transp
-
-!-----------------------------------------------------------------------
-
-pure &
-                                !$ subroutine omp_dummy_3(); end subroutine omp_dummy_3
-   function matmul_mat_mat(a,b) result(c)
-! The product is computed one column at a time.
-type(t_col), intent(in) :: a, b
-type(t_col) :: c
-
-integer :: nnzbj, nnz, nnzn, i, j
-sll_real64 :: cij
-integer, allocatable :: bj_i(:)
-sll_real64, allocatable :: ai(:), bj(:)
-integer, allocatable :: tio(:), tjo(:), ti(:), tj(:), tin(:), tjn(:)
-sll_real64, allocatable :: txo(:), tx(:), txn(:)
-type(t_col) :: at
-
-if(a%m.ne.b%n) then
- c = tri2col(new_tri(a%n,b%m,(/1/),(/1/),huge(0.0d0)))
-else
- allocate( ai(a%m) )
- allocate(tin(a%n),tjn(a%n),txn(a%n))
- at = transpose(a)
-
- nnz = 0
- allocate(ti(nnz),tj(nnz),tx(nnz))
- do j=1,b%m ! column loop
-    ! get the column of b
-    nnzbj = nnz_col(b,j-1)
-    allocate( bj(nnzbj) , bj_i(nnzbj) )
-    bj   = nz_col  (b,j-1)
-    bj_i = nz_col_i(b,j-1)+1
-    nnzn = 0
-    do i=1,a%n ! row loop
-       ai = 0.0d0 ! i-th row of a
-       ai( at%ai(at%ap(i)+1:at%ap(i+1))+1 ) = &
-            at%ax(at%ap(i)+1:at%ap(i+1))
-       cij = dot_product( ai(bj_i) , bj )
-       if(cij.ne.0.0d0) then
-          nnzn = nnzn+1
-          tin(nnzn) = i-1 ! index starts from 0
-          tjn(nnzn) = j-1 ! index starts from 0
-          txn(nnzn) = cij
-       endif
-    enddo
-    deallocate(bj,bj_i)
-    allocate(tio(nnz),tjo(nnz),txo(nnz))
-    tio = ti; tjo = tj; txo = tx
-    deallocate(ti,tj,tx)
-    allocate(ti(nnz+nnzn),tj(nnz+nnzn),tx(nnz+nnzn))
-    ti(1:nnz) = tio; ti(nnz+1:nnz+nnzn) = tin(1:nnzn)
-    tj(1:nnz) = tjo; tj(nnz+1:nnz+nnzn) = tjn(1:nnzn)
-    tx(1:nnz) = txo; tx(nnz+1:nnz+nnzn) = txn(1:nnzn)
-    nnz = nnz + nnzn
-    deallocate(tio,tjo,txo)
- enddo
- c = tri2col(new_tri(a%n,b%m,ti,tj,tx))
- deallocate(ti ,tj ,tx )
- deallocate(tin,tjn,txn)
- deallocate( ai )
-endif
-
-end function matmul_mat_mat
-
-!-----------------------------------------------------------------------
-
-pure function nnz_col_col(a,j) result(n)
-  ! number of nonzero entries in column j
-integer :: n
-integer, intent(in) :: j
-type(t_col), intent(in) :: a
-
-n = a%ap(j+2) - a%ap(j+1)
-
-end function nnz_col_col
-
-!-----------------------------------------------------------------------
-
-pure function nz_col_col(a,j) result(col)
-  ! nonzero entries in column j
-sll_real64, allocatable :: col(:)
-integer, intent(in) :: j
-type(t_col), intent(in) :: a
-
-allocate( col(nnz_col_col(a,j)) )
-col = a%ax(a%ap(j+1)+1:a%ap(j+2))
-
-end function nz_col_col
-
-!-----------------------------------------------------------------------
-
-pure function nz_col_col_i(a,j) result(ind)
-  ! indexes of nonzero entries in column j
-integer, allocatable :: ind(:)
-integer, intent(in) :: j
-type(t_col), intent(in) :: a
-
-allocate( ind(nnz_col_col(a,j)) )
-ind = a%ai(a%ap(j+1)+1:a%ap(j+2))
-
-end function nz_col_col_i
-
-!-----------------------------------------------------------------------
-
-pure function get(a,i,j) result(x)
-  ! extract element i,j
-sll_real64 :: x
-integer, intent(in) :: i,j 
-type(t_col), intent(in) :: a
-
-integer :: pos
-
-x = 0.0d0
-pos = search_sorted(i,nz_col_i(a,j))
-if(pos.gt.0) x = a%ax(a%ap(j+1)+pos)
-
-end function get
-
-!-----------------------------------------------------------------------
-
-pure subroutine set(a,i,j,x)
-  ! set element i,j
-integer, intent(in) :: i,j 
-sll_real64, intent(in) :: x
-type(t_col), intent(inout) :: a
-
-integer :: pos
-
-pos = search_sorted(i,nz_col_i(a,j))
-if(pos.gt.0) then ! the element was already present
- a%ax(a%ap(j+1)+pos) = x
-else ! new nonzero entry: we need to reallocate a
- a = a + new_tri(a%n,a%m,(/i/),(/j/),x)
-endif
-
-end subroutine set
-
-!-----------------------------------------------------------------------
-
-pure function search_sorted(i,v) result(pos)
-  ! search i in vector v assuming v is increasing
-integer :: pos
-integer, intent(in) :: i, v(:)
-
-pos = count(v.le.i)
-if(pos.ne.0) then
- if(v(pos).ne.i) pos = 0
-endif
-
-end function search_sorted
-
-!-----------------------------------------------------------------------
-
-pure function extract_column_col(a,ind) result(a_ind)
-  ! Given a vector of indexes ind, extract the corresponding columns.
-  ! The index vector can contain repetitions and can have arbitrary
-  ! length. The order of the operands reflect the fact that a column
-  ! can be extracted by right multiplication with an "identity" matrix
-  ! where part of the diagonal coefficients are set to zero.
-type(t_col), intent(in) :: a
-integer, intent(in) :: ind(:)
-type(t_col) :: a_ind
-
-integer :: m, nz, j
-integer, allocatable :: ap(:), ai(:)
-sll_real64, allocatable :: ax(:)
-
-if(maxval(ind).ge.a%m) then
- a_ind = new_col(0,0,0)
- a_ind%ierr = wrong_m
-else
-
- m = size(ind)
-
- ! count the final nonzero entries
- nz = 0
- colloop1: do j=1,m
-    nz = nz + nnz_col(a,ind(j))
- enddo colloop1
-
- ! contruct ap ai ax
- allocate(ap(m+1),ai(nz),ax(nz))
- ap(1) = 0
- colloop2: do j=1,m
-    ap(j+1) = ap(j) + nnz_col(a,ind(j))
-    ai(ap(j)+1:ap(j+1)) = nz_col_i(a,ind(j))
-    ax(ap(j)+1:ap(j+1)) = nz_col(a,ind(j))
- enddo colloop2
-
- a_ind = new_col(a%n,m,ap,ai,ax)
-
- deallocate(ap,ai,ax)
-
-endif
-end function extract_column_col
-
-!-----------------------------------------------------------------------
-
-pure function extract_row_col(ind,a) result(a_ind)
-  ! analogous to extract_column_col, but rows are etracted
-integer, intent(in) :: ind(:)
-type(t_col), intent(in) :: a
-type(t_col) :: a_ind
-
-a_ind = transpose( transpose(a) * ind )
-end function extract_row_col
-
-!-----------------------------------------------------------------------
-
-pure function diag_col(a,diags) result(d)
-  ! Extract the diagonals of a indicated in diags. Use 0 for the main
-  ! diagonal, negative values for the lower diagonals and positive
-  ! values for the upper diagonals.
-  ! When diags(id).ne.0, some of the last elements of d are outside the
-  ! bounds of the matrix and are left uninitialized. For instance, for 
-  !  diags = (/ -1 , 0 , 2 /), a%n = a%m = 6
-  ! we have
-  !      [ a(1,0) a(0,0) a(0,2) ]
-  !      [ a(2,1) a(1,1) a(1,3) ]
-  !      [ a(3,2) a(2,2) a(2,4) ]
-  !  d = [ a(4,3) a(3,3) a(3,5) ]
-  !      [ a(5,4) a(4,4)   **   ]
-  !      [   **   a(5,5)   **   ]
-type(t_col), intent(in) :: a
-integer, intent(in) :: diags(:)
-sll_real64 :: d(min(a%n,a%m),size(diags))
-
-integer :: id, i, i_start, i_end, shift
-
-do id=1,size(diags)
-   ! i is the row index (counting from 1), and must be ajusted for
-   ! the secondary diagonals
- i_start = max(1-diags(id),1)
- i_end   = min(a%n,a%m-diags(id))
- shift = max(-diags(id),0)
- do i=i_start,i_end
-    d(i-shift,id) = get(a,i-1,i+diags(id)-1)
- enddo
-enddo
-
-end function diag_col
-
-!-----------------------------------------------------------------------
-
-pure function diag_col_main(a) result(d)
-  ! Analogous to diag_col, but only extracts the main diagonal
-type(t_col), intent(in) :: a
-sll_real64 :: d(min(a%n,a%m))
-
-d = reshape(diag(a,(/0/)),(/size(d)/))
-
-end function diag_col_main
-
-!-----------------------------------------------------------------------
-
-pure function diag_tri(t,diags) result(d)
-type(t_tri), intent(in) :: t
-integer, intent(in) :: diags(:)
-sll_real64 :: d(min(t%n,t%m),size(diags))
-
-d = diag(tri2col(t),diags)
-
-end function diag_tri
-
-!-----------------------------------------------------------------------
-
-pure function diag_tri_main(t) result(d)
-  ! Analogous to diag_tri, but only extracts the main diagonal
-type(t_tri), intent(in) :: t
-sll_real64 :: d(min(t%n,t%m))
-
-d = reshape(diag(t,(/0/)),(/size(d)/))
-
-end function diag_tri_main
-
-!-----------------------------------------------------------------------
-
-pure function spdiag_col(a,diags) result(d)
-  ! Analogous to diag, but the diagonals are written into a sparse
-  ! matrix. An important feature is that the indexes in diags can
-  ! exceed the size of a, in which case they are ignored.
-type(t_col), intent(in) :: a
-integer, intent(in) :: diags(:)
-type(t_col) :: d
-
-integer :: p, j, id, i, pos, ti(a%nz), tj(a%nz)
-sll_real64 :: tx(a%nz)
-integer, allocatable :: indi(:)
-sll_real64, allocatable :: xi(:)
-
-p = 0
-do j=0,a%m-1
-   ! here we could use the reallocation on assignment on indi, xi
- if(allocated(indi)) deallocate(indi)
- allocate(indi(nnz_col(a,j)))
- indi = nz_col_i(a,j)
- if(allocated(xi)) deallocate(xi)
- allocate(xi(nnz_col(a,j)))
- xi = nz_col(a,j)
- do id=1,size(diags)
-    i = j-diags(id)
-    ! check whether a(i,j) is nonzero
-    pos = search_sorted(i,indi)
-    if(pos.ne.0) then
-       p = p+1
-       ti(p) = i
-       tj(p) = j
-       tx(p) = xi(pos)
+  pure function matmul_col(x,a) result(b)
+    ! Matrix vector multiplication. The most natural way when the matrix
+    ! is in column major order is  b = x^T * A
+    sll_real64, intent(in) :: x(:)
+    type(t_col), intent(in) :: a
+    sll_real64 :: b(a%m)
+
+    integer :: j
+
+    if(size(x).ne.a%n) then
+       b = huge(0.0d0)
+    else
+!!$     !$ if(detailed_timing_omp) then
+!!$     !$   call omput_push_key("MatmulCol")
+!!$     !$   call omput_start_timer()
+!!$     !$ endif
+!!$     !$omp parallel do schedule(static) &
+!!$     !$omp    default(none) private(j) shared(a,x,b)
+       do j=1,a%m
+          b(j) = dot_product(x(nz_col_i(a,j-1)+1),nz_col(a,j-1))
+       enddo
+!!$     !$omp end parallel do
+!!$     !$ if(detailed_timing_omp) then
+!!$     !$   call omput_write_time()
+!!$     !$   call omput_close_timer()
+!!$     !$   call omput_pop_key()
+!!$     !$ endif
     endif
- enddo
-enddo
 
-d = tri2col(new_tri(a%m,a%n,ti(1:p),tj(1:p),tx(1:p)))
+  end function matmul_col
 
-end function spdiag_col
+  !-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
+  pure function matmul_col_transp(aa,x) result(b)
+    type(t_col), intent(in) :: aa
+    sll_real64, intent(in) :: x(:)
+    sll_real64 :: b(aa%n)
 
-pure subroutine clear_col(a)
-  ! deallocate a matrix
-type(t_col), intent(out) :: a
+    b = matmul(x,transpose(aa))
+  end function matmul_col_transp
 
-a%ierr = 0
-a%n = -1
-a%m = -1
-a%nz = -1
-! allocatable fields implicitly deallocated
+  !-----------------------------------------------------------------------
 
-end subroutine clear_col
+  pure function matmul_mat_mat(a,b) result(c)
+    ! The product is computed one column at a time.
+    type(t_col), intent(in) :: a, b
+    type(t_col) :: c
 
-!-----------------------------------------------------------------------
+    integer :: nnzbj, nnz, nnzn, i, j
+    sll_real64 :: cij
+    integer, allocatable :: bj_i(:)
+    sll_real64, allocatable :: ai(:), bj(:)
+    integer, allocatable :: tio(:), tjo(:), ti(:), tj(:), tin(:), tjn(:)
+    sll_real64, allocatable :: txo(:), tx(:), txn(:)
+    type(t_col) :: at
 
-pure subroutine clear_tri(t)
-  ! deallocate a matrix
-type(t_tri), intent(out) :: t
+    if(a%m.ne.b%n) then
+       c = tri2col(new_tri(a%n,b%m,(/1/),(/1/),huge(0.0d0)))
+    else
+       allocate( ai(a%m) )
+       allocate(tin(a%n),tjn(a%n),txn(a%n))
+       at = transpose(a)
 
-t%ierr = 0
-t%n = -1
-t%m = -1
-t%nz = -1
-! allocatable fields implicitly deallocated
+       nnz = 0
+       allocate(ti(nnz),tj(nnz),tx(nnz))
+       do j=1,b%m ! column loop
+          ! get the column of b
+          nnzbj = nnz_col(b,j-1)
+          allocate( bj(nnzbj) , bj_i(nnzbj) )
+          bj   = nz_col  (b,j-1)
+          bj_i = nz_col_i(b,j-1)+1
+          nnzn = 0
+          do i=1,a%n ! row loop
+             ai = 0.0d0 ! i-th row of a
+             ai( at%ai(at%ap(i)+1:at%ap(i+1))+1 ) = &
+                  at%ax(at%ap(i)+1:at%ap(i+1))
+             cij = dot_product( ai(bj_i) , bj )
+             if(cij.ne.0.0d0) then
+                nnzn = nnzn+1
+                tin(nnzn) = i-1 ! index starts from 0
+                tjn(nnzn) = j-1 ! index starts from 0
+                txn(nnzn) = cij
+             endif
+          enddo
+          deallocate(bj,bj_i)
+          allocate(tio(nnz),tjo(nnz),txo(nnz))
+          tio = ti; tjo = tj; txo = tx
+          deallocate(ti,tj,tx)
+          allocate(ti(nnz+nnzn),tj(nnz+nnzn),tx(nnz+nnzn))
+          ti(1:nnz) = tio; ti(nnz+1:nnz+nnzn) = tin(1:nnzn)
+          tj(1:nnz) = tjo; tj(nnz+1:nnz+nnzn) = tjn(1:nnzn)
+          tx(1:nnz) = txo; tx(nnz+1:nnz+nnzn) = txn(1:nnzn)
+          nnz = nnz + nnzn
+          deallocate(tio,tjo,txo)
+       enddo
+       c = tri2col(new_tri(a%n,b%m,ti,tj,tx))
+       deallocate(ti ,tj ,tx )
+       deallocate(tin,tjn,txn)
+       deallocate( ai )
+    endif
 
-end subroutine clear_tri
+  end function matmul_mat_mat
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
-pure subroutine clear_pm_sk(pm)
-  ! deallocate a matrix
-type(t_pm_sk), intent(out) :: pm
+  pure function nnz_col_col(a,j) result(n)
+    ! number of nonzero entries in column j
+    integer :: n
+    integer, intent(in) :: j
+    type(t_col), intent(in) :: a
 
-pm%n_in = -1
-! allocatable fields implicitly deallocated
+    n = a%ap(j+2) - a%ap(j+1)
 
-end subroutine clear_pm_sk
+  end function nnz_col_col
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+
+  pure function nz_col_col(a,j) result(col)
+    ! nonzero entries in column j
+    sll_real64, allocatable :: col(:)
+    integer, intent(in) :: j
+    type(t_col), intent(in) :: a
+
+    allocate( col(nnz_col_col(a,j)) )
+    col = a%ax(a%ap(j+1)+1:a%ap(j+2))
+
+  end function nz_col_col
+
+  !-----------------------------------------------------------------------
+
+  pure function nz_col_col_i(a,j) result(ind)
+    ! indexes of nonzero entries in column j
+    integer, allocatable :: ind(:)
+    integer, intent(in) :: j
+    type(t_col), intent(in) :: a
+
+    allocate( ind(nnz_col_col(a,j)) )
+    ind = a%ai(a%ap(j+1)+1:a%ap(j+2))
+
+  end function nz_col_col_i
+
+  !-----------------------------------------------------------------------
+
+  pure function get(a,i,j) result(x)
+    ! extract element i,j
+    sll_real64 :: x
+    integer, intent(in) :: i,j 
+    type(t_col), intent(in) :: a
+
+    integer :: pos
+
+    x = 0.0d0
+    pos = search_sorted(i,nz_col_i(a,j))
+    if(pos.gt.0) x = a%ax(a%ap(j+1)+pos)
+
+  end function get
+
+  !-----------------------------------------------------------------------
+
+  pure subroutine set(a,i,j,x)
+    ! set element i,j
+    integer, intent(in) :: i,j 
+    sll_real64, intent(in) :: x
+    type(t_col), intent(inout) :: a
+
+    integer :: pos
+
+    pos = search_sorted(i,nz_col_i(a,j))
+    if(pos.gt.0) then ! the element was already present
+       a%ax(a%ap(j+1)+pos) = x
+    else ! new nonzero entry: we need to reallocate a
+       a = a + new_tri(a%n,a%m,(/i/),(/j/),x)
+    endif
+
+  end subroutine set
+
+  !-----------------------------------------------------------------------
+
+  pure function search_sorted(i,v) result(pos)
+    ! search i in vector v assuming v is increasing
+    integer :: pos
+    integer, intent(in) :: i, v(:)
+
+    pos = count(v.le.i)
+    if(pos.ne.0) then
+       if(v(pos).ne.i) pos = 0
+    endif
+
+  end function search_sorted
+
+  !-----------------------------------------------------------------------
+
+  pure function extract_column_col(a,ind) result(a_ind)
+    ! Given a vector of indexes ind, extract the corresponding columns.
+    ! The index vector can contain repetitions and can have arbitrary
+    ! length. The order of the operands reflect the fact that a column
+    ! can be extracted by right multiplication with an "identity" matrix
+    ! where part of the diagonal coefficients are set to zero.
+    type(t_col), intent(in) :: a
+    integer, intent(in) :: ind(:)
+    type(t_col) :: a_ind
+
+    integer :: m, nz, j
+    integer, allocatable :: ap(:), ai(:)
+    sll_real64, allocatable :: ax(:)
+
+    if(maxval(ind).ge.a%m) then
+       a_ind = new_col(0,0,0)
+       a_ind%ierr = wrong_m
+    else
+
+       m = size(ind)
+
+       ! count the final nonzero entries
+       nz = 0
+       colloop1: do j=1,m
+          nz = nz + nnz_col(a,ind(j))
+       enddo colloop1
+
+       ! contruct ap ai ax
+       allocate(ap(m+1),ai(nz),ax(nz))
+       ap(1) = 0
+       colloop2: do j=1,m
+          ap(j+1) = ap(j) + nnz_col(a,ind(j))
+          ai(ap(j)+1:ap(j+1)) = nz_col_i(a,ind(j))
+          ax(ap(j)+1:ap(j+1)) = nz_col(a,ind(j))
+       enddo colloop2
+
+       a_ind = new_col(a%n,m,ap,ai,ax)
+
+       deallocate(ap,ai,ax)
+
+    endif
+  end function extract_column_col
+
+  !-----------------------------------------------------------------------
+
+  pure function extract_row_col(ind,a) result(a_ind)
+    ! analogous to extract_column_col, but rows are etracted
+    integer, intent(in) :: ind(:)
+    type(t_col), intent(in) :: a
+    type(t_col) :: a_ind
+
+    a_ind = transpose( transpose(a) * ind )
+  end function extract_row_col
+
+  !-----------------------------------------------------------------------
+
+  pure function diag_col(a,diags) result(d)
+    ! Extract the diagonals of a indicated in diags. Use 0 for the main
+    ! diagonal, negative values for the lower diagonals and positive
+    ! values for the upper diagonals.
+    ! When diags(id).ne.0, some of the last elements of d are outside the
+    ! bounds of the matrix and are left uninitialized. For instance, for 
+    !  diags = (/ -1 , 0 , 2 /), a%n = a%m = 6
+    ! we have
+    !      [ a(1,0) a(0,0) a(0,2) ]
+    !      [ a(2,1) a(1,1) a(1,3) ]
+    !      [ a(3,2) a(2,2) a(2,4) ]
+    !  d = [ a(4,3) a(3,3) a(3,5) ]
+    !      [ a(5,4) a(4,4)   **   ]
+    !      [   **   a(5,5)   **   ]
+    type(t_col), intent(in) :: a
+    integer, intent(in) :: diags(:)
+    sll_real64 :: d(min(a%n,a%m),size(diags))
+
+    integer :: id, i, i_start, i_end, shift
+
+    do id=1,size(diags)
+       ! i is the row index (counting from 1), and must be ajusted for
+       ! the secondary diagonals
+       i_start = max(1-diags(id),1)
+       i_end   = min(a%n,a%m-diags(id))
+       shift = max(-diags(id),0)
+       do i=i_start,i_end
+          d(i-shift,id) = get(a,i-1,i+diags(id)-1)
+       enddo
+    enddo
+
+  end function diag_col
+
+  !-----------------------------------------------------------------------
+
+  pure function diag_col_main(a) result(d)
+    ! Analogous to diag_col, but only extracts the main diagonal
+    type(t_col), intent(in) :: a
+    sll_real64 :: d(min(a%n,a%m))
+
+    d = reshape(diag(a,(/0/)),(/size(d)/))
+
+  end function diag_col_main
+
+  !-----------------------------------------------------------------------
+
+  pure function diag_tri(t,diags) result(d)
+    type(t_tri), intent(in) :: t
+    integer, intent(in) :: diags(:)
+    sll_real64 :: d(min(t%n,t%m),size(diags))
+
+    d = diag(tri2col(t),diags)
+
+  end function diag_tri
+
+  !-----------------------------------------------------------------------
+
+  pure function diag_tri_main(t) result(d)
+    ! Analogous to diag_tri, but only extracts the main diagonal
+    type(t_tri), intent(in) :: t
+    sll_real64 :: d(min(t%n,t%m))
+
+    d = reshape(diag(t,(/0/)),(/size(d)/))
+
+  end function diag_tri_main
+
+  !-----------------------------------------------------------------------
+
+  pure function spdiag_col(a,diags) result(d)
+    ! Analogous to diag, but the diagonals are written into a sparse
+    ! matrix. An important feature is that the indexes in diags can
+    ! exceed the size of a, in which case they are ignored.
+    type(t_col), intent(in) :: a
+    integer, intent(in) :: diags(:)
+    type(t_col) :: d
+
+    integer :: p, j, id, i, pos, ti(a%nz), tj(a%nz)
+    sll_real64 :: tx(a%nz)
+    integer, allocatable :: indi(:)
+    sll_real64, allocatable :: xi(:)
+
+    p = 0
+    do j=0,a%m-1
+       ! here we could use the reallocation on assignment on indi, xi
+       if(allocated(indi)) deallocate(indi)
+       allocate(indi(nnz_col(a,j)))
+       indi = nz_col_i(a,j)
+       if(allocated(xi)) deallocate(xi)
+       allocate(xi(nnz_col(a,j)))
+       xi = nz_col(a,j)
+       do id=1,size(diags)
+          i = j-diags(id)
+          ! check whether a(i,j) is nonzero
+          pos = search_sorted(i,indi)
+          if(pos.ne.0) then
+             p = p+1
+             ti(p) = i
+             tj(p) = j
+             tx(p) = xi(pos)
+          endif
+       enddo
+    enddo
+
+    d = tri2col(new_tri(a%m,a%n,ti(1:p),tj(1:p),tx(1:p)))
+
+  end function spdiag_col
+
+  !-----------------------------------------------------------------------
+
+  pure subroutine clear_col(a)
+    ! deallocate a matrix
+    type(t_col), intent(out) :: a
+
+    a%ierr = 0
+    a%n = -1
+    a%m = -1
+    a%nz = -1
+    ! allocatable fields implicitly deallocated
+
+  end subroutine clear_col
+
+  !-----------------------------------------------------------------------
+
+  pure subroutine clear_tri(t)
+    ! deallocate a matrix
+    type(t_tri), intent(out) :: t
+
+    t%ierr = 0
+    t%n = -1
+    t%m = -1
+    t%nz = -1
+    ! allocatable fields implicitly deallocated
+
+  end subroutine clear_tri
+
+  !-----------------------------------------------------------------------
+
+  pure subroutine clear_pm_sk(pm)
+    ! deallocate a matrix
+    type(t_pm_sk), intent(out) :: pm
+
+    pm%n_in = -1
+    ! allocatable fields implicitly deallocated
+
+  end subroutine clear_pm_sk
+
+  !-----------------------------------------------------------------------
 
 end module mod_sparse
 
