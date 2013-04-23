@@ -369,8 +369,8 @@ SLL_ALLOCATE(jy(geomx%nx,geomx%ny),iflag)
 ! initialisation de la fonction de distribution 
 xi=0.90
 eps=0.05
-kx=2*pi/((geomx%nx)*geomx%dx)
-ky=2*pi/((geomx%ny)*geomx%dy)
+kx=2*sll_pi/((geomx%nx)*geomx%dx)
+ky=2*sll_pi/((geomx%ny)*geomx%dy)
 do jv=jstartv,jendv
    vy = geomv%y0+(jv-1)*geomv%dy
    do iv=1,geomv%nx
@@ -385,7 +385,7 @@ do jv=jstartv,jendv
 !                 1/(2*pi)*((2-2*xi)/(3-2*xi))* &
 !                 (1+.5*vx*vx/(1-xi))*exp(-.5*v2)
 !             f(i,j,iv,jv)=(1+eps*cos(kx*x)*cos(ky*y))*1/(2*pi)*exp(-.5*v2)
-            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*pi))*exp(-0.5_wp*v2)
+            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
          end do
       end do
    end do
