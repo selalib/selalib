@@ -7,6 +7,7 @@
 #include "sll_utilities.h"
 #include "sll_constants.h"
 #include "sll_file_io.h"
+#include "sll_fft.h"
 #include "sll_interpolators.h"
 #include "sll_splines.h"
 #include "sll_maxwell_solvers.h"

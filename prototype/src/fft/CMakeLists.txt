@@ -1,10 +1,9 @@
-set(DEPENDENCIES
-	sll_utilities
-	sll_timer
-	sll_constants
-	sll_memory
-	sll_assertion
-	sll_working_precision
+set(DEPENDENCIES sll_utilities
+	              sll_timer
+	              sll_constants
+	             sll_memory
+	              sll_assertion
+	              sll_working_precision
 )
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
@@ -26,11 +25,8 @@ ELSE()
   add_definitions(-D_DEFAULTFFTLIB=SLLFFT_MOD)
 ENDIF()
 
-add_library(sll_fft STATIC
-	${FFT_SRC}
-	fft_utils.F90
+add_library(sll_fft STATIC ${FFT_SRC} fft_utils.F90)
 
-)
 add_dependencies(sll_fft ${DEPENDENCIES})
 
 IF(FFTW_FOUND AND FFTW_ENABLED)

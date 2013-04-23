@@ -165,27 +165,24 @@ target_link_libraries(polar_SL
 	sll_assertion
   )
 
-add_executable(CG_polar
-		CG_polar.F90
-		#sll_poisson_2d_polar.F90
-		sll_advection_polar.F90
-		sll_polar_operators.F90
-		)
-add_dependencies(CG_polar sll_file_io)
+add_executable(CG_polar CG_polar.F90
+		                  sll_advection_polar.F90
+		                  sll_polar_operators.F90)
+
+add_dependencies(CG_polar sll_file_io sll_fft sll_poisson_2d_polar)
 
 #FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
-target_link_libraries(CG_polar
-	sll_splines
-	sll_poisson_2d_polar
-        sll_file_io
-	sll_fft
-#	sll_tridiagonal
-	sll_constants
-	sll_memory
-	sll_assertion
-	sll_timer
-	sll_utilities
-	)
+
+target_link_libraries(CG_polar 
+	                            sll_poisson_2d_polar
+	                            sll_utilities
+                               sll_file_io
+	                            sll_fft
+                               sll_splines
+	                            sll_constants
+	                            sll_memory
+	                            sll_assertion
+	                            sll_timer)
 
 IF (0)
 add_executable(Poisson_solver
