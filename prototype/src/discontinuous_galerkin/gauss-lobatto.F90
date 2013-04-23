@@ -5,23 +5,23 @@
 !
 ! DESCRIPTION:
 !> @file gauss-lobatto.F90
-!> @namespace gausslobatto
-!> @author Madaule Eric
-!> @brief Gauss-Lobatto interpolation tools
-!> @details Here are several of the Gauss-Lobatto tools :\\
-!>            ·Gauss-Lobatto points and weight,\\
-!>            ·Gauss-Lobatto bases functions and the integral of their product,\\
-!>            ·integral of product of Gauss-Lobatto function and their derivative.
-!>
-!>          The mass matrix (which is the integral of \phi_i \times \phi_j) is simply 
-!>          diag(weigh), so there is no need to store it more than just the weigh.
-!>
-!>          We also need the derivative matrix D.
-!>          \f[ D_{i,j}=\int \pih_i \phi^'_j f]
-!>
-!>          This module will first be limited to 1D and should extend as people will
-!>          have the need for higher dimension (and so have time to write it).
-!>         
+!! @namespace gausslobatto
+!! @author Madaule Eric
+!! @brief Gauss-Lobatto interpolation tools
+!! @details Here are several of the Gauss-Lobatto tools :\\
+!!            ·Gauss-Lobatto points and weight,\\
+!!            ·Gauss-Lobatto bases functions and the integral of their product,\\
+!!            ·integral of product of Gauss-Lobatto function and their derivative.
+!!
+!!          The mass matrix (which is the integral of \phi_i \times \phi_j) is simply 
+!!          diag(weigh), so there is no need to store it more than just the weigh.
+!!
+!!          We also need the derivative matrix D.
+!!          \f[ D_{i,j}=\int \pih_i \phi^'_j f]
+!!
+!!          This module will first be limited to 1D and should extend as people will
+!!          have the need for higher dimension (and so have time to write it).
+!!         
 !------------------------------------------------------------------------------
 module gausslobatto
 #include "sll_working_precision.h"
@@ -32,16 +32,16 @@ module gausslobatto
 
   type gausslobatto1D
      !---------------------------------------------------------------------------
-     !> @brief Gauss-Lobatto
-     !> @details Gauss-Lobatto nodes and weigh on a reference element [-1;1] in 1D.
-     !>          This also includes the degree of polynomials and the matrix of derivatives
-     !>          D_{i,j}=\int(\Psi_i\Psi'_j)=w_i\sum_{l/=j}1/(x_j-x_l)\prod_{m/=j,m/=l}(x_i-x_m)/(x_j-x_m)
-     !> 
-     !>          A gausslobatto1d object contains node, weight, jac and degree.
-     !>          These are allocatable array. Use the construction subroutine
-     !>          to build it. Only degree is a scalar. It is the degree of corresponding
-     !>          polynomials. Only jac must be filled manually (but it is allocated in
-     !>          the constructor)
+     !< @brief Gauss-Lobatto
+     !! @details Gauss-Lobatto nodes and weigh on a reference element [-1;1] in 1D.
+     !!          This also includes the degree of polynomials and the matrix of derivatives
+     !!          D_{i,j}=\int(\Psi_i\Psi'_j)=w_i\sum_{l/=j}1/(x_j-x_l)\prod_{m/=j,m/=l}(x_i-x_m)/(x_j-x_m)
+     !! 
+     !!          A gausslobatto1d object contains node, weight, jac and degree.
+     !!          These are allocatable array. Use the construction subroutine
+     !!          to build it. Only degree is a scalar. It is the degree of corresponding
+     !!          polynomials. Only jac must be filled manually (but it is allocated in
+     !!          the constructor)
      sll_real64,dimension(:),allocatable :: node,weigh
      sll_int32 :: degree
      sll_real64,dimension(:,:),allocatable :: der
@@ -61,10 +61,9 @@ contains
     !!          (very easy, it is explained in the file) and compile again (sorry)
     !! @param[IN] size number of Gauss-Lobatto points, should be at least 2 (if 1,
     !!                 then piecewise constant => Gauss-Lobatto is impossible)
-    !> @param[OUT] gl_obj Gauss-Lobatto object to build
+    !! @param[OUT] gl_obj Gauss-Lobatto object to build
 
     sll_int32,intent(in) :: size
-    !> Gauss-Lobatto object to build
     type(gausslobatto1D),intent(out) :: gl_obj
 
     sll_int32 :: err,i
@@ -105,9 +104,9 @@ contains
 
   subroutine delete_gausslobatto_1d(gl_obj)
     !---------------------------------------------------------------------------
-    !> @brief delete an object of type gausslobatto1D
-    !> @details delete all array in an object of type gausslobatto1D
-    !> @param[INOUT] gl_obj the object to delete
+    !< @brief delete an object of type gausslobatto1D
+    !! @details delete all array in an object of type gausslobatto1D
+    !! @param[INOUT] gl_obj the object to delete
 
     type(gausslobatto1D),intent(inout) :: gl_obj
 
@@ -119,11 +118,11 @@ contains
 
   subroutine derivative_matrix_1d(gl_obj)
     !called by Gauss-Lobatto 1D constructor
-!!$    !---------------------------------------------------------------------------
-!!$    !> @brief construction of the derivative matrix for Gauss-Lobatto 1D
-!!$    !> @details Construction of the derivative matrix for Gauss-Lobatto 1D,
-!!$    !>          The matrix must be already allocated of size (number of point)^2.
-!!$    !> @param[INOUT] gl_obj the object to delete
+    !---------------------------------------------------------------------------
+    !< @brief construction of the derivative matrix for Gauss-Lobatto 1D
+    !! @details Construction of the derivative matrix for Gauss-Lobatto 1D,
+    !!          The matrix must be already allocated of size (number of point)^2.
+    !! @param[INOUT] gl_obj the object to delete
 
     !derivative on the shape function
 
