@@ -5,12 +5,12 @@
 !
 ! DESCRIPTION:
 !> @file mesh.F90
-!> @namespace sll_nu_cart_mesh
-!> @author Madaule Eric
-!> @brief module for non uniform cartesian mesh
-!> @details In this module we define a non uniform cartesian mesh type.
-!>          Here also are the constructors and destructor of this type
-!>          Note that this type is not made to be a pointer and is build with subroutines
+!! @namespace sll_nu_cart_mesh
+!! @author Madaule Eric
+!! @brief module for non uniform cartesian mesh
+!! @details In this module we define a non uniform cartesian mesh type.
+!!          Here also are the constructors and destructor of this type
+!!          Note that this type is not made to be a pointer and is build with subroutines
 !------------------------------------------------------------------------------
 module sll_nu_cart_mesh
 #include "sll_working_precision.h"
@@ -19,11 +19,11 @@ module sll_nu_cart_mesh
 
   type :: non_unif_cart_mesh
      !---------------------------------------------------------------------------
-     !> @brief non uniform 2D mesh
-     !> @details non uniform 2D mesh
-     !>          contains number of cells in each direction, each cell size in each direction
-     !>                   and position of each nodes
-     !>                   Jacobian on each cell
+     !< @brief non uniform 2D mesh
+     !! @details non uniform 2D mesh
+     !!          contains number of cells in each direction, each cell size in each direction
+     !!                   and position of each nodes
+     !!                   Jacobian on each cell
      sll_int32 :: n_etat1,n_etat2
      sll_real64,dimension(:),allocatable :: d_etat1,d_etat2
      sll_real64,dimension(:),allocatable :: etat1,etat2
@@ -37,18 +37,18 @@ contains
 
   subroutine init_nu_cart_mesh(n_etat1,n_etat2,mesh)!,d_etat1,d_etat2)
     !---------------------------------------------------------------------------
-    !> @brief creation of type non_unif_cart_mesh
-    !> @details creation of type non_unif_cart_mesh
-    !>          the mesh can be uniform in one direction etat1 or etat2 (both is possible)
-    !>          we allocate nodes, d_etati and jac
-    !>          if the size of cells in one direction is not constant, just don't enter any value
-    !>          the vector will be allocated and you can fill it by yourself
-    !>          if the size of the cell is constant in direction i, then size(d_etati) = 1
-    !> @param[IN] n_etat1 number of cell in direction etat1
-    !> @param[IN] n_etat2 number of cell in direction etat2
-    !> @param[OUT] mesh the mesh to build
-!!$    !> @param[IN,OPTIONAL] d_etat1 size of step in direction etat1 if the size is constant
-!!$    !> @param[IN,OPTIONAL] d_etat2 size of step in direction etat2 if the size is constant
+    !< @brief creation of type non_unif_cart_mesh
+    !! @details creation of type non_unif_cart_mesh
+    !!          the mesh can be uniform in one direction etat1 or etat2 (both is possible)
+    !!          we allocate nodes, d_etati and jac
+    !!          if the size of cells in one direction is not constant, just don't enter any value
+    !!          the vector will be allocated and you can fill it by yourself
+    !!          if the size of the cell is constant in direction i, then size(d_etati) = 1
+    !! @param[IN] n_etat1 number of cell in direction etat1
+    !! @param[IN] n_etat2 number of cell in direction etat2
+    !! @param[OUT] mesh the mesh to build
+!!$    !! @param[IN,OPTIONAL] d_etat1 size of step in direction etat1 if the size is constant
+!!$    !! @param[IN,OPTIONAL] d_etat2 size of step in direction etat2 if the size is constant
     
     sll_int32,intent(in) :: n_etat1,n_etat2
     type(non_unif_cart_mesh), intent(out) :: mesh
@@ -56,7 +56,7 @@ contains
 
     mesh%n_etat1=n_etat1
     mesh%n_etat2=n_etat2
-    allocate(mesh%etat1(n_etat1+1),mesh%etat2(n_etat2+1),mesh%jac(n_etat1,n_etat2))
+    allocate(mesh%etat1(n_etat1+1),mesh%etat2(n_etat2+1),mesh%jac(n_etat1+1,n_etat2+1))
 
 !!$    if (present(d_etat1)) then
 !!$       allocate(mesh%d_etat1(1))
@@ -88,13 +88,13 @@ contains
 
   subroutine fill_node_nuc_mesh(etat1_min,etat2_min,mesh)
     !---------------------------------------------------------------------------
-    !> @brief filling the mesh%node with nodes coordinates
-    !> @details Filling the mesh%node with nodes coordinates
-    !>          The non_unif_cart_mesh object must already be build and the d_etat1 and d_etat2 be filled
-    !>          Since after that we have all information needed, then the Jacobien is also filled
-    !> @param[IN] etat1_min minimum in direction etat1
-    !> @param[IN] etat2_min minimum in direction etat2
-    !> @param[INOUT] mesh the mesh to build
+    !< @brief filling the mesh%node with nodes coordinates
+    !! @details Filling the mesh%node with nodes coordinates
+    !!          The non_unif_cart_mesh object must already be build and the d_etat1 and d_etat2 be filled
+    !!          Since after that we have all information needed, then the Jacobien is also filled
+    !! @param[IN] etat1_min minimum in direction etat1
+    !! @param[IN] etat2_min minimum in direction etat2
+    !! @param[INOUT] mesh the mesh to build
 
     sll_real64,intent(in) :: etat1_min,etat2_min
     type(non_unif_cart_mesh), intent(inout) :: mesh
@@ -161,6 +161,10 @@ contains
           do i=1,mesh%n_etat1
              mesh%jac(i,j)=4.0d0/(mesh%d_etat1(i)*mesh%d_etat2(j))
           end do
+          mesh%jac(mesh%n_etat1+1,j)=2.0d0/mesh%d_etat2(j)
+       end do
+       do i=1,mesh%n_etat2
+          mesh%jac(i,mesh%n_etat2+1)=2.0d0/mesh%d_etat1(j)
        end do
 !!$    end if
 
@@ -168,9 +172,9 @@ contains
 
   subroutine delete_nu_cart_mesh(mesh)
     !---------------------------------------------------------------------------
-    !> @brief delete an object of type non_unif_cart_mesh
-    !> @details delete all array in an object of type non_unif_cart_mesh
-    !> @param[INOUT] mesh the mesh to delete
+    !< @brief delete an object of type non_unif_cart_mesh
+    !! @details delete all array in an object of type non_unif_cart_mesh
+    !! @param[INOUT] mesh the mesh to delete
 
     type(non_unif_cart_mesh),intent(inout) :: mesh
 
