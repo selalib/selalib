@@ -8,7 +8,7 @@ program cg_curvilinear_2D
   use module_cg_curvi_structure
   use curvilinear_2D_advection
   use module_cg_curvi_function
-  use poisson_polar
+  use sll_poisson_2d_polar
   use sll_constants
   implicit none
 
