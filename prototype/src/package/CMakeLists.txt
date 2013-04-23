@@ -13,6 +13,7 @@ SET(SLL_MACROS
 	 ${SLL_DIR}/interpolators/sll_interpolators.h
 	 ${SLL_DIR}/splines/sll_splines.h
 	 ${SLL_DIR}/file_io/sll_file_io.h
+	 ${SLL_DIR}/fft/sll_fft.h
 	)
 
 FILE(COPY        ${SLL_MACROS}
@@ -87,4 +88,4 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    FILE(COPY selalib-mpi.h DESTINATION ${CMAKE_BINARY_DIR}/include)
    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h   DESTINATION include)
 
-ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+ENDIF(HDF5_ENABLE_PARALLEl AND HDF5_PARALLEL_ENABLED)
