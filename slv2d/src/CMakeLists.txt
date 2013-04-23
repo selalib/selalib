@@ -22,7 +22,7 @@ SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
-INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/package)
 
 
 MESSAGE(STATUS "SLV2D:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
@@ -76,9 +76,12 @@ ENDIF(NOT HDF5_FOUND)
 SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+
 IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack ${CMAKE_BINARY_DIR}/dfftpack)
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
+                    ${CMAKE_BINARY_DIR}/package)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
+                    ${CMAKE_BINARY_DIR}/dfftpack)
 ENDIF()
 
 
@@ -147,14 +150,14 @@ IF (FFTW_FOUND)
    TARGET_LINK_LIBRARIES(vm4d          sll_vlasov4d slv2d ${LIBS})
    TARGET_LINK_LIBRARIES(vm4d_spectral sll_vlasov4d slv2d ${LIBS})
 
-   IF(FFTW_MPI_LIBRARY)
-
-      ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
-      TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
-      ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
-      TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib-mpi ${FFTW_LIBRARIES})
-
-   ENDIF()
+   #IF(FFTW_MPI_LIBRARY)
+   #
+   #   ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
+   #   TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
+   #   ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
+   #   TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib-mpi ${FFTW_LIBRARIES})
+   #
+   #ENDIF()
 
 
 ENDIF()
