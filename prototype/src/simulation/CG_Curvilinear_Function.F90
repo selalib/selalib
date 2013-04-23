@@ -6,9 +6,9 @@ module module_cg_curvi_function
 
    use module_cg_curvi_structure
    use sll_constants
-   use sll_splines
+   use sll_cubic_splines
    use sll_fft
-   use poisson_polar
+   use sll_poisson_2d_polar
 contains
 
 !!!****************************************************************************************

@@ -5,8 +5,8 @@ module module_cg_curvi_structure
 #include "sll_assert.h"
 
 
-  use sll_splines 
-  use poisson_polar
+  use sll_cubic_splines 
+  use sll_poisson_2d_polar
 !>type sll_plan_adv_polar
   !>type for advection with center-guide equations
   !>the field and other needed data/object are within
