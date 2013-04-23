@@ -1,3 +1,6 @@
+#ifndef _SLL_FFT_H_
+#define _SLL_FFT_H_
+
 use sll_fft
 
 #define GET_MODE0(mode,data) \
@@ -75,4 +78,6 @@ use sll_fft
 #define SET_MODE_LT_N_2(new_value,data,k,n) \
         data(k+1) = real(new_value,kind=f64); \
         data(n-k+1) = dimag(new_value)
+#endif
+
 #endif
