@@ -2,6 +2,7 @@ SET(SLL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 SET(SLL_MACROS
 	 ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
+	 ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
 	 ${SLL_DIR}/memory/sll_memory.h
 	 ${SLL_DIR}/precision/sll_working_precision.h
 	 ${SLL_DIR}/assert/sll_assert.h
@@ -68,24 +69,26 @@ ELSE()
   ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
 ENDIF()
 
-ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
-
-FILE(GLOB SLL_MODULES "${CMAKE_BINARY_DIR}/modules/sll_*.mod")
-
-INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
-INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
-INSTALL(FILES ${SLL_MODULES} DESTINATION include COMPONENT fortheaders)
-
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-   ADD_LIBRARY(selalib-mpi STATIC ${SLL_SOURCE_FILES}
-      ${SLL_DIR}/collective/sll_collective.F90
-      ${SLL_DIR}/remap/sll_remap.F90
-      ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
-      ${SLL_DIR}/file_io/sll_xdmf_parallel.F90 )
-
-   INSTALL(TARGETS selalib-mpi ARCHIVE DESTINATION lib)
-   FILE(COPY selalib-mpi.h DESTINATION ${CMAKE_BINARY_DIR}/include)
-   INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h   DESTINATION include)
+   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+       ${SLL_DIR}/collective/sll_collective.F90
+       ${SLL_DIR}/remap/sll_remap.F90
+       ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
+       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90 )
 
 ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+
+IF(SLL_BUILD_PACKAGE)
+FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/selalib-1.0.0/include)
+FILE(COPY ${SLL_SOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR}/selalib-1.0.0/src)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt DESTINATION ${CMAKE_BINARY_DIR}/selalib-1.0.0/)
+ENDIF(SLL_BUILD_PACKAGE)
+
+ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+
+
+INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
+INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
+INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
+INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")

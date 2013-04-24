@@ -14,12 +14,6 @@
 !> #include "sll_file_io.h"
 !> \endcode
 !> link with <code>sll_file_io</code> library
-!> - Modules available
-!>      + sll_xml_io
-!>      + sll_ascii_io
-!>      + sll_binary_io
-!>      + sll_hdf5_io
-!>      + sll_xdmf
 !> - Plot a 2D field described on a cartesian mesh, axis are perpendicular and spacing is constant.
 !> \code
 !> call sll_xdmf_corect2d_nodes("file_name",df,"field_name",x_min,dx,y_min,dy,"HDF5")
