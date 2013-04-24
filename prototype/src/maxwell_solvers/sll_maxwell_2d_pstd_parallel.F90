@@ -43,15 +43,14 @@ plan%d_dy = plan%d_dy / plan%ncy
 module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
 #include "sll_assert.h"
+#include "sll_maxwell_solvers_macros.h"
 
 use, intrinsic :: iso_c_binding
-use remapper
-use sll_fft
-use numeric_constants
+use sll_remapper
+use sll_constants
 use sll_collective
-use sll_maxwell
 
 implicit none
 
@@ -384,10 +383,10 @@ contains
 
     if (c_associated(plan%p_x_array)) call fftw_free(plan%p_x_array)
     if (c_associated(plan%p_y_array)) call fftw_free(plan%p_y_array)
-    call dfftw_destroy_plan(plan%fwx)
-    call dfftw_destroy_plan(plan%fwy)
-    call dfftw_destroy_plan(plan%bwx)
-    call dfftw_destroy_plan(plan%bwy)
+    call fftw_destroy_plan(plan%fwx)
+    call fftw_destroy_plan(plan%fwy)
+    call fftw_destroy_plan(plan%bwx)
+    call fftw_destroy_plan(plan%bwy)
 
     call delete(plan%rmp_xy)
     call delete(plan%rmp_yx)

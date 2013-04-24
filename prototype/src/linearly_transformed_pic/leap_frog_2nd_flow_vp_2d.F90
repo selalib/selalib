@@ -8,7 +8,7 @@ module sll_leap_frog_2nd_flow_2d
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_flow_base
   implicit none
 

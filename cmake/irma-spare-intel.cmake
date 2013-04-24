@@ -1,0 +1,16 @@
+CMAKE_BUILD_TYPE:STRING=Debug
+CMAKE_C_COMPILER:FILEPATH=/opt/intel/composer_xe_2013.1.117/bin/intel64/icc
+CMAKE_Fortran_COMPILER:FILEPATH=/opt/intel/composer_xe_2013.1.117/bin/intel64/ifort
+FFTW_ENABLED:BOOL=ON
+FFTW_INCLUDE_DIRS:PATH=/opt/local/include
+FFTW_LIBRARY:FILEPATH=/opt/local/lib/libfftw3.a
+FFTW_MPI_INCLUDE_DIR:PATH=/opt/local/include
+FFTW_MPI_LIBRARY:FILEPATH=/opt/local/lib/libfftw3_mpi.a
+FFTW_THREADS_LIBRARY:FILEPATH=/opt/local/lib/libfftw3_threads.a
+FFT_DEFAULT_LIBRARY:STRING=SLLFFT
+HDF5_C_LIBRARY:FILEPATH=/opt/local/lib/libhdf5.a
+HDF5_ENABLED:BOOL=ON
+HDF5_FORTRAN_LIBRARY:FILEPATH=/opt/local/lib/libhdf5_fortran.a
+HDF5_INCLUDE_DIRS:PATH=/opt/local/include
+HDF5_PARALLEL_ENABLED:BOOL=ON
+LAPACK_lapack_LIBRARY:FILEPATH=/usr/lib64/liblapack.so

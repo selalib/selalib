@@ -1,9 +1,9 @@
 program remap_test_4d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-  use remapper
+  use sll_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
   implicit none
 
   ! Test of the 4D remapper takes a 4D array whose global size N1*N2*N3*N4,
