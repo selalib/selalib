@@ -1,9 +1,7 @@
 module sll_module_mapped_meshes_1d_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-
-use sll_io
-use sll_gnuplot
+#include "sll_file_io.h"
 
   implicit none
 
