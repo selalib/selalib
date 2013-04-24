@@ -50,7 +50,6 @@ INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
-INCLUDE(DoxygenConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
@@ -66,9 +65,10 @@ INCLUDE_DIRECTORIES(utilities
                     poisson_solvers
                     maxwell_solvers
                     visu_pic) 
-ENABLE_TESTING()
 
 IF(NOT SLL_BUILD_PACKAGE)
+
+   ENABLE_TESTING()
 
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
@@ -116,9 +116,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ENDIF(NOT STDF95)
 
-ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(package)
 
 ##########################################################
 
@@ -174,6 +172,7 @@ IF(MUDPACK_ENABLED)
    ENDIF()
 ENDIF()
 
+
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
@@ -224,5 +223,11 @@ IF(PETSC_ENABLED)
       ADD_SUBDIRECTORY(petsc_solvers)
    ENDIF(PETSC_FOUND)
 ENDIF()
+
+INCLUDE(DoxygenConfig)
+
+ENDIF(NOT SLL_BUILD_PACKAGE)
+
+ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
