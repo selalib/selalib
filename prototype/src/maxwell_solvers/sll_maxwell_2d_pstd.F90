@@ -364,10 +364,10 @@ type(maxwell_pstd) :: self
 
 if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
 if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
-call dfftw_destroy_plan(self%fwx)
-call dfftw_destroy_plan(self%fwy)
-call dfftw_destroy_plan(self%bwx)
-call dfftw_destroy_plan(self%bwy)
+call fftw_destroy_plan(self%fwx)
+call fftw_destroy_plan(self%fwy)
+call fftw_destroy_plan(self%bwx)
+call fftw_destroy_plan(self%bwy)
 !if (nthreads > 1) then
 !   call dfftw_cleanup_threads(error)
 !end if
