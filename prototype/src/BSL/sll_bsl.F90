@@ -2,9 +2,8 @@ module sll_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use numeric_constants
-use sll_splines
+#include "sll_constants.h"
+#include "sll_splines.h"
 
 implicit none
 

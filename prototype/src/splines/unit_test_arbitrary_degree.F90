@@ -2,7 +2,7 @@ program arbitrary_degree_spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use arbitrary_degree_splines
+  use sll_arbitrary_degree_splines
   implicit none
 
   logical                                :: passed_test

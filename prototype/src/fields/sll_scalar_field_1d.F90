@@ -32,11 +32,11 @@ module sll_scalar_field_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_io
-  use numeric_constants
+#include "sll_file_io.h"
+  use sll_constants
   use sll_scalar_field_initializers_base
   use sll_module_mapped_meshes_1d_base
-  use sll_misc_utils
+  use sll_utilities
   implicit none
   
   !I removed this line because, it not exists in 2d version
@@ -125,7 +125,7 @@ contains   ! *i****************************************************************
     output_file_name, &
     output_format)
     class(scalar_field_1d)                  :: scalar_field
-    sll_real64, dimension(:), pointer      :: x1_array
+    !sll_real64, dimension(:), pointer      :: x1_array
     logical, optional                       :: multiply_by_jacobian 
     sll_int32, optional                     :: output_format 
     character(len=*), optional              :: output_file_name

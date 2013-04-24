@@ -18,21 +18,18 @@ program spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_splines.h"
+#include "sll_constants.h"
   
 #define PRINT_SPLINE_COEFFS 0
-  use sll_splines
-  use numeric_constants
   use util_constants
   use test_processes_module
   implicit none
 
   intrinsic :: cos
 
-  sll_int32                              :: err, ok
-  sll_int32                              :: i, i_test, j_test
+  sll_int32                              :: ok
  
-  sll_real64, dimension(1:100)           :: spline_vals
-  sll_real64                             :: rnd
 
   sll_int32, parameter                   :: nbtest = 12
   logical                                :: test_passed

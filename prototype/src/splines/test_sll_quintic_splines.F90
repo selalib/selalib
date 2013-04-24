@@ -17,9 +17,9 @@ program test_sll_quintic_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use numeric_constants
+use sll_constants
 use sll_quintic_splines
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
 
 implicit none
   
