@@ -1,5 +1,4 @@
 SET( INTERPOLATORS_SRC_FILES 
-        sll_interpolators.F90
         sll_cubic_spline_interpolator_1d.F90
         sll_cubic_spline_interpolator_1d_nonuniform.F90
         sll_cubic_spline_interpolator_2d.F90
@@ -28,7 +27,7 @@ ADD_DEPENDENCIES( sll_interpolators
                   sll_working_precision
                   sll_memory
                   sll_assertion
-                  sll_numerical_utilities 
+                  sll_utilities 
                   sll_quintic_splines
                   sll_weno
                   sll_lagrange_interpolation )
@@ -43,7 +42,6 @@ IF(NOT STDF95)
                           sll_splines
                           sll_fft
                           sll_utilities
-                          sll_numerical_utilities
                           sll_constants
                           sll_assertion
                           sll_memory
@@ -57,7 +55,7 @@ ADD_EXECUTABLE(test_interpolators_2d unit_test.F90
 TARGET_LINK_LIBRARIES( test_interpolators_2d
                        sll_interpolators
                        sll_splines
-                       sll_numerical_utilities  
+                       sll_utilities  
                        sll_constants
                        sll_assertion
                        sll_memory
@@ -69,7 +67,7 @@ ADD_EXECUTABLE(test_quintic_interpolators_1d
 TARGET_LINK_LIBRARIES( test_quintic_interpolators_1d
                        sll_interpolators
                        sll_splines
-                       sll_numerical_utilities
+                       sll_utilities
                        sll_constants
                        sll_assertion
                        sll_memory
@@ -82,7 +80,7 @@ ADD_EXECUTABLE(test_quintic_interpolators_1d_nonuniform
 TARGET_LINK_LIBRARIES(test_quintic_interpolators_1d_nonuniform
                       sll_interpolators
                       sll_splines
-                      sll_numerical_utilities
+                      sll_utilities
                       sll_constants
                       sll_assertion
                       sll_memory
@@ -95,7 +93,7 @@ ADD_EXECUTABLE(test_odd_degree_interpolators_1d_nonuniform
 TARGET_LINK_LIBRARIES( test_odd_degree_interpolators_1d_nonuniform
                        sll_interpolators
                        sll_splines
-                       sll_numerical_utilities
+                       sll_utilities
                        sll_constants
                        sll_assertion
                        sll_memory
@@ -108,7 +106,7 @@ ADD_EXECUTABLE(test_odd_degree_interpolators_1d
 TARGET_LINK_LIBRARIES( test_odd_degree_interpolators_1d
                        sll_interpolators
                        sll_splines
-                       sll_numerical_utilities
+                       sll_utilities
                        sll_constants
                        sll_assertion
                        sll_memory
@@ -121,7 +119,7 @@ TARGET_LINK_LIBRARIES( test_periodic_interpolators_1d
                        sll_interpolators
                        sll_periodic_interp
                        sll_splines
-                       sll_numerical_utilities  
+                       sll_utilities  
                        sll_fft
                        sll_utilities
                        sll_assertion

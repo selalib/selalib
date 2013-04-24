@@ -29,18 +29,13 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-
-IF(FFTPACK_ENABLED)
-  ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
-ENDIF()
+ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 
 ADD_TEST(NAME fft COMMAND test_fft)
 
 IF(NOT STDF95)
    ADD_TEST(NAME utilities COMMAND test_utilities)
-   IF(FFTPACK_ENABLED)
-      ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
-   ENDIF(FFTPACK_ENABLED)
+   ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
 
    ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
@@ -96,8 +91,8 @@ ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-ADD_TEST(NAME low_level_file_io COMMAND test_io)
-SET_TESTS_PROPERTIES(low_level_file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME file_io COMMAND test_io)
+SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 IF(NOT STDF95)
 ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)

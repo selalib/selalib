@@ -1,6 +1,5 @@
 SET(BSL_LIB_DEPS sll_interpolators
                  sll_splines 
-                 sll_numerical_utilities	
                  sll_memory 
 	         sll_working_precision
                  sll_utilities 
@@ -42,7 +41,7 @@ IF(NOT STDF95)
    ADD_DEPENDENCIES(bsl_2d_omp ${BSL_LIB_DEPS})
    TARGET_LINK_LIBRARIES(bsl_2d_omp ${BSL_LIB_DEPS})
 
-   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../selalib_level)
+   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../package)
    ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
    ADD_DEPENDENCIES(bsl_landau_1d selalib)
    TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)

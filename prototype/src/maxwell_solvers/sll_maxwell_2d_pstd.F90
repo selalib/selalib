@@ -57,11 +57,14 @@ self%d_dy = self%d_dy / ny
 !>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
+
+
 module sll_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
+
 
 use, intrinsic :: iso_c_binding
 use sll_constants

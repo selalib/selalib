@@ -1,4 +1,7 @@
- use sll_fft
+#ifndef _SLL_FFT_H_
+#define _SLL_FFT_H_
+
+use sll_fft
 
 #define GET_MODE0(mode,data) \
       mode = cmplx(data(1),0.0_f64,kind=f64)
@@ -65,7 +68,7 @@
         mode = cmplx(data(n/2+1),0.0_f64,kind=f64)
 #define GET_MODE_GT_N_2(mode,data,k,n) \
         mode = cmplx( data(n-k+1) , -data(k+1) ,kind=f64)
-#define GET_MODE_LT_N_2(mode,data,k,n) \ 
+#define GET_MODE_LT_N_2(mode,data,k,n) \
         mode = cmplx( data(k+1) , data(n-k+1) ,kind=f64)  
 #define SET_MODE_N_2(new_value,data,n) \
         data(n/2+1) = real(new_value,kind=f64)
@@ -75,4 +78,6 @@
 #define SET_MODE_LT_N_2(new_value,data,k,n) \
         data(k+1) = real(new_value,kind=f64); \
         data(n-k+1) = dimag(new_value)
+#endif
+
 #endif
