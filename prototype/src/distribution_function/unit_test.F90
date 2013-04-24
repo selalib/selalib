@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-  use numeric_constants
+  use sll_constants
   use distribution_function
   use geometry_functions
   use sll_module_mapped_meshes_2d
@@ -30,8 +30,7 @@ program unit_test
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
 
-  sll_int32  :: ierr, istep
-  sll_int32 :: ix, iv, nnode_x1, nnode_v1
+  sll_int32 :: istep
 
   nc_eta1 = 100
   nc_eta2 = 100

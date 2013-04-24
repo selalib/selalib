@@ -3,10 +3,9 @@ module biot_savart
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use sll_misc_utils
-use numeric_constants
-use sll_io
+#include "sll_utilities.h"
+#include "sll_constants.h"
+#include "sll_file_io.h"
 
 implicit none
 

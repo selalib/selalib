@@ -4,7 +4,7 @@
 module sll_gaussian_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use numeric_constants
+  use sll_constants
   use sll_scalar_field_initializers_base
   implicit none
 
