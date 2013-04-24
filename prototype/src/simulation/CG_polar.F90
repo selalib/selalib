@@ -3,7 +3,7 @@ program cg_polar
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_timer
+  use sll_timer 
   use polar_operators
   use polar_advection
   use sll_fft
@@ -17,7 +17,7 @@ program cg_polar
   sll_real64, dimension (:)  , allocatable :: int_r
   sll_int32  :: i, j, step, visustep, hh, min, ss
   sll_int32  :: nr, ntheta, nb_step
-  sll_int32  :: fcase, scheme, carac, grad, visu
+  sll_int32  :: fcase, scheme, carac, grad, visu, interp_case, PPM_order
   sll_int32  :: ierr_poiss
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0, re, im
@@ -52,6 +52,8 @@ program cg_polar
   read(27,*)grad
   read(27,*)fcase
   read(27,*)scheme
+  read(27,*)interp_case
+  read(27,*)PPM_order
   read(27,*)visu
   read(27,*)f_file
   read(27,*)
@@ -105,6 +107,7 @@ program cg_polar
         theta = real(j-1,f64)*dtheta
       enddo
     end do
+!f=10._f64
 
   else if (fcase==3) then
     do i = 1,nr+1
@@ -476,6 +479,10 @@ program cg_polar
     if (scheme==1) then
       !classical semi-Lagrangian scheme (order 1)
       call SL_classic(plan_sl,f,fp1)
+
+    else if (scheme==10) then
+      !semi-Lagrangian scheme remap (order 1, remap)
+      call SL_remap(plan_sl,f,fp1,interp_case,PPM_order)
 
     else if (scheme==2) then
       !semi-Lagrangian predictive-corrective scheme
