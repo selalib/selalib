@@ -45,11 +45,10 @@ module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
 
 use, intrinsic :: iso_c_binding
-use remapper
-use sll_fft
+use sll_remapper
 use sll_constants
 use sll_collective
 

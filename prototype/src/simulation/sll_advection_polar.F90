@@ -4,7 +4,7 @@ module polar_advection
 #include "sll_assert.h"
 
   use polar_operators
-  use poisson_polar
+  use sll_poisson_2d_polar
   use sll_constants
   use sll_cubic_splines
   implicit none

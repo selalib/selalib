@@ -1,0 +1,14 @@
+import os
+
+SLL_ROOT='/Users/navaro/Codes/selalib'
+
+env = Environment( ENV=os.environ,
+                   LIBS=['selalib','dfftpack'],
+                   F90='ifort',
+                   F90FLAGS = ['-O3'],
+	                F90PATH = [SLL_ROOT+'/usr/include'],
+                   LINK='ifort',
+	                LIBPATH = [SLL_ROOT+'/usr/lib'])
+
+env.Program('landau', ['landau.F90'])
+
