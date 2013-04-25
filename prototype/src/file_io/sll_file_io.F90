@@ -9,17 +9,11 @@
 !> - Xdmf    http://www.xdmf.org/index.php/Main_Page
 !> - HDF5    http://www.hdfgroup.org/HDF5/
 !>
-!> link with <code>sll_low_level_io</code> library
-!> - Modules available
-!>      + sll_xml_io
-!>      + sll_ascii_io
-!>      + sll_binary_io
-!>      + sll_hdf5_io
-!>      + sll_xdmf
-!> - import the module :
+!> Use this module with
 !> \code
-!> use sll_xdmf
+!> #include "sll_file_io.h"
 !> \endcode
+!> link with <code>sll_file_io</code> library
 !> - Plot a 2D field described on a cartesian mesh, axis are perpendicular and spacing is constant.
 !> \code
 !> call sll_xdmf_corect2d_nodes("file_name",df,"field_name",x_min,dx,y_min,dy,"HDF5")
