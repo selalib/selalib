@@ -145,7 +145,7 @@ program vm4d_spectral
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
   end if
 
-  call free(poisson)
+  call delete(poisson)
   call sll_halt_collective()
 
   print*,'PASSED'
@@ -206,11 +206,11 @@ contains
     end do
     end do
 
-    call new(maxwell, geomx%x0, geomx%x1, geomx%nx, &
-                             geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
+    call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx, &
+                    geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
-    call new(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                      geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+    call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
+                    geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
 
   end subroutine initlocal
 
