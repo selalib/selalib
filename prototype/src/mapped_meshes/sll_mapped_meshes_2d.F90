@@ -94,6 +94,10 @@ module sll_module_mapped_meshes_2d
 #endif
   end type sll_mapped_mesh_2d_analytic
 
+
+
+  ! Discrete case
+
 #ifdef STDF95
   type                                  ::sll_mapped_mesh_2d_discrete
      sll_int32  :: nc_eta1

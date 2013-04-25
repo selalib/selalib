@@ -13,16 +13,15 @@ module sll_test_4d_initializer
   ! function, periodic in x and y, and compact-ish in vx and vy.
   !
   ! Basically:
-  !
-  ! f(x,y,vx,vy) = pi/(8*vt^2)*sin(pi*x)*sin(pi*y)*exp(-(vx^2+vy^2)/(2*vt^2))
+  !                 1                                      -(vx^2 + vy^2)
+  ! f(x,y,vx,vy) = ----(1+epsilon*cos(kx*x)*cos(ky*y))*exp(------------- )
+  !                 2*pi                                         2
   !
   ! It is meant to be used in the intervals:
-  ! x:  [ 0,1]
-  ! y:  [ 0,1]
-  ! vx: [-1,1]
-  ! vy: [-1,1]
-  ! thus vthermal has to be small relative to 1 to make the support as
-  ! 'compact' as possible. 
+  ! x:  [ 0,2*pi/kx]
+  ! y:  [ 0,2*pi/ky]
+  ! vx: [-6,6]
+  ! vy: [-6,6]
   !
   ! Issue to resolve: to initialize the data we need the 'mesh'/'mapping'
   ! information. How to deal with this in 4D? Do we pass multiple 2D
@@ -30,20 +29,38 @@ module sll_test_4d_initializer
   ! cartesian mesh.
 
 #ifdef STDF95
-  type :: init_test_4d_par
+  type :: init_test_4d_par_landau
      sll_int32 :: data_position
 #else
-  type, extends(scalar_field_4d_initializer_base) :: init_test_4d_par
+  type, extends(scalar_field_4d_initializer_base) :: init_test_4d_par_landau
 #endif
-     sll_real64 :: v_thermal
      type(layout_4D), pointer :: data_layout
-     type(simple_cartesian_4d_mesh), pointer :: mesh_4d
+!     type(simple_cartesian_4d_mesh), pointer :: mesh_4d
+     sll_real64               :: x1_min
+     sll_real64               :: x1_max
+     sll_real64               :: x2_min
+     sll_real64               :: x2_max
+     sll_real64               :: x3_min
+     sll_real64               :: x3_max
+     sll_real64               :: x4_min
+     sll_real64               :: x4_max
+     sll_real64               :: nc_x1
+     sll_real64               :: nc_x2
+     sll_real64               :: nc_x3
+     sll_real64               :: nc_x4
+     sll_real64               :: delta1
+     sll_real64               :: delta2
+     sll_real64               :: delta3
+     sll_real64               :: delta4
+     sll_real64               :: epsilon
+     sll_real64               :: kx
+     sll_real64               :: ky
 #ifndef STDF95
    contains
-     procedure, pass(init_obj) :: initialize => load_test_4d_initializer
-     procedure, pass(init_obj) :: f_of_4args => compact_4d_field
+     procedure, pass(init_obj) :: initialize => load_test_4d_initializer_landau
+     procedure, pass(init_obj) :: f_of_4args => compact_4d_field_landau
 #endif
-  end type init_test_4d_par
+  end type init_test_4d_par_landau
   
   ! This has to end up somewhere else, if it is to stay in the library
   type simple_cartesian_4d_mesh
@@ -65,13 +82,37 @@ module sll_test_4d_initializer
      sll_real64 :: delta_x4
   end type simple_cartesian_4d_mesh
 
+  type simple_cartesian_2d_mesh
+     sll_int32  :: num_cells1
+     sll_int32  :: num_cells2
+     sll_real64 :: x1_min
+     sll_real64 :: x1_max
+     sll_real64 :: x2_min
+     sll_real64 :: x2_max
+     sll_real64 :: delta_x1
+     sll_real64 :: delta_x2
+  end type simple_cartesian_2d_mesh
+
+
 contains
 
-  function new_cartesian_4d_mesh( &
-    num_cells1, &
-    num_cells2, &
-    num_cells3, &
-    num_cells4, &
+
+#ifdef STDF95
+  subroutine init_test_4d_par_initialize_landau( &
+    init_obj, &
+    data_position, &
+    mesh2d_x, &
+    mesh2d_v, &
+    epsilon, &
+    kx, &
+    ky, &
+    layout )
+
+    type(init_test_4d_par_landau), intent(inout)  :: init_obj
+#else
+  subroutine load_test_4d_initializer_landau( &
+    init_obj, &
+    data_position, &
     x1_min, &
     x1_max, &
     x2_min, &
@@ -79,81 +120,54 @@ contains
     x3_min, &
     x3_max, &
     x4_min, &
-    x4_max )
-
-    type(simple_cartesian_4d_mesh), pointer :: new_cartesian_4d_mesh
-    sll_int32, intent(in)  :: num_cells1
-    sll_int32, intent(in)  :: num_cells2
-    sll_int32, intent(in)  :: num_cells3
-    sll_int32, intent(in)  :: num_cells4
-    sll_real64, intent(in) :: x1_min
-    sll_real64, intent(in) :: x1_max
-    sll_real64, intent(in) :: x2_min
-    sll_real64, intent(in) :: x2_max
-    sll_real64, intent(in) :: x3_min
-    sll_real64, intent(in) :: x3_max
-    sll_real64, intent(in) :: x4_min
-    sll_real64, intent(in) :: x4_max
-    sll_int32 :: ierr
-
-    SLL_ALLOCATE(new_cartesian_4d_mesh, ierr)
-    new_cartesian_4d_mesh%num_cells1 = num_cells1
-    new_cartesian_4d_mesh%num_cells2 = num_cells2
-    new_cartesian_4d_mesh%num_cells3 = num_cells3
-    new_cartesian_4d_mesh%num_cells4 = num_cells4
-    new_cartesian_4d_mesh%x1_min     = x1_min
-    new_cartesian_4d_mesh%x1_max     = x1_max
-    new_cartesian_4d_mesh%x2_min     = x2_min
-    new_cartesian_4d_mesh%x2_max     = x2_max
-    new_cartesian_4d_mesh%x3_min     = x3_min
-    new_cartesian_4d_mesh%x3_max     = x3_max
-    new_cartesian_4d_mesh%x4_min     = x4_min
-    new_cartesian_4d_mesh%x4_max     = x4_max
-    new_cartesian_4d_mesh%delta_x1   = (x1_max - x1_min)/real(num_cells1,f64)
-    new_cartesian_4d_mesh%delta_x2   = (x2_max - x2_min)/real(num_cells2,f64)
-    new_cartesian_4d_mesh%delta_x3   = (x3_max - x3_min)/real(num_cells3,f64)
-    new_cartesian_4d_mesh%delta_x4   = (x4_max - x4_min)/real(num_cells4,f64)
-  end function new_cartesian_4d_mesh
-
-  subroutine delete_cartesian_4d_mesh( mesh )
-    type(simple_cartesian_4d_mesh), pointer :: mesh
-    sll_int32 :: ierr
-    SLL_DEALLOCATE(mesh, ierr)
-  end subroutine delete_cartesian_4d_mesh
-
-#ifdef STDF95
-  subroutine init_test_4d_par_initialize( &
-    init_obj, &
-    data_position, &
-    mesh_4d, &
-    v_thermal, &
+    x4_max, &
+    nc_x1, &
+    nc_x2, &
+    nc_x3, &
+    nc_x4, &
+    delta1, &
+    delta2, &
+    delta3, &
+    delta4, &
+    epsilon, &
+    kx, &
+    ky, &
     layout )
 
-    type(init_test_4d_par), intent(inout)  :: init_obj
-#else
-  subroutine load_test_4d_initializer( &
-    init_obj, &
-    data_position, &
-    mesh_4d, &
-    v_thermal, &
-    layout )
-
-    class(init_test_4d_par), intent(inout)  :: init_obj
+    class(init_test_4d_par_landau), intent(inout)  :: init_obj
 #endif
     sll_int32                               :: data_position
-    sll_real64, intent(in)                  :: v_thermal
+    sll_real64, intent(in)                  :: x1_min
+    sll_real64, intent(in)                  :: x1_max
+    sll_real64, intent(in)                  :: x2_min
+    sll_real64, intent(in)                  :: x2_max
+    sll_real64, intent(in)                  :: x3_min
+    sll_real64, intent(in)                  :: x3_max
+    sll_real64, intent(in)                  :: x4_min
+    sll_real64, intent(in)                  :: x4_max
+    sll_real64, intent(in)                  :: nc_x1
+    sll_real64, intent(in)                  :: nc_x2
+    sll_real64, intent(in)                  :: nc_x3
+    sll_real64, intent(in)                  :: nc_x4
+    sll_real64, intent(in)                  :: delta1
+    sll_real64, intent(in)                  :: delta2
+    sll_real64, intent(in)                  :: delta3
+    sll_real64, intent(in)                  :: delta4
+    sll_real64, intent(in)                  :: epsilon
+    sll_real64, intent(in)                  :: kx
+    sll_real64, intent(in)                  :: ky
     type(layout_4D), pointer                :: layout
-    type(simple_cartesian_4d_mesh), pointer :: mesh_4d
 
     if( .not. associated(layout) ) then
-       print *, 'initialize_test_4d(): ERROR, passed layout is not initialized'
+       print *, 'initialize_test_4d_landau(): ', &
+            'ERROR, passed layout is not initialized'
        stop
     end if
 
-    if( .not. associated(mesh_4d) ) then
-       print *, 'initialize_test_4d(): ERROR, passed 4d mesh is not initialized'
-       stop
-    end if
+!!$    if( .not. associated(mesh_4d) ) then
+!!$       print *, 'initialize_test_4d(): ERROR, passed 4d mesh is not initialized'
+!!$       stop
+!!$    end if
 
     init_obj%data_position =  data_position
     init_obj%mesh_4d       => mesh_4d
@@ -263,6 +277,7 @@ contains
     end do
 
   end subroutine 
+
 
 
 !!$#ifdef STDF95

@@ -29,6 +29,11 @@ IF(PROCESSOR_COUNT GREATER 1)
       SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+      SET(PROCS 2)
+      ADD_MPI_TEST(parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(parallel_array_initializers
+	PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
       SET(PROCS 16)
       ADD_MPI_TEST(qns2d_with_finite_diff_par test_qns2d_with_finite_diff_par ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(qns2d_with_finite_diff_par 

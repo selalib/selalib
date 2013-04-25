@@ -118,7 +118,7 @@ print *, 'phi: ', phi(:,:)
   SLL_DEALLOCATE_ARRAY(rho, ierr)
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
 
-  call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
+  call sll_collective_reduce(sll_world_collective, (/ ok /), &
        1, MPI_PROD, 0, prod4test )
   if (myrank==0) then
 

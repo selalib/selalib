@@ -257,12 +257,15 @@ add_dependencies( sll_simulations
   sll_scalar_field
   sll_interpolators
   sll_splines
-  sll_numerical_utilities	
+  sll_numerical_utilities
+  sll_parallel_array_initializer_module	
   sll_remap
   sll_collective
   sll_constants
   sll_low_level_file_io_parallel
   sll_utilities
+  sll_coordinate_transformations
+  sll_logical_meshes
   sll_memory
   sll_assertion 	
   sll_working_precision
@@ -303,16 +306,16 @@ target_link_libraries( test_vp4d_sim_general
   sll_fft
   sll_electric_field_accumulators
   sll_scalar_field
-  sll_mapped_meshes
   sll_interpolators
   sll_splines
-  geometry_functions
+  sll_coordinate_transformations
   sll_numerical_utilities	
   sll_remap
   sll_collective
   sll_constants
   sll_low_level_file_io_parallel
   sll_utilities
+  sll_logical_meshes
   sll_memory
   sll_assertion 	
   sll_working_precision
