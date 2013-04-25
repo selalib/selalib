@@ -19,10 +19,9 @@ target_link_libraries(test_distribution_function
 	sll_distribution_function
 	geometry_functions
 	sll_scalar_field_2d
-	sll_low_level_file_io
+	sll_file_io
 	sll_interpolators
 	sll_splines
-        sll_numerical_utilities	
 	sll_mapped_meshes
 	sll_utilities
 	sll_memory

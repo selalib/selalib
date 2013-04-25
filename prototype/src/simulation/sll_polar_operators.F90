@@ -4,7 +4,7 @@ module polar_operators
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use poisson_polar
+  use sll_poisson_2d_polar
   use sll_fft
   use sll_cubic_splines
   implicit none

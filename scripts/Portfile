@@ -1,0 +1,37 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+PortGroup           cmake 1.0
+
+name                selalib
+version             1.0.0
+categories          science
+platforms           darwin
+supported_archs     x86_64
+license             GPL
+maintainers         inria.com:pierre.navaro
+description         Semi-lagrangian library
+long_description    Modular library for the gyrokinetic simulation \
+                    model by a semi-Lagrangian method.
+homepage            http://selalib.gforge.inria.fr
+master_sites        http://selalib.gforge.inria.fr/releases
+
+depends_build       port:cmake
+
+depends_lib         port:gcc46   \
+                    port:mpich   \
+                    port:hdf5-18 \
+                    port:fftw-3  \
+
+configure.pre_args
+configure.args      -DCMAKE_BUILD_TYPE:STRING=Release \
+                    -DCMAKE_CXX_COMPILER:FILEPATH=/opt/local/bin/g++-mp-4.6 \
+                    -DCMAKE_C_COMPILER:FILEPATH=/opt/local/bin/gcc-mp-4.6 \
+                    -DCMAKE_INSTALL_PREFIX:PATH=/opt/local \
+                    -DHDF5_ENABLED:BOOL=ON \
+                    -DHDF5_PARALLEL_ENABLED:BOOL=OFF \
+                    -DMPI_CXX_COMPILER:FILEPATH=/opt/local/bin/mpicxx \
+                    -DMPI_C_COMPILER:FILEPATH=/opt/local/bin/mpicc \
+                    -DMPI_Fortran_COMPILER:FILEPATH=/opt/local/bin/mpif90 \
+                    -DMPI_LIBRARY:FILEPATH=/opt/local/lib/libmpi_cxx.dylib
