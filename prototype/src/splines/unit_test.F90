@@ -18,10 +18,10 @@ program spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_splines.h"
+#include "sll_constants.h"
   
 #define PRINT_SPLINE_COEFFS 0
-  use sll_splines
-  use sll_constants
   use util_constants
   use test_processes_module
   implicit none

@@ -18,7 +18,6 @@
 !> - memory
 !> - precision
 !> - assert 
-!> - numerical_utilities
 !> - constants
 !> - mesh_types
 !> - diagnostics

@@ -2,7 +2,7 @@ module sll_module_mapped_meshes_2d_cartesian
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_splines
+  use sll_cubic_splines
 #ifdef STDF95
   use sll_cubic_spline_interpolator_2d
   use sll_module_mapped_meshes_2d

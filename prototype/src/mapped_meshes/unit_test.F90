@@ -146,7 +146,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   print *, 'initializing the interpolator: '
 
 #ifdef STDF95
-  call cubic_spline_initialize( x1_interp,&
+  call cubic_spline_2d_initialize( x1_interp,&
 #else
   call x1_interp%initialize( &
 #endif
@@ -162,7 +162,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        eta1_max_slopes=x1_eta1_max )
 
 #ifdef STDF95
-  call cubic_spline_initialize( x2_interp,&
+  call cubic_spline_2d_initialize( x2_interp,&
 #else
   call x2_interp%initialize( &
 #endif
@@ -178,7 +178,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        eta1_max_slopes=x2_eta1_max )
 
 #ifdef STDF95
-  call cubic_spline_initialize( j_interp,&
+  call cubic_spline_2d_initialize( j_interp,&
 #else
   call j_interp%initialize( &
 #endif

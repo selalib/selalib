@@ -55,7 +55,7 @@ contains
   ! The underlying implementation with the splines module could be hidden but
   ! I can't see a compelling reason why.
 #ifdef STDF95
-  subroutine cubic_spline_initialize( &
+  subroutine cubic_spline_2d_initialize( &
 #else
   subroutine initialize_cs2d_interpolator( &
 #endif
@@ -123,7 +123,7 @@ contains
   end subroutine
 
 #ifdef STDF95
-  subroutine cubic_spline_compute_interpolants( interpolator, data_array )
+  subroutine cubic_spline_2d_compute_interpolants( interpolator, data_array )
     type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
 #else
   subroutine compute_interpolants_cs2d( interpolator, data_array )
@@ -134,7 +134,7 @@ contains
   end subroutine
 
 #ifdef STDF95
-  function cubic_spline_interpolate_value( interpolator, eta1, eta2 ) result(val)
+  function cubic_spline_2d_interpolate_value( interpolator, eta1, eta2 ) result(val)
     type(cubic_spline_2d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
@@ -147,7 +147,7 @@ contains
   end function
 
 #ifdef STDF95
-  function cubic_spline_interpolate_derivative_eta1( interpolator, eta1, eta2 ) result(val)
+  function cubic_spline_2d_interpolate_derivative_eta1( interpolator, eta1, eta2 ) result(val)
     type(cubic_spline_2d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
@@ -160,7 +160,7 @@ contains
   end function
 
 #ifdef STDF95
-  function cubic_spline_interpolate_derivative_eta2( interpolator, eta1, eta2 ) result(val)
+  function cubic_spline_2d_interpolate_derivative_eta2( interpolator, eta1, eta2 ) result(val)
     type(cubic_spline_2d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
@@ -175,7 +175,7 @@ contains
   end function
 
 #ifdef STDF95
-  function cubic_spline_interpolate_array(this, num_points1, num_points2, data_in, &
+  function cubic_spline_2d_interpolate_array(this, num_points1, num_points2, data_in, &
                                 eta1, eta2) &
        result(data_out)
     type(cubic_spline_2d_interpolator),  intent(in)       :: this
@@ -199,7 +199,7 @@ contains
     do j = 1, num_points2
     do i = 1, num_points1
 #ifdef STDF95
-        data_out(i,j) = cubic_spline_interpolate_value(this,eta1(i,j),eta2(i,j))     
+        data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1(i,j),eta2(i,j))     
 #else
         data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
 #endif
@@ -270,7 +270,7 @@ contains
              eta2 = eta2_min + &
                   modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
 #ifdef STDF95
-             data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+          data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1,eta2)     
 #else
              data_out(i,j) = this%interpolate_value(eta1,eta2)
 #endif
@@ -289,7 +289,7 @@ contains
              eta1 = max(eta1,eta1_min)
              eta2 = max(eta2,eta2_min)
 #ifdef STDF95
-             data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+             data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1,eta2)
 #else
              data_out(i,j) = this%interpolate_value(eta1,eta2)
 #endif
@@ -305,7 +305,7 @@ contains
              SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
              SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
 #ifdef STDF95
-             data_out(i,j) = cubic_spline_interpolate_value(this,eta1,eta2)     
+             data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1,eta2)
 #else
              data_out(i,j) = this%interpolate_value(eta1,eta2)
 #endif

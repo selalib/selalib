@@ -1,11 +1,9 @@
+#include "sll_maxwell_solvers_macros.h"
+
 #ifndef _maxwell_solvers_h
 #define _maxwell_solvers_h
 
-#define  NORTH  0      
-#define  EAST   1       
-#define  SOUTH  2        
-#define  WEST   3         
-#define  TE_POLARIZATION  0
-#define  TM_POLARIZATION  1 
+use sll_maxwell_2d_fdtd
+use sll_maxwell_2d_pstd
 
 #endif
