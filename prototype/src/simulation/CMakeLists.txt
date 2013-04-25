@@ -295,12 +295,12 @@ target_link_libraries( test_vp4d_sim_general
   sll_interpolators
   sll_splines
   sll_coordinate_transformations
-  sll_numerical_utilities	
+  sll_utilities
+  sll_parallel_array_initializers	
   sll_remap
   sll_collective
   sll_constants
-  sll_low_level_file_io_parallel
-  sll_utilities
+  sll_file_io_parallel
   sll_logical_meshes
   sll_memory
   sll_assertion 	

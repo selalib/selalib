@@ -17,7 +17,7 @@ target_link_libraries(test_parallel_array_initializer
 	sll_remap
 	sll_collective
 	sll_coordinate_transformations
-	sll_low_level_file_io
+	sll_file_io
 	sll_logical_meshes
 	sll_memory
 	sll_assertion

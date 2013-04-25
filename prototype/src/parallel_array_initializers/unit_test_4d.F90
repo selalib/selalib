@@ -1,7 +1,7 @@
 program unit_test_initializers_4d
 #include "sll_working_precision.h"
   use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d_base
+  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
