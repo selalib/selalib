@@ -12,7 +12,7 @@ module sll_module_interpolators_1d_base
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
           interpolate_value
      procedure(interpolator_one_arg_msg), deferred, pass(interpolator) :: &
-          interpolate_derivative_eta1
+          interpolate_derivative_eta1 
      procedure(interpolate_1d_array), pass, deferred :: interpolate_array
      procedure(interpolate_1d_array_at_displacement), pass, deferred :: interpolate_array_disp
      procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
