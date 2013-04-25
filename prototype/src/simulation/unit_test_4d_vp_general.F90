@@ -1,19 +1,26 @@
 ! Sample computation with the following characteristics:
 ! - vlasov-poisson
-! - 4D cartesian: x, y, vx, vy (or x1, x2, x3, x4)
+! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with arbitrary coordinate transformation
+!   in the x,y variables.
 ! - parallel
 
 program vlasov_poisson_4d_general
   use sll_simulation_4d_vlasov_poisson_general
   use sll_collective
-  use sll_module_mapped_meshes_2d
-  use geometry_functions
+  use sll_constants
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
+  use sll_common_coordinate_transformations
+  use sll_common_array_initializers_module
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_vp_general)      :: simulation
-  class(sll_mapped_mesh_2d_base), pointer :: map2d
+  type(sll_logical_mesh_2d), pointer      :: mx
+  type(sll_logical_mesh_2d), pointer      :: mv
+  class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
+  sll_real64, dimension(1:3) :: landau_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -26,7 +33,7 @@ program vlasov_poisson_4d_general
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
   
-  call simulation%init_from_file(filename_local)
+!  call simulation%init_from_file(filename_local)
   
   ! The second is to initialize 'manually' with a routine whose parameters
   ! allow to configure the different types of objects in the simulation. For
@@ -38,18 +45,39 @@ program vlasov_poisson_4d_general
 ! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
 #define NPTS2 32
-  map2d => new_mesh_2d_analytic( &
-       "map_a", &
-       NPTS1, &
-       NPTS2, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22 )
 
-  call initialize( simulation, map2d )
+  ! logical mesh for space coordinates
+  mx => sll_new_logical_mesh_2d( NPTS1, NPTS2 )
+
+  ! logical mesh for velocity coordinates
+  mv => sll_new_logical_mesh_2d( NPTS1, NPTS2, &
+       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
+       eta2_min=-6.0_f64, eta2_max=6.0_f64)
+
+  ! coordinate transformation associated with space coordinates
+  transformation_x => new_coordinate_transformation_2d_analytic( &
+       "analytic_identity_transformation", &
+       mx, &
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22 )
+
+  ! define the values of the parameters for the landau initializer
+  landau_params(1) = 0.1
+  landau_params(2) = 2.0*sll_pi
+  landau_params(3) = 2.0*sll_pi
+
+  ! initialize simulation object with the above parameters
+  call initialize( &
+       simulation, &
+       mx, &
+       mv, &
+       transformation_x, &
+       sll_landau_initializer_4d, &
+       landau_params )
 
   call simulation%run( )
   call delete(simulation)
