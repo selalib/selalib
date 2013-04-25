@@ -354,15 +354,15 @@ SLL_ALLOCATE(f1(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
 !!$  SLL_ALLOCATE(ey(geomx%nx,jstartx:jendx),iflag)
 !!$  if (iflag.ne.0) stop 'erreur dans l allocation de ey'
 ! Poisson n'est pas parallele pour l'instant
-SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(bz(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ex1(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ey1(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(bz1(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(jx(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(jy(geomx%nx,geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(rho(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ex(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ey(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(bz(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ex1(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ey1(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(bz1(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(jx(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(jy(1:geomx%nx,1:geomx%ny),iflag)
 
 ! initialisation parallele des tableaux globaux, 
 ! ce qui permet  de les distribuer sur les processeurs
@@ -390,14 +390,6 @@ do jv=jstartv,jendv
       end do
    end do
 end do
-
-! initialisation de ex,ey, bz, jx, jy
-
-ex(:,:) = 0.0; ey(:,:)  = 0.0
-ex1(:,:)= 0.0; ey1(:,:) = 0.0
-jx(:,:) = 0.0; jy(:,:)  = 0.0 
-bz(:,:) = 0.0; bz1(:,:) = 0.0; 
-rho(:,:) = 0.0
 
 !Initialisation du module poisson
 call new(poiss2dpp,rho,geomx,iflag)
