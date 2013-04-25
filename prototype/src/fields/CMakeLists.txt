@@ -23,6 +23,7 @@ add_dependencies(sll_scalar_field_2d
 	sll_constants
 	sll_utilities
 	geometry_functions
+	sll_logical_meshes
 	sll_assertion
 	sll_memory
 	sll_working_precision

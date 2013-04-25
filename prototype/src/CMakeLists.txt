@@ -79,6 +79,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(timer)
    ADD_SUBDIRECTORY(non_linear_solvers)
    ADD_SUBDIRECTORY(splines)
+   ADD_SUBDIRECTORY(logical_meshes)
+   ADD_SUBDIRECTORY(coordinate_transformations)
    ADD_SUBDIRECTORY(lagrange_interpolation)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
@@ -90,7 +92,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
-   
+      ADD_SUBDIRECTORY(parallel_array_initializers)
+
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)

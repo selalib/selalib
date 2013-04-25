@@ -5,7 +5,7 @@ module sll_simulation_4d_vlasov_poisson_general
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
   use sll_collective
-  use remapper
+  use sll_remapper
   use sll_constants
   use sll_cubic_spline_interpolator_2d
   use sll_poisson_2d_periodic_cartesian_par
@@ -13,7 +13,8 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_simulation_base
   use sll_logical_meshes
   use sll_parallel_array_initializer_module
-  use sll_module_coordinate_transformations_2d
+  use sll_coordinate_transformation_2d_base_module
+
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -112,7 +113,7 @@ contains
    type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
    class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
    procedure(sll_scalar_initializer_4d)                  :: init_func
-   sll_real64, dimension(:)                              :: params
+   sll_real64, dimension(:), target                      :: params
    sim%mesh2d_x  => mesh2d_x
    sim%mesh2d_v  => mesh2d_v
    sim%transfx   => transformation_x
@@ -817,18 +818,20 @@ contains
   subroutine compute_charge_density( &
     mx, &
     mv, &
+    numpts1, &
+    numpts2, &
     f, &
     partial, &
     rho )
 
     type(sll_logical_mesh_2d), pointer     :: mx
     type(sll_logical_mesh_2d), pointer     :: mv
+    sll_int32, intent(in)                  :: numpts1
+    sll_int32, intent(in)                  :: numpts2
     sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
     sll_real64, intent(inout),  dimension(:,:,:):: partial ! intermediate res.
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
     ! local sizes in the split directions have to be given by caller.
-    sll_int32                       :: numpts1
-    sll_int32                       :: numpts2
     sll_int32                       :: numpts3
     sll_int32                       :: numpts4
     sll_real64                      :: delta3
@@ -836,8 +839,6 @@ contains
 
     sll_int32 :: i, j, k, l
     
-    numpts1 = mx%num_cells1 
-    numpts2 = mx%num_cells2
     numpts3 = mv%num_cells1
     numpts4 = mv%num_cells2
     delta3  = mv%delta_eta1
@@ -1044,6 +1045,7 @@ contains
     end do
   end subroutine advection_v_1d
 
+#if 0
   subroutine plot_fields(itime, sim)
     use sll_collective
     use hdf5
@@ -1197,7 +1199,7 @@ contains
    !   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
   
   end subroutine plot_fields
-
+#endif
 !!$  subroutine compute_electric_field_energy( efield, layout )
 !!$    sll_cmplx64, dimension(:,:), intent(in) :: efield
 !!$

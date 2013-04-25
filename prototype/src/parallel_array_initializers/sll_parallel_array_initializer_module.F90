@@ -1,7 +1,7 @@
 module sll_parallel_array_initializer_module
-  use remapper
+  use sll_remapper
   use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d_base
+  use sll_coordinate_transformation_2d_base_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   implicit none
@@ -20,7 +20,7 @@ module sll_parallel_array_initializer_module
   abstract interface
      function sll_scalar_initializer_4d( x1, x2, x3, x4, params )
        use sll_working_precision
-       sll_real64                                     :: scalar_initializer_4d
+       sll_real64                                  :: sll_scalar_initializer_4d
        sll_real64, intent(in)                         :: x1
        sll_real64, intent(in)                         :: x2
        sll_real64, intent(in)                         :: x3
