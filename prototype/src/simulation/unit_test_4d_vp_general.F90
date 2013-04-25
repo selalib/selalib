@@ -1,10 +1,12 @@
 ! Sample computation with the following characteristics:
 ! - vlasov-poisson
-! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with arbitrary coordinate transformation
+! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with arbitrary coordinate 
+!   transformation
 !   in the x,y variables.
 ! - parallel
 
 program vlasov_poisson_4d_general
+#include "sll_working_precision.h"
   use sll_simulation_4d_vlasov_poisson_general
   use sll_collective
   use sll_constants
@@ -33,24 +35,25 @@ program vlasov_poisson_4d_general
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
   
-!  call simulation%init_from_file(filename_local)
+  call simulation%init_from_file(filename_local)
   
   ! The second is to initialize 'manually' with a routine whose parameters
   ! allow to configure the different types of objects in the simulation. For
   ! instance, the type of coordinate mapping. Here we use both methods while
   ! we develop and sort out the interfaces.
   ! Eventually, when using the module, one should only need to use one 
-  ! way to initialize the simulation object.
+  ! way to initialize the simulation object, in development we are using them
+  ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
 #define NPTS2 32
 
   ! logical mesh for space coordinates
-  mx => sll_new_logical_mesh_2d( NPTS1, NPTS2 )
+  mx => new_logical_mesh_2d( NPTS1, NPTS2 )
 
   ! logical mesh for velocity coordinates
-  mv => sll_new_logical_mesh_2d( NPTS1, NPTS2, &
+  mv => new_logical_mesh_2d( NPTS1, NPTS2, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
 
@@ -71,7 +74,7 @@ program vlasov_poisson_4d_general
   landau_params(3) = 2.0*sll_pi
 
   ! initialize simulation object with the above parameters
-  call initialize( &
+  call initialize_vp4d_general( &
        simulation, &
        mx, &
        mv, &

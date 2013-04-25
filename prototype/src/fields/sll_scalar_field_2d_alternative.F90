@@ -32,7 +32,7 @@ module sll_module_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_io.h"
+#include "sll_file_io.h"
   use sll_module_scalar_field_2d_base
   use sll_constants
   use sll_module_interpolators_1d_base
