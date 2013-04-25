@@ -18,7 +18,6 @@
 !> - memory
 !> - precision
 !> - assert 
-!> - numerical_utilities
 !> - constants
 !> - mesh_types
 !> - diagnostics
@@ -216,8 +215,8 @@ type(poisson_2d_periodic) :: self
 call fftw_free(self%p_rhot)
 if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
-call dfftw_destroy_plan(self%fw)
-call dfftw_destroy_plan(self%bw)
+call fftw_destroy_plan(self%fw)
+call fftw_destroy_plan(self%bw)
 !if (nthreads > 1) then
    !call dfftw_cleanup_threads(error)
 !end if

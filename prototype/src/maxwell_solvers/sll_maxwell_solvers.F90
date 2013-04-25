@@ -17,22 +17,17 @@
 
 !> \author
 !> Pierre Navaro 
+!> @namespace sll_maxwell_solvers
 !> Common data for Maxwell solvers
 module sll_maxwell_solvers
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use sll_constants
+#include "sll_constants.h"
+#include "sll_maxwell_solvers_macros.h"
 
 implicit none
-integer, parameter ::  NORTH = 0           !< parameter for boundary in 2d
-integer, parameter ::  EAST  = 1           !< parameter for boundary in 2d
-integer, parameter ::  SOUTH = 2           !< parameter for boundary in 2d
-integer, parameter ::  WEST  = 3           !< parameter for boundary in 2d
-integer, parameter ::  TE_POLARIZATION = 0 !< we solve ex,ey,bz
-integer, parameter ::  TM_POLARIZATION = 1 !< we solve bx,by,ez
 
 !private
 !
