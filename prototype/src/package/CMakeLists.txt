@@ -14,8 +14,7 @@ SET(SLL_MACROS
 	 ${SLL_DIR}/interpolators/sll_interpolators.h
 	 ${SLL_DIR}/splines/sll_splines.h
 	 ${SLL_DIR}/file_io/sll_file_io.h
-	 ${SLL_DIR}/fft/sll_fft.h
-	)
+	 ${SLL_DIR}/fft/sll_fft.h)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -54,20 +53,28 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
-    ${SLL_DIR}/fft/fft_utils.F90 
-   )
+    ${SLL_DIR}/fft/fft_utils.F90 )
 
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
+
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
   ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
+
 ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
+
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
   ${SLL_DIR}/fft/fftw_module.F90
   ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
+
 ELSE()
+
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
   ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
+
 ENDIF()
+
+ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
@@ -77,18 +84,28 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90 )
 
+   ADD_LIBRARY(selalib-mpi STATIC ${SLL_SOURCE_FILES})
+   INSTALL(TARGETS selalib-mpi ARCHIVE DESTINATION lib COMPONENT libraries)
+
 ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 IF(SLL_BUILD_PACKAGE)
-FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/selalib-1.0.0/include)
-FILE(COPY ${SLL_SOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR}/selalib-1.0.0/src)
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt DESTINATION ${CMAKE_BINARY_DIR}/selalib-1.0.0/)
+
+   SET(DIST_NAME "selalib-1.0.0")
+
+   FILE(COPY ${SLL_MACROS} 
+        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/include)
+   FILE(COPY ${SLL_SOURCE_FILES} 
+        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+   FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt 
+        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/)
+   FILE(COPY ${CMAKE_SOURCE_DIR}/fftpack 
+        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME})
+
+   INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E tar zcvf ${DIST_NAME}.tar.gz ${DIST_NAME})")
+   INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
+   INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz)")
+
 ENDIF(SLL_BUILD_PACKAGE)
 
-ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
-
-
 INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
-INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
-INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
-INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
