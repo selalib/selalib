@@ -17,7 +17,7 @@ long_description    Modular library for the gyrokinetic simulation \
 homepage            http://selalib.gforge.inria.fr
 master_sites        http://selalib.gforge.inria.fr/releases
 
-checksums           md5 7be38b4799a1e902e78fe0bfe7678327
+checksums           md5 e63c2b6e4f824fcf8e0d14e932ba2ef8
 
 depends_build       port:cmake \
                     port:gmake \
