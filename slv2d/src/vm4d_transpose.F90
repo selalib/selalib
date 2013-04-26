@@ -354,23 +354,23 @@ SLL_ALLOCATE(f1(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
 !!$  SLL_ALLOCATE(ey(geomx%nx,jstartx:jendx),iflag)
 !!$  if (iflag.ne.0) stop 'erreur dans l allocation de ey'
 ! Poisson n'est pas parallele pour l'instant
-SLL_ALLOCATE(rho(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ex(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ey(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(bz(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ex1(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(ey1(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(bz1(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(jx(geomx%nx,geomx%ny),iflag)
-SLL_ALLOCATE(jy(geomx%nx,geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(rho(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ex(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ey(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(bz(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ex1(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(ey1(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(bz1(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(jx(1:geomx%nx,1:geomx%ny),iflag)
+SLL_CLEAR_ALLOCATE(jy(1:geomx%nx,1:geomx%ny),iflag)
 
 ! initialisation parallele des tableaux globaux, 
 ! ce qui permet  de les distribuer sur les processeurs
 ! initialisation de la fonction de distribution 
 xi=0.90
 eps=0.05
-kx=2*pi/((geomx%nx)*geomx%dx)
-ky=2*pi/((geomx%ny)*geomx%dy)
+kx=2*sll_pi/((geomx%nx)*geomx%dx)
+ky=2*sll_pi/((geomx%ny)*geomx%dy)
 do jv=jstartv,jendv
    vy = geomv%y0+(jv-1)*geomv%dy
    do iv=1,geomv%nx
@@ -385,19 +385,11 @@ do jv=jstartv,jendv
 !                 1/(2*pi)*((2-2*xi)/(3-2*xi))* &
 !                 (1+.5*vx*vx/(1-xi))*exp(-.5*v2)
 !             f(i,j,iv,jv)=(1+eps*cos(kx*x)*cos(ky*y))*1/(2*pi)*exp(-.5*v2)
-            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*pi))*exp(-0.5_wp*v2)
+            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
          end do
       end do
    end do
 end do
-
-! initialisation de ex,ey, bz, jx, jy
-
-ex(:,:) = 0.0; ey(:,:)  = 0.0
-ex1(:,:)= 0.0; ey1(:,:) = 0.0
-jx(:,:) = 0.0; jy(:,:)  = 0.0 
-bz(:,:) = 0.0; bz1(:,:) = 0.0; 
-rho(:,:) = 0.0
 
 !Initialisation du module poisson
 call new(poiss2dpp,rho,geomx,iflag)
