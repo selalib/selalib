@@ -67,6 +67,7 @@ INCLUDE_DIRECTORIES(utilities
                     visu_pic) 
 
 ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(package)
 
 IF(NOT SLL_BUILD_PACKAGE)
 
@@ -229,6 +230,5 @@ INCLUDE(DoxygenConfig)
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
