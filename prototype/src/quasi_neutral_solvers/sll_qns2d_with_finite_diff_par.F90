@@ -27,7 +27,7 @@ module sll_qns2d_with_finite_diff_par
   use sll_fft
   use sll_tridiagonal
   use sll_collective
-  use remapper
+  use sll_remapper
   implicit none
 
 

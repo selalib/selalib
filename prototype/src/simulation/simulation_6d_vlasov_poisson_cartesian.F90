@@ -5,7 +5,7 @@ module sll_simulation_6d_vlasov_poisson_cartesian
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
   use sll_collective
-  use remapper
+  use sll_remapper
   use sll_constants
   use sll_cubic_spline_interpolator_1d
   use sll_distribution_function_6d_initializer

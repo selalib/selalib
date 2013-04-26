@@ -22,9 +22,7 @@ SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
-#INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
-INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
-#LINK_DIRECTORIES(${SLL_SOURCE_DIR}/selalib_level)
+INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/package)
 
 MESSAGE(STATUS "PIC2D:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 INCLUDE(F90FLAGS)
@@ -38,7 +36,6 @@ IF(NOT LAPACK_FOUND)
 ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED    OFF CACHE BOOL "Use SILO Library from LLNL ")
-SET(FFTPACK_ENABLED ON  CACHE BOOL "Use dfftpack library       " FORCE)
 SET(FFTW_ENABLED    OFF CACHE BOOL "Use fftw library       " )
 
 IF(SILO_ENABLED) 
@@ -51,13 +48,8 @@ IF(SILO_ENABLED)
    ENDIF()
 ENDIF()
 
-IF(FFTPACK_ENABLED AND NOT FFTPACK_FOUND)
-   FIND_PACKAGE(FFTPACK)
-   IF(FFTPACK_FOUND)
-      ADD_DEFINITIONS(-D_FFTPACK)
-   ENDIF()
-   MESSAGE(STATUS "FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
-ENDIF()
+SET(FFT_DEFAULT_LIBRARY "FFTPACK")
+SET(FFTPACK_LIBRARIES "dfftpack")
 
 IF(FFTW_ENABLED AND NOT FFTW_FOUND)
    FIND_PACKAGE(FFTW)
@@ -85,26 +77,22 @@ IF(NOT HDF5_FOUND)
    ENDIF()
 ENDIF(NOT HDF5_FOUND)
 
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 IF (CMAKE_PROJECT_NAME MATCHES "PIC2D")
-   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/assert)
-   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/memory)
-   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/precision)
-   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/../../prototype/src/utilities)
-   ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/selalib_level ${CMAKE_BINARY_DIR}/selalib_level)
-ELSE()
-   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+   ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/package 
+                    ${CMAKE_BINARY_DIR}/package)
 ENDIF()
 
 
 SET(PIC2D_SRC zone.F90 
-            initialisation.F90 
-            kiss.F90 
-            quietstart.F90 
-            particules.F90
-	    poisson.F90 
-            villasenor.F90 
-            maxwell.F90 
-            diagno.F90 )
+              initialisation.F90 
+              kiss.F90 
+              quietstart.F90 
+              particules.F90
+	      poisson.F90 
+              villasenor.F90 
+              maxwell.F90 
+              diagno.F90 )
 
 ADD_LIBRARY(pic2d STATIC ${PIC2D_SRC})
 

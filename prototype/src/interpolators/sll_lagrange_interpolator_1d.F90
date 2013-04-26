@@ -97,6 +97,7 @@ subroutine interpolate_array_values_li1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
+    output_array = 0.0
     print*, 'interpolate_array_values:', &
          ' not implemented for lagrange interpolation'
     stop
@@ -117,6 +118,7 @@ subroutine interpolate_array_derivatives_li1d( &
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
+    output_array = 0.0
      print*, 'interpolate_array_derivatives: ', &
          'not implemented for lagrange interpolation'
     stop
