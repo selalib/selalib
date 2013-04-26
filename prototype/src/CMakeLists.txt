@@ -66,6 +66,9 @@ INCLUDE_DIRECTORIES(utilities
                     maxwell_solvers
                     visu_pic) 
 
+ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(package)
+
 IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
@@ -85,7 +88,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
-   ADD_SUBDIRECTORY(fftpack)
    ADD_SUBDIRECTORY(periodic_interpolation)
    
    IF(MPI_MODULE_ENABLED)
@@ -230,6 +232,5 @@ INCLUDE(DoxygenConfig)
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

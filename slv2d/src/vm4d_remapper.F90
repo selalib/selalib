@@ -95,7 +95,7 @@ program vm4d
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call free(poisson)
+  call delete(poisson)
   call sll_halt_collective()
 
   print*,'PASSED'
@@ -164,11 +164,11 @@ contains
     end do
     end do
 
-    call new(maxwell, geomx%x0, geomx%x1, geomx%nx, &
+    call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx, &
                              geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
-    call new(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                      geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+    call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
+                             geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
 
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )
