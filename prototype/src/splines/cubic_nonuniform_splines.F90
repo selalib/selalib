@@ -9,8 +9,8 @@ module cubic_non_uniform_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_splines.h"
   use sll_tridiagonal
-  use sll_splines
   implicit none
 
   type cubic_nonunif_spline_1D
@@ -321,7 +321,6 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: cts!, a
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
     !sll_real64 :: linf_err,tmp
-    sll_int32 :: i
     !a    => buf(1:3*N) 
     cts  => buf(3*N+1:10*N)
     ipiv => ibuf(1:N)
@@ -348,7 +347,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: lift(4,2)
     sll_real64, dimension(:), pointer :: cts
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
-    sll_int32 :: i,Np
+    sll_int32 :: Np
     Np=N+1
     cts  => buf(3*Np+1:10*Np)
     ipiv => ibuf(1:Np)

@@ -80,7 +80,7 @@ C) Configuring (Makefile Generator)
 
         ./do-configure [OTHER OPTIONS] -D<PACKAGE>_ENABLED=ON
 
-      where <PACKAGE> is FFTPACK, FFTW, etc. and SLL_HOME is set to the
+      where <PACKAGE> FFTW, etc. and SLL_HOME is set to the
       selalib prototype source base directory (or your can just give it explicitly).
       (ex: selalib/prototype/src)
 
@@ -99,7 +99,6 @@ C) Configuring (Makefile Generator)
 
       SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING "" FORCE)
       SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "" FORCE)
-      SET(FFTPACK_ENABLED ON CACHE BOOL "" FORCE)
       SET(MPI_Fortran_COMPILER "mpiifort" CACHE BOOL "" FORCE) #Hydra build
       ...
 
@@ -140,7 +139,7 @@ C) Configuring (Makefile Generator)
   b) Configuring SeLaLib to test all effects of changing a given package(s):
   
     $ ./do-configure \
-       -D FFTPACK_ENABLE:BOOL=ON \
+       -D HDF5_ENABLE:BOOL=ON \
        -D FFTW_ENABLED:BOOL=OFF
   
 

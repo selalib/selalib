@@ -19,7 +19,7 @@
 program test_layout_output
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
 
   use sll_collective, only: sll_boot_collective, &
        sll_halt_collective
@@ -28,7 +28,7 @@ program test_layout_output
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
        sll_hdf5_write_array, &
        sll_hdf5_file_close
-  use remapper
+  use sll_remapper
 
 
   implicit none
