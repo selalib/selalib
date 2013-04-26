@@ -383,10 +383,10 @@ contains
 
     if (c_associated(plan%p_x_array)) call fftw_free(plan%p_x_array)
     if (c_associated(plan%p_y_array)) call fftw_free(plan%p_y_array)
-    call dfftw_destroy_plan(plan%fwx)
-    call dfftw_destroy_plan(plan%fwy)
-    call dfftw_destroy_plan(plan%bwx)
-    call dfftw_destroy_plan(plan%bwy)
+    call fftw_destroy_plan(plan%fwx)
+    call fftw_destroy_plan(plan%fwy)
+    call fftw_destroy_plan(plan%bwx)
+    call fftw_destroy_plan(plan%bwy)
 
     call delete(plan%rmp_xy)
     call delete(plan%rmp_yx)
