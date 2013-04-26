@@ -12,10 +12,7 @@
 
 \begin{abstract}
  This is a draft for a guide to the facilities offered by Selalib, the Semi-Lagrangian Library. It serves as a record for module descriptions, design decision, pending issues, etc., which are relevant for the development and improvement of the library. The main focus is the exposed API, thus the document also serves as a working document for the architectural specifications. More specific implementation details should be found in the comments within the source code. We may decide later to extract those either with an automatic system or in a developer's manual. At the time of writing this version of the draft, the library contains only a few modules in the lower levels and aims at having a minimalist structure. Of those capabilities that could be deemed interesting enough by the managers of GYSELA, the intent would be to incorporate them that code. In this sense, this library prototype can also be a testbed for ideas and suggestions that could eventually be absorbed into production code.
-
-
 \end{abstract}
-
 
 \tableofcontents
 
@@ -229,7 +226,6 @@ which of course doesn't even need to happen at the moment of the first error.
 \subsection{Status}
 Unit tested.
 
-
 \section{Timing Utility}
 \subsection{Description}
 Selalib has its own timing facility, capable of resolving time periods slightly shorter than 2 $\mu s$. 
@@ -301,7 +297,6 @@ Any number of time markers can be declared and set at different points. So this 
 
 \subsection{Status}
 Unit-tested.
-
 
 \section{Low-Level File IO}
 
@@ -404,7 +399,6 @@ the system would have been solved in-place.
 
 \subsection{Status}
 Unit-tested.
-
 
 \section{Splines}
 \subsection{Description}
@@ -660,8 +654,6 @@ A pointer to the spline object to be filled or updated.
 
 \subsection{Usage}
 \subsection{Status}
-
-
 
 \section{Collective Communications}
 \subsection{Description}
@@ -1097,7 +1089,6 @@ Another means to achieve the illusion of genericity are Fortran's built-in featu
 
 In testing.
 
-
 \chapter{Top-Level Layer: Semi-Lagrangian Toolbox}
 
 \section{Meshes}
@@ -1151,13 +1142,132 @@ We may need to include other operations here which would entail inverse mappings
 
 \subsection{Status}
 
+
+
+\section{Scalar Fields}
+\subsection{Description}
+The physical quantities of interest are normally defined in a physical space. For instance, the electric potential $\phi(\vec{x})$ is specified by a function on the $\vec{x}$ variables ($x,y,z$). Even in simple problems the borders of the physical domain may have relatively complicated shapes which make the solution of differential equations more difficult. Great flexibility (possibly at the expense of efficiency) can be gained by transferring the data from the physical space to a representation in a logical space in which the underlying grid that we use for the numerical solution is always uniform. In such uniform grid, the borders have a much simpler (straight line) representation that may aid the solution of the equations. This means that it is convenient to permit the alternative representation of the data on variables on a physical space ($\vec{x}$) or on a logical space ($\vec{\eta}$). For these reasons, the scalar field should be thought of data plus a coordinate transformation. 
+
+(place picture of an example coordinate transformation here.)
+
+Consider a scalar field and the services that it should offer to permit us to use it in our logical grid:
+\begin{enumerate}
+  \item The scalar field is a derived type.
+  \item The type contains a simple array to store the data, i.e.: the values of the fields on a collection of points. Both, logical mesh values or physical mesh values can be stored in the same array.
+  \item The type contains an object that fully specifies the associated coordinate transformation (a mapped mesh). The transformation should provide all the needed services to permit moving the representation of the data from the physical space to the logical space and vice-versa:
+  \begin{enumerate}
+     \item something
+     \item something else
+   \end{enumerate}
+\end{enumerate}
+
+
+
+
+
 \section{Quasi-Neutral Equation Solver}
 \subsection{Description}
+Here we present a simplified but hopefully reasonably clear step-by-step derivation of the quasi-neutral equation (the gyrokinetic Poisson equation) which this module solves. The intent is to make clear some of the assumptions that are built into this model. We follow the general argument given by Krommes (cite reference here for "Nonlinear gyrokinetics: a powerful tool for the description of microturbulence in magnetized plasmas").
+
+The model is based on the idea that the fast gyrations of particles around the magnetic field lines can be averaged away while still preserving the most important long-term physics (hence the name of this type of approach: gyrokinetics). The simplest model that we will look into first deals directly in the distribution function of the gyrocenters, instead of the particles'. 
+
+We start with the Poisson equation:
+
+\begin{equation}
+-\nabla ^2 \phi = \frac{1}{\epsilon_0}\rho,
+\end{equation}
+where $\phi$ is the electric potential, $\rho$ is the volumetric charge density and $\epsilon_0$ is the permittivity of free space. The main assumptions built into the model are introduced through the treatment of $\rho$. We decompose the charge density in its two main constituents: the contribution by the ions ($\rho_i$) and the electrons' ($\rho_e$). As mentioned earlier, the main idea behind gyrokinetics is the averaging of the fast particle motions around the field lines, hence some of the effects that occur on longer time-scales are explicitly introduced into the model, for example by particle drifts (e.g.: $\vec{E}\times\vec{B}$, polarization drift, etc.). In doing so, we allow ourselves to further separate the charge density into a polarization charge and a charge at the particles' gyrocenters (gyrocenters do not polarize). Thus, Poisson's equation becomes
+
+\begin{equation} \label{eq:poisson_2}
+-\nabla ^2 \phi = \frac{1}{\epsilon_0}(\rho^G_i + \rho^{pol}_i - \rho^G_e - \rho^{pol}_e),
+\end{equation}
+where the indices $G$, $pol$, $i$ and $e$ indicate \emph{gyrocenters}, \emph{polarization}, \emph{ions} and \emph{electrons} respectively. The polarization drift velocity, whose derivation can be found in introductory plasma physics texts is given by
+
+\begin{equation}
+\vec{v}^{pol} = \pm \frac{1}{\omega_{ci}B}\frac{\partial \vec{E}_{\perp}}{\partial t}.
+\end{equation}
+Here $\omega_{ci}$ is the ion cyclotron frequency, $B$ is the magnitude of the local magnetic field and $\vec{E}_{\perp}$ is the electric field perpendicular to the magnetic field. The plus/minus sign in the equation applies to positive and negative particles respectively. Heuristically, the polarization charge obeys a continuity equation:
+
+\begin{equation} \label{eq:rho_pol_continuity}
+\frac{\partial \rho^{pol} }{\partial t} = - \nabla \cdot \vec{j}^{pol} = - \nabla \cdot (nZe \vec{v}^{pol})=- \nabla \cdot \bigg( n Ze \frac{1}{\omega_{ci}B}\frac{\partial \vec{E}_{\perp}}{\partial t}\bigg) .
+\end{equation}
+
+Here, $Z$ is the charge state of the ions under consideration (obviously 1 for a hydrogen-burning fusion plasma), $e$ is the electron charge and $n$ is the particle density per unit volume. As long as none of the factors of the time derivative depends itself on time, we can integrate immediately and arrive at an expression for $\rho^{pol}$:
+
+\begin{equation} \label{eq:rho_pol}
+\rho^{pol}(\vec{x}) = \nabla \cdot \bigg( \frac{n_i(\vec{x})Ze}{\omega_{ci}(\vec{x}) B(\vec{x}) }\nabla_{\perp}\phi(\vec{x},t) \bigg).
+\end{equation}
+
+Here we have introduced the assumption of $n_i$, the ion particle density,  being independent of time. In equation (\ref{eq:rho_pol}), we can consider that the differential operators act only in the directions perpendicular to the magnetic field, as these are the only terms that will survive the taking of the divergence. Finally, by multiplying by the proper unit factors and using the relation
+
+\begin{equation}
+\omega_p = \bigg( \frac{ne^2} {\epsilon_0 m} \bigg)^{\frac{1}{2}}
+\end{equation}
+we can recast equation (\ref{eq:rho_pol}) into
+
+\begin{equation} \label{eq:rho_pol_epsilon}
+\rho^{pol}(\vec{x}) = \epsilon_0 \nabla_{\perp} \cdot \big( \varepsilon^G(\vec{x})\nabla_{\perp}\phi(\vec{x},t) \big).
+\end{equation}
+where 
+
+\begin{equation}
+\varepsilon^G(\vec{x}) \equiv \frac{\omega^2_{pi}(\vec{x})}{\omega^2_{ci}(\vec{x})}
+\end{equation}
+is called the \emph{dielectric constant of the gyrokinetic vacuum}. With equation (\ref{eq:rho_pol_epsilon}), and neglecting the polarization of the electrons, the modified Poisson equation (\ref{eq:poisson_2}) can be written as:
+
+\begin{equation}
+-\nabla ^2 \phi(\vec{x},t) - \nabla_{\perp} \cdot \big(\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t) \big) = \frac{1}{\epsilon_0}(\rho^G_i - \rho^G_e).
+\end{equation}
+In fusion applications, $\varepsilon^G >> 1$ thus we neglect the ordinary laplacian term on the left-hand side. 
+
+The charge density of the electrons also receives a special treatment. The basic assumption here is that the electrons can move very quickly along a magnetic field line and thus are able to rapidly react to electric potential variations through changes in the electron particle density. Thus, it is assumed that along a field line, the electrons obey the Boltzmann relation:
+
+\begin{equation}  \label{eq:boltzmann}
+n_e(\vec{x},t) = \bar{n}_e(\vec{x},0) \exp \bigg(\frac{e}{k_BT_e}(\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})\bigg).
+\end{equation}
+In equation (\ref{eq:boltzmann}), $n_e(\vec{x},t)$ is the instantaneous electron particle density, $\bar{n}_e(\vec{x})$ is the average electron density along the magnetic field line, $k_B$ is Boltzmann's constant, $T_e$ is the electron temperature and the $< \cdot >_{\ell}$ average is taken along the magnetic field line. By making yet another assumption of very small deviations from the average electric potential, the previous equation can be linearized:
+
+\begin{equation}  \label{eq:boltzmann_linear}
+n_e(\vec{x},t) = \bar{n}_e(\vec{x},0) \bigg(1+\frac{e}{k_BT_e}(\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})\bigg).
+\end{equation}
+At the risk of being too sloppy, we will equate the electron particle density with the electron gyrocenter density. A more careful step would involve gyroaveraging directly the original electron distribution function. With this assumption, our modified poisson becomes:
+
+\begin{equation}
+- \nabla_{\perp} \cdot \big(\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t) \big) = \frac{1}{\epsilon_0}\bigg(\rho^G_i - \bar{\rho}_{e0}^G\Big(1+\frac{e}{k_BT_e}(\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})\Big)\bigg).
+\end{equation}
+Rearranging terms and using the relation:
+\begin{equation} \label{eq:debye_length}
+\lambda_D=\bigg(\frac{\epsilon_0k_BT_e}{ne^2}\bigg)^\frac{1}{2}=\bigg(\frac{\epsilon_0k_BT_e}{\rho e}\bigg)^\frac{1}{2},
+\end{equation}
+we arrive at:
+\begin{equation} \label{eq:gk_poisson}
+- \nabla_{\perp} \cdot \big(\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t) \big)+\frac{1}{\bar{\lambda}_{D0}} (\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})= \frac{1}{\epsilon_0}\Big(\rho^G_i - \bar{\rho}_{e0}^G\Big).
+\end{equation}
+But for a normalization of the variables, equation (\ref{eq:gk_poisson}) is virtually the same as the one stated in the report by Latu (list here reference for "Scalable Quasineutral solver for gyrokinetic simultion"). Equation (\ref{eq:gk_poisson}) is not yet ready to solve due to the presence of the $<\phi(\vec{x},t)>$ term. We need to average the solution we seek, after all. To obtain an additional equation that will help us find this term, we take the average of both sides of the equation in the same sense that we have been averaging before: along a magnetic field line (note that in practice, due to ergodicity, this line may extend and fill a surface or even worse.) The barred quantities have already been averaged so we can get them out of the averaging operator when necessary. Averages of averages remain unchanged and thus we arrive at:
+
+\begin{equation} \label{eq:gk_poisson_aux}
+- \nabla_{\perp} \cdot \big(<\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t)>_{\ell} \big)= \frac{1}{\epsilon_0}(<\rho^G_i>_{\ell} - <\bar{\rho}_{e0}^G>_{\ell}).
+\end{equation}
+By making two final assumptions: that the quantities involved in the calculation of $\varepsilon^G(\vec{x},t)$ are not time-dependent but given by the initial ion distribution, and that this quantity does not vary along the domain of the average procedure (the magnetic field line), we can extract $\varepsilon^G(\vec{x},t)$ from the average operator, yielding the auxiliary equation that we need to compute $<\phi(\vec{x},t)>_{\ell}$:
+
+\begin{equation} \label{eq:gk_poisson_aux}
+- \nabla_{\perp} \cdot \big(\varepsilon ^G\nabla_{\perp} <\phi(\vec{x},t)>_{\ell} \big)= \frac{1}{\epsilon_0}(<\rho^G_i>_{\ell} - <\bar{\rho}_{e0}^G>_{\ell}).
+\end{equation}
+The average ion charge density can be computed from $\rho^G_i(\vec{x},t)$ which is input data for the solver. To compute the average of the electron density we need to explicitly invoke the initial quasineutrality condition, i.e.: $\rho_i = \rho_e$. With this, $<\bar{\rho}^G_{e0}>_{\ell} = <\bar{\rho}^G_{i0}>_{\ell}$ and we are able to compute all the quantities involved based on the initial ion distribution profile.
+
+Once we calculate $<\phi(\vec{x},t)>_{\ell}$ with equation (\ref{eq:gk_poisson_aux}) we can use this to solve the final version of our quasineutral equation, after introducing all the assumptions:
+
+\begin{equation} \label{eq:gk_poisson_final}
+- \nabla_{\perp} \cdot \big(\bar{\varepsilon}^G(\vec{x},0)\nabla_{\perp} \phi(\vec{x},t) \big)+\frac{1}{\bar{\lambda}_D} (\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})= \frac{1}{\epsilon_0}(\rho^G_i - \bar{\rho}_{i0}^G).
+\end{equation}
+
+
+ 
 \subsection{Exposed Interface}
 Fundamental type: None. It is a function that operates on other top-level types. Function:
 \begin{verbatim}
-     sll_solve_quasi_neutral_equation( electron_T_profile_3D,
-                                       electron_n_profile_3D,
+     sll_solve_quasi_neutral_equation( electron_T_profile_2D,
+                                       initial_rho_ion_profile_2D,
                                        charge_density,
                                        phi )
 \end{verbatim}
