@@ -58,18 +58,18 @@ SET(SLL_SOURCE_FILES
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
+      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
 
 ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/fft/fftw_module.F90
-  ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
+      ${SLL_DIR}/fft/fftw_module.F90
+      ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
 
 ELSE()
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
+      ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
 
 ENDIF()
 
@@ -108,10 +108,8 @@ IF(SLL_BUILD_PACKAGE)
 ELSE()
 
    FILE(GLOB SLL_MODULES "${CMAKE_Fortran_MODULE_DIRECTORY}/sll_*.mod")
-   MESSAGE(STATUS ${CMAKE_Fortran_MODULE_DIRECTORY})
-   MESSAGE(STATUS ${SLL_MODULES})
    INSTALL(FILES ${SLL_MODULES} DESTINATION include COMPONENT headers)
-   INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
+   INSTALL(FILES ${SLL_MACROS}  DESTINATION include COMPONENT headers)
 
 ENDIF(SLL_BUILD_PACKAGE)
 
