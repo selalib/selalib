@@ -14,7 +14,7 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library")
 SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
 
 # Specify the output for binary
@@ -50,7 +50,6 @@ INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
-INCLUDE(DoxygenConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
@@ -66,9 +65,12 @@ INCLUDE_DIRECTORIES(utilities
                     poisson_solvers
                     maxwell_solvers
                     visu_pic) 
-ENABLE_TESTING()
+
+ADD_SUBDIRECTORY(fftpack)
 
 IF(NOT SLL_BUILD_PACKAGE)
+
+   ENABLE_TESTING()
 
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
@@ -83,7 +85,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
-   ADD_SUBDIRECTORY(fftpack)
    ADD_SUBDIRECTORY(periodic_interpolation)
    
    IF(MPI_MODULE_ENABLED)
@@ -116,9 +117,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ENDIF(NOT STDF95)
 
-ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(package)
 
 ##########################################################
 
@@ -174,6 +173,7 @@ IF(MUDPACK_ENABLED)
    ENDIF()
 ENDIF()
 
+
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
@@ -224,5 +224,11 @@ IF(PETSC_ENABLED)
       ADD_SUBDIRECTORY(petsc_solvers)
    ENDIF(PETSC_FOUND)
 ENDIF()
+
+INCLUDE(DoxygenConfig)
+
+ENDIF(NOT SLL_BUILD_PACKAGE)
+
+ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
