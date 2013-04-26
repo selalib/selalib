@@ -39,7 +39,8 @@ use sll_xdmf
      ! jacobian_matrix = jacobian(matrix(eta1,eta2))
      procedure(matrix_geometry_function), deferred, pass   :: jacobian_matrix
 !     procedure(j_matrix_function_nopass), pointer, nopass :: jacobian_matrix
-
+     procedure(matrix_geometry_function), deferred, pass :: &
+          inverse_jacobian_matrix
      ! The name of the abstract signature 'geometry_function_nodes' is
      ! potentially misleading since the same signature is also used for
      ! functions that return values on cells. The key point is that the 
