@@ -6,7 +6,7 @@
 module sll_leap_frog_1st_flow_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use numeric_constants
+  use sll_constants
   use sll_flow_base
   implicit none
 

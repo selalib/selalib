@@ -26,7 +26,7 @@ program test_time_splitting
   sll_int32 :: i, j
   sll_real64 :: dt
   sll_int32 :: ierr, file_id
-  character(len=20) :: filename, name
+  character(len=20) :: filename
 
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2

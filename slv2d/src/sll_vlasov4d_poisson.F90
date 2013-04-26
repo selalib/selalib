@@ -1,15 +1,9 @@
 module sll_vlasov4d_poisson
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+#include "selalib-mpi.h"
 
- use used_precision
  use geometry_module
- use diagnostiques_module
- use sll_module_interpolators_1d_base
  use sll_vlasov4d_base
- use remapper
 
  implicit none
  private
@@ -67,7 +61,7 @@ contains
 
  subroutine free_vlasov4d_poisson(this)
 
-  class(vlasov4d_poisson),intent(out) :: this
+  class(vlasov4d_poisson),intent(inout) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)

@@ -1,15 +1,8 @@
 module sll_vlasov4d_maxwell
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+#include "selalib-mpi.h"
 
- use used_precision
  use geometry_module
- use diagnostiques_module
- use sll_module_interpolators_1d_base
- use sll_module_interpolators_2d_base
- use remapper
  use sll_vlasov4d_base
 
  implicit none
@@ -70,7 +63,7 @@ contains
 
  subroutine free_vlasov4d_maxwell(this)
 
-  class(vlasov4d_maxwell),intent(out) :: this
+  class(vlasov4d_maxwell),intent(inout) :: this
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)

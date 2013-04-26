@@ -2,11 +2,11 @@ module sll_distribution_function_6d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
 !  use sll_module_mapped_meshes_2d_base
   use sll_scalar_field_initializers_base
   use sll_collective
-  use remapper
+  use sll_remapper
   implicit none
 
 

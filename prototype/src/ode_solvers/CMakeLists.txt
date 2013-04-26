@@ -4,7 +4,7 @@ add_executable(test_implicit_ode_nonuniform unit_test_implicit_ode_nonuniform.F9
 target_link_libraries(test_implicit_ode_nonuniform
 	ode_solvers
 #	sll_scalar_field_2d
-#	sll_low_level_file_io
+#	sll_file_io
 #	sll_mapped_meshes
 #	geometry_functions
 #	sll_splines

@@ -13,12 +13,12 @@ module sll_poisson_3d_periodic_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_misc_utils.h"
+#include "sll_utilities.h"
 #include "sll_assert.h"
   use sll_fft
-  use numeric_constants
+  use sll_constants
   use sll_collective
-  use remapper
+  use sll_remapper
   implicit none
 
   type poisson_3d_periodic_plan_par
@@ -184,14 +184,11 @@ contains
     ! nx, ny, nz are the numbers of points - 1 in directions x, y ,z
     sll_int32                                    :: nx_loc, ny_loc, nz_loc
     sll_int32                                    :: i, j, k
-    sll_int32                                    :: ierr
     sll_real64                                   :: Lx, Ly, Lz
     sll_real64                                   :: ind_x, ind_y, ind_z
-    sll_int32                                    :: myrank
-    sll_int64                                    :: colsz ! collective size
-    type(layout_3D), pointer                   :: layout_x
-    type(layout_3D), pointer                   :: layout_y
-    type(layout_3D), pointer                   :: layout_z
+    type(layout_3D), pointer                     :: layout_x
+    type(layout_3D), pointer                     :: layout_y
+    type(layout_3D), pointer                     :: layout_z
     sll_int32, dimension(1:3)                    :: global
     sll_int32                                    :: gi, gj, gk
 
