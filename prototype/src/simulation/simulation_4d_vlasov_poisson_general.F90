@@ -200,7 +200,7 @@ contains
     sll_int32, dimension(1:2)      :: gi     ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 2
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_int32 :: buffer_counter
@@ -696,7 +696,9 @@ contains
                 rewind(efield_energy_file_id)
              end if
              buffer_result(:) = log(buffer_result(:))
-             write(efield_energy_file_id,*) buffer_result(1:BUFFER_SIZE)
+             do i=1,BUFFER_SIZE
+                write(efield_energy_file_id,*) buffer_result(i)
+             end do
              close(efield_energy_file_id)
           end if
        else
