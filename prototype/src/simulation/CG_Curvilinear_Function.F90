@@ -704,8 +704,8 @@ implicit none
   case(2)
      do j=1,N_eta2+1
            do i=1,N_eta1+1
-              eta1=eta1_min+real(i-1,f64)*delta_eta1
-              f(i,j) = cos(eta1)
+              eta2=eta2_min+real(i-1,f64)*delta_eta2
+              f(i,j) = cos(eta2)
            end do
      end do
 
