@@ -125,7 +125,7 @@ contains
     eta2_min=geom_eta(2,1)
     eta2_max=geom_eta(2,2)
 
-     !plan_sl%poisson => new_plan_poisson_polar(delta_eta1,eta1_min,N_eta1,N_eta2,bc)
+     plan_sl%poisson => new_plan_poisson_polar(delta_eta1,eta1_min,N_eta1,N_eta2,bc)
      plan_sl%grad => new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type)
      plan_sl%adv => new_plan_adv_curvilinear(geom_eta,delta_eta1,delta_eta2,dt,N_eta1,N_eta2,carac_case,bc1_type,bc2_type)
 
@@ -147,7 +147,7 @@ contains
 
     if (associated(plan_sl)) then
        call delete_plan_adv_curvilinear(plan_sl%adv)
-       !call delete_plan_poisson_polar(plan_sl%poisson)
+       call delete_plan_poisson_polar(plan_sl%poisson)
        call delete_plan_curvilinear_op(plan_sl%grad)
        SLL_DEALLOCATE(plan_sl,err)
     end if
@@ -171,10 +171,10 @@ contains
     implicit none
 
     type(sll_plan_adv_curvilinear), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(in) :: fn
-    sll_real64, dimension(:,:), intent(out) :: fnp1
-    sll_real64, dimension(:,:), pointer,intent(in) :: x1_tab,x2_tab
-    sll_real64, dimension(:,:), pointer, intent(inout):: jac_array
+    sll_real64, dimension(:,:),allocatable,intent(in) :: fn
+    sll_real64, dimension(:,:),allocatable, intent(inout) :: fnp1
+    sll_real64, dimension(:,:), pointer :: x1_tab,x2_tab
+    sll_real64, dimension(:,:), pointer:: jac_array
     sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr,a_eta1,a_eta2,eta10,eta2_min,eta2_max !,tolth
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
     sll_int32 :: N_eta1, N_eta2
@@ -197,10 +197,10 @@ contains
     bc2_type=plan%bc2_type
  
     !construction of spline coefficients for f
+    print*,'pass avant spline',size(fn),size(fnp1)
     call compute_spline_2D(fn,plan%spl_f)
     !plan%field(2,:,:)=-plan%field(2,:,:)
    
-    
     if (plan%carac_case==1) then
        !explicit Euler with linear interpolation
        fnp1=fn
@@ -254,6 +254,7 @@ contains
 
   if (plan%carac_case==2) then
       !explicit Euler with "Spline interpolation"
+      
        do i=1,N_eta1+1
           do j=1,N_eta2+1
              eta10=eta1_min+real(i-1,f64)*delta_eta1
@@ -264,9 +265,8 @@ contains
 
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
                 &eta1,eta2)
-             !print *,i,j,eta1,eta2,eta1_min,eta1_max,eta2_min,eta2_max
- 
-             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+            ! print *,i,j,eta1,eta2,eta1_min,eta1_max,eta2_min,eta2_max
+             fnp1(i,j)= interpolate_value_2D(eta1,eta2,plan%spl_f)
           end do
        end do
        
@@ -315,7 +315,7 @@ contains
            call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
               &eta1,eta2)
 
-             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+             fnp1(i,j)=interpolate_value_2D(eta1,eta2,plan%spl_f)
       
          end do
       end do
@@ -424,7 +424,8 @@ contains
              eta1=eta10-2.0_f64*a_eta1
              eta2=eta20-2.0_f64*a_eta2
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2)    
-             fnp1(i,j)=interpolate_value_2d(eta1,eta2,plan%spl_f)
+             fnp1(i,j) = interpolate_value_2d(eta1,eta2,plan%spl_f)
+
           end do
 
        end do
@@ -451,20 +452,21 @@ contains
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(inout), allocatable :: inn
-    sll_real64, dimension(:,:), intent(out), allocatable :: outt
-    sll_real64,dimension(:,:),pointer,intent(inout)::jac_array,x1_tab,x2_tab
+    sll_real64, dimension(:,:), allocatable,intent(in) :: inn
+    sll_real64, dimension(:,:), allocatable,intent(inout) :: outt
+    sll_real64,dimension(:,:),pointer ::jac_array,x1_tab,x2_tab
     sll_real64, intent(in) :: geom_eta(2,2)
     sll_int32, intent(in) :: N_eta1, N_eta2
     sll_int :: step,i,j,mesh_case
-    print*,'pass10'
-    !call poisson_solve_polar(plan%poisson,inn,plan%phi)
-    call lire_appel(plan%phi,inn,N_eta1,N_eta2)
+    
+    call poisson_solve_polar(plan%poisson,inn,plan%phi)
+    !call lire_appel(plan%phi,inn,N_eta1,N_eta2)
     
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
-  
+    print*,'pass avant'
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
- 
+    print*,'pass apres'
+    
   end subroutine SL_order_1
 
 !!*********************************************************************************
@@ -478,8 +480,8 @@ contains
     implicit none
 
     type(sll_SL_curvilinear), intent(inout), pointer :: plan
-    sll_real64, dimension(:,:), intent(in) :: inn
-    sll_real64, dimension(:,:), intent(out) :: outt
+    sll_real64, dimension(:,:),allocatable, intent(in)  :: inn
+    sll_real64, dimension(:,:),allocatable, intent(inout)  :: outt
     sll_real64,dimension(:,:),pointer, intent(inout)::jac_array,x1_tab,x2_tab
     sll_real64, intent(in) :: geom_eta(2,2)
     sll_int32, intent(in) :: N_eta1, N_eta2

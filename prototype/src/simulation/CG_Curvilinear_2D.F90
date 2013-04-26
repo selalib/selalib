@@ -131,10 +131,10 @@ sll_real :: l10,l20,e0,alpha,r1,r2
   ! BC        : hermite-periodic
   if ((mesh_case==2).or.(mesh_case==3)) then
 
-    eta2_min = 0.5_f64!0.5_f64
-    eta2_max = 5._f64
-    eta1_min = 0._f64
-    eta1_max = 2._f64*sll_pi
+    eta1_min = 1._f64!0.5_f64
+    eta1_max = 10._f64
+    eta2_min = 0._f64
+    eta2_max = 2._f64*sll_pi
    
     x1c_r=0._f64
     x2c_r=0._f64
@@ -146,15 +146,16 @@ sll_real :: l10,l20,e0,alpha,r1,r2
     sigma_x2 = 0.2
 
 
-    bc1_type = PERIODIC_B
-    bc2_type = HERMITE_B
+    bc2_type = PERIODIC_B
+    bc1_type = HERMITE_B
    ! bc2_type = PERIODIC_B
-    bc(1)=3
+    bc(1)=1 !3
     bc(2)=1
-    mode=7
+    mode=3
     alpha=1.e-6
-    r1=6._f64
-    r2=7._f64
+    r1=4._f64
+    r2=5._f64
+    f_case = 1
   endif
   
   ! mesh type : Collela
@@ -245,7 +246,6 @@ sll_real :: l10,l20,e0,alpha,r1,r2
 plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
                   & N_eta1,N_eta2,grad_case,carac_case,bc,bc1_type,bc2_type)
 
-
 !  !SLL_ALLOCATE(div(N_eta1+1,N_eta2+1),i)
   SLL_ALLOCATE(f(N_eta1+1,N_eta2+1),err)
   SLL_ALLOCATE(f_init(N_eta1+1,N_eta2+1),err)
@@ -268,18 +268,17 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  !call init_distribution_curvilinear(N_eta1,N_eta2,f_case,f,mesh_case,&
  !                                     & x1n_array,x2n_array,x1c,x2c,sigma_x1,sigma_x2)
 
-
  call init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
            & delta_eta1,delta_eta2,f_case,f,mesh_case,mode,alpha,r1,r2,sigma_x1,sigma_x2)
   f_init=f
  
- call lire_appel(plan_sl%phi,f,N_eta1,N_eta2)
+ !call lire_appel(plan_sl%phi,f,N_eta1,N_eta2)
  
  
  !call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array, & 
  !                    & a1,a2,x1c_r,x2c_r,jac_matrix)
 
- !   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+    call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
 
 !   plan_sl%phi=phi_exact
 !   plan_sl%adv%field=0
@@ -289,15 +288,16 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
   call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"finit")
 ! !***************************************
 !!*********Diag: *****
-! call diagnostic_1(f,plan_sl,phi_ref,int_r,bc,eta1_min,eta1_max,delta_eta1,& 
-! & delta_eta2,N_eta1,N_eta2,nb_step,f_case,time_scheme,carac_case,grad_case,mode,& 
-!       & l10,l20,e0,dt,alpha,r1,r2)
+ call diagnostic_1(f,plan_sl,phi_ref,int_r,bc,eta1_min,eta1_max,delta_eta1,& 
+ & delta_eta2,N_eta1,N_eta2,nb_step,f_case,time_scheme,carac_case,grad_case,mode,& 
+       & l10,l20,e0,dt,alpha,r1,r2)
 !!********
   t1 => start_time_mark(t1)
-!
 
  do step=1,nb_step
+
     if(step==1) print*,'!!**************Begin of time loop'
+
    select case (time_scheme)
 
       case(1) 
@@ -307,7 +307,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
                                   & x1_tab,x2_tab,dt)
             call SL_order_1(plan_sl,f,fp1,jac_array,step,x1_tab,x2_tab& 
                                   & ,mesh_case,N_eta1,N_eta2,geom_eta)
- 
+
       case(2) 
            !semi-Lagrangian predictor-corrector scheme  
             call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
@@ -338,14 +338,14 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
    
 
      !---> poisson solving
- !   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
-     call lire_appel(plan_sl%phi,f,N_eta1,N_eta2)
+    call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+    !call lire_appel(plan_sl%phi,f,N_eta1,N_eta2)
     !---> Computation of the field
      call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field,N_eta1,N_eta2,geom_eta)
 
     !!**Diag:****
- ! call diagnostic_2(f,plan_sl,phi_ref,int_r,eta1_min,eta1_max,delta_eta1,delta_eta2, &
- !       & N_eta1,N_eta2,step,l10,l20,e0,mode,dt,alpha)
+  call diagnostic_2(f,plan_sl,phi_ref,int_r,eta1_min,eta1_max,delta_eta1,delta_eta2, &
+        & N_eta1,N_eta2,step,l10,l20,e0,mode,dt,alpha)
    !********
     if (step==1 .or. step/visu_step*visu_step==step) then
        call print2d(geom_eta,f(1:(N_eta1+1),1:(N_eta2+1)),N_eta1,N_eta2,visu_case,step,"f")
