@@ -2,7 +2,7 @@ set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library(sll_remap STATIC sll_remap.F90)
 add_dependencies(sll_remap 
   sll_collective 
-  sll_electric_field_accumulators 
+  sll_electric_field_accumulators  # this has to disappear
   sll_memory 
   sll_utilities 
   sll_working_precision
@@ -52,11 +52,11 @@ target_link_libraries(test_remap_6d
 
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-   ADD_DEPENDENCIES(sll_remap sll_low_level_file_io_parallel)
+   ADD_DEPENDENCIES(sll_remap sll_file_io_parallel)
    TARGET_LINK_LIBRARIES(sll_remap ${HDF5_LIBRARIES})
    ADD_EXECUTABLE(test_layout_output unit_test_output.F90)
    TARGET_LINK_LIBRARIES(test_layout_output sll_remap
-                                            sll_low_level_file_io_parallel
+                                            sll_file_io_parallel
                                             sll_collective
 	                                    sll_utilities
 	                                    sll_constants

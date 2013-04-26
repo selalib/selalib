@@ -1,19 +1,8 @@
 program vm4d_spectral
 
 #define MPI_MASTER 0
-#include "sll_working_precision.h"
-#include "sll_assert.h"
-#include "sll_memory.h"
-use sll_collective
-use remapper
-use sll_module_interpolators_2d_base
-use sll_cubic_spline_interpolator_2d
-use sll_poisson_2d_periodic
-use sll_maxwell_solvers
-use sll_maxwell_2d_pstd
+#include "selalib-mpi.h"
 
-
-  use used_precision  
   use geometry_module
   use diagnostiques_module
   use sll_vlasov4d_base
@@ -156,7 +145,7 @@ use sll_maxwell_2d_pstd
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
   end if
 
-  call free(poisson)
+  call delete(poisson)
   call sll_halt_collective()
 
   print*,'PASSED'
@@ -217,11 +206,11 @@ contains
     end do
     end do
 
-    call new(maxwell, geomx%x0, geomx%x1, geomx%nx, &
-                             geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
+    call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx, &
+                    geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
-    call new(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                      geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+    call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
+                    geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
 
   end subroutine initlocal
 

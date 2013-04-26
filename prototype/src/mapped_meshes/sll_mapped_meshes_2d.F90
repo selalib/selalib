@@ -2,9 +2,9 @@ module sll_module_mapped_meshes_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_io.h"
+#include "sll_file_io.h"
 
-  use sll_splines
+  use sll_cubic_splines
 #ifdef STDF95
   use sll_cubic_spline_interpolator_2d
   use sll_xdmf
@@ -89,8 +89,14 @@ module sll_module_mapped_meshes_2d
      procedure, pass(mesh) :: x2         => x2_analytic
      procedure, pass(mesh) :: jacobian   => jacobian_2d_analytic
      procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_analytic
+     procedure, pass(mesh) :: inverse_jacobian_matrix => &
+          inverse_jacobian_matrix_2d_analytic
 #endif
   end type sll_mapped_mesh_2d_analytic
+
+
+
+  ! Discrete case
 
 #ifdef STDF95
   type                                  ::sll_mapped_mesh_2d_discrete
@@ -131,6 +137,8 @@ module sll_module_mapped_meshes_2d
      procedure, pass(mesh) :: jacobian_at_cell => jacobian_2d_cell_discrete
      procedure, pass(mesh) :: jacobian   => jacobian_2d_discrete
      procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_discrete
+     procedure, pass(mesh) :: inverse_jacobian_matrix => &
+          inverse_jacobian_matrix_2d_discrete
 #endif
   end type sll_mapped_mesh_2d_discrete
 
@@ -218,6 +226,51 @@ contains
 
   ! initialize_mapped_mesh_2D_general() allocates all the memory needed by 
   ! the 2D map. 
+
+  function new_mesh_2d_analytic( &
+    label,          &
+    npts1,          &
+    npts2,          &
+    x1_func,        &
+    x2_func,        &
+    j11_func,       &
+    j12_func,       &
+    j21_func,       &
+    j22_func )
+    type(sll_mapped_mesh_2d_analytic), pointer :: new_mesh_2d_analytic
+    character(len=*), intent(in)                  :: label
+    sll_int32, intent(in)                         :: npts1
+    sll_int32, intent(in)                         :: npts2
+#ifdef STDF95
+    sll_real64            :: x1_func
+    sll_real64            :: x2_func
+    sll_real64            :: j11_func
+    sll_real64            :: j12_func
+    sll_real64            :: j21_func
+    sll_real64            :: j22_func
+#else
+    procedure(two_arg_scalar_function)            :: x1_func
+    procedure(two_arg_scalar_function)            :: x2_func
+    procedure(two_arg_scalar_function)            :: j11_func
+    procedure(two_arg_scalar_function)            :: j12_func
+    procedure(two_arg_scalar_function)            :: j21_func
+    procedure(two_arg_scalar_function)            :: j22_func
+#endif
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(new_mesh_2d_analytic, ierr)
+    call initialize_mesh_2d_analytic( &
+         new_mesh_2d_analytic, &
+         label,          &
+         npts1,          &
+         npts2,          &
+         x1_func,        &
+         x2_func,        &
+         j11_func,       &
+         j12_func,       &
+         j21_func,       &
+         j22_func )
+  end function new_mesh_2d_analytic
 
   subroutine initialize_mesh_2d_analytic( &
     mesh,           &
@@ -389,6 +442,32 @@ contains
     jacobian_matrix_2d_analytic(2,1) = j21
     jacobian_matrix_2d_analytic(2,2) = j22
   end function jacobian_matrix_2d_analytic
+
+  function inverse_jacobian_matrix_2d_analytic( mesh, eta1, eta2 )
+    sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_analytic
+    class(sll_mapped_mesh_2d_analytic) :: mesh
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: inv_j11
+    sll_real64             :: inv_j12
+    sll_real64             :: inv_j21
+    sll_real64             :: inv_j22
+    sll_real64             :: r_jacobian ! reciprocal of the jacobian
+
+    r_jacobian = 1.0_f64/mesh%jacobian( eta1, eta2 )
+    inv_j11 =  (mesh%j_matrix(2,2)%f( eta1, eta2 ))*r_jacobian
+    inv_j12 = -(mesh%j_matrix(1,2)%f( eta1, eta2 ))*r_jacobian
+    inv_j21 = -(mesh%j_matrix(2,1)%f( eta1, eta2 ))*r_jacobian
+    inv_j22 =  (mesh%j_matrix(1,1)%f( eta1, eta2 ))*r_jacobian
+    ! For debugging:
+    !    print *, 'jacobian_2d_analytic: '
+    !    print *, j11, j12
+    !    print *, j21, j22
+    inverse_jacobian_matrix_2d_analytic(1,1) = inv_j11
+    inverse_jacobian_matrix_2d_analytic(1,2) = inv_j12
+    inverse_jacobian_matrix_2d_analytic(2,1) = inv_j21
+    inverse_jacobian_matrix_2d_analytic(2,2) = inv_j22
+  end function inverse_jacobian_matrix_2d_analytic
 
   function x1_analytic( mesh, eta1, eta2 ) result(val)
     sll_real64                         :: val
@@ -590,7 +669,7 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 #ifdef STDF95
-    val = cubic_spline_interpolate_value(mesh%x1_interp,eta1, eta2)
+    val = cubic_spline_2d_interpolate_value(mesh%x1_interp,eta1, eta2)
 #else
     val = mesh%x1_interp%interpolate_value(eta1, eta2)
 #endif
@@ -606,7 +685,7 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 #ifdef STDF95
-    val = cubic_spline_interpolate_value(mesh%x2_interp, eta1, eta2)
+    val = cubic_spline_2d_interpolate_value(mesh%x2_interp, eta1, eta2)
 #else
     val = mesh%x2_interp%interpolate_value(eta1, eta2)
 #endif
@@ -626,10 +705,10 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
 #ifdef STDF95
-    j11 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
-    j12 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
-    j21 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
-    j22 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j11 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j12 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j21 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j22 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
 #else
     j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
@@ -669,10 +748,10 @@ contains
     sll_real64             :: j21
     sll_real64             :: j22
 #ifdef STDF95
-    j11 = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
-    j12 = cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
-    j21 = cubic_spline_interpolate_derivative_eta1( mesh%x2_interp, eta1, eta2 )
-    j22 = cubic_spline_interpolate_derivative_eta2( mesh%x2_interp, eta1, eta2 )
+    j11 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    j12 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    j21 = cubic_spline_2d_interpolate_derivative_eta1( mesh%x2_interp, eta1, eta2 )
+    j22 = cubic_spline_2d_interpolate_derivative_eta2( mesh%x2_interp, eta1, eta2 )
 #else
     j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
@@ -688,6 +767,48 @@ contains
     jacobian_matrix_2d_discrete(2,1) = j21
     jacobian_matrix_2d_discrete(2,2) = j22
   end function jacobian_matrix_2d_discrete
+
+  function inverse_jacobian_matrix_2d_discrete( mesh, eta1, eta2 )
+#ifdef STDF95
+    type(sll_mapped_mesh_2d_discrete)  :: mesh
+#else
+    class(sll_mapped_mesh_2d_discrete) :: mesh
+#endif
+    sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_discrete
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: inv_j11
+    sll_real64             :: inv_j12
+    sll_real64             :: inv_j21
+    sll_real64             :: inv_j22
+    sll_real64             :: r_jac ! reciprocal of the jacobian
+#ifdef STDF95
+    r_jac = jacobian_2d_discrete( mesh, eta1, eta2 )
+    inv_j11 = &
+         cubic_spline_interpolate_derivative_eta1( mesh%x1_interp, eta1, eta2 )
+    inv_j12 = &
+         cubic_spline_interpolate_derivative_eta2( mesh%x1_interp, eta1, eta2 )
+    inv_j21 = &
+         cubic_spline_interpolate_derivative_eta1( mesh%x2_interp, eta1, eta2 )
+    inv_j22 = &
+         cubic_spline_interpolate_derivative_eta2( mesh%x2_interp, eta1, eta2 )
+#else
+    r_jac = 1.0_f64/mesh%jacobian( eta1, eta2 )
+    inv_j11 = mesh%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+    inv_j12 = mesh%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+    inv_j21 = mesh%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+    inv_j22 = mesh%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+#endif
+    ! For debugging:
+    !    print *, 'jacobian_2D_discrete: '
+    !    print *, j11, j12
+    !    print *, j21, j22
+    inverse_jacobian_matrix_2d_discrete(1,1) =  inv_j22*r_jac
+    inverse_jacobian_matrix_2d_discrete(1,2) = -inv_j12*r_jac
+    inverse_jacobian_matrix_2d_discrete(2,1) = -inv_j21*r_jac
+    inverse_jacobian_matrix_2d_discrete(2,2) =  inv_j11*r_jac
+  end function inverse_jacobian_matrix_2d_discrete
+
 
 
   subroutine initialize_mesh_2d_discrete( &
@@ -827,8 +948,8 @@ contains
 
     ! Compute the spline coefficients
 #ifdef STDF95
-    call cubic_spline_compute_interpolants( x1_interpolator, mesh%x1_node )
-    call cubic_spline_compute_interpolants( x2_interpolator, mesh%x2_node )
+    call cubic_spline_2d_compute_interpolants( x1_interpolator, mesh%x1_node )
+    call cubic_spline_2d_compute_interpolants( x2_interpolator, mesh%x2_node )
 #else
     call x1_interpolator%compute_interpolants( mesh%x1_node )
     call x2_interpolator%compute_interpolants( mesh%x2_node )

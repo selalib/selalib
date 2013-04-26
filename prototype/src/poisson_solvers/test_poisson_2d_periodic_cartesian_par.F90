@@ -2,7 +2,7 @@ program test_poisson_2d_periodic_cart_par
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use remapper
+  use sll_remapper
   use sll_constants
   use sll_poisson_2d_periodic_cartesian_par
   use sll_collective
@@ -118,7 +118,7 @@ print *, 'phi: ', phi(:,:)
   SLL_DEALLOCATE_ARRAY(rho, ierr)
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
 
-  call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
+  call sll_collective_reduce(sll_world_collective, (/ ok /), &
        1, MPI_PROD, 0, prod4test )
   if (myrank==0) then
 

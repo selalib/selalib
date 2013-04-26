@@ -44,13 +44,13 @@ program test_poisson_2d
    call mesh%write_to_file()
    m => mesh
 
-   SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
-   SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
-   SLL_ALLOCATE(ex_exact(nc_eta1+1,nc_eta2+1),error)
-   SLL_ALLOCATE(ey_exact(nc_eta1+1,nc_eta2+1),error)
-   SLL_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),error)
-   SLL_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),error)
-   SLL_ALLOCATE(phi_exact(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(ex_exact(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(ey_exact(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),error)
+   SLL_CLEAR_ALLOCATE(phi_exact(nc_eta1+1,nc_eta2+1),error)
 
    write(*,*) " eta1_min, eta1_max, nc_eta1 ", eta1_min, eta1_max, nc_eta1
    write(*,*) " eta2_min, eta2_max, nc_eta2 ", eta2_min, eta2_max, nc_eta2

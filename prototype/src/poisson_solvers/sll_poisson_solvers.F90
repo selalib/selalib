@@ -1,6 +1,9 @@
-module sll_poisson_solvers
-
-use sll_poisson_1d_periodic
-use sll_poisson_2d_periodic
-
-end module sll_poisson_solvers
+!> @namespace sll_poisson_solvers
+!> @author Pierre Navaro
+!> @brief 
+!> Library to solve Poisson equation in 2D and 3D
+!>
+!> - Add  :
+!> \code
+!> #include "sll_poisson_solvers.h"
+!> \endcode

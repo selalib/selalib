@@ -7,8 +7,8 @@
 !>
 !> Don't forget to read the README file before launching the make command.
 !>
-!> \remark If you encountered a problem with doxygen please send me an email 
-!> to selalib-work@lists.gforge.inria.fr
+!> \remark If you encountered a problem with doxygen please send an email 
+!> to selalib-users@lists.gforge.inria.fr
 !>
 !> \section Description Description
 !>

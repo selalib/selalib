@@ -14,7 +14,8 @@ PROJECT(SLL)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../../usr" CACHE BOOL "Installation directory of the library" FORCE )
+SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library")
+SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -49,72 +50,77 @@ INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
-INCLUDE(DoxygenConfig)
 
 # include's .h files
 INCLUDE_DIRECTORIES(utilities 
+                    constants
                     memory 
                     assert 
                     splines 
-                    numerical_utilities 
                     precision 
                     fields 
-                    low_level_file_io
+                    file_io
                     fft
-                    maxwell_solvers) 
-ENABLE_TESTING()
+                    interpolators
+                    poisson_solvers
+                    maxwell_solvers
+                    visu_pic) 
 
-ADD_SUBDIRECTORY(memory)
-ADD_SUBDIRECTORY(precision)
-ADD_SUBDIRECTORY(assert)
-ADD_SUBDIRECTORY(constants)
-ADD_SUBDIRECTORY(utilities)
-ADD_SUBDIRECTORY(low_level_file_io)
-ADD_SUBDIRECTORY(timer)
-ADD_SUBDIRECTORY(numerical_utilities)
-ADD_SUBDIRECTORY(non_linear_solvers)
-ADD_SUBDIRECTORY(splines)
-ADD_SUBDIRECTORY(lagrange_interpolation)
-ADD_SUBDIRECTORY(WENO)
-ADD_SUBDIRECTORY(integration)
-ADD_SUBDIRECTORY(fft)
+ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(package)
 
-IF(FFTPACK_ENABLED)
+IF(NOT SLL_BUILD_PACKAGE)
 
-   ADD_SUBDIRECTORY(fftpack)
+   ENABLE_TESTING()
+
+   ADD_SUBDIRECTORY(memory)
+   ADD_SUBDIRECTORY(precision)
+   ADD_SUBDIRECTORY(assert)
+   ADD_SUBDIRECTORY(constants)
+   ADD_SUBDIRECTORY(utilities)
+   ADD_SUBDIRECTORY(file_io)
+   ADD_SUBDIRECTORY(timer)
+   ADD_SUBDIRECTORY(non_linear_solvers)
+   ADD_SUBDIRECTORY(splines)
+   ADD_SUBDIRECTORY(logical_meshes)
+   ADD_SUBDIRECTORY(coordinate_transformations)
+   ADD_SUBDIRECTORY(lagrange_interpolation)
+   ADD_SUBDIRECTORY(WENO)
+   ADD_SUBDIRECTORY(integration)
+   ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
+   
+   IF(MPI_MODULE_ENABLED)
+   
+      ADD_SUBDIRECTORY(collective)
+      ADD_SUBDIRECTORY(remap)
+      ADD_SUBDIRECTORY(parallel_array_initializers)
 
-ENDIF()
+   ENDIF()
+   
+   ADD_SUBDIRECTORY(quasi_neutral_solvers)
+   ADD_SUBDIRECTORY(electric_field_accumulators)
+   ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(mapped_meshes)
+   ADD_SUBDIRECTORY(fields)
+   
+   IF(NOT STDF95)
+   
+      ADD_SUBDIRECTORY(time_solvers)
+      ADD_SUBDIRECTORY(ode_solvers)
+      ADD_SUBDIRECTORY(distribution_function)
+      ADD_SUBDIRECTORY(advection_field)
+      ADD_SUBDIRECTORY(LinRood)
+      ADD_SUBDIRECTORY(poisson_solvers)
+      ADD_SUBDIRECTORY(maxwell_solvers)
+      ADD_SUBDIRECTORY(BSL)
+      ADD_SUBDIRECTORY(CSL)
+      ADD_SUBDIRECTORY(visu_pic)
+      ADD_SUBDIRECTORY(simulation)
+      ADD_SUBDIRECTORY(discontinuous_galerkin) 
+   
+   ENDIF(NOT STDF95)
 
-IF(MPI_MODULE_ENABLED)
-
-   ADD_SUBDIRECTORY(collective)
-   ADD_SUBDIRECTORY(remap)
-
-ENDIF()
-
-ADD_SUBDIRECTORY(quasi_neutral_solvers)
-ADD_SUBDIRECTORY(electric_field_accumulators)
-ADD_SUBDIRECTORY(interpolators)
-ADD_SUBDIRECTORY(mapped_meshes)
-ADD_SUBDIRECTORY(fields)
-
-IF(NOT STDF95)
-
-   ADD_SUBDIRECTORY(time_solvers)
-   ADD_SUBDIRECTORY(ode_solvers)
-   ADD_SUBDIRECTORY(distribution_function)
-   ADD_SUBDIRECTORY(advection_field)
-   ADD_SUBDIRECTORY(LinRood)
-   ADD_SUBDIRECTORY(poisson_solvers)
-   ADD_SUBDIRECTORY(maxwell_solvers)
-   ADD_SUBDIRECTORY(BSL)
-   ADD_SUBDIRECTORY(CSL)
-   ADD_SUBDIRECTORY(selalib_level)
-   ADD_SUBDIRECTORY(visu_pic)
-   ADD_SUBDIRECTORY(simulation)
-
-ENDIF(NOT STDF95)
 
 ##########################################################
 
@@ -170,6 +176,7 @@ IF(MUDPACK_ENABLED)
    ENDIF()
 ENDIF()
 
+
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
@@ -196,7 +203,7 @@ MESSAGE(STATUS "## maxwel_solvers                           ##")
 MESSAGE(STATUS "## ode_solvers                              ##")
 MESSAGE(STATUS "## poisson_solvers                          ##")
 MESSAGE(STATUS "## time_solvers                             ##")
-MESSAGE(STATUS "## selalib_level                            ##")
+MESSAGE(STATUS "## package                                  ##")
 MESSAGE(STATUS "## simulation                               ##")
 MESSAGE(STATUS "## visu_pic                                 ##")
 MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
@@ -220,3 +227,10 @@ IF(PETSC_ENABLED)
       ADD_SUBDIRECTORY(petsc_solvers)
    ENDIF(PETSC_FOUND)
 ENDIF()
+
+INCLUDE(DoxygenConfig)
+
+ENDIF(NOT SLL_BUILD_PACKAGE)
+
+
+MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

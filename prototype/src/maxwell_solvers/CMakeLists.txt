@@ -53,7 +53,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
   TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd_parallel 
                         sll_maxwell_parallel
                         sll_remap
-                        sll_low_level_file_io_parallel
+                        sll_file_io_parallel
                         sll_collective
                         sll_fft
                         sll_memory
