@@ -28,7 +28,7 @@ Clone the repository:
 Display all branches with:
  git branch -a
 
-Create the local branch and merge the remote prototype branch:
+Create the local branch and merge the remote prototype-devel branch:
  git checkout -b prototype-devel origin/prototype-devel
 
 To build the library, she reads the CMakeQuickstart.txt in this directory...

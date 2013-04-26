@@ -1,6 +1,6 @@
 program remap_test_6d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-  use remapper
+  use sll_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -392,7 +392,7 @@ program remap_test_6d
      ! local 
      ! sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
-     call sll_collective_reduce_real( &
+     call sll_collective_reduce( &
           sll_world_collective, &
           (/ real(ok) /), &
           1, &

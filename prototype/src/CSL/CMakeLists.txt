@@ -14,9 +14,8 @@ target_link_libraries(test_csl
   sll_mapped_meshes 
   ode_solvers
   sll_scalar_field_2d 
-  sll_numerical_utilities	
   geometry_functions 
-  sll_low_level_file_io 
+  sll_file_io 
   sll_memory
   sll_assertion 
   sll_working_precision 
@@ -34,9 +33,8 @@ target_link_libraries(vp_csl_bloc_unif
 	sll_interpolators
 	sll_constants
 	sll_splines
-	sll_low_level_file_io 
+	sll_file_io 
 	sll_mapped_meshes
-        sll_numerical_utilities	
 	sll_utilities
 	ode_solvers
 	sll_scalar_field_2d
@@ -54,7 +52,7 @@ target_link_libraries(vp_classic_csl
 	sll_bgk_mesh
 	sll_assertion 
         sll_constants 
-        sll_low_level_file_io 
+        sll_file_io 
         sll_distribution_function 
         sll_mapped_meshes 
         sll_utilities 
@@ -71,7 +69,7 @@ target_link_libraries(vp_non_unif_mesh
 	sll_bgk_mesh
 	sll_assertion 
         sll_constants 
-        sll_low_level_file_io 
+        sll_file_io 
         sll_distribution_function 
         sll_mapped_meshes 
         sll_utilities 

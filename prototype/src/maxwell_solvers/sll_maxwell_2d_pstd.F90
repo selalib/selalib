@@ -57,11 +57,14 @@ self%d_dy = self%d_dy / ny
 !>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
+
+
 module sll_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
+
 
 use, intrinsic :: iso_c_binding
 use sll_constants
@@ -70,21 +73,21 @@ implicit none
 private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface new
+interface initialize
  module procedure new_maxwell_2d_pstd
-end interface new
+end interface initialize
 
 !> Solve maxwell solver 2d cartesian periodic with PSTD scheme
 interface solve
- module procedure solve_maxwell_2d
+ module procedure solve_maxwell_2d_pstd
 end interface solve
 
 !> Delete maxwell solver 2d cartesian periodic with PSTD scheme
-interface free
+interface delete
  module procedure free_maxwell_2d_pstd
-end interface free
+end interface delete
 
-public :: new, free, solve, ampere_te, faraday_te, ampere_tm, faraday_tm
+public :: initialize, delete, solve, ampere_te, faraday_te, ampere_tm, faraday_tm
 
 !> Maxwell solver object
 type, public :: maxwell_pstd
@@ -177,7 +180,7 @@ end subroutine new_maxwell_2d_pstd
 
 !> this routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.
-subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
+subroutine solve_maxwell_2d_pstd(self, fx, fy, fz, dt)
 
    type(maxwell_pstd), intent(inout)          :: self !< maxwell object
    sll_real64 , intent(inout), dimension(:,:) :: fx   !< Ex or Bx
@@ -203,7 +206,7 @@ subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
       call bc_periodic(self, fx, fy, fz)
    end if
 
-end subroutine solve_maxwell_2d
+end subroutine solve_maxwell_2d_pstd
 
 
 !> Impose periodic boundary conditions
@@ -361,10 +364,10 @@ type(maxwell_pstd) :: self
 
 if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
 if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
-call dfftw_destroy_plan(self%fwx)
-call dfftw_destroy_plan(self%fwy)
-call dfftw_destroy_plan(self%bwx)
-call dfftw_destroy_plan(self%bwy)
+call fftw_destroy_plan(self%fwx)
+call fftw_destroy_plan(self%fwy)
+call fftw_destroy_plan(self%bwx)
+call fftw_destroy_plan(self%bwy)
 !if (nthreads > 1) then
 !   call dfftw_cleanup_threads(error)
 !end if
