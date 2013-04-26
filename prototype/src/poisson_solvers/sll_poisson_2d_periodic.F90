@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
@@ -215,8 +232,8 @@ type(poisson_2d_periodic) :: self
 call fftw_free(self%p_rhot)
 if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
-call dfftw_destroy_plan(self%fw)
-call dfftw_destroy_plan(self%bw)
+call fftw_destroy_plan(self%fw)
+call fftw_destroy_plan(self%bw)
 !if (nthreads > 1) then
    !call dfftw_cleanup_threads(error)
 !end if
