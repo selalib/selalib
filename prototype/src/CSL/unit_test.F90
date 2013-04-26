@@ -3,10 +3,10 @@ program unit_test
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use numeric_constants
+#include "sll_constants.h"
+#include "sll_file_io.h"
+
   use distribution_function
-  !use sll_diagnostics
-  use sll_io
   use sll_csl
   use sll_module_mapped_meshes_2d_cartesian
   use sll_gaussian_2d_initializer
@@ -14,12 +14,10 @@ program unit_test
   implicit none
   
   sll_int32 :: nc_eta1_coarse, nc_eta2_coarse
-  sll_int32 :: nc_eta1_fine, nc_eta2_fine
-  sll_real64 :: delta_eta1_coarse, delta_eta2_coarse
-  sll_real64 :: delta_eta1_fine, delta_eta2_fine
-  sll_int32 :: i1, i2, it, n_steps
-  sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, deltat, val, error, error1 
-  sll_real64 :: alpha1, alpha2
+  sll_int32 :: nc_eta1_fine!, nc_eta2_fine
+  !sll_real64 :: delta_eta1_coarse, delta_eta2_coarse
+  !sll_real64 :: delta_eta1_fine, delta_eta2_fine
+  sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max
   procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
   class(sll_mapped_mesh_2d_base), pointer   :: m
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
@@ -29,10 +27,11 @@ program unit_test
   !type(geometry_2D), pointer :: geomc, geomf
   !type(mesh_descriptor_2D), pointer :: coarse_mesh
   !type(mesh_descriptor_2D), pointer :: fine_mesh
-  type(sll_distribution_function_2D) :: dist_func_coarse, dist_func_fine
-  type(scalar_field_2D), pointer :: rotating_field
-  type(scalar_field_2D), pointer :: uniform_field
-  type(csl_workspace), pointer :: csl_work
+  type(sll_distribution_function_2D) :: dist_func_fine
+  type(sll_distribution_function_2D) :: dist_func_coarse
+  !type(scalar_field_2D), pointer :: rotating_field
+  !type(scalar_field_2D), pointer :: uniform_field
+  !type(csl_workspace), pointer :: csl_work
   character(32),parameter  :: name = 'distribution_function'
   type(init_gaussian_2d),target :: pgaussian
   type(cubic_spline_1d_interpolator), target  :: interp_eta1

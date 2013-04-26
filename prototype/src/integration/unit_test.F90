@@ -1,6 +1,6 @@
 program gauss_legendre_tester
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
   use gauss_legendre_integration
   use test_function_module
   implicit none
@@ -11,7 +11,7 @@ program gauss_legendre_tester
           gauss_legendre_integrate_1D( test_func, 0.0_f64, sll_pi/2.0, i)
   end do
   print *, 'Exact value: '
-  write (*,'(e20.15)') 0.4674011002723395
+  write (*,'(e22.15)') 0.4674011002723395
 
   print *, 'Test gauss_points()'
   print *, gauss_points(5,-1.0_f64,1.0_f64)

@@ -1,11 +1,12 @@
-module poisson_polar
+module sll_poisson_2d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
   use sll_fft
   use sll_tridiagonal
-  use numeric_constants
+  use sll_constants
+
   implicit none
   !>type sll_plan_poisson_polar
   !>type for the Poisson solver in polar coordinate
@@ -283,4 +284,4 @@ contains
     end if
   end subroutine poisson_solve_polar
 
-end module poisson_polar
+end module sll_poisson_2d_polar

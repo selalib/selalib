@@ -2,7 +2,7 @@ module sll_module_mapped_meshes_2d_cartesian
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_splines
+  use sll_cubic_splines
 #ifdef STDF95
   use sll_cubic_spline_interpolator_2d
   use sll_module_mapped_meshes_2d
@@ -11,6 +11,8 @@ module sll_module_mapped_meshes_2d_cartesian
   use sll_module_interpolators_2d_base
 #endif
   implicit none
+  ! This module ought to be eliminated since a cartesian transformation is
+  ! an overkill. It remains in case that it can be used for testing purposes.
 
 ! Definition of a 2D uniform cartesian mesh
 ! In this case
@@ -66,6 +68,8 @@ module sll_module_mapped_meshes_2d_cartesian
      procedure, pass(mesh) :: x2_at_cell => x2_cell_cartesian
      procedure, pass(mesh) :: jacobian_at_cell =>mesh_2d_jacobian_cell_cartesian
      procedure, pass(mesh) :: jacobian_matrix => jacobian_matrix_2d_cartesian
+     procedure, pass(mesh) :: inverse_jacobian_matrix => &
+          inverse_jacobian_matrix_2d_cartesian
      procedure, pass(mesh) :: x1 => x1_cartesian 
      procedure, pass(mesh) :: x2 => x2_cartesian
      procedure, pass(mesh) :: x1_cartesian_one_arg
@@ -153,12 +157,12 @@ contains
 
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: delta_2  ! cell spacing in eta2 
-    sll_real64 :: eta_1
-    sll_real64 :: eta_2
-    sll_real64 :: jacobian_val
-    sll_int32  :: i
-    sll_int32  :: j
-    sll_int32  :: ierr
+    !sll_real64 :: eta_1
+    !sll_real64 :: eta_2
+    !sll_real64 :: jacobian_val
+    !sll_int32  :: i
+    !sll_int32  :: j
+    !sll_int32  :: ierr
 
     mesh%label   = trim(label)
     mesh%nc_eta1 = npts1-1
@@ -198,10 +202,10 @@ contains
 #endif
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64             :: j11
-    sll_real64             :: j12
-    sll_real64             :: j21
-    sll_real64             :: j22
+    !sll_real64             :: j11
+    !sll_real64             :: j12
+    !sll_real64             :: j21
+    !sll_real64             :: j22
    
 #ifdef STDF95
     mapped_mesh_2d_cartesian_jacobian_matrix(1,1) = mesh%l1
@@ -215,6 +219,41 @@ contains
     jacobian_matrix_2d_cartesian(2,2) = mesh%l2
 #endif
   end function 
+
+
+#ifdef STDF95
+  function mapped_mesh_2d_cartesian_inverse_jacobian_matrix( mesh, eta1, eta2 )
+    type(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_real64, dimension(1:2,1:2)     :: &
+         mapped_mesh_2d_cartesian_inverse_jacobian_matrix
+#else
+  function inverse_jacobian_matrix_2d_cartesian( mesh, eta1, eta2 )
+    class(sll_mapped_mesh_2d_cartesian) :: mesh
+    sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_cartesian
+#endif
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    !sll_real64             :: j11
+    !sll_real64             :: j12
+    !sll_real64             :: j21
+    !sll_real64             :: j22
+    sll_real64             :: r_jac
+
+    r_jac = 1.0_f64/(mesh%l1 * mesh%l2)
+#ifdef STDF95
+    mapped_mesh_2d_cartesian_inverse_jacobian_matrix(2,2) = mesh%l1*r_jac
+    mapped_mesh_2d_cartesian_inverse_jacobian_matrix(1,2) = 0.0
+    mapped_mesh_2d_cartesian_inverse_jacobian_matrix(2,1) = 0.0
+    mapped_mesh_2d_cartesian_inverse_jacobian_matrix(1,1) = mesh%l2*r_jac
+#else 
+    inverse_jacobian_matrix_2d_cartesian(2,2) = mesh%l1*r_jac
+    inverse_jacobian_matrix_2d_cartesian(1,2) = 0.0
+    inverse_jacobian_matrix_2d_cartesian(2,1) = 0.0
+    inverse_jacobian_matrix_2d_cartesian(1,1) = mesh%l2*r_jac
+#endif
+  end function 
+
+
 
 #ifdef STDF95
   function mapped_mesh_2d_cartesian_jacobian_at_node( mesh, i, j )
