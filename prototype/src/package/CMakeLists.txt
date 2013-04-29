@@ -28,7 +28,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
-    ${SLL_DIR}/utilities/lagrange_interpolation.F90
+    ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
     ${SLL_DIR}/file_io/sll_hdf5_io.F90
@@ -58,18 +58,18 @@ SET(SLL_SOURCE_FILES
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
+      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
 
 ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/fft/fftw_module.F90
-  ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
+      ${SLL_DIR}/fft/fftw_module.F90
+      ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
 
 ELSE()
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-  ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
+      ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
 
 ENDIF()
 
@@ -102,10 +102,16 @@ IF(SLL_BUILD_PACKAGE)
    FILE(COPY ${CMAKE_SOURCE_DIR}/fftpack 
         DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME})
 
-   INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E tar zcvf ${DIST_NAME}.tar.gz ${DIST_NAME})")
-   INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
-   INSTALL(CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz)")
+   ADD_CUSTOM_TARGET(release 
+   ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
+   COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
+   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+   COMMENT "Generating Release for macports" VERBATIM)
+
 
 ENDIF(SLL_BUILD_PACKAGE)
 
-INSTALL(FILES ${SLL_MACROS} DESTINATION include COMPONENT headers)
+INSTALL( CODE
+   "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
+
+INSTALL(FILES ${SLL_MACROS}  DESTINATION include  )

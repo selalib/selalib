@@ -1,25 +1,22 @@
-module geometry_functions
+module sll_common_coordinate_transformations
 #include "sll_working_precision.h"
-  
 #include "sll_assert.h"
-
-!  use sll_splines
   use sll_constants
   implicit none
   
-  sll_real64, parameter :: c1_test = 0.1_f64
-  sll_real64, parameter :: c2_test = 0.1_f64
-
-!  type(sll_spline_2D), pointer :: spl2D_x1, spl2D_x2 
 
 contains
   
-  ! geometry functions should provide direct mapping, inverse mapping and 
-  ! jacobian all of these should be implement following the examples using 
-  ! a common name to identity on specific mapping
+  ! This module provides some common coordinate transformations in terms of the
+  ! direct mapping, inverse mapping and jacobian.  All of these should be 
+  ! implement following similar naming conventions.
 
-  ! identity function
-  !-------------------
+  ! **************************************************************************
+  !
+  !                         Identity transformation
+  !
+  ! **************************************************************************
+
   ! direct mapping
   function identity_x1 ( eta1, eta2 )
     sll_real64  :: identity_x1
@@ -87,9 +84,15 @@ contains
     identity_jac = 1.0_f64
   end function identity_jac
 
-  ! affine function (logical mesh is [0,1]x[0,1])
-  ! x1 = (b1-a1)*eta1 + a1; x2=(b2-a2)*eta2 + a2
-  !-------------------
+  ! **************************************************************************
+  !
+  !        affine transformation (logical mesh is [0,1]x[0,1]):
+  !
+  !        x1 = (b1-a1)*eta1 + a1
+  !        x2 = (b2-a2)*eta2 + a2
+  !
+  ! **************************************************************************
+
 #define A1 (-1.0_f64)
 #define B1  1.0_f64
 #define A2 (-1.0_f64)
@@ -150,10 +153,16 @@ contains
 #undef B1
 #undef A2
 #undef B2
-  ! polar coordinates (r = eta1, theta = eta2)
-  ! x1 = eta1 * cos (eta2)
-  ! x2 = eta1 * sin (eta2)
-  !-------------------
+
+  ! **************************************************************************
+  !
+  !       polar coordinate transformation (r = eta1, theta = eta2):
+  !
+  !        x1 = eta1 * cos (eta2)
+  !        x2 = eta1 * sin (eta2)
+  !
+  ! **************************************************************************
+
   ! direct mapping
   function polar_x1 ( eta1, eta2 )
     sll_real64  :: polar_x1
@@ -221,11 +230,17 @@ contains
     polar_jac = eta1
   end function polar_jac
 
+  ! **************************************************************************
+  !
+  ! "Colella transformation";
   ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
-  ! (102) p 2968)
-  ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
-  ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
-  !-------------------
+  ! (102) p 2968):
+  !
+  !        x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
+  !        x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
+  !
+  ! **************************************************************************
+
   ! direct mapping
   function sinprod_x1 ( eta1, eta2 )
     sll_real64  :: sinprod_x1
@@ -287,7 +302,8 @@ contains
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac22 = 1.0_f64 + 0.2_f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
+    sinprod_jac22 = 1.0_f64 + &
+         0.2_f64*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -296,11 +312,11 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
-    sinprod_jac = (1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)) * &
-         (1.0_f64 + 0.2_f64 * sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)) - &
-         0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2) * &
-         0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
-    
+    sinprod_jac = &
+         (1.0_f64 + 0.2_f64*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))* &
+         (1.0_f64 + 0.2_f64*sll_pi*sin(2*sll_pi*eta1)*cos (2*sll_pi*eta2)) - &
+         0.2_f64*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) * &
+         0.2_f64*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
   end function sinprod_jac
 
   ! test function
@@ -310,7 +326,7 @@ contains
     sll_real64  :: test_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_x1 = eta1 + c1_test * sin( 2.0_f64* sll_pi * eta1 )
+    test_x1 = eta1 + 0.1_f64 * sin( 2.0_f64* sll_pi * eta1 )
     !test_x1 = eta1**2
   end function test_x1
 
@@ -318,7 +334,7 @@ contains
     sll_real64  :: test_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_x2 = eta2 + c2_test * sin( 2.0_f64* sll_pi * eta2 )
+    test_x2 = eta2 + 0.1_f64 * sin( 2.0_f64* sll_pi * eta2 )
   end function test_x2
 
   ! inverse mapping
@@ -326,14 +342,14 @@ contains
     sll_real64  :: test_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    test_eta1 = x1 / c1_test
+    test_eta1 = x1 / 0.1_f64
   end function test_eta1
 
   function test_eta2 ( x1, x2 )
     sll_real64  :: test_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    test_eta2 = x2 / c2_test
+    test_eta2 = x2 / 0.1_f64
   end function test_eta2
 
   ! inverse jacobian matrix
@@ -341,7 +357,7 @@ contains
     sll_real64  :: test_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1))
+    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1))
   end function test_jac11
 
     function test_jac12 ( eta1, eta2 )
@@ -362,7 +378,7 @@ contains
     sll_real64  :: test_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
   end function test_jac22
 
   ! jacobian ie determinant of jacobian matrix
@@ -370,11 +386,13 @@ contains
     sll_real64  :: test_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* c1_test * cos( 2.0_f64* sll_pi * eta1)) * &
-         (1.0_f64 + 2.0_f64 * sll_pi* c2_test * cos( 2.0_f64* sll_pi * eta2))
+    test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1)) * &
+         (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
 
+  ! ***************************************************************************
+  !
   ! Alternative formulation for the polar coordinate transformation:
   !
   ! X1 = (Rmin + (Rmax-Rmin)*eta1)*cos(2*pi*eta2)
@@ -384,6 +402,8 @@ contains
   ! the functions that embody this transformation. This is used for testing
   ! purposes, hence the parameters R1 and R2 do not form part of the functions'
   ! interfaces. This may become a limitation and should be discussed further.
+  !
+  ! ***************************************************************************
 #define R1 0.1_f64
 #define R2 1.0_f64
   function x1_polar_f( eta1, eta2 )
@@ -447,6 +467,7 @@ contains
     zero_function = 0.0_f64
   end function zero_function
     
+
   !************************************************************************
   ! 1D maps
   !************************************************************************
@@ -488,5 +509,5 @@ contains
 #undef B
   
 
-end module geometry_functions
+end module sll_common_coordinate_transformations
 

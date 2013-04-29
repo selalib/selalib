@@ -29,6 +29,11 @@ IF(PROCESSOR_COUNT GREATER 1)
       SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+      SET(PROCS 2)
+      ADD_MPI_TEST(parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(parallel_array_initializers
+	PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
       SET(PROCS 16)
       ADD_MPI_TEST(qns2d_with_finite_diff_par test_qns2d_with_finite_diff_par ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(qns2d_with_finite_diff_par 
@@ -56,6 +61,15 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
    ADD_MPI_TEST(vp4d_sim test_vp4d_sim ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
+   ADD_MPI_TEST(vp4d_sim_general test_vp4d_sim_general ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
+   ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
    IF(PROCESSOR_COUNT GREATER 1)
 
