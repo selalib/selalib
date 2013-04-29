@@ -329,7 +329,7 @@ contains
           end do
        end do
     end if
-  end function spline_interpolate2d_disp
+  end function 
 
 
 end module sll_cubic_spline_interpolator_2d
