@@ -1,27 +1,21 @@
 ! Sample computation with the following characteristics:
-! - vlasov-poisson
-! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with arbitrary coordinate 
-!   transformation
-!   in the x,y variables.
+! - drift kinetic
+! - 4D: x1,x2,x3,v3 (or v1) with cartesian coordinate 
 ! - parallel
 
-program vlasov_poisson_4d_general
+program dk_cartesian_4d
 #include "sll_working_precision.h"
-  use sll_simulation_4d_vlasov_poisson_general
+  use sll_simulation_4d_drift_kinetic_cartesian_finite_volume
   use sll_collective
   use sll_constants
   use sll_logical_meshes
-  use sll_module_coordinate_transformations_2d
-  use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_vp_general)      :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mx
-  type(sll_logical_mesh_2d), pointer      :: mv
-  class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
+  type(sll_simulation_4d_drift_kinetic_cart_finite_volume)      :: simulation
+  type(sll_logical_mesh_4d), pointer      :: mx
   sll_real64, dimension(1:2) :: landau_params
 
   print *, 'Booting parallel environment...'
@@ -29,13 +23,14 @@ program vlasov_poisson_4d_general
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
-  filename_local = trim(filename)
+  !call getarg(1, filename)
+  !filename_local = trim(filename)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
   
-  call simulation%init_from_file(filename_local)
+  !call simulation%init_from_file(filename_local)
+
   
   ! The second is to initialize 'manually' with a routine whose parameters
   ! allow to configure the different types of objects in the simulation. For
@@ -48,37 +43,25 @@ program vlasov_poisson_4d_general
 ! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
 #define NPTS2 32
+#define NPTS3 32
+#define NPTS4 32
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_2d( NPTS1, NPTS2 )
+  mx => new_logical_mesh_4d( NPTS1, NPTS2,NPTS3, NPTS4 , &
+       eta4_min=-6.0_f64, eta4_max=6.0_f64)
 
-  ! logical mesh for velocity coordinates
-  mv => new_logical_mesh_2d( NPTS1, NPTS2, &
-       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
-       eta2_min=-6.0_f64, eta2_max=6.0_f64)
 
-  ! coordinate transformation associated with space coordinates
-  transformation_x => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
-       mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22 )
+
 
   ! define the values of the parameters for the landau initializer
-  landau_params(1) = 0.01
+  landau_params(1) = 0.1
   landau_params(2) = 2.0*sll_pi
 
   ! initialize simulation object with the above parameters
-  call initialize_vp4d_general( &
+  call initialize_dk4d( &
        simulation, &
        mx, &
-       mv, &
-       transformation_x, &
-       sll_landau_initializer_4d, &
+       sll_landau_initializer_dk_test_4d, &
        landau_params )
 
   call simulation%run( )
@@ -89,6 +72,6 @@ program vlasov_poisson_4d_general
   call sll_halt_collective()
 
 
-end program vlasov_poisson_4d_general
+end program dk_cartesian_4d
 
 

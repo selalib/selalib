@@ -37,14 +37,14 @@ contains
   ! to, for example, separate a 4D mesh into two parts, one can remain 
   ! cartesian while the other may be transformed.
   subroutine sll_4d_parallel_array_initializer( &
-    layout, &
-    mesh2d_eta1_eta2, &
-    mesh2d_eta3_eta4, &
-    array, &
-    func, &
-    func_params, &
-    transf_x1_x2, &
-    transf_x3_x4 )
+       layout, &
+       mesh2d_eta1_eta2, &
+       mesh2d_eta3_eta4, &
+       array, &
+       func, &
+       func_params, &
+       transf_x1_x2, &
+       transf_x3_x4 )
 
     type(layout_4D), pointer                    :: layout
     type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
@@ -243,6 +243,116 @@ contains
 
   end subroutine sll_4d_parallel_array_initializer
 
+
+
+  subroutine sll_4d_parallel_array_initializer_cartesian( &
+       layout, &
+       mesh4d, &
+       array, &
+       func, &
+       func_params)
+
+    type(layout_4D), pointer                    :: layout
+    type(sll_logical_mesh_4d), pointer          :: mesh4d
+    sll_real64, dimension(:,:,:,:), intent(out) :: array
+    procedure(sll_scalar_initializer_4d)        :: func
+    sll_real64, dimension(:), optional          :: func_params
+
+
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: k
+    sll_int32  :: l
+    sll_int32  :: loc_size_x1
+    sll_int32  :: loc_size_x2
+    sll_int32  :: loc_size_x3
+    sll_int32  :: loc_size_x4
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: delta3
+    sll_real64 :: delta4
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta3_min
+    sll_real64 :: eta4_min
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 :: eta3
+    sll_real64 :: eta4
+    sll_real64 :: x1
+    sll_real64 :: x2
+    sll_real64 :: x3
+    sll_real64 :: x4
+    sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
+
+    if( .not. associated(layout) ) then
+       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+            'passed layout is uninitialized.'
+    end if
+
+    if( .not. associated(mesh4d) ) then
+       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+            'passed mesh2d_eta1_eta2 argument is uninitialized.'
+    end if
+
+
+    call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
+         loc_size_x4 ) 
+
+    if( size(array,1) .lt. loc_size_x1 ) then
+       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+            'first dimension of passed array is inconsistent with ', &
+            'the size contained in the passed layout.'
+    end if
+
+    if( size(array,2) .lt. loc_size_x2 ) then
+       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+            'second dimension of passed array is inconsistent with ', &
+            'the size contained in the passed layout.'
+    end if
+
+    if( size(array,3) .lt. loc_size_x3 ) then
+       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+            'third dimension of passed array is inconsistent with ', &
+            'the size contained in the passed layout.'
+    end if
+
+    if( size(array,4) .lt. loc_size_x4 ) then
+       print *, 'sll_4d_parallel_array_initializer_cartesian error: ', &
+            'fourth dimension of passed array is inconsistent with ', &
+            'the size contained in the passed layout.'
+    end if
+
+
+
+    eta1_min = mesh4d%eta1_min
+    eta2_min = mesh4d%eta2_min
+    eta3_min = mesh4d%eta3_min
+    eta4_min = mesh4d%eta4_min
+    delta1   = mesh4d%delta_eta1
+    delta2   = mesh4d%delta_eta2
+    delta3   = mesh4d%delta_eta3
+    delta4   = mesh4d%delta_eta4
+
+    ! This initializes a node-centered array. The loop should be repeated
+    ! below if cell-centered or if arbitrary positions are specified.
+
+    do l=1,loc_size_x4
+       do k=1,loc_size_x3
+          do j=1,loc_size_x2
+             do i=1,loc_size_x1
+                gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+                eta1 = eta1_min + real(gi(1)-1,f64)*delta1
+                eta2 = eta2_min + real(gi(2)-1,f64)*delta2
+                eta3 = eta3_min + real(gi(3)-1,f64)*delta3
+                eta4 = eta4_min + real(gi(4)-1,f64)*delta4
+                array(i,j,k,l) = func(eta1,eta2,eta3,eta4,func_params)
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine sll_4d_parallel_array_initializer_cartesian
 
 
 

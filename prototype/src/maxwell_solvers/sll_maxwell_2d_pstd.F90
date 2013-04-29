@@ -73,21 +73,21 @@ implicit none
 private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface new
+interface initialize
  module procedure new_maxwell_2d_pstd
-end interface new
+end interface initialize
 
 !> Solve maxwell solver 2d cartesian periodic with PSTD scheme
 interface solve
- module procedure solve_maxwell_2d
+ module procedure solve_maxwell_2d_pstd
 end interface solve
 
 !> Delete maxwell solver 2d cartesian periodic with PSTD scheme
-interface free
+interface delete
  module procedure free_maxwell_2d_pstd
-end interface free
+end interface delete
 
-public :: new, free, solve, ampere_te, faraday_te, ampere_tm, faraday_tm
+public :: initialize, delete, solve, ampere_te, faraday_te, ampere_tm, faraday_tm
 
 !> Maxwell solver object
 type, public :: maxwell_pstd
@@ -180,7 +180,7 @@ end subroutine new_maxwell_2d_pstd
 
 !> this routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.
-subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
+subroutine solve_maxwell_2d_pstd(self, fx, fy, fz, dt)
 
    type(maxwell_pstd), intent(inout)          :: self !< maxwell object
    sll_real64 , intent(inout), dimension(:,:) :: fx   !< Ex or Bx
@@ -206,7 +206,7 @@ subroutine solve_maxwell_2d(self, fx, fy, fz, dt)
       call bc_periodic(self, fx, fy, fz)
    end if
 
-end subroutine solve_maxwell_2d
+end subroutine solve_maxwell_2d_pstd
 
 
 !> Impose periodic boundary conditions
