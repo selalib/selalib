@@ -14,7 +14,7 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_logical_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
-
+  use sll_gnuplot
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -572,6 +572,18 @@ contains
             sim%partial_reduction, &
             sim%rho_split )
        
+!!$       call sll_gnuplot_rect_2d( &
+!!$            sim%mesh2d_x%eta1_min, &
+!!$            sim%mesh2d_x%eta1_max, &
+!!$            sim%mesh2d_x%num_cells1, &
+!!$            sim%mesh2d_x%eta2_min, &
+!!$            sim%mesh2d_x%eta2_max, &
+!!$            sim%mesh2d_x%num_cells2, &
+!!$            sim%rho_split, &
+!!$            "charge_density", &
+!!$            itime, &
+!!$            ierr )
+
        ! Re-arrange rho_split in a way that permits sequential operations in 
        ! x1, to feed to the Poisson solver.
        sim%split_to_seqx1 => &

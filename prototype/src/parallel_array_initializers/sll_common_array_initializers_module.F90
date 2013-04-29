@@ -20,9 +20,9 @@ contains
   ! function, periodic in x and y, and compact-ish in vx and vy.
   !
   ! Basically:
-  !                 1                                      -(vx^2 + vy^2)
-  ! f(x,y,vx,vy) = ----(1+epsilon*cos(kx*x)*cos(ky*y))*exp(------------- )
-  !                 2*pi                                         2
+  !                 1                           -(vx^2 + vy^2)
+  ! f(x,y,vx,vy) = ----(1+epsilon*cos(kx*x))*exp(------------- )
+  !                 2*pi                              2
   !
   ! It is meant to be used in the intervals:
   ! x:  [ 0,2*pi/kx]
@@ -33,7 +33,7 @@ contains
   ! convention for the params array:
   ! params(1) = epsilon
   ! params(2) = kx
-  ! params(3) = ky
+  !
   ! The params array is declared optional to conform with the expected 
   ! function signature of the initializer subroutines, but in the particular
   ! case of the landau initializer, the params array must be passed.
@@ -48,7 +48,6 @@ contains
 
     sll_real64 :: epsilon
     sll_real64 :: kx
-    sll_real64 :: ky
     sll_real64 :: factor1
 
     if( .not. present(params) ) then
@@ -59,12 +58,40 @@ contains
 
     epsilon = params(1)
     kx      = params(2)
-    ky      = params(3)
     factor1 = 0.5_f64/sll_pi
 
     sll_landau_initializer_4d = factor1*&
-         (1.0_f64+cos(kx*x)*cos(ky*y)*exp(-0.5_f64*(vx**2+vy**2)))
+         (1.0_f64+cos(kx*x)*exp(-0.5_f64*(vx**2+vy**2)))
   end function sll_landau_initializer_4d
 
+  ! this function is a 1D landau initializer used for debugging
+  ! 4D drift kinetic simulations in variables x1,x2,x3 ,v1
+  ! the function is constant with respect to x2 and x3
+
+  function sll_landau_initializer_dk_test_4d(x1,x2,x3,v1,params ) 
+    sll_real64 :: sll_landau_initializer_dk_test_4d
+    sll_real64, intent(in) :: x1
+    sll_real64, intent(in) :: x2
+    sll_real64, intent(in) :: x3
+    sll_real64, intent(in) :: v1
+    sll_real64, dimension(:), intent(in), optional :: params
+
+    sll_real64 :: epsilon
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_dk_test_4d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx'
+       stop
+    end if
+
+    epsilon = params(1)
+    kx      = params(2)
+    factor1 = 0.5_f64/sll_pi
+
+    sll_landau_initializer_dk_test_4d = factor1*&
+         (1.0_f64+cos(kx*x1)*exp(-0.5_f64*(v1**2)))
+  end function sll_landau_initializer_dk_test_4d
 
 end module sll_common_array_initializers_module

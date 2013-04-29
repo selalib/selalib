@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !------------------------------------------------------------------------------
 ! SELALIB
 !------------------------------------------------------------------------------
@@ -33,16 +50,14 @@ module sll_poisson_2d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use sll_constants
+#include "sll_constants.h"
 
 use, intrinsic :: iso_c_binding
 implicit none
-!private
 include 'fftw3.f03'
 
-interface new
-  module procedure initialize
+interface initialize
+  module procedure initialize_poisson_2d_periodic
 end interface
 
 interface solve
@@ -50,12 +65,9 @@ interface solve
    module procedure solve_e_fields
 end interface
 
-interface free
+interface delete
    module procedure free_poisson
 end interface
-
-public :: new, solve, free, initialize
-public :: solve_potential, solve_e_fields
 
 type, public :: poisson_2d_periodic
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
@@ -69,10 +81,9 @@ type, public :: poisson_2d_periodic
    sll_real64  :: dx, dy
 end type poisson_2d_periodic
 
-
 contains
 
-subroutine initialize(self, x_min, x_max, nc_x, &
+subroutine initialize_poisson_2d_periodic(self, x_min, x_max, nc_x, &
                       y_min, y_max, nc_y, rho, error )
 
    type(poisson_2d_periodic) :: self
@@ -134,7 +145,7 @@ subroutine initialize(self, x_min, x_max, nc_x, &
    self%kx = self%kx/self%k2
    self%ky = self%ky/self%k2
 
-end subroutine initialize
+end subroutine initialize_poisson_2d_periodic
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.

@@ -1,7 +1,9 @@
 ADD_LIBRARY(sll_utilities STATIC sll_utilities.F90 
                                  tridiagonal.F90
                                  sll_toeplitz_penta_diagonal.F90
-                                 lagrange_interpolation.F90 )
+                                 lagrange_interpolation.F90
+				 sol.f
+				 muls.f )
 
 ADD_DEPENDENCIES(sll_utilities sll_memory
                                sll_assertion

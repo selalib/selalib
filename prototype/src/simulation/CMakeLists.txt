@@ -233,7 +233,8 @@ add_library( sll_simulations STATIC
   simulation_base_class.F90 
   simulation_4d_vlasov_poisson_cartesian.F90
   simulation_4d_vlasov_poisson_general.F90
-  simulation_6d_vlasov_poisson_cartesian.F90 )
+  simulation_6d_vlasov_poisson_cartesian.F90
+  simulation_4d_drift_kinetic_cartesian_finite_volume.F90 )
 
 #Add new dependencies concerning simulation_MYMETHOD.F90
 
@@ -299,6 +300,28 @@ target_link_libraries( test_vp4d_sim_general
   sll_parallel_array_initializers	
   sll_remap
   sll_collective
+  sll_constants
+  sll_file_io_parallel
+  sll_logical_meshes
+  sll_memory
+  sll_assertion 	
+  sll_working_precision
+  )
+
+add_executable(test_4d_dk_cartesian unit_test_4d_dk_cartesian.F90 )
+
+target_link_libraries( test_4d_dk_cartesian
+  sll_simulations
+  #sll_poisson_parallel
+  sll_fft
+  sll_scalar_field
+  sll_interpolators
+  sll_splines
+  sll_coordinate_transformations
+  sll_parallel_array_initializers	
+  sll_remap
+  sll_collective
+  sll_utilities
   sll_constants
   sll_file_io_parallel
   sll_logical_meshes
