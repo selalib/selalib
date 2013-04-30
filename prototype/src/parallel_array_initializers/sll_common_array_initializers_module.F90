@@ -1,6 +1,8 @@
 module sll_common_array_initializers_module
+
 #include "sll_working_precision.h"
-  use sll_constants
+#include "sll_constants.h"
+
   implicit none
 
   ! The functions specified here are meant to have the specific signature
@@ -59,9 +61,10 @@ contains
     epsilon = params(1)
     kx      = params(2)
     factor1 = 0.5_f64/sll_pi
-
+    
     sll_landau_initializer_4d = factor1*&
-         (1.0_f64+cos(kx*x)*exp(-0.5_f64*(vx**2+vy**2)))
+         (1.0_f64+cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
+
   end function sll_landau_initializer_4d
 
   ! this function is a 1D landau initializer used for debugging
