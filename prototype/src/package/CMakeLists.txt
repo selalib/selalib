@@ -53,7 +53,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
-    ${SLL_DIR}/fft/fft_utils.F90 )
+    ${SLL_DIR}/fft/sll_fft_utils.F90 )
 
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
 

@@ -20,8 +20,10 @@ module sll_fft
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+
   use fftw_module
-  use fft_utils
+  use sll_fft_utils
+
   implicit none 
 
 
