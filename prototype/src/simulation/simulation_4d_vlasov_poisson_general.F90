@@ -14,7 +14,7 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_logical_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
-  use sll_gnuplot
+  use sll_gnuplot_parallel
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -205,6 +205,7 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
+    sll_int32 :: global_indices(2)
 
     buffer_counter = 1
 
@@ -572,32 +573,29 @@ contains
             sim%partial_reduction, &
             sim%rho_split )
        
-!!$       call sll_gnuplot_rect_2d( &
-!!$            sim%mesh2d_x%eta1_min, &
-!!$            sim%mesh2d_x%eta1_max, &
-!!$            sim%mesh2d_x%num_cells1, &
-!!$            sim%mesh2d_x%eta2_min, &
-!!$            sim%mesh2d_x%eta2_max, &
-!!$            sim%mesh2d_x%num_cells2, &
-!!$            sim%rho_split, &
-!!$            "charge_density", &
-!!$            itime, &
-!!$            ierr )
 
        ! Re-arrange rho_split in a way that permits sequential operations in 
        ! x1, to feed to the Poisson solver.
        sim%split_to_seqx1 => &
             NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
        call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-       
-       call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
-       do j=1,loc_sz_x2
-          do i=1,loc_sz_x1
-             sim%rho_x1(i,j) = 1.0_f64 - sim%rho_x1(i,j)
-          end do
-       end do
-      
+       global_indices =  local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+
+       print*, global_indices
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+            sim%mesh2d_x%delta_eta1, &
+            sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%delta_eta2, &
+            sim%rho_x1, &
+            "charge_density", &
+            itime, &
+            ierr )
+       
+       call sll_halt_collective()
+       stop
+
        ! solve for the electric potential
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
