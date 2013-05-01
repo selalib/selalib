@@ -48,7 +48,7 @@ contains
     sll_real64, intent(in) :: vy
     sll_real64, dimension(:), intent(in), optional :: params
 
-    sll_real64 :: epsilon
+    sll_real64 :: eps
     sll_real64 :: kx
     sll_real64 :: factor1
 
@@ -58,8 +58,8 @@ contains
        stop
     end if
 
-    epsilon = params(1)
-    kx      = params(2)
+    eps = params(1)
+    kx  = params(2)
     factor1 = 0.5_f64/sll_pi
     
     sll_landau_initializer_4d = factor1*&
