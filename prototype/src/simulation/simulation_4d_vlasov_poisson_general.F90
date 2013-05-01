@@ -1,9 +1,11 @@
 module sll_simulation_4d_vlasov_poisson_general
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
+
   use sll_collective
   use sll_remapper
   use sll_constants
@@ -564,14 +566,22 @@ contains
        ! separate.
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
 
-       call compute_charge_density( &
-            sim%mesh2d_x, &
-            sim%mesh2d_v, &
-            size(sim%f_x3x4,1), &
-            size(sim%f_x3x4,2), &
-            sim%f_x3x4, &
-            sim%partial_reduction, &
-            sim%rho_split )
+       eps = 0.05_f64  
+       kx  = 2.*sll_pi 
+    
+       call compute_local_sizes_4d( sim%sequential_x1x2, &
+                                    loc_sz_x1,           &
+                                    loc_sz_x2,           &
+                                    loc_sz_x3,           &
+                                    loc_sz_x4 )
+
+       call compute_charge_density( sim%mesh2d_x,           &
+                                    sim%mesh2d_v,           &
+                                    size(sim%f_x3x4,1),     &
+                                    size(sim%f_x3x4,2),     &
+                                    sim%f_x3x4,             &
+                                    sim%partial_reduction,  &
+                                    sim%rho_split )
        
 
        ! Re-arrange rho_split in a way that permits sequential operations in 
@@ -582,7 +592,6 @@ contains
 
        global_indices =  local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
 
-       print*, global_indices
        call sll_gnuplot_rect_2d_parallel( &
             sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
             sim%mesh2d_x%delta_eta1, &

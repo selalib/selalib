@@ -73,24 +73,7 @@ if (iplot == 1) then
    end if
 end if
 
-if (iproc == MPI_MASTER) then
 
-   if (iplot == 1) call sll_new_file_id(gnu_id, error)
-   open(gnu_id,file=array_name//".gnu", position="append")
-   if (iplot == 1) rewind(gnu_id)
-
-   write(gnu_id,*)"set title 'Time = ",iplot,"'"
-   write(gnu_id,"(a)",advance='no') &
-   "splot '"//"0000/"//array_name//'_'//fin//".dat' w l"
-   do j = 1, nproc - 1
-      write(gnu_id,"(a)",advance='no') ", &
-      '"//cproc//"/"//array_name//'_'//fin//".dat' w l "
-   end do
-   write(gnu_id,*)
-   close(gnu_id)
-end if
-
-print*,iproc,x_min,y_min
 call sll_new_file_id(file_id, error)
 call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
 x = x_min
@@ -104,6 +87,24 @@ do i = 1, size(array,1)
    write(file_id,*)
 enddo
 close(file_id)
+
+if (iproc == MPI_MASTER) then
+
+   if (iplot == 1) call sll_new_file_id(gnu_id, error)
+   open(gnu_id,file=array_name//".gnu", position="append")
+   if (iplot == 1) rewind(gnu_id)
+
+   write(gnu_id,*)"set title 'Time = ",iplot,"'"
+   write(gnu_id,"(a)",advance='no') &
+   "splot '"//"0000/"//array_name//'_'//fin//".dat' w l"
+   do iproc = 1, nproc - 1
+      call int2string(iproc, cproc)
+      write(gnu_id,"(a)",advance='no')  &
+      ",'"//cproc//"/"//array_name//'_'//fin//".dat' w l "
+   end do
+   write(gnu_id,*)
+   close(gnu_id)
+end if
 
 end subroutine sll_gnuplot_rect_2d_parallel
 
