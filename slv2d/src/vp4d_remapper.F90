@@ -131,7 +131,7 @@ contains
     sll_real64              :: xi, eps, kx, ky
     sll_int32               :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
-    sll_real64              :: dimx, factor1
+    sll_real64              :: dimx, factor1, a, b, c, d
 
     prank = sll_get_collective_rank(sll_world_collective)
     comm  = sll_world_collective%comm
@@ -152,15 +152,12 @@ contains
     ky  = 2_f64*sll_pi/((geomx%ny)*geomx%dy)
 
     
-    factor1 =  1./( ( - dimx) &
-               *((( - dimx)* &
-               sin(2*sll_pi*geomx%x0/( - dimx)) &
-                - ( - dimx)* &
-               sin(2*sll_pi*geomx%x1/( - dimx)))*eps  &
-               - 2*sll_pi*dimx ))
+    a = geomx%x0
+    b = geomx%x1
+    c = geomx%x0
+    d = geomx%x1
+    factor1 =(c-d)*(((a-b)*sin(2*sll_pi*a/(a-b))-(a-b)*sin(2*sll_pi*b/(a-b)))*eps+2*sll_pi*a-2*sll_pi*b)
     
-
-
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
     do j=1,loc_sz_j
@@ -179,7 +176,7 @@ contains
 
        v2 = vx*vx+vy*vy
 
-       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1./(32*sll_pi*sll_pi*sll_pi)*exp(-.5*v2)*factor1
+       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*exp(-.5*v2)/factor1
 
     end do
     end do
