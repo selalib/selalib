@@ -21,7 +21,7 @@ module sll_fft
 #include "sll_memory.h"
 #include "sll_utilities.h"
   use sll_constants
-  use fft_utils
+  use sll_fft_utils
   implicit none
   
   type sll_fft_plan
