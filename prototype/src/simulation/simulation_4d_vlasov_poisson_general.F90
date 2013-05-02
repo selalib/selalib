@@ -1,9 +1,11 @@
 module sll_simulation_4d_vlasov_poisson_general
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
+
   use sll_collective
   use sll_remapper
   use sll_constants
@@ -14,7 +16,7 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_logical_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
-  use sll_gnuplot
+  use sll_gnuplot_parallel
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -205,6 +207,7 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
+    sll_int32 :: global_indices(2)
 
     buffer_counter = 1
 
@@ -366,6 +369,35 @@ contains
          sim%params, &
          transf_x1_x2=sim%transfx )
 
+    delta1 = sim%mesh2d_x%delta_eta1
+    delta2 = sim%mesh2d_x%delta_eta2
+    delta3 = sim%mesh2d_v%delta_eta1
+    delta4 = sim%mesh2d_v%delta_eta2
+
+
+    call compute_charge_density( sim%mesh2d_x,           &
+                                 sim%mesh2d_v,           &
+                                 size(sim%f_x3x4,1),     &
+                                 size(sim%f_x3x4,2),     &
+                                 sim%f_x3x4,             &
+                                 sim%partial_reduction,  &
+                                 sim%rho_split )
+    sim%split_to_seqx1 => &
+         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
+    call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
+       
+    global_indices =  local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+    !call sll_gnuplot_rect_2d_parallel( &
+    !     sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+    !     sim%mesh2d_x%delta_eta1, &
+    !     sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+    !     sim%mesh2d_x%delta_eta2, &
+    !     sim%rho_x1, &
+    !     "charge_density", &
+    !     itime, &
+    !     ierr )
+       
+
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
     ! First we need to compute the charge density. Some thoughts:
@@ -412,10 +444,6 @@ contains
     vmax3  = sim%mesh2d_v%eta1_max
     vmin4  = sim%mesh2d_v%eta2_min
     vmax4  = sim%mesh2d_v%eta2_max
-    delta1 = sim%mesh2d_x%delta_eta1
-    delta2 = sim%mesh2d_x%delta_eta2
-    delta3 = sim%mesh2d_v%delta_eta1
-    delta4 = sim%mesh2d_v%delta_eta2
 
     ! First dt/2 advection for eta1-eta2:
     
@@ -432,18 +460,18 @@ contains
     call sim%interp_x1x2%initialize( &
          nc_x1, &
          nc_x2, &
-         0.0_f64, &
-         1.0_f64, &
-         0.0_f64, &
-         1.0_f64, &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%eta1_max, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%eta2_max, &
          PERIODIC_SPLINE, &
          PERIODIC_SPLINE )
 
     do l=1,loc_sz_x4
        do k=1,loc_sz_x3
+          call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
           do j=1,nc_x2
              do i=1,nc_x1
-                call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
                 eta1   = real(i-1,f64)*delta1
                 eta2   = real(j-1,f64)*delta2
                 inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -455,17 +483,17 @@ contains
                 disp2 = eta2+alpha2
                 
                 ! This is hardwiring the periodic BC, please improve this...
-                if( disp1 .lt. 0.0 ) then
-                   disp1 = 1.0 + disp1
+                if( disp1 .lt.  sim%mesh2d_x%eta1_min ) then
+                   disp1 =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + disp1
                 end if
-                if( disp1 .gt. 1.0 ) then
-                   disp1 = disp1 - 1.0
+                if( disp1 .gt.  sim%mesh2d_x%eta1_max ) then
+                   disp1 = disp1 -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
                 end if
-                if( disp2 .lt. 0.0 ) then
-                   disp2 = 1.0 + disp2
+                if( disp2 .lt.  sim%mesh2d_x%eta1_min ) then
+                   disp2 =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + disp2
                 end if
-                if( disp2 .gt. 1.0 ) then
-                   disp2 = disp2 - 1.0
+                if( disp2 .gt.  sim%mesh2d_x%eta1_max ) then
+                   disp2 = disp2 -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
                 end if
                 
                 sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
@@ -563,41 +591,28 @@ contains
        ! separate.
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
 
-       call compute_charge_density( &
-            sim%mesh2d_x, &
-            sim%mesh2d_v, &
-            size(sim%f_x3x4,1), &
-            size(sim%f_x3x4,2), &
-            sim%f_x3x4, &
-            sim%partial_reduction, &
-            sim%rho_split )
+       call compute_local_sizes_4d( sim%sequential_x1x2, &
+                                    loc_sz_x1,           &
+                                    loc_sz_x2,           &
+                                    loc_sz_x3,           &
+                                    loc_sz_x4 )
+
+       call compute_charge_density( sim%mesh2d_x,           &
+                                    sim%mesh2d_v,           &
+                                    size(sim%f_x3x4,1),     &
+                                    size(sim%f_x3x4,2),     &
+                                    sim%f_x3x4,             &
+                                    sim%partial_reduction,  &
+                                    sim%rho_split )
        
-!!$       call sll_gnuplot_rect_2d( &
-!!$            sim%mesh2d_x%eta1_min, &
-!!$            sim%mesh2d_x%eta1_max, &
-!!$            sim%mesh2d_x%num_cells1, &
-!!$            sim%mesh2d_x%eta2_min, &
-!!$            sim%mesh2d_x%eta2_max, &
-!!$            sim%mesh2d_x%num_cells2, &
-!!$            sim%rho_split, &
-!!$            "charge_density", &
-!!$            itime, &
-!!$            ierr )
 
        ! Re-arrange rho_split in a way that permits sequential operations in 
        ! x1, to feed to the Poisson solver.
        sim%split_to_seqx1 => &
             NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
        call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-       
-       call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
-       do j=1,loc_sz_x2
-          do i=1,loc_sz_x1
-             sim%rho_x1(i,j) = 1.0_f64 - sim%rho_x1(i,j)
-          end do
-       end do
-      
+
        ! solve for the electric potential
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
@@ -687,6 +702,7 @@ contains
        end do
 
        buffer(buffer_counter) = efield_energy_total
+       print*,'nrj=',sim%my_rank, log(efield_energy_total)
        ! This should be abstracted away...
        ! Each processor keeps a local buffer, when the buffer reaches a
        ! predetermined size, we reduce ther buffer with an addition on 
@@ -747,41 +763,52 @@ contains
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-       do l=1,loc_sz_x4
-          do k=1,loc_sz_x3
-             do j=1,nc_x2
-                do i=1,nc_x1
-                   call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
-                   eta1   = real(i,f64)*delta1
-                   eta2   = real(j,f64)*delta2
-                   inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                   alpha1 = -sim%dt*(inv_j(1,1)*(vmin3 + (k-1)*delta3) + &
-                                     inv_j(1,2)*(vmin4 + (l-1)*delta4))
-                   alpha2 = -sim%dt*(inv_j(2,1)*(vmin3 + (k-1)*delta3) + &
-                                     inv_j(2,2)*(vmin4 + (l-1)*delta4))
-                   disp1 = eta1+alpha1
-                   disp2 = eta2+alpha2
-
-                   ! This is hardwiring the periodic BC, please improve this...
-                   if( disp1 .lt. 0.0 ) then
-                      disp1 = 1.0 + disp1
-                   end if
-                   if( disp1 .gt. 1.0 ) then
-                      disp1 = disp1 - 1.0
-                   end if
-                   if( disp2 .lt. 0.0 ) then
-                      disp2 = 1.0 + disp2
-                   end if
-                   if( disp2 .gt. 1.0 ) then
-                      disp2 = disp2 - 1.0
-                   end if
-
-                   sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
-                        disp1, disp2 )
-                end do
+    do l=1,loc_sz_x4
+       do k=1,loc_sz_x3
+          call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
+          do j=1,nc_x2
+             do i=1,nc_x1
+                eta1   = real(i-1,f64)*delta1
+                eta2   = real(j-1,f64)*delta2
+                inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                alpha1 = -0.5_f64*sim%dt*(inv_j(1,1)*(vmin3 + (k-1)*delta3) + &
+                     inv_j(1,2)*(vmin4 + (l-1)*delta4))
+                alpha2 = -0.5_f64*sim%dt*(inv_j(2,1)*(vmin3 + (k-1)*delta3) + &
+                     inv_j(2,2)*(vmin4 + (l-1)*delta4))
+                disp1 = eta1+alpha1
+                disp2 = eta2+alpha2
+                
+                ! This is hardwiring the periodic BC, please improve this...
+                if( disp1 .lt.  sim%mesh2d_x%eta1_min ) then
+                   disp1 =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + disp1
+                end if
+                if( disp1 .gt.  sim%mesh2d_x%eta1_max ) then
+                   disp1 = disp1 -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
+                end if
+                if( disp2 .lt.  sim%mesh2d_x%eta1_min ) then
+                   disp2 =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + disp2
+                end if
+                if( disp2 .gt.  sim%mesh2d_x%eta1_max ) then
+                   disp2 = disp2 -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
+                end if
+                
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
+                     disp1 , disp2 )
+                
+!!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
+!!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
+!!$             !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
+!!$             ! interpolate_array_disp() has an interface that must be changed
+!!$             sim%f_x1x2(:,:,k,l) = sim%interp_x1x2%interpolate_array_disp( &
+!!$                  nc_x1, &
+!!$                  nc_x2 , &
+!!$                  sim%f_x1x2(:,:,k,l), &
+!!$                  alpha1, &
+!!$                  alpha2 )
              end do
           end do
        end do
+    end do
 
   !     call plot_fields(itime, sim)
 #undef BUFFER_SIZE
