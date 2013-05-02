@@ -22,7 +22,7 @@ program vlasov_poisson_4d_general
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
-  sll_real64, dimension(1:2) :: landau_params
+  sll_real64, dimension(1:5) :: landau_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -50,7 +50,9 @@ program vlasov_poisson_4d_general
 #define NPTS2 32
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_2d( NPTS1, NPTS2 )
+  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
+       eta1_min=.0_f64, eta1_max=4.0_f64*sll_pi, &
+       eta2_min=.0_f64, eta2_max=4.0_f64*sll_pi)
 
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS1, NPTS2, &
@@ -69,8 +71,11 @@ program vlasov_poisson_4d_general
        identity_jac22 )
 
   ! define the values of the parameters for the landau initializer
-  landau_params(1) = 0.01
-  landau_params(2) = 2.0*sll_pi
+  landau_params(1) = 0.0      !eta1_min
+  landau_params(2) = 4*sll_pi !eta1_max
+  landau_params(3) = 0.0      !eta2_min
+  landau_params(4) = 4*sll_pi !eta2_max
+  landau_params(5) = 0.05     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_general( &
