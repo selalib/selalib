@@ -104,6 +104,7 @@ if (iproc == MPI_MASTER) then
    end do
    write(gnu_id,*)
    close(gnu_id)
+
 end if
 
 end subroutine sll_gnuplot_rect_2d_parallel

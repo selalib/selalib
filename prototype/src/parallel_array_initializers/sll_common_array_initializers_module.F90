@@ -33,8 +33,11 @@ contains
   ! vy: [-6,6]
 
   ! convention for the params array:
-  ! params(1) = epsilon
-  ! params(2) = kx
+  ! params(1) = eta1_min
+  ! params(2) = eta1_max
+  ! params(3) = eta2_min
+  ! params(4) = eta2_max
+  ! params(5) = epsilon
   !
   ! The params array is declared optional to conform with the expected 
   ! function signature of the initializer subroutines, but in the particular
@@ -46,7 +49,12 @@ contains
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
+
     sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
 
     sll_real64 :: eps
     sll_real64 :: kx
@@ -58,12 +66,28 @@ contains
        stop
     end if
 
-    eps = params(1)
-    kx  = params(2)
-    factor1 = 0.5_f64/sll_pi
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    kx  = 2. * sll_pi / (eta1_max - eta1_min)
+
+    !Normalization
+    !sagemath command
+    !sage : var('u v epsilon a b c d x y')
+    !sage : f(a,b,c,d,epsilon) =integral(integral(integral(integral((1+epsilon*cos(2*pi/(b-a)*x))*exp(-(u*u+v*v)/2),u,-oo,oo),v,-oo,oo),x,a,b),y,c,d)
     
-    sll_landau_initializer_4d = factor1*&
-         (1.0_f64+cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
+    factor1 =  1./( (eta2_min - eta2_max) &
+               *(((eta1_min - eta1_max)* &
+               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
+                - (eta1_min - eta1_max)* &
+               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
+               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
+    
+    sll_landau_initializer_4d = factor1 * &
+         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
 
   end function sll_landau_initializer_4d
 
