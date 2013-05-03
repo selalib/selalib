@@ -6,6 +6,7 @@ use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
 use sll_xdmf_parallel
+use sll_gnuplot_parallel
 use sll_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -120,6 +121,12 @@ contains
   
   offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
   offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
+
+  !Gnuplot output
+  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
+                                    dble(offset(2)), dble(1), &
+                                    zdata, "values", 1, error)  
+  
   
   !Begin high level version
 
@@ -160,7 +167,7 @@ contains
   end if
 
   !End low level version
-  
+
   call delete_layout_2D( layout )
   
  end subroutine plot_layout2d

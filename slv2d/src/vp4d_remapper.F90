@@ -75,23 +75,7 @@ program vp4d
 
      call transposexv(vlasov4d)
 
-     write(*,*) sum(vlasov4d%f) * (geomx%dx*geomx%dy*geomv%dx*geomv%dy)
      call compute_charge(vlasov4d)
-     do i = 1, geomx%nx
-     do j = 1, geomx%ny
-         write(11,*) geomx%xgrid(i), geomx%ygrid(j), &
-                     vlasov4d%rho(i,j),sum(vlasov4d%f(i,j,:,:))
-     end do
-         write(11,*) 
-     end do
-     do i = 1, geomv%nx
-     do j = 1, geomv%ny
-         write(12,*) geomv%xgrid(i), geomv%ygrid(j), &
-                     sum(vlasov4d%f(:,:,i,j))
-     end do
-         write(12,*) 
-     end do
-     stop
      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
 
      call advection_x3(vlasov4d,dt)
@@ -103,8 +87,8 @@ program vp4d
      call advection_x2(vlasov4d,dt)
 
      if (mod(iter,fthdiag).eq.0) then 
-      call thdiag(vlasov4d,nrj,iter*dt)
-     endif
+        call thdiag(vlasov4d,nrj,iter*dt)
+     end if
 
   end do
 
@@ -131,7 +115,7 @@ contains
     sll_real64              :: xi, eps, kx, ky
     sll_int32               :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
-    sll_real64              :: dimx, factor1, a, b, c, d
+    sll_real64              :: dimx, dimy, factor
 
     prank = sll_get_collective_rank(sll_world_collective)
     comm  = sll_world_collective%comm
@@ -147,16 +131,13 @@ contains
 
     xi  = 0.90_f64
     eps = 0.05_f64
-    dimx  = geomx%nx*geomx%dx
-    kx  = 2_f64*sll_pi/((geomx%nx)*geomx%dx)
-    ky  = 2_f64*sll_pi/((geomx%ny)*geomx%dy)
+    dimx  = 4*sll_pi !geomx%nx*geomx%dx
+    dimy  = 4*sll_pi !geomx%ny*geomx%dy
+    kx  = 2_f64*sll_pi/dimx
+    ky  = 2_f64*sll_pi/dimy
 
-    
-    a = geomx%x0
-    b = geomx%x1
-    c = geomx%x0
-    d = geomx%x1
-    factor1 =(c-d)*(((a-b)*sin(2*sll_pi*a/(a-b))-(a-b)*sin(2*sll_pi*b/(a-b)))*eps+2*sll_pi*a-2*sll_pi*b)
+    factor = dimx*dimy*(2*sll_pi+eps*(sin(kx*geomx%x1)-sin(kx*geomx%x0)))
+    factor = 2.*sll_pi
     
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
@@ -176,7 +157,7 @@ contains
 
        v2 = vx*vx+vy*vy
 
-       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*exp(-.5*v2)/factor1
+       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*exp(-.5*v2)/factor
 
     end do
     end do
