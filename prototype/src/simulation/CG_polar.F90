@@ -390,7 +390,7 @@ program cg_polar
     nr,dr,tmp/(1._f64+abs(alpha)), &
     l1/(1._f64+abs(alpha)),l2/(1._f64+abs(alpha))
 
-  open(unit=23,file='thdiag.dat')
+  open(unit=23,file='thdiaglag3b.dat')
   write(23,*)'#fcase',fcase,'scheme',scheme, &
     'mode',mode,'grad',grad,'carac',carac
   write(23,*)'#nr',nr,'ntheta',ntheta,'alpha',alpha
