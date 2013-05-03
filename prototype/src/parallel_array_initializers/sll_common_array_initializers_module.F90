@@ -43,6 +43,38 @@ contains
   ! function signature of the initializer subroutines, but in the particular
   ! case of the landau initializer, the params array must be passed.
 
+  function sll_gaussian_initializer_4d( x, y, vx, vy, params ) 
+    sll_real64 :: sll_gaussian_initializer_4d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: xc
+    sll_real64 :: yc
+    sll_real64 :: vxc
+    sll_real64 :: vyc
+
+    sll_real64 :: alpha = 1.
+    sll_real64 :: beta  = 0.0
+
+    if( .not. present(params) ) then
+       print *, 'sll_gaussian_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = xc, params(2) = yc, params(3) = vxc...'
+       stop
+    end if
+
+    xc  = params(1)
+    yc  = params(2)
+    vxc = params(3)
+    vyc = params(4)
+
+    sll_gaussian_initializer_4d = alpha*exp(-0.5_f64*((x-xc)**2+(y-yc)**2)) + &
+                                  beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
+
+  end function sll_gaussian_initializer_4d
+
   function sll_landau_initializer_4d( x, y, vx, vy, params ) 
     sll_real64 :: sll_landau_initializer_4d
     sll_real64, intent(in) :: x

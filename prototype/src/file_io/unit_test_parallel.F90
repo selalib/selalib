@@ -125,7 +125,9 @@ contains
   !Gnuplot output
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
-                                    zdata, "values", 1, error)  
+                                    zdata, "rect_mesh", 1, error)  
+
+  call sll_gnuplot_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
   !Begin high level version
