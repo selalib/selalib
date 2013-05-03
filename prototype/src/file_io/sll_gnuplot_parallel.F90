@@ -28,7 +28,6 @@ module sll_gnuplot_parallel
 use sll_ascii_io, only: sll_ascii_file_create
 use sll_utilities, only: sll_new_file_id, int2string
 use sll_collective
-use sll_remapper
 
 implicit none
 
