@@ -57,6 +57,12 @@ module sll_module_interpolators_2d_base
 
   end type sll_interpolator_2d_base
   
+
+  sll_int32, parameter :: PERIODIC_INTERP  = 0
+  sll_int32, parameter :: DIRICHLET_INTERP = 1 
+  sll_int32, parameter :: NEUMANN_INTERP   = 2 
+  sll_int32, parameter :: HERMITE_INTERP   = 3
+
   abstract interface
 
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
