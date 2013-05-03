@@ -879,7 +879,7 @@ end subroutine advect_CG_polar2
 !print*,i,j,carac(1,i,j), carac(2,i,j)
 !enddo
 !enddo
-    call advect2d_CSL_per_per_CG(geom_x,fn(1:nr,1:ntheta),nr,ntheta,buf2d,interp_case,carac,PPM_order)
+    call advect2d_CSL_CG(geom_x,fn(1:nr,1:ntheta),nr,ntheta,buf2d,interp_case,carac,PPM_order)
     fnp1=fn
 
 !print*,fn
@@ -911,7 +911,7 @@ end subroutine advect_CG_polar2
     if (plan%time_scheme==1) then
        !explicit Euler
        do i=1,nr+1
-          do j=1,ntheta
+          do j=1,ntheta+1
              theta=real(j-1,f64)*dtheta
              r=rmin+real(i-1,f64)*dr
              theta=theta-dt*plan%field(1,i,j)/r
@@ -931,9 +931,9 @@ end subroutine advect_CG_polar2
        tolth=1e-12
        !tolr=1e-4
        !tolth=1e-4
-       maxiter=1000
+       maxiter=10!00
 
-       do j=1,ntheta
+       do j=1,ntheta+1
           do i=1,nr+1
              !initialization for r interpolation
              rr=rmin+real(i-1,f64)*dr+dt/2.0_f64*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
@@ -942,24 +942,25 @@ end subroutine advect_CG_polar2
              kr=1
              iter=0
 
-             call correction_r(rr,rmin,rmax)
+             !call correction_r(rr,rmin,rmax)
              do while (iter<maxiter .and. abs(rrn-rr)>tolr)
                 r=(rr-rmin)/(rmax-rmin)
                 r=r*real(nr,f64)
                 kr=floor(r)+1
                 r=r-real(kr-1,f64)
                 rrn=rr
-                if (kr==nr+1) then
-                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*plan%field(2,kr,j)/rr
-                else if (kr>0 .and. kr<nr+1) then
+                if (kr>nr) then
+                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*plan%field(2,nr+1,j)/rr
+                else if (kr>=1 .and. kr<=nr) then
                    rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*((1.0_f64-r)*plan%field(2,kr,j)/rr+r*plan%field(2,kr+1,j)/rr)
                 else
-                   print*,kr
-                   print*,'error : kr is not in range'
-                   print*,'exiting'
-                   stop
+                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*plan%field(2,1,j)/rr
+                   !print*,kr
+                   !print*,'error : kr is not in range'
+                   !print*,'exiting'
+                   !stop
                 end if
-                call correction_r(rr,rmin,rmax)
+                !call correction_r(rr,rmin,rmax)
 
                 iter=iter+1
              end do
@@ -979,7 +980,7 @@ end subroutine advect_CG_polar2
              k=1
              iter=0
 
-             call correction_theta(theta)
+             !call correction_theta(theta)
              do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. &
                   & abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
                 theta=ttheta/(2.0_f64*sll_pi)
@@ -987,18 +988,21 @@ end subroutine advect_CG_polar2
                 theta=theta*real(ntheta,f64)
                 k=floor(theta)+1
                 theta=theta-real(k-1,f64)
-                if (k==ntheta+1) then
-                   k=1
-                   theta=0.0_f64
+                if (k>ntheta) then
+                   k=modulo(k-1,ntheta)+1
+                !   theta=0.0_f64
                 end if
                 tthetan=ttheta
-                if (kr==nr+1) then
-                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,kr,k)/rr+theta*plan%field(1,kr,k+1)/rr)
-                   ttheta=ttheta-0.5_f64*dt*plan%field(1,kr,j)/rr
-                else
+                if (kr>nr) then
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,nr+1,k)/rr+theta*plan%field(1,nr+1,k+1)/rr)
+                   ttheta=ttheta-0.5_f64*dt*plan%field(1,nr+1,j)/rr
+                else if (kr>=1 .and. kr<=nr) then
                    ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+r*plan%field(1,kr+1,k)/rr) &
                         & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr+r*plan%field(1,kr+1,k+1)/rr))
                    ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*plan%field(1,kr,j)/rr+r*plan%field(1,kr+1,j)/rr)
+                else
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,1,k)/rr+theta*plan%field(1,1,k+1)/rr)
+                   ttheta=ttheta-0.5_f64*dt*plan%field(1,1,j)/rr
                 end if
                 !call correction_theta(ttheta)
 
@@ -1014,17 +1018,19 @@ end subroutine advect_CG_polar2
              theta=theta*real(ntheta,f64)
              k=floor(theta)+1
              theta=theta-real(k-1,f64)
-             if (k==ntheta+1) then
-               k=1
-               theta=0.0_f64
+             if (k>ntheta) then
+                k=modulo(k-1,ntheta)+1
+             !   theta=0.0_f64
              end if
-             if (kr==nr+1) then
-                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(2,kr,k)/rr+theta*plan%field(2,kr,k+1)/rr)
-             else
+             if (kr>nr) then
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(2,nr+1,k)/rr+theta*plan%field(2,nr+1,k+1)/rr)
+             else if (kr>=1 .and. kr<=nr) then
                 rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/rr) &
                      & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr+r*plan%field(2,kr+1,k+1)/rr))
+             else
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(2,1,k)/rr+theta*plan%field(2,1,k+1)/rr)
              end if
-             call correction_r(rr,rmin,rmax)
+             !call correction_r(rr,rmin,rmax)
 !if ((i==1) .and. (j==1)) then
 !print*,rr,ttheta
 !endif
@@ -1038,13 +1044,13 @@ end subroutine advect_CG_polar2
 
 
        do i=0,nr
-          carac(1,i,ntheta) = carac(1,i,0)
-          carac(2,i,ntheta) = carac(2,i,0)+ntheta*dtheta
+          !carac(1,i,ntheta) = carac(1,i,0)
+          !carac(2,i,ntheta) = carac(2,i,0)+ntheta*dtheta
           carac(1,i,-1) = carac(1,i,ntheta-1)
           carac(2,i,-1) = carac(2,i,ntheta-1)-ntheta*dtheta
        enddo
        do j=-1,ntheta
-          !moe suitable for periodic conditions, but here we are Dirichlet for r
+          !more suitable for periodic conditions, but here we are Dirichlet for r
           !carac(1,nr,j) = carac(1,0,j)+nr*dr
           !carac(2,nr,j) = carac(2,0,j)          
           !carac(1,-1,j) = carac(1,nr-1,j)-nr*dr
@@ -1410,7 +1416,7 @@ end subroutine advect_CG_polar2
     close(900)  
   end subroutine printvtk2d
 
-  subroutine advect2d_CSL_per_per_CG(dom,f,N0,N1,buf2d,interp_case,carac,ppm_order) !conservative 2d remapping algorithm
+  subroutine advect2d_CSL_CG(dom,f,N0,N1,buf2d,interp_case,carac,ppm_order) !conservative 2d remapping algorithm
     sll_real64,dimension(0:1,0:1),intent(in)::dom
     sll_int32,intent(in)::N0,N1,interp_case,ppm_order
     sll_real64,dimension(0:N0-1,0:N1-1)::buf2d
@@ -1459,10 +1465,10 @@ end subroutine advect_CG_polar2
 
 	f(i+1,j+1)=0._f64
 
-        im1=modulo(i-1,N0)
-	i1=modulo(i+1,N0)
-	jm1=modulo(j-1,N1)
-	j1=modulo(j+1,N1)
+        !im1=modulo(i-1,N0)
+	!i1=modulo(i+1,N0)
+	!jm1=modulo(j-1,N1)
+	!j1=modulo(j+1,N1)
         
 	!computation of the feet of the characteristics
         xx(1)=0.25_f64*(carac(1,i-1,j-1)+carac(1,i,j-1)+carac(1,i,j)+carac(1,i-1,j))
@@ -1730,7 +1736,7 @@ endif
       deallocate(areteshb,areteshh,aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd)
     endif
 
-  end subroutine advect2d_CSL_per_per_CG
+  end subroutine advect2d_CSL_CG
 
 	subroutine aux(N0,N1,f,aretesh,aretesv,sommets,ordre,carac,dom) !used in PPM case
 
