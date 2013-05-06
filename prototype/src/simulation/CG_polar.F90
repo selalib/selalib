@@ -390,7 +390,7 @@ program cg_polar
     nr,dr,tmp/(1._f64+abs(alpha)), &
     l1/(1._f64+abs(alpha)),l2/(1._f64+abs(alpha))
 
-  open(unit=23,file='thdiaglag3b.dat')
+  open(unit=23,file='thdiag.dat')
   write(23,*)'#fcase',fcase,'scheme',scheme, &
     'mode',mode,'grad',grad,'carac',carac
   write(23,*)'#nr',nr,'ntheta',ntheta,'alpha',alpha
@@ -481,12 +481,16 @@ program cg_polar
       call SL_classic(plan_sl,f,fp1)
 
     else if (scheme==10) then
-      !semi-Lagrangian scheme remap (order 1, remap)
+      !semi-Lagrangian scheme remap (Euler, order 1)
       call SL_remap(plan_sl,f,fp1,interp_case,PPM_order)
 
     else if (scheme==2) then
       !semi-Lagrangian predictive-corrective scheme
       call SL_ordre_2(plan_sl,f,fp1)
+
+    else if (scheme==20) then
+      !semi-Lagrangian scheme remap (predictive-corrective, order 2)
+      call SL_remap_ordre_2(plan_sl,f,fp1,interp_case,PPM_order)
 
     else if (scheme==3) then
       !leap-frog scheme
