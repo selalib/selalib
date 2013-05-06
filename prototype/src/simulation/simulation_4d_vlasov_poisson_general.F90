@@ -200,10 +200,7 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
-    sll_real64 :: eta1_new
-    sll_real64 :: eta2_new
     sll_real64, dimension(1:2,1:2) :: inv_j
-    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE 1
@@ -211,7 +208,10 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
-    sll_int32 :: global_indices(2)
+    sll_int32 :: global_indices(4)
+    sll_int32 :: gi,gj,gk,gl
+    sll_int32 :: iplot
+    character(len=4) :: cplot
 
     buffer_counter = 1
 
@@ -692,9 +692,9 @@ contains
 !       do l=1,sim%mesh2d_v%num_cells2
 !          do j=1,loc_sz_x2
 !             do i=1,loc_sz_x1
-!                gi = local_to_global_2D( sim%split_rho_layout, (/i,j/))
-!                eta1   =  real(gi(1)-1,f64)*delta1
-!                eta2   =  real(gi(2)-1,f64)*delta2
+!                global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+!                eta1   =  real(global_indices(1)(1)-1,f64)*delta1
+!                eta2   =  real(global_indices(1)(2)-1,f64)*delta2
 !                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
 !                ex     =  0.0!real( sim%efield_split(i,j),f64)
 !                ey     =  0.0!aimag(sim%efield_split(i,j))
@@ -707,7 +707,7 @@ contains
 !                ! consider placing this somewhere else, probably at greater
 !                ! expense.
 !                efield_energy_total = efield_energy_total + &
-!                     sim%transfx%jacobian_at_node(gi(1),gi(2))*delta1*delta2*&
+!                     sim%transfx%jacobian_at_node(global_indices(1),global_indices(2))*delta1*delta2*&
 !                     ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
 !                      (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
 !             end do
@@ -720,9 +720,9 @@ contains
 !       do j=1,loc_sz_x2
 !          do i=1,loc_sz_x1
 !             do k=1,sim%mesh2d_v%num_cells1
-!                gi = local_to_global_2D( sim%split_rho_layout, (/i,j/))
-!                eta1   =  real(gi(1)-1,f64)*delta1
-!                eta2   =  real(gi(2)-1,f64)*delta2
+!                global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+!                eta1   =  real(global_indices(1)-1,f64)*delta1
+!                eta2   =  real(global_indices(2)-1,f64)*delta2
 !                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
 !                ex     =  0.0!real( sim%efield_split(i,j),f64)
 !                ey     =  0.0!aimag(sim%efield_split(i,j))
@@ -746,7 +746,7 @@ contains
 !          end do
 !       end do
 !
-!       global_indices =  local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
+!       global_indices(1:2) =  local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
 !
 !       
 !       call sll_gnuplot_rect_2d_parallel( &
@@ -793,45 +793,47 @@ contains
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
-            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
+    call compute_local_sizes_4d( sim%sequential_x1x2, &
+         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l=1,loc_sz_x4
        do k=1,loc_sz_x3
           call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
-          eta3 = vmin3 + (k-1)*delta3
-          eta4 = vmin4 + (l-1)*delta4
-          do j=1,nc_x2
-             do i=1,nc_x1
-                eta1   = real(i-1,f64)*delta1
-                eta2   = real(j-1,f64)*delta2
+          do j=1,loc_sz_x2
+             do i=1,loc_sz_x1
+                global_indices = local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                gi = global_indices(1)
+                gj = global_indices(2)
+                gk = global_indices(3)
+                gl = global_indices(4)
+                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*sim%mesh2d_x%delta_eta1
+                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*sim%mesh2d_x%delta_eta2
+                eta3 = sim%mesh2d_v%eta1_min + (gk-1)*sim%mesh2d_v%delta_eta1
+                eta4 = sim%mesh2d_v%eta2_min + (gl-1)*sim%mesh2d_v%delta_eta2
                 inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                alpha1 = 0.0 !-0.5_f64*sim%dt!*(inv_j(1,1)*eta3 + &
-                                        !  inv_j(1,2)*eta4)
-                alpha2 = 0.0 !-0.5_f64*sim%dt!*(inv_j(2,1)*eta3 + &
-                                        !  inv_j(2,2)*eta4)
-                eta1_new = sim%mesh2d_x%eta1_min + &
-                  modulo(eta1-sim%mesh2d_x%eta1_min-alpha1,sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min)
-                eta2_new = sim%mesh2d_x%eta2_min + &
-                  modulo(eta2-sim%mesh2d_x%eta2_min-alpha2,sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min)
+                alpha1 = 0.0 !sim%dt!*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                alpha2 = 0.0 !-sim%dt*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+!                eta1_new = sim%mesh2d_x%eta1_min + &
+!                  modulo(eta1-sim%mesh2d_x%eta1_min-alpha1,sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min)
+!                eta2_new = sim%mesh2d_x%eta2_min + &
+!                  modulo(eta2-sim%mesh2d_x%eta2_min-alpha2,sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min)
 
+                eta1 = eta1+alpha1
+                ! This is hardwiring the periodic BC, please improve this...
+                if( eta1 <  sim%mesh2d_x%eta1_min ) then
+                   eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
+                else if( eta1 >  sim%mesh2d_x%eta1_max ) then
+                   eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
+                end if
 
-!                ! This is hardwiring the periodic BC, please improve this...
-!                if( eta1_new .lt.  sim%mesh2d_x%eta1_min ) then
-!                   eta1_new =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + eta1_new
-!                end if
-!                if( eta1_new .gt.  sim%mesh2d_x%eta1_max ) then
-!                   eta1_new = eta1_new -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
-!                end if
-!                if( eta2_new .lt.  sim%mesh2d_x%eta1_min ) then
-!                   eta2_new =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + eta2_new
-!                end if
-!                if( eta2_new .gt.  sim%mesh2d_x%eta1_max ) then
-!                   eta2_new = eta2_new -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
-!                end if
-!                
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
-                     eta1 , eta2 )
+                eta2 = eta2+alpha2
+                if( eta2 <  sim%mesh2d_x%eta2_min ) then
+                   eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
+                else if( eta2 >  sim%mesh2d_x%eta2_max ) then
+                   eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                end if
+                
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
                
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
@@ -850,7 +852,7 @@ contains
 
     call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
     call compute_local_sizes_4d( sim%sequential_x3x4, &
-            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+                                 loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
     do j = 1, loc_sz_x2
        do i = 1, loc_sz_x1
@@ -858,7 +860,31 @@ contains
        end do
     end do
 
-    global_indices =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+
+   iplot = itime
+   call int2string(iplot,cplot)
+
+   open(11, file="dfxy-"//cplot//".dat")
+   do i = 1, size(sim%f_x3x4,1)
+      do j = 1, size(sim%f_x3x4,2)
+         write(11,*) sngl(x(i)),sngl(y(j)),sngl(sum(sim%f_x3x4(i,j,:,:)))
+      end do
+      write(11,*)
+   end do
+   close(11)
+   
+   open( 90, file = 'dfxy.gnu', position="append" )
+   if ( iplot == 1 ) then
+      rewind(90)
+      write(90,*)"set surf"
+      write(90,*)"set term x11"
+   end if
+
+   write(90,*)"set title 'step = ",iplot,"'"
+   write(90,"(a)")"splot 'dfxy-"//cplot//".dat' u 1:2:3 w lines"
+   close(90)
+
+    global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
 
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
