@@ -200,10 +200,20 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta3_min
+    sll_real64 :: eta4_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_max
+    sll_real64 :: eta3_max
+    sll_real64 :: eta4_max
     sll_real64 :: eta1_new
     sll_real64 :: eta2_new
+    sll_real64 :: diff
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_int32, dimension(1:2)      :: gi     ! for storing global indices
+    sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE 1
@@ -264,6 +274,18 @@ contains
     nc_x2 = sim%mesh2d_x%num_cells2
     nc_x3 = sim%mesh2d_v%num_cells1
     nc_x4 = sim%mesh2d_v%num_cells2
+    delta1 = sim%mesh2d_x%delta_eta1
+    delta2 = sim%mesh2d_x%delta_eta2
+    delta3 = sim%mesh2d_v%delta_eta1
+    delta4 = sim%mesh2d_v%delta_eta2
+    eta1_min = sim%mesh2d_x%eta1_min
+    eta2_min = sim%mesh2d_x%eta2_min
+    eta3_min = sim%mesh2d_v%eta1_min
+    eta4_min = sim%mesh2d_v%eta2_min
+    eta1_max = sim%mesh2d_x%eta1_max
+    eta2_max = sim%mesh2d_x%eta2_max
+    eta3_max = sim%mesh2d_v%eta1_max
+    eta4_max = sim%mesh2d_v%eta2_max
 
     call initialize_layout_with_distributed_4D_array( &
          nc_x1, &
@@ -383,11 +405,6 @@ contains
          sim%params, &
          transf_x1_x2=sim%transfx )
 
-
-    delta1 = sim%mesh2d_x%delta_eta1
-    delta2 = sim%mesh2d_x%delta_eta2
-    delta3 = sim%mesh2d_v%delta_eta1
-    delta4 = sim%mesh2d_v%delta_eta2
 
 
     call compute_charge_density( sim%mesh2d_x,           &
@@ -799,8 +816,11 @@ contains
     do l=1,loc_sz_x4
        do k=1,loc_sz_x3
           call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
-          eta3 = vmin3 + (k-1)*delta3
-          eta4 = vmin4 + (l-1)*delta4
+          ! we can pick any i,j index pair since we are interested in the 
+          ! global indices of k and l only.
+          gi4d(:) = local_to_global_4d(sim%sequential_x1x2, (/1,1,k,l/)) 
+          eta3 = vmin3 + (gi4d(3)-1)*delta3
+          eta4 = vmin4 + (gi4d(4)-1)*delta4
           do j=1,nc_x2
              do i=1,nc_x1
                 eta1   = real(i-1,f64)*delta1
@@ -810,29 +830,36 @@ contains
                                         !  inv_j(1,2)*eta4)
                 alpha2 = 0.0 !-0.5_f64*sim%dt!*(inv_j(2,1)*eta3 + &
                                         !  inv_j(2,2)*eta4)
-                eta1_new = sim%mesh2d_x%eta1_min + &
-                  modulo(eta1-sim%mesh2d_x%eta1_min-alpha1,sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min)
-                eta2_new = sim%mesh2d_x%eta2_min + &
-                  modulo(eta2-sim%mesh2d_x%eta2_min-alpha2,sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min)
+!!$                eta1_new = sim%mesh2d_x%eta1_min + &
+!!$                  modulo(eta1-sim%mesh2d_x%eta1_min-alpha1,sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min)
+!!$                eta2_new = sim%mesh2d_x%eta2_min + &
+!!$                  modulo(eta2-sim%mesh2d_x%eta2_min-alpha2,sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min)
+                eta1_new = eta1 + alpha1
+                eta2_new = eta2 + alpha2
 
-
-!                ! This is hardwiring the periodic BC, please improve this...
-!                if( eta1_new .lt.  sim%mesh2d_x%eta1_min ) then
-!                   eta1_new =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + eta1_new
-!                end if
-!                if( eta1_new .gt.  sim%mesh2d_x%eta1_max ) then
-!                   eta1_new = eta1_new -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
-!                end if
-!                if( eta2_new .lt.  sim%mesh2d_x%eta1_min ) then
-!                   eta2_new =  sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min + eta2_new
-!                end if
-!                if( eta2_new .gt.  sim%mesh2d_x%eta1_max ) then
-!                   eta2_new = eta2_new -  sim%mesh2d_x%eta1_max+sim%mesh2d_x%eta1_min
-!                end if
-!                
+                ! This is hardwiring the periodic BC, please improve this...
+                if( eta1_new .lt. eta1_min ) then
+                   diff     = eta1_new - eta1_min ! < zero
+                   eta1_new =  eta1_max + diff
+                end if
+                if( eta1_new .gt. eta1_max ) then
+                   diff     = eta1_new - eta1_max
+                   eta1_new = eta1_min + diff
+                end if
+                if( eta2_new .lt. eta2_min ) then
+                   diff     = eta2_new - eta2_min ! < zero
+                   eta2_new = eta2_max + diff
+                end if
+                if( eta2_new .gt. eta2_max ) then
+                   diff     = eta2_new - eta2_min
+                   eta2_new = eta2_min + diff
+                end if
+                diff = sim%interp_x1x2%interpolate_value( &
+                     eta1_new , eta2_new )
+                print *, sim%f_x1x2(i,j,k,l), diff
                 sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
-                     eta1 , eta2 )
-               
+                     eta1_new , eta2_new )
+
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
 !!$             !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
