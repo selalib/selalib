@@ -89,29 +89,20 @@ program vlasov_poisson_4d_general
 !       sinprod_jac21, &
 !       sinprod_jac22 )
 
-!  ! define the values of the parameters for the landau initializer
-!  landau_params(1) = 0.0      !eta1_min
-!  landau_params(2) = 4*sll_pi !eta1_max
-!  landau_params(3) = 0.0      !eta2_min
-!  landau_params(4) = 4*sll_pi !eta2_max
-!  landau_params(5) = 0.05     !eps
-!
-!  ! initialize simulation object with the above parameters
-!  call initialize_vp4d_general( &
-!       simulation, &
-!       mx, &
-!       mv, &
-!       transformation_x, &
-!       sll_landau_initializer_4d, &
-!       landau_params )
-
   ! define the values of the parameters for the landau initializer
-  gaussian_params(1) = 2.0*sll_pi !xc
-  gaussian_params(2) = 2.0*sll_pi !yc
-  gaussian_params(3) = 0.0        !vxc
-  gaussian_params(4) = 0.0        !vyc
-  gaussian_params(5) = 1.0        !vxc
-  gaussian_params(6) = 0.0        !vyc
+
+!!$  gaussian_params(1) = 2.0*sll_pi !xc
+!!$  gaussian_params(2) = 2.0*sll_pi !yc
+!!$  gaussian_params(3) = 0.0        !vxc
+!!$  gaussian_params(4) = 0.0        !vyc
+!!$  gaussian_params(5) = 1.0        !vxc
+!!$  gaussian_params(6) = 0.0        !vyc
+
+  landau_params(1) = 0.0      !eta1_min
+  landau_params(2) = 4*sll_pi !eta1_max
+  landau_params(3) = 0.0      !eta2_min
+  landau_params(4) = 4*sll_pi !eta2_max
+  landau_params(5) = 0.05     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_general( &
@@ -119,8 +110,23 @@ program vlasov_poisson_4d_general
        mx, &
        mv, &
        transformation_x, &
-       sll_gaussian_initializer_4d, &
-       gaussian_params )
+       sll_landau_initializer_4d, &
+       landau_params )
+
+!  ! define the values of the parameters for the landau initializer
+!  gaussian_params(1) = 3.0*sll_pi !xc
+!  gaussian_params(2) = 2.0*sll_pi !yc
+!  gaussian_params(3) = 0.0        !vxc
+!  gaussian_params(4) = 0.0        !vyc
+!
+!  ! initialize simulation object with the above parameters
+!  call initialize_vp4d_general( &
+!       simulation, &
+!       mx, &
+!       mv, &
+!       transformation_x, &
+!       sll_gaussian_initializer_4d, &
+!       gaussian_params )
   print *, ' f initialized '
 
   call simulation%run( )
