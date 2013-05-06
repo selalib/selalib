@@ -848,12 +848,12 @@ end subroutine advect_CG_polar2
     sll_real64, dimension(:,:), intent(in)  :: fn
     sll_real64, dimension(:,:), intent(out) :: fnp1
     sll_int32,intent(in) :: interp_case,PPM_order
-
+    !sll_real64, intent(in)  :: dt
 
     sll_int32 :: nr,ntheta
-    sll_real64 :: dt, dr, dtheta, rmin, rmax
+    sll_real64 :: dr, dtheta, rmin, rmax
     sll_int32 :: i,j,maxiter,iter,kr,k
-    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta,geom_x(2,2)
+    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta,geom_x(2,2),dt
     sll_real64,dimension(:,:,:),allocatable::carac
     sll_real64,dimension(:,:),allocatable::buf2d
 
@@ -1151,15 +1151,57 @@ end subroutine advect_CG_polar2
     sll_real64, dimension(:,:), intent(inout) :: in
     sll_real64, dimension(:,:), intent(out)   :: out
     sll_int32,intent(in) :: interp_case,PPM_order
+    sll_real64 :: dt
 
+    dt=plan%adv%dt
     call poisson_solve_polar(plan%poisson,in,plan%phi)
-    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
-    
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)    
     call compute_remap(plan%adv,in,out,interp_case,PPM_order)
 
     !print *,sum(abs(plan%adv%field(1,1,:)))
 
   end subroutine SL_remap
+
+
+  !>subroutine SL_remap(plan,in,out,interp_case,PPM_order)
+  !>plan : sll_SL_polar object, contains plan for Poisson, gradient and advection
+  !>in : distribution function at time n, size (nr+1)*(ntheta+1)
+  !>out : distribution function at time n+1, size (nr+1)*(ntheta+1)
+  subroutine SL_remap_ordre_2(plan,in,out,interp_case,PPM_order)
+ 
+    implicit none
+
+    type(sll_SL_polar), pointer               :: plan
+    sll_real64, dimension(:,:), intent(inout) :: in
+    sll_real64, dimension(:,:), intent(out)   :: out
+    sll_real64, dimension(:,:), allocatable   :: aux
+    sll_int32,intent(in) :: interp_case,PPM_order
+    sll_real64 :: dt
+    sll_int32 :: nr,ntheta
+
+    nr=plan%adv%nr
+    ntheta=plan%adv%ntheta
+    allocate(aux(1:nr+1,1:ntheta+1))
+    dt=plan%adv%dt/2.0_f64
+    plan%adv%dt=dt
+    aux=in
+
+    call poisson_solve_polar(plan%poisson,in,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)    
+    call compute_remap(plan%adv,aux,out,interp_case,PPM_order)
+
+    call poisson_solve_polar(plan%poisson,out,plan%phi)
+    call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+
+    dt=2._f64*dt
+    plan%adv%dt=dt
+    call compute_remap(plan%adv,in,out,interp_case,PPM_order)
+
+    deallocate(aux)
+    !print *,sum(abs(plan%adv%field(1,1,:)))
+
+  end subroutine SL_remap_ordre_2
+
 
   !>subroutine SL_classic(plan,in,out)
   !>computes the classic semi-Lagrangian scheme for Vlasov-Poisson equation
@@ -1212,6 +1254,7 @@ end subroutine advect_CG_polar2
     !we just obtained E^(n+1/2)
     plan%adv%dt = dt
     call advect_CG_polar(plan%adv,in,out)
+
   end subroutine SL_ordre_2
 
 
