@@ -55,8 +55,8 @@ implicit none
   !$OMP PRIVATE(spline_xy, spline_vxvy, interp_xy, interp_vxvy) 
 
   print*, 'set domain size'
-  x_min  =  -5.0_f64; x_max  =  5.0_f64
-  y_min  =  -5.0_f64; y_max  =  5.0_f64
+  x_min  =  -0.0_f64; x_max  =  10.0_f64
+  y_min  =  -0.0_f64; y_max  =  10.0_f64
   vx_min =  -5.0_f64; vx_max =  5.0_f64 
   vy_min =  -5.0_f64; vy_max =  5.0_f64 
   
@@ -92,7 +92,7 @@ implicit none
      do k = 1, n_vx
         do j = 1, n_y
            do i = 1, n_x
-              df(i,j,k,l) = exp(-((x(i)-2)**2+y(j)**2+vx(k)**2+vy(l)**2))
+              df(i,j,k,l) = exp(-((x(i)-5)**2+(y(j)-5)**2+vx(k)**2+vy(l)**2))
            end do
         end do
      end do
@@ -101,7 +101,7 @@ implicit none
   !$OMP END SINGLE
 
   ! run BSL method using 10 time steps and second order splitting
-  n_steps = 100
+  n_steps = 200
   dt = 0.05
 
   do it = 1, n_steps
@@ -125,8 +125,8 @@ implicit none
 
        do j = 1, n_y
         do i = 1, n_x
-           dx = dt!*vx(k)
-           dy = 0.0 !dt*vy(l)
+           dx = dt !*vx(k)
+           dy = dt !dt*vy(l)
            eta1 = x_min + (i-1)*delta_x - dx
            eta2 = y_min + (j-1)*delta_y - dy
            !eta1 = x_min + modulo(eta1-x_min-dx,x_max-x_min)
@@ -140,7 +140,7 @@ implicit none
            
            if(eta2  < y_min) then
               eta2 = eta2 + y_max - y_min
-           else if(eta1 > y_max) then
+           else if(eta2 > y_max) then
               eta2 = eta2 - y_max + y_min
            end if
 
