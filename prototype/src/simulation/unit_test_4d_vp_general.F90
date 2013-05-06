@@ -23,7 +23,7 @@ program vlasov_poisson_4d_general
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
-  sll_real64, dimension(1:5) :: gaussian_params
+  sll_real64, dimension(1:6) :: gaussian_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -110,6 +110,8 @@ program vlasov_poisson_4d_general
   gaussian_params(2) = 2.0*sll_pi !yc
   gaussian_params(3) = 0.0        !vxc
   gaussian_params(4) = 0.0        !vyc
+  gaussian_params(5) = 1.0        !vxc
+  gaussian_params(6) = 0.0        !vyc
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_general( &
