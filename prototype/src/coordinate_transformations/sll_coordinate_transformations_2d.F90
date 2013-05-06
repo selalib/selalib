@@ -56,6 +56,7 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_c
      character(len=64) :: label
      logical           :: written! = .false.
+     type(sll_logical_mesh_2d), pointer :: mesh
 #else
   type, extends(sll_coordinate_transformation_2d_base):: &
        sll_coordinate_transformation_2d_analytic
