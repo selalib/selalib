@@ -37,6 +37,7 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 html:
+	(cd ../../build; make doc)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -f *~ *.*~
 	rsync -vurz --exclude 'releases' --delete -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
