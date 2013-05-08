@@ -22,7 +22,7 @@ program vlasov_poisson_4d_general
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
-  sll_real64, dimension(1:3) :: landau_params
+  sll_real64, dimension(1:2) :: landau_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -69,9 +69,8 @@ program vlasov_poisson_4d_general
        identity_jac22 )
 
   ! define the values of the parameters for the landau initializer
-  landau_params(1) = 0.1
+  landau_params(1) = 0.01
   landau_params(2) = 2.0*sll_pi
-  landau_params(3) = 2.0*sll_pi
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_general( &
