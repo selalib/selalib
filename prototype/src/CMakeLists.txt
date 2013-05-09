@@ -121,10 +121,13 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
       ADD_SUBDIRECTORY(simulation)
-      ADD_SUBDIRECTORY(discontinuous_galerkin) 
+
+      FIND_PACKAGE(UMFPACK)
+      IF(UMFPACK_FOUND)
+         ADD_SUBDIRECTORY(discontinuous_galerkin) 
+      ENDIF(UMFPACK_FOUND)
    
    ENDIF(NOT STDF95)
-
 
    SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 
