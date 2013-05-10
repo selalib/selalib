@@ -43,7 +43,7 @@ sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
 !type(poisson_2d_periodic) :: poisson
-type(maxwell_fdtd)        :: maxwell_TE
+type(maxwell_2d_fdtd)        :: maxwell_TE
 
 class(sll_interpolator_1d_base), pointer    :: interp_1
 class(sll_interpolator_1d_base), pointer    :: interp_2
