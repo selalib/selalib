@@ -1,5 +1,4 @@
 !> \file leap_frog_1st_flow_2d.F90
-!> \namespace sll_leap_frog_1st_flow_2d
 !> \authors                    
 !> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 

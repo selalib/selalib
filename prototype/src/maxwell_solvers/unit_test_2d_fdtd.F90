@@ -33,8 +33,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_fdtd)                      :: maxwell_TE
-type(maxwell_fdtd)                      :: maxwell_TM
+type(maxwell_2d_fdtd)                      :: maxwell_TE
+type(maxwell_2d_fdtd)                      :: maxwell_TM
 
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
