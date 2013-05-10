@@ -70,7 +70,7 @@ contains
   ! 4D drift kinetic simulations in variables x1,x2,x3 ,v1
   ! the function is constant with respect to x2 and x3
 
-  function sll_landau_initializer_dk_test_4d(x1,x2,x3,v1,params ) 
+  function sll_landau_initializer_dk_test_4d(v1,x1,x2,x3,params ) 
     sll_real64 :: sll_landau_initializer_dk_test_4d
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
