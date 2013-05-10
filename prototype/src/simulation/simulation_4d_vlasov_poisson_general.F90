@@ -1,9 +1,11 @@
 module sll_simulation_4d_vlasov_poisson_general
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
+
   use sll_collective
   use sll_remapper
   use sll_constants
@@ -14,7 +16,7 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_logical_meshes
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
-
+  use sll_gnuplot_parallel
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -56,6 +58,7 @@ module sll_simulation_4d_vlasov_poisson_general
      sll_real64, dimension(:,:), allocatable     :: rho_split
      sll_real64, dimension(:,:), allocatable     :: phi_x1
      sll_real64, dimension(:,:), allocatable     :: phi_x2
+     sll_real64, dimension(:,:), allocatable     :: phi_split
      
      ! for remap
      type(layout_4D), pointer :: sequential_x1x2
@@ -63,6 +66,7 @@ module sll_simulation_4d_vlasov_poisson_general
      type(layout_2D), pointer :: rho_seq_x1
      type(layout_2D), pointer :: rho_seq_x2
      type(layout_2D), pointer :: split_rho_layout ! not sequential in any dir.
+     type(layout_2D), pointer :: split_phi_layout ! not sequential in any dir.
      type(remap_plan_2D_real64), pointer :: split_to_seqx1
      type(remap_plan_2D_real64), pointer :: seqx1_to_seqx2
      ! remaps for the electric field data
@@ -194,17 +198,20 @@ contains
     sll_real64 :: ey
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: disp1
-    sll_real64 :: disp2
+    sll_real64 :: eta3
+    sll_real64 :: eta4
     sll_real64, dimension(1:2,1:2) :: inv_j
-    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 1
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
+    sll_int32 :: global_indices(4)
+    sll_int32 :: gi,gj,gk,gl
+    sll_int32 :: iplot
+    character(len=4) :: cplot
 
     buffer_counter = 1
 
@@ -226,6 +233,7 @@ contains
     sim%rho_seq_x1       => new_layout_2D( sll_world_collective )
     sim%rho_seq_x2       => new_layout_2D( sll_world_collective )
     sim%split_rho_layout => new_layout_2D( sll_world_collective )
+    sim%split_phi_layout => new_layout_2D( sll_world_collective )
 
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
@@ -258,10 +266,10 @@ contains
     nc_x4 = sim%mesh2d_v%num_cells2
 
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1, &
-         nc_x2, &
-         nc_x3, &
-         nc_x4, &
+         nc_x1+1, &
+         nc_x2+1, &
+         nc_x3+1, &
+         nc_x4+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%nproc_x3, &
@@ -273,15 +281,15 @@ contains
     ! in any of the two available directions. We also initialize the other two
     ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
     call initialize_layout_with_distributed_2D_array( &
-         nc_x1, &
-         nc_x2, &
+         nc_x1+1, &
+         nc_x2+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%split_rho_layout )
-    
+
     call initialize_layout_with_distributed_2D_array( &
-         nc_x1, &
-         nc_x2, &
+         nc_x1+1, &
+         nc_x2+1, &
          1, &
          sim%world_size, &
          sim%rho_seq_x1 )
@@ -294,8 +302,8 @@ contains
     SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
 
     call initialize_layout_with_distributed_2D_array( &
-         nc_x1, &
-         nc_x2, &
+         nc_x1+1, &
+         nc_x2+1, &
          sim%world_size, &
          1, &
          sim%rho_seq_x2 )
@@ -319,10 +327,10 @@ contains
     sim%nproc_x2 = itemp
     
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1, &
-         nc_x2, &
-         nc_x3, &
-         nc_x4, &
+         nc_x1+1, &
+         nc_x2+1, &
+         nc_x3+1, &
+         nc_x4+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%nproc_x3, &
@@ -339,18 +347,27 @@ contains
          loc_sz_x3, &
          loc_sz_x4 )
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
+    SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
     
-    ! This layout is also useful to represent the charge density array. Since
-    ! this is a result of a local reduction on x3 and x4, the new layout is
-    ! 2D but with the same dimensions of the process mesh in x1 and x2.
-    SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
     
     call compute_local_sizes_4d( sim%sequential_x3x4, &
          loc_sz_x1, &
          loc_sz_x2, &
          loc_sz_x3, &
          loc_sz_x4 )
+
+    call initialize_layout_with_distributed_2D_array( &
+         nc_x3, &
+         nc_x4, &
+         sim%nproc_x3, &
+         sim%nproc_x4, &
+         sim%split_phi_layout )
+
+    ! This layout is also useful to represent the charge density array. Since
+    ! this is a result of a local reduction on x3 and x4, the new layout is
+    ! 2D but with the same dimensions of the process mesh in x1 and x2.
+    SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     
     ! These dimensions are also the ones needed for the array where we store
@@ -365,6 +382,24 @@ contains
          sim%init_func, &
          sim%params, &
          transf_x1_x2=sim%transfx )
+
+    delta1 = sim%mesh2d_x%delta_eta1
+    delta2 = sim%mesh2d_x%delta_eta2
+    delta3 = sim%mesh2d_v%delta_eta1
+    delta4 = sim%mesh2d_v%delta_eta2
+
+    call compute_charge_density( sim%mesh2d_x,           &
+                                 sim%mesh2d_v,           &
+                                 size(sim%f_x3x4,1),     &
+                                 size(sim%f_x3x4,2),     &
+                                 sim%f_x3x4,             &
+                                 sim%partial_reduction,  &
+                                 sim%rho_split )
+    sim%split_to_seqx1 => &
+         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
+    call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
+       
+
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -412,10 +447,6 @@ contains
     vmax3  = sim%mesh2d_v%eta1_max
     vmin4  = sim%mesh2d_v%eta2_min
     vmax4  = sim%mesh2d_v%eta2_max
-    delta1 = sim%mesh2d_x%delta_eta1
-    delta2 = sim%mesh2d_x%delta_eta2
-    delta3 = sim%mesh2d_v%delta_eta1
-    delta4 = sim%mesh2d_v%delta_eta2
 
     ! First dt/2 advection for eta1-eta2:
     
@@ -430,83 +461,25 @@ contains
     ! true anymore, so this should be changed to depend on the values stored
     ! in the logical grids.
     call sim%interp_x1x2%initialize( &
-         nc_x1, &
-         nc_x2, &
-         0.0_f64, &
-         1.0_f64, &
-         0.0_f64, &
-         1.0_f64, &
+         nc_x1+1, &
+         nc_x2+1, &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%eta1_max, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%eta2_max, &
          PERIODIC_SPLINE, &
          PERIODIC_SPLINE )
 
-    do l=1,loc_sz_x4
-       do k=1,loc_sz_x3
-          do j=1,nc_x2
-             do i=1,nc_x1
-                call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
-                eta1   = real(i-1,f64)*delta1
-                eta2   = real(j-1,f64)*delta2
-                inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                alpha1 = -0.5_f64*sim%dt*(inv_j(1,1)*(vmin3 + (k-1)*delta3) + &
-                     inv_j(1,2)*(vmin4 + (l-1)*delta4))
-                alpha2 = -0.5_f64*sim%dt*(inv_j(2,1)*(vmin3 + (k-1)*delta3) + &
-                     inv_j(2,2)*(vmin4 + (l-1)*delta4))
-                disp1 = eta1+alpha1
-                disp2 = eta2+alpha2
-                
-                ! This is hardwiring the periodic BC, please improve this...
-                if( disp1 .lt. 0.0 ) then
-                   disp1 = 1.0 + disp1
-                end if
-                if( disp1 .gt. 1.0 ) then
-                   disp1 = disp1 - 1.0
-                end if
-                if( disp2 .lt. 0.0 ) then
-                   disp2 = 1.0 + disp2
-                end if
-                if( disp2 .gt. 1.0 ) then
-                   disp2 = disp2 - 1.0
-                end if
-                
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
-                     disp1 , disp2 )
-                
-!!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
-!!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
-!!$             !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
-!!$             ! interpolate_array_disp() has an interface that must be changed
-!!$             sim%f_x1x2(:,:,k,l) = sim%interp_x1x2%interpolate_array_disp( &
-!!$                  nc_x1, &
-!!$                  nc_x2 , &
-!!$                  sim%f_x1x2(:,:,k,l), &
-!!$                  alpha1, &
-!!$                  alpha2 )
-             end do
-          end do
-       end do
-    end do
+    call advection_x1x2(sim,0.5*sim%dt)
         
-
-!!$    call sim%interp_x1%initialize( &
-!!$         nc_x1, &
-!!$         sim%mesh4d%x1_min, &
-!!$         sim%mesh4d%x1_max, &
-!!$         PERIODIC_SPLINE)
-!!$
-!!$    call sim%interp_x2%initialize( &
-!!$         nc_x2, &
-!!$         sim%mesh4d%x2_min, &
-!!$         sim%mesh4d%x2_max, &
-!!$         PERIODIC_SPLINE)
-
     call sim%interp_x3%initialize( &
-         nc_x3, &
+         nc_x3+1, &
          vmin3, &
          vmax3, &
          HERMITE_SPLINE)
 
     call sim%interp_x4%initialize( &
-         nc_x4, &
+         nc_x4+1, &
          vmin4, &
          vmax4, &
          HERMITE_SPLINE)
@@ -515,13 +488,21 @@ contains
 
     ! Initialize the poisson plan before going into the main loop.
 
-       sim%poisson_plan => new_poisson_2d_periodic_plan_cartesian_par( &
+    sim%poisson_plan => new_poisson_2d_periodic_plan_cartesian_par( &
             sim%rho_seq_x1, &
             nc_x1, &
             nc_x2, &
             1.0_f64, &    ! parametrize with mesh values
             1.0_f64 )     ! parametrize with mesh values
        
+    sim%efld_seqx1_to_seqx2 => &
+          NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
+
+    sim%seqx1_to_seqx2 => &
+         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
+
+    sim%efld_seqx2_to_split => &
+         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -531,7 +512,8 @@ contains
 
     do itime=1, sim%num_iterations
        if(sim%my_rank == 0) then
-          print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
+          print *, 'Starting iteration ', itime, ' of ', sim%num_iterations &
+                          ,buffer_result(1:BUFFER_SIZE)
        end if
        ! The splitting scheme used here is meant to attain a dt^2 accuracy.
        ! We use:
@@ -563,29 +545,26 @@ contains
        ! separate.
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
 
-       call compute_charge_density( &
-            sim%mesh2d_x, &
-            sim%mesh2d_v, &
-            size(sim%f_x3x4,1), &
-            size(sim%f_x3x4,2), &
-            sim%f_x3x4, &
-            sim%partial_reduction, &
-            sim%rho_split )
+       call compute_local_sizes_4d( sim%sequential_x1x2, &
+                                    loc_sz_x1,           &
+                                    loc_sz_x2,           &
+                                    loc_sz_x3,           &
+                                    loc_sz_x4 )
+
+       call compute_charge_density( sim%mesh2d_x,           &
+                                    sim%mesh2d_v,           &
+                                    size(sim%f_x3x4,1),     &
+                                    size(sim%f_x3x4,2),     &
+                                    sim%f_x3x4,             &
+                                    sim%partial_reduction,  &
+                                    sim%rho_split )
        
+
        ! Re-arrange rho_split in a way that permits sequential operations in 
        ! x1, to feed to the Poisson solver.
-       sim%split_to_seqx1 => &
-            NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
        call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-       
-       call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
-       do j=1,loc_sz_x2
-          do i=1,loc_sz_x1
-             sim%rho_x1(i,j) = 1.0_f64 - sim%rho_x1(i,j)
-          end do
-       end do
-      
+
        ! solve for the electric potential
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
@@ -615,10 +594,6 @@ contains
             sim%efield_x1 )
        ! note that we are 'recycling' the layouts used for the other arrays 
        ! because they represent an identical configuration.
-       sim%efld_seqx1_to_seqx2 => &
-            NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
-       sim%seqx1_to_seqx2 => &
-            NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
        call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
        call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
        call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
@@ -632,8 +607,6 @@ contains
        ! But now, to make the electric field data configuration compatible with
        ! the sequential operations in x2x3 we need still another remap 
        ! operation.
-       sim%efld_seqx2_to_split => &
-            NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
        call apply_remap_2D( &
             sim%efld_seqx2_to_split, &
             sim%efield_x2, &
@@ -642,7 +615,13 @@ contains
        ! There might be advantages to this approach if we avoid larger data 
        ! transfers like with an all-to-all transfer... however, we could end 
        ! up paying more if the simulation is latency-dominated.
-       
+      
+       call compute_local_sizes_4d( sim%sequential_x1x2, &
+                                    loc_sz_x1,           &
+                                    loc_sz_x2,           &
+                                    loc_sz_x3,           &
+                                    loc_sz_x4 )
+
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
@@ -652,9 +631,9 @@ contains
        do l=1,sim%mesh2d_v%num_cells2
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
-                gi = local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  real(gi(1)-1,f64)*delta1
-                eta2   =  real(gi(2)-1,f64)*delta2
+                global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                eta1   =  real(global_indices(1)-1,f64)*delta1
+                eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 ex     =  real( sim%efield_split(i,j),f64)
                 ey     =  aimag(sim%efield_split(i,j))
@@ -667,12 +646,57 @@ contains
                 ! consider placing this somewhere else, probably at greater
                 ! expense.
                 efield_energy_total = efield_energy_total + &
-                     sim%transfx%jacobian_at_node(gi(1),gi(2))*delta1*delta2*&
+                     sim%transfx%jacobian_at_node(global_indices(1),global_indices(2))*delta1*delta2*&
                      ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
                       (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
              end do
           end do
        end do
+
+       call compute_local_sizes_4d( sim%sequential_x3x4, &
+            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+       ! dt in vy...(x4)
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             do k=1,sim%mesh2d_v%num_cells1
+                global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                eta1   =  real(global_indices(1)-1,f64)*delta1
+                eta2   =  real(global_indices(2)-1,f64)*delta2
+                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                ex     =  real( sim%efield_split(i,j),f64)
+                ey     =  aimag(sim%efield_split(i,j))
+                alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                     nc_x4, &
+                     sim%f_x3x4(i,j,k,:), &
+                     alpha4 )
+             end do
+          end do
+       end do
+
+       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
+
+       call compute_local_sizes_4d( sim%sequential_x1x2, &
+            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+
+       do l = 1, loc_sz_x4
+          do k = 1, loc_sz_x3
+              sim%phi_split(k,l) = sum(sim%f_x1x2(:,:,k,l))
+          end do
+       end do
+
+       global_indices(1:2) =  local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
+
+       
+       call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
+         sim%mesh2d_v%delta_eta1, &
+         sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
+         sim%mesh2d_v%delta_eta2, &
+         sim%phi_split, &
+         "phi_split", &
+         itime, &
+         ierr )
 
        buffer(buffer_counter) = efield_energy_total
        ! This should be abstracted away...
@@ -703,76 +727,104 @@ contains
           buffer_counter         = buffer_counter + 1
        end if
        efield_energy_total    = 0.0_f64
-
-
-       ! dt in vy...(x4)
-       do j=1,loc_sz_x2
-          do i=1,loc_sz_x1
-             do k=1,sim%mesh2d_v%num_cells1
-                gi = local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  real(gi(1)-1,f64)*delta1
-                eta2   =  real(gi(2)-1,f64)*delta2
-                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                ex     =  real( sim%efield_split(i,j),f64)
-                ey     =  aimag(sim%efield_split(i,j))
-                alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-                sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
-                     nc_x4, &
-                     sim%f_x3x4(i,j,k,:), &
-                     alpha4 )
-             end do
-          end do
-       end do
-
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
        ! Reconfigure data. 
-       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
-            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-       do l=1,loc_sz_x4
-          do k=1,loc_sz_x3
-             do j=1,nc_x2
-                do i=1,nc_x1
-                   call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
-                   eta1   = real(i,f64)*delta1
-                   eta2   = real(j,f64)*delta2
-                   inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                   alpha1 = -sim%dt*(inv_j(1,1)*(vmin3 + (k-1)*delta3) + &
-                                     inv_j(1,2)*(vmin4 + (l-1)*delta4))
-                   alpha2 = -sim%dt*(inv_j(2,1)*(vmin3 + (k-1)*delta3) + &
-                                     inv_j(2,2)*(vmin4 + (l-1)*delta4))
-                   disp1 = eta1+alpha1
-                   disp2 = eta2+alpha2
+       call advection_x1x2(sim,sim%dt)
+       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
+       call compute_local_sizes_4d( sim%sequential_x3x4, &
+                                 loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
-                   ! This is hardwiring the periodic BC, please improve this...
-                   if( disp1 .lt. 0.0 ) then
-                      disp1 = 1.0 + disp1
-                   end if
-                   if( disp1 .gt. 1.0 ) then
-                      disp1 = disp1 - 1.0
-                   end if
-                   if( disp2 .lt. 0.0 ) then
-                      disp2 = 1.0 + disp2
-                   end if
-                   if( disp2 .gt. 1.0 ) then
-                      disp2 = disp2 - 1.0
-                   end if
-
-                   sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value( &
-                        disp1, disp2 )
-                end do
-             end do
+       do j = 1, loc_sz_x2
+          do i = 1, loc_sz_x1
+             sim%rho_split(i,j) = sum(sim%f_x3x4(i,j,:,:))
           end do
        end do
 
+      global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+
+      call sll_gnuplot_rect_2d_parallel( &
+           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*delta1,delta1, &
+           sim%mesh2d_x%eta2_min+(global_indices(2)-1)*delta2,delta2, &
+           sim%rho_split,"rho_split",itime,ierr )
+
   !     call plot_fields(itime, sim)
 #undef BUFFER_SIZE
-    end do ! main loop
+
+   end do ! main loop
+
   end subroutine run_vp4d_cartesian_general
+
+
+  subroutine advection_x1x2(sim,deltat)
+    type(sll_simulation_4d_vp_general) :: sim
+    sll_real64, intent(in) :: deltat
+    sll_int32 :: gi, gj, gk, gl
+    sll_real64, dimension(1:2,1:2) :: inv_j
+    sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
+    sll_int32, dimension(4) :: global_indices
+    sll_real64 :: alpha1, alpha2
+    sll_real64 :: eta1, eta2, eta3, eta4
+    sll_int32 :: i, j, k, l
+
+    call compute_local_sizes_4d( sim%sequential_x1x2, &
+         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
+
+    do l=1,loc_sz_x4
+       do k=1,loc_sz_x3
+          call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
+          do j=1,loc_sz_x2
+             do i=1,loc_sz_x1
+                global_indices = local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                gi = global_indices(1)
+                gj = global_indices(2)
+                gk = global_indices(3)
+                gl = global_indices(4)
+                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*sim%mesh2d_x%delta_eta1
+                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*sim%mesh2d_x%delta_eta2
+                eta3 = sim%mesh2d_v%eta1_min + (gk-1)*sim%mesh2d_v%delta_eta1
+                eta4 = sim%mesh2d_v%eta2_min + (gl-1)*sim%mesh2d_v%delta_eta2
+                inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+
+                eta1 = eta1+alpha1
+                ! This is hardwiring the periodic BC, please improve this...
+                if( eta1 <  sim%mesh2d_x%eta1_min ) then
+                   eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
+                else if( eta1 >  sim%mesh2d_x%eta1_max ) then
+                   eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
+                end if
+
+                eta2 = eta2+alpha2
+                if( eta2 <  sim%mesh2d_x%eta2_min ) then
+                   eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
+                else if( eta2 >  sim%mesh2d_x%eta2_max ) then
+                   eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                end if
+                
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+               
+!!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
+!!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
+!!$             !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
+!!$             ! interpolate_array_disp() has an interface that must be changed
+!!$             sim%f_x1x2(:,:,k,l) = sim%interp_x1x2%interpolate_array_disp( &
+!!$                  nc_x1, &
+!!$                  nc_x2 , &
+!!$                  sim%f_x1x2(:,:,k,l), &
+!!$                  alpha1, &
+!!$                  alpha2 )
+
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine advection_x1x2
 
   subroutine delete_vp4d_par_gen( sim )
     type(sll_simulation_4d_vp_general) :: sim
@@ -785,6 +837,7 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
     call delete( sim%sequential_x1x2 )
     call delete( sim%sequential_x3x4 )
     call delete( sim%rho_seq_x1 )
