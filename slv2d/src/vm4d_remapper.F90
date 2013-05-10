@@ -12,7 +12,7 @@ program vm4d
   type(geometry)            :: geomx 
   type(geometry)            :: geomv 
   type(vlasov4d_maxwell)    :: vlasov4d 
-  type(maxwell_pstd)        :: maxwell
+  type(maxwell_2d_pstd)     :: maxwell
   type(poisson_2d_periodic) :: poisson 
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
@@ -61,7 +61,7 @@ program vm4d
   call transposexv(vlasov4d)
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
-  call faraday_te(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
+  !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
   call transposevx(vlasov4d)
   call advection_x1(vlasov4d,0.5*dt)
   call advection_x2(vlasov4d,0.5*dt)
@@ -74,11 +74,10 @@ program vm4d
 
      call transposexv(vlasov4d)
      call compute_current(vlasov4d)
-     call ampere_te(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
-     call faraday_te(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
-
-     !call advection_x3x4(vlasov4d,dt)
+     call ampere(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
+     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
      call advection_x3x4(vlasov4d,dt)
+     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
      call transposevx(vlasov4d)
      call advection_x1(vlasov4d,dt)
      call advection_x2(vlasov4d,dt)

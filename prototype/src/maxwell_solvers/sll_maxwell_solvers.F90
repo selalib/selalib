@@ -19,6 +19,11 @@
 !> Pierre Navaro 
 !> @namespace sll_maxwell_solvers
 !> Common data for Maxwell solvers
+!>
+!> Solvers available:
+!> - sll_maxwell_2d_fdtd
+!> - sll_maxwell_2d_pstd
+!> - sll_maxwell_2d_periodic_cartesian_par
 module sll_maxwell_solvers
 
 #include "sll_working_precision.h"
@@ -29,79 +34,10 @@ module sll_maxwell_solvers
 
 implicit none
 
-!private
-!
-!interface new
-! module procedure new_maxwell_2d
-!end interface
-!interface solve
-! module procedure solve_maxwell_2d
-!end interface
-!interface delete
-! module procedure delete_maxwell_2d
-!end interface
-!
-!public :: new, solve, delete
-
-!Object with data to solve Maxwell equation on 2d domain
-!Maxwell in TE mode: (Ex,Ey,Hz)
-!type, public :: maxwell_2d
-!  sll_real64 :: c_light
-!  sll_real64 :: epsilon_0
-!  sll_int32  :: ix, jx, iy, jy
-!  sll_real64 :: dx, dy
-!end type maxwell_2d
-!
-!enum, bind(C)
-!   enumerator :: NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
-!end enum
-!
-!enum, bind(C)
-!   enumerator :: FDTD = 0, PSTD = 1
-!end enum
-
 contains
 
-!subroutine new_maxwell_2d(this, ix, jx, iy, jy, dx, dy, METHOD )
-!
-!   type(maxwell_2d) :: this
-!   sll_int32        :: ix, jx, iy, jy
-!   sll_real64       :: dx, dy
-!   sll_int32        :: error
-!   sll_int32        :: METHOD
-!
-!   select case(METHOD)
-!   case(FDTD)
-!      call new_maxwell_2d_fdtd
-!   end select
-!
-!end subroutine new_maxwell_2d
-!
-!subroutine solve_maxwell_2d(this, ex, ey, bz, dt)
-!
-!   type(maxwell_2d)          :: this
-!   sll_real64 , intent(inout), dimension(:,:)   :: ex, ey, bz
-!   sll_real64 , intent(in)   :: dt
-!
-!   !B(n-1/2)--> B(n+1/2) sur les pts interieurs   
-!   call faraday(this, ex, ey, bz, dt)   
-!
-!   call cl_periodiques(this, ex, ey, bz, dt)
-!
-!   !E(n)-->E(n+1) sur les pts interieurs
-!   call ampere_maxwell(this, ex, ey, bz, dt) 
-!
-!end subroutine solve_maxwell_2d
-!
-!subroutine delete_maxwell_2d(this)
-!   type(maxwell_2d), pointer :: this
-!  
-!end subroutine delete_maxwell_2d
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 !> write files to visualize 2d fields with gnuplot
-subroutine plot_fields(fname, f1, f2, iplot, time )
+subroutine plot_two_fields(fname, f1, f2, iplot, time )
 
 sll_real64, dimension(:,:), intent(in) :: f1 !< first field 2d
 sll_real64, dimension(:,:), intent(in) :: f2 !< second field 2d
@@ -146,6 +82,6 @@ write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
 write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
 close(90)
 
-end subroutine plot_fields
+end subroutine plot_two_fields
 
 end module sll_maxwell_solvers
