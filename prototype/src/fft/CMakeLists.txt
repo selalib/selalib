@@ -25,9 +25,9 @@ ELSE()
   add_definitions(-D_DEFAULTFFTLIB=SLLFFT_MOD)
 ENDIF()
 
-add_library(sll_fft STATIC ${FFT_SRC} fft_utils.F90)
+ADD_LIBRARY(sll_fft STATIC ${FFT_SRC} sll_fft_utils.F90)
 
-add_dependencies(sll_fft ${DEPENDENCIES})
+ADD_DEPENDENCIES(sll_fft ${DEPENDENCIES})
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
 	TARGET_LINK_LIBRARIES(sll_fft fftw_module)
