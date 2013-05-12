@@ -8,24 +8,12 @@ add_executable(VP_DG
   vlasov_poisson_DG.F90
 #  mod_octave_io.f90
 #  mod_octave_io_sparse.f90
-  mod_umfpack.f90
+  mod_umfpack.F90
   umf4_f77wrapper.c
 	)
 add_dependencies(VP_DG sll_file_io )
-target_link_libraries(VP_DG
-  umfpack
-  amd
-  suitesparseconfig
-  cholmod
-  colamd
-  ccolamd
-  rt
-  blas
-  lapack
-  sll_working_precision
-	sll_constants
-	sll_utilities
-	)
+target_link_libraries(VP_DG ${UMFPACK_LIBRARIES} 
+                            sll_working_precision sll_constants sll_utilities)
 
 if(0)
 add_executable(test_DG
