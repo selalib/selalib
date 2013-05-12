@@ -52,6 +52,5 @@ endif(BLAS_FOUND)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(UMFPACK DEFAULT_MSG
                                   UMFPACK_INCLUDES UMFPACK_LIBRARIES)
-INCLUDE_DIRECTORIES(${UMFPACK_INCLUDES})
 
 mark_as_advanced(UMFPACK_INCLUDES UMFPACK_LIBRARIES AMD_LIBRARY COLAMD_LIBRARY)
