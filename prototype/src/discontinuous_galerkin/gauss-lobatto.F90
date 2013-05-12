@@ -90,7 +90,7 @@ contains
     end do
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
     !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
-    !polynomials and Gauss-type quadrature rules* by _Walter Gautschi_
+    !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
     beta(0)=2.0d0
 
     !for single precision, comment the first line and uncomment the second
@@ -122,9 +122,9 @@ contains
     !< @brief construction of the derivative matrix for Gauss-Lobatto 1D
     !! @details Construction of the derivative matrix for Gauss-Lobatto 1D,
     !!          The matrix must be already allocated of size (number of point)^2.
+    !!          der(i,j)=int(Phi_i.Phi'_j)_[-1;1]²
+    !!                  =w_i.Phi'_j(x_i)
     !! @param[INOUT] gl_obj the object to delete
-
-    !derivative on the shape function
 
     type(gausslobatto1D),intent(inout) :: gl_obj
 
@@ -144,13 +144,13 @@ contains
           !the code is writen so there is no if
           do l=1,j-1
              prod=1.0d0
-             do m=1,min(j,l)-1
+             do m=1,l-1!min(j,l)-1
                 prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
              end do
-             do m=min(j,l)+1,max(j,l)-1
+             do m=l+1,j-1!min(j,l)+1,max(j,l)-1
                 prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
              end do
-             do m=max(j,l)+1,nb_pts
+             do m=j+1,nb_pts!max(j,l)+1,nb_pts
                 prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
              end do
              prod=prod/(gl_obj%node(j)-gl_obj%node(l))
@@ -158,13 +158,13 @@ contains
           end do
           do l=j+1,nb_pts
              prod=1.0d0
-             do m=1,min(j,l)-1
+             do m=1,j-1!min(j,l)-1
                 prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
              end do
-             do m=min(j,l)+1,max(j,l)-1
+             do m=j+1,l-1!min(j,l)+1,max(j,l)-1
                 prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
              end do
-             do m=max(j,l)+1,nb_pts
+             do m=l+1,nb_pts!max(j,l)+1,nb_pts
                 prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
              end do
              prod=prod/(gl_obj%node(j)-gl_obj%node(l))
