@@ -6,6 +6,7 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
 #include "sll_constants.h"
 #include "sll_interpolators.h"
 
+
   use sll_collective
   use sll_remapper
   use sll_poisson_2d_periodic_cartesian_par
@@ -14,6 +15,7 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
   use sll_simulation_base
   use sll_parallel_array_initializer_module
   use sll_logical_meshes
+  use sll_gnuplot_parallel
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
@@ -142,6 +144,15 @@ contains
     sll_int32  :: nc_x1
     sll_int32  :: nc_x2
     sll_int32  :: nc_x3
+    sll_int32  :: ranktop
+    sll_int32  :: rankbottom
+    sll_int32  :: message_id
+    sll_int32  :: datasize
+    sll_int32  :: istat
+
+    
+    sll_real64,dimension(:,:),allocatable :: plotf2d
+    sll_int32,dimension(4)  :: global_indices
 
     sim%world_size = sll_get_collective_size(sll_world_collective)  
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)  
@@ -222,10 +233,16 @@ contains
 
     ! initialize here the distribution function
 
+    ! the function is passed by the user when the init_dk subroutine is called.
+    ! The routine sll_4d_parallel_array_initializer_cartesian is in 
+    ! src/parallal_array_initializers/sll_parallel_array_initializer_module.F90
+    ! the particular initializer is in
+    ! parallel_array_initializers/sll_common_array_initializers_module.F90
+
     call sll_4d_parallel_array_initializer_cartesian( &
          sim%sequential_v3x1x2, &
          sim%mesh4d, &
-         sim%fn_v3x1x2, &
+         sim%fn_v3x1x2(:,:,:,1:loc_sz_x3), &
          sim%init_func, &
          sim%params)
 
@@ -254,6 +271,62 @@ contains
     ! original process mesh for the 4d data is NP1xNP2xNP3x1 (we start with a
     ! layout that permits a reduction in x4), then the processor mesh for the
     ! Poisson step should be NP1'xNP2'x1x1 where NP1xNP2xNP3 = NP1'xNP2'
+
+
+    ! plot the int function 
+
+
+
+    ! mpi communications  xxx
+
+    ranktop=mod(sim%my_rank+1,sim%world_size)
+    rankbottom=sim%my_rank-1
+    if (rankbottom.lt.0) rankbottom=sim%world_size-1
+    message_id=1
+    datasize=loc_sz_v3*loc_sz_x1*loc_sz_x2
+
+    ! top communications
+    write(*,*) 'coucou1',sim%my_rank,' bottom:',rankbottom,' top:',ranktop
+    Call mpi_SENDRECV(sim%fn_v3x1x2(:,:,:,loc_sz_x3),datasize, &
+         MPI_DOUBLE_PRECISION,ranktop,message_id,              &
+         sim%fn_v3x1x2(:,:,:,loc_sz_x3+1),datasize,            &
+         MPI_DOUBLE_PRECISION,ranktop,message_id,              &
+         MPI_COMM_WORLD,istat,ierr)   
+
+    ! bottom communications
+    write(*,*) 'coucou2',sim%my_rank
+    Call mpi_SENDRECV(sim%fn_v3x1x2(:,:,:,1),datasize, &
+         MPI_DOUBLE_PRECISION,rankbottom,message_id,              &
+         sim%fn_v3x1x2(:,:,:,0),datasize,            &
+         MPI_DOUBLE_PRECISION,rankbottom,message_id,              &
+         MPI_COMM_WORLD,istat,ierr)       
+
+    write(*,*) 'end comm',sim%my_rank
+
+    call compute_local_sizes_4d( sim%sequential_v3x1x2, &
+         loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 
+    
+    allocate (plotf2d(loc_sz_v3,loc_sz_x1))
+
+    do i = 1, loc_sz_x1
+       do j = 1, loc_sz_v3
+          plotf2d(j,i) = sim%fn_v3x1x2(j,i,1,0)
+       end do
+    end do
+    
+    global_indices(1:4) =  local_to_global_4D(sim%sequential_v3x1x2, (/1,1,1,1/) )
+    
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1, &
+         sim%mesh4d%delta_eta1, &
+         sim%mesh4d%eta2_min+(global_indices(2)-1)*sim%mesh4d%delta_eta2, &
+         sim%mesh4d%delta_eta2, &
+         plotf2d, &
+         "plotf2d", &
+         0, &
+         ierr)
+    
+
   end subroutine run_dk_cart
 
   subroutine delete_dk_cart( sim )
