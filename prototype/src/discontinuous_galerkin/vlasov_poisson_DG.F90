@@ -17,8 +17,8 @@
 !------------------------------------------------------------------------------
 module Poisson4dg
 #include "sll_working_precision.h"
+#include "sll_integration.h"
 
-  use gausslobatto
   use mod_sparse
 
   implicit none
