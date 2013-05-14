@@ -1,20 +1,20 @@
 SET(SLL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 SET(SLL_MACROS
-	 ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
-	 ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
-	 ${SLL_DIR}/memory/sll_memory.h
-	 ${SLL_DIR}/precision/sll_working_precision.h
-	 ${SLL_DIR}/assert/sll_assert.h
-	 ${SLL_DIR}/constants/sll_constants.h
-	 ${SLL_DIR}/utilities/sll_utilities.h
-	 ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
-	 ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
-	 ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
-	 ${SLL_DIR}/interpolators/sll_interpolators.h
-	 ${SLL_DIR}/splines/sll_splines.h
-	 ${SLL_DIR}/file_io/sll_file_io.h
-	 ${SLL_DIR}/fft/sll_fft.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
+    ${SLL_DIR}/memory/sll_memory.h
+    ${SLL_DIR}/precision/sll_working_precision.h
+    ${SLL_DIR}/assert/sll_assert.h
+    ${SLL_DIR}/constants/sll_constants.h
+    ${SLL_DIR}/utilities/sll_utilities.h
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
+    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
+    ${SLL_DIR}/interpolators/sll_interpolators.h
+    ${SLL_DIR}/splines/sll_splines.h
+    ${SLL_DIR}/file_io/sll_file_io.h
+    ${SLL_DIR}/fft/sll_fft.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h)
@@ -40,7 +40,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_xml_io.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
-    ${SLL_DIR}/electric_field_accumulators/electric_field_2d.F90
+    ${SLL_DIR}/electric_field_accumulators/sll_electric_field_2d.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
@@ -97,8 +97,6 @@ ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 SET(DIST_NAME "selalib-1.0.0")
 
-#FILE(COPY ${SLL_SOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-
 ADD_CUSTOM_TARGET(release 
 COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
@@ -120,6 +118,6 @@ FOREACH(_file ${SLL_SOURCE_FILES})
 ENDFOREACH(_file)
 
 INSTALL( CODE
-   "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
+   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/fortran\")")
 
 INSTALL(FILES ${SLL_MACROS}  DESTINATION include  )
