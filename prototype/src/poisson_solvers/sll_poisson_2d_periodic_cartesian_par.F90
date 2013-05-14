@@ -177,6 +177,8 @@ contains
      new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
   end function new_poisson_2d_periodic_plan_cartesian_par
 
+  ! Note that the equation that is solved is:  -laplacian(phi) = rho, yes, 
+  ! there is a minus sign there.
   subroutine solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
     type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
     sll_real64, dimension(:,:)                     :: rho

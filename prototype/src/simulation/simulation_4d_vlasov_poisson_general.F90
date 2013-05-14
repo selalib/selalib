@@ -589,9 +589,22 @@ contains
        ! x1, to feed to the Poisson solver.
        call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
 
-       ! Apply the neutralizing ion background, what value to use? function?
-       ! The original charge density data?
-       sim%rho_x1(:,:) =  1.0_f64 - sim%rho_x1(:,:)! - 1.0_f64
+       ! It is important to remember a particular property of the periodic 
+       ! poisson solver used here: For a given input charge density 
+       ! configuration, there is an infinite number of solutions for the 
+       ! potential, all differing by a constant. By design, the solver will
+       ! return the solution with ZERO-MEAN. This implies that if given as
+       ! input a uniform blob of charge, the solver will return a potential
+       ! field with value equal to zero everywhere. In other words, the solver
+       ! will only 'react' to nonuniform inputs.
+       !
+       ! The above is important when dealing with certain tests or certain
+       ! model assumptions. For example in a Landau-damping test, one may
+       ! want to apply a uniform neutralizing field for instance by adding or
+       ! subtracting a constant value. This step becomes unnecessary since
+       ! the answer returned by the solver will not be affected.
+       !
+       !    sim%rho_x1(:,:) = sim%rho_x1(:,:) - 1.0_f64  <--- unnecessary step
 
        ! solve for the electric potential
        call solve_poisson_2d_periodic_cartesian_par( &
@@ -603,10 +616,10 @@ contains
             local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
        
        call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
-         sim%mesh2d_v%delta_eta1, &
-         sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
-         sim%mesh2d_v%delta_eta2, &
+         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%delta_eta2, &
          sim%phi_x1, &
          "phi_x1", &
          itime, &
@@ -692,8 +705,8 @@ contains
                      sim%transfx%jacobian_at_node(global_indices(1),&
                                                   global_indices(2))*&
                                                   delta1*delta2*&
-                     ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
-                      (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
+                     sqrt(((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
+                      (inv_j(1,2)*ex + inv_j(2,2)*ey)**2))
              end do
           end do
        end do
