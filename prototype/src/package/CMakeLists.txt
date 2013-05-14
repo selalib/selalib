@@ -109,12 +109,15 @@ COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 COMMENT "Generating Release for macports" VERBATIM)
 
+ADD_CUSTOM_TARGET(make_source_dir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+ADD_DEPENDENCIES(release make_source_dir)
+
 FOREACH(_file ${SLL_SOURCE_FILES})
    get_filename_component(_target ${_file} NAME_WE)
    ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
    ADD_DEPENDENCIES(release ${_target}_f90)
+   ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
 ENDFOREACH(_file)
-
 
 INSTALL( CODE
    "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
