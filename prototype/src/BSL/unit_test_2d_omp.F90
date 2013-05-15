@@ -117,7 +117,7 @@ implicit none
      !$OMP END SINGLE
 
 
-#ifndef DEBUG
+#ifdef _OPENMP
      !$OMP BARRIER
      t0=OMP_GET_WTIME()
 #endif
