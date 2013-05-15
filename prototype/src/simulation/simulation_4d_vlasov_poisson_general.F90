@@ -607,23 +607,26 @@ contains
        !    sim%rho_x1(:,:) = sim%rho_x1(:,:) - 1.0_f64  <--- unnecessary step
 
        ! solve for the electric potential
+       ! but first adjust the sign of the source term (the sign should come
+       ! automatically from the computation of the charge density, please fix)
+       sim%rho_x1(:,:) = - sim%rho_x1(:,:) 
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
  
-       global_indices(1:2) =  &
-            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-       
-       call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-         sim%mesh2d_x%delta_eta2, &
-         sim%phi_x1, &
-         "phi_x1", &
-         itime, &
-         ierr )
+!!$       global_indices(1:2) =  &
+!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+!!$       
+!!$       call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+!!$         sim%mesh2d_x%delta_eta1, &
+!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+!!$         sim%mesh2d_x%delta_eta2, &
+!!$         sim%phi_x1, &
+!!$         "phi_x1", &
+!!$         itime, &
+!!$         ierr )
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !
        ! Here is where Aurore's general geometry poisson should be included...
@@ -1035,10 +1038,10 @@ contains
     
     ! FIXME: check arrays sizes
     
-    r_delta = 1.0_f64/delta
+    r_delta = 0.5_f64/delta
 
     ! Do first point:
-    efield(1) = r_delta*(-1.5_f64*phi(1) + 2.0_f64*phi(2) - 0.5_f64*phi(3))
+    efield(1) = 2.0*r_delta*(-1.5_f64*phi(1) + 2.0_f64*phi(2) - 0.5_f64*phi(3))
     
     ! Do the internal values:
     do i=2,num_pts-1
@@ -1046,7 +1049,7 @@ contains
     end do
     
     ! Do last point:
-    efield(num_pts) = r_delta*( 0.5_f64*phi(num_pts-2) - &
+    efield(num_pts) = 2.0*r_delta*( 0.5_f64*phi(num_pts-2) - &
          2.0_f64*phi(num_pts-1) + &
          1.5_f64*phi(num_pts) )
   end subroutine compute_electric_field_on_line
@@ -1075,12 +1078,12 @@ contains
     ! Compute the electric field values on the left and right edges.
     do j=1,num_pts_x2
        ! left:
-       ex = r_delta*(-1.5_f64*phi_x1(1,j) + &
+       ex = -r_delta*(-1.5_f64*phi_x1(1,j) + &
                       2.0_f64*phi_x1(2,j) - &
                       0.5_f64*phi_x1(3,j) )
        efield_x1(1,j) = cmplx(ex,f64)  
        ! right:
-       ex = r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
+       ex = -r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
                      2.0_f64*phi_x1(num_pts_x1-1,j)+&
                      1.5_f64*phi_x1(num_pts_x1,j) )
        efield_x1(num_pts_x1,j) = cmplx(ex,f64) 
@@ -1089,7 +1092,7 @@ contains
     ! Electric field in interior points
     do j=1,num_pts_x2
        do i=2, num_pts_x1-1
-          ex = r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
+          ex = -r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
           efield_x1(i,j) = cmplx(ex,f64)
        end do
     end do
@@ -1129,12 +1132,12 @@ contains
        ! bottom:
        ! ... there has to be a better way to do this in fortran :-(
        ex = real(efield_x2(i,1),f64)
-       ey = r_delta*(-1.5_f64*phi_x2(i,1) + 2.0_f64*phi_x2(i,2) - &
+       ey = -r_delta*(-1.5_f64*phi_x2(i,1) + 2.0_f64*phi_x2(i,2) - &
                       0.5_f64*phi_x2(i,3))
        efield_x2(i,1) = cmplx(ex,ey,f64)
        ! top:
        ex = real(efield_x2(i,num_pts_x1),f64)
-       ey = r_delta*(0.5_f64*phi_x2(i,num_pts_x1-2) - &
+       ey = -r_delta*(0.5_f64*phi_x2(i,num_pts_x1-2) - &
                      2.0_f64*phi_x2(i,num_pts_x1-1)+&
                      1.5_f64*phi_x2(i,num_pts_x1))
        efield_x2(i,num_pts_x1) = cmplx(ex,ey,f64) 
@@ -1144,7 +1147,7 @@ contains
     do j=2,num_pts_x2-1
        do i=1, num_pts_x1
           ex = real(efield_x2(i,j),f64)
-          ey = r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
+          ey = -r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
           efield_x2(i,j) = cmplx(ex,ey,f64) 
        end do
     end do
@@ -1179,7 +1182,6 @@ contains
     sll_real64                               :: displacement
 
     do i=1, num_pts
-       ! Why is the negative sign there?
        displacement = -efield(i)*0.5_f64*dt
        f_line = f_interp%interpolate_array_disp(num_pts, f_line, displacement)
     end do
