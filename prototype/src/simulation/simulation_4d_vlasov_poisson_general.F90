@@ -809,7 +809,7 @@ contains
 
 
   subroutine advection_x1x2(sim,deltat)
-    type(sll_simulation_4d_vp_general) :: sim
+    class(sll_simulation_4d_vp_general) :: sim
     sll_real64, intent(in) :: deltat
     sll_int32 :: gi, gj, gk, gl
     sll_real64, dimension(1:2,1:2) :: inv_j
