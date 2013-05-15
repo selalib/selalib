@@ -54,7 +54,12 @@ implicit none
   !$OMP DEFAULT(SHARED)           &
   !$OMP PRIVATE(spline_xy, spline_vxvy, interp_xy, interp_vxvy) 
 
-  print*, 'set domain size'
+  !$OMP CRITICAL
+#ifdef _OPENMP
+  PRINT *, OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM()
+  !$OMP END CRITICAL
+#endif
+
   x_min  =  -0.0_f64; x_max  =  10.0_f64
   y_min  =  -0.0_f64; y_max  =  10.0_f64
   vx_min =  -5.0_f64; vx_max =  5.0_f64 
@@ -151,7 +156,7 @@ implicit none
      end do
      end do
 
-#ifndef DEBUG
+#ifdef _OPENMP
      !$OMP BARRIER
      t1=OMP_GET_WTIME()
 #endif
