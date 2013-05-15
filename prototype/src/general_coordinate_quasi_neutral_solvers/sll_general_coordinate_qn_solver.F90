@@ -40,6 +40,16 @@ contains
     SLL_ALLOCATE(K_a21_loc(quadrature_degree,quadrature_degree),ierr)
     SLL_ALLOCATE(K_a22_loc(quadrature_degree,quadrature_degree),ierr)
 
+    ! First task something akin to the build_local_matrices() in test_elip.f90
+    ! new_ecs_plan() deals with the connectivities, allocates the matrices
+    ! 
+    ! create_csr() compression sparse row stuff
+    !
+    ! csr_matrix, allocation 
+    !
+    ! loop over domain cells build local matrices M_c_loc , global
+    !
+    ! apr_B is the source, apr_U is the solution
   end subroutine solve_quasi_neutral_eq_general_coords
 
  ! subroutine build_global_mass_stiffness_matrices( &

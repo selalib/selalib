@@ -195,15 +195,15 @@ contains
     ! in any of the two available directions. We also initialize the other two
     ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
     call initialize_layout_with_distributed_2D_array( &
-         sim%nc_x1, &
-         sim%nc_x2, &
+         sim%nc_x1+1, &
+         sim%nc_x2+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%split_rho_layout )
     
     call initialize_layout_with_distributed_2D_array( &
-         sim%nc_x1, &
-         sim%nc_x2, &
+         sim%nc_x1+1, &
+         sim%nc_x2+1, &
          1, &
          sim%world_size, &
          sim%rho_seq_x1 )
@@ -216,8 +216,8 @@ contains
     SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
 
     call initialize_layout_with_distributed_2D_array( &
-         sim%nc_x1, &
-         sim%nc_x2, &
+         sim%nc_x1+1, &
+         sim%nc_x2+1, &
          sim%world_size, &
          1, &
          sim%rho_seq_x2 )
@@ -241,10 +241,10 @@ contains
     sim%nproc_x2 = itemp
     
     call initialize_layout_with_distributed_4D_array( &
-         sim%nc_x1, &
-         sim%nc_x2, &
-         sim%nc_x3, &
-         sim%nc_x4, &
+         sim%nc_x1+1, &
+         sim%nc_x2+1, &
+         sim%nc_x3+1, &
+         sim%nc_x4+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%nproc_x3, &
