@@ -56,19 +56,7 @@ INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 
 # include's .h files
-INCLUDE_DIRECTORIES(utilities 
-                    constants
-                    memory 
-                    assert 
-                    splines 
-                    precision 
-                    fields 
-                    file_io
-                    fft
-                    interpolators
-                    poisson_solvers
-                    maxwell_solvers
-                    visu_pic) 
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(package)
@@ -123,10 +111,14 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
       ADD_SUBDIRECTORY(simulation)
-      ADD_SUBDIRECTORY(discontinuous_galerkin) 
+
+      FIND_PACKAGE(SUITESPARSE)
+      IF(SUITESPARSE_FOUND)
+         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+         ADD_SUBDIRECTORY(discontinuous_galerkin) 
+      ENDIF(SUITESPARSE_FOUND)
    
    ENDIF(NOT STDF95)
-
 
    SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 
