@@ -7,9 +7,9 @@ program landau_4d
 use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
-!use sll_poisson_2d_periodic
+use sll_poisson_2d_periodic
 !use sll_maxwell
-use sll_maxwell_2d_fdtd
+!use sll_maxwell_2d_fdtd
 
 use sll_utilities, only: int2string
 
@@ -42,8 +42,8 @@ sll_real64, dimension(:,:), allocatable :: jy
 sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
-!type(poisson_2d_periodic) :: poisson
-type(maxwell_2d_fdtd)        :: maxwell_TE
+type(poisson_2d_periodic) :: poisson
+!type(maxwell_2d_fdtd)        :: maxwell_TE
 
 class(sll_interpolator_1d_base), pointer    :: interp_1
 class(sll_interpolator_1d_base), pointer    :: interp_2
@@ -88,12 +88,12 @@ SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jx(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
-call initialize(maxwell_TE, 1, nc_eta1+1, 1, nc_eta2+1, &
-                delta_eta1, delta_eta2, TE_POLARIZATION)
+!call initialize(maxwell_TE, 1, nc_eta1+1, 1, nc_eta2+1, &
+!                delta_eta1, delta_eta2, TE_POLARIZATION)
 
 
-!call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
-!                         eta2_min, eta2_max, nc_eta2, rho, error)
+call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
+                         eta2_min, eta2_max, nc_eta2, rho, error)
 
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, PERIODIC_SPLINE )
 call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, PERIODIC_SPLINE )
@@ -118,7 +118,7 @@ do i4=1,nc_eta4+1
       do i2=1,nc_eta2+1
          eta1 = eta1_min
          do i1=1,nc_eta1+1
-            f(i1,i2,i3,i4)=(1+eps*cos(kx*eta1))*1/(2*sll_pi)*exp(-.5*v2)
+            f(i1,i2,i3,i4)=(1+eps*cos(kx*eta1))/(2*sll_pi)*exp(-.5*v2)
             eta1 = eta1 + delta_eta1
          end do
          eta2 = eta2 + delta_eta2
@@ -129,7 +129,7 @@ do i4=1,nc_eta4+1
 end do
 
 n_step = 1000
-SLL_ALLOCATE(nrj(n_step), error)
+SLL_CLEAR_ALLOCATE(nrj(1:n_step), error)
 delta_t = .01_f64
 time = 0.0_f32
 
@@ -138,11 +138,11 @@ if ( delta_t > 0.5/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))) 
 
 call advection_x1(0.5_f64*delta_t)
 call advection_x2(0.5_f64*delta_t)
-call compute_current()
-call ampere(maxwell_TE, ex, ey, bz, 0.5_f64*delta_t, jx, jy)
+!call compute_current()
+!call ampere(maxwell_TE, ex, ey, bz, 0.5_f64*delta_t, jx, jy)
 
-print*, "set title'", delta_eta1, delta_eta2,"'"
-print*, 'set term x11'
+!print*, "set title'", delta_eta1, delta_eta2,"'"
+!print*, 'set term x11'
  
 do i_step = 1, n_step !Loop over time
 
@@ -150,17 +150,17 @@ do i_step = 1, n_step !Loop over time
 
    call advection_v1(delta_t)
    call advection_v2(delta_t)
-   !call compute_rho()
+   call compute_rho()
 
-   call faraday(maxwell_TE, ex, ey, bz, delta_t)
+   !call faraday(maxwell_TE, ex, ey, bz, delta_t)
 
-   !call solve(poisson,ex,ey,rho)
-   !if (mod(i_step, 10) == 0) then
-   !   call plot_field(ex,"ex",i_step/10)
-   !   call plot_field(rho,"rho",i_step/10)
-   !   call plot_field(f(:,:,1,1),"f",i_step/10)
-   !end if
-
+   call solve(poisson,ex,ey,rho,nrj(i_step))
+   call online_plot() 
+   if (i_step == 1 .or. mod(i_step, 10) == 0) then
+      call plot_field(ex,"ex",i_step/10)
+      call plot_field(rho,"rho",i_step/10)
+      call plot_field(f(:,:,1,1),"f",i_step/10)
+   end if
 
    time  = time + 0.5 * delta_t
 
@@ -168,7 +168,7 @@ do i_step = 1, n_step !Loop over time
    call advection_x2(delta_t)
 
    call compute_current()
-   call ampere(maxwell_TE, ex, ey, bz, delta_t, jx, jy)
+   !call ampere(maxwell_TE, ex, ey, bz, delta_t, jx, jy)
 
 end do !next time step
 
@@ -212,9 +212,9 @@ end subroutine compute_current
 
 subroutine online_plot()
 
-   nrj(i_step) = sum(ex*ex+ey*ey) 
-   nrj(i_step) = nrj(i_step)*delta_eta1*delta_eta2
-   nrj(i_step) = 0.5_f64*log(nrj(i_step))
+   !nrj(i_step) = sum(ex*ex+ey*ey) 
+   !nrj(i_step) = nrj(i_step)*delta_eta1*delta_eta2
+   !nrj(i_step) = 0.5_f64*log(nrj(i_step))
    
    open(11, file='thf_4d.dat', position='append')
    if (i_step == 1) rewind(11)

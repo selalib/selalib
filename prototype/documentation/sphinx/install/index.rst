@@ -100,10 +100,6 @@ Find config files for selalib and fftpack in directory called "cmake"::
    TARGET_LINK_LIBRARIES(landau ${SELALIB_LIBRARIES} 
                                 ${FFTPACK_LIBRARIES})
 
-
-
-
-
 Makefile
 ========
 
@@ -148,9 +144,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-	                   F90PATH = [SLL_ROOT+'include',SLL_ROOT+'include/fortran'],
+	              F90PATH = [SLL_ROOT+'include',SLL_ROOT+'include/fortran'],
                       LINK='ifort',
-	                   LIBPATH = [SLL_ROOT+'/lib'])
+	              LIBPATH = [SLL_ROOT+'/lib'])
 
    env.Program('landau', ['landau.F90'])
 

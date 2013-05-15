@@ -15,11 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> \author
-!> Pierre Navaro 
+!> @author Pierre Navaro 
 !> @namespace sll_maxwell_solvers
-!> Common data for Maxwell solvers
-!>
+!> @brief 
+!> Library to solve Maxwell equation in 2D and 3D
+!> @details
 !> Solvers available:
 !> - sll_maxwell_2d_fdtd
 !> - sll_maxwell_2d_pstd
