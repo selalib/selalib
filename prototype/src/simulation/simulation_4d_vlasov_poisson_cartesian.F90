@@ -180,10 +180,10 @@ contains
     end if
     
     call initialize_layout_with_distributed_4D_array( &
-         sim%nc_x1, &
-         sim%nc_x2, &
-         sim%nc_x3, &
-         sim%nc_x4, &
+         sim%nc_x1+1, &
+         sim%nc_x2+1, &
+         sim%nc_x3+1, &
+         sim%nc_x4+1, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%nproc_x3, &
@@ -250,7 +250,7 @@ contains
          sim%nproc_x3, &
          sim%nproc_x4, &
          sim%sequential_x1x2 )
-    
+
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate four different arrays, one for each
@@ -273,6 +273,7 @@ contains
          loc_sz_x2, &
          loc_sz_x3, &
          loc_sz_x4 )
+
     SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     
     ! These dimensions are also the ones needed for the array where we store
@@ -290,7 +291,7 @@ contains
          0.0_f64, 1.0_f64, &
          -1.0_f64, 1.0_f64, &
          -1.0_f64, 1.0_f64 )
-    
+
     call load_test_4d_initializer( sim%init_4d, &
          NODE_CENTERED_FIELD, &
          sim%mesh4d, &
@@ -331,13 +332,13 @@ contains
          sim%f_x3x4, &
          sim%partial_reduction, &
          sim%rho_split )
-    
+
     ! Re-arrange rho_split in a way that permits sequential operations in x1, to
     ! feed to the Poisson solver.
     sim%split_to_seqx1 => &
          NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
-    
+
     ! We are in a position now to compute the electric potential.
     ! Initialize the poisson plan
     sim%poisson_plan => new_poisson_2d_periodic_plan_cartesian_par( &
@@ -346,13 +347,13 @@ contains
          sim%nc_x2, &
          1.0_f64, &    ! parametrize with mesh values
          1.0_f64 )     ! parametrize with mesh values
-    
+
     ! solve for the electric potential
     call solve_poisson_2d_periodic_cartesian_par( &
          sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1)
-    
+
     ! compute the values of the electric field. rho is configured for 
     ! sequential operations in x1, thus we start by computing the E_x component.
     ! The following call is inefficient and unnecessary. The local sizes for
@@ -365,6 +366,7 @@ contains
          loc_sz_x2, &
          sim%mesh4d%delta_x1, &
          sim%efield_x1 )
+
     ! note that we are 'recycling' the layouts used for the other arrays because
     ! they represent an identical configuration.
     sim%efld_seqx1_to_seqx2 => &
@@ -402,25 +404,25 @@ contains
     ! The interpolators need the number of points and always consider that
     ! num_cells = num_pts - 1. This is a possible source of confusion.
     call sim%interp_x1%initialize( &
-         sim%nc_x1, &
+         sim%nc_x1+1, &
          sim%mesh4d%x1_min, &
          sim%mesh4d%x1_max, &
          PERIODIC_SPLINE)
 
     call sim%interp_x2%initialize( &
-         sim%nc_x2, &
+         sim%nc_x2+1, &
          sim%mesh4d%x2_min, &
          sim%mesh4d%x2_max, &
          PERIODIC_SPLINE)
 
     call sim%interp_x3%initialize( &
-         sim%nc_x3, &
+         sim%nc_x3+1, &
          sim%mesh4d%x3_min, &
          sim%mesh4d%x3_max, &
          HERMITE_SPLINE)
 
     call sim%interp_x4%initialize( &
-         sim%nc_x4, &
+         sim%nc_x4+1, &
          sim%mesh4d%x4_min, &
          sim%mesh4d%x4_max, &
          HERMITE_SPLINE)
@@ -465,12 +467,12 @@ contains
        ! Start with dt/2 in vx...(x3)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             do l=1,sim%mesh4d%num_cells4
+             do l=1,sim%mesh4d%num_cells4+1
                 ex    = real(sim%efield_split(i,j),f64)
                 alpha = -ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
-                     sim%nc_x3, &
+                     sim%nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha )
              end do
@@ -480,12 +482,12 @@ contains
        ! dt/2 in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             do k=1,sim%mesh4d%num_cells3
+             do k=1,sim%mesh4d%num_cells3+1
                 ey    = aimag(sim%efield_split(i,j))
                 alpha = -ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
-                     sim%nc_x4, &
+                     sim%nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
                      alpha )
              end do
@@ -495,12 +497,12 @@ contains
        ! dt/4 in vx:
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             do l=1,sim%mesh4d%num_cells4
+             do l=1,sim%mesh4d%num_cells4+1
                 ex    = real(sim%efield_split(i,j),f64)
                 alpha = -ex*0.25_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
-                     sim%nc_x3, &
+                     sim%nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha )
              end do
@@ -515,35 +517,35 @@ contains
        ! to make these calls...
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
-
+            
        ! dt/2 in 'y' (x2)
        do l=1,loc_sz_x4
           do k=1,loc_sz_x3
-             do i=1,sim%mesh4d%num_cells1
+             do i=1,sim%mesh4d%num_cells1+1
                 vmin = sim%mesh4d%x4_min
                 delta = sim%mesh4d%delta_x4
                 alpha = (vmin + (l-1)*delta)*sim%dt*0.5_f64
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
-                     sim%nc_x2, &
+                     sim%nc_x2+1, &
                      sim%f_x1x2(i,:,k,l), &
                      alpha )
              end do
           end do
        end do
-       
+
        ! dt in 'x' (x1)
        do l=1,loc_sz_x4
           do k=1,loc_sz_x3
-             do j=1,sim%mesh4d%num_cells2
+             do j=1,sim%mesh4d%num_cells2+1
                 vmin = sim%mesh4d%x3_min
                 delta = sim%mesh4d%delta_x3
                 alpha = (vmin + (k-1)*delta)*sim%dt
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(:,j,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(:,j,k,l) = sim%interp_x1%interpolate_array_disp( &
-                     sim%nc_x1, &
+                     sim%nc_x1+1, &
                      sim%f_x1x2(:,j,k,l), &
                      alpha )
              end do
@@ -553,20 +555,20 @@ contains
        ! dt/2 in 'y' (x2)
        do l=1,loc_sz_x4
           do k=1,loc_sz_x3
-             do i=1,sim%mesh4d%num_cells1
+             do i=1,sim%mesh4d%num_cells1+1
                 vmin = sim%mesh4d%x4_min
                 delta = sim%mesh4d%delta_x4
                 alpha = (vmin + (l-1)*delta)*sim%dt*0.5_f64
                 !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
                 ! interpolate_array_disp() has an interface that must be changed
                 sim%f_x1x2(i,:,k,l) = sim%interp_x2%interpolate_array_disp( &
-                     sim%nc_x2, &
+                     sim%nc_x2+1, &
                      sim%f_x1x2(i,:,k,l), &
                      alpha )
              end do
           end do
        end do
-       
+
        ! And reconfigure the data for the last set of advections in vx and vy.
        ! This will also help for the calculation of the charge density later
        ! on.
@@ -697,7 +699,10 @@ contains
              end do
           end do
        end do
-       call plot_fields(itime, sim)
+       ! plot fields is giving some errors after the size of the data arrays was
+       ! changed to include the last point (the periodic point). After this, some
+       ! error messages are given by hdf5...
+!       call plot_fields(itime, sim)
 
     end do ! main loop
   end subroutine run_vp4d_cartesian
