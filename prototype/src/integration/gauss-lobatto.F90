@@ -5,7 +5,6 @@
 !
 ! DESCRIPTION:
 !> @file gauss-lobatto.F90
-!! @namespace gausslobatto
 !! @author Madaule Eric
 !! @brief Gauss-Lobatto interpolation tools
 !! @details Here are several of the Gauss-Lobatto tools :\\
