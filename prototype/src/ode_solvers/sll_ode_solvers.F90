@@ -2,13 +2,13 @@ module ode_solvers
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_field_2d.h"
+!#include "sll_field_2d.h"
   
   implicit none
-  enum, bind(C)
-     enumerator :: PERIODIC_ODE = 0, COMPACT_ODE = 1
-  end enum
+  
+  integer, parameter :: PERIODIC_ODE = 0, COMPACT_ODE = 1
 
+#ifndef STDF95
   abstract interface
      function scalar_function_1D( eta )
        use sll_working_precision
@@ -16,6 +16,7 @@ module ode_solvers
        sll_real64, intent(in)  :: eta
      end function scalar_function_1D
   end interface
+#endif
 
 contains
 
@@ -189,8 +190,8 @@ contains
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
-    sll_int32  :: i, id, ileft, iright, i0, imax
-    sll_real64 :: xmax, xi, xi0, yi0, yi0p1, y1, x1, beta
+    sll_int32  :: i, ileft, iright, i0, imax
+    sll_real64 :: xi, xi0, yi0, yi0p1, x1, beta
     sll_real64 :: c     ! real coefficient
     sll_real64 :: period ! period of periodic domain
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
@@ -412,8 +413,8 @@ contains
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
-    sll_int32  :: i, id, ileft, iright, i0, imax
-    sll_real64 :: xmax, xi, xi0, yi0, yi0p1, y1, x1, beta
+    sll_int32  :: i, ileft, iright, i0, imax
+    sll_real64 :: xi, xi0, yi0, yi0p1, x1, beta
     sll_real64 :: c     ! real coefficient
     sll_real64 :: period ! period of periodic domain
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
@@ -631,9 +632,14 @@ contains
     sll_real64 :: delta_eta
     sll_int32  :: bt    ! boundary_type
     ! solution for all initial conditions:
-    sll_real64, dimension(:)                     :: eta_out   
+    sll_real64, dimension(:)                     :: eta_out  
+#ifdef STDF95
+    sll_real64 :: xfunc
+    sll_real64 :: xprimefunc
+#else 
     procedure(scalar_function_1D), pointer       :: xfunc
     procedure(scalar_function_1D), pointer       :: xprimefunc
+#endif
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
@@ -731,20 +737,28 @@ contains
     ! solution for all initial conditions:
     sll_real64, dimension(:)                     :: eta_out   
     sll_real64, dimension(:)                     :: a     ! rhs of ode
+#ifdef STDF95
+    sll_real64, optional :: jac
+    !local variables
+    sll_real64           :: jacobian
+#else
     procedure(scalar_function_1D), pointer, optional  :: jac
     ! local variables
     procedure(scalar_function_1D), pointer  :: jacobian
+#endif
     sll_real64 :: eta_max
     sll_real64 :: eta_i, eta_k, eta_kp1
     sll_real64 :: deltatsub
-    sll_real64 :: a_n, a_np1, alpha, k2
+    sll_real64 :: a_n, a_np1, alpha
     sll_int32  :: i, id, isub
 
+#ifndef STDF95
     if (present(jac)) then
        jacobian => jac 
     else 
        jacobian => f_one
     end if
+#endif
 
     SLL_ASSERT(size(a)==nc_eta+1)
     SLL_ASSERT(size(eta_out)==nc_eta+1)
@@ -754,7 +768,15 @@ contains
        eta_i = eta_min + (i-1)*delta_eta  ! current grid point
        ! loop over substeps
        eta_k = eta_i
+#ifdef STDF95
+       if(present(jac)) then
+          a_n = a(i)/ jac(eta_i)
+       else
+          a_n = a(i) / 1.0_f64
+       endif
+#else
        a_n = a(i) / jacobian(eta_i)
+#endif
        deltatsub = deltat / nsubsteps
        do isub = 1, nsubsteps
           ! first stage
@@ -778,7 +800,15 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac)) then
+             a_np1 = a_np1 / jac(eta_kp1)
+          else
+             a_np1 = a_np1 / 1.0_f64
+          endif
+#else
           a_np1 = a_np1 / jacobian(eta_kp1)
+#endif
           ! compute cubic Lagrange interpolation of a at eta_k
           !a_np1 = -alpha*(alpha-1)*(alpha-2)/6 * a(id) + (alpha+1)*(alpha-1)*(alpha-2)/2 * a(id+1) &
           !     - (alpha+1)*alpha*(alpha-2)/2 * a(id+2) + (alpha+1)*alpha*(alpha-1)/6 * a(id+3) 
@@ -804,7 +834,15 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac)) then
+             a_np1 = a_np1 / jac(eta_kp1)
+          else
+             a_np1 = a_np1 / 1.0_f64
+          endif
+#else
           a_np1 = a_np1 / jacobian(eta_kp1)
+#endif
           ! update
           eta_k = eta_kp1
           a_n = a_np1
@@ -837,20 +875,28 @@ contains
     ! solution for all initial conditions:
     sll_real64, dimension(:)                     :: eta_out   
     sll_real64, dimension(:)                     :: a     ! rhs of ode
+#ifdef STDF95
+    sll_real64, optional :: jac
+    !local variables
+    sll_real64           :: jacobian
+#else
     procedure(scalar_function_1D), pointer, optional  :: jac
     ! local variables
     procedure(scalar_function_1D), pointer  :: jacobian
+#endif
     sll_real64 :: eta_max
     sll_real64 :: eta_i, eta_k, eta_kp1
     sll_real64 :: deltatsub
     sll_real64 :: a_n, a_np1, alpha, k2, k3, k4
     sll_int32  :: i, id, isub
 
+#ifndef STDF95
     if (present(jac)) then
        jacobian => jac 
     else 
        jacobian => f_one
     end if
+#endif
 
     SLL_ASSERT(size(a)==nc_eta+1)
     SLL_ASSERT(size(eta_out)==nc_eta+1)
@@ -860,7 +906,15 @@ contains
        eta_i = eta_min + (i-1)*delta_eta  ! current grid point
        ! loop over substeps
        eta_k = eta_i
+#ifdef STDF95
+       if(present(jac)) then
+          a_n = a(i)/ jac(eta_i)
+       else
+          a_n = a(i) / 1.0_f64
+       endif
+#else
        a_n = a(i) / jacobian(eta_i)
+#endif
        deltatsub = deltat / nsubsteps
        do isub = 1, nsubsteps
           ! second stage
@@ -883,7 +937,15 @@ contains
           ! compute linear interpolation of a at eta_k
           k2 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac))then
+             k2 = k2 / jac(eta_kp1)
+          else
+             k2 = k2 / 1.0_f64
+          end if
+#else
           k2 = k2 / jacobian(eta_kp1)
+#endif
  
          ! third stage
           eta_kp1 = eta_k + 0.5_f64*deltatsub * k2
@@ -905,7 +967,15 @@ contains
           ! compute linear interpolation of a at eta_k
           k3 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac))then
+             k3 = k3 / jac(eta_kp1)
+          else
+             k3 = k3 / 1.0_f64
+          end if
+#else
           k3 = k3 / jacobian(eta_kp1)
+#endif
 
           ! fourth stage
           eta_kp1 = eta_k + deltatsub * k3
@@ -927,8 +997,15 @@ contains
           ! compute linear interpolation of a at eta_k
           k4 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac))then
+             k4 = k4 / jac(eta_kp1)
+          else
+             k4 = k4 / 1.0_f64
+          end if
+#else
           k4 = k4 / jacobian(eta_kp1)
-
+#endif
 
 
           ! compute solution of ode for current grid point 
@@ -953,7 +1030,15 @@ contains
           ! compute linear interpolation of a at eta_k
           a_np1 = (1.0_f64 - alpha) * a(id+1) + alpha * a(id+2)
           ! divide by jacobian of mesh
+#ifdef STDF95
+          if(present(jac)) then
+             a_np1 = a_np1 / jac(eta_kp1)
+          else
+             a_np1 = a_np1 / 1.0_f64
+          endif
+#else
           a_np1 = a_np1 / jacobian(eta_kp1)
+#endif
           ! update
           eta_k = eta_kp1
           a_n = a_np1
@@ -1106,8 +1191,6 @@ contains
        SLL_ASSERT((eta_out(i) >= eta_min ) .and. (eta_out(i) <= eta_max)) 
     end do
   end subroutine rk4_non_unif
-
-
 
 
 end module ode_solvers

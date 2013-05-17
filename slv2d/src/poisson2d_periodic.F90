@@ -1,7 +1,8 @@
 module poisson2d_periodic
 
-#ifdef _FFTW
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+use sll_constants
 
 use geometry_module
 use, intrinsic :: iso_c_binding
@@ -12,11 +13,15 @@ interface new
    module procedure new_potential
    module procedure new_e_fields
 end interface
+
 interface solve
    module procedure solve_potential
    module procedure solve_e_fields
 end interface
 
+interface free
+   module procedure free_poisson
+end interface free
 
 type :: poisson2dpp
    type(geometry)                       :: geom
@@ -53,9 +58,9 @@ subroutine new_potential(self, rho, geomx, error )
    self%p_rhot = fftw_alloc_complex(self%sz_rhot)
    call c_f_pointer(self%p_rhot, self%rhot, [nx/2+1,ny])
 
-   call dfftw_init_threads(error)
-   if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   call dfftw_plan_with_nthreads(nthreads)
+   !call dfftw_init_threads(error)
+   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
+   !call dfftw_plan_with_nthreads(nthreads)
    
    self%fw = fftw_plan_dft_r2c_2d(ny, nx, rho, self%rhot, FFTW_ESTIMATE)
    self%bw = fftw_plan_dft_c2r_2d(ny, nx, self%rhot, rho, FFTW_ESTIMATE)
@@ -113,9 +118,9 @@ subroutine new_e_fields(self, ex, ey, geomx, error )
    SLL_ALLOCATE(self%ky (nx/2+1,ny), error)
    SLL_ALLOCATE(self%k2 (nx/2+1,ny), error)
 
-   call dfftw_init_threads(error)
-   if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   call dfftw_plan_with_nthreads(nthreads)
+   !call dfftw_init_threads(error)
+   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
+   !call dfftw_plan_with_nthreads(nthreads)
 
    self%fw = fftw_plan_dft_r2c_2d(ny, nx, ex, self%ext, FFTW_ESTIMATE)
    self%bw = fftw_plan_dft_c2r_2d(ny, nx, self%eyt, ey, FFTW_ESTIMATE)
@@ -215,12 +220,11 @@ if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
 call dfftw_destroy_plan(self%fw)
 call dfftw_destroy_plan(self%bw)
-if (nthreads > 1) then
-   call dfftw_cleanup_threads(error)
-end if
+!if (nthreads > 1) then
+!   call dfftw_cleanup_threads(error)
+!end if
 
 end subroutine
 
 
-#endif
 end module poisson2d_periodic

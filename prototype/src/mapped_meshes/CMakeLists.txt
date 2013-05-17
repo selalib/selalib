@@ -2,6 +2,7 @@ IF(STDF95)
  add_library(sll_mapped_meshes STATIC
 	sll_mapped_meshes_1d.F90
 	sll_mapped_meshes_2d.F90
+	sll_mapped_meshes_2d_cartesian.F90
   )
 ELSE()
  add_library(sll_mapped_meshes STATIC
@@ -17,7 +18,7 @@ add_dependencies(sll_mapped_meshes
 	sll_splines
 	geometry_functions
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
 	sll_utilities
 	sll_memory
 	sll_assertion
@@ -31,7 +32,7 @@ target_link_libraries(test_mapped_meshes_1d
 	sll_splines
 	geometry_functions
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
 	sll_utilities
 	sll_memory
 	sll_assertion
@@ -46,7 +47,7 @@ target_link_libraries(test_mapped_meshes_2d
 	geometry_functions
 	sll_utilities
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
 	sll_memory
 	sll_assertion
 	sll_working_precision
@@ -61,7 +62,7 @@ IF(NOT STDF95)
 	geometry_functions
 	sll_utilities
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
 	sll_memory
 	sll_assertion
  )

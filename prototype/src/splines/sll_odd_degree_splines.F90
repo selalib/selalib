@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !***************************************************************************
 !
 ! Selalib 2012     
@@ -19,7 +36,7 @@ module sll_odd_degree_splines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
   implicit none
 
   type odd_degree_splines_uniform_plan
@@ -27,12 +44,8 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
-#ifdef STDF95
-    sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable :: coeffs
-#endif
-    sll_real64, dimension(:,:), allocatable :: matrix 
+    sll_real64, dimension(:), pointer     :: coeffs
+    sll_real64, dimension(:,:), pointer   :: matrix
    ! matrix will be the result of Choleski factorization
    end type odd_degree_splines_uniform_plan
 
@@ -41,15 +54,11 @@ use arbitrary_degree_splines
     sll_int32                             :: degree
     sll_real64                            :: xmin
     sll_real64                            :: xmax
-#ifdef STDF95
-    sll_real64, dimension(:), pointer :: coeffs
-#else
-    sll_real64, dimension(:), allocatable     :: coeffs
-#endif
+    sll_real64, dimension(:), pointer       :: coeffs
+    sll_real64, dimension(:), pointer       :: b_spline
+    sll_real64, dimension(:,:), pointer     :: matrix
+    sll_real64, dimension(:), pointer       :: ipiv ! for matrix LU solving
     type(arbitrary_degree_spline_1d), pointer :: spline_obj
-    sll_real64, dimension(:), allocatable     :: b_spline
-    sll_real64, dimension(:,:),allocatable    :: matrix
-    sll_real64, dimension(:), allocatable     :: ipiv ! for matrix LU solving
   end type odd_degree_splines_nonuniform_plan 
 
   interface compute_odd_degree_coeffs

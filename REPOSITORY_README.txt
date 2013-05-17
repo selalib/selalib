@@ -5,10 +5,10 @@ structure like this:
                       ________________
                      |    Selalib     |
                      |________________|
-           __________________|__________________
-    ______|________   _______|_________   ______|________
-   |   prototype   | |     selalib     | | gysela_public |
-   |_______________| |_________________| |_______________|
+           __________________|___________________________________________
+    ______|________   _______|_________   ______|________   ___|___   __|____
+   |   prototype   | |     selalib     | | gysela_public | | slv2d | | pic2d |
+   |_______________| |_________________| |_______________| |_______| |_______|
 
 The 'prototype' directory will contain the files related with the preliminary
 testing and development of an architecture for Selalib. During the initial
@@ -20,9 +20,15 @@ utilities and will include higher-level functionality as time progresses.
 
 'gysela_public' will contain the baseline public version of Gysela, whose 
 capabilities we intend to keep compatible with our other developments. However,
-since the public version of Gysela is derived from the propietary version
+since the public version of Gysela is derived from the proprietary version
 owned by the CEA, only the CEA personnel will work updating this part of the
 repository.
+
+'slv2d' is a code written by Eric Sonnendrucker that contains all functions
+we need to have in selalib. This part of the code will be used for testing purpose
+
+'pic2d' is a code written by Regine Bartheleme that contains a test case using PIC 
+method. This part of the code will be used for testing purpose of PIC features of selalib.
 
 AVAILABLE BRANCHES:
 

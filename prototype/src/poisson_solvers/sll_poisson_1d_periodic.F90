@@ -1,10 +1,27 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 module sll_poisson_1d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use numeric_constants
+  use sll_constants
 
   implicit none
   private
@@ -29,6 +46,7 @@ module sll_poisson_1d_periodic
 contains
 
   subroutine new_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+
     type(poisson_1d_periodic),intent(out) :: this
     sll_int32,intent(in)                   :: nc_eta1
     sll_int32, intent(out)                 :: error 
@@ -50,8 +68,8 @@ contains
 
   end subroutine new_poisson_1d_periodic
 
-
   subroutine solve_poisson_1d_periodic(this, field, rhs)
+
     type(poisson_1d_periodic),intent(inout) :: this
     sll_real64, dimension(:), intent(out)     :: field
     sll_real64, dimension(:), intent(in)      :: rhs

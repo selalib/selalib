@@ -1,6 +1,6 @@
 program unit_test_1d
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
 ! The next line cause an error with the definition of 
 ! compute_interpolants in sll_cubic_spline_interpolator_1d
 ! use sll_module_mapped_meshes_2d
@@ -97,7 +97,7 @@ program unit_test_1d
   print *, 'initializing the interpolator: '
 
 #ifdef STDF95
-  call cubic_spline_initialize( x1_interp,&
+  call cubic_spline_1d_interpolator_initialize( x1_interp,&
 #else
   call x1_interp%initialize( &
 #endif
@@ -109,7 +109,7 @@ program unit_test_1d
        slope_right=x1_eta1_max )
 
 #ifdef STDF95
-  call cubic_spline_initialize( j_interp,&
+  call cubic_spline_1d_interpolator_initialize( j_interp,&
 #else
   call j_interp%initialize( &
 #endif

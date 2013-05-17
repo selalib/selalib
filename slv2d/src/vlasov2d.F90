@@ -1,6 +1,9 @@
 module Vlasov2d_module
 
-#include "selalib.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
  use used_precision
  use splinenn_class

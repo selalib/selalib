@@ -37,11 +37,26 @@ module distribution_function
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-  use numeric_constants
-  use sll_misc_utils   ! for int2string
+  use sll_constants
+  use sll_utilities   ! for int2string
   use sll_scalar_field_initializers_base
   implicit none
-  
+
+!#ifdef STDF95
+!  type  :: sll_distribution_function_2D
+   !  type(sll_mapped_mesh_2d_discrete), pointer  :: mesh
+   !  type(cubic_spline_1d_interpolator), pointer :: eta1_interpolator
+   !  type(cubic_spline_1d_interpolator), pointer :: eta2_interpolator
+   !  sll_real64, dimension(:,:), pointer      :: data
+   !  sll_int32                                :: data_position
+   !  character(len=64)                        :: name
+   !  sll_int32                                :: plot_counter
+!     type(scalar_field_2d) :: extend_type
+!     sll_real64        :: pmass
+!     sll_real64        :: pcharge           
+!     sll_real64        :: average 
+!  end type  sll_distribution_function_2D
+!#else  
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
   type, extends(extended_type) :: new_df_type;                       \
      sll_real64      :: pmass;                                       \
@@ -61,8 +76,7 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 !!$  end interface
 
 #undef NEW_TYPE_FOR_DF
-
-
+!#endif
 
 contains
 
@@ -76,9 +90,9 @@ contains
     
     class(sll_distribution_function_2D)   :: this
     class(sll_mapped_mesh_2d_base), target  :: mesh
+    procedure(scalar_function_2D)           :: data_func
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
-    procedure(scalar_function_2D)           :: data_func
     ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
@@ -86,11 +100,11 @@ contains
     sll_real64 :: delta1, delta2
 
     this%mesh => mesh
+    this%plot_counter = 0
+    this%name = name
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
-    this%plot_counter = 0
-    this%name = name
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
        do i2 = 1, mesh%nc_eta2+1
@@ -115,7 +129,6 @@ contains
        end do
     endif
   end subroutine sll_new_distribution_function_2d
-#endif
 
   subroutine initialize_distribution_function_2d( &
     this, &
@@ -128,15 +141,15 @@ contains
     eta2_interpolator, &
     initializer )
 
+    class(sll_mapped_mesh_2d_base), pointer             :: mesh
+    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
+    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
+    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     type(sll_distribution_function_2d), intent(inout)   :: this
     sll_real64, intent(in)                              :: mass
     sll_real64, intent(in)                              :: charge
     character(len=*), intent(in)                        :: field_name
-    class(sll_mapped_mesh_2d_base), pointer             :: mesh
     sll_int32, intent(in)                               :: data_position
-    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
 
     this%pmass = mass
     this%pcharge = charge
@@ -150,6 +163,8 @@ contains
          eta2_interpolator, &
          initializer )
   end subroutine initialize_distribution_function_2d
+#endif
+
 
 
 !!$  function sll_new_distribution_function_4D( mesh_descriptor_x,  &

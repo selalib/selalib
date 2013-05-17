@@ -15,6 +15,12 @@ PROJECT(SLL)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
+
+IF(NOT SLL_BUILD_PACKAGE)
+   SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
+ENDIF(NOT SLL_BUILD_PACKAGE)
+
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
@@ -48,132 +54,217 @@ INCLUDE(LapackConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
-INCLUDE(DoxygenConfig)
 
 # include's .h files
-INCLUDE_DIRECTORIES(utilities 
-                    memory 
-                    assert 
-                    splines 
-                    numerical_utilities 
-                    precision 
-                    fields 
-                    fft) 
-ENABLE_TESTING()
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
-ADD_SUBDIRECTORY(memory)
-ADD_SUBDIRECTORY(precision)
-ADD_SUBDIRECTORY(assert)
-ADD_SUBDIRECTORY(constants)
-ADD_SUBDIRECTORY(utilities)
-ADD_SUBDIRECTORY(low_level_file_io)
-ADD_SUBDIRECTORY(timer)
-ADD_SUBDIRECTORY(numerical_utilities)
-ADD_SUBDIRECTORY(non_linear_solvers)
-ADD_SUBDIRECTORY(splines)
-ADD_SUBDIRECTORY(WENO)
-ADD_SUBDIRECTORY(integration)
-IF(FFTPACK_ENABLED)
-   ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(package)
+
+IF(NOT SLL_BUILD_PACKAGE)
+
+   ENABLE_TESTING()
+
+   ADD_SUBDIRECTORY(memory)
+   ADD_SUBDIRECTORY(precision)
+   ADD_SUBDIRECTORY(assert)
+   ADD_SUBDIRECTORY(constants)
+   ADD_SUBDIRECTORY(utilities)
+   ADD_SUBDIRECTORY(file_io)
+   ADD_SUBDIRECTORY(timer)
+   ADD_SUBDIRECTORY(non_linear_solvers)
+   ADD_SUBDIRECTORY(splines)
+   ADD_SUBDIRECTORY(logical_meshes)
+   ADD_SUBDIRECTORY(coordinate_transformations)
+   ADD_SUBDIRECTORY(lagrange_interpolation)
+   ADD_SUBDIRECTORY(WENO)
+   ADD_SUBDIRECTORY(integration)
+   ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
-ENDIF()
-ADD_SUBDIRECTORY(fft)
-IF(MPI_MODULE_ENABLED)
-   ADD_SUBDIRECTORY(collective)
-   ADD_SUBDIRECTORY(remap)
-ENDIF()
-IF(NOT STDF95)
-   ADD_SUBDIRECTORY(poisson_solvers)
+   
+   IF(MPI_MODULE_ENABLED)
+   
+      ADD_SUBDIRECTORY(collective)
+      ADD_SUBDIRECTORY(remap)
+      ADD_SUBDIRECTORY(parallel_array_initializers)
+
+   ENDIF()
+   
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-ENDIF()
-ADD_SUBDIRECTORY(electric_field_accumulators)
-ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(electric_field_accumulators)
+   ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(mapped_meshes)
+   ADD_SUBDIRECTORY(fields)
+   
+   IF(NOT STDF95)
+   
+      ADD_SUBDIRECTORY(time_solvers)
+      ADD_SUBDIRECTORY(ode_solvers)
+      ADD_SUBDIRECTORY(distribution_function)
+      ADD_SUBDIRECTORY(advection_field)
+      ADD_SUBDIRECTORY(LinRood)
+      ADD_SUBDIRECTORY(poisson_solvers)
+      ADD_SUBDIRECTORY(maxwell_solvers)
+      ADD_SUBDIRECTORY(BSL)
+      ADD_SUBDIRECTORY(CSL)
+      ADD_SUBDIRECTORY(visu_pic)
+      ADD_SUBDIRECTORY(simulation)
 
+      FIND_PACKAGE(SUITESPARSE)
+      IF(SUITESPARSE_FOUND)
+         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+         ADD_SUBDIRECTORY(discontinuous_galerkin) 
+      ENDIF(SUITESPARSE_FOUND)
+   
+   ENDIF(NOT STDF95)
 
-##########################################################
+   SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 
-ADD_SUBDIRECTORY(mapped_meshes)
-ADD_SUBDIRECTORY(fields)
-ADD_SUBDIRECTORY(time_solvers)
-ADD_SUBDIRECTORY(ode_solvers)
-ADD_SUBDIRECTORY(distribution_function)
-ADD_SUBDIRECTORY(advection_field)
-ADD_SUBDIRECTORY(LinRood)
-ADD_SUBDIRECTORY(maxwell_solvers)
-ADD_SUBDIRECTORY(BSL)
-ADD_SUBDIRECTORY(CSL)
-ADD_SUBDIRECTORY(selalib_level EXCLUDE_FROM_ALL)
-ADD_SUBDIRECTORY(simulation)
-ADD_SUBDIRECTORY(visu_pic)
+   IF(FORTRANCL_ENABLED)
 
-SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
+     FIND_PACKAGE(FORTRANCL QUIET)
 
-IF(FORTRANCL_ENABLED)
-  FIND_PACKAGE(FORTRANCL QUIET)
-  IF(FORTRANCL_FOUND)
-    MESSAGE(STATUS "FORTRANCL FOUND")
-    INCLUDE_DIRECTORIES(${FORTRANCL_INCLUDE_DIRS})
-    ADD_SUBDIRECTORY(opencl)
-  ENDIF(FORTRANCL_FOUND)
-ENDIF(FORTRANCL_ENABLED)
+     IF(FORTRANCL_FOUND)
 
-SET(PASTIX_ENABLED NO CACHE BOOL " ")
+       MESSAGE(STATUS "FORTRANCL FOUND")
+       INCLUDE_DIRECTORIES(${FORTRANCL_INCLUDE_DIRS})
+       ADD_SUBDIRECTORY(opencl)
 
-IF(PASTIX_ENABLED)
-   IF( DEFINED ENV{SCOTCH_ROOT} )
-      SET(SCOTCH_ROOT $ENV{SCOTCH_ROOT})
-      SET(PTSCOTCH_ROOT $ENV{SCOTCH_ROOT})
+     ENDIF(FORTRANCL_FOUND)
+
+   ENDIF(FORTRANCL_ENABLED)
+
+   SET(PASTIX_ENABLED NO CACHE BOOL " ")
+
+   IF(PASTIX_ENABLED)
+
+      IF( DEFINED ENV{SCOTCH_ROOT} )
+
+         SET(SCOTCH_ROOT $ENV{SCOTCH_ROOT})
+         SET(PTSCOTCH_ROOT $ENV{SCOTCH_ROOT})
+
+      ENDIF()
+
+      IF( DEFINED ENV{PASTIX_ROOT} )
+
+         SET(PASTIX_ROOT $ENV{PASTIX_ROOT})
+         SET(MURGE_ROOT $ENV{PASTIX_ROOT})
+
+      ENDIF()
+
+      FIND_PACKAGE(RT QUIET)
+      FIND_PACKAGE(SCOTCH QUIET)
+      FIND_PACKAGE(PTSCOTCH QUIET)
+      FIND_PACKAGE(MURGE QUIET)
+      FIND_PACKAGE(PASTIX QUIET)
+
+      IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
+
+         MESSAGE(STATUS "PASTIX FOUND")
+         INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
+         ADD_SUBDIRECTORY(pastix)
+
+      ELSE()
+
+         MESSAGE(STATUS "PASTIX NOT FOUND")
+
+      ENDIF()
+
+   ENDIF(PASTIX_ENABLED)
+
+   SET(FISHPACK_ENABLED OFF CACHE BOOL " ")
+
+   IF(FISHPACK_ENABLED)
+
+      ADD_SUBDIRECTORY(fishpack)
+
    ENDIF()
-   IF( DEFINED ENV{PASTIX_ROOT} )
-      SET(PASTIX_ROOT $ENV{PASTIX_ROOT})
-      SET(MURGE_ROOT $ENV{PASTIX_ROOT})
+
+   SET(MUDPACK_ENABLED OFF CACHE BOOL "Enable multigrid solvers")
+
+   IF(MUDPACK_ENABLED)
+
+      IF(HDF5_PARALLEL_ENABLED)
+
+         ADD_SUBDIRECTORY(multigrid)
+
+      ELSE()
+
+         ADD_SUBDIRECTORY(mudpack)
+
+      ENDIF()
+
    ENDIF()
-   FIND_PACKAGE(RT QUIET)
-   FIND_PACKAGE(SCOTCH QUIET)
-   FIND_PACKAGE(PTSCOTCH QUIET)
-   FIND_PACKAGE(MURGE QUIET)
-   FIND_PACKAGE(PASTIX QUIET)
-   IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
-      MESSAGE(STATUS "PASTIX FOUND")
-      INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
-      ADD_SUBDIRECTORY(pastix)
+
+   
+   MESSAGE(STATUS "############################################################")
+   MESSAGE(STATUS "####")
+   MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
+   MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+   MESSAGE(STATUS "#### Fortran FLAGS ")
+   
+   IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
+
+      MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
+
    ELSE()
-      MESSAGE(STATUS "PASTIX NOT FOUND")
+
+      MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
+
    ENDIF()
-ENDIF(PASTIX_ENABLED)
 
-SET(FISHPACK_ENABLED OFF CACHE BOOL " ")
+   MESSAGE(STATUS "####")
+   MESSAGE(STATUS "############################################################")
 
-IF(FISHPACK_ENABLED)
-   ADD_SUBDIRECTORY(fishpack)
-ENDIF()
+   IF(STDF95)
+   
+      MESSAGE(STATUS " ")
+      MESSAGE(STATUS "####################  F95  ###################")
+      MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
+      MESSAGE(STATUS "## advection_field                          ##")
+      MESSAGE(STATUS "## Linrood                                  ##")
+      MESSAGE(STATUS "## BSL                                      ##")
+      MESSAGE(STATUS "## CSL                                      ##")
+      MESSAGE(STATUS "## distribution_function                    ##")
+      MESSAGE(STATUS "## maxwel_solvers                           ##")
+      MESSAGE(STATUS "## ode_solvers                              ##")
+      MESSAGE(STATUS "## poisson_solvers                          ##")
+      MESSAGE(STATUS "## time_solvers                             ##")
+      MESSAGE(STATUS "## package                                  ##")
+      MESSAGE(STATUS "## simulation                               ##")
+      MESSAGE(STATUS "## visu_pic                                 ##")
+      MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
+      MESSAGE(STATUS "##############################################")
 
-SET(MUDPACK_ENABLED OFF CACHE BOOL "Enable multigrid solvers")
+   ENDIF(STDF95)
 
-IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
-   IF(MPI_MODULE_ENABLED AND HDF5_PARALLEL_ENABLED)
-      ADD_SUBDIRECTORY(multigrid)
-   ELSE()
-      ADD_SUBDIRECTORY(mudpack)
+   INCLUDE(SequentialTests)
+
+   IF(MPI_MODULE_ENABLED)
+
+      INCLUDE(ProcessorCount)
+      INCLUDE(POEConfig)
+      INCLUDE(ParallelTests)
+
    ENDIF()
-ENDIF()
 
-MESSAGE(STATUS "############################################################")
-MESSAGE(STATUS "####")
-MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
-MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
-MESSAGE(STATUS "#### Fortran FLAGS ")
-IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
-MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
-ELSE()
-MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
-ENDIF()
-MESSAGE(STATUS "####")
-MESSAGE(STATUS "############################################################")
+   SET(PETSC_ENABLED OFF CACHE BOOL "Enable PETSc solvers")
 
-INCLUDE(SequentialTests)
+   IF(PETSC_ENABLED)
 
-IF(MPI_MODULE_ENABLED)
-   INCLUDE(POEConfig)
-   INCLUDE(ParallelTests)
-ENDIF()
+      FIND_PACKAGE(PETSc)
+
+      IF(PETSC_FOUND)
+
+         INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
+         ADD_SUBDIRECTORY(petsc_solvers)
+
+      ENDIF(PETSC_FOUND)
+
+   ENDIF()
+
+   INCLUDE(DoxygenConfig)
+
+ENDIF(NOT SLL_BUILD_PACKAGE)
+
+MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

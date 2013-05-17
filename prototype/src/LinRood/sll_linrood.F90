@@ -1,5 +1,5 @@
 !> \brief Implements a conservative and consistant algorithm based on an idea by Lin and Rood
-!> for the solution in 2D of $\partial_t u + \partial_x (au) = 0$, with a divergence free.
+!> for the solution in 2D of \f$\partial_t u + \partial_x (au) = 0\f$, with a divergence free.
 !> This algorithm is based on an advective backward semi-Lagrangian method for predicting 
 !> the fluxes in a conservative finite difference scheme which leads to conservativity
 !> Consitancy (conservation of constant states) is achieved by prediction using 
@@ -13,7 +13,7 @@ module sll_linrood
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
+  use sll_constants
   use weno_recon
   use weno_interp
   use sll_advection_field
@@ -30,9 +30,6 @@ module sll_linrood
      sll_real64, dimension(:,:), pointer   :: dist_func_2d, f_temp
      sll_real64, dimension(:,:), pointer   :: advfield_1, advfield_2
      sll_real64, dimension(:,:), pointer   :: flux
-!     sll_real64, dimension(:,:), allocatable   :: dist_func_2d
-!     sll_real64, dimension(:,:), allocatable   :: advfield_1, advfield_2
-!     sll_real64, dimension(:,:), allocatable   :: flux
   end type linrood_plan
 
 contains
@@ -53,11 +50,17 @@ contains
     sll_int32  :: nc_eta2
     
     ! get dimensions
+!#ifdef STDF95
+!    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
+!    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
+!#else
     nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
     nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+
     ! save dimensions in plan
     this%nc_eta1 = nc_eta1  
     this%nc_eta2 = nc_eta2
+!#endif
 
     ! allocate arrays
     SLL_ALLOCATE(this%dist_func_2d(nc_eta1,nc_eta1),ierr)
@@ -98,8 +101,13 @@ contains
    sll_real64, dimension(max(plan%nc_eta1, plan%nc_eta2)) :: aux_in, aux_out
     
    ! get dimensions
+!#ifdef STDF95
+!   nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
+!   nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type )
+!#else
    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D )
+!#endif
    delta_eta1 = 1.0_8 / nc_eta1
    delta_eta2 = 1.0_8 / nc_eta2
 
@@ -108,7 +116,11 @@ contains
    ! First component: a_1 = d H/ d eta_2
    do i1 = 1, nc_eta1
       do i2 = 1, nc_eta2
+!#ifdef STDF95
+!         aux_in(i2) =  FIELD_2D_AT_I( advfield%extend_type, i1, i2 )
+!#else
          aux_in(i2) =  FIELD_2D_AT_I( advfield, i1, i2 )
+!#endif
       end do
       call FD_WENO_recon_1D(plan%recon_eta2, nc_eta2, aux_in, aux_out)
       do i2 = 1, nc_eta2
@@ -118,7 +130,11 @@ contains
    ! Second component: a_2 = - d H/ d eta_1
    do i2 = 1, nc_eta2
       do i1 = 1, nc_eta1
+!#ifdef STDF95
+!         aux_in(i1) =  FIELD_2D_AT_I( advfield%extend_type, i1, i2 )
+!#else
          aux_in(i1) =  FIELD_2D_AT_I( advfield, i1, i2 )
+!#endif
       end do
       call FD_WENO_recon_1D(plan%recon_eta1, nc_eta1, aux_in, aux_out)
       do i1 = 1, nc_eta1
@@ -140,6 +156,7 @@ contains
          ! FIELD_2D_AT_I( dist_func_2d, i1, i2 ) = dist_func_2d%data(i1,i2)
          plan%f_temp(i1,i2) = FIELD_2D_AT_I( dist_func_2d, i1, i2 ) / &
               FIELD_2D_JACOBIAN_AT_I( dist_func_2d, eta1, eta2 )
+!#endif
          eta1 = eta1 + delta_eta1
       end do
       eta2 = eta2 + delta_eta2
