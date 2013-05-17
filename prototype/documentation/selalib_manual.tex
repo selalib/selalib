@@ -1091,6 +1091,22 @@ In testing.
 
 \chapter{Top-Level Layer: Semi-Lagrangian Toolbox}
 
+
+
+
+\section{Logical Meshes}
+
+   \subsection{Description}
+   The types of mathematical problems which we aim at studying are usually most easily solved on regular cartesian grids. Because of reasons which will become clear when we discuss the coordinate transformations module, in Selalib we follow the convention of calling the simplest cartesian grids by the name \emph{logical meshes}. We use the terms \emph{grid} and \emph{mesh} interchangeably in this text. In the code we use exclusively the term \emph{mesh}. Also by our convention, these grids will represent a uniform meshing of a multidimensional domain on the logical coordinates $\eta_1, \eta_2, ..., \eta_n$. 
+   
+   The logical meshes are thus very simple entities, and they represent an aggregate of information like the extent of the domain in each direction, and the number of cells in which such direction is divided.
+
+
+
+
+
+
+
 \section{Meshes}
 \subsection{Description}
 The mesh types aim at storing array data, but including additional information needed to put this data in context. There are several types of meshes:
