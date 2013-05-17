@@ -7,9 +7,11 @@
 !> @file vlasov_poisson_DG.F90
 !! @namespace poisson4dg
 !! @author Madaule Eric
-!! @brief tools for the resolution of the Vlasov-Poisson system with Discontinuous Galerkin
-!! @details Tools for the resolution of the Vlasov-Poisson system with Discontinuous Galerkin.
-!!          Here is the initialization. The time step tools should arrive later.
+!! @brief Tools for the resolution of the Vlasov-Poisson system with Discontinuous Galerkin.
+!! @details Tools for the resolution of the Poisson equation with Discontinuous Galerkin.
+!!          You must initialize your matrix(ces) with poisson1d_matrix. The resolution is done
+!!          with UMFpack. You just need to call poisson_solve_4dg_1d_csc to solve the Poisson
+!!          equation. If I have time I will add more flexibility to those.
 !!
 !!          This module will first be limited to 1D and should extend as people will
 !!          have the need for higher dimension (and so have time to write it).
@@ -19,9 +21,28 @@ module Poisson4dg
 #include "sll_working_precision.h"
 
   use gausslobatto
+  !those are part of FEMilaro
   use mod_sparse
+  use mod_umfpack
+
+  !use mod_octave_io_sparse
 
   implicit none
+
+  type umfpack_plan
+     !> plan for UMFpack
+     !! This plan mainly contains array objects so they are not created
+     !! every times we call UMFpack for the resolution of the Poisson problem.
+     !! Note that it does not need to be initialized, it contains workink array of fixe
+     !! size for UMFpack.
+     sll_real64 :: control(umfpack_control), info(umfpack_info)
+    integer(umf_void) :: symbolic
+  end type umfpack_plan
+
+  interface poisson_solve_4dg_1d
+     module procedure poisson_solve_4dg_1d_csc
+     !more could follow, it will depend on the time I have to do it
+  end interface poisson_solve_4dg_1d
 
 contains
 
@@ -126,8 +147,8 @@ contains
 
     !matrix D
     d=new_tri(ne*ng,ne*ng,ne*(ng**2+2))
-    d%ti=2
-    d%tj=2
+    d%ti=0
+    d%tj=0
     d%tx=0.0d0
 
     do i=1,ne
@@ -176,25 +197,19 @@ contains
     d%ti=d%ti-1
     d%tj=d%tj-1
 
-    !because the matrix is -d*m_inv*transpose(d)+c and we can't do A=-A
-    !on object of type t_col or t_tri, it is easier to do m_inv=-m_inv
-    !since d=-d is not define
-    !m_inv%tx=-m_inv%tx
-
     !construction of vp_mat
     vp_mat=matmul(matmul(tri2col(d),tri2col(m_inv)),tri2col(transpose(d)))+c
     field_mat=matmul(tri2col(m_inv),tri2col(transpose(d)))
 
-    !we impose phi_0=0 (because the matrix is periodic) (we set the first line to (1,0...0)
-    !and first value of rhs must also be 0)
-
-!!$    vp_mat2=matmul(tri2col(new_tri( ne*ng, ne*ng, (/(i-1,i=1,ne*ng)/), (/(i-1,i=1,ne*ng)/), &
-!!$         & (/( real((i-1)/max(i-1,1),8),i=1,ne*ng )/) )),vp_mat) + &
-!!$         & new_tri(ne*ng,ne*ng,(/0/),(/0/),(/1.0d0/))
     field_mat=matmul(tri2col(new_tri( ne*ng,ne*ng, (/(i-1,i=1,ne*ng)/), (/(i-1,i=1,ne*ng)/), &
          & (/ ((1.0d0/jac(i),j=1,ng),i=1,ne) /) )), field_mat)
 
-    if (x_bound>vp_mat%m .or. x_bound>vp_mat%n) then
+    !we impose phi_0=alpha (because the matrix is periodic) (we set the cooresponding line
+    !to (0,..,0,1,0,..,0)
+    !and corresponding value of rhs must be alpha)
+    !alpha is set outside; the coordinate of phi_0 is set with x_bound
+
+    if (x_bound>vp_mat%m .or. x_bound>vp_mat%n .or. x_bound<1) then
        print*,'boudary conditions out of domain'
        print*,x_bound,vp_mat%m,vp_mat%n
        print*,'no boundary conditions imposed'
@@ -224,5 +239,56 @@ contains
     end if
 
   end function nequal
+
+  subroutine poisson_solve_4dg_1d_csc(plan,a,b,x)
+    !< @brief Resolution of the Poisson problem in 1D using discontinous Galerkin/
+    !!        spectral element method
+    !! @details This routine solve the Poisson problem AX=B for dg using UMFpack.
+    !!          The matrix a is sparse, A and B must be initialized, X must be allocated before.
+    !!          If this routine returns error, see UMFpack documentation at
+    !!          http://www.cise.ufl.edu/research/sparse/umfpack/UMFPACK/Doc/UserGuide.pdf
+    !!          In the case of DG, if you define field for v>0 and v<0 you will need to call
+    !!          this rountine twice.
+    !! @param[IN] plan UMFpack plan, contains array for UMFpack
+    !! @param[IN] a t_col matrix (CSC matrix)
+    !! @param[IN] b rhs of system AX=B, 1D array
+    !! @param[OUT] x unknown of system AX=B, 1D array
+
+    implicit none
+
+    !umfpack variables
+    type(umfpack_plan),intent(inout) :: plan
+    type(t_col),intent(in) :: a
+    sll_real64,dimension(:),intent(in) :: b
+    sll_real64,dimension(:),intent(out) :: x
+
+    integer :: sys,sx
+    sll_int64 :: numeric
+
+    sx=size(x)
+    if (sx/=a%m .or. size(b)/=a%n .or. a%m/=a%n) then
+       print*,'error in array or matrix size for the resolution of Poisson problem'
+       print*,'expected square problem, passed',a%m,'×',a%n,'problem'
+       print*,'expected size(x)=',a%m,' ; expected size(b)=',a%n
+       print*,'passed',sx,'for x and',size(b),'for b'
+       print*,'exiting...'
+       stop
+    end if
+
+    sys=UMFPACK_A
+
+    call umf4def(plan%control)
+    plan%control(1)=2
+    call umf4sym (int(sx,umf_int),int(sx,umf_int),a%ap,a%ai,a%ax, &
+         & plan%symbolic,plan%control,plan%info)
+    if (plan%info(1) .lt. 0) then
+       print *, 'Error occurred in umf4sym: ', plan%info (1)
+       stop
+    end if
+    !call umf4pinf(plan%control,plan%info);stop ! this is only for debuging
+    call umf4num (a%ap,a%ai,a%ax,plan%symbolic,numeric,plan%control,plan%info)
+    call umf4solr(sys,a%ap,a%ai,a%ax,x,b,numeric,plan%control,plan%info)
+
+  end subroutine poisson_solve_4dg_1d_csc
 
 end module Poisson4DG
