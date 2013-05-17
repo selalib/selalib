@@ -103,7 +103,7 @@ contains  ! ****************************************************************
          alpha/this%cell_size)
     ! complete by periodicity
     data_out(num_points) = data_out(1)
-  end function per_interpolate1d_disp
+  end function
 
   ! Both versions F03 and F95 of compute_interpolants_per1d should have the
   ! same name. In the F95 we should add a generic interface around this
@@ -146,6 +146,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
+    output_array = 0.0
     print*, 'interpolate_values_per1d:', &
          ' not implemented for periodic interpolation'
     stop
@@ -176,6 +177,8 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
+
+
 #ifdef STDF95
     type(per_1d_interpolator),  intent(in) :: interpolator
 #else
@@ -185,6 +188,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
+    output_array = 0.0
      print*, 'interpolate_array_derivatives: ', &
          'not implemented for periodic interpolation'
     stop

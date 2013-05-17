@@ -4,7 +4,7 @@ program fft_solver
 #include "sll_assert.h"
 #include "sll_mesh_types.h"
 use sll_mesh_types
-use numeric_constants
+use sll_constants
 
 use, intrinsic :: iso_c_binding
 implicit none

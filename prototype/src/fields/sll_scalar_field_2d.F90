@@ -32,20 +32,21 @@ module sll_scalar_field_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_io
-  use numeric_constants
-  use sll_module_mapped_meshes_2d_base
-  use sll_scalar_field_initializers_base
-  use sll_misc_utils
+#include "sll_file_io.h"
+
+  use sll_constants
   use sll_module_interpolators_1d_base
+  use sll_utilities
+  use sll_scalar_field_initializers_base
+
   implicit none
 
   type scalar_field_2d
      class(sll_mapped_mesh_2d_base), pointer  :: mesh
-     sll_real64, dimension(:,:), pointer      :: data
-     sll_int32                                :: data_position
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
+     sll_real64, dimension(:,:), pointer      :: data
+     sll_int32                                :: data_position
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
   end type scalar_field_2d
@@ -61,6 +62,7 @@ module sll_scalar_field_2d
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
+  ! initializer is not use whith fortran95
   subroutine initialize_scalar_field_2d( &
     this, &
     field_name, &
@@ -71,19 +73,19 @@ contains   ! *****************************************************************
     initializer )
 
     class(scalar_field_2d), intent(inout)               :: this
-    character(len=*), intent(in)                        :: field_name
     class(sll_mapped_mesh_2d_base), pointer             :: mesh
-    sll_int32, intent(in)                               :: data_position
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
+    character(len=*), intent(in)                        :: field_name
+    sll_int32, intent(in)                               :: data_position
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
-    sll_int32  :: i1, i2
+    !sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
@@ -168,17 +170,17 @@ contains   ! *****************************************************************
     output_format)
 
     class(scalar_field_2d) :: scalar_field
+    class(sll_mapped_mesh_2d_base), pointer :: mesh
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
     sll_int32              :: local_format 
 
     sll_int32  :: i1
     sll_int32  :: i2
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: avg
+    !sll_real64 :: avg
     sll_int32  :: ierr
     sll_real64, dimension(:,:), allocatable :: val
     sll_int32  :: num_pts1

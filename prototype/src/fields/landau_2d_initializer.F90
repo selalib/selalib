@@ -1,14 +1,13 @@
 module sll_landau_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use numeric_constants
-  use sll_module_mapped_meshes_2d_base
+  use sll_constants
   use sll_scalar_field_initializers_base
   implicit none
 
   type, extends(scalar_field_2d_initializer_base) :: init_landau_2d
-    sll_real64 :: eps
     class(sll_mapped_mesh_2d_base), pointer :: mesh
+    sll_real64 :: eps
     sll_real64 :: kx
     sll_int32 :: is_delta_f
   contains
@@ -45,13 +44,13 @@ contains
     end if
     init_obj%mesh => mesh
     ! kx remains uninitialized because we need mesh information
-  end subroutine initialize_landau_2d
+  end subroutine
 
   subroutine f_x1x2_landau_2d( init_obj, data_out )
     class(init_landau_2d), intent(inout)       :: init_obj
+    class(sll_mapped_mesh_2d_base), pointer    :: mesh
     sll_real64, dimension(:,:), intent(out)    :: data_out
 
-    class(sll_mapped_mesh_2d_base), pointer    :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -92,6 +91,6 @@ contains
           endif
        end do
     end do
-  end subroutine f_x1x2_landau_2d
+  end subroutine
 
 end module sll_landau_2d_initializer

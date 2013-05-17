@@ -1,5 +1,3 @@
-!> \ file sll_time_splitting_base.F90
-!> \namespace sll_time_splitting
 !> \brief 
 !> The time splitting module provides a generic implementation of
 !> time splitting algorithms of different order 
@@ -9,6 +7,7 @@ module sll_time_splitting
 #include "sll_assert.h"
 
   implicit none
+
   type, abstract :: time_splitting
      sll_real64 :: current_time = 0.0_f64
    contains 
@@ -56,7 +55,7 @@ module sll_time_splitting
       sll_int32, intent(in)   :: number_steps
       ! local variables
       sll_int32  :: i
-      
+     
       call this%operator1(0.5_f64*dt)
       do i = 1, number_steps - 2
          call this%operator2(dt)

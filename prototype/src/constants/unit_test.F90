@@ -1,6 +1,5 @@
 program unit_test
-use numeric_constants
-use physical_constants
+use sll_constants
 
 implicit none
 

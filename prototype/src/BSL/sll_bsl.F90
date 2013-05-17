@@ -1,10 +1,10 @@
+
 module sll_bsl
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use numeric_constants
-use sll_splines
+#include "sll_constants.h"
+#include "sll_splines.h"
 
 implicit none
 
@@ -307,7 +307,7 @@ SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
     
 eta2 = eta2_min 
 do i2 = 1, nc_eta2
-
+get_filename_component(target ${_file} NAME_WE)
    call compute_spline_1D_periodic( dist_func_2D%field%data(:,i2), bsl_work%spl_eta1 )
 
    eta1 = eta1_min  
@@ -377,7 +377,7 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_real64 :: eta1_min, eta2_min, eta1_max, eta2_max
 sll_int32  :: boundary1_type, boundary2_type
 sll_real64 :: val
-sll_real64 :: eta1, eta2
+sll_real64 :: etget_filename_component(target ${_file} NAME_WE)a1, eta2
 
 ! order of scheme
 order = 2

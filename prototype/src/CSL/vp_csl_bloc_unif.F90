@@ -3,7 +3,7 @@ program vp_csl_bloc_unif
 #include "sll_working_precision.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   !use distribution_function
   !use sll_diagnostics
   use bgk_mesh_construction
@@ -17,9 +17,8 @@ program vp_csl_bloc_unif
   sll_real64,dimension(:,:),pointer::jac_array
   sll_real64,dimension(:,:,:),pointer::integration_points
 
-  sll_real64 :: delta_x1,delta_x2,x1,x2,x1c,x2c
-  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
-  sll_real64 :: val,tmp
+  sll_real64 :: delta_x1,delta_x2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2
   sll_real64 :: x1_min,x1_max,x2_min,x2_max
 
 

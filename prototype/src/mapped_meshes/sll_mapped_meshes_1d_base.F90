@@ -1,12 +1,10 @@
 module sll_module_mapped_meshes_1d_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-
-use sll_io
-use sll_gnuplot
+#include "sll_file_io.h"
 
   implicit none
-  
+
   ! A single abstract base class is defined which will further be extended
   ! by its subclasses. The two main types of mapped meshes are those
   ! represented by an analytic transformation and those represented by a

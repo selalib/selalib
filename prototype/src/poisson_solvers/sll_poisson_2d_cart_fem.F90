@@ -1,7 +1,7 @@
 program sll_poisson_2d_cart_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use numeric_constants
+use sll_constants
 implicit none
 
 sll_int32 :: i, j, ii, jj
@@ -11,7 +11,7 @@ sll_real64 :: dimx, dimy
 type :: poisson_fem
 sll_real64, dimension((nx-1)*(ny-1),(nx-1)*(ny-1)) :: A, M
 sll_real64, dimension(nx+1,(nx-1)*(ny-1)) :: mat
-sll_real64, dimension(:), allocatable :: hx, hy    ! les h_i+1/2
+sll_real64, dimension(:), pointer :: hx, hy    ! les h_i+1/2
 end type poisson_fem
 
 call test()

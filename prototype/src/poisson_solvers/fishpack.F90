@@ -7,6 +7,7 @@ module fishpack
 implicit none
 integer, private :: i, j, k
 
+!> Fishpack solver cartesian 2d
 type, public :: fishpack_2d
    sll_int32                               :: nc_eta1
    sll_int32                               :: nc_eta2
@@ -27,6 +28,7 @@ contains
    procedure :: solve => solve_2d
 end type fishpack_2d
 
+!> Fishpack solver cartesian 3d
 type, public :: fishpack_3d
    sll_int32                               :: nc_eta1
    sll_int32                               :: nc_eta2
@@ -60,18 +62,22 @@ end enum
 
 contains
 
+  !> Initialize the fishpack solver 2d.
   subroutine new_2d(this, geometry,            &
                     eta1_min,eta1_max,nc_eta1,bc_eta1, &
                     eta2_min,eta2_max,nc_eta2,bc_eta2)
 
-    class(fishpack_2d),intent(out)     :: this
-    sll_int32, intent(in)              :: nc_eta1
-    sll_int32, intent(in)              :: nc_eta2
-    sll_real64, intent(in)             :: eta1_min, eta1_max
-    sll_real64, intent(in)             :: eta2_min, eta2_max
-    sll_int32                          :: geometry
-    sll_int32                          :: bc_eta1, bc_eta2
-    !sll_real64                         :: elmbda
+    class(fishpack_2d),intent(out) :: this      !< Fishpack solver
+    sll_int32, intent(in)          :: nc_eta1   !< x number of cells
+    sll_int32, intent(in)          :: nc_eta2   !< y number of cells
+    sll_real64, intent(in)         :: eta1_min  !< left side of the domain
+    sll_real64, intent(in)         :: eta1_max  !< right side of the domain
+    sll_real64, intent(in)         :: eta2_min  !< bottom side of the domain
+    sll_real64, intent(in)         :: eta2_max  !< top side of the domain
+    sll_int32                      :: geometry  !< polar or cartesian
+    sll_int32                      :: bc_eta1   !< boundary condition parameter
+    sll_int32                      :: bc_eta2   !< boundary condition parameter
+    !sll_real64                    :: elmbda
 
     this%geometry = geometry
     ! Indicateur d'erreur
@@ -99,19 +105,26 @@ contains
 
   end subroutine new_2d
 
+  !> Initialize the fishpack solver 3d.
   subroutine new_3d(this, geometry,            &
                     eta1_min,eta1_max,nc_eta1,bc_eta1, &
                     eta2_min,eta2_max,nc_eta2,bc_eta2, &
                     eta3_min,eta3_max,nc_eta3,bc_eta3  )
 
-    class(fishpack_3d),intent(out)     :: this
-    sll_int32, intent(in)              :: nc_eta1, bc_eta1
-    sll_int32, intent(in)              :: nc_eta2, bc_eta2
-    sll_int32, intent(in)              :: nc_eta3, bc_eta3
-    sll_real64, intent(in)             :: eta1_min, eta1_max
-    sll_real64, intent(in)             :: eta2_min, eta2_max
-    sll_real64, intent(in)             :: eta3_min, eta3_max
-    sll_int32,  intent(in)             :: geometry
+    class(fishpack_3d),intent(out) :: this
+    sll_int32, intent(in)          :: nc_eta1
+    sll_int32, intent(in)          :: nc_eta2
+    sll_int32, intent(in)          :: nc_eta3
+    sll_int32, intent(in)          :: bc_eta1
+    sll_int32, intent(in)          :: bc_eta2
+    sll_int32, intent(in)          :: bc_eta3
+    sll_real64, intent(in)         :: eta1_min
+    sll_real64, intent(in)         :: eta2_min
+    sll_real64, intent(in)         :: eta3_min
+    sll_real64, intent(in)         :: eta1_max
+    sll_real64, intent(in)         :: eta2_max
+    sll_real64, intent(in)         :: eta3_max
+    sll_int32,  intent(in)         :: geometry
 
     this%geometry = geometry
     ! Indicateur d'erreur
@@ -148,6 +161,7 @@ contains
   end subroutine new_3d
 
 
+  !> Solve routine for fishpack 2d solver
   subroutine solve_2d(this, field)
 
      implicit none
@@ -190,6 +204,7 @@ contains
   
   end subroutine solve_2d
 
+  !> Solve routine for fishpack 3d solver
   subroutine solve_3d(this, field)
 
      implicit none
@@ -199,9 +214,7 @@ contains
      sll_int32                         :: ldimf
      sll_int32                         :: mdimf
   
-  
      !     auxiliary quantities.
-  
      ldimf = this%nc_eta1+1
      mdimf = this%nc_eta2+1
 
