@@ -1,5 +1,4 @@
 !> \file flow_base.F90
-!> \namespace sll_flow_base
 !> \authors                    
 !> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 !> \brief  

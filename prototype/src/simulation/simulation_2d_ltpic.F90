@@ -1,5 +1,4 @@
 !> \file simulation_2d_ltpic.F90
-!> \namespace sll_simulation_2d_ltpic
 !> \authors                    
 !> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 
