@@ -33,15 +33,16 @@ module sll_mesh_types
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use numeric_constants
-  use sll_misc_utils                  ! for is_power_of_two()
+  use sll_constants
+  use sll_utilities                  ! for is_power_of_two()
   use sll_diagnostics
   use geometry_functions 
   implicit none
 
-  enum, bind(C)
-     enumerator :: PERIODIC = 0, COMPACT = 1
-  end enum
+  integer, parameter :: PERIODIC = 0, COMPACT = 1
+  !enum, bind(C)
+  !   enumerator :: PERIODIC = 0, COMPACT = 1
+  !end enum
 
   abstract interface
      function scalar_function_2D( eta1, eta2 )

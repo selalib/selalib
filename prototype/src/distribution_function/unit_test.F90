@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-  use numeric_constants
+  use sll_constants
   use distribution_function
   use geometry_functions
   use sll_module_mapped_meshes_2d
@@ -12,19 +12,25 @@ program unit_test
  
   sll_int32 :: nc_eta1, nc_eta2
   type(sll_mapped_mesh_2d_analytic), target :: mesh2d
+#ifdef STDF95
+  type(sll_mapped_mesh_2d_analytic), pointer   :: m
+  type(init_landau_2d), pointer    :: p_init_f
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr
+  type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr
+#else
   class(sll_mapped_mesh_2d_base), pointer   :: m
+  class(scalar_field_2d_initializer_base), pointer    :: p_init_f
+  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
+  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
+#endif
   type(sll_distribution_function_2d)   :: df 
   character(32)  :: name = 'dist_func'
   character(len=4) :: cstep
   type(init_landau_2d), target :: init_landau
-  class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
   type(cubic_spline_1d_interpolator), target  :: interp_eta2
-  class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
-  class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
 
-  sll_int32  :: ierr, istep
-  sll_int32 :: ix, iv, nnode_x1, nnode_v1
+  sll_int32 :: istep
 
   nc_eta1 = 100
   nc_eta2 = 100
@@ -34,7 +40,12 @@ program unit_test
 !  px1 => sinprod_x1
 !  px2 => sinprod_x2
 !  pjac => sinprod_jac
+#ifdef STDF95
+  call initialize_mesh_2d_analytic( &
+       mesh2d, &
+#else
   call mesh2d%initialize( &
+#endif
        "mesh2d",  &
        nc_eta1+1, &
        nc_eta2+1, &
@@ -48,15 +59,24 @@ program unit_test
 
   print *, 'initialization of the interpolators'
  ! Set up the interpolators for the field
+#ifdef STDF95
+  call cubic_spline_1d_interpolator_initialize(interp_eta1, nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(interp_eta2, nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+#else
   call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
   call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+#endif
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
 
   print*, 'initialization of distribution_function'
 
+#ifdef STDF95
+  call init_landau_2d_initialize(init_landau, m,CELL_CENTERED_FIELD,0.001_f64)
+#else
   call init_landau%initialize(m,CELL_CENTERED_FIELD,0.001_f64)
+#endif
   p_init_f => init_landau
 
   print*, 'landau initialized'
@@ -76,7 +96,11 @@ program unit_test
 
   istep = 0
   call int2string(istep,cstep)
+#ifdef STDF95
+  df%extend_type%name = trim(name)//cstep
+#else
   df%name = trim(name)//cstep
+#endif
   
   call write_scalar_field_2d(df,multiply_by_jacobian=.true.) 
 

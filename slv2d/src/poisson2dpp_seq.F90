@@ -1,13 +1,14 @@
 module poisson2dpp_seq
 
-#include "selalib.h"
-
 use used_precision
 use geometry_module
 use fft_module
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+use sll_constants
+
 
 implicit none
-private
 public :: new, dealloc, solve, transposexy, transposeyx
 
 type, public:: poisson2dpp

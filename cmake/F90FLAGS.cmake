@@ -8,8 +8,8 @@ ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
 
    ADD_DEFINITIONS(-DINTEL)
 
-      SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip" CACHE STRING "opt flags")
-      SET(CMAKE_Fortran_FLAGS_DEBUG "-O0 -check all -fpe0 -traceback -ftrapuv " CACHE STRING "debug flags")
+      SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -openmp" CACHE STRING "opt flags" FORCE)
+      SET(CMAKE_Fortran_FLAGS_DEBUG "-O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv " CACHE STRING "debug flags" FORCE)
 
 ELSEIF(CMAKE_Fortran_COMPILER MATCHES "xlf")
 

@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = _build
+BUILDDIR      = ../build
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -36,10 +36,15 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
+doc:
+	(cd ../../build; make doc)
+
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -f *~ *.*~
-	rsync -vurz -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
+
+rsync:
+	rsync -vurz --exclude 'releases' --delete -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
 
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

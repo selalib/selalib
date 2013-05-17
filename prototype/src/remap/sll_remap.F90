@@ -1,8 +1,25 @@
-module remapper
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+module sll_remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "misc_utils.h"
+#include "sll_utilities.h"
   use sll_collective
   use sll_electric_field_2d_accumulator ! terrible dependency here...
   implicit none
@@ -1016,8 +1033,9 @@ contains  !******************************************************************
        .not. (global_npx4 .gt. 0) .or. &
        .not. (global_npx5 .gt. 0) .or. &
        .not. (global_npx6 .gt. 0) ) then
-       print *, 'ERROR: distribute_6D_array() needs that the array dimensions',&
-            'be greater than zero.'
+       print *, 'ERROR: distribute_6D_array() needs that the array ', &
+            'dimensions be greater than zero. Passed:', global_npx1, &
+            global_npx2, global_npx3, global_npx4, global_npx5, global_npx6
        STOP
     end if
 
@@ -1970,7 +1988,6 @@ contains  !******************************************************************
     sll_int32                                :: id, jd, kd
     sll_int32                                :: i
     sll_int32                                :: col_sz
-    sll_int32                                :: ierr
     sll_int32                                :: loi, loj, lok
     sll_int32                                :: hii, hij, hik
     type(box_3D)                             :: sbox
@@ -2104,7 +2121,6 @@ contains  !******************************************************************
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj
     sll_int32                                 :: hii, hij
     type(box_2D)                              :: sbox
@@ -2298,7 +2314,6 @@ contains  !******************************************************************
     sll_int32                                 :: id, jd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj
     sll_int32                                 :: hii, hij
     type(box_2D)                              :: sbox
@@ -2609,8 +2624,8 @@ print *, 'remap 2d complex:'
     type(remap_plan_3D_real64), pointer              :: plan
     sll_real64, dimension(:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:), intent(out) :: data_out
-    sll_real64, dimension(:), pointer          :: sb     ! send buffer
-    sll_real64, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
     sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
@@ -2621,7 +2636,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok
     sll_int32                                 :: hii, hij, hik
     type(box_3D)                              :: sbox
@@ -2764,7 +2778,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd, ld
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok, lol
     sll_int32                                 :: hii, hij, hik, hil
     type(box_4D)                              :: sbox
@@ -2915,7 +2928,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok
     sll_int32                                 :: hii, hij, hik
     type(box_3D)                              :: sbox
@@ -3050,7 +3062,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok, lol, lom, lon
     sll_int32                                 :: hii, hij, hik, hil, him, hin
     type(box_6D)                              :: sbox
@@ -3110,10 +3121,9 @@ print *, 'remap 2d complex:'
           tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
           local_hi = global_to_local_6D( init_layout, tmpa)
 
-          ! The plan to load the send buffer is to traverse the integer
-          ! array with a single index (loc). When we load the buffer, each
-          ! data element may occupy multiple integer 'slots', hence the
-          ! loading index needs to be manually increased. As an advantage,
+          ! The plan to load the send buffer is to traverse the send buffer
+          ! array with a single index (loc). We manually increment the loading
+          ! index. As an advantage,
           ! we can do some error checking every time we send data to a 
           ! different process, as we know what is the expected value of 
           ! the index at that point.
@@ -3134,7 +3144,6 @@ print *, 'remap 2d complex:'
        end if
     end do
     ! Comment the following when not debugging    
-
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
 !!$    call flush(6)
@@ -3158,7 +3167,6 @@ print *, 'remap 2d complex:'
 !!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
 !!$    print *, rb(0:size(rb)-1)
 !!$    call flush(6)
-
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
@@ -3221,7 +3229,6 @@ print *, 'remap 2d complex:'
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
-    sll_int32                                 :: ierr
     sll_int32                                 :: loi, loj, lok, lol, lom, lon
     sll_int32                                 :: hii, hij, hik, hil, him, hin
     type(box_6D)                              :: sbox
@@ -4400,4 +4407,4 @@ print *, 'remap 2d complex:'
   end function layout_2D_from_layout_4D
 #endif
 
-end module remapper
+end module sll_remapper

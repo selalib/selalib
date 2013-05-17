@@ -1,5 +1,4 @@
 !> \file simulation_2d_ltpic.F90
-!> \namespace sll_simulation_2d_ltpic
 !> \authors                    
 !> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 
@@ -8,7 +7,7 @@ module sll_simulation_2d_ltpic
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_tsi_2d_initializer
   use sll_simulation_base
   use sll_poisson_1d_periodic

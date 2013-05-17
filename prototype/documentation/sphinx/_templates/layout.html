@@ -1,5 +1,13 @@
 {% extends "!layout.html" %}
 
+{% block rootrellink %}
+          <li><a href="{{ pathto('index') }}">Home</a>|&nbsp;</li>
+          <li><a href="{{ pathto('prototype/getting_started') }}">Prototype</a>|&nbsp;</li>
+          <li><a href="{{ pathto('install/index') }}">Installation</a>|&nbsp;</li>
+          <li><a href="http:/selalib.gforge.inria.fr/doxygen/html">Doxygen</a>|&nbsp;</li>
+{% endblock %}
+
+
 {% block relbar1 %}
 <link rel="shortcut icon" href="_static/favicon.ico">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">

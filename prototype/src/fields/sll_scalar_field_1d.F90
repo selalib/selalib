@@ -32,11 +32,11 @@ module sll_scalar_field_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_io
-  use numeric_constants
+#include "sll_file_io.h"
+  use sll_constants
   use sll_scalar_field_initializers_base
   use sll_module_mapped_meshes_1d_base
-  use sll_misc_utils
+  use sll_utilities
   implicit none
   
   !I removed this line because, it not exists in 2d version
@@ -44,11 +44,7 @@ module sll_scalar_field_1d
   !integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
 
   type scalar_field_1d
-#ifdef STDF95
-     type(sll_mapped_mesh_1d_base), pointer :: mesh
-#else
      class(sll_mapped_mesh_1d_base), pointer :: mesh
-#endif
      sll_real64, dimension(:), pointer       :: data
      sll_int32                               :: data_position
      character(len=64)                       :: name
@@ -62,19 +58,8 @@ module sll_scalar_field_1d
      end function scalar_function_1D
   end interface
 
-contains   ! *****************************************************************  
+contains   ! *i****************************************************************  
   ! this used to be new_scalar_field_1d
-#ifdef STDF95
-  subroutine scalar_field_1d_initialize_scalar_field_1d( &
-    this, &
-    field_name, &
-    mesh, &
-    data_position, &
-    init_function)
-
-    type(scalar_field_1d), intent(inout)               :: this
-    type(sll_mapped_mesh_1d_base), pointer             :: mesh
-#else
   subroutine initialize_scalar_field_1d( &
     this, &
     field_name, &
@@ -84,10 +69,9 @@ contains   ! *****************************************************************
 
     class(scalar_field_1d), intent(inout)               :: this
     class(sll_mapped_mesh_1d_base), pointer             :: mesh
-#endif
+    procedure(scalar_function_1D), optional             :: init_function
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
-    procedure(scalar_function_1D), optional             :: init_function
     sll_int32  :: ierr
     sll_int32  :: num_cells1
     sll_int32  :: num_pts1
@@ -123,12 +107,7 @@ contains   ! *****************************************************************
           this%data = 0.0_f64 ! initialize to zero
        end if
     endif
-#ifdef STDF95
-  end subroutine scalar_field_1d_initialize_scalar_field_1d
-
-#else
   end subroutine initialize_scalar_field_1d
-#endif
 
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
@@ -145,12 +124,8 @@ contains   ! *****************************************************************
     multiply_by_jacobian, &
     output_file_name, &
     output_format)
-#ifdef STDF95
-    type(scalar_field_1d)                  :: scalar_field
-#else
     class(scalar_field_1d)                  :: scalar_field
-#endif
-    sll_real64, dimension(:), pointer      :: x1_array
+    !sll_real64, dimension(:), pointer      :: x1_array
     logical, optional                       :: multiply_by_jacobian 
     sll_int32, optional                     :: output_format 
     character(len=*), optional              :: output_file_name

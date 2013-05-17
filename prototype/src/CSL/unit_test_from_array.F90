@@ -2,7 +2,7 @@ program unit_test_from_array
 #include "sll_working_precision.h"
 #include "sll_mesh_types.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use distribution_function
   use sll_diagnostics
   use sll_csl

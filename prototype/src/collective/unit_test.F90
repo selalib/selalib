@@ -19,10 +19,12 @@ program collective_test
   sll_real32, ALLOCATABLE, DIMENSION(:) :: somme
 
   sll_real32, allocatable, dimension(:) :: sendbuf_real, recvbuf_real
-  sll_int32, allocatable, dimension(:) :: sendbuf_int, recvbuf_int
+  sll_int32, allocatable, dimension(:) :: sendbuf_int!, recvbuf_int
+  sll_int32, pointer, dimension(:) :: recvbuf_int
   logical, allocatable, dimension(:) :: sendbuf_log, recvbuf_log
   sll_int32, allocatable, dimension(:) :: sendcounts, recvcounts
   sll_int32, allocatable, dimension(:) :: sdispls, rdispls
+  
 
   call sll_boot_collective()
   rank = sll_get_collective_rank( sll_world_collective )
@@ -32,7 +34,7 @@ program collective_test
   sendbuf_real(:)=rank
   SLL_ALLOCATE(recvbuf_real(1),ierr)
   
-  call sll_collective_reduce_real( sll_world_collective, sendbuf_real, &
+  call sll_collective_reduce_real32( sll_world_collective, sendbuf_real, &
                                       1    , MPI_SUM,0,recvbuf_real)
    
   if( rank == 0 ) then
@@ -132,7 +134,7 @@ program collective_test
  
   call sll_collective_barrier(sll_world_collective)
  
-  call sll_collective_reduce_real( sll_world_collective,recvbuf_real,&
+  call sll_collective_reduce_real32( sll_world_collective,recvbuf_real,&
                                       1    , MPI_SUM,0,sendbuf_real)
 
   if( rank == 0 ) then
@@ -160,7 +162,7 @@ program collective_test
   !PRINT *,'(BCAST) ','Me, process ',rank,', I''ve received  ',values,&
   !        ' from process 0'
   
-  call sll_collective_reduce_real(sll_world_collective, sendbuf_real,1,&
+  call sll_collective_reduce_real32(sll_world_collective, sendbuf_real,1,&
                                   MPI_SUM,0,somme)
 
   if( rank == 0 ) then
@@ -194,7 +196,7 @@ program collective_test
   !PRINT *,'(SCATTER REAL) ', 'Me, process ', rank, ', I''ve received', recvbuf_real, &
   !         ' from process 0'
 
-  call sll_collective_reduce_real(sll_world_collective, recvbuf_real,1,&
+  call sll_collective_reduce_real32(sll_world_collective, recvbuf_real,1,&
                                   MPI_SUM,0,somme)
 
   if( rank .eq. 0 ) then
@@ -245,7 +247,7 @@ program collective_test
   !print *, 'Me process ',rank,' I''ve receveid ', recvbuf_real
     
   SLL_ALLOCATE(somme(1), ierr)
-  call sll_collective_reduce_real(sll_world_collective, &
+  call sll_collective_reduce_real32(sll_world_collective, &
                                   (/ SUM(recvbuf_real) /), &
                                   1,MPI_SUM,0,somme)
 
@@ -339,8 +341,8 @@ program collective_test
                                   recvbuf_real )
 
   SLL_ALLOCATE(somme(1),ierr)
-  call sll_collective_reduce_real(sll_world_collective,(/ SUM(sendbuf_real) /),&
-                                      1,MPI_SUM,0,somme)
+  call sll_collective_reduce_real32(sll_world_collective,&
+       (/ SUM(sendbuf_real) /), 1,MPI_SUM,0,somme)
 
   !IF(rank==0) THEN
   ! PRINT *,'(GATHER) ', 'Me, process 0.', ' I''ve receveid the values : ', recvbuf_real
@@ -462,10 +464,8 @@ program collective_test
   !                                 sendbuf_int(:)
   
   
-#ifndef STDF95
   call sll_collective_alltoall_int( sendbuf_int ,1 ,1, &
                                    recvbuf_int, sll_world_collective)  
-#endif
 
   !PRINT *,'Moi, processus ',rank,', j''ai recu ',recvbuf_int
 
@@ -508,10 +508,8 @@ program collective_test
    sendcounts(1)=2
   endif
 
-#ifndef STDF95
    call sll_collective_alltoallV_int_simple( sendbuf_int, sendcounts, &
                                   recvbuf_int,sll_world_collective)
-#endif
 
  SLL_ALLOCATE(somme(1),ierr)
  call sll_collective_reduce_int(sll_world_collective,&
@@ -573,7 +571,7 @@ program collective_test
                                           rdispls, sll_world_collective)
 
  SLL_ALLOCATE(somme(1),ierr)
- call sll_collective_reduce_real(sll_world_collective,&
+ call sll_collective_reduce_real32(sll_world_collective,&
                           (/ SUM(recvbuf_real(:)) /) ,1,MPI_SUM,0,somme)
  if(rank.eq.0) then
    if ( somme(1) .eq. (size+1)*(size-1)*size/2.0 ) then

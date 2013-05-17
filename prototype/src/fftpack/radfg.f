@@ -2,7 +2,7 @@
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION       CH(IDO,L1,IP)          ,CC(IDO,IP,L1)          ,
      1                C1(IDO,L1,IP)          ,C2(IDL1,IP),
-     2                CH2(IDL1,IP)           ,WA(1)
+     2                CH2(IDL1,IP)           ,WA(*)
       DATA TPI/6.28318530717958647692D0/
       ARG = TPI/FLOAT(IP)
       DCP = COS(ARG)

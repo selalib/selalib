@@ -9,41 +9,66 @@ module simulation_VP1D_curvilinear_analytic
 #include "sll_assert.h"
 #include "sll_memory.h"
 
+#ifndef STDF95
   use sll_simulation_base
+#endif
   use cubic_non_uniform_splines
-  use numeric_constants
+  use sll_constants
   implicit none
 
+#ifdef STDF95
+  type :: sll_simulation_VP1D_curvilinear_analytic
+#else
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_VP1D_curvilinear_analytic
+#endif
     ! Numerical parameters
     sll_real64 :: dt
+#ifndef STDF95
   contains
     procedure, pass(sim) :: run => run_VP1D_curvilinear_analytic
+    procedure, pass(sim) :: init_from_file => VP1D_curvilinear_analytic_init
+#endif
   end type sll_simulation_VP1D_curvilinear_analytic
 
 contains
 
+  subroutine VP1D_curvilinear_analytic_init(sim, filename)
+#ifdef STDF95
+    type(sll_simulation_VP1D_curvilinear_analytic), intent(inout)  :: sim
+#else
+    class(sll_simulation_VP1D_curvilinear_analytic), intent(inout) :: sim
+#endif
+    character(len=*), intent(in)                                 :: filename
+    ! Declare here the variables to be read in through a namelist and that
+    ! are to be kept inside the sim object. Look at the parallel vp4d simulation
+    ! for an example.
+    print *, 'This is a dummy function. Needs implementation.'
+  end subroutine VP1D_curvilinear_analytic_init
 
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here
   ! directly, but this should be cleaned up.
   subroutine run_VP1D_curvilinear_analytic(sim)
     implicit none
+#ifdef STDF95
+    type(sll_simulation_VP1D_curvilinear_analytic), intent(inout) :: sim
+#else
     class(sll_simulation_VP1D_curvilinear_analytic), intent(inout) :: sim
+#endif
     type(cubic_nonunif_spline_1D), pointer :: spl_per_x1,spl_per_x2
     sll_int32 :: nc_eta1,nc_eta2,N_x1_poisson,N,nb_step
     sll_int32:: mesh_case,test_case,rho_case,div_Case
     sll_int32:: i,i1,i2,err,step
     sll_real64 :: x1_min,x1_max,x2_min,x2_max
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max
-    sll_real64 :: delta_x1,delta_x2,delta_x1_poisson,dt,delta_eta1,delta_eta2
+    sll_real64 :: delta_x1,delta_x2,dt,delta_eta1,delta_eta2
     sll_real64,dimension(:), pointer :: node_positions_x1,node_positions_x2
-    sll_real64,dimension(:), pointer :: node_positions_x1_unit,node_positions_x2_unit
-    sll_real64,dimension(:), pointer :: node_positions_x1_poisson
+    !sll_real64,dimension(:), pointer :: node_positions_x1_unit,node_positions_x2_unit
+    !sll_real64,dimension(:), pointer :: node_positions_x1_poisson
     sll_real64,dimension(:), pointer :: rho,E,phi_poisson
     sll_real64,dimension(:), pointer :: buf1d,Xstar
-    sll_real64,dimension(:), pointer :: random_vector_x1,random_vector_x2
+    !sll_real64,dimension(:), pointer :: random_vector_x1,random_vector_x2
     sll_real64,dimension(:,:), pointer :: f,f_store
     !sll_real64,dimension(:,:), pointer :: integration_points
     sll_real64,dimension(:,:),pointer::x1n_array,x2n_array,x1c_array,x2c_array
@@ -51,7 +76,7 @@ contains
     !sll_real64, dimension(:,:), pointer :: a1,a2,psi
     sll_real64,dimension(:,:,:),pointer::integration_points
     sll_real64 :: landau_alpha,alpha_mesh,geom_x(2,2),geom_eta(2,2)
-    sll_real64 :: val,x1,x2,tmp
+    sll_real64 :: val,x1,x2
     
     !initialization of parameters
     nc_eta1=64
@@ -214,7 +239,7 @@ contains
 
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use numeric_constants
+    use sll_constants
     use cubic_non_uniform_splines
     implicit none
     
@@ -315,7 +340,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -454,7 +479,7 @@ end subroutine compute_rho_mapped_mesh2
 
 subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2
@@ -1063,7 +1088,7 @@ end subroutine advect_classical_csl
    subroutine construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
    &geom_x,geom_eta,alpha_mesh)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_int32,intent(in)::nc_eta1,nc_eta2,mesh_case
     sll_real64,intent(in)::geom_x(2,2),geom_eta(2,2),alpha_mesh
@@ -1071,11 +1096,11 @@ end subroutine advect_classical_csl
     sll_real64,dimension(:,:),pointer::jac_array
     sll_real64,dimension(:,:,:),pointer::integration_points
     sll_int32  :: i1,i2,err,i
-    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1,x2,x1c,x2c
+    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
     sll_real64 :: val,tmp
     sll_real64 :: slope_mesh1,slope_mesh2,wk,ll,dxx,slope_mesh3
-    sll_int    ::Nzon,Nzon2,Nzon3
+    sll_int    ::Nzon,Nzon2!,Nzon3
     sll_real64 , dimension(4)         :: ws
     sll_int , dimension(4)         :: Ns
 
@@ -1693,7 +1718,7 @@ function compute_non_unif_integral_spline_old(integration_points,N_points,Nb)
   sll_real64,dimension(:,:),pointer :: integration_points_fine
   sll_int,intent(in) :: N_points,Nb
   sll_int :: i,N_points_fine,ierr,j
-  sll_real64 :: tmp,x1,x2,fval1,fval2
+  sll_real64 :: x1,x2
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline_old = 0._f64
   if(N_points<=1)then
@@ -1742,7 +1767,7 @@ function compute_non_unif_integral_spline(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_middle
   sll_int,intent(in) :: N_points
-  sll_int :: i,ierr,j
+  sll_int :: i,ierr
   sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline = 0._f64
@@ -1783,7 +1808,7 @@ function compute_non_unif_integral_spline_per(integration_points,N_points)
   sll_real64,dimension(:,:),pointer :: integration_points
   sll_real64,dimension(:,:),pointer :: integration_points_middle
   sll_int,intent(in) :: N_points
-  sll_int :: i,ierr,j
+  sll_int :: i,ierr
   sll_real64 :: tmp,x1,x2,fval1,fval2,fvalm
   type(cubic_nonunif_spline_1D), pointer :: spl
   compute_non_unif_integral_spline_per = 0._f64

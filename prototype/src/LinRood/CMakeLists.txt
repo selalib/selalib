@@ -4,6 +4,7 @@ ENDIF()
 
 add_library(sll_linrood STATIC
 	sll_linrood.F90)
+IF (NOT STDF95)
 add_executable(test_linrood unit_test.F90)
 target_link_libraries(test_linrood
         sll_linrood
@@ -12,7 +13,7 @@ target_link_libraries(test_linrood
 	sll_distribution_function
 	geometry_functions
 	sll_scalar_field_2d
-	sll_low_level_file_io
+	sll_file_io
 	sll_interpolators
 	sll_splines
 	sll_mapped_meshes
@@ -20,3 +21,4 @@ target_link_libraries(test_linrood
 	sll_memory
 	sll_assertion
 	sll_constants)
+ENDIF (NOT STDF95)
