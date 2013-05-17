@@ -1,174 +1,251 @@
 program test_DG
 #include "sll_working_precision.h"
 
-  use sll_nu_cart_mesh
+  !use sll_nu_cart_mesh
   use gausslobatto
-  use mod_sparse
+  !use mod_sparse
 
-!!$  use mod_octave_io_sparse
+  use mod_octave_io_sparse
 
   implicit none
 
+!local max of der
+
+  type(gausslobatto1D) :: gausslob
+
+  call init_gausslobatto_1d(10,gausslob)
+  open(13,file='erato')
+  call write_octave(gausslob%der,'der',13)
+  close(13)
+  call delete_gausslobatto_1d(gausslob)
+
+!check GLL nodes and weigh
+
+!!$  integer :: i,j
+!!$  type(gausslobatto1D) :: gausslob
+!!$
+!!$  print *, 'Exact value: '
+!!$  write (*,'(e22.15)') 0.4674011002723395
+!!$
+!!$  print*,'Test Gauss-Lobatto'
+!!$  do i=2,10
+!!$     call init_gausslobatto_1d(i,gausslob)
+!!$     !don't to it in real program, use transformation between real mesh and reference element
+!!$     !here it is done for simplicity
+!!$     gausslob%node(:)=(gausslob%node(:)+1.0d0)*(sll_pi/2.0d0)/2.0d0
+!!$     write (*,'(a, i8, a, e20.12)') 'case n = ', i, ': ', &
+!!$          & sum((/ (gausslob%weigh(j)*test_func(gausslob%node(j))*sll_pi/4.0d0,j=1,i) /))
+!!$     call delete_gausslobatto_1d(gausslob)
+!!$  end do
+!!$
+!!$  print*,'Test Gauss-lobatto points and weight (5 points)'
+!!$  call init_gausslobatto_1d(5,gausslob)
+!!$  print*,gausslob%node
+!!$  print*,gausslob%weigh
+!!$  call delete_gausslobatto_1d(gausslob)
+!!$
+!!$contains
+!!$
+!!$  function test_func(x)
+!!$    intrinsic :: dcos
+!!$    sll_real64 :: test_func
+!!$    sll_real64, intent(in) :: x
+!!$    test_func = x*x*dcos(x)
+!!$  end function test_func
+
+!max(w)=O(ng^a)
+
+!!$  type(gausslobatto1D) :: gausslob
+!!$  sll_real64 :: maxw,maxd
+!!$  sll_int32 :: i
+!!$
+!!$  open(13,file='erato')
+!!$
+!!$  do i=2,10
+!!$     call init_gausslobatto_1d(i,gausslob)
+!!$     !maxw=maxval(gausslob%weigh)
+!!$     gausslob%der=abs(gausslob%der)
+!!$     !gausslob%der(1,1)=0.0d0
+!!$     !gausslob%der(i,i)=0.0d0
+!!$     !maxd=maxval(gausslob%der)
+!!$     !write(13,*)i,maxw,maxd
+!!$     write(13,*)i
+!!$     write(13,*)gausslob%der
+!!$     call delete_gausslobatto_1d(gausslob)
+!!$  end do
+!!$
+!!$  close(13)
+
 !transposition and derivative matrix
 
-  type(t_tri) :: d1,d2,d3
-  sll_int32 :: i,j,ne,ng,k
-  type(gausslobatto1D) :: gausslob
-  sll_real64 :: c12
-
-  ne=5
-  ng=6
-
-  c12=-0.5d0
-  !c12=0.0d0
-
-  call init_gausslobatto_1d(ng,gausslob)
-  d1=new_tri(ne*ng,ne*ng,ne*(ng**2+2))
-  d2=new_tri(ne*ng,ne*ng,ne*(ng**2+2))
-
+!!$  type(t_tri) :: d1,d2,d3
+!!$  sll_int32 :: i,j,ne,ng,k
+!!$  type(gausslobatto1D) :: gausslob
+!!$  sll_real64 :: c12!,som
+!!$
+!!$  ne=5
+!!$  ng=6
+!!$
+!!$  !c12=0.5d0
+!!$  c12=0.0d0
+!!$
+!!$  call init_gausslobatto_1d(ng,gausslob)
+!!$  d1=new_tri(ne*ng,ne*ng,ne*(ng**2+2))
+!!$  d2=new_tri(ne*ng,ne*ng,ne*(ng**2+2))
+!!$
 !!$  print*,'der'
 !!$  do i=1,ng
-!!$     print*,gausslob%der(i,:)
+!!$     som=0.0d0
+!!$     do j=1,ng
+!!$        som=som+gausslob%der(i,j)
+!!$     end do
+!!$     print*,j,som
 !!$  end do
 !!$  print*,'end der'
-
-  d1%ti=2
-  d1%tj=2
-  d2%ti=2
-  d2%tj=2
-  d1%tx=0.0d0
-  d2%tx=0.0d0
- 
-  do i=1,ne
-     !line
-     do j=1,ng
-        !column
-        do k=1,ng
-           d1%ti((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+j
-           d1%tj((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+k
-           d1%tx((i-1)*ng**2+(j-1)*ng+k)=gausslob%der(j,k)
+!!$
+!!$  d1%ti=2
+!!$  d1%tj=2
+!!$  d2%ti=2
+!!$  d2%tj=2
+!!$  d1%tx=0.0d0
+!!$  d2%tx=0.0d0
+!!$
+!!$  do i=1,ne
+!!$     !line
+!!$     do j=1,ng
+!!$        !column
+!!$        do k=1,ng
+!!$           d1%ti((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+j
+!!$           d1%tj((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+k
+!!$           d1%tx((i-1)*ng**2+(j-1)*ng+k)=gausslob%der(j,k)
 !!$           d1%tx((i-1)*ng**2+(j-1)*ng+k)=gausslob%der(k,j)
-
-           d2%ti((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+j
-           d2%tj((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+k
+!!$
+!!$           d2%ti((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+j
+!!$           d2%tj((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+k
 !!$           d2%tx((i-1)*ng**2+(j-1)*ng+k)=gausslob%der(j,k)
-           d2%tx((i-1)*ng**2+(j-1)*ng+k)=-gausslob%der(j,k)
-           
-           if (j==1 .and. k==1) then
+!!$           d2%tx((i-1)*ng**2+(j-1)*ng+k)=-gausslob%der(j,k)
+!!$           d2%tx((i-1)*ng**2+(j-1)*ng+k)=-gausslob%der(k,j)
+!!$           
+!!$           if (j==1 .and. k==1) then
 !!$              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)-(-0.5d0-c12)
 !!$              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)-0.5d0+c12
 !!$              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)+1.0d0
 !!$              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)-1.0d
-              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)-(-0.5d0+c12)
-              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)-0.5d0-c12
-           else if (j==ng .and. k==ng) then
-              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)-(0.5d0+c12)
-              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)+0.5d0-c12
+!!$              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)-(-0.5d0+c12)
+!!$              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)-0.5d0-c12
+!!$           else if (j==ng .and. k==ng) then
+!!$              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)-(0.5d0+c12)
+!!$              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)+0.5d0-c12
 !!$              d1%tx((i-1)*ng**2+(j-1)*ng+k)=d1%tx((i-1)*ng**2+(j-1)*ng+k)-1.0d0
 !!$              d2%tx((i-1)*ng**2+(j-1)*ng+k)=d2%tx((i-1)*ng**2+(j-1)*ng+k)+1.0d0
-           end if
-        end do
-     end do
-  end do
-
-  d1%ti(ne*ng**2+1)=ng
-  d1%tj(ne*ng**2+1)=ng+1
-  d1%tx(ne*ng**2+1)=-(0.5d0-c12)
+!!$           end if
+!!$        end do
+!!$     end do
+!!$  end do
+!if (.false.) then
+!!$  d1%ti(ne*ng**2+1)=ng
+!!$  d1%tj(ne*ng**2+1)=ng+1
+!!$  d1%tx(ne*ng**2+1)=-(0.5d0-c12)
 !!$  d1%tx(ne*ng**2+1)=1.0d0
-
-  d1%ti(ne*(ng**2+2))=1
-  d1%tj(ne*(ng**2+2))=ne*ng
+!!$
+!!$  d1%ti(ne*(ng**2+2))=1
+!!$  d1%tj(ne*(ng**2+2))=ne*ng
 !!$  d1%tx(ne*(ng**2+2))=-(-0.5d0+c12)
 !!$  d1%tx(ne*(ng**2+2))=-1.0d0
-  d1%tx(ne*(ng**2+2))=-(-0.5d0-c12)
-
-  d2%ti(ne*ng**2+1)=ng
-  d2%tj(ne*ng**2+1)=ng+1
-  d2%tx(ne*ng**2+1)=0.5d0+c12
+!!$  d1%tx(ne*(ng**2+2))=-(-0.5d0-c12)
+!!$
+!!$  d2%ti(ne*ng**2+1)=ng
+!!$  d2%tj(ne*ng**2+1)=ng+1
+!!$  d2%tx(ne*ng**2+1)=0.5d0+c12
 !!$  d2%tx(ne*ng**2+1)=-1.0d0
-
-  d2%ti(ne*(ng**2+2))=1
-  d2%tj(ne*(ng**2+2))=ne*ng
+!!$
+!!$  d2%ti(ne*(ng**2+2))=1
+!!$  d2%tj(ne*(ng**2+2))=ne*ng
 !!$  d2%tx(ne*(ng**2+2))=-0.5d0-c12
 !!$  d2%tx(ne*(ng**2+2))=1.0d0
-  d2%tx(ne*(ng**2+2))=-0.5d0+c12
-
-  do i=2,ne-1
-     d1%ti(ne*ng**2+i)=i*ng
-     d1%tj(ne*ng**2+i)=i*ng+1
-     d1%tx(ne*ng**2+i)=-(0.5d0-c12)
+!!$  d2%tx(ne*(ng**2+2))=-0.5d0+c12
+!!$
+!!$  do i=2,ne-1
+!!$     d1%ti(ne*ng**2+i)=i*ng
+!!$     d1%tj(ne*ng**2+i)=i*ng+1
+!!$     d1%tx(ne*ng**2+i)=-(0.5d0-c12)
 !!$     d1%tx(ne*ng**2+i)=1.0d0
-
-     d1%ti(ne*(ng**2+2)-i+1)=(i-1)*ng+1
-     d1%tj(ne*(ng**2+2)-i+1)=(i-1)*ng
+!!$
+!!$     d1%ti(ne*(ng**2+2)-i+1)=(i-1)*ng+1
+!!$     d1%tj(ne*(ng**2+2)-i+1)=(i-1)*ng
 !!$     d1%tx(ne*(ng**2+2)-i+1)=-(-0.5d0+c12)
 !!$     d1%tx(ne*(ng**2+2)-i+1)=-1.0d
-     d1%tx(ne*(ng**2+2)-i+1)=-(-0.5d0-c12)
-
-     d2%ti(ne*ng**2+i)=i*ng
-     d2%tj(ne*ng**2+i)=i*ng+1
-     d2%tx(ne*ng**2+i)=0.5d0+c12
+!!$     d1%tx(ne*(ng**2+2)-i+1)=-(-0.5d0-c12)
+!!$
+!!$     d2%ti(ne*ng**2+i)=i*ng
+!!$     d2%tj(ne*ng**2+i)=i*ng+1
+!!$     d2%tx(ne*ng**2+i)=0.5d0+c12
 !!$     d2%tx(ne*ng**2+i)=-1.0d0
-
-     d2%ti(ne*(ng**2+2)-i+1)=(i-1)*ng+1
-     d2%tj(ne*(ng**2+2)-i+1)=(i-1)*ng
+!!$
+!!$     d2%ti(ne*(ng**2+2)-i+1)=(i-1)*ng+1
+!!$     d2%tj(ne*(ng**2+2)-i+1)=(i-1)*ng
 !!$     d2%tx(ne*(ng**2+2)-i+1)=-0.5d0-c12
 !!$     d2%tx(ne*(ng**2+2)-i+1)=1.0d0
-     d2%tx(ne*(ng**2+2)-i+1)=-0.5d0+c12
-
-  end do
-
-  d1%ti(ne*ng**2+ne)=ne*ng
-  d1%tj(ne*ng**2+ne)=1
-  d1%tx(ne*ng**2+ne)=-(0.5d0-c12)
+!!$     d2%tx(ne*(ng**2+2)-i+1)=-0.5d0+c12
+!!$
+!!$  end do
+!!$
+!!$  d1%ti(ne*ng**2+ne)=ne*ng
+!!$  d1%tj(ne*ng**2+ne)=1
+!!$  d1%tx(ne*ng**2+ne)=-(0.5d0-c12)
 !!$  d1%tx(ne*ng**2+ne)=1.0d0
-
-  d1%ti(ne*ng**2+ne+1)=(ne-1)*ng+1
-  d1%tj(ne*ng**2+ne+1)=(ne-1)*ng
+!!$
+!!$  d1%ti(ne*ng**2+ne+1)=(ne-1)*ng+1
+!!$  d1%tj(ne*ng**2+ne+1)=(ne-1)*ng
 !!$  d1%tx(ne*ng**2+ne+1)=-(-0.5d0+c12)
 !!$  d1%tx(ne*ng**2+ne+1)=-1.0d0
-  d1%tx(ne*ng**2+ne+1)=-(-0.5d0-c12)
-
-  d2%ti(ne*ng**2+ne)=ne*ng
-  d2%tj(ne*ng**2+ne)=1
-  d2%tx(ne*ng**2+ne)=0.5d0+c12
+!!$  d1%tx(ne*ng**2+ne+1)=-(-0.5d0-c12)
+!!$
+!!$  d2%ti(ne*ng**2+ne)=ne*ng
+!!$  d2%tj(ne*ng**2+ne)=1
+!!$  d2%tx(ne*ng**2+ne)=0.5d0+c12
 !!$  d2%tx(ne*ng**2+ne)=-1.0d0
-
-  d2%ti(ne*ng**2+ne+1)=(ne-1)*ng+1
-  d2%tj(ne*ng**2+ne+1)=(ne-1)*ng
+!!$
+!!$  d2%ti(ne*ng**2+ne+1)=(ne-1)*ng+1
+!!$  d2%tj(ne*ng**2+ne+1)=(ne-1)*ng
 !!$  d2%tx(ne*ng**2+ne+1)=-0.5d0-c12
 !!$  d2%tx(ne*ng**2+ne+1)=1.0d0
-  d2%tx(ne*ng**2+ne+1)=-0.5d0+c12
-
-  d1%ti=d1%ti-1
-  d1%tj=d1%tj-1
-  d2%ti=d2%ti-1
-  d2%tj=d2%tj-1
-
-  d2%tx=-d2%tx
-  d3=col2tri(tri2col(d2+transpose(d1)))
+!!$  d2%tx(ne*ng**2+ne+1)=-0.5d0+c12
+!!$!end if
+!!$  d1%ti=d1%ti-1
+!!$  d1%tj=d1%tj-1
+!!$  d2%ti=d2%ti-1
+!!$  d2%tj=d2%tj-1
+!!$
+!!$  d2%tx=-d2%tx
+!!$  d3=col2tri(tri2col(d2+transpose(d1)))
 !!$  d3=col2tri(tri2col(d2+d1))
-
+!!$
 !!$  do i=1,d3%nz
 !!$     if (d3%tx(i)<=0.001d0) then
 !!$        d3%tx(i)=0.0d0
 !!$     end if
 !!$  end do
-
-  do i=1,d3%nz
-     print*,d3%ti(i)+1,d3%tj(i)+1,d3%tx(i)
-  end do
-
+!!$
+!!$  do i=1,d1%nz
+!!$     if (d1%ti(i)==0) then
+!!$        print*,d1%tj(i),d1%tx(i)
+!!$     end if
+!!$  end do
+!!$
+!!$  do i=1,d3%nz
+!!$     print*,d3%ti(i)+1,d3%tj(i)+1,d3%tx(i)
+!!$  end do
+!!$
 !!$  print*,d1%n,d1%m
 !!$  print*,matmul((/(1.0d0,i=1,ne*ng)/),transpose(tri2col(d1)))
-
-!!$  open(12,file='file')
+!!$  print*,matmul(tri2col(d1),(/(1.0d0,i=1,ne*ng)/))
+!!$
+!!$  open(12,file='calliope')
 !!$  call write_octave(tri2col(d1),'d1',12)
 !!$  call write_octave(tri2col(d2),'d2',12)
 !!$  call write_octave(tri2col(d3),'d3',12)
 !!$  close(12)
-!!$
-!!$  print*,' '
 
 !mesh
 
