@@ -221,7 +221,8 @@ contains
     polar_jac = eta1
   end function polar_jac
 
-  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula (102) p 2968)
+  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+  ! (102) p 2968)
   ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
   ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
   !-------------------

@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !------------------------------------------------------------------------------
 ! Selalib
 !------------------------------------------------------------------------------
@@ -212,7 +229,8 @@ module sll_collective
   
   !> @brief Reduces values on all processes to a single value.
   interface sll_collective_reduce
-     module procedure sll_collective_reduce_real, &
+     module procedure sll_collective_reduce_real32, &
+                      sll_collective_reduce_real64, &
                       sll_collective_reduce_int, &
                       sll_collective_reduce_logical
   end interface
@@ -721,7 +739,7 @@ contains !************************** Operations **************************
   !> @param[in] op reduce operation
   !> @param[in] root_rank rank of root process
   !> @param[out] rec_buf address of receive buffer
-  subroutine sll_collective_reduce_real( col, send_buf, size, op, root_rank, &
+  subroutine sll_collective_reduce_real32( col, send_buf, size, op, root_rank, &
        rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
@@ -736,7 +754,25 @@ contains !************************** Operations **************************
          col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_reduce_real(): MPI_REDUCE()' )
-  end subroutine sll_collective_reduce_real
+  end subroutine sll_collective_reduce_real32
+
+  subroutine sll_collective_reduce_real64( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_real64, dimension(:), intent(in)  :: send_buf 
+    sll_int32, intent(in)                 :: size
+    sll_int32, intent(in)                 :: op
+    sll_int32, intent(in)                 :: root_rank
+    sll_real64, dimension(:), intent(out) :: rec_buf 
+    sll_int32                             :: ierr
+
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_DOUBLE_PRECISION, op, &
+         root_rank, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_real(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_real64
+
   
   !> @brief Reduces logical values on all processes to a single value
   !> @param[in] col wrapper around the communicator

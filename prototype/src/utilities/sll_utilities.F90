@@ -1,3 +1,30 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!> @namespace sll_utilities
+!> @author Selalib team
+!> @brief 
+!> Library with some useful numerical utlities
+!>
+!> - Add  :
+!> \code
+!> #include "sll_utilities.h"
+!> \endcode
+
 module sll_utilities
 #include "sll_working_precision.h"
   implicit none
@@ -51,9 +78,10 @@ contains
     end if
   end function is_even
 
+!> Convert an integer < 9999 to a 4 characters string
   subroutine int2string( istep, cstep )
-    integer, intent(in) :: istep
-    character(len=4), intent(out) :: cstep
+    integer, intent(in) :: istep             !< input integer
+    character(len=4), intent(out) :: cstep   !< output string
     character(len=1) :: aa,bb,cc,dd
     integer :: kk1, kk2, kk3, kk4
 
@@ -68,6 +96,7 @@ contains
     cstep = aa//bb//cc//dd
 
   end subroutine int2string
+
 
 !> Get a file unit number free before creating a file
   subroutine sll_new_file_id(file_id, error)
