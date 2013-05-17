@@ -72,8 +72,8 @@ contains
     sll_int64                                    :: colsz ! collective size
     type(sll_collective_t), pointer              :: collective
     ! number of processors
-    sll_int64                                    :: nprocx1
-    sll_int64                                    :: nprocx2
+    sll_int32                                    :: nprocx1
+    sll_int32                                    :: nprocx2
     sll_int32                                    :: ierr 
     sll_int32                                    :: loc_sz_x1
     sll_int32                                    :: loc_sz_x2
@@ -96,7 +96,8 @@ contains
 
     SLL_ALLOCATE(plan, ierr)
 
-    ! Geometry
+    ! We use the number of cells since due to periodicity, the last point is
+    ! not considered. 
     plan%ncx = ncx
     plan%ncy = ncy
     plan%Lx  = Lx
@@ -109,14 +110,14 @@ contains
          loc_sz_x1, &
          loc_sz_x2 )
 
-    plan%seq_x1_local_sz_x1 = loc_sz_x1
+    plan%seq_x1_local_sz_x1 = loc_sz_x1 
     plan%seq_x1_local_sz_x2 = loc_sz_x2
 
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
 
     ! For FFTs (in x-direction)
     plan%px => fft_new_plan( &
-         loc_sz_x1, &
+         ncx, &
          loc_sz_x2, &
          plan%fft_x_array, &
          plan%fft_x_array, &
@@ -124,7 +125,7 @@ contains
          FFT_ONLY_FIRST_DIRECTION)!+FFT_NORMALIZE )
 
     plan%px_inv => fft_new_plan( &
-         loc_sz_x1, &
+         ncx, &
          loc_sz_x2, &
          plan%fft_x_array, &
          plan%fft_x_array, &
@@ -137,10 +138,10 @@ contains
     nprocx2 = 1
 
     call initialize_layout_with_distributed_2D_array( &
-         ncx, &
-         ncy, &
-         int(nprocx1,i32), &
-         int(nprocx2,i32), &
+         ncx+1, &
+         ncy+1, &
+         nprocx1, &
+         nprocx2, &
          plan%layout_seq_x2 )
 
     call compute_local_sizes_2d( &
@@ -156,7 +157,7 @@ contains
 
     plan%py => fft_new_plan( &
          loc_sz_x1, &
-         loc_sz_x2, &
+         ncy, &
          plan%fft_y_array, &
          plan%fft_y_array, &
          FFT_FORWARD, &
@@ -164,7 +165,7 @@ contains
 
     plan%py_inv => fft_new_plan( &
          loc_sz_x1, &
-         loc_sz_x2, &
+         ncy, &
          plan%fft_y_array, &
          plan%fft_y_array, &
          FFT_INVERSE, &
@@ -215,7 +216,7 @@ contains
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
     npy_loc = plan%seq_x2_local_sz_x2
- 
+
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
 
     call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
@@ -224,7 +225,7 @@ contains
     normalization = 1.0_f64/(ncx*ncy)
 
     ! Apply the kernel 
-    do j=1, npy_loc
+    do j=1, npy_loc-1 ! last point was not transformed
        do i=1, npx_loc
           ! Make sure that the first mode is set to zero so that we get an
           ! answer with zero mean value. This step assumes that the (1,1) point
@@ -283,12 +284,25 @@ contains
     ! Inverse FFTs in y-direction
     call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
 
+    ! Force the periodicity condition in the y-direction. CAN'T USE THE FFT
+    ! INTERFACE SINCE THIS POINT FALLS OUTSIDE OF THE POINTS IN THE ARRAY
+    ! TOUCHED BY THE FFT. This is another reason to permit not including the
+    ! last point in the periodic cases...
+    do i=1,npx_loc
+       plan%fft_y_array(i,npy_loc) = plan%fft_y_array(i,1)
+    end do
+
     ! Prepare to take inverse FFTs in x-direction
     call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
 
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
+
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
+    ! Also ensure the periodicity
+    do j=1,npy_loc
+       plan%fft_x_array(npx_loc,j) = plan%fft_x_array(1,j)
+    end do
     phi = real(plan%fft_x_array, f64)
   end subroutine solve_poisson_2d_periodic_cartesian_par
 
