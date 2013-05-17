@@ -31,14 +31,17 @@ Change the variable CMAKE_BUILD_TYPE to "Release".
 
 Set the variable CMAKE_INSTALL_PREFIX to the path where you want to install selalib.
 
-Set the variable SLL_BUILD_PACKAGE to "ON" to reduce the building time.
-
 Fortran modules, header files and library will be installed to this path.
+
+* header files in ${CMAKE_INSTALL_PREFIX}/include
+* fortran module files in ${CMAKE_INSTALL_PREFIX}/include/fortran
+* library archives in ${CMAKE_INSTALL_PREFIX}/lib
+
 Just type::
 
    cmake -DCMAKE_BUILD_TYPE="Release" \
          -DCMAKE_INSTALL_PREFIX=<install_dir> \
-         -DSLL_BUILD_PACKAGE=1 selalib/prototype/src
+         -DSLL_BUILD_PACKAGE=ON <prototype_src_dir>
    make 
    make install
 
@@ -92,13 +95,10 @@ Find config files for selalib and fftpack in directory called "cmake"::
    MESSAGE(STATUS "SELALIB_INCLUDES:${SELALIB_INCLUDES}")
    MESSAGE(STATUS "SELALIB_LIBRARIES:${SELALIB_LIBRARIES}")
    INCLUDE_DIRECTORIES(${SELALIB_INCLUDES})
+   INCLUDE_DIRECTORIES(${SELALIB_INCLUDES}/fortran)
    ADD_EXECUTABLE(landau landau.F90)
    TARGET_LINK_LIBRARIES(landau ${SELALIB_LIBRARIES} 
                                 ${FFTPACK_LIBRARIES})
-
-
-
-
 
 Makefile
 ========
@@ -109,7 +109,7 @@ SLL_ROOT is the path equal to the variable CMAKE_INSTALL_PREFIX::
    F90 = gfortran
    OPT = -O3
    
-   F90FLAGS= -I${SLL_ROOT}/include 
+   F90FLAGS= -I${SLL_ROOT}/include -J${SLL_ROOT}/include/fortran
    LDFLAGS=-L${SLL_ROOT}/lib 
    LIBS= -lselalib -ldfftpack
 
@@ -144,9 +144,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-	                   F90PATH = [SLL_ROOT+'/usr/include'],
+	              F90PATH = [SLL_ROOT+'include',SLL_ROOT+'include/fortran'],
                       LINK='ifort',
-	                   LIBPATH = [SLL_ROOT+'/usr/lib'])
+	              LIBPATH = [SLL_ROOT+'/lib'])
 
    env.Program('landau', ['landau.F90'])
 

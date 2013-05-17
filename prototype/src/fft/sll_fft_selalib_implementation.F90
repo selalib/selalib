@@ -1,10 +1,27 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 module sll_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_utilities.h"
   use sll_constants
-  use fft_utils
+  use sll_fft_utils
   implicit none
   
   type sll_fft_plan
@@ -203,8 +220,8 @@ contains
     type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: ierr,i
 
-    SLL_ASSERT(size(array_in).eq.nx)
-    SLL_ASSERT(size(array_out).eq.nx)
+    SLL_ASSERT(size(array_in).ge.nx)
+    SLL_ASSERT(size(array_out).ge.nx)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
     plan%direction = direction
@@ -240,7 +257,7 @@ contains
        array_out = array_in
     endif   
     
-    call fft_dit_nr(array_out,plan%t,plan%direction)
+    call fft_dit_nr(array_out,plan%problem_shape(1),plan%t,plan%direction)
     call bit_reverse_complex(plan%problem_shape(1),array_out)
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
@@ -267,15 +284,10 @@ contains
 
     ! This does not look good.
     ! 1. Error checking like this should be permanent, not with assertions.
-    ! 2. The condition should be to check for a minimum size of the array, not
-    !    to establish a strict limit.
-    ! Can fix this right now since I need to see to what extent the function
-    ! depends on the strict limit. ECG 9-5-12
-    
-    SLL_ASSERT(size(array_in,dim=1).eq.NX)
-    SLL_ASSERT(size(array_in,dim=2).eq.NY)
-    SLL_ASSERT(size(array_out,dim=1).eq.NX)
-    SLL_ASSERT(size(array_out,dim=2).eq.NY)
+    SLL_ASSERT(size(array_in,dim=1).ge.NX)
+    SLL_ASSERT(size(array_in,dim=2).ge.NY)
+    SLL_ASSERT(size(array_out,dim=1).ge.NX)
+    SLL_ASSERT(size(array_out,dim=2).ge.NY)
 
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
@@ -358,7 +370,7 @@ contains
     if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
         two_direction ) then
        do i=0,ny-1
-          call fft_dit_nr(array_out(0:nx-1,i),plan%t(1:nx/2),plan%direction)
+          call fft_dit_nr(array_out(0:nx-1,i),nx,plan%t(1:nx/2),plan%direction)
           call bit_reverse_complex(nx,array_out(0:nx-1,i))
        enddo
     endif
@@ -368,6 +380,7 @@ contains
        do i=0,nx-1
           call fft_dit_nr( &
                array_out(i,0:ny-1), &
+               ny, &
                plan%t(nx/2+1:nx/2+ny/2), &
                plan%direction)
           call bit_reverse_complex(ny,array_out(i,0:ny-1))
@@ -627,7 +640,7 @@ contains
       enddo
     enddo
     do k=0,nx/2
-      call fft_dit_nr(array_out(k,0:ny-1),plan%t,plan%direction)
+      call fft_dit_nr(array_out(k,0:ny-1),ny,plan%t,plan%direction)
       call bit_reverse_complex(ny,array_out(k,0:ny-1))
     enddo
 
@@ -686,7 +699,7 @@ contains
     ny = plan%problem_shape(2)
 
     do j=0,nx/2
-      call fft_dit_nr(array_in(j,0:ny-1),plan%t,plan%direction)
+      call fft_dit_nr(array_in(j,0:ny-1),ny,plan%t,plan%direction)
       call bit_reverse_complex(ny,array_in(j,0:ny-1))
     enddo
     do i=0,ny-1
@@ -946,18 +959,13 @@ contains
   !    
   ! *************************************************************************
   
-  subroutine fft_dit_nr(data, twiddles, sign)
+  subroutine fft_dit_nr(data, n, twiddles, sign)
     sll_comp64, dimension(:), intent(inout) :: data
     sll_int32, intent(in)                   :: sign
     sll_comp64, dimension(:), intent(in)    :: twiddles
-    sll_int32                               :: n
-    !sll_int32                               :: ierr
-
-    n = size(data)
+    sll_int32, intent(in)                   :: n
     SLL_ASSERT(is_power_of_two(int(n,i64)))
-    !SLL_ALLOCATE(twiddles(n/2),ierr)
-    !call compute_twiddles(n,twiddles) 
-    !call bit_reverse(n/2,twiddles)
+    SLL_ASSERT(size(data) .ge. n)
     call fft_dit_nr_aux(data, n, twiddles, 0, sign)
   end subroutine fft_dit_nr
   
