@@ -53,7 +53,7 @@ contains
 
     character(len=*), intent(in) :: file_name !< xmf file name 
     character(len=*), intent(in) :: mesh_name !< file name that contains mesh coordinates
-    sll_int32                    :: file_id   !< file unit number
+    integer(HID_T)               :: file_id   !< file unit number
     sll_int32                    :: error     !< error code
     sll_int32                    :: nnodes_x1 !< nodes number x
     sll_int32                    :: nnodes_x2 !< nodes number y
@@ -82,7 +82,7 @@ contains
     sll_int32                    :: nnodes_x1  !< nodes number x
     sll_int32                    :: nnodes_x2  !< nodes number y
     sll_int32                    :: nnodes_x3  !< nodes number z
-    sll_int32, intent(out)       :: file_id    !< file unit number
+    integer(HID_T), intent(out)  :: file_id    !< file unit number
     sll_int32, intent(out)       :: error      !< error code
     sll_int32                    :: myrank
     
