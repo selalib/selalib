@@ -1,4 +1,3 @@
-if(0)
 add_executable(VP_DG
 	main.F90
   mesh.F90
@@ -29,7 +28,6 @@ target_link_libraries(VP_DG
 	sll_utilities
 	)
 
-#if(0)
 add_executable(test_DG
 	test.F90
   mesh.F90
@@ -45,4 +43,3 @@ target_link_libraries(test_DG
   sll_working_precision
 	sll_constants
 	)
-endif(0)
