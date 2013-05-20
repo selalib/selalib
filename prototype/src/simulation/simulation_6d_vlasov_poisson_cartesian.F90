@@ -1315,7 +1315,7 @@ contains
        end do
     end do
        
-    call sll_xdmf_open_3d("test.xmf","grid",               &
+    call sll_xdmf_open(my_rank,"test.xmf","grid",               &
                        sim%nc_x1,sim%nc_x2,sim%nc_x3,   &
                        file_id,error)
     call sll_xdmf_write_array("grid",array_dims,offset,x1,'x1',error)
