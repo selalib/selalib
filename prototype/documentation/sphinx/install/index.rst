@@ -53,11 +53,11 @@ To use the sequential version of selalib just add::
 
    #include "selalib.h"
 
-and link your program with flag *-lselalib*. Or to use the parallel version of selalib just add::
+To use the parallel version of selalib just add::
 
    #include "selalib-mpi.h"
 
-and link your program with flag *-lselalib-mpi*. 
+and link your program with flag *-lselalib*. 
 You can also use one of selalib capabilities separately, headers file available are::
 
    #include "sll_working_precision.h"
