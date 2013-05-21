@@ -15,35 +15,18 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_poisson_2d_periodic
-!
 !> @author
 !> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
-!>
-!>@details
-!>This module depends on:
-!> - memory
-!> - precision
-!> - assert 
-!> - constants
-!> - mesh_types
-!> - diagnostics
+!> @details
+!> This module depends on:
+!> - sll_memory
+!> - sll_precision
+!> - sll_assert 
+!> - sll_constants
 !> - sll_utilities
 !>
-! REVISION HISTORY:
-! 09 01 2012 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 
 module sll_poisson_2d_periodic
 
