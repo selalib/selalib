@@ -279,7 +279,7 @@ offset(2) =  sy - 1
 datadims(1) = nx
 datadims(2) = ny
 write(*,"(7i5)") myid, sx, ex, sy, ey, nx, ny
-call sll_xdmf_open("mgd2.xmf","mesh2d",nx,ny,xml_id,error)
+call sll_xdmf_open(myid,"mgd2.xmf","mesh2d",nx,ny,xml_id,error)
 !call sll_xdmf_write_array("mesh2d",datadims,offset,xdata,'x1',error)
 !call sll_xdmf_write_array("mesh2d",datadims,offset,ydata,'x2',error)
 !call sll_xdmf_write_array("mesh2d",datadims,offset,p(sx:ex,sy:ey),"p", &

@@ -74,7 +74,7 @@ global_dims(1) = nx
 global_dims(2) = ny
 offset = 0
 
-call sll_xdmf_open("fields.xmf",prefix,nx,ny,file_id,error)
+call sll_xdmf_open(my_num,"fields.xmf",prefix,nx,ny,file_id,error)
 call sll_xdmf_write_array(prefix,global_dims,offset,x,'x1',error)
 call sll_xdmf_write_array(prefix,global_dims,offset,y,'x2',error)
 call sll_xdmf_write_array(prefix,global_dims,offset,rho,"rho",error,file_id,"Node")
