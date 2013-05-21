@@ -7,11 +7,9 @@
 !> @file vlasov_poisson_DG.F90
 !! @namespace poisson4dg
 !! @author Madaule Eric
-!! @brief Tools for the resolution of the Vlasov-Poisson system with Discontinuous Galerkin.
-!! @details Tools for the resolution of the Poisson equation with Discontinuous Galerkin.
-!!          You must initialize your matrix(ces) with poisson1d_matrix. The resolution is done
-!!          with UMFpack. You just need to call poisson_solve_4dg_1d_csc to solve the Poisson
-!!          equation. If I have time I will add more flexibility to those.
+!! @brief tools for the resolution of the Vlasov-Poisson system with Discontinuous Galerkin
+!! @details Tools for the resolution of the Vlasov-Poisson system with Discontinuous Galerkin.
+!!          Here is the initialization. The time step tools should arrive later.
 !!
 !!          This module will first be limited to 1D and should extend as people will
 !!          have the need for higher dimension (and so have time to write it).
@@ -19,24 +17,20 @@
 !------------------------------------------------------------------------------
 module Poisson4dg
 #include "sll_working_precision.h"
-#include "sll_integration.h"
-
 
   use gausslobatto
   !those are part of FEMilaro
   use mod_sparse
   use mod_umfpack
 
-  !use mod_octave_io_sparse
+  use mod_octave_io_sparse
 
   implicit none
 
   type umfpack_plan
      !> plan for UMFpack
      !! This plan mainly contains array objects so they are not created
-     !! every times we call UMFpack for the resolution of the Poisson problem.
-     !! Note that it does not need to be initialized, it contains workink array of fixe
-     !! size for UMFpack.
+     !! every times we call UMFpack for the resolution of the Poisson proble
      sll_real64 :: control(umfpack_control), info(umfpack_info)
     integer(umf_void) :: symbolic
   end type umfpack_plan
@@ -101,56 +95,56 @@ contains
 
     c%ti(1)=0
     c%tj(1)=0
-    c%tx(1)=c11*jac(1)
+    c%tx(1)=c11
 
     c%ti(2)=ng-1
     c%tj(2)=ng-1
-    c%tx(2)=c11*jac(1)
+    c%tx(2)=c11
 
     c%ti(3)=0
     c%tj(3)=ne*ng-1
-    c%tx(3)=-c11*jac(1)
+    c%tx(3)=-c11
 
     c%ti(4)=ng-1
     c%tj(4)=ng
-    c%tx(4)=-c11*jac(1)
+    c%tx(4)=-c11
     do i=2,ne-1
        c%ti((i-1)*4+1)=(i-1)*ng
        c%tj((i-1)*4+1)=(i-1)*ng
-       c%tx((i-1)*4+1)=c11*jac(i)
+       c%tx((i-1)*4+1)=c11
 
        c%ti((i-1)*4+2)=i*ng-1
        c%tj((i-1)*4+2)=i*ng-1
-       c%tx((i-1)*4+2)=c11*jac(i)
+       c%tx((i-1)*4+2)=c11
 
        c%ti((i-1)*4+3)=(i-1)*ng
        c%tj((i-1)*4+3)=(i-1)*ng-1
-       c%tx((i-1)*4+3)=-c11*jac(i)
+       c%tx((i-1)*4+3)=-c11
 
        c%ti(i*4)      =i*ng-1
        c%tj(i*4)      =i*ng
-       c%tx(i*4)      =-c11*jac(i)
+       c%tx(i*4)      =-c11
     end do
     c%ti(4*ne-3)=(ne-1)*ng
     c%tj(4*ne-3)=(ne-1)*ng
-    c%tx(4*ne-3)=c11*jac(ne)
+    c%tx(4*ne-3)=c11
 
     c%ti(4*ne-2)=ne*ng-1
     c%tj(4*ne-2)=ne*ng-1
-    c%tx(4*ne-2)=c11*jac(ne)
+    c%tx(4*ne-2)=c11
 
     c%ti(4*ne-1)=(ne-1)*ng
     c%tj(4*ne-1)=(ne-1)*ng-1
-    c%tx(4*ne-1)=-c11*jac(ne)
+    c%tx(4*ne-1)=-c11
 
     c%ti(4*ne)  =ne*ng-1
     c%tj(4*ne)  =0
-    c%tx(4*ne)  =-c11*jac(ne)
+    c%tx(4*ne)  =-c11
 
     !matrix D
     d=new_tri(ne*ng,ne*ng,ne*(ng**2+2))
-    d%ti=0
-    d%tj=0
+    d%ti=2
+    d%tj=2
     d%tx=0.0d0
 
     do i=1,ne
@@ -160,11 +154,11 @@ contains
           do k=1,ng
              d%ti((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+j
              d%tj((i-1)*ng**2+(j-1)*ng+k)=(i-1)*ng+k
-             d%tx((i-1)*ng**2+(j-1)*ng+k)=gausslob%der(k,j)*jac(i)
+             d%tx((i-1)*ng**2+(j-1)*ng+k)=gausslob%der(k,j)
              if (j==1 .and. k==1) then
-                d%tx((i-1)*ng**2+(j-1)*ng+k)=d%tx((i-1)*ng**2+(j-1)*ng+k)-(-0.5d0+c12)*jac(i)
+                d%tx((i-1)*ng**2+(j-1)*ng+k)=d%tx((i-1)*ng**2+(j-1)*ng+k)-(-0.5d0+c12)
              else if (j==ng .and. k==ng) then
-                d%tx((i-1)*ng**2+(j-1)*ng+k)=d%tx((i-1)*ng**2+(j-1)*ng+k)-(0.5d0+c12)*jac(i)
+                d%tx((i-1)*ng**2+(j-1)*ng+k)=d%tx((i-1)*ng**2+(j-1)*ng+k)-(0.5d0+c12)
              end if
           end do
        end do
@@ -172,46 +166,52 @@ contains
 
     d%ti(ne*ng**2+1)=ng
     d%tj(ne*ng**2+1)=ng+1
-    d%tx(ne*ng**2+1)=-(0.5d0-c12)*jac(1)
+    d%tx(ne*ng**2+1)=-(0.5d0-c12)
 
     d%ti(ne*(ng**2+2))=1
     d%tj(ne*(ng**2+2))=ne*ng
-    d%tx(ne*(ng**2+2))=-(-0.5d0-c12)*jac(1)
+    d%tx(ne*(ng**2+2))=-(-0.5d0-c12)
 
     do i=2,ne-1
        d%ti(ne*ng**2+i)=i*ng
        d%tj(ne*ng**2+i)=i*ng+1
-       d%tx(ne*ng**2+i)=-(0.5d0-c12)*jac(i)
+       d%tx(ne*ng**2+i)=-(0.5d0-c12)
 
        d%ti(ne*(ng**2+2)-i+1)=(i-1)*ng+1
        d%tj(ne*(ng**2+2)-i+1)=(i-1)*ng
-       d%tx(ne*(ng**2+2)-i+1)=-(-0.5d0-c12)*jac(i)
+       d%tx(ne*(ng**2+2)-i+1)=-(-0.5d0-c12)
     end do
 
     d%ti(ne*ng**2+ne)=ne*ng
     d%tj(ne*ng**2+ne)=1
-    d%tx(ne*ng**2+ne)=-(0.5d0-c12)*jac(ne)
+    d%tx(ne*ng**2+ne)=-(0.5d0-c12)
 
     d%ti(ne*ng**2+ne+1)=(ne-1)*ng+1
     d%tj(ne*ng**2+ne+1)=(ne-1)*ng
-    d%tx(ne*ng**2+ne+1)=-(-0.5d0-c12)*jac(ne)
+    d%tx(ne*ng**2+ne+1)=-(-0.5d0-c12)
 
     d%ti=d%ti-1
     d%tj=d%tj-1
 
+!!$    open(11,file='mat2')
+!!$    call write_octave(m_inv,'m_inv',11)
+!!$    call write_octave(d,'d',11)
+!!$    call write_octave(c,'cc',11)
+!!$    !close(11);stop
+
     !construction of vp_mat
-    vp_mat=matmul(matmul(tri2col(d),tri2col(m_inv)),tri2col(transpose(d)))+c
+    vp_mat=(matmul(matmul(tri2col(d),tri2col(m_inv)),tri2col(transpose(d)))+c)
     field_mat=matmul(tri2col(m_inv),tri2col(transpose(d)))
 
-    field_mat=matmul(tri2col(new_tri( ne*ng,ne*ng, (/(i-1,i=1,ne*ng)/), (/(i-1,i=1,ne*ng)/), &
-         & (/ ((1.0d0/jac(i),j=1,ng),i=1,ne) /) )), field_mat)
+!!$    call write_octave(vp_mat,'global',11)
+!!$    close(11);stop
 
     !we impose phi_0=alpha (because the matrix is periodic) (we set the cooresponding line
     !to (0,..,0,1,0,..,0)
     !and corresponding value of rhs must be alpha)
     !alpha is set outside; the coordinate of phi_0 is set with x_bound
 
-    if (x_bound>vp_mat%m .or. x_bound>vp_mat%n .or. x_bound<1) then
+    if (x_bound>vp_mat%m .or. x_bound>vp_mat%n) then
        print*,'boudary conditions out of domain'
        print*,x_bound,vp_mat%m,vp_mat%n
        print*,'no boundary conditions imposed'
@@ -246,7 +246,7 @@ contains
     !< @brief Resolution of the Poisson problem in 1D using discontinous Galerkin/
     !!        spectral element method
     !! @details This routine solve the Poisson problem AX=B for dg using UMFpack.
-    !!          The matrix a is sparse, A and B must be initialized, X must be allocated before.
+    !!          The matrix A is sparse, A and B must be initialized, X must be allocated before.
     !!          If this routine returns error, see UMFpack documentation at
     !!          http://www.cise.ufl.edu/research/sparse/umfpack/UMFPACK/Doc/UserGuide.pdf
     !!          In the case of DG, if you define field for v>0 and v<0 you will need to call
@@ -270,7 +270,7 @@ contains
     sx=size(x)
     if (sx/=a%m .or. size(b)/=a%n .or. a%m/=a%n) then
        print*,'error in array or matrix size for the resolution of Poisson problem'
-       print*,'expected square problem, passed',a%m,'×',a%n,'problem'
+       print*,'expected square problem, passed',a%m,'x',a%n,'problem'
        print*,'expected size(x)=',a%m,' ; expected size(b)=',a%n
        print*,'passed',sx,'for x and',size(b),'for b'
        print*,'exiting...'
@@ -284,7 +284,8 @@ contains
     call umf4sym (int(sx,umf_int),int(sx,umf_int),a%ap,a%ai,a%ax, &
          & plan%symbolic,plan%control,plan%info)
     if (plan%info(1) .lt. 0) then
-       print *, 'Error occurred in umf4sym: ', plan%info (1)
+       print *,'Error occurred in umf4sym: ', plan%info (1)
+       print*,'See documentation for more information'
        stop
     end if
     !call umf4pinf(plan%control,plan%info);stop ! this is only for debuging

@@ -12,8 +12,7 @@ program VP_DG
   use sll_constants
   use timestep4dg
 
-  !use mod_octave_io_sparse
-  !use mod_umfpack
+  use mod_octave_io_sparse
 
   implicit none
 
@@ -56,29 +55,29 @@ program VP_DG
   !namelist /param/ nx,nv,ng,dt,var
   !read(*,NML=param)
 
-  nx=20
-  nv=20
-  ng=5
+  nx=30
+  nv=30
+  ng=6
   dt=0.1d0
-  var=0
+  var=-1
 
   !definition of geometry and data
-!!$  x_min=0.0d0
-!!$  x_max=sll_pi
-!!$  v_min=0
-!!$  v_max=sll_pi
+  x_min=0.0d0
+  x_max=sll_pi
+  v_min=0
+  v_max=sll_pi
 
 !!$  x_min=0.0d0
 !!$  x_max=4.0d0*sll_pi
 !!$  v_min=-2.0d0
 !!$  v_max=2.0d0
 
-  !!!>>>Blanca's case
-  x_min=-sll_pi
-  x_max=sll_pi
-  v_min=-sll_pi
-  v_max=sll_pi
-  !!!<<<
+!!$  !!!>>>Blanca's case
+!!$  x_min=-sll_pi
+!!$  x_max=sll_pi
+!!$  v_min=-sll_pi
+!!$  v_max=sll_pi
+!!$  !!!<<<
 
 !!$  x_min=0.0d0
 !!$  x_max=1.0d0
@@ -101,17 +100,13 @@ program VP_DG
 
   !definition or time step, delta_t and final time
 !!$  dt=0.0001d0
-  tf=1.0d0
+  tf=1.5d0
   nb_step=ceiling(tf/dt)
+  !nb_step=1 ! only for debugging and test
   tf=dt*nb_step
   print*,'size of time step   :',dt
   print*,'number of time step :',nb_step
   print*,'final time          :',tf
-
-  !flux coefficients
-  c22=0.0d0
-  c12=0.5d0
-  c11=0.1d0
 
   call init_gausslobatto_1d(ng,gausslob)
   !call init_gausslobatto_1d(3*ng,gll)
@@ -119,10 +114,16 @@ program VP_DG
   mesh%d_etat1=(x_max-x_min)/real(nx,8)
   mesh%d_etat2=(v_max-v_min)/real(nv,8)
   call fill_node_nuc_mesh(x_min,v_min,mesh)
-  call init_timesteping_4dg(dg_plan,SLL_RK4,gausslob,mesh%jac(1:nx,nv+1),dt,xbound, &
+
+  !flux coefficients
+  c22=0.0d0
+  c12=0.5d0
+  c11=0.1d0/maxval(mesh%d_etat1)
+
+  call init_timesteping_4dg(dg_plan,SLL_EE,gausslob,mesh%jac(1:nx,nv+1),dt,xbound, &
        & nx,nv,ng,c11,c12)
 
-  !dist() !construction of distribution function
+  !construction of distribution function
   !x_i is indexed on both mesh nodes and GLL nodes, so to have the postion in x
   !one shoul take the lower node of the element and add the part due to GLL
   !the 1.0d0 is to compensate the fact that GLL is done on [-1;1]
@@ -144,7 +145,8 @@ program VP_DG
 !!$                   & exp(-200.0d0*(v+0.8d0)**2))!*(cos(3.0d0*x)+cos(6.0d0*x)+cos(18.0d0*x))
 
               !!!>>>Blanca's test case
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(2.0d0-cos(2.0d0*x))*exp(-0.25d0*(4.0d0*v-1.0d0)**2)
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(2.0d0-cos(2.0d0*x))* &
+                   & exp(-0.25d0*(4.0d0*v-1.0d0)**2)
               !!!<<<
 
 !!$              if (abs(v)<=0.5d0) then
@@ -161,35 +163,52 @@ program VP_DG
   end do
   close(14)
 
-!!$  dg_plan%k(2,:,:)=dist
-!!$  call rk4dg_step(dg_plan,gausslob,mesh)
-!!$  
-!!$  open(16,file="mneme")
-!!$  write(16,*)' '
-!!$  write(16,*)"#rhs dist"
-!!$  do v1=1,nv
-!!$     do v2=1,ng
-!!$        do x1=1,nx
-!!$           do x2=1,ng
-!!$              x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
-!!$              v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
-!!$              write(16,*)x,v,dg_plan%rhs((x1-1)*ng+x2,(v1-1)*ng+v2), &
-!!$                   & dist((x1-1)*ng+x2,(v1-1)*ng+v2)
-!!$           end do
-!!$        end do
-!!$        write(16,*)' '
-!!$     end do
-!!$  end do
-!!$  close(16)
-  
   ! time loop
+  dg_plan%t=0.0d0
+  open(14,file='melpomene')
+!!$  open(15,file='mneme')
   do step=1,nb_step
      dg_plan%t=real(step-1,8)*dt
-     call rk4_4dg_1d(dg_plan,gausslob,mesh,dist,distp1)
+     call time_integration_4dg(dg_plan,gausslob,mesh,dist,distp1)
      print*,maxval(distp1)
+     dg_plan%t=real(step,8)*dt
+
+     do v1=1,nv
+        do v2=1,ng
+           do x1=1,nx
+              do x2=1,ng
+                 x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
+                 v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+
+                 write(14,*)x,v,dg_plan%k(1,(x1-1)*ng+x2,(v1-1)*ng+v2), &
+                      & dg_plan%rhs((x1-1)*ng+x2,(v1-1)*ng+v2), &
+                      & distp1((x1-1)*ng+x2,(v1-1)*ng+v2), &
+                      & dist((x1-1)*ng+x2,(v1-1)*ng+v2), &
+                      & (2.0d0-cos(2.0d0*x+2.0d0*sll_pi*dg_plan%t))* &
+                      & exp(-0.25d0*(4.0d0*v-1.0d0)**2), &
+                      & -v*cos(x)*sin(x)+sin(2.0d0*x)*cos(v)
+              end do
+           end do
+           write(14,*)''
+        end do
+     end do
+     write(14,*)''
+     write(14,*)''
+
+!!$     do x1=1,nx
+!!$        do x2=1,ng
+!!$           x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
+!!$
+!!$           write(15,*)x,dg_plan%field((x1-1)*ng+x2),dg_plan%phi((x1-1)*ng+x2), &
+!!$                & dg_plan%rho((x1-1)*ng+x2)
+!!$        end do
+!!$     end do
+
      dist=distp1
      !print*,"step",step,'done'
   end do
+  close(14)
+!!$  close(15)
 
   if (var==0) then
      open(13,file='ref_data')
@@ -260,6 +279,7 @@ program VP_DG
 contains
 !only to check the convergence of the Poisson solver
 !and of the full solver
+!those function greatly increase the execution time, so use them only if necessary
 
   function interp_poly_1d(x,gll,f) result(res)
 
