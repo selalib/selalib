@@ -9,7 +9,7 @@ add_executable(VP_DG
   timestep4dg.F90
   mod_octave_io.f90
   mod_octave_io_sparse.f90
-  mod_umfpack.f90
+  mod_umfpack.F90
   umf4_f77wrapper.c
 	)
 add_dependencies(VP_DG sll_file_io )
@@ -28,6 +28,9 @@ target_link_libraries(VP_DG
 	sll_utilities
 	)
 
+if(0)
+#this is a serie of test I used while developping
+#this should disappear or be transformed into several unit_test
 add_executable(test_DG
 	test.F90
   mesh.F90
@@ -43,3 +46,4 @@ target_link_libraries(test_DG
   sll_working_precision
 	sll_constants
 	)
+endif(0)
