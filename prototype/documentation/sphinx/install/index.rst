@@ -53,11 +53,11 @@ To use the sequential version of selalib just add::
 
    #include "selalib.h"
 
-and link your program with flag *-lselalib*. Or to use the parallel version of selalib just add::
+To use the parallel version of selalib just add::
 
    #include "selalib-mpi.h"
 
-and link your program with flag *-lselalib-mpi*. 
+and link your program with flag *-lselalib*. 
 You can also use one of selalib capabilities separately, headers file available are::
 
    #include "sll_working_precision.h"
@@ -99,10 +99,6 @@ Find config files for selalib and fftpack in directory called "cmake"::
    ADD_EXECUTABLE(landau landau.F90)
    TARGET_LINK_LIBRARIES(landau ${SELALIB_LIBRARIES} 
                                 ${FFTPACK_LIBRARIES})
-
-
-
-
 
 Makefile
 ========
@@ -148,9 +144,9 @@ If selalib is installed in /usr/local::
                       LIBS=['selalib','dfftpack'],
                       F90='ifort',
                       F90FLAGS = ['-O3'],
-	                   F90PATH = [SLL_ROOT+'include',SLL_ROOT+'include/fortran'],
+	              F90PATH = [SLL_ROOT+'include',SLL_ROOT+'include/fortran'],
                       LINK='ifort',
-	                   LIBPATH = [SLL_ROOT+'/lib'])
+	              LIBPATH = [SLL_ROOT+'/lib'])
 
    env.Program('landau', ['landau.F90'])
 

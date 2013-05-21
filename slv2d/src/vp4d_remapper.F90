@@ -64,6 +64,7 @@ program vp4d
 
   call initlocal(jstartx,jendx,jstartv,jendv)
 
+
   call advection_x1(vlasov4d,0.5*dt)
   call advection_x2(vlasov4d,0.5*dt)
 
@@ -109,6 +110,8 @@ contains
 
   subroutine initlocal(jstartx,jendx,jstartv,jendv)
 
+    use sll_xdmf_parallel
+
     sll_int32               :: jstartx, jendx, jstartv, jendv   
     sll_int32               :: i,j,k,l,error
     sll_real64              :: vx,vy,v2,x,y
@@ -116,6 +119,12 @@ contains
     sll_int32               :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
     sll_real64              :: dimx, dimy, factor
+    character(len=4)        :: prefix = "vp4d"
+    integer(HID_T)          :: file_id
+    integer(HSSIZE_T)       :: offset(2)
+    integer(HSIZE_T)        :: global_dims(2)
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
 
     prank = sll_get_collective_rank(sll_world_collective)
     comm  = sll_world_collective%comm
@@ -170,6 +179,35 @@ contains
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
     jendv   = get_layout_4D_l_max( vlasov4d%layout_x, prank )
 
-  end subroutine initlocal
+    call compute_charge(vlasov4d)
+    call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
+
+
+    SLL_ALLOCATE(x1(geomx%nx,geomx%ny),error)
+    SLL_ALLOCATE(x2(geomx%nx,geomx%ny),error)
+   
+    do j=1,geomx%ny
+    do i=1,geomx%nx
+      x1(i,j) = geomx%xgrid(i)
+      x2(i,j) = geomx%ygrid(j)
+    end do
+    end do
+
+    global_dims(1) = geomx%nx
+    global_dims(2) = geomx%ny
+    offset = 0
+
+    call sll_xdmf_open(prank,"fields.xmf",prefix,geomx%nx,geomx%ny,file_id,error)
+    call sll_xdmf_write_array(prefix,global_dims,offset,x1,'x1',error)
+    call sll_xdmf_write_array(prefix,global_dims,offset,x2,'x2',error)
+    call sll_xdmf_write_array(prefix,global_dims,offset, &
+                              vlasov4d%rho,"rho",error,file_id,"Node")
+    call sll_xdmf_write_array(prefix,global_dims,offset, &
+                              vlasov4d%ex ,"ex" ,error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+
+end subroutine initlocal
+
+
 
 end program vp4d
