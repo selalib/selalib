@@ -128,7 +128,8 @@ contains
     ! this can be requiered for some cases (as Vlasov-Poisson with DG)
     j=0
     do i=1,mesh%n_etat1+1
-       if (mesh%etat1(i)==epsilon( max(abs(mesh%etat1(1)),abs(mesh%etat1(mesh%n_etat1+1))) )) then
+       if (abs(mesh%etat1(i))<=real(i,8)*epsilon( max(abs(mesh%etat1(1)), & 
+            & abs(mesh%etat1(mesh%n_etat1+1))) )) then
           j=1
        end if
     end do
@@ -137,7 +138,8 @@ contains
     end if
     j=0
     do i=1,mesh%n_etat2+1
-       if (mesh%etat2(i)==epsilon( max(abs(mesh%etat2(1)),abs(mesh%etat2(mesh%n_etat2+1))) )) then
+       if (abs(mesh%etat2(i))<=real(i,8)*epsilon( max(abs(mesh%etat2(1)), & 
+            & abs(mesh%etat2(mesh%n_etat2+1))) )) then
           j=1
        end if
     end do
@@ -163,8 +165,8 @@ contains
           end do
           mesh%jac(mesh%n_etat1+1,j)=2.0d0/mesh%d_etat2(j)
        end do
-       do i=1,mesh%n_etat2
-          mesh%jac(i,mesh%n_etat2+1)=2.0d0/mesh%d_etat1(j)
+       do i=1,mesh%n_etat1
+          mesh%jac(i,mesh%n_etat2+1)=2.0d0/mesh%d_etat1(i)
        end do
 !!$    end if
 

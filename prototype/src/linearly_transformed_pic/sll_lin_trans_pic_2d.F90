@@ -1,4 +1,4 @@
-!> \namespace sll_leap_frog
+!! \namespace sll_leap_frog
 !> \authors                    
 !> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 !> \brief  

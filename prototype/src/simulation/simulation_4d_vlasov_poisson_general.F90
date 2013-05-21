@@ -200,16 +200,29 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta3_min
+    sll_real64 :: eta4_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_max
+    sll_real64 :: eta3_max
+    sll_real64 :: eta4_max
+    sll_real64 :: eta1_new
+    sll_real64 :: eta2_new
+    sll_real64 :: diff
+    sll_real64, dimension(:,:), allocatable :: rho_x1_initial
     sll_real64, dimension(1:2,1:2) :: inv_j
+    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
+    sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 1
+#define BUFFER_SIZE 100
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
     sll_int32 :: global_indices(4)
-    sll_int32 :: gi,gj,gk,gl
     sll_int32 :: iplot
     character(len=4) :: cplot
 
@@ -264,6 +277,18 @@ contains
     nc_x2 = sim%mesh2d_x%num_cells2
     nc_x3 = sim%mesh2d_v%num_cells1
     nc_x4 = sim%mesh2d_v%num_cells2
+    delta1 = sim%mesh2d_x%delta_eta1
+    delta2 = sim%mesh2d_x%delta_eta2
+    delta3 = sim%mesh2d_v%delta_eta1
+    delta4 = sim%mesh2d_v%delta_eta2
+    eta1_min = sim%mesh2d_x%eta1_min
+    eta2_min = sim%mesh2d_x%eta2_min
+    eta3_min = sim%mesh2d_v%eta1_min
+    eta4_min = sim%mesh2d_v%eta2_min
+    eta1_max = sim%mesh2d_x%eta1_max
+    eta2_max = sim%mesh2d_x%eta2_max
+    eta3_max = sim%mesh2d_v%eta1_max
+    eta4_max = sim%mesh2d_v%eta2_max
 
     call initialize_layout_with_distributed_4D_array( &
          nc_x1+1, &
@@ -296,6 +321,7 @@ contains
     
     call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(rho_x1_initial(loc_sz_x1,loc_sz_x2),ierr) !delete this
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
     ! Experiment with a dedicated array to store the values of the electric
     ! field in each point of the grid.
@@ -399,7 +425,7 @@ contains
          NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
        
-
+    rho_x1_initial(:,:) = sim%rho_x1(:,:)
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -492,9 +518,9 @@ contains
             sim%rho_seq_x1, &
             nc_x1, &
             nc_x2, &
-            1.0_f64, &    ! parametrize with mesh values
-            1.0_f64 )     ! parametrize with mesh values
-       
+            sim%mesh2d_x%eta1_max - sim%mesh2d_x%eta1_min, &
+            sim%mesh2d_x%eta2_max - sim%mesh2d_x%eta2_min )
+
     sim%efld_seqx1_to_seqx2 => &
           NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
 
@@ -512,8 +538,7 @@ contains
 
     do itime=1, sim%num_iterations
        if(sim%my_rank == 0) then
-          print *, 'Starting iteration ', itime, ' of ', sim%num_iterations &
-                          ,buffer_result(1:BUFFER_SIZE)
+          print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
        end if
        ! The splitting scheme used here is meant to attain a dt^2 accuracy.
        ! We use:
@@ -551,6 +576,7 @@ contains
                                     loc_sz_x3,           &
                                     loc_sz_x4 )
 
+       sim%rho_split(:,:) = 0.0_f64
        call compute_charge_density( sim%mesh2d_x,           &
                                     sim%mesh2d_v,           &
                                     size(sim%f_x3x4,1),     &
@@ -558,19 +584,33 @@ contains
                                     sim%f_x3x4,             &
                                     sim%partial_reduction,  &
                                     sim%rho_split )
-       
 
        ! Re-arrange rho_split in a way that permits sequential operations in 
        ! x1, to feed to the Poisson solver.
        call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
 
+       ! Apply the neutralizing ion background, what value to use? function?
+       ! The original charge density data?
+       sim%rho_x1(:,:) =  1.0_f64 - sim%rho_x1(:,:)! - 1.0_f64
 
        ! solve for the electric potential
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
+ 
+       global_indices(1:2) =  &
+            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
        
+       call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
+         sim%mesh2d_v%delta_eta1, &
+         sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
+         sim%mesh2d_v%delta_eta2, &
+         sim%phi_x1, &
+         "phi_x1", &
+         itime, &
+         ierr )
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !
        ! Here is where Aurore's general geometry poisson should be included...
@@ -586,6 +626,7 @@ contains
        ! variables whose content could be anything... This will have to do for 
        ! now.
        call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+
        call compute_electric_field_eta1( &
             sim%phi_x1, &
             loc_sz_x1, &
@@ -597,6 +638,7 @@ contains
        call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
        call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
        call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+
        call compute_electric_field_eta2( &
             sim%phi_x2, &
             loc_sz_x1, &
@@ -631,7 +673,8 @@ contains
        do l=1,sim%mesh2d_v%num_cells2
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
-                global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                global_indices(1:2) = &
+                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 eta1   =  real(global_indices(1)-1,f64)*delta1
                 eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -646,7 +689,9 @@ contains
                 ! consider placing this somewhere else, probably at greater
                 ! expense.
                 efield_energy_total = efield_energy_total + &
-                     sim%transfx%jacobian_at_node(global_indices(1),global_indices(2))*delta1*delta2*&
+                     sim%transfx%jacobian_at_node(global_indices(1),&
+                                                  global_indices(2))*&
+                                                  delta1*delta2*&
                      ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
                       (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
              end do
@@ -655,11 +700,13 @@ contains
 
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+
        ! dt in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              do k=1,sim%mesh2d_v%num_cells1
-                global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
+                global_indices(1:2) = &
+                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 eta1   =  real(global_indices(1)-1,f64)*delta1
                 eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -679,24 +726,24 @@ contains
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
-       do l = 1, loc_sz_x4
-          do k = 1, loc_sz_x3
-              sim%phi_split(k,l) = sum(sim%f_x1x2(:,:,k,l))
-          end do
-       end do
+!!$       do l = 1, loc_sz_x4
+!!$          do k = 1, loc_sz_x3
+!!$              sim%phi_split(k,l) = sum(sim%f_x1x2(:,:,k,l))
+!!$          end do
+!!$       end do
 
-       global_indices(1:2) =  local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
-
-       
-       call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
-         sim%mesh2d_v%delta_eta1, &
-         sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
-         sim%mesh2d_v%delta_eta2, &
-         sim%phi_split, &
-         "phi_split", &
-         itime, &
-         ierr )
+!!$       global_indices(1:2) =  &
+!!$            local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
+!!$       
+!!$       call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
+!!$         sim%mesh2d_v%delta_eta1, &
+!!$         sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
+!!$         sim%mesh2d_v%delta_eta2, &
+!!$         sim%phi_split, &
+!!$         "phi_split", &
+!!$         itime, &
+!!$         ierr )
 
        buffer(buffer_counter) = efield_energy_total
        ! This should be abstracted away...
@@ -716,11 +763,13 @@ contains
           if(sim%my_rank == 0) then
              open(efield_energy_file_id,file="electric_field_energy",&
                   position="append")
-             if(itime == 1) then
+             if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)
              end if
              buffer_result(:) = log(buffer_result(:))
-             write(efield_energy_file_id,*) buffer_result(1:BUFFER_SIZE)
+             do i=1,BUFFER_SIZE
+                write(efield_energy_file_id,*) buffer_result(i)
+             end do
              close(efield_energy_file_id)
           end if
        else
@@ -738,18 +787,18 @@ contains
        call compute_local_sizes_4d( sim%sequential_x3x4, &
                                  loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
-       do j = 1, loc_sz_x2
-          do i = 1, loc_sz_x1
-             sim%rho_split(i,j) = sum(sim%f_x3x4(i,j,:,:))
-          end do
-       end do
-
-      global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
-
-      call sll_gnuplot_rect_2d_parallel( &
-           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*delta1,delta1, &
-           sim%mesh2d_x%eta2_min+(global_indices(2)-1)*delta2,delta2, &
-           sim%rho_split,"rho_split",itime,ierr )
+!!$       do j = 1, loc_sz_x2
+!!$          do i = 1, loc_sz_x1
+!!$             sim%rho_split(i,j) = sum(sim%f_x3x4(i,j,:,:))
+!!$          end do
+!!$       end do
+!!$
+!!$      global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+!!$
+!!$      call sll_gnuplot_rect_2d_parallel( &
+!!$           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*delta1,delta1, &
+!!$           sim%mesh2d_x%eta2_min+(global_indices(2)-1)*delta2,delta2, &
+!!$           sim%rho_split,"rho_split",itime,ierr )
 
   !     call plot_fields(itime, sim)
 #undef BUFFER_SIZE
@@ -807,7 +856,7 @@ contains
                 end if
                 
                 sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
-               
+
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
 !!$             !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
@@ -929,6 +978,31 @@ contains
     end do
   end subroutine compute_charge_density
   
+!!$  ! Super-ugly and ad-hoc but this needs to be done if we use the last point
+!!$  ! to compute the electric fields.
+!!$  subroutine ensure_periodicity_x(phi, how_many, nptsx)
+!!$    sll_real64, dimension(:,:), intent(inout) :: phi
+!!$    sll_int32, intent(in) :: how_many
+!!$    sll_int32, intent(in) :: nptsx
+!!$    sll_int32 :: j
+!!$
+!!$    do j=1,how_many
+!!$       phi(nptsx,j) = phi(1,j)
+!!$    end do
+!!$  end subroutine ensure_periodicity_x
+!!$
+!!$  subroutine ensure_periodicity_y(phi, how_many, nptsy)
+!!$    sll_real64, dimension(:,:), intent(inout) :: phi
+!!$    sll_int32, intent(in) :: how_many
+!!$    sll_int32, intent(in) :: nptsy
+!!$    sll_int32 :: i
+!!$
+!!$    do i=1,how_many
+!!$       phi(i,nptsy) = phi(i,1)
+!!$    end do
+!!$  end subroutine ensure_periodicity_y
+!!$
+
   ! Temporary utility to compute the values of the electric field given 
   ! a pointer to an array of double precision values. It uses 
   ! forward/backward differencing schemes for the end points and a 
@@ -949,7 +1023,7 @@ contains
     ! FIXME: check arrays sizes
     
     r_delta = 1.0_f64/delta
-    
+
     ! Do first point:
     efield(1) = r_delta*(-1.5_f64*phi(1) + 2.0_f64*phi(2) - 0.5_f64*phi(3))
     
