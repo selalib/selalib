@@ -26,7 +26,7 @@ module timestep4dg
 
   implicit none
 
-  integer,parameter :: SLL_RK3=0,SLL_RK4=1
+  integer,parameter :: SLL_RK3=0,SLL_RK4=1,SLL_EE=2
 
   type dg_time_steping
      !< @brief Plan for time stepping with discontinuous Galerkin.
@@ -43,6 +43,7 @@ module timestep4dg
      type(t_col) :: fieldvp,fieldvm ! to compute E
      sll_real64 :: dt,t
      sll_int32 :: x0 ! place to apply phi(x=0)=0
+     sll_int32 :: method
      !umfpack variables
      type(umfpack_plan) :: umfpack_data
   end type dg_time_steping
@@ -75,13 +76,20 @@ contains
     sll_real64,intent(in) :: dt,c11,c12
     sll_int32,intent(in) :: nx,nv,ng
 
-    if (method==0) then
+    plan%method=method
+
+    if (plan%method==0) then
        !RK3
        print*,'RK3 not done'
        stop
-    else if(method==1) then
+    else if (plan%method==1) then
        !RK4
+       print*,'time integration using RK4'
        call init_rk4_4dg(plan,gll,jac,dt,xbound,nx,nv,ng,c11,c12)
+    else if (plan%method==2) then
+       !Euler explicit
+       print*,'time integration using Euler explicit'
+       call init_ee_4dg(plan,gll,jac,dt,xbound,nx,nv,ng,c11,c12)
     end if
 
   end subroutine init_timesteping_4dg
@@ -91,7 +99,7 @@ contains
 
     implicit none
 
-    type(dg_time_steping),intent(out) :: plan
+    type(dg_time_steping),intent(inout) :: plan
     type(gausslobatto1d),intent(in) :: gll
     sll_real64,dimension(:),intent(in) :: jac
     sll_int32,intent(in) :: xbound
@@ -111,6 +119,32 @@ contains
     call poisson1d_matrix(gll,nx,jac,c11,-c12,xbound,plan%matvm,plan%fieldvm)
 
   end subroutine init_rk4_4dg
+
+  subroutine init_ee_4dg(plan,gll,jac,dt,xbound,nx,nv,ng,c11,c12)
+    !< @brief Do not use it, call the interface routine init_timesteping_4dg
+
+    implicit none
+
+    type(dg_time_steping),intent(inout) :: plan
+    type(gausslobatto1d),intent(in) :: gll
+    sll_real64,dimension(:),intent(in) :: jac
+    sll_int32,intent(in) :: xbound
+    sll_real64,intent(in) :: dt,c11,c12
+    sll_int32,intent(in) :: nx,nv,ng
+
+    allocate(plan%k(2,nx*ng,nv*ng),plan%phi(nx*ng),plan%rho(nx*ng),plan%field(nx*ng), &
+         & plan%rhs(nx*ng,nv*ng))
+    plan%dt=dt
+    plan%x0=xbound
+
+    !build the matrixes for the Poisson-problem
+    !((D+F_E).M-¹.(D-F_\Phi)^T - C).\Phi = M.(\rho-1)
+    !this is for v>0
+    call poisson1d_matrix(gll,nx,jac,c11,c12,xbound,plan%matvp,plan%fieldvp)
+    !this is for v<0
+    call poisson1d_matrix(gll,nx,jac,c11,-c12,xbound,plan%matvm,plan%fieldvm)
+
+  end subroutine init_ee_4dg
 
   subroutine delete_dg_step(plan)
 
@@ -135,7 +169,8 @@ contains
     !! @param[IN] gll gausslobatto1D object, gives most of the needed information for computation
     !! @param[IN] field_e electric field, 1D array of real
     !! @param[IN] dist distribution function, 2D array of real
-    !! @param[OUt] rhs right hand side of Vlasov equation, 2D array of real
+    !! @param[OUT] rhs right hand side of Vlasov equation, 2D array of real
+    !! @param[IN,OPTIONAL] t time, may be needed, especially for Blanca's case
 
     implicit none
 
@@ -145,7 +180,7 @@ contains
     sll_real64,dimension(:,:),intent(in) :: dist
     sll_real64,dimension(:,:),intent(out) :: rhs
     
-    sll_real64,intent(in) :: t
+    sll_real64,intent(in),optional :: t
 
     sll_int32 :: nx,nv,ng
     sll_int32 :: x1,x2,v1,v2,i
@@ -231,16 +266,18 @@ contains
                    end if
                 end if
 
-                !!!>>only to test Blanca's case
-                rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
-                     & exp(-0.25d0*(4.0d0*v-1.0d0)**2)*(((4.0d0*sqrt(sll_pi)+2.0d0)*v- &
-                     & (2.0d0*sll_pi+sqrt(sll_pi)))*sin(2.0d0*x-2.0d0*sll_pi*t)+ &
-                     & sqrt(sll_pi)*(0.25d0-v)*sin(4.0d0*x-4.0d0*sll_pi*t))* &
-                     & gll%node(x2)*gll%node(v2)/mesh%jac(x1,v1)
-                !!!<<
+                if (present(t)) then
+                   !!!>>only to test Blanca's case
+                   rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                        & exp(-0.25d0*(4.0d0*v-1.0d0)**2)*( ((4.0d0*sqrt(sll_pi)+2.0d0)*v- &
+                        & (2.0d0*sll_pi+sqrt(sll_pi)))*sin(2.0d0*x-2.0d0*sll_pi*t)+ &
+                        & sqrt(sll_pi)*(0.25d0-v)*sin(4.0d0*x-4.0d0*sll_pi*t) )* &
+                        & gll%weigh(x2)*gll%weigh(v2)/mesh%jac(x1,v1)
+                   !!!<<
+                end if
 
-                rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)*mesh%jac(x1,v1) &
-                     & /(gll%weigh(x2)*gll%weigh(v2))
+                rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                     & mesh%jac(x1,v1)/(gll%weigh(x2)*gll%weigh(v2))
 
              end do
           end do
@@ -249,14 +286,49 @@ contains
 
   end subroutine rhs4dg_1d
 
+  subroutine time_integration_4dg(plan,gll,mesh,dist,distp1)
+    !< @brief Interface for the time integration for DG.
+    !! @details Interface for the time integration for DG. It will call the routine that 
+    !!          correspond to the time itegrator you choosed at initialization of plan. Also see 
+    !!          initialization of dg_time_steping object for more details \n
+    !!          Be aware that this code does not check the size of objects. It might gives you
+    !! @param[INOUT] plan dg_time_steping object, contains work array and data
+    !! @param[IN] gll gausslobatto1D object, necessary for the computation
+    !! @param[IN] mesh non_unif_cart_mesh object, necessary for the computation
+    !! @param[IN] dist distribution function at time n, 2D real array
+    !! @param[OUT] distp1 distribution function at time n+1, 2D real array, same size as dist
+
+    implicit none
+    
+    type(dg_time_steping),intent(inout) :: plan
+    type(gausslobatto1D),intent(in) :: gll
+    type(non_unif_cart_mesh),intent(in) :: mesh
+    sll_real64,dimension(:,:),intent(in) :: dist
+    sll_real64,dimension(:,:),intent(out) :: distp1
+
+    if (plan%method==0) then
+       !RK3
+       !to do
+    else if (plan%method==1) then
+       !RK4
+       call rk4_4dg_1d(plan,gll,mesh,dist,distp1)
+    else if (plan%method==2) then
+       !ee
+       call ee4dg_1d(plan,gll,mesh,dist,distp1)
+    end if
+
+  end subroutine time_integration_4dg
+
   subroutine rk4_4dg_1d(plan,gll,mesh,dist,distp1)
     !< @brief Computation of RK4 steps for Vlasov-Poisson with DG, returns the distribution
-    !!        at time n+1
+    !!        at time n+1. \n
+    !!        You shouldn't call it but call time_integration_4dg which is the interface
     !! @details Computation of RK4 steps for Vlasov-Poisson with DG, returns the distribution
-    !!        at time n+1. This is the routine to call at each time step. Also see 
-    !!        initialization of dg_time_steping object for more details \n
-    !!        Be aware that this code does not check the size of objects. It might gives you
-    !!        segmentation faults if there are error in object size.
+    !!          at time n+1. This routine is called at each time step. Also see 
+    !!          initialization of dg_time_steping object and time_integration_4dg for more 
+    !!          details. \n
+    !!          Be aware that this code does not check the size of objects. It might gives you
+    !!          segmentation faults if there are error in object size.
     !! @param[INOUT] plan dg_time_steping object, contains work array and data for RK4
     !! @param[IN] gll gausslobatto1D object, necessary for the computation
     !! @param[IN] mesh non_unif_cart_mesh object, necessary for the computation
@@ -273,27 +345,64 @@ contains
 
     !first step of RK4
     plan%k(2,:,:)=dist
-    call rk4dg_step(plan,gll,mesh)
+    call dg_stepdg_time_integration(plan,gll,mesh)
     distp1=dist+plan%k(1,:,:)/6.0d0*plan%dt
 
     !second step of RK4
     plan%k(2,:,:)=dist+plan%k(1,:,:)/2.0d0*plan%dt
-    call rk4dg_step(plan,gll,mesh)
+    call dg_stepdg_time_integration(plan,gll,mesh)
     distp1=distp1+plan%k(1,:,:)/3.0d0*plan%dt
 
     !third step of RK4
     plan%k(2,:,:)=dist+plan%k(1,:,:)/2.0d0*plan%dt
-    call rk4dg_step(plan,gll,mesh)
+    call dg_stepdg_time_integration(plan,gll,mesh)
     distp1=distp1+plan%k(1,:,:)/3.0d0
 
     !fourth step of RK4
     plan%k(2,:,:)=dist+plan%k(1,:,:)*plan%dt
-    call rk4dg_step(plan,gll,mesh)
+    call dg_stepdg_time_integration(plan,gll,mesh)
     distp1=distp1+plan%k(1,:,:)/6.0d0
 
   end subroutine rk4_4dg_1d
 
-  subroutine rk4dg_step(plan,gll,mesh)
+  subroutine ee4dg_1d(plan,gll,mesh,dist,distp1)
+    !< @brief Computation of explicit Euler steps for Vlasov-Poisson with DG, returns the
+    !!        distribution at time n+1. \n
+    !!        You shouldn't call it but call time_integration_4dg which is the interface
+    !! @details Computation of explicit Eule steps for Vlasov-Poisson with DG, returns the 
+    !!          distribution at time n+1. This routine is called at each time step. Also see 
+    !!          initialization of dg_time_steping object and time_integration_4dg for more 
+    !!          details. \n
+    !!          Be aware that this code does not check the size of objects. It might gives you
+    !!          segmentation faults if there are error in object size.
+    !! @param[INOUT] plan dg_time_steping object, contains work array and data for RK4
+    !! @param[IN] gll gausslobatto1D object, necessary for the computation
+    !! @param[IN] mesh non_unif_cart_mesh object, necessary for the computation
+    !! @param[IN] dist distribution function at time n, 2D real array
+    !! @param[OUT] distp1 distribution function at time n+1, 2D real array, same size as dist
+
+    implicit none
+    
+    type(dg_time_steping),intent(inout) :: plan
+    type(gausslobatto1D),intent(in) :: gll
+    type(non_unif_cart_mesh),intent(in) :: mesh
+    sll_real64,dimension(:,:),intent(in) :: dist
+    sll_real64,dimension(:,:),intent(out) :: distp1
+
+    plan%k(2,:,:)=dist
+    call dg_stepdg_time_integration(plan,gll,mesh)
+    distp1=dist+plan%k(1,:,:)*plan%dt
+
+  end subroutine ee4dg_1d
+
+  subroutine dg_stepdg_time_integration(plan,gll,mesh)
+    !< @brief Computation for time integration with DG. You do not need to call it, it is used
+    !!        as it should in time integration routines.
+    !! @details Computation for time integration with DG. You do not need to call it unless 
+    !!          you want to use a time integration method which is not already implmented. 
+    !!          It is used as it should in time integration routines. In the case you would like 
+    !!          to use it directly, please chek the source code of this routine and the source
+    !!          code of routine ee4dg_1d (which is probably the easiest to understand).
 
     implicit none
     
@@ -316,6 +425,7 @@ contains
     zero=1
 
     plan%rho=0.0d0
+    plan%k(1,:,:)=0.0d0
     do x1=1,nx
        do x2=1,ng
           do v1=1,nv
@@ -324,22 +434,9 @@ contains
                      & plan%k(2,(x1-1)*ng+x2,(v1-1)*ng+v2)*gll%weigh(v2)/mesh%jac(nx+1,v1)
              end do
           end do
-          plan%rho((x1-1)*ng+x2)=plan%rho((x1-1)*ng+x2)*gll%weigh(x2)*mesh%jac(x1,nv+1)
+          plan%rho((x1-1)*ng+x2)=plan%rho((x1-1)*ng+x2)*gll%weigh(x2)/mesh%jac(x1,nv+1)
        end do
     end do
-!!$    do i=1,nx*ng
-!!$       do j=1,nv
-!!$          do k=1,ng
-!!$             plan%rho(i)=plan%rho(i)+plan%k(2,i,(j-1)*ng+k)*gll%weigh(k)/mesh%jac(nx+1,j)
-!!$          end do
-!!$       end do
-!!$    end do
-!!$    !rho=M*rho
-!!$    do i=1,nx
-!!$       do j=1,ng
-!!$          plan%rho((i-1)*ng+j)=plan%rho((i-1)*ng+j)*gll%weigh(j)*mesh%jac(i,nv+1)
-!!$       end do
-!!$    end do
     plan%rho(plan%x0)=0.0d0 ! boudary condition = \Phi(0,t) = 0
 
 !!$    !we first consider v<0
@@ -385,10 +482,10 @@ contains
           plan%field((x1-1)*ng+x2)=sqrt(sll_pi)/4.0d0*sin(2.0d0*x-2.0d0*t)
        end do
     end do
-    call rhs4dg_1d(mesh,gll,plan%field,plan%k(2,:,:),plan%rhs,t)
+    call rhs4dg_1d(mesh,gll,plan%field,plan%k(2,:,:),plan%rhs,t=t)
     plan%k(1,:,:)=plan%rhs
     !!!<<<
 
-  end subroutine rk4dg_step
+  end subroutine dg_stepdg_time_integration
 
 end module timestep4dg
