@@ -149,6 +149,7 @@ contains
     sll_int32  :: message_id
     sll_int32  :: datasize
     sll_int32  :: istat
+    sll_int32  :: tagtop,tagbottom
 
     
     sll_real64,dimension(:,:),allocatable :: plotf2d
@@ -277,29 +278,31 @@ contains
 
 
 
-    ! mpi communications  xxx
+    ! mpi communications 
 
     ranktop=mod(sim%my_rank+1,sim%world_size)
     rankbottom=sim%my_rank-1
     if (rankbottom.lt.0) rankbottom=sim%world_size-1
     message_id=1
     datasize=loc_sz_v3*loc_sz_x1*loc_sz_x2
+    tagtop=sim%my_rank
+    tagbottom=ranktop
 
     ! top communications
-    write(*,*) 'coucou1',sim%my_rank,' bottom:',rankbottom,' top:',ranktop
-    Call mpi_SENDRECV(sim%fn_v3x1x2(:,:,:,loc_sz_x3),datasize, &
-         MPI_DOUBLE_PRECISION,ranktop,message_id,              &
-         sim%fn_v3x1x2(:,:,:,loc_sz_x3+1),datasize,            &
-         MPI_DOUBLE_PRECISION,ranktop,message_id,              &
-         MPI_COMM_WORLD,istat,ierr)   
+    write(*,*) 'coucou1',sim%my_rank,' bottom:',rankbottom,' top:',ranktop,'datasize=',size(sim%fn_v3x1x2(:,:,:,loc_sz_x3+1))
+    Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,loc_sz_x3),datasize, &
+         MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+         sim%fn_v3x1x2(1,1,1,0),datasize,            &
+         MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
 
     ! bottom communications
     write(*,*) 'coucou2',sim%my_rank
-    Call mpi_SENDRECV(sim%fn_v3x1x2(:,:,:,1),datasize, &
-         MPI_DOUBLE_PRECISION,rankbottom,message_id,              &
-         sim%fn_v3x1x2(:,:,:,0),datasize,            &
-         MPI_DOUBLE_PRECISION,rankbottom,message_id,              &
-         MPI_COMM_WORLD,istat,ierr)       
+    Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,1),datasize, &
+         MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+         sim%fn_v3x1x2(1,1,1,loc_sz_x3+1),datasize,            &
+         MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
 
     write(*,*) 'end comm',sim%my_rank
 
