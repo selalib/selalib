@@ -1,4 +1,4 @@
-module fishpack
+module sll_mudpack
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -8,7 +8,7 @@ implicit none
 integer, private :: i, j, k
 
 !> Fishpack solver cartesian 2d
-type, public :: fishpack_2d
+type, public :: mudpack_2d
    sll_int32                               :: nc_eta1
    sll_int32                               :: nc_eta2
    sll_real64                              :: eta1_min, eta1_max
@@ -26,10 +26,10 @@ type, public :: fishpack_2d
 contains
    procedure :: initialize => new_2d
    procedure :: solve => solve_2d
-end type fishpack_2d
+end type mudpack_2d
 
 !> Fishpack solver cartesian 3d
-type, public :: fishpack_3d
+type, public :: mudpack_3d
    sll_int32                               :: nc_eta1
    sll_int32                               :: nc_eta2
    sll_int32                               :: nc_eta3
@@ -52,7 +52,7 @@ type, public :: fishpack_3d
 contains
    procedure :: initialize => new_3d
    procedure :: solve => solve_3d
-end type fishpack_3d
+end type mudpack_3d
 
 enum, bind(C)
    enumerator :: CARTESIAN_2D = 0, POLAR_2D = 1, CARTESIAN_3D = 2
@@ -62,12 +62,12 @@ end enum
 
 contains
 
-  !> Initialize the fishpack solver 2d.
+  !> Initialize the mudpack solver 2d.
   subroutine new_2d(this, geometry,            &
                     eta1_min,eta1_max,nc_eta1,bc_eta1, &
                     eta2_min,eta2_max,nc_eta2,bc_eta2)
 
-    class(fishpack_2d),intent(out) :: this      !< Fishpack solver
+    class(mudpack_2d),intent(out) :: this      !< Fishpack solver
     sll_int32, intent(in)          :: nc_eta1   !< x number of cells
     sll_int32, intent(in)          :: nc_eta2   !< y number of cells
     sll_real64, intent(in)         :: eta1_min  !< left side of the domain
@@ -105,13 +105,13 @@ contains
 
   end subroutine new_2d
 
-  !> Initialize the fishpack solver 3d.
+  !> Initialize the mudpack solver 3d.
   subroutine new_3d(this, geometry,            &
                     eta1_min,eta1_max,nc_eta1,bc_eta1, &
                     eta2_min,eta2_max,nc_eta2,bc_eta2, &
                     eta3_min,eta3_max,nc_eta3,bc_eta3  )
 
-    class(fishpack_3d),intent(out) :: this
+    class(mudpack_3d),intent(out) :: this
     sll_int32, intent(in)          :: nc_eta1
     sll_int32, intent(in)          :: nc_eta2
     sll_int32, intent(in)          :: nc_eta3
@@ -161,11 +161,11 @@ contains
   end subroutine new_3d
 
 
-  !> Solve routine for fishpack 2d solver
+  !> Solve routine for mudpack 2d solver
   subroutine solve_2d(this, field)
 
      implicit none
-     class(fishpack_2d),intent(in)     :: this
+     class(mudpack_2d),intent(in)     :: this
      sll_real64, dimension(:,:)        :: field
      sll_real64                        :: w
      sll_int32                         :: idimf
@@ -181,20 +181,20 @@ contains
 
      if ( this%geometry == CARTESIAN_2D ) then
   
-        call hwscrt (this%eta1_min, this%eta1_max, this%nc_eta1, &
-                     this%bc_eta1, this%bda, this%bdb, &
-                     this%eta2_min, this%eta2_max, this%nc_eta2, &
-                     this%bc_eta2, this%bdc, this%bdd, &
-                     this%elmbda, field, idimf, this%pertrb, this%error)
+!        call hwscrt (this%eta1_min, this%eta1_max, this%nc_eta1, &
+!                     this%bc_eta1, this%bda, this%bdb, &
+!                     this%eta2_min, this%eta2_max, this%nc_eta2, &
+!                     this%bc_eta2, this%bdc, this%bdd, &
+!                     this%elmbda, field, idimf, this%pertrb, this%error)
 
      else if ( this%geometry == POLAR_2D ) then
 
 
-        call hwsplr (this%eta1_min, this%eta1_max, this%nc_eta1, &
-                     this%bc_eta1, this%bda, this%bdb, &
-                     this%eta2_min, this%eta2_max, this%nc_eta2, &
-                     this%bc_eta2, this%bdc, this%bdd, &
-                     this%elmbda, field, idimf, this%pertrb, this%error, w)
+!        call hwsplr (this%eta1_min, this%eta1_max, this%nc_eta1, &
+!                     this%bc_eta1, this%bda, this%bdb, &
+!                     this%eta2_min, this%eta2_max, this%nc_eta2, &
+!                     this%bc_eta2, this%bdc, this%bdd, &
+!                     this%elmbda, field, idimf, this%pertrb, this%error, w)
 
      else
 
@@ -204,11 +204,11 @@ contains
   
   end subroutine solve_2d
 
-  !> Solve routine for fishpack 3d solver
+  !> Solve routine for mudpack 3d solver
   subroutine solve_3d(this, field)
 
      implicit none
-     class(fishpack_3d),intent(in)     :: this
+     class(mudpack_3d),intent(in)     :: this
      sll_real64, dimension(:,:,:)      :: field
      sll_real64                        :: w
      sll_int32                         :: ldimf
@@ -220,13 +220,13 @@ contains
 
      if ( this%geometry == CARTESIAN_3D) then
 
-        call hw3crt (this%eta1_min,this%eta1_max,this%nc_eta1, &
-                     this%bc_eta1,this%bda,this%bdb, &
-                     this%eta2_min,this%eta2_max,this%nc_eta2, &
-                     this%bc_eta2,this%bdc,this%bdd, &
-                     this%eta3_min,this%eta3_max,this%nc_eta3, &
-                     this%bc_eta3,this%bde,this%bdf,this%elmbda, &
-                     ldimf,mdimf,field, this%pertrb,this%error,w)
+!        call hw3crt (this%eta1_min,this%eta1_max,this%nc_eta1, &
+!                     this%bc_eta1,this%bda,this%bdb, &
+!                     this%eta2_min,this%eta2_max,this%nc_eta2, &
+!                     this%bc_eta2,this%bdc,this%bdd, &
+!                     this%eta3_min,this%eta3_max,this%nc_eta3, &
+!                     this%bc_eta3,this%bde,this%bdf,this%elmbda, &
+!                     ldimf,mdimf,field, this%pertrb,this%error,w)
 
      else
 
@@ -236,4 +236,4 @@ contains
   
   end subroutine solve_3d
   
-end module fishpack
+end module sll_mudpack
