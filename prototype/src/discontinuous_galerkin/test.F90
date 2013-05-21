@@ -1,23 +1,69 @@
 program test_DG
 #include "sll_working_precision.h"
 
-  !use sll_nu_cart_mesh
+  use sll_nu_cart_mesh
   use gausslobatto
-  !use mod_sparse
+  use poisson4dg
+  use mod_sparse
+  use sll_constants
+  use timestep4dg
 
   use mod_octave_io_sparse
 
   implicit none
 
+!test of 1./x*x for timestep4dg.F90
+  
+!!$  type(non_unif_cart_mesh) :: mesh
+!!$  type(gausslobatto1D) :: gausslob
+!!$  sll_int32 :: x1,x2,v1,v2
+!!$  sll_real64,dimension(30*6,30*6) :: rhs
+!!$  sll_int32 :: nx,nv,ng
+!!$  sll_real64 :: x_min,x_max,v_min,v_max
+!!$
+!!$  nv=30
+!!$  nx=30
+!!$  ng=6
+!!$
+!!$  x_min=-sll_pi
+!!$  x_max=sll_pi
+!!$  v_min=-sll_pi
+!!$  v_max=sll_pi
+!!$
+!!$
+!!$  call init_gausslobatto_1d(ng,gausslob)
+!!$  !call init_gausslobatto_1d(3*ng,gll)
+!!$  call init_nu_cart_mesh(nx,nv,mesh)
+!!$  mesh%d_etat1=(x_max-x_min)/real(nx,8)
+!!$  mesh%d_etat2=(v_max-v_min)/real(nv,8)
+!!$  call fill_node_nuc_mesh(x_min,v_min,mesh)
+!!$  
+!!$  rhs=1.0d0
+!!$  do v1=1,nv !loop on elements in direction v
+!!$     do v2=1,ng !loop on GLL points in direction v
+!!$        do x1=1,nx !loop on elements in direction x
+!!$           do x2=1,ng !loop on GLL points in direction x
+!!$              rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+!!$                   & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+!!$              rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+!!$                   & mesh%jac(x1,v1)/(gausslob%weigh(x2)*gausslob%weigh(v2))
+!!$           end do
+!!$        end do
+!!$     end do
+!!$  end do
+!!$
+!!$  print*,maxval(abs(rhs))
+!!$  print*,minval(abs(rhs))
+
 !local max of der
 
-  type(gausslobatto1D) :: gausslob
-
-  call init_gausslobatto_1d(10,gausslob)
-  open(13,file='erato')
-  call write_octave(gausslob%der,'der',13)
-  close(13)
-  call delete_gausslobatto_1d(gausslob)
+!!$  type(gausslobatto1D) :: gausslob
+!!$
+!!$  call init_gausslobatto_1d(10,gausslob)
+!!$  open(13,file='erato')
+!!$  call write_octave(gausslob%der,'der',13)
+!!$  close(13)
+!!$  call delete_gausslobatto_1d(gausslob)
 
 !check GLL nodes and weigh
 
