@@ -1,7 +1,7 @@
 add_executable(VP_DG
 	main.F90
   mesh.F90
-  gauss-lobatto.F90
+  ../integration/gauss-lobatto.F90
   lob.f
   gauss.f
   mod_sparse.F90
@@ -31,7 +31,7 @@ target_link_libraries(VP_DG
 add_executable(test_DG
 	test.F90
   mesh.F90
-  gauss-lobatto.F90
+  ../integration/gauss-lobatto.F90
   lob.f
   gauss.f
   mod_sparse.F90
