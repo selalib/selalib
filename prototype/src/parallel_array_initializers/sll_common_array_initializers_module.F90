@@ -22,9 +22,10 @@ contains
   ! function, periodic in x and y, and compact-ish in vx and vy.
   !
   ! Basically:
-  !                 1                           -(vx^2 + vy^2)
-  ! f(x,y,vx,vy) = ----(1+epsilon*cos(kx*x))*exp(------------- )
-  !                 2*pi                              2
+  !                          
+  ! f(x,y,vx,vy) = alpha*exp(-0.5*((x -xc )^2+(y - yc)^2)) + 
+  !                beta* exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))
+  !                          
   !
   ! It is meant to be used in the intervals:
   ! x:  [ 0,2*pi/kx]
@@ -55,20 +56,23 @@ contains
     sll_real64 :: yc
     sll_real64 :: vxc
     sll_real64 :: vyc
-
-    sll_real64 :: alpha = 1.
-    sll_real64 :: beta  = 0.0
+    sll_real64 :: alpha
+    sll_real64 :: beta 
 
     if( .not. present(params) ) then
        print *, 'sll_gaussian_initializer_4d, error: the params array must ', &
-            'be passed. params(1) = xc, params(2) = yc, params(3) = vxc...'
+            'be passed: ', &
+            'params(1) = xc, params(2) = yc, params(3) = vxc, params(4) = vyc',&
+            'params(5) = alpha, params(6) = beta'
        stop
     end if
 
-    xc  = params(1)
-    yc  = params(2)
-    vxc = params(3)
-    vyc = params(4)
+    xc    = params(1)
+    yc    = params(2)
+    vxc   = params(3)
+    vyc   = params(4)
+    alpha = params(5)
+    beta  = params(6)
 
     sll_gaussian_initializer_4d = alpha*exp(-0.5_f64*((x-xc)**2+(y-yc)**2)) + &
                                   beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
@@ -154,5 +158,68 @@ contains
     sll_landau_initializer_dk_test_4d = factor1*&
          (1.0_f64+epsilon*cos(kx*x1))*exp(-0.5_f64*(v1**2))
   end function sll_landau_initializer_dk_test_4d
+
+  !---------------------------------------------------------------------------
+  !
+  !                         Periodic Maxwellian
+  !
+  ! 4D distribution in [0,1]X[0,1][-6,6]X[-6,6]  with the property of being 
+  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  !
+  ! f(x,y,vx,vy) = sin(kx*x)*sin(ky*y) + 
+  !                beta* exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))
+  !                          
+  !
+  ! It is meant to be used in the intervals:
+  ! x:  [ 0,2*pi/kx]
+  ! y:  [ 0,2*pi/ky]
+  ! vx: [-6,6]
+  ! vy: [-6,6]
+
+  ! convention for the params array:
+  ! params(1) = eta1_min
+  ! params(2) = eta1_max
+  ! params(3) = eta2_min
+  ! params(4) = eta2_max
+  ! params(5) = epsilon
+  !
+  !---------------------------------------------------------------------------
+
+  function sll_periodic_gaussian_initializer_4d( x, y, vx, vy, params ) &
+    result(val)
+
+    sll_real64 :: val !sll_gaussian_initializer_4d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: xc
+    sll_real64 :: yc
+    sll_real64 :: vxc
+    sll_real64 :: vyc
+    sll_real64 :: alpha
+    sll_real64 :: beta 
+
+    if( .not. present(params) ) then
+       print *, 'sll_gaussian_initializer_4d, error: the params array must ', &
+            'be passed: ', &
+            'params(1) = xc, params(2) = yc, params(3) = vxc, params(4) = vyc',&
+            'params(5) = alpha, params(6) = beta'
+       stop
+    end if
+
+    xc    = params(1)
+    yc    = params(2)
+    vxc   = params(3)
+    vyc   = params(4)
+    alpha = params(5)
+    beta  = params(6)
+
+    val = alpha*exp(-0.5_f64*((x-xc)**2+(y-yc)**2)) + &
+                                  beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
+
+  end function sll_periodic_gaussian_initializer_4d
 
 end module sll_common_array_initializers_module
