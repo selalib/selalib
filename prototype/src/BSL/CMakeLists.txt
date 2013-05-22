@@ -46,7 +46,7 @@ IF(NOT STDF95)
    ADD_DEPENDENCIES(bsl_landau_1d selalib)
    TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)
 
-   IF(FFTW_FOUND)
+   IF(FFTW_FOUND AND FFTW_ENABLED)
 
       ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
       ADD_DEPENDENCIES(bsl_landau_2d ${BSL_LIB_DEPS})
