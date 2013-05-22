@@ -33,36 +33,50 @@ module sll_poisson_2d_periodic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
 
-use sll_constants
-
-use fft_module
+use sll_poisson_solvers
 
 implicit none
 private
 
+!> fft type use to do fft with fftpack library
+type, public :: fftclass
+   real, dimension(:), pointer ::  coefc, work, workc
+   double precision, dimension(:), pointer :: coefd, workd, coefcd
+   integer  :: n  ! number of samples in each sequence
+end type fftclass
+
 !> Object with data to solve Poisson equation on 2d domain with
 !> periodic boundary conditions
-type, public :: poisson_2d_periodic
-  sll_int32                           :: nc_x, nc_y
-  sll_real64                          :: x_min, x_max
-  sll_real64                          :: y_min, y_max
+type, public, extends(poisson_2d)     :: poisson_2d_periodic
   sll_comp64, dimension(:,:), pointer :: rhst, ext, eyt
   sll_real64, dimension(:,:), pointer :: kx, ky, k2
   type(fftclass)                      :: fftx, ffty
 contains
-   procedure :: initialize
-   procedure :: solve_e_fields
-   procedure :: solve_potential
-   generic   :: solve => solve_e_fields, solve_potential
+   procedure :: initialize_poisson_2d_periodic_fftpack
+   procedure :: solve_e_fields_poisson_2d_periodic_fftpack
+   procedure :: solve_potential_poisson_2d_periodic_fftpack
+   generic   :: initialize => initialize_poisson_2d_periodic_fftpack
+   generic   :: solve => solve_e_fields_poisson_2d_periodic_fftpack, &
+                         solve_potential_poisson_2d_periodic_fftpack
 end type poisson_2d_periodic
+
+
+interface fft
+   module procedure doubfft, doubcfft
+end interface
+interface fftinv
+   module procedure doubfftinv,  doubcfftinv
+end interface
 
 contains
 
 !> Create an object to solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:
-subroutine initialize(this, x_min, x_max, nc_x, &
-                      y_min, y_max, nc_y, error )
+subroutine initialize_poisson_2d_periodic_fftpack( &
+           this, x_min, x_max, nc_x, &
+           y_min, y_max, nc_y, error )
 
    class(poisson_2d_periodic)        :: this
    sll_int32,  intent(in)            :: nc_x
@@ -91,11 +105,11 @@ subroutine initialize(this, x_min, x_max, nc_x, &
 
    call wave_number_vectors(this)
 
-end subroutine initialize
+end subroutine initialize_poisson_2d_periodic_fftpack
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.
-subroutine solve_potential(this,sol,rhs)
+subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
 
    class(poisson_2d_periodic)                :: this
    sll_real64, dimension(:,:), intent(in)    :: rhs
@@ -134,11 +148,11 @@ subroutine solve_potential(this,sol,rhs)
    sol(nc_x+1,:) = sol(1,:)
    sol(:,nc_y+1) = sol(:,1)
 
-end subroutine solve_potential
+end subroutine solve_potential_poisson_2d_periodic_fftpack
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
-subroutine solve_e_fields(this,field_x,field_y,rhs)
+subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs)
 
    class(poisson_2d_periodic)               :: this
    sll_real64, dimension(:,:), intent(in)   :: rhs
@@ -192,7 +206,7 @@ subroutine solve_e_fields(this,field_x,field_y,rhs)
    field_y(nc_x+1,:) = field_y(1,:)
    field_y(:,nc_y+1) = field_y(:,1)
 
-end subroutine solve_e_fields
+end subroutine solve_e_fields_poisson_2d_periodic_fftpack
 
 subroutine wave_number_vectors(this)
 
@@ -272,5 +286,72 @@ subroutine transpose_c2r(comp_array, real_array)
    end do
 
 end subroutine transpose_c2r
+
+    subroutine initdfft(this,l)
+      type(fftclass) :: this
+      integer :: l 
+      this%n = l 
+      allocate(this%coefd(2*this%n+15))
+      call dffti(this%n,this%coefd)
+    end subroutine initdfft
+
+
+    subroutine initcfft(this,l)
+      type(fftclass) :: this
+      integer :: l 
+      this%n = l
+      allocate(this%coefcd(4*this%n+15))
+      call zffti(this%n,this%coefcd)
+    end subroutine initcfft
+
+    subroutine doubfft(this,array)
+      type(fftclass) :: this
+      integer :: i,p
+      double precision, dimension(:,:) :: array
+      p = size(array,2)   ! number of 1d transforms
+
+      do i=1,p
+         call dfftf( this%n, array(:,i), this%coefd)
+      end do
+
+      array = array /this%n      ! normalize FFT
+    end subroutine doubfft
+
+    subroutine doubcfft(this,array)
+      type(fftclass) :: this
+      integer :: i, p
+      double complex, dimension(:,:) :: array
+
+      p = size(array,2)   ! number of 1d transforms
+
+      do i=1,p
+         call zfftf( this%n, array(:,i), this%coefcd)
+      end do
+      array = array /this%n      ! normalize FFT
+    end subroutine doubcfft
+
+    subroutine doubfftinv(this,array)
+      type(fftclass) :: this
+      integer :: i, p
+      double precision, dimension(:,:) :: array
+
+      p = size(array,2)   ! number of 1d transforms
+
+      do i=1,p
+         call dfftb( this%n, array(:,i),  this%coefd )
+      end do
+    end subroutine doubfftinv
+
+    subroutine doubcfftinv(this,array)
+      type(fftclass) :: this
+      integer :: i, p
+      double complex, dimension(:,:) :: array
+
+      p = size(array,2)   ! number of 1d transforms
+
+      do i=1,p
+         call zfftb( this%n, array(:,i),  this%coefcd )
+      end do
+    end subroutine doubcfftinv
 
 end module sll_poisson_2D_periodic
