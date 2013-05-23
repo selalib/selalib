@@ -60,10 +60,11 @@ program test_poisson_2d_periodic_cart_par
   layout_x => new_layout_2D( sll_world_collective )
   nprocx = 1
   nprocy = 2**e
-  call initialize_layout_with_distributed_2D_array( ncx, ncy, &
+  call initialize_layout_with_distributed_2D_array( ncx+1, ncy+1, &
        nprocx, nprocy, layout_x )
 
-  plan => new_poisson_2d_periodic_plan_cartesian_par(layout_x, ncx, ncy, Lx, Ly)
+  plan => new_poisson_2d_periodic_plan_cartesian_par(&
+       layout_x, ncx, ncy, Lx, Ly)
 
   call compute_local_sizes( layout_x, nx_loc, ny_loc )
 
@@ -79,8 +80,8 @@ program test_poisson_2d_periodic_cart_par
         gj = global(2)
         x  = (gi-1)*dx
         y  = (gj-1)*dy
-        phi_an(i,j) = cos(x)*sin(y) 
-        rho(i,j)    = 2.0_f64*phi_an(i,j)
+        phi_an(i,j) =  cos(x)*sin(y) 
+        rho(i,j)    = -2.0_f64*phi_an(i,j)
      end do
   end do
 
