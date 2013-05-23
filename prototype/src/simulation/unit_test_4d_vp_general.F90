@@ -54,7 +54,7 @@ program vlasov_poisson_4d_general
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=.0_f64, eta1_max=2.0_f64*sll_pi)!eta1_max=4.0_f64*sll_pi)
+       eta1_min=.0_f64, eta1_max=4.0_f64*sll_pi)
 
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -103,7 +103,7 @@ program vlasov_poisson_4d_general
   landau_params(2) = mx%eta1_max
   landau_params(3) = 0.0      !eta2_min
   landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.2!0.01     !eps
+  landau_params(5) = 0.05!0.01     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_general( &
