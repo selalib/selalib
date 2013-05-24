@@ -18,12 +18,12 @@ IF(NOT HDF5_FOUND)
 
    FIND_LIBRARY(HDF5_C_LIBRARY NAMES hdf5
    HINTS ${HDF5_PATHS} 
-   PATH_SUFFIXES lib hdf5/lib
+   PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
    HINTS ${HDF5_PATHS} 
-   PATH_SUFFIXES lib hdf5/lib
+   PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5_fortran")
 
    FIND_LIBRARY(ZLIB_LIBRARIES NAMES z
