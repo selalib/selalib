@@ -1706,9 +1706,10 @@ c
       implicit none
       integer nx,ny,nz,i,j,k,nxa,nyc,nze
       real(8) u(nx,ny,nz)
-      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
-      common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,
-     +               dlx4,dly4,dlz4
+      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz
+      real(8) tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,
+     &               tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
       real(8) ux3,ux4,uy3,uy4,uz3,uz4
 c
 c     x,y partial derivatives
@@ -1782,7 +1783,8 @@ c
       implicit none
       integer nx,ny,i,j,nxa,nyc,l
       real(8) u(nx,ny)
-      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz
+      real(8) tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
       common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,
      +               dlx4,dly4,dlz4
       real(8) ux3,ux4,uy3,uy4
@@ -1856,7 +1858,8 @@ c
       implicit none
       integer nx,i,nxa,k
       real(8) u(nx)
-      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz
+      real(8) tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
       common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,
      +               dlx4,dly4,dlz4
       real(8) ux3,ux4
