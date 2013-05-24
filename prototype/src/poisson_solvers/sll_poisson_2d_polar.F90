@@ -114,9 +114,9 @@ module sll_poisson_2d_polar
   !flags for boundary conditions
   !>boundary conditions can be at TOP_ or BOT_ and take value NEUMANN or DIRICHLET
   !>ex : TOP_DIRICHLET or BOT_NEUMANN
-  integer, parameter :: DIRICHLET=1
-  integer, parameter :: NEUMANN=2
-  integer, parameter :: NEUMANN_MODE0=3
+  integer, parameter :: DIRICHLET     = 1
+  integer, parameter :: NEUMANN       = 2
+  integer, parameter :: NEUMANN_MODE0 = 3
 
 contains
 
@@ -326,7 +326,6 @@ contains
           plan%phik(nr+1)=0.0_f64
         endif
       endif
-
 
       err = 0._f64
       do i=4,nr-4

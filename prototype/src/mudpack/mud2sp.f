@@ -1,26 +1,3 @@
-c
-c     file mud2sp.f
-c
-c  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-c  .                                                             .
-c  .                  copyright (c) 1999 by UCAR                 .
-c  .                                                             .
-c  .       UNIVERSITY CORPORATION for ATMOSPHERIC RESEARCH       .
-c  .                                                             .
-c  .                      all rights reserved                    .
-c  .                                                             .
-c  .                                                             .
-c  .                      MUDPACK version 5.0                    .
-c  .                                                             .
-c  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-c
-c
-c
-c ... author and specialist
-c
-c          John C. Adams (National Center for Atmospheric Research)
-c          email: johnad@ucar.edu, phone: 303-497-1213
-
 c ... For MUDPACK 5.0 information, visit the website:
 c     (http://www.scd.ucar.edu/css/software/mudpack)
 c
