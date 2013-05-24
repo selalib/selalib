@@ -32,8 +32,8 @@ r_max   = 2.0_f64
 theta_min  = 0.0_f64
 theta_max  = 2.0_f64 * sll_pi
 
-nr     = 32
-ntheta = 128
+nr     = 33
+ntheta = 129
 delta_r     = (r_max-r_min)/real(nr-1,f64)
 delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
 
@@ -56,8 +56,8 @@ end do
 open(10,file="phi_polar.dat")
 do j=1,ntheta
    do i=1,nr
-      phi_cos(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
-      phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*sin(n*theta(j))*r(i)
+      phi_cos(i,j) = 0.0 !(r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
+      phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
       write(10,*) sngl(r(i)*cos(theta(j))), &
                   sngl(r(i)*sin(theta(j))), &
                   sngl(phi_cos(i,j)),      &
@@ -79,6 +79,17 @@ call solve_poisson_polar_mudpack(phi_cos, rhs, &
                                  r_min, r_max, &
                                  theta_min, theta_max, &
                                  nr, ntheta)
+
+do j = 1, ntheta
+   do i = 1, nr
+      write(11,*) sngl(r(i)*cos(theta(j))), &
+                  sngl(r(i)*sin(theta(j))), &
+                  sngl(phi_cos(i,j)),      &
+                  sngl(phi_sin(i,j))
+   end do
+   write(11,*)
+end do
+
 l1   = 0.0_f64
 l2   = 0.0_f64
 linf = 0.0_f64
