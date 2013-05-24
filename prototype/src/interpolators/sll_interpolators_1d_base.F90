@@ -154,6 +154,4 @@ module sll_module_interpolators_1d_base
      end function reconstruct_1d_array
   end interface
 
-
 end module sll_module_interpolators_1d_base
-
