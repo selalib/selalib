@@ -209,29 +209,29 @@ c     set right hand side in rhs
 c     initialize phi to zero
 c
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	do j=1,ny
-	  y = yc+float(j-1)*dly
-	  call cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-	  call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-	  rhs(i,j) = cxx*pxx+cxy*pxy+cyy*pyy+cx*px+cy*py+ce*pe
-	  phi(i,j) = 0.0
-	end do
+      x = xa+float(i-1)*dlx
+      do j=1,ny
+        y = yc+float(j-1)*dly
+        call cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
+        call exacr(x,y,pxx,pxy,pyy,px,py,pe)
+        rhs(i,j) = cxx*pxx+cxy*pxy+cyy*pyy+cx*px+cy*py+ce*pe
+        phi(i,j) = 0.0
+      end do
       end do
 c
 c     set specified boundaries in phi at x=xa,xb and y=yc
 c
       do j=1,ny
-	y = yc+float(j-1)*dly
-	call exacr(xa,y,pxx,pxy,pyy,px,py,pe)
-	phi(1,j) = pe
-	call exacr(xb,y,pxx,pxy,pyy,px,py,pe)
-	phi(nx,j) = pe
+      y = yc+float(j-1)*dly
+      call exacr(xa,y,pxx,pxy,pyy,px,py,pe)
+      phi(1,j) = pe
+      call exacr(xb,y,pxx,pxy,pyy,px,py,pe)
+      phi(nx,j) = pe
       end do
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	call exacr(x,yc,pxx,pxy,pyy,px,py,pe)
-	phi(i,1) = pe
+      x = xa+float(i-1)*dlx
+      call exacr(x,yc,pxx,pxy,pyy,px,py,pe)
+      phi(i,1) = pe
       end do
       write(*,100)
   100 format(//' mud2cr test ')
@@ -277,12 +277,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exacr(x,y,pxx,pxy,pyy,px,py,pe)
+        errmax = amax1(errmax,abs((phi(i,j)-pe)))
+      end do
       end do
       write(*,201) errmax
   201 format(' maximum error  =  ',e10.3)
@@ -299,12 +299,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exacr(x,y,pxx,pxy,pyy,px,py,pe)
+        errmax = amax1(errmax,abs((phi(i,j)-pe)))
+      end do
       end do
       write(*,201) errmax
       end

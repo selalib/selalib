@@ -201,29 +201,29 @@ c     set right hand side in rhs
 c     initialize phi to zero
 c
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	do j=1,ny
-	  y = yc+float(j-1)*dly
-	  call cof(x,y,cxx,cyy,cx,cy,ce)
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
-	  phi(i,j) = 0.0
-	end do
+      x = xa+float(i-1)*dlx
+      do j=1,ny
+        y = yc+float(j-1)*dly
+        call cof(x,y,cxx,cyy,cx,cy,ce)
+        call exact(x,y,pxx,pyy,px,py,pe)
+        rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
+        phi(i,j) = 0.0
+      end do
       end do
 c
 c     set specified boundaries in phi
 c
       x = xb
       do j=1,ny
-	y = yc+float(j-1)*dly
-	call exact(x,y,pxx,pyy,px,py,pe)
-	phi(nx,j) = pe
+      y = yc+float(j-1)*dly
+      call exact(x,y,pxx,pyy,px,py,pe)
+      phi(nx,j) = pe
       end do
       y = yc
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	call exact(x,y,pxx,pyy,px,py,pe)
-	phi(i,1) = pe
+      x = xa+float(i-1)*dlx
+      call exact(x,y,pxx,pyy,px,py,pe)
+      phi(i,1) = pe
       end do
       write(*,100)
   100 format(//' mud2 test ')
@@ -272,12 +272,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exact(x,y,pxx,pyy,px,py,pe)
+        errmax = amax1(errmax,abs((phi(i,j)-pe)))
+      end do
       end do
       write(*,108) errmax
   108 format(' maximum error  =  ',e10.3)
@@ -307,20 +307,20 @@ c
       real xa,xb,yc,yd,tolmax,relmax
       common/ftmud2/xa,xb,yc,yd,tolmax,relmax
       if (kbdy.eq.1) then  ! x=xa boundary
-	y = xory
-	x = xa
-	call exact(x,y,pxx,pyy,px,py,pe)
-	alfa = -y
-	gbdy = px + alfa*pe
-	return
+      y = xory
+      x = xa
+      call exact(x,y,pxx,pyy,px,py,pe)
+      alfa = -y
+      gbdy = px + alfa*pe
+      return
       end if
       if (kbdy.eq.4) then  ! y=yd boundary
-	y = yd
-	x = xory
-	call exact(x,y,pxx,pyy,px,py,pe)
-	alfa = x
-	gbdy = py + alfa*pe
-	return
+      y = yd
+      x = xory
+      call exact(x,y,pxx,pyy,px,py,pe)
+      alfa = x
+      gbdy = py + alfa*pe
+      return
       end if
       end
 

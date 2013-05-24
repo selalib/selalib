@@ -30,7 +30,7 @@ sll_real64, intent(in) :: theta_min, theta_max
 sll_int32, intent(in)  :: nr, nth
 sll_int32 :: icall
 sll_int32 :: iiex,jjey,nnx,nny,llwork
-sll_int32, parameter :: iixp = 4 , jjyq = 4
+sll_int32, parameter :: iixp = 2 , jjyq = 2
 
 sll_real64, intent(inout) ::  phi(nr,nth)
 sll_real64, intent(in) ::  rhs(nr,nth)
@@ -68,15 +68,15 @@ if (.not. allocated(work)) then
 else
    icall = 1
 end if
-iiex = int(log((nnx-1.)/iixp)/log(2.)+1 )
-jjey = int(log((nny-1.)/jjyq)/log(2.)+1 )
+iiex = ceiling(log((nnx-1.)/iixp)/log(2.))+1
+jjey = ceiling(log((nny-1.)/jjyq)/log(2.))+1
 
 ! set input sll_int32 arguments
 intl = 0
 
 ! set boundary condition flags
 nxa = 1
-nxb = 2
+nxb = 1
 nyc = 0
 nyd = 0
 
@@ -85,8 +85,9 @@ ixp = iixp
 jyq = jjyq
 iex = iiex
 jey = jjey
-nx = iixp*2**(iiex-1)+1
-ny = jjyq*2**(jjey-1)+1
+
+nx = ixp*(2**(iex-1))+1
+ny = jyq*(2**(jey-1))+1
 
 if (nx /= nr) then
    print*, "nx,nr=", nx, nr
@@ -130,10 +131,11 @@ tolmax = 0.0
 ! set specified boundaries in phi at x=xa 
 do j=1,ny
    phi(1,j) = 0.0
+   phi(nx,j) = 0.0
 end do
 write(*,100)
 
-! intiialization call
+! intialization call
 if (icall == 0) then
    write(*,104) intl
    call mud2cr(iprm,fprm,work,cofcr,bndcr,rhs,phi,mgopt,ierror)
