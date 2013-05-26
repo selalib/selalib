@@ -247,9 +247,9 @@ subroutine exact(x,y,pxx,pyy,px,py,pe)
 implicit none
 real(8) :: x,y,pxx,pyy,px,py,pe
 
-pe = x**5+y**5+1.
-px = 5.*x**4
-py = 5.*y**4
+pe  = x**5+y**5+1.
+px  = 5.*x**4
+py  = 5.*y**4
 pxx = 20.*x**3
 pyy = 20.*y**3
 return
