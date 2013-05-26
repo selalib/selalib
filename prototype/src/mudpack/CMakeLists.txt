@@ -2,7 +2,8 @@
 
 ADD_LIBRARY(mudpack STATIC mudcom.f mud2.f mud24.f 
                                     mud24sp.f mud2sp.f
-                                    mud24cr.f mud2cr.f )
+                                    mud24cr.f mud2cr.f 
+                                    muh24cr.f muh2cr.f )
 
 #ADD_EXECUTABLE( tcud2		tcud2.f)
 #ADD_EXECUTABLE( tcud24		tcud24.f)

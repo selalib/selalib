@@ -1,4 +1,4 @@
-program test_poisson_polar
+program test_mudpack_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -22,6 +22,7 @@ sll_real64 :: r_min, r_max, delta_r
 sll_real64 :: theta_min, theta_max, delta_theta
 sll_int32  :: error
 sll_real64 :: tol,l1,l2,linf
+
 sll_int32, parameter  :: n = 4
 
 print*,'Testing the Poisson solver in 2D, polar coordinate'
@@ -151,4 +152,4 @@ sll_real64 function f_sin( r, theta)
 
 end function f_sin
 
-end program test_poisson_polar
+end program test_mudpack_polar

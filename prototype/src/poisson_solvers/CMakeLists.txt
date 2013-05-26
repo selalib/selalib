@@ -4,10 +4,10 @@ SET(POISSON_LIBS sll_fft
                  sll_splines
                  sll_interpolators
                  sll_file_io
-	              sll_utilities
+                 sll_utilities
                  sll_memory
-	              sll_assertion
-	              sll_timer
+                 sll_assertion
+                 sll_timer
                  dfftpack)
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
