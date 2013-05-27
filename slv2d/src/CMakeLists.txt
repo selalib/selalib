@@ -108,6 +108,31 @@ ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
 ADD_DEPENDENCIES(slv2d selalib-mpi dfftpack)
 
+SET(SLV2D_CSL2D_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              csl2dpp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_csl2d.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_csl2d STATIC ${SLV2D_CSL2D_SRC})
+
+ADD_DEPENDENCIES(slv2d_csl2d selalib-mpi dfftpack)
+
+
+
 MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
@@ -120,6 +145,10 @@ SET(LIBS selalib-mpi
 
 ADD_EXECUTABLE(vp4d_transpose vp4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vp4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
+
+ADD_EXECUTABLE(vp4d_csl2d vp4d_csl2d.F90)
+TARGET_LINK_LIBRARIES(vp4d_csl2d slv2d_csl2d ${LIBS} ${LAPACK_LIBRARIES})
+
 
 ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vm4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
