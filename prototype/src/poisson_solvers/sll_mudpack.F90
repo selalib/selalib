@@ -5,42 +5,38 @@ module sll_mudpack
 #include "sll_assert.h"
 
 implicit none
-integer, private :: i, j, k
+sll_int32, private :: i, j, k
 
 !> Fishpack solver cartesian 2d
 type, public :: mudpack_2d
 
-   integer :: iprm(16),mgopt(4)
-   real(8) :: fprm(6)
-   integer :: intl
-   integer :: nxa
-   integer :: nxb
-   integer :: nyc
-   integer :: nyd
-   integer :: ixp
-   integer :: jyq
-   integer :: iex
-   integer :: jey
-   integer :: nx
-   integer :: ny
-   integer :: iguess
-   integer :: maxcy
-   integer :: method
-   integer :: nwork
-   integer :: lwrkqd
-   integer :: itero
+   sll_int32 :: iprm(16),mgopt(4)
+   sll_real64 :: fprm(6)
 
-   real(8) :: xa
-   real(8) :: xb
-   real(8) :: yc
-   real(8) :: yd
-   real(8) :: tolmax
-   real(8) :: relmax
+   sll_int32 :: intl
+   sll_int32 :: nxa
+   sll_int32 :: nxb
+   sll_int32 :: nyc
+   sll_int32 :: nyd
+   sll_int32 :: ixp
+   sll_int32 :: jyq
+   sll_int32 :: iex
+   sll_int32 :: jey
+   sll_int32 :: nx
+   sll_int32 :: ny
+   sll_int32 :: iguess
+   sll_int32 :: maxcy
+   sll_int32 :: method
+   sll_int32 :: nwork
+   sll_int32 :: lwrkqd
+   sll_int32 :: itero
 
-contains
-
-   procedure :: initialize => new_2d
-   procedure :: solve => solve_2d
+   sll_real64 :: xa
+   sll_real64 :: xb
+   sll_real64 :: yc
+   sll_real64 :: yd
+   sll_real64 :: tolmax
+   sll_real64 :: relmax
 
 end type mudpack_2d
 
@@ -53,9 +49,9 @@ end enum
 contains
 
   !> Initialize the mudpack solver 2d.
-  subroutine new_2d(this, geometry,            &
-                    eta1_min,eta1_max,nc_eta1,bc_eta1, &
-                    eta2_min,eta2_max,nc_eta2,bc_eta2)
+  subroutine initialize(this, geometry,                    &
+                        eta1_min,eta1_max,nc_eta1,bc_eta1, &
+                        eta2_min,eta2_max,nc_eta2,bc_eta2)
 
     class(mudpack_2d),intent(out) :: this      !< Fishpack solver
     sll_int32, intent(in)         :: nc_eta1   !< x number of cells
@@ -93,38 +89,6 @@ contains
 !       SLL_ALLOCATE(this%bdd(nc_eta1+1),this%error)
 !    end if
 
-  end subroutine new_2d
+  end subroutine initialize
 
-  !> Solve routine for mudpack 2d solver
-  subroutine solve_2d(this, field)
-
-     implicit none
-     class(mudpack_2d),intent(in)     :: this
-     sll_real64, dimension(:,:)        :: field
-     sll_real64                        :: w
-     sll_int32                         :: idimf
-     sll_int32                         :: ldimf
-     sll_int32                         :: mdimf
-  
-!     !     auxiliary quantities.
-!  
-!     idimf = this%nc_eta1+1
-!     ldimf = this%nc_eta1+1
-!     mdimf = this%nc_eta2+1
-!
-!     if ( this%geometry == CARTESIAN_2D ) then
-!  
-!
-!     else if ( this%geometry == POLAR_2D ) then
-!
-!
-!     else
-!
-!        write(*,*) " This kind of geometry is not implemented "
-!
-!     end if
-  
-  end subroutine solve_2d
-
-  
 end module sll_mudpack

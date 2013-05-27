@@ -76,10 +76,12 @@ do i =1,nr
    end do
 end do
 
-call solve_poisson_polar_mudpack(phi_cos, rhs, &
-                                 r_min, r_max, &
-                                 theta_min, theta_max, &
-                                 nr, ntheta)
+call initialize_poisson_polar_mudpack(phi_cos, rhs, &
+                                      r_min, r_max, &
+                                      theta_min, theta_max, &
+                                      nr, ntheta)
+
+call solve_poisson_polar_mudpack(phi_cos, rhs)
 
 do j = 1, ntheta
    do i = 1, nr

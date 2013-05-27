@@ -118,23 +118,24 @@ c
 c     estimate work space for point relaxation (see mud2cr.d)
 c
       parameter (llwork=(7*(nnx+2)*(nny+2)+44*nnx*nny)/3 )
-      real phi(nnx,nny),rhs(nnx,nny),work(llwork)
+      real(8) phi(nnx,nny),rhs(nnx,nny),work(llwork)
 c
 c     put integer and floating point argument names in contiguous
 c     storeage for labelling in vectors iprm,fprm
 c
       integer iprm(16),mgopt(4)
-      real fprm(6)
+      real(8) fprm(6)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
       equivalence(intl,iprm)
       equivalence(xa,fprm)
       integer i,j,ierror
-      real dlx,dly,x,y,cxx,cxy,cyy,cx,cy,ce,pxx,pxy,pyy,px,py,pe,errmax
+      real(8) dlx,dly,x,y,cxx,cxy,cyy,cx,cy,ce
+      real(8) pxx,pxy,pyy,px,py,pe,errmax
 c
 c     declare coefficient and boundary condition input subroutines external
 c
@@ -277,7 +278,7 @@ c
       do i=1,nx
         x = xa+(i-1)*dlx
         call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-        errmax = amax1(errmax,abs((phi(i,j)-pe)))
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
       end do
       end do
       write(*,201) errmax
@@ -291,7 +292,7 @@ c     input pde coefficients at any grid point (x,y) in the solution region
 c     (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 c
       implicit none
-      real x,y,cxx,cxy,cyy,cx,cy,ce
+      real(8) x,y,cxx,cxy,cyy,cx,cy,ce
       cxx = 1.+y**2
       cxy = 2.*x*y
       cyy = 1.+x**2
@@ -308,14 +309,14 @@ c     at upper y boundary
 c
       implicit none
       integer kbdy
-      real xory,alfa,beta,gama,gbdy
+      real(8) xory,alfa,beta,gama,gbdy
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
-      real x,y,pxx,pxy,pyy,px,py,pe
+      real(8) x,y,pxx,pxy,pyy,px,py,pe
       if (kbdy.eq.4) then
 c
 c     y=yd boundary (nyd must equal 2 if this code is to be executed).
@@ -340,7 +341,7 @@ c     this subroutine is used for setting an exact solution
 c     to test subroutine mud2cr.
 c
       implicit none
-      real x,y,pxx,pxy,pyy,px,py,pe
+      real(8) x,y,pxx,pxy,pyy,px,py,pe
       pe = (x*y)**5
       px = 5.*(x*y)**4*y
       py = 5.*(x*y)**4*x
