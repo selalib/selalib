@@ -41,12 +41,14 @@ use sll_module_interpolators_2d_base
      ! some knot-like arrays needed by the spli2d_per routine
      sll_real64, dimension(:), pointer :: t1
      sll_real64, dimension(:), pointer :: t2
-     sll_int64  :: bc_selector
+     sll_int64  :: bc_selector ! this is set in initialization
      sll_real64, dimension(:,:), pointer :: coeff_splines
      sll_int32                  :: size_coeffs1
      sll_int32                  :: size_coeffs2
+
    contains
     procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
+    procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
 ! better: pre-compute-interpolation-information or something...
     procedure :: compute_interpolants => compute_interpolants_ad2d
     procedure, pass :: compute_spline_coefficients => &
@@ -220,8 +222,8 @@ contains
        print *, 'initialize_ad2d_interpolator: BC combination not implemented.'
     end select
 
-    SLL_ALLOCATE( interpolator%t1(num_pts1 + spline_degree1 + 2), ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2 + spline_degree2 + 2), ierr)
+    SLL_ALLOCATE( interpolator%t1(num_pts1 + 2*spline_degree1 + 1), ierr)
+    SLL_ALLOCATE( interpolator%t2(num_pts2 + 2*spline_degree2 + 1), ierr)
 
   end subroutine initialize_ad2d_interpolator
 
@@ -236,6 +238,87 @@ contains
 
   end subroutine compute_interpolants_ad2d
 
+  subroutine set_coefficients_ad2d( &
+   interpolator, &
+   linear_coeffs )
+
+   class(arb_deg_2d_interpolator), intent(inout) :: interpolator
+   sll_real64, dimension(:), intent(in)          :: linear_coeffs
+   sll_int32 :: sp_deg1
+   sll_int32 :: sp_deg2
+   sll_int32 :: num_cells1
+   sll_int32 :: num_cells2
+   sll_int32 :: tmp1, tmp2
+   sll_int32 :: i, j
+   sll_real64 :: eta1_min, eta1_max
+   sll_real64 :: eta2_min, eta2_max
+   sll_real64 :: delta1
+   sll_real64 :: delta2
+
+   sp_deg1    = interpolator%spline_degree1
+   sp_deg2    = interpolator%spline_degree2
+   num_cells1 = interpolator%num_pts1 - 1
+   num_cells2 = interpolator%num_pts2 - 1
+   eta1_min = interpolator%eta1_min
+   eta2_min = interpolator%eta2_min
+   eta1_max = interpolator%eta1_max
+   eta2_max = interpolator%eta2_max
+   delta1 = (eta1_max - eta1_min)/num_cells1
+   delta2 = (eta2_max - eta2_min)/num_cells2
+
+   ! The interpretation and further filling of the spline coefficients array
+   ! depends on the boundary conditions.
+   select case (interpolator%bc_selector)
+   case(0) ! periodic-periodic
+      ! allocation and definition of knots
+      do i = -sp_deg1, num_cells1 + sp_deg1
+         interpolator%t1( i + sp_deg1 + 1 ) = eta1_min + i*delta1
+      end do
+
+      do i = -sp_deg2, num_cells2 + sp_deg2
+         interpolator%t2( i + sp_deg2 + 1 ) = eta2_min + i*delta2
+      end do
+
+      tmp1 = (sp_deg1 + 1)/2
+      tmp2 = (sp_deg2 + 1)/2
+
+      do i = 1,num_cells1
+         do j = 1,num_cells2
+            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
+                 linear_coeffs( i + num_cells1 *(j-1) )
+         end do
+      end do
+
+      do j=1, tmp2
+         interpolator%coeff_splines(:,j) = &
+              interpolator%coeff_splines(:,num_cells2 + j)
+      end do
+
+      if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
+         do j = tmp2 + 1, sp_deg2
+            interpolator%coeff_splines(:, num_cells2 + j) = &
+                 interpolator%coeff_splines(:, j)
+         end do
+      end if
+
+      do i=1, tmp1
+         interpolator%coeff_splines(i,:) = &
+              interpolator%coeff_splines(num_cells1 + i,:)
+      end do
+
+      if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
+         do i = tmp1 + 1, sp_deg1
+            interpolator%coeff_splines(num_cells1 + i,:) = &
+                 interpolator%coeff_splines(i,:)
+         end do
+      end if
+
+   case default
+      print *, 'arbitrary_degree_spline_2d() error: set_spline_coefficients ',&
+           'not recognized.'
+      stop
+   end select
+ end subroutine set_coefficients_ad2d
 
   subroutine compute_spline_coefficients_ad2d( &
     interpolator, &

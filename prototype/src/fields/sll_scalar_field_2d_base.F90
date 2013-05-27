@@ -14,12 +14,14 @@ module sll_module_scalar_field_2d_base
           get_jacobian_matrix
      procedure(function_evaluation_real), deferred, pass :: value_at_point
      procedure(function_evaluation_integer), deferred, pass :: value_at_indices
-     procedure(return_integer), deferred, pass :: interpolation_degree
 !     procedure(file_output), deferred, pass :: write_to_file
      ! here we can continue with derivatives or whatever else that might
      ! be desired.
   end type sll_scalar_field_2d_base
 
+  type sll_scalar_field_2d_base_ptr
+     class(sll_scalar_field_2d_base), pointer :: base
+  end type sll_scalar_field_2d_base_ptr
 
 
   ! Function signatures
@@ -33,10 +35,12 @@ module sll_module_scalar_field_2d_base
   end interface
 
   abstract interface
-     function function_get_jacobian_matrix(field ) result(res)
+     function function_get_jacobian_matrix(field,eta1,eta2 ) result(res)
        use sll_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base) :: field
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
        sll_real64, dimension(:,:), pointer :: res
      end function function_get_jacobian_matrix
   end interface
