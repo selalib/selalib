@@ -2009,8 +2009,8 @@ c
       end
 
       subroutine sgfa (a,lda,n,ipvt,info)
-      integer lda,n,ipvt(1),info                                                
-      real(8) a(lda,1)                                                             
+      integer lda,n,ipvt(*),info                                                
+      real(8) a(lda,*)                                                             
       real(8) t                                                                    
       integer isfmax,j,k,kp1,l,nm1
       info = 0                                                                  
@@ -2048,8 +2048,8 @@ c
       end                                                                       
                                                                                 
       subroutine sgsl (a,lda,n,ipvt,b,job)
-      integer lda,n,ipvt(1),job                                                 
-      real(8) a(lda,1),b(1)                                                        
+      integer lda,n,ipvt(*),job                                                 
+      real(8) a(lda,*),b(*)                                                        
       real(8) sdt,t
       integer k,kb,l,nm1                                                        
       nm1 = n - 1                                                               
@@ -2094,7 +2094,7 @@ c
       end                                                                       
                                                                                 
       real(8) function sdt(n,sx,incx,sy,incy)
-      real(8) sx(1),sy(1),stemp                                                    
+      real(8) sx(*),sy(*),stemp                                                    
       integer i,incx,incy,ix,iy,m,mp1,n                                         
       stemp = 0.0e0                                                             
       sdt = 0.0e0
@@ -2127,7 +2127,7 @@ c
       end                                                                       
                                                                                 
       integer function isfmax(n,sx,incx)
-      real(8) sx(1),smax                                                           
+      real(8) sx(*),smax                                                           
       integer i,incx,ix,n                                                       
       isfmax = 0
       if( n .lt. 1 ) return                                                     
@@ -2146,15 +2146,15 @@ c
       return                                                                    
    20 smax = abs(sx(1))                                                         
       do 30 i = 2,n                                                             
-         if(abs(sx(i)).le.smax) go to 30                                        
-       isfmax = i
+         if(abs(sx(i)).le.smax) goto 30                                        
+         isfmax = i
          smax = abs(sx(i))                                                      
    30 continue                                                                  
       return                                                                    
       end                                                                       
 
       subroutine sxpy(n,sa,sx,incx,sy,incy)
-      real(8) sx(1),sy(1),sa                                                       
+      real(8) sx(*),sy(*),sa                                                       
       integer i,incx,incy,ix,iy,m,mp1,n                                         
       if(n.le.0)return                                                          
       if (sa .eq. 0.0) return                                                   
@@ -2186,7 +2186,7 @@ c
       end                                                                       
 
       subroutine sscl(n,sa,sx,incx)
-      real(8) sa,sx(1)                                                             
+      real(8) sa,sx(*)                                                             
       integer i,incx,m,mp1,n,nincx                                              
       if(n.le.0)return                                                          
       if(incx.eq.1)go to 20                                                     

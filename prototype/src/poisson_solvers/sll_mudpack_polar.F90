@@ -17,10 +17,10 @@ sll_real64 ,allocatable :: work(:)
 
 contains
 
-subroutine solve_poisson_polar_mudpack(phi, rhs, &
-                                       r_min, r_max,  &
-                                       theta_min, theta_max, &
-                                       nr, nth)
+subroutine initialize_poisson_polar_mudpack(phi, rhs, &
+                                            r_min, r_max,  &
+                                            theta_min, theta_max, &
+                                            nr, nth)
 implicit none
 
 ! set grid size params
@@ -135,14 +135,68 @@ do j=1,ny
 end do
 write(*,100)
 
-! intialization call
-if (icall == 0) then
-   write(*,104) intl
-   call mud2cr(iprm,fprm,work,cofcr,bndcr,rhs,phi,mgopt,ierror)
-   write (*,200) ierror,iprm(16)
-   if (ierror.gt.0) call exit(0)
-end if
+write(*,102) (mgopt(i),i=1,4)
+write(*,103) xa,xb,yc,yd,tolmax
+write(*,104) intl
+call mud2cr(iprm,fprm,work,cofcr,bndcr,rhs,phi,mgopt,ierror)
+write (*,200) ierror,iprm(16)
+if (ierror.gt.0) call exit(0)
 
+100 format(//' multigrid poisson solver in polar coordinates ')
+    write (*,101) (iprm(i),i=1,15)
+101 format(/' integer input arguments ', &
+    /'intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
+    /' ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
+    /' nx = ',i3,' ny = ',i3,' iguess = ',i2,' maxcy = ',i2, &
+    /' method = ',i2, ' work space estimate = ',i7)
+102 format(/' multigrid option arguments ',&
+    /' kcycle = ',i2,  &
+    /' iprer = ',i2,   &
+    /' ipost = ',i2    &
+    /' intpol = ',i2)
+103 format(/' floating point input parameters ', &
+    /' xa = ',f6.3,' xb = ',f6.3,' yc = ',f6.3,' yd = ',f6.3, &
+    /' tolerance (error control) =   ',e10.3)
+104 format(/' discretization call to mud2cr', ' intl = ', i2)
+200 format(' ierror = ',i2, ' minimum work space = ',i7)
+
+return
+end subroutine initialize_poisson_polar_mudpack
+
+
+subroutine solve_poisson_polar_mudpack(phi, rhs)
+implicit none
+
+! set grid size params
+
+sll_int32 :: icall
+sll_int32 :: iiex,jjey,nnx,nny,llwork
+sll_int32, parameter :: iixp = 2 , jjyq = 2
+
+sll_real64, intent(inout) ::  phi(nr,nth)
+sll_real64, intent(in) ::  rhs(nr,nth)
+
+! put sll_int32 and floating point argument names in contiguous
+! storeage for labelling in vectors iprm,fprm
+
+sll_int32 :: iprm(16),mgopt(4)
+sll_real64 :: fprm(6)
+sll_int32 intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,&
+              iguess,maxcy,method,nwork,lwrkqd,itero
+common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+              iguess,maxcy,method,nwork,lwrkqd,itero
+sll_real64 :: xa,xb,yc,yd,tolmax,relmax
+common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
+sll_int32 :: i,j,ierror
+sll_real64 :: dlx,dly
+
+equivalence(intl,iprm)
+equivalence(xa,fprm)
+
+! declare coefficient and boundary condition input subroutines external
+external cofcr,bndcr
+
+icall = 1
 ! attempt solution
 intl = 1
 write(*,106) intl,method,iguess
@@ -155,29 +209,10 @@ call mud24cr(work,cofcr,bndcr,phi,ierror)
 write (*,108) ierror
 if (ierror.gt.0) call exit(0)
 
- 100 format(//' multigrid poisson solver in polar coordinates ')
-     write (*,101) (iprm(i),i=1,15)
- 101 format(/' sll_int32 input arguments ', &
-     /'intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
-     /' ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
-     /' nx = ',i3,' ny = ',i3,' iguess = ',i2,' maxcy = ',i2, &
-     /' method = ',i2, ' work space estimate = ',i7)
-      write (*,102) (mgopt(i),i=1,4)
- 102 format(/' multigrid option arguments ',&
-     /' kcycle = ',i2,  &
-     /' iprer = ',i2,   &
-     /' ipost = ',i2    &
-     /' intpol = ',i2)
-     write(*,103) xa,xb,yc,yd,tolmax
- 103 format(/' floating point input parameters ', &
-    /' xa = ',f6.3,' xb = ',f6.3,' yc = ',f6.3,' yd = ',f6.3, &
-    /' tolerance (error control) =   ',e10.3)
- 104 format(/' discretization call to mud2cr', ' intl = ', i2)
- 106 format(/' approximation call to mud2cr', &
-     /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
- 107 format(' ierror = ',i2)
- 108 format(/' mud24cr test', '  ierror = ',i2)
- 200 format(' ierror = ',i2, ' minimum work space = ',i7)
+106 format(/' approximation call to mud2cr', &
+    /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
+107 format(' ierror = ',i2)
+108 format(/' mud24cr test', '  ierror = ',i2)
 
 return
 end subroutine solve_poisson_polar_mudpack

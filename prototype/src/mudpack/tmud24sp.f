@@ -113,24 +113,24 @@ c
 c     set minimal required work space (see tmud2sp.f)
 c
       parameter (llwork = 13264)
-      real phi(nnx,nny),rhs(nnx,nny),work(llwork)
+      real(8) phi(nnx,nny),rhs(nnx,nny),work(llwork)
 c
 c     put integer and floating point argument names in contiguous
 c     storeage for labelling in vectors iprm,fprm
 c
       integer iprm(16),mgopt(4)
-      real fprm(6)
+      real(8) fprm(6)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
       equivalence(intl,iprm)
       equivalence(xa,fprm)
       integer i,j,ierror
-      real dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
-      real cex,cey
+      real(8) dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
+      real(8) cex,cey
 c
 c     declare coefficient and boundary condition input subroutines external
 c
@@ -279,7 +279,7 @@ c
       do i=1,nx
         x = xa+(i-1)*dlx
         call exact(x,y,pxx,pyy,px,py,pe)
-        errmax = amax1(errmax,abs((phi(i,j)-pe)))
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
       end do
       end do
       write(*,201) errmax
@@ -302,7 +302,7 @@ c
       do i=1,nx
         x = xa+(i-1)*dlx
         call exact(x,y,pxx,pyy,px,py,pe)
-        errmax = amax1(errmax,abs((phi(i,j)-pe)))
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
       end do
       end do
       write(*,201) errmax
@@ -317,7 +317,7 @@ c
 c     input x dependent coefficients
 c
       implicit none
-      real x,cxx,cx,cex
+      real(8) x,cxx,cx,cex
       cxx = 1.0+x*x
       cx = 0.0
       cex = -x
@@ -329,7 +329,7 @@ c
 c     input y dependent coefficients
 c
       implicit none
-      real y,cyy,cy,cey
+      real(8) y,cyy,cy,cey
       cyy = exp(1.0-y)
       cy = -cyy
       cey = -y
@@ -342,8 +342,8 @@ c     input mixed derivative b.c. to mud2sp
 c
       implicit none
       integer kbdy
-      real xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
       if (kbdy.eq.1) then  ! x=xa boundary
       y = xory
@@ -368,7 +368,7 @@ c
 c     set an exact solution for testing mud2sp
 c
       implicit none
-      real x,y,pxx,pyy,px,py,pe
+      real(8) x,y,pxx,pyy,px,py,pe
       pe = (x**3+y**3+1.0)/3.0
       px = x*x
       py = y*y
