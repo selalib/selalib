@@ -1,6 +1,6 @@
       subroutine coocsr(nrow,nnz,a,ir,jc,ao,jao,iao)
 !---------------------------------------------------------------------- 
-      real*8 a(*),ao(*),x
+      real(8) a(*),ao(*),x
       integer ir(*),jc(*),jao(*),iao(*)
 !----------------------------------------------------------------------
 !  Coordinate     to   Compressed Sparse Row 
