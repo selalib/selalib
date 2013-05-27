@@ -44,10 +44,18 @@ IF(MUDPACK_ENABLED)
 
    ADD_EXECUTABLE(test_mudpack_polar test_mudpack_polar.F90
                                      sll_mudpack_polar.F90)
+
    TARGET_LINK_LIBRARIES(test_mudpack_polar sll_memory 
                                             sll_assertion 
                                             sll_utilities
                                             mudpack)
+
+   ADD_EXECUTABLE(test_mudpack_hybrid test_mudpack_hybrid.F90)
+
+   TARGET_LINK_LIBRARIES(test_mudpack_hybrid sll_memory 
+                                             sll_assertion 
+                                             sll_utilities
+                                             mudpack)
 
    ADD_TEST(NAME sll_mudpack_polar COMMAND test_mudpack_polar )
    SET(sll_mudpack_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

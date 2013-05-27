@@ -52,10 +52,10 @@ c
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
-      real fparm(6),xa,xb,yc,yd,tolmax,relmax
+      real(8) fparm(6),xa,xb,yc,yd,tolmax,relmax
       integer kpbgn,kcbgn,ktxbgn,ktybgn,nxk,nyk,isx,jsy
       integer int,iw,k,kb,nx,ny,ic,itx,ity
-      real wk(*),phi(*),rhs(*)
+      real(8) wk(*),phi(*),rhs(*)
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
@@ -226,11 +226,11 @@ c
       subroutine muh2cr1(nx,ny,rhsf,phif,coef,bndyc,wk,iwk)
       implicit none
       integer nx,ny,iwk(*)
-      real phif(nx,ny),rhsf(nx,ny),wk(*)
+      real(8) phif(nx,ny),rhsf(nx,ny),wk(*)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
-      real xa,xb,yc,yd,tolmax,relmax,phmax
+      real(8) xa,xb,yc,yd,tolmax,relmax,phmax
       integer kpbgn,kcbgn,ktxbgn,ktybgn,nxk,nyk,isx,jsy
       integer k,kb,ip,ic,ir,ipc,irc,icc
       integer ncx,ncy,jj,ij,i,j,iter
@@ -330,8 +330,8 @@ c
           jj = j*(nfx+2)
           do i=1,nfx
             ij = jj+i+1
-            phmax = amax1(phmax,abs(wk(ij)))
-            relmax = amax1(relmax,abs(wk(ij)-phif(i,j)))
+            phmax = dmax1(phmax,abs(wk(ij)))
+            relmax = dmax1(relmax,abs(wk(ij)-phif(i,j)))
             phif(i,j) = wk(ij)
           end do
         end do
@@ -362,12 +362,12 @@ c     kcycle=1 for v cycles, kcycle=2 for w cycles
 c
       implicit none
       integer iwk(*)
-      real wk(*)
+      real(8) wk(*)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
       integer nx,ny,ip,ic,ipc,irc,itx,ity,ncx,ncy,l,nrel
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       integer kpbgn,kcbgn,ktxbgn,ktybgn,nxk,nyk,isx,jsy
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
@@ -562,18 +562,18 @@ c
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       integer nx,ny,iwk(*),i,j,kbdy,l,im1,jm1,ier,jc
-      real cf(nx,ny,10),tx(nx,ny,*),ty(ny,nx,*)
-      real wk(*),dlx,dlx2,dlxx,dly,dly2,dlyy,cmin,alfmax,cemax
-      real x,y,cxx,cxy,cyy,cx,cy,ce,c1,c2,c3,c4,c5
-      real c6,c7,c8,c9
-      real alfaa,alfab,alfac,alfad,betaa,betab,betac,betad,det
-      real gamaa,gamab,gamac,gamad,dxoy,dyox,dlxy,dlxy2,dlxy4
-      real alfim1,alfi,alfip1,betim1,beti,betip1,gamim1,gami,gamip1
-      real alfjm1,alfj,alfjp1,betjm1,betj,betjp1,gamjm1,gamj,gamjp1
-      real gammax,gbdim1,gbdi,gbdip1,gbdj,gbdjm1,gbdjp1
-      real gbdya,gbdyb,gbdyc,gbdyd
+      real(8) cf(nx,ny,10),tx(nx,ny,*),ty(ny,nx,*)
+      real(8) wk(*),dlx,dlx2,dlxx,dly,dly2,dlyy,cmin,alfmax,cemax
+      real(8) x,y,cxx,cxy,cyy,cx,cy,ce,c1,c2,c3,c4,c5
+      real(8) c6,c7,c8,c9
+      real(8) alfaa,alfab,alfac,alfad,betaa,betab,betac,betad,det
+      real(8) gamaa,gamab,gamac,gamad,dxoy,dyox,dlxy,dlxy2,dlxy4
+      real(8) alfim1,alfi,alfip1,betim1,beti,betip1,gamim1,gami,gamip1
+      real(8) alfjm1,alfj,alfjp1,betjm1,betj,betjp1,gamjm1,gamj,gamjp1
+      real(8) gammax,gbdim1,gbdi,gbdip1,gbdj,gbdjm1,gbdjp1
+      real(8) gbdya,gbdyb,gbdyc,gbdyd
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
@@ -604,8 +604,8 @@ c
       do i=1,nx
         x = xa+(i-1)*dlx
         call coef(x,y,cxx,cxy,cyy,cx,cy,ce)
-        cmin = amin1(cmin,cxx*cyy)
-        cemax = amax1(abs(ce),cemax)
+        cmin = dmin1(cmin,cxx*cyy)
+        cemax = dmax1(abs(ce),cemax)
 c
 c     flag hyperbolic pde
 c
@@ -615,8 +615,8 @@ c
             ier = -4
           end if
         end if
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c1=cxx/dlxx+cx/dlx2
         c2=cxy/dlxy4
         c3=cyy/dlyy+cy/dly2
@@ -695,12 +695,12 @@ c
       i = 1
       call bndyc(kbdy,yc,alfjm1,betjm1,gamjm1,gbdjm1)
       call bndyc(kbdy,yc+dly,alfj,betj,gamj,gbdj)
-      gammax = amax1(abs(gamjm1),abs(gamj),gammax)
+      gammax = dmax1(abs(gamjm1),abs(gamj),gammax)
       do j=2,ny-1
         jc = j
         y = yc+j*dly
         call bndyc(kbdy,y,alfjp1,betjp1,gamjp1,gbdjp1)
-        gammax = amax1(abs(gamjp1),gammax)
+        gammax = dmax1(abs(gamjp1),gammax)
 c
 c     check for illegal tangential derivative b.c.
 c
@@ -741,12 +741,12 @@ c
       i = nx
       call bndyc(kbdy,yc,alfjm1,betjm1,gamjm1,gbdjm1)
       call bndyc(kbdy,yc+dly,alfj,betj,gamj,gbdj)
-      gammax = amax1(abs(gamjm1),abs(gamj),gammax)
+      gammax = dmax1(abs(gamjm1),abs(gamj),gammax)
       do j=2,ny-1
         jc = j
         y = yc+j*dly
         call bndyc(kbdy,y,alfjp1,betjp1,gamjp1,gbdjp1)
-        gammax = amax1(abs(gamjp1),gammax)
+        gammax = dmax1(abs(gamjp1),gammax)
 c
 c     check for illegal tangential derivative b.c.
 c
@@ -786,11 +786,11 @@ c
       jc = 1
       call bndyc(kbdy,xa,alfim1,betim1,gamim1,gbdim1)
       call bndyc(kbdy,xa+dlx,alfi,beti,gami,gbdi)
-      gammax = amax1(abs(gamim1),abs(gami),gammax)
+      gammax = dmax1(abs(gamim1),abs(gami),gammax)
       do i=2,nx-1
         x=xa+i*dlx
         call bndyc(kbdy,x,alfip1,betip1,gamip1,gbdip1)
-        gammax = amax1(abs(gamip1),gammax)
+        gammax = dmax1(abs(gamip1),gammax)
 c
 c     check for illegal tangential derivative b.c.
 c
@@ -833,11 +833,11 @@ c     advance scalars for next pass
       kbdy=4
       call bndyc(kbdy,xa,alfim1,betim1,gamim1,gbdim1)
       call bndyc(kbdy,xa+dlx,alfi,beti,gami,gbdi)
-      gammax = amax1(abs(gamim1),abs(gami),gammax)
+      gammax = dmax1(abs(gamim1),abs(gami),gammax)
       do i=2,nx-1
         x=xa+i*dlx
         call bndyc(kbdy,x,alfip1,betip1,gamip1,gbdip1)
-        gammax = amax1(abs(gamip1),gammax)
+        gammax = dmax1(abs(gamip1),gammax)
 c
 c     check for illegal tangential derivative b.c.
 c
@@ -1355,9 +1355,9 @@ c     decompose nonperiodic block coefficient matrix
 c
       implicit none
       integer nx,ny,nxa,index(nx,ny)
-      real cof(nx,ny,10),beta(nx,nx,*),alfa(nx,nx,*)
+      real(8) cof(nx,ny,10),beta(nx,nx,*),alfa(nx,nx,*)
       integer iz,i1,jcur,jm1,l,lm1,lp1,k,i
-      real gama,sum
+      real(8) gama,sum
       iz = 0
       i1 = 1
 c
@@ -1422,8 +1422,8 @@ c     direct solve at coarsest grid
 c
       implicit none
       integer nx,ny,index(nx,ny),nxa
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10)
-      real beta(nx,nx,*),alfa(nx,nx,*)
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10)
+      real(8) beta(nx,nx,*),alfa(nx,nx,*)
 c     forward sweep
       call for2cr(nx,ny,phi,cof(1,1,10),alfa)
 c     backward sweep
@@ -1437,7 +1437,7 @@ c     forward sweep
 c
       implicit none
       integer nx,ny,i,j,l
-      real phi(0:nx+1,0:ny+1),frhs(nx,ny),alfa(nx,nx,*),sum
+      real(8) phi(0:nx+1,0:ny+1),frhs(nx,ny),alfa(nx,nx,*),sum
       do j=1,ny
       do i=1,nx
         phi(i,j)=frhs(i,j)
@@ -1458,8 +1458,8 @@ c
       subroutine bkw2cr(nx,ny,phi,cof,beta,index,nxa)
       implicit none
       integer nx,ny,index(nx,ny),nxa
-      real beta(nx,nx,*),sum
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10)
+      real(8) beta(nx,nx,*),sum
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10)
       integer iz,jcur,jb,j,i
       iz = 0
       jcur=ny
@@ -1490,8 +1490,8 @@ c     decompose periodic block tridiagonal matrix for direct at coarsest grid
 c
       implicit none
       integer nx,ny,index(nx,ny),nxa
-      real cof(nx,ny,10),alfa(nx,nx,*),beta(nx,nx,*)
-      real dmat(nx,nx,*),zmat(nx,nx,*),sum,gama
+      real(8) cof(nx,ny,10),alfa(nx,nx,*),beta(nx,nx,*)
+      real(8) dmat(nx,nx,*),zmat(nx,nx,*),sum,gama
       integer iz,j,jcur,i,l,jm1,i1,lm1,lp1,k
       jcur = 1
 c
@@ -1733,9 +1733,9 @@ c
       subroutine dir2crp(nx,ny,phi,cof,beta,alfa,zmat,dmat,index,nxa)
       implicit none
       integer nx,ny,index(nx,ny),nxa
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10)
-      real beta(nx,nx,*),alfa(nx,nx,*)
-      real zmat(nx,nx,*), dmat(nx,nx,*)
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10)
+      real(8) beta(nx,nx,*),alfa(nx,nx,*)
+      real(8) zmat(nx,nx,*), dmat(nx,nx,*)
 c     forward sweep
       call for2crp(nx,ny,phi,cof(1,1,10),alfa,zmat)
 c     backward sweep
@@ -1746,11 +1746,11 @@ c     backward sweep
       subroutine for2crp(nx,ny,phi,frhs,alfa,zmat)
       implicit none
       integer nx,ny,i,j,l,jcur,k
-      real frhs(nx,ny)
-      real phi(0:nx+1,0:ny+1)
+      real(8) frhs(nx,ny)
+      real(8) phi(0:nx+1,0:ny+1)
 
-      real alfa(nx,nx,*),zmat(nx,nx,*)
-      real sum
+      real(8) alfa(nx,nx,*),zmat(nx,nx,*)
+      real(8) sum
       do j=1,ny-1
       do i=1,nx
         phi(i,j)=frhs(i,j)
@@ -1784,10 +1784,10 @@ c
       subroutine bkw2crp(nx,ny,phi,cof,beta,dmat,index,nxa)
       implicit none
       integer nx,ny,index(nx,ny),nxa
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10)
-      real beta(nx,nx,ny),dmat(nx,nx,*)
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10)
+      real(8) beta(nx,nx,ny),dmat(nx,nx,*)
       integer iz,i,l,kb,k
-       real sum
+       real(8) sum
       iz = 0
       call sgsl(beta(1,1,ny-1),nx,nx,index(1,ny-1),phi(1,ny-1),iz)
 c
@@ -1852,7 +1852,7 @@ c     set diagonal matrix on block
 c
       implicit none
       integer nx,ny,jcur,nxa,i,l
-      real cof(nx,ny,10),beta(nx,nx,*)
+      real(8) cof(nx,ny,10),beta(nx,nx,*)
       do i=1,nx
       do l=1,nx
         beta(i,l,jcur)=0.0
@@ -1877,7 +1877,7 @@ c
       subroutine setacr(nx,ny,cof,alfa,jcur,nxa)
       implicit none
       integer nx,ny,jcur,nxa,i,j
-      real cof(nx,ny,10),alfa(nx,nx,*)
+      real(8) cof(nx,ny,10),alfa(nx,nx,*)
       do i=1,nx
       do j=1,nx
         alfa(i,j,jcur)=0.0
@@ -1908,18 +1908,18 @@ c
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       integer nx,ny,i,j,kbdy
-      real cf(nx,ny,10),phi(0:nx+1,0:ny+1)
-      real dlx,dlx2,dlxx,dly,dly2,dlyy,dlxy,dlxy2,dlxy4,dxoy,dyox
-      real x,y,cxx,cxy,cyy,cx,cy,ce,c1,c2,c3,c4,c5
-      real c6,c7,c8
-      real alfaa,alfab,alfac,alfad,betaa,betab,betac,betad,det
-      real gamaa,gamab,gamac,gamad
-      real alfim1,alfi,alfip1,betim1,beti,betip1,gamim1,gami,gamip1
-      real alfjm1,alfj,alfjp1,betjm1,betj,betjp1,gamjm1,gamj,gamjp1
-      real gbdim1,gbdi,gbdip1,gbdj,gbdjm1,gbdjp1
-      real gbdya,gbdyb,gbdyc,gbdyd
+      real(8) cf(nx,ny,10),phi(0:nx+1,0:ny+1)
+      real(8) dlx,dlx2,dlxx,dly,dly2,dlyy,dlxy,dlxy2,dlxy4,dxoy,dyox
+      real(8) x,y,cxx,cxy,cyy,cx,cy,ce,c1,c2,c3,c4,c5
+      real(8) c6,c7,c8
+      real(8) alfaa,alfab,alfac,alfad,betaa,betab,betac,betad,det
+      real(8) gamaa,gamab,gamac,gamad
+      real(8) alfim1,alfi,alfip1,betim1,beti,betip1,gamim1,gami,gamip1
+      real(8) alfjm1,alfj,alfjp1,betjm1,betj,betjp1,gamjm1,gamj,gamjp1
+      real(8) gbdim1,gbdi,gbdip1,gbdj,gbdjm1,gbdjp1
+      real(8) gbdya,gbdyb,gbdyc,gbdyd
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
@@ -1947,8 +1947,8 @@ c
         x=xa+i*dlx
         call bndyc(kbdy,x,alfip1,betip1,gamip1,gbdip1)
         call coef(x-dlx,yc,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c6=cxy/dlxy4
         c7=cyy/dlyy-cy/dly2
         c8=-c6
@@ -1964,16 +1964,16 @@ c
         call bndyc(kbdy,xa,alfi,beti,gami,gbdi)
         call bndyc(kbdy,xa+dlx,alfip1,betip1,gamip1,gbdip1)
         call coef(xa,yc,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c7=cyy/dlyy-cy/dly2+cxy/dlxy2
         c8=-cxy/dlxy2
         cf(1,1,10)=cf(1,1,10)+dly2*(c8*gbdip1/betip1+c7*gbdi/beti)
         call bndyc(kbdy,xb-dlx,alfim1,betim1,gamim1,gbdim1)
         call bndyc(kbdy,xb,alfi,beti,gami,gbdi)
         call coef(xb,yc,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c6=cxy/dlxy2
         c7=cyy/dlyy-cy/dly2-c6
         cf(nx,1,10)=cf(nx,1,10)+dly2*(c6*gbdim1/betim1+c7*gbdi/beti)
@@ -1983,8 +1983,8 @@ c
         kbdy=1
         call bndyc(kbdy,yc+dly,alfaa,betaa,gamaa,gbdya)
         call coef(xa,yc,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c4=-cxy/dlxy2
         c8=c4
         c5=cxx/dlxx-cx/dlx2-c4
@@ -2008,8 +2008,8 @@ c     correct for mixed-mixed at (xb,yc)
         kbdy=2
         call bndyc(kbdy,yc+dly,alfab,betab,gamab,gbdyb)
         call coef(xb,yc,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c2=cxy/dlxy2
         c6=c2
         c1=cxx/dlxx+cx/dlx2-c2
@@ -2038,8 +2038,8 @@ c     mixed along x=xb
         y=yc+j*dly
         call bndyc(kbdy,y,alfjp1,betjp1,gamjp1,gbdjp1)
         call coef(xb,y-dly,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c1=cxx/dlxx+cx/dlx2
         c2=cxy/dlxy4
         c8=-c2
@@ -2060,8 +2060,8 @@ c     mixed along x=xb
         x=xa+i*dlx
         call bndyc(kbdy,x,alfip1,betip1,gamip1,gbdip1)
         call coef(x-dlx,yd,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c2=cxy/dlxy4
         c3=cyy/dlyy+cy/dly2
         c4=-c2
@@ -2078,16 +2078,16 @@ c     correct for periodic-mixed at (xa,yd), (xb,yd)
         call bndyc(kbdy,xa,alfi,beti,gami,gbdi)
         call bndyc(kbdy,xa+dlx,alfip1,betip1,gamip1,gbdip1)
         call coef(xa,yd,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c2=cxy/dlxy2
         c3=cyy/dlyy+cy/dly2-c2
         cf(1,ny,10)=cf(1,ny,10)-dly2*(c3*gbdi/beti+c2*gbdip1/betip1)
         call bndyc(kbdy,xb-dlx,alfim1,betim1,gamim1,gbdim1)
         call bndyc(kbdy,xb,alfi,beti,gami,gbdi)
         call coef(xb,yd,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c4=-cxy/dlxy2
         c3=cyy/dlyy+cy/dly2-c4
         cf(nx,ny,10)=cf(nx,ny,10)-dly2*(c3*gbdi/beti+c4*gbdim1/betim1)
@@ -2095,8 +2095,8 @@ c     correct for periodic-mixed at (xa,yd), (xb,yd)
 c     correct for mixed-mixed at (xa,yd)
 c     phase 1
         call coef(xa,yd,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c2=cxy/dlxy2
         c6=c2
         c3=cyy/dlyy+cy/dly2-c2
@@ -2121,8 +2121,8 @@ c     phase 2
       if (nxb.eq.2) then
 c     correct ofr mixed-mixed at (xb,yd)
         call coef(xb,yd,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c4=-cxy/dlxy2
         c8=c4
         c1=cxx/dlxx+cx/dlx2-c4
@@ -2155,8 +2155,8 @@ c     mixed along x=xa
         y=yc+j*dly
         call bndyc(kbdy,y,alfjp1,betjp1,gamjp1,gbdjp1)
         call coef(xa,y-dly,cxx,cxy,cyy,cx,cy,ce)
-        cxx = amax1(cxx,abs(cx)*dlx*0.5)
-        cyy = amax1(cyy,abs(cy)*dly*0.5)
+        cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+        cyy = dmax1(cyy,abs(cy)*dly*0.5)
         c4=-cxy/dlxy4
         c5=cxx/dlxx-cx/dlx2
         c6=-c4
@@ -2177,8 +2177,8 @@ c
       call bndyc(kbdy,yc,alfj,betj,gamj,gbdj)
       call bndyc(kbdy,yc+dly,alfjp1,betjp1,gamjp1,gbdjp1)
       call coef(xa,yc,cxx,cxy,cyy,cx,cy,ce)
-      cxx = amax1(cxx,abs(cx)*dlx*0.5)
-      cyy = amax1(cyy,abs(cy)*dly*0.5)
+      cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+      cyy = dmax1(cyy,abs(cy)*dly*0.5)
       c4 = -cxy/dlxy2
       c5 = cxx/dlxx-cx/dlx2-c4
       cf(1,1,10) = cf(1,1,10)+dlx2*(c4*gbdjp1/alfjp1+c5*gbdj/alfj)
@@ -2188,8 +2188,8 @@ c
       call bndyc(kbdy,yd-dly,alfjm1,betjm1,gamjm1,gbdjm1)
       call bndyc(kbdy,yd,alfj,betj,gamj,gbdj)
       call coef(xa,yd,cxx,cxy,cyy,cx,cy,ce)
-      cxx = amax1(cxx,abs(cx)*dlx*0.5)
-      cyy = amax1(cyy,abs(cy)*dly*0.5)
+      cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+      cyy = dmax1(cyy,abs(cy)*dly*0.5)
       c6=cxy/dlxy2
       c5 = cxx/dlxx-cx/dlx2-c6
       cf(1,ny,10)=cf(1,ny,10)+dlx2*(c6*gbdjm1/alfjm1+c5*gbdj/alfj)
@@ -2203,16 +2203,16 @@ c
       call bndyc(kbdy,yc,alfj,betj,gamj,gbdj)
       call bndyc(kbdy,yc+dly,alfjp1,betjp1,gamjp1,gbdjp1)
       call coef(xb,yc,cxx,cxy,cyy,cx,cy,ce)
-      cxx = amax1(cxx,abs(cx)*dlx*0.5)
-      cyy = amax1(cyy,abs(cy)*dly*0.5)
+      cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+      cyy = dmax1(cyy,abs(cy)*dly*0.5)
       c2 = cxy/dlxy2
       c1 = cxx/dlxx+cx/dlx2-c2
       cf(nx,1,10) = cf(nx,1,10)-dlx2*(c1*gbdj/alfj+c2*gbdjp1/alfjp1)
       call bndyc(kbdy,yd-dly,alfjm1,betjm1,gamjm1,gbdjm1)
       call bndyc(kbdy,yd,alfj,betj,gamj,gbdj)
       call coef(xb,yd,cxx,cxy,cyy,cx,cy,ce)
-      cxx = amax1(cxx,abs(cx)*dlx*0.5)
-      cyy = amax1(cyy,abs(cy)*dly*0.5)
+      cxx = dmax1(cxx,abs(cx)*dlx*0.5)
+      cyy = dmax1(cyy,abs(cy)*dly*0.5)
       c8 = -cxy/dlxy2
       c1 = cxx/dlxx+cx/dlx2-c8
       cf(nx,ny,10) = cf(nx,ny,10)-dlx2*(c1*gbdj/alfj+c8*gbdjm1/alfjm1)
@@ -2260,9 +2260,9 @@ c
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
-      real rhsc(ncx,ncy),resf(nx,ny)
-      real phi(0:nx+1,0:ny+1),phic(0:ncx+1,0:ncy+1)
-      real cof(nx,ny,10)
+      real(8) rhsc(ncx,ncy),resf(nx,ny)
+      real(8) phi(0:nx+1,0:ny+1),phic(0:ncx+1,0:ncy+1)
+      real(8) cof(nx,ny,10)
 c
 c     set phic zero
 c
@@ -2302,7 +2302,7 @@ c     relaxation for muh2cr
 c
       implicit none
       integer nx,ny
-      real phi(*),cof(*),tx(*),ty(*),sum(*)
+      real(8) phi(*),cof(*),tx(*),ty(*),sum(*)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
@@ -2334,7 +2334,7 @@ c
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10)
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10)
       i1 = 1
       i2 = 4
       i3 = 3
@@ -2438,7 +2438,7 @@ c
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10),tx(nx,ny,*),sum(ny)
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10),tx(nx,ny,*),sum(ny)
 c
 c     set periodic y virtual boundary if necessary
 c
@@ -2620,7 +2620,7 @@ c
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
-      real phi(0:nx+1,0:ny+1),cof(nx,ny,10),ty(ny,nx,*),sum(nx)
+      real(8) phi(0:nx+1,0:ny+1),cof(nx,ny,10),ty(ny,nx,*),sum(nx)
 c
 c      set periodic and virtual x boundaries if necessary
 c
