@@ -1,5 +1,6 @@
 module GC
-implicit none 
+  use tracelog_Module
+  implicit none 
 
 contains
 
@@ -14,7 +15,7 @@ contains
 subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
     use SparseMatrix_Module
     implicit none
-    type(csr_matrix) :: this 	
+    type(csr_matrix) :: this
     real(8), dimension(:) :: apr_U
     real(8), dimension(:) :: apr_B
     integer  :: ai_maxIter
@@ -22,19 +23,19 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
     !local var
     real(8), dimension(:), pointer :: lpr_Ad
     real(8), dimension(:), pointer :: lpr_r
-    real(8), dimension(:), pointer :: lpr_d				
-    real(8), dimension(:), pointer :: lpr_Ux			
+    real(8), dimension(:), pointer :: lpr_d
+    real(8), dimension(:), pointer :: lpr_Ux
     real(8) :: lr_Norm2r1
     real(8) :: lr_Norm2r0
     real(8) :: lr_NormInfb
-    real(8) :: lr_NormInfr						
+    real(8) :: lr_NormInfr
     real(8) :: lr_ps
     real(8) :: lr_beta
-    real(8) :: lr_alpha				
+    real(8) :: lr_alpha
     logical  :: ll_continue
     integer  :: li_iter
     integer  :: li_err
-    integer  :: li_flag		
+    integer  :: li_flag
 		
     if ( this%oi_nR /= this%oi_nC ) then
             PRINT*,'ERROR Gradient_conj: The matrix must be square'
@@ -47,23 +48,23 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
     end if
 
     allocate(lpr_Ad(this%oi_nR),stat=li_err)
-    if (li_err.ne.0) li_flag=10	
+    if (li_err.ne.0) li_flag=10
     allocate(lpr_r(this%oi_nR),stat=li_err)
-    if (li_err.ne.0) li_flag=20	
+    if (li_err.ne.0) li_flag=20
     allocate(lpr_d(this%oi_nR),stat=li_err)
-    if (li_err.ne.0) li_flag=30		
+    if (li_err.ne.0) li_flag=30
     allocate(lpr_Ux(this%oi_nR),stat=li_err)
-    if (li_err.ne.0) li_flag=40					
+    if (li_err.ne.0) li_flag=40
     !================!
     ! initialisation !
     !================!
     lpr_Ux(:) = apr_U(:)
     li_iter = 0
-    call Mult_CSR_Matrix_Vector( this , lpr_Ux , lpr_Ad )		
+    call Mult_CSR_Matrix_Vector( this , lpr_Ux , lpr_Ad )
     !-------------------!
     ! calcul des normes !
     !-------------------!
-    lpr_r		= apr_B - lpr_Ad
+    lpr_r       = apr_B - lpr_Ad
     lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
     lr_NormInfb = maxval( dabs( apr_B ) )
 
@@ -121,14 +122,14 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
             print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
     end if
 
-call printlog ( "Gradient_conj : duree du calcul =", ai_dtllevel = 1 )            
-
-call printcputime ( )              		
+    call printlog("Gradient_conj : duree du calcul =",ai_dtllevel=1)
+    
+    call printcputime ( )
     
     deallocate(lpr_Ad)
     deallocate(lpr_d)
-    deallocate(lpr_r)				
-    deallocate(lpr_Ux)			
+    deallocate(lpr_r)
+    deallocate(lpr_Ux)
 end subroutine Gradient_conj
 
 

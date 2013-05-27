@@ -33,8 +33,8 @@ Implicit None
                    , concatmsg_array3realwp     &
                    , concatmsg_array4realwp     &
                    , concatmsg_array1int        &
-                   , concatmsg_array2int		&
-                                       , concatmsg_array1complexwp
+                   , concatmsg_array2int        &
+                   , concatmsg_array1complexwp
     end interface
 
 contains
@@ -504,70 +504,70 @@ contains
 !-------------------------------------------------------------------------------------------
     subroutine printcputime ( ai_detail )
     implicit none
-		integer, optional, intent ( in ) :: ai_detail
+    integer, optional, intent ( in ) :: ai_detail
         !LOCAL VARIABLES
-		integer :: li_detail
-        real    ( kind = 8 ) lr_time
-
-		li_detail = 2
-		if ( present ( ai_detail ) ) then
-			li_detail = ai_detail
-		end if
-
-        call concatmsg_string ( "CPU time :" )
-
-		call cpu_time ( lr_time )
-
-        call concatmsg_realwp ( lr_time - mr_time )
-        call printmsg ( ai_dtllevel = li_detail )
-
-        mr_time = lr_time
-
-    end subroutine printcputime
-!-------------------------------------------------------------------------------------------
-    subroutine setstamp ( ai_dtllevel )
+    integer :: li_detail
+    real    ( kind = 8 ) lr_time
+    
+    li_detail = 2
+    if ( present ( ai_detail ) ) then
+       li_detail = ai_detail
+    end if
+    
+    call concatmsg_string ( "CPU time :" )
+    
+    call cpu_time ( lr_time )
+    
+    call concatmsg_realwp ( lr_time - mr_time )
+    call printmsg ( ai_dtllevel = li_detail )
+    
+    mr_time = lr_time
+    
+  end subroutine printcputime
+  !-----------------------------------------------------------------------
+  subroutine setstamp ( ai_dtllevel )
     implicit none
-        integer  :: ai_dtllevel
-        !LOCAL VARIABLES
-        integer  :: li_i
-
-        do li_i = 1, ai_dtllevel
-
-            ms_stamp = TRIM ( ADJUSTL ( ADJUSTR ( ms_stamp ) ) ) // "---"
-
-        end do
-
-        ms_stamp = TRIM ( ADJUSTL ( ADJUSTR ( ms_stamp ) ) ) // "> "
-
-    end subroutine setstamp
-!----------------------------------------------------------------------------------------------
-	integer function print_evolution( ai_i, ai_N, ai_k, ai_q, ai_err )
-	implicit none
-		integer  :: ai_i, ai_N, ai_k, ai_err, ai_q
-		! LOCAL VARIABLES
-		real(wp) :: lr_d
-		integer  :: li_q
-
-		if ( ai_err == 0 ) then
-			print_evolution = 0
-			return
-		end if
-
-		lr_d = float ( ai_N ) / float ( ai_k )
-		li_q = int ( ai_i / lr_d )
-		if ( li_q > ai_q ) then
-			ai_q = li_q
-			write(6,'(a$)')'.'
-		end if
-
-		if ( ai_i == ai_N ) then
-			write(6,'(a)')' done'
-!			print*,' '
-		end if
-
-		print_evolution = 1
-
-	end function print_evolution
+    integer  :: ai_dtllevel
+    !LOCAL VARIABLES
+    integer  :: li_i
+    
+    do li_i = 1, ai_dtllevel
+       
+       ms_stamp = TRIM ( ADJUSTL ( ADJUSTR ( ms_stamp ) ) ) // "---"
+       
+    end do
+    
+    ms_stamp = TRIM ( ADJUSTL ( ADJUSTR ( ms_stamp ) ) ) // "> "
+    
+  end subroutine setstamp
+  !-----------------------------------------------------------------------
+  integer function print_evolution( ai_i, ai_N, ai_k, ai_q, ai_err )
+    implicit none
+    integer  :: ai_i, ai_N, ai_k, ai_err, ai_q
+    ! LOCAL VARIABLES
+    real(wp) :: lr_d
+    integer  :: li_q
+    
+    if ( ai_err == 0 ) then
+       print_evolution = 0
+       return
+    end if
+    
+    lr_d = float ( ai_N ) / float ( ai_k )
+    li_q = int ( ai_i / lr_d )
+    if ( li_q > ai_q ) then
+       ai_q = li_q
+       write(6,'(a)')'.' ! originally the format specifier was (a$)
+    end if
+    
+    if ( ai_i == ai_N ) then
+       write(6,'(a)')' done'
+       !			print*,' '
+    end if
+    
+    print_evolution = 1
+    
+  end function print_evolution
 End Module tracelog_Module
 
 

@@ -1,5 +1,6 @@
 module sll_general_coordinate_qn_solver_module
 #include "sll_working_precision.h"
+#include "sll_memory.h"
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sparsematrix_module
@@ -45,6 +46,10 @@ module sll_general_coordinate_qn_solver_module
   ! For the integration mode.  
   integer, parameter :: QNS_GAUSS_LEGENDRE = 0, QNS_GAUSS_LOBATTO = 1
 
+  interface delete
+     module procedure delete_qns
+  end interface delete
+
 contains
 
   function new_general_qn_solver( &
@@ -72,6 +77,8 @@ contains
    sll_int32, intent(in) :: bc_right
    sll_int32, intent(in) :: bc_bottom
    sll_int32, intent(in) :: bc_top
+   sll_int32, intent(in) :: quadrature_type1
+   sll_int32, intent(in) :: quadrature_type2
    sll_real64, intent(in) :: eta1_min
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
@@ -85,7 +92,7 @@ contains
    sll_int32 :: solution_size
 
    SLL_ALLOCATE(qns,ierr)
-   qns%total_num_splines_loc = (spline_degree1+1)*(spline_degree2+1)
+   qns%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
    ! num_cells + spline_degree
    num_splines1 = num_cells_eta1 + spline_degree_eta1
@@ -131,7 +138,7 @@ contains
 !!$         qns%gauss_pts2(:,:)
    end select
 
-   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) &
+   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
       qns%total_num_splines_eta1 = num_cells_eta1 
@@ -139,7 +146,7 @@ contains
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = num_cells_eta1*num_cells_eta2
-   else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) &
+   else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
        (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
 
       qns%total_num_splines_eta1 = num_cells_eta1 
@@ -148,7 +155,7 @@ contains
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+num_cells_eta2+1
       vec_sz      = num_cells_eta1*(num_cells_eta2+spline_degree_eta2)
-   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) &
+   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
             (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
       qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
@@ -156,7 +163,7 @@ contains
       knots1_size = 2*spline_degree_eta1+num_cells_eta1+1
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*num_cells_eta2
-   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) &
+   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
        (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
 
       qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
@@ -208,8 +215,8 @@ contains
 
     call create_CSR( &
         qns%csr_mat, &
-        tot_num_splines, &
-        tot_num_splines, &
+        solution_size, &
+        solution_size, &
         vec_sz, &
         qns%local_to_global_spline_indices, &
         qns%total_num_splines_loc, &
@@ -217,6 +224,11 @@ contains
         qns%total_num_splines_loc )
         
   end function new_general_qn_solver
+
+  subroutine delete_qns( qns )
+    type(general_coordinate_qn_solver), pointer :: qns
+    ! please finish...
+  end subroutine delete_qns
 
 
   subroutine solve_quasi_neutral_eq_general_coords( &
@@ -230,9 +242,7 @@ contains
     class(sll_scalar_field_2d_base), dimension(:,:), intent(in) :: a_field_mat
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
     class(sll_scalar_field_2d_base), intent(in)                 :: rho
-    sll_int32, intent(in)                                :: quadrature_type 
-    class(sll_scalar_field_2d_base), intent(out)                :: phi
-    sll_int32                                 :: quadrature_degree
+    class(sll_scalar_field_2d_base), intent(inout)              :: phi
     sll_real64, dimension(:), allocatable   :: M_rho_loc
     sll_real64, dimension(:,:), allocatable :: M_c_loc
     sll_real64, dimension(:,:), allocatable :: K_a11_loc
@@ -265,7 +275,6 @@ contains
     ! total number of splines should come in the field...
 
     ! The quadrature degree is the number of splines that intersect a cell.
-    quadrature_degree = c_field%interpolation_degree()+1
     total_num_splines_loc = qns%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -312,13 +321,15 @@ contains
        end do
     end do
     
+    call solve_linear_system(qns)
+
     ! apr_B is the source, apr_U is the solution
-    SLL_DEALLOCATE(M_rho_loc,ierr)
-    SLL_DEALLOCATE(M_c_loc,ierr)
-    SLL_DEALLOCATE(K_a11_loc,ierr)
-    SLL_DEALLOCATE(K_a12_loc,ierr)
-    SLL_DEALLOCATE(K_a21_loc,ierr)
-    SLL_DEALLOCATE(K_a22_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
   end subroutine solve_quasi_neutral_eq_general_coords
 
   ! This is based on the assumption that all the input fields have the same
@@ -418,25 +429,25 @@ contains
     num_pts_g1 = obj%spline_degree1+1
     num_pts_g2 = obj%spline_degree2+1
 
-    if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) &
+    if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
-       eta1  = eta1_min + (cell_i-1+tmp1)*delta_eta1
-       eta2  = eta2_min + (cell_j-1+tmp2)*delta_eta2
+       eta1  = eta1_min + (cell_i-1+tmp1)*delta1
+       eta2  = eta2_min + (cell_j-1+tmp2)*delta2
 
-    else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right== SLL_PERIODIC) &
+    else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right== SLL_PERIODIC) .and.&
              (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-       eta1  = eta1_min + (cell_i-1+tmp1)*delta_eta1
-       eta2  = eta2_min + (cell_j-1)*delta_eta2
+       eta1  = eta1_min + (cell_i-1+tmp1)*delta1
+       eta2  = eta2_min + (cell_j-1)*delta2
        
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) &
+    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-       eta1  = eta1_min + (cell_i-1)*delta_eta1
-       eta2  = eta2_min + (cell_j-1+tmp2)*delta_eta2
+       eta1  = eta1_min + (cell_i-1)*delta1
+       eta2  = eta2_min + (cell_j-1+tmp2)*delta2
        
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) &
+    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-       eta1  = eta1_min + (cell_i-1)*delta_eta1
-       eta2  = eta2_min + (cell_j-1)*delta_eta2
+       eta1  = eta1_min + (cell_i-1)*delta1
+       eta2  = eta2_min + (cell_j-1)*delta2
     else
        print *, 'boundary conditions given are not recognized.'
        stop
@@ -484,7 +495,7 @@ contains
              local_spline_index1 = obj%spline_degree1 + cell_i
              
           end if
-
+          
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -526,7 +537,7 @@ contains
           ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
           ! each direction.
           do ii = 0,obj%spline_degree1
-             do jj = 0,init%spline_degree2
+             do jj = 0,obj%spline_degree2
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
                 M_rho_loc(index1)= M_rho_loc(index1) + &
@@ -617,8 +628,8 @@ contains
        
        if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
           
-          if ( index3 > qns%total_number_splines_eta2) then
-             index3 = index3 - qns%total_number_splines_eta2
+          if ( index3 > qns%total_num_splines_eta2) then
+             index3 = index3 - qns%total_num_splines_eta2
           end if
           
        end if
@@ -627,12 +638,12 @@ contains
           
           index1 = cell_i + i
           if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
-             if ( index1 > qns%total_number_splines_eta1) then
+             if ( index1 > qns%total_num_splines_eta1) then
                 
-                index1 = index1 - qns%total_number_splines_eta1
+                index1 = index1 - qns%total_num_splines_eta1
                 
              end if
-             nbsp = qns%total_number_splines_eta1
+             nbsp = qns%total_num_splines_eta1
              
           else if ( (bc_left  == SLL_DIRICHLET).and.&
                (bc_right == SLL_DIRICHLET) ) then
@@ -648,9 +659,9 @@ contains
              index4 = cell_j + nn
              
              if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
-                if ( index4 > qns%total_number_splines_eta2) then
+                if ( index4 > qns%total_num_splines_eta2) then
                    
-                   index4 = index4 - qns%total_number_splines_eta2
+                   index4 = index4 - qns%total_num_splines_eta2
                 end if
              end if
              
@@ -659,11 +670,11 @@ contains
                 index2 = cell_i + j
                 if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
                    
-                   if ( index2 > qns%total_number_splines_eta1) then
+                   if ( index2 > qns%total_num_splines_eta1) then
                       
-                      index2 = index2 - qns%total_number_splines_eta1
+                      index2 = index2 - qns%total_num_splines_eta1
                    end if
-                   nbsp1 = qns%total_number_splines_eta1
+                   nbsp1 = qns%total_num_splines_eta1
                    
                 else if ( (bc_left  == SLL_DIRICHLET) .and.&
                      (bc_right == SLL_DIRICHLET) ) then
@@ -671,9 +682,10 @@ contains
                    nbsp1 = qns%num_cells1 + qns%spline_degree1
                 end if
                    
-                y              = index2 + (index4-1)*nbsp1
-                bprime         =  nn * ( qns%spline_degree1 + 1 ) + j + 1
-                li_Aprime      = qns%rho_vec (bprime, cell_index)
+                y         = index2 + (index4-1)*nbsp1
+                bprime    =  nn * ( qns%spline_degree1 + 1 ) + j + 1
+                li_Aprime = qns%local_to_global_spline_indices(bprime, &
+                                                               cell_index)
                 elt_mat_global = &
                      M_c_loc(b, bprime) + &
                      K_a11_loc(b, bprime) + &
@@ -708,7 +720,7 @@ contains
     bc_top    = qns%bc_top
 
 
-    if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) &
+    if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_DIRICHLET).and. (bc_top   == SLL_DIRICHLET) ) then
 
        do i = 1, qns%total_num_splines_eta1
@@ -720,7 +732,7 @@ contains
           end do
        end do
     
-    else if ( (bc_left   == SLL_DIRICHLET).and.(bc_right==SLL_DIRICHLET) &
+    else if ( (bc_left   == SLL_DIRICHLET).and.(bc_right==SLL_DIRICHLET) .and.&
               (bc_bottom == SLL_DIRICHLET).and.(bc_top==SLL_DIRICHLET) ) then 
         
        do i = 1, qns%total_num_splines_eta1
@@ -732,12 +744,12 @@ contains
           end do
        end do
 
-    else if((bc_left   == SLL_PERIODIC) .and. (bc_right==SLL_PERIODIC) &
+    else if((bc_left   == SLL_PERIODIC) .and. (bc_right==SLL_PERIODIC) .and.&
             (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
 
        qns%tmp_rho_vec = qns%rho_vec
             
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) &
+    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
 
        do i = 1, qns%total_num_splines_eta1
