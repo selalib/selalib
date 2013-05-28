@@ -33,46 +33,24 @@ IF(MUDPACK_ENABLED)
 
    SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack.F90)
    
-   ADD_EXECUTABLE(test_mudpack_cartesian test_mudpack_cartesian.F90)
-   TARGET_LINK_LIBRARIES(test_mudpack_cartesian sll_memory 
-                                                sll_assertion 
-                                                sll_utilities
-                                                mudpack)
+   MACRO(ADD_MUDPACK_PROGRAM TEST_NAME) 
 
-   ADD_TEST(NAME sll_mudpack_cartesian COMMAND test_mudpack_cartesian )
-   SET(sll_mudpack_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90
+                                               sll_mudpack_${TEST_NAME}.F90)
 
-   ADD_EXECUTABLE(test_mudpack_polar test_mudpack_polar.F90
-                                     sll_mudpack_polar.F90)
+      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_memory 
+                                                      sll_assertion 
+                                                      sll_utilities
+                                                      mudpack)
 
-   TARGET_LINK_LIBRARIES(test_mudpack_polar sll_memory 
-                                            sll_assertion 
-                                            sll_utilities
-                                            mudpack)
+      ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
+      SET(sll_mudpack_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   ADD_EXECUTABLE(test_mudpack_hybrid test_mudpack_hybrid.F90)
+   ENDMACRO(ADD_MUDPACK_PROGRAM)
 
-   TARGET_LINK_LIBRARIES(test_mudpack_hybrid sll_memory 
-                                             sll_assertion 
-                                             sll_utilities
-                                             mudpack)
+   ADD_MUDPACK_PROGRAM( polar )
+   ADD_MUDPACK_PROGRAM( colella )
 
-   ADD_TEST(NAME sll_mudpack_polar COMMAND test_mudpack_polar )
-   SET(sll_mudpack_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
-
-   ADD_EXECUTABLE(test_mudpack_2d test_mudpack_2d.F90)
-   TARGET_LINK_LIBRARIES(test_mudpack_2d sll_memory 
-                                         sll_assertion 
-                                         sll_utilities
-                                         mudpack)
-
-   ADD_TEST(NAME sll_mudpack_2d COMMAND test_mudpack_2d )
-   SET(sll_mudpack_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-   #ADD_EXECUTABLE(test_mudpack test_mudpack.F90 sll_mudpack.F90)
-   #TARGET_LINK_LIBRARIES( test_mudpack sll_memory sll_assertion mudpack)
 
 ENDIF()
 

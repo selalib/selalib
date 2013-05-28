@@ -1,6 +1,6 @@
 ! *********************************************************
 !
-! Poisson solver in polar coordinates
+! Poisson solver in colella coordinates
 !
 ! **********************************************************
 !
@@ -11,7 +11,7 @@
 !
 ! **********************************************************
 
-module sll_mudpack_polar
+module sll_mudpack_colella
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 implicit none
@@ -20,48 +20,47 @@ sll_real64 ,allocatable :: work(:)
 
 contains
 
-subroutine initialize_poisson_polar_mudpack(phi, rhs, &
-                                            r_min, r_max,  &
-                                            theta_min, theta_max, &
-                                            nr, nth)
+subroutine initialize_poisson_colella_mudpack(phi, rhs, &
+                                              eta1_min, eta1_max,  &
+                                              eta2_min, eta2_max, &
+                                              nc_eta1, nc_eta2)
 implicit none
 
 ! set grid size params
 
-sll_real64, intent(in) :: r_min, r_max
-sll_real64, intent(in) :: theta_min, theta_max
-sll_int32, intent(in)  :: nr, nth
+sll_real64, intent(in) :: eta1_min, eta1_max
+sll_real64, intent(in) :: eta2_min, eta2_max
+sll_int32, intent(in)  :: nc_eta1, nc_eta2
 sll_int32 :: icall
 sll_int32 :: iiex,jjey,nnx,nny,llwork
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
-sll_real64, intent(inout) ::  phi(nr,nth)
-sll_real64, intent(in) ::  rhs(nr,nth)
+sll_real64, intent(inout) ::  phi(nc_eta1+1,nc_eta2+1)
+sll_real64, intent(in) ::  rhs(nc_eta1+1,nc_eta2+1)
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
 
-sll_int32 intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,&
-              iguess,maxcy,method,nwork,lwrkqd,itero
+sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
-sll_int32 :: i,j,ierror
+sll_int32  :: i,j,ierror
 sll_real64 :: dlx,dly
-sll_int32               :: iprm(16)
-sll_real64              :: fprm(6)
-sll_int32               :: mgopt(4)
+sll_int32  :: iprm(16)
+sll_real64 :: fprm(6)
+sll_int32  :: mgopt(4)
 
-!equivalence(intl,iprm)
-!equivalence(xa,fprm)
+equivalence(intl,iprm)
+equivalence(xa,fprm)
 
 ! declare coefficient and boundary condition input subroutines external
-external coef_polar,bndcr
+external coef,bnd
 
-
-nnx = nr
-nny = nth
+nnx = nc_eta1+1
+nny = nc_eta2+1
 
 ! set minimum required work space
 llwork=(7*(nnx+2)*(nny+2)+44*nnx*nny)/3
@@ -75,8 +74,8 @@ jjey = ceiling(log((nny-1.)/jjyq)/log(2.))+1
 intl = 0
 
 ! set boundary condition flags
-nxa = 1
-nxb = 1
+nxa = 0
+nxb = 0
 nyc = 0
 nyd = 0
 
@@ -89,13 +88,13 @@ jey = jjey
 nx = ixp*(2**(iex-1))+1
 ny = jyq*(2**(jey-1))+1
 
-if (nx /= nr) then
-   print*, "nx,nr=", nx, nr
-   stop ' nx different de nr dans mg_polar_poisson'
+if (nx /= nc_eta1+1) then
+   print*, "nx,nc_eta1=", nx, nc_eta1+1
+   stop ' nx different de nc_eta1+1 '
 end if
-if (ny /= nth) then
-   print*, "ny,nth=", ny, nth
-   stop ' ny different de nth dans mg_polar_poisson'
+if (ny /= nc_eta2+1) then
+   print*, "ny,nc_eta2+1=", ny, nc_eta2+1
+   stop ' ny different de nc_eta2+1 '
 end if
 
 ! set multigrid arguments (w(2,1) cycling with fully weighted
@@ -118,31 +117,25 @@ nwork = llwork
 method = 0
 
 ! set mesh increments
-xa = r_min
-xb = r_max
-yc = theta_min
-yd = theta_max
-dlx = (xb-xa)/float(nx-1)
-dly = (yd-yc)/float(ny-1)
+xa = eta1_min
+xb = eta1_max
+yc = eta2_min
+yd = eta2_max
+dlx = (xb-xa)/float(nc_eta1)
+dly = (yd-yc)/float(nc_eta2)
 
 ! set for no error control flag
 tolmax = 0.0
 
-! set specified boundaries in phi at x=xa 
-do j=1,ny
-   phi(1,j) = 0.0
-   phi(nx,j) = 0.0
-end do
 write(*,100)
-
 write(*,102) (mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
-call mud2cr(iprm,fprm,work,coef_polar,bndcr,rhs,phi,mgopt,ierror)
+call mud2cr(iprm,fprm,work,coef,bnd,rhs,phi,mgopt,ierror)
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
 
-100 format(//' multigrid poisson solver in polar coordinates ')
+100 format(//' multigrid poisson solver in colella mesh ')
     write (*,101) (iprm(i),i=1,15)
 101 format(/' integer input arguments ', &
     /'intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
@@ -161,16 +154,15 @@ if (ierror > 0) call exit(0)
 200 format(' ierror = ',i2, ' minimum work space = ',i7)
 
 return
-end subroutine initialize_poisson_polar_mudpack
+end subroutine initialize_poisson_colella_mudpack
 
 
-subroutine solve_poisson_polar_mudpack(phi, rhs)
+subroutine solve_poisson_colella_mudpack(phi, rhs)
 implicit none
 
 ! set grid size params
 
 sll_int32 :: icall
-sll_int32, parameter :: iixp = 2 , jjyq = 2
 
 sll_real64, intent(inout) ::  phi(:,:)
 sll_real64, intent(inout) ::  rhs(:,:)
@@ -182,9 +174,9 @@ sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 sll_int32  :: ierror
-sll_int32               :: iprm(16)
-sll_real64              :: fprm(6)
-sll_int32               :: mgopt(4)
+sll_int32  :: iprm(16)
+sll_real64 :: fprm(6)
+sll_int32  :: mgopt(4)
 
 common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
                 iguess,maxcy,method,nwork,lwrkqd,itero
@@ -194,32 +186,36 @@ equivalence(intl,iprm)
 equivalence(xa,fprm)
 
 ! declare coefficient and boundary condition input subroutines external
-external coef_polar,bndcr
+external coef,bnd
 
-icall = 1
-intl  = 1
+iguess = 1
+icall  = 1
+intl   = 1
 write(*,106) intl,method,iguess
 ! attempt solution
-call mud2cr(iprm,fprm,work,coef_polar,bndcr,rhs,phi,mgopt,ierror)
+call mud2cr(iprm,fprm,work,coef,bnd,rhs,phi,mgopt,ierror)
 SLL_ASSERT(ierror == 0)
 ! attempt fourth order approximation
-call mud24cr(work,coef_polar,bndcr,phi,ierror)
+call mud24cr(work,coef,bnd,phi,ierror)
 SLL_ASSERT(ierror == 0)
 
 106 format(/' approximation call to mud2cr', &
     /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 
 return
-end subroutine solve_poisson_polar_mudpack
+end subroutine solve_poisson_colella_mudpack
 
-end module sll_mudpack_polar
+end module sll_mudpack_colella
 
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
-subroutine coef_polar(x,y,cxx,cxy,cyy,cx,cy,ce)
+subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
 implicit none
 real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
+
+!! CHANGE HERE FOR COLELLA MESH
+
 cxx = 1.0 
 cxy = 0.0 
 cyy = 1.0 / (x*x) 
@@ -229,26 +225,13 @@ ce  = 0.0
 return
 end subroutine
 
-!> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
-subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
+subroutine bnd(kbdy,xory,alfa,beta,gama,gbdy)
 implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,beta,gama,gbdy
 
-if (kbdy.eq.2) then
-
-   ! x=xb boundary.
-   ! b.c. has the form alfyd(x)*px+betyd(x)*py+gamyd(x)*pe = gbdyd(x)
-   ! where x = yorx.   alfa,beta,gama,gbdy corresponding to alfyd(x),
-   ! betyd(x),gamyd(x),gbdyd(y) must be output.
-
-   alfa = 1.0
-   beta = 0.0
-   gama = 0.0
-   gbdy = 0.0
-
-end if
+!! Set bounday condition value
 
 return
 end subroutine
