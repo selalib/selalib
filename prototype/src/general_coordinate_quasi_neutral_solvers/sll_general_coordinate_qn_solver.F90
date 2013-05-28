@@ -1,6 +1,7 @@
 module sll_general_coordinate_qn_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sparsematrix_module
@@ -273,7 +274,7 @@ contains
     sll_int32 :: j
     sll_int32 :: cell_index
     type(sll_logical_mesh_2d), pointer :: mesh
-
+    print *, 'Entered QNS solver...'
     ! This function builds and solves a system:
     !
     !      A*phi_vec = rho_vec
@@ -302,7 +303,9 @@ contains
        do i=1,qns%num_cells1
           ! cells are numbered in a linear fashion, convert from (i,j) indexing
           ! to the linear array index.
+
           cell_index = i+qns%num_cells1*(j-1)
+
           call build_local_matrices( &
                qns, &
                i, &
@@ -332,7 +335,7 @@ contains
 
        end do
     end do
-    
+
     call solve_linear_system(qns)
 
     ! apr_B is the source, apr_U is the solution
@@ -471,18 +474,18 @@ contains
        ! the bottom edge of the cell.
        gpt2  = eta2  + 0.5_f64*delta2 * ( obj%gauss_pts2(1,j) + 1.0_f64 )
        wgpt2 = 0.5_f64*delta2*obj%gauss_pts2(2,j)
-       
+
        if ((obj%bc_bottom==SLL_PERIODIC).and.(obj%bc_top==SLL_PERIODIC))then
           ! rescale gauss point in interval [0,delta2]
           gtmp2 = 0.5_f64*delta2*( obj%gauss_pts2(1,j) + 1.0_f64)
           local_spline_index2 = obj%spline_degree2 + 1
-          
+
        else if ((obj%bc_bottom == SLL_DIRICHLET).and.&
             (obj%bc_top    == SLL_DIRICHLET)) then
           gtmp2 = gpt2
           local_spline_index2 = obj%spline_degree2 + cell_j
        end if
-       
+
        call bsplvd( &
             obj%knots2, &
             obj%spline_degree2+1,&
@@ -491,16 +494,17 @@ contains
             work2,&
             dbiatx2,&
             2)
+
        do i=1,num_pts_g1
           ! rescale Gauss points to be in interval [eta1,eta1+delta1]
           gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
           wgpt1 = 0.5_f64*delta1*obj%gauss_pts1(2,i)
-          
+
           if((obj%bc_left==SLL_PERIODIC).and.(obj%bc_right==SLL_PERIODIC)) then 
              
              gtmp1   = 0.5_f64*delta1*( obj%gauss_pts1(1,i) + 1.0_f64)
              local_spline_index1 = obj%spline_degree1 + 1
-             
+
           else if ((obj%bc_left  == SLL_DIRICHLET).and.&
                (obj%bc_right == SLL_DIRICHLET) ) then
              
@@ -508,7 +512,7 @@ contains
              local_spline_index1 = obj%spline_degree1 + cell_i
              
           end if
-          
+
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -517,7 +521,7 @@ contains
                work1,&
                dbiatx1,&
                2 )
-          
+
           val_f   = rho%value_at_point(gpt1,gpt2)
           val_c   = c_field%value_at_point(gpt1,gpt2)
           val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
@@ -526,7 +530,7 @@ contains
           val_a22 = a_field_mat(2,2)%base%value_at_point(gpt1,gpt2)
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
-          
+
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &

@@ -205,7 +205,7 @@ program test_general_qns
 
   ! delete things...
   call delete(qns)
-
+  print *, 'PASSED'
 end program test_general_qns
 
 function func_one( eta1, eta2, params ) result(res)
