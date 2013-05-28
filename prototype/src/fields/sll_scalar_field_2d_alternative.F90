@@ -119,7 +119,7 @@ contains   ! *****************************************************************
 
 
   function value_at_pt_analytic( field, eta1, eta2 )
-    class(sll_scalar_field_2d_analytic_alt) :: field
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             ::  value_at_pt_analytic
@@ -127,7 +127,7 @@ contains   ! *****************************************************************
   end function value_at_pt_analytic
 
   function value_at_index_analytic( field, i, j )
-    class(sll_scalar_field_2d_analytic_alt) :: field
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
@@ -224,17 +224,17 @@ contains   ! *****************************************************************
 
 
   function get_logical_mesh_2d_analytic_alt( field ) result(res)
-    class(sll_scalar_field_2d_analytic_alt) :: field
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     type(sll_logical_mesh_2d), pointer :: res
     res => field%T%mesh
   end function get_logical_mesh_2d_analytic_alt
 
   function get_jacobian_matrix_analytic_alt( field, eta1, eta2 ) result(res)
-    class(sll_scalar_field_2d_analytic_alt) :: field
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64, dimension(:,:), pointer :: res
-    res(:,:) = field%T%jacobian_matrix(eta1,eta2)
+    sll_real64, dimension(2,2) :: res
+    res = (field%T%jacobian_matrix(eta1,eta2))
   end function get_jacobian_matrix_analytic_alt
 
   ! need to do something about deallocating the field proper, when allocated
@@ -287,13 +287,13 @@ contains   ! *****************************************************************
 
 
   function get_logical_mesh_2d_discrete_alt( field ) result(res)
-    class(sll_scalar_field_2d_discrete_alt) :: field
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     type(sll_logical_mesh_2d), pointer :: res
     res => field%T%mesh
   end function get_logical_mesh_2d_discrete_alt
 
   function get_jacobian_matrix_discrete_alt( field, eta1, eta2 ) result(res)
-    class(sll_scalar_field_2d_discrete_alt) :: field
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64, dimension(:,:), pointer :: res
@@ -301,7 +301,7 @@ contains   ! *****************************************************************
   end function get_jacobian_matrix_discrete_alt
 
   function value_at_pt_discrete( field, eta1, eta2 )
-    class(sll_scalar_field_2d_discrete_alt) :: field
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: value_at_pt_discrete
@@ -309,7 +309,7 @@ contains   ! *****************************************************************
   end function value_at_pt_discrete
 
   function value_at_index_discrete( field, i, j )
-    class(sll_scalar_field_2d_discrete_alt) :: field
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
