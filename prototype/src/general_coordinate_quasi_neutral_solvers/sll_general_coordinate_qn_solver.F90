@@ -227,7 +227,18 @@ contains
 
   subroutine delete_qns( qns )
     type(general_coordinate_qn_solver), pointer :: qns
-    ! please finish...
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(qns%knots1,ierr)
+    SLL_DEALLOCATE(qns%knots2,ierr)
+    SLL_DEALLOCATE(qns%gauss_pts1,ierr)
+    SLL_DEALLOCATE(qns%gauss_pts2,ierr)
+    SLL_DEALLOCATE(qns%global_spline_indices,ierr)
+    SLL_DEALLOCATE(qns%local_spline_indices,ierr)
+    SLL_DEALLOCATE(qns%local_to_global_spline_indices,ierr)
+    call free_csr(qns%csr_mat)
+    SLL_DEALLOCATE(qns%rho_vec,ierr)
+    SLL_DEALLOCATE(qns%phi_vec,ierr)
+    SLL_DEALLOCATE(qns%tmp_rho_vec,ierr)
   end subroutine delete_qns
 
 
@@ -239,7 +250,8 @@ contains
     phi )
     
     type(general_coordinate_qn_solver), pointer :: qns
-    class(sll_scalar_field_2d_base), dimension(:,:), intent(in) :: a_field_mat
+    class(sll_scalar_field_2d_base_ptr), dimension(:,:), intent(in) :: &
+         a_field_mat
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
     class(sll_scalar_field_2d_base), intent(in)                 :: rho
     class(sll_scalar_field_2d_base), intent(inout)              :: phi
@@ -356,7 +368,8 @@ contains
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
-    class(sll_scalar_field_2d_base), dimension(:,:), intent(in) :: a_field_mat
+    class(sll_scalar_field_2d_base_ptr), dimension(:,:), intent(in) :: &
+         a_field_mat
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
     class(sll_scalar_field_2d_base), intent(in)                 :: rho
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
@@ -507,10 +520,10 @@ contains
           
           val_f   = rho%value_at_point(gpt1,gpt2)
           val_c   = c_field%value_at_point(gpt1,gpt2)
-          val_a11 = a_field_mat(1,1)%value_at_point(gpt1,gpt2)
-          val_a12 = a_field_mat(1,2)%value_at_point(gpt1,gpt2)
-          val_a21 = a_field_mat(2,1)%value_at_point(gpt1,gpt2)
-          val_a22 = a_field_mat(2,2)%value_at_point(gpt1,gpt2)
+          val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
+          val_a12 = a_field_mat(1,2)%base%value_at_point(gpt1,gpt2)
+          val_a21 = a_field_mat(2,1)%base%value_at_point(gpt1,gpt2)
+          val_a22 = a_field_mat(2,2)%base%value_at_point(gpt1,gpt2)
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
           
