@@ -3,7 +3,6 @@ ADD_LIBRARY( sll_general_coordinate_quasi_neutral_solvers STATIC
   profilmat.f90
   connectivity_qn.f90
   GC.f90
-  smcg.f90
   sparse_matrix.F90
   sparse_matrix_con.F90
   sparse_matrix_operations.F90 

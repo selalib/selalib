@@ -2,6 +2,7 @@ module sll_general_coordinate_qn_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+  use GC
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sparsematrix_module
