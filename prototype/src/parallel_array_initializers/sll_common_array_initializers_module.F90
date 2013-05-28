@@ -11,12 +11,6 @@ module sll_common_array_initializers_module
 
 contains
 
-  ! -------------------------------------------------------------------------
-  !
-  !             Landau damping 4d initialization function
-  !
-  ! -------------------------------------------------------------------------
-
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution
   ! function, periodic in x and y, and compact-ish in vx and vy.
@@ -39,10 +33,6 @@ contains
   ! params(3) = eta2_min
   ! params(4) = eta2_max
   ! params(5) = epsilon
-  !
-  ! The params array is declared optional to conform with the expected 
-  ! function signature of the initializer subroutines, but in the particular
-  ! case of the landau initializer, the params array must be passed.
 
   function sll_gaussian_initializer_4d( x, y, vx, vy, params ) 
     sll_real64 :: sll_gaussian_initializer_4d
@@ -79,6 +69,19 @@ contains
 
   end function sll_gaussian_initializer_4d
 
+
+  ! -------------------------------------------------------------------------
+  !
+  !             Landau damping 4d initialization function
+  !
+  ! -------------------------------------------------------------------------
+  !
+  ! The params array is declared optional to conform with the expected 
+  ! function signature of the initializer subroutines, but in the particular
+  ! case of the landau initializer, the params array must be passed.
+
+
+
   function sll_landau_initializer_4d( x, y, vx, vy, params ) 
     sll_real64 :: sll_landau_initializer_4d
     sll_real64, intent(in) :: x
@@ -108,30 +111,31 @@ contains
     eta2_max = params(4)
 
     eps = params(5)
-    kx  = 2. * sll_pi / (eta1_max - eta1_min)
+    kx  =  2. * sll_pi / (eta1_max - eta1_min)
 
     !Normalization
     !sagemath command
     !sage : var('u v epsilon a b c d x y')
     !sage : f(a,b,c,d,epsilon) =integral(integral(integral(integral((1+epsilon*cos(2*pi/(b-a)*x))*exp(-(u*u+v*v)/2),u,-oo,oo),v,-oo,oo),x,a,b),y,c,d)
     
-    factor1 =  1./( (eta2_min - eta2_max) &
-               *(((eta1_min - eta1_max)* &
-               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
-                - (eta1_min - eta1_max)* &
-               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
-               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
-    
+!!$    factor1 =  1./( (eta2_min - eta2_max) &
+!!$               *(((eta1_min - eta1_max)* &
+!!$               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
+!!$                - (eta1_min - eta1_max)* &
+!!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
+!!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
+    factor1 = 1.0_f64/(2.0*sll_pi)
+!!$    sll_landau_initializer_4d = factor1 * &
+!!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     sll_landau_initializer_4d = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-
   end function sll_landau_initializer_4d
 
   ! this function is a 1D landau initializer used for debugging
   ! 4D drift kinetic simulations in variables x1,x2,x3 ,v1
   ! the function is constant with respect to x2 and x3
 
-  function sll_landau_initializer_dk_test_4d(x1,x2,x3,v1,params ) 
+  function sll_landau_initializer_dk_test_4d(v1,x1,x2,x3,params ) 
     sll_real64 :: sll_landau_initializer_dk_test_4d
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2
@@ -153,8 +157,10 @@ contains
     kx      = params(2)
     factor1 = 0.5_f64/sll_pi
 
+    !write(*,*) 'x1 v1',x1,v1
+
     sll_landau_initializer_dk_test_4d = factor1*&
-         (1.0_f64+cos(kx*x1)*exp(-0.5_f64*(v1**2)))
+         (1.0_f64+epsilon*cos(kx*x1))*exp(-0.5_f64*(v1**2))
   end function sll_landau_initializer_dk_test_4d
 
   !---------------------------------------------------------------------------

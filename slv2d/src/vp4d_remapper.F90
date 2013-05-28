@@ -197,7 +197,7 @@ contains
     global_dims(2) = geomx%ny
     offset = 0
 
-    call sll_xdmf_open("fields.xmf",prefix,geomx%nx,geomx%ny,file_id,error)
+    call sll_xdmf_open(prank,"fields.xmf",prefix,geomx%nx,geomx%ny,file_id,error)
     call sll_xdmf_write_array(prefix,global_dims,offset,x1,'x1',error)
     call sll_xdmf_write_array(prefix,global_dims,offset,x2,'x2',error)
     call sll_xdmf_write_array(prefix,global_dims,offset, &

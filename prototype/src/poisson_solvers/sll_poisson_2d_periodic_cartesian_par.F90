@@ -177,6 +177,8 @@ contains
      new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
   end function new_poisson_2d_periodic_plan_cartesian_par
 
+  ! Note that the equation that is solved is:  laplacian(phi) = rho Thus the 
+  ! user is responsible for giving the proper sign to the source term.
   subroutine solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
     type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
     sll_real64, dimension(:,:)                     :: rho
@@ -208,8 +210,8 @@ contains
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
 
-    ! The input is handled internally as complex arrays
-    plan%fft_x_array = -cmplx(rho, 0_f64, kind=f64)
+    ! The input is handled internally as a complex array
+    plan%fft_x_array = cmplx(rho, 0_f64, kind=f64)
 
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
 
