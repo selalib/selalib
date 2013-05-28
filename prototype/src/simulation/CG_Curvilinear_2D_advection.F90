@@ -461,11 +461,10 @@ contains
     
     call poisson_solve_polar(plan%poisson,inn,plan%phi)
     !call lire_appel(plan%phi,inn,N_eta1,N_eta2)
-    
+   
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
-    print*,'pass avant'
     call advect_CG_curvilinear(plan%adv,inn,outt,jac_array,x1_tab,x2_tab,mesh_case)
-    print*,'pass apres'
+
     
   end subroutine SL_order_1
 

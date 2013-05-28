@@ -697,6 +697,7 @@ implicit none
            if((eta1>eta1_r).and.(eta1<eta1_rm)) then
              f(i,j)=1.0_f64+ alpha*cos(mode*eta2)
            endif
+         write(119,*) eta1,eta2,f(i,j)
         enddo
      enddo
 
