@@ -29,7 +29,7 @@ module sll_module_scalar_field_2d_base
      function function_get_mesh(field) result(res)
        use sll_logical_meshes
        import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base) :: field
+       class(sll_scalar_field_2d_base), intent(in) :: field
        type(sll_logical_mesh_2d), pointer :: res
      end function function_get_mesh
   end interface
@@ -38,10 +38,10 @@ module sll_module_scalar_field_2d_base
      function function_get_jacobian_matrix(field,eta1,eta2 ) result(res)
        use sll_working_precision
        import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base) :: field
+       class(sll_scalar_field_2d_base), intent(in) :: field
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
-       sll_real64, dimension(:,:), pointer :: res
+       sll_real64, dimension(2,2) :: res
      end function function_get_jacobian_matrix
   end interface
 
@@ -50,7 +50,7 @@ module sll_module_scalar_field_2d_base
      function function_evaluation_real( field, eta1, eta2 ) result(res)
        use sll_working_precision
        import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base) :: field
+       class(sll_scalar_field_2d_base), intent(in) :: field
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
        sll_real64             :: res
@@ -61,7 +61,7 @@ module sll_module_scalar_field_2d_base
      function function_evaluation_integer( field, i, j ) result(res)
        use sll_working_precision
        import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base) :: field
+       class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)  :: i
        sll_int32, intent(in)  :: j
        sll_real64             :: res
@@ -72,7 +72,7 @@ module sll_module_scalar_field_2d_base
      function return_integer( field ) result(res)
        use sll_working_precision
        import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base) :: field
+       class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32             :: res
      end function return_integer
   end interface
