@@ -278,7 +278,10 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
  !call phi_analytique(phi_exact,plan_sl%adv,phi_case,x1n_array,x2n_array, & 
  !                    & a1,a2,x1c_r,x2c_r,jac_matrix)
 
-    call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+ call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
+
+
+    !call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
 
 !   plan_sl%phi=phi_exact
 !   plan_sl%adv%field=0
@@ -354,7 +357,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
    
  end do 
  print*,'!!**************End of time loop'
-
+ print*,'phi end ' , maxval(abs(f)),maxval(abs(plan_sl%phi))
 
  call carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c_r,x2c_r,&
                        &x1_tab,x2_tab,real(nb_step,f64)*dt)
