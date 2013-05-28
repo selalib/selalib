@@ -1,7 +1,7 @@
 SET(BSL_LIB_DEPS sll_interpolators
                  sll_splines 
                  sll_memory 
-	         sll_working_precision
+	              sll_working_precision
                  sll_utilities 
                  sll_assertion)
 
@@ -46,11 +46,14 @@ IF(NOT STDF95)
    ADD_DEPENDENCIES(bsl_landau_1d selalib)
    TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)
 
-   IF(FFTW_FOUND)
+   IF(FFTW_FOUND AND FFTW_ENABLED)
 
       ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
       ADD_DEPENDENCIES(bsl_landau_2d ${BSL_LIB_DEPS})
-      TARGET_LINK_LIBRARIES(bsl_landau_2d ${BSL_LIB_DEPS} sll_maxwell_solvers ${FFTW_LIBRARIES})
+      TARGET_LINK_LIBRARIES(bsl_landau_2d ${BSL_LIB_DEPS} 
+                                          sll_poisson_solvers
+                                          sll_maxwell_solvers 
+                                          ${FFTW_LIBRARIES})
 
    ENDIF()
 
