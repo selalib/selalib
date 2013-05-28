@@ -3,6 +3,7 @@ ADD_LIBRARY( sll_general_coordinate_quasi_neutral_solvers STATIC
   profilmat.f90
   connectivity_qn.f90
   GC.f90
+  smcg.f90
   sparse_matrix.F90
   sparse_matrix_con.F90
   sparse_matrix_operations.F90 
@@ -23,6 +24,7 @@ ADD_DEPENDENCIES( sll_general_coordinate_quasi_neutral_solvers
   sll_integration
   sll_memory
   sll_boundary_condition_descriptors
+  sll_assertion
   sll_working_precision
   deboor_splines
   )
@@ -31,12 +33,16 @@ ADD_EXECUTABLE(test_qns_general_coordinates unit_test.F90)
 target_link_libraries( test_qns_general_coordinates
   sll_general_coordinate_quasi_neutral_solvers
   sll_scalar_field_2d_alternative
+  sll_interpolators
   sll_coordinate_transformations
   sll_logical_meshes
   sll_boundary_condition_descriptors
   sll_file_io
+  sll_integration
   sll_constants
   sll_utilities
+  sll_assertion
   sll_memory
   sll_working_precision
+  deboor_splines
   )
