@@ -23,7 +23,7 @@ use sll_module_interpolators_2d_base
   implicit none
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
-  type, extends(sll_interpolator_2d_base) :: arb_deg_2d_interpolator
+  type, extends(sll_interpolator_2d_base) :: arb_deg_2d_interpolator           
      sll_int32  :: num_pts1
      sll_int32  :: num_pts2
      sll_real64 :: eta1_min
@@ -41,6 +41,8 @@ use sll_module_interpolators_2d_base
      ! some knot-like arrays needed by the spli2d_per routine
      sll_real64, dimension(:), pointer :: t1
      sll_real64, dimension(:), pointer :: t2
+     sll_int32  :: size_t1
+     sll_int32  :: size_t2 
      sll_int64  :: bc_selector ! this is set in initialization
      sll_real64, dimension(:,:), pointer :: coeff_splines
      sll_int32                  :: size_coeffs1
@@ -254,6 +256,8 @@ contains
    sll_real64 :: eta2_min, eta2_max
    sll_real64 :: delta1
    sll_real64 :: delta2
+   sll_real64 ::  nb_spline_eta1
+   sll_real64 ::  nb_spline_eta2
 
    sp_deg1    = interpolator%spline_degree1
    sp_deg2    = interpolator%spline_degree2
@@ -266,21 +270,24 @@ contains
    delta1 = (eta1_max - eta1_min)/num_cells1
    delta2 = (eta2_max - eta2_min)/num_cells2
 
+   tmp1 = (sp_deg1 + 1)/2
+   tmp2 = (sp_deg2 + 1)/2
    ! The interpretation and further filling of the spline coefficients array
    ! depends on the boundary conditions.
    select case (interpolator%bc_selector)
    case(0) ! periodic-periodic
+
+      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 
+      interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2
       ! allocation and definition of knots
       do i = -sp_deg1, num_cells1 + sp_deg1
          interpolator%t1( i + sp_deg1 + 1 ) = eta1_min + i*delta1
       end do
-
+      
       do i = -sp_deg2, num_cells2 + sp_deg2
          interpolator%t2( i + sp_deg2 + 1 ) = eta2_min + i*delta2
       end do
 
-      tmp1 = (sp_deg1 + 1)/2
-      tmp2 = (sp_deg2 + 1)/2
 
       do i = 1,num_cells1
          do j = 1,num_cells2
@@ -288,12 +295,12 @@ contains
                  linear_coeffs( i + num_cells1 *(j-1) )
          end do
       end do
-
+      
       do j=1, tmp2
          interpolator%coeff_splines(:,j) = &
               interpolator%coeff_splines(:,num_cells2 + j)
       end do
-
+      
       if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
          do j = tmp2 + 1, sp_deg2
             interpolator%coeff_splines(:, num_cells2 + j) = &
@@ -305,14 +312,123 @@ contains
          interpolator%coeff_splines(i,:) = &
               interpolator%coeff_splines(num_cells1 + i,:)
       end do
-
+      
       if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
          do i = tmp1 + 1, sp_deg1
             interpolator%coeff_splines(num_cells1 + i,:) = &
                  interpolator%coeff_splines(i,:)
          end do
       end if
+   case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
+      interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2
+      nb_spline_eta1 = num_cells1 + sp_deg1 - 2
+      nb_spline_eta2 = num_cells2
+      ! allocation and definition of knots
+      do i = - sp_deg2, num_cells2 + sp_deg2
+         interpolator%t2( i+ sp_deg2 + 1 ) = eta2_min + i* delta2
+      end do
+      
+      interpolator%t1(1:interpolator%size_t1)=interpolator%knots1(1:interpolator%size_t1)
+      
+      
+      do i = 1 ,nb_spline_eta1
+         do j = 1,nb_spline_eta2
+            interpolator%coeff_splines(i+1,j+tmp2)=linear_coeffs(i+nb_spline_eta1*(j-1))
+         end do
+      end do
 
+      interpolator%coeff_splines(1,:) = 0.0_8
+      interpolator%coeff_splines(nb_spline_eta1+2,:) = 0.0_8
+
+
+
+      do j = 1, tmp2
+         do i = 1,nb_spline_eta1
+
+            interpolator%coeff_splines(i + 1 ,j ) = &
+                 linear_coeffs( i + nb_spline_eta1*(nb_spline_eta2 - (tmp2 -j)-1))
+         end do
+      end do
+
+      if (nb_spline_eta2 + tmp2 < nb_spline_eta2 + sp_deg2 ) then
+
+         do j = nb_spline_eta2 + tmp2 +1, nb_spline_eta2 + sp_deg2
+
+            do i = 1,nb_spline_eta1
+
+               interpolator%coeff_splines(i+1 ,j) = &
+                    linear_coeffs(i + nb_spline_eta1*(j-(nb_spline_eta2+tmp2)-1))
+               
+            end do
+         end do
+      end if
+
+   case(576)!3. periodic, dirichlet-bottom, dirichlet-top
+      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1
+      interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2 + 1
+      nb_spline_eta1 = num_cells1
+      nb_spline_eta2 = num_cells2 + sp_deg2 - 2
+      
+      ! allocation and definition of knots
+      do i = - sp_deg1, nb_spline_eta1 + sp_deg1
+
+         interpolator%t1( i+ sp_deg1 + 1 ) = eta1_min + i* delta1
+      end do
+
+      interpolator%t2(1: interpolator%size_t2) = interpolator%knots2(1: interpolator%size_t2)
+
+
+      do i = 1 , nb_spline_eta1
+         do j = 1,nb_spline_eta2
+
+            interpolator%coeff_splines(i + tmp1 ,j+1) = linear_coeffs(i+nb_spline_eta1 *(j-1) )
+         end do
+      end do
+
+      do i = 1, tmp1
+         do j = 1,nb_spline_eta2
+
+        interpolator%coeff_splines(i ,j+1) = &
+             linear_coeffs(nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+     end do
+  end do
+
+  if (nb_spline_eta1 + tmp1 < nb_spline_eta1 + sp_deg1) then
+
+     do i = nb_spline_eta1 + tmp1 +1, nb_spline_eta1 + sp_deg1
+
+        do j = 1,nb_spline_eta2
+
+             interpolator%coeff_splines(i,j+1) = &
+                  linear_coeffs( i- (nb_spline_eta1 + tmp1)+nb_spline_eta1 *(j-1) )
+          end do
+       end do
+    end if
+
+    interpolator%coeff_splines(:,1) = 0.0_8
+    interpolator%coeff_splines(:,nb_spline_eta2+2) = 0.0_8
+
+   case(585) ! 4. dirichlet in all sides
+      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
+      interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2 + 1
+      nb_spline_eta1 = num_cells1 + sp_deg1 - 2
+      nb_spline_eta2 = num_cells2 + sp_deg2 - 2
+
+      ! allocation and definition of knots
+
+      interpolator%t1(1: interpolator%size_t1)  = interpolator%knots1(1: interpolator%size_t1)
+      interpolator%t2(1: interpolator%size_t2)  = interpolator%knots2(1: interpolator%size_t2)
+
+      interpolator%coeff_splines(:,:) = 0.0_8
+      ! allocation coefficient spline
+      do i = 1,nb_spline_eta1
+         do j = 1,nb_spline_eta2
+
+            interpolator%coeff_splines(i+1,j+1) = linear_coeffs( i + nb_spline_eta1 *(j-1))
+         end do
+      end do
+      
    case default
       print *, 'arbitrary_degree_spline_2d() error: set_spline_coefficients ',&
            'not recognized.'
@@ -343,7 +459,7 @@ contains
 
     sz1 = size_eta1_coords
     sz2 = size_eta2_coords
-    PRINT *, 'SZ1 = ', SZ1, 'SZ2 = ', SZ2, 'DATA: ', SIZE(DATA_ARRAY,1), SIZE(DATA_ARRAY,2)
+    !PRINT *, 'SZ1 = ', SZ1, 'SZ2 = ', SZ2, 'DATA: ', SIZE(DATA_ARRAY,1), SIZE(DATA_ARRAY,2)
     SLL_ASSERT(sz1 .le. interpolator%num_pts1)
     SLL_ASSERT(sz2 .le. interpolator%num_pts2)
     SLL_ASSERT(size(data_array,1) .ge. sz1)
@@ -361,6 +477,8 @@ contains
     case (0) ! periodic-periodic
        interpolator%size_coeffs1 = sz1+1
        interpolator%size_coeffs2 = sz2+1
+       interpolator%size_t1 = order1 + sz1 + 1
+       interpolator%size_t2 = order2 + sz2 + 1       
        call spli2d_perper( &
             period1, sz1+1, order1, eta1_coords, &
             period2, sz2+1, order2, eta2_coords, &
@@ -371,6 +489,8 @@ contains
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_coeffs1 = sz1
        interpolator%size_coeffs2 = sz2+1
+       interpolator%size_t1 = order1 + sz1
+       interpolator%size_t2 = order2 + sz2 + 1
        call spli2d_dirper( sz1, order1, eta1_coords, &
             period2, sz2+1, order2, eta2_coords, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2+1),&
@@ -382,6 +502,8 @@ contains
        print *, 'sz1 = ', sz1, 'sz2 = ', sz2
        interpolator%size_coeffs1 = sz1+1
        interpolator%size_coeffs2 = sz2
+       interpolator%size_t1 = order1 + sz1 + 1
+       interpolator%size_t2 = order2 + sz2 
        call spli2d_perdir( period1, sz1+1, order1, eta1_coords, &
             sz2, order2, eta2_coords, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2),&
@@ -391,6 +513,8 @@ contains
     case (585) ! 4. dirichlet in all sides
        interpolator%size_coeffs1 = sz1
        interpolator%size_coeffs2 = sz2
+       interpolator%size_t1 = order1 + sz1 
+       interpolator%size_t2 = order2 + sz2 
        call spli2d_custom( sz1, order1, eta1_coords, &
             sz2, order2, eta2_coords, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2),&
