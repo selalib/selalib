@@ -65,7 +65,6 @@ rm -rf fftw-3.3.2
 
 apt-get -y update
 apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev doxygen  liblapack-dev
-dpkg -i ${PIPOL_HOMEDIR}/libhdf5-openmpi-dev_1.8.8-9_amd64.deb 
 
 wget http://www.fftw.org/fftw-3.3.2.tar.gz
 tar zxvf fftw-3.3.2.tar.gz
@@ -77,6 +76,7 @@ cd fftw-3.3.2; {
 rm -rf fftw-3.3.2
 
 * Fedora
+*********
 
 yum -y update
 yum install -y  gcc-gfortran gcc-c++ hdf5-openmpi-devel openmpi-devel git-all doxygen texlive-latex lapack-devel
@@ -88,7 +88,6 @@ cd fftw-3.3.2; {
    make
    make install
 }; cd -
-#!/bin/bash
 
 * Macosx Snow Leopard with macports
 
@@ -138,21 +137,8 @@ cd fftw-3.3.2; {
    make install
 }; cd -
 
-yum update
-yum install -y git
-yum install -y wget
-yum install -y openmpi-devel
-yum install -y doxygen
-wget http://www.cmake.org/files/v2.8/cmake-2.8.10.1.tar.gz
-tar zxvf cmake-2.8.10.1.tar.gz
-cd cmake-2.8.10.1; {
-    ./bootstrap
-    make
-    make install
-}; cd -
-rm -rf  cmake-2.8.10.1
-
-* Macosx Lion with intel compilers
+* Macosx Lion with Intel compilers
+***********************************
 
 source /opt/intel/composerxe/bin/compilervars.sh intel64
 
@@ -198,7 +184,8 @@ cd fftw-3.3.2; {
 }; cd -
 rm -rf fftw-3.3.2
 
-*Ubuntu
+* Ubuntu
+********
 
 apt-get -y update
 apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev libfftw3-mpi-dev doxygen liblapack-dev <&-

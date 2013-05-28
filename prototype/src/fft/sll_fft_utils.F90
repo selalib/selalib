@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module fft_utils
+module sll_fft_utils
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
@@ -58,4 +58,4 @@ contains
   ! END "How-to manipulate flags ?" section
   ! ***************************************************************************
 
-end module fft_utils
+end module sll_fft_utils
