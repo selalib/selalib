@@ -132,7 +132,7 @@ contains
   
   !Begin high level version
 
-  call sll_xdmf_open("zdata.xmf",prefix,nx,ny,xml_id,error)
+  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
   call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
   call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
   call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")

@@ -125,23 +125,23 @@ c
 c     set minimal required work space length (see tmud2.f)
 c
       parameter (llwork=70048)
-      real phi(nnx,nny),rhs(nnx,nny),work(llwork)
+      real(8) phi(nnx,nny),rhs(nnx,nny),work(llwork)
 c
 c     put integer and floating point argument names in contiguous
 c     storeage for labelling in vectors iprm,fprm
 c
       integer iprm(16),mgopt(4)
-      real fprm(6)
+      real(8) fprm(6)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmud2/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2/xa,xb,yc,yd,tolmax,relmax
       equivalence(intl,iprm)
       equivalence(xa,fprm)
       integer i,j,ierror
-      real dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
+      real(8) dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
 c
 c     declare coefficient and boundary condition input subroutines external
 c
@@ -213,29 +213,29 @@ c     set right hand side in rhs
 c     initialize phi to zero
 c
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	do j=1,ny
-	  y = yc+float(j-1)*dly
-	  call cof(x,y,cxx,cyy,cx,cy,ce)
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
-	  phi(i,j) = 0.0
-	end do
+      x = xa+float(i-1)*dlx
+      do j=1,ny
+        y = yc+float(j-1)*dly
+        call cof(x,y,cxx,cyy,cx,cy,ce)
+        call exact(x,y,pxx,pyy,px,py,pe)
+        rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
+        phi(i,j) = 0.0
+      end do
       end do
 c
 c     set specified boundaries in phi
 c
       x = xb
       do j=1,ny
-	y = yc+float(j-1)*dly
-	call exact(x,y,pxx,pyy,px,py,pe)
-	phi(nx,j) = pe
+      y = yc+float(j-1)*dly
+      call exact(x,y,pxx,pyy,px,py,pe)
+      phi(nx,j) = pe
       end do
       y = yc
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	call exact(x,y,pxx,pyy,px,py,pe)
-	phi(i,1) = pe
+      x = xa+float(i-1)*dlx
+      call exact(x,y,pxx,pyy,px,py,pe)
+      phi(i,1) = pe
       end do
       write(*,100)
   100 format(//' mud2 test ')
@@ -284,12 +284,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exact(x,y,pxx,pyy,px,py,pe)
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
+      end do
       end do
       write(*,201) errmax
   201 format(' maximum error  =  ',e10.3)
@@ -305,12 +305,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exact(x,y,pxx,pyy,px,py,pe)
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
+      end do
       end do
       write(*,201) errmax
       print*,"PASSED"
@@ -321,7 +321,7 @@ c
 c     input pde coefficients at any grid point (x,y) in the solution region
 c
       implicit none
-      real x,y,cxx,cyy,cx,cy,ce
+      real(8) x,y,cxx,cyy,cx,cy,ce
       cxx = 1.+y*y
       cyy = exp(-(x+y))
       cx = 0.
@@ -336,24 +336,24 @@ c     input mixed derivative b.c. to mud2
 c
       implicit none
       integer kbdy
-      real xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2/xa,xb,yc,yd,tolmax,relmax
       if (kbdy.eq.1) then  ! x=xa boundary
-	y = xory
-	x = xa
-	call exact(x,y,pxx,pyy,px,py,pe)
-	alfa = -y
-	gbdy = px + alfa*pe
-	return
+      y = xory
+      x = xa
+      call exact(x,y,pxx,pyy,px,py,pe)
+      alfa = -y
+      gbdy = px + alfa*pe
+      return
       end if
       if (kbdy.eq.4) then  ! y=yd boundary
-	y = yd
-	x = xory
-	call exact(x,y,pxx,pyy,px,py,pe)
-	alfa = x
-	gbdy = py + alfa*pe
-	return
+      y = yd
+      x = xory
+      call exact(x,y,pxx,pyy,px,py,pe)
+      alfa = x
+      gbdy = py + alfa*pe
+      return
       end if
       end
 
@@ -362,7 +362,7 @@ c
 c     this subroutine is used to set an exact solution for testing mud2
 c
       implicit none
-      real x,y,pxx,pyy,px,py,pe
+      real(8) x,y,pxx,pyy,px,py,pe
       pe = x**5+y**5+1.
       px = 5.*x**4
       py = 5.*y**4
