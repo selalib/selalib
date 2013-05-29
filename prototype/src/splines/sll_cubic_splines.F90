@@ -18,9 +18,9 @@
 !> \file sll_cubic_splines.F90
 !> \namespace sll_cubic_splines
 !> \brief  
-!> The splines module provides capabilities for 1D data interpolation with 
+!> The splines module provides capabilities for data interpolation with 
 !> cubic B-splines and different boundary conditions
-!>
+!> \details
 !> (at the time of this writing: periodic, hermite). The data to be 
 !> interpolated is represented by a simple array.  The spline coefficients 
 !> and other information are stored in a spline object, which is also used 

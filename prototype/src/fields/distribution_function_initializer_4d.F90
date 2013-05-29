@@ -264,4 +264,110 @@ contains
 
   end subroutine 
 
+
+!!$#ifdef STDF95
+!!$  subroutine init_test_4d_par_f_of_4args( init_obj, data_out )
+!!$    type(init_test_4d_par), intent(inout)      :: init_obj
+!!$#else
+!!$  subroutine compact_4d_field( init_obj, data_out )
+!!$    class(init_test_4d_par), intent(inout)      :: init_obj
+!!$#endif
+!!$    sll_real64, dimension(:,:,:,:), intent(out) :: data_out
+!!$    type(layout_4D), pointer                    :: layout
+!!$    sll_int32  :: i
+!!$    sll_int32  :: j
+!!$    sll_int32  :: k
+!!$    sll_int32  :: l
+!!$    sll_int32  :: i_min
+!!$    sll_int32  :: i_max
+!!$    sll_int32  :: j_min
+!!$    sll_int32  :: j_max
+!!$    sll_int32  :: k_min
+!!$    sll_int32  :: k_max
+!!$    sll_int32  :: l_min
+!!$    sll_int32  :: l_max
+!!$    sll_int32  :: myrank
+!!$    sll_int32  :: num_pts1
+!!$    sll_int32  :: num_pts2
+!!$    sll_int32  :: num_pts3
+!!$    sll_int32  :: num_pts4
+!!$    sll_int32, dimension(1:4) :: gi
+!!$    sll_real64 :: x
+!!$    sll_real64 :: y
+!!$    sll_real64 :: vx
+!!$    sll_real64 :: vy
+!!$    sll_real64 :: vx_min
+!!$    sll_real64 :: vx_max
+!!$    sll_real64 :: vy_min
+!!$    sll_real64 :: vy_max
+!!$    sll_real64 :: v_thermal
+!!$    type(sll_collective_t), pointer :: col
+!!$    sll_real64 :: delta1
+!!$    sll_real64 :: delta2
+!!$    sll_real64 :: delta3
+!!$    sll_real64 :: delta4
+!!$    sll_real64 :: factor, factor2
+!!$
+!!$    ! Find the local limits of the array to initialize. This could have been
+!!$    ! done as an initialization step, but it really does not matter, since
+!!$    ! the whole process is supposed to be done only once anyway.
+!!$    layout => init_obj%data_layout
+!!$    col    => get_layout_collective(layout)
+!!$    myrank =  sll_get_collective_rank( col )
+!!$    i_min = get_layout_i_min( layout, myrank )
+!!$    i_max = get_layout_i_max( layout, myrank )
+!!$    j_min = get_layout_j_min( layout, myrank )
+!!$    j_max = get_layout_j_max( layout, myrank )
+!!$    k_min = get_layout_k_min( layout, myrank )
+!!$    k_max = get_layout_k_max( layout, myrank )
+!!$    l_min = get_layout_l_min( layout, myrank )
+!!$    l_max = get_layout_l_max( layout, myrank )
+!!$    num_pts1 = i_max - i_min + 1
+!!$    num_pts2 = j_max - j_min + 1
+!!$    num_pts3 = k_max - k_min + 1
+!!$    num_pts4 = l_max - l_min + 1
+!!$    delta1 = init_obj%mesh_4d%delta_x1
+!!$    delta2 = init_obj%mesh_4d%delta_x2
+!!$    delta3 = init_obj%mesh_4d%delta_x3
+!!$    delta4 = init_obj%mesh_4d%delta_x4
+!!$
+!!$    vx_min = init_obj%mesh_4d%x3_min
+!!$    vx_max = init_obj%mesh_4d%x3_max
+!!$    vy_min = init_obj%mesh_4d%x4_min
+!!$    vy_max = init_obj%mesh_4d%x4_max
+!!$    v_thermal = init_obj%v_thermal
+!!$    factor    = sll_pi/(8.0_f64*v_thermal**2)
+!!$    factor2   = 0.5_f64/v_thermal**2
+!!$
+!!$    SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
+!!$    SLL_ASSERT( size(data_out,2) .ge. num_pts2 )
+!!$    SLL_ASSERT( size(data_out,3) .ge. num_pts3 )
+!!$    SLL_ASSERT( size(data_out,4) .ge. num_pts4 )
+!!$
+!!$    ! At this point nothing has been done regarding the data being
+!!$    ! cell centered... add this later.
+!!$             
+!!$    do l=1, num_pts4
+!!$       do k=1, num_pts3
+!!$          do j=1, num_pts2
+!!$             do i=1, num_pts1
+!!$                ! convert to global indices
+!!$                gi(:) = local_to_global_4D( layout, (/i,j,k,l/) )
+!!$                x  = gi(1)*delta1  ! danger: implicit xmin = 0
+!!$                y  = gi(2)*delta2  ! danger: implicit ymin = 0
+!!$                vx = vx_min + gi(3)*delta3
+!!$                vy = vy_min + gi(4)*delta4
+!!$                ! The following function could be defined outside and
+!!$                ! maybe stored in the object as a function pointer.
+!!$                data_out(i,j,k,l) = factor*sin(sll_pi*x)*sin(sll_pi*y)*&
+!!$                                           exp(-(vx**2+vy**2)*factor2)
+!!$             end do
+!!$          end do
+!!$       end do
+!!$    end do
+!!$
+!!$  end subroutine 
+
+
+
 end module sll_test_4d_initializer
