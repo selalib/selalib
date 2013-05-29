@@ -3,13 +3,11 @@ program landau_4d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_maxwell_solvers.h"
+#include "sll_poisson_solvers.h"
 
 use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
-use sll_poisson_2d_periodic
-!use sll_maxwell
-!use sll_maxwell_2d_fdtd
 
 use sll_utilities, only: int2string
 
@@ -308,8 +306,8 @@ subroutine plot_field(f, fname, iplot)
    call int2string(iplot,cplot)
 
    open(11, file=fname//cplot//".dat")
-   do i = 1, size(ex,1)
-      do j = 1, size(ex,2)
+   do i = 1, size(f,1)
+      do j = 1, size(f,2)
          x = eta1_min + (i-1)*delta_eta1
          y = eta2_min + (j-1)*delta_eta2
          write(11,*) x,y,f(i,j)
