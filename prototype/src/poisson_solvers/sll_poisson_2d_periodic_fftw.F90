@@ -15,64 +15,42 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_poisson_2d_periodic
-!
 !> @author
 !> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
-!>
-!>@details
-!>This module depends on:
-!> - memory
-!> - precision
-!> - assert 
-!> - constants
-!> - mesh_types
-!> - diagnostics
+!> @details
+!> This module depends on:
+!> - sll_memory
+!> - sll_precision
+!> - sll_assert 
+!> - sll_constants
 !> - sll_utilities
 !>
-! REVISION HISTORY:
-! 09 01 2012 - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 
 module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use sll_constants
+#include "sll_constants.h"
 
 use, intrinsic :: iso_c_binding
 implicit none
-!private
 include 'fftw3.f03'
 
-interface new
-  module procedure initialize
+interface initialize
+  module procedure initialize_poisson_2d_periodic_fftw
 end interface
 
 interface solve
-   module procedure solve_potential
-   module procedure solve_e_fields
+   module procedure solve_potential_poisson_2d_periodic_fftw
+   module procedure solve_e_fields_poisson_2d_periodic_fftw
 end interface
 
-interface free
-   module procedure free_poisson
+interface delete
+   module procedure free_poisson_2d_periodic_fftw
 end interface
-
-public :: new, solve, free, initialize
-public :: solve_potential, solve_e_fields
 
 type, public :: poisson_2d_periodic
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
@@ -86,10 +64,12 @@ type, public :: poisson_2d_periodic
    sll_real64  :: dx, dy
 end type poisson_2d_periodic
 
+public initialize, solve, delete
 
 contains
 
-subroutine initialize(self, x_min, x_max, nc_x, &
+subroutine initialize_poisson_2d_periodic_fftw(self, &
+                      x_min, x_max, nc_x, &
                       y_min, y_max, nc_y, rho, error )
 
    type(poisson_2d_periodic) :: self
@@ -151,11 +131,11 @@ subroutine initialize(self, x_min, x_max, nc_x, &
    self%kx = self%kx/self%k2
    self%ky = self%ky/self%k2
 
-end subroutine initialize
+end subroutine initialize_poisson_2d_periodic_fftw
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return potential.
-subroutine solve_potential(self, phi, rho)
+subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
    type(poisson_2d_periodic),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
@@ -179,11 +159,11 @@ subroutine solve_potential(self, phi, rho)
    phi(nc_x+1,:) = phi(1,:)
    phi(:,nc_y+1) = phi(:,1)
 
-end subroutine solve_potential
+end subroutine solve_potential_poisson_2d_periodic_fftw
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
-subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
+subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
    type(poisson_2d_periodic),intent(inout)  :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
@@ -225,9 +205,9 @@ subroutine solve_e_fields(self,e_x,e_y,rho,nrj)
       endif
    end if
 
-end subroutine solve_e_fields
+end subroutine solve_e_fields_poisson_2d_periodic_fftw
 
-subroutine free_poisson(self)
+subroutine free_poisson_2d_periodic_fftw(self)
 type(poisson_2d_periodic) :: self
 call fftw_free(self%p_rhot)
 if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
