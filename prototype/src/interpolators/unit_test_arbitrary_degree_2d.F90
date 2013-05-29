@@ -331,75 +331,17 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
   print *, 'Average error in nodes (periodic-dirichlet) = ', acc1/(NPTS1*NPTS2)
   print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
 
-  if( acc/(NPTS1*NPTS2) .lt. 1.0e-16 ) then
+
+  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
+      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
+      (acc2/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
+      (acc3/(NPTS1*NPTS2) .lt. 2.0e-16)) then
      print *, 'PASSED'
   else
      print *, 'FAILED'
   end if
 !!$  print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
 !!$  print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
-
-!  call test_interpolator_2d()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-contains
-
-subroutine test_interpolator_2d()
-#ifdef STDF95
-  type(cubic_spline_2d_interpolator), pointer   :: interp
-#else
-  class(sll_interpolator_2d_base),    pointer   :: interp
-#endif
-  type(cubic_spline_2d_interpolator), target    :: spline
-  sll_real64, dimension(NPTS1,NPTS2) :: xx1
-  sll_real64, dimension(NPTS1,NPTS2) :: xx2
-  sll_real64, dimension(NPTS1,NPTS2) :: data_in
-  sll_real64, dimension(NPTS1,NPTS2) :: data_out
-
-#ifdef STDF95
-  call cubic_spline_2d_initialize(spline,NPTS1,NPTS2, &
-                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
-#else
-  call spline%initialize(NPTS1,NPTS2, &
-                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
-#endif
-  interp =>  spline
-  do j = 1, NPTS2
-  do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1-1)
-     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2-1)
-  end do
-  end do
-  data_in = cos(xx1)*sin(xx2)
-
-  do j = 1, NPTS2
-  do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1)
-     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
-  end do
-  end do
-#ifdef STDF95
-  data_out = cubic_spline_2d_interpolate_array(interp,NPTS1, NPTS2, data_in, xx1, xx2)
-#else
-  data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
-#endif
-
-  print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
-end subroutine test_interpolator_2d
 
 end program unit_test
 
