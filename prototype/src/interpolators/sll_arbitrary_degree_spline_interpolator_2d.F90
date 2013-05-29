@@ -256,8 +256,8 @@ contains
    sll_real64 :: eta2_min, eta2_max
    sll_real64 :: delta1
    sll_real64 :: delta2
-   sll_real64 ::  nb_spline_eta1
-   sll_real64 ::  nb_spline_eta2
+   sll_int32  ::  nb_spline_eta1
+   sll_int32  ::  nb_spline_eta2
 
    sp_deg1    = interpolator%spline_degree1
    sp_deg2    = interpolator%spline_degree2
@@ -277,8 +277,8 @@ contains
    select case (interpolator%bc_selector)
    case(0) ! periodic-periodic
 
-      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 
-      interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2
+      interpolator%size_t1 = 2*sp_deg1 + num_cells1 
+      interpolator%size_t2 = 2*sp_deg2 + num_cells2
       ! allocation and definition of knots
       do i = -sp_deg1, num_cells1 + sp_deg1
          interpolator%t1( i + sp_deg1 + 1 ) = eta1_min + i*delta1
@@ -320,8 +320,8 @@ contains
          end do
       end if
    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
-      interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2
+      interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
+      interpolator%size_t2 = 2*sp_deg2 + num_cells2
       nb_spline_eta1 = num_cells1 + sp_deg1 - 2
       nb_spline_eta2 = num_cells2
       ! allocation and definition of knots
@@ -334,7 +334,8 @@ contains
       
       do i = 1 ,nb_spline_eta1
          do j = 1,nb_spline_eta2
-            interpolator%coeff_splines(i+1,j+tmp2)=linear_coeffs(i+nb_spline_eta1*(j-1))
+            interpolator%coeff_splines(i+1,j+tmp2) = &
+                 linear_coeffs(i+nb_spline_eta1*(j-1))
          end do
       end do
 
