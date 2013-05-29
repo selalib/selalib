@@ -1,6 +1,6 @@
-program test_fishpack
+program test_mudpack
 
-use sll_fishpack
+use sll_mudpack
 
 implicit none
 !-----------------------------------------------
@@ -60,7 +60,7 @@ real(8), dimension(nc_eta2+1)           :: eta2
 real(8), intent(in)                     :: eta1_min, eta1_max
 real(8), intent(in)                     :: eta2_min, eta2_max
 
-type(fishpack_2d) :: poisson
+type(mudpack_2d) :: poisson
 
 call poisson%initialize(CARTESIAN_2D, &
          eta1_min, eta1_max, nc_eta1, bc_eta1,&
@@ -110,7 +110,7 @@ end do
 !     print earlier output from platforms with 32 and 64 bit floating point
 !     arithemtic followed by the output from this computer
 
-write (*, *) '    fishpack 2d cartesian test run *** '
+write (*, *) '    mudpack 2d cartesian test run *** '
 write (*, *) '    previous 64 bit floating point arithmetic result '
 write (*, *) '    ierror = 0,  discretization error = 5.36508-4'
 write (*, *) '    previous 32 bit floating point arithmetic result '
@@ -132,7 +132,7 @@ real(8), dimension(nc_eta2+1)           :: eta2
 real(8), intent(in)                     :: eta1_min, eta1_max
 real(8), intent(in)                     :: eta2_min, eta2_max
 
-type(fishpack_2d) :: poisson
+type(mudpack_2d) :: poisson
 
 
 !--------------------------------------------------------------------------
@@ -221,7 +221,7 @@ real(8), intent(in)                     :: eta3_min, eta3_max
 
 real(8), dimension(nc_eta1+1,nc_eta2+1,nc_eta3+1) :: field
 
-type(fishpack_3d) :: poisson
+type(mudpack_3d) :: poisson
 
 real(8) , allocatable, dimension(:) :: eta1
 real(8) , allocatable, dimension(:) :: eta2
@@ -306,4 +306,4 @@ write (*, *) '    ierror =', poisson%error, ' discretization error = ', err
 
 end subroutine test_cartesian_3d
  
-end program test_fishpack
+end program test_mudpack
