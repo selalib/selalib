@@ -2,7 +2,7 @@ set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library(sll_remap STATIC sll_remap.F90)
 add_dependencies(sll_remap 
   sll_collective 
-  sll_electric_field_accumulators 
+  sll_electric_field_accumulators  # this has to disappear
   sll_memory 
   sll_utilities 
   sll_working_precision

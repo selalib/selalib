@@ -158,7 +158,7 @@ program test_poisson_3d_periodic_par
 
   end do
 
-     call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
+     call sll_collective_reduce(sll_world_collective, (/ ok /), &
           1, MPI_PROD, 0, prod4test )
      if (myrank==0) then
 

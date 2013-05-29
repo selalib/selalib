@@ -26,7 +26,8 @@ IF(HDF5_PARALLEL_ENABLED)
 
    ADD_DEFINITIONS(-DHDF5_PARALLEL)
    SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
-                        sll_xdmf_parallel.F90 )
+                        sll_xdmf_parallel.F90 
+                        sll_gnuplot_parallel.F90 )
    ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
    ADD_DEPENDENCIES(sll_file_io_parallel sll_utilities 
                                                    sll_collective)
@@ -39,11 +40,11 @@ IF(HDF5_PARALLEL_ENABLED)
       TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel
                                              sll_remap
                                              sll_collective
-	                                     sll_utilities
-	                                     sll_constants
-	                                     sll_memory
-	                                     sll_assertion
-	                                     sll_working_precision)
+	                                          sll_utilities
+	                                          sll_constants
+	                                          sll_memory
+	                                          sll_assertion
+	                                          sll_working_precision)
    ENDIF()
 
 ENDIF()

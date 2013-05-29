@@ -1,4 +1,4 @@
-module fishpack
+module sll_fishpack
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -236,4 +236,4 @@ contains
   
   end subroutine solve_3d
   
-end module fishpack
+end module sll_fishpack

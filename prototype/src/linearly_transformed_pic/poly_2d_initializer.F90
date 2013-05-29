@@ -1,5 +1,4 @@
 !> \file poly_2d_initializer.F90
-!> \namespace sll_poly_2d_initializer
 !> \authors                    
 !> Martin CAMPOS PINTO (campos@ann.jussieu.fr) 
 !> \brief  
