@@ -8,18 +8,29 @@ implicit none
 sll_real64, dimension(:), allocatable :: work
 sll_int32 :: mgopt(4)
 
+enum, bind(C)
+   enumerator :: PERIODIC=0, DIRICHLET=1
+   enumerator :: NEUMANN_RIGHT=2, NEUMANN_LEFT=3, NEUMANN=4
+end enum
+
 contains
 
-subroutine initialize_mudpack_cartesian(phi, rhs,            &
+subroutine initialize_mudpack_cartesian(phi, rhs,                    &
                                         eta1_min, eta1_max, nc_eta1, &
-                                        eta2_min, eta2_max, nc_eta2)
+                                        eta2_min, eta2_max, nc_eta2, &
+                                        bc_eta1_left, bc_eta1_right, &
+                                        bc_eta2_left, bc_eta2_right )
 implicit none
 
 ! set grid size params
-sll_real64, intent(in) :: eta1_min, eta1_max
-sll_real64, intent(in) :: eta2_min, eta2_max
-sll_int32,  intent(in) :: nc_eta1, nc_eta2
-sll_int32, parameter   :: iixp = 2 , jjyq = 2
+sll_real64, intent(in)  :: eta1_min, eta1_max
+sll_real64, intent(in)  :: eta2_min, eta2_max
+sll_int32,  intent(in)  :: nc_eta1, nc_eta2
+sll_int32,  intent(in)  :: bc_eta1_left
+sll_int32,  intent(in)  :: bc_eta1_right
+sll_int32,  intent(in)  :: bc_eta2_left
+sll_int32,  intent(in)  :: bc_eta2_right
+sll_int32,  parameter   :: iixp = 2 , jjyq = 2
 sll_int32 :: icall, iiex, jjey, nnx, nny, llwork
 
 sll_real64, intent(inout) :: phi(nc_eta1+1,nc_eta2+1)
@@ -29,15 +40,15 @@ sll_real64, intent(inout) :: rhs(nc_eta1+1,nc_eta2+1)
 !storeage for labelling in vectors iprm,fprm
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
-sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
-sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
-sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 sll_int32  :: i,j,error
 sll_real64 :: dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
 sll_real64 :: cex,cey
 
+sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
+sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
 equivalence(intl,iprm)
@@ -67,10 +78,10 @@ mgopt(3) = 1
 intl = 0
 
 !set boundary condition flags
-nxa  = 2
-nxb  = 1
-nyc  = 1
-nyd  = 2
+nxa  = bc_eta1_left
+nxb  = bc_eta1_right
+nyc  = bc_eta2_left
+nyd  = bc_eta2_right
 
 !set grid sizes from parameter statements
 ixp  = iixp
@@ -81,13 +92,10 @@ jey  = jjey
 nx = ixp*(2**(iex-1))+1
 ny = jyq*(2**(jey-1))+1
 
-if (nx /= nc_eta1+1) then
+if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
    print*, "nx,nc_eta1+1=", nx, nc_eta1+1
-   stop ' nx different de nr dans mg_polar_poisson'
-end if
-if (ny /= nc_eta2+1) then
    print*, "ny,nc_eta2+1=", ny, nc_eta2+1
-   stop ' ny different de nth dans mg_polar_poisson'
+   stop ' nx or ny different in sll_mudpack_cartesian '
 end if
 
 !set multigrid arguments (w(2,1) cycling with fully weighted
@@ -114,10 +122,6 @@ xa = eta1_min
 xb = eta1_max
 yc = eta2_min
 yd = eta2_max
-
-!set mesh increments
-dlx = (xb-xa)/float(nx-1)
-dly = (yd-yc)/float(ny-1)
 
 !set for no error control flag
 tolmax = 0.0
@@ -160,13 +164,13 @@ sll_real64 :: phi(:,:),rhs(:,:)
 !storeage for labelling in vectors iprm,fprm
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
-sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
-sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
-sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 sll_int32  :: error
 
+sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
+sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
 equivalence(intl,iprm)
@@ -174,9 +178,6 @@ equivalence(xa,fprm)
 
 !declare coefficient and boundary condition input subroutines external
 external cofx,cofy,bndsp
-
-!set input integer arguments
-intl = 1
 
 !set no initial guess forcing full multigrid cycling
 iguess = 0
@@ -204,13 +205,16 @@ end subroutine solve_mudpack_cartesian
 
 end module sll_mudpack_cartesian
 
+
+
+
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0+x*x
-cx = 0.0
-cex = -x
+cxx = 1.0
+cx  = 0.0
+cex = 0.0
 return
 end
 
@@ -218,9 +222,9 @@ end
 subroutine cofy(y,cyy,cy,cey)
 implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = exp(1.0-y)
-cy = -cyy
-cey = -y
+cyy = 1.0
+cy  = 0.0
+cey = 0.0
 return
 end
 
@@ -250,17 +254,4 @@ if (kbdy == 4) then  ! y=yd boundary
    return
 end if
 end
-
-!> set an exact solution for testing mud2sp
-subroutine exact(x,y,pxx,pyy,px,py,pe)
-implicit none
-real(8)  :: x,y,pxx,pyy,px,py,pe
-pe  = (x**3+y**3+1.0)/3.0
-px  = x*x
-py  = y*y
-pxx = x+x
-pyy = y+y
-return
-end
-
 

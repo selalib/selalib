@@ -293,18 +293,23 @@ c
   108 format(/' mud24sp test ', ' ierror = ',i2)
       if (ierror.gt.0) call exit(0)
       if (ierror .le. 0) then
+
 c
 c     compute and print maximum norm of error
 c
       errmax = 0.0
+      open(17,file='phi.dat')
       do j=1,ny
       y = yc+(j-1)*dly
       do i=1,nx
         x = xa+(i-1)*dlx
         call exact(x,y,pxx,pyy,px,py,pe)
         errmax = dmax1(errmax,abs((phi(i,j)-pe)))
+        write(17,*) x, y, phi(i,j), pe
       end do
+      write(17,*)
       end do
+      close(17)
       write(*,201) errmax
       end if
       print*,"PASSED"
