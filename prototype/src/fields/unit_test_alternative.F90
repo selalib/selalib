@@ -56,7 +56,7 @@ program unit_test_alternative
   print *, 'field value at indices 1,1 = ', &
        field_2d%value_at_indices(1,1)
 
-
+  call field_2d%write_to_file(0)
 
 !!$  do iplot = 1, 10
 !!$     field%data = exp(-(mesh%x1_node**2+mesh%x2_node**2)*iplot*0.1)

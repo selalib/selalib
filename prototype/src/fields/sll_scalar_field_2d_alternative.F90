@@ -38,6 +38,7 @@ module sll_module_scalar_field_2d_alternative
   use sll_module_interpolators_2d_base
   use sll_utilities
   use sll_boundary_condition_descriptors
+  use sll_gnuplot
 !  use sll_scalar_field_initializers_base
   implicit none
 
@@ -45,25 +46,28 @@ module sll_module_scalar_field_2d_alternative
      procedure(two_var_parametrizable_function), pointer, nopass :: func
      sll_real64, dimension(:), pointer        :: params
      character(len=64)                        :: name
-     sll_int32                                :: plot_counter
+!     sll_int32                                :: plot_counter
      class(sll_coordinate_transformation_2d_base), pointer :: T
      sll_int32 :: bc_left
      sll_int32 :: bc_right
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
    contains
+     procedure, pass(field) :: get_transformation => &
+          get_transformation_analytic_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_2d_analytic_alt
      procedure, pass(field) :: get_jacobian_matrix => &
           get_jacobian_matrix_analytic_alt
      procedure, pass(field) :: value_at_point => value_at_pt_analytic
      procedure, pass(field) :: value_at_indices => value_at_index_analytic
+     procedure, pass(field) :: write_to_file => write_to_file_analytic_2d
   end type sll_scalar_field_2d_analytic_alt
 
   type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete_alt
      sll_real64, dimension(:,:), pointer  :: values
      character(len=64)                    :: name
-     sll_int32                            :: plot_counter
+!     sll_int32                            :: plot_counter
      class(sll_coordinate_transformation_2d_base), pointer :: T
      class(sll_interpolator_2d_base), pointer :: interp_2d
      sll_int32 :: bc_left
@@ -71,12 +75,15 @@ module sll_module_scalar_field_2d_alternative
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
    contains
+     procedure, pass(field) :: get_transformation => &
+          get_transformation_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_2d_discrete_alt
      procedure, pass(field) :: get_jacobian_matrix => &
           get_jacobian_matrix_discrete_alt
      procedure, pass(field) :: value_at_point => value_at_pt_discrete
      procedure, pass(field) :: value_at_indices => value_at_index_discrete
+    procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
   end type sll_scalar_field_2d_discrete_alt
 
 !  type sll_ptr_scalar_field_2d_a
@@ -200,7 +207,6 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
-    sll_int32  :: ierr
  
     obj%T => transformation
     !    obj%mesh%written = .false.
@@ -228,6 +234,12 @@ contains   ! *****************************************************************
 !!$    sll_real64, dimension(:),intent(out) :: deriv_out
 !!$  end subroutine compute_eta1_derivative_on_col
 
+  function get_transformation_analytic_alt( field ) result(res)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    class(sll_coordinate_transformation_2d_base), pointer :: res
+    res => field%T
+  end function get_transformation_analytic_alt
+
 
   function get_logical_mesh_2d_analytic_alt( field ) result(res)
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
@@ -250,6 +262,58 @@ contains   ! *****************************************************************
     sll_int32                      :: ierr
     SLL_DEALLOCATE(obj, ierr)
   end subroutine delete_scalar_field_2d_analytic_alt
+
+  subroutine write_to_file_analytic_2d( field, tag )
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_int32, intent(in)                               :: tag
+    sll_int32 :: nptsx1
+    sll_int32 :: nptsx2
+    sll_real64, dimension(:,:), allocatable :: x1coords
+    sll_real64, dimension(:,:), allocatable :: x2coords
+    sll_real64, dimension(:,:), allocatable :: values
+    sll_real64                              :: eta1
+    sll_real64                              :: eta2
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    type(sll_logical_mesh_2d), pointer      :: mesh
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ierr
+
+    ! use the logical mesh information to find out the extent of the
+    ! domain and allocate the arrays for the plotter.
+    T      => field%get_transformation()
+    mesh   => field%get_logical_mesh()
+    nptsx1 = mesh%num_cells1 + 1
+    nptsx2 = mesh%num_cells2 + 1
+    SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(x2coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(values(nptsx1,nptsx2),ierr)
+
+    ! Fill the arrays with the needed information.
+    do j=1, nptsx2
+       eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
+       do i=1, nptsx1
+          eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
+          x1coords(i,j) = T%x1(eta1,eta2)
+          x2coords(i,j) = T%x2(eta1,eta2)
+          values(i,j)   = field%value_at_point(eta1,eta2)
+       end do
+    end do
+
+    call sll_gnuplot_curv_2d( &
+         nptsx1, &
+         nptsx2, &
+         x1coords, &
+         x2coords, &
+         values, &
+         trim(field%name), &
+         tag, &
+         ierr )
+
+    SLL_DEALLOCATE_ARRAY(x1coords,ierr)
+    SLL_DEALLOCATE_ARRAY(x2coords,ierr)
+    SLL_DEALLOCATE_ARRAY(values,ierr)
+  end subroutine write_to_file_analytic_2d
 
 
   ! **************************************************************************
@@ -291,6 +355,11 @@ contains   ! *****************************************************************
     obj%bc_top    = bc_top
   end function new_scalar_field_2d_discrete_alt
 
+  function get_transformation_discrete_alt( field ) result(res)
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    class(sll_coordinate_transformation_2d_base), pointer :: res
+    res => field%T
+  end function get_transformation_discrete_alt
 
   function get_logical_mesh_2d_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
@@ -326,6 +395,57 @@ contains   ! *****************************************************************
     value_at_index_discrete = field%interp_2d%interpolate_value(eta1,eta2)
   end function value_at_index_discrete
 
+  subroutine write_to_file_discrete_2d( field, tag )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_int32, intent(in)                               :: tag
+    sll_int32 :: nptsx1
+    sll_int32 :: nptsx2
+    sll_real64, dimension(:,:), allocatable :: x1coords
+    sll_real64, dimension(:,:), allocatable :: x2coords
+    sll_real64, dimension(:,:), allocatable :: values
+    sll_real64                              :: eta1
+    sll_real64                              :: eta2
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    type(sll_logical_mesh_2d), pointer      :: mesh
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ierr
+
+    ! use the logical mesh information to find out the extent of the
+    ! domain and allocate the arrays for the plotter.
+    T      => field%get_transformation()
+    mesh   => field%get_logical_mesh()
+    nptsx1 = mesh%num_cells1 + 1
+    nptsx2 = mesh%num_cells2 + 1
+    SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(x2coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(values(nptsx1,nptsx2),ierr)
+
+    ! Fill the arrays with the needed information.
+    do j=1, nptsx2
+       eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
+       do i=1, nptsx1
+          eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
+          x1coords(i,j) = field%coord_trans%x1(eta1,eta2)
+          x2coords(i,j) = field%coord_trans%x2(eta1,eta2)
+          values(i,j)   = field%value_at_point(eta1,eta2)
+       end do
+    end do
+
+    call sll_gnuplot_curv_2d( &
+         nptsx1, &
+         nptsx2, &
+         x1coords, &
+         x2coords, &
+         values, &
+         trim(field%name), &
+         tag, &
+         ierr )
+
+    SLL_DEALLOCATE_ARRAY(x1coords,ierr)
+    SLL_DEALLOCATE_ARRAY(x2coords,ierr)
+    SLL_DEALLOCATE_ARRAY(values,ierr)
+  end subroutine write_to_file_discrete_2d
 
 
 
