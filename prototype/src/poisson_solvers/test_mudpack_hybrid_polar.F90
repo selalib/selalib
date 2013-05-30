@@ -135,25 +135,24 @@ c
 c     set exact minimum work space requried (see tmuh2cr.f)
 c
       parameter (llwork = 149055)
-      real(8) phi(nnx,nny),rhs(nnx,nny),work(llwork)
+      real phi(nnx,nny),rhs(nnx,nny),work(llwork)
       integer iwork(iixp1,jjyq1)
 c
 c     put integer and floating point argument names in contiguous
 c     storeage for labelling in vectors iprm,fprm
 c
       integer iprm(16),mgopt(4)
-      real(8) fprm(6)
+      real fprm(6)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmuh2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real(8) xa,xb,yc,yd,tolmax,relmax
+      real xa,xb,yc,yd,tolmax,relmax
       common/ftmuh2cr/xa,xb,yc,yd,tolmax,relmax
       equivalence(intl,iprm)
       equivalence(xa,fprm)
       integer i,j,ierror
-      real(8) dlx,dly,x,y,cxx,cxy,cyy,cx,cy,ce
-      real(8) pxx,pxy,pyy,px,py,pe,errmax
+      real dlx,dly,x,y,cxx,cxy,cyy,cx,cy,ce,pxx,pxy,pyy,px,py,pe,errmax
 c
 c     declare coefficient and boundary condition input subroutines external
 c
@@ -224,29 +223,29 @@ c     set right hand side in rhs
 c     initialize phi to zero
 c
       do i=1,nx
-      x = xa+float(i-1)*dlx
-      do j=1,ny
-        y = yc+float(j-1)*dly
-        call cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-        call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-        rhs(i,j) = cxx*pxx+cxy*pxy+cyy*pyy+cx*px+cy*py+ce*pe
-        phi(i,j) = 0.0
-      end do
+	x = xa+float(i-1)*dlx
+	do j=1,ny
+	  y = yc+float(j-1)*dly
+	  call cofcr(x,y,cxx,cxy,cyy,cx,cy,ce)
+	  call exacr(x,y,pxx,pxy,pyy,px,py,pe)
+	  rhs(i,j) = cxx*pxx+cxy*pxy+cyy*pyy+cx*px+cy*py+ce*pe
+	  phi(i,j) = 0.0
+	end do
       end do
 c
 c     set specified boundaries in phi at x=xa,xb and y=yc
 c
       do j=1,ny
-      y = yc+float(j-1)*dly
-      call exacr(xa,y,pxx,pxy,pyy,px,py,pe)
-      phi(1,j) = pe
-      call exacr(xb,y,pxx,pxy,pyy,px,py,pe)
-      phi(nx,j) = pe
+	y = yc+float(j-1)*dly
+	call exacr(xa,y,pxx,pxy,pyy,px,py,pe)
+	phi(1,j) = pe
+	call exacr(xb,y,pxx,pxy,pyy,px,py,pe)
+	phi(nx,j) = pe
       end do
       do i=1,nx
-      x = xa+float(i-1)*dlx
-      call exacr(x,yc,pxx,pxy,pyy,px,py,pe)
-      phi(i,1) = pe
+	x = xa+float(i-1)*dlx
+	call exacr(x,yc,pxx,pxy,pyy,px,py,pe)
+	phi(i,1) = pe
       end do
       write(*,100)
   100 format(//' muh2cr test ')
@@ -291,12 +290,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-      y = yc+(j-1)*dly
-      do i=1,nx
-        x = xa+(i-1)*dlx
-        call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
-      end do
+	y = yc+(j-1)*dly
+	do i=1,nx
+	  x = xa+(i-1)*dlx
+	  call exacr(x,y,pxx,pxy,pyy,px,py,pe)
+	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
+	end do
       end do
       write(*,108) errmax
   108 format(' maximum error  =  ',e10.3)
@@ -312,12 +311,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-      y = yc+(j-1)*dly
-      do i=1,nx
-        x = xa+(i-1)*dlx
-        call exacr(x,y,pxx,pxy,pyy,px,py,pe)
-        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
-      end do
+	y = yc+(j-1)*dly
+	do i=1,nx
+	  x = xa+(i-1)*dlx
+	  call exacr(x,y,pxx,pxy,pyy,px,py,pe)
+	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
+	end do
       end do
       write(*,108) errmax
       end
@@ -328,7 +327,7 @@ c     input pde coefficients at any grid point (x,y) in the solution region
 c     (xa.le.x.le.xb,yc.le.y.le.yd) to muh2cr
 c
       implicit none
-      real(8) x,y,cxx,cxy,cyy,cx,cy,ce
+      real x,y,cxx,cxy,cyy,cx,cy,ce
       cxx = 1.+y**2
       cxy = 2.*x*y
       cyy = 1.+x**2
@@ -345,14 +344,14 @@ c     at upper y boundary
 c
       implicit none
       integer kbdy
-      real(8) xory,alfa,beta,gama,gbdy
+      real xory,alfa,beta,gama,gbdy
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmuh2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real(8) xa,xb,yc,yd,tolmax,relmax
+      real xa,xb,yc,yd,tolmax,relmax
       common/ftmuh2cr/xa,xb,yc,yd,tolmax,relmax
-      real(8) x,y,pxx,pxy,pyy,px,py,pe
+      real x,y,pxx,pxy,pyy,px,py,pe
       if (kbdy.eq.4) then
 c
 c     y=yd boundary (nyd must equal 2 if this code is to be executed).
@@ -377,7 +376,7 @@ c     this subroutine is used for setting an exact solution
 c     to test subroutine muh2cr.
 c
       implicit none
-      real(8) x,y,pxx,pxy,pyy,px,py,pe
+      real x,y,pxx,pxy,pyy,px,py,pe
       pe = (x*y)**5
       px = 5.*(x*y)**4*y
       py = 5.*(x*y)**4*x
