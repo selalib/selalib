@@ -203,7 +203,7 @@ target_link_libraries(VP1D_deltaf_cart
   	sll_utilities
 	sll_memory
 	sll_assertion 	
-	sll_poisson
+	sll_poisson_solvers
 	dfftpack
 	${LAPACK_LIBRARIES}
 	)
