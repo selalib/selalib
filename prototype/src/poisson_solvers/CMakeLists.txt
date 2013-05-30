@@ -41,6 +41,7 @@ IF(MUDPACK_ENABLED)
       TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_memory 
                                                       sll_assertion 
                                                       sll_utilities
+                                                      sll_file_io
                                                       mudpack)
 
       ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
@@ -48,8 +49,9 @@ IF(MUDPACK_ENABLED)
 
    ENDMACRO(ADD_MUDPACK_PROGRAM)
 
-   ADD_MUDPACK_PROGRAM( polar )
-   ADD_MUDPACK_PROGRAM( colella )
+   ADD_MUDPACK_PROGRAM(cartesian)
+   ADD_MUDPACK_PROGRAM(polar)
+   ADD_MUDPACK_PROGRAM(colella)
 
 
 ENDIF()
