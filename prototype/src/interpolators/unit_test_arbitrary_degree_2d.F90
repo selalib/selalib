@@ -54,7 +54,17 @@ program unit_test
      end do
   end do
 
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, reference, 'reference_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_rect_2d( &
+       0.0_f64, &
+       1.0_f64, &
+       NPTS1, &
+       0.0_f64,&
+       1.0_f64, &
+       NPTS2, &
+       reference, &
+       'reference_interp_arb_deg', &
+       0, &
+       ierr )
 
   print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
 !  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
@@ -70,11 +80,7 @@ program unit_test
 
   ! Test the 2D transformation:
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -88,9 +94,7 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
 
-#ifdef STDF95
-!  call cubic_spline_2d_compute_spline_coefficients(ad2d,x1)
-#else
+
   call ad2d%compute_spline_coefficients( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&
@@ -108,41 +112,57 @@ program unit_test
      do i=0,NPTS1-2
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
-#ifdef STDF95
-        node_val   = cubic_spline_2d_interpolate_value(ad2d,eta1,eta2)
-#else
         node_val   = ad2d%interpolate_value(eta1,eta2)
-#endif
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical = ', ref
+        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+             'theoretical = ', ref
         acc        = acc + abs(node_val-ref)
-#ifdef STDF95
-        deriv1_val = cubic_spline_2d_interpolate_derivative_eta1(cs2d,eta1,eta2)
-#else
  !       deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
-#endif
-
-
-
 
  !       ref        = deriv_x1_polar_f_eta1(eta1,eta2)
  !       acc1       = acc1 + abs(deriv1_val-ref)
-#ifdef STDF95
- !       deriv2_val = cubic_spline_2d_interpolate_derivative_eta2(cs2d,eta1,eta2)
-#else
   !      deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
-#endif
    !     ref        = deriv_x1_polar_f_eta2(eta1,eta2)
     !    acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, calculated, 'calculated_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_rect_2d( &
+       0.0_f64, &
+       1.0_f64, &
+       NPTS1, &
+       0.0_f64,&
+       1.0_f64, &
+       NPTS2, &
+       calculated, &
+       'calculated_interp_arb_deg', &
+       0, &
+       ierr)
 
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, difference, 'difference_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_rect_2d(&
+       0.0_f64, &
+       1.0_f64, &
+       NPTS1, &
+       0.0_f64,&
+       1.0_f64, &
+       NPTS2, &
+       difference, &
+       'difference_interp_arb_deg', &
+       0, &
+       ierr)
 
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_rect_2d( &
+       0.0_f64, &
+       1.0_f64, &
+       NPTS1, &
+       0.0_f64, &
+       1.0_f64, &
+       NPTS2, &
+       ad2d%coeff_splines, &
+       'coefficients_interp_arb_deg', &
+       0, &
+       ierr)
 
 
   print *, '***********************************************************'
@@ -151,11 +171,7 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
 
   call delete(ad2d)
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -217,11 +233,7 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
      end do
   end do
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -259,7 +271,7 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
      end do
   end do
   
- print *, '***********************************************************'
+  print *, '***********************************************************'
   print *, '              dirichlet-dirichlet case'
   print *, '***********************************************************'
 
@@ -278,11 +290,7 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
      end do
   end do
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -322,9 +330,6 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
      end do
   end do
   
-
-
-
 
   print *, 'Average error in nodes (dirichlet-dirichlet) = ', acc3/(NPTS1*NPTS2)
   print *, 'Average error in nodes (dirichlet-periodic) = ', acc2/(NPTS1*NPTS2)
