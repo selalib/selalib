@@ -30,6 +30,7 @@ implicit none
 !> write file pltable by gnuplot to visualize 2d field
 interface sll_gnuplot_field_2d
 module procedure sll_gnuplot_rect_2d
+module procedure sll_gnuplot_curv_2d
 end interface
 
 contains  
@@ -114,7 +115,7 @@ x = xmin
 do i=1,nx
    y = ymin
    do j=1,ny
-      write(file_id,*) x,y,array(i,j)  
+      write(file_id,*) sngl(x),sngl(y),sngl(array(i,j))
       y = y + dy
    end do
    x = x + dx
@@ -123,5 +124,46 @@ enddo
 close(file_id)
 
 end subroutine sll_gnuplot_rect_2d
+
+!> write a data file plotable by gnuplot to visualize a 2d field on structured
+!> curvilinear mesh
+subroutine sll_gnuplot_curv_2d( nx, ny, xcoord, ycoord,&
+                               array, array_name, iplot, error)  
+sll_int32                    :: nx         !< x points number
+sll_int32                    :: ny         !< y points number
+sll_real64, dimension(nx,ny) :: xcoord     !< x coordinates
+sll_real64, dimension(nx,ny) :: ycoord     !< y coordiantes
+sll_real64, dimension(nx,ny) :: array      !< data
+character(len=*)             :: array_name !< field name
+character(len=4)             :: fin   
+sll_int32                    :: iplot      !< plot counter
+sll_int32, save :: gnu_id
+sll_int32 :: file_id
+sll_int32 :: error                         !< error code
+sll_int32 :: i, j
+
+call int2string(iplot, fin)
+
+if ( iplot == 1 ) then
+   call sll_new_file_id(gnu_id, error)
+end if
+
+open(gnu_id,file=array_name//".gnu", position="append")
+write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
+close(gnu_id)
+
+call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
+do i=1,nx
+   do j=1,ny
+      write(file_id,*) sngl(xcoord(i,j)), &
+                       sngl(ycoord(i,j)), &
+                       sngl(array(i,j)) 
+   end do
+   write(file_id,*)
+enddo
+close(file_id)
+
+end subroutine sll_gnuplot_curv_2d
+
 
 end module sll_gnuplot
