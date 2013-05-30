@@ -10,6 +10,8 @@ module sll_module_scalar_field_2d_base
      class(sll_coordinate_transformation_2d_base), pointer :: coord_trans 
    contains
      procedure(function_get_mesh), deferred, pass :: get_logical_mesh
+     procedure(function_get_transformation), deferred, pass :: &
+          get_transformation
      procedure(function_get_jacobian_matrix), deferred, pass :: &
           get_jacobian_matrix
      procedure(function_evaluation_real), deferred, pass :: value_at_point
@@ -32,6 +34,15 @@ module sll_module_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        type(sll_logical_mesh_2d), pointer :: res
      end function function_get_mesh
+  end interface
+
+  abstract interface
+     function function_get_transformation(field) result(res)
+       use sll_coordinate_transformation_2d_base_module
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(in) :: field
+       class(sll_coordinate_transformation_2d_base), pointer :: res
+     end function function_get_transformation
   end interface
 
   abstract interface
@@ -78,12 +89,11 @@ module sll_module_scalar_field_2d_base
   end interface
 
   abstract interface
-     subroutine field_2d_file_output( field, tag, optional_filename )
+     subroutine field_2d_file_output( field, tag )
        use sll_working_precision
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)                       :: tag
-       character(len=*), optional                  :: optional_filename
      end subroutine field_2d_file_output
   end interface
 
