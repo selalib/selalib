@@ -14,7 +14,7 @@ module sll_module_scalar_field_2d_base
           get_jacobian_matrix
      procedure(function_evaluation_real), deferred, pass :: value_at_point
      procedure(function_evaluation_integer), deferred, pass :: value_at_indices
-!     procedure(file_output), deferred, pass :: write_to_file
+     procedure(field_2d_file_output), deferred, pass :: write_to_file
      ! here we can continue with derivatives or whatever else that might
      ! be desired.
   end type sll_scalar_field_2d_base
@@ -75,6 +75,16 @@ module sll_module_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32             :: res
      end function return_integer
+  end interface
+
+  abstract interface
+     subroutine field_2d_file_output( field, tag, optional_filename )
+       use sll_working_precision
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(in) :: field
+       sll_int32, intent(in)                       :: tag
+       character(len=*), optional                  :: optional_filename
+     end subroutine field_2d_file_output
   end interface
 
 end module sll_module_scalar_field_2d_base
