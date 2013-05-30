@@ -188,7 +188,7 @@ equivalence(xa,fprm)
 ! declare coefficient and boundary condition input subroutines external
 external coef,bnd
 
-iguess = 1
+iguess = 0
 icall  = 1
 intl   = 1
 write(*,106) intl,method,iguess
@@ -200,7 +200,7 @@ call mud24cr(work,coef,bnd,phi,ierror)
 SLL_ASSERT(ierror == 0)
 
 106 format(/' approximation call to mud2cr', &
-    /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
+          /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 
 return
 end subroutine solve_poisson_colella_mudpack
@@ -210,18 +210,169 @@ end module sll_mudpack_colella
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
+!subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
+!
+!implicit none
+!
+!real(8):: x,y,cxx,cxy,cyy,cx,cy,ce
+!real(8) :: alpha,det,a11,a12,a21,a22,a11_x,a11_y,a12_x
+!real(8) :: a21_y,a22_x,a22_y,det_x,det_y
+!real(8) :: sll_pi
+!
+!!! CHANGE HERE FOR COLELLA MESH
+!sll_pi = 3.14159265359
+!alpha=0.0_8
+!
+!xx = x + alpha * sin(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
+!yy = y + alpha * sin(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
+!
+!xx_x = 1 + alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
+!xx_y = alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*x)*cos(2.0_8*sll_pi*y)
+!yy_x = alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
+!yy_y = 1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*x)*cos(2.0_8*sll_pi*y)
+!
+!
+!
+!
+!
+!a11 = 
+!    
+!a11_x= 
+!
+!a11_y= 
+!    
+!a12 = 
+!a12_x= 
+!a21 = a12
+!
+!a21_y=
+!
+!a22 = 
+!    
+!a22_x =
+!a22_y = 
+!
+!det = a11*a22-a12*a21
+!
+!det_x = a11_x * a22 + a11 * a22_x - 2.0_8 * a12_x * a12
+!
+!det_y = a11_y * a22 + a11 * a22_y - 2.0_8 * a21_y * a21
+!
+!a11 = a11/det
+!a22 = a22/det
+!a12 = -a12/det
+!a21 = -a21/det
+!
+!a11_x = (a11_x*det - a11 * det_x)/det**2
+!a12_x =-(a12_x*det - a12 * det_x)/det**2
+!a21_y =-(a21_y*det - a21 * det_y)/det**2
+!a22_y = (a22_y*det - a22 * det_y)/det**2
+!
+!cxx = -a11
+!cyy = -a22
+!cxy= -a12-a21
+!cx  = -(a11_x+a21_y) 
+!cy  = -(a12_x+a22_y)
+!ce  = 0.0_8
+!
+!
+!return
+!end subroutine
 subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
+
 implicit none
-real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
+
+real(8):: x,y,cxx,cxy,cyy,cx,cy,ce
+real(8) :: alpha,det,a11,a12,a21,a22,a11_x,a11_y,a12_x
+real(8) :: a21_y,a22_x,a22_y,det_x,det_y
+real(8) :: x_min,x_max,y_min,y_max,xx,yy,sll_pi
 
 !! CHANGE HERE FOR COLELLA MESH
+sll_pi = 3.14159265359
+alpha=0.0_8
+x_min=0.0_8
+x_max=2.0_8 * sll_pi
+y_min=0.0_8
+y_max=2.0_8 * sll_pi
 
-cxx = 1.0 
-cxy = 0.0 
-cyy = 1.0 / (x*x) 
-cx  = 1.0 / x 
-cy  = 0.0 
-ce  = 0.0 
+xx = (x-x_min)/(x_max-x_min)
+yy = (y-y_min)/(y_max-y_min)
+
+a11 = (alpha*2*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2*sll_pi*yy)/(y_max-y_min))**2 & 
+    & + (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))**2
+    
+a11_x= 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+      &(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+      & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
+
+a11_y= 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+      &(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+      & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
+    
+a12 = (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))* &
+    & (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))+ &
+    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))* &
+    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))
+    
+a12_x= -( alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)*(2.0_8*sll_pi/(x_max-x_min))**2)* &
+    & (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
+    & (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+    & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2*sll_pi)**2/((x_max-x_min)*(y_max-y_min))- &
+    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)*(2.0_8*sll_pi/(x_max-x_min))**2)* &
+    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
+    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+    & ( alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2.0_8/((x_max-x_min)*(y_max-y_min))  
+
+a21 = a12
+
+a21_y=-(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))* &
+    &  (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))+ &
+    & (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy))*(2.0_8*sll_pi/(y_max-y_min))**2- &
+    & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))* &
+    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
+    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy))*(2.0_8*sll_pi/(y_max-y_min))**2
+
+a22 = (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))**2 & 
+    & + (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))**2
+    
+a22_x = 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
+      &(alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2*sll_pi*yy)*cos(2*sll_pi*xx)/(x_max-x_min))* &
+      & (alpha*cos(2*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
+    
+a22_y = 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
+      &(alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
+      & (alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))   
+    
+det = a11*a22-a12*a21
+
+det_x = a11_x * a22 + a11 * a22_x - 2.0_8 * a12_x * a12
+
+det_y = a11_y * a22 + a11 * a22_y - 2.0_8 * a21_y * a21
+
+a11 = a11/det
+a22 = a22/det
+a12 = -a12/det
+a21 = -a21/det
+
+a11_x = (a11_x*det - a11 * det_x)/det**2
+a12_x =-(a12_x*det - a12 * det_x)/det**2
+a21_y =-(a21_y*det - a21 * det_y)/det**2
+a22_y = (a22_y*det - a22 * det_y)/det**2
+
+cxx = -a11
+cyy = -a22
+cxy= -a12-a21
+cx  = -(a11_x+a21_y) 
+cy  = -(a12_x+a22_y)
+ce  = 0.0_8
+
+
 return
 end subroutine
 
@@ -232,6 +383,19 @@ integer  :: kbdy
 real(8)  :: xory,alfa,beta,gama,gbdy
 
 !! Set bounday condition value
+if (kbdy.eq.2) then
+
+   ! x=xb boundary.
+   ! b.c. has the form alfyd(x)*px+betyd(x)*py+gamyd(x)*pe = gbdyd(x)
+   ! where xory = x.   alfa,beta,gama,gbdy corresponding to alfyd(x),
+   ! betyd(x),gamyd(x),gbdyd(y) must be output.
+
+   alfa = 1.0
+   beta = 0.0
+   gama = 0.0
+   gbdy = 0.0
+
+end if
 
 return
 end subroutine

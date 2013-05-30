@@ -25,14 +25,14 @@ sll_real64 :: tol,l1,l2,linf
 
 sll_int32, parameter  :: n = 4
 
-eta1_min   = 1.0_f64
-eta1_max   = 2.0_f64
+eta1_min   = 0.0_f64
+eta1_max   = 2.0_f64*sll_pi
 
 eta2_min  = 0.0_f64
 eta2_max  = 2.0_f64 * sll_pi
 
-nc_eta1 = 32
-nc_eta2 = 128
+nc_eta1 = 64
+nc_eta2 = 64
 delta_eta1 = (eta1_max-eta1_min)/real(nc_eta1,f64)
 delta_eta2 = 2.0_f64*sll_pi/real(nc_eta2,f64)
 
@@ -76,9 +76,9 @@ call initialize_poisson_colella_mudpack(phi_cos, rhs, &
                                       eta1_min, eta1_max, &
                                       eta2_min, eta2_max, &
                                       nc_eta1, nc_eta2)
-
+print*,'PASS 1'
 call solve_poisson_colella_mudpack(phi_cos, rhs)
-
+print*,'PASS 2'
 !changer de polaire -> colella
 do j = 1, nc_eta2+1
    do i = 1, nc_eta1+1
