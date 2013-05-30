@@ -2,8 +2,7 @@ program test_poisson_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-!#include "sll_field_1d.h"
-#include "sll_poisson_solvers.h"
+
 use sll_constants
 use sll_module_mapped_meshes_1d
 use geometry_functions
