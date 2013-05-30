@@ -447,11 +447,16 @@ c
       end
 
       subroutine exact(t,p,utt,upp,ut,up,ue)
+      implicit none
 c
 c     the exact solution used is the restriction of u(x,y,z) = (x*y*z)**2
 c     in cartesian coordinates to the surface of the sphere of radius one
 c     using the standard spherical coordinate transforms
 c
+      integer i, j
+      real(8) t, p, utt, upp, ut, up, ue
+      real(8) sinp, cosp, sint, cost, dp, dpp, dt, dtt, tmp
+      real(8) ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
       common / fprm / ta,tb,pc,pd,tolmax,sinat(73),cosat(73),
      +                sinap(145),cosap(145),dlt,dlp
 c
