@@ -16,21 +16,23 @@ subroutine diagnostic_1(f,plan_sl,phi_ref,int_r,bc,rmin,rmax,dr,dtheta,nr &
 
 implicit none
 
- type(sll_SL_curvilinear), pointer :: plan_sl
-sll_real64, dimension (:,:)  , allocatable :: phi_ref
-sll_real64, dimension (:,:)  , allocatable :: f
-sll_real64, dimension (:)  , allocatable :: int_r
-sll_int32 :: bc(2)
+type(sll_SL_curvilinear)     , pointer          :: plan_sl
+sll_real64, dimension (:,:)  , intent(inout)    :: phi_ref
+sll_real64, dimension (:,:)  , intent(in)       :: f
+sll_real64, dimension (:)    , intent(inout)    :: int_r
+sll_int32,  intent(in)                          :: bc(2)
+sll_real64, intent(in)                          :: r1,r2,rmax,rmin,dr,dtheta,alpha,dt
+sll_int32,  intent(in)                          :: fcase, scheme, carac, grad,nr, ntheta
+sll_real64, intent(out)                         :: l10,l20,e0
+
 sll_real64 :: r,theta,x,y
-sll_real64, intent(in) :: r1,r2,rmax,rmin,dr,dtheta,alpha,dt
 sll_real64 :: k1,k2,k3,c1,c2,c3 
 sll_real64 :: k1_mode,k2_mode,k3_mode,c1_mode,c2_mode,c3_mode
-sll_int32 ::  NEUMANN,NEUMANN_MODE0,DIRICHLET
+sll_int32  :: NEUMANN,NEUMANN_MODE0,DIRICHLET
 sll_real64 :: w0,w, l1, l2, e, re, im,tmp,temps
-sll_real64, intent(out) :: l10,l20,e0
-sll_int32 :: mode,nb_step,i,j
-sll_real64  :: temps_mode,err_loc
-sll_int32, intent(in) :: fcase, scheme, carac, grad,nr, ntheta
+sll_int32  :: mode,nb_step,i,j
+sll_real64 :: temps_mode,err_loc
+
 
  !mode=1.5
 DIRICHLET=1
@@ -326,16 +328,16 @@ end subroutine diagnostic_1
 subroutine diagnostic_2(f,plan_sl,phi_ref,int_r,rmin,rmax,dr,dtheta,nr &
        & ,ntheta,step,l10,l20,e0,mode,dt,alpha)
 implicit none
-type(sll_SL_curvilinear), pointer :: plan_sl
-sll_real64, dimension (:,:)  , allocatable :: phi_ref
-sll_real64, dimension (:,:)  , allocatable :: f
-sll_real64, dimension (:)  , allocatable :: int_r
-sll_real64 :: r,theta
-sll_real64 :: rmax,rmin
-sll_real64 :: w, l10, l1, l20, l2, e, e0, re
-sll_int32 :: mode,nb_step
-sll_real64 :: dr,dtheta,alpha,dt
-sll_int32  :: nr, ntheta,i,j,step
+
+type(sll_SL_curvilinear)     ,  pointer       :: plan_sl
+sll_real64, dimension (:,:)  ,  intent(inout) :: phi_ref
+sll_real64, dimension (:,:)  ,  intent(in)    :: f
+sll_real64, dimension (:)    ,  intent(inout) :: int_r
+sll_real64, intent(in)                        :: dr,dtheta,alpha,dt,rmax,rmin
+sll_int32 , intent(in)                        :: nr,ntheta,step,mode
+sll_real64   :: r,theta
+sll_real64   :: w, l10, l1, l20, l2, e, e0, re
+sll_int32    :: i,j
 
 
   do i = 1,nr+1

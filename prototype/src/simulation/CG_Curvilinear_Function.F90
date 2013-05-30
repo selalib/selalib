@@ -3,12 +3,11 @@ module module_cg_curvi_function
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "selalib.h"
 
    use module_cg_curvi_structure
-   use sll_constants
-   use sll_cubic_splines
-   use sll_fft
-   use sll_poisson_2d_polar
+    !--*Poisson*----
+  
 contains
 
 !!!****************************************************************************************
@@ -20,13 +19,13 @@ subroutine init_distribution_curvilinear(N_eta1,N_eta2, fcase,f,mesh_case,&
 implicit none
 
 
-  sll_real64, dimension (:,:), allocatable, intent(inout) :: f
-  sll_real64, dimension (:,:), pointer, intent(in) :: x1_array,x2_array
-  sll_int32 :: i, j
-  sll_int32, intent(in) :: N_eta1,N_eta2
-  sll_int32, intent(in):: fcase,mesh_case
-  sll_real64,intent(in) :: x1c,x2c,sigma_x1,sigma_x2
+  sll_real64, dimension (:,:), intent(inout) :: f
+  sll_real64, dimension (:,:), pointer       :: x1_array,x2_array
+  sll_int32,  intent(in) :: N_eta1,N_eta2
+  sll_int32,  intent(in) :: fcase,mesh_case
+  sll_real64, intent(in) :: x1c,x2c,sigma_x1,sigma_x2
   sll_real64 :: x,y
+  sll_int32  :: i, j
 
 
 
@@ -113,12 +112,12 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
    &geom_eta,alpha_mesh,geom_x,jac_matrix)
 
     implicit none
-    sll_int32,intent(in) :: nc_eta1,nc_eta2,mesh_case
-    sll_real64,intent(in) :: geom_eta(2,2),alpha_mesh
+    sll_real64,dimension(:,:),   pointer :: x1n_array,x2n_array  
+    sll_real64,dimension(:,:,:), pointer :: jac_matrix
+    sll_real64,dimension(:,:),   pointer :: jac_array
+    sll_int32, intent(in)  :: nc_eta1,nc_eta2,mesh_case
+    sll_real64,intent(in)  :: geom_eta(2,2),alpha_mesh
     sll_real64,intent(out) :: geom_x(2,2)
-    sll_real64,dimension(:,:),pointer,intent(out) :: x1n_array,x2n_array  
-    sll_real64,dimension(:,:,:),pointer,intent(out) :: jac_matrix
-    sll_real64,dimension(:,:),pointer,intent(out) :: jac_array
     sll_int32  :: i1,i2,err
     sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta2
@@ -127,10 +126,10 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
     
     
 
-    SLL_ALLOCATE(x1n_array(nc_eta1+1, nc_eta2+1), err)
-    SLL_ALLOCATE(x2n_array(nc_eta1+1, nc_eta2+1), err)
-    SLL_ALLOCATE(jac_matrix(4,nc_eta1+1, nc_eta2+1), err); jac_matrix=0._f64
-    SLL_ALLOCATE(jac_array(nc_eta1+1, nc_eta2+1), err); jac_array=0.0_f64
+    ALLOCATE(x1n_array(nc_eta1+1, nc_eta2+1))
+    ALLOCATE(x2n_array(nc_eta1+1, nc_eta2+1))
+    ALLOCATE(jac_matrix(4,nc_eta1+1, nc_eta2+1)); jac_matrix=0._f64
+    ALLOCATE(jac_array(nc_eta1+1, nc_eta2+1)); jac_array=0.0_f64
 
    
 
@@ -172,8 +171,8 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
       if (mesh_case==2) then 
          x1_min=-eta1_max
          x1_max=eta1_max
-         x2_min=-eta1_max
-         x2_max=eta1_max
+         x2_min=-eta2_max
+         x2_max=eta2_max
         do i1= 1, nc_eta1 + 1
             eta1 = eta1_min + real(i1-1,f64)*delta_eta1
            do i2= 1, nc_eta2 + 1
@@ -181,11 +180,20 @@ subroutine construct_mesh_transF(nc_eta1,nc_eta2,mesh_case,&
             x1n_array(i1,i2) = eta1*cos(eta2)
             x2n_array(i1,i2) = eta1*sin(eta2)
             jac_array(i1,i2) = eta1
-
+            
+            !--*Jacobien matrix for (r,theta)*---
             jac_matrix(1,i1,i2)=cos(eta2)         !dx/deta1
             jac_matrix(2,i1,i2)=-eta1*sin(eta2)   !dx/deta2
             jac_matrix(3,i1,i2)=sin(eta2)         !dy/deta1
             jac_matrix(4,i1,i2)=eta1*cos(eta2)    !dy/deta2
+
+             !--*Jacobien matrix for (theta,r)*---
+            jac_matrix(1,i1,i2)=-eta1*sin(eta2)   !dx/deta1
+            jac_matrix(2,i1,i2)=cos(eta2)         !dx/deta2
+            jac_matrix(3,i1,i2)=eta1*cos(eta2)    !dy/deta1
+            jac_matrix(4,i1,i2)=sin(eta2)         !dy/deta2
+            
+            
            end do
         end do
 
@@ -426,14 +434,14 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
   function new_curvilinear_op(geom_eta,N_eta1,N_eta2,grad_case,bc1_type,bc2_type) result(plan_sl)
 
     type(plan_curvilinear_op), pointer :: plan_sl
-    sll_real64 ::delta_eta1,delta_eta2
-    sll_real64, intent(in) :: geom_eta(2,2)
+    sll_real64, intent(in)             :: geom_eta(2,2)
+    sll_int32,  intent(in)             :: N_eta1, N_eta2,bc1_type,bc2_type
+    sll_int32,  intent(in),   optional :: grad_case
+    sll_int32  :: err
     sll_real64 :: eta1_min,eta2_min,eta1_max,eta2_max
-    sll_int32, intent(in) :: N_eta1, N_eta2,bc1_type,bc2_type
-    sll_int32, intent(in), optional :: grad_case
-    sll_int32 :: err
+    sll_real64 :: delta_eta1,delta_eta2
    
-    SLL_ALLOCATE(plan_sl,err)
+    ALLOCATE(plan_sl)
 
     eta1_min=geom_eta(1,1)
     eta1_max=geom_eta(2,1)
@@ -476,7 +484,7 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     sll_int32 :: err
    
     call delete_spline_2d(this%spl_phi)
-    SLL_DEALLOCATE(this,err)
+    DEALLOCATE(this)
     this=>null()
 
   end subroutine delete_plan_curvilinear_op
@@ -486,24 +494,22 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
 !===========================================
 
   subroutine compute_grad_field(plan,phi,grad_phi, &
-       & N_eta1, N_eta2,geom_eta,bc1_type,bc2_type,jac_matrix,x1n_array,x2n_array)
+       & N_eta1, N_eta2,geom_eta,bc1_type,bc2_type)
 
     implicit none
 
-    type(plan_curvilinear_op), pointer              :: plan
-    sll_real64, dimension(:,:), intent(inout) :: phi
-    sll_real64, dimension(:,:,:), intent(out) :: grad_phi
+    type(plan_curvilinear_op),    pointer       :: plan
+    sll_real64, dimension(:,:),   intent(inout) :: phi
+    sll_real64, dimension(:,:,:), intent(out)   :: grad_phi
+    sll_int32,  intent(in),       optional      :: bc1_type,bc2_type
+    sll_real64, intent(in)                      :: geom_eta(2,2)
+    sll_int32,  intent(in)                      :: N_eta1, N_eta2
+    
     sll_real64 :: eta1,eta2
-    sll_real64 ::delta_eta1,delta_eta2
-    sll_real64, intent(in) :: geom_eta(2,2)
+    sll_real64 :: delta_eta1,delta_eta2
     sll_real64 :: eta1_min,eta2_min,eta1_max,eta2_max
-    sll_int32, intent(in) :: N_eta1, N_eta2
-    sll_int32, intent(in), optional :: bc1_type,bc2_type
     sll_int32 :: i,j
 
-
-    sll_real64, dimension(:,:), intent(in), pointer,optional :: x1n_array,x2n_array 
-   sll_real64,dimension(:,:,:),pointer,intent(in), optional :: jac_matrix
   
     eta1_min=geom_eta(1,1)
     eta1_max=geom_eta(2,1)
@@ -554,20 +560,6 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
           end do
        end do
 
-   ! else if (plan%grad_case==3) then
-   !    ! using splines for x1 and x2
-
-   !    call compute_spline_2D(phi,plan%spl_phi)
-
-   !    do j=1,N_eta2+1
-   !       do i=1,N_eta1+1
-   !      grad_phi(1,i,j)=interpolate_x1_derivative_2D(x1n_array(i,j),x2n_array(i,j),plan%spl_phi)
-   !      grad_phi(2,i,j)=interpolate_x2_derivative_2D(x1n_array(i,j),x2n_array(i,j),plan%spl_phi)
-   !      grad_phi(1,i,j)=jac_matrix(1,i,j)*grad_phi(1,i,j)+jac_matrix(3,i,j)*grad_phi(2,i,j)
-   !     grad_phi(2,i,j)=jac_matrix(2,i,j)*grad_phi(1,i,j)+jac_matrix(4,i,j)*grad_phi(2,i,j)       
-   !       end do
-   !    end do
-
     else
      
        print*,'no choosen way to compute grad'
@@ -596,8 +588,9 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
 
    implicit none
 
-    sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,eta1,eta2  
-    sll_int32  :: bc1_type,bc2_type
+    sll_real64, intent(in)    :: eta1_min,eta1_max,eta2_min,eta2_max
+    sll_real64, intent(inout) :: eta1,eta2  
+    sll_int32,  intent(in)    :: bc1_type,bc2_type
      
   
 ! --- Corrections on the BC ---
@@ -626,7 +619,7 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
   end subroutine correction_BC    
 !!!************************************************************************
 !*****
-subroutine plot_f1(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)
+subroutine plot_f1(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)!
 
   use sll_xdmf
   use sll_hdf5_io
@@ -657,27 +650,33 @@ subroutine plot_f1(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,et
   call int2string(iplot,cplot)
   call sll_xdmf_open("f"//cplot//".xmf","curvilinear_mesh",nnodes_x1,nnodes_x2,file_id,error)
   call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
-  call sll_xdmf_close(file_id,error)
-
+  call sll_xdmf_close(file_id,error)!
+!
  end subroutine plot_f1
 !!!****************************************************************************************
-subroutine init_distribution_cartesian(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
-           & delta_eta1,delta_eta2,fcase,f,mesh_case,mode,alpha,eta1_r,eta1_rm,sigma_x1,sigma_x2)
+subroutine init_distribution_cart(eta1_min,eta1_max,eta2_min,eta2_max,N_eta1,N_eta2, &  
+           & fcase,f,mesh_case,mode,alpha,eta1_r,eta1_rm,sigma_x1,sigma_x2, &  
+           & landau_alpha, landau_mode)
 
 implicit none
 
 
-  sll_real64, dimension (:,:), allocatable, intent(inout) :: f
-  sll_int32 :: i, j,mode
-  sll_int32, intent(in) :: N_eta1,N_eta2
-  sll_int32, intent(in):: fcase,mesh_case
-  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max,delta_eta1,delta_eta2,sigma_x1,sigma_x2
+  sll_real64, dimension (:,:), intent(inout) :: f
+  sll_int32,  intent(in) :: N_eta1,N_eta2,mode
+  sll_int32,  intent(in) :: fcase,mesh_case
+  sll_real64, intent(in) :: eta1_min, eta1_max, eta2_min, eta2_max
+  sll_real64 :: delta_eta1,delta_eta2
   sll_real64 :: eta1,eta2,eta1c,eta2c
-  sll_real64 :: eta1_r,eta1_rm,alpha
+  sll_int32  :: i, j
+  sll_real64, optional :: eta1_r,eta1_rm,alpha
+  sll_real64, optional :: landau_alpha, landau_mode
+  sll_real64, optional :: sigma_x1,sigma_x2
 
-!!  eta1c = 0.5_f64*(eta1_max+eta1_min)
-!!  eta2c = 0.5_f64*(eta2_max+eta2_min)
-!
+
+
+  delta_eta1= (eta1_max-eta1_min)/real(N_eta1,f64)
+  delta_eta2= (eta2_max-eta2_min)/real(N_eta2,f64)
+
   eta1c = 0.25_f64*eta1_max+0.75_f64*eta1_min
   eta2c = 0.25_f64*eta2_max+0.75_f64*eta2_min
 !
@@ -686,9 +685,18 @@ implicit none
 !    
 !
   select case (fcase)
+   case(0)
+     do j=1,N_eta2+1
+        do i=1,N_eta1+1
+             f(i,j)=1.0_f64
+        enddo
+     enddo
+
    case(1)
 
-     print*,'eta1_r', eta1_r
+     print*,'#r_1 = ', eta1_r
+     print*,'#r_2 = ',eta1_rm
+     print*,'#alpha, mode = ',alpha,mode
      do j=1,N_eta2+1
        eta2=eta2_min+real(j-1,f64)*delta_eta2
         do i=1,N_eta1+1
@@ -697,28 +705,27 @@ implicit none
            if((eta1>eta1_r).and.(eta1<eta1_rm)) then
              f(i,j)=1.0_f64+ alpha*cos(mode*eta2)
            endif
-         write(119,*) eta1,eta2,f(i,j)
         enddo
      enddo
-
-!
+    
   case(2)
      do j=1,N_eta2+1
            do i=1,N_eta1+1
-              eta2=eta2_min+real(i-1,f64)*delta_eta2
-              f(i,j) = cos(eta2)
+              eta1=eta1_min+real(i-1,f64)*delta_eta1
+              f(i,j) = cos(eta1)
            end do
      end do
 
 !
-  ! case(3)
-!
-    ! do i=1,N_eta1+1
-    !     eta1=eta1_min+real(i-1,f64)*delta_eta1
-    !    do j=1,N_eta2+1
-    !      f(i,j) = exp(-100._f64*(eta1-eta1c)**2) 
-    !    end do
-    ! end do
+   case(3) !khp testcase 
+   
+     do j=1,N_eta2+1
+          eta2=eta2_min+real(j-1,f64)*delta_eta2
+        do i=1,N_eta1+1
+          eta1=eta1_min+real(i-1,f64)*delta_eta1
+          f(i,j) = sin(eta2)+landau_alpha*cos(landau_mode*eta1)
+        end do
+     end do
 
    case(4) 
      
@@ -754,402 +761,9 @@ implicit none
 !
    end select 
 !
-end subroutine init_distribution_cartesian
-
-!!!************************************************************************
-subroutine diagnostic_1(f,plan_sl,phi_ref,int_r,bc,rmin,rmax,dr,dtheta,nr &
-       & ,ntheta,nb_step,fcase,scheme,carac,grad,mode,&
-       & l10,l20,e0,dt,alpha,r1,r2)
-
-implicit none
-
- type(sll_SL_curvilinear), pointer :: plan_sl
-sll_real64, dimension (:,:)  , allocatable :: phi_ref
-sll_real64, dimension (:,:)  , allocatable :: f
-sll_real64, dimension (:)  , allocatable :: int_r
-sll_int32 :: bc(2)
-sll_real64 :: r,theta,x,y
-sll_real64, intent(in) :: r1,r2,rmax,rmin,dr,dtheta,alpha,dt
-sll_real64 :: k1,k2,k3,c1,c2,c3 
-sll_real64 :: k1_mode,k2_mode,k3_mode,c1_mode,c2_mode,c3_mode
-sll_int32 ::  NEUMANN,NEUMANN_MODE0,DIRICHLET
-sll_real64 :: w0,w, l1, l2, e, re, im,tmp,temps
-sll_real64, intent(out) :: l10,l20,e0
-sll_int32 :: mode,nb_step,i,j
-sll_real64  :: temps_mode,err_loc
-sll_int32, intent(in) :: fcase, scheme, carac, grad,nr, ntheta
-
- !mode=1.5
-DIRICHLET=1
-NEUMANN=2
-NEUMANN_MODE0=3
-
-  if(bc(1)==DIRICHLET)then
-    k1 = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
-      2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-    k2 = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
-      2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-    k3 = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
-      2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
-    c1 = (2.0_f64*r1**2*log(rmax/r1)+2.0_f64*r2**2*log(r2/rmax) + &
-      r1**2-r2**2)*log(rmin)/(-4.0_f64*log(rmin/rmax))
-    c2 = (2.0_f64*r2**2*log(rmin)*log(r2/rmax) + &
-      2.0_f64*r1**2*log(rmax)*log(rmin/r1)+r1**2*log(rmax) - &
-      r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
-    c3 = (r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin) + &
-      2.0_f64*r1**2*log(rmin/r1))*log(rmax) / &
-      (-4.0_f64*log(rmin/rmax))
-  endif
-  if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
-    k1 = 0._f64
-    k2 = r1**2/2._f64
-    k3 = r1**2/2._f64-r2**2/2._f64
-    c1 = r1**2*log(r1)/2._f64+r2**2/4._f64-r2**2*log(r2)/2._f64
-    c1 = c1-r1**2*log(rmax)/2._f64+r2**2*log(rmax)/2._f64 - &
-      r1**2/4._f64
-    c2 = r2**2/4._f64-r2**2*log(r2)/2._f64-r1**2 * &
-      log(rmax)/2._f64+r2**2*log(rmax)/2._f64
-    c3 = -log(rmax)*(r1**2-r2**2)/2._f64
-  endif
-
-  if (mode==0) then 
-    if(bc(1)==DIRICHLET)then
-      k1_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
-        2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-      k2_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
-        2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
-      k3_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
-        2.0_f64*r2**2*log(r2/rmin))/(4.0_f64*log(rmin/rmax))
-      c1_mode = (2.0_f64*r1**2*log(rmax/r1) + &
-        2.0_f64*r2**2*log(r2/rmax)+r1**2-r2**2)*log(rmin) / &
-        (-4.0_f64*log(rmin/rmax))
-      c2_mode = (2.0_f64*r2**2*log(rmin)*log(r2/rmax) + &
-        2.0_f64*r1**2*log(rmax)*log(rmin/r1) + &
-        r1**2*log(rmax)-r2**2*log(rmin))/(-4.0_f64*log(rmin/rmax))
-      c3_mode = (r1**2-r2**2+2.0_f64*r2**2*log(r2/rmin) + &
-        2.0_f64*r1**2*log(rmin/r1))*log(rmax) / &
-        (-4.0_f64*log(rmin/rmax))
-    endif
-    if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
-      k1_mode = 0._f64
-      k2_mode = r1**2/2._f64
-      k3_mode = r1**2/2._f64-r2**2/2._f64
-      c1_mode = r1**2*log(r1)/2._f64+r2**2/4._f64-r2**2 * &
-        log(r2)/2._f64
-      c1_mode = c1_mode-r1**2*log(rmax)/2._f64+r2**2 * &
-        log(rmax)/2._f64-r1**2/4._f64
-      c2_mode = r2**2/4._f64-r2**2*log(r2)/2._f64-r1**2 * &
-        log(rmax)/2._f64+r2**2*log(rmax)/2._f64
-      c3_mode = -log(rmax)*(r1**2-r2**2)/2._f64
-    endif
-  endif
-
-  if(mode==1)then
-    if((bc(1)==NEUMANN))then
-      k1_mode = (-3._f64*r1*rmax**2-r2**3 + &
-        3*rmax**2*r2+r1**3)/(6._f64*(rmin**2+rmax**2))
-      k2_mode = (3._f64*r2*rmax**2-r2**3 + &
-        3*rmin**2*r1+r1**3)/(6._f64*(rmin**2+rmax**2))
-      k3_mode = (-3._f64*r2*rmin**2-r2**3 + &
-        3*rmin**2*r1+r1**3)/(6._f64*(rmin**2+rmax**2))
-      c1_mode = (-3._f64*r1*rmax**2-r2**3 + &
-        3*rmax**2*r2+r1**3)*rmin**2/(6._f64*(rmin**2+rmax**2))
-      c2_mode = -(3._f64*r1*rmin**2*rmax**2 + &
-        r2**3*rmin**2-3*rmin**2*rmax**2*r2+rmax**2*r1**3) / &
-        (6._f64 *(rmin**2+rmax**2))
-      c3_mode = -(-3._f64*r2*rmin**2-r2**3 + &
-        3*rmin**2*r1+r1**3)*rmax**2/(6._f64*(rmin**2+rmax**2))
-    endif
-
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
-      k1_mode = (-3._f64*r1*rmax**2-r2**3 + &
-        3*rmax**2*r2+r1**3)/(6._f64*(-rmin**2+rmax**2))
-      k2_mode = (3._f64*r2*rmax**2-r2**3 - &
-        3*rmin**2*r1+r1**3)/(6._f64*(-rmin**2+rmax**2))
-      k3_mode = (3._f64*r2*rmin**2-r2**3 - &
-        3*rmin**2*r1+r1**3)/(6._f64*(-rmin**2+rmax**2))
-      c1_mode = (-3._f64*r1*rmax**2-r2**3 + &
-        3*rmax**2*r2+r1**3)*rmin**2/(6._f64*(rmin**2-rmax**2))
-      c2_mode = (-3._f64*r1*rmin**2*rmax**2 - &
-        r2**3*rmin**2+3*rmin**2*rmax**2*r2+rmax**2*r1**3) / &
-        (6._f64 *(rmin**2-rmax**2))
-      c3_mode = (-3._f64*r1*rmin**2-r2**3 + &
-        3*rmin**2*r2+r1**3)*rmax**2/(6._f64*(rmin**2-rmax**2))
-    endif
-  endif
-
-  if(mode==3)then
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
-      k1_mode = (r1*r2*(r2**5-r1**5) - &
-        5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-      k2_mode = (r1*r2*(r2**5-r1**5) - &
-        5._f64*(rmin**6*r2-rmax**6*r1))/(30._f64*r2*r1 * &
-        (rmin**6-rmax**6))    
-      k3_mode = (-r1*r2*(r1**5-r2**5) - &
-        5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-      c1_mode = (-r1*r2*(r2**5-r1**5) + &
-        5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-      c2_mode = (-r1*r2*(rmin**6*r2**5-rmax**6*r1**5) + &
-        5._f64*(rmin*rmax)**6*(r2-r1)) / &
-        (30._f64*r2*r1*(rmin**6-rmax**6))
-      c3_mode = rmax**6*(-r1*r2*(r2**5-r1**5) + &
-        5._f64*rmin**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
-    endif
-  endif
-
-  if(mode==7)then
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
-      k1_mode = -5._f64*r1**5*r2**14 + &
-        5._f64*r1**14*r2**5-9._f64*r1**5*rmax**14 + &
-        9._f64*r2**5*rmax**14
-      k1_mode = k1/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
-      k2_mode = -5._f64*r1**5*r2**14 + &
-        5._f64*r1**14*r2**5-9._f64*r2**5*rmin**14 - &
-        9._f64*r1**5*rmax**14
-      k2_mode = k2/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
-      k3_mode = -5._f64*r1**5*r2**14 + &
-        5._f64*r1**14*r2**5-9._f64*r2**5*rmin**14 + &
-        9._f64*r1**5*rmin**14
-      k3_mode = k3/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
-      c1_mode = -5._f64*r1**5*r2**14 + &
-        5._f64*r1**14*r2**5-9._f64*r1**5*rmax**14 + &
-        9._f64*r2**5*rmax**14
-      c1_mode = rmin**14*c1 / &
-        (630._f64*r1**5*r2**5*(rmin**14+rmax**14))
-      c2_mode = 5._f64*rmin**14*r1**5*r2**14 + &
-        9._f64*rmax**14*rmin**14*r1**5
-      c2_mode = c2_mode-9._f64*rmax**14*r2**5*rmin**14 + &
-        5._f64*rmax**14*r1**14*r2**5
-      c2_mode = -c2_mode/(630._f64*r1**5*r2**5*(rmin**14+rmax**14))
-      c3_mode = -5._f64*r1**5*r2**14 + &
-        5._f64*r1**14*r2**5+9._f64*r1**5*rmin**14 - &
-        9._f64*r2**5*rmin**14
-      c3_mode = -rmax**14*c3_mode / &
-        (630._f64*r1**5*r2**5*(rmin**14+rmax**14))
-    endif
-  endif
-
-  tmp = 0._f64
-  l1  = 0.0_f64
-  l2  = 0.0_f64
-
-  open (unit=20,file='CGinit.dat')
-  do i = 1,nr+1
-    r = rmin+real(i-1,f64)*dr
-    if(mode==0)then
-      if (r<r1) then
-        temps_mode = k1_mode*log(r)+c1_mode
-      else if (r>r2) then
-        temps_mode = k3_mode*log(r)+c3_mode
-      else
-        temps_mode = k2_mode*log(r)+c2_mode-r**2/4.0_f64
-      end if
-    end if
-
-    if((mode>=3).or.(mode==1))then
-      if (r<r1) then
-        temps_mode = k1_mode*r**mode+c1_mode/r**(mode)
-      else if (r>r2) then
-        temps_mode = k3_mode*r**mode+c3_mode/r**mode
-      else
-        temps_mode = k2_mode*r**mode+c2_mode/r**mode + &
-          r**2/(mode**2-4._f64)
-      end if
-    end if
+end subroutine init_distribution_cart
 
 
-    if (r<r1) then
-      temps = k1*log(r)+c1
-    else if (r>r2) then
-      temps = k3*log(r)+c3
-    else
-      temps = k2*log(r)+c2-r**2/4.0_f64
-    end if
-
-    temps_mode = temps_mode*alpha
-    do j = 1,ntheta+1
-      theta   = real(j-1,f64)*dtheta
-      x       = r*cos(theta)
-      y       = r*sin(theta)
-      err_loc = abs(plan_sl%phi(i,j) - &
-        temps_mode*cos(mode*theta)-temps)
-      phi_ref(i,j) = temps_mode*cos(mode*theta)+temps
-
-      write(20,*) r, theta, x, y, plan_sl%phi(i,j), &
-        temps+temps_mode*cos(mode*theta)
-      tmp = max(tmp,err_loc)
-      if (i==1 .or. i==nr+1) then
-        l1 = l1+err_loc*r/2.0_f64
-        l2 = l2+err_loc**2*r/2.0_f64
-      else
-        l1 = l1+err_loc*r
-        l2 = l2+err_loc**2*r
-      end if
-    end do
-    write(20,*)' '
-  end do
-  close(20)
-  l1 = l1*dr*dtheta
-  l2 = sqrt(l2*dr*dtheta)
-  print*,"#error for phi in initialization", &
-    nr,dr,tmp/(1._f64+abs(alpha)), &
-    l1/(1._f64+abs(alpha)),l2/(1._f64+abs(alpha))
-
-  open(unit=23,file='diagMF.dat')
-  write(23,*)'#fcase',fcase,'scheme',scheme, &
-    'mode',mode,'grad',grad,'carac',carac
-  write(23,*)'#nr',nr,'ntheta',ntheta,'alpha',alpha
-  write(23,*)'#nb_step = ',nb_step,'  dt = ',dt
-  write(23,*)'#   t   //   w   //   l1 rel  //   l2  rel //   e   //   re   //   im'
-
-  do i = 1,nr+1
-    r = rmin+real(i-1,f64)*dr
-    plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)/r
-  end do
-
-  w0    = 0.0_f64
-  l10   = 0.0_f64
-  l20   = 0.0_f64
-  e0    = 0.0_f64
-  int_r = 0.0_f64
-  do j = 1,ntheta
-    w0  = w0+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
-    l10 = l10+abs(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
-    l20 = l20+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
-    e0  = e0+rmin*(plan_sl%adv%field(1,1,j))**2/2.0_f64 + &
-      rmax*(plan_sl%adv%field(1,nr+1,j))**2/2.0_f64 + &
-      rmin*(plan_sl%adv%field(2,1,j))**2/2.0_f64 + &
-      rmax*(plan_sl%adv%field(2,nr+1,j))**2/2.0_f64
-    int_r(j) = (f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
-    do i = 2,nr
-      r   = rmin+real(i-1,f64)*dr
-      w0  = w0+r*f(i,j)
-      l10 = l10+r*abs(f(i,j))
-      l20 = l20+r*f(i,j)**2
-      e0  = e0+r*(plan_sl%adv%field(1,i,j)**2 + &
-        plan_sl%adv%field(2,i,j)**2)
-      int_r(j) = int_r(j)+f(i,j)*r
-    end do
-  end do
-
-  w0    = w0*dr*dtheta
-  l10   = l10*dr*dtheta
-  l20   = sqrt(l20*dr*dtheta)
-  e0    = e0*dr*dtheta/2.0_f64
-  int_r = int_r*dr
-  call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
-  write(23,*)'#t=0',w0,l10,l20,e0
-  write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64,e0, &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
-
- do i = 1,nr+1
-    r = rmin+real(i-1,f64)*dr
-    plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)*r
- end do
-end subroutine diagnostic_1
-
-!!******************
-subroutine diagnostic_2(f,plan_sl,phi_ref,int_r,rmin,rmax,dr,dtheta,nr &
-       & ,ntheta,step,l10,l20,e0,mode,dt,alpha)
-implicit none
-type(sll_SL_curvilinear), pointer :: plan_sl
-sll_real64, dimension (:,:)  , allocatable :: phi_ref
-sll_real64, dimension (:,:)  , allocatable :: f
-sll_real64, dimension (:)  , allocatable :: int_r
-sll_real64 :: r,theta
-sll_real64 :: rmax,rmin
-sll_real64 :: w, l10, l1, l20, l2, e, e0, re
-sll_int32 :: mode,nb_step
-sll_real64 :: dr,dtheta,alpha,dt
-sll_int32  :: nr, ntheta,i,j,step
-
-
-  do i = 1,nr+1
-      r = rmin+real(i-1,f64)*dr
-      plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)/r
-    end do
-    w     = 0.0_f64
-    l1    = 0.0_f64
-    l2    = 0.0_f64
-    e     = 0.0_f64
-    int_r = 0.0_f64
-    do j = 1,ntheta
-      w  = w+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
-      l1 = l1+abs(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
-      l2 = l2+(f(1,j)/2.0_f64)**2*rmin+(f(nr+1,j)/2.0_f64)**2*rmax
-      e  = e+rmin*(plan_sl%adv%field(1,1,j))**2/2.0_f64 + &
-        rmax*(plan_sl%adv%field(1,nr+1,j))**2/2.0_f64 + &
-        rmin*(plan_sl%adv%field(2,1,j))**2/2.0_f64 + &
-        rmax*(plan_sl%adv%field(2,nr+1,j))**2/2.0_f64
-      int_r(j) = (f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
-      int_r(j) = (plan_sl%phi(1,j)*rmin + &
-        plan_sl%phi(nr+1,j)*rmax)/2.0_f64
-      do i = 2,nr
-        r  = rmin+real(i-1,f64)*dr
-        w  = w+r*f(i,j)
-        l1 = l1+r*abs(f(i,j))
-        l2 = l2+r*f(i,j)**2
-        e  = e+r*(plan_sl%adv%field(1,i,j)**2 + &
-          plan_sl%adv%field(2,i,j)**2)
-        int_r(j) = int_r(j)+plan_sl%phi(i,j)*r
-      end do
-    end do
-    w     = w*dr*dtheta
-    l1    = l1*dr*dtheta
-    l2    = sqrt(l2*dr*dtheta)
-    e     = e*dr*dtheta/2.0_f64
-    int_r = int_r*dr
-    call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
-    write(23,*) dt*real(step,f64),w,l1/l10,l2/l20,e-e0,e, &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &   !$7
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &  !$8
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &   !$9
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &  !$10
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &   !$11
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &  !$12
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &   !$13
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &  !$14
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &   !$15
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &  !$16
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &   !$17
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &  !$18
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), & 
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
-
-do i = 1,nr+1
-    r = rmin+real(i-1,f64)*dr
-    plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)*r
-  end do
-end subroutine diagnostic_2
 !*****************************************************************************************
 subroutine lire_appel(phi,f,N_eta1,N_eta2)
 implicit none
@@ -1160,7 +774,7 @@ implicit none
   sll_int32 :: i, j,err
   sll_int32, intent(in) :: N_eta1,N_eta2
 
-SLL_ALLOCATE(vec_phi((N_eta1+1)*(N_eta2+1)),err)
+ALLOCATE(vec_phi((N_eta1+1)*(N_eta2+1)))
 open (unit=28,file="file_rho.dat",action="write",status="old")
       do i=1,N_eta1+1
           do j=1,N_eta2+1 
@@ -1177,9 +791,83 @@ open (unit=28,file="file_rho.dat",action="write",status="old")
     !vec_phi=0.
     phi(1:(N_eta1+1),1:(N_eta2+1))=reshape(vec_phi,(/(N_eta1+1),(N_eta2+1)/))
 
-SLL_DEALLOCATE_ARRAY(vec_phi,err) 
+DEALLOCATE(vec_phi) 
 end subroutine lire_appel
 !***************************************************************************
+!subroutine Poisson_solver_curvilinear(eta1_min,eta1_max,eta2_min,eta2_max, &
+!                                    & phi,init,BC_P, option,apr_U,point1,point2, &
+!                                    & f,tab_b11,tab_b12,tab_b21,tab_b22, tab_c, &
+!                                    & tab_dF11,tab_dF12,tab_dF21,tab_dF22,values_U, &
+!                                    & spline_degree,N_eta1,N_eta2)
+!
+!sll_real64, dimension (:,:), allocatable :: phi
+!sll_real64, dimension (:,:), allocatable :: f
+!  integer   :: BC_P ! boundary conditions 0 if periodic-Drichlet and 1 if Dirichlet-Dirichlet  
+!  real(8)   :: period
+!  real(8), dimension(:), pointer :: apr_U
+!  integer                        :: option ! 0 for analytique and 1 for interpolation 
+!  type(initial) :: init
+!  real(8), dimension(:,:), allocatable :: values_U
+!  real(8), dimension(:), allocatable  :: point1
+!  real(8), dimension(:), allocatable  :: point2
+!  real(8), dimension(:,:), pointer,OPTIONAL  :: tab_b11,tab_b12,tab_b21,tab_b22
+!  real(8), dimension(:,:), pointer,OPTIONAL  :: tab_c,tab_dF11,tab_dF12,tab_dF21,tab_dF22
+!integer:: N_eta1,N_eta2,nbpt1,nbpt2,num_pts_eta1,num_pts_eta2 
+!  integer :: spline_degree
+!  real(8)   :: eta1_min, eta2_min, eta1_max, eta2_max
+!  real(8)   :: conv_order_L1,conv_order_L2,conv_order_Linf
+!
+! num_pts_eta1 = N_eta2 +1
+! num_pts_eta2 = N_eta1 +1
+! nbpt1 = num_pts_eta1
+! nbpt2 = num_pts_eta2
+! period = eta2_max - eta2_min
+! phi=0._f64
+!
+!
+! call general_qn_solver(init,BC_P, option,apr_U,point1,point2, &
+!       transpose(f), tab_b11,tab_b12,tab_b21,tab_b22,&
+!        tab_dF11,tab_dF12,tab_dF21,tab_dF22,tab_c)
+!   
+!
+! print *,'#general_qn_solver done'       
+! values_U = 0.0_8
+! if(BC_P==0) then
+!  print*,'pass get values perdir',size(point1)
+!        call get_values_function_perdir(init,period, apr_U, &  
+!                                     & point1,nbpt1-1,point2,nbpt2,values_U )
+! endif
+!
+! if(BC_P==1) then
+!        call get_values_function_dirdir(init,apr_U, &
+!                                     & point1,nbpt1,point2,nbpt2,values_U )
+! endif
+!
+! if(BC_P==2) then
+!         call get_values_function_perper(init,eta2_max-eta2_min,eta1_max-eta1_min, apr_U, &  
+!                                     & point1,nbpt1,point2,nbpt2,values_U )
+! endif
+!
+!
+! phi=transpose(values_U)
+!print*,'phi poisson ' , maxval(abs(f)),maxval(abs(phi))
+!
+! !---------------------------------------------------------------------------
+!    !!!!!!!!!!!!!!!! CONVERGENCE TEST !!!!!!!!!!!!!!!!
+!    !---------------------------------------------------------------------------
+!    !call convergence_order(apr_U,init,BC_P,conv_order_L1,conv_order_L2,conv_order_Linf)
+!
+!   ! print*," ordre de convergence L1 =:)", conv_order_L1
+!   ! print*," ordre de convergence L2 =:)", conv_order_L2
+!   ! print*," ordre de convergence Linf =:)", conv_order_Linf
+!    !open(unit=800,file='conv_order.dat',position="append")
+!    !write(800,*) num_pts_eta1,conv_order_L1,conv_order_L2,conv_order_Linf  
+!    !close(800)  
+!  call free_tab()
+!end subroutine Poisson_solver_curvilinear
+!!**********************************************************************************
+
+!!!************************************************************************
 
 
 end module module_cg_curvi_function
