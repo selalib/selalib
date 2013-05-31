@@ -154,19 +154,12 @@ make NightlyConfigure
 make NightlyBuild
 make NightlyTest
 make NightlySubmit
-#cpack -G $PIPOL_CPACK_G .
-}; cd -
-rm -rf build
-
-mkdir build
-cd build; {
 cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
 make NightlyTest
 make NightlySubmit
-#cpack -G $PIPOL_CPACK_G .
 }; cd -
 rm -rf build
 
