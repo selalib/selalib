@@ -554,8 +554,8 @@ contains
          size_coeffs2, &
          interpolator%spline_degree2+1, &
          interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
-         interpolator%t1, &
-         interpolator%t2 )
+         interpolator%t1(1:interpolator%size_t1), &
+         interpolator%t2(1:interpolator%size_t2))
   end function interpolate_value_ad2d
 
 
