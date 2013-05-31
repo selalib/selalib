@@ -601,60 +601,6 @@ contains
 
 
 
-  ! *************************************************************************
-  !
-  !                    UNIFORM B-SPLINE FUNCTIONS
-  !
-  ! *************************************************************************
-
-  !> returns an array with the values of the b-splines of the 
-  !> requested degree, evaluated at a given cell offset. The cell size is
-  !> normalized between 0 and 1, thus the offset given must be a number
-  !> between 0 and 1.
-  function uniform_b_splines_at_x( spline_degree, normalized_offset )
-    sll_int32, intent(in)                      :: spline_degree
-    sll_real64, dimension(1:spline_degree+1)   :: uniform_b_splines_at_x
-    sll_real64, intent(in)                     :: normalized_offset
-    sll_real64, dimension(1:2*spline_degree+1) :: splines
-    sll_int32                                  :: i
-    sll_int32                                  :: j
-    sll_int32                                  :: last
-    sll_real64                                 :: jreal
-    sll_real64                                 :: r_jreal
-    sll_real64                                 :: fac1
-    sll_real64                                 :: fac2
-    sll_real64                                 :: temp
-
-    SLL_ASSERT( spline_degree >= 0 )
-    SLL_ASSERT( normalized_offset >= 0.0_f64 )
-    SLL_ASSERT( normalized_offset <= 1.0_f64 )
-
-    ! Build the zeroth-order splines. The middle cell of the splines array
-    ! corresponds to the 'cell' that contains 'x'. So for example, if a cubic
-    ! spline is requested, the zeroth-order splines will be:
-    !
-    !        0, 0, 0, 1, 0, 0, 0
-    !
-    ! And from this we recursively build the higher degree splines.
-    splines(:)               = 0.0_f64
-    splines(spline_degree+1) = 1.0_f64
-    
-    ! Build the higher order splines. 
-    last = 2*spline_degree  
-    do j=1,spline_degree
-       jreal      = real(j,f64)
-       r_jreal    = 1.0_f64/jreal
-       do i=1,last
-          temp       = real(spline_degree - i, f64)
-          fac1       = (temp + normalized_offset + 1.0_f64)*r_jreal
-          fac2       = (-temp + jreal - normalized_offset)*r_jreal
-          splines(i) = fac1*splines(i) + fac2*splines(i+1)
-       end do
-       last = last - 1
-    end do
-    uniform_b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
-  end function uniform_b_splines_at_x
-
 
   ! *************************************************************************
   !
@@ -721,7 +667,7 @@ contains
 
   function uniform_b_splines_at_x_old( spline_degree, normalized_offset )
     sll_int32, intent(in)                      :: spline_degree
-    sll_real64, dimension(1:spline_degree+1)   :: uniform_b_splines_at_x
+    sll_real64, dimension(1:spline_degree+1)   :: uniform_b_splines_at_x_old
     sll_real64, intent(in)                     :: normalized_offset
     sll_real64, dimension(1:2*spline_degree+1) :: splines
     sll_int32                                  :: i
@@ -760,7 +706,7 @@ contains
        end do
        last = last - 1
     end do
-    uniform_b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
+    uniform_b_splines_at_x_old(1:spline_degree+1) = splines(1:spline_degree+1)
   end function uniform_b_splines_at_x_old
 
 
