@@ -8,6 +8,7 @@ use sll_mudpack_polar
 
 implicit none
 
+type(mudpack_2d) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -21,7 +22,7 @@ sll_int32  :: ntheta
 sll_real64 :: r_min, r_max, delta_r
 sll_real64 :: theta_min, theta_max, delta_theta
 sll_int32  :: error
-sll_real64 :: tol,l1,l2,linf
+sll_real64 :: tolmax,errmax
 
 sll_int32, parameter  :: n = 4
 
@@ -45,75 +46,65 @@ SLL_CLEAR_ALLOCATE(phi_sin(1:nr,1:ntheta),error)
 SLL_CLEAR_ALLOCATE(r(1:nr),error)
 SLL_CLEAR_ALLOCATE(theta(1:ntheta),error)
 
-print*, r_min
 do i = 1, nr
    r(i)=r_min+(i-1)*delta_r
 end do
-print*, r
 do j = 1, ntheta
    theta(j)=(j-1)*delta_theta
 end do
 
-open(10,file="phi_polar.dat")
 do j=1,ntheta
    do i=1,nr
-      phi_cos(i,j) = 0.0 !(r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
-      phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
-      write(10,*) sngl(r(i)*cos(theta(j))), &
-                  sngl(r(i)*sin(theta(j))), &
-                  sngl(phi_cos(i,j)),      &
-                  sngl(phi_sin(i,j))
+      phi_cos(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
+      phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*sin(n*theta(j))*r(i)
    end do
-   write(10,*)
 end do
-close(10)
 
-tol   = 1.0e-14_f64
+tolmax   = 1.0e-4_f64
 
+call initialize_poisson_polar_mudpack(poisson, phi, rhs, &
+                                      r_min, r_max, nr, &
+                                      theta_min, theta_max, ntheta, &
+                                      NEUMANN, DIRICHLET, PERIODIC, PERIODIC )
 do i =1,nr
    do j=1,ntheta
       rhs(i,j) = f_cos(r(i), theta(j))
    end do
 end do
 
-call initialize_poisson_polar_mudpack(phi_cos, rhs, &
-                                      r_min, r_max, &
-                                      theta_min, theta_max, &
-                                      nr, ntheta)
+poisson%iguess = 0 ! no initial guess
 
-call solve_poisson_polar_mudpack(phi_cos, rhs)
+call solve_poisson_polar_mudpack(poisson, phi, rhs)
 
-do j = 1, ntheta
-   do i = 1, nr
-      write(11,*) sngl(r(i)*cos(theta(j))), &
-                  sngl(r(i)*sin(theta(j))), &
-                  sngl(phi_cos(i,j)),      &
-                  sngl(phi_sin(i,j))
-   end do
-   write(11,*)
-end do
-
-l1   = 0.0_f64
-l2   = 0.0_f64
-linf = 0.0_f64
-
-if (l1>tol .or. l2>tol .or. linf>tol) then
-   print*,'FAILED',tol,l1,l2,linf
+errmax = maxval(abs(phi_cos-phi))
+write(*,201) errmax
+if ( errmax > tolmax ) then
+   print*,'FAILED'
    stop
+else
+   print*,'PASSED'
 end if
 
 do i =1,nr
    do j=1,ntheta
-      rhs(i,j)= f_sin(r(i),theta(j))
+      rhs(i,j) = f_sin(r(i), theta(j))
    end do
 end do
 
-if (l1>tol .or. l2>tol .or. linf>tol) then
-   print*,'FAILED',tol,l1,l2,linf
+poisson%iguess = 0 ! no initial guess
+
+call solve_poisson_polar_mudpack(poisson, phi, rhs)
+
+errmax = maxval(abs(phi_cos-phi))
+write(*,201) errmax
+if ( errmax > tolmax ) then
+   print*,'FAILED'
    stop
+else
+   print*,'PASSED'
 end if
 
-print*,'PASSED'
+201 format(' maximum error  =  ',e10.3)
 
 contains
 
