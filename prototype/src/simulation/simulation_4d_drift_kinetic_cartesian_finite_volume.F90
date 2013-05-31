@@ -31,6 +31,7 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
      sll_int32  :: nproc_x3
      ! Physics/numerical parameters
      sll_real64 :: dt
+     sll_real64 :: tmax
      sll_int32  :: num_iterations
      ! Mesh parameters
      sll_int32  :: nc_v3  ! velocity nodes
@@ -144,6 +145,7 @@ contains
     sll_int32  :: nc_x1
     sll_int32  :: nc_x2
     sll_int32  :: nc_x3
+    sll_int32,dimension(3) :: jdir,kdir,ldir
     sll_int32  :: ranktop
     sll_int32  :: rankbottom
     sll_int32  :: message_id
@@ -153,6 +155,8 @@ contains
 
     
     sll_real64,dimension(:,:),allocatable :: plotf2d
+    ! volumes of the cells and surfaces of the faces
+    sll_real64,dimension(:),allocatable :: volume,surface
     sll_int32,dimension(4)  :: global_indices
 
     sim%world_size = sll_get_collective_size(sll_world_collective)  
@@ -278,8 +282,7 @@ contains
 
 
 
-    ! mpi communications 
-
+    ! mpi communications parameters
     ranktop=mod(sim%my_rank+1,sim%world_size)
     rankbottom=sim%my_rank-1
     if (rankbottom.lt.0) rankbottom=sim%world_size-1
@@ -288,23 +291,78 @@ contains
     tagtop=sim%my_rank
     tagbottom=ranktop
 
-    ! top communications
-    write(*,*) 'coucou1',sim%my_rank,' bottom:',rankbottom,' top:',ranktop,'datasize=',size(sim%fn_v3x1x2(:,:,:,loc_sz_x3+1))
-    Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,loc_sz_x3),datasize, &
-         MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-         sim%fn_v3x1x2(1,1,1,0),datasize,            &
-         MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
 
-    ! bottom communications
-    write(*,*) 'coucou2',sim%my_rank
-    Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,1),datasize, &
-         MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-         sim%fn_v3x1x2(1,1,1,loc_sz_x3+1),datasize,            &
-         MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+    ! init the volume and surface arrays
+    allocate(volume(loc_sz_x1*loc_sz_x2*loc_sz_x3))
+    allocate(surface(3*loc_sz_x1*loc_sz_x2*loc_sz_x3))
+    
 
-    write(*,*) 'end comm',sim%my_rank
+    ! simple computation
+    ! to be generalized with generic transformation...
+    volume=sim%mesh4d%delta_eta2 * &
+         sim%mesh4d%delta_eta3 * &
+         sim%mesh4d%delta_eta4 
+
+    surface(1:loc_sz_x1*loc_sz_x2*loc_sz_x3)= &
+         sim%mesh4d%delta_eta3*sim%mesh4d%delta_eta4
+   surface(loc_sz_x1*loc_sz_x2*loc_sz_x3+1:2*loc_sz_x1*loc_sz_x2*loc_sz_x3)= &
+         sim%mesh4d%delta_eta2*sim%mesh4d%delta_eta4
+   surface(2*loc_sz_x1*loc_sz_x2*loc_sz_x3+1:3*loc_sz_x1*loc_sz_x2*loc_sz_x3)= &
+         sim%mesh4d%delta_eta2*sim%mesh4d%delta_eta3
+
+
+   ! face and normal directions
+!!$   jdir=(/1,0,0/)
+!!$   kdir=(/0,1,0/)
+!!$   ldir=(/0,0,1/)
+!!$   facedir=(/loc_sz_x1,loc_sz_x2,loc_sz_x3/)
+
+   ! time loop
+   t=0
+   do while(t.lt.tmax)
+       
+      
+      ! mpi communications
+      ! top communications
+      Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,loc_sz_x3),datasize, &
+           MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+           sim%fn_v3x1x2(1,1,1,0),datasize,            &
+           MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+
+      ! bottom communications
+      write(*,*) 'coucou2',sim%my_rank
+      Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,1),datasize, &
+           MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+           sim%fn_v3x1x2(1,1,1,loc_sz_x3+1),datasize,            &
+           MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+
+      fstar=fn
+
+!!$      ! loop on the directions
+!!$      do dir=1,3
+!!$         ! loop on the face in the direction
+!!$         do iface=1,facedir(dir)
+
+
+      ! counter for the face 
+      isurf=1
+      ! fluxes in the x1 direction
+      do k=1,loc_sz_x2
+         do l=1,loc_sz_x3
+            do j=1,loc_sz_x1
+               jp1=j+1
+               if (jp1.gt.loc_sz_x1) jp1=1
+               call fluxnum(fn(1,j,k,l),fn(1,jp1,k,l),flux)
+               surf=surface(isurf)
+               isurf=isurf+1
+               fstar(:,j,k,l)=fstar(:,j,k,l)-dt*surf/volume(j,k,l)*flux(:)
+               fstar(:,jp1,k,l)=fstar(:,jp1,k,l)+dt*surf/volume(jp1,k,l)*flux(:)
+            end do
+         end do
+      end do
+    end do
 
     call compute_local_sizes_4d( sim%sequential_v3x1x2, &
          loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 
