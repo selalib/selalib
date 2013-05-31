@@ -82,8 +82,7 @@ elif [[ "$HOST" = *irma-* ]]; then
    HOMEDIR=${HOME}/Vlasov
 else
    HOMEDIR="./"
-   mkdir ./build
-   WORKDIR="./build"
+   WORKDIR="./"
 fi
 
 echo "HOMEDIR:$HOMEDIR"
@@ -146,14 +145,18 @@ if [[ `hostname` == "irma-spare" ]]; then
   mpd &
 fi
 
-mkdir build
-cd build; {
+mkdir debug
+cd debug; {
 cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Debug
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
 make NightlyTest
 make NightlySubmit
+}; cd -
+
+mkdir release
+cd release; {
 cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
 make NightlyUpdate
 make NightlyConfigure
@@ -161,7 +164,8 @@ make NightlyBuild
 make NightlyTest
 make NightlySubmit
 }; cd -
-rm -rf build
 
+rm -rf debug
+rm -rf release
 
 exit 0
