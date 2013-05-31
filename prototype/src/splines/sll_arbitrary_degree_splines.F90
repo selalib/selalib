@@ -655,6 +655,118 @@ contains
     uniform_b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
   end function uniform_b_splines_at_x
 
+
+  ! *************************************************************************
+  !
+  !                    UNIFORM B-SPLINE FUNCTIONS
+  !
+  ! *************************************************************************
+
+  !> returns an array with the values of the b-splines of the 
+  !> requested degree, evaluated at a given cell offset. The cell size is
+  !> normalized between 0 and 1, thus the offset given must be a number
+  !> between 0 and 1.
+
+  function uniform_b_splines_at_x( spline_degree, normalized_offset ) result(out)
+    !new uniform_b_splines_at_x
+    !out(1:d+1)= B_d(-(d+1)/2+d+x),...,B_d(-(d+1)/2+x) with d=spline_degree and x=normalized_offset
+    !where B_d=B_{d-1}*B_0 and B_0=1_[-1/2,1/2] and * is convolution
+    !complexity is lower than deboor splines in this uniform setting (translation of a unique B-spline)
+    !the following code can be used for comparison with deboor
+    !do i=-d,d+1
+    !t(i+d+1)=real(i,8)
+    !enddo
+    !call bsplvb(t,d+1,1,normalized_offset,d+1,out)
+    !we also have the property (from the symmetry of the B-spline)
+    !out(1:d+1)= B_d(-(d+1)/2+xx),...,B_d(-(d+1)/2+d+xx),..., where xx=1-normalized_offset
+    
+    implicit none
+    sll_int32, intent(in)                      :: spline_degree
+    sll_real64, intent(in)                     :: normalized_offset
+    sll_real64, dimension(1:spline_degree+1)   :: out
+    sll_int32                                  :: degree,i
+    sll_real64                                 :: degree_real,i_real
+    sll_real64                                 :: r_degree
+    sll_real64                                 :: fac1,fac2
+    sll_real64                                 :: x,xx,tmp1,tmp2
+    !SLL_ASSERT( spline_degree >= 0 )
+    !SLL_ASSERT( normalized_offset >= 0.0_f64 )
+    !SLL_ASSERT( normalized_offset <= 1.0_f64 )
+    out(1) = 1._f64
+    xx=normalized_offset
+    x=1._f64-normalized_offset
+    !exchange x and xx for reverse
+    do degree=1,spline_degree
+      degree_real = real(degree,f64)
+      r_degree    = 1._f64/degree_real
+      fac1        = x*r_degree
+      tmp1        = out(1)
+      out(1)      = fac1*out(1)
+      do i=1,degree-1
+        i_real = real(i,f64)
+        fac1   = (x+i_real)*r_degree
+        fac2   = (xx+degree_real-i_real)*r_degree        
+        tmp2   = fac1*out(i+1)+fac2*tmp1
+        tmp1   = out(i+1)
+        out(i+1) = tmp2
+      enddo
+      fac2            = xx*r_degree 
+      out(degree+1)     = fac2*tmp1
+    enddo
+  end function uniform_b_splines_at_x
+
+
+
+
+
+  function uniform_b_splines_at_x_old( spline_degree, normalized_offset )
+    sll_int32, intent(in)                      :: spline_degree
+    sll_real64, dimension(1:spline_degree+1)   :: uniform_b_splines_at_x
+    sll_real64, intent(in)                     :: normalized_offset
+    sll_real64, dimension(1:2*spline_degree+1) :: splines
+    sll_int32                                  :: i
+    sll_int32                                  :: j
+    sll_int32                                  :: last
+    sll_real64                                 :: jreal
+    sll_real64                                 :: r_jreal
+    sll_real64                                 :: fac1
+    sll_real64                                 :: fac2
+    sll_real64                                 :: temp
+
+    SLL_ASSERT( spline_degree >= 0 )
+    SLL_ASSERT( normalized_offset >= 0.0_f64 )
+    SLL_ASSERT( normalized_offset <= 1.0_f64 )
+
+    ! Build the zeroth-order splines. The middle cell of the splines array
+    ! corresponds to the 'cell' that contains 'x'. So for example, if a cubic
+    ! spline is requested, the zeroth-order splines will be:
+    !
+    !        0, 0, 0, 1, 0, 0, 0
+    !
+    ! And from this we recursively build the higher degree splines.
+    splines(:)               = 0.0_f64
+    splines(spline_degree+1) = 1.0_f64
+    
+    ! Build the higher order splines. 
+    last = 2*spline_degree  
+    do j=1,spline_degree
+       jreal      = real(j,f64)
+       r_jreal    = 1.0_f64/jreal
+       do i=1,last
+          temp       = real(spline_degree - i, f64)
+          fac1       = (temp + normalized_offset + 1.0_f64)*r_jreal
+          fac2       = (-temp + jreal - normalized_offset)*r_jreal
+          splines(i) = fac1*splines(i) + fac2*splines(i+1)
+       end do
+       last = last - 1
+    end do
+    uniform_b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
+  end function uniform_b_splines_at_x_old
+
+
+
+
+
   !> returns an array with the values of the b-spline derivatives of the 
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
