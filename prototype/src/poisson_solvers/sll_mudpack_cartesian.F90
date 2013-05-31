@@ -3,19 +3,13 @@ module sll_mudpack_cartesian
 #include "sll_utilities.h"
 #include "sll_file_io.h"
 
+use sll_mudpack_base
+
 implicit none
-
-sll_real64, dimension(:), allocatable :: work
-sll_int32 :: mgopt(4)
-
-enum, bind(C)
-   enumerator :: PERIODIC=0, DIRICHLET=1
-   enumerator :: NEUMANN_RIGHT=2, NEUMANN_LEFT=3, NEUMANN=4
-end enum
 
 contains
 
-subroutine initialize_mudpack_cartesian(phi, rhs,                    &
+subroutine initialize_mudpack_cartesian(this, phi, rhs,              &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
                                         bc_eta1_left, bc_eta1_right, &
@@ -23,6 +17,7 @@ subroutine initialize_mudpack_cartesian(phi, rhs,                    &
 implicit none
 
 ! set grid size params
+type(mudpack_2d)        :: this
 sll_real64, intent(in)  :: eta1_min, eta1_max
 sll_real64, intent(in)  :: eta2_min, eta2_max
 sll_int32,  intent(in)  :: nc_eta1, nc_eta2
@@ -31,7 +26,7 @@ sll_int32,  intent(in)  :: bc_eta1_right
 sll_int32,  intent(in)  :: bc_eta2_left
 sll_int32,  intent(in)  :: bc_eta2_right
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
-sll_int32 :: icall, iiex, jjey, nnx, nny, llwork
+sll_int32 :: icall, iiex, jjey, llwork
 
 sll_real64, intent(inout) :: phi(nc_eta1+1,nc_eta2+1)
 sll_real64, intent(inout) :: rhs(nc_eta1+1,nc_eta2+1)
@@ -40,10 +35,7 @@ sll_real64, intent(inout) :: rhs(nc_eta1+1,nc_eta2+1)
 !storeage for labelling in vectors iprm,fprm
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
-sll_int32  :: i,j,error
-sll_real64 :: dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
-sll_real64 :: cex,cey
-
+sll_int32  :: i,error
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -57,22 +49,16 @@ equivalence(xa,fprm)
 !declare coefficient and boundary condition input subroutines external
 external cofx,cofy,bndsp
 
-nnx = nc_eta1+1
-nny = nc_eta2+1
+nx = nc_eta1+1
+ny = nc_eta2+1
 
 ! set minimum required work space
-llwork=(7*(nnx+2)*(nny+2)+44*nnx*nny)/3
+llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
       
-allocate(work(llwork))
+allocate(this%work(llwork))
 icall = 0
-iiex = ceiling(log((nnx-1.)/iixp)/log(2.))+1
-jjey = ceiling(log((nny-1.)/jjyq)/log(2.))+1
-
-! set multigrid arguments (w(2,1) cycling with fully weighted
-! residual restriction and cubic prolongation)
-mgopt(1) = 2
-mgopt(2) = 2
-mgopt(3) = 1
+iiex = ceiling(log((nx-1.)/iixp)/log(2.))+1
+jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
 
 !set input integer arguments
 intl = 0
@@ -100,16 +86,17 @@ end if
 
 !set multigrid arguments (w(2,1) cycling with fully weighted
 !residual restriction and cubic prolongation)
-mgopt(1) = 2
-mgopt(2) = 2
-mgopt(3) = 1
-mgopt(4) = 3
+this%mgopt(1) = 2
+this%mgopt(2) = 2
+this%mgopt(3) = 1
+this%mgopt(4) = 3
 
 !set for three cycles to ensure second-order approximation is computed
 maxcy = 3
 
 !set no initial guess forcing full multigrid cycling
-iguess = 0
+this%iguess = 0
+iguess = this%iguess
 
 !set work space length approximation from parameter statement
 nwork = llwork
@@ -127,11 +114,11 @@ yd = eta2_max
 tolmax = 0.0
 
 write(*,101) (iprm(i),i=1,15)
-write(*,102) (mgopt(i),i=1,4)
+write(*,102) (this%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
-call mud2sp(iprm,fprm,work,cofx,cofy,bndsp,rhs,phi,mgopt,error)
+call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
 !print error parameter and minimum work space requirement
 write (*,200) error,iprm(16)
@@ -156,9 +143,10 @@ if (error > 0) call exit(0)
 end subroutine initialize_mudpack_cartesian
 
 
-subroutine solve_mudpack_cartesian(phi, rhs)
+subroutine solve_mudpack_cartesian(this, phi, rhs)
 
-sll_real64 :: phi(:,:),rhs(:,:)
+type(mudpack_2d)  :: this
+sll_real64        :: phi(:,:),rhs(:,:)
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
@@ -179,19 +167,20 @@ equivalence(xa,fprm)
 !declare coefficient and boundary condition input subroutines external
 external cofx,cofy,bndsp
 
-!set no initial guess forcing full multigrid cycling
-iguess = 0
+!set initial guess because solve should be called every time step in a
+!time dependent problem and the elliptic operator does not depend on time.
+iguess = this%iguess
 
 !attempt solution
 intl = 1
 write(*,106) intl,method,iguess
 
-call mud2sp(iprm,fprm,work,cofx,cofy,bndsp,rhs,phi,mgopt,error)
+call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 write(*,107) error
 if (error > 0) call exit(0)
 
 ! attempt to improve approximation to fourth order
-call mud24sp(work,phi,error)
+call mud24sp(this%work,phi,error)
 
 write (*,108) error
 if (error > 0) call exit(0)
@@ -204,9 +193,6 @@ if (error > 0) call exit(0)
 end subroutine solve_mudpack_cartesian
 
 end module sll_mudpack_cartesian
-
-
-
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
@@ -232,14 +218,14 @@ end
 subroutine bndsp(kbdy,xory,alfa,gbdy)
 implicit none
 integer  :: kbdy
-real(8)  :: xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
+real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
+!subroutiner not used in periodic case
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa
-   call exact(x,y,pxx,pyy,px,py,pe)
    alfa = -1.0
    gbdy = px + alfa*pe
    return
@@ -248,7 +234,6 @@ end if
 if (kbdy == 4) then  ! y=yd boundary
    y = yd
    x = xory
-   call exact(x,y,pxx,pyy,px,py,pe)
    alfa = 1.0
    gbdy = py + alfa*pe
    return
