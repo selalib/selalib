@@ -510,6 +510,11 @@ c
       end
 
       subroutine exact(t,p,utt,upp,ut,up,ue)
+      implicit none
+      integer i, j
+      real(8) t, p, utt, upp, ut, up, ue
+      real(8) sinp, cosp, sint, cost, dp, dpp, dt, dtt, tmp
+      real(8) ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
 c
 c     the exact solution used is the restriction of u(x,y,z) = (x*y*z)**2
 c     in cartesian coordinates to the surface of the sphere of radius one
