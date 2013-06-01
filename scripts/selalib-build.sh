@@ -158,10 +158,7 @@ make NightlySubmit
 mkdir debug
 cd debug; {
 cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Debug
-make NightlyConfigure
-make NightlyBuild
-make NightlyTest
-make NightlySubmit
+make Experimental
 }; cd -
 
 rm -rf debug
