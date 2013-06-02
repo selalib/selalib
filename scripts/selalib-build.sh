@@ -145,9 +145,9 @@ if [[ `hostname` == "irma-spare" ]]; then
   mpd &
 fi
 
-mkdir release
-cd release; {
-cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
+mkdir build
+cd build; {
+cmake ${HOMEDIR}/selalib
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
@@ -155,13 +155,6 @@ make NightlyTest
 make NightlySubmit
 }; cd -
 
-mkdir debug
-cd debug; {
-cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Debug
-make Experimental
-}; cd -
-
-rm -rf debug
-rm -rf release
+rm -rf build
 
 exit 0
