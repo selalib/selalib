@@ -41,14 +41,14 @@ program dk_cartesian_4d
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
-#define NPTS2 32
-#define NPTS3 32
-#define NPTS4 32
+#define NCELL1 32
+#define NCELL2 32
+#define NCELL3 4
+#define NCELL4 8
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_4d( NPTS1, NPTS2,NPTS3, NPTS4 , &
-       eta4_min=-6.0_f64, eta4_max=6.0_f64)
+  mx => new_logical_mesh_4d( NCELL1, NCELL2,NCELL3, NCELL4 , &
+       eta1_min=-6.0_f64, eta1_max=6.0_f64,eta2_min=0.0_f64,eta2_max=1.0_f64)
 
 
 

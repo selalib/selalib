@@ -106,7 +106,7 @@ SET(SLV2D_SRC silo_module.F90
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
 
-ADD_DEPENDENCIES(slv2d selalib-mpi dfftpack)
+ADD_DEPENDENCIES(slv2d selalib dfftpack)
 
 SET(SLV2D_CSL2D_SRC silo_module.F90
               diagnostiques.F90
@@ -162,7 +162,7 @@ MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
-SET(LIBS selalib-mpi 
+SET(LIBS selalib 
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
          ${FFTW_LIBRARIES} 
@@ -213,7 +213,7 @@ IF (FFTW_FOUND)
    #   ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
    #   TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
    #   ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
-   #   TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib-mpi ${FFTW_LIBRARIES})
+   #   TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib ${FFTW_LIBRARIES})
    #
    #ENDIF()
 

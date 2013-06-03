@@ -56,19 +56,7 @@ INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 
 # include's .h files
-INCLUDE_DIRECTORIES(utilities 
-                    constants
-                    memory 
-                    assert 
-                    splines 
-                    precision 
-                    fields 
-                    file_io
-                    fft
-                    interpolators
-                    poisson_solvers
-                    maxwell_solvers
-                    visu_pic) 
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(package)
@@ -85,6 +73,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(file_io)
    ADD_SUBDIRECTORY(timer)
    ADD_SUBDIRECTORY(non_linear_solvers)
+ #  ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(splines)
    ADD_SUBDIRECTORY(logical_meshes)
    ADD_SUBDIRECTORY(coordinate_transformations)
@@ -104,6 +93,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
+   ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(interpolators)
    ADD_SUBDIRECTORY(mapped_meshes)
    ADD_SUBDIRECTORY(fields)
@@ -121,10 +111,14 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
       ADD_SUBDIRECTORY(simulation)
-      ADD_SUBDIRECTORY(discontinuous_galerkin) 
+
+      FIND_PACKAGE(SUITESPARSE)
+      IF(SUITESPARSE_FOUND AND 0)
+         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+         ADD_SUBDIRECTORY(discontinuous_galerkin) 
+      ENDIF(SUITESPARSE_FOUND AND 0)
    
    ENDIF(NOT STDF95)
-
 
    SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
 
