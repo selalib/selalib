@@ -37,7 +37,7 @@ program test_general_qns
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
-  sll_real64 :: NPTS1,NPTS2
+  sll_int32 :: npts1,npts2
   real(8), external :: sol_exacte_perper
   
   
@@ -54,8 +54,8 @@ program test_general_qns
   print*, "---------------------"
   print*, "first test case witout change of coordinates"
   print*, "---------------------"
-  NPTS1 =  NUM_CELLS1 + 1
-  NPTS2 =  NUM_CELLS2 + 1
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
   h1 = 1.0_f64/real(NPTS1-1,f64)
   h2 = 1.0_f64/real(NPTS2-1,f64)
   print *, 'h1 = ', h1
@@ -63,8 +63,8 @@ program test_general_qns
 
   ! Table to represent the node values of phi
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
-  allocate(calculated(NPTS1,NPTS2))
-  allocate(difference(NPTS1,NPTS2))
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
   
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
@@ -207,8 +207,8 @@ program test_general_qns
   
   acc = 0.0_f64
 
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
+  do j=0,npts2-1
+     do i=0,npts1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
         node_val   = interp_2d%interpolate_value(eta1,eta2)
@@ -224,7 +224,7 @@ program test_general_qns
   
 
   print *,'Average error in nodes (per-per) without change of coordinates='&
-       ,acc/(NPTS1*NPTS2)
+       ,acc/(npts1*npts2)
 
 
   ! delete things...
