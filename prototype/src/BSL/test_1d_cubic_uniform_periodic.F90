@@ -61,11 +61,11 @@ program bsl_1d_cubic_periodic
 
   Print*, 'checking advection of a Gaussian in a uniform field'
 #ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, PERIODIC_SPLINE )
-  call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, SLL_PERIODIC )
+  call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, SLL_PERIODIC )
 #else  
-  call spline_x%initialize(nc_x+1, x_min, x_max, PERIODIC_SPLINE )
-  call spline_v%initialize(nc_v+1, v_min, v_max, PERIODIC_SPLINE )
+  call spline_x%initialize(nc_x+1, x_min, x_max, SLL_PERIODIC )
+  call spline_v%initialize(nc_v+1, v_min, v_max, SLL_PERIODIC )
 #endif
 
   interp_x => spline_x

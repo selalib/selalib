@@ -19,7 +19,7 @@
 !>
 module sll_module_interpolators_2d_base
 #include "sll_working_precision.h" 
-
+  use sll_boundary_condition_descriptors
   implicit none
   
   !*************************************************************************
@@ -55,16 +55,13 @@ module sll_module_interpolators_2d_base
      procedure(interpolate_2d_array_disp), &
      pass, deferred :: interpolate_array_disp
 
+     procedure(interpolator_2d_set_coeffs), &
+          pass, deferred :: set_coefficients
+
   end type sll_interpolator_2d_base
   
 
-  sll_int32, parameter :: PERIODIC_INTERP  = 0
-  sll_int32, parameter :: DIRICHLET_INTERP = 1 
-  sll_int32, parameter :: NEUMANN_INTERP   = 2 
-  sll_int32, parameter :: HERMITE_INTERP   = 3
-
   abstract interface
-
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
 
        use sll_working_precision
@@ -136,5 +133,18 @@ module sll_module_interpolators_2d_base
      end function interpolate_2d_array_disp
 
   end interface
+
+  abstract interface
+     subroutine interpolator_2d_set_coeffs( interpolator, coeffs_1d, coeffs_2d )
+       use sll_working_precision
+       import sll_interpolator_2d_base
+       class(sll_interpolator_2d_base), intent(inout) :: interpolator
+       ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
+       ! for more flexibility for the children classes.
+       sll_real64, dimension(:), intent(in), optional   :: coeffs_1d
+       sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
+     end subroutine interpolator_2d_set_coeffs
+  end interface
+
 
 end module sll_module_interpolators_2d_base
