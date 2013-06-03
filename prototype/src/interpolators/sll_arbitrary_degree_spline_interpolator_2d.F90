@@ -516,7 +516,7 @@ contains
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        print *, 'sz1 = ', sz1, 'sz2 = ', sz2
-       print *, 'size(coeff_splines) = ', size(interpolator%coeff_splines)
+       print *, 'size(coeff_splines) = ', size(interpolator%coeff_splines,1),size(interpolator%coeff_splines,2)
        interpolator%size_coeffs1 = sz1+1
        interpolator%size_coeffs2 = sz2
        interpolator%size_t1 = order1 + sz1 + 1
