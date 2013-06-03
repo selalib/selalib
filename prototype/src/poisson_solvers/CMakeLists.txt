@@ -31,23 +31,29 @@ TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
-   ADD_LIBRARY(sll_poisson_2d_periodic STATIC sll_poisson_2d_periodic.F90)
+
+   ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_1d_periodic.F90
+                                          sll_poisson_2d_periodic_fftw.F90
+                                          sll_poisson_2d_polar.F90)
 
    ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
 
-   TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_2d_periodic 
+   TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_solvers 
                                          ${POISSON_LIBS}
                                          ${FFTW_LIBRARIES})
 
-   ADD_LIBRARY(sll_poisson_solvers STATIC sll_poisson_1d_periodic.F90
-                                          sll_poisson_2d_periodic.F90
-                                          sll_poisson_2d_polar.F90)
+ENDIF()
+
+IF(MUDPACK_ENABLED)
+
+   ADD_EXECUTABLE(test_mudpack test_mudpack.F90 sll_mudpack.F90)
+   TARGET_LINK_LIBRARIES( test_mudpack sll_memory sll_assertion mudpack)
 
 ENDIF()
 
 IF(FISHPACK_ENABLED)
 
-   ADD_EXECUTABLE(test_fishpack test_fishpack.F90 fishpack.F90)
+   ADD_EXECUTABLE(test_fishpack test_fishpack.F90 sll_fishpack.F90)
    TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assertion fishpack)
 
 ENDIF()

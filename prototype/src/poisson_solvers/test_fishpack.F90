@@ -1,6 +1,6 @@
 program test_fishpack
 
-use fishpack
+use sll_fishpack
 
 implicit none
 !-----------------------------------------------

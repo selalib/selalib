@@ -19,8 +19,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_pstd)                 :: maxwell_TE
-type(maxwell_pstd)                 :: maxwell_TM
+type(maxwell_2d_pstd)              :: maxwell_TE
+type(maxwell_2d_pstd)              :: maxwell_TM
 sll_int32                          :: i, j
 sll_real64                         :: omega
 sll_real64                         :: time

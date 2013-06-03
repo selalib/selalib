@@ -368,6 +368,11 @@ contains
 
   end subroutine test_process_2d
 
+  function sincos_prod( x, y ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: x, y
+    val = sin(x)*cos(y)
+  end function sincos_prod
 
   !*********************************************************************
   ! The above routines should be converted into individualized routines
