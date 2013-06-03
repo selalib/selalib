@@ -37,8 +37,8 @@ program vp2d_keen_non_unif_v
   type(poisson2dpp) :: poisson 
   type(drive_param) :: dr_param
   ! old version of splines
-  type (splinepp)    :: splx 
-  type (splinenn)    :: sply
+  !type (splinepp)    :: splx 
+  !type (splinenn)    :: sply
 
   sll_real64, dimension(:,:,:,:), pointer :: f4d
   sll_real64, dimension(:,:),     pointer :: rho
@@ -115,7 +115,7 @@ program vp2d_keen_non_unif_v
         do i = 1, geomx%nx
            ! use normalized hypergaussian envelope in x
            xx = geomx%x0 + (i-1)*geomx%dx
-           hypergaussian = exp(-0.5_8 * xx * xx) ** 3 / 1.4472025  
+           hypergaussian = 0._f64*exp(-0.5_8 * xx * xx) ** 3 / 1.4472025  
            e_y(i,j) = e_y(i,j) +  hypergaussian * dr_param%Edrmax * &
                 dr_param%adr * dr_param%kdr * &
                 sin(dr_param%kdr * (j-1) * geomx%dy - dr_param%omegadr*iter*dt)
@@ -253,7 +253,7 @@ contains
     dr_param%kdr = kdr
 
     call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
+    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"perxy")
 
 !print*, 'bcast ',my_num, t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr, kdr
   end subroutine initglobal
@@ -314,6 +314,7 @@ contains
 
     kx  = 2_f64*sll_pi/((geomx%nx)*geomx%dx)
     ky  = 2_f64*sll_pi/((geomx%ny)*geomx%dy)
+    eps=0.05_f64
     do jv=jstartv,jendv
        vy = geomv%y0+(jv-1)*geomv%dy
        do iv=1,geomv%nx
@@ -323,7 +324,9 @@ contains
              y=geomx%y0+(j-1)*geomx%dy
              do i=1,geomx%nx
                 x=geomx%x0+(i-1)*geomx%dx
-                f(i,j,iv,jv)= 1/(2*sll_pi)*exp(-.5*v2)
+                !f(i,j,iv,jv)= 1/(2*sll_pi)*exp(-.5*v2)
+                !f(i,j,iv,jv)= 1._f64/(2._f64*sll_pi)*exp(-.5_f64*v2)*(1._f64+0.01_f64*cos(kx*x)*cos(ky*y))
+                f(i,j,iv,jv)=(1._f64+eps*cos(kx*x))*1._f64/(2._f64*sll_pi)*exp(-.5_f64*v2)
              end do
           end do
        end do
