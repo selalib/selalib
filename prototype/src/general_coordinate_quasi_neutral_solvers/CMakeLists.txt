@@ -24,6 +24,7 @@ ADD_DEPENDENCIES( sll_general_coordinate_quasi_neutral_solvers
   sll_memory
   sll_boundary_condition_descriptors
   sll_assertion
+  sll_constants
   sll_working_precision
   deboor_splines
   )
