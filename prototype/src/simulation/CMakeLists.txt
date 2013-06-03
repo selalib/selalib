@@ -24,6 +24,7 @@ add_library(sll_simulation_1d STATIC simulation_1d.F90
             CG_Curvilinear_2D_advection.F90
             CG_Curvilinear_2D_structure.F90
             CG_Curvilinear_Function.F90
+            CG_Curvilinear_2D_diagnostic.F90
 ## for cg2d_curvilinear branch end
             simulation_vp1d_fourier_fem.F90)
 ENDIF (STDF95)
@@ -91,7 +92,7 @@ target_link_libraries( test_vp1d_fourier_fem
 
 ## for cg2d_curvilinear branch begin
 
-add_executable( test_cg_curvilinear CG_Curvilinear_2D.F90 )
+add_executable( test_cg_curvilinear CG_Curvilinear_2D.F90 ../poisson_solvers/sll_mudpack_colella.F90 )
 add_dependencies( test_cg_curvilinear sll_file_io)
 target_link_libraries( test_cg_curvilinear
   sll_simulation_1d
@@ -107,6 +108,7 @@ target_link_libraries( test_cg_curvilinear
   sll_memory
   sll_assertion 	
   sll_working_precision
+  mudpack
   )
 
 ## for cg2d_curvilinear branch end
@@ -220,25 +222,25 @@ target_link_libraries(VP1D_cart
 
 IF(CMAKE_BUILD_TYPE MATCHES "Release")
 
-add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
-target_link_libraries(VP1D_deltaf_cart
-	sll_mapped_meshes
-	sll_interpolators
-	sll_periodic_interp
-	sll_splines
-	sll_fft
-	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
-	sll_constants
-	sll_file_io
-  	sll_utilities
-	sll_memory
-	sll_assertion 	
-	sll_poisson
-	dfftpack
-	${LAPACK_LIBRARIES}
-	)
+#add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
+#target_link_libraries(VP1D_deltaf_cart
+#	sll_mapped_meshes
+# 	sll_interpolators
+# 	sll_periodic_interp
+# 	sll_splines
+# 	sll_fft
+# 	geometry_functions
+# 	sll_distribution_function
+# 	sll_scalar_field_2d	
+# 	sll_constants
+# 	sll_file_io
+#   	sll_utilities
+# 	sll_memory
+# 	sll_assertion 	
+# 	sll_poisson
+# 	dfftpack
+# 	${LAPACK_LIBRARIES}
+# 	)
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
