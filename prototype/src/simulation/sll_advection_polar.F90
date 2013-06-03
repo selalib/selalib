@@ -72,10 +72,10 @@ contains
     this%time_scheme=time_scheme
 
     this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-         & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
+         & SLL_HERMITE, SLL_PERIODIC,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
    ! this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-   !      & PERIODIC_SPLINE, PERIODIC_SPLINE)
+   !      & SLL_PERIODIC, SLL_PERIODIC)
 
   end function new_plan_adv_polar
 

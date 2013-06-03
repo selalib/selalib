@@ -356,11 +356,11 @@ program vp_non_unif_mesh
 
   
 
-  spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
-  spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
+  spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, SLL_PERIODIC)
+  spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, SLL_PERIODIC)
 
-  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
-  spl_per_x1_E =>  new_cubic_nonunif_spline_1D( N_x1_poisson, PERIODIC_SPLINE)
+  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, SLL_PERIODIC)
+  spl_per_x1_E =>  new_cubic_nonunif_spline_1D( N_x1_poisson, SLL_PERIODIC)
   do i1=1,nc_eta1+1
     do i2=1,nc_eta2+1
       x1 = x1_min+(x1_max-x1_min)*node_positions_x1(i1)

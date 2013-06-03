@@ -87,20 +87,20 @@ program unit_test
   p_init_f => init_gaussian
 
  ! Set up the interpolators for the distribution function
-  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
  ! Set up the interpolators for the scalar field
-  call interp_eta1_sf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2_sf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1_sf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2_sf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr_sf => interp_eta1_sf
   interp_eta2_ptr_sf => interp_eta2_sf
 
  ! Set up the interpolators for the rotating field
-  call interp_eta1_rf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2_rf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1_rf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2_rf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr_rf => interp_eta1_rf
   interp_eta2_ptr_rf => interp_eta2_rf
 
