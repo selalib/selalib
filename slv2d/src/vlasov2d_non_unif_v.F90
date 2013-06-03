@@ -21,8 +21,9 @@ module vlasov2d_non_unif_v_module
  type, public :: vlasov2d
    sll_real64, dimension(:,:,:,:), pointer :: ft
    type (splinepp) :: splinex ! spline periodique pour X
+   !type (splinepp) :: interpv ! spline periodique pour V
    !type (splinenn) :: interpv ! spline naturel pour V
-   type (interp_non_unif_pp) :: interpv ! spline naturel pour V
+   type (interp_non_unif_pp) :: interpv ! non unif splines for V
    type (geometry) :: geomx, geomv
    logical :: transposed       ! permet de definir si f ou ft est derniere 
                                ! fonction de distribution mise a jour

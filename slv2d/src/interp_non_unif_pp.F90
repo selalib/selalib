@@ -13,6 +13,15 @@ module interp_non_unif_pp_class
   public :: new, interpole
   type, public :: interp_non_unif_pp
      type (geometry) :: geom
+     integer  :: conservative_x_case,mesh_x_case,interp_x_case(2),mesh_interp_x_case
+     integer  :: conservative_y_case,mesh_y_case,interp_y_case(2),mesh_interp_y_case
+     integer  :: bloc_index_x(3),bloc_index_y(3)
+     real(wp) :: bloc_coord_x(2),bloc_coord_y(2)
+     real(wp) :: eps_mesh_x,eps_mesh_y
+     integer  :: rho_x_case,rho_y_case
+     real(wp),dimension(:),allocatable :: node_positions_x,node_positions_y
+
+     
   end type interp_non_unif_pp
   interface new
      module procedure new_interp_non_unif_pp
@@ -28,6 +37,54 @@ contains
 
     ! initialisation de geom
     this%geom = geom
+    
+    this%mesh_interp_x_case = 1   ! 1: piecewise linear 2: cubic splines based
+    this%eps_mesh_x = 0._f64     ! relax cubic splines based mesh with uniform
+    this%mesh_interp_y_case = 1   ! 1: piecewise linear 2: cubic splines based
+    this%eps_mesh_y = 0._f64     ! relax cubic splines based mesh with uniform
+
+
+    !parameters
+    ! bloc_coord = (a,b) \subset (0,1) zone to refine
+    ! bloc_index(1) = density of points for (0,a) = 1 for the moment
+    ! bloc_index(2) = density of points for (a,b)
+    ! bloc_index(3) = density of points for (b,1) = 1 for the moment
+    this%bloc_coord_x(1) = 0.53125_f64
+    this%bloc_coord_x(2) = 0.6875_f64!69_f64
+    this%bloc_index_x(1) = 1
+    this%bloc_index_x(2) = 2!32
+    this%bloc_index_x(3) = 1
+    
+    this%bloc_coord_y(1) = 0.53125_f64
+    this%bloc_coord_y(2) = 0.6875_f64!69_f64
+    this%bloc_index_y(1) = 1
+    this%bloc_index_y(2) = 2!32
+    this%bloc_index_y(3) = 1
+
+    this%conservative_x_case=0
+    this%mesh_x_case=1
+    this%interp_x_case=(/1,3/)   ! cubic splines on uniform mesh
+    this%interp_x_case=(/2,17/)  ! Lagrange 17 on uniform mesh
+    !interp_case=(/0,17/)  ! FD order  17 on uniform mesh
+    !interp_case=(/0,6/)  ! FD order  6 on uniform mesh
+    !interp_case=(/10,5/) ! FD order 17 on two grid
+    !interp_case=(/10,6/) ! FD order 6 on two grid
+    !interp_case=(/11,3/)  ! cubic splines on two grid
+    this%interp_x_case=(/31,3/)  ! cubic non uniform splines
+
+    this%conservative_y_case=0
+    this%mesh_y_case=1
+    this%interp_y_case=(/1,3/)   ! cubic splines on uniform mesh
+    this%interp_y_case=(/2,17/)  ! Lagrange 17 on uniform mesh
+    this%interp_y_case=(/31,3/)  ! cubic non uniform splines
+
+    this%rho_x_case = 1 !1:trapezoidal formula 
+    this%rho_y_case = 1 !1:trapezoidal formula 
+
+    allocate(this%node_positions_x(this%geom%nx+1))
+    allocate(this%node_positions_y(this%geom%ny+1))
+    
+    call initialize(this)
 
 
  end subroutine new_interp_non_unif_pp
@@ -68,12 +125,226 @@ contains
     integer :: iflag ! error flag
     ! variables locales
     logical  :: aff
+    integer  :: i,Nc1,Nc2,bloc_index(3)
+    real(wp) :: alpha,mean,bloc_coord(2)
+    real(wp) :: eps_mesh
+    real(wp),dimension(:),allocatable :: buf_f,node_positions
+    
+    integer  :: conservative_case,mesh_case,interp_case(2),mesh_interp_case
+    integer  :: transpose_case
+    integer  :: N_buf
+    real(wp),dimension(:),allocatable :: buf
 
+    ALLOCATE(node_positions(max(this%geom%nx,this%geom%ny)+1))
+    
+    do transpose_case=0,1
+      if(transpose_case==0)then
+        Nc1=this%geom%nx
+        Nc2=this%geom%ny
+        bloc_coord=this%bloc_coord_x
+        bloc_index=this%bloc_index_x
+        mesh_case=this%mesh_x_case
+        interp_case=this%interp_x_case
+        mesh_interp_case=this%mesh_interp_x_case
+        conservative_case=this%conservative_x_case
+        eps_mesh=this%eps_mesh_x
+        alpha = depx/(real(this%geom%nx,f64)*this%geom%dx)
+        node_positions(1:Nc1+1)=this%node_positions_x(1:Nc1+1)
+      else
+        Nc1=this%geom%ny
+        Nc2=this%geom%nx
+        bloc_coord=this%bloc_coord_y
+        bloc_index=this%bloc_index_y
+        mesh_case=this%mesh_y_case
+        interp_case=this%interp_y_case
+        mesh_interp_case=this%mesh_interp_y_case
+        conservative_case=this%conservative_y_case
+        eps_mesh=this%eps_mesh_y
+        alpha = depy/(real(this%geom%ny,f64)*this%geom%dy)    
+        node_positions(1:Nc1+1)=this%node_positions_y(1:Nc1+1)
+      endif
+      
+      
+      
+!enforce use of uniform grid depending on interp_case 
+!      if((interp_case(1)>=0).and.(interp_case(1)<10))then
+!        bloc_index(1) = 1
+!        bloc_index(2) = 1
+!        bloc_index(3) = 1
+!        mesh_interp_case = 1
+!        eps_mesh = 0._f64  !or 1._f64
+!      endif
+!  
+!  
+!enforce use of two_grid depending on interp_case 
+!      if((interp_case(1)>=10).and.(interp_case(1)<29))then
+!        bloc_index(1) = 1
+!        bloc_index(3) = 1
+!        mesh_interp_case = 1
+!        eps_mesh = 0._f64  
+!      endif
+      
+	  ALLOCATE(buf_f(Nc1+1))
+	  !ALLOCATE(node_positions(Nc1+1))    
+!      call compute_bloc(bloc_coord,bloc_index,Nc1)
+!      if(mesh_case==1)then
+!        do i=1,Nc1+1
+!          node_positions(i) = (real(i,f64)-1._f64)/real(Nc1,f64)
+!        enddo
+!      endif
+!      if(mesh_case==2)then
+!        call compute_mesh_from_bloc(bloc_coord,bloc_index,node_positions,&
+!          &mesh_interp_case,eps_mesh)
+!      endif
+      if((interp_case(1)>=0).and.(interp_case(1)<10))then  
+        call constant_advection_size(N_buf,interp_case,Nc1)  
+        allocate(buf(0:N_buf-1))
+        call constant_advection_init(buf,N_buf,Nc1,interp_case)
+      endif
+      do i=1,Nc2
+        if(transpose_case==0)then
+          buf_f(1:Nc1)=f(1:Nc1,i)
+          buf_f(Nc1+1)=f(1,i)
+        else
+          buf_f(1:Nc1)=f(i,1:Nc1)
+          buf_f(Nc1+1)=f(i,1)      
+        endif  
+        if(conservative_case==1)then
+          call function_to_primitive(buf_f,node_positions,Nc1,mean)  
+        endif       
+        !choice of interpolation in v with different interfaces
+        !uniform
+        if((interp_case(1)>=0).and.(interp_case(1)<10))then
+          call constant_advection_solve(buf,N_buf,buf_f(1:Nc1),Nc1,alpha,&
+          &interp_case)
+          buf_f(Nc1+1)=buf_f(1)
+        endif
+        !advective two_grid
+        if((interp_case(1)>=10).and.(interp_case(1)<20))then
+          call constant_advection_two_grid_per(buf_f,alpha,&
+          &bloc_coord,bloc_index,node_positions,interp_case)
+        endif
+        !advective non_uniform
+        if((interp_case(1)>=30).and.(interp_case(1)<40))then
+          call constant_advection_non_unif_per(buf_f,alpha,node_positions,&
+          &Nc1,interp_case)
+        endif
+        if(conservative_case==1)then
+          call primitive_to_function(buf_f,node_positions,Nc1,mean)  
+        endif
+        if(transpose_case==0)then
+          f(1:Nc1,i)=buf_f(1:Nc1)
+        else
+          f(i,1:Nc1)=buf_f(1:Nc1)        
+        endif  
+      enddo
+      if((interp_case(1)>=0).and.(interp_case(1)<10))then  
+        DEALLOCATE(buf)
+      endif
+      DEALLOCATE(buf_f)
+    enddo
     !if (aff) then 
     !   call clck_temps(l_a)
     !end if
-
+    DEALLOCATE(node_positions)
+      
   end subroutine interpole_non_unif_ppdep
+
+
+
+  subroutine initialize(this) 
+    !----------------------------------------------------------------
+    ! interpolation par spline periodique dans les deux directions.
+    ! Les points d'interpolation sont definis grace a depx et depy
+    ! qui definissent le deplacement par rapport au maillage.
+    !----------------------------------------------------------------
+    type(interp_non_unif_pp), intent(inout) :: this
+    integer  :: i,Nc1,Nc2,bloc_index(3)
+    real(wp) :: alpha,mean,bloc_coord(2)
+    real(wp) :: eps_mesh
+    real(wp),dimension(:),allocatable :: buf_f,node_positions
+    
+    integer  :: conservative_case,mesh_case,interp_case(2),mesh_interp_case
+    integer  :: transpose_case
+    integer  :: N_buf
+    real(wp),dimension(:),allocatable :: buf
+
+    
+    do transpose_case=0,1
+      if(transpose_case==0)then
+        Nc1=this%geom%nx
+        Nc2=this%geom%ny
+        bloc_coord=this%bloc_coord_x
+        bloc_index=this%bloc_index_x
+        mesh_case=this%mesh_x_case
+        interp_case=this%interp_x_case
+        mesh_interp_case=this%mesh_interp_x_case
+        conservative_case=this%conservative_x_case
+        eps_mesh=this%eps_mesh_x
+      else
+        Nc1=this%geom%ny
+        Nc2=this%geom%nx
+        bloc_coord=this%bloc_coord_y
+        bloc_index=this%bloc_index_y
+        mesh_case=this%mesh_y_case
+        interp_case=this%interp_y_case
+        mesh_interp_case=this%mesh_interp_y_case
+        conservative_case=this%conservative_y_case
+        eps_mesh=this%eps_mesh_y
+      endif
+      
+      
+      
+      !enforce use of uniform grid depending on interp_case 
+      if((interp_case(1)>=0).and.(interp_case(1)<10))then
+        bloc_index(1) = 1
+        bloc_index(2) = 1
+        bloc_index(3) = 1
+        mesh_interp_case = 1
+        eps_mesh = 0._f64  !or 1._f64
+      endif
+  
+  
+      !enforce use of two_grid depending on interp_case 
+      if((interp_case(1)>=10).and.(interp_case(1)<29))then
+        bloc_index(1) = 1
+        bloc_index(3) = 1
+        mesh_interp_case = 1
+        eps_mesh = 0._f64  
+      endif
+      
+      ALLOCATE(node_positions(Nc1+1))
+      if(transpose_case==0)then
+        node_positions=this%node_positions_x
+      else
+        node_positions=this%node_positions_y      
+      endif
+      call compute_bloc(bloc_coord,bloc_index,Nc1)
+      if(mesh_case==1)then
+        do i=1,Nc1+1
+          node_positions(i) = (real(i,f64)-1._f64)/real(Nc1,f64)
+        enddo
+      endif
+      if(mesh_case==2)then
+        call compute_mesh_from_bloc(bloc_coord,bloc_index,node_positions,&
+          &mesh_interp_case,eps_mesh)
+      endif
+      if(transpose_case==0)then
+        this%node_positions_x=node_positions
+      else
+        this%node_positions_y=node_positions     
+      endif
+      
+      DEALLOCATE(node_positions)
+    enddo
+    !if (aff) then 
+    !   call clck_temps(l_a)
+    !end if
+      
+  end subroutine initialize
+
+
+
 
 
 !!!!!!!!!!!!!! routines from vlasov1d_non_unif_v_module.F90
@@ -136,12 +407,12 @@ contains
       bloc_coord(1)=real(i1,f64)/real(N_coarse,f64)
       bloc_coord(2)=real(i2,f64)/real(N_coarse,f64)
            
-      print *,'#uniform fine mesh would be:',N_coarse*N_local
-      print *,'#N_coarse=',N_coarse
-      print *,'#saving:',real(N,f64)/real(N_coarse*N_local,f64)
-      print *,'#new x(i1),x(i1+N_fine)=',bloc_coord(1),bloc_coord(2)
-      print *,'#error for x(i1),x(i1+N_fine)=',bloc_coord(1)-a,bloc_coord(2)-b
-      print *,'#i1,i1+N_fine,N_fine,N=',i1,i1+N_fine,N_fine,N
+      !print *,'#uniform fine mesh would be:',N_coarse*N_local
+      !print *,'#N_coarse=',N_coarse
+      !print *,'#saving:',real(N,f64)/real(N_coarse*N_local,f64)
+      !print *,'#new x(i1),x(i1+N_fine)=',bloc_coord(1),bloc_coord(2)
+      !print *,'#error for x(i1),x(i1+N_fine)=',bloc_coord(1)-a,bloc_coord(2)-b
+      !print *,'#i1,i1+N_fine,N_fine,N=',i1,i1+N_fine,N_fine,N
     else
       print *,'case in compute_bloc not implemented yet'
       stop  
