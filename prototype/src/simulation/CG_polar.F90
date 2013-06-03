@@ -593,7 +593,7 @@ program cg_polar
     end if
 
     if (step==1 .or. step/visustep*visustep==step) then
-      call plot_f(step)
+      call plot_f(step/visustep)
     end if
   end do
   write(23,*)' '
