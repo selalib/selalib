@@ -8,10 +8,10 @@ use sll_mudpack_colella
 
 implicit none
 
+type(mudpack_2d) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
-sll_real64, dimension(:,:), allocatable :: phi_cos
-sll_real64, dimension(:,:), allocatable :: phi_sin
+sll_real64, dimension(:,:), allocatable :: err
 sll_real64, dimension(:),   allocatable :: eta1
 sll_real64, dimension(:),   allocatable :: eta2
 
@@ -21,25 +21,25 @@ sll_int32  :: nc_eta2
 sll_real64 :: eta1_min, eta1_max, delta_eta1
 sll_real64 :: eta2_min, eta2_max, delta_eta2
 sll_int32  :: error
-sll_real64 :: tol,l1,l2,linf
+sll_real64 :: tol,l1,l2,linf, x, y
+
+#define alpha 0.2
+#define mode 2
 
 sll_int32, parameter  :: n = 4
 
-eta1_min   = 1.0_f64
-eta1_max   = 2.0_f64
-
+eta1_min  = 0.0_f64
+eta1_max  = 2*sll_pi
 eta2_min  = 0.0_f64
-eta2_max  = 2.0_f64 * sll_pi
+eta2_max  = 2*sll_pi
 
 nc_eta1 = 32
-nc_eta2 = 128
+nc_eta2 = 32
 delta_eta1 = (eta1_max-eta1_min)/real(nc_eta1,f64)
-delta_eta2 = 2.0_f64*sll_pi/real(nc_eta2,f64)
+delta_eta2 = (eta2_max-eta2_min)/real(nc_eta2,f64)
 
 SLL_CLEAR_ALLOCATE(rhs(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(phi(1:nc_eta1+1,1:nc_eta2+1),error)
-SLL_CLEAR_ALLOCATE(phi_cos(1:nc_eta1+1,1:nc_eta2+1),error)
-SLL_CLEAR_ALLOCATE(phi_sin(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(eta1(1:nc_eta1+1),error)
 SLL_CLEAR_ALLOCATE(eta2(1:nc_eta2+1),error)
 
@@ -50,105 +50,65 @@ do j = 1, nc_eta2+1
    eta2(j)=eta2_min+(j-1)*delta_eta2
 end do
 
-open(10,file="phi_colella.dat")
 do j=1,nc_eta2+1
    do i=1,nc_eta1+1
-      phi_cos(i,j) = 0.0 !(eta1(i)-eta1_min)*(eta1(i)-eta1_max)*cos(n*theta(j))*eta1(i)
-      phi_sin(i,j) = (eta1(i)-eta1_min)*(eta1(i)-eta1_max)*cos(n*eta2(j))*eta1(i)
-      write(10,*) sngl(eta1(i)*cos(eta2(j))), &
-                  sngl(eta1(i)*sin(eta2(j))), &
-                  sngl(phi_cos(i,j)),      &
-                  sngl(phi_sin(i,j))
-   end do
-   write(10,*)
-end do
-close(10)
-
-tol   = 1.0e-14_f64
-
-do i =1,nc_eta1+1
-   do j=1,nc_eta2+1
-      rhs(i,j) = f_cos(eta1(i), eta2(j))
-   end do
-end do
-
-call initialize_poisson_colella_mudpack(phi_cos, rhs, &
-                                      eta1_min, eta1_max, &
-                                      eta2_min, eta2_max, &
-                                      nc_eta1, nc_eta2)
-
-call solve_poisson_colella_mudpack(phi_cos, rhs)
-
-!changer de polaire -> colella
-do j = 1, nc_eta2+1
-   do i = 1, nc_eta1+1
-      write(11,*) sngl(eta1(i)*cos(eta2(j))), &
-                  sngl(eta1(i)*sin(eta2(j))), &
-                  sngl(phi_cos(i,j)),      &
-                  sngl(phi_sin(i,j))
+      x = eta1(i) !+ alpha*sin(eta1(i))*sin(eta2(j))
+      y = eta2(j) !+ alpha*sin(eta1(i))*sin(eta2(j))
+      phi(i,j) = sin(mode*x)*sin(mode*y)
+      rhs(i,j) = -2*mode*mode*phi(i,j)
+      write(11,*) sngl(x), sngl(y), sngl(phi(i,j))
    end do
    write(11,*)
 end do
 
-l1   = 0.0_f64
-l2   = 0.0_f64
-linf = 0.0_f64
+call initialize_poisson_colella_mudpack(poisson, phi, rhs, &
+                                      eta1_min, eta1_max, &
+                                      eta2_min, eta2_max, &
+                                      nc_eta1, nc_eta2)
 
-if (l1>tol .or. l2>tol .or. linf>tol) then
-   print*,'FAILED',tol,l1,l2,linf
-   stop
-end if
+call solve_poisson_colella_mudpack(poisson, phi, rhs)
 
-do i =1,nc_eta1+1
-   do j=1,nc_eta2+1
-      rhs(i,j)= f_sin(eta1(i),eta2(j))
+SLL_CLEAR_ALLOCATE(err(1:nc_eta1+1,1:nc_eta2+1),error)
+do j=1,nc_eta2+1
+   do i=1,nc_eta1+1
+      x = eta1(i) + alpha*sin(eta1(i))*sin(eta2(j))
+      y = eta2(j) + alpha*sin(eta1(i))*sin(eta2(j))
+      err(i,j) = phi(i,j) - sin(mode*x)*sin(mode*y)
+      write(12,*) sngl(x),sngl(y),sngl(phi(i,j))
    end do
+   write(12,*)
 end do
 
-if (l1>tol .or. l2>tol .or. linf>tol) then
-   print*,'FAILED',tol,l1,l2,linf
-   stop
-end if
 
+write(*,201) maxval(abs(err))
 print*,'PASSED'
-
-contains
-
-sll_real64 function f_cos( r, eta2 )
-
-   !sage: assume(r>=1)
-   !sage: assume(r<=2)
-   !sage: phi = (r-eta1_min)*(r-eta1_max)*r*cos(n*eta2)
-   !sage: diff(r*diff(phi,r),r)/r + diff(phi,eta2,eta2)/(r*r)
-
-   sll_real64 :: r
-   sll_real64 :: eta2
-
-   f_cos = -(r-eta1_max)*(r-eta1_min)*n*n*cos(n*eta2)/r &
-           + ((r-eta1_max)*(r-eta1_min)*cos(n*eta2)  &
-           + (r-eta1_max)*r*cos(n*eta2) + (r-eta1_min)*r*cos(n*eta2) &
-           + 2*((r-eta1_max)*cos(n*eta2) + (r-eta1_min)*cos(n*eta2) &
-           + r*cos(n*eta2))*r)/r
-
-
-end function f_cos
-
-sll_real64 function f_sin( r, eta2)
-
-   !sage: assume(r>=1)
-   !sage: assume(r<=2)
-   !sage: phi = (r-eta1_min)*(r-eta1_max)*r*sin(n*eta2)
-   !sage: diff(r*diff(phi,r),r)/r + diff(phi,eta2,eta2)/(r*r)
-
-   sll_real64 :: r
-   sll_real64 :: eta2
-   
-   f_sin = -(r-eta1_max)*(r-eta1_min)*n*n*sin(n*eta2)/r &
-         + ((r-eta1_max)*(r-eta1_min)*sin(n*eta2) &
-         + (r-eta1_max)*r*sin(n*eta2) + (r-eta1_min)*r*sin(n*eta2) &
-         + 2*((r-eta1_max)*sin(n*eta2) + (r-eta1_min)*sin(n*eta2)  &
-         + r*sin(n*eta2))*r)/r
-
-end function f_sin
+201 format(' maximum error  =  ',e10.3)
 
 end program test_mudpack_colella
+
+!> input pde coefficients at any grid point (x,y) in the solution region
+!> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
+subroutine coef(eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce)
+implicit none
+real(8) :: eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce
+
+cxx = alpha**2*sin(eta_1)**2*cos(eta_2)**2 + (alpha*sin(eta_2)*cos(eta_1) + 1)**2
+cxy = (alpha*sin(eta_2)*cos(eta_1) + 1)*alpha*sin(eta_1)*cos(eta_2) + &
+      (alpha*sin(eta_1)*cos(eta_2) + 1)*alpha*sin(eta_2)*cos(eta_1)
+cyy = alpha**2*sin(eta_2)**2*cos(eta_1)**2 + (alpha*sin(eta_1)*cos(eta_2) + 1)**2
+cx  = 0.0 
+cy  = 0.0 
+ce  = 0.0 
+return
+end subroutine
+
+!> at upper y boundary
+subroutine bnd(kbdy,xory,alfa,beta,gama,gbdy)
+implicit none
+integer  :: kbdy
+real(8)  :: xory,alfa,beta,gama,gbdy
+
+!! Set bounday condition value
+
+return
+end subroutine
