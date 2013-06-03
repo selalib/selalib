@@ -190,7 +190,7 @@ sll_real :: landau_alpha,landau_mode
     if(f_case==3) then!khp
     landau_mode=0.5_f64
     landau_alpha=0.015_f64
-    dt=0.1
+    dt=0.1_f64
     nb_step=600 
     visu_step=300
     eta1_min = 0._f64
