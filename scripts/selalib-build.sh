@@ -147,7 +147,7 @@ fi
 
 mkdir build
 cd build; {
-cmake ${HOMEDIR}/selalib
+cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
