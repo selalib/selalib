@@ -337,7 +337,7 @@ contains
     end do
 
     s => new_spline_2d( npts1, npts2, x1min, x1max, x2min, x2max, &
-         PERIODIC_SPLINE, PERIODIC_SPLINE )
+         SLL_PERIODIC, SLL_PERIODIC )
 
     call compute_spline_2d_prdc_prdc( data_2d, s )
     acc_2D = 0.0

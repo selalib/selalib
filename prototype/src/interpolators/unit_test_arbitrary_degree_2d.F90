@@ -6,9 +6,9 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 33 
-#define NPTS2 33 
-#define SPL_DEG 4
+#define NPTS1 3 
+#define NPTS2 3 
+#define SPL_DEG 0
 
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
@@ -87,10 +87,10 @@ program unit_test
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
        SPL_DEG, &
        SPL_DEG )
 
@@ -151,10 +151,10 @@ program unit_test
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
        SPL_DEG, &
        SPL_DEG )
 
@@ -213,10 +213,10 @@ program unit_test
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
        SPL_DEG, &
        SPL_DEG )
 
@@ -270,10 +270,10 @@ program unit_test
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
        SPL_DEG, &
        SPL_DEG )
 

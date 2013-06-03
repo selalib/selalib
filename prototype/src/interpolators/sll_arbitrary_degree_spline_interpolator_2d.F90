@@ -113,15 +113,15 @@ contains
 
 
     ! do some argument checking...
-    if(((bc_left  == PERIODIC_INTERP).and.(bc_right.ne. PERIODIC_INTERP)).or.&
-       ((bc_right == PERIODIC_INTERP).and.(bc_left .ne. PERIODIC_INTERP)))then
+    if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC)).or.&
+       ((bc_right == SLL_PERIODIC).and.(bc_left .ne. SLL_PERIODIC)))then
        print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
             'if one boundary condition is specified as periodic, then ', &
             'both must be. Error in first direction.'
     end if
 
-    if(((bc_bottom == PERIODIC_INTERP).and.(bc_top.ne. PERIODIC_INTERP)).or.&
-       ((bc_top == PERIODIC_INTERP).and.(bc_bottom .ne. PERIODIC_INTERP)))then
+    if(((bc_bottom == SLL_PERIODIC).and.(bc_top.ne. SLL_PERIODIC)).or.&
+       ((bc_top == SLL_PERIODIC).and.(bc_bottom .ne. SLL_PERIODIC)))then
        print *, 'initialize_arbitrary_degree_2d_interpolator, ERROR: ', &
             'if one boundary condition is specified as periodic, then ', &
             'both must be. Error in second direction.'
@@ -129,51 +129,51 @@ contains
 
     bc_selector = 0
 
-    if( bc_left == DIRICHLET_INTERP ) then
+    if( bc_left == SLL_DIRICHLET ) then
        bc_selector = bc_selector + 1
     end if
 
-    if( bc_left == NEUMANN_INTERP ) then
+    if( bc_left == SLL_NEUMANN ) then
        bc_selector = bc_selector + 2
     end if
 
-    if( bc_left == HERMITE_INTERP ) then
+    if( bc_left == SLL_HERMITE ) then
        bc_selector = bc_selector + 4
     end if
 
-    if( bc_right == DIRICHLET_INTERP ) then
+    if( bc_right == SLL_DIRICHLET ) then
        bc_selector = bc_selector + 8
     end if
 
-    if( bc_right == NEUMANN_INTERP ) then
+    if( bc_right == SLL_NEUMANN ) then
        bc_selector = bc_selector + 16
     end if
 
-   if( bc_right == HERMITE_INTERP ) then
+   if( bc_right == SLL_HERMITE ) then
        bc_selector = bc_selector + 32
     end if
 
-    if( bc_bottom == DIRICHLET_INTERP ) then
+    if( bc_bottom == SLL_DIRICHLET ) then
        bc_selector = bc_selector + 64
     end if
 
-    if( bc_bottom == NEUMANN_INTERP ) then
+    if( bc_bottom == SLL_NEUMANN ) then
        bc_selector = bc_selector + 128
     end if
 
-    if( bc_bottom == HERMITE_INTERP ) then
+    if( bc_bottom == SLL_HERMITE ) then
        bc_selector = bc_selector + 256
     end if
 
-    if( bc_top == DIRICHLET_INTERP ) then
+    if( bc_top == SLL_DIRICHLET ) then
        bc_selector = bc_selector + 512
     end if
 
-    if( bc_top == NEUMANN_INTERP ) then
+    if( bc_top == SLL_NEUMANN ) then
        bc_selector = bc_selector + 1024
     end if
 
-   if( bc_top == HERMITE_INTERP ) then
+   if( bc_top == SLL_HERMITE ) then
        bc_selector = bc_selector + 2048
     end if
 
@@ -242,10 +242,12 @@ contains
 
   subroutine set_coefficients_ad2d( &
    interpolator, &
-   linear_coeffs )
+   coeffs_1d, &
+   coeffs_2d )
 
-   class(arb_deg_2d_interpolator), intent(inout) :: interpolator
-   sll_real64, dimension(:), intent(in)          :: linear_coeffs
+   class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
+   sll_real64, dimension(:), intent(in), optional :: coeffs_1d
+   sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
    sll_int32 :: sp_deg1
    sll_int32 :: sp_deg2
    sll_int32 :: num_cells1
@@ -258,6 +260,13 @@ contains
    sll_real64 :: delta2
    sll_int32  ::  nb_spline_eta1
    sll_int32  ::  nb_spline_eta2
+
+   if(present(coeffs_2d)) then
+      print *, 'set_coefficients_ad2d(), ERROR: this function has not ', &
+           'implmented the option to set the coeffcients provided as a 2d ', &
+           'array.'
+      stop
+   end if
 
    sp_deg1    = interpolator%spline_degree1
    sp_deg2    = interpolator%spline_degree2
@@ -292,7 +301,7 @@ contains
       do i = 1,num_cells1
          do j = 1,num_cells2
             interpolator%coeff_splines(i+tmp1,j+tmp2) = &
-                 linear_coeffs( i + num_cells1 *(j-1) )
+                 coeffs_1d( i + num_cells1 *(j-1) )
          end do
       end do
       
@@ -329,13 +338,14 @@ contains
          interpolator%t2( i+ sp_deg2 + 1 ) = eta2_min + i* delta2
       end do
       
-      interpolator%t1(1:interpolator%size_t1)=interpolator%knots1(1:interpolator%size_t1)
+      interpolator%t1(1:interpolator%size_t1) = &
+           interpolator%knots1(1:interpolator%size_t1)
       
       
       do i = 1 ,nb_spline_eta1
          do j = 1,nb_spline_eta2
             interpolator%coeff_splines(i+1,j+tmp2) = &
-                 linear_coeffs(i+nb_spline_eta1*(j-1))
+                 coeffs_1d(i+nb_spline_eta1*(j-1))
          end do
       end do
 
@@ -348,7 +358,7 @@ contains
          do i = 1,nb_spline_eta1
 
             interpolator%coeff_splines(i + 1 ,j ) = &
-                 linear_coeffs( i + nb_spline_eta1*(nb_spline_eta2 - (tmp2 -j)-1))
+                 coeffs_1d( i + nb_spline_eta1*(nb_spline_eta2 - (tmp2 -j)-1))
          end do
       end do
 
@@ -359,7 +369,7 @@ contains
             do i = 1,nb_spline_eta1
 
                interpolator%coeff_splines(i+1 ,j) = &
-                    linear_coeffs(i + nb_spline_eta1*(j-(nb_spline_eta2+tmp2)-1))
+                    coeffs_1d(i + nb_spline_eta1*(j-(nb_spline_eta2+tmp2)-1))
                
             end do
          end do
@@ -377,13 +387,15 @@ contains
          interpolator%t1( i+ sp_deg1 + 1 ) = eta1_min + i* delta1
       end do
 
-      interpolator%t2(1: interpolator%size_t2) = interpolator%knots2(1: interpolator%size_t2)
+      interpolator%t2(1: interpolator%size_t2) = &
+           interpolator%knots2(1: interpolator%size_t2)
 
 
       do i = 1 , nb_spline_eta1
          do j = 1,nb_spline_eta2
 
-            interpolator%coeff_splines(i + tmp1 ,j+1) = linear_coeffs(i+nb_spline_eta1 *(j-1) )
+            interpolator%coeff_splines(i + tmp1 ,j+1) = &
+                 coeffs_1d(i+nb_spline_eta1 *(j-1) )
          end do
       end do
 
@@ -391,7 +403,7 @@ contains
          do j = 1,nb_spline_eta2
 
         interpolator%coeff_splines(i ,j+1) = &
-             linear_coeffs(nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+             coeffs_1d(nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
      end do
   end do
 
@@ -402,7 +414,7 @@ contains
         do j = 1,nb_spline_eta2
 
              interpolator%coeff_splines(i,j+1) = &
-                  linear_coeffs( i- (nb_spline_eta1 + tmp1)+nb_spline_eta1 *(j-1) )
+                  coeffs_1d( i- (nb_spline_eta1 + tmp1)+nb_spline_eta1 *(j-1) )
           end do
        end do
     end if
@@ -418,15 +430,18 @@ contains
 
       ! allocation and definition of knots
 
-      interpolator%t1(1: interpolator%size_t1)  = interpolator%knots1(1: interpolator%size_t1)
-      interpolator%t2(1: interpolator%size_t2)  = interpolator%knots2(1: interpolator%size_t2)
+      interpolator%t1(1: interpolator%size_t1)  = &
+           interpolator%knots1(1: interpolator%size_t1)
+      interpolator%t2(1: interpolator%size_t2)  = &
+           interpolator%knots2(1: interpolator%size_t2)
 
       interpolator%coeff_splines(:,:) = 0.0_8
       ! allocation coefficient spline
       do i = 1,nb_spline_eta1
          do j = 1,nb_spline_eta2
 
-            interpolator%coeff_splines(i+1,j+1) = linear_coeffs( i + nb_spline_eta1 *(j-1))
+            interpolator%coeff_splines(i+1,j+1) = &
+                 coeffs_1d( i + nb_spline_eta1 *(j-1))
          end do
       end do
       

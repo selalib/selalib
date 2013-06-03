@@ -71,11 +71,11 @@ implicit none
   delta_vy = (vy_max-vy_min)/(n_vy-1)
 
   call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
-                            PERIODIC_SPLINE, PERIODIC_SPLINE )
+                            SLL_PERIODIC, SLL_PERIODIC )
   interp_xy   => spline_xy
 
   call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              PERIODIC_SPLINE, PERIODIC_SPLINE )
+                              SLL_PERIODIC, SLL_PERIODIC )
   interp_vxvy => spline_vxvy
 
   do i = 1, n_x

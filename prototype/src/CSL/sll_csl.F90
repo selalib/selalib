@@ -64,17 +64,17 @@ contains
 
     ! initialize splines
     if (boundary1_type == PERIODIC) then
-       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, PERIODIC_SPLINE)
+       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, SLL_PERIODIC)
     else if (boundary1_type == COMPACT) then
-       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, HERMITE_SPLINE)
+       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, SLL_HERMITE)
     else
        print*, 'sll_csl.F90: new_csl_workspace. boundary1_type ', boundary1_type, ' not implemented'
        stop
     end if
     if (boundary2_type == PERIODIC) then
-       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, PERIODIC_SPLINE)
+       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, SLL_PERIODIC)
     else if (boundary2_type == COMPACT) then
-       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, HERMITE_SPLINE)  
+       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, SLL_HERMITE)  
     else
        print*, 'sll_csl.F90: new_csl_workspace. boundary2_type ', boundary2_type, ' not implemented'
        stop
