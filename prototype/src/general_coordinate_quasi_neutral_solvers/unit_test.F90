@@ -15,9 +15,9 @@ program test_general_qns
 #define NUM_CELLS1  64
 #define NUM_CELLS2  64
 #define ETA1MIN  0.0_f64
-#define ETA1MAX  (2.0*sll_pi)
+#define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
-#define ETA2MAX  (2.0*sll_pi)
+#define ETA2MAX  1.0_f64
 
   type(sll_logical_mesh_2d), pointer          :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
@@ -28,17 +28,47 @@ program test_general_qns
   type(sll_scalar_field_2d_base_ptr), dimension(2,2) :: a_field_mat
   class(sll_scalar_field_2d_base), pointer    :: c_field
   class(sll_scalar_field_2d_base), pointer    :: rho
-  class(sll_scalar_field_2d_base), pointer    :: phi
-  real(8), external :: func_zero, func_one, source_term
+  type(sll_scalar_field_2d_discrete_alt), pointer    :: phi
+  real(8), external :: func_zero, func_one, source_term_perper
   sll_real64, dimension(:,:), allocatable :: values
+  sll_real64 :: acc
+  sll_real64, dimension(:,:), allocatable    :: calculated
+  sll_real64, dimension(:,:), allocatable    :: difference
   sll_int32 :: ierr
+  sll_int32  :: i, j
+  sll_real64 :: h1,h2,eta1,eta2,node_val,ref
+  sll_real64 :: NPTS1,NPTS2
+  real(8), external :: sol_exacte_perper
+  
+  
+
+
+
+  !--------------------------------------------------------------------
+  
+  !     first test case without chane of coordinates 
+  !      periodic-periodic boundary conditions
+
+  !--------------------------------------------------------------------
+  
+  print*, "---------------------"
+  print*, "first test case witout change of coordinates"
+  print*, "---------------------"
+  NPTS1 =  NUM_CELLS1 + 1
+  NPTS2 =  NUM_CELLS2 + 1
+  h1 = 1.0_f64/real(NPTS1-1,f64)
+  h2 = 1.0_f64/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
 
   ! Table to represent the node values of phi
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
-
-  ! First thing, initialize the logical mesh associated with this problem.
+  allocate(calculated(NPTS1,NPTS2))
+  allocate(difference(NPTS1,NPTS2))
+  
+  ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
-       0.0_f64, 2.0*sll_pi, 0.0_f64,2.0*sll_pi )
+       0.0_f64, 1.0_f64, 0.0_f64,1.0_f64 )
 
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
@@ -91,41 +121,6 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-!!$  call initialize_scalar_field_2d_analytic_alt( &
-!!$       a_field_mat(1,1), &
-!!$       func_one, &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC )
-
-!!$  call initialize_scalar_field_2d_analytic_alt( &
-!!$       a_field_mat(1,2), &
-!!$       func_zero, &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC )
-!!$
-!!$  call initialize_scalar_field_2d_analytic_alt( &
-!!$       a_field_mat(2,1), &
-!!$       func_zero, &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC )
-!!$
-!!$  call initialize_scalar_field_2d_analytic_alt( &
-!!$       a_field_mat(2,2), &
-!!$       func_one, &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC )
 
   c_field => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -137,7 +132,7 @@ program test_general_qns
        SLL_PERIODIC )
 
   rho => new_scalar_field_2d_analytic_alt( &
-       source_term, &
+       source_term_perper, &
        "rho", &     
        T, &
        SLL_PERIODIC, &
@@ -188,7 +183,7 @@ program test_general_qns
        ETA1MIN, &
        ETA1MAX, &
        ETA2MIN, &
-       ETA2MAX )
+       ETA2MAX)
 
   print *, 'Initialized QNS object'
 
@@ -201,6 +196,35 @@ program test_general_qns
        phi )
 
   print *, 'Completed solution'
+
+  call  set_coefficients_ad2d( &
+       interp_2d, &
+       qns%phi_vec)
+
+  print*, 'reorganizaton of splines coefficients of solution'
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc = 0.0_f64
+
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1       = real(i,f64)*h1
+        eta2       = real(j,f64)*h2
+        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        print*, 'coucou'
+        ref        = sol_exacte_perper(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+             'theoretical = ', ref
+        acc        = acc + abs(node_val-ref)
+     end do
+  end do
+  
+
+  print *,'Average error in nodes (per-per) without change of coordinates='&
+       ,acc/(NPTS1*NPTS2)
 
 
   ! delete things...
@@ -224,11 +248,243 @@ function func_zero( eta1, eta2, params ) result(res)
   res = 0.0_8
 end function func_zero
 
-function source_term( eta1, eta2, params ) result(res)
+
+!----------------------------------------------------------
+!  Solution for a identity change of coordinates 
+!   and periodic-periodic conditions
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+function source_term_perper( eta1, eta2, params ) result(res)
   intrinsic :: cos
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
-  res = 2.0*cos(eta1)*cos(eta2)
-end function source_term
+  res = (2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+end function source_term_perper
+
+real(8) function sol_exacte_perper(eta1,eta2)
+  real(8) :: eta1,eta2
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perper = cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+  
+  
+end function sol_exacte_perper
+
+
+!----------------------------------------------------------
+!  Solution for a identity change of coordinates 
+!   and periodic-dirichlet conditions
+!   and also dirivhlet-dirichlet conditons
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+
+real(8) function source_term_perdir(eta1,eta2,params) ! in the path
+  real(8),intent(in) :: eta1,eta2
+  real(8), dimension(:), intent(in), optional :: params
+  source_term_perdir = &
+      (16.0*sll_pi**2*eta2**4 &
+      - 16.0*sll_pi**2*eta2**2 &
+      - 12.0*eta2**2 + 2.0)*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta1)
+  
+  
+end function source_term_perdir
+
+
+real(8) function sol_exacte_perdir(eta1,eta2,params)
+  real(8) :: eta1,eta2
+  real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perdir = eta2 ** 2 * (eta2**2-1)&
+       * cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta1)
+  
+
+end function sol_exacte_perdir
+
+
+
+!----------------------------------------------------------
+!  Solution for a r theta change of coordinates 
+!   and periodic-dirichlet conditions
+!   and also dirivhlet-dirichlet conditons
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+
+
+real(8) function rho_rtheta(eta1,eta2,params) ! in the path
+  intrinsic :: cos
+  intrinsic :: sin
+  real(8),intent(in) :: eta1,eta2
+  real(8) :: x, y
+  real(8), dimension(:), intent(in), optional :: params
+
+  x = eta2*cos(2*sll_pi*eta1)
+  y = eta2*sin(2*sll_pi*eta1)
+  
+  rho_rtheta = x*y*(-32.0*x**2 - 32.0*y**2 + 15.0)  
+  
+    
+end function rho_rtheta
+
+
+real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
+  
+  real(8),intent(in) :: eta1,eta2
+  intrinsic :: cos
+  intrinsic :: sin
+  real(8), dimension(:), intent(in), optional :: params
+  
+  
+  sol_exacte_rtheta = ( eta2**2-1)*(eta2**2-0.5**2)*eta2**2&
+       *cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
+  
+    
+end function sol_exacte_rtheta
+
+
+!----------------------------------------------------------
+!  Solution for a colella change of coordinates 
+!   and periodic-periodic conditons
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+
+
+
+
+real(8) function source_term_chgt_perper(eta1,eta2,params) ! in the path
+  
+  real(8),intent(in) :: eta1,eta2
+  real(8) :: x, y
+  intrinsic :: cos
+  intrinsic :: sin
+  real(8), dimension(:), intent(in), optional :: params
+  
+  x =   eta1 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  source_term_chgt_perper = 8.0*pi**2*cos(2*sll_pi*x)*cos(2*sll_pi*y) 
+  
+end function source_term_chgt_perper
+
+
+
+
+real(8) function sol_exacte_chgt_perper(eta1,eta2,params)
+  
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  real(8), dimension(:), intent(in), optional :: params
+  
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  sol_exacte_chgt_perper = cos(2*sll_pi*x)*cos(2*sll_pi*y)
+  
+  
+end function sol_exacte_chgt_perper
+
+
+
+
+!----------------------------------------------------------
+!  Solution for a colella change of coordinates 
+!   and periodic-dirichlet conditons
+!   and dircihlet-diichlet conditions
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+
+
+
+
+real(8) function source_term_chgt_perdir(eta1,eta2,params) ! in the path
+  
+  real(8),intent(in) :: eta1,eta2
+  real(8) :: x, y
+  intrinsic :: cos
+  intrinsic :: sin
+  real(8), dimension(:), intent(in), optional :: params
+    
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  source_term_chgt_perdir=&
+       (16.0*sll_pi**2*y**4 - 16.0*sll_pi**2*y**2 &
+       - 12.0*y**2 + 2.0)*sin(2*sll_pi*x)*cos(2*sll_pi*x)
+  
+  
+end function source_term_chgt_perdir
+
+
+
+real(8) function sol_exacte_chgt_perdir(eta1,eta2,params)
+  
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  real(8), dimension(:), intent(in), optional :: params
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  sol_exacte_chgt_perdir = &
+       y** 2 * (y**2-1)* cos(2*sll_pi*x)*sin(2*sll_pi*x)
+  
+  
+end function sol_exacte_chgt_perdir
+
+
+
+
+!----------------------------------------------------------
+!  Solution for a colella change of coordinates 
+!   and dirchlet-periodic conditions
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+
+
+
+real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
+  
+  real(8),intent(in) :: eta1,eta2
+  real(8) :: x, y
+  intrinsic :: cos
+  intrinsic :: sin
+  ! -------------------------------------------------
+  ! In the case without change of coordinates
+  ! -------------------------------------------------
+  x =   eta1 + 0.1_8*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1_8*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  
+  source_term_chgt_dirper = &
+        (16.0*sll_pi**2*x**4 - 16.0*sll_pi**2*x**2 &
+       - 12.0*x**2 + 2.0)*sin(2*sll_pi*y)*cos(2*sll_pi*y)
+  
+end function source_term_chgt_dirper
+
+
+
+
+real(8) function sol_exacte_chgt_dirper(eta1,eta2)
+  
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  
+  sol_exacte_chgt_dirper = &
+       x ** 2 * (x**2-1)* cos(2* sll_pi*y)*sin(2* sll_pi*y)
+  
+end function sol_exacte_chgt_dirper
+
