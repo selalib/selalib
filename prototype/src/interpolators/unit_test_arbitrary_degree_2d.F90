@@ -6,8 +6,8 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 3 
-#define NPTS2 3 
+#define NPTS1 4 
+#define NPTS2 4 
 #define SPL_DEG 0
 
   type(arb_deg_2d_interpolator) :: ad2d
