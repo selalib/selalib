@@ -6,9 +6,9 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 4 
-#define NPTS2 4 
-#define SPL_DEG 1
+#define NPTS1 5
+#define NPTS2 5 
+#define SPL_DEG 0
 
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
@@ -23,6 +23,7 @@ program unit_test
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, acc3, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
+
 
 
   print *,  'filling out discrete arrays for x1 '
@@ -234,7 +235,9 @@ program unit_test
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
+        !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
@@ -276,7 +279,8 @@ program unit_test
        SLL_DIRICHLET, &
        SPL_DEG, &
        SPL_DEG )
-
+  !print*, 'ret', size(x,1), size(x,2)
+  !print*, 'x', x(1:NPTS1,1:NPTS2)
   call ad2d%compute_spline_coefficients( &
        x,&
        eta1_pos,&
@@ -285,6 +289,7 @@ program unit_test
        NPTS2)
 
 
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc3 = 0.0_f64
@@ -293,7 +298,9 @@ program unit_test
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
+        !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
