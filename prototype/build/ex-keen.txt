@@ -1,10 +1,13 @@
 &geom
   Ncx = 64 
-  Ncv = 512
+  Ncv = 32
   nbox = 1
   xmin = 0.0
   vmin = -6.0
   vmax = 6.0
+  iHmin = 17
+  iHmax = 25
+  iraf = 20
 /
 &interpolator
  interpol_x = 1
@@ -14,13 +17,13 @@
 /
 &time_iterations
   dt = 0.05
-  nbiter = 20000
+  nbiter = 50
   freqdiag = 50
 /
 &landau
   kmode = 0.26
   eps = 0.0
-  is_delta_f = 0
+  is_delta_f = 1
   driven = .true.
 /
 &drive
