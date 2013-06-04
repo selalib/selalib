@@ -204,7 +204,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_timer
 	sll_memory
 	sll_assertion 	
-	sll_poisson_1d_periodic
+	sll_poisson_solvers
 	dfftpack
 	${LAPACK_LIBRARIES}
 	)
