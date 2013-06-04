@@ -110,6 +110,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
 
   left = k
 
+  !print*, t
   q(1:(2*k-1)*n) = 0.0D+00
 !
 !  Construct the N interpolation equations.
@@ -132,6 +133,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'SPLI2D - Fatal error!'
       write ( *, '(a)' ) '  The TAU array is not strictly increasing.'
+      !print*, taui, t(left),left
       stop
     end if
 
@@ -150,6 +152,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
         write ( *, '(a)' ) ' '
         write ( *, '(a)' ) 'SPLI2D - Fatal error!'
         write ( *, '(a)' ) '  The TAU array is not strictly increasing.'
+        !print*, taui, t(left+1),left
         stop
       end if
 
