@@ -8,7 +8,7 @@ program unit_test
 
 #define NPTS1 4 
 #define NPTS2 4 
-#define SPL_DEG 0
+#define SPL_DEG 1
 
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
