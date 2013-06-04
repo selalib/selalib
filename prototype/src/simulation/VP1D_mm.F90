@@ -10,9 +10,8 @@ program VP1d_deltaf
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-
-  use numeric_constants
-  use sll_splines
+#include "sll_constants.h"
+  use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
   use sll_odd_degree_spline_interpolator_1d
@@ -22,10 +21,11 @@ program VP1d_deltaf
   use sll_poisson_1d_periodic
   use sll_timer
   use omp_lib
+  use sll_hdf5_io
   implicit none
 
 !  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x
-  type(sll_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
+  type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
@@ -74,6 +74,7 @@ program VP1d_deltaf
   sll_int32  :: ipiece_size_x, ipiece_size_v
   type(time_mark), pointer :: time0 => NULL()
   sll_real64 :: time1
+  sll_int32  :: error, file_id
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
@@ -633,6 +634,12 @@ program VP1d_deltaf
      write(12,*) 
   enddo
   close(12)
+
+  call sll_hdf5_file_create("ff.h5",file_id,error)
+  call sll_hdf5_write_array(file_id,ff,"ff",error)
+  call sll_hdf5_write_array(file_id,ff1,"ff1",error)
+  call sll_hdf5_write_array(file_id,fg,"fg",error)
+  call sll_hdf5_file_close(file_id, error)
 
   open(12, file="ffinal")
   do i=1,Ncx+1
