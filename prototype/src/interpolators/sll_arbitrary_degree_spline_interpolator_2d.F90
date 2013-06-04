@@ -202,7 +202,7 @@ contains
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-       tmp1 = num_pts1 + spline_degree1 - 1
+       tmp1 = num_pts1 + spline_degree1 !- 1
        tmp2 = num_pts2 + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
@@ -210,23 +210,27 @@ contains
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
        tmp1 = num_pts1 + 2*spline_degree1
-       tmp2 = num_pts2 + spline_degree2 - 1
+       tmp2 = num_pts2 + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (585) ! 4. dirichlet in all sides
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1 + spline_degree1 - 1
-       tmp2 = num_pts2 + spline_degree2 - 1
+       tmp1 = num_pts1 + spline_degree1 !- 1
+       tmp2 = num_pts2 + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case default
        print *, 'initialize_ad2d_interpolator: BC combination not implemented.'
     end select
 
-    SLL_ALLOCATE( interpolator%t1(num_pts1 + 2*spline_degree1 + 1), ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2 + 2*spline_degree2 + 1), ierr)
+    interpolator%coeff_splines(:,:) = 0.0_f64
+    SLL_ALLOCATE( interpolator%t1(num_pts1 + 2*(spline_degree1 + 1)), ierr)
+    SLL_ALLOCATE( interpolator%t2(num_pts2 + 2*(spline_degree2 + 1)), ierr)
 
+    interpolator%t1(:) = 0.0_f64
+    interpolator%t2(:) = 0.0_f64
+    !print*,'SIZE',  num_pts1 + 2*(spline_degree1 + 1)
   end subroutine initialize_ad2d_interpolator
 
   subroutine compute_interpolants_ad2d( &
@@ -472,6 +476,9 @@ contains
     sll_real64 :: period2
     sll_int32  :: order1
     sll_int32  :: order2
+    sll_int32 :: ierr
+    sll_real64, dimension(:), allocatable :: t1,t2
+    sll_real64, dimension(:,:), allocatable :: coeff
 
     sz1 = size_eta1_coords
     sz2 = size_eta2_coords
@@ -494,7 +501,9 @@ contains
        interpolator%size_coeffs1 = sz1+1
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1 + 1
-       interpolator%size_t2 = order2 + sz2 + 1       
+       interpolator%size_t2 = order2 + sz2 + 1    
+       !print*, " size t1",   order1 + sz1 + 1
+       !print*, "size t2", order2 + sz2 +1
        call spli2d_perper( &
             period1, sz1+1, order1, eta1_coords, &
             period2, sz2+1, order2, eta2_coords, &
@@ -515,28 +524,50 @@ contains
   
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       print *, 'sz1 = ', sz1, 'sz2 = ', sz2
-       print *, 'size(coeff_splines) = ', size(interpolator%coeff_splines,1),size(interpolator%coeff_splines,2)
+       !print *, 'sz1 = ', sz1, 'sz2 = ', sz2
+       !print *, 'size(coeff_splines) = ', size(interpolator%coeff_splines,1),size(interpolator%coeff_splines,2)
        interpolator%size_coeffs1 = sz1+1
        interpolator%size_coeffs2 = sz2
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 
+       !print*, " size t1",   order1 + sz1 + 1
+       !print*, "size t2", order2 + sz2
+       !print*, "order1", order1
+       !print*, "order2", order2
        call spli2d_perdir( period1, sz1+1, order1, eta1_coords, &
             sz2, order2, eta2_coords, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2),&
             interpolator%t1(1:sz1+order1+1), &
             interpolator%t2(1:sz2+order2) )
-
+       
     case (585) ! 4. dirichlet in all sides
+       !print*, 'her'
        interpolator%size_coeffs1 = sz1
        interpolator%size_coeffs2 = sz2
        interpolator%size_t1 = order1 + sz1 
        interpolator%size_t2 = order2 + sz2 
+       !SLL_ALLOCATE( t1(sz1+order1),ierr)
+       !SLL_ALLOCATE( t2(sz2+order2),ierr)
+       !SLL_ALLOCATE( coeff(sz1,sz2),ierr)
+       !t1(:)= 0.0_f64
+       !t2(:)= 0.0_f64
+       !print*, t1
+       !print*, t2
+       !print*, 'her', interpolator%t1(1:sz1+order1),sz1+order1
+       !print*, 'her', interpolator%t2(1:sz2+order2),sz2+order2
+      ! print*, 'ter',  interpolator%coeff_splines(1:sz1,1:sz2)
        call spli2d_custom( sz1, order1, eta1_coords, &
             sz2, order2, eta2_coords, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2) )
+       !print*, coeff(1:sz1,1:sz2)
+       !interpolator%coeff_splines(1:sz1,1:sz2) = coeff(1:sz1,1:sz2)
+       !interpolator%t1(1:sz1+order1) = t1(1:sz1+order1)
+       !interpolator%t2(1:sz2+order2) = t2(1:sz2+order2)
+       !print*, 'y',sz1+order1
+       !print*, 'coefTTTT', t1,t2
+!interpolator%t1(:)
     end select
   end subroutine compute_spline_coefficients_ad2d
 
@@ -559,8 +590,11 @@ contains
     SLL_ASSERT( eta2 .ge. interpolator%eta2_min )
     SLL_ASSERT( eta2 .le. interpolator%eta2_max )
 
+    !print*, 'hert', interpolator%size_coeffs1,interpolator%size_coeffs2
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
+    !print*,'rer',interpolator%size_t1, interpolator%t1
+    !print*, "t1", interpolator%t1(1:interpolator%size_t1)
 
     val = bvalue2d( &
          eta1, &
