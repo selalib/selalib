@@ -205,7 +205,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_memory
 	sll_assertion 	
 	sll_poisson_1d_periodic
-	fftpack_module
+	dfftpack
 	${LAPACK_LIBRARIES}
 	)
 
@@ -220,7 +220,7 @@ target_link_libraries(VP1D_mm
 	sll_distribution_function
 	sll_scalar_field_2d	
 	sll_constants
-	sll_low_level_file_io
+	sll_file_io
   	sll_utilities
 	sll_timer
 	sll_memory
