@@ -10,9 +10,8 @@ program VP1d_deltaf
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_field_2d.h"
-
-  use sll_constants
-  use sll_module_mapped_meshes_2d_cartesian
+#include "sll_constants.h"
+  use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
   use sll_odd_degree_spline_interpolator_1d
@@ -22,26 +21,27 @@ program VP1d_deltaf
   use sll_poisson_1d_periodic
   use sll_timer
   use omp_lib
+  use sll_hdf5_io
   implicit none
 
-  type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
+!  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x
+  type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
-  type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
-  class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
-  type(init_landau_2d), target :: init_landau
-  type(init_tsi_2d), target :: init_tsi
-  class(scalar_field_2d_initializer_base), pointer    :: p_init_f
-  type(sll_distribution_function_2d)   :: f
   type(poisson_1d_periodic)  :: poisson_1d
+  sll_real64, dimension(:,:), allocatable, target :: f
+  sll_real64, dimension(:,:), allocatable :: fg,ff,ff1,ff2
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
+  sll_real64, dimension(:), allocatable :: fx
   sll_real64, dimension(:), pointer     :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
-  sll_real64, dimension(:), allocatable :: v_array
-  sll_int32  :: Ncx, Ncv   ! number of cells
+  sll_real64, dimension(:), allocatable :: v_array, vg_array, vh_array, vhg_array 
+  sll_real64, dimension(:), allocatable :: x_array, xg_array
+  sll_int32  :: Ncx, Ncv, Ncvh   ! number of cells
+  sll_int32  :: iHmin, iHmax, iraf   ! indices of the coarse mesh to define fine mesh; iraf=dv/dvh
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
   sll_int32, parameter  :: param_out_drive = 40
@@ -49,7 +49,7 @@ program VP1d_deltaf
   sll_int32  :: is_delta_f
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
-  sll_real64 :: delta_x, delta_v
+  sll_real64 :: delta_x, delta_v, dvh
   sll_int32  :: interpol_x, interpol_v  ! type of interpolator
   sll_int32  :: order_x, order_v   ! order of interpolator
   sll_real64 :: alpha
@@ -73,11 +73,11 @@ program VP1d_deltaf
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
   type(time_mark), pointer :: time0 => NULL()
-  ! type(time_mark), pointer :: t1 => NULL()
-  sll_real64 :: time1, som
+  sll_real64 :: time1
+  sll_int32  :: error, file_id
 
   ! namelists for data input
-  namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
+  namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
   namelist / interpolator / interpol_x, order_x, interpol_v, order_v
   namelist / time_iterations / dt, nbiter, freqdiag
   namelist / landau / kmode, eps, is_delta_f, driven 
@@ -105,23 +105,53 @@ program VP1d_deltaf
      read(input_file, time_iterations)
      read(input_file,tsi)
      close(input_file)
+  elseif (case == "keen") then
+     open(unit = input_file, file = 'ex-keen.txt')
+     read(input_file, geom) 
+     read(input_file, interpolator) 
+     read(input_file, time_iterations)
+     read(input_file, landau)
+     if (driven) then
+        read(input_file, drive)
+        eps = 0.0  ! no initial perturbation for driven simulation
+     end if
+     close(input_file)
   else
      print*, 'test case ', case, ' not defined'
      print*, '   usage: VP1D_cart test_case'
      print*, '     where test_case is on of:'
      print*, '        landau'
      print*, '        tsi'
+     print*, '        keen'
      stop
   endif
 
-  ! define uniform cartesian mesh in x and v
+  ! define uniform cartesian mesh in x and coarse mesh in v
   xmax = nbox * 2 * sll_pi / kmode
   delta_x = (xmax - xmin) / Ncx
   delta_v = (vmax - vmin) / Ncv
+
+  ! define fine mesh in v
+  dvh=delta_v/real(iraf,8)
+  Ncvh=(iHmax-iHmin+1)*iraf
+
+  SLL_ALLOCATE(x_array(Ncx+1),ierr)
+  SLL_ALLOCATE(xg_array(Ncx+1),ierr)
   SLL_ALLOCATE(v_array(Ncv+1),ierr)
+  SLL_ALLOCATE(vg_array(Ncv+1),ierr)
+  SLL_ALLOCATE(vh_array(Ncvh+1),ierr)
+  SLL_ALLOCATE(vhg_array(Ncvh+1),ierr)
+
+  do i=1, Ncx + 1
+     x_array(i) = xmin + (i-1)*delta_x
+  enddo
   do j = 1, Ncv + 1
      v_array(j) = vmin + (j-1)*delta_v
   end do
+  do j = 1, Ncvh + 1
+     vh_array(j) = v_array(iHmin) + (j-1)*dvh
+  end do
+
   ! allocate f_maxwellian for diagnostics
   SLL_ALLOCATE(f_maxwellian(Ncv+1),ierr)
   if (is_delta_f==0) then
@@ -147,6 +177,16 @@ program VP1d_deltaf
      print*, '   k=', kmode
      print*, '   perturbation=', eps
      print*, '   v0=', v0
+  elseif (case == "keen") then
+     print*, '     ----------------------'
+     print*, '     | keen delta_f run |'
+     print*, '     ----------------------'
+     print*, '   k=', kmode
+     print*, '   perturbation=', eps
+     print*, '   driven=', driven
+     if (driven) then
+        print*, 'omegadr=', omegadr
+     endif
   end if
   if (is_delta_f==0) then
      print*, '   delta_f version'
@@ -180,19 +220,8 @@ program VP1d_deltaf
      close(param_out_drive)
   end if
 
-  call initialize_mesh_2d_cartesian( &
-       mesh2d,           &
-       "mesh2d_cart",       &
-       xmin,         &
-       xmax,         &
-       Ncx+1,          &
-       vmin,         &
-       vmax,         &
-       Ncv+1           &
-       )
-  mesh2d_base => mesh2d
-
   ! allocate rho and phi
+  SLL_ALLOCATE(fx(Ncx+1),ierr)
   SLL_ALLOCATE(rho(Ncx+1),ierr)
   SLL_ALLOCATE(efield(Ncx+1),ierr)
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
@@ -205,16 +234,13 @@ program VP1d_deltaf
   open(unit = adr_diag, file = 'adrdiag.dat') 
 
   ! initialization of distribution_function
-  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, &
-       is_delta_f)
-  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, &
-       is_delta_f)
-  if (case == "landau") then
-     p_init_f => init_landau
-  else if (case == "tsi") then
-     p_init_f => init_tsi
-  end if
+  SLL_ALLOCATE(f(Ncx+1,Ncv+Ncvh-(iHmax-iHmin+1)+1),ierr)
+  SLL_ALLOCATE(fg(Ncx+1,Ncv+1),ierr)
+  SLL_ALLOCATE(ff(Ncx+1,Ncvh+1),ierr)
+  SLL_ALLOCATE(ff1(Ncx+1,Ncvh+1),ierr)
+  SLL_ALLOCATE(ff2(Ncx+1,Ncvh+1),ierr)
 
+#ifdef tomp
   !$omp parallel default(shared) &
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
@@ -224,7 +250,7 @@ program VP1d_deltaf
   print*, 'running with openmp using ', num_threads, ' threads'
   ipiece_size_v = (Ncv + 1) / num_threads
   ipiece_size_x = (Ncx + 1) / num_threads
-
+  
   istartx = my_num * ipiece_size_x + 1
   if (my_num < num_threads-1) then
      iendx   = istartx - 1 + ipiece_size_x
@@ -237,12 +263,14 @@ program VP1d_deltaf
   else
      jendv = Ncv+1
   end if
+#endif
 
   ! initialize interpolators
   select case (interpol_x)
   case (1) ! periodic cubic spline
-     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-     interp_x => interp_spline_x
+     interp_spline_x => new_spline_1d( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
+!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
+!     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
      call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
      interp_x => interp_per_x
@@ -252,10 +280,10 @@ program VP1d_deltaf
   case default
      print*,'interpolation in x number ', interpol_x, ' not implemented' 
   end select
-  select case (interpol_v)
+     select case (interpol_v)
   case (1) ! hermite cubic spline
-     call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-     interp_v => interp_spline_v
+      interp_spline_v => new_spline_1d( Ncv + 1,vmin, vmax, HERMITE_SPLINE )
+      interp_spline_vh => new_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), HERMITE_SPLINE )
   case (2) ! arbitrary order periodic splines
      call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
      interp_v => interp_per_v
@@ -267,32 +295,69 @@ program VP1d_deltaf
   case default
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select
-
+ 
+#ifdef tomp
   !$omp barrier
   !$omp single
   fname = 'dist_func'
-  call initialize_distribution_function_2d( &
-       f, &
-       1.0_f64, &
-       1.0_f64, &
-       fname, &
-       mesh2d_base, &
-       NODE_CENTERED_FIELD, &
-       interp_x, &
-       interp_v, &
-       p_init_f )
+#endif
+
   ! write mesh and initial distribution function
-#ifdef DIAG
-  call write_scalar_field_2d(f) 
+!  call write_scalar_field_2d(f) --> remplacer par une ecriture hdf5
+
+
+!fg = d.f. on coarse mesh in v (v_array)
+!ff = d.f. on fine mesh in v (vh_array) 
+!such that sum_{v_j in vh_array} [ ff(x_i, v_j) - fg(x_i, v_j) ] = 0 forall i
+
+  ff1=0._f64;ff2=0._f64
+  do j=1,Ncv+1
+     v=v_array(j)
+     do i=1,Ncx+1
+        fg(i,j)=(1._f64/sqrt(2._f64*sll_pi))*exp(-0.5_f64*v*v)
+     enddo
+  enddo
+
+  !compute deltaf such that int deltaf(v)dv = 0
+  !--------------------------------------------
+  do i=1,Ncx+1
+     !compute splines coef associated to fg and evalute splines on the fine mesh vh_array --> ff1
+     call compute_spline_1D(fg(i,:), interp_spline_v)
+     call interpolate_array_values(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
+
+     !compute ff:=deltaf on the fine mesh: ff(v_j)=f(v_j)-ff1(v_j), v_j\in vh_array
+     mass=0._f64
+     do j=1,Ncvh+1
+        v=vh_array(j)
+        ff(i,j)=(1._f64/sqrt(2._f64*sll_pi))*exp(-0.5_f64*v*v)-ff1(i,j)
+        mass=mass+ff(i,j)
+     enddo
+     ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
+
+  enddo
+  !compute f on the fine mesh
+  ff=ff1+ff
+
+  !plot of f on the fine mesh
+  open(12, file="ffinit")
+  do i=1,Ncx+1
+     do j=1,Ncvh+1
+        write(12,*) i,j,ff(i,j)
+     enddo
+     write(12,*) 
+  enddo
+  close(12)
 
   ! initialize Poisson
   call new(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
-     rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     rho = - delta_v * sum(f, DIM = 2)
   else
-     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+     !compute density on coarse grid
+     rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
   endif
   call solve(poisson_1d, efield, rho)
+
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
   istep = 0
@@ -304,40 +369,7 @@ program VP1d_deltaf
      enddo
   endif
 
-!!$  do i= 1, Ncx
-!!$     som = 0.
-!!$     do j = 1, Ncv/2
-!!$        som = som + FIELD_DATA(f)(i,j)*v_array(j) + FIELD_DATA(f)(i,Ncv+2-j)*v_array(Ncv+2-j)
-!!$     end do
-!!$     write(*,'(I5,2g24.17)'), i, sum(FIELD_DATA(f)(i,:)*v_array), som
-!!$  end do
-!!$ 
-!!$  write(*,*), 'rho * e', sum (rho(1:Ncx)*efield(1:Ncx))
-  ! write diagnostics at time 0
-  time = 0.
-  mass = 0.
-  momentum = 0.
-  l1norm = 0.
-  l2norm = 0.
-  kinetic_energy = 0.
-  potential_energy = 0.
-  do i = 1, Ncx 
-     mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
-     l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
-     l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-     momentum = momentum + sum((FIELD_DATA(f)(i,1:Ncv/2) &
-                -(FIELD_DATA(f)(i,Ncv+1:Ncv/2:-1)))*v_array(1:Ncv/2))
-     kinetic_energy = kinetic_energy + 0.5_f64 * &
-          sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
-  end do
-  mass = mass * delta_x * delta_v 
-  l1norm = l1norm  * delta_x * delta_v
-  l2norm = l2norm  * delta_x * delta_v
-  momentum = momentum * delta_x * delta_v
-  kinetic_energy = kinetic_energy * delta_x * delta_v
-  potential_energy =  0.5_f64 * sum(efield(1:Ncx)**2) * delta_x
-  write(th_diag,'(f12.5,7g20.12)') time, mass, l1norm, momentum, l2norm, &
-       kinetic_energy, potential_energy, kinetic_energy + potential_energy
+  ! write initial fields
   do i = 1, Ncx+1
      write(ex_diag,"(g15.5)",advance="no") efield(i)
      write(rho_diag,"(g15.5)",advance="no") rho(i)
@@ -347,43 +379,127 @@ program VP1d_deltaf
   write(rho_diag,*)
   write(eapp_diag,*)
   write(adr_diag,'(2g15.5)') istep*dt, adr
+#ifdef tomp
   !$omp end single
+#endif
 
   ! initialize timer
   ! time loop
   !----------
-  ! half time step advection in v
-  do istep = 1, nbiter
-     !     time0 => reset_time_mark(time0)
-     do i = istartx, iendx
+
+
+  do istep = 1,nbiter
+!     time0 => reset_time_mark(time0)
+
+     ! half time step advection in v
+     do i = 1,Ncx+1 !istartx, iendx
+
+        !compute splines coef associated to fg 
+        !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
+        call compute_spline_1D(fg(i,:), interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-        f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f==0) then
-           ! add equilibrium contribution
-           do j=1, Ncv + 1
-              v = vmin + (j-1) * delta_v
-              equilibrium_contrib = f_equilibrium(v-alpha) - f_equilibrium(v)
-              f1d(j) = f1d(j) + equilibrium_contrib
-           end do
-        endif
-     end do
+        do j=1,Ncv+1
+           vg_array(j)=v_array(j)+alpha
+           if (vg_array(j)<vmin) then 
+              vg_array(j)=vmin
+           endif
+           if (vg_array(j)>vmax) then 
+              vg_array(j)=vmax
+           endif
+        enddo
+        call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+
+        !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
+        call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+
+        !compute fg on the fine mesh -> ff1
+        call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+
+        !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
+        mass=0._f64
+        do j=1,Ncvh+1        
+           ff(i,j)=ff1(i,j)-ff(i,j)
+           mass=mass+ff(i,j)
+        enddo
+        ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
+
+        !compute splines coef associated to ff 
+        call compute_spline_1D(ff(i,:),interp_spline_vh)
+
+        do j=1,Ncvh+1
+           vhg_array(j)=vh_array(j)+alpha
+           if (vhg_array(j)<vh_array(1)) then 
+              vhg_array(j)=vh_array(1) 
+           endif
+           if (vhg_array(j)>vh_array(Ncvh+1)) then 
+              vhg_array(j)=vh_array(Ncvh+1)
+           endif
+        enddo
+
+        call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+        !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
+        !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
+        ff(i,:)=ff2(i,:)+ff(i,:)
+
+     enddo
+
+#ifdef tomp
      !$omp barrier
-     do j =  jstartv, jendv
+#endif
+
+     ! advection in x
+     do j=1,Ncv+1 
+        
+        !compute splines coef associated to fg 
+        !and compute, for the coarse grid in v fg^{n+1}(x_i)=fg^n(x_i^*) -> fg
+        call compute_spline_1D(fg(:,j), interp_spline_x)
         alpha = (vmin + (j-1) * delta_v) * dt
-        f1d => FIELD_DATA(f) (:,j) 
-        f1d = interp_x%interpolate_array_disp(Ncx+1, f1d, alpha)
-     end do
+        do i=1, Ncx+1
+           xg_array(i)=x_array(i)-alpha
+           if (xg_array(i)<xmin) then 
+              xg_array(i)=xg_array(i)+xmax
+           endif
+           if (xg_array(i)>xmax) then 
+              xg_array(i)=xg_array(i)-xmax
+           endif
+        enddo
+        call interpolate_array_values(xg_array, fg(:,j), Ncx+1, interp_spline_x)
+     enddo
+
+
+     do j=1,Ncvh+1 
+        !compute splines coef associated to ff 
+        !and compute, for the fine grid in v ff^{n+1}(x_i)=ff^n(x_i^*) -> ff
+        call compute_spline_1D(ff(:,j), interp_spline_x)
+        alpha = vh_array(j) * dt 
+        do i=1, Ncx+1
+           xg_array(i)=x_array(i)-alpha
+           if (xg_array(i)<xmin) then 
+              xg_array(i)=xg_array(i)+xmax
+           endif
+           if (xg_array(i)>xmax) then 
+              xg_array(i)=xg_array(i)-xmax
+           endif
+        enddo
+        call interpolate_array_values(xg_array, ff(:,j), Ncx+1, interp_spline_x)
+
+     enddo
+
+#ifdef tomp
      !$omp barrier
 
      !$omp single
+#endif
+
      ! compute rho and electric field
      if (is_delta_f==0) then
-        rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
+        rho = - delta_v * sum(f, DIM = 2)
      else
-        rho = 1.0_f64 - delta_v * sum(FIELD_DATA(f), DIM = 2)
+        !compute density on coarse grid
+        rho = 1.0_f64 - delta_v * sum(fg, DIM = 2)
      endif
      call solve(poisson_1d, efield, rho)
+
      if (driven) then
         call PFenvelope(adr, istep*dt, tflat, tL, tR, twL, twR, &
              t0, turn_drive_off)
@@ -392,25 +508,74 @@ program VP1d_deltaf
                 - omegadr*istep*dt)
         enddo
      endif
+
+#ifdef tomp
      !$omp end single
-     do i = istartx, iendx
+#endif     
+
+     do i = 1,Ncx+1 !istartx, iendx !
+        
+        !compute splines coef associated to fg 
+        !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
+        call compute_spline_1D(fg(i,:),interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-        f1d => FIELD_DATA(f) (i,:) 
-        f1d = interp_v%interpolate_array_disp(Ncv+1, f1d, alpha)
-        if (is_delta_f==0) then
-           ! add equilibrium contribution
-           do j=1, Ncv + 1
-              v = vmin + (j-1) * delta_v
-              equilibrium_contrib = f_equilibrium(v-alpha) - f_equilibrium(v)
-              f1d(j) = f1d(j) + equilibrium_contrib
-           end do
-        end if
-     end do
+        do j=1,Ncv+1
+           vg_array(j)=v_array(j)+alpha
+           if (vg_array(j)<vmin) then 
+              vg_array(j)=vmin
+           endif
+           if (vg_array(j)>vmax) then 
+              vg_array(j)=vmax
+           endif
+        enddo
+        call interpolate_array_values(vg_array,fg(i,:),Ncv+1,interp_spline_v)
+
+      
+        !compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the fine mesh) -> ff2
+        call interpolate_array_values(vh_array+alpha,ff2(i,:),Ncvh+1,interp_spline_v)
+
+        !compute fg on the fine mesh -> ff1
+        call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+
+        !compute deltaf=ff1-ff on the fine mesh + zero average -> ff
+        mass=0._f64
+        do j=1,Ncvh+1        
+           ff(i,j)=ff1(i,j)-ff(i,j)
+           mass=mass+ff(i,j)
+        enddo
+        ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
+
+        !compute splines coef associated to ff 
+        call compute_spline_1D(ff(i,:), interp_spline_vh)
+
+        do j=1,Ncvh+1
+           vhg_array(j)=vh_array(j)+alpha
+           if (vhg_array(j)<vh_array(1)) then 
+              vhg_array(j)=vh_array(1) 
+           endif
+           if (vhg_array(j)>vh_array(Ncvh+1)) then 
+              vhg_array(j)=vh_array(Ncvh+1)
+           endif
+        enddo
+
+        call interpolate_array_values(vhg_array,ff(i,:),Ncvh+1,interp_spline_vh)
+
+        !update deltaf on the fine mesh: delta^{n+1}=ff2+ff-ff1 
+        !f^{n+1} = f^n(v*)= (ff2 + ff)(v*)
+        ff(i,:)=ff2(i,:)+ff(i,:)
+
+     enddo
+
+
+#ifdef tomp
      !$omp barrier
      !$omp single
+#endif
+
      ! diagnostics
      if (mod(istep,freqdiag)==0) then
         time = istep*dt
+        print *,'time',time
         mass = 0.
         momentum = 0.
         l1norm = 0.
@@ -418,13 +583,12 @@ program VP1d_deltaf
         kinetic_energy = 0.
         potential_energy = 0.
         do i = 1, Ncx 
-           mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
-           l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
-           l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-           momentum = momentum + sum((FIELD_DATA(f)(i,1:Ncv/2) &
-                -(FIELD_DATA(f)(i,Ncv+1:Ncv/2:-1)))*v_array(1:Ncv/2))
+           mass = mass + sum(fg(i,:))
+           l1norm = l1norm + sum(abs(fg(i,:)))
+           l2norm = l2norm + sum((fg(i,:))**2)
+           momentum = momentum + sum(fg(i,:)*v_array)
            kinetic_energy = kinetic_energy + 0.5_f64 * &
-                sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
+                sum((fg(i,:))*(v_array**2))
         end do
         mass = mass * delta_x * delta_v 
         l1norm = l1norm  * delta_x * delta_v
@@ -442,15 +606,54 @@ program VP1d_deltaf
         write(ex_diag,*)
         write(rho_diag,*)
         write(eapp_diag,*)
-
+       
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
-        call write_scalar_field_2d(f) 
+!        call write_scalar_field_2d(f) 
      end if
+
+#ifdef tomp
      !$omp end single
+#endif     
+
+
+     print *,'ITERATION',istep
   end do
 
+  !compute fg on the fine mesh -> ff1 (for diagnostic)
+  do i=1,Ncx+1
+     call compute_spline_1D(fg(i,:), interp_spline_v)
+     call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
+  enddo
+
+  open(12, file="ffinalh")
+  do i=1,Ncx+1
+     do j=1,Ncvh+1
+        write(12,*) x_array(i),vh_array(j),ff(i,j),ff1(i,j)
+     enddo
+     write(12,*) 
+  enddo
+  close(12)
+
+  call sll_hdf5_file_create("ff.h5",file_id,error)
+  call sll_hdf5_write_array(file_id,ff,"ff",error)
+  call sll_hdf5_write_array(file_id,ff1,"ff1",error)
+  call sll_hdf5_write_array(file_id,fg,"fg",error)
+  call sll_hdf5_file_close(file_id, error)
+
+  open(12, file="ffinal")
+  do i=1,Ncx+1
+     do j=1,Ncv+1
+        write(12,*) x_array(i),v_array(j),fg(i,j)
+     enddo
+     write(12,*) 
+  enddo
+  close(12)
+
+#ifdef tomp
   !$omp end parallel
+#endif
+
   close(th_diag)
   close(ex_diag)
 

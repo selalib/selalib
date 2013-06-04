@@ -187,7 +187,7 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts2
     sll_int32  :: file_id
     character(len=32) :: name
-    character(len=4) :: counter
+    character(len=6) :: counter
     character(len=4) :: center
 
 
