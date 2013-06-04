@@ -90,12 +90,46 @@ end program test_mudpack_colella
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 subroutine coef(eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce)
 implicit none
-real(8) :: eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce
+real(8) :: eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce,pi, beta
+pi = 4*atan(1.)
 
-cxx = alpha**2*sin(eta_1)**2*cos(eta_2)**2 + (alpha*sin(eta_2)*cos(eta_1) + 1)**2
-cxy = (alpha*sin(eta_2)*cos(eta_1) + 1)*alpha*sin(eta_1)*cos(eta_2) + &
-      (alpha*sin(eta_1)*cos(eta_2) + 1)*alpha*sin(eta_2)*cos(eta_1)
-cyy = alpha**2*sin(eta_2)**2*cos(eta_1)**2 + (alpha*sin(eta_1)*cos(eta_2) + 1)**2
+beta = (512*pi**3*alpha**3*sin(pi*eta_1)**3*cos(pi*eta_1)**3*cos(pi*eta_2)**6       &
+       - 64*pi**3*alpha**3*sin(pi*eta_1)**3*cos(pi*eta_1)**3 - &
+       48*pi**2*alpha**2*sin(pi*eta_1)**2*cos(pi*eta_1)**2 + &
+       64*(8*pi**3*alpha**3*sin(pi*eta_1)**6 - 12*pi**3*alpha**3*sin(pi*eta_1)**4 + &
+       6*pi**3*alpha**3*sin(pi*eta_1)**2 - &
+       pi**3*alpha**3)*sin(pi*eta_2)**3*cos(pi*eta_2)**3 - &
+       192*(4*pi**3*alpha**3*sin(pi*eta_1)**3*cos(pi*eta_1)**3 + &
+       pi**2*alpha**2*sin(pi*eta_1)**2*cos(pi*eta_1)**2)*cos(pi*eta_2)**4 - &
+       12*pi*alpha*sin(pi*eta_1)*cos(pi*eta_1) + &
+       48*(8*(4*pi**3*alpha**3*sin(pi*eta_1)**5*cos(pi*eta_1) - &
+       4*pi**3*alpha**3*sin(pi*eta_1)**3*cos(pi*eta_1) + &
+       pi**3*alpha**3*sin(pi*eta_1)*cos(pi*eta_1))*cos(pi*eta_2)**4 - &
+       (16*pi**3*alpha**3*sin(pi*eta_1)**5*cos(pi*eta_1) - &
+       16*pi**3*alpha**3*sin(pi*eta_1)**3*cos(pi*eta_1) + &
+       4*pi**3*alpha**3*sin(pi*eta_1)*cos(pi*eta_1) + &
+       4*pi**2*alpha**2*sin(pi*eta_1)**4 - 4*pi**2*alpha**2*sin(pi*eta_1)**2 + &
+       pi**2*alpha**2)*cos(pi*eta_2)**2)*sin(pi*eta_2)**2 + &
+       24*(16*pi**3*alpha**3*sin(pi*eta_1)**3*cos(pi*eta_1)**3 + &
+       8*pi**2*alpha**2*sin(pi*eta_1)**2*cos(pi*eta_1)**2 + &
+       pi*alpha*sin(pi*eta_1)*cos(pi*eta_1))*cos(pi*eta_2)**2 + &
+       12*(64*(2*pi**3*alpha**3*sin(pi*eta_1)**4*cos(pi*eta_1)**2 - &
+       pi**3*alpha**3*sin(pi*eta_1)**2*cos(pi*eta_1)**2)*cos(pi*eta_2)**5 - &
+       16*(8*pi**3*alpha**3*sin(pi*eta_1)**4*cos(pi*eta_1)**2 - &
+       4*pi**3*alpha**3*sin(pi*eta_1)**2*cos(pi*eta_1)**2 + &
+       2*pi**2*alpha**2*sin(pi*eta_1)**3*cos(pi*eta_1) - &
+       pi**2*alpha**2*sin(pi*eta_1)*cos(pi*eta_1))*cos(pi*eta_2)**3 + &
+       (32*pi**3*alpha**3*sin(pi*eta_1)**4*cos(pi*eta_1)**2 + &
+       16*pi**2*alpha**2*sin(pi*eta_1)**3*cos(pi*eta_1) - &
+       8*pi**2*alpha**2*sin(pi*eta_1)*cos(pi*eta_1) - &
+       2*(8*pi**3*alpha**3*cos(pi*eta_1)**2 - pi*alpha)*sin(pi*eta_1)**2 - &
+       pi*alpha)*cos(pi*eta_2))*sin(pi*eta_2) - 1)
+
+
+cxx = 0.
+cxy = 0.
+     
+cyy = 0.
 cx  = 0.0 
 cy  = 0.0 
 ce  = 0.0 
