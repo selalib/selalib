@@ -22,7 +22,8 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                   sll_poisson_2d_periodic_fftw.F90)
 
    TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
-                                              ${FFTW_LIBRARIES})
+                                              ${FFTW_LIBRARIES}
+                                              ${HDF5_LIBRARIES})
 ELSE()
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftpack.F90")
