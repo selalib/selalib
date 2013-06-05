@@ -85,7 +85,6 @@ IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
                     ${CMAKE_BINARY_DIR}/dfftpack)
 ENDIF()
 
-
 SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
               geometry.F90
