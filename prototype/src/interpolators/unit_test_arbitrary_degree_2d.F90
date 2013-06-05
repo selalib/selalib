@@ -6,9 +6,13 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 5
-#define NPTS2 5 
-#define SPL_DEG 0
+#define NPTS1 65
+#define NPTS2 65 
+#define SPL_DEG 9
+#define X1MIN 0.0_f64
+#define X1MAX 1.0_f64
+#define X2MIN 0.0_f64
+#define X2MAX 1.0_f64
 
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
@@ -27,8 +31,8 @@ program unit_test
 
 
   print *,  'filling out discrete arrays for x1 '
-  h1 = 1.0_f64/real(NPTS1-1,f64)
-  h2 = 1.0_f64/real(NPTS2-1,f64)
+  h1 = (X1MAX-X1MIN)/real(NPTS1-1,f64)
+  h2 = (X2MAX-X2MIN)/real(NPTS2-1,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
   allocate(x(NPTS1,NPTS2))
@@ -43,11 +47,10 @@ program unit_test
   print *, '              periodic-periodic case'
   print *, '***********************************************************'
 
-  ! assumes eta mins are 0
   do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1               = real(i,f64)*h1
-        eta2               = real(j,f64)*h2
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) 
@@ -56,11 +59,11 @@ program unit_test
   end do
 
   call sll_gnuplot_field_2d( &
-       0.0_f64, &
-       1.0_f64, &
+       X1MIN, &
+       X1MAX, &
        NPTS1, &
-       0.0_f64,&
-       1.0_f64,&
+       X2MIN,&
+       X2MAX,&
        NPTS2, &
        reference, &
        'reference_interp_arb_deg', &
@@ -84,10 +87,10 @@ program unit_test
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -110,8 +113,8 @@ program unit_test
   acc2 = 0.0_f64
   do j=0,NPTS2-2
      do i=0,NPTS1-2
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
         node_val   = ad2d%interpolate_value(eta1,eta2)
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
@@ -129,13 +132,13 @@ program unit_test
      end do
   end do
 
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, &
+  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
        calculated, 'calculated_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, &
+  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
        difference, 'difference_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, &
+  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN ,X2MAX, NPTS2, &
        ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
 
 
@@ -148,10 +151,10 @@ program unit_test
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
@@ -173,8 +176,8 @@ program unit_test
   acc2 = 0.0_f64
   do j=0,NPTS2-1
      do i=0,NPTS1-2
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
         node_val   = ad2d%interpolate_value(eta1,eta2)
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
@@ -198,8 +201,8 @@ program unit_test
   ! assumes eta mins are 0
   do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1               = real(i,f64)*h1
-        eta2               = real(j,f64)*h2
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1) 
@@ -210,10 +213,10 @@ program unit_test
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
@@ -233,8 +236,8 @@ program unit_test
 
    do j=0,NPTS2-2
      do i=0,NPTS1-1
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
         !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
         !print*, "hehe"
@@ -254,11 +257,11 @@ program unit_test
   call delete(ad2d)
 
   !reinitialize data
-  ! assumes eta mins are 0
+
   do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1               = real(i,f64)*h1
-        eta2               = real(j,f64)*h2
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
@@ -269,10 +272,10 @@ program unit_test
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -296,8 +299,8 @@ program unit_test
 
    do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
         !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
         !print*, "hehe"
