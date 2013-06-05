@@ -20,7 +20,7 @@ module interp_non_unif_pp_class
      real(wp) :: eps_mesh_x,eps_mesh_y
      integer  :: rho_x_case,rho_y_case
      real(wp),dimension(:),allocatable :: node_positions_x,node_positions_y
-
+     real(wp),dimension(:),allocatable :: node_pos_x,node_pos_y
      
   end type interp_non_unif_pp
   interface new
@@ -329,11 +329,27 @@ contains
         call compute_mesh_from_bloc(bloc_coord,bloc_index,node_positions,&
           &mesh_interp_case,eps_mesh)
       endif
+      
       if(transpose_case==0)then
         this%node_positions_x=node_positions
       else
         this%node_positions_y=node_positions     
       endif
+      
+      !initialize node_pos
+      if(conservative_case==1)then 
+        do i=1,Nc1
+          node_positions(i)= 0.5_f64*(node_positions(i)+node_positions(i+1))
+        enddo
+        node_positions(Nc1+1)=node_positions(1)+1._f64
+      endif
+
+      if(transpose_case==0)then
+        this%node_pos_x=node_positions
+      else
+        this%node_pos_y=node_positions     
+      endif
+      
       
       DEALLOCATE(node_positions)
     enddo
