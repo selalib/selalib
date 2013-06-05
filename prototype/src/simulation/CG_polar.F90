@@ -15,7 +15,7 @@ program cg_polar
   type(time_mark)   , pointer :: t1,t2,t3
   sll_real64, dimension (:,:), allocatable :: div,f,fp1,g,phi_ref
   sll_real64, dimension (:)  , allocatable :: int_r
-  sll_int32  :: i, j, step, visustep, hh, min, ss
+  sll_int32  :: i, j, step, visustep, hh, min, ss,ii
   sll_int32  :: nr, ntheta, nb_step
   sll_int32  :: fcase, scheme, carac, grad, visu, interp_case, PPM_order
   sll_int32  :: ierr_poiss
@@ -28,6 +28,7 @@ program cg_polar
   !used for testing poisson with fcase=2
   sll_real64 :: c1, c2, c3, k1, k2, k3, x, y
   sll_real64 :: c1_mode, c2_mode, c3_mode, k1_mode, k2_mode, k3_mode
+  sll_real64 :: mode_slope(1:8),time_mode(1:8)
 
   t1 => new_time_mark()
   t2 => new_time_mark()
@@ -433,30 +434,41 @@ program cg_polar
   e0    = e0*dr*dtheta/2.0_f64
   int_r = int_r*dr
   call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
+  do ii=1,8
+    time_mode(ii) = real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2 &
+     &+aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2
+  enddo
+  !mode_slope=time_mode
   write(23,*)'#t=0',w0,l10,l20,e0
   write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64,e0, &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
+     time_mode(1:8)!,time_mode(1:8)
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
+
+  
+
+
+
 
   t1 => start_time_mark(t1)
 
@@ -564,29 +576,39 @@ program cg_polar
     e     = e*dr*dtheta/2.0_f64
     int_r = int_r*dr
     call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
+    do ii=1,8
+      mode_slope(ii) = time_mode(ii)
+      time_mode(ii) = real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2 &
+       &+aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2
+       mode_slope(ii) = (log(time_mode(ii))-log(mode_slope(ii)))/dt
+    enddo
+    !mode_slope=(time_mode-mode_slope)/dt
+    
+    
     write(23,*) dt*real(step,f64),w,l1/l10,l2/l20,e-e0,e, &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &   !$7
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &  !$8
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &   !$9
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &  !$10
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &   !$11
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &  !$12
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &   !$13
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &  !$14
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &   !$15
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &  !$16
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &   !$17
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &  !$18
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), & 
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
+      time_mode,mode_slope
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &   !$7
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &  !$8
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &   !$9
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &  !$10
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &   !$11
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &  !$12
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &   !$13
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &  !$14
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &   !$15
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &  !$16
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &   !$17
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &  !$18
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), & 
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
     if ((step/500)*500==step) then
       print*,'#step',step
