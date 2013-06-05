@@ -613,7 +613,10 @@ program VP1d_deltaf
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
         !call write_scalar_field_2d(f) 
-        call sll_hdf5_write_array_2d(file_id,f,dsetname,error)
+        call int2string(istep,cstep)
+        call sll_hdf5_file_create("f"//cstep//".h5",file_id,error)
+        call sll_hdf5_write_array(file_id,f,"f",error)
+        call sll_hdf5_file_close(file_id, error)
      end if
 
 #ifdef tomp
@@ -623,12 +626,6 @@ program VP1d_deltaf
 
      print *,'ITERATION',istep
 
-  call int2string(istep,cstep)
-  call sll_hdf5_file_create("ff"//cstep//".h5",file_id,error)
-  call sll_hdf5_write_array(file_id,ff,"ff",error)
-  call sll_hdf5_write_array(file_id,ff1,"ff1",error)
-  call sll_hdf5_write_array(file_id,fg,"fg",error)
-  call sll_hdf5_file_close(file_id, error)
   end do
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
