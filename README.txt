@@ -26,14 +26,13 @@ selalib compilation, installation
 mkdir build 
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release                                    \
-      -DBUILD_LIBRARY_ONLY=1                                        \
+      -DSLL_PACKAGE=1                                               \
       -DCMAKE_INSTALL_PREFIX=<path where selalib will be installed> \
       <the path of this directory>/prototype/src 
 make install
 
 selalib compilation, testing and packaging
 ------------------------------------------
-
 
 mkdir build
 cd build
@@ -44,5 +43,21 @@ To display results from outside of IRMA network you need to connect your VPN cli
 
 For package generation
 cpack -G <the cpack generator for your system : DEB, RPM, ... >
+
 AUTHORS
 
+ - Aurore Back
+ - Morgane Bergot
+ - Raphael Blanchard
+ - Edwin Chacon-Golcher
+ - Samuel Desantis
+ - Aliou Diouf
+ - Emmanuel Frenod
+ - Adnane Hamiaz
+ - Philippe Helluy
+ - Sever Hirstoaga
+ - Eric Madaule
+ - Michel Mehrenberger
+ - Pierre Navaro
+ - Laurent Navoret
+ - Eric Sonnendrucker

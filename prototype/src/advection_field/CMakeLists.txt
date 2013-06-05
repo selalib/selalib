@@ -26,5 +26,6 @@ target_link_libraries(test_advection_field
 	sll_memory
 	sll_assertion
 	sll_constants
-	sll_working_precision)
+	sll_working_precision
+        ${HDF5_LIBRARIES})
 ENDIF (NOT STDF95)

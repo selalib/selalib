@@ -20,7 +20,9 @@ target_link_libraries(test_csl
   sll_assertion 
   sll_working_precision 
   sll_utilities 
-  sll_constants )
+  sll_constants
+  ${HDF5_LIBRARIES}
+ )
 ENDIF(NOT STDF95)
 
 add_library(sll_bgk_mesh STATIC sll_bgk_mesh.F90)
