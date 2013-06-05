@@ -120,19 +120,19 @@ contains
    ! First direction
    select case(quadrature_type1)
       case (QNS_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+1),ierr)
-         qns%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+1)
+         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+2),ierr)
+         qns%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
       case (QNS_GAUSS_LOBATTO)
          print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
               'because the interface of that function is not good.'
 !!$         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+1),ierr)
 !!$         qns%gauss_pts2(:,:)
    end select
-
+  ! print*, 'gaussss',qns%gauss_pts1
    select case(quadrature_type2)
       case (QNS_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(qns%gauss_pts2(2,spline_degree_eta2+1),ierr)
-         qns%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+1)
+         SLL_ALLOCATE(qns%gauss_pts2(2,spline_degree_eta2+2),ierr)
+         qns%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
       case (QNS_GAUSS_LOBATTO)
          print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
               'because the interface of that function is not good.'
@@ -337,6 +337,7 @@ contains
        end do
     end do
 
+    !print*, 'er',qns%rho_vec
     call solve_linear_system(qns)
 
     ! apr_B is the source, apr_U is the solution
@@ -443,9 +444,10 @@ contains
     bc_right  = obj%bc_right
     bc_bottom = obj%bc_bottom
     bc_top    = obj%bc_top
-    num_pts_g1 = obj%spline_degree1+1
-    num_pts_g2 = obj%spline_degree2+1
+    num_pts_g1 = obj%spline_degree1+2
+    num_pts_g2 = obj%spline_degree2+2
 
+    !print*, 'rez',tmp1, (cell_i-1+tmp1)*delta1,eta1_min
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
        eta1  = eta1_min + (cell_i-1+tmp1)*delta1
@@ -513,18 +515,21 @@ contains
              local_spline_index1 = obj%spline_degree1 + cell_i
              
           end if
+          !print*,  'gauss',obj%gauss_pts1(1,i)
 
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
-               gtmp2,&
+               gtmp1,&
                local_spline_index1,&
                work1,&
                dbiatx1,&
                2 )
 
           val_f   = rho%value_at_point(gpt1,gpt2)
+         ! print*, 'val',val_f,wgpt1,wgpt2!,(2.0*pi)**2*cos(2*pi*gpt1)*cos(2*pi*gpt2),gpt1,gpt2,eta1
           val_c   = c_field%value_at_point(gpt1,gpt2)
+          !print*, 'val,',val_c
           val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
           val_a12 = a_field_mat(1,2)%base%value_at_point(gpt1,gpt2)
           val_a21 = a_field_mat(2,1)%base%value_at_point(gpt1,gpt2)
@@ -561,6 +566,7 @@ contains
                 M_rho_loc(index1)= M_rho_loc(index1) + &
                      val_f*val_jac*wgpt1*wgpt2* &
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
+                !print*, 'ethop',M_rho_loc(index1),dbiatx1(ii+1,1),dbiatx2(jj+1,1)
                 
                 do iii = 0,obj%spline_degree1
                    do jjj = 0,obj%spline_degree2
@@ -603,6 +609,7 @@ contains
           end do
        end do
     end do
+    !print*,  'rez',   K_a12_loc
   end subroutine build_local_matrices
        
   subroutine local_to_global_matrices( &
@@ -710,6 +717,7 @@ contains
                      K_a12_loc(b, bprime) + &
                      K_a21_loc(b, bprime) + &
                      K_a22_loc(b, bprime)
+                !print*, 'elt',  elt_mat_global
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    call add_MVal(qns%csr_mat,elt_mat_global,li_A,li_Aprime)
@@ -719,6 +727,8 @@ contains
           end do
        end do
     end do
+
+    
   end subroutine local_to_global_matrices
 
   subroutine solve_linear_system( qns )
@@ -781,8 +791,12 @@ contains
 
     end if
 
+    !print*, 'retr', qns%tmp_rho_vec
+
+    !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
+    !print*, 'sol', qns%phi_vec
   end subroutine solve_linear_system
 
   subroutine solve_general_qn(csr_mat,apr_B,apr_U)

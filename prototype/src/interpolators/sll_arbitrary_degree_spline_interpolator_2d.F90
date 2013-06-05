@@ -264,6 +264,8 @@ contains
    sll_real64 :: delta2
    sll_int32  ::  nb_spline_eta1
    sll_int32  ::  nb_spline_eta2
+   sll_real64 :: eta1
+   sll_real64 :: eta2
 
    if(present(coeffs_2d)) then
       print *, 'set_coefficients_ad2d(), ERROR: this function has not ', &
@@ -285,13 +287,16 @@ contains
 
    tmp1 = (sp_deg1 + 1)/2
    tmp2 = (sp_deg2 + 1)/2
+   print*, tmp1,tmp2
    ! The interpretation and further filling of the spline coefficients array
    ! depends on the boundary conditions.
    select case (interpolator%bc_selector)
    case(0) ! periodic-periodic
-
-      interpolator%size_t1 = 2*sp_deg1 + num_cells1 
-      interpolator%size_t2 = 2*sp_deg2 + num_cells2
+      
+      interpolator%size_coeffs1=  num_cells1 + sp_deg1
+      interpolator%size_coeffs2=  num_cells2 + sp_deg2
+      interpolator%size_t1 = 2*sp_deg1 + num_cells1 +1 
+      interpolator%size_t2 = 2*sp_deg2 + num_cells2 +1
       ! allocation and definition of knots
       do i = -sp_deg1, num_cells1 + sp_deg1
          interpolator%t1( i + sp_deg1 + 1 ) = eta1_min + i*delta1
@@ -333,8 +338,10 @@ contains
          end do
       end if
    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+      interpolator%size_coeffs1=  num_cells1 + sp_deg1
+      interpolator%size_coeffs2=  num_cells2 + sp_deg2
       interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
-      interpolator%size_t2 = 2*sp_deg2 + num_cells2
+      interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
       nb_spline_eta1 = num_cells1 + sp_deg1 - 2
       nb_spline_eta2 = num_cells2
       ! allocation and definition of knots
@@ -342,22 +349,31 @@ contains
          interpolator%t2( i+ sp_deg2 + 1 ) = eta2_min + i* delta2
       end do
       
-      interpolator%t1(1:interpolator%size_t1) = &
-           interpolator%knots1(1:interpolator%size_t1)
-      
-      
-      do i = 1 ,nb_spline_eta1
-         do j = 1,nb_spline_eta2
-            interpolator%coeff_splines(i+1,j+tmp2) = &
-                 coeffs_1d(i+nb_spline_eta1*(j-1))
+      do i = 1, sp_deg1 + 1
+         interpolator%t1(i) = eta1_min
+      enddo
+      eta1 = eta1_min
+      do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+         eta1 = eta1 + delta1
+         interpolator%t1(i) = eta1
+      enddo
+       do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+          interpolator%t1(i) = eta1
+       enddo
+       
+       
+       do i = 1 ,nb_spline_eta1
+          do j = 1,nb_spline_eta2
+             interpolator%coeff_splines(i+1,j+tmp2) = &
+                  coeffs_1d(i+nb_spline_eta1*(j-1))
          end do
       end do
-
+      
       interpolator%coeff_splines(1,:) = 0.0_8
       interpolator%coeff_splines(nb_spline_eta1+2,:) = 0.0_8
+      
 
-
-
+      
       do j = 1, tmp2
          do i = 1,nb_spline_eta1
 
@@ -365,11 +381,11 @@ contains
                  coeffs_1d( i + nb_spline_eta1*(nb_spline_eta2 - (tmp2 -j)-1))
          end do
       end do
-
+      
       if (nb_spline_eta2 + tmp2 < nb_spline_eta2 + sp_deg2 ) then
-
+         
          do j = nb_spline_eta2 + tmp2 +1, nb_spline_eta2 + sp_deg2
-
+            
             do i = 1,nb_spline_eta1
 
                interpolator%coeff_splines(i+1 ,j) = &
@@ -378,9 +394,11 @@ contains
             end do
          end do
       end if
-
+      
    case(576)!3. periodic, dirichlet-bottom, dirichlet-top
-      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1
+      interpolator%size_coeffs1=  num_cells1 + sp_deg1
+      interpolator%size_coeffs2=  num_cells2 + sp_deg2
+      interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
       interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2 + 1
       nb_spline_eta1 = num_cells1
       nb_spline_eta2 = num_cells2 + sp_deg2 - 2
@@ -390,43 +408,59 @@ contains
 
          interpolator%t1( i+ sp_deg1 + 1 ) = eta1_min + i* delta1
       end do
+      
+      
+      do i = 1, sp_deg2 + 1
+         interpolator%t2(i) = eta2_min
+      enddo
+      eta2 = eta2_min
+      do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+         eta2 = eta2 + delta2
+         interpolator%t2(i) = eta2
+      enddo
+      do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+         interpolator%t2(i) = eta2
+      enddo
+       
+      
+      ! interpolator%t2(1: interpolator%size_t2) = &
+      !     interpolator%knots2(1: interpolator%size_t2)
 
-      interpolator%t2(1: interpolator%size_t2) = &
-           interpolator%knots2(1: interpolator%size_t2)
-
-
+      
       do i = 1 , nb_spline_eta1
          do j = 1,nb_spline_eta2
-
+            
             interpolator%coeff_splines(i + tmp1 ,j+1) = &
                  coeffs_1d(i+nb_spline_eta1 *(j-1) )
          end do
       end do
-
+      
       do i = 1, tmp1
          do j = 1,nb_spline_eta2
+            
+            interpolator%coeff_splines(i ,j+1) = &
+                 coeffs_1d(nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+         end do
+      end do
+      
+      if (nb_spline_eta1 + tmp1 < nb_spline_eta1 + sp_deg1) then
+         
+         do i = nb_spline_eta1 + tmp1 +1, nb_spline_eta1 + sp_deg1
 
-        interpolator%coeff_splines(i ,j+1) = &
-             coeffs_1d(nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
-     end do
-  end do
+            do j = 1,nb_spline_eta2
 
-  if (nb_spline_eta1 + tmp1 < nb_spline_eta1 + sp_deg1) then
-
-     do i = nb_spline_eta1 + tmp1 +1, nb_spline_eta1 + sp_deg1
-
-        do j = 1,nb_spline_eta2
-
-             interpolator%coeff_splines(i,j+1) = &
-                  coeffs_1d( i- (nb_spline_eta1 + tmp1)+nb_spline_eta1 *(j-1) )
-          end do
-       end do
-    end if
-
-    interpolator%coeff_splines(:,1) = 0.0_8
-    interpolator%coeff_splines(:,nb_spline_eta2+2) = 0.0_8
-
+               interpolator%coeff_splines(i,j+1) = &
+                    coeffs_1d( i- (nb_spline_eta1 + tmp1)+nb_spline_eta1 *(j-1) )
+            end do
+         end do
+      end if
+      
+      interpolator%coeff_splines(:,1) = 0.0_8
+      interpolator%coeff_splines(:,nb_spline_eta2+2) = 0.0_8
+      
    case(585) ! 4. dirichlet in all sides
+      interpolator%size_coeffs1=  num_cells1 + sp_deg1
+      interpolator%size_coeffs2=  num_cells2 + sp_deg2
       interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
       interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2 + 1
       nb_spline_eta1 = num_cells1 + sp_deg1 - 2
@@ -434,10 +468,35 @@ contains
 
       ! allocation and definition of knots
 
-      interpolator%t1(1: interpolator%size_t1)  = &
-           interpolator%knots1(1: interpolator%size_t1)
-      interpolator%t2(1: interpolator%size_t2)  = &
-           interpolator%knots2(1: interpolator%size_t2)
+      do i = 1, sp_deg1 + 1
+         interpolator%t1(i) = eta1_min
+      enddo
+      eta1 = eta1_min
+      do i = sp_deg1 + 2, num_cells1 + 1 + sp_deg1
+         eta1 = eta1 + delta1
+         interpolator%t1(i) = eta1
+      enddo
+      do i = num_cells1 + sp_deg1 + 2, num_cells1 + 1 + 2*sp_deg1
+         interpolator%t1(i) = eta1
+       enddo
+       
+       do i = 1, sp_deg2 + 1
+          interpolator%t2(i) = eta2_min
+       enddo
+       eta2 = eta2_min
+       do i = sp_deg2 + 2, num_cells2 + 1 + sp_deg2
+         eta2 = eta2 + delta2
+         interpolator%t2(i) = eta2
+      enddo
+      do i = num_cells2 + sp_deg2 + 2, num_cells2 + 1 + 2*sp_deg2
+         interpolator%t2(i) = eta2
+      enddo
+      
+      
+      !interpolator%t1(1: interpolator%size_t1)  = &
+       !    interpolator%knots1(1: interpolator%size_t1)
+      !interpolator%t2(1: interpolator%size_t2)  = &
+       !    interpolator%knots2(1: interpolator%size_t2)
 
       interpolator%coeff_splines(:,:) = 0.0_8
       ! allocation coefficient spline
@@ -476,9 +535,9 @@ contains
     sll_real64 :: period2
     sll_int32  :: order1
     sll_int32  :: order2
-    sll_int32 :: ierr
-    sll_real64, dimension(:), allocatable :: t1,t2
-    sll_real64, dimension(:,:), allocatable :: coeff
+    !sll_int32 :: ierr
+    !sll_real64, dimension(:), allocatable :: t1,t2
+    !sll_real64, dimension(:,:), allocatable :: coeff
 
     sz1 = size_eta1_coords
     sz2 = size_eta2_coords
