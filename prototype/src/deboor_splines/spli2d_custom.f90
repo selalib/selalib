@@ -23,10 +23,13 @@ subroutine spli2d_custom ( &
   real(8), dimension ( ai_nx , ai_ny ) :: lpr_work1
   real(8), dimension ( ai_nx         ) :: lpr_work2
   real(8), dimension ( ai_nx * ai_ny ) :: lpr_work3
+  real(8), dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work31
+  real(8), dimension (( 2*ai_ky-1) * ai_ny ) :: lpr_work32
+  real(8), dimension ( ai_ny         ) :: lpr_work4
+  real(8), dimension ( ai_ny , ai_nx ) :: lpr_work5
   integer  :: li_i, li_j, li_iflag
   
-  !print*,'rerz', ai_nx, ai_kx, apr_taux
-
+   lpr_work1(:,:) = 0.0
   
   ! *** set up knots
   !     interpolate between knots
@@ -36,57 +39,70 @@ subroutine spli2d_custom ( &
   
   do li_i = ai_kx + 1, ai_nx
      apr_tx ( li_i ) = apr_taux ( 2 ) + &
-          (li_i-(ai_kx + 1))*( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
-     !( apr_taux ( li_i - ai_kx + 1 ) + apr_taux ( li_i - ai_kx + 2 ) ) / 2.0_8!
+          (li_i-(ai_kx + 1))*&
+          ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+    
   end do
   
-   apr_Bcoef = 0.0_8
-  !print*, 'ty', apr_ty, ai_ky,apr_taux
-  !print*, 'tx', apr_tx, ai_kx, apr_taux
+
+
+ ! print*, 'tetet',apr_tx
+  apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
      do li_j = 1, ai_ny
         apr_Bcoef ( li_i, li_j ) = apr_g ( li_i, li_j )
      end do
   end do
-  !print*, 'ert', apr_Bcoef
-!  *** construct b-coefficients of interpolant
+  
+ ! print*, 'ert', apr_Bcoef
+  !  *** construct b-coefficients of interpolant
   !
   call spli2d ( &
        apr_taux,&
-       apr_bcoef,&
+       apr_Bcoef,&
        apr_tx, &
        ai_nx,&
        ai_kx, &
        ai_ny, &
        lpr_work2,&
-       lpr_work3,&
-       lpr_work1, &
+       lpr_work31,&
+       lpr_work5, &
        li_iflag )
-  !print*, "ok"
-
+  !print*, "ok" lpr_work1
+  
+  !print*, 'ert', lpr_work5
   apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
   apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
   
   do li_j = ai_ky + 1, ai_ny
      apr_ty ( li_j ) = apr_tauy ( 2 ) +&
-          (li_j-(ai_ky + 1))*( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
-     !( apr_tauy ( li_j - ai_ky + 1 ) + apr_tauy ( li_j - ai_ky + 2 ) ) / 2.0_8!
+          (li_j-(ai_ky + 1))*&
+          ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
   end do
-  !print*, 'ty', apr_ty
-
+  
+  !print*, 'tetet',apr_ty
+  !print*, 'ertbisole',  lpr_work5 !lpr_work1
+  
+  apr_bcoef(:,:) =0.0_8
+  lpr_work4 = 0.0_8
+  lpr_work3 = 0.0_8
   call spli2d ( &
        apr_tauy,&
-       lpr_work1,&
+       lpr_work5,&
        apr_ty,&
        ai_ny, &
        ai_ky, &
        ai_nx, &
-       lpr_work2, &
-       lpr_work3,&
+       lpr_work4, &
+       lpr_work32,&
        apr_bcoef, &
        li_iflag )
-  !print*, 're'
-  !print*, apr_bcoef
-  !print*, 'ty', apr_ty
-  !print*, 'tx', apr_tx
+ ! print*, 'ertbis', apr_Bcoef(1,:)!wor
+ ! print*, 'ertbis', apr_Bcoef(2,:)
+ ! print*, 'ertbis', apr_Bcoef(ai_nx,:)
+ ! print*, 'ertbis', apr_Bcoef(ai_nx-1,:)
+ ! print*, 'ertbis', apr_Bcoef(:,1)
+ ! print*, 'ertbis', apr_Bcoef(:,2)
+  !print*, 'ertbis', apr_Bcoef(:,ai_ny)
+ ! print*, 'ertbis', apr_Bcoef(:,ai_ny-1)
 end subroutine spli2d_custom
