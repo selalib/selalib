@@ -6,10 +6,10 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 5
-#define NPTS2 5 
-#define SPL_DEG 0
-
+#define NPTS1 40
+#define NPTS2 40 
+#define SPL_DEG 9
+  
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
   sll_real64, dimension(:), allocatable      :: eta1_pos
@@ -24,8 +24,8 @@ program unit_test
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, acc3, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
 
-
-
+  
+  
   print *,  'filling out discrete arrays for x1 '
   h1 = 1.0_f64/real(NPTS1-1,f64)
   h2 = 1.0_f64/real(NPTS2-1,f64)
@@ -37,12 +37,12 @@ program unit_test
   allocate(difference(NPTS1,NPTS2))
   allocate(eta1_pos(NPTS1))
   allocate(eta2_pos(NPTS2))
-!!$  allocate(x1_eta1_min(NPTS2))
-!!$  allocate(x1_eta1_max(NPTS2))
+!  allocate(x1_eta1_min(NPTS2))
+ ! allocate(x1_eta1_max(NPTS2))
   print *, '***********************************************************'
   print *, '              periodic-periodic case'
   print *, '***********************************************************'
-
+  
   ! assumes eta mins are 0
   do j=0,NPTS2-1
      do i=0,NPTS1-1
@@ -66,10 +66,10 @@ program unit_test
        'reference_interp_arb_deg', &
        0, &
        ierr)
-
-  print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
-!  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
-
+  
+  !print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
+  !  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
+  
 !!$  ! Fill out the transformation's slopes at the borders
 !!$  do j=0,NPTS2-1
 !!$     eta1           = 0.0_f64
@@ -78,9 +78,9 @@ program unit_test
 !!$     eta1           = 1.0_f64
 !!$     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
 !!$  end do
-
+  
   ! Test the 2D transformation:
-
+  
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
@@ -94,16 +94,16 @@ program unit_test
        SLL_PERIODIC, &
        SPL_DEG, &
        SPL_DEG )
-
-
+  
+  
   call ad2d%compute_spline_coefficients( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&
        NPTS1-1,&
        eta2_pos(1:NPTS2-1),&
        NPTS2-1)
-
-
+  
+  
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
@@ -116,35 +116,35 @@ program unit_test
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !    'theoretical = ', ref
         acc        = acc + abs(node_val-ref)
- !       deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
-
- !       ref        = deriv_x1_polar_f_eta1(eta1,eta2)
- !       acc1       = acc1 + abs(deriv1_val-ref)
-  !      deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
-   !     ref        = deriv_x1_polar_f_eta2(eta1,eta2)
-    !    acc2       = acc2 + abs(deriv2_val-ref)
+        !       deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
+        
+        !       ref        = deriv_x1_polar_f_eta1(eta1,eta2)
+        !       acc1       = acc1 + abs(deriv1_val-ref)
+        !      deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
+        !     ref        = deriv_x1_polar_f_eta2(eta1,eta2)
+        !    acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
 
   call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, &
        calculated, 'calculated_interp_arb_deg', 0, ierr)
-
+  
   call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, &
        difference, 'difference_interp_arb_deg', 0, ierr)
-
+  
   call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, &
        ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
-
-
+  
+  
   print *, '***********************************************************'
   print *, '              periodic-dirichlet case'
   print *, '***********************************************************'
 
   call delete(ad2d)
-
+  
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
@@ -166,7 +166,7 @@ program unit_test
        eta2_pos(1:NPTS2),&
        NPTS2)
 
-
+  
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc1 = 0.0_f64
@@ -179,19 +179,19 @@ program unit_test
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc1        = acc1 + abs(node_val-ref)
         
      end do
   end do
   
-
-
+  
+  
   print *, '***********************************************************'
   print *, '              dirichlet-periodic case'
   print *, '***********************************************************'
-
+  
   call delete(ad2d)
 
   !reinitialize data
@@ -227,11 +227,11 @@ program unit_test
        NPTS1,&
        eta2_pos(1:NPTS2-1),&
        NPTS2-1)
-
-
+  
+  
   print *, 'Compare the values of the transformation at the nodes: '
 
-   do j=0,NPTS2-2
+  do j=0,NPTS2-2
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
@@ -241,8 +241,8 @@ program unit_test
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc2        = acc2 + abs(node_val-ref)
      end do
   end do
@@ -250,7 +250,7 @@ program unit_test
   print *, '***********************************************************'
   print *, '              dirichlet-dirichlet case'
   print *, '***********************************************************'
-
+  
   call delete(ad2d)
 
   !reinitialize data
@@ -265,7 +265,7 @@ program unit_test
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
      end do
   end do
-
+  
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
@@ -288,13 +288,13 @@ program unit_test
        eta2_pos,&
        NPTS2)
 
-
+  
   !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc3 = 0.0_f64
-
-   do j=0,NPTS2-1
+  
+  do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
@@ -304,27 +304,30 @@ program unit_test
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc3        = acc3 + abs(node_val-ref)
      end do
   end do
   
-
+  
   print *, 'Average error in nodes (dirichlet-dirichlet) = ', acc3/(NPTS1*NPTS2)
+  !
   print *, 'Average error in nodes (dirichlet-periodic) = ', acc2/(NPTS1*NPTS2)
+  !
   print *, 'Average error in nodes (periodic-dirichlet) = ', acc1/(NPTS1*NPTS2)
+!
   print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
-
-
-  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
-      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
-      (acc2/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
-      (acc3/(NPTS1*NPTS2) .lt. 2.0e-16)) then
-     print *, 'PASSED'
-  else
-     print *, 'FAILED'
-  end if
+!!$
+!!$
+!!$  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
+!!$      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
+!!$      (acc2/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
+!!$      (acc3/(NPTS1*NPTS2) .lt. 2.0e-16)) then
+!!$     print *, 'PASSED'
+!!$  else
+!!$     print *, 'FAILED'
+!!$  end if
 !!$  print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
 !!$  print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
 
