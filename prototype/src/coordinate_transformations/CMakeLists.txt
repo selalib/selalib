@@ -1,3 +1,4 @@
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 IF(STDF95)
  add_library(sll_coordinate_transformations STATIC
         sll_coordinate_transformations_2d.F90
