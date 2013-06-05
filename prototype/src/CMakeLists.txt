@@ -85,6 +85,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    IF(MPI_MODULE_ENABLED)
    
+      SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_array_initializers)
