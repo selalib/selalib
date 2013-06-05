@@ -316,9 +316,11 @@ contains
     ky  = 2_f64*sll_pi/((geomx%ny)*geomx%dy)
     eps=0.05_f64
     do jv=jstartv,jendv
-       vy = geomv%y0+(jv-1)*geomv%dy
+       !vy = geomv%y0+(jv-1)*geomv%dy
+       vy = geomv%y0+interpv%node_pos_y(jv)*(geomv%y1-geomv%y0)
        do iv=1,geomv%nx
-          vx = geomv%x0+(iv-1)*geomv%dx
+          !vx = geomv%x0+(iv-1)*geomv%dx
+          vx = geomv%x0+interpv%node_pos_x(iv)*(geomv%x1-geomv%x0)
           v2 = vx*vx+vy*vy
           do j=1,geomx%ny
              y=geomx%y0+(j-1)*geomx%dy
