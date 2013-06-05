@@ -40,15 +40,16 @@ module sll_module_scalar_field_2d
   use sll_scalar_field_initializers_base
   implicit none
 
-  type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic
-     procedure(two_var_parametrizable_function), pointer, nopass :: func
-     sll_real64, dimension(:), pointer        :: params
-     character(len=64)                        :: name
-     sll_int32                                :: plot_counter
-   contains
-     procedure, pass(field) :: value_at_point => value_at_pt_analytic
-     procedure, pass(field) :: value_at_indices => value_at_index_analytic
-  end type sll_scalar_field_2d_analytic
+!!$  type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic
+!!$     procedure(two_var_parametrizable_function), pointer, nopass :: func
+!!$     sll_real64, dimension(:), pointer        :: params
+!!$     character(len=64)                        :: name
+!!$     sll_int32                                :: plot_counter
+!!$   contains
+!!$     procedure, pass(field) :: value_at_point => value_at_pt_analytic
+!!$     procedure, pass(field) :: value_at_indices => value_at_index_analytic
+!!$  end type sll_scalar_field_2d_analytic
+!!$
 
 !!$ type, extends(sll_scalar_field_2d_base) :: scalar_field_2d_dis
 !!$     class(sll_interpolator_1d_base), pointer :: eta1_interpolator
@@ -81,25 +82,29 @@ module sll_module_scalar_field_2d
 
 contains   ! *****************************************************************
 
-  function value_at_pt_analytic( field, eta1, eta2 )
-    class(sll_scalar_field_2d_analytic) :: field
-    sll_real64, intent(in) :: eta1
-    sll_real64, intent(in) :: eta2
-    sll_real64             ::  value_at_pt_analytic
-    value_at_pt_analytic = field%func(eta1,eta2,field%params)
-  end function value_at_pt_analytic
+function whatever()
+  sll_real64 :: whatever
+  whatever = 1.0_f64
+end function whatever
+!!$  function value_at_pt_analytic( field, eta1, eta2 )
+!!$    class(sll_scalar_field_2d_analytic) :: field
+!!$    sll_real64, intent(in) :: eta1
+!!$    sll_real64, intent(in) :: eta2
+!!$    sll_real64             ::  value_at_pt_analytic
+!!$    value_at_pt_analytic = field%func(eta1,eta2,field%params)
+!!$  end function value_at_pt_analytic
 
-  function value_at_index_analytic( field, i, j )
-    class(sll_scalar_field_2d_analytic) :: field
-    sll_int32, intent(in) :: i
-    sll_int32, intent(in) :: j
-    sll_real64            :: eta1
-    sll_real64            :: eta2
-    sll_real64            :: value_at_index_analytic
-    eta1 = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
-    eta2 = field%mesh%eta2_min + real(j-1,f64)*field%mesh%delta_eta2
-    value_at_index_analytic = field%func(eta1,eta2,field%params)
-  end function value_at_index_analytic
+!!$  function value_at_index_analytic( field, i, j )
+!!$    class(sll_scalar_field_2d_analytic) :: field
+!!$    sll_int32, intent(in) :: i
+!!$    sll_int32, intent(in) :: j
+!!$    sll_real64            :: eta1
+!!$    sll_real64            :: eta2
+!!$    sll_real64            :: value_at_index_analytic
+!!$    eta1 = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
+!!$    eta2 = field%mesh%eta2_min + real(j-1,f64)*field%mesh%delta_eta2
+!!$    value_at_index_analytic = field%func(eta1,eta2,field%params)
+!!$  end function value_at_index_analytic
 
 
 
