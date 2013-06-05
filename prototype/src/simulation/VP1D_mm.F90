@@ -11,8 +11,8 @@ program VP1d_deltaf
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
-  use sll_splines
+  use sll_constants
+  use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
   use sll_odd_degree_spline_interpolator_1d
@@ -25,7 +25,7 @@ program VP1d_deltaf
   implicit none
 
 !  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x
-  type(sll_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
+  type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
@@ -608,7 +608,8 @@ program VP1d_deltaf
        
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
-!        call write_scalar_field_2d(f) 
+        !call write_scalar_field_2d(f) 
+        call sll_hdf5_write_array_2d(file_id,f,dsetname,error)
      end if
 
 #ifdef tomp
