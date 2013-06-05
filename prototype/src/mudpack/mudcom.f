@@ -36,24 +36,24 @@ c     virtual boundaries for phi (for all 2-d real codes)
 c
       implicit none
       integer nfx,nfy,i,j
-      real phif(nfx,nfy),rhsf(nfx,nfy)
-      real phi(0:nfx+1,0:nfy+1),rhs(nfx,nfy)
+      real(8) phif(nfx,nfy),rhsf(nfx,nfy)
+      real(8) phi(0:nfx+1,0:nfy+1),rhs(nfx,nfy)
       do j=1,nfy
-	do i=1,nfx
-	  phi(i,j) = phif(i,j)
-	  rhs(i,j) = rhsf(i,j)
-	end do
+      do i=1,nfx
+        phi(i,j) = phif(i,j)
+        rhs(i,j) = rhsf(i,j)
+      end do
       end do
 c
 c     set virtual boundaries in phi to zero
 c
       do j=0,nfy+1
-	phi(0,j) = 0.0
-	phi(nfx+1,j) = 0.0
+      phi(0,j) = 0.0
+      phi(nfx+1,j) = 0.0
       end do
       do i=0,nfx+1
-	phi(i,0) = 0.0
-	phi(i,nfy+1) = 0.0
+      phi(i,0) = 0.0
+      phi(i,nfy+1) = 0.0
       end do
       return
       end
@@ -64,55 +64,55 @@ c     transfer fine grid to coarse grid
 c
       implicit none
       integer nx,ny,ncx,ncy,i,j,ic,jc
-      real phi(0:nx+1,0:ny+1),rhs(nx,ny)
-      real phic(0:ncx+1,0:ncy+1),rhsc(ncx,ncy)
+      real(8) phi(0:nx+1,0:ny+1),rhs(nx,ny)
+      real(8) phic(0:ncx+1,0:ncy+1),rhsc(ncx,ncy)
 c
 c     set virtual boundaries in phic to zero
 c
       do jc=0,ncy+1
-	phic(0,jc) = 0.0
-	phic(ncx+1,jc) = 0.0
+      phic(0,jc) = 0.0
+      phic(ncx+1,jc) = 0.0
       end do
       do ic=0,ncx+1
-	phic(ic,0) = 0.0
-	phic(ic,ncy+1) = 0.0
+      phic(ic,0) = 0.0
+      phic(ic,ncy+1) = 0.0
       end do
       if (ncx.lt.nx .and. ncy.lt.ny) then
 c
 c     coarsening in both x and y
 c
-	do jc=1,ncy
-	  j = jc+jc-1
-	  do ic=1,ncx
-	    i = ic+ic-1
-	    phic(ic,jc) = phi(i,j)
-	    rhsc(ic,jc) = rhs(i,j)
-	  end do
-	end do
+      do jc=1,ncy
+        j = jc+jc-1
+        do ic=1,ncx
+          i = ic+ic-1
+          phic(ic,jc) = phi(i,j)
+          rhsc(ic,jc) = rhs(i,j)
+        end do
+      end do
       else if (ncx.lt.nx .and. ncy.eq.ny) then
 c
 c     coarsening in x only
 c
-	do jc=1,ncy
-	  j = jc
-	  do ic=1,ncx
-	    i = ic+ic-1
-	    phic(ic,jc) = phi(i,j)
-	    rhsc(ic,jc) = rhs(i,j)
-	  end do
-	end do
+      do jc=1,ncy
+        j = jc
+        do ic=1,ncx
+          i = ic+ic-1
+          phic(ic,jc) = phi(i,j)
+          rhsc(ic,jc) = rhs(i,j)
+        end do
+      end do
       else
 c
 c     coarsening in y only
 c
-	do jc=1,ncy
-	  j = jc+jc-1
-	  do ic=1,ncx
-	    i = ic
-	    phic(ic,jc) = phi(i,j)
-	    rhsc(ic,jc) = rhs(i,j)
-	  end do
-	end do
+      do jc=1,ncy
+        j = jc+jc-1
+        do ic=1,ncx
+          i = ic
+          phic(ic,jc) = phi(i,j)
+          rhsc(ic,jc) = rhs(i,j)
+        end do
+      end do
       end if
       return
       end
@@ -125,7 +125,7 @@ c
 c     restrict fine grid residual in resf to coarse grid in rhsc
 c     using full weighting for all real 2d codes
 c
-      real resf(nx,ny),rhsc(ncx,ncy)
+      real(8) resf(nx,ny),rhsc(ncx,ncy)
 c
 c     set x,y coarsening integer subscript scales
 c
@@ -141,43 +141,43 @@ c
 c     coarsening in both directions
 c
 !$OMP PARALLEL DO PRIVATE(i,j,ic,jc), SHARED(resf,rhsc,ncx,ncy)
-	do jc=2,ncy-1
-	  j = jc+jc-1
-	  do ic=2,ncx-1
-	    i = ic+ic-1
-	    rhsc(ic,jc) = (resf(i-1,j-1)+resf(i+1,j-1)+resf(i-1,j+1)+
+      do jc=2,ncy-1
+        j = jc+jc-1
+        do ic=2,ncx-1
+          i = ic+ic-1
+          rhsc(ic,jc) = (resf(i-1,j-1)+resf(i+1,j-1)+resf(i-1,j+1)+
      +                     resf(i+1,j+1)+2.*(resf(i-1,j)+resf(i+1,j)+
      +                     resf(i,j-1)+resf(i,j+1))+4.*resf(i,j))*.0625
-	  end do
-	end do
+        end do
+      end do
       else if (ncy.eq.ny) then
 c
 c     no coarsening in y but coarsening in x
 c
 !$OMP PARALLEL DO PRIVATE(i,j,ic,jc), SHARED(resf,rhsc,ncx,ncy)
-	do jc=2,ncy-1
-	  j = jc
-	  do ic=2,ncx-1
-	    i = ic+ic-1
-	    rhsc(ic,jc) = (resf(i-1,j-1)+resf(i+1,j-1)+resf(i-1,j+1)+
+      do jc=2,ncy-1
+        j = jc
+        do ic=2,ncx-1
+          i = ic+ic-1
+          rhsc(ic,jc) = (resf(i-1,j-1)+resf(i+1,j-1)+resf(i-1,j+1)+
      +                     resf(i+1,j+1)+2.*(resf(i-1,j)+resf(i+1,j)+
      +                     resf(i,j-1)+resf(i,j+1))+4.*resf(i,j))*.0625
-	  end do
-	end do
+        end do
+      end do
       else
 c
 c     no coarsening in x but coarsening in y
 c
 !$OMP PARALLEL DO PRIVATE(i,j,ic,jc), SHARED(resf,rhsc,ncx,ncy)
-	do jc=2,ncy-1
-	  j = jc+jc-1
-	  do ic=2,ncx-1
-	    i = ic
-	    rhsc(ic,jc) = (resf(i-1,j-1)+resf(i+1,j-1)+resf(i-1,j+1)+
+      do jc=2,ncy-1
+        j = jc+jc-1
+        do ic=2,ncx-1
+          i = ic
+          rhsc(ic,jc) = (resf(i-1,j-1)+resf(i+1,j-1)+resf(i-1,j+1)+
      +                     resf(i+1,j+1)+2.*(resf(i-1,j)+resf(i+1,j)+
      +                     resf(i,j-1)+resf(i,j+1))+4.*resf(i,j))*.0625
-	  end do
-	end do
+        end do
+      end do
       end if
 c
 c     set residual on boundaries
@@ -186,72 +186,72 @@ c
 c
 c     y=yc,yd boundaries
 c
-	j = jc+jy*(jc-1)
-	jm1 = max0(j-1,2)
-	jp1 = min0(j+1,ny-1)
-	if (j.eq.1 .and. nyc.eq.0) jm1 = ny-1
-	if (j.eq.ny .and. nyc.eq.0) jp1 = 2
+      j = jc+jy*(jc-1)
+      jm1 = max0(j-1,2)
+      jp1 = min0(j+1,ny-1)
+      if (j.eq.1 .and. nyc.eq.0) jm1 = ny-1
+      if (j.eq.ny .and. nyc.eq.0) jp1 = 2
 c
 c     y=yc,yd and x=xa,xb cornors
 c
-	do ic=1,ncx,ncx-1
-	  i = ic+ix*(ic-1)
-	  im1 = max0(i-1,2)
-	  ip1 = min0(i+1,nx-1)
-	  if (i.eq.1 .and. nxa.eq.0) im1 = nx-1
-	  if (i.eq.nx .and. nxa.eq.0) ip1 = 2
-	  rhsc(ic,jc) = (resf(im1,jm1)+resf(ip1,jm1)+resf(im1,jp1)+
+      do ic=1,ncx,ncx-1
+        i = ic+ix*(ic-1)
+        im1 = max0(i-1,2)
+        ip1 = min0(i+1,nx-1)
+        if (i.eq.1 .and. nxa.eq.0) im1 = nx-1
+        if (i.eq.nx .and. nxa.eq.0) ip1 = 2
+        rhsc(ic,jc) = (resf(im1,jm1)+resf(ip1,jm1)+resf(im1,jp1)+
      +                   resf(ip1,jp1)+2.*(resf(im1,j)+resf(ip1,j)+
      +                   resf(i,jm1)+resf(i,jp1))+4.*resf(i,j))*.0625
-	end do
+      end do
 c
 c     set y=yc,yd interior edges
 c
-	do ic=2,ncx-1
-	  i = ic+ix*(ic-1)
-	  rhsc(ic,jc) = (resf(i-1,jm1)+resf(i+1,jm1)+resf(i-1,jp1)+
+      do ic=2,ncx-1
+        i = ic+ix*(ic-1)
+        rhsc(ic,jc) = (resf(i-1,jm1)+resf(i+1,jm1)+resf(i-1,jp1)+
      +                   resf(i+1,jp1)+2.*(resf(i-1,j)+resf(i+1,j)+
      +                   resf(i,jm1)+resf(i,jp1))+4.*resf(i,j))*.0625
-	end do
+      end do
       end do
 c
 c     set x=xa,xb interior edges
 c
       do ic=1,ncx,ncx-1
-	i = ic+ix*(ic-1)
-	im1 = max0(i-1,2)
-	ip1 = min0(i+1,nx-1)
-	if (i.eq.1 .and. nxa.eq.0) im1 = nx-1
-	if (i.eq.nx .and. nxa.eq.0) ip1 = 2
-	do jc=2,ncy-1
-	  j = jc+jy*(jc-1)
-	  rhsc(ic,jc) = (resf(im1,j-1)+resf(ip1,j-1)+resf(im1,j+1)+
+      i = ic+ix*(ic-1)
+      im1 = max0(i-1,2)
+      ip1 = min0(i+1,nx-1)
+      if (i.eq.1 .and. nxa.eq.0) im1 = nx-1
+      if (i.eq.nx .and. nxa.eq.0) ip1 = 2
+      do jc=2,ncy-1
+        j = jc+jy*(jc-1)
+        rhsc(ic,jc) = (resf(im1,j-1)+resf(ip1,j-1)+resf(im1,j+1)+
      +                   resf(ip1,j+1)+2.*(resf(im1,j)+resf(ip1,j)+
      +                   resf(i,j-1)+resf(i,j+1))+4.*resf(i,j))*.0625
-	end do
+      end do
       end do
 c
 c     set coarse grid residual zero on specified boundaries
 c
       if (nxa.eq.1) then
-	do jc=1,ncy
-	  rhsc(1,jc) = 0.0
-	end do
+      do jc=1,ncy
+        rhsc(1,jc) = 0.0
+      end do
       end if
       if (nxb.eq.1) then
-	do jc=1,ncy
-	  rhsc(ncx,jc) = 0.0
-	end do
+      do jc=1,ncy
+        rhsc(ncx,jc) = 0.0
+      end do
       end if
       if (nyc.eq.1) then
-	do ic=1,ncx
-	  rhsc(ic,1) = 0.0
-	end do
+      do ic=1,ncx
+        rhsc(ic,1) = 0.0
+      end do
       end if
       if (nyd.eq.1) then
-	do ic=1,ncx
-	  rhsc(ic,ncy) = 0.0
-	end do
+      do ic=1,ncx
+        rhsc(ic,ncy) = 0.0
+      end do
       end if
       return
       end
@@ -261,7 +261,7 @@ c
       subroutine prolon2(ncx,ncy,p,nx,ny,q,nxa,nxb,nyc,nyd,intpol)
       implicit none
       integer ncx,ncy,nx,ny,intpol,nxa,nxb,nyc,nyd
-      real p(0:ncx+1,0:ncy+1),q(0:nx+1,0:ny+1)
+      real(8) p(0:ncx+1,0:ncy+1),q(0:nx+1,0:ny+1)
       integer i,j,jc,ist,ifn,jst,jfn,joddst,joddfn
       ist = 1
       ifn = nx
@@ -270,131 +270,131 @@ c
       joddst = 1
       joddfn = ny
       if (nxa.eq.1) then
-	ist = 2
+      ist = 2
       end if
       if (nxb.eq.1) then
-	ifn = nx-1
+      ifn = nx-1
       end if
       if (nyc.eq.1) then
-	jst = 2
-	joddst = 3
+      jst = 2
+      joddst = 3
       end if
       if (nyd.eq.1) then
-	jfn = ny-1
-	joddfn = ny-2
+      jfn = ny-1
+      joddfn = ny-2
       end if
       if (intpol.eq.1 .or. ncy.lt.4) then
 c
 c     linearly interpolate in y
 c
-	if (ncy .lt. ny) then
+      if (ncy .lt. ny) then
 c
 c     ncy grid is an every other point subset of ny grid
 c     set odd j lines interpolating in x and then set even
 c     j lines by averaging odd j lines
 c
-	  do j=joddst,joddfn,2
-	    jc = j/2+1
-	    call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
-	  end do
-	  do j=2,jfn,2
-	    do i=ist,ifn
-	      q(i,j) = 0.5*(q(i,j-1)+q(i,j+1))
-	    end do
-	  end do
+        do j=joddst,joddfn,2
+          jc = j/2+1
+          call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
+        end do
+        do j=2,jfn,2
+          do i=ist,ifn
+            q(i,j) = 0.5*(q(i,j-1)+q(i,j+1))
+          end do
+        end do
 c
 c     set periodic virtual boundaries if necessary
 c
-	  if (nyc.eq.0) then
-	    do i=ist,ifn
-	      q(i,0) = q(i,ny-1)
-	      q(i,ny+1) = q(i,2)
-	    end do
-	  end if
-	  return
-	else
+        if (nyc.eq.0) then
+          do i=ist,ifn
+            q(i,0) = q(i,ny-1)
+            q(i,ny+1) = q(i,2)
+          end do
+        end if
+        return
+      else
 c
 c     ncy grid equals ny grid so interpolate in x only
 c
-	  do j=jst,jfn
-	    jc = j
-	    call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
-	  end do
+        do j=jst,jfn
+          jc = j
+          call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
+        end do
 c
 c     set periodic virtual boundaries if necessary
 c
-	  if (nyc.eq.0) then
-	    do i=ist,ifn
-	      q(i,0) = q(i,ny-1)
-	      q(i,ny+1) = q(i,2)
-	    end do
-	  end if
-	  return
-	end if
+        if (nyc.eq.0) then
+          do i=ist,ifn
+            q(i,0) = q(i,ny-1)
+            q(i,ny+1) = q(i,2)
+          end do
+        end if
+        return
+      end if
       else
 c
 c     cubically interpolate in y
 c
-	if (ncy .lt. ny) then
+      if (ncy .lt. ny) then
 c
 c     set every other point of ny grid by interpolating in x
 c
-	  do j=joddst,joddfn,2
-	    jc = j/2+1
-	    call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
-	  end do
+        do j=joddst,joddfn,2
+          jc = j/2+1
+          call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
+        end do
 c
 c     set deep interior of ny grid using values just
 c     generated and symmetric cubic interpolation in y
 c
-	  do j=4,ny-3,2
-	    do i=ist,ifn
-	    q(i,j)=(-q(i,j-3)+9.*(q(i,j-1)+q(i,j+1))-q(i,j+3))*.0625
-	    end do
-	  end do
+        do j=4,ny-3,2
+          do i=ist,ifn
+          q(i,j)=(-q(i,j-3)+9.*(q(i,j-1)+q(i,j+1))-q(i,j+3))*.0625
+          end do
+        end do
 c
 c     interpolate from q at j=2 and j=ny-1
 c
-	  if (nyc.ne.0) then
+        if (nyc.ne.0) then
 c
 c     asymmetric formula near nonperiodic y boundaries
 c
-	    do i=ist,ifn
-	      q(i,2)=(5.*q(i,1)+15.*q(i,3)-5.*q(i,5)+q(i,7))*.0625
-	      q(i,ny-1)=(5.*q(i,ny)+15.*q(i,ny-2)-5.*q(i,ny-4)+
+          do i=ist,ifn
+            q(i,2)=(5.*q(i,1)+15.*q(i,3)-5.*q(i,5)+q(i,7))*.0625
+            q(i,ny-1)=(5.*q(i,ny)+15.*q(i,ny-2)-5.*q(i,ny-4)+
      +                    q(i,ny-6))*.0625
-	    end do
-	  else
+          end do
+        else
 c
 c     periodicity in y alows symmetric formula near bndys
 c
-	    do i=ist,ifn
-	      q(i,2) = (-q(i,ny-2)+9.*(q(i,1)+q(i,3))-q(i,5))*.0625
-	      q(i,ny-1)=(-q(i,ny-4)+9.*(q(i,ny-2)+q(i,ny))-q(i,3))*.0625
-	      q(i,ny+1) = q(i,2)
-	      q(i,0) = q(i,ny-1)
-	    end do
-	  end if
-	  return
-	else
+          do i=ist,ifn
+            q(i,2) = (-q(i,ny-2)+9.*(q(i,1)+q(i,3))-q(i,5))*.0625
+            q(i,ny-1)=(-q(i,ny-4)+9.*(q(i,ny-2)+q(i,ny))-q(i,3))*.0625
+            q(i,ny+1) = q(i,2)
+            q(i,0) = q(i,ny-1)
+          end do
+        end if
+        return
+      else
 c
 c     ncy grid is equals ny grid so interpolate in x only
 c
-	  do j=jst,jfn
-	    jc = j
-	    call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
-	  end do
+        do j=jst,jfn
+          jc = j
+          call prolon1(ncx,p(0,jc),nx,q(0,j),nxa,nxb,intpol)
+        end do
 c
 c     set periodic virtual boundaries if necessary
 c
-	  if (nyc.eq.0) then
-	    do i=ist,ifn
-	      q(i,0) = q(i,ny-1)
-	      q(i,ny+1) = q(i,2)
-	    end do
-	  end if
-	  return
-	end if
+        if (nyc.eq.0) then
+          do i=ist,ifn
+            q(i,0) = q(i,ny-1)
+            q(i,ny+1) = q(i,2)
+          end do
+        end if
+        return
+      end if
       end if
       end
 
@@ -404,97 +404,97 @@ c
       subroutine prolon1(ncx,p,nx,q,nxa,nxb,intpol)
       implicit none
       integer intpol,nxa,nxb,ncx,nx,i,ic,ist,ifn,ioddst,ioddfn
-      real p(0:ncx+1),q(0:nx+1)
+      real(8) p(0:ncx+1),q(0:nx+1)
       ist = 1
       ioddst = 1
       ifn = nx
       ioddfn = nx
       if (nxa.eq.1) then
-	ist = 2
-	ioddst = 3
+      ist = 2
+      ioddst = 3
       end if
       if (nxb.eq.1) then
-	ifn = nx-1
-	ioddfn = nx-2
+      ifn = nx-1
+      ioddfn = nx-2
       end if
       if (intpol.eq.1 .or. ncx.lt.4) then
 c
 c     linear interpolation in x
 c
-	if (ncx .lt. nx) then
+      if (ncx .lt. nx) then
 c
 c     every other point of nx grid is ncx grid
 c
-	  do i=ioddst,ioddfn,2
-	    ic = (i+1)/2
-	    q(i) = p(ic)
-	  end do
-	  do i=2,ifn,2
-	    q(i) = 0.5*(q(i-1)+q(i+1))
-	  end do
-	else
+        do i=ioddst,ioddfn,2
+          ic = (i+1)/2
+          q(i) = p(ic)
+        end do
+        do i=2,ifn,2
+          q(i) = 0.5*(q(i-1)+q(i+1))
+        end do
+      else
 c
 c     nx grid equals ncx grid
 c
-	  do i=ist,ifn
-	    q(i) = p(i)
-	  end do
-	end if
+        do i=ist,ifn
+          q(i) = p(i)
+        end do
+      end if
 c
 c     set virtual end points if periodic
 c
-	if (nxa.eq.0) then
-	  q(0) = q(nx-1)
-	  q(nx+1) = q(2)
-	end if
-	return
+      if (nxa.eq.0) then
+        q(0) = q(nx-1)
+        q(nx+1) = q(2)
+      end if
+      return
       else
 c
 c     cubic interpolation in x
 c
-	if (ncx .lt. nx) then
-	  do i=ioddst,ioddfn,2
-	    ic = (i+1)/2
-	    q(i) = p(ic)
-	  end do
+      if (ncx .lt. nx) then
+        do i=ioddst,ioddfn,2
+          ic = (i+1)/2
+          q(i) = p(ic)
+        end do
 c
 c      set deep interior with symmetric formula
 c
-	  do i=4,nx-3,2
-	    q(i)=(-q(i-3)+9.*(q(i-1)+q(i+1))-q(i+3))*.0625
-	  end do
+        do i=4,nx-3,2
+          q(i)=(-q(i-3)+9.*(q(i-1)+q(i+1))-q(i+3))*.0625
+        end do
 c
 c     interpolate from q at i=2 and i=nx-1
 c
-	  if (nxa.ne.0) then
+        if (nxa.ne.0) then
 c
 c     asymmetric formula near nonperiodic bndys
 c
-	    q(2)=(5.*q(1)+15.*q(3)-5.*q(5)+q(7))*.0625
-	    q(nx-1)=(5.*q(nx)+15.*q(nx-2)-5.*q(nx-4)+q(nx-6))*.0625
-	  else
+          q(2)=(5.*q(1)+15.*q(3)-5.*q(5)+q(7))*.0625
+          q(nx-1)=(5.*q(nx)+15.*q(nx-2)-5.*q(nx-4)+q(nx-6))*.0625
+        else
 c
 c     periodicity in x alows symmetric formula near bndys
 c
-	    q(2) = (-q(nx-2)+9.*(q(1)+q(3))-q(5))*.0625
-	    q(nx-1) = (-q(nx-4)+9.*(q(nx-2)+q(nx))-q(3))*.0625
-	    q(nx+1) = q(2)
-	    q(0) = q(nx-1)
-	  end if
-	  return
-	else
+          q(2) = (-q(nx-2)+9.*(q(1)+q(3))-q(5))*.0625
+          q(nx-1) = (-q(nx-4)+9.*(q(nx-2)+q(nx))-q(3))*.0625
+          q(nx+1) = q(2)
+          q(0) = q(nx-1)
+        end if
+        return
+      else
 c
 c     ncx grid equals nx grid
 c
-	  do i=ist,ifn
-	    q(i) = p(i)
-	  end do
-	  if (nxa.eq.0) then
-	    q(0) = q(nx-1)
-	    q(nx+1) = q(2)
-	  end if
-	  return
-	end if
+        do i=ist,ifn
+          q(i) = p(i)
+        end do
+        if (nxa.eq.0) then
+          q(0) = q(nx-1)
+          q(nx+1) = q(2)
+        end if
+        return
+      end if
       end if
       end
 
@@ -507,12 +507,12 @@ c     in phif using linear or cubic interpolation
 c
       implicit none
       integer i,j,nx,ny,ncx,ncy,nxa,nxb,nyc,nyd,intpol,ist,ifn,jst,jfn
-      real phif(0:nx+1,0:ny+1),phic(0:ncx+1,0:ncy+1)
-      real phcor(0:nx+1,0:ny+1)
+      real(8) phif(0:nx+1,0:ny+1),phic(0:ncx+1,0:ncy+1)
+      real(8) phcor(0:nx+1,0:ny+1)
       do j=0,ny+1
-	do i=0,nx+1
-	  phcor(i,j) = 0.0
-	end do
+      do i=0,nx+1
+        phcor(i,j) = 0.0
+      end do
       end do
 c
 c     lift correction in phic to fine grid in phcor
@@ -530,33 +530,33 @@ c
       if (nyc.eq.1) jst = 2
       if (nyd.eq.1) jfn = ny-1
       do j=jst,jfn
-	do i=ist,ifn
-	  phif(i,j) = phif(i,j) + phcor(i,j)
-	end do
+      do i=ist,ifn
+        phif(i,j) = phif(i,j) + phcor(i,j)
+      end do
       end do
 c
 c     add periodic points if necessary
 c
       if (nyc.eq.0) then
-	do i=ist,ifn
-	  phif(i,0) = phif(i,ny-1)
-	  phif(i,ny+1) = phif(i,2)
-	end do
+      do i=ist,ifn
+        phif(i,0) = phif(i,ny-1)
+        phif(i,ny+1) = phif(i,2)
+      end do
       end if
       if (nxa.eq.0) then
-	do j=jst,jfn
-	  phif(0,j) = phif(nx-1,j)
-	  phif(nx+1,j) = phif(2,j)
-	end do
+      do j=jst,jfn
+        phif(0,j) = phif(nx-1,j)
+        phif(nx+1,j) = phif(2,j)
+      end do
       end if
       end
 
       subroutine pde2(nx,ny,u,i,j,ux3,ux4,uy3,uy4,nxa,nyc)
       implicit none
       integer nx,ny,i,j,nxa,nyc
-      real u(nx,ny),dlx,dly,dlxx,dlyy,tdlx3,tdly3,dlx4,dly4
+      real(8) u(nx,ny),dlx,dly,dlxx,dlyy,tdlx3,tdly3,dlx4,dly4
       common/pde2com/dlx,dly,dlxx,dlyy,tdlx3,tdly3,dlx4,dly4
-      real ux3,ux4,uy3,uy4
+      real(8) ux3,ux4,uy3,uy4
 c
 c     use second order approximation in u to estimate (second order)
 c     third and fourth partial derivatives in the x and y direction
@@ -567,55 +567,55 @@ c
 c
 c     nonperiodic in x
 c
-	if(i.gt.2 .and. i.lt.nx-1) then
-	  ux3 = (-u(i-2,j)+2.0*u(i-1,j)-2.0*u(i+1,j)+u(i+2,j))/tdlx3
-	  ux4 = (u(i-2,j)-4.0*u(i-1,j)+6.0*u(i,j)-4.0*u(i+1,j)+u(i+2,j))
+      if(i.gt.2 .and. i.lt.nx-1) then
+        ux3 = (-u(i-2,j)+2.0*u(i-1,j)-2.0*u(i+1,j)+u(i+2,j))/tdlx3
+        ux4 = (u(i-2,j)-4.0*u(i-1,j)+6.0*u(i,j)-4.0*u(i+1,j)+u(i+2,j))
      +           /dlx4
-	else if (i.eq.1) then
-	  ux3 = (-5.0*u(1,j)+18.0*u(2,j)-24.0*u(3,j)+14.0*u(4,j)-
+      else if (i.eq.1) then
+        ux3 = (-5.0*u(1,j)+18.0*u(2,j)-24.0*u(3,j)+14.0*u(4,j)-
      +           3.0*u(5,j))/tdlx3
-	  ux4 = (3.0*u(1,j)-14.0*u(2,j)+26.0*u(3,j)-24.0*u(4,j)+
+        ux4 = (3.0*u(1,j)-14.0*u(2,j)+26.0*u(3,j)-24.0*u(4,j)+
      +           11.0*u(5,j)-2.0*u(6,j))/dlx4
-	else if (i.eq.2) then
-	  ux3 = (-3.0*u(1,j)+10.0*u(2,j)-12.0*u(3,j)+6.0*u(4,j)-u(5,j))
+      else if (i.eq.2) then
+        ux3 = (-3.0*u(1,j)+10.0*u(2,j)-12.0*u(3,j)+6.0*u(4,j)-u(5,j))
      +           /tdlx3
-	  ux4 = (2.0*u(1,j)-9.0*u(2,j)+16.0*u(3,j)-14.0*u(4,j)+
+        ux4 = (2.0*u(1,j)-9.0*u(2,j)+16.0*u(3,j)-14.0*u(4,j)+
      +           6.0*u(5,j)-u(6,j))/dlx4
-	else if (i.eq.nx-1) then
-	  ux3 = (u(nx-4,j)-6.0*u(nx-3,j)+12.0*u(nx-2,j)-10.0*u(nx-1,j)+
+      else if (i.eq.nx-1) then
+        ux3 = (u(nx-4,j)-6.0*u(nx-3,j)+12.0*u(nx-2,j)-10.0*u(nx-1,j)+
      +           3.0*u(nx,j))/tdlx3
-	 ux4 = (-u(nx-5,j)+6.0*u(nx-4,j)-14.0*u(nx-3,j)+16.0*u(nx-2,j)-
+       ux4 = (-u(nx-5,j)+6.0*u(nx-4,j)-14.0*u(nx-3,j)+16.0*u(nx-2,j)-
      +           9.0*u(nx-1,j)+2.0*u(nx,j))/dlx4
-	else if (i.eq.nx) then
-	  ux3 = (3.0*u(nx-4,j)-14.0*u(nx-3,j)+24.0*u(nx-2,j)-
+      else if (i.eq.nx) then
+        ux3 = (3.0*u(nx-4,j)-14.0*u(nx-3,j)+24.0*u(nx-2,j)-
      +           18.0*u(nx-1,j)+5.0*u(nx,j))/tdlx3
-	  ux4 = (-2.0*u(nx-5,j)+11.0*u(nx-4,j)-24.0*u(nx-3,j)+
+        ux4 = (-2.0*u(nx-5,j)+11.0*u(nx-4,j)-24.0*u(nx-3,j)+
      +           26.0*u(nx-2,j)-14.0*u(nx-1,j)+3.0*u(nx,j))/dlx4
-	end if
+      end if
       else
 c
 c     periodic in x
 c
-	if(i.gt.2 .and. i.lt.nx-1) then
-	  ux3 = (-u(i-2,j)+2.0*u(i-1,j)-2.0*u(i+1,j)+u(i+2,j))/tdlx3
-	  ux4 = (u(i-2,j)-4.0*u(i-1,j)+6.0*u(i,j)-4.0*u(i+1,j)+u(i+2,j))
+      if(i.gt.2 .and. i.lt.nx-1) then
+        ux3 = (-u(i-2,j)+2.0*u(i-1,j)-2.0*u(i+1,j)+u(i+2,j))/tdlx3
+        ux4 = (u(i-2,j)-4.0*u(i-1,j)+6.0*u(i,j)-4.0*u(i+1,j)+u(i+2,j))
      +           /dlx4
-	else if (i.eq.1) then
-	  ux3 = (-u(nx-2,j)+2.0*u(nx-1,j)-2.0*u(2,j)+u(3,j))/tdlx3
-	  ux4 = (u(nx-2,j)-4.0*u(nx-1,j)+6.0*u(1,j)-4.0*u(2,j)+u(3,j))
+      else if (i.eq.1) then
+        ux3 = (-u(nx-2,j)+2.0*u(nx-1,j)-2.0*u(2,j)+u(3,j))/tdlx3
+        ux4 = (u(nx-2,j)-4.0*u(nx-1,j)+6.0*u(1,j)-4.0*u(2,j)+u(3,j))
      +          /dlx4
-	else if (i.eq.2) then
-	  ux3 = (-u(nx-1,j)+2.0*u(1,j)-2.0*u(3,j)+u(4,j))/(tdlx3)
-	  ux4 = (u(nx-1,j)-4.0*u(1,j)+6.0*u(2,j)-4.0*u(3,j)+u(4,j))/dlx4
-	else if (i.eq.nx-1) then
-	  ux3 = (-u(nx-3,j)+2.0*u(nx-2,j)-2.0*u(1,j)+u(2,j))/tdlx3
-	  ux4 = (u(nx-3,j)-4.0*u(nx-2,j)+6.0*u(nx-1,j)-4.0*u(1,j)+
+      else if (i.eq.2) then
+        ux3 = (-u(nx-1,j)+2.0*u(1,j)-2.0*u(3,j)+u(4,j))/(tdlx3)
+        ux4 = (u(nx-1,j)-4.0*u(1,j)+6.0*u(2,j)-4.0*u(3,j)+u(4,j))/dlx4
+      else if (i.eq.nx-1) then
+        ux3 = (-u(nx-3,j)+2.0*u(nx-2,j)-2.0*u(1,j)+u(2,j))/tdlx3
+        ux4 = (u(nx-3,j)-4.0*u(nx-2,j)+6.0*u(nx-1,j)-4.0*u(1,j)+
      +           u(2,j))/dlx4
-	else if (i.eq.nx) then
-	  ux3 = (-u(nx-2,j)+2.0*u(nx-1,j)-2.0*u(2,j)+u(3,j))/tdlx3
-	  ux4 = (u(nx-2,j)-4.0*u(nx-1,j)+6.0*u(nx,j)-4.0*u(2,j)+u(3,j))
+      else if (i.eq.nx) then
+        ux3 = (-u(nx-2,j)+2.0*u(nx-1,j)-2.0*u(2,j)+u(3,j))/tdlx3
+        ux4 = (u(nx-2,j)-4.0*u(nx-1,j)+6.0*u(nx,j)-4.0*u(2,j)+u(3,j))
      +          /dlx4
-	end if
+      end if
       end if
 c
 c     y partial derivatives
@@ -624,55 +624,55 @@ c
 c
 c     not periodic in y
 c
-	if (j.gt.2 .and. j.lt.ny-1) then
-	  uy3 = (-u(i,j-2)+2.0*u(i,j-1)-2.0*u(i,j+1)+u(i,j+2))/tdly3
-	  uy4 = (u(i,j-2)-4.0*u(i,j-1)+6.0*u(i,j)-4.0*u(i,j+1)+u(i,j+2))
+      if (j.gt.2 .and. j.lt.ny-1) then
+        uy3 = (-u(i,j-2)+2.0*u(i,j-1)-2.0*u(i,j+1)+u(i,j+2))/tdly3
+        uy4 = (u(i,j-2)-4.0*u(i,j-1)+6.0*u(i,j)-4.0*u(i,j+1)+u(i,j+2))
      +          /dly4
-	else if (j.eq.1) then
-	  uy3 = (-5.0*u(i,1)+18.0*u(i,2)-24.0*u(i,3)+14.0*u(i,4)-
+      else if (j.eq.1) then
+        uy3 = (-5.0*u(i,1)+18.0*u(i,2)-24.0*u(i,3)+14.0*u(i,4)-
      +            3.0*u(i,5))/tdly3
-	  uy4 = (3.0*u(i,1)-14.0*u(i,2)+26.0*u(i,3)-24.0*u(i,4)+
+        uy4 = (3.0*u(i,1)-14.0*u(i,2)+26.0*u(i,3)-24.0*u(i,4)+
      +           11.0*u(i,5)-2.0*u(i,6))/dly4
-	else if (j.eq.2) then
-	  uy3 = (-3.0*u(i,1)+10.0*u(i,2)-12.0*u(i,3)+6.0*u(i,4)-u(i,5))
+      else if (j.eq.2) then
+        uy3 = (-3.0*u(i,1)+10.0*u(i,2)-12.0*u(i,3)+6.0*u(i,4)-u(i,5))
      +          /tdly3
-	  uy4 = (2.0*u(i,1)-9.0*u(i,2)+16.0*u(i,3)-14.0*u(i,4)+
+        uy4 = (2.0*u(i,1)-9.0*u(i,2)+16.0*u(i,3)-14.0*u(i,4)+
      +           6.0*u(i,5)-u(i,6))/dly4
-	else if (j.eq.ny-1) then
-	  uy3 = (u(i,ny-4)-6.0*u(i,ny-3)+12.0*u(i,ny-2)-10.0*u(i,ny-1)+
+      else if (j.eq.ny-1) then
+        uy3 = (u(i,ny-4)-6.0*u(i,ny-3)+12.0*u(i,ny-2)-10.0*u(i,ny-1)+
      +           3.0*u(i,ny))/tdly3
-	  uy4 = (-u(i,ny-5)+6.0*u(i,ny-4)-14.0*u(i,ny-3)+16.0*u(i,ny-2)-
+        uy4 = (-u(i,ny-5)+6.0*u(i,ny-4)-14.0*u(i,ny-3)+16.0*u(i,ny-2)-
      +           9.0*u(i,ny-1)+2.0*u(i,ny))/dly4
-	else if (j.eq.ny) then
-	  uy3 = (3.0*u(i,ny-4)-14.0*u(i,ny-3)+24.0*u(i,ny-2)-
+      else if (j.eq.ny) then
+        uy3 = (3.0*u(i,ny-4)-14.0*u(i,ny-3)+24.0*u(i,ny-2)-
      +           18.0*u(i,ny-1)+5.0*u(i,ny))/tdly3
-	  uy4 = (-2.0*u(i,ny-5)+11.0*u(i,ny-4)-24.0*u(i,ny-3)+
+        uy4 = (-2.0*u(i,ny-5)+11.0*u(i,ny-4)-24.0*u(i,ny-3)+
      +           26.0*u(i,ny-2)-14.0*u(i,ny-1)+3.0*u(i,ny))/dly4
-	end if
+      end if
       else
 c
 c     periodic in y
 c
-	if (j.gt.2 .and. j.lt.ny-1) then
-	  uy3 = (-u(i,j-2)+2.0*u(i,j-1)-2.0*u(i,j+1)+u(i,j+2))/tdly3
-	  uy4 = (u(i,j-2)-4.0*u(i,j-1)+6.0*u(i,j)-4.0*u(i,j+1)+u(i,j+2))
+      if (j.gt.2 .and. j.lt.ny-1) then
+        uy3 = (-u(i,j-2)+2.0*u(i,j-1)-2.0*u(i,j+1)+u(i,j+2))/tdly3
+        uy4 = (u(i,j-2)-4.0*u(i,j-1)+6.0*u(i,j)-4.0*u(i,j+1)+u(i,j+2))
      +           /dly4
-	else if (j.eq.1) then
-	  uy3 = (-u(i,ny-2)+2.0*u(i,ny-1)-2.0*u(i,2)+u(i,3))/tdly3
-	  uy4 = (u(i,ny-2)-4.0*u(i,ny-1)+6.0*u(i,1)-4.0*u(i,2)+u(i,3))
+      else if (j.eq.1) then
+        uy3 = (-u(i,ny-2)+2.0*u(i,ny-1)-2.0*u(i,2)+u(i,3))/tdly3
+        uy4 = (u(i,ny-2)-4.0*u(i,ny-1)+6.0*u(i,1)-4.0*u(i,2)+u(i,3))
      +          /dly4
-	else if (j.eq.2) then
-	  uy3 = (-u(i,ny-1)+2.0*u(i,1)-2.0*u(i,3)+u(i,4))/(tdly3)
-	  uy4 = (u(i,ny-1)-4.0*u(i,1)+6.0*u(i,2)-4.0*u(i,3)+u(i,4))/dly4
-	else if (j.eq.ny-1) then
-	  uy3 = (-u(i,ny-3)+2.0*u(i,ny-2)-2.0*u(i,1)+u(i,2))/tdly3
-	  uy4 = (u(i,ny-3)-4.0*u(i,ny-2)+6.0*u(i,ny-1)-4.0*u(i,1)+
+      else if (j.eq.2) then
+        uy3 = (-u(i,ny-1)+2.0*u(i,1)-2.0*u(i,3)+u(i,4))/(tdly3)
+        uy4 = (u(i,ny-1)-4.0*u(i,1)+6.0*u(i,2)-4.0*u(i,3)+u(i,4))/dly4
+      else if (j.eq.ny-1) then
+        uy3 = (-u(i,ny-3)+2.0*u(i,ny-2)-2.0*u(i,1)+u(i,2))/tdly3
+        uy4 = (u(i,ny-3)-4.0*u(i,ny-2)+6.0*u(i,ny-1)-4.0*u(i,1)+
      +           u(i,2))/dly4
-	else if (j.eq.ny) then
-	  uy3 = (-u(i,ny-2)+2.0*u(i,ny-1)-2.0*u(i,2)+u(i,3))/tdly3
-	  uy4 = (u(i,ny-2)-4.0*u(i,ny-1)+6.0*u(i,ny)-4.0*u(i,2)+u(i,3))
+      else if (j.eq.ny) then
+        uy3 = (-u(i,ny-2)+2.0*u(i,ny-1)-2.0*u(i,2)+u(i,3))/tdly3
+        uy4 = (u(i,ny-2)-4.0*u(i,ny-1)+6.0*u(i,ny)-4.0*u(i,2)+u(i,3))
      +          /dly4
-	end if
+      end if
       end if
       return
       end
@@ -684,36 +684,36 @@ c     virtual boundaries for phi (for all 2-d real codes)
 c
       implicit none
       integer nfx,nfy,nfz,i,j,k
-      real phif(nfx,nfy,nfz),rhsf(nfx,nfy,nfz)
-      real phi(0:nfx+1,0:nfy+1,0:nfz+1),rhs(nfx,nfy,nfz)
+      real(8) phif(nfx,nfy,nfz),rhsf(nfx,nfy,nfz)
+      real(8) phi(0:nfx+1,0:nfy+1,0:nfz+1),rhs(nfx,nfy,nfz)
       do k=1,nfz
-	do j=1,nfy
-	  do i=1,nfx
-	    phi(i,j,k) = phif(i,j,k)
-	    rhs(i,j,k) = rhsf(i,j,k)
-	  end do
-	end do
+      do j=1,nfy
+        do i=1,nfx
+          phi(i,j,k) = phif(i,j,k)
+          rhs(i,j,k) = rhsf(i,j,k)
+        end do
+      end do
       end do
 c
 c     set virtual boundaries in phi to zero
 c
       do k=0,nfz+1
-	do j=0,nfy+1
-	  phi(0,j,k) = 0.0
-	  phi(nfx+1,j,k) = 0.0
-	end do
+      do j=0,nfy+1
+        phi(0,j,k) = 0.0
+        phi(nfx+1,j,k) = 0.0
+      end do
       end do
       do k=0,nfz+1
-	do i=0,nfx+1
-	  phi(i,0,k) = 0.0
-	  phi(i,nfy+1,k) = 0.0
-	end do
+      do i=0,nfx+1
+        phi(i,0,k) = 0.0
+        phi(i,nfy+1,k) = 0.0
+      end do
       end do
       do j=0,nfy+1
-	do i=0,nfx+1
-	  phi(i,j,0) = 0.0
-	  phi(i,j,nfz+1) = 0.0
-	end do
+      do i=0,nfx+1
+        phi(i,j,0) = 0.0
+        phi(i,j,nfz+1) = 0.0
+      end do
       end do
       return
       end
@@ -724,66 +724,66 @@ c     transfer fine grid to coarse grid
 c
       implicit none
       integer nx,ny,nz,ncx,ncy,ncz,i,j,k,ic,jc,kc,ix,jy,kz
-      real phi(0:nx+1,0:ny+1,0:nz+1),rhs(nx,ny,nz)
-      real phic(0:ncx+1,0:ncy+1,0:ncz+1),rhsc(ncx,ncy,ncz)
+      real(8) phi(0:nx+1,0:ny+1,0:nz+1),rhs(nx,ny,nz)
+      real(8) phic(0:ncx+1,0:ncy+1,0:ncz+1),rhsc(ncx,ncy,ncz)
 c
 c     set virtual boundaries in phic to zero
 c
       do kc=0,ncz+1
-	do jc=0,ncy+1
-	  phic(0,jc,kc) = 0.0
-	  phic(ncx+1,jc,kc) = 0.0
-	end do
+      do jc=0,ncy+1
+        phic(0,jc,kc) = 0.0
+        phic(ncx+1,jc,kc) = 0.0
+      end do
       end do
       do kc=0,ncz+1
-	do ic=0,ncx+1
-	  phic(ic,0,kc) = 0.0
-	  phic(ic,ncy+1,kc) = 0.0
-	end do
+      do ic=0,ncx+1
+        phic(ic,0,kc) = 0.0
+        phic(ic,ncy+1,kc) = 0.0
+      end do
       end do
       do jc=0,ncy+1
-	do ic=0,ncx+1
-	  phic(ic,jc,0) = 0.0
-	  phic(ic,jc,ncz+1) = 0.0
-	end do
+      do ic=0,ncx+1
+        phic(ic,jc,0) = 0.0
+        phic(ic,jc,ncz+1) = 0.0
+      end do
       end do
       if (ncx.lt.nx .and. ncy.lt.ny .and. ncz.lt.nz) then
 c
 c     coarsening in x,y,z (usually the case?)
 c
-	do kc=1,ncz
-	k = kc+kc-1
-	do jc=1,ncy
-	  j = jc+jc-1
-	  do ic=1,ncx
-	    i = ic+ic-1
-	    phic(ic,jc,kc) = phi(i,j,k)
-	    rhsc(ic,jc,kc) = rhs(i,j,k)
-	  end do
-	end do
-	end do
+      do kc=1,ncz
+      k = kc+kc-1
+      do jc=1,ncy
+        j = jc+jc-1
+        do ic=1,ncx
+          i = ic+ic-1
+          phic(ic,jc,kc) = phi(i,j,k)
+          rhsc(ic,jc,kc) = rhs(i,j,k)
+        end do
+      end do
+      end do
       else
 c
 c     no coarsening in at least one dimension
 c
-	ix = 1
-	if (ncx.eq.nx) ix = 0
-	jy = 1
-	if (ncy.eq.ny) jy = 0
-	kz = 1
-	if (ncz.eq.nz) kz = 0
+      ix = 1
+      if (ncx.eq.nx) ix = 0
+      jy = 1
+      if (ncy.eq.ny) jy = 0
+      kz = 1
+      if (ncz.eq.nz) kz = 0
 
-	do kc=1,ncz
-	  k = kc+kz*(kc-1)
-	  do jc=1,ncy
-	    j = jc+jy*(jc-1)
-	    do ic=1,ncx
-	      i = ic+ix*(ic-1)
-	      phic(ic,jc,kc) = phi(i,j,k)
-	      rhsc(ic,jc,kc) = rhs(i,j,k)
-	    end do
-	  end do
-	end do
+      do kc=1,ncz
+        k = kc+kz*(kc-1)
+        do jc=1,ncy
+          j = jc+jy*(jc-1)
+          do ic=1,ncx
+            i = ic+ix*(ic-1)
+            phic(ic,jc,kc) = phi(i,j,k)
+            rhsc(ic,jc,kc) = rhs(i,j,k)
+          end do
+        end do
+      end do
       end if
       return
       end
@@ -793,12 +793,12 @@ c
       implicit none
       integer nx,ny,nz,ncx,ncy,ncz,nxa,nxb,nyc,nyd,nze,nzf
       integer ix,jy,kz,i,j,k,ic,jc,kc,im1,ip1,jm1,jp1,km1,kp1
-      real rm,rk,rp
+      real(8) rm,rk,rp
 c
 c     restrict fine grid residual in resf to coarse grid in rhsc
 c     using full weighting
 c
-      real resf(nx,ny,nz),rhsc(ncx,ncy,ncz)
+      real(8) resf(nx,ny,nz),rhsc(ncx,ncy,ncz)
 c
 c     set x,y,z coarsening integer subscript scales
 c
@@ -818,29 +818,29 @@ c
 !$OMP PARALLEL DO PRIVATE(i,j,k,ic,jc,kc,rm,rk,rp)
 !$OMP+SHARED(resf,rhsc,ncx,ncy,ncz)
       do kc=2,ncz-1
-	k = kc+kc-1
-	do jc=2,ncy-1
-	  j = jc+jc-1
-	  do ic=2,ncx-1
-	    i = ic+ic-1
+      k = kc+kc-1
+      do jc=2,ncy-1
+        j = jc+jc-1
+        do ic=2,ncx-1
+          i = ic+ic-1
 c
 c     weight on k-1,k,k+1 z planes in rm,rk,rp
 c
-	    rm=(resf(i-1,j-1,k-1)+resf(i+1,j-1,k-1)+resf(i-1,j+1,k-1)+
+          rm=(resf(i-1,j-1,k-1)+resf(i+1,j-1,k-1)+resf(i-1,j+1,k-1)+
      +      resf(i+1,j+1,k-1)+2.*(resf(i-1,j,k-1)+resf(i+1,j,k-1)+
      +      resf(i,j-1,k-1)+resf(i,j+1,k-1))+4.*resf(i,j,k-1))*.0625
-	    rk=(resf(i-1,j-1,k)+resf(i+1,j-1,k)+resf(i-1,j+1,k)+
+          rk=(resf(i-1,j-1,k)+resf(i+1,j-1,k)+resf(i-1,j+1,k)+
      +      resf(i+1,j+1,k)+2.*(resf(i-1,j,k)+resf(i+1,j,k)+
      +      resf(i,j-1,k)+resf(i,j+1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(i-1,j-1,k+1)+resf(i+1,j-1,k+1)+resf(i-1,j+1,k+1)+
+          rp=(resf(i-1,j-1,k+1)+resf(i+1,j-1,k+1)+resf(i-1,j+1,k+1)+
      +      resf(i+1,j+1,k+1)+2.*(resf(i-1,j,k+1)+resf(i+1,j,k+1)+
      +      resf(i,j-1,k+1)+resf(i,j+1,k+1))+4.*resf(i,j,k+1))*.0625
 c
 c     weight in z direction for final result
 c
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
       end do
       else
 c
@@ -849,29 +849,29 @@ c
 !$OMP PARALLEL DO PRIVATE(i,j,k,ic,jc,kc,rm,rk,rp)
 !$OMP+SHARED(ix,jy,kz,resf,rhsc,ncx,ncy,ncz)
       do kc=2,ncz-1
-	k = kc+kz*(kc-1)
-	do jc=2,ncy-1
-	  j = jc+jy*(jc-1)
-	  do ic=2,ncx-1
-	    i = ic+ix*(ic-1)
+      k = kc+kz*(kc-1)
+      do jc=2,ncy-1
+        j = jc+jy*(jc-1)
+        do ic=2,ncx-1
+          i = ic+ix*(ic-1)
 c
 c     weight on k-1,k,k+1 z planes in rm,rk,rp
 c
-	    rm=(resf(i-1,j-1,k-1)+resf(i+1,j-1,k-1)+resf(i-1,j+1,k-1)+
+          rm=(resf(i-1,j-1,k-1)+resf(i+1,j-1,k-1)+resf(i-1,j+1,k-1)+
      +      resf(i+1,j+1,k-1)+2.*(resf(i-1,j,k-1)+resf(i+1,j,k-1)+
      +      resf(i,j-1,k-1)+resf(i,j+1,k-1))+4.*resf(i,j,k-1))*.0625
-	    rk=(resf(i-1,j-1,k)+resf(i+1,j-1,k)+resf(i-1,j+1,k)+
+          rk=(resf(i-1,j-1,k)+resf(i+1,j-1,k)+resf(i-1,j+1,k)+
      +      resf(i+1,j+1,k)+2.*(resf(i-1,j,k)+resf(i+1,j,k)+
      +      resf(i,j-1,k)+resf(i,j+1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(i-1,j-1,k+1)+resf(i+1,j-1,k+1)+resf(i-1,j+1,k+1)+
+          rp=(resf(i-1,j-1,k+1)+resf(i+1,j-1,k+1)+resf(i-1,j+1,k+1)+
      +      resf(i+1,j+1,k+1)+2.*(resf(i-1,j,k+1)+resf(i+1,j,k+1)+
      +      resf(i,j-1,k+1)+resf(i,j+1,k+1))+4.*resf(i,j,k+1))*.0625
 c
 c     weight in z direction for final result
 c
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
       end do
       end if
 c
@@ -881,235 +881,235 @@ c
 c
 c     x=xa and x=xb
 c
-	i = ic+ix*(ic-1)
-	im1 = max0(i-1,2)
-	ip1 = min0(i+1,nx-1)
-	if (i.eq.1 .and. nxa.eq.0) im1 = nx-1
-	if (i.eq.nx .and. nxb.eq.0) ip1 = 2
+      i = ic+ix*(ic-1)
+      im1 = max0(i-1,2)
+      ip1 = min0(i+1,nx-1)
+      if (i.eq.1 .and. nxa.eq.0) im1 = nx-1
+      if (i.eq.nx .and. nxb.eq.0) ip1 = 2
 c
 c    (y,z) interior
 c
 !$OMP PARALLEL DO PRIVATE(j,k,jc,kc,rm,rk,rp)
 !$OMP+SHARED(kz,jy,ic,im1,i,ip1,resf,rhsc,ncy,ncz)
-	do kc=2,ncz-1
-	  k = kc+kz*(kc-1)
-	  do jc=2,ncy-1
-	    j = jc+jy*(jc-1)
-	    rm=(resf(im1,j-1,k-1)+resf(ip1,j-1,k-1)+resf(im1,j+1,k-1)+
+      do kc=2,ncz-1
+        k = kc+kz*(kc-1)
+        do jc=2,ncy-1
+          j = jc+jy*(jc-1)
+          rm=(resf(im1,j-1,k-1)+resf(ip1,j-1,k-1)+resf(im1,j+1,k-1)+
      +      resf(ip1,j+1,k-1)+2.*(resf(im1,j,k-1)+resf(ip1,j,k-1)+
      +      resf(i,j-1,k-1)+resf(i,j+1,k-1))+4.*resf(i,j,k-1))*.0625
-	    rk=(resf(im1,j-1,k)+resf(ip1,j-1,k)+resf(im1,j+1,k)+
+          rk=(resf(im1,j-1,k)+resf(ip1,j-1,k)+resf(im1,j+1,k)+
      +      resf(ip1,j+1,k)+2.*(resf(im1,j,k)+resf(ip1,j,k)+
      +      resf(i,j-1,k)+resf(i,j+1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(im1,j-1,k+1)+resf(ip1,j-1,k+1)+resf(im1,j+1,k+1)+
+          rp=(resf(im1,j-1,k+1)+resf(ip1,j-1,k+1)+resf(im1,j+1,k+1)+
      +      resf(ip1,j+1,k+1)+2.*(resf(im1,j,k+1)+resf(ip1,j,k+1)+
      +      resf(i,j-1,k+1)+resf(i,j+1,k+1))+4.*resf(i,j,k+1))*.0625
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
 c
 c     x=xa,xb and y=yc,yd interior edges
 c
-	do jc=1,ncy,ncy-1
-	  j = jc+jy*(jc-1)
-	  jm1 = max0(j-1,2)
-	  jp1 = min0(j+1,ny-1)
-	  if (j.eq.1 .and. nyc.eq.0) jm1 = ny-1
-	  if (j.eq.ny .and. nyc.eq.0) jp1 = 2
-	  do kc=2,ncz-1
-	    k = kc+kz*(kc-1)
-	    rm=(resf(im1,jm1,k-1)+resf(ip1,jm1,k-1)+resf(im1,jp1,k-1)+
+      do jc=1,ncy,ncy-1
+        j = jc+jy*(jc-1)
+        jm1 = max0(j-1,2)
+        jp1 = min0(j+1,ny-1)
+        if (j.eq.1 .and. nyc.eq.0) jm1 = ny-1
+        if (j.eq.ny .and. nyc.eq.0) jp1 = 2
+        do kc=2,ncz-1
+          k = kc+kz*(kc-1)
+          rm=(resf(im1,jm1,k-1)+resf(ip1,jm1,k-1)+resf(im1,jp1,k-1)+
      +      resf(ip1,jp1,k-1)+2.*(resf(im1,j,k-1)+resf(ip1,j,k-1)+
      +      resf(i,jm1,k-1)+resf(i,jp1,k-1))+4.*resf(i,j,k-1))*.0625
-	    rk=(resf(im1,jm1,k)+resf(ip1,jm1,k)+resf(im1,jp1,k)+
+          rk=(resf(im1,jm1,k)+resf(ip1,jm1,k)+resf(im1,jp1,k)+
      +      resf(ip1,jp1,k)+2.*(resf(im1,j,k)+resf(ip1,j,k)+
      +      resf(i,jm1,k)+resf(i,jp1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(im1,jm1,k+1)+resf(ip1,jm1,k+1)+resf(im1,jp1,k+1)+
+          rp=(resf(im1,jm1,k+1)+resf(ip1,jm1,k+1)+resf(im1,jp1,k+1)+
      +      resf(ip1,jp1,k+1)+2.*(resf(im1,j,k+1)+resf(ip1,j,k+1)+
      +      resf(i,jm1,k+1)+resf(i,jp1,k+1))+4.*resf(i,j,k+1))*.0625
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
 c     x=xa,xb; y=yc,yd; z=ze,zf cornors
-	  do kc=1,ncz,ncz-1
-	  k = kc+kz*(kc-1)
-	  km1 = max0(k-1,2)
-	  kp1 = min0(k+1,nz-1)
-	  if (k.eq.1 .and. nze.eq.0) km1 = nz-1
-	  if (k.eq.nz .and. nzf.eq.0) kp1 = 2
-	  rm=(resf(im1,jm1,km1)+resf(ip1,jm1,km1)+resf(im1,jp1,km1)+
+        do kc=1,ncz,ncz-1
+        k = kc+kz*(kc-1)
+        km1 = max0(k-1,2)
+        kp1 = min0(k+1,nz-1)
+        if (k.eq.1 .and. nze.eq.0) km1 = nz-1
+        if (k.eq.nz .and. nzf.eq.0) kp1 = 2
+        rm=(resf(im1,jm1,km1)+resf(ip1,jm1,km1)+resf(im1,jp1,km1)+
      +    resf(ip1,jp1,km1)+2.*(resf(im1,j,km1)+resf(ip1,j,km1)+
      +    resf(i,jm1,km1)+resf(i,jp1,km1))+4.*resf(i,j,km1))*.0625
-	  rk=(resf(im1,jm1,k)+resf(ip1,jm1,k)+resf(im1,jp1,k)+
+        rk=(resf(im1,jm1,k)+resf(ip1,jm1,k)+resf(im1,jp1,k)+
      +    resf(ip1,jp1,k)+2.*(resf(im1,j,k)+resf(ip1,j,k)+
      +    resf(i,jm1,k)+resf(i,jp1,k))+4.*resf(i,j,k))*.0625
-	  rp=(resf(im1,jm1,kp1)+resf(ip1,jm1,kp1)+resf(im1,jp1,kp1)+
+        rp=(resf(im1,jm1,kp1)+resf(ip1,jm1,kp1)+resf(im1,jp1,kp1)+
      +    resf(ip1,jp1,kp1)+2.*(resf(im1,j,kp1)+resf(ip1,j,kp1)+
      +    resf(i,jm1,kp1)+resf(i,jp1,kp1))+4.*resf(i,j,kp1))*.0625
-	  rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+        rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
 c
 c      x=xa,xb and z=ze,zf edges
 c
-	do kc=1,ncz,ncz-1
-	  k = kc+kz*(kc-1)
-	  km1 = max0(k-1,2)
-	  kp1 = min0(k+1,nz-1)
-	  if (k.eq.1 .and. nze.eq.0) km1 = nz-1
-	  if (k.eq.nz .and. nzf.eq.0) kp1 = 2
-	   do jc=2,ncy-1
-	    j = jc+jy*(jc-1)
-	    rm=(resf(im1,j-1,km1)+resf(ip1,j-1,km1)+resf(im1,j+1,km1)+
+      do kc=1,ncz,ncz-1
+        k = kc+kz*(kc-1)
+        km1 = max0(k-1,2)
+        kp1 = min0(k+1,nz-1)
+        if (k.eq.1 .and. nze.eq.0) km1 = nz-1
+        if (k.eq.nz .and. nzf.eq.0) kp1 = 2
+         do jc=2,ncy-1
+          j = jc+jy*(jc-1)
+          rm=(resf(im1,j-1,km1)+resf(ip1,j-1,km1)+resf(im1,j+1,km1)+
      +      resf(ip1,j+1,km1)+2.*(resf(im1,j,km1)+resf(ip1,j,km1)+
      +      resf(i,j-1,km1)+resf(i,j+1,km1))+4.*resf(i,j,km1))*.0625
-	    rk=(resf(im1,j-1,k)+resf(ip1,j-1,k)+resf(im1,j+1,k)+
+          rk=(resf(im1,j-1,k)+resf(ip1,j-1,k)+resf(im1,j+1,k)+
      +      resf(ip1,j+1,k)+2.*(resf(im1,j,k)+resf(ip1,j,k)+
      +      resf(i,j-1,k)+resf(i,j+1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(im1,j-1,kp1)+resf(ip1,j-1,kp1)+resf(im1,j+1,kp1)+
+          rp=(resf(im1,j-1,kp1)+resf(ip1,j-1,kp1)+resf(im1,j+1,kp1)+
      +      resf(ip1,j+1,kp1)+2.*(resf(im1,j,kp1)+resf(ip1,j,kp1)+
      +      resf(i,j-1,kp1)+resf(i,j+1,kp1))+4.*resf(i,j,kp1))*.0625
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
       end do
 c
 c     y boundaries y=yc and y=yd
 c
       do jc=1,ncy,ncy-1
-	j = jc+jy*(jc-1)
-	jm1 = max0(j-1,2)
-	jp1 = min0(j+1,ny-1)
-	if (j.eq.1 .and. nyc.eq.0) jm1 = ny-1
-	if (j.eq.ny .and. nyd.eq.0) jp1 = 2
+      j = jc+jy*(jc-1)
+      jm1 = max0(j-1,2)
+      jp1 = min0(j+1,ny-1)
+      if (j.eq.1 .and. nyc.eq.0) jm1 = ny-1
+      if (j.eq.ny .and. nyd.eq.0) jp1 = 2
 c
 c     (x,z) interior
 c
 !$OMP PARALLEL DO PRIVATE(i,k,ic,kc,rm,rk,rp)
 !$OMP+SHARED(ix,kz,jc,jm1,j,jp1,resf,rhsc,ncx,ncz)
-	do kc=2,ncz-1
-	  k = kc+kz*(kc-1)
-	  do ic=2,ncx-1
-	    i = ic+ix*(ic-1)
-	    rm=(resf(i-1,jm1,k-1)+resf(i+1,jm1,k-1)+resf(i-1,jp1,k-1)+
+      do kc=2,ncz-1
+        k = kc+kz*(kc-1)
+        do ic=2,ncx-1
+          i = ic+ix*(ic-1)
+          rm=(resf(i-1,jm1,k-1)+resf(i+1,jm1,k-1)+resf(i-1,jp1,k-1)+
      +      resf(i+1,jp1,k-1)+2.*(resf(i-1,j,k-1)+resf(i+1,j,k-1)+
      +      resf(i,jm1,k-1)+resf(i,jp1,k-1))+4.*resf(i,j,k-1))*.0625
-	    rk=(resf(i-1,jm1,k)+resf(i+1,jm1,k)+resf(i-1,jp1,k)+
+          rk=(resf(i-1,jm1,k)+resf(i+1,jm1,k)+resf(i-1,jp1,k)+
      +      resf(i+1,jp1,k)+2.*(resf(i-1,j,k)+resf(i+1,j,k)+
      +      resf(i,jm1,k)+resf(i,jp1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(i-1,jm1,k+1)+resf(i+1,jm1,k+1)+resf(i-1,jp1,k+1)+
+          rp=(resf(i-1,jm1,k+1)+resf(i+1,jm1,k+1)+resf(i-1,jp1,k+1)+
      +      resf(i+1,jp1,k+1)+2.*(resf(i-1,j,k+1)+resf(i+1,j,k+1)+
      +      resf(i,jm1,k+1)+resf(i,jp1,k+1))+4.*resf(i,j,k+1))*.0625
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
 c
 c     y=yc,yd and z=ze,zf edges
 c
-	do kc=1,ncz,ncz-1
-	  k = kc+kz*(kc-1)
-	  km1 = max0(k-1,2)
-	  kp1 = min0(k+1,nz-1)
-	  if (k.eq.1 .and. nze.eq.0) km1 = nz-1
-	  if (k.eq.nz .and. nzf.eq.0) kp1 = 2
+      do kc=1,ncz,ncz-1
+        k = kc+kz*(kc-1)
+        km1 = max0(k-1,2)
+        kp1 = min0(k+1,nz-1)
+        if (k.eq.1 .and. nze.eq.0) km1 = nz-1
+        if (k.eq.nz .and. nzf.eq.0) kp1 = 2
 c
 c     interior in x
 c
-	  do ic=2,ncx-1
-	    i = ic+ix*(ic-1)
-	    rm=(resf(i-1,jm1,km1)+resf(i+1,jm1,km1)+resf(i-1,jp1,km1)+
+        do ic=2,ncx-1
+          i = ic+ix*(ic-1)
+          rm=(resf(i-1,jm1,km1)+resf(i+1,jm1,km1)+resf(i-1,jp1,km1)+
      +      resf(i+1,jp1,km1)+2.*(resf(i-1,j,km1)+resf(i+1,j,km1)+
      +      resf(i,jm1,km1)+resf(i,jp1,km1))+4.*resf(i,j,km1))*.0625
-	    rk=(resf(i-1,jm1,k)+resf(i+1,jm1,k)+resf(i-1,jp1,k)+
+          rk=(resf(i-1,jm1,k)+resf(i+1,jm1,k)+resf(i-1,jp1,k)+
      +      resf(i+1,jp1,k)+2.*(resf(i-1,j,k)+resf(i+1,j,k)+
      +      resf(i,jm1,k)+resf(i,jp1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(i-1,jm1,kp1)+resf(i+1,jm1,kp1)+resf(i-1,jp1,kp1)+
+          rp=(resf(i-1,jm1,kp1)+resf(i+1,jm1,kp1)+resf(i-1,jp1,kp1)+
      +      resf(i+1,jp1,kp1)+2.*(resf(i-1,j,kp1)+resf(i+1,j,kp1)+
      +      resf(i,jm1,kp1)+resf(i,jp1,kp1))+4.*resf(i,j,kp1))*.0625
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
       end do
 c
 c     z=ze,zf boundaries
 c
       do kc=1,ncz,ncz-1
-	k = kc+kz*(kc-1)
-	km1 = max0(k-1,2)
-	kp1 = min0(k+1,nz-1)
-	if (k.eq.1 .and. nze.eq.0) km1 = nz-1
-	if (k.eq.nz .and. nzf.eq.0) kp1 = 2
+      k = kc+kz*(kc-1)
+      km1 = max0(k-1,2)
+      kp1 = min0(k+1,nz-1)
+      if (k.eq.1 .and. nze.eq.0) km1 = nz-1
+      if (k.eq.nz .and. nzf.eq.0) kp1 = 2
 c
 c     (x,y) interior
 c
 !$OMP PARALLEL DO PRIVATE(i,j,ic,jc,rm,rk,rp)
 !$OMP+SHARED(ix,jy,kc,km1,k,kp1,resf,rhsc,ncx,ncz)
-	do jc=2,ncy-1
-	  j = jc+jy*(jc-1)
-	  do ic=2,ncx-1
-	    i = ic+ix*(ic-1)
-	    rm=(resf(i-1,j-1,km1)+resf(i+1,j-1,km1)+resf(i-1,j+1,km1)+
+      do jc=2,ncy-1
+        j = jc+jy*(jc-1)
+        do ic=2,ncx-1
+          i = ic+ix*(ic-1)
+          rm=(resf(i-1,j-1,km1)+resf(i+1,j-1,km1)+resf(i-1,j+1,km1)+
      +      resf(i+1,j+1,km1)+2.*(resf(i-1,j,km1)+resf(i+1,j,km1)+
      +      resf(i,j-1,km1)+resf(i,j+1,km1))+4.*resf(i,j,km1))*.0625
-	    rk=(resf(i-1,j-1,k)+resf(i+1,j-1,k)+resf(i-1,j+1,k)+
+          rk=(resf(i-1,j-1,k)+resf(i+1,j-1,k)+resf(i-1,j+1,k)+
      +      resf(i+1,j+1,k)+2.*(resf(i-1,j,k)+resf(i+1,j,k)+
      +      resf(i,j-1,k)+resf(i,j+1,k))+4.*resf(i,j,k))*.0625
-	    rp=(resf(i-1,j-1,kp1)+resf(i+1,j-1,kp1)+resf(i-1,j+1,kp1)+
+          rp=(resf(i-1,j-1,kp1)+resf(i+1,j-1,kp1)+resf(i-1,j+1,kp1)+
      +      resf(i+1,j+1,kp1)+2.*(resf(i-1,j,kp1)+resf(i+1,j,kp1)+
      +      resf(i,j-1,kp1)+resf(i,j+1,kp1))+4.*resf(i,j,kp1))*.0625
-	    rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
-	  end do
-	end do
+          rhsc(ic,jc,kc) = 0.25*(rm+2.*rk+rp)
+        end do
+      end do
       end do
 c
 c     set coarse grid residual to zero at specified boundaries
 c
       if (nxa.eq.1) then
-	ic = 1
-	do kc=1,ncz
-	  do jc=1,ncy
-	    rhsc(ic,jc,kc) = 0.0
-	  end do
-	end do
+      ic = 1
+      do kc=1,ncz
+        do jc=1,ncy
+          rhsc(ic,jc,kc) = 0.0
+        end do
+      end do
       end if
       if (nxb.eq.1) then
-	ic = ncx
-	do kc=1,ncz
-	  do jc=1,ncy
-	    rhsc(ic,jc,kc) = 0.0
-	  end do
-	end do
+      ic = ncx
+      do kc=1,ncz
+        do jc=1,ncy
+          rhsc(ic,jc,kc) = 0.0
+        end do
+      end do
       end if
       if (nyc.eq.1) then
-	jc = 1
-	do kc=1,ncz
-	  do ic=1,ncx
-	    rhsc(ic,jc,kc) = 0.0
-	  end do
-	end do
+      jc = 1
+      do kc=1,ncz
+        do ic=1,ncx
+          rhsc(ic,jc,kc) = 0.0
+        end do
+      end do
       end if
       if (nyd.eq.1) then
-	jc = ncy
-	do kc=1,ncz
-	  do ic=1,ncx
-	    rhsc(ic,jc,kc) = 0.0
-	  end do
-	end do
+      jc = ncy
+      do kc=1,ncz
+        do ic=1,ncx
+          rhsc(ic,jc,kc) = 0.0
+        end do
+      end do
       end if
       if (nze.eq.1) then
-	kc = 1
-	do jc=1,ncy
-	  do ic=1,ncx
-	    rhsc(ic,jc,kc) = 0.0
-	  end do
-	end do
+      kc = 1
+      do jc=1,ncy
+        do ic=1,ncx
+          rhsc(ic,jc,kc) = 0.0
+        end do
+      end do
       end if
       if (nzf.eq.1) then
-	kc = ncz
-	do jc=1,ncy
-	  do ic=1,ncx
-	    rhsc(ic,jc,kc) = 0.0
-	  end do
-	end do
+      kc = ncz
+      do jc=1,ncy
+        do ic=1,ncx
+          rhsc(ic,jc,kc) = 0.0
+        end do
+      end do
       end if
       return
       end
@@ -1121,7 +1121,7 @@ c
      +                   nze,nzf,intpol)
       implicit none
       integer ncx,ncy,ncz,nx,ny,nz,intpol,nxa,nxb,nyc,nyd,nze,nzf
-      real p(0:ncx+1,0:ncy+1,0:ncz+1),q(0:nx+1,0:ny+1,0:nz+1)
+      real(8) p(0:ncx+1,0:ncy+1,0:ncz+1),q(0:nx+1,0:ny+1,0:nz+1)
       integer i,j,k,kc,ist,ifn,jst,jfn,kst,kfn,koddst,koddfn
       ist = 1
       ifn = nx
@@ -1132,159 +1132,159 @@ c
       koddst = 1
       koddfn = nz
       if (nxa.eq.1) then
-	ist = 2
+      ist = 2
       end if
       if (nxb.eq.1) then
-	ifn = nx-1
+      ifn = nx-1
       end if
       if (nyc.eq.1) then
-	jst = 2
+      jst = 2
       end if
       if (nyd.eq.1) then
-	jfn = ny-1
+      jfn = ny-1
       end if
       if (nze.eq.1) then
-	kst = 2
-	koddst = 3
+      kst = 2
+      koddst = 3
       end if
       if (nzf.eq.1) then
-	kfn = nz-1
-	koddfn = nz-2
+      kfn = nz-1
+      koddfn = nz-2
       end if
       if (intpol.eq.1 .or. ncz.lt.4) then
 c
 c     linearly interpolate in z
 c
-	if (ncz .lt. nz) then
+      if (ncz .lt. nz) then
 c
 c     ncz grid is an every other point subset of nz grid
 c     set odd k planes interpolating in x&y and then set even
 c     k planes by averaging odd k planes
 c
-	  do k=koddst,koddfn,2
-	    kc = k/2+1
-	    call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
+        do k=koddst,koddfn,2
+          kc = k/2+1
+          call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
      +                   nyd,intpol)
-	  end do
-	  do k=2,kfn,2
-	    do j=jst,jfn
-	      do i=ist,ifn
-		q(i,j,k) = 0.5*(q(i,j,k-1)+q(i,j,k+1))
-	      end do
-	    end do
-	  end do
+        end do
+        do k=2,kfn,2
+          do j=jst,jfn
+            do i=ist,ifn
+      	q(i,j,k) = 0.5*(q(i,j,k-1)+q(i,j,k+1))
+            end do
+          end do
+        end do
 c
 c     set periodic virtual boundaries if necessary
 c
-	  if (nze.eq.0) then
-	    do j=jst,jfn
-	      do i=ist,ifn
-		q(i,j,0) = q(i,j,nz-1)
-		q(i,j,nz+1) = q(i,j,2)
-	      end do
-	    end do
-	  end if
-	  return
-	else
+        if (nze.eq.0) then
+          do j=jst,jfn
+            do i=ist,ifn
+      	q(i,j,0) = q(i,j,nz-1)
+      	q(i,j,nz+1) = q(i,j,2)
+            end do
+          end do
+        end if
+        return
+      else
 c
 c     ncz grid is equals nz grid so interpolate in x&y only
 c
-	  do k=kst,kfn
-	    kc = k
-	    call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
+        do k=kst,kfn
+          kc = k
+          call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
      +                   nyd,intpol)
-	  end do
+        end do
 c
 c     set periodic virtual boundaries if necessary
 c
-	  if (nze.eq.0) then
-	    do j=jst,jfn
-	    do i=ist,ifn
-	      q(i,j,0) = q(i,j,nz-1)
-	      q(i,j,nz+1) = q(i,j,2)
-	    end do
-	    end do
-	  end if
-	  return
-	end if
+        if (nze.eq.0) then
+          do j=jst,jfn
+          do i=ist,ifn
+            q(i,j,0) = q(i,j,nz-1)
+            q(i,j,nz+1) = q(i,j,2)
+          end do
+          end do
+        end if
+        return
+      end if
       else
 c
 c     cubically interpolate in z
 c
-	if (ncz .lt. nz) then
+      if (ncz .lt. nz) then
 c
 c     set every other point of nz grid by interpolating in x&y
 c
-	  do k=koddst,koddfn,2
-	    kc = k/2+1
-	    call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
+        do k=koddst,koddfn,2
+          kc = k/2+1
+          call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
      +                   nyd,intpol)
-	  end do
+        end do
 c
 c     set deep interior of nz grid using values just
 c     generated and symmetric cubic interpolation in z
 c
-	  do k=4,nz-3,2
-	    do j=jst,jfn
-	    do i=ist,ifn
-	    q(i,j,k)=(-q(i,j,k-3)+9.*(q(i,j,k-1)+q(i,j,k+1))-q(i,j,k+3))
+        do k=4,nz-3,2
+          do j=jst,jfn
+          do i=ist,ifn
+          q(i,j,k)=(-q(i,j,k-3)+9.*(q(i,j,k-1)+q(i,j,k+1))-q(i,j,k+3))
      +                *.0625
-	    end do
-	    end do
-	  end do
+          end do
+          end do
+        end do
 c
 c     interpolate from q at k=2 and k=nz-1
 c
-	  if (nze.ne.0) then
+        if (nze.ne.0) then
 c
 c     asymmetric formula near nonperiodic z boundaries
 c
-	    do j=jst,jfn
-	    do i=ist,ifn
-	      q(i,j,2)=(5.*q(i,j,1)+15.*q(i,j,3)-5.*q(i,j,5)+q(i,j,7))
+          do j=jst,jfn
+          do i=ist,ifn
+            q(i,j,2)=(5.*q(i,j,1)+15.*q(i,j,3)-5.*q(i,j,5)+q(i,j,7))
      +                  *.0625
-	      q(i,j,nz-1)=(5.*q(i,j,nz)+15.*q(i,j,nz-2)-5.*q(i,j,nz-4)+
+            q(i,j,nz-1)=(5.*q(i,j,nz)+15.*q(i,j,nz-2)-5.*q(i,j,nz-4)+
      +                    q(i,j,nz-6))*.0625
-	    end do
-	    end do
-	  else
+          end do
+          end do
+        else
 c
 c     periodicity in y alows symmetric formula near bndys
 c
-	    do j=jst,jfn
-	    do i=ist,ifn
-	      q(i,j,2) = (-q(i,j,nz-2)+9.*(q(i,j,1)+q(i,j,3))-q(i,j,5))
+          do j=jst,jfn
+          do i=ist,ifn
+            q(i,j,2) = (-q(i,j,nz-2)+9.*(q(i,j,1)+q(i,j,3))-q(i,j,5))
      +                   *.0625
-	      q(i,j,nz-1)=(-q(i,j,nz-4)+9.*(q(i,j,nz-2)+q(i,j,nz))-
+            q(i,j,nz-1)=(-q(i,j,nz-4)+9.*(q(i,j,nz-2)+q(i,j,nz))-
      +                      q(i,j,3))*.0625
-	      q(i,j,nz+1) = q(i,j,2)
-	      q(i,j,0) = q(i,j,nz-1)
-	    end do
-	    end do
-	  end if
-	  return
-	else
+            q(i,j,nz+1) = q(i,j,2)
+            q(i,j,0) = q(i,j,nz-1)
+          end do
+          end do
+        end if
+        return
+      else
 c
 c     ncz grid is equals nx grid so interpolate in x&y only
 c
-	  do k=kst,kfn
-	    kc = k
-	    call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
+        do k=kst,kfn
+          kc = k
+          call prolon2(ncx,ncy,p(0,0,kc),nx,ny,q(0,0,k),nxa,nxb,nyc,
      +                   nyd,intpol)
-	  end do
+        end do
 c
 c     set periodic virtual boundaries if necessary
 c
-	  if (nze.eq.0) then
-	    do j=jst,jfn
-	    do i=ist,ifn
-	      q(i,j,0) = q(i,j,nz-1)
-	      q(i,j,nz+1) = q(i,j,2)
-	    end do
-	    end do
-	  end if
-	  return
-	end if
+        if (nze.eq.0) then
+          do j=jst,jfn
+          do i=ist,ifn
+            q(i,j,0) = q(i,j,nz-1)
+            q(i,j,nz+1) = q(i,j,2)
+          end do
+          end do
+        end if
+        return
+      end if
       end if
       end
 
@@ -1297,14 +1297,14 @@ c
 c     add coarse grid correction in phic to fine grid approximation
 c     in phif using linear or cubic interpolation
 c
-      real phif(0:nx+1,0:ny+1,0:nz+1),phic(0:ncx+1,0:ncy+1,0:ncz+1)
-      real phcor(0:nx+1,0:ny+1,0:nz+1)
+      real(8) phif(0:nx+1,0:ny+1,0:nz+1),phic(0:ncx+1,0:ncy+1,0:ncz+1)
+      real(8) phcor(0:nx+1,0:ny+1,0:nz+1)
       do k=0,nz+1
-	do j=0,ny+1
-	  do i=0,nx+1
-	    phcor(i,j,k) = 0.0
-	  end do
-	end do
+      do j=0,ny+1
+        do i=0,nx+1
+          phcor(i,j,k) = 0.0
+        end do
+      end do
       end do
 c
 c     lift correction in phic to fine grid in phcor
@@ -1327,38 +1327,38 @@ c
       if (nze.eq.1) kst = 2
       if (nzf.eq.1) kfn = nz-1
       do k=kst,kfn
-	do j=jst,jfn
-	  do i=ist,ifn
-	    phif(i,j,k) = phif(i,j,k) + phcor(i,j,k)
-	  end do
-	end do
+      do j=jst,jfn
+        do i=ist,ifn
+          phif(i,j,k) = phif(i,j,k) + phcor(i,j,k)
+        end do
+      end do
       end do
 c
 c     add periodic points if necessary
 c
       if (nze.eq.0) then
-	do j=jst,jfn
-	  do i=ist,ifn
-	    phif(i,j,0) = phif(i,j,nz-1)
-	    phif(i,j,nz+1) = phif(i,j,2)
-	  end do
-	end do
+      do j=jst,jfn
+        do i=ist,ifn
+          phif(i,j,0) = phif(i,j,nz-1)
+          phif(i,j,nz+1) = phif(i,j,2)
+        end do
+      end do
       end if
       if (nyc.eq.0) then
-	do k=kst,kfn
-	  do i=ist,ifn
-	    phif(i,0,k) = phif(i,ny-1,k)
-	    phif(i,ny+1,k) = phif(i,2,k)
-	  end do
-	end do
+      do k=kst,kfn
+        do i=ist,ifn
+          phif(i,0,k) = phif(i,ny-1,k)
+          phif(i,ny+1,k) = phif(i,2,k)
+        end do
+      end do
       end if
       if (nxa.eq.0) then
-	do k=kst,kfn
-	  do j=jst,jfn
-	    phif(0,j,k) = phif(nx-1,j,k)
-	    phif(nx+1,j,k) = phif(2,j,k)
-	  end do
-	end do
+      do k=kst,kfn
+        do j=jst,jfn
+          phif(0,j,k) = phif(nx-1,j,k)
+          phif(nx+1,j,k) = phif(2,j,k)
+        end do
+      end do
       end if
       end
 
@@ -1369,33 +1369,33 @@ c     in three dimensions (for all 3-d solvers)
 c
       implicit none
       integer nx,ny,nz,nxa,nyc,nze,j,k,i
-      real phi(0:nx+1,0:ny+1,0:nz+1)
+      real(8) phi(0:nx+1,0:ny+1,0:nz+1)
       if (nxa.eq.0) then
-	do k=1,nz
-	  do j=1,ny
-	    phi(0,j,k) = phi(nx-1,j,k)
-	    phi(nx,j,k) = phi(1,j,k)
-	    phi(nx+1,j,k) = phi(2,j,k)
-	  end do
-	end do
+      do k=1,nz
+        do j=1,ny
+          phi(0,j,k) = phi(nx-1,j,k)
+          phi(nx,j,k) = phi(1,j,k)
+          phi(nx+1,j,k) = phi(2,j,k)
+        end do
+      end do
       end if
       if (nyc.eq.0) then
-	do k=1,nz
-	  do i=1,nx
-	    phi(i,0,k) = phi(i,ny-1,k)
-	    phi(i,ny,k) = phi(i,1,k)
-	    phi(i,ny+1,k) = phi(i,2,k)
-	  end do
-	end do
+      do k=1,nz
+        do i=1,nx
+          phi(i,0,k) = phi(i,ny-1,k)
+          phi(i,ny,k) = phi(i,1,k)
+          phi(i,ny+1,k) = phi(i,2,k)
+        end do
+      end do
       end if
       if (nze.eq.0) then
-	do j=1,ny
-	  do i=1,nx
-	    phi(i,j,0) = phi(i,j,nz-1)
-	    phi(i,j,nz) = phi(i,j,1)
-	    phi(i,j,nz+1) = phi(i,j,2)
-	  end do
-	end do
+      do j=1,ny
+        do i=1,nx
+          phi(i,j,0) = phi(i,j,nz-1)
+          phi(i,j,nz) = phi(i,j,1)
+          phi(i,j,nz+1) = phi(i,j,2)
+        end do
+      end do
       end if
       return
       end
@@ -1406,16 +1406,16 @@ c     compute mixed partial derivative approximations
 c
       implicit none
       integer nx,ny,i,j,n1,n2,n3,n4,m1,m2,m3,m4
-      real u(nx,ny),ux3y,uxy3,ux2y2
+      real(8) u(nx,ny),ux3y,uxy3,ux2y2
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,iguess,
      +             maxcy,method,nwork,lwork,itero,ngrid,klevel,kcur,
      +             kcycle,iprer,ipost,intpol,kps
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/imud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nfx,nfy,
      +               iguess, maxcy,method,nwork,lwork,itero,ngrid,
      +               klevel,kcur,kcycle,iprer,ipost,intpol,kps
       common/fmud2cr/xa,xb,yc,yd,tolmax,relmax
-      real dlx,dly,dyox,dxoy,dlx2,dly2,dlxx,dlxy,dlyy,dlxy2,
+      real(8) dlx,dly,dyox,dxoy,dlx2,dly2,dlxx,dlxy,dlyy,dlxy2,
      +             dlxy4,dxxxy4,dxyyy4,dxxyy,tdlx3,tdly3,dlx4,dly4,
      +             dlxxx,dlyyy
       common/com2dcr/dyox,dxoy,dlx2,dly2,dlxy,dlxy2,dlxy4,
@@ -1705,11 +1705,12 @@ c     estimate third and fourth partial derivatives in x,y,z
 c
       implicit none
       integer nx,ny,nz,i,j,k,nxa,nyc,nze
-      real u(nx,ny,nz)
-      real dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
-      common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,
-     +               dlx4,dly4,dlz4
-      real ux3,ux4,uy3,uy4,uz3,uz4
+      real(8) u(nx,ny,nz)
+      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz
+      real(8) tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,
+     &               tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      real(8) ux3,ux4,uy3,uy4,uz3,uz4
 c
 c     x,y partial derivatives
 c
@@ -1781,11 +1782,12 @@ c     third and fourth partial derivatives in x and y
 c
       implicit none
       integer nx,ny,i,j,nxa,nyc,l
-      real u(nx,ny)
-      real dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      real(8) u(nx,ny)
+      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz
+      real(8) tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
       common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,
      +               dlx4,dly4,dlz4
-      real ux3,ux4,uy3,uy4
+      real(8) ux3,ux4,uy3,uy4
       l=ny
 c
 c     x partial derivatives
@@ -1855,11 +1857,12 @@ c     third and fourth derivatives in x
 c
       implicit none
       integer nx,i,nxa,k
-      real u(nx)
-      real dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
+      real(8) u(nx)
+      real(8) dlx,dly,dlz,dlxx,dlyy,dlzz
+      real(8) tdlx3,tdly3,tdlz3,dlx4,dly4,dlz4
       common/pde3com/dlx,dly,dlz,dlxx,dlyy,dlzz,tdlx3,tdly3,tdlz3,
      +               dlx4,dly4,dlz4
-      real ux3,ux4
+      real(8) ux3,ux4
       k = nx
       if (nxa.ne.0) then
 c
@@ -1922,11 +1925,11 @@ c     factor the m simultaneous tridiagonal systems of order n
 c
       implicit none
       integer m,n,i,j
-      real a(n,m),b(n,m),c(n,m)
+      real(8) a(n,m),b(n,m),c(n,m)
       do i=2,n
-	do j=1,m
-	  a(i-1,j) = a(i-1,j)/b(i-1,j)
-	  b(i,j) = b(i,j)-a(i-1,j)*c(i-1,j)
+      do j=1,m
+        a(i-1,j) = a(i-1,j)/b(i-1,j)
+        b(i,j) = b(i,j)-a(i-1,j)*c(i-1,j)
        end do
       end do
       return
@@ -1940,50 +1943,50 @@ c     (so sweeps below only go from i=1,2,...,n-1) n > 3 is necessary
 c
       implicit none
       integer m,n,i,j
-      real a(n,m),b(n,m),c(n,m),d(n,m),e(n,m),sum(m)
+      real(8) a(n,m),b(n,m),c(n,m),d(n,m),e(n,m),sum(m)
       do j=1,m
-	d(1,j) = a(1,j)
+      d(1,j) = a(1,j)
       end do
       do i=2,n-2
-	do j=1,m
-	  a(i,j) = a(i,j)/b(i-1,j)
-	  b(i,j) = b(i,j)-a(i,j)*c(i-1,j)
-	  d(i,j) = -a(i,j)*d(i-1,j)
+      do j=1,m
+        a(i,j) = a(i,j)/b(i-1,j)
+        b(i,j) = b(i,j)-a(i,j)*c(i-1,j)
+        d(i,j) = -a(i,j)*d(i-1,j)
        end do
       end do
 c
 c     correct computation of last d element
 c
       do j=1,m
-	d(n-2,j) = c(n-2,j)+d(n-2,j)
+      d(n-2,j) = c(n-2,j)+d(n-2,j)
       end do
       do j=1,m
-	e(1,j) = c(n-1,j)/b(1,j)
+      e(1,j) = c(n-1,j)/b(1,j)
       end do
       do i=2,n-3
-	do j=1,m
-	  e(i,j) = -e(i-1,j)*c(i-1,j)/b(i,j)
-	end do
+      do j=1,m
+        e(i,j) = -e(i-1,j)*c(i-1,j)/b(i,j)
+      end do
       end do
       do j=1,m
-	e(n-2,j) = (a(n-1,j)-e(n-3,j)*c(n-3,j))/b(n-2,j)
+      e(n-2,j) = (a(n-1,j)-e(n-3,j)*c(n-3,j))/b(n-2,j)
       end do
 c
 c     compute  inner product (e,d) for each j in sum(j)
 c
       do j=1,m
-	sum(j) = 0.
+      sum(j) = 0.
       end do
       do i=1,n-2
-	do j=1,m
-	  sum(j) = sum(j)+e(i,j)*d(i,j)
-	end do
+      do j=1,m
+        sum(j) = sum(j)+e(i,j)*d(i,j)
+      end do
       end do
 c
 c     set last diagonal element
 c
       do j=1,m
-	b(n-1,j) = b(n-1,j)-sum(j)
+      b(n-1,j) = b(n-1,j)-sum(j)
       end do
       return
       end
@@ -1994,28 +1997,28 @@ c     transpose n by n real matrix
 c
       implicit none
       integer n,i,j
-      real amat(n,n),temp
+      real(8) amat(n,n),temp
       do i=1,n-1
-	do j=i+1,n
-	  temp = amat(i,j)
-	  amat(i,j) = amat(j,i)
-	  amat(j,i) = temp
-	end do
+      do j=i+1,n
+        temp = amat(i,j)
+        amat(i,j) = amat(j,i)
+        amat(j,i) = temp
+      end do
       end do
       return
       end
 
       subroutine sgfa (a,lda,n,ipvt,info)
-      integer lda,n,ipvt(1),info                                                
-      real a(lda,1)                                                             
-      real t                                                                    
+      integer lda,n,ipvt(*),info                                                
+      real(8) a(lda,*)                                                             
+      real(8) t                                                                    
       integer isfmax,j,k,kp1,l,nm1
       info = 0                                                                  
       nm1 = n - 1                                                               
       if (nm1 .lt. 1) go to 70                                                  
       do 60 k = 1, nm1                                                          
          kp1 = k + 1                                                            
-	 l = isfmax(n-k+1,a(k,k),1) + k - 1
+       l = isfmax(n-k+1,a(k,k),1) + k - 1
          ipvt(k) = l                                                            
          if (a(l,k) .eq. 0.0e0) go to 40                                        
             if (l .eq. k) go to 10                                              
@@ -2024,14 +2027,14 @@ c
                a(k,k) = t                                                       
    10       continue                                                            
             t = -1.0e0/a(k,k)                                                   
-	    call sscl(n-k,t,a(k+1,k),1)
+          call sscl(n-k,t,a(k+1,k),1)
             do 30 j = kp1, n                                                    
                t = a(l,j)                                                       
                if (l .eq. k) go to 20                                           
                   a(l,j) = a(k,j)                                               
                   a(k,j) = t                                                    
    20          continue                                                         
-	       call sxpy(n-k,t,a(k+1,k),1,a(k+1,j),1)
+             call sxpy(n-k,t,a(k+1,k),1,a(k+1,j),1)
    30       continue                                                            
          go to 50                                                               
    40    continue                                                               
@@ -2045,9 +2048,9 @@ c
       end                                                                       
                                                                                 
       subroutine sgsl (a,lda,n,ipvt,b,job)
-      integer lda,n,ipvt(1),job                                                 
-      real a(lda,1),b(1)                                                        
-      real sdt,t
+      integer lda,n,ipvt(*),job                                                 
+      real(8) a(lda,*),b(*)                                                        
+      real(8) sdt,t
       integer k,kb,l,nm1                                                        
       nm1 = n - 1                                                               
       if (job .ne. 0) go to 50                                                  
@@ -2059,25 +2062,25 @@ c
                b(l) = b(k)                                                      
                b(k) = t                                                         
    10       continue                                                            
-	    call sxpy(n-k,t,a(k+1,k),1,b(k+1),1)
+          call sxpy(n-k,t,a(k+1,k),1,b(k+1),1)
    20    continue                                                               
    30    continue                                                               
          do 40 kb = 1, n                                                        
             k = n + 1 - kb                                                      
             b(k) = b(k)/a(k,k)                                                  
             t = -b(k)                                                           
-	    call sxpy(k-1,t,a(1,k),1,b(1),1)
+          call sxpy(k-1,t,a(1,k),1,b(1),1)
    40    continue                                                               
       go to 100                                                                 
    50 continue                                                                  
          do 60 k = 1, n                                                         
-	    t = sdt(k-1,a(1,k),1,b(1),1)
+          t = sdt(k-1,a(1,k),1,b(1),1)
             b(k) = (b(k) - t)/a(k,k)                                            
    60    continue                                                               
          if (nm1 .lt. 1) go to 90                                               
          do 80 kb = 1, nm1                                                      
             k = n - kb                                                          
-	    b(k) = b(k) + sdt(n-k,a(k+1,k),1,b(k+1),1)
+          b(k) = b(k) + sdt(n-k,a(k+1,k),1,b(k+1),1)
             l = ipvt(k)                                                         
             if (l .eq. k) go to 70                                              
                t = b(l)                                                         
@@ -2090,8 +2093,8 @@ c
       return                                                                    
       end                                                                       
                                                                                 
-      real function sdt(n,sx,incx,sy,incy)
-      real sx(1),sy(1),stemp                                                    
+      real(8) function sdt(n,sx,incx,sy,incy)
+      real(8) sx(*),sy(*),stemp                                                    
       integer i,incx,incy,ix,iy,m,mp1,n                                         
       stemp = 0.0e0                                                             
       sdt = 0.0e0
@@ -2124,7 +2127,7 @@ c
       end                                                                       
                                                                                 
       integer function isfmax(n,sx,incx)
-      real sx(1),smax                                                           
+      real(8) sx(*),smax                                                           
       integer i,incx,ix,n                                                       
       isfmax = 0
       if( n .lt. 1 ) return                                                     
@@ -2136,22 +2139,22 @@ c
       ix = ix + incx                                                            
       do 10 i = 2,n                                                             
          if(abs(sx(ix)).le.smax) go to 5                                        
-	 isfmax = i
+       isfmax = i
          smax = abs(sx(ix))                                                     
     5    ix = ix + incx                                                         
    10 continue                                                                  
       return                                                                    
    20 smax = abs(sx(1))                                                         
       do 30 i = 2,n                                                             
-         if(abs(sx(i)).le.smax) go to 30                                        
-	 isfmax = i
+         if(abs(sx(i)).le.smax) goto 30                                        
+         isfmax = i
          smax = abs(sx(i))                                                      
    30 continue                                                                  
       return                                                                    
       end                                                                       
 
       subroutine sxpy(n,sa,sx,incx,sy,incy)
-      real sx(1),sy(1),sa                                                       
+      real(8) sx(*),sy(*),sa                                                       
       integer i,incx,incy,ix,iy,m,mp1,n                                         
       if(n.le.0)return                                                          
       if (sa .eq. 0.0) return                                                   
@@ -2183,7 +2186,7 @@ c
       end                                                                       
 
       subroutine sscl(n,sa,sx,incx)
-      real sa,sx(1)                                                             
+      real(8) sa,sx(*)                                                             
       integer i,incx,m,mp1,n,nincx                                              
       if(n.le.0)return                                                          
       if(incx.eq.1)go to 20                                                     
