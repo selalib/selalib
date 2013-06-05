@@ -186,7 +186,7 @@ target_link_libraries(VP1D_cart
 	)
 
 
-IF(CMAKE_BUILD_TYPE MATCHES "Release")
+#IF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 target_link_libraries(VP1D_deltaf_cart
@@ -205,7 +205,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_memory
 	sll_assertion 	
 	sll_poisson_1d_periodic
-	fftpack_module
+	dfftpack
 	${LAPACK_LIBRARIES}
 	)
 
@@ -230,7 +230,7 @@ target_link_libraries(VP1D_mm
 	${LAPACK_LIBRARIES}
 	)
 
-ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
+#ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 ENDIF(NOT STDF95)
 
