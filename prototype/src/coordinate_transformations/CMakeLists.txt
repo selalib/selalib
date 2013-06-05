@@ -37,5 +37,6 @@ target_link_libraries(test_coordinate_transformations_2d
 	sll_memory
 	sll_assertion
 	sll_working_precision
+        ${HDF5_LIBRARIES}
   )
 
