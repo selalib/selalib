@@ -7,9 +7,10 @@
 
 program vlasov_poisson_4d_polar
 #include "sll_working_precision.h"
+#include "sll_constants.h"
+
   use sll_simulation_4d_vlasov_poisson_polar
   use sll_collective
-  use sll_constants
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -62,14 +63,6 @@ program vlasov_poisson_4d_polar
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
 
-!  ! logical mesh for space coordinates
-!  mx => new_logical_mesh_2d( NPTS1, NPTS2)
-!
-!  ! logical mesh for velocity coordinates
-!  mv => new_logical_mesh_2d( NPTS1, NPTS2, &
-!       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
-!       eta2_min=-6.0_f64, eta2_max=6.0_f64)
-!
   ! coordinate transformation associated with space coordinates
   transformation_x => new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
@@ -139,6 +132,6 @@ program vlasov_poisson_4d_polar
   call sll_halt_collective()
 
 
-end program vlasov_poisson_4d_general
+end program vlasov_poisson_4d_polar
 
 
