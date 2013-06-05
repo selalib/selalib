@@ -14,8 +14,8 @@ program vp2d_keen
 #else
   use poisson2dpp_seq
 #endif
-  use sll_vlasov2d
-!  use vlasov2d_module
+!  use sll_vlasov2d
+  use vlasov2d_module
   use splinepp_class
   use splinenn_class
 
