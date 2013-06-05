@@ -24,6 +24,7 @@ TARGET_LINK_LIBRARIES(test_io sll_file_io
 
 IF(HDF5_PARALLEL_ENABLED)
 
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_DEFINITIONS(-DHDF5_PARALLEL)
    SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
                         sll_xdmf_parallel.F90 
