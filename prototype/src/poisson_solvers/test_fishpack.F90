@@ -1,11 +1,8 @@
 program test_fishpack
 
-use fishpack
+use sll_fishpack
 
 implicit none
-!-----------------------------------------------
-!   l o c a l   v a r i a b l e s
-!-----------------------------------------------
 integer :: l, m, n, mp1, np1
 integer :: i, j, k
 

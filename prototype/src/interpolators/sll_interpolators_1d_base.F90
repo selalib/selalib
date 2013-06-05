@@ -53,6 +53,10 @@ module sll_module_interpolators_1d_base
      ! procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
   end type sll_interpolator_1d_base
 
+  sll_int32, parameter :: INTERP_PERIODIC_BC  = 0
+  sll_int32, parameter :: INTERP_DIRICHLET_BC = 1 
+  sll_int32, parameter :: INTERP_NEUMANN_BC   = 2 
+
  ! Signature of the interpolating function  
   abstract interface
      function interpolator_one_arg_msg( interpolator, eta1 ) result(val)
@@ -150,6 +154,4 @@ module sll_module_interpolators_1d_base
      end function reconstruct_1d_array
   end interface
 
-
 end module sll_module_interpolators_1d_base
-

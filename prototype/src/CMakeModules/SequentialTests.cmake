@@ -53,8 +53,9 @@ IF(NOT STDF95)
             COMMAND test_qns2d_angular_spectral_method_seq)
    SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_seq 
                         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#consider merging the following 2 tests
    ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
-
+   ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME fields COMMAND test_scalar_field)
    ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
@@ -107,11 +108,3 @@ IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)
    SET_TESTS_PROPERTIES(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF(FORTRANCL_FOUND)
-
-IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
-   IF(HDF5_PARALLEL_ENABLED)
-   ELSE()
-      ADD_TEST(NAME mudpack COMMAND tmud34sp tmud24sp )
-      SET(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ENDIF()
-ENDIF()
