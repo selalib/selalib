@@ -149,7 +149,9 @@ target_link_libraries(CG_polar
 	                            sll_constants
 	                            sll_memory
 	                            sll_assertion
-	                            sll_timer)
+	                            sll_timer
+                                    ${HDF5_LIBRARIES}
+)
 
 IF (0)
 add_executable(Poisson_solver
@@ -183,6 +185,7 @@ target_link_libraries(VP1D_cart
 	sll_assertion 	
 	sll_poisson_solvers
 	dfftpack
+                                    ${HDF5_LIBRARIES}
 	)
 
 
@@ -207,6 +210,7 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_poisson_solvers
 	dfftpack
 	${LAPACK_LIBRARIES}
+                                    ${HDF5_LIBRARIES}
 	)
 
 add_executable(VP1D_mm VP1D_mm.F90)
@@ -228,6 +232,7 @@ target_link_libraries(VP1D_mm
 	sll_poisson_solvers
 	dfftpack
 	${LAPACK_LIBRARIES}
+                                    ${HDF5_LIBRARIES}
 	)
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")

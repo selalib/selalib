@@ -13,14 +13,13 @@ ADD_DEPENDENCIES(sll_file_io sll_assertion
 
 ADD_EXECUTABLE(test_io unit_test.F90)
 
-TARGET_LINK_LIBRARIES(sll_file_io ${HDF5_LIBRARIES})
-
 TARGET_LINK_LIBRARIES(test_io sll_file_io
                               sll_constants
                               sll_memory
                               sll_assertion
                               sll_working_precision
-	                           sll_utilities)
+                              sll_utilities
+                              ${HDF5_LIBRARIES})
 
 IF(HDF5_PARALLEL_ENABLED)
 
