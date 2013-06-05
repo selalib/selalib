@@ -33,6 +33,10 @@ module sll_nu_cart_mesh
 !!$     logical :: unif1, unif2 ! .true. if the meshing is uniform, .fale. else, just for optimization
   end type non_unif_cart_mesh
 
+  interface delete
+     module procedure delete_nu_cart_mesh
+  end interface delete
+
 contains
 
   subroutine init_nu_cart_mesh(n_etat1,n_etat2,mesh)!,d_etat1,d_etat2)
