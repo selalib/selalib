@@ -77,6 +77,7 @@ program VP1d_deltaf
   sll_real64 :: time1
   sll_int32  :: error, file_id
   character(len=4) :: cstep
+  character(len=32) :: dsetname
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
