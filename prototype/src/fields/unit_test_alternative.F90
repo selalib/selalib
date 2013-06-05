@@ -10,7 +10,10 @@ program unit_test_alternative
   
   type(sll_logical_mesh_2d), pointer               :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
+  ! either of these type declarations can be used to work. Initialization is
+  ! different.
   class(sll_scalar_field_2d_base), pointer              :: field_2d
+  type(sll_scalar_field_2d_analytic_alt)                :: field_2d_a
   real(8), external :: test_function
   sll_int32 :: nc1, nc2, iplot
  ! procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
@@ -41,8 +44,7 @@ program unit_test_alternative
        identity_jac21, &
        identity_jac22 )
   print *, 'initialized transformation'
-
-  field_2d => new_scalar_field_2d_analytic_alt( &
+  call field_2d_a%initialize( &
        test_function, &
        'doubly_periodic', &
        T, &
@@ -52,19 +54,18 @@ program unit_test_alternative
        SLL_PERIODIC )
   print *, 'initialized field 2d'
 
-  print *, 'field value at 0,0 = ', field_2d%value_at_point(0.0_f64,0.0_f64)
+  print *, 'field value at 0,0 = ', field_2d_a%value_at_point(0.0_f64,0.0_f64)
   print *, 'field value at indices 1,1 = ', &
-       field_2d%value_at_indices(1,1)
+       field_2d_a%value_at_indices(1,1)
 
-  call field_2d%write_to_file(0)
+  call field_2d_a%write_to_file(0)
 
-!!$  do iplot = 1, 10
-!!$     field%data = exp(-(mesh%x1_node**2+mesh%x2_node**2)*iplot*0.1)
-!!$     call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
-!!$     call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
-!!$  end do
-!!$
-!!$  call mesh%write_to_file()
+
+  ! the following call can also be made as:
+  ! call field_2d_a%delete()
+  ! we leave this as follows to test if any compilers complain about this
+  ! syntax.
+  call delete(field_2d_a)
 
   print *, 'PASSED'
   

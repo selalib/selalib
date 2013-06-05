@@ -227,7 +227,9 @@ program test_general_qns
        ,acc/(npts1*npts2)
 
 
-  ! delete things...
+  ! delete things... 
+  call T%delete()
+  call phi%delete()
   call delete(qns)
   print *, 'PASSED'
 end program test_general_qns

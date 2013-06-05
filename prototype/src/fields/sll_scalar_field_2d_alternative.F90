@@ -53,6 +53,8 @@ module sll_module_scalar_field_2d_alternative
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
    contains
+     procedure, pass(field) :: initialize => &
+          initialize_scalar_field_2d_analytic_alt
      procedure, pass(field) :: get_transformation => &
           get_transformation_analytic_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -62,6 +64,7 @@ module sll_module_scalar_field_2d_alternative
      procedure, pass(field) :: value_at_point => value_at_pt_analytic
      procedure, pass(field) :: value_at_indices => value_at_index_analytic
      procedure, pass(field) :: write_to_file => write_to_file_analytic_2d
+     procedure, pass(field) :: delete => delete_field_2d_analytic_alt
   end type sll_scalar_field_2d_analytic_alt
 
   type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete_alt
@@ -75,6 +78,8 @@ module sll_module_scalar_field_2d_alternative
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
    contains
+   procedure, pass(field) :: initialize => &
+          initialize_scalar_field_2d_discrete_alt
      procedure, pass(field) :: get_transformation => &
           get_transformation_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -83,7 +88,8 @@ module sll_module_scalar_field_2d_alternative
           get_jacobian_matrix_discrete_alt
      procedure, pass(field) :: value_at_point => value_at_pt_discrete
      procedure, pass(field) :: value_at_indices => value_at_index_discrete
-    procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
+     procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
+     procedure, pass(field) :: delete => delete_field_2d_discrete_alt
   end type sll_scalar_field_2d_discrete_alt
 
 !  type sll_ptr_scalar_field_2d_a
@@ -116,7 +122,9 @@ module sll_module_scalar_field_2d_alternative
      end function scalar_function_2D
   end interface
 
-
+  interface delete
+     module procedure delete_field_2d_analytic_alt, delete_field_2d_discrete_alt
+  end interface delete
 
 
 contains   ! *****************************************************************
@@ -151,6 +159,38 @@ contains   ! *****************************************************************
     value_at_index_analytic = field%func(eta1,eta2,field%params)
   end function value_at_index_analytic
 
+!!$  subroutine initialize_scalar_field_2d_analytic_alt( &
+!!$    obj, &
+!!$    func, &
+!!$    field_name, &
+!!$    transformation, &
+!!$    bc_left, &
+!!$    bc_right, &
+!!$    bc_bottom, &
+!!$    bc_top, &
+!!$    func_params )
+!!$
+!!$    class(sll_scalar_field_2d_analytic_alt)         :: obj
+!!$    procedure(two_var_parametrizable_function)      :: func
+!!$    character(len=*), intent(in)                    :: field_name
+!!$    sll_real64, dimension(:), intent(in), optional, target :: func_params
+!!$    class(sll_coordinate_transformation_2d_base), target :: transformation
+!!$    sll_int32, intent(in) :: bc_left
+!!$    sll_int32, intent(in) :: bc_right
+!!$    sll_int32, intent(in) :: bc_bottom
+!!$    sll_int32, intent(in) :: bc_top
+!!$    sll_int32  :: ierr
+!!$ 
+!!$    obj%T => transformation
+!!$    !    obj%mesh%written = .false.
+!!$    obj%func      => func
+!!$    obj%params    => func_params   
+!!$    obj%name      = trim(field_name)
+!!$    obj%bc_left   = bc_left
+!!$    obj%bc_right  = bc_right
+!!$    obj%bc_bottom = bc_bottom
+!!$    obj%bc_top    = bc_top
+!!$  end subroutine initialize_scalar_field_2d_analytic_alt
 
   function new_scalar_field_2d_analytic_alt( &
     func, &
@@ -174,21 +214,30 @@ contains   ! *****************************************************************
     sll_int32  :: ierr
  
     SLL_ALLOCATE(obj,ierr)
-    obj%T => transformation
-    !    obj%mesh%written = .false.
-    obj%func      => func
-    obj%params    => func_params   
-    obj%name      = trim(field_name)
-    obj%bc_left   = bc_left
-    obj%bc_right  = bc_right
-    obj%bc_bottom = bc_bottom
-    obj%bc_top    = bc_top
+    call obj%initialize( &
+    func, &
+    field_name, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top, &
+    func_params )
   end function new_scalar_field_2d_analytic_alt
+
+  subroutine delete_field_2d_analytic_alt( field )
+    class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
+    ! nothing internal do deallocate, just nullify pointers. Can't call
+    ! delete on them because the field does not 'own' these data.
+    nullify(field%func)
+    nullify(field%params)
+    nullify(field%T)
+  end subroutine delete_field_2d_analytic_alt
 
   ! For those cases in which handling pointers to field structures is not
   ! convenient, we offer the following alternative initialization.
   subroutine initialize_scalar_field_2d_analytic_alt( &
-    obj, &
+    field, &
     func, &
     field_name, &
     transformation, &
@@ -198,7 +247,7 @@ contains   ! *****************************************************************
     bc_top, &
     func_params )
 
-    type(sll_scalar_field_2d_analytic_alt), intent(out) :: obj
+    class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
     procedure(two_var_parametrizable_function)      :: func
     character(len=*), intent(in)                    :: field_name
     sll_real64, dimension(:), intent(in), optional, target :: func_params
@@ -208,15 +257,15 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
  
-    obj%T => transformation
-    !    obj%mesh%written = .false.
-    obj%func      => func
-    obj%params    => func_params   
-    obj%name      = trim(field_name)
-    obj%bc_left   = bc_left
-    obj%bc_right  = bc_right
-    obj%bc_bottom = bc_bottom
-    obj%bc_top    = bc_top
+    field%T => transformation
+    !    field%mesh%written = .false.
+    field%func      => func
+    field%params    => func_params   
+    field%name      = trim(field_name)
+    field%bc_left   = bc_left
+    field%bc_right  = bc_right
+    field%bc_bottom = bc_bottom
+    field%bc_top    = bc_top
   end subroutine initialize_scalar_field_2d_analytic_alt
 
   
@@ -255,13 +304,6 @@ contains   ! *****************************************************************
     res = (field%T%jacobian_matrix(eta1,eta2))
   end function get_jacobian_matrix_analytic_alt
 
-  ! need to do something about deallocating the field proper, when allocated
-  ! in the heap...
-  subroutine delete_scalar_field_2d_analytic_alt( obj )
-    type(sll_scalar_field_2d_analytic_alt), pointer :: obj
-    sll_int32                      :: ierr
-    SLL_DEALLOCATE(obj, ierr)
-  end subroutine delete_scalar_field_2d_analytic_alt
 
   subroutine write_to_file_analytic_2d( field, tag )
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
@@ -344,16 +386,59 @@ contains   ! *****************************************************************
     sll_int32  :: ierr
  
     SLL_ALLOCATE(obj,ierr)
-    obj%values => array_2d
-    obj%T => transformation
-    obj%interp_2d => interpolator_2d
-    !    obj%mesh%written = .false.
-     obj%name      = trim(field_name)
-    obj%bc_left   = bc_left
-    obj%bc_right  = bc_right
-    obj%bc_bottom = bc_bottom
-    obj%bc_top    = bc_top
+    call obj%initialize( &
+    array_2d, &
+    field_name, &
+    interpolator_2d, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top )
   end function new_scalar_field_2d_discrete_alt
+
+  subroutine initialize_scalar_field_2d_discrete_alt( &
+    field, &
+    array_2d, &
+    field_name, &
+    interpolator_2d, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top ) 
+
+    class(sll_scalar_field_2d_discrete_alt)         :: field
+    sll_real64, dimension(:,:), intent(in), target  :: array_2d
+    character(len=*), intent(in)                    :: field_name
+    class(sll_interpolator_2d_base), pointer        :: interpolator_2d
+    class(sll_coordinate_transformation_2d_base), target :: transformation
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
+ 
+    field%values => array_2d
+    field%T => transformation
+    field%interp_2d => interpolator_2d
+    !    field%mesh%written = .false.
+     field%name      = trim(field_name)
+    field%bc_left   = bc_left
+    field%bc_right  = bc_right
+    field%bc_bottom = bc_bottom
+    field%bc_top    = bc_top
+  end subroutine initialize_scalar_field_2d_discrete_alt
+
+  ! need to do something about deallocating the field proper, when allocated
+  ! in the heap...
+  subroutine delete_field_2d_discrete_alt( field )
+    class(sll_scalar_field_2d_discrete_alt), intent(out) :: field
+    ! just nullify pointers, nothing to deallocate that this object owns.
+    nullify(field%values)
+    nullify(field%T)
+    nullify(field%interp_2d)
+  end subroutine delete_field_2d_discrete_alt
+
 
   function get_transformation_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
