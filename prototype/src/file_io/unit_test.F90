@@ -4,6 +4,7 @@ module test_io
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 use sll_xdmf
+use sll_hdf5_io
 use sll_constants
 use sll_utilities, only: int2string
 
