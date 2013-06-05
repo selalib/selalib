@@ -994,6 +994,7 @@ program test_general_qns
 
 
 
+<<<<<<< HEAD
 
 
 
@@ -1006,6 +1007,12 @@ program test_general_qns
   print *,'Average error in nodes (dir-per) without change of coordinates='&
        ,acc3/(npts1*npts2)
   
+=======
+  ! delete things... 
+  call T%delete()
+  call phi%delete()
+  call delete(qns)
+>>>>>>> origin/vp4d-simulation
   print *, 'PASSED'
 end program test_general_qns
 
