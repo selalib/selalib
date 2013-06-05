@@ -17,6 +17,7 @@ module sll_module_scalar_field_2d_base
      procedure(function_evaluation_real), deferred, pass :: value_at_point
      procedure(function_evaluation_integer), deferred, pass :: value_at_indices
      procedure(field_2d_file_output), deferred, pass :: write_to_file
+     procedure(field_2d_subroutine), deferred, pass :: delete
      ! here we can continue with derivatives or whatever else that might
      ! be desired.
   end type sll_scalar_field_2d_base
@@ -95,6 +96,13 @@ module sll_module_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
        sll_int32, intent(in)                       :: tag
      end subroutine field_2d_file_output
+  end interface
+
+  abstract interface
+     subroutine field_2d_subroutine( field )
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(out) :: field
+     end subroutine field_2d_subroutine
   end interface
 
 end module sll_module_scalar_field_2d_base
