@@ -100,11 +100,11 @@ contains
    num_splines1 = num_cells_eta1 + spline_degree_eta1
    num_splines2 = num_cells_eta2 + spline_degree_eta2
    SLL_ALLOCATE(qns%global_spline_indices(num_splines1*num_splines2),ierr)
-
+   qns%global_spline_indices(:) = 0
    SLL_ALLOCATE(qns%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-
+   qns%local_spline_indices(:,:) = 0
    SLL_ALLOCATE(qns%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-
+   qns%local_to_global_spline_indices = 0
    ! This should be changed to verify that the passed BC's are part of the
    ! recognized list described in sll_boundary_condition_descriptors...
    qns%bc_left   = bc_left
@@ -125,10 +125,8 @@ contains
       case (QNS_GAUSS_LOBATTO)
          print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
               'because the interface of that function is not good.'
-!!$         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+1),ierr)
-!!$         qns%gauss_pts2(:,:)
    end select
-  ! print*, 'gaussss',qns%gauss_pts1
+
    select case(quadrature_type2)
       case (QNS_GAUSS_LEGENDRE)
          SLL_ALLOCATE(qns%gauss_pts2(2,spline_degree_eta2+2),ierr)
@@ -136,9 +134,9 @@ contains
       case (QNS_GAUSS_LOBATTO)
          print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
               'because the interface of that function is not good.'
-!!$         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+1),ierr)
-!!$         qns%gauss_pts2(:,:)
+
    end select
+
 
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
@@ -184,6 +182,7 @@ contains
    qns%rho_vec(:) = 0.0
    qns%phi_vec(:) = 0.0
 
+  ! print*, 'ok'
    call initialize_knots( &
         spline_degree_eta1, &
         num_cells_eta1, &
@@ -193,6 +192,7 @@ contains
         bc_right, &
         qns%knots1 )
 
+  ! print*, 'ok3'
    call initialize_knots( &
         spline_degree_eta2, &
         num_cells_eta2, &
@@ -201,7 +201,8 @@ contains
         bc_bottom, &
         bc_top, &
         qns%knots2 )
-
+  ! print*, 'ok2'
+   !print*, 'okok',qns%global_spline_indices
    call initconnectivity( &
         num_cells_eta1, &
         num_cells_eta2, &
@@ -215,16 +216,23 @@ contains
         qns%global_spline_indices, &
         qns%local_to_global_spline_indices )
 
+  ! print*, 'ok1',size(qns%local_spline_indices,1),size(qns%local_spline_indices,2)
+  ! print*, 'ok1',size(qns%local_to_global_spline_indices,1),size(qns%local_to_global_spline_indices,2)
+  ! print*, 'okok',size(qns%global_spline_indices,1)
+  ! print*,  solution_size,vec_sz,qns%total_num_splines_loc
+  ! print*, 'heheh',  qns%local_to_global_spline_indices
     call create_CSR( &
         qns%csr_mat, &
         solution_size, &
         solution_size, &
-        vec_sz, &
+        num_cells_eta1*num_cells_eta2, &
         qns%local_to_global_spline_indices, &
         qns%total_num_splines_loc, &
         qns%local_to_global_spline_indices, &
         qns%total_num_splines_loc )
         
+ 
+   ! print*, 'ok'
   end function new_general_qn_solver
 
   subroutine delete_qns( qns )

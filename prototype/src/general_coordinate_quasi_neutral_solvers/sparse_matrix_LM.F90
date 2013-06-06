@@ -51,7 +51,6 @@ contains
         allocate(lpi_columns(ai_nR, 0:li_COEF * ai_nen_2))
 
         allocate(lpi_occ(ai_nR + 1))
-
         lpi_columns(:,:) = 0
         lpi_occ(:) = 0
 
@@ -59,17 +58,22 @@ contains
 
         li_nnz = count_non_zero_elts(ai_nR, ai_nC, ai_nel, api_LM_1, ai_nen_1, api_LM_2, ai_nen_2, lpi_columns, lpi_occ)
 
+
         this % ol_use_mm_format = .FALSE.
 
         this % oi_nR = ai_nR
         this % oi_nC = ai_nC
         this % oi_nel = li_nnz
 
+
         allocate(this % opi_ia(this % oi_nR + 1))
+
 
         allocate(this % opi_ja(this % oi_nel))
 
+
         allocate(this % opr_a(this % oi_nel))
+
 
         call init_SparseMatrix(this, ai_nel, api_LM_1, ai_nen_1, api_LM_2, ai_nen_2, lpi_columns, lpi_occ)
 
