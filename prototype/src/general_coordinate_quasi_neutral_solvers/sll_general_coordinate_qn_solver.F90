@@ -52,9 +52,15 @@ module sll_general_coordinate_qn_solver_module
      module procedure delete_qns
   end interface delete
 
-contains
+  interface initialize
+     module procedure initialize_general_qn_solver
+  end interface initialize
 
-  function new_general_qn_solver( &
+
+contains ! *******************************************************************
+
+  subroutine initialize_general_qn_solver( &
+   qns, &
    spline_degree_eta1, &
    spline_degree_eta2, &
    num_cells_eta1, &
@@ -68,9 +74,9 @@ contains
    eta1_min, &
    eta1_max, &
    eta2_min, &
-   eta2_max ) result(qns)
+   eta2_max )
 
-   type(general_coordinate_qn_solver), pointer :: qns
+   type(general_coordinate_qn_solver), intent(out) :: qns
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
    sll_int32, intent(in) :: num_cells_eta1
@@ -93,7 +99,6 @@ contains
    sll_int32 :: ierr
    sll_int32 :: solution_size
 
-   SLL_ALLOCATE(qns,ierr)
    qns%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
    ! num_cells + spline_degree
@@ -230,16 +235,218 @@ contains
         qns%total_num_splines_loc, &
         qns%local_to_global_spline_indices, &
         qns%total_num_splines_loc )
-        
- 
-   ! print*, 'ok'
+  end subroutine initialize_general_qn_solver
+
+  function new_general_qn_solver( &
+   spline_degree_eta1, &
+   spline_degree_eta2, &
+   num_cells_eta1, &
+   num_cells_eta2, &
+   quadrature_type1, &
+   quadrature_type2, &
+   bc_left, &
+   bc_right, &
+   bc_bottom, &
+   bc_top, &
+   eta1_min, &
+   eta1_max, &
+   eta2_min, &
+   eta2_max ) result(qns)
+
+   type(general_coordinate_qn_solver), pointer :: qns
+   sll_int32, intent(in) :: spline_degree_eta1
+   sll_int32, intent(in) :: spline_degree_eta2
+   sll_int32, intent(in) :: num_cells_eta1
+   sll_int32, intent(in) :: num_cells_eta2
+   sll_int32, intent(in) :: bc_left
+   sll_int32, intent(in) :: bc_right
+   sll_int32, intent(in) :: bc_bottom
+   sll_int32, intent(in) :: bc_top
+   sll_int32, intent(in) :: quadrature_type1
+   sll_int32, intent(in) :: quadrature_type2
+   sll_real64, intent(in) :: eta1_min
+   sll_real64, intent(in) :: eta1_max
+   sll_real64, intent(in) :: eta2_min
+   sll_real64, intent(in) :: eta2_max
+   sll_int32 :: knots1_size
+   sll_int32 :: knots2_size
+   sll_int32 :: num_splines1
+   sll_int32 :: num_splines2
+   sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
+   sll_int32 :: ierr
+   sll_int32 :: solution_size
+
+   SLL_ALLOCATE(qns,ierr)
+   call initialize( &
+        qns, &
+   spline_degree_eta1, &
+   spline_degree_eta2, &
+   num_cells_eta1, &
+   num_cells_eta2, &
+   quadrature_type1, &
+   quadrature_type2, &
+   bc_left, &
+   bc_right, &
+   bc_bottom, &
+   bc_top, &
+   eta1_min, &
+   eta1_max, &
+   eta2_min, &
+   eta2_max )
+
+!!$   qns%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
+!!$   ! The total number of splines in a single direction is given by
+!!$   ! num_cells + spline_degree
+!!$   num_splines1 = num_cells_eta1 + spline_degree_eta1
+!!$   num_splines2 = num_cells_eta2 + spline_degree_eta2
+!!$   SLL_ALLOCATE(qns%global_spline_indices(num_splines1*num_splines2),ierr)
+!!$   qns%global_spline_indices(:) = 0
+!!$   SLL_ALLOCATE(qns%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+!!$   qns%local_spline_indices(:,:) = 0
+!!$   SLL_ALLOCATE(qns%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+!!$   qns%local_to_global_spline_indices = 0
+!!$   ! This should be changed to verify that the passed BC's are part of the
+!!$   ! recognized list described in sll_boundary_condition_descriptors...
+!!$   qns%bc_left   = bc_left
+!!$   qns%bc_right  = bc_right
+!!$   qns%bc_bottom = bc_bottom
+!!$   qns%bc_top    = bc_top
+!!$   qns%spline_degree1 = spline_degree_eta1
+!!$   qns%spline_degree2 = spline_degree_eta2
+!!$   qns%num_cells1 = num_cells_eta1
+!!$   qns%num_cells2 = num_cells_eta2
+!!$
+!!$   ! Allocate and fill the gauss points/weights information.
+!!$   ! First direction
+!!$   select case(quadrature_type1)
+!!$      case (QNS_GAUSS_LEGENDRE)
+!!$         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+2),ierr)
+!!$         qns%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
+!!$      case (QNS_GAUSS_LOBATTO)
+!!$         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
+!!$              'because the interface of that function is not good.'
+!!$   end select
+!!$
+!!$   select case(quadrature_type2)
+!!$      case (QNS_GAUSS_LEGENDRE)
+!!$         SLL_ALLOCATE(qns%gauss_pts2(2,spline_degree_eta2+2),ierr)
+!!$         qns%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
+!!$      case (QNS_GAUSS_LOBATTO)
+!!$         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
+!!$              'because the interface of that function is not good.'
+!!$
+!!$   end select
+!!$
+!!$
+!!$   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
+!!$       (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+!!$
+!!$      qns%total_num_splines_eta1 = num_cells_eta1 
+!!$      qns%total_num_splines_eta2 = num_cells_eta2
+!!$      knots1_size = 2*spline_degree_eta1+2
+!!$      knots2_size = 2*spline_degree_eta2+2
+!!$      vec_sz      = num_cells_eta1*num_cells_eta2
+!!$   else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
+!!$       (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
+!!$
+!!$      qns%total_num_splines_eta1 = num_cells_eta1 
+!!$      qns%total_num_splines_eta2 = num_cells_eta2 + &
+!!$                                   spline_degree_eta2 - 2
+!!$      knots1_size = 2*spline_degree_eta1+2
+!!$      knots2_size = 2*spline_degree_eta2+num_cells_eta2+1
+!!$      vec_sz      = num_cells_eta1*(num_cells_eta2+spline_degree_eta2)
+!!$   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
+!!$            (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+!!$
+!!$      qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
+!!$      qns%total_num_splines_eta2 = num_cells_eta2 
+!!$      knots1_size = 2*spline_degree_eta1+num_cells_eta1+1
+!!$      knots2_size = 2*spline_degree_eta2+2
+!!$      vec_sz      = (num_cells_eta1 + spline_degree_eta1)*num_cells_eta2
+!!$   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
+!!$       (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
+!!$
+!!$      qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
+!!$      qns%total_num_splines_eta2 = num_cells_eta2 + spline_degree_eta2 - 2
+!!$      knots1_size = 2*spline_degree_eta1 + num_cells_eta1+1
+!!$      knots2_size = 2*spline_degree_eta2 + num_cells_eta2+1
+!!$      vec_sz      = (num_cells_eta1 + spline_degree_eta1)*&
+!!$                    (num_cells_eta2 + spline_degree_eta2)
+!!$   end if
+!!$   solution_size = qns%total_num_splines_eta1*qns%total_num_splines_eta2
+!!$   SLL_ALLOCATE(qns%knots1(knots1_size),ierr)
+!!$   SLL_ALLOCATE(qns%knots2(knots2_size),ierr)
+!!$   SLL_ALLOCATE(qns%rho_vec(vec_sz),ierr)
+!!$   SLL_ALLOCATE(qns%phi_vec(solution_size),ierr)
+!!$   SLL_ALLOCATE(qns%tmp_rho_vec(solution_size),ierr)
+!!$   qns%rho_vec(:) = 0.0
+!!$   qns%phi_vec(:) = 0.0
+!!$
+!!$  ! print*, 'ok'
+!!$   call initialize_knots( &
+!!$        spline_degree_eta1, &
+!!$        num_cells_eta1, &
+!!$        eta1_min, &
+!!$        eta1_max, &
+!!$        bc_left, &
+!!$        bc_right, &
+!!$        qns%knots1 )
+!!$
+!!$  ! print*, 'ok3'
+!!$   call initialize_knots( &
+!!$        spline_degree_eta2, &
+!!$        num_cells_eta2, &
+!!$        eta2_min, &
+!!$        eta2_max, &
+!!$        bc_bottom, &
+!!$        bc_top, &
+!!$        qns%knots2 )
+!!$  ! print*, 'ok2'
+!!$   !print*, 'okok',qns%global_spline_indices
+!!$   call initconnectivity( &
+!!$        num_cells_eta1, &
+!!$        num_cells_eta2, &
+!!$        spline_degree_eta1, &
+!!$        spline_degree_eta2, &
+!!$        bc_left, &
+!!$        bc_right, &
+!!$        bc_bottom, &
+!!$        bc_top, &
+!!$        qns%local_spline_indices, &
+!!$        qns%global_spline_indices, &
+!!$        qns%local_to_global_spline_indices )
+!!$
+!!$  ! print*, 'ok1',size(qns%local_spline_indices,1),size(qns%local_spline_indices,2)
+!!$  ! print*, 'ok1',size(qns%local_to_global_spline_indices,1),size(qns%local_to_global_spline_indices,2)
+!!$  ! print*, 'okok',size(qns%global_spline_indices,1)
+!!$  ! print*,  solution_size,vec_sz,qns%total_num_splines_loc
+!!$  ! print*, 'heheh',  qns%local_to_global_spline_indices
+!!$    call create_CSR( &
+!!$        qns%csr_mat, &
+!!$        solution_size, &
+!!$        solution_size, &
+!!$        num_cells_eta1*num_cells_eta2, &
+!!$        qns%local_to_global_spline_indices, &
+!!$        qns%total_num_splines_loc, &
+!!$        qns%local_to_global_spline_indices, &
+!!$        qns%total_num_splines_loc )
   end function new_general_qn_solver
 
   subroutine delete_qns( qns )
-    type(general_coordinate_qn_solver), pointer :: qns
+    type(general_coordinate_qn_solver) :: qns
     sll_int32 :: ierr
-    SLL_DEALLOCATE(qns%knots1,ierr)
-    SLL_DEALLOCATE(qns%knots2,ierr)
+    ! it is not good to check some cases and not others, fix...
+    if(associated(qns%knots1)) then
+       SLL_DEALLOCATE(qns%knots1,ierr)
+    else
+       print *, 'delete qns, WARNING: knots1 array was not allocated.'
+    end if
+    if(associated(qns%knots2)) then
+       SLL_DEALLOCATE(qns%knots2,ierr)
+    else
+       print *, 'delete qns general coords, ', &
+            'WARNING: knots2 array was not allocated.'
+    end if
     SLL_DEALLOCATE(qns%gauss_pts1,ierr)
     SLL_DEALLOCATE(qns%gauss_pts2,ierr)
     SLL_DEALLOCATE(qns%global_spline_indices,ierr)
@@ -259,7 +466,7 @@ contains
     rho, &
     phi )
     
-    type(general_coordinate_qn_solver), pointer :: qns
+    type(general_coordinate_qn_solver) :: qns
     class(sll_scalar_field_2d_base_ptr), dimension(:,:), intent(in) :: &
          a_field_mat
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
@@ -632,7 +839,7 @@ contains
        K_a21_loc, &
        K_a22_loc )
     
-    type(general_coordinate_qn_solver), pointer  :: qns
+    type(general_coordinate_qn_solver)  :: qns
     sll_int32 :: cell_index
     sll_int32 :: cell_i
     sll_int32 :: cell_j
@@ -742,7 +949,7 @@ contains
   subroutine solve_linear_system( qns )
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    type(general_coordinate_qn_solver), pointer :: qns
+    type(general_coordinate_qn_solver) :: qns
     integer :: elt, elt1
     integer :: i,j
     sll_int32 :: bc_left
@@ -754,7 +961,6 @@ contains
     bc_right  = qns%bc_right
     bc_bottom = qns%bc_bottom
     bc_top    = qns%bc_top
-
 
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_DIRICHLET).and. (bc_top   == SLL_DIRICHLET) ) then

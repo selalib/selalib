@@ -19,16 +19,16 @@ program test_general_qns
 #define ETA2MIN  0.0_f64
 #define ETA2MAX  1.0_f64
 
-  type(sll_logical_mesh_2d), pointer          :: mesh_2d
+  type(sll_logical_mesh_2d), pointer                    :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
-  type(general_coordinate_qn_solver), pointer :: qns
-  type(arb_deg_2d_interpolator), target :: interp_2d
-  class(sll_interpolator_2d_base), pointer :: interp_2d_ptr
+  type(general_coordinate_qn_solver)                    :: qns
+  type(arb_deg_2d_interpolator), target                 :: interp_2d
+  class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
 !  class(sll_scalar_field_2d_analytic_alt), dimension(2,2) :: a_field_mat
-  type(sll_scalar_field_2d_base_ptr), dimension(2,2) :: a_field_mat
-  class(sll_scalar_field_2d_base), pointer    :: c_field
-  class(sll_scalar_field_2d_base), pointer    :: rho
-  type(sll_scalar_field_2d_discrete_alt), pointer    :: phi
+  type(sll_scalar_field_2d_base_ptr), dimension(2,2)    :: a_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: c_field
+  class(sll_scalar_field_2d_base), pointer              :: rho
+  type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   real(8), external :: func_zero
   real(8), external :: func_one
   real(8), external :: source_term_perper
@@ -52,15 +52,10 @@ program test_general_qns
   real(8), external :: sol_exacte_chgt_perdir  
   real(8), external :: sol_exacte_chgt_dirper
   
-  
-  
-
-  
+    
   !--------------------------------------------------------------------
-  
   !     first test case without chane of coordinates 
   !      periodic-periodic boundary conditions
-
   !--------------------------------------------------------------------
   
   print*, "---------------------"
@@ -181,7 +176,8 @@ program test_general_qns
 
   print *, 'initialized fields...'
 
-  qns => new_general_qn_solver( &
+  call initialize_general_qn_solver( &
+       qns, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
        NUM_CELLS1, &
@@ -377,7 +373,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   print *, 'a = ', qns%csr_mat%opr_a
-  qns => new_general_qn_solver( &
+  call initialize_general_qn_solver( &
+       qns, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
        NUM_CELLS1, &
@@ -572,7 +569,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
-  qns => new_general_qn_solver( &
+  call initialize_general_qn_solver( &
+       qns, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
        NUM_CELLS1, &
@@ -766,7 +764,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
-  qns => new_general_qn_solver( &
+  call initialize_general_qn_solver( &
+       qns, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
        NUM_CELLS1, &
@@ -1013,12 +1012,6 @@ program test_general_qns
 !!$  end do
 
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> origin/vp4d-simulation
   print *,'Average error in nodes (per-per) without change of coordinates='&
        ,acc/(npts1*npts2)
   print *,'Average error in nodes (per-dir) without change of coordinates='&
@@ -1028,11 +1021,6 @@ program test_general_qns
   print *,'Average error in nodes (dir-per) without change of coordinates='&
        ,acc3/(npts1*npts2)
   
-  ! delete things... 
-  call T%delete()
-  call phi%delete()
-  call delete(qns)
-
   print *, 'PASSED'
 end program test_general_qns
 

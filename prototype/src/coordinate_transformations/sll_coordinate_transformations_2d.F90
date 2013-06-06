@@ -404,7 +404,9 @@ contains
   subroutine delete_transformation_2d_analytic( transf )
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
     sll_int32 :: ierr
-    SLL_DEALLOCATE( transf%j_matrix, ierr )
+    if(associated(transf%j_matrix)) then
+       SLL_DEALLOCATE( transf%j_matrix, ierr )
+    end if
     nullify( transf%x1_func )
     nullify( transf%x2_func )
     nullify( transf%jacobian_func )
