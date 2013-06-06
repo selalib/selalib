@@ -287,13 +287,14 @@ contains
 
     ! poisson solver
     do k = 0,ntheta/2
-      ind_k=k
-      !do i=1,nr+1
-      if( ind_k .gt. ntheta/2 ) then
-        ind_k = ind_k - ntheta
+
+      if( k > ntheta/2 ) then
+        ind_k = k - ntheta
+      else
+        ind_k=k
       end if
+
       kval=real(ind_k,f64)
-      !kval=1.5
 
       do i=2,nr
         r=rmin+real(i-1,f64)*dr
