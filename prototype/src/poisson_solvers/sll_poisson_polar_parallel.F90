@@ -195,9 +195,9 @@ contains
       !kval=1.5
 
       do i=2,nr
-        r=rmin+real(i-1,f64)*dr
-        this%a(3*(i-1))=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-        this%a(3*(i-1)-1)=2.0_f64/dr**2+(kval/r)**2
+        r=rmin+(i-1)*dr
+        this%a(3*(i-1)  )=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+        this%a(3*(i-1)-1)= 2.0_f64/dr**2+(kval/r)**2
         this%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
 
         this%fk(i)=fft_get_mode(this%pfwd,this%f_fft(i,1:ntheta),k)!ind_k)          
