@@ -155,6 +155,7 @@ contains
 
     
     sll_real64,dimension(:,:),allocatable :: plotf2d
+    sll_real64 :: t
     ! volumes of the cells and surfaces of the faces
     sll_real64,dimension(:),allocatable :: volume,surface
     sll_int32,dimension(4)  :: global_indices
@@ -319,7 +320,7 @@ contains
 
    ! time loop
    t=0
-   do while(t.lt.tmax)
+   do while(t.lt.sim%tmax)
        
       
       ! mpi communications
@@ -338,7 +339,7 @@ contains
            MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
            MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
 
-      fstar=fn
+      sim%fstar_v3x1x2=sim%fn_v3x1x2
 
 !!$      ! loop on the directions
 !!$      do dir=1,3
@@ -346,23 +347,23 @@ contains
 !!$         do iface=1,facedir(dir)
 
 
-      ! counter for the face 
-      isurf=1
-      ! fluxes in the x1 direction
-      do k=1,loc_sz_x2
-         do l=1,loc_sz_x3
-            do j=1,loc_sz_x1
-               jp1=j+1
-               if (jp1.gt.loc_sz_x1) jp1=1
-               call fluxnum(fn(1,j,k,l),fn(1,jp1,k,l),flux)
-               surf=surface(isurf)
-               isurf=isurf+1
-               fstar(:,j,k,l)=fstar(:,j,k,l)-dt*surf/volume(j,k,l)*flux(:)
-               fstar(:,jp1,k,l)=fstar(:,jp1,k,l)+dt*surf/volume(jp1,k,l)*flux(:)
-            end do
-         end do
-      end do
-    end do
+!!$      ! counter for the face 
+!!$      isurf=1
+!!$      ! fluxes in the x1 direction
+!!$      do k=1,loc_sz_x2
+!!$         do l=1,loc_sz_x3
+!!$            do j=1,loc_sz_x1
+!!$               jp1=j+1
+!!$               if (jp1.gt.loc_sz_x1) jp1=1
+!!$               call fluxnum(fn(1,j,k,l),fn(1,jp1,k,l),flux)
+!!$               surf=surface(isurf)
+!!$               isurf=isurf+1
+!!$               fstar(:,j,k,l)=fstar(:,j,k,l)-dt*surf/volume(j,k,l)*flux(:)
+!!$               fstar(:,jp1,k,l)=fstar(:,jp1,k,l)+dt*surf/volume(jp1,k,l)*flux(:)
+!!$            end do
+!!$         end do
+!!$      end do
+   end do
 
     call compute_local_sizes_4d( sim%sequential_v3x1x2, &
          loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 

@@ -1,4 +1,4 @@
-module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
+module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -19,25 +19,25 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
-       sll_simulation_4d_drift_kinetic_cart_finite_volume
+       sll_simulation_4d_vp_eulerian_cartesian_finite_volume
      ! Parallel environment parameters
      sll_int32  :: world_size
      sll_int32  :: my_rank
      sll_int32  :: power2 ! 2^power2 = number of processes available
      ! Processor mesh sizes
-     sll_int32  :: nproc_v3  ! only processor vor the v direction
+     sll_int32  :: nproc_v1  
+     sll_int32  :: nproc_v2
      sll_int32  :: nproc_x1
      sll_int32  :: nproc_x2
-     sll_int32  :: nproc_x3
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_real64 :: tmax
      sll_int32  :: num_iterations
      ! Mesh parameters
-     sll_int32  :: nc_v3  ! velocity nodes
+     sll_int32  :: nc_v1  ! velocity nodes
+     sll_int32  :: nc_v2
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
-     sll_int32  :: nc_x3
      ! for initializers
      type(sll_logical_mesh_4d), pointer    :: mesh4d
      type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
@@ -47,32 +47,32 @@ module sll_simulation_4d_drift_kinetic_cartesian_finite_volume
 
      ! distribution functions at time steps n, star and n+1 
      ! communications are needed only in the x3 direction
-     sll_real64, dimension(:,:,:,:), pointer     :: fn_v3x1x2
-     sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v3x1x2
-     sll_real64, dimension(:,:,:,:), pointer     :: fstar_v3x1x2
+     sll_real64, dimension(:,:,:,:), pointer     :: fn_v1v2x1
+     sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2x1
+     sll_real64, dimension(:,:,:,:), pointer     :: fstar_v1v2x1
      ! charge density
-     sll_real64, dimension(:,:,:), allocatable     :: rho_x1x2
+     sll_real64, dimension(:,:,:), allocatable     :: rho_x1,Ex_x1,Ey_x1
      ! potential 
-     sll_real64, dimension(:,:,:), allocatable     :: phi_x1x2
+     sll_real64, dimension(:,:,:), allocatable     :: phi_x1
 
-     type(layout_4d),pointer :: sequential_v3x1x2
-     type(layout_3d),pointer :: rho_seq_x1x2,phi_seq_x1x2
+     type(layout_4d),pointer :: sequential_v1v2x1
+     type(layout_3d),pointer :: phi_seq_x1
      
    contains
-     procedure, pass(sim) :: run => run_dk_cart
-     procedure, pass(sim) :: init_from_file => init_dk_cart
+     procedure, pass(sim) :: run => run_vp_cart
+     procedure, pass(sim) :: init_from_file => init_vp_cart
     
-  end type sll_simulation_4d_drift_kinetic_cart_finite_volume
+  end type sll_simulation_4d_vp_eulerian_cartesian_finite_volume
 
   interface delete
-     module procedure delete_dk_cart
+     module procedure delete_vp_cart
   end interface delete
 
 contains
 
-  subroutine init_dk_cart( sim, filename )
+  subroutine init_vp_cart( sim, filename )
     intrinsic :: trim
-    class(sll_simulation_4d_drift_kinetic_cart_finite_volume), intent(inout) :: sim
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
     sll_int32             :: IO_stat
     sll_real64            :: dt
@@ -89,7 +89,7 @@ contains
     ! xmin, xmax and also for the distribution function initializer.
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
-       print *, 'init_dk_cart() failed to open file ', filename
+       print *, 'init_vp_cart() failed to open file ', filename
        STOP
     end if
     read(input_file, sim_params)
@@ -104,34 +104,34 @@ contains
     !sim%nc_x2 = num_cells_x2
     !sim%nc_x3 = num_cells_x3
     !sim%nc_x4 = num_cells_x4
-  end subroutine init_dk_cart
+  end subroutine init_vp_cart
 
 
-  subroutine initialize_dk4d( &
+  subroutine initialize_vp4d( &
    sim, &
    mesh4d, &
    init_func, &
    params )
 
-   type(sll_simulation_4d_drift_kinetic_cart_finite_volume), intent(inout)     :: sim
+   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout)     :: sim
    type(sll_logical_mesh_4d), pointer                    :: mesh4d
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
    sim%mesh4d  => mesh4d
    sim%init_func => init_func
    sim%params    => params
- end subroutine initialize_dk4d
+ end subroutine initialize_vp4d
 
 
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here
   ! directly, but this should be cleaned up.
-  subroutine run_dk_cart(sim)
-    class(sll_simulation_4d_drift_kinetic_cart_finite_volume), intent(inout) :: sim
-    sll_int32  :: loc_sz_v3
+  subroutine run_vp_cart(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    sll_int32  :: loc_sz_v1
+    sll_int32  :: loc_sz_v2
     sll_int32  :: loc_sz_x1
     sll_int32  :: loc_sz_x2
-    sll_int32  :: loc_sz_x3
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: k
@@ -141,11 +141,10 @@ contains
     sll_real64 :: dv
     sll_int32  :: ierr
     sll_int32  :: itime
-    sll_int32  :: nc_v3
+    sll_int32  :: nc_v1
+    sll_int32  :: nc_v2
     sll_int32  :: nc_x1
     sll_int32  :: nc_x2
-    sll_int32  :: nc_x3
-    sll_int32,dimension(3) :: jdir,kdir,ldir
     sll_int32  :: ranktop
     sll_int32  :: rankbottom
     sll_int32  :: message_id
@@ -155,6 +154,7 @@ contains
 
     
     sll_real64,dimension(:,:),allocatable :: plotf2d
+    sll_real64 :: t
     ! volumes of the cells and surfaces of the faces
     sll_real64,dimension(:),allocatable :: volume,surface
     sll_int32,dimension(4)  :: global_indices
@@ -163,74 +163,60 @@ contains
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)  
 
     ! allocate the layouts...
-    sim%sequential_v3x1x2  => new_layout_4D( sll_world_collective )
-    sim%rho_seq_x1x2       => new_layout_3D( sll_world_collective )
-    sim%phi_seq_x1x2       => new_layout_3D( sll_world_collective )
+    sim%sequential_v1v2x1  => new_layout_4D( sll_world_collective )
+    sim%phi_seq_x1       => new_layout_2D( sll_world_collective )
 
-    nc_v3 = sim%mesh4d%num_cells1
-    nc_x1 = sim%mesh4d%num_cells2   
-    nc_x2 = sim%mesh4d%num_cells3   
-    nc_x3 = sim%mesh4d%num_cells4   
+    nc_v1 = sim%mesh4d%num_cells1
+    nc_v2 = sim%mesh4d%num_cells2   
+    nc_x1 = sim%mesh4d%num_cells3   
+    nc_x2 = sim%mesh4d%num_cells4   
 
-    sim%nproc_v3 = 1
+    sim%nproc_v1 = 1
+    sim%nproc_v2 = 1
     sim%nproc_x1 = 1
-    sim%nproc_x2 = 1
-    sim%nproc_x3 = sim%world_size
+    sim%nproc_x2 = sim%world_size
     
     ! init the layout for the distribution function
     ! the mesh is split only in the x3 direction
     call initialize_layout_with_distributed_4D_array( &
-         nc_v3, &
+         nc_v1, &
+         nc_v2, &
          nc_x1, &
          nc_x2, &
-         nc_x3, &
-         sim%nproc_v3, &
+         sim%nproc_v1, &
+         sim%nproc_v2, &
          sim%nproc_x1, &
          sim%nproc_x2, &
-         sim%nproc_x3, &
-         sim%sequential_v3x1x2)
+         sim%sequential_v1v2x1)
 
-    ! charge density layout
-    call initialize_layout_with_distributed_3D_array( &
-         nc_x1, &
-         nc_x2, &
-         nc_x3, &
-         sim%nproc_x1, &
-         sim%nproc_x2, &
-         sim%nproc_x3, &
-         sim%rho_seq_x1x2)
     
     ! potential layout
-    call initialize_layout_with_distributed_3D_array( &
+    call initialize_layout_with_distributed_2D_array( &
          nc_x1, &
          nc_x2, &
-         nc_x3, &
          sim%nproc_x1, &
          sim%nproc_x2, &
-         sim%nproc_x3, &
-         sim%phi_seq_x1x2)
+         sim%phi_seq_x1)
     
     
-    call compute_local_sizes_3d( sim%rho_seq_x1x2, loc_sz_x1, loc_sz_x2, &
-         loc_sz_x3)
-
+    call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! iz=0 corresponds to the mean values of rho and phi 
-    SLL_ALLOCATE(sim%rho_x1x2(loc_sz_x1,loc_sz_x2,0:loc_sz_x3),ierr)
-    SLL_ALLOCATE(sim%phi_x1x2(loc_sz_x1,loc_sz_x2,0:loc_sz_x3),ierr)
+    SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,0:loc_sz_x2+1),ierr)
 
        
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes.
-    call compute_local_sizes_4d( sim%sequential_v3x1x2, &
-         loc_sz_v3, &
+    call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+         loc_sz_v1, &
+         loc_sz_v2, &
          loc_sz_x1, &
-         loc_sz_x2, &
-         loc_sz_x3 )
+         loc_sz_x2 )
 
     ! iz=0 and iz=loc_sz_x3+1 correspond to ghost cells.
-    SLL_ALLOCATE(sim%fn_v3x1x2(loc_sz_v3,loc_sz_x1,loc_sz_x2,0:loc_sz_x3+1),ierr)
-    SLL_ALLOCATE(sim%fnp1_v3x1x2(loc_sz_v3,loc_sz_x1,loc_sz_x2,0:loc_sz_x3+1),ierr)
-    SLL_ALLOCATE(sim%fstar_v3x1x2(loc_sz_v3,loc_sz_x1,loc_sz_x2,0:loc_sz_x3+1),ierr)
+    SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
+    SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
+    SLL_ALLOCATE(sim%fstar_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     
     
     
@@ -238,16 +224,16 @@ contains
 
     ! initialize here the distribution function
 
-    ! the function is passed by the user when the init_dk subroutine is called.
+    ! the function is passed by the user when the init_vp subroutine is called.
     ! The routine sll_4d_parallel_array_initializer_cartesian is in 
     ! src/parallal_array_initializers/sll_parallel_array_initializer_module.F90
     ! the particular initializer is in
     ! parallel_array_initializers/sll_common_array_initializers_module.F90
 
     call sll_4d_parallel_array_initializer_cartesian( &
-         sim%sequential_v3x1x2, &
+         sim%sequential_v1v2x1, &
          sim%mesh4d, &
-         sim%fn_v3x1x2(:,:,:,1:loc_sz_x3), &
+         sim%fn_v1v2x1(:,:,:,1:loc_sz_x3), &
          sim%init_func, &
          sim%params)
 
@@ -287,28 +273,25 @@ contains
     rankbottom=sim%my_rank-1
     if (rankbottom.lt.0) rankbottom=sim%world_size-1
     message_id=1
-    datasize=loc_sz_v3*loc_sz_x1*loc_sz_x2
+    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
     tagtop=sim%my_rank
     tagbottom=ranktop
 
 
     ! init the volume and surface arrays
-    allocate(volume(loc_sz_x1*loc_sz_x2*loc_sz_x3))
-    allocate(surface(3*loc_sz_x1*loc_sz_x2*loc_sz_x3))
+    allocate(volume(loc_sz_x1*loc_sz_x2))
+    allocate(surface(2*loc_sz_x1*loc_sz_x2))
     
 
     ! simple computation
     ! to be generalized with generic transformation...
-    volume=sim%mesh4d%delta_eta2 * &
-         sim%mesh4d%delta_eta3 * &
+    volume=sim%mesh4d%delta_eta3 * &
          sim%mesh4d%delta_eta4 
 
-    surface(1:loc_sz_x1*loc_sz_x2*loc_sz_x3)= &
-         sim%mesh4d%delta_eta3*sim%mesh4d%delta_eta4
-   surface(loc_sz_x1*loc_sz_x2*loc_sz_x3+1:2*loc_sz_x1*loc_sz_x2*loc_sz_x3)= &
-         sim%mesh4d%delta_eta2*sim%mesh4d%delta_eta4
-   surface(2*loc_sz_x1*loc_sz_x2*loc_sz_x3+1:3*loc_sz_x1*loc_sz_x2*loc_sz_x3)= &
-         sim%mesh4d%delta_eta2*sim%mesh4d%delta_eta3
+    surface(1:loc_sz_x1*loc_sz_x2)= &
+         sim%mesh4d%delta_eta3
+    surface(loc_sz_x1*loc_sz_x2+1:2*loc_sz_x1*loc_sz_x2)= &
+         sim%mesh4d%delta_eta4
 
 
    ! face and normal directions
@@ -319,7 +302,7 @@ contains
 
    ! time loop
    t=0
-   do while(t.lt.tmax)
+   do while(t.lt.sim%tmax)
        
       
       ! mpi communications
@@ -338,7 +321,7 @@ contains
            MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
            MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
 
-      fstar=fn
+      sim%fstar_v3x1x2=sim%fn_v3x1x2
 
 !!$      ! loop on the directions
 !!$      do dir=1,3
@@ -346,23 +329,23 @@ contains
 !!$         do iface=1,facedir(dir)
 
 
-      ! counter for the face 
-      isurf=1
-      ! fluxes in the x1 direction
-      do k=1,loc_sz_x2
-         do l=1,loc_sz_x3
-            do j=1,loc_sz_x1
-               jp1=j+1
-               if (jp1.gt.loc_sz_x1) jp1=1
-               call fluxnum(fn(1,j,k,l),fn(1,jp1,k,l),flux)
-               surf=surface(isurf)
-               isurf=isurf+1
-               fstar(:,j,k,l)=fstar(:,j,k,l)-dt*surf/volume(j,k,l)*flux(:)
-               fstar(:,jp1,k,l)=fstar(:,jp1,k,l)+dt*surf/volume(jp1,k,l)*flux(:)
-            end do
-         end do
-      end do
-    end do
+!!$      ! counter for the face 
+!!$      isurf=1
+!!$      ! fluxes in the x1 direction
+!!$      do k=1,loc_sz_x2
+!!$         do l=1,loc_sz_x3
+!!$            do j=1,loc_sz_x1
+!!$               jp1=j+1
+!!$               if (jp1.gt.loc_sz_x1) jp1=1
+!!$               call fluxnum(fn(1,j,k,l),fn(1,jp1,k,l),flux)
+!!$               surf=surface(isurf)
+!!$               isurf=isurf+1
+!!$               fstar(:,j,k,l)=fstar(:,j,k,l)-dt*surf/volume(j,k,l)*flux(:)
+!!$               fstar(:,jp1,k,l)=fstar(:,jp1,k,l)+dt*surf/volume(jp1,k,l)*flux(:)
+!!$            end do
+!!$         end do
+!!$      end do
+   end do
 
     call compute_local_sizes_4d( sim%sequential_v3x1x2, &
          loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 
@@ -388,10 +371,10 @@ contains
          ierr)
     
 
-  end subroutine run_dk_cart
+  end subroutine run_vp_cart
 
-  subroutine delete_dk_cart( sim )
-    class(sll_simulation_4d_drift_kinetic_cart_finite_volume) :: sim
+  subroutine delete_vp_cart( sim )
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
     sll_int32 :: ierr
     SLL_DEALLOCATE( sim%fn_v3x1x2, ierr )
     SLL_DEALLOCATE( sim%fnp1_v3x1x2, ierr )
@@ -401,7 +384,7 @@ contains
     call delete( sim%sequential_v3x1x2 )
     call delete( sim%rho_seq_x1x2 )
     call delete( sim%phi_seq_x1x2 )
-  end subroutine delete_dk_cart
+  end subroutine delete_vp_cart
 
   ! we put the reduction functions here for now, since we are only using
   ! simple data for the distribution function. This should go elsewhere.
@@ -622,4 +605,4 @@ contains
 !!$  
 !!$  end subroutine plot_fields
 
-end module  sll_simulation_4d_drift_kinetic_cartesian_finite_volume
+end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
