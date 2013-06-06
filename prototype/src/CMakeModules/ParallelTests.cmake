@@ -67,9 +67,11 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
-   ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
+   ADD_MPI_TEST(dk4d_sim_cartesian test_4d_drift_kinetic_cartesian_finite_volume ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+   ADD_MPI_TEST(vp4d_euler_fv test_4d_vp_eulerian_cartesian_finite_volume ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES(vp4d_euler_fv PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    IF(PROCESSOR_COUNT GREATER 1)
 
