@@ -119,7 +119,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(ode_solvers)
       ADD_SUBDIRECTORY(distribution_function)
       ADD_SUBDIRECTORY(advection_field)
-      #ADD_SUBDIRECTORY(LinRood)
+      ADD_SUBDIRECTORY(LinRood)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
       ADD_SUBDIRECTORY(BSL)
@@ -134,7 +134,6 @@ IF(NOT SLL_BUILD_PACKAGE)
       ENDIF(SUITESPARSE_FOUND AND 0)
    
    ENDIF(NOT STDF95)
-
 
    IF(FORTRANCL_ENABLED)
 
