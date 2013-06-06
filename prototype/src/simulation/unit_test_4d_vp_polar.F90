@@ -28,25 +28,6 @@ program vlasov_poisson_4d_polar
 
   call sll_boot_collective() ! Wrap this up somewhere else
 
-  ! In this test, the name of the file to open is provided as a command line
-  ! argument.
-  call getarg(1, filename)
-  filename_local = trim(filename)
-
-  ! To initialize the simulation type, there should be two options. One is to
-  ! initialize from a file:
-  
-  call simulation%init_from_file(filename_local)
-  
-  ! The second is to initialize 'manually' with a routine whose parameters
-  ! allow to configure the different types of objects in the simulation. For
-  ! instance, the type of coordinate mapping. Here we use both methods while
-  ! we develop and sort out the interfaces.
-  ! Eventually, when using the module, one should only need to use one 
-  ! way to initialize the simulation object, in development we are using them
-  ! both...
-
-! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
 #define NPTS2 32
 #define NPTS3 32
