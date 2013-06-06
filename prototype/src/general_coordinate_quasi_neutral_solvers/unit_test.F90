@@ -1013,9 +1013,12 @@ program test_general_qns
 !!$  end do
 
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> origin/vp4d-simulation
   print *,'Average error in nodes (per-per) without change of coordinates='&
        ,acc/(npts1*npts2)
   print *,'Average error in nodes (per-dir) without change of coordinates='&
