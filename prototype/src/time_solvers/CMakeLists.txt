@@ -22,7 +22,8 @@ TARGET_LINK_LIBRARIES(test_time_splitting sll_time_splitting
                                           sll_utilities	
 	                                       sll_memory
 	                                       sll_assertion
-	                                       sll_working_precision)
+	                                       sll_working_precision
+        ${HDF5_LIBRARIES})
 
 
 ADD_EXECUTABLE(vp1d_bsl_time_split vp1d_bsl_time_split.F90)
@@ -41,4 +42,5 @@ TARGET_LINK_LIBRARIES(vp1d_bsl_time_split sll_mapped_meshes
                                           sll_working_precision
                                           sll_utilities
                                           sll_poisson_solvers
-                                          dfftpack)
+                                          dfftpack
+        ${HDF5_LIBRARIES})
