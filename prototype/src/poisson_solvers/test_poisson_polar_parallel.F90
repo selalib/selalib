@@ -5,6 +5,8 @@ program test_poisson_polar_parallel
 #include "sll_constants.h"
 
 use sll_poisson_polar_parallel
+use sll_collective
+use sll_remapper
 
 implicit none
 
@@ -17,15 +19,53 @@ sll_real64, dimension(:),   allocatable :: r
 sll_real64, dimension(:),   allocatable :: theta
 
 sll_int32  :: i, j
-sll_int32  :: nr
-sll_int32  :: ntheta
+sll_int32  :: nr, nc_r
+sll_int32  :: ntheta, nc_theta
 sll_real64 :: r_min, r_max, delta_r
 sll_real64 :: theta_min, theta_max, delta_theta
 sll_int32  :: error
 
 sll_int32, parameter  :: n = 4
 
-print*,'Testing the Poisson solver in 2D, polar coordinate'
+type(layout_2D), pointer            :: layout_r
+type(layout_2D), pointer            :: layout_theta
+sll_int32, dimension(2)             :: global
+sll_int32  :: psize, prank, e, nproc_r, nproc_theta
+
+!Boot parallel environment
+call sll_boot_collective()
+
+psize = sll_get_collective_size(sll_world_collective)
+prank = sll_get_collective_rank(sll_world_collective)
+
+e      = int(log(real(psize))/log(2.))
+print *, 'running on ', 2**e, 'processes'
+
+! Layout and local sizes for FFTs in x-direction
+layout_r     => new_layout_2D( sll_world_collective )
+layout_theta => new_layout_2D( sll_world_collective )
+nproc_r     = 2**e
+nproc_theta = 2**e
+
+nc_r = 64
+nc_theta = 128
+
+call initialize_layout_with_distributed_2D_array( nc_r,     &
+                                                  nc_theta, &
+                                                    1,      &
+                                               nproc_r,     &
+                                              layout_r )
+
+call initialize_layout_with_distributed_2D_array( nc_r,     &
+                                                  nc_theta, &
+                                               nproc_theta, &
+                                                    1,      &
+                                              layout_theta )
+call flush(6)
+call sll_view_lims_2D(layout_r)
+call flush(6)
+call sll_view_lims_2D(layout_theta)
+call flush(6)
 
 r_min   = 1.0_f64
 r_max   = 2.0_f64
@@ -33,8 +73,8 @@ r_max   = 2.0_f64
 theta_min  = 0.0_f64
 theta_max  = 2.0_f64 * sll_pi
 
-nr     = 33
-ntheta = 129
+nr     = nc_r+1
+ntheta = nc_theta+1
 delta_r     = (r_max-r_min)/real(nr-1,f64)
 delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
 
@@ -59,7 +99,8 @@ do j=1,ntheta
    end do
 end do
 
-call initialize( poisson,r_min,r_max,nr-1,ntheta-1, DIRICHLET, DIRICHLET)
+call initialize( poisson,layout_r, layout_theta, &
+                 r_min,r_max,nr-1,ntheta-1, DIRICHLET, DIRICHLET)
 
 do i =1,nr
    do j=1,ntheta
