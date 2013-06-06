@@ -273,10 +273,10 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_remap
                        sll_collective
                        sll_constants
-                       sll_file_io_parallel
                        sll_utilities
                        sll_coordinate_transformations
                        sll_logical_meshes
+                       sll_file_io_parallel
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
