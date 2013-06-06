@@ -17,16 +17,15 @@ program vlasov_poisson_4d_polar
   use sll_common_array_initializers_module
   implicit none
 
-  character(len=256) :: filename
-  character(len=256) :: filename_local
-  type(sll_simulation_4d_vp_polar)      :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mx
-  type(sll_logical_mesh_2d), pointer      :: mv
-  class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
-  sll_real64, dimension(1:5) :: landau_params
-  sll_real64, dimension(1:6) :: gaussian_params
+  character(len=256)                  :: filename
+  character(len=256)                  :: filename_local
+  type(sll_simulation_4d_vp_polar)    :: simulation
+  type(sll_logical_mesh_2d), pointer  :: mx
+  type(sll_logical_mesh_2d), pointer  :: mv
+  sll_real64                          :: params(6)
 
-  print *, 'Booting parallel environment...'
+  class(sll_coordinate_transformation_2d_base), pointer :: transformation
+
   call sll_boot_collective() ! Wrap this up somewhere else
 
   ! In this test, the name of the file to open is provided as a command line
@@ -64,74 +63,44 @@ program vlasov_poisson_4d_polar
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
 
   ! coordinate transformation associated with space coordinates
-  transformation_x => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
+  transformation => new_coordinate_transformation_2d_analytic( &
+       "analytic_polar_transformation", &
        mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22 )
-
-!  transformation_x => new_coordinate_transformation_2d_analytic( &
-!       "analytic_sinprod_transformation", &
-!       mx, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22 )
-
-  ! define the values of the parameters for the landau initializer
-
-!!$  gaussian_params(1) = 2.0*sll_pi !xc
-!!$  gaussian_params(2) = 2.0*sll_pi !yc
-!!$  gaussian_params(3) = 0.0        !vxc
-!!$  gaussian_params(4) = 0.0        !vyc
-!!$  gaussian_params(5) = 1.0        !vxc
-!!$  gaussian_params(6) = 0.0        !vyc
-
-  landau_params(1) = 0.0      !eta1_min
-  landau_params(2) = mx%eta1_max
-  landau_params(3) = 0.0      !eta2_min
-  landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.05!0.01     !eps
+       polar_x1, &
+       polar_x2, &
+       polar_jac11, &
+       polar_jac12, &
+       polar_jac21, &
+       polar_jac22 )
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_polar( &
        simulation, &
        mx, &
        mv, &
-       transformation_x, &
-       sll_landau_initializer_4d, &
-       landau_params )
+       transformation, &
+       sll_periodic_gaussian_initializer_4d, &
+       params )
 
-!  ! define the values of the parameters for the landau initializer
-!  gaussian_params(1) = 3.0*sll_pi !xc
-!  gaussian_params(2) = 2.0*sll_pi !yc
-!  gaussian_params(3) = 0.0        !vxc
-!  gaussian_params(4) = 0.0        !vyc
-!
-!  ! initialize simulation object with the above parameters
-!  call initialize_vp4d_general( &
-!       simulation, &
-!       mx, &
-!       mv, &
-!       transformation_x, &
-!       sll_gaussian_initializer_4d, &
-!       gaussian_params )
-  print *, ' f initialized '
+!  function defined in  parallel_array_initializers/sll_common_array_initializers_module.F90
+!  sll_periodic_gaussian_initializer_4d(x,y,vx,xy) = 
+!  val = alpha*exp(-0.5_f64*((x -xc )**2+(y -yc )**2)) + &
+!        beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
+
+  params(1) = 0.5 !xc
+  params(2) = 0.0 !yc
+  params(3) = 0.0 !vxc
+  params(4) = 0.0 !vyc
+  params(5) = 1.0 !alpha
+  params(6) = 0.0 !beta
+
 
   call simulation%run( )
   call delete(simulation)
-  print *, 'reached end of vp4d test'
+
   print *, 'PASSED'
 
   call sll_halt_collective()
 
 
 end program vlasov_poisson_4d_polar
-
-
