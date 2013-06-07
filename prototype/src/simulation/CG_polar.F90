@@ -12,7 +12,7 @@ program cg_polar
   implicit none
 
   type(sll_SL_polar), pointer :: plan_sl
-  type(time_mark)   , pointer :: t1,t2,t3
+  type(sll_time_mark)  :: t1,t2,t3
   sll_real64, dimension (:,:), allocatable :: div,f,fp1,g,phi_ref
   sll_real64, dimension (:)  , allocatable :: int_r
   sll_int32  :: i, j, step, visustep, hh, min, ss
@@ -28,10 +28,6 @@ program cg_polar
   !used for testing poisson with fcase=2
   sll_real64 :: c1, c2, c3, k1, k2, k3, x, y
   sll_real64 :: c1_mode, c2_mode, c3_mode, k1_mode, k2_mode, k3_mode
-
-  t1 => new_time_mark()
-  t2 => new_time_mark()
-  t3 => new_time_mark()
 
   !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
@@ -455,11 +451,11 @@ program cg_polar
     real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
     aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
-  t1 => start_time_mark(t1)
+  call set_time_mark(t1)
 
   do step = 1,nb_step
     if (step==101) then
-      t2 => start_time_mark(t2)
+      call set_time_mark(t2)
       temps = time_elapsed_between(t1,t2)
       temps = temps/100*real(nb_step,f32)
       hh    = floor(temps/3600.0d0)
@@ -589,7 +585,7 @@ program cg_polar
   write(23,*)' '
   close(23)
 
-  t3 => start_time_mark(t3)
+  call set_time_mark(t3)
   temps = time_elapsed_between(t1,t3)
   hh    = floor(temps/3600.0d0)
   min   = floor((temps-3600.0d0*real(hh))/60.0d0)
@@ -609,9 +605,6 @@ program cg_polar
   SLL_DEALLOCATE_ARRAY(f,i)
   SLL_DEALLOCATE_ARRAY(fp1,i)
   SLL_DEALLOCATE_ARRAY(g,i)
-  t1 => delete_time_mark(t1)
-  t2 => delete_time_mark(t2)
-  t3 => delete_time_mark(t3)
   call delete_SL_polar(plan_sl)
 
 
