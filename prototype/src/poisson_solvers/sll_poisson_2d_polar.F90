@@ -288,21 +288,17 @@ contains
     ! poisson solver
     do k = 0,ntheta/2
 
-      if( k > ntheta/2 ) then
-        ind_k = k - ntheta
-      else
-        ind_k=k
-      end if
+      ind_k=k
 
       kval=real(ind_k,f64)
 
       do i=2,nr
-        r=rmin+real(i-1,f64)*dr
-        plan%a(3*(i-1))=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-        plan%a(3*(i-1)-1)=2.0_f64/dr**2+(kval/r)**2
-        plan%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+        r = rmin + (i-1)*dr
+        plan%a(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2*dr*r)
+        plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2
+        plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r)
 
-        plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)!ind_k)          
+        plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)
       enddo
 
       plan%phik=0.0_f64
@@ -375,7 +371,7 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)!ind_k)
+        call fft_set_mode(plan%pinv,phi(i,1:ntheta),plan%phik(i),k)
       end do
     end do
 
@@ -428,12 +424,7 @@ contains
     ! poisson solver
     do k = 0,ntheta/2
       ind_k=k
-      !do i=1,nr+1
-      if( ind_k .gt. ntheta/2 ) then
-        ind_k = ind_k - ntheta
-      end if
       kval=real(ind_k,f64)
-      !kval=1.5
 
       do i=2,nr
         r=rmin+real(i-1,f64)*dr
