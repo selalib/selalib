@@ -169,7 +169,7 @@ contains
     sll_int32  :: nr, ntheta,bc(2)
 
     sll_real64 :: r
-    sll_int32  :: i, k, ind_k
+    sll_int32  :: i, k
     sll_real64 :: kval
 
     nr     = this%nr
@@ -184,57 +184,45 @@ contains
       call fft_apply_plan(this%pfwd,this%f_fft(i,1:ntheta),this%f_fft(i,1:ntheta))
     end do
 
-    ! poisson solver
     do k = 0,ntheta/2
-      ind_k=k
-      !do i=1,nr+1
-      if( ind_k .gt. ntheta/2 ) then
-        ind_k = ind_k - ntheta
-      end if
-      kval=real(ind_k,f64)
-      !kval=1.5
+
+      kval=real(k,f64)
 
       do i=2,nr
         r=rmin+(i-1)*dr
         this%a(3*(i-1)  )=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
         this%a(3*(i-1)-1)= 2.0_f64/dr**2+(kval/r)**2
         this%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-
-        this%fk(i)=fft_get_mode(this%pfwd,this%f_fft(i,1:ntheta),k)!ind_k)          
+        this%fk(i)=fft_get_mode(this%pfwd,this%f_fft(i,1:ntheta),k)
       enddo
 
       this%phik=0.0_f64
 
-      !boundary condition at rmin
-      if(bc(1)==DIRICHLET)then !Dirichlet
+      if(bc(1)==DIRICHLET) then
         this%a(1)=0.0_f64
-      endif
-      if(bc(1)==NEUMANN)then
-        this%a(2)=this%a(2)+this%a(1) !Neumann
+      else if(bc(1)==NEUMANN) then
+        this%a(2)=this%a(2)+this%a(1) 
         this%a(1)=0._f64
-      endif
-      if(bc(1)==NEUMANN_MODE0)then 
-        if(k==0)then!Neumann for mode zero
+      else if(bc(1)==NEUMANN_MODE0)then 
+        if(k==0) then
           this%a(2)=this%a(2)+this%a(1)
           this%a(1)=0._f64
-        else !Dirichlet for other modes
+        else 
           this%a(1)=0._f64
         endif
       endif
 
       !boundary condition at rmax
-      if(bc(2)==DIRICHLET)then !Dirichlet
+      if(bc(2)==DIRICHLET) then
         this%a(3*(nr-1))=0.0_f64
-      endif
-      if(bc(2)==NEUMANN)then
-        this%a(3*(nr-1)-1)=this%a(3*(nr-1)-1)+this%a(3*(nr-1)) !Neumann
+      else if(bc(2)==NEUMANN)then
+        this%a(3*(nr-1)-1)=this%a(3*(nr-1)-1)+this%a(3*(nr-1)) 
         this%a(3*(nr-1))=0.0_f64
-      endif
-      if(bc(2)==NEUMANN_MODE0)then 
-        if(k==0)then!Neumann for mode zero
+      else if(bc(2)==NEUMANN_MODE0)then 
+        if(k==0)then
           this%a(3*(nr-1)-1)=this%a(3*(nr-1)-1)+this%a(3*(nr-1))
           this%a(3*(nr-1))=0.0_f64
-        else !Dirichlet for other modes
+        else 
           this%a(3*(nr-1))=0.0_f64
         endif
       endif
@@ -243,41 +231,37 @@ contains
       call solve_cyclic_tridiag(this%cts,this%ipiv,this%fk(2:nr),nr-1,this%phik(2:nr))
 
       !boundary condition at rmin
-      if(bc(1)==1)then !Dirichlet
+      if(bc(1)==1)then
         this%phik(1)=0.0_f64
-      endif
-      if(bc(1)==2)then
-        this%phik(1)=this%phik(2) !Neumann
-      endif
-      if(bc(1)==3)then 
-        if(k==0)then!Neumann for mode zero
+      else if(bc(1)==2)then
+        this%phik(1)=this%phik(2) 
+      else if(bc(1)==3)then 
+        if(k==0)then
           this%phik(1)=this%phik(2)
-        else !Dirichlet for other modes
+        else 
           this%phik(1)=0.0_f64
         endif
       endif
 
       !boundary condition at rmax
-      if(bc(2)==1)then !Dirichlet
+      if(bc(2)==1)then
         this%phik(nr+1)=0.0_f64
-      endif
-      if(bc(2)==2)then
-        this%phik(nr+1)=this%phik(nr) !Neumann
-      endif
-      if(bc(2)==3)then 
-        if(k==0)then!Neumann for mode zero
+      else if(bc(2)==2)then
+        this%phik(nr+1)=this%phik(nr)
+      else if(bc(2)==3)then 
+        if(k==0)then
           this%phik(nr+1)=this%phik(nr)
-        else !Dirichlet for other modes
+        else 
           this%phik(nr+1)=0.0_f64
         endif
       endif
 
       do i=1,nr+1
-        call fft_set_mode(this%pinv,phi(i,1:ntheta),this%phik(i),k)!ind_k)
+        call fft_set_mode(this%pinv,phi(i,1:ntheta),this%phik(i),k)
       end do
+
     end do
 
-    ! FFT INVERSE
     do i=1,nr+1
       call fft_apply_plan(this%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
