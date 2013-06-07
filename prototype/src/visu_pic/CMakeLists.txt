@@ -15,4 +15,6 @@ TARGET_LINK_LIBRARIES(test_visu_pic sll_visu_pic
                                     sll_memory
                                     sll_assertion
                                     sll_working_precision
-                                    sll_utilities)
+                                    sll_utilities
+                                    ${HDF5_LIBRARIES}
+)
