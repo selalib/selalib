@@ -9,6 +9,7 @@ module sll_general_coordinate_qn_solver_module
   use connectivity_module
   use sll_knots
   use gauss_legendre_integration
+  use sll_timer
   implicit none
 
   type :: general_coordinate_qn_solver
@@ -293,143 +294,6 @@ contains ! *******************************************************************
    eta1_max, &
    eta2_min, &
    eta2_max )
-
-!!$   qns%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
-!!$   ! The total number of splines in a single direction is given by
-!!$   ! num_cells + spline_degree
-!!$   num_splines1 = num_cells_eta1 + spline_degree_eta1
-!!$   num_splines2 = num_cells_eta2 + spline_degree_eta2
-!!$   SLL_ALLOCATE(qns%global_spline_indices(num_splines1*num_splines2),ierr)
-!!$   qns%global_spline_indices(:) = 0
-!!$   SLL_ALLOCATE(qns%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-!!$   qns%local_spline_indices(:,:) = 0
-!!$   SLL_ALLOCATE(qns%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-!!$   qns%local_to_global_spline_indices = 0
-!!$   ! This should be changed to verify that the passed BC's are part of the
-!!$   ! recognized list described in sll_boundary_condition_descriptors...
-!!$   qns%bc_left   = bc_left
-!!$   qns%bc_right  = bc_right
-!!$   qns%bc_bottom = bc_bottom
-!!$   qns%bc_top    = bc_top
-!!$   qns%spline_degree1 = spline_degree_eta1
-!!$   qns%spline_degree2 = spline_degree_eta2
-!!$   qns%num_cells1 = num_cells_eta1
-!!$   qns%num_cells2 = num_cells_eta2
-!!$
-!!$   ! Allocate and fill the gauss points/weights information.
-!!$   ! First direction
-!!$   select case(quadrature_type1)
-!!$      case (QNS_GAUSS_LEGENDRE)
-!!$         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+2),ierr)
-!!$         qns%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
-!!$      case (QNS_GAUSS_LOBATTO)
-!!$         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
-!!$              'because the interface of that function is not good.'
-!!$   end select
-!!$
-!!$   select case(quadrature_type2)
-!!$      case (QNS_GAUSS_LEGENDRE)
-!!$         SLL_ALLOCATE(qns%gauss_pts2(2,spline_degree_eta2+2),ierr)
-!!$         qns%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
-!!$      case (QNS_GAUSS_LOBATTO)
-!!$         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
-!!$              'because the interface of that function is not good.'
-!!$
-!!$   end select
-!!$
-!!$
-!!$   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-!!$       (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-!!$
-!!$      qns%total_num_splines_eta1 = num_cells_eta1 
-!!$      qns%total_num_splines_eta2 = num_cells_eta2
-!!$      knots1_size = 2*spline_degree_eta1+2
-!!$      knots2_size = 2*spline_degree_eta2+2
-!!$      vec_sz      = num_cells_eta1*num_cells_eta2
-!!$   else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
-!!$       (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-!!$
-!!$      qns%total_num_splines_eta1 = num_cells_eta1 
-!!$      qns%total_num_splines_eta2 = num_cells_eta2 + &
-!!$                                   spline_degree_eta2 - 2
-!!$      knots1_size = 2*spline_degree_eta1+2
-!!$      knots2_size = 2*spline_degree_eta2+num_cells_eta2+1
-!!$      vec_sz      = num_cells_eta1*(num_cells_eta2+spline_degree_eta2)
-!!$   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-!!$            (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-!!$
-!!$      qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
-!!$      qns%total_num_splines_eta2 = num_cells_eta2 
-!!$      knots1_size = 2*spline_degree_eta1+num_cells_eta1+1
-!!$      knots2_size = 2*spline_degree_eta2+2
-!!$      vec_sz      = (num_cells_eta1 + spline_degree_eta1)*num_cells_eta2
-!!$   else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-!!$       (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-!!$
-!!$      qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
-!!$      qns%total_num_splines_eta2 = num_cells_eta2 + spline_degree_eta2 - 2
-!!$      knots1_size = 2*spline_degree_eta1 + num_cells_eta1+1
-!!$      knots2_size = 2*spline_degree_eta2 + num_cells_eta2+1
-!!$      vec_sz      = (num_cells_eta1 + spline_degree_eta1)*&
-!!$                    (num_cells_eta2 + spline_degree_eta2)
-!!$   end if
-!!$   solution_size = qns%total_num_splines_eta1*qns%total_num_splines_eta2
-!!$   SLL_ALLOCATE(qns%knots1(knots1_size),ierr)
-!!$   SLL_ALLOCATE(qns%knots2(knots2_size),ierr)
-!!$   SLL_ALLOCATE(qns%rho_vec(vec_sz),ierr)
-!!$   SLL_ALLOCATE(qns%phi_vec(solution_size),ierr)
-!!$   SLL_ALLOCATE(qns%tmp_rho_vec(solution_size),ierr)
-!!$   qns%rho_vec(:) = 0.0
-!!$   qns%phi_vec(:) = 0.0
-!!$
-!!$  ! print*, 'ok'
-!!$   call initialize_knots( &
-!!$        spline_degree_eta1, &
-!!$        num_cells_eta1, &
-!!$        eta1_min, &
-!!$        eta1_max, &
-!!$        bc_left, &
-!!$        bc_right, &
-!!$        qns%knots1 )
-!!$
-!!$  ! print*, 'ok3'
-!!$   call initialize_knots( &
-!!$        spline_degree_eta2, &
-!!$        num_cells_eta2, &
-!!$        eta2_min, &
-!!$        eta2_max, &
-!!$        bc_bottom, &
-!!$        bc_top, &
-!!$        qns%knots2 )
-!!$  ! print*, 'ok2'
-!!$   !print*, 'okok',qns%global_spline_indices
-!!$   call initconnectivity( &
-!!$        num_cells_eta1, &
-!!$        num_cells_eta2, &
-!!$        spline_degree_eta1, &
-!!$        spline_degree_eta2, &
-!!$        bc_left, &
-!!$        bc_right, &
-!!$        bc_bottom, &
-!!$        bc_top, &
-!!$        qns%local_spline_indices, &
-!!$        qns%global_spline_indices, &
-!!$        qns%local_to_global_spline_indices )
-!!$
-!!$  ! print*, 'ok1',size(qns%local_spline_indices,1),size(qns%local_spline_indices,2)
-!!$  ! print*, 'ok1',size(qns%local_to_global_spline_indices,1),size(qns%local_to_global_spline_indices,2)
-!!$  ! print*, 'okok',size(qns%global_spline_indices,1)
-!!$  ! print*,  solution_size,vec_sz,qns%total_num_splines_loc
-!!$  ! print*, 'heheh',  qns%local_to_global_spline_indices
-!!$    call create_CSR( &
-!!$        qns%csr_mat, &
-!!$        solution_size, &
-!!$        solution_size, &
-!!$        num_cells_eta1*num_cells_eta2, &
-!!$        qns%local_to_global_spline_indices, &
-!!$        qns%total_num_splines_loc, &
-!!$        qns%local_to_global_spline_indices, &
-!!$        qns%total_num_splines_loc )
   end function new_general_qn_solver
 
   subroutine delete_qns( qns )
@@ -490,7 +354,8 @@ contains ! *******************************************************************
     sll_int32 :: j
     sll_int32 :: cell_index
     type(sll_logical_mesh_2d), pointer :: mesh
-    print *, 'Entered QNS solver...'
+    type(sll_time_mark) :: timer
+    sll_real64 :: time
     ! This function builds and solves a system:
     !
     !      A*phi_vec = rho_vec
@@ -504,6 +369,7 @@ contains ! *******************************************************************
     ! total number of splines should come in the field...
 
     ! The quadrature degree is the number of splines that intersect a cell.
+    call set_time_mark(timer)
     total_num_splines_loc = qns%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -513,7 +379,7 @@ contains ! *******************************************************************
     SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
 
     mesh => c_field%get_logical_mesh( )
-
+    call set_time_mark(timer) ! comment this
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,qns%num_cells2
        do i=1,qns%num_cells1
@@ -551,6 +417,8 @@ contains ! *******************************************************************
 
        end do
     end do
+    time = time_elapsed_since(timer) ! comment this
+    print *, 'time loop over cells for building matrices (seconds): ', time ! comment this
 
     !print*, 'er',qns%rho_vec
     call solve_linear_system(qns)
