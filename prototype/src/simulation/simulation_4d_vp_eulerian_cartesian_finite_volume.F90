@@ -51,12 +51,12 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2x1
      sll_real64, dimension(:,:,:,:), pointer     :: fstar_v1v2x1
      ! charge density
-     sll_real64, dimension(:,:,:), allocatable     :: rho_x1,Ex_x1,Ey_x1
+     sll_real64, dimension(:,:), allocatable     :: rho_x1,Ex_x1,Ey_x1
      ! potential 
-     sll_real64, dimension(:,:,:), allocatable     :: phi_x1
+     sll_real64, dimension(:,:), allocatable     :: phi_x1
 
      type(layout_4d),pointer :: sequential_v1v2x1
-     type(layout_3d),pointer :: phi_seq_x1
+     type(layout_2d),pointer :: phi_seq_x1
      
    contains
      procedure, pass(sim) :: run => run_vp_cart
@@ -111,15 +111,19 @@ contains
    sim, &
    mesh4d, &
    init_func, &
-   params )
+   params, &
+   tmax )
 
    type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout)     :: sim
    type(sll_logical_mesh_4d), pointer                    :: mesh4d
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
+   sll_real64 :: tmax
    sim%mesh4d  => mesh4d
    sim%init_func => init_func
    sim%params    => params
+
+   sim%tmax = tmax
  end subroutine initialize_vp4d
 
 
@@ -213,7 +217,7 @@ contains
          loc_sz_x1, &
          loc_sz_x2 )
 
-    ! iz=0 and iz=loc_sz_x3+1 correspond to ghost cells.
+    ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
     SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     SLL_ALLOCATE(sim%fstar_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
@@ -233,7 +237,7 @@ contains
     call sll_4d_parallel_array_initializer_cartesian( &
          sim%sequential_v1v2x1, &
          sim%mesh4d, &
-         sim%fn_v1v2x1(:,:,:,1:loc_sz_x3), &
+         sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
          sim%init_func, &
          sim%params)
 
@@ -294,34 +298,28 @@ contains
          sim%mesh4d%delta_eta4
 
 
-   ! face and normal directions
-!!$   jdir=(/1,0,0/)
-!!$   kdir=(/0,1,0/)
-!!$   ldir=(/0,0,1/)
-!!$   facedir=(/loc_sz_x1,loc_sz_x2,loc_sz_x3/)
 
    ! time loop
    t=0
    do while(t.lt.sim%tmax)
-       
+       t=t+1
       
       ! mpi communications
       ! top communications
-      Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,loc_sz_x3),datasize, &
+      Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,loc_sz_x2),datasize, &
            MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-           sim%fn_v3x1x2(1,1,1,0),datasize,            &
+           sim%fn_v1v2x1(1,1,1,0),datasize,            &
            MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
            MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
 
       ! bottom communications
-      write(*,*) 'coucou2',sim%my_rank
-      Call mpi_SENDRECV(sim%fn_v3x1x2(1,1,1,1),datasize, &
+      Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
            MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-           sim%fn_v3x1x2(1,1,1,loc_sz_x3+1),datasize,            &
+           sim%fn_v1v2x1(1,1,1,loc_sz_x2+1),datasize,            &
            MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
            MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
 
-      sim%fstar_v3x1x2=sim%fn_v3x1x2
+      sim%fstar_v1v2x1=sim%fn_v1v2x1
 
 !!$      ! loop on the directions
 !!$      do dir=1,3
@@ -347,24 +345,24 @@ contains
 !!$      end do
    end do
 
-    call compute_local_sizes_4d( sim%sequential_v3x1x2, &
-         loc_sz_v3, loc_sz_x1, loc_sz_x2, loc_sz_x3) 
+    call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+         loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
     
-    allocate (plotf2d(loc_sz_v3,loc_sz_x1))
+    allocate (plotf2d(loc_sz_x1,loc_sz_v1))
 
     do i = 1, loc_sz_x1
-       do j = 1, loc_sz_v3
-          plotf2d(j,i) = sim%fn_v3x1x2(j,i,1,0)
+       do j = 1, loc_sz_v1
+          plotf2d(i,j) = sim%fn_v1v2x1(j,1,i,1)
        end do
     end do
     
-    global_indices(1:4) =  local_to_global_4D(sim%sequential_v3x1x2, (/1,1,1,1/) )
+    global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh4d%eta3_min+(global_indices(3)-1)*sim%mesh4d%delta_eta3, &
+         sim%mesh4d%delta_eta3, &
          sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1, &
          sim%mesh4d%delta_eta1, &
-         sim%mesh4d%eta2_min+(global_indices(2)-1)*sim%mesh4d%delta_eta2, &
-         sim%mesh4d%delta_eta2, &
          plotf2d, &
          "plotf2d", &
          0, &
@@ -376,14 +374,13 @@ contains
   subroutine delete_vp_cart( sim )
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
     sll_int32 :: ierr
-    SLL_DEALLOCATE( sim%fn_v3x1x2, ierr )
-    SLL_DEALLOCATE( sim%fnp1_v3x1x2, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%fstar_v3x1x2, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%rho_x1x2, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%phi_x1x2, ierr )
-    call delete( sim%sequential_v3x1x2 )
-    call delete( sim%rho_seq_x1x2 )
-    call delete( sim%phi_seq_x1x2 )
+    SLL_DEALLOCATE( sim%fn_v1v2x1, ierr )
+    SLL_DEALLOCATE( sim%fnp1_v1v2x1, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%fstar_v1v2x1, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%rho_x1, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
+    call delete( sim%sequential_v1v2x1 )
+    call delete( sim%phi_seq_x1 )
   end subroutine delete_vp_cart
 
   ! we put the reduction functions here for now, since we are only using
