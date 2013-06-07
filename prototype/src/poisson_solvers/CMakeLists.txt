@@ -22,7 +22,8 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                   sll_poisson_2d_periodic_fftw.F90)
 
    TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
-                                              ${FFTW_LIBRARIES})
+                                              ${FFTW_LIBRARIES}
+                                              ${HDF5_LIBRARIES})
 ELSE()
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftpack.F90")
@@ -35,6 +36,7 @@ IF(MUDPACK_ENABLED)
                                     sll_mudpack_cartesian.F90
                                     sll_mudpack_polar.F90
                                     sll_mudpack_colella.F90)
+
 ENDIF(MUDPACK_ENABLED)
    
 IF(FISHPACK_ENABLED)
@@ -76,7 +78,7 @@ IF(MUDPACK_ENABLED)
    MACRO(ADD_MUDPACK_PROGRAM TEST_NAME) 
 
       ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
-
+      
       TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_memory 
                                                       sll_assertion 
                                                       sll_utilities

@@ -5,6 +5,7 @@
 !
 ! DESCRIPTION:
 !> @file gauss-lobatto.F90
+!! @namespace gausslobatto
 !! @author Madaule Eric
 !! @brief Gauss-Lobatto interpolation tools
 !! @details Here are several of the Gauss-Lobatto tools :\\
@@ -45,6 +46,10 @@ module gausslobatto
      sll_int32 :: degree
      sll_real64,dimension(:,:),allocatable :: der
   end type gausslobatto1D
+
+  interface delete
+     module procedure delete_gausslobatto_1D
+  end interface delete
 
 contains
 
@@ -123,7 +128,7 @@ contains
     !!          The matrix must be already allocated of size (number of point)^2.
     !!          der(i,j)=int(Phi_i.Phi'_j)_[-1;1]²
     !!                  =w_i.Phi'_j(x_i)
-    !! @param[INOUT] gl_obj the object to delete
+    !! @param[INOUT] gl_obj gausslobatto1D object to build derivative
 
     type(gausslobatto1D),intent(inout) :: gl_obj
 
