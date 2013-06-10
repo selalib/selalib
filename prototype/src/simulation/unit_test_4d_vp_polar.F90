@@ -37,13 +37,13 @@ program vlasov_poisson_4d_polar
   else
 
 #define NPTS1 32
-#define NPTS2 32
+#define NPTS2 64
 #define NPTS3 32
 #define NPTS4 32
 
      ! logical mesh for space coordinates
      mx => new_logical_mesh_2d( NPTS1, NPTS2,    & 
-       eta1_min=.2_f64, eta1_max=.8_f64,         &
+       eta1_min= 2.0_f64, eta1_max= 8.0_f64,         &
        eta2_min=.0_f64, eta2_max=2.0_f64*sll_pi)
 
      ! logical mesh for velocity coordinates
@@ -79,7 +79,7 @@ program vlasov_poisson_4d_polar
 !  val = alpha*exp(-0.5_f64*((x -xc )**2+(y -yc )**2)) + &
 !        beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
 
-  params(1) = 0.5 !xc
+  params(1) = 5.0 !xc
   params(2) = 0.0 !yc
   params(3) = 0.0 !vxc
   params(4) = 0.0 !vyc

@@ -52,7 +52,7 @@ use sll_collective
 use sll_remapper
 use sll_constants
 use sll_cubic_spline_interpolator_2d
-use sll_poisson_2d_periodic_cartesian_par
+use sll_poisson_2d_polar
 use sll_cubic_spline_interpolator_1d
 use sll_simulation_base
 use sll_logical_meshes
@@ -65,37 +65,37 @@ implicit none
 !> vp4d polar simulation class extended from sll_simulation_base_class
 type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
   
-   sll_int32  :: world_size !< Parallel environment parameters
-   sll_int32  :: my_rank    !< Processor id
-   sll_int32  :: nproc_x1, nproc_x2, nproc_x3, nproc_x4 !< Processor mesh sizes
-   sll_real64 :: dt              !< time step
-   sll_int32  :: num_iterations  !< steps number
-   sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4 !< Mesh parameters
-   type(sll_logical_mesh_2d), pointer    :: mesh2d_x !< the logical mesh for space
-   type(sll_logical_mesh_2d), pointer    :: mesh2d_v !< the logical mesh for velocity
-   class(sll_coordinate_transformation_2d_base), pointer :: transfx !< coordinate transformation
-
-   sll_real64, dimension(:,:,:,:), pointer     :: f_x1x2 !< sequential in x1 and x2
-   sll_real64, dimension(:,:,:,:), pointer     :: f_x3x4 !< sequential in x3 and x4
-
-   sll_real64, dimension(:,:), pointer :: proj_f_x1x2 !< f projection to x1x2
-   sll_real64, dimension(:,:), pointer :: proj_f_x3x4 !< f projection to x3x4
-     
-   type(layout_4D), pointer :: sequential_x1x2 !< layout 4d sequential in x1x2
-   type(layout_4D), pointer :: sequential_x3x4 !< layout 4d sequential in x3x4
-   type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4 !< transpose x to v
-   type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2 !< transpose v to x 
-
-   type(cubic_spline_2d_interpolator) :: interp_x1x2 !< interpolator 2d in xy
-   type(cubic_spline_1d_interpolator) :: interp_x3   !< interpolator 1d in vx
-   type(cubic_spline_1d_interpolator) :: interp_x4   !< interpolator 1d in vx
-   procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func !< for distribution function initializer:
-   sll_real64, dimension(:), pointer :: params !< function initializer parameters
+ sll_int32  :: world_size !< Parallel environment parameters
+ sll_int32  :: my_rank    !< Processor id
+ sll_int32  :: nproc_x1, nproc_x2, nproc_x3, nproc_x4 !< Processor mesh sizes
+ sll_real64 :: dt              !< time step
+ sll_int32  :: num_iterations  !< steps number
+ sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4 !< Mesh parameters
+ type(sll_logical_mesh_2d), pointer :: mesh2d_x !< the logical mesh for space
+ type(sll_logical_mesh_2d), pointer :: mesh2d_v !< the logical mesh for velocity
+ class(sll_coordinate_transformation_2d_base), pointer :: transfx !< coordinate transformation
+ 
+ sll_real64, dimension(:,:,:,:), pointer :: f_x1x2 !< sequential in x1 and x2
+ sll_real64, dimension(:,:,:,:), pointer :: f_x3x4 !< sequential in x3 and x4
+ 
+ sll_real64, dimension(:,:), pointer :: proj_f_x1x2 !< f projection to x1x2
+ sll_real64, dimension(:,:), pointer :: proj_f_x3x4 !< f projection to x3x4
+      
+ type(layout_4D), pointer :: sequential_x1x2 !< layout 4d sequential in x1x2
+ type(layout_4D), pointer :: sequential_x3x4 !< layout 4d sequential in x3x4
+ type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4 !< transpose x to v
+ type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2 !< transpose v to x 
+ 
+ type(cubic_spline_2d_interpolator) :: interp_x1x2 !< interpolator 2d in xy
+ type(cubic_spline_1d_interpolator) :: interp_x3   !< interpolator 1d in vx
+ type(cubic_spline_1d_interpolator) :: interp_x4   !< interpolator 1d in vx
+ procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func !< for distribution function initializer:
+ sll_real64, dimension(:), pointer :: params !< function initializer parameters
 
 contains
-
-     procedure, pass(sim) :: run => run_vp4d_cartesian_polar !< run the simulation
-     procedure, pass(sim) :: init_from_file => init_vp4d_par_polar !< init the simulation
+ 
+ procedure, pass(sim) :: run => run_vp4d_polar !< run the simulation
+ procedure, pass(sim) :: init_from_file => init_vp4d_par_polar !< init the simulation
 
 end type sll_simulation_4d_vp_polar
 
@@ -143,24 +143,24 @@ contains
    sim%init_func => init_func
    sim%params    => params
 
-   sim%nc_x1  = mesh2d_x%num_cells1
-   sim%nc_x2  = mesh2d_x%num_cells2
-   sim%nc_x3  = mesh2d_v%num_cells1
-   sim%nc_x4  = mesh2d_v%num_cells2
+   sim%nc_x1 = mesh2d_x%num_cells1
+   sim%nc_x2 = mesh2d_x%num_cells2
+   sim%nc_x3 = mesh2d_v%num_cells1
+   sim%nc_x4 = mesh2d_v%num_cells2
   end subroutine initialize_vp4d_polar
 
   !> Function to initialize the simulation object from a file.
   subroutine init_vp4d_par_polar( sim, filename )
     class(sll_simulation_4d_vp_polar), intent(inout) :: sim !< simulation class
     character(len=*), intent(in)                     :: filename !< input file name
-    sll_int32     :: IO_stat
-    sll_real64    :: dt
-    sll_int32     :: number_iterations
-    sll_int32     :: num_cells_x1
-    sll_int32     :: num_cells_x2
-    sll_int32     :: num_cells_x3
-    sll_int32     :: num_cells_x4
-    sll_int32     :: input_file 
+    sll_int32  :: IO_stat
+    sll_real64 :: dt
+    sll_int32  :: number_iterations
+    sll_int32  :: num_cells_x1
+    sll_int32  :: num_cells_x2
+    sll_int32  :: num_cells_x3
+    sll_int32  :: num_cells_x4
+    sll_int32  :: input_file 
 
     namelist /sim_params/ dt, number_iterations
     namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3, num_cells_x4
@@ -169,7 +169,7 @@ contains
     open(unit = input_file, file=filename,IOStat=IO_stat)
     if( IO_stat /= 0 ) then
        print *, 'init_vp4d_par_cart() failed to open file ', filename
-       STOP
+       stop
     end if
     read(input_file, sim_params)
     read(input_file,grid_dims)
@@ -186,39 +186,20 @@ contains
   end subroutine init_vp4d_par_polar
 
   !> run simulation
-  subroutine run_vp4d_cartesian_polar(sim)
+  subroutine run_vp4d_polar(sim)
     class(sll_simulation_4d_vp_polar), intent(inout) :: sim
     sll_int32  :: error
     sll_real64 :: eta1_min, eta2_min, eta3_min, eta4_min
     sll_real64 :: eta1_max, eta2_max, eta3_max, eta4_max
-    sll_int32  :: power2
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+
+    call compute_domain_decomposition(sim)
 
     ! allocate the layouts...
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
     sim%sequential_x3x4  => new_layout_4D( sll_world_collective )
 
-    power2 = int(log(real(sim%world_size))/log(2.0))
-
-    ! special case N = 1, so power2 = 0
-    if(power2 == 0) then
-       sim%nproc_x1 = 1; sim%nproc_x2 = 1; sim%nproc_x3 = 1; sim%nproc_x4 = 1
-    end if
-    
-    if(is_even(power2)) then
-       sim%nproc_x1 = 2**(power2/2)
-       sim%nproc_x2 = 2**(power2/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    else 
-       sim%nproc_x1 = 2**((power2-1)/2)
-       sim%nproc_x2 = 2**((power2+1)/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
-    
     delta1   = sim%mesh2d_x%delta_eta1
     delta2   = sim%mesh2d_x%delta_eta2
     delta3   = sim%mesh2d_v%delta_eta1
@@ -259,10 +240,13 @@ contains
     SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),error)
     SLL_ALLOCATE(sim%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
     
+    call sll_view_lims_4D( sim%sequential_x3x4)
+    
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, sim%mesh2d_x, sim%mesh2d_v, &
          sim%f_x3x4, sim%init_func, sim%params, &
          transf_x1_x2=sim%transfx )
+
 
     sim%seqx3x4_to_seqx1x2 => &
          NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
@@ -293,10 +277,19 @@ contains
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        !call advection_x3(sim,sim%dt)
        !call advection_x4(sim,sim%dt)
+       do i = 1, loc_sz_x1
+          do j = 1, loc_sz_x2
+             write(10,*) sim%transfx%x1_at_node(i,j), &
+                         sim%transfx%x2_at_node(i,j), &
+                         sum(sim%f_x3x4(i,j,:,:))
+          end do
+          write(10,*)
+       end do
+       close(10)
 
     end do ! next time step 
 
-  end subroutine run_vp4d_cartesian_polar
+  end subroutine run_vp4d_polar
 
 
   subroutine advection_x1x2(sim,deltat)
@@ -321,8 +314,8 @@ contains
                 eta3 = sim%mesh2d_v%eta1_min + (gk-1)*sim%mesh2d_v%delta_eta1
                 eta4 = sim%mesh2d_v%eta2_min + (gl-1)*sim%mesh2d_v%delta_eta2
                 inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
-                alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+                alpha1 = 0.!-deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                alpha2 = 0.!-deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
 
                 eta1 = eta1+alpha1
                 ! This is hardwiring the periodic BC, please improve this...
@@ -455,7 +448,6 @@ contains
 
   end subroutine plot_fxy
 
-
   subroutine delete_vp4d_par_polar( sim )
     type(sll_simulation_4d_vp_polar) :: sim
     sll_int32 :: error
@@ -469,5 +461,33 @@ contains
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )
   end subroutine delete_vp4d_par_polar
+
+  subroutine compute_domain_decomposition(sim)
+    class(sll_simulation_4d_vp_polar), intent(inout) :: sim
+    sll_int32  :: power2
+
+    sim%world_size = sll_get_collective_size(sll_world_collective)
+    power2 = int(log(real(sim%world_size))/log(2.0))
+
+    ! special case N = 1, so power2 = 0
+    if(power2 == 0) then
+       sim%nproc_x1 = 1
+       sim%nproc_x2 = 1
+       sim%nproc_x3 = 1
+       sim%nproc_x4 = 1
+    end if
+    
+    if(is_even(power2)) then
+       sim%nproc_x1 = 2**(power2/2)
+       sim%nproc_x2 = 2**(power2/2)
+       sim%nproc_x3 = 1
+       sim%nproc_x4 = 1
+    else 
+       sim%nproc_x1 = 2**((power2-1)/2)
+       sim%nproc_x2 = 2**((power2+1)/2)
+       sim%nproc_x3 = 1
+       sim%nproc_x4 = 1
+    end if
+  end subroutine compute_domain_decomposition
 
 end module sll_simulation_4d_vlasov_poisson_polar
