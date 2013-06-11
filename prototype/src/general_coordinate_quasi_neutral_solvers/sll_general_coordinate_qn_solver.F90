@@ -354,7 +354,7 @@ contains ! *******************************************************************
     sll_int32 :: j
     sll_int32 :: cell_index
     type(sll_logical_mesh_2d), pointer :: mesh
-    type(sll_time_mark) :: timer
+!    type(sll_time_mark) :: timer
     sll_real64 :: time
     ! This function builds and solves a system:
     !
@@ -369,7 +369,7 @@ contains ! *******************************************************************
     ! total number of splines should come in the field...
 
     ! The quadrature degree is the number of splines that intersect a cell.
-    call set_time_mark(timer)
+ !   call set_time_mark(timer)
     total_num_splines_loc = qns%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -379,7 +379,7 @@ contains ! *******************************************************************
     SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
 
     mesh => c_field%get_logical_mesh( )
-    call set_time_mark(timer) ! comment this
+!    call set_time_mark(timer) ! comment this
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,qns%num_cells2
        do i=1,qns%num_cells1
@@ -417,8 +417,8 @@ contains ! *******************************************************************
 
        end do
     end do
-    time = time_elapsed_since(timer) ! comment this
-    print *, 'time loop over cells for building matrices (seconds): ', time ! comment this
+!!$    time = time_elapsed_since(timer) 
+!!$    print *, 'time loop over cells for building matrices (seconds): ', time 
 
     !print*, 'er',qns%rho_vec
     call solve_linear_system(qns)
@@ -875,7 +875,7 @@ contains ! *******************************************************************
 
     !print*, 'retr', qns%tmp_rho_vec
 
-    print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
+    !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
     !print*, 'sol', qns%phi_vec
