@@ -538,13 +538,13 @@ contains ! *******************************************************************
 
     else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right== SLL_PERIODIC) .and.&
              (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-       eta1  = eta1_min + (cell_i-1+tmp1)*delta1
+       eta1  = eta1_min + (cell_i-1)*delta1
        eta2  = eta2_min + (cell_j-1)*delta2
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
        eta1  = eta1_min + (cell_i-1)*delta1
-       eta2  = eta2_min + (cell_j-1+tmp2)*delta2
+       eta2  = eta2_min + (cell_j-1)*delta2
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
@@ -610,7 +610,7 @@ contains ! *******************************************************************
                2 )
 
           val_f   = rho%value_at_point(gpt1,gpt2)
-         ! print*, 'val',val_f,wgpt1,wgpt2!,(2.0*pi)**2*cos(2*pi*gpt1)*cos(2*pi*gpt2),gpt1,gpt2,eta1
+          !print*, 'val',val_f  !,wgpt1,wgpt2!,(2.0*pi)**2*cos(2*pi*gpt1)*cos(2*pi*gpt2),gpt1,gpt2,eta1
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
           val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
@@ -618,7 +618,7 @@ contains ! *******************************************************************
           val_a21 = a_field_mat(2,1)%base%value_at_point(gpt1,gpt2)
           val_a22 = a_field_mat(2,2)%base%value_at_point(gpt1,gpt2)
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
-          val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+          val_jac = abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
 
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
@@ -875,7 +875,7 @@ contains ! *******************************************************************
 
     !print*, 'retr', qns%tmp_rho_vec
 
-    !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
+    print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
     !print*, 'sol', qns%phi_vec
