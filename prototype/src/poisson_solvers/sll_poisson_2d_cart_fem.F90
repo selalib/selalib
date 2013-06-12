@@ -7,11 +7,16 @@ implicit none
 sll_int32 :: i, j, ii, jj
 sll_int32, parameter :: nx = 64, ny = 64
 sll_real64 :: dimx, dimy
+sll_int32 :: mode
+sll_real64, dimension(:), pointer :: x, y
 
 type :: poisson_fem
-sll_real64, dimension((nx-1)*(ny-1),(nx-1)*(ny-1)) :: A, M
-sll_real64, dimension(nx+1,(nx-1)*(ny-1)) :: mat
-sll_real64, dimension(:), pointer :: hx, hy    ! les h_i+1/2
+   sll_real64, dimension(:,:), pointer :: A
+   sll_real64, dimension(:,:), pointer :: M
+   sll_real64, dimension(:,:), pointer :: mat
+   sll_real64, dimension(:),   pointer :: hx    ! les h_i+1/2
+   sll_real64, dimension(:),   pointer :: hy    ! les h_i+1/2
+   sll_real64, dimension(:),   pointer :: phi
 end type poisson_fem
 
 call test()
@@ -20,13 +25,11 @@ contains
 
 subroutine test()
 type( poisson_fem ) :: poisson
-sll_real64, dimension(0:nx,0:ny) :: ex
-sll_real64, dimension(0:nx,0:ny) :: ey
-sll_real64, dimension(0:nx,0:ny) :: phi
-sll_real64, dimension(0:nx,0:ny) :: rho
-sll_real64, dimension(:), pointer :: x, y
+sll_real64, dimension(1:nx,1:ny) :: ex
+sll_real64, dimension(1:nx,1:ny) :: ey
+sll_real64, dimension(1:nx,1:ny) :: rho
 sll_real64 :: dx, dy
-sll_int32 :: error, mode
+sll_int32  :: error
 
 SLL_ALLOCATE(x(-1:nx+1),error)  
 SLL_ALLOCATE(y(-1:ny+1),error) 
@@ -51,7 +54,6 @@ enddo
 mode = 2
 do i = 1, nx
    do j = 1, ny
-      phi(i,j) = mode * sin(mode*x(i)) * sin(mode*y(j))
       rho(i,j) = 2_f64 * mode**3 * sin(mode*x(i))*sin(mode*y(j))
       write(10,*) x(i), y(j), rho(i,j)
    end do
@@ -62,8 +64,8 @@ close(10)
 call initialize(poisson, x, y)
 call solve(poisson, ex, ey, rho)
 
-do i = 1, nx
-   do j = 1, ny
+do i = 1, nx-1
+        do j = 1, ny-1
       write(11,*) x(i), y(j), ex(i,j),  mode**2*cos(mode*x(i))*sin(mode*y(j))
       write(12,*) x(i), y(j), ey(i,j), -mode**2*sin(mode*x(i))*cos(mode*y(j))
    end do
@@ -74,7 +76,6 @@ close(11)
 close(12)
 
 end subroutine test
-
 
 subroutine initialize( this, x, y )
 type( poisson_fem ) :: this
@@ -87,9 +88,12 @@ sll_real64 :: dum
 sll_int32 :: Iel, info
 sll_int32, dimension(4) :: Isom
 
-
 SLL_ALLOCATE(this%hx(-1:nx),error)
 SLL_ALLOCATE(this%hy(-1:ny),error)
+SLL_ALLOCATE(this%A((nx-1)*(ny-1),(nx-1)*(ny-1)),error) 
+SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)),error) 
+SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)),error) 
+SLL_ALLOCATE(this%phi((nx-1)*(ny-1)),error) 
 
 do i=0,nx-1
    this%hx(i) = x(i+1)-x(i)
@@ -237,44 +241,47 @@ end subroutine initialize
 
 subroutine solve( this, ex, ey, rho )
 type( poisson_fem ) :: this
-sll_real64, dimension(0:nx,0:ny) :: ex
-sll_real64, dimension(0:nx,0:ny) :: ey
-sll_real64, dimension(0:nx,0:ny) :: phi
-sll_real64, dimension(0:nx,0:ny) :: rho
-sll_real64, dimension((nx-1)*(ny-1)) :: b
+sll_real64, dimension(:,:) :: ex
+sll_real64, dimension(:,:) :: ey
+sll_real64, dimension(:,:) :: rho
 sll_int32 :: info
 
 !** Construction du second membre (rho a support compact --> projete)
 do i=1,nx-1
    do j=1,ny-1
-      b(i+(j-1)*(nx-1)) = rho(i,j)
+      this%phi(i+(j-1)*(nx-1)) = rho(i,j)
    end do
 end do
 
-b = matmul(this%M,b)
+this%phi = matmul(this%M,this%phi)
 
-CALL DPBTRS('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),info) 
+CALL DPBTRS('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,this%phi,(nx-1)*(ny-1),info) 
 print*,'resolution par Cholesky',info
 
-phi = 0.d0
 do i=1,nx-1
    do j=1,ny-1
-      phi(i,j) = b(i+(j-1)*(nx-1)) 
+      rho(i,j) = this%phi(i+(j-1)*(nx-1)) 
    end do
 end do
 
-!** Reconstruction du champ E
-
-do i=0,nx-1
-   do j=0,ny
-      ex(i,j) = - (phi(i+1,j)-phi(i,j)) / this%hx(i)
+do i = 1, nx-1
+   do j = 1, ny-1
+      write(15,*) x(i), y(j), rho(i,j), sin(mode*x(i))*sin(mode*y(j))
    end do
+   write(15,*)
+end do
+close(15)
+
+do i=1,nx-2
+   do j=1,ny-1
+      ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
+  end do
 end do
 
-do i=0,nx
-   do j=0,ny-1
-      ey(i,j) = - (phi(i,j+1)-phi(i,j)) / this%hy(j)
-   end do
+do i=1,nx-1
+   do j=1,ny-2
+      ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(i)
+  end do
 end do
 
 end subroutine solve
