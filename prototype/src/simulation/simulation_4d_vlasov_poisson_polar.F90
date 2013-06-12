@@ -91,6 +91,8 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
  type(cubic_spline_1d_interpolator) :: interp_x4   !< interpolator 1d in vx
  procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func !< for distribution function initializer:
  sll_real64, dimension(:), pointer :: params !< function initializer parameters
+ sll_real64, dimension(:,:), pointer :: x1 !< x1 mesh mapped coordinates
+ sll_real64, dimension(:,:), pointer :: x2 !< x2 mesh mapped coordinates
 
 contains
  
@@ -112,11 +114,13 @@ sll_int32,  private :: i, j, k, l
 sll_int32,  private :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
 sll_int32,  private :: global_indices(4)
 sll_int32,  private :: gi, gj, gk, gl
-sll_real64, private :: delta1, delta2, delta3, delta4
+sll_real64, private :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 sll_real64, private :: alpha1, alpha2, alpha3, alpha4
 sll_real64, private :: eta1, eta2, eta3, eta4
 sll_real64, private :: jac_m(2,2), inv_j(2,2)
 sll_int32,  private :: itime, error
+sll_real64, private :: eta1_min, eta2_min, eta3_min, eta4_min
+sll_real64, private :: eta1_max, eta2_max, eta3_max, eta4_max
 
 character(len=4), private :: ctime
 
@@ -147,6 +151,8 @@ contains
    sim%nc_x2 = mesh2d_x%num_cells2
    sim%nc_x3 = mesh2d_v%num_cells1
    sim%nc_x4 = mesh2d_v%num_cells2
+
+
   end subroutine initialize_vp4d_polar
 
   !> Function to initialize the simulation object from a file.
@@ -189,8 +195,6 @@ contains
   subroutine run_vp4d_polar(sim)
     class(sll_simulation_4d_vp_polar), intent(inout) :: sim
     sll_int32  :: error
-    sll_real64 :: eta1_min, eta2_min, eta3_min, eta4_min
-    sll_real64 :: eta1_max, eta2_max, eta3_max, eta4_max
 
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
@@ -200,10 +204,10 @@ contains
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
     sim%sequential_x3x4  => new_layout_4D( sll_world_collective )
 
-    delta1   = sim%mesh2d_x%delta_eta1
-    delta2   = sim%mesh2d_x%delta_eta2
-    delta3   = sim%mesh2d_v%delta_eta1
-    delta4   = sim%mesh2d_v%delta_eta2
+    delta_eta1 = sim%mesh2d_x%delta_eta1
+    delta_eta2 = sim%mesh2d_x%delta_eta2
+    delta_eta3 = sim%mesh2d_v%delta_eta1
+    delta_eta4 = sim%mesh2d_v%delta_eta2
 
     eta1_min = sim%mesh2d_x%eta1_min
     eta2_min = sim%mesh2d_x%eta2_min
@@ -239,6 +243,17 @@ contains
 
     SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),error)
     SLL_ALLOCATE(sim%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
+
+    SLL_CLEAR_ALLOCATE(sim%x1(loc_sz_x1,loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%x2(loc_sz_x1,loc_sz_x2),error)
+
+    do j = 1, loc_sz_x2
+    do i = 1, loc_sz_x1
+       global_indices = local_to_global_4D(sim%sequential_x3x4,(/i,j,1,1/))
+       sim%x1(i,j) = sim%transfx%x1_at_node(global_indices(1),global_indices(2))
+       sim%x2(i,j) = sim%transfx%x2_at_node(global_indices(1),global_indices(2))
+    end do
+    end do
     
     call sll_view_lims_4D( sim%sequential_x3x4)
     
@@ -246,7 +261,6 @@ contains
          sim%sequential_x3x4, sim%mesh2d_x, sim%mesh2d_v, &
          sim%f_x3x4, sim%init_func, sim%params, &
          transf_x1_x2=sim%transfx )
-
 
     sim%seqx3x4_to_seqx1x2 => &
          NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
@@ -277,15 +291,6 @@ contains
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        !call advection_x3(sim,sim%dt)
        !call advection_x4(sim,sim%dt)
-       do i = 1, loc_sz_x1
-          do j = 1, loc_sz_x2
-             write(10,*) sim%transfx%x1_at_node(i,j), &
-                         sim%transfx%x2_at_node(i,j), &
-                         sum(sim%f_x3x4(i,j,:,:))
-          end do
-          write(10,*)
-       end do
-       close(10)
 
     end do ! next time step 
 
@@ -309,10 +314,10 @@ contains
                 gj = global_indices(2)
                 gk = global_indices(3)
                 gl = global_indices(4)
-                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*sim%mesh2d_x%delta_eta1
-                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*sim%mesh2d_x%delta_eta2
-                eta3 = sim%mesh2d_v%eta1_min + (gk-1)*sim%mesh2d_v%delta_eta1
-                eta4 = sim%mesh2d_v%eta2_min + (gl-1)*sim%mesh2d_v%delta_eta2
+                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*delta_eta1
+                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*delta_eta2
+                eta3 = sim%mesh2d_v%eta1_min + (gk-1)*delta_eta3
+                eta4 = sim%mesh2d_v%eta2_min + (gl-1)*delta_eta4
                 inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 alpha1 = 0.!-deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
                 alpha2 = 0.!-deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
@@ -353,8 +358,8 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              global_indices = local_to_global_4D( sim%sequential_x3x4, (/i,j,1,1/))
-             eta1   =  (global_indices(1)-1)*delta1
-             eta2   =  (global_indices(2)-1)*delta2
+             eta1   =  (global_indices(1)-1)*delta_eta1
+             eta2   =  (global_indices(2)-1)*delta_eta2
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
              jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
              ex     =  0.
@@ -380,8 +385,8 @@ contains
        do i=1,loc_sz_x1
           do k=1,loc_sz_x3
              global_indices = local_to_global_4D( sim%sequential_x3x4, (/i,j,1,1/))
-             eta1   =  (global_indices(1)-1)*delta1
-             eta2   =  (global_indices(2)-1)*delta2
+             eta1   =  (global_indices(1)-1)*delta_eta1
+             eta2   =  (global_indices(2)-1)*delta_eta2
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
              ex     =  0.
              ey     =  0.
@@ -393,6 +398,24 @@ contains
     end do
 
   end subroutine advection_x4
+
+  subroutine plot_fxy(sim)
+    class(sll_simulation_4d_vp_polar) :: sim
+
+    call compute_local_sizes_4d( sim%sequential_x3x4, &
+         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
+
+    call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
+    do i = 1, loc_sz_x1
+       do j = 1, loc_sz_x2
+          sim%proj_f_x1x2(i,j) = sum(sim%f_x3x4(i,j,:,:))
+       end do
+    end do
+
+    call sll_gnuplot_2d_parallel( sim%x1, sim%x2, sim%proj_f_x1x2, &
+                                  "fxy", itime, error )
+
+  end subroutine plot_fxy
 
   subroutine plot_fvxvy(sim)
     class(sll_simulation_4d_vp_polar) :: sim
@@ -409,44 +432,12 @@ contains
 
     global_indices = local_to_global_4D( sim%sequential_x1x2, (/1,1,1,1/) )
        
-    call sll_gnuplot_rect_2d_parallel( &
-        sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
-        sim%mesh2d_v%delta_eta1, &
-        sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
-        sim%mesh2d_v%delta_eta2, &
-        sim%proj_f_x3x4, &
-        "fvxvy", &
-        itime, &
-        error )
+    call sll_gnuplot_2d_parallel( &
+        eta3_min+(global_indices(1)-1)*delta_eta3, delta_eta3, &
+        eta4_min+(global_indices(2)-1)*delta_eta4, delta_eta4, &
+        sim%proj_f_x3x4, "fxy", itime, error )
 
   end subroutine plot_fvxvy
-
-  subroutine plot_fxy(sim)
-    class(sll_simulation_4d_vp_polar) :: sim
-
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
-         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
-
-    call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
-    do j = 1, loc_sz_x2
-       do i = 1, loc_sz_x1
-          sim%proj_f_x1x2(i,j) = sum(sim%f_x3x4(:,:,k,l))
-       end do
-    end do
-
-    global_indices = local_to_global_4D( sim%sequential_x1x2, (/1,1,1,1/) )
-       
-    call sll_gnuplot_rect_2d_parallel( &
-        sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
-        sim%mesh2d_v%delta_eta1, &
-        sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
-        sim%mesh2d_v%delta_eta2, &
-        sim%proj_f_x3x4, &
-        "fxy", &
-        itime, &
-        error )
-
-  end subroutine plot_fxy
 
   subroutine delete_vp4d_par_polar( sim )
     type(sll_simulation_4d_vp_polar) :: sim
