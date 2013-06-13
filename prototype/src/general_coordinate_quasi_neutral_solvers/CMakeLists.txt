@@ -25,6 +25,7 @@ ADD_DEPENDENCIES( sll_general_coordinate_quasi_neutral_solvers
   sll_boundary_condition_descriptors
   sll_assertion
   sll_constants
+  sll_timer
   sll_working_precision
   deboor_splines
   )
@@ -41,6 +42,7 @@ target_link_libraries( test_qns_general_coordinates
   sll_integration
   sll_constants
   sll_utilities
+  sll_timer
   sll_assertion
   sll_memory
   sll_working_precision
