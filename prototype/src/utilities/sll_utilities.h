@@ -51,6 +51,8 @@
 #define BYTE_SIZEOF( var )  size(transfer(var, (/1_byte_size/) ))
 #define INT32_SIZEOF( var ) size(transfer(var, (/1_i32/)))
 
+#define SWAP(A,B) A = A + B; B = A - B; A = A - B
+
 use sll_utilities
 use sll_tridiagonal
 
