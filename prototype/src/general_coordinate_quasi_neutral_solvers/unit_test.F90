@@ -6,6 +6,7 @@ program test_general_qns
   use sll_module_scalar_field_2d_alternative
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_timer
 #include "sll_memory.h"
 #include "sll_working_precision.h"
   implicit none
@@ -18,6 +19,7 @@ program test_general_qns
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
 #define ETA2MAX  1.0_f64
+#define PRINT_COMPARISON .false.
 
   type(sll_logical_mesh_2d), pointer                    :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
@@ -31,6 +33,9 @@ program test_general_qns
   class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+  type(sll_time_mark) :: t_reference
+  sll_real64 :: t1i, t1e, t2i, t2e, t3i, t3e, t4i, t4e, t5i, t5e, t6i, t6e, &
+       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e
   real(8), external :: func_zero
   real(8), external :: func_one
   real(8), external :: source_term_perper
@@ -41,7 +46,7 @@ program test_general_qns
   real(8), external :: source_term_chgt_dirper
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), allocatable :: values
-  sll_real64 :: acc, acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9,acc10,acc11
+  sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9,acc10,acc11,acc12
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
   sll_real64, dimension(:,:), allocatable    :: tab_rho
@@ -61,13 +66,13 @@ program test_general_qns
   
     
   !--------------------------------------------------------------------
-  !     first test case without chane of coordinates 
+  !     1 test case without chane of coordinates 
   !      periodic-periodic boundary conditions
   !--------------------------------------------------------------------
   
-  print*, "---------------------"
-  print*, "first test case witout change of coordinates"
-  print*, "---------------------"
+  print*, "-------------------------------------------------------------"
+  print*, "1 test case witout change of coordinates"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX-ETA1MIN)/real(NPTS1-1,f64)
@@ -183,6 +188,8 @@ program test_general_qns
 
   print *, 'initialized fields...'
 
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -199,8 +206,12 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-
+ 
+  t1i = time_elapsed_since(t_reference)
+ 
   print *, 'Initialized QNS object'
+
+  call set_time_mark(t_reference)
 
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -210,15 +221,17 @@ program test_general_qns
        rho, &
        phi )
 
-  print *, 'Completed solution'!,qns%phi_vec
-
+  ! This call should be inside the solver!
   call  interp_2d%set_coefficients( qns%phi_vec)
 
+  t1e = time_elapsed_since(t_reference)
+
+  print *, 'Completed solution'!,qns%phi_vec
   print*, 'reorganizaton of splines coefficients of solution'
   
-  print *, 'Compare the values of the transformation at the nodes: '
+!  print *, 'Compare the values of the transformation at the nodes: '
   
-  acc = 0.0_f64
+  acc1 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -228,11 +241,13 @@ program test_general_qns
         ref        = sol_exacte_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val,'theoretical = ', ref
-        acc        = acc + abs(node_val-ref)
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc1        = acc1 + abs(node_val-ref)
      end do
   end do
-  
 
   ! delete things...
   call delete(qns)
@@ -253,17 +268,17 @@ program test_general_qns
 
   !--------------------------------------------------------------------
   
-  !     second test case without chane of coordinates 
+  !     2 test case without chane of coordinates 
   !      periodic-dirichlet boundary conditions
   
   !--------------------------------------------------------------------
   
   
   
-  print*, "---------------------"
-  print*, "second test case witout change of coordinates"
+  print*, "-------------------------------------------------------------"
+  print*, " 2 test case witout change of coordinates"
   print*, " periodic-dirichlet boundary conditions"
-  print*, "---------------------"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX-ETA1MIN)/real(NPTS1-1,f64)
@@ -378,6 +393,9 @@ program test_general_qns
   
   print *, 'initialized fields...'
 !  print *, 'a = ', qns%csr_mat%opr_a
+
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -394,10 +412,11 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-  
+  t2i = time_elapsed_since(t_reference) 
   print *, 'Initialized QNS object'
   
-  ! solve the field
+  call set_time_mark(t_reference)
+
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
        a_field_mat, &
@@ -409,10 +428,11 @@ program test_general_qns
   
   call  interp_2d%set_coefficients( qns%phi_vec)
 
+  t2e = time_elapsed_since(t_reference)
   
-  print *, 'Compare the values of the transformation at the nodes: '
+!  print *, 'Compare the values of the transformation at the nodes: '
   
-  acc1 = 0.0_f64
+  acc2 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -423,13 +443,14 @@ program test_general_qns
 !        print*,sin(2*sll_pi*eta1)*cos(2*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc1        = acc1 + abs(node_val-ref)
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc2        = acc2 + abs(node_val-ref)
      end do
   end do
-  
-  
+    
   ! delete things...
   call delete(qns)
   call rho%delete()
@@ -446,20 +467,19 @@ program test_general_qns
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
   
-!!$
-    !--------------------------------------------------------------------
+  !--------------------------------------------------------------------
   
-  !     third test case without chane of coordinates 
+  !     3 test case without chane of coordinates 
   !      dirichlet-dirichlet boundary conditions
   
   !--------------------------------------------------------------------
   
   
   
-  print*, "---------------------"
-  print*, "third test case witout change of coordinates"
+  print*, "-------------------------------------------------------------"
+  print*, " 3 test case witout change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
-  print*, "---------------------"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX-ETA1MIN)/real(NPTS1-1,f64)
@@ -472,7 +492,7 @@ program test_general_qns
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
   
-  ! First thing, initialize the logical mesh associated with this problem.        
+  ! First thing, initialize the logical mesh associated with this problem.    
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
@@ -575,6 +595,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -592,8 +614,12 @@ program test_general_qns
        ETA2MIN, &
        ETA2MAX)
   
+  t3i = time_elapsed_since(t_reference) 
+
   print *, 'Initialized QNS object'
-  
+
+  call set_time_mark(t_reference)
+
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
@@ -602,15 +628,13 @@ program test_general_qns
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
  
-  ! print*, 'reorganizaton of splines coefficients of solution'
+  t3e = time_elapsed_since(t_reference)
+
   
-  print *, 'Compare the values of the transformation at the nodes: '
-  
-  acc2 = 0.0_f64
+  acc3 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -620,9 +644,11 @@ program test_general_qns
         ref        = sol_exacte_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc2        = acc2 + abs(node_val-ref)
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc3        = acc3 + abs(node_val-ref)
      end do
   end do
   
@@ -641,20 +667,20 @@ program test_general_qns
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
-  
-    !--------------------------------------------------------------------
-  
-  !     fourth test case without chane of coordinates 
-  !      dirichlet-periodic boundary conditions
+
+
   
   !--------------------------------------------------------------------
   
+  !     4 test case without change of coordinates 
+  !     dirichlet-periodic boundary conditions
   
-  
-  print*, "---------------------"
-  print*, "fourth test case witout change of coordinates"
+  !--------------------------------------------------------------------
+    
+  print*, "-------------------------------------------------------------"
+  print*, " 4 test case witout change of coordinates"
   print*, " dirichlet-periodic boundary conditions"
-  print*, "---------------------"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = 1.0_f64/real(NPTS1-1,f64)
@@ -722,7 +748,6 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
@@ -769,7 +794,9 @@ program test_general_qns
        SLL_PERIODIC)
   
   print *, 'initialized fields...'
-  
+
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -786,9 +813,12 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-  
+
+  t4i = time_elapsed_since(t_reference) 
   print *, 'Initialized QNS object'
   
+  call set_time_mark(t_reference)
+
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
@@ -797,14 +827,13 @@ program test_general_qns
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
+ 
+  t4e = time_elapsed_since(t_reference) 
   
   
-  print *, 'Compare the values of the transformation at the nodes: '
-  
-  acc3 = 0.0_f64
+  acc4 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -814,13 +843,13 @@ program test_general_qns
         ref        = sol_exacte_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc3        = acc3 + abs(node_val-ref)
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc4        = acc4 + abs(node_val-ref)
      end do
   end do
-
-
 
   ! delete things...
   call delete(qns)
@@ -838,19 +867,16 @@ program test_general_qns
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
 
-!!$
 
-   !--------------------------------------------------------------------
+  !--------------------------------------------------------------------
   
-  !     fith test case with colella change of coordinates 
-  !      periodic-periodic boundary conditions
+  !     5 test case with colella change of coordinates 
+  !     periodic-periodic boundary conditions
   
   !--------------------------------------------------------------------
   
-  
-  
   print*, "---------------------"
-  print*, "fith test case with colella change of coordinates"
+  print*, " 5 test case with colella change of coordinates"
   print*, " periodic-periodic boundary conditions"
   print*, "---------------------"
   npts1 =  NUM_CELLS1 + 1
@@ -865,13 +891,13 @@ program test_general_qns
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
   
-  ! First thing, initialize the logical mesh associated with this problem.        
+  ! First thing, initialize the logical mesh associated with this problem.  
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -920,7 +946,6 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
@@ -968,6 +993,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -984,9 +1011,11 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-  
+
+  t5i = time_elapsed_since(t_reference) 
   print *, 'Initialized QNS object'
-  
+
+  call set_time_mark(t_reference)  
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
@@ -994,15 +1023,15 @@ program test_general_qns
        c_field, &
        rho, &
        phi )
-  
+
   !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
+  t5e = time_elapsed_since(t_reference)  
   
+!  print *, 'Compare the values of the transformation at the nodes: '
   
-  print *, 'Compare the values of the transformation at the nodes: '
-  
-  acc4 = 0.0_f64
+  acc5 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1013,12 +1042,13 @@ program test_general_qns
         ref        = sol_exacte_chgt_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc4        = acc4 + abs(node_val-ref)
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc5        = acc5 + abs(node_val-ref)
      end do
   end do
-
 
 
   ! delete things...
@@ -1037,20 +1067,18 @@ program test_general_qns
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
 
-
-!!$   !--------------------------------------------------------------------
-!!$  
-!!$  !     six test case with colella change of coordinates 
-!!$  !      periodic-dirirchlet boundary conditions
-!!$  
-!!$  !--------------------------------------------------------------------
-!!$  
-!!$  
-!!$  
-  print*, "---------------------"
-  print*, "six test case with colella change of coordinates"
+  !--------------------------------------------------------------------
+  
+  !     6 test case with colella change of coordinates 
+  !     periodic-dirichlet boundary conditions
+  
+  !--------------------------------------------------------------------
+  
+  
+  print*, "-------------------------------------------------------------"
+  print*, " 6 test case with colella change of coordinates"
   print*, " periodic-dirichlet boundary conditions"
-  print*, "---------------------"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
@@ -1166,6 +1194,10 @@ program test_general_qns
   
   print *, 'initialized fields...'
 
+!  print *, 'a = ', qns%csr_mat%opr_a
+
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -1182,8 +1214,12 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-  
+
+  t6i = time_elapsed_since(t_reference) 
+
   print *, 'Initialized QNS object'
+
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -1192,16 +1228,15 @@ program test_general_qns
        c_field, &
        rho, &
        phi )
-  
-  !print *, 'Completed solution',qns%phi_vec
-  
+
   call  interp_2d%set_coefficients( qns%phi_vec)
+
+  t6e = time_elapsed_since(t_reference)
+
   
-  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+!  print *, 'Compare the values of the transformation at the nodes: '
   
-  print *, 'Compare the values of the transformation at the nodes: '
-  
-  acc5 = 0.0_f64
+  acc6 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1213,9 +1248,12 @@ program test_general_qns
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc5        = acc5 + abs(node_val-ref)
+
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+         acc6        = acc6 + abs(node_val-ref)
      end do
   end do
 
@@ -1237,19 +1275,17 @@ program test_general_qns
 
 
 
-!!$   !--------------------------------------------------------------------
-!!$  
-!!$  !     seven test case with colella change of coordinates 
-!!$  !      dirichlet-dirirchlet boundary conditions
-!!$  
-!!$  !--------------------------------------------------------------------
-!!$  
-!!$  
-!!$  
-  print*, "---------------------"
-  print*, "seven test case with colella change of coordinates"
+  !--------------------------------------------------------------------
+  
+  !     7 test case with colella change of coordinates 
+  !     dirichlet-dirichlet boundary conditions
+  
+  !--------------------------------------------------------------------
+  
+  print*, "-------------------------------------------------------------"
+  print*, " 7 test case with colella change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
-  print*, "---------------------"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
@@ -1364,7 +1400,8 @@ program test_general_qns
        SLL_DIRICHLET)
   
   print *, 'initialized fields...'
-  
+
+  call set_time_mark(t_reference)
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -1381,8 +1418,12 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-  
+
+  t7i = time_elapsed_since(t_reference) 
+
   print *, 'Initialized QNS object'
+
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -1392,15 +1433,15 @@ program test_general_qns
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
+
+  t7e = time_elapsed_since(t_reference)
+
   
-  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+!  print *, 'Compare the values of the transformation at the nodes: '
   
-  print *, 'Compare the values of the transformation at the nodes: '
-  
-  acc6 = 0.0_f64
+  acc7 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1412,9 +1453,11 @@ program test_general_qns
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc6        = acc6 + abs(node_val-ref)
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc7        = acc7 + abs(node_val-ref)
      end do
   end do
 
@@ -1435,18 +1478,16 @@ program test_general_qns
   DEALLOCATE(difference)
 
 
-
-!!$   !--------------------------------------------------------------------
-!!$  
-!!$  !     8  test case with colella change of coordinates 
-!!$  !      dirichlet-dirirchlet boundary conditions
-!!$  
-!!$  !--------------------------------------------------------------------
-!!$  
-!!$  
-!!$  
+  !--------------------------------------------------------------------
+  
+  !     8  test case with colella change of coordinates 
+  !     dirichlet-dirichlet boundary conditions
+  
+  !--------------------------------------------------------------------
+  
+  
   print*, "---------------------"
-  print*, "8 test case with colella change of coordinates"
+  print*, " 8 test case with colella change of coordinates"
   print*, " dirichlet-periodic boundary conditions"
   print*, "---------------------"
   npts1 =  NUM_CELLS1 + 1
@@ -1563,6 +1604,8 @@ program test_general_qns
        SLL_PERIODIC)
   
   print *, 'initialized fields...'
+
+  call set_time_mark(t_reference)
   
   call initialize_general_qn_solver( &
        qns, &
@@ -1581,7 +1624,10 @@ program test_general_qns
        ETA2MIN, &
        ETA2MAX)
   
+  t8i = time_elapsed_since(t_reference) 
+
   print *, 'Initialized QNS object'
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -1595,11 +1641,13 @@ program test_general_qns
   
   call  interp_2d%set_coefficients( qns%phi_vec)
   
-  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  t8e = time_elapsed_since(t_reference)
+
+
   
-  print *, 'Compare the values of the transformation at the nodes: '
+!  print *, 'Compare the values of the transformation at the nodes: '
   
-  acc7 = 0.0_f64
+  acc8 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1611,9 +1659,12 @@ program test_general_qns
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
-        acc7        = acc7 + abs(node_val-ref)
+
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref
+        end if
+        acc8        = acc8 + abs(node_val-ref)
      end do
   end do
 
@@ -1771,15 +1822,9 @@ program test_general_qns
        SPLINE_DEG2 )
   
   terme_source_interp => interp_2d_term_source
- ! print*, tab_rho
+
   print*, 'initialization interpolation for rho'
-  !call interp_2d_term_source%compute_spline_coefficients( &
-   !         tab_rho, &
-    !        point1, &
-     !       npts1-1, &
-      !      point2, &
-       !     npts2-1 )
-!  print*, interp_2d_term_source%coeff_splines
+
   rho => new_scalar_field_2d_discrete_alt( &
        tab_rho, &
        "rho", &
@@ -1824,6 +1869,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
+  call set_time_mark(t_reference)
+  
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -1841,7 +1888,10 @@ program test_general_qns
        ETA2MIN, &
        ETA2MAX)
   
+  t9i = time_elapsed_since(t_reference) 
+  
   print *, 'Initialized QNS object'
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -1855,11 +1905,11 @@ program test_general_qns
   
   call  interp_2d%set_coefficients( qns%phi_vec)
   
-  print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  t9e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
-  acc8 = 0.0_f64
+  acc9 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1873,7 +1923,7 @@ program test_general_qns
         difference(i+1,j+1) = ref-node_val
         print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
              'theoretical = ', ref
-        acc8        = acc8 + abs(node_val-ref)
+        acc9        = acc9 + abs(node_val-ref)
      end do
   end do
 
@@ -2080,6 +2130,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
+  call set_time_mark(t_reference)
+  
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -2096,8 +2148,11 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
+
+  t10i = time_elapsed_since(t_reference) 
   
   print *, 'Initialized QNS object'
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -2107,15 +2162,14 @@ program test_general_qns
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
   
-  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  t10e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
-  acc9 = 0.0_f64
+  acc10 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -2129,7 +2183,7 @@ program test_general_qns
         difference(i+1,j+1) = ref-node_val
         print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
              'theoretical = ', ref
-        acc9        = acc9 + abs(node_val-ref)
+        acc10        = acc10 + abs(node_val-ref)
      end do
   end do
 
@@ -2334,6 +2388,7 @@ program test_general_qns
        SLL_DIRICHLET)
   
   print *, 'initialized fields...'
+  call set_time_mark(t_reference)
   
   call initialize_general_qn_solver( &
        qns, &
@@ -2352,7 +2407,10 @@ program test_general_qns
        ETA2MIN, &
        ETA2MAX)
   
+  t11i = time_elapsed_since(t_reference) 
+
   print *, 'Initialized QNS object'
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -2362,15 +2420,14 @@ program test_general_qns
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
   
-  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  t11e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
-  acc10 = 0.0_f64
+  acc11 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -2384,7 +2441,7 @@ program test_general_qns
         difference(i+1,j+1) = ref-node_val
         print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
              'theoretical = ', ref
-        acc10        = acc10 + abs(node_val-ref)
+        acc11        = acc11 + abs(node_val-ref)
      end do
   end do
 
@@ -2589,6 +2646,8 @@ program test_general_qns
   
   print *, 'initialized fields...'
   
+  call set_time_mark(t_reference)
+
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -2606,7 +2665,10 @@ program test_general_qns
        ETA2MIN, &
        ETA2MAX)
   
+  t12i = time_elapsed_since(t_reference) 
+
   print *, 'Initialized QNS object'
+  call set_time_mark(t_reference)
   
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -2616,15 +2678,14 @@ program test_general_qns
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
   
   call  interp_2d%set_coefficients( qns%phi_vec)
   
-  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  t12e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
-  acc11 = 0.0_f64
+  acc12 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -2638,7 +2699,7 @@ program test_general_qns
         difference(i+1,j+1) = ref-node_val
         print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
              'theoretical = ', ref
-        acc11        = acc11 + abs(node_val-ref)
+        acc12        = acc12 + abs(node_val-ref)
      end do
   end do
 
@@ -2667,43 +2728,68 @@ program test_general_qns
   print*, '-----------------------------------------------------'
 
   print *,'Average error in nodes (per-per) without change of coordinates='&
-       ,acc/(npts1*npts2)
+       ,acc1/(npts1*npts2), ',  initialization time (s): ', t1i, &
+       ',  solution time (s): ', t1e
   print *,'Average error in nodes (per-dir) without change of coordinates='&
-       ,acc1/(npts1*npts2)
+       ,acc2/(npts1*npts2), ',  initialization time (s): ', t2i, &
+       ',  solution time (s): ', t2e
   print *,'Average error in nodes (dir-dir) without change of coordinates='&
-       ,acc2/(npts1*npts2)
+       ,acc3/(npts1*npts2), ',  initialization time (s): ', t3i, &
+       ',  solution time (s): ', t3e
   print *,'Average error in nodes (dir-per) without change of coordinates='&
-       ,acc3/(npts1*npts2)
+       ,acc4/(npts1*npts2), ',  initialization time (s): ', t4i, &
+       ',  solution time (s): ', t4e
+
   print*, '-------------------------------------------------------'
   print*, ' COLELLA CHANGE OF COORDINATES AND ANALYTIC DATA' 
   print*, '-------------------------------------------------------'
-  print *,'Average error in nodes (per-per) with colella change of coordinates='&
-       ,acc4/(npts1*npts2)
-  print *,'Average error in nodes (per-dir) with colella change of coordinates='&
-       ,acc5/(npts1*npts2)
-  print *,'Average error in nodes (dir-dir) with colella change of coordinates='&
-       ,acc6/(npts1*npts2)
-  print *,'Average error in nodes (dir-per) with colella change of coordinates='&
-       ,acc7/(npts1*npts2)
-
-
+  print *,'Average error in nodes (per-per) '
+  print*, 'with colella change of coordinates='&
+       ,acc5/(npts1*npts2), ',  initialization time (s): ', t5i, &
+       ',  solution time (s): ', t5e
+  print *,'Average error in nodes (per-dir) '
+  print*, 'with colella change of coordinates='&
+       ,acc6/(npts1*npts2), ',  initialization time (s): ', t6i, &
+       ',  solution time (s): ', t6e
+  print *,'Average error in nodes (dir-dir) '
+  print*, 'with colella change of coordinates='&
+       ,acc7/(npts1*npts2), ',  initialization time (s): ', t7i, &
+       ',  solution time (s): ', t7e
+  print *,'Average error in nodes (dir-per) '
+  print*, 'with colella change of coordinates='&
+       ,acc8/(npts1*npts2), ',  initialization time (s): ', t8i, &
+       ',  solution time (s): ', t8e
+  
+  
   print*, '-------------------------------------------------------'
   print*, ' COLELLA CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
   print*, '-------------------------------------------------------'
-  print *,'Average error in nodes (per-per) with colella change of coordinates and source term non analytic='&
-       ,acc8/(npts1*npts2)
-  print *,'Average error in nodes (per-dir) with colella change of coordinates and source term non analytic='&
-      ,acc9/(npts1*npts2)
-  print *,'Average error in nodes (dir-dir) with colella change of coordinates and source term non analytic='&
-       ,acc10/(npts1*npts2)
-  print *,'Average error in nodes (dir-per) with colella change of coordinates and source term non analytic='&
-       ,acc11/(npts1*npts2)
-
-
+  print *,'Average error in nodes (per-per) '
+  print*, 'with colella change of coordinates and source term non analytic='&
+       ,acc9/(npts1*npts2), ',  initialization time (s): ', t9i, &
+       ',  solution time (s): ', t9e
+  print *,'Average error in nodes (per-dir) '
+  print*, 'with colella change of coordinates and source term non analytic='&
+       ,acc10/(npts1*npts2), ',  initialization time (s): ', t10i, &
+       ',  solution time (s): ', t10e
+  print *,'Average error in nodes (dir-dir)'
+  print*, 'with colella change of coordinates and source term non analytic='&
+       ,acc11/(npts1*npts2), ',  initialization time (s): ', t11i, &
+       ',  solution time (s): ', t11e
+  print *,'Average error in nodes (dir-per) '
+  print*, 'with colella change of coordinates and source term non analytic='&
+       ,acc12/(npts1*npts2), ',  initialization time (s): ', t12i, &
+       ',  solution time (s): ', t12e
 
   
   print *, 'PASSED'
 end program test_general_qns
+
+
+
+
+! External functions used as parameters in the above unit test:
+
 
 function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
