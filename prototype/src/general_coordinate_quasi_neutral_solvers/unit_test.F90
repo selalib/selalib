@@ -12,8 +12,8 @@ program test_general_qns
 
 #define SPLINE_DEG1 1
 #define SPLINE_DEG2 1
-#define NUM_CELLS1  11
-#define NUM_CELLS2  11
+#define NUM_CELLS1  21
+#define NUM_CELLS2  21
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
@@ -23,7 +23,9 @@ program test_general_qns
   class(sll_coordinate_transformation_2d_base), pointer :: T
   type(general_coordinate_qn_solver)                    :: qns
   type(arb_deg_2d_interpolator), target                 :: interp_2d
+  type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
   class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
+  class(sll_interpolator_2d_base), pointer              :: terme_source_interp
 !  class(sll_scalar_field_2d_analytic_alt), dimension(2,2) :: a_field_mat
   type(sll_scalar_field_2d_base_ptr), dimension(2,2)    :: a_field_mat
   class(sll_scalar_field_2d_base), pointer              :: c_field
@@ -39,9 +41,12 @@ program test_general_qns
   real(8), external :: source_term_chgt_dirper
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), allocatable :: values
-  sll_real64 :: acc, acc1,acc2,acc3,acc4,acc5,acc6,acc7
+  sll_real64 :: acc, acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9,acc10,acc11
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
+  sll_real64, dimension(:,:), allocatable    :: tab_rho
+  sll_real64, dimension(:),   allocatable    :: point1
+  sll_real64, dimension(:),   allocatable    :: point2
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
@@ -1630,8 +1635,1035 @@ program test_general_qns
 
 
 
+   !--------------------------------------------------------------------
+  
+  !     9  test case with colella change of coordinates 
+  !      periodic-periodic boundary conditions
+  !      and with a non analytic source term
+  
+  !--------------------------------------------------------------------
+  
+  
+  
+  print*, "---------------------"
+  print*, " 9 test case with colella change of coordinates"
+  print*, " periodic-periodic boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
+  
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+  
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+   T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC ) 
+  
+  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC)
+  
+  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC) 
+  
+  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC) 
+  
+  print*, 'initialization fields matrix a'
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC )
+
+  print*, 'initialization fields scalar c'
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+  
+  print*, 'initialization fields solution phi'
+
+  allocate(point1(npts1-1))
+  allocate(point2(npts2-1))
+  allocate(tab_rho(npts1-1,npts2-1))
+  do j=0,npts2-2
+     do i=0,npts1-2
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_perper(point1(i+1),point2(j+1))
+     end do
+  end do
+
+  print*, 'initialization points et tab_rho'
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
+ ! print*, tab_rho
+  print*, 'initialization interpolation for rho'
+  !call interp_2d_term_source%compute_spline_coefficients( &
+   !         tab_rho, &
+    !        point1, &
+     !       npts1-1, &
+      !      point2, &
+       !     npts2-1 )
+!  print*, interp_2d_term_source%coeff_splines
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho", &
+       terme_source_interp, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       point1,&
+       npts1-1,&
+       point2,&
+       npts2-1)
+  print*, 'initialization fields rho'
+!!$  
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+!!$  
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+  
+  print *, 'initialized fields...'
+  
+  call initialize_general_qn_solver( &
+       qns, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       QNS_GAUSS_LEGENDRE, &
+       QNS_GAUSS_LEGENDRE, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+  
+  print *, 'Initialized QNS object'
+  
+  ! solve the field
+  call solve_quasi_neutral_eq_general_coords( &
+       qns, &
+       a_field_mat, &
+       c_field, &
+       rho, &
+       phi )
+  
+  !print *, 'Completed solution',qns%phi_vec
+  
+  call  interp_2d%set_coefficients( qns%phi_vec)
+  
+  print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc8 = 0.0_f64
+  
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_perper(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+             'theoretical = ', ref
+        acc8        = acc8 + abs(node_val-ref)
+     end do
+  end do
+
+  ! delete things...
+  call delete(qns)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a_field_mat(1,1)%base%delete()
+  call a_field_mat(1,2)%base%delete()
+  call a_field_mat(2,1)%base%delete()
+  call a_field_mat(2,2)%base%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
+
+
+
+   !--------------------------------------------------------------------
+  
+  !     10  test case with colella change of coordinates 
+  !      periodic-dirichlet boundary conditions
+  !     and non analytic source term
+  !--------------------------------------------------------------------
+  
+  
+  
+  print*, "---------------------"
+  print*, " 10 test case with colella change of coordinates"
+  print*, " periodic-dirichlet boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
+  
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+  
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+   T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET) 
+  
+  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET)
+  
+  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  print*, 'initialization fields matrix a'
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET )
+
+  print*, 'initialization fields scalar c'
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET)
+  
+  print*, 'initialization fields solution phi'
+
+  allocate(point1(npts1-1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1-1,npts2))
+  do j=0,npts2-1
+     do i=0,npts1-2
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_perdir(point1(i+1),point2(j+1))
+     end do
+  end do
+
+  print*, 'initialization points et tab_rho'
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
+
+  print*, 'initialization interpolation for rho'
+
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho", &
+       terme_source_interp, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       point1,&
+       npts1-1,&
+       point2,&
+       npts2)
+  print*, 'initialization fields rho'
+!!$  
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+!!$  
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET)
+  
+  print *, 'initialized fields...'
+  
+  call initialize_general_qn_solver( &
+       qns, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       QNS_GAUSS_LEGENDRE, &
+       QNS_GAUSS_LEGENDRE, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+  
+  print *, 'Initialized QNS object'
+  
+  ! solve the field
+  call solve_quasi_neutral_eq_general_coords( &
+       qns, &
+       a_field_mat, &
+       c_field, &
+       rho, &
+       phi )
+  
+  !print *, 'Completed solution',qns%phi_vec
+  
+  call  interp_2d%set_coefficients( qns%phi_vec)
+  
+  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc9 = 0.0_f64
+  
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_perdir(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+             'theoretical = ', ref
+        acc9        = acc9 + abs(node_val-ref)
+     end do
+  end do
+
+  ! delete things...
+  call delete(qns)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a_field_mat(1,1)%base%delete()
+  call a_field_mat(1,2)%base%delete()
+  call a_field_mat(2,1)%base%delete()
+  call a_field_mat(2,2)%base%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
+
+
+  !--------------------------------------------------------------------
+  
+  !     11  test case with colella change of coordinates 
+  !      dirichlet-dirichlet boundary conditions
+  !     and non analytic source term
+  !--------------------------------------------------------------------
+  
+  
+  
+  print*, "---------------------"
+  print*, " 11 test case with colella change of coordinates"
+  print*, " dirichlet-dirichlet boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
+  
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+  
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+   T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET) 
+  
+  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET)
+  
+  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  print*, 'initialization fields matrix a'
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET )
+
+  print*, 'initialization fields scalar c'
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET)
+  
+  print*, 'initialization fields solution phi'
+
+  allocate(point1(npts1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1,npts2))
+  do j=0,npts2-1
+     do i=0,npts1-1
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_dirdir(point1(i+1),point2(j+1))
+     end do
+  end do
+
+  print*, 'initialization points et tab_rho'
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
+
+  print*, 'initialization interpolation for rho'
+
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho", &
+       terme_source_interp, &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       point1,&
+       npts1,&
+       point2,&
+       npts2)
+  print*, 'initialization fields rho'
+!!$  
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+!!$  
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET)
+  
+  print *, 'initialized fields...'
+  
+  call initialize_general_qn_solver( &
+       qns, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       QNS_GAUSS_LEGENDRE, &
+       QNS_GAUSS_LEGENDRE, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+  
+  print *, 'Initialized QNS object'
+  
+  ! solve the field
+  call solve_quasi_neutral_eq_general_coords( &
+       qns, &
+       a_field_mat, &
+       c_field, &
+       rho, &
+       phi )
+  
+  !print *, 'Completed solution',qns%phi_vec
+  
+  call  interp_2d%set_coefficients( qns%phi_vec)
+  
+  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc10 = 0.0_f64
+  
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_dirdir(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+             'theoretical = ', ref
+        acc10        = acc10 + abs(node_val-ref)
+     end do
+  end do
+
+  ! delete things...
+  call delete(qns)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a_field_mat(1,1)%base%delete()
+  call a_field_mat(1,2)%base%delete()
+  call a_field_mat(2,1)%base%delete()
+  call a_field_mat(2,2)%base%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
+
+  !--------------------------------------------------------------------
+  
+  !     12  test case with colella change of coordinates 
+  !      dirichlet-periodic boundary conditions
+  !     and non analytic source term
+  !--------------------------------------------------------------------
+  
+  
+  
+  print*, "---------------------"
+  print*, " 12 test case with colella change of coordinates"
+  print*, " dirichlet-periodic  boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
+  
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+  
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+   T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC) 
+  
+  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+  
+  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC) 
+  
+  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC) 
+  
+  print*, 'initialization fields matrix a'
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC )
+  
+  print*, 'initialization fields scalar c'
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+  
+  print*, 'initialization fields solution phi'
+
+  allocate(point1(npts1))
+  allocate(point2(npts2-1))
+  allocate(tab_rho(npts1,npts2-1))
+  do j=0,npts2-2
+     do i=0,npts1-1
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_dirper(point1(i+1),point2(j+1))
+     end do
+  end do
+
+  print*, 'initialization points et tab_rho'
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
+
+  print*, 'initialization interpolation for rho'
+
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho", &
+       terme_source_interp, &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       point1,&
+       npts1,&
+       point2,&
+       npts2-1)
+  print*, 'initialization fields rho'
+!!$  
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+!!$  
+  interp_2d_ptr => interp_2d
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi", &
+       interp_2d_ptr, &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+  
+  print *, 'initialized fields...'
+  
+  call initialize_general_qn_solver( &
+       qns, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       QNS_GAUSS_LEGENDRE, &
+       QNS_GAUSS_LEGENDRE, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+  
+  print *, 'Initialized QNS object'
+  
+  ! solve the field
+  call solve_quasi_neutral_eq_general_coords( &
+       qns, &
+       a_field_mat, &
+       c_field, &
+       rho, &
+       phi )
+  
+  !print *, 'Completed solution',qns%phi_vec
+  
+  call  interp_2d%set_coefficients( qns%phi_vec)
+  
+  !print*, interp_2d%coeff_splines(1: interp_2d%size_coeffs1,1) 
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc11 = 0.0_f64
+  
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_dirper(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+             'theoretical = ', ref
+        acc11        = acc11 + abs(node_val-ref)
+     end do
+  end do
+
+  ! delete things...
+  call delete(qns)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a_field_mat(1,1)%base%delete()
+  call a_field_mat(1,2)%base%delete()
+  call a_field_mat(2,1)%base%delete()
+  call a_field_mat(2,2)%base%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
+
+
   print*, '------------------------------------------------------'
-  print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC SOLUTIONS' 
+  print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 
   print*, '-----------------------------------------------------'
 
   print *,'Average error in nodes (per-per) without change of coordinates='&
@@ -1643,7 +2675,7 @@ program test_general_qns
   print *,'Average error in nodes (dir-per) without change of coordinates='&
        ,acc3/(npts1*npts2)
   print*, '-------------------------------------------------------'
-  print*, ' COLELLA CHANGE OF COORDINATES AND ANALYTIC SOLUTIONS' 
+  print*, ' COLELLA CHANGE OF COORDINATES AND ANALYTIC DATA' 
   print*, '-------------------------------------------------------'
   print *,'Average error in nodes (per-per) with colella change of coordinates='&
        ,acc4/(npts1*npts2)
@@ -1653,6 +2685,22 @@ program test_general_qns
        ,acc6/(npts1*npts2)
   print *,'Average error in nodes (dir-per) with colella change of coordinates='&
        ,acc7/(npts1*npts2)
+
+
+  print*, '-------------------------------------------------------'
+  print*, ' COLELLA CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
+  print*, '-------------------------------------------------------'
+  print *,'Average error in nodes (per-per) with colella change of coordinates and source term non analytic='&
+       ,acc8/(npts1*npts2)
+  print *,'Average error in nodes (per-dir) with colella change of coordinates and source term non analytic='&
+      ,acc9/(npts1*npts2)
+  print *,'Average error in nodes (dir-dir) with colella change of coordinates and source term non analytic='&
+       ,acc10/(npts1*npts2)
+  print *,'Average error in nodes (dir-per) with colella change of coordinates and source term non analytic='&
+       ,acc11/(npts1*npts2)
+
+
+
   
   print *, 'PASSED'
 end program test_general_qns
@@ -1862,13 +2910,13 @@ end function sol_exacte_chgt_perper
 
 
 
-real(8) function source_term_chgt_perdir(eta1,eta2,params) ! in the path
+real(8) function source_term_chgt_perdir(eta1,eta2) ! in the path
   use sll_constants
   real(8),intent(in) :: eta1,eta2
   real(8) :: x, y
   intrinsic :: cos
   intrinsic :: sin
-  real(8), dimension(:), intent(in), optional :: params
+  !real(8), dimension(:), intent(in), optional :: params
     
   x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
@@ -1961,6 +3009,7 @@ real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
   real(8) :: x, y
   intrinsic :: cos
   intrinsic :: sin
+  !real(8), dimension(:), intent(in), optional :: params
   ! -------------------------------------------------
   ! In the case without change of coordinates
   ! -------------------------------------------------
