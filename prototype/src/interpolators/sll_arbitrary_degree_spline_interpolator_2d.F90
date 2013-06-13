@@ -61,6 +61,7 @@ use sll_module_interpolators_2d_base
     procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
     procedure, pass:: interpolate_array => interpolate_array_ad2d
     procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
+    procedure, pass:: get_coefficients => get_coefficients_ad2d
   end type arb_deg_2d_interpolator
 
   interface delete
@@ -597,21 +598,21 @@ contains
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
        if ( res1 .ge. interpolator%eta1_max ) then 
-          res1 = res1 -interpolator%eta1_max
+          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
        if ( res2 .ge. interpolator%eta2_max ) then 
-          res2 = res2 -interpolator%eta2_max
+          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        if ( res2 .ge. interpolator%eta2_max ) then 
-          res2 = res2 -interpolator%eta2_max
+          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
        end if
        SLL_ASSERT( res1 .lt. interpolator%eta1_min )
        SLL_ASSERT( res1 .gt. interpolator%eta1_max )
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        if ( res1 .ge. interpolator%eta1_max ) then 
-          res1 = res1 -interpolator%eta1_max
+          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
        SLL_ASSERT( res2 .lt. interpolator%eta2_min )
        SLL_ASSERT( res2 .gt. interpolator%eta2_max )
@@ -726,25 +727,32 @@ contains
  
     print *, 'interpolate_array_ad2d: not implemented'
   end function interpolate_array_ad2d
-
-    function interpolate_2d_array_disp_ad2d( &
-         this,        &
-         num_points1, &
-         num_points2, &
-         data_in,     &
-         alpha1,      &
-         alpha2) result(res)
+  
+  function interpolate_2d_array_disp_ad2d( &
+       this,        &
+       num_points1, &
+       num_points2, &
+       data_in,     &
+       alpha1,      &
+       alpha2) result(res)
       
-      class(arb_deg_2d_interpolator), intent(in)    :: this
-      sll_int32, intent(in)                          :: num_points1  
-      sll_int32, intent(in)                          :: num_points2 
-      sll_real64, dimension(:,:), intent(in)         :: data_in
-      sll_real64, dimension(:,:), intent(in)         :: alpha1
-      sll_real64, dimension(:,:), intent(in)         :: alpha2  
-      sll_real64, dimension(num_points1,num_points2) :: res
+    class(arb_deg_2d_interpolator), intent(in)    :: this
+    sll_int32, intent(in)                          :: num_points1  
+    sll_int32, intent(in)                          :: num_points2 
+    sll_real64, dimension(:,:), intent(in)         :: data_in
+    sll_real64, dimension(:,:), intent(in)         :: alpha1
+    sll_real64, dimension(:,:), intent(in)         :: alpha2  
+    sll_real64, dimension(num_points1,num_points2) :: res
+    
+    print *, 'interpolate_2d_array_disp_ad2d: not implemented.'
+  end function interpolate_2d_array_disp_ad2d
+    
+    
+  function get_coefficients_ad2d(interpolator)
+    class(arb_deg_2d_interpolator), intent(in)    :: interpolator
+    sll_real64, dimension(:,:), pointer            :: get_coefficients_ad2d     
 
-      print *, 'interpolate_2d_array_disp_ad2d: not implemented.'
-    end function interpolate_2d_array_disp_ad2d
-
+    get_coefficients_ad2d => interpolator%coeff_splines
+  end function get_coefficients_ad2d
   
 end module sll_arbitrary_degree_spline_interpolator_2d_module
