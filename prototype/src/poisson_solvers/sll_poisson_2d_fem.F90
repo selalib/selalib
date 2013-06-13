@@ -1,3 +1,6 @@
+!>Solve Poisson equation on cartesian domain with finit elements.
+!> * Compact boundary conditions.
+!> * Linear system solve with lapack (Choleski)
 module sll_poisson_2d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -50,34 +53,34 @@ do j=0,ny-1
    this%hy(j) = y(j+1)-y(j)
 end do
 
-this%hx(nx) = this%hx(0)  ! CL periodiques
-this%hx(-1) = this%hx(nx-1)
-this%hy(ny) = this%hy(0)
-this%hy(-1) = this%hy(ny-1)
-
-x(-1)   = x(0) - this%hx(nx-1)  !points utiles pour le cas period
-x(nx+1) = x(nx) + this%hx(0)
-y(-1)   = y(0) - this%hy(ny-1)
-y(ny+1) = y(ny) + this%hy(0)
+!Utilisé pour des conditions limites periodiques
+!this%hx(nx) = this%hx(0)  
+!this%hx(-1) = this%hx(nx-1)
+!this%hy(ny) = this%hy(0)
+!this%hy(-1) = this%hy(ny-1)
+!
+!x(-1)   = x(0)  - this%hx(nx-1) 
+!x(nx+1) = x(nx) + this%hx(0)
+!y(-1)   = y(0)  - this%hy(ny-1)
+!y(ny+1) = y(ny) + this%hy(0)
 
 !** Construction des matrices elementaires
 dum = 1.d0/6.d0
-Axelem(1,1)= 2*dum ; Axelem(1,2)=-2*dum ; Axelem(1,3)= - dum ; Axelem(1,4)=   dum ;
-Axelem(2,1)=-2*dum ; Axelem(2,2)= 2*dum ; Axelem(2,3)=   dum ; Axelem(2,4)= - dum ;
-Axelem(3,1)= - dum ; Axelem(3,2)=   dum ; Axelem(3,3)= 2*dum ; Axelem(3,4)=-2*dum ;
-Axelem(4,1)=   dum ; Axelem(4,2)=-  dum ; Axelem(4,3)=-2*dum ; Axelem(4,4)= 2*dum ;
+Axelem(1,1)= 2*dum; Axelem(1,2)=-2*dum; Axelem(1,3)= - dum; Axelem(1,4)=   dum ;
+Axelem(2,1)=-2*dum; Axelem(2,2)= 2*dum; Axelem(2,3)=   dum; Axelem(2,4)= - dum ;
+Axelem(3,1)= - dum; Axelem(3,2)=   dum; Axelem(3,3)= 2*dum; Axelem(3,4)=-2*dum ;
+Axelem(4,1)=   dum; Axelem(4,2)=-  dum; Axelem(4,3)=-2*dum; Axelem(4,4)= 2*dum ;
 
-Ayelem(1,1)= 2*dum ; Ayelem(1,2)=   dum ; Ayelem(1,3)= - dum ; Ayelem(1,4)=-2*dum ;
-Ayelem(2,1)=   dum ; Ayelem(2,2)= 2*dum ; Ayelem(2,3)=-2*dum ; Ayelem(2,4)= - dum ;
-Ayelem(3,1)= - dum ; Ayelem(3,2)=-2*dum ; Ayelem(3,3)= 2*dum ; Ayelem(3,4)=   dum ;
-Ayelem(4,1)=-2*dum ; Ayelem(4,2)= - dum ; Ayelem(4,3)=   dum ; Ayelem(4,4)= 2*dum ;
+Ayelem(1,1)= 2*dum; Ayelem(1,2)=   dum; Ayelem(1,3)= - dum; Ayelem(1,4)=-2*dum ;
+Ayelem(2,1)=   dum; Ayelem(2,2)= 2*dum; Ayelem(2,3)=-2*dum; Ayelem(2,4)= - dum ;
+Ayelem(3,1)= - dum; Ayelem(3,2)=-2*dum; Ayelem(3,3)= 2*dum; Ayelem(3,4)=   dum ;
+Ayelem(4,1)=-2*dum; Ayelem(4,2)= - dum; Ayelem(4,3)=   dum; Ayelem(4,4)= 2*dum ;
 
 dum = 1.d0/36.d0
-Melem(1,1)=4*dum ; Melem(1,2)=2*dum ; Melem(1,3)=  dum ; Melem(1,4)=2*dum ;
-Melem(2,1)=2*dum ; Melem(2,2)=4*dum ; Melem(2,3)=2*dum ; Melem(2,4)=  dum ;
-Melem(3,1)=  dum ; Melem(3,2)=2*dum ; Melem(3,3)=4*dum ; Melem(3,4)=2*dum ;
-Melem(4,1)=2*dum ; Melem(4,2)=  dum ; Melem(4,3)=2*dum ; Melem(4,4)=4*dum ;
-
+Melem(1,1)=4*dum; Melem(1,2)=2*dum; Melem(1,3)=  dum; Melem(1,4)=2*dum;
+Melem(2,1)=2*dum; Melem(2,2)=4*dum; Melem(2,3)=2*dum; Melem(2,4)=  dum;
+Melem(3,1)=  dum; Melem(3,2)=2*dum; Melem(3,3)=4*dum; Melem(3,4)=2*dum;
+Melem(4,1)=2*dum; Melem(4,2)=  dum; Melem(4,3)=2*dum; Melem(4,4)=4*dum;
 
 this%A = 0.d0
 

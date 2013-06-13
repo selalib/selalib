@@ -38,16 +38,16 @@ SLL_ALLOCATE(y(-1:ny+1),error)
 dimx = 2 * sll_pi
 dimy = 2 * sll_pi
 
-dx = dimx / (nx-1)
-dy = dimy / (ny-1)
+dx = dimx / nx
+dy = dimy / ny
 
 x(0) = 0.
 y(0) = 0.
 
-do i=1,nx+1
+do i=1,nx
    x(i) = (i*dx) *(i*dx+1)/(1+dimx)
 enddo
-do j=1,ny+1
+do j=1,ny
    y(j) = (j*dy) *(j*dy+1)/(1+dimy)
 enddo
 
