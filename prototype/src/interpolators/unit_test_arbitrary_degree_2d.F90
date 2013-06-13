@@ -99,7 +99,7 @@ program unit_test
        SPL_DEG )
   
   
-  call ad2d%compute_spline_coefficients( &
+  call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&
        NPTS1-1,&
@@ -162,7 +162,7 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
 
-  call ad2d%compute_spline_coefficients( &
+  call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2),&
        eta1_pos(1:NPTS1-1),&
        NPTS1-1,&
@@ -224,7 +224,7 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
 
-  call ad2d%compute_spline_coefficients( &
+  call ad2d%compute_interpolants( &
        x(1:NPTS1,1:NPTS2-1),&
        eta1_pos(1:NPTS1),&
        NPTS1,&
@@ -284,7 +284,7 @@ program unit_test
        SPL_DEG )
   !print*, 'ret', size(x,1), size(x,2)
   !print*, 'x', x(1:NPTS1,1:NPTS2)
-  call ad2d%compute_spline_coefficients( &
+  call ad2d%compute_interpolants( &
        x,&
        eta1_pos,&
        NPTS1,&
