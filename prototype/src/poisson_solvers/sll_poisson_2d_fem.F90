@@ -34,7 +34,7 @@ sll_real64, dimension(4,4) :: Axelem
 sll_real64, dimension(4,4) :: Ayelem
 sll_real64, dimension(4,4) :: Melem
 sll_real64 :: dum
-sll_int32 :: Iel, info
+sll_int32 :: Iel
 sll_int32, dimension(4) :: Isom
 sll_int32 :: nx
 sll_int32 :: ny
@@ -197,7 +197,7 @@ do j=nx+1,(nx-1)*(ny-1)
    this%mat(2,j) = this%A(j-nx+1,j)
    this%mat(1,j) = this%A(j-nx,j)
 end do
-call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,info)
+call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
 
 end subroutine initialize_poisson_2d_fem
 
@@ -208,7 +208,7 @@ sll_real64, dimension(:,:) :: ey
 sll_real64, dimension(:,:) :: rho
 sll_int32 :: i, j, nx, ny
 sll_real64, dimension((nx-1)*(ny-1)) :: b
-sll_int32 :: info
+sll_int32 :: error
 
 !** Construction du second membre (rho a support compact --> projete)
 do i=1,nx-1
@@ -219,7 +219,7 @@ end do
 
 b = matmul(this%M,b)
 
-call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),info) 
+call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),error) 
 
 do i=1,nx-1
    do j=1,ny-1
