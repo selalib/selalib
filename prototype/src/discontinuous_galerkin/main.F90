@@ -1,17 +1,18 @@
 program VP_DG
 #include "sll_working_precision.h"
 
-!from Madaule Éric :
+!from Madaule Eric :
 !Warning : this code and all the modules it calls and I wrote are not optimized in
 !term of computation time. \n
 !We kept the readability of the code over computation performances
 
   use sll_nu_cart_mesh
-  use gausslobatto
-  use poisson4dg
-  use mod_sparse
+  use sll_gausslobatto
+  use sll_poisson4dg
   use sll_constants
-  use timestep4dg
+  use sll_timestep4dg
+  !this is part of FEMilaro
+  use mod_sparse
 
   !use mod_octave_io
   use mod_octave_io_sparse
@@ -30,39 +31,39 @@ program VP_DG
   !mesh
   type(non_unif_cart_mesh) :: mesh
   !coefficients for fluxes
-  sll_real64 :: c11,c12,c22
+  sll_real64 :: c11,c12
   !number of Gauss-Lobatto points
   sll_int32 :: ng
   !time step and finalt time
   sll_real64 :: dt,tf
   !Gauss-Lobatto
-  type(gausslobatto1D) :: gausslob
+  type(gausslobatto1D) :: gausslob,gll
   !elements of Phi equal to 0 so Phi(x=0)=0
   sll_int32 :: xbound
   !space variables
   sll_real64 :: x,v,k
   !energy and momentum to check conservation
-  sll_real64 :: momentum,l1_f,l2_f
+  sll_real64 :: momentum,l1_f,l2_f!,energy0
   sll_real64 :: k_en,em_en,energy,phi_jump
-
   !indexes for loops
   sll_int32 :: x1,x2,v1,v2
   !display parameter
   sll_int32 :: len,i1,i2,i3,i4,i5,i6
   character(len=25) :: form,fdist,ffield
-  sll_int32 :: irec ! for binary writting
 
   ! for the python script *.py
   !namelist /param/ nx,nv,ng
   !read(*,NML=param)
 
   !definition of geometry and data
+!!$  k=2.0d0/13.0d0
   k=0.5d0
+  !k=1.0d0/k
 
-  x_min=0.0d0
-  x_max=sll_pi
-  v_min=0
-  v_max=sll_pi
+!!$  x_min=0.0d0
+!!$  x_max=sll_pi
+!!$  v_min=0
+!!$  v_max=sll_pi
 
 !!$  x_min=0.0d0
 !!$  x_max=4.0d0*sll_pi
@@ -86,14 +87,14 @@ program VP_DG
 !!$  v_min=-1.0d0
 !!$  v_max=1.0d0
 
-!!$  x_min=0.0d0
-!!$  x_max=2.0d0*sll_pi/k
-!!$  v_min=-10.0d0
-!!$  v_max=10.0d0
+  x_min=0.0d0
+  x_max=2.0d0*sll_pi/k
+  v_min=-10.0d0
+  v_max=10.0d0
 
-  nx=30
-  nv=50
-  ng=5
+  nx=50
+  nv=80
+  ng=7
 
   print*,'discretization caracteristics :'
   print"(3(a5,i3))",'nx=',nx,', nv=',nv,', ng=',ng
@@ -105,11 +106,11 @@ program VP_DG
 
   !definition or time step, delta_t and final time
   dt=0.001d0
-  tf=15.0d0
-  nb_step=1!ceiling(tf/dt)
+  tf=100.0d0
+  nb_step=ceiling(tf/dt)
   th=20
-  th_out=200
-  th_large=1000
+  th_out=500
+  th_large=1000 ! must be a multiple of th
   tf=dt*nb_step
   print*,'size of time step      :',dt
   print*,'number of time step    :',nb_step
@@ -124,19 +125,17 @@ program VP_DG
   form="(1x,i"//char(len+48)//",a1,i"//char(len+48)//",1x,a11,f6.2)"
 
   call init_gausslobatto_1d(ng,gausslob)
+  call init_gausslobatto_1d(ng*3,gll)
   call init_nu_cart_mesh(nx,nv,mesh)
   mesh%d_etat1=(x_max-x_min)/real(nx,8)
   mesh%d_etat2=(v_max-v_min)/real(nv,8)
   call fill_node_nuc_mesh(x_min,v_min,mesh)
 
   !flux coefficients
-  c22=0.0d0
   c12=0.5d0
   c11=real(ng**2,8)/maxval(mesh%d_etat1)
 
-  call init_timesteping_4dg(dg_plan,SLL_ee,gausslob,mesh,dt,xbound,c11,c12, &
-       & alpha=0.0d0)
-!       & norma=erf(5.0d0*sqrt(2.0d0)))
+  call init_timesteping_4dg(dg_plan,SLL_rk4,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
 
   !construction of distribution function
   !x_i is indexed on both mesh nodes and GLL nodes, so to have the postion in x
@@ -145,18 +144,18 @@ program VP_DG
   !same is done for v
 
   !test distribution for the Poisson's problem : 
-  !f(x,v)=sin(x)sin(v), (x,v)\in [0;pi]² (to check rhs, independants on t)
+  !f(x,v)=sin(x)sin(v), (x,v)\in [0;pi]^2 (to check rhs, independants on t)
   !exact rhs = -v*cos(x)sin(x)+sin(2x)cos(v)
   dist=0.0d0
-  inquire(iolength=irec)dist
-  open(14,file='dist_000000')!,form="unformatted",access="direct",recl=irec)
+  open(14,file='dist_000000')
   do v1=1,nv
      do v2=1,ng
         v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
         do x1=1,nx
            do x2=1,ng
               x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=sin(x)*sin(v)+1.0d0/sll_pi
+              !test case for RHS
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=sin(x)*sin(v)
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(exp(-200.0d0*(v-0.8d0)**2)+ &
 !!$                   & exp(-200.0d0*(v+0.8d0)**2))!*(cos(3.0d0*x)+cos(6.0d0*x)+cos(18.0d0*x))
@@ -173,22 +172,36 @@ program VP_DG
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(x**2-1.0d0)*(v**2-1.0d0)
 
-!!$              !dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.5d0*sin(k*x))* &
+              !linear Landau
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.5d0*cos(k*x))* &
-!!$                   !& (exp(-(v-1.0d0)**2*40.0d0)+exp(-(v+1.0d0)**2*40.0d0))
 !!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
+
+              !strong oscillations two streams
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=v**2/sqrt(8.0d0*sll_pi)*(2.0d0- &
+!!$                   & cos(k*(x-2.0d0*sll_pi)))* &
+!!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
+
+              !classical two streams instability
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
+!!$                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
+!!$                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
+!!$                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
+
+              !asymetric two streams instability
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.05d0*cos(k*x))/sqrt(2.0d0*sll_pi)* &
+!!$                   & (exp(-v**2/2.0d0)+0.2d0*exp(-(v-2.0d0)**2*100))
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=exp(-v**2)/sqrt(2.0d0*sll_pi)
 
               write(14,*)x,v,dist((x1-1)*ng+x2,(v1-1)*ng+v2)
-              !write(14)x,v,dist((x1-1)*ng+x2,(v1-1)*ng+v2)
            end do
         end do
         write(14,*)''
      end do
   end do
-  !write(14,rec=1)dist
-  close(14)!,status='keep')
+  close(14)
+
+  call param_out(x_min,x_max,v_min,v_max,nx,nv,ng,.true.,c11,c12,tf,dt,nb_step,th,th_large)
 
   dg_plan%t=0.0d0
   open(15,file='energy_momentum',action='write')
@@ -204,29 +217,16 @@ program VP_DG
 
   dg_plan%rho=0.0d0
   dg_plan%norma=0.0d0
-!!$  do x1=1,nx
-!!$     do x2=1,ng
-!!$        do v1=1,nv
-!!$           do v2=1,ng
-!!$              dg_plan%rho((x1-1)*ng+x2)=dg_plan%rho((x1-1)*ng+x2)+ &
-!!$                   & dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
-!!$           end do
-!!$        end do
-!!$        dg_plan%rho((x1-1)*ng+x2)=(dg_plan%rho((x1-1)*ng+x2)-dg_plan%norma)* &
-!!$             & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
-!!$     end do
-!!$  end do
-  do x1=1,nx*ng
-     do v1=1,nv
-        do v2=1,ng
-           dg_plan%rho(x1)=dg_plan%rho(x1)+ &
-                & dist(x1,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
-        end do
-     end do
-  end do
   do x1=1,nx
      do x2=1,ng
-        dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)*gausslob%weigh(x2)/mesh%jac(x1,nv+1)
+        do v1=1,nv
+           do v2=1,ng
+              dg_plan%rho((x1-1)*ng+x2)=dg_plan%rho((x1-1)*ng+x2)+ &
+                   & dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
+           end do
+        end do
+        dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)* &
+             & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
      end do
   end do
   dg_plan%norma=dg_plan%norma/(x_max-x_min)
@@ -248,7 +248,6 @@ program VP_DG
         v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
         do x1=1,nx
            do x2=1,ng
-!!$              x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
 
               momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
                    & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
@@ -280,7 +279,7 @@ program VP_DG
      phi_jump=phi_jump+(dg_plan%phi(x1*ng)-dg_plan%phi(modulo(x1*ng+1-1,nx*ng)+1))**2
   end do
   energy=k_en+em_en+phi_jump*c11
-  write(15,*)dg_plan%t,momentum,energy,k_en,em_en,phi_jump,l1_f,l2_f
+  write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f
   close(17)
 
   dg_plan%bound=0
@@ -301,14 +300,22 @@ program VP_DG
         l2_f=0.0d0
         
         dg_plan%rho=0.0d0
+        dg_plan%norma=0.0d0
         do x1=1,nx
            do x2=1,ng
               do v1=1,nv
                  do v2=1,ng
                     dg_plan%rho((x1-1)*ng+x2)=dg_plan%rho((x1-1)*ng+x2)+ &
-                         & dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
+                      & dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
                  end do
               end do
+              dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)* &
+                   & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
+           end do
+        end do
+        dg_plan%norma=dg_plan%norma/(x_max-x_min)
+        do x1=1,nx
+           do x2=1,ng
               dg_plan%rho((x1-1)*ng+x2)=(dg_plan%rho((x1-1)*ng+x2)-dg_plan%norma)* &
                    & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
            end do
@@ -342,6 +349,7 @@ program VP_DG
               end do
            end do
         end do
+        l2_f=sqrt(l2_f)
 
         do x1=1,nx
            do x2=1,ng
@@ -352,7 +360,7 @@ program VP_DG
            phi_jump=phi_jump+(dg_plan%phi(x1*ng)-dg_plan%phi(modulo(x1*ng+1-1,nx*ng)+1))**2
         end do
         energy=k_en+em_en+phi_jump*c11
-        write(15,*)dg_plan%t,momentum,energy,k_en,em_en,phi_jump,l1_f,l2_f
+        write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f
      end if
 
      if (modulo(step,th_large)==0 .or. step==nb_step) then
@@ -376,9 +384,7 @@ program VP_DG
               do x1=1,nx
                  do x2=1,ng
                     x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
-                    write(16,*)x,v,dist((x1-1)*ng+x2,(v1-1)*ng+v2), &
-                         & dg_plan%rhs((x1-1)*ng+x2,(v1-1)*ng+v2), &
-                         & -v*cos(x)*sin(v)+sin(2.0d0*x)*cos(v)
+                    write(16,*)x,v,dist((x1-1)*ng+x2,(v1-1)*ng+v2)
                  end do
               end do
               write(16,*)''
@@ -390,7 +396,8 @@ program VP_DG
         do x1=1,nx
            do x2=1,ng
               x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
-              write(17,*)x,dg_plan%field((x1-1)*ng+x2)
+              write(17,*)x,dg_plan%field((x1-1)*ng+x2),dg_plan%phi((x1-1)*ng+x2), &
+                   & dg_plan%rho((x1-1)*ng+x2)*mesh%jac(x1,nv+1)/gausslob%weigh(x2)+dg_plan%norma
            end do
         end do
         close(17)
@@ -406,6 +413,40 @@ program VP_DG
   call delete(gausslob)
   call delete(dg_plan)
   call delete(mesh)
+
+contains
+
+  subroutine param_out(x_min,x_max,v_min,v_max,nx,nv,ng,unif,c11,c12,tf,dt,nt,th,thl)
+    
+    sll_real64,intent(in) :: x_min,x_max,v_min,v_max,c11,c12,tf,dt
+    sll_int32,intent(in)  :: nx,nv,ng,nt,th,thl
+    logical,intent(in)    :: unif
+
+    open(20,file="parameters",action="write")
+    write(20,*)"x bounadries :",x_min,x_max
+    write(20,*)"v bounadries :",v_min,v_max
+    if (unif) then
+       write(20,*)"uniforme mesh"
+    else
+       write(20,*)"non-uniforme mesh"
+    end if
+    write(20,*)"number of step in direction x  :",nx
+    write(20,*)"number of step in direction v  :",nv
+    write(20,*)"number of Gauss-Lobatto points :",ng
+    write(20,*)""
+    write(20,*)"flux coefficient c11 :",c11
+    write(20,*)"flux coefficient c12 :",c12
+    write(20,*)""
+    write(20,*)"final time :",real(tf,4)
+    write(20,*)"number of time steps :",nt
+    write(20,*)"size of time steps   :",dt
+    write(20,*)"frequency of time historic :",real(th,4)*dt,th
+    write(20,*)"number of time historic    :",nt/th+1
+    write(20,*)"frequency of snapshot :",real(thl,4)*dt,thl
+    write(20,*)"number of snapshot    :",nt/thl+1
+    close(20)
+
+  end subroutine param_out
 
 end program VP_DG
 
