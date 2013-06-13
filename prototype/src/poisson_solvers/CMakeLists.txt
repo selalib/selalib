@@ -66,7 +66,8 @@ ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90
 TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq ${POISSON_LIBS})
 TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
 
-ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
+ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
+                                   test_poisson_2d_fem.F90)
 
 TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})
 
