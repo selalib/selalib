@@ -576,8 +576,8 @@ contains   ! *****************************************************************
        eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
        do i=1, nptsx1
           eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
-          x1coords(i,j) = field%coord_trans%x1(eta1,eta2)
-          x2coords(i,j) = field%coord_trans%x2(eta1,eta2)
+          x1coords(i,j) = field%T%x1(eta1,eta2)
+          x2coords(i,j) = field%T%x2(eta1,eta2)
           values(i,j)   = field%value_at_point(eta1,eta2)
        end do
     end do
