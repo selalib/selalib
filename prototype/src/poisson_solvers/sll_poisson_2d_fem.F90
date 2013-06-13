@@ -1,99 +1,46 @@
-program sll_poisson_2d_cart_fem
+module sll_poisson_2d_fem
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_constants
 implicit none
 
-sll_int32 :: i, j, ii, jj
-sll_int32, parameter :: nx = 64, ny = 64
-sll_real64 :: dimx, dimy
-sll_int32 :: mode
-sll_real64, dimension(:), pointer :: x, y
-
 type :: poisson_fem
    sll_real64, dimension(:,:), pointer :: A
    sll_real64, dimension(:,:), pointer :: M
    sll_real64, dimension(:,:), pointer :: mat
-   sll_real64, dimension(:),   pointer :: hx    ! les h_i+1/2
-   sll_real64, dimension(:),   pointer :: hy    ! les h_i+1/2
-   sll_real64, dimension(:),   pointer :: phi
+   sll_real64, dimension(:)  , pointer :: hx    !< step size x
+   sll_real64, dimension(:)  , pointer :: hy    !< step size y
 end type poisson_fem
 
-call test()
+interface initialize
+   module procedure initialize_poisson_2d_fem
+end interface initialize
+interface solve
+   module procedure solve_poisson_2d_fem
+end interface solve
 
 contains
 
-subroutine test()
-type( poisson_fem ) :: poisson
-sll_real64, dimension(1:nx,1:ny) :: ex
-sll_real64, dimension(1:nx,1:ny) :: ey
-sll_real64, dimension(1:nx,1:ny) :: rho
-sll_real64 :: dx, dy
-sll_int32  :: error
-
-SLL_ALLOCATE(x(-1:nx+1),error)  
-SLL_ALLOCATE(y(-1:ny+1),error) 
-
-dimx = 2 * sll_pi
-dimy = 2 * sll_pi
-
-dx = dimx / nx
-dy = dimy / ny
-
-x(0) = 0.
-y(0) = 0.
-
-do i=1,nx
-   x(i) = (i*dx) *(i*dx+1)/(1+dimx)
-enddo
-do j=1,ny
-   y(j) = (j*dy) *(j*dy+1)/(1+dimy)
-enddo
-
-
-mode = 2
-do i = 1, nx
-   do j = 1, ny
-      rho(i,j) = 2_f64 * mode**3 * sin(mode*x(i))*sin(mode*y(j))
-      write(10,*) x(i), y(j), rho(i,j)
-   end do
-   write(10,*)
-end do
-close(10)
-
-call initialize(poisson, x, y)
-call solve(poisson, ex, ey, rho)
-
-do i = 1, nx-1
-        do j = 1, ny-1
-      write(11,*) x(i), y(j), ex(i,j),  mode**2*cos(mode*x(i))*sin(mode*y(j))
-      write(12,*) x(i), y(j), ey(i,j), -mode**2*sin(mode*x(i))*cos(mode*y(j))
-   end do
-   write(11,*)
-   write(12,*)
-end do
-close(11)
-close(12)
-
-end subroutine test
-
-subroutine initialize( this, x, y )
+subroutine initialize_poisson_2d_fem( this, x, y ,nx, ny)
 type( poisson_fem ) :: this
 sll_real64, dimension(-1:) :: x, y
-sll_int32 :: i, j
+sll_int32 :: i, j, ii, jj
 sll_int32 :: error
 
-sll_real64, dimension(4,4) :: Axelem, Ayelem, Melem
+sll_real64, dimension(4,4) :: Axelem
+sll_real64, dimension(4,4) :: Ayelem
+sll_real64, dimension(4,4) :: Melem
 sll_real64 :: dum
 sll_int32 :: Iel, info
 sll_int32, dimension(4) :: Isom
+sll_int32 :: nx
+sll_int32 :: ny
 
 SLL_ALLOCATE(this%hx(-1:nx),error)
 SLL_ALLOCATE(this%hy(-1:ny),error)
-SLL_ALLOCATE(this%A((nx-1)*(ny-1),(nx-1)*(ny-1)),error) 
-SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)),error) 
-SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)),error) 
-SLL_ALLOCATE(this%phi((nx-1)*(ny-1)),error) 
+SLL_ALLOCATE(this%A((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
+SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
+SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)), error)
 
 do i=0,nx-1
    this%hx(i) = x(i+1)-x(i)
@@ -203,23 +150,36 @@ end do
 
 !** Contribution des coins
 Isom(3) = 1    !SW
-this%A(1,1) = this%A(1,1) + Axelem(3,3) * this%hy(0) / this%hx(0) + Ayelem(3,3) * this%hx(0) / this%hy(0)
+this%A(1,1) =   this%A(1,1) &
+              + Axelem(3,3) * this%hy(0) / this%hx(0) &
+              + Ayelem(3,3) * this%hx(0) / this%hy(0)
+
 this%M(1,1) = this%M(1,1) + Melem(3,3) * this%hx(0) * this%hy(0)
 
 Isom(4) = nx-1 !SE
-this%A(nx-1,nx-1) = this%A(nx-1,nx-1) + Axelem(4,4) * this%hy(0) / this%hx(nx-1) &
-     & + Ayelem(4,4) * this%hx(nx-1) / this%hy(0)
+this%A(nx-1,nx-1) =   this%A(nx-1,nx-1) &
+                    + Axelem(4,4) * this%hy(0) / this%hx(nx-1) &
+                    + Ayelem(4,4) * this%hx(nx-1) / this%hy(0)
+
 this%M(nx-1,nx-1) = this%M(nx-1,nx-1) + Melem(4,4) * this%hx(nx-1) * this%hy(0)
 
 Isom(1) = (nx-1)*(ny-1)   !NE
-this%A(Isom(1),Isom(1)) = this%A(Isom(1),Isom(1)) + Axelem(1,1) * this%hy(ny-1) / this%hx(nx-1) &
-     & + Ayelem(1,1) * this%hx(nx-1) / this%hy(ny-1)
-this%M(Isom(1),Isom(1)) = this%M(Isom(1),Isom(1)) + Melem(1,1) * this%hx(nx-1) * this%hy(ny-1)
+
+this%A(Isom(1),Isom(1)) =   this%A(Isom(1),Isom(1)) &
+                          + Axelem(1,1) * this%hy(ny-1) / this%hx(nx-1) &
+                          + Ayelem(1,1) * this%hx(nx-1) / this%hy(ny-1)
+
+this%M(Isom(1),Isom(1)) =   this%M(Isom(1),Isom(1))  &
+                          + Melem(1,1) * this%hx(nx-1) * this%hy(ny-1)
 
 Isom(2) = (nx-1)*(ny-2)+1 !NW
-this%A(Isom(2),Isom(2)) = this%A(Isom(2),Isom(2)) + Axelem(2,2) * this%hy(ny-1) / this%hx(0) &
-     & + Ayelem(2,2) * this%hx(0) / this%hy(ny-1)
-this%M(Isom(2),Isom(2)) = this%M(Isom(2),Isom(2)) + Melem(2,2) * this%hx(0) * this%hy(ny-1)
+
+this%A(Isom(2),Isom(2)) =   this%A(Isom(2),Isom(2))  &
+                          + Axelem(2,2) * this%hy(ny-1) / this%hx(0) &
+                          + Ayelem(2,2) * this%hx(0) / this%hy(ny-1)
+
+this%M(Isom(2),Isom(2)) =   this%M(Isom(2),Isom(2))  &
+                          + Melem(2,2) * this%hx(0) * this%hy(ny-1)
 
 this%mat = 0.d0
 this%mat(nx+1,1) = this%A(1,1)
@@ -234,56 +194,48 @@ do j=nx+1,(nx-1)*(ny-1)
    this%mat(2,j) = this%A(j-nx+1,j)
    this%mat(1,j) = this%A(j-nx,j)
 end do
-CALL DPBTRF('U',(nx-1)*(ny-1),nx,this%mat,nx+1,info)
-print*,'factorisation pour Cholesky',info
+call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,info)
 
-end subroutine initialize
+end subroutine initialize_poisson_2d_fem
 
-subroutine solve( this, ex, ey, rho )
+subroutine solve_poisson_2d_fem( this, ex, ey, rho, nx, ny )
 type( poisson_fem ) :: this
 sll_real64, dimension(:,:) :: ex
 sll_real64, dimension(:,:) :: ey
 sll_real64, dimension(:,:) :: rho
+sll_int32 :: i, j, nx, ny
+sll_real64, dimension((nx-1)*(ny-1)) :: b
 sll_int32 :: info
 
 !** Construction du second membre (rho a support compact --> projete)
 do i=1,nx-1
    do j=1,ny-1
-      this%phi(i+(j-1)*(nx-1)) = rho(i,j)
+      b(i+(j-1)*(nx-1)) = rho(i,j)
    end do
 end do
 
-this%phi = matmul(this%M,this%phi)
+b = matmul(this%M,b)
 
-CALL DPBTRS('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,this%phi,(nx-1)*(ny-1),info) 
-print*,'resolution par Cholesky',info
+call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),info) 
 
 do i=1,nx-1
    do j=1,ny-1
-      rho(i,j) = this%phi(i+(j-1)*(nx-1)) 
+      rho(i,j) = b(i+(j-1)*(nx-1)) 
    end do
 end do
 
-do i = 1, nx-1
-   do j = 1, ny-1
-      write(15,*) x(i), y(j), rho(i,j), sin(mode*x(i))*sin(mode*y(j))
-   end do
-   write(15,*)
-end do
-close(15)
-
+do j=1,ny-1
 do i=1,nx-2
-   do j=1,ny-1
-      ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
-  end do
+   ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
+end do
 end do
 
+do j=1,ny-2
 do i=1,nx-1
-   do j=1,ny-2
-      ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(i)
-  end do
+   ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
+end do
 end do
 
-end subroutine solve
+end subroutine solve_poisson_2d_fem
 
-end program sll_poisson_2d_cart_fem
+end module sll_poisson_2d_fem
