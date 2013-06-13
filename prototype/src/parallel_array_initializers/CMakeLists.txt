@@ -22,6 +22,7 @@ target_link_libraries(test_parallel_array_initializer
 	sll_memory
 	sll_assertion
 	sll_working_precision
+        ${HDF5_LIBRARIES}
 	)
 
 # Just in case that the unit test needs diagnostics
