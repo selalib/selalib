@@ -69,10 +69,16 @@ module sll_module_scalar_field_2d_alternative
 
   type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete_alt
      sll_real64, dimension(:,:), pointer  :: values
+     !sll_real64, dimension(:,:), pointer  :: coeff_spline
+     !sll_int32                            :: sz_coeff1
+     !sll_int32                            :: sz_coeff2
      character(len=64)                    :: name
 !     sll_int32                            :: plot_counter
      class(sll_coordinate_transformation_2d_base), pointer :: T
      class(sll_interpolator_2d_base), pointer :: interp_2d
+     sll_real64, dimension(:), pointer :: point1_1d
+     sll_real64, dimension(:), pointer :: point2_1d
+     !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
      sll_int32 :: bc_right
      sll_int32 :: bc_bottom
@@ -372,31 +378,48 @@ contains   ! *****************************************************************
     bc_left, &
     bc_right, &
     bc_bottom, &
-    bc_top ) result(obj)
+    bc_top,&
+    point1_1d, &
+    sz_point1,&
+    point2_1d,&
+    sz_point2) result(obj)
+    ! point2d)
+   ! result(obj)!
 
     type(sll_scalar_field_2d_discrete_alt), pointer :: obj
     sll_real64, dimension(:,:), intent(in), target  :: array_2d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), pointer        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
+    sll_int32 :: SPLINE_DEG1
+    sll_int32 :: SPLINE_DEG2
+    sll_real64, dimension(:), optional :: point1_1d
+    sll_real64, dimension(:), optional :: point2_1d
+    sll_int32, optional :: sz_point1
+    sll_int32, optional :: sz_point2
+    ! sll_real64, dimension(:,:), optional :: point2d
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
     sll_int32  :: ierr
- 
+    
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
-    array_2d, &
-    field_name, &
-    interpolator_2d, &
-    transformation, &
-    bc_left, &
-    bc_right, &
-    bc_bottom, &
-    bc_top )
+         array_2d, &
+         field_name, &
+         interpolator_2d, &
+         transformation, &
+         bc_left, &
+         bc_right, &
+         bc_bottom, &
+         bc_top,&
+         point1_1d,&
+         sz_point1,&
+         point2_1d,&
+         sz_point2)
   end function new_scalar_field_2d_discrete_alt
-
+  
   subroutine initialize_scalar_field_2d_discrete_alt( &
     field, &
     array_2d, &
@@ -406,29 +429,68 @@ contains   ! *****************************************************************
     bc_left, &
     bc_right, &
     bc_bottom, &
-    bc_top ) 
-
+    bc_top,& 
+    point1_1d, &
+    sz_point1,&
+    point2_1d,&
+    sz_point2)
+    
+    
     class(sll_scalar_field_2d_discrete_alt)         :: field
     sll_real64, dimension(:,:), intent(in), target  :: array_2d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), pointer        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
+
+    sll_real64, dimension(:), optional :: point1_1d
+    sll_real64, dimension(:), optional :: point2_1d
+    sll_int32,optional :: sz_point1
+    sll_int32,optional :: sz_point2
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
- 
+    class(sll_interpolator_2d_base), pointer :: interp
+    sll_int32 :: i
+   
+    
+    
     field%values => array_2d
     field%T => transformation
     field%interp_2d => interpolator_2d
     !    field%mesh%written = .false.
-     field%name      = trim(field_name)
+    field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
+    
+   
+    if (present(point1_1d) .and. present(point2_1d) &
+         .and. present(sz_point1) .and. present(sz_point2)) then 
+       
+       allocate(field%point1_1d(sz_point1))
+       allocate(field%point2_1d(sz_point2))
+       
+       field%point1_1d(:) = point1_1d(:)
+       field%point2_1d(:) = point2_1d(:)
+ 
+    end if
+    
+    if (present(point1_1d) .and. present(point2_1d) &
+         .and. present(sz_point1) .and. present(sz_point2) ) then  
+       
+       call  field%interp_2d%compute_spline_coefficients( &
+            array_2d, &
+            point1_1d, &
+            sz_point1, &
+            point2_1d, &
+            sz_point2 )
+    end if
+    
+    
   end subroutine initialize_scalar_field_2d_discrete_alt
-
+  
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_2d_discrete_alt( field )
@@ -437,6 +499,8 @@ contains   ! *****************************************************************
     nullify(field%values)
     nullify(field%T)
     nullify(field%interp_2d)
+    nullify(field%point1_1d)
+    nullify(field%point2_1d)
   end subroutine delete_field_2d_discrete_alt
 
 

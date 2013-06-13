@@ -11,7 +11,8 @@ subroutine spli2d_perper(&
      apr_Bcoef,&
      apr_tx,&
      apr_ty )
-  ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM WITH A PERIOD = ar_L
+  ! CALLED WHEN WE WANT TO INTERPOL WITH A PERIODIC FIRST PARAM 
+  !WITH A PERIOD = ar_L
   implicit none
   ! INPUT
   real(8) :: ar_Lx
@@ -42,12 +43,11 @@ subroutine spli2d_perper(&
   lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_Lx
   
   
-  !print*,'tx',  lpr_taux
+
 
   lpr_tauy ( 1 : ai_ny - 1 ) = apr_tauy ( 1 : ai_ny - 1 )
   lpr_tauy ( ai_ny ) = apr_tauy ( 1 ) + ar_Ly
-  
-  !print*,'ty',  lpr_tauy
+
   
   lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny - 1 ) = &
        apr_g ( 1 : ai_nx - 1 , 1 : ai_ny -1 )
@@ -56,7 +56,6 @@ subroutine spli2d_perper(&
   lpr_g ( ai_nx , ai_ny ) = apr_g ( 1 , 1 )
 
 
- ! print*, 'tab',lpr_g(2,:)
   
   call spli2d_custom ( &
        ai_nx,&
@@ -64,13 +63,10 @@ subroutine spli2d_perper(&
        lpr_taux,&
        ai_ny,&
        ai_ky,&
-       apr_tauy,&
+       lpr_tauy,&
        lpr_g,&
        apr_Bcoef,&
        apr_tx,&
        apr_ty )
   
-  !print*, 'ttx', apr_tx
-  !print*, 'tty',  apr_ty
-!  print*, 'coef', apr_Bcoef
 end subroutine spli2d_perper

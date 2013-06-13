@@ -38,26 +38,29 @@ module sll_module_interpolators_2d_base
    contains
 
      procedure(interpolator_2d_array_msg), &
-     deferred, pass(interpolator) :: compute_interpolants
+          deferred, pass(interpolator) :: compute_interpolants
+     
+     procedure(interpolator_two_arg_msg),  &
+          deferred, pass(interpolator) :: interpolate_value
+     
+     procedure(interpolator_two_arg_msg),  &
+          deferred, pass(interpolator) :: interpolate_derivative_eta1
 
      procedure(interpolator_two_arg_msg),  &
-     deferred, pass(interpolator) :: interpolate_value
-
-     procedure(interpolator_two_arg_msg),  &
-     deferred, pass(interpolator) :: interpolate_derivative_eta1
-
-     procedure(interpolator_two_arg_msg),  &
-     deferred, pass(interpolator) :: interpolate_derivative_eta2
-
+          deferred, pass(interpolator) :: interpolate_derivative_eta2
+     
      procedure(interpolate_2d_array),      &
-     pass, deferred :: interpolate_array
-
+          pass, deferred :: interpolate_array
+     
      procedure(interpolate_2d_array_disp), &
-     pass, deferred :: interpolate_array_disp
-
+          pass, deferred :: interpolate_array_disp
+     
      procedure(interpolator_2d_set_coeffs), &
           pass, deferred :: set_coefficients
-
+     
+     procedure(compute_spline_coeff_2d),&
+          pass, deferred ::  compute_spline_coefficients
+     
   end type sll_interpolator_2d_base
   
 
@@ -146,5 +149,22 @@ module sll_module_interpolators_2d_base
      end subroutine interpolator_2d_set_coeffs
   end interface
 
+abstract interface
+   subroutine compute_spline_coeff_2d(interpolator, &
+        data_array, &
+        eta1_coords, &
+        size_eta1_coords, &
+        eta2_coords, &
+        size_eta2_coords )
+     use sll_working_precision
+     import sll_interpolator_2d_base
+     class(sll_interpolator_2d_base), intent(inout)  :: interpolator
+     sll_real64, dimension(:,:), intent(in)        :: data_array
+     sll_real64, dimension(:), intent(in),optional           :: eta1_coords
+     sll_real64, dimension(:), intent(in),optional           :: eta2_coords
+     sll_int32, intent(in), optional                          :: size_eta1_coords
+     sll_int32, intent(in),optional                          :: size_eta2_coords
+   end subroutine compute_spline_coeff_2d
+end interface
 
 end module sll_module_interpolators_2d_base
