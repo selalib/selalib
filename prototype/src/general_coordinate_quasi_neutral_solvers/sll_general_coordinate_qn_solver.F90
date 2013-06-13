@@ -583,6 +583,7 @@ contains ! *******************************************************************
        K_a12_loc, &
        K_a21_loc, &
        K_a22_loc )
+    use sll_constants
 
     type(general_coordinate_qn_solver) :: obj
     sll_int32, intent(in) :: cell_i
@@ -742,7 +743,8 @@ contains ! *******************************************************************
                2 )
 
           val_f   = rho%value_at_point(gpt1,gpt2)
-          !print*, 'val',val_f  !,wgpt1,wgpt2!,(2.0*pi)**2*cos(2*pi*gpt1)*cos(2*pi*gpt2),gpt1,gpt2,eta1
+          !print*, 'val',val_f , 8.0*sll_pi**2*cos(2*sll_pi*(gpt1 + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2)))&
+           !    *cos(2*sll_pi*(gpt2 + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2))),gpt1,gpt2
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
           val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)

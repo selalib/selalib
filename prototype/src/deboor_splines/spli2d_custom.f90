@@ -44,17 +44,13 @@ subroutine spli2d_custom ( &
     
   end do
   
-
-
- ! print*, 'tetet',apr_tx
   apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
      do li_j = 1, ai_ny
         apr_Bcoef ( li_i, li_j ) = apr_g ( li_i, li_j )
      end do
   end do
-  
- ! print*, 'ert', apr_Bcoef
+
   !  *** construct b-coefficients of interpolant
   !
   call spli2d ( &
@@ -68,9 +64,7 @@ subroutine spli2d_custom ( &
        lpr_work31,&
        lpr_work5, &
        li_iflag )
-  !print*, "ok" lpr_work1
-  
-  !print*, 'ert', lpr_work5
+
   apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
   apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
   
@@ -80,8 +74,7 @@ subroutine spli2d_custom ( &
           ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
   end do
   
-  !print*, 'tetet',apr_ty
-  !print*, 'ertbisole',  lpr_work5 !lpr_work1
+
   
   apr_bcoef(:,:) =0.0_8
   lpr_work4 = 0.0_8
@@ -97,12 +90,5 @@ subroutine spli2d_custom ( &
        lpr_work32,&
        apr_bcoef, &
        li_iflag )
- ! print*, 'ertbis', apr_Bcoef(1,:)!wor
- ! print*, 'ertbis', apr_Bcoef(2,:)
- ! print*, 'ertbis', apr_Bcoef(ai_nx,:)
- ! print*, 'ertbis', apr_Bcoef(ai_nx-1,:)
- ! print*, 'ertbis', apr_Bcoef(:,1)
- ! print*, 'ertbis', apr_Bcoef(:,2)
-  !print*, 'ertbis', apr_Bcoef(:,ai_ny)
- ! print*, 'ertbis', apr_Bcoef(:,ai_ny-1)
+
 end subroutine spli2d_custom
