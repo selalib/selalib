@@ -36,6 +36,7 @@ module sll_module_scalar_field_2d_alternative
   use sll_module_scalar_field_2d_base
   use sll_constants
   use sll_module_interpolators_2d_base
+  use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot
@@ -389,7 +390,7 @@ contains   ! *****************************************************************
     type(sll_scalar_field_2d_discrete_alt), pointer :: obj
     sll_real64, dimension(:,:), intent(in), target  :: array_2d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_2d_base), pointer        :: interpolator_2d
+    class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
     sll_int32 :: SPLINE_DEG1
     sll_int32 :: SPLINE_DEG2
@@ -439,7 +440,7 @@ contains   ! *****************************************************************
     class(sll_scalar_field_2d_discrete_alt)         :: field
     sll_real64, dimension(:,:), intent(in), target  :: array_2d
     character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_2d_base), pointer        :: interpolator_2d
+    class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
 
     sll_real64, dimension(:), optional :: point1_1d
@@ -450,7 +451,6 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
-    class(sll_interpolator_2d_base), pointer :: interp
     sll_int32 :: i
    
     
@@ -529,6 +529,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: value_at_pt_discrete
+
     value_at_pt_discrete = field%interp_2d%interpolate_value(eta1,eta2)
   end function value_at_pt_discrete
 

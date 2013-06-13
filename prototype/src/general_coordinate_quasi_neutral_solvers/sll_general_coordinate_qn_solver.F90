@@ -5,6 +5,7 @@ module sll_general_coordinate_qn_solver_module
   use GC
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
   use sparsematrix_module
   use connectivity_module
   use sll_knots
@@ -335,7 +336,7 @@ contains ! *******************************************************************
          a_field_mat
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
     class(sll_scalar_field_2d_base), intent(in)                 :: rho
-    class(sll_scalar_field_2d_base), intent(inout)              :: phi
+    type(sll_scalar_field_2d_discrete_alt), intent(inout)       :: phi
     sll_real64, dimension(:), allocatable   :: M_rho_loc
     sll_real64, dimension(:,:), allocatable :: M_c_loc
     sll_real64, dimension(:,:), allocatable :: K_a11_loc
@@ -422,6 +423,8 @@ contains ! *******************************************************************
 
     !print*, 'er',qns%rho_vec
     call solve_linear_system(qns)
+
+    call  phi%interp_2d%set_coefficients( qns%phi_vec)
 
     ! apr_B is the source, apr_U is the solution
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
@@ -880,6 +883,8 @@ contains ! *******************************************************************
     !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
+
+
     !print*, 'sol', qns%phi_vec
   end subroutine solve_linear_system
 

@@ -26,7 +26,7 @@ program test_general_qns
   type(general_coordinate_qn_solver)                    :: qns
   type(arb_deg_2d_interpolator), target                 :: interp_2d
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
-  class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
+ ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
 !  class(sll_scalar_field_2d_analytic_alt), dimension(2,2) :: a_field_mat
   type(sll_scalar_field_2d_base_ptr), dimension(2,2)    :: a_field_mat
@@ -52,6 +52,7 @@ program test_general_qns
   sll_real64, dimension(:,:), allocatable    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
+  sll_real64, dimension(:,:), pointer        :: test_coeff
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
@@ -63,6 +64,7 @@ program test_general_qns
   real(8), external :: sol_exacte_chgt_perdir  
   real(8), external :: sol_exacte_chgt_dirper
   real(8), external :: sol_exacte_chgt_dirdir
+  sll_real64 :: node_val1
   
     
   !--------------------------------------------------------------------
@@ -174,12 +176,12 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 
-  interp_2d_ptr => interp_2d
+ ! interp_2d_ptr => interp_2d
 
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -221,9 +223,6 @@ program test_general_qns
        rho, &
        phi )
 
-  ! This call should be inside the solver!
-  call  interp_2d%set_coefficients( qns%phi_vec)
-
   t1e = time_elapsed_since(t_reference)
 
   print *, 'Completed solution'!,qns%phi_vec
@@ -237,7 +236,7 @@ program test_general_qns
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         ref        = sol_exacte_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
@@ -248,6 +247,9 @@ program test_general_qns
         acc1        = acc1 + abs(node_val-ref)
      end do
   end do
+
+  !call phi%write_to_file(0)
+
 
   ! delete things...
   call delete(qns)
@@ -379,12 +381,11 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -425,8 +426,6 @@ program test_general_qns
        phi )
 
   !print *, 'Completed solution',qns%phi_vec
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
 
   t2e = time_elapsed_since(t_reference)
   
@@ -438,7 +437,7 @@ program test_general_qns
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         ref        = sol_exacte_perdir(eta1,eta2)
 !        print*,sin(2*sll_pi*eta1)*cos(2*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
@@ -580,13 +579,12 @@ program test_general_qns
        SLL_DIRICHLET, &
        SPLINE_DEG1, &
        SPLINE_DEG2 )
-  
-  interp_2d_ptr => interp_2d
+ 
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -627,20 +625,22 @@ program test_general_qns
        c_field, &
        rho, &
        phi )
-  
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
+
+  call interp_2d%set_coefficients( qns%phi_vec)
  
+  
   t3e = time_elapsed_since(t_reference)
 
-  
+
   acc3 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+
+        node_val   =phi%value_at_point(eta1,eta2)
+
         ref        = sol_exacte_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
@@ -780,13 +780,11 @@ program test_general_qns
        SLL_PERIODIC, &
        SPLINE_DEG1, &
        SPLINE_DEG2 )
-  
-  interp_2d_ptr => interp_2d
-  
+
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -826,9 +824,7 @@ program test_general_qns
        c_field, &
        rho, &
        phi )
-  
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
+
  
   t4e = time_elapsed_since(t_reference) 
   
@@ -839,7 +835,7 @@ program test_general_qns
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         ref        = sol_exacte_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
@@ -979,12 +975,11 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
   
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -1026,7 +1021,6 @@ program test_general_qns
 
   !print *, 'Completed solution',qns%phi_vec
   
-  call  interp_2d%set_coefficients( qns%phi_vec)
   t5e = time_elapsed_since(t_reference)  
   
 !  print *, 'Compare the values of the transformation at the nodes: '
@@ -1037,7 +1031,7 @@ program test_general_qns
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
@@ -1180,12 +1174,10 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
   
-  interp_2d_ptr => interp_2d
-  
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
@@ -1229,8 +1221,6 @@ program test_general_qns
        rho, &
        phi )
 
-  call  interp_2d%set_coefficients( qns%phi_vec)
-
   t6e = time_elapsed_since(t_reference)
 
   
@@ -1243,7 +1233,7 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
@@ -1387,12 +1377,10 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
   
-  interp_2d_ptr => interp_2d
-  
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
@@ -1433,8 +1421,6 @@ program test_general_qns
        rho, &
        phi )
   
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
 
   t7e = time_elapsed_since(t_reference)
 
@@ -1448,7 +1434,7 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
@@ -1591,12 +1577,11 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
   
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
@@ -1638,9 +1623,7 @@ program test_general_qns
        phi )
   
   !print *, 'Completed solution',qns%phi_vec
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
-  
+    
   t8e = time_elapsed_since(t_reference)
 
 
@@ -1654,7 +1637,7 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   =phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
@@ -1780,12 +1763,11 @@ program test_general_qns
        SLL_PERIODIC )
 
   print*, 'initialization fields scalar c'
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
@@ -1855,12 +1837,11 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
@@ -1902,9 +1883,7 @@ program test_general_qns
        phi )
   
   !print *, 'Completed solution',qns%phi_vec
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
-  
+    
   t9e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
@@ -1916,13 +1895,13 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   =phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc9        = acc9 + abs(node_val-ref)
      end do
   end do
@@ -2041,12 +2020,11 @@ program test_general_qns
        SLL_DIRICHLET )
 
   print*, 'initialization fields scalar c'
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
@@ -2116,12 +2094,11 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
@@ -2161,9 +2138,7 @@ program test_general_qns
        c_field, &
        rho, &
        phi )
-  
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
+ 
   
   t10e = time_elapsed_since(t_reference)
   
@@ -2176,13 +2151,13 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   =phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+       ! print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
         acc10        = acc10 + abs(node_val-ref)
      end do
   end do
@@ -2300,12 +2275,11 @@ program test_general_qns
        SLL_DIRICHLET )
 
   print*, 'initialization fields scalar c'
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
@@ -2374,13 +2348,11 @@ program test_general_qns
        SLL_DIRICHLET,&
        SPLINE_DEG1, &
        SPLINE_DEG2 )
-!!$  
-  interp_2d_ptr => interp_2d
-  
+!!$    
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
@@ -2419,9 +2391,7 @@ program test_general_qns
        c_field, &
        rho, &
        phi )
-  
-  
-  call  interp_2d%set_coefficients( qns%phi_vec)
+ 
   
   t11e = time_elapsed_since(t_reference)
   
@@ -2434,13 +2404,13 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   =phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc11        = acc11 + abs(node_val-ref)
      end do
   end do
@@ -2557,12 +2527,11 @@ program test_general_qns
        SLL_PERIODIC )
   
   print*, 'initialization fields scalar c'
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
@@ -2632,12 +2601,11 @@ program test_general_qns
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
-  interp_2d_ptr => interp_2d
   
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi", &
-       interp_2d_ptr, &
+       interp_2d, &
        T, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
@@ -2679,8 +2647,6 @@ program test_general_qns
        phi )
   
   
-  call  interp_2d%set_coefficients( qns%phi_vec)
-  
   t12e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
@@ -2692,13 +2658,13 @@ program test_general_qns
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
-        node_val   = interp_2d%interpolate_value(eta1,eta2)
+        node_val   = phi%value_at_point(eta1,eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+       ! print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
         acc12        = acc12 + abs(node_val-ref)
      end do
   end do
