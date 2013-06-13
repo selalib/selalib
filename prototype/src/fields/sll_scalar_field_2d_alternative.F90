@@ -480,7 +480,7 @@ contains   ! *****************************************************************
     if (present(point1_1d) .and. present(point2_1d) &
          .and. present(sz_point1) .and. present(sz_point2) ) then  
        
-       call  field%interp_2d%compute_spline_coefficients( &
+       call  field%interp_2d%compute_interpolants( &
             array_2d, &
             point1_1d, &
             sz_point1, &

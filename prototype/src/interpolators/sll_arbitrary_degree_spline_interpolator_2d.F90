@@ -55,7 +55,7 @@ use sll_module_interpolators_2d_base
     procedure :: compute_interpolants => compute_interpolants_ad2d
    ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
     !     compute_spline_coefficients_ad2d
-    procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
+    !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
     procedure :: interpolate_value => interpolate_value_ad2d
     procedure :: interpolate_derivative_eta1 => interpolate_derivative1_ad2d
     procedure :: interpolate_derivative_eta2 => interpolate_derivative2_ad2d
@@ -234,16 +234,16 @@ contains
     !print*,'SIZE',  num_pts1 + 2*(spline_degree1 + 1)
   end subroutine initialize_ad2d_interpolator
 
-  subroutine compute_interpolants_ad2d( &
-    interpolator, &
-    data_array )
-
-    class(arb_deg_2d_interpolator), intent(inout) :: interpolator
-    sll_real64, dimension(:,:), intent(in)         :: data_array
-
-    print *, 'compute interpolants not implemented'
-
-  end subroutine compute_interpolants_ad2d
+!!$  subroutine compute_interpolants_ad2d( &
+!!$    interpolator, &
+!!$    data_array )
+!!$
+!!$    class(arb_deg_2d_interpolator), intent(inout) :: interpolator
+!!$    sll_real64, dimension(:,:), intent(in)         :: data_array
+!!$
+!!$    print *, 'compute interpolants not implemented'
+!!$
+!!$  end subroutine compute_interpolants_ad2d
 
   subroutine set_coefficients_ad2d( &
    interpolator, &
@@ -483,7 +483,7 @@ contains
    end select
  end subroutine set_coefficients_ad2d
 
-  subroutine compute_spline_coefficients_ad2d( &
+  subroutine compute_interpolants_ad2d( &
     interpolator, &
     data_array, &
     eta1_coords, &
@@ -572,7 +572,7 @@ contains
             interpolator%t2(1:sz2+order2) )
 
     end select
-  end subroutine compute_spline_coefficients_ad2d
+  end subroutine compute_interpolants_ad2d
 
 
   function interpolate_value_ad2d( &
