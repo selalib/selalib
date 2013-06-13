@@ -248,7 +248,7 @@ program test_general_qns
      end do
   end do
 
-  !call phi%write_to_file(0)
+  call phi%write_to_file(0)
 
 
   ! delete things...
