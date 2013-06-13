@@ -25,10 +25,10 @@
 !!          have the need for higher dimension (and so have time to write it).
 !!         
 !------------------------------------------------------------------------------
-module Poisson4dg
+module sll_poisson4dg
 #include "sll_working_precision.h"
 
-  use gausslobatto
+  use sll_gausslobatto
   !those are part of FEMilaro
   use mod_sparse
   use mod_umfpack
@@ -363,4 +363,4 @@ contains
 
   end subroutine delete_poisson_1d_periodic_dg
 
-end module Poisson4DG
+end module sll_poisson4dg
