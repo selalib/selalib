@@ -10,19 +10,20 @@
 !! @details Here are several of the Gauss-Lobatto tools :\\
 !!            ·Gauss-Lobatto points and weight,\\
 !!            ·Gauss-Lobatto bases functions and the integral of their product,\\
-!!            ·integral of product of Gauss-Lobatto function and their derivative.
+!!            ·integral of product of Gauss-Lobatto function and their derivative.\\
+!!          To use this module you must also link to the compilation gauss.f and lob.f
 !!
 !!          The mass matrix (which is the integral of \phi_i \times \phi_j) is simply 
-!!          diag(weigh), so there is no need to store it more than just the weigh.
+!!          diag(weigh), so there is no need to store it more than just the weigh.\\
 !!
 !!          We also need the derivative matrix D.
-!!          \f[ D_{i,j}=\int \pih_i \phi^'_j f]
+!!          \f[ D_{i,j}=\int \pih_i \phi^'_j \f]
 !!
 !!          This module will first be limited to 1D and should extend as people will
 !!          have the need for higher dimension (and so have time to write it).
 !!         
 !------------------------------------------------------------------------------
-module gausslobatto
+module sll_gausslobatto
 #include "sll_working_precision.h"
 
   use sll_constants
@@ -45,6 +46,10 @@ module gausslobatto
      sll_int32 :: degree
      sll_real64,dimension(:,:),allocatable :: der
   end type gausslobatto1D
+
+  interface delete
+     module procedure delete_gausslobatto_1D
+  end interface delete
 
 contains
 
@@ -123,7 +128,7 @@ contains
     !!          The matrix must be already allocated of size (number of point)^2.
     !!          der(i,j)=int(Phi_i.Phi'_j)_[-1;1]²
     !!                  =w_i.Phi'_j(x_i)
-    !! @param[INOUT] gl_obj the object to delete
+    !! @param[INOUT] gl_obj gausslobatto1D object to build derivative
 
     type(gausslobatto1D),intent(inout) :: gl_obj
 
@@ -175,4 +180,4 @@ contains
 
   end subroutine derivative_matrix_1d
 
-end module gausslobatto
+end module sll_gausslobatto
