@@ -19,11 +19,11 @@
 !!          have the need for higher dimension (and time to write it).
 !!         
 !------------------------------------------------------------------------------
-module timestep4dg
+module sll_timestep4dg
 #include "sll_working_precision.h"
 
-  use gausslobatto
-  use poisson4dg
+  use sll_gausslobatto
+  use sll_poisson4dg
   use sll_nu_cart_mesh
   use sll_constants
   !those are part of FEMilaro
@@ -112,7 +112,8 @@ contains
 
     if (plan%method==SLL_RK3) then
        !RK3
-       print*,'RK3 not done'
+       print*,'time integration using RK3'
+       call init_k3_4dg(plan,gll,mesh,dt,xbound,c11,c12,norma=norma0,alpha=alpha0)
        stop
     else if (plan%method==SLL_RK4) then
        !RK4
@@ -194,6 +195,71 @@ contains
     call new(plan%poisson_0,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
 
   end subroutine init_k2_4dg
+
+  subroutine init_k3_4dg(plan,gll,mesh,dt,xbound,c11,c12,norma,alpha)
+    !< @brief Do not use it, call the interface routine init_timesteping_4dg
+
+    implicit none
+
+    type(dg_time_steping),intent(inout) :: plan
+    type(gausslobatto1d),intent(in) :: gll
+    type(non_unif_cart_mesh),intent(in) :: mesh
+    sll_int32,intent(in) :: xbound
+    sll_real64,intent(in) :: dt,c11,c12
+    sll_real64,intent(in),optional :: norma
+    sll_real64,intent(in),optional :: alpha
+
+    sll_int32 :: nx,nv,ng,v1,v2
+    sll_real64 :: vv1,vv2
+
+    nx=mesh%n_etat1
+    nv=mesh%n_etat2
+    ng=gll%degree+1
+
+    allocate(plan%k(nx*ng,nv*ng,3),plan%phi(nx*ng),plan%rho(nx*ng),plan%field(nx*ng), &
+         & plan%rhs(nx*ng,nv*ng))
+    plan%dt=dt
+    plan%x0=xbound
+    if (present(alpha)) then
+       plan%bound=alpha
+    else
+       plan%bound=0.0d0
+    end if
+    if (present(norma)) then
+       plan%norma=norma
+    else
+       plan%norma=0.0d0
+    end if
+
+    plan%zero=0
+    if ( mesh%etat2(nv+1)<=epsilon(abs( mesh%etat2(1) )) ) then
+       plan%zero=nv*ng+1
+    else if(mesh%etat2(1)<epsilon( abs(mesh%etat2(nv+1)) ) .and. & 
+         & mesh%etat2(nv+1)>epsilon( abs(mesh%etat2(1)) )) then
+       vv1=mesh%etat2(1)
+       do v1=1,nv
+          do v2=1,ng
+             vv2=vv1
+             vv1=mesh%etat2(v1)+(1.0d0+gll%node(v2))/mesh%jac(nx+1,v1)
+             if (vv2<0.0d0 .and. vv1>=0.0d0 .and. plan%zero==0) then
+                plan%zero=(v1-1)*ng+v2+1
+             end if
+          end do
+       end do
+    else if (mesh%etat2(1)>=epsilon( abs(mesh%etat2(nv+1)) )) then
+       plan%zero=1
+    else
+       print*,'error in the source code'
+       print*,'can not tell whether 0 is in velocity domain'
+       plan%zero=-huge(nv)
+    end if
+
+    ! initialization of Poisson's
+    call new(plan%poisson_vp,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
+    call new(plan%poisson_vm,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
+    call new(plan%poisson_0,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
+
+  end subroutine init_k3_4dg
 
   subroutine delete_dg_step(plan)
     !< @brief deletion of dg_time_steping object
@@ -495,6 +561,50 @@ contains
 
   end subroutine tvdrk2_4dg_1d
 
+  subroutine rk3_4dg_1d(plan,gll,mesh,dist,distp1)
+    !< @brief Computation of RK3 steps for Vlasov-Poisson with DG, returns the
+    !!        distribution at time n+1. \n
+    !!        You shouldn't call it but call time_integration_4dg which is the interface
+    !! @details Computation of TVD RK3 steps for Vlasov-Poisson with DG, returns the 
+    !!          distribution at time n+1. This routine is called at each time step. Also see 
+    !!          initialization of dg_time_steping object and time_integration_4dg for more 
+    !!          details. \n
+    !!          Be aware that this code does not check the size of objects. It might gives you
+    !!          segmentation faults if there are error in object size.
+    !! @param[INOUT] plan dg_time_steping object, contains work array and data for the scheme
+    !! @param[IN] gll gausslobatto1D object, necessary for the computation
+    !! @param[IN] mesh non_unif_cart_mesh object, necessary for the computation
+    !! @param[IN] dist distribution function at time n, 2D real array
+    !! @param[OUT] distp1 distribution function at time n+1, 2D real array, same size as dist
+
+    implicit none
+    
+    type(dg_time_steping),intent(inout) :: plan
+    type(gausslobatto1D),intent(in) :: gll
+    type(non_unif_cart_mesh),intent(in) :: mesh
+    sll_real64,dimension(:,:),intent(in) :: dist
+    sll_real64,dimension(:,:),intent(out) :: distp1
+
+    !first step of RK3
+    plan%k(:,:,2)=dist
+    call dg_stepdg_time_integration(plan,gll,mesh)
+    plan%k(:,:,3)=plan%k(:,:,1)
+    plan%k(:,:,2)=dist+plan%k(:,:,1)*plan%dt/2.0d0
+    distp1=dist+plan%k(:,:,1)*plan%dt/6.0d0
+
+    !second step of RK3
+    plan%t=plan%t+plan%dt/2.0d0
+    call dg_stepdg_time_integration(plan,gll,mesh)
+    distp1=distp1+plan%k(:,:,1)*plan%dt*2.0d0/3.0d0
+    plan%k(:,:,2)=dist+plan%dt*(-plan%k(:,:,3)+2.0d0*plan%k(:,:,1))
+
+    !third step of RK3
+    plan%t=plan%t+plan%dt/2.0d0
+    call dg_stepdg_time_integration(plan,gll,mesh)
+    distp1=distp1+plan%k(:,:,1)*plan%dt/6.0d0
+
+  end subroutine rk3_4dg_1d
+
   subroutine dg_stepdg_time_integration(plan,gll,mesh)
     !< @brief Computation for time integration with DG. You do not need to call it, it is used
     !!        as it should in time integration routines.
@@ -525,28 +635,14 @@ contains
     plan%rho=0.0d0
     plan%norma=0.0d0
     plan%k(:,:,1)=0.0d0
-!!$    do x1=1,nx
-!!$       do x2=1,ng
-!!$          do v1=1,nv
-!!$             do v2=1,ng
-!!$                plan%rho((x1-1)*ng+x2)=plan%rho((x1-1)*ng+x2)+ &
-!!$                     & plan%k((x1-1)*ng+x2,(v1-1)*ng+v2,2)*gll%weigh(v2)/mesh%jac(nx+1,v1)
-!!$             end do
-!!$          end do
-!!$          plan%rho((x1-1)*ng+x2)=(plan%rho((x1-1)*ng+x2)-plan%norma)* &
-!!$               & gll%weigh(x2)/mesh%jac(x1,nv+1)
-!!$       end do
-!!$    end do
-    do x1=1,nx*ng
-       do v1=1,nv
-          do v2=1,ng
-             plan%rho(x1)=plan%rho(x1)+ &
-                  & plan%k(x1,(v1-1)*ng+v2,2)*gll%weigh(v2)/mesh%jac(nx+1,v1)
-          end do
-       end do
-    end do
     do x1=1,nx
        do x2=1,ng
+          do v1=1,nv
+             do v2=1,ng
+                plan%rho((x1-1)*ng+x2)=plan%rho((x1-1)*ng+x2)+ &
+                     & plan%k((x1-1)*ng+x2,(v1-1)*ng+v2,2)*gll%weigh(v2)/mesh%jac(nx+1,v1)
+             end do
+          end do
           plan%norma=plan%norma+plan%rho((x1-1)*ng+x2)*gll%weigh(x2)/mesh%jac(x1,nv+1)
        end do
     end do
@@ -604,4 +700,4 @@ contains
 
   end subroutine dg_stepdg_time_integration
 
-end module timestep4dg
+end module sll_timestep4dg

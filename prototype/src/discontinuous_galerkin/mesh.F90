@@ -5,7 +5,6 @@
 !
 ! DESCRIPTION:
 !> @file mesh.F90
-!! @namespace sll_nu_cart_mesh
 !! @author Madaule Eric
 !! @brief module for non uniform cartesian mesh
 !! @details In this module we define a non uniform cartesian mesh type.
