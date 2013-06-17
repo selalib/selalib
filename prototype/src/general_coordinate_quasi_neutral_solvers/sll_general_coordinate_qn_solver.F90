@@ -29,6 +29,7 @@ module sll_general_coordinate_qn_solver_module
      sll_int32 :: bc_top
      sll_int32 :: spline_degree1
      sll_int32 :: spline_degree2
+     sll_real64 :: epsi
      ! the following is otherwise known as "ID" in Aurore Back's original
      ! nomenclature. The indexing of the
      ! splines in this array depends on the boundary conditions.
@@ -76,7 +77,8 @@ contains ! *******************************************************************
    eta1_min, &
    eta1_max, &
    eta2_min, &
-   eta2_max )
+   eta2_max,&
+   epsi)
 
    type(general_coordinate_qn_solver), intent(out) :: qns
    sll_int32, intent(in) :: spline_degree_eta1
@@ -93,6 +95,7 @@ contains ! *******************************************************************
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
+   sll_real64, optional   :: epsi
    sll_int32 :: knots1_size
    sll_int32 :: knots2_size
    sll_int32 :: num_splines1
@@ -122,6 +125,12 @@ contains ! *******************************************************************
    qns%spline_degree2 = spline_degree_eta2
    qns%num_cells1 = num_cells_eta1
    qns%num_cells2 = num_cells_eta2
+
+   if (present(epsi) ) then 
+      qns%epsi = epsi
+   else 
+      qns%epsi = 0.0_f64
+   end if
 
    ! Allocate and fill the gauss points/weights information.
    ! First direction
@@ -337,12 +346,14 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
     class(sll_scalar_field_2d_base), intent(in)                 :: rho
     type(sll_scalar_field_2d_discrete_alt), intent(inout)       :: phi
+    sll_real64 :: epsi
     sll_real64, dimension(:), allocatable   :: M_rho_loc
     sll_real64, dimension(:,:), allocatable :: M_c_loc
     sll_real64, dimension(:,:), allocatable :: K_a11_loc
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
     sll_real64, dimension(:,:), allocatable :: K_a21_loc
     sll_real64, dimension(:,:), allocatable :: K_a22_loc
+    sll_real64, dimension(:,:), allocatable :: Masse_loc
     sll_int32 :: total_num_splines_eta1
     sll_int32 :: total_num_splines_eta2
     sll_int32 :: spline_degree_eta1
@@ -378,6 +389,9 @@ contains ! *******************************************************************
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a21_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
+    SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
+
+    epsi = qns%epsi
 
     mesh => c_field%get_logical_mesh( )
 !    call set_time_mark(timer) ! comment this
@@ -397,6 +411,8 @@ contains ! *******************************************************************
                a_field_mat, &
                c_field, &
                rho, &
+               Masse_loc,&
+               epsi,&
                M_rho_loc, &
                M_c_loc, &
                K_a11_loc, &
@@ -409,6 +425,7 @@ contains ! *******************************************************************
                cell_index, &
                i, &
                j, &
+               Masse_loc,&
                M_rho_loc, &
                M_c_loc, &
                K_a11_loc, &
@@ -433,6 +450,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(Masse_loc,ierr)
   end subroutine solve_quasi_neutral_eq_general_coords
 
   ! This is based on the assumption that all the input fields have the same
@@ -448,6 +466,8 @@ contains ! *******************************************************************
        a_field_mat, &
        c_field, &
        rho, &
+       Masse_loc,&
+       epsi,&
        M_rho_loc, &
        M_c_loc, &
        K_a11_loc, &
@@ -464,12 +484,14 @@ contains ! *******************************************************************
          a_field_mat
     class(sll_scalar_field_2d_base), intent(in)                 :: c_field
     class(sll_scalar_field_2d_base), intent(in)                 :: rho
+    sll_real64 :: epsi
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
     sll_real64, dimension(:,:), intent(out) :: K_a11_loc
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
     sll_real64, dimension(:,:), intent(out) :: K_a21_loc
     sll_real64, dimension(:,:), intent(out) :: K_a22_loc
+    sll_real64, dimension(:,:), intent(out) :: Masse_loc
     sll_int32 :: bc_left    
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom    
@@ -513,6 +535,7 @@ contains ! *******************************************************************
     sll_real64 :: B21
     sll_real64 :: B22
 
+    Masse_loc(:,:) = 0.0
     M_rho_loc(:) = 0.0
     M_c_loc(:,:) = 0.0
     K_a11_loc(:,:) = 0.0
@@ -537,8 +560,8 @@ contains ! *******************************************************************
     !print*, 'rez',tmp1, (cell_i-1+tmp1)*delta1,eta1_min
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
-       eta1  = eta1_min + (cell_i-1+tmp1)*delta1
-       eta2  = eta2_min + (cell_j-1+tmp2)*delta2
+       eta1  = eta1_min + (cell_i-1)*delta1
+       eta2  = eta2_min + (cell_j-1)*delta2
 
     else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right== SLL_PERIODIC) .and.&
              (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
@@ -613,9 +636,11 @@ contains ! *******************************************************************
                dbiatx1,&
                2 )
 
+             
+
           val_f   = rho%value_at_point(gpt1,gpt2)
-          !print*, 'val',val_f , 8.0*sll_pi**2*cos(2*sll_pi*(gpt1 + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2)))&
-           !    *cos(2*sll_pi*(gpt2 + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2))),gpt1,gpt2
+          !print*, 'val',val_f,8.0*sll_pi**2*cos(2*sll_pi*(gpt1))&
+           !    *cos(2*sll_pi*(gpt2)), gpt1,gpt2! + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2))),gpt1,gpt2
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
           val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
@@ -654,13 +679,23 @@ contains ! *******************************************************************
                 M_rho_loc(index1)= M_rho_loc(index1) + &
                      val_f*val_jac*wgpt1*wgpt2* &
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
+                
+                 
                 !print*, 'ethop',M_rho_loc(index1),dbiatx1(ii+1,1),dbiatx2(jj+1,1)
                 
                 do iii = 0,obj%spline_degree1
                    do jjj = 0,obj%spline_degree2
                       
                       index2 =  jjj*(obj%spline_degree1 + 1) + iii + 1
+
+                      Masse_loc(index1, index2) = &
+                           Masse_loc(index1, index2) + &
+                           epsi*val_jac*wgpt1*wgpt2* &
+                           dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
+                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
                       
+
+
                       M_c_loc(index1, index2) = &
                            M_c_loc(index1, index2) + &
                            val_c*val_jac*wgpt1*wgpt2* &
@@ -705,6 +740,7 @@ contains ! *******************************************************************
        cell_index, &
        cell_i, &
        cell_j, &
+       Masse_loc,&
        M_rho_loc, &
        M_c_loc, &
        K_a11_loc, &
@@ -722,6 +758,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: K_a12_loc
     sll_real64, dimension(:,:), intent(in) :: K_a21_loc
     sll_real64, dimension(:,:), intent(in) :: K_a22_loc
+    sll_real64, dimension(:,:), intent(in) :: Masse_loc
     sll_int32 :: index1, index2, index3, index4
     sll_int32 :: i,j,mm, nn, b, bprime,x,y
     sll_int32 :: li_A, li_Aprime
@@ -800,6 +837,7 @@ contains ! *******************************************************************
                 li_Aprime = qns%local_to_global_spline_indices(bprime, &
                                                                cell_index)
                 elt_mat_global = &
+                     Masse_loc(b,bprime) + &
                      M_c_loc(b, bprime) + &
                      K_a11_loc(b, bprime) + &
                      K_a12_loc(b, bprime) + &
@@ -883,7 +921,8 @@ contains ! *******************************************************************
     !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
-
+    print*, '---------------'
+    !print*, 'etvoila',qns%phi_vec
 
     !print*, 'sol', qns%phi_vec
   end subroutine solve_linear_system
@@ -896,10 +935,10 @@ contains ! *******************************************************************
     sll_real64 :: ar_eps
     
     ar_eps = 1.d-13
-    ai_maxIter = 3000
+    ai_maxIter = 10000
     !print *, 'a = ', csr_mat % opr_a(1:csr_mat%opi_ia(2)-1)
     call Gradient_conj ( csr_mat, apr_B,apr_U, ai_maxIter, ar_eps )
-    !print*,'u', apr_U
+   ! print*,'u', apr_U
   end subroutine solve_general_qn
 
 end module sll_general_coordinate_qn_solver_module

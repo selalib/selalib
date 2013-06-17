@@ -29,11 +29,21 @@ subroutine spli2d_custom ( &
   real(8), dimension ( ai_ny , ai_nx ) :: lpr_work5
   integer  :: li_i, li_j, li_iflag
   
-   lpr_work1(:,:) = 0.0
+  lpr_work1(:,:) = 0.0
   
   ! *** set up knots
   !     interpolate between knots
   ! x
+!!$  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )		
+!!$  apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )		
+!!$  
+!!$  do li_i = ai_kx + 1, ai_nx
+!!$     apr_tx ( li_i ) = apr_taux ( 2 ) + &
+!!$          (li_i-(ai_kx + 1))*&
+!!$          ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+!!$    
+!!$  end do
+
   apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )		
   apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )		
   
@@ -43,7 +53,9 @@ subroutine spli2d_custom ( &
           ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
     
   end do
-  
+
+ ! print*, 'taux',apr_tx
+ ! print*, 'tx',apr_taux
   apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
      do li_j = 1, ai_ny
@@ -74,7 +86,16 @@ subroutine spli2d_custom ( &
           ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
   end do
   
+!!$  apr_ty ( 1 : ai_ky/2) = apr_tauy ( 1 )		
+!!$  apr_ty ( ai_ny + ai_ky/2 +1  : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
+!!$  
+!!$  do li_i = 1, ai_ny
+!!$     apr_ty ( li_i + ai_ky/2 ) = apr_tauy ( li_i )
+!!$     
+!!$  end do
+ ! print*, 'taux',apr_ty
 
+ ! print*, lpr_work5
   
   apr_bcoef(:,:) =0.0_8
   lpr_work4 = 0.0_8

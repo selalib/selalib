@@ -55,8 +55,7 @@ subroutine spli2d_perper(&
   lpr_g ( 1 : ai_nx -1 , ai_ny ) = apr_g ( 1 : ai_nx -1, 1 )
   lpr_g ( ai_nx , ai_ny ) = apr_g ( 1 , 1 )
 
-
-  
+  !print*, lpr_taux
   call spli2d_custom ( &
        ai_nx,&
        ai_kx,&
@@ -68,5 +67,9 @@ subroutine spli2d_perper(&
        apr_Bcoef,&
        apr_tx,&
        apr_ty )
+
+ ! print*, apr_tx
+ ! print*, apr_ty
+ ! print*, apr_Bcoef
   
 end subroutine spli2d_perper
