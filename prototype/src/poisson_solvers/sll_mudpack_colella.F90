@@ -278,7 +278,7 @@ end module sll_mudpack_colella
 !
 !return
 !end subroutine
-subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
+!subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
 
 implicit none
 

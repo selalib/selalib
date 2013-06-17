@@ -68,7 +68,7 @@ tol   = 1.0e-14_f64
 
 do i =1,nc_eta1+1
    do j=1,nc_eta2+1
-      rhs(i,j) = f_cos(eta1(i), eta2(j))
+      rhs(i,j) = 0 !f_cos(eta1(i), eta2(j))
    end do
 end do
 
