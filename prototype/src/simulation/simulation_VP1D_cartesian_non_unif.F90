@@ -1,23 +1,20 @@
 module simulation_VP1D_cartesian_non_unif
 
-!!!!!!!!!!!!!!!!!!!!!!!
-!  Vlasov-Poisson 1D simulation
-!  the mesh is non uniform in x1 (=x) and x2 (=v)
-!  for the moment it uses non uniform splines
-!  the formulation is conservative
-!  see csl_advection_per
-!  periodic conditions are used
 
+!> Vlasov-Poisson 1D on uniform or nonuniform cartesian grid
+!> using the Backward Semi-Lagrangian (BSL) method.
+!> in development
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_field_2d.h"
+
 
 #ifndef STDF95
   use sll_simulation_base
 #endif
   use cubic_non_uniform_splines
-
   use sll_constants
   implicit none
 
@@ -61,23 +58,28 @@ contains
 #else
     class(sll_simulation_VP1D_cartesian_non_unif), intent(inout) :: sim
 #endif
+
+
+
     
     type(cubic_nonunif_spline_1D), pointer :: spl_per_x1,spl_per_x2,spl_per_x1_poisson
     sll_int32 :: N_x1,N_x2,N_x1_poisson,N,nb_step
     sll_int32:: mesh_case,test_case,rho_case
     sll_int32:: i,i1,i2,err,step
-    sll_real64 :: x1_min,x1_max,x2_min,x2_max
-    sll_real64 :: delta_x1,delta_x2,delta_x1_poisson,dt
+    sll_real64 :: dt,x1_min,x1_max,x2_min,x2_max
+    sll_real64 :: delta_x1,delta_x2,delta_x1_poisson
     sll_real64,dimension(:), pointer :: node_positions_x1,node_positions_x2
     sll_real64,dimension(:), pointer :: node_positions_x1_unit,node_positions_x2_unit
     sll_real64,dimension(:), pointer :: node_positions_x1_poisson
-    sll_real64,dimension(:), pointer :: rho,E,E_poisson
+    sll_real64,dimension(:), pointer :: E,E_poisson,rho
     sll_real64,dimension(:), pointer :: buf1d,Xstar
     sll_real64,dimension(:), pointer :: random_vector_x1,random_vector_x2
     sll_real64,dimension(:,:), pointer :: f
     sll_real64,dimension(:,:), pointer :: integration_points
     sll_real64 :: landau_alpha,non_unif_scale_x1,non_unif_scale_x2
     sll_real64 :: val,x1,x2,tmp
+    
+    
     
     !initialization of parameters
     N_x1=256

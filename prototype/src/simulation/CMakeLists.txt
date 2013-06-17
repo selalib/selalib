@@ -222,6 +222,7 @@ target_link_libraries(VP1D_cart
 
 IF(CMAKE_BUILD_TYPE MATCHES "Release")
 
+<<<<<<< HEAD
 #add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 #target_link_libraries(VP1D_deltaf_cart
 #	sll_mapped_meshes
@@ -241,6 +242,27 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 # 	dfftpack
 # 	${LAPACK_LIBRARIES}
 # 	)
+=======
+add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
+target_link_libraries(VP1D_deltaf_cart
+	sll_mapped_meshes
+	sll_interpolators
+	sll_periodic_interp
+	sll_splines
+	sll_fft
+	geometry_functions
+	sll_distribution_function
+	sll_scalar_field_2d	
+	sll_constants
+	sll_file_io
+  	sll_utilities
+	sll_memory
+	sll_assertion 	
+	sll_poisson_solvers
+	dfftpack
+	${LAPACK_LIBRARIES}
+	)
+>>>>>>> origin/prototype-devel
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
