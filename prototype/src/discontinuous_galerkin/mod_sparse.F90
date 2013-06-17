@@ -128,10 +128,12 @@ module mod_sparse
      integer :: ierr = 0
      integer :: n !< rows
      integer :: m !< columns
-     integer :: nz !< non zero elements
+     integer :: nz=-1 !< non zero elements
      integer, allocatable  :: ap(:) !< (m+1)
      integer, allocatable  :: ai(:) !< (nz)
      sll_real64, allocatable :: ax(:) !< (nz)
+  contains
+     procedure, pass(a) :: check => check_col
   end type t_col
 
   !> triple <tt>(i,j,x)</tt> oriented storage
@@ -1374,6 +1376,14 @@ contains
     ! allocatable fields implicitly deallocated
 
   end subroutine clear_pm_sk
+
+  !-----------------------------------------------------------------------
+
+  pure function check_col(a)
+    class(t_col), intent(in) :: a
+    logical :: check_col
+      check_col = (a%nz.gt.0).and.(a%ierr.eq.0)
+  end function check_col
 
   !-----------------------------------------------------------------------
 
