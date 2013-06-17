@@ -2,6 +2,7 @@
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
 module sll_poisson_2d_fem
+#include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_constants
@@ -23,19 +24,22 @@ interface solve
 end interface solve
 
 sll_int32, private :: nx, ny
+sll_int32, private :: i, j
 
 contains
 
 !> Initialize Poisson solver object using finite elements method.
 !> Indices are shifted from [1:n+1] to [0:n] only inside this 
 !> subroutine
-subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
+subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y, bc_x, bc_y)
 type( poisson_fem ) :: this
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
 sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
-sll_int32 :: i, j, ii, jj
+sll_int32, optional         :: bc_x !< boundary condition type in x direction
+sll_int32, optional         :: bc_y !< boundary condition type in x direction
+sll_int32 :: ii, jj
 sll_int32 :: error
 
 sll_real64, dimension(4,4) :: Axelem
@@ -99,56 +103,58 @@ do i=1,nx-2
    end do
 end do
 
-!** Contribution des mailles au sud et au nord
-do i=1,nx-2
-   isom(3)=i+1; isom(4)=i  !Sud
-   do ii=3,4
-      do jj=3,4
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(1) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(1)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj) * this%hx(i) * this%hy(1)
+if (present(bc_y) .and. bc_y == COMPACT) then
+   do i=1,nx-2
+      isom(3)=i+1; isom(4)=i  !Sud
+      do ii=3,4
+         do jj=3,4
+            this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+                    & + Axelem(ii,jj) * this%hy(1) / this%hx(i) &
+                    & + Ayelem(ii,jj) * this%hx(i) / this%hy(1)
+            this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+                 & + Melem(ii,jj) * this%hx(i) * this%hy(1)
+         end do
+      end do
+      iel = (ny-2)*(nx-1)+i   !Nord
+      isom(1)=iel; isom(2)=iel+1
+      do ii=1,2
+         do jj=1,2
+            this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+                    & + Axelem(ii,jj) * this%hy(ny-1) / this%hx(i) &
+                    & + Ayelem(ii,jj) * this%hx(i) / this%hy(ny-1)
+            this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+                 & + Melem(ii,jj) * this%hx(i) * this%hy(ny-1)
+         end do
       end do
    end do
-   iel = (ny-2)*(nx-1)+i   !Nord
-   isom(1)=iel; isom(2)=iel+1
-   do ii=1,2
-      do jj=1,2
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(ny-1) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(ny-1)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj) * this%hx(i) * this%hy(ny-1)
-      end do
-   end do
-end do
+end if
 
-!** Contribution des mailles a l'ouest et a l'est
-do j=1,ny-2
-   isom(2)=1+(j-1)*(nx-1); isom(3)=1+j*(nx-1) !Ouest
-   do ii=2,3
-      do jj=2,3
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(1) &
-                 & + Ayelem(ii,jj) * this%hx(1) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj) * this%hx(1) * this%hy(j)
+if (present(bc_x) .and. bc_x == COMPACT) then
+   do j=1,ny-2
+      isom(2)=1+(j-1)*(nx-1); isom(3)=1+j*(nx-1) !Ouest
+      do ii=2,3
+         do jj=2,3
+            this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+                    & + Axelem(ii,jj) * this%hy(j) / this%hx(1) &
+                    & + Ayelem(ii,jj) * this%hx(1) / this%hy(j)
+            this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+                 & + Melem(ii,jj) * this%hx(1) * this%hy(j)
+         end do
+      end do
+      iel = j*(nx-1)                              !Est
+      isom(1)=iel; isom(4)=iel+nx-1
+      do ii=1,4,3
+         do jj=1,4,3
+            this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+                    & + Axelem(ii,jj) * this%hy(j) / this%hx(nx-1) &
+                    & + Ayelem(ii,jj) * this%hx(nx-1) / this%hy(j)
+            this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+                 & + Melem(ii,jj) * this%hx(nx-1) * this%hy(j)
+         end do
       end do
    end do
-   iel = j*(nx-1)                              !Est
-   isom(1)=iel; isom(4)=iel+nx-1
-   do ii=1,4,3
-      do jj=1,4,3
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(nx-1) &
-                 & + Ayelem(ii,jj) * this%hx(nx-1) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj) * this%hx(nx-1) * this%hy(j)
-      end do
-   end do
-end do
-
+end if
+   
 !** Contribution des coins
 isom(3) = 1    !SW
 this%A(1,1) =   this%A(1,1) &
@@ -197,6 +203,8 @@ do j=nx+1,(nx-1)*(ny-1)
 end do
 call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,info)
 
+call write_mtv_file( x, y)
+
 end subroutine initialize_poisson_2d_fem
 
 !> Solve the poisson equation
@@ -205,7 +213,6 @@ type( poisson_fem )        :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
-sll_int32 :: i, j
 sll_real64, dimension((nx-1)*(ny-1)) :: b
 sll_int32 :: info
 
@@ -239,5 +246,48 @@ end do
 end do
 
 end subroutine solve_poisson_2d_fem
+
+subroutine write_mtv_file( x, y )
+sll_real64, dimension(:) :: x
+sll_real64, dimension(:) :: y
+sll_int32 :: iel
+sll_real64 :: x1, y1
+
+open(10, file="gd.mtv")
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Numero des faces ' "
+   
+do i=1,nx-2
+   do j=1,ny-2
+      write(10,*) x(i  ), y(j  ), 0.
+      write(10,*) x(i+1), y(j  ), 0.
+      write(10,*) x(i+1), y(j+1), 0.
+      write(10,*) x(i  ), y(j+1), 0.
+      write(10,*) x(i  ), y(j  ), 0.
+      write(10,*)
+   end do
+end do
+
+!Numeros des elements
+do i=1,nx-2
+   do j=1,ny-2
+      iel = i+(j-1)*(nx-1)
+      x1 = 0.5*(x(i)+x(i+1))
+      y1 = 0.5*(y(j)+y(j+1))
+      write(10,"(a)"   ,  advance="no")"@text x1="
+      write(10,"(g15.3)", advance="no") x1
+      write(10,"(a)"   ,  advance="no")" y1="
+      write(10,"(g15.3)", advance="no") y1
+      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
+      write(10,"(i4)"  ,  advance="no") iel
+      write(10,"(a)")"'"
+   end do
+end do
+   
+write(10,*)"$END"
+close(10)
+
+end subroutine write_mtv_file
 
 end module sll_poisson_2d_fem
