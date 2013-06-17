@@ -7,12 +7,11 @@ use sll_xdmf
 use sll_hdf5_io
 use sll_constants
 use sll_utilities, only: int2string
-use hdf5
 
 sll_int32, private :: i, j, k !< indices
 sll_int32 :: error            !< error code
 sll_int32 :: file_id          !< file unit number
-integer(hid_t) :: hfile_id          !< file unit number
+integer   :: hfile_id          !< file unit number
 sll_int32 :: iplot            !< plot counter
 character(len=4) :: cplot     !< plot counter
 
