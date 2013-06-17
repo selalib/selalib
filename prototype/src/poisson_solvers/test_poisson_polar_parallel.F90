@@ -1,14 +1,16 @@
-program test_mudpack_polar
+program test_poisson_polar_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-use sll_mudpack_polar
+use sll_poisson_polar_parallel
+use sll_collective
+use sll_remapper
 
 implicit none
 
-type(mudpack_2d) :: poisson
+type(sll_poisson_polar) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -17,27 +19,64 @@ sll_real64, dimension(:),   allocatable :: r
 sll_real64, dimension(:),   allocatable :: theta
 
 sll_int32  :: i, j
-sll_int32  :: nr
-sll_int32  :: ntheta
+sll_int32  :: nr, nc_r
+sll_int32  :: ntheta, nc_theta
 sll_real64 :: r_min, r_max, delta_r
 sll_real64 :: theta_min, theta_max, delta_theta
 sll_int32  :: error
-sll_real64 :: tolmax,errmax
 
 sll_int32, parameter  :: n = 4
 
-print*,'Testing the Poisson solver in 2D, polar coordinate'
+type(layout_2D), pointer            :: layout_r
+type(layout_2D), pointer            :: layout_theta
+sll_int32, dimension(2)             :: global
+sll_int32  :: psize, prank, e, nproc_r, nproc_theta
+
+!Boot parallel environment
+call sll_boot_collective()
+
+psize = sll_get_collective_size(sll_world_collective)
+prank = sll_get_collective_rank(sll_world_collective)
+
+e      = int(log(real(psize))/log(2.))
+print *, 'running on ', 2**e, 'processes'
+
+! Layout and local sizes for FFTs in x-direction
+layout_r     => new_layout_2D( sll_world_collective )
+layout_theta => new_layout_2D( sll_world_collective )
+nproc_r     = 2**e
+nproc_theta = 2**e
+
+nc_r = 64
+nc_theta = 128
+
+call initialize_layout_with_distributed_2D_array( nc_r,     &
+                                                  nc_theta, &
+                                                    1,      &
+                                               nproc_r,     &
+                                              layout_r )
+
+call initialize_layout_with_distributed_2D_array( nc_r,     &
+                                                  nc_theta, &
+                                               nproc_theta, &
+                                                    1,      &
+                                              layout_theta )
+call flush(6)
+call sll_view_lims_2D(layout_r)
+call flush(6)
+call sll_view_lims_2D(layout_theta)
+call flush(6)
 
 r_min   = 1.0_f64
 r_max   = 2.0_f64
 
-theta_min = 0.0_f64
-theta_max = 2.0_f64 * sll_pi
+theta_min  = 0.0_f64
+theta_max  = 2.0_f64 * sll_pi
 
-nr     = 33
-ntheta = 129
-delta_r     = (r_max-r_min)/(nr-1)
-delta_theta = 2.0_f64*sll_pi/(ntheta-1)
+nr     = nc_r+1
+ntheta = nc_theta+1
+delta_r     = (r_max-r_min)/real(nr-1,f64)
+delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
 
 SLL_CLEAR_ALLOCATE(rhs(1:nr,1:ntheta),error)
 SLL_CLEAR_ALLOCATE(phi(1:nr,1:ntheta),error)
@@ -60,42 +99,36 @@ do j=1,ntheta
    end do
 end do
 
-tolmax   = 1.0e-4_f64
-
-call initialize_poisson_polar_mudpack(poisson, phi, rhs, &
-                                      r_min, r_max, nr, &
-                                      theta_min, theta_max, ntheta, &
-                                      DIRICHLET, DIRICHLET, PERIODIC, PERIODIC )
-do i =1,nr
-   do j=1,ntheta
-      rhs(i,j) = f_cos(r(i), theta(j))
-   end do
-end do
-
-poisson%iguess = 0 ! no initial guess
-
-call solve_poisson_polar_mudpack(poisson, phi, rhs)
-
-errmax = maxval(abs(phi_cos-phi))
-write(*,201) errmax
-if ( errmax > tolmax ) then
-   print*,'FAILED'
-   stop
-else
-   print*,'PASSED'
-end if
+call initialize( poisson,layout_r, layout_theta, &
+                 r_min,r_max,nr-1,ntheta-1, DIRICHLET, DIRICHLET)
 
 do i =1,nr
    do j=1,ntheta
-      rhs(i,j) = f_sin(r(i), theta(j))
+      rhs(i,j) = - f_sin(r(i), theta(j))
    end do
 end do
 
-poisson%iguess = 0 ! no initial guess
+call solve_poisson_polar(poisson, rhs, phi)
 
-call solve_poisson_polar_mudpack(poisson, phi, rhs)
+do i =1,nr
+   do j=1,ntheta
+      write(13,*) r(i)*cos(theta(j)),r(i)*sin(theta(j)), phi(i,j), phi_sin(i,j)
+   end do
+   write(13,*) 
+end do
+close(13)
 
-errmax = maxval(abs(phi_cos-phi))
+call error_max(phi_sin,phi,1e-4_f64)
+
+contains
+
+subroutine error_max(phi, phi_exact, tolmax)
+
+sll_real64, intent(in), dimension(:,:) :: phi
+sll_real64, intent(in), dimension(:,:) :: phi_exact
+sll_real64 :: errmax, tolmax 
+
+errmax = maxval(abs(phi_exact-phi))
 write(*,201) errmax
 if ( errmax > tolmax ) then
    print*,'FAILED'
@@ -106,7 +139,8 @@ end if
 
 201 format(' maximum error  =  ',e10.3)
 
-contains
+end subroutine error_max
+
 
 sll_real64 function f_cos( r, theta )
 
@@ -145,4 +179,4 @@ sll_real64 function f_sin( r, theta)
 
 end function f_sin
 
-end program test_mudpack_polar
+end program test_poisson_polar_parallel
