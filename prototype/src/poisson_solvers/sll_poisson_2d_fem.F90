@@ -22,11 +22,19 @@ interface solve
    module procedure solve_poisson_2d_fem
 end interface solve
 
+sll_int32, private :: nx, ny
+
 contains
 
-subroutine initialize_poisson_2d_fem( this, x, y ,nx, ny)
+!> Initialize Poisson solver object using finite elements method.
+!> Indices are shifted from [1:n+1] to [0:n] only inside this 
+!> subroutine
+subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
 type( poisson_fem ) :: this
-sll_real64, dimension(:) :: x, y
+sll_int32,  intent(in)      :: nn_x !< number of cells along x
+sll_int32,  intent(in)      :: nn_y !< number of cells along y
+sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
+sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
 sll_int32 :: i, j, ii, jj
 sll_int32 :: error
 
@@ -34,10 +42,11 @@ sll_real64, dimension(4,4) :: Axelem
 sll_real64, dimension(4,4) :: Ayelem
 sll_real64, dimension(4,4) :: Melem
 sll_real64 :: dum
-sll_int32 :: iel
+sll_int32 :: iel, info
 sll_int32, dimension(4) :: isom
-sll_int32 :: nx
-sll_int32 :: ny
+
+nx = nn_x-1
+ny = nn_y-1
 
 SLL_ALLOCATE(this%hx(1:nx),error)
 SLL_ALLOCATE(this%hy(1:ny),error)
@@ -52,17 +61,6 @@ end do
 do j=1,ny
    this%hy(j) = y(j+1)-y(j)
 end do
-
-!Utilisé pour des conditions limites periodiques
-!this%hx(nx) = this%hx(0)  
-!this%hx(-1) = this%hx(nx-1)
-!this%hy(ny) = this%hy(0)
-!this%hy(-1) = this%hy(ny-1)
-!
-!x(-1)   = x(0)  - this%hx(nx-1) 
-!x(nx+1) = x(nx) + this%hx(0)
-!y(-1)   = y(0)  - this%hy(ny-1)
-!y(ny+1) = y(ny) + this%hy(0)
 
 !** Construction des matrices elementaires
 dum = 1.d0/6.d0
@@ -85,13 +83,10 @@ Melem(4,1)=2*dum; Melem(4,2)=  dum; Melem(4,3)=2*dum; Melem(4,4)=4*dum;
 this%A = 0.d0
 
 !** Contribution des mailles interieures
-do i=2,nx-1
-   do j=2,ny-1
+do i=1,nx-2
+   do j=1,ny-2
       iel = i+(j-1)*(nx-1)
-      isom(1)=iel
-      isom(2)=iel+1
-      isom(3)=iel+nx
-      isom(4)=iel+nx-1;
+      isom(1)=iel; isom(2)=iel+1; isom(3)=iel+nx; isom(4)=iel+nx-1;
       do ii=1,4
          do jj=1,4
             this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
@@ -105,7 +100,7 @@ do i=2,nx-1
 end do
 
 !** Contribution des mailles au sud et au nord
-do i=2,nx-1
+do i=1,nx-2
    isom(3)=i+1; isom(4)=i  !Sud
    do ii=3,4
       do jj=3,4
@@ -130,7 +125,7 @@ do i=2,nx-1
 end do
 
 !** Contribution des mailles a l'ouest et a l'est
-do j=2,ny-1
+do j=1,ny-2
    isom(2)=1+(j-1)*(nx-1); isom(3)=1+j*(nx-1) !Ouest
    do ii=2,3
       do jj=2,3
@@ -138,7 +133,7 @@ do j=2,ny-1
                  & + Axelem(ii,jj) * this%hy(j) / this%hx(1) &
                  & + Ayelem(ii,jj) * this%hx(1) / this%hy(j)
          this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-              & + Melem(ii,jj) * this%hx(0) * this%hy(j)
+              & + Melem(ii,jj) * this%hx(1) * this%hy(j)
       end do
    end do
    iel = j*(nx-1)                              !Est
@@ -182,7 +177,7 @@ isom(2) = (nx-1)*(ny-2)+1 !NW
 
 this%A(isom(2),isom(2)) =   this%A(isom(2),isom(2))  &
                           + Axelem(2,2) * this%hy(ny-1) / this%hx(1) &
-                          + Ayelem(2,2) * this%hx(0) / this%hy(ny-1)
+                          + Ayelem(2,2) * this%hx(1) / this%hy(ny-1)
 
 this%M(isom(2),isom(2)) =   this%M(isom(2),isom(2))  &
                           + Melem(2,2) * this%hx(1) * this%hy(ny-1)
@@ -200,45 +195,46 @@ do j=nx+1,(nx-1)*(ny-1)
    this%mat(2,j) = this%A(j-nx+1,j)
    this%mat(1,j) = this%A(j-nx,j)
 end do
-call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
+call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,info)
 
 end subroutine initialize_poisson_2d_fem
 
-subroutine solve_poisson_2d_fem( this, ex, ey, rho, nx, ny )
-type( poisson_fem ) :: this
-sll_real64, dimension(:,:) :: ex
-sll_real64, dimension(:,:) :: ey
-sll_real64, dimension(:,:) :: rho
-sll_int32 :: i, j, nx, ny
+!> Solve the poisson equation
+subroutine solve_poisson_2d_fem( this, ex, ey, rho )
+type( poisson_fem )        :: this !< Poisson solver object
+sll_real64, dimension(:,:) :: ex   !< x electric field
+sll_real64, dimension(:,:) :: ey   !< y electric field
+sll_real64, dimension(:,:) :: rho  !< charge density
+sll_int32 :: i, j
 sll_real64, dimension((nx-1)*(ny-1)) :: b
-sll_int32 :: error
+sll_int32 :: info
 
 !** Construction du second membre (rho a support compact --> projete)
 do i=2,nx
    do j=2,ny
-      b(i+(j-1)*(nx-1)) = rho(i,j)
+      b((i-1)+(j-2)*(nx-1)) = rho(i,j)
    end do
 end do
 
 b = matmul(this%M,b)
 
-call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),error) 
+call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),info) 
 
 do i=2,nx
    do j=2,ny
-      rho(i,j) = b(i+(j-1)*(nx-1)) 
+      rho(i,j) = b((i-1)+(j-2)*(nx-1)) 
    end do
 end do
 
-do j=1,ny+1
-do i=2,nx
-   ex(i,j) = - (rho(i+1,j)-rho(i-1,j)) / (this%hx(i)+this%hx(i-1))
+do j=1,ny-1
+do i=1,nx-2
+   ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)
 end do
 end do
 
-do j=2,ny
-do i=1,nx+1
-   ey(i,j) = - (rho(i,j+1)-rho(i,j-1)) / (this%hy(j)+this%hy(j-1))
+do j=1,ny-2
+do i=1,nx-1
+   ey(i,j) = - (rho(i,j+1)-rho(i,j)) / this%hy(j)
 end do
 end do
 
