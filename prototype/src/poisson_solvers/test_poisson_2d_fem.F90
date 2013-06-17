@@ -1,4 +1,5 @@
 program test_poisson_2d_fem
+#include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
@@ -26,8 +27,8 @@ type( poisson_fem ) :: poisson
 sll_real64 :: dx, dy
 sll_int32  :: nc_x, nc_y
 
-nc_x = 64
-nc_y = 64
+nc_x = 8
+nc_y = 8
 
 SLL_CLEAR_ALLOCATE(ex(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(ey(1:nc_x+1,1:nc_y+1),error) 
@@ -57,7 +58,7 @@ do j = 1, nc_y
    end do
 end do
 
-call initialize(poisson, x, y, nc_x+1, nc_y+1)
+call initialize(poisson, x, y, nc_x+1, nc_y+1, COMPACT, COMPACT)
 call solve(poisson, ex, ey, rho)
 
 errmax = 0.

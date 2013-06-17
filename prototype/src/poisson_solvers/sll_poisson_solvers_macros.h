@@ -18,13 +18,13 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-#define  NORTH  0      
-#define  EAST   1       
-#define  SOUTH  2        
-#define  WEST   3         
-integer, parameter :: PERIODIC  = 0
-integer, parameter :: DIRICHLET = 1
-integer, parameter :: NEUMANN   = 2
-integer, parameter :: COMPACT   = 3
+#define NORTH     0      
+#define EAST      1       
+#define SOUTH     2        
+#define WEST      3         
+#define PERIODIC  0
+#define DIRICHLET 1
+#define NEUMANN   2
+#define COMPACT   3
 
 #endif
