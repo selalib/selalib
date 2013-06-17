@@ -308,37 +308,67 @@ contains
          interpolator%t2( i + sp_deg2 + 1 ) = eta2_min + i*delta2
       end do
 
-
       do i = 1,num_cells1
          do j = 1,num_cells2
-            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
+            interpolator%coeff_splines(i,j) = &
                  coeffs_1d( i + num_cells1 *(j-1) )
          end do
       end do
-      
-      do j=1, tmp2
-         interpolator%coeff_splines(:,j) = &
-              interpolator%coeff_splines(:,num_cells2 + j)
-      end do
-      
-      if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
-         do j = tmp2 + 1, sp_deg2
-            interpolator%coeff_splines(:, num_cells2 + j) = &
-                 interpolator%coeff_splines(:, j)
-         end do
-      end if
 
-      do i=1, tmp1
-         interpolator%coeff_splines(i,:) = &
-              interpolator%coeff_splines(num_cells1 + i,:)
-      end do
-      
-      if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
-         do i = tmp1 + 1, sp_deg1
-            interpolator%coeff_splines(num_cells1 + i,:) = &
-                 interpolator%coeff_splines(i,:)
+      do j = 1, sp_deg2
+         do i = 1,num_cells1
+            
+            interpolator%coeff_splines(i ,num_cells2 + j ) = &
+                 coeffs_1d(i+num_cells1*(j-1))
          end do
-      end if
+      end do
+      do i = 1, sp_deg1
+         do j = 1,num_cells2
+            
+            interpolator%coeff_splines(num_cells1 + i ,j) = &
+                 coeffs_1d(i+num_cells1 *(j-1) )!nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+         end do
+      end do
+
+      do i= 1,sp_deg1
+         do j=1,sp_deg2
+            
+            interpolator%coeff_splines(num_cells1 +  i ,num_cells2 + j) = &
+                 interpolator%coeff_splines((sp_deg1-(i-1)),(sp_deg2-(j-1)))
+         end do
+      end do
+!!$      do i = 1,num_cells1
+!!$         do j = 1,num_cells2
+!!$            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
+!!$                 coeffs_1d( i + num_cells1 *(j-1) )
+!!$         end do
+!!$      end do
+!!$      
+!!$      print*, 't1',interpolator%t1(1:interpolator%size_t1)
+!!$      print*, 't2',interpolator%t2(1:interpolator%size_t2)
+!!$      do j=1, tmp2
+!!$         interpolator%coeff_splines(:,j) = &
+!!$              interpolator%coeff_splines(:,num_cells2 + j)
+!!$      end do
+!!$      
+!!$      if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
+!!$         do j = tmp2 + 1, sp_deg2
+!!$            interpolator%coeff_splines(:, num_cells2 + j) = &
+!!$                 interpolator%coeff_splines(:, j)
+!!$         end do
+!!$      end if
+!!$
+!!$      do i=1, tmp1
+!!$         interpolator%coeff_splines(i,:) = &
+!!$              interpolator%coeff_splines(num_cells1 + i,:)
+!!$      end do
+!!$      
+!!$      if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
+!!$         do i = tmp1 + 1, sp_deg1
+!!$            interpolator%coeff_splines(num_cells1 + i,:) = &
+!!$                 interpolator%coeff_splines(i,:)
+!!$         end do
+!!$      end if
    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
       interpolator%size_coeffs1=  num_cells1 + sp_deg1
       interpolator%size_coeffs2=  num_cells2 + sp_deg2
@@ -535,6 +565,7 @@ contains
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
+
        
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_coeffs1 = sz1
