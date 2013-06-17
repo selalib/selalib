@@ -63,9 +63,6 @@ target_link_libraries( test_VP1D_curvilinear_analytic
   sll_working_precision
   )
 
-
-
-
 add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
 
 target_link_libraries( test_vp1d_fourier_fem
@@ -78,8 +75,6 @@ target_link_libraries( test_vp1d_fourier_fem
   sll_assertion 	
   sll_working_precision
   )
-
-
 
 #Commands to be updated in the above simulation class standard
 #############################################################
@@ -210,7 +205,6 @@ target_link_libraries(VP1D_deltaf_cart
 	sll_poisson_solvers
 	dfftpack
 	${LAPACK_LIBRARIES}
-                                    ${HDF5_LIBRARIES}
 	)
 
 add_executable(VP1D_mm VP1D_mm.F90)
@@ -232,7 +226,6 @@ target_link_libraries(VP1D_mm
 	sll_poisson_solvers
 	dfftpack
 	${LAPACK_LIBRARIES}
-                                    ${HDF5_LIBRARIES}
 	)
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -261,7 +254,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
      simulation_6d_vlasov_poisson_cartesian.F90)
 
-#Add new dependencies concerning simulation_MYMETHOD.F90
+   #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
                        sll_fft
                        sll_electric_field_accumulators
@@ -273,10 +266,10 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_remap
                        sll_collective
                        sll_constants
-                       sll_file_io_parallel
                        sll_utilities
                        sll_coordinate_transformations
                        sll_logical_meshes
+                       sll_file_io_parallel
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
@@ -288,16 +281,15 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
       TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulations ${SIMULATION_DEPS})
    ENDMACRO(ADD_SIMULATION)
 
-#Define the executables/tests here.
-#Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
-#ADD_SIMULATION(MYMETHOD)
-###############################################################
+   #Define the executables/tests here.
+   #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
+   #ADD_SIMULATION(MYMETHOD)
+   ###############################################################
 
-ADD_SIMULATION(4d)
-ADD_SIMULATION(4d_vp_general)
-ADD_SIMULATION(4d_vp_polar)
-ADD_SIMULATION(4d_dk_cartesian)
-ADD_SIMULATION(6d)
-
+   ADD_SIMULATION(4d)
+   ADD_SIMULATION(4d_vp_general)
+   ADD_SIMULATION(4d_vp_polar)
+   ADD_SIMULATION(4d_dk_cartesian)
+   ADD_SIMULATION(6d)
 
 ENDIF()
