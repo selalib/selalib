@@ -5,25 +5,25 @@
 !
 ! DESCRIPTION:
 !> @file gauss-lobatto.F90
-!! @namespace gausslobatto
 !! @author Madaule Eric
 !! @brief Gauss-Lobatto interpolation tools
 !! @details Here are several of the Gauss-Lobatto tools :\\
 !!            ·Gauss-Lobatto points and weight,\\
 !!            ·Gauss-Lobatto bases functions and the integral of their product,\\
-!!            ·integral of product of Gauss-Lobatto function and their derivative.
+!!            ·integral of product of Gauss-Lobatto function and their derivative.\\
+!!          To use this module you must also link to the compilation gauss.f and lob.f
 !!
 !!          The mass matrix (which is the integral of \phi_i \times \phi_j) is simply 
-!!          diag(weigh), so there is no need to store it more than just the weigh.
+!!          diag(weigh), so there is no need to store it more than just the weigh.\\
 !!
 !!          We also need the derivative matrix D.
-!!          \f[ D_{i,j}=\int \pih_i \phi^'_j f]
+!!          \f[ D_{i,j}=\int \pih_i \phi^'_j \f]
 !!
 !!          This module will first be limited to 1D and should extend as people will
 !!          have the need for higher dimension (and so have time to write it).
 !!         
 !------------------------------------------------------------------------------
-module gausslobatto
+module sll_gausslobatto
 #include "sll_working_precision.h"
 
   use sll_constants
@@ -180,4 +180,4 @@ contains
 
   end subroutine derivative_matrix_1d
 
-end module gausslobatto
+end module sll_gausslobatto
