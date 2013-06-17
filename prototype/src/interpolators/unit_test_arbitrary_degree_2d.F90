@@ -54,7 +54,7 @@ program unit_test
      end do
   end do
 
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, reference, 'reference_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, reference, 'reference_interp_arb_deg', 0, ierr)
 
   print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
 !  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
@@ -138,11 +138,11 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
     !    acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, calculated, 'calculated_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, calculated, 'calculated_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, difference, 'difference_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, difference, 'difference_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_rect_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
 
 
   print *, '***********************************************************'
