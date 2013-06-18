@@ -1,0 +1,31 @@
+&MESH
+  Nr           = 127
+  Ntheta       = 128
+  Nphi         = 32
+  Nvpar        = 47
+  a            = 32.
+  rhomin       = 0.2  !rmin=a*rhomin
+  rhomax       = 0.8  !rmax=a*rhomax
+  aspect_ratio = 3.
+  vmax      = 6.
+  nbiter      = 30
+  dt      = 16.
+  fdiag      = 30
+  fthdiag      = 30
+/
+
+&EQUIL
+  rpeak          = 0.5     
+  kappan         = 4.
+  kappaTi        = 27.
+  kappaTe        = 27.
+  deltarn        = 0.08
+  deltarTi       = 0.08
+  deltarTe       = 0.08
+  epsilon        = .001
+  m              = 16
+  n              = 8
+  init_perturb   = 2
+  zonal_flow     = .true.
+/
+
