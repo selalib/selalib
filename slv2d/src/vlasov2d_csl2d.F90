@@ -25,8 +25,8 @@ module vlasov2d_csl2d_module
    
    !type (splinepp) :: interpx ! spline periodique pour X
    type (csl2dpp) ::  interpx ! new csl2d method
-
-   type (splinenn) :: splinev ! spline naturel pour V
+   type (csl2dpp) ::  interpv ! new csl2d method
+   !type (splinenn) :: interpv ! spline naturel pour V
    type (geometry) :: geomx, geomv
    logical :: transposed       ! permet de definir si f ou ft est derniere 
                                ! fonction de distribution mise a jour
@@ -89,7 +89,7 @@ contains
   this%geomx=geomx
   this%geomv=geomv
   ! initialisation des splines de l'espace des vitesses
-  call new(this%splinev,geomv,error)
+  call new(this%interpv,geomv,error)
   ! initialisation de l'interpolation de l'espace physique
   call new(this%interpx,geomx,error)  
 
@@ -118,7 +118,13 @@ contains
   sll_real64 :: depx, depy   ! deplacement par rapport au maillage
   sll_real64 :: vx, vy       ! vitesse du point courant
   sll_int32 :: iv, jv ! indices de boucle
+!  sll_int32::timecase(0:1),interp_case,ppm_order
 
+
+!  timecase(0)=3 !computation of the characteristics: 1 for Euler, 2 or 3 for symplectic Verlet
+!  timecase(1)=2 !number of steps fixed point algo (symplectic Verlet case)
+!  interp_case=1 !1:Lauritzen 2:LAG3 3:PPM CD 4:PPM up
+!  ppm_order=2 !if interp_case=3: PPM0, PPM1 or PPM2 / if interp_case=4: up3 (1) or up5 (2)
   ! verifier que la transposition est a jour
   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
   do jv=this%jstartv,this%jendv
@@ -168,7 +174,7 @@ contains
       end do
      end do
 
-     call interpole(this%splinev,this%ft(:,:,i,j),this%ft(:,:,i,j),P_x,P_y)
+     call interpole(this%interpv,this%ft(:,:,i,j),this%ft(:,:,i,j),P_x,P_y)
 
     end do
    end do
@@ -180,12 +186,13 @@ contains
      im1=mod(i-1+this%geomx%nx,this%geomx%nx)
      depvx = fx(i,j)*dt
      depvy = fy(i,j)*dt
+!print*,i,j,depvx,depvy
      !depvx =  fx(i,j)*dt;depvy=0._wp
-     call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,j==0)
-     !call interpole(this%splinev,this%ft(:,:,i,j),depvx,depvy,(j .eq. 3) .and. (i .eq. 3))
+     call interpole(this%interpv,this%ft(:,:,i,j),depvx,depvy,j==0)
+     !call interpole(this%interpv,this%ft(:,:,i,j),depvx,depvy,(j .eq. 3) .and. (i .eq. 3))
     end do
    end do
-
+!stop
   end if
        
  end subroutine advection_v
