@@ -353,7 +353,8 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
     sll_real64, dimension(:,:), allocatable :: K_a21_loc
     sll_real64, dimension(:,:), allocatable :: K_a22_loc
-    sll_real64, dimension(:,:), allocatable :: Masse_loc
+    !sll_real64, dimension(:,:), allocatable :: Masse_loc
+    sll_real64, dimension(:), allocatable :: Masse_loc
     sll_int32 :: total_num_splines_eta1
     sll_int32 :: total_num_splines_eta2
     sll_int32 :: spline_degree_eta1
@@ -389,7 +390,8 @@ contains ! *******************************************************************
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a21_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-    SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
+   ! SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
+    SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
 
     epsi = qns%epsi
 
@@ -491,7 +493,8 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
     sll_real64, dimension(:,:), intent(out) :: K_a21_loc
     sll_real64, dimension(:,:), intent(out) :: K_a22_loc
-    sll_real64, dimension(:,:), intent(out) :: Masse_loc
+    !sll_real64, dimension(:,:), intent(out) :: Masse_loc
+    sll_real64, dimension(:), intent(out) :: Masse_loc
     sll_int32 :: bc_left    
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom    
@@ -535,7 +538,7 @@ contains ! *******************************************************************
     sll_real64 :: B21
     sll_real64 :: B22
 
-    Masse_loc(:,:) = 0.0
+    Masse_loc(:) = 0.0
     M_rho_loc(:) = 0.0
     M_c_loc(:,:) = 0.0
     K_a11_loc(:,:) = 0.0
@@ -679,6 +682,12 @@ contains ! *******************************************************************
                 M_rho_loc(index1)= M_rho_loc(index1) + &
                      val_f*val_jac*wgpt1*wgpt2* &
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
+
+                 Masse_loc(index1) = &
+                           Masse_loc(index1) + &
+                           epsi*val_jac*wgpt1*wgpt2* &
+                           dbiatx1(ii+1,1)*  &
+                           dbiatx2(jj+1,1)
                 
                  
                 !print*, 'ethop',M_rho_loc(index1),dbiatx1(ii+1,1),dbiatx2(jj+1,1)
@@ -688,11 +697,11 @@ contains ! *******************************************************************
                       
                       index2 =  jjj*(obj%spline_degree1 + 1) + iii + 1
 
-                      Masse_loc(index1, index2) = &
-                           Masse_loc(index1, index2) + &
-                           epsi*val_jac*wgpt1*wgpt2* &
-                           dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
-                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
+                     ! Masse_loc(index1, index2) = &
+                      !     Masse_loc(index1, index2) + &
+                       !    epsi*val_jac*wgpt1*wgpt2* &
+                        !   dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
+                         !  dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
                       
 
 
@@ -758,7 +767,8 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: K_a12_loc
     sll_real64, dimension(:,:), intent(in) :: K_a21_loc
     sll_real64, dimension(:,:), intent(in) :: K_a22_loc
-    sll_real64, dimension(:,:), intent(in) :: Masse_loc
+    !sll_real64, dimension(:,:), intent(in) :: Masse_loc
+    sll_real64, dimension(:), intent(in) :: Masse_loc
     sll_int32 :: index1, index2, index3, index4
     sll_int32 :: i,j,mm, nn, b, bprime,x,y
     sll_int32 :: li_A, li_Aprime
@@ -837,7 +847,7 @@ contains ! *******************************************************************
                 li_Aprime = qns%local_to_global_spline_indices(bprime, &
                                                                cell_index)
                 elt_mat_global = &
-                     Masse_loc(b,bprime) + &
+                     Masse_loc(b) + &
                      M_c_loc(b, bprime) + &
                      K_a11_loc(b, bprime) + &
                      K_a12_loc(b, bprime) + &

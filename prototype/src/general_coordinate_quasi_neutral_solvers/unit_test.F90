@@ -11,10 +11,10 @@ program test_general_qns
 #include "sll_working_precision.h"
   implicit none
 
-#define SPLINE_DEG1 3
-#define SPLINE_DEG2 3
-#define NUM_CELLS1  20
-#define NUM_CELLS2  20
+#define SPLINE_DEG1 5
+#define SPLINE_DEG2 4
+#define NUM_CELLS1  24
+#define NUM_CELLS2  24
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
@@ -67,6 +67,13 @@ program test_general_qns
   real(8), external :: sol_exacte_chgt_dirper
   real(8), external :: sol_exacte_chgt_dirdir
   sll_real64 :: node_val1
+  sll_real64 :: epsi
+  sll_real64 :: epsi1
+
+  epsi  =  0.0001_f64
+  epsi1 =  0.005_f64 ! penalization method
+  
+  
   
     
   !--------------------------------------------------------------------
@@ -1860,7 +1867,7 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX,&
-       -0.1_f64)
+       epsi)
   
   t95i = time_elapsed_since(t_reference) 
   
@@ -2060,7 +2067,7 @@ program test_general_qns
        npts1-1,&
        point2,&
        npts2-1)
-
+ 
 
 
 
@@ -2111,7 +2118,7 @@ program test_general_qns
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX, &
-       -0.1_f64)
+       epsi1)
   
   t9i = time_elapsed_since(t_reference) 
   
