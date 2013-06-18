@@ -73,8 +73,9 @@ call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                f4d,rho,e_x,e_y,vlas2d,poisson,splx,sply)
 
 call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
- 
+
 call advection_x(vlas2d,f4d,.5*dt)
+
 
 do iter=1,nbiter
 
@@ -92,9 +93,11 @@ do iter=1,nbiter
 
    call transposevx(vlas2d,f4d)
 
+
    if (mod(iter,fdiag) == 0) then 
 
        call advection_x(vlas2d,f4d,.5*dt)
+
 
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
@@ -105,6 +108,7 @@ do iter=1,nbiter
        call advection_x(vlas2d,f4d,.5*dt)
 
    else 
+
 
        call advection_x(vlas2d,f4d,dt)
 
@@ -205,7 +209,7 @@ contains
   sll_int32  :: ipiece_size_v
   sll_int32  :: ipiece_size_x
 
-  sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky
+  sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky,alpha,k
   sll_int32  :: i,j,iv,jv,iflag
   sll_int32  :: my_num, num_threads, comm
 
@@ -236,20 +240,24 @@ contains
   SLL_ALLOCATE(e_x(geomx%nx,geomx%ny),iflag)
   SLL_ALLOCATE(e_y(geomx%nx,geomx%ny),iflag)
 
-  xi  = 0.90
-  eps = 0.05
+  xi  = 0.9_f64
+  eps = 0.5_f64
+  alpha = 0.01_f64
+  k = 0.5_f64
   kx  = 2*pi/((geomx%nx)*geomx%dx)
   ky  = 2*pi/((geomx%ny)*geomx%dy)
   do jv=jstartv,jendv
-     vy = geomv%y0+(jv-1)*geomv%dy
+     vy = geomv%y0+(real(jv-1,f64))*geomv%dy
      do iv=1,geomv%nx
-        vx = geomv%x0+(iv-1)*geomv%dx
+        vx = geomv%x0+(real(iv-1,f64))*geomv%dx
         v2 = vx*vx+vy*vy
         do j=1,geomx%ny
-           y=geomx%y0+(j-1)*geomx%dy
+           y=geomx%y0+(real(j-1,f64))*geomx%dy
            do i=1,geomx%nx
-              x=geomx%x0+(i-1)*geomx%dx
-              f(i,j,iv,jv)=(1+eps*cos(kx*x))*1/(2*pi)*exp(-.5*v2)
+              x=geomx%x0+(real(i-1,f64))*geomx%dx
+              f(i,j,iv,jv)=(1._f64+eps*cos(kx*x))/(2._f64*pi)*exp(-.5_f64*v2)
+              !f(i,j,iv,jv)=2/(49*pi)*(1+5*z(1)*z(1))*exp(-0.5*z(1)*z(1)) &
+              !*(1+alpha*(cos(k*x)+(cos(2*k*x)+cos(3*k*x))/1.2))
            end do
         end do
      end do
