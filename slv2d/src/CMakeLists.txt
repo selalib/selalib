@@ -162,6 +162,30 @@ ADD_LIBRARY(slv2d_non_unif_v STATIC ${SLV2D_NON_UNIF_V_SRC})
 ADD_DEPENDENCIES(slv2d_non_unif_v selalib-mpi dfftpack)
 
 
+SET(SLV2D_DK_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_dk.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_dk STATIC ${SLV2D_DK_SRC})
+
+ADD_DEPENDENCIES(slv2d_dk selalib-mpi dfftpack)
+
+
+
 
 
 MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
@@ -179,6 +203,11 @@ TARGET_LINK_LIBRARIES(vp4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
 
 ADD_EXECUTABLE(vp4d_csl2d vp4d_csl2d.F90)
 TARGET_LINK_LIBRARIES(vp4d_csl2d slv2d_csl2d ${LIBS} ${LAPACK_LIBRARIES})
+
+
+ADD_EXECUTABLE(vp4d_dk vp4d_dk.F90)
+TARGET_LINK_LIBRARIES(vp4d_dk slv2d_dk ${LIBS} ${LAPACK_LIBRARIES})
+
 
 ADD_EXECUTABLE(vp2d_keen_non_unif_v vp2d_keen_non_unif_v.F90)
 TARGET_LINK_LIBRARIES(vp2d_keen_non_unif_v slv2d_non_unif_v ${LIBS} ${LAPACK_LIBRARIES})
