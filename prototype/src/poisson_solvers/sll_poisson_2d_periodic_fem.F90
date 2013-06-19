@@ -24,7 +24,7 @@ interface solve
 end interface solve
 
 sll_int32, private :: nx, ny
-sll_int32, private :: i, j, ii, jj
+sll_int32, private :: i, j, k, ii, jj
 sll_int32, private :: error
 
 private :: som, build_matrices
@@ -50,11 +50,15 @@ sll_int32, dimension(4) :: isom
 nx = nn_x-1
 ny = nn_y-1
 
+call write_mtv_periodic( x, y )
+
+stop
+
 SLL_ALLOCATE(this%hx(1:nx),error)
 SLL_ALLOCATE(this%hy(1:ny),error)
-SLL_ALLOCATE(this%A((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
-SLL_ALLOCATE(this%M((nx-1)*(ny-1),(nx-1)*(ny-1)), error)
-SLL_ALLOCATE(this%mat(nx+1,(nx-1)*(ny-1)), error)
+SLL_ALLOCATE(this%A(nx*ny,nx*ny), error)
+SLL_ALLOCATE(this%M(nx*ny,nx*ny), error)
+SLL_ALLOCATE(this%mat(nx+1,nx*ny), error)
 
 do i=1,nx
    this%hx(i) = x(i+1)-x(i)
@@ -92,42 +96,47 @@ do i=2,nx-1
       isom(3) =  som(i,j,3)
       isom(4) =  som(i,j,4)
       call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+      print*, isom
    end do
 end do
 
 do i=2,nx-1
 
    j = 1
-   isom(1)=som(i,ny-1,1)
-   isom(2)=som(i,ny-1,2)
-   isom(3)=som(i,j+1,1)
-   isom(4)=som(i,j+1,2)
+   isom(1)=som(i,ny,1)
+   isom(2)=som(i,ny,2)
+   isom(3)=som(i,j+1,2)
+   isom(4)=som(i,j+1,1)
    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+   print*, isom
 
-   j = ny
-   isom(1)=som(i,j-1,3)
-   isom(2)=som(i,j-1,4)
-   isom(3)=som(i,2,2)
-   isom(4)=som(i,2,1)
-   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+   !j = ny
+   !isom(1)=som(i,j-1,4)
+   !isom(2)=som(i,j-1,3)
+   !isom(3)=som(i,2,2)
+   !isom(4)=som(i,2,1)
+   !print*, isom
+   !call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 end do
 
 do j=2,ny-1
 
    i = 1
-   isom(1)=som(nx-1,j,1)
+   isom(1)=som(nx,j,1)
    isom(2)=som(i+1,j,1)
    isom(3)=som(i+1,j,4)
-   isom(4)=som(nx-1,j,4)
+   isom(4)=som(nx,j,4)
    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+   print*, isom
 
-   i = nx
-   isom(1)=som(i-1,j,2)
-   isom(2)=som(2,j,1)
-   isom(3)=som(2,j,4)
-   isom(4)=som(i-1,j,3)
-   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+   !i = nx
+   !isom(1)=som(i-1,j,2)
+   !isom(2)=som(2,j,1)
+   !isom(3)=som(2,j,4)
+   !isom(4)=som(i-1,j,3)
+   !print*, isom
+   !call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 end do
    
 !Corners
@@ -137,27 +146,28 @@ isom(2) = som(2   ,ny-1,4)
 isom(3) = som(2   ,2   ,1)
 isom(4) = som(nx-1,2   ,2)
 call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+print*, isom
 
-i=nx; j=1 !SE
-isom(1) = som(nx-1,ny-1,3)
-isom(2) = som(2   ,ny-1,4)
-isom(3) = som(2   ,2   ,1)
-isom(4) = som(nx-1,2   ,2)
-call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+!i=nx; j=1 !SE
+!isom(1) = som(nx-1,ny-1,3)
+!isom(2) = som(2   ,ny-1,4)
+!isom(3) = som(2   ,2   ,1)
+!isom(4) = som(nx-1,2   ,2)
+!call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
-i=nx; j=ny !NE
-isom(1) = som(nx-1,ny-1,3)
-isom(2) = som(2   ,ny-1,4)
-isom(3) = som(2   ,2   ,1)
-isom(4) = som(nx-1,2   ,2)
-call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-
-i=1; j=ny !NW
-isom(1) = som(nx-1,ny-1,3)
-isom(2) = som(2   ,ny-1,4)
-isom(3) = som(2   ,2   ,1)
-isom(4) = som(nx-1,2   ,2)
-call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+!i=nx; j=ny !NE
+!isom(1) = som(nx-1,ny-1,3)
+!isom(2) = som(2   ,ny-1,4)
+!isom(3) = som(2   ,2   ,1)
+!isom(4) = som(nx-1,2   ,2)
+!call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+!
+!i=1; j=ny !NW
+!isom(1) = som(nx-1,ny-1,3)
+!isom(2) = som(2   ,ny-1,4)
+!isom(3) = som(2   ,2   ,1)
+!isom(4) = som(nx-1,2   ,2)
+!call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 this%mat = 0.d0
 this%mat(nx+1,1) = this%A(1,1)
@@ -182,13 +192,13 @@ integer function som(i, j, k)
    integer :: i, j, k
 
    if (k == 1) then
-      som = i-1+(j-2)*(nx-1)
+      som = i+(j-1)*nx
    else if (k == 2) then
-      som = i-1+(j-2)*(nx-1)+1
+      som = i+(j-1)*nx+1
    else if (k == 3) then
-      som = i-1+(j-2)*(nx-1)+nx
+      som = i+(j-1)*nx+nx
    else if (k == 4) then
-      som = i-1+(j-2)*(nx-1)+nx-1
+      som = i+(j-1)*nx+nx-1
    end if 
 
 end function som
@@ -217,25 +227,29 @@ end subroutine build_matrices
 !> Solve the poisson equation
 subroutine solve_poisson_2d_periodic_fem( this, ex, ey, rho )
 type( poisson_2d_periodic_fem )        :: this !< Poisson solver object
-sll_real64, dimension(:,:) :: ex   !< x electric field
-sll_real64, dimension(:,:) :: ey   !< y electric field
-sll_real64, dimension(:,:) :: rho  !< charge density
-sll_real64, dimension((nx-1)*(ny-1)) :: b
+sll_real64, dimension(:,:)   :: ex   !< x electric field
+sll_real64, dimension(:,:)   :: ey   !< y electric field
+sll_real64, dimension(:,:)   :: rho  !< charge density
+sll_real64, dimension(nx*ny) :: b
 
 !** Construction du second membre (rho a support compact --> projete)
-do i=2,nx
-   do j=2,ny
-      b((i-1)+(j-2)*(nx-1)) = rho(i,j)
+k=0
+do i=1,nx
+   do j=1,ny
+      k=k+1
+      b(k) = rho(i,j)
    end do
 end do
 
 b = matmul(this%M,b)
 
-call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),error) 
+call dpbtrs('U',nx*ny,nx,1,this%mat,nx+1,b,nx*ny,error) 
 
-do i=2,nx
-   do j=2,ny
-      rho(i,j) = b((i-1)+(j-2)*(nx-1)) 
+k=0
+do i=1,nx
+   do j=1,ny
+      k=k+1
+      rho(i,j) = b(k) 
    end do
 end do
 
@@ -252,5 +266,65 @@ end do
 end do
 
 end subroutine solve_poisson_2d_periodic_fem
+
+subroutine write_mtv_periodic( x, y )
+real(8), dimension(:) :: x
+real(8), dimension(:) :: y
+integer :: iel, isom, nx, ny
+real(8) :: x1, y1
+
+nx = size(x)-1
+ny = size(y)-1
+open(10, file="mesh.mtv")
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Elements number ' "
+   
+do i=1,nx
+   do j=1,ny
+      write(10,*) x(i  ), y(j  ), 0.
+      write(10,*) x(i+1), y(j  ), 0.
+      write(10,*) x(i+1), y(j+1), 0.
+      write(10,*) x(i  ), y(j+1), 0.
+      write(10,*) x(i  ), y(j  ), 0.
+      write(10,*)
+   end do
+end do
+
+!Numeros des elements
+iel = 0
+do j=1,ny-1
+   do i=1,nx-1
+      iel = iel+1
+      x1 = 0.5*(x(i)+x(i+1))
+      y1 = 0.5*(y(j)+y(j+1))
+      write(10,"(a)"   ,  advance="no")"@text x1="
+      write(10,"(g15.3)", advance="no") x1
+      write(10,"(a)"   ,  advance="no")" y1="
+      write(10,"(g15.3)", advance="no") y1
+      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
+      write(10,"(i4)"  ,  advance="no") iel
+      write(10,"(a)")"'"
+   end do
+end do
+
+!Numeros des noeud
+do i=1,nx
+   do j=1,ny
+      write(10,"(a)"   ,  advance="no")"@text x1="
+      write(10,"(g15.3)", advance="no") x(i)
+      write(10,"(a)"   ,  advance="no")" y1="
+      write(10,"(g15.3)", advance="no") y(j)
+      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+      write(10,"(i4)"  ,  advance="no") som(i,j,1)
+      write(10,"(a)")"'"
+   end do
+end do
+   
+write(10,*)"$END"
+close(10)
+
+end subroutine write_mtv_periodic
+
 
 end module sll_poisson_2d_periodic_fem

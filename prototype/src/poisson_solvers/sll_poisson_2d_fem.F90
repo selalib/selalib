@@ -24,7 +24,7 @@ interface solve
 end interface solve
 
 sll_int32, private :: nx, ny
-sll_int32, private :: i, j
+sll_int32, private :: i, j, k
 sll_int32, private :: error
 
 contains
@@ -230,9 +230,11 @@ sll_real64, dimension(:,:) :: rho  !< charge density
 sll_real64, dimension((nx-1)*(ny-1)) :: b
 
 !** Construction du second membre (rho a support compact --> projete)
+k = 0
 do i=2,nx
    do j=2,ny
-      b((i-1)+(j-2)*(nx-1)) = rho(i,j)
+      k = k+1
+      b(k) = rho(i,j)
    end do
 end do
 
@@ -240,11 +242,15 @@ b = matmul(this%M,b)
 
 call dpbtrs('U',(nx-1)*(ny-1),nx,1,this%mat,nx+1,b,(nx-1)*(ny-1),error) 
 
+rho = 0.0
+k = 0
 do i=2,nx
    do j=2,ny
-      rho(i,j) = b((i-1)+(j-2)*(nx-1)) 
+      k = k+1
+      rho(i,j) = b(k) 
    end do
 end do
+
 
 do j=1,ny-1
 do i=1,nx-2
@@ -259,5 +265,66 @@ end do
 end do
 
 end subroutine solve_poisson_2d_fem
+
+subroutine write_mtv_file( x, y )
+real(8), dimension(:) :: x
+real(8), dimension(:) :: y
+integer :: iel, isom, nx, ny
+real(8) :: x1, y1
+
+nx = size(x)-1
+ny = size(y)-1
+open(10, file="mesh.mtv")
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Elements number ' "
+   
+do i=1,nx
+   do j=1,ny
+      write(10,*) x(i  ), y(j  ), 0.
+      write(10,*) x(i+1), y(j  ), 0.
+      write(10,*) x(i+1), y(j+1), 0.
+      write(10,*) x(i  ), y(j+1), 0.
+      write(10,*) x(i  ), y(j  ), 0.
+      write(10,*)
+   end do
+end do
+
+!Numeros des elements
+iel = 0
+do i=2,nx-1
+   do j=2,ny-1
+      iel = iel+1
+      x1 = 0.5*(x(i)+x(i+1))
+      y1 = 0.5*(y(j)+y(j+1))
+      write(10,"(a)"   ,  advance="no")"@text x1="
+      write(10,"(g15.3)", advance="no") x1
+      write(10,"(a)"   ,  advance="no")" y1="
+      write(10,"(g15.3)", advance="no") y1
+      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
+      write(10,"(i4)"  ,  advance="no") iel
+      write(10,"(a)")"'"
+   end do
+end do
+
+!Numeros des noeud
+do i=2,nx
+   do j=2,ny
+      isom = isom+1
+      write(10,"(a)"   ,  advance="no")"@text x1="
+      write(10,"(g15.3)", advance="no") x(i)
+      write(10,"(a)"   ,  advance="no")" y1="
+      write(10,"(g15.3)", advance="no") y(j)
+      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+      write(10,"(i4)"  ,  advance="no") isom
+      write(10,"(a)")"'"
+   end do
+end do
+   
+write(10,*)"$END"
+close(10)
+
+end subroutine write_mtv_file
+
 
 end module sll_poisson_2d_fem
