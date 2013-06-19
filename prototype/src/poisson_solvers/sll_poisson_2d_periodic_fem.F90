@@ -1,44 +1,45 @@
 !>Solve Poisson equation on cartesian domain with finit elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
-module sll_poisson_2d_fem
+module sll_poisson_2d_periodic_fem
 #include "sll_poisson_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_constants
 implicit none
 
-type :: poisson_fem
+type :: poisson_2d_periodic_fem
    sll_real64, dimension(:,:), pointer :: A
    sll_real64, dimension(:,:), pointer :: M
    sll_real64, dimension(:,:), pointer :: mat
    sll_real64, dimension(:)  , pointer :: hx    !< step size x
    sll_real64, dimension(:)  , pointer :: hy    !< step size y
-end type poisson_fem
+end type poisson_2d_periodic_fem
 
 interface initialize
-   module procedure initialize_poisson_2d_fem
+   module procedure initialize_poisson_2d_periodic_fem
 end interface initialize
 interface solve
-   module procedure solve_poisson_2d_fem
+   module procedure solve_poisson_2d_periodic_fem
 end interface solve
 
 sll_int32, private :: nx, ny
-sll_int32, private :: i, j
+sll_int32, private :: i, j, ii, jj
 sll_int32, private :: error
+
+private :: som, build_matrices
 
 contains
 
 !> Initialize Poisson solver object using finite elements method.
 !> Indices are shifted from [1:n+1] to [0:n] only inside this 
 !> subroutine
-subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( poisson_fem ) :: this
+subroutine initialize_poisson_2d_periodic_fem( this, x, y ,nn_x, nn_y)
+type( poisson_2d_periodic_fem ) :: this
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
 sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
-sll_int32 :: ii, jj
 
 sll_real64, dimension(4,4) :: Axelem
 sll_real64, dimension(4,4) :: Ayelem
@@ -86,106 +87,77 @@ this%A = 0.d0
 !***  Interior mesh ***
 do i=2,nx-1
    do j=2,ny-1
-      do ii=1,4
-         do jj=1,4
-            this%A(som(i,j,ii),som(i,j,jj)) = this%A(som(i,j,ii),som(i,j,jj)) &
-                    & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                    & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-            this%M(som(i,j,ii),som(i,j,jj)) = this%M(som(i,j,ii),som(i,j,jj)) &
-                    & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-         end do
-      end do
+      isom(1) =  som(i,j,1)
+      isom(2) =  som(i,j,2)
+      isom(3) =  som(i,j,3)
+      isom(4) =  som(i,j,4)
+      call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
    end do
 end do
 
-call write_mtv_file( x, y)
-
 do i=2,nx-1
+
    j = 1
+   isom(1)=som(i,ny-1,1)
+   isom(2)=som(i,ny-1,2)
    isom(3)=som(i,j+1,1)
    isom(4)=som(i,j+1,2)
-   do ii=3,4
-      do jj=3,4
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+
    j = ny
    isom(1)=som(i,j-1,3)
    isom(2)=som(i,j-1,4)
-   do ii=1,2
-      do jj=1,2
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i)   &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+   isom(3)=som(i,2,2)
+   isom(4)=som(i,2,1)
+   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+
 end do
 
 do j=2,ny-1
+
    i = 1
+   isom(1)=som(nx-1,j,1)
    isom(2)=som(i+1,j,1)
    isom(3)=som(i+1,j,4)
-   do ii=2,3
-      do jj=2,3
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+   isom(4)=som(nx-1,j,4)
+   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+
    i = nx
    isom(1)=som(i-1,j,2)
+   isom(2)=som(2,j,1)
+   isom(3)=som(2,j,4)
    isom(4)=som(i-1,j,3)
-   do ii=1,4,3
-      do jj=1,4,3
-         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
-                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
-                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
-         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
-                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
-      end do
-   end do
+   call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 end do
-
+   
 !Corners
 i=1; j=1  !SW
-isom(3) = som(i+1,j+1,1)
-this%A(isom(3),isom(3)) = this%A(i,j)                           &
-                        + Axelem(3,3) * this%hy(j) / this%hx(i) &
-                        + Ayelem(3,3) * this%hx(i) / this%hy(j)
-this%M(isom(3),isom(3)) = this%M(isom(3),isom(3))               &
-                        + Melem(3,3) * this%hx(i) * this%hy(j)
+isom(1) = som(nx-1,ny-1,3)
+isom(2) = som(2   ,ny-1,4)
+isom(3) = som(2   ,2   ,1)
+isom(4) = som(nx-1,2   ,2)
+call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 i=nx; j=1 !SE
-isom(4) = som(i-1,j+1,2)
-this%A(isom(4),isom(4)) = this%A(isom(4),isom(4))               &
-                        + Axelem(4,4) * this%hy(i) / this%hx(i) &
-                        + Ayelem(4,4) * this%hx(j) / this%hy(j)
-this%M(isom(4),isom(4)) = this%M(isom(4),isom(4))               &
-                        + Melem(4,4) * this%hx(i) * this%hy(j)
+isom(1) = som(nx-1,ny-1,3)
+isom(2) = som(2   ,ny-1,4)
+isom(3) = som(2   ,2   ,1)
+isom(4) = som(nx-1,2   ,2)
+call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 i=nx; j=ny !NE
-isom(1) = som(i-1,j-1,3)
-this%A(isom(1),isom(1)) = this%A(isom(1),isom(1))               &
-                        + Axelem(1,1) * this%hy(j) / this%hx(i) &
-                        + Ayelem(1,1) * this%hx(i) / this%hy(j)
-this%M(isom(1),isom(1)) =   this%M(isom(1),isom(1))             &
-                        + Melem(1,1) * this%hx(i) * this%hy(j)
+isom(1) = som(nx-1,ny-1,3)
+isom(2) = som(2   ,ny-1,4)
+isom(3) = som(2   ,2   ,1)
+isom(4) = som(nx-1,2   ,2)
+call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 i=1; j=ny !NW
-isom(2) = som(i+1,j-1,4) 
-this%A(isom(2),isom(2)) = this%A(isom(2),isom(2))               &
-                        + Axelem(2,2) * this%hy(j) / this%hx(i) &
-                        + Ayelem(2,2) * this%hx(i) / this%hy(j)
-this%M(isom(2),isom(2)) =   this%M(isom(2),isom(2))             &
-                        + Melem(2,2) * this%hx(i) * this%hy(j)
+isom(1) = som(nx-1,ny-1,3)
+isom(2) = som(2   ,ny-1,4)
+isom(3) = som(2   ,2   ,1)
+isom(4) = som(nx-1,2   ,2)
+call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 this%mat = 0.d0
 this%mat(nx+1,1) = this%A(1,1)
@@ -203,7 +175,7 @@ end do
 
 call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
 
-end subroutine initialize_poisson_2d_fem
+end subroutine initialize_poisson_2d_periodic_fem
 
 integer function som(i, j, k)
 
@@ -221,9 +193,30 @@ integer function som(i, j, k)
 
 end function som
 
+subroutine build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
+type( poisson_2d_periodic_fem )     :: this     !< Poisson solver object
+sll_real64, dimension(:,:) :: Axelem   !< x electric field
+sll_real64, dimension(:,:) :: Ayelem   !< y electric field
+sll_real64, dimension(:,:) :: Melem    !< charge density
+sll_int32, dimension(:)   :: isom
+sll_int32                  :: i
+sll_int32                  :: j
+
+   do ii=1,4
+      do jj=1,4
+         this%A(isom(ii),isom(jj)) = this%A(isom(ii),isom(jj)) &
+                 & + Axelem(ii,jj) * this%hy(j) / this%hx(i) &
+                 & + Ayelem(ii,jj) * this%hx(i) / this%hy(j)
+         this%M(isom(ii),isom(jj)) = this%M(isom(ii),isom(jj)) &
+                 & + Melem(ii,jj)  * this%hx(i) * this%hy(j)
+      end do
+   end do
+
+end subroutine build_matrices
+
 !> Solve the poisson equation
-subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( poisson_fem )        :: this !< Poisson solver object
+subroutine solve_poisson_2d_periodic_fem( this, ex, ey, rho )
+type( poisson_2d_periodic_fem )        :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
@@ -258,6 +251,6 @@ do i=1,nx-1
 end do
 end do
 
-end subroutine solve_poisson_2d_fem
+end subroutine solve_poisson_2d_periodic_fem
 
-end module sll_poisson_2d_fem
+end module sll_poisson_2d_periodic_fem
