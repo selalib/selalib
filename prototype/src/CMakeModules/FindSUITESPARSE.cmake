@@ -23,11 +23,12 @@ FIND_PATH( CHOLMOD_INCLUDE_DIR cholmod.h
 
 MESSAGE(STATUS "CHOLMOD_INCLUDE_DIR:${CHOLMOD_INCLUDE_DIR}")
 
-FIND_PATH( SUITESPARSE_LIBRARY_DIR
+FIND_LIBRARY( SUITESPARSE_LIBRARY_DIR
            NAMES cholmod
            PATHS /usr/lib 
                  /usr/lib64 
                  /usr/local/lib )
+MESSAGE(STATUS "SUITESPARSE_LIBRARY_DIR:${SUITESPARSE_LIBRARY_DIR}")
 
 # Add cholmod include directory to collection include directories
 IF ( CHOLMOD_INCLUDE_DIR )

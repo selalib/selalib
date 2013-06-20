@@ -15,7 +15,12 @@ PROJECT(SLL)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(SLL_BUILD_PACKAGE "NO" CACHE BOOL "Build library without test programs")
+SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build library without test programs")
+SET(MUDPACK_ENABLED   OFF CACHE BOOL "Build mudpack library")
+SET(FISHPACK_ENABLED  OFF CACHE BOOL "Build fishpack library")
+SET(FORTRANCL_ENABLED OFF CACHE BOOL "Enable OpenCL test programs")
+SET(PASTIX_ENABLED    OFF CACHE BOOL "Build PasTiX solvers ")
+SET(PETSC_ENABLED     OFF CACHE BOOL "Enable PETSc solvers")
 
 IF(NOT SLL_BUILD_PACKAGE)
    SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
@@ -61,9 +66,20 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 ADD_SUBDIRECTORY(fftpack)
 
 
+
 IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
+
+   IF(MUDPACK_ENABLED)
+      IF(HDF5_PARALLEL_ENABLED)
+         ADD_SUBDIRECTORY(multigrid)
+      ENDIF()
+      ADD_SUBDIRECTORY(mudpack)
+   ENDIF()
+   IF(FISHPACK_ENABLED)
+      ADD_SUBDIRECTORY(fishpack)
+   ENDIF()
 
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
@@ -84,6 +100,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    IF(MPI_MODULE_ENABLED)
    
+      SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_array_initializers)
@@ -122,8 +139,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ENDIF(NOT STDF95)
 
-   SET(FORTRANCL_ENABLED NO CACHE BOOL "Enable OpenCL test programs")
-
    IF(FORTRANCL_ENABLED)
 
      FIND_PACKAGE(FORTRANCL QUIET)
@@ -138,7 +153,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF(FORTRANCL_ENABLED)
 
-   SET(PASTIX_ENABLED NO CACHE BOOL " ")
 
    IF(PASTIX_ENABLED)
 
@@ -176,31 +190,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF(PASTIX_ENABLED)
 
-   SET(FISHPACK_ENABLED OFF CACHE BOOL " ")
-
-   IF(FISHPACK_ENABLED)
-
-      ADD_SUBDIRECTORY(fishpack)
-
-   ENDIF()
-
-   SET(MUDPACK_ENABLED OFF CACHE BOOL "Enable multigrid solvers")
-
-   IF(MUDPACK_ENABLED)
-
-      IF(HDF5_PARALLEL_ENABLED)
-
-         ADD_SUBDIRECTORY(multigrid)
-
-      ELSE()
-
-         ADD_SUBDIRECTORY(mudpack)
-
-      ENDIF()
-
-   ENDIF()
-
-   
    MESSAGE(STATUS "############################################################")
    MESSAGE(STATUS "####")
    MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
@@ -208,13 +197,9 @@ IF(NOT SLL_BUILD_PACKAGE)
    MESSAGE(STATUS "#### Fortran FLAGS ")
    
    IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
-
       MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
-
    ELSE()
-
       MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
-
    ENDIF()
 
    MESSAGE(STATUS "####")
@@ -252,7 +237,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF()
 
-   SET(PETSC_ENABLED OFF CACHE BOOL "Enable PETSc solvers")
 
    IF(PETSC_ENABLED)
 
