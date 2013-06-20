@@ -251,7 +251,6 @@ do i=2,nx
    end do
 end do
 
-
 do j=1,ny-1
 do i=1,nx-2
    ex(i,j) = - (rho(i+1,j)-rho(i,j)) / this%hx(i)

@@ -11,9 +11,9 @@ implicit none
 type :: poisson_2d_periodic_fem
    sll_real64, dimension(:,:), pointer :: A
    sll_real64, dimension(:,:), pointer :: M
-   sll_real64, dimension(:,:), pointer :: mat
    sll_real64, dimension(:)  , pointer :: hx    !< step size x
    sll_real64, dimension(:)  , pointer :: hy    !< step size y
+   sll_int32,  dimension(:)  , pointer :: ipiv
 end type poisson_2d_periodic_fem
 
 interface initialize
@@ -23,7 +23,7 @@ interface solve
    module procedure solve_poisson_2d_periodic_fem
 end interface solve
 
-sll_int32, private :: nx, ny
+sll_int32, private :: nx, ny, nxy
 sll_int32, private :: i, j, k, ii, jj
 sll_int32, private :: error
 
@@ -49,16 +49,14 @@ sll_int32, dimension(4) :: isom
 
 nx = nn_x-1
 ny = nn_y-1
+nxy = nx * ny
 
 call write_mtv_periodic( x, y )
 
-stop
-
 SLL_ALLOCATE(this%hx(1:nx),error)
 SLL_ALLOCATE(this%hy(1:ny),error)
-SLL_ALLOCATE(this%A(nx*ny,nx*ny), error)
-SLL_ALLOCATE(this%M(nx*ny,nx*ny), error)
-SLL_ALLOCATE(this%mat(nx+1,nx*ny), error)
+SLL_ALLOCATE(this%A(nxy,nxy), error)
+SLL_ALLOCATE(this%M(nxy,nxy), error)
 
 do i=1,nx
    this%hx(i) = x(i+1)-x(i)
@@ -89,14 +87,13 @@ Melem(4,1)=2*dum; Melem(4,2)=  dum; Melem(4,3)=2*dum; Melem(4,4)=4*dum;
 this%A = 0.d0
 
 !***  Interior mesh ***
-do i=2,nx-1
-   do j=2,ny-1
+do j=1,ny-1
+   do i=1,nx-1
       isom(1) =  som(i,j,1)
       isom(2) =  som(i,j,2)
       isom(3) =  som(i,j,3)
       isom(4) =  som(i,j,4)
       call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-      print*, isom
    end do
 end do
 
@@ -105,18 +102,9 @@ do i=2,nx-1
    j = 1
    isom(1)=som(i,ny,1)
    isom(2)=som(i,ny,2)
-   isom(3)=som(i,j+1,2)
-   isom(4)=som(i,j+1,1)
+   isom(3)=som(i,j,2)
+   isom(4)=som(i,j,1)
    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-   print*, isom
-
-   !j = ny
-   !isom(1)=som(i,j-1,4)
-   !isom(2)=som(i,j-1,3)
-   !isom(3)=som(i,2,2)
-   !isom(4)=som(i,2,1)
-   !print*, isom
-   !call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 end do
 
@@ -124,66 +112,24 @@ do j=2,ny-1
 
    i = 1
    isom(1)=som(nx,j,1)
-   isom(2)=som(i+1,j,1)
-   isom(3)=som(i+1,j,4)
+   isom(2)=som(i,j,1)
+   isom(3)=som(i,j,4)
    isom(4)=som(nx,j,4)
    call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-   print*, isom
 
-   !i = nx
-   !isom(1)=som(i-1,j,2)
-   !isom(2)=som(2,j,1)
-   !isom(3)=som(2,j,4)
-   !isom(4)=som(i-1,j,3)
-   !print*, isom
-   !call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 end do
    
 !Corners
 i=1; j=1  !SW
 isom(1) = som(nx-1,ny-1,3)
-isom(2) = som(2   ,ny-1,4)
-isom(3) = som(2   ,2   ,1)
-isom(4) = som(nx-1,2   ,2)
+isom(2) = som(i   ,ny-1,4)
+isom(3) = som(i   ,j   ,1)
+isom(4) = som(nx-1,j   ,2)
 call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-print*, isom
 
-!i=nx; j=1 !SE
-!isom(1) = som(nx-1,ny-1,3)
-!isom(2) = som(2   ,ny-1,4)
-!isom(3) = som(2   ,2   ,1)
-!isom(4) = som(nx-1,2   ,2)
-!call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-
-!i=nx; j=ny !NE
-!isom(1) = som(nx-1,ny-1,3)
-!isom(2) = som(2   ,ny-1,4)
-!isom(3) = som(2   ,2   ,1)
-!isom(4) = som(nx-1,2   ,2)
-!call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-!
-!i=1; j=ny !NW
-!isom(1) = som(nx-1,ny-1,3)
-!isom(2) = som(2   ,ny-1,4)
-!isom(3) = som(2   ,2   ,1)
-!isom(4) = som(nx-1,2   ,2)
-!call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-
-this%mat = 0.d0
-this%mat(nx+1,1) = this%A(1,1)
-do j=2,(nx-1)*(ny-1)
-   this%mat(nx+1,j) = this%A(j,j)
-   this%mat(nx,j)   = this%A(j-1,j)
-end do
-this%mat(3,nx) = this%A(2,nx)
-this%mat(2,nx) = this%A(1,nx)
-do j=nx+1,(nx-1)*(ny-1)
-   this%mat(3,j) = this%A(j-nx+2,j)
-   this%mat(2,j) = this%A(j-nx+1,j)
-   this%mat(1,j) = this%A(j-nx,j)
-end do
-
-call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
+SLL_ALLOCATE(this%ipiv(nxy),error)
+this%A(nxy,nxy) = 1.0_f64
+call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 
 end subroutine initialize_poisson_2d_periodic_fem
 
@@ -196,9 +142,9 @@ integer function som(i, j, k)
    else if (k == 2) then
       som = i+(j-1)*nx+1
    else if (k == 3) then
-      som = i+(j-1)*nx+nx
+      som = i+j*nx+1
    else if (k == 4) then
-      som = i+(j-1)*nx+nx-1
+      som = i+j*nx
    end if 
 
 end function som
@@ -227,10 +173,10 @@ end subroutine build_matrices
 !> Solve the poisson equation
 subroutine solve_poisson_2d_periodic_fem( this, ex, ey, rho )
 type( poisson_2d_periodic_fem )        :: this !< Poisson solver object
-sll_real64, dimension(:,:)   :: ex   !< x electric field
-sll_real64, dimension(:,:)   :: ey   !< y electric field
-sll_real64, dimension(:,:)   :: rho  !< charge density
-sll_real64, dimension(nx*ny) :: b
+sll_real64, dimension(:,:) :: ex   !< x electric field
+sll_real64, dimension(:,:) :: ey   !< y electric field
+sll_real64, dimension(:,:) :: rho  !< charge density
+sll_real64, dimension(nxy) :: b
 
 !** Construction du second membre (rho a support compact --> projete)
 k=0
@@ -242,8 +188,7 @@ do i=1,nx
 end do
 
 b = matmul(this%M,b)
-
-call dpbtrs('U',nx*ny,nx,1,this%mat,nx+1,b,nx*ny,error) 
+call DGETRS('N',nxy,1,this%A,nxy,this%ipiv,b,nxy,error)
 
 k=0
 do i=1,nx
