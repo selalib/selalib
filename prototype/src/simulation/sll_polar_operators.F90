@@ -181,7 +181,7 @@ contains
        do i=1,nr+1
           do j=0,ntheta/2
              temp=fft_get_mode(plan%pfwd,plan%grad_fft(i,:),j)
-             temp=temp*cmplx(0.0_f64,real(j,f64))
+             temp=temp*cmplx(0.0_f64,real(j,f64),kind=f64)
              call fft_set_mode(plan%pinv,plan%grad_fft(i,:),temp,j)
           end do
        end do
