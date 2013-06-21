@@ -31,10 +31,17 @@ use sll_collective
 
 implicit none
 
+interface sll_gnuplot_2d_parallel
+module procedure sll_gnuplot_curv_2d_parallel
+module procedure sll_gnuplot_rect_2d_parallel
+end interface sll_gnuplot_2d_parallel
+
+
+
 contains  
 
 !> write a data file plotable by gnuplot to visualize a 2d field
-subroutine sll_gnuplot_2d_parallel(array_x, array_y, array, &
+subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
                                    array_name, iplot, error)  
 
 sll_real64, dimension(:,:) :: array_x    !< x mesh coordinates
@@ -51,7 +58,6 @@ sll_int32                  :: i, j
 character(len=4)           :: cproc 
 sll_int32                  :: comm, iproc, nproc
 logical                    :: dir_e
-
 
 nproc = sll_get_collective_size(sll_world_collective)
 iproc = sll_get_collective_rank(sll_world_collective)
@@ -97,7 +103,7 @@ if (iproc == MPI_MASTER) then
 
 end if
 
-end subroutine sll_gnuplot_2d_parallel
+end subroutine sll_gnuplot_curv_2d_parallel
 
 !> write a data file plotable by gnuplot to visualize a 2d field
 subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &

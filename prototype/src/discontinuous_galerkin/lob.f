@@ -6,6 +6,8 @@
 !!$ Gautschi_ (here xxx is 726 in other references) formulas (1.1) to (1.3) page 2, 
 !!$ and book **Numerical Mathematics** by _Alfio Quarteroni_, _Riccardo Sacco_ and 
 !!$ _Fausto Saleri_ section 10.
+!!$ If you just want to use Gauss-Lobatto inside Selalib, just use what is in 
+!!$ gauss-lobatto.F90 ans see selalib documentation
 
       subroutine lob(n,alpha,beta,aleft,right,zero,weight,ierr,e,a,b)
 !!$
