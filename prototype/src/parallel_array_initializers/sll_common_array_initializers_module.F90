@@ -279,8 +279,9 @@ contains
     beta  = params(6)
 
     val = alpha*exp(-0.5_f64*((x-xc)**2+(y-yc)**2)) + &
-                                  beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
+          beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
 
   end function sll_periodic_gaussian_initializer_4d
+
 
 end module sll_common_array_initializers_module
