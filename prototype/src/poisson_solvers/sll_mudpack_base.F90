@@ -18,14 +18,12 @@ type, public :: mudpack_2d
 
 end type mudpack_2d
 
-enum, bind(C)
-   enumerator :: CARTESIAN_2D = 2
-   enumerator :: CARTESIAN_3D = 3
-   enumerator :: POLAR        = 11
-   enumerator :: CYLINDRICAL  = 12
-   enumerator :: PERIODIC     = 0
-   enumerator :: DIRICHLET    = 1
-   enumerator :: NEUMANN      = 2
-end enum
+integer, parameter :: CARTESIAN_2D = 2
+integer, parameter :: CARTESIAN_3D = 3
+integer, parameter :: POLAR        = 11
+integer, parameter :: CYLINDRICAL  = 12
+integer, parameter :: PERIODIC     = 0
+integer, parameter :: DIRICHLET    = 1
+integer, parameter :: NEUMANN      = 2
 
 end module sll_mudpack_base

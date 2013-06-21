@@ -51,7 +51,6 @@ target_link_libraries(test_mapped_meshes_2d
 	sll_memory
 	sll_assertion
 	sll_working_precision
-        ${HDF5_LIBRARIES}
   )
 
 IF(NOT STDF95)
@@ -66,6 +65,5 @@ IF(NOT STDF95)
 	sll_file_io
 	sll_memory
 	sll_assertion
-        ${HDF5_LIBRARIES}
  )
 ENDIF()
