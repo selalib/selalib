@@ -183,8 +183,8 @@ contains
     ! init the layout for the distribution function
     ! the mesh is split only in the x3 direction
     call initialize_layout_with_distributed_4D_array( &
-         nc_v1, &
-         nc_v2, &
+         nc_v1+1, &
+         nc_v2+1, &
          nc_x1, &
          nc_x2, &
          sim%nproc_v1, &

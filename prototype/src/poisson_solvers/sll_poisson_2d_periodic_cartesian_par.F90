@@ -295,10 +295,15 @@ contains
     end do
 
     ! Prepare to take inverse FFTs in x-direction
+    write(*,*) 'npx=',plan%seq_x1_local_sz_x1 
+
     call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
+
+
 
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
+
 
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
     ! Also ensure the periodicity
