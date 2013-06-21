@@ -294,7 +294,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ADD_SIMULATION(4d_vp_polar)
    ADD_SIMULATION(4d_drift_kinetic_cartesian_finite_volume)
    ADD_SIMULATION(4d_vp_eulerian_cartesian_finite_volume)
-   ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)
 
 ENDIF()

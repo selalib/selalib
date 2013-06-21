@@ -55,8 +55,13 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    SET(PROCS 4)
    ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   SET(PROCS 1)
-   ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
+
+   SET(PROCS 8)
+   ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} 
+     ${ARGS})
+   SET_TESTS_PROPERTIES(poisson_per_cart_par_2d PROPERTIES 
+     PASS_REGULAR_EXPRESSION "PASSED")
+
    SET(PROCS 8)
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
    ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
@@ -77,7 +82,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
 
    SET(PROCS 8)
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim6d_input.txt)
-   ADD_MPI_TEST(vp6d_sim test_vp6d_sim ${PROCS} ${ARGS})
+   ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
  
    ENDIF(PROCESSOR_COUNT GREATER 1)
