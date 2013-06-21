@@ -5,13 +5,9 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 #include "sll_utilities.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-
-
   use sll_collective
   use sll_remapper
   use sll_poisson_2d_periodic_cartesian_par
-
-
   use sll_simulation_base
   use sll_parallel_array_initializer_module
   use sll_logical_meshes
@@ -215,7 +211,7 @@ contains
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,0:loc_sz_x2+1),ierr)
     !SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
-
+    print *, 'rank = ', sim%my_rank, 'local sizes of phi: ', loc_sz_x1, loc_sz_x2
        
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes.
