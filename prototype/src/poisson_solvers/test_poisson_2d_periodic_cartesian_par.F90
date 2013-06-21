@@ -10,7 +10,7 @@ program test_poisson_2d_periodic_cart_par
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
        sll_hdf5_write_array, &
        sll_hdf5_file_close
-
+  use sll_gnuplot_parallel
   implicit none
 
   sll_int32                                    :: ncx, ncy
@@ -24,7 +24,6 @@ program test_poisson_2d_periodic_cart_par
   sll_real64, dimension(:,:), allocatable      :: phi
   sll_int32                                    :: i, j
   type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
-  sll_real64                                   :: average_err
   sll_int32, dimension(1:2)                    :: global
   sll_int32                                    :: gi, gj
   sll_int32                                    :: myrank
@@ -33,16 +32,16 @@ program test_poisson_2d_periodic_cart_par
   sll_int32                                    :: nprocx, nprocy
   sll_int32                                    :: e
   sll_real32                                   :: ok 
-  sll_real32, dimension(1)                     :: prod4test
-
+  sll_real64, dimension(1)                     :: error_sum
+  sll_real64, dimension(1)                     :: phi_error
   ok = 1.0
 
   !Boot parallel environment
   call sll_boot_collective()
 
   ! Number of cells is equal to number of points in this case
-  ncx = 512
-  ncy = 512
+  ncx = 128
+  ncy = 128
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 
@@ -60,7 +59,7 @@ program test_poisson_2d_periodic_cart_par
   layout_x => new_layout_2D( sll_world_collective )
   nprocx = 1
   nprocy = 2**e
-  call initialize_layout_with_distributed_2D_array( ncx+1, ncy+1, &
+  call initialize_layout_with_distributed_2D_array( ncx, ncy, &
        nprocx, nprocy, layout_x )
 
   plan => new_poisson_2d_periodic_plan_cartesian_par(&
@@ -85,56 +84,90 @@ program test_poisson_2d_periodic_cart_par
      end do
   end do
 
+  ! print *, 'rank', myrank,'rho:', rho(:,:)
+
+  global = local_to_global( layout_x, (/1,1/) )
+  ! print *, 'rank = ', myrank, 'global indices of 1,1 = ', global(:)
+  call sll_gnuplot_rect_2d_parallel( &
+       (0.0_f64+global(1)-1)*dx, &
+       dx, &
+       (0.0_f64+global(2)-1)*dy, &
+       dy, &
+       rho, &
+       "rho_poisson_test", &
+       1, &
+       ierr )
+
   print *, 'proceeding to write rho to file: '  
   call parallel_hdf5_write_array_2d( 'q_density.h5', ncx, ncy, rho, 'rho', layout_x)
   print *, 'finished writing rho to file.'
 
   call solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
 
-print *, 'phi: ', phi(:,:)
+  global = local_to_global( layout_x, (/1,1/) )
+  ! print *, 'rank = ', myrank, 'global indices of 1,1 = ', global(:)
+  call sll_gnuplot_rect_2d_parallel( &
+       (0.0_f64+global(1)-1)*dx, &
+       dx, &
+       (0.0_f64+global(2)-1)*dy, &
+       dy, &
+       phi, &
+       "phi_poisson_test", &
+       1, &
+       ierr )
 
-  call parallel_hdf5_write_array_2d( 'phi_analytical.h5', ncx, ncy, phi_an, 'phi_an', layout_x)
-  call parallel_hdf5_write_array_2d( 'phi_computed.h5', ncx, ncy, phi, 'phi', layout_x)
-  average_err  = 0.d0
+  ! print *, 'phi: ', phi(:,:)
+
+  call parallel_hdf5_write_array_2d( 'phi_analytical.h5', ncx, ncy, phi_an, &
+       'phi_an', layout_x)
+  call parallel_hdf5_write_array_2d( 'phi_computed.h5', ncx, ncy, phi, 'phi', &
+       layout_x)
+  phi_error  = 0.d0
   do j=1,ny_loc
      do i=1,nx_loc
-        average_err  = average_err + abs(phi_an(i,j) - phi(i,j))
+        phi_error  = phi_error + abs(phi_an(i,j) - phi(i,j))
      enddo
   enddo
      
-  average_err  = average_err/(ncx*ncy)
+  call sll_collective_reduce(sll_world_collective, phi_error, &
+       1, MPI_SUM, 0, error_sum )
 
-  call flush(6); print*, ' ------------------'
-  call flush(6); print*, ' myrank ', myrank
-  call flush(6); print*, 'local average error:', average_err
-  call flush(6); print*, 'dx*dy =', dx*dy
-  call flush(6); print*, ' ------------------'
 
-  if (average_err> 1.0e-15 ) then
-     print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
-     stop
-  endif
-! 
+  if( myrank == 0 ) then
+     error_sum(1)  = error_sum(1)/(ncx*ncy)
+     call flush(6); print*, ' ------------------'
+     call flush(6); print*, 'global average error:', error_sum(1)
+     call flush(6); print*, 'dx*dy =', dx*dy
+     call flush(6); print*, ' ------------------'
+  end if
+
+  if( myrank == 0 ) then
+     if(error_sum(1) >= dx*dy ) then
+        print*, 'Test "sll_poisson_2d_periodic_par": FAIL'
+     else
+        print *, 'sll_poisson_2d_periodic_par: PASSED'
+     end if
+  end if
+
+
+!!$  call sll_collective_reduce(sll_world_collective, (/ ok /), &
+!!$       1, MPI_PROD, 0, prod4test )
+!!$  if (myrank==0) then
+!!$
+!!$     if (prod4test(1)==1.) then
+!!$        call flush(6)
+!!$        print*, ' '
+!!$        call flush(6)
+!!$        print*, '"sll_poisson_2d_periodic_cart_par" test: PASSED'
+!!$        call flush(6)
+!!$        print*, ' '
+!!$     endif
+!!$  endif
+
+  call delete_poisson_2d_periodic_plan_cartesian_par(plan)
   SLL_DEALLOCATE_ARRAY(phi, ierr)
   SLL_DEALLOCATE_ARRAY(rho, ierr)
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
-
-  call sll_collective_reduce(sll_world_collective, (/ ok /), &
-       1, MPI_PROD, 0, prod4test )
-  if (myrank==0) then
-
-     if (prod4test(1)==1.) then
-        call flush(6)
-        print*, ' '
-        call flush(6)
-        print*, '"sll_poisson_2d_periodic_cart_par" test: PASS'
-        call flush(6)
-        print*, ' '
-     endif
-  endif
-
-  call delete_poisson_2d_periodic_plan_cartesian_par(plan)
-
 
   call sll_halt_collective()
 

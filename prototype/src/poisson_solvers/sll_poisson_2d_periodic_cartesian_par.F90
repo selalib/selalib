@@ -88,8 +88,10 @@ contains
 
     if ( (.not.is_power_of_two(int(ncx,i64))) .and. &
          (.not.is_power_of_two(int(ncy,i64))) ) then     
-       print *, 'This test needs to run with numbers of cells which are',  &
-                'powers of 2.'
+       print *, ' new_poisson_2d_periodic_plan_cartesian_par() ERROR: ', &
+            'solver needs to run with numbers of cells which are',  &
+            'powers of 2. Since the solver is doubly periodic, the number ', &
+            'of points is the same, a power of two.'
        print *, 'Exiting...'
        stop
     end if
@@ -136,10 +138,12 @@ contains
     plan%layout_seq_x2 => new_layout_2D( collective )
     nprocx1 = colsz
     nprocx2 = 1
-
+! why did the following had ncx+1 and ncy+1 before???
     call initialize_layout_with_distributed_2D_array( &
-         ncx+1, &
-         ncy+1, &
+         ncx, &  
+         ncy, &
+!!$         ncx+1, &  
+!!$         ncy+1, &
          nprocx1, &
          nprocx2, &
          plan%layout_seq_x2 )
@@ -227,7 +231,7 @@ contains
     normalization = 1.0_f64/(ncx*ncy)
 
     ! Apply the kernel 
-    do j=1, npy_loc-1 ! last point was not transformed
+    do j=1, npy_loc!-1 ! last point was not transformed
        do i=1, npx_loc
           ! Make sure that the first mode is set to zero so that we get an
           ! answer with zero mean value. This step assumes that the (1,1) point
@@ -286,24 +290,11 @@ contains
     ! Inverse FFTs in y-direction
     call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
 
-    ! Force the periodicity condition in the y-direction. CAN'T USE THE FFT
-    ! INTERFACE SINCE THIS POINT FALLS OUTSIDE OF THE POINTS IN THE ARRAY
-    ! TOUCHED BY THE FFT. This is another reason to permit not including the
-    ! last point in the periodic cases...
-    do i=1,npx_loc
-       plan%fft_y_array(i,npy_loc) = plan%fft_y_array(i,1)
-    end do
-
     ! Prepare to take inverse FFTs in x-direction
-    write(*,*) 'npx=',plan%seq_x1_local_sz_x1 
-
     call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
-
-
 
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
-
 
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
     ! Also ensure the periodicity
