@@ -157,7 +157,7 @@ contains
     sll_int32  :: tagtop,tagbottom
 
     
-    sll_real64,dimension(:,:),allocatable :: plotf2d
+    sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
     sll_real64 :: t
     ! volumes of the cells and surfaces of the faces
     sll_real64,dimension(:),allocatable :: volume,surface
@@ -201,12 +201,20 @@ contains
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%phi_seq_x1)
+
+    sim%poisson_plan=>new_poisson_2d_periodic_plan_cartesian_par( &
+    sim%phi_seq_x1, &
+    nc_x1, &
+    nc_x2, &
+    sim%mesh4d%eta3_max-sim%mesh4d%eta3_min, &
+    sim%mesh4d%eta4_max-sim%mesh4d%eta4_min )
     
     
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! iz=0 corresponds to the mean values of rho and phi 
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,0:loc_sz_x2+1),ierr)
+    !SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
 
        
     ! Allocate the array needed to store the local chunk of the distribution
@@ -240,6 +248,26 @@ contains
          sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
          sim%init_func, &
          sim%params)
+
+
+    !
+    do i=1,loc_sz_x1
+       do j=1,loc_sz_x2
+          sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
+          !sim%rho_x1(i,j)=1.d0
+       enddo
+    enddo
+
+!!$    do i=1,loc_sz_x1
+!!$       do j=1,loc_sz_x2
+!!$          sim%rho_x1(i,j)=0_f64
+!!$       enddo
+!!$    enddo
+
+    ! solve the poisson equation
+    call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, sim%rho_x1,&
+         sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -356,6 +384,14 @@ contains
        end do
     end do
     
+    allocate (plotphi2d(loc_sz_x1,loc_sz_x2))
+
+    do i = 1, loc_sz_x1
+       do j = 1, loc_sz_x2
+          plotphi2d(i,j) = sim%phi_x1(i,j)
+       end do
+    end do
+
     global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
@@ -365,6 +401,16 @@ contains
          sim%mesh4d%delta_eta1, &
          plotf2d, &
          "plotf2d", &
+         0, &
+         ierr)
+
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh4d%eta3_min+(global_indices(3)-1)*sim%mesh4d%delta_eta3, &
+         sim%mesh4d%delta_eta3, &
+         sim%mesh4d%eta4_min+(global_indices(4)-1)*sim%mesh4d%delta_eta4, &
+         sim%mesh4d%delta_eta4, &
+         plotphi2d, &
+         "plotphi2d", &
          0, &
          ierr)
     
