@@ -129,14 +129,12 @@ call int2string(iproc, cproc)
 comm  = sll_world_collective%comm
 call int2string(iplot, fin)
 
-if (iplot == 1) then
    inquire(file=cproc//"/"".", exist=dir_e)
    if (dir_e) then
      write(*,*) "directory "//cproc//" exists!"
    else
      call system("mkdir -p "//cproc)
    end if
-end if
 
 
 call sll_new_file_id(file_id, error)
