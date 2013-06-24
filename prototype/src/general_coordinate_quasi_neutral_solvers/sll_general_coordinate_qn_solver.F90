@@ -353,8 +353,11 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
     sll_real64, dimension(:,:), allocatable :: K_a21_loc
     sll_real64, dimension(:,:), allocatable :: K_a22_loc
+    !sll_real64, dimension(:,:), allocatable :: full_Matrix
     !sll_real64, dimension(:,:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Masse_loc
+    sll_int32, dimension(:), allocatable :: ipvt
+    sll_real64, dimension(:), allocatable :: z
     sll_int32 :: total_num_splines_eta1
     sll_int32 :: total_num_splines_eta2
     sll_int32 :: spline_degree_eta1
@@ -369,6 +372,7 @@ contains ! *******************************************************************
     type(sll_logical_mesh_2d), pointer :: mesh
 !    type(sll_time_mark) :: timer
     sll_real64 :: time
+    sll_real64 :: cond
     ! This function builds and solves a system:
     !
     !      A*phi_vec = rho_vec
@@ -393,6 +397,12 @@ contains ! *******************************************************************
    ! SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
 
+      !   Allocation full_Matrix 
+    !SLL_ALLOCATE(full_Matrix(qns%total_num_splines_eta1*qns%total_num_splines_eta2,qns%total_num_splines_eta2*qns%total_num_splines_eta1),ierr)
+    !full_Matrix(:,:) = 0.0_f64
+
+    !SLL_ALLOCATE(ipvt(qns%total_num_splines_eta1*qns%total_num_splines_eta2),ierr)
+    !SLL_ALLOCATE(z(qns%total_num_splines_eta1*qns%total_num_splines_eta2),ierr)
     epsi = qns%epsi
 
     mesh => c_field%get_logical_mesh( )
@@ -433,7 +443,8 @@ contains ! *******************************************************************
                K_a11_loc, &
                K_a12_loc, &
                K_a21_loc, &
-               K_a22_loc )
+               K_a22_loc)!,&
+              ! full_Matrix)
 
        end do
     end do
@@ -441,10 +452,27 @@ contains ! *******************************************************************
 !!$    print *, 'time loop over cells for building matrices (seconds): ', time 
 
     !print*, 'er',qns%rho_vec
+
+   ! print*, qns%total_num_splines_eta1*qns%total_num_splines_eta2
+
+    !full_Matrix(:,:)=0.0_8
+    !do i =1, qns%total_num_splines_eta1*qns%total_num_splines_eta2
+    !   full_Matrix(i,i)=1.0_8
+    !end do
+   ! call sgeco(&
+    !     full_Matrix,&
+     !    qns%total_num_splines_eta1*qns%total_num_splines_eta2,&
+      !   qns%total_num_splines_eta1*qns%total_num_splines_eta2,&
+      !   ipvt,&
+       !  cond,&
+       !  z)
+   ! print*,'condition number = ', cond
     call solve_linear_system(qns)
 
     call  phi%interp_2d%set_coefficients( qns%phi_vec)
 
+
+    !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
     ! apr_B is the source, apr_U is the solution
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
@@ -557,33 +585,13 @@ contains ! *******************************************************************
     bc_right  = obj%bc_right
     bc_bottom = obj%bc_bottom
     bc_top    = obj%bc_top
-    num_pts_g1 = obj%spline_degree1+2
-    num_pts_g2 = obj%spline_degree2+2
+    num_pts_g1 = size(obj%gauss_pts1,2) !obj%spline_degree1+2
+    num_pts_g2 = size(obj%gauss_pts2,2)!obj%spline_degree2+2
 
-    !print*, 'rez',tmp1, (cell_i-1+tmp1)*delta1,eta1_min
-    if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-        (bc_bottom == SLL_PERIODIC) .and. (bc_top   == SLL_PERIODIC) ) then
-       eta1  = eta1_min + (cell_i-1)*delta1
-       eta2  = eta2_min + (cell_j-1)*delta2
+  
+    eta1  = eta1_min + (cell_i-1)*delta1
+    eta2  = eta2_min + (cell_j-1)*delta2
 
-    else if( (bc_left   == SLL_PERIODIC)  .and. (bc_right== SLL_PERIODIC) .and.&
-             (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-       eta1  = eta1_min + (cell_i-1)*delta1
-       eta2  = eta2_min + (cell_j-1)*delta2
-       
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-             (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-       eta1  = eta1_min + (cell_i-1)*delta1
-       eta2  = eta2_min + (cell_j-1)*delta2
-       
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-             (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-       eta1  = eta1_min + (cell_i-1)*delta1
-       eta2  = eta2_min + (cell_j-1)*delta2
-    else
-       print *, 'boundary conditions given are not recognized.'
-       stop
-    end if
 
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
@@ -642,8 +650,8 @@ contains ! *******************************************************************
              
 
           val_f   = rho%value_at_point(gpt1,gpt2)
-          !print*, 'val',val_f,8.0*sll_pi**2*cos(2*sll_pi*(gpt1))&
-           !    *cos(2*sll_pi*(gpt2)), gpt1,gpt2! + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2))),gpt1,gpt2
+         ! print*, 'val',val_f,8.0*sll_pi**2*cos(2*sll_pi*(gpt1))&
+          !     *cos(2*sll_pi*(gpt2)), gpt1,gpt2! + 0.1_8*sin(2*sll_pi*gpt1) * sin(2*sll_pi*gpt2))),gpt1,gpt2
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
           val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
@@ -755,7 +763,8 @@ contains ! *******************************************************************
        K_a11_loc, &
        K_a12_loc, &
        K_a21_loc, &
-       K_a22_loc )
+       K_a22_loc)!,&
+      ! full_Matrix)
     
     type(general_coordinate_qn_solver)  :: qns
     sll_int32 :: cell_index
@@ -767,6 +776,9 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: K_a12_loc
     sll_real64, dimension(:,:), intent(in) :: K_a21_loc
     sll_real64, dimension(:,:), intent(in) :: K_a22_loc
+    !  Correspond to the full Matrix of linear system 
+    !  It is not necessary to keep it  
+   ! sll_real64, dimension(:,:), intent(inout) :: full_Matrix
     !sll_real64, dimension(:,:), intent(in) :: Masse_loc
     sll_real64, dimension(:), intent(in) :: Masse_loc
     sll_int32 :: index1, index2, index3, index4
@@ -778,11 +790,15 @@ contains ! *******************************************************************
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
+    sll_int32 :: ierr 
     
     bc_left   = qns%bc_left
     bc_right  = qns%bc_right
     bc_bottom = qns%bc_bottom
     bc_top    = qns%bc_top
+
+  
+
     do mm = 0,qns%spline_degree2
        index3 = cell_j + mm
        
@@ -853,6 +869,14 @@ contains ! *******************************************************************
                      K_a12_loc(b, bprime) + &
                      K_a21_loc(b, bprime) + &
                      K_a22_loc(b, bprime)
+
+!!$                full_Matrix(x,y) = &
+!!$                     full_Matrix(x,y) + &
+!!$                     M_c_loc(b, bprime) + &
+!!$                     K_a11_loc(b, bprime) + &
+!!$                     K_a12_loc(b, bprime) + &
+!!$                     K_a21_loc(b, bprime) + &
+!!$                     K_a22_loc(b, bprime)
                 !print*, 'elt',  elt_mat_global
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
@@ -911,6 +935,9 @@ contains ! *******************************************************************
             (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
 
        qns%tmp_rho_vec = qns%rho_vec
+
+       qns%tmp_rho_vec= qns%tmp_rho_vec-sum(qns%tmp_rho_vec)/(size(qns%tmp_rho_vec))
+       print*, 'moyenne', sum(qns%tmp_rho_vec)
             
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
@@ -928,6 +955,7 @@ contains ! *******************************************************************
 
     !print*, 'retr', qns%tmp_rho_vec
 
+    
     !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
@@ -945,10 +973,11 @@ contains ! *******************************************************************
     sll_real64 :: ar_eps
     
     ar_eps = 1.d-13
-    ai_maxIter = 10000
+    ai_maxIter = 100000
     !print *, 'a = ', csr_mat % opr_a(1:csr_mat%opi_ia(2)-1)
     call Gradient_conj ( csr_mat, apr_B,apr_U, ai_maxIter, ar_eps )
    ! print*,'u', apr_U
   end subroutine solve_general_qn
+
 
 end module sll_general_coordinate_qn_solver_module

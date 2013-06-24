@@ -11,10 +11,10 @@ program test_general_qns
 #include "sll_working_precision.h"
   implicit none
 
-#define SPLINE_DEG1 5
-#define SPLINE_DEG2 4
-#define NUM_CELLS1  24
-#define NUM_CELLS2  24
+#define SPLINE_DEG1 3
+#define SPLINE_DEG2 3
+#define NUM_CELLS1  10
+#define NUM_CELLS2  10
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
@@ -36,7 +36,7 @@ program test_general_qns
   type(sll_time_mark) :: t_reference
   sll_real64 :: t1i, t1e, t2i, t2e, t3i, t3e, t4i, t4e, t5i, t5e, t6i, t6e, &
        t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i
-  sll_real64 :: t105e,t105i,t115e,t115i,t125i,t125e
+ ! sll_real64 :: t105e,t105i,t115e,t115i,t125i,t125e
   real(8), external :: func_zero
   real(8), external :: func_one
   real(8), external :: source_term_perper
@@ -47,14 +47,15 @@ program test_general_qns
   real(8), external :: source_term_chgt_dirper
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), allocatable :: values
-  sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9,acc10,acc11,acc12,acc95
-  sll_real64 :: acc105,acc115,acc125
+  sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
+  sll_real64 :: acc10,acc11,acc12,acc95
+ ! sll_real64 :: acc105,acc115,acc125
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
   sll_real64, dimension(:,:), allocatable    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
-  sll_real64, dimension(:,:), pointer        :: test_coeff
+!  sll_real64, dimension(:,:), pointer        :: test_coeff
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
@@ -66,12 +67,12 @@ program test_general_qns
   real(8), external :: sol_exacte_chgt_perdir  
   real(8), external :: sol_exacte_chgt_dirper
   real(8), external :: sol_exacte_chgt_dirdir
-  sll_real64 :: node_val1
-  sll_real64 :: epsi
-  sll_real64 :: epsi1
+ ! sll_real64 :: node_val1
+  !sll_real64 :: epsi
+  !sll_real64 :: epsi1
 
-  epsi  =  0.0001_f64
-  epsi1 =  0.005_f64 ! penalization method
+ ! epsi  =  0.000_f64
+ ! epsi1 =  0.000_f64 ! penalization method
   
   
   
@@ -1679,8 +1680,8 @@ program test_general_qns
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
-!!$
-!!$
+
+
 
  !--------------------------------------------------------------------
   
@@ -1776,17 +1777,18 @@ program test_general_qns
 
   
 
-  allocate(point1(npts1-1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1-1,npts2-1))
-  do j=0,npts2-2
-     do i=0,npts1-2
-        point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(npts1-1) + ETA1MIN 
-        point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(npts2-1) + ETA2MIN 
+  allocate(point1(2*npts1-1))
+  allocate(point2(2*npts2-1))
+  allocate(tab_rho(2*npts1-1,2*npts2-1))
+  do j=0,2*npts2-2
+     do i=0,2*npts1-2
+        point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(2*npts1-1) + ETA1MIN 
+        point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(2*npts2-1) + ETA2MIN 
         tab_rho(i+1,j+1)  = source_term_perper(point1(i+1),point2(j+1))
      end do
   end do
 
+  !print*, point1,point2
   call initialize_ad2d_interpolator( &
        interp_2d_term_source, &
        NUM_CELLS1+1, &
@@ -1814,9 +1816,9 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC,&
        point1,&
-       npts1-1,&
+       2*npts1-1,&
        point2,&
-       npts2-1)
+       2*npts2-1)
 
 
 
@@ -1866,8 +1868,7 @@ program test_general_qns
        ETA1MIN, &
        ETA1MAX, &
        ETA2MIN, &
-       ETA2MAX,&
-       epsi)
+       ETA2MAX)
   
   t95i = time_elapsed_since(t_reference) 
   
@@ -2028,6 +2029,7 @@ program test_general_qns
   allocate(point1(npts1-1))
   allocate(point2(npts2-1))
   allocate(tab_rho(npts1-1,npts2-1))
+  
   do j=0,npts2-2
      do i=0,npts1-2
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
@@ -2036,6 +2038,7 @@ program test_general_qns
      end do
   end do
 
+  
   call initialize_ad2d_interpolator( &
        interp_2d_term_source, &
        NUM_CELLS1+1, &
@@ -2053,7 +2056,8 @@ program test_general_qns
   
   terme_source_interp => interp_2d_term_source
 
-
+  tab_rho(:,:) = tab_rho - sum(tab_rho)/((npts1-1)*(npts2-1))
+  print*,'moyenne', sum(tab_rho)
   rho => new_scalar_field_2d_discrete_alt( &
        tab_rho, &
        "rho9", &
@@ -2067,8 +2071,6 @@ program test_general_qns
        npts1-1,&
        point2,&
        npts2-1)
- 
-
 
 
 !!$  
@@ -2117,8 +2119,7 @@ program test_general_qns
        ETA1MIN, &
        ETA1MAX, &
        ETA2MIN, &
-       ETA2MAX, &
-       epsi1)
+       ETA2MAX)
   
   t9i = time_elapsed_since(t_reference) 
   
@@ -2160,6 +2161,7 @@ program test_general_qns
      end do
   end do
   call phi%write_to_file(0)
+  call rho%write_to_file(0)
   ! delete things...
   call delete(qns)
   call rho%delete()
@@ -2180,14 +2182,14 @@ program test_general_qns
   DEALLOCATE(tab_rho)
 
 !!$
-
-   !--------------------------------------------------------------------
-  
-  !     10  test case with colella change of coordinates 
-  !      periodic-dirichlet boundary conditions
-  !     and non analytic source term
-  !--------------------------------------------------------------------
-  
+!!$
+!!$   !--------------------------------------------------------------------
+!!$  
+!!$  !     10  test case with colella change of coordinates 
+!!$  !      periodic-dirichlet boundary conditions
+!!$  !     and non analytic source term
+!!$  !--------------------------------------------------------------------
+!!$  
   
   
   print*, "---------------------"
@@ -2904,8 +2906,8 @@ program test_general_qns
   DEALLOCATE(point1)
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
-
-
+!!$
+!!$
   print*, '------------------------------------------------------'
   print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 
   print*, '-----------------------------------------------------'
