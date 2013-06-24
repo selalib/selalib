@@ -16,7 +16,7 @@ program vp_cartesian_4d
   character(len=256) :: filename_local
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
   type(sll_logical_mesh_4d), pointer      :: mx
-  sll_real64, dimension(1:5) :: landau_params
+  sll_real64, dimension(1:6) :: landau_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -54,6 +54,9 @@ program vp_cartesian_4d
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
 
+#define DEG 2   ! polynomial degree
+
+
   ! logical mesh for space coordinates
   mx => new_logical_mesh_4d( NCELL1, NCELL2,NCELL3, NCELL4 , &
        eta1_min=ETA1MIN, eta1_max=ETA1MAX, &
@@ -70,6 +73,7 @@ program vp_cartesian_4d
     landau_params(3)=ETA4MIN
     landau_params(4)=ETA4MAX
     landau_params(5)= 0.1
+    landau_params(6)= DEG  ! polynomial interpolation degree
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d( &
