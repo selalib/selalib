@@ -87,6 +87,7 @@ program vlasov_poisson_4d_polar
   params(6) = 0.0 !beta
 
   simulation%num_iterations = 100 ! run 100 iterations
+  simulation%dt             = 0.1 ! time step
   call simulation%run()
   call delete(simulation)
 

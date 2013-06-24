@@ -1,7 +1,7 @@
 !> Unit test for parallel output
 program test_io_parallel
 
-use hdf5
+use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
