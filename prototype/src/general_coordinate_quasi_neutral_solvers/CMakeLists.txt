@@ -16,7 +16,8 @@ ADD_LIBRARY( sll_general_coordinate_quasi_neutral_solvers STATIC
   sparse_matrix_def.F90
   precision.f90
   sll_knots.F90
-  coocsr.f90 )
+  coocsr.f90 
+  linpack.f90)
 
 ADD_DEPENDENCIES( sll_general_coordinate_quasi_neutral_solvers
   sll_scalar_field_2d_alternative

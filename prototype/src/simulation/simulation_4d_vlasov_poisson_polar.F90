@@ -272,13 +272,19 @@ contains
          sim%nc_x1+1, sim%nc_x2+1, &
          sim%mesh2d_x%eta1_min, sim%mesh2d_x%eta1_max, &
          sim%mesh2d_x%eta2_min, sim%mesh2d_x%eta2_max, &
-         PERIODIC_SPLINE, PERIODIC_SPLINE )
+         SLL_PERIODIC, SLL_PERIODIC )
 
     call sim%interp_x3%initialize( &
-         sim%nc_x3+1, sim%mesh2d_v%eta1_min, sim%mesh2d_v%eta1_max, PERIODIC_SPLINE)
+         sim%nc_x3+1,&
+         sim%mesh2d_v%eta1_min,&
+         sim%mesh2d_v%eta1_max, &
+         SLL_PERIODIC)
 
     call sim%interp_x4%initialize( &
-         sim%nc_x4+1, sim%mesh2d_v%eta2_min, sim%mesh2d_v%eta2_max, PERIODIC_SPLINE)
+         sim%nc_x4+1,&
+         sim%mesh2d_v%eta2_min,&
+         sim%mesh2d_v%eta2_max,&
+         SLL_PERIODIC)
 
     do itime=1, sim%num_iterations !Loop over time
 
