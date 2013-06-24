@@ -29,17 +29,31 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_real64 :: dt
      sll_real64 :: tmax
      sll_int32  :: num_iterations
+
      ! Mesh parameters
-     sll_int32  :: nc_v1  ! velocity nodes
+     sll_int32  :: nc_v1  ! velocity cells
      sll_int32  :: nc_v2
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
+
+     sll_int32 :: degree ! polynomial degree
+
+     sll_int32  :: np_v1  ! velocity nodes
+     sll_int32  :: np_v2
+
      ! for initializers
      type(sll_logical_mesh_4d), pointer    :: mesh4d
      type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
 
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
+
+
+     ! finite element approximation in the velocity space
+     ! connectivity array
+     
+
+
 
      ! distribution functions at time steps n, star and n+1 
      ! communications are needed only in the x3 direction
@@ -145,6 +159,8 @@ contains
     sll_int32  :: nc_v2
     sll_int32  :: nc_x1
     sll_int32  :: nc_x2
+    sll_int32  :: np_v1
+    sll_int32  :: np_v2
     sll_int32  :: ranktop
     sll_int32  :: rankbottom
     sll_int32  :: message_id
@@ -166,10 +182,15 @@ contains
     sim%sequential_v1v2x1  => new_layout_4D( sll_world_collective )
     sim%phi_seq_x1       => new_layout_2D( sll_world_collective )
 
+    sim%degree=sim%params(6)
+
     nc_v1 = sim%mesh4d%num_cells1
     nc_v2 = sim%mesh4d%num_cells2   
     nc_x1 = sim%mesh4d%num_cells3   
-    nc_x2 = sim%mesh4d%num_cells4   
+    nc_x2 = sim%mesh4d%num_cells4  
+
+    np_v1 = sim%degree * nc_v1 + 1
+    np_v2 = sim%degree * nc_v2 + 1
 
     sim%nproc_v1 = 1
     sim%nproc_v2 = 1
@@ -179,8 +200,8 @@ contains
     ! init the layout for the distribution function
     ! the mesh is split only in the x3 direction
     call initialize_layout_with_distributed_4D_array( &
-         nc_v1+1, &
-         nc_v2+1, &
+         np_v1, &
+         np_v2, &
          nc_x1, &
          nc_x2, &
          sim%nproc_v1, &
@@ -188,6 +209,7 @@ contains
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%sequential_v1v2x1)
+
 
     
     ! potential layout
@@ -220,6 +242,8 @@ contains
          loc_sz_v2, &
          loc_sz_x1, &
          loc_sz_x2 )
+
+    write(*,*) 'np_v1',np_v1,loc_sz_v1
 
     ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
     SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
@@ -393,13 +417,13 @@ contains
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh4d%eta3_min+(global_indices(3)-1)*sim%mesh4d%delta_eta3, &
          sim%mesh4d%delta_eta3, &
-         sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1, &
+         sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1/sim%degree, &
          sim%mesh4d%delta_eta1, &
          plotf2d, &
          "plotf2d", &
          0, &
          ierr)
-
+!!$
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh4d%eta3_min+(global_indices(3)-1)*sim%mesh4d%delta_eta3, &
          sim%mesh4d%delta_eta3, &
