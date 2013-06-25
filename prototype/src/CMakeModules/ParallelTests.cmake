@@ -59,11 +59,11 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
    SET(PROCS 8)
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
-   ADD_MPI_TEST(vp4d_sim test_vp4d_sim ${PROCS} ${ARGS})
+   ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
-   ADD_MPI_TEST(vp4d_sim_general test_vp4d_sim_general ${PROCS} ${ARGS})
+   ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
@@ -79,7 +79,6 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
  
    ENDIF(PROCESSOR_COUNT GREATER 1)
-
 
    SET(ARGS " ")
    IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")

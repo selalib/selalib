@@ -36,8 +36,8 @@ program vp2d_keen
   type(poisson2dpp) :: poisson 
   type(drive_param) :: dr_param
   ! old version of splines
-  type (splinepp)    :: splx 
-  type (splinenn)    :: sply
+ ! type (splinepp)    :: splx 
+ ! type (splinenn)    :: sply
 
   sll_real64, dimension(:,:,:,:), pointer :: f4d
   sll_real64, dimension(:,:),     pointer :: rho

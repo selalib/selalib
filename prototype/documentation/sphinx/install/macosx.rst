@@ -41,7 +41,7 @@ Download and install HDF5::
    $ cd -
    $ curl -L -O http://zlib.net/zlib-1.2.7.tar.gz
    $ tar jxvf zlib-1.2.7.tar.gz
-   $ cd zlib-1.2.7; {
+   $ cd zlib-1.2.7
    $ ./configure --prefix=/usr/local 
    $ make
    $ sudo make install
@@ -58,8 +58,8 @@ Download and install HDF5::
 Download and install FFTW3::
 
    $ curl -L -O http://www.fftw.org/fftw-3.3.2.tar.gz
-   $ tar zxvf fftw-3.3.1.tar.gz
-   $ cd fftw-3.3.1
+   $ tar zxvf fftw-3.3.2.tar.gz
+   $ cd fftw-3.3.2
    $ ./configure --prefix=/usr/local --enable-shared --enable-threads --enable-mpi
    $ make
    $ sudo make install
