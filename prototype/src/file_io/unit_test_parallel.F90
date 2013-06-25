@@ -127,7 +127,7 @@ contains
                                     dble(offset(2)), dble(1), &
                                     zdata, "rect_mesh", 1, error)  
 
-  call sll_gnuplot_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
+  call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
   !Begin high level version

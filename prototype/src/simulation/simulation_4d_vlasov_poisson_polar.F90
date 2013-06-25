@@ -284,6 +284,8 @@ contains
     call sim%interp_x4%initialize( &
          sim%nc_x4+1, eta4_min, eta4_max, PERIODIC_SPLINE)
 
+    sim%split_layout => new_layout_2D( sll_world_collective )
+
     call initialize_layout_with_distributed_2D_array( &
          sim%nc_x1+1,                                 &
          sim%nc_x2+1,                                 &
@@ -291,11 +293,7 @@ contains
          sim%nproc_x2,                                &
          sim%split_layout )
 
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
-         loc_sz_x1,                                   &
-         loc_sz_x2,                                   & 
-         loc_sz_x3,                                   &
-         loc_sz_x4 )
+    call compute_local_sizes_2d( sim%split_layout, loc_sz_x1, loc_sz_x2) 
 
     ! This layout is also useful to represent the charge density array. Since
     ! this is a result of a local reduction on x3 and x4, the new layout is
@@ -303,16 +301,9 @@ contains
     SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
     SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
     
-    ! These dimensions are also the ones needed for the array where we store
-    ! the intermediate results of the charge density computation.
-    SLL_ALLOCATE(sim%partial_reduction(loc_sz_x1,loc_sz_x2, loc_sz_x3),error)
-
     call compute_charge_density( loc_sz_x1,              &
                                  loc_sz_x2,              &
-                                 loc_sz_x3,              &
-                                 loc_sz_x4,              &
                                  sim%f_x3x4,             &
-                                 sim%partial_reduction,  &
                                  sim%rho )
 
     global_indices(1:2) =  local_to_global_2D( sim%split_layout, (/1, 1/) )
@@ -529,40 +520,23 @@ contains
 
   subroutine compute_charge_density( numpts1, &
                                      numpts2, &
-                                     numpts3, &
-                                     numpts4, &
                                      f,       &
-                                     partial, &
                                      rho )
 
     sll_int32, intent(in) :: numpts1
     sll_int32, intent(in) :: numpts2
-    sll_int32, intent(in) :: numpts3
-    sll_int32, intent(in) :: numpts4
 
     sll_real64, intent(in),    dimension(:,:,:,:) :: f       ! local distr. func
-    sll_real64, intent(inout), dimension(:,:,:)   :: partial ! intermediate res.
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
 
-    partial(:,:,:) = 0.0
-    
-    do k=1,numpts3
-       do j=1,numpts2
-          do i=1,numpts1
-             do l=1,numpts4
-                partial(i,j,k) = partial(i,j,k) + f(i,j,k,l)*delta_eta4
-             end do
-          end do
-       end do
-    end do
+    rho(:,:) = 0.0
     
     do j=1,numpts2
        do i=1,numpts1
-          do k=1,numpts3
-             rho(i,j) = rho(i,j) + partial(i,j,k)*delta_eta3
-          end do
+          rho(i,j) = sum(f(i,j,:,:))
        end do
     end do
+    rho = rho *delta_eta3*delta_eta4
 
   end subroutine compute_charge_density
 
