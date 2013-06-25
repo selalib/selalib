@@ -14,77 +14,75 @@
 module sll_mudpack_polar
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-implicit none
 
-sll_real64 ,allocatable :: work(:)
+use sll_mudpack_base
+
+implicit none
 
 contains
 
-subroutine initialize_poisson_polar_mudpack(phi, rhs, &
-                                            r_min, r_max,  &
-                                            theta_min, theta_max, &
-                                            nr, nth)
+subroutine initialize_poisson_polar_mudpack(this, phi, rhs, &
+                                            r_min, r_max, nr, &
+                                            theta_min, theta_max, nth, &
+                                            bc_r_min, bc_r_max, &
+                                            bc_theta_min, bc_theta_max )
 implicit none
 
 ! set grid size params
-
+type(mudpack_2d) :: this
 sll_real64, intent(in) :: r_min, r_max
 sll_real64, intent(in) :: theta_min, theta_max
 sll_int32, intent(in)  :: nr, nth
 sll_int32 :: icall
-sll_int32 :: iiex,jjey,nnx,nny,llwork
-sll_int32, parameter :: iixp = 2 , jjyq = 2
+sll_int32 :: iiex,jjey,llwork
+sll_int32 :: bc_r_min, bc_r_max
+sll_int32 :: bc_theta_min, bc_theta_max
 
-sll_real64, intent(inout) ::  phi(nr,nth)
-sll_real64, intent(in) ::  rhs(nr,nth)
+sll_real64, intent(inout) ::  phi(:,:)
+sll_real64, intent(inout) ::  rhs(:,:)
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
 
-sll_int32 intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,&
+sll_int32 :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,&
               iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
-sll_int32 :: i,j,ierror
-sll_real64 :: dlx,dly
-sll_int32               :: iprm(16)
-sll_real64              :: fprm(6)
-sll_int32               :: mgopt(4)
+sll_int32  :: i,j,ierror
+sll_int32  :: iprm(16)
+sll_real64 :: fprm(6)
 
-!equivalence(intl,iprm)
-!equivalence(xa,fprm)
+equivalence(intl,iprm)
+equivalence(xa,fprm)
 
 ! declare coefficient and boundary condition input subroutines external
 external coef_polar,bndcr
 
-
-nnx = nr
-nny = nth
+nx = nr
+ny = nth
 
 ! set minimum required work space
-llwork=(7*(nnx+2)*(nny+2)+44*nnx*nny)/3
+llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
       
-allocate(work(llwork))
+allocate(this%work(llwork))
 icall = 0
-iiex = ceiling(log((nnx-1.)/iixp)/log(2.))+1
-jjey = ceiling(log((nny-1.)/jjyq)/log(2.))+1
 
 ! set input sll_int32 arguments
 intl = 0
 
 ! set boundary condition flags
-nxa = 1
-nxb = 1
-nyc = 0
-nyd = 0
+nxa = bc_r_min
+nxb = bc_r_max
+nyc = bc_theta_min
+nyd = bc_theta_max
 
 ! set grid sizes from parameter statements
-ixp = iixp
-jyq = jjyq
-iex = iiex
-jey = jjey
+ixp = 2
+jyq = 2
+iex = ceiling(log((nx-1.)/ixp)/log(2.))+1
+jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
 
 nx = ixp*(2**(iex-1))+1
 ny = jyq*(2**(jey-1))+1
@@ -100,10 +98,10 @@ end if
 
 ! set multigrid arguments (w(2,1) cycling with fully weighted
 ! residual restriction and cubic prolongation)
-mgopt(1) = 2
-mgopt(2) = 2
-mgopt(3) = 1
-mgopt(4) = 3
+this%mgopt(1) = 2
+this%mgopt(2) = 2
+this%mgopt(3) = 1
+this%mgopt(4) = 3
 
 ! set three cycles to ensure second-order approx
 maxcy = 3
@@ -122,28 +120,23 @@ xa = r_min
 xb = r_max
 yc = theta_min
 yd = theta_max
-dlx = (xb-xa)/float(nx-1)
-dly = (yd-yc)/float(ny-1)
 
 ! set for no error control flag
 tolmax = 0.0
 
-! set specified boundaries in phi at x=xa 
-do j=1,ny
-   phi(1,j) = 0.0
-   phi(nx,j) = 0.0
-end do
 write(*,100)
-
-write(*,102) (mgopt(i),i=1,4)
+write(*,101) (iprm(i),i=1,15)
+write(*,102) (this%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
-call mud2cr(iprm,fprm,work,coef_polar,bndcr,rhs,phi,mgopt,ierror)
+
+call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
+stop
+
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
 
 100 format(//' multigrid poisson solver in polar coordinates ')
-    write (*,101) (iprm(i),i=1,15)
 101 format(/' integer input arguments ', &
     /'intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
     /' ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
@@ -164,11 +157,11 @@ return
 end subroutine initialize_poisson_polar_mudpack
 
 
-subroutine solve_poisson_polar_mudpack(phi, rhs)
+subroutine solve_poisson_polar_mudpack(this, phi, rhs)
 implicit none
 
 ! set grid size params
-
+type(mudpack_2d) :: this
 sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
@@ -182,9 +175,8 @@ sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 sll_int32  :: ierror
-sll_int32               :: iprm(16)
-sll_real64              :: fprm(6)
-sll_int32               :: mgopt(4)
+sll_int32  :: iprm(16)
+sll_real64 :: fprm(6)
 
 common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
                 iguess,maxcy,method,nwork,lwrkqd,itero
@@ -200,10 +192,10 @@ icall = 1
 intl  = 1
 write(*,106) intl,method,iguess
 ! attempt solution
-call mud2cr(iprm,fprm,work,coef_polar,bndcr,rhs,phi,mgopt,ierror)
+call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
 SLL_ASSERT(ierror == 0)
 ! attempt fourth order approximation
-call mud24cr(work,coef_polar,bndcr,phi,ierror)
+call mud24cr(this%work,coef_polar,bndcr,phi,ierror)
 SLL_ASSERT(ierror == 0)
 
 106 format(/' approximation call to mud2cr', &

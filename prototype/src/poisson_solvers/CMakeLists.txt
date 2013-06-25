@@ -22,7 +22,8 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                   sll_poisson_2d_periodic_fftw.F90)
 
    TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
-                                              ${FFTW_LIBRARIES})
+                                              ${FFTW_LIBRARIES}
+                                              ${HDF5_LIBRARIES})
 ELSE()
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftpack.F90")
@@ -31,16 +32,64 @@ ENDIF()
 
 IF(MUDPACK_ENABLED)
 
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack.F90)
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
+                                    sll_mudpack_cartesian.F90
+                                    sll_mudpack_polar.F90
+                                    sll_mudpack_colella.F90)
+
+ENDIF(MUDPACK_ENABLED)
    
+IF(FISHPACK_ENABLED)
+
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_fishpack.F90)
+
+ENDIF(FISHPACK_ENABLED)
+
+ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
+
+ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
+
+ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
+TARGET_LINK_LIBRARIES(sll_poisson_2d_polar sll_fft sll_memory sll_assertion sll_utilities)
+
+ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
+               ../simulation/sll_polar_operators.F90)
+
+TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_2d_polar ${POISSON_LIBS})
+
+ADD_EXECUTABLE(test_poisson_polar_fft test_poisson_polar_fft.F90)
+TARGET_LINK_LIBRARIES(test_poisson_polar_fft sll_poisson_2d_polar)
+
+ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90
+               sll_poisson_3d_periodic_seq.F90)
+
+TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq ${POISSON_LIBS})
+TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
+
+ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
+                                   test_poisson_2d_fem.F90)
+
+TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})
+
+IF(FISHPACK_ENABLED)
+
+   ADD_EXECUTABLE(test_fishpack test_fishpack.F90 sll_fishpack.F90)
+   TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assertion fishpack)
+
+ENDIF()
+
+IF(MUDPACK_ENABLED)
+
    MACRO(ADD_MUDPACK_PROGRAM TEST_NAME) 
 
-      ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90
-                                               sll_mudpack_${TEST_NAME}.F90)
-
+      ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
+      
       TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_memory 
                                                       sll_assertion 
                                                       sll_utilities
+                                                      sll_file_io
+                                                      sll_fft
+                                                      sll_poisson_solvers
                                                       mudpack)
 
       ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
@@ -48,42 +97,12 @@ IF(MUDPACK_ENABLED)
 
    ENDMACRO(ADD_MUDPACK_PROGRAM)
 
-   ADD_MUDPACK_PROGRAM( polar )
-   ADD_MUDPACK_PROGRAM( colella )
+   ADD_MUDPACK_PROGRAM(cartesian)
+   ADD_MUDPACK_PROGRAM(polar)
+   ADD_MUDPACK_PROGRAM(colella)
 
 
 ENDIF()
-
-IF(FISHPACK_ENABLED)
-
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_fishpack.F90)
-   ADD_EXECUTABLE(test_fishpack test_fishpack.F90 sll_fishpack.F90)
-   TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assertion fishpack)
-
-ENDIF()
-
-ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
-
-ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
-
-ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
-
-ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
-               ../simulation/sll_polar_operators.F90)
-
-ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90
-               sll_poisson_3d_periodic_seq.F90)
-
-TARGET_LINK_LIBRARIES(unit_test_polar sll_poisson_2d_polar ${POISSON_LIBS})
-TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq ${POISSON_LIBS})
-TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
-
-ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_cart_fem.F90)
-
-TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory 
-                                          sll_assertion 
-                                          ${LAPACK_LIBRARIES})
-
 # ****************************************************************************
 #
 #                           PARALLEL POISSON SOLVERS
@@ -93,10 +112,17 @@ TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory
 IF(MPI_MODULE_ENABLED)
 
    ADD_LIBRARY(sll_poisson_parallel STATIC 
+               sll_poisson_polar_parallel.F90 
                sll_poisson_3d_periodic_par.F90 
                sll_poisson_2d_periodic_cartesian_par.F90 )
 
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
+   TARGET_LINK_LIBRARIES(sll_poisson_parallel sll_remap 
+                                              sll_fft
+                                              sll_collective
+                                              sll_utilities
+                                              sll_memory
+                                              sll_assertion)
   
    ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
 
@@ -120,14 +146,12 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    TARGET_LINK_LIBRARIES(test_poisson_2d_per_cart_par
                          sll_poisson_parallel
-                         sll_remap
-                         sll_collective
-                         sll_file_io_parallel
-                         sll_fft
-                         sll_memory
-                         sll_timer
-                         sll_utilities
-                         sll_assertion )
+                         sll_file_io_parallel )
+
+   ADD_EXECUTABLE( test_poisson_polar_parallel 
+                   test_poisson_polar_parallel.F90 )
+
+   TARGET_LINK_LIBRARIES(test_poisson_polar_parallel sll_poisson_parallel)
+
 
 ENDIF()
-

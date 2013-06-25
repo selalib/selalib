@@ -132,7 +132,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
       iflag = 2
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'SPLI2D - Fatal error!'
-      write ( *, '(a)' ) '  The TAU array is not strictly increasing.'
+      write ( *, '(a)' ) '  The TAU array is not strictly increasing .'
       !print*, taui, t(left),left
       stop
     end if

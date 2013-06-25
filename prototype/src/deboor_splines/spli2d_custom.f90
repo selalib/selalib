@@ -27,22 +27,31 @@ subroutine spli2d_custom ( &
   real(8), dimension (( 2*ai_ky-1) * ai_ny ) :: lpr_work32
   real(8), dimension ( ai_ny         ) :: lpr_work4
   real(8), dimension ( ai_ny , ai_nx ) :: lpr_work5
-  integer  :: li_i, li_j, li_iflag
+  real(8), dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
+  real(8), dimension ( (ai_ny-ai_ky)*(2*ai_ky+3)+5*ai_ky+3 ) :: scrtch1
+  real(8), dimension ( ai_nx + ai_kx ) :: t 
+  integer  :: li_i, li_j, li_iflag,iflag,iflag1
   
-   lpr_work1(:,:) = 0.0
+  lpr_work1(:,:) = 0.0
   
   ! *** set up knots
   !     interpolate between knots
   ! x
-  apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )		
-  apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )		
+  if (ai_kx <= 2) then 
+     apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )		
+     apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )		
   
-  do li_i = ai_kx + 1, ai_nx
-     apr_tx ( li_i ) = apr_taux ( 2 ) + &
-          (li_i-(ai_kx + 1))*&
-          ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
-    
-  end do
+     do li_i = ai_kx + 1, ai_nx
+        apr_tx ( li_i ) = apr_taux ( 2 ) + &
+             (li_i-(ai_kx + 1))*&
+             ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+        
+     end do
+  else
+     scrtch(:) = 0.0_8
+     call splopt ( apr_taux,ai_nx, ai_kx, scrtch, apr_tx, iflag )
+  end if
+!!$  print*, 'DE BOOR SPSLINE', apr_tx
   
   apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
@@ -50,7 +59,7 @@ subroutine spli2d_custom ( &
         apr_Bcoef ( li_i, li_j ) = apr_g ( li_i, li_j )
      end do
   end do
-
+  
   !  *** construct b-coefficients of interpolant
   !
   call spli2d ( &
@@ -65,15 +74,20 @@ subroutine spli2d_custom ( &
        lpr_work5, &
        li_iflag )
 
-  apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
-  apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
-  
-  do li_j = ai_ky + 1, ai_ny
-     apr_ty ( li_j ) = apr_tauy ( 2 ) +&
-          (li_j-(ai_ky + 1))*&
-          ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
-  end do
-  
+  if (ai_ky <= 2) then 
+     apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
+     apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
+     
+
+     do li_j = ai_ky + 1, ai_ny
+        apr_ty ( li_j ) = apr_tauy ( 2 ) +&
+             (li_j-(ai_ky + 1))*&
+             ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
+     end do
+  else 
+
+     call splopt ( apr_tauy,ai_ny, ai_ky, scrtch1, apr_ty, iflag1 )
+  end if
 
   
   apr_bcoef(:,:) =0.0_8
@@ -91,4 +105,5 @@ subroutine spli2d_custom ( &
        apr_bcoef, &
        li_iflag )
 
+!!$  print*, 'ok'
 end subroutine spli2d_custom

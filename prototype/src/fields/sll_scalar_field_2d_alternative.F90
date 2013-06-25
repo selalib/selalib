@@ -488,7 +488,7 @@ contains   ! *****************************************************************
             sz_point2 )
     end if
     
-    
+    print*, 'hello'
   end subroutine initialize_scalar_field_2d_discrete_alt
   
   ! need to do something about deallocating the field proper, when allocated
@@ -520,7 +520,7 @@ contains   ! *****************************************************************
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64, dimension(:,:), pointer :: res
+    sll_real64, dimension(2,2) :: res
     res(:,:) = field%T%jacobian_matrix(eta1,eta2)
   end function get_jacobian_matrix_discrete_alt
 

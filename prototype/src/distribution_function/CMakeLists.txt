@@ -28,5 +28,6 @@ target_link_libraries(test_distribution_function
 	sll_assertion
 	sll_constants
 	sll_working_precision
+        ${HDF5_LIBRARIES}
 )
 #ENDIF (NOT STDF95)

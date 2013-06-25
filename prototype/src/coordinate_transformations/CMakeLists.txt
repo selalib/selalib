@@ -1,3 +1,4 @@
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 IF(STDF95)
  add_library(sll_coordinate_transformations STATIC
         sll_coordinate_transformations_2d.F90
@@ -34,5 +35,6 @@ target_link_libraries(test_coordinate_transformations_2d
 	sll_memory
 	sll_assertion
 	sll_working_precision
+        ${HDF5_LIBRARIES}
   )
 
