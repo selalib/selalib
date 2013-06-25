@@ -126,6 +126,7 @@ contains
    sim%params    => params
   end subroutine initialize_vp4d_general
 
+
   subroutine init_vp4d_par_gen( sim, filename )
     intrinsic :: trim
     class(sll_simulation_4d_vp_general), intent(inout) :: sim
@@ -161,7 +162,6 @@ contains
     sim%nc_x3 = num_cells_x3
     sim%nc_x4 = num_cells_x4
   end subroutine init_vp4d_par_gen
-
 
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here

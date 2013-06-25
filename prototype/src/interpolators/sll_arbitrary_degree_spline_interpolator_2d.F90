@@ -197,29 +197,29 @@ contains
     case (0) ! 1. periodic-periodic
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-       tmp1 = num_pts1 + 2*spline_degree1
-       tmp2 = num_pts2 + 2*spline_degree2
+       tmp1 = num_pts1*num_pts1 !+ 2*spline_degree1
+       tmp2 = num_pts2*num_pts2 !+ 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-       tmp1 = num_pts1 + spline_degree1 !- 1
-       tmp2 = num_pts2 + 2*spline_degree2
+       tmp1 = num_pts1*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1 + 2*spline_degree1
-       tmp2 = num_pts2 + spline_degree2 !- 1
+       tmp1 = num_pts1*num_pts1! + 2*spline_degree1
+       tmp2 = num_pts2*num_pts2 + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (585) ! 4. dirichlet in all sides
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1 + spline_degree1 !- 1
-       tmp2 = num_pts2 + spline_degree2 !- 1
+       tmp1 = num_pts1*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case default
@@ -227,8 +227,8 @@ contains
     end select
 
     interpolator%coeff_splines(:,:) = 0.0_f64
-    SLL_ALLOCATE( interpolator%t1(num_pts1 + 2*(spline_degree1 + 1)), ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2 + 2*(spline_degree2 + 1)), ierr)
+    SLL_ALLOCATE( interpolator%t1(num_pts1*num_pts1),ierr) !+ 2*(spline_degree1 + 1)), ierr)
+    SLL_ALLOCATE( interpolator%t2(num_pts2*num_pts2),ierr) !+ 2*(spline_degree2 + 1)), ierr)
 
     interpolator%t1(:) = 0.0_f64
     interpolator%t2(:) = 0.0_f64
@@ -308,37 +308,67 @@ contains
          interpolator%t2( i + sp_deg2 + 1 ) = eta2_min + i*delta2
       end do
 
-
       do i = 1,num_cells1
          do j = 1,num_cells2
-            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
+            interpolator%coeff_splines(i,j) = &
                  coeffs_1d( i + num_cells1 *(j-1) )
          end do
       end do
-      
-      do j=1, tmp2
-         interpolator%coeff_splines(:,j) = &
-              interpolator%coeff_splines(:,num_cells2 + j)
-      end do
-      
-      if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
-         do j = tmp2 + 1, sp_deg2
-            interpolator%coeff_splines(:, num_cells2 + j) = &
-                 interpolator%coeff_splines(:, j)
-         end do
-      end if
 
-      do i=1, tmp1
-         interpolator%coeff_splines(i,:) = &
-              interpolator%coeff_splines(num_cells1 + i,:)
-      end do
-      
-      if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
-         do i = tmp1 + 1, sp_deg1
-            interpolator%coeff_splines(num_cells1 + i,:) = &
-                 interpolator%coeff_splines(i,:)
+      do j = 1, sp_deg2
+         do i = 1,num_cells1
+            
+            interpolator%coeff_splines(i ,num_cells2 + j ) = &
+                 coeffs_1d(i+num_cells1*(j-1))
          end do
-      end if
+      end do
+      do i = 1, sp_deg1
+         do j = 1,num_cells2
+            
+            interpolator%coeff_splines(num_cells1 + i ,j) = &
+                 coeffs_1d(i+num_cells1 *(j-1) )!nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+         end do
+      end do
+
+      do i= 1,sp_deg1
+         do j=1,sp_deg2
+            
+            interpolator%coeff_splines(num_cells1 +  i ,num_cells2 + j) = &
+                 interpolator%coeff_splines((sp_deg1-(i-1)),(sp_deg2-(j-1)))
+         end do
+      end do
+!!$      do i = 1,num_cells1
+!!$         do j = 1,num_cells2
+!!$            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
+!!$                 coeffs_1d( i + num_cells1 *(j-1) )
+!!$         end do
+!!$      end do
+!!$      
+!!$      print*, 't1',interpolator%t1(1:interpolator%size_t1)
+!!$      print*, 't2',interpolator%t2(1:interpolator%size_t2)
+!!$      do j=1, tmp2
+!!$         interpolator%coeff_splines(:,j) = &
+!!$              interpolator%coeff_splines(:,num_cells2 + j)
+!!$      end do
+!!$      
+!!$      if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
+!!$         do j = tmp2 + 1, sp_deg2
+!!$            interpolator%coeff_splines(:, num_cells2 + j) = &
+!!$                 interpolator%coeff_splines(:, j)
+!!$         end do
+!!$      end if
+!!$
+!!$      do i=1, tmp1
+!!$         interpolator%coeff_splines(i,:) = &
+!!$              interpolator%coeff_splines(num_cells1 + i,:)
+!!$      end do
+!!$      
+!!$      if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
+!!$         do i = tmp1 + 1, sp_deg1
+!!$            interpolator%coeff_splines(num_cells1 + i,:) = &
+!!$                 interpolator%coeff_splines(i,:)
+!!$         end do
+!!$      end if
    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
       interpolator%size_coeffs1=  num_cells1 + sp_deg1
       interpolator%size_coeffs2=  num_cells2 + sp_deg2
@@ -509,12 +539,12 @@ contains
     sz1 = size_eta1_coords
     sz2 = size_eta2_coords
     !PRINT *, 'SZ1 = ', SZ1, 'SZ2 = ', SZ2, 'DATA: ', SIZE(DATA_ARRAY,1), SIZE(DATA_ARRAY,2)
-    SLL_ASSERT(sz1 .le. interpolator%num_pts1)
-    SLL_ASSERT(sz2 .le. interpolator%num_pts2)
+    SLL_ASSERT(sz1 .le. interpolator%num_pts1* interpolator%num_pts1)
+    SLL_ASSERT(sz2 .le. interpolator%num_pts2* interpolator%num_pts2)
     SLL_ASSERT(size(data_array,1) .ge. sz1)
     SLL_ASSERT(size(data_array,2) .ge. sz2)
-    SLL_ASSERT(size(eta1_coords) .ge. sz1)
-    SLL_ASSERT(size(eta2_coords) .ge. sz2)
+    SLL_ASSERT(size(eta1_coords)  .ge. sz1)
+    SLL_ASSERT(size(eta2_coords)  .ge. sz2)
 
     order1  = interpolator%spline_degree1 + 1
     order2  = interpolator%spline_degree2 + 1
@@ -528,13 +558,15 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 + 1 
-
        call spli2d_perper( &
             period1, sz1+1, order1, eta1_coords, &
             period2, sz2+1, order2, eta2_coords, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
+
+
+       print*, 'moyenne', sum( interpolator%coeff_splines(1:sz1+1,1:sz2+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_coeffs1 = sz1
@@ -607,21 +639,21 @@ contains
        if ( res2 .ge. interpolator%eta2_max ) then 
           res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
        end if
-       SLL_ASSERT( res1 .lt. interpolator%eta1_min )
-       SLL_ASSERT( res1 .gt. interpolator%eta1_max )
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        if ( res1 .ge. interpolator%eta1_max ) then 
           res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
-       SLL_ASSERT( res2 .lt. interpolator%eta2_min )
-       SLL_ASSERT( res2 .gt. interpolator%eta2_max )
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
        
     case (585) ! dirichlet-dirichlet 
-       SLL_ASSERT( res1 .lt. interpolator%eta1_min )
-       SLL_ASSERT( res1 .gt. interpolator%eta1_max )
-       SLL_ASSERT( res2 .lt. interpolator%eta2_min )
-       SLL_ASSERT( res2 .gt. interpolator%eta2_max )
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
     end select
           
     val = bvalue2d( &

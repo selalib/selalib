@@ -62,18 +62,18 @@ type maxwell_2d_periodic_plan_cartesian_par
    type(C_PTR)                         :: fwy         !< fftw plan forward y
    type(C_PTR)                         :: bwx         !< fftw plan backward x
    type(C_PTR)                         :: bwy         !< fftw plan backward y
-   type(layout_2D),  pointer           :: layout_x    !< layout sequential in x
-   type(layout_2D),  pointer           :: layout_y    !< layout sequential in y
    sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
    sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
    sll_comp64, dimension(:), pointer   :: fft_x_array !< fft x transform
    sll_comp64, dimension(:), pointer   :: fft_y_array !< fft y transform
-   type(remap_plan_2D_real64), pointer :: rmp_xy      !< remap x->y pointer
-   type(remap_plan_2D_real64), pointer :: rmp_yx      !< remap y->x pointer
    sll_real64                          :: e_0         !< electric conductibility
    sll_real64                          :: mu_0        !< magnetic permeability
    type(C_PTR)                         :: p_x_array   !< x pointer to memory
    type(C_PTR)                         :: p_y_array   !< y pointer to memory
+   type(layout_2D),  pointer           :: layout_x    !< layout sequential in x
+   type(layout_2D),  pointer           :: layout_y    !< layout sequential in y
+   type(remap_plan_2D_real64), pointer :: rmp_xy      !< remap x->y pointer
+   type(remap_plan_2D_real64), pointer :: rmp_yx      !< remap y->x pointer
    sll_real64, dimension(:,:), pointer :: fz_x        !< array sequential in x
    sll_real64, dimension(:,:), pointer :: fz_y        !< array sequential in y
    sll_real64, dimension(:), pointer   :: kx          !< x wave number

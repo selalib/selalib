@@ -6,9 +6,9 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 65
-#define NPTS2 65 
-#define SPL_DEG 9
+#define NPTS1 30
+#define NPTS2 30 
+#define SPL_DEG 2
 #define X1MIN 0.0_f64
 #define X1MAX 1.0_f64
 #define X2MIN 0.0_f64
@@ -53,8 +53,8 @@ program unit_test
         eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
-        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) 
-        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) *sin(2.0_f64*sll_pi*eta1)
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
      end do
   end do
 
@@ -113,12 +113,13 @@ program unit_test
   acc2 = 0.0_f64
   do j=0,NPTS2-2
      do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1/2
+        eta2       = X2MIN + real(j,f64)*h2/2
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref                 = reference(i+1,j+1)
+        ref                 =sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)! reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        print*, node_val,ref,ref-node_val
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
         !    'theoretical = ', ref
         acc        = acc + abs(node_val-ref)
@@ -176,12 +177,13 @@ program unit_test
   acc2 = 0.0_f64
   do j=0,NPTS2-1
      do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1/2
+        eta2       = X2MIN + real(j,f64)*h2/2
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref                 = reference(i+1,j+1)
+        ref                 = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1) !reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        print*, ref,node_val,node_val-ref
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
          !    'theoretical = ', ref
         acc1        = acc1 + abs(node_val-ref)

@@ -5,7 +5,6 @@
 !
 ! DESCRIPTION:
 !> @file mesh.F90
-!! @namespace sll_nu_cart_mesh
 !! @author Madaule Eric
 !! @brief module for non uniform cartesian mesh
 !! @details In this module we define a non uniform cartesian mesh type.
@@ -32,6 +31,10 @@ module sll_nu_cart_mesh
      sll_real64,dimension(:,:),allocatable :: jac
 !!$     logical :: unif1, unif2 ! .true. if the meshing is uniform, .fale. else, just for optimization
   end type non_unif_cart_mesh
+
+  interface delete
+     module procedure delete_nu_cart_mesh
+  end interface delete
 
 contains
 
