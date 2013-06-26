@@ -59,6 +59,7 @@ use sll_logical_meshes
 use sll_parallel_array_initializer_module
 use sll_coordinate_transformation_2d_base_module
 use sll_gnuplot_parallel
+use sll_multigrid_parallel
 
 implicit none
 
@@ -83,7 +84,7 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
       
  type(layout_4D), pointer :: sequential_x1x2 !< layout 4d sequential in x1x2
  type(layout_4D), pointer :: sequential_x3x4 !< layout 4d sequential in x3x4
- type(layout_2D), pointer :: split_layout    !< layout 2d not sequential in x1x2
+ type(layout_2D), pointer :: layout_xy    !< layout 2d not sequential in x1x2
  type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4 !< transpose x to v
  type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2 !< transpose v to x 
  
@@ -284,29 +285,30 @@ contains
     call sim%interp_x4%initialize( &
          sim%nc_x4+1, eta4_min, eta4_max, PERIODIC_SPLINE)
 
-    sim%split_layout => new_layout_2D( sll_world_collective )
+    sim%layout_xy => new_layout_2D( sll_world_collective )
 
-    call initialize_layout_with_distributed_2D_array( &
-         sim%nc_x1+1,                                 &
-         sim%nc_x2+1,                                 &
-         sim%nproc_x1,                                &
-         sim%nproc_x2,                                &
-         sim%split_layout )
+    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &  
+                                                      sim%nc_x2+1, &
+                                                             2, 2, &
+                                                      sim%layout_xy )
 
-    call compute_local_sizes_2d( sim%split_layout, loc_sz_x1, loc_sz_x2) 
+    call compute_local_sizes_2d( sim%layout_xy, loc_sz_x1, loc_sz_x2) 
 
     ! This layout is also useful to represent the charge density array. Since
     ! this is a result of a local reduction on x3 and x4, the new layout is
     ! 2D but with the same dimensions of the process mesh in x1 and x2.
     SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
     SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
+
+    call initialize_multigrid(sim%layout_xy, 1)
+stop
     
     call compute_charge_density( loc_sz_x1,              &
                                  loc_sz_x2,              &
                                  sim%f_x3x4,             &
                                  sim%rho )
 
-    global_indices(1:2) =  local_to_global_2D( sim%split_layout, (/1, 1/) )
+    global_indices(1:2) =  local_to_global_2D( sim%layout_xy, (/1, 1/) )
        
     call sll_gnuplot_rect_2d_parallel( &
          eta1_min+(global_indices(1)-1)*delta_eta1, delta_eta1, &

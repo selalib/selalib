@@ -1,7 +1,7 @@
 subroutine gscale(sx,ex,sy,ey,a,avo,acorr,comm2d,nx,ny)
 use mpi
 #include "sll_working_precision.h"
-#include "mgd2.h"
+
 sll_int32  :: sx,ex,sy,ey,nx,ny
 sll_real64 :: a(sx-1:ex+1,sy-1:ey+1),avo,acorr
 sll_int32  :: comm2d
@@ -18,13 +18,8 @@ sll_int32  :: comm2d
 !------------------------------------------------------------------------
 sll_real64 :: avloc,av
 sll_int32  :: i,j,ierr
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
-!
+
 ! determine average value
-!
 avloc=0.0d0
 do j=sy,ey
    do i=sx,ex
@@ -48,9 +43,5 @@ do j=sy,ey
     a(i,j)=a(i,j)+acorr
   end do
 end do
-
-# if DEBUG
-timing(49)=timing(49)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine 

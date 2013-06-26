@@ -17,9 +17,7 @@
 subroutine mgdppde(sxm,exm,sym,eym,nxm,nym,cof,     &
                    sxf,exf,syf,eyf,rf,xl,yl,bd)
 
-use mpi
 #include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,sxf,exf,syf,eyf,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
@@ -27,13 +25,8 @@ sll_real64 :: rf(sxf-1:exf+1,syf-1:eyf+1),xl,yl
 sll_real64 :: dlx,odlxx,dly,odlyy
 sll_int32  :: i,j,is,js
 sll_real64 :: c1, c2, c3, c4
-# if DEBUG
-sll_real64 ::  tinitial
-tinitial=MPI_WTIME()
-# endif
-!
+
 ! calculate off-diagonal terms
-!
 dlx=xl/float(nxm-1)
 odlxx=1.0d0/(dlx*dlx)
 dly=yl/float(nym-1)
@@ -53,9 +46,5 @@ do j=sym,eym
     cof(i,j,5)=-(C1+C2+C3+C4)
   end do
 end do
-
-# if DEBUG
-timing(87)=timing(87)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine

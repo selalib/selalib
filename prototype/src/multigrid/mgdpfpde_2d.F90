@@ -17,7 +17,6 @@
 ! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 !------------------------------------------------------------------------
 subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
-use mpi
 #include "sll_working_precision.h"
 #include "mgd2.h"
 
@@ -32,18 +31,37 @@ tinitial=MPI_WTIME()
 # endif
 
 dlx=xl/float(nxf-1)
-todlxx=2.0d0/(dlx*dlx)
 dly=yl/float(nyf-1)
-todlyy=2.0d0/(dly*dly)
-do j=syf,eyf
-  do i=sxf,exf
-    rij=r(i,j)
-    cof(i,j,1)=todlxx/(rij+r(i-1,j))
-    cof(i,j,2)=todlxx/(rij+r(i+1,j))
-    cof(i,j,3)=todlyy/(rij+r(i,j-1))
-    cof(i,j,4)=todlyy/(rij+r(i,j+1))
-  end do
-end do
+
+#ifdef POLAR
+
+   todlxx=1.0d0/(dlx*dlx)
+   todlyy=1.0d0/(dly*dly)
+   do j=syf,eyf
+     do i=sxf,exf
+       rij=r(i,j)
+       cof(i,j,1)=1./(dlx*(rij+r(i-1,j)))+todlxx
+       cof(i,j,2)=1./(dlx*(rij+r(i+1,j)))+todlxx
+       cof(i,j,3)=4./((rij+r(i,j-1))*(rij+r(i,j-1))*dly)
+       cof(i,j,4)=4./((rij+r(i,j+1))*(rij+r(i,j-1))*dly)
+     end do
+   end do
+
+#else
+
+   todlxx=2.0d0/(dlx*dlx)
+   todlyy=2.0d0/(dly*dly)
+   do j=syf,eyf
+     do i=sxf,exf
+       rij=r(i,j)
+       cof(i,j,1)=todlxx/(rij+r(i-1,j))
+       cof(i,j,2)=todlxx/(rij+r(i+1,j))
+       cof(i,j,3)=todlyy/(rij+r(i,j-1))
+       cof(i,j,4)=todlyy/(rij+r(i,j+1))
+     end do
+   end do
+
+#endif
 
 ! enforce wall BCs 
 
@@ -75,9 +93,5 @@ do j=syf,eyf
     cof(i,j,5)=-(cof(i,j,1)+cof(i,j,2)+cof(i,j,3)+cof(i,j,4))
   end do
 end do
-
-# if DEBUG
-timing(84)=timing(84)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine

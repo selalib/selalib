@@ -247,15 +247,16 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ############################################################
 
    ADD_LIBRARY( sll_simulations STATIC 
-     simulation_base_class.F90
-     simulation_4d_vlasov_poisson_cartesian.F90
-     simulation_4d_vlasov_poisson_general.F90
-     simulation_4d_vlasov_poisson_polar.F90
-     simulation_4d_drift_kinetic_cartesian_finite_volume.F90
-     simulation_6d_vlasov_poisson_cartesian.F90)
+                simulation_base_class.F90
+                simulation_4d_vlasov_poisson_cartesian.F90
+                simulation_4d_vlasov_poisson_general.F90
+                simulation_4d_vlasov_poisson_polar.F90
+                simulation_4d_drift_kinetic_cartesian_finite_volume.F90
+                simulation_6d_vlasov_poisson_cartesian.F90)
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
+                       sll_multigrid
                        sll_fft
                        sll_electric_field_accumulators
                        sll_scalar_field
