@@ -131,7 +131,6 @@ write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
 call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
-stop
 
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)

@@ -76,6 +76,8 @@ poisson%iguess = 0 ! no initial guess
 
 call solve_poisson_polar_mudpack(poisson, phi, rhs)
 
+call plot_field( "mudpack_polar_cos.dat", phi )
+
 errmax = maxval(abs(phi_cos-phi))
 write(*,201) errmax
 if ( errmax > tolmax ) then
@@ -95,7 +97,9 @@ poisson%iguess = 0 ! no initial guess
 
 call solve_poisson_polar_mudpack(poisson, phi, rhs)
 
-errmax = maxval(abs(phi_cos-phi))
+call plot_field( "mudpack_polar_sin.dat", phi )
+
+errmax = maxval(abs(phi_sin-phi))
 write(*,201) errmax
 if ( errmax > tolmax ) then
    print*,'FAILED'
@@ -144,5 +148,22 @@ sll_real64 function f_sin( r, theta)
          + r*sin(n*theta))*r)/r
 
 end function f_sin
+
+subroutine plot_field( filename, field )
+
+   character(len=*) :: filename
+   sll_real64       :: field(:,:)
+   open(10, file=filename)
+   do i =1,nr
+      do j=1,ntheta
+         write(10,*) sngl(r(i)*cos(theta(j))), &
+                     sngl(r(i)*sin(theta(j))), &
+                     sngl(field(i,j))
+      end do
+      write(10,*) 
+   end do
+   close(10)
+
+end subroutine plot_field
 
 end program test_mudpack_polar
