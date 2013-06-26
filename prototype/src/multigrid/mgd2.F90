@@ -2,9 +2,12 @@
 !> \authors Pierre Navaro
 !> \remark this a refactored version of Bernard Bunner code 
 !> (http://cs-www.cs.yale.edu/homes/douglas-craig/mgnet-codes-bunner.html)
-module sll_mgd2
-use mpi
+module mgd2
 #include "sll_working_precision.h"
+use mpi
+use gxch1_2d
+
+implicit none
 
 sll_int32 :: nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20)
 sll_int32 :: kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20)
@@ -37,6 +40,7 @@ type, public :: mg_solver
 end type mg_solver
 
 
+
 contains
 
 !>  \function
@@ -46,22 +50,22 @@ contains
 !>  product decomposition.  The values returned assume a "global" domain  \n
 !>  in [1:n]
 subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
-#include "sll_working_precision.h"
-#include "mgd2.h"
 
-sll_int32  :: n, numprocs, myid, s, e
-sll_int32  :: nlocal
-sll_int32  :: deficit
-nlocal  = n / numprocs
-s = myid * nlocal + 1
-deficit = mod(n,numprocs)
-s = s + min(myid,deficit)
-if (myid .lt. deficit) then
-   nlocal = nlocal + 1
-endif
-e = s + nlocal - 1
-if (e .gt. n .or. myid .eq. numprocs-1) e = n
-return
+   sll_int32  :: n, numprocs, myid, s, e
+   sll_int32  :: nlocal
+   sll_int32  :: deficit
+
+   nlocal  = n / numprocs
+   s = myid * nlocal + 1
+   deficit = mod(n,numprocs)
+   s = s + min(myid,deficit)
+   if (myid .lt. deficit) then
+      nlocal = nlocal + 1
+   endif
+   e = s + nlocal - 1
+   if (e .gt. n .or. myid .eq. numprocs-1) e = n
+   return
+
 end subroutine
 
 !> Initialize the parallel multigrid solver: subdomain indices and
@@ -123,7 +127,7 @@ end subroutine
 !> make the change
 !>
 !> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-subroutine initialize(my_block, my_mg, nerror)
+subroutine initialize_mgd2(my_block, my_mg, nerror)
 #include "mgd2.h"
 
 sll_int32       :: nerror
@@ -554,9 +558,6 @@ end do
 # endif
 # endif
 
-# if DEBUG
-timing(81)=timing(81)+MPI_WTIME()-tinitial
-# endif
 return
 end subroutine
 
@@ -600,7 +601,7 @@ end subroutine
 !>             gscale, gxch1lin, gxch1cor,
 !>               -> rescale pressure and density around average values
 !>------------------------------------------------------------------------
-subroutine mgdsolver(my_block,my_mg,phif,rhsf,r,work, &
+subroutine mgd2_solver(my_block,my_mg,phif,rhsf,r,work, &
                      rro,iter,nprscr,nerror)
 #include "mgd2.h"
 sll_real64      :: phif(:,:),rhsf(:,:)
@@ -711,10 +712,12 @@ else
       ic=kcbgn(k)
       if (lev.eq.1) then
         call mgdppde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                     sxf,exf,syf,eyf,work(ir1),my_mg%xl,my_mg%yl,my_block%bd)
+                     sxf,exf,syf,eyf,work(ir1),        &
+                     my_mg%xl,my_mg%yl,my_block%bd)
       else
         call mgdppde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                     sxf,exf,syf,eyf,work(ir2),my_mg%xl,my_mg%yl,my_block%bd)
+                     sxf,exf,syf,eyf,work(ir2),        &
+                     my_mg%xl,my_mg%yl,my_block%bd)
       end if
       if (k.gt.1) then
         sxc=sxr(k-1)
@@ -728,12 +731,16 @@ else
         if (lev.eq.1) then
           call mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,work(ir2), &
                         sxf,exf,syf,eyf,nxf,nyf,work(ir1), &
-                        my_mg%comm2d,my_block%id,my_block%neighbor,my_block%bd,itype,jtype)
+                        my_mg%comm2d,my_block%id,          &
+                        my_block%neighbor,my_block%bd,     &
+                        itype,jtype)
           lev=2
         else
           call mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,work(ir1), &
                         sxf,exf,syf,eyf,nxf,nyf,work(ir2), &
-                        my_mg%comm2d,my_block%id,my_block%neighbor,my_block%bd,itype,jtype)
+                        my_mg%comm2d,my_block%id,          &
+                        my_block%neighbor,my_block%bd,     &
+                        itype,jtype)
           lev=1
         end if
         sxf=sxc
@@ -762,8 +769,10 @@ call mgdsetf(sxf,exf,syf,eyf,work(ipf),work(irf),phif,rhsf)
 !
 kcur=my_block%ngrid
 do iter=1,my_mg%maxcy
-  call mgdkcyc(work,rhsf,kcur,my_mg%kcycle,my_mg%iprer,my_mg%ipost,my_mg%iresw, &
-               my_mg%comm2d,my_block%id,my_block%neighbor,my_block%bd,my_mg%phibc)
+  call mgdkcyc(work,rhsf,kcur,my_mg%kcycle,my_mg%iprer,     &
+               my_mg%ipost,my_mg%iresw, my_mg%comm2d,       &
+               my_block%id,my_block%neighbor,my_block%bd,   &
+               my_mg%phibc)
   sxm=sxk(my_block%ngrid)
   exm=exk(my_block%ngrid)
   sym=syk(my_block%ngrid)
@@ -792,13 +801,18 @@ if (my_mg%isol.eq.1) then
 else
   avo=0.0d0
 end if
-call gscale(my_block%sx,my_block%ex,my_block%sy,my_block%ey,phif,avo,acorr,my_mg%comm2d,my_mg%nx,my_mg%ny)
+call gscale(my_block%sx,my_block%ex,my_block%sy,my_block%ey, &
+            phif,avo,acorr,my_mg%comm2d,my_mg%nx,my_mg%ny)
 !
 ! exchange boundary data and impose periodic BCs
 !
-call gxch1lin(phif,my_mg%comm2d,my_block%sx,my_block%ex,my_block%sy,my_block%ey,my_block%neighbor,my_block%bd, &
-              ikdatatype(my_block%ngrid),jkdatatype(my_block%ngrid))
-call gxch1cor(phif,my_mg%comm2d,sxm,exm,sym,eym,my_block%neighbor,my_block%bd, &
+call gxch1lin(phif,my_mg%comm2d,my_block%sx,my_block%ex,     &
+              my_block%sy,my_block%ey,my_block%neighbor,     &
+              my_block%bd, ikdatatype(my_block%ngrid),       &
+              jkdatatype(my_block%ngrid))
+
+call gxch1cor(phif,my_mg%comm2d,sxm,exm,sym,eym,             &
+              my_block%neighbor,my_block%bd,                 &
               ijkdatatype(my_block%ngrid))
 # if WMGD
 !
@@ -810,15 +824,9 @@ call mgdbdry(sx,ex,sy,ey,phif,my_block%bd,my_mg%vbc)
 if (my_mg%isol.eq.1) then
   if (nprscr.and.my_block%id.eq.0) write(6,110) relmax,iter,acorr
 110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
-# if DEBUG
-  timing(95)=timing(95)+MPI_WTIME()-tinitial
-# endif
 else
   if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
 120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
-# if DEBUG
-  timing(96)=timing(96)+MPI_WTIME()-tinitial
-# endif
 end if
 
 return
@@ -829,13 +837,10 @@ end subroutine
 !> neighbors
 subroutine grid1_type(my_block,itype,jtype,ijtype,sx,ex,sy,ey)
 #include "mgd2.h"
-sll_int32  :: itype,jtype,ijtype,realtype,sx,ex,sy,ey,ierr
-sll_int32  :: ier
+sll_int32  :: itype,jtype,ijtype,realtype,sx,ex,sy,ey
+sll_int32  :: ierr
 type(block) :: my_block
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
+
 realtype = MPI_REAL8
 !
 ! datatype for one row
@@ -853,10 +858,7 @@ call MPI_TYPE_COMMIT(jtype,ierr)
 call MPI_TYPE_CONTIGUOUS(1,realtype,ijtype,ierr)
 call MPI_TYPE_COMMIT(ijtype,ierr)
 
-# if DEBUG
-timing(7)=timing(7)+MPI_WTIME()-tinitial
-# endif
 return
 end subroutine
 
-end module sll_mgd2
+end module mgd2

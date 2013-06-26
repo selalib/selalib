@@ -11,9 +11,8 @@
 subroutine mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,rc,            &
                        sxf,exf,syf,eyf,nxf,nyf,rf,            &
                        comm2d,myid,neighbor,bd,itype,jtype)
-use mpi
+use gxch1_2d
 #include "sll_working_precision.h"
-#include "mgd2.h"
 sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,sxf,exf,syf,eyf,nxf,nyf
 sll_int32  :: comm2d,myid,neighbor(8),bd(8),itype,jtype
 
@@ -21,11 +20,6 @@ sll_real64 :: rc(sxc-1:exc+1,syc-1:eyc+1)
 sll_real64 :: rf(sxf-1:exf+1,syf-1:eyf+1)
 
 sll_int32  :: i,j,ic,jc,i1,i2,j1,j2
-
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
 
 if (nxc.lt.nxf) then
   i1=1
@@ -48,13 +42,8 @@ do jc=syc,eyc
     rc(ic,jc)=rf(i,j)
   end do
 end do
-!
-! exchange the boundary values (need only lines, not corner)
-!
-call gxch1lin(rc,comm2d,sxc,exc,syc,eyc,neighbor,bd,itype,jtype)
 
-# if DEBUG
-timing(86)=timing(86)+MPI_WTIME()-tinitial
-# endif
+! exchange the boundary values (need only lines, not corner)
+call gxch1lin(rc,comm2d,sxc,exc,syc,eyc,neighbor,bd,itype,jtype)
 
 end subroutine
