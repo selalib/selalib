@@ -40,6 +40,14 @@ module sll_simulation_4d_qns_general_module
      sll_int32  :: nc_x2
      sll_int32  :: nc_x3
      sll_int32  :: nc_x4
+     ! for QNS spline_degre in each direction
+     sll_int32  :: spline_degree_eta1
+     sll_int32  :: spline_degree_eta2
+     ! for QNS boundary conditions
+     sll_int32  :: bc_left
+     sll_int32  :: bc_right
+     sll_int32  :: bc_bottom
+     sll_int32  :: bc_top
      ! the logical meshes are split in two one for space, one for velocity
      type(sll_logical_mesh_2d), pointer    :: mesh2d_x
      type(sll_logical_mesh_2d), pointer    :: mesh2d_v
@@ -83,6 +91,9 @@ module sll_simulation_4d_qns_general_module
 !!$     type(cubic_spline_1d_interpolator) :: interp_x2
      type(cubic_spline_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
+     ! interpolation any arbitrary spline
+      type(arb_deg_2d_interpolator)     :: interp_rho
+      type(arb_deg_2d_interpolator)     :: interp_phi
      ! Field accumulator
      sll_comp64, dimension(:,:), allocatable :: efield_x1
      sll_comp64, dimension(:,:), allocatable :: efield_x2
@@ -91,11 +102,11 @@ module sll_simulation_4d_qns_general_module
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
      ! for general coordinate QNS, analytical fields
-     procedure(two_var_parametrizable_function), nopass, pointer :: a11_f
-     procedure(two_var_parametrizable_function), nopass, pointer :: a12_f
-     procedure(two_var_parametrizable_function), nopass, pointer :: a21_f
-     procedure(two_var_parametrizable_function), nopass, pointer :: a22_f
-     procedure(two_var_parametrizable_function), nopass, pointer :: c_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: a11_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: a12_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: c_f
    contains
      procedure, pass(sim) :: run => run_4d_qns_general
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen
@@ -118,7 +129,18 @@ contains
    mesh2d_v, &
    transformation_x, &
    init_func, &
-   params )
+   params,&
+   a11_f,&
+   a12_f,&
+   a21_f,&
+   a22_f,&
+   c_f,&
+   spline_degre1,&
+   spline_degre2,&
+   bc_left,&
+   bc_right,&
+   bc_bottom,&
+   bc_top)
 
    type(sll_simulation_4d_qns_general), intent(inout)     :: sim
    type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
@@ -126,11 +148,66 @@ contains
    class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
+   procedure(two_var_parametrizable_function) :: a11_f
+   procedure(two_var_parametrizable_function) :: a12_f
+   procedure(two_var_parametrizable_function) :: a21_f
+   procedure(two_var_parametrizable_function) :: a22_f
+   procedure(two_var_parametrizable_function) :: c_f
+   sll_int32  :: spline_degre1
+   sll_int32  :: spline_degre2
+   sll_int32  :: bc_left
+   sll_int32  :: bc_right
+   sll_int32  :: bc_bottom
+   sll_int32  :: bc_top
+
    sim%mesh2d_x  => mesh2d_x
    sim%mesh2d_v  => mesh2d_v
    sim%transfx   => transformation_x
    sim%init_func => init_func
    sim%params    => params
+   sim%a11_f     => a11_f
+   sim%a12_f     => a12_f
+   sim%a21_f     => a21_f
+   sim%a22_f     => a22_f
+   sim%c_f       => c_f
+   sim%spline_degree_eta1 = spline_degre1
+   sim%spline_degree_eta2 = spline_degre2
+
+   sim%bc_left   = bc_left
+   sim%bc_right  = bc_right
+   sim%bc_bottom = bc_bottom
+   sim%bc_top    = bc_top
+
+
+   call initialize_ad2d_interpolator( &
+        sim%interp_phi, &
+        sim%mesh2d_x%num_cells1 +1, &
+        sim%mesh2d_x%num_cells2 +1, &
+        sim%mesh2d_x%eta1_min, &
+        sim%mesh2d_x%eta1_max, &
+        sim%mesh2d_x%eta2_min, &
+        sim%mesh2d_x%eta2_max, &
+        sim%bc_left, &
+        sim%bc_right, &
+        sim%bc_bottom, &
+        sim%bc_top, &
+        sim%spline_degree_eta1, &
+        sim%spline_degree_eta2)
+
+   call initialize_ad2d_interpolator( &
+        sim%interp_rho, &
+        sim%mesh2d_x%num_cells1 +1, &
+        sim%mesh2d_x%num_cells2 +1, &
+        sim%mesh2d_x%eta1_min, &
+        sim%mesh2d_x%eta1_max, &
+        sim%mesh2d_x%eta2_min, &
+        sim%mesh2d_x%eta2_max, &
+        sim%bc_left, &
+        sim%bc_right, &
+        sim%bc_bottom, &
+        sim%bc_top, &
+        sim%spline_degree_eta1, &
+        sim%spline_degree_eta2)
   end subroutine initialize_4d_qns_general
 
 
@@ -251,84 +328,69 @@ contains
          sim%a11_f, &
          "a11", &
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC ) 
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top) 
 
     a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC ) 
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top) 
 
     a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC ) 
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
     
     a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC ) 
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top) 
 
 
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC )
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
 
     rho => new_scalar_field_2d_discrete_alt( &
          da_data, & ! :-(
-         "rho1", &
+         "rho", &
          sim%interp_rho, &     
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC )
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
 
-    call initialize_ad2d_interpolator( &
-         interp_2d, &
-         NUM_CELLS1+1, &
-         NUM_CELLS2+1, &
-         ETA1MIN, &
-         ETA1MAX, &
-         ETA2MIN, &
-         ETA2MAX, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SPLINE_DEG1, &
-         SPLINE_DEG2 )
-
-    ! interp_2d_ptr => interp_2d
+    SLL_ALLOCATE(values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
 
     phi => new_scalar_field_2d_discrete_alt( &
          values, &
-         "phi1", &
-         interp_2d, &
+         "phi", &
+         sim%interp_phi, &
          transfx, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC )
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
 #endif    
   ! fields initialized -----------------------------------
 

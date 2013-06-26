@@ -934,11 +934,15 @@ contains ! *******************************************************************
     else if((bc_left   == SLL_PERIODIC) .and. (bc_right==SLL_PERIODIC) .and.&
             (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
 
-       qns%tmp_rho_vec = qns%rho_vec
-
-       qns%tmp_rho_vec= qns%tmp_rho_vec-sum(qns%tmp_rho_vec)/(size(qns%tmp_rho_vec))
+       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2) =&
+            qns%rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)
+       
+       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)= &
+            qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)&
+            -sum(qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2))&
+            /(qns%total_num_splines_eta1*qns%total_num_splines_eta2)
        print*, 'moyenne', sum(qns%tmp_rho_vec)
-            
+       
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
 
