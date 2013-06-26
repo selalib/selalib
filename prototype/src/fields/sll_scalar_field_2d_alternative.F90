@@ -474,7 +474,6 @@ contains   ! *****************************************************************
        
        field%point1_1d(:) = point1_1d(:)
        field%point2_1d(:) = point2_1d(:)
- 
     end if
     
     if (present(point1_1d) .and. present(point2_1d) &
@@ -487,8 +486,6 @@ contains   ! *****************************************************************
             point2_1d, &
             sz_point2 )
     end if
-    
-    print*, 'hello'
   end subroutine initialize_scalar_field_2d_discrete_alt
   
   ! need to do something about deallocating the field proper, when allocated
