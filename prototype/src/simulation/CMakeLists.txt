@@ -258,6 +258,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
                        sll_fft
+		       sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
@@ -273,7 +274,8 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_file_io_parallel
                        sll_memory
                        sll_assertion 	
-                       sll_working_precision)
+                       sll_working_precision
+		       deboor_splines)
 
    ADD_DEPENDENCIES(sll_simulations ${SIMULATION_DEPS})
 
