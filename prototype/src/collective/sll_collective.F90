@@ -195,7 +195,8 @@ module sll_collective
   !> @brief Gathers data from all tasks and distribute the combined 
   !!        data to all tasks.
   interface sll_collective_allgather
-     module procedure sll_collective_allgather_int
+     module procedure sll_collective_allgather_int, &
+          sll_collective_allgather_real64
   end interface
 
   !> @brief Gathers data from all tasks and deliver the combined
@@ -575,6 +576,30 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_allgather_int(): MPI_BARRIER()' )
   end subroutine
+
+  subroutine sll_collective_allgather_real64( col, send_buf, send_sz, &
+       recv_buf, recv_sz )
+    type(sll_collective_t), pointer         :: col
+    sll_real64, dimension(:), intent(in)    :: send_buf ! what would change...
+    sll_int32, intent(in)                   :: send_sz
+    sll_real64, dimension(:), intent(inout) :: recv_buf ! would also change
+    sll_int32, dimension(:), intent(in)     :: recv_sz  
+    sll_int32                               :: ierr
+    ! FIXME: Argument checking
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_allgather_int(): MPI_BARRIER()' )
+    call MPI_ALLGATHER( send_buf(:), send_sz, MPI_DOUBLE_PRECISION, &
+                        recv_buf(:), recv_sz, MPI_DOUBLE_PRECISION, &
+                        col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_allgather_int(): MPI_ALLGATHER()' )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_allgather_int(): MPI_BARRIER()' )
+  end subroutine
+
 
   !> @brief Gathers real data from all tasks and 
   !!        deliver the combined data to all tasks
@@ -1029,7 +1054,7 @@ contains !************************** Operations **************************
 !FOR SOME REASON THIS ARGUMENT OF THIS FUNCTION IS DECLARED ALLOCATBLE AND 
 !POSING PROBLEM WITH F95 STANDARD. WE SHOULD COME BACK TO THIS
 !
-#warning sll_collective_alltoallV_int_simple is not fixed
+!warning sll_collective_alltoallV_int_simple is not fixed
   ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
  subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
                                             recv_buf,col )
