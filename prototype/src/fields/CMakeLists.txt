@@ -71,6 +71,5 @@ target_link_libraries(test_scalar_field
 	sll_assertion
 	sll_memory
 	sll_working_precision
-        ${HDF5_LIBRARIES}
 )
 ENDIF(NOT STDF95)
