@@ -1,8 +1,8 @@
 !> Free the MPI datatypes associated witht the multigrid code
 subroutine mgdend(ngrid)
 #include "sll_working_precision.h"
-use sll_mgd2, only:ikdatatype,jkdatatype,ijkdatatype, &
-                   irdatatype,jrdatatype,ijrdatatype
+use mgd2, only:ikdatatype,jkdatatype,ijkdatatype, &
+               irdatatype,jrdatatype,ijrdatatype
 
 #include "mgd2.h"
 

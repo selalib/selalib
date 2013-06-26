@@ -1,11 +1,29 @@
-module gxch1
+module gxch1_2d
+use mpi
+#include "sll_working_precision.h"
+
+# if NBLOCKGR
+sll_int32 :: nisend(2,3)
+sll_int32 :: nirecv(2,3)
+sll_int32 :: nwait
+sll_int32 :: nwaitall
+# else
+sll_int32  :: nsendrecv(2,3)
+# endif
+
+sll_int32  :: nallreduce
+sll_int32  :: nalltoall
+sll_int32  :: nreduce
+
+sll_int32  :: nisendfr
+sll_int32  :: nirecvfr
+sll_int32  :: nwaitallfr
+sll_int32  :: nsteptiming
+logical    :: nocterr
 
 contains
 
 subroutine gxch1cor(a,comm2d,sx,ex,sy,ey,neighbor,bd,ijdatatype)
-use mpi
-#include "sll_working_precision.h"
-#include "mgd2.h"
 sll_int32  :: sx,ex,sy,ey
 sll_real64 :: a(sx-1:ex+1,sy-1:ey+1)
 sll_int32  :: comm2d,neighbor(8),bd(8),ijdatatype
@@ -157,7 +175,7 @@ nsendrecv(2,1)=nsendrecv(2,1)+4
 # endif
 
 # if DEBUG
-timing(60)=timing(60)+MPI_WTIME()-tinitial
+!timing(60)=timing(60)+MPI_WTIME()-tinitial
 # endif
 return
 end subroutine
@@ -165,9 +183,6 @@ end subroutine
 
 subroutine gxch1lin(a,comm2d,sx,ex,sy,ey,neighbor,bd, &
                     idatatype,jdatatype)
-use mpi
-#include "sll_working_precision.h"
-#include "mgd2.h"
 sll_int32  :: sx,ex,sy,ey
 sll_real64 :: a(sx-1:ex+1,sy-1:ey+1)
 sll_int32  :: comm2d,neighbor(8),bd(8),idatatype,jdatatype
@@ -322,10 +337,10 @@ nsendrecv(1,1)=nsendrecv(1,1)+4
 # endif
 
 # if DEBUG
-timing(59)=timing(59)+MPI_WTIME()-tinitial
+!timing(59)=timing(59)+MPI_WTIME()-tinitial
 # endif
 
 end subroutine
 
-end module gxch1
+end module gxch1_2d
 

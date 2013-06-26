@@ -1,26 +1,4 @@
-!> Test problem for 2D multigrid parallel code mgd2. mgd2 solves the
-!> non-separable elliptic equation div(1/r*grad(p))=f on a rectangular
-!> domain with a staggered uniform grid and either periodic or Neumann
-!> (set normal derivative of p at boundary to 0) or Dirichlet (set value
-!> of p at boundary) boundary conditions.
-!>
-!> Here, r is constant and equal to 1 everywhere. The right-hand side
-!> f is chosen so that it corresponds to 
-!>                p=sin(2*pi*wk*x)*sin(2*pi*wk*y),
-!> where k is the wavenumber. The program computes the numerical 
-!> solution and compares it to the exact expression.
-!>
-!> The program also shows how to implement mgd2. The user must define
-!> a few parameters describing the resolution and the number of levels
-!> to operate on, a communicator and a datatype.
-!>
-!> An important feature is that before doing any calculation using
-!> mgdsolver, the user must call mgdinit to initialize the multigrid
-!> parameters. Once this is done, mgdsolver can be called any number
-!> of times, the variables are not overwritten.
-!>
-program test_mgd2
-
+module sll_multigrid_parallel
 
 use sll_collective, only: sll_boot_collective,      &
                           sll_world_collective,     &
@@ -29,35 +7,30 @@ use sll_collective, only: sll_boot_collective,      &
                           sll_get_collective_size
 
 use sll_gnuplot_parallel
-
+use sll_remapper
 use mgd2
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "mgd2.h"
 
+contains
+
+subroutine initialize_multigrid(layout, geometry)
+type(layout_2d), pointer :: layout
+
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: maxcy,kcycle,iprer,ipost,iresw,nwork
 sll_int32  :: ngrid,nxdim,nydim
 sll_real64 :: tolmax
-
-parameter( nxp2=66, nyp2=66)
-parameter( nx=nxp2-2, ny=nyp2-2)
-parameter( nxprocs=2, nyprocs=2)
-parameter( ixp=4, jyq=4, iex=5, jey=5)
-parameter( maxcy=300, tolmax=1.0d-05)
-parameter( kcycle=1, iprer=2, ipost=1, iresw=1)
-parameter( nwork=(4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3)
-parameter( ngrid=max(iex,jey))
-parameter( nxdim=int(float(nxp2-2)/float(nxprocs)+0.99)+2)
-parameter( nydim=int(float(nyp2-2)/float(nyprocs)+0.99)+2)
+sll_int32  :: geometry
+sll_int32, parameter :: CARTESIAN = 1, POLAR = 2
 
 logical           :: nprscr,periods(2)
 sll_int32         :: numprocs,myid,comm2d,sx,ex,sy,ey,neighbor(8),bd(8),iter
 sll_int32         :: realtype,ibdry,jbdry
 sll_int32         :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
 sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
-sll_real64        :: p(nxdim,nydim),r(nxdim,nydim),f(nxdim,nydim),work(nwork)
 sll_real64        :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro,pi
 character(len=1)  :: num(10)
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
@@ -69,11 +42,32 @@ type(mg_solver) :: my_mg
 
 integer :: statut(MPI_STATUS_SIZE)
 
-pi=4.0d0*atan(1.0d0)
+parameter( nxp2=66, nyp2=66)
 
+sll_real64, allocatable  :: p(:,:)
+sll_real64, allocatable  :: r(:,:)
+sll_real64, allocatable  :: f(:,:)
+sll_real64, allocatable  :: work(:)
+sll_real64, allocatable  :: xcoord(:,:)
+sll_real64, allocatable  :: ycoord(:,:)
+
+pi=4.0d0*atan(1.0d0)
+nx=nxp2-2; ny=nyp2-2
+nxprocs=2; nyprocs=2
+ixp=4; jyq=4; iex=5; jey=5
+maxcy=300; tolmax=1.0d-05
+kcycle=1; iprer=2; ipost=1; iresw=1
+nwork=(4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
+ngrid=max(iex,jey)
+nxdim=int(float(nxp2-2)/float(nxprocs)+0.99)+2
+nydim=int(float(nyp2-2)/float(nyprocs)+0.99)+2
+
+SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim), error)
+SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim), error)
+SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim), error)
+SLL_CLEAR_ALLOCATE(work(1:nwork), error)
 ! initialize MPI and create a datatype for real numbers
 
-call sll_boot_collective()
 
 numprocs  = sll_get_collective_size(sll_world_collective)
 myid      = sll_get_collective_rank(sll_world_collective)
@@ -200,7 +194,12 @@ my_mg%nyprocs = nyprocs
 my_mg%ibdry   = ibdry
 my_mg%jbdry   = jbdry
 my_mg%comm2d  = comm2d
-call initialize_mgd2(my_block,my_mg,nerror)
+
+if (geometry == CARTESIAN) then
+   call initialize_mgd2(my_block,my_mg,nerror)
+else if (geometry == POLAR) then
+   call initialize_mgd_polar(my_block,my_mg,nerror)
+end if
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -228,28 +227,37 @@ my_mg%ipost  = ipost
 my_mg%iresw  = iresw
 my_mg%isol   = 2
 
-call mgd2_solver(my_block,my_mg,p,f,r,work, &
-               rro, iter,.true.,nerror)
-
-if (nerror.eq.1) goto 1000
-! compare numerical and exact solutions
-call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny)
-
-call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
-                                  dble(sy-2.0)/hyi, dble(1)/hyi, &
-                                  p, "potential", 1, error)  
+if (geometry == CARTESIAN) then
+   call mgd2_solver(my_block,my_mg,p,f,r,work, &
+                  rro, iter,.true.,nerror)
+   if (nerror.eq.1) goto 1000
+   ! compare numerical and exact solutions
+   call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny)
+   
+   call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
+                                     dble(sy-2.0)/hyi, dble(1)/hyi, &
+                                     p, "potential", 1, error)  
   
-close(8)
-!call mgdend(ngrid)
-print*,"PASSED"
+else if (geometry == POLAR) then
+   call mgd_polar_solver(my_block,my_mg,p,f,r,work, &
+                  rro, iter,.true.,nerror)
+
+   if (nerror.eq.1) goto 1000
+   ! compare numerical and exact solutions
+   call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny)
+   
+   call sll_gnuplot_curv_2d_parallel(xcoord, ycoord, &
+                                     p, "potential", 1, error)  
+  
+end if
+
+return
 call sll_halt_collective()
-stop
 1000  write(6,200)
 200   format(/,'ERROR in multigrid code',/)
 close(8)
 stop
-
-contains
+end subroutine initialize_multigrid
 
 !> Initialize the pressure, density, and right-hand side of the
 !> elliptic equation div(1/r*grad(p))=f
@@ -307,4 +315,4 @@ write(6,100) errloc/float(nx*ny),err/float(nx*ny)
 
 end subroutine
 
-end program test_mgd2
+end module sll_multigrid_parallel
