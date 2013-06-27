@@ -534,10 +534,58 @@ contains
     sll_real64 :: period2
     sll_int32  :: order1
     sll_int32  :: order2
+    logical    :: user_coords
+
+    if(present(eta1_coords) .and. (.not. present(size_eta1_coords))) then
+       print *, 'compute_interpolants_ad2d(), ERROR: if eta1_coords is ', &
+            'passed, its size must be specified as well through ', &
+            'size_eta1_coords.'
+       stop
+    end if
+
+    if(present(eta2_coords) .and. (.not. present(size_eta2_coords))) then
+       print *, 'compute_interpolants_ad2d(), ERROR: if eta2_coords is ', &
+            'passed, its size must be specified as well through ', &
+            'size_eta2_coords.'
+       stop
+    end if
+    
+    if( (present(eta1_coords) .and. (.not. present(eta2_coords))) .or.
+        (present(eta2_coords) .and. (.not. present(eta1_coords))) ) then
+       print *, 'compute_interpolants_ad2d(), ERROR: if either, ', &
+            'eta1_coords or eta2_coords is specified, the other must be also.'
+       stop
+    end if
+
+    if( present(eta1_coords) .and. present(eta2_coords) ) then
+       user_coords = .true.
+    else
+       user_coords = .false.
+    end if
+
+    if(user_coords .eqv. .true.) then
+       sz1 = size_eta1_coords
+       sz2 = size_eta2_coords
+    else ! size depends on BC combination
+
+       select case (interpolator%bc_selector)
+       case (0) ! 1. periodic-periodic
+          sz1 = interpolator%num_pts1-1
+          sz2 = interpolator%num_pts2-1
+       case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+          sz1 = interpolator%num_pts1
+          sz2 = interpolator%num_pts2-1
+       case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
+          sz1 = interpolator%num_pts1-1
+          sz2 = interpolator%num_pts2
+       case (585) ! 4. dirichlet in all sides
+          sz1 = interpolator%num_pts1
+          sz2 = interpolator%num_pts2
+       case default
+          print *, 'compute_interpolants_ad2d():BC combination not implemented.'
+       end select
 
 
-    sz1 = size_eta1_coords
-    sz2 = size_eta2_coords
     !PRINT *, 'SZ1 = ', SZ1, 'SZ2 = ', SZ2, 'DATA: ', SIZE(DATA_ARRAY,1), SIZE(DATA_ARRAY,2)
     SLL_ASSERT(sz1 .le. interpolator%num_pts1* interpolator%num_pts1)
     SLL_ASSERT(sz2 .le. interpolator%num_pts2* interpolator%num_pts2)
