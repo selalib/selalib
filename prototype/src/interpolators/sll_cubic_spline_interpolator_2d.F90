@@ -48,11 +48,14 @@ module sll_cubic_spline_interpolator_2d
      procedure :: interpolate_value => interpolate_value_cs2d
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs2d
      procedure :: interpolate_derivative_eta2 => interpolate_deriv2_cs2d
-     procedure, pass:: interpolate_array => spline_interpolate2d
-     procedure, pass:: interpolate_array_disp => spline_interpolate2d_disp
+     procedure, pass :: interpolate_array => spline_interpolate2d
+     procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
+     procedure, pass :: set_coefficients => set_coefficients_cs2d
+     procedure, pass :: get_coefficients => get_coefficients_cs2d
+    ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
 #endif
   end type cubic_spline_2d_interpolator
-
+  
   interface delete
      module procedure delete_cubic_spline_2d_interpolator
   end interface delete
@@ -143,10 +146,21 @@ contains
   subroutine cubic_spline_2d_compute_interpolants( interpolator, data_array )
     type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
 #else
-  subroutine compute_interpolants_cs2d( interpolator, data_array )
+  subroutine compute_interpolants_cs2d( &
+       interpolator, &
+       data_array, &
+       eta1_coords, &
+       size_eta1_coords, &
+       eta2_coords, &
+       size_eta2_coords )
+
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:,:), intent(in) :: data_array
+    sll_real64, dimension(:), intent(in),optional   :: eta1_coords
+    sll_real64, dimension(:), intent(in),optional   :: eta2_coords
+    sll_int32, intent(in), optional                 :: size_eta1_coords
+    sll_int32, intent(in),optional                  :: size_eta2_coords
     call compute_spline_2D( data_array, interpolator%spline )
   end subroutine
 
@@ -275,8 +289,8 @@ contains
     
     call compute_spline_2D( data_in, this%spline )
 
-    if(this%bc_type1 == PERIODIC_SPLINE .and. &
-       this%bc_type2 == PERIODIC_SPLINE ) then
+    if(this%bc_type1 == SLL_PERIODIC .and. &
+       this%bc_type2 == SLL_PERIODIC ) then
        
        do j = 1, num_points2
           do i = 1, num_points1
@@ -294,8 +308,8 @@ contains
           end do
        end do
 
-    else if(this%bc_type1 == HERMITE_SPLINE .and. &
-            this%bc_type2 == HERMITE_SPLINE ) then
+    else if(this%bc_type1 == SLL_HERMITE .and. &
+            this%bc_type2 == SLL_HERMITE ) then
        
        do j = 1, num_points2
           do i = 1, num_points1
@@ -331,5 +345,40 @@ contains
     end if
   end function 
 
+  subroutine set_coefficients_cs2d( interpolator, coeffs_1d, coeffs_2d )
+    class(cubic_spline_2d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs_1d
+    sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
+    print *, 'set_coefficients_cs2d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_cs2d
+  
+!!$  subroutine compute_spl_coeff_cs2d(interpolator, &
+!!$       data_array, &
+!!$       eta1_coords, &
+!!$       size_eta1_coords, &
+!!$       eta2_coords, &
+!!$       size_eta2_coords )
+!!$    class(cubic_spline_2d_interpolator), intent(inout)  :: interpolator
+!!$    sll_real64, dimension(:,:), intent(in)     :: data_array
+!!$    sll_real64, dimension(:), intent(in),optional       :: eta1_coords
+!!$    sll_real64, dimension(:), intent(in),optional       :: eta2_coords
+!!$    sll_int32, intent(in), optional                     :: size_eta1_coords
+!!$    sll_int32, intent(in),optional                      :: size_eta2_coords
+!!$
+!!$    print *, 'compute_coefficients_cs2d(): ERROR: This function has not been',&
+!!$         'implemented yet.'
+!!$    stop
+!!$  end subroutine compute_spl_coeff_cs2d
+  
+  
+  function get_coefficients_cs2d(interpolator)
+    class(cubic_spline_2d_interpolator), intent(in)    :: interpolator
+    sll_real64, dimension(:,:), pointer            :: get_coefficients_cs2d     
+    
+    print *, 'get_coefficients_cs2d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_cs2d
 
 end module sll_cubic_spline_interpolator_2d
