@@ -319,6 +319,10 @@ contains
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_base), pointer              :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    sll_real64, dimension(:), allocatable :: send_buf
+    sll_real64, dimension(:), allocatable :: recv_buf
+    sll_int32, dimension(:), allocatable  :: recv_sz
+
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
@@ -369,17 +373,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
-    rho => new_scalar_field_2d_discrete_alt( &
-         da_data, & ! :-(
-         "rho", &
-         sim%interp_rho, &     
-         transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top)
-
+#endif
+    
+#if 0
     SLL_ALLOCATE(values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
 
     phi => new_scalar_field_2d_discrete_alt( &
@@ -398,6 +394,8 @@ contains
 
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+
+    SLL_ALLOCATE(recv_sz(sim%world_size),ierr)
 
     if( sim%my_rank == 0 ) then
        call sll_new_file_id( efield_energy_file_id, ierr )
@@ -450,7 +448,7 @@ contains
        sim%nproc_x3 = 1
        sim%nproc_x4 = 1
     end if
-    
+
     nc_x1 = sim%mesh2d_x%num_cells1
     nc_x2 = sim%mesh2d_x%num_cells2
     nc_x3 = sim%mesh2d_v%num_cells1
@@ -468,9 +466,41 @@ contains
     eta3_max = sim%mesh2d_v%eta1_max
     eta4_max = sim%mesh2d_v%eta2_max
 
+    print *, 'sequential_x3x4 mode...'
+    ! Use this information to initialize the layout that describes the result
+    ! of computing rho. This layout is not useful to do sequential operations
+    ! in any of the two available directions. We also initialize the other two
+    ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
+    call initialize_layout_with_distributed_2D_array( &
+         nc_x1, &
+         nc_x2, &
+         sim%nproc_x1, &
+         sim%nproc_x2, &
+         sim%split_rho_layout )
+
+    call compute_local_sizes( sim%split_rho_layout, loc_sz_x1, loc_sz_x2)
+    ! This layout is also useful to represent the charge density array. Since
+    ! this is a result of a local reduction on x3 and x4, the new layout is
+    ! 2D but with the same dimensions of the process mesh in x1 and x2.
+    SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(send_buf(loc_sz_x1*loc_sz_x2), ierr)
+    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
+
+!!$    call initialize_layout_with_distributed_2D_array( &
+!!$         nc_x1+1, &
+!!$         nc_x2+1, &
+!!$         1, &
+!!$         1, &
+!!$         sim%rho_full_layout )
+    
+!    call compute_local_sizes_2d( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
+    SLL_ALLOCATE(sim%rho_full(nc_x1,nc_x2),ierr)
+    SLL_ALLOCATE(recv_buf(nc_x1*nc_x2),ierr)
+
+
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1+1, &
-         nc_x2+1, &
+         nc_x1, &
+         nc_x2, &
          nc_x3+1, &
          nc_x4+1, &
          sim%nproc_x1, &
@@ -479,45 +509,43 @@ contains
          sim%nproc_x4, &
          sim%sequential_x3x4 )
 
-    ! Use this information to initialize the layout that describes the result
-    ! of computing rho. This layout is not useful to do sequential operations
-    ! in any of the two available directions. We also initialize the other two
-    ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
-    call initialize_layout_with_distributed_2D_array( &
-         nc_x1+1, &
-         nc_x2+1, &
-         sim%nproc_x1, &
-         sim%nproc_x2, &
-         sim%split_rho_layout )
-
-    call initialize_layout_with_distributed_2D_array( &
-         nc_x1+1, &
-         nc_x2+1, &
-         1, &
-         1, &
-         sim%rho_full_layout )
+    print *, 'nproc_x1: ', sim%nproc_x1
+    print *, 'nproc_x2: ', sim%nproc_x2
+    print *, 'nproc_x3: ', sim%nproc_x3
+    print *, 'nproc_x4: ', sim%nproc_x4
     
-    call compute_local_sizes_2d( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
-    SLL_ALLOCATE(sim%rho_full(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
+    call compute_local_sizes_4d( sim%sequential_x3x4, &
+         loc_sz_x1, &
+         loc_sz_x2, &
+         loc_sz_x3, &
+         loc_sz_x4 )
+
+    SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
+    ! These dimensions are also the ones needed for the array where we store
+    ! the intermediate results of the charge density computation.
+    SLL_ALLOCATE(sim%partial_reduction(loc_sz_x1,loc_sz_x2, loc_sz_x3),ierr)
+
+
+
+   ! SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
     ! at this point loc_sz_x1 and loc_sz_x2 should be nc_x1+1 and nc_x2+1
     ! respectively
 
 !    SLL_ALLOCATE(ex_field(loc_sz_x1,loc_sz_x2),ierr)
     ! Experiment with a dedicated array to store the values of the electric
     ! field in each point of the grid.
-    SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
+   ! SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
 
-    call initialize_layout_with_distributed_2D_array( &
-         nc_x1+1, &
-         nc_x2+1, &
-         sim%world_size, &
-         1, &
-         sim%rho_seq_x2 )
-    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
-    SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
+!!$    call initialize_layout_with_distributed_2D_array( &
+!!$         nc_x1+1, &
+!!$         nc_x2+1, &
+!!$         sim%world_size, &
+!!$         1, &
+!!$         sim%rho_seq_x2 )
+!!$    call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
+!!$    SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
+!!$    SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
+!!$    SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
  !   SLL_ALLOCATE(ey_field(loc_sz_x1,loc_sz_x2),ierr)
     ! layout for sequential operations in x1 and x2. This is basically just the
     ! flipping of the values between x1,x3 and x2,x4 on the previous layout.
@@ -533,9 +561,10 @@ contains
     sim%nproc_x4 = sim%nproc_x2 
     sim%nproc_x2 = itemp
     
+print *, 'sequential x1x2 mode...'
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1+1, &
-         nc_x2+1, &
+         nc_x1, &
+         nc_x2, &
          nc_x3+1, &
          nc_x4+1, &
          sim%nproc_x1, &
@@ -544,6 +573,8 @@ contains
          sim%nproc_x4, &
          sim%sequential_x1x2 )
     
+    print *, 'sequential_x1x2 mode...'
+
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate four different arrays, one for each
@@ -556,30 +587,16 @@ contains
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
     
-    
-    call compute_local_sizes_4d( sim%sequential_x3x4, &
-         loc_sz_x1, &
-         loc_sz_x2, &
-         loc_sz_x3, &
-         loc_sz_x4 )
 
-    call initialize_layout_with_distributed_2D_array( &
-         nc_x3, &
-         nc_x4, &
-         sim%nproc_x3, &
-         sim%nproc_x4, &
-         sim%split_phi_layout )
 
-    ! This layout is also useful to represent the charge density array. Since
-    ! this is a result of a local reduction on x3 and x4, the new layout is
-    ! 2D but with the same dimensions of the process mesh in x1 and x2.
-    SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
-    
-    ! These dimensions are also the ones needed for the array where we store
-    ! the intermediate results of the charge density computation.
-    SLL_ALLOCATE(sim%partial_reduction(loc_sz_x1,loc_sz_x2, loc_sz_x3),ierr)
+!!$print *, 'do I see this?'
+!!$    call initialize_layout_with_distributed_2D_array( &
+!!$         nc_x1, &
+!!$         nc_x2, &
+!!$         sim%nproc_x1, &
+!!$         sim%nproc_x2, &
+!!$         sim%split_phi_layout )
+!!$
     
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
@@ -595,8 +612,9 @@ contains
     delta3 = sim%mesh2d_v%delta_eta1
     delta4 = sim%mesh2d_v%delta_eta2
 
+  
 
-
+    sim%rho_split(:,:) = 0.0_f64
     call compute_charge_density( sim%mesh2d_x,           &
                                  sim%mesh2d_v,           &
                                  size(sim%f_x3x4,1),     &
@@ -604,22 +622,50 @@ contains
                                  sim%f_x3x4,             &
                                  sim%partial_reduction,  &
                                  sim%rho_split )
-    sim%split_to_full => &
-         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_full_layout, sim%rho_full)
-    call apply_remap_2D( sim%split_to_full, sim%rho_split, sim%rho_full )
 
-    global_indices(1:2) =  &
-         local_to_global_2D( sim%rho_full_layout, (/1, 1/) )
-       
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-         sim%mesh2d_x%delta_eta2, &
+    call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
+
+    recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
+ 
+    call sll_collective_allgather( &
+         sll_world_collective, &
+         send_buf, &
+         size(send_buf), &
+         recv_buf, &
+         recv_sz )
+ 
+    call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
+
+print *, 'rho to be used with the scalar field:'
+print *, 'rank = ', sim%my_rank, sim%rho_full
+
+    rho => new_scalar_field_2d_discrete_alt( &
          sim%rho_full, &
-         "rho_full", &
-         0, &
-         ierr )
+         "rho_field_check", &
+         sim%interp_rho, &     
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
+ 
+    call rho%write_to_file(0)
+!!$    sim%split_to_full => &
+!!$         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_full_layout, sim%rho_full)
+!!$    call apply_remap_2D( sim%split_to_full, sim%rho_split, sim%rho_full )
+
+!!$    global_indices(1:2) =  &
+!!$         local_to_global_2D( sim%rho_full_layout, (/1, 1/) )
+       
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+!!$         sim%mesh2d_x%delta_eta1, &
+!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+!!$         sim%mesh2d_x%delta_eta2, &
+!!$         sim%rho_full, &
+!!$         "rho_full", &
+!!$         0, &
+!!$         ierr )
 #if 0       
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -724,14 +770,14 @@ contains
          sim%mesh2d_x%eta2_min, & ! ok
          sim%mesh2d_x%eta2_max ) ! ok
 
-    sim%efld_seqx1_to_seqx2 => &
-          NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
-
-    sim%seqx1_to_seqx2 => &
-         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
-
-    sim%efld_seqx2_to_split => &
-         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
+!!$    sim%efld_seqx1_to_seqx2 => &
+!!$          NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
+!!$
+!!$    sim%seqx1_to_seqx2 => &
+!!$         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
+!!$
+!!$    sim%efld_seqx2_to_split => &
+!!$         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -1248,6 +1294,7 @@ contains
     sll_real64, intent(in),  dimension(:,:,:,:) :: f       ! local distr. func
     sll_real64, intent(inout),  dimension(:,:,:):: partial ! intermediate res.
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
+
     ! local sizes in the split directions have to be given by caller.
     sll_int32                       :: numpts3
     sll_int32                       :: numpts4
@@ -1255,14 +1302,16 @@ contains
     sll_real64                      :: delta4
 
     sll_int32 :: i, j, k, l
+
+
     
-    numpts3 = mv%num_cells1
-    numpts4 = mv%num_cells2
+    numpts3 = mv%num_cells1+1
+    numpts4 = mv%num_cells2+1
     delta3  = mv%delta_eta1
     delta4  = mv%delta_eta2
 
     partial(:,:,:) = 0.0
-    
+ 
     ! This expects partial to be already initialized to zero!!!
     do k=1,numpts3
        do j=1,numpts2
@@ -1276,10 +1325,11 @@ contains
           end do
        end do
     end do
-    
+
     ! Carry out the final reduction on x3. Note that rho is not initialized
     ! to zero since it may already have the partial charge accumulation from
     ! other species.
+
     do j=1,numpts2
        do i=1,numpts1
           do k=1,numpts3
@@ -1291,7 +1341,108 @@ contains
           end do
        end do
     end do
+
   end subroutine compute_charge_density
+
+  ! Some ad-hoc functions to prepare data for allgather operations. Should
+  ! consider putting this elsewhere.
+
+  subroutine load_buffer( layout, data, buffer )
+    type(layout_2D), pointer   :: layout
+    sll_real64, dimension(:,:), intent(in) :: data
+    sll_real64, dimension(:),  intent(out) :: buffer
+    sll_int32 :: myrank
+    sll_int32 :: data_size
+    sll_int32 :: send_size
+    type(sll_collective_t), pointer :: col
+    sll_int32 :: imin, imax
+    sll_int32 :: jmin, jmax
+    sll_int32 :: size_i, size_j
+    sll_int32 :: i,j
+    sll_int32 :: counter
+
+    col => get_layout_collective( layout )
+    myrank = sll_get_collective_rank( col )
+    data_size = size(data,1)*size(data,2)
+    imin = get_layout_i_min( layout, myrank )
+    imax = get_layout_i_max( layout, myrank )
+    jmin = get_layout_j_min( layout, myrank )
+    jmax = get_layout_j_max( layout, myrank )
+    size_i = imax - imin + 1
+    size_j = jmax - jmin + 1
+print *, 'inside load buffer, data is', data
+    if( data_size .ne. size_i*size_j ) then
+       print *, 'function load_buffer():'
+       print *, 'size(data) = ', size(data,1), size(data,2)
+       print *, 'warning from rank ', myrank
+       print *, 'there seems to be a discrepancy between the data size ', &
+            'passed and the size declared in the layout.'
+       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
+    end if
+print *, 'size_j', size_j, 'size_i', size_i
+    counter=0
+    do j=1,size_j
+       do i=1,size_i
+          counter = counter + 1
+          buffer(counter) = data(i,j)
+       end do
+    end do
+
+  end subroutine load_buffer
+
+  function receive_counts_array( layout, n ) result(rc)
+    type(layout_2D), pointer :: layout
+    sll_int32, intent(in)    :: n
+    sll_int32, dimension(n) :: rc
+    sll_int32 :: i
+    sll_int32 :: imin, imax
+    sll_int32 :: jmin, jmax
+    sll_int32 :: size_i, size_j
+
+    do i=0,n-1
+       imin = get_layout_i_min( layout, i )
+       imax = get_layout_i_max( layout, i )
+       jmin = get_layout_j_min( layout, i )
+       jmax = get_layout_j_max( layout, i )
+       size_i = imax - imin + 1
+       size_j = jmax - jmin + 1
+       rc(i+1)  = size_i*size_j
+    end do
+  end function receive_counts_array
+
+  subroutine unload_buffer( layout, buffer, data )
+    type(layout_2D), pointer                :: layout
+    sll_real64, dimension(:,:), intent(out) :: data
+    sll_real64, dimension(:), intent(in)    :: buffer
+    sll_int32 :: col_sz
+    type(sll_collective_t), pointer :: col
+    sll_int32 :: i, j
+    sll_int32 :: box
+    sll_int32 :: imin, imax
+    sll_int32 :: jmin, jmax
+    sll_int32 :: size_i, size_j
+    sll_int32 :: pos            ! position in buffer
+    col => get_layout_collective( layout )
+    col_sz = sll_get_collective_size( col )
+
+    ! loop over all the boxes in the layout and fill the data array by chunks.
+    pos = 1
+    do box=0,col_sz-1
+       imin = get_layout_i_min( layout, box )
+       imax = get_layout_i_max( layout, box )
+       jmin = get_layout_j_min( layout, box )
+       jmax = get_layout_j_max( layout, box )
+       ! this will fill the data array in whatever order that the boxes
+       ! are ordered.
+       do j=jmin,jmax
+          do i=imin,imax
+             data(i,j) = buffer(pos)
+             pos       = pos + 1
+          end do
+       end do
+    end do
+  end subroutine unload_buffer
+
   
 !!$  ! Super-ugly and ad-hoc but this needs to be done if we use the last point
 !!$  ! to compute the electric fields.

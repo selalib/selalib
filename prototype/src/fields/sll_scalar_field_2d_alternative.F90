@@ -518,7 +518,6 @@ contains   ! *****************************************************************
                   field%T%mesh%delta_eta2 * (i-1)
           end do
        end if
-       
     end if
     
     !if (present(point1_1d) .and. present(point2_1d) &

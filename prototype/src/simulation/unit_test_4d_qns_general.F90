@@ -5,9 +5,9 @@
 !   in the x,y variables.
 ! - parallel
 
-program vlasov_poisson_4d_general
+program qns_4d_general
 #include "sll_working_precision.h"
-  use sll_simulation_4d_vlasov_poisson_general
+  use sll_simulation_4d_qns_general_module
   use sll_collective
   use sll_constants
   use sll_logical_meshes
@@ -18,12 +18,13 @@ program vlasov_poisson_4d_general
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_vp_general)      :: simulation
+  type(sll_simulation_4d_qns_general)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
+  sll_real64, external :: func_zero, func_one
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -47,10 +48,10 @@ program vlasov_poisson_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
-#define NPTS2 32
-#define NPTS3 32
-#define NPTS4 32
+#define NPTS1 8
+#define NPTS2 8
+#define NPTS3 8
+#define NPTS4 8
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
@@ -106,13 +107,25 @@ program vlasov_poisson_4d_general
   landau_params(5) = 0.05!0.01     !eps
 
   ! initialize simulation object with the above parameters
-  call initialize_vp4d_general( &
+  call initialize_4d_qns_general( &
        simulation, &
        mx, &
        mv, &
        transformation_x, &
        sll_landau_initializer_4d, &
-       landau_params )
+       landau_params, &
+       func_one, &
+       func_zero, &
+       func_zero, &
+       func_one, &
+       func_zero, &
+       1, &
+       1, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC )
+
 
 !  ! define the values of the parameters for the landau initializer
 !  gaussian_params(1) = 3.0*sll_pi !xc
@@ -131,13 +144,33 @@ program vlasov_poisson_4d_general
   print *, ' f initialized '
 
   call simulation%run( )
-  call delete(simulation)
+ ! call delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 
   call sll_halt_collective()
 
 
-end program vlasov_poisson_4d_general
+end program qns_4d_general
+
+! External functions used as parameters in the above unit test:
+
+
+function func_one( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in), optional :: params
+  real(8) :: res
+  res = 1.0_8
+end function func_one
+
+function func_zero( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in), optional :: params
+  real(8) :: res
+  res = 0.0_8
+end function func_zero
+
 
 

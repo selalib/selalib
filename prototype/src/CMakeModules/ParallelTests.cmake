@@ -65,7 +65,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
    ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
+   SET(PROCS 2)
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/sim4d_qns_general_input.txt)
    ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
