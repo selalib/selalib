@@ -86,9 +86,9 @@ program nonuniform_spline_tester
   SLL_ALLOCATE(new_node_positions(N_new), err)
   SLL_ALLOCATE(f_new(N_new), err)
   
-  spl_per =>  new_cubic_nonunif_spline_1D( N, PERIODIC_SPLINE)
+  spl_per =>  new_cubic_nonunif_spline_1D( N, SLL_PERIODIC)
 
-  spl_hrmt =>  new_cubic_nonunif_spline_1D( N, HERMITE_SPLINE)
+  spl_hrmt =>  new_cubic_nonunif_spline_1D( N, SLL_HERMITE)
   
   
   do bdr_case=1,2
