@@ -258,6 +258,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
                        sll_fft
+		       sll_general_coordinate_quasi_neutral_solvers
 		       sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
@@ -267,6 +268,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_parallel_array_initializers	
                        sll_remap
                        sll_collective
+		       sll_integration
                        sll_constants
                        sll_utilities
                        sll_coordinate_transformations

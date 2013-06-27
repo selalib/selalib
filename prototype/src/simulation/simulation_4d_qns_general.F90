@@ -317,21 +317,21 @@ contains
     character(len=4) :: cplot
     type(sll_scalar_field_2d_base_ptr), dimension(2,2)    :: a_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
-    class(sll_scalar_field_2d_base), pointer              :: rho
+    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
-
+    sll_real64, dimension(:,:), allocatable :: phi_values
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
-#if 0
+
     ! Start with the fields
     a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
-         transfx, &
+         sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -340,7 +340,7 @@ contains
     a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
-         transfx, &
+         sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -349,7 +349,7 @@ contains
     a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
-         transfx, &
+         sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -358,7 +358,7 @@ contains
     a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
-         transfx, &
+         sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -368,27 +368,24 @@ contains
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
-         transfx, &
+         sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-#endif
-    
-#if 0
-    SLL_ALLOCATE(values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
+
+
+    SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
 
     phi => new_scalar_field_2d_discrete_alt( &
-         values, &
+         phi_values, &
          "phi", &
          sim%interp_phi, &
-         transfx, &
+         sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-#endif    
-  ! fields initialized -----------------------------------
 
     buffer_counter = 1
 
@@ -563,8 +560,8 @@ contains
     
 print *, 'sequential x1x2 mode...'
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1, &
-         nc_x2, &
+         nc_x1+1, &
+         nc_x2+1, &
          nc_x3+1, &
          nc_x4+1, &
          sim%nproc_x1, &
@@ -636,9 +633,6 @@ print *, 'sequential x1x2 mode...'
  
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
-print *, 'rho to be used with the scalar field:'
-print *, 'rank = ', sim%my_rank, sim%rho_full
-
     rho => new_scalar_field_2d_discrete_alt( &
          sim%rho_full, &
          "rho_field_check", &
@@ -666,32 +660,6 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
 !!$         "rho_full", &
 !!$         0, &
 !!$         ierr )
-#if 0       
-    ! With the distribution function initialized in at least one configuration,
-    ! we can proceed to carry out the computation of the electric potential.
-    ! First we need to compute the charge density. Some thoughts:
-    !
-    ! The computation of rho is a reduction process that takes as input a 4d
-    ! array and that should return a 2d array (or alternatively, a 4d array
-    ! of size 1 in the reduced directions). For example, a df of dimensions
-    ! np1 X np2 X np3 X np4 might effectively end up as an array of dimensions
-    ! np1 X np2 X np3 X 1  after a summation of all the values in x4. After a
-    ! second summation along x3, the dimensions would be np1 X np2 X 1  X 1. 
-    ! One simple-minded but inefficient way to prepare the data for the double
-    ! reduction could be to have a layout in a process mesh NP1 X NP2 X 1 X 1
-    ! where NP1xNP2 is the total number of processors available. The problem 
-    ! here is that the end result would still need a layout change to be fed
-    ! into the Poisson solver...
-    !
-    ! So can we do better? Let try working backwards. The desired input for
-    ! the Poisson solver is a 2d array where sequential operations in x1 are
-    ! possible. Hence, the last reduction operation
-    !
-    ! Let's start with the idea that we want to maintain the same number of
-    ! processors busy when we launch the Poisson solver. This means that if the
-    ! original process mesh for the 4d data is NP1xNP2xNP3x1 (we start with a
-    ! layout that permits a reduction in x4), then the processor mesh for the
-    ! Poisson step should be NP1'xNP2'x1x1 where NP1xNP2xNP3 = NP1'xNP2'
 
     sim%seqx3x4_to_seqx1x2 => &
          NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
@@ -720,11 +688,12 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
     ! of cells than points. Is this properly handled by the interpolators??
     ! The interpolators need the number of points and always consider that
     ! num_cells = num_pts - 1. This is a possible source of confusion.
-    
+
     ! endpoints are hardcoded because the logical mesh lives always on the 
     ! unit square. But with the more general logical meshes, this is not
     ! true anymore, so this should be changed to depend on the values stored
     ! in the logical grids.
+
     call sim%interp_x1x2%initialize( &
          nc_x1+1, &
          nc_x2+1, &
@@ -736,7 +705,6 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
          SLL_PERIODIC )
 
     call advection_x1x2(sim,0.5*sim%dt)
-
     ! other test cases use periodic bc's here...        
     call sim%interp_x3%initialize( &
          nc_x3+1, &
@@ -750,34 +718,23 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
          vmax4, &
          SLL_PERIODIC)
 
-    call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
-
     ! Initialize the poisson plan before going into the main loop.
-
     sim%qns => new_general_qn_solver( &
-         1, & ! put in arguments
-         1, &  ! put in arguments
-         sim%mesh2d_x%num_cells1, & ! ok
-         sim%mesh2d_x%num_cells2, & ! ok
+         sim%spline_degree_eta1, & 
+         sim%spline_degree_eta2, & 
+         sim%mesh2d_x%num_cells1, &
+         sim%mesh2d_x%num_cells2, &
          QNS_GAUSS_LEGENDRE, &  ! put in arguments
          QNS_GAUSS_LEGENDRE, &  ! put in arguments
-         SLL_PERIODIC, & ! put in arguments
-         SLL_PERIODIC, &! put in arguments
-         SLL_PERIODIC, &! put in arguments
-         SLL_PERIODIC, &! put in arguments
-         sim%mesh2d_x%eta1_min, &  ! ok
-         sim%mesh2d_x%eta1_max, & ! ok
-         sim%mesh2d_x%eta2_min, & ! ok
-         sim%mesh2d_x%eta2_max ) ! ok
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%mesh2d_x%eta1_min, &  
+         sim%mesh2d_x%eta1_max, & 
+         sim%mesh2d_x%eta2_min, & 
+         sim%mesh2d_x%eta2_max ) 
 
-!!$    sim%efld_seqx1_to_seqx2 => &
-!!$          NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%efield_x1)
-!!$
-!!$    sim%seqx1_to_seqx2 => &
-!!$         NEW_REMAP_PLAN( sim%rho_seq_x1, sim%rho_seq_x2, sim%phi_x1 )
-!!$
-!!$    sim%efld_seqx2_to_split => &
-!!$         NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -834,11 +791,30 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
                                     sim%partial_reduction,  &
                                     sim%rho_split )
 
+       call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
 
+       recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
+ 
+       call sll_collective_allgather( &
+            sll_world_collective, &
+            send_buf, &
+            size(send_buf), &
+            recv_buf, &
+            recv_sz )
+ 
+       call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
-       ! Re-arrange rho_split in a way that permits sequential operations in 
-       ! x1, to feed to the Poisson solver.
-       call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
+       ! the rho field has a pointer to sim%rho_full so it is already 
+       ! 'aware' that the data has changed. However, the interpolation
+       ! coefficients are out of date.
+       !
+       ! It should be seriously considered to modify the interpolators
+       ! in such a way that they always carry a pointer to the data to 
+       ! be interpolated. In such case we would need:
+       ! - a routine to (re-)set this pointer to the data
+       ! - a change of the compute_coefficients interface to set the
+       !   data parameter as optional...
+       call rho%update_interpolation_coefficients(sim%rho_full)
 
        ! It is important to remember a particular property of the periodic 
        ! poisson solver used here: For a given input charge density 
@@ -876,53 +852,13 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
 !!$          ierr )
 
        call solve_quasi_neutral_eq_general_coords( &
-            sim%qns, & ! ok
+            sim%qns, & 
             a_field_mat, &
             c_field, &
             rho, &
             phi )
 
-
-            sim%poisson_plan, &
-            sim%rho_x1, &
-            sim%phi_x1)
- 
-!!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-!!$       
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$         sim%mesh2d_x%delta_eta2, &
-!!$         sim%phi_x1, &
-!!$         "phi_x1", &
-!!$         itime, &
-!!$         ierr )
-
-
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-       !
-       ! Here is where Aurore's general geometry poisson should be included...
-       !
-       !???????????????????????????????????????????????????????????????????????
-       
-
-       ! compute the values of the electric field. rho is configured for 
-       ! sequential operations in x1, thus we start by computing the E_x 
-       ! component.
-       ! The following call is inefficient and unnecessary. The local sizes for
-       ! the arrays should be kept around as parameters basically and not on 
-       ! variables whose content could be anything... This will have to do for 
-       ! now.
-       call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
-
-       call compute_electric_field_eta1( &
-            sim%phi_x1, &
-            loc_sz_x1, &
-            loc_sz_x2, &
-            sim%mesh2d_x%delta_eta1, &
-            sim%efield_x1 )
+#if 0
 
 !!$       ex_field(:,:) = real(sim%efield_x1(:,:))
 !!$
@@ -1162,10 +1098,11 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
 !!$           sim%rho_split,"rho_split",itime,ierr )
 
   !     call plot_fields(itime, sim)
+
+#endif
+   end do ! main loop
 #undef BUFFER_SIZE
 
-   end do ! main loop
-#endif
  end subroutine run_4d_qns_general
 
 
@@ -1188,7 +1125,8 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
           call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
-                global_indices = local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
+                global_indices = &
+                     local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
                 gk = global_indices(3)
@@ -1370,16 +1308,16 @@ print *, 'rank = ', sim%my_rank, sim%rho_full
     jmax = get_layout_j_max( layout, myrank )
     size_i = imax - imin + 1
     size_j = jmax - jmin + 1
-print *, 'inside load buffer, data is', data
-    if( data_size .ne. size_i*size_j ) then
-       print *, 'function load_buffer():'
-       print *, 'size(data) = ', size(data,1), size(data,2)
-       print *, 'warning from rank ', myrank
-       print *, 'there seems to be a discrepancy between the data size ', &
-            'passed and the size declared in the layout.'
-       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
-    end if
-print *, 'size_j', size_j, 'size_i', size_i
+
+!!$    if( data_size .ne. size_i*size_j ) then
+!!$       print *, 'function load_buffer():'
+!!$       print *, 'size(data) = ', size(data,1), size(data,2)
+!!$       print *, 'warning from rank ', myrank
+!!$       print *, 'there seems to be a discrepancy between the data size ', &
+!!$            'passed and the size declared in the layout.'
+!!$       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
+!!$    end if
+!!$print *, 'size_j', size_j, 'size_i', size_i
     counter=0
     do j=1,size_j
        do i=1,size_i
@@ -1469,139 +1407,7 @@ print *, 'size_j', size_j, 'size_i', size_i
 !!$  end subroutine ensure_periodicity_y
 !!$
 
-  ! Temporary utility to compute the values of the electric field given 
-  ! a pointer to an array of double precision values. It uses 
-  ! forward/backward differencing schemes for the end points and a 
-  ! centered one for the interior points. 
-  subroutine compute_electric_field_on_line( &
-       phi, &
-       num_pts, &
-       delta, &
-       efield )
-    
-    sll_real64, dimension(:), intent(in) :: phi
-    sll_int32                            :: num_pts
-    sll_real64, intent(in)               :: delta
-    sll_real64, dimension(:), intent(out):: efield
-    sll_int32                            :: i
-    sll_real64                           :: r_delta  ! reciprocal
-    
-    ! FIXME: check arrays sizes
-    
-    r_delta = 0.5_f64/delta
-
-    ! Do first point:
-    efield(1) = 2.0*r_delta*(-1.5_f64*phi(1) + 2.0_f64*phi(2) - 0.5_f64*phi(3))
-    
-    ! Do the internal values:
-    do i=2,num_pts-1
-       efield(i) = r_delta*(phi(i+1) - phi(i-1))
-    end do
-    
-    ! Do last point:
-    efield(num_pts) = 2.0*r_delta*( 0.5_f64*phi(num_pts-2) - &
-         2.0_f64*phi(num_pts-1) + &
-         1.5_f64*phi(num_pts) )
-  end subroutine compute_electric_field_on_line
   
-  subroutine compute_electric_field_eta1( &
-       phi_x1, &
-       num_pts_x1, &
-       num_pts_x2, &
-       delta_x1, &
-       efield_x1 )
-
-    intrinsic                               :: cmplx
-    sll_real64, dimension(:,:), intent(in)  :: phi_x1
-    sll_int32, intent(in)                   :: num_pts_x1
-    sll_int32, intent(in)                   :: num_pts_x2
-    sll_real64, intent(in)                  :: delta_x1
-    sll_comp64, dimension(:,:), intent(out) :: efield_x1
-    sll_int32                               :: i
-    sll_int32                               :: j
-    sll_real64                              :: r_delta
-    sll_real64                              :: ex
-    ! FIXME: arg checking
-    
-    r_delta = 1.0_f64/delta_x1
-    
-    ! Compute the electric field values on the left and right edges.
-    do j=1,num_pts_x2
-       ! left:
-       ex = -r_delta*(-1.5_f64*phi_x1(1,j) + &
-                       2.0_f64*phi_x1(2,j) - &
-                       0.5_f64*phi_x1(3,j) )
-       efield_x1(1,j) = cmplx(ex,f64)  
-       ! right:
-       ex = -r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
-                      2.0_f64*phi_x1(num_pts_x1-1,j)+&
-                      1.5_f64*phi_x1(num_pts_x1,j) )
-       efield_x1(num_pts_x1,j) = cmplx(ex,f64) 
-    end do
-    
-    ! Electric field in interior points
-    do j=1,num_pts_x2
-       do i=2, num_pts_x1-1
-          ex = -r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
-          efield_x1(i,j) = cmplx(ex,f64)
-       end do
-    end do
-  end subroutine compute_electric_field_eta1
-  
-  ! This function only sets the Ey component of the electric field. NOTE: This
-  ! and the above function have a terrible flaw: they are not independent. 
-  ! compute_electric_field_x2 assumes that compute_electric_field_x1 has been
-  ! called first, thus the ex values have been computed. 
-  ! compute_electric_field_x1() does not have a similar assumption. It would
-  ! be good to change things in order to get rid of these functions.
-  subroutine compute_electric_field_eta2( &
-       phi_x2, &
-       num_pts_x1, &
-       num_pts_x2, &
-       delta_x2, &
-       efield_x2 )
-    
-    intrinsic                               :: cmplx
-    sll_real64, dimension(:,:), intent(in)  :: phi_x2
-    sll_int32, intent(in)                   :: num_pts_x1
-    sll_int32, intent(in)                   :: num_pts_x2
-    sll_real64, intent(in)                  :: delta_x2
-    sll_comp64, dimension(:,:), intent(out) :: efield_x2
-    sll_int32                               :: i
-    sll_int32                               :: j
-    sll_real64                              :: r_delta
-    sll_real64                              :: ex
-    sll_real64                              :: ey
-
-    ! FIXME: arg checking
-    
-    r_delta = 1.0_f64/delta_x2
-    
-    ! Compute the electric field values on the bottom and top edges.
-    do i=1,num_pts_x1
-       ! bottom:
-       ! ... there has to be a better way to do this in fortran :-(
-       ex = real(efield_x2(i,1),f64)
-       ey = -r_delta*(-1.5_f64*phi_x2(i,1) + 2.0_f64*phi_x2(i,2) - &
-                      0.5_f64*phi_x2(i,3))
-       efield_x2(i,1) = cmplx(ex,ey,f64)
-       ! top:
-       ex = real(efield_x2(i,num_pts_x1),f64)
-       ey = -r_delta*(0.5_f64*phi_x2(i,num_pts_x2-2) - &
-                     2.0_f64*phi_x2(i,num_pts_x2-1)+&
-                     1.5_f64*phi_x2(i,num_pts_x2))
-       efield_x2(i,num_pts_x2) = cmplx(ex,ey,f64) 
-    end do
-    
-    ! Electric field in interior points
-    do j=2,num_pts_x2-1
-       do i=1, num_pts_x1
-          ex = real(efield_x2(i,j),f64)
-          ey = -r_delta*0.5_f64*(phi_x2(i,j+1) - phi_x2(i,j-1))
-          efield_x2(i,j) = cmplx(ex,ey,f64) 
-       end do
-    end do
-  end subroutine compute_electric_field_eta2
   
   ! Tentative advection routines.
   subroutine advection_x_1d( dt, vmin, delta_v, num_pts, f_line, f_interp )

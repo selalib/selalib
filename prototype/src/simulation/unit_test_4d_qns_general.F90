@@ -48,10 +48,10 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 8
-#define NPTS2 8
-#define NPTS3 8
-#define NPTS4 8
+#define NPTS1 32
+#define NPTS2 32
+#define NPTS3 32
+#define NPTS4 32
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
@@ -119,8 +119,8 @@ program qns_4d_general
        func_zero, &
        func_one, &
        func_zero, &
-       1, &
-       1, &
+       1, & ! spline degree
+       1, & ! spline degree2
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &

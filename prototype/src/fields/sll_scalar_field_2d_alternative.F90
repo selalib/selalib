@@ -56,6 +56,7 @@ module sll_module_scalar_field_2d_alternative
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_analytic_alt
+
      procedure, pass(field) :: get_transformation => &
           get_transformation_analytic_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -87,6 +88,8 @@ module sll_module_scalar_field_2d_alternative
    contains
    procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_discrete_alt
+     procedure, pass(field) :: update_interpolation_coefficients => &
+          update_coeffs_scalar_field_2d
      procedure, pass(field) :: get_transformation => &
           get_transformation_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -488,6 +491,11 @@ contains   ! *****************************************************************
     nullify(field%point2_1d)
   end subroutine delete_field_2d_discrete_alt
 
+  subroutine update_coeffs_scalar_field_2d( field, data )
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
+    sll_real64, dimension(:,:), intent(in) :: data
+    call field%interp_2d%compute_interpolants( data )
+  end subroutine update_coeffs_scalar_field_2d
 
   function get_transformation_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
