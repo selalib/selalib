@@ -55,6 +55,8 @@ subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
 
   middle = nbandu + 1
 
+  !print*, "ze",size(w,1),size(w,2)
+
   if ( nrow == 1 ) then
     b(1) = b(1) / w(middle,1)
     return
@@ -92,5 +94,6 @@ subroutine banslv ( w, nroww, nrow, nbandl, nbandu, b )
 
   b(1) = b(1) / w(middle,1)
 
+  !print*, 'banslv',b
   return
 end subroutine banslv

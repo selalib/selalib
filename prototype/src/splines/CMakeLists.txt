@@ -5,6 +5,7 @@ ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
 
 ADD_DEPENDENCIES(sll_splines sll_memory 
                              sll_utilities
+			     sll_boundary_condition_descriptors
                              sll_assertion 
                              sll_working_precision)
 
@@ -15,6 +16,7 @@ ADD_DEPENDENCIES(cubic_non_uniform_splines
                              sll_tridiagonal
                              sll_memory 
                              sll_utilities
+			     sll_boundary_condition_descriptors
                              sll_assertion 
                              sll_working_precision)
 
@@ -24,6 +26,7 @@ ADD_DEPENDENCIES(cubic_non_uniform_splines
 SET(SPL_LIBS sll_splines 
              sll_utilities 
              sll_memory 
+	     sll_boundary_condition_descriptors
              sll_assertion 
              sll_constants )
 
