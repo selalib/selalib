@@ -122,6 +122,7 @@ sll_int32,  private :: gi, gj, gk, gl
 sll_real64, private :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 sll_real64, private :: alpha1, alpha2, alpha3, alpha4
 sll_real64, private :: eta1, eta2, eta3, eta4
+sll_real64, private :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_real64, private :: jac_m(2,2), inv_j(2,2)
 sll_int32,  private :: itime, error
 sll_real64, private :: eta1_min, eta2_min, eta3_min, eta4_min
@@ -156,7 +157,6 @@ contains
    sim%nc_x2 = mesh2d_x%num_cells2
    sim%nc_x3 = mesh2d_v%num_cells1
    sim%nc_x4 = mesh2d_v%num_cells2
-
 
   end subroutine initialize_vp4d_polar
 
@@ -194,6 +194,7 @@ contains
     sim%nc_x2 = num_cells_x2
     sim%nc_x3 = num_cells_x3
     sim%nc_x4 = num_cells_x4
+
   end subroutine init_vp4d_par_polar
 
   !> run simulation
@@ -209,20 +210,25 @@ contains
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
     sim%sequential_x3x4  => new_layout_4D( sll_world_collective )
 
+    nc_eta1    = sim%nc_x1
+    nc_eta2    = sim%nc_x2 
+    nc_eta3    = sim%nc_x3
+    nc_eta4    = sim%nc_x4 
+
     delta_eta1 = sim%mesh2d_x%delta_eta1
     delta_eta2 = sim%mesh2d_x%delta_eta2
     delta_eta3 = sim%mesh2d_v%delta_eta1
     delta_eta4 = sim%mesh2d_v%delta_eta2
 
-    eta1_min = sim%mesh2d_x%eta1_min
-    eta2_min = sim%mesh2d_x%eta2_min
-    eta3_min = sim%mesh2d_v%eta1_min
-    eta4_min = sim%mesh2d_v%eta2_min
+    eta1_min   = sim%mesh2d_x%eta1_min
+    eta2_min   = sim%mesh2d_x%eta2_min
+    eta3_min   = sim%mesh2d_v%eta1_min
+    eta4_min   = sim%mesh2d_v%eta2_min
 
-    eta1_max = sim%mesh2d_x%eta1_max
-    eta2_max = sim%mesh2d_x%eta2_max
-    eta3_max = sim%mesh2d_v%eta1_max
-    eta4_max = sim%mesh2d_v%eta2_max
+    eta1_max   = sim%mesh2d_x%eta1_max
+    eta2_max   = sim%mesh2d_x%eta2_max
+    eta3_max   = sim%mesh2d_v%eta1_max
+    eta4_max   = sim%mesh2d_v%eta2_max
 
     call initialize_layout_with_distributed_4D_array( &
          sim%nc_x1+1, sim%nc_x2+1, sim%nc_x3+1, sim%nc_x4+1, &
@@ -300,7 +306,10 @@ contains
     SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
     SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
 
-    call initialize_multigrid(sim%layout_xy, 1)
+    call initialize_multigrid(sim%layout_xy, &
+                              eta1_min, eta1_max, nc_eta1+1, &
+                              eta2_min, eta2_max, nc_eta2+1, &
+                              2)
 stop
     
     call compute_charge_density( loc_sz_x1,              &
