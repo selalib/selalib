@@ -156,8 +156,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
@@ -172,8 +172,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
@@ -188,8 +188,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        const_eta1_min_slope=deriv1_jacobian_polar_f(), &
        const_eta1_max_slope=deriv1_jacobian_polar_f() )
 

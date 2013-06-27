@@ -73,22 +73,22 @@ program radial_1d_SL
   spl_bsl => new_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
-    HERMITE_SPLINE, PERIODIC_SPLINE,&
+    SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
   spl_bsl_nc => new_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
-    HERMITE_SPLINE, PERIODIC_SPLINE,&
+    SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
   spl_fsl => new_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
-    HERMITE_SPLINE, PERIODIC_SPLINE,&
+    SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
   spl_fsl_nc => new_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
-    HERMITE_SPLINE, PERIODIC_SPLINE,&
+    SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
  
