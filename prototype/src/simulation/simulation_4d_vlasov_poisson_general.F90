@@ -522,8 +522,8 @@ contains
          sim%mesh2d_x%eta1_max, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%eta2_max, &
-         PERIODIC_SPLINE, &
-         PERIODIC_SPLINE )
+         SLL_PERIODIC, &
+         SLL_PERIODIC )
 
     call advection_x1x2(sim,0.5*sim%dt)
 
@@ -532,13 +532,13 @@ contains
          nc_x3+1, &
          vmin3, &
          vmax3, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call sim%interp_x4%initialize( &
          nc_x4+1, &
          vmin4, &
          vmax4, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
