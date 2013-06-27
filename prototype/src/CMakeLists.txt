@@ -65,6 +65,8 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
 
+
+
 IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
@@ -83,14 +85,13 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(precision)
    ADD_SUBDIRECTORY(assert)
    ADD_SUBDIRECTORY(constants)
+   ADD_SUBDIRECTORY(boundary_condition_descriptors)
    ADD_SUBDIRECTORY(utilities)
    ADD_SUBDIRECTORY(file_io)
    ADD_SUBDIRECTORY(timer)
    ADD_SUBDIRECTORY(non_linear_solvers)
- #  ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(splines)
    ADD_SUBDIRECTORY(logical_meshes)
-   ADD_SUBDIRECTORY(coordinate_transformations)
    ADD_SUBDIRECTORY(lagrange_interpolation)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
@@ -110,11 +111,12 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(electric_field_accumulators)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(coordinate_transformations)
    ADD_SUBDIRECTORY(mapped_meshes)
    ADD_SUBDIRECTORY(fields)
    
    IF(NOT STDF95)
-   
+      ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(ode_solvers)
       ADD_SUBDIRECTORY(distribution_function)
@@ -126,6 +128,8 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
       ADD_SUBDIRECTORY(simulation)
+
+
 
       FIND_PACKAGE(SUITESPARSE)
       IF(SUITESPARSE_FOUND AND 0)
