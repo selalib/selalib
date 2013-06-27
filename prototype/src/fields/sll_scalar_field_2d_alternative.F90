@@ -465,7 +465,8 @@ contains   ! *****************************************************************
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
     
-   
+    
+    
     if (present(point1_1d) .and. present(point2_1d) &
          .and. present(sz_point1) .and. present(sz_point2)) then 
        
@@ -474,21 +475,63 @@ contains   ! *****************************************************************
        
        field%point1_1d(:) = point1_1d(:)
        field%point2_1d(:) = point2_1d(:)
- 
+       
+    else 
+       if ((bc_left == SLL_PERIODIC ) .AND. ( bc_right == SLL_PERIODIC ) ) then 
+
+          allocate(field%point1_1d(field%T%mesh%num_cells1))
+          
+          do i = 1, field%T%mesh%num_cells1
+             
+             field%point1_1d(i) = field%T%mesh%eta1_min +&
+                  field%T%mesh%delta_eta1 * (i-1)
+          end do
+          
+       else if ((bc_left == SLL_DIRICHLET ) .AND. ( bc_right == SLL_DIRICHLET ) ) then
+          
+          allocate(field%point1_1d(field%T%mesh%num_cells1 + 1))
+          
+          do i = 1, field%T%mesh%num_cells1 + 1
+             
+             field%point1_1d(i) = field%T%mesh%eta1_min +&
+                  field%T%mesh%delta_eta1 * (i-1)
+          end do
+          
+       else if ((bc_bottom == SLL_PERIODIC ) .AND. ( bc_top == SLL_PERIODIC ) ) then 
+          
+          allocate(field%point2_1d(field%T%mesh%num_cells2))
+          
+          do i = 1, field%T%mesh%num_cells2
+             
+             field%point2_1d(i) = field%T%mesh%eta2_min +&
+                  field%T%mesh%delta_eta2 * (i-1)
+          end do
+          
+          
+       else if ((bc_bottom == SLL_DIRICHLET ) .AND. ( bc_top == SLL_DIRICHLET ) ) then
+          
+          allocate(field%point2_1d(field%T%mesh%num_cells2 + 1))
+          
+          do i = 1, field%T%mesh%num_cells2 + 1
+             
+             field%point2_1d(i) = field%T%mesh%eta2_min +&
+                  field%T%mesh%delta_eta2 * (i-1)
+          end do
+       end if
+       
     end if
     
-    if (present(point1_1d) .and. present(point2_1d) &
-         .and. present(sz_point1) .and. present(sz_point2) ) then  
-       
+    !if (present(point1_1d) .and. present(point2_1d) &
+    !    .and. present(sz_point1) .and. present(sz_point2) ) then  
+    
        call  field%interp_2d%compute_interpolants( &
             array_2d, &
             point1_1d, &
             sz_point1, &
             point2_1d, &
             sz_point2 )
-    end if
+   ! end if
     
-    print*, 'hello'
   end subroutine initialize_scalar_field_2d_discrete_alt
   
   ! need to do something about deallocating the field proper, when allocated
