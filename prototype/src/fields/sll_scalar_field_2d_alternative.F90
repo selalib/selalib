@@ -452,7 +452,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
     sll_int32 :: i
-   
+    sll_int32 :: ierr   
     
     
     field%values => array_2d
@@ -470,14 +470,15 @@ contains   ! *****************************************************************
     if (present(point1_1d) .and. present(point2_1d) &
          .and. present(sz_point1) .and. present(sz_point2)) then 
        
-       allocate(field%point1_1d(sz_point1))
-       allocate(field%point2_1d(sz_point2))
+       SLL_ALLOCATE(field%point1_1d(sz_point1),ierr)
+       SLL_ALLOCATE(field%point2_1d(sz_point2),ierr)
        
        field%point1_1d(:) = point1_1d(:)
        field%point2_1d(:) = point2_1d(:)
        
     else 
-       if ((bc_left == SLL_PERIODIC ) .AND. ( bc_right == SLL_PERIODIC ) ) then 
+       if( (bc_left  == SLL_PERIODIC ) .and. &
+           (bc_right == SLL_PERIODIC ) ) then 
 
           allocate(field%point1_1d(field%T%mesh%num_cells1))
           
@@ -523,13 +524,13 @@ contains   ! *****************************************************************
     !if (present(point1_1d) .and. present(point2_1d) &
     !    .and. present(sz_point1) .and. present(sz_point2) ) then  
     
-       call  field%interp_2d%compute_interpolants( &
-            array_2d, &
-            point1_1d, &
-            sz_point1, &
-            point2_1d, &
-            sz_point2 )
-   ! end if
+    call field%interp_2d%compute_interpolants( &
+         array_2d, &
+         point1_1d, &
+         sz_point1, &
+         point2_1d, &
+         sz_point2 )
+    ! end if
     
   end subroutine initialize_scalar_field_2d_discrete_alt
   
