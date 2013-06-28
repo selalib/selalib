@@ -1,4 +1,5 @@
 ADD_LIBRARY(deboor_splines STATIC
+  dvalue2d.f90
   bvalue2d.f90
   spli2d_custom.f90
   spli2d_perper.f90
