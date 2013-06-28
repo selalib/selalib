@@ -62,12 +62,6 @@ if (mod(my_mg%ny,my_mg%nyprocs).ne.0) then
   nerror=1
   return
 end if
-100 format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
-           'nxprocs=',i3,/,'cannot use the new version of the ',  &
-           'multigrid code',/)
-110 format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
-           'nyprocs=',i3,/,'cannot use the new version of the ',  &
-           'multigrid code',/)
 
 !
 ! check that the dimensions are correct
@@ -84,12 +78,6 @@ if ((my_mg%ny+1).ne.j) then
   nerror=1
   return
 end if
-130  format(/,'ERROR in mgdinit: nxp1=',i3,' <> ixp*2**(iex-1)+1=', &
-            i3,/,'-> adjust the multigrid parameters ixp and iex', &
-            ' in main',/)
-140  format(/,'ERROR in mgdinit: nyp1=',i3,' <> jyq*2**(jey-1)+1=', &
-            i3,/,'-> adjust the multigrid parameters jyq and jey', &
-            ' in main',/)
 !
 ! check that the number of points at the coarser level is not smaller
 ! than the number of processes in either direction
@@ -104,16 +92,6 @@ if (my_block%jyq.lt.my_mg%nyprocs) then
   nerror=1
   return
 end if
-150  format(/,'ERROR in mgdinit: ixp=',i3,' < nxprocs=',i3,/, &
-            ' there must be at least one grid point at the ', &
-            'coarsest grid level',/, &
-            '-> increase ixp and decrease iex correspondingly', &
-            ' in main',/)
-160  format(/,'ERROR in mgdinit: jyq=',i3,' < nyprocs=',i3,/, &
-            ' there must be at least one grid point at the ', &
-            'coarsest grid level',/, &
-            '-> increase jyq and decrease jey correspondingly', &
-            ' in main',/)
 !
 ! check that coarsifying takes place in all directions at the finest
 ! grid level
@@ -130,12 +108,6 @@ if (my_block%ngrid.gt.1) then
     return
   end if
 end if
-170  format(/,'ERROR in mgdinit: ngrid=',i3,' iex=',i3, &
-            /,'no coarsifying at the finest grid level in x-direction', &
-            /,'this is not allowed by the mutligrid code',/)
-180  format(/,'ERROR in mgdinit: ngrid=',i3,' jey=',i3, &
-            /,'no coarsifying at the finest grid level in y-direction', &
-            /,'this is not allowed by the mutligrid code',/)
 !------------------------------------------------------------------------
 ! define all grid levels
 ! I have adopted the same notations as in Mudpack as far as possible.
@@ -243,6 +215,34 @@ do k=my_block%ngrid-1,1,-1
   end do
 end do
 
+100 format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
+           'nxprocs=',i3,/,'cannot use the new version of the ',  &
+           'multigrid code',/)
+110 format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
+           'nyprocs=',i3,/,'cannot use the new version of the ',  &
+           'multigrid code',/)
+130  format(/,'ERROR in mgdinit: nxp1=',i3,' <> ixp*2**(iex-1)+1=', &
+            i3,/,'-> adjust the multigrid parameters ixp and iex', &
+            ' in main',/)
+140  format(/,'ERROR in mgdinit: nyp1=',i3,' <> jyq*2**(jey-1)+1=', &
+            i3,/,'-> adjust the multigrid parameters jyq and jey', &
+            ' in main',/)
+170  format(/,'ERROR in mgdinit: ngrid=',i3,' iex=',i3, &
+            /,'no coarsifying at the finest grid level in x-direction', &
+            /,'this is not allowed by the mutligrid code',/)
+180  format(/,'ERROR in mgdinit: ngrid=',i3,' jey=',i3, &
+            /,'no coarsifying at the finest grid level in y-direction', &
+            /,'this is not allowed by the mutligrid code',/)
+150  format(/,'ERROR in mgdinit: ixp=',i3,' < nxprocs=',i3,/, &
+            ' there must be at least one grid point at the ', &
+            'coarsest grid level',/, &
+            '-> increase ixp and decrease iex correspondingly', &
+            ' in main',/)
+160  format(/,'ERROR in mgdinit: jyq=',i3,' < nyprocs=',i3,/, &
+            ' there must be at least one grid point at the ', &
+            'coarsest grid level',/, &
+            '-> increase jyq and decrease jey correspondingly', &
+            ' in main',/)
 return
 end subroutine
 
@@ -251,7 +251,7 @@ end subroutine
 subroutine mgd_polar_solver(my_block,my_mg,phif,rhsf,r,work, &
                             rro,iter,nprscr,nerror)
 sll_real64      :: phif(:,:),rhsf(:,:)
-sll_real64      :: r(:,:)
+sll_real64      :: r(:)
 sll_real64      :: work(*),rro
 sll_int32       :: iter,nerror
 type(block)     :: my_block
@@ -325,8 +325,6 @@ end do
 ! if not converged in maxcy cycles, issue an error message and quit
 !
 if (my_block%id.eq.0) write(6,100) my_mg%maxcy,relmax
-100   format('WARNING: failed to achieve convergence in ',i5, &
-       ' cycles  error=',e12.5)
 nerror=1
 return
 !------------------------------------------------------------------------
@@ -336,11 +334,7 @@ return
 !
 ! rescale phif
 !
-if (my_mg%isol.eq.1) then
-  avo=rro
-else
-  avo=0.0d0
-end if
+avo=0.0d0
 call gscale(my_block%sx,my_block%ex,my_block%sy,my_block%ey, &
             phif,avo,acorr,my_mg%comm2d,my_mg%nx,my_mg%ny)
 !
@@ -359,15 +353,13 @@ call gxch1cor(phif,my_mg%comm2d,sxm,exm,sym,eym,             &
 !
 call mgdbdry(sx,ex,sy,ey,phif,my_block%bd,my_mg%vbc)
 
-if (my_mg%isol.eq.1) then
-  if (nprscr.and.my_block%id.eq.0) write(6,110) relmax,iter,acorr
-110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
-else
-  if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
-120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
-end if
+if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
 
 return
+100   format('WARNING: failed to achieve convergence in ',i5, &
+       ' cycles  error=',e12.5)
+110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
+120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
 end subroutine
 
 
@@ -391,7 +383,7 @@ subroutine polar_pfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
 
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,bd(8)
 sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
-sll_real64 :: r(sxf-1:exf+1,syf-1:eyf+1),xl,yl
+sll_real64 :: r(sxf-1:exf+1),xl,yl
 sll_real64 :: dlx,todlxx,dly,todlyy,rij
 sll_int32  :: i,j
 
@@ -402,9 +394,9 @@ todlxx=1.0d0/(dlx*dlx)
 todlyy=1.0d0/(dly*dly)
 do j=syf,eyf
    do i=sxf,exf
-     rij=r(i,j)
-     cof(i,j,1)=todlxx + 1./(dlx*(rij+r(i-1,j)))
-     cof(i,j,2)=todlxx - 1./(dlx*(rij+r(i+1,j)))
+     rij=r(i)
+     cof(i,j,1)=todlxx + 1./(dlx*(rij+r(i-1)))
+     cof(i,j,2)=todlxx - 1./(dlx*(rij+r(i+1)))
      cof(i,j,3)= 1./(rij*rij*dly)
      cof(i,j,4)= 1./(rij*rij*dly)
   end do
@@ -468,7 +460,7 @@ subroutine polar_phpde(sxm,exm,sym,eym,nxm,nym,cof,         &
 
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,sx,ex,sy,ey,nxf,nyf,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
-sll_real64 :: r(sx-1:ex+1,sy-1:ey+1),xl,yl
+sll_real64 :: r(sx-1:ex+1),xl,yl
 sll_real64 :: dlx,fodlxx,dly,fodlyy
 sll_int32  :: i,j,im,jm,is,js,istep,jstep
 
@@ -489,14 +481,14 @@ do j=sym,eym
     im=2*istep*i-3*(istep-1)
     is=(im-istep)/2
     js=jm/2
-    cof(i,j,1)=fodlxx+1./((r(is,js)+r(is+1,js))*dlx)
+    cof(i,j,1)=fodlxx+1./((r(is)+r(is+1))*dlx)
     is=(im+istep)/2
-    cof(i,j,2)=fodlxx-1./((r(is,js)+r(is+1,js))*dlx)
+    cof(i,j,2)=fodlxx-1./((r(is)+r(is+1))*dlx)
     is=im/2
     js=(jm-jstep)/2
-    cof(i,j,3)=fodlyy/(r(is,js)*r(is,js))
+    cof(i,j,3)=fodlyy/(r(is)*r(is))
     js=(jm+jstep)/2
-    cof(i,j,4)=fodlyy/(r(is,js)*r(is,js))
+    cof(i,j,4)=fodlyy/(r(is)*r(is))
   end do
 end do
 

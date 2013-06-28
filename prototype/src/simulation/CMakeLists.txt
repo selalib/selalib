@@ -180,7 +180,6 @@ target_link_libraries(VP1D_cart
 	sll_assertion 	
 	sll_poisson_solvers
 	dfftpack
-                                    ${HDF5_LIBRARIES}
 	)
 
 
@@ -276,10 +275,11 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_working_precision)
 
    ADD_DEPENDENCIES(sll_simulations ${SIMULATION_DEPS})
+   TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
 
    MACRO(ADD_SIMULATION TEST_NAME) 
       ADD_EXECUTABLE(test_${TEST_NAME} unit_test_${TEST_NAME}.F90)
-      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulations ${SIMULATION_DEPS})
+      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulations)
    ENDMACRO(ADD_SIMULATION)
 
    #Define the executables/tests here.

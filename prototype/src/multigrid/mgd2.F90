@@ -51,7 +51,11 @@ contains
 !>  in [1:n]
 subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
 
-   sll_int32  :: n, numprocs, myid, s, e
+   sll_int32  :: n
+   sll_int32  :: numprocs
+   sll_int32  :: myid
+   sll_int32  :: s
+   sll_int32  :: e
    sll_int32  :: nlocal
    sll_int32  :: deficit
 
@@ -59,11 +63,11 @@ subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
    s = myid * nlocal + 1
    deficit = mod(n,numprocs)
    s = s + min(myid,deficit)
-   if (myid .lt. deficit) then
+   if (myid < deficit) then
       nlocal = nlocal + 1
    endif
    e = s + nlocal - 1
-   if (e .gt. n .or. myid .eq. numprocs-1) e = n
+   if (e > n .or. myid == numprocs-1) e = n
    return
 
 end subroutine
@@ -141,13 +145,8 @@ type(mg_solver) :: my_mg
 !sll_int32  :: irdatatype,jrdatatype,ijrdatatype
 sll_int32  :: i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
 
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
-!------------------------------------------------------------------------
 ! set /mgd/ variables to zero
-!
+nerror = 0
 do k=1,20
   nxk(k)         = 0
   nyk(k)         = 0
