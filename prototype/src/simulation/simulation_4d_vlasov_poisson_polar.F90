@@ -59,7 +59,6 @@ use sll_logical_meshes
 use sll_parallel_array_initializer_module
 use sll_coordinate_transformation_2d_base_module
 use sll_gnuplot_parallel
-use sll_multigrid_parallel
 
 implicit none
 
@@ -122,7 +121,7 @@ sll_int32,  private :: gi, gj, gk, gl
 sll_real64, private :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 sll_real64, private :: alpha1, alpha2, alpha3, alpha4
 sll_real64, private :: eta1, eta2, eta3, eta4
-sll_real64, private :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
+sll_int32,  private :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_real64, private :: jac_m(2,2), inv_j(2,2)
 sll_int32,  private :: itime, error
 sll_real64, private :: eta1_min, eta2_min, eta3_min, eta4_min
@@ -307,11 +306,11 @@ contains
     SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
     SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
 
-    call initialize_multigrid(sim%layout_xy, &
-                              eta1_min, eta1_max, nc_eta1+1, &
-                              eta2_min, eta2_max, nc_eta2+1, &
-                              2)
-stop
+!    call initialize_multigrid(sim%layout_xy,                 &
+!                              eta1_min, eta1_max, nc_eta1+1, &
+!                              eta2_min, eta2_max, nc_eta2+1, &
+!                              2)
+!stop
     
     call compute_charge_density( loc_sz_x1,              &
                                  loc_sz_x2,              &

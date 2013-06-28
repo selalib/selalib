@@ -1,5 +1,6 @@
-module sll_multigrid_parallel
+module sll_multigrid_2d
 
+use sll_multigrid_base
 use sll_collective, only: sll_boot_collective,      &
                           sll_world_collective,     &
                           sll_halt_collective,      &
@@ -15,22 +16,38 @@ use mgd2
 #include "sll_memory.h"
 #include "mgd2.h"
 
+private :: gerr, ginit
+
+type, public, extends(sll_multigrid_solver) :: sll_multigrid_solver_2d
+
+   sll_real64 :: eta1_min
+   sll_real64 :: eta1_max
+   sll_real64 :: eta2_min
+   sll_real64 :: eta2_max
+   
+   sll_int32 :: nc_eta1
+   sll_int32 :: nc_eta2
+   sll_int32 :: nprocs_1
+   sll_int32 :: nprocs_2
+
+end type sll_multigrid_solver_2d
+
+interface initialize
+   module procedure initialize_2d
+end interface initialize
+
 contains
 
-subroutine initialize_multigrid(layout, &
-                                eta1_min, eta1_max, nnodes_eta1, &
-                                eta2_min, eta2_max, nnodes_eta2, &
-                                geometry)
+subroutine initialize_2d(this, eta1_min, eta1_max, nc_eta1, &
+                               eta2_min, eta2_max, nc_eta2)
 
-type(layout_2d), pointer :: layout
-sll_real64, intent(in)   :: eta1_min
-sll_real64, intent(in)   :: eta1_max
-sll_real64, intent(in)   :: eta2_min
-sll_real64, intent(in)   :: eta2_max
-sll_int32 , intent(in)   :: nnodes_eta1
-sll_int32 , intent(in)   :: nnodes_eta2
-sll_int32 , intent(in)   :: geometry
-sll_int32 , parameter    :: CARTESIAN = 1, POLAR = 2
+type(sll_multigrid_solver_2d) :: this
+sll_real64, intent(in)        :: eta1_min
+sll_real64, intent(in)        :: eta1_max
+sll_real64, intent(in)        :: eta2_min
+sll_real64, intent(in)        :: eta2_max
+sll_int32 , intent(in)        :: nc_eta1
+sll_int32 , intent(in)        :: nc_eta2
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: maxcy,kcycle,iprer,ipost,iresw,nwork
@@ -44,6 +61,7 @@ sll_int32         :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
 sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
 sll_real64        :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro
 character(len=1)  :: num(10)
+
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 
 sll_int32 :: error
@@ -53,26 +71,47 @@ type(mg_solver) :: my_mg
 
 integer :: statut(MPI_STATUS_SIZE)
 
-sll_real64, allocatable  :: p(:,:)
-sll_real64, allocatable  :: r(:,:)
-sll_real64, allocatable  :: f(:,:)
-sll_real64, allocatable  :: work(:)
-sll_real64, allocatable  :: xcoord(:,:)
-sll_real64, allocatable  :: ycoord(:,:)
+sll_real64, allocatable :: p(:,:)
+sll_real64, allocatable :: r(:,:)
+sll_real64, allocatable :: f(:,:)
+sll_real64, allocatable :: work(:)
+sll_real64, allocatable :: xcoord(:,:)
+sll_real64, allocatable :: ycoord(:,:)
 
-nxp2 = nnodes_eta1 + 2
-nyp2 = nnodes_eta2 + 2
+numprocs  = sll_get_collective_size(sll_world_collective)
+myid      = sll_get_collective_rank(sll_world_collective)
+comm2d    = sll_world_collective%comm
+realtype  = MPI_REAL8
 
-nx = nxp2 - 2
-ny = nyp2 - 2
+nx = nc_eta1
+ny = nc_eta2
+
+nxp2 = nx+2
+nyp2 = nx+2
+
+! Layout and local sizes for FFTs in x-direction
+this%layout => new_layout_2D( sll_world_collective )
+nxprocs = 2
+nyprocs = 2
+call initialize_layout_with_distributed_2D_array( nc_eta1, nc_eta2, &
+       nxprocs, nyprocs, this%layout)
+
+print*, get_layout_2d_i_min(this%layout,myid)
+print*, get_layout_2d_j_min(this%layout,myid)
+print*, get_layout_2d_i_max(this%layout,myid)
+print*, get_layout_2d_j_max(this%layout,myid)
+call flush(6)
+
+
 
 nxprocs = 2
 nyprocs = 2
 
+
 ixp = 4    ! the resolution of the global domain,
 jyq = 4    ! such that :
-iex = 5    ! nx = ixp*2**(iex-1)
-jey = 5    ! ny = jyq*2**(jey-1)
+iex = ceiling(log((nx-1.)/ixp)/log(2.))+1
+jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
 
 maxcy  = 300     ! maximum number of multigrid cycle
 tolmax = 1.0d-05 ! desired accuracy
@@ -92,10 +131,6 @@ SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim), error)
 SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim), error)
 SLL_CLEAR_ALLOCATE(work(1:nwork), error)
 
-numprocs  = sll_get_collective_size(sll_world_collective)
-myid      = sll_get_collective_rank(sll_world_collective)
-comm2d    = sll_world_collective%comm
-realtype  = MPI_REAL8
 
 ! open file for output of messages and check that the number of 
 ! processes is correct
@@ -111,12 +146,12 @@ end if
 
 dims(1)    = nxprocs
 dims(2)    = nyprocs
-periods(1) = .false. !non periodic in r
+periods(1) = .true. !non periodic in r
 periods(2) = .true.  !periodic in theta
 call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periods,.true.,comm2d,ierr)
 call MPI_COMM_RANK(comm2d,myid,ierr)
 
-ibdry  = 1    ! Dirchlet bc in direction 1
+ibdry  = 0    ! Periodic bc in direction 1
 jbdry  = 0    ! Periodic bc in direction 2
 
 vbc(1) = 0.0d0 ! Value for eta_1 = eta1_min
@@ -211,12 +246,8 @@ my_mg%ibdry       = ibdry
 my_mg%jbdry       = jbdry
 my_mg%comm2d      = comm2d
 
-if (geometry == CARTESIAN) then
-   call initialize_mgd2(my_block,my_mg,nerror)
-else if (geometry == POLAR) then
-   call initialize_mgd_polar(my_block,my_mg,nerror)
-end if
-if (nerror.eq.1) goto 1000
+call initialize_mgd2(my_block,my_mg,nerror)
+if (nerror == 1) write(6,200)
 !-----------------------------------------------------------------------
 ! initialize problem
 ! xl,yl are the dimensions of the domain
@@ -243,33 +274,18 @@ my_mg%ipost  = ipost
 my_mg%iresw  = iresw
 my_mg%isol   = 2
 
-if (geometry == CARTESIAN) then
-   call mgd2_solver(my_block,my_mg,p,f,r,work, &
-                  rro, iter,.true.,nerror)
-   if (nerror.eq.1) goto 1000
-   ! compare numerical and exact solutions
-   call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,nx,ny)
-   
-   call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
-                                     dble(sy-2.0)/hyi, dble(1)/hyi, &
-                                     p, "potential", 1, error)  
-  
-else if (geometry == POLAR) then
-   call mgd_polar_solver(my_block,my_mg,p,f,r,work, &
-                  rro, iter,.true.,nerror)
+call mgd2_solver(my_block,my_mg,p,f,r,work, &
+                 rro, iter,.true.,nerror)
+if (nerror == 1) write(6,210)
+! compare numerical and exact solutions
+call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,nx,ny)
 
-   if (nerror.eq.1) goto 1000
-   ! compare numerical and exact solutions
-   call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,nx,ny)
-   
-   call sll_gnuplot_curv_2d_parallel(xcoord, ycoord, &
-                                     p, "potential", 1, error)  
+call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
+                                  dble(sy-2.0)/hyi, dble(1)/hyi, &
+                                  p, "potential", 1, error)  
   
-end if
-
 return
 call sll_halt_collective()
-1000  write(6,200)
 close(8)
 stop
 
@@ -282,9 +298,10 @@ stop
            ' -> put the parameter formula for nydim in main.F in ', &
            'comments and'/,'     assign to nydim the maximum ',     &
            'value of ey-sy+3',/)
-200 format(/,'ERROR in multigrid code',/)
+200 format(/,'ERROR in multigrid code initialization',/)
+210 format(/,'ERROR in multigrid code solver',/)
 
-end subroutine initialize_multigrid
+end subroutine initialize_2d
 
 !> Initialize the pressure, density, and right-hand side of the
 !> elliptic equation div(1/r*grad(p))=f
@@ -342,4 +359,4 @@ write(6,100) errloc/float(nx*ny),err/float(nx*ny)
 
 end subroutine
 
-end module sll_multigrid_parallel
+end module sll_multigrid_2d
