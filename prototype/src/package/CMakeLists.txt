@@ -59,6 +59,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss-lobatto.F90
+    ${SLL_DIR}/simulation/sll_polar_operators.F90
+    ${SLL_DIR}/simulation/sll_advection_polar.F90
  )
 
 IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
