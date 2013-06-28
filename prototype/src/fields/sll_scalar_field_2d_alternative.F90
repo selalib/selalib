@@ -56,7 +56,8 @@ module sll_module_scalar_field_2d_alternative
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
      ! allows to decide if the user put the derivative of the analiytic function: func
-     sll_int32 :: present_deriv_int
+     logical :: present_deriv_eta1_int
+     logical :: present_deriv_eta2_int
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_analytic_alt
@@ -195,7 +196,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in) :: eta2
     sll_real64             :: first_deriv_eta1_value_at_pt_analytic
     
-    if ( (field%present_deriv_int == 2) .or. (field%present_deriv_int == 4) ) then 
+    if ( field%present_deriv_eta1_int ) then 
        first_deriv_eta1_value_at_pt_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
@@ -210,7 +211,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in) :: eta2
     sll_real64            :: first_deriv_eta2_value_at_pt_analytic
     
-    if ((field%present_deriv_int == 4) ) then 
+    if ( field%present_deriv_eta2_int ) then 
        first_deriv_eta2_value_at_pt_analytic = &
             field%first_deriv_eta2(eta1,eta2,field%params)
     else 
@@ -230,7 +231,7 @@ contains   ! *****************************************************************
     eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
     eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
     
-    if (  (field%present_deriv_int == 2) .or. (field%present_deriv_int == 4)) then 
+    if ( field%present_deriv_eta1_int ) then 
        first_deriv_eta1_value_at_index_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
@@ -250,7 +251,7 @@ contains   ! *****************************************************************
     eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
     eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
     
-    if ( (field%present_deriv_int == 4) ) then 
+    if ( field%present_deriv_eta2_int ) then 
        first_deriv_eta2_value_at_index_analytic = &
             field%first_deriv_eta2(eta1,eta2,field%params)
     else 
@@ -376,14 +377,13 @@ contains   ! *****************************************************************
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
     
-    field%present_deriv_int = 0
     if (present(first_deriv_eta1)) then
        field%first_deriv_eta1 => first_deriv_eta1
-       field%present_deriv_int = field%present_deriv_int + 2
+       field%present_deriv_eta1_int = .TRUE.
     end if
     if (present(first_deriv_eta2)) then
        field%first_deriv_eta2 => first_deriv_eta2
-       field%present_deriv_int = field%present_deriv_int + 4
+       field%present_deriv_eta2_int = .TRUE.
     end if
   end subroutine initialize_scalar_field_2d_analytic_alt
 
