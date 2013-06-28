@@ -757,30 +757,63 @@ contains
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
-
+    sll_real64 :: dvalue2d
+    sll_real64 :: res1,res2
+    
     SLL_ASSERT( eta1 .ge. interpolator%eta1_min )
     SLL_ASSERT( eta1 .le. interpolator%eta1_max )
     SLL_ASSERT( eta2 .ge. interpolator%eta2_min )
     SLL_ASSERT( eta2 .le. interpolator%eta2_max )
-
+    
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
 
-    print *, 'interpolate_derivative1d_ad2d: not implemented'
-
-!!$    val = bvalue( &
-!!$         eta1, &
-!!$         eta2, &
-!!$         size_coeffs1, &
-!!$         interpolator%spline_degree+1, &
-!!$         size_coeffs2, &
-!!$         interpolator%spline_degree+1, &
-!!$         interpolator%coeffs_splines(1:size_coeffs1,1:size_coeffs2), &
-!!$         interpolator%t1, &
-!!$         interpolator%t2 )
-
+    res1 = eta1
+    res2 = eta2
+    
+    select case (interpolator%bc_selector)
+    case (0) ! periodic-periodic
+       if ( res1 .ge. interpolator%eta1_max ) then 
+          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+       end if
+       if ( res2 .ge. interpolator%eta2_max ) then 
+          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+       end if
+    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+       if ( res2 .ge. interpolator%eta2_max ) then 
+          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+       end if
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       
+    case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
+       if ( res1 .ge. interpolator%eta1_max ) then 
+          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+       end if
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
+       
+    case (585) ! dirichlet-dirichlet 
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
+    end select
+    
+    val = dvalue2d( &
+         res1, &
+         res2, &
+         size_coeffs1, &
+         interpolator%spline_degree1+1, &
+         size_coeffs2, &
+         interpolator%spline_degree2+1, &
+         interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
+         interpolator%t1(1:interpolator%size_t1), &
+         interpolator%t2(1:interpolator%size_t2),&
+         1,0)
+    
   end function interpolate_derivative1_ad2d
-
+  
 
   function interpolate_derivative2_ad2d( &
     interpolator, &
@@ -793,6 +826,8 @@ contains
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
+    sll_real64 :: dvalue2d
+    sll_real64 :: res1,res2
 
     SLL_ASSERT( eta1 .ge. interpolator%eta1_min )
     SLL_ASSERT( eta1 .le. interpolator%eta1_max )
@@ -802,18 +837,48 @@ contains
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
 
-    print *, 'interpolate_derivative2_ad2d: not implemented'
-
-!!$    val = bvalue( &
-!!$         eta1, &
-!!$         eta2, &
-!!$         size_coeffs1, &
-!!$         interpolator%spline_degree+1, &
-!!$         size_coeffs2, &
-!!$         interpolator%spline_degree+1, &
-!!$         interpolator%coeffs_splines(1:size_coeffs1,1:size_coeffs2), &
-!!$         interpolator%t1, &
-!!$         interpolator%t2 )
+    res1 = eta1
+    res2 = eta2
+    select case (interpolator%bc_selector)
+    case (0) ! periodic-periodic
+       if ( res1 .ge. interpolator%eta1_max ) then 
+          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+       end if
+       if ( res2 .ge. interpolator%eta2_max ) then 
+          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+       end if
+    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
+       if ( res2 .ge. interpolator%eta2_max ) then 
+          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+       end if
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       
+    case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
+       if ( res1 .ge. interpolator%eta1_max ) then 
+          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+       end if
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
+       
+    case (585) ! dirichlet-dirichlet 
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
+    end select
+    
+    val = dvalue2d( &
+         res1, &
+         res2, &
+         size_coeffs1, &
+         interpolator%spline_degree1+1, &
+         size_coeffs2, &
+         interpolator%spline_degree2+1, &
+         interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
+         interpolator%t1(1:interpolator%size_t1), &
+         interpolator%t2(1:interpolator%size_t2),&
+         0,1)
 
   end function interpolate_derivative2_ad2d
 
