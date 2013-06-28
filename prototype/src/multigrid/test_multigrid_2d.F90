@@ -60,6 +60,7 @@ SLL_ALLOCATE(rho(nx_loc,ny_loc), ierr)
 SLL_ALLOCATE(phi_an(nx_loc,ny_loc), ierr)
 SLL_ALLOCATE(phi(nx_loc,ny_loc), ierr)
 
+
 ! initialize reference array
 do j=1,ny_loc
    do i=1,nx_loc

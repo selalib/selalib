@@ -16,6 +16,8 @@ use mgd2
 #include "sll_memory.h"
 #include "mgd2.h"
 
+implicit none
+
 private :: gerr, ginit
 
 type, public, extends(sll_multigrid_solver) :: sll_multigrid_solver_2d
@@ -36,6 +38,8 @@ interface initialize
    module procedure initialize_2d
 end interface initialize
 
+sll_int32, private :: error
+
 contains
 
 subroutine initialize_2d(this, eta1_min, eta1_max, nc_eta1, &
@@ -50,21 +54,20 @@ sll_int32 , intent(in)        :: nc_eta1
 sll_int32 , intent(in)        :: nc_eta2
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
-sll_int32  :: maxcy,kcycle,iprer,ipost,iresw,nwork
+sll_int32  :: nwork
 sll_int32  :: ngrid,nxdim,nydim
 sll_real64 :: tolmax
 
 logical           :: nprscr,periods(2)
-sll_int32         :: numprocs,myid,comm2d,sx,ex,sy,ey,neighbor(8),bd(8),iter
-sll_int32         :: realtype,ibdry,jbdry
-sll_int32         :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
+sll_int32         :: numprocs,myid,sx,ex,sy,ey,neighbor(8),bd(8),iter
+sll_int32         :: realtype
+sll_int32         :: ierr,m0,m1,dims(2),coords(2),i,j
 sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
-sll_real64        :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro
+sll_real64        :: xl,yl,hxi,hyi,wk,rro
 character(len=1)  :: num(10)
 
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 
-sll_int32 :: error
 
 type(block)     :: my_block
 type(mg_solver) :: my_mg
@@ -74,14 +77,20 @@ integer :: statut(MPI_STATUS_SIZE)
 sll_real64, allocatable :: p(:,:)
 sll_real64, allocatable :: r(:,:)
 sll_real64, allocatable :: f(:,:)
-sll_real64, allocatable :: work(:)
 sll_real64, allocatable :: xcoord(:,:)
 sll_real64, allocatable :: ycoord(:,:)
 
-numprocs  = sll_get_collective_size(sll_world_collective)
-myid      = sll_get_collective_rank(sll_world_collective)
-comm2d    = sll_world_collective%comm
-realtype  = MPI_REAL8
+numprocs    = sll_get_collective_size(sll_world_collective)
+myid        = sll_get_collective_rank(sll_world_collective)
+this%comm2d = sll_world_collective%comm
+realtype    = MPI_REAL8
+
+nxprocs = int(sqrt(real(numprocs,f64)))
+nyprocs = nxprocs
+this%nprocs_1 = nxprocs
+this%nprocs_2 = nyprocs
+
+if (nxprocs*nyprocs /= numprocs) goto 1000
 
 nx = nc_eta1
 ny = nc_eta2
@@ -91,34 +100,25 @@ nyp2 = nx+2
 
 ! Layout and local sizes for FFTs in x-direction
 this%layout => new_layout_2D( sll_world_collective )
-nxprocs = 2
-nyprocs = 2
 call initialize_layout_with_distributed_2D_array( nc_eta1, nc_eta2, &
        nxprocs, nyprocs, this%layout)
 
-print*, get_layout_2d_i_min(this%layout,myid)
-print*, get_layout_2d_j_min(this%layout,myid)
-print*, get_layout_2d_i_max(this%layout,myid)
-print*, get_layout_2d_j_max(this%layout,myid)
-call flush(6)
-
-
-
-nxprocs = 2
-nyprocs = 2
-
+sx = get_layout_2d_i_min(this%layout,myid)+1
+ex = get_layout_2d_i_max(this%layout,myid)+1
+sy = get_layout_2d_j_min(this%layout,myid)+1
+ey = get_layout_2d_j_max(this%layout,myid)+1
 
 ixp = 4    ! the resolution of the global domain,
 jyq = 4    ! such that :
 iex = ceiling(log((nx-1.)/ixp)/log(2.))+1
 jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
 
-maxcy  = 300     ! maximum number of multigrid cycle
-tolmax = 1.0d-05 ! desired accuracy
-kcycle = 1       ! 1 : V-cycles 2 : W-cycles
-iprer  = 2       ! relaxation steps before restricting the residual
-ipost  = 1       ! relaxation steps after correction
-iresw  = 1       ! 1 : fully weighted residuals 2 : half-weighted residuals
+this%maxcy  = 300     ! maximum number of multigrid cycle
+this%tolmax = 1.0d-05 ! desired accuracy
+this%kcycle = 1       ! 1 : V-cycles 2 : W-cycles
+this%iprer  = 2       ! relaxation steps before restricting the residual
+this%ipost  = 1       ! relaxation steps after correction
+this%iresw  = 1       ! 1 : fully weighted residuals 2 : half-weighted residuals
 
 nwork  = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
 
@@ -126,10 +126,20 @@ ngrid  = max(iex,jey)
 nxdim  = int(float(nxp2-2)/float(nxprocs)+0.99)+2
 nydim  = int(float(nyp2-2)/float(nyprocs)+0.99)+2
 
+if ((ex-sx+3) > nxdim) then
+  write(6,110) myid,nxdim,ex-sx+3
+  goto 1000
+end if
+if ((ey-sy+3).gt.nydim) then
+  write(6,120) myid,nydim,ey-sy+3
+  goto 1000
+end if
+write(6,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
+
 SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim), error)
 SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim), error)
 SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim), error)
-SLL_CLEAR_ALLOCATE(work(1:nwork), error)
+SLL_CLEAR_ALLOCATE(this%work(1:nwork), error)
 
 
 ! open file for output of messages and check that the number of 
@@ -148,16 +158,16 @@ dims(1)    = nxprocs
 dims(2)    = nyprocs
 periods(1) = .true. !non periodic in r
 periods(2) = .true.  !periodic in theta
-call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periods,.true.,comm2d,ierr)
-call MPI_COMM_RANK(comm2d,myid,ierr)
+call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periods,.true.,this%comm2d,ierr)
+call MPI_COMM_RANK(this%comm2d,myid,ierr)
 
-ibdry  = 0    ! Periodic bc in direction 1
-jbdry  = 0    ! Periodic bc in direction 2
+this%ibdry  = 0    ! Periodic bc in direction 1
+this%jbdry  = 0    ! Periodic bc in direction 2
 
-vbc(1) = 0.0d0 ! Value for eta_1 = eta1_min
-vbc(2) = 0.0d0 ! Value for eta_1 = eta2_max
-vbc(3) = 0.0d0 ! Value for eta_2 = eta2_min
-vbc(4) = 0.0d0 ! Value for eta_2 = eta2_max
+this%vbc(1) = 0.0d0 ! Value for eta_1 = eta1_min
+this%vbc(2) = 0.0d0 ! Value for eta_1 = eta2_max
+this%vbc(3) = 0.0d0 ! Value for eta_2 = eta2_min
+this%vbc(4) = 0.0d0 ! Value for eta_2 = eta2_max
 
 bd(:)  = 0
 
@@ -175,49 +185,27 @@ bd(:)  = 0
 !       |           |
 !     4 |     3     | 2
 
-call MPI_CART_SHIFT(comm2d,0,1,nbrleft,nbrright,ierr)
-call MPI_CART_SHIFT(comm2d,1,1,nbrbottom,nbrtop,ierr)
+call MPI_CART_SHIFT(this%comm2d,0,1,nbrleft,nbrright,ierr)
+call MPI_CART_SHIFT(this%comm2d,1,1,nbrbottom,nbrtop,ierr)
 
 neighbor(1)=nbrright
 neighbor(3)=nbrbottom
 neighbor(5)=nbrleft
 neighbor(7)=nbrtop
 
-call MPI_BARRIER(comm2d,ierr)
+call MPI_BARRIER(this%comm2d,ierr)
 call MPI_SENDRECV(neighbor(3),1,MPI_INTEGER,nbrright,0, &
                   neighbor(4),1,MPI_INTEGER,nbrleft,0, &
-                  comm2d,statut,ierr)
+                  this%comm2d,statut,ierr)
 call MPI_SENDRECV(neighbor(7),1,MPI_INTEGER,nbrright,1, &
                   neighbor(6),1,MPI_INTEGER,nbrleft,1, &
-                  comm2d,statut,ierr)
+                  this%comm2d,statut,ierr)
 call MPI_SENDRECV(neighbor(3),1,MPI_INTEGER,nbrleft,0, &
                   neighbor(2),1,MPI_INTEGER,nbrright,0, &
-                  comm2d,statut,ierr)
+                  this%comm2d,statut,ierr)
 call MPI_SENDRECV(neighbor(7),1,MPI_INTEGER,nbrleft,1, &
                   neighbor(8),1,MPI_INTEGER,nbrright,1, &
-                  comm2d,statut,ierr)
-!-----------------------------------------------------------------------
-! find indices of subdomain and check that dimensions of arrays are
-! sufficient
-!
-call MPI_CART_GET(comm2d,2,dims,periods,coords,ierr)
-call MPE_DECOMP1D(nxp2-2,dims(1),coords(1),sx,ex)
-sx=sx+1
-ex=ex+1
-call MPE_DECOMP1D(nyp2-2,dims(2),coords(2),sy,ey)
-sy=sy+1
-ey=ey+1
-if ((ex-sx+3) > nxdim) then
-  write(6,110) myid,nxdim,ex-sx+3
-  nerror=1
-  stop
-end if
-if ((ey-sy+3).gt.nydim) then
-  write(6,120) myid,nydim,ey-sy+3
-  nerror=1
-  stop
-end if
-write(6,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
+                  this%comm2d,statut,ierr)
 do i=1,8
   write(6,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
 end do
@@ -236,18 +224,18 @@ my_block%jyq      = jyq
 my_block%iex      = iex
 my_block%jey      = jey
 
-my_mg%vbc         = vbc
-my_mg%phibc       = phibc
+my_mg%vbc         = this%vbc
+my_mg%phibc       = this%phibc
 my_mg%nx          = nx
 my_mg%ny          = ny
 my_mg%nxprocs     = nxprocs
 my_mg%nyprocs     = nyprocs
-my_mg%ibdry       = ibdry
-my_mg%jbdry       = jbdry
-my_mg%comm2d      = comm2d
+my_mg%ibdry       = this%ibdry
+my_mg%jbdry       = this%jbdry
+my_mg%comm2d      = this%comm2d
 
-call initialize_mgd2(my_block,my_mg,nerror)
-if (nerror == 1) write(6,200)
+call initialize_mgd2(my_block,my_mg,error)
+if (error == 1) write(6,200)
 !-----------------------------------------------------------------------
 ! initialize problem
 ! xl,yl are the dimensions of the domain
@@ -266,25 +254,26 @@ call ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi)
 
 my_mg%xl     = xl
 my_mg%yl     = yl
-my_mg%tolmax = tolmax
-my_mg%kcycle = kcycle
-my_mg%maxcy  = maxcy
-my_mg%iprer  = iprer
-my_mg%ipost  = ipost
-my_mg%iresw  = iresw
+my_mg%tolmax = this%tolmax
+my_mg%kcycle = this%kcycle
+my_mg%maxcy  = this%maxcy
+my_mg%iprer  = this%iprer
+my_mg%ipost  = this%ipost
+my_mg%iresw  = this%iresw
 my_mg%isol   = 2
 
-call mgd2_solver(my_block,my_mg,p,f,r,work, &
-                 rro, iter,.true.,nerror)
-if (nerror == 1) write(6,210)
+call mgd2_solver(my_block,my_mg,p,f,r,this%work, &
+                 rro, iter,.true.,error)
+if (error == 1) write(6,210)
 ! compare numerical and exact solutions
-call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,nx,ny)
+call gerr(sx,ex,sy,ey,p,this%comm2d,wk,hxi,hyi,nx,ny)
 
 call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
                                   dble(sy-2.0)/hyi, dble(1)/hyi, &
                                   p, "potential", 1, error)  
   
 return
+1000 continue
 call sll_halt_collective()
 close(8)
 stop
