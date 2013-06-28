@@ -17,7 +17,8 @@ SET(SLL_MACROS
     ${SLL_DIR}/fft/sll_fft.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
-    ${SLL_DIR}/fields/sll_field_2d.h)
+    ${SLL_DIR}/fields/sll_field_2d.h
+    ${SLL_DIR}/multigrid/sll_multigrid.h)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)

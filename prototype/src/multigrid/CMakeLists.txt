@@ -42,9 +42,21 @@ ADD_LIBRARY(sll_mgd3 mgdend_3d.F90
                      mgdrtrsf_3d.F90
                      write_xdmf_3d.F90)
 
-ADD_LIBRARY(sll_multigrid sll_multigrid_parallel.F90)
+ADD_LIBRARY(sll_multigrid sll_multigrid_base.F90
+                          sll_multigrid_2d.F90
+                          sll_multigrid_polar.F90)
 
-TARGET_LINK_LIBRARIES(sll_multigrid sll_mgd2 sll_mgd3 )
+TARGET_LINK_LIBRARIES(sll_multigrid sll_mgd2 
+                                    sll_mgd3 
+                                    sll_remap 
+                                    sll_utilities
+                                    sll_collective 
+                                    sll_assertion
+                                    sll_memory)
+
+ADD_EXECUTABLE(test_multigrid_2d test_multigrid_2d.F90)
+
+TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid sll_file_io_parallel )
 
 IF(HDF5_PARALLEL_ENABLED)
 
