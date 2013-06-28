@@ -9,11 +9,18 @@ program gauss_legendre_tester
   integer :: i,j
   type(gausslobatto1D) :: gausslob
   do i=2,10
-     write (*,'(a, i8, a, e20.12)') 'case n = ', i, ': ', &
+     write (*,'(a, i8, a, f20.12)') 'case n = ', i, ': ', &
           gauss_legendre_integrate_1D( test_func, 0.0_f64, sll_pi/2.0, i)
   end do
   print *, 'Exact value: '
-  write (*,'(e22.15)') 0.4674011002723395
+  write (*,'(f22.15)') 0.4674011002723395
+
+  do i=2,10
+     write (*,'(a, i8, a, f20.12)') 'case n = ', i, ': ', &
+          gauss_legendre_integrate_1D( one, 0.0_f64, 1.0_f64, i)
+  end do
+  print *, 'Exact value: '
+  write (*,'(f22.15)') 1.00000
 
   print *, 'Test gauss_points()'
   print *, gauss_points(5,-1.0_f64,1.0_f64)
