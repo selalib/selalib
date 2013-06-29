@@ -5,17 +5,11 @@
 !> Called in : mgdrelax, mgdsolver
 !> Calls     : --
 subroutine mgdbdry(sxm,exm,sym,eym,phi,bd,phibc)
-use mpi
 #include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxm,exm,sym,eym,bd(8)
 sll_real64 :: phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
 sll_int32 :: i,j
-# if DEBUG
-double precision tinitial
-tinitial=MPI_WTIME()
-# endif
 
 if (bd(1).eq.1) then
    do j=sym-1,eym+1
@@ -53,9 +47,5 @@ else if (bd(7).eq.2) then
       phi(i,eym+1)=2.0d0*phibc(4)-phi(i,eym)
    end do
 end if
-
-# if DEBUG
-timing(93)=timing(93)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine

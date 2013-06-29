@@ -1,9 +1,8 @@
 subroutine mgdrelax(sxm,exm,sym,eym,phi,cof,iters,comm2d,myid, &
                     neighbor,bd,phibc,itype,jtype)
 
-use mpi
 #include "sll_working_precision.h"
-#include "mgd2.h"
+use gxch1_2d
 
 sll_int32 :: sxm,exm,sym,eym,iters
 sll_int32 :: comm2d,myid,neighbor(8),bd(8),itype,jtype
@@ -19,10 +18,6 @@ sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),phibc(4)
 ! Calls     : mgdbdry, gxch1lin
 !------------------------------------------------------------------------
 sll_int32 :: rb,it,ipass,i,j
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
 !
 ! do iters sweeps in the subdomain
 !
@@ -61,9 +56,5 @@ call gxch1lin(phi,comm2d,sxm,exm,sym,eym,neighbor,bd,itype,jtype)
 !
 call mgdbdry(sxm,exm,sym,eym,phi,bd,phibc)
 # endif 
-
-# if DEBUG
-timing(90)=timing(90)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine

@@ -490,37 +490,37 @@ contains
          sim%nc_x1, &
          sim%mesh6d%x1_min, &
          sim%mesh6d%x1_max, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call sim%interp_x2%initialize( &
          sim%nc_x2, &
          sim%mesh6d%x2_min, &
          sim%mesh6d%x2_max, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call sim%interp_x3%initialize( &
          sim%nc_x3, &
          sim%mesh6d%x3_min, &
          sim%mesh6d%x3_max, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call sim%interp_x4%initialize( &
          sim%nc_x4, &
          sim%mesh6d%x4_min, &
          sim%mesh6d%x4_max, &
-         HERMITE_SPLINE)
+         SLL_HERMITE)
 
     call sim%interp_x5%initialize( &
          sim%nc_x5, &
          sim%mesh6d%x5_min, &
          sim%mesh6d%x5_max, &
-         HERMITE_SPLINE)
+         SLL_HERMITE)
 
     call sim%interp_x6%initialize( &
          sim%nc_x6, &
          sim%mesh6d%x6_min, &
          sim%mesh6d%x6_max, &
-         HERMITE_SPLINE)
+         SLL_HERMITE)
 
     call compute_local_sizes_3d(sim%rho_seq_x1, loc_sz_x1, loc_sz_x2, loc_sz_x3)
 

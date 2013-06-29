@@ -44,7 +44,6 @@ sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
 sll_real64, dimension(4,4) :: Axelem
 sll_real64, dimension(4,4) :: Ayelem
 sll_real64, dimension(4,4) :: Melem
-sll_real64 :: dum
 sll_int32, dimension(4) :: isom
 
 nx = nn_x-1
@@ -67,22 +66,26 @@ do j=1,ny
 end do
 
 !** Construction des matrices elementaires
-dum = 1.d0/6.d0
-Axelem(1,1)= 2*dum; Axelem(1,2)=-2*dum; Axelem(1,3)= - dum; Axelem(1,4)=   dum ;
-Axelem(2,1)=-2*dum; Axelem(2,2)= 2*dum; Axelem(2,3)=   dum; Axelem(2,4)= - dum ;
-Axelem(3,1)= - dum; Axelem(3,2)=   dum; Axelem(3,3)= 2*dum; Axelem(3,4)=-2*dum ;
-Axelem(4,1)=   dum; Axelem(4,2)=-  dum; Axelem(4,3)=-2*dum; Axelem(4,4)= 2*dum ;
+Axelem(1,:) = (/  2, -2, -1,  1 /)
+Axelem(2,:) = (/ -2,  2,  1, -1 /)
+Axelem(3,:) = (/ -1,  1,  2, -2 /)
+Axelem(4,:) = (/  1, -1, -2,  2 /)
 
-Ayelem(1,1)= 2*dum; Ayelem(1,2)=   dum; Ayelem(1,3)= - dum; Ayelem(1,4)=-2*dum ;
-Ayelem(2,1)=   dum; Ayelem(2,2)= 2*dum; Ayelem(2,3)=-2*dum; Ayelem(2,4)= - dum ;
-Ayelem(3,1)= - dum; Ayelem(3,2)=-2*dum; Ayelem(3,3)= 2*dum; Ayelem(3,4)=   dum ;
-Ayelem(4,1)=-2*dum; Ayelem(4,2)= - dum; Ayelem(4,3)=   dum; Ayelem(4,4)= 2*dum ;
+Axelem = 1.d0/6.d0 * Axelem
 
-dum = 1.d0/36.d0
-Melem(1,1)=4*dum; Melem(1,2)=2*dum; Melem(1,3)=  dum; Melem(1,4)=2*dum;
-Melem(2,1)=2*dum; Melem(2,2)=4*dum; Melem(2,3)=2*dum; Melem(2,4)=  dum;
-Melem(3,1)=  dum; Melem(3,2)=2*dum; Melem(3,3)=4*dum; Melem(3,4)=2*dum;
-Melem(4,1)=2*dum; Melem(4,2)=  dum; Melem(4,3)=2*dum; Melem(4,4)=4*dum;
+Ayelem(1,:) = (/  2,  1, -1, -2 /)
+Ayelem(2,:) = (/  1,  2, -2, -1 /)
+Ayelem(3,:) = (/ -1, -2,  2,  1 /)
+Ayelem(4,:) = (/ -2, -1,  1,  2 /)
+
+Ayelem = 1.d0/6.d0 * Ayelem
+
+Melem(1,:) = (/ 4, 2, 1, 2/)
+Melem(2,:) = (/ 2, 4, 2, 1/)
+Melem(3,:) = (/ 1, 2, 4, 2/)
+Melem(4,:) = (/ 2, 1, 2, 4/)
+
+Melem = 1.d0/36.d0 * Melem
 
 this%A = 0.d0
 
@@ -128,35 +131,36 @@ isom(4) = som(nx-1,j   ,2)
 call build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 
 SLL_ALLOCATE(this%ipiv(nxy),error)
-this%A(nxy,nxy) = 1.0_f64
+
+this%A(1,:) = 0.
+this%A(1,1) = 1.
 call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 
 end subroutine initialize_poisson_2d_periodic_fem
 
 integer function som(i, j, k)
+integer :: i, j, k
 
-   integer :: i, j, k
-
-   if (k == 1) then
-      som = i+(j-1)*nx
-   else if (k == 2) then
-      som = i+(j-1)*nx+1
-   else if (k == 3) then
-      som = i+j*nx+1
-   else if (k == 4) then
-      som = i+j*nx
-   end if 
+if (k == 1) then
+   som = i+(j-1)*nx
+else if (k == 2) then
+   som = i+(j-1)*nx+1
+else if (k == 3) then
+   som = i+j*nx+1
+else if (k == 4) then
+   som = i+j*nx
+end if 
 
 end function som
 
 subroutine build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
-type( poisson_2d_periodic_fem )     :: this     !< Poisson solver object
-sll_real64, dimension(:,:) :: Axelem   !< x electric field
-sll_real64, dimension(:,:) :: Ayelem   !< y electric field
-sll_real64, dimension(:,:) :: Melem    !< charge density
-sll_int32, dimension(:)   :: isom
-sll_int32                  :: i
-sll_int32                  :: j
+type( poisson_2d_periodic_fem ) :: this     !< Poisson solver object
+sll_real64, dimension(:,:)      :: Axelem   !< x electric field
+sll_real64, dimension(:,:)      :: Ayelem   !< y electric field
+sll_real64, dimension(:,:)      :: Melem    !< charge density
+sll_int32,  dimension(:)        :: isom
+sll_int32, intent(in)           :: i
+sll_int32, intent(in)           :: j
 
    do ii=1,4
       do jj=1,4
@@ -172,11 +176,12 @@ end subroutine build_matrices
 
 !> Solve the poisson equation
 subroutine solve_poisson_2d_periodic_fem( this, ex, ey, rho )
-type( poisson_2d_periodic_fem )        :: this !< Poisson solver object
-sll_real64, dimension(:,:) :: ex   !< x electric field
-sll_real64, dimension(:,:) :: ey   !< y electric field
-sll_real64, dimension(:,:) :: rho  !< charge density
-sll_real64, dimension(nxy) :: b
+type( poisson_2d_periodic_fem ) :: this !< Poisson solver object
+sll_real64, dimension(:,:)      :: ex   !< x electric field
+sll_real64, dimension(:,:)      :: ey   !< y electric field
+sll_real64, dimension(:,:)      :: rho  !< charge density
+sll_real64, dimension(nxy)      :: b
+sll_real64                      :: bmoy
 
 !** Construction du second membre (rho a support compact --> projete)
 k=0
@@ -188,13 +193,17 @@ do i=1,nx
 end do
 
 b = matmul(this%M,b)
+b(1) = 1
+
 call DGETRS('N',nxy,1,this%A,nxy,this%ipiv,b,nxy,error)
+
+bmoy = sum(b) / nxy
 
 k=0
 do i=1,nx
    do j=1,ny
       k=k+1
-      rho(i,j) = b(k) 
+      rho(i,j) = b(k) - bmoy
    end do
 end do
 
@@ -213,13 +222,12 @@ end do
 end subroutine solve_poisson_2d_periodic_fem
 
 subroutine write_mtv_periodic( x, y )
+integer               :: iel
 real(8), dimension(:) :: x
 real(8), dimension(:) :: y
-integer :: iel, isom, nx, ny
-real(8) :: x1, y1
+real(8)               :: x1
+real(8)               :: y1
 
-nx = size(x)-1
-ny = size(y)-1
 open(10, file="mesh.mtv")
 write(10,*)"$DATA=CURVE3D"
 write(10,*)"%equalscale=T"
