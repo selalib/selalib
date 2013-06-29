@@ -28,29 +28,78 @@
 ! DD Mmm YYYY - Initial Version
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
-module sll_module_scalar_field_2d
+module sll_module_scalar_field_2d_alternative
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
   use sll_module_scalar_field_2d_base
   use sll_constants
-  use sll_module_interpolators_1d_base
+  use sll_module_interpolators_2d_base
+  use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_utilities
-  use sll_scalar_field_initializers_base
+  use sll_boundary_condition_descriptors
+  use sll_gnuplot
+!  use sll_scalar_field_initializers_base
   implicit none
 
-!!$  type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic
-!!$     procedure(two_var_parametrizable_function), pointer, nopass :: func
-!!$     sll_real64, dimension(:), pointer        :: params
-!!$     character(len=64)                        :: name
-!!$     sll_int32                                :: plot_counter
-!!$   contains
-!!$     procedure, pass(field) :: value_at_point => value_at_pt_analytic
-!!$     procedure, pass(field) :: value_at_indices => value_at_index_analytic
-!!$  end type sll_scalar_field_2d_analytic
-!!$
+  type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic_alt
+     procedure(two_var_parametrizable_function), pointer, nopass :: func
+     sll_real64, dimension(:), pointer        :: params
+     character(len=64)                        :: name
+!     sll_int32                                :: plot_counter
+     class(sll_coordinate_transformation_2d_base), pointer :: T
+     sll_int32 :: bc_left
+     sll_int32 :: bc_right
+     sll_int32 :: bc_bottom
+     sll_int32 :: bc_top
+   contains
+     procedure, pass(field) :: initialize => &
+          initialize_scalar_field_2d_analytic_alt
+     procedure, pass(field) :: get_transformation => &
+          get_transformation_analytic_alt
+     procedure, pass(field) :: get_logical_mesh => &
+          get_logical_mesh_2d_analytic_alt
+     procedure, pass(field) :: get_jacobian_matrix => &
+          get_jacobian_matrix_analytic_alt
+     procedure, pass(field) :: value_at_point => value_at_pt_analytic
+     procedure, pass(field) :: value_at_indices => value_at_index_analytic
+     procedure, pass(field) :: write_to_file => write_to_file_analytic_2d
+     procedure, pass(field) :: delete => delete_field_2d_analytic_alt
+  end type sll_scalar_field_2d_analytic_alt
 
+  type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete_alt
+     sll_real64, dimension(:,:), pointer  :: values
+     !sll_real64, dimension(:,:), pointer  :: coeff_spline
+     !sll_int32                            :: sz_coeff1
+     !sll_int32                            :: sz_coeff2
+     character(len=64)                    :: name
+!     sll_int32                            :: plot_counter
+     class(sll_coordinate_transformation_2d_base), pointer :: T
+     class(sll_interpolator_2d_base), pointer :: interp_2d
+     sll_real64, dimension(:), pointer :: point1_1d
+     sll_real64, dimension(:), pointer :: point2_1d
+     !sll_real64, dimension(:,:), pointer :: point2d
+     sll_int32 :: bc_left
+     sll_int32 :: bc_right
+     sll_int32 :: bc_bottom
+     sll_int32 :: bc_top
+   contains
+   procedure, pass(field) :: initialize => &
+          initialize_scalar_field_2d_discrete_alt
+     procedure, pass(field) :: get_transformation => &
+          get_transformation_discrete_alt
+     procedure, pass(field) :: get_logical_mesh => &
+          get_logical_mesh_2d_discrete_alt
+     procedure, pass(field) :: get_jacobian_matrix => &
+          get_jacobian_matrix_discrete_alt
+     procedure, pass(field) :: value_at_point => value_at_pt_discrete
+     procedure, pass(field) :: value_at_indices => value_at_index_discrete
+     procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
+     procedure, pass(field) :: delete => delete_field_2d_discrete_alt
+  end type sll_scalar_field_2d_discrete_alt
+
+!  type sll_ptr_scalar_field_2d_a
 !!$ type, extends(sll_scalar_field_2d_base) :: scalar_field_2d_dis
 !!$     class(sll_interpolator_1d_base), pointer :: eta1_interpolator
 !!$     class(sll_interpolator_1d_base), pointer :: eta2_interpolator
@@ -80,138 +129,477 @@ module sll_module_scalar_field_2d
      end function scalar_function_2D
   end interface
 
+  interface delete
+     module procedure delete_field_2d_analytic_alt, delete_field_2d_discrete_alt
+  end interface delete
+
+
 contains   ! *****************************************************************
 
-function whatever()
-  sll_real64 :: whatever
-  whatever = 1.0_f64
-end function whatever
-!!$  function value_at_pt_analytic( field, eta1, eta2 )
-!!$    class(sll_scalar_field_2d_analytic) :: field
-!!$    sll_real64, intent(in) :: eta1
-!!$    sll_real64, intent(in) :: eta2
-!!$    sll_real64             ::  value_at_pt_analytic
-!!$    value_at_pt_analytic = field%func(eta1,eta2,field%params)
-!!$  end function value_at_pt_analytic
-
-!!$  function value_at_index_analytic( field, i, j )
-!!$    class(sll_scalar_field_2d_analytic) :: field
-!!$    sll_int32, intent(in) :: i
-!!$    sll_int32, intent(in) :: j
-!!$    sll_real64            :: eta1
-!!$    sll_real64            :: eta2
-!!$    sll_real64            :: value_at_index_analytic
-!!$    eta1 = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
-!!$    eta2 = field%mesh%eta2_min + real(j-1,f64)*field%mesh%delta_eta2
-!!$    value_at_index_analytic = field%func(eta1,eta2,field%params)
-!!$  end function value_at_index_analytic
 
 
 
+  ! **************************************************************************
+  !
+  !                         ANALYTIC CASE
+  !
+  ! **************************************************************************
+
+
+  function value_at_pt_analytic( field, eta1, eta2 )
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             ::  value_at_pt_analytic
+    value_at_pt_analytic = field%func(eta1,eta2,field%params)
+  end function value_at_pt_analytic
+
+  function value_at_index_analytic( field, i, j )
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: value_at_index_analytic
+    eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
+    eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
+    value_at_index_analytic = field%func(eta1,eta2,field%params)
+  end function value_at_index_analytic
+
+!!$  subroutine initialize_scalar_field_2d_analytic_alt( &
+!!$    obj, &
+!!$    func, &
+!!$    field_name, &
+!!$    transformation, &
+!!$    bc_left, &
+!!$    bc_right, &
+!!$    bc_bottom, &
+!!$    bc_top, &
+!!$    func_params )
+!!$
+!!$    class(sll_scalar_field_2d_analytic_alt)         :: obj
+!!$    procedure(two_var_parametrizable_function)      :: func
+!!$    character(len=*), intent(in)                    :: field_name
+!!$    sll_real64, dimension(:), intent(in), optional, target :: func_params
+!!$    class(sll_coordinate_transformation_2d_base), target :: transformation
+!!$    sll_int32, intent(in) :: bc_left
+!!$    sll_int32, intent(in) :: bc_right
+!!$    sll_int32, intent(in) :: bc_bottom
+!!$    sll_int32, intent(in) :: bc_top
+!!$    sll_int32  :: ierr
+!!$ 
+!!$    obj%T => transformation
+!!$    !    obj%mesh%written = .false.
+!!$    obj%func      => func
+!!$    obj%params    => func_params   
+!!$    obj%name      = trim(field_name)
+!!$    obj%bc_left   = bc_left
+!!$    obj%bc_right  = bc_right
+!!$    obj%bc_bottom = bc_bottom
+!!$    obj%bc_top    = bc_top
+!!$  end subroutine initialize_scalar_field_2d_analytic_alt
+
+  function new_scalar_field_2d_analytic_alt( &
+    func, &
+    field_name, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top, &
+    func_params ) result(obj)
+
+    type(sll_scalar_field_2d_analytic_alt), pointer :: obj
+    procedure(two_var_parametrizable_function)      :: func
+    character(len=*), intent(in)                    :: field_name
+    sll_real64, dimension(:), intent(in), optional, target :: func_params
+    class(sll_coordinate_transformation_2d_base), target :: transformation
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
+    sll_int32  :: ierr
+ 
+    SLL_ALLOCATE(obj,ierr)
+    call obj%initialize( &
+    func, &
+    field_name, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top, &
+    func_params )
+  end function new_scalar_field_2d_analytic_alt
+
+  subroutine delete_field_2d_analytic_alt( field )
+    class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
+    ! nothing internal do deallocate, just nullify pointers. Can't call
+    ! delete on them because the field does not 'own' these data.
+    nullify(field%func)
+    nullify(field%params)
+    nullify(field%T)
+  end subroutine delete_field_2d_analytic_alt
+
+  ! For those cases in which handling pointers to field structures is not
+  ! convenient, we offer the following alternative initialization.
+  subroutine initialize_scalar_field_2d_analytic_alt( &
+    field, &
+    func, &
+    field_name, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top, &
+    func_params )
+
+    class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
+    procedure(two_var_parametrizable_function)      :: func
+    character(len=*), intent(in)                    :: field_name
+    sll_real64, dimension(:), intent(in), optional, target :: func_params
+    class(sll_coordinate_transformation_2d_base), target :: transformation
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
+ 
+    field%T => transformation
+    !    field%mesh%written = .false.
+    field%func      => func
+    field%params    => func_params   
+    field%name      = trim(field_name)
+    field%bc_left   = bc_left
+    field%bc_right  = bc_right
+    field%bc_bottom = bc_bottom
+    field%bc_top    = bc_top
+  end subroutine initialize_scalar_field_2d_analytic_alt
 
   
-!!$  ! this used to be new_scalar_field_2d
-!!$  ! initializer is not use whith fortran95
-!!$  subroutine initialize_scalar_field_2d( &
-!!$    this, &
-!!$    field_name, &
-!!$    mesh, &
-!!$    data_position, &
-!!$    eta1_interpolator, &
-!!$    eta2_interpolator, &
-!!$    initializer )
-!!$
-!!$    class(sll_scalar_field_2d_analytic), intent(inout)  :: this
-!!$    class(sll_mapped_mesh_2d_base), pointer             :: mesh
-!!$    class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
-!!$    class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-!!$    class(scalar_field_2d_initializer_base), pointer, optional :: initializer
-!!$    character(len=*), intent(in)                        :: field_name
-!!$    sll_int32, intent(in)                               :: data_position
-!!$
-!!$    sll_int32  :: ierr
-!!$    sll_int32  :: num_cells1
-!!$    sll_int32  :: num_cells2
-!!$    sll_int32  :: num_pts1
-!!$    sll_int32  :: num_pts2
-!!$    !sll_int32  :: i1, i2
-!!$    sll_real64 :: eta1, eta2
-!!$    sll_real64 :: delta1, delta2
-!!$
-!!$    SLL_ASSERT(associated(mesh))
-!!$    this%mesh => mesh
-!!$    this%mesh%written = .false.
-!!$    
-!!$    this%name  = trim(field_name)
-!!$    num_cells1 = mesh%nc_eta1
-!!$    num_cells2 = mesh%nc_eta2
-!!$    num_pts1   = mesh%nc_eta1+1
-!!$    num_pts2   = mesh%nc_eta2+1
-!!$
-!!$    ! For an initializing function, argument check should not be assertions
-!!$    ! but more permanent if-tests. There is no reason to turn these off ever.
-!!$    if( associated(eta1_interpolator) ) then
-!!$       this%eta1_interpolator => eta1_interpolator
-!!$    else
-!!$       print *, 'initialize_scalar_field_2d(): eta1_interpolator pointer ', &
-!!$            'is not associated. Exiting...'
-!!$       stop
-!!$    end if
-!!$    if( associated(eta2_interpolator) ) then
-!!$       this%eta2_interpolator => eta2_interpolator
-!!$    else
-!!$       print *, 'initialize_scalar_field_2d(): eta2_interpolator pointer ', &
-!!$            'is not associated. Exiting...'
-!!$       stop
-!!$    end if
-!!$
-!!$
-!!$    this%data_position = data_position
-!!$    if (data_position == NODE_CENTERED_FIELD) then
-!!$       SLL_ALLOCATE(this%data(num_pts1,num_pts2), ierr)
-!!$       if (present(initializer)) then
-!!$          call initializer%f_of_x1x2(this%data)
-!!$       else 
-!!$          this%data = 0.0_f64
-!!$       end if
-!!$    else if (data_position == CELL_CENTERED_FIELD) then
-!!$       SLL_ALLOCATE(this%data(num_cells1,num_cells2), ierr)
-!!$       delta1 = 1.0_f64/real(num_cells1,f64)
-!!$       delta2 = 1.0_f64/real(num_cells2,f64)
-!!$       eta1   = 0.5_f64 * delta1
-!!$       eta2   = 0.5_f64 * delta2
-!!$       if (present(initializer)) then
-!!$          call initializer%f_of_x1x2(this%data)
-!!$       else 
-!!$          this%data = 0.0_f64
-!!$       end if
-!!$    endif
-!!$    this%plot_counter = 0
-!!$  end subroutine initialize_scalar_field_2d
-!!$
-!!$  ! The following pair of subroutines are tricky. We want them as general 
-!!$  ! services by the fields, hence we need this subroutine interface, yet
-!!$  ! we would also like a flexibility in how the derivatives are computed.
-!!$  ! A general interpolator interface would cover most of the cases, maybe
-!!$  ! all. It could be that a finite difference scheme would also work, if
-!!$  ! we ignore some of the interpolator services, like the ability to return
-!!$  ! values anywhere instead of at the nodes.
-!!$  ! For now, this interface would permit to have multiple implementations.
+  ! The following pair of subroutines are tricky. We want them as general 
+  ! services by the fields, hence we need this subroutine interface, yet
+  ! we would also like a flexibility in how the derivatives are computed.
+  ! A general interpolator interface would cover most of the cases, maybe
+  ! all. It could be that a finite difference scheme would also work, if
+  ! we ignore some of the interpolator services, like the ability to return
+  ! values anywhere instead of at the nodes.
+  ! For now, this interface would permit to have multiple implementations.
 !!$  subroutine compute_eta1_derivative_on_col( field2d, ith_col, deriv_out )
 !!$    type(scalar_field_2d), intent(in)    :: field2d
 !!$    sll_int32, intent(in)                :: ith_col
 !!$    sll_real64, dimension(:),intent(out) :: deriv_out
 !!$  end subroutine compute_eta1_derivative_on_col
-!!$
-!!$  ! need to do something about deallocating the field proper, when allocated
-!!$  ! in the heap...
-!!$  subroutine delete_scalar_field_2d( this )
-!!$    type(scalar_field_2d), pointer :: this
-!!$    sll_int32                      :: ierr
-!!$    nullify(this%mesh)
-!!$    SLL_DEALLOCATE(this%data, ierr)
-!!$  end subroutine delete_scalar_field_2d
-!!$
+
+  function get_transformation_analytic_alt( field ) result(res)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    class(sll_coordinate_transformation_2d_base), pointer :: res
+    res => field%T
+  end function get_transformation_analytic_alt
+
+
+  function get_logical_mesh_2d_analytic_alt( field ) result(res)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    type(sll_logical_mesh_2d), pointer :: res
+    res => field%T%mesh
+  end function get_logical_mesh_2d_analytic_alt
+
+  function get_jacobian_matrix_analytic_alt( field, eta1, eta2 ) result(res)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(2,2) :: res
+    res = (field%T%jacobian_matrix(eta1,eta2))
+  end function get_jacobian_matrix_analytic_alt
+
+
+  subroutine write_to_file_analytic_2d( field, tag )
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_int32, intent(in)                               :: tag
+    sll_int32 :: nptsx1
+    sll_int32 :: nptsx2
+    sll_real64, dimension(:,:), allocatable :: x1coords
+    sll_real64, dimension(:,:), allocatable :: x2coords
+    sll_real64, dimension(:,:), allocatable :: values
+    sll_real64                              :: eta1
+    sll_real64                              :: eta2
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    type(sll_logical_mesh_2d), pointer      :: mesh
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ierr
+
+    ! use the logical mesh information to find out the extent of the
+    ! domain and allocate the arrays for the plotter.
+    T      => field%get_transformation()
+    mesh   => field%get_logical_mesh()
+    nptsx1 = mesh%num_cells1 + 1
+    nptsx2 = mesh%num_cells2 + 1
+    SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(x2coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(values(nptsx1,nptsx2),ierr)
+
+    ! Fill the arrays with the needed information.
+    do j=1, nptsx2
+       eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
+       do i=1, nptsx1
+          eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
+          x1coords(i,j) = T%x1(eta1,eta2)
+          x2coords(i,j) = T%x2(eta1,eta2)
+          values(i,j)   = field%value_at_point(eta1,eta2)
+       end do
+    end do
+
+    call sll_gnuplot_curv_2d( &
+         nptsx1, &
+         nptsx2, &
+         x1coords, &
+         x2coords, &
+         values, &
+         trim(field%name), &
+         tag, &
+         ierr )
+
+    SLL_DEALLOCATE_ARRAY(x1coords,ierr)
+    SLL_DEALLOCATE_ARRAY(x2coords,ierr)
+    SLL_DEALLOCATE_ARRAY(values,ierr)
+  end subroutine write_to_file_analytic_2d
+
+
+  ! **************************************************************************
+  !
+  !                         DISCRETE CASE
+  !
+  ! **************************************************************************
+
+  function new_scalar_field_2d_discrete_alt( &
+    array_2d, &
+    field_name, &
+    interpolator_2d, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top,&
+    point1_1d, &
+    sz_point1,&
+    point2_1d,&
+    sz_point2) result(obj)
+    ! point2d)
+   ! result(obj)!
+
+    type(sll_scalar_field_2d_discrete_alt), pointer :: obj
+    sll_real64, dimension(:,:), intent(in), target  :: array_2d
+    character(len=*), intent(in)                    :: field_name
+    class(sll_interpolator_2d_base), target        :: interpolator_2d
+    class(sll_coordinate_transformation_2d_base), target :: transformation
+    sll_int32 :: SPLINE_DEG1
+    sll_int32 :: SPLINE_DEG2
+    sll_real64, dimension(:), optional :: point1_1d
+    sll_real64, dimension(:), optional :: point2_1d
+    sll_int32, optional :: sz_point1
+    sll_int32, optional :: sz_point2
+    ! sll_real64, dimension(:,:), optional :: point2d
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
+    sll_int32  :: ierr
+    
+    SLL_ALLOCATE(obj,ierr)
+    call obj%initialize( &
+         array_2d, &
+         field_name, &
+         interpolator_2d, &
+         transformation, &
+         bc_left, &
+         bc_right, &
+         bc_bottom, &
+         bc_top,&
+         point1_1d,&
+         sz_point1,&
+         point2_1d,&
+         sz_point2)
+  end function new_scalar_field_2d_discrete_alt
+  
+  subroutine initialize_scalar_field_2d_discrete_alt( &
+    field, &
+    array_2d, &
+    field_name, &
+    interpolator_2d, &
+    transformation, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top,& 
+    point1_1d, &
+    sz_point1,&
+    point2_1d,&
+    sz_point2)
+    
+    
+    class(sll_scalar_field_2d_discrete_alt)         :: field
+    sll_real64, dimension(:,:), intent(in), target  :: array_2d
+    character(len=*), intent(in)                    :: field_name
+    class(sll_interpolator_2d_base), target        :: interpolator_2d
+    class(sll_coordinate_transformation_2d_base), target :: transformation
+
+    sll_real64, dimension(:), optional :: point1_1d
+    sll_real64, dimension(:), optional :: point2_1d
+    sll_int32,optional :: sz_point1
+    sll_int32,optional :: sz_point2
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
+    sll_int32 :: i
+   
+    
+    
+    field%values => array_2d
+    field%T => transformation
+    field%interp_2d => interpolator_2d
+    !    field%mesh%written = .false.
+    field%name      = trim(field_name)
+    field%bc_left   = bc_left
+    field%bc_right  = bc_right
+    field%bc_bottom = bc_bottom
+    field%bc_top    = bc_top
+    
+   
+    if (present(point1_1d) .and. present(point2_1d) &
+         .and. present(sz_point1) .and. present(sz_point2)) then 
+       
+       allocate(field%point1_1d(sz_point1))
+       allocate(field%point2_1d(sz_point2))
+       
+       field%point1_1d(:) = point1_1d(:)
+       field%point2_1d(:) = point2_1d(:)
+ 
+    end if
+    
+    if (present(point1_1d) .and. present(point2_1d) &
+         .and. present(sz_point1) .and. present(sz_point2) ) then  
+       
+       call  field%interp_2d%compute_interpolants( &
+            array_2d, &
+            point1_1d, &
+            sz_point1, &
+            point2_1d, &
+            sz_point2 )
+    end if
+    
+    print*, 'hello'
+  end subroutine initialize_scalar_field_2d_discrete_alt
+  
+  ! need to do something about deallocating the field proper, when allocated
+  ! in the heap...
+  subroutine delete_field_2d_discrete_alt( field )
+    class(sll_scalar_field_2d_discrete_alt), intent(out) :: field
+    ! just nullify pointers, nothing to deallocate that this object owns.
+    nullify(field%values)
+    nullify(field%T)
+    nullify(field%interp_2d)
+    nullify(field%point1_1d)
+    nullify(field%point2_1d)
+  end subroutine delete_field_2d_discrete_alt
+
+
+  function get_transformation_discrete_alt( field ) result(res)
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    class(sll_coordinate_transformation_2d_base), pointer :: res
+    res => field%T
+  end function get_transformation_discrete_alt
+
+  function get_logical_mesh_2d_discrete_alt( field ) result(res)
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    type(sll_logical_mesh_2d), pointer :: res
+    res => field%T%mesh
+  end function get_logical_mesh_2d_discrete_alt
+
+  function get_jacobian_matrix_discrete_alt( field, eta1, eta2 ) result(res)
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(2,2) :: res
+    res(:,:) = field%T%jacobian_matrix(eta1,eta2)
+  end function get_jacobian_matrix_discrete_alt
+
+  function value_at_pt_discrete( field, eta1, eta2 )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: value_at_pt_discrete
+
+    value_at_pt_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+  end function value_at_pt_discrete
+
+  function value_at_index_discrete( field, i, j )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: value_at_index_discrete
+    eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
+    eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
+    value_at_index_discrete = field%interp_2d%interpolate_value(eta1,eta2)
+  end function value_at_index_discrete
+
+  subroutine write_to_file_discrete_2d( field, tag )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_int32, intent(in)                               :: tag
+    sll_int32 :: nptsx1
+    sll_int32 :: nptsx2
+    sll_real64, dimension(:,:), allocatable :: x1coords
+    sll_real64, dimension(:,:), allocatable :: x2coords
+    sll_real64, dimension(:,:), allocatable :: values
+    sll_real64                              :: eta1
+    sll_real64                              :: eta2
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    type(sll_logical_mesh_2d), pointer      :: mesh
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ierr
+
+    ! use the logical mesh information to find out the extent of the
+    ! domain and allocate the arrays for the plotter.
+    T      => field%get_transformation()
+    mesh   => field%get_logical_mesh()
+    nptsx1 = mesh%num_cells1 + 1
+    nptsx2 = mesh%num_cells2 + 1
+    SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(x2coords(nptsx1,nptsx2),ierr)
+    SLL_ALLOCATE(values(nptsx1,nptsx2),ierr)
+
+    ! Fill the arrays with the needed information.
+    do j=1, nptsx2
+       eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
+       do i=1, nptsx1
+          eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
+          x1coords(i,j) = field%T%x1(eta1,eta2)
+          x2coords(i,j) = field%T%x2(eta1,eta2)
+          values(i,j)   = field%value_at_point(eta1,eta2)
+       end do
+    end do
+
+    call sll_gnuplot_curv_2d( &
+         nptsx1, &
+         nptsx2, &
+         x1coords, &
+         x2coords, &
+         values, &
+         trim(field%name), &
+         tag, &
+         ierr )
+
+    SLL_DEALLOCATE_ARRAY(x1coords,ierr)
+    SLL_DEALLOCATE_ARRAY(x2coords,ierr)
+    SLL_DEALLOCATE_ARRAY(values,ierr)
+  end subroutine write_to_file_discrete_2d
+
+
+
+
 !!$  subroutine write_scalar_field_2d( &
 !!$    scalar_field, &
 !!$    multiply_by_jacobian, &
@@ -352,4 +740,4 @@ end function whatever
 !!$    SLL_DEALLOCATE_ARRAY(val,ierr)
 !!$  end subroutine write_scalar_field_2d
 
-end module sll_module_scalar_field_2d
+end module sll_module_scalar_field_2d_alternative

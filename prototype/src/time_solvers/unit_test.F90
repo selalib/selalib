@@ -40,11 +40,11 @@ program test_time_splitting
 
   ! initialize interpolator
 #ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(interp_eta1, N1, XMIN, XMAX, PERIODIC_SPLINE )
-  call cubic_spline_1d_interpolator_initialize(interp_eta2, N2, XMIN, XMAX, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(interp_eta1, N1, XMIN, XMAX, SLL_PERIODIC )
+  call cubic_spline_1d_interpolator_initialize(interp_eta2, N2, XMIN, XMAX, SLL_PERIODIC )
 #else
-  call interp_eta1%initialize( N1, XMIN, XMAX, PERIODIC_SPLINE )
-  call interp_eta2%initialize( N2, XMIN, XMAX, PERIODIC_SPLINE )
+  call interp_eta1%initialize( N1, XMIN, XMAX, SLL_PERIODIC )
+  call interp_eta2%initialize( N2, XMIN, XMAX, SLL_PERIODIC )
 #endif
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2

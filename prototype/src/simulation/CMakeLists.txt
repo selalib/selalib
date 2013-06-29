@@ -180,7 +180,6 @@ target_link_libraries(VP1D_cart
 	sll_assertion 	
 	sll_poisson_solvers
 	dfftpack
-                                    ${HDF5_LIBRARIES}
 	)
 
 
@@ -247,15 +246,16 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ############################################################
 
    ADD_LIBRARY( sll_simulations STATIC 
-     simulation_base_class.F90
-     simulation_4d_vlasov_poisson_cartesian.F90
-     simulation_4d_vlasov_poisson_general.F90
-     simulation_4d_vlasov_poisson_polar.F90
-     simulation_4d_drift_kinetic_cartesian_finite_volume.F90
-     simulation_6d_vlasov_poisson_cartesian.F90)
+                simulation_base_class.F90
+                simulation_4d_vlasov_poisson_cartesian.F90
+                simulation_4d_vlasov_poisson_general.F90
+                simulation_4d_vlasov_poisson_polar.F90
+                simulation_4d_drift_kinetic_cartesian_finite_volume.F90
+                simulation_6d_vlasov_poisson_cartesian.F90)
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
+                       sll_multigrid
                        sll_fft
                        sll_electric_field_accumulators
                        sll_scalar_field
@@ -275,10 +275,11 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_working_precision)
 
    ADD_DEPENDENCIES(sll_simulations ${SIMULATION_DEPS})
+   TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
 
    MACRO(ADD_SIMULATION TEST_NAME) 
       ADD_EXECUTABLE(test_${TEST_NAME} unit_test_${TEST_NAME}.F90)
-      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulations ${SIMULATION_DEPS})
+      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulations)
    ENDMACRO(ADD_SIMULATION)
 
    #Define the executables/tests here.

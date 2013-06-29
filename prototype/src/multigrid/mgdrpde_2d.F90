@@ -1,9 +1,3 @@
-subroutine mgdrpde(sxm,exm,sym,eym,nxm,nym,cof,xl,yl,bd)
-use mpi
-#include "sll_working_precision.h"
-#include "mgd2.h"
-sll_int32  :: sxm,exm,sym,eym,nxm,nym,bd(8)
-sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),xl,yl
 !------------------------------------------------------------------------
 ! Discretize the pde: set the coefficients of the cof matrix. Works
 ! for periodic, Neumann, and Dirichlet boundary conditions.
@@ -23,19 +17,22 @@ sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),xl,yl
 ! Called in : mgdsolver
 ! Calls     : --
 !------------------------------------------------------------------------
+subroutine mgdrpde(sxm,exm,sym,eym,nxm,nym,cof,xl,yl,bd)
+#include "sll_working_precision.h"
+#include "mgd2.h"
+sll_int32  :: sxm,exm,sym,eym,nxm,nym,bd(8)
+sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),xl,yl
 sll_real64 :: dlx,odlxx,dly,odlyy
 sll_int32  :: i,j
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
-!
+
 ! calculate off-diagonal terms
-!
 dlx=xl/float(nxm-1)
 odlxx=1.0d0/(dlx*dlx)
 dly=yl/float(nym-1)
 odlyy=1.0d0/(dly*dly)
+
+#ifdef POLAR
+
 do j=sym,eym
   do i=sxm,exm
     cof(i,j,1)=odlxx
@@ -44,6 +41,19 @@ do j=sym,eym
     cof(i,j,4)=odlyy
   end do
 end do
+
+#else
+
+do j=sym,eym
+  do i=sxm,exm
+    cof(i,j,1)=odlxx
+    cof(i,j,2)=odlxx
+    cof(i,j,3)=odlyy
+    cof(i,j,4)=odlyy
+  end do
+end do
+
+#endif
 !
 ! enforce Neumann BCs
 !
@@ -75,9 +85,5 @@ do j=sym,eym
     cof(i,j,5)=-(cof(i,j,1)+cof(i,j,2)+cof(i,j,3)+cof(i,j,4))
   end do
 end do
-
-# if DEBUG
-timing(82)=timing(82)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine

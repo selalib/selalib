@@ -50,7 +50,8 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
 
 ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
-TARGET_LINK_LIBRARIES(sll_poisson_2d_polar sll_fft sll_memory sll_assertion sll_utilities)
+TARGET_LINK_LIBRARIES(sll_poisson_2d_polar 
+                      sll_fft sll_memory sll_assertion sll_utilities)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
                ../simulation/sll_polar_operators.F90)

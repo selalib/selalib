@@ -7,9 +7,7 @@ subroutine mgdcor(sxf,exf,syf,eyf,nxf,nyf,phif,  &
                   sxc,exc,syc,eyc,nxc,nyc,phic,  &
                   sx1,ex1,sy1,ey1,bd,phibc)
 
-use mpi
 #include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf
 sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,sx1,ex1,sy1,ey1,bd(8)
@@ -17,10 +15,6 @@ sll_real64 :: phif(sxf-1:exf+1,syf-1:eyf+1)
 sll_real64 :: phic(sxc-1:exc+1,syc-1:eyc+1),phibc(4)
 
 sll_int32 :: i,j,ic,jc,i1,i2,j1,j2
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
 
 # if WMGD
 !------------------------------------------------------------------------
@@ -141,10 +135,6 @@ if (nxc.lt.nxf.and.nyc.lt.nyf) then
     end do
   end do
 end if
-# endif
-
-# if DEBUG
-timing(92)=timing(92)+MPI_WTIME()-tinitial
 # endif
 
 end subroutine

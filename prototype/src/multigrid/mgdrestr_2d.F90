@@ -3,9 +3,8 @@ subroutine mgdrestr(sxc,exc,syc,eyc,nxc,nyc,phic,rhsc,   &
                     resf,iresw,comm2d,myid,neighbor,bd,  &
                     itype,jtype,ijtype)
 
-use mpi
+use gxch1_2d
 #include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,iresw
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf
@@ -26,10 +25,6 @@ sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
 ! Calls     : gxch1lin, gxch1cor
 !------------------------------------------------------------------------
 sll_int32 :: i,j,isrt,jsrt,iinc,jinc,ic,jc
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
 !------------------------------------------------------------------------
 do jc=syc-1,eyc+1
   do ic=sxc-1,exc+1
@@ -142,10 +137,6 @@ else if (iresw.eq.2) then
     j=j+jinc
   end do
 end if
-# endif
-
-# if DEBUG
-timing(91)=timing(91)+MPI_WTIME()-tinitial
 # endif
 
 end subroutine

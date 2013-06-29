@@ -1,12 +1,10 @@
 subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
                    comm2d,myid,neighbor,bd,phibc)
 
-use mpi
 #include "sll_working_precision.h"
-use sll_mgd2, only: nxk,nyk,sxk,exk,syk,eyk,           &
-                    kpbgn,kcbgn,ikdatatype,jkdatatype, &
-                    ijkdatatype,sxi,exi,syi,eyi
-#include "mgd2.h"
+use mgd2, only: nxk,nyk,sxk,exk,syk,eyk,           &
+                kpbgn,kcbgn,ikdatatype,jkdatatype, &
+                ijkdatatype,sxi,exi,syi,eyi
 
 sll_int32  :: kcur,kcycle,iprer,ipost,iresw
 sll_int32  :: comm2d,myid,neighbor(8),bd(8)
@@ -26,10 +24,6 @@ sll_int32 :: sxf,exf,syf,eyf,nxf,nyf,ipf,icf
 sll_int32 :: sxc,exc,syc,eyc,nxc,nyc,ipc,irc
 sll_int32 :: klevel,itype,jtype,ijtype,kount(20),l,nrel
 sll_int32 :: sx1,ex1,sy1,ey1
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
 
 klevel=kcur
 !
@@ -243,9 +237,5 @@ jtype=jkdatatype(kcur)
 call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),ipost, &
               comm2d,myid,neighbor,bd,phibc(1,kcur),     &
               itype,jtype)
-
-# if DEBUG
-timing(89)=timing(89)+MPI_WTIME()-tinitial
-# endif
 
 end subroutine

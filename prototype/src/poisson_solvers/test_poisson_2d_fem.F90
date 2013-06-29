@@ -21,8 +21,8 @@ sll_real64, dimension(:,:), pointer :: ey
 sll_real64, dimension(:,:), pointer :: rho
 sll_real64 :: errmax
 
-nc_x = 5
-nc_y = 5
+nc_x = 32
+nc_y = 32
 
 SLL_CLEAR_ALLOCATE(ex(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(ey(1:nc_x+1,1:nc_y+1),error) 
@@ -47,7 +47,7 @@ enddo
 
 mode = 4*sll_pi
 
-!call test_compact()
+call test_compact()
 call test_periodic()
 
 contains
@@ -67,14 +67,14 @@ call solve(poisson, ex, ey, rho)
 errmax = 0.
 do j = 1, nc_y+1
    do i = 1, nc_x+1
-      errmax = max(errmax,abs(rho(i,j)-sin(mode*x(i))*sin(mode*y(j))))
+      errmax = errmax +abs(rho(i,j)-sin(mode*x(i))*sin(mode*y(j)))
       write(11,*) x(i), y(j), rho(i,j), sin(mode*x(i))*sin(mode*y(j))
       write(12,*) x(i), y(j), rho(i,j)-sin(mode*x(i))*sin(mode*y(j))
    end do
    write(12,*); write(11,*)
 end do
 close(11); close(12)
-print*, 'compact, error = ', errmax
+print*, 'compact, error = ', errmax / (nc_x+1) / (nc_y+1)
 
 end subroutine test_compact
 
@@ -83,7 +83,7 @@ type( poisson_2d_periodic_fem ) :: poisson
 
 do j = 1, nc_y+1
    do i = 1, nc_x+1
-      rho(i,j) = 2_f64 * mode**2 * cos(mode*x(i))*cos(mode*y(j))
+      rho(i,j) = 2_f64 * mode**2 * sin(mode*x(i))*sin(mode*y(j))
    end do
 end do
 
@@ -91,16 +91,16 @@ call initialize(poisson, x, y, nc_x+1, nc_y+1)
 call solve(poisson, ex, ey, rho)
 
 errmax = 0.
-do j = 1, nc_y+1
-   do i = 1, nc_x+1
-      errmax = max(errmax,abs(rho(i,j)-cos(mode*x(i))*cos(mode*y(j))))
-      write(13,*) x(i), y(j), rho(i,j),cos(mode*x(i))*cos(mode*y(j))
-      write(14,*) x(i), y(j), rho(i,j)-cos(mode*x(i))*cos(mode*y(j))
+do j = 1, nc_y
+   do i = 1, nc_x
+      errmax = errmax+abs(rho(i,j)-sin(mode*x(i))*sin(mode*y(j)))
+      write(13,*) x(i), y(j), rho(i,j),sin(mode*x(i))*sin(mode*y(j))
+      write(14,*) x(i), y(j), rho(i,j)-sin(mode*x(i))*sin(mode*y(j))
    end do
    write(13,*) ; write(14,*) 
 end do
 close(13); close(14)
-print*, 'periodic, error = ', errmax
+print*, 'periodic, error = ', errmax / (nc_x*nc_y)
 
 end subroutine test_periodic
 

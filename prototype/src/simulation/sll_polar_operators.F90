@@ -68,7 +68,7 @@ contains
     end if
 
     this%spl_phi => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-         & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
+         & SLL_HERMITE, SLL_PERIODIC,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
     SLL_ALLOCATE(bufr(ntheta),err)
     SLL_ALLOCATE(bufc(ntheta/2+1),err)
