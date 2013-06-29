@@ -27,7 +27,6 @@ sll_int32                                    :: gi, gj
 sll_int32                                    :: myrank
 type(layout_2D), pointer                     :: layout
 sll_int64                                    :: colsz ! collective size
-sll_int32                                    :: nprocx, nprocy
 sll_int32                                    :: e
 sll_real32                                   :: ok 
 sll_real32, dimension(1)                     :: prod4test
@@ -59,7 +58,6 @@ call initialize_2d(poisson, 0._f64, Lx, ncx, 0._f64, Ly, ncy)
 SLL_ALLOCATE(rho(nx_loc,ny_loc), ierr)
 SLL_ALLOCATE(phi_an(nx_loc,ny_loc), ierr)
 SLL_ALLOCATE(phi(nx_loc,ny_loc), ierr)
-
 
 ! initialize reference array
 do j=1,ny_loc
