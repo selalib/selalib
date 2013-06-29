@@ -59,11 +59,11 @@ program unit_test
 
   print*, 'Cubic spline interpolation'
 #ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, SLL_PERIODIC )
 #else
-  call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  !call quintic_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  !call cubic_nonunif_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
+  call spline%initialize(n, x_min, x_max, SLL_PERIODIC )
+  !call quintic_spline%initialize(n, x_min, x_max, SLL_PERIODIC )
+  !call cubic_nonunif_spline%initialize(n, x_min, x_max, SLL_PERIODIC )
 #endif
 
   interp =>  spline
