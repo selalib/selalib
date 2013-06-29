@@ -38,6 +38,7 @@ interface initialize
    module procedure initialize_2d
 end interface initialize
 
+sll_int32, private :: i, j, k
 sll_int32, private :: error
 
 contains
@@ -56,12 +57,11 @@ sll_int32 , intent(in)        :: nc_eta2
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: nwork
 sll_int32  :: ngrid,nxdim,nydim
-sll_real64 :: tolmax
 
-logical           :: nprscr,periods(2)
+logical           :: periods(2)
 sll_int32         :: numprocs,myid,sx,ex,sy,ey,neighbor(8),bd(8),iter
 sll_int32         :: realtype
-sll_int32         :: ierr,m0,m1,dims(2),coords(2),i,j
+sll_int32         :: ierr,m0,m1,dims(2)
 sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
 sll_real64        :: xl,yl,hxi,hyi,wk,rro
 character(len=1)  :: num(10)
@@ -77,8 +77,6 @@ integer :: statut(MPI_STATUS_SIZE)
 sll_real64, allocatable :: p(:,:)
 sll_real64, allocatable :: r(:,:)
 sll_real64, allocatable :: f(:,:)
-sll_real64, allocatable :: xcoord(:,:)
-sll_real64, allocatable :: ycoord(:,:)
 
 numprocs    = sll_get_collective_size(sll_world_collective)
 myid        = sll_get_collective_rank(sll_world_collective)
@@ -89,6 +87,10 @@ nxprocs = int(sqrt(real(numprocs,f64)))
 nyprocs = nxprocs
 this%nprocs_1 = nxprocs
 this%nprocs_2 = nyprocs
+this%eta1_min = eta1_min
+this%eta1_max = eta1_max
+this%eta2_min = eta2_min
+this%eta2_max = eta2_max
 
 if (nxprocs*nyprocs /= numprocs) goto 1000
 
@@ -149,7 +151,7 @@ m1 = mod(myid,10)+1
 m0 = mod(myid/10,10)+1
 if (numprocs.ne.(nxprocs*nyprocs)) then
   write(6,100)
-  stop
+  goto 1000
 end if
 
 ! create Cartesian topology with periodic boundary conditions

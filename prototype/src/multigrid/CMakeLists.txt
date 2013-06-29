@@ -56,7 +56,7 @@ TARGET_LINK_LIBRARIES(sll_multigrid sll_mgd2
 
 ADD_EXECUTABLE(test_multigrid_2d test_multigrid_2d.F90)
 
-TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid sll_file_io_parallel )
+TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid sll_file_io )
 
 IF(HDF5_PARALLEL_ENABLED)
 
