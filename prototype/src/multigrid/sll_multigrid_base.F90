@@ -33,7 +33,6 @@ type, public  :: sll_multigrid_solver
    sll_int32                :: iprer
    sll_int32                :: ipost
    sll_int32                :: iresw
-   sll_real64, pointer      :: work(:)
 end type sll_multigrid_solver
 
 end module sll_multigrid_base

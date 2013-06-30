@@ -9,7 +9,7 @@ use gxch1_2d
 
 implicit none
 
-sll_int32, private :: sx, ex, sy, ey
+sll_int32, private :: sx, ex, sy, ey, i, j, k
 
 logical ::  WMGD 
 sll_int32 :: nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20)
@@ -28,657 +28,14 @@ type, public :: block
    sll_int32  :: neighbor(8),bd(8)
 end type block
 
-type, public :: mg_solver
-   sll_int32  :: nx, ny
-   sll_int32  :: ibdry
-   sll_int32  :: jbdry
-   sll_int32  :: nxprocs
-   sll_int32  :: nyprocs
-   sll_real64 :: vbc(4),phibc(4,20)
-   sll_int32  :: comm2d
-   sll_real64 :: tolmax
-   sll_real64 :: xl,yl
-   sll_int32  :: maxcy
-   sll_int32  :: kcycle
-   sll_int32  :: iprer
-   sll_int32  :: ipost
-   sll_int32  :: iresw
-   sll_int32  :: isol
-end type mg_solver
-
 contains
-
-!>  \function
-!>  From the MPE library \n
-!>  This file contains a routine for producing a decomposition of a 1-d  \n
-!>  array when given a number of processors.  It may be used in "direct"  \n
-!>  product decomposition.  The values returned assume a "global" domain  \n
-!>  in [1:n]
-subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
-
-   sll_int32  :: n
-   sll_int32  :: numprocs
-   sll_int32  :: myid
-   sll_int32  :: s
-   sll_int32  :: e
-   sll_int32  :: nlocal
-   sll_int32  :: deficit
-
-   nlocal  = n / numprocs
-   s = myid * nlocal + 1
-   deficit = mod(n,numprocs)
-   s = s + min(myid,deficit)
-   if (myid < deficit) then
-      nlocal = nlocal + 1
-   endif
-   e = s + nlocal - 1
-   if (e > n .or. myid == numprocs-1) e = n
-   return
-
-end subroutine
-
-!> Initialize the parallel multigrid solver: subdomain indices and
-!> MPI datatypes.
-!>
-!> The multigrid code comes in two versions. With the WMGD compiler
-!> directive set to 0, the grid setup is vertex-centered:
-!>
-!> WMGD=0
-!> 
-!>  |------|-----|-----|-----|-----|            fine
-!>  1      2     3     4     5     6 
-!>
-!>  |------------|-----------|-----------|      coarse
-!>  1            2           3           4
-!>
-!> With WMGD set to 1, it is cell-centered:
-!>
-!> WMGD=1   
-!>           |                       |
-!>        |--|--|-----|-----|-----|--|--|       fine
-!>        1  |  2     3     4     5  |  6
-!>           |                       |
-!>     |-----|-----|-----------|-----|-----|    coarse
-!>     1     |     2           3     |     4
-!>           |                       |
-!>          wall                    wall
-!>
-!> For WMGD=0, the restriction and correction operators are standard
-!> (choice of full or half weighting for the restriction, bilinear
-!> interpolation for the correction). This works fine for periodic
-!> boundary conditions. However, when there are Neumann (wall) or
-!> Dirichlet BCs, this grid setup results in a loss of accuracy near
-!> the boundaries when the grid is staggered (the discretization of
-!> the relaxation operator is first-order locally there). With the
-!> grid setup corresponding to WMGD=1, accuracy remains second-order
-!> all the time. As the grid gets coarser, it remains centered on the
-!> domain instead of "shifting to the right". This option works for
-!> periodic, Neumann, and Dirichlet BCs, although only periodic and
-!> Neumann BCs have been tested thoroughly. There is one catch, though.
-!> For a problem with purely periodic BCs, WMGD=0 converges in less
-!> cycles than WMGD=1 and requires less CPU time (the penalty is
-!> apparently between 10 and 50%). This can be attributed to the loss
-!> of accuracy in the restriction and correction operators due to the
-!> fact that WMGD=0 uses a support of 3 points in each direction 
-!> whereas WMGD=1 uses only 2 points.
-!>
-!> Both versions offer the option to coarsify in one direction and
-!> not the other, except at the finest grid level, where coarsifying
-!> MUST take place along all axes. However, it is possible to have
-!> ngrid=iex=jey=1, with ixp=nx and jyq=ny. In this case, the code
-!> never enters 'mgdrestr' and 'mgdcor' and all it does is Gauss-Seidel
-!> iterate at the finest grid level. This can be useful as a preliminary
-!> check.
-!>
-!> Note: some memory could be saved by noting that the cof arrays
-!> need be dimensioned (sxm:exm,sym:eym) and not
-!> (sxm-1:exm+1,sym-1:eym+1)... Probably not too difficult to
-!> make the change
-!>
-!> Bernard Bunner (bunner@engin.umich.edu), January 1998
-subroutine initialize_mgd2(my_block, my_mg, nerror)
-
-sll_int32       :: nerror
-type(block)     :: my_block
-type(mg_solver) :: my_mg
-
-!sll_int32  :: nxk,nyk,sxk,exk,syk,eyk,kpbgn,kcbgn
-!sll_int32  :: ikdatatype,jkdatatype,ijkdatatype
-!sll_int32  :: sxi,exi,syi,eyi
-!sll_int32  :: nxr,nyr,sxr,exr,syr,eyr
-!sll_int32  :: irdatatype,jrdatatype,ijrdatatype
-sll_int32  :: i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
-
-! set /mgd/ variables to zero
-nerror = 0
-do k=1,20
-  nxk(k)         = 0
-  nyk(k)         = 0
-  sxk(k)         = 0
-  exk(k)         = 0
-  syk(k)         = 0
-  eyk(k)         = 0
-  kpbgn(k)       = 0
-  kcbgn(k)       = 0
-  ikdatatype(k)  = MPI_DATATYPE_NULL
-  jkdatatype(k)  = MPI_DATATYPE_NULL
-  ijkdatatype(k) = MPI_DATATYPE_NULL
-  irdatatype(k)  = MPI_DATATYPE_NULL
-  jrdatatype(k)  = MPI_DATATYPE_NULL
-  ijrdatatype(k) = MPI_DATATYPE_NULL
-  sxi(k)         = 0
-  exi(k)         = 0
-  syi(k)         = 0
-  eyi(k)         = 0
-  nxr(k)         = 0
-  nyr(k)         = 0
-  sxr(k)         = 0
-  exr(k)         = 0
-  syr(k)         = 0
-  eyr(k)         = 0
-end do
-
-
-if (my_mg%ibdry.ne.0.or.my_mg%jbdry.ne.0) then
-
-  write(6,120) my_mg%ibdry,my_mg%jbdry
-  WMGD = .true.
-  ! check that the number of processes in each
-  ! direction divides the number of points in that direction 
-  if (mod(my_mg%nx,my_mg%nxprocs).ne.0) then
-    write(6,100) my_mg%nx,my_mg%nxprocs
-    nerror=1
-    return
-  end if
-  if (mod(my_mg%ny,my_mg%nyprocs).ne.0) then
-    write(6,110) my_mg%ny,my_mg%nyprocs
-    nerror=1
-    return
-  end if
-
-else
-
-  WMGD = .false.
-
-endif
-
-100 format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
-           'nxprocs=',i3,/,'cannot use the new version of the ',  &
-           'multigrid code',/)
-110 format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
-           'nyprocs=',i3,/,'cannot use the new version of the ',  &
-           'multigrid code',/)
-120  format(/,'NOTE in mgdinit: ibdry=',i2,' jbdry=',i2, &
-            /,'boundary conditions that are not periodic',/)
-!------------------------------------------------------------------------
-! define all grid levels
-! I have adopted the same notations as in Mudpack as far as possible.
-! When a confusion was possible, I added a suffix 'm' to the name
-! of the variables. For example, nxm is nx+1 for the multigrid
-! code whereas nx means nxp2-2 in the rest of the code.
-!
-do k=1,my_block%ngrid
-  nxk(k)=my_block%ixp*2**(max(k+my_block%iex-my_block%ngrid,1)-1)+1
-  nyk(k)=my_block%jyq*2**(max(k+my_block%jey-my_block%ngrid,1)-1)+1
-end do
-
-! for all grid levels, set the indices of the subdomain the process
-! 'myid' work on, as well as the datatypes needed for the exchange
-! of boundary data
-
-nxf=nxk(my_block%ngrid)
-nyf=nyk(my_block%ngrid)
-sxk(my_block%ngrid)=my_block%sx
-exk(my_block%ngrid)=my_block%ex
-syk(my_block%ngrid)=my_block%sy
-eyk(my_block%ngrid)=my_block%ey
-call grid1_type(my_block,ikdatatype(my_block%ngrid), &
-                         jkdatatype(my_block%ngrid), &
-                         ijkdatatype(my_block%ngrid),&
-                         my_block%sx, &
-                         my_block%ex, &
-                         my_block%sy, &
-                         my_block%ey)
-do k=my_block%ngrid-1,1,-1
-  nxm=nxk(k)
-  nym=nyk(k)
-  if (nxm.lt.nxf) then
-    sxk(k)=sxk(k+1)/2+1
-    exk(k)=(exk(k+1)-1)/2+1
-  else
-    sxk(k)=sxk(k+1)
-    exk(k)=exk(k+1)
-  end if
-  if (nym.lt.nyf) then
-    syk(k)=syk(k+1)/2+1
-    eyk(k)=(eyk(k+1)-1)/2+1
-  else
-    syk(k)=syk(k+1)
-    eyk(k)=eyk(k+1)
-  end if
-  nxf=nxm
-  nyf=nym
-  call grid1_type(my_block,ikdatatype(k),jkdatatype(k),ijkdatatype(k), &
-                  sxk(k),exk(k),syk(k),eyk(k))
-end do
-!
-! set work space indices for phi, cof at each grid level
-! check that there is sufficient work space
-!
-kps=1
-do k=my_block%ngrid,1,-1
-  sxm=sxk(k)
-  exm=exk(k)
-  sym=syk(k)
-  eym=eyk(k)
-  kpbgn(k)=kps
-  kcbgn(k)=kpbgn(k)+(exm-sxm+3)*(eym-sym+3)
-  kps=kcbgn(k)+6*(exm-sxm+3)*(eym-sym+3)
-end do
-
-!if (kps.gt.nwork) then
-!  write(6,200) kps,nwork,my_block%id
-!  nerror=1
-!  return
-!else
-!  write(6,210) kps,nwork
-!end if
-
-!200 format(/,'ERROR in mgdinit: not enough work space',/, &
-!    ' kps=',i10,' nwork=',i10,' myid: ',i3,/, &
-!    '-> put the formula for nwork in main in ', &
-!    'comments',/,'   and set nwork to the value of kps',/)
-!210 format(/,'WARNING in mgdinit: kps=',i10,' nwork=',i10, &
-!         /,'can optimize the amount of memory needed by ', &
-!           'the multigrid code',/,'by putting the formula ', &
-!           'for nwork into comments and setting',/,'nwork ', &
-!           'to the value of kps',/)
-
-if (WMGD) then
-   !------------------------------------------------------------------------
-   ! For the new version of the multigrid code, set the boundary values 
-   ! to be used for the Dirichlet boundaries. It is possible to assign
-   ! 4 different constant values to the 4 different sides. The values are
-   ! assigned at the finest grid level, zero is assigned at all levels
-   ! below
-   ! 
-   ! vbc, phibc:
-   !
-   !       -----vbc(4)------ 
-   !       |               |
-   !       |               |
-   !     vbc(3)----------vbc(1)
-   !       |               |
-   !       |               |
-   !       ------vbc(2)-----
-   !
-   my_mg%phibc(:,:)=0.0d0
-   my_mg%phibc(:,my_block%ngrid)=my_mg%vbc(:)
-else  
-   !------------------------------------------------------------------------
-   ! set indices for range of ic and jc on coarser grid level which are
-   ! supported on finer grid level, i.e. for which the points
-   ! (x(2*ic-1,2*jc-1),y(2*ic-1,2*jc-1)) are defined in the subdomain
-   ! of process 'myid'. This allows to avoid having any communication
-   ! after the interpolation (or prolongation) step; it should be used
-   ! in that operation only. 
-   !
-   ! example:
-   !   a)  - - -|-----------|-----------|-----------|
-   !                                  exf=8      exf+1=9
-   !
-   !       - ---------------|-----------------------|
-   !                      exc=4                  exc+1=5
-   !
-   !   b)  - - -|-----------|
-   !          exf=5      exf+1=6
-   !
-   !       - - -|-----------------------|
-   !          exc=3                  exc+1=4
-   !
-      
-sxi(my_block%ngrid)=sxk(my_block%ngrid)-1
-exi(my_block%ngrid)=exk(my_block%ngrid)+1
-syi(my_block%ngrid)=syk(my_block%ngrid)-1
-eyi(my_block%ngrid)=eyk(my_block%ngrid)+1
-nxf=nxk(my_block%ngrid)
-nyf=nyk(my_block%ngrid)
-do k=my_block%ngrid-1,1,-1
-  nxc=nxk(k)
-  nyc=nyk(k)
-  if (nxc.lt.nxf) then
-    sxi(k)=sxk(k)-1+mod(sxk(k+1),2)
-    exi(k)=exk(k)+1-mod(exk(k+1),2)
-  else
-    sxi(k)=sxk(k)-1
-    exi(k)=exk(k)+1
-  end if
-  if (nyc.lt.nyf) then
-    syi(k)=syk(k)-1+mod(syk(k+1),2)
-    eyi(k)=eyk(k)+1-mod(eyk(k+1),2)
-  else
-    syi(k)=syk(k)-1
-    eyi(k)=eyk(k)+1
-  end if
-  nxf=nxc
-  nyf=nyc
-end do
-!------------------------------------------------------------------------
-! set indices for determining the coefficients in the elliptic
-! equation div(cof*grad(P))=rhs. Used only when solving for the
-! pressure. When setting these coefficients at level k, need
-! the values of the density at midpoints, i.e. at level k+1
-! (if coarsifying takes place between the levels k and k+1).
-! If coarsifying took place at all levels, the array cof could
-! be used as temporary storage space for the densities, with
-! cof(*,*,6) at level k+1 giving the values cof(*,*,1->5) at level
-! k, and the already defined datatypes could be used for the 
-! exchange of the boundary values. However, this does not work
-! in case there is coarsifying in one direction between two levels.
-!
-! Example: - - -|----------|----------|----------|- -  
-!               3          4          5          6    \
-!                                                      | coarsifying
-!                          |                     |     |
-!                          |                     |    /
-!                          V                     V
-!          - - -|---------------------|---------------------|- -
-!               2          r          3          r   \      4
-!                                                     |
-!                          |                     |    | no coarsifying
-!                          |                     |    /
-!                          V                     V
-!          - - -|---------------------|---------------------|- -
-!               2          r          3          r          4
-!
-! At the finest grid level, the coefficients are determined by a 
-! special procedure directly from r, so that no value needs to be
-! assigned to the indices at level ngrid.
-!
-do k=my_block%ngrid-1,1,-1
-  nxf=nxk(k+1)
-  nyf=nyk(k+1)
-  nxc=nxk(k)
-  nyc=nyk(k)
-  if (nxc.lt.nxf) then
-    sxr(k)=sxk(k+1)
-    exr(k)=exk(k+1)
-    nxr(k)=nxk(k+1)
-    sxm=sxr(k)
-    exm=exr(k)
-    nxm=nxr(k)
-  else
-    if (k.eq.(my_block%ngrid-1)) then
-      write(6,300) my_block%ngrid,my_block%ngrid-1
-      nerror=1
-      return
-    end if
-    sxr(k)=sxm
-    exr(k)=exm
-    nxr(k)=nxm
-  end if
-  if (nyc.lt.nyf) then
-    syr(k)=syk(k+1)
-    eyr(k)=eyk(k+1)
-    nyr(k)=nyk(k+1)
-    sym=syr(k)
-    eym=eyr(k)
-    nym=nyr(k)
-  else
-    if (k.eq.(my_block%ngrid-1)) then
-      write(6,300) my_block%ngrid,my_block%ngrid-1
-      nerror=1
-      return
-    end if
-    syr(k)=sym
-    eyr(k)=eym
-    nyr(k)=nym
-  end if
-  call grid1_type(my_block,irdatatype(k),jrdatatype(k),ijrdatatype(k), &
-                  sxr(k),exr(k),syr(k),eyr(k))
-end do
-endif
-
-return
-300 format('ERROR in mgdinit: no coarsifying between level ', &
-           i3,' and level ',i3,/,', the current version of ', &
-           'the code cannot cope with that',/, &
-           ' -> decrease the value of ixp and/or jyq and',/, &
-           '    increase the value of iex and/or jey')
-end subroutine
-
-!> Parallel multigrid solver in 2-D cartesian coordinates for the
-!> elliptic equation:      div(cof(grad(phif)))=rhsf
-!>
-!> Written for periodic, wall (Neumann), and constant value
-!> (Dirichlet) BCs. Tested roughly for all these BCs. There are 
-!> two versions of the multigrid code, which are separated by the 
-!> compiler directive WMGD set in 'compdir.inc'. The old version 
-!> (WMGD=0) corresponds to the original, "traditional" grid setup, 
-!> and works well when all boundary conditions are periodic. When one 
-!> of the BCs is not periodic, must compile with the new version 
-!> (WMGD=1), which uses a different grid setup and new restriction 
-!> and correction operators (see 'mgdinit' for more details). It is 
-!> less accurate (or ,equivalently, slower to converge) for the case 
-!> of all-periodic BCs than the old version, but is better able to 
-!> handle wall BCs.
-!>
-!> Notes: - the values of the rhs contained in the array rhsf are
-!>          transferred to the work vector and the memory of the 
-!>          rhsf array is then used to store the residuals at the
-!>          different levels; therefore, it does not preserve its
-!>          initial values
-!>        - with the initialization and clean-up routines mgdinit
-!>          and mgdend, this multigrid code is self-standing
-!>
-subroutine mgd2_solver(my_block,my_mg,phif,rhsf,r,work, &
-                     iter,nprscr,nerror)
-sll_real64      :: phif(:,:),rhsf(:,:)
-sll_real64      :: r(:,:)
-sll_real64      :: work(*)
-sll_int32       :: iter,nerror
-type(block)     :: my_block
-type(mg_solver) :: my_mg
-
-logical    :: nprscr
-
-sll_int32  :: k, icf
-sll_real64 :: avo,acorr, relmax
-sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
-sll_int32  :: ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
-sll_int32  :: itype,jtype,ijtype,lev,ir1,ir2
-
-
-! discretize pde at all levels
-!
-! pressure: have to do a lot more work. The coefficients in the new
-!           and old versions of the multigrid code are located at
-!           different places on the grid.
-! Note: the code requires that corasifying takes place in all 
-! directions between levels ngrid and ngrid-1
-!
-! determine coefficients at finest grid level (mid-point values) from
-! two neighboring density points
-!
-  sxf=sxk(my_block%ngrid)
-  exf=exk(my_block%ngrid)
-  syf=syk(my_block%ngrid)
-  eyf=eyk(my_block%ngrid)
-  nxf=nxk(my_block%ngrid)
-  nyf=nyk(my_block%ngrid)
-  icf=kcbgn(my_block%ngrid)
-  call mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,work(icf),r,my_mg%xl,my_mg%yl,my_block%bd)
-if (WMGD) then
-!
-! new version: determine coefficients at coarser grid levels from
-! four neighboring density points; no communication of boundary data
-! is involved because of the grid setup, under the condition that
-! mod(nx,nxprocs)=mod(ny,nyprocs)=0
-!
-  do k=my_block%ngrid-1,1,-1
-    sxm=sxk(k)
-    exm=exk(k)
-    sym=syk(k)
-    eym=eyk(k)
-    nxm=nxk(k)
-    nym=nyk(k)
-    ic=kcbgn(k)
-    call mgdphpde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                  sx,ex,sy,ey,nxf,nyf,my_block%bd,my_mg%xl,my_mg%yl)
-  end do
-else  
-  if (my_block%ngrid.gt.1) then
-!
-! old version: use two locations ir1 and ir2 in the work vector to
-! store the density on the different grid levels. First set r in 
-! work(ir1) at the finest grid level; this is used to determine the 
-! coefficients at level k=ngrid-1
-!
-    ir1=kpbgn(my_block%ngrid)
-    ir2=kcbgn(my_block%ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
-    sxf=sxr(my_block%ngrid-1)
-    exf=exr(my_block%ngrid-1)
-    syf=syr(my_block%ngrid-1)
-    eyf=eyr(my_block%ngrid-1)
-    nxf=nxr(my_block%ngrid-1)
-    nyf=nyr(my_block%ngrid-1)
-    lev=1
-    call mgdrsetf(sxf,exf,syf,eyf,work(ir1),r)
-!
-! for the levels k=ngrid-1,1, calculate the coefficients from the
-! densities stored in the arrays work(ir1) and work(ir2)
-! for the levels k=ngrid-1,2, transfer to the level below the values
-! of the density needed there to determine the coefficients; exchange
-! of the boundary density data is necessary
-!
-    do k=my_block%ngrid-1,1,-1
-      sxm=sxk(k)
-      exm=exk(k)
-      sym=syk(k)
-      eym=eyk(k)
-      nxm=nxk(k)
-      nym=nyk(k)
-      ic=kcbgn(k)
-      if (lev.eq.1) then
-        call mgdppde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                     sxf,exf,syf,eyf,work(ir1),        &
-                     my_mg%xl,my_mg%yl,my_block%bd)
-      else
-        call mgdppde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                     sxf,exf,syf,eyf,work(ir2),        &
-                     my_mg%xl,my_mg%yl,my_block%bd)
-      end if
-      if (k.gt.1) then
-        sxc=sxr(k-1)
-        exc=exr(k-1)
-        syc=syr(k-1)
-        eyc=eyr(k-1)
-        nxc=nxr(k-1)
-        nyc=nyr(k-1)
-        itype=irdatatype(k-1)
-        jtype=jrdatatype(k-1)
-        if (lev.eq.1) then
-          call mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,work(ir2), &
-                        sxf,exf,syf,eyf,nxf,nyf,work(ir1), &
-                        my_mg%comm2d,my_block%id,          &
-                        my_block%neighbor,my_block%bd,     &
-                        itype,jtype)
-          lev=2
-        else
-          call mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,work(ir1), &
-                        sxf,exf,syf,eyf,nxf,nyf,work(ir2), &
-                        my_mg%comm2d,my_block%id,          &
-                        my_block%neighbor,my_block%bd,     &
-                        itype,jtype)
-          lev=1
-        end if
-        sxf=sxc
-        exf=exc
-        syf=syc
-        eyf=eyc
-        nxf=nxc
-        nyf=nyc
-      end if
-    end do
-  end if
-endif
-
-!------------------------------------------------------------------------
-! set phi,rhsf in work at the finest grid level
-!
-sxf = sxk(my_block%ngrid)
-exf = exk(my_block%ngrid)
-syf = syk(my_block%ngrid)
-eyf = eyk(my_block%ngrid)
-ipf = kpbgn(my_block%ngrid)
-irf = kcbgn(my_block%ngrid)+5*(exf-sxf+3)*(eyf-syf+3)
-call mgdsetf(sxf,exf,syf,eyf,work(ipf),work(irf),phif,rhsf)
-!------------------------------------------------------------------------
-! cycling at kcur=ngrid level
-!
-kcur=my_block%ngrid
-do iter=1,my_mg%maxcy
-  call mgdkcyc(work,rhsf,kcur,my_mg%kcycle,my_mg%iprer,     &
-               my_mg%ipost,my_mg%iresw, my_mg%comm2d,       &
-               my_block%id,my_block%neighbor,my_block%bd,   &
-               my_mg%phibc)
-  sxm=sxk(my_block%ngrid)
-  exm=exk(my_block%ngrid)
-  sym=syk(my_block%ngrid)
-  eym=eyk(my_block%ngrid)
-  ip=kpbgn(my_block%ngrid)
-  call mgderr(relmax,sxm,exm,sym,eym,phif,work(ip),my_mg%comm2d)
-  if (relmax.le.my_mg%tolmax) goto 1000
-end do
-!------------------------------------------------------------------------
-! if not converged in maxcy cycles, issue an error message and quit
-!
-if (my_block%id.eq.0) write(6,100) my_mg%maxcy,relmax
-100   format('WARNING: failed to achieve convergence in ',i5, &
-       ' cycles  error=',e12.5)
-nerror=1
-return
-!------------------------------------------------------------------------
-! converged
-!
-1000  continue
-!
-! rescale phif
-!
-avo=0.0d0
-call gscale(my_block%sx,my_block%ex,my_block%sy,my_block%ey, &
-            phif,avo,acorr,my_mg%comm2d,my_mg%nx,my_mg%ny)
-!
-! exchange boundary data and impose periodic BCs
-!
-call gxch1lin(phif,my_mg%comm2d,my_block%sx,my_block%ex,     &
-              my_block%sy,my_block%ey,my_block%neighbor,     &
-              my_block%bd, ikdatatype(my_block%ngrid),       &
-              jkdatatype(my_block%ngrid))
-
-call gxch1cor(phif,my_mg%comm2d,sxm,exm,sym,eym,             &
-              my_block%neighbor,my_block%bd,                 &
-              ijkdatatype(my_block%ngrid))
-if (WMGD) then
-!
-! impose wall and Dirichlet BCs
-!
-call mgdbdry(sx,ex,sy,ey,phif,my_block%bd,my_mg%phibc)
-endif
-
-if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
-120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
-
-return
-end subroutine
 
 !> Define the 3 derived datatypes needed to communicate the boundary
 !> data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
 !> neighbors
-subroutine grid1_type(my_block,itype,jtype,ijtype,sx,ex,sy,ey)
+subroutine grid1_type(itype,jtype,ijtype,sx,ex,sy,ey)
 sll_int32  :: itype,jtype,ijtype,realtype,sx,ex,sy,ey
 sll_int32  :: ierr
-type(block) :: my_block
 
 realtype = MPI_REAL8
 !
@@ -701,7 +58,6 @@ return
 end subroutine
 
 
-!------------------------------------------------------------------------
 !> Determine coefficients for the pressure equation at the finest grid
 !> level. These coefficients involve densities half-way between the
 !> pressure and density nodes. Works for periodic, Neumann, and
@@ -717,8 +73,6 @@ end subroutine
 !>           |
 !>         cof(3)
 !>
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-!------------------------------------------------------------------------
 subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
 
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,bd(8)
@@ -793,7 +147,6 @@ end subroutine
 !>           |
 !>         cof(3)
 !>
-!> Bernard Bunner 
 subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,sx,ex,sy,ey,nxf,nyf,bd,xl,yl)
 
 
@@ -879,7 +232,6 @@ end subroutine
 !>           |
 !>         cof(3)
 !>
-!> Bernard Bunner 
 subroutine mgdppde(sxm,exm,sym,eym,nxm,nym,cof,     &
                    sxf,exf,syf,eyf,rf,xl,yl,bd)
 
@@ -983,7 +335,6 @@ end subroutine
 
 !> For the old version of the multigrid code, set the fine grid values 
 !> of the density in the work vector
-!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 subroutine mgdrsetf(sxf,exf,syf,eyf,rf,r)
 
 sll_int32  :: sxf,exf,syf,eyf
@@ -998,16 +349,12 @@ end do
 
 end subroutine
 
-!------------------------------------------------------------------------
 !> For the old version of the multigrid code, transfer values of the 
 !> density from a finer to a coarser grid level. It is necessary to
 !> exchange the boundary density data because the grid "shifts" to
 !> the right as it becomes coarser. (In the new version of the
 !> multigrid code, there is no such shift, hence no communication is 
 !> needed).
-!
-!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-!------------------------------------------------------------------------
 subroutine mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,rc,            &
                        sxf,exf,syf,eyf,nxf,nyf,rf,            &
                        comm2d,myid,neighbor,bd,itype,jtype)
@@ -1046,18 +393,11 @@ call gxch1lin(rc,comm2d,sxc,exc,syc,eyc,neighbor,bd,itype,jtype)
 
 end subroutine
 
+!> Set the fine grid values in the work vector
 subroutine mgdsetf(sxf,exf,syf,eyf,phi,rhs,phif,rhsf)
 sll_int32  :: sxf,exf,syf,eyf
 sll_real64 :: phi(sxf-1:exf+1,syf-1:eyf+1),rhs(sxf-1:exf+1,syf-1:eyf+1)
 sll_real64 :: phif(sxf-1:exf+1,syf-1:eyf+1),rhsf(sxf-1:exf+1,syf-1:eyf+1)
-!------------------------------------------------------------------------
-! Set the fine grid values in the work vector
-!
-! Code      : mgd2, 2-D parallel multigrid solver
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-! Called in : mgdsolver
-! Calls     : --
-!------------------------------------------------------------------------
 sll_int32  :: i,j
 
 do j=syf-1,eyf+1
@@ -1231,6 +571,8 @@ endif
 end subroutine
 
 
+!> Gauss-Seidel point relaxation with Red & Black ordering. Works for
+!> periodic, Neumann, and Dirichlet boundary conditions.
 subroutine mgdrelax(sxm,exm,sym,eym,phi,cof,iters,comm2d,myid, &
                     neighbor,bd,phibc,itype,jtype)
 
@@ -1239,15 +581,6 @@ sll_int32 :: sxm,exm,sym,eym,iters
 sll_int32 :: comm2d,myid,neighbor(8),bd(8),itype,jtype
 sll_real64 :: phi(sxm-1:exm+1,sym-1:eym+1)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),phibc(4)
-!------------------------------------------------------------------------
-! Gauss-Seidel point relaxation with Red & Black ordering. Works for
-! periodic, Neumann, and Dirichlet boundary conditions.
-!
-! Code      : mgd2, 2-D parallel multigrid solver
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-! Called in : mgdkcyc
-! Calls     : mgdbdry, gxch1lin
-!------------------------------------------------------------------------
 sll_int32 :: rb,it,ipass,i,j
 !
 ! do iters sweeps in the subdomain
@@ -1293,8 +626,6 @@ end subroutine
 !> Calculate the residual and restrict it to the coarser level. In
 !> the new version, the restriction involves 4 points. In the old
 !> version, it involves 9 points (5 if half-weighting).
-!>
-!> Bernard Bunner
 subroutine mgdrestr(sxc,exc,syc,eyc,nxc,nyc,phic,rhsc,   &
                     sxf,exf,syf,eyf,nxf,nyf,phif,cof,    &
                     resf,iresw,comm2d,myid,neighbor,bd,  &
@@ -1740,4 +1071,43 @@ call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),ipost, &
               itype,jtype)
 
 end subroutine
+
+
+!> Rescale the field a so that its average inside the domain
+!> remains constant and equal to avo. For the density,avo should
+!> be rro, this ensures conservation of mass. For the pressure,
+!> avo should be 0 so that the average pressure does not drift
+!> away from 0, which is the initial value.
+subroutine gscale(sx,ex,sy,ey,a,avo,acorr,comm2d,nx,ny)
+
+sll_int32  :: sx,ex,sy,ey,nx,ny
+sll_real64 :: a(sx-1:ex+1,sy-1:ey+1),avo,acorr
+sll_int32  :: comm2d
+sll_real64 :: avloc,av
+sll_int32  :: i,j,ierr
+
+! determine average value
+avloc=0.0d0
+do j=sy,ey
+   do i=sx,ex
+      avloc=avloc+a(i,j)
+   end do
+end do
+!
+! global reduce across all process
+!
+call MPI_ALLREDUCE(avloc,av,1,MPI_REAL8,MPI_SUM,comm2d,ierr)
+
+av=av/float(nx*ny)
+!
+! do correction
+!
+acorr=avo-av
+do j=sy,ey
+  do i=sx,ex
+    a(i,j)=a(i,j)+acorr
+  end do
+end do
+
+end subroutine 
 end module mgd2
