@@ -26,8 +26,8 @@ type, public, extends(sll_multigrid_solver) :: sll_multigrid_solver_2d
    
    sll_int32 :: nc_x
    sll_int32 :: nc_y
-   sll_int32 :: nprocs_1
-   sll_int32 :: nprocs_2
+   sll_int32 :: nprocs_x
+   sll_int32 :: nprocs_y
 
    type(block)     :: block
    type(mg_solver) :: mg
@@ -76,8 +76,8 @@ realtype    = MPI_REAL8
 
 nxprocs       = int(sqrt(real(numprocs,f64)))
 nyprocs       = nxprocs
-this%nprocs_1 = nxprocs
-this%nprocs_2 = nyprocs
+this%nprocs_x = nxprocs
+this%nprocs_y = nyprocs
 this%x_min    = x_min
 this%x_max    = x_max
 this%y_min    = y_min
@@ -124,9 +124,7 @@ if ((ey-sy+3).gt.nydim) then
   write(6,120) myid,nydim,ey-sy+3
   goto 1000
 end if
-write(6,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 
-print*, nxdim, nydim
 SLL_CLEAR_ALLOCATE(this%work(1:nwork), error)
 
 ! open file for output of messages and check that the number of 
@@ -220,29 +218,80 @@ this%mg%nyprocs     = nyprocs
 this%mg%ibdry       = this%ibdry
 this%mg%jbdry       = this%jbdry
 this%mg%comm2d      = this%comm2d
+!
+! check that the dimensions are correct
+!
+i=ixp*2**(iex-1)+1
+if ((this%nc_x+1).ne.i) then
+  write(6,130) this%nc_x+1,i
+  goto 1000
+end if
+j=jyq*2**(jey-1)+1
+if ((this%nc_y+1).ne.j) then
+  write(6,140) this%nc_y+1,j
+  goto 1000
+end if
+!
+! check that the number of points at the coarser level is not smaller
+! than the number of processes in either direction
+!
+if (ixp.lt.this%nprocs_x) then
+  write(6,150) ixp,this%nprocs_x
+  goto 1000
+end if
+if (jyq.lt.this%nprocs_y) then
+  write(6,160) jyq,this%nprocs_y
+  goto 1000
+end if
+! check that coarsifying takes place in all directions at the finest
+! grid level
+!
+if (ngrid.gt.1) then
+  if (iex.eq.1) then
+    write(6,170) ngrid,iex
+    goto 1000
+  end if
+  if (jey.eq.1) then
+    write(6,180) ngrid,jey
+    goto 1000
+  end if
+end if
 
 call initialize_mgd2(this%block,this%mg,error)
 if (error == 1) then
-   write(6,200)
    goto 1000
 end if
 
 return
 1000 continue
+write(6,200)
 call sll_halt_collective()
 close(8)
 stop
 
 100 format(/,'ERROR: numprocs <> (nxprocs*nyprocs)',/)
-110 format(/,'ERROR: process:',i3,' nxdim=',i4,' < ex-sx+3=',i4,/,  &
-       ' -> put the parameter formula for nxdim in main.F in ',     &
-            'comments and',/,'    assign to nxdim the maximum ',    &
-            'value of ex-sx+3',/)
-120 format(/,'ERROR: process:',i3,' nydim=',i4,' < ey-sy+3=',i4,/,  &
-           ' -> put the parameter formula for nydim in main.F in ', &
-           'comments and'/,'     assign to nydim the maximum ',     &
-           'value of ey-sy+3',/)
+110 format(/,'ERROR: process:',i3,' nxdim=',i4,' < ex-sx+3=',i4,/)
+120 format(/,'ERROR: process:',i3,' nydim=',i4,' < ey-sy+3=',i4,/) 
+130 format(/,'nxp1=',i3,' <> ixp*2**(iex-1)+1=',                       &
+          i3,/,'-> adjust the multigrid parameters ixp and iex',/)
+140 format(/,'nyp1=',i3,' <> jyq*2**(jey-1)+1=',                       &
+          i3,/,'-> adjust the multigrid parameters jyq and jey',/)
+150 format(/,'ixp=',i3,' < nxprocs=',i3,/,                             &
+            ' there must be at least one grid point at the ',          &
+            'coarsest grid level',/,                                   &
+            '-> increase ixp and decrease iex correspondingly',/)
+160 format(/,'jyq=',i3,' < nyprocs=',i3,/,                             &
+            ' there must be at least one grid point at the ',          &
+            'coarsest grid level',/,                                   &
+            '-> increase jyq and decrease jey correspondingly',/)
+170 format(/,'ngrid=',i3,' iex=',i3,                                   &
+           /,'no coarsifying at the finest grid level in x-direction', &
+           /,'this is not allowed by the mutligrid code',/)
+180 format(/,'ngrid=',i3,' jey=',i3,                                   &
+           /,'no coarsifying at the finest grid level in y-direction', &
+           /,'this is not allowed by the mutligrid code',/)
 200 format(/,'ERROR in multigrid code initialization',/)
+
 end subroutine initialize_2d
 
 subroutine solve_2d(this, f, p, r)
@@ -250,7 +299,6 @@ sll_real64, dimension(:,:) :: f
 sll_real64, dimension(:,:) :: p
 sll_real64, dimension(:,:) :: r
 type(sll_multigrid_solver_2d) :: this
-sll_real64 :: rro
 sll_int32  :: iter
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -258,7 +306,6 @@ sll_int32  :: iter
 ! wk is the wavenumber (must be an integer value)
 ! rro is the average density
 !
-rro=1.0d0
 r = 1.0
 
 this%mg%xl     = this%x_max-this%x_min
@@ -271,7 +318,7 @@ this%mg%ipost  = this%ipost
 this%mg%iresw  = this%iresw
 this%mg%isol   = 2
 
-call mgd2_solver(this%block,this%mg,p,f,r,this%work,rro,iter,.true.,error)
+call mgd2_solver(this%block,this%mg,p,f,r,this%work,iter,.true.,error)
 
 if (error == 1) then
    write(6,210)
