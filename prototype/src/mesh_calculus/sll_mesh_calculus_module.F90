@@ -88,4 +88,65 @@ contains
 
   end function cell_volume
 
+  function edge_length_eta1_plus( T, ic, jc, integration_degree ) result(len)
+    intrinsic :: abs
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    sll_int32, intent(in) :: ic
+    sll_int32, intent(in) :: jc
+    sll_int32, intent(in) :: integration_degree
+    sll_real64            :: len   ! length of edge in physical space
+    sll_real64, dimension(2,2) :: jac_mat
+!    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
+    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
+    sll_real64 :: eta1
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: max1
+    sll_real64 :: min1
+    sll_real64 :: max2
+    sll_real64 :: min2
+    sll_real64 :: factor1
+    sll_real64 :: factor2
+    sll_int32  :: j
+    sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
+    sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
+
+    ! Verify arguments
+    SLL_ASSERT(associated(T))
+    ! verify that the indices requested are within the logical mesh.
+    SLL_ASSERT(ic <= T%mesh%num_cells1)
+    SLL_ASSERT(jc <= T%mesh%num_cells2)
+
+    len = 0.0_f64
+
+!    eta1_min = T%mesh%eta1_min
+    delta1   = T%mesh%delta_eta1
+    eta2_min = T%mesh%eta2_min
+    delta2   = T%mesh%delta_eta2
+
+    ! The limits of integration are the limits of the cell in eta-space
+!    min1    = eta1_min + (ic-1)*delta1
+!    max1    = eta1_min + ic*delta1
+    eta1    = (ic-1)*delta1
+    min2    = eta2_min + (jc-1)*delta2
+    max2    = eta2_min + jc*delta2
+!    factor1 = 0.5_f64*(max1-min1)
+    factor2 = 0.5_f64*(max2-min2) 
+!    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
+    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
+
+    do j=1,integration_degree
+       ! this can be made more efficient if we could access directly each
+       ! term of the jacobian matrix independently.
+       jac_mat(:,:) = T%jacobian_matrix(eta1,pts_g2(1,j))
+       x1_eta2 = jac_mat(1,2)
+       x2_eta2 = jac_mat(2,2)
+       len = len + sqrt(x1_eta2**2 + x2_eta2**2)*pts_g2(2,j)
+    end do
+    len = len*factor2
+  end function edge_length_eta1_plus
+
+
 end module sll_mesh_calculus_2d_module
