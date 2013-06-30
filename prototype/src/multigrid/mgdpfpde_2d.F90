@@ -33,22 +33,6 @@ tinitial=MPI_WTIME()
 dlx=xl/float(nxf-1)
 dly=yl/float(nyf-1)
 
-#ifdef POLAR
-
-   todlxx=1.0d0/(dlx*dlx)
-   todlyy=1.0d0/(dly*dly)
-   do j=syf,eyf
-     do i=sxf,exf
-       rij=r(i,j)
-       cof(i,j,1)=1./(dlx*(rij+r(i-1,j)))+todlxx
-       cof(i,j,2)=1./(dlx*(rij+r(i+1,j)))+todlxx
-       cof(i,j,3)=4./((rij+r(i,j-1))*(rij+r(i,j-1))*dly)
-       cof(i,j,4)=4./((rij+r(i,j+1))*(rij+r(i,j-1))*dly)
-     end do
-   end do
-
-#else
-
    todlxx=2.0d0/(dlx*dlx)
    todlyy=2.0d0/(dly*dly)
    do j=syf,eyf
@@ -60,8 +44,6 @@ dly=yl/float(nyf-1)
        cof(i,j,4)=todlyy/(rij+r(i,j+1))
      end do
    end do
-
-#endif
 
 ! enforce wall BCs 
 
