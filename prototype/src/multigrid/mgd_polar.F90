@@ -384,7 +384,6 @@ end subroutine
 !>         cof(3)
 !>
 subroutine polar_pfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
-#include "sll_working_precision.h"
 
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,bd(8)
 sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
@@ -460,8 +459,6 @@ end subroutine
 !>
 subroutine polar_phpde(sxm,exm,sym,eym,nxm,nym,cof,         &
                     sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl)
-
-#include "sll_working_precision.h"
 
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,sx,ex,sy,ey,nxf,nyf,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
@@ -549,8 +546,6 @@ end subroutine
 ! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 !------------------------------------------------------------------------
 subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
-#include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,bd(8)
 sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
@@ -650,9 +645,6 @@ end subroutine
 !> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,         &
                     sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl)
-
-#include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,sx,ex,sy,ey,nxf,nyf,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)

@@ -2,16 +2,10 @@ SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      gscale_2d.F90
-                     mgdrsetf_2d.F90
-                     mgdrtrsf_2d.F90
-                     mgdsetf_2d.F90
 		     mgdkcyc_2d.F90
-                     mgdrelax_2d.F90
                      mgdbdry_2d.F90
-                     mgdrestr_2d.F90
 		     mgdcor_2d.F90
                      mgderr_2d.F90
-                     mgdend_2d.F90
                      diagnostics.F90
                      write_xdmf_2d.F90
                      mgd2.F90

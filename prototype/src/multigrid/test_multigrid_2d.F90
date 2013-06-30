@@ -56,8 +56,8 @@ print *, 'running on ', 2**e, 'processes'
 
 ! Layout and local sizes for FFTs in x-direction
 layout => new_layout_2D( sll_world_collective )
-call initialize_layout_with_distributed_2D_array( ncx, ncy, &
-                                                  2, 2, layout)
+call initialize_layout_with_distributed_2D_array( ncx, ncy, 2, 2, layout)
+call sll_view_lims_2D( layout )
 
 call initialize_2d(poisson, layout, 0._f64, Lx, ncx, 0._f64, Ly, ncy)
 

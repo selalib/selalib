@@ -9,6 +9,9 @@ use gxch1_2d
 
 implicit none
 
+sll_int32, private :: sx, ex, sy, ey
+
+logical, parameter :: WMGD = .false.
 sll_int32 :: nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20)
 sll_int32 :: kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20)
 sll_int32 :: ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20)
@@ -35,11 +38,13 @@ type, public :: mg_solver
    sll_int32  :: comm2d
    sll_real64 :: tolmax
    sll_real64 :: xl,yl
-   sll_int32  :: maxcy, kcycle, iprer, ipost, iresw
+   sll_int32  :: maxcy
+   sll_int32  :: kcycle
+   sll_int32  :: iprer
+   sll_int32  :: ipost
+   sll_int32  :: iresw
    sll_int32  :: isol
 end type mg_solver
-
-
 
 contains
 
@@ -130,9 +135,8 @@ end subroutine
 !> (sxm-1:exm+1,sym-1:eym+1)... Probably not too difficult to
 !> make the change
 !>
-!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+!> Bernard Bunner (bunner@engin.umich.edu), January 1998
 subroutine initialize_mgd2(my_block, my_mg, nerror)
-#include "mgd2.h"
 
 sll_int32       :: nerror
 type(block)     :: my_block
@@ -176,7 +180,7 @@ end do
 !------------------------------------------------------------------------
 ! make a number of checks
 !
-# if WMGD
+if (WMGD) then
 !
 ! check that, for the new version, the number of processes in each
 ! direction divides the number of points in that direction (the
@@ -201,7 +205,7 @@ end if
 110 format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
            'nyprocs=',i3,/,'cannot use the new version of the ',  &
            'multigrid code',/)
-# else
+else  
 !
 ! check that the old version is not used with non-periodic BCs
 !
@@ -215,7 +219,7 @@ end if
             /,'boundary conditions that are not periodic', &
             /,'-> change compiler directive to 1 in compdir.inc', &
             /,'   and recompile the multigrid code',/)
-# endif
+endif
 !
 ! check that the dimensions are correct
 !
@@ -334,21 +338,6 @@ do k=my_block%ngrid-1,1,-1
   call grid1_type(my_block,ikdatatype(k),jkdatatype(k),ijkdatatype(k), &
                   sxk(k),exk(k),syk(k),eyk(k))
 end do
-# if xdebug1
-!
-! print out the indices and determine the size of the MPI messages
-! as a rough check
-! 
-write(6,*) 'size of the multigrid phi-messages'
-do k=my_block%ngrid,1,-1
-  call MPI_TYPE_SIZE(ikdatatype(k),nsiz1,ierr)
-  call MPI_TYPE_SIZE(jkdatatype(k),nsiz2,ierr)
-  call MPI_TYPE_SIZE(ijkdatatype(k),nsiz3,ierr)
-  write(6,*) 'myid: ',my_block%id,' k=',k,' sxk=',sxk(k),' exk=', &
-                exk(k),' syk=',syk(k),' eyk=',eyk(k), &
-                ' size of datatypes: ',nsiz1,nsiz2,nsiz3
-end do
-# endif
 !
 ! set work space indices for phi, cof at each grid level
 ! check that there is sufficient work space
@@ -382,7 +371,7 @@ end do
 !           'for nwork into comments and setting',/,'nwork ', &
 !           'to the value of kps',/)
 
-# if WMGD
+if (WMGD) then
 !------------------------------------------------------------------------
 ! For the new version of the multigrid code, set the boundary values 
 ! to be used for the Dirichlet boundaries. It is possible to assign
@@ -408,7 +397,7 @@ do k=my_block%ngrid-1,1,-1
     my_mg%phibc(j,k)=0.0d0
   end do
 end do
-# else
+else  
 !------------------------------------------------------------------------
 ! set indices for range of ic and jc on coarser grid level which are
 ! supported on finer grid level, i.e. for which the points
@@ -454,10 +443,6 @@ do k=my_block%ngrid-1,1,-1
     syi(k)=syk(k)-1
     eyi(k)=eyk(k)+1
   end if
-# if xdebug1
-  write(6,*) 'myid: ',my_block%id,' k=',k,' sxi=',sxi(k),' exi=', &
-                exi(k),' syi=',syi(k),' eyi=',eyi(k)
-# endif
   nxf=nxc
   nyf=nyc
 end do
@@ -540,33 +525,14 @@ do k=my_block%ngrid-1,1,-1
   call grid1_type(my_block,irdatatype(k),jrdatatype(k),ijrdatatype(k), &
                   sxr(k),exr(k),syr(k),eyr(k))
 end do
-# if xdebug1
-!
-! print out the indices and determine the size of the MPI messages
-! as a rough check
-! 
-write(6,*) 'size of the r-messages'
-do k=my_block%ngrid-1,1,-1
-  call MPI_TYPE_SIZE(irdatatype(k),nsiz1,ierr)
-  call MPI_TYPE_SIZE(jrdatatype(k),nsiz2,ierr)
-  call MPI_TYPE_SIZE(ijrdatatype(k),nsiz3,ierr)
-  write(6,*) 'myid: ',my_block%id,' k=',k,' sxr=',sxr(k),' exr=', &
-                exr(k),' syr=',syr(k),' eyr=',eyr(k), &
-                ' size of datatypes: ',nsiz1,nsiz2,nsiz3
-end do
-# endif
-# endif
+endif
 
 return
 end subroutine
 
-!>------------------------------------------------------------------------
 !> Parallel multigrid solver in 2-D cartesian coordinates for the
 !> elliptic equation:      div(cof(grad(phif)))=rhsf
 !>
-!> isol=1 -> density
-!> isol=2 -> pressure
-!> 
 !> Written for periodic, wall (Neumann), and constant value
 !> (Dirichlet) BCs. Tested roughly for all these BCs. There are 
 !> two versions of the multigrid code, which are separated by the 
@@ -588,21 +554,8 @@ end subroutine
 !>        - with the initialization and clean-up routines mgdinit
 !>          and mgdend, this multigrid code is self-standing
 !>
-!> Code      : mgd2, 2-D parallel multigrid solver
-!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-!> Called in : main
-!> Calls     : mgdrpde, mgdpfpde, mgdphpde, mgdrsetf, mgdppde, mgdrtrsf,
-!>              -> discretize the pde
-!>             mgdsetf
-!>               -> set the initial guesses and the right-hand side
-!>             mgdkcyc, mgderr,
-!>               -> do the actual cycling
-!>             gscale, gxch1lin, gxch1cor,
-!>               -> rescale pressure and density around average values
-!>------------------------------------------------------------------------
 subroutine mgd2_solver(my_block,my_mg,phif,rhsf,r,work, &
                      rro,iter,nprscr,nerror)
-#include "mgd2.h"
 sll_real64      :: phif(:,:),rhsf(:,:)
 sll_real64      :: r(:,:)
 sll_real64      :: work(*),rro
@@ -617,29 +570,9 @@ sll_real64 :: avo,acorr, relmax
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
 sll_int32  :: ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
 sll_int32  :: itype,jtype,ijtype,lev,ir1,ir2
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
-!------------------------------------------------------------------------
+
+
 ! discretize pde at all levels
-!
-if (my_mg%isol.eq.1) then
-!
-! density: only have to set geometric factors
-!
-  do k=1,my_block%ngrid
-    sxm=sxk(k)
-    exm=exk(k)
-    sym=syk(k)
-    eym=eyk(k)
-    nxm=nxk(k)
-    nym=nyk(k)
-    ic=kcbgn(k)
-    call mgdrpde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                 my_mg%xl,my_mg%yl,my_block%bd)
-  end do
-else
 !
 ! pressure: have to do a lot more work. The coefficients in the new
 !           and old versions of the multigrid code are located at
@@ -658,7 +591,7 @@ else
   nyf=nyk(my_block%ngrid)
   icf=kcbgn(my_block%ngrid)
   call mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,work(icf),r,my_mg%xl,my_mg%yl,my_block%bd)
-# if WMGD
+if (WMGD) then
 !
 ! new version: determine coefficients at coarser grid levels from
 ! four neighboring density points; no communication of boundary data
@@ -674,9 +607,9 @@ else
     nym=nyk(k)
     ic=kcbgn(k)
     call mgdphpde(sxm,exm,sym,eym,nxm,nym,work(ic), &
-                  sx,ex,sy,ey,nxf,nyf,r,my_block%bd,my_mg%xl,my_mg%yl)
+                  sx,ex,sy,ey,nxf,nyf,my_block%bd,my_mg%xl,my_mg%yl)
   end do
-# else
+else  
   if (my_block%ngrid.gt.1) then
 !
 ! old version: use two locations ir1 and ir2 in the work vector to
@@ -751,8 +684,8 @@ else
       end if
     end do
   end if
-# endif
-      end if
+endif
+
 !------------------------------------------------------------------------
 ! set phi,rhsf in work at the finest grid level
 !
@@ -795,11 +728,7 @@ return
 !
 ! rescale phif
 !
-if (my_mg%isol.eq.1) then
-  avo=rro
-else
-  avo=0.0d0
-end if
+avo=0.0d0
 call gscale(my_block%sx,my_block%ex,my_block%sy,my_block%ey, &
             phif,avo,acorr,my_mg%comm2d,my_mg%nx,my_mg%ny)
 !
@@ -813,20 +742,15 @@ call gxch1lin(phif,my_mg%comm2d,my_block%sx,my_block%ex,     &
 call gxch1cor(phif,my_mg%comm2d,sxm,exm,sym,eym,             &
               my_block%neighbor,my_block%bd,                 &
               ijkdatatype(my_block%ngrid))
-# if WMGD
+if (WMGD) then
 !
 ! impose wall and Dirichlet BCs
 !
-call mgdbdry(sx,ex,sy,ey,phif,my_block%bd,my_mg%vbc)
-# endif
+call mgdbdry(sx,ex,sy,ey,phif,my_block%bd,my_mg%phibc)
+endif
 
-if (my_mg%isol.eq.1) then
-  if (nprscr.and.my_block%id.eq.0) write(6,110) relmax,iter,acorr
-110     format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
-else
-  if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
-120     format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
-end if
+if (nprscr.and.my_block%id.eq.0) write(6,120) relmax,iter,acorr
+120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
 
 return
 end subroutine
@@ -835,7 +759,6 @@ end subroutine
 !> data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
 !> neighbors
 subroutine grid1_type(my_block,itype,jtype,ijtype,sx,ex,sy,ey)
-#include "mgd2.h"
 sll_int32  :: itype,jtype,ijtype,realtype,sx,ex,sy,ey
 sll_int32  :: ierr
 type(block) :: my_block
@@ -880,18 +803,12 @@ end subroutine
 ! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 !------------------------------------------------------------------------
 subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
-#include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,bd(8)
 sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
 sll_real64 :: r(sxf-1:exf+1,syf-1:eyf+1),xl,yl
 sll_real64 :: dlx,todlxx,dly,todlyy,rij
 sll_int32  :: i,j
-# if DEBUG
-sll_real64 :: tinitial
-tinitial=MPI_WTIME()
-# endif
 
 dlx=xl/float(nxf-1)
 dly=yl/float(nyf-1)
@@ -959,17 +876,13 @@ end subroutine
 !>           |
 !>         cof(3)
 !>
-!> Code      : mgd2, 2-D parallel multigrid solver
-!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,         &
-                    sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl)
+!> Bernard Bunner 
+subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,sx,ex,sy,ey,nxf,nyf,bd,xl,yl)
 
-#include "sll_working_precision.h"
-#include "mgd2.h"
 
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,sx,ex,sy,ey,nxf,nyf,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
-sll_real64 :: r(sx-1:ex+1,sy-1:ey+1),xl,yl
+sll_real64 :: xl,yl
 sll_real64 :: dlx,fodlxx,dly,fodlyy
 sll_int32  :: i,j,im,jm,is,js,istep,jstep
 
@@ -978,13 +891,11 @@ sll_int32  :: i,j,im,jm,is,js,istep,jstep
 dlx=xl/float(nxm-1)
 dly=yl/float(nym-1)
 
-r = 1
-
 istep=(nxf-1)/(nxm-1)
 jstep=(nyf-1)/(nym-1)
 
-fodlxx=4.0d0/(dlx*dlx)
-fodlyy=4.0d0/(dly*dly)
+fodlxx=1.0d0/(dlx*dlx)
+fodlyy=1.0d0/(dly*dly)
 
 do j=sym,eym
   jm=2*jstep*j-3*(jstep-1)
@@ -992,14 +903,14 @@ do j=sym,eym
     im=2*istep*i-3*(istep-1)
     is=(im-istep)/2
     js=jm/2
-    cof(i,j,1)=fodlxx/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    cof(i,j,1)=fodlxx
     is=(im+istep)/2
-    cof(i,j,2)=fodlxx/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    cof(i,j,2)=fodlxx
     is=im/2
     js=(jm-jstep)/2
-    cof(i,j,3)=fodlyy/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    cof(i,j,3)=fodlyy
     js=(jm+jstep)/2
-    cof(i,j,4)=fodlyy/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    cof(i,j,4)=fodlyy
   end do
 end do
 
@@ -1036,7 +947,6 @@ end do
 
 end subroutine
 
-
 !> For the old version of the multigrid code, determine coefficients 
 !> for the pressure equation at all grid levels but the finest one.
 !> The coefficients are determined from the values of the density
@@ -1052,11 +962,9 @@ end subroutine
 !>           |
 !>         cof(3)
 !>
-!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+!> Bernard Bunner 
 subroutine mgdppde(sxm,exm,sym,eym,nxm,nym,cof,     &
                    sxf,exf,syf,eyf,rf,xl,yl,bd)
-
-#include "sll_working_precision.h"
 
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,sxf,exf,syf,eyf,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
@@ -1088,29 +996,20 @@ end do
 
 end subroutine
 
-
-!------------------------------------------------------------------------
-! Discretize the pde: set the coefficients of the cof matrix. Works
-! for periodic, Neumann, and Dirichlet boundary conditions.
-!
-! cof array:
-!
-!         cof(4)
-!           |
-!           |
-! cof(1)--cof(5)--cof(2)
-!           |
-!           |
-!         cof(3)
-!
-! Code      : mgd2, 2-D parallel multigrid solver
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-! Called in : mgdsolver
-! Calls     : --
-!------------------------------------------------------------------------
+!> Discretize the pde: set the coefficients of the cof matrix. Works
+!> for periodic, Neumann, and Dirichlet boundary conditions.
+!>
+!> cof array:
+!>
+!>         cof(4)
+!>           |
+!>           |
+!> cof(1)--cof(5)--cof(2)
+!>           |
+!>           |
+!>         cof(3)
+!>
 subroutine mgdrpde(sxm,exm,sym,eym,nxm,nym,cof,xl,yl,bd)
-#include "sll_working_precision.h"
-#include "mgd2.h"
 sll_int32  :: sxm,exm,sym,eym,nxm,nym,bd(8)
 sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),xl,yl
 sll_real64 :: dlx,odlxx,dly,odlyy
@@ -1162,6 +1061,455 @@ do j=sym,eym
     cof(i,j,5)=-(cof(i,j,1)+cof(i,j,2)+cof(i,j,3)+cof(i,j,4))
   end do
 end do
+
+end subroutine
+
+!> For the old version of the multigrid code, set the fine grid values 
+!> of the density in the work vector
+!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+subroutine mgdrsetf(sxf,exf,syf,eyf,rf,r)
+
+sll_int32  :: sxf,exf,syf,eyf
+sll_real64 :: rf(sxf-1:exf+1,syf-1:eyf+1),r(sxf-1:exf+1,syf-1:eyf+1)
+sll_int32  :: i,j
+
+do j=syf-1,eyf+1
+  do i=sxf-1,exf+1
+    rf(i,j)=r(i,j)
+  end do
+end do
+
+end subroutine
+
+!------------------------------------------------------------------------
+!> For the old version of the multigrid code, transfer values of the 
+!> density from a finer to a coarser grid level. It is necessary to
+!> exchange the boundary density data because the grid "shifts" to
+!> the right as it becomes coarser. (In the new version of the
+!> multigrid code, there is no such shift, hence no communication is 
+!> needed).
+!
+!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+!------------------------------------------------------------------------
+subroutine mgdrtrsf(sxc,exc,syc,eyc,nxc,nyc,rc,            &
+                       sxf,exf,syf,eyf,nxf,nyf,rf,            &
+                       comm2d,myid,neighbor,bd,itype,jtype)
+sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,sxf,exf,syf,eyf,nxf,nyf
+sll_int32  :: comm2d,myid,neighbor(8),bd(8),itype,jtype
+
+sll_real64 :: rc(sxc-1:exc+1,syc-1:eyc+1)
+sll_real64 :: rf(sxf-1:exf+1,syf-1:eyf+1)
+
+sll_int32  :: i,j,ic,jc,i1,i2,j1,j2
+
+if (nxc.lt.nxf) then
+  i1=1
+  i2=0
+else 
+  i1=0
+  i2=1
+end if
+if (nyc.lt.nyf) then
+  j1=1
+  j2=0
+else
+  j1=0
+  j2=1
+end if
+do jc=syc,eyc
+  j=j1*(2*jc-1)+j2*jc
+  do ic=sxc,exc
+    i=i1*(2*ic-1)+i2*ic
+    rc(ic,jc)=rf(i,j)
+  end do
+end do
+
+! exchange the boundary values (need only lines, not corner)
+call gxch1lin(rc,comm2d,sxc,exc,syc,eyc,neighbor,bd,itype,jtype)
+
+end subroutine
+
+subroutine mgdsetf(sxf,exf,syf,eyf,phi,rhs,phif,rhsf)
+sll_int32  :: sxf,exf,syf,eyf
+sll_real64 :: phi(sxf-1:exf+1,syf-1:eyf+1),rhs(sxf-1:exf+1,syf-1:eyf+1)
+sll_real64 :: phif(sxf-1:exf+1,syf-1:eyf+1),rhsf(sxf-1:exf+1,syf-1:eyf+1)
+!------------------------------------------------------------------------
+! Set the fine grid values in the work vector
+!
+! Code      : mgd2, 2-D parallel multigrid solver
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+! Called in : mgdsolver
+! Calls     : --
+!------------------------------------------------------------------------
+sll_int32  :: i,j
+
+do j=syf-1,eyf+1
+  do i=sxf-1,exf+1
+    phi(i,j)=phif(i,j)
+    rhs(i,j)=rhsf(i,j)
+  end do
+end do
+
+end subroutine
+
+!> Free the MPI datatypes associated witht the multigrid code
+subroutine mgdend(ngrid)
+
+sll_int32 :: k,ierr
+sll_int32 :: ngrid
+
+do k=1,ngrid-1
+   call MPI_TYPE_FREE(ikdatatype(k),ierr)
+   call MPI_TYPE_FREE(jkdatatype(k),ierr)
+   call MPI_TYPE_FREE(ijkdatatype(k),ierr)
+ if (.not. WMGD) then
+   call MPI_TYPE_FREE(irdatatype(k),ierr)
+   call MPI_TYPE_FREE(jrdatatype(k),ierr)
+   call MPI_TYPE_FREE(ijrdatatype(k),ierr)
+ endif
+end do
+
+!call MPI_FINALIZE(ierr)
+
+
+end subroutine
+
+!> Add correction from coarse grid level to fine grid level. Uses
+!> bilinear interpolation for the old version of the multigrid code,
+!> and area weighting for its new version.
+!>
+!> Tested for the case where coarsifying takes place in all directions
+subroutine mgdcor(sxf,exf,syf,eyf,nxf,nyf,phif,  &
+                  sxc,exc,syc,eyc,nxc,nyc,phic,  &
+                  sx1,ex1,sy1,ey1,bd,phibc)
+
+sll_int32  :: sxf,exf,syf,eyf,nxf,nyf
+sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,sx1,ex1,sy1,ey1,bd(8)
+sll_real64 :: phif(sxf-1:exf+1,syf-1:eyf+1)
+sll_real64 :: phic(sxc-1:exc+1,syc-1:eyc+1),phibc(4)
+
+sll_int32 :: i,j,ic,jc,i1,i2,j1,j2
+
+if (WMGD) then
+!------------------------------------------------------------------------
+! new version: the correction is the weighted average of either two 
+! or four points at the coarser grid level depending on whether 
+! coarsifying takes place in all directions or not
+!
+if (nxf.eq.nxc) then
+  do jc=syc-1,eyc
+    j=2*jc-1
+    do i=sxf-1,exf+1
+      ic=i
+      phif(i,j)=phif(i,j)+(3.0d0*phic(ic,jc)+phic(ic,jc+1))/4.0d0
+      phif(i,j+1)=phif(i,j+1)+(phic(ic,jc)+3.0d0*phic(ic,jc+1))/4.0d0
+    end do
+  end do
+else if (nyf.eq.nyc) then
+  do j=syf-1,eyf+1
+    jc=j
+    do ic=sxc-1,exc
+      i=2*ic-1
+      phif(i,j)=phif(i,j)+(3.0d0*phic(ic,jc)+phic(ic+1,jc))/4.0d0
+      phif(i+1,j)=phif(i+1,j)+(phic(ic,jc)+3.0d0*phic(ic+1,jc))/4.0d0
+    end do
+  end do
+else
+  do jc=syc-1,eyc
+    j=2*jc-1
+    do ic=sxc-1,exc
+      i=2*ic-1
+      phif(i,j)=phif(i,j)+  &
+        (9.0d0*phic(ic,jc)+3.0d0*phic(ic+1,jc)  &
+        +3.0d0*phic(ic,jc+1)+phic(ic+1,jc+1))/16.0d0
+      phif(i+1,j)=phif(i+1,j)+  &
+        (3.0d0*phic(ic,jc)+9.0d0*phic(ic+1,jc)  &
+        +phic(ic,jc+1)+3.0d0*phic(ic+1,jc+1))/16.0d0
+      phif(i,j+1)=phif(i,j+1)+  &
+        (3.0d0*phic(ic,jc)+phic(ic+1,jc)  &
+        +9.0d0*phic(ic,jc+1)+3.0d0*phic(ic+1,jc+1))/16.0d0
+      phif(i+1,j+1)=phif(i+1,j+1)+  &
+        (phic(ic,jc)+3.0d0*phic(ic+1,jc)  &
+        +3.0d0*phic(ic,jc+1)+9.0d0*phic(ic+1,jc+1))/16.0d0
+    end do
+  end do
+end if
+!
+! impose Neumann and Dirichlet boundary conditions
+! TEMP: periodicity is not enforced to save one call to gxch1lin;
+! check whether it has an impact or not...
+!
+      call mgdbdry(sxf,exf,syf,eyf,phif,bd,phibc)
+else  
+!------------------------------------------------------------------------
+! old version
+!
+if (nxc.lt.nxf) then
+  i1=1
+  i2=0
+else
+  i1=0
+  i2=1
+end if
+if (nyc.lt.nyf) then
+  j1=1
+  j2=0
+else
+  j1=0
+  j2=1
+end if
+!
+! identity at the points of the fine grid which have odd indices 
+! in i and j
+!
+do jc=sy1,ey1
+  j=j1*(2*jc-1)+j2*jc
+  do ic=sx1,ex1
+    i=i1*(2*ic-1)+i2*ic
+    phif(i,j)=phif(i,j)+phic(ic,jc)
+  end do
+end do
+!
+! interpolation of the two neighboring values for the points of the 
+! fine grid with even index for i and odd index for j
+!
+if (nxc.lt.nxf) then
+  do jc=sy1,ey1
+    j=j1*(2*jc-1)+j2*jc
+    do ic=sxc-1,exc
+      i=2*ic
+      phif(i,j)=phif(i,j)+0.5d0*(phic(ic,jc)+phic(ic+1,jc))
+    end do
+  end do
+end if
+!
+! interpolation of the two neighboring values for the points of the 
+! fine grid with odd index for i and even index for j
+!
+if (nyc.lt.nyf) then
+  do jc=syc-1,eyc
+    j=2*jc
+    do ic=sx1,ex1
+      i=i1*(2*ic-1)+i2*ic
+      phif(i,j)=phif(i,j)+0.5d0*(phic(ic,jc)+phic(ic,jc+1))
+    end do
+  end do
+end if
+!
+! interpolation of the four neighboring values for the points of the
+! fine grid with even indices for i and j
+!
+if (nxc.lt.nxf.and.nyc.lt.nyf) then
+  do jc=syc-1,eyc
+    j=2*jc
+    do ic=sxc-1,exc
+      i=2*ic
+      phif(i,j)=phif(i,j)+0.25d0*(phic(ic,jc)+phic(ic+1,jc) &
+                                 +phic(ic,jc+1)+phic(ic+1,jc+1))
+    end do
+  end do
+end if
+endif
+
+end subroutine
+
+
+subroutine mgdrelax(sxm,exm,sym,eym,phi,cof,iters,comm2d,myid, &
+                    neighbor,bd,phibc,itype,jtype)
+
+
+sll_int32 :: sxm,exm,sym,eym,iters
+sll_int32 :: comm2d,myid,neighbor(8),bd(8),itype,jtype
+sll_real64 :: phi(sxm-1:exm+1,sym-1:eym+1)
+sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6),phibc(4)
+!------------------------------------------------------------------------
+! Gauss-Seidel point relaxation with Red & Black ordering. Works for
+! periodic, Neumann, and Dirichlet boundary conditions.
+!
+! Code      : mgd2, 2-D parallel multigrid solver
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+! Called in : mgdkcyc
+! Calls     : mgdbdry, gxch1lin
+!------------------------------------------------------------------------
+sll_int32 :: rb,it,ipass,i,j
+!
+! do iters sweeps in the subdomain
+!
+do it=1,iters
+  rb=mod(sxm,2)
+  do ipass=1,2
+    do j=sym,eym
+      do i=sxm+rb,exm,2
+        phi(i,j)=(cof(i,j,6)-(cof(i,j,1)*phi(i-1,j)               &
+                             +cof(i,j,2)*phi(i+1,j)               &
+                             +cof(i,j,3)*phi(i,j-1)               &
+                             +cof(i,j,4)*phi(i,j+1)))/cof(i,j,5)
+      end do
+      rb=1-rb
+    end do
+    rb=1-mod(sxm,2)
+if (WMGD) then
+!
+! new version: impose Neumann and Dirichlet boundary conditions
+!
+    call mgdbdry(sxm,exm,sym,eym,phi,bd,phibc)
+endif
+  end do
+end do
+!
+! Exchange boundary data only once at the end. Since the number
+! of relaxation sweeps at each level is characteristically small
+! (1 or 2 are common values), this does not damage the convergence
+! rate too badly. Overall, I have found a significant reduction
+! in execution time. This also imposes the periodic BCs.
+!
+call gxch1lin(phi,comm2d,sxm,exm,sym,eym,neighbor,bd,itype,jtype)
+if (WMGD) then
+!
+! new version: impose Neumann and Dirichlet boundary conditions
+!
+call mgdbdry(sxm,exm,sym,eym,phi,bd,phibc)
+endif 
+
+end subroutine
+
+subroutine mgdrestr(sxc,exc,syc,eyc,nxc,nyc,phic,rhsc,   &
+                    sxf,exf,syf,eyf,nxf,nyf,phif,cof,    &
+                    resf,iresw,comm2d,myid,neighbor,bd,  &
+                    itype,jtype,ijtype)
+
+sll_int32  :: sxc,exc,syc,eyc,nxc,nyc,iresw
+sll_int32  :: sxf,exf,syf,eyf,nxf,nyf
+sll_int32  :: comm2d,myid,neighbor(8),bd(8),itype,jtype,ijtype
+sll_real64 :: phic(sxc-1:exc+1,syc-1:eyc+1)
+sll_real64 :: rhsc(sxc-1:exc+1,syc-1:eyc+1)
+sll_real64 :: phif(sxf-1:exf+1,syf-1:eyf+1)
+sll_real64 :: resf(sxf-1:exf+1,syf-1:eyf+1)
+sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
+!------------------------------------------------------------------------
+! Calculate the residual and restrict it to the coarser level. In
+! the new version, the restriction involves 4 points. In the old
+! version, it involves 9 points (5 if half-weighting).
+!
+! Code      : mgd2, 2-D parallel multigrid solver
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+! Called in : mgdkcyc
+! Calls     : gxch1lin, gxch1cor
+!------------------------------------------------------------------------
+sll_int32 :: i,j,isrt,jsrt,iinc,jinc,ic,jc
+!------------------------------------------------------------------------
+do jc=syc-1,eyc+1
+  do ic=sxc-1,exc+1
+    phic(ic,jc)=0.0d0
+    rhsc(ic,jc)=0.0d0
+  end do
+end do
+!
+! calculate residual
+!
+do j=syf,eyf
+  do i=sxf,exf
+    resf(i,j)=cof(i,j,6)-(cof(i,j,1)*phif(i-1,j) &
+                         +cof(i,j,2)*phif(i+1,j) &
+                         +cof(i,j,3)*phif(i,j-1) &
+                         +cof(i,j,4)*phif(i,j+1) &
+                         +cof(i,j,5)*phif(i,j))
+  end do
+end do
+if (WMGD) then
+!------------------------------------------------------------------------
+! new version: calculate the right-hand side at the coarser grid
+! level from the averages of the values at the 4 surrounding points;
+! if there is no coarsifying in one direction, only 2 points are
+! used; no exchange of boundary data is necessary
+!
+if (nxc.eq.nxf) then
+  do jc=syc,eyc
+    j=2*jc-2
+    do ic=sxc,exc
+      i=ic
+      rhsc(ic,jc)=0.5d0*(resf(i,j)+resf(i,j+1))
+    end do
+  end do
+else if (nyc.eq.nyf) then
+  do jc=syc,eyc
+    j=jc
+    do ic=sxc,exc
+      i=2*ic-2
+      rhsc(ic,jc)=0.5d0*(resf(i,j)+resf(i+1,j))
+    end do
+  end do
+else
+  do jc=syc,eyc
+    j=2*jc-2
+    do ic=sxc,exc
+      i=2*ic-2
+      rhsc(ic,jc)=0.25d0*(resf(i,j)+resf(i+1,j) &
+                   +resf(i,j+1)+resf(i+1,j+1))
+    end do
+  end do
+end if
+else  
+!------------------------------------------------------------------------
+! old version: have to exchange boundary data; if full-weighting, 
+! need to exchange also corner points
+!
+call gxch1lin(resf,comm2d,sxf,exf,syf,eyf,neighbor,bd,itype,jtype)
+if (iresw.eq.1) then
+  call gxch1cor(resf,comm2d,sxf,exf,syf,eyf,neighbor,bd,ijtype)
+end if
+!
+! restrict it to coarser level
+!
+if (nxc.lt.nxf) then
+  isrt=2*sxc-1
+  iinc=2
+else
+  isrt=sxc
+  iinc=1
+end if
+if (nyc.lt.nyf) then
+  jsrt=2*syc-1
+  jinc=2
+else
+  jsrt=syc
+  jinc=1
+end if
+
+if (iresw.eq.1) then
+!
+! use full weighting
+!
+  j=jsrt
+  do jc=syc,eyc
+    i=isrt
+    do ic=sxc,exc
+      rhsc(ic,jc)=0.25d0*resf(i,j)                        &
+                 +0.125d0*(resf(i+1,j)+resf(i-1,j)        &
+                          +resf(i,j+1)+resf(i,j-1))       &
+                 +0.0625d0*(resf(i+1,j+1)+resf(i+1,j-1)   &
+                           +resf(i-1,j-1)+resf(i-1,j+1))
+      i=i+iinc
+    end do
+    j=j+jinc
+  end do
+else if (iresw.eq.2) then
+!
+! use half-weighting
+!
+  j=jsrt
+  do jc=syc,eyc
+    i=isrt
+    do ic=sxc,exc
+      rhsc(ic,jc)=0.5d0*resf(i,j)                     &
+                 +0.125d0*(resf(i+1,j)+resf(i-1,j)    &
+                          +resf(i,j+1)+resf(i,j-1))
+      i=i+iinc
+    end do
+    j=j+jinc
+  end do
+end if
+endif
 
 end subroutine
 end module mgd2
