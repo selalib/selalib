@@ -31,8 +31,6 @@ odlxx=1.0d0/(dlx*dlx)
 dly=yl/float(nym-1)
 odlyy=1.0d0/(dly*dly)
 
-#ifdef POLAR
-
 do j=sym,eym
   do i=sxm,exm
     cof(i,j,1)=odlxx
@@ -42,18 +40,6 @@ do j=sym,eym
   end do
 end do
 
-#else
-
-do j=sym,eym
-  do i=sxm,exm
-    cof(i,j,1)=odlxx
-    cof(i,j,2)=odlxx
-    cof(i,j,3)=odlyy
-    cof(i,j,4)=odlyy
-  end do
-end do
-
-#endif
 !
 ! enforce Neumann BCs
 !

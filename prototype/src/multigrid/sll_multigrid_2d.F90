@@ -18,19 +18,20 @@ use mgd2
 
 implicit none
 
-private :: gerr, ginit
-
 type, public, extends(sll_multigrid_solver) :: sll_multigrid_solver_2d
 
-   sll_real64 :: eta1_min
-   sll_real64 :: eta1_max
-   sll_real64 :: eta2_min
-   sll_real64 :: eta2_max
+   sll_real64 :: x_min
+   sll_real64 :: x_max
+   sll_real64 :: y_min
+   sll_real64 :: y_max
    
-   sll_int32 :: nc_eta1
-   sll_int32 :: nc_eta2
+   sll_int32 :: nc_x
+   sll_int32 :: nc_y
    sll_int32 :: nprocs_1
    sll_int32 :: nprocs_2
+
+   type(block)     :: block
+   type(mg_solver) :: mg
 
 end type sll_multigrid_solver_2d
 
@@ -43,67 +44,55 @@ sll_int32, private :: error
 
 contains
 
-subroutine initialize_2d(this, eta1_min, eta1_max, nc_eta1, &
-                               eta2_min, eta2_max, nc_eta2)
+subroutine initialize_2d(this, layout,                &
+                         x_min, x_max, nc_x, &
+                         y_min, y_max, nc_y)
 
 type(sll_multigrid_solver_2d) :: this
-sll_real64, intent(in)        :: eta1_min
-sll_real64, intent(in)        :: eta1_max
-sll_real64, intent(in)        :: eta2_min
-sll_real64, intent(in)        :: eta2_max
-sll_int32 , intent(in)        :: nc_eta1
-sll_int32 , intent(in)        :: nc_eta2
+type(layout_2d), pointer      :: layout
+sll_real64, intent(in)        :: x_min
+sll_real64, intent(in)        :: x_max
+sll_real64, intent(in)        :: y_min
+sll_real64, intent(in)        :: y_max
+sll_int32 , intent(in)        :: nc_x
+sll_int32 , intent(in)        :: nc_y
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: nwork
 sll_int32  :: ngrid,nxdim,nydim
 
-logical           :: periods(2)
-sll_int32         :: numprocs,myid,sx,ex,sy,ey,neighbor(8),bd(8),iter
-sll_int32         :: realtype
-sll_int32         :: ierr,m0,m1,dims(2)
-sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
-sll_real64        :: xl,yl,hxi,hyi,wk,rro
-character(len=1)  :: num(10)
-
-data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
-
-
-type(block)     :: my_block
-type(mg_solver) :: my_mg
+logical   :: periods(2)
+sll_int32 :: numprocs,myid,sx,ex,sy,ey,neighbor(8),bd(8)
+sll_int32 :: realtype
+sll_int32 :: ierr,m0,m1,dims(2)
+sll_int32 :: nbrright,nbrbottom,nbrleft,nbrtop
 
 integer :: statut(MPI_STATUS_SIZE)
 
-sll_real64, allocatable :: p(:,:)
-sll_real64, allocatable :: r(:,:)
-sll_real64, allocatable :: f(:,:)
-
+this%layout => layout
 numprocs    = sll_get_collective_size(sll_world_collective)
 myid        = sll_get_collective_rank(sll_world_collective)
 this%comm2d = sll_world_collective%comm
 realtype    = MPI_REAL8
 
-nxprocs = int(sqrt(real(numprocs,f64)))
-nyprocs = nxprocs
+nxprocs       = int(sqrt(real(numprocs,f64)))
+nyprocs       = nxprocs
 this%nprocs_1 = nxprocs
 this%nprocs_2 = nyprocs
-this%eta1_min = eta1_min
-this%eta1_max = eta1_max
-this%eta2_min = eta2_min
-this%eta2_max = eta2_max
+this%x_min    = x_min
+this%x_max    = x_max
+this%y_min    = y_min
+this%y_max    = y_max
+this%nc_x     = nc_x
+this%nc_y     = nc_y
 
 if (nxprocs*nyprocs /= numprocs) goto 1000
 
-nx = nc_eta1
-ny = nc_eta2
+nx = nc_x
+ny = nc_y
 
 nxp2 = nx+2
 nyp2 = nx+2
-
-! Layout and local sizes for FFTs in x-direction
-this%layout => new_layout_2D( sll_world_collective )
-call initialize_layout_with_distributed_2D_array( nc_eta1, nc_eta2, &
-       nxprocs, nyprocs, this%layout)
 
 sx = get_layout_2d_i_min(this%layout,myid)+1
 ex = get_layout_2d_i_max(this%layout,myid)+1
@@ -138,9 +127,7 @@ if ((ey-sy+3).gt.nydim) then
 end if
 write(6,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 
-SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim), error)
-SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim), error)
-SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim), error)
+print*, nxdim, nydim
 SLL_CLEAR_ALLOCATE(this%work(1:nwork), error)
 
 
@@ -166,10 +153,10 @@ call MPI_COMM_RANK(this%comm2d,myid,ierr)
 this%ibdry  = 0    ! Periodic bc in direction 1
 this%jbdry  = 0    ! Periodic bc in direction 2
 
-this%vbc(1) = 0.0d0 ! Value for eta_1 = eta1_min
-this%vbc(2) = 0.0d0 ! Value for eta_1 = eta2_max
-this%vbc(3) = 0.0d0 ! Value for eta_2 = eta2_min
-this%vbc(4) = 0.0d0 ! Value for eta_2 = eta2_max
+this%vbc(1) = 0.0d0 ! Value for eta_1 = x_min
+this%vbc(2) = 0.0d0 ! Value for eta_1 = y_max
+this%vbc(3) = 0.0d0 ! Value for eta_2 = y_min
+this%vbc(4) = 0.0d0 ! Value for eta_2 = y_max
 
 bd(:)  = 0
 
@@ -212,68 +199,36 @@ do i=1,8
   write(6,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
 end do
 
-my_block%id       = myid
-my_block%sx       = sx
-my_block%ex       = ex
-my_block%sy       = sy
-my_block%ey       = ey
-my_block%ngrid    = ngrid
-my_block%neighbor = neighbor
-my_block%bd       = bd
+this%block%id       = myid
+this%block%sx       = sx
+this%block%ex       = ex
+this%block%sy       = sy
+this%block%ey       = ey
+this%block%ngrid    = ngrid
+this%block%neighbor = neighbor
+this%block%bd       = bd
 
-my_block%ixp      = ixp
-my_block%jyq      = jyq
-my_block%iex      = iex
-my_block%jey      = jey
+this%block%ixp      = ixp
+this%block%jyq      = jyq
+this%block%iex      = iex
+this%block%jey      = jey
 
-my_mg%vbc         = this%vbc
-my_mg%phibc       = this%phibc
-my_mg%nx          = nx
-my_mg%ny          = ny
-my_mg%nxprocs     = nxprocs
-my_mg%nyprocs     = nyprocs
-my_mg%ibdry       = this%ibdry
-my_mg%jbdry       = this%jbdry
-my_mg%comm2d      = this%comm2d
+this%mg%vbc         = this%vbc
+this%mg%phibc       = this%phibc
+this%mg%nx          = nx
+this%mg%ny          = ny
+this%mg%nxprocs     = nxprocs
+this%mg%nyprocs     = nyprocs
+this%mg%ibdry       = this%ibdry
+this%mg%jbdry       = this%jbdry
+this%mg%comm2d      = this%comm2d
 
-call initialize_mgd2(my_block,my_mg,error)
-if (error == 1) write(6,200)
-!-----------------------------------------------------------------------
-! initialize problem
-! xl,yl are the dimensions of the domain
-! wk is the wavenumber (must be an integer value)
-! rro is the average density
-! 1/hxi,1/hyi are the spatial resolutions
-!
-xl=1.0d0
-yl=1.0d0
-wk=2.0d0
-rro=1.0d0
-hxi=float(nx)/xl
-hyi=float(ny)/yl
-write(6,*) 'hxi=',hxi,' hyi=',hyi
-call ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi)
+call initialize_mgd2(this%block,this%mg,error)
+if (error == 1) then
+   write(6,200)
+   goto 1000
+end if
 
-my_mg%xl     = xl
-my_mg%yl     = yl
-my_mg%tolmax = this%tolmax
-my_mg%kcycle = this%kcycle
-my_mg%maxcy  = this%maxcy
-my_mg%iprer  = this%iprer
-my_mg%ipost  = this%ipost
-my_mg%iresw  = this%iresw
-my_mg%isol   = 2
-
-call mgd2_solver(my_block,my_mg,p,f,r,this%work, &
-                 rro, iter,.true.,error)
-if (error == 1) write(6,210)
-! compare numerical and exact solutions
-call gerr(sx,ex,sy,ey,p,this%comm2d,wk,hxi,hyi,nx,ny)
-
-call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
-                                  dble(sy-2.0)/hyi, dble(1)/hyi, &
-                                  p, "potential", 1, error)  
-  
 return
 1000 continue
 call sll_halt_collective()
@@ -290,64 +245,43 @@ stop
            'comments and'/,'     assign to nydim the maximum ',     &
            'value of ey-sy+3',/)
 200 format(/,'ERROR in multigrid code initialization',/)
-210 format(/,'ERROR in multigrid code solver',/)
-
 end subroutine initialize_2d
 
-!> Initialize the pressure, density, and right-hand side of the
-!> elliptic equation div(1/r*grad(p))=f
-subroutine ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi)
+subroutine solve_2d(this, f, p, r)
+sll_real64, dimension(:,:) :: f
+sll_real64, dimension(:,:) :: p
+sll_real64, dimension(:,:) :: r
+type(sll_multigrid_solver_2d) :: this
+sll_real64 :: rro
+sll_int32  :: iter
+!-----------------------------------------------------------------------
+! initialize problem
+! xl,yl are the dimensions of the domain
+! wk is the wavenumber (must be an integer value)
+! rro is the average density
+!
+rro=1.0d0
+r = 1.0
 
-sll_int32  :: sx,ex,sy,ey
-sll_real64 :: p(sx-1:ex+1,sy-1:ey+1),r(sx-1:ex+1,sy-1:ey+1)
-sll_real64 :: f(sx-1:ex+1,sy-1:ey+1),hxi,hyi,wk
-sll_int32  :: i,j
-sll_real64 :: cnst,cx,cy,xi,yj
+this%mg%xl     = this%x_max-this%x_min
+this%mg%yl     = this%y_max-this%y_min
+this%mg%tolmax = this%tolmax
+this%mg%kcycle = this%kcycle
+this%mg%maxcy  = this%maxcy
+this%mg%iprer  = this%iprer
+this%mg%ipost  = this%ipost
+this%mg%iresw  = this%iresw
+this%mg%isol   = 2
 
-p = 0.0d0
-r = 1.0d0
-f = 0.0d0
+call mgd2_solver(this%block,this%mg,p,f,r,this%work,rro,iter,.true.,error)
 
-cnst = -8.0d0*(sll_pi*wk)**2
-cx   = 2.0d0*sll_pi*wk
-cy   = 2.0d0*sll_pi*wk
+if (error == 1) then
+   write(6,210)
+   call sll_halt_collective()
+end if
 
-do j=sy,ey
-  do i=sx,ex
-    xi=(i-1.5)/hxi
-    yj=(j-1.5)/hyi
-    f(i,j)=cnst*sin(cx*xi)*sin(cy*yj)
-  end do
-end do
+210 format(/,'ERROR in multigrid code solver',/)
 
-end subroutine
-
-!> Calculate the error between the numerical and exact solution to
-!> the test problem.
-subroutine gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,nx,ny)
-sll_int32  :: sx,ex,sy,ey,comm2d,nx,ny
-sll_real64 :: p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,xi,yj
-sll_int32  :: i,j,ierr
-sll_real64 :: errloc,err,cx,cy,exact
-
-! calculate local error
-cx=2.0d0*sll_pi*wk
-cy=2.0d0*sll_pi*wk
-errloc=0.0d0
-do j=sy,ey
-  yj=(j-1.5)/hyi
-  do i=sx,ex
-    xi=(i-1.5)/hxi
-    exact=sin(cx*xi)*sin(cy*yj)
-    errloc=errloc+abs(p(i,j)-exact)
-  end do
-end do
-
-! calculate global error
-call MPI_ALLREDUCE(errloc,err,1,MPI_REAL8,MPI_SUM,comm2d,ierr)
-write(6,100) errloc/float(nx*ny),err/float(nx*ny)
-100   format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
-
-end subroutine
+end subroutine solve_2d
 
 end module sll_multigrid_2d

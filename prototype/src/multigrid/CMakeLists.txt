@@ -2,18 +2,14 @@ SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      gscale_2d.F90
-		         mgdrpde_2d.F90
-                     mgdpfpde_2d.F90
-                     mgdphpde_2d.F90
                      mgdrsetf_2d.F90
-		         mgdppde_2d.F90
                      mgdrtrsf_2d.F90
                      mgdsetf_2d.F90
-		         mgdkcyc_2d.F90
+		     mgdkcyc_2d.F90
                      mgdrelax_2d.F90
                      mgdbdry_2d.F90
                      mgdrestr_2d.F90
-		         mgdcor_2d.F90
+		     mgdcor_2d.F90
                      mgderr_2d.F90
                      mgdend_2d.F90
                      diagnostics.F90
@@ -47,7 +43,6 @@ ADD_LIBRARY(sll_multigrid sll_multigrid_base.F90
                           sll_multigrid_polar.F90)
 
 TARGET_LINK_LIBRARIES(sll_multigrid sll_mgd2 
-                                    sll_mgd3 
                                     sll_remap 
                                     sll_utilities
                                     sll_collective 
