@@ -15,7 +15,6 @@ use mgd_polar
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
-#include "mgd2.h"
 
 type, public, extends(sll_multigrid_solver) :: sll_multigrid_solver_polar
 

@@ -14,7 +14,6 @@ use mgd2
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_memory.h"
-#include "mgd2.h"
 
 implicit none
 
@@ -129,7 +128,6 @@ write(6,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 
 print*, nxdim, nydim
 SLL_CLEAR_ALLOCATE(this%work(1:nwork), error)
-
 
 ! open file for output of messages and check that the number of 
 ! processes is correct
