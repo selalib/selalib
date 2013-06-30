@@ -6,11 +6,16 @@ module mgd_polar
 #include "sll_working_precision.h"
 use mpi
 use gxch1_2d
-use mgd2
+use mgd2, only : block, mg_solver
 
 implicit none
 
 sll_int32, private :: sx, ex, sy, ey
+sll_int32 :: nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20)
+sll_int32 :: kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20)
+sll_int32 :: ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20)
+sll_int32 :: nxr(20),nyr(20),sxr(20),exr(20),syr(20),eyr(20)
+sll_int32 :: irdatatype(20),jrdatatype(20),ijrdatatype(20)
 
 contains
 
@@ -491,6 +496,224 @@ do j=sym,eym
     cof(i,j,4)=fodlyy/(r(is)*r(is))
   end do
 end do
+
+! enforce wall BCs
+
+if (bd(1).eq.1) then
+  do j=sym,eym
+    cof(exm,j,2)=0.0d0
+  end do
+end if
+if (bd(5).eq.1) then
+  do j=sym,eym
+    cof(sxm,j,1)=0.0d0
+  end do
+end if
+if (bd(3).eq.1) then
+  do i=sxm,exm
+    cof(i,sym,3)=0.0d0
+  end do
+end if
+if (bd(7).eq.1) then
+  do i=sxm,exm
+    cof(i,eym,4)=0.0d0
+  end do
+end if
+
+! calculate diagonal term
+
+do j=sym,eym
+  do i=sxm,exm
+    cof(i,j,5)=-(cof(i,j,1)+cof(i,j,2)+cof(i,j,3)+cof(i,j,4))
+  end do
+end do
+
+end subroutine
+
+!------------------------------------------------------------------------
+!> Determine coefficients for the pressure equation at the finest grid
+!> level. These coefficients involve densities half-way between the
+!> pressure and density nodes. Works for periodic, Neumann, and
+!> Dirichlet boundary conditions.
+!>
+!> cof array:
+!>
+!>         cof(4)
+!>           |
+!>           |
+!> cof(1)--cof(5)--cof(2)
+!>           |
+!>           |
+!>         cof(3)
+!>
+! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+!------------------------------------------------------------------------
+subroutine mgdpfpde(sxf,exf,syf,eyf,nxf,nyf,cof,r,xl,yl,bd)
+#include "sll_working_precision.h"
+#include "mgd2.h"
+
+sll_int32  :: sxf,exf,syf,eyf,nxf,nyf,bd(8)
+sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
+sll_real64 :: r(sxf-1:exf+1,syf-1:eyf+1),xl,yl
+sll_real64 :: dlx,todlxx,dly,todlyy,rij
+sll_int32  :: i,j
+# if DEBUG
+sll_real64 :: tinitial
+tinitial=MPI_WTIME()
+# endif
+
+dlx=xl/float(nxf-1)
+dly=yl/float(nyf-1)
+
+#ifdef POLAR
+
+   todlxx=1.0d0/(dlx*dlx)
+   todlyy=1.0d0/(dly*dly)
+   do j=syf,eyf
+     do i=sxf,exf
+       rij=r(i,j)
+       cof(i,j,1)=1./(dlx*(rij+r(i-1,j)))+todlxx
+       cof(i,j,2)=1./(dlx*(rij+r(i+1,j)))+todlxx
+       cof(i,j,3)=4./((rij+r(i,j-1))*(rij+r(i,j-1))*dly)
+       cof(i,j,4)=4./((rij+r(i,j+1))*(rij+r(i,j-1))*dly)
+     end do
+   end do
+
+#else
+
+   todlxx=2.0d0/(dlx*dlx)
+   todlyy=2.0d0/(dly*dly)
+   do j=syf,eyf
+     do i=sxf,exf
+       rij=r(i,j)
+       cof(i,j,1)=todlxx/(rij+r(i-1,j))
+       cof(i,j,2)=todlxx/(rij+r(i+1,j))
+       cof(i,j,3)=todlyy/(rij+r(i,j-1))
+       cof(i,j,4)=todlyy/(rij+r(i,j+1))
+     end do
+   end do
+
+#endif
+
+! enforce wall BCs 
+
+if (bd(1).eq.1) then
+  do j=syf,eyf
+    cof(exf,j,2)=0.0d0
+  end do
+end if
+if (bd(5).eq.1) then
+  do j=syf,eyf
+    cof(sxf,j,1)=0.0d0
+  end do
+end if
+if (bd(3).eq.1) then
+  do i=sxf,exf
+    cof(i,syf,3)=0.0d0
+  end do
+end if
+if (bd(7).eq.1) then
+  do i=sxf,exf
+    cof(i,eyf,4)=0.0d0
+  end do
+end if
+
+! calculate diagonal term
+
+do j=syf,eyf
+  do i=sxf,exf
+    cof(i,j,5)=-(cof(i,j,1)+cof(i,j,2)+cof(i,j,3)+cof(i,j,4))
+  end do
+end do
+
+end subroutine
+
+
+!> For the new version of the multigrid code, determine the coefficients
+!> for the pressure equation at all grid levels except the finest one.
+!> The coefficients are determined directly from the density array r
+!> through some manipulation of indices and are values at (i+1/2,j+1/2)
+!> points. Works for periodic, Neumann, and Dirichlet boundary
+!> conditions.
+!>
+!> cof array:
+!>
+!>         cof(4)
+!>           |
+!>           |
+!> cof(1)--cof(5)--cof(2)
+!>           |
+!>           |
+!>         cof(3)
+!>
+!> Code      : mgd2, 2-D parallel multigrid solver
+!> Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+subroutine mgdphpde(sxm,exm,sym,eym,nxm,nym,cof,         &
+                    sx,ex,sy,ey,nxf,nyf,r,bd,xl,yl)
+
+#include "sll_working_precision.h"
+#include "mgd2.h"
+
+sll_int32  :: sxm,exm,sym,eym,nxm,nym,sx,ex,sy,ey,nxf,nyf,bd(8)
+sll_real64 :: cof(sxm-1:exm+1,sym-1:eym+1,6)
+sll_real64 :: r(sx-1:ex+1,sy-1:ey+1),xl,yl
+sll_real64 :: dlx,fodlxx,dly,fodlyy
+sll_int32  :: i,j,im,jm,is,js,istep,jstep
+
+! calculate off-diagonal terms
+
+dlx=xl/float(nxm-1)
+dly=yl/float(nym-1)
+
+
+istep=(nxf-1)/(nxm-1)
+jstep=(nyf-1)/(nym-1)
+
+#ifdef POLAR
+
+fodlxx=1.0d0/(dlx*dlx)
+fodlyy=1.0d0/(dly*dly)
+
+do j=sym,eym
+  jm=2*jstep*j-3*(jstep-1)
+  do i=sxm,exm
+    im=2*istep*i-3*(istep-1)
+    is=(im-istep)/2
+    js=jm/2
+    cof(i,j,1)=fodlxx+1./((r(is,js)+r(is+1,js))*dlx)
+    is=(im+istep)/2
+    cof(i,j,2)=fodlxx-1./((r(is,js)+r(is+1,js))*dlx)
+    is=im/2
+    js=(jm-jstep)/2
+    cof(i,j,3)=fodlyy/(r(is,js)*r(is,js))
+    js=(jm+jstep)/2
+    cof(i,j,4)=fodlyy/(r(is,js)*r(is,js))
+  end do
+end do
+
+#else
+
+fodlxx=4.0d0/(dlx*dlx)
+fodlyy=4.0d0/(dly*dly)
+
+do j=sym,eym
+  jm=2*jstep*j-3*(jstep-1)
+  do i=sxm,exm
+    im=2*istep*i-3*(istep-1)
+    is=(im-istep)/2
+    js=jm/2
+    cof(i,j,1)=fodlxx/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    is=(im+istep)/2
+    cof(i,j,2)=fodlxx/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    is=im/2
+    js=(jm-jstep)/2
+    cof(i,j,3)=fodlyy/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+    js=(jm+jstep)/2
+    cof(i,j,4)=fodlyy/(r(is,js)+r(is+1,js)+r(is,js+1)+r(is+1,js+1))
+  end do
+end do
+
+#endif
 
 ! enforce wall BCs
 
