@@ -4,7 +4,7 @@ subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
 #include "sll_working_precision.h"
 use mgd2, only: nxk,nyk,sxk,exk,syk,eyk,           &
                 kpbgn,kcbgn,ikdatatype,jkdatatype, &
-                ijkdatatype,sxi,exi,syi,eyi
+                ijkdatatype,sxi,exi,syi,eyi,mgdrelax, mgdrestr
 
 sll_int32  :: kcur,kcycle,iprer,ipost,iresw
 sll_int32  :: comm2d,myid,neighbor(8),bd(8)
