@@ -11,7 +11,7 @@ implicit none
 
 sll_int32, private :: sx, ex, sy, ey
 
-logical, parameter :: WMGD = .false.
+logical ::  WMGD 
 sll_int32 :: nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20)
 sll_int32 :: kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20)
 sll_int32 :: ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20)
@@ -177,116 +177,39 @@ do k=1,20
   syr(k)         = 0
   eyr(k)         = 0
 end do
-!------------------------------------------------------------------------
-! make a number of checks
-!
-if (WMGD) then
-!
-! check that, for the new version, the number of processes in each
-! direction divides the number of points in that direction (the
-! determination of the pressure coefficients in 'mgdphpde' and the
-! restriction in 'mgdrestr' would not be complete and would require
-! doing some inter-process data communication - warning: would
-! be very complex because of the pressure coefficients)
-!
-if (mod(my_mg%nx,my_mg%nxprocs).ne.0) then
-  write(6,100) my_mg%nx,my_mg%nxprocs
-  nerror=1
-  return
-end if
-if (mod(my_mg%ny,my_mg%nyprocs).ne.0) then
-  write(6,110) my_mg%ny,my_mg%nyprocs
-  nerror=1
-  return
-end if
+
+
+if (my_mg%ibdry.ne.0.or.my_mg%jbdry.ne.0) then
+
+  write(6,120) my_mg%ibdry,my_mg%jbdry
+  WMGD = .true.
+  ! check that the number of processes in each
+  ! direction divides the number of points in that direction 
+  if (mod(my_mg%nx,my_mg%nxprocs).ne.0) then
+    write(6,100) my_mg%nx,my_mg%nxprocs
+    nerror=1
+    return
+  end if
+  if (mod(my_mg%ny,my_mg%nyprocs).ne.0) then
+    write(6,110) my_mg%ny,my_mg%nyprocs
+    nerror=1
+    return
+  end if
+
+else
+
+  WMGD = .false.
+
+endif
+
 100 format(/,'ERROR in mgdinit: nx=',i3,' is not a multiple of ', &
            'nxprocs=',i3,/,'cannot use the new version of the ',  &
            'multigrid code',/)
 110 format(/,'ERROR in mgdinit: ny=',i3,' is not a multiple of ', &
            'nyprocs=',i3,/,'cannot use the new version of the ',  &
            'multigrid code',/)
-else  
-!
-! check that the old version is not used with non-periodic BCs
-!
-if (my_mg%ibdry.ne.0.or.my_mg%jbdry.ne.0) then
-  write(6,120) my_mg%ibdry,my_mg%jbdry
-  nerror=1
-  return
-end if
-120  format(/,'ERROR in mgdinit: ibdry=',i2,' jbdry=',i2, &
-            /,'cannot use the old version of the multigrid code', &
-            /,'boundary conditions that are not periodic', &
-            /,'-> change compiler directive to 1 in compdir.inc', &
-            /,'   and recompile the multigrid code',/)
-endif
-!
-! check that the dimensions are correct
-!
-i=my_block%ixp*2**(my_block%iex-1)+1
-if ((my_mg%nx+1).ne.i) then
-  write(6,130) my_mg%nx+1,i
-  nerror=1
-  return
-end if
-j=my_block%jyq*2**(my_block%jey-1)+1
-if ((my_mg%ny+1).ne.j) then
-  write(6,140) my_mg%ny+1,j
-  nerror=1
-  return
-end if
-130  format(/,'ERROR in mgdinit: nxp1=',i3,' <> ixp*2**(iex-1)+1=', &
-            i3,/,'-> adjust the multigrid parameters ixp and iex', &
-            ' in main',/)
-140  format(/,'ERROR in mgdinit: nyp1=',i3,' <> jyq*2**(jey-1)+1=', &
-            i3,/,'-> adjust the multigrid parameters jyq and jey', &
-            ' in main',/)
-!
-! check that the number of points at the coarser level is not smaller
-! than the number of processes in either direction
-!
-if (my_block%ixp.lt.my_mg%nxprocs) then
-  write(6,150) my_block%ixp,my_mg%nxprocs
-  nerror=1
-  return
-end if
-if (my_block%jyq.lt.my_mg%nyprocs) then
-  write(6,160) my_block%jyq,my_mg%nyprocs
-  nerror=1
-  return
-end if
-150  format(/,'ERROR in mgdinit: ixp=',i3,' < nxprocs=',i3,/, &
-            ' there must be at least one grid point at the ', &
-            'coarsest grid level',/, &
-            '-> increase ixp and decrease iex correspondingly', &
-            ' in main',/)
-160  format(/,'ERROR in mgdinit: jyq=',i3,' < nyprocs=',i3,/, &
-            ' there must be at least one grid point at the ', &
-            'coarsest grid level',/, &
-            '-> increase jyq and decrease jey correspondingly', &
-            ' in main',/)
-!
-! check that coarsifying takes place in all directions at the finest
-! grid level
-!
-if (my_block%ngrid.gt.1) then
-  if (my_block%iex.eq.1) then
-    write(6,170) my_block%ngrid,my_block%iex
-    nerror=1
-    return
-  end if
-  if (my_block%jey.eq.1) then
-    write(6,180) my_block%ngrid,my_block%jey
-    nerror=1
-    return
-  end if
-end if
-170  format(/,'ERROR in mgdinit: ngrid=',i3,' iex=',i3, &
-            /,'no coarsifying at the finest grid level in x-direction', &
-            /,'this is not allowed by the mutligrid code',/)
-180  format(/,'ERROR in mgdinit: ngrid=',i3,' jey=',i3, &
-            /,'no coarsifying at the finest grid level in y-direction', &
-            /,'this is not allowed by the mutligrid code',/)
+120  format(/,'NOTE in mgdinit: ibdry=',i2,' jbdry=',i2, &
+            /,'boundary conditions that are not periodic',/)
 !------------------------------------------------------------------------
 ! define all grid levels
 ! I have adopted the same notations as in Mudpack as far as possible.
@@ -372,53 +295,47 @@ end do
 !           'to the value of kps',/)
 
 if (WMGD) then
-!------------------------------------------------------------------------
-! For the new version of the multigrid code, set the boundary values 
-! to be used for the Dirichlet boundaries. It is possible to assign
-! 4 different constant values to the 4 different sides. The values are
-! assigned at the finest grid level, zero is assigned at all levels
-! below
-! 
-! vbc, phibc:
-!
-!       -----vbc(4)------ 
-!       |               |
-!       |               |
-!     vbc(3)----------vbc(1)
-!       |               |
-!       |               |
-!       ------vbc(2)-----
-!
-do j=1,4
-  my_mg%phibc(j,my_block%ngrid)=my_mg%vbc(j)
-end do
-do k=my_block%ngrid-1,1,-1
-  do j=1,4
-    my_mg%phibc(j,k)=0.0d0
-  end do
-end do
+   !------------------------------------------------------------------------
+   ! For the new version of the multigrid code, set the boundary values 
+   ! to be used for the Dirichlet boundaries. It is possible to assign
+   ! 4 different constant values to the 4 different sides. The values are
+   ! assigned at the finest grid level, zero is assigned at all levels
+   ! below
+   ! 
+   ! vbc, phibc:
+   !
+   !       -----vbc(4)------ 
+   !       |               |
+   !       |               |
+   !     vbc(3)----------vbc(1)
+   !       |               |
+   !       |               |
+   !       ------vbc(2)-----
+   !
+   my_mg%phibc(:,:)=0.0d0
+   my_mg%phibc(:,my_block%ngrid)=my_mg%vbc(:)
 else  
-!------------------------------------------------------------------------
-! set indices for range of ic and jc on coarser grid level which are
-! supported on finer grid level, i.e. for which the points
-! (x(2*ic-1,2*jc-1),y(2*ic-1,2*jc-1)) are defined in the subdomain
-! of process 'myid'. This allows to avoid having any communication
-! after the interpolation (or prolongation) step; it should be used
-! in that operation only. 
-!
-! example:
-!   a)  - - -|-----------|-----------|-----------|
-!                                  exf=8      exf+1=9
-!
-!       - ---------------|-----------------------|
-!                      exc=4                  exc+1=5
-!
-!   b)  - - -|-----------|
-!          exf=5      exf+1=6
-!
-!       - - -|-----------------------|
-!          exc=3                  exc+1=4
-!
+   !------------------------------------------------------------------------
+   ! set indices for range of ic and jc on coarser grid level which are
+   ! supported on finer grid level, i.e. for which the points
+   ! (x(2*ic-1,2*jc-1),y(2*ic-1,2*jc-1)) are defined in the subdomain
+   ! of process 'myid'. This allows to avoid having any communication
+   ! after the interpolation (or prolongation) step; it should be used
+   ! in that operation only. 
+   !
+   ! example:
+   !   a)  - - -|-----------|-----------|-----------|
+   !                                  exf=8      exf+1=9
+   !
+   !       - ---------------|-----------------------|
+   !                      exc=4                  exc+1=5
+   !
+   !   b)  - - -|-----------|
+   !          exf=5      exf+1=6
+   !
+   !       - - -|-----------------------|
+   !          exc=3                  exc+1=4
+   !
       
 sxi(my_block%ngrid)=sxk(my_block%ngrid)-1
 exi(my_block%ngrid)=exk(my_block%ngrid)+1
@@ -493,11 +410,6 @@ do k=my_block%ngrid-1,1,-1
   else
     if (k.eq.(my_block%ngrid-1)) then
       write(6,300) my_block%ngrid,my_block%ngrid-1
-300   format('ERROR in mgdinit: no coarsifying between level ', &
-             i3,' and level ',i3,/,', the current version of ', &
-             'the code cannot cope with that',/, &
-             ' -> decrease the value of ixp and/or jyq and',/, &
-             '    increase the value of iex and/or jey')
       nerror=1
       return
     end if
@@ -528,6 +440,11 @@ end do
 endif
 
 return
+300 format('ERROR in mgdinit: no coarsifying between level ', &
+           i3,' and level ',i3,/,', the current version of ', &
+           'the code cannot cope with that',/, &
+           ' -> decrease the value of ixp and/or jyq and',/, &
+           '    increase the value of iex and/or jey')
 end subroutine
 
 !> Parallel multigrid solver in 2-D cartesian coordinates for the
@@ -555,10 +472,10 @@ end subroutine
 !>          and mgdend, this multigrid code is self-standing
 !>
 subroutine mgd2_solver(my_block,my_mg,phif,rhsf,r,work, &
-                     rro,iter,nprscr,nerror)
+                     iter,nprscr,nerror)
 sll_real64      :: phif(:,:),rhsf(:,:)
 sll_real64      :: r(:,:)
-sll_real64      :: work(*),rro
+sll_real64      :: work(*)
 sll_int32       :: iter,nerror
 type(block)     :: my_block
 type(mg_solver) :: my_mg
@@ -1373,6 +1290,11 @@ endif
 
 end subroutine
 
+!> Calculate the residual and restrict it to the coarser level. In
+!> the new version, the restriction involves 4 points. In the old
+!> version, it involves 9 points (5 if half-weighting).
+!>
+!> Bernard Bunner
 subroutine mgdrestr(sxc,exc,syc,eyc,nxc,nyc,phic,rhsc,   &
                     sxf,exf,syf,eyf,nxf,nyf,phif,cof,    &
                     resf,iresw,comm2d,myid,neighbor,bd,  &
@@ -1386,17 +1308,7 @@ sll_real64 :: rhsc(sxc-1:exc+1,syc-1:eyc+1)
 sll_real64 :: phif(sxf-1:exf+1,syf-1:eyf+1)
 sll_real64 :: resf(sxf-1:exf+1,syf-1:eyf+1)
 sll_real64 :: cof(sxf-1:exf+1,syf-1:eyf+1,6)
-!------------------------------------------------------------------------
-! Calculate the residual and restrict it to the coarser level. In
-! the new version, the restriction involves 4 points. In the old
-! version, it involves 9 points (5 if half-weighting).
-!
-! Code      : mgd2, 2-D parallel multigrid solver
-! Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-! Called in : mgdkcyc
-! Calls     : gxch1lin, gxch1cor
-!------------------------------------------------------------------------
-sll_int32 :: i,j,isrt,jsrt,iinc,jinc,ic,jc
+sll_int32  :: i,j,isrt,jsrt,iinc,jinc,ic,jc
 !------------------------------------------------------------------------
 do jc=syc-1,eyc+1
   do ic=sxc-1,exc+1
@@ -1510,6 +1422,322 @@ else if (iresw.eq.2) then
   end do
 end if
 endif
+
+end subroutine
+
+
+!> Calculate the error between the new and old iterates of phi and 
+!> save the new iterate into the phio array.
+subroutine mgderr(relmax,sxm,exm,sym,eym,phio,phin,comm2d)
+
+sll_int32  :: sxm,exm,sym,eym,comm2d
+sll_real64 :: relmax
+sll_real64 :: phio(sxm-1:exm+1,sym-1:eym+1),phin(sxm-1:exm+1,sym-1:eym+1)
+sll_real64 :: phloc,reloc
+sll_int32  :: i,j,ierr
+!
+! calculate local error
+!
+phloc=0.0d0
+reloc=0.0d0
+do j=sym,eym
+  do i=sxm,exm
+    phloc=max(phloc,abs(phin(i,j)))
+    reloc=max(reloc,abs(phin(i,j)-phio(i,j)))
+  end do
+end do
+if (phloc.gt.0.0) then
+  reloc=reloc/phloc
+else
+  reloc=0.0d0
+end if
+
+! global reduce across all processes
+call MPI_ALLREDUCE(reloc,relmax,1,MPI_REAL8,MPI_MAX,comm2d,ierr)
+
+! save new values into ouput array
+do j=sym-1,eym+1
+  do i=sxm-1,exm+1
+    phio(i,j)=phin(i,j)
+  end do
+end do
+
+end subroutine
+
+!> Enforce the Neumann and Dirichlet boundary conditions
+subroutine mgdbdry(sxm,exm,sym,eym,phi,bd,phibc)
+
+
+sll_int32  :: sxm,exm,sym,eym,bd(8)
+sll_real64 :: phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
+sll_int32 :: i,j
+
+if (bd(1).eq.1) then
+   do j=sym-1,eym+1
+      phi(exm+1,j)=phi(exm,j)
+   end do
+else if (bd(1).eq.2) then
+   do j=sym-1,eym+1
+      phi(exm+1,j)=2.0d0*phibc(1)-phi(exm,j)
+   end do
+end if
+if (bd(5).eq.1) then
+   do j=sym-1,eym+1
+      phi(sxm-1,j)=phi(sxm,j)
+   end do
+else if (bd(5).eq.2) then
+   do j=sym-1,eym+1
+      phi(sxm-1,j)=2.0d0*phibc(3)-phi(sxm,j)
+   end do
+end if
+if (bd(3).eq.1) then
+   do i=sxm-1,exm+1
+      phi(i,sym-1)=phi(i,sym)
+   end do
+else if (bd(3).eq.2) then
+   do i=sxm-1,exm+1
+      phi(i,sym-1)=2.0d0*phibc(2)-phi(i,sym)
+   end do
+end if
+if (bd(7).eq.1) then
+   do i=sxm-1,exm+1
+      phi(i,eym+1)=phi(i,eym)
+   end do
+else if (bd(7).eq.2) then
+   do i=sxm-1,exm+1
+      phi(i,eym+1)=2.0d0*phibc(4)-phi(i,eym)
+   end do
+end if
+
+end subroutine
+
+!> Do one multigrid K-cycle
+!> K=1 -> V-cycle
+!> K=2 -> W-cycle
+subroutine mgdkcyc(work,res,kcur,kcycle,iprer,ipost,iresw, &
+                   comm2d,myid,neighbor,bd,phibc)
+
+sll_int32  :: kcur,kcycle,iprer,ipost,iresw
+sll_int32  :: comm2d,myid,neighbor(8),bd(8)
+sll_real64 :: work(*),res(*),phibc(4,*)
+
+sll_int32 :: sxf,exf,syf,eyf,nxf,nyf,ipf,icf
+sll_int32 :: sxc,exc,syc,eyc,nxc,nyc,ipc,irc
+sll_int32 :: klevel,itype,jtype,ijtype,kount(20),l,nrel
+sll_int32 :: sx1,ex1,sy1,ey1
+
+klevel=kcur
+!
+! pre-relax at current finest grid level
+!
+sxf=sxk(klevel)
+exf=exk(klevel)
+syf=syk(klevel)
+eyf=eyk(klevel)
+nxf=nxk(klevel)
+nyf=nyk(klevel)
+ipf=kpbgn(klevel)
+icf=kcbgn(klevel)
+itype=ikdatatype(klevel)
+jtype=jkdatatype(klevel)
+call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),iprer, &
+              comm2d,myid,neighbor,bd,phibc(1,klevel),   &
+              itype,jtype)
+!
+! if at coarsest level, post-relax
+!
+if (kcur.eq.1) goto 5
+!
+! calculate residual and restrict it to kcur-1 
+! (note: the residuals are stored in the memory space used by the
+! the rhs array rhsf, which is therefore erased)
+!
+sxc=sxk(klevel-1)
+exc=exk(klevel-1)
+syc=syk(klevel-1)
+eyc=eyk(klevel-1)
+nxc=nxk(klevel-1)
+nyc=nyk(klevel-1)
+ipc=kpbgn(klevel-1)
+irc=kcbgn(klevel-1)+5*(exc-sxc+3)*(eyc-syc+3)
+itype=ikdatatype(klevel)
+jtype=jkdatatype(klevel)
+ijtype=ijkdatatype(klevel)
+call mgdrestr(sxc,exc,syc,eyc,nxc,nyc,work(ipc),work(irc), &
+              sxf,exf,syf,eyf,nxf,nyf,work(ipf),work(icf), &
+              res,iresw,comm2d,myid,neighbor,bd,           &
+              itype,jtype,ijtype)
+!
+! set counter for grid levels to zero
+!
+do l=1,kcur
+  kount(l)=0
+end do
+!
+! set new level and continue K-cycling
+!
+klevel=kcur-1
+nrel=iprer
+!
+!------------------------------------------------------------------------
+! K-cycle control point
+!
+10    continue
+!
+! post-relax when kcur revisited
+!
+if (klevel.eq.kcur) goto 5
+!
+! count "hit" at current level
+!
+kount(klevel)=kount(klevel)+1
+!
+! relax at current level
+!
+sxf=sxk(klevel)
+exf=exk(klevel)
+syf=syk(klevel)
+eyf=eyk(klevel)
+nxf=nxk(klevel)
+nyf=nyk(klevel)
+ipf=kpbgn(klevel)
+icf=kcbgn(klevel)
+itype=ikdatatype(klevel)
+jtype=jkdatatype(klevel)
+call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),nrel, &
+              comm2d,myid,neighbor,bd,phibc(1,klevel),itype,jtype)
+
+if (kount(klevel).eq.(kcycle+1)) then
+!
+! K-cycle(iprer,ipost) complete at klevel
+! inject correction to finer grid
+!      
+  sxf=sxk(klevel+1)
+  exf=exk(klevel+1)
+  syf=syk(klevel+1)
+  eyf=eyk(klevel+1)
+  nxf=nxk(klevel+1)
+  nyf=nyk(klevel+1)
+  ipf=kpbgn(klevel+1)
+  sxc=sxk(klevel)
+  exc=exk(klevel)
+  syc=syk(klevel)
+  eyc=eyk(klevel)
+  nxc=nxk(klevel)
+  nyc=nyk(klevel)
+  ipc=kpbgn(klevel)
+  sx1=sxi(klevel)
+  ex1=exi(klevel)
+  sy1=syi(klevel)
+  ey1=eyi(klevel)
+  call mgdcor(sxf,exf,syf,eyf,nxf,nyf,work(ipf),         &
+              sxc,exc,syc,eyc,nxc,nyc,work(ipc),         &
+              sx1,ex1,sy1,ey1,bd,phibc(1,klevel+1))
+!
+! reset counter to zero at klevel
+!
+  kount(klevel)=0
+!
+! ascend to next higher level and set to post-relax there
+!
+  klevel=klevel+1
+  nrel=ipost
+  goto 10
+  
+else
+
+! K-cycle not complete so descend unless at coarsest
+
+  if (klevel.gt.1) then
+    sxc=sxk(klevel-1)
+    exc=exk(klevel-1)
+    syc=syk(klevel-1)
+    eyc=eyk(klevel-1)
+    nxc=nxk(klevel-1)
+    nyc=nyk(klevel-1)
+    ipc=kpbgn(klevel-1)
+    irc=kcbgn(klevel-1)+5*(exc-sxc+3)*(eyc-syc+3)
+    itype=ikdatatype(klevel)
+    jtype=jkdatatype(klevel)
+    ijtype=ijkdatatype(klevel)
+    call mgdrestr(sxc,exc,syc,eyc,nxc,nyc,work(ipc),work(irc),  &
+                  sxf,exf,syf,eyf,nxf,nyf,work(ipf),work(icf),  &
+                  res,iresw,comm2d,myid,neighbor,bd,            &
+                  itype,jtype,ijtype)
+!
+! pre-relax at next coarser level
+!
+    klevel=klevel-1
+    nrel=iprer
+    goto 10
+
+  else
+!
+! post-relax at coarsest level
+!
+    sxf=sxk(klevel)
+    exf=exk(klevel)
+    syf=syk(klevel)
+    eyf=eyk(klevel)
+    ipf=kpbgn(klevel)
+    icf=kcbgn(klevel)
+    itype=ikdatatype(klevel)
+    jtype=jkdatatype(klevel)
+    call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),ipost, &
+                  comm2d,myid,neighbor,bd,phibc(1,klevel),   &
+                  itype,jtype)
+!
+! inject correction to grid level 2
+!
+    sxf=sxk(2)
+    exf=exk(2)
+    syf=syk(2)
+    eyf=eyk(2)
+    nxf=nxk(2)
+    nyf=nyk(2)
+    ipf=kpbgn(2)
+    sxc=sxk(1)
+    exc=exk(1)
+    syc=syk(1)
+    eyc=eyk(1)
+    nxc=nxk(1)
+    nyc=nyk(1)
+    ipc=kpbgn(1)
+    sx1=sxi(1)
+    ex1=exi(1)
+    sy1=syi(1)
+    ey1=eyi(1)
+    call mgdcor(sxf,exf,syf,eyf,nxf,nyf,work(ipf),  &
+                sxc,exc,syc,eyc,nxc,nyc,work(ipc),  &
+                sx1,ex1,sy1,ey1,bd,phibc(1,2))
+!
+! set to post-relax at level 2
+!
+    nrel=ipost
+    klevel=2
+    goto 10
+
+  end if
+
+end if
+
+5     continue
+!
+!------------------------------------------------------------------------
+! post-relax at kcur level
+!
+sxf=sxk(kcur)
+exf=exk(kcur)
+syf=syk(kcur)
+eyf=eyk(kcur)
+ipf=kpbgn(kcur)
+icf=kcbgn(kcur)
+itype=ikdatatype(kcur)
+jtype=jkdatatype(kcur)
+
+call mgdrelax(sxf,exf,syf,eyf,work(ipf),work(icf),ipost, &
+              comm2d,myid,neighbor,bd,phibc(1,kcur),     &
+              itype,jtype)
 
 end subroutine
 end module mgd2
