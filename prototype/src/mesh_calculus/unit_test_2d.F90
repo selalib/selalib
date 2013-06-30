@@ -12,7 +12,7 @@ program test_mesh_calculus
 
   type(sll_logical_mesh_2d), pointer                    :: m
   class(sll_coordinate_transformation_2d_base), pointer :: Ta
-  sll_real64 :: volume
+  sll_real64 :: volume, length_east
 
   m => new_logical_mesh_2d( NCELLS1, NCELLS2)
 
@@ -28,6 +28,10 @@ program test_mesh_calculus
 
   volume = cell_volume(Ta,1,1,3)
   print *, 'volume = ', volume
+
+  length_east = edge_length_eta1_plus(Ta,1,1,3)
+  print *, 'length east edge = ', length_east
+
 
   print *, 'PASSED'
 
