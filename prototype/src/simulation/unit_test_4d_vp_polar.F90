@@ -18,30 +18,41 @@ program vlasov_poisson_4d_polar
   implicit none
 
   character(len=256)                  :: filename
-  character(len=256)                  :: filename_local
   type(sll_simulation_4d_vp_polar)    :: simulation
   type(sll_logical_mesh_2d), pointer  :: mx
   type(sll_logical_mesh_2d), pointer  :: mv
   sll_real64                          :: params(6)
+  sll_int32                           :: nargs
 
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
 
   call sll_boot_collective() ! Wrap this up somewhere else
 
+  nargs = iargc()
+  if ( nargs > 0 ) then
+
+     call getarg(1, filename)
+     call simulation%init_from_file(trim(filename))
+
+  else
+
 #define NPTS1 32
-#define NPTS2 32
+#define NPTS2 64
 #define NPTS3 32
 #define NPTS4 32
 
-  ! logical mesh for space coordinates
-  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=.2_f64, eta1_max=.8_f64,         &
+     ! logical mesh for space coordinates
+     mx => new_logical_mesh_2d( NPTS1, NPTS2,    & 
+       eta1_min= 2.0_f64, eta1_max= 8.0_f64,         &
        eta2_min=.0_f64, eta2_max=2.0_f64*sll_pi)
 
-  ! logical mesh for velocity coordinates
-  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+     ! logical mesh for velocity coordinates
+     mv => new_logical_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
+
+
+  end if
 
   ! coordinate transformation associated with space coordinates
   transformation => new_coordinate_transformation_2d_analytic( &
@@ -68,15 +79,16 @@ program vlasov_poisson_4d_polar
 !  val = alpha*exp(-0.5_f64*((x -xc )**2+(y -yc )**2)) + &
 !        beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
 
-  params(1) = 0.5 !xc
+  params(1) = 5.0 !xc
   params(2) = 0.0 !yc
   params(3) = 0.0 !vxc
   params(4) = 0.0 !vyc
   params(5) = 1.0 !alpha
   params(6) = 0.0 !beta
 
-
-  call simulation%run( )
+  simulation%num_iterations = 100 ! run 100 iterations
+  simulation%dt             = 0.1 ! time step
+  call simulation%run()
   call delete(simulation)
 
   print *, 'PASSED'
