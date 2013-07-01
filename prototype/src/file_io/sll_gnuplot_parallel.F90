@@ -18,6 +18,7 @@
 !> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write data file plotable by GNUplot
+!> for parallel simulations
 #define MPI_MASTER 0
 
 module sll_gnuplot_parallel
@@ -31,10 +32,17 @@ use sll_collective
 
 implicit none
 
+interface sll_gnuplot_2d_parallel
+module procedure sll_gnuplot_curv_2d_parallel
+module procedure sll_gnuplot_rect_2d_parallel
+end interface sll_gnuplot_2d_parallel
+
+
+
 contains  
 
 !> write a data file plotable by gnuplot to visualize a 2d field
-subroutine sll_gnuplot_2d_parallel(array_x, array_y, array, &
+subroutine sll_gnuplot_curv_2d_parallel(array_x, array_y, array, &
                                    array_name, iplot, error)  
 
 sll_real64, dimension(:,:) :: array_x    !< x mesh coordinates
@@ -51,7 +59,7 @@ sll_int32                  :: i, j
 character(len=4)           :: cproc 
 sll_int32                  :: comm, iproc, nproc
 logical                    :: dir_e
-
+logical, save              :: first_call = .true.
 
 nproc = sll_get_collective_size(sll_world_collective)
 iproc = sll_get_collective_rank(sll_world_collective)
@@ -59,13 +67,9 @@ call int2string(iproc, cproc)
 comm  = sll_world_collective%comm
 call int2string(iplot, fin)
 
-if (iplot == 1) then
-   inquire(file=cproc//"/"".", exist=dir_e)
-   if (dir_e) then
-     write(*,*) "directory "//cproc//" exists!"
-   else
-     call system("mkdir -p "//cproc)
-   end if
+inquire(file=cproc//"/"".", exist=dir_e)
+if (.not. dir_e) then
+   call system("mkdir -p "//cproc)
 end if
 
 call sll_new_file_id(file_id, error)
@@ -80,9 +84,14 @@ close(file_id)
 
 if (iproc == MPI_MASTER) then
 
-   if (iplot == 1) call sll_new_file_id(gnu_id, error)
-   open(gnu_id,file=array_name//".gnu", position="append")
-   if (iplot == 1) rewind(gnu_id)
+   if (first_call) then
+      call sll_new_file_id(gnu_id, error)
+      open(gnu_id,file=array_name//".gnu")
+      rewind(gnu_id)
+      first_call = .false.
+   else
+      open(gnu_id,file=array_name//".gnu", position="append")
+   end if
 
    write(gnu_id,*)"set title 'Time = ",iplot,"'"
    write(gnu_id,"(a)",advance='no') &
@@ -97,7 +106,7 @@ if (iproc == MPI_MASTER) then
 
 end if
 
-end subroutine sll_gnuplot_2d_parallel
+end subroutine sll_gnuplot_curv_2d_parallel
 
 !> write a data file plotable by gnuplot to visualize a 2d field
 subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
@@ -121,6 +130,7 @@ sll_real64                 :: x, y
 character(len=4)           :: cproc 
 sll_int32                  :: comm, iproc, nproc
 logical                    :: dir_e
+logical, save              :: first_call= .true.
 
 
 nproc = sll_get_collective_size(sll_world_collective)
@@ -129,13 +139,9 @@ call int2string(iproc, cproc)
 comm  = sll_world_collective%comm
 call int2string(iplot, fin)
 
-if (iplot == 1) then
-   inquire(file=cproc//"/"".", exist=dir_e)
-   if (dir_e) then
-     write(*,*) "directory "//cproc//" exists!"
-   else
-     call system("mkdir -p "//cproc)
-   end if
+inquire(file=cproc//"/"".", exist=dir_e)
+if (.not. dir_e) then
+  call system("mkdir -p "//cproc)
 end if
 
 
@@ -153,9 +159,14 @@ close(file_id)
 
 if (iproc == MPI_MASTER) then
 
-   if (iplot == 1) call sll_new_file_id(gnu_id, error)
-   open(gnu_id,file=array_name//".gnu", position="append")
-   if (iplot == 1) rewind(gnu_id)
+   if (first_call) then
+      call sll_new_file_id(gnu_id, error)
+      open(gnu_id,file=array_name//".gnu")
+      rewind(gnu_id)
+      first_call = .false.
+   else
+      open(gnu_id,file=array_name//".gnu", position="append")
+   end if
 
    write(gnu_id,*)"set title 'Time = ",iplot,"'"
    write(gnu_id,"(a)",advance='no') &

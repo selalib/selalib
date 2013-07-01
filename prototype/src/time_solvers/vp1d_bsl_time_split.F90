@@ -167,8 +167,8 @@ program VP1d_BSL_time_split
   mesh2d_base => mesh2d
 
   ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
   interp_x => interp_spline_x
   interp_v => interp_spline_v
 

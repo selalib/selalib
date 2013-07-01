@@ -3,7 +3,7 @@ program gauss_legendre_tester
   use sll_constants
   use gauss_legendre_integration
   use test_function_module
-  use gausslobatto
+  use sll_gausslobatto
   implicit none
   intrinsic :: dsin
   integer :: i,j
