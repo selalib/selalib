@@ -1,11 +1,12 @@
 &MESH
-  Nr           = 127
-  Ntheta       = 128
+  Nr           = 511
+  Ntheta       = 32
   Nphi         = 32
-  Nvpar        = 47
+  Nvpar        = 48 !47
   a            = 32.
   rhomin       = 0.2  !rmin=a*rhomin
   rhomax       = 0.8  !rmax=a*rhomax
+  Lz           = 6.283185307179586476925286766559005768394  !rmax=a*rhomax
   aspect_ratio = 3.
   vmax      = 6.
   nbiter      = 30
@@ -23,9 +24,10 @@
   deltarTi       = 0.08
   deltarTe       = 0.08
   epsilon        = .001
-  m              = 16
-  n              = 8
-  init_perturb   = 2
+  modethmin       = 1
+  modethmax       = 16
+  modezmin        = 1
+  modezmax        = 8
   zonal_flow     = .true.
 /
 
