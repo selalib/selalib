@@ -7,14 +7,21 @@ program test_mesh_calculus
   use sll_mesh_calculus_2d_module
   implicit none
 
-#define NCELLS1 1
-#define NCELLS2 1
+#define NCELLS1 128
+#define NCELLS2 128
 
   type(sll_logical_mesh_2d), pointer                    :: m
   class(sll_coordinate_transformation_2d_base), pointer :: Ta
-  sll_real64 :: volume, length_east
+  sll_real64 :: volume, length_east, length_west, length_north, length_south
+  sll_int32  :: i, j
 
-  m => new_logical_mesh_2d( NCELLS1, NCELLS2)
+  m => new_logical_mesh_2d( &
+       NCELLS1, &
+       NCELLS2, &
+       eta1_min=-1.0_f64, &
+       eta1_max= 1.0_f64, &
+       eta2_min=-1.0_f64, &
+       eta2_max= 1.0_f64)
 
   Ta => new_coordinate_transformation_2d_analytic( &
        "map_a", &
@@ -26,11 +33,31 @@ program test_mesh_calculus
        identity_jac21, &
        identity_jac22 )
 
-  volume = cell_volume(Ta,1,1,3)
+  volume = 0.0_f64
+  do j=1,NCELLS1
+     do i=1,NCELLS2
+        volume = volume + cell_volume(Ta,i,j,3)
+     end do
+  end do
   print *, 'volume = ', volume
 
-  length_east = edge_length_eta1_plus(Ta,1,1,3)
-  print *, 'length east edge = ', length_east
+  length_east  = 0.0_f64
+  length_west  = 0.0_f64
+  length_north = 0.0_f64
+  length_south = 0.0_f64
+
+  do i=1,NCELLS1
+     length_north = length_north + edge_length_eta2_plus(Ta,i,1,3)
+     length_south = length_south + edge_length_eta2_minus(Ta,i,1,3)
+  end do
+
+  do j=1,NCELLS2
+     length_east  = length_east + edge_length_eta1_plus(Ta,1,j,3)
+     length_west  = length_west + edge_length_eta1_minus(Ta,1,j,3)
+  end do
+
+  print *, 'length east edge = ', length_east, length_west, length_north, &
+       length_south
 
 
   print *, 'PASSED'
