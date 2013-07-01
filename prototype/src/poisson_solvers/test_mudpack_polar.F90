@@ -31,13 +31,13 @@ print*,'Testing the Poisson solver in 2D, polar coordinate'
 r_min   = 1.0_f64
 r_max   = 2.0_f64
 
-theta_min  = 0.0_f64
-theta_max  = 2.0_f64 * sll_pi
+theta_min = 0.0_f64
+theta_max = 2.0_f64 * sll_pi
 
 nr     = 33
 ntheta = 129
-delta_r     = (r_max-r_min)/real(nr-1,f64)
-delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
+delta_r     = (r_max-r_min)/(nr-1)
+delta_theta = 2.0_f64*sll_pi/(ntheta-1)
 
 SLL_CLEAR_ALLOCATE(rhs(1:nr,1:ntheta),error)
 SLL_CLEAR_ALLOCATE(phi(1:nr,1:ntheta),error)
@@ -65,7 +65,7 @@ tolmax   = 1.0e-4_f64
 call initialize_poisson_polar_mudpack(poisson, phi, rhs, &
                                       r_min, r_max, nr, &
                                       theta_min, theta_max, ntheta, &
-                                      NEUMANN, DIRICHLET, PERIODIC, PERIODIC )
+                                      DIRICHLET, DIRICHLET, PERIODIC, PERIODIC )
 do i =1,nr
    do j=1,ntheta
       rhs(i,j) = f_cos(r(i), theta(j))
@@ -75,6 +75,8 @@ end do
 poisson%iguess = 0 ! no initial guess
 
 call solve_poisson_polar_mudpack(poisson, phi, rhs)
+
+call plot_field( "mudpack_polar_cos.dat", phi )
 
 errmax = maxval(abs(phi_cos-phi))
 write(*,201) errmax
@@ -95,7 +97,9 @@ poisson%iguess = 0 ! no initial guess
 
 call solve_poisson_polar_mudpack(poisson, phi, rhs)
 
-errmax = maxval(abs(phi_cos-phi))
+call plot_field( "mudpack_polar_sin.dat", phi )
+
+errmax = maxval(abs(phi_sin-phi))
 write(*,201) errmax
 if ( errmax > tolmax ) then
    print*,'FAILED'
@@ -144,5 +148,22 @@ sll_real64 function f_sin( r, theta)
          + r*sin(n*theta))*r)/r
 
 end function f_sin
+
+subroutine plot_field( filename, field )
+
+   character(len=*) :: filename
+   sll_real64       :: field(:,:)
+   open(10, file=filename)
+   do i =1,nr
+      do j=1,ntheta
+         write(10,*) sngl(r(i)*cos(theta(j))), &
+                     sngl(r(i)*sin(theta(j))), &
+                     sngl(field(i,j))
+      end do
+      write(10,*) 
+   end do
+   close(10)
+
+end subroutine plot_field
 
 end program test_mudpack_polar
