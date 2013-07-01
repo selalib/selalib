@@ -268,6 +268,8 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_collective
                        sll_constants
                        sll_utilities
+		       sll_mesh_calculus
+		       sll_integration
                        sll_coordinate_transformations
                        sll_logical_meshes
                        sll_file_io_parallel
