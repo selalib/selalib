@@ -8,7 +8,7 @@ program VP_DG
 
   use sll_nu_cart_mesh
   use sll_gausslobatto
-  use sll_poisson4dg
+  use sll_poisson4dg_1d_periodic_dg
   use sll_constants
   use sll_timestep4dg
   !this is part of FEMilaro
@@ -43,26 +43,28 @@ program VP_DG
   !space variables
   sll_real64 :: x,v,k
   !energy and momentum to check conservation
-  sll_real64 :: momentum,l1_f,l2_f!,energy0
+  sll_real64 :: momentum,l1_f,l2_f,int_f
   sll_real64 :: k_en,em_en,energy,phi_jump
   !indexes for loops
   sll_int32 :: x1,x2,v1,v2
   !display parameter
-  sll_int32 :: len,i1,i2,i3,i4,i5,i6
+  sll_int32 :: len,i,j
+  sll_int32,dimension(:),allocatable :: lfor
   character(len=25) :: form,fdist,ffield
 
   ! for the python script *.py
-  !namelist /param/ nx,nv,ng
+  !namelist /param/ dt
   !read(*,NML=param)
 
   !definition of geometry and data
-!!$  k=2.0d0/13.0d0
   k=0.5d0
+  !k=2.0d0/13.0d0
+  !k=0.3d0
   !k=1.0d0/k
 
 !!$  x_min=0.0d0
-!!$  x_max=sll_pi
-!!$  v_min=0
+!!$  x_max=sll_pi!
+!$  v_min=0
 !!$  v_max=sll_pi
 
 !!$  x_min=0.0d0
@@ -89,8 +91,9 @@ program VP_DG
 
   x_min=0.0d0
   x_max=2.0d0*sll_pi/k
-  v_min=-10.0d0
-  v_max=10.0d0
+  !x_max=24.0d0*sll_pi
+  v_min=-5.0d0
+  v_max=5.0d0
 
   nx=50
   nv=80
@@ -106,11 +109,15 @@ program VP_DG
 
   !definition or time step, delta_t and final time
   dt=0.001d0
-  tf=100.0d0
+  tf=5.0d0
   nb_step=ceiling(tf/dt)
-  th=20
-  th_out=500
-  th_large=1000 ! must be a multiple of th
+  th=min(10,int(0.1d0/dt))!20
+  th_out=int(0.5d0/dt)
+  th_large=int(0.1d0/dt) ! must be a multiple of th
+  !th_large=huge(1)
+  if (modulo(th_large,th)/=0) then
+     print*,"WARNING : snapshot of the electric field may be miscalculated"
+  end if
   tf=dt*nb_step
   print*,'size of time step      :',dt
   print*,'number of time step    :',nb_step
@@ -122,7 +129,9 @@ program VP_DG
   do while (nb_step>=10**len)
      len=len+1
   end do
-  form="(1x,i"//char(len+48)//",a1,i"//char(len+48)//",1x,a11,f6.2)"
+  allocate(lfor(len))
+  lfor=0
+  form="(1x,i"//char(len+48)//",a1,i"//char(len+48)//",1x,a11,f7.2)"
 
   call init_gausslobatto_1d(ng,gausslob)
   call init_gausslobatto_1d(ng*3,gll)
@@ -147,7 +156,15 @@ program VP_DG
   !f(x,v)=sin(x)sin(v), (x,v)\in [0;pi]^2 (to check rhs, independants on t)
   !exact rhs = -v*cos(x)sin(x)+sin(2x)cos(v)
   dist=0.0d0
-  open(14,file='dist_000000')
+  write(fdist,*)'dist_'
+  write(ffield,*)'field_'
+  do i=1,len
+     write(fdist,*)trim(adjustl(fdist))//char(48)
+     write(ffield,*)trim(adjustl(ffield))//char(48)
+     fdist=trim(adjustl(fdist))
+     ffield=trim(adjustl(ffield))
+  end do
+  open(14,file=fdist)
   do v1=1,nv
      do v2=1,ng
         v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
@@ -155,7 +172,7 @@ program VP_DG
            do x2=1,ng
               x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
               !test case for RHS
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=sin(x)*sin(v)
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=sin(x)*sin(v)
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(exp(-200.0d0*(v-0.8d0)**2)+ &
 !!$                   & exp(-200.0d0*(v+0.8d0)**2))!*(cos(3.0d0*x)+cos(6.0d0*x)+cos(18.0d0*x))
@@ -172,13 +189,13 @@ program VP_DG
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(x**2-1.0d0)*(v**2-1.0d0)
 
-              !linear Landau
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.5d0*cos(k*x))* &
-!!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
+              !Landau
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.5d0*cos(k*x))* &
+                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !strong oscillations two streams
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=v**2/sqrt(8.0d0*sll_pi)*(2.0d0- &
-!!$                   & cos(k*(x-2.0d0*sll_pi)))* &
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=v**2/sqrt(8.0d0*sll_pi)* &
+!!$                   & (2.0d0-cos(k*(x-2.0d0*sll_pi)))* &
 !!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !classical two streams instability
@@ -188,7 +205,14 @@ program VP_DG
 !!$                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
 
               !asymetric two streams instability
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.05d0*cos(k*x))/sqrt(2.0d0*sll_pi)* &
+              !from michel, eric and nicolas
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
+!!$                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
+!!$                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
+
+              !"from me"
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=&!(1.0d0-0.05d0*cos(k*x))
+!!$                   & 1.0d0/sqrt(2.0d0*sll_pi)* &
 !!$                   & (exp(-v**2/2.0d0)+0.2d0*exp(-(v-2.0d0)**2*100))
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=exp(-v**2)/sqrt(2.0d0*sll_pi)
@@ -206,7 +230,7 @@ program VP_DG
   dg_plan%t=0.0d0
   open(15,file='energy_momentum',action='write')
   write(15,*)"# t ; momentum ; total energy ; kinetic energy ; electromagnetic energy ;", &
-       & " jump of phi ; ||f||_L1 ; ||f||_L2"
+       & " jump of phi ; ||f||_L1 ; ||f||_L2 ; min(f) ; max(f) ; integral(f)"
   momentum=0.0d0
   energy=0.0d0
   k_en=0.0d0
@@ -214,9 +238,11 @@ program VP_DG
   phi_jump=0.0d0
   l1_f=0.0d0
   l2_f=0.0d0
+  int_f=0.0d0
 
   dg_plan%rho=0.0d0
   dg_plan%norma=0.0d0
+  dg_plan%bound=0
   do x1=1,nx
      do x2=1,ng
         do v1=1,nv
@@ -260,13 +286,15 @@ program VP_DG
                    & gausslob%weigh(v2)/mesh%jac(x1,v1)
               l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
                    & gausslob%weigh(v2)/mesh%jac(x1,v1)
+              int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                   & gausslob%weigh(v2)/mesh%jac(x1,v1)
            end do
         end do
      end do
   end do
   l2_f=sqrt(l2_f)
 
-  open(17,file='field_000000')
+  open(17,file=ffield)
   do x1=1,nx
      do x2=1,ng
         !electric/potential energy
@@ -278,14 +306,16 @@ program VP_DG
      !stabilisation term (see Blanca's DG method for the 1D VP system)
      phi_jump=phi_jump+(dg_plan%phi(x1*ng)-dg_plan%phi(modulo(x1*ng+1-1,nx*ng)+1))**2
   end do
-  energy=k_en+em_en+phi_jump*c11
-  write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f
+  energy=(k_en+em_en+phi_jump*c11)/2.0d0
+  write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f, &
+       & minval(dist),maxval(dist),int_f
   close(17)
 
-  dg_plan%bound=0
   ! time loop begin
   do step=1,nb_step
+     !!!>>>Blanca"s case
      !dg_plan%bound=-sqrt(sll_pi)/8.0d0*cos(2.0d0/sll_pi*dg_plan%t)
+     !!!<<<
      call time_integration_4dg(dg_plan,gausslob,mesh,dist,distp1)
      dg_plan%t=real(step,8)*dt
      dist=distp1
@@ -298,6 +328,7 @@ program VP_DG
         phi_jump=0.0d0
         l1_f=0.0d0
         l2_f=0.0d0
+        int_f=0.0d0
         
         dg_plan%rho=0.0d0
         dg_plan%norma=0.0d0
@@ -337,13 +368,15 @@ program VP_DG
                     momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
                          & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
                     !kinetik energy
-                    k_en=k_en+v**2*abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))* &
+                    k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
                          & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
 
                     !norms 1 and 2 of distribution
                     l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
                          & gausslob%weigh(v2)/mesh%jac(x1,v1)
                     l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                    int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
                          & gausslob%weigh(v2)/mesh%jac(x1,v1)
                  end do
               end do
@@ -359,21 +392,39 @@ program VP_DG
            !stabilisation term (see Blanca's DG method for the 1D VP system)
            phi_jump=phi_jump+(dg_plan%phi(x1*ng)-dg_plan%phi(modulo(x1*ng+1-1,nx*ng)+1))**2
         end do
-        energy=k_en+em_en+phi_jump*c11
-        write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f
+        energy=(k_en+em_en+phi_jump*c11)/2.0d0
+        write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f, &
+             & minval(dist),maxval(dist),int_f
      end if
 
      if (modulo(step,th_large)==0 .or. step==nb_step) then
-        i1=step/100000
-        i2=(step-100000*i1)/10000
-        i3=(step-100000*i1-10000*i2)/1000
-        i4=(step-100000*i1-10000*i2-i3*1000)/100
-        i5=(step-100000*i1-10000*i2-i3*1000-i4*100)/10
-        i6= step-100000*i1-10000*i2-i3*1000-i4*100-i5*10
-        write(ffield,*)'field_'//char(i1+48)//char(i2+48)//char(i3+48)//char(i4+48)// &
-             & char(i5+48)//char(i6+48)
-        write(fdist,*)'dist_'//char(i1+48)//char(i2+48)//char(i3+48)//char(i4+48)// &
-             & char(i5+48)//char(i6+48)
+        write(fdist,*)'dist_'
+        write(ffield,*)'field_'
+        fdist=trim(adjustl(fdist))
+        ffield=trim(adjustl(ffield))
+        lfor=step
+        lfor(1)=step/10**(len-1)
+        write(fdist,*)trim(adjustl(fdist))//char(lfor(1)+48)
+        write(ffield,*)trim(adjustl(ffield))//char(lfor(1)+48)
+        do i=2,len
+           do j=1,i-1
+              lfor(i)=lfor(i)-lfor(j)*10**(len-j)
+           end do
+           lfor(i)=lfor(i)/10**(len-i)
+           write(fdist,*)trim(adjustl(fdist))//char(lfor(i)+48)
+           write(ffield,*)trim(adjustl(ffield))//char(lfor(i)+48)
+        end do
+
+!!$        i1=step/100000
+!!$        i2=(step-100000*i1)/10000
+!!$        i3=(step-100000*i1-10000*i2)/1000
+!!$        i4=(step-100000*i1-10000*i2-i3*1000)/100
+!!$        i5=(step-100000*i1-10000*i2-i3*1000-i4*100)/10
+!!$        i6= step-100000*i1-10000*i2-i3*1000-i4*100-i5*10
+!!$        write(ffield,*)'field_'//char(i1+48)//char(i2+48)//char(i3+48)//char(i4+48)// &
+!!$             & char(i5+48)//char(i6+48)
+!!$        write(fdist,*)'dist_'//char(i1+48)//char(i2+48)//char(i3+48)//char(i4+48)// &
+!!$             & char(i5+48)//char(i6+48)
         fdist=trim(adjustl(fdist))
         ffield=trim(adjustl(ffield))
 
@@ -409,7 +460,7 @@ program VP_DG
   end do
   close(15)
 
-  deallocate(dist,distp1)
+  deallocate(dist,distp1,lfor)
   call delete(gausslob)
   call delete(dg_plan)
   call delete(mesh)
@@ -425,11 +476,18 @@ contains
     open(20,file="parameters",action="write")
     write(20,*)"x bounadries :",x_min,x_max
     write(20,*)"v bounadries :",v_min,v_max
+    write(20,*)""
     if (unif) then
        write(20,*)"uniforme mesh"
     else
        write(20,*)"non-uniforme mesh"
     end if
+    if (v_periodic) then
+       write(20,*)"periodicity in direction v"
+    else
+       write(20,*)"Dirichlet condition in v"
+    end if
+    write(20,*)""
     write(20,*)"number of step in direction x  :",nx
     write(20,*)"number of step in direction v  :",nv
     write(20,*)"number of Gauss-Lobatto points :",ng
@@ -444,6 +502,17 @@ contains
     write(20,*)"number of time historic    :",nt/th+1
     write(20,*)"frequency of snapshot :",real(thl,4)*dt,thl
     write(20,*)"number of snapshot    :",nt/thl+1
+    write(20,*)""
+    if (x_upwind) then
+       write(20,*)"upwind flux in direction x"
+    else
+       write(20,*)"centered flux in direction x"
+    end if
+    if (v_upwind) then
+       write(20,*)"upwind flux in direction v"
+    else
+       write(20,*)"centered flux in direction v"
+    end if
     close(20)
 
   end subroutine param_out

@@ -23,7 +23,7 @@ module sll_timestep4dg
 #include "sll_working_precision.h"
 
   use sll_gausslobatto
-  use sll_poisson4dg
+  use sll_poisson4dg_1d_periodic_dg
   use sll_nu_cart_mesh
   use sll_constants
   !those are part of FEMilaro
@@ -34,6 +34,7 @@ module sll_timestep4dg
 
   implicit none
 
+  logical,parameter :: v_periodic=.false.,x_upwind=.false.,v_upwind=.true.
   integer,parameter :: SLL_RK3=0,SLL_RK4=1,SLL_EE=2,SLL_TVDRK2=3
   !<parameters to compute the time integration
 
@@ -114,7 +115,6 @@ contains
        !RK3
        print*,'time integration using RK3'
        call init_k3_4dg(plan,gll,mesh,dt,xbound,c11,c12,norma=norma0,alpha=alpha0)
-       stop
     else if (plan%method==SLL_RK4) then
        !RK4
        print*,'time integration using RK4'
@@ -340,48 +340,119 @@ contains
                      & som2*field_e((x1-1)*ng+x2)*gll%weigh(x2))/mesh%jac(x1,v1)
 
                 !boudaries part
-                if (x2==ng) then 
-                   if (mesh%etat2(v1)+(1.0d0+gll%node(v2))/mesh%jac(nx+1,v1) >= 0.0d0) then
-                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
-                           & v*dist(x1*ng,(v1-1)*ng+v2)*gll%weigh(v2)/mesh%jac(nx+1,v1)
-                   else
-                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
-                           & v*dist(modulo(x1*ng+1-1,nx*ng)+1,(v1-1)*ng+v2)* &
-                           & gll%weigh(v2)/mesh%jac(nx+1,v1)
-                   end if
-                else if (x2==1) then
-                   if (mesh%etat2(v1)+(1.0d0+gll%node(v2))/mesh%jac(nx+1,v1) >= 0.0d0) then
-                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
-                           & v*dist(modulo((x1-1)*ng-1,nx*ng)+1,(v1-1)*ng+v2)* &
-                           & gll%weigh(v2)/mesh%jac(nx+1,v1) 
-                   else
-                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
-                           & v*dist((x1-1)*ng+1,(v1-1)*ng+v2)*gll%weigh(v2)/mesh%jac(nx+1,v1) 
+                !upwind
+                if (x_upwind) then
+                   if (x2==ng) then 
+                      if (mesh%etat2(v1)+(1.0d0+gll%node(v2))/mesh%jac(nx+1,v1) >= 0.0d0) then
+                         rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                              & v*dist(x1*ng,(v1-1)*ng+v2)*gll%weigh(v2)/mesh%jac(nx+1,v1)
+                      else
+                         rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                              & v*dist(modulo(x1*ng+1-1,nx*ng)+1,(v1-1)*ng+v2)* &
+                              & gll%weigh(v2)/mesh%jac(nx+1,v1)
+                      end if
+                   else if (x2==1) then
+                      if (mesh%etat2(v1)+(1.0d0+gll%node(v2))/mesh%jac(nx+1,v1) >= 0.0d0) then
+                         rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                              & v*dist(modulo((x1-1)*ng-1,nx*ng)+1,(v1-1)*ng+v2)* &
+                              & gll%weigh(v2)/mesh%jac(nx+1,v1) 
+                      else
+                         rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                              & v*dist((x1-1)*ng+1,(v1-1)*ng+v2)*gll%weigh(v2)/mesh%jac(nx+1,v1) 
+                      end if
                    end if
                 end if
 
-                if (v2==ng) then
-                   if (field_e((x1-1)*ng+x2) >= 0.0d0) then
-                      if (v1<nv) then
+                if (v_upwind) then
+                   if (v2==ng) then
+                      if (field_e((x1-1)*ng+x2) >= 0.0d0) then
+                         if (v1<nv) then
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                                 & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng+1)* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1) 
+                         else if (v_periodic) then
+                            ! activate only for periodicity in v
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                                 & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,1)* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         end if
+                      else
                          rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
-                              & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng+1)* &
+                              & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng)* &
                               & gll%weigh(x2)/mesh%jac(x1,nv+1) 
                       end if
-                   else
-                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
-                           & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng)* &
-                           & gll%weigh(x2)/mesh%jac(x1,nv+1) 
-                   end if
-                else if (v2==1) then
-                   if (field_e((x1-1)*ng+x2) >= 0.0d0) then
-                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
-                           & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng+1)* &
-                           & gll%weigh(x2)/mesh%jac(x1,nv+1)
-                   else 
-                      if (v1>=2) then
+                   else if (v2==1) then
+                      if (field_e((x1-1)*ng+x2) >= 0.0d0) then
                          rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
-                              & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng)* &
+                              & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng+1)* &
                               & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                      else 
+                         if (v1>=2) then
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                                 & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng)* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         else if (v_periodic) then
+                            ! activate only for periodicity in v
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                                 & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,nv*ng)* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         end if
+                      end if
+                   end if
+                end if
+
+                !centered
+                if (.not. x_upwind) then
+                   if (x2==ng) then 
+                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                           & 0.5d0*(v*dist(x1*ng,(v1-1)*ng+v2)+ &
+                           & v*dist(modulo(x1*ng+1-1,nx*ng)+1,(v1-1)*ng+v2))* &
+                           & gll%weigh(v2)/mesh%jac(nx+1,v1)
+                   else if (x2==1) then
+                      rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                           & 0.5d0*(v*dist(modulo((x1-1)*ng-1,nx*ng)+1,(v1-1)*ng+v2)+ &
+                           & v*dist((x1-1)*ng+1,(v1-1)*ng+v2))*gll%weigh(v2)/mesh%jac(nx+1,v1)
+                   end if
+                end if
+
+                if (.not. v_upwind) then
+                   if (v2==ng) then
+                      if (v1<nv) then
+                         rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                              & 0.5d0*(field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng+1)+ &
+                              & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng))* &
+                              & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                      else if (v1==nv) then
+                         if (v_periodic) then
+                            ! activate only for periodicity in v
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                                 & 0.5d0*(field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,1)+ &
+                                 & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,nv*ng))* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         else
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)+ &
+                                 & 0.5d0*field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,v1*ng)* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         end if
+                      end if
+                   else if (v2==1) then
+                      if (v1>1) then
+                         rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                              & 0.5d0*(field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng+1)+ &
+                              & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng))* &
+                              & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                      else if (v1==1) then
+                         if (v_periodic) then
+                            ! activate only for periodicity in v
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                                 & 0.5d0*(field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,1)+ &
+                                 & field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,nv*ng))* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         else
+                            rhs((x1-1)*ng+x2,(v1-1)*ng+v2)=rhs((x1-1)*ng+x2,(v1-1)*ng+v2)- &
+                                 & 0.5d0*field_e((x1-1)*ng+x2)*dist((x1-1)*ng+x2,(v1-1)*ng+1)* &
+                                 & gll%weigh(x2)/mesh%jac(x1,nv+1)
+                         end if
                       end if
                    end if
                 end if
@@ -428,9 +499,7 @@ contains
 
     if (plan%method==SLL_RK3) then
        !RK3
-       !to do
-       print*,'RK3 not done yet'
-       print*,'exiting...'; stop
+       call rk3_4dg_1d(plan,gll,mesh,dist,distp1)
     else if (plan%method==SLL_RK4) then
        !RK4
        call rk4_4dg_1d(plan,gll,mesh,dist,distp1)
@@ -623,9 +692,9 @@ contains
 
     sll_int32 :: x1,x2,v1,v2,nx,nv,ng,zero
 
-!!$    !!!>>only to test Blanca's case 
+!!$    !!!>>>only to test Blanca's case 
 !!$    sll_real64 :: x
-!!$    !!!<<
+!!$    !!!<<<
 
     nx=mesh%n_etat1
     nv=mesh%n_etat2
