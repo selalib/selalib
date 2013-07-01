@@ -10,12 +10,15 @@ program vp_cartesian_4d
   use sll_constants
   use sll_logical_meshes
   use sll_common_array_initializers_module
+  use sll_module_coordinate_transformations_2d
+  use sll_common_coordinate_transformations
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
-  type(sll_logical_mesh_4d), pointer      :: mx
+  type(sll_logical_mesh_2d), pointer      :: mx,mv
+  class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv
   sll_real64, dimension(1:6) :: landau_params
 
   print *, 'Booting parallel environment...'
@@ -58,13 +61,36 @@ program vp_cartesian_4d
 
 
   ! logical mesh for space coordinates
-  mx => new_logical_mesh_4d( NCELL1, NCELL2,NCELL3, NCELL4 , &
+  mx => new_logical_mesh_2d( NCELL3, NCELL4 , &
+       eta1_min=ETA3MIN, eta1_max=ETA3MAX, &
+       eta2_min=ETA4MIN,eta2_max=ETA4MAX )
+
+
+  ! logical mesh for space coordinates
+  mv => new_logical_mesh_2d( NCELL1, NCELL2, &
        eta1_min=ETA1MIN, eta1_max=ETA1MAX, &
-       eta2_min=ETA2MIN,eta2_max=ETA2MAX , &
-       eta3_min=ETA3MIN, eta3_max=ETA3MAX, &
-       eta4_min=ETA4MIN,eta4_max=ETA4MAX )
+       eta2_min=ETA2MIN,eta2_max=ETA2MAX )
 
 
+  tx => new_coordinate_transformation_2d_analytic( &
+    'mapxy',          &
+    mx,        &
+    identity_x1,        &
+    identity_x2,        &
+    identity_jac11,       &
+    identity_jac12,       &
+    identity_jac21,       &
+    identity_jac22 )
+
+  tv => new_coordinate_transformation_2d_analytic( &
+    'mapvxvy',          &
+    mv,        &
+    identity_x1,        &
+    identity_x2,        &
+    identity_jac11,       &
+    identity_jac12,       &
+    identity_jac21,       &
+    identity_jac22 )
 
 
   ! define the values of the parameters for the landau initializer
@@ -78,7 +104,7 @@ program vp_cartesian_4d
   ! initialize simulation object with the above parameters
   call initialize_vp4d( &
        simulation, &
-       mx, &
+       mx,mv,tx,tv, &
        sll_landau_initializer_v1v2x1x2, &
        landau_params, &
        1.0_f64 )
