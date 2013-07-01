@@ -11,6 +11,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   use sll_simulation_base
   use sll_parallel_array_initializer_module
   use sll_logical_meshes
+  use sll_mesh_calculus_2d_module
   use sll_gnuplot_parallel
   implicit none
 
@@ -42,7 +43,8 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32  :: np_v2
 
      ! for initializers
-     type(sll_logical_mesh_4d), pointer    :: mesh4d
+     type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
+     class(sll_coordinate_transformation_2d_base),pointer     :: tx,tv
      type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
 
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
@@ -119,17 +121,23 @@ contains
 
   subroutine initialize_vp4d( &
    sim, &
-   mesh4d, &
+   mesh2dx, &
+   mesh2dv, &
+   tx,tv, &
    init_func, &
    params, &
    tmax )
 
    type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout)     :: sim
-   type(sll_logical_mesh_4d), pointer                    :: mesh4d
+   type(sll_logical_mesh_2d), pointer                    :: mesh2dx,mesh2dv
+   class(sll_coordinate_transformation_2d_base),pointer          :: tx,tv
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
    sll_real64 :: tmax
-   sim%mesh4d  => mesh4d
+   sim%mesh2dx  => mesh2dx
+   sim%mesh2dv  => mesh2dv
+   sim%tx => tx
+   sim%tv => tv
    sim%init_func => init_func
    sim%params    => params
 
@@ -167,12 +175,14 @@ contains
     sll_int32  :: datasize
     sll_int32  :: istat
     sll_int32  :: tagtop,tagbottom
-
+    sll_int32  :: ic
+    sll_int32  :: jc
     
     sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
     sll_real64 :: t
     ! volumes of the cells and surfaces of the faces
-    sll_real64,dimension(:),allocatable :: volume,surface
+    sll_real64,dimension(:,:),allocatable :: volume
+    sll_real64,dimension(:,:),allocatable :: surfx1,surfx2
     sll_int32,dimension(4)  :: global_indices
 
     sim%world_size = sll_get_collective_size(sll_world_collective)  
@@ -184,10 +194,10 @@ contains
 
     sim%degree=sim%params(6)
 
-    nc_v1 = sim%mesh4d%num_cells1
-    nc_v2 = sim%mesh4d%num_cells2   
-    nc_x1 = sim%mesh4d%num_cells3   
-    nc_x2 = sim%mesh4d%num_cells4  
+    nc_v1 = sim%mesh2dv%num_cells1
+    nc_v2 = sim%mesh2dv%num_cells2   
+    nc_x1 = sim%mesh2dx%num_cells1   
+    nc_x2 = sim%mesh2dx%num_cells2  
 
     np_v1 = sim%degree * nc_v1 + 1
     np_v2 = sim%degree * nc_v2 + 1
@@ -224,8 +234,8 @@ contains
     sim%phi_seq_x1, &
     nc_x1, &
     nc_x2, &
-    sim%mesh4d%eta3_max-sim%mesh4d%eta3_min, &
-    sim%mesh4d%eta4_max-sim%mesh4d%eta4_min )
+    sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min, &
+    sim%mesh2dx%eta2_max-sim%mesh2dx%eta2_min )
     
     
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
@@ -262,12 +272,24 @@ contains
     ! the particular initializer is in
     ! parallel_array_initializers/sll_common_array_initializers_module.F90
 
-    call sll_4d_parallel_array_initializer_cartesian( &
+!!$    call sll_4d_parallel_array_initializer_cartesian( &
+!!$         sim%sequential_v1v2x1, &
+!!$         sim%mesh4d, &
+!!$         sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
+!!$         sim%init_func, &
+!!$         sim%params)
+    call sll_4d_parallel_array_initializer( &
          sim%sequential_v1v2x1, &
-         sim%mesh4d, &
+         sim%mesh2dv, &
+         sim%mesh2dx, &
          sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
-         sim%init_func, &
-         sim%params)
+         sim%init_func , &
+         sim%params, &
+         sim%tv, &
+         sim%tx, &
+         sim%degree, &
+         sim%degree)
+    
 
 
     !
@@ -331,20 +353,54 @@ contains
 
 
     ! init the volume and surface arrays
-    allocate(volume(loc_sz_x1*loc_sz_x2))
-    allocate(surface(2*loc_sz_x1*loc_sz_x2))
+    SLL_ALLOCATE(volume(loc_sz_x1,loc_sz_x2),ierr)
+    ! vertical edges 
+    SLL_ALLOCATE(surfx1(loc_sz_x1+1,loc_sz_x2),ierr)
+    ! horizontal edges 
+    SLL_ALLOCATE(surfx2(loc_sz_x1,loc_sz_x2+1),ierr)
     
 
-    ! simple computation
-    ! to be generalized with generic transformation...
-    volume=sim%mesh4d%delta_eta3 * &
-         sim%mesh4d%delta_eta4 
+!!$    ! simple computation
+!!$    ! to be generalized with generic transformation...
+!!$    volume=sim%mesh2dx%delta_eta1 * &
+!!$         sim%mesh2dx%delta_eta2 
 
-    surface(1:loc_sz_x1*loc_sz_x2)= &
-         sim%mesh4d%delta_eta3
-    surface(loc_sz_x1*loc_sz_x2+1:2*loc_sz_x1*loc_sz_x2)= &
-         sim%mesh4d%delta_eta4
+    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+! cell volumes
+    do j=1,loc_sz_x2
+       do i=1,loc_sz_x1
+          ic=i+global_indices(3)-1
+          jc=j+global_indices(4)-1
+          volume(i,j)=cell_volume( sim%tx, ic, jc,3)          
+       end do
+    end do
+!!$    surface(1:loc_sz_x1*loc_sz_x2)= &
+!!$         sim%mesh2dx%delta_eta1
+!!$    surface(loc_sz_x1*loc_sz_x2+1:2*loc_sz_x1*loc_sz_x2)= &
+!!$         sim%mesh2dx%delta_eta2
 
+    do j=1,loc_sz_x2
+       ic=1+global_indices(3)-1
+       jc=j+global_indices(4)-1  
+       surfx1(1,j)=edge_length_eta1_minus( sim%tx, ic, jc,3)      
+       do i=1,loc_sz_x1
+          ic=i+global_indices(3)-1
+          surfx1(i+1,j)=edge_length_eta1_plus( sim%tx, ic, jc,3)  
+       end do
+    end do
+
+    do i=1,loc_sz_x1
+       ic=i+global_indices(3)-1
+       jc=1+global_indices(4)-1  
+       surfx2(i,1)=edge_length_eta2_minus( sim%tx, ic, jc,3)      
+       do j=1,loc_sz_x2
+          jc=j+global_indices(4)-1
+          surfx2(i,j+1)=edge_length_eta2_plus( sim%tx, ic, jc,3)  
+       end do
+    end do
+
+    write(*,*) 'vertical',sim%my_rank,sum(surfx1(1,:))
+    write(*,*) 'horizontal',sim%my_rank,sum(surfx2(1,:))
 
 
    ! time loop
@@ -415,20 +471,20 @@ contains
     global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh4d%eta3_min+(global_indices(3)-1)*sim%mesh4d%delta_eta3, &
-         sim%mesh4d%delta_eta3, &
-         sim%mesh4d%eta1_min+(global_indices(1)-1)*sim%mesh4d%delta_eta1/sim%degree, &
-         sim%mesh4d%delta_eta1, &
+         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+         sim%mesh2dx%delta_eta1, &
+         sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
+         sim%mesh2dv%delta_eta1/sim%degree, &
          plotf2d, &
          "plotf2d", &
          0, &
          ierr)
 !!$
     call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh4d%eta3_min+(global_indices(3)-1)*sim%mesh4d%delta_eta3, &
-         sim%mesh4d%delta_eta3, &
-         sim%mesh4d%eta4_min+(global_indices(4)-1)*sim%mesh4d%delta_eta4, &
-         sim%mesh4d%delta_eta4, &
+         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+         sim%mesh2dx%delta_eta1, &
+         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+         sim%mesh2dx%delta_eta2, &
          plotphi2d, &
          "plotphi2d", &
          0, &
