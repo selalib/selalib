@@ -4,19 +4,22 @@ module vlasov2d_dk_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
+#include "sll_poisson_solvers.h"
  use used_precision
  use splinenn_class
  use splinepp_class
  use geometry_module
  use diagnostiques_module
+ use polar_operators
+ use polar_advection
+
  !use clock
 
  implicit none
  private
  public :: new, dealloc,advection_x, advection_v,&
-           densite_charge,transposexv,transposevx,thdiag,densite_courant,&
-           compute_profile
+           densite_charge,densite_charge_dk,transposexv,transposevx,thdiag,densite_courant,&
+           compute_profile,solve_quasi_neutral,compute_field_dk,advection_x_dk
 
  type, public :: vlasov2d
    sll_real64, dimension(:,:,:,:), pointer :: ft
@@ -128,6 +131,44 @@ contains
 
  end subroutine advection_x
 
+
+ !>
+ !> fait une advection en x sur un pas de temps dt
+ !>
+ subroutine advection_x_dk(this,plan_adv,f,adv_field)
+  type(vlasov2d),intent(inout) :: this
+  type(sll_plan_adv_polar),pointer        :: plan_adv
+  sll_real64, dimension(:,:,:,:) :: adv_field
+  sll_real64, dimension(:,:,:,this%jstartv:) :: f
+  sll_int32 :: iv, jv ! indices de boucle
+  sll_int32 :: ierr
+  sll_real64, dimension(:,:),allocatable :: fn
+  sll_real64, dimension(:,:),allocatable :: fnp1
+  
+  SLL_ALLOCATE(fn(this%geomx%nx,this%geomx%ny+1),ierr)
+  SLL_ALLOCATE(fnp1(this%geomx%nx,this%geomx%ny+1),ierr)
+  ! verifier que la transposition est a jour
+  if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
+  do jv=this%jstartv,this%jendv
+     do iv=1,this%geomv%nx
+        plan_adv%field = adv_field(1:2,:,:,iv)
+        fn(:,1:this%geomx%ny) = f(:,:,iv,jv)
+        fn(:,this%geomx%ny+1) = fn(:,1)
+        call advect_CG_polar(plan_adv,fn,fnp1)
+        f(:,1:this%geomx%ny,iv,jv)=fnp1
+        !call interpole(this%splinex,f(:,:,iv,jv),depx,depy,jv==0)
+     end do
+  end do
+  
+  SLL_DEALLOCATE_ARRAY(fn,ierr)
+  SLL_DEALLOCATE_ARRAY(fnp1,ierr)
+  
+ end subroutine advection_x_dk
+
+
+
+
+
  !>
  !> fait une advection en v sur un pas de temps dt
  !>
@@ -185,6 +226,42 @@ contains
        
  end subroutine advection_v
 
+subroutine solve_quasi_neutral(this,plan_poisson,rho,phi)
+  type(vlasov2d),intent(inout) :: this
+  type(sll_plan_poisson_polar), pointer :: plan_poisson
+  sll_real64, dimension(:,:,:), intent(in)  :: rho
+  sll_real64, dimension(:,:,:), intent(out)  :: phi
+  sll_int32 :: i,ierr
+
+  do i = 1,this%geomv%nx
+    call solve_poisson_polar(plan_poisson,rho(:,:,i),phi(:,:,i))
+  enddo
+
+
+end subroutine solve_quasi_neutral
+
+!call compute_grad_field(plan%grad,plan%phi,plan%adv%field)
+
+subroutine compute_field_dk(this,grad,phi,adv_field)
+  type(vlasov2d),intent(inout) :: this
+  sll_real64, dimension(:,:,:,:), intent(out)  :: adv_field
+  sll_real64, dimension(:,:,:), intent(inout)  :: phi
+  type(plan_polar_op), pointer :: grad
+  sll_int32 :: i,ierr
+  
+  do i=1,this%geomv%nx
+    call compute_grad_field(grad,phi(:,:,i),adv_field(1:2,:,:,i))
+  enddo
+  
+  !for the moment finite differences
+  do i=1,this%geomv%nx
+    adv_field(3,:,:,i)=(phi(:,:,modulo(i+1-1+this%geomv%nx,this%geomv%nx)+1)&
+      &-phi(:,:,modulo(i-1-1+this%geomv%nx,this%geomv%nx)+1))/(2._f64*this%geomv%dx)
+  enddo
+  
+end subroutine compute_field_dk
+
+
 !>------------------------------------------------
 !> calcule la densite de charge rho a partir de ft
 !> en fait le moment d'ordre 0 de f. Les constantes
@@ -192,6 +269,40 @@ contains
 !>------------------------------------------------
 !> Poisson n'est pas parallele on transmet donc rho
 !> a tous les processeurs
+subroutine densite_charge_dk(this, rho)
+
+   type(vlasov2d),intent(inout) :: this
+   sll_int32 :: error
+   sll_real64, dimension(:,:,:), intent(out)  :: rho
+   sll_real64, dimension(this%geomx%nx,this%geomx%ny,this%geomv%nx) :: locrho
+   sll_int32 :: i,j,iv,jv,c
+   sll_int32 :: comm
+
+   comm   = sll_world_collective%comm
+
+   SLL_ASSERT(this%transposed)
+   
+   rho(:,:,:) = 0._f64
+   locrho(:,:,:) = 0._f64
+   do j=this%jstartx,this%jendx
+      do i=1,this%geomx%nx
+         do iv=1,this%geomv%nx!-1 
+            do jv=1,this%geomv%ny!-1
+               locrho(i,j,iv) = locrho(i,j,iv) + this%geomv%dy* &
+                    this%ft(iv,jv,i,j) 
+            end do
+         end do
+      end do
+   end do
+   call mpi_barrier(comm,error)
+   c=this%geomx%nx*this%geomx%ny*this%geomv%nx
+   call mpi_allreduce(locrho,rho,c,MPI_REAL8,MPI_SUM,comm,error)
+   rho(:,:,this%geomv%nx+1)=rho(:,:,1)
+   rho(:,this%geomx%ny+1,:)=rho(:,1,:)
+   
+end subroutine densite_charge_dk
+
+
 subroutine densite_charge(this, rho)
 
    type(vlasov2d),intent(inout) :: this
@@ -222,6 +333,7 @@ subroutine densite_charge(this, rho)
    call mpi_allreduce(locrho,rho,c,MPI_REAL8,MPI_SUM,comm,error)
 
 end subroutine densite_charge
+
 
 !>------------------------------------------------
 !> calcule la densite de courant jx et jy a partir de ft
@@ -363,13 +475,13 @@ subroutine thdiag(this,f,nrj,t,jstartv)
    type(vlasov2d),intent(inout) :: this
    sll_int32, intent(in) :: jstartv
    sll_real64, dimension(:,:,:,jstartv:),intent(in) :: f
-   !sll_int32 :: error
+   sll_int32 :: error
    sll_real64, intent(in) :: t,nrj   ! current time
    ! variables locales
-   !sll_int32 :: i,iv, j,jv
-   !sll_real64 :: x, vx, y, vy
+   sll_int32 :: i,iv, j,jv
+   sll_real64 :: x, vx, y, vy
    !sll_real64,dimension(7) :: diagloc
-   !sll_real64,dimension(11) :: auxloc
+   sll_real64,dimension(11) :: auxloc
    sll_real64,dimension(13) :: aux
    sll_real64,dimension(0:9) :: diag
    sll_int32 :: my_num, num_threads
@@ -384,8 +496,8 @@ subroutine thdiag(this,f,nrj,t,jstartv)
       aux=0.
    end if
 
-!   diagloc = 0._wp
-!   auxloc  = 0._wp
+   !diagloc = 0._f64
+!   auxloc  = 0._f64
 !   do i = 1,this%geomx%nx
 !      x = this%geomx%x0+(i-1)*this%geomx%dx
 !      do j = 1,this%geomx%ny
@@ -394,7 +506,7 @@ subroutine thdiag(this,f,nrj,t,jstartv)
 !            vx = this%geomv%x0+(iv-1)*this%geomv%dx
 !            do jv=this%jstartv,this%jendv
 !               vy = this%geomv%y0+(jv-1)*this%geomv%dy
-!               diagloc(2) = diagloc(2) + f(i,j,iv,jv)*f(i,j,iv,jv)
+!               !diagloc(2) = diagloc(2) + f(i,j,iv,jv)*f(i,j,iv,jv)
 !
 !               auxloc(1) = auxloc(1) + f(i,j,iv,jv)         ! avg(f)
 !               auxloc(2) = auxloc(2) + x*f(i,j,iv,jv)       ! avg(x)
@@ -412,18 +524,78 @@ subroutine thdiag(this,f,nrj,t,jstartv)
 !         end do
 !      end do
 !   end do
-!   auxloc=auxloc!*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
-!
-!   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,0,  &
-!                   comm, error)
-!   call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
-!                   comm, error)
+
+   auxloc  = 0._f64
+   do jv=this%jstartv,this%jendv
+      vy = this%geomv%y0+(jv-1)*this%geomv%dy
+      do iv=1,this%geomv%nx
+         vx = this%geomv%x0+(iv-1)*this%geomv%dx
+         do j = 1,this%geomx%ny
+            y = this%geomx%y0+(j-1)*this%geomx%dy
+               i=1
+               x = this%geomx%x0+(i-1)*this%geomx%dx
+               auxloc(1) = auxloc(1) + 0.5_f64*f(i,j,iv,jv)         ! avg(f)
+               auxloc(2) = auxloc(2) + 0.5_f64*x*f(i,j,iv,jv)       ! avg(x)
+               auxloc(3) = auxloc(3) + 0.5_f64*vx*f(i,j,iv,jv)      ! avg(vx)
+               auxloc(4) = auxloc(4) + 0.5_f64*x*x*f(i,j,iv,jv)     ! avg(x^2)
+               auxloc(5) = auxloc(5) + 0.5_f64*vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
+               auxloc(6) = auxloc(6) + 0.5_f64*x*vx*f(i,j,iv,jv)    ! avg(x*vx)
+               auxloc(7) = auxloc(7) + 0.5_f64*y*f(i,j,iv,jv)       ! avg(y)
+               auxloc(8) = auxloc(8) + 0.5_f64*vy*f(i,j,iv,jv)      ! avg(vy)
+               auxloc(9) = auxloc(9) + 0.5_f64*y*y*f(i,j,iv,jv)     ! avg(y^2)
+               auxloc(10) = auxloc(10) + 0.5_f64*vy*vy*f(i,j,iv,jv) ! avg(vy^2)
+               auxloc(11) = auxloc(11) + 0.5_f64*y*vy*f(i,j,iv,jv)  ! avg(y*vy)            
+            do i = 2,this%geomx%nx-1
+               x = this%geomx%x0+(i-1)*this%geomx%dx
+               auxloc(1) = auxloc(1) + f(i,j,iv,jv)         ! avg(f)
+               auxloc(2) = auxloc(2) + x*f(i,j,iv,jv)       ! avg(x)
+               auxloc(3) = auxloc(3) + vx*f(i,j,iv,jv)      ! avg(vx)
+               auxloc(4) = auxloc(4) + x*x*f(i,j,iv,jv)     ! avg(x^2)
+               auxloc(5) = auxloc(5) + vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
+               auxloc(6) = auxloc(6) + x*vx*f(i,j,iv,jv)    ! avg(x*vx)
+               auxloc(7) = auxloc(7) + y*f(i,j,iv,jv)       ! avg(y)
+               auxloc(8) = auxloc(8) + vy*f(i,j,iv,jv)      ! avg(vy)
+               auxloc(9) = auxloc(9) + y*y*f(i,j,iv,jv)     ! avg(y^2)
+               auxloc(10) = auxloc(10) + vy*vy*f(i,j,iv,jv) ! avg(vy^2)
+               auxloc(11) = auxloc(11) + y*vy*f(i,j,iv,jv)  ! avg(y*vy)
+            end do
+               i=this%geomx%nx
+               x = this%geomx%x0+(i-1)*this%geomx%dx
+               auxloc(1) = auxloc(1) + 0.5_f64*f(i,j,iv,jv)         ! avg(f)
+               auxloc(2) = auxloc(2) + 0.5_f64*x*f(i,j,iv,jv)       ! avg(x)
+               auxloc(3) = auxloc(3) + 0.5_f64*vx*f(i,j,iv,jv)      ! avg(vx)
+               auxloc(4) = auxloc(4) + 0.5_f64*x*x*f(i,j,iv,jv)     ! avg(x^2)
+               auxloc(5) = auxloc(5) + 0.5_f64*vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
+               auxloc(6) = auxloc(6) + 0.5_f64*x*vx*f(i,j,iv,jv)    ! avg(x*vx)
+               auxloc(7) = auxloc(7) + 0.5_f64*y*f(i,j,iv,jv)       ! avg(y)
+               auxloc(8) = auxloc(8) + 0.5_f64*vy*f(i,j,iv,jv)      ! avg(vy)
+               auxloc(9) = auxloc(9) + 0.5_f64*y*y*f(i,j,iv,jv)     ! avg(y^2)
+               auxloc(10) = auxloc(10) + 0.5_f64*vy*vy*f(i,j,iv,jv) ! avg(vy^2)
+               auxloc(11) = auxloc(11) + 0.5_f64*y*vy*f(i,j,iv,jv)  ! avg(y*vy)            
+         end do
+      end do
+   end do
+
+
+
+
+   auxloc=auxloc*this%geomx%dx*this%geomx%dy*this%geomv%dx*this%geomv%dy
+
+   call mpi_reduce(auxloc,aux,11,MPI_REAL8,MPI_SUM,0,  &
+                   comm, error)
+   !call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
+   !                comm, error)
+
+
 
 if (my_num==MPI_MASTER) then
    aux(13)=t
    aux(12)=nrj
    write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
    call time_history("thf","(13(1x,e15.6))",aux(1:13))
+   !print "(13(1x,e15.10))",aux(1:13)
+   print *,aux(1:13)
+   stop
 end if
 
 end subroutine thdiag
