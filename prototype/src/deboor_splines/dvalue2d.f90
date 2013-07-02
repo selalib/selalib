@@ -39,7 +39,7 @@ real(8) function dvalue2d(&
           deriv1 )
      
   end do
-  
+  !print*, lpr_coef
   dvalue2d = bvalue(&
        apr_ty ( li_lefty - ai_ky + 1 ),&
        lpr_coef,&

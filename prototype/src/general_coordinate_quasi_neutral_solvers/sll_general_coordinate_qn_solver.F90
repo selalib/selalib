@@ -909,19 +909,19 @@ contains ! *******************************************************************
 
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_DIRICHLET).and. (bc_top   == SLL_DIRICHLET) ) then
-
+       
        do i = 1, qns%total_num_splines_eta1
           do j = 1, qns%total_num_splines_eta2
-
+             
              elt  = i + qns%total_num_splines_eta1 * (  j - 1)
              elt1 = i + ( qns%total_num_splines_eta1 ) * j
              qns%tmp_rho_vec(elt) = qns%rho_vec(elt1)
           end do
        end do
-    
+       
     else if ( (bc_left   == SLL_DIRICHLET).and.(bc_right==SLL_DIRICHLET) .and.&
               (bc_bottom == SLL_DIRICHLET).and.(bc_top==SLL_DIRICHLET) ) then 
-        
+       
        do i = 1, qns%total_num_splines_eta1
           do j = 1, qns%total_num_splines_eta2
 
@@ -930,14 +930,14 @@ contains ! *******************************************************************
              qns%tmp_rho_vec( elt ) = qns%rho_vec( elt1 )
           end do
        end do
-
+       
     else if((bc_left   == SLL_PERIODIC) .and. (bc_right==SLL_PERIODIC) .and.&
-            (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
-
-       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2) =&
+         (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
+       
+       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)=&
             qns%rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)
        
-       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)= &
+       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)=&
             qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)&
             -sum(qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2))&
             /(qns%total_num_splines_eta1*qns%total_num_splines_eta2)
@@ -945,7 +945,7 @@ contains ! *******************************************************************
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
-
+       
        do i = 1, qns%total_num_splines_eta1
           do j = 1, qns%total_num_splines_eta2
 
@@ -956,7 +956,7 @@ contains ! *******************************************************************
        end do
 
     end if
-
+    
     !print*, 'retr', qns%tmp_rho_vec
 
     
