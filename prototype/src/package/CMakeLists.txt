@@ -17,7 +17,8 @@ SET(SLL_MACROS
     ${SLL_DIR}/fft/sll_fft.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
-    ${SLL_DIR}/fields/sll_field_2d.h)
+    ${SLL_DIR}/fields/sll_field_2d.h
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -61,6 +62,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss-lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
  )
 
 IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")

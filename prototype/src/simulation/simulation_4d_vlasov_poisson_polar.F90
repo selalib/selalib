@@ -273,16 +273,17 @@ contains
          NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
     call sim%interp_x1x2%initialize( &
+
          sim%nc_x1+1, sim%nc_x2+1,   &
          eta1_min, eta1_max,         &
          eta2_min, eta2_max,         &
-         PERIODIC_SPLINE, PERIODIC_SPLINE )
+         SLL_PERIODIC, SLL_PERIODIC )
 
     call sim%interp_x3%initialize( &
-         sim%nc_x3+1, eta3_min, eta3_max, PERIODIC_SPLINE)
+         sim%nc_x3+1, eta3_min, eta3_max, SLL_PERIODIC)
 
     call sim%interp_x4%initialize( &
-         sim%nc_x4+1, eta4_min, eta4_max, PERIODIC_SPLINE)
+         sim%nc_x4+1, eta4_min, eta4_max, SLL_PERIODIC)
 
     sim%split_layout => new_layout_2D( sll_world_collective )
 

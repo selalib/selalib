@@ -110,6 +110,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
 
   left = k
 
+  !print*, t
   q(1:(2*k-1)*n) = 0.0D+00
 !
 !  Construct the N interpolation equations.
@@ -131,7 +132,8 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
       iflag = 2
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'SPLI2D - Fatal error!'
-      write ( *, '(a)' ) '  The TAU array is not strictly increasing.'
+      write ( *, '(a)' ) '  The TAU array is not strictly increasing .'
+      !print*, taui, t(left),left
       stop
     end if
 
@@ -150,6 +152,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
         write ( *, '(a)' ) ' '
         write ( *, '(a)' ) 'SPLI2D - Fatal error!'
         write ( *, '(a)' ) '  The TAU array is not strictly increasing.'
+        !print*, taui, t(left+1),left
         stop
       end if
 
@@ -166,6 +169,8 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
 !  temporary storage here), by the following call:
 !
     call bsplvb ( t, k, 1, taui, left, work )
+    !print*, 'achtung',taui
+   ! print*, 'work', work(1:k)
 !
 !  We therefore want
 !
@@ -195,6 +200,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
     end do
 
   end do
+  ! print*, 'qqqq_spli2d', q
 !
 !  Factor A, stored again in Q.
 !
@@ -206,22 +212,27 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
     write ( *, '(a)' ) '  BANFAC reports that the matrix is singular.'
     stop
   end if
+ ! print*, 'rrttt',q
 !
 !  Solve
 !
 !    A * BCOEF = GTAU
 !
 !  by back substitution.
-!
+
+  !print*, 'za',gtau(:,2)
+  !print*, "gt",size(q,1)!,size(q,2)
   do j = 1, m
 
     work(1:n) = gtau(1:n,j)
-
+    
+    
     call banslv ( q, k+k-1, n, k-1, k-1, work )
 
     bcoef(j,1:n) = work(1:n)
-
+   ! print*, 'uyt',work(1:n)
   end do
+  !print*,  bcoef(2,1:n)
 
   return
 end subroutine spli2d
