@@ -7,8 +7,6 @@ add_executable(VP_DG
   mod_sparse.F90
   sll_poisson_1d_periodic_dg.F90
   sll_timestep4dg.F90
-  mod_octave_io.f90
-  mod_octave_io_sparse.f90
   mod_umfpack.F90
   umf4_f77wrapper.c
 	)
