@@ -119,10 +119,10 @@ contains
   this%interp_v => spl_v
 #else
 
-  call spl_x1%initialize( nc_x1, x1_min, x1_max, PERIODIC_SPLINE)
-  call spl_x2%initialize( nc_x2, x2_min, x2_max, PERIODIC_SPLINE)
-  call spl_x3%initialize( nc_x3, x3_min, x3_max, PERIODIC_SPLINE)
-  call spl_x4%initialize( nc_x4, x4_min, x4_max, PERIODIC_SPLINE)
+  call spl_x1%initialize( nc_x1, x1_min, x1_max, SLL_PERIODIC)
+  call spl_x2%initialize( nc_x2, x2_min, x2_max, SLL_PERIODIC)
+  call spl_x3%initialize( nc_x3, x3_min, x3_max, SLL_PERIODIC)
+  call spl_x4%initialize( nc_x4, x4_min, x4_max, SLL_PERIODIC)
 
   this%interp_x1 => spl_x1
   this%interp_x2 => spl_x2

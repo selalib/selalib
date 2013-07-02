@@ -72,11 +72,11 @@ end do
 print*, 'initialize 2d distribution function f(x,v) gaussian'
 Print*, 'checking advection of a Gaussian in a uniform field'
 #ifdef STDF95
-call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, HERMITE_SPLINE)
-call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, HERMITE_SPLINE)
+call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, SLL_HERMITE)
+call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, SLL_HERMITE)
 #else  
-call spline_x%initialize(nc_x+1, x_min, x_max, HERMITE_SPLINE )
-call spline_v%initialize(nc_v+1, v_min, v_max, HERMITE_SPLINE )
+call spline_x%initialize(nc_x+1, x_min, x_max, SLL_HERMITE )
+call spline_v%initialize(nc_v+1, v_min, v_max, SLL_HERMITE )
 #endif
 
 interp_x => spline_x

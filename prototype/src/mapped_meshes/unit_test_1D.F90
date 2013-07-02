@@ -104,7 +104,7 @@ program unit_test_1d
        NPTS1, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
+       SLL_HERMITE, &
        slope_left=x1_eta1_min, &
        slope_right=x1_eta1_max )
 
@@ -116,7 +116,7 @@ program unit_test_1d
        NPTS1, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
+       SLL_HERMITE, &
        slope_left=linear_map_jac_f(0.0_f64), &
        slope_right=linear_map_jac_f(1.0_f64) )
 

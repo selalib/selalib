@@ -62,7 +62,7 @@ program unit_test_2d
   end do
 
   print *, '**********************************************************'
-  print *, '              TESTING THE ANALYTIC MAP                    '
+  print *, '              TESTING THE ANALYTIC TRANSFORMATION '
   print *, '**********************************************************'
 
 
@@ -141,8 +141,9 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
 #endif
 
 
+
   print *, '**********************************************************'
-  print *, '              TESTING THE DISCRETE MAP                    '
+  print *, '              TESTING THE DISCRETE TRANSFORMATION         '
   print *, '**********************************************************'
 
   print *, 'initializing the interpolator: '
@@ -158,8 +159,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
@@ -174,8 +175,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
@@ -190,8 +191,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        const_eta1_min_slope=deriv1_jacobian_polar_f(), &
        const_eta1_max_slope=deriv1_jacobian_polar_f() )
 
@@ -215,12 +216,14 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
+
   do j=1,NPTS2
      do i=1,NPTS1
 #ifdef STDF95
         node_a   = x1_at_node(t_a,i,j)
         node_d   = x1_at_node(t_d,i,j)
 #else
+
         node_a   = t_a%x1_at_node(i,j)
         node_d   = t_d%x1_at_node(i,j)
 #endif
@@ -229,6 +232,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
         node_a   = x2_at_node(t_a,i,j)
         node_d   = x2_at_node(t_d,i,j)
 #else
+
         node_a   = t_a%x2_at_node(i,j)
         node_d   = t_d%x2_at_node(i,j)
 #endif
@@ -277,8 +281,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
 #endif
 
   print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
-!  call delete(map_a)
-!  call delete(map_d)
+  call delete(t_a)
+  call delete(t_d)
 
   print *, 'deleted maps'
   print *, 'reached end of unit test'
