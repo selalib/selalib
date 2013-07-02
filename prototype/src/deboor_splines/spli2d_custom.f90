@@ -59,7 +59,7 @@ subroutine spli2d_custom ( &
         apr_Bcoef ( li_i, li_j ) = apr_g ( li_i, li_j )
      end do
   end do
-  
+  !print*, 'coef',apr_Bcoef
   !  *** construct b-coefficients of interpolant
   !
   call spli2d ( &

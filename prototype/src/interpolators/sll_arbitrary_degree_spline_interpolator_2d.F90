@@ -227,8 +227,10 @@ contains
     end select
 
     interpolator%coeff_splines(:,:) = 0.0_f64
-    SLL_ALLOCATE( interpolator%t1(num_pts1*num_pts1),ierr) !+ 2*(spline_degree1 + 1)), ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2*num_pts2),ierr) !+ 2*(spline_degree2 + 1)), ierr)
+    SLL_ALLOCATE( interpolator%t1(num_pts1*num_pts1),ierr)
+    !+ 2*(spline_degree1 + 1)), ierr)
+    SLL_ALLOCATE( interpolator%t2(num_pts2*num_pts2),ierr) 
+    !+ 2*(spline_degree2 + 1)), ierr)
 
     interpolator%t1(:) = 0.0_f64
     interpolator%t2(:) = 0.0_f64
@@ -289,7 +291,7 @@ contains
 
    tmp1 = (sp_deg1 + 1)/2
    tmp2 = (sp_deg2 + 1)/2
-   print*, tmp1,tmp2
+   !print*, tmp1,tmp2
    ! The interpretation and further filling of the spline coefficients array
    ! depends on the boundary conditions.
    select case (interpolator%bc_selector)
@@ -326,7 +328,8 @@ contains
          do j = 1,num_cells2
             
             interpolator%coeff_splines(num_cells1 + i ,j) = &
-                 coeffs_1d(i+num_cells1 *(j-1) )!nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+                 coeffs_1d(i+num_cells1 *(j-1) )
+            !nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
          end do
       end do
 
@@ -455,7 +458,8 @@ contains
          do j = 1,nb_spline_eta2
             
             interpolator%coeff_splines(nb_spline_eta1 + i ,j+1) = &
-                 coeffs_1d(i+nb_spline_eta1 *(j-1) )!nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
+                 coeffs_1d(i+nb_spline_eta1 *(j-1) )
+            !nb_spline_eta1 - (tmp1 -i)  + nb_spline_eta1 *(j-1) )
          end do
       end do
       
@@ -628,7 +632,7 @@ contains
     period1 = interpolator%eta1_max - interpolator%eta1_min
     period2 = interpolator%eta2_max - interpolator%eta2_min
     
-    
+   ! print*, 'pointlocate',point_locate_eta2
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
        interpolator%size_coeffs1 = sz1+1
@@ -643,7 +647,7 @@ contains
             interpolator%t2(1:order2 + sz2 + 1) )
 
 
-       print*, 'moyenne', sum( interpolator%coeff_splines(1:sz1+1,1:sz2+1))
+       !print*, 'moyenne', sum( interpolator%coeff_splines(1:sz1+1,1:sz2+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_coeffs1 = sz1
