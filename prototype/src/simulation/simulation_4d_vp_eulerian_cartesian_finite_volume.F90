@@ -42,6 +42,9 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32  :: np_v1  ! velocity nodes
      sll_int32  :: np_v2
 
+     ! number of local nodes in each element
+     sll_int32 :: np_loc
+
      ! for initializers
      type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
      class(sll_coordinate_transformation_2d_base),pointer     :: tx,tv
@@ -50,12 +53,20 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
 
-
+     ! 1D interpolation points repartition
+     sll_real64, dimension(:),pointer  :: interp_pts_1D 
      ! finite element approximation in the velocity space
      ! connectivity array
+     sll_int32,dimension(:,:),pointer  :: connec
+     ! velocity interpolation points
+     sll_real64, dimension(:,:),pointer  :: vcoords
      
-
-
+     ! skyline structure of the matrices
+     ! profil and pointers to the columns
+     sll_int32,dimension(:),pointer  :: prof
+     sll_int32,dimension(:),pointer  :: mkld
+     sll_int32 :: nsky
+     sll_real64, dimension(:),pointer  :: Bv1_diag,Bv1_low,Bv1_sup
 
      ! distribution functions at time steps n, star and n+1 
      ! communications are needed only in the x3 direction
@@ -163,12 +174,12 @@ contains
     sll_real64 :: dv
     sll_int32  :: ierr
     sll_int32  :: itime
-    sll_int32  :: nc_v1
-    sll_int32  :: nc_v2
-    sll_int32  :: nc_x1
-    sll_int32  :: nc_x2
-    sll_int32  :: np_v1
-    sll_int32  :: np_v2
+!!$    sll_int32  :: nc_v1
+!!$    sll_int32  :: nc_v2
+!!$    sll_int32  :: nc_x1
+!!$    sll_int32  :: nc_x2
+!!$    sll_int32  :: np_v1
+!!$    sll_int32  :: np_v2
     sll_int32  :: ranktop
     sll_int32  :: rankbottom
     sll_int32  :: message_id
@@ -194,13 +205,16 @@ contains
 
     sim%degree=sim%params(6)
 
-    nc_v1 = sim%mesh2dv%num_cells1
-    nc_v2 = sim%mesh2dv%num_cells2   
-    nc_x1 = sim%mesh2dx%num_cells1   
-    nc_x2 = sim%mesh2dx%num_cells2  
+    sim%nc_v1 = sim%mesh2dv%num_cells1
+    sim%nc_v2 = sim%mesh2dv%num_cells2   
+    sim%nc_x1 = sim%mesh2dx%num_cells1   
+    sim%nc_x2 = sim%mesh2dx%num_cells2  
 
-    np_v1 = sim%degree * nc_v1 + 1
-    np_v2 = sim%degree * nc_v2 + 1
+    sim%np_v1 = sim%degree * sim%nc_v1 + 1
+    sim%np_v2 = sim%degree * sim%nc_v2 + 1
+
+    sim%np_v1 = sim%degree * sim%nc_v1 + 1
+    sim%np_v2 = sim%degree * sim%nc_v2 + 1
 
     sim%nproc_v1 = 1
     sim%nproc_v2 = 1
@@ -210,10 +224,10 @@ contains
     ! init the layout for the distribution function
     ! the mesh is split only in the x3 direction
     call initialize_layout_with_distributed_4D_array( &
-         np_v1, &
-         np_v2, &
-         nc_x1, &
-         nc_x2, &
+         sim%np_v1, &
+         sim%np_v2, &
+         sim%nc_x1, &
+         sim%nc_x2, &
          sim%nproc_v1, &
          sim%nproc_v2, &
          sim%nproc_x1, &
@@ -224,16 +238,16 @@ contains
     
     ! potential layout
     call initialize_layout_with_distributed_2D_array( &
-         nc_x1, &
-         nc_x2, &
+         sim%nc_x1, &
+         sim%nc_x2, &
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%phi_seq_x1)
 
     sim%poisson_plan=>new_poisson_2d_periodic_plan_cartesian_par( &
     sim%phi_seq_x1, &
-    nc_x1, &
-    nc_x2, &
+    sim%nc_x1, &
+    sim%nc_x2, &
     sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min, &
     sim%mesh2dx%eta2_max-sim%mesh2dx%eta2_min )
     
@@ -253,7 +267,7 @@ contains
          loc_sz_x1, &
          loc_sz_x2 )
 
-    write(*,*) 'np_v1',np_v1,loc_sz_v1
+    write(*,*) 'sim%np_v1',sim%np_v1,loc_sz_v1
 
     ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
     SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
@@ -290,6 +304,8 @@ contains
          sim%degree, &
          sim%degree)
     
+
+    call velocity_mesh_connectivity(sim)
 
 
     !
@@ -493,6 +509,106 @@ contains
 
   end subroutine run_vp_cart
 
+  subroutine velocity_mesh_connectivity(sim)
+
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
+    sll_int32 :: ierr
+    sll_int32 :: i,j,k,ii,jj
+    sll_int32 :: ic,jc,iploc,jploc,ino
+    sll_real64  :: x,y,xref,yref
+
+    SLL_ALLOCATE(sim%interp_pts_1D(sim%degree+1),ierr)
+
+    ! for the moment: equally spaced points
+    do i=0,sim%degree
+       sim%interp_pts_1D(i+1)=real(i,f64)/sim%degree
+    end do
+
+    ! array of points coordinates
+    SLL_ALLOCATE(sim%vcoords(2,sim%np_v1*sim%np_v2),ierr)
+
+    SLL_ALLOCATE(sim%vcoords(2,sim%np_v1*sim%np_v2),ierr)
+    
+    ! connectivity
+    sim%np_loc=(sim%degree+1)**2
+    SLL_ALLOCATE(sim%connec(sim%np_loc,sim%nc_v1*sim%nc_v2),ierr)
+    
+    do ic=0,sim%nc_v1-1
+       do jc=0,sim%nc_v2-1
+          do iploc=0,sim%degree
+             do jploc=0,sim%degree
+                sim%connec(jploc*(sim%degree+1)+iploc+1, &
+                     jc*sim%nc_v1+ic+1) = &
+                     (sim%nc_v1 * sim%degree+1)* &
+                     (jploc+jc*sim%degree)+ &
+                     iploc+1+ic*sim%degree
+             end do
+          end do
+       end do
+    end do
+    
+!!$    do ic=1,sim%nc_v1*sim%nc_v2
+!!$       write(*,*) sim%connec(:,ic) 
+!!$    end do
+    do ic=0,sim%nc_v1-1
+       do jc=0,sim%nc_v2-1
+          do iploc=0,sim%degree
+             do jploc=0,sim%degree
+                xref=sim%mesh2dv%eta1_min+ &
+                     (ic+sim%interp_pts_1D(iploc+1))*sim%mesh2dv%delta_eta1
+                yref=sim%mesh2dv%eta2_min+ &
+                     (jc+sim%interp_pts_1D(jploc+1))*sim%mesh2dv%delta_eta2
+                x=sim%tv%x1(xref,yref)
+                y=sim%tv%x2(xref,yref)
+                ino=sim%connec(jploc*(sim%degree+1)+iploc+1, &
+                     jc*sim%nc_v1+ic+1)
+                sim%vcoords(1,ino)=x
+                sim%vcoords(2,ino)=y
+             end do
+          end do
+       end do
+    end do
+
+!!$    do ino=1,sim%np_v1*sim%np_v2
+!!$       write(*,*) ino,sim%vcoords(1,ino),sim%vcoords(2,ino)
+!!$    end do
+!!$    stop
+    
+    SLL_ALLOCATE(sim%prof(sim%np_v1*sim%np_v2),ierr)
+    SLL_ALLOCATE(sim%mkld(sim%np_v1*sim%np_v2+1),ierr)
+
+    sim%prof=0
+    do k=1,sim%nc_v1*sim%nc_v2
+       do ii=1,sim%np_loc
+          do jj=1,sim%np_loc
+             i=sim%connec(ii,k)
+             j=sim%connec(jj,k)
+             sim%prof(j)=max(sim%prof(j),j-i)
+             sim%prof(i)=max(sim%prof(i),i-j)
+          enddo
+       enddo
+    enddo
+
+    sim%mkld(1)=1
+    do i=1,sim%np_v1*sim%np_v2
+       sim%mkld(i+1)=sim%mkld(i)+sim%prof(i)
+    enddo
+
+    sim%nsky=sim%mkld(sim%np_v1*sim%np_v2+1)-1
+
+    SLL_ALLOCATE(sim%Bv1_low(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Bv1_sup(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Bv1_diag(sim%np_v1*sim%np_v2),ierr)
+    
+
+
+    write(*,*) sim%prof
+
+    stop
+    
+
+  end subroutine velocity_mesh_connectivity
+
   subroutine delete_vp_cart( sim )
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
     sll_int32 :: ierr
@@ -615,8 +731,8 @@ contains
 !!$    integer(HSIZE_T), dimension(2)  :: array_dims 
 !!$    integer(HSSIZE_T), dimension(2) :: offset 
 !!$
-!!$    array_dims(1) = nc_x1
-!!$    array_dims(2) = nc_x2
+!!$    array_dims(1) = sim%nc_x1
+!!$    array_dims(2) = sim%nc_x2
 !!$    world_size    = sll_get_collective_size(sll_world_collective)
 !!$    my_rank       = sll_get_collective_rank(sll_world_collective)
 !!$
@@ -723,5 +839,105 @@ contains
 !!$   !   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*world_size
 !!$  
 !!$  end subroutine plot_fields
+
+
+  subroutine lag_gauss(degree,gauss,weight,lag,dlag)
+
+    sll_int32 :: degree
+
+    sll_real64,dimension(:) :: gauss
+    sll_real64,dimension(:) :: weight
+    sll_real64,dimension(degree+1,*) :: lag
+    sll_real64,dimension(degree+1,*) :: dlag
+
+    select case(degree)
+
+    case(1)
+       gauss(1) = -0.5773502691896257645091487805019574556476D0
+       gauss(2) = 0.5773502691896257645091487805019574556476D0
+       weight(1) = 0.1000000000000000000000000000000000000000D1
+       weight(2) = 0.1000000000000000000000000000000000000000D1
+       lag(1,1) = 0.7886751345948128822545743902509787278238D0
+       lag(1,2) = 0.2113248654051871177454256097490212721762D0
+       lag(2,1) = 0.2113248654051871177454256097490212721762D0
+       lag(2,2) = 0.7886751345948128822545743902509787278238D0
+       dlag(1,1) = -0.5000000000000000000000000000000000000000D0
+       dlag(1,2) = -0.5000000000000000000000000000000000000000D0
+       dlag(2,1) = 0.5000000000000000000000000000000000000000D0
+       dlag(2,2) = 0.5000000000000000000000000000000000000000D0
+ 
+    case(2)
+       gauss(1) = -0.7745966692414833770358530799564799221666D0
+       gauss(2) = 0.0D0
+       gauss(3) = 0.7745966692414833770358530799564799221666D0
+       weight(1) = 0.5555555555555555555555555555555555555560D0
+       weight(2) = 0.8888888888888888888888888888888888888888D0
+       weight(3) = 0.5555555555555555555555555555555555555560D0
+       lag(1,1) = 0.6872983346207416885179265399782399610833D0
+       lag(1,3) = -0.8729833462074168851792653997823996108329D-1
+       lag(2,1) = 0.4000000000000000000000000000000000000001D0
+       lag(2,2) = 0.1D1
+       lag(2,3) = 0.4000000000000000000000000000000000000001D0
+       lag(3,1) = -0.8729833462074168851792653997823996108329D-1
+       lag(3,3) = 0.6872983346207416885179265399782399610833D0
+       dlag(1,1) = -0.1274596669241483377035853079956479922167D1
+       dlag(1,2) = -0.5000000000000000000000000000000000000000D0
+       dlag(1,3) = 0.2745966692414833770358530799564799221666D0
+       dlag(2,1) = 0.1549193338482966754071706159912959844333D1
+       dlag(2,3) = -0.1549193338482966754071706159912959844333D1
+       dlag(3,1) = -0.2745966692414833770358530799564799221666D0
+       dlag(3,2) = 0.5000000000000000000000000000000000000000D0
+       dlag(3,3) = 0.1274596669241483377035853079956479922167D1
+
+    case(3)
+       gauss(1) = -0.8611363115940525752239464888928095050957D0
+       gauss(2) = -0.3399810435848562648026657591032446872006D0
+       gauss(3) = 0.3399810435848562648026657591032446872006D0
+       gauss(4) = 0.8611363115940525752239464888928095050957D0
+       weight(1) = 0.3478548451374538573730639492219994072349D0
+       weight(2) = 0.6521451548625461426269360507780005927648D0
+       weight(3) = 0.6521451548625461426269360507780005927648D0
+       weight(4) = 0.3478548451374538573730639492219994072349D0
+       lag(1,1) = 0.6600056650728035304586090241410712591072D0
+       lag(1,2) = 0.3373736432772532230452701535743525193130D-2
+       lag(1,3) = 0.1661762313906394832923866663740817265855D-2
+       lag(1,4) = 0.4924455046623182819230012194515868414856D-1
+       lag(2,1) = 0.5209376877117036301110018070022304235776D0
+       lag(2,2) = 0.1004885854825645727576017102247120797681D1
+       lag(2,3) = -0.9921353572324654639393670446605140139452D-2
+       lag(2,4) = -0.2301879032507389887619109530884603668341D0
+       lag(3,1) = -0.2301879032507389887619109530884603668341D0
+       lag(3,2) = -0.9921353572324654639393670446605140139450D-2
+       lag(3,3) = 0.1004885854825645727576017102247120797682D1
+       lag(3,4) = 0.5209376877117036301110018070022304235776D0
+       lag(4,1) = 0.4924455046623182819230012194515868414856D-1
+       lag(4,2) = 0.1661762313906394832923866663740817265855D-2
+       lag(4,3) = 0.3373736432772532230452701535743525193130D-2
+       lag(4,4) = 0.6600056650728035304586090241410712591073D0
+       dlag(1,1) = -0.2157653673851862185103303519133755608117D1
+       dlag(1,2) = -0.5150319221529816884980638312903767867892D0
+       dlag(1,3) = 0.2499254259129449073079341266919237594124D0
+       dlag(1,4) = -0.2200969727652438908494239191249342216503D0
+       dlag(2,1) = 0.3035404320468968261056030957392445437885D1
+       dlag(2,2) = -0.7198615816069815303118064641111701858325D0
+       dlag(2,3) = -0.1484818929672908126117804422093470732036D1
+       dlag(2,4) = 0.1097847619382349966802151357383624051417D1
+       dlag(3,1) = -0.1097847619382349966802151357383624051417D1
+       dlag(3,2) = 0.1484818929672908126117804422093470732036D1
+       dlag(3,3) = 0.719861581606981530311806464111170185832D0
+       dlag(3,4) = -0.3035404320468968261056030957392445437884D1
+       dlag(4,1) = 0.2200969727652438908494239191249342216502D0
+       dlag(4,2) = -0.2499254259129449073079341266919237594124D0
+       dlag(4,3) = 0.5150319221529816884980638312903767867892D0
+       dlag(4,4) = 0.2157653673851862185103303519133755608117D1
+
+    case default
+       write(*,*) 'degree ',degree,' not implemented !'
+       stop
+
+    end select
+
+
+  end subroutine lag_gauss
 
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
