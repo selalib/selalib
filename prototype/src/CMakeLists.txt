@@ -103,7 +103,10 @@ IF(NOT SLL_BUILD_PACKAGE)
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
-      ADD_SUBDIRECTORY(parallel_array_initializers)
+
+      IF(NOT STDF95)
+         ADD_SUBDIRECTORY(parallel_array_initializers)
+      ENDIF(NOT STDF95)
 
    ENDIF()
    
@@ -111,8 +114,12 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(electric_field_accumulators)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(interpolators)
-   ADD_SUBDIRECTORY(coordinate_transformations)
-   ADD_SUBDIRECTORY(mapped_meshes)
+
+   IF(NOT STDF95)
+      ADD_SUBDIRECTORY(coordinate_transformations)
+      ADD_SUBDIRECTORY(mapped_meshes)
+   ENDIF(NOT STDF95)
+
    ADD_SUBDIRECTORY(fields)
    
    IF(NOT STDF95)
@@ -204,13 +211,16 @@ IF(NOT SLL_BUILD_PACKAGE)
    MESSAGE(STATUS "############################################################")
 
    IF(STDF95)
-   
+
       MESSAGE(STATUS " ")
       MESSAGE(STATUS "####################  F95  ###################")
       MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
       MESSAGE(STATUS "## advection_field                          ##")
       MESSAGE(STATUS "## Linrood                                  ##")
       MESSAGE(STATUS "## BSL                                      ##")
+      MESSAGE(STATUS "## coordinate_transformations               ##")
+      MESSAGE(STATUS "## mapped_meshes                            ##")
+      MESSAGE(STATUS "## parallel_array_initializers              ##")
       MESSAGE(STATUS "## CSL                                      ##")
       MESSAGE(STATUS "## distribution_function                    ##")
       MESSAGE(STATUS "## maxwel_solvers                           ##")
@@ -253,6 +263,8 @@ IF(NOT SLL_BUILD_PACKAGE)
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(package)
+IF(NOT STDF95)
+   ADD_SUBDIRECTORY(package)
+ENDIF()
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

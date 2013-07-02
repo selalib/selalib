@@ -51,34 +51,37 @@ ENDIF(PROCESSOR_COUNT GREATER 1)
 
 
 IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
-
-   SET(PROCS 4)
-   ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   SET(PROCS 1)
-   ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
-   SET(PROCS 8)
-   SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
-   ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-   SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
-   ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-   #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
-   ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
-   IF(PROCESSOR_COUNT GREATER 1)
-
-   SET(PROCS 8)
-   SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim6d_input.txt)
-   ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
- 
-   ENDIF(PROCESSOR_COUNT GREATER 1)
+   
+   IF(NOT STDF95)
+      SET(PROCS 4)
+      ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      SET(PROCS 1)
+      ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
+   
+      SET(PROCS 8)
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
+      ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
+      ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   
+      #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
+      ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   
+   
+      IF(PROCESSOR_COUNT GREATER 1)
+   
+      SET(PROCS 8)
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim6d_input.txt)
+      ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+    
+      ENDIF(PROCESSOR_COUNT GREATER 1)
+   ENDIF(NOT STDF95)
 
    SET(ARGS " ")
    IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
