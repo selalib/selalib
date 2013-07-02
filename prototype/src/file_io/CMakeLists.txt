@@ -3,7 +3,6 @@ SET(IO_SRC sll_ascii_io.F90
            sll_gnuplot.F90 
            sll_hdf5_io.F90
            sll_xml_io.F90
-           sll_gnuplot_parallel.F90
            sll_xdmf.F90 )
 
 ADD_LIBRARY(sll_file_io STATIC ${IO_SRC})
@@ -36,6 +35,7 @@ IF(HDF5_PARALLEL_ENABLED)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_DEFINITIONS(-DHDF5_PARALLEL)
    SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
+                        sll_gnuplot_parallel.F90
                         sll_xdmf_parallel.F90 )
    ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
    ADD_DEPENDENCIES(sll_file_io_parallel sll_utilities sll_collective)
