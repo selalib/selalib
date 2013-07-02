@@ -195,8 +195,8 @@ this%iresw  = 1       ! 1 : fully weighted residuals 2 : half-weighted residuals
 nwork  = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
 
 ngrid  = max(iex,jey)
-nxdim  = int(float(nxp2-2)/float(nxprocs)+0.99)+2
-nydim  = int(float(nyp2-2)/float(nyprocs)+0.99)+2
+nxdim  = ceiling(float(nxp2-2)/float(nxprocs))+2
+nydim  = ceiling(float(nyp2-2)/float(nyprocs))+2
 
 if ((ex-sx+3) > nxdim) then
   write(6,110) myid,nxdim,ex-sx+3
@@ -296,9 +296,9 @@ call MPI_SENDRECV(neighbor(3),1,MPI_INTEGER,nbrleft,0, &
 call MPI_SENDRECV(neighbor(7),1,MPI_INTEGER,nbrleft,1, &
                   neighbor(8),1,MPI_INTEGER,nbrright,1, &
                   this%comm2d,statut,ierr)
-do i=1,8
-  write(6,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
-end do
+!do i=1,8
+!  write(6,*) 'neighbor: ',neighbor(i),' bd: ',bd(i)
+!end do
 
 this%block%id       = myid
 this%block%sx       = sx
