@@ -28,7 +28,7 @@ type (splinepx)    :: splx
 type (splinepy)    :: sply
 type(sll_plan_poisson_polar), pointer :: plan_poisson
 type(sll_SL_polar), pointer :: plan_sl
-sll_real64, dimension(:,:,:,:), pointer :: f4d
+sll_real64, dimension(:,:,:,:), pointer :: f4d,f4d_old
 sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:,:),     pointer :: rho_dk
 sll_real64, dimension(:,:,:),     pointer :: phi
@@ -43,7 +43,7 @@ sll_real64 :: R0
 sll_int32  :: fdiag, fthdiag  
 sll_int32  :: iter 
 sll_int32  :: jstartx, jendx, jstartv, jendv
-sll_real64 :: nrj
+sll_real64 :: nrj,tmp
 sll_real64 :: tcpu1, tcpu2
 
 sll_int32 :: my_num, num_threads, comm
@@ -64,17 +64,22 @@ if (my_num == MPI_MASTER) then
    print*,'#MPI Version of slv2d running on ',num_threads, ' processors'
 end if
 
-call initglobal_dk(geomx,geomv,dt,nbiter,fdiag,fthdiag,R0)
+!call initglobal_dk(geomx,geomv,dt,nbiter,fdiag,fthdiag,R0)
 
+call init_dk(geomx,geomv,nbiter,fdiag,fthdiag,jstartv,jendv,jstartx,jendx, &
+               f4d,f4d_old,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
+
+dt=plan_sl%adv%dt
 if (my_num == MPI_MASTER) then
+  
   print *,'#Nr=',geomx%nx-1
   print *,'#Ntheta=',geomx%ny
   print *,'#Nphi=',geomv%nx
   print *,'#Nvpar=',geomv%ny
   print *,'#rmin=',geomx%x0
   print *,'#rmax=',geomx%x1
-  print *,'#vmax=',geomv%y0
   print *,'#vmin=',geomv%y0
+  print *,'#vmax=',geomv%y1
   print *,'#thetamin=',geomx%y0
   print *,'#thetamax=',geomx%y1
   print *,'#phimin=',geomv%x0
@@ -101,42 +106,119 @@ endif
 !   write(*,"(g13.3,1x,3i6)") dt,nbiter,fdiag,fthdiag
 !endif
 
-call initlocal_dk(geomx,geomv,R0,jstartv,jendv,jstartx,jendx, &
-               f4d,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply,dt)
+!call initlocal_dk(geomx,geomv,R0,jstartv,jendv,jstartx,jendx, &
+!               f4d,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply,dt)
 
    
    !call solve(poisson,e_x,e_y,rho,nrj)
    
    !print *,my_num,sum(rho(:,:))*geomx%dx*geomx%dy,sum(profile(1,:))*geomx%dx
 
+iter=0
+   call thdiag(vlas2d,f4d,nrj,real(iter,f64)*dt,jstartv)
 
+
+do iter=1,nbiter
+
+
+   f4d_old=f4d
    call transposexv(vlas2d,f4d)
-
+   
+   !compute field at time tn
    call densite_charge_dk(vlas2d,rho_dk)
    do i=1,geomx%nx
-     rho_dk(i,:,:) = rho_dk(i,:,:)/profile(1,i)-1._f64
+     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
+     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
    enddo  
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+   call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
+
+   ! prediction step
+   call advection_x3_dk(vlas2d,0.5_f64*dt)
+   call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
+   call transposevx(vlas2d,f4d)
+   plan_sl%adv%dt = 0.5_f64*dt   
+   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
+   call transposexv(vlas2d,f4d)
+   !compute field at time t_{n+1/2}
+   call densite_charge_dk(vlas2d,rho_dk)
+   do i=1,geomx%nx
+     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
+     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
+   enddo  
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+   call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
    
+   !advection from tn to t_{n+1}
+   call transposexv(vlas2d,f4d_old)
+   call advection_x3_dk(vlas2d,0.5_f64*dt)
+   call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
+   call transposevx(vlas2d,f4d)
+   plan_sl%adv%dt = dt   
+   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
+   call transposexv(vlas2d,f4d)
+   call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
+   call advection_x3_dk(vlas2d,0.5_f64*dt)
    call transposevx(vlas2d,f4d)
 
-   print *,my_num,sum(rho_dk(:,:,:))*geomx%dx*geomx%dy*geomv%dx
+   call thdiag(vlas2d,f4d,nrj,real(iter,f64)*dt,jstartv)
+if (my_num==MPI_MASTER) then
+   print *,my_num,iter,dt,real(iter,f64)*dt
+end if
 
-   !call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
-   !call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
 
-   !dt = plan_sl%adv%dt
-   !plan_sl%adv%dt = dt/2.0_f64   
-   !call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
-   !plan_sl%adv%dt = dt
+
+enddo   
+
+if (my_num==MPI_MASTER) then
+   stop
+end if
+
+
+
+   
+   if (my_num == MPI_MASTER) then
+   
+     !write(20,*),maxval(abs(phi(:,:,:))),minval((phi(:,:,:)))
+     do i=1,geomx%nx
+       write (40,*),geomx%x0+real(i-1,f64)*geomx%dx,&
+       &sum(phi(i,1:geomx%ny,1:geomv%nx))*geomx%dy*geomv%dx,&
+       &sum(rho_dk(i,1:geomx%ny,1:geomv%nx))*geomx%dy*geomv%dx/(geomx%y1*geomv%x1),&
+       &sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/(geomx%ny*geomv%nx),&
+       profile(1,i),profile(2,i),profile(3,i)
+     enddo 
+   
+   endif
+   
+   call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
+
+   call transposevx(vlas2d,f4d)
+
+   dt = plan_sl%adv%dt
+   plan_sl%adv%dt = dt/2.0_f64   
+   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
+   plan_sl%adv%dt = dt
    
    
    
    call thdiag(vlas2d,f4d,nrj,0._f64,jstartv)
+
+
+   call transposexv(vlas2d,f4d)
    
+   !dt = 0._f64
 
-   !call transposevx(vlas2d,f4d)
+   call advection_x3_dk(vlas2d,dt)
+   call advection_x4_dk(vlas2d,adv_field(3,:,:,:),dt)
 
-   !call transposexv(vlas2d,f4d)
+   call transposevx(vlas2d,f4d)
+
+   call thdiag(vlas2d,f4d,nrj,0._f64,jstartv)
+   
+if (my_num==MPI_MASTER) then
+   stop
+end if
+
 
    !call densite_charge_dk(vlas2d,rho_dk)
 
@@ -330,16 +412,13 @@ contains
 
 
 
- subroutine initlocal_dk(geomx,geomv,R0,jstartv,jendv,jstartx,jendx, &
-                      f,rho,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply,dt)
+ subroutine init_dk(geomx,geomv,nbiter,fdiag,fthdiag,jstartv,jendv,jstartx,jendx, &
+                      f,f_old,rho,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
 
   type(geometry) :: geomx
   type(geometry) :: geomv
-  sll_real64     :: R0,dt  
-  sll_int32      :: jstartv
-  sll_int32      :: jendv
-  sll_int32      :: jstartx
-  sll_int32      :: jendx
+  sll_int32      :: jstartv,jendv
+  sll_int32      :: jstartx,jendx
 
   sll_real64, dimension(:,:,:)    ,pointer :: rho
   sll_real64, dimension(:,:,:)    ,pointer :: phi
@@ -347,10 +426,7 @@ contains
   sll_real64, dimension(:,:)    ,pointer :: e_x
   sll_real64, dimension(:,:)    ,pointer :: e_y
   sll_real64, dimension(:,:)    ,pointer :: profile
-  sll_real64, dimension(:,:,:,:),pointer :: f
-
-
-
+  sll_real64, dimension(:,:,:,:),pointer :: f,f_old
   type(vlasov2d)    :: vlas2d
   type(splinepx)    :: splx
   type(splinepy)    :: sply
@@ -367,6 +443,11 @@ contains
   sll_real64, dimension(:), allocatable :: dlog_density,inv_Te
 
 
+  
+  !MESH
+  sll_int32       :: Nr,Ntheta,Nphi,Nvpar,nbiter,fdiag,fthdiag
+  sll_real64      :: a,rhomin,rhomax,Lz,aspect_ratio,vmax,dt,R0
+
   !EQUIL
   sll_int32       :: modethmin,modethmax,modezmin,modezmax
   logical         :: zonal_flow
@@ -375,8 +456,38 @@ contains
   sll_int32  :: grad,carac,bc(2)     
   
   
+
+
+
+
+  
+  namelist /MESH/ Nr,Ntheta,Nphi,Nvpar,a,rhomin,rhomax,Lz,aspect_ratio,vmax,nbiter,dt,&
+           &fdiag,fthdiag    
+
+
+!  &MESH
+!  Nr           = 127
+!  Ntheta       = 128
+!  Nphi         = 32
+!  Nvpar        = 47
+!  a            = 32.
+!  rhomin       = 0.2
+!  rhomax       = 0.8
+!  Ltheta       = 6.283185307179586476925286766559005768394
+!  Lz         = 6.283185307179586476925286766559005768394
+!  aspect_ratio = 3.
+!  vmax      = 6.
+!  nbiter      = 30
+!  dt      = 16.
+!  fdiag      = 30
+!  fthdiag      = 30
+
+
+
   namelist /EQUIL/ rpeak,kappan,kappaTi,kappaTe,deltarn,deltarTi,deltarTe,&
            &epsilon,modethmin,modethmax,modezmin,modezmax,zonal_flow
+
+
 
 !  &EQUIL
 !  rpeak          = 0.5     
@@ -395,20 +506,69 @@ contains
 
 
 
-  bc = (/0,0/)
+
+
+  my_num = sll_get_collective_rank(sll_world_collective)
+  num_threads = sll_get_collective_size(sll_world_collective)
+  comm   = sll_world_collective%comm
+  
+  if (my_num == MPI_MASTER) then
+    call fichinit()
+    read(idata,NML=MESH)
+  end if
+
+  !MESH  
+  call mpi_bcast(Nr,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(Ntheta,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(Nphi,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(Nvpar,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(a,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(rhomin,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(rhomax,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(Lz,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(aspect_ratio,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vmax,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(dt,      1,MPI_REAL8,MPI_MASTER,comm,ierr)
+  call mpi_bcast(fdiag,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(fthdiag,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+
+  
+
+  call new(geomx,a*rhomin,0._f64,a*rhomax,2._f64*sll_pi,Nr+1,Ntheta,iflag,"pery")  
+  !call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perxy")
+  call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perx")
+  R0 = a*aspect_ratio
+
+
+
+  !print *,'eh ben alors ?',my_num,geomx%nx
+
+
+
+
+  bc = (/1,1/)
   grad = 2
   carac = 5
    
 
 
-  my_num      = sll_get_collective_rank(sll_world_collective)
-  num_threads = sll_get_collective_size(sll_world_collective)
-  comm        = sll_world_collective%comm
+  !my_num      = sll_get_collective_rank(sll_world_collective)
+  !num_threads = sll_get_collective_size(sll_world_collective)
+  !comm        = sll_world_collective%comm
 
   if (my_num == MPI_MASTER) then
    
     call fichinit()
     read(idata,NML=EQUIL)
+    
+    rpeak = geomx%x0+rpeak*(geomx%x1-geomx%x0)
+    kappan = kappan*(geomx%x1-geomx%x0)
+    kappaTi = kappaTi*(geomx%x1-geomx%x0)
+    kappaTe = kappaTe*(geomx%x1-geomx%x0)
+    deltarn = deltarn*(geomx%x1-geomx%x0)
+    deltarTi = deltarTi*(geomx%x1-geomx%x0)
+    deltarTe = deltarTe*(geomx%x1-geomx%x0)
 
   end if
 
@@ -450,6 +610,7 @@ contains
   
   
   SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
+  SLL_ALLOCATE(f_old(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
 
   SLL_ALLOCATE(rho(geomx%nx,geomx%ny+1,geomv%nx+1),iflag)
   SLL_ALLOCATE(phi(geomx%nx,geomx%ny+1,geomv%nx+1),iflag)
@@ -511,13 +672,24 @@ contains
   enddo
   
   
-  !plan_sl => new_SL(geomx%x0,geomx%x1,geomx%dx,geomx%dy,dt,geomx%nx,geomx%ny,grad,carac,bc)
+  if (my_num == MPI_MASTER) then
+    do i=1,geomx%nx
+      x = geomx%x0+(i-1)*geomx%dx
+      write(20,*),x,dlog_density(i),-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2),&
+      &-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2)/dlog_density(i)
+    enddo
+    !stop
+
+  endif
+  
+  
+  plan_sl => new_SL(geomx%x0,geomx%x1,geomx%dx,geomx%dy,dt,geomx%nx-1,geomx%ny,grad,carac,bc)
   
   
   
   
-  !plan_poisson => new_plan_poisson_polar(geomx%dx,geomx%x0,geomx%nx,geomx%ny,bc,&
-  !  &dlog_density,inv_Te)
+  plan_poisson => new_plan_poisson_polar(geomx%dx,geomx%x0,geomx%nx,geomx%ny,bc,&
+    &dlog_density,inv_Te)
   
   SLL_DEALLOCATE_ARRAY(dlog_density,iflag)
   SLL_DEALLOCATE_ARRAY(inv_Te,iflag)
@@ -530,7 +702,7 @@ contains
   !call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
   
   
- end subroutine initlocal_dk
+ end subroutine init_dk
 
 
 
