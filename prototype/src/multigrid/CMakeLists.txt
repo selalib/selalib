@@ -4,7 +4,6 @@ ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      diagnostics.F90
                      write_xdmf_2d.F90
                      mgd2.F90)
-                     #mgd_polar.F90)
 
 ADD_LIBRARY(sll_mgd3 mgdend_3d.F90 
                      mgdkcyc_3d.F90
