@@ -66,17 +66,13 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:,:), allocatable     :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
      sll_real64, dimension(:,:), allocatable     :: rho_split
-     sll_real64, dimension(:,:), allocatable     :: phi_x1
-     sll_real64, dimension(:,:), allocatable     :: phi_x2
-     sll_real64, dimension(:,:), allocatable     :: phi_split
-     
+
      ! for remap
      type(layout_4D), pointer :: sequential_x1x2
      type(layout_4D), pointer :: sequential_x3x4
      type(layout_2D), pointer :: rho_full_layout
      type(layout_2D), pointer :: rho_seq_x2
      type(layout_2D), pointer :: split_rho_layout ! not sequential in any dir.
-     type(layout_2D), pointer :: split_phi_layout ! not sequential in any dir.
      type(remap_plan_2D_real64), pointer :: split_to_full
      type(remap_plan_2D_real64), pointer :: seqx1_to_seqx2
      ! remaps for the electric field data
@@ -94,10 +90,6 @@ module sll_simulation_4d_qns_general_module
      ! interpolation any arbitrary spline
       type(arb_deg_2d_interpolator)     :: interp_rho
       type(arb_deg_2d_interpolator)     :: interp_phi
-     ! Field accumulator
-     sll_comp64, dimension(:,:), allocatable :: efield_x1
-     sll_comp64, dimension(:,:), allocatable :: efield_x2
-     sll_comp64, dimension(:,:), allocatable :: efield_split
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
@@ -377,9 +369,11 @@ contains
 
     SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
 
+    phi_values(:,:) = 0.0_f64
+
     phi => new_scalar_field_2d_discrete_alt( &
          phi_values, &
-         "phi", &
+         "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
          sim%bc_left, &
@@ -419,7 +413,6 @@ contains
     sim%rho_full_layout  => new_layout_2D( sll_world_collective )
     sim%rho_seq_x2       => new_layout_2D( sll_world_collective )
     sim%split_rho_layout => new_layout_2D( sll_world_collective )
-    sim%split_phi_layout => new_layout_2D( sll_world_collective )
 
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
@@ -584,17 +577,6 @@ print *, 'sequential x1x2 mode...'
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
     
-
-
-!!$print *, 'do I see this?'
-!!$    call initialize_layout_with_distributed_2D_array( &
-!!$         nc_x1, &
-!!$         nc_x2, &
-!!$         sim%nproc_x1, &
-!!$         sim%nproc_x2, &
-!!$         sim%split_phi_layout )
-!!$
-    
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
          sim%mesh2d_x, &
@@ -608,8 +590,6 @@ print *, 'sequential x1x2 mode...'
     delta2 = sim%mesh2d_x%delta_eta2
     delta3 = sim%mesh2d_v%delta_eta1
     delta4 = sim%mesh2d_v%delta_eta2
-
-  
 
     sim%rho_split(:,:) = 0.0_f64
     call compute_charge_density( sim%mesh2d_x,           &
@@ -801,7 +781,7 @@ print *, 'sequential x1x2 mode...'
             size(send_buf), &
             recv_buf, &
             recv_sz )
- 
+
        call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
        ! the rho field has a pointer to sim%rho_full so it is already 
@@ -850,6 +830,7 @@ print *, 'sequential x1x2 mode...'
 !!$          "rho_x1", &
 !!$          itime, &
 !!$          ierr )
+       call rho%write_to_file(itime)
 
        call solve_quasi_neutral_eq_general_coords( &
             sim%qns, & 
@@ -858,70 +839,8 @@ print *, 'sequential x1x2 mode...'
             rho, &
             phi )
 
-#if 0
+       call phi%write_to_file(itime)
 
-!!$       ex_field(:,:) = real(sim%efield_x1(:,:))
-!!$
-!!$
-!!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-!!$       
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$         sim%mesh2d_x%delta_eta2, &
-!!$         ex_field, &
-!!$         "ex_x1", &
-!!$         itime, &
-!!$         ierr )
-!!$
-
-
-
-
-       ! note that we are 'recycling' the layouts used for the other arrays 
-       ! because they represent an identical configuration.
-       call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
-       call apply_remap_2D( sim%seqx1_to_seqx2, sim%phi_x1, sim%phi_x2 )
-       call compute_local_sizes_2d( sim%rho_seq_x2, loc_sz_x1, loc_sz_x2 )
-
-       call compute_electric_field_eta2( &
-            sim%phi_x2, &
-            loc_sz_x1, &
-            loc_sz_x2, &
-            sim%mesh2d_x%delta_eta2, &
-            sim%efield_x2 )
-       
-!!$       ey_field(:,:) = aimag(sim%efield_x2(:,:))
-!!$
-!!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x2, (/1, 1/) )
-!!$       
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$         sim%mesh2d_x%delta_eta2, &
-!!$         ey_field, &
-!!$         "ey_x2", &
-!!$         itime, &
-!!$         ierr )
-
-
-
-       ! But now, to make the electric field data configuration compatible with
-       ! the sequential operations in x2x3 we need still another remap 
-       ! operation.
-       call apply_remap_2D( &
-            sim%efld_seqx2_to_split, &
-            sim%efield_x2, &
-            sim%efield_split )
-       ! Now we proceed to reconfigure the data. This is very expensive. 
-       ! There might be advantages to this approach if we avoid larger data 
-       ! transfers like with an all-to-all transfer... however, we could end 
-       ! up paying more if the simulation is latency-dominated.
-      
        call compute_local_sizes_4d( sim%sequential_x1x2, &
                                     loc_sz_x1,           &
                                     loc_sz_x2,           &
@@ -943,8 +862,8 @@ print *, 'sequential x1x2 mode...'
                 eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-                ex     =  real( sim%efield_split(i,j),f64)
-                ey     =  aimag(sim%efield_split(i,j))
+                ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
+                ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
@@ -980,8 +899,8 @@ print *, 'sequential x1x2 mode...'
                 eta1   =  real(global_indices(1)-1,f64)*delta1
                 eta2   =  real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                ex     =  real( sim%efield_split(i,j),f64)
-                ey     =  aimag(sim%efield_split(i,j))
+                ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
+                ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
@@ -995,26 +914,6 @@ print *, 'sequential x1x2 mode...'
 
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
-
-!!$       do l = 1, loc_sz_x4
-!!$          do k = 1, loc_sz_x3
-!!$              sim%phi_split(k,l) = sum(sim%f_x1x2(:,:,k,l))
-!!$          end do
-!!$       end do
-
-!!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%split_phi_layout, (/1, 1/) )
-!!$       
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2d_v%eta1_min+(global_indices(1)-1)*sim%mesh2d_v%delta_eta1, &
-!!$         sim%mesh2d_v%delta_eta1, &
-!!$         sim%mesh2d_v%eta2_min+(global_indices(2)-1)*sim%mesh2d_v%delta_eta2, &
-!!$         sim%mesh2d_v%delta_eta2, &
-!!$         sim%phi_split, &
-!!$         "phi_split", &
-!!$         itime, &
-!!$         ierr )
-
 
        ! Approximate the integral of the distribution function along all
        ! directions.
@@ -1080,9 +979,6 @@ print *, 'sequential x1x2 mode...'
        ! to make these calls...
 
        call advection_x1x2(sim,sim%dt)
-       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
-       call compute_local_sizes_4d( sim%sequential_x3x4, &
-                                 loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
 !!$       do j = 1, loc_sz_x2
 !!$          do i = 1, loc_sz_x1
@@ -1099,7 +995,6 @@ print *, 'sequential x1x2 mode...'
 
   !     call plot_fields(itime, sim)
 
-#endif
    end do ! main loop
 #undef BUFFER_SIZE
 
