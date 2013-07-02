@@ -11,20 +11,18 @@ program test_mesh_calculus
 #define NCELLS2 128
 
   type(sll_logical_mesh_2d), pointer                    :: m
-  class(sll_coordinate_transformation_2d_base), pointer :: Ta
+  class(sll_coordinate_transformation_2d_base), pointer :: Ti   ! identity 
+  class(sll_coordinate_transformation_2d_base), pointer :: Tp   ! polar
   sll_real64 :: volume, length_east, length_west, length_north, length_south
+  sll_real64 :: int_east
   sll_int32  :: i, j
 
   m => new_logical_mesh_2d( &
        NCELLS1, &
-       NCELLS2, &
-       eta1_min=-1.0_f64, &
-       eta1_max= 1.0_f64, &
-       eta2_min=-1.0_f64, &
-       eta2_max= 1.0_f64)
+       NCELLS2 )
 
-  Ta => new_coordinate_transformation_2d_analytic( &
-       "map_a", &
+  Ti => new_coordinate_transformation_2d_analytic( &
+       "identity_mesh_calculus", &
        m, &
        identity_x1, &
        identity_x2, &
@@ -33,10 +31,20 @@ program test_mesh_calculus
        identity_jac21, &
        identity_jac22 )
 
+  Tp => new_coordinate_transformation_2d_analytic( &
+       "polar_mesh_calculus", &
+       m, &
+       x1_polar_f, &
+       x2_polar_f, &
+       deriv_x1_polar_f_eta1, &
+       deriv_x1_polar_f_eta2, &
+       deriv_x2_polar_f_eta1, &
+       deriv_x2_polar_f_eta2 )
+
   volume = 0.0_f64
   do j=1,NCELLS1
      do i=1,NCELLS2
-        volume = volume + cell_volume(Ta,i,j,3)
+        volume = volume + cell_volume(Ti,i,j,3)
      end do
   end do
   print *, 'volume = ', volume
@@ -47,18 +55,23 @@ program test_mesh_calculus
   length_south = 0.0_f64
 
   do i=1,NCELLS1
-     length_north = length_north + edge_length_eta2_plus(Ta,i,1,3)
-     length_south = length_south + edge_length_eta2_minus(Ta,i,1,3)
+     length_north = length_north + edge_length_eta2_plus(Ti,i,1,3)
+     length_south = length_south + edge_length_eta2_minus(Ti,i,1,3)
   end do
 
   do j=1,NCELLS2
-     length_east  = length_east + edge_length_eta1_plus(Ta,1,j,3)
-     length_west  = length_west + edge_length_eta1_minus(Ta,1,j,3)
+     length_east  = length_east + edge_length_eta1_plus(Ti,1,j,3)
+     length_west  = length_west + edge_length_eta1_minus(Ti,1,j,3)
   end do
 
   print *, 'length east edge = ', length_east, length_west, length_north, &
        length_south
 
+  print *, '---------------------------------------------------------------'
+  print *, '                   TEST OF NORMAL INTEGRALS                    '
+  print *, '---------------------------------------------------------------'
+
+  int_east = normal_integral_eta1_plus(Ti,1,1,3)
 
   print *, 'PASSED'
 
