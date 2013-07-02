@@ -1,5 +1,6 @@
 module sll_multigrid_2d
 
+use sll_boundary_condition_descriptors
 use sll_multigrid_base
 use sll_collective, only: sll_boot_collective,      &
                           sll_world_collective,     &
@@ -37,14 +38,27 @@ type, public, extends(sll_multigrid_solver) :: sll_multigrid_solver_2d
 end type sll_multigrid_solver_2d
 
 interface initialize
-   module procedure initialize_2d
+   module procedure initialize_multigrid_2d
 end interface initialize
+interface solve
+   module procedure solve_multigrid_2d
+end interface solve
+interface delete
+   module procedure delete_multigrid_2d
+end interface delete
 
 sll_int32, private :: i, j, k
 sll_int32, private :: error
 sll_real64, dimension(:), allocatable :: work
 
 contains
+
+subroutine delete_multigrid_2d(this)
+type(sll_multigrid_solver_2d) :: this
+
+SLL_DEALLOCATE_ARRAY(work, error)
+
+end subroutine delete_multigrid_2d
 
 !> Initialize the parallel multigrid solver: subdomain indices and
 !> MPI datatypes.
@@ -104,9 +118,10 @@ contains
 !> (sxm-1:exm+1,sym-1:eym+1)... Probably not too difficult to
 !> make the change
 !>
-subroutine initialize_2d(this, layout,                &
-                         x_min, x_max, nc_x, &
-                         y_min, y_max, nc_y)
+subroutine initialize_multigrid_2d(this, layout,             &
+                                   x_min, x_max, nc_x, bc_x, &
+                                   y_min, y_max, nc_y, bc_y, &
+                                   vbc_x, vbc_y)
 
 type(sll_multigrid_solver_2d) :: this
 type(layout_2d), pointer      :: layout
@@ -116,6 +131,10 @@ sll_real64, intent(in)        :: y_min
 sll_real64, intent(in)        :: y_max
 sll_int32 , intent(in)        :: nc_x
 sll_int32 , intent(in)        :: nc_y
+sll_int32 , intent(in)        :: bc_x
+sll_int32 , intent(in)        :: bc_y
+sll_int32 , optional          :: vbc_x(2)
+sll_int32 , optional          :: vbc_y(2)
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: nwork
@@ -188,7 +207,9 @@ if ((ey-sy+3).gt.nydim) then
   goto 1000
 end if
 
-SLL_CLEAR_ALLOCATE(work(1:nwork), error)
+if (.not. allocated(work)) then
+   SLL_CLEAR_ALLOCATE(work(1:nwork), error)
+end if
 
 ! open file for output of messages and check that the number of 
 ! processes is correct
@@ -209,13 +230,34 @@ periods(2) = .true.  !periodic in theta
 call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periods,.true.,this%comm2d,ierr)
 call MPI_COMM_RANK(this%comm2d,myid,ierr)
 
-this%ibdry  = 0    ! Periodic bc in direction 1
-this%jbdry  = 0    ! Periodic bc in direction 2
+if(bc_x == SLL_PERIODIC) then
+   this%ibdry  = 0    ! Periodic bc in direction x
+else if(bc_x == SLL_DIRICHLET) then
+   this%ibdry  = 1    ! Periodic bc in direction x
+   if (present(vbc_x)) then
+      this%vbc(1:2) = vbc_x ! Value for x_min, x_max
+   else
+      this%vbc(1:2) = 0.0_f64
+   end if
+else
+   print*, " multigrid solver wrong boundary conditions in x"
+   goto 1000
+end if
 
-this%vbc(1) = 0.0d0 ! Value for eta_1 = x_min
-this%vbc(2) = 0.0d0 ! Value for eta_1 = y_max
-this%vbc(3) = 0.0d0 ! Value for eta_2 = y_min
-this%vbc(4) = 0.0d0 ! Value for eta_2 = y_max
+if(bc_y == SLL_PERIODIC) then
+   this%jbdry  = 0    ! Periodic bc in direction y
+else if(bc_y == SLL_DIRICHLET) then
+   this%jbdry  = 1    ! Periodic bc in direction y
+   if (present(vbc_y)) then
+      this%vbc(3:4) = vbc_y ! Value for y_min, y_max
+   else
+      this%vbc(3:4) = 0.0_f64
+   end if
+else
+   print*, " multigrid solver wrong boundary conditions in y"
+   goto 1000
+end if
+
 
 bd(:)  = 0
 
@@ -630,7 +672,7 @@ stop
            '    increase the value of iex and/or jey')
 
 
-end subroutine initialize_2d
+end subroutine initialize_multigrid_2d
 
 !> Parallel multigrid solver in 2-D cartesian coordinates for the
 !> elliptic equation:      div(cof(grad(phi)))=rhs
@@ -656,7 +698,7 @@ end subroutine initialize_2d
 !>        - with the initialization and clean-up routines mgdinit
 !>          and mgdend, this multigrid code is self-standing
 !>
-subroutine solve_2d(this, rhs, phi, r)
+subroutine solve_multigrid_2d(this, rhs, phi, r)
 
 type(sll_multigrid_solver_2d)     :: this
 sll_real64, dimension(:,:)        :: rhs
@@ -871,6 +913,6 @@ end if
 
 210 format(/,'ERROR in multigrid code solver',/)
 
-end subroutine solve_2d
+end subroutine solve_multigrid_2d
 
 end module sll_multigrid_2d

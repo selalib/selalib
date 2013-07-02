@@ -34,7 +34,6 @@ use mgd2
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "mgd2.h"
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: maxcy,kcycle,iprer,ipost,iresw,nwork

@@ -8,30 +8,30 @@ program test_multigrid_cartesian
 use sll_remapper
 use sll_collective
 use sll_gnuplot_parallel
+use sll_boundary_condition_descriptors
 
 implicit none
 
-sll_int32                                    :: ncx, ncy
-sll_int32                                    :: nx_loc, ny_loc
-sll_int32                                    :: error
-sll_real64                                   :: Lx, Ly
-sll_real64                                   :: dx, dy
-sll_real64                                   :: x, y
-sll_real64, dimension(:,:), allocatable      :: rho
-sll_real64, dimension(:,:), allocatable      :: phi_an
-sll_real64, dimension(:,:), allocatable      :: phi
-sll_real64, dimension(:,:), allocatable      :: r
-sll_int32                                    :: i, j
-sll_real64                                   :: average_err
-sll_int32, dimension(1:2)                    :: global
-sll_int32                                    :: gi, gj
-sll_int32                                    :: myrank
-type(layout_2D), pointer                     :: layout
-sll_int64                                    :: colsz ! collective size
-sll_int32                                    :: e
-sll_real32                                   :: ok 
-sll_real32, dimension(1)                     :: prod4test
-type(sll_multigrid_solver_2d)                :: poisson
+sll_int32                               :: ncx, ncy
+sll_int32                               :: nx_loc, ny_loc
+sll_int32                               :: error
+sll_real64                              :: xmin, xmax
+sll_real64                              :: ymin, ymax
+sll_real64                              :: dx, dy
+sll_real64, dimension(:,:), allocatable :: x, y
+sll_real64, dimension(:,:), allocatable :: rho
+sll_real64, dimension(:,:), allocatable :: phi
+sll_real64, dimension(:,:), allocatable :: r
+sll_int32                               :: i, j
+sll_real64                              :: err
+sll_int32, dimension(1:2)               :: global
+sll_int32                               :: gi, gj
+sll_int32                               :: myrank
+type(layout_2D), pointer                :: layout
+sll_real32                              :: ok 
+sll_real32, dimension(1)                :: prod4test
+type(sll_multigrid_solver_2d)           :: poisson_periodic
+type(sll_multigrid_solver_2d)           :: poisson_dirichlet
 
 ok = 1.0
 
@@ -39,34 +39,28 @@ ok = 1.0
 call sll_boot_collective()
 
 ! Number of cells is equal to number of points in this case
-ncx = 512
-ncy = 512
-Lx  = 2.0*sll_pi
-Ly  = 2.0*sll_pi
+ncx  = 64
+ncy  = 64
+xmin = 0.0_f64; xmax = 2*sll_pi
+ymin = 0.0_f64; ymax = 2*sll_pi
 
-colsz  = sll_get_collective_size(sll_world_collective)
 myrank = sll_get_collective_rank(sll_world_collective)
 
-dx = Lx/ncx
-dy = Ly/ncy
-
-colsz  = sll_get_collective_size(sll_world_collective)
-e      = int(log(real(colsz))/log(2.))-1
-print *, 'running on ', 2**e, 'processes'
+dx = (xmax-xmin)/ncx
+dy = (ymax-ymin)/ncy
 
 ! Layout and local sizes for FFTs in x-direction
 layout => new_layout_2D( sll_world_collective )
 call initialize_layout_with_distributed_2D_array( ncx, ncy, 2, 2, layout)
 call sll_view_lims_2D( layout )
 
-call initialize_2d(poisson, layout, 0._f64, Lx, ncx, 0._f64, Ly, ncy)
-
 call compute_local_sizes_2d( layout, nx_loc, ny_loc )
 
-SLL_ALLOCATE(rho(nx_loc+2,ny_loc+2), error)
-SLL_ALLOCATE(phi_an(nx_loc+2,ny_loc+2), error)
-SLL_ALLOCATE(phi(nx_loc+2,ny_loc+2), error)
-SLL_ALLOCATE(r(nx_loc+2,ny_loc+2), error)
+SLL_CLEAR_ALLOCATE(rho(1:nx_loc+2,1:ny_loc+2), error)
+SLL_CLEAR_ALLOCATE(phi(1:nx_loc+2,1:ny_loc+2), error)
+SLL_CLEAR_ALLOCATE(r(1:nx_loc+2,1:ny_loc+2), error)
+SLL_CLEAR_ALLOCATE(x(1:nx_loc,1:ny_loc), error)
+SLL_CLEAR_ALLOCATE(y(1:nx_loc,1:ny_loc), error)
 
 ! initialize reference array
 do j=1,ny_loc
@@ -74,41 +68,60 @@ do j=1,ny_loc
       global = local_to_global_2D( layout, (/i, j/))
       gi = global(1)
       gj = global(2)
-      x  = (gi-1)*dx
-      y  = (gj-1)*dy
-      phi_an(i,j) =  cos(x)*sin(y) 
-      rho(i,j)    = -2.0_f64*phi_an(i,j)
-      r(i,j)      = 1.
+      x(i,j)  = (gi-1)*dx
+      y(i,j)  = (gj-1)*dy
    end do
 end do
 
-call solve_2d(poisson, rho, phi, r)
+call initialize(poisson_periodic, layout, xmin, xmax, ncx, SLL_PERIODIC, &
+                                 ymin, ymax, ncy, SLL_PERIODIC )
 
-global = local_to_global_2D( layout, (/1, 1/))
+rho(2:nx_loc+1,2:ny_loc+1)  = -2.0_f64*cos(x)*cos(y)
+r = 1.
+call solve(poisson_periodic, rho, phi, r)
 
-call sll_gnuplot_rect_2d_parallel(dble(global(1)-1.0)*dx,dx, &
-                                  dble(global(2)-1.0)*dy,dy, &
-                                  phi, "potential", 1, error)  
+call sll_gnuplot_curv_2d_parallel(x,y, &
+     phi(2:nx_loc+1,2:ny_loc+1), "cos", 1, error)  
+call sll_gnuplot_curv_2d_parallel(x,y, &
+     cos(x)*cos(y)             , "cos", 2, error)  
 
-average_err  = 0.d0
-do j=1,ny_loc
-   do i=1,nx_loc
-      average_err  = average_err + abs(phi_an(i,j) - phi(i,j))
-   enddo
-enddo
-     
-average_err  = average_err/(ncx*ncy)
+err = sum(abs(cos(x)*cos(y)-phi(2:nx_loc+1,2:ny_loc+1)))/(ncx*ncy)
 
 call flush(6); print*, ' ------------------'
 call flush(6); print*, ' myrank ', myrank
-call flush(6); print*, 'local average error:', average_err
-call flush(6); print*, 'dx*dy =', dx*dy
+call flush(6); print*, ' local average error:', err
+call flush(6); print*, ' dx*dy =', dx*dy
 call flush(6); print*, ' ------------------'
+
+call delete(poisson_periodic)
+
+
+call initialize(poisson_dirichlet, layout, &
+                xmin, xmax, ncx, SLL_DIRICHLET, &
+                ymin, ymax, ncy, SLL_DIRICHLET )
+
+rho(2:nx_loc+1,2:ny_loc+1)  = -2.0_f64*sin(x)*sin(y)
+r = 1.
+call solve(poisson_dirichlet, rho, phi, r)
+
+call sll_gnuplot_curv_2d_parallel(x,y, &
+     phi(2:nx_loc+1,2:ny_loc+1), "resultat_sin", 1, error)  
+call sll_gnuplot_curv_2d_parallel(x,y, &
+     sin(x)*sin(y),              "solution_sin", 1, error)  
+
+err = sum(abs(sin(x)*sin(y)-phi(2:nx_loc+1,2:ny_loc+1)))/(ncx*ncy)
+
+call flush(6); print*, ' ------------------'
+call flush(6); print*, ' myrank ', myrank
+call flush(6); print*, ' local average error:', err
+call flush(6); print*, ' dx*dy =', dx*dy
+call flush(6); print*, ' ------------------'
+
+call delete(poisson_dirichlet)
 
  
 SLL_DEALLOCATE_ARRAY(phi, error)
 SLL_DEALLOCATE_ARRAY(rho, error)
-SLL_DEALLOCATE_ARRAY(phi_an, error)
 
 call sll_collective_reduce(sll_world_collective, (/ ok /), &
                            1, MPI_PROD, 0, prod4test )
