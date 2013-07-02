@@ -332,4 +332,289 @@ contains
     len = len*factor1
   end function edge_length_eta2_minus
 
+  ! integral of the normal vector over the 'east' edge of the cell.
+  function normal_integral_eta1_plus( T,ic,jc,integration_degree ) result(res)
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    sll_int32, intent(in) :: ic
+    sll_int32, intent(in) :: jc
+    sll_int32, intent(in) :: integration_degree
+    sll_real64            :: res
+
+    sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
+!    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
+    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
+    sll_real64 :: eta1
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: max1
+    sll_real64 :: min1
+    sll_real64 :: max2
+    sll_real64 :: min2
+    sll_real64 :: factor1
+    sll_real64 :: factor2
+    sll_int32  :: j
+    sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
+    sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
+    sll_real64 :: edge_length
+
+    ! Verify arguments
+    SLL_ASSERT(associated(T))
+    ! verify that the indices requested are within the logical mesh.
+    SLL_ASSERT(ic <= T%mesh%num_cells1)
+    SLL_ASSERT(jc <= T%mesh%num_cells2)
+
+    res = 0.0_f64
+
+!    eta1_min = T%mesh%eta1_min
+    delta1   = T%mesh%delta_eta1
+    eta2_min = T%mesh%eta2_min
+    delta2   = T%mesh%delta_eta2
+
+    ! The limits of integration are the limits of the cell in eta-space
+!    min1    = eta1_min + (ic-1)*delta1
+!    max1    = eta1_min + ic*delta1
+    eta1    = ic*delta1 ! <- line differs w/ normal_integral_eta1_minus()
+    min2    = eta2_min + (jc-1)*delta2
+    max2    = eta2_min + jc*delta2
+!    factor1 = 0.5_f64*(max1-min1)
+    factor2 = 0.5_f64*(max2-min2) 
+!    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
+    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
+
+    ! For efficiency, this code should be refactored. Consider:
+    ! - adding direct access functions to the jacobian matrix elements and the
+    !   inverse jacobian matrix elements
+    ! - use macros to eliminate the massive code redundancy in this module's
+    !   functions.
+    ! - same macros can be used to improve a function call like the one next.
+    edge_length = edge_length_eta1_plus( T, ic, jc, integration_degree )
+
+    do j=1,integration_degree
+       ! this can be made more efficient if we could access directly each
+       ! term of the jacobian matrix independently.
+       inv_jac_mat(:,:) = T%inverse_jacobian_matrix(eta1,pts_g2(1,j))
+       eta1_x1 = inv_jac_mat(1,1)
+       eta1_x2 = inv_jac_mat(2,1)
+       print *, 'eta1_x1 = ', eta1_x1, 'eta1_x2 = ', eta1_x2
+       print *, 'gradient length = ', eta1_x1**2 + eta1_x2**2
+       res = res + (eta1_x1**2 + eta1_x2**2)*pts_g2(2,j)
+    end do
+    res = res*factor2*edge_length
+  end function normal_integral_eta1_plus
+
+  ! integral of the normal vector over the 'west' edge of the cell.
+  function normal_integral_eta1_minus( T,ic,jc,integration_degree ) result(res)
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    sll_int32, intent(in) :: ic
+    sll_int32, intent(in) :: jc
+    sll_int32, intent(in) :: integration_degree
+    sll_real64            :: res
+
+    sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
+!    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
+    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
+    sll_real64 :: eta1
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: max1
+    sll_real64 :: min1
+    sll_real64 :: max2
+    sll_real64 :: min2
+    sll_real64 :: factor1
+    sll_real64 :: factor2
+    sll_int32  :: j
+    sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
+    sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
+    sll_real64 :: edge_length
+
+    ! Verify arguments
+    SLL_ASSERT(associated(T))
+    ! verify that the indices requested are within the logical mesh.
+    SLL_ASSERT(ic <= T%mesh%num_cells1)
+    SLL_ASSERT(jc <= T%mesh%num_cells2)
+
+    res = 0.0_f64
+
+!    eta1_min = T%mesh%eta1_min
+    delta1   = T%mesh%delta_eta1
+    eta2_min = T%mesh%eta2_min
+    delta2   = T%mesh%delta_eta2
+
+    ! The limits of integration are the limits of the cell in eta-space
+!    min1    = eta1_min + (ic-1)*delta1
+!    max1    = eta1_min + ic*delta1
+    eta1    = (ic-1)*delta1 ! <- line differs w/ normal_integral_eta1_plus()
+    min2    = eta2_min + (jc-1)*delta2
+    max2    = eta2_min + jc*delta2
+!    factor1 = 0.5_f64*(max1-min1)
+    factor2 = 0.5_f64*(max2-min2) 
+!    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
+    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
+
+    ! For efficiency, this code should be refactored. Consider:
+    ! - adding direct access functions to the jacobian matrix elements and the
+    !   inverse jacobian matrix elements
+    ! - use macros to eliminate the massive code redundancy in this module's
+    !   functions.
+    ! - same macros can be used to improve a function call like the one next.
+    edge_length = edge_length_eta1_minus( T, ic, jc, integration_degree )
+
+    do j=1,integration_degree
+       ! this can be made more efficient if we could access directly each
+       ! term of the jacobian matrix independently.
+       inv_jac_mat(:,:) = T%inverse_jacobian_matrix(eta1,pts_g2(1,j))
+       eta1_x1 = inv_jac_mat(1,1)
+       eta1_x2 = inv_jac_mat(2,1)
+       print *, 'eta1_x1 = ', eta1_x1, 'eta1_x2 = ', eta1_x2
+       print *, 'gradient length = ', eta1_x1**2 + eta1_x2**2
+       res = res + (eta1_x1**2 + eta1_x2**2)*pts_g2(2,j)
+    end do
+    res = res*factor2*edge_length
+  end function normal_integral_eta1_minus
+
+  ! integral of the normal vector over the 'north' edge of the cell.
+  function normal_integral_eta2_plus( T,ic,jc,integration_degree ) result(res)
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    sll_int32, intent(in) :: ic
+    sll_int32, intent(in) :: jc
+    sll_int32, intent(in) :: integration_degree
+    sll_real64            :: res
+
+    sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
+    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
+!    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
+    sll_real64 :: eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: max1
+    sll_real64 :: min1
+    sll_real64 :: max2
+    sll_real64 :: min2
+    sll_real64 :: factor1
+    sll_real64 :: factor2
+    sll_int32  :: i
+    sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
+    sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
+    sll_real64 :: edge_length
+
+    ! Verify arguments
+    SLL_ASSERT(associated(T))
+    ! verify that the indices requested are within the logical mesh.
+    SLL_ASSERT(ic <= T%mesh%num_cells1)
+    SLL_ASSERT(jc <= T%mesh%num_cells2)
+
+    res = 0.0_f64
+
+    eta1_min = T%mesh%eta1_min
+    delta1   = T%mesh%delta_eta1
+!    eta2_min = T%mesh%eta2_min
+    delta2   = T%mesh%delta_eta2
+
+    ! The limits of integration are the limits of the cell in eta-space
+    min1    = eta1_min + (ic-1)*delta1
+    max1    = eta1_min + ic*delta1
+    eta2    = jc*delta2 ! <- line differs w/ normal_integral_eta2_minus()
+!    min2    = eta2_min + (jc-1)*delta2
+!    max2    = eta2_min + jc*delta2
+    factor1 = 0.5_f64*(max1-min1)
+!    factor2 = 0.5_f64*(max2-min2) 
+    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
+!    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
+
+    ! For efficiency, this code should be refactored. Consider:
+    ! - adding direct access functions to the jacobian matrix elements and the
+    !   inverse jacobian matrix elements
+    ! - use macros to eliminate the massive code redundancy in this module's
+    !   functions.
+    ! - same macros can be used to improve a function call like the one next.
+    edge_length = edge_length_eta2_plus( T, ic, jc, integration_degree )
+
+    do i=1,integration_degree
+       ! this can be made more efficient if we could access directly each
+       ! term of the jacobian matrix independently.
+       inv_jac_mat(:,:) = T%inverse_jacobian_matrix(pts_g1(1,i),eta2)
+       eta2_x1 = inv_jac_mat(2,1)
+       eta2_x2 = inv_jac_mat(2,2)
+       res = res + (eta2_x1**2 + eta2_x2**2)*pts_g1(2,i)
+    end do
+    res = res*factor1*edge_length
+  end function normal_integral_eta2_plus
+
+  ! integral of the normal vector over the 'southth' edge of the cell.
+  function normal_integral_eta2_minus( T,ic,jc,integration_degree ) result(res)
+    class(sll_coordinate_transformation_2d_base), pointer :: T
+    sll_int32, intent(in) :: ic
+    sll_int32, intent(in) :: jc
+    sll_int32, intent(in) :: integration_degree
+    sll_real64            :: res
+
+    sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
+    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
+!    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
+    sll_real64 :: eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: max1
+    sll_real64 :: min1
+    sll_real64 :: max2
+    sll_real64 :: min2
+    sll_real64 :: factor1
+    sll_real64 :: factor2
+    sll_int32  :: i
+    sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
+    sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
+    sll_real64 :: edge_length
+
+    ! Verify arguments
+    SLL_ASSERT(associated(T))
+    ! verify that the indices requested are within the logical mesh.
+    SLL_ASSERT(ic <= T%mesh%num_cells1)
+    SLL_ASSERT(jc <= T%mesh%num_cells2)
+
+    res = 0.0_f64
+
+    eta1_min = T%mesh%eta1_min
+    delta1   = T%mesh%delta_eta1
+!    eta2_min = T%mesh%eta2_min
+    delta2   = T%mesh%delta_eta2
+
+    ! The limits of integration are the limits of the cell in eta-space
+    min1    = eta1_min + (ic-1)*delta1
+    max1    = eta1_min + ic*delta1
+    eta2    = (jc-1)*delta2 ! <- line differs w/ normal_integral_eta2_pluus()
+!    min2    = eta2_min + (jc-1)*delta2
+!    max2    = eta2_min + jc*delta2
+    factor1 = 0.5_f64*(max1-min1)
+!    factor2 = 0.5_f64*(max2-min2) 
+    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
+!    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
+
+    ! For efficiency, this code should be refactored. Consider:
+    ! - adding direct access functions to the jacobian matrix elements and the
+    !   inverse jacobian matrix elements
+    ! - use macros to eliminate the massive code redundancy in this module's
+    !   functions.
+    ! - same macros can be used to improve a function call like the one next.
+    edge_length = edge_length_eta2_minus( T, ic, jc, integration_degree )
+
+    do i=1,integration_degree
+       ! this can be made more efficient if we could access directly each
+       ! term of the jacobian matrix independently.
+       inv_jac_mat(:,:) = T%inverse_jacobian_matrix(pts_g1(1,i),eta2)
+       eta2_x1 = inv_jac_mat(2,1)
+       eta2_x2 = inv_jac_mat(2,2)
+       res = res + (eta2_x1**2 + eta2_x2**2)*pts_g1(2,i)
+    end do
+    res = res*factor1*edge_length
+  end function normal_integral_eta2_minus
+
+
 end module sll_mesh_calculus_2d_module
