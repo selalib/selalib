@@ -44,6 +44,8 @@ SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_D
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
 
 ADD_CUSTOM_TARGET( clear
+   COMMAND echo "WARNING : you are about to delete repisitory buid/bin/ Ctrl+C to cancel, else press enter to continue"
+   COMMAND read 
    COMMAND find . -name *.mod -delete
    COMMAND find . -name *.a -delete
    COMMAND find . -name *.o -delete
@@ -132,10 +134,10 @@ IF(NOT SLL_BUILD_PACKAGE)
 
 
       FIND_PACKAGE(SUITESPARSE)
-      IF(SUITESPARSE_FOUND AND 0)
+      IF(SUITESPARSE_FOUND)
          INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ENDIF(SUITESPARSE_FOUND AND 0)
+      ENDIF(SUITESPARSE_FOUND)
    
    ENDIF(NOT STDF95)
 

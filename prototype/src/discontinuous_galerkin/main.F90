@@ -91,12 +91,12 @@ program VP_DG
 
   x_min=0.0d0
   !x_max=2.0d0*sll_pi/k
-  x_max=24.0d0*sll_pi
+  x_max=20.0d0*sll_pi
   v_min=-8.0d0
-  v_max=8.0d0
+  v_max=12.0d0
 
-  nx=30
-  nv=30
+  nx=16
+  nv=20
   ng=8
 
   print*,'discretization caracteristics :'
@@ -199,18 +199,17 @@ program VP_DG
 !!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !classical two streams instability
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
-                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
-                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
-                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
+!!$                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
+!!$                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
+!!$                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
 
-              !asymetric two streams instability
+              !Bump on tail
               !from michel, eric and nicolas
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
-!!$                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
-!!$                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
+                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
+                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
 
-              !"from me"
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=&!(1.0d0-0.05d0*cos(k*x))
 !!$                   & 1.0d0/sqrt(2.0d0*sll_pi)* &
 !!$                   & (exp(-v**2/2.0d0)+0.2d0*exp(-(v-2.0d0)**2*100))
