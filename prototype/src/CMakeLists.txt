@@ -116,6 +116,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(fields)
    
    IF(NOT STDF95)
+
       ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(ode_solvers)
@@ -129,13 +130,10 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(visu_pic)
       ADD_SUBDIRECTORY(simulation)
 
-
-
       FIND_PACKAGE(SUITESPARSE)
-      IF(SUITESPARSE_FOUND AND 0)
-         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+      IF(SUITESPARSE_FOUND)
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ENDIF(SUITESPARSE_FOUND AND 0)
+      ENDIF(SUITESPARSE_FOUND)
    
    ENDIF(NOT STDF95)
 
