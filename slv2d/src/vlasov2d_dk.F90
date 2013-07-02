@@ -12,6 +12,8 @@ module vlasov2d_dk_module
  use diagnostiques_module
  use polar_operators
  use polar_advection
+ use sll_cubic_splines
+ use sll_cubic_spline_interpolator_1d
 
  !use clock
 
@@ -19,7 +21,8 @@ module vlasov2d_dk_module
  private
  public :: new, dealloc,advection_x, advection_v,&
            densite_charge,densite_charge_dk,transposexv,transposevx,thdiag,densite_courant,&
-           compute_profile,solve_quasi_neutral,compute_field_dk,advection_x_dk
+           compute_profile,solve_quasi_neutral,compute_field_dk,advection_x_dk,&
+           advection_x3_dk,advection_x4_dk
 
  type, public :: vlasov2d
    sll_real64, dimension(:,:,:,:), pointer :: ft
@@ -30,10 +33,14 @@ module vlasov2d_dk_module
                                ! fonction de distribution mise a jour
    sll_int32 :: jstartx, jendx
    sll_int32 :: jstartv, jendv  ! definition de la bande de calcul
+   class(sll_interpolator_1d_base), pointer :: interp_x3
+   class(sll_interpolator_1d_base), pointer :: interp_x4
  end type vlasov2d
 
  ! variables globales 
  sll_real64, dimension(:,:),allocatable :: P_x, P_y
+ type(cubic_spline_1d_interpolator), target :: spl_x3
+ type(cubic_spline_1d_interpolator), target :: spl_x4
 
  interface new
    module procedure new_vlasov2d
@@ -90,6 +97,13 @@ contains
   call new(this%splinev,geomv,error)
   ! initialisation des splines de l'espace physique
   call new(this%splinex,geomx,error)  
+
+  call spl_x3%initialize( geomv%nx+1, geomv%x0, geomv%x1, PERIODIC_SPLINE)
+  call spl_x4%initialize( geomv%ny+1, geomv%y0, geomv%y1, PERIODIC_SPLINE)
+
+  this%interp_x3 => spl_x3
+  this%interp_x4 => spl_x4
+
 
   ! allocation memoire
   SLL_ALLOCATE(this%ft(geomv%nx,geomv%ny,geomx%nx,this%jstartx:this%jendx),error)
@@ -164,6 +178,82 @@ contains
   SLL_DEALLOCATE_ARRAY(fnp1,ierr)
   
  end subroutine advection_x_dk
+
+
+
+ subroutine advection_x3_dk(this,dt)
+
+  type(vlasov2d),intent(inout) :: this
+
+  !sll_real64, dimension(:,:,:), intent(in) :: ex
+  sll_real64, intent(in) :: dt
+  sll_int32  :: nc_x1, nc_x3, nc_x4,i,j,l
+  sll_real64 :: alpha
+  sll_real64,dimension(:),allocatable::buf
+  sll_int32::ierr
+
+  SLL_ASSERT(this%transposed) 
+  
+
+  nc_x1    = this%geomx%nx
+  nc_x3    = this%geomv%nx
+  nc_x4    = this%geomv%ny
+  
+  SLL_ALLOCATE(buf(nc_x3+1),ierr)
+  
+  do j=this%jstartx,this%jendx
+     do i=1,nc_x1
+        do l=1,nc_x4
+           alpha = (this%geomv%y0+real(l-1,f64)*this%geomv%dy)*dt
+           buf(1:nc_x3)=this%ft(:,l,i,j)
+           buf(nc_x3+1)=buf(1)
+           buf = this%interp_x3%interpolate_array_disp( &
+                              nc_x3+1, buf, alpha )
+           this%ft(:,l,i,j)=buf(1:nc_x3)                   
+       end do
+    end do
+ end do
+  SLL_DEALLOCATE_ARRAY(buf,ierr)
+
+ end subroutine advection_x3_dk
+
+
+ subroutine advection_x4_dk(this,ey,dt)
+
+  type(vlasov2d),intent(inout) :: this
+  sll_real64, dimension(:,:,:), intent(in) :: ey
+  sll_real64, intent(in) :: dt
+  sll_int32  :: nc_x1, nc_x3, nc_x4,i,j,k
+  sll_real64 :: alpha
+  sll_real64,dimension(:),allocatable::buf
+  sll_int32::ierr
+
+  SLL_ASSERT(this%transposed) 
+
+  nc_x1    = this%geomx%nx
+  nc_x3    = this%geomv%nx
+  nc_x4    = this%geomv%ny
+
+  SLL_ALLOCATE(buf(nc_x4+1),ierr)
+
+  do j=this%jstartx,this%jendx
+     do i=1,nc_x1
+        do k=1,nc_x3
+           alpha = ey(i,j,k)*dt
+           buf(1:nc_x4)=this%ft(k,:,i,j)
+           buf(nc_x4+1)=buf(1)
+           buf = this%interp_x4%interpolate_array_disp( &
+                              nc_x4+1, buf, alpha )
+           this%ft(k,:,i,j)=buf(1:nc_x4)                   
+       end do
+    end do
+ end do
+  SLL_DEALLOCATE_ARRAY(buf,ierr)
+
+
+ end subroutine advection_x4_dk
+
+
 
 
 
@@ -274,7 +364,7 @@ subroutine densite_charge_dk(this, rho)
    type(vlasov2d),intent(inout) :: this
    sll_int32 :: error
    sll_real64, dimension(:,:,:), intent(out)  :: rho
-   sll_real64, dimension(this%geomx%nx,this%geomx%ny,this%geomv%nx) :: locrho
+   sll_real64, dimension(this%geomx%nx,this%geomx%ny+1,this%geomv%nx+1) :: locrho
    sll_int32 :: i,j,iv,jv,c
    sll_int32 :: comm
 
@@ -295,7 +385,7 @@ subroutine densite_charge_dk(this, rho)
       end do
    end do
    call mpi_barrier(comm,error)
-   c=this%geomx%nx*this%geomx%ny*this%geomv%nx
+   c=this%geomx%nx*(this%geomx%ny+1)*(this%geomv%nx+1)
    call mpi_allreduce(locrho,rho,c,MPI_REAL8,MPI_SUM,comm,error)
    rho(:,:,this%geomv%nx+1)=rho(:,:,1)
    rho(:,this%geomx%ny+1,:)=rho(:,1,:)
@@ -467,6 +557,13 @@ subroutine compute_profile(this,prof,geom,rpeak,deltar,kappa,R0)!,n0_case)
       
     profnorm       = profnorm_tmp
     prof(1:Nr_loc) = prof(1:Nr_loc)/profnorm
+    
+    do ir = 1,Nr_loc
+      r            = geom%xgrid(ir)
+      rth          = r + dr_loc*0.5_f64    
+     ! print *,'prof',ir,prof(ir)-1._f64,-invL /cosh((rth-rpeak)/deltar)**2
+    enddo
+    
   
 end subroutine compute_profile
 
@@ -595,7 +692,7 @@ if (my_num==MPI_MASTER) then
    call time_history("thf","(13(1x,e15.6))",aux(1:13))
    !print "(13(1x,e15.10))",aux(1:13)
    print *,aux(1:13)
-   stop
+   !stop
 end if
 
 end subroutine thdiag
