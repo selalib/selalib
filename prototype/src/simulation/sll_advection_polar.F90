@@ -538,7 +538,7 @@ end subroutine advect_CG_polar2
        !using fixed point method
 
        !initialization
-       maxiter=10
+       maxiter=10 !10
        tolr=1e-12
 
        do j=1,ntheta
@@ -581,8 +581,9 @@ end subroutine advect_CG_polar2
 
                 iter=iter+1
              end do
-             if (iter==maxiter .and. (rrn-rr)+(tthetan-ttheta)>tolr) then
-                print*,'no convergence in fixe point methode',i,j
+             if (iter==maxiter .and. abs(rrn-rr)+abs(tthetan-ttheta)>tolr) then
+                !print*,'no convergence in fixed point method',i,j,&
+                !&abs(rrn-rr)+abs(tthetan-ttheta),tolr
              end if
 
              rr=rmin+real(i-1,f64)*dr-2.0_f64*ar
