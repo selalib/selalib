@@ -471,7 +471,6 @@ contains ! *******************************************************************
 
     call  phi%interp_2d%set_coefficients( qns%phi_vec)
 
-
     !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
     ! apr_B is the source, apr_U is the solution
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
