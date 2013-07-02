@@ -20,6 +20,5 @@
 
 use sll_multigrid_base
 use sll_multigrid_2d
-use sll_multigrid_polar
 
 #endif
