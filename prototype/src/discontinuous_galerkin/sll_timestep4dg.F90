@@ -34,7 +34,7 @@ module sll_timestep4dg
 
   implicit none
 
-  logical,parameter :: v_periodic=.false.,x_upwind=.false.,v_upwind=.true.
+  logical,parameter :: v_periodic=.false.,x_upwind=.true.,v_upwind=.true.
   integer,parameter :: SLL_RK3=0,SLL_RK4=1,SLL_EE=2,SLL_TVDRK2=3
   !<parameters to compute the time integration
 

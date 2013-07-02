@@ -90,14 +90,14 @@ program VP_DG
 !!$  v_max=1.0d0
 
   x_min=0.0d0
-  x_max=2.0d0*sll_pi/k
-  !x_max=24.0d0*sll_pi
-  v_min=-5.0d0
-  v_max=5.0d0
+  !x_max=2.0d0*sll_pi/k
+  x_max=24.0d0*sll_pi
+  v_min=-8.0d0
+  v_max=8.0d0
 
-  nx=50
-  nv=80
-  ng=7
+  nx=30
+  nv=30
+  ng=8
 
   print*,'discretization caracteristics :'
   print"(3(a5,i3))",'nx=',nx,', nv=',nv,', ng=',ng
@@ -109,11 +109,11 @@ program VP_DG
 
   !definition or time step, delta_t and final time
   dt=0.001d0
-  tf=5.0d0
+  tf=200.0d0
   nb_step=ceiling(tf/dt)
-  th=min(10,int(0.1d0/dt))!20
+  th=min(20,int(0.1d0/dt))!20
   th_out=int(0.5d0/dt)
-  th_large=int(0.1d0/dt) ! must be a multiple of th
+  th_large=int(5.0d0/dt) ! must be a multiple of th
   !th_large=huge(1)
   if (modulo(th_large,th)/=0) then
      print*,"WARNING : snapshot of the electric field may be miscalculated"
@@ -190,8 +190,8 @@ program VP_DG
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(x**2-1.0d0)*(v**2-1.0d0)
 
               !Landau
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.5d0*cos(k*x))* &
-                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0-0.5d0*cos(k*x))* &
+!!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !strong oscillations two streams
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=v**2/sqrt(8.0d0*sll_pi)* &
@@ -199,10 +199,10 @@ program VP_DG
 !!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !classical two streams instability
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
-!!$                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
-!!$                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
-!!$                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
+                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
+                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
+                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
 
               !asymetric two streams instability
               !from michel, eric and nicolas
@@ -415,16 +415,6 @@ program VP_DG
            write(ffield,*)trim(adjustl(ffield))//char(lfor(i)+48)
         end do
 
-!!$        i1=step/100000
-!!$        i2=(step-100000*i1)/10000
-!!$        i3=(step-100000*i1-10000*i2)/1000
-!!$        i4=(step-100000*i1-10000*i2-i3*1000)/100
-!!$        i5=(step-100000*i1-10000*i2-i3*1000-i4*100)/10
-!!$        i6= step-100000*i1-10000*i2-i3*1000-i4*100-i5*10
-!!$        write(ffield,*)'field_'//char(i1+48)//char(i2+48)//char(i3+48)//char(i4+48)// &
-!!$             & char(i5+48)//char(i6+48)
-!!$        write(fdist,*)'dist_'//char(i1+48)//char(i2+48)//char(i3+48)//char(i4+48)// &
-!!$             & char(i5+48)//char(i6+48)
         fdist=trim(adjustl(fdist))
         ffield=trim(adjustl(ffield))
 
