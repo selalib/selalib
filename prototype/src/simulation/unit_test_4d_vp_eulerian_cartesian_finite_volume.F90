@@ -44,8 +44,8 @@ program vp_cartesian_4d
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NCELL1 2
-#define NCELL2 2
+#define NCELL1 4
+#define NCELL2 4
 #define NCELL3 32
 #define NCELL4 32
 #define ETA1MIN -6.0_f64
@@ -57,7 +57,7 @@ program vp_cartesian_4d
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
 
-#define DEG 2   ! polynomial degree
+#define DEG 1   ! polynomial degree
 
 
   ! logical mesh for space coordinates

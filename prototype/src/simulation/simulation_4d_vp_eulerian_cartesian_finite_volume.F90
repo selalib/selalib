@@ -516,6 +516,12 @@ contains
     sll_int32 :: i,j,k,ii,jj
     sll_int32 :: ic,jc,iploc,jploc,ino
     sll_real64  :: x,y,xref,yref
+    sll_real64 :: det
+    sll_real64 :: phi1,phi2,dphi1(2),dphi2(2),dphi1ref(2),dphi2ref(2)
+    sll_real64,dimension(2,2) :: jacob,invjacob
+    sll_real64,dimension(:,:),allocatable :: matloc,lag,dlag
+    sll_real64,dimension(:),allocatable :: gauss,weight
+    sll_int32 :: ll,ib1,ib2,jb1,jb2
 
     SLL_ALLOCATE(sim%interp_pts_1D(sim%degree+1),ierr)
 
@@ -599,14 +605,110 @@ contains
     SLL_ALLOCATE(sim%Bv1_low(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Bv1_sup(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Bv1_diag(sim%np_v1*sim%np_v2),ierr)
+
+    sim%Bv1_low=0
+    sim%Bv1_sup=0
+    sim%Bv1_diag=0
     
 
 
-    write(*,*) sim%prof
+!!$    write(*,*) sim%prof
+!!$
+!!$    stop
 
-    stop
+    ! init of Gauss points
+    SLL_ALLOCATE(gauss(sim%degree+1),ierr)
+    SLL_ALLOCATE(weight(sim%degree+1),ierr)
+    SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
+    SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
+
+    SLL_ALLOCATE(matloc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
+
+    call lag_gauss(sim%degree,gauss,weight,lag,dlag)
+
+
+    ! matrix assembly
+
+    ! loop on the cells
+    do ic=0,sim%nc_v1-1
+       do jc=0,sim%nc_v2-1
+          matloc=0
+          ! loop on the points
+          ! loop on the Gauss points
+          do iploc=0,sim%degree
+             do jploc=0,sim%degree
+                xref=sim%mesh2dv%eta1_min+ &
+                     (ic+gauss(iploc+1))*sim%mesh2dv%delta_eta1
+                yref=sim%mesh2dv%eta2_min+ &
+                     (jc+gauss(jploc+1))*sim%mesh2dv%delta_eta2
+                write(*,*) 'xref,yref=',xref,yref
+                jacob=sim%tv%jacobian_matrix(xref,yref)
+                invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
+                det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
+
+!!$                write(*,*) 'det=',det
+!!$                write(*,*) 'jacob=',jacob
+!!$                write(*,*) 'invjacob=',invjacob
+!!$                write(*,*) 'gauss=',weight
+!!$                write(*,*)
+
+                do ib1=1,sim%degree+1
+                   do jb1=1,sim%degree+1
+                      do ib2=1,sim%degree+1
+                         do jb2=1,sim%degree+1
+                            phi1=lag(ib1,iploc+1)*lag(jb1,jploc+1)
+                            phi2=lag(ib2,iploc+1)*lag(jb2,jploc+1)
+!!$                            write(*,*) 'phi=',xref,yref,'i,j',(jb1-1)*(sim%degree+1)+ib1, &
+!!$                                 (jb2-1)*(sim%degree+1)+ib2,phi1,phi2
+                            dphi1ref(1)=dlag(ib1,iploc+1)*lag(jb1,jploc+1)
+                            dphi1ref(2)=lag(ib1,iploc+1)*dlag(jb1,jploc+1)
+                            dphi2ref(1)=dlag(ib2,iploc+1)*lag(jb2,jploc+1)
+                            dphi2ref(2)=lag(ib2,iploc+1)*dlag(jb2,jploc+1)
+                            dphi1(1)=dphi1ref(1)*invjacob(1,1)+dphi1ref(2)*invjacob(2,1)
+                            dphi1(2)=dphi1ref(1)*invjacob(1,2)+dphi1ref(2)*invjacob(2,2)
+                            dphi2(1)=dphi2ref(1)*invjacob(1,1)+dphi2ref(2)*invjacob(2,1)
+                            dphi2(2)=dphi2ref(1)*invjacob(1,2)+dphi2ref(2)*invjacob(2,2)
+                            matloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+                                 matloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+                                dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1)                     
+                         end do
+                      end do
+                   end do
+                end do
+
+             end do
+          end do
+
+!!$          do ii=1,(sim%degree+1)**2
+!!$             write(*,*) 'matloc=',matloc(ii,:)
+!!$          end do
+             
+          do ii=1,(sim%degree+1)**2
+             do jj=1,(sim%degree+1)**2
+                i=sim%connec(ii,jc*sim%nc_v1+ic+1)
+                j=sim%connec(jj,jc*sim%nc_v1+ic+1)
+                !if (cal.eq.1) then
+                if (i.eq.j) then
+                   sim%Bv1_diag(i)=sim%Bv1_diag(i)+matloc(ii,jj)
+                else if (j.gt.i) then
+                   ll=sim%mkld(j+1)-j+i
+                   sim%Bv1_sup(ll)=sim%Bv1_sup(ll)+matloc(ii,jj)
+                else
+                   ll=sim%mkld(i+1)-i+j
+                   sim%Bv1_low(ll)=sim%Bv1_low(ll)+matloc(ii,jj)
+                end if
+             end do
+          end do
+
+          ! end loop on the cells
+       end do
+    end do
+
+    write(*,*) 'Bdiag=',sim%Bv1_diag
+!!$    write(*,*) 'Bsup=',sim%Bv1_sup
+!!$    write(*,*) 'Blow=',sim%Bv1_low
+!!$    stop
     
-
   end subroutine velocity_mesh_connectivity
 
   subroutine delete_vp_cart( sim )
@@ -845,10 +947,14 @@ contains
 
     sll_int32 :: degree
 
-    sll_real64,dimension(:) :: gauss
-    sll_real64,dimension(:) :: weight
-    sll_real64,dimension(degree+1,*) :: lag
-    sll_real64,dimension(degree+1,*) :: dlag
+    sll_real64,dimension(degree+1) :: gauss
+    sll_real64,dimension(degree+1) :: weight
+    sll_real64,dimension(degree+1,degree+1) :: lag
+    sll_real64,dimension(degree+1,degree+1) :: dlag
+
+    lag=0
+    dlag=0
+    gauss=0
 
     select case(degree)
 
@@ -936,6 +1042,12 @@ contains
        stop
 
     end select
+
+
+    ! remap to interval [0,1]
+    gauss=(gauss+1)/2
+    weight=weight/2
+    dlag=dlag*2
 
 
   end subroutine lag_gauss
