@@ -1,4 +1,3 @@
-STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
 
 SET(ARGS " ")
 SET(PROCS 2)
@@ -26,33 +25,30 @@ IF(PROCESSOR_COUNT GREATER 1)
    IF(NOT STDF95)
 
       SET(PROCS 16)
-      ADD_MPI_TEST(poisson_3d_periodic_par 
-                   test_poisson_3d_periodic_par ${PROCS} ${ARGS})
+      ADD_MPI_TEST(poisson_3d_periodic_par test_poisson_3d_periodic_par ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 2)
-      ADD_MPI_TEST(parallel_array_initializers 
-                   test_parallel_array_initializer ${PROCS} ${ARGS})
+      ADD_MPI_TEST(parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(parallel_array_initializers
 	PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 16)
-      ADD_MPI_TEST(qns2d_with_finite_diff_par 
-                   test_qns2d_with_finite_diff_par ${PROCS} ${ARGS})
+      ADD_MPI_TEST(qns2d_with_finite_diff_par test_qns2d_with_finite_diff_par ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(qns2d_with_finite_diff_par 
                            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 16)
-      ADD_MPI_TEST(qns2d_angular_spectral_method_par 
-                   test_qns2d_angular_spectral_method_par
-	             ${PROCS} ${ARGS})
+      ADD_MPI_TEST(qns2d_angular_spectral_method_par test_qns2d_angular_spectral_method_par
+	          ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_par 
                            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    ENDIF()
 
 ENDIF(PROCESSOR_COUNT GREATER 1)
+
 
 IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    
