@@ -6,9 +6,13 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 33 
-#define NPTS2 33 
-#define SPL_DEG 4
+#define NPTS1 30
+#define NPTS2 30 
+#define SPL_DEG 2
+#define X1MIN 0.0_f64
+#define X1MAX 1.0_f64
+#define X2MIN 0.0_f64
+#define X2MAX 1.0_f64
 
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
@@ -24,10 +28,11 @@ program unit_test
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, acc3, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
 
-
+  
+  
   print *,  'filling out discrete arrays for x1 '
-  h1 = 1.0_f64/real(NPTS1-1,f64)
-  h2 = 1.0_f64/real(NPTS2-1,f64)
+  h1 = (X1MAX-X1MIN)/real(NPTS1-1,f64)
+  h2 = (X2MAX-X2MIN)/real(NPTS2-1,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
   allocate(x(NPTS1,NPTS2))
@@ -36,29 +41,38 @@ program unit_test
   allocate(difference(NPTS1,NPTS2))
   allocate(eta1_pos(NPTS1))
   allocate(eta2_pos(NPTS2))
-!!$  allocate(x1_eta1_min(NPTS2))
-!!$  allocate(x1_eta1_max(NPTS2))
+!  allocate(x1_eta1_min(NPTS2))
+ ! allocate(x1_eta1_max(NPTS2))
   print *, '***********************************************************'
   print *, '              periodic-periodic case'
   print *, '***********************************************************'
 
-  ! assumes eta mins are 0
   do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1               = real(i,f64)*h1
-        eta2               = real(j,f64)*h2
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
-        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) 
-        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) *sin(2.0_f64*sll_pi*eta1)
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
      end do
   end do
 
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, reference, 'reference_interp_arb_deg', 0, ierr)
-
-  print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
-!  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
-
+  call sll_gnuplot_field_2d( &
+       X1MIN, &
+       X1MAX, &
+       NPTS1, &
+       X2MIN,&
+       X2MAX,&
+       NPTS2, &
+       reference, &
+       'reference_interp_arb_deg', &
+       0, &
+       ierr)
+  
+  !print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
+  !  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
+  
 !!$  ! Fill out the transformation's slopes at the borders
 !!$  do j=0,NPTS2-1
 !!$     eta1           = 0.0_f64
@@ -67,149 +81,130 @@ program unit_test
 !!$     eta1           = 1.0_f64
 !!$     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
 !!$  end do
-
+  
   ! Test the 2D transformation:
-
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
+  
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
        SPL_DEG, &
        SPL_DEG )
-
-#ifdef STDF95
-!  call cubic_spline_2d_compute_spline_coefficients(ad2d,x1)
-#else
-  call ad2d%compute_spline_coefficients( &
+  
+  
+  call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&
        NPTS1-1,&
        eta2_pos(1:NPTS2-1),&
        NPTS2-1)
-
-#endif
-
+  
+  
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
   acc2 = 0.0_f64
   do j=0,NPTS2-2
      do i=0,NPTS1-2
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
-#ifdef STDF95
-        node_val   = cubic_spline_2d_interpolate_value(ad2d,eta1,eta2)
-#else
+        eta1       = X1MIN + real(i,f64)*h1/2
+        eta2       = X2MIN + real(j,f64)*h2/2
         node_val   = ad2d%interpolate_value(eta1,eta2)
-#endif
-        ref                 = reference(i+1,j+1)
+        ref                 =sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)! reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical = ', ref
+        print*, node_val,ref,ref-node_val
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !    'theoretical = ', ref
         acc        = acc + abs(node_val-ref)
-#ifdef STDF95
-        deriv1_val = cubic_spline_2d_interpolate_derivative_eta1(cs2d,eta1,eta2)
-#else
- !       deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
-#endif
-
-
-
-
- !       ref        = deriv_x1_polar_f_eta1(eta1,eta2)
- !       acc1       = acc1 + abs(deriv1_val-ref)
-#ifdef STDF95
- !       deriv2_val = cubic_spline_2d_interpolate_derivative_eta2(cs2d,eta1,eta2)
-#else
-  !      deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
-#endif
-   !     ref        = deriv_x1_polar_f_eta2(eta1,eta2)
-    !    acc2       = acc2 + abs(deriv2_val-ref)
+        !       deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
+        
+        !       ref        = deriv_x1_polar_f_eta1(eta1,eta2)
+        !       acc1       = acc1 + abs(deriv1_val-ref)
+        !      deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
+        !     ref        = deriv_x1_polar_f_eta2(eta1,eta2)
+        !    acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, calculated, 'calculated_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, difference, 'difference_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
+       calculated, 'calculated_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_field_2d(0.0_f64, 1.0_f64, NPTS1, 0.0_f64,1.0_f64, NPTS2, ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
+  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
+       difference, 'difference_interp_arb_deg', 0, ierr)
 
-
+  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN ,X2MAX, NPTS2, &
+       ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
+  
+  
   print *, '***********************************************************'
   print *, '              periodic-dirichlet case'
   print *, '***********************************************************'
 
   call delete(ad2d)
-
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
+  
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
        SPL_DEG, &
        SPL_DEG )
 
-  call ad2d%compute_spline_coefficients( &
+  call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2),&
        eta1_pos(1:NPTS1-1),&
        NPTS1-1,&
        eta2_pos(1:NPTS2),&
        NPTS2)
 
-
+  
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc1 = 0.0_f64
   acc2 = 0.0_f64
   do j=0,NPTS2-1
      do i=0,NPTS1-2
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1/2
+        eta2       = X2MIN + real(j,f64)*h2/2
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref                 = reference(i+1,j+1)
+        ref                 = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1) !reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        print*, ref,node_val,node_val-ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc1        = acc1 + abs(node_val-ref)
         
      end do
   end do
   
-
-
+  
+  
   print *, '***********************************************************'
   print *, '              dirichlet-periodic case'
   print *, '***********************************************************'
-
+  
   call delete(ad2d)
 
   !reinitialize data
   ! assumes eta mins are 0
   do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1               = real(i,f64)*h1
-        eta2               = real(j,f64)*h2
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1) 
@@ -217,189 +212,129 @@ print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, 'theoretical =
      end do
   end do
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
-       PERIODIC_INTERP, &
-       PERIODIC_INTERP, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
        SPL_DEG, &
        SPL_DEG )
 
-  call ad2d%compute_spline_coefficients( &
+  call ad2d%compute_interpolants( &
        x(1:NPTS1,1:NPTS2-1),&
        eta1_pos(1:NPTS1),&
        NPTS1,&
        eta2_pos(1:NPTS2-1),&
        NPTS2-1)
-
-
+  
+  
   print *, 'Compare the values of the transformation at the nodes: '
 
-   do j=0,NPTS2-2
+  do j=0,NPTS2-2
      do i=0,NPTS1-1
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc2        = acc2 + abs(node_val-ref)
      end do
   end do
   
- print *, '***********************************************************'
+  print *, '***********************************************************'
   print *, '              dirichlet-dirichlet case'
   print *, '***********************************************************'
-
+  
   call delete(ad2d)
 
   !reinitialize data
-  ! assumes eta mins are 0
+
   do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1               = real(i,f64)*h1
-        eta2               = real(j,f64)*h2
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
      end do
   end do
-
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
+  
   call ad2d%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
-       0.0_f64, &
-       1.0_f64, &
-       0.0_f64, &
-       1.0_f64, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
-       DIRICHLET_INTERP, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
        SPL_DEG, &
        SPL_DEG )
-
-  call ad2d%compute_spline_coefficients( &
+  !print*, 'ret', size(x,1), size(x,2)
+  !print*, 'x', x(1:NPTS1,1:NPTS2)
+  call ad2d%compute_interpolants( &
        x,&
        eta1_pos,&
        NPTS1,&
        eta2_pos,&
        NPTS2)
 
-
+  
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc3 = 0.0_f64
-
-   do j=0,NPTS2-1
+  
+  do j=0,NPTS2-1
      do i=0,NPTS1-1
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+         !    'theoretical = ', ref
         acc3        = acc3 + abs(node_val-ref)
      end do
   end do
   
-
-
-
-
+  
   print *, 'Average error in nodes (dirichlet-dirichlet) = ', acc3/(NPTS1*NPTS2)
+  !
   print *, 'Average error in nodes (dirichlet-periodic) = ', acc2/(NPTS1*NPTS2)
+  !
   print *, 'Average error in nodes (periodic-dirichlet) = ', acc1/(NPTS1*NPTS2)
+!
   print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
-
-  if( acc/(NPTS1*NPTS2) .lt. 1.0e-16 ) then
-     print *, 'PASSED'
-  else
-     print *, 'FAILED'
-  end if
+!!$
+!!$
+!!$  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
+!!$      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
+!!$      (acc2/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
+!!$      (acc3/(NPTS1*NPTS2) .lt. 2.0e-16)) then
+!!$     print *, 'PASSED'
+!!$  else
+!!$     print *, 'FAILED'
+!!$  end if
 !!$  print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
 !!$  print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
-
-!  call test_interpolator_2d()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-contains
-
-subroutine test_interpolator_2d()
-#ifdef STDF95
-  type(cubic_spline_2d_interpolator), pointer   :: interp
-#else
-  class(sll_interpolator_2d_base),    pointer   :: interp
-#endif
-  type(cubic_spline_2d_interpolator), target    :: spline
-  sll_real64, dimension(NPTS1,NPTS2) :: xx1
-  sll_real64, dimension(NPTS1,NPTS2) :: xx2
-  sll_real64, dimension(NPTS1,NPTS2) :: data_in
-  sll_real64, dimension(NPTS1,NPTS2) :: data_out
-
-#ifdef STDF95
-  call cubic_spline_2d_initialize(spline,NPTS1,NPTS2, &
-                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
-#else
-  call spline%initialize(NPTS1,NPTS2, &
-                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
-#endif
-  interp =>  spline
-  do j = 1, NPTS2
-  do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1-1)
-     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2-1)
-  end do
-  end do
-  data_in = cos(xx1)*sin(xx2)
-
-  do j = 1, NPTS2
-  do i = 1, NPTS1
-     xx1(i,j) = 2.*sll_pi*float(i-1)/(NPTS1)
-     xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
-  end do
-  end do
-#ifdef STDF95
-  data_out = cubic_spline_2d_interpolate_array(interp,NPTS1, NPTS2, data_in, xx1, xx2)
-#else
-  data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
-#endif
-
-  print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
-end subroutine test_interpolator_2d
 
 end program unit_test
 

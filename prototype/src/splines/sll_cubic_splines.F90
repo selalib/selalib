@@ -31,6 +31,7 @@ module sll_cubic_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
   use sll_tridiagonal  ! Used for 'slow' algorithm implementation
+  use sll_boundary_condition_descriptors
   implicit none
   
   type  ::  sll_cubic_spline_1D
@@ -97,19 +98,6 @@ module sll_cubic_splines
      logical                             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
-
-  ! At all cost we want to avoid the use of obscure numeric flags to
-  ! induce some function behavior. Here we use a Fortran2003 feature, the
-  ! enumeration. It is thus possible to give descriptive names to flags,
-  ! instead of using some numeric code that one needs to look up somewhere.
-
-#ifdef STDF95
-   integer, parameter :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
-#else
-  enum, bind(C)
-     enumerator :: PERIODIC_SPLINE = 0, HERMITE_SPLINE = 1
-  end enum
-#endif
 
   interface delete
      module procedure delete_spline_1D, delete_spline_2D
@@ -186,7 +174,7 @@ contains  ! ****************************************************************
     ! Some more general error checking depending on the type of boundary
     ! condition requested.
     select case (bc_type)
-    case (PERIODIC_SPLINE)
+    case (SLL_PERIODIC)
        if( present(sl) .or. present(sr) ) then
           print *, 'new_spline_1D(): it is not allowed to specify the ',&
                'end ifin the case of periodic boundary conditions. ', &
@@ -227,7 +215,7 @@ contains  ! ****************************************************************
           new_spline_1D%ipiv => null()
           new_spline_1D%f_aux => null()
        end if
-    case (HERMITE_SPLINE)
+    case (SLL_HERMITE)
        if( present(sl) ) then
           new_spline_1D%slope_L = sl
           new_spline_1D%compute_slope_L = .false.
@@ -409,9 +397,9 @@ contains  ! ****************************************************************
     ! the arguments will be carried out at least once.
     bc_type = spline%bc_type;
     select case (bc_type)
-    case (PERIODIC_SPLINE)
+    case (SLL_PERIODIC)
        call compute_spline_1D_periodic( f, spline )
-    case (HERMITE_SPLINE)
+    case (SLL_HERMITE)
        call compute_spline_1D_hermite( f, spline )
     case default
        print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
@@ -1104,7 +1092,7 @@ contains  ! ****************************************************************
        SLL_DEALLOCATE( spline%a, ierr )
        SLL_DEALLOCATE( spline%cts, ierr )
        SLL_DEALLOCATE( spline%ipiv, ierr )
-       if( spline%bc_type == HERMITE_SPLINE ) then
+       if( spline%bc_type == SLL_HERMITE ) then
           SLL_DEALLOCATE( spline%f_aux, ierr )
        end if
     end if
@@ -1203,16 +1191,16 @@ contains  ! ****************************************************************
     ! given. This scheme allows to add more types of boundary conditions
     ! if necessary.
     bc_selector = 0
-    if( x1_bc_type .eq. PERIODIC_SPLINE ) then 
+    if( x1_bc_type .eq. SLL_PERIODIC ) then 
        bc_selector = bc_selector + 1
     end if
-    if( x1_bc_type .eq. HERMITE_SPLINE ) then
+    if( x1_bc_type .eq. SLL_HERMITE ) then
        bc_selector = bc_selector + 2
     end if
-    if( x2_bc_type .eq. PERIODIC_SPLINE ) then 
+    if( x2_bc_type .eq. SLL_PERIODIC ) then 
        bc_selector = bc_selector + 4
     end if
-    if( x2_bc_type .eq. HERMITE_SPLINE ) then
+    if( x2_bc_type .eq. SLL_HERMITE ) then
        bc_selector = bc_selector + 8
     end if
     select case (bc_selector)
@@ -1401,7 +1389,7 @@ contains  ! ****************************************************************
        FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes,compute_slopes_x2_min)
 
        ! Set the values of the slopes at x2_max
-       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
+       FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
 
     case default
        print *, 'ERROR: new_spline_2D(): ', &
@@ -1950,19 +1938,19 @@ contains  ! ****************************************************************
 
     ! We make every case explicit to facilitate adding more BC types in
     ! the future.
-    if( bc1 .eq. PERIODIC_SPLINE ) then 
+    if( bc1 .eq. SLL_PERIODIC ) then 
        bc_selector = bc_selector + 1
     end if
 
-    if( bc1 .eq. HERMITE_SPLINE ) then 
+    if( bc1 .eq. SLL_HERMITE ) then 
        bc_selector = bc_selector + 2
     end if
 
-    if( bc2 .eq. PERIODIC_SPLINE ) then 
+    if( bc2 .eq. SLL_PERIODIC ) then 
        bc_selector = bc_selector + 4
     end if
 
-    if( bc2 .eq. HERMITE_SPLINE ) then
+    if( bc2 .eq. SLL_HERMITE ) then
        bc_selector = bc_selector + 8
     end if
 
@@ -2072,16 +2060,16 @@ contains  ! ****************************************************************
     n1         = spline%num_pts_x1
     n2         = spline%num_pts_x2
     
-    if( bc1 .eq. PERIODIC_SPLINE ) then 
+    if( bc1 .eq. SLL_PERIODIC ) then 
       nt1 = n1-1
     end if
-    if( bc1 .eq. HERMITE_SPLINE ) then 
+    if( bc1 .eq. SLL_HERMITE ) then 
       nt1 = n1
     end if
-    if( bc2 .eq. PERIODIC_SPLINE ) then 
+    if( bc2 .eq. SLL_PERIODIC ) then 
       nt2 = n2-1
     end if
-    if( bc2 .eq. HERMITE_SPLINE ) then 
+    if( bc2 .eq. SLL_HERMITE ) then 
       nt2 = n2
     end if
 
@@ -2115,25 +2103,25 @@ contains  ! ****************************************************************
         cij = spline%coeffs(i1,i2)
       
         ! index depending on the BC 
-        if( bc1 .eq. PERIODIC_SPLINE ) then 
+        if( bc1 .eq. SLL_PERIODIC ) then 
           ipm1 = mod(cell1+n1-3,n1-1)+1
           ip   = mod(cell1+n1-2,n1-1)+1
           ipp1 = mod(cell1+n1-1,n1-1)+1
           ipp2 = mod(cell1+n1  ,n1-1)+1
         end if
-        if( bc1 .eq. HERMITE_SPLINE ) then 
+        if( bc1 .eq. SLL_HERMITE ) then 
           ipm1=cell1-1
           ip  =cell1
           ipp1=cell1+1
           ipp2=cell1+2
         end if
-        if( bc2 .eq. PERIODIC_SPLINE ) then 
+        if( bc2 .eq. SLL_PERIODIC ) then 
           jpm1 = mod(cell2+n2-3,n2-1)+1
           jp   = mod(cell2+n2-2,n2-1)+1
           jpp1 = mod(cell2+n2-1,n2-1)+1
           jpp2 = mod(cell2+n2  ,n2-1)+1
         end if
-        if( bc2 .eq. HERMITE_SPLINE ) then 
+        if( bc2 .eq. SLL_HERMITE ) then 
           jpm1=cell2-1
           jp  =cell2
           jpp1=cell2+1
@@ -2208,7 +2196,7 @@ contains  ! ****************************************************************
           end if
         end if
               
-        if (bc1.eq.HERMITE_SPLINE) then 
+        if (bc1.eq.SLL_HERMITE) then 
            if (i1.eq.1) then
               if (jpm1.ge.1) then
                  a_out(1,jpm1) = a_out(1,jpm1) + spline%coeffs(0,i2)/6._f64*svaly1
@@ -2236,7 +2224,7 @@ contains  ! ****************************************************************
           end if
         end if
       
-        if (bc2.eq.HERMITE_SPLINE) then 
+        if (bc2.eq.SLL_HERMITE) then 
           if (i2.eq.1) then
             if (ipm1.ge.1) then
               a_out(ipm1,1) = a_out(ipm1,1) + spline%coeffs(i1,0)/6._f64*svalx1
@@ -2267,10 +2255,10 @@ contains  ! ****************************************************************
       end do
     end do
     
-    if( bc1 .eq. PERIODIC_SPLINE ) then 
+    if( bc1 .eq. SLL_PERIODIC ) then 
       a_out(n1,:) = a_out(1,:)
     end if
-    if( bc2 .eq. PERIODIC_SPLINE ) then 
+    if( bc2 .eq. SLL_PERIODIC ) then 
       a_out(:,n2) = a_out(:,1)
     end if
     			 
