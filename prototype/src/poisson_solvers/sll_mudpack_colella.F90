@@ -74,10 +74,10 @@ jjey = ceiling(log((nny-1.)/jjyq)/log(2.))+1
 intl = 0
 
 ! set boundary condition flags
-nxa = 1
-nxb = 1
-nyc = 1
-nyd = 1
+nxa = 0
+nxb = 0
+nyc = 0
+nyd = 0
 
 ! set grid sizes from parameter statements
 ixp = iixp
@@ -108,7 +108,7 @@ this%mgopt(4) = 3
 maxcy = 3
 
 ! set no initial guess forcing full multigrid cycling
-iguess = 0
+iguess = 1
 
 ! set work space length approximation from parameter statement
 nwork = llwork
@@ -188,7 +188,7 @@ equivalence(xa,fprm)
 ! declare coefficient and boundary condition input subroutines external
 external coef,bnd
 
-iguess = 0
+iguess = 1
 icall  = 1
 intl   = 1
 write(*,106) intl,method,iguess
@@ -208,9 +208,253 @@ end subroutine solve_poisson_colella_mudpack
 end module sll_mudpack_colella
 
 
-<<<<<<< HEAD
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
+subroutine coef2(eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce)
+
+implicit none
+
+real(8):: eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce
+real(8) :: alpha,det,a11,a12,a21,a22,a11_eta1,a12_eta1
+real(8) :: a21_eta2,a22_eta2
+real(8) :: pi,dx_eta1,dx_eta2,dy_eta1,dy_eta2,xx,yy
+
+
+!! CHANGE HERE FOR COLELLA MESH
+pi = 3.1415926535897932385_8
+alpha=0.1_8
+
+xx = eta_1 + alpha * sin(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+yy = eta_2 + alpha * sin(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+
+dx_eta1 = 1 + alpha*2.0_8*pi*sin(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+dx_eta2 = alpha*2.0_8*pi*sin(2.0_8*pi*eta_1)*cos(2.0_8*pi*eta_2)
+dy_eta1 = alpha*2.0_8*pi*cos(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+dy_eta2 = 1+alpha*2.0_8*pi*sin(2.0_8*pi*eta_1)*cos(2.0_8*pi*eta_2)
+
+
+
+
+a11 = dx_eta2*dx_eta2 +  dy_eta2*dy_eta2  
+a11_eta1= 16*pi**3*alpha**2*sin(2*pi*eta_1)*cos(2*pi*eta_1)*cos(2*pi*eta_2)**2 + &
+        8*(2*pi*alpha*sin(2*pi*eta_1)*cos(2*pi*eta_2) +1)* &
+        pi**2*alpha*cos(2*pi*eta_1)*cos(2*pi*eta_2)
+
+
+
+a12 =  -(dx_eta1*dx_eta2 +  dy_eta1*dy_eta2) 
+a12 = a21
+a12_eta1= 8*pi**3*alpha**2*sin(2*pi*eta_1)**2*sin(2*pi*eta_2)*cos(2*pi*eta_2) - &
+       8*pi**3*alpha**2*sin(2*pi*eta_2)*cos(2*pi*eta_1)**2*cos(2*pi*eta_2) - &
+       4*(2*pi*alpha*sin(2*pi*eta_2)*cos(2*pi*eta_1) +1)* &
+       pi**2*alpha*cos(2*pi*eta_1)*cos(2*pi*eta_2) + &
+       4*(2*pi*alpha*sin(2*pi*eta_1)*cos(2*pi*eta_2) +1)* &
+       pi**2*alpha*sin(2*pi*eta_1)*sin(2*pi*eta_2)
+
+
+a21_eta2= 8*pi**3*alpha**2*sin(2*pi*eta_1)*sin(2*pi*eta_2)**2*cos(2*pi*eta_1) - &
+       8*pi**3*alpha**2*sin(2*pi*eta_1)*cos(2*pi*eta_1)*cos(2*pi*eta_2)**2 + &
+       4*(2*pi*alpha*sin(2*pi*eta_2)*cos(2*pi*eta_1) +1)* &
+       pi**2*alpha*sin(2*pi*eta_1)*sin(2*pi*eta_2) - &
+       4*(2*pi*alpha*sin(2*pi*eta_1)*cos(2*pi*eta_2) +1)* &
+       pi**2*alpha*cos(2*pi*eta_1)*cos(2*pi*eta_2)
+
+a22 = dx_eta1*dx_eta1 +  dy_eta1*dy_eta1 
+    
+a22_eta2 = 16*pi**3*alpha**2*sin(2*pi*eta_2)*cos(2*pi*eta_1)**2*cos(2*pi*eta_2) + &
+        8*(2*pi*alpha*sin(2*pi*eta_2)*cos(2*pi*eta_1) +1)* &
+        pi**2*alpha*cos(2*pi*eta_1)*cos(2*pi*eta_2)
+
+
+
+!det = a11*a22-a12*a21
+
+!det_x = a11_x * a22 + a11 * a22_x - 2.0_8 * a12_x * a12
+!det_y = a11_y * a22 + a11 * a22_y - 2.0_8 * a21_y * a21
+
+!a11 = a11/det
+!a22 = a22/det
+!a12 = -a12/det
+!a21 = -a21/det
+
+
+         
+cxx = -a11
+cyy = -a22
+cxy= -a12-a21
+cx  = -(a11_eta1+a21_eta2) 
+cy  = -(a12_eta1+a22_eta2)
+ce  = 0.0_8
+
+write(12,*) xx,yy,cxx,cyy
+
+
+return
+end subroutine
+
+subroutine coef(eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce)
+
+implicit none
+
+real(8):: eta_1,eta_2,cxx,cxy,cyy,cx,cy,ce
+real(8) :: alpha,det,a11,a12,a21,a22,a11_eta1,a12_eta1
+real(8) :: a21_eta2,a22_eta2
+real(8) :: pi,dx_eta1,dx_eta2,dy_eta1,dy_eta2,xx,yy
+real(8) :: expr1,expr2,expr3,expr4,expr5,mode
+
+!! CHANGE HERE FOR COLELLA MESH
+pi = 3.1415926535897932385_8
+alpha=0.1_8
+
+xx = eta_1 + alpha * sin(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+yy = eta_2 + alpha * sin(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+
+dx_eta1 = 1 + alpha*2.0_8*pi*sin(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+dx_eta2 = alpha*2.0_8*pi*sin(2.0_8*pi*eta_1)*cos(2.0_8*pi*eta_2)
+dy_eta1 = alpha*2.0_8*pi*cos(2.0_8*pi*eta_1)*sin(2.0_8*pi*eta_2)
+dy_eta2 = 1+alpha*2.0_8*pi*sin(2.0_8*pi*eta_1)*cos(2.0_8*pi*eta_2)
+
+
+
+
+!a11 = 0.0_8
+!a12 = cos(xx) * cos(yy)
+!a21 = cos(xx) * cos(yy)
+!a22 = 0.0_8
+
+
+mode = 2.0_8*pi
+expr1= alpha*sin(mode*eta_1)*sin(mode*eta_2)
+expr2= mode*alpha*cos(mode*eta_1)*sin(mode*eta_2)
+expr3= mode*alpha*sin(mode*eta_1)*cos(mode*eta_2)
+expr4= (1 + expr2)*(1 + expr3) - (alpha*mode)**2 *cos(mode*eta_1)* &
+        sin(mode*eta_2)*sin(mode*eta_1)*cos(mode*eta_2)
+expr5= expr4/(1 + expr3 + expr2)**2         
+         
+
+
+
+a11 = -( &
+       2*alpha*mode*(1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*sin(mode*eta_1)*cos(mode*eta_2) &        
+       /(1 + expr3 + expr2)**2 )
+       
+a12 = ((1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2) + (alpha*mode)**2 *&
+      sin(mode*eta_1)*cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*& 
+      cos(mode*eta_1)*sin(mode*eta_2))/(1 + expr3 + expr2)**2 
+      
+a21 = ((1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2) + (alpha*mode)**2 *&
+      sin(mode*eta_1)*cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*& 
+      cos(mode*eta_1)*sin(mode*eta_2))/(1 + expr3 + expr2)**2 
+      
+a22 =  -( &
+       2*alpha*mode*(1 + expr2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*sin(mode*eta_1)*cos(mode*eta_2) &        
+       /(1 + expr3 + expr2)**2 )
+
+a11 = expr4* a11 
+a12 = expr4* a12 
+a21 = expr4* a21 
+a22 = expr4* a22       
+       
+a11_eta1 = - 2*(-alpha*mode**2*sin(mode*eta_1)*sin(mode*eta_2)*(1 + expr3) + (1+expr2)*alpha*mode**2*cos(mode*eta_1)*cos(mode*eta_2) &
+             + (alpha**2)*(mode**3)*(sin(mode*eta_1)**2*sin(mode*eta_2)*cos(mode*eta_2)- &
+             cos(mode*eta_1)**2*sin(mode*eta_2)*cos(mode*eta_2))* &
+             alpha*mode*(1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*sin(mode*eta_1)*cos(mode*eta_2)&
+              /(1 + expr3 + expr2)**2 ) &
+              -2*expr5*mode**3*alpha**2*cos(mode*eta_1)*cos(mode*eta_2)**2*cos(eta_1+expr1)*cos(eta_2 +expr1)*sin(mode*eta_1) &
+              + 4*mode*alpha*expr5*(1+expr3)*cos(eta_1 +expr1)*cos(eta_2 + expr1)*sin(mode*eta_1)*cos(mode*eta_2)&
+              *(alpha*mode**2*(cos(mode*eta_1)*cos(mode*eta_2) - sin(mode*eta_1)*sin(mode*eta_2)))/(1 + expr3 + expr2) &
+              + 2*expr5*mode*alpha*(1 + expr3)*sin(eta_1 + expr1)*(1 + expr2)*cos(eta_2 + expr1)*sin(mode*eta_1)*cos(mode*eta_2) &
+              + 2*expr5*(mode*alpha)**2*(1 + expr3)*cos(eta_1 + expr1)*sin(eta_2 + expr1)*cos(mode*eta_1)*sin(mode*eta_2)*sin(mode*eta_1)*cos(mode*eta_2)&
+              - 2*expr5*mode**2*alpha*(1 + expr3)*cos(eta_1+expr1)*cos(eta_2+expr1)*cos(mode*eta_1)*cos(mode*eta_2)
+              
+a22_eta2 =-2*(alpha*cos(mode*eta_1)*mode**2 *cos(mode*eta_2)*(1 + expr3) - (1 + expr2)*alpha*sin(mode*eta_1)*mode**2 *sin(mode*eta_2) &
+          - alpha**2 *cos(mode*eta_1)* mode**3 *cos(mode*eta_2)**2*sin(mode*eta_1) + alpha**2 *cos(mode*eta_1)*mode**3*sin(mode*eta_2)**2*sin(mode*eta_1))*alpha* &
+           cos(mode*eta_1)*mode*sin(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2)/(1+expr3+expr2)**2 &
+          - 2 *expr5 *alpha *cos(mode*eta_1)*mode**2 *cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2) &
+          + 4 *expr5 *alpha *cos(mode*eta_1)*mode*sin(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2)  &              
+          *(alpha*cos(mode*eta_1)*mode**2 *cos(mode*eta_2) - alpha*sin(mode*eta_1)* mode**2 *sin(mode*eta_2))/(1+expr3+expr2)  &                                                                                               
+          + 2 *expr5 *alpha**2 *cos(mode*eta_1)*mode**2 *sin(mode*eta_2) *sin(eta_1 + expr1)*sin(mode*eta_1)*cos(mode*eta_2)*cos(eta_2 + expr1)*(1 + expr2) &
+          + 2 *expr5 *alpha*cos(mode*eta_1)*mode*sin(mode*eta_2)*cos(eta_1 + expr1)*sin(eta_2 + expr1)*(1 + expr3)*(1 + expr2) &    
+          - 2 *expr5 *alpha**2 *cos(mode*eta_1)**2 *mode**3 *sin(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*cos(mode*eta_2)
+  
+
+
+
+a21_eta2 = (alpha**2 *mode *cos(mode*eta_1)*cos(mode*eta_2)*(1 + expr3)-(1 + expr2)*mode* alpha**2 *sin(mode*eta_1)*sin(mode*eta_2) & 
+          - alpha**2 *cos(mode*eta_1)*mode**3 *cos(mode*eta_2)**2 *sin(mode*eta_1) + alpha**2 *cos(mode*eta_1)*mode**3*sin(mode*eta_2)**2*sin(mode*eta_1)) &
+          *((1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2)/(1 + expr3 + expr2)**2  &
+          + alpha**2*sin(mode*eta_1)*cos(mode*eta_2)*mode**2*cos(eta_1 + expr1)*cos(eta_2 + expr1)*cos(mode*eta_1)*sin(mode*eta_2)/(1 + expr3 + expr2)**2) &                                                                                                                                                                                   
+          +((1 + expr2)*(1 + expr3) - alpha**2*cos(mode*eta_1)*mode**2*sin(mode*eta_2)*sin(mode*eta_1)*cos(mode*eta_2))*( &                                                                                              
+         - alpha*sin(mode*eta_1)*mode**2 *sin(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2) - 2*(1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)&
+         *(1 + expr2)*(alpha*cos(mode*eta_1)*mode**2*cos(mode*eta_2) - alpha*sin(mode*eta_1)*mode**2*sin(mode*eta_2))/(1 + expr3 + expr2) &
+         -(1 + expr3)*sin(eta_1 + expr1)*alpha*sin(mode*eta_1)*cos(mode*eta_2)*mode*cos(eta_2 + expr1)*(1 + expr2) &
+         -(1 + expr3)**2*cos(eta_1 + expr1)*sin(eta_2 + expr1)*(1 + expr2) &
+         +(1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*alpha*cos(mode*eta_1)*mode**2*cos(mode*eta_2)&
+         - alpha**2*sin(mode*eta_1)*sin(mode*eta_2)**2*mode**3*cos(eta_1 + expr1)*cos(eta_2 + expr1)*cos(mode*eta_1) - 2*alpha**2*sin(mode*eta_1)&
+         *cos(mode*eta_2)*mode**2*cos(eta_1 + expr1)*cos(eta_2 + expr1)*cos(mode*eta_1)*sin(mode*eta_2)&
+         *(alpha*cos(mode*eta_1)*mode**2*cos(mode*eta_2) - alpha*sin(mode*eta_1)*mode**2*sin(mode*eta_2))/(1 + expr3 + expr2)&
+         - alpha**3*sin(mode*eta_1)**2 *cos(mode*eta_2)**2*mode**3*sin(eta_1 + expr1)*cos(eta_2 + expr1)*cos(mode*eta_1)*sin(mode*eta_2)&
+         - alpha**2*sin(mode*eta_1) *cos(mode*eta_2) *mode**2 *cos(eta_1 + expr1) *sin(eta_2 + expr1) *(1 + expr3) *cos(mode*eta_1)*sin(mode*eta_2)&
+         + alpha**2*sin(mode*eta_1) *cos(mode*eta_2)**2 *mode**3 *cos(eta_1 + expr1)*cos(eta_2 + expr1)*cos(mode*eta_1))/(1 + expr3 + expr2)**2
+     
+a12_eta1 =(-alpha*mode**2*sin(mode*eta_1)*sin(mode*eta_2)*(1 +expr3) + (1 + expr2)*alpha*mode**2*cos(mode*eta_1)*cos(mode*eta_2) &
+         + (alpha**2)*(mode**3)*(sin(mode*eta_1)**2*sin(mode*eta_2)*cos(mode*eta_2)- &
+         cos(mode*eta_1)**2*sin(mode*eta_2)*cos(mode*eta_2)))* &
+         ((1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 +expr2) &
+         + (alpha*mode)**2*sin(mode*eta_1)*cos(mode*eta_2)*cos(eta_1 +expr1)*cos(eta_2 +expr1)*cos(mode*eta_1)*sin(mode*eta_2) &
+         /(1 + expr3 + expr2)**2 ) &
+         +((1 + expr2)*(1 + expr3) -(alpha*mode)**2*cos(mode*eta_1)*sin(mode*eta_2)*sin(mode*eta_1)*cos(mode*eta_2)) &
+         *(alpha*cos(mode*eta_1)* mode**2 *cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*(1 + expr2)  &
+         - 2*(1 + expr3)*(1+expr2)*cos(eta_1 + expr1)*cos(eta_2 + expr1) &
+         *(alpha*mode**2*(cos(mode*eta_1)*cos(mode*eta_2) - sin(mode*eta_1)*sin(mode*eta_2)))/(1 + expr3 + expr2) &
+         -(1 + expr3)*sin(eta_1 + expr1)*(1 + expr2)**2 *cos(eta_2 + expr1) &
+         -(1 + expr3)*cos(eta_1 + expr1)*sin(eta_2 + expr1)*alpha*cos(mode*eta_1)*mode*sin(mode*eta_2)*(1 + expr2) &
+         -(1 + expr3)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*alpha*sin(mode*eta_1)*mode**2*sin(mode*eta_2) &
+         +alpha**2*mode**3 *cos(mode*eta_1)**2*cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 +expr1)*sin(mode*eta_2) &
+         - 2*(mode*alpha)**2* sin(mode*eta_1)*cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 +expr1)*cos(mode*eta_1)*sin(mode*eta_2)&
+         *(alpha*mode**2*(cos(mode*eta_1)*cos(mode*eta_2) - sin(mode*eta_1)*sin(mode*eta_2)))/(1 + expr3 + expr2) &
+         -(mode*alpha)**2*sin(mode*eta_1)*cos(mode*eta_2)*sin(eta_1 + expr1)*(1 + expr2)*cos(eta_2 + expr1)*cos(mode*eta_1)*sin(mode*eta_2) &
+         -(mode*alpha)**3*sin(mode*eta_1)*cos(mode*eta_2)*cos(eta_1 + expr1)*sin(eta_2 + expr1)*cos(mode*eta_1)**2 *sin(mode*eta_2)**2 &
+         -alpha**2*mode**3* sin(mode*eta_1)**2 *cos(mode*eta_2)*cos(eta_1 + expr1)*cos(eta_2 + expr1)*sin(mode*eta_2) &
+         )/(1 + expr3 + expr2)**2
+         
+cxx = -a11
+cyy = -a22
+cxy= -a12-a21
+cx  = -(a11_eta1+a21_eta2) 
+cy  = -(a12_eta1+a22_eta2)
+ce  = expr4*4.0_8*sin(xx)*sin(yy)
+write(12,*) xx,yy,cxx*cyy
+return
+end subroutine
+
+
+!> at upper y boundary
+subroutine bnd(kbdy,xory,alfa,beta,gama,gbdy)
+implicit none
+integer  :: kbdy
+real(8)  :: xory,alfa,beta,gama,gbdy
+
+ !!Set bounday condition value
+
+!if (kbdy.eq.2) then
+
+   !! x=xb boundary.
+   !! b.c. has the form alfyd(x)*px+betyd(x)*py+gamyd(x)*pe = gbdyd(x)
+   !! where xory = x.   alfa,beta,gama,gbdy corresponding to alfyd(x),
+   !! betyd(x),gamyd(x),gbdyd(y) must be output.
+
+  ! alfa = 0.0
+  ! beta = 0.0
+  ! gama = 1.0
+  ! gbdy = 1.0
+
+!end if
+
+return
+end subroutine
+
+
 !subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
 !
 !implicit none
@@ -218,41 +462,70 @@ end module sll_mudpack_colella
 !real(8):: x,y,cxx,cxy,cyy,cx,cy,ce
 !real(8) :: alpha,det,a11,a12,a21,a22,a11_x,a11_y,a12_x
 !real(8) :: a21_y,a22_x,a22_y,det_x,det_y
-!real(8) :: sll_pi
+!real(8) :: x_min,x_max,y_min,y_max,xx,yy,sll_pi
 !
 !!! CHANGE HERE FOR COLELLA MESH
 !sll_pi = 3.14159265359
 !alpha=0.0_8
+!x_min=0.0_8
+!x_max=2.0_8 * sll_pi
+!y_min=0.0_8
+!y_max=2.0_8 * sll_pi
 !
-!xx = x + alpha * sin(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
-!yy = y + alpha * sin(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
+!xx = (x-x_min)/(x_max-x_min)
+!yy = (y-y_min)/(y_max-y_min)
 !
-!xx_x = 1 + alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
-!xx_y = alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*x)*cos(2.0_8*sll_pi*y)
-!yy_x = alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*x)*sin(2.0_8*sll_pi*y)
-!yy_y = 1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*x)*cos(2.0_8*sll_pi*y)
-!
-!
-!
-!
-!
-!a11 = 
+!a11 = (alpha*2*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2*sll_pi*yy)/(y_max-y_min))**2 & 
+!    & + (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))**2
 !    
-!a11_x= 
+!a11_x= 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+!      &(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+!      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+!      & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
 !
-!a11_y= 
+!a11_y= 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+!      &(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+!      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
+!      & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
 !    
-!a12 = 
-!a12_x= 
+!a12 = (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))* &
+!    & (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))+ &
+!    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))* &
+!    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))
+!    
+!a12_x= -( alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)*(2.0_8*sll_pi/(x_max-x_min))**2)* &
+!    & (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
+!    & (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+!    & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2*sll_pi)**2/((x_max-x_min)*(y_max-y_min))- &
+!    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)*(2.0_8*sll_pi/(x_max-x_min))**2)* &
+!    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
+!    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+!    & ( alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2.0_8/((x_max-x_min)*(y_max-y_min))  
+!
 !a21 = a12
 !
-!a21_y=
+!a21_y=-(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))* &
+!    &  (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))+ &
+!    & (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+!    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy))*(2.0_8*sll_pi/(y_max-y_min))**2- &
+!    & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))* &
+!    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
+!    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
+!    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy))*(2.0_8*sll_pi/(y_max-y_min))**2
 !
-!a22 = 
+!a22 = (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))**2 & 
+!    & + (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))**2
 !    
-!a22_x =
-!a22_y = 
-!
+!a22_x = 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
+!      &(alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+!      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2*sll_pi*yy)*cos(2*sll_pi*xx)/(x_max-x_min))* &
+!      & (alpha*cos(2*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
+!    
+!a22_y = 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
+!      &(alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
+!      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
+!      & (alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))   
+!    
 !det = a11*a22-a12*a21
 !
 !det_x = a11_x * a22 + a11 * a22_x - 2.0_8 * a12_x * a12
@@ -279,126 +552,3 @@ end module sll_mudpack_colella
 !
 !return
 !end subroutine
-!subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
-
-implicit none
-
-real(8):: x,y,cxx,cxy,cyy,cx,cy,ce
-real(8) :: alpha,det,a11,a12,a21,a22,a11_x,a11_y,a12_x
-real(8) :: a21_y,a22_x,a22_y,det_x,det_y
-real(8) :: x_min,x_max,y_min,y_max,xx,yy,sll_pi
-
-!! CHANGE HERE FOR COLELLA MESH
-sll_pi = 3.14159265359
-alpha=0.0_8
-x_min=0.0_8
-x_max=2.0_8 * sll_pi
-y_min=0.0_8
-y_max=2.0_8 * sll_pi
-
-xx = (x-x_min)/(x_max-x_min)
-yy = (y-y_min)/(y_max-y_min)
-
-a11 = (alpha*2*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2*sll_pi*yy)/(y_max-y_min))**2 & 
-    & + (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))**2
-    
-a11_x= 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
-      &(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
-      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
-      & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
-
-a11_y= 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
-      &(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
-      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))* &
-      & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
-    
-a12 = (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))* &
-    & (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))+ &
-    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))* &
-    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))
-    
-a12_x= -( alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)*(2.0_8*sll_pi/(x_max-x_min))**2)* &
-    & (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
-    & (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
-    & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2*sll_pi)**2/((x_max-x_min)*(y_max-y_min))- &
-    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)*(2.0_8*sll_pi/(x_max-x_min))**2)* &
-    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
-    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
-    & ( alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2.0_8/((x_max-x_min)*(y_max-y_min))  
-
-a21 = a12
-
-a21_y=-(alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))* &
-    &  (alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min))+ &
-    & (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
-    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy))*(2.0_8*sll_pi/(y_max-y_min))**2- &
-    & (alpha*cos(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))* &
-    & (1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*xx)*cos(2.0_8*sll_pi*yy)/(y_max-y_min)) + &
-    & (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min)) * &
-    & (alpha*sin(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy))*(2.0_8*sll_pi/(y_max-y_min))**2
-
-a22 = (1+alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))**2 & 
-    & + (alpha*2.0_8*sll_pi*cos(2.0_8*sll_pi*xx)*sin(2.0_8*sll_pi*yy)/(x_max-x_min))**2
-    
-a22_x = 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
-      &(alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
-      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2*sll_pi*yy)*cos(2*sll_pi*xx)/(x_max-x_min))* &
-      & (alpha*cos(2*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))
-    
-a22_y = 2.0_8*(alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
-      &(alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min)) + &
-      & 2.0_8*(1+alpha*2.0_8*sll_pi*sin(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx)/(x_max-x_min))* &
-      & (alpha*cos(2.0_8*sll_pi*yy)*cos(2.0_8*sll_pi*xx))*(2.0_8*sll_pi)**2/((x_max-x_min)*(y_max-y_min))   
-    
-det = a11*a22-a12*a21
-
-det_x = a11_x * a22 + a11 * a22_x - 2.0_8 * a12_x * a12
-
-det_y = a11_y * a22 + a11 * a22_y - 2.0_8 * a21_y * a21
-
-a11 = a11/det
-a22 = a22/det
-a12 = -a12/det
-a21 = -a21/det
-
-a11_x = (a11_x*det - a11 * det_x)/det**2
-a12_x =-(a12_x*det - a12 * det_x)/det**2
-a21_y =-(a21_y*det - a21 * det_y)/det**2
-a22_y = (a22_y*det - a22 * det_y)/det**2
-
-cxx = -a11
-cyy = -a22
-cxy= -a12-a21
-cx  = -(a11_x+a21_y) 
-cy  = -(a12_x+a22_y)
-ce  = 0.0_8
-
-
-return
-end subroutine
-
-!> at upper y boundary
-subroutine bnd(kbdy,xory,alfa,beta,gama,gbdy)
-implicit none
-integer  :: kbdy
-real(8)  :: xory,alfa,beta,gama,gbdy
-
-!! Set bounday condition value
-if (kbdy.eq.2) then
-
-   ! x=xb boundary.
-   ! b.c. has the form alfyd(x)*px+betyd(x)*py+gamyd(x)*pe = gbdyd(x)
-   ! where xory = x.   alfa,beta,gama,gbdy corresponding to alfyd(x),
-   ! betyd(x),gamyd(x),gbdyd(y) must be output.
-
-   alfa = 1.0
-   beta = 0.0
-   gama = 0.0
-   gbdy = 0.0
-
-end if
-
-return
-end subroutine
-=======
->>>>>>> origin/prototype-devel
