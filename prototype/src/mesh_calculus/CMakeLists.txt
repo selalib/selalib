@@ -2,6 +2,7 @@ ADD_LIBRARY(sll_mesh_calculus STATIC sll_mesh_calculus_module.F90 )
 
 ADD_DEPENDENCIES(sll_mesh_calculus
   sll_coordinate_transformations
+  sll_file_io
   sll_logical_meshes
   sll_integration
   sll_assertion

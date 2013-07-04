@@ -66,8 +66,11 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32,dimension(:),pointer  :: prof
      sll_int32,dimension(:),pointer  :: mkld
      sll_int32 :: nsky
+     sll_real64, dimension(:),pointer  :: M_diag,M_low,M_sup
+     sll_real64, dimension(:),pointer  :: Av1_diag,Av1_low,Av1_sup
+     sll_real64, dimension(:),pointer  :: Av2_diag,Av2_low,Av2_sup
      sll_real64, dimension(:),pointer  :: Bv1_diag,Bv1_low,Bv1_sup
-
+     sll_real64, dimension(:),pointer  :: Bv2_diag,Bv2_low,Bv2_sup
      ! distribution functions at time steps n, star and n+1 
      ! communications are needed only in the x3 direction
      sll_real64, dimension(:,:,:,:), pointer     :: fn_v1v2x1
@@ -415,8 +418,8 @@ contains
        end do
     end do
 
-    write(*,*) 'vertical',sim%my_rank,sum(surfx1(1,:))
-    write(*,*) 'horizontal',sim%my_rank,sum(surfx2(1,:))
+    !write(*,*) 'vertical',sim%my_rank,sum(surfx1(1,:))
+    !write(*,*) 'horizontal',sim%my_rank,sum(surfx2(1,:))
 
 
    ! time loop
@@ -519,7 +522,8 @@ contains
     sll_real64 :: det
     sll_real64 :: phi1,phi2,dphi1(2),dphi2(2),dphi1ref(2),dphi2ref(2)
     sll_real64,dimension(2,2) :: jacob,invjacob
-    sll_real64,dimension(:,:),allocatable :: matloc,lag,dlag
+    sll_real64,dimension(:,:),allocatable :: lag,dlag
+    sll_real64,dimension(:,:),allocatable :: mloc,av1loc,av2loc,bv1loc,bv2loc
     sll_real64,dimension(:),allocatable :: gauss,weight
     sll_int32 :: ll,ib1,ib2,jb1,jb2
 
@@ -602,13 +606,45 @@ contains
 
     sim%nsky=sim%mkld(sim%np_v1*sim%np_v2+1)-1
 
+    SLL_ALLOCATE(sim%M_low(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%M_sup(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%M_diag(sim%np_v1*sim%np_v2),ierr)
+
+    SLL_ALLOCATE(sim%Av1_low(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Av1_sup(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Av1_diag(sim%np_v1*sim%np_v2),ierr)
+
+    SLL_ALLOCATE(sim%Av2_low(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Av2_sup(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Av2_diag(sim%np_v1*sim%np_v2),ierr)
+
     SLL_ALLOCATE(sim%Bv1_low(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Bv1_sup(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Bv1_diag(sim%np_v1*sim%np_v2),ierr)
 
+    SLL_ALLOCATE(sim%Bv2_low(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Bv2_sup(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%Bv2_diag(sim%np_v1*sim%np_v2),ierr)
+
+    sim%M_low=0
+    sim%M_sup=0
+    sim%M_diag=0
+
+    sim%Av1_low=0
+    sim%Av1_sup=0
+    sim%Av1_diag=0
+
+    sim%Av2_low=0
+    sim%Av2_sup=0
+    sim%Av2_diag=0
+
     sim%Bv1_low=0
     sim%Bv1_sup=0
     sim%Bv1_diag=0
+
+    sim%Bv2_low=0
+    sim%Bv2_sup=0
+    sim%Bv2_diag=0
     
 
 
@@ -622,8 +658,11 @@ contains
     SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
     SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
 
-    SLL_ALLOCATE(matloc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
-
+    SLL_ALLOCATE(mloc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
+    SLL_ALLOCATE(av1loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
+    SLL_ALLOCATE(av2loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
+    SLL_ALLOCATE(bv1loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
+    SLL_ALLOCATE(bv2loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     call lag_gauss(sim%degree,gauss,weight,lag,dlag)
 
 
@@ -632,7 +671,11 @@ contains
     ! loop on the cells
     do ic=0,sim%nc_v1-1
        do jc=0,sim%nc_v2-1
-          matloc=0
+          mloc=0
+          av1loc=0
+          av2loc=0
+          bv1loc=0
+          bv2loc=0
           ! loop on the points
           ! loop on the Gauss points
           do iploc=0,sim%degree
@@ -641,7 +684,7 @@ contains
                      (ic+gauss(iploc+1))*sim%mesh2dv%delta_eta1
                 yref=sim%mesh2dv%eta2_min+ &
                      (jc+gauss(jploc+1))*sim%mesh2dv%delta_eta2
-                write(*,*) 'xref,yref=',xref,yref
+               ! write(*,*) 'xref,yref=',xref,yref
                 jacob=sim%tv%jacobian_matrix(xref,yref)
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
                 det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
@@ -668,9 +711,21 @@ contains
                             dphi1(2)=dphi1ref(1)*invjacob(1,2)+dphi1ref(2)*invjacob(2,2)
                             dphi2(1)=dphi2ref(1)*invjacob(1,1)+dphi2ref(2)*invjacob(2,1)
                             dphi2(2)=dphi2ref(1)*invjacob(1,2)+dphi2ref(2)*invjacob(2,2)
-                            matloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
-                                 matloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                                dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1)                     
+                            mloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+                                 mloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+                                phi1*phi2*det*weight(iploc+1)*weight(jploc+1)
+                            av1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+                                 av1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+                                 sim%tv%x1(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
+                            av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+                                 av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+                                 sim%tv%x2(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
+                            bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+                                 bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+                                dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1)  
+                            bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+                                 bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+                                dphi1(2)*phi2*det*weight(iploc+1)*weight(jploc+1)                    
                          end do
                       end do
                    end do
@@ -680,7 +735,7 @@ contains
           end do
 
 !!$          do ii=1,(sim%degree+1)**2
-!!$             write(*,*) 'matloc=',matloc(ii,:)
+!!$             write(*,*) 'bv1loc=',bv1loc(ii,:)
 !!$          end do
              
           do ii=1,(sim%degree+1)**2
@@ -689,13 +744,25 @@ contains
                 j=sim%connec(jj,jc*sim%nc_v1+ic+1)
                 !if (cal.eq.1) then
                 if (i.eq.j) then
-                   sim%Bv1_diag(i)=sim%Bv1_diag(i)+matloc(ii,jj)
+                   sim%M_diag(i)=sim%M_diag(i)+mloc(ii,jj)
+                   sim%Av1_diag(i)=sim%Av1_diag(i)+av1loc(ii,jj)
+                   sim%Av2_diag(i)=sim%Av2_diag(i)+av2loc(ii,jj)
+                   sim%Bv1_diag(i)=sim%Bv1_diag(i)+bv1loc(ii,jj)
+                   sim%Bv2_diag(i)=sim%Bv2_diag(i)+bv2loc(ii,jj)
                 else if (j.gt.i) then
                    ll=sim%mkld(j+1)-j+i
-                   sim%Bv1_sup(ll)=sim%Bv1_sup(ll)+matloc(ii,jj)
+                   sim%M_sup(ll)=sim%M_sup(ll)+mloc(ii,jj)
+                   sim%Av1_sup(ll)=sim%Av1_sup(ll)+av1loc(ii,jj)
+                   sim%Av2_sup(ll)=sim%Av2_sup(ll)+av2loc(ii,jj)
+                   sim%Bv1_sup(ll)=sim%Bv1_sup(ll)+bv1loc(ii,jj)
+                   sim%Bv2_sup(ll)=sim%Bv2_sup(ll)+bv2loc(ii,jj)
                 else
                    ll=sim%mkld(i+1)-i+j
-                   sim%Bv1_low(ll)=sim%Bv1_low(ll)+matloc(ii,jj)
+                   sim%M_low(ll)=sim%M_low(ll)+mloc(ii,jj)
+                   sim%Av1_low(ll)=sim%Av1_low(ll)+av1loc(ii,jj)
+                   sim%Av2_low(ll)=sim%Av2_low(ll)+av1loc(ii,jj)
+                   sim%Bv1_low(ll)=sim%Bv1_low(ll)+bv1loc(ii,jj)
+                   sim%Bv2_low(ll)=sim%Bv2_low(ll)+bv2loc(ii,jj)
                 end if
              end do
           end do
@@ -704,10 +771,23 @@ contains
        end do
     end do
 
-    write(*,*) 'Bdiag=',sim%Bv1_diag
-!!$    write(*,*) 'Bsup=',sim%Bv1_sup
-!!$    write(*,*) 'Blow=',sim%Bv1_low
-!!$    stop
+!!$    write(*,*) 'Mdiag=',sim%Bv1_diag
+!!$    write(*,*) 'Msup=',sim%Bv1_sup
+!!$    write(*,*) 'Mlow=',sim%Bv1_low
+    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
+    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
+  !  stop
+    SLL_DEALLOCATE_ARRAY(mloc,ierr)
+    SLL_DEALLOCATE_ARRAY(av1loc,ierr)
+    SLL_DEALLOCATE_ARRAY(av2loc,ierr)
+    SLL_DEALLOCATE_ARRAY(bv1loc,ierr)
+    SLL_DEALLOCATE_ARRAY(bv2loc,ierr)
+
+!!$    deallocate(mloc)
+!!$    deallocate(av1loc)
+!!$    deallocate(av2loc)
+!!$    deallocate(bv1loc)
+!!$    deallocate(bv2loc)
     
   end subroutine velocity_mesh_connectivity
 
