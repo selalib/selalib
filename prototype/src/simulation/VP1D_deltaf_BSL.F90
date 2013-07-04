@@ -230,8 +230,8 @@ program VP1d_deltaf
   end if
 
   ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
   !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
 
