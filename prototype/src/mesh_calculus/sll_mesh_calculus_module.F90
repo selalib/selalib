@@ -10,23 +10,10 @@ module sll_mesh_calculus_2d_module
   ! --------------------------------------------------------------------------
   !
   ! The mesh calculus module aims at providing the means of computing
-  ! quantities like edge-lengths, areas and volumes of cell elements in 
-  ! a deformed mesh.
+  ! quantities like edge-lengths, areas, volumes and normals of cell elements 
+  ! in a deformed mesh.
   !
   ! --------------------------------------------------------------------------
-
-  ! Try first a module without a native type since all information is 
-  ! contained in a coordinate transformation... does this imply that these
-  ! should be methods of the coordinate transformation type? Probably, but
-  ! not necessarily if this module behaves exclusively as a client of the
-  ! coordinate transformation module.
-
-!!$  type :: sll_mesh_calculus_2d
-!!$      class(sll_coordinate_transformation_2d_base), pointer :: T
-!!$   contains
-!!$     procedure, pass(obj) :: cell_volume => cell_vol
-!!$  end type sll_mesh_calculus_2d
-
 
 contains
 
@@ -335,10 +322,10 @@ contains
   ! integral of the normal vector over the 'east' edge of the cell.
   function normal_integral_eta1_plus( T,ic,jc,integration_degree ) result(res)
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    sll_int32, intent(in) :: ic
-    sll_int32, intent(in) :: jc
-    sll_int32, intent(in) :: integration_degree
-    sll_real64            :: res
+    sll_int32, intent(in)     :: ic
+    sll_int32, intent(in)     :: jc
+    sll_int32, intent(in)     :: integration_degree
+    sll_real64, dimension(2)  :: res
 
     sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
