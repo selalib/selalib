@@ -1,4 +1,4 @@
-IF(FFTW_FOUND)
+IF(FFTW_FOUND AND FFTW_ENABLED)
 
    ADD_LIBRARY(sll_maxwell_solvers STATIC sll_maxwell_solvers.F90
                                           sll_maxwell_2d_fdtd.F90
@@ -18,7 +18,7 @@ ELSE()
    ADD_LIBRARY(sll_maxwell_solvers STATIC sll_maxwell_solvers.F90 
                                           sll_maxwell_2d_fdtd.F90)
 
-ENDIF(FFTW_FOUND)
+ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 
