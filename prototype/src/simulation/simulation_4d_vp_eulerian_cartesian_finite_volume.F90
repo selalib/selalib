@@ -66,6 +66,9 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32,dimension(:),pointer  :: prof
      sll_int32,dimension(:),pointer  :: mkld
      sll_int32 :: nsky
+    ! volumes of the cells and surfaces of the faces
+     sll_real64,dimension(:,:),allocatable :: volume
+     sll_real64,dimension(:,:),allocatable :: surfx1,surfx2
      sll_real64, dimension(:),pointer  :: M_diag,M_low,M_sup
      sll_real64, dimension(:),pointer  :: Av1_diag,Av1_low,Av1_sup
      sll_real64, dimension(:),pointer  :: Av2_diag,Av2_low,Av2_sup
@@ -75,7 +78,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      ! communications are needed only in the x3 direction
      sll_real64, dimension(:,:,:,:), pointer     :: fn_v1v2x1
      sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2x1
-     sll_real64, dimension(:,:,:,:), pointer     :: fstar_v1v2x1
+     sll_real64, dimension(:,:,:,:), pointer     :: dtfn_v1v2x1
      ! charge density
      sll_real64, dimension(:,:), allocatable     :: rho_x1,Ex_x1,Ey_x1
      ! potential 
@@ -186,7 +189,7 @@ contains
     sll_int32  :: ranktop
     sll_int32  :: rankbottom
     sll_int32  :: message_id
-    sll_int32  :: datasize
+    sll_int32  :: datasize,datasizephi
     sll_int32  :: istat
     sll_int32  :: tagtop,tagbottom
     sll_int32  :: ic
@@ -194,9 +197,6 @@ contains
     
     sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
     sll_real64 :: t
-    ! volumes of the cells and surfaces of the faces
-    sll_real64,dimension(:,:),allocatable :: volume
-    sll_real64,dimension(:,:),allocatable :: surfx1,surfx2
     sll_int32,dimension(4)  :: global_indices
 
     sim%world_size = sll_get_collective_size(sll_world_collective)  
@@ -275,7 +275,7 @@ contains
     ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
     SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
-    SLL_ALLOCATE(sim%fstar_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
+    SLL_ALLOCATE(sim%dtfn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     
     
     
@@ -367,16 +367,17 @@ contains
     if (rankbottom.lt.0) rankbottom=sim%world_size-1
     message_id=1
     datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
+    datasizephi=loc_sz_x1
     tagtop=sim%my_rank
     tagbottom=ranktop
 
 
     ! init the volume and surface arrays
-    SLL_ALLOCATE(volume(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%volume(loc_sz_x1,loc_sz_x2),ierr)
     ! vertical edges 
-    SLL_ALLOCATE(surfx1(loc_sz_x1+1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%surfx1(loc_sz_x1+1,loc_sz_x2),ierr)
     ! horizontal edges 
-    SLL_ALLOCATE(surfx2(loc_sz_x1,loc_sz_x2+1),ierr)
+    SLL_ALLOCATE(sim%surfx2(loc_sz_x1,loc_sz_x2+1),ierr)
     
 
 !!$    ! simple computation
@@ -390,7 +391,7 @@ contains
        do i=1,loc_sz_x1
           ic=i+global_indices(3)-1
           jc=j+global_indices(4)-1
-          volume(i,j)=cell_volume( sim%tx, ic, jc,3)          
+          sim%volume(i,j)=cell_volume( sim%tx, ic, jc,3)          
        end do
     end do
 !!$    surface(1:loc_sz_x1*loc_sz_x2)= &
@@ -401,25 +402,25 @@ contains
     do j=1,loc_sz_x2
        ic=1+global_indices(3)-1
        jc=j+global_indices(4)-1  
-       surfx1(1,j)=edge_length_eta1_minus( sim%tx, ic, jc,3)      
+       sim%surfx1(1,j)=edge_length_eta1_minus( sim%tx, ic, jc,3)      
        do i=1,loc_sz_x1
           ic=i+global_indices(3)-1
-          surfx1(i+1,j)=edge_length_eta1_plus( sim%tx, ic, jc,3)  
+          sim%surfx1(i+1,j)=edge_length_eta1_plus( sim%tx, ic, jc,3)  
        end do
     end do
 
     do i=1,loc_sz_x1
        ic=i+global_indices(3)-1
        jc=1+global_indices(4)-1  
-       surfx2(i,1)=edge_length_eta2_minus( sim%tx, ic, jc,3)      
+       sim%surfx2(i,1)=edge_length_eta2_minus( sim%tx, ic, jc,3)      
        do j=1,loc_sz_x2
           jc=j+global_indices(4)-1
-          surfx2(i,j+1)=edge_length_eta2_plus( sim%tx, ic, jc,3)  
+          sim%surfx2(i,j+1)=edge_length_eta2_plus( sim%tx, ic, jc,3)  
        end do
     end do
 
-    !write(*,*) 'vertical',sim%my_rank,sum(surfx1(1,:))
-    !write(*,*) 'horizontal',sim%my_rank,sum(surfx2(1,:))
+    !write(*,*) 'vertical',sim%my_rank,sum(sim%surfx1(1,:))
+    !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
 
 
    ! time loop
@@ -435,6 +436,12 @@ contains
            MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
            MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
 
+      Call mpi_SENDRECV(sim%phi_x1(1,loc_sz_x2),datasizephi, &
+           MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+           sim%phi_x1(1,0),datasizephi,            &
+           MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+
       ! bottom communications
       Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
            MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
@@ -442,30 +449,15 @@ contains
            MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
            MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
 
-      sim%fstar_v1v2x1=sim%fn_v1v2x1
+      Call mpi_SENDRECV(sim%phi_x1(1,1),datasizephi, &
+           MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+           sim%phi_x1(1,loc_sz_x2+1),datasizephi,            &
+           MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
 
-!!$      ! loop on the directions
-!!$      do dir=1,3
-!!$         ! loop on the face in the direction
-!!$         do iface=1,facedir(dir)
+      call dtf(sim)
 
 
-!!$      ! counter for the face 
-!!$      isurf=1
-!!$      ! fluxes in the x1 direction
-!!$      do k=1,loc_sz_x2
-!!$         do l=1,loc_sz_x3
-!!$            do j=1,loc_sz_x1
-!!$               jp1=j+1
-!!$               if (jp1.gt.loc_sz_x1) jp1=1
-!!$               call fluxnum(fn(1,j,k,l),fn(1,jp1,k,l),flux)
-!!$               surf=surface(isurf)
-!!$               isurf=isurf+1
-!!$               fstar(:,j,k,l)=fstar(:,j,k,l)-dt*surf/volume(j,k,l)*flux(:)
-!!$               fstar(:,jp1,k,l)=fstar(:,jp1,k,l)+dt*surf/volume(jp1,k,l)*flux(:)
-!!$            end do
-!!$         end do
-!!$      end do
    end do
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
@@ -525,6 +517,8 @@ contains
     sll_real64,dimension(:,:),allocatable :: lag,dlag
     sll_real64,dimension(:,:),allocatable :: mloc,av1loc,av2loc,bv1loc,bv2loc
     sll_real64,dimension(:),allocatable :: gauss,weight
+    sll_real64 :: void  ! only for a valid address
+    sll_int32 :: ifac,isol,nsym,mp
     sll_int32 :: ll,ib1,ib2,jb1,jb2
 
     SLL_ALLOCATE(sim%interp_pts_1D(sim%degree+1),ierr)
@@ -774,9 +768,22 @@ contains
 !!$    write(*,*) 'Mdiag=',sim%Bv1_diag
 !!$    write(*,*) 'Msup=',sim%Bv1_sup
 !!$    write(*,*) 'Mlow=',sim%Bv1_low
-    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
-    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
+!!$    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
+!!$    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
   !  stop
+
+    ! LU decomposition of M
+    ifac=1  ! we compute the LU decomposition
+    isol=0  ! we do not solve the linear system
+    nsym=1  ! we do not take into account the symetry of M
+    mp=6   ! write the log on screen
+
+    call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
+         sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
+         sim%nsky)
+    
+
+
     SLL_DEALLOCATE_ARRAY(mloc,ierr)
     SLL_DEALLOCATE_ARRAY(av1loc,ierr)
     SLL_DEALLOCATE_ARRAY(av2loc,ierr)
@@ -796,7 +803,7 @@ contains
     sll_int32 :: ierr
     SLL_DEALLOCATE( sim%fn_v1v2x1, ierr )
     SLL_DEALLOCATE( sim%fnp1_v1v2x1, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%fstar_v1v2x1, ierr )
+    SLL_DEALLOCATE_ARRAY( sim%dtfn_v1v2x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
     call delete( sim%sequential_v1v2x1 )
@@ -1131,5 +1138,152 @@ contains
 
 
   end subroutine lag_gauss
+
+
+  subroutine sourcenum(sim,Ex,Ey,w,source)
+    
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim   
+    sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: w
+    sll_real64,intent(in)  :: Ex,Ey
+    sll_real64,dimension(:,:),intent(out) :: source
+
+    sll_real64,dimension(:,:),allocatable :: source1,source2
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(source1(sim%np_v1,sim%np_v2),ierr)
+    SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
+
+
+    source1=0
+    source2=0
+    
+    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
+         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+    call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
+         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+
+    source=Ex*source1+Ey*source2
+
+
+    SLL_DEALLOCATE_ARRAY(source1,ierr)
+    SLL_DEALLOCATE_ARRAY(source2,ierr)
+
+  end subroutine sourcenum
+
+  subroutine fluxnum(sim,wL,wR,vn,flux)
+    
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim   
+    sll_real64,dimension(2),intent(in) :: vn
+    sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: wL,wR
+    sll_real64,dimension(sim%np_v1*sim%np_v2),intent(out) :: flux
+
+    sll_real64,dimension(sim%np_v1*sim%np_v2) :: flux1,flux2
+    sll_real64,dimension(sim%np_v1*sim%np_v2) :: wm
+    sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
+
+    sll_real64   :: eps=0.01
+
+    wm=(wL+wR)/2
+
+    flux1=0
+    flux2=0
+    
+    call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
+         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
+    call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
+         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
+
+    flux=vn(1)*flux1+vn(2)*flux2-eps/2*(wR-wL)
+
+
+  end subroutine fluxnum
+
+  ! time derivative of f
+  subroutine dtf(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+    
+    sll_int32  :: loc_sz_x1
+    sll_int32  :: loc_sz_x2
+    sll_int32  :: ierr,ifac,isol,nsym,mp
+    sll_real64 :: void,Ex,Ey,vn(2)
+    sll_int32 :: ic,jc,icL,icR,jcL,jcR
+
+    sll_real64,dimension(:,:),allocatable  :: temp,flux,source
+
+    SLL_ALLOCATE(flux(sim%np_v1,sim%np_v2),ierr)
+    SLL_ALLOCATE(temp(sim%np_v1,sim%np_v2),ierr)
+    SLL_ALLOCATE(source(sim%np_v1,sim%np_v2),ierr)
+
+        ! LU decomposition of M
+    ifac=0  ! we do not compute the LU decomposition
+    isol=1  ! we do solve the linear system
+    nsym=0  ! we do not take into account the symetry of M
+    mp=6   ! write the log on screen
+
+    
+    call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
+    ! init
+    sim%dtfn_v1v2x1=0
+
+    !compute the fluxes in the x1 direction
+    vn(1)=1*sim%surfx1(1,1) ! temporaire !!!!
+    vn(2)=0
+    do jc=1,loc_sz_x2
+       do ic=0,loc_sz_x1-1
+          icL=ic
+          if (icL.le.0) icL=loc_sz_x1
+          icR=ic+1
+          call fluxnum(sim,sim%fn_v1v2x1(:,:,icL,jc), &
+               sim%fn_v1v2x1(:,:,icR,jc),vn,flux)
+          sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc)-flux
+          sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc)+flux
+       end do
+    end do
+
+    !compute the fluxes in the x2 direction
+    vn(1)=0 ! temporaire !!!!
+    vn(2)=1*sim%surfx2(1,1)
+    do ic=1,loc_sz_x1
+       do jc=0,loc_sz_x2-1
+          jcL=jc
+          jcR=jc+1
+          call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
+               sim%fn_v1v2x1(:,:,ic,jcR),vn,flux)
+          sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
+          sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
+       end do
+    end do
+
+    ! source terms
+    do ic=1,loc_sz_x1
+       do jc=1,loc_sz_x2
+          icL=ic-1
+          icR=ic+1
+          if(ic.le.1) then
+             icL=loc_sz_x1
+          elseif(ic.ge.loc_sz_x1)then
+             icR=1
+          end if
+          Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+          Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+          call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
+               source)
+
+          temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
+          call sol(sim%M_sup,sim%M_diag,sim%M_low,&
+               sim%dtfn_v1v2x1(:,:,ic,jc),&
+               sim%mkld,temp,sim%np_v1*sim%np_v2, &
+               mp,ifac,isol,nsym,void,ierr,&
+               sim%nsky)
+       end do
+    end do
+
+
+    SLL_DEALLOCATE_ARRAY(flux,ierr)
+    SLL_DEALLOCATE_ARRAY(temp,ierr)
+
+
+
+  end subroutine dtf
 
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
