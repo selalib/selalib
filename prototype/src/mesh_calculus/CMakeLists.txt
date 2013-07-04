@@ -1,3 +1,5 @@
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER}) #MPI is needed by hdf5...
+
 ADD_LIBRARY(sll_mesh_calculus STATIC sll_mesh_calculus_module.F90 )
 
 ADD_DEPENDENCIES(sll_mesh_calculus
@@ -6,7 +8,8 @@ ADD_DEPENDENCIES(sll_mesh_calculus
   sll_logical_meshes
   sll_integration
   sll_assertion
-  sll_working_precision )
+  sll_working_precision
+  ${HDF5_LIBRARIES} )
 
 ADD_EXECUTABLE( test_mesh_calculus_2d unit_test_2d.F90 )
 
@@ -18,6 +21,7 @@ TARGET_LINK_LIBRARIES( test_mesh_calculus_2d
   sll_integration
   sll_memory
   sll_assertion
-  sll_working_precision )
+  sll_working_precision
+  ${HDF5_LIBRARIES} )
 
 
