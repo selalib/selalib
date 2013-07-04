@@ -103,6 +103,7 @@ if (myrank == MPI_MASTER) then
    print*, ' polar '
    call sll_view_lims_2D( layout )
 end if
+call flush(6)
 call compute_local_sizes_2d( layout, nr_loc, ntheta_loc )
 
 SLL_CLEAR_ALLOCATE(rho(1:nr_loc+2,1:ntheta_loc+2),error)
