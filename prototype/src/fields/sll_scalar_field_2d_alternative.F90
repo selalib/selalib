@@ -267,7 +267,7 @@ contains   ! *****************************************************************
     field%T => transformation
     !    field%mesh%written = .false.
     field%func      => func
-    field%params    => func_params   
+    if (present(func_params)) field%params    => func_params   
     field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right
