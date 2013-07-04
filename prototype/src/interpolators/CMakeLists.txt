@@ -22,17 +22,17 @@ ENDIF(NOT STDF95)
 ADD_LIBRARY( sll_interpolators STATIC ${INTERPOLATORS_SRC_FILES} )
 
 ADD_DEPENDENCIES( sll_interpolators
-                  deboor_splines
                   sll_splines
                   sll_periodic_interp
+                  sll_quintic_splines
+                  sll_lagrange_interpolation
                   sll_fft
-                  sll_working_precision
+                  sll_weno
                   sll_memory
                   sll_assertion
                   sll_utilities 
-                  sll_quintic_splines
-                  sll_weno
-                  sll_lagrange_interpolation )
+		  sll_working_precision
+		  deboor_splines )
 
 IF(NOT STDF95)
 
@@ -56,13 +56,13 @@ IF(NOT STDF95)
    TARGET_LINK_LIBRARIES( test_arb_deg_spline_interpolators_2d
                           sll_interpolators
                           sll_splines
-			  deboor_splines
 			  sll_file_io
                           sll_utilities
                           sll_constants
                           sll_assertion
                           sll_memory
-                          sll_working_precision )
+                          sll_working_precision 
+			  deboor_splines)
 
 
 ENDIF()

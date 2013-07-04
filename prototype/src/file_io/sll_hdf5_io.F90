@@ -27,7 +27,10 @@ module sll_hdf5_io
   
 #ifndef NOHDF5
 
-use hdf5
+use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
+                h5fopen_f, H5F_ACC_RDONLY_F, H5F_ACC_TRUNC_F, &
+                h5dcreate_f, h5dwrite_f,h5dclose_f, h5open_f,&
+                h5screate_f, h5sclose_f, h5fclose_f, h5fcreate_f
   
   implicit none
   

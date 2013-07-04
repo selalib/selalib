@@ -261,7 +261,7 @@ function compute_non_unif_integral_spline_old(integration_points,N_points,Nb)
     stop
   endif
   N_points_fine = (N_points-1)*Nb+1
-  spl =>  new_cubic_nonunif_spline_1D( N_points-1, HERMITE_SPLINE)
+  spl =>  new_cubic_nonunif_spline_1D( N_points-1, SLL_HERMITE)
   SLL_ALLOCATE(integration_points_fine(2,N_points_fine),ierr)
   do i=1,N_points-1
     x1 = integration_points(1,i)
@@ -311,7 +311,7 @@ function compute_non_unif_integral_spline(integration_points,N_points)
     print *,'bad value of N_points=',N_points
     stop
   endif
-  spl =>  new_cubic_nonunif_spline_1D( N_points-1, HERMITE_SPLINE)
+  spl =>  new_cubic_nonunif_spline_1D( N_points-1, SLL_HERMITE)
   SLL_ALLOCATE(integration_points_middle(2,N_points-1),ierr)
   do i=1,N_points-1
     x1 = integration_points(1,i)
@@ -352,7 +352,7 @@ function compute_non_unif_integral_spline_per(integration_points,N_points)
     print *,'bad value of N_points=',N_points
     stop
   endif
-  spl =>  new_cubic_nonunif_spline_1D( N_points-1, PERIODIC_SPLINE)
+  spl =>  new_cubic_nonunif_spline_1D( N_points-1, SLL_PERIODIC)
   SLL_ALLOCATE(integration_points_middle(2,N_points-1),ierr)
   do i=1,N_points-1
     x1 = integration_points(1,i)
