@@ -58,6 +58,3 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers
                                            sll_memory 
                                            sll_utilities )
 
-ADD_EXECUTABLE(test_allocate test.F90)
-TARGET_LINK_LIBRARIES(test_allocate sll_memory)
-
