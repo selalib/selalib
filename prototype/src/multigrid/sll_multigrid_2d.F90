@@ -172,8 +172,8 @@ if (nxprocs*nyprocs /= numprocs) goto 1000
 nx = nc_x
 ny = nc_y
 
-nxp2 = nx+2
-nyp2 = nx+2
+nxp2 = nc_x+2
+nyp2 = nc_y+2
 
 sx = get_layout_2d_i_min(this%layout,myid)+1
 ex = get_layout_2d_i_max(this%layout,myid)+1
