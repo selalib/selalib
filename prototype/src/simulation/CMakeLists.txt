@@ -87,7 +87,7 @@ target_link_libraries( test_vp1d_fourier_fem
   sll_working_precision
   )
 
-<<<<<<< HEAD
+
 ## for cg2d_curvilinear branch begin
 
 add_executable( test_cg_curvilinear CG_Curvilinear_2D.F90 ../poisson_solvers/sll_mudpack_colella.F90 )
@@ -113,8 +113,7 @@ target_link_libraries( test_cg_curvilinear
 
 
 
-=======
->>>>>>> origin/prototype-devel
+
 #Commands to be updated in the above simulation class standard
 #############################################################
 
@@ -225,7 +224,7 @@ target_link_libraries(VP1D_cart
 
 IF(CMAKE_BUILD_TYPE MATCHES "Release")
 
-<<<<<<< HEAD
+
 #add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 #target_link_libraries(VP1D_deltaf_cart
 #	sll_mapped_meshes
@@ -245,7 +244,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 # 	dfftpack
 # 	${LAPACK_LIBRARIES}
 # 	)
-=======
+
 add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 target_link_libraries(VP1D_deltaf_cart
 	sll_mapped_meshes
@@ -287,7 +286,7 @@ target_link_libraries(VP1D_mm
 	dfftpack
 	${LAPACK_LIBRARIES}
 	)
->>>>>>> origin/prototype-devel
+
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
