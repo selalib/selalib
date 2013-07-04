@@ -10,8 +10,9 @@ module sll_module_coordinate_transformations_2d
   use sll_cubic_spline_interpolator_2d
   use sll_gnuplot
 #else
-  use sll_coordinate_transformation_2d_base_module
   use sll_module_interpolators_2d_base
+  use sll_coordinate_transformation_2d_base_module
+
 
 #endif
   implicit none
@@ -56,6 +57,7 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_c
      character(len=64) :: label
      logical           :: written! = .false.
+     type(sll_logical_mesh_2d), pointer :: mesh
 #else
   type, extends(sll_coordinate_transformation_2d_base):: &
        sll_coordinate_transformation_2d_analytic
@@ -89,6 +91,7 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_analytic
      procedure, pass(transf) :: write_to_file => write_to_file_2d_analytic
+     procedure, pass(transf) :: delete => delete_transformation_2d_analytic
 #endif
   end type sll_coordinate_transformation_2d_analytic
 
@@ -115,15 +118,16 @@ module sll_module_coordinate_transformations_2d
      logical           :: written! = .false.
 
 #ifdef STDF95
+     ! this is not good, since a choice is being made about a specific 
+     ! interpolator, the f95 version does not behave in the same way and
+     ! thus should not be compilable. This module should not be made available
+     ! in f95.
      type(cubic_spline_2d_interpolator), pointer            :: x1_interp
      type(cubic_spline_2d_interpolator), pointer            :: x2_interp
 #else
-     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
+!     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(sll_interpolator_2d_base), pointer               :: x1_interp
      class(sll_interpolator_2d_base), pointer               :: x2_interp
-     procedure(two_arg_scalar_function), pointer, nopass    :: x1_func
-     procedure(two_arg_scalar_function), pointer, nopass    :: x2_func
-     !procedure(two_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
@@ -140,6 +144,7 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_discrete
      procedure, pass(transf) :: write_to_file => write_to_file_2d_discrete
+     procedure, pass(transf) :: delete => delete_transformation_2d_discrete
 #endif
   end type sll_coordinate_transformation_2d_discrete
 
@@ -212,11 +217,13 @@ module sll_module_coordinate_transformations_2d
   end type jacobian_matrix_element
 #endif
   
-#if 0
+
   interface delete
-     module procedure delete_coordinate_transformation_2D_general
+     module procedure &
+          delete_transformation_2d_analytic, &
+          delete_transformation_2d_discrete
   end interface
-#endif
+
   
 contains
 
@@ -394,6 +401,20 @@ contains
 !!$       end do
 !!$    end do
   end subroutine initialize_coord_transf_2d_analytic
+
+  subroutine delete_transformation_2d_analytic( transf )
+    class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
+    sll_int32 :: ierr
+    if(associated(transf%j_matrix)) then
+       SLL_DEALLOCATE( transf%j_matrix, ierr )
+    end if
+    nullify( transf%x1_func )
+    nullify( transf%x2_func )
+    nullify( transf%jacobian_func )
+    nullify( transf%jacobian_matrix_function )
+  end subroutine delete_transformation_2d_analytic
+
+
 
 #ifdef STDF95
 #else
@@ -951,6 +972,8 @@ contains
     sll_real64, dimension(:,:)           :: x1_node
     sll_real64, dimension(:,:)           :: x2_node
 #ifdef STDF95
+    ! no this should not be compiled under f95, the object would not have
+    ! the same functionality
     type(cubic_spline_2d_interpolator), target  :: x1_interpolator
     type(cubic_spline_2d_interpolator), target  :: x2_interpolator
     type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
@@ -1232,7 +1255,23 @@ contains
     transf%written = .true.
   end subroutine
 
-
+  subroutine delete_transformation_2d_discrete( transf )
+    class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
+!!$    sll_int32 :: ierr
+!!$    SLL_DEALLOCATE( transf%j_matrix, ierr )
+    nullify( transf%x1_node )
+    nullify( transf%x2_node )
+    nullify( transf%x1_cell )
+    nullify( transf%x2_cell )
+    nullify( transf%jacobians_n )
+    nullify( transf%jacobians_c )
+    ! Fix: there is a dependency problem where these pointers are not recognized
+    ! during the linking step. A similar nullification of an abstract class
+    ! pointer is carried out in the fields_2d_alternative type without problems.
+!    transf%x1_interp => null() this gives a different message.
+!!$    nullify( transf%x1_interp )
+!!$    nullify( transf%x2_interp )
+  end subroutine delete_transformation_2d_discrete
 
 #if 0
   subroutine delete_coordinate_transformation_2D_general( transf )
