@@ -20,21 +20,15 @@
 !> of times, the variables are not overwritten.
 !>
 program test_mgd2
-use hdf5, only:HID_T,HSIZE_T,HSSIZE_T
+
+
 use sll_collective, only: sll_boot_collective,      &
                           sll_world_collective,     &
                           sll_halt_collective,      &
                           sll_get_collective_rank,  &
                           sll_get_collective_size
-use sll_xdmf_parallel, only: sll_hdf5_file_create,  &
-                             sll_hdf5_write_array,  &
-                             sll_hdf5_file_close,   &
-                             sll_xdmf_open,         &
-                             sll_xdmf_close,        &
-                             sll_xml_file_create,   &
-                             sll_xml_grid_geometry, &
-                             sll_xml_field,         &
-                             sll_xml_file_close
+
+use sll_gnuplot_parallel
 
 use sll_mgd2
 
@@ -65,26 +59,10 @@ sll_int32         :: ierr,nerror,m0,m1,dims(2),coords(2),i,j
 sll_int32         :: nbrright,nbrbottom,nbrleft,nbrtop
 sll_real64        :: p(nxdim,nydim),r(nxdim,nydim),f(nxdim,nydim),work(nwork)
 sll_real64        :: xl,yl,hxi,hyi,vbc(4),phibc(4,20),wk,rro,pi
-character(len=20) :: outfile
 character(len=1)  :: num(10)
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 
-sll_real64, dimension(:,:), allocatable :: xdata
-sll_real64, dimension(:,:), allocatable :: ydata
-sll_real64, dimension(:,:), allocatable :: zdata
-sll_int32 :: xml_id
 sll_int32 :: error
-
-integer(HID_T)                  :: file_id
-integer(HSIZE_T),  dimension(2) :: datadims
-integer(HSSIZE_T), dimension(2) :: offset 
-
-character(len=8), parameter :: xfile = "xdata.h5" 
-character(len=8), parameter :: yfile = "ydata.h5"
-character(len=8), parameter :: zfile = "zdata.h5"
-character(len=8), parameter :: xdset = "xdataset"
-character(len=8), parameter :: ydset = "ydataset"
-character(len=8), parameter :: zdset = "zdataset"
 
 type(block)     :: my_block
 type(mg_solver) :: my_mg
@@ -105,13 +83,8 @@ realtype  = MPI_REAL8
 ! open file for output of messages and check that the number of 
 ! processes is correct
 
-outfile='out'
-outfile(4:5)='_'
 m1=mod(myid,10)+1
 m0=mod(myid/10,10)+1
-outfile(5:6)=num(m0)
-outfile(6:7)=num(m1)
-!open(IOUT,file=outfile,status='unknown',form='formatted')
 if (numprocs.ne.(nxprocs*nyprocs)) then
   write(6,100)
 100     format(/,'ERROR: numprocs <> (nxprocs*nyprocs)',/)
@@ -238,7 +211,7 @@ if (nerror.eq.1) goto 1000
 !
 xl=1.0d0
 yl=1.0d0
-wk=5.0d0
+wk=2.0d0
 rro=1.0d0
 hxi=float(nx)/xl
 hyi=float(ny)/yl
@@ -262,56 +235,14 @@ if (nerror.eq.1) goto 1000
 ! compare numerical and exact solutions
 call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny)
 
-SLL_ALLOCATE(xdata(sx:ex,sy:ey),error)
-SLL_ALLOCATE(ydata(sx:ex,sy:ey),error)
-SLL_ALLOCATE(zdata(sx:ex,sy:ey),error)
-do j = sy, ey
-   do i = sx, ex
-      xdata(i,j) = float(i-1)/(nx-1)
-      ydata(i,j) = float(j-1)/(ny-1)
-      zdata(i,j) = myid
-   end do
-end do
+call sll_gnuplot_rect_2d_parallel(dble(sx-2.0)/hxi, dble(1)/hxi, &
+                                  dble(sy-2.0)/hyi, dble(1)/hyi, &
+                                  p, "potential", 1, error)  
   
-offset(1) =  sx - 1
-offset(2) =  sy - 1
-  
-datadims(1) = nx
-datadims(2) = ny
-write(*,"(7i5)") myid, sx, ex, sy, ey, nx, ny
-call sll_xdmf_open(myid,"mgd2.xmf","mesh2d",nx,ny,xml_id,error)
-!call sll_xdmf_write_array("mesh2d",datadims,offset,xdata,'x1',error)
-!call sll_xdmf_write_array("mesh2d",datadims,offset,ydata,'x2',error)
-!call sll_xdmf_write_array("mesh2d",datadims,offset,p(sx:ex,sy:ey),"p", &
-!                          error,xml_id,"Node")
-call sll_xdmf_close(xml_id,error)
-call sll_halt_collective()
-stop
-
-call sll_hdf5_file_create(xfile, file_id, error)
-call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
-call sll_hdf5_file_close(file_id,error)
-  
-call sll_hdf5_file_create(yfile, file_id, error)
-call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
-call sll_hdf5_file_close(file_id,error)
-  
-call sll_hdf5_file_create(zfile, file_id, error)
-call sll_hdf5_write_array(file_id, datadims,offset,zdata,zdset,error)
-call sll_hdf5_file_close(file_id,error)
-
-if (myid == 0) then
-  
-   call sll_xml_file_create("mgd2.xmf",xml_id,error)
-   call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
-   call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-   call sll_xml_file_close(file_id,error)
-
-end if
-
 close(8)
 !call mgdend(ngrid)
 print*,"PASSED"
+call sll_halt_collective()
 stop
 1000  write(6,200)
 200   format(/,'ERROR in multigrid code',/)
@@ -339,9 +270,9 @@ cx   = 2.0d0*pi*wk
 cy   = 2.0d0*pi*wk
 
 do j=sy,ey
-  yj=(float(j)-1.5d0)/hyi
   do i=sx,ex
-    xi=(float(i)-1.5d0)/hxi
+    xi=float(i-2)/(nx-1)
+    yj=float(j-2)/(ny-1)
     f(i,j)=cnst*sin(cx*xi)*sin(cy*yj)
   end do
 end do
@@ -361,9 +292,9 @@ cx=2.0d0*pi*wk
 cy=2.0d0*pi*wk
 errloc=0.0d0
 do j=sy,ey
-  yj=(float(j)-1.5d0)/hyi
+  yj=(float(j)-2.0d0)/hyi
   do i=sx,ex
-    xi=(float(i)-1.5d0)/hxi
+    xi=(float(i)-2.0d0)/hxi
     exact=sin(cx*xi)*sin(cy*yj)
     errloc=errloc+abs(p(i,j)-exact)
   end do
