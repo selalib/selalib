@@ -222,7 +222,7 @@ real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
-!subroutiner not used in periodic case
+!subroutine not used in periodic case
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa

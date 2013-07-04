@@ -49,7 +49,7 @@ program cg_curvilinear_2D
   
 !!**Poisson solver *****
    sll_real64, dimension (:,:) , allocatable :: values_U
-   
+   type(mudpack_2d)                          :: poisson_df
    
 !!---* Diagnostic *----:
 sll_real64, dimension (:,:)  , allocatable :: phi_ref,trans_phi
@@ -305,7 +305,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
 
  if(solver==1) then    
         print*,'Poisson Solver with Finite Difference method'
-        call initialize_poisson_colella_mudpack(values_U, f, &
+        call initialize_poisson_colella_mudpack(poisson_df,values_U, f, &
                                       eta1_min, eta1_max, &
                                       eta2_min, eta2_max, &
                                       N_eta1, N_eta2)
@@ -327,7 +327,7 @@ plan_sl => new_SL(geom_eta,delta_eta1,delta_eta2,dt, &
     !! call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
     !call poisson_solve_polar(plan_sl%poisson,f,phi_Fourier)
   !!-----------------****------------------------------------
-  call solve_poisson_colella_mudpack(plan_sl%phi, f)
+  call solve_poisson_colella_mudpack(poisson_df,plan_sl%phi, f)
  !call Poisson_solver_curvilinear()
  
  call compute_grad_field(plan_sl%grad,plan_sl%phi,plan_sl%adv%field,N_eta1,N_eta2,geom_eta)
@@ -400,7 +400,7 @@ print*,'phi end ' , maxval(abs(f)),maxval(abs(plan_sl%phi))-maxval(abs(phi_Fouri
     !  call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi)
     
     !call Poisson_solver_curvilinear()
-     call solve_poisson_colella_mudpack(plan_sl%phi, f)
+     call solve_poisson_colella_mudpack(poisson_df,plan_sl%phi, f)
     !!-----------------------------------------------------
 
     !---* Computation of the field *----

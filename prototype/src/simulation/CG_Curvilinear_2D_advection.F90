@@ -395,7 +395,8 @@ contains
     implicit none
 
     type(sll_SL_curvilinear)   , intent(inout), pointer :: plan
-    sll_real64,  dimension(:,:), intent(inout)             :: inn
+    type(mudpack_2d)                                    :: poisson_df
+    sll_real64,  dimension(:,:), intent(inout)          :: inn
     sll_real64,  dimension(:,:), intent(out)            :: outt
     sll_real64,  dimension(:,:), pointer                :: jac_array
     sll_real64,  intent(in)                             :: geom_eta(2,2)
@@ -413,7 +414,7 @@ contains
      !---*Fourier method for poisson's equation*-----
      !call poisson_solve_polar(plan%poisson,inn,plan%phi)
      !-----------------****------------------------------------
-    call solve_poisson_colella_mudpack(plan%phi, inn)
+    call solve_poisson_colella_mudpack(poisson_df,plan%phi, inn)
    
     call compute_grad_field(plan%grad,plan%phi,plan%adv%field,N_eta1,N_eta2,geom_eta)
     
