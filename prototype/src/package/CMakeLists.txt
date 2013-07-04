@@ -53,7 +53,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
@@ -71,6 +70,7 @@ IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
 ELSEIF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+      ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
       ${SLL_DIR}/fft/fftw_module.F90
       ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
 
