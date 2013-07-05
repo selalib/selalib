@@ -121,6 +121,7 @@ IF(MPI_MODULE_ENABLED)
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
    TARGET_LINK_LIBRARIES(sll_poisson_parallel sll_remap 
                                               sll_fft
+                                              sll_file_io_parallel
                                               sll_collective
                                               sll_utilities
                                               sll_memory
@@ -128,15 +129,8 @@ IF(MPI_MODULE_ENABLED)
   
    ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
 
-   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par 
-                          sll_poisson_parallel 
-                          sll_remap 
-                          sll_collective 
-                          sll_fft 
-                          sll_memory 
-                          sll_timer 
-                          sll_utilities 
-                          sll_assertion)
+   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
+
 ENDIF()
 
 IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)

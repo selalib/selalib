@@ -7,6 +7,7 @@ program test_poisson_polar_parallel
 use sll_poisson_polar_parallel
 use sll_collective
 use sll_remapper
+use sll_gnuplot_parallel
 
 implicit none
 
@@ -17,6 +18,8 @@ sll_real64, dimension(:,:), allocatable :: phi_cos
 sll_real64, dimension(:,:), allocatable :: phi_sin
 sll_real64, dimension(:),   allocatable :: r
 sll_real64, dimension(:),   allocatable :: theta
+sll_real64, dimension(:,:), allocatable :: x
+sll_real64, dimension(:,:), allocatable :: y
 
 sll_int32  :: i, j
 sll_int32  :: nr, nc_r
@@ -27,10 +30,17 @@ sll_int32  :: error
 
 sll_int32, parameter  :: n = 4
 
-type(layout_2D), pointer            :: layout_r
-type(layout_2D), pointer            :: layout_theta
-sll_int32, dimension(2)             :: global
-sll_int32  :: psize, prank, e, nproc_r, nproc_theta
+type(layout_2D), pointer  :: layout_r
+type(layout_2D), pointer  :: layout_theta
+sll_int32, dimension(2)   :: global
+sll_int32                 :: gi, gj
+sll_int32                 :: psize
+sll_int32                 :: prank
+sll_int32                 :: e
+sll_int32                 :: nproc_r
+sll_int32                 :: nproc_theta
+sll_int32                 :: nr_loc
+sll_int32                 :: ntheta_loc
 
 !Boot parallel environment
 call sll_boot_collective()
@@ -78,45 +88,49 @@ ntheta = nc_theta+1
 delta_r     = (r_max-r_min)/real(nr-1,f64)
 delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
 
-SLL_CLEAR_ALLOCATE(rhs(1:nr,1:ntheta),error)
-SLL_CLEAR_ALLOCATE(phi(1:nr,1:ntheta),error)
-SLL_CLEAR_ALLOCATE(phi_cos(1:nr,1:ntheta),error)
-SLL_CLEAR_ALLOCATE(phi_sin(1:nr,1:ntheta),error)
-SLL_CLEAR_ALLOCATE(r(1:nr),error)
-SLL_CLEAR_ALLOCATE(theta(1:ntheta),error)
+call compute_local_sizes(layout_r, nr_loc, ntheta_loc )
+SLL_CLEAR_ALLOCATE(rhs(1:nr_loc,1:ntheta_loc),error)
+SLL_CLEAR_ALLOCATE(phi(1:nr_loc,1:ntheta_loc),error)
+SLL_CLEAR_ALLOCATE(phi_cos(1:nr_loc,1:ntheta_loc),error)
+SLL_CLEAR_ALLOCATE(phi_sin(1:nr_loc,1:ntheta_loc),error)
+SLL_CLEAR_ALLOCATE(r(1:nr_loc),error)
+SLL_CLEAR_ALLOCATE(theta(1:ntheta_loc),error)
 
-do i = 1, nr
-   r(i)=r_min+(i-1)*delta_r
+do i = 1, nr_loc
+   global = local_to_global_2D( layout_r, (/i, 1/))
+   gi = global(1)
+   r(i)=r_min+(gi-1)*delta_r
 end do
-do j = 1, ntheta
-   theta(j)=(j-1)*delta_theta
+do j = 1, ntheta_loc
+   global = local_to_global_2D( layout_r, (/1, j/))
+   gj = global(2)
+   theta(j)=(gj-1)*delta_theta
 end do
 
-do j=1,ntheta
-   do i=1,nr
+SLL_CLEAR_ALLOCATE(x(1:nr,1:ntheta),error)
+SLL_CLEAR_ALLOCATE(y(1:nr,1:ntheta),error)
+
+do j=1,ntheta_loc
+   do i=1,nr_loc
       phi_cos(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*theta(j))*r(i)
       phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*sin(n*theta(j))*r(i)
+      x(i,j)   = r(i)*cos(theta(j))
+      y(i,j)   = r(i)*sin(theta(j))
    end do
 end do
+call sll_gnuplot_2d_parallel(x, y, phi_sin, 'phi_sin', 1, error)
+call sll_gnuplot_2d_parallel(x, y, phi_cos, 'phi_cos', 1, error)
 
 call initialize( poisson,layout_r, layout_theta, &
                  r_min,r_max,nr-1,ntheta-1, DIRICHLET, DIRICHLET)
 
-do i =1,nr
-   do j=1,ntheta
+do i =1,nr_loc
+   do j=1,ntheta_loc
       rhs(i,j) = - f_sin(r(i), theta(j))
    end do
 end do
 
-call solve_poisson_polar(poisson, rhs, phi)
-
-do i =1,nr
-   do j=1,ntheta
-      write(13,*) r(i)*cos(theta(j)),r(i)*sin(theta(j)), phi(i,j), phi_sin(i,j)
-   end do
-   write(13,*) 
-end do
-close(13)
+call solve(poisson, rhs, phi)
 
 call error_max(phi_sin,phi,1e-4_f64)
 
