@@ -25,33 +25,26 @@ module sll_poisson_polar_parallel
   use sll_tridiagonal
   use sll_collective
   use sll_remapper
+  use sll_boundary_condition_descriptors
 
   implicit none
   !>type sll_poisson_polar
   !>type for the Poisson solver in polar coordinate
   type sll_poisson_polar
    sll_real64                          :: dr, rmin, rmax
-   sll_int32                           :: nr, ntheta
+   sll_int32                           :: nr, nt
    sll_int32                           :: bc(2)
    type(sll_fft_plan), pointer         :: pfwd,pinv
-   sll_real64, dimension(:,:), pointer :: f_fft
    sll_comp64, dimension(:),   pointer :: fk,phik
    sll_real64, dimension(:),   pointer :: a,cts
    sll_int32,  dimension(:),   pointer :: ipiv
-   type(layout_2D),  pointer           :: layout_r     !< layout sequential in x
-   type(layout_2D),  pointer           :: layout_theta !< layout sequential in y
-   type(remap_plan_2D_real64), pointer :: rmp_r_theta  !< remap r->theta 
-   type(remap_plan_2D_real64), pointer :: rmp_theta_r  !< remap theta->r
-   sll_real64, dimension(:,:), pointer :: f_r          !< array sequential in x
-   sll_real64, dimension(:,:), pointer :: f_theta      !< array sequential in y
+   type(layout_2D),  pointer           :: layout_r !< layout sequential in x
+   type(layout_2D),  pointer           :: layout_t !< layout sequential in y
+   type(remap_plan_2D_real64), pointer :: rmp_rt   !< remap r->theta 
+   type(remap_plan_2D_real64), pointer :: rmp_tr   !< remap theta->r
+   sll_real64, dimension(:,:), pointer :: f_r      !< array sequential in x
+   sll_real64, dimension(:,:), pointer :: f_t      !< array sequential in y
   end type sll_poisson_polar
-
-  !flags for boundary conditions
-  !>boundary conditions can be at TOP_ or BOT_ and take value NEUMANN or DIRICHLET
-  !>ex : TOP_DIRICHLET or BOT_NEUMANN
-  integer, parameter :: DIRICHLET     = 1
-  integer, parameter :: NEUMANN       = 2
-  integer, parameter :: NEUMANN_MODE0 = 3
 
   interface initialize
      module procedure initialize_poisson_polar
@@ -62,41 +55,40 @@ module sll_poisson_polar_parallel
   end interface solve
 
   integer, private :: nr_loc
-  integer, private :: ntheta_loc
+  integer, private :: nt_loc
 
 contains
 
   !> Initialize the Poisson solver in polar coordinates
   subroutine initialize_poisson_polar(this, &
-             layout_r, layout_theta,        &
-             rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
+             layout_r, layout_t,        &
+             rmin,rmax,nr,nt,bc_rmin,bc_rmax)
 
     implicit none
-    type(sll_poisson_polar) :: this
+    type(sll_poisson_polar)  :: this
     type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_theta !< sequential in theta direction
+    type(layout_2D), pointer :: layout_t !< sequential in theta direction
 
     sll_real64               :: rmin    !< rmin
     sll_real64               :: rmax    !< rmax
     sll_int32                :: nr      !< number of cells radial
-    sll_int32                :: ntheta  !< number of cells angular
+    sll_int32                :: nt  !< number of cells angular
     sll_int32, optional      :: bc_rmin !< radial boundary conditions
     sll_int32, optional      :: bc_rmax !< radial boundary conditions
     sll_int32                :: error
     sll_real64, dimension(:), allocatable :: buf
 
-    SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),error)
     SLL_ALLOCATE(this%fk(nr+1),error)
     SLL_ALLOCATE(this%phik(nr+1),error)
     SLL_ALLOCATE(this%a(3*(nr-1)),error)
     SLL_ALLOCATE(this%cts(7*(nr-1)),error)
     SLL_ALLOCATE(this%ipiv(nr-1),error)
 
-    this%rmin=rmin
-    this%rmax=rmax
-    this%dr=(rmax-rmin)/nr
-    this%nr=nr
-    this%ntheta=ntheta
+    this%rmin = rmin
+    this%rmax = rmax
+    this%dr   = (rmax-rmin)/nr
+    this%nr   = nr
+    this%nt   = nt
 
     if (present(bc_rmin) .and. present(bc_rmax)) then
       this%bc(1)=bc_rmin
@@ -106,23 +98,23 @@ contains
       this%bc(2)=-1
     end if
 
-    SLL_ALLOCATE(buf(ntheta),error)
-    this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    SLL_ALLOCATE(buf(nt),error)
+    this%pfwd => fft_new_plan(nt,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
+    this%pinv => fft_new_plan(nt,buf,buf,FFT_INVERSE)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
     ! Layout and local sizes for FFTs in r-direction
     this%layout_r => layout_r
-    call compute_local_sizes_2d(this%layout_r,nr_loc,ntheta_loc)
-    SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:ntheta_loc),error)
+    call compute_local_sizes_2d(this%layout_r,nr_loc,nt_loc)
+    SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:nt_loc),error)
 
     ! Layout and local sizes for FFTs in theta-direction
-    this%layout_theta => layout_theta
-    call compute_local_sizes_2d(this%layout_theta,nr_loc,ntheta_loc)
-    SLL_CLEAR_ALLOCATE(this%f_theta(1:nr_loc,1:ntheta_loc),error)
+    this%layout_t => layout_t
+    call compute_local_sizes_2d(this%layout_t,nr_loc,nt_loc)
+    SLL_CLEAR_ALLOCATE(this%f_t(1:nr_loc,1:nt_loc),error)
 
-    this%rmp_r_theta => new_remap_plan(this%layout_r, this%layout_theta, this%f_r)
-    this%rmp_theta_r => new_remap_plan(this%layout_theta, this%layout_r, this%f_theta)
+    this%rmp_rt => new_remap_plan(this%layout_r, this%layout_t, this%f_r)
+    this%rmp_tr => new_remap_plan(this%layout_t, this%layout_r, this%f_t)
 
   end subroutine initialize_poisson_polar
 
@@ -136,7 +128,6 @@ contains
     if (associated(this)) then
        call fft_delete_plan(this%pfwd)
        call fft_delete_plan(this%pinv)
-       SLL_DEALLOCATE_ARRAY(this%f_fft,err)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
        SLL_DEALLOCATE_ARRAY(this%a,err)
@@ -151,40 +142,45 @@ contains
 !  Poisson solver
 !===================
 
-  !>subroutine solve_poisson_polar(this,f,phi)
-  !>poisson solver for polar system : -\Delta (phi)=f
-  !>plan : sll_plan_poisson_polar, contains data for the solver
-  !>f : distribution function, size (nr+1)*(ntheta+1), input
-  !>phi : unknown field, size (nr+1)*(ntheta+1), output
+  !>poisson solver for polar system : -\Delta (phi)=rhs
   !>initialization must be done outside the solver
-  subroutine solve_poisson_polar(this,f,phi)
+  subroutine solve_poisson_polar(this,rhs,phi)
 
     implicit none
 
-    type(sll_poisson_polar) :: this
-    sll_real64, dimension(this%nr+1,this%ntheta+1), intent(in)  :: f
-    sll_real64, dimension(this%nr+1,this%ntheta+1), intent(out) :: phi
+    type(sll_poisson_polar) :: this !< contains data for the solver
+    !>rhs field, size (nr+1)*(nt+1), input
+    sll_real64, dimension(this%nr+1,this%nt+1), intent(in)  :: rhs
+    !>unknown field, size (nr+1)*(nt+1), output
+    sll_real64, dimension(this%nr+1,this%nt+1), intent(out) :: phi
 
     sll_real64 :: rmin,dr
-    sll_int32  :: nr, ntheta,bc(2)
+    sll_int32  :: nr, nt,bc(2)
 
     sll_real64 :: r
     sll_int32  :: i, k
     sll_real64 :: kval
 
-    nr     = this%nr
-    ntheta = this%ntheta
-    rmin   = this%rmin
-    dr     = this%dr
+    nr   = this%nr
+    nt   = this%nt
+    rmin = this%rmin
+    dr   = this%dr
+    bc   = this%bc
 
-    bc     = this%bc
-    this%f_fft = f
+    call verify_argument_sizes_par(this%layout_t, rhs, phi)
 
-    do i=1,nr+1
-      call fft_apply_plan(this%pfwd,this%f_fft(i,1:ntheta),this%f_fft(i,1:ntheta))
+    this%f_t = rhs
+    
+    call compute_local_sizes_2d( this%layout_t, nr_loc, nt_loc )
+    
+    do i=1,nr_loc+1
+      call fft_apply_plan(this%pfwd,this%f_t(i,1:nt),this%f_t(i,1:nt))
     end do
 
-    do k = 0,ntheta/2
+    call apply_remap_2D( this%rmp_tr, this%f_t, this%f_r )
+    call compute_local_sizes_2d( this%layout_r, nr_loc, nt_loc )
+
+    do k = 0,nt_loc/2
 
       kval=real(k,f64)
 
@@ -193,17 +189,17 @@ contains
         this%a(3*(i-1)  )=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
         this%a(3*(i-1)-1)= 2.0_f64/dr**2+(kval/r)**2
         this%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
-        this%fk(i)=fft_get_mode(this%pfwd,this%f_fft(i,1:ntheta),k)
+        this%fk(i)=fft_get_mode(this%pfwd,this%f_r(i,1:nt),k)
       enddo
 
       this%phik=0.0_f64
 
-      if(bc(1)==DIRICHLET) then
+      if(bc(1)==SLL_DIRICHLET) then
         this%a(1)=0.0_f64
-      else if(bc(1)==NEUMANN) then
+      else if(bc(1)==SLL_NEUMANN) then
         this%a(2)=this%a(2)+this%a(1) 
         this%a(1)=0._f64
-      else if(bc(1)==NEUMANN_MODE0)then 
+      else if(bc(1)==SLL_NEUMANN_MODE0)then 
         if(k==0) then
           this%a(2)=this%a(2)+this%a(1)
           this%a(1)=0._f64
@@ -213,12 +209,12 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==DIRICHLET) then
+      if(bc(2)==SLL_DIRICHLET) then
         this%a(3*(nr-1))=0.0_f64
-      else if(bc(2)==NEUMANN)then
+      else if(bc(2)==SLL_NEUMANN)then
         this%a(3*(nr-1)-1)=this%a(3*(nr-1)-1)+this%a(3*(nr-1)) 
         this%a(3*(nr-1))=0.0_f64
-      else if(bc(2)==NEUMANN_MODE0)then 
+      else if(bc(2)==SLL_NEUMANN_MODE0)then 
         if(k==0)then
           this%a(3*(nr-1)-1)=this%a(3*(nr-1)-1)+this%a(3*(nr-1))
           this%a(3*(nr-1))=0.0_f64
@@ -257,16 +253,18 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(this%pinv,phi(i,1:ntheta),this%phik(i),k)
+        call fft_set_mode(this%pinv,phi(i,1:nt),this%phik(i),k)
       end do
 
     end do
 
-    do i=1,nr+1
-      call fft_apply_plan(this%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
+    call apply_remap_2D( this%rmp_rt, this%f_r, this%f_t )
+    call compute_local_sizes_2d( this%layout_t, nr_loc, nt_loc )
+    do i=1,nr_loc+1
+      call fft_apply_plan(this%pinv,phi(i,1:nt),phi(i,1:nt))
+      phi(i,nt+1)=phi(i,1)
     end do
 
-    phi(:,ntheta+1)=phi(:,1)
 
   end subroutine solve_poisson_polar
 
