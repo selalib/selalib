@@ -50,7 +50,8 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
 
 ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
-TARGET_LINK_LIBRARIES(sll_poisson_2d_polar sll_fft sll_memory sll_assertion sll_utilities)
+TARGET_LINK_LIBRARIES(sll_poisson_2d_polar 
+                      sll_fft sll_memory sll_assertion sll_utilities)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
                ../simulation/sll_polar_operators.F90)
@@ -67,6 +68,7 @@ TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq ${POISSON_LIBS})
 TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
 
 ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
+                                   sll_poisson_2d_periodic_fem.F90
                                    test_poisson_2d_fem.F90)
 
 TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})

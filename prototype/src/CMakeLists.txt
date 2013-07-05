@@ -65,6 +65,8 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
 
+
+
 IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
@@ -83,13 +85,14 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(precision)
    ADD_SUBDIRECTORY(assert)
    ADD_SUBDIRECTORY(constants)
+   ADD_SUBDIRECTORY(boundary_condition_descriptors)
    ADD_SUBDIRECTORY(utilities)
    ADD_SUBDIRECTORY(file_io)
    ADD_SUBDIRECTORY(timer)
    ADD_SUBDIRECTORY(non_linear_solvers)
    ADD_SUBDIRECTORY(splines)
    ADD_SUBDIRECTORY(logical_meshes)
-   ADD_SUBDIRECTORY(coordinate_transformations)
+#   ADD_SUBDIRECTORY(coordinate_transformations)
    ADD_SUBDIRECTORY(mesh_calculus)
    ADD_SUBDIRECTORY(lagrange_interpolation)
    ADD_SUBDIRECTORY(WENO)
@@ -102,7 +105,10 @@ IF(NOT SLL_BUILD_PACKAGE)
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
-      ADD_SUBDIRECTORY(parallel_array_initializers)
+
+      IF(NOT STDF95)
+         ADD_SUBDIRECTORY(parallel_array_initializers)
+      ENDIF(NOT STDF95)
 
    ENDIF()
    
@@ -110,11 +116,17 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(electric_field_accumulators)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(interpolators)
-   ADD_SUBDIRECTORY(mapped_meshes)
+
+   IF(NOT STDF95)
+      ADD_SUBDIRECTORY(coordinate_transformations)
+      ADD_SUBDIRECTORY(mapped_meshes)
+   ENDIF(NOT STDF95)
+
    ADD_SUBDIRECTORY(fields)
    
    IF(NOT STDF95)
-   
+
+      ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(ode_solvers)
       ADD_SUBDIRECTORY(distribution_function)
@@ -129,7 +141,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
       FIND_PACKAGE(SUITESPARSE)
       IF(SUITESPARSE_FOUND AND 0)
-         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ENDIF(SUITESPARSE_FOUND AND 0)
    
@@ -202,13 +213,16 @@ IF(NOT SLL_BUILD_PACKAGE)
    MESSAGE(STATUS "############################################################")
 
    IF(STDF95)
-   
+
       MESSAGE(STATUS " ")
       MESSAGE(STATUS "####################  F95  ###################")
       MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
       MESSAGE(STATUS "## advection_field                          ##")
       MESSAGE(STATUS "## Linrood                                  ##")
       MESSAGE(STATUS "## BSL                                      ##")
+      MESSAGE(STATUS "## coordinate_transformations               ##")
+      MESSAGE(STATUS "## mapped_meshes                            ##")
+      MESSAGE(STATUS "## parallel_array_initializers              ##")
       MESSAGE(STATUS "## CSL                                      ##")
       MESSAGE(STATUS "## distribution_function                    ##")
       MESSAGE(STATUS "## maxwel_solvers                           ##")
@@ -251,6 +265,8 @@ IF(NOT SLL_BUILD_PACKAGE)
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
-ADD_SUBDIRECTORY(package)
+IF(NOT STDF95)
+   ADD_SUBDIRECTORY(package)
+ENDIF()
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
