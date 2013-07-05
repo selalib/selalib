@@ -180,18 +180,7 @@ contains
     sll_real64 :: dv
     sll_int32  :: ierr
     sll_int32  :: itime
-!!$    sll_int32  :: nc_v1
-!!$    sll_int32  :: nc_v2
-!!$    sll_int32  :: nc_x1
-!!$    sll_int32  :: nc_x2
-!!$    sll_int32  :: np_v1
-!!$    sll_int32  :: np_v2
-    sll_int32  :: ranktop
-    sll_int32  :: rankbottom
-    sll_int32  :: message_id
-    sll_int32  :: datasize,datasizephi
     sll_int32  :: istat
-    sll_int32  :: tagtop,tagbottom
     sll_int32  :: ic
     sll_int32  :: jc
     
@@ -362,14 +351,14 @@ contains
 
 
     ! mpi communications parameters
-    ranktop=mod(sim%my_rank+1,sim%world_size)
-    rankbottom=sim%my_rank-1
-    if (rankbottom.lt.0) rankbottom=sim%world_size-1
-    message_id=1
-    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
-    datasizephi=loc_sz_x1
-    tagtop=sim%my_rank
-    tagbottom=ranktop
+!!$    ranktop=mod(sim%my_rank+1,sim%world_size)
+!!$    rankbottom=sim%my_rank-1
+!!$    if (rankbottom.lt.0) rankbottom=sim%world_size-1
+!!$    message_id=1
+!!$    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
+!!$    datasizephi=loc_sz_x1
+!!$    tagtop=sim%my_rank
+!!$    tagbottom=ranktop
 
 
     ! init the volume and surface arrays
@@ -427,33 +416,8 @@ contains
    t=0
    do while(t.lt.sim%tmax)
        t=t+1
-      
       ! mpi communications
-      ! top communications
-      Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,loc_sz_x2),datasize, &
-           MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-           sim%fn_v1v2x1(1,1,1,0),datasize,            &
-           MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
-
-      Call mpi_SENDRECV(sim%phi_x1(1,loc_sz_x2),datasizephi, &
-           MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-           sim%phi_x1(1,0),datasizephi,            &
-           MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
-
-      ! bottom communications
-      Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
-           MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-           sim%fn_v1v2x1(1,1,1,loc_sz_x2+1),datasize,            &
-           MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
-
-      Call mpi_SENDRECV(sim%phi_x1(1,1),datasizephi, &
-           MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-           sim%phi_x1(1,loc_sz_x2+1),datasizephi,            &
-           MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+      call mpi_comm(sim)
 
       call dtf(sim)
 
@@ -765,12 +729,13 @@ contains
        end do
     end do
 
-!!$    write(*,*) 'Mdiag=',sim%Bv1_diag
-!!$    write(*,*) 'Msup=',sim%Bv1_sup
+ !   write(*,*) 'Mdiag=',sim%M_diag
+    write(*,*) 'Msup=',sim%M_sup
+    write(*,*) 'Msup=',sim%M_low
 !!$    write(*,*) 'Mlow=',sim%Bv1_low
 !!$    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
 !!$    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
-  !  stop
+   ! stop
 
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
@@ -1286,4 +1251,54 @@ contains
 
   end subroutine dtf
 
+  subroutine mpi_comm(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+    sll_int32 :: ierr
+    sll_int32  :: loc_sz_v1
+    sll_int32  :: loc_sz_v2
+    sll_int32  :: loc_sz_x1
+    sll_int32  :: loc_sz_x2
+    sll_int32  :: ranktop
+    sll_int32  :: rankbottom
+    sll_int32  :: datasize,datasizephi
+
+    call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+         loc_sz_v1, &
+         loc_sz_v2, &
+         loc_sz_x1, &
+         loc_sz_x2 )
+    ranktop=mod(sim%my_rank+1,sim%world_size)
+    rankbottom=sim%my_rank-1
+    if (rankbottom.lt.0) rankbottom=sim%world_size-1
+    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
+    datasizephi=loc_sz_x1
+
+    Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,loc_sz_x2),datasize, &
+         MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+         sim%fn_v1v2x1(1,1,1,0),datasize,            &
+         MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+
+    Call mpi_SENDRECV(sim%phi_x1(1,loc_sz_x2),datasizephi, &
+         MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+         sim%phi_x1(1,0),datasizephi,            &
+         MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+
+    ! bottom communications
+    Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
+         MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+         sim%fn_v1v2x1(1,1,1,loc_sz_x2+1),datasize,            &
+         MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+
+    Call mpi_SENDRECV(sim%phi_x1(1,1),datasizephi, &
+         MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+         sim%phi_x1(1,loc_sz_x2+1),datasizephi,            &
+         MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+
+
+
+  end subroutine mpi_comm
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
