@@ -122,27 +122,15 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export FFTW_ROOT=/usr/local
 fi
 
-if [[ `hostname` == "irma-spare" ]]; then
+if [[ `hostname` == "irma-4600" ]]; then
   source /opt/intel/composerxe/bin/compilervars.sh intel64
   source /opt/intel/mkl/bin/mklvars.sh intel64
-  export FC=ifort
-  export F77=ifort
+  source /opt/intel/impi/4.1.1.036/bin64/mpivars.sh 
   export CC=icc
-  export CXX=icpc
-  export F9X=ifort
-  export MPICH_FC=ifort
-  export MPICH_F90=ifort
-  export MPICH_CC=icc
-  export MPICH_CXX=icpc
+  export I_MPI_F90=ifort
+  export I_MPI_CC=icc
   export HDF5_ROOT=/opt/local
   export FFTW_ROOT=/opt/local
-  export CFLAGS='-O3 -xHost -ip'
-  export CXXFLAGS='-O3 -xHost -ip'
-  export FFLAGS='-O3 -xHost -ip'
-  export F90FLAGS='-O3 -xHost -ip'
-  export HDF5_HOME=/opt/local
-  export FFTW_HOME=/opt/local
-  mpd &
 fi
 
 mkdir build
