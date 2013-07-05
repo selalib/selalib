@@ -131,6 +131,7 @@ if [[ `hostname` == "irma-4600" ]]; then
   export I_MPI_CC=icc
   export HDF5_ROOT=/opt/local
   export FFTW_ROOT=/opt/local
+  export MKLROOT=/opt/intel/composer_xe_2013.4.183/mkl
 fi
 
 mkdir build
