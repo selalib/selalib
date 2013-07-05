@@ -14,7 +14,7 @@ program test_mesh_calculus
   class(sll_coordinate_transformation_2d_base), pointer :: Ti   ! identity 
   class(sll_coordinate_transformation_2d_base), pointer :: Tp   ! polar
   sll_real64 :: volume, length_east, length_west, length_north, length_south
-  sll_real64 :: int_east
+  sll_real64, dimension(2) :: int_east
   sll_int32  :: i, j
 
   m => new_logical_mesh_2d( &
@@ -72,6 +72,7 @@ program test_mesh_calculus
   print *, '---------------------------------------------------------------'
 
   int_east = normal_integral_eta1_plus(Ti,1,1,3)
+  print *, 'integral of the normal vector on east edge = ', int_east
 
   print *, 'PASSED'
 

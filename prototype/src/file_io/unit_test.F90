@@ -11,7 +11,7 @@ use sll_utilities, only: int2string
 sll_int32, private :: i, j, k !< indices
 sll_int32 :: error            !< error code
 sll_int32 :: file_id          !< file unit number
-integer   :: hfile_id          !< file unit number
+integer(hid_t) :: hfile_id    !< file unit number
 sll_int32 :: iplot            !< plot counter
 character(len=4) :: cplot     !< plot counter
 
@@ -111,7 +111,7 @@ call sll_xdmf_curv2d_nodes( "test_curv2d", df, "f3_2d", x1, x2, "HDF5")
 call sll_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
 call sll_hdf5_write_array(hfile_id,x1,"/x1",error)
 call sll_hdf5_file_close(hfile_id, error)
-call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+call sll_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
 call sll_hdf5_write_array(hfile_id,x2,"/x2",error)
 call sll_hdf5_file_close(hfile_id, error)
 
