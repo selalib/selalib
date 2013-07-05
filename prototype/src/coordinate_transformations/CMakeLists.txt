@@ -14,11 +14,10 @@ ENDIF()
 add_dependencies(sll_coordinate_transformations
 	sll_interpolators
 	sll_splines
-#        sll_utilities	
+        sll_utilities	
 	sll_constants
 	sll_file_io
 	sll_logical_meshes
-	sll_utilities
 	sll_memory
 	sll_assertion
 	sll_working_precision
@@ -29,11 +28,10 @@ target_link_libraries(test_coordinate_transformations_2d
 	sll_coordinate_transformations
 	sll_interpolators
 	sll_splines
-#        sll_utilities	
+        sll_utilities	
 	sll_constants
 	sll_file_io
 	sll_logical_meshes
-	sll_utilities
 	sll_memory
 	sll_assertion
 	sll_working_precision
