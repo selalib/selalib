@@ -122,7 +122,7 @@ if [ "$PIPOL_IMAGE_NAME" = "x86_64_mac-mac-osx-server-snow-leopard" ]; then
    export FFTW_ROOT=/usr/local
 fi
 
-if [[ `hostname` == "irma-4600" ]]; then
+if [[ `hostname -s` == "irma-4600" ]]; then
   source /opt/intel/composerxe/bin/compilervars.sh intel64
   source /opt/intel/mkl/bin/mklvars.sh intel64
   source /opt/intel/impi/4.1.1.036/bin64/mpivars.sh 
@@ -131,6 +131,7 @@ if [[ `hostname` == "irma-4600" ]]; then
   export I_MPI_CC=icc
   export HDF5_ROOT=/opt/local
   export FFTW_ROOT=/opt/local
+  export MKLROOT=/opt/intel/composer_xe_2013.4.183/mkl
 fi
 
 mkdir build
