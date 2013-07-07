@@ -28,6 +28,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32  :: nproc_x2
      ! Physics/numerical parameters
      sll_real64 :: dt
+     sll_real64 :: cfl !cfl value 
      sll_real64 :: tmax
      sll_int32  :: num_iterations
 
@@ -412,16 +413,22 @@ contains
     !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
 
 
-   ! time loop
-   t=0
-   do while(t.lt.sim%tmax)
-       t=t+1
-      ! mpi communications
-      call mpi_comm(sim)
-
-      call dtf(sim)
-
-
+    ! time loop
+    t=0
+    !compute the time step
+    sim%cfl=sim%params(7)
+!!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
+!!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta2_max
+!!$    write(*,*) 'deltav = ', sim%mesh2dx%delta_eta1
+!!$    write(*,*) 'surf/volum =  ', (sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+!!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
+    sim%dt = sim%cfl*sim%volume(1,1)/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
+    write(*,*) 'dt = ', sim%dt
+    do while(t.lt.sim%tmax)
+       t=t+sim%dt
+       call RK2(sim)
+    sim%fn_v1v2x1 = sim%fnp1_v1v2x1
    end do
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
@@ -729,19 +736,16 @@ contains
        end do
     end do
 
- !   write(*,*) 'Mdiag=',sim%M_diag
-    write(*,*) 'Msup=',sim%M_sup
-    write(*,*) 'Msup=',sim%M_low
-!!$    write(*,*) 'Mlow=',sim%Bv1_low
-!!$    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
-!!$    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
-   ! stop
+
+!!$    write(*,*) 'A1_sup=',sim%Av1_sup
+!!$    write(*,*) 'A1_low=',sim%Av1_low
+!!$    stop
 
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
     isol=0  ! we do not solve the linear system
     nsym=1  ! we do not take into account the symetry of M
-    mp=6   ! write the log on screen
+    mp=6    ! write the log on screen
 
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
          sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
@@ -1129,6 +1133,13 @@ contains
 
     source=Ex*source1+Ey*source2
 
+!!$    !can we do as following ? so we have to call only one 
+!!$    !time the subroutine mulk
+!!$    source=0
+!!$    call MULKU(sim%Bv1_sup*Ex+Ey*sim%Bv2_sup,sim%Bv1_diag*Ex+Ey*sim%Bv2_diag, &
+!!$         sim%Bv1_low*Ex+Ey*sim%Bv2_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source,sim%nsky)
+
 
     SLL_DEALLOCATE_ARRAY(source1,ierr)
     SLL_DEALLOCATE_ARRAY(source2,ierr)
@@ -1179,11 +1190,11 @@ contains
     SLL_ALLOCATE(temp(sim%np_v1,sim%np_v2),ierr)
     SLL_ALLOCATE(source(sim%np_v1,sim%np_v2),ierr)
 
-        ! LU decomposition of M
+        ! solve  Mvx=vf
     ifac=0  ! we do not compute the LU decomposition
     isol=1  ! we do solve the linear system
-    nsym=0  ! we do not take into account the symetry of M
-    mp=6   ! write the log on screen
+    nsym=1  ! we do not take into account the symetry of M
+    mp=6    ! write the log on screen
 
     
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
@@ -1200,6 +1211,10 @@ contains
           icR=ic+1
           call fluxnum(sim,sim%fn_v1v2x1(:,:,icL,jc), &
                sim%fn_v1v2x1(:,:,icR,jc),vn,flux)
+!!$          sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc) &
+!!$               -flux/sim%mesh2dx%delta_eta1
+!!$          sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc) &
+!!$               +flux/sim%mesh2dx%delta_eta1
           sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc)-flux
           sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc)+flux
        end do
@@ -1214,8 +1229,13 @@ contains
           jcR=jc+1
           call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
                sim%fn_v1v2x1(:,:,ic,jcR),vn,flux)
+!!$          sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL) &
+!!$               -flux/sim%mesh2dx%delta_eta2
+!!$          sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR) &
+!!$               +flux/sim%mesh2dx%delta_eta2
           sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
           sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
+ 
        end do
     end do
 
@@ -1229,17 +1249,21 @@ contains
           elseif(ic.ge.loc_sz_x1)then
              icR=1
           end if
-          Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-          Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
 
           temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
-          call sol(sim%M_sup,sim%M_diag,sim%M_low,&
+          call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+               sim%mkld, &
                sim%dtfn_v1v2x1(:,:,ic,jc),&
-               sim%mkld,temp,sim%np_v1*sim%np_v2, &
+               sim%np_v1*sim%np_v2, &
                mp,ifac,isol,nsym,void,ierr,&
                sim%nsky)
+          !if we call the sol here, it means that we have to call many times
+          !so if we call the sol out of the loop so we have to call it only 
+          !one time and we have juste modify the temp=>vector,no?
        end do
     end do
 
@@ -1250,6 +1274,31 @@ contains
 
 
   end subroutine dtf
+
+  subroutine euler(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    sim%fnp1_v1v2x1=0
+    ! mpi communications
+    call mpi_comm(sim)
+    call dtf(sim)
+    sim%fnp1_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
+         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)
+  end subroutine euler
+
+  subroutine RK2(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    sim%fnp1_v1v2x1=0
+    ! mpi communications
+    call mpi_comm(sim)
+    call dtf(sim)
+    sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%fn_v1v2x1
+    sim%fn_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
+         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)/2
+    call mpi_comm(sim)
+    call dtf(sim)
+    sim%fnp1_v1v2x1 = (sim%volume(1,1)*sim%fnp1_v1v2x1 &
+         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)
+  end subroutine RK2
 
   subroutine mpi_comm(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
