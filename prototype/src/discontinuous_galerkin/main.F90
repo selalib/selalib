@@ -57,14 +57,14 @@ program VP_DG
   !read(*,NML=param)
 
   !definition of geometry and data
-  k=0.5d0
+  k=1.0d0
   !k=2.0d0/13.0d0
   !k=0.3d0
   !k=1.0d0/k
 
 !!$  x_min=0.0d0
 !!$  x_max=sll_pi!
-!$  v_min=0
+!!$  v_min=0
 !!$  v_max=sll_pi
 
 !!$  x_min=0.0d0
@@ -91,12 +91,12 @@ program VP_DG
 
   x_min=0.0d0
   !x_max=2.0d0*sll_pi/k
-  x_max=20.0d0*sll_pi
+  x_max=26.0d0*sll_pi
   v_min=-8.0d0
-  v_max=12.0d0
+  v_max=8.0d0
 
-  nx=16
-  nv=20
+  nx=18
+  nv=16
   ng=8
 
   print*,'discretization caracteristics :'
@@ -109,11 +109,11 @@ program VP_DG
 
   !definition or time step, delta_t and final time
   dt=0.001d0
-  tf=200.0d0
+  tf=1000.0d0
   nb_step=ceiling(tf/dt)
   th=min(20,int(0.1d0/dt))!20
   th_out=int(0.5d0/dt)
-  th_large=int(5.0d0/dt) ! must be a multiple of th
+  th_large=int(10.0d0/dt) ! must be a multiple of th
   !th_large=huge(1)
   if (modulo(th_large,th)/=0) then
      print*,"WARNING : snapshot of the electric field may be miscalculated"
@@ -199,16 +199,16 @@ program VP_DG
 !!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !classical two streams instability
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
-!!$                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
-!!$                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
-!!$                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
+                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
+                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
+                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
 
               !Bump on tail
               !from michel, eric and nicolas
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
-                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
-                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
+!!$                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
+!!$                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=&!(1.0d0-0.05d0*cos(k*x))
 !!$                   & 1.0d0/sqrt(2.0d0*sll_pi)* &
@@ -486,10 +486,10 @@ contains
     write(20,*)""
     write(20,*)"final time :",real(tf,4)
     write(20,*)"number of time steps :",nt
-    write(20,*)"size of time steps   :",dt
-    write(20,*)"frequency of time historic :",real(th,4)*dt,th
+    write(20,*)"size of time steps   :",real(dt,4)
+    write(20,*)"frequency of time historic :",real(th*dt,4),th
     write(20,*)"number of time historic    :",nt/th+1
-    write(20,*)"frequency of snapshot :",real(thl,4)*dt,thl
+    write(20,*)"frequency of snapshot :",real(thl*dt,4),thl
     write(20,*)"number of snapshot    :",nt/thl+1
     write(20,*)""
     if (x_upwind) then

@@ -34,7 +34,7 @@ module sll_timestep4dg
 
   implicit none
 
-  logical,parameter :: v_periodic=.false.,x_upwind=.true.,v_upwind=.true.
+  logical,parameter :: v_periodic=.true.,x_upwind=.true.,v_upwind=.true.
   integer,parameter :: SLL_RK3=0,SLL_RK4=1,SLL_EE=2,SLL_TVDRK2=3
   !<parameters to compute the time integration
 
@@ -50,10 +50,10 @@ module sll_timestep4dg
      sll_real64,dimension(:),allocatable :: phi,field,rho
      sll_real64,dimension(:,:),allocatable :: rhs ! right hand side of Vlasov
      sll_real64 :: dt,t,bound,norma ! time step and time, value for Vlasov-Poisson problem
-     sll_int32 :: x0 ! place to apply phi(x=0)=alpha
+     sll_int32 :: x0 ! place to apply phi(x0)=alpha
      sll_int32 :: method,zero ! computation method, node such as j<zero => v<0
      ! Poisson's problem
-     type(poisson_1d_periodic_dg) :: poisson_vp,poisson_vm,poisson_0
+     type(poisson_1d_periodic_dg) :: poisson_vp,poisson_vm
   end type dg_time_steping
 
   interface new
@@ -192,7 +192,6 @@ contains
     ! initialization of Poisson's
     call new(plan%poisson_vp,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
     call new(plan%poisson_vm,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
-    call new(plan%poisson_0,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
 
   end subroutine init_k2_4dg
 
@@ -257,7 +256,6 @@ contains
     ! initialization of Poisson's
     call new(plan%poisson_vp,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
     call new(plan%poisson_vm,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
-    call new(plan%poisson_0,gll,nx,mesh%jac(1:nx,nv+1),c11,c12,xbound,.true.)
 
   end subroutine init_k3_4dg
 
@@ -274,7 +272,6 @@ contains
     deallocate(plan%k,plan%field,plan%phi,plan%rho,plan%rhs)
     call delete(plan%poisson_vp)
     call delete(plan%poisson_vm)
-    call delete(plan%poisson_0)
     
   end subroutine delete_dg_step
 
