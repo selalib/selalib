@@ -111,7 +111,9 @@ ENDIF()
 #
 # ****************************************************************************
 
-IF(MPI_MODULE_ENABLED)
+# This test has parallel diagnostics. Maybe these should only be turned on
+# when debugging this specific module.
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_LIBRARY(sll_poisson_parallel STATIC 
                sll_poisson_polar_parallel.F90 
@@ -131,12 +133,6 @@ IF(MPI_MODULE_ENABLED)
 
    TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
 
-ENDIF()
-
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
-
-   # This test has hdf5 diagnostics. Maybe these should only be turned on
-   # when debugging this specific module.
    ADD_EXECUTABLE( test_poisson_2d_per_cart_par 
                    test_poisson_2d_periodic_cartesian_par.F90 )
 
