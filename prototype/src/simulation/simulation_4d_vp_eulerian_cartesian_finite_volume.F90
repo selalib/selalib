@@ -771,6 +771,9 @@ contains
 !!$    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
 !!$    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
   !  stop
+!!$    write(*,*) 'b1diag',sim%Bv1_diag
+!!$    write(*,*) 'b2diag',sim%Bv2_diag
+!!$    stop
 
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
