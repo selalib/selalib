@@ -10,23 +10,10 @@ module sll_mesh_calculus_2d_module
   ! --------------------------------------------------------------------------
   !
   ! The mesh calculus module aims at providing the means of computing
-  ! quantities like edge-lengths, areas and volumes of cell elements in 
-  ! a deformed mesh.
+  ! quantities like edge-lengths, areas, volumes and normals of cell elements 
+  ! in a deformed mesh.
   !
   ! --------------------------------------------------------------------------
-
-  ! Try first a module without a native type since all information is 
-  ! contained in a coordinate transformation... does this imply that these
-  ! should be methods of the coordinate transformation type? Probably, but
-  ! not necessarily if this module behaves exclusively as a client of the
-  ! coordinate transformation module.
-
-!!$  type :: sll_mesh_calculus_2d
-!!$      class(sll_coordinate_transformation_2d_base), pointer :: T
-!!$   contains
-!!$     procedure, pass(obj) :: cell_volume => cell_vol
-!!$  end type sll_mesh_calculus_2d
-
 
 contains
 
@@ -335,10 +322,10 @@ contains
   ! integral of the normal vector over the 'east' edge of the cell.
   function normal_integral_eta1_plus( T,ic,jc,integration_degree ) result(res)
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    sll_int32, intent(in) :: ic
-    sll_int32, intent(in) :: jc
-    sll_int32, intent(in) :: integration_degree
-    sll_real64            :: res
+    sll_int32, intent(in)     :: ic
+    sll_int32, intent(in)     :: jc
+    sll_int32, intent(in)     :: integration_degree
+    sll_real64, dimension(2)  :: res
 
     sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
@@ -364,8 +351,6 @@ contains
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= T%mesh%num_cells1)
     SLL_ASSERT(jc <= T%mesh%num_cells2)
-
-    res = 0.0_f64
 
 !    eta1_min = T%mesh%eta1_min
     delta1   = T%mesh%delta_eta1
@@ -390,6 +375,7 @@ contains
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
     edge_length = edge_length_eta1_plus( T, ic, jc, integration_degree )
+    res(:) = 0.0_f64
 
     do j=1,integration_degree
        ! this can be made more efficient if we could access directly each
@@ -397,20 +383,21 @@ contains
        inv_jac_mat(:,:) = T%inverse_jacobian_matrix(eta1,pts_g2(1,j))
        eta1_x1 = inv_jac_mat(1,1)
        eta1_x2 = inv_jac_mat(2,1)
-       print *, 'eta1_x1 = ', eta1_x1, 'eta1_x2 = ', eta1_x2
-       print *, 'gradient length = ', eta1_x1**2 + eta1_x2**2
-       res = res + (eta1_x1**2 + eta1_x2**2)*pts_g2(2,j)
+       SLL_ASSERT(T%jacobian(eta1,pts_g2(1,j)) > 0.0_f64)
+       res(1) = res(1) + eta1_x1*pts_g2(2,j)
+       res(2) = res(2) + eta1_x2*pts_g2(2,j)
     end do
-    res = res*factor2*edge_length
+    res(1) = res(1)*factor2*edge_length
+    res(2) = res(2)*factor2*edge_length
   end function normal_integral_eta1_plus
 
   ! integral of the normal vector over the 'west' edge of the cell.
   function normal_integral_eta1_minus( T,ic,jc,integration_degree ) result(res)
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    sll_int32, intent(in) :: ic
-    sll_int32, intent(in) :: jc
-    sll_int32, intent(in) :: integration_degree
-    sll_real64            :: res
+    sll_int32, intent(in)    :: ic
+    sll_int32, intent(in)    :: jc
+    sll_int32, intent(in)    :: integration_degree
+    sll_real64, dimension(2) :: res
 
     sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
@@ -436,8 +423,6 @@ contains
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= T%mesh%num_cells1)
     SLL_ASSERT(jc <= T%mesh%num_cells2)
-
-    res = 0.0_f64
 
 !    eta1_min = T%mesh%eta1_min
     delta1   = T%mesh%delta_eta1
@@ -469,20 +454,22 @@ contains
        inv_jac_mat(:,:) = T%inverse_jacobian_matrix(eta1,pts_g2(1,j))
        eta1_x1 = inv_jac_mat(1,1)
        eta1_x2 = inv_jac_mat(2,1)
-       print *, 'eta1_x1 = ', eta1_x1, 'eta1_x2 = ', eta1_x2
-       print *, 'gradient length = ', eta1_x1**2 + eta1_x2**2
-       res = res + (eta1_x1**2 + eta1_x2**2)*pts_g2(2,j)
+       SLL_ASSERT(T%jacobian(eta1,pts_g2(1,j)) > 0.0_f64)
+       res(1) = res(1) + eta1_x1*pts_g2(2,j)
+       res(2) = res(2) + eta1_x2*pts_g2(2,j)
     end do
-    res = res*factor2*edge_length
+    ! change of sign due to the direction in which the integral is done
+    res(1) = -res(1)*factor2*edge_length 
+    res(2) = -res(2)*factor2*edge_length 
   end function normal_integral_eta1_minus
 
   ! integral of the normal vector over the 'north' edge of the cell.
   function normal_integral_eta2_plus( T,ic,jc,integration_degree ) result(res)
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    sll_int32, intent(in) :: ic
-    sll_int32, intent(in) :: jc
-    sll_int32, intent(in) :: integration_degree
-    sll_real64            :: res
+    sll_int32, intent(in)    :: ic
+    sll_int32, intent(in)    :: jc
+    sll_int32, intent(in)    :: integration_degree
+    sll_real64, dimension(2) :: res
 
     sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
     sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
@@ -508,8 +495,6 @@ contains
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= T%mesh%num_cells1)
     SLL_ASSERT(jc <= T%mesh%num_cells2)
-
-    res = 0.0_f64
 
     eta1_min = T%mesh%eta1_min
     delta1   = T%mesh%delta_eta1
@@ -534,6 +519,7 @@ contains
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
     edge_length = edge_length_eta2_plus( T, ic, jc, integration_degree )
+    res(:) = 0.0_f64
 
     do i=1,integration_degree
        ! this can be made more efficient if we could access directly each
@@ -541,18 +527,21 @@ contains
        inv_jac_mat(:,:) = T%inverse_jacobian_matrix(pts_g1(1,i),eta2)
        eta2_x1 = inv_jac_mat(2,1)
        eta2_x2 = inv_jac_mat(2,2)
-       res = res + (eta2_x1**2 + eta2_x2**2)*pts_g1(2,i)
+       SLL_ASSERT(T%jacobian(pts_g1(1,i),eta2) > 0.0_f64)
+       res(1) = res(1) + eta2_x1*pts_g1(2,i)
+       res(2) = res(2) + eta2_x2*pts_g1(2,i)
     end do
-    res = res*factor1*edge_length
+    res(1) = res(1)*factor1*edge_length
+    res(2) = res(2)*factor1*edge_length
   end function normal_integral_eta2_plus
 
   ! integral of the normal vector over the 'southth' edge of the cell.
   function normal_integral_eta2_minus( T,ic,jc,integration_degree ) result(res)
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    sll_int32, intent(in) :: ic
-    sll_int32, intent(in) :: jc
-    sll_int32, intent(in) :: integration_degree
-    sll_real64            :: res
+    sll_int32, intent(in)    :: ic
+    sll_int32, intent(in)    :: jc
+    sll_int32, intent(in)    :: integration_degree
+    sll_real64, dimension(2) :: res
 
     sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
     sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
@@ -579,8 +568,6 @@ contains
     SLL_ASSERT(ic <= T%mesh%num_cells1)
     SLL_ASSERT(jc <= T%mesh%num_cells2)
 
-    res = 0.0_f64
-
     eta1_min = T%mesh%eta1_min
     delta1   = T%mesh%delta_eta1
 !    eta2_min = T%mesh%eta2_min
@@ -604,6 +591,7 @@ contains
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
     edge_length = edge_length_eta2_minus( T, ic, jc, integration_degree )
+    res(:) = 0.0_f64
 
     do i=1,integration_degree
        ! this can be made more efficient if we could access directly each
@@ -611,9 +599,13 @@ contains
        inv_jac_mat(:,:) = T%inverse_jacobian_matrix(pts_g1(1,i),eta2)
        eta2_x1 = inv_jac_mat(2,1)
        eta2_x2 = inv_jac_mat(2,2)
-       res = res + (eta2_x1**2 + eta2_x2**2)*pts_g1(2,i)
+       SLL_ASSERT(T%jacobian(pts_g1(1,i),eta2) > 0.0_f64)
+       res(1) = res(1) + eta2_x1*pts_g1(2,i)
+       res(2) = res(2) + eta2_x2*pts_g1(2,i)
     end do
-    res = res*factor1*edge_length
+    ! change of sign due to direction of integration
+    res(1) = -res(1)*factor1*edge_length
+    res(2) = -res(2)*factor1*edge_length
   end function normal_integral_eta2_minus
 
 

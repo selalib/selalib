@@ -28,7 +28,9 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32  :: nproc_x2
      ! Physics/numerical parameters
      sll_real64 :: dt
+     sll_real64 :: cfl !cfl value 
      sll_real64 :: tmax
+     sll_real64 :: Enorm
      sll_int32  :: num_iterations
 
      ! Mesh parameters
@@ -180,18 +182,7 @@ contains
     sll_real64 :: dv
     sll_int32  :: ierr
     sll_int32  :: itime
-!!$    sll_int32  :: nc_v1
-!!$    sll_int32  :: nc_v2
-!!$    sll_int32  :: nc_x1
-!!$    sll_int32  :: nc_x2
-!!$    sll_int32  :: np_v1
-!!$    sll_int32  :: np_v2
-    sll_int32  :: ranktop
-    sll_int32  :: rankbottom
-    sll_int32  :: message_id
-    sll_int32  :: datasize,datasizephi
     sll_int32  :: istat
-    sll_int32  :: tagtop,tagbottom
     sll_int32  :: ic
     sll_int32  :: jc
     
@@ -312,12 +303,7 @@ contains
 
 
     !
-    do i=1,loc_sz_x1
-       do j=1,loc_sz_x2
-          sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
-          !sim%rho_x1(i,j)=1.d0
-       enddo
-    enddo
+
 
 !!$    do i=1,loc_sz_x1
 !!$       do j=1,loc_sz_x2
@@ -325,10 +311,7 @@ contains
 !!$       enddo
 !!$    enddo
 
-    ! solve the poisson equation
-    call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, sim%rho_x1,&
-         sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
-
+ 
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -362,14 +345,14 @@ contains
 
 
     ! mpi communications parameters
-    ranktop=mod(sim%my_rank+1,sim%world_size)
-    rankbottom=sim%my_rank-1
-    if (rankbottom.lt.0) rankbottom=sim%world_size-1
-    message_id=1
-    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
-    datasizephi=loc_sz_x1
-    tagtop=sim%my_rank
-    tagbottom=ranktop
+!!$    ranktop=mod(sim%my_rank+1,sim%world_size)
+!!$    rankbottom=sim%my_rank-1
+!!$    if (rankbottom.lt.0) rankbottom=sim%world_size-1
+!!$    message_id=1
+!!$    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
+!!$    datasizephi=loc_sz_x1
+!!$    tagtop=sim%my_rank
+!!$    tagbottom=ranktop
 
 
     ! init the volume and surface arrays
@@ -422,43 +405,37 @@ contains
     !write(*,*) 'vertical',sim%my_rank,sum(sim%surfx1(1,:))
     !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
 
+    
+    ! time loop
+    t=0
+    !compute the time step
+    sim%cfl=sim%params(7)
+!!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
+!!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta2_max
+!!$    write(*,*) 'deltav = ', sim%mesh2dx%delta_eta1
+!!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+!!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
+!!$    stop
+    sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
+    write(*,*) 'dt = ', sim%dt
 
-   ! time loop
-   t=0
-   do while(t.lt.sim%tmax)
-       t=t+1
-      
-      ! mpi communications
-      ! top communications
-      Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,loc_sz_x2),datasize, &
-           MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-           sim%fn_v1v2x1(1,1,1,0),datasize,            &
-           MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+    do while(t.lt.sim%tmax)
+       !compute the charge density
+       do i=1,loc_sz_x1
+          do j=1,loc_sz_x2
+             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
+          enddo
+       enddo
+       ! solve the poisson equation
+       call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
+            sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
 
-      Call mpi_SENDRECV(sim%phi_x1(1,loc_sz_x2),datasizephi, &
-           MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-           sim%phi_x1(1,0),datasizephi,            &
-           MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
-
-      ! bottom communications
-      Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
-           MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-           sim%fn_v1v2x1(1,1,1,loc_sz_x2+1),datasize,            &
-           MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
-
-      Call mpi_SENDRECV(sim%phi_x1(1,1),datasizephi, &
-           MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-           sim%phi_x1(1,loc_sz_x2+1),datasizephi,            &
-           MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-           MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
-
-      call dtf(sim)
-
-
-   end do
+       t=t+sim%dt
+       call RK2(sim)
+       sim%fn_v1v2x1 = sim%fnp1_v1v2x1
+       write(*,*) 't = ', t
+    end do
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
@@ -765,21 +742,12 @@ contains
        end do
     end do
 
-!!$    write(*,*) 'Mdiag=',sim%Bv1_diag
-!!$    write(*,*) 'Msup=',sim%Bv1_sup
-!!$    write(*,*) 'Mlow=',sim%Bv1_low
-!!$    write(*,*) 'M(1,2) = ',sim%Bv1_sup(1)
-!!$    write(*,*) 'M(2,1) = ',sim%Bv1_low(1)
-  !  stop
-!!$    write(*,*) 'b1diag',sim%Bv1_diag
-!!$    write(*,*) 'b2diag',sim%Bv2_diag
-!!$    stop
 
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
     isol=0  ! we do not solve the linear system
     nsym=1  ! we do not take into account the symetry of M
-    mp=6   ! write the log on screen
+    mp=6    ! write the log on screen
 
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
          sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
@@ -1127,6 +1095,63 @@ contains
        dlag(4,3) = 0.5150319221529816884980638312903767867892D0
        dlag(4,4) = 0.2157653673851862185103303519133755608117D1
 
+    case(4)
+      gauss(1) = -0.9061798459386639927976268782993929651254D0
+      gauss(2) = -0.5384693101056830910363144207002088049674D0
+      gauss(3) = 0.0D0
+      gauss(4) = 0.5384693101056830910363144207002088049674D0
+      gauss(5) = 0.9061798459386639927976268782993929651254D0
+      weight(1) = 0.2369268850561890875142640407199173626416D0
+      weight(2) = 0.4786286704993664680412915148356381929120D0
+      weight(3) = 0.5688888888888888888888888888888888888888D0
+      weight(4) = 0.4786286704993664680412915148356381929120D0
+      weight(5) = 0.2369268850561890875142640407199173626416D0
+      lag(1,1) = 0.6577278825775883905959416853145508163014D0
+      lag(1,2) = 0.2206310329510026462660372235361697772283D-1
+      lag(1,4) = -0.6618786099995526088371303768558919770637D-2
+      lag(1,5) = -0.3237267008427455182670790754452363027997D-1
+      lag(2,1) = 0.6076926946610149906004284764305419175436D0
+      lag(2,2) = 0.1058797182171758427703178033099861242748D1
+      lag(2,4) = 0.3922234075058382706049924394379542780120D-1
+      lag(2,5) = 0.1755341081074128898504739055499048804553D0
+      lag(3,1) = -0.4085820152617417192201361597504739840206D0
+      lag(3,2) = -0.1134638401174469933019096956287147285027D0
+      lag(3,3) = 0.1000000000000000000000000000000000000000D1
+      lag(3,4) = -0.1134638401174469933019096956287147285028D0
+      lag(3,5) = -0.4085820152617417192201361597504739840207D0
+      lag(4,1) = 0.1755341081074128898504739055499048804554D0
+      lag(4,2) = 0.3922234075058382706049924394379542780120D-1
+      lag(4,4) = 0.1058797182171758427703178033099861242748D1
+      lag(4,5) = 0.6076926946610149906004284764305419175436D0
+      lag(5,1) = -0.3237267008427455182670790754452363027997D-1
+      lag(5,2) = -0.6618786099995526088371303768558919770637D-2
+      lag(5,4) = 0.2206310329510026462660372235361697772283D-1
+      lag(5,5) = 0.6577278825775883905959416853145508163015D0
+      dlag(1,1) = -0.3157918213674122166875093558348224319248D1
+      dlag(1,2) = -0.6500852780101332162336916681696991811558D0
+      dlag(1,3) = 0.1666666666666666666666666666666666666667D0
+      dlag(1,4) = -0.1763781803592946593495819498808563878701D0
+      dlag(1,5) = 0.2066038942657722646805893986210021104953D0
+      dlag(2,1) = 0.5055639151533482794115362560468103207732D1
+      dlag(2,2) = -0.1379999586751627374793764628172594064273D1
+      dlag(2,3) = -0.1333333333333333333333333333333333333333D1
+      dlag(2,4) = 0.1032926503490483125960311864273705202324D1
+      dlag(2,5) = -0.1153010512716782989726354241013658790230D1
+      dlag(3,1) = -0.2844127556310371352286033844512535568221D1
+      dlag(3,2) = 0.2886633187892949057638186210735142059883D1
+      dlag(3,4) = -0.2886633187892949057638186210735142059882D1
+      dlag(3,5) = 0.2844127556310371352286033844512535568222D1
+      dlag(4,1) = 0.1153010512716782989726354241013658790231D1
+      dlag(4,2) = -0.1032926503490483125960311864273705202324D1
+      dlag(4,3) = 0.1333333333333333333333333333333333333334D1
+      dlag(4,4) = 0.1379999586751627374793764628172594064273D1
+      dlag(4,5) = -0.5055639151533482794115362560468103207737D1
+      dlag(5,1) = -0.2066038942657722646805893986210021104953D0
+      dlag(5,2) = 0.1763781803592946593495819498808563878701D0
+      dlag(5,3) = -0.1666666666666666666666666666666666666667D0
+      dlag(5,4) = 0.6500852780101332162336916681696991811557D0
+      dlag(5,5) = 0.3157918213674122166875093558348224319247D1
+
     case default
        write(*,*) 'degree ',degree,' not implemented !'
        stop
@@ -1166,6 +1191,13 @@ contains
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
 
     source=Ex*source1+Ey*source2
+
+!!$    !can we do as following ? so we have to call only one 
+!!$    !time the subroutine mulk
+!!$    source=0
+!!$    call MULKU(sim%Bv1_sup*Ex+Ey*sim%Bv2_sup,sim%Bv1_diag*Ex+Ey*sim%Bv2_diag, &
+!!$         sim%Bv1_low*Ex+Ey*sim%Bv2_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source,sim%nsky)
 
 
     SLL_DEALLOCATE_ARRAY(source1,ierr)
@@ -1217,17 +1249,17 @@ contains
     SLL_ALLOCATE(temp(sim%np_v1,sim%np_v2),ierr)
     SLL_ALLOCATE(source(sim%np_v1,sim%np_v2),ierr)
 
-        ! LU decomposition of M
+        ! solve  Mvx=vf
     ifac=0  ! we do not compute the LU decomposition
     isol=1  ! we do solve the linear system
-    nsym=0  ! we do not take into account the symetry of M
-    mp=6   ! write the log on screen
+    nsym=1  ! we do not take into account the symetry of M
+    mp=6    ! write the log on screen
 
     
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! init
     sim%dtfn_v1v2x1=0
-
+    sim%Enorm = 0
     !compute the fluxes in the x1 direction
     vn(1)=1*sim%surfx1(1,1) ! temporaire !!!!
     vn(2)=0
@@ -1238,6 +1270,10 @@ contains
           icR=ic+1
           call fluxnum(sim,sim%fn_v1v2x1(:,:,icL,jc), &
                sim%fn_v1v2x1(:,:,icR,jc),vn,flux)
+!!$          sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc) &
+!!$               -flux/sim%mesh2dx%delta_eta1
+!!$          sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc) &
+!!$               +flux/sim%mesh2dx%delta_eta1
           sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc)-flux
           sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc)+flux
        end do
@@ -1252,8 +1288,13 @@ contains
           jcR=jc+1
           call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
                sim%fn_v1v2x1(:,:,ic,jcR),vn,flux)
+!!$          sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL) &
+!!$               -flux/sim%mesh2dx%delta_eta2
+!!$          sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR) &
+!!$               +flux/sim%mesh2dx%delta_eta2
           sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
           sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
+ 
        end do
     end do
 
@@ -1267,17 +1308,22 @@ contains
           elseif(ic.ge.loc_sz_x1)then
              icR=1
           end if
-          Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-          Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
+          sim%Enorm=sim%Enorm + sim%volume(1,1)*(Ex*Ex+Ey*Ey)
 
           temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
-          call sol(sim%M_sup,sim%M_diag,sim%M_low,&
+          call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+               sim%mkld, &
                sim%dtfn_v1v2x1(:,:,ic,jc),&
-               sim%mkld,temp,sim%np_v1*sim%np_v2, &
+               sim%np_v1*sim%np_v2, &
                mp,ifac,isol,nsym,void,ierr,&
                sim%nsky)
+          !if we call the sol here, it means that we have to call many times
+          !so if we call the sol out of the loop so we have to call it only 
+          !one time and we have juste modify the temp=>vector,no?
        end do
     end do
 
@@ -1289,4 +1335,79 @@ contains
 
   end subroutine dtf
 
+  subroutine euler(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    sim%fnp1_v1v2x1=0
+    ! mpi communications
+    call mpi_comm(sim)
+    call dtf(sim)
+    sim%fnp1_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
+         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)
+  end subroutine euler
+
+  subroutine RK2(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+    sim%fnp1_v1v2x1=0
+    ! mpi communications
+    call mpi_comm(sim)
+    call dtf(sim)
+    sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%fn_v1v2x1
+    sim%fn_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
+         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)/2
+    call mpi_comm(sim)
+    call dtf(sim)
+    sim%fnp1_v1v2x1 = (sim%volume(1,1)*sim%fnp1_v1v2x1 &
+         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)
+  end subroutine RK2
+
+  subroutine mpi_comm(sim)
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+    sll_int32 :: ierr
+    sll_int32  :: loc_sz_v1
+    sll_int32  :: loc_sz_v2
+    sll_int32  :: loc_sz_x1
+    sll_int32  :: loc_sz_x2
+    sll_int32  :: ranktop
+    sll_int32  :: rankbottom
+    sll_int32  :: datasize,datasizephi
+
+    call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+         loc_sz_v1, &
+         loc_sz_v2, &
+         loc_sz_x1, &
+         loc_sz_x2 )
+    ranktop=mod(sim%my_rank+1,sim%world_size)
+    rankbottom=sim%my_rank-1
+    if (rankbottom.lt.0) rankbottom=sim%world_size-1
+    datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
+    datasizephi=loc_sz_x1
+
+    Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,loc_sz_x2),datasize, &
+         MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+         sim%fn_v1v2x1(1,1,1,0),datasize,            &
+         MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+
+    Call mpi_SENDRECV(sim%phi_x1(1,loc_sz_x2),datasizephi, &
+         MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+         sim%phi_x1(1,0),datasizephi,            &
+         MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+
+    ! bottom communications
+    Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
+         MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+         sim%fn_v1v2x1(1,1,1,loc_sz_x2+1),datasize,            &
+         MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+
+    Call mpi_SENDRECV(sim%phi_x1(1,1),datasizephi, &
+         MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+         sim%phi_x1(1,loc_sz_x2+1),datasizephi,            &
+         MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+         MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+
+
+
+  end subroutine mpi_comm
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module

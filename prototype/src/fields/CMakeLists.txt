@@ -14,7 +14,43 @@ add_library(sll_scalar_field_2d STATIC
   gaussian_2d_initializer.F90
   tsi_2d_initializer.F90	
 	)		
+###################3
+add_library(sll_scalar_field_2d_alternative STATIC 
+  sll_scalar_field_2d_base.F90
+  sll_scalar_field_2d_alternative.F90
+  )		
 
+add_dependencies(sll_scalar_field_2d_alternative
+  sll_coordinate_transformations
+  sll_logical_meshes
+  sll_boundary_condition_descriptors
+  sll_interpolators
+#	sll_splines
+  sll_file_io
+  sll_constants
+  sll_utilities
+  sll_assertion
+  sll_memory
+  sll_working_precision
+)
+
+add_executable(test_scalar_fields_alternative unit_test_alternative.F90)
+target_link_libraries(test_scalar_fields_alternative
+	sll_scalar_field_2d_alternative
+	sll_coordinate_transformations
+	sll_logical_meshes
+	sll_boundary_condition_descriptors
+	sll_interpolators
+#	sll_splines
+	sll_file_io
+	sll_constants
+	sll_utilities
+	sll_assertion
+	sll_memory
+	sll_working_precision
+)
+
+##############
 add_dependencies(sll_scalar_field_2d
 	sll_mapped_meshes
 	sll_interpolators
@@ -23,7 +59,6 @@ add_dependencies(sll_scalar_field_2d
 	sll_constants
 	sll_utilities
 	geometry_functions
-	sll_logical_meshes
 	sll_assertion
 	sll_memory
 	sll_working_precision
@@ -71,6 +106,5 @@ target_link_libraries(test_scalar_field
 	sll_assertion
 	sll_memory
 	sll_working_precision
-        ${HDF5_LIBRARIES}
 )
 ENDIF(NOT STDF95)
