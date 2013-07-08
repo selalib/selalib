@@ -64,11 +64,12 @@ contains
 
 
   !> Initialize the Poisson solver in polar coordinates
-  subroutine initialize_poisson_polar(this, layout_a, &
+  subroutine initialize_poisson_polar(this, layout_r, layout_a, &
              rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
 
     implicit none
     type(sll_poisson_polar) :: this
+    type(layout_2D), pointer :: layout_r !< sequential in r direction
     type(layout_2D), pointer :: layout_a !< sequential in theta direction
 
 
@@ -113,19 +114,13 @@ contains
 
     psize = sll_get_collective_size(sll_world_collective)
 
-    ! Layout and local sizes for FFTs in r-direction
-    this%layout_r => new_layout_2D( sll_world_collective )
-    call initialize_layout_with_distributed_2D_array( nr+1,   &
-                                                      ntheta+1,   &
-                                                      1,      &
-                                                      psize,  &
-                                                      this%layout_r )
-    call compute_local_sizes_2d(this%layout_r,nr_loc,na_loc)
+    this%layout_r => layout_r
+    call compute_local_sizes_2d(layout_r,nr_loc,na_loc)
     SLL_CLEAR_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
 
     ! Layout and local sizes for FFTs in theta-direction
     this%layout_a => layout_a
-    call compute_local_sizes_2d(this%layout_a,nr_loc,na_loc)
+    call compute_local_sizes_2d(layout_a,nr_loc,na_loc)
     SLL_CLEAR_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
 
     this%rmp_ra => new_remap_plan(this%layout_r, this%layout_a, this%f_r)
@@ -177,10 +172,10 @@ contains
     rmin   = this%rmin
     dr     = this%dr
 
-    bc         = this%bc
+    bc       = this%bc
+    call verify_argument_sizes_par(this%layout_a, rhs)
     this%f_a = rhs
 
-    call verify_argument_sizes_par(this%layout_a, rhs, phi)
 
     call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
 
@@ -278,29 +273,26 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(this%bw,phi(i,1:ntheta),this%phik(i),k)
+        call fft_set_mode(this%bw,this%f_r(i,1:ntheta),this%phik(i),k)
       end do
     end do
 
     call apply_remap_2D( this%rmp_ra, this%f_r, this%f_a )
     call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
 
-
-    ! FFT INVERSE
+    call verify_argument_sizes_par(this%layout_a, phi)
+    
     do i=1,nr+1
-      call fft_apply_plan(this%bw,phi(i,1:ntheta),phi(i,1:ntheta))
+      call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta))
     end do
-
-    phi(:,ntheta+1)=phi(:,1)
 
   end subroutine solve_poisson_polar
 
 
-  subroutine verify_argument_sizes_par(layout, rho, phi)
+  subroutine verify_argument_sizes_par(layout, array)
 
     type(layout_2D), pointer       :: layout
-    sll_real64, dimension(:,:)     :: rho
-    sll_real64, dimension(:,:)     :: phi
+    sll_real64, dimension(:,:)     :: array
     sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
     sll_int32                      :: i
 
@@ -310,7 +302,7 @@ contains
     call compute_local_sizes_2d( layout, n(1), n(2) )
 
     do i=1,2
-       if ( (n(i)/=size(rho,i)) .or. (n(i)/=size(phi,i))  ) then
+       if ( (n(i)/=size(array,i))) then
           print*, 'ERROR: solve_poisson_polar_parallel()', &
                'size of either rhs or phi does not match expected size. '
           if (i==1) then
