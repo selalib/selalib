@@ -659,7 +659,7 @@ contains
                      (ic+gauss(iploc+1))*sim%mesh2dv%delta_eta1
                 yref=sim%mesh2dv%eta2_min+ &
                      (jc+gauss(jploc+1))*sim%mesh2dv%delta_eta2
-               ! write(*,*) 'xref,yref=',xref,yref
+               write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
                 jacob=sim%tv%jacobian_matrix(xref,yref)
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
                 det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
@@ -709,6 +709,7 @@ contains
 
              end do
           end do
+          write(*,*)
 
           av2loc = 0
 !!$          do ii=1,(sim%degree+1)**2
@@ -737,7 +738,7 @@ contains
                    ll=sim%mkld(i+1)-i+j
                    sim%M_low(ll)=sim%M_low(ll)+mloc(ii,jj)
                    sim%Av1_low(ll)=sim%Av1_low(ll)+av1loc(ii,jj)
-                   sim%Av2_low(ll)=sim%Av2_low(ll)+av1loc(ii,jj)
+                   sim%Av2_low(ll)=sim%Av2_low(ll)+av2loc(ii,jj)
                    sim%Bv1_low(ll)=sim%Bv1_low(ll)+bv1loc(ii,jj)
                    sim%Bv2_low(ll)=sim%Bv2_low(ll)+bv2loc(ii,jj)
                 end if
