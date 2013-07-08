@@ -27,14 +27,14 @@ sll_int32, parameter  :: n = 4
 
 print*,'Testing the Poisson solver in 2D, polar coordinate'
 
-r_min   = 1.0_f64
-r_max   = 2.0_f64
+r_min       = 1.0_f64
+r_max       = 2.0_f64
 
-theta_min  = 0.0_f64
-theta_max  = 2.0_f64 * sll_pi
+theta_min   = 0.0_f64
+theta_max   = 2.0_f64 * sll_pi
 
-nr     = 33
-ntheta = 129
+nr          = 33
+ntheta      = 129
 delta_r     = (r_max-r_min)/real(nr-1,f64)
 delta_theta = 2.0_f64*sll_pi/real(ntheta-1,f64)
 
@@ -59,7 +59,13 @@ do j=1,ntheta
    end do
 end do
 
-call initialize( poisson_fft,r_min,r_max,nr-1,ntheta-1, DIRICHLET, DIRICHLET)
+call initialize( poisson_fft,   &
+                 r_min,         &
+                 r_max,         &
+                 nr-1,          &
+                 ntheta-1,      &
+                 SLL_DIRICHLET, &
+                 SLL_DIRICHLET)
 
 do i =1,nr
    do j=1,ntheta

@@ -55,19 +55,19 @@ nproc_t  = 2**e
 nc_r     = 64
 nc_t     = 128
 
-r_min   = 1.0_f64
-r_max   = 2.0_f64
+r_min    = 1.0_f64
+r_max    = 2.0_f64
 
-t_min  = 0.0_f64
-t_max  = 2.0_f64 * sll_pi
+t_min    = 0.0_f64
+t_max    = 2.0_f64 * sll_pi
 
-delta_r = (r_max-r_min)/real(nc_r-1,f64)
-delta_t = 2.0_f64*sll_pi/real(nc_t-1,f64)
+delta_r  = (r_max-r_min)/real(nc_r-1,f64)
+delta_t  = 2.0_f64*sll_pi/real(nc_t-1,f64)
 
-call initialize_layout_with_distributed_2D_array( nc_r+1,   &
-                                                  nc_t+1,   &
-                                                  nproc_t,  &
-                                                    1,      &
+call initialize_layout_with_distributed_2D_array(   nc_r+1,  &
+                                                    nc_t+1,  &
+                                                   nproc_t,  &
+                                                         1,  &
                                                   layout_t )
 call flush(6)
 call sll_view_lims_2D(layout_t)
