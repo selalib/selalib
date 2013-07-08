@@ -61,8 +61,8 @@ implicit none
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
@@ -126,11 +126,11 @@ subroutine test_interpolator_2d()
 #ifdef STDF95
   call cubic_spline_2d_initialize(spline,NPTS1,NPTS2, &
                          0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+                         SLL_PERIODIC, SLL_PERIODIC )
 #else
   call spline%initialize(NPTS1,NPTS2, &
                          0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+                         SLL_PERIODIC, SLL_PERIODIC )
 #endif
   interp =>  spline
   do j = 1, NPTS2
