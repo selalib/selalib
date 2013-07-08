@@ -30,6 +30,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_real64 :: dt
      sll_real64 :: cfl !cfl value 
      sll_real64 :: tmax
+     sll_real64 :: Enorm
      sll_int32  :: num_iterations
 
      ! Mesh parameters
@@ -302,12 +303,7 @@ contains
 
 
     !
-    do i=1,loc_sz_x1
-       do j=1,loc_sz_x2
-          sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
-          !sim%rho_x1(i,j)=1.d0
-       enddo
-    enddo
+
 
 !!$    do i=1,loc_sz_x1
 !!$       do j=1,loc_sz_x2
@@ -315,10 +311,7 @@ contains
 !!$       enddo
 !!$    enddo
 
-    ! solve the poisson equation
-    call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, sim%rho_x1,&
-         sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
-
+ 
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -412,7 +405,7 @@ contains
     !write(*,*) 'vertical',sim%my_rank,sum(sim%surfx1(1,:))
     !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
 
-
+    
     ! time loop
     t=0
     !compute the time step
@@ -420,16 +413,29 @@ contains
 !!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
 !!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta2_max
 !!$    write(*,*) 'deltav = ', sim%mesh2dx%delta_eta1
-!!$    write(*,*) 'surf/volum =  ', (sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+!!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
-    sim%dt = sim%cfl*sim%volume(1,1)/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+!!$    stop
+    sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
          max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
     write(*,*) 'dt = ', sim%dt
+
     do while(t.lt.sim%tmax)
+       !compute the charge density
+       do i=1,loc_sz_x1
+          do j=1,loc_sz_x2
+             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
+          enddo
+       enddo
+       ! solve the poisson equation
+       call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
+            sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+
        t=t+sim%dt
        call RK2(sim)
-    sim%fn_v1v2x1 = sim%fnp1_v1v2x1
-   end do
+       sim%fn_v1v2x1 = sim%fnp1_v1v2x1
+       write(*,*) 't = ', t
+    end do
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
@@ -1257,7 +1263,7 @@ contains
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! init
     sim%dtfn_v1v2x1=0
-
+    sim%Enorm = 0
     !compute the fluxes in the x1 direction
     vn(1)=1*sim%surfx1(1,1) ! temporaire !!!!
     vn(2)=0
@@ -1310,6 +1316,7 @@ contains
           Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
+          sim%Enorm=sim%Enorm + sim%volume(1,1)*(Ex*Ex+Ey*Ey)
 
           temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
           call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
