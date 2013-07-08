@@ -50,8 +50,8 @@ program test_poisson
   tol=1.0e-14_f64
   test= .true.
   mod=0
-  bc(1)=DIRICHLET
-  bc(2)=DIRICHLET
+  bc(1)=SLL_DIRICHLET
+  bc(2)=SLL_DIRICHLET
 
   do while (test .and. mod<ntheta/2)
      do i =1,nr+1
@@ -97,8 +97,8 @@ program test_poisson
 
      mod=mod+1
      if (mod==ntheta/2 .and. (bc(1)+bc(2)==5)) then
-        bc(1)=DIRICHLET
-        bc(2)=NEUMANN
+        bc(1)=SLL_DIRICHLET
+        bc(2)=SLL_NEUMANN
         mod=0
      end if
   end do
@@ -147,8 +147,8 @@ program test_poisson
 
      mod=mod+1
      if (mod==ntheta/2 .and. bc(1)+bc(2)==5) then
-        bc(2)=NEUMANN
-        bc(1)=DIRICHLET
+        bc(2)=SLL_NEUMANN
+        bc(1)=SLL_DIRICHLET
         mod=0
      end if
   end do

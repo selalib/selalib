@@ -157,7 +157,7 @@ contains
     implicit none
 
     type(sll_poisson_polar) :: this !< contains data for the solver
-    sll_real64, dimension(:,:), intent(in)  :: rhs
+    sll_real64, dimension(:,:), intent(in)    :: rhs
     sll_real64, dimension(:,:), intent(inout) :: phi
     sll_int32 :: global(2)
 
@@ -190,18 +190,19 @@ contains
     do k = 0,nt_loc/2
 
       global = local_to_global_2D( this%layout_r, (/1, k/))
-      kval=real(global(2)-1,f64)
+      kval   = real(global(2)-1,f64)
 
       do i=2,nr
         r=rmin+(i-1)*dr
-        this%a(3*(i-1)  )=-1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
-        this%a(3*(i-1)-1)= 2.0_f64/dr**2+(kval/r)**2
-        this%a(3*(i-1)-2)=-1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
+        this%a(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2.0_f64*dr*r)
+        this%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2
+        this%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2.0_f64*dr*r)
         this%fk(i)=fft_get_mode(this%fw,this%f_r(i,:),k)
       enddo
 
       this%phik=0.0_f64
 
+      !boundary condition at rmin
       if(bc(1)==SLL_DIRICHLET) then
         this%a(1)=0.0_f64
       else if(bc(1)==SLL_NEUMANN) then
@@ -269,6 +270,7 @@ contains
 
     call apply_remap_2D( this%rmp_rt, this%f_r, this%f_t )
     call compute_local_sizes_2d( this%layout_t, nr_loc, nt_loc )
+
     do i=1,nr_loc+1
       call fft_apply_plan(this%bw,this%f_t(i,:),phi(i,:))
     end do
