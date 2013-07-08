@@ -183,9 +183,9 @@ contains
     !     (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
     !write(*,*) 'vx=',vx,kx,x,factor1
 !!         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-    !sll_landau_initializer_v1v2x1x2 = exp(-4*x**2)
-    sll_landau_initializer_v1v2x1x2 = 1
-    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
+    sll_landau_initializer_v1v2x1x2 = exp(-4*x**2)
+!!$    sll_landau_initializer_v1v2x1x2 = 1
+!!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
 
   end function sll_landau_initializer_v1v2x1x2
 
