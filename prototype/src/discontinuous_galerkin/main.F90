@@ -15,7 +15,7 @@ program VP_DG
   use mod_sparse
 
   !use mod_octave_io
-  use mod_octave_io_sparse
+  !use mod_octave_io_sparse
 
   implicit none
 
