@@ -21,12 +21,14 @@ sll_real64, dimension(:,:), allocatable :: x
 sll_real64, dimension(:,:), allocatable :: y
 
 
-type(layout_2D), pointer  :: layout_a
+type(layout_2D), pointer :: layout_r ! sequential in r direction
+type(layout_2D), pointer :: layout_a ! sequential in theta direction
+
 sll_int32, dimension(2)   :: global
 sll_int32                 :: gi, gj
 sll_int32  :: i, j
-sll_int32  :: nr
-sll_int32  :: na
+sll_int32  :: nc_r, nr
+sll_int32  :: nc_a, na
 sll_real64 :: r_min, r_max, delta_r
 sll_real64 :: a_min, a_max, delta_a
 sll_int32  :: error
@@ -45,8 +47,10 @@ r_max   = 2.0_f64
 a_min   = 0.0_f64
 a_max   = 2.0_f64 * sll_pi
 
-nr      = 33
-na      = 129
+nc_r    = 32
+nc_a    = 128
+nr      = nc_r+1
+na      = nc_a+1
 delta_r = (r_max-r_min)/real(nr-1,f64)
 delta_a = 2.0_f64*sll_pi/real(na-1,f64)
 
@@ -56,21 +60,28 @@ call sll_boot_collective()
 psize  = sll_get_collective_size(sll_world_collective)
 prank  = sll_get_collective_rank(sll_world_collective)
 
+layout_r => new_layout_2D( sll_world_collective )
 layout_a => new_layout_2D( sll_world_collective )
 
-call initialize_layout_with_distributed_2D_array(   nr,     &
-                                                    na, &
-                                                    psize,  &
-                                                         1, &
+call initialize_layout_with_distributed_2D_array( nr,     &
+                                                  na,     &
+                                                  1,      &
+                                                  psize,  &
+                                                  layout_r )
+
+call initialize_layout_with_distributed_2D_array( nr,     &
+                                                  na,     &
+                                                  psize,  &
+                                                  1,      &
                                                   layout_a )
 call flush(6)
-call sll_view_lims_2D(layout_a)
+if (prank == 0) then
+   call sll_view_lims_2D(layout_a)
+   call sll_view_lims_2D(layout_a)
+end if
 call flush(6)
 
-
 call compute_local_sizes(layout_a, nr_loc, na_loc )
-
-
 SLL_CLEAR_ALLOCATE(rhs(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(phi(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(phi_cos(1:nr_loc,1:na_loc),error)
@@ -79,7 +90,6 @@ SLL_CLEAR_ALLOCATE(r(1:nr_loc),error)
 SLL_CLEAR_ALLOCATE(a(1:na_loc),error)
 SLL_CLEAR_ALLOCATE(x(1:nr_loc,1:na_loc),error)
 SLL_CLEAR_ALLOCATE(y(1:nr_loc,1:na_loc),error)
-
 
 do i = 1, nr_loc
    global = local_to_global_2D( layout_a, (/i, 1/))
@@ -93,8 +103,8 @@ do j = 1, na_loc
    a(j)=(gj-1)*delta_a
 end do
 
-do j=1,na
-   do i=1,nr
+do j=1,na_loc
+   do i=1,nr_loc
       phi_cos(i,j) = (r(i)-r_min)*(r(i)-r_max)*cos(n*a(j))*r(i)
       phi_sin(i,j) = (r(i)-r_min)*(r(i)-r_max)*sin(n*a(j))*r(i)
       x(i,j)   = r(i)*cos(a(j))
@@ -103,16 +113,17 @@ do j=1,na
 end do
 
 call initialize( poisson_fft,   &
+                 layout_r,      &
                  layout_a,      &
                  r_min,         &
                  r_max,         &
-                 nr-1,          &
-                 na-1,          &
+                 nc_r,          &
+                 nc_a,          &
                  SLL_DIRICHLET, &
                  SLL_DIRICHLET)
 
-do i =1,nr
-   do j=1,na
+do i =1,nr_loc
+   do j=1,na_loc
       rhs(i,j) = - f_sin(r(i), a(j))
    end do
 end do
@@ -121,8 +132,6 @@ call solve_poisson_polar(poisson_fft, rhs, phi)
 
 call sll_gnuplot_2d_parallel(x, y, phi_sin, 'phi_sin',  1, error)
 call sll_gnuplot_2d_parallel(x, y, phi,     'solution', 1, error)
-
-
 
 call error_max(phi_sin,phi,1e-4_f64)
 call sll_halt_collective()
