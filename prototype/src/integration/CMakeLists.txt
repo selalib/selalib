@@ -1,5 +1,5 @@
 ADD_LIBRARY(sll_integration STATIC gauss_legendre.F90
-                                   gauss-lobatto.F90 lob.f gauss.f)
+                                   sll_gausslobatto.F90 lob.f gauss.f)
 
 ADD_DEPENDENCIES(sll_integration sll_splines 
                                  sll_assertion 

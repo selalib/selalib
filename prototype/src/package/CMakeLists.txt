@@ -57,7 +57,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
-    ${SLL_DIR}/integration/gauss-lobatto.F90
+    ${SLL_DIR}/integration/sll_gausslobatto.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
  )
 
