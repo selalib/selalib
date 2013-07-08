@@ -377,6 +377,7 @@ contains
           sim%volume(i,j)=cell_volume( sim%tx, ic, jc,3)          
        end do
     end do
+
 !!$    surface(1:loc_sz_x1*loc_sz_x2)= &
 !!$         sim%mesh2dx%delta_eta1
 !!$    surface(loc_sz_x1*loc_sz_x2+1:2*loc_sz_x1*loc_sz_x2)= &
@@ -432,8 +433,8 @@ contains
             sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
 
        t=t+sim%dt
-       call RK2(sim)
-       sim%fn_v1v2x1 = sim%fnp1_v1v2x1
+       !call RK2(sim)
+       call euler(sim)
        write(*,*) 't = ', t
     end do
 
@@ -448,6 +449,9 @@ contains
        end do
     end do
     
+!!$    write(*,*) 'plotf2d',plotf2d
+!!$    stop
+
     allocate (plotphi2d(loc_sz_x1,loc_sz_x2))
 
     do i = 1, loc_sz_x1
@@ -687,7 +691,8 @@ contains
                                 phi1*phi2*det*weight(iploc+1)*weight(jploc+1)
                             av1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  av1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                                 sim%tv%x1(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
+                                 !sim%tv%x1(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
+                                 1.0_f64*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
                             av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                  sim%tv%x2(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
@@ -705,6 +710,7 @@ contains
              end do
           end do
 
+          av2loc = 0
 !!$          do ii=1,(sim%degree+1)**2
 !!$             write(*,*) 'bv1loc=',bv1loc(ii,:)
 !!$          end do
@@ -742,7 +748,10 @@ contains
        end do
     end do
 
-
+!!$    write(*,*) 'A diag', sim%Av1_diag
+!!$    write(*,*) 'A low', sim%Av1_low
+!!$    write(*,*) 'A sup', sim%Av1_sup
+!!$    stop
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
     isol=0  ! we do not solve the linear system
@@ -1016,6 +1025,11 @@ contains
 
     select case(degree)
 
+    case(0)
+       gauss(1) = 0_f64
+       weight(1) = 2_f64
+       lag(1,1) = 1_f64
+       dlag(1,1) = 0_f64
     case(1)
        gauss(1) = -0.5773502691896257645091487805019574556476D0
        gauss(2) = 0.5773502691896257645091487805019574556476D0
@@ -1229,7 +1243,10 @@ contains
          sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
 
     flux=vn(1)*flux1+vn(2)*flux2-eps/2*(wR-wL)
-
+    flux=vn(1)*wL*4
+!!$    write(*,*) 'vn(1)',vn(1)
+!!$    stop
+!!$     write(*,*) '0=', (wm-flux)*vn(1)
 
   end subroutine fluxnum
 
@@ -1279,53 +1296,55 @@ contains
        end do
     end do
 
-    !compute the fluxes in the x2 direction
-    vn(1)=0 ! temporaire !!!!
-    vn(2)=1*sim%surfx2(1,1)
-    do ic=1,loc_sz_x1
-       do jc=0,loc_sz_x2-1
-          jcL=jc
-          jcR=jc+1
-          call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
-               sim%fn_v1v2x1(:,:,ic,jcR),vn,flux)
-!!$          sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL) &
-!!$               -flux/sim%mesh2dx%delta_eta2
-!!$          sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR) &
-!!$               +flux/sim%mesh2dx%delta_eta2
-          sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
-          sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
- 
-       end do
-    end do
-
-    ! source terms
-    do ic=1,loc_sz_x1
-       do jc=1,loc_sz_x2
-          icL=ic-1
-          icR=ic+1
-          if(ic.le.1) then
-             icL=loc_sz_x1
-          elseif(ic.ge.loc_sz_x1)then
-             icR=1
-          end if
-          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
-          call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
-               source)
-          sim%Enorm=sim%Enorm + sim%volume(1,1)*(Ex*Ex+Ey*Ey)
-
-          temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
-          call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
-               sim%mkld, &
-               sim%dtfn_v1v2x1(:,:,ic,jc),&
-               sim%np_v1*sim%np_v2, &
-               mp,ifac,isol,nsym,void,ierr,&
-               sim%nsky)
-          !if we call the sol here, it means that we have to call many times
-          !so if we call the sol out of the loop so we have to call it only 
-          !one time and we have juste modify the temp=>vector,no?
-       end do
-    end do
+!!$    !compute the fluxes in the x2 direction
+!!$    vn(1)=0 ! temporaire !!!!
+!!$    vn(2)=1*sim%surfx2(1,1)
+!!$    do ic=1,loc_sz_x1
+!!$       do jc=0,loc_sz_x2-1
+!!$          jcL=jc
+!!$          jcR=jc+1
+!!$          call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
+!!$               sim%fn_v1v2x1(:,:,ic,jcR),vn,flux)
+!!$          write(*,*) '0=', (sim%fn_v1v2x1(:,:,ic,jcR)+sim%fn_v1v2x1(:,:,ic,jcL))-flux
+!!$       !   sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL) &
+!!$       !        -flux/sim%mesh2dx%delta_eta2
+!!$      !    sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR) &
+!!$       !        +flux/sim%mesh2dx%delta_eta2
+!!$          sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
+!!$          sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
+!!$ 
+!!$       end do
+!!$    end do
+!!$
+!!$    ! source terms
+!!$    do ic=1,loc_sz_x1
+!!$       do jc=1,loc_sz_x2
+!!$          icL=ic-1
+!!$          icR=ic+1
+!!$          if(ic.le.1) then
+!!$             icL=loc_sz_x1
+!!$          elseif(ic.ge.loc_sz_x1)then
+!!$             icR=1
+!!$          end if
+!!$          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+!!$          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+!!$          call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
+!!$               source)
+!!$          source=0
+!!$          sim%Enorm=sim%Enorm + sim%volume(1,1)*(Ex*Ex+Ey*Ey)
+!!$
+!!$          temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
+!!$          call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+!!$               sim%mkld, &
+!!$               sim%dtfn_v1v2x1(:,:,ic,jc),&
+!!$               sim%np_v1*sim%np_v2, &
+!!$               mp,ifac,isol,nsym,void,ierr,&
+!!$               sim%nsky)
+!!$          !if we call the sol here, it means that we have to call many times
+!!$          !so if we call the sol out of the loop so we have to call it only 
+!!$          !one time and we have juste modify the temp=>vector,no?
+!!$       end do
+!!$    end do
 
 
     SLL_DEALLOCATE_ARRAY(flux,ierr)
@@ -1337,27 +1356,26 @@ contains
 
   subroutine euler(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
-    sim%fnp1_v1v2x1=0
+ 
     ! mpi communications
     call mpi_comm(sim)
     call dtf(sim)
-    sim%fnp1_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
+    sim%fn_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
          + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)
   end subroutine euler
 
   subroutine RK2(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
-    sim%fnp1_v1v2x1=0
     ! mpi communications
     call mpi_comm(sim)
     call dtf(sim)
-    sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%fn_v1v2x1
-    sim%fn_v1v2x1 = (sim%volume(1,1)*sim%fn_v1v2x1 &
-         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)/2
+    sim%fnp1_v1v2x1 = sim%fn_v1v2x1
+    sim%fn_v1v2x1 = sim%fn_v1v2x1 &
+         + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
     call mpi_comm(sim)
     call dtf(sim)
-    sim%fnp1_v1v2x1 = (sim%volume(1,1)*sim%fnp1_v1v2x1 &
-         + sim%dt*sim%dtfn_v1v2x1)/sim%volume(1,1)
+    sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
+         + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2x1
   end subroutine RK2
 
   subroutine mpi_comm(sim)
