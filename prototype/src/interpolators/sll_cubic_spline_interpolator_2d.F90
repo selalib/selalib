@@ -143,17 +143,19 @@ contains
   end subroutine
 
 #ifdef STDF95
-  subroutine cubic_spline_2d_compute_interpolants( interpolator, data_array )
-    type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
+  subroutine cubic_spline_2d_compute_interpolants( &
 #else
   subroutine compute_interpolants_cs2d( &
+#endif
        interpolator, &
        data_array, &
        eta1_coords, &
        size_eta1_coords, &
        eta2_coords, &
        size_eta2_coords )
-
+#ifdef STDF95
+    type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
+#else
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:,:), intent(in) :: data_array
@@ -343,16 +345,21 @@ contains
           end do
        end do
     end if
-  end function spline_interpolate2d_disp
+  end function 
 
+#ifdef STDF95
+  subroutine cubic_spline_2d_set_coefficients( interpolator, coeffs_1d, coeffs_2d )
+    type (cubic_spline_2d_interpolator),  intent(inout) :: interpolator
+#else
   subroutine set_coefficients_cs2d( interpolator, coeffs_1d, coeffs_2d )
     class(cubic_spline_2d_interpolator),  intent(inout) :: interpolator
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs_1d
     sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
     print *, 'set_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.'
     stop
-  end subroutine set_coefficients_cs2d
+  end subroutine !set_coefficients_cs2d
   
 !!$  subroutine compute_spl_coeff_cs2d(interpolator, &
 !!$       data_array, &
@@ -372,7 +379,16 @@ contains
 !!$    stop
 !!$  end subroutine compute_spl_coeff_cs2d
   
-  
+
+#ifdef STDF95
+  function cubic_spline_2d_get_coefficients(interpolator)
+    type (cubic_spline_2d_interpolator), intent(in)    :: interpolator
+    sll_real64, dimension(:,:), pointer            :: cubic_spline_2d_get_coefficients     
+    
+    print *, 'cubic_spline_2d_get_coefficients(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function cubic_spline_2d_get_coefficients
+#else  
   function get_coefficients_cs2d(interpolator)
     class(cubic_spline_2d_interpolator), intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer            :: get_coefficients_cs2d     
@@ -380,5 +396,6 @@ contains
     print *, 'get_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.' 
   end function get_coefficients_cs2d
+#endif
 
 end module sll_cubic_spline_interpolator_2d
