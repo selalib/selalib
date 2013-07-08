@@ -7,7 +7,7 @@
 !!$ and book **Numerical Mathematics** by _Alfio Quarteroni_, _Riccardo Sacco_ and 
 !!$ _Fausto Saleri_ section 10.
 !!$ If you just want to use Gauss-Lobatto inside Selalib, just use what is in 
-!!$ gauss-lobatto.F90 ans see selalib documentation
+!!$ sll_gausslobatto.F90 ans see selalib documentation
 
       subroutine gauss(n,alpha,beta,eps,zero,weight,ierr,e)
 !!$ 
