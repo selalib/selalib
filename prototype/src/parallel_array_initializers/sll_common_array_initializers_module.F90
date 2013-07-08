@@ -174,7 +174,7 @@ contains
 !!$                - (eta1_min - eta1_max)* &
 !!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
 !!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
-    factor1 = 1.0_f64/(2.0*sll_pi)
+    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
 !!$    sll_landau_initializer_4d = factor1 * &
 !!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     !write(*,*) 'factor1=',factor1,eps,vx,vy,x
