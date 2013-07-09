@@ -307,7 +307,10 @@ contains
     sll_int32 :: global_indices(4)
     sll_int32 :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_2d_base_ptr), dimension(2,2)    :: a_field_mat
+    type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
+    type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
+    type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
+    type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
@@ -321,7 +324,7 @@ contains
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
 
     ! Start with the fields
-    a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
@@ -330,7 +333,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
@@ -339,7 +342,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
@@ -348,7 +351,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
-    a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
@@ -855,13 +858,16 @@ contains
 
        call solve_quasi_neutral_eq_general_coords( &
             sim%qns, & 
-            a_field_mat, &
+            a11_field_mat, &
+            a12_field_mat, &
+            a21_field_mat, &
+            a22_field_mat, &
             c_field, &
             rho, &
             phi )
-
+       
        call phi%write_to_file(itime)
-
+       
        call compute_local_sizes_4d( sim%sequential_x1x2, &
                                     loc_sz_x1,           &
                                     loc_sz_x2,           &
@@ -910,6 +916,8 @@ contains
              end do
           end do
        end do
+
+       !print*, 'energy total', efield_energy_total
 
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 

@@ -28,9 +28,11 @@ program test_general_qns
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
-!  class(sll_scalar_field_2d_analytic_alt), dimension(2,2) :: a_field_mat
-  type(sll_scalar_field_2d_base_ptr), dimension(2,2)    :: a_field_mat
-  class(sll_scalar_field_2d_base), pointer              :: c_field
+  type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
+  type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
+  type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
+  type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
+class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
@@ -116,7 +118,7 @@ program test_general_qns
 
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -125,7 +127,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -134,7 +136,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -143,7 +145,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -228,17 +230,20 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
-
+  
   t1e = time_elapsed_since(t_reference)
 
   !print *, 'Completed solution',qns%phi_vec
   print*, 'reorganizaton of splines coefficients of solution'
   
-!  print *, 'Compare the values of the transformation at the nodes: '
+  !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc1 = 0.0_f64
   
@@ -267,10 +272,10 @@ program test_general_qns
   call c_field%delete()
   call phi%delete()
 
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -321,7 +326,7 @@ program test_general_qns
 
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -330,7 +335,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
 
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -339,7 +344,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
 
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -348,7 +353,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -430,7 +435,10 @@ program test_general_qns
 
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -467,10 +475,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -522,7 +530,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -531,7 +539,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -540,7 +548,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -549,7 +557,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -633,7 +641,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -670,10 +681,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -725,7 +736,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -734,7 +745,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -743,7 +754,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -752,7 +763,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -833,7 +844,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -866,10 +880,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -920,7 +934,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -929,7 +943,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -938,7 +952,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -947,7 +961,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1028,7 +1042,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -1064,10 +1081,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -1118,7 +1135,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1127,7 +1144,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1136,7 +1153,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET) 
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1145,7 +1162,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1230,7 +1247,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -1266,10 +1286,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -1321,7 +1341,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1330,7 +1350,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1339,7 +1359,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET) 
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1348,7 +1368,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1430,7 +1450,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -1466,10 +1489,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -1521,7 +1544,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1530,7 +1553,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1539,7 +1562,7 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC)
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1548,7 +1571,7 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1631,7 +1654,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -1670,10 +1696,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -1729,7 +1755,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1738,7 +1764,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1747,7 +1773,7 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC)
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1756,7 +1782,7 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1878,7 +1904,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -1915,10 +1944,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -1978,7 +2007,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1987,7 +2016,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1996,7 +2025,7 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC)
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -2005,7 +2034,7 @@ program test_general_qns
        SLL_PERIODIC,&
        SLL_PERIODIC) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -2129,7 +2158,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -2167,10 +2199,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -2228,7 +2260,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -2237,7 +2269,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -2246,7 +2278,7 @@ program test_general_qns
        SLL_DIRICHLET,&
        SLL_DIRICHLET)
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -2255,7 +2287,7 @@ program test_general_qns
        SLL_DIRICHLET,&
        SLL_DIRICHLET) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -2376,7 +2408,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -2412,10 +2447,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -2472,7 +2507,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -2481,7 +2516,7 @@ program test_general_qns
        SLL_DIRICHLET, &
        SLL_DIRICHLET) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -2490,7 +2525,7 @@ program test_general_qns
        SLL_DIRICHLET,&
        SLL_DIRICHLET)
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -2499,7 +2534,7 @@ program test_general_qns
        SLL_DIRICHLET,&
        SLL_DIRICHLET) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -2618,7 +2653,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -2653,10 +2691,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
@@ -2712,7 +2750,7 @@ program test_general_qns
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a_field_mat(1,1)%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -2721,7 +2759,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC) 
   
-  a_field_mat(1,2)%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -2730,7 +2768,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC)
   
-  a_field_mat(2,1)%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -2739,7 +2777,7 @@ program test_general_qns
        SLL_PERIODIC, &
        SLL_PERIODIC) 
   
-  a_field_mat(2,2)%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -2858,7 +2896,10 @@ program test_general_qns
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        phi )
@@ -2893,10 +2934,10 @@ program test_general_qns
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a_field_mat(1,1)%base%delete()
-  call a_field_mat(1,2)%base%delete()
-  call a_field_mat(2,1)%base%delete()
-  call a_field_mat(2,2)%base%delete()
+  call a11_field_mat%base%delete()
+  call a12_field_mat%base%delete()
+  call a21_field_mat%base%delete()
+  call a22_field_mat%base%delete()
 
   call T%delete()
   
