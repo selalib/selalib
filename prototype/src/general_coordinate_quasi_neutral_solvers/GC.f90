@@ -116,7 +116,7 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
             ! boucle suivante ? !
             !-------------------!
             ll_continue=( ( lr_NormInfr / lr_NormInfb ) >= ar_eps ) .AND. ( li_iter < ai_maxIter )
-            print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
+            !print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
             
     end do
     apr_U = lpr_Ux
