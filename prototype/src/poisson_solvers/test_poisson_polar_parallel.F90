@@ -10,7 +10,7 @@ use sll_poisson_polar_parallel
 
 implicit none
 
-type(sll_poisson_polar) :: poisson_fft
+type(sll_poisson_polar) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -112,7 +112,7 @@ do j=1,na_loc
    end do
 end do
 
-call initialize( poisson_fft,   &
+call initialize( poisson,   &
                  layout_r,      &
                  layout_a,      &
                  r_min,         &
@@ -128,7 +128,7 @@ do i =1,nr_loc
    end do
 end do
 
-call solve_poisson_polar(poisson_fft, rhs, phi)
+call solve_poisson_polar(poisson, rhs, phi)
 
 call sll_gnuplot_2d_parallel(x, y, phi_sin, 'phi_sin',  1, error)
 call sll_gnuplot_2d_parallel(x, y, phi,     'solution', 1, error)
