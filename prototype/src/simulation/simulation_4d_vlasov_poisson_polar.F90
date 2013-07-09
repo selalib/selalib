@@ -59,6 +59,7 @@ use sll_logical_meshes
 use sll_parallel_array_initializer_module
 use sll_coordinate_transformation_2d_base_module
 use sll_gnuplot_parallel
+use sll_poisson_polar_parallel
 
 implicit none
 
@@ -67,7 +68,6 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
   
  sll_int32  :: world_size !< Parallel environment parameters
  sll_int32  :: my_rank    !< Processor id
- sll_int32  :: nproc_x1, nproc_x2, nproc_x3, nproc_x4 !< Processor mesh sizes
  sll_real64 :: dt              !< time step
  sll_int32  :: num_iterations  !< steps number
  sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4 !< Mesh parameters
@@ -83,7 +83,6 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
       
  type(layout_4D), pointer :: sequential_x1x2 !< layout 4d sequential in x1x2
  type(layout_4D), pointer :: sequential_x3x4 !< layout 4d sequential in x3x4
- type(layout_2D), pointer :: layout_xy    !< layout 2d not sequential in x1x2
  type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4 !< transpose x to v
  type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2 !< transpose v to x 
  
@@ -97,6 +96,10 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
  sll_real64, dimension(:,:),   pointer :: phi    !< potential
  sll_real64, dimension(:,:),   pointer :: rho    !< charge density
  sll_real64, dimension(:,:,:), pointer :: partial_reduction
+
+ type(sll_poisson_polar)  :: poisson   ! Poisson solver in polar coordinates
+ type(layout_2D), pointer :: layout_x1 ! sequential in r direction
+ type(layout_2D), pointer :: layout_x2 ! sequential in theta direction
 
 contains
  
@@ -200,10 +203,13 @@ contains
   subroutine run_vp4d_polar(sim)
     class(sll_simulation_4d_vp_polar), intent(inout) :: sim
     sll_int32  :: error
+    sll_int32  :: prank
+    sll_int32  :: psize
 
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+    psize  = sll_get_collective_size(sll_world_collective)
+    prank  = sll_get_collective_rank(sll_world_collective)
 
-    call compute_domain_decomposition(sim)
+    sim%my_rank = prank
 
     ! allocate the layouts...
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
@@ -231,15 +237,12 @@ contains
 
     call initialize_layout_with_distributed_4D_array( &
          sim%nc_x1+1, sim%nc_x2+1, sim%nc_x3+1, sim%nc_x4+1, &
-         sim%nproc_x1, sim%nproc_x2, sim%nproc_x3, sim%nproc_x4, &
+         psize, 1, 1, 1, &
          sim%sequential_x3x4 )
 
-    SWAP(sim%nproc_x1, sim%nproc_x3)
-    SWAP(sim%nproc_x2, sim%nproc_x4)
-    
     call initialize_layout_with_distributed_4D_array( &
          sim%nc_x1+1, sim%nc_x2+1, sim%nc_x3+1, sim%nc_x4+1, &
-         sim%nproc_x1, sim%nproc_x2, sim%nproc_x3, sim%nproc_x4, &
+         1, 1, psize, 1, &
          sim%sequential_x1x2 )
     
     call compute_local_sizes_4d( sim%sequential_x1x2, &
@@ -279,7 +282,6 @@ contains
          NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
     call sim%interp_x1x2%initialize( &
-
          sim%nc_x1+1, sim%nc_x2+1,   &
          eta1_min, eta1_max,         &
          eta2_min, eta2_max,         &
@@ -291,52 +293,65 @@ contains
     call sim%interp_x4%initialize( &
          sim%nc_x4+1, eta4_min, eta4_max, SLL_PERIODIC)
 
-    sim%layout_xy => new_layout_2D( sll_world_collective )
+    sim%layout_x1 => new_layout_2D( sll_world_collective )
 
-    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &  
+    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
                                                       sim%nc_x2+1, &
-                                                             2, 2, &
-                                                      sim%layout_xy )
+                                                      1,           &
+                                                      psize,       &
+                                                      sim%layout_x1 )
 
-    call compute_local_sizes_2d( sim%layout_xy, loc_sz_x1, loc_sz_x2) 
+    sim%layout_x2 => new_layout_2D( sll_world_collective )
 
-    ! This layout is also useful to represent the charge density array. Since
-    ! this is a result of a local reduction on x3 and x4, the new layout is
-    ! 2D but with the same dimensions of the process mesh in x1 and x2.
-    SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
+    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
+                                                      sim%nc_x2+1, &
+                                                      psize,       &
+                                                      1,           &
+                                                      sim%layout_x2 )
+
+    call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
     SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
 
-!    call initialize_multigrid(sim%layout_xy,                 &
-!                              eta1_min, eta1_max, nc_eta1+1, &
-!                              eta2_min, eta2_max, nc_eta2+1, &
-!                              2)
-!stop
+    call initialize( sim%poisson,   &
+                     sim%layout_x1, &
+                     sim%layout_x2, &
+                     eta1_min,      &
+                     eta2_max,      &
+                     sim%nc_x1,     &
+                     sim%nc_x2,     &
+                     SLL_DIRICHLET, &
+                     SLL_DIRICHLET)
     
-    call compute_charge_density( loc_sz_x1,              &
-                                 loc_sz_x2,              &
-                                 sim%f_x3x4,             &
-                                 sim%rho )
-
-    global_indices(1:2) =  local_to_global_2D( sim%layout_xy, (/1, 1/) )
-       
-    call sll_gnuplot_rect_2d_parallel( &
-         eta1_min+(global_indices(1)-1)*delta_eta1, delta_eta1, &
-         eta2_min+(global_indices(2)-1)*delta_eta2, delta_eta2, &
-         sim%rho, "rho", 0, error )
-
     do itime=1, sim%num_iterations !Loop over time
 
        if(sim%my_rank == 0) then
           print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
        end if
 
+       !transpose to x space
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
+
        call advection_x1x2(sim,sim%dt)
+
+       call plot_f_x1x2(sim)
+
+       call compute_charge_density( sim )
+
+       call plot_rho(sim)
+
+       call solve(sim%poisson, sim%rho, sim%phi)
+
+       call plot_phi(sim)
+
+       !transpose to v space
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
-       call plot_fxy(sim)
 
        call advection_x3(sim,sim%dt)
+
        call advection_x4(sim,sim%dt)
+
+       call plot_f_x3x4(sim)
 
     end do ! next time step 
 
@@ -447,7 +462,7 @@ contains
 
   end subroutine advection_x4
 
-  subroutine plot_fxy(sim)
+  subroutine plot_f_x1x2(sim)
     class(sll_simulation_4d_vp_polar) :: sim
 
     call compute_local_sizes_4d( sim%sequential_x3x4, &
@@ -463,9 +478,9 @@ contains
     call sll_gnuplot_2d_parallel( sim%x1, sim%x2, sim%proj_f_x1x2, &
                                   "fxy", itime, error )
 
-  end subroutine plot_fxy
+  end subroutine plot_f_x1x2
 
-  subroutine plot_fvxvy(sim)
+  subroutine plot_f_x3x4(sim)
     class(sll_simulation_4d_vp_polar) :: sim
 
     call compute_local_sizes_4d( sim%sequential_x1x2, &
@@ -478,14 +493,12 @@ contains
        end do
     end do
 
-    global_indices = local_to_global_4D( sim%sequential_x1x2, (/1,1,1,1/) )
-       
     call sll_gnuplot_2d_parallel( &
         eta3_min+(global_indices(1)-1)*delta_eta3, delta_eta3, &
         eta4_min+(global_indices(2)-1)*delta_eta4, delta_eta4, &
         sim%proj_f_x3x4, "fxy", itime, error )
 
-  end subroutine plot_fvxvy
+  end subroutine plot_f_x3x4
 
   subroutine delete_vp4d_par_polar( sim )
     type(sll_simulation_4d_vp_polar) :: sim
@@ -501,55 +514,43 @@ contains
     call delete( sim%interp_x4 )
   end subroutine delete_vp4d_par_polar
 
-  subroutine compute_domain_decomposition(sim)
-    class(sll_simulation_4d_vp_polar), intent(inout) :: sim
-    sll_int32  :: power2
+  subroutine compute_charge_density( sim )
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    power2 = int(log(real(sim%world_size))/log(2.0))
+    class(sll_simulation_4d_vp_polar) :: sim
 
-    ! special case N = 1, so power2 = 0
-    if(power2 == 0) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
+    call compute_local_sizes_4d(sim%sequential_x3x4, loc_sz_x1, &
+                                                     loc_sz_x2, &
+                                                     loc_sz_x3, &
+                                                     loc_sz_x4)
+    sim%rho(:,:) = 0.0
     
-    if(is_even(power2)) then
-       sim%nproc_x1 = 2**(power2/2)
-       sim%nproc_x2 = 2**(power2/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    else 
-       sim%nproc_x1 = 2**((power2-1)/2)
-       sim%nproc_x2 = 2**((power2+1)/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
-  end subroutine compute_domain_decomposition
-
-  subroutine compute_charge_density( numpts1, &
-                                     numpts2, &
-                                     f,       &
-                                     rho )
-
-    sll_int32, intent(in) :: numpts1
-    sll_int32, intent(in) :: numpts2
-
-    sll_real64, intent(in),    dimension(:,:,:,:) :: f       ! local distr. func
-    sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
-
-    rho(:,:) = 0.0
-    
-    do j=1,numpts2
-       do i=1,numpts1
-          rho(i,j) = sum(f(i,j,:,:))
+    do j=1,loc_sz_x2
+       do i=1,loc_sz_x1
+          sim%rho(i,j) = sum(sim%f_x3x4(i,j,:,:))
        end do
     end do
-    rho = rho *delta_eta3*delta_eta4
+    sim%rho = sim%rho *delta_eta3*delta_eta4
 
   end subroutine compute_charge_density
+
+  
+  subroutine plot_rho(sim)
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
+
+    call sll_gnuplot_2d_parallel(sim%x1, sim%x2, sim%rho, 'rho', itime, error)
+
+  end subroutine plot_rho
+ 
+  subroutine plot_phi(sim)
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
+
+    call sll_gnuplot_2d_parallel(sim%x1, sim%x2, sim%phi, 'phi', itime, error)
+
+  end subroutine plot_phi
 
 
 end module sll_simulation_4d_vlasov_poisson_polar

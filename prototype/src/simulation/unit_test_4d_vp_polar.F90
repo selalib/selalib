@@ -36,8 +36,8 @@ program vlasov_poisson_4d_polar
 
   else
 
-#define NPTS1 63
-#define NPTS2 63
+#define NPTS1 64
+#define NPTS2 64
 #define NPTS3 32
 #define NPTS4 32
 
