@@ -93,9 +93,13 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
  sll_real64, dimension(:),     pointer :: params !< function initializer parameters
  sll_real64, dimension(:,:),   pointer :: x1     !< x1 mesh mapped coordinates
  sll_real64, dimension(:,:),   pointer :: x2     !< x2 mesh mapped coordinates
- sll_real64, dimension(:,:),   pointer :: phi    !< potential
+ sll_real64, dimension(:,:),   pointer :: phi_x1    !< potential
+ sll_real64, dimension(:,:),   pointer :: phi_x2    !< potential
  sll_real64, dimension(:,:),   pointer :: rho    !< charge density
  sll_real64, dimension(:,:,:), pointer :: partial_reduction
+ sll_real64, dimension(:,:),   pointer :: efield_x1
+ sll_real64, dimension(:,:),   pointer :: efield_x2
+
 
  type(sll_poisson_polar)  :: poisson   ! Poisson solver in polar coordinates
  type(layout_2D), pointer :: layout_x1 ! sequential in r direction
@@ -301,6 +305,10 @@ contains
                                                       psize,       &
                                                       sim%layout_x1 )
 
+    call compute_local_sizes_2d(sim%layout_x1, loc_sz_x1, loc_sz_x2)
+    SLL_CLEAR_ALLOCATE(sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%efield_x1(1:loc_sz_x1,1:loc_sz_x2),error)
+
     sim%layout_x2 => new_layout_2D( sll_world_collective )
 
     call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
@@ -311,7 +319,9 @@ contains
 
     call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
     SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
-    SLL_CLEAR_ALLOCATE(sim%phi(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%phi_x2(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%efield_x2(1:loc_sz_x1,1:loc_sz_x2),error)
+
 
     call initialize( sim%poisson,   &
                      sim%layout_x1, &
@@ -340,7 +350,7 @@ contains
 
        call plot_rho(sim)
 
-       call solve(sim%poisson, sim%rho, sim%phi)
+       call solve(sim%poisson, sim%rho, sim%phi_x2)
 
        call plot_phi(sim)
 
@@ -424,8 +434,9 @@ contains
              eta2   =  eta2_min + (global_indices(2)-1)*delta_eta2
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
              jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-             ex     =  0.
-             ey     =  0.
+             ex     =  sim%efield_x1(i,j)
+#warning ey pas compatible
+             ey     =  sim%efield_x2(i,j)
              alpha3 = -deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
              sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                                    sim%nc_x3+1, sim%f_x3x4(i,j,:,l), alpha3 )
@@ -451,8 +462,9 @@ contains
              eta1   =  eta1_min+(global_indices(1)-1)*delta_eta1
              eta2   =  eta2_min+(global_indices(2)-1)*delta_eta2
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-             ex     =  0.
-             ey     =  0.
+#warning ey pas compatible
+             ex     =  sim%efield_x1(i,j)
+             ey     =  sim%efield_x2(j,j)
              alpha4 = -deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
              sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                                    sim%nc_x4+1, sim%f_x3x4(i,j,k,:), alpha4 )
@@ -548,9 +560,68 @@ contains
     class(sll_simulation_4d_vp_polar) :: sim
     call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
 
-    call sll_gnuplot_2d_parallel(sim%x1, sim%x2, sim%phi, 'phi', itime, error)
+    call sll_gnuplot_2d_parallel(sim%x1, sim%x2, sim%phi_x2, 'phi', itime, error)
 
   end subroutine plot_phi
+
+  subroutine compute_electric_fields_eta1( sim )
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    sll_real64                        :: r_delta
+    
+    r_delta = 1.0_f64/delta_eta1
+    
+    do j=1,sim%nc_x2+1
+     
+       i = 1
+       sim%efield_x1(i,j) = -r_delta*(- 1.5_f64*sim%phi_x1(i  ,j) &
+                                      + 2.0_f64*sim%phi_x1(i+1,j) &
+                                      - 0.5_f64*sim%phi_x1(i+2,j) )
+       i = sim%nc_x1+1
+       sim%efield_x1(i,j) = -r_delta*(  0.5_f64*sim%phi_x1(i-2,j) &
+                                      - 2.0_f64*sim%phi_x1(i-1,j) &
+                                      + 1.5_f64*sim%phi_x1(i  ,j) )
+
+    end do
+    
+    ! Electric field in interior points
+    do j=1,sim%nc_x2+1
+       do i=2, sim%nc_x1
+          sim%efield_x1(i,j) = -r_delta*0.5_f64*(sim%phi_x1(i+1,j) &
+                                               - sim%phi_x1(i-1,j))
+       end do
+    end do
+
+  end subroutine compute_electric_fields_eta1
+
+  subroutine compute_electric_fields_eta2( sim )
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    sll_real64                        :: r_delta
+  
+    r_delta = 1.0_f64/delta_eta2
+    
+    ! Compute the electric field values on the bottom and top edges.
+    do i=1,sim%nc_x1+1
+       j=1 
+       sim%efield_x2 = -r_delta*(- 1.5_f64*sim%phi_x2(i,j)   &
+                                 + 2.0_f64*sim%phi_x2(i,j+1) &
+                                 - 0.5_f64*sim%phi_x2(i,j+2))
+       j=sim%nc_x2+1
+       sim%efield_x2 = -r_delta*(  0.5_f64*sim%phi_x2(i,j-2) &
+                                 - 2.0_f64*sim%phi_x2(i,j-1) &
+                                 + 1.5_f64*sim%phi_x2(i,j))
+    end do
+    
+    ! Electric field in interior points
+    do j=2,sim%nc_x2
+       do i=1, sim%nc_x1+1
+          sim%efield_x2(i,j) = -r_delta*0.5_f64*(sim%phi_x2(i,j+1) &
+                                               - sim%phi_x2(i,j-1))
+       end do
+    end do
+  end subroutine compute_electric_fields_eta2
+
 
 
 end module sll_simulation_4d_vlasov_poisson_polar
