@@ -130,20 +130,14 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                                               sll_assertion)
   
    ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
+   TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_par sll_poisson_parallel )
 
-   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
+   ADD_EXECUTABLE(test_poisson_2d_per_cart_par 
+                  test_poisson_2d_periodic_cartesian_par.F90 )
+   TARGET_LINK_LIBRARIES(test_poisson_2d_per_cart_par sll_poisson_parallel)
 
-   ADD_EXECUTABLE( test_poisson_2d_per_cart_par 
-                   test_poisson_2d_periodic_cartesian_par.F90 )
-
-   TARGET_LINK_LIBRARIES(test_poisson_2d_per_cart_par
-                         sll_poisson_parallel
-                         sll_file_io_parallel )
-
-   ADD_EXECUTABLE( test_poisson_polar_parallel 
-                   test_poisson_polar_parallel.F90 )
-
+   ADD_EXECUTABLE(test_poisson_polar_parallel 
+                  test_poisson_polar_parallel.F90 )
    TARGET_LINK_LIBRARIES(test_poisson_polar_parallel sll_poisson_parallel)
-
 
 ENDIF()
