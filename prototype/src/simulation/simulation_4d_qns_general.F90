@@ -315,6 +315,7 @@ contains
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
     sll_real64, dimension(:,:), allocatable :: phi_values
+    sll_real64 :: density_tot
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
@@ -474,7 +475,7 @@ contains
     ! 2D but with the same dimensions of the process mesh in x1 and x2.
     SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(send_buf(loc_sz_x1*loc_sz_x2), ierr)
-    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
+!    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
 
 !!$    call initialize_layout_with_distributed_2D_array( &
 !!$         nc_x1+1, &
@@ -551,7 +552,7 @@ contains
     sim%nproc_x4 = sim%nproc_x2 
     sim%nproc_x2 = itemp
     
-print *, 'sequential x1x2 mode...'
+    print *, 'sequential x1x2 mode...'
     call initialize_layout_with_distributed_4D_array( &
          nc_x1+1, &
          nc_x2+1, &
@@ -575,7 +576,7 @@ print *, 'sequential x1x2 mode...'
          loc_sz_x3, &
          loc_sz_x4 )
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
-    SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
+!    SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
     
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
@@ -600,6 +601,7 @@ print *, 'sequential x1x2 mode...'
                                  sim%partial_reduction,  &
                                  sim%rho_split )
 
+
     call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
 
     recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
@@ -613,8 +615,14 @@ print *, 'sequential x1x2 mode...'
  
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
+    call compute_average_f( &
+            sim%mesh2d_x,&
+            sim%rho_full, &
+            density_tot )
+    print*, 'density', density_tot
+
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full, &
+         sim%rho_full-density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -622,6 +630,8 @@ print *, 'sequential x1x2 mode...'
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
+
+    
  
     call rho%write_to_file(0)
 !!$    sim%split_to_full => &
@@ -715,6 +725,8 @@ print *, 'sequential x1x2 mode...'
          sim%mesh2d_x%eta2_min, & 
          sim%mesh2d_x%eta2_max ) 
 
+
+    print*, ' initialization finish'
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -722,7 +734,7 @@ print *, 'sequential x1x2 mode...'
     ! ------------------------------------------------------------------------
 
 
-    do itime=1, sim%num_iterations
+    do itime=1,sim%num_iterations
        if(sim%my_rank == 0) then
           print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
        end if
@@ -794,7 +806,16 @@ print *, 'sequential x1x2 mode...'
        ! - a routine to (re-)set this pointer to the data
        ! - a change of the compute_coefficients interface to set the
        !   data parameter as optional...
-       call rho%update_interpolation_coefficients(sim%rho_full)
+
+       call compute_average_f( &
+            sim%mesh2d_x,&
+            sim%rho_full, &
+            density_tot )
+       print*, 'density', density_tot
+
+       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+
+       
 
        ! It is important to remember a particular property of the periodic 
        ! poisson solver used here: For a given input charge density 
@@ -860,10 +881,13 @@ print *, 'sequential x1x2 mode...'
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 eta1   =  real(global_indices(1)-1,f64)*delta1
                 eta2   =  real(global_indices(2)-1,f64)*delta2
+                !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
                 ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
+                !print*, 'values ex', -0.05/(0.5)*sin(0.5*eta1), phi%first_deriv_eta1_value_at_indices(i,j), phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                !print*, 'values ey', 0.0, ey
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
@@ -1078,9 +1102,9 @@ print *, 'sequential x1x2 mode...'
     SLL_DEALLOCATE_ARRAY( sim%rho_full, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
+   ! SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
+   ! SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
+   ! SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
     call delete( sim%sequential_x1x2 )
     call delete( sim%sequential_x3x4 )
     call delete( sim%rho_full_layout )
@@ -1094,9 +1118,9 @@ print *, 'sequential x1x2 mode...'
     call delete( sim%interp_x1x2 )
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )
-    SLL_DEALLOCATE_ARRAY( sim%efield_x1, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%efield_x2, ierr )
-    SLL_DEALLOCATE_ARRAY( sim%efield_split, ierr )
+    !SLL_DEALLOCATE_ARRAY( sim%efield_x1, ierr )
+    !SLL_DEALLOCATE_ARRAY( sim%efield_x2, ierr )
+    !SLL_DEALLOCATE_ARRAY( sim%efield_split, ierr )
   end subroutine delete_4d_qns_gen
 
   ! we put the reduction functions here for now, since we are only using
@@ -1176,6 +1200,46 @@ print *, 'sequential x1x2 mode...'
     end do
 
   end subroutine compute_charge_density
+
+
+  subroutine compute_average_f( &
+       mx,&
+       rho, &
+       density_tot )
+    
+    type(sll_logical_mesh_2d), pointer     :: mx
+    sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
+    sll_real64, intent(out)              :: density_tot
+    
+    ! local sizes in the split directions have to be given by caller.
+    sll_int32                       :: numpts1
+    sll_int32                       :: numpts2
+    sll_real64                      :: delta1
+    sll_real64                      :: delta2
+    sll_real64                      :: lenght1
+    sll_real64                      :: lenght2
+    
+    sll_int32 :: i, j
+    
+
+    
+    numpts1 = mx%num_cells1+1
+    numpts2 = mx%num_cells2+1
+    delta1  = mx%delta_eta1
+    delta2  = mx%delta_eta2
+    lenght1 = mx%eta1_max- mx%eta1_min
+    lenght2 = mx%eta2_max- mx%eta2_min
+    
+    density_tot = 0.0_8
+    
+    do j=1,numpts2-1
+       do i=1,numpts1-1
+          
+          density_tot = density_tot + rho(i,j) * delta1* delta2
+       end do
+    end do
+    density_tot = density_tot/ (lenght1*lenght2)
+  end subroutine compute_average_f
 
   ! Some ad-hoc functions to prepare data for allgather operations. Should
   ! consider putting this elsewhere.
