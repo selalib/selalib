@@ -324,17 +324,22 @@ contains ! *******************************************************************
 
   subroutine solve_quasi_neutral_eq_general_coords( &
     qns, &
-    a_field_mat, &
+    a11_field_mat, &
+    a12_field_mat,&
+    a21_field_mat,&
+    a22_field_mat,&
     c_field, &
     rho, &
     phi )
     
     type(general_coordinate_qn_solver) :: qns
-    class(sll_scalar_field_2d_base_ptr), dimension(:,:), intent(in) :: &
-         a_field_mat
-    class(sll_scalar_field_2d_base), intent(in)                 :: c_field
-    class(sll_scalar_field_2d_base), intent(in)                 :: rho
-    type(sll_scalar_field_2d_discrete_alt), intent(inout)       :: phi
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a11_field_mat
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a12_field_mat
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a21_field_mat
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a22_field_mat
+    class(sll_scalar_field_2d_base), intent(in)     :: c_field
+    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     type(csr_matrix)  :: csr_masse
     sll_real64 :: epsi
     sll_real64, dimension(:), allocatable   :: M_rho_loc
@@ -422,7 +427,10 @@ contains ! *******************************************************************
                i, &
                j, &
                mesh, &
-               a_field_mat, &
+               a11_field_mat, &
+               a12_field_mat, &
+               a21_field_mat, &
+               a22_field_mat, &
                c_field, &
                rho, &
                M_rho_loc, &
@@ -505,7 +513,10 @@ contains ! *******************************************************************
        cell_i, &
        cell_j, &
        mesh2d, &
-       a_field_mat, &
+       a11_field_mat, &
+       a12_field_mat, &
+       a21_field_mat, &
+       a22_field_mat, &
        c_field, &
        rho, &
        M_rho_loc, &
@@ -520,10 +531,12 @@ contains ! *******************************************************************
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
-    class(sll_scalar_field_2d_base_ptr), dimension(:,:), intent(in) :: &
-         a_field_mat
-    class(sll_scalar_field_2d_base), intent(in)                 :: c_field
-    class(sll_scalar_field_2d_base), intent(in)                 :: rho
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a11_field_mat
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a12_field_mat
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a21_field_mat
+    class(sll_scalar_field_2d_base_ptr), intent(in) :: a22_field_mat
+    class(sll_scalar_field_2d_base), intent(in)     :: c_field
+    class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64 :: epsi
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
@@ -664,10 +677,10 @@ contains ! *******************************************************************
        
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
-          val_a11 = a_field_mat(1,1)%base%value_at_point(gpt1,gpt2)
-          val_a12 = a_field_mat(1,2)%base%value_at_point(gpt1,gpt2)
-          val_a21 = a_field_mat(2,1)%base%value_at_point(gpt1,gpt2)
-          val_a22 = a_field_mat(2,2)%base%value_at_point(gpt1,gpt2)
+          val_a11 = a11_field_mat%base%value_at_point(gpt1,gpt2)
+          val_a12 = a12_field_mat%base%value_at_point(gpt1,gpt2)
+          val_a21 = a21_field_mat%base%value_at_point(gpt1,gpt2)
+          val_a22 = a22_field_mat%base%value_at_point(gpt1,gpt2)
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
