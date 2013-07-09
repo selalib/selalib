@@ -119,7 +119,7 @@ program qns_4d_general
        func_zero, &
        func_one, &
        func_zero, &
-       2, & ! spline degree
+       3, & ! spline degree
        2, & ! spline degree2
        SLL_PERIODIC, &
        SLL_PERIODIC, &
