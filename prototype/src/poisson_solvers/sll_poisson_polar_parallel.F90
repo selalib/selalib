@@ -162,20 +162,19 @@ contains
     sll_int32  :: nr, ntheta,bc(2)
 
     sll_real64 :: r
-    sll_int32  :: i, k, ind_k
-    sll_real64 :: kval
-    sll_int32 :: nr_loc
-    sll_int32 :: na_loc
+    sll_int32  :: i, j, k
+    sll_int32  :: nr_loc
+    sll_int32  :: na_loc
+    sll_int32  :: global(2)
 
     nr     = this%nr
     ntheta = this%nt
     rmin   = this%rmin
     dr     = this%dr
+    bc     = this%bc
 
-    bc       = this%bc
     call verify_argument_sizes_par(this%layout_a, rhs)
     this%f_a = rhs
-
 
     call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
 
@@ -186,34 +185,40 @@ contains
     call apply_remap_2D( this%rmp_ar, this%f_a, this%f_r )
     call compute_local_sizes_2d( this%layout_r, nr_loc, na_loc )
 
+    global = local_to_global_2D( this%layout_r, (/1, 1/))
+    k = global(2)/2 - 1
 
-    ! poisson solver
-    do k = 0,ntheta/2
-
-      ind_k=k
-
-      kval=real(ind_k,f64)
+    do j = 1, na_loc-1, 2
+      
+      k = k + 1
 
       do i=2,nr
+
         r = rmin + (i-1)*dr
         this%mat(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2*dr*r)
-        this%mat(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2
+        this%mat(3*(i-1)-1) =  2.0_f64/dr**2+(k/r)**2
         this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r)
 
-        this%fk(i)=fft_get_mode(this%fw,this%f_r(i,1:ntheta),k)
+        if( j == 1 ) then
+           this%fk(i) = cmplx(this%f_r(i,1),0.0_f64,kind=f64)
+        else if( j == ntheta ) then
+           this%fk(i) = cmplx(this%f_r(i,2),0.0_f64,kind=f64)
+        else
+           this%fk(i) = cmplx(this%f_r(i,j), &
+                              this%f_r(i,j+1),kind=f64)
+        endif
+
       enddo
 
       this%phik=0.0_f64
 
       !boundary condition at rmin
-      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
+      if (bc(1)==SLL_DIRICHLET) then !Dirichlet
         this%mat(1)=0.0_f64
-      endif
-      if(bc(1)==SLL_NEUMANN)then
+      else if (bc(1)==SLL_NEUMANN) then
         this%mat(2)=this%mat(2)+this%mat(1) !Neumann
         this%mat(1)=0._f64
-      endif
-      if(bc(1)==SLL_NEUMANN_MODE_0)then 
+      else if(bc(1)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           this%mat(2)=this%mat(2)+this%mat(1)
           this%mat(1)=0._f64
@@ -225,12 +230,10 @@ contains
       !boundary condition at rmax
       if(bc(2)==SLL_DIRICHLET)then !Dirichlet
         this%mat(3*(nr-1))=0.0_f64
-      endif
-      if(bc(2)==SLL_NEUMANN)then
+      else if(bc(2)==SLL_NEUMANN)then
         this%mat(3*(nr-1)-1)=this%mat(3*(nr-1)-1)+this%mat(3*(nr-1)) !Neumann
         this%mat(3*(nr-1))=0.0_f64
-      endif
-      if(bc(2)==SLL_NEUMANN_MODE_0)then 
+      else if(bc(2)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           this%mat(3*(nr-1)-1)=this%mat(3*(nr-1)-1)+this%mat(3*(nr-1))
           this%mat(3*(nr-1))=0.0_f64
@@ -245,12 +248,10 @@ contains
       !boundary condition at rmin
       if(bc(1)==1)then !Dirichlet
         this%phik(1)=0.0_f64
-      endif
-      if(bc(1)==2)then
+      else if (bc(1)==2) then
         this%phik(1)=this%phik(2) !Neumann
-      endif
-      if(bc(1)==3)then 
-        if(k==0)then!Neumann for mode zero
+      else if (bc(1)==3) then 
+        if (k==0) then!Neumann for mode zero
           this%phik(1)=this%phik(2)
         else !Dirichlet for other modes
           this%phik(1)=0.0_f64
@@ -258,13 +259,11 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==1)then !Dirichlet
+      if (bc(2)==1) then !Dirichlet
         this%phik(nr+1)=0.0_f64
-      endif
-      if(bc(2)==2)then
+      else if (bc(2)==2) then
         this%phik(nr+1)=this%phik(nr) !Neumann
-      endif
-      if(bc(2)==3)then 
+      else if (bc(2)==3) then 
         if(k==0)then!Neumann for mode zero
           this%phik(nr+1)=this%phik(nr)
         else !Dirichlet for other modes
@@ -273,8 +272,18 @@ contains
       endif
 
       do i=1,nr+1
-        call fft_set_mode(this%bw,this%f_r(i,1:ntheta),this%phik(i),k)
+
+         if( j == 1 ) then
+            this%f_r(i,1) = real(this%phik(i),kind=f64)
+         else if( j == ntheta ) then
+            this%f_r(i,2) = real(this%phik(i),kind=f64)
+         else
+            this%f_r(i,j) = real(this%phik(i),kind=f64)
+            this%f_r(i,j+1) = dimag(this%phik(i))
+         endif
+
       end do
+
     end do
 
     call apply_remap_2D( this%rmp_ra, this%f_r, this%f_a )
@@ -282,7 +291,7 @@ contains
 
     call verify_argument_sizes_par(this%layout_a, phi)
     
-    do i=1,nr+1
+    do i=1,nr_loc
       call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta))
     end do
 
