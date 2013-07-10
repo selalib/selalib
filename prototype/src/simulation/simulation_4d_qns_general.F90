@@ -622,7 +622,7 @@ contains
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
-    print*, 'density', density_tot
+    !print*, 'density', density_tot
 
     rho => new_scalar_field_2d_discrete_alt( &
          sim%rho_full-density_tot, &
@@ -729,7 +729,7 @@ contains
          sim%mesh2d_x%eta2_max ) 
 
 
-    print*, ' initialization finish'
+    !print*, ' initialization finish'
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -814,7 +814,7 @@ contains
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
-       print*, 'density', density_tot
+       !print*, 'density', density_tot
 
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
 
