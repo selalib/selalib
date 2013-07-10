@@ -72,7 +72,7 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
 
     lpr_d = lpr_r
     !================!
-    print *,'%%%%'
+!    print *,'%%%%'
     ll_continue=.true.
     do while(ll_continue)
             li_iter = li_iter + 1
@@ -199,7 +199,7 @@ subroutine Gradient_conj_perper ( this, apr_B,apr_U, ai_maxIter, ar_eps )
 
     lpr_d = lpr_r
     !================!
-    print *,'%%%%'
+!    print *,'%%%%'
 
     ll_continue=.true.
     do while(ll_continue)
