@@ -13,11 +13,6 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftw.F90")
 
-#   ADD_EXECUTABLE(test_poisson_2d_fftw test_poisson_2d.F90
-#                                  sll_poisson_2d_periodic_fftw.F90)
-#
-#   TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
-#                                              ${FFTW_LIBRARIES})
 
 ELSE()
 
@@ -43,13 +38,20 @@ ENDIF(FISHPACK_ENABLED)
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers dfftpack ${FFTW_LIBRARIES} )
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
+                                             dfftpack 
+                                             ${FFTW_LIBRARIES} )
 ELSE()
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers dfftpack )
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
+                                             dfftpack )
 ENDIF()
 
-#ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
-#TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
+ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
+TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
+
+ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
+
+TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_solvers)
 
 ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
 TARGET_LINK_LIBRARIES(sll_poisson_2d_polar sll_fft sll_utilities)
