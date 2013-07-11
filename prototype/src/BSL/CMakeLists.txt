@@ -21,14 +21,10 @@ ADD_EXECUTABLE(bsl_2d_omp unit_test_2d_omp.F90)
 ADD_DEPENDENCIES(bsl_2d_omp sll_interpolators)
 TARGET_LINK_LIBRARIES(bsl_2d_omp sll_interpolators)
 
-IF(FFTW_FOUND AND FFTW_ENABLED)
+ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
+TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)
 
-   ADD_EXECUTABLE(bsl_landau_1d landau_1d.F90)
-   TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)
-
-   ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
-   TARGET_LINK_LIBRARIES(bsl_landau_2d sll_interpolators 
-                                       sll_poisson_solvers
-                                       sll_maxwell_solvers 
-                                       ${FFTW_LIBRARIES})
-ENDIF()
+ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
+TARGET_LINK_LIBRARIES(bsl_landau_2d sll_interpolators 
+                                    sll_poisson_solvers
+                                    sll_maxwell_solvers )
