@@ -156,7 +156,7 @@ end subroutine solve_potential_poisson_2d_periodic_fftpack
 
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
-subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs)
+subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,nrj)
 
    type(poisson_2d_periodic)               :: this
    sll_real64, dimension(:,:), intent(in)   :: rhs
@@ -164,6 +164,7 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs)
    sll_real64, dimension(:,:), intent(out)  :: field_y
    sll_int32                                :: nc_x, nc_y
    sll_int32                                :: i, j
+   sll_real64, optional                     :: nrj
 
    nc_x = this%nc_x
    nc_y = this%nc_y
@@ -209,6 +210,15 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs)
    field_x(:,nc_y+1) = field_x(:,1)
    field_y(nc_x+1,:) = field_y(1,:)
    field_y(:,nc_y+1) = field_y(:,1)
+
+   if (present(nrj)) then 
+      nrj=sum(field_x*field_x+field_y*field_y)*this%dx*this%dy
+      if (nrj>1.e-30) then 
+         nrj=0.5_f64*log(nrj)
+      else
+         nrj=-10**9
+      endif
+   end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftpack
 
