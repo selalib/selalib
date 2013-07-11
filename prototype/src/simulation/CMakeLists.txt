@@ -157,17 +157,16 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_scalar_field
                        sll_interpolators
                        sll_splines
-                       sll_utilities
                        sll_parallel_array_initializers	
                        sll_remap
                        sll_collective
                        sll_constants
-                       sll_utilities
                        sll_coordinate_transformations
                        sll_logical_meshes
-                       sll_file_io_parallel)
+                       sll_file_io_parallel
+                       sll_utilities
+)
 
-   ADD_DEPENDENCIES(sll_simulations ${SIMULATION_DEPS})
    TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
 
    MACRO(ADD_SIMULATION TEST_NAME) 
