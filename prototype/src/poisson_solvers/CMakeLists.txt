@@ -13,12 +13,12 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftw.F90")
 
-   ADD_EXECUTABLE(test_poisson_2d_fftw test_poisson_2d.F90
-                                  sll_poisson_2d_periodic_fftw.F90)
+#   ADD_EXECUTABLE(test_poisson_2d_fftw test_poisson_2d.F90
+#                                  sll_poisson_2d_periodic_fftw.F90)
+#
+#   TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
+#                                              ${FFTW_LIBRARIES})
 
-   TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
-                                              ${FFTW_LIBRARIES}
-                                              ${HDF5_LIBRARIES})
 ELSE()
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftpack.F90")
