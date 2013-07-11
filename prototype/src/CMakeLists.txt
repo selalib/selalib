@@ -56,16 +56,15 @@ SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
-INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
+INCLUDE(HDF5Config)
+
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
-
-
 
 IF(NOT SLL_BUILD_PACKAGE)
 
@@ -94,7 +93,10 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
-   
+   ADD_SUBDIRECTORY(deboor_splines)
+   ADD_SUBDIRECTORY(coordinate_transformations)
+   ADD_SUBDIRECTORY(interpolators)
+
    IF(MPI_MODULE_ENABLED)
    
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
@@ -108,38 +110,36 @@ IF(NOT SLL_BUILD_PACKAGE)
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
+
    ADD_SUBDIRECTORY(electric_field_accumulators)
-   ADD_SUBDIRECTORY(deboor_splines)
-   ADD_SUBDIRECTORY(interpolators)
 
-   IF(NOT STDF95)
-      ADD_SUBDIRECTORY(coordinate_transformations)
-      ADD_SUBDIRECTORY(mapped_meshes)
-   ENDIF(NOT STDF95)
 
-   ADD_SUBDIRECTORY(fields)
    
    IF(NOT STDF95)
 
+      ADD_SUBDIRECTORY(fields)
       #ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
-      ADD_SUBDIRECTORY(time_solvers)
-      ADD_SUBDIRECTORY(ode_solvers)
-      ADD_SUBDIRECTORY(distribution_function)
-      ADD_SUBDIRECTORY(advection_field)
-      ADD_SUBDIRECTORY(LinRood)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
       ADD_SUBDIRECTORY(multigrid)
       ADD_SUBDIRECTORY(BSL)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
-      ADD_SUBDIRECTORY(simulation)
 
       FIND_PACKAGE(SUITESPARSE)
       IF(SUITESPARSE_FOUND)
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ENDIF(SUITESPARSE_FOUND)
    
+      ADD_SUBDIRECTORY(mapped_meshes)
+      ADD_SUBDIRECTORY(time_solvers)
+      ADD_SUBDIRECTORY(distribution_function)
+      ADD_SUBDIRECTORY(ode_solvers)
+      ADD_SUBDIRECTORY(advection_field)
+      ADD_SUBDIRECTORY(LinRood)
+
+      ADD_SUBDIRECTORY(simulation)
+
    ENDIF(NOT STDF95)
 
    IF(FORTRANCL_ENABLED)
