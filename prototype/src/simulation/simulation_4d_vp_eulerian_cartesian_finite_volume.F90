@@ -185,7 +185,8 @@ contains
     sll_int32  :: istat
     sll_int32  :: ic
     sll_int32  :: jc
-    
+    sll_real64 :: df
+    sll_real64,dimension(:),pointer :: node,xmil 
     sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
     sll_real64 :: t
     sll_int32,dimension(4)  :: global_indices
@@ -198,6 +199,8 @@ contains
     sim%phi_seq_x1       => new_layout_2D( sll_world_collective )
 
     sim%degree=sim%params(6)
+    write(*,*) 'degree = ', sim%degree
+    stop
 
     sim%nc_v1 = sim%mesh2dv%num_cells1
     sim%nc_v2 = sim%mesh2dv%num_cells2   
@@ -417,8 +420,9 @@ contains
 !!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
 !!$    stop
-    sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
-         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
+!!$    sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+!!$         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
+sim%dt=0.1
     write(*,*) 'dt = ', sim%dt
 
     do while(t.lt.sim%tmax)
@@ -440,14 +444,34 @@ contains
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
-    
-    allocate (plotf2d(loc_sz_x1,loc_sz_v1))
-
+!!$    
+!!$    allocate (plotf2d(loc_sz_x1,loc_sz_v1))
+!!$    do i = 1, loc_sz_x1
+!!$       do j = 1, loc_sz_v1
+!!$          plotf2d(i,j) = sim%fn_v1v2x1(j,1,i,1)
+!!$       end do
+!!$    end do
+!!$ 
+    allocate (xmil(loc_sz_x1))
+    allocate (node(loc_sz_v1))
+    open(299,file='distribution')
+    do i=1,loc_sz_x1
+       xmil(i)=sim%mesh2dx%eta1_min+sim%mesh2dx%delta_eta1*i-sim%mesh2dx%delta_eta1/2
+    end do
+    do j=1,loc_sz_v1
+       node(j)=sim%mesh2dv%eta1_min+sim%mesh2dv%delta_eta1/sim%degree*(j-1)
+    end do
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-          plotf2d(i,j) = sim%fn_v1v2x1(j,1,i,1)
+          df = sim%fn_v1v2x1(j,1,i,1)
+          write(299,*) xmil(i), node(j), df 
        end do
     end do
+    close(299)
+    deallocate(xmil)
+    deallocate(node)
+
+  !stop
     
 !!$    write(*,*) 'plotf2d',plotf2d
 !!$    stop
@@ -578,8 +602,10 @@ contains
     do i=1,sim%np_v1*sim%np_v2
        sim%mkld(i+1)=sim%mkld(i)+sim%prof(i)
     enddo
-
+    !write (*,*) 'mkld = ', sim%mkld
+    !write (*,*)
     sim%nsky=sim%mkld(sim%np_v1*sim%np_v2+1)-1
+    !write(*,*) 'nsky = ', sim%nsky
 
     SLL_ALLOCATE(sim%M_low(sim%nsky),ierr)
     SLL_ALLOCATE(sim%M_sup(sim%nsky),ierr)
@@ -622,8 +648,7 @@ contains
     sim%Bv2_diag=0
     
 
-
-!!$    write(*,*) sim%prof
+   write(*,*) sim%prof
 !!$
 !!$    stop
 
@@ -659,7 +684,7 @@ contains
                      (ic+gauss(iploc+1))*sim%mesh2dv%delta_eta1
                 yref=sim%mesh2dv%eta2_min+ &
                      (jc+gauss(jploc+1))*sim%mesh2dv%delta_eta2
-               write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
+              ! write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
                 jacob=sim%tv%jacobian_matrix(xref,yref)
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
                 det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
@@ -701,7 +726,8 @@ contains
                                 dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1)  
                             bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                                dphi1(2)*phi2*det*weight(iploc+1)*weight(jploc+1)                    
+                                dphi1(2)*phi2*det*weight(iploc+1)*weight(jploc+1)  
+                            !write(*,*) 'ib1,jb1,ib2,jb2',ib1,jb1,ib2,jb2,(jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2            
                          end do
                       end do
                    end do
@@ -709,17 +735,20 @@ contains
 
              end do
           end do
-          write(*,*)
+          !write(*,*)
 
-          av2loc = 0
+!!$          !av2loc = 0
 !!$          do ii=1,(sim%degree+1)**2
-!!$             write(*,*) 'bv1loc=',bv1loc(ii,:)
+!!$             write(*,*) 'av1loc=',av1loc(ii,:)
 !!$          end do
-             
+            
           do ii=1,(sim%degree+1)**2
              do jj=1,(sim%degree+1)**2
                 i=sim%connec(ii,jc*sim%nc_v1+ic+1)
                 j=sim%connec(jj,jc*sim%nc_v1+ic+1)
+!!$                if (ii == 2) then
+!!$                write(*,*) 'ii,jj,j,i', ii,jj,i,j
+!!$                end if
                 !if (cal.eq.1) then
                 if (i.eq.j) then
                    sim%M_diag(i)=sim%M_diag(i)+mloc(ii,jj)
@@ -749,9 +778,9 @@ contains
        end do
     end do
 
-!!$    write(*,*) 'A diag', sim%Av1_diag
-!!$    write(*,*) 'A low', sim%Av1_low
-!!$    write(*,*) 'A sup', sim%Av1_sup
+!!$    write(*,*) 'A diag', sim%Av2_diag
+!!$    write(*,*) 'A low', sim%Av2_low
+!!$    write(*,*) 'A sup', sim%Av2_sup
 !!$    stop
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
@@ -1206,6 +1235,7 @@ contains
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
 
     source=Ex*source1+Ey*source2
+    !source=0
 
 !!$    !can we do as following ? so we have to call only one 
 !!$    !time the subroutine mulk
@@ -1231,17 +1261,21 @@ contains
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: wm
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
 
-    sll_real64   :: eps=0.0
+    sll_real64   :: eps=0.01
 
     wm=(wL+wR)/2
 
     flux1=0
     flux2=0
+    !verify the subroutine mulku
+    !c'est ici le bug
+    !stop
     
-    call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
-         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
-    call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
-         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
+!!$    call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
+!!$         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
+!!$    call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
+!!$         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
+   ! write(*,*) 'nnoe = ', sim%np_v1*sim%np_v2
 
     flux=vn(1)*flux1+vn(2)*flux2-eps/2*(wR-wL)
 !!$    flux=vn(1)*wL*4
@@ -1289,10 +1323,6 @@ contains
           icR=ic+1
           call fluxnum(sim,sim%fn_v1v2x1(:,:,icL,jc), &
                sim%fn_v1v2x1(:,:,icR,jc),vn,flux)
-!!$          sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc) &
-!!$               -flux/sim%mesh2dx%delta_eta1
-!!$          sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc) &
-!!$               +flux/sim%mesh2dx%delta_eta1
           sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc)-flux
           sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc)+flux
        end do
@@ -1331,6 +1361,7 @@ contains
           end if
           Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
           Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
           source=0
