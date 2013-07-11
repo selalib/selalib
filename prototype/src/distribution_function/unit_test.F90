@@ -4,7 +4,7 @@ program unit_test
 #include "sll_field_2d.h"
   use sll_constants
   use distribution_function
-  use geometry_functions
+  use sll_common_coordinate_transformations
   use sll_module_mapped_meshes_2d
   use sll_landau_2d_initializer
   use sll_cubic_spline_interpolator_1d

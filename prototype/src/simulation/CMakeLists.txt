@@ -11,12 +11,7 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_VP1D_curvilinear_analytic.F90
                                      simulation_vp1d_fourier_fem.F90)
 
-TARGET_LINK_LIBRARIES( sll_simulation_1d cubic_non_uniform_splines
-                                         sll_constants
-                                         sll_utilities
-                                         sll_memory
-                                         sll_assertion 	
-                                         sll_working_precision)
+TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines)
 
 # Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
@@ -39,8 +34,6 @@ ADD_EXECUTABLE(polar_SL polar_SL.F90)
 
 TARGET_LINK_LIBRARIES(polar_SL sll_mapped_meshes
 	                         sll_interpolators
-	                         sll_splines
-	                         geometry_functions
 	                         sll_constants
 	                         sll_file_io
   	                         sll_utilities)
@@ -51,8 +44,6 @@ ADD_EXECUTABLE(curvilinear_SL curvilinear_SL.F90)
   
 TARGET_LINK_LIBRARIES(curvilinear_SL sll_mapped_meshes
 	                               sll_interpolators
-	                               sll_splines
-	                               geometry_functions
 	                               sll_constants
 	                               sll_file_io
   	                               sll_utilities)
@@ -71,18 +62,15 @@ TARGET_LINK_LIBRARIES(CG_polar sll_poisson_2d_polar
 ###
 
 ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
+
 TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
 	                          sll_interpolators
 	                          sll_fft
-	                          sll_splines
-	                          geometry_functions
 	                          sll_distribution_function
-	                          sll_scalar_field_2d	
+	                          sll_scalar_field	
 	                          sll_constants
 	                          sll_file_io
   	                          sll_utilities
-	                          sll_memory
-	                          sll_assertion 	
 	                          sll_poisson_solvers
 	                          dfftpack)
 
@@ -96,34 +84,28 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
    TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_mapped_meshes
 	                                    sll_interpolators
 	                                    sll_periodic_interp
-	                                    sll_splines
 	                                    sll_fft
-	                                    geometry_functions
 	                                    sll_distribution_function
-	                                    sll_scalar_field_2d	
+	                                    sll_scalar_field
                                           sll_constants
 	                                    sll_file_io
   	                                    sll_utilities
 	                                    sll_timer
 	                                    sll_poisson_solvers
-	                                    dfftpack
-                                          ${LAPACK_LIBRARIES})
+	                                    dfftpack)
 
    ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
    TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
 	                           sll_interpolators
 	                           sll_periodic_interp
-	                           sll_splines
 	                           sll_fft
-	                           geometry_functions
 	                           sll_distribution_function
-	                           sll_scalar_field_2d	
+	                           sll_scalar_field
 	                           sll_constants
 	                           sll_file_io
   	                           sll_utilities
 	                           sll_timer
 	                           sll_poisson_solvers
-                                 ${LAPACK_LIBRARIES}
 	                           dfftpack)
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -159,7 +141,6 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_splines
                        sll_parallel_array_initializers	
                        sll_remap
-                       sll_collective
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes

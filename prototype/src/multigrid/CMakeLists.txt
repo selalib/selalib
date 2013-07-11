@@ -1,5 +1,3 @@
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
 ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      diagnostics.F90
                      write_xdmf_2d.F90
@@ -33,10 +31,7 @@ IF(HDF5_PARALLEL_ENABLED)
 
    TARGET_LINK_LIBRARIES(sll_multigrid sll_mgd2 
                                        sll_remap 
-                                       sll_utilities
-                                       sll_collective 
-                                       sll_assertion
-                                       sll_memory)
+                                       sll_utilities)
 
    ADD_EXECUTABLE(test_multigrid_2d test_multigrid_2d.F90)
    
@@ -47,12 +42,7 @@ IF(HDF5_PARALLEL_ENABLED)
 
    TARGET_LINK_LIBRARIES(test_mgd3 sll_mgd3 
                                    sll_file_io_parallel
-	                             sll_constants
-	                             sll_utilities
-	                             sll_collective
-	                             sll_memory
-	                             sll_assertion
-	                             sll_working_precision )
+	                             sll_utilities )
 
 #   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90)
 #
