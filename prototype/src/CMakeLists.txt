@@ -110,11 +110,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-
    ADD_SUBDIRECTORY(electric_field_accumulators)
 
-
-   
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
