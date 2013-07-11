@@ -179,11 +179,11 @@ contains
 !!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))**exp(-0.5_f64*(vx**2+vy**2))
     !write(*,*) 'factor1=',factor1,eps,vx,vy,x
 ! to be changed later (dependance in vy) !!!!!!!!!!!!!!!!!!!!!
-    !sll_landau_initializer_v1v2x1x2 = factor1 * &
-    !     (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
+    sll_landau_initializer_v1v2x1x2 = factor1 * &
+         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
     !write(*,*) 'vx=',vx,kx,x,factor1
 !!         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-    sll_landau_initializer_v1v2x1x2 = exp(-4*x**2)
+  !  sll_landau_initializer_v1v2x1x2 = exp(-4*x**2)
 !!$    sll_landau_initializer_v1v2x1x2 = 1
 !!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
 
