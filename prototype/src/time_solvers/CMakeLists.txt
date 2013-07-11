@@ -13,7 +13,6 @@ ADD_EXECUTABLE(test_time_splitting unit_test.F90)
 
 TARGET_LINK_LIBRARIES(test_time_splitting sll_time_splitting)
 
-
 ADD_EXECUTABLE(vp1d_bsl_time_split vp1d_bsl_time_split.F90)
 
 TARGET_LINK_LIBRARIES(vp1d_bsl_time_split sll_time_splitting)
