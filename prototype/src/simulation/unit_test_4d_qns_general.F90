@@ -48,10 +48,10 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
+#define NPTS1 64
 #define NPTS2 32
-#define NPTS3 32
-#define NPTS4 32
+#define NPTS3 64
+#define NPTS4 64
 #define SPL_DEG1 3
 #define SPL_DEG2 3
   ! logical mesh for space coordinates
