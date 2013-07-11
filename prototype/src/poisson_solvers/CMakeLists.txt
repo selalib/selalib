@@ -41,6 +41,7 @@ IF(FISHPACK_ENABLED)
 ENDIF(FISHPACK_ENABLED)
 
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
+TARGET_LINK_LIBRARIES(sll_poisson_solvers dfftpack)
 
 #ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
 #TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
