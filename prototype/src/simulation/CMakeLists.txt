@@ -43,9 +43,7 @@ TARGET_LINK_LIBRARIES(polar_SL sll_mapped_meshes
 	                         geometry_functions
 	                         sll_constants
 	                         sll_file_io
-  	                         sll_utilities
-	                         sll_memory
-	                         sll_assertion)
+  	                         sll_utilities)
 
 ###
 
@@ -57,9 +55,7 @@ TARGET_LINK_LIBRARIES(curvilinear_SL sll_mapped_meshes
 	                               geometry_functions
 	                               sll_constants
 	                               sll_file_io
-  	                               sll_utilities
-	                               sll_memory
-	                               sll_assertion)
+  	                               sll_utilities)
 ###
 
 ADD_EXECUTABLE(CG_polar CG_polar.F90 sll_advection_polar.F90
@@ -71,8 +67,6 @@ TARGET_LINK_LIBRARIES(CG_polar sll_poisson_2d_polar
 	                         sll_fft
                                sll_splines
 	                         sll_constants
-	                         sll_memory
-	                         sll_assertion
 	                         sll_timer)
 ###
 
@@ -111,10 +105,9 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                                    sll_file_io
   	                                    sll_utilities
 	                                    sll_timer
-	                                    sll_memory
-	                                    sll_assertion 	
 	                                    sll_poisson_solvers
-	                                    dfftpack)
+	                                    dfftpack
+                                          ${LAPACK_LIBRARIES})
 
    ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
    TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
@@ -129,9 +122,8 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                           sll_file_io
   	                           sll_utilities
 	                           sll_timer
-	                           sll_memory
-	                           sll_assertion 	
 	                           sll_poisson_solvers
+                                 ${LAPACK_LIBRARIES}
 	                           dfftpack)
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -173,10 +165,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_utilities
                        sll_coordinate_transformations
                        sll_logical_meshes
-                       sll_file_io_parallel
-                       sll_memory
-                       sll_assertion 	
-                       sll_working_precision)
+                       sll_file_io_parallel)
 
    ADD_DEPENDENCIES(sll_simulations ${SIMULATION_DEPS})
    TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
