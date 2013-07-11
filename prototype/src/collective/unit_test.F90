@@ -426,8 +426,13 @@ program collective_test
   endif
   SLL_ALLOCATE(recvbuf_real(SUM(recvcounts)),ierr)
   
-  call sll_collective_allgatherv_real( sll_world_collective, sendbuf_real, sendcounts(1), &
-       recvcounts, sdispls, recvbuf_real )
+  call sll_collective_allgatherv( &
+       sll_world_collective, &
+       sendbuf_real, &
+       sendcounts(1), &
+       recvcounts, &
+       sdispls, &
+       recvbuf_real )
 
 
   if( SUM(recvbuf_real) .eq. (size)*(size+1)/2.0 ) then

@@ -319,6 +319,8 @@ contains
     sll_int32, dimension(:), allocatable  :: recv_sz
     sll_real64, dimension(:,:), allocatable :: phi_values
     sll_real64 :: density_tot
+    sll_int32  :: send_size   ! for allgatherv operation
+    sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
@@ -391,6 +393,7 @@ contains
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
     SLL_ALLOCATE(recv_sz(sim%world_size),ierr)
+    SLL_ALLOCATE(disps(sim%world_size),ierr)
 
     if( sim%my_rank == 0 ) then
        call sll_new_file_id( efield_energy_file_id, ierr )
@@ -617,18 +620,30 @@ contains
 
 
     call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
-
+ !   print *, 'rank: ', sim%my_rank, 'send_buf:', send_buf
     recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
- 
-    call sll_collective_allgather( &
+ !   print *, 'rank: ', sim%my_rank, 'recv_sz = ', recv_sz(:)
+
+    send_size = size(send_buf)
+  !  print *, 'rank:', sim%my_rank, 'send_size = ', send_size
+    call compute_displacements_array( &
+         sim%split_rho_layout, &
+         sim%world_size, &
+         disps )
+    if(sim%my_rank == 0 ) then
+       print *, 'displacements array: ', disps(:)
+    end if
+    call sll_collective_allgatherv_real64( &
          sll_world_collective, &
          send_buf, &
-         size(send_buf), &
-         recv_buf, &
-         recv_sz )
- 
+         send_size, &
+         recv_sz, &
+         disps, &
+         recv_buf )
+!!$    if(sim%my_rank == 0) then
+!!$       print *, 'rank: ', sim%my_rank, 'recv_buf:', recv_buf(:)
+!!$    end if
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
-
 
    call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min+1*sim%mesh2d_x%delta_eta1, &
@@ -810,12 +825,13 @@ contains
 
        recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
  
-       call sll_collective_allgather( &
+       call sll_collective_allgatherv( &
             sll_world_collective, &
             send_buf, &
             size(send_buf), &
-            recv_buf, &
-            recv_sz )
+            recv_sz, &
+            disps, &
+            recv_buf )
 
        call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
@@ -1277,6 +1293,31 @@ contains
 
   ! Some ad-hoc functions to prepare data for allgather operations. Should
   ! consider putting this elsewhere.
+
+  subroutine compute_displacements_array( layout, collective_size, disps )
+    type(layout_2D), pointer                           :: layout
+    sll_int32, intent(in)                              :: collective_size
+    sll_int32, dimension(collective_size), intent(out) :: disps
+    sll_int32 :: imin, imax
+    sll_int32 :: jmin, jmax
+    sll_int32 :: size_i, size_j
+    sll_int32 :: i,j
+    sll_int32 :: counter
+    sll_int32 :: rank
+
+    counter  = 0
+    disps(1) = counter
+    do rank=1,collective_size-1
+       imin = get_layout_i_min( layout, rank-1 )
+       imax = get_layout_i_max( layout, rank-1 )
+       jmin = get_layout_j_min( layout, rank-1 )
+       jmax = get_layout_j_max( layout, rank-1 )
+       size_i      = imax - imin + 1
+       size_j      = jmax - jmin + 1
+       counter     = counter + size_i*size_j
+       disps(rank+1) = counter
+    end do
+  end subroutine compute_displacements_array
 
   subroutine load_buffer( layout, data, buffer )
     type(layout_2D), pointer   :: layout
