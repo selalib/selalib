@@ -21,7 +21,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
      ADD_LIBRARY(sll_maxwell_parallel STATIC 
                  sll_maxwell_2d_pstd_parallel.F90 )
    
-     TARGET_LINK_LIBRARIES(sll_maxwell_parallel sll_remap)
+     TARGET_LINK_LIBRARIES(sll_maxwell_parallel sll_remap ${FFTW_LIBRARIES})
      
      ADD_EXECUTABLE(test_maxwell_2d_pstd_parallel 
                     unit_test_2d_pstd_parallel.F90 )
