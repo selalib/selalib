@@ -1,5 +1,4 @@
-ADD_LIBRARY(sll_qn_solvers STATIC sll_qns2d_with_finite_diff_seq.F90
-                                  sll_qns2d_angular_spectral_method_seq.F90)
+ADD_LIBRARY(sll_qn_solvers STATIC sll_qn_solver_2d.F90)
 
 TARGET_LINK_LIBRARIES(sll_qn_solvers sll_fft sll_utilities sll_timer)
 
