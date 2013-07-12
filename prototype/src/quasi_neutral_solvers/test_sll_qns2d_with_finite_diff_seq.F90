@@ -1,9 +1,3 @@
-
-!***************************************************************************
-!
-! Selalib 2012     
-! Module: test_sll_qns2d_with_finite_diff_seq.F90
-!
 !> @brief 
 !> Selalib poisson solvers (1D, 2D and 3D) unit test
 !> Start date: March 20, 2012
@@ -12,44 +6,55 @@
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
-!                                  
-!***************************************************************************
+
 program test_sll_qns2d_with_finite_diff_seq
+
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_constants
-  use sll_collective
-  use sll_qns2d_with_finite_diff_seq
+#include "sll_constants.h"
+
+use sll_qns2d_with_finite_diff_seq
+use sll_boundary_condition_descriptors
+
 implicit none
 
-  character(len=100)                    :: BC ! Boundary_conditions
-  sll_int32                             :: NP_r, NP_theta
-  ! NP_r and NP_theta are the numbers of points in directions r and 
-  ! theta respectively
-  sll_real64                            :: rmin, rmax, Zi
-  sll_real64, dimension(:), allocatable :: Te
-  sll_int32                             :: ierr, i
+  sll_int32  :: BC       ! Boundary_conditions
+  sll_int32  :: NP_r     ! number of points in directions r
+  sll_int32  :: NP_theta ! number of points in directions theta
+  sll_real64 :: rmin
+  sll_real64 :: rmax
+  sll_real64 :: Zi
 
-  NP_r = 256
+  sll_real64, dimension(:), allocatable :: Te
+
+  sll_int32  :: i
+  sll_int32  :: ierr
+
+  NP_r     = 256
   NP_theta = 256
-  rmin = 1.d0
-  rmax = 10.d0
-  Zi = 1.d0
+  rmin     = 1.d0
+  rmax     = 10.d0
+  Zi       = 1.d0
 
   do i=1,2
 
      if (i==1) then
-        BC = 'neumann'
+        BC = SLL_NEUMANN
      else
-        BC = 'dirichlet'
+        BC = SLL_DIRICHLET
      endif
+
      print*, ' '
      print*, 'Testing sll_qns2d_with_finite_diff_seq with ', BC
      print*, ' '
+
      SLL_ALLOCATE(Te(NP_r), ierr)
+
      Te = 1.d0
-     call test_process(BC, NP_r, NP_theta, rmin, rmax, Te, Zi)
+
+     call test_process()
+
      SLL_DEALLOCATE_ARRAY(Te, ierr)
 
   enddo
@@ -60,27 +65,24 @@ implicit none
 contains
 
 
-  subroutine test_process(BC, NP_r, NP_theta, rmin, rmax, Te, Zi)
+  subroutine test_process()
 
-    character(len=*)                                :: BC!Boundary_conditions
-    sll_int32                                       :: NP_r, NP_theta
-    ! NP_r and NP_theta are the numbers of points in directions r and 
-    ! theta respectively
-    sll_real64                                      :: rmin, rmax, Zi
-    sll_real64, dimension(:)                        :: Te
-    sll_real64, dimension(:),   allocatable         :: c, f, g
-    sll_int32                                       :: ierr
-    sll_real64                                      :: dr, dtheta
-    sll_real64                                      :: r, theta
-    sll_real64, dimension(NP_r,NP_theta)            :: rho, phi
-    sll_real64, dimension(NP_r,NP_theta)            :: phi_exact
-    sll_int32                                       :: i, j, i_test
     type (qns2d_with_finite_diff_plan_seq), pointer :: plan
-    sll_real64                                      :: average_err
-    sll_real64                                      :: average_err_bound
-    sll_real64                                      :: Mr, Mtheta
 
-    if (BC=='neumann') then
+    sll_real64, dimension(:),  allocatable         :: c
+    sll_real64, dimension(:),  allocatable         :: f
+    sll_real64, dimension(:),  allocatable         :: g
+    sll_int32                                      :: ierr
+    sll_real64                                     :: dr, dtheta
+    sll_real64                                     :: r, theta
+    sll_real64, dimension(NP_r,NP_theta)           :: rho, phi
+    sll_real64, dimension(NP_r,NP_theta)           :: phi_exact
+    sll_int32                                      :: i, j, i_test
+    sll_real64                                     :: average_err
+    sll_real64                                     :: average_err_bound
+    sll_real64                                     :: Mr, Mtheta
+
+    if (BC==SLL_NEUMANN) then
        dr = (rmax-rmin)/(NP_r-1)
     else ! 'Dirichlet'
        dr = (rmax-rmin)/(NP_r+1)
@@ -104,7 +106,7 @@ contains
           theta = (j-1)*dtheta
           Mr = 4*abs(cos(theta))
 
-          if (BC=='neumann') then
+          if (BC==SLL_NEUMANN) then
              if (i_test==1) then
                 f(j) = sin(rmax-rmin)*cos(theta)
              else
@@ -113,7 +115,7 @@ contains
           endif
 
           do i=1,NP_r
-             if (BC=='neumann') then
+             if (BC==SLL_NEUMANN) then
                 r = rmin + (i-1)*dr
                 c(i) = 2/r
              else ! 'dirichlet'
