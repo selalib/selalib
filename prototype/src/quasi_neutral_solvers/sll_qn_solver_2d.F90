@@ -41,7 +41,7 @@ type qns2d_with_finite_diff_plan_seq
 
 end type qns2d_with_finite_diff_plan_seq
 
-sll_int32, private :: i, j
+sll_int32, private :: i, j, k
 
 contains
 
@@ -128,10 +128,19 @@ contains
     enddo
 
     do j=1,NP_theta
+
+       if (j<=NP_theta/2) then
+           k = j-1
+       else
+           k = NP_theta-(j-1)
+       endif
+       
        if (plan%BC==SLL_NEUMANN) then
-          call neumann_matrix_resh_seq(plan, j-1, c, Te, Zi, plan%a_resh)
-       else ! dirichlet
-          call dirichlet_matrix_resh_seq(plan, j-1, c, Te, Zi,  plan%a_resh)
+          !call neumann_matrix_resh_seq(plan, j-1, c, Te, Zi, plan%a_resh)
+          call neumann_matrix_resh_seq(plan, k, c, Te, Zi, plan%a_resh)
+       else 
+          !call dirichlet_matrix_resh_seq(plan, j-1, c, Te, Zi,  plan%a_resh)
+          call dirichlet_matrix_resh_seq(plan, k, c, Te, Zi,  plan%a_resh)
        endif
        call setup_cyclic_tridiag( plan%a_resh, NP_r, plan%cts, plan%ipiv )
        call solve_cyclic_tridiag( plan%cts, plan%ipiv, plan%hat_rho(:,j), &
@@ -188,8 +197,9 @@ contains
        if (i>1) then
           a_resh(3*(i-1)+1) = c(i)/(2*dr) - 1/dr**2
        endif
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
-                                                     + 1/(Zi*Te(i))
+      ! a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
+      !                                               + 1/(Zi*Te(i))
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (k/r)**2
                                            
        if (i<NP_r) then
           a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
@@ -216,21 +226,25 @@ contains
 
     a_resh = 0.d0
 
-    a_resh(2) = 2/dr**2 + 2/(rmin*dtheta)**2*(1-cos(j*dtheta)) &
-                                             + 1/(Zi*Te(1))
+   ! a_resh(2) = 2/dr**2 + 2/(rmin*dtheta)**2*(1-cos(j*dtheta)) &
+   !                                          + 1/(Zi*Te(1))
+
+    a_resh(2) = 2/dr**2 + 1/(Zi*Te(1)) + (k/rmin)**2
     a_resh(3) = -2/dr**2
 
     do i=2,NP_r-1
        r = rmin + (i-1)*dr
        a_resh(3*(i-1)+1) = c(i)/(2*dr) - 1/dr**2
-       a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2* &
-                       (1-cos(j*dtheta)) + 1/(Zi*Te(i))
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (k/r)**2
+      ! a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2* &
+     !                  (1-cos(j*dtheta)) + 1/(Zi*Te(i))
        a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
     enddo
 
     a_resh(3*(NP_r-1)+1) = -2/dr**2
-    a_resh(3*(NP_r-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2* &
-                       (1-cos(j*dtheta)) + 1/(Zi*Te(NP_r))
+    !a_resh(3*(NP_r-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2* &
+    !                   (1-cos(j*dtheta)) + 1/(Zi*Te(NP_r))
+    a_resh(3*(NP_r-1)+2) = 2/dr**2 + 1/(Zi*Te(NP_r)) + (k/rmax)**2
 
   end subroutine neumann_matrix_resh_seq
 
