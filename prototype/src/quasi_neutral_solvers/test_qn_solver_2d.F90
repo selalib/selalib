@@ -13,7 +13,7 @@ program test_qns2d
 #include "sll_assert.h"
 #include "sll_constants.h"
 
-use sll_qns2d_with_finite_diff_seq
+use sll_qn_solver_2d
 use sll_boundary_condition_descriptors
 
 implicit none
@@ -84,9 +84,9 @@ contains
 
 subroutine test_function_1()
 
-type (qns2d_with_finite_diff_plan_seq), pointer :: plan
+type (qn_solver_2d), pointer :: plan
 
-plan => new_qns2d_with_finite_diff_plan_seq(BC, rmin, rmax, NP_r, NP_theta)
+plan => new(BC, rmin, rmax, NP_r, NP_theta)
 
 if (BC==SLL_NEUMANN) then
    f = sin(rmax-rmin)*cos(theta)
@@ -119,7 +119,7 @@ enddo
 
 g = -f
 
-call solve_qns2d_with_finite_diff_seq(plan, rho, c, Te, f, g, Zi, phi)
+call solve(plan, rho, c, Te, f, g, Zi, phi)
 
 err = sum(abs(phi_exact-phi))/(NP_r*NP_theta)
 err_bound = err_bound/(NP_r*NP_theta)
@@ -133,15 +133,15 @@ if ( err > err_bound ) then
    stop
 endif
     
-call delete_qns2d_with_finite_diff_plan_seq(plan)
+call delete(plan)
 
 end subroutine test_function_1
 
 subroutine test_function_2()
 
-type (qns2d_with_finite_diff_plan_seq), pointer :: plan
+type (qn_solver_2d), pointer :: plan
 
-plan => new_qns2d_with_finite_diff_plan_seq(BC, rmin, rmax, NP_r, NP_theta)
+plan => new(BC, rmin, rmax, NP_r, NP_theta)
 
 if (BC==SLL_NEUMANN) then
    f = sin(rmax-rmin) * exp(-.5*(theta-sll_pi)**2)/sqrt(2*sll_pi)
@@ -176,7 +176,7 @@ enddo
 
 g = -f
 
-call solve_qns2d_with_finite_diff_seq(plan, rho, c, Te, f, g, Zi, phi)
+call solve(plan, rho, c, Te, f, g, Zi, phi)
 
 err = sum(abs(phi_exact-phi))/(NP_r*NP_theta)
 err_bound = err_bound/(NP_r*NP_theta)
@@ -190,7 +190,7 @@ if ( err > err_bound ) then
    stop
 endif
     
-call delete_qns2d_with_finite_diff_plan_seq(plan)
+call delete(plan)
 
 end subroutine test_function_2
 
