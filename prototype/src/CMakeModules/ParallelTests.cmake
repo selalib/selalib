@@ -35,15 +35,8 @@ IF(PROCESSOR_COUNT GREATER 1)
 	PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 16)
-      ADD_MPI_TEST(qns2d_with_finite_diff_par test_qns2d_with_finite_diff_par ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(qns2d_with_finite_diff_par 
-                           PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-      SET(PROCS 16)
-      ADD_MPI_TEST(qns2d_angular_spectral_method_par test_qns2d_angular_spectral_method_par
-	          ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_par 
-                           PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      ADD_MPI_TEST(qns2d_parallel test_qn_solver_2d_parallel ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns2d_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    ENDIF()
 
