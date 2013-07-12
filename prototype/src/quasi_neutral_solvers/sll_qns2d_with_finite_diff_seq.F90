@@ -46,10 +46,13 @@ sll_int32, private :: i, j
 contains
 
   !> Initialialize a new QNS solver in 2D space
-  function new_qns2d_with_finite_diff_plan_seq(BC, rmin, rmax, NP_r, NP_theta) &
-                                                                   result (plan)
+  function new_qns2d_with_finite_diff_plan_seq(BC,     &
+                                               rmin,   &
+                                               rmax,   &
+                                               NP_r,   &
+                                               NP_theta) result (plan)
 
-    type(qns2d_with_finite_diff_plan_seq), pointer :: plan     !< qns solver
+    type(qns2d_with_finite_diff_plan_seq), pointer :: plan !< qns solver
 
     sll_int32   :: BC       !< Boundary_conditions
     sll_real64  :: rmin     !< r min
@@ -64,9 +67,9 @@ contains
 
     SLL_CLEAR_ALLOCATE(plan%hat_f(1:NP_theta),ierr)
     SLL_CLEAR_ALLOCATE(plan%hat_g(1:NP_theta),ierr)
-    SLL_CLEAR_ALLOCATE(plan%ipiv(plan%NP_r),ierr)
-    SLL_CLEAR_ALLOCATE(plan%a_resh(1:3*plan%NP_r),ierr) 
-    SLL_CLEAR_ALLOCATE(plan%cts(1:7*plan%NP_r),ierr)
+    SLL_ALLOCATE(plan%ipiv(1:NP_r),ierr); plan%ipiv = 0
+    SLL_CLEAR_ALLOCATE(plan%a_resh(1:3*NP_r),ierr) 
+    SLL_CLEAR_ALLOCATE(plan%cts(1:7*NP_r),ierr)
 
     plan%BC       = BC
     plan%NP_r     = NP_r

@@ -20,10 +20,8 @@ module sll_qns2d_angular_spect_method_seq
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
-  use sll_constants
+#include "sll_constants.h"
   use sll_fft
-  use sll_tridiagonal
-  use sll_collective
 
   implicit none
 
