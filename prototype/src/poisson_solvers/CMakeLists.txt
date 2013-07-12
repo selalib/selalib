@@ -42,7 +42,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion
                                              dfftpack )
 ENDIF()
 
