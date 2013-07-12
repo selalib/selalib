@@ -1,4 +1,7 @@
 module sll_multigrid_2d
+#include "sll_working_precision.h"
+#include "sll_constants.h"
+#include "sll_memory.h"
 
 use sll_boundary_condition_descriptors
 use sll_multigrid_base
@@ -11,10 +14,6 @@ use sll_collective, only: sll_boot_collective,      &
 use sll_gnuplot_parallel
 use sll_remapper
 use mgd2
-
-#include "sll_working_precision.h"
-#include "sll_constants.h"
-#include "sll_memory.h"
 
 implicit none
 
