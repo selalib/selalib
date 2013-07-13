@@ -53,8 +53,6 @@ end interface delete
 
 sll_int32, private :: i, j, k
 
-private :: dirichlet_matrix_resh, neumann_matrix_resh
-
 contains
 
   !> Initialialize a new QNS solver in 2D space
@@ -144,11 +142,9 @@ contains
        endif
        
        if (plan%BC==SLL_NEUMANN) then
-          !call neumann_matrix_resh(plan, j-1, c, Te, Zi, plan%a_resh)
-          call neumann_matrix_resh(plan, k, c, Te, Zi, plan%a_resh)
+          call neumann_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, k, c, Te, Zi, plan%a_resh)
        else 
-          !call dirichlet_matrix_resh(plan, j-1, c, Te, Zi,  plan%a_resh)
-          call dirichlet_matrix_resh(plan, k, c, Te, Zi,  plan%a_resh)
+          call dirichlet_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, k, c, Te, Zi,  plan%a_resh)
        endif
        call setup_cyclic_tridiag( plan%a_resh, np_r, plan%cts, plan%ipiv )
        call solve_cyclic_tridiag( plan%cts, plan%ipiv, plan%hat_rho(:,j), &
@@ -183,20 +179,16 @@ contains
   end subroutine delete_qn_solver_2d
 
 
-  subroutine dirichlet_matrix_resh(plan, j, c, Te, Zi, a_resh)
+  subroutine dirichlet_matrix_resh(np_r, rmin, rmax, np_theta, j, c, Te, Zi, a_resh)
 
-    type(qn_solver_2d), pointer :: plan
     sll_real64, dimension(:)                       :: c, Te
     sll_real64                                     :: dr, dtheta, Zi
     sll_real64                                     :: r, rmin, rmax
-    sll_int32                                      :: i, j, np_r
+    sll_int32                                      :: i, j, np_r, np_theta
     sll_real64, dimension(:)                       :: a_resh
 
-    np_r = plan%np_r
-    rmin = plan%rmin
-    rmax = plan%rmax
     dr = (rmax-rmin)/(np_r+1)
-    dtheta = 2*sll_pi / plan%np_theta
+    dtheta = 2*sll_pi / np_theta
 
     a_resh = 0.d0
 
@@ -207,7 +199,7 @@ contains
        endif
       ! a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2*(1-cos(j*dtheta)) &
       !                                               + 1/(Zi*Te(i))
-       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (k/r)**2
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (j/r)**2
                                            
        if (i<np_r) then
           a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
@@ -217,20 +209,16 @@ contains
   end subroutine dirichlet_matrix_resh
 
 
-  subroutine neumann_matrix_resh(plan, j, c, Te, Zi, a_resh)
+  subroutine neumann_matrix_resh(np_r, rmin, rmax, np_theta, j, c, Te, Zi, a_resh)
 
-    type(qn_solver_2d), pointer :: plan
     sll_real64, dimension(:)                       :: c, Te
     sll_real64                                     :: dr, dtheta, Zi
     sll_real64                                     :: rmin, rmax, r
-    sll_int32                                      :: i, j, np_r
+    sll_int32                                      :: i, j, np_r, np_theta
     sll_real64, dimension(:)                       :: a_resh
 
-    np_r = plan%np_r
-    rmin = plan%rmin
-    rmax = plan%rmax
     dr = (rmax-rmin)/(np_r-1)
-    dtheta = 2*sll_pi / plan%np_theta
+    dtheta = 2*sll_pi / np_theta
 
     a_resh = 0.d0
 
@@ -243,7 +231,7 @@ contains
     do i=2,np_r-1
        r = rmin + (i-1)*dr
        a_resh(3*(i-1)+1) = c(i)/(2*dr) - 1/dr**2
-       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (k/r)**2
+       a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (j/r)**2
       ! a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2* &
      !                  (1-cos(j*dtheta)) + 1/(Zi*Te(i))
        a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
@@ -252,7 +240,7 @@ contains
     a_resh(3*(np_r-1)+1) = -2/dr**2
     !a_resh(3*(np_r-1)+2) = 2/dr**2 + 2/(rmax*dtheta)**2* &
     !                   (1-cos(j*dtheta)) + 1/(Zi*Te(np_r))
-    a_resh(3*(np_r-1)+2) = 2/dr**2 + 1/(Zi*Te(np_r)) + (k/rmax)**2
+    a_resh(3*(np_r-1)+2) = 2/dr**2 + 1/(Zi*Te(np_r)) + (j/rmax)**2
 
   end subroutine neumann_matrix_resh
 
