@@ -10,7 +10,7 @@ IF (MPI_MODULE_ENABLED)
 
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-   ADD_LIBRARY(sll_qn_solvers_parallel STATIC sll_qn_solver_2d_parallel.F90)
+   ADD_LIBRARY(sll_qn_solvers_parallel STATIC sll_qn_solver_2d.F90 sll_qn_solver_2d_parallel.F90)
 
    TARGET_LINK_LIBRARIES(sll_qn_solvers_parallel sll_remap sll_fft)
 
