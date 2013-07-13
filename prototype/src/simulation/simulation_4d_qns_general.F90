@@ -902,7 +902,7 @@ contains
             rho, &
             phi )
        
-!       call phi%write_to_file(itime)
+       call phi%write_to_file(itime)
        
        call compute_local_sizes_4d( sim%sequential_x1x2, &
                                     loc_sz_x1,           &
@@ -921,8 +921,8 @@ contains
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  real(global_indices(1)-1,f64)*delta1
-                eta2   =  real(global_indices(2)-1,f64)*delta2
+                eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
+                eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
@@ -964,8 +964,8 @@ contains
              do k=1,sim%mesh2d_v%num_cells1+1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  real(global_indices(1)-1,f64)*delta1
-                eta2   =  real(global_indices(2)-1,f64)*delta2
+                eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
+                eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
                 ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
