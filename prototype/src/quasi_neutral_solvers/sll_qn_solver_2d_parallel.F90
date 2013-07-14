@@ -97,7 +97,7 @@ contains
           print *, 'The number of points in r-direction needs to be a power of 2'
           print *, 'Exiting...'
           stop
-       else ! dirichlet
+       else 
           print *, 'The number of points in r-direction needs to be in form 2^n + 2'
           print *, 'Exiting...'
           stop

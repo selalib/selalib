@@ -83,9 +83,7 @@ contains
     plan%rmin     = rmin
     plan%rmax     = rmax
 
-    ! For FFTs in theta-direction
     plan%fw_fft => fft_new_plan( np_theta, plan%hat_f, plan%hat_g, FFT_FORWARD )
-
     plan%bw_fft => fft_new_plan( np_theta, plan%hat_g, plan%hat_f, FFT_INVERSE )
 
   end function new_qn_solver_2d
@@ -122,9 +120,9 @@ contains
     call fft_apply_plan( plan%fw_fft, plan%hat_rho(np_r,:), plan%hat_rho(np_r,:) )
 
     if (plan%bc==SLL_NEUMANN) then
-       plan%hat_rho(1,:)  = plan%hat_rho(1,:) + (c(1)-2/dr)*plan%hat_f 
+       plan%hat_rho(1,:)    = plan%hat_rho(1,:)    + (c(1)-2/dr)*plan%hat_f 
        plan%hat_rho(np_r,:) = plan%hat_rho(np_r,:) + (c(np_r)+2/dr)*plan%hat_g
-    else ! dirichlet
+    else 
        plan%hat_rho(1,:)  = plan%hat_rho(1,:) + (1/dr**2 - c(1)/(2*dr))*plan%hat_f
        plan%hat_rho(np_r,:) = plan%hat_rho(np_r,:) + (1/dr**2 + c(np_r)/(2*dr))*plan%hat_g
     endif
@@ -142,9 +140,11 @@ contains
        endif
        
        if (plan%BC==SLL_NEUMANN) then
-          call neumann_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, k, c, Te, Zi, plan%a_resh)
+          call neumann_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, &
+                                   k, c, Te, Zi, plan%a_resh)
        else 
-          call dirichlet_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, k, c, Te, Zi,  plan%a_resh)
+          call dirichlet_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, &
+                                     k, c, Te, Zi,  plan%a_resh)
        endif
        call setup_cyclic_tridiag( plan%a_resh, np_r, plan%cts, plan%ipiv )
        call solve_cyclic_tridiag( plan%cts, plan%ipiv, plan%hat_rho(:,j), &
@@ -167,8 +167,6 @@ contains
      type (qn_solver_2d), pointer :: plan
      sll_int32                                       :: ierr
 
-     ! Fixme: some error checking, whether the poisson pointer is associated
-     ! for instance
      SLL_ASSERT( associated(plan) )
 
      call fft_delete_plan(plan%fw_fft)
@@ -233,7 +231,7 @@ contains
        a_resh(3*(i-1)+1) = c(i)/(2*dr) - 1/dr**2
        a_resh(3*(i-1)+2) = 2/dr**2 + 1/(Zi*Te(i)) + (j/r)**2
       ! a_resh(3*(i-1)+2) = 2/dr**2 + 2/(r*dtheta)**2* &
-     !                  (1-cos(j*dtheta)) + 1/(Zi*Te(i))
+      !                  (1-cos(j*dtheta)) + 1/(Zi*Te(i))
        a_resh(3*(i-1)+3) = -( 1/dr**2 + c(i)/(2*dr) )
     enddo
 
