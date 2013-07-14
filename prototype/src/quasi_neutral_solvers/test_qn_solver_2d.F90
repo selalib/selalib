@@ -61,14 +61,14 @@ do bc=1,2
          r(i) = rmin + (i-1)*dr
          c(i) = 2/r(i)
       end do
-      print*, 'Testing sll_qns2d_with_finite_diff_seq with neumann'
+      print*, 'Testing with neumann'
    else
       dr = (rmax-rmin)/(NP_r+1)
       do i = 1, np_r
          r(i) = rmin + i*dr
          c(i) = (rmax+rmin-2*r(i)) / ( (rmax-r(i))*(r(i)-rmin) )
       end do
-      print*, 'Testing sll_qns2d_with_finite_diff_seq with dirichlet'
+      print*, 'Testing with dirichlet'
    endif
    print*, ' '
 
@@ -77,7 +77,7 @@ do bc=1,2
 
 enddo
 
-print*, 'test_sll_qns2d_with_finite_diff_seq: PASSED'
+print*, 'test_qn_solver_2d : PASSED'
 print*, ' '
 
 contains
