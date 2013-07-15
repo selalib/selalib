@@ -1389,7 +1389,7 @@ contains  ! ****************************************************************
        FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes,compute_slopes_x2_min)
 
        ! Set the values of the slopes at x2_max
-       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
+       FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
 
     case default
        print *, 'ERROR: new_spline_2D(): ', &

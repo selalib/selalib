@@ -1,4 +1,4 @@
-set(MEMORY_SRC sll_memory.F90)
-add_library(sll_memory STATIC ${MEMORY_SRC})
-add_executable(test_memory unit_test.F90)
-target_link_libraries(test_memory sll_memory)
+SET(MEMORY_SRC sll_memory.F90)
+ADD_LIBRARY(sll_memory STATIC ${MEMORY_SRC})
+ADD_EXECUTABLE(test_memory unit_test.F90)
+TARGET_LINK_LIBRARIES(test_memory sll_memory)

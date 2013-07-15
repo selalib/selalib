@@ -1,7 +1,7 @@
 !> Unit test for parallel output
 program test_io_parallel
 
-use hdf5
+use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
@@ -127,7 +127,7 @@ contains
                                     dble(offset(2)), dble(1), &
                                     zdata, "rect_mesh", 1, error)  
 
-  call sll_gnuplot_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
+  call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
   !Begin high level version

@@ -17,7 +17,9 @@ SET(SLL_MACROS
     ${SLL_DIR}/fft/sll_fft.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
-    ${SLL_DIR}/fields/sll_field_2d.h)
+    ${SLL_DIR}/fields/sll_field_2d.h
+    ${SLL_DIR}/multigrid/sll_multigrid.h
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -52,13 +54,12 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
-    ${SLL_DIR}/integration/gauss-lobatto.F90
+    ${SLL_DIR}/integration/sll_gausslobatto.F90
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
  )
 
 IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
@@ -69,6 +70,8 @@ IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
 ELSEIF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+      ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+      ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
       ${SLL_DIR}/fft/fftw_module.F90
       ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
 

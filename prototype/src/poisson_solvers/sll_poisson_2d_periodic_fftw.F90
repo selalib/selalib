@@ -70,15 +70,15 @@ contains
 
 subroutine initialize_poisson_2d_periodic_fftw(self, &
                       x_min, x_max, nc_x, &
-                      y_min, y_max, nc_y, rho, error )
+                      y_min, y_max, nc_y, error )
 
    type(poisson_2d_periodic) :: self
-   sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, intent(in) :: x_min, x_max, y_min, y_max
    sll_int32  :: error
    sll_int32  :: nc_x, nc_y
    sll_int32  :: ik, jk
    sll_real64 :: kx1, kx0, ky0
+   sll_real64, dimension(:,:), allocatable :: tmp
 
    self%nc_x = nc_x
    self%nc_y = nc_y
@@ -106,10 +106,10 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
 
-   self%fw = fftw_plan_dft_r2c_2d(nc_y,nc_x,rho(1:nc_x,1:nc_y), &
-                                  self%ext,FFTW_MEASURE)
-   self%bw = fftw_plan_dft_c2r_2d(nc_y,nc_x,self%eyt,           &
-                                  rho(1:nc_x,1:nc_y),FFTW_MEASURE)
+   SLL_ALLOCATE(tmp(1:nc_x,1:nc_y),error)
+   self%fw = fftw_plan_dft_r2c_2d(nc_y,nc_x,tmp,self%ext,FFTW_MEASURE)
+   self%bw = fftw_plan_dft_c2r_2d(nc_y,nc_x,self%eyt,tmp,FFTW_MEASURE)
+   deallocate(tmp)
 
    kx0 = 2._f64*sll_pi/(x_max-x_min)
    ky0 = 2._f64*sll_pi/(y_max-y_min)
@@ -189,10 +189,10 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
 
-   !e_x(nc_x+1,:) = e_x(1,:)
-   !e_x(:,nc_y+1) = e_x(:,1)
-   !e_y(nc_x+1,:) = e_y(1,:)
-   !e_y(:,nc_y+1) = e_y(:,1)
+   e_x(nc_x+1,:) = e_x(1,:)
+   e_x(:,nc_y+1) = e_x(:,1)
+   e_y(nc_x+1,:) = e_y(1,:)
+   e_y(:,nc_y+1) = e_y(:,1)
 
    if (present(nrj)) then 
       dx = self%dx
