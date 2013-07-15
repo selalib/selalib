@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
   use sll_constants
   use sll_module_mapped_meshes_2d
-  use geometry_functions
+  use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_2d
   implicit none
 

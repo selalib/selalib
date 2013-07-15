@@ -1,7 +1,5 @@
-add_library(newton_raphson STATIC newton_raphson.F90)
-add_dependencies(newton_raphson sll_working_precision)
-add_executable(test_newton_raphson test_jacobian_and_f_module.F90 unit_test.F90 )
-target_link_libraries(test_newton_raphson
-	newton_raphson
-	sll_working_precision
-)
+ADD_EXECUTABLE(test_newton_raphson newton_raphson.F90
+                                   test_jacobian_and_f_module.F90 
+                                   unit_test.F90 )
+
+TARGET_LINK_LIBRARIES(test_newton_raphson sll_working_precision)

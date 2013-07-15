@@ -2,7 +2,7 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_maxwell_solvers.h"
+!#include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
 
 use sll_constants
@@ -91,7 +91,7 @@ SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
 
 call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
-                         eta2_min, eta2_max, nc_eta2, rho, error)
+                         eta2_min, eta2_max, nc_eta2, error)
 
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC )
 call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC )
