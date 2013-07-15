@@ -44,236 +44,79 @@ contains
     sll_real64, intent(in)    :: a
     sll_real64, intent(in)    :: b
     sll_int32,  intent(in)    :: n 
-    sll_real64, dimension(10) :: xk, alpha
-    sll_real64, dimension(10) :: wk, beta
+    sll_real64, dimension(n)  :: xk
+    sll_real64, dimension(n)  :: wk
     sll_int32                 :: k
     sll_int32                 :: err
+    sll_real64                :: alpha(0:n-1), beta(0:n-1)
+    sll_real64                :: de(n), da(n), db(n)
     sll_real64                :: ans
+    sll_real64                :: x
+    sll_real64                :: c1
+    sll_real64                :: c2
 
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
 
-    alpha = 0.0d0
-    do k = 0, 9
-       beta(k+1)=real(k*k,f64)/((2.0d0*k+1)*(2.0d0*k-1))
+    alpha = 0.0_f64
+    do k = 0, n-1
+       beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
+
+    !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
+    !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
+    !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
     beta(0)=2.0d0
 
-    call dlob(n-2,alpha,beta,a,b,xk,wk,err)
+    call dlob(n-2,alpha,beta,-1.0_f64,1._f64,xk,wk,err,de,da,db)
 
-    ans = 0.0_f64
+    ans = 0.0
+    ! need to map the interval [-1,1] into the interval [a,b]
+    c1 = 0.5_f64*(b-a)
+    c2 = 0.5_f64*(b+a)
     do k=1,n
-       ans = ans + f(xk(k))*wk(k)
+       x = c1*xk(k) + c2
+       ans = ans + f(x)*wk(k)
     end do
-
-    gauss_lobatto_integral_1D = ans
-
+    gauss_lobatto_integral_1D = c1*ans
 
   end function gauss_lobatto_integral_1D
 
 
 
-!> This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements
+  subroutine test_gauss_lobatto( f, a, b, n )
+    procedure(function_1D)    :: f
+    sll_real64, intent(in)    :: a
+    sll_real64, intent(in)    :: b
+    sll_int32,  intent(in)    :: n 
+    sll_real64, dimension(n)  :: xk
+    sll_real64, dimension(n)  :: wk
+    sll_int32                 :: k
+    sll_int32                 :: err
+    sll_real64                :: alpha(0:n-1), beta(0:n-1)
+    sll_real64                :: de(n), da(n), db(n)
 
-!> To use those functions, READ the documentation beside and find more information 
-!> about coefficients in paper *Algorithm xxx - ORTHPOL: A package of routines for 
-!> generating orthogonal polynomials and Gauss-type quadrature rules* by _Walter 
-!> Gautschi_ (here xxx is 726 in other references) formulas (1.1) to (1.3) page 2, 
-!> and book **Numerical Mathematics** by _Alfio Quarteroni_, _Riccardo Sacco_ and 
-!> _Fausto Saleri_ section 10.
-!> Given  n  and a measure  dlambda, this routine generates the 
-!> (n+2)-point Gauss-Lobatto quadrature formula
-!> 
-!>   integral over supp(dlambda) of f(x)dlambda(x)
-!> 
-!>      = w(0)f(x(0)) + sum from k=1 to k=n of w(k)f(x(k))  
-!> 
-!>              + w(n+1)f(x(n+1)) + R(n;f).
-!> 
-!> The nodes are returned as  zero(k)=x(k), the weights as  weight(k)
-!> =w(k), k=0,1,...,n,n+1. The user has to supply the recursion
-!> coefficients  alpha(k), beta(k), k=0,1,...,n,n+1, for the measure
-!> dlambda. The nodes and weights are computed in terms of the
-!> eigenvalues and first component of the normalized eigenvectors of
-!> a slightly modified Jacobi matrix of order  n+2. The routine calls 
-!> upon the subroutine  gauss  and the function subroutine  r1mach.
-!> 
-!>   Input:  
-!>     - n : the number of interior points in the Gauss-Lobatto
-!>                  formula; type integer
-!>     - alpha,beta : arrays of dimension  n+2  to be supplied with
-!>                  the recursion coefficients  alpha(k-1), beta(k-1),
-!>                  k=1,2,...,n+2, of the underlying measure; the
-!>                  routine does not use  alpha(n+2), beta(n+2)
-!>     - aleft,right : the prescribed left and right endpoints 
-!>                  x(0)  and  x(n+1)  of the Gauss-Lobatto formula
-!> 
-!>   Output: 
-!>     - zero : an array of dimension  n+2  containing the nodes (in 
-!>                  increasing order)  zero(k)=x(k), k=0,1,...,n,n+1
-!>     - weight : an array of dimension  n+2  containing the weights 
-!>                  weight(k)=w(k), k=0,1,...,n,n+1
-!>     - ierr : an error flag inherited from the routine  gauss
-!> 
-!> The arrays  e,a,b  are needed for working space.
-!> 
-subroutine dlob(n,dalpha,dbeta,dleft,dright,dzero,dweigh,ierr)
+    xk(:) = 0.0_f64
+    wk(:) = 0.0_f64
 
-sll_int32  :: n, np1, np2, k, ierr
-sll_real64 :: dleft,dright,depsma,dp0l,dp0r,dp1l,dp1r,dpm1l
-sll_real64 :: dpm1r,ddet,dalpha(:),dbeta(:),dzero(:),dweigh(:)
-sll_real64 :: de(n+2), da(n+2), db(n+2)
+    alpha = 0.0_f64
+    do k = 0, n-1
+       beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
+    end do
 
-! 
-! The arrays  dalpha,dbeta,dzero,dweigh,de,da,db  are assumed to have
-! dimension  n+2.
-! 
-depsma=epsilon(1.0d0)
-! 
-! depsma is the machine double precision.
-! 
-np1=n+1
-np2=n+2
-do k=1,np2
-   da(k)=dalpha(k)
-   db(k)=dbeta(k)
-end do
+    !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
+    !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
+    !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
+    beta(0)=2.0d0
 
-dp0l=0.d0
-dp0r=0.d0
-dp1l=1.d0
-dp1r=1.d0
-do k=1,np1
-  dpm1l=dp0l
-  dp0l=dp1l
-  dpm1r=dp0r
-  dp0r=dp1r
-  dp1l=(dleft-da(k))*dp0l-db(k)*dpm1l
-  dp1r=(dright-da(k))*dp0r-db(k)*dpm1r
-end do
-
-ddet=dp1l*dp0r-dp1r*dp0l
-da(np2)=(dleft*dp1l*dp0r-dright*dp1r*dp0l)/ddet
-db(np2)=(dright-dleft)*dp1l*dp1r/ddet
-call dgauss(np2,da,db,depsma,dzero,dweigh,ierr,de)
-return
-end subroutine dlob
+    call dlob(n-2,alpha,beta,a,b,xk,wk,err,de,da,db)
 
 
-subroutine dgauss(n,dalpha,dbeta,deps,dzero,dweigh,ierr,de)
+    write(*,*) "xk=",xk(:)
+    write(*,*) "wk=",wk(:)
 
-sll_int32  :: n, k, l, i, m, ii, j, mml, ierr
-sll_real64 :: deps,dp,dg,dr,ds,dc,df,db
-sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
 
-if(n.lt.1) then
-  ierr=-1
-  return
-end if
-ierr=0
-dzero(1)=dalpha(1)
-if(dbeta(1).lt.0.d0) then
-  ierr=-2
-  return
-end if
-dweigh(1)=dbeta(1)
-if (n.eq.1) return
-dweigh(1)=1.d0
-de(n)=0.d0
+  end subroutine test_gauss_lobatto
 
-do k=2,n
-  dzero(k)=dalpha(k)
-  if(dbeta(k).lt.0.d0) then
-    ierr=-2
-    return
-  end if
-  de(k-1)=dsqrt(dbeta(k))
-  dweigh(k)=0.d0
-end do
 
-do l=1,n
-   j=0
-   105 do m=l,n
-        if(m.eq.n) exit
-        if(dabs(de(m)).le.deps*(dabs(dzero(m))+dabs(dzero(m+1)))) exit
-   end do
-   dp=dzero(l)
-   if(m.eq.l) cycle
-   if(j.eq.30) goto 400
-   j=j+1
-   dg=(dzero(l+1)-dp)/(2.d0*de(l))
-   dr=dsqrt(dg*dg+1.d0)
-   dg=dzero(m)-dp+de(l)/(dg+dsign(dr,dg))
-   ds=1.d0
-   dc=1.d0
-   dp=0.d0
-   mml=m-l
-   do ii=1,mml
-      i=m-ii
-      df=ds*de(i)
-      db=dc*de(i)
-
-      if(dabs(df) .ge. dabs(dg)) then
-         dc=dg/df
-         dr=dsqrt(dc*dc+1.d0)
-         de(i+1)=df*dr
-         ds=1.d0/dr
-         dc=dc*ds
-      else
-         ds=df/dg
-         dr=dsqrt(ds*ds+1.d0)
-         de(i+1)=dg*dr
-         dc=1.d0/dr
-         ds=ds*dc
-      end if
-      
-      dg=dzero(i+1)-dp
-      dr=(dzero(i)-dg)*ds+2.d0*dc*db
-      dp=ds*dr
-      dzero(i+1)=dg+dp
-      dg=dc*dr-db
-      df=dweigh(i+1)
-      dweigh(i+1)=ds*dweigh(i)+dc*df
-      dweigh(i)=dc*dweigh(i)-ds*df
-
-   end do
-
-   dzero(l)=dzero(l)-dp
-   de(l)=dg
-   de(m)=0.d0
-   goto 105
-
-end do
-
-do ii=2,n
-
-   i=ii-1
-   k=i
-   dp=dzero(i)
-
-   do j=ii,n
-     if(dzero(j).ge.dp) cycle
-     k=j
-     dp=dzero(j)
-   end do
-
-   if(k.ne.i) then
-      dzero(k)=dzero(i)
-      dzero(i)=dp
-      dp=dweigh(i)
-      dweigh(i)=dweigh(k)
-      dweigh(k)=dp
-   end if
-
-end do
-
-do k=1,n
-  dweigh(k)=dbeta(1)*dweigh(k)*dweigh(k)
-end do
-
-return
-  400 ierr=l
-return
-end subroutine
-
-end module sll_gausslobatto
+end module gauss_lobatto_integration
