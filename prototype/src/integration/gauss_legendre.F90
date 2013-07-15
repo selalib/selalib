@@ -142,11 +142,9 @@ contains
        print *, 'degree of integration not implemented. Exiting...';\
        stop;
 
-  !---------------------------------------------------------------------------!
-  ! DESCRIPTION: 
-  !> @author Routine Author Name and Affiliation.
   !> @brief Gauss-Legendre Quadrature.
-  !> @details To integrate the function f(x) (real-valued and of a single, real-valued argument x)
+  !> @details To integrate the function f(x) 
+  !> (real-valued and of a single, real-valued argument x)
   !> over the interval [a,b], we use the Gauss-Legendre formula 
   !> \f[ \int_{-1}^1 f(x)dx \approx \sum_{k=1}^{n} w_k f(x_k) \f]
   !> where n represents the desired number of Gauss points.
@@ -156,16 +154,11 @@ contains
   !>
   !> To be considered is to split this function into degree-specific
   !> functions to avoid the select statement.
-  !
-  ! REVISION HISTORY:
-  ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-  !
   !> @param f the function to be integrated
   !> @param[in] a left-bound of the definition interval of f  
   !> @param[in] b right-bound of the definition interval of f 
   !> @param[in] n the desired number of Gauss points
   !> @return The value of the integral
-  !---------------------------------------------------------------------------
   function gauss_legendre_integral_1D( f, a, b, n )
     intrinsic                       :: sqrt
     sll_real64                      :: gauss_legendre_integral_1D

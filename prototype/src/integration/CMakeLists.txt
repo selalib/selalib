@@ -1,7 +1,5 @@
 ADD_LIBRARY(sll_integration STATIC gauss_legendre.F90
-                                   sll_gausslobatto.F90 
-                                   lob.f 
-                                   gauss.f)
+                                   sll_gausslobatto.F90 )
 
 TARGET_LINK_LIBRARIES(sll_integration sll_splines)
 
