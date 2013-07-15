@@ -140,10 +140,10 @@ contains
        endif
        
        if (plan%BC==SLL_NEUMANN) then
-          call neumann_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, &
+          call neumann_matrix(np_r, plan%rmin, plan%rmax, np_theta, &
                                    k, c, Te, Zi, plan%a_resh)
        else 
-          call dirichlet_matrix_resh(np_r, plan%rmin, plan%rmax, np_theta, &
+          call dirichlet_matrix(np_r, plan%rmin, plan%rmax, np_theta, &
                                      k, c, Te, Zi,  plan%a_resh)
        endif
        call setup_cyclic_tridiag( plan%a_resh, np_r, plan%cts, plan%ipiv )
@@ -177,7 +177,7 @@ contains
   end subroutine delete_qn_solver_2d
 
 
-  subroutine dirichlet_matrix_resh(np_r, rmin, rmax, np_theta, j, c, Te, Zi, a_resh)
+  subroutine dirichlet_matrix(np_r, rmin, rmax, np_theta, j, c, Te, Zi, a_resh)
 
     sll_real64, dimension(:)                       :: c, Te
     sll_real64                                     :: dr, dtheta, Zi
@@ -204,10 +204,10 @@ contains
        endif
     enddo
 
-  end subroutine dirichlet_matrix_resh
+  end subroutine dirichlet_matrix
 
 
-  subroutine neumann_matrix_resh(np_r, rmin, rmax, np_theta, j, c, Te, Zi, a_resh)
+  subroutine neumann_matrix(np_r, rmin, rmax, np_theta, j, c, Te, Zi, a_resh)
 
     sll_real64, dimension(:)                       :: c, Te
     sll_real64                                     :: dr, dtheta, Zi
@@ -240,7 +240,7 @@ contains
     !                   (1-cos(j*dtheta)) + 1/(Zi*Te(np_r))
     a_resh(3*(np_r-1)+2) = 2/dr**2 + 1/(Zi*Te(np_r)) + (j/rmax)**2
 
-  end subroutine neumann_matrix_resh
+  end subroutine neumann_matrix
 
 
 end module sll_qn_solver_2d
