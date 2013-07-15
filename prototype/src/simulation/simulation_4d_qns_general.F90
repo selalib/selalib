@@ -853,7 +853,7 @@ contains
 !       print*, 'density', density_tot
 
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-
+       call rho%write_to_file(itime)
        
 
        ! It is important to remember a particular property of the periodic 
