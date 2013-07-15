@@ -115,7 +115,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
-      #ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
+      ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
       ADD_SUBDIRECTORY(multigrid)
