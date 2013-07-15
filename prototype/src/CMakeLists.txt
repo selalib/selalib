@@ -44,8 +44,6 @@ SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_D
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/include/)
 
 ADD_CUSTOM_TARGET( clear
-   COMMAND echo "WARNING : you are about to delete repisitory buid/bin/ Ctrl+C to cancel, else press enter to continue"
-   COMMAND read 
    COMMAND find . -name *.mod -delete
    COMMAND find . -name *.a -delete
    COMMAND find . -name *.o -delete
