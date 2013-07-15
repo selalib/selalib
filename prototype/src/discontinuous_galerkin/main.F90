@@ -57,7 +57,7 @@ program VP_DG
   !read(*,NML=param)
 
   !definition of geometry and data
-  k=1.0d0
+  k=0.5d0
   !k=2.0d0/13.0d0
   !k=0.3d0
   !k=1.0d0/k
@@ -91,11 +91,11 @@ program VP_DG
 
   x_min=0.0d0
   !x_max=2.0d0*sll_pi/k
-  x_max=26.0d0*sll_pi
+  x_max=20.0d0*sll_pi
   v_min=-8.0d0
   v_max=8.0d0
 
-  nx=18
+  nx=16
   nv=16
   ng=8
 
@@ -462,7 +462,7 @@ contains
     sll_int32,intent(in)  :: nx,nv,ng,nt,th,thl
     logical,intent(in)    :: unif
 
-    open(20,file="parameters",action="write")
+    open(20,file="parameters",action="write",status="new")
     write(20,*)"x bounadries :",x_min,x_max
     write(20,*)"v bounadries :",v_min,v_max
     write(20,*)""
