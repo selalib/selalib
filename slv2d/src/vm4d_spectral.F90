@@ -165,7 +165,7 @@ contains
 
     call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
-    &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
+    &                        SLL_PERIODIC, SLL_PERIODIC)
 
     call new(vlasov4d,geomx,geomv,spl_x3x4,error)
 
@@ -204,7 +204,7 @@ contains
                     geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                    geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+                    geomx%y0, geomx%y1, geomx%ny, error)
 
   end subroutine initlocal
 

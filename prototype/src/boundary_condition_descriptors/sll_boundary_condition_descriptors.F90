@@ -12,9 +12,10 @@ module sll_boundary_condition_descriptors
   ! example a flag like SLL_DIRICHLET_NEUMANN could indicate two BC's along
   ! a particular dimension...
 
-  sll_int32, parameter :: SLL_PERIODIC  = 0
-  sll_int32, parameter :: SLL_DIRICHLET = 1 
-  sll_int32, parameter :: SLL_NEUMANN   = 2
-  sll_int32, parameter :: SLL_HERMITE   = 3
+  sll_int32, parameter :: SLL_PERIODIC       = 0
+  sll_int32, parameter :: SLL_DIRICHLET      = 1 
+  sll_int32, parameter :: SLL_NEUMANN        = 2
+  sll_int32, parameter :: SLL_HERMITE        = 3
+  sll_int32, parameter :: SLL_NEUMANN_MODE_0 = 4
 
 end module sll_boundary_condition_descriptors

@@ -12,6 +12,7 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
+
   use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
@@ -271,8 +272,8 @@ program VP1d_deltaf
   select case (interpol_x)
   case (1) ! periodic cubic spline
      interp_spline_x => new_spline_1d( Ncx + 1, xmin, xmax, SLL_PERIODIC )
-!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-!     interp_x => interp_spline_x
+     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
      call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
      interp_x => interp_per_x
