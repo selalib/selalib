@@ -11,12 +11,16 @@ program gauss_legendre_tester
   do i=2,10
      write (*,'(a, i8, a, e20.12)') 'case n = ', i, ': ', &
           gauss_legendre_integrate_1D( test_func, 0.0_f64, sll_pi/2.0, i)
+     write (*,'(a, i8, a, e20.12)') 'case n = ', i, ': ', &
+          gauss_lobatto_integrate_1D( test_func, 0.0_f64, sll_pi/2.0, i)
   end do
   print *, 'Exact value: '
   write (*,'(e22.15)') 0.4674011002723395
 
   print *, 'Test gauss_points()'
   print *, gauss_points(5,-1.0_f64,1.0_f64)
+
+  stop
 
   print*,'Test Gauss-Lobatto'
   do i=2,10
