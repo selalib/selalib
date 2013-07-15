@@ -40,6 +40,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_int32  :: nc_x2
 
      sll_int32 :: degree ! polynomial degree
+     sll_int32 :: test
 
      sll_int32  :: np_v1  ! velocity nodes
      sll_int32  :: np_v2
@@ -88,6 +89,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
      type(layout_4d),pointer :: sequential_v1v2x1
      type(layout_2d),pointer :: phi_seq_x1
+     type(layout_2d),pointer :: split_rho_layout
      
    contains
      procedure, pass(sim) :: run => run_vp_cart
@@ -188,9 +190,21 @@ contains
     sll_real64 :: df
     sll_real64,dimension(:),pointer :: node,xmil 
     sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
+    sll_real64,dimension(:,:),allocatable :: f_x_exact,f_v_exact
+
+
     sll_real64 :: t
     sll_int32,dimension(4)  :: global_indices
-
+    sll_real64,dimension(1:2,1:2) :: jac_m
+    sll_real64 :: det
+    sll_real64 :: x1, x2,Ex,Ey
+    sll_int32 :: icL,icR,jcL,jcR
+#define BUFFER_SIZE 10
+    sll_real64, dimension (BUFFER_SIZE) :: buffer
+    sll_real64, dimension (BUFFER_SIZE) :: buffer_result
+    sll_real64, dimension (BUFFER_SIZE) :: num_particles_local
+    sll_real64, dimension (BUFFER_SIZE) :: num_particles_global
+    sll_int32 :: buffer_counter
     sim%world_size = sll_get_collective_size(sll_world_collective)  
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)  
 
@@ -199,8 +213,8 @@ contains
     sim%phi_seq_x1       => new_layout_2D( sll_world_collective )
 
     sim%degree=sim%params(6)
-    write(*,*) 'degree = ', sim%degree
-    stop
+
+
 
     sim%nc_v1 = sim%mesh2dv%num_cells1
     sim%nc_v2 = sim%mesh2dv%num_cells2   
@@ -408,7 +422,7 @@ contains
 
     !write(*,*) 'vertical',sim%my_rank,sum(sim%surfx1(1,:))
     !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
-
+    
     
     ! time loop
     t=0
@@ -420,12 +434,14 @@ contains
 !!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
 !!$    stop
-!!$    sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
-!!$         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
-sim%dt=0.1
+    sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
+         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
+!!$    sim%dt=0.1
     write(*,*) 'dt = ', sim%dt
-
+    itime=1
+    sim%Enorm = 0.0_f64
     do while(t.lt.sim%tmax)
+
        !compute the charge density
        do i=1,loc_sz_x1
           do j=1,loc_sz_x2
@@ -437,21 +453,80 @@ sim%dt=0.1
             sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
 
        t=t+sim%dt
+       itime=itime+1
        call RK2(sim)
        !call euler(sim)
-       write(*,*) 't = ', t
+       !n Try to plot the log of energy
+       do ic=1,loc_sz_x1
+          do jc=1,loc_sz_x2
+             icL=ic-1
+             icR=ic+1
+             if(ic.le.1) then
+                icL=loc_sz_x1
+             elseif(ic.ge.loc_sz_x1)then
+                icR=1
+             end if
+             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+
+             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)*sim%mesh2dx%delta_eta1
+             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)*sim%mesh2dx%delta_eta2
+             !jac_m=sim%tx%jacobian_matrix(x1,x2)
+             det=sim%tv%jacobian(x1,x2)
+!!$             sim%Enorm=sim%Enorm + sim%volume(1,1)*((jac_m(1,1)*Ex+jac_m(1,2)*Ey)**2+ &
+!!$                  (jac_m(2,1)*Ex+jac_m(2,2)*Ey)**2)
+
+
+             sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
+                  sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
+          end do
+       end do
+       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
+       buffer_counter =1
+       buffer(buffer_counter) = sqrt(sim%Enorm)
+       if(buffer_counter==BUFFER_SIZE) then
+          call sll_collective_reduce_real64(sll_world_collective, &
+               buffer, &
+               BUFFER_SIZE, &
+               MPI_SUM, &
+               0, &
+               buffer_result )
+
+          buffer_counter=1
+          if (sim%my_rank==0) then
+             open(399,file='log(energy)',position='append')
+             if(itime==BUFFER_SIZE) then 
+                rewind(399)
+             endif
+             buffer_result(:)=log(buffer_result(:))
+             do i=1,BUFFER_SIZE
+                write(399,*) t, buffer_result(i)
+             enddo
+             close(399)
+          end if
+       else
+          buffer_counter=buffer_counter+1
+       end if
+
     end do
+
+
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
-!!$    
-!!$    allocate (plotf2d(loc_sz_x1,loc_sz_v1))
-!!$    do i = 1, loc_sz_x1
-!!$       do j = 1, loc_sz_v1
-!!$          plotf2d(i,j) = sim%fn_v1v2x1(j,1,i,1)
-!!$       end do
-!!$    end do
-!!$ 
+
+    do i=1,loc_sz_v1
+       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2x1(i,1,:,1)))
+    end do
+    
+    allocate (plotf2d(loc_sz_x1,loc_sz_v1))
+    do i = 1, loc_sz_x1
+       do j = 1, loc_sz_v1
+          plotf2d(i,j) = sim%fn_v1v2x1(j,1,i,1)
+       end do
+    end do
+ 
     allocate (xmil(loc_sz_x1))
     allocate (node(loc_sz_v1))
     open(299,file='distribution')
@@ -470,6 +545,7 @@ sim%dt=0.1
     close(299)
     deallocate(xmil)
     deallocate(node)
+    sim%test=sim%params(8)
 
   !stop
     
@@ -485,7 +561,7 @@ sim%dt=0.1
     end do
 
     global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
-    
+   
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
          sim%mesh2dx%delta_eta1, &
@@ -495,7 +571,50 @@ sim%dt=0.1
          "plotf2d", &
          0, &
          ierr)
-!!$
+    if(sim%test==0)then
+       allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
+       do i = 1, loc_sz_x1
+          do j = 1, loc_sz_v1
+             f_x_exact(i,j) = exp(-4*(sim%mesh2dx%eta1_min+(i-1)*sim%mesh2dx%delta_eta1 &
+                  -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t)**2)
+          end do
+       end do
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+            sim%mesh2dx%delta_eta1, &
+            sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
+            sim%mesh2dv%delta_eta1/sim%degree, &
+            f_x_exact, &
+            "plotfxtransport", &
+            0, &
+            ierr)
+    end if
+
+
+!!$    write(*,*) 'test = ', sim%test
+!!$    stop
+
+    if(sim%test==2)then
+       allocate (f_v_exact(loc_sz_x1,loc_sz_v1))
+       do i = 1, loc_sz_x1
+          do j = 1, loc_sz_v1
+             f_v_exact(i,j) = exp(-4*(-(sim%mesh2dx%eta1_min+(i-1)*sim%mesh2dx%delta_eta1)*t &
+                  +(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree))**2)
+          end do
+       end do
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+            sim%mesh2dx%delta_eta1, &
+            sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
+            sim%mesh2dv%delta_eta1/sim%degree, &
+            f_v_exact, &
+            "plotfvtransport", &
+            0, &
+            ierr)
+    end if
+
+
+
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
          sim%mesh2dx%delta_eta1, &
@@ -505,7 +624,17 @@ sim%dt=0.1
          "plotphi2d", &
          0, &
          ierr)
-    
+    write(*,*) 'coucou3'
+    if (sim%test .eq. 1) then
+       write(*,*) 'we r using the Landau damping test case'
+    else if (sim%test .eq. 0) then
+       write(*,*) 'the x-transport test case'
+    else if (sim%test .eq. 2) then
+       write(*,*) 'the v-transport test case'
+    endif
+
+
+
 
   end subroutine run_vp_cart
 
@@ -1214,17 +1343,39 @@ sim%dt=0.1
 
   subroutine sourcenum(sim,Ex,Ey,w,source)
     
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim   
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: w
     sll_real64,intent(in)  :: Ex,Ey
     sll_real64,dimension(:,:),intent(out) :: source
 
     sll_real64,dimension(:,:),allocatable :: source1,source2
-    sll_int32 :: ierr
+    sll_int32 :: ierr,i
 
     SLL_ALLOCATE(source1(sim%np_v1,sim%np_v2),ierr)
     SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
-
+    sim%test=sim%params(8)
+    !write(*,*) 'test =', sim%test
+    !correction the matrices B
+    do i=1,sim%np_v1*sim%np_v2
+       if (Ex.gt.0) then
+          if(sim%Bv1_diag(i).lt.0) then
+             sim%Bv1_diag(i)=0
+          end if
+       else
+          if(sim%Bv1_diag(i).gt.0) then
+             sim%Bv1_diag(i)=0
+          end if
+       endif
+       if (Ey.gt.0) then
+          if(sim%Bv2_diag(i).lt.0) then
+             sim%Bv2_diag(i)=0
+          end if
+       else
+          if(sim%Bv2_diag(i).gt.0) then
+             sim%Bv2_diag(i)=0
+          end if
+       endif
+    enddo
 
     source1=0
     source2=0
@@ -1235,7 +1386,10 @@ sim%dt=0.1
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
 
     source=Ex*source1+Ey*source2
-    !source=0
+    !use this when we want to test the transport equation 
+    if(sim%test==0) then
+       source=0.0_f64
+    endif
 
 !!$    !can we do as following ? so we have to call only one 
 !!$    !time the subroutine mulk
@@ -1252,7 +1406,7 @@ sim%dt=0.1
 
   subroutine fluxnum(sim,wL,wR,vn,flux)
     
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim   
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
     sll_real64,dimension(2),intent(in) :: vn
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: wL,wR
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(out) :: flux
@@ -1262,7 +1416,7 @@ sim%dt=0.1
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
 
     sll_real64   :: eps=0.01
-
+    sim%test=sim%params(8)
     wm=(wL+wR)/2
 
     flux1=0
@@ -1270,19 +1424,22 @@ sim%dt=0.1
     !verify the subroutine mulku
     !c'est ici le bug
     !stop
-    
-!!$    call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
-!!$         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
-!!$    call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
-!!$         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
+    !prinf *, 
+    call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
+         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
+    call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
+         sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
    ! write(*,*) 'nnoe = ', sim%np_v1*sim%np_v2
-
+    !print *, 'bonjour2'
     flux=vn(1)*flux1+vn(2)*flux2-eps/2*(wR-wL)
 !!$    flux=vn(1)*wL*4
 !!$    flux=wm*vn(1)
 !!$    write(*,*) 'vn(1)',vn(1)
 !!$    stop
 !!$     write(*,*) '0=', (wm-flux)*vn(1)
+    if(sim%test==2) then
+       flux=0.0_f64
+    end if
 
   end subroutine fluxnum
 
@@ -1311,8 +1468,8 @@ sim%dt=0.1
     
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! init
-    sim%dtfn_v1v2x1=0
-    sim%Enorm = 0
+    sim%dtfn_v1v2x1=0.0_f64
+
     !compute the fluxes in the x1 direction
     vn(1)=1*sim%surfx1(1,1) ! temporaire !!!!
     vn(2)=0
@@ -1364,9 +1521,6 @@ sim%dt=0.1
 
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
-          source=0
-          sim%Enorm=sim%Enorm + sim%volume(1,1)*(Ex*Ex+Ey*Ey)
-
           temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
           call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
                sim%mkld, &
@@ -1377,6 +1531,13 @@ sim%dt=0.1
           !if we call the sol here, it means that we have to call many times
           !so if we call the sol out of the loop so we have to call it only 
           !one time and we have juste modify the temp=>vector,no?
+          !global_indices(1:2) = local_to_global_2D(sim%split_rho_layout, (/i, j/) )
+!!$          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+!!$          x1= real(global_indices(3)-1,f64)*sim%mesh2dx%delta_eta1
+!!$          x2= real(global_indices(4)-1,f64)*sim%mesh2dx%delta_eta2
+!!$          jac_m=sim%tx%jacobian_matrix(x1,x2)
+!!$          sim%Enorm=sim%Enorm + sim%volume(1,1)*((jac_m(1,1)*Ex+jac_m(2,1)*Ey)**2+ &
+!!$               (jac_m(1,2)*Ex+jac_m(2,2)*Ey)**2)
        end do
     end do
 
