@@ -1,6 +1,8 @@
 program landau_1d
-#include "selalib.h"
-
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_interpolators.h"
+#include "sll_poisson_solvers.h"
 implicit none
   
 sll_int32  :: i_step, n_step, i, j, j_step

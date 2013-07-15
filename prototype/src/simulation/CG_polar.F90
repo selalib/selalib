@@ -176,7 +176,7 @@ program cg_polar
     visu,step,"CG")
 
   !mode=1.5
-  if(bc(1)==DIRICHLET)then
+  if(bc(1)==SLL_DIRICHLET)then
     k1 = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
       2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
     k2 = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
@@ -192,7 +192,7 @@ program cg_polar
       2.0_f64*r1**2*log(rmin/r1))*log(rmax) / &
       (-4.0_f64*log(rmin/rmax))
   endif
-  if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
+  if((bc(1)==SLL_NEUMANN).or.(bc(1)==SLL_NEUMANN_MODE_0))then
     k1 = 0._f64
     k2 = r1**2/2._f64
     k3 = r1**2/2._f64-r2**2/2._f64
@@ -205,7 +205,7 @@ program cg_polar
   endif
 
   if (mode==0) then 
-    if(bc(1)==DIRICHLET)then
+    if(bc(1)==SLL_DIRICHLET)then
       k1_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
         2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
       k2_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
@@ -222,7 +222,7 @@ program cg_polar
         2.0_f64*r1**2*log(rmin/r1))*log(rmax) / &
         (-4.0_f64*log(rmin/rmax))
     endif
-    if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_NEUMANN).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = 0._f64
       k2_mode = r1**2/2._f64
       k3_mode = r1**2/2._f64-r2**2/2._f64
@@ -237,7 +237,7 @@ program cg_polar
   endif
 
   if(mode==1)then
-    if((bc(1)==NEUMANN))then
+    if((bc(1)==SLL_NEUMANN))then
       k1_mode = (-3._f64*r1*rmax**2-r2**3 + &
         3*rmax**2*r2+r1**3)/(6._f64*(rmin**2+rmax**2))
       k2_mode = (3._f64*r2*rmax**2-r2**3 + &
@@ -253,7 +253,7 @@ program cg_polar
         3*rmin**2*r1+r1**3)*rmax**2/(6._f64*(rmin**2+rmax**2))
     endif
 
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_DIRICHLET).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = (-3._f64*r1*rmax**2-r2**3 + &
         3*rmax**2*r2+r1**3)/(6._f64*(-rmin**2+rmax**2))
       k2_mode = (3._f64*r2*rmax**2-r2**3 - &
@@ -271,7 +271,7 @@ program cg_polar
   endif
 
   if(mode==3)then
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_DIRICHLET).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = (r1*r2*(r2**5-r1**5) - &
         5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
       k2_mode = (r1*r2*(r2**5-r1**5) - &
@@ -290,7 +290,7 @@ program cg_polar
   endif
 
   if(mode==7)then
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_DIRICHLET).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = -5._f64*r1**5*r2**14 + &
         5._f64*r1**14*r2**5-9._f64*r1**5*rmax**14 + &
         9._f64*r2**5*rmax**14
