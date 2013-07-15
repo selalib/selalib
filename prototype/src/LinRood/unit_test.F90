@@ -3,7 +3,7 @@ program unit_test
 #include "sll_field_2d.h"
 #include "sll_memory.h"
   use sll_constants
-  use geometry_functions
+  use sll_common_coordinate_transformations
   use distribution_function
   use sll_scalar_field_2d
 !  use sll_module_mapped_meshes_2d_base

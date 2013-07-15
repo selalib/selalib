@@ -4,7 +4,8 @@ program unit_test_1d
 ! The next line cause an error with the definition of 
 ! compute_interpolants in sll_cubic_spline_interpolator_1d
 ! use sll_module_mapped_meshes_2d
-  use geometry_functions
+!  use geometry_functions
+  use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_1d
   use sll_module_mapped_meshes_1d
   implicit none
