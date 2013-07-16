@@ -164,8 +164,7 @@ contains
     kx  =  2. * sll_pi / (eta1_max - eta1_min)
 
     sll_x_transport_initializer_v1v2x1x2 =exp(-4*x**2)
-!!$    sll_landau_initializer_v1v2x1x2 = 1
-!!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
+    sll_x_transport_initializer_v1v2x1x2 =1
 
   end function sll_x_transport_initializer_v1v2x1x2
 
