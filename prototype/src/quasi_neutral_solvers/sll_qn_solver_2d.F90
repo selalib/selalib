@@ -56,7 +56,7 @@ sll_int32, private :: i, j, k
 contains
 
   !> Initialialize a new QNS solver in 2D space
-  function new_qn_solver_2d(bc, rmin, rmax, np_r,  np_theta) result (plan)
+  function new_qn_solver_2d(bc, rmin, rmax, np_r, np_theta) result (plan)
 
     type(qn_solver_2d), pointer :: plan !< qns solver
 
@@ -104,7 +104,7 @@ contains
     np_theta = plan%np_theta
     if (plan%BC==SLL_NEUMANN) then
        dr = (plan%rmax-plan%rmin)/(np_r-1)
-    else ! 'dirichlet'
+    else 
        dr = (plan%rmax-plan%rmin)/(np_r+1)
     endif
     dtheta = 2*sll_pi/np_theta
@@ -120,11 +120,11 @@ contains
     call fft_apply_plan( plan%fw_fft, plan%hat_rho(np_r,:), plan%hat_rho(np_r,:) )
 
     if (plan%bc==SLL_NEUMANN) then
-       plan%hat_rho(1,:)    = plan%hat_rho(1,:)    + (c(1)-2/dr)*plan%hat_f 
-       plan%hat_rho(np_r,:) = plan%hat_rho(np_r,:) + (c(np_r)+2/dr)*plan%hat_g
+       plan%hat_rho(1,:)    = plan%hat_rho(1,:)   +(c(1)-2/dr)*plan%hat_f 
+       plan%hat_rho(np_r,:) = plan%hat_rho(np_r,:)+(c(np_r)+2/dr)*plan%hat_g
     else 
-       plan%hat_rho(1,:)  = plan%hat_rho(1,:) + (1/dr**2 - c(1)/(2*dr))*plan%hat_f
-       plan%hat_rho(np_r,:) = plan%hat_rho(np_r,:) + (1/dr**2 + c(np_r)/(2*dr))*plan%hat_g
+       plan%hat_rho(1,:)    = plan%hat_rho(1,:)   +(1/dr**2-c(1)/(2*dr))*plan%hat_f
+       plan%hat_rho(np_r,:) = plan%hat_rho(np_r,:)+(1/dr**2+c(np_r)/(2*dr))*plan%hat_g
     endif
 
     do i=2,np_r-1
