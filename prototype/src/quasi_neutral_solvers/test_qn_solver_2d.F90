@@ -77,8 +77,7 @@ do bc=1,2
 
 enddo
 
-print*, 'test_qn_solver_2d : PASSED'
-print*, ' '
+print*, 'PASSED'
 
 contains
 
@@ -129,7 +128,7 @@ print*, 'Boundary error =', err_bound
 print*, ' '
 
 if ( err > err_bound ) then
-   print*, 'test_sll_qns2d_with_finite_diff_seq: FAILED'
+   print*, 'test_qns2d FAILED'
    stop
 endif
     
@@ -186,7 +185,7 @@ print*, 'Boundary error =', err_bound
 print*, ' '
 
 if ( err > err_bound ) then
-   print*, 'test_sll_qns2d_with_finite_diff_seq: FAILED'
+   print*, 'test_qns2d FAILED'
    stop
 endif
     
