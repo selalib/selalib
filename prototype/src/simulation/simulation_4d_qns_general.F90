@@ -1269,11 +1269,8 @@ contains
     sll_real64                      :: delta2
     sll_real64                      :: lenght1
     sll_real64                      :: lenght2
-    
     sll_int32 :: i, j
-    
-
-    
+     
     numpts1 = mx%num_cells1+1
     numpts2 = mx%num_cells2+1
     delta1  = mx%delta_eta1
@@ -1281,11 +1278,11 @@ contains
     lenght1 = mx%eta1_max- mx%eta1_min
     lenght2 = mx%eta2_max- mx%eta2_min
     
-    density_tot = 0.0_8
+    density_tot = 0.0_f64
     
     do j=1,numpts2
        do i=1,numpts1
-          density_tot = density_tot + rho(i,j) * delta1* delta2
+          density_tot = density_tot + rho(i,j)*delta1*delta2
        end do
     end do
     density_tot = density_tot/ (lenght1*lenght2)
