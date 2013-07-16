@@ -24,25 +24,25 @@ module sll_qn_solver_2d_parallel
   implicit none
 
   type qn_solver_2d_parallel
-     sll_int32                             :: bc   !< Boundary_conditions
-     sll_int32                             :: np_r !< points in r
-     sll_int32                             :: np_theta !< points in theta
-     sll_real64                            :: rmin
-     sll_real64                            :: rmax
-     type(sll_fft_plan), pointer           :: fw_fft
-     type(sll_fft_plan), pointer           :: bw_fft
-     type(layout_2D),  pointer             :: layout_fft
-     type(layout_2D),  pointer             :: layout_lin_sys
-     sll_comp64, dimension(:,:), pointer   :: array_fft
-     sll_comp64, dimension(:,:), pointer   :: array_lin_sys
-     sll_comp64, dimension(:,:), pointer   :: c_remap, Te_remap
-     type(remap_plan_2D_comp64), pointer   :: rmp3_1
-     type(remap_plan_2D_comp64), pointer   :: rmp3_2
-     sll_comp64, dimension(:), pointer     :: hat_f
-     sll_comp64, dimension(:), pointer     :: hat_g
-     sll_int32, dimension(:), pointer      :: ipiv
-     sll_real64, dimension(:), pointer     :: a_resh ! 3*n
-     sll_real64, dimension(:), pointer     :: cts ! 7*n allocation
+     sll_int32                           :: bc   !< Boundary_conditions
+     sll_int32                           :: np_r !< points in r
+     sll_int32                           :: np_theta !< points in theta
+     sll_real64                          :: rmin
+     sll_real64                          :: rmax
+     type(sll_fft_plan),         pointer :: fw_fft
+     type(sll_fft_plan),         pointer :: bw_fft
+     type(layout_2D),            pointer :: layout_fft
+     type(layout_2D),            pointer :: layout_lin_sys
+     sll_comp64, dimension(:,:), pointer :: fft
+     sll_comp64, dimension(:,:), pointer :: lin_sys
+     sll_comp64, dimension(:,:), pointer :: c_remap, Te_remap
+     type(remap_plan_2D_comp64), pointer :: rmp3_1
+     type(remap_plan_2D_comp64), pointer :: rmp3_2
+     sll_comp64, dimension(:),   pointer :: hat_f
+     sll_comp64, dimension(:),   pointer :: hat_g
+     sll_int32, dimension(:),    pointer :: ipiv
+     sll_real64, dimension(:),   pointer :: a_resh ! 3*n
+     sll_real64, dimension(:),   pointer :: cts ! 7*n allocation
   end type qn_solver_2d_parallel
 
 interface new
@@ -133,15 +133,15 @@ contains
     call initialize_layout_with_distributed_2D_array( np_r, np_theta, &
                                    1, int(colsz), plan%layout_lin_sys )
 
-    SLL_ALLOCATE(plan%array_fft(np_r_loc,np_theta), ierr)
-    SLL_ALLOCATE(plan%array_lin_sys(np_r,np_theta_loc), ierr)
+    SLL_ALLOCATE(plan%fft(np_r_loc,np_theta), ierr)
+    SLL_ALLOCATE(plan%lin_sys(np_r,np_theta_loc), ierr)
     SLL_ALLOCATE(plan%c_remap(np_r,np_theta_loc), ierr)
     SLL_ALLOCATE(plan%Te_remap(np_r,np_theta_loc), ierr)
 
     plan%rmp3_1 => new_remap_plan( plan%layout_fft, plan%layout_lin_sys, &
-                                   plan%array_fft )
+                                   plan%fft )
     plan%rmp3_2 => new_remap_plan( plan%layout_lin_sys,plan%layout_fft, &
-                                   plan%array_lin_sys )
+                                   plan%lin_sys )
 
   end function new_qn_solver_2d_parallel
 
@@ -175,7 +175,7 @@ contains
 
     ! FFTs (in theta-direction)
 
-    plan%array_fft(:,:) = cmplx(rho, 0_f64, kind=f64)
+    plan%fft(:,:) = cmplx(rho, 0_f64, kind=f64)
     plan%hat_f = cmplx(f, 0_f64, kind=f64)
     plan%hat_g = cmplx(g, 0_f64, kind=f64)
 
@@ -184,41 +184,41 @@ contains
 
     do i=1,np_r_loc
 
-       call fft_apply_plan( plan%fw_fft, plan%array_fft(i,:), &
-                                              plan%array_fft(i,:) )
+       call fft_apply_plan( plan%fw_fft, plan%fft(i,:), &
+                                         plan%fft(i,:) )
        global = local_to_global_2D( plan%layout_fft, (/i, 1/))
        ind = global(1)
        if (ind==1) then
           if (plan%bc==SLL_NEUMANN) then
-             plan%array_fft(i,:) = plan%array_fft(i,:) + &
+             plan%fft(i,:) = plan%fft(i,:) + &
                                              (c(i)-2/dr)*plan%hat_f 
           else 
-             plan%array_fft(i,:) = plan%array_fft(i,:) + &
+             plan%fft(i,:) = plan%fft(i,:) + &
                                  (1/dr**2 - c(i)/(2*dr))*plan%hat_f
           endif
        elseif(ind==np_r) then
           if (plan%bc==SLL_NEUMANN) then
-             plan%array_fft(i,:) = plan%array_fft(i,:) + &
+             plan%fft(i,:) = plan%fft(i,:) + &
                                              (c(i)+2/dr)*plan%hat_g
           else 
-             plan%array_fft(i,:) = plan%array_fft(i,:) + &
+             plan%fft(i,:) = plan%fft(i,:) + &
                                  (1/dr**2 + c(i)/(2*dr))*plan%hat_g
           endif
        endif 
     enddo
 
     ! Remapping to solve linear systems
-    call apply_remap_2D( plan%rmp3_1, plan%array_fft, plan%array_lin_sys ) 
+    call apply_remap_2D( plan%rmp3_1, plan%fft, plan%lin_sys ) 
 
     do i=1,np_r_loc
-       plan%array_fft(i,:) = c(i)
+       plan%fft(i,:) = c(i)
     enddo
-    call apply_remap_2D( plan%rmp3_1, plan%array_fft, plan%c_remap )
+    call apply_remap_2D( plan%rmp3_1, plan%fft, plan%c_remap )
 
     do i=1,np_r_loc
-       plan%array_fft(i,:) = Te(i)
+       plan%fft(i,:) = Te(i)
     enddo
-    call apply_remap_2D( plan%rmp3_1, plan%array_fft, plan%Te_remap )
+    call apply_remap_2D( plan%rmp3_1, plan%fft, plan%Te_remap )
 
     ! Solve linear systems (r-direction)
     do j=1,np_theta_loc
@@ -256,21 +256,21 @@ contains
        call setup_cyclic_tridiag( plan%a_resh, np_r, plan%cts, plan%ipiv )
        call solve_cyclic_tridiag(plan%cts,                &
                                  plan%ipiv,               &
-                                 plan%array_lin_sys(:,j), &
+                                 plan%lin_sys(:,j), &
                                  np_r,                    &
-                                 plan%array_lin_sys(:,j))         
+                                 plan%lin_sys(:,j))         
     enddo
 
     ! Remapping to do inverse FFTs
-    call apply_remap_2D( plan%rmp3_2, plan%array_lin_sys, plan%array_fft ) 
+    call apply_remap_2D( plan%rmp3_2, plan%lin_sys, plan%fft ) 
 
     ! Inverse FFTs (in the theta-direction)
     do i=1,np_r_loc
-       call fft_apply_plan( plan%bw_fft, plan%array_fft(i,:), &
-                                         plan%array_fft(i,:) ) 
+       call fft_apply_plan( plan%bw_fft, plan%fft(i,:), &
+                                         plan%fft(i,:) ) 
     enddo
 
-    phi = real(plan%array_fft(:,:), f64)/np_theta
+    phi = real(plan%fft(:,:), f64)/np_theta
 
   end subroutine solve_qn_solver_2d_parallel
 
@@ -289,8 +289,8 @@ contains
        call delete_layout_2D( plan%layout_fft )
        call delete_layout_2D( plan%layout_lin_sys )
 
-       SLL_DEALLOCATE_ARRAY(plan%array_fft,ierr)
-       SLL_DEALLOCATE_ARRAY(plan%array_lin_sys,ierr)
+       SLL_DEALLOCATE_ARRAY(plan%fft,ierr)
+       SLL_DEALLOCATE_ARRAY(plan%lin_sys,ierr)
        SLL_DEALLOCATE_ARRAY(plan%c_remap,ierr)
        SLL_DEALLOCATE_ARRAY(plan%Te_remap,ierr)
 
