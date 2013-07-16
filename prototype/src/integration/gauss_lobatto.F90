@@ -151,24 +151,20 @@ contains
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
-  !>  der(i,j)=int(Phi_i.Phi'_j)_[-1;1]^2=w_i.Phi'_j(x_i)
+  !>  der(i,j)=(Phi'_i(x_j))
   !> \f]
   function  gauss_lobatto_derivative_matrix(n, a, b) result(der)
 
     sll_real64 :: a, b
     sll_int32  :: n,i,j,l,m
     sll_real64 :: prod
-    sll_real64 :: x(n), w(n), der(n,n)
+    sll_real64 :: x(n), der(n,n)
 
     x = gauss_lobatto_points( n, a, b ) 
-    w = gauss_lobatto_weights( n, a, b ) 
-    !loop on all element of D
-    !loop on columns
+    der = 0.0
+    
     do j=1,n
-       !loop on rows
        do i=1,n
-          !loop on all the derivatives
-          !the code is writen so there is no if
           do l=1,j-1
              prod=1.0d0
              do m=1,l-1!min(j,l)-1
@@ -197,9 +193,10 @@ contains
              prod=prod/(x(j)-x(l))
              der(i,j)=der(i,j)+prod
           end do
-          der(i,j)=der(i,j)*w(i)
+          der(i,j)=der(i,j)
        end do
     end do
+    der = transpose(der)
 
   end function gauss_lobatto_derivative_matrix
 

@@ -8,7 +8,7 @@ program gauss_legendre_tester
   intrinsic :: dsin
   integer :: i,j,n
   sll_real64, dimension(10) :: x, w
-  sll_real64, dimension(:,:), allocatable :: d
+  sll_real64, dimension(:,:), allocatable :: d, dlag
   character(len=18) :: string
 
   write (*,'(9x, a10, 9x, a10, 5x, a20 )') ' legendre ',' lobatto ', 'Exact value: '
@@ -61,6 +61,30 @@ program gauss_legendre_tester
   write (string, '( "(",I2,"f20.15)" )' )  n
   do i = 1, n
      write(*,string) ( d(i,j), j = 1, n)
+  end do 
+
+  allocate(dlag(4,4))
+  dlag(1,1) = -0.3000000000000000000000000000000000000000D1
+  dlag(1,2) = -0.8090169943749474241022934171828190588602D0
+  dlag(1,3) = 0.3090169943749474241022934171828190588602D0
+  dlag(1,4) = -0.5000000000000000000000000000000000000000D0
+  dlag(2,1) = 0.4045084971874737120511467085914095294301D1
+  dlag(2,2) = -0.6D-39
+  dlag(2,3) = -0.1118033988749894848204586834365638117720D1
+  dlag(2,4) = 0.1545084971874737120511467085914095294300D1
+  dlag(3,1) = -0.1545084971874737120511467085914095294300D1
+  dlag(3,2) = 0.1118033988749894848204586834365638117720D1
+  dlag(3,3) = 0.1D-38
+  dlag(3,4) = -0.4045084971874737120511467085914095294301D1
+  dlag(4,1) = 0.5000000000000000000000000000000000000000D0
+  dlag(4,2) = -0.3090169943749474241022934171828190588602D0
+  dlag(4,3) = 0.8090169943749474241022934171828190588602D0
+  dlag(4,4) = 0.3000000000000000000000000000000000000000D1
+
+  print*, " ** exact values with maple"
+
+  do i = 1, n
+     write(*,string) ( dlag(i,j), j = 1, n)
   end do 
 
 end program gauss_legendre_tester
