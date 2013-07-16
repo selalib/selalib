@@ -200,17 +200,15 @@ contains
 
   end function gauss_lobatto_derivative_matrix
 
-!!$ This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements
+!> This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements
 
-!!$ To use those functions, READ the documentation beside and find more information 
-!!$ about coefficients in paper *Algorithm xxx - ORTHPOL: A package of routines for 
-!!$ generating orthogonal polynomials and Gauss-type quadrature rules* by _Walter 
-!!$ Gautschi_ (here xxx is 726 in other references) formulas (1.1) to (1.3) page 2, 
-!!$ and book **Numerical Mathematics** by _Alfio Quarteroni_, _Riccardo Sacco_ and 
-!!$ _Fausto Saleri_ section 10.
-!!$ If you just want to use Gauss-Lobatto inside Selalib, just use what is in 
-!!$ sll_gausslobatto.F90 ans see selalib documentation
-
+!> To use those functions, READ the documentation beside and find more information 
+!> about coefficients in paper *Algorithm 726 - ORTHPOL: A package of routines for 
+!> generating orthogonal polynomials and Gauss-type quadrature rules* by _Walter 
+!> Gautschi_ (here xxx is 726 in other references) formulas (1.1) to (1.3) page 2, 
+!> and book **Numerical Mathematics** by _Alfio Quarteroni_, _Riccardo Sacco_ and 
+!> _Fausto Saleri_ section 10.
+!>
 !> Given  n  and a measure  dlambda, this routine generates the 
 !> (n+2)-point Gauss-Lobatto quadrature formula
 !> 
@@ -228,20 +226,22 @@ contains
 !> a slightly modified Jacobi matrix of order  n+2. The routine calls 
 !> upon the subroutine  gauss  and the function subroutine  r1mach.
 !> 
-!>   Input:  n - -  the number of interior points in the Gauss-Lobatto
+!>   Input:  
+!>           - n - -  the number of interior points in the Gauss-Lobatto
 !>                  formula; type integer
-!>           alpha,beta - arrays of dimension  n+2  to be supplied with
+!>           - alpha,beta - arrays of dimension  n+2  to be supplied with
 !>                  the recursion coefficients  alpha(k-1), beta(k-1),
 !>                  k=1,2,...,n+2, of the underlying measure; the
 !>                  routine does not use  alpha(n+2), beta(n+2)
-!>           aleft,right - the prescribed left and right endpoints 
+!>           - aleft,right - the prescribed left and right endpoints 
 !>                  x(0)  and  x(n+1)  of the Gauss-Lobatto formula
 !> 
-!>   Output: zero - an array of dimension  n+2  containing the nodes (in 
+!>   Output: 
+!>           - zero - an array of dimension  n+2  containing the nodes (in 
 !>                  increasing order)  zero(k)=x(k), k=0,1,...,n,n+1
-!>           weight-an array of dimension  n+2  containing the weights 
+!>           - weight-an array of dimension  n+2  containing the weights 
 !>                  weight(k)=w(k), k=0,1,...,n,n+1
-!>           ierr - an error flag inherited from the routine  gauss
+!>           - ierr - an error flag inherited from the routine  gauss
 !> 
 !> The arrays  e,a,b  are needed for working space.
 !> 
@@ -250,14 +250,8 @@ subroutine dlob(n,dalpha,dbeta,dleft,dright,dzero,dweigh,ierr,de,da,db)
 sll_int32 :: n, ierr, k, np1, np2
 sll_real64 :: dleft,dright,depsma,dp0l,dp0r,dp1l,dp1r,dpm1l
 sll_real64 :: dpm1r,ddet,dalpha(*),dbeta(*),dzero(*),dweigh(*),de(*),da(*),db(*)
-!!$
-!!$The arrays  dalpha,dbeta,dzero,dweigh,de,da,db  are assumed to have
-!!$dimension  n+2.
-!!$
+
       depsma=epsilon(1.0d0)
-!!$
-!!$depsma is the machine double precision.
-!!$
       np1=n+1
       np2=n+2
       do 10 k=1,np2
@@ -284,6 +278,50 @@ sll_real64 :: dpm1r,ddet,dalpha(*),dbeta(*),dzero(*),dweigh(*),de(*),da(*),db(*)
 end subroutine dlob
 
 
+!>
+!> Given  n  and a measure  dlambda, this routine generates the n-point
+!> Gaussian quadrature formula
+!> 
+!>     integral over supp(dlambda) of f(x)dlambda(x)
+!>
+!>        = sum from k=1 to k=n of w(k)f(x(k)) + R(n;f).
+!> 
+!> The nodes are returned as  zero(k)=x(k) and the weights as 
+!> weight(k)=w(k), k=1,2,...,n. The user has to supply the recursion 
+!> coefficients  alpha(k), beta(k), k=0,1,2,...,n-1, for the measure 
+!> dlambda. The routine computes the nodes as eigenvalues, and the 
+!> weights in term of the first component of the respective normalized 
+!> eigenvectors of the n-th order Jacobi matrix associated with  dlambda.
+!> It uses a translation and adaptation of the algol procedure  imtql2,
+!> Numer. Math. 12, 1968, 377-383, by Martin and Wilkinson, as modified 
+!> by Dubrulle, Numer. Math. 15, 1970, 450. See also Handbook for 
+!> Autom. Comput., vol. 2 - Linear Algebra, pp.241-248, and the eispack
+!> routine  imtql2.
+!>
+!>        Input: 
+!>              - n - - the number of points in the Gaussian quadrature	
+!>                      formula; type integer
+!>              - alpha,beta - - arrays of dimension  n  to be filled 
+!>                      with the values of  alpha(k-1), beta(k-1), k=1,2,
+!>                      ...,n
+!>              - eps - the relative accuracy desired in the nodes
+!>                      and weights
+!>
+!>        Output: 
+!>              - zero- array of dimension  n  containing the Gaussian 
+!>                      nodes (in increasing order)  zero(k)=x(k), k=1,2,
+!>                      ...,n
+!>              - weight - array of dimension  n  containing the 
+!>                      Gaussian weights  weight(k)=w(k), k=1,2,...,n
+!>              - ierr- an error flag equal to  0  on normal return,
+!>                      equal to  i  if the QR algorithm does not
+!>                      converge within 30 iterations on evaluating the 
+!>                      i-th eigenvalue, equal to  -1  if  n  is not in
+!>                      range, and equal to  -2  if one of the beta's is 
+!>                      negative.
+!>
+!> The array  e  is needed for working space.
+!>
 subroutine dgauss(n,dalpha,dbeta,deps,dzero,dweigh,ierr,de)
 sll_int32 :: n, ierr, i, ii, j, k, l, m, mml, np1, np2
 sll_real64 :: deps
