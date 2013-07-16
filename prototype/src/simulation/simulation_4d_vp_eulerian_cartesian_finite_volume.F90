@@ -435,7 +435,8 @@ contains
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
 !!$    stop
     sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
-         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max)
+         max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max,abs(sim%mesh2dv%eta1_min), &
+         abs(sim%mesh2dv%eta2_min))
 !!$    sim%dt=0.1
     write(*,*) 'dt = ', sim%dt
     itime=1
@@ -495,7 +496,7 @@ contains
 
           buffer_counter=1
           if (sim%my_rank==0) then
-             open(399,file='log(energy)',position='append')
+             open(399,file='energy',position='append')
              if(itime==BUFFER_SIZE) then 
                 rewind(399)
              endif
@@ -818,11 +819,6 @@ contains
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
                 det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
 
-!!$                write(*,*) 'det=',det
-!!$                write(*,*) 'jacob=',jacob
-!!$                write(*,*) 'invjacob=',invjacob
-!!$                write(*,*) 'gauss=',weight
-!!$                write(*,*)
 
                 do ib1=1,sim%degree+1
                    do jb1=1,sim%degree+1
@@ -1531,13 +1527,6 @@ contains
           !if we call the sol here, it means that we have to call many times
           !so if we call the sol out of the loop so we have to call it only 
           !one time and we have juste modify the temp=>vector,no?
-          !global_indices(1:2) = local_to_global_2D(sim%split_rho_layout, (/i, j/) )
-!!$          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
-!!$          x1= real(global_indices(3)-1,f64)*sim%mesh2dx%delta_eta1
-!!$          x2= real(global_indices(4)-1,f64)*sim%mesh2dx%delta_eta2
-!!$          jac_m=sim%tx%jacobian_matrix(x1,x2)
-!!$          sim%Enorm=sim%Enorm + sim%volume(1,1)*((jac_m(1,1)*Ex+jac_m(2,1)*Ey)**2+ &
-!!$               (jac_m(1,2)*Ex+jac_m(2,2)*Ey)**2)
        end do
     end do
 
