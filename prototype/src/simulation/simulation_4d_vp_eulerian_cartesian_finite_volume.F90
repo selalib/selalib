@@ -426,6 +426,7 @@ contains
     
     ! time loop
     t=0
+    buffer_counter =1
     !compute the time step
     sim%cfl=sim%params(7)
 !!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
@@ -449,69 +450,77 @@ contains
              sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
           enddo
        enddo
+       !write(*,*) 'here1'
        ! solve the poisson equation
        call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
             sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+       !write(*,*) 'here2'
 
        t=t+sim%dt
        itime=itime+1
-       call RK2(sim)
-       !call euler(sim)
-       !n Try to plot the log of energy
-       do ic=1,loc_sz_x1
-          do jc=1,loc_sz_x2
-             icL=ic-1
-             icR=ic+1
-             if(ic.le.1) then
-                icL=loc_sz_x1
-             elseif(ic.ge.loc_sz_x1)then
-                icR=1
-             end if
-             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
-
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
-             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)*sim%mesh2dx%delta_eta1
-             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)*sim%mesh2dx%delta_eta2
-             !jac_m=sim%tx%jacobian_matrix(x1,x2)
-             det=sim%tv%jacobian(x1,x2)
+       !call RK2(sim)
+       !write(*,*) 'here3'
+       call euler(sim)
+!!$       !n Try to plot the log of energy
+!!$       do ic=1,loc_sz_x1
+!!$          do jc=1,loc_sz_x2
+!!$             icL=ic-1
+!!$             icR=ic+1
+!!$             if(ic.le.1) then
+!!$                icL=loc_sz_x1
+!!$             elseif(ic.ge.loc_sz_x1)then
+!!$                icR=1
+!!$             end if
+!!$             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+!!$             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+!!$
+!!$             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+!!$             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)*sim%mesh2dx%delta_eta1
+!!$             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)*sim%mesh2dx%delta_eta2
+!!$             jac_m=sim%tx%jacobian_matrix(x1,x2)
+             !det=sim%tv%jacobian(x1,x2)
 !!$             sim%Enorm=sim%Enorm + sim%volume(1,1)*((jac_m(1,1)*Ex+jac_m(1,2)*Ey)**2+ &
 !!$                  (jac_m(2,1)*Ex+jac_m(2,2)*Ey)**2)
 
 
-             sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
-                  sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
-          end do
-       end do
-       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
-       buffer_counter =1
-       buffer(buffer_counter) = sqrt(sim%Enorm)
-       if(buffer_counter==BUFFER_SIZE) then
-          call sll_collective_reduce_real64(sll_world_collective, &
-               buffer, &
-               BUFFER_SIZE, &
-               MPI_SUM, &
-               0, &
-               buffer_result )
-
-          buffer_counter=1
-          if (sim%my_rank==0) then
-             open(399,file='energy',position='append')
-             if(itime==BUFFER_SIZE) then 
-                rewind(399)
-             endif
-             buffer_result(:)=log(buffer_result(:))
-             do i=1,BUFFER_SIZE
-                write(399,*) t, buffer_result(i)
-             enddo
-             close(399)
-          end if
-       else
-          buffer_counter=buffer_counter+1
-       end if
+             !sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
+              !    sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
+!!$          end do
+!!$       end do
+!!$       !write(*,*) 'here4'
+!!$       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
+!!$
+!!$       buffer(buffer_counter) = sqrt(sim%Enorm)
+!!$       if(buffer_counter==BUFFER_SIZE) then
+!!$          call sll_collective_reduce_real64(sll_world_collective, &
+!!$               buffer, &
+!!$               BUFFER_SIZE, &
+!!$               MPI_SUM, &
+!!$               0, &
+!!$               buffer_result )
+!!$
+!!$          buffer_counter=1
+!!$             print*, 'coucou 1!!'
+!!$          if (sim%my_rank==0) then
+!!$             print*, 'coucou 2!!'
+!!$             open(399,file='energy_total',position='append')
+!!$             if(itime==BUFFER_SIZE) then 
+!!$                rewind(399)
+!!$             endif
+!!$             buffer_result(:)=log(buffer_result(:))
+!!$             do i=1,BUFFER_SIZE
+!!$                write(399,*) t, buffer_result(i)
+!!$             enddo
+!!$             close(399)
+!!$          end if
+!!$       else
+!!$          buffer_counter=buffer_counter+1
+!!$             print*, 'coucou 3!!'
+!!$       end if
 
     end do
 
+    write(*,*) 'number of iteration', itime
 
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
@@ -576,8 +585,8 @@ contains
        allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
        do i = 1, loc_sz_x1
           do j = 1, loc_sz_v1
-             f_x_exact(i,j) = exp(-4*(sim%mesh2dx%eta1_min+(i-1)*sim%mesh2dx%delta_eta1 &
-                  -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t)**2)
+             f_x_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
+                  -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min)**2)
           end do
        end do
        call sll_gnuplot_rect_2d_parallel( &
@@ -1481,11 +1490,13 @@ contains
        end do
     end do
 
+    write(*,*) 'sim%dtfn_v1v2x1',maxval(abs(sim%dtfn_v1v2x1(1,1,:,:)))
+
     !compute the fluxes in the x2 direction
     vn(1)=0 ! temporaire !!!!
     vn(2)=1*sim%surfx2(1,1)
     do ic=1,loc_sz_x1
-       do jc=0,loc_sz_x2-1
+       do jc=0,loc_sz_x2
           jcL=jc
           jcR=jc+1
           call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
@@ -1502,6 +1513,13 @@ contains
        end do
     end do
 
+!!$    write(*,*) 'sim%dtfn_v1v2x1'
+!!$    do jc=0,loc_sz_x2+1
+!!$       write(*,*) jc, sim%dtfn_v1v2x1(1,1,:,jc)
+!!$    end do
+ 
+
+
     ! source terms
     do ic=1,loc_sz_x1
        do jc=1,loc_sz_x2
@@ -1517,6 +1535,7 @@ contains
 
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
+
           temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
           call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
                sim%mkld, &
