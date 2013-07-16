@@ -60,6 +60,14 @@
 
 \begin_body
 
+\begin_layout Section
+Interpolation Gauss-Lobatto ordre 
+\begin_inset Formula $d$
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 On considère une grille 2D
 \end_layout
@@ -249,7 +257,7 @@ La formulation Galerkin-Discontinu (GD) s'écrit: pour toute cellule
 
 \begin_inset Formula 
 \[
-+\int_{\partial L}F(W_{kk,ll}^{L}\phi_{kk,ll}^{L},W_{kk,ll}^{R}\phi_{kk,ll}^{R},n_{LR})\phi_{ii,jj}^{L}=0.
++\int_{\partial L}F(W_{kk,ll}^{L}\phi_{kk,ll}^{L},W_{kk,ll}^{R}\phi_{kk,ll}^{R},n_{LR}dl)\phi_{ii,jj}^{L}=0.
 \]
 
 \end_inset
@@ -280,6 +288,186 @@ Ainsi
 \end_inset
 
 et la matrice masse est diagonale.
+\end_layout
+
+\begin_layout Standard
+Pour le calcul du second terme, il suffit de connaître 
+\begin_inset Formula $W$
+\end_inset
+
+ aux points de GL et le gradient des fonctions test en ces points, or
+\begin_inset Formula 
+\[
+\nabla_{x_{1},x_{2}}\phi_{ii,jj}^{L}=\left(\tau'^{-1}\right)^{T}\nabla_{\eta_{1},\eta_{2}}\phi_{ii,jj}^{L}.
+\]
+
+\end_inset
+
+Le dernier terme nécessite le calcul de la normale 
+\begin_inset Formula $n_{LR}dl$
+\end_inset
+
+ aux points de Gauss-Lobatto sur le bord de la cellule 
+\begin_inset Formula $L$
+\end_inset
+
+.
+ Commençons par le calcul d'une normale orientée de la cellule 
+\begin_inset Formula $L$
+\end_inset
+
+ vers la cellule 
+\begin_inset Formula $R$
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+à l'est
+\begin_inset Quotes erd
+\end_inset
+
+ de 
+\begin_inset Formula $L.$
+\end_inset
+
+ Soit 
+\begin_inset Formula $\eta_{1},\eta_{2}$
+\end_inset
+
+ un point de GL sur le bord correspondant de la cellule du maillage logique.
+ La normale en ce point sur le maillage logique est 
+\begin_inset Formula $\hat{n}=(1,0)^{T}$
+\end_inset
+
+.
+ Le point est transformé par 
+\begin_inset Formula $\tau$
+\end_inset
+
+ en un point de GL sur le maillage physique
+\begin_inset Formula 
+\[
+(x_{1},x_{2})=\tau(\eta_{1},\eta_{2}).
+\]
+
+\end_inset
+
+La jacobienne inverse de 
+\begin_inset Formula $\tau$
+\end_inset
+
+ et le jacobien de 
+\begin_inset Formula $\tau$
+\end_inset
+
+ en ce point donnent la quantité cherchée.
+ En effet
+\begin_inset Formula 
+\[
+co(\tau')^{T}=\det\tau'\tau'^{-1},
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+co(\tau')^{T}=\left(\begin{array}{cc}
+\frac{\partial\tau_{2}}{\partial\eta_{1}} & -\frac{\partial\tau_{2}}{\partial\eta_{1}}\\
+-\frac{\partial\tau_{1}}{\partial\eta_{2}} & \frac{\partial\tau_{1}}{\partial\eta_{1}}
+\end{array}\right)
+\]
+
+\end_inset
+
+et 
+\begin_inset Formula $n_{LR}dl$
+\end_inset
+
+ est simplement la première colonne de 
+\begin_inset Formula $co(\tau')^{T}$
+\end_inset
+
+.
+ On peut aussi écrire
+\begin_inset Formula 
+\[
+n_{LR}dl=co(\tau')^{T}\hat{n}.
+\]
+
+\end_inset
+
+Cette formule est encore valable pour les normales 
+\begin_inset Quotes eld
+\end_inset
+
+nord
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+ouest
+\begin_inset Quotes erd
+\end_inset
+
+ et 
+\begin_inset Quotes eld
+\end_inset
+
+sud
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Flux et flux numérique
+\end_layout
+
+\begin_layout Standard
+On peut écrire les équations de Maxwell sous la forme
+\begin_inset Formula 
+\[
+\partial_{t}W+A^{1}\partial_{x_{1}}W+A^{2}\partial_{x_{2}}W=0,
+\]
+
+\end_inset
+
+avec
+\begin_inset Formula 
+\[
+\sum_{i=1}^{2}A^{i}n_{i}=\left(\begin{array}{ccc}
+0 & 0 & -n_{2}\\
+0 & 0 & n_{1}\\
+-n_{2} & n_{1} & 0
+\end{array}\right).
+\]
+
+\end_inset
+
+Avec ces notations le flux est donné par
+\begin_inset Formula 
+\[
+F(W,n)=A^{i}n_{i}W.
+\]
+
+\end_inset
+
+Le flux numérique centré est
+\begin_inset Formula 
+\[
+F(W_{L},W_{R},n)=\frac{1}{2}A^{i}n_{i}(W_{L}+W_{R}).
+\]
+
+\end_inset
+
+Le flux décentré est donné dans la thèse d'Anaïs.
 \end_layout
 
 \end_body
