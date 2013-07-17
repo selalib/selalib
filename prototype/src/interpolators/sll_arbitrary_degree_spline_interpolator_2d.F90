@@ -570,8 +570,8 @@ contains
     sll_real64, dimension(:), intent(in),optional  :: eta2_coords
     sll_int32, intent(in),optional                 :: size_eta1_coords
     sll_int32, intent(in),optional                 :: size_eta2_coords
-    sll_real64, dimension(:),pointer               :: point_locate_eta1
-    sll_real64, dimension(:),pointer               :: point_locate_eta2
+    sll_real64, dimension(:),pointer               :: point_location_eta1
+    sll_real64, dimension(:),pointer               :: point_location_eta2
     sll_real64 :: delta_eta1
     sll_real64 :: delta_eta2
     sll_int32  :: sz1
@@ -615,12 +615,12 @@ contains
        sz1 = size_eta1_coords
        sz2 = size_eta2_coords
        
-       SLL_ALLOCATE(point_locate_eta1(sz1),ierr)
-       SLL_ALLOCATE(point_locate_eta2(sz2),ierr)
-       point_locate_eta1 = eta1_coords
-       point_locate_eta2 = eta2_coords
+       SLL_ALLOCATE(point_location_eta1(sz1),ierr)
+       SLL_ALLOCATE(point_location_eta2(sz2),ierr)
+       point_location_eta1 = eta1_coords
+       point_location_eta2 = eta2_coords
 
-    else ! size depends on BC combination
+    else ! size depends on BC combination, filled out at initialization.
 
        select case (interpolator%bc_selector)
        case (0) ! 1. periodic-periodic
@@ -647,14 +647,14 @@ contains
             /(interpolator%num_pts1 -1)
        delta_eta2 = (interpolator%eta2_max - interpolator%eta2_min)&
             /(interpolator%num_pts2 -1)
-       SLL_ALLOCATE(point_locate_eta1(sz1),ierr)
-       SLL_ALLOCATE(point_locate_eta2(sz2),ierr)
+       SLL_ALLOCATE(point_location_eta1(sz1),ierr)
+       SLL_ALLOCATE(point_location_eta2(sz2),ierr)
        
        do i = 1,sz1
-          point_locate_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
+          point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
        end do
        do i = 1,sz2
-          point_locate_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
+          point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
        end do
     end if
     
@@ -662,15 +662,15 @@ contains
     SLL_ASSERT(sz2 .le. interpolator%num_pts2* interpolator%num_pts2)
     SLL_ASSERT(size(data_array,1) .ge. sz1)
     SLL_ASSERT(size(data_array,2) .ge. sz2)
-    SLL_ASSERT(size(point_locate_eta1)  .ge. sz1)
-    SLL_ASSERT(size(point_locate_eta2)  .ge. sz2)
+    SLL_ASSERT(size(point_location_eta1)  .ge. sz1)
+    SLL_ASSERT(size(point_location_eta2)  .ge. sz2)
     
     order1  = interpolator%spline_degree1 + 1
     order2  = interpolator%spline_degree2 + 1
     period1 = interpolator%eta1_max - interpolator%eta1_min
     period2 = interpolator%eta2_max - interpolator%eta2_min
     
-   ! print*, 'pointlocate',point_locate_eta2
+   ! print*, 'pointlocation',point_location_eta2
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
        interpolator%size_coeffs1 = sz1+1
@@ -678,8 +678,8 @@ contains
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 + 1 
        call spli2d_perper( &
-            period1, sz1+1, order1, point_locate_eta1, &
-            period2, sz2+1, order2, point_locate_eta2, &
+            period1, sz1+1, order1, point_location_eta1, &
+            period2, sz2+1, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
@@ -692,8 +692,8 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1
        interpolator%size_t2 = order2 + sz2 + 1
-       call spli2d_dirper( sz1, order1, point_locate_eta1, &
-            period2, sz2+1, order2, point_locate_eta2, &
+       call spli2d_dirper( sz1, order1, point_location_eta1, &
+            period2, sz2+1, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2+1),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2+1) )
@@ -704,8 +704,8 @@ contains
        interpolator%size_coeffs2 = sz2
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 
-       call spli2d_perdir( period1, sz1+1, order1, point_locate_eta1, &
-            sz2, order2, point_locate_eta2, &
+       call spli2d_perdir( period1, sz1+1, order1, point_location_eta1, &
+            sz2, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2),&
             interpolator%t1(1:sz1+order1+1), &
             interpolator%t2(1:sz2+order2) )
@@ -717,8 +717,8 @@ contains
        interpolator%size_t1 = order1 + sz1 
        interpolator%size_t2 = order2 + sz2 
  
-       call spli2d_custom( sz1, order1, point_locate_eta2, &
-            sz2, order2, point_locate_eta2, &
+       call spli2d_custom( sz1, order1, point_location_eta2, &
+            sz2, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2) )

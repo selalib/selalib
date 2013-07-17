@@ -170,9 +170,7 @@ contains
    sim%bc_bottom = bc_bottom
    sim%bc_top    = bc_top
 
-
-   call initialize_ad2d_interpolator( &
-        sim%interp_phi, &
+   call sim%interp_phi%initialize( &
         sim%mesh2d_x%num_cells1 +1, &
         sim%mesh2d_x%num_cells2 +1, &
         sim%mesh2d_x%eta1_min, &
@@ -186,8 +184,7 @@ contains
         sim%spline_degree_eta1, &
         sim%spline_degree_eta2)
 
-   call initialize_ad2d_interpolator( &
-        sim%interp_rho, &
+   call sim%interp_rho%initialize( &
         sim%mesh2d_x%num_cells1 +1, &
         sim%mesh2d_x%num_cells2 +1, &
         sim%mesh2d_x%eta1_min, &
@@ -373,7 +370,7 @@ contains
          sim%bc_top)
 
 
-    SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
+    SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2+1),ierr)
 
     phi_values(:,:) = 0.0_f64
 
@@ -412,7 +409,6 @@ contains
           stop
        end if
     end if
-
 
     ! allocate the layouts...
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
@@ -597,6 +593,8 @@ contains
     delta4 = sim%mesh2d_v%delta_eta2
 
     sim%rho_split(:,:) = 0.0_f64
+    ! this only works because there is no transformation applied in the
+    ! velocity space...
     call compute_charge_density( sim%mesh2d_x,           &
                                  sim%mesh2d_v,           &
                                  size(sim%f_x3x4,1),     &

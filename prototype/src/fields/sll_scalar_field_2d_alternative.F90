@@ -565,8 +565,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_top
     sll_int32 :: i
     sll_int32 :: ierr   
-    
-    
+        
     field%values => array_2d
     field%T => transformation
     field%interp_2d => interpolator_2d
@@ -577,10 +576,8 @@ contains   ! *****************************************************************
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
     
-    
-   
     call field%interp_2d%compute_interpolants( &
-         array_2d, &
+         field%values, & !array_2d, &
          point1_1d, &
          sz_point1, &
          point2_1d, &
