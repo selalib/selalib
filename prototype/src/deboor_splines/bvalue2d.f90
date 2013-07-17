@@ -1,3 +1,5 @@
+! Just for the record: what is ar_x, ar_y, ai_nx, etc., etc.? What is this
+! function supposed to do? This is a deeply frustrating file.
 real(8) function bvalue2d(&
      ar_x,&
      ar_y,&
