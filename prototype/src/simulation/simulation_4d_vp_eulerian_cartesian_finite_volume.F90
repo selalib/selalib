@@ -444,10 +444,20 @@ contains
     sim%Enorm = 0.0_f64
     do while(t.lt.sim%tmax)
 
-       !compute the charge density
+!!$       !compute the charge density
+!!$       !integral over the velocity but why approche with the sum of space?
+!!$       !and in fact the following solver Poisson resolve the eqution in the
+!!$       !logical maillages but fn computed in the physical maillage? 
+!!$       do i=1,loc_sz_x1
+!!$          do j=1,loc_sz_x2
+!!$             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
+!!$          enddo
+!!$       enddo
+       !try
        do i=1,loc_sz_x1
           do j=1,loc_sz_x2
-             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
+             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))* &
+                  sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2/sim%degree
           enddo
        enddo
        !write(*,*) 'here1'
@@ -458,9 +468,9 @@ contains
 
        t=t+sim%dt
        itime=itime+1
-       !call RK2(sim)
+       call RK2(sim)
        !write(*,*) 'here3'
-       call euler(sim)
+       !call euler(sim)
 !!$       !n Try to plot the log of energy
 !!$       do ic=1,loc_sz_x1
 !!$          do jc=1,loc_sz_x2
@@ -481,15 +491,13 @@ contains
              !det=sim%tv%jacobian(x1,x2)
 !!$             sim%Enorm=sim%Enorm + sim%volume(1,1)*((jac_m(1,1)*Ex+jac_m(1,2)*Ey)**2+ &
 !!$                  (jac_m(2,1)*Ex+jac_m(2,2)*Ey)**2)
-
-
              !sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
               !    sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
 !!$          end do
 !!$       end do
 !!$       !write(*,*) 'here4'
-!!$       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
-!!$
+       !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
+       write(*,*) 'iter = ',itime, ' t = ', t 
 !!$       buffer(buffer_counter) = sqrt(sim%Enorm)
 !!$       if(buffer_counter==BUFFER_SIZE) then
 !!$          call sll_collective_reduce_real64(sll_world_collective, &
@@ -503,7 +511,7 @@ contains
 !!$             print*, 'coucou 1!!'
 !!$          if (sim%my_rank==0) then
 !!$             print*, 'coucou 2!!'
-!!$             open(399,file='energy_total',position='append')
+!!$             open(399,file='log(energy)',position='append')
 !!$             if(itime==BUFFER_SIZE) then 
 !!$                rewind(399)
 !!$             endif
@@ -1350,7 +1358,8 @@ contains
     
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: w
-    sll_real64,intent(in)  :: Ex,Ey
+    !sll_real64,intent(in)  :: Ex,Ey
+    sll_real64  :: Ex,Ey
     sll_real64,dimension(:,:),intent(out) :: source
 
     sll_real64,dimension(:,:),allocatable :: source1,source2
@@ -1389,7 +1398,10 @@ contains
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
     call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
-
+    if(sim%test==2) then
+       Ex=1.0_f64
+       Ey=0.0_f64
+    endif
     source=Ex*source1+Ey*source2
     !use this when we want to test the transport equation 
     if(sim%test==0) then
@@ -1490,7 +1502,7 @@ contains
        end do
     end do
 
-    write(*,*) 'sim%dtfn_v1v2x1',maxval(abs(sim%dtfn_v1v2x1(1,1,:,:)))
+    !write(*,*) 'sim%dtfn_v1v2x1',maxval(abs(sim%dtfn_v1v2x1(1,1,:,:)))
 
     !compute the fluxes in the x2 direction
     vn(1)=0 ! temporaire !!!!
