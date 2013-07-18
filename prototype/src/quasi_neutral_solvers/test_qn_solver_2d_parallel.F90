@@ -77,7 +77,7 @@ implicit none
   if (myrank==0) then
      if (prod4test(1)==1.d0) then
         call flush(6)
-        print*, 'test_sll_qns2d_with_finite_diff_par: PASSED'
+        print*, 'PASSED'
         call flush(6)
         print*, ' '
      endif
@@ -213,7 +213,7 @@ contains
        call flush(6)
        print*, 'myrank=', myrank
        call flush(6)
-       print*, ' '
+       print*, 'FAILED'
        stop
     endif
 

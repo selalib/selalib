@@ -1,4 +1,4 @@
-program gauss_legendre_tester
+program integration_tester
 #include "sll_working_precision.h"
 #include "sll_constants.h"
   use gauss_legendre_integration
@@ -23,7 +23,7 @@ program gauss_legendre_tester
   print *, gauss_points(5,-1.0_f64,1.0_f64)
 
   x = gauss_lobatto_points( 10, -1._f64, 1._f64)
-  w = gauss_lobatto_weights( 10, -1._f64, 1._f64)
+  w = gauss_lobatto_weights(10)
 
   do i = 1, 10
      write(*,"(2f20.15)") &
@@ -87,4 +87,6 @@ program gauss_legendre_tester
      write(*,string) ( dlag(i,j), j = 1, n)
   end do 
 
-end program gauss_legendre_tester
+  print*, 'PASSED'
+
+end program integration_tester
