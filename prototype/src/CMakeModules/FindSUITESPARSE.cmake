@@ -26,6 +26,10 @@ FIND_LIBRARY( CHOLMOD_LIBRARY
               NAMES cholmod
               PATHS /usr/lib /usr/lib64 /usr/local/lib )
 
+FIND_LIBRARY( SUITESPARSECONFIG_LIBRARY
+              NAMES suitesparseconfig
+              PATHS /usr/lib /usr/lib64 /usr/local/lib )
+
 MESSAGE(STATUS "CHOLMOD_LIBRARY:${CHOLMOD_LIBRARY}")
 
 # Add cholmod include directory to collection include directories
@@ -34,7 +38,7 @@ IF ( CHOLMOD_INCLUDE_DIR )
 ENDIF( CHOLMOD_INCLUDE_DIR )
 
 # if we found the library, add it to the defined libraries
-IF ( CHOLMOD_LIBRARY )
+IF ( CHOLMOD_LIBRARY AND SUITESPARSECONFIG_LIBRARY)
 
    # Skipped, as this is set for apple in the block above
    LIST ( APPEND SUITESPARSE_LIBRARIES amd)
@@ -76,7 +80,7 @@ IF ( CHOLMOD_LIBRARY )
 
    ENDIF()
        
-ENDIF( CHOLMOD_LIBRARY )  
+ENDIF( CHOLMOD_LIBRARY AND SUITESPARSECONFIG_LIBRARY)
    
 IF (SUITESPARSE_INCLUDE_DIRS AND SUITESPARSE_LIBRARIES)
    SET(SUITESPARSE_FOUND TRUE)
