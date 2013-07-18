@@ -44,9 +44,9 @@ program vp_cartesian_4d
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NCELL1 8
+#define NCELL1 32
 #define NCELL2 2
-#define NCELL3 64
+#define NCELL3 4
 #define NCELL4 4
 #define ETA1MIN -1.0_f64
 #define ETA1MAX 1.0_f64
@@ -67,7 +67,7 @@ program vp_cartesian_4d
 #define TEST 2
 ! 0: x transport 1: landau damping 2: v-transport
 
-#define DEG 1  ! polynomial degree
+#define DEG 3  ! polynomial degree
 
 
   ! logical mesh for space coordinates
@@ -136,7 +136,6 @@ program vp_cartesian_4d
             TMAX )
 
     end if
-
 
   call simulation%run( )
   call delete(simulation)

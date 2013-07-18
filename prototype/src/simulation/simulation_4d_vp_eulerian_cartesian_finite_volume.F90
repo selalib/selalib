@@ -435,6 +435,7 @@ contains
 !!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
 !!$    stop
+    write(*,*) 'coucou'
     sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
          max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max,abs(sim%mesh2dv%eta1_min), &
          abs(sim%mesh2dv%eta2_min))
@@ -795,7 +796,7 @@ contains
     sim%Bv2_diag=0
     
 
-   write(*,*) sim%prof
+   !write(*,*) sim%prof
 !!$
 !!$    stop
 
@@ -930,9 +931,11 @@ contains
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
 
+    nsym=0
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
          sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
+    write(*,*) 'fin LU'
     
 
 
@@ -1370,6 +1373,11 @@ contains
     sim%test=sim%params(8)
     !write(*,*) 'test =', sim%test
     !correction the matrices B
+    if(sim%test==2) then
+       Ex=1.0_f64
+       Ey=0.0_f64
+    endif
+
     do i=1,sim%np_v1*sim%np_v2
        if (Ex.gt.0) then
           if(sim%Bv1_diag(i).lt.0) then
@@ -1398,10 +1406,6 @@ contains
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
     call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
-    if(sim%test==2) then
-       Ex=1.0_f64
-       Ey=0.0_f64
-    endif
     source=Ex*source1+Ey*source2
     !use this when we want to test the transport equation 
     if(sim%test==0) then
@@ -1482,7 +1486,7 @@ contains
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
 
-    
+    nsym=0    
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! init
     sim%dtfn_v1v2x1=0.0_f64
