@@ -102,7 +102,7 @@ contains
     wk(:) = 0.0_f64
 
     alpha = 0
-    do k = 0, n
+    do k = 0, n-1
        beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
 
@@ -119,9 +119,7 @@ contains
 
   end function gauss_lobatto_points
 
-  function gauss_lobatto_weights( n, a, b ) result(wk)
-    sll_real64, intent(in)    :: a
-    sll_real64, intent(in)    :: b
+  function gauss_lobatto_weights( n ) result(wk)
     sll_int32,  intent(in)    :: n 
     sll_real64, dimension(n)  :: xk
     sll_real64, dimension(n)  :: wk
@@ -134,7 +132,7 @@ contains
     wk(:) = 0.0_f64
 
     alpha = 0
-    do k = 0, n
+    do k = 0, n-1
        beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
 
@@ -323,7 +321,7 @@ end subroutine dlob
 !> The array  e  is needed for working space.
 !>
 subroutine dgauss(n,dalpha,dbeta,deps,dzero,dweigh,ierr,de)
-sll_int32 :: n, ierr, i, ii, j, k, l, m, mml, np1, np2
+sll_int32 :: n, ierr, i, ii, j, k, l, m, mml
 sll_real64 :: deps
 sll_real64 :: dp,dg,dr,ds,dc,df,db
 sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)

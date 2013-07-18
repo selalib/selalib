@@ -24,10 +24,6 @@ IF(PROCESSOR_COUNT GREATER 1)
 
    IF(NOT STDF95)
 
-      SET(PROCS 16)
-      ADD_MPI_TEST(poisson_3d_periodic_par test_poisson_3d_periodic_par ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
-                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 2)
       ADD_MPI_TEST(parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS})
@@ -46,11 +42,22 @@ ENDIF(PROCESSOR_COUNT GREATER 1)
 IF(HDF5_PARALLEL_ENABLED AND HDF5_ENABLE_PARALLEL)
    
    IF(NOT STDF95)
+
+      SET(PROCS 16)
+      ADD_MPI_TEST(poisson_3d_periodic_par 
+                   test_poisson_3d_periodic_par ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
+                           PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
       SET(PROCS 4)
       ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
       SET(PROCS 1)
-      ADD_MPI_TEST(poisson_per_cart_par_2d test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
+      ADD_MPI_TEST(poisson_per_cart_par_2d 
+                   test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(poisson_per_cart_par_2d
+                           PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
       SET(PROCS 8)
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
