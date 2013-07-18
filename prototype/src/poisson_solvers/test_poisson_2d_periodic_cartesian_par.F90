@@ -7,33 +7,33 @@ program test_poisson_2d_periodic_cart_par
   use sll_poisson_2d_periodic_cartesian_par
   use sll_collective
   use hdf5
-  use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
-       sll_hdf5_write_array, &
-       sll_hdf5_file_close
-  use sll_gnuplot_parallel
+  use sll_hdf5_io_parallel
+
   implicit none
 
-  sll_int32                                    :: ncx, ncy
-  sll_int32                                    :: nx_loc, ny_loc
-  sll_int32                                    :: ierr
-  sll_real64                                   :: Lx, Ly
-  sll_real64                                   :: dx, dy
-  sll_real64                                   :: x, y
-  sll_real64, dimension(:,:), allocatable      :: rho
-  sll_real64, dimension(:,:), allocatable      :: phi_an
-  sll_real64, dimension(:,:), allocatable      :: phi
-  sll_int32                                    :: i, j
   type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
-  sll_int32, dimension(1:2)                    :: global
-  sll_int32                                    :: gi, gj
-  sll_int32                                    :: myrank
-  type(layout_2D), pointer                     :: layout_x
-  sll_int64                                    :: colsz ! collective size
-  sll_int32                                    :: nprocx, nprocy
-  sll_int32                                    :: e
-  sll_real32                                   :: ok 
-  sll_real64, dimension(1)                     :: error_sum
-  sll_real64, dimension(1)                     :: phi_error
+
+  sll_int32                               :: ncx, ncy
+  sll_int32                               :: nx_loc, ny_loc
+  sll_int32                               :: ierr
+  sll_real64                              :: Lx, Ly
+  sll_real64                              :: dx, dy
+  sll_real64                              :: x, y
+  sll_real64, dimension(:,:), allocatable :: rho
+  sll_real64, dimension(:,:), allocatable :: phi_an
+  sll_real64, dimension(:,:), allocatable :: phi
+  sll_int32                               :: i, j
+  sll_real64                              :: average_err
+  sll_int32, dimension(1:2)               :: global
+  sll_int32                               :: gi, gj
+  sll_int32                               :: myrank
+  type(layout_2D), pointer                :: layout_x
+  sll_int64                               :: colsz ! collective size
+  sll_int32                               :: nprocx, nprocy
+  sll_int32                               :: e
+  sll_real32                              :: ok 
+  sll_real32, dimension(1)                :: prod4test
+
   ok = 1.0
 
   !Boot parallel environment
@@ -133,13 +133,14 @@ program test_poisson_2d_periodic_cart_par
        1, MPI_SUM, 0, error_sum )
 
 
-  if( myrank == 0 ) then
-     error_sum(1)  = error_sum(1)/(ncx*ncy)
-     call flush(6); print*, ' ------------------'
-     call flush(6); print*, 'global average error:', error_sum(1)
-     call flush(6); print*, 'dx*dy =', dx*dy
-     call flush(6); print*, ' ------------------'
-  end if
+  if (average_err> 1.0e-06 ) then
+     print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
+     stop
+  endif
+ 
+  SLL_DEALLOCATE_ARRAY(phi, ierr)
+  SLL_DEALLOCATE_ARRAY(rho, ierr)
+  SLL_DEALLOCATE_ARRAY(phi_an, ierr)
 
   if( myrank == 0 ) then
      if(error_sum(1) >= dx*dy ) then
@@ -149,6 +150,15 @@ program test_poisson_2d_periodic_cart_par
      end if
   end if
 
+     if (prod4test(1)==1.) then
+        call flush(6)
+        print*, ' '
+        call flush(6)
+        print*, '"sll_poisson_2d_periodic_cart_par" test: PASSED'
+        call flush(6)
+        print*, ' '
+     endif
+  endif
 
 !!$  call sll_collective_reduce(sll_world_collective, (/ ok /), &
 !!$       1, MPI_PROD, 0, prod4test )
@@ -190,7 +200,7 @@ contains
     character(len=*), intent(in)           :: dataset_name
     type(layout_2D), pointer               :: layout
     sll_int32                              :: error
-    sll_int32                              :: file_id
+    integer(HID_T)                         :: file_id
     integer(HSIZE_T), dimension(1:2)       :: offset
     type(sll_collective_t), pointer        :: col
     sll_int32                              :: myrank
@@ -199,13 +209,16 @@ contains
     col => get_layout_collective( layout )
     myrank = sll_get_collective_rank( col )
     global_dims(:) = (/ n_pts1,n_pts2 /)
+    
 
     offset(1) = get_layout_i_min( layout, myrank ) - 1
     offset(2) = get_layout_j_min( layout, myrank ) - 1
 
-    call sll_hdf5_file_create(trim(filename),file_id,error)
-    call sll_hdf5_write_array(file_id,global_dims,offset,dble(array),trim(dataset_name),error)
+    call sll_hdf5_file_create(filename,file_id,error)
+    call sll_hdf5_write_array(file_id,global_dims,offset, &
+                              array,dataset_name,error)
     call sll_hdf5_file_close(file_id,error)
+
   end subroutine parallel_hdf5_write_array_2d
 
 

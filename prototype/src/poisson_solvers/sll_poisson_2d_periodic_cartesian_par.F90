@@ -136,7 +136,7 @@ contains
 
     ! Layout and local sizes for FFTs in y-direction (x2)
     plan%layout_seq_x2 => new_layout_2D( collective )
-    nprocx1 = colsz
+    nprocx1 = int(colsz,kind=2)
     nprocx2 = 1
 ! why did the following had ncx+1 and ncy+1 before???
     call initialize_layout_with_distributed_2D_array( &
