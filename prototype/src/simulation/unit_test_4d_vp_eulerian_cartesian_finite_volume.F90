@@ -44,14 +44,14 @@ program vp_cartesian_4d
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NCELL1 4
+#define NCELL1 8
 #define NCELL2 2
 #define NCELL3 64
 #define NCELL4 4
+#define ETA1MIN -1.0_f64
+#define ETA1MAX 1.0_f64
 !!$#define ETA1MIN -6.0_f64
 !!$#define ETA1MAX 6.0_f64
-#define ETA1MIN -6.0_f64
-#define ETA1MAX 6.0_f64
 #define ETA2MIN -6.0_f64
 #define ETA2MAX 6.0_f64
 !#define ETA3MIN 0.0_f64
@@ -60,11 +60,11 @@ program vp_cartesian_4d
 #define ETA3MAX 1.0_f64
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
-#define TMAX 5.e-2_f64
+#define TMAX 1.e-1_f64
 !#define TMAX 0.0_f64
 #define CFL 0.05_f64
 #define EPSILON 0.05
-#define TEST 0
+#define TEST 2
 ! 0: x transport 1: landau damping 2: v-transport
 
 #define DEG 1  ! polynomial degree
