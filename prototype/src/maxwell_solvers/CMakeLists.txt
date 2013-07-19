@@ -3,13 +3,12 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
    ADD_LIBRARY(sll_maxwell_solvers STATIC sll_maxwell_solvers.F90
                                           sll_maxwell_2d_fdtd.F90
                                           sll_maxwell_2d_pstd.F90
+                                          sll_maxwell_2d_diga.F90
                                           sll_maxwell_3d_pstd.F90)
 
-   TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_utilities 
-                                             ${FFTW_LIBRARIES})
+   TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_utilities ${FFTW_LIBRARIES})
 
    ADD_EXECUTABLE(test_maxwell_2d_pstd unit_test_2d_pstd.F90 )
-   
    TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd sll_maxwell_solvers)
 
    # ****************************************************************************
@@ -34,6 +33,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 ELSE()
 
    ADD_LIBRARY(sll_maxwell_solvers STATIC sll_maxwell_solvers.F90 
+                                          sll_maxwell_2d_diga.F90
                                           sll_maxwell_2d_fdtd.F90)
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
@@ -43,4 +43,7 @@ TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_utilities )
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
+
+ADD_EXECUTABLE(test_maxwell_2d_diga unit_test_2d_diga.F90)
+TARGET_LINK_LIBRARIES(test_maxwell_2d_diga sll_maxwell_solvers)
 
