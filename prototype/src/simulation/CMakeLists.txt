@@ -129,6 +129,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                 simulation_4d_vlasov_poisson_general.F90
                 simulation_4d_vlasov_poisson_polar.F90
                 simulation_4d_drift_kinetic_cartesian_finite_volume.F90
+                simulation_4d_vp_eulerian_cartesian_finite_volume.F90
                 simulation_6d_vlasov_poisson_cartesian.F90)
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
@@ -146,6 +147,8 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_logical_meshes
                        sll_file_io_parallel
                        sll_utilities
+                       sll_mesh_calculus
+                       sll_integration
 )
 
    TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
