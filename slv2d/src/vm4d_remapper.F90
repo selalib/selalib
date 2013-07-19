@@ -167,7 +167,7 @@ contains
                              geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                             geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+                             geomx%y0, geomx%y1, geomx%ny, error)
 
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )

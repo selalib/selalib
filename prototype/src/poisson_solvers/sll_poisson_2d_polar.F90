@@ -95,28 +95,27 @@ module sll_poisson_2d_polar
   use sll_fft
   use sll_tridiagonal
   use sll_constants
+  use sll_boundary_condition_descriptors
 
   implicit none
   !>type sll_plan_poisson_polar
   !>type for the Poisson solver in polar coordinate
   type sll_plan_poisson_polar
-     sll_real64 :: dr, rmin, rmax
-     sll_int32 :: nr, ntheta
-     sll_int32 :: bc(2)
-     type(sll_fft_plan), pointer :: pfwd,pinv
+     sll_real64                          :: rmin
+     sll_real64                          :: rmax
+     sll_real64                          :: dr
+     sll_int32                           :: nr
+     sll_int32                           :: ntheta
+     sll_int32                           :: bc(2)
+     type(sll_fft_plan), pointer         :: pfwd
+     type(sll_fft_plan), pointer         :: pinv
      sll_real64, dimension(:,:), pointer :: f_fft
-     sll_comp64, dimension(:), pointer :: fk,phik
-     !for the tridiagonal solver
-     sll_real64, dimension(:), pointer :: a,cts
-     sll_int32, dimension(:), pointer :: ipiv
+     sll_comp64, dimension(:),   pointer :: fk
+     sll_comp64, dimension(:),   pointer :: phik
+     sll_real64, dimension(:), pointer   :: a      !< data for the tridiagonal solver
+     sll_real64, dimension(:), pointer   :: cts
+     sll_int32, dimension(:),  pointer   :: ipiv
   end type sll_plan_poisson_polar
-
-  !flags for boundary conditions
-  !>boundary conditions can be at TOP_ or BOT_ and take value NEUMANN or DIRICHLET
-  !>ex : TOP_DIRICHLET or BOT_NEUMANN
-  integer, parameter :: DIRICHLET     = 1
-  integer, parameter :: NEUMANN       = 2
-  integer, parameter :: NEUMANN_MODE0 = 3
 
   interface initialize
      module procedure initialize_poisson_polar
@@ -304,14 +303,14 @@ contains
       plan%phik=0.0_f64
 
       !boundary condition at rmin
-      if(bc(1)==DIRICHLET)then !Dirichlet
+      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
         plan%a(1)=0.0_f64
       endif
-      if(bc(1)==NEUMANN)then
+      if(bc(1)==SLL_NEUMANN)then
         plan%a(2)=plan%a(2)+plan%a(1) !Neumann
         plan%a(1)=0._f64
       endif
-      if(bc(1)==NEUMANN_MODE0)then 
+      if(bc(1)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(2)=plan%a(2)+plan%a(1)
           plan%a(1)=0._f64
@@ -321,14 +320,14 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==DIRICHLET)then !Dirichlet
+      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==NEUMANN)then
+      if(bc(2)==SLL_NEUMANN)then
         plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==NEUMANN_MODE0)then 
+      if(bc(2)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
           plan%a(3*(nr-1))=0.0_f64
@@ -438,14 +437,14 @@ contains
       plan%phik=0.0_f64
 
       !boundary condition at rmin
-      if(bc(1)==DIRICHLET)then !Dirichlet
+      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
         plan%a(1)=0.0_f64
       endif
-      if(bc(1)==NEUMANN)then
+      if(bc(1)==SLL_NEUMANN)then
         plan%a(2)=plan%a(2)+plan%a(1) !Neumann
         plan%a(1)=0._f64
       endif
-      if(bc(1)==NEUMANN_MODE0)then 
+      if(bc(1)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(2)=plan%a(2)+plan%a(1)
           plan%a(1)=0._f64
@@ -455,14 +454,14 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==DIRICHLET)then !Dirichlet
+      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==NEUMANN)then
+      if(bc(2)==SLL_NEUMANN)then
         plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1)) !Neumann
         plan%a(3*(nr-1))=0.0_f64
       endif
-      if(bc(2)==NEUMANN_MODE0)then 
+      if(bc(2)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
           plan%a(3*(nr-1))=0.0_f64
