@@ -42,9 +42,9 @@ module sll_gausslobatto
      !!          to build it. Only degree is a scalar. It is the degree of corresponding
      !!          polynomials. Only jac must be filled manually (but it is allocated in
      !!          the constructor)
-     sll_real64,dimension(:),allocatable :: node,weigh
+     sll_real64,dimension(:),pointer :: node,weigh
      sll_int32 :: degree
-     sll_real64,dimension(:,:),allocatable :: der
+     sll_real64,dimension(:,:),pointer :: der
   end type gausslobatto1D
 
   interface delete

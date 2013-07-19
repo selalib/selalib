@@ -1,6 +1,4 @@
-add_library(sll_boundary_condition_descriptors STATIC 
-  sll_boundary_condition_descriptors.F90)
+ADD_LIBRARY(sll_boundary_condition_descriptors STATIC 
+            sll_boundary_condition_descriptors.F90)
 
-add_dependencies(sll_boundary_condition_descriptors
-  sll_working_precision
-  )
+TARGET_LINK_LIBRARIES(sll_boundary_condition_descriptors sll_working_precision)

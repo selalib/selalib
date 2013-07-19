@@ -204,7 +204,7 @@ contains
                     geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                    geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+                    geomx%y0, geomx%y1, geomx%ny, error)
 
   end subroutine initlocal
 
