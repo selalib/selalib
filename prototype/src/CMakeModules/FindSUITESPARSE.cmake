@@ -16,66 +16,71 @@ IF (SUITESPARSE_INCLUDE_DIRS)
 ENDIF (SUITESPARSE_INCLUDE_DIRS)
 
 FIND_PATH( CHOLMOD_INCLUDE_DIR cholmod.h
-  	        PATHS /usr/local/include 
-        	        /usr/include 
-        	        /usr/include/suitesparse/ 
-         )
+           PATHS /usr/local/include 
+                 /usr/include 
+        	     /usr/include/suitesparse/ )
 
 MESSAGE(STATUS "CHOLMOD_INCLUDE_DIR:${CHOLMOD_INCLUDE_DIR}")
 
-FIND_LIBRARY( SUITESPARSE_LIBRARY_DIR
-           NAMES cholmod
-           PATHS /usr/lib 
-                 /usr/lib64 
-                 /usr/local/lib )
-MESSAGE(STATUS "SUITESPARSE_LIBRARY_DIR:${SUITESPARSE_LIBRARY_DIR}")
+FIND_LIBRARY( CHOLMOD_LIBRARY
+              NAMES cholmod
+              PATHS /usr/lib /usr/lib64 /usr/local/lib )
+
+FIND_LIBRARY( SUITESPARSECONFIG_LIBRARY
+              NAMES suitesparseconfig
+              PATHS /usr/lib /usr/lib64 /usr/local/lib )
+
+MESSAGE(STATUS "CHOLMOD_LIBRARY:${CHOLMOD_LIBRARY}")
 
 # Add cholmod include directory to collection include directories
 IF ( CHOLMOD_INCLUDE_DIR )
-	list ( APPEND SUITESPARSE_INCLUDE_DIRS ${CHOLMOD_INCLUDE_DIR} )
+   LIST ( APPEND SUITESPARSE_INCLUDE_DIRS ${CHOLMOD_INCLUDE_DIR} )
 ENDIF( CHOLMOD_INCLUDE_DIR )
 
 # if we found the library, add it to the defined libraries
-IF ( SUITESPARSE_LIBRARY_DIR )
+IF ( CHOLMOD_LIBRARY AND SUITESPARSECONFIG_LIBRARY)
 
-    # Skipped, as this is set for apple in the block above
-    list ( APPEND SUITESPARSE_LIBRARIES amd)
-    list ( APPEND SUITESPARSE_LIBRARIES btf)
-    list ( APPEND SUITESPARSE_LIBRARIES camd)
-    list ( APPEND SUITESPARSE_LIBRARIES ccolamd)
-    list ( APPEND SUITESPARSE_LIBRARIES cholmod)
-    list ( APPEND SUITESPARSE_LIBRARIES colamd)
-#   list ( APPEND SUITESPARSE_LIBRARIES csparse)
-    list ( APPEND SUITESPARSE_LIBRARIES cxsparse)
-    list ( APPEND SUITESPARSE_LIBRARIES klu)
-#   list ( APPEND SUITESPARSE_LIBRARIES spqr)
-    list ( APPEND SUITESPARSE_LIBRARIES umfpack)
-    list ( APPEND SUITESPARSE_LIBRARIES suitesparseconfig)
+   # Skipped, as this is set for apple in the block above
+   LIST ( APPEND SUITESPARSE_LIBRARIES amd)
+   LIST ( APPEND SUITESPARSE_LIBRARIES btf)
+   LIST ( APPEND SUITESPARSE_LIBRARIES camd)
+   LIST ( APPEND SUITESPARSE_LIBRARIES ccolamd)
+   LIST ( APPEND SUITESPARSE_LIBRARIES cholmod)
+   LIST ( APPEND SUITESPARSE_LIBRARIES colamd)
+#  LIST ( APPEND SUITESPARSE_LIBRARIES csparse)
+   LIST ( APPEND SUITESPARSE_LIBRARIES cxsparse)
+   LIST ( APPEND SUITESPARSE_LIBRARIES klu)
+#  LIST ( APPEND SUITESPARSE_LIBRARIES spqr)
+   LIST ( APPEND SUITESPARSE_LIBRARIES umfpack)
+   LIST ( APPEND SUITESPARSE_LIBRARIES suitesparseconfig)
    
-    # Metis and spqr are optional
-    FIND_LIBRARY( SUITESPARSE_METIS_LIBRARY
-                  NAMES metis
-                  PATHS ${SUITESPARSE_LIBRARY_DIR} )
-    IF (SUITESPARSE_METIS_LIBRARY)			
-	    list ( APPEND SUITESPARSE_LIBRARIES metis)
-    ENDIF(SUITESPARSE_METIS_LIBRARY)
+   # Metis and spqr are optional
+   FIND_LIBRARY( SUITESPARSE_METIS_LIBRARY
+                 NAMES metis
+                 PATHS ${SUITESPARSE_LIBRARY_DIR} )
+   IF (SUITESPARSE_METIS_LIBRARY)			
+      LIST ( APPEND SUITESPARSE_LIBRARIES metis)
+   ENDIF(SUITESPARSE_METIS_LIBRARY)
 
-   if(EXISTS  "${CHOLMOD_INCLUDE_DIR}/SuiteSparseQR.hpp")
-	  SET(SUITESPARSE_SPQR_VALID TRUE CACHE BOOL "SuiteSparseSPQR valid")
-   else()
-	  SET(SUITESPARSE_SPQR_VALID false CACHE BOOL "SuiteSparseSPQR valid")
-   endif()
+   IF(EXISTS  "${CHOLMOD_INCLUDE_DIR}/SuiteSparseQR.hpp")
+      SET(SUITESPARSE_SPQR_VALID TRUE CACHE BOOL "SuiteSparseSPQR valid")
+   ELSE()
+      SET(SUITESPARSE_SPQR_VALID false CACHE BOOL "SuiteSparseSPQR valid")
+   ENDIF()
 
-   if(SUITESPARSE_SPQR_VALID)
-	  FIND_LIBRARY( SUITESPARSE_SPQR_LIBRARY
-	  NAMES spqr
-	  PATHS ${SUITESPARSE_LIBRARY_DIR} )
-	IF (SUITESPARSE_SPQR_LIBRARY)			
-	    list ( APPEND SUITESPARSE_LIBRARIES spqr)
-	ENDIF (SUITESPARSE_SPQR_LIBRARY)
-    endif()
+   IF(SUITESPARSE_SPQR_VALID)
+
+      FIND_LIBRARY( SUITESPARSE_SPQR_LIBRARY
+                    NAMES spqr
+                    PATHS /usr/lib /usr/lib64 /usr/local/lib )
+
+      IF (SUITESPARSE_SPQR_LIBRARY)			
+         LIST ( APPEND SUITESPARSE_LIBRARIES spqr)
+      ENDIF (SUITESPARSE_SPQR_LIBRARY)
+
+   ENDIF()
        
-ENDIF( SUITESPARSE_LIBRARY_DIR )  
+ENDIF( CHOLMOD_LIBRARY AND SUITESPARSECONFIG_LIBRARY)
    
 IF (SUITESPARSE_INCLUDE_DIRS AND SUITESPARSE_LIBRARIES)
    SET(SUITESPARSE_FOUND TRUE)

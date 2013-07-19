@@ -1,5 +1,6 @@
 program VP_DG
 #include "sll_working_precision.h"
+#include "sll_boundary_condition_descriptors.h"
 
 !from Madaule Eric :
 !Warning : this code and all the modules it calls and I wrote are not optimized in
@@ -15,7 +16,7 @@ program VP_DG
   use mod_sparse
 
   !use mod_octave_io
-  use mod_octave_io_sparse
+  !use mod_octave_io_sparse
 
   implicit none
 
@@ -41,7 +42,7 @@ program VP_DG
   !elements of Phi equal to 0 so Phi(x=0)=0
   sll_int32 :: xbound
   !space variables
-  sll_real64 :: x,v,k
+  sll_real64 :: x,v,k,vv
   !energy and momentum to check conservation
   sll_real64 :: momentum,l1_f,l2_f,int_f
   sll_real64 :: k_en,em_en,energy,phi_jump
@@ -51,6 +52,10 @@ program VP_DG
   sll_int32 :: len,i,j
   sll_int32,dimension(:),allocatable :: lfor
   character(len=25) :: form,fdist,ffield
+  logical :: sym_mom_comp
+  sym_mom_comp=.true. ! way to compute momentum
+                       ! true for symetric computation (0->nv/2 and nv->nv/2)
+                       ! false for linear computation (0->nv)
 
   ! for the python script *.py
   !namelist /param/ dt
@@ -72,12 +77,12 @@ program VP_DG
 !!$  v_min=-2.0d0
 !!$  v_max=2.0d0
 
-!!$  !!!>>>Blanca's case
+  !!!>>>Blanca's case
 !!$  x_min=-sll_pi
 !!$  x_max=sll_pi
 !!$  v_min=-4
 !!$  v_max=4
-!!$  !!!<<<
+  !!!<<<
 
 !!$  x_min=0.0d0
 !!$  x_max=1.0d0
@@ -109,12 +114,12 @@ program VP_DG
 
   !definition or time step, delta_t and final time
   dt=0.001d0
-  tf=1000.0d0
+  tf=100.0d0
   nb_step=ceiling(tf/dt)
   th=min(20,int(0.1d0/dt))!20
   th_out=int(0.5d0/dt)
-  th_large=int(10.0d0/dt) ! must be a multiple of th
-  !th_large=huge(1)
+  !th_large=int(10.0d0/dt) ! must be a multiple of th
+  th_large=huge(1)
   if (modulo(th_large,th)/=0) then
      print*,"WARNING : snapshot of the electric field may be miscalculated"
   end if
@@ -138,13 +143,15 @@ program VP_DG
   call init_nu_cart_mesh(nx,nv,mesh)
   mesh%d_etat1=(x_max-x_min)/real(nx,8)
   mesh%d_etat2=(v_max-v_min)/real(nv,8)
+  !mesh%d_etat2=1.0d0
+  !mesh%d_etat2(9:32)=0.25d0
   call fill_node_nuc_mesh(x_min,v_min,mesh)
 
   !flux coefficients
   c12=0.5d0
   c11=real(ng**2,8)/maxval(mesh%d_etat1)
 
-  call init_timesteping_4dg(dg_plan,SLL_rk4,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
+  call init_timesteping_4dg(dg_plan,sll_ee,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
 
   !construction of distribution function
   !x_i is indexed on both mesh nodes and GLL nodes, so to have the postion in x
@@ -177,10 +184,10 @@ program VP_DG
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(exp(-200.0d0*(v-0.8d0)**2)+ &
 !!$                   & exp(-200.0d0*(v+0.8d0)**2))!*(cos(3.0d0*x)+cos(6.0d0*x)+cos(18.0d0*x))
 
-!!$              !!!>>>Blanca's test case
+              !!!>>>Blanca's test case
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(2.0d0-cos(2.0d0*x))* &
 !!$                   & exp(-0.25d0*(4.0d0*v-1.0d0)**2)
-!!$              !!!<<<
+              !!!<<<
 
 !!$              if (abs(v)<=0.5d0) then
 !!$                 dist((x1-1)*ng+x2,(v1-1)*ng+v2)=1.0d0* &
@@ -199,16 +206,16 @@ program VP_DG
 !!$                   & exp(-v**2/2.0d0)/sqrt(2.0d0*sll_pi)
 
               !classical two streams instability
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
-                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
-                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
-                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.05d0*cos(k*x))/ &
+!!$                   & (2.0d0*0.3d0*sqrt(2.0d0*sll_pi))*( &
+!!$                   & exp(-(v-0.99d0)**2/(2.0d0*0.3d0**2))+ &
+!!$                   & exp(-(v+0.99d0)**2/(2.0d0*0.3d0**2)))
 
               !Bump on tail
-              !from michel, eric and nicolas
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
-!!$                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
-!!$                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
+              !from michel, eric and nicolas, inria
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
+                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
+                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=&!(1.0d0-0.05d0*cos(k*x))
 !!$                   & 1.0d0/sqrt(2.0d0*sll_pi)* &
@@ -223,6 +230,15 @@ program VP_DG
      end do
   end do
   close(14)
+
+  if (dg_plan%method==sll_SSP_RK) then
+     dg_plan%max0=maxval(dist)
+     !prevent negative value in case the initial distribution would be negative at some point
+     dg_plan%min0=max(min(minval(dist),0.0d0),0.0d0)
+  end if
+  if (minval(dist)<0.0d0) then
+     print*,"WARNING : initial distribution is not positive"
+  end if
 
   call param_out(x_min,x_max,v_min,v_max,nx,nv,ng,.true.,c11,c12,tf,dt,nb_step,th,th_large)
 
@@ -268,30 +284,124 @@ program VP_DG
   call solve(dg_plan%poisson_vp,dg_plan%rho,dg_plan%phi)
   dg_plan%field=matmul(dg_plan%poisson_vp%mat_field,dg_plan%phi)
 
-  do v1=1,nv
-     do v2=1,ng
-        v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
-        do x1=1,nx
-           do x2=1,ng
+  if (sym_mom_comp) then
+     if (modulo(nv,2)==0) then !nv even
+        do v1=1,nv/2
+           do v2=1,ng
+              v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+              vv=mesh%etat2(nv+1-v1)+(1.0d0+gausslob%node(ng+1-v2))/mesh%jac(nx+1,nv+1-v1)
+              do x1=1,nx
+                 do x2=1,ng
+                    momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & vv*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                    !kinetik energy
+                    k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & vv**2*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
 
-              momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
-                   & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
-              !kinetik energy
-              k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
-                   & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+                    !norms 1 and 2 of distribution
+                    l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & abs(dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2))* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                    l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)**2* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                    int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                 end do
+              end do
+           end do
+        end do
+     else !nv ode
+        do v1=1,floor(nv/2.)-1
+           do v2=1,ng
+              v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+              vv=mesh%etat2(nv+1-v1)+(1.0d0+gausslob%node(ng+1-v2))/mesh%jac(nx+1,nv+1-v1)
+              do x1=1,nx
+                 do x2=1,ng
+                    momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & vv*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                    !kinetik energy
+                    k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & vv**2*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
 
-              !norms 1 and 2 of distribution
-              l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
-                   & gausslob%weigh(v2)/mesh%jac(x1,v1)
-              l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
-                   & gausslob%weigh(v2)/mesh%jac(x1,v1)
-              int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
-                   & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                    !norms 1 and 2 of distribution
+                    l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & abs(dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2))* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                    l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)**2* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                    int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                         & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                         & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                         & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                 end do
+              end do
+           end do
+        end do
+        v1=floor(nv/2.)
+        do v2=1,ng
+           v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+           do x1=1,nx
+              do x2=1,ng
+                 momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                      & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+                 !kinetik energy
+                 k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                      & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+
+                 !norms 1 and 2 of distribution
+                 l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                      & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                 l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                      & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                 int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                      & gausslob%weigh(v2)/mesh%jac(x1,v1)
+              end do
+           end do
+        end do
+     end if
+     l2_f=sqrt(l2_f)
+  else
+
+     do v1=1,nv
+        do v2=1,ng
+           v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+           do x1=1,nx
+              do x2=1,ng
+                 momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                      & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+                 !kinetik energy
+                 k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                      & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+
+                 !norms 1 and 2 of distribution
+                 l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                      & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                 l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                      & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                 int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                      & gausslob%weigh(v2)/mesh%jac(x1,v1)
+              end do
            end do
         end do
      end do
-  end do
-  l2_f=sqrt(l2_f)
+     l2_f=sqrt(l2_f)
+  end if
 
   open(17,file=ffield)
   do x1=1,nx
@@ -357,31 +467,125 @@ program VP_DG
         call solve(dg_plan%poisson_vp,dg_plan%rho,dg_plan%phi)
         dg_plan%field=matmul(dg_plan%poisson_vp%mat_field,dg_plan%phi)
 
-        do v1=1,nv
-           do v2=1,ng
-              v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
-              do x1=1,nx
-                 do x2=1,ng
-                    x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
+        if (sym_mom_comp) then
+           if (modulo(nv,2)==0) then !nv even
+              do v1=1,nv/2
+                 do v2=1,ng
+                    v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+                    vv=mesh%etat2(nv+1-v1)+(1.0d0+gausslob%node(ng+1-v2))/mesh%jac(nx+1,nv+1-v1)
+                    do x1=1,nx
+                       do x2=1,ng
+                          momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & vv*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                          !kinetik energy
+                          k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & vv**2*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
 
-                    momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
-                         & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
-                    !kinetik energy
-                    k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
-                         & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+                          !norms 1 and 2 of distribution
+                          l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                               & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & abs(dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2))* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                          l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                               & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)**2* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                          int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                               & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                       end do
+                    end do
+                 end do
+              end do
+           else !nv ode
+              do v1=1,floor(nv/2.)-1
+                 do v2=1,ng
+                    v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+                    vv=mesh%etat2(nv+1-v1)+(1.0d0+gausslob%node(ng+1-v2))/mesh%jac(nx+1,nv+1-v1)
+                    do x1=1,nx
+                       do x2=1,ng
+                          momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & vv*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                          !kinetik energy
+                          k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & vv**2*dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
 
-                    !norms 1 and 2 of distribution
-                    l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
-                         & gausslob%weigh(v2)/mesh%jac(x1,v1)
-                    l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
-                         & gausslob%weigh(v2)/mesh%jac(x1,v1)
-                    int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
-                         & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                          !norms 1 and 2 of distribution
+                          l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                               & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & abs(dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2))* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                          l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                               & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)**2* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                          int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                               & gausslob%weigh(v2)/mesh%jac(x1,v1)+ &
+                               & dist((x1-1)*ng+x2,(nv-v1)*ng+ng+1-v2)* &
+                               & gausslob%weigh(x2)*gausslob%weigh(ng+1-v2)/mesh%jac(x1,nv+1-v1)
+                       end do
+                    end do
+                 end do
+              end do
+              v1=floor(nv/2.)
+              do v2=1,ng
+                 v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+                 do x1=1,nx
+                    do x2=1,ng
+                       momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                            & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+                       !kinetik energy
+                       k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                            & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+
+                       !norms 1 and 2 of distribution
+                       l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                            & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                       l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                            & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                       int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                            & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                    end do
+                 end do
+              end do
+           end if
+           l2_f=sqrt(l2_f)
+        else
+
+           do v1=1,nv
+              do v2=1,ng
+                 v=mesh%etat2(v1)+(1.0d0+gausslob%node(v2))/mesh%jac(nx+1,v1)
+                 do x1=1,nx
+                    do x2=1,ng
+                       momentum=momentum+v*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                            & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+                       !kinetik energy
+                       k_en=k_en+v**2*dist((x1-1)*ng+x2,(v1-1)*ng+v2)* &
+                            & gausslob%weigh(x2)*gausslob%weigh(v2)/mesh%jac(x1,v1)
+
+                       !norms 1 and 2 of distribution
+                       l1_f=l1_f+abs(dist((x1-1)*ng+x2,(v1-1)*ng+v2))*gausslob%weigh(x2)* &
+                            & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                       l2_f=l2_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)**2*gausslob%weigh(x2)* &
+                            & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                       int_f=int_f+dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(x2)* &
+                            & gausslob%weigh(v2)/mesh%jac(x1,v1)
+                    end do
                  end do
               end do
            end do
-        end do
-        l2_f=sqrt(l2_f)
+           l2_f=sqrt(l2_f)
+
+        end if
 
         do x1=1,nx
            do x2=1,ng
@@ -471,7 +675,7 @@ contains
     else
        write(20,*)"non-uniforme mesh"
     end if
-    if (v_periodic) then
+    if (bc_v==sll_periodic) then
        write(20,*)"periodicity in direction v"
     else
        write(20,*)"Dirichlet condition in v"

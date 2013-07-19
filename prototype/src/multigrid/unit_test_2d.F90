@@ -30,11 +30,10 @@ use sll_collective, only: sll_boot_collective,      &
 
 use sll_gnuplot_parallel
 
-use sll_mgd2
+use mgd2
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "mgd2.h"
 
 sll_int32  :: nxp2,nyp2,nx,ny,nxprocs,nyprocs,ixp,jyq,iex,jey
 sll_int32  :: maxcy,kcycle,iprer,ipost,iresw,nwork
@@ -200,7 +199,7 @@ my_mg%nyprocs = nyprocs
 my_mg%ibdry   = ibdry
 my_mg%jbdry   = jbdry
 my_mg%comm2d  = comm2d
-call initialize(my_block,my_mg,nerror)
+call initialize_mgd2(my_block,my_mg,nerror)
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------
 ! initialize problem
@@ -228,7 +227,7 @@ my_mg%ipost  = ipost
 my_mg%iresw  = iresw
 my_mg%isol   = 2
 
-call mgdsolver(my_block,my_mg,p,f,r,work, &
+call mgd2_solver(my_block,my_mg,p,f,r,work, &
                rro, iter,.true.,nerror)
 
 if (nerror.eq.1) goto 1000
@@ -271,8 +270,8 @@ cy   = 2.0d0*pi*wk
 
 do j=sy,ey
   do i=sx,ex
-    xi=float(i-2)/(nx-1)
-    yj=float(j-2)/(ny-1)
+    xi=(i-1.5)/hxi
+    yj=(j-1.5)/hyi
     f(i,j)=cnst*sin(cx*xi)*sin(cy*yj)
   end do
 end do
@@ -292,9 +291,9 @@ cx=2.0d0*pi*wk
 cy=2.0d0*pi*wk
 errloc=0.0d0
 do j=sy,ey
-  yj=(float(j)-2.0d0)/hyi
+  yj=(j-1.5)/hyi
   do i=sx,ex
-    xi=(float(i)-2.0d0)/hxi
+    xi=(i-1.5)/hxi
     exact=sin(cx*xi)*sin(cy*yj)
     errloc=errloc+abs(p(i,j)-exact)
   end do
