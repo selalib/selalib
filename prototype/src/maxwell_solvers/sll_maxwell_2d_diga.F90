@@ -1,26 +1,27 @@
 !>Solve Poisson equation on cartesian domain with finit elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
-module sll_poisson_2d_fem
-#include "sll_poisson_solvers_macros.h"
+module sll_maxwell_2d_dg
+#include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_constants
+#include "sll_constants.h"
+
 implicit none
 
-type :: poisson_fem
+type :: maxwell_2d_dg
    sll_real64, dimension(:,:), pointer :: A
    sll_real64, dimension(:,:), pointer :: M
    sll_real64, dimension(:,:), pointer :: mat
    sll_real64, dimension(:)  , pointer :: hx    !< step size x
    sll_real64, dimension(:)  , pointer :: hy    !< step size y
-end type poisson_fem
+end type maxwell_2d_dg
 
 interface initialize
-   module procedure initialize_poisson_2d_fem
+   module procedure initialize_maxwell_2d_dg
 end interface initialize
 interface solve
-   module procedure solve_poisson_2d_fem
+   module procedure solve_maxwell_2d_dg
 end interface solve
 
 sll_int32, private :: nx, ny
@@ -34,8 +35,8 @@ contains
 !> Initialize Poisson solver object using finite elements method.
 !> Indices are shifted from [1:n+1] to [0:n] only inside this 
 !> subroutine
-subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( poisson_fem ) :: this
+subroutine initialize_maxwell_2d_dg( this, x, y ,nn_x, nn_y)
+type( maxwell_2d_dg ) :: this
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
@@ -205,7 +206,7 @@ end do
 
 call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
 
-end subroutine initialize_poisson_2d_fem
+end subroutine initialize_maxwell_2d_dg
 
 integer function som(i, j, k)
 
@@ -223,9 +224,9 @@ integer function som(i, j, k)
 
 end function som
 
-!> Solve the poisson equation
-subroutine solve_poisson_2d_fem( this, ex, ey, rho )
-type( poisson_fem )        :: this !< Poisson solver object
+!> Solve the maxwell equation
+subroutine solve_maxwell_2d_dg( this, ex, ey, rho )
+type( maxwell_2d_dg )        :: this !< Poisson solver object
 sll_real64, dimension(:,:) :: ex   !< x electric field
 sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
@@ -265,7 +266,7 @@ do i=1,nx-1
 end do
 end do
 
-end subroutine solve_poisson_2d_fem
+end subroutine solve_maxwell_2d_dg
 
 subroutine write_mtv_file( x, y )
 real(8), dimension(:) :: x
@@ -328,4 +329,4 @@ close(10)
 end subroutine write_mtv_file
 
 
-end module sll_poisson_2d_fem
+end module sll_maxwell_2d_dg
