@@ -12,17 +12,20 @@
 !>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
 !>$
 !>
-program test_maxwell_2d_fdtd
-!------------------------------------------------------------------------
-!  test 2D Maxwell solver based on finite differences on a staggered grid
-!------------------------------------------------------------------------
+program test_maxwell_2d_diga
+!--------------------------------------------------------------------------
+!  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
+!--------------------------------------------------------------------------
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_maxwell_2d_fdtd
+use sll_logical_meshes
+use sll_module_coordinate_transformations_2d
+use sll_common_coordinate_transformations
+use sll_maxwell_2d_diga
 
 implicit none
 
@@ -33,8 +36,11 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_2d_fdtd)                      :: maxwell_TE
-type(maxwell_2d_fdtd)                      :: maxwell_TM
+type(sll_logical_mesh_2d), pointer :: mesh
+class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+
+type(maxwell_2d_diga)                   :: maxwell_TE
+type(maxwell_2d_diga)                   :: maxwell_TM
 
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
@@ -57,19 +63,39 @@ sll_real64                              :: cfl = 0.5
 
 sll_int32,  parameter                   :: mode = 2
 
-eta1_min = .0_f64; eta1_max = 1.0_f64
-eta2_min = .0_f64; eta2_max = 1.0_f64
+nc_eta1 = 7; nc_eta2 = 7
 
-nc_eta1 = 127; nc_eta2 = 127
+mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 
-delta_eta1 = (eta1_max-eta1_min)/nc_eta1
-delta_eta2 = (eta2_max-eta2_min)/nc_eta2
+eta1_min = mesh%eta1_min
+eta1_max = mesh%eta1_max
+eta2_min = mesh%eta2_min
+eta2_max = mesh%eta2_max
 
-call initialize(maxwell_TE, 1, nc_eta1+1, 1,  &
-                nc_eta2+1, delta_eta1, delta_eta2, TE_POLARIZATION)
+delta_eta1 = mesh%delta_eta1
+delta_eta2 = mesh%delta_eta2
 
-call initialize(maxwell_TM, 1, nc_eta1+1, 1,  &
-                nc_eta2+1, delta_eta1, delta_eta2, TM_POLARIZATION)
+! "Colella transformation";
+! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+! (102) p 2968):
+!
+! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
+! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
+
+tau => new_coordinate_transformation_2d_analytic( &
+       "collela_transformation", &
+       mesh, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22 )
+
+
+call initialize(maxwell_TE, mesh, tau, TE_POLARIZATION)
+
+call initialize(maxwell_TM, mesh, tau, TM_POLARIZATION)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 nstep = 100
@@ -136,5 +162,6 @@ DEALLOCATE(ex)
 DEALLOCATE(ey)
 DEALLOCATE(bz)
 DEALLOCATE(bz_exact)
+call delete(mesh)
 
-end program test_maxwell_2d_fdtd
+end program test_maxwell_2d_diga
