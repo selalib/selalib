@@ -11,9 +11,9 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
    ADD_EXECUTABLE(test_maxwell_2d_pstd unit_test_2d_pstd.F90 )
    TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd sll_maxwell_solvers)
 
-   # ****************************************************************************
+   # ****************************************************************
    #                           PARALLEL MAXWELL SOLVERS
-   # ****************************************************************************
+   # ***************************************************************
 
    IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
    
@@ -38,8 +38,9 @@ ELSE()
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
-
-TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_utilities )
+TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_utilities 
+                                          sll_logical_meshes 
+                                          sll_coordinate_transformations)
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
