@@ -8,6 +8,7 @@ program test_poisson_2d_periodic_cart_par
   use sll_collective
   use hdf5
   use sll_hdf5_io_parallel
+  use sll_gnuplot_parallel
 
   implicit none
 
@@ -23,7 +24,6 @@ program test_poisson_2d_periodic_cart_par
   sll_real64, dimension(:,:), allocatable :: phi_an
   sll_real64, dimension(:,:), allocatable :: phi
   sll_int32                               :: i, j
-  sll_real64                              :: average_err
   sll_int32, dimension(1:2)               :: global
   sll_int32                               :: gi, gj
   sll_int32                               :: myrank
@@ -31,10 +31,9 @@ program test_poisson_2d_periodic_cart_par
   sll_int64                               :: colsz ! collective size
   sll_int32                               :: nprocx, nprocy
   sll_int32                               :: e
-  sll_real32                              :: ok 
-  sll_real32, dimension(1)                :: prod4test
+  sll_real64                              :: phi_error(1)
+  sll_real64                              :: error_sum(1)
 
-  ok = 1.0
 
   !Boot parallel environment
   call sll_boot_collective()
@@ -116,67 +115,29 @@ program test_poisson_2d_periodic_cart_par
        1, &
        ierr )
 
-  ! print *, 'phi: ', phi(:,:)
-
   call parallel_hdf5_write_array_2d( 'phi_analytical.h5', ncx, ncy, phi_an, &
        'phi_an', layout_x)
   call parallel_hdf5_write_array_2d( 'phi_computed.h5', ncx, ncy, phi, 'phi', &
        layout_x)
-  phi_error  = 0.d0
-  do j=1,ny_loc
-     do i=1,nx_loc
-        phi_error  = phi_error + abs(phi_an(i,j) - phi(i,j))
-     enddo
-  enddo
+
+  phi_error  = sum(abs(phi_an - phi))/(ncx*ncy)
      
   call sll_collective_reduce(sll_world_collective, phi_error, &
        1, MPI_SUM, 0, error_sum )
 
-
-  if (average_err> 1.0e-06 ) then
-     print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
-     stop
-  endif
- 
-  SLL_DEALLOCATE_ARRAY(phi, ierr)
-  SLL_DEALLOCATE_ARRAY(rho, ierr)
-  SLL_DEALLOCATE_ARRAY(phi_an, ierr)
-
   if( myrank == 0 ) then
      if(error_sum(1) >= dx*dy ) then
-        print*, 'Test "sll_poisson_2d_periodic_par": FAIL'
+        print*, 'error_sum, dx*dy : ', error_sum, dx*dy
+        print*, 'sll_poisson_2d_periodic_par: FAILED'
      else
-        print *, 'sll_poisson_2d_periodic_par: PASSED'
+        print*, 'sll_poisson_2d_periodic_par: PASSED'
      end if
-  end if
-
-     if (prod4test(1)==1.) then
-        call flush(6)
-        print*, ' '
-        call flush(6)
-        print*, '"sll_poisson_2d_periodic_cart_par" test: PASSED'
-        call flush(6)
-        print*, ' '
-     endif
   endif
 
-!!$  call sll_collective_reduce(sll_world_collective, (/ ok /), &
-!!$       1, MPI_PROD, 0, prod4test )
-!!$  if (myrank==0) then
-!!$
-!!$     if (prod4test(1)==1.) then
-!!$        call flush(6)
-!!$        print*, ' '
-!!$        call flush(6)
-!!$        print*, '"sll_poisson_2d_periodic_cart_par" test: PASSED'
-!!$        call flush(6)
-!!$        print*, ' '
-!!$     endif
-!!$  endif
-
   call delete_poisson_2d_periodic_plan_cartesian_par(plan)
-  SLL_DEALLOCATE_ARRAY(phi, ierr)
-  SLL_DEALLOCATE_ARRAY(rho, ierr)
+
+  SLL_DEALLOCATE_ARRAY(phi,    ierr)
+  SLL_DEALLOCATE_ARRAY(rho,    ierr)
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
 
   call sll_halt_collective()
