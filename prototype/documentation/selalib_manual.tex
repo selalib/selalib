@@ -7,7 +7,7 @@
 
 \title{Selalib Notes - DRAFT -}   
 \author{Edwin Chacon-Golcher}        
-\date{April, 2012}    
+\date{\today}    
 \maketitle
 
 \begin{abstract}
@@ -298,10 +298,10 @@ Any number of time markers can be declared and set at different points. So this 
 \subsection{Status}
 Unit-tested.
 
-\section{Low-Level File IO}
+\section{File IO}
 
     \subsection{Description}
-	Presently, Selalib offers facilities to output data in the XDMF file format, readable by the VisIt program. To use, import the module \verb+sll_low_level_file_io+. The interface allows to open a file, write multi-dimensional data in it and then close it. The main purpose of this module is to provide the low-level building blocks that can be used by higher-level functions to conveniently write data to files.
+	Presently, Selalib offers facilities to output data in the XDMF file format, readable by the VisIt program. To use, import the module \verb+sll_file_io+. The interface allows to open a file, write multi-dimensional data in it and then close it. The main purpose of this module is to provide the low-level building blocks that can be used by higher-level functions to conveniently write data to files.
 
     \subsection{Exposed Interface}
     The current interface is a collection of generic functions:
@@ -323,7 +323,7 @@ Unit-tested.
     \begin{description}
        \item \verb+sll_xdmf_open( )+ opens a file with a given name and returns a file identifier on \verb+file_id+.
        \item \verb+sll_xdmf_write_array( )+ writes a given multi-dimensional array on a file identified by \verb+xmffile_id+.
-       \item \verb+sll_sdmf_close( )+ closes the given file.
+       \item \verb+sll_xdmf_close( )+ closes the given file.
     \end{description}
 
 \subsection{Critical Commentary}
@@ -331,7 +331,9 @@ ECG: This interface can be improved. To consider:
 \begin{description}
 \item The job of \verb+sll_xdmf_open( )+ should be to open a file, with a given filename; it should take as parameters some flags to indicate what behavior to exercise in case of error or if the file exists (overwrite? append?) and nothing else. The nnodes parameters are used to write XDMF-related preambles, but this should be sent to the other functions that actually write into the file.
 \item The mesh\_name parameter is not clear. Why mesh?
+{\it Answer Mesh coordinates are written in a separate file, so you can write it only one time at the beginning of the computation. When you plot a field you still need to link your data to a mesh.}
 \item What is the 'center' parameter in the write\_array() function?
+{\it Answer When you plot field you can specify if your values are node centered or cell centered}
 \end{description}
 
 \chapter{Mid-Level Layer: Numerical and Parallel Utilities}
