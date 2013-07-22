@@ -664,7 +664,7 @@ contains
     sll_real64 :: det
     sll_real64 :: phi1,phi2,dphi1(2),dphi2(2),dphi1ref(2),dphi2ref(2)
     sll_real64,dimension(2,2) :: jacob,invjacob
-    sll_real64,dimension(:,:),allocatable :: lag,dlag
+    sll_real64,dimension(:,:),allocatable :: lag,dlag,ploc
     sll_real64,dimension(:,:),allocatable :: mloc,av1loc,av2loc,bv1loc,bv2loc
     sll_real64,dimension(:),allocatable :: gauss,weight
     sll_real64 :: void  ! only for a valid address
@@ -801,7 +801,7 @@ contains
     SLL_ALLOCATE(weight(sim%degree+1),ierr)
     SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
     SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
-
+    SLL_ALLOCATE(ploc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(mloc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(av1loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(av2loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
@@ -815,6 +815,7 @@ contains
     ! loop on the cells
     do ic=0,sim%nc_v1-1
        do jc=0,sim%nc_v2-1
+          ploc=0
           mloc=0
           av1loc=0
           av2loc=0
