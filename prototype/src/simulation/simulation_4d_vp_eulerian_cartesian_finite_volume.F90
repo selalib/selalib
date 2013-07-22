@@ -224,9 +224,6 @@ contains
     sim%np_v1 = sim%degree * sim%nc_v1 + 1
     sim%np_v2 = sim%degree * sim%nc_v2 + 1
 
-    sim%np_v1 = sim%degree * sim%nc_v1 + 1
-    sim%np_v2 = sim%degree * sim%nc_v2 + 1
-
     sim%nproc_v1 = 1
     sim%nproc_v2 = 1
     sim%nproc_x1 = 1
@@ -682,7 +679,6 @@ contains
     end do
 
     ! array of points coordinates
-    SLL_ALLOCATE(sim%vcoords(2,sim%np_v1*sim%np_v2),ierr)
 
     SLL_ALLOCATE(sim%vcoords(2,sim%np_v1*sim%np_v2),ierr)
     
@@ -796,7 +792,7 @@ contains
     sim%Bv2_diag=0
     
 
-   !write(*,*) sim%prof
+   write(*,*) 'sim%prof', sim%prof
 !!$
 !!$    stop
 
@@ -835,9 +831,12 @@ contains
               ! write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
                 jacob=sim%tv%jacobian_matrix(xref,yref)
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
+                !write(*,*) 'determinal of matrix = ', sim%tv%jacobian(xref,yref)
+                !stop
                 det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
-
-
+                !write(*,*) 'delta_eta1',sim%mesh2dv%delta_eta1
+                !write(*,*) 'det',det
+                !stop
                 do ib1=1,sim%degree+1
                    do jb1=1,sim%degree+1
                       do ib2=1,sim%degree+1
@@ -920,21 +919,26 @@ contains
           ! end loop on the cells
        end do
     end do
+    write(*,*) 'dimension of matrix : ', sim%np_v1*sim%np_v2
+    write(*,*) 'nsky = ', sim%nsky
+    !stop
 
-!!$    write(*,*) 'A diag', sim%Av2_diag
-!!$    write(*,*) 'A low', sim%Av2_low
-!!$    write(*,*) 'A sup', sim%Av2_sup
-!!$    stop
+!!$    !write(*,*) 'M diag', sim%Av2_diag
+!!$    write(*,*) 'M low', sim%M_low
+    write(*,*) 'max of M sup', maxval(abs(sim%M_sup))
+    write(*,*) 'max of M low', maxval(abs(sim%M_low))
+    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
     isol=0  ! we do not solve the linear system
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
 
-    nsym=0
+    !nsym=0
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
          sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
+
     write(*,*) 'fin LU'
     
 
@@ -1486,7 +1490,7 @@ contains
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
 
-    nsym=0    
+    !nsym=0    
     call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! init
     sim%dtfn_v1v2x1=0.0_f64
