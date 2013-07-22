@@ -934,12 +934,17 @@ contains
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
 
-    !nsym=0
+    !stop
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
          sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
 
-    write(*,*) 'fin LU'
+!!$    do i=1,sim%np_v1*sim%np_v2
+!!$       write(*,*) sim%M_diag(i)
+!!$    end do
+!!$
+!!$    write(*,*) 'fin LU'
+!!$    stop
     
 
 
@@ -1563,6 +1568,10 @@ contains
                sim%np_v1*sim%np_v2, &
                mp,ifac,isol,nsym,void,ierr,&
                sim%nsky)
+!!$          write(*,*) sim%dtfn_v1v2x1(:,:,ic,jc)
+!!$          write(*,*) 'coucou'
+!!$          stop
+          
           !if we call the sol here, it means that we have to call many times
           !so if we call the sol out of the loop so we have to call it only 
           !one time and we have juste modify the temp=>vector,no?
@@ -1595,6 +1604,8 @@ contains
     sim%fnp1_v1v2x1 = sim%fn_v1v2x1
     sim%fn_v1v2x1 = sim%fn_v1v2x1 &
          + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
+!!$    write(*,*) sim%dtfn_v1v2x1
+!!$    stop
     call mpi_comm(sim)
     call dtf(sim)
     sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
