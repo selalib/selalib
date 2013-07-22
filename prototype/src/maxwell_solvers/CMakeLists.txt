@@ -16,7 +16,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
    #                           PARALLEL MAXWELL SOLVERS
    # ****************************************************************************
 
-   IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+   IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    
      ADD_LIBRARY(sll_maxwell_parallel STATIC 
                  sll_maxwell_2d_pstd_parallel.F90 )
