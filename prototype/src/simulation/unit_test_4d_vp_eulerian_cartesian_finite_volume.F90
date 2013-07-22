@@ -48,10 +48,10 @@ program vp_cartesian_4d
 #define NCELL2 4
 #define NCELL3 16
 #define NCELL4 4
-#define ETA1MIN -1.0_f64
-#define ETA1MAX 1.0_f64
-!!$#define ETA1MIN -6.0_f64
-!!$#define ETA1MAX 6.0_f64
+!!$#define ETA1MIN -1.0_f64
+!!$#define ETA1MAX 1.0_f64
+#define ETA1MIN -6.0_f64
+#define ETA1MAX 6.0_f64
 #define ETA2MIN -6.0_f64
 #define ETA2MAX 6.0_f64
 !#define ETA3MIN 0.0_f64
