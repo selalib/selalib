@@ -11,7 +11,7 @@ IF(NOT HDF5_FOUND)
                   /usr/local 
                   /opt/local)
 
-   FIND_PATH(HDF5_INCLUDE_DIRS NAMES hdf5.mod
+   FIND_PATH(HDF5_INCLUDE_DIR NAMES hdf5.mod
    HINTS ${HDF5_PATHS} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64
    PATH_SUFFIXES / include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
@@ -31,13 +31,13 @@ IF(NOT HDF5_FOUND)
 	        PATH_SUFFIXES lib hdf5/lib
 	        DOC "PATH TO libz.dylib")
 
-   IF(HDF5_INCLUDE_DIRS AND HDF5_FORTRAN_LIBRARY AND ZLIB_LIBRARIES)
+   IF(HDF5_INCLUDE_DIR AND HDF5_FORTRAN_LIBRARY AND ZLIB_LIBRARIES)
       SET(HDF5_FOUND YES)
    ENDIF()
 
    SET(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY} ${ZLIB_LIBRARIES})
 
-   MESSAGE(STATUS "HDF5_INCLUDE_DIRS:${HDF5_INCLUDE_DIRS}")
+   MESSAGE(STATUS "HDF5_INCLUDE_DIR:${HDF5_INCLUDE_DIR}")
    MESSAGE(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}")
    MESSAGE(STATUS "ZLIB_LIBRARIES:${ZLIB_LIBRARIES}")
 
@@ -47,33 +47,29 @@ ENDIF()
 IF(HDF5_FOUND)
 
    MESSAGE(STATUS "HDF5 FOUND")
-   SET(HDF5_ENABLE_PARALLEL @HDF5_ENABLE_PARALLEL@)
-   SET(HDF5_BUILD_FORTRAN   @HDF5_BUILD_FORTRAN@)
-   SET(HDF5_ENABLE_F2003    @HDF5_ENABLE_F2003@)
-   SET(HDF5_BUILD_HL_LIB    @HDF5_BUILD_HL_LIB@)
-   
-   IF(HDF5_ENABLE_PARALLEL) 
+
+   set( HDF5_IS_PARALLEL FALSE )
+   if( HDF5_INCLUDE_DIR )
+       if( EXISTS "${HDF5_INCLUDE_DIR}/h5pubconf.h" )
+           file( STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" 
+               HDF5_HAVE_PARALLEL_DEFINE
+               REGEX "HAVE_PARALLEL 1" )
+           if( HDF5_HAVE_PARALLEL_DEFINE )
+               set( HDF5_IS_PARALLEL TRUE )
+           endif()
+       endif()
+    endif()
+   set( HDF5_IS_PARALLEL ${HDF5_IS_PARALLEL} CACHE BOOL
+       "HDF5 library compiled with parallel IO support" )
+   mark_as_advanced( HDF5_IS_PARALLEL )
+
+   IF(HDF5_IS_PARALLEL) 
       MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE(HDF5_ENABLE_PARALLEL)
+   ELSE(HDF5_IS_PARALLEL)
       MESSAGE(STATUS "HDF5 parallel not supported")
    ENDIF()
-   IF(HDF5_BUILD_FORTRAN)   
-      MESSAGE(STATUS "HDF5 was compiled with fortran on")
-   ELSE(HDF5_BUILD_FORTRAN)   
-      MESSAGE(STATUS "HDF5 was compiled with fortran off")
-   ENDIF()
-   IF(HDF5_BUILD_HL_LIB)    
-      MESSAGE(STATUS "HDF5 was compiled with high level on")
-   ELSE(HDF5_BUILD_HL_LIB)    
-      MESSAGE(STATUS "HDF5 was compiled with high level off")
-   ENDIF()
-   IF(HDF5_ENABLE_F2003)
-      MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard enabled")
-   ELSE(HDF5_ENABLE_F2003)
-      MESSAGE (STATUS "HDF5 FORTRAN 2003 Standard disabled")
-   ENDIF()
 
-   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+   INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
    MESSAGE(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}")
 
 ELSE()
