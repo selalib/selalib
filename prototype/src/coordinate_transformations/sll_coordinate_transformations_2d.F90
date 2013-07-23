@@ -48,6 +48,7 @@ module sll_module_coordinate_transformations_2d
   !                   [      partial eta1              partial eta2          ]
   !
 
+!> Analytic transformation
 #ifdef STDF95
   type  :: sll_coordinate_transformation_2d_analytic
      ! for pre-computing values. Not clear how advantageous this is.
@@ -55,7 +56,7 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_cell
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_n
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
+     character(len=64) :: label              
      logical           :: written! = .false.
      type(sll_logical_mesh_2d), pointer :: mesh
 #else
