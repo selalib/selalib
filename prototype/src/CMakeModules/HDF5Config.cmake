@@ -49,16 +49,15 @@ IF(HDF5_FOUND)
    MESSAGE(STATUS "HDF5 FOUND")
 
    set( HDF5_IS_PARALLEL FALSE )
-   if( HDF5_INCLUDE_DIR )
-       if( EXISTS "${HDF5_INCLUDE_DIR}/h5pubconf.h" )
-           file( STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" 
-               HDF5_HAVE_PARALLEL_DEFINE
-               REGEX "HAVE_PARALLEL 1" )
-           if( HDF5_HAVE_PARALLEL_DEFINE )
-               set( HDF5_IS_PARALLEL TRUE )
-           endif()
-       endif()
-    endif()
+   
+   if( EXISTS "${HDF5_INCLUDE_DIR}/H5pubconf.h" )
+      file( STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" 
+          HDF5_HAVE_PARALLEL_DEFINE
+          REGEX "HAVE_PARALLEL 1" )
+      if( HDF5_HAVE_PARALLEL_DEFINE )
+         set( HDF5_IS_PARALLEL TRUE )
+      endif()
+   endif()
    set( HDF5_IS_PARALLEL ${HDF5_IS_PARALLEL} CACHE BOOL
        "HDF5 library compiled with parallel IO support" )
    mark_as_advanced( HDF5_IS_PARALLEL )
