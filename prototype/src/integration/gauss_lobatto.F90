@@ -4,6 +4,7 @@ module gauss_lobatto_integration
   
 implicit none
 
+#ifndef STDF95
 abstract interface
    function function_1D(x)
       use sll_working_precision ! can't pass a header file because the
@@ -13,6 +14,7 @@ abstract interface
       sll_real64, intent(in) :: x
    end function function_1D
 end interface
+#endif
 
 interface gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
@@ -42,7 +44,11 @@ contains
   !> @return The value of the integral
   function gauss_lobatto_integral_1D( f, a, b, n )
     sll_real64                :: gauss_lobatto_integral_1D
+#ifdef STDF95
+    sll_real64, external      :: f
+#else
     procedure(function_1D)    :: f
+#endif
     sll_real64, intent(in)    :: a
     sll_real64, intent(in)    :: b
     sll_int32,  intent(in)    :: n 

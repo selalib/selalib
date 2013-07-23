@@ -51,6 +51,7 @@ call write_mtv_file( mesh, tau)
 
 end subroutine initialize_maxwell_2d_diga
 
+!need to be replace by a macro
 integer function som(i, j, k)
 
    integer :: i, j, k
@@ -95,28 +96,35 @@ nc_x = mesh%num_cells1
 nc_y = mesh%num_cells2
 
 open(10, file="mesh.mtv")
-write(10,*)"$DATA=CURVE3D"
-write(10,*)"%equalscale=T"
-write(10,*)"%toplabel='Elements number ' "
+write(10,"(a)")"$DATA=CURVE2D"
+write(10,"('% xmin=',f7.3,' xmax=', f7.3)") mesh%eta1_min, mesh%eta2_max
+write(10,"('% ymin=',f7.3,' ymax=', f7.3)") mesh%eta2_min, mesh%eta2_max
+write(10,"(a)")"% equalscale=T"
+write(10,"(a)")"% spline=1"
+write(10,"(a)")"% markertype=2"
+write(10,"(a)")"% pointID=F"
+write(10,"(a)")"% toplabel='Mapped Mesh' "
    
-do i=1,nc_x-1
-   do j=1,nc_y-1
-      write(10,*) tau%x1_at_node(i  ,j), tau%x2_at_node(i,j  ), 0.
-      write(10,*) tau%x1_at_node(i+1,j), tau%x2_at_node(i,j  ), 0.
-      write(10,*) tau%x1_at_node(i+1,j), tau%x2_at_node(i,j+1), 0.
-      write(10,*) tau%x1_at_node(i  ,j), tau%x2_at_node(i,j+1), 0.
-      write(10,*) tau%x1_at_node(i  ,j), tau%x2_at_node(i,j  ), 0.
-      write(10,*)
+do i=1,nc_x+1
+   do j=1,nc_y+1
+      write(10,*) tau%x1_at_node(i,j), tau%x2_at_node(i,j  )
    end do
+   write(10,*)
+end do
+do j=1,nc_y+1
+   do i=1,nc_x+1
+      write(10,*) tau%x1_at_node(i,j), tau%x2_at_node(i,j  )
+   end do
+   write(10,*)
 end do
 
 !Numeros des elements
 iel = 0
-do i=1,nc_x-1
-   do j=1,nc_y-1
+do i=1,nc_x
+   do j=1,nc_y
       iel = iel+1
-      x1 = 0.5*(tau%x1_at_node(i,j)+tau%x1_at_node(i+1,j))
-      y1 = 0.5*(tau%x2_at_node(i,j)+tau%x2_at_node(i,j+1))
+      x1 = 0.5*(tau%x1_at_node(i,j)+tau%x1_at_node(i+1,j+1))
+      y1 = 0.5*(tau%x2_at_node(i+1,j)+tau%x2_at_node(i,j+1))
       write(10,"(a)"   ,  advance="no")"@text x1="
       write(10,"(g15.3)", advance="no") x1
       write(10,"(a)"   ,  advance="no")" y1="
@@ -127,19 +135,19 @@ do i=1,nc_x-1
    end do
 end do
 
-!Numeros des noeud
-do i=1,nc_x-1
-   do j=1,nc_y-1
-      isom = isom+1
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") tau%x1_at_node(i,j)
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") tau%x2_at_node(i,j)
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-      write(10,"(i4)"  ,  advance="no") isom
-      write(10,"(a)")"'"
-   end do
-end do
+!!Numeros des noeud
+!do i=1,nc_x-1
+!   do j=1,nc_y-1
+!      isom = isom+1
+!      write(10,"(a)"   ,  advance="no")"@text x1="
+!      write(10,"(g15.3)", advance="no") tau%x1_at_node(i,j)
+!      write(10,"(a)"   ,  advance="no")" y1="
+!      write(10,"(g15.3)", advance="no") tau%x2_at_node(i,j)
+!      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
+!      write(10,"(i4)"  ,  advance="no") isom
+!      write(10,"(a)")"'"
+!   end do
+!end do
    
 write(10,*)"$END"
 close(10)
