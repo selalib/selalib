@@ -170,10 +170,15 @@ c=======================================================================
       implicit real(8) (a-h,o-z)
       dimension x(n),y(n)
       data zero/0.d0/
-c-----------------------------------------------------------------------
+c234567------------------------------------------------------------------
       scal=zero
       do i=1,n
-      scal=scal+x(i)*y(i)
+!      write(*,*) 'scal',n,i,x(i)*y(i)
+!!!!! horrible !!!!!
+c$$$         if (abs(x(i)).gt.1.d-20.and.abs(y(i)).gt.1.d-20)
+c$$$     &    scal=scal+x(i)*y(i) 
+         scal=scal+x(i)*y(i) 
       enddo
+!      write(*,*) 'finscal'
       return
       end
