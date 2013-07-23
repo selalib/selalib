@@ -93,9 +93,9 @@ tau => new_coordinate_transformation_2d_analytic( &
        sinprod_jac22 )
 
 
-call initialize(maxwell_TE, mesh, tau, TE_POLARIZATION)
+call initialize(maxwell_TE, tau, TE_POLARIZATION)
 
-call initialize(maxwell_TM, mesh, tau, TM_POLARIZATION)
+call initialize(maxwell_TM, tau, TM_POLARIZATION)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 nstep = 100

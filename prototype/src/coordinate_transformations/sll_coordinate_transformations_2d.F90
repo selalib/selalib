@@ -731,9 +731,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
        else if (local_format == SLL_IO_MTV) then
 
-          
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+
+          do i1=1, nc_eta1+1
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_plotmtv_write( nc_eta1+1,nc_eta2+1, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
 
        else
           print*, 'Not recognized format to write this mesh'
@@ -1247,6 +1259,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_MTV) then
+
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_plotmtv_write( npts_eta1,npts_eta2, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
 
        else
           print*, 'Not recognized format to write this mesh'
