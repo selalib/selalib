@@ -6,6 +6,7 @@ module sll_maxwell_2d_diga
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
+#include "sll_file_io.h"
 
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
@@ -30,24 +31,21 @@ sll_int32, private :: nx, ny
 sll_int32, private :: i, j, k
 sll_int32, private :: error
 
-private :: write_mtv_file
-
 contains
 
 !> Initialize Poisson solver object using finite elements method.
 !> Indices are shifted from [1:n+1] to [0:n] only inside this 
 !> subroutine
-subroutine initialize_maxwell_2d_diga( this, mesh, tau, polarization)
+subroutine initialize_maxwell_2d_diga( this, tau, polarization)
 type( maxwell_2d_diga ) :: this !< solver data object
-type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 sll_int32 :: polarization
 
-this%mesh => mesh
 this%tau  => tau
+this%mesh => tau%mesh
 this%polarization = polarization
 
-call write_mtv_file( mesh, tau)
+call tau%write_to_file(SLL_IO_MTV)
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -83,75 +81,5 @@ sll_real64, dimension(:,:), optional :: jy   !< y current field
 sll_real64, dimension(:,:), optional :: rho  !< charge density
 
 end subroutine solve_maxwell_2d_diga
-
-subroutine write_mtv_file( mesh, tau )
-sll_int32 :: nc_x
-sll_int32 :: nc_y
-type(sll_logical_mesh_2d) :: mesh
-type(sll_coordinate_transformation_2d_analytic) :: tau
-integer :: iel, isom
-real(8) :: x1, y1
-
-nc_x = mesh%num_cells1
-nc_y = mesh%num_cells2
-
-open(10, file="mesh.mtv")
-write(10,"(a)")"$DATA=CURVE2D"
-write(10,"('% xmin=',f7.3,' xmax=', f7.3)") mesh%eta1_min, mesh%eta2_max
-write(10,"('% ymin=',f7.3,' ymax=', f7.3)") mesh%eta2_min, mesh%eta2_max
-write(10,"(a)")"% equalscale=T"
-write(10,"(a)")"% spline=1"
-write(10,"(a)")"% markertype=2"
-write(10,"(a)")"% pointID=F"
-write(10,"(a)")"% toplabel='Mapped Mesh' "
-   
-do i=1,nc_x+1
-   do j=1,nc_y+1
-      write(10,*) tau%x1_at_node(i,j), tau%x2_at_node(i,j  )
-   end do
-   write(10,*)
-end do
-do j=1,nc_y+1
-   do i=1,nc_x+1
-      write(10,*) tau%x1_at_node(i,j), tau%x2_at_node(i,j  )
-   end do
-   write(10,*)
-end do
-
-!Numeros des elements
-iel = 0
-do i=1,nc_x
-   do j=1,nc_y
-      iel = iel+1
-      x1 = 0.5*(tau%x1_at_node(i,j)+tau%x1_at_node(i+1,j+1))
-      y1 = 0.5*(tau%x2_at_node(i+1,j)+tau%x2_at_node(i,j+1))
-      write(10,"(a)"   ,  advance="no")"@text x1="
-      write(10,"(g15.3)", advance="no") x1
-      write(10,"(a)"   ,  advance="no")" y1="
-      write(10,"(g15.3)", advance="no") y1
-      write(10,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
-      write(10,"(i4)"  ,  advance="no") iel
-      write(10,"(a)")"'"
-   end do
-end do
-
-!!Numeros des noeud
-!do i=1,nc_x-1
-!   do j=1,nc_y-1
-!      isom = isom+1
-!      write(10,"(a)"   ,  advance="no")"@text x1="
-!      write(10,"(g15.3)", advance="no") tau%x1_at_node(i,j)
-!      write(10,"(a)"   ,  advance="no")" y1="
-!      write(10,"(g15.3)", advance="no") tau%x2_at_node(i,j)
-!      write(10,"(a)"   ,  advance="no")" z1=0. lc=5 ll='"
-!      write(10,"(i4)"  ,  advance="no") isom
-!      write(10,"(a)")"'"
-!   end do
-!end do
-   
-write(10,*)"$END"
-close(10)
-
-end subroutine write_mtv_file
 
 end module sll_maxwell_2d_diga
