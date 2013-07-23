@@ -72,6 +72,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
     ! volumes of the cells and surfaces of the faces
      sll_real64,dimension(:,:),allocatable :: volume
      sll_real64,dimension(:,:),allocatable :: surfx1,surfx2
+     sll_real64, dimension(:),pointer  :: p
      sll_real64, dimension(:),pointer  :: M_diag,M_low,M_sup
      sll_real64, dimension(:),pointer  :: Av1_diag,Av1_low,Av1_sup
      sll_real64, dimension(:),pointer  :: Av2_diag,Av2_low,Av2_sup
@@ -438,6 +439,8 @@ contains
          abs(sim%mesh2dv%eta2_min))
 !!$    sim%dt=0.1
     write(*,*) 'dt = ', sim%dt
+    write (*,*) 'Vxmax = ', sim%mesh2dx%eta1_max
+    !stop
     itime=1
     sim%Enorm = 0.0_f64
     do while(t.lt.sim%tmax)
@@ -451,24 +454,24 @@ contains
 !!$             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
 !!$          enddo
 !!$       enddo
+       !c'est faut mais juste esaayer d'abord
        !try
-       do i=1,loc_sz_x1
-          do j=1,loc_sz_x2
-             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))* &
-                  sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2/sim%degree
-          enddo
-       enddo
-       !write(*,*) 'here1'
-       ! solve the poisson equation
-       call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
-            sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
-       !write(*,*) 'here2'
+!!$       do i=1,loc_sz_x1
+!!$          do j=1,loc_sz_x2
+!!$             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j)*sim%p(:))
+!!$          enddo
+!!$       enddo
+!!$       !write(*,*) 'here1'
+!!$       ! solve the poisson equation
+!!$       call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
+!!$            sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+!!$       !write(*,*) 'here2'
 
        t=t+sim%dt
        itime=itime+1
-       call RK2(sim)
+       !call RK2(sim)
        !write(*,*) 'here3'
-       !call euler(sim)
+       call euler(sim)
 !!$       !n Try to plot the log of energy
 !!$       do ic=1,loc_sz_x1
 !!$          do jc=1,loc_sz_x2
@@ -531,11 +534,11 @@ contains
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
-
-    do i=1,loc_sz_v1
-       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2x1(i,1,:,1)))
-    end do
-    
+    write (*,*) 'loc_sz_x1', loc_sz_x1
+!!$    do i=1,loc_sz_v1
+!!$       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2x1(i,1,:,1)))
+!!$    end do
+!!$    
     allocate (plotf2d(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
@@ -568,16 +571,17 @@ contains
 !!$    write(*,*) 'plotf2d',plotf2d
 !!$    stop
 
-    allocate (plotphi2d(loc_sz_x1,loc_sz_x2))
-
-    do i = 1, loc_sz_x1
-       do j = 1, loc_sz_x2
-          plotphi2d(i,j) = sim%phi_x1(i,j)
-       end do
-    end do
+!!$    allocate (plotphi2d(loc_sz_x1,loc_sz_x2))
+!!$
+!!$    do i = 1, loc_sz_x1
+!!$       do j = 1, loc_sz_x2
+!!$          plotphi2d(i,j) = sim%phi_x1(i,j)
+!!$       end do
+!!$    end do
 
     global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
-   
+    write (*,*) 'Vxmax = ', sim%mesh2dx%eta1_max
+    write (*,*) 'Vxmin = ', sim%mesh2dx%eta1_min
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
          sim%mesh2dx%delta_eta1, &
@@ -614,7 +618,7 @@ contains
        allocate (f_v_exact(loc_sz_x1,loc_sz_v1))
        do i = 1, loc_sz_x1
           do j = 1, loc_sz_v1
-             f_v_exact(i,j) = exp(-4*(-(sim%mesh2dx%eta1_min+(i-1)*sim%mesh2dx%delta_eta1)*t &
+             f_v_exact(i,j) = exp(-4*(-t &
                   +(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree))**2)
           end do
        end do
@@ -631,15 +635,15 @@ contains
 
 
 
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
-         sim%mesh2dx%delta_eta1, &
-         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
-         sim%mesh2dx%delta_eta2, &
-         plotphi2d, &
-         "plotphi2d", &
-         0, &
-         ierr)
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+!!$         sim%mesh2dx%delta_eta1, &
+!!$         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+!!$         sim%mesh2dx%delta_eta2, &
+!!$         plotphi2d, &
+!!$         "plotphi2d", &
+!!$         0, &
+!!$         ierr)
     write(*,*) 'coucou3'
     if (sim%test .eq. 1) then
        write(*,*) 'we r using the Landau damping test case'
@@ -664,7 +668,8 @@ contains
     sll_real64 :: det
     sll_real64 :: phi1,phi2,dphi1(2),dphi2(2),dphi1ref(2),dphi2ref(2)
     sll_real64,dimension(2,2) :: jacob,invjacob
-    sll_real64,dimension(:,:),allocatable :: lag,dlag,ploc
+    sll_real64,dimension(:,:),allocatable :: lag,dlag
+    sll_real64,dimension(:),allocatable :: ploc
     sll_real64,dimension(:,:),allocatable :: mloc,av1loc,av2loc,bv1loc,bv2loc
     sll_real64,dimension(:),allocatable :: gauss,weight
     sll_real64 :: void  ! only for a valid address
@@ -770,7 +775,8 @@ contains
     SLL_ALLOCATE(sim%Bv2_low(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Bv2_sup(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Bv2_diag(sim%np_v1*sim%np_v2),ierr)
-
+    SLL_ALLOCATE(sim%p(sim%np_v1*sim%np_v2),ierr)
+    sim%p=0
     sim%M_low=0
     sim%M_sup=0
     sim%M_diag=0
@@ -801,14 +807,13 @@ contains
     SLL_ALLOCATE(weight(sim%degree+1),ierr)
     SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
     SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
-    SLL_ALLOCATE(ploc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
+    SLL_ALLOCATE(ploc((sim%degree+1)**2),ierr)
     SLL_ALLOCATE(mloc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(av1loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(av2loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(bv1loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     SLL_ALLOCATE(bv2loc((sim%degree+1)**2,(sim%degree+1)**2),ierr)
     call lag_gauss(sim%degree,gauss,weight,lag,dlag)
-
 
     ! matrix assembly
 
@@ -843,10 +848,14 @@ contains
                       do ib2=1,sim%degree+1
                          do jb2=1,sim%degree+1
                             phi1=lag(ib1,iploc+1)*lag(jb1,jploc+1)
+!!$                            write(*,*) 'phi1 = ', phi1
+!!$                            stop
                             phi2=lag(ib2,iploc+1)*lag(jb2,jploc+1)
 !!$                            write(*,*) 'phi=',xref,yref,'i,j',(jb1-1)*(sim%degree+1)+ib1, &
 !!$                                 (jb2-1)*(sim%degree+1)+ib2,phi1,phi2
                             dphi1ref(1)=dlag(ib1,iploc+1)*lag(jb1,jploc+1)
+                           ! write(*,*) 'dphi1ref(1)', dphi1ref(1)
+                            !write(*,*) 'phi1(1) = ', phi1
                             dphi1ref(2)=lag(ib1,iploc+1)*dlag(jb1,jploc+1)
                             dphi2ref(1)=dlag(ib2,iploc+1)*lag(jb2,jploc+1)
                             dphi2ref(2)=lag(ib2,iploc+1)*dlag(jb2,jploc+1)
@@ -854,6 +863,8 @@ contains
                             dphi1(2)=dphi1ref(1)*invjacob(1,2)+dphi1ref(2)*invjacob(2,2)
                             dphi2(1)=dphi2ref(1)*invjacob(1,1)+dphi2ref(2)*invjacob(2,1)
                             dphi2(2)=dphi2ref(1)*invjacob(1,2)+dphi2ref(2)*invjacob(2,2)
+!!$                            ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
+!!$                                phi1*det*weight(iploc+1)*weight(jploc+1)
                             mloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  mloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                 phi1*phi2*det*weight(iploc+1)*weight(jploc+1)
@@ -863,27 +874,41 @@ contains
                                  !1.0_f64*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
                             av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                                 sim%tv%x2(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
+                                 sim%tv%x2(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1)
                             bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                                dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1)  
+                                 dphi1ref(1)*phi2*det*weight(iploc+1)*weight(jploc+1)  
+!!$                            bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
+!!$                                 bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
+!!$                                dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1) 
                             bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                 dphi1(2)*phi2*det*weight(iploc+1)*weight(jploc+1)  
                             !write(*,*) 'ib1,jb1,ib2,jb2',ib1,jb1,ib2,jb2,(jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2            
                          end do
                       end do
+                      ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
+                           phi1*det*weight(iploc+1)*weight(jploc+1)
                    end do
                 end do
-
+!!$          do ii=1,(sim%degree+1)**2
+!!$             write(*,*) 'ploc=',ploc(ii)
+!!$          end do
+          do ii=1,(sim%degree+1)**2
+             write(*,*) 'bv1loc=',bv1loc(ii,:)
+          end do
              end do
           end do
           !write(*,*)
 
 !!$          !av2loc = 0
 !!$          do ii=1,(sim%degree+1)**2
-!!$             write(*,*) 'av1loc=',av1loc(ii,:)
+!!$             write(*,*) 'ploc=',ploc(ii)
 !!$          end do
+          do ii=1,(sim%degree+1)**2
+             i=sim%connec(ii,jc*sim%nc_v1+ic+1)
+             sim%p(i)=sim%p(i)+ploc(ii)
+          end do
             
           do ii=1,(sim%degree+1)**2
              do jj=1,(sim%degree+1)**2
@@ -922,25 +947,37 @@ contains
     end do
     write(*,*) 'dimension of matrix : ', sim%np_v1*sim%np_v2
     write(*,*) 'nsky = ', sim%nsky
-    !stop
+!!$    write(*,*) 'matrix p : ', sim%p
+!!$    stop
 
 !!$    !write(*,*) 'M diag', sim%Av2_diag
 !!$    write(*,*) 'M low', sim%M_low
-    write(*,*) 'max of M sup', maxval(abs(sim%M_sup))
-    write(*,*) 'max of M low', maxval(abs(sim%M_low))
-    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
+!!$    sim%Bv1_low=sim%Bv1_low/10
+!!$    sim%Bv1_diag=sim%Bv1_diag/10
+!!$    sim%Bv1_sup=sim%Bv1_sup/10
+    write(*,*) 'Bv1_diag', sim%Bv1_diag
+    write(*,*) 'Bv1_sup', sim%Bv1_sup
+    write(*,*) 'Bv1_low', sim%Bv1_low
+    !stop
+!!$    write(*,*) 'max of M low', maxval(abs(sim%M_low))
+!!$    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
     ! LU decomposition of M
     ifac=1  ! we compute the LU decomposition
     isol=0  ! we do not solve the linear system
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
 
-    !nsym=0
+    !stop
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
          sim%mkld,void,sim%np_v1*sim%np_v2,mp,ifac,isol,nsym,void,ierr,&
          sim%nsky)
 
-    write(*,*) 'fin LU'
+!!$    do i=1,sim%np_v1*sim%np_v2
+!!$       write(*,*) sim%M_diag(i)
+!!$    end do
+!!$
+!!$    write(*,*) 'fin LU'
+!!$    stop
     
 
 
@@ -1211,18 +1248,30 @@ contains
        lag(1,1) = 1_f64
        dlag(1,1) = 0_f64
     case(1)
-       gauss(1) = -0.5773502691896257645091487805019574556476D0
-       gauss(2) = 0.5773502691896257645091487805019574556476D0
-       weight(1) = 0.1000000000000000000000000000000000000000D1
-       weight(2) = 0.1000000000000000000000000000000000000000D1
-       lag(1,1) = 0.7886751345948128822545743902509787278238D0
-       lag(1,2) = 0.2113248654051871177454256097490212721762D0
-       lag(2,1) = 0.2113248654051871177454256097490212721762D0
-       lag(2,2) = 0.7886751345948128822545743902509787278238D0
-       dlag(1,1) = -0.5000000000000000000000000000000000000000D0
-       dlag(1,2) = -0.5000000000000000000000000000000000000000D0
-       dlag(2,1) = 0.5000000000000000000000000000000000000000D0
-       dlag(2,2) = 0.5000000000000000000000000000000000000000D0
+!!$       gauss(1) = -0.5773502691896257645091487805019574556476D0
+!!$       gauss(2) = 0.5773502691896257645091487805019574556476D0
+!!$       weight(1) = 0.1000000000000000000000000000000000000000D1
+!!$       weight(2) = 0.1000000000000000000000000000000000000000D1
+!!$       lag(1,1) = 0.7886751345948128822545743902509787278238D0
+!!$       lag(1,2) = 0.2113248654051871177454256097490212721762D0
+!!$       lag(2,1) = 0.2113248654051871177454256097490212721762D0
+!!$       lag(2,2) = 0.7886751345948128822545743902509787278238D0
+!!$       dlag(1,1) = -0.5000000000000000000000000000000000000000D0
+!!$       dlag(1,2) = -0.5000000000000000000000000000000000000000D0
+!!$       dlag(2,1) = 0.5000000000000000000000000000000000000000D0
+!!$       dlag(2,2) = 0.5000000000000000000000000000000000000000D0
+      gauss(1) = -0.5773502691896257645091487805019574556476D0
+      gauss(2) = 0.5773502691896257645091487805019574556476D0
+      weight(1) = 0.1000000000000000000000000000000000000000D1
+      weight(2) = 0.1000000000000000000000000000000000000000D1
+      lag(1,1) = 0.1577350269189625764509148780501957455648D1
+      lag(1,2) = 0.4226497308103742354908512194980425443524D0
+      lag(2,1) = -0.5773502691896257645091487805019574556476D0
+      lag(2,2) = 0.5773502691896257645091487805019574556476D0
+      dlag(1,1) = -0.1D1
+      dlag(1,2) = -0.1D1
+      dlag(2,1) = 0.1D1
+      dlag(2,2) = 0.1D1
  
     case(2)
        gauss(1) = -0.7745966692414833770358530799564799221666D0
@@ -1368,13 +1417,18 @@ contains
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: w
     !sll_real64,intent(in)  :: Ex,Ey
     sll_real64  :: Ex,Ey
-    sll_real64,dimension(:,:),intent(out) :: source
-
-    sll_real64,dimension(:,:),allocatable :: source1,source2
+    !sll_real64,dimension(:,:),intent(out) :: source
+    sll_real64,dimension(sim%np_v1*sim%np_v2),intent(out) :: source
+    sll_real64, dimension(:),allocatable  :: Bv1_diag_corr,Bv2_diag_corr
+    !sll_real64,dimension(:,:),allocatable :: source1,source2
+    sll_real64,dimension(sim%np_v1*sim%np_v2) ::  source1,source2
     sll_int32 :: ierr,i
 
-    SLL_ALLOCATE(source1(sim%np_v1,sim%np_v2),ierr)
-    SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
+!!$    SLL_ALLOCATE(source1(sim%np_v1,sim%np_v2),ierr)
+!!$    SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
+    SLL_ALLOCATE(Bv1_diag_corr(sim%np_v1*sim%np_v2),ierr)
+    SLL_ALLOCATE(Bv2_diag_corr(sim%np_v1*sim%np_v2),ierr)
+
     sim%test=sim%params(8)
     !write(*,*) 'test =', sim%test
     !correction the matrices B
@@ -1382,24 +1436,25 @@ contains
        Ex=1.0_f64
        Ey=0.0_f64
     endif
-
+    Bv1_diag_corr=sim%Bv1_diag
+    Bv2_diag_corr=sim%Bv2_diag
     do i=1,sim%np_v1*sim%np_v2
        if (Ex.gt.0) then
           if(sim%Bv1_diag(i).lt.0) then
-             sim%Bv1_diag(i)=0
+             Bv1_diag_corr(i)=0
           end if
        else
           if(sim%Bv1_diag(i).gt.0) then
-             sim%Bv1_diag(i)=0
+             Bv1_diag_corr(i)=0
           end if
        endif
        if (Ey.gt.0) then
           if(sim%Bv2_diag(i).lt.0) then
-             sim%Bv2_diag(i)=0
+             Bv2_diag_corr(i)=0
           end if
        else
           if(sim%Bv2_diag(i).gt.0) then
-             sim%Bv2_diag(i)=0
+             Bv2_diag_corr(i)=0
           end if
        endif
     enddo
@@ -1407,11 +1462,30 @@ contains
     source1=0
     source2=0
     
-    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
+!!$    call MULKU(sim%Bv1_sup,Bv1_diag_corr,sim%Bv1_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+!!$    call MULKU(sim%Bv2_sup,Bv2_diag_corr,sim%Bv2_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+!!$    source=Ex*source1+Ey*source2
+!!$    sim%Bv1_diag=1_f64
+!!$    sim%Bv2_diag=0
+!!$    !write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU1'
+!!$    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+!!$    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+    call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+    !write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU2'
     call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
     source=Ex*source1+Ey*source2
+!    write(*,*) 'source = ',  source
+!    stop
+!!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
+!!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
+!!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
+!!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
     !use this when we want to test the transport equation 
     if(sim%test==0) then
        source=0.0_f64
@@ -1425,8 +1499,8 @@ contains
 !!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source,sim%nsky)
 
 
-    SLL_DEALLOCATE_ARRAY(source1,ierr)
-    SLL_DEALLOCATE_ARRAY(source2,ierr)
+!!$    SLL_DEALLOCATE_ARRAY(source1,ierr)
+!!$    SLL_DEALLOCATE_ARRAY(source2,ierr)
 
   end subroutine sourcenum
 
@@ -1451,6 +1525,7 @@ contains
     !c'est ici le bug
     !stop
     !prinf *, 
+    !write(*,*) 'ENTRER DANS FLUXNUM'
     call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
          sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
     call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
@@ -1514,6 +1589,7 @@ contains
     !write(*,*) 'sim%dtfn_v1v2x1',maxval(abs(sim%dtfn_v1v2x1(1,1,:,:)))
 
     !compute the fluxes in the x2 direction
+    !write(*,*) 'ENTRER DANS dtf'
     vn(1)=0 ! temporaire !!!!
     vn(2)=1*sim%surfx2(1,1)
     do ic=1,loc_sz_x1
@@ -1533,14 +1609,14 @@ contains
  
        end do
     end do
-
+     
 !!$    write(*,*) 'sim%dtfn_v1v2x1'
 !!$    do jc=0,loc_sz_x2+1
 !!$       write(*,*) jc, sim%dtfn_v1v2x1(1,1,:,jc)
 !!$    end do
- 
+!!$ 
 
-
+    !write(*,*) 'ici3'
     ! source terms
     do ic=1,loc_sz_x1
        do jc=1,loc_sz_x2
@@ -1551,25 +1627,42 @@ contains
           elseif(ic.ge.loc_sz_x1)then
              icR=1
           end if
-          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
-
+          !write(*,*) 'ici4'
+          Ex=1_f64
+          Ey=0_f64
+!!$          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+!!$          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+          !write(*,*) 'ici5'
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
+          !write(*,*) 'ici6'
+!!$          write(*,*) 'source = ', source
+!!$          write(*,*) 'coucou'
+!          stop
 
           temp=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
+!!$          sim%dtfn_v1v2x1(:,:,ic,jc)=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
+!!$          write(*,*) temp
+!!$          stop
           call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
                sim%mkld, &
                sim%dtfn_v1v2x1(:,:,ic,jc),&
                sim%np_v1*sim%np_v2, &
                mp,ifac,isol,nsym,void,ierr,&
                sim%nsky)
+
+
+          
           !if we call the sol here, it means that we have to call many times
           !so if we call the sol out of the loop so we have to call it only 
           !one time and we have juste modify the temp=>vector,no?
        end do
     end do
-
+          !write(*,*) 'sim%dtfn_v1v2x1'
+!!$          do jc=0,loc_sz_x2+1
+!!$             write(*,*) jc, sim%dtfn_v1v2x1(1,1,:,jc)
+!!$          end do
+!!$          stop
 
     SLL_DEALLOCATE_ARRAY(flux,ierr)
     SLL_DEALLOCATE_ARRAY(temp,ierr)
@@ -1580,12 +1673,34 @@ contains
 
   subroutine euler(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
- 
+    sll_int32 :: jc
+    sll_int32  :: loc_sz_x2,loc_sz_x1
+    call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
     ! mpi communications
+    !write(*,*) 'sim%dtfn_v1v2x1= ', sim%dtfn_v1v2x1
+!!$    do jc=0,loc_sz_x2+1
+!!$       write(*,*) 'avant',jc, sim%fn_v1v2x1(1,1,:,jc)
+!!$    end do
     call mpi_comm(sim)
+!!$    do jc=0,loc_sz_x2+1
+!!$       write(*,*) 'apres',jc, sim%fn_v1v2x1(1,1,:,jc)
+!!$    end do
+    !write(*,*) 'ici1'
     call dtf(sim)
+    !write(*,*) 'ici2'
+!!$    do jc=0,loc_sz_x2+1
+!!$       write(*,*) 'apres',jc, sim%dtfn_v1v2x1(1,1,:,jc)
+!!$    end do
+    !stop
+    !write(*,*) 'fist call dtf: sim%dtfn_v1v2x1= ', sim%dtfn_v1v2x1
+!!$    sim%fn_v1v2x1 = sim%fn_v1v2x1 &
+!!$         + sim%dt*sim%dtfn_v1v2x1/sim%volume(1,1)
     sim%fn_v1v2x1 = sim%fn_v1v2x1 &
-         + sim%dt*sim%dtfn_v1v2x1/sim%volume(1,1)
+         +sim%dtfn_v1v2x1/sim%volume(1,1)*sim%dt
+!!$    do jc=0,loc_sz_x2+1
+!!$       write(*,*) 'apres',jc, sim%fn_v1v2x1(1,1,:,jc)
+!!$    end do
+    !write(*,*) 'second call dtf: sim%dtfn_v1v2x1= ', sim%dtfn_v1v2x1
   end subroutine euler
 
   subroutine RK2(sim)
@@ -1596,6 +1711,8 @@ contains
     sim%fnp1_v1v2x1 = sim%fn_v1v2x1
     sim%fn_v1v2x1 = sim%fn_v1v2x1 &
          + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
+!!$    write(*,*) sim%dtfn_v1v2x1
+!!$    stop
     call mpi_comm(sim)
     call dtf(sim)
     sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
