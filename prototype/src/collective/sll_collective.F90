@@ -129,13 +129,8 @@ module sll_collective
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-#ifdef INTEL
-  implicit none
-  include 'mpif.h'
-#else
   use mpi
   implicit none
-#endif
   ! This is the only place in the prototype that should have to include
   ! the mpi header file.
   !include 'mpif.h'
@@ -202,7 +197,8 @@ module sll_collective
   !> @brief Gathers data from all tasks and deliver the combined
   !!        data to all tasks 
   interface sll_collective_allgatherv
-     module procedure sll_collective_allgatherv_real
+     module procedure sll_collective_allgatherv_real32, &
+          sll_collective_allgatherv_real64
   end interface
 
   !> @brief Gathers into specified locations from all processes in a group.
@@ -577,12 +573,17 @@ contains !************************** Operations **************************
          'sll_collective_allgather_int(): MPI_BARRIER()' )
   end subroutine
 
-  subroutine sll_collective_allgather_real64( col, send_buf, send_sz, &
-       recv_buf, recv_sz )
+  subroutine sll_collective_allgather_real64( &
+    col, &
+    send_buf, &
+    send_sz, &
+    recv_buf, &
+    recv_sz )
+
     type(sll_collective_t), pointer         :: col
-    sll_real64, dimension(:), intent(in)    :: send_buf ! what would change...
+    sll_real64, dimension(:), intent(in)    :: send_buf 
     sll_int32, intent(in)                   :: send_sz
-    sll_real64, dimension(:), intent(inout) :: recv_buf ! would also change
+    sll_real64, dimension(:), intent(out)   :: recv_buf ! would change
     sll_int32, dimension(:), intent(in)     :: recv_sz  
     sll_int32                               :: ierr
     ! FIXME: Argument checking
@@ -598,7 +599,7 @@ contains !************************** Operations **************************
     call MPI_BARRIER( col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_allgather_int(): MPI_BARRIER()' )
-  end subroutine
+  end subroutine sll_collective_allgather_real64
 
 
   !> @brief Gathers real data from all tasks and 
@@ -610,7 +611,7 @@ contains !************************** Operations **************************
   !> @param[in] rec_cnt integer array containing the number of elements 
   !!            that are to be received from each process
   !> @param[out] rec_buf address of receive buffer
-  subroutine sll_collective_allgatherv_real( col, send_buf, send_cnt, &
+  subroutine sll_collective_allgatherv_real32( col, send_buf, send_cnt, &
        rec_cnt, displs, rec_buf )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
@@ -625,8 +626,41 @@ contains !************************** Operations **************************
     call MPI_ALLGATHERV( send_buf, send_cnt, MPI_REAL, rec_buf,rec_cnt,&
          displs, MPI_REAL, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_allgatherv_real(): MPI_ALLGATHERV()' )
-  end subroutine sll_collective_allgatherv_real
+         'sll_collective_allgatherv_real32(): MPI_ALLGATHERV()' )
+  end subroutine sll_collective_allgatherv_real32
+
+
+  subroutine sll_collective_allgatherv_real64( &
+    col, &
+    send_buf, &
+    send_cnt, &
+    rec_cnt, &
+    displs, &
+    rec_buf )
+
+    type(sll_collective_t), pointer       :: col
+    sll_real64, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: send_cnt
+    sll_int32, dimension(:), intent(in)   :: rec_cnt
+    sll_int32, dimension(:), intent(in)   :: displs
+    sll_real64, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: argument checking
+    SLL_ASSERT(col%size .eq. SIZE(displs))
+    SLL_ASSERT(col%size .eq. SIZE(rec_cnt))
+    call MPI_ALLGATHERV( &
+         send_buf, &
+         send_cnt, &
+         MPI_DOUBLE_PRECISION, &
+         rec_buf, &
+         rec_cnt, &
+         displs, &
+         MPI_DOUBLE_PRECISION, &
+         col%comm, &
+         ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_allgatherv_real64(): MPI_ALLGATHERV()' )
+  end subroutine sll_collective_allgatherv_real64
 
   !> @brief Sends data from one process to all other processes
   !>        in a communicator 

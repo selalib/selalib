@@ -433,8 +433,6 @@ contains
     delta3 = sim%mesh2d_v%delta_eta1
     delta4 = sim%mesh2d_v%delta_eta2
 
-
-
     call compute_charge_density( sim%mesh2d_x,           &
                                  sim%mesh2d_v,           &
                                  size(sim%f_x3x4,1),     &

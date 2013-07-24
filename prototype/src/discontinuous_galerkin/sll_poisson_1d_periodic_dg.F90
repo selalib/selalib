@@ -25,7 +25,7 @@
 !!          have the need for higher dimension (and so have time to write it).
 !!         
 !------------------------------------------------------------------------------
-module sll_poisson4dg
+module sll_poisson4dg_1d_periodic_dg
 #include "sll_working_precision.h"
 
   use sll_gausslobatto
@@ -363,4 +363,4 @@ contains
 
   end subroutine delete_poisson_1d_periodic_dg
 
-end module sll_poisson4dg
+end module sll_poisson4dg_1d_periodic_dg
