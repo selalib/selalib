@@ -152,58 +152,63 @@ end subroutine solve_maxwell_2d_diga
 !>          der(i,j)=int(Phi_{i,j}.Phi_{k,l})_[-1;1]²
 !>                  =w_i.Phi'_j(x_i)
 
-function mass_matrix(degree, x, w)
+
+#define L(k,l,eta)                     \
+do l=1,k-1;                            \
+   prod=prod*(eta-x(l))/(x(k)-x(l));   \
+end do;                                \
+do l=k+1,degree+1;                     \
+   prod=prod*(eta-x(l))/(x(k)-x(l));   \
+end do                                 \
+
+function mass_matrix(degree, x, w) result(mdiag)
 
  sll_int32  :: degree
  sll_real64 :: x(degree+1)
  sll_real64 :: w(degree+1)
  sll_real64 :: prod
+ sll_real64, dimension(degree+1,degree+1) :: mdiag
+ 
 
- nb_pts=degree+1
+ mdiag=0.0_f64
 
- der=0.0d0
-
-    !loop on all element of D
-    !loop on columns
-    do j=1,nb_pts
-       !loop on rows
-       do i=1,nb_pts
-          !loop on all the derivatives
-          !the code is writen so there is no if
-          do l=1,j-1
-             prod=1.0d0
-             do m=1,l-1!min(j,l)-1
-                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
-             end do
-             do m=l+1,j-1!min(j,l)+1,max(j,l)-1
-                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
-             end do
-             do m=j+1,nb_pts!max(j,l)+1,nb_pts
-                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
-             end do
-             prod=prod/(gl_obj%node(j)-gl_obj%node(l))
-             gl_obj%der(i,j)=gl_obj%der(i,j)+prod
+ do j=1,degree+1
+    do i=1,degree+1
+       do l=1,j-1
+          prod=1.0_f64
+          do k=1,l-1
+             prod=prod*(x(i)-x(k))/(x(j)-x(k))
           end do
-          do l=j+1,nb_pts
-             prod=1.0d0
-             do m=1,j-1!min(j,l)-1
-                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
-             end do
-             do m=j+1,l-1!min(j,l)+1,max(j,l)-1
-                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
-             end do
-             do m=l+1,nb_pts!max(j,l)+1,nb_pts
-                prod=prod*(gl_obj%node(i)-gl_obj%node(m))/(gl_obj%node(j)-gl_obj%node(m))
-             end do
-             prod=prod/(gl_obj%node(j)-gl_obj%node(l))
-             gl_obj%der(i,j)=gl_obj%der(i,j)+prod
+          do k=l+1,j-1
+             prod=prod*(x(i)-x(k))/(x(j)-x(k))
           end do
-          gl_obj%der(i,j)=gl_obj%der(i,j)*gl_obj%weigh(i)
+          do k=j+1,degree+1
+             prod=prod*(x(i)-x(k))/(x(j)-x(k))
+          end do
+          prod=prod/(x(j)-x(l))
+          mdiag(i,j)=mdiag(i,j)+prod
        end do
+
+       do l=j+1,degree+1
+          prod=1.0_f64
+          do k=1,j-1
+             prod=prod*(x(i)-x(k))/(x(j)-x(k))
+          end do
+          do k=j+1,l-1
+             prod=prod*(x(i)-x(k))/(x(j)-x(k))
+          end do
+          do k=l+1,degree+1
+             prod=prod*(x(i)-x(k))/(x(j)-x(k))
+          end do
+          prod=prod/(x(j)-x(l))
+          mdiag(i,j)=mdiag(i,j)+prod
+       end do
+
+       mdiag(i,j)=mdiag(i,j)*w(i)
+
     end do
+ end do
 
-  end function mass_matrix
-
-end module sll_gausslobatto
+end function mass_matrix
 
 end module sll_maxwell_2d_diga
