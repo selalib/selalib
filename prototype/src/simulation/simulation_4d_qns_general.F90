@@ -294,7 +294,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 10
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -466,8 +466,8 @@ contains
     ! in any of the two available directions. We also initialize the other two
     ! layouts needed for both sequential operations on x1 and x2 in the 2D case.
     call initialize_layout_with_distributed_2D_array( &
-         nc_x1, &
-         nc_x2, &
+         nc_x1+1, & ! changed from nc only
+         nc_x2+1, & ! changed from nc only
          sim%nproc_x1, &
          sim%nproc_x2, &
          sim%split_rho_layout )
@@ -488,13 +488,13 @@ contains
 !!$         sim%rho_full_layout )
     
 !    call compute_local_sizes_2d( sim%rho_full_layout, loc_sz_x1, loc_sz_x2 )
-    SLL_ALLOCATE(sim%rho_full(nc_x1,nc_x2),ierr)
-    SLL_ALLOCATE(recv_buf(nc_x1*nc_x2),ierr)
+    SLL_ALLOCATE(sim%rho_full(nc_x1+1,nc_x2+1),ierr) ! changed from nc,nc
+    SLL_ALLOCATE(recv_buf((nc_x1+1)*(nc_x2+1)),ierr) !changed from nc, nc
 
 
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1, &
-         nc_x2, &
+         nc_x1+1, &
+         nc_x2+1, &
          nc_x3+1, &
          nc_x4+1, &
          sim%nproc_x1, &
@@ -557,8 +557,8 @@ contains
     
     print *, 'sequential x1x2 mode...'
     call initialize_layout_with_distributed_4D_array( &
-         nc_x1+1, &
-         nc_x2+1, &
+         nc_x1+1, & ! changed
+         nc_x2+1, & ! changed
          nc_x3+1, &
          nc_x4+1, &
          sim%nproc_x1, &
@@ -567,8 +567,6 @@ contains
          sim%nproc_x4, &
          sim%sequential_x1x2 )
     
-    print *, 'sequential_x1x2 mode...'
-
     ! Allocate the array needed to store the local chunk of the distribution
     ! function data. First compute the local sizes. Since the remap operations
     ! are out-of-place, we will allocate four different arrays, one for each
@@ -604,6 +602,19 @@ contains
                                  sim%partial_reduction,  &
                                  sim%rho_split )
 
+    global_indices(1:2) =  &
+         local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
+       
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%rho_split, &
+         "rho_split", &
+         0, &
+         ierr )
+
 
     call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
 
@@ -618,14 +629,26 @@ contains
  
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
+
+   call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min+1*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min+1*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%rho_full, &
+         "rho_full", &
+         0, &
+         ierr )
+
     call compute_average_f( &
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
+
     !print*, 'density', density_tot
 
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full-density_tot, &
+         sim%rho_full - density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -633,8 +656,6 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
-    
  
     call rho%write_to_file(0)
 !!$    sim%split_to_full => &
@@ -729,7 +750,7 @@ contains
          sim%mesh2d_x%eta2_max ) 
 
 
-    !print*, ' initialization finish'
+    print*, ' ... finished initialization, entering main loop.'
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -737,7 +758,7 @@ contains
     ! ------------------------------------------------------------------------
 
 
-    do itime=1,sim%num_iterations
+    do itime=1,1!sim%num_iterations
        if(sim%my_rank == 0) then
           print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
        end if
@@ -814,7 +835,8 @@ contains
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
-       !print*, 'density', density_tot
+
+!       print*, 'density', density_tot
 
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
 
@@ -866,7 +888,7 @@ contains
             rho, &
             phi )
        
-       call phi%write_to_file(itime)
+!       call phi%write_to_file(itime)
        
        call compute_local_sizes_4d( sim%sequential_x1x2, &
                                     loc_sz_x1,           &
@@ -880,7 +902,7 @@ contains
        efield_energy_total = 0.0_f64
        
        ! Start with dt in vx...(x3)
-       do l=1,sim%mesh2d_v%num_cells2
+       do l=1,sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
@@ -925,7 +947,7 @@ contains
        ! dt in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             do k=1,sim%mesh2d_v%num_cells1
+             do k=1,sim%mesh2d_v%num_cells1+1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 eta1   =  real(global_indices(1)-1,f64)*delta1
@@ -979,6 +1001,10 @@ contains
        ! predetermined size, we reduce ther buffer with an addition on 
        ! process 0, who appends it to a file. Then reset the buffer.
        if( buffer_counter == BUFFER_SIZE ) then
+          ! While using a sequential QNS solver, each processor contains the
+          ! full information on the electric field energy, thus it is not 
+          ! necessary to add the individual contributions.
+
           call sll_collective_reduce_real64( &
                sll_world_collective, &
                buffer, &
@@ -986,6 +1012,9 @@ contains
                MPI_SUM, &
                0, &
                buffer_result )
+
+          ! Use next line only if no communications are needed!
+   !       buffer_result(:) = buffer(:)
 
           buffer_counter = 1
           if(sim%my_rank == 0) then
@@ -1240,9 +1269,8 @@ contains
     
     density_tot = 0.0_8
     
-    do j=1,numpts2-1
-       do i=1,numpts1-1
-          
+    do j=1,numpts2
+       do i=1,numpts1
           density_tot = density_tot + rho(i,j) * delta1* delta2
        end do
     end do
@@ -1269,6 +1297,7 @@ contains
     col => get_layout_collective( layout )
     myrank = sll_get_collective_rank( col )
     data_size = size(data,1)*size(data,2)
+!print *, 'data1: ', size(data,1), 'data2:', size(data,2)
     imin = get_layout_i_min( layout, myrank )
     imax = get_layout_i_max( layout, myrank )
     jmin = get_layout_j_min( layout, myrank )
