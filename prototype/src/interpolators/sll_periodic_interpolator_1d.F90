@@ -35,7 +35,10 @@ use periodic_interp_module
      procedure, pass:: interpolate_array => per_interpolate1d
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
      procedure, pass:: reconstruct_array
+     procedure, pass :: set_coefficients => set_coefficients_per1d
+     procedure, pass :: get_coefficients => get_coefficients_per1d
 #endif
+     
   end type per_1d_interpolator
 
   interface delete
@@ -327,5 +330,22 @@ contains  ! ****************************************************************
 #endif
     call delete(obj%per_interp)
   end subroutine delete_per1d
+
+  subroutine set_coefficients_per1d( interpolator, coeffs )
+    class(per_1d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_per1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_per1d
+
+
+  function get_coefficients_per1d(interpolator)
+    class(per_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_per1d     
+    
+    print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_per1d
 
 end module sll_periodic_interpolator_1d

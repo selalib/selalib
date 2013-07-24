@@ -31,8 +31,8 @@ use sll_cubic_splines
 type ::  cubic_spline_1d_interpolator
    sll_real64, dimension(:), pointer :: interpolation_points !< points positions
    sll_int32                         :: num_points           !< size
-   sll_int32                         :: bc_type              !< boundary condition
-   type(sll_cubic_spline_1D), pointer      :: spline               !< spline object
+   sll_int32                         :: bc_type            !< boundary condition
+   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
 end type cubic_spline_1d_interpolator
 
 #else
@@ -41,8 +41,8 @@ type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
 
    sll_real64, dimension(:), pointer :: interpolation_points !< points position
    sll_int32                         :: num_points           !< size
-   sll_int32                         :: bc_type              !< boundary condition
-   type(sll_cubic_spline_1D), pointer      :: spline               !< spline object
+   sll_int32                         :: bc_type            !< boundary condition
+   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
 
 contains
 
@@ -57,6 +57,8 @@ procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_
 procedure, pass:: interpolate_array => spline_interpolate1d
 procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
 procedure, pass:: reconstruct_array
+procedure, pass :: set_coefficients => set_coefficients_cs1d
+procedure, pass :: get_coefficients => get_coefficients_cs1d
 !generic :: initialize => initialize_cs1d_interpolator
 
 end type cubic_spline_1d_interpolator
@@ -378,5 +380,22 @@ contains  ! ****************************************************************
 #endif
     call delete(obj%spline)
   end subroutine delete_cs1d
+
+  subroutine set_coefficients_cs1d( interpolator, coeffs )
+    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_cs1d
+
+
+  function get_coefficients_cs1d(interpolator)
+    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
+    
+    print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_cs1d
 
 end module sll_cubic_spline_interpolator_1d

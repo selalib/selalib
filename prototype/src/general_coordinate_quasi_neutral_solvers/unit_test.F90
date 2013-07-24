@@ -98,7 +98,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -306,6 +307,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  values(:,:) = 0.0_f64
   
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
@@ -510,7 +512,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.    
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -716,7 +719,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -914,7 +918,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.  
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -1115,7 +1120,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -1321,7 +1327,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -1524,7 +1531,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+    
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -1735,7 +1743,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -1987,7 +1996,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -2240,7 +2250,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -2487,7 +2498,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -2730,7 +2742,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  
+  values(:,:) = 0.0_f64
+
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )

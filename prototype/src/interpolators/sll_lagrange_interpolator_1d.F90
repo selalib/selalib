@@ -29,6 +29,8 @@ implicit none
    procedure :: interpolate_array_values => interpolate_array_values_li1d
    procedure :: interpolate_value => interpolate_value_li1d
    procedure :: reconstruct_array => reconstruct_array_li1d
+   procedure, pass :: set_coefficients => set_coefficients_li1d
+   procedure, pass :: get_coefficients => get_coefficients_li1d
 #endif
  end type lagrange_1d_interpolator
 
@@ -237,8 +239,23 @@ end subroutine interpolate_pointer_values_li1d
          ' not implemented for lagrange interpolation'
     stop
   end subroutine
-
-!DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_values_li1d)
+  subroutine set_coefficients_li1d( interpolator, coeffs )
+    class(lagrange_1d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_li1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_li1d
+  
+  
+  function get_coefficients_li1d(interpolator)
+    class(lagrange_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_li1d     
+    
+    print *, 'get_coefficients_li1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_li1d
+  !DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_values_li1d)
 !DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_derivatives_li1d)
 !DEFINE_NULL_INTERP_1D_POINTER_SUB(lagrange_1d_interpolator, interpolate_pointer_derivatives_li1d)
 !DEFINE_NULL_INTERP_ONE_ARG_MSG(lagrange_1d_interpolator, interpolate_derivative_eta1_li1d)

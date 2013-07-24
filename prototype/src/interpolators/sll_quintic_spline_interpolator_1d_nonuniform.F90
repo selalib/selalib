@@ -32,6 +32,9 @@ use sll_quintic_splines
      procedure, pass:: interpolate_array => spline_interpolate1d_nonuniform
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp_nonuniform
      procedure, pass:: reconstruct_array
+     procedure, pass :: set_coefficients => set_coefficients_qs1d_nonuniform
+     procedure, pass :: get_coefficients => get_coefficients_qs1d_nonuniform
+
      !generic :: initialize => initialize_qs1d_interpolato
 #endif
   end type quintic_spline_1d_interpolator_nonuniform
@@ -260,5 +263,24 @@ contains  ! ****************************************************************
 #endif
     call delete_quintic_splines_nonuniform(obj%spline)
   end subroutine delete_qs1d_nonuniform
+
+
+  subroutine set_coefficients_qs1d_nonuniform( interpolator, coeffs )
+    class(quintic_spline_1d_interpolator_nonuniform),intent(inout)::interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_qs1d_nonuniform
+
+
+  function get_coefficients_qs1d_nonuniform(interpolator)
+    class(quintic_spline_1d_interpolator_nonuniform), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer   :: get_coefficients_qs1d_nonuniform    
+    
+    print *, 'get_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_qs1d_nonuniform
+
 
 end module sll_quintic_spline_interpolator_1d_nonuniform

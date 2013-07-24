@@ -49,6 +49,8 @@ use sll_odd_degree_splines
      procedure, pass:: interpolate_array => spline_interpolate1d
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
+     procedure, pass :: set_coefficients => set_coefficients_qs1d
+     procedure, pass :: get_coefficients => get_coefficients_qs1d
      !generic :: initialize => initialize_qs1d_interpolato
 #endif
   end type odd_degree_spline_1d_interpolator
@@ -289,4 +291,20 @@ contains  ! ****************************************************************
     call delete_odd_degree_splines_uniform(obj%spline)
   end subroutine delete_qs1d
 
+  subroutine set_coefficients_qs1d( interpolator, coeffs )
+    class(odd_degree_spline_1d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_qs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_qs1d
+
+
+  function get_coefficients_qs1d(interpolator)
+    class(odd_degree_spline_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_qs1d     
+    
+    print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_qs1d
 end module sll_odd_degree_spline_interpolator_1d

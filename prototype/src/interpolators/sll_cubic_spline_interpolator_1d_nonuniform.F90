@@ -35,6 +35,8 @@ use sll_cubic_splines
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
+     procedure, pass :: set_coefficients => set_coefficients_cs1d
+     procedure, pass :: get_coefficients => get_coefficients_cs1d
 #endif
   end type cubic_non_uniform_spline_1d_interpolator
 
@@ -329,7 +331,22 @@ contains  ! ****************************************************************
   end subroutine delete_cs1d
 
   
+  subroutine set_coefficients_cs1d( interpolator, coeffs )
+    class(cubic_non_uniform_spline_1d_interpolator),intent(inout):: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_cs1d
+
   
+  function get_coefficients_cs1d(interpolator)
+    class(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
+    
+    print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_cs1d
   
   
 end module cubic_non_uniform_spline_interpolator_1d  
