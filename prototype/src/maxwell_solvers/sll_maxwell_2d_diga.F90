@@ -152,16 +152,16 @@ end subroutine solve_maxwell_2d_diga
 !>          der(i,j)=int(Phi_{i,j}.Phi_{k,l})_[-1;1]²
 !>                  =w_i.Phi'_j(x_i)
 
-subroutine mass_matrix(degree, x, w)
+function mass_matrix(degree, x, w)
 
  sll_int32  :: degree
  sll_real64 :: x(degree+1)
  sll_real64 :: w(degree+1)
  sll_real64 :: prod
 
- nb_pts=gl_obj%degree+1
+ nb_pts=degree+1
 
- gl_obj%der=0.0d0
+ der=0.0d0
 
     !loop on all element of D
     !loop on columns
@@ -202,7 +202,7 @@ subroutine mass_matrix(degree, x, w)
        end do
     end do
 
-  end subroutine derivative_matrix_1d
+  end function mass_matrix
 
 end module sll_gausslobatto
 
