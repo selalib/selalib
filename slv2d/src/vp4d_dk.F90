@@ -90,32 +90,9 @@ if (my_num == MPI_MASTER) then
   print *,'#fthdiag=',fthdiag  
 endif
   
-!if (my_num == MPI_MASTER) then
-!   ! write some run data
-!   write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-!   write(*,"(2(i3,1x),6(g13.3,1x))") geomx%nx, geomx%ny, geomx%x0, &
-!                                     geomx%x0+(geomx%nx)*geomx%dx, &
-!                                     geomx%y0, geomx%y0+(geomx%ny)*geomx%dy, &
-!                                     geomx%dx, geomx%dy   
-!   write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-!   write(*,"(2(i3,1x),6(g13.3,1x))") geomv%nx, geomv%ny, geomv%x0, &
-!                                     geomv%x0+(geomv%nx-1)*geomv%dx, &
-!                                     geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy, &
-!                                     geomv%dx, geomv%dy
-!   write(*,*) 'dt,nbiter,fdiag,fthdiag'
-!   write(*,"(g13.3,1x,3i6)") dt,nbiter,fdiag,fthdiag
-!endif
-
-!call initlocal_dk(geomx,geomv,R0,jstartv,jendv,jstartx,jendx, &
-!               f4d,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply,dt)
-
-   
-   !call solve(poisson,e_x,e_y,rho,nrj)
-   
-   !print *,my_num,sum(rho(:,:))*geomx%dx*geomx%dy,sum(profile(1,:))*geomx%dx
 
 iter=0
-   call thdiag(vlas2d,f4d,nrj,real(iter,f64)*dt,jstartv)
+   call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv)
 
 
 do iter=1,nbiter
@@ -161,18 +138,18 @@ do iter=1,nbiter
    call advection_x3_dk(vlas2d,0.5_f64*dt)
    call transposevx(vlas2d,f4d)
 
-   call thdiag(vlas2d,f4d,nrj,real(iter,f64)*dt,jstartv)
-if (my_num==MPI_MASTER) then
-   print *,my_num,iter,dt,real(iter,f64)*dt
-end if
+   call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv)
+!if (my_num==MPI_MASTER) then
+!   print *,my_num,iter,dt,real(iter,f64)*dt
+!end if
 
 
 
 enddo   
 
-if (my_num==MPI_MASTER) then
-   stop
-end if
+!if (my_num==MPI_MASTER) then
+!   stop
+!end if
 
 
 
@@ -189,92 +166,6 @@ end if
      enddo 
    
    endif
-   
-   call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
-
-   call transposevx(vlas2d,f4d)
-
-   dt = plan_sl%adv%dt
-   plan_sl%adv%dt = dt/2.0_f64   
-   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
-   plan_sl%adv%dt = dt
-   
-   
-   
-   call thdiag(vlas2d,f4d,nrj,0._f64,jstartv)
-
-
-   call transposexv(vlas2d,f4d)
-   
-   !dt = 0._f64
-
-   call advection_x3_dk(vlas2d,dt)
-   call advection_x4_dk(vlas2d,adv_field(3,:,:,:),dt)
-
-   call transposevx(vlas2d,f4d)
-
-   call thdiag(vlas2d,f4d,nrj,0._f64,jstartv)
-   
-if (my_num==MPI_MASTER) then
-   stop
-end if
-
-
-   !call densite_charge_dk(vlas2d,rho_dk)
-
-
-
-   !call transposevx(vlas2d,f4d)
-
-
-
-   !call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
-   !                       jstartx,jendx,jstartv,jendv,0)
-
-
-
-!call plot_mesh4d(geomx,geomv,jstartx,jendx,jstartv,jendv)
-
-!stop
-
- 
-call advection_x(vlas2d,f4d,.5*dt)
-
-do iter=1,nbiter
-
-   call transposexv(vlas2d,f4d)
-
-   call densite_charge(vlas2d,rho)
-
-   call solve(poisson,e_x,e_y,rho,nrj)
-
-   if (mod(iter,fthdiag).eq.0) then
-       call thdiag(vlas2d,f4d,nrj,iter*dt,jstartv)    
-   end if
-
-   call advection_v(vlas2d,e_x,e_y,dt)
-
-   call transposevx(vlas2d,f4d)
-
-   if (mod(iter,fdiag) == 0) then 
-
-       call advection_x(vlas2d,f4d,.5*dt)
-
-       call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
-                          jstartx,jendx,jstartv,jendv,iter/fdiag)
-
-       call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,VXVY_VIEW)
-
-
-       call advection_x(vlas2d,f4d,.5*dt)
-
-   else 
-
-       call advection_x(vlas2d,f4d,dt)
-
-   end if
-
-end do
 
 tcpu2 = MPI_WTIME()
 if (my_num == MPI_MASTER) &
@@ -629,6 +520,9 @@ contains
   profile(1,:)=profile(1,:)/sqrt(2._f64*sll_pi*profile(2,:))
   profile(2,:)=-0.5_f64/profile(2,:)
   
+  
+  
+  
   ky  = 2._f64*pi/(real(geomx%ny,f64)*geomx%dy)
   kvx  = 2._f64*pi/(real(geomv%nx,f64)*geomv%dx)
   do jv=jstartv,jendv
@@ -644,10 +538,17 @@ contains
                tmp_mode=tmp_mode+cos(real(n,f64)*kvx*vx+real(m,f64)*ky*y)
              enddo
            enddo  
-           tmp_mode=1._f64+tmp_mode*epsilon
            do i=1,geomx%nx
-              x=geomx%x0+(i-1)*geomx%dx
-              f(i,j,iv,jv)=tmp_mode*profile(1,i)*exp(v2*profile(2,i))
+    x=geomx%x0+(i-1)*geomx%dx
+    tmp_mode = exp(-(x-rpeak)**2/(deltarn/deltarTi))
+    profile(1,i)=profile(1,i)*tmp_mode
+  enddo
+           !tmp_mode=1._f64+tmp_mode*epsilon
+           do i=1,geomx%nx
+              x=geomx%x0+(i-1)*geomx%dx              
+              !f(i,j,iv,jv)=tmp_mode*profile(1,i)*exp(v2*profile(2,i))
+              f(i,j,iv,jv)=(1._f64+tmp_mode*epsilon*exp(-(x-rpeak)**2/(deltarn/deltarTi)))*&
+                &profile(1,i)*exp(v2*profile(2,i))
            end do
         end do
      end do
@@ -764,10 +665,10 @@ contains
   SLL_ALLOCATE(e_x(geomx%nx,geomx%ny),iflag)
   SLL_ALLOCATE(e_y(geomx%nx,geomx%ny),iflag)
 
-  xi  = 0.90
-  eps = 0.05
-  kx  = 2*pi/((geomx%nx)*geomx%dx)
-  ky  = 2*pi/((geomx%ny)*geomx%dy)
+  xi  = 0.90_f64
+  eps = 0.05._f64
+  kx  = 2._f64*pi/((geomx%nx)*geomx%dx)
+  ky  = 2._f64*pi/((geomx%ny)*geomx%dy)
   do jv=jstartv,jendv
      vy = geomv%y0+(jv-1)*geomv%dy
      do iv=1,geomv%nx
@@ -777,7 +678,7 @@ contains
            y=geomx%y0+(j-1)*geomx%dy
            do i=1,geomx%nx
               x=geomx%x0+(i-1)*geomx%dx
-              f(i,j,iv,jv)=(1+eps*cos(kx*x))*1/(2*pi)*exp(-.5*v2)
+              f(i,j,iv,jv)=(1+eps*cos(kx*x))*1._f64/(2._f64*pi)*exp(-0.5_f64*v2)
            end do
         end do
      end do
@@ -789,5 +690,9 @@ contains
   call new(sply,   geomx, geomv, iflag, jstartx, jendx, jstartv, jendv)
 
  end subroutine initlocal
+
+
+
+
 
 end program vp4d_dk
