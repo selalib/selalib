@@ -98,8 +98,8 @@ contains
   ! initialisation des splines de l'espace physique
   call new(this%splinex,geomx,error)  
 
-  call spl_x3%initialize( geomv%nx+1, geomv%x0, geomv%x1, PERIODIC_SPLINE)
-  call spl_x4%initialize( geomv%ny+1, geomv%y0, geomv%y1, PERIODIC_SPLINE)
+  call spl_x3%initialize( geomv%nx+1, geomv%x0, geomv%x1, SLL_PERIODIC)
+  call spl_x4%initialize( geomv%ny+1, geomv%y0, geomv%y1, SLL_PERIODIC)
 
   this%interp_x3 => spl_x3
   this%interp_x4 => spl_x4
@@ -567,16 +567,17 @@ subroutine compute_profile(this,prof,geom,rpeak,deltar,kappa,R0)!,n0_case)
   
 end subroutine compute_profile
 
-subroutine thdiag(this,f,nrj,t,jstartv)
+subroutine thdiag(this,f,phi,t,jstartv)
 
    type(vlasov2d),intent(inout) :: this
    sll_int32, intent(in) :: jstartv
    sll_real64, dimension(:,:,:,jstartv:),intent(in) :: f
+   sll_real64, dimension(:,:,:),intent(in) :: phi
    sll_int32 :: error
-   sll_real64, intent(in) :: t,nrj   ! current time
+   sll_real64, intent(in) :: t  ! current time
    ! variables locales
    sll_int32 :: i,iv, j,jv
-   sll_real64 :: x, vx, y, vy
+   sll_real64 :: x, vx, y, vy,nrj
    !sll_real64,dimension(7) :: diagloc
    sll_real64,dimension(11) :: auxloc
    sll_real64,dimension(13) :: aux
@@ -631,44 +632,26 @@ subroutine thdiag(this,f,nrj,t,jstartv)
             y = this%geomx%y0+(j-1)*this%geomx%dy
                i=1
                x = this%geomx%x0+(i-1)*this%geomx%dx
-               auxloc(1) = auxloc(1) + 0.5_f64*f(i,j,iv,jv)         ! avg(f)
-               auxloc(2) = auxloc(2) + 0.5_f64*x*f(i,j,iv,jv)       ! avg(x)
-               auxloc(3) = auxloc(3) + 0.5_f64*vx*f(i,j,iv,jv)      ! avg(vx)
-               auxloc(4) = auxloc(4) + 0.5_f64*x*x*f(i,j,iv,jv)     ! avg(x^2)
-               auxloc(5) = auxloc(5) + 0.5_f64*vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
-               auxloc(6) = auxloc(6) + 0.5_f64*x*vx*f(i,j,iv,jv)    ! avg(x*vx)
-               auxloc(7) = auxloc(7) + 0.5_f64*y*f(i,j,iv,jv)       ! avg(y)
-               auxloc(8) = auxloc(8) + 0.5_f64*vy*f(i,j,iv,jv)      ! avg(vy)
-               auxloc(9) = auxloc(9) + 0.5_f64*y*y*f(i,j,iv,jv)     ! avg(y^2)
-               auxloc(10) = auxloc(10) + 0.5_f64*vy*vy*f(i,j,iv,jv) ! avg(vy^2)
-               auxloc(11) = auxloc(11) + 0.5_f64*y*vy*f(i,j,iv,jv)  ! avg(y*vy)            
+               auxloc(1) = auxloc(1) + 0.5_f64*x*f(i,j,iv,jv)             ! mass
+               auxloc(2) = auxloc(2) + 0.5_f64*x*abs(f(i,j,iv,jv))        ! L1
+               auxloc(3) = auxloc(3) + 0.5_f64*x*abs(f(i,j,iv,jv))**2     ! L2
+               auxloc(4) = auxloc(4) + 0.5_f64*x*vy*vy*f(i,j,iv,jv)       ! ekin
+               auxloc(5) = auxloc(5) + 0.5_f64*x*phi(i,j,iv)*f(i,j,iv,jv) ! epot
             do i = 2,this%geomx%nx-1
                x = this%geomx%x0+(i-1)*this%geomx%dx
-               auxloc(1) = auxloc(1) + f(i,j,iv,jv)         ! avg(f)
-               auxloc(2) = auxloc(2) + x*f(i,j,iv,jv)       ! avg(x)
-               auxloc(3) = auxloc(3) + vx*f(i,j,iv,jv)      ! avg(vx)
-               auxloc(4) = auxloc(4) + x*x*f(i,j,iv,jv)     ! avg(x^2)
-               auxloc(5) = auxloc(5) + vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
-               auxloc(6) = auxloc(6) + x*vx*f(i,j,iv,jv)    ! avg(x*vx)
-               auxloc(7) = auxloc(7) + y*f(i,j,iv,jv)       ! avg(y)
-               auxloc(8) = auxloc(8) + vy*f(i,j,iv,jv)      ! avg(vy)
-               auxloc(9) = auxloc(9) + y*y*f(i,j,iv,jv)     ! avg(y^2)
-               auxloc(10) = auxloc(10) + vy*vy*f(i,j,iv,jv) ! avg(vy^2)
-               auxloc(11) = auxloc(11) + y*vy*f(i,j,iv,jv)  ! avg(y*vy)
+               auxloc(1) = auxloc(1) + x*f(i,j,iv,jv)             ! mass
+               auxloc(2) = auxloc(2) + x*abs(f(i,j,iv,jv))        ! L1
+               auxloc(3) = auxloc(3) + x*abs(f(i,j,iv,jv))**2     ! L2
+               auxloc(4) = auxloc(4) + x*vy*vy*f(i,j,iv,jv)       ! ekin
+               auxloc(5) = auxloc(5) + x*phi(i,j,iv)*f(i,j,iv,jv) ! epot
             end do
                i=this%geomx%nx
                x = this%geomx%x0+(i-1)*this%geomx%dx
-               auxloc(1) = auxloc(1) + 0.5_f64*f(i,j,iv,jv)         ! avg(f)
-               auxloc(2) = auxloc(2) + 0.5_f64*x*f(i,j,iv,jv)       ! avg(x)
-               auxloc(3) = auxloc(3) + 0.5_f64*vx*f(i,j,iv,jv)      ! avg(vx)
-               auxloc(4) = auxloc(4) + 0.5_f64*x*x*f(i,j,iv,jv)     ! avg(x^2)
-               auxloc(5) = auxloc(5) + 0.5_f64*vx*vx*f(i,j,iv,jv)   ! avg(vx^2)
-               auxloc(6) = auxloc(6) + 0.5_f64*x*vx*f(i,j,iv,jv)    ! avg(x*vx)
-               auxloc(7) = auxloc(7) + 0.5_f64*y*f(i,j,iv,jv)       ! avg(y)
-               auxloc(8) = auxloc(8) + 0.5_f64*vy*f(i,j,iv,jv)      ! avg(vy)
-               auxloc(9) = auxloc(9) + 0.5_f64*y*y*f(i,j,iv,jv)     ! avg(y^2)
-               auxloc(10) = auxloc(10) + 0.5_f64*vy*vy*f(i,j,iv,jv) ! avg(vy^2)
-               auxloc(11) = auxloc(11) + 0.5_f64*y*vy*f(i,j,iv,jv)  ! avg(y*vy)            
+               auxloc(1) = auxloc(1) + 0.5_f64*x*f(i,j,iv,jv)             ! mass
+               auxloc(2) = auxloc(2) + 0.5_f64*x*abs(f(i,j,iv,jv))        ! L1
+               auxloc(3) = auxloc(3) + 0.5_f64*x*abs(f(i,j,iv,jv))**2     ! L2
+               auxloc(4) = auxloc(4) + 0.5_f64*x*vy*vy*f(i,j,iv,jv)       ! ekin
+               auxloc(5) = auxloc(5) + 0.5_f64*x*phi(i,j,iv)*f(i,j,iv,jv) ! epot
          end do
       end do
    end do
@@ -683,15 +666,16 @@ subroutine thdiag(this,f,nrj,t,jstartv)
    !call mpi_reduce(diagloc(2),diag(2),1,MPI_REAL8,MPI_SUM,0, &
    !                comm, error)
 
-
+  nrj = 0._f64
+  nrj = sum(phi(this%geomx%nx/2,1:this%geomx%ny,1:this%geomv%nx)**2)*this%geomx%dy*this%geomv%dx
 
 if (my_num==MPI_MASTER) then
    aux(13)=t
    aux(12)=nrj
-   write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
-   call time_history("thf","(13(1x,e15.6))",aux(1:13))
+   !write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
+   !call time_history("thf","(13(1x,e15.6))",aux(1:13))
    !print "(13(1x,e15.10))",aux(1:13)
-   print *,aux(1:13)
+   print *,t,nrj,aux(4)+aux(5),aux(1:5)
    !stop
 end if
 
