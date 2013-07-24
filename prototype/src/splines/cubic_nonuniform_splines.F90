@@ -10,7 +10,8 @@ module cubic_non_uniform_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_splines.h"
-  use sll_tridiagonal
+#include "sll_utilities.h"
+
   implicit none
 
   type cubic_nonunif_spline_1D

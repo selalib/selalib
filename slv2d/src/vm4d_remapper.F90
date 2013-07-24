@@ -123,12 +123,12 @@ contains
     psize = sll_get_collective_size(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, PERIODIC_SPLINE)
-    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, PERIODIC_SPLINE)
+    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, SLL_PERIODIC)
+    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, SLL_PERIODIC)
 
     call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
-    &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
+    &                        SLL_PERIODIC, SLL_PERIODIC)
 
     call new(vlasov4d,geomx,geomv,spl_x1,spl_x2,spl_x3x4,error)
 
@@ -167,7 +167,7 @@ contains
                              geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                             geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+                             geomx%y0, geomx%y1, geomx%ny, error)
 
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )

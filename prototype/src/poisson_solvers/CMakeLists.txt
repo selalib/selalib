@@ -1,12 +1,7 @@
 SET(POISSON_LIBS sll_fft
-                 sll_mapped_meshes
-                 geometry_functions
-                 sll_splines
                  sll_interpolators
                  sll_file_io
                  sll_utilities
-                 sll_memory
-                 sll_assertion
                  sll_timer
                  dfftpack)
 
@@ -18,12 +13,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftw.F90")
 
-   ADD_EXECUTABLE(test_poisson_2d_fftw test_poisson_2d.F90
-                                  sll_poisson_2d_periodic_fftw.F90)
 
-   TARGET_LINK_LIBRARIES(test_poisson_2d_fftw ${POISSON_LIBS}
-                                              ${FFTW_LIBRARIES}
-                                              ${HDF5_LIBRARIES})
 ELSE()
 
    SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftpack.F90")
@@ -47,10 +37,24 @@ ENDIF(FISHPACK_ENABLED)
 
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
+IF(FFTW_FOUND AND FFTW_ENABLED)
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
+                                             dfftpack 
+                                             ${FFTW_LIBRARIES} )
+ELSE()
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion
+                                             dfftpack )
+ENDIF()
+
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
+TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
+
+ADD_EXECUTABLE(test_poisson_2d test_poisson_2d.F90)
+
+TARGET_LINK_LIBRARIES(test_poisson_2d sll_poisson_solvers)
 
 ADD_LIBRARY(sll_poisson_2d_polar STATIC sll_poisson_2d_polar.F90)
-TARGET_LINK_LIBRARIES(sll_poisson_2d_polar sll_fft sll_memory sll_assertion sll_utilities)
+TARGET_LINK_LIBRARIES(sll_poisson_2d_polar sll_fft sll_utilities)
 
 ADD_EXECUTABLE(unit_test_polar unit_test_polar.F90 
                ../simulation/sll_polar_operators.F90)
@@ -64,9 +68,9 @@ ADD_EXECUTABLE(test_poisson_3d_periodic_seq test_poisson_3d_periodic_seq.F90
                sll_poisson_3d_periodic_seq.F90)
 
 TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_seq ${POISSON_LIBS})
-TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
 
 ADD_EXECUTABLE(test_poisson_2d_fem sll_poisson_2d_fem.F90
+                                   sll_poisson_2d_periodic_fem.F90
                                    test_poisson_2d_fem.F90)
 
 TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})
@@ -84,12 +88,8 @@ IF(MUDPACK_ENABLED)
 
       ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
       
-      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_memory 
-                                                      sll_assertion 
-                                                      sll_utilities
+      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_poisson_solvers 
                                                       sll_file_io
-                                                      sll_fft
-                                                      sll_poisson_solvers
                                                       mudpack)
 
       ADD_TEST(NAME sll_mudpack_${TEST_NAME} COMMAND test_mudpack_${TEST_NAME} )
@@ -109,7 +109,9 @@ ENDIF()
 #
 # ****************************************************************************
 
-IF(MPI_MODULE_ENABLED)
+# This test has parallel diagnostics. Maybe these should only be turned on
+# when debugging this specific module.
+IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_LIBRARY(sll_poisson_parallel STATIC 
                sll_poisson_polar_parallel.F90 
@@ -119,39 +121,18 @@ IF(MPI_MODULE_ENABLED)
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
    TARGET_LINK_LIBRARIES(sll_poisson_parallel sll_remap 
                                               sll_fft
-                                              sll_collective
-                                              sll_utilities
-                                              sll_memory
-                                              sll_assertion)
+                                              sll_file_io_parallel
+                                              sll_utilities)
   
    ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
+   TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_par sll_poisson_parallel )
 
-   TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par 
-                          sll_poisson_parallel 
-                          sll_remap 
-                          sll_collective 
-                          sll_fft 
-                          sll_memory 
-                          sll_timer 
-                          sll_utilities 
-                          sll_assertion)
-ENDIF()
+   ADD_EXECUTABLE(test_poisson_2d_per_cart_par 
+                  test_poisson_2d_periodic_cartesian_par.F90 )
+   TARGET_LINK_LIBRARIES(test_poisson_2d_per_cart_par sll_poisson_parallel)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
-
-   # This test has hdf5 diagnostics. Maybe these should only be turned on
-   # when debugging this specific module.
-   ADD_EXECUTABLE( test_poisson_2d_per_cart_par 
-                   test_poisson_2d_periodic_cartesian_par.F90 )
-
-   TARGET_LINK_LIBRARIES(test_poisson_2d_per_cart_par
-                         sll_poisson_parallel
-                         sll_file_io_parallel )
-
-   ADD_EXECUTABLE( test_poisson_polar_parallel 
-                   test_poisson_polar_parallel.F90 )
-
+   ADD_EXECUTABLE(test_poisson_polar_parallel 
+                  test_poisson_polar_parallel.F90 )
    TARGET_LINK_LIBRARIES(test_poisson_polar_parallel sll_poisson_parallel)
-
 
 ENDIF()

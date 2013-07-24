@@ -1,20 +1,3 @@
-program test_multigrid_3d
-use hdf5, only:HID_T,HSIZE_T,HSSIZE_T
-use mgd3
-use sll_collective, only: sll_boot_collective,      &
-                          sll_world_collective,     &
-                          sll_halt_collective,      &
-                          sll_get_collective_rank,  &
-                          sll_get_collective_size,  &
-                          sll_collective_barrier
-use sll_hdf5_io_parallel
-use sll_xml_io
-use sll_constants
-#include "mgd3.h"
-#include "sll_memory.h"
-#include "sll_working_precision.h"
-#include "sll_utilities.h"
-implicit none
 !-----------------------------------------------------------------------
 ! Test problem for 3D multigrid parallel code mgd3. mgd3 solves the
 ! non-separable elliptic equation div(1/r*grad(p))=f on a rectangular
@@ -45,6 +28,23 @@ implicit none
 !             MPI_CART_GET, MPE_DECOMP1D, 
 !             mgdinit, ginit, mgdsolver, gerr
 !-----------------------------------------------------------------------
+program test_multigrid_3d
+use hdf5, only:HID_T,HSIZE_T,HSSIZE_T
+use mgd3
+use sll_collective, only: sll_boot_collective,      &
+                          sll_world_collective,     &
+                          sll_halt_collective,      &
+                          sll_get_collective_rank,  &
+                          sll_get_collective_size,  &
+                          sll_collective_barrier
+use sll_hdf5_io_parallel
+use sll_xml_io
+use sll_constants
+#include "mgd3.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_utilities.h"
+implicit none
 
 logical :: periods(3)
 sll_int32 :: nxdim, nydim, nzdim
@@ -280,7 +280,7 @@ allocate(p(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1))
 allocate(f(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1))
 allocate(r(sx-1:ex+1,sy-1:ey+1,sz-1:ez+1))
 
-call initialize(my_block,my_mg,nerror)
+call initialize_mgd3(my_block,my_mg,nerror)
 
 if (nerror.eq.1) goto 1000
 !-----------------------------------------------------------------------

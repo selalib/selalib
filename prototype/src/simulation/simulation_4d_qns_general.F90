@@ -170,9 +170,7 @@ contains
    sim%bc_bottom = bc_bottom
    sim%bc_top    = bc_top
 
-
-   call initialize_ad2d_interpolator( &
-        sim%interp_phi, &
+   call sim%interp_phi%initialize( &
         sim%mesh2d_x%num_cells1 +1, &
         sim%mesh2d_x%num_cells2 +1, &
         sim%mesh2d_x%eta1_min, &
@@ -186,8 +184,7 @@ contains
         sim%spline_degree_eta1, &
         sim%spline_degree_eta2)
 
-   call initialize_ad2d_interpolator( &
-        sim%interp_rho, &
+   call sim%interp_rho%initialize( &
         sim%mesh2d_x%num_cells1 +1, &
         sim%mesh2d_x%num_cells2 +1, &
         sim%mesh2d_x%eta1_min, &
@@ -294,7 +291,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 100
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -319,6 +316,8 @@ contains
     sll_int32, dimension(:), allocatable  :: recv_sz
     sll_real64, dimension(:,:), allocatable :: phi_values
     sll_real64 :: density_tot
+    sll_int32  :: send_size   ! for allgatherv operation
+    sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
@@ -371,7 +370,7 @@ contains
          sim%bc_top)
 
 
-    SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2 +1),ierr)
+    SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2+1),ierr)
 
     phi_values(:,:) = 0.0_f64
 
@@ -391,6 +390,7 @@ contains
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
     SLL_ALLOCATE(recv_sz(sim%world_size),ierr)
+    SLL_ALLOCATE(disps(sim%world_size),ierr)
 
     if( sim%my_rank == 0 ) then
        call sll_new_file_id( efield_energy_file_id, ierr )
@@ -409,7 +409,6 @@ contains
           stop
        end if
     end if
-
 
     ! allocate the layouts...
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
@@ -594,6 +593,8 @@ contains
     delta4 = sim%mesh2d_v%delta_eta2
 
     sim%rho_split(:,:) = 0.0_f64
+    ! this only works because there is no transformation applied in the
+    ! velocity space...
     call compute_charge_density( sim%mesh2d_x,           &
                                  sim%mesh2d_v,           &
                                  size(sim%f_x3x4,1),     &
@@ -617,18 +618,30 @@ contains
 
 
     call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
-
+ !   print *, 'rank: ', sim%my_rank, 'send_buf:', send_buf
     recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
- 
-    call sll_collective_allgather( &
+ !   print *, 'rank: ', sim%my_rank, 'recv_sz = ', recv_sz(:)
+
+    send_size = size(send_buf)
+  !  print *, 'rank:', sim%my_rank, 'send_size = ', send_size
+    call compute_displacements_array( &
+         sim%split_rho_layout, &
+         sim%world_size, &
+         disps )
+    if(sim%my_rank == 0 ) then
+       print *, 'displacements array: ', disps(:)
+    end if
+    call sll_collective_allgatherv_real64( &
          sll_world_collective, &
          send_buf, &
-         size(send_buf), &
-         recv_buf, &
-         recv_sz )
- 
+         send_size, &
+         recv_sz, &
+         disps, &
+         recv_buf )
+!!$    if(sim%my_rank == 0) then
+!!$       print *, 'rank: ', sim%my_rank, 'recv_buf:', recv_buf(:)
+!!$    end if
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
-
 
    call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min+1*sim%mesh2d_x%delta_eta1, &
@@ -811,12 +824,13 @@ contains
 
        recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
  
-       call sll_collective_allgather( &
+       call sll_collective_allgatherv( &
             sll_world_collective, &
             send_buf, &
             size(send_buf), &
-            recv_buf, &
-            recv_sz )
+            recv_sz, &
+            disps, &
+            recv_buf )
 
        call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
@@ -839,7 +853,7 @@ contains
 !       print*, 'density', density_tot
 
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-
+       call rho%write_to_file(itime)
        
 
        ! It is important to remember a particular property of the periodic 
@@ -876,7 +890,7 @@ contains
 !!$          "rho_x1", &
 !!$          itime, &
 !!$          ierr )
-       call rho%write_to_file(itime)
+!       call rho%write_to_file(itime)
 
        call solve_quasi_neutral_eq_general_coords( &
             sim%qns, & 
@@ -888,7 +902,7 @@ contains
             rho, &
             phi )
        
-!       call phi%write_to_file(itime)
+       call phi%write_to_file(itime)
        
        call compute_local_sizes_4d( sim%sequential_x1x2, &
                                     loc_sz_x1,           &
@@ -907,8 +921,8 @@ contains
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  real(global_indices(1)-1,f64)*delta1
-                eta2   =  real(global_indices(2)-1,f64)*delta2
+                eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
+                eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
@@ -950,8 +964,8 @@ contains
              do k=1,sim%mesh2d_v%num_cells1+1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  real(global_indices(1)-1,f64)*delta1
-                eta2   =  real(global_indices(2)-1,f64)*delta2
+                eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
+                eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
                 ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
@@ -1255,11 +1269,8 @@ contains
     sll_real64                      :: delta2
     sll_real64                      :: lenght1
     sll_real64                      :: lenght2
-    
     sll_int32 :: i, j
-    
-
-    
+     
     numpts1 = mx%num_cells1+1
     numpts2 = mx%num_cells2+1
     delta1  = mx%delta_eta1
@@ -1267,11 +1278,11 @@ contains
     lenght1 = mx%eta1_max- mx%eta1_min
     lenght2 = mx%eta2_max- mx%eta2_min
     
-    density_tot = 0.0_8
+    density_tot = 0.0_f64
     
     do j=1,numpts2
        do i=1,numpts1
-          density_tot = density_tot + rho(i,j) * delta1* delta2
+          density_tot = density_tot + rho(i,j)*delta1*delta2
        end do
     end do
     density_tot = density_tot/ (lenght1*lenght2)
@@ -1279,6 +1290,31 @@ contains
 
   ! Some ad-hoc functions to prepare data for allgather operations. Should
   ! consider putting this elsewhere.
+
+  subroutine compute_displacements_array( layout, collective_size, disps )
+    type(layout_2D), pointer                           :: layout
+    sll_int32, intent(in)                              :: collective_size
+    sll_int32, dimension(collective_size), intent(out) :: disps
+    sll_int32 :: imin, imax
+    sll_int32 :: jmin, jmax
+    sll_int32 :: size_i, size_j
+    sll_int32 :: i,j
+    sll_int32 :: counter
+    sll_int32 :: rank
+
+    counter  = 0
+    disps(1) = counter
+    do rank=1,collective_size-1
+       imin = get_layout_i_min( layout, rank-1 )
+       imax = get_layout_i_max( layout, rank-1 )
+       jmin = get_layout_j_min( layout, rank-1 )
+       jmax = get_layout_j_max( layout, rank-1 )
+       size_i      = imax - imin + 1
+       size_j      = jmax - jmin + 1
+       counter     = counter + size_i*size_j
+       disps(rank+1) = counter
+    end do
+  end subroutine compute_displacements_array
 
   subroutine load_buffer( layout, data, buffer )
     type(layout_2D), pointer   :: layout
