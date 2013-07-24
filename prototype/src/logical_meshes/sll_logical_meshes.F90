@@ -3,6 +3,14 @@ module sll_logical_meshes
 #include "sll_memory.h"
   implicit none
 
+   type sll_logical_mesh_1d
+     sll_int32  :: num_cells
+     sll_real64 :: eta_min
+     sll_real64 :: eta_max
+     sll_real64 :: delta_eta
+  end type sll_logical_mesh_1d
+
+
   type sll_logical_mesh_2d
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2

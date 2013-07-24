@@ -972,7 +972,9 @@ contains ! *******************************************************************
             qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)&
             -sum(qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2))&
             /(qns%total_num_splines_eta1*qns%total_num_splines_eta2)
-       !print*, 'moyenne de  rho-density(rho)', sum(qns%tmp_rho_vec)
+
+!       print*, 'moyenne de  rho-density(rho)', sum(qns%tmp_rho_vec)
+
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
@@ -994,7 +996,7 @@ contains ! *******************************************************************
     !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns,qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
-    print*, '---------------'
+!    print*, '---------------'
   
   end subroutine solve_linear_system
 

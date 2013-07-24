@@ -51,7 +51,11 @@ module sll_module_interpolators_1d_base
      ! implementations for them.
      ! procedure(interpolate_1d_array), pass, deferred :: interpolate_array
      ! procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
-  end type sll_interpolator_1d_base
+      procedure(get_coeffs_1d), &
+           pass,deferred :: get_coefficients
+      procedure(interpolator_1d_set_coeffs), &
+           pass, deferred :: set_coefficients
+   end type sll_interpolator_1d_base
 
   sll_int32, parameter :: INTERP_PERIODIC_BC  = 0
   sll_int32, parameter :: INTERP_DIRICHLET_BC = 1 
@@ -152,6 +156,27 @@ module sll_module_interpolators_1d_base
        sll_real64, dimension(:), intent(in)  :: data ! data to be interpolated 
        sll_real64, dimension(num_points)     :: res
      end function reconstruct_1d_array
+  end interface
+
+  abstract interface
+     subroutine interpolator_1d_set_coeffs( interpolator, coeffs )
+       use sll_working_precision
+       import sll_interpolator_1d_base
+       class(sll_interpolator_1d_base), intent(inout) :: interpolator
+       ! We allow the coefficients to be passed as 1d or 2d arrays. This allows
+       ! for more flexibility for the children classes.
+       sll_real64, dimension(:), intent(in), optional   :: coeffs
+     end subroutine interpolator_1d_set_coeffs
+  end interface
+
+
+   abstract interface 
+     function get_coeffs_1d(interpolator)
+       use sll_working_precision
+       import sll_interpolator_1d_base
+       class(sll_interpolator_1d_base), intent(in) :: interpolator
+       sll_real64, dimension(:), pointer         :: get_coeffs_1d     
+     end function get_coeffs_1d
   end interface
 
 end module sll_module_interpolators_1d_base
