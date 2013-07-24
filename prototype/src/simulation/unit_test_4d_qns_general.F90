@@ -60,8 +60,8 @@ program qns_4d_general
 
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
-       eta1_min=-10.0_f64, eta1_max=10.0_f64, &
-       eta2_min=-10.0_f64, eta2_max=10.0_f64)
+       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
+       eta2_min=-6.0_f64, eta2_max=6.0_f64)
 
 !  ! logical mesh for space coordinates
 !  mx => new_logical_mesh_2d( NPTS1, NPTS2)

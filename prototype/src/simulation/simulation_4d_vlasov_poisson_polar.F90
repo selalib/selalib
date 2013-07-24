@@ -40,6 +40,8 @@
 !>  call delete(simulation)
 !> \endcode
 
+#define MPI_MASTER 0
+
 module sll_simulation_4d_vlasov_poisson_polar
 
 #include "sll_working_precision.h"
@@ -59,6 +61,7 @@ use sll_logical_meshes
 use sll_parallel_array_initializer_module
 use sll_coordinate_transformation_2d_base_module
 use sll_gnuplot_parallel
+use sll_poisson_polar_parallel
 
 implicit none
 
@@ -67,7 +70,6 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
   
  sll_int32  :: world_size !< Parallel environment parameters
  sll_int32  :: my_rank    !< Processor id
- sll_int32  :: nproc_x1, nproc_x2, nproc_x3, nproc_x4 !< Processor mesh sizes
  sll_real64 :: dt              !< time step
  sll_int32  :: num_iterations  !< steps number
  sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4 !< Mesh parameters
@@ -90,9 +92,22 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
  type(cubic_spline_1d_interpolator) :: interp_x3   !< interpolator 1d in vx
  type(cubic_spline_1d_interpolator) :: interp_x4   !< interpolator 1d in vx
  procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func !< for distribution function initializer:
- sll_real64, dimension(:), pointer :: params !< function initializer parameters
- sll_real64, dimension(:,:), pointer :: x1 !< x1 mesh mapped coordinates
- sll_real64, dimension(:,:), pointer :: x2 !< x2 mesh mapped coordinates
+ sll_real64, dimension(:),     pointer :: params !< function initializer parameters
+ sll_real64, dimension(:,:),   pointer :: x1     !< x1 mesh mapped coordinates
+ sll_real64, dimension(:,:),   pointer :: x2     !< x2 mesh mapped coordinates
+ sll_real64, dimension(:,:),   pointer :: phi_x1    !< potential
+ sll_real64, dimension(:,:),   pointer :: phi_x2    !< potential
+ sll_real64, dimension(:,:),   pointer :: rho    !< charge density
+ sll_real64, dimension(:,:,:), pointer :: partial_reduction
+ sll_real64, dimension(:,:,:), pointer :: efields_x1
+ sll_real64, dimension(:,:,:), pointer :: efields_x2
+
+
+ type(sll_poisson_polar)  :: poisson   ! Poisson solver in polar coordinates
+ type(layout_2D), pointer :: layout_x1 ! sequential in r direction
+ type(layout_2D), pointer :: layout_x2 ! sequential in theta direction
+ type(remap_plan_2D_real64), pointer :: rmp_x1x2   !< remap r->theta 
+ type(remap_plan_2D_real64), pointer :: rmp_x2x1   !< remap theta->r
 
 contains
  
@@ -117,6 +132,7 @@ sll_int32,  private :: gi, gj, gk, gl
 sll_real64, private :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 sll_real64, private :: alpha1, alpha2, alpha3, alpha4
 sll_real64, private :: eta1, eta2, eta3, eta4
+sll_int32,  private :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_real64, private :: jac_m(2,2), inv_j(2,2)
 sll_int32,  private :: itime, error
 sll_real64, private :: eta1_min, eta2_min, eta3_min, eta4_min
@@ -151,7 +167,6 @@ contains
    sim%nc_x2 = mesh2d_x%num_cells2
    sim%nc_x3 = mesh2d_v%num_cells1
    sim%nc_x4 = mesh2d_v%num_cells2
-
 
   end subroutine initialize_vp4d_polar
 
@@ -189,47 +204,53 @@ contains
     sim%nc_x2 = num_cells_x2
     sim%nc_x3 = num_cells_x3
     sim%nc_x4 = num_cells_x4
+
   end subroutine init_vp4d_par_polar
 
   !> run simulation
   subroutine run_vp4d_polar(sim)
     class(sll_simulation_4d_vp_polar), intent(inout) :: sim
     sll_int32  :: error
+    sll_int32  :: prank
+    sll_int32  :: psize
 
-    sim%my_rank    = sll_get_collective_rank(sll_world_collective)
+    psize  = sll_get_collective_size(sll_world_collective)
+    prank  = sll_get_collective_rank(sll_world_collective)
 
-    call compute_domain_decomposition(sim)
+    sim%my_rank = prank
 
     ! allocate the layouts...
     sim%sequential_x1x2  => new_layout_4D( sll_world_collective )
     sim%sequential_x3x4  => new_layout_4D( sll_world_collective )
+
+    nc_eta1    = sim%nc_x1
+    nc_eta2    = sim%nc_x2 
+    nc_eta3    = sim%nc_x3
+    nc_eta4    = sim%nc_x4 
 
     delta_eta1 = sim%mesh2d_x%delta_eta1
     delta_eta2 = sim%mesh2d_x%delta_eta2
     delta_eta3 = sim%mesh2d_v%delta_eta1
     delta_eta4 = sim%mesh2d_v%delta_eta2
 
-    eta1_min = sim%mesh2d_x%eta1_min
-    eta2_min = sim%mesh2d_x%eta2_min
-    eta3_min = sim%mesh2d_v%eta1_min
-    eta4_min = sim%mesh2d_v%eta2_min
+    eta1_min   = sim%mesh2d_x%eta1_min
+    eta2_min   = sim%mesh2d_x%eta2_min
+    eta3_min   = sim%mesh2d_v%eta1_min
+    eta4_min   = sim%mesh2d_v%eta2_min
 
-    eta1_max = sim%mesh2d_x%eta1_max
-    eta2_max = sim%mesh2d_x%eta2_max
-    eta3_max = sim%mesh2d_v%eta1_max
-    eta4_max = sim%mesh2d_v%eta2_max
+    eta1_max   = sim%mesh2d_x%eta1_max
+    eta2_max   = sim%mesh2d_x%eta2_max
+    eta3_max   = sim%mesh2d_v%eta1_max
+    eta4_max   = sim%mesh2d_v%eta2_max
 
     call initialize_layout_with_distributed_4D_array( &
          sim%nc_x1+1, sim%nc_x2+1, sim%nc_x3+1, sim%nc_x4+1, &
-         sim%nproc_x1, sim%nproc_x2, sim%nproc_x3, sim%nproc_x4, &
+         psize, 1, 1, 1, &
          sim%sequential_x3x4 )
 
-    SWAP(sim%nproc_x1, sim%nproc_x3)
-    SWAP(sim%nproc_x2, sim%nproc_x4)
-    
     call initialize_layout_with_distributed_4D_array( &
          sim%nc_x1+1, sim%nc_x2+1, sim%nc_x3+1, sim%nc_x4+1, &
-         sim%nproc_x1, sim%nproc_x2, sim%nproc_x3, sim%nproc_x4, &
+         1, 1, psize, 1, &
          sim%sequential_x1x2 )
     
     call compute_local_sizes_4d( sim%sequential_x1x2, &
@@ -244,18 +265,11 @@ contains
     SLL_ALLOCATE(sim%f_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),error)
     SLL_ALLOCATE(sim%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
 
-    SLL_CLEAR_ALLOCATE(sim%x1(loc_sz_x1,loc_sz_x2),error)
-    SLL_CLEAR_ALLOCATE(sim%x2(loc_sz_x1,loc_sz_x2),error)
-
-    do j = 1, loc_sz_x2
-    do i = 1, loc_sz_x1
-       global_indices = local_to_global_4D(sim%sequential_x3x4,(/i,j,1,1/))
-       sim%x1(i,j) = sim%transfx%x1_at_node(global_indices(1),global_indices(2))
-       sim%x2(i,j) = sim%transfx%x2_at_node(global_indices(1),global_indices(2))
-    end do
-    end do
     
-    call sll_view_lims_4D( sim%sequential_x3x4)
+    if ( prank == MPI_MASTER ) call sll_view_lims_4D( sim%sequential_x1x2 )
+    call flush(6)
+    if ( prank == MPI_MASTER ) call sll_view_lims_4D( sim%sequential_x3x4 )
+    call flush(6)
     
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, sim%mesh2d_x, sim%mesh2d_v, &
@@ -269,39 +283,105 @@ contains
          NEW_REMAP_PLAN(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
     call sim%interp_x1x2%initialize( &
-         sim%nc_x1+1, sim%nc_x2+1, &
-         sim%mesh2d_x%eta1_min, sim%mesh2d_x%eta1_max, &
-         sim%mesh2d_x%eta2_min, sim%mesh2d_x%eta2_max, &
+         sim%nc_x1+1, sim%nc_x2+1,   &
+         eta1_min, eta1_max,         &
+         eta2_min, eta2_max,         &
          SLL_PERIODIC, SLL_PERIODIC )
 
     call sim%interp_x3%initialize( &
-         sim%nc_x3+1,&
-         sim%mesh2d_v%eta1_min,&
-         sim%mesh2d_v%eta1_max, &
-         SLL_PERIODIC)
+         sim%nc_x3+1, eta3_min, eta3_max, SLL_PERIODIC)
 
     call sim%interp_x4%initialize( &
-         sim%nc_x4+1,&
-         sim%mesh2d_v%eta2_min,&
-         sim%mesh2d_v%eta2_max,&
-         SLL_PERIODIC)
+         sim%nc_x4+1, eta4_min, eta4_max, SLL_PERIODIC)
 
+    sim%layout_x1 => new_layout_2D( sll_world_collective )
+
+    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
+                                                      sim%nc_x2+1, &
+                                                      1,           &
+                                                      psize,       &
+                                                      sim%layout_x1 )
+
+    call compute_local_sizes_2d(sim%layout_x1, loc_sz_x1, loc_sz_x2)
+    SLL_CLEAR_ALLOCATE(sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%efields_x1(1:loc_sz_x1,1:loc_sz_x2,2),error)
+
+    sim%layout_x2 => new_layout_2D( sll_world_collective )
+
+    call initialize_layout_with_distributed_2D_array( sim%nc_x1+1, &
+                                                      sim%nc_x2+1, &
+                                                      psize,       &
+                                                      1,           &
+                                                      sim%layout_x2 )
+
+    call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
+    SLL_CLEAR_ALLOCATE(sim%rho(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%phi_x2(1:loc_sz_x1,1:loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%efields_x2(1:loc_sz_x1,1:loc_sz_x2,2),error)
+
+    call initialize( sim%poisson,   &
+                     sim%layout_x1, &
+                     sim%layout_x2, &
+                     eta1_min,      &
+                     eta2_max,      &
+                     sim%nc_x1,     &
+                     sim%nc_x2,     &
+                     SLL_DIRICHLET, &
+                     SLL_DIRICHLET)
+
+    sim%rmp_x1x2 => new_remap_plan(sim%layout_x1, sim%layout_x2, sim%phi_x1)
+    sim%rmp_x2x1 => new_remap_plan(sim%layout_x2, sim%layout_x1, sim%phi_x2)
+
+    SLL_CLEAR_ALLOCATE(sim%x1(loc_sz_x1,loc_sz_x2),error)
+    SLL_CLEAR_ALLOCATE(sim%x2(loc_sz_x1,loc_sz_x2),error)
+
+    do j = 1, loc_sz_x2
+    do i = 1, loc_sz_x1
+       global_indices(1:2) = local_to_global_2D(sim%layout_x2,(/i,j/))
+       sim%x1(i,j) = sim%transfx%x1_at_node(global_indices(1),global_indices(2))
+       sim%x2(i,j) = sim%transfx%x2_at_node(global_indices(1),global_indices(2))
+    end do
+    end do
+    
     do itime=1, sim%num_iterations !Loop over time
 
        if(sim%my_rank == 0) then
           print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
        end if
 
+       call plot_f_x1x2(sim)
+
+       !transpose to x space
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
+
        call advection_x1x2(sim,sim%dt)
+
+
+       call compute_charge_density( sim )
+
+       call plot_rho(sim)
+
+       call solve(sim%poisson, sim%rho, sim%phi_x2)
+
+       call plot_phi(sim)
+
+       !transpose to v space
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
-       !call advection_x3(sim,sim%dt)
-       !call advection_x4(sim,sim%dt)
+
+       !call apply_remap_2D( sim%rmp_x2x1, sim%phi_x2, sim%phi_x1 )
+       !call compute_electric_fields_eta1( sim )
+       !call apply_remap_2D( sim%rmp_x1x2, sim%phi_x1, sim%phi_x2 )
+       !call compute_electric_fields_eta2( sim )
+!
+!       call advection_x3(sim,sim%dt)
+
+!       call advection_x4(sim,sim%dt)
+
+       call plot_f_x3x4(sim)
 
     end do ! next time step 
 
   end subroutine run_vp4d_polar
-
 
   subroutine advection_x1x2(sim,deltat)
     class(sll_simulation_4d_vp_polar) :: sim
@@ -320,27 +400,27 @@ contains
                 gj = global_indices(2)
                 gk = global_indices(3)
                 gl = global_indices(4)
-                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*delta_eta1
-                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*delta_eta2
-                eta3 = sim%mesh2d_v%eta1_min + (gk-1)*delta_eta3
-                eta4 = sim%mesh2d_v%eta2_min + (gl-1)*delta_eta4
+                eta1 = eta1_min + (gi-1)*delta_eta1
+                eta2 = eta2_min + (gj-1)*delta_eta2
+                eta3 =  eta1*sin(eta2) !sim%mesh2d_v%eta1_min + (gk-1)*delta_eta3
+                eta4 = -eta1*cos(eta2) !sim%mesh2d_v%eta2_min + (gl-1)*delta_eta4
                 inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                alpha1 = 0.!-deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
-                alpha2 = 0.!-deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+                alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
 
                 eta1 = eta1+alpha1
                 ! This is hardwiring the periodic BC, please improve this...
-                if( eta1 <  sim%mesh2d_x%eta1_min ) then
-                   eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
-                else if( eta1 >  sim%mesh2d_x%eta1_max ) then
-                   eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
+                if( eta1 < eta1_min ) then
+                   eta1 = eta1+eta1_max-eta1_min
+                else if( eta1 > eta1_max ) then
+                   eta1 = eta1+eta1_min-eta1_max
                 end if
 
                 eta2 = eta2+alpha2
-                if( eta2 <  sim%mesh2d_x%eta2_min ) then
-                   eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
-                else if( eta2 >  sim%mesh2d_x%eta2_max ) then
-                   eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                if( eta2 < eta2_min ) then
+                   eta2 = eta2+eta2_max-eta2_min
+                else if( eta2 > eta2_max ) then
+                   eta2 = eta2+eta2_min-eta2_max
                 end if
                 
                 sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
@@ -353,6 +433,7 @@ contains
   end subroutine advection_x1x2
 
   subroutine advection_x3(sim,deltat)
+
     class(sll_simulation_4d_vp_polar) :: sim
     sll_real64, intent(in) :: deltat
     sll_real64 :: ex, ey
@@ -364,22 +445,23 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              global_indices = local_to_global_4D( sim%sequential_x3x4, (/i,j,1,1/))
-             eta1   =  (global_indices(1)-1)*delta_eta1
-             eta2   =  (global_indices(2)-1)*delta_eta2
+             eta1   =  eta1_min + (global_indices(1)-1)*delta_eta1
+             eta2   =  eta2_min + (global_indices(2)-1)*delta_eta2
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
              jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-             ex     =  0.
-             ey     =  0.
+             ex     =  sim%efields_x2(i,j,1)
+             ey     =  sim%efields_x2(i,j,2)
              alpha3 = -deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
              sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                                    sim%nc_x3+1, sim%f_x3x4(i,j,:,l), alpha3 )
-             end do
           end do
        end do
+    end do
 
   end subroutine advection_x3
 
   subroutine advection_x4(sim,deltat)
+
     class(sll_simulation_4d_vp_polar) :: sim
     sll_real64, intent(in) :: deltat
     sll_real64 :: ex, ey
@@ -391,11 +473,11 @@ contains
        do i=1,loc_sz_x1
           do k=1,loc_sz_x3
              global_indices = local_to_global_4D( sim%sequential_x3x4, (/i,j,1,1/))
-             eta1   =  (global_indices(1)-1)*delta_eta1
-             eta2   =  (global_indices(2)-1)*delta_eta2
+             eta1   =  eta1_min+(global_indices(1)-1)*delta_eta1
+             eta2   =  eta2_min+(global_indices(2)-1)*delta_eta2
              inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-             ex     =  0.
-             ey     =  0.
+             ex     =  sim%efields_x2(i,j,1)
+             ey     =  sim%efields_x2(i,j,2)
              alpha4 = -deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
              sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                                    sim%nc_x4+1, sim%f_x3x4(i,j,k,:), alpha4 )
@@ -405,13 +487,13 @@ contains
 
   end subroutine advection_x4
 
-  subroutine plot_fxy(sim)
+  subroutine plot_f_x1x2(sim)
     class(sll_simulation_4d_vp_polar) :: sim
+
 
     call compute_local_sizes_4d( sim%sequential_x3x4, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-    call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_x2
           sim%proj_f_x1x2(i,j) = sum(sim%f_x3x4(i,j,:,:))
@@ -421,29 +503,26 @@ contains
     call sll_gnuplot_2d_parallel( sim%x1, sim%x2, sim%proj_f_x1x2, &
                                   "fxy", itime, error )
 
-  end subroutine plot_fxy
+  end subroutine plot_f_x1x2
 
-  subroutine plot_fvxvy(sim)
+  subroutine plot_f_x3x4(sim)
     class(sll_simulation_4d_vp_polar) :: sim
 
     call compute_local_sizes_4d( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-    call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
     do l = 1, loc_sz_x4
        do k = 1, loc_sz_x3
           sim%proj_f_x3x4(k,l) = sum(sim%f_x1x2(:,:,k,l))
        end do
     end do
 
-    global_indices = local_to_global_4D( sim%sequential_x1x2, (/1,1,1,1/) )
-       
     call sll_gnuplot_2d_parallel( &
         eta3_min+(global_indices(1)-1)*delta_eta3, delta_eta3, &
         eta4_min+(global_indices(2)-1)*delta_eta4, delta_eta4, &
         sim%proj_f_x3x4, "fxy", itime, error )
 
-  end subroutine plot_fvxvy
+  end subroutine plot_f_x3x4
 
   subroutine delete_vp4d_par_polar( sim )
     type(sll_simulation_4d_vp_polar) :: sim
@@ -459,32 +538,92 @@ contains
     call delete( sim%interp_x4 )
   end subroutine delete_vp4d_par_polar
 
-  subroutine compute_domain_decomposition(sim)
-    class(sll_simulation_4d_vp_polar), intent(inout) :: sim
-    sll_int32  :: power2
+  subroutine compute_charge_density( sim )
 
-    sim%world_size = sll_get_collective_size(sll_world_collective)
-    power2 = int(log(real(sim%world_size))/log(2.0))
+    class(sll_simulation_4d_vp_polar) :: sim
 
-    ! special case N = 1, so power2 = 0
-    if(power2 == 0) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
+    call compute_local_sizes_4d(sim%sequential_x3x4, loc_sz_x1, &
+                                                     loc_sz_x2, &
+                                                     loc_sz_x3, &
+                                                     loc_sz_x4)
+    sim%rho(:,:) = 0.0
     
-    if(is_even(power2)) then
-       sim%nproc_x1 = 2**(power2/2)
-       sim%nproc_x2 = 2**(power2/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    else 
-       sim%nproc_x1 = 2**((power2-1)/2)
-       sim%nproc_x2 = 2**((power2+1)/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
-  end subroutine compute_domain_decomposition
+    do j=1,loc_sz_x2
+       do i=1,loc_sz_x1
+          sim%rho(i,j) = sum(sim%f_x3x4(i,j,:,:))
+       end do
+    end do
+    sim%rho = sim%rho *delta_eta3*delta_eta4
+
+  end subroutine compute_charge_density
+
+  
+  subroutine plot_rho(sim)
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
+
+    call sll_gnuplot_2d_parallel(sim%x1, sim%x2, sim%rho, 'rho', itime, error)
+
+  end subroutine plot_rho
+ 
+  subroutine plot_phi(sim)
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    call compute_local_sizes_2d(sim%layout_x2, loc_sz_x1, loc_sz_x2)
+
+    call sll_gnuplot_2d_parallel(sim%x1, sim%x2, sim%phi_x2, 'phi', itime, error)
+
+  end subroutine plot_phi
+
+  subroutine compute_electric_fields_eta1( sim )
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    sll_real64                        :: r_delta
+    
+    r_delta = 1.0_f64/delta_eta1
+    
+    i = 1
+    sim%efields_x1(i,:,1) = -r_delta*(- 1.5_f64*sim%phi_x1(i  ,:) &
+                                   + 2.0_f64*sim%phi_x1(i+1,:) &
+                                   - 0.5_f64*sim%phi_x1(i+2,:) )
+    i = sim%nc_x1+1
+    sim%efields_x1(i,:,1) = -r_delta*(  0.5_f64*sim%phi_x1(i-2,:) &
+                                   - 2.0_f64*sim%phi_x1(i-1,:) &
+                                   + 1.5_f64*sim%phi_x1(i  ,:) )
+    do i=2, sim%nc_x1
+       sim%efields_x1(i,:,1) = -r_delta*0.5_f64*(sim%phi_x1(i+1,:) &
+                                            - sim%phi_x1(i-1,:))
+    end do
+
+    call apply_remap_2D( sim%rmp_x1x2, sim%efields_x1(:,:,1), sim%efields_x2(:,:,1) )
+
+  end subroutine compute_electric_fields_eta1
+
+  subroutine compute_electric_fields_eta2( sim )
+
+    class(sll_simulation_4d_vp_polar) :: sim
+    sll_real64                        :: r_delta
+  
+    r_delta = 1.0_f64/delta_eta2
+    
+    j=1 
+    sim%efields_x2(:,j,2) = -r_delta*(- 1.5_f64*sim%phi_x2(:,j)   &
+                                     + 2.0_f64*sim%phi_x2(:,j+1) &
+                                     - 0.5_f64*sim%phi_x2(:,j+2))
+    j=sim%nc_x2+1
+    sim%efields_x2(:,j,2) = -r_delta*(  0.5_f64*sim%phi_x2(:,j-2) &
+                                     - 2.0_f64*sim%phi_x2(:,j-1) &
+                                     + 1.5_f64*sim%phi_x2(:,j))
+    
+    do j=2,sim%nc_x2
+       sim%efields_x2(:,j,2) = -r_delta*0.5_f64*(sim%phi_x2(:,j+1) &
+                                              - sim%phi_x2(:,j-1))
+    end do
+
+    call apply_remap_2D( sim%rmp_x2x1, sim%efields_x2(:,:,2), sim%efields_x1(:,:,2) )
+
+  end subroutine compute_electric_fields_eta2
+
 
 end module sll_simulation_4d_vlasov_poisson_polar

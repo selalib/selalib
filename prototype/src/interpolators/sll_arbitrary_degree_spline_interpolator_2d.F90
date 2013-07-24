@@ -19,11 +19,19 @@ module sll_arbitrary_degree_spline_interpolator_2d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h" 
+#ifdef STDF95
+use sll_boundary_condition_descriptors
+#else
 use sll_module_interpolators_2d_base
+#endif
   implicit none
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
+#ifdef STDF95
+  type                                    :: arb_deg_2d_interpolator           
+#else
   type, extends(sll_interpolator_2d_base) :: arb_deg_2d_interpolator           
+#endif
      sll_int32  :: num_pts1
      sll_int32  :: num_pts2
      sll_real64 :: eta1_min
@@ -48,6 +56,7 @@ use sll_module_interpolators_2d_base
      sll_int32                  :: size_coeffs1
      sll_int32                  :: size_coeffs2
 
+#ifndef STDF95
    contains
     procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
     procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
@@ -62,6 +71,7 @@ use sll_module_interpolators_2d_base
     procedure, pass:: interpolate_array => interpolate_array_ad2d
     procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
     procedure, pass:: get_coefficients => get_coefficients_ad2d
+#endif
   end type arb_deg_2d_interpolator
 
   interface delete
@@ -71,7 +81,11 @@ use sll_module_interpolators_2d_base
 contains
 
   subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(inout) :: interpolator
+#else
     class(arb_deg_2d_interpolator), intent(inout) :: interpolator
+#endif
     sll_int32 :: ierr
     SLL_DEALLOCATE(interpolator%knots1,ierr)
     SLL_DEALLOCATE(interpolator%knots2,ierr)
@@ -80,7 +94,11 @@ contains
     SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
   end subroutine delete_arbitrary_degree_2d_interpolator
 
+#ifdef STDF95
+  subroutine arbitrary_degree_spline_interp2d_initialize( &
+#else
   subroutine initialize_ad2d_interpolator( &
+#endif
     interpolator, &
     num_pts1, &
     num_pts2, &
@@ -95,7 +113,11 @@ contains
     spline_degree1, &
     spline_degree2 )
 
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(inout) :: interpolator
+#else
     class(arb_deg_2d_interpolator), intent(inout) :: interpolator
+#endif
     sll_int32, intent(in) :: num_pts1
     sll_int32, intent(in) :: num_pts2
     sll_real64, intent(in) :: eta1_min
@@ -235,7 +257,7 @@ contains
     interpolator%t1(:) = 0.0_f64
     interpolator%t2(:) = 0.0_f64
     !print*,'SIZE',  num_pts1 + 2*(spline_degree1 + 1)
-  end subroutine initialize_ad2d_interpolator
+  end subroutine !initialize_ad2d_interpolator
 
 !!$  subroutine compute_interpolants_ad2d( &
 !!$    interpolator, &
@@ -248,12 +270,20 @@ contains
 !!$
 !!$  end subroutine compute_interpolants_ad2d
 
+#ifdef STDF95
+  subroutine arbitrary_degree_spline_interp2_set_coefficients( &
+#else
   subroutine set_coefficients_ad2d( &
+#endif
    interpolator, &
    coeffs_1d, &
    coeffs_2d )
 
+#ifdef STDF95
+   type (arb_deg_2d_interpolator), intent(inout)  :: interpolator
+#else
    class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
+#endif
    sll_real64, dimension(:), intent(in), optional :: coeffs_1d
    sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
    sll_int32 :: sp_deg1
@@ -516,9 +546,13 @@ contains
            'not recognized.'
       stop
    end select
- end subroutine set_coefficients_ad2d
+ end subroutine !set_coefficients_ad2d
 
+#ifdef STDF95
+  subroutine arbitrary_degree_spline_interp2d_compute_interpolants( &
+#else
   subroutine compute_interpolants_ad2d( &
+#endif
     interpolator, &
     data_array, &
     eta1_coords, &
@@ -526,14 +560,18 @@ contains
     eta2_coords, &
     size_eta2_coords )
 
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(inout)  :: interpolator
+#else
     class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
+#endif
     sll_real64, dimension(:,:), intent(in)         :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta1_coords
     sll_real64, dimension(:), intent(in),optional  :: eta2_coords
     sll_int32, intent(in),optional                 :: size_eta1_coords
     sll_int32, intent(in),optional                 :: size_eta2_coords
-    sll_real64, dimension(:),pointer               :: point_locate_eta1
-    sll_real64, dimension(:),pointer               :: point_locate_eta2
+    sll_real64, dimension(:),pointer               :: point_location_eta1
+    sll_real64, dimension(:),pointer               :: point_location_eta2
     sll_real64 :: delta_eta1
     sll_real64 :: delta_eta2
     sll_int32  :: sz1
@@ -577,12 +615,12 @@ contains
        sz1 = size_eta1_coords
        sz2 = size_eta2_coords
        
-       SLL_ALLOCATE(point_locate_eta1(sz1),ierr)
-       SLL_ALLOCATE(point_locate_eta2(sz2),ierr)
-       point_locate_eta1 = eta1_coords
-       point_locate_eta2 = eta2_coords
+       SLL_ALLOCATE(point_location_eta1(sz1),ierr)
+       SLL_ALLOCATE(point_location_eta2(sz2),ierr)
+       point_location_eta1 = eta1_coords
+       point_location_eta2 = eta2_coords
 
-    else ! size depends on BC combination
+    else ! size depends on BC combination, filled out at initialization.
 
        select case (interpolator%bc_selector)
        case (0) ! 1. periodic-periodic
@@ -609,14 +647,14 @@ contains
             /(interpolator%num_pts1 -1)
        delta_eta2 = (interpolator%eta2_max - interpolator%eta2_min)&
             /(interpolator%num_pts2 -1)
-       SLL_ALLOCATE(point_locate_eta1(sz1),ierr)
-       SLL_ALLOCATE(point_locate_eta2(sz2),ierr)
+       SLL_ALLOCATE(point_location_eta1(sz1),ierr)
+       SLL_ALLOCATE(point_location_eta2(sz2),ierr)
        
        do i = 1,sz1
-          point_locate_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
+          point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
        end do
        do i = 1,sz2
-          point_locate_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
+          point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
        end do
     end if
     
@@ -624,15 +662,15 @@ contains
     SLL_ASSERT(sz2 .le. interpolator%num_pts2* interpolator%num_pts2)
     SLL_ASSERT(size(data_array,1) .ge. sz1)
     SLL_ASSERT(size(data_array,2) .ge. sz2)
-    SLL_ASSERT(size(point_locate_eta1)  .ge. sz1)
-    SLL_ASSERT(size(point_locate_eta2)  .ge. sz2)
+    SLL_ASSERT(size(point_location_eta1)  .ge. sz1)
+    SLL_ASSERT(size(point_location_eta2)  .ge. sz2)
     
     order1  = interpolator%spline_degree1 + 1
     order2  = interpolator%spline_degree2 + 1
     period1 = interpolator%eta1_max - interpolator%eta1_min
     period2 = interpolator%eta2_max - interpolator%eta2_min
     
-   ! print*, 'pointlocate',point_locate_eta2
+   ! print*, 'pointlocation',point_location_eta2
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
        interpolator%size_coeffs1 = sz1+1
@@ -640,8 +678,8 @@ contains
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 + 1 
        call spli2d_perper( &
-            period1, sz1+1, order1, point_locate_eta1, &
-            period2, sz2+1, order2, point_locate_eta2, &
+            period1, sz1+1, order1, point_location_eta1, &
+            period2, sz2+1, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
@@ -654,8 +692,8 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1
        interpolator%size_t2 = order2 + sz2 + 1
-       call spli2d_dirper( sz1, order1, point_locate_eta1, &
-            period2, sz2+1, order2, point_locate_eta2, &
+       call spli2d_dirper( sz1, order1, point_location_eta1, &
+            period2, sz2+1, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2+1),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2+1) )
@@ -666,8 +704,8 @@ contains
        interpolator%size_coeffs2 = sz2
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 
-       call spli2d_perdir( period1, sz1+1, order1, point_locate_eta1, &
-            sz2, order2, point_locate_eta2, &
+       call spli2d_perdir( period1, sz1+1, order1, point_location_eta1, &
+            sz2, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1+1,1:sz2),&
             interpolator%t1(1:sz1+order1+1), &
             interpolator%t2(1:sz2+order2) )
@@ -679,22 +717,29 @@ contains
        interpolator%size_t1 = order1 + sz1 
        interpolator%size_t2 = order2 + sz2 
  
-       call spli2d_custom( sz1, order1, point_locate_eta2, &
-            sz2, order2, point_locate_eta2, &
+       call spli2d_custom( sz1, order1, point_location_eta2, &
+            sz2, order2, point_location_eta2, &
             data_array, interpolator%coeff_splines(1:sz1,1:sz2),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2) )
 
     end select
-  end subroutine compute_interpolants_ad2d
+  end subroutine !compute_interpolants_ad2d
 
-
+#ifdef STDF95
+  function arbitrary_degree_spline_interp2d_interpolate_value( &
+#else
   function interpolate_value_ad2d( &
+#endif
     interpolator, &
     eta1, &
     eta2 ) result(val)
 
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(in)  :: interpolator
+#else
     class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+#endif
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -747,15 +792,23 @@ contains
          interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
          interpolator%t1(1:interpolator%size_t1), &
          interpolator%t2(1:interpolator%size_t2))
-  end function interpolate_value_ad2d
+  end function !interpolate_value_ad2d
 
 
+#ifdef STDF95
+  function arbitrary_degree_spline_interp2d_interpolate_derivative1( &
+#else
   function interpolate_derivative1_ad2d( &
+#endif
     interpolator, &
     eta1, &
     eta2 ) result(val)
 
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(in)  :: interpolator
+#else
     class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+#endif
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -819,12 +872,20 @@ contains
   end function interpolate_derivative1_ad2d
   
 
+#ifdef STDF95
+  function arbitrary_degree_spline_interp2d_interpolate_derivative2( &
+#else
   function interpolate_derivative2_ad2d( &
+#endif
     interpolator, &
     eta1, &
     eta2 ) result(val)
 
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(in)  :: interpolator
+#else
     class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+#endif
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -884,9 +945,13 @@ contains
          interpolator%t2(1:interpolator%size_t2),&
          0,1)
 
-  end function interpolate_derivative2_ad2d
+  end function !interpolate_derivative2_ad2d
 
+#ifdef STDF95
+  function arbitrary_degree_spline_interp2d_interpolate_array( &
+#else
   function interpolate_array_ad2d( &
+#endif
     this, &
     num_points1, &
     num_points2, &
@@ -894,7 +959,11 @@ contains
     eta1, &
     eta2 ) result(res)
 
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(in)  :: this
+#else
     class(arb_deg_2d_interpolator), intent(in)  :: this
+#endif
     sll_real64,  dimension(:,:), intent(in)         :: eta1
     sll_real64,  dimension(:,:), intent(in)         :: eta2
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -904,9 +973,13 @@ contains
     sll_real64, dimension(num_points1,num_points2) :: res
  
     print *, 'interpolate_array_ad2d: not implemented'
-  end function interpolate_array_ad2d
+  end function !interpolate_array_ad2d
   
+#ifdef STDF95
+  function arbitrary_degree_spline_interp2d_interpolate_2d_array_disp( &
+#else
   function interpolate_2d_array_disp_ad2d( &
+#endif
        this,        &
        num_points1, &
        num_points2, &
@@ -914,7 +987,11 @@ contains
        alpha1,      &
        alpha2) result(res)
       
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), intent(in)    :: this
+#else
     class(arb_deg_2d_interpolator), intent(in)    :: this
+#endif
     sll_int32, intent(in)                          :: num_points1  
     sll_int32, intent(in)                          :: num_points2 
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -923,14 +1000,23 @@ contains
     sll_real64, dimension(num_points1,num_points2) :: res
     
     print *, 'interpolate_2d_array_disp_ad2d: not implemented.'
-  end function interpolate_2d_array_disp_ad2d
+  end function !interpolate_2d_array_disp_ad2d
     
-    
+   
+#ifdef STDF95
+  function arbitrary_degree_spline_interp2d_get_coefficients(interpolator)
+    type (arb_deg_2d_interpolator), intent(in)    :: interpolator
+    sll_real64, dimension(:,:), pointer           :: arbitrary_degree_spline_interp2d_get_coefficients     
+
+    arbitrary_degree_spline_interp2d_get_coefficients => interpolator%coeff_splines
+  end function arbitrary_degree_spline_interp2d_get_coefficients
+#else 
   function get_coefficients_ad2d(interpolator)
     class(arb_deg_2d_interpolator), intent(in)    :: interpolator
-    sll_real64, dimension(:,:), pointer            :: get_coefficients_ad2d     
+    sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
 
     get_coefficients_ad2d => interpolator%coeff_splines
   end function get_coefficients_ad2d
+#endif
   
 end module sll_arbitrary_degree_spline_interpolator_2d_module
