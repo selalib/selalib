@@ -61,6 +61,7 @@ program integration_tester
   write(*,*) "  0.919533908166459  0.133305990851070  "
   write(*,*) "  1.000000000000000  0.022222222222222  "
 
+  write(*,"(/,a,/)") "Matrix of derivatives"
   n = 4
   allocate(d(n,n))
   d = gauss_lobatto_derivative_matrix(n, -1._f64, 1._f64) 
@@ -88,7 +89,7 @@ program integration_tester
   dlag(4,3) = 0.8090169943749474241022934171828190588602D0
   dlag(4,4) = 0.3000000000000000000000000000000000000000D1
 
-  print*, " ** exact values with maple"
+  write(*,"(/,a,/)") " Exact values with maple "
 
   do i = 1, n
      write(*,string) ( dlag(i,j), j = 1, n)
