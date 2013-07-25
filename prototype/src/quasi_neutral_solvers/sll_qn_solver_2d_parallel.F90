@@ -15,7 +15,7 @@
 !                                  
 !***************************************************************************
 
-module sll_qns2d_angular_spect_method_par
+module sll_qn_solver_2d_parallel
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -31,7 +31,7 @@ module sll_qns2d_angular_spect_method_par
   implicit none
 
 
-  type qns2d_angular_spect_method_par
+  type qn_solver_2d_parallel
      character(len=100)                        :: BC ! Boundary_conditions
      sll_int32                                 :: NP_r ! Number of points in 
                                                                ! r-direction
@@ -48,12 +48,12 @@ module sll_qns2d_angular_spect_method_par
      sll_comp64, dimension(:,:,:), pointer :: c_remap, Te_remap
      type(remap_plan_3D_comp64), pointer              :: rmp3_1
      type(remap_plan_3D_comp64), pointer              :: rmp3_2
-  end type qns2d_angular_spect_method_par
+  end type qn_solver_2d_parallel
 
 contains
 
 
-  function new_qns2d_angular_spect_method_par(BC,rmin,rmax,NP_r, NP_theta) &
+  function new_qn_solver_2d_parallel(BC,rmin,rmax,NP_r, NP_theta) &
                                                                result (plan)
 
     character(len=100)                            :: BC ! Boundary_conditions
@@ -64,7 +64,7 @@ contains
     sll_int32                                     :: NP_r_loc, NP_theta_loc
     sll_int32                                     :: ierr
     sll_int64                                     :: colsz
-    type(qns2d_angular_spect_method_par), pointer :: plan
+    type(qn_solver_2d_parallel), pointer :: plan
 
     colsz  = sll_get_collective_size(sll_world_collective)
     NP_r_loc = NP_r/int(colsz)
@@ -134,12 +134,12 @@ contains
 
     SLL_DEALLOCATE_ARRAY( x, ierr )
 
-  end function new_qns2d_angular_spect_method_par
+  end function new_qn_solver_2d_parallel
 
 
- subroutine solve_qns2d_angular_spect_method_par(plan, rho, c, Te, f, g, Zi, phi)
+ subroutine solve_qn_solver_2d_parallel(plan, rho, c, Te, f, g, Zi, phi)
 
-    type(qns2d_angular_spect_method_par), pointer :: plan
+    type(qn_solver_2d_parallel), pointer :: plan
     sll_real64                                    :: dr, dtheta, Zi
     sll_int32                                     :: NP_r, NP_theta
     sll_int32                                     :: NP_r_loc, NP_theta_loc
@@ -250,11 +250,11 @@ contains
 
     phi = real(plan%array_fft(:,:,1), f64)/NP_theta
 
-  end subroutine solve_qns2d_angular_spect_method_par
+  end subroutine solve_qn_solver_2d_parallel
 
-  subroutine delete_qns2d_angular_spect_method_par(plan)
+  subroutine delete_qn_solver_2d_parallel(plan)
 
-       type (qns2d_angular_spect_method_par), pointer :: plan
+       type (qn_solver_2d_parallel), pointer :: plan
        sll_int32                                      :: ierr
 
        ! Fixme: some error checking, whether the poisson pointer is 
@@ -274,12 +274,11 @@ contains
 
        SLL_DEALLOCATE(plan, ierr)
 
-  end subroutine delete_qns2d_angular_spect_method_par
+  end subroutine delete_qn_solver_2d_parallel
 
 
   subroutine dirichlet_matrix_resh_spect_par(plan, k, c, Te, Zi, a_resh)
-
-    type(qns2d_angular_spect_method_par), pointer :: plan
+    type(qn_solver_2d_parallel), pointer :: plan
     sll_real64, dimension(:)                      :: c, Te
     sll_real64                                    :: dr, dtheta, Zi
     sll_real64                                    :: r, rmin, rmax
@@ -310,7 +309,7 @@ contains
 
   subroutine neumann_matrix_resh_spect_par(plan, k, c, Te, Zi, a_resh)
 
-    type(qns2d_angular_spect_method_par), pointer :: plan
+    type(qn_solver_2d_parallel), pointer :: plan
     sll_real64, dimension(:)                      :: c, Te
     sll_real64                                    :: dr, dtheta, Zi
     sll_real64                                    :: rmin, rmax, r
@@ -340,4 +339,4 @@ contains
 
   end subroutine neumann_matrix_resh_spect_par
 
-end module sll_qns2d_angular_spect_method_par
+end module sll_qn_solver_2d_parallel
