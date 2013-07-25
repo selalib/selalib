@@ -30,6 +30,7 @@ SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION
 SET_TESTS_PROPERTIES(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
@@ -44,14 +45,8 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   ADD_TEST(NAME qns2d_with_finite_diff_seq 
-            COMMAND test_qns2d_with_finite_diff_seq)
-   SET_TESTS_PROPERTIES(qns2d_with_finite_diff_seq 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ADD_TEST(NAME qns2d_angular_spectral_method_seq 
-            COMMAND test_qns2d_angular_spectral_method_seq)
-   SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_seq 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ADD_TEST(NAME qns2d COMMAND test_qn_solver_2d)
+   SET_TESTS_PROPERTIES(qns2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #consider merging the following 2 tests
    ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
