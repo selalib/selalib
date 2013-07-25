@@ -56,11 +56,11 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_field COMMAND test_advection_field)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_fields_alternative)
-   #ADD_TEST(NAME general_coordinate_qns COMMAND test_qns_general_coordinates)
+   ADD_TEST(NAME general_coordinate_qns COMMAND test_qns_general_coordinates)
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   #SET_TESTS_PROPERTIES(general_coordinate_qns PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(general_coordinate_qns PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    IF(FFTW_ENABLED)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
