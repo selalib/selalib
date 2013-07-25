@@ -7,9 +7,9 @@ TARGET_LINK_LIBRARIES(sll_coordinate_transformations sll_interpolators
 	                                               sll_file_io
 	                                               sll_logical_meshes)
 
-IF(HDF5_ENABLE_PARALLEL)
+IF(HDF5_IS_PARALLEL)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_ENABLE_PARALLEL)
+ENDIF(HDF5_IS_PARALLEL)
 
 ADD_EXECUTABLE(test_coordinate_transformations_2d unit_test_2d.F90)
 
