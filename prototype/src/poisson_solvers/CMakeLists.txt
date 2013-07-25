@@ -111,7 +111,7 @@ ENDIF()
 
 # This test has parallel diagnostics. Maybe these should only be turned on
 # when debugging this specific module.
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_LIBRARY(sll_poisson_parallel STATIC 
                sll_poisson_polar_parallel.F90 
