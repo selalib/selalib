@@ -62,6 +62,7 @@ sll_int32  :: nquads
 sll_real64 :: xgalo(degree+1)
 sll_real64 :: wgalo(degree+1)
 sll_real64 :: dlag(degree+1,degree+1)
+sll_real64 :: mdiag(degree+1,degree+1)
 sll_real64 :: xk(degree+1)
 
 this%tau  => tau
@@ -77,6 +78,11 @@ xgalo  = gauss_lobatto_points(degree+1,-1._f64,1._f64)
 wgalo  = gauss_lobatto_weights(degree+1)
 dlag   = gauss_lobatto_derivative_matrix(degree+1, -1._f64, 1._f64) 
 
+do i = 1, degree+1
+   write(*,*) (mdiag(i,j),j=1,degree+1)
+end do
+stop
+
 SLL_CLEAR_ALLOCATE(this%eta1(1:degree+1,1:nquads),  error)
 SLL_CLEAR_ALLOCATE(this%eta2(1:degree+1,1:nquads),  error)
 SLL_CLEAR_ALLOCATE(this%x1(1:nddl,1:nddl,1:nquads), error)
@@ -88,6 +94,7 @@ do j = 1, this%mesh%num_cells2
       k = k+1
       this%eta1(:,k) = this%mesh%eta1_min + (i-0.5+0.5*xgalo(k))*this%mesh%delta_eta1
       this%eta2(:,k) = this%mesh%eta2_min + (j-0.5+0.5*xgalo(k))*this%mesh%delta_eta2
+      !mdiag  = mass_matrix(degree, eta1, eta2, xgalo, wgalo, tau) 
    end do
 end do
 
@@ -144,68 +151,45 @@ sll_real64, dimension(:,:), optional :: jx   !< x current field
 sll_real64, dimension(:,:), optional :: jy   !< y current field
 sll_real64, dimension(:,:), optional :: rho  !< charge density
 
-
 end subroutine solve_maxwell_2d_diga
 
 !> Construction of the derivative matrix for Gauss-Lobatto 2D
-!> 
-!>          der(i,j)=int(Phi_{i,j}.Phi_{k,l})_[-1;1]²
-!>                  =w_i.Phi'_j(x_i)
-
-
-#define L(k,l,eta)                     \
-do l=1,k-1;                            \
-   prod=prod*(eta-x(l))/(x(k)-x(l));   \
-end do;                                \
-do l=k+1,degree+1;                     \
-   prod=prod*(eta-x(l))/(x(k)-x(l));   \
-end do                                 \
-
-function mass_matrix(degree, x, w) result(mdiag)
+!> \f[ mdiag(i,j)  =  int(Phi_{i,j}.Phi_{k,l})_{[-1;1]}^2  \f]
+!> \f[             =  w_i w_j det(\tau'(\hat{\eta}_{i,j} \delta_{i,k}.\delta_{j,l}\f]
+function mass_matrix(degree, eta1, eta2, x, w, tau) result(mdiag)
 
  sll_int32  :: degree
  sll_real64 :: x(degree+1)
  sll_real64 :: w(degree+1)
+ sll_real64 :: eta1, eta1_p
+ sll_real64 :: eta2, eta2_p
  sll_real64 :: prod
+ sll_real64 :: delta_eta1, delta_eta2, eta1_min, eta2_min
  sll_real64, dimension(degree+1,degree+1) :: mdiag
+ class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+ sll_real64 :: jac_mat(2,2)
  
-
  mdiag=0.0_f64
+ eta1_min = tau%mesh%eta1_min
+ eta2_min = tau%mesh%eta2_min
+ delta_eta1 = tau%mesh%delta_eta1
+ delta_eta2 = tau%mesh%delta_eta2
 
  do j=1,degree+1
     do i=1,degree+1
-       do l=1,j-1
-          prod=1.0_f64
-          do k=1,l-1
-             prod=prod*(x(i)-x(k))/(x(j)-x(k))
-          end do
-          do k=l+1,j-1
-             prod=prod*(x(i)-x(k))/(x(j)-x(k))
-          end do
-          do k=j+1,degree+1
-             prod=prod*(x(i)-x(k))/(x(j)-x(k))
-          end do
-          prod=prod/(x(j)-x(l))
-          mdiag(i,j)=mdiag(i,j)+prod
+       
+       do l=1,degree+1
+          if ( j /= l ) then
+             do k=1,degree+1 
+                if ( k /= l .and. k /= j ) prod=prod*(x(i)-x(k))/(x(j)-x(k))
+             end do
+             mdiag(i,j)=mdiag(i,j)+prod
+          end if
        end do
-
-       do l=j+1,degree+1
-          prod=1.0_f64
-          do k=1,j-1
-             prod=prod*(x(i)-x(k))/(x(j)-x(k))
-          end do
-          do k=j+1,l-1
-             prod=prod*(x(i)-x(k))/(x(j)-x(k))
-          end do
-          do k=l+1,degree+1
-             prod=prod*(x(i)-x(k))/(x(j)-x(k))
-          end do
-          prod=prod/(x(j)-x(l))
-          mdiag(i,j)=mdiag(i,j)+prod
-       end do
-
-       mdiag(i,j)=mdiag(i,j)*w(i)
-
+       eta1_p  = 2 * ( eta1-eta1_min-(i-1)*delta_eta1)/delta_eta1-1
+       eta2_p  = 2 * ( eta2-eta2_min-(j-1)*delta_eta2)/delta_eta2-1
+       jac_mat = tau%jacobian_matrix(eta1_p,eta2_p)
+       prod    = w(i)*w(j)*(jac_mat(1,1)*jac_mat(2,2)- jac_mat(1,2)*jac_mat(2,1))
     end do
  end do
 
