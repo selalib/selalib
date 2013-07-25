@@ -151,16 +151,6 @@ contains
 
   end function gauss_lobatto_weights
 
-
-#define L(k,l,n,x)                   \
-1.0_f64;                             \
-do l=1,k-1;                          \
-   prod=prod*(x-x(l))/(x(k)-x(l));   \
-end do;                              \
-do l=k+1,n;                          \
-   prod=prod*(x-x(l))/(x(k)-x(l));   \
-end do                               \
-
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
