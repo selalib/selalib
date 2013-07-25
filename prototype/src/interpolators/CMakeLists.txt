@@ -20,14 +20,25 @@ ENDIF(NOT STDF95)
 
 ADD_LIBRARY( sll_interpolators STATIC ${INTERPOLATORS_SRC_FILES} )
 
-TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
-                                         sll_periodic_interp
-                                         sll_lagrange_interpolation
-                                         sll_fft
-                                         sll_utilities 
-		                             deboor_splines 
-                                         sll_coordinate_transformations
-                                         ${LAPACK_LIBRARIES} )
+IF (NOT STDF95)
+   TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
+                                            sll_periodic_interp
+                                            sll_lagrange_interpolation
+                                            sll_fft
+                                            sll_utilities 
+   		                             deboor_splines 
+                                            sll_coordinate_transformations
+                                            ${LAPACK_LIBRARIES} )
+ELSE()
+   TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
+                                            sll_periodic_interp
+                                            sll_lagrange_interpolation
+                                            sll_fft
+                                            sll_utilities 
+   		                             deboor_splines 
+                                            ${LAPACK_LIBRARIES} )
+ENDIF (NOT STDF95)
+
 
 IF(NOT STDF95)
 
@@ -49,11 +60,11 @@ IF(NOT STDF95)
 #			  deboor_splines
  sll_interpolators sll_file_io)
 
+   ADD_EXECUTABLE(test_interpolators_2d unit_test.F90)
+   
+   TARGET_LINK_LIBRARIES( test_interpolators_2d sll_interpolators)
 ENDIF()
 
-ADD_EXECUTABLE(test_interpolators_2d unit_test.F90)
-
-TARGET_LINK_LIBRARIES( test_interpolators_2d sll_interpolators)
 
 ADD_EXECUTABLE(test_quintic_interpolators_1d 
                test_sll_quintic_spline_interpolator_1d.F90)

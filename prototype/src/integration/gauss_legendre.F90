@@ -130,10 +130,10 @@ contains
        xk(1)  = -0.973906528517172_f64;   wk(1)  =  0.066671344308688_f64;\
        xk(2)  = -0.865063366688985_f64;   wk(2)  =  0.149451349150581_f64;\
        xk(3)  = -0.679409568299024_f64;   wk(3)  =  0.219086362515982_f64;\
-       xk(4)  = -0.433895394129247_f64;   wk(4)  =  0.269266719309996_f64;\
+       xk(4)  = -0.433395394129247_f64;   wk(4)  =  0.269266719309996_f64;\
        xk(5)  = -0.148874338981631_f64;   wk(5)  =  0.295524224714753_f64;\
        xk(6)  =  0.148874338981631_f64;   wk(6)  =  0.295524224714753_f64;\
-       xk(7)  =  0.433895394129247_f64;   wk(7)  =  0.269266719309996_f64;\
+       xk(7)  =  0.433395394129247_f64;   wk(7)  =  0.269266719309996_f64;\
        xk(8)  =  0.679409568299024_f64;   wk(8)  =  0.219086362515982_f64;\
        xk(9)  =  0.865063366688985_f64;   wk(9)  =  0.149451349150581_f64;\
        xk(10) =  0.973906528517172_f64;   wk(10) =  0.066671344308688_f64;\
@@ -142,11 +142,9 @@ contains
        print *, 'degree of integration not implemented. Exiting...';\
        stop;
 
-  !---------------------------------------------------------------------------!
-  ! DESCRIPTION: 
-  !> @author Routine Author Name and Affiliation.
   !> @brief Gauss-Legendre Quadrature.
-  !> @details To integrate the function f(x) (real-valued and of a single, real-valued argument x)
+  !> @details To integrate the function f(x) 
+  !> (real-valued and of a single, real-valued argument x)
   !> over the interval [a,b], we use the Gauss-Legendre formula 
   !> \f[ \int_{-1}^1 f(x)dx \approx \sum_{k=1}^{n} w_k f(x_k) \f]
   !> where n represents the desired number of Gauss points.
@@ -156,16 +154,11 @@ contains
   !>
   !> To be considered is to split this function into degree-specific
   !> functions to avoid the select statement.
-  !
-  ! REVISION HISTORY:
-  ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-  !
   !> @param f the function to be integrated
   !> @param[in] a left-bound of the definition interval of f  
   !> @param[in] b right-bound of the definition interval of f 
   !> @param[in] n the desired number of Gauss points
   !> @return The value of the integral
-  !---------------------------------------------------------------------------
   function gauss_legendre_integral_1D( f, a, b, n )
     intrinsic                       :: sqrt
     sll_real64                      :: gauss_legendre_integral_1D
