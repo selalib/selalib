@@ -60,13 +60,17 @@ sll_real64                              :: err_te
 sll_real64                              :: err_tm
 sll_real64                              :: dt
 sll_real64                              :: cfl = 0.5
-sll_int32                               :: degree = 2
-
+sll_int32                               :: degree = 3
 sll_int32,  parameter                   :: mode = 2
 
-nc_eta1 = 7; nc_eta2 = 7
+nc_eta1 = 1; nc_eta2 = 1
 
-mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
+!mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
+mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
+                            eta1_min=-1._f64, eta2_min=-1._f64)
+
+write(*,*) mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
+write(*,*) mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
 
 eta1_min = mesh%eta1_min
 eta1_max = mesh%eta1_max
@@ -83,15 +87,25 @@ delta_eta2 = mesh%delta_eta2
 ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "collela_transformation", &
+!       mesh, &
+!       sinprod_x1, &
+!       sinprod_x2, &
+!       sinprod_jac11, &
+!       sinprod_jac12, &
+!       sinprod_jac21, &
+!       sinprod_jac22 )
+
 tau => new_coordinate_transformation_2d_analytic( &
-       "collela_transformation", &
+       "identity_transformation", &
        mesh, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22 )
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22 )
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
