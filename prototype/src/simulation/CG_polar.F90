@@ -599,9 +599,11 @@ program cg_polar
       print*,'#step',step
     end if
 
+#ifndef NOHDF5
     if (step==1 .or. step/visustep*visustep==step) then
       call plot_f(step/visustep)
     end if
+#endif
   end do
   write(23,*)' '
   write(23,*)' '
@@ -634,6 +636,7 @@ program cg_polar
 contains
 !*********************
 
+#ifndef NOHDF5
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
@@ -682,5 +685,7 @@ contains
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f
+
+#endif
  
 end program cg_polar
