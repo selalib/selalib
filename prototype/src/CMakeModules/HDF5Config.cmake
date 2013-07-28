@@ -1,7 +1,7 @@
 SET(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
-IF(NOT HDF5_FOUND)
+IF(NOT HDF5_FOUND AND HDF5_ENABLED)
 
    SET(HDF5_PATHS $ENV{HDF5_HOME}
                   $ENV{HDF5_ROOT} 
@@ -16,12 +16,12 @@ IF(NOT HDF5_FOUND)
    PATH_SUFFIXES / include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
-   FIND_LIBRARY(HDF5_C_LIBRARY NAMES hdf5
+   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5
    HINTS ${HDF5_PATHS} 
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
-   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
+   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES libhdf5_fortran.a hdf5_fortran
    HINTS ${HDF5_PATHS} 
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5_fortran")

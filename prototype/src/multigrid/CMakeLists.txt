@@ -1,3 +1,4 @@
+IF (MPI_MODULE_ENABLED)
 ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      diagnostics.F90
                      write_xdmf_2d.F90
@@ -54,3 +55,5 @@ IF(HDF5_PARALLEL_ENABLED)
 #	                             sll_assertion)
 
 ENDIF()
+
+ENDIF (MPI_MODULE_ENABLED)
