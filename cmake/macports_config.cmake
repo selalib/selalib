@@ -19,5 +19,4 @@ SET(MPI_Fortran_INCLUDE_PATH "/opt/local/lib" CACHE PATH " " FORCE)
 SET(MPI_C_LIBRARIES          "/opt/local/lib/libmpi.dylib" CACHE FILEPATH " " FORCE)
 SET(MPI_CXX_LIBRARIES        "/opt/local/lib/libmpi_cxx.dylib" CACHE FILEPATH " " FORCE)
 SET(MPI_Fortran_LIBRARIES    "/opt/local/lib/libmpi_f90.dylib" CACHE FILEPATH " " FORCE)
-SET(LAPACK_Accelerate_LIBRARY    "/opt/local/lib/libatlas.dylib" CACHE FILEPATH " " FORCE)
 
