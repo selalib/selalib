@@ -44,9 +44,8 @@ program integration_tester
 ! sage: proots = L.roots()
 ! sage: xk = [-1]+[ proots[i][0] for i in range(n-2)]+[1]
 ! sage: wk =[2/(n*(n-1))]+[2/(n*(n-1)*(legendre_P(n-1,xk[i]))^2) for i in range(1,n-1)]+[2/(n*(n-1))]
-! sage: dk = [ L(xk[i]) for i in range(n)]
 ! sage: for i in range(10):
-! sage:    print " %28.15f %28.15f %28.15 " % (xk[i], wk[i], dk[i]) 
+! sage:    print " %28.15f %28.15f " % (xk[i], wk[i])
 
   print*, " ** exact values with sage"
 
