@@ -107,8 +107,5 @@ case "$OS" in
       fi;;
    linux)  ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/prototype/src ;;
 esac
-INFO "done"
-
 INFO "To build the library go to build directory and type make"
-INFO "To run regression tests type : make test"
 
