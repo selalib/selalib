@@ -1,3 +1,4 @@
+IF (MPI_MOUDLE_ENABLED)
 ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      diagnostics.F90
                      write_xdmf_2d.F90
@@ -23,6 +24,7 @@ ADD_LIBRARY(sll_mgd3 mgdend_3d.F90
                      mgdsetf_3d.F90 
                      mgdrtrsf_3d.F90
                      write_xdmf_3d.F90)
+ENDIF (MPI_MOUDLE_ENABLED)
 
 IF(HDF5_PARALLEL_ENABLED)
 
