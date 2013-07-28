@@ -8,6 +8,7 @@ module sll_maxwell_2d_diga
 #include "sll_constants.h"
 #include "sll_file_io.h"
 #include "sll_integration.h"
+#include "sll_utilities.h"
 
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
@@ -29,18 +30,21 @@ end type A_matrix
 !> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
 type :: maxwell_2d_diga
- type(sll_logical_mesh_2d), pointer :: mesh !< Logical mesh
+ type(sll_logical_mesh_2d), pointer    :: mesh !< Logical mesh
  class(sll_coordinate_transformation_2d_analytic), pointer :: tau  !< Geometric transformation
- sll_int32           :: polarization !< TE or TM
- sll_int32           :: d       !< d of gauss integration
+ sll_int32                             :: polarization !< TE or TM
+ sll_int32                             :: d       !< d of gauss integration
  type(w_vector), dimension(:), pointer :: W
  type(A_matrix), dimension(2)          :: A
+ sll_real64, dimension(:,:),   pointer :: MassMatrix !< Mass Matrix
+ sll_real64, dimension(:,:,:), pointer :: DxMatrix   !< X Stiffness Matrix
+ sll_real64, dimension(:,:,:), pointer :: DyMatrix   !< Y Stiffness Matrix
 end type maxwell_2d_diga
-
 
 interface initialize
    module procedure initialize_maxwell_2d_diga
 end interface initialize
+
 interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
@@ -67,15 +71,16 @@ sll_int32  :: ncells
 sll_real64 :: xgalo(d+1)
 sll_real64 :: wgalo(d+1)
 sll_real64 :: dlag(d+1,d+1)
-sll_real64 :: mdiag((d+1)*(d+1))
-sll_real64 :: Dx((d+1)*(d+1),(d+1)*(d+1))
-sll_real64 :: Dy((d+1)*(d+1),(d+1)*(d+1))
-sll_real64 :: eta1_p, eta2_p
 sll_int32  :: i, j, k, l, ii, jj, kk, ll
-sll_real64 :: integral, det
+sll_real64 :: det
 sll_real64 :: jac_mat(2,2)
+sll_real64 :: inv_jac_mat(2,2)
 sll_real64 :: east(2), west(2), north(2), south(2)
-
+sll_real64 :: eta1_p, eta2_p
+sll_real64 :: v_east(2)
+sll_real64 :: v_west(2)
+sll_real64 :: v_north(2)
+sll_real64 :: v_south(2)
 
 this%tau  => tau
 this%d = d
@@ -92,28 +97,8 @@ wgalo  = gauss_lobatto_weights(d+1)
 write(*,*) " GL weights ", wgalo
 dlag   = gauss_lobatto_derivative_matrix(d+1, -1._f64, 1._f64) 
 write(*,*) "Derivative matrix"
-do k = 1,d+1
-   write(*,*)(dlag(k,l),l=1,d+1)
-end do
 
-print*, " test integration "
-
-integral = 0.0_f64
-do j = 1, this%mesh%num_cells2
-do i = 1, this%mesh%num_cells1
-   do ii = 1, d+1
-   do jj = 1, d+1
-      eta1_p  = (i-0.5+0.5*xgalo(ii))*tau%mesh%delta_eta1+tau%mesh%eta1_min
-      eta2_p  = (j-0.5+0.5*xgalo(jj))*tau%mesh%delta_eta2+tau%mesh%eta2_min
-      integral = integral + wgalo(ii)*wgalo(jj)*f(eta1_p,eta2_p)
-   end do
-   end do
-end do
-end do
-
-write(*,*) "pi*erf(1)**2", sll_pi*erf(1._f64)**2, &
-           integral/(this%mesh%num_cells1*this%mesh%num_cells2)
-
+call display_matrix(dlag, "f8.3")
 
 do j = 1, this%mesh%num_cells2+1
    do i = 1, this%mesh%num_cells1+1
@@ -123,12 +108,16 @@ do j = 1, this%mesh%num_cells2+1
    write(11,*) 
 end do
 
-mdiag = 0.0
+SLL_CLEAR_ALLOCATE(this%MassMatrix(1:(d+1)*(d+1),1:ncells), error)
+SLL_CLEAR_ALLOCATE(this%DxMatrix(1:(d+1)*(d+1),1:(d+1)*(d+1),1:ncells), error)
+SLL_CLEAR_ALLOCATE(this%DyMatrix(1:(d+1)*(d+1),1:(d+1)*(d+1),1:ncells), error)
 
-integral = 0.0_f64
-
+k = 0
 do j = 1, this%mesh%num_cells2
 do i = 1, this%mesh%num_cells1
+
+   k = k+1
+   this%MassMatrix(:,k) = mass_matrix(i, j, d, tau, xgalo, wgalo)
 
    do ii = 1, d+1
    do jj = 1, d+1
@@ -136,27 +125,31 @@ do i = 1, this%mesh%num_cells1
       eta2_p  = (j-0.5+0.5*xgalo(jj))*tau%mesh%delta_eta2+tau%mesh%eta2_min
       jac_mat = tau%jacobian_matrix(eta1_p,eta2_p)
       det     = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
-      mdiag((ii-1)*(d+1)+jj) = wgalo(ii)*wgalo(jj)*det
-
       
       do ll = 1, d+1
       do kk = 1, d+1
-         Dx((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll) = 0
-         Dy((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll) = 0
+         if (ii /= kk .and. jj /= ll) then
+            this%DxMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll,k) = wgalo(ii)*wgalo(jj)*dlag(kk,ll)*det
+            this%DyMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll,k) = wgalo(ii)*wgalo(jj)*dlag(kk,ll)*det
+         end if
       end do
       end do
    end do
    end do
 
-   
-
 end do
 end do
 
+call display_matrix(this%MassMatrix(:,:),"f7.2")
+call display_matrix(this%DxMatrix(:,:,1),"f7.2")
+call display_matrix(this%DxMatrix(:,:,1),"f7.2")
 
+stop
 this%A(1)%v = reshape((/ 0., 0., 0., 0., 0., 1., 0., 1., 0./), (/3,3/))
 this%A(2)%v = reshape((/ 0., 0.,-1., 0., 0., 0.,-1., 0., 0./), (/3,3/))
 
+call display_matrix(this%A(1)%v,"f7.2")
+call display_matrix(this%A(2)%v,"f7.2")
 
 !k = 0
 !do j = 1, this%mesh%num_cells2
@@ -177,7 +170,7 @@ do k = 1, ncells
    SLL_ALLOCATE(this%W(k)%ey(nddl),error)
    SLL_ALLOCATE(this%W(k)%hz(nddl),error)
 end do
- stop
+stop
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -197,12 +190,33 @@ sll_real64, dimension(:,:), optional :: rho  !< charge density
 
 end subroutine solve_maxwell_2d_diga
 
+function mass_matrix( i, j, d, tau, x, w ) result(mdiag)
 
-sll_real64 function f( x , y)
-sll_real64 :: x, y
+   class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+   sll_int32, intent(in)                  :: i
+   sll_int32, intent(in)                  :: j
+   sll_int32, intent(in)                  :: d
+   sll_real64, dimension((d+1)*(d+1))     :: mdiag
+   sll_real64, dimension(d+1), intent(in) :: x
+   sll_real64, dimension(d+1), intent(in) :: w
+   sll_real64                             :: jac_mat(2,2)
+   sll_real64                             :: det
+   sll_real64                             :: eta1_p, eta2_p
+   sll_int32                              :: ii, jj
 
-f = exp(-(x*x+y*y))
+   do ii = 1, d+1
+   do jj = 1, d+1
+      eta1_p  = (i-0.5+0.5*x(ii))*tau%mesh%delta_eta1+tau%mesh%eta1_min
+      eta2_p  = (j-0.5+0.5*x(jj))*tau%mesh%delta_eta2+tau%mesh%eta2_min
+      jac_mat = tau%jacobian_matrix(eta1_p,eta2_p)
+      det     = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
+      mdiag((ii-1)*(d+1)+jj) = w(ii)*w(jj)*det
+   end do
+   end do
 
-end function f
+end function mass_matrix
+
 
 end module sll_maxwell_2d_diga
+
+

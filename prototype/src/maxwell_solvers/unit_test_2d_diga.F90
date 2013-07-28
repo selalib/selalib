@@ -60,7 +60,7 @@ sll_real64                              :: err_te
 sll_real64                              :: err_tm
 sll_real64                              :: dt
 sll_real64                              :: cfl = 0.5
-sll_int32                               :: degree = 3
+sll_int32                               :: degree = 2
 sll_int32,  parameter                   :: mode = 2
 
 nc_eta1 = 1; nc_eta2 = 1
