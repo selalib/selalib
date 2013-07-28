@@ -14,7 +14,6 @@ SLL_BUILD="$WD/build"
 # -------------------------------------------------------
 
 INFO( ) {
-   echo ''
    echo "+---------------------------------------------"
    echo "+ $*"
    echo "+---------------------------------------------"
@@ -80,13 +79,8 @@ case "$OS" in
    linux)   CMAKE="`which cmake`";   MAKE="`which make`" ;;
 esac
 
-    [ -x "$CMAKE"  ] || DIE "missing executable file = $CMAKE"
-    [ -x "$MAKE" ] || DIE "missing executable file = $MAKE"
-
-########################################################################
-# see if this is linux, macosx
-# For Mac OSX, see if an intel or powerpc Mac
-########################################################################
+[ -x "$CMAKE"  ] || DIE "missing executable file = $CMAKE"
+[ -x "$MAKE" ] || DIE "missing executable file = $MAKE"
 
 INFO "check OS & cpu type"
 
@@ -115,6 +109,6 @@ case "$OS" in
 esac
 INFO "done"
 
-INFO "To build the library type make"
+INFO "To build the library go to build directory and type make"
 INFO "To run regression tests type : make test"
 
