@@ -13,8 +13,6 @@ ADD_EXECUTABLE(test_scalar_fields_alternative unit_test_alternative.F90)
 
 TARGET_LINK_LIBRARIES(test_scalar_fields_alternative sll_scalar_field_2d_alternative)
 
-
-
 SET(SLL_SCALAR_FIELD_SRCS sll_scalar_field_1d.F90
                           scalar_field_initializer_base.F90
                           sll_scalar_field_2d_base.F90
@@ -28,7 +26,8 @@ SET(SLL_SCALAR_FIELD_SRCS sll_scalar_field_1d.F90
 
 
 IF (MPI_MODULE_ENABLED)
-   SET(SLL_SCALAR_FIELD_SRCS distribution_function_initializer_4d.F90
+   SET(SLL_SCALAR_FIELD_SRCS ${SLL_SCALAR_FIELD_SRCS}
+                             distribution_function_initializer_4d.F90
                              distribution_function_initializer_6d.F90)
 ENDIF (MPI_MODULE_ENABLED)
 
