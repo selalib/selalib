@@ -323,6 +323,7 @@ contains
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
 
     ! Start with the fields
+    
     a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
@@ -331,7 +332,7 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top) 
-
+    print*, 'finish fields a11'
     a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
@@ -359,7 +360,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-
+    print*, 'finish fields a'
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
@@ -369,11 +370,11 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
 
-
+    print*, 'finish fields c'
     SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2+1),ierr)
 
     phi_values(:,:) = 0.0_f64
-
+    print*, 'begin fields phi'
     phi => new_scalar_field_2d_discrete_alt( &
          phi_values, &
          "phi_check", &
@@ -383,7 +384,7 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    print*, 'finish fields phi'
     buffer_counter = 1
 
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -771,7 +772,7 @@ contains
     ! ------------------------------------------------------------------------
 
 
-    do itime=1,1!sim%num_iterations
+    do itime=1,sim%num_iterations
        if(sim%my_rank == 0) then
           print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
        end if
