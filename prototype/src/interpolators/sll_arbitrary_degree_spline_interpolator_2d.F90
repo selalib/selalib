@@ -584,6 +584,7 @@ contains
     sll_int32  :: i
     logical    :: user_coords
 
+    !print*, data_array
     if(present(eta1_coords) .and. (.not. present(size_eta1_coords))) then
        print *, 'compute_interpolants_ad2d(), ERROR: if eta1_coords is ', &
             'passed, its size must be specified as well through ', &
@@ -677,6 +678,10 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 + 1 
+       !print*, 'hello'
+       !print*, period1,period2, sz1+1, sz2+1,order1,order2
+       !print*, point_location_eta1,point_location_eta2
+       !print*, size(data_array,1), size(data_array,2)
        call spli2d_perper( &
             period1, sz1+1, order1, point_location_eta1, &
             period2, sz2+1, order2, point_location_eta2, &
@@ -684,7 +689,7 @@ contains
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
 
-
+      ! print*, 'test'
        !print*, 'moyenne', sum( interpolator%coeff_splines(1:sz1+1,1:sz2+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic

@@ -575,6 +575,8 @@ contains   ! *****************************************************************
     field%bc_right  = bc_right
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
+
+    !print*,  field%values
     
     call field%interp_2d%compute_interpolants( &
          field%values, & !array_2d, &
