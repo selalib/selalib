@@ -659,6 +659,8 @@ contains
        end do
     end if
     
+    !print*, 'point location1',point_location_eta1
+    !print*, 'point location2',point_location_eta2
     SLL_ASSERT(sz1 .le. interpolator%num_pts1* interpolator%num_pts1)
     SLL_ASSERT(sz2 .le. interpolator%num_pts2* interpolator%num_pts2)
     SLL_ASSERT(size(data_array,1) .ge. sz1)
@@ -682,13 +684,28 @@ contains
        !print*, period1,period2, sz1+1, sz2+1,order1,order2
        !print*, point_location_eta1,point_location_eta2
        !print*, size(data_array,1), size(data_array,2)
+      ! print*, '---------------'
+      ! print*, 'size rho full', size(data_array(:,1))
+      ! print*, 'data rho full', data_array(:,3)
+      ! !print*, data_array(2,:)
+      ! print*, '---------------'
+
+       !  data_array must have the same dimension than 
+       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  i.e  data_array must have the dimension sz1 x sz2
        call spli2d_perper( &
             period1, sz1+1, order1, point_location_eta1, &
             period2, sz2+1, order2, point_location_eta2, &
-            data_array, interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
+            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
 
+       !print*, '****************'
+       !print*, interpolator%coeff_splines(1,1:sz2+1)
+       !print*, interpolator%coeff_splines(2,1:sz2+1)
+      ! print*, '****************'
+       !print*, interpolator%t1(1:order1 + sz1 + 1)
+       !print*, interpolator%t2(1:order2 + sz2 + 1)
       ! print*, 'test'
        !print*, 'moyenne', sum( interpolator%coeff_splines(1:sz1+1,1:sz2+1))
        
@@ -697,9 +714,12 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1
        interpolator%size_t2 = order2 + sz2 + 1
+       !  data_array must have the same dimension than 
+       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  i.e  data_array must have the dimension sz1 x sz2
        call spli2d_dirper( sz1, order1, point_location_eta1, &
             period2, sz2+1, order2, point_location_eta2, &
-            data_array, interpolator%coeff_splines(1:sz1,1:sz2+1),&
+            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1,1:sz2+1),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2+1) )
   
@@ -709,9 +729,12 @@ contains
        interpolator%size_coeffs2 = sz2
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 
+       !  data_array must have the same dimension than 
+       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  i.e  data_array must have the dimension sz1 x sz2
        call spli2d_perdir( period1, sz1+1, order1, point_location_eta1, &
             sz2, order2, point_location_eta2, &
-            data_array, interpolator%coeff_splines(1:sz1+1,1:sz2),&
+            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1+1,1:sz2),&
             interpolator%t1(1:sz1+order1+1), &
             interpolator%t2(1:sz2+order2) )
        
@@ -722,9 +745,12 @@ contains
        interpolator%size_t1 = order1 + sz1 
        interpolator%size_t2 = order2 + sz2 
  
+       !  data_array must have the same dimension than 
+       !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
+       !  i.e  data_array must have the dimension sz1 x sz2
        call spli2d_custom( sz1, order1, point_location_eta2, &
             sz2, order2, point_location_eta2, &
-            data_array, interpolator%coeff_splines(1:sz1,1:sz2),&
+            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1,1:sz2),&
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2) )
 
@@ -758,33 +784,38 @@ contains
 
     res1 = eta1
     res2 = eta2
+    SLL_ASSERT( res1 >= interpolator%eta1_min )
+    SLL_ASSERT( res1 <= interpolator%eta1_max )
+    SLL_ASSERT( res2 >= interpolator%eta2_min )
+    SLL_ASSERT( res2 <= interpolator%eta2_max )
+
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
-       if ( res1 .ge. interpolator%eta1_max ) then 
+       if ( res1 == interpolator%eta1_max ) then 
           res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
-       if ( res2 .ge. interpolator%eta2_max ) then 
+       if ( res2 == interpolator%eta2_max ) then 
           res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       if ( res2 .ge. interpolator%eta2_max ) then 
+       if ( res2 == interpolator%eta2_max ) then 
           res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
        end if
-       SLL_ASSERT( res1 >= interpolator%eta1_min )
-       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       !SLL_ASSERT( res1 >= interpolator%eta1_min )
+       !SLL_ASSERT( res1 <= interpolator%eta1_max )
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       if ( res1 .ge. interpolator%eta1_max ) then 
+       if ( res1 == interpolator%eta1_max ) then 
           res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
-       SLL_ASSERT( res2 >= interpolator%eta2_min )
-       SLL_ASSERT( res2 <= interpolator%eta2_max )
+       !SLL_ASSERT( res2 >= interpolator%eta2_min )
+       !SLL_ASSERT( res2 <= interpolator%eta2_max )
        
-    case (585) ! dirichlet-dirichlet 
-       SLL_ASSERT( res1 >= interpolator%eta1_min )
-       SLL_ASSERT( res1 <= interpolator%eta1_max )
-       SLL_ASSERT( res2 >= interpolator%eta2_min )
-       SLL_ASSERT( res2 <= interpolator%eta2_max )
+    !case (585) ! dirichlet-dirichlet 
+     !  SLL_ASSERT( res1 >= interpolator%eta1_min )
+      ! SLL_ASSERT( res1 <= interpolator%eta1_max )
+      ! SLL_ASSERT( res2 >= interpolator%eta2_min )
+      ! SLL_ASSERT( res2 <= interpolator%eta2_max )
     end select
           
     val = bvalue2d( &
