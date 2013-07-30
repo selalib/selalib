@@ -1855,6 +1855,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        point2,&
        2*npts2-1)
 
+  call rho%write_to_file(0)
 
 
 !!$  
@@ -2105,7 +2106,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC,&
+       SLL_PERIODIC ,&
        point1,&
        npts1-1,&
        point2,&
