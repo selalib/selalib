@@ -279,7 +279,7 @@ subroutine splopt ( tau, n, k, scrtch, t, iflag )
       sign = - sign
       
    end do
-   print*, 'heho',scrtch(1+nc)
+
    call banfac ( scrtch(1+nc), kpkm1, nmk, k-1, k-1, iflag )
    
    if ( iflag == 2 ) then

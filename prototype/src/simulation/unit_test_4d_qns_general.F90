@@ -24,7 +24,7 @@ program qns_4d_general
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
-  sll_real64, external :: func_zero, func_one
+  sll_real64, external :: func_zero, func_one, func_minus_one
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -52,12 +52,12 @@ program qns_4d_general
 #define NPTS2 32
 #define NPTS3 32
 #define NPTS4 32
-#define SPL_DEG1 1
-#define SPL_DEG2 1
+#define SPL_DEG1 2
+#define SPL_DEG2 2
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=.0_f64, eta1_max=4.0_f64*sll_pi)
+       eta1_min=0.0_f64, eta1_max=4.0_f64*sll_pi)
 
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -102,11 +102,11 @@ program qns_4d_general
 !!$  gaussian_params(5) = 1.0        !vxc
 !!$  gaussian_params(6) = 0.0        !vyc
 
-  landau_params(1) = 0.0      !eta1_min
+  landau_params(1) = mx%eta1_min      !eta1_min
   landau_params(2) = mx%eta1_max
-  landau_params(3) = 0.0      !eta2_min
+  landau_params(3) = mx%eta2_min      !eta2_min
   landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.05!0.01     !eps
+  landau_params(5) = 0.05     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_4d_qns_general( &
@@ -116,10 +116,10 @@ program qns_4d_general
        transformation_x, &
        sll_landau_initializer_4d, &
        landau_params, &
-       func_one, &
+       func_minus_one, &
        func_zero, &
        func_zero, &
-       func_one, &
+       func_minus_one, &
        func_zero, &
        SPL_DEG1, & 
        SPL_DEG2, & 
@@ -165,6 +165,14 @@ function func_one( eta1, eta2, params ) result(res)
   real(8) :: res
   res = 1.0_8
 end function func_one
+
+function func_minus_one( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in), optional :: params
+  real(8) :: res
+  res = -1.0_8
+end function func_minus_one
 
 function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
