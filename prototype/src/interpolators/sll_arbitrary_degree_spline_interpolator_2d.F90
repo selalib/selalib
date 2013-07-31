@@ -748,7 +748,7 @@ contains
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
-       call spli2d_custom( sz1, order1, point_location_eta2, &
+       call spli2d_custom( sz1, order1, point_location_eta1, &
             sz2, order2, point_location_eta2, &
             data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1,1:sz2),&
             interpolator%t1(1:sz1+order1), &
