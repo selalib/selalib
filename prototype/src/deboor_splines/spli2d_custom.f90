@@ -37,7 +37,7 @@ subroutine spli2d_custom ( &
   ! *** set up knots
   !     interpolate between knots
   ! x
-    if (ai_kx <= 2) then 
+  !  if (ai_kx <= 2) then 
      apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
      apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
      
@@ -47,13 +47,13 @@ subroutine spli2d_custom ( &
              ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
         
      end do
-  else
-     scrtch(:) = 0.0_8
+ ! else
+  !   scrtch(:) = 0.0_8
    !  print*, 'TEST SPLOT', size(apr_taux), ai_nx,ai_kx,size(apr_tx),size(scrtch)
-     call splopt ( apr_taux,ai_nx, ai_kx, scrtch, apr_tx, iflag )
+  !   call splopt ( apr_taux,ai_nx, ai_kx, scrtch, apr_tx, iflag )
     ! print*, 'result', apr_tx
      
-  end if
+  !end if
   ! print*, 'probleme de merde 2'
 !!$  print*, 'DE BOOR SPSLINE', apr_tx
   
@@ -78,7 +78,7 @@ subroutine spli2d_custom ( &
        lpr_work5, &
        li_iflag )
 
-  if (ai_ky <= 2) then 
+ ! if (ai_ky <= 2) then 
      apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
      apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
      
@@ -88,9 +88,9 @@ subroutine spli2d_custom ( &
              (li_j-(ai_ky + 1))*&
              ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
      end do
-  else 
-     call splopt ( apr_tauy,ai_ny, ai_ky, scrtch1, apr_ty, iflag1 )
-  end if
+ ! else 
+  !   call splopt ( apr_tauy,ai_ny, ai_ky, scrtch1, apr_ty, iflag1 )
+ ! end if
 
  
   apr_bcoef(:,:) =0.0_8

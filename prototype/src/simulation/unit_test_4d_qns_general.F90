@@ -52,8 +52,8 @@ program qns_4d_general
 #define NPTS2 32
 #define NPTS3 32
 #define NPTS4 32
-#define SPL_DEG1 1
-#define SPL_DEG2 1
+#define SPL_DEG1 3
+#define SPL_DEG2 3
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
