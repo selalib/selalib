@@ -291,7 +291,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 5
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -629,9 +629,9 @@ contains
          sim%split_rho_layout, &
          sim%world_size, &
          disps )
-    if(sim%my_rank == 0 ) then
-       print *, 'displacements array: ', disps(:)
-    end if
+!!$    if(sim%my_rank == 0 ) then
+!!$       print *, 'displacements array: ', disps(:)
+!!$    end if
     call sll_collective_allgatherv_real64( &
          sll_world_collective, &
          send_buf, &
@@ -659,10 +659,10 @@ contains
             sim%rho_full, &
             density_tot )
 
-    !print*, 'density', density_tot
+   ! print*, 'density', density_tot
 
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - density_tot, &
+         sim%rho_full - 1, & !density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -670,8 +670,10 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
- 
-    call rho%write_to_file(0)
+
+    if(sim%my_rank == 0) then
+       call rho%write_to_file(0)
+    end if
 !!$    sim%split_to_full => &
 !!$         NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_full_layout, sim%rho_full)
 !!$    call apply_remap_2D( sim%split_to_full, sim%rho_split, sim%rho_full )
@@ -770,7 +772,7 @@ contains
     !                                MAIN LOOP
     !
     ! ------------------------------------------------------------------------
-
+delete_this_counter = 1
 
     do itime=1,sim%num_iterations
        if(sim%my_rank == 0) then
@@ -835,6 +837,19 @@ contains
 
        call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
 
+       if(sim%my_rank == 0) then
+          call sll_gnuplot_rect_2d_parallel( &
+               sim%mesh2d_x%eta1_min, &
+               sim%mesh2d_x%delta_eta1, &
+               sim%mesh2d_x%eta2_min, &
+               sim%mesh2d_x%delta_eta2, &
+               sim%rho_full, &
+               "rho_full_check", &
+               itime, &
+               ierr )
+       end if
+
+
        ! the rho field has a pointer to sim%rho_full so it is already 
        ! 'aware' that the data has changed. However, the interpolation
        ! coefficients are out of date.
@@ -851,11 +866,12 @@ contains
             sim%rho_full, &
             density_tot )
 
-!       print*, 'density', density_tot
+       ! print*, 'density', density_tot
+       call rho%update_interpolation_coefficients(sim%rho_full-1.0)!density_tot)
 
-       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-       call rho%write_to_file(itime)
-       
+!!$       if(sim%my_rank == 0) then
+!!$          call rho%write_to_file(itime)
+!!$       end if
 
        ! It is important to remember a particular property of the periodic 
        ! poisson solver used here: For a given input charge density 
@@ -891,7 +907,7 @@ contains
 !!$          "rho_x1", &
 !!$          itime, &
 !!$          ierr )
-!       call rho%write_to_file(itime)
+!       if(sim%my_rank == 0) call rho%write_to_file(itime)
 
        call solve_quasi_neutral_eq_general_coords( &
             sim%qns, & 
@@ -903,8 +919,10 @@ contains
             rho, &
             phi )
        
-       call phi%write_to_file(itime)
-       
+       if(sim%my_rank == 0) then
+          call phi%write_to_file(itime)
+       end if
+
        call compute_local_sizes_4d( sim%sequential_x1x2, &
                                     loc_sz_x1,           &
                                     loc_sz_x2,           &
@@ -927,8 +945,8 @@ contains
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-                ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
-                ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
+                ex     =  - phi%first_deriv_eta1_value_at_indices(i,j)
+                ey     =  - phi%first_deriv_eta2_value_at_indices(i,j)
                 !print*, 'values ex', -0.05/(0.5)*sin(0.5*eta1), phi%first_deriv_eta1_value_at_indices(i,j), phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 !print*, 'values ey', 0.0, ey
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
@@ -968,8 +986,8 @@ contains
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                ex     =  phi%first_deriv_eta1_value_at_indices(i,j)
-                ey     =  phi%first_deriv_eta2_value_at_indices(i,j)
+                ex     =  - phi%first_deriv_eta1_value_at_indices(i,j)
+                ey     =  - phi%first_deriv_eta2_value_at_indices(i,j)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
@@ -1033,7 +1051,7 @@ contains
 
           buffer_counter = 1
           if(sim%my_rank == 0) then
-             open(efield_energy_file_id,file="electric_field_energy",&
+             open(efield_energy_file_id,file="electric_field_energy_qns",&
                   position="append")
              if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)

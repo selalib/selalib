@@ -1,5 +1,5 @@
 module sll_common_array_initializers_module
-
+#include "sll_assert.h" 
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
@@ -101,16 +101,18 @@ contains
 
     if( .not. present(params) ) then
        print *, 'sll_landau_initializer_4d, error: the params array must ', &
-            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
+            'be passed. params(1) = eta1_min, params(2) = eta1_max, ', &
+            'params(3) = eta2_min, params(4) = eta2_max, params(5) = epsilon.'
        stop
     end if
+
+    SLL_ASSERT( size(params) >= 5 )
 
     eta1_min = params(1)
     eta1_max = params(2)
     eta2_min = params(3)
     eta2_max = params(4)
-
-    eps = params(5)
+    eps      = params(5)
     kx  =  2. * sll_pi / (eta1_max - eta1_min)
 
     !Normalization

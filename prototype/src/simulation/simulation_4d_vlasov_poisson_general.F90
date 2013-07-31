@@ -218,7 +218,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 5
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -643,36 +643,37 @@ contains
        ! automatically from the computation of the charge density, please fix)
 !       sim%rho_x1(:,:) = - sim%rho_x1(:,:) 
 
-!!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-!!$       
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$          sim%mesh2d_x%delta_eta1, &
-!!$          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$          sim%mesh2d_x%delta_eta2, &
-!!$          sim%rho_x1, &
-!!$          "rho_x1", &
-!!$          itime, &
-!!$          ierr )
+       global_indices(1:2) =  &
+            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+       
+       call sll_gnuplot_rect_2d_parallel( &
+          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+          sim%mesh2d_x%delta_eta1, &
+          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+          sim%mesh2d_x%delta_eta2, &
+          sim%rho_x1, &
+          "rho_x1", &
+          itime, &
+          ierr )
 
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
  
-!!$       global_indices(1:2) =  &
-!!$            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-!!$       
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$         sim%mesh2d_x%delta_eta2, &
-!!$         sim%phi_x1, &
-!!$         "phi_x1", &
-!!$         itime, &
-!!$         ierr )
+
+       global_indices(1:2) =  &
+            local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
+       
+       call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%phi_x1, &
+         "phi_x1", &
+         itime, &
+         ierr )
 
 
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
