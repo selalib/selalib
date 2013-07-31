@@ -86,7 +86,9 @@ program unit_test
   end do
 
   call compute_hamiltonian(adv_field, phi_self)
-  call write_scalar_field_2d(adv_field) 
+
+  !Problem with this call file names are wrong (Pierre)
+  !call write_scalar_field_2d(adv_field) 
 
     
   print *, 'Successful, exiting program.'
