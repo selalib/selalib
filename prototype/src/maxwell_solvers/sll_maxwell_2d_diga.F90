@@ -81,6 +81,7 @@ sll_real64 :: v_east(2)
 sll_real64 :: v_west(2)
 sll_real64 :: v_north(2)
 sll_real64 :: v_south(2)
+sll_real64 :: mdiag
 
 this%tau  => tau
 this%d = d
@@ -117,7 +118,6 @@ do j = 1, this%mesh%num_cells2
 do i = 1, this%mesh%num_cells1
 
    k = k+1
-   this%MassMatrix(:,k) = mass_matrix(i, j, d, tau, xgalo, wgalo)
 
    do ii = 1, d+1
    do jj = 1, d+1
@@ -125,13 +125,16 @@ do i = 1, this%mesh%num_cells1
       eta2_p  = (j-0.5+0.5*xgalo(jj))*tau%mesh%delta_eta2+tau%mesh%eta2_min
       jac_mat = tau%jacobian_matrix(eta1_p,eta2_p)
       det     = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
-      
+
+      mdiag   = wgalo(ii)*wgalo(jj)*det
+      this%MassMatrix((ii-1)*(d+1)+jj,k) = mdiag
+
       do ll = 1, d+1
       do kk = 1, d+1
-         if (ii /= kk .and. jj /= ll) then
-            this%DxMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll,k) = wgalo(ii)*wgalo(jj)*dlag(kk,ll)*det
-            this%DyMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll,k) = wgalo(ii)*wgalo(jj)*dlag(kk,ll)*det
-         end if
+         if ( jj == ll) &
+            this%DxMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll,k) = mdiag*dlag(ii,kk)
+         if ( ii == kk) &
+            this%DyMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll,k) = mdiag*dlag(jj,ll)
       end do
       end do
    end do
@@ -142,27 +145,13 @@ end do
 
 call display_matrix(this%MassMatrix(:,:),"f7.2")
 call display_matrix(this%DxMatrix(:,:,1),"f7.2")
-call display_matrix(this%DxMatrix(:,:,1),"f7.2")
+call display_matrix(this%DyMatrix(:,:,1),"f7.2")
 
-stop
 this%A(1)%v = reshape((/ 0., 0., 0., 0., 0., 1., 0., 1., 0./), (/3,3/))
 this%A(2)%v = reshape((/ 0., 0.,-1., 0., 0., 0.,-1., 0., 0./), (/3,3/))
 
 call display_matrix(this%A(1)%v,"f7.2")
 call display_matrix(this%A(2)%v,"f7.2")
-
-!k = 0
-!do j = 1, this%mesh%num_cells2
-!do i = 1, this%mesh%num_cells1
-!   k = k + 1
-!   do ii = 1, d+1
-!   do jj = 1, d+1
-!      this%x1(ii,jj,k) = tau%x1(this%eta1(ii,k),this%eta2(jj,k))
-!      this%x2(ii,jj,k) = tau%x2(this%eta1(ii,k),this%eta2(jj,k))
-!   end do
-!   end do
-!end do
-!end do
 
 SLL_ALLOCATE(this%W(ncells),error)
 do k = 1, ncells
@@ -189,32 +178,6 @@ sll_real64, dimension(:,:), optional :: jy   !< y current field
 sll_real64, dimension(:,:), optional :: rho  !< charge density
 
 end subroutine solve_maxwell_2d_diga
-
-function mass_matrix( i, j, d, tau, x, w ) result(mdiag)
-
-   class(sll_coordinate_transformation_2d_analytic), pointer :: tau
-   sll_int32, intent(in)                  :: i
-   sll_int32, intent(in)                  :: j
-   sll_int32, intent(in)                  :: d
-   sll_real64, dimension((d+1)*(d+1))     :: mdiag
-   sll_real64, dimension(d+1), intent(in) :: x
-   sll_real64, dimension(d+1), intent(in) :: w
-   sll_real64                             :: jac_mat(2,2)
-   sll_real64                             :: det
-   sll_real64                             :: eta1_p, eta2_p
-   sll_int32                              :: ii, jj
-
-   do ii = 1, d+1
-   do jj = 1, d+1
-      eta1_p  = (i-0.5+0.5*x(ii))*tau%mesh%delta_eta1+tau%mesh%eta1_min
-      eta2_p  = (j-0.5+0.5*x(jj))*tau%mesh%delta_eta2+tau%mesh%eta2_min
-      jac_mat = tau%jacobian_matrix(eta1_p,eta2_p)
-      det     = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
-      mdiag((ii-1)*(d+1)+jj) = w(ii)*w(jj)*det
-   end do
-   end do
-
-end function mass_matrix
 
 
 end module sll_maxwell_2d_diga
