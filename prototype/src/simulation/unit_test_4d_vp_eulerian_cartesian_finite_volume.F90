@@ -62,7 +62,7 @@ program vp_cartesian_4d
 #define ETA3MAX 1.0_f64
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
-#define TMAX 1.e-1_f64
+#define TMAX 2.e-1_f64
 !#define TMAX 0.0_f64
 #define CFL 0.5_f64
 #define EPSILON 0.05
