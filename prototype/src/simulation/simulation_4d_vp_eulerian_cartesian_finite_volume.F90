@@ -9,7 +9,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   use sll_remapper
   use sll_poisson_2d_periodic_cartesian_par
   use sll_simulation_base
-  use sll_parallel_array_initializer_module
+  use sll_parallel_array_initializer_module  
   use sll_logical_meshes
   use sll_mesh_calculus_2d_module
   use sll_gnuplot_parallel
@@ -193,14 +193,14 @@ contains
     sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
     sll_real64,dimension(:,:),allocatable :: f_x_exact,f_v_exact
 
-
+    sll_int32 :: ii,jj,mm
     sll_real64 :: t
     sll_int32,dimension(4)  :: global_indices
-    sll_real64,dimension(1:2,1:2) :: jac_m
+    sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
     sll_real64 :: det
     sll_real64 :: x1, x2,Ex,Ey
     sll_int32 :: icL,icR,jcL,jcR
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 2
     sll_real64, dimension (BUFFER_SIZE) :: buffer
     sll_real64, dimension (BUFFER_SIZE) :: buffer_result
     sll_real64, dimension (BUFFER_SIZE) :: num_particles_local
@@ -442,90 +442,108 @@ contains
     write (*,*) 'Vxmax = ', sim%mesh2dx%eta1_max
     !stop
     itime=1
-    sim%Enorm = 0.0_f64
-    do while(t.lt.sim%tmax)
 
-!!$       !compute the charge density
-!!$       !integral over the velocity but why approche with the sum of space?
-!!$       !and in fact the following solver Poisson resolve the eqution in the
-!!$       !logical maillages but fn computed in the physical maillage? 
-!!$       do i=1,loc_sz_x1
-!!$          do j=1,loc_sz_x2
-!!$             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j))
-!!$          enddo
-!!$       enddo
-       !c'est faut mais juste esaayer d'abord
-       !try
-!!$       do i=1,loc_sz_x1
-!!$          do j=1,loc_sz_x2
-!!$             sim%rho_x1(i,j)=sum(sim%fn_v1v2x1(:,:,i,j)*sim%p(:))
-!!$          enddo
-!!$       enddo
-!!$       !write(*,*) 'here1'
-!!$       ! solve the poisson equation
-!!$       call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
-!!$            sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
-!!$       !write(*,*) 'here2'
+    do while(t.lt.sim%tmax)
+       sim%Enorm = 0.0_f64
+       !compute the charge density
+       sim%rho_x1=0.0_f64
+       do i=1,loc_sz_x1
+          do j=1,loc_sz_x2
+             do ii=1,loc_sz_v1
+                do jj=1,loc_sz_v2
+                   mm=loc_sz_v1*(jj-1)+ii
+                   sim%rho_x1(i,j)=sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)* & 
+                        sim%p(mm)
+                enddo
+             end do
+             !write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+          enddo
+       enddo
+
+       ! solve the poisson equation
+       call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
+            sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+       !write (*,*) 'phi = ', sim%phi_x1
+       !stop
+
 
        t=t+sim%dt
        itime=itime+1
-       !call RK2(sim)
+       call RK2(sim)
        !write(*,*) 'here3'
-       call euler(sim)
-!!$       !n Try to plot the log of energy
-!!$       do ic=1,loc_sz_x1
-!!$          do jc=1,loc_sz_x2
-!!$             icL=ic-1
-!!$             icR=ic+1
-!!$             if(ic.le.1) then
-!!$                icL=loc_sz_x1
-!!$             elseif(ic.ge.loc_sz_x1)then
-!!$                icR=1
-!!$             end if
-!!$             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-!!$             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
-!!$
-!!$             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
-!!$             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)*sim%mesh2dx%delta_eta1
-!!$             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)*sim%mesh2dx%delta_eta2
-!!$             jac_m=sim%tx%jacobian_matrix(x1,x2)
-             !det=sim%tv%jacobian(x1,x2)
-!!$             sim%Enorm=sim%Enorm + sim%volume(1,1)*((jac_m(1,1)*Ex+jac_m(1,2)*Ey)**2+ &
-!!$                  (jac_m(2,1)*Ex+jac_m(2,2)*Ey)**2)
-             !sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
-              !    sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
-!!$          end do
-!!$       end do
-!!$       !write(*,*) 'here4'
-       !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
-       write(*,*) 'iter = ',itime, ' t = ', t 
-!!$       buffer(buffer_counter) = sqrt(sim%Enorm)
-!!$       if(buffer_counter==BUFFER_SIZE) then
-!!$          call sll_collective_reduce_real64(sll_world_collective, &
-!!$               buffer, &
-!!$               BUFFER_SIZE, &
-!!$               MPI_SUM, &
-!!$               0, &
-!!$               buffer_result )
-!!$
-!!$          buffer_counter=1
-!!$             print*, 'coucou 1!!'
-!!$          if (sim%my_rank==0) then
-!!$             print*, 'coucou 2!!'
-!!$             open(399,file='log(energy)',position='append')
-!!$             if(itime==BUFFER_SIZE) then 
-!!$                rewind(399)
-!!$             endif
-!!$             buffer_result(:)=log(buffer_result(:))
-!!$             do i=1,BUFFER_SIZE
-!!$                write(399,*) t, buffer_result(i)
-!!$             enddo
-!!$             close(399)
-!!$          end if
-!!$       else
-!!$          buffer_counter=buffer_counter+1
-!!$             print*, 'coucou 3!!'
-!!$       end if
+       !call euler(sim)
+       !n Try to plot the log of energy
+       do ic=1,loc_sz_x1
+          do jc=1,loc_sz_x2
+             icL=ic-1
+             icR=ic+1
+             if(ic.le.1) then
+                icL=loc_sz_x1
+             elseif(ic.ge.loc_sz_x1)then
+                icR=1
+             end if
+             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+                  (/1,1,1,1/) )
+             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+                  sim%mesh2dx%delta_eta1
+             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+                  sim%mesh2dx%delta_eta2
+             jac_m=sim%tx%jacobian_matrix(x1,x2)
+             inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+!!$             !write(*,*) 'verify the matrix: (1,1)',  inv_jac(1,1)
+!!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
+!!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
+!!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
+             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+             det=sim%tx%jacobian(x1,x2)
+!!$             !write(*,*) 'verify the matrix: det = ',  det
+             !write(*,*) 'Ex = ', Ex
+             !write(*,*) 'Ey = ', Ey
+             if(sim%test==2) then
+                Ex=1.0_f64
+                Ey=0.0_f64
+             endif
+             sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
+                  sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
+             !write(*,*) 'Enorm = ',sim%Enorm
+          end do
+       end do
+       !write(*,*) 'here4'
+       !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
+       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
+       !write(*,*) 'iter = ',itime, ' t = ', t 
+       buffer(buffer_counter) = sqrt(sim%Enorm)
+       if(buffer_counter==BUFFER_SIZE) then
+          call sll_collective_reduce_real64(sll_world_collective, &
+               buffer, &
+               BUFFER_SIZE, &
+               MPI_SUM, &
+               0, &
+               buffer_result )
+
+          buffer_counter=1
+             !print*, 'coucou 1!!'
+          if (sim%my_rank==0) then
+             !print*, 'coucou 2!!'
+             open(399,file='log(energy)',position='append')
+             if(itime==BUFFER_SIZE) then 
+                rewind(399)
+             endif
+             buffer_result(:)=log(buffer_result(:))
+             do i=1,BUFFER_SIZE
+                write(399,*) t, buffer_result(i)
+             enddo
+             close(399)
+          end if
+       else
+          buffer_counter=buffer_counter+1
+             !print*, 'coucou 3!!'
+       end if
 
     end do
 
@@ -580,8 +598,8 @@ contains
 !!$    end do
 
     global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
-    write (*,*) 'Vxmax = ', sim%mesh2dx%eta1_max
-    write (*,*) 'Vxmin = ', sim%mesh2dx%eta1_min
+    write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
+    write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
          sim%mesh2dx%delta_eta1, &
@@ -1538,18 +1556,18 @@ contains
     source1=0
     source2=0
     
-    call MULKU(sim%Bv1_sup,Bv1_diag_corr,sim%Bv1_low, &
-         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
-    call MULKU(sim%Bv2_sup,Bv2_diag_corr,sim%Bv2_low, &
-         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+!!$    call MULKU(sim%Bv1_sup,Bv1_diag_corr,sim%Bv1_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+!!$    call MULKU(sim%Bv2_sup,Bv2_diag_corr,sim%Bv2_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
 !!$    source=Ex*source1+Ey*source2
 !!$    sim%Bv1_diag=1_f64
 !!$    sim%Bv2_diag=0
 
-!!$    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
-!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
-!!$    call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
-!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
+         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+    call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
+         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
     source=Ex*source1+Ey*source2
 !    write(*,*) 'source = ',  source
 !    stop
@@ -1699,10 +1717,8 @@ contains
              icR=1
           end if
           !write(*,*) 'ici4'
-          Ex=1_f64
-          Ey=0_f64
-!!$          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-!!$          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
+          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
+          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
           !write(*,*) 'ici5'
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
