@@ -41,7 +41,7 @@ IF(HDF5_PARALLEL_ENABLED)
 
    TARGET_LINK_LIBRARIES(test_mgd3 sll_mgd3 
                                    sll_file_io_parallel
-	                             sll_utilities )
+	                           sll_utilities )
 
 #   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90 write_xdmf_2d.F90)
 #
