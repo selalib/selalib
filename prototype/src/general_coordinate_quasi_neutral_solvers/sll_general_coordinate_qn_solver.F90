@@ -14,6 +14,7 @@ module sll_general_coordinate_qn_solver_module
   !use LU
   implicit none
 
+sll_int32 :: delete_this_counter
 
   type :: general_coordinate_qn_solver
      sll_int32 :: total_num_splines_loc
@@ -382,6 +383,8 @@ contains ! *******************************************************************
     ! computed at the same time.
     ! total number of splines should come in the field...
     
+    call rho%write_to_file(delete_this_counter)
+    delete_this_counter = delete_this_counter + 1
     ! The quadrature degree is the number of splines that intersect a cell.
  !   call set_time_mark(timer)
     total_num_splines_loc = qns%total_num_splines_loc
@@ -525,7 +528,7 @@ contains ! *******************************************************************
        K_a12_loc, &
        K_a21_loc, &
        K_a22_loc )
-    use sll_constants
+!    use sll_constants
 
     type(general_coordinate_qn_solver) :: obj
     sll_int32, intent(in) :: cell_i
