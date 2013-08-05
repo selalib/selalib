@@ -1,7 +1,6 @@
 IF (MPI_MODULE_ENABLED)
 ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
                      diagnostics.F90
-                     write_xdmf_2d.F90
                      mgd2.F90)
 
 ADD_LIBRARY(sll_mgd3 mgdend_3d.F90 
@@ -22,8 +21,7 @@ ADD_LIBRARY(sll_mgd3 mgdend_3d.F90
                      mgdrpde_3d.F90 
                      mgdrsetf_3d.F90
                      mgdsetf_3d.F90 
-                     mgdrtrsf_3d.F90
-                     write_xdmf_3d.F90)
+                     mgdrtrsf_3d.F90)
 
 IF(HDF5_PARALLEL_ENABLED)
 
@@ -39,13 +37,13 @@ IF(HDF5_PARALLEL_ENABLED)
    TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid 
                                            sll_file_io_parallel )
 
-   ADD_EXECUTABLE(test_mgd3 unit_test_3d.F90)
+   ADD_EXECUTABLE(test_mgd3 unit_test_3d.F90 write_xdmf_3d.F90)
 
    TARGET_LINK_LIBRARIES(test_mgd3 sll_mgd3 
                                    sll_file_io_parallel
 	                             sll_utilities )
 
-#   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90)
+#   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90 write_xdmf_2d.F90)
 #
 #   TARGET_LINK_LIBRARIES(test_mgd2 sll_mgd2 
 #                                   sll_file_io_parallel
