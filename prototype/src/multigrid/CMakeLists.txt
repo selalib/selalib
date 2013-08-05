@@ -37,11 +37,10 @@ IF(HDF5_PARALLEL_ENABLED)
    TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid 
                                            sll_file_io_parallel )
 
-   ADD_EXECUTABLE(test_mgd3 unit_test_3d.F90)
+   ADD_EXECUTABLE(test_mgd3 unit_test_3d.F90 write_xdmf_3d.F90)
 
    TARGET_LINK_LIBRARIES(test_mgd3 sll_mgd3 
                                    sll_file_io_parallel
-                                   write_xdmf_3d.F90
 	                           sll_utilities )
 
 #   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90)
