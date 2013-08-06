@@ -38,7 +38,7 @@ program VP_DG
   !time step and finalt time
   sll_real64 :: dt,tf
   !Gauss-Lobatto
-  type(gausslobatto1D) :: gausslob,gll
+  type(gausslobatto1D) :: gausslob!,gll
   !elements of Phi equal to 0 so Phi(x=0)=0
   sll_int32 :: xbound
   !space variables
@@ -53,13 +53,14 @@ program VP_DG
   sll_int32,dimension(:),allocatable :: lfor
   character(len=25) :: form,fdist,ffield
   logical :: sym_mom_comp
+
+  ! for the python script *.py
+!!$  namelist /param/ nx,nv,ng
+!!$  read(*,NML=param)
+
   sym_mom_comp=.true. ! way to compute momentum
                        ! true for symetric computation (0->nv/2 and nv->nv/2)
                        ! false for linear computation (0->nv)
-
-  ! for the python script *.py
-  !namelist /param/ dt
-  !read(*,NML=param)
 
   !definition of geometry and data
   k=0.5d0
@@ -67,10 +68,10 @@ program VP_DG
   !k=0.3d0
   !k=1.0d0/k
 
-!!$  x_min=0.0d0
-!!$  x_max=sll_pi!
-!!$  v_min=0
-!!$  v_max=sll_pi
+  x_min=0.0d0
+  x_max=2.0d0*sll_pi ! this is to test the Poisson sover
+  v_min=0
+  v_max=sll_pi
 
 !!$  x_min=0.0d0
 !!$  x_max=4.0d0*sll_pi
@@ -94,15 +95,15 @@ program VP_DG
 !!$  v_min=-1.0d0
 !!$  v_max=1.0d0
 
-  x_min=0.0d0
-  !x_max=2.0d0*sll_pi/k
-  x_max=20.0d0*sll_pi
-  v_min=-8.0d0
-  v_max=8.0d0
+!!$  x_min=0.0d0
+!!$  !x_max=2.0d0*sll_pi/k
+!!$  x_max=20.0d0*sll_pi
+!!$  v_min=-8.0d0
+!!$  v_max=8.0d0
 
-  nx=16
-  nv=16
-  ng=8
+  nx=4
+  nv=4
+  ng=4
 
   print*,'discretization caracteristics :'
   print"(3(a5,i3))",'nx=',nx,', nv=',nv,', ng=',ng
@@ -113,13 +114,13 @@ program VP_DG
   allocate(dist(nx*ng,nv*ng),distp1(nx*ng,nv*ng))
 
   !definition or time step, delta_t and final time
-  dt=0.001d0
-  tf=100.0d0
+  dt=0.002d0
+  tf=500.0d0
   nb_step=ceiling(tf/dt)
   th=min(20,int(0.1d0/dt))!20
   th_out=int(0.5d0/dt)
-  !th_large=int(10.0d0/dt) ! must be a multiple of th
-  th_large=huge(1)
+  th_large=int(10.0d0/dt) ! must be a multiple of th
+  !th_large=huge(1)
   if (modulo(th_large,th)/=0) then
      print*,"WARNING : snapshot of the electric field may be miscalculated"
   end if
@@ -139,7 +140,11 @@ program VP_DG
   form="(1x,i"//char(len+48)//",a1,i"//char(len+48)//",1x,a11,f7.2)"
 
   call init_gausslobatto_1d(ng,gausslob)
-  call init_gausslobatto_1d(ng*3,gll)
+!!$print*,ng
+!!$print*,gausslob%weigh
+!!$print*,gausslob%node
+!!$stop
+  !call init_gausslobatto_1d(ng*3,gll)
   call init_nu_cart_mesh(nx,nv,mesh)
   mesh%d_etat1=(x_max-x_min)/real(nx,8)
   mesh%d_etat2=(v_max-v_min)/real(nv,8)
@@ -148,10 +153,10 @@ program VP_DG
   call fill_node_nuc_mesh(x_min,v_min,mesh)
 
   !flux coefficients
-  c12=0.5d0
+  c12=0.0d0
   c11=real(ng**2,8)/maxval(mesh%d_etat1)
 
-  call init_timesteping_4dg(dg_plan,sll_ee,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
+  call init_timesteping_4dg(dg_plan,sll_rk4,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
 
   !construction of distribution function
   !x_i is indexed on both mesh nodes and GLL nodes, so to have the postion in x
@@ -180,6 +185,7 @@ program VP_DG
               x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
               !test case for RHS
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=sin(x)*sin(v)
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=0.5d0*(+1.0d0+sin(x))*sin(v)
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(exp(-200.0d0*(v-0.8d0)**2)+ &
 !!$                   & exp(-200.0d0*(v+0.8d0)**2))!*(cos(3.0d0*x)+cos(6.0d0*x)+cos(18.0d0*x))
@@ -213,9 +219,9 @@ program VP_DG
 
               !Bump on tail
               !from michel, eric and nicolas, inria
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
-                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
-                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
+!!$                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
+!!$                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=&!(1.0d0-0.05d0*cos(k*x))
 !!$                   & 1.0d0/sqrt(2.0d0*sll_pi)* &
@@ -256,7 +262,7 @@ program VP_DG
   int_f=0.0d0
 
   dg_plan%rho=0.0d0
-  dg_plan%norma=0.0d0
+!!$  dg_plan%norma=0.0d0
   dg_plan%bound=0
   do x1=1,nx
      do x2=1,ng
@@ -266,11 +272,12 @@ program VP_DG
                    & dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
            end do
         end do
-        dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)* &
-             & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
+!!$        dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)* &
+!!$             & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
      end do
   end do
-  dg_plan%norma=dg_plan%norma/(x_max-x_min)
+!!$  dg_plan%norma=dg_plan%norma/(x_max-x_min)
+  dg_plan%norma=1.0d0
   do x1=1,nx
      do x2=1,ng
         dg_plan%rho((x1-1)*ng+x2)=(dg_plan%rho((x1-1)*ng+x2)-dg_plan%norma)* &
@@ -283,6 +290,23 @@ program VP_DG
   dg_plan%field=0.0d0
   call solve(dg_plan%poisson_vp,dg_plan%rho,dg_plan%phi)
   dg_plan%field=matmul(dg_plan%poisson_vp%mat_field,dg_plan%phi)
+
+!!$!!!to check Poisson solver
+!!$l2_f=0.0d0 ! error on phi
+!!$l1_f=0.0d0 ! error on E
+!!$do x1=1,nx
+!!$   do x2=1,ng
+!!$      x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
+!!$      l2_f=l2_f+(sin(x)-  dg_plan%phi((x1-1)*ng+x2))**2*gausslob%weigh(x2)/mesh%jac(x1,nv+1)
+!!$      l1_f=l1_f+(cos(x)-dg_plan%field((x1-1)*ng+x2))**2*gausslob%weigh(x2)/mesh%jac(x1,nv+1)
+!!$   end do
+!!$end do
+!!$l2_f=sqrt(l2_f)
+!!$l1_f=sqrt(l1_f)
+!!$open(42,file="check_poisson",position="append")
+!!$write(42,*) mesh%d_etat1(1),l2_f,l1_f
+!!$close(42)
+!!$!stop
 
   if (sym_mom_comp) then
      if (modulo(nv,2)==0) then !nv even
@@ -419,7 +443,9 @@ program VP_DG
   write(15,*)dg_plan%t,momentum,energy,k_en,sqrt(em_en),phi_jump,l1_f,l2_f, &
        & minval(dist),maxval(dist),int_f
   close(17)
-
+!!$!!!>>>>>>>
+!!$stop!!!!!!
+!!$!!!<<<<<<<
   ! time loop begin
   do step=1,nb_step
      !!!>>>Blanca"s case
@@ -440,7 +466,7 @@ program VP_DG
         int_f=0.0d0
         
         dg_plan%rho=0.0d0
-        dg_plan%norma=0.0d0
+!!$        dg_plan%norma=0.0d0
         do x1=1,nx
            do x2=1,ng
               do v1=1,nv
@@ -449,11 +475,11 @@ program VP_DG
                       & dist((x1-1)*ng+x2,(v1-1)*ng+v2)*gausslob%weigh(v2)/mesh%jac(nx+1,v1)
                  end do
               end do
-              dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)* &
-                   & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
+!!$              dg_plan%norma=dg_plan%norma+dg_plan%rho((x1-1)*ng+x2)* &
+!!$                   & gausslob%weigh(x2)/mesh%jac(x1,nv+1)
            end do
         end do
-        dg_plan%norma=dg_plan%norma/(x_max-x_min)
+!!$        dg_plan%norma=dg_plan%norma/(x_max-x_min)
         do x1=1,nx
            do x2=1,ng
               dg_plan%rho((x1-1)*ng+x2)=(dg_plan%rho((x1-1)*ng+x2)-dg_plan%norma)* &
@@ -666,7 +692,7 @@ contains
     sll_int32,intent(in)  :: nx,nv,ng,nt,th,thl
     logical,intent(in)    :: unif
 
-    open(20,file="parameters",action="write",status="new")
+    open(20,file="parameters",action="write")!,status="new")
     write(20,*)"x bounadries :",x_min,x_max
     write(20,*)"v bounadries :",v_min,v_max
     write(20,*)""
@@ -795,7 +821,7 @@ end program VP_DG
 !!$ This part was originally after the time loop.
 !!$ Its purpose was for self-convergence test but it was not used.
 !!$ Since it was useles in the code i wanted to remove it, but it 
-!!$ still might be usefull so I did not want to loose it, so I
+!!$ still might be usefull so I did not want to loose it. Finally I
 !!$ placed it there as comment.
 !!$ Madaule Eric
 
