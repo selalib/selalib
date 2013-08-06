@@ -5,9 +5,9 @@
 !   in the x,y variables.
 ! - parallel
 
-program qns_4d_general
+program qns_4d_mixed
 #include "sll_working_precision.h"
-  use sll_simulation_4d_qns_general_module
+  use sll_simulation_4d_qns_mixed_module
   use sll_collective
   use sll_constants
   use sll_logical_meshes
@@ -18,7 +18,7 @@ program qns_4d_general
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_qns_general)      :: simulation
+  type(sll_simulation_4d_qns_mixed)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
@@ -48,10 +48,10 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 64
+#define NPTS1 32
 #define NPTS2 32
-#define NPTS3 64
-#define NPTS4 64
+#define NPTS3 32
+#define NPTS4 32
 #define SPL_DEG1 3
 #define SPL_DEG2 3
 
@@ -109,7 +109,7 @@ program qns_4d_general
   landau_params(5) = 0.01     !eps
 
   ! initialize simulation object with the above parameters
-  call initialize_4d_qns_general( &
+  call initialize_4d_qns_mixed( &
        simulation, &
        mx, &
        mv, &
@@ -153,7 +153,7 @@ program qns_4d_general
   call sll_halt_collective()
 
 
-end program qns_4d_general
+end program qns_4d_mixed
 
 ! External functions used as parameters in the above unit test:
 
