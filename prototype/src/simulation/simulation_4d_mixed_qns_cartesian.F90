@@ -118,6 +118,12 @@ module sll_simulation_4d_qns_mixed_module
      sll_real64, dimension(:,:), allocatable :: efield_x1_diff
      sll_real64, dimension(:,:), allocatable :: efield_x2_diff
      sll_real64, dimension(:,:), allocatable :: efield_x1_ref
+     sll_real64, dimension(:,:), allocatable :: efield_x1_qns
+     sll_real64, dimension(:,:), allocatable :: efield_x2_qns
+     sll_real64, dimension(:,:), allocatable :: efield_x1_cart
+     sll_real64, dimension(:,:), allocatable :: efield_x2_cart
+     sll_real64, dimension(:,:), allocatable :: efield_x1_ref_diff_qns
+     sll_real64, dimension(:,:), allocatable :: efield_x1_ref_diff_cart
      sll_real64, dimension(:,:), allocatable :: phi_ref
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
@@ -567,7 +573,12 @@ contains
     ! the following only works in sequential mode! no parallel!
     SLL_ALLOCATE(sim%efield_x1_diff(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_x2_diff(loc_sz_x1,loc_sz_x2),ierr)
-
+    SLL_ALLOCATE(sim%efield_x1_qns(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_x2_qns(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_x1_cart(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_x2_cart(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_x1_ref_diff_qns(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_x1_ref_diff_cart(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%rho_full(nc_x1+1,nc_x2+1),ierr) ! changed from nc,nc
     SLL_ALLOCATE(recv_buf((nc_x1+1)*(nc_x2+1)),ierr) !changed from nc, nc
 
@@ -793,7 +804,7 @@ contains
     ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - 1, & !density_tot, &
+         sim%rho_full - density_tot, &
          "rho_field_qns", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -1081,7 +1092,7 @@ contains
             density_tot )
        
        ! print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-1.0)!density_tot)
+       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
        
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
@@ -1137,12 +1148,29 @@ contains
           call phi%write_to_file(itime)
        end if       
 
-       ! add phi_qns phi_cart to compare with exact value, first iteration.
+       do j=1,nc_x2+1
+          do i=1,nc_x1+1
+             sim%phi_diff(i,j) = sim%phi_ref(i,j) - phi%value_at_indices(i,j)
+          end do
+       end do
+
+       call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%phi_diff, &
+         "phi_diff_qns", &
+         itime, &
+         ierr )
 
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
+       print *, 'What the heck is going on with phi?'
+       print *,'last column = '
+       print *, sim%phi_x1(:,32)
 
        global_indices(1:2) =  &
             local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
@@ -1159,17 +1187,17 @@ contains
 
        do j=1,nc_x2+1
           do i=1,nc_x1+1
-             sim%phi_diff(i,j) = sim%phi_x1(i,j) - phi%value_at_indices(i,j)
+             sim%phi_diff(i,j) = sim%phi_x1(i,j) - sim%phi_ref(i,j)
           end do
        end do
        print *, 'the sum of phi_diff is = ', sum(sim%phi_diff)
        call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
          sim%phi_diff, &
-         "phi_diff", &
+         "phi_diff_cart", &
          itime, &
          ierr )
        ! compute the values of the electric field. rho is configured for 
@@ -1209,18 +1237,91 @@ contains
             sim%efield_x2, &
             sim%efield_split )
  
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+!             sim%efield_x1_diff(i,j) = sim%efield_x1_ref(i,j) - &
+!                 ( - phi%first_deriv_eta1_value_at_indices(i,j))
+             sim%efield_x1_cart(i,j)= real( sim%efield_split(i,j),f64) 
+             sim%efield_x2_cart(i,j)= aimag(sim%efield_split(i,j))
+          end do
+       end do
+
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%efield_x1_cart, &
+         "electric_field_x1_cart", &
+         itime, &
+         ierr )
+
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%efield_x2_cart, &
+         "electric_field_x2_cart", &
+         itime, &
+         ierr )
 
        
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
+
+
+
        print *, 'difference in electric field, qns case:'
+
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             sim%efield_x1_diff(i,j) = sim%efield_x1_ref(i,j) - &
+             sim%efield_x1_ref_diff_qns(i,j) = sim%efield_x1_ref(i,j) - &
                  ( - phi%first_deriv_eta1_value_at_indices(i,j))
-!             sim%efield_x2_diff(i,j) = aimag(sim%efield_split(i,j)) - &
-!                 ( - phi%first_deriv_eta2_value_at_indices(i,j))       
+             sim%efield_x1_qns(i,j)=-phi%first_deriv_eta1_value_at_indices(i,j)
+             sim%efield_x2_qns(i,j)=-phi%first_deriv_eta2_value_at_indices(i,j)
+          end do
+       end do
+
+
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%efield_x1_ref_diff_qns, &
+         "electric_field_difference_ref_qns", &
+         itime, &
+         ierr )
+
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%efield_x1_qns, &
+         "electric_field_x1_qns", &
+         itime, &
+         ierr )
+
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%efield_x2_qns, &
+         "electric_field_x2_qns", &
+         itime, &
+         ierr )
+
+
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             sim%efield_x1_ref_diff_cart(i,j) = sim%efield_x1_ref(i,j) - &
+                                                sim%efield_x1_cart(i,j)
+             sim%efield_x1_qns(i,j)=-phi%first_deriv_eta1_value_at_indices(i,j)
+             sim%efield_x2_qns(i,j)=-phi%first_deriv_eta2_value_at_indices(i,j)
           end do
        end do
 
@@ -1229,15 +1330,15 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
-         sim%efield_x1_diff, &
-         "electric_field_difference_qns", &
-         0, &
+         sim%efield_x1_ref_diff_cart, &
+         "electric_field_difference_ref_cart", &
+         itime, &
          ierr )
 
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             sim%efield_x1_diff(i,j) = sim%efield_x1_ref(i,j) - &
-                  real( sim%efield_split(i,j),f64) 
+             sim%efield_x1_diff(i,j) = sim%efield_x1_cart(i,j) - &
+                                       sim%efield_x1_qns(i,j)
 !             sim%efield_x2_diff(i,j) = aimag(sim%efield_split(i,j)) - &
 !                 ( - phi%first_deriv_eta2_value_at_indices(i,j))       
           end do
@@ -1248,14 +1349,14 @@ contains
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
          sim%efield_x1_diff, &
-         "electric_field_difference_cartesian", &
-         0, &
+         "electric_field_x1_difference", &
+         itime, &
          ierr )
 
-stop
        efield_energy_total_c = 0.0_f64
        efield_energy_total_q = 0.0_f64
 
+#if 0
        ! cartesian case
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
@@ -1364,7 +1465,7 @@ stop
              end do
           end do
        end do
-
+#endif
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4_c, sim%f_x1x2_c )
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4_q, sim%f_x1x2_q )
 
@@ -1847,8 +1948,8 @@ stop
     
     density_tot = 0.0_f64
     
-    do j=1,numpts2
-       do i=1,numpts1
+    do j=1,numpts2-1
+       do i=1,numpts1-1
           density_tot = density_tot + rho(i,j)*delta1*delta2
        end do
     end do
