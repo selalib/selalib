@@ -14,6 +14,7 @@ module vlasov2d_dk_module
  use polar_advection
  use sll_cubic_splines
  use sll_cubic_spline_interpolator_1d
+ use sll_fft
 
  !use clock
 
@@ -21,7 +22,7 @@ module vlasov2d_dk_module
  private
  public :: new, dealloc,advection_x, advection_v,&
            densite_charge,densite_charge_dk,transposexv,transposevx,thdiag,densite_courant,&
-           compute_profile,solve_quasi_neutral,compute_field_dk,advection_x_dk,&
+           compute_profile,normalize_profile,solve_quasi_neutral,compute_field_dk,advection_x_dk,&
            advection_x3_dk,advection_x4_dk
 
  type, public :: vlasov2d
@@ -169,7 +170,8 @@ contains
         fn(:,1:this%geomx%ny) = f(:,:,iv,jv)
         fn(:,this%geomx%ny+1) = fn(:,1)
         call advect_CG_polar(plan_adv,fn,fnp1)
-        f(:,1:this%geomx%ny,iv,jv)=fnp1
+        f(1:this%geomx%nx,1:this%geomx%ny,iv,jv)=fnp1(1:this%geomx%nx,1:this%geomx%ny)
+        !f(:,1:this%geomx%ny,iv,jv)=fnp1
         !call interpole(this%splinex,f(:,:,iv,jv),depx,depy,jv==0)
      end do
   end do
@@ -316,6 +318,26 @@ contains
        
  end subroutine advection_v
 
+subroutine normalize_rho(this,profile,rho)
+  type(vlasov2d),intent(in) :: this
+  sll_real64,dimension(:),intent(in)::profile
+  sll_real64,dimension(:,:,:),intent(inout)::rho
+  sll_int32 ::i,j
+  sll_real64 :: tmp
+!   do i=1,this%geomx%nx
+!     tmp = sum(rho(i,1:this%geomx%ny,1:this%geomv%nx))&
+!       /real(this%geomx%ny*this%geomv%nx,f64)
+!     rho(i,:,:) = (rho(i,:,:)-tmp)/profile(i)
+!   enddo  
+   do i=1,this%geomx%nx
+     do j=1,this%geomx%ny+1
+       tmp = sum(rho(i,j,1:this%geomv%nx))/real(this%geomv%nx,f64)
+       rho(i,j,:) = (rho(i,j,:)-tmp)/profile(i)
+     enddo
+   enddo  
+
+end subroutine normalize_rho
+
 subroutine solve_quasi_neutral(this,plan_poisson,rho,phi)
   type(vlasov2d),intent(inout) :: this
   type(sll_plan_poisson_polar), pointer :: plan_poisson
@@ -323,10 +345,15 @@ subroutine solve_quasi_neutral(this,plan_poisson,rho,phi)
   sll_real64, dimension(:,:,:), intent(out)  :: phi
   sll_int32 :: i,ierr
 
+  !do i=1,this%geomx%ny+1
+  !  print *,i,rho(2,i,1)
+  !enddo
+  !stop
   do i = 1,this%geomv%nx
+    !print *,'#i=',i
     call solve_poisson_polar(plan_poisson,rho(:,:,i),phi(:,:,i))
   enddo
-
+!stop
 
 end subroutine solve_quasi_neutral
 
@@ -367,6 +394,7 @@ subroutine densite_charge_dk(this, rho)
    sll_real64, dimension(this%geomx%nx,this%geomx%ny+1,this%geomv%nx+1) :: locrho
    sll_int32 :: i,j,iv,jv,c
    sll_int32 :: comm
+   sll_real64 :: tmp
 
    comm   = sll_world_collective%comm
 
@@ -390,6 +418,17 @@ subroutine densite_charge_dk(this, rho)
    rho(:,:,this%geomv%nx+1)=rho(:,:,1)
    rho(:,this%geomx%ny+1,:)=rho(:,1,:)
    
+   !tmp=0._f64
+   !do i=1,this%geomx%ny
+   !  tmp=tmp+rho(2,i,4)
+   !  !print *,i,rho(2,i,4)
+   !enddo
+   !do i=1,this%geomx%ny+1
+   !  !tmp=tmp+rho(2,i,4)
+   !  print *,i,rho(2,i,4)-tmp/real(this%geomx%ny,f64)
+   !enddo
+   
+   !stop
 end subroutine densite_charge_dk
 
 
@@ -543,8 +582,10 @@ subroutine compute_profile(this,prof,geom,rpeak,deltar,kappa,R0)!,n0_case)
       prof(ir+1) = (1._f64+tmp)/(1._f64-tmp)*prof(ir)
     enddo
     
-    !*** normalisation of the density at int(prof(r)rdr)/int(rdr) ***
-    ! -> computation of int(prof(r)rdr)
+    
+    
+   !*** normalisation of the density at int(prof(r)rdr)/int(rdr) ***
+   ! -> computation of int(prof(r)rdr)
     profnorm_tmp = 0._f64
     do ir = 2,Nr_loc-1
       profnorm_tmp = profnorm_tmp + prof(ir)*geom%xgrid(ir)
@@ -567,13 +608,102 @@ subroutine compute_profile(this,prof,geom,rpeak,deltar,kappa,R0)!,n0_case)
   
 end subroutine compute_profile
 
-subroutine thdiag(this,f,phi,t,jstartv)
+subroutine normalize_profile(this,prof,geom,x)
+  type(vlasov2d),intent(in) :: this
+  type(geometry),intent(in) :: geom
+  sll_real64,dimension(:),intent(inout)   :: prof
+  sll_real64,intent(in) :: x
+  sll_real64::xx
+  sll_int32::ii
+  
+  xx=(x-geom%x0)/(geom%x1-geom%x0)
+  if((xx>=1).or.(xx<=0))then
+    print *,'#bad normalization in subroutine normalize_profile'
+    stop
+  endif  
+  
+  xx=xx*real(geom%Nx-1,f64)
+  ii=floor(xx)
+  xx=xx-ii
+  if((ii<0).or.(ii>geom%Nx-1))then
+    print *,'#bad index for subroutine normalize_profile'
+    stop
+  endif
+  xx=(1._f64-xx)*prof(ii+1)+xx*prof(ii+2)   
+  prof=prof/xx
+  
+  print *,'#check',prof(ii+1),prof(ii+2)
+end subroutine normalize_profile
+
+
+subroutine get_mode(this,phi,kmin,kmax,res)
+  type(vlasov2d),intent(in) :: this
+  sll_real64,dimension(:,:) :: phi
+  sll_int32,intent(in)      :: kmin(2),kmax(2)
+  sll_comp64 :: res(kmin(1),kmax())
+  sll_int32:: N(2),err
+  sll_real64,dimension(:),allocatable::buf_real
+  sll_real64,dimension(:),allocatable::buf_complex
+  type(sll_fft_plan), pointer         :: pfwd_1,pfwd_2
+  !type(sll_fft_plan), pointer         :: pinv(2)  
+  sll_int32 :: i,j
+  sll_real64,dimension(:,:),allocatable::buf2d_real
+  sll_real64,dimension(:,:),allocatable::buf2d_complex
+  !type(sll_fft_plan), pointer :: p => null()
+  !sll_comp64, dimension(:,:),allocatable :: data_comp2d
+  
+  
+  N(1)=this%geomx%ny
+  N(2)=this%geomv%nx
+  
+  SLL_ALLOCATE(buf_real(N(1)),err)
+  pfwd_2 => fft_new_plan(N(2),buf_real,buf_real,FFT_FORWARD,FFT_NORMALIZE)
+  !pinv(1) => fft_new_plan(N(1),buf_real,buf_real,FFT_INVERSE)
+  !SLL_DEALLOCATE_ARRAY(buf_real,err)
+  SLL_ALLOCATE(buf_complex(N(1)),err)
+  pfwd_1 => fft_new_plan(N(1),buf_complex,buf_complex,FFT_FORWARD,FFT_NORMALIZE)
+  !pinv(2) => fft_new_plan(N(2),buf_complex,buf_complex,FFT_INVERSE)
+  SLL_DEALLOCATE_ARRAY(buf_complex,err)
+  
+  SLL_ALLOCATE(buf2d_complex(N(1),kmin(2):kmax(2)),err)
+  
+  !buf2d_real=phi(1:N(1),1:N(2))
+  
+  do i=1,N(1)
+    call fft_apply_plan(pfwd_2,phi(i,1:N(2)),buf_real(1:N(2)))
+    do j=kmin(2),kmax(2)
+      buf2d_complex(i,j)=fft_get_mode(pfwd_2,buf_real(1:N(2)),j)
+    enddo
+  enddo
+  SLL_DEALLOCATE_ARRAY(buf_real,err)
+  
+  do j=kmin(2),kmax(2)
+    call fft_apply_plan(pfwd_1,buf2d_complex(1:N(1),j),buf2d_complex(1:N(1),j))
+    do i=kmin(1),kmax(1)
+      res(i,j)=fft_get_mode(pfwd_1,buf2d_complex(1:N(1),j),i)
+    enddo
+  enddo
+  
+  
+  SLL_DEALLOCATE_ARRAY(buf2d_complex,err)
+  
+  
+  !SLL_ALLOCATE(data_comp2d(N(1)/2+1,N(2)),err)
+  !p => fft_new_plan(N(1),N(2),phi(1:N(1),1:N(2)),data_comp2d(1:N(1)/2+1,1:N(2)))
+  !call fft_apply_plan(p,phi(1:N(1),1:N(2)),data_comp2d(1:N(1)/2+1,1:N(2)))
+  !call fft_delete_plan(p)
+  
+  !SLL_DEALLOCATE_ARRAY(data_comp2d,err)
+
+end subroutine get_mode
+
+subroutine thdiag(this,f,phi,t,jstartv,kmin,kmax)
 
    type(vlasov2d),intent(inout) :: this
    sll_int32, intent(in) :: jstartv
    sll_real64, dimension(:,:,:,jstartv:),intent(in) :: f
    sll_real64, dimension(:,:,:),intent(in) :: phi
-   sll_int32 :: error
+   sll_int32 :: error,err
    sll_real64, intent(in) :: t  ! current time
    ! variables locales
    sll_int32 :: i,iv, j,jv
@@ -582,6 +712,8 @@ subroutine thdiag(this,f,phi,t,jstartv)
    sll_real64,dimension(11) :: auxloc
    sll_real64,dimension(13) :: aux
    sll_real64,dimension(0:9) :: diag
+   sll_comp64,dimension(:,:),allocatable :: mode_tab
+   sll_int32,intent(in) :: kmin(2),kmax(2)
    sll_int32 :: my_num, num_threads
    sll_int32 :: comm
 
@@ -622,7 +754,6 @@ subroutine thdiag(this,f,phi,t,jstartv)
 !         end do
 !      end do
 !   end do
-
    auxloc  = 0._f64
    do jv=this%jstartv,this%jendv
       vy = this%geomv%y0+(jv-1)*this%geomv%dy
@@ -634,22 +765,25 @@ subroutine thdiag(this,f,phi,t,jstartv)
                x = this%geomx%x0+(i-1)*this%geomx%dx
                auxloc(1) = auxloc(1) + 0.5_f64*x*f(i,j,iv,jv)             ! mass
                auxloc(2) = auxloc(2) + 0.5_f64*x*abs(f(i,j,iv,jv))        ! L1
-               auxloc(3) = auxloc(3) + 0.5_f64*x*abs(f(i,j,iv,jv))**2     ! L2
+               auxloc(3) = auxloc(3) + 0.5_f64*x*abs(f(i,j,iv,jv)+1e-30)**2     ! L2
                auxloc(4) = auxloc(4) + 0.5_f64*x*vy*vy*f(i,j,iv,jv)       ! ekin
                auxloc(5) = auxloc(5) + 0.5_f64*x*phi(i,j,iv)*f(i,j,iv,jv) ! epot
             do i = 2,this%geomx%nx-1
                x = this%geomx%x0+(i-1)*this%geomx%dx
                auxloc(1) = auxloc(1) + x*f(i,j,iv,jv)             ! mass
                auxloc(2) = auxloc(2) + x*abs(f(i,j,iv,jv))        ! L1
-               auxloc(3) = auxloc(3) + x*abs(f(i,j,iv,jv))**2     ! L2
-               auxloc(4) = auxloc(4) + x*vy*vy*f(i,j,iv,jv)       ! ekin
+               !print *,i,(f(i,j,iv,jv))
+               auxloc(3) = auxloc(3) + 1._f64*x*abs(f(i,j,iv,jv)+1e-30)**2     ! L2
+               !print *,i,this%geomx%nx-1,f(i,j,iv,jv),phi(i,j,iv)
+               auxloc(4) = auxloc(4) + x*vy*vy*f(i,j,iv,jv)       ! ekin               
                auxloc(5) = auxloc(5) + x*phi(i,j,iv)*f(i,j,iv,jv) ! epot
+               !print *,'ok',i,f(i+1,j,iv,jv),phi(i+1,j,iv),x*abs(f(i,j,iv,jv))**2
             end do
                i=this%geomx%nx
                x = this%geomx%x0+(i-1)*this%geomx%dx
                auxloc(1) = auxloc(1) + 0.5_f64*x*f(i,j,iv,jv)             ! mass
                auxloc(2) = auxloc(2) + 0.5_f64*x*abs(f(i,j,iv,jv))        ! L1
-               auxloc(3) = auxloc(3) + 0.5_f64*x*abs(f(i,j,iv,jv))**2     ! L2
+               auxloc(3) = auxloc(3) + 0.5_f64*x*abs(f(i,j,iv,jv)+1e-30)**2     ! L2
                auxloc(4) = auxloc(4) + 0.5_f64*x*vy*vy*f(i,j,iv,jv)       ! ekin
                auxloc(5) = auxloc(5) + 0.5_f64*x*phi(i,j,iv)*f(i,j,iv,jv) ! epot
          end do
@@ -670,13 +804,24 @@ subroutine thdiag(this,f,phi,t,jstartv)
   nrj = sum(phi(this%geomx%nx/2,1:this%geomx%ny,1:this%geomv%nx)**2)*this%geomx%dy*this%geomv%dx
 
 if (my_num==MPI_MASTER) then
+   
+   SLL_ALLOCATE(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)),err)
+   
+   !print *,mode_tab(0,0)
+   
+   call get_mode(this,phi(this%geomx%nx/2,:,:),kmin,kmax,mode_tab)
+   
+   print *,mode_tab(0,0)
    aux(13)=t
    aux(12)=nrj
    !write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
    !call time_history("thf","(13(1x,e15.6))",aux(1:13))
    !print "(13(1x,e15.10))",aux(1:13)
-   print *,t,nrj,aux(4)+aux(5),aux(1:5)
+   print *,t,nrj,aux(4)+aux(5),aux(1:5),mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))
    !stop
+   
+   SLL_DEALLOCATE_ARRAY(mode_tab,err)
+   
 end if
 
 end subroutine thdiag
