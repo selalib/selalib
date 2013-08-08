@@ -69,7 +69,7 @@ contains
     real(wp),dimension(:,:),allocatable::buf2d,E0,E1
     real(wp)::dom(0:1,0:1)
 
-    timecase(0)=1 !computation of the characteristics: 1 for Euler, 3 for symplectic Verlet
+    timecase(0)=3 !computation of the characteristics: 1 for Euler, 3 for symplectic Verlet
     timecase(1)=2 !number of steps fixed point algo (symplectic Verlet case)
     interp_case=2 !1:Lauritzen 2:LAG3 3:PPM CD 4:LAG(2d+1)
     ppm_order=4   !if interp_case=3: PPM0, PPM1 or PPM2; if interp_case=4: ppm_order=d for LAG(2d+1)

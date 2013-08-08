@@ -49,6 +49,7 @@ choose the way to compute
 2 : Semi-Lagrangian scheme order 2
 3 : leap-frog scheme
 10 : Semi-Lagrangian scheme order 1 with remapping
+20 : Semi-Lagrangian scheme order 2 with remapping
 
 interpolation case
 1 : Lauritzen
