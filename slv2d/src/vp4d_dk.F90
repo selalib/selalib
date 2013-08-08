@@ -43,12 +43,14 @@ sll_real64 :: R0
 sll_int32  :: fdiag, fthdiag  
 sll_int32  :: iter 
 sll_int32  :: jstartx, jendx, jstartv, jendv
-sll_real64 :: nrj,tmp
+sll_real64 :: nrj,tmp,tmp_tab(2)
 sll_real64 :: tcpu1, tcpu2
 
 sll_int32 :: my_num, num_threads, comm
 sll_int32 :: nr,ntheta,err!,bc(2)
 sll_real64 :: rmin,dr
+
+sll_int32 :: kmin(2),kmax(2)
 call sll_boot_collective()
 
 my_num = sll_get_collective_rank(sll_world_collective)
@@ -56,6 +58,8 @@ num_threads = sll_get_collective_size(sll_world_collective)
 comm   = sll_world_collective%comm
 
 
+kmin=0
+kmax=2
 
 
 ! initialisation global
@@ -66,8 +70,11 @@ end if
 
 !call initglobal_dk(geomx,geomv,dt,nbiter,fdiag,fthdiag,R0)
 
+
+
 call init_dk(geomx,geomv,nbiter,fdiag,fthdiag,jstartv,jendv,jstartx,jendx, &
                f4d,f4d_old,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
+
 
 dt=plan_sl%adv%dt
 if (my_num == MPI_MASTER) then
@@ -92,7 +99,22 @@ endif
   
 
 iter=0
-   call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv)
+   call transposexv(vlas2d,f4d)
+   call densite_charge_dk(vlas2d,rho_dk)
+!   do i=1,geomx%nx
+!     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
+!     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
+!   enddo  
+   do i=1,geomx%nx
+     do j=1,geomx%ny+1
+       tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
+       rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+     enddo
+   enddo  
+
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+   call transposevx(vlas2d,f4d)
+   call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv,kmin,kmax)
 
 
 do iter=1,nbiter
@@ -100,14 +122,6 @@ do iter=1,nbiter
 
    f4d_old=f4d
    call transposexv(vlas2d,f4d)
-   
-   !compute field at time tn
-   call densite_charge_dk(vlas2d,rho_dk)
-   do i=1,geomx%nx
-     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
-     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
-   enddo  
-   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
    call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
 
    ! prediction step
@@ -117,11 +131,18 @@ do iter=1,nbiter
    plan_sl%adv%dt = 0.5_f64*dt   
    call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
    call transposexv(vlas2d,f4d)
+   
    !compute field at time t_{n+1/2}
    call densite_charge_dk(vlas2d,rho_dk)
+   !do i=1,geomx%nx
+   !  tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
+   !  rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
+   !enddo  
    do i=1,geomx%nx
-     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
-     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
+     do j=1,geomx%ny+1
+       tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
+       rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+     enddo
    enddo  
    call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
    call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
@@ -136,9 +157,27 @@ do iter=1,nbiter
    call transposexv(vlas2d,f4d)
    call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
    call advection_x3_dk(vlas2d,0.5_f64*dt)
+   
+
+   call densite_charge_dk(vlas2d,rho_dk)
+!   do i=1,geomx%nx
+!     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
+!     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
+!   enddo  
+   do i=1,geomx%nx
+     do j=1,geomx%ny+1
+       tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
+       rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+     enddo
+   enddo  
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+
+
+   
+   
    call transposevx(vlas2d,f4d)
 
-   call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv)
+   call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv,kmin,kmax)
 !if (my_num==MPI_MASTER) then
 !   print *,my_num,iter,dt,real(iter,f64)*dt
 !end if
@@ -167,13 +206,13 @@ enddo
    
    endif
 
-tcpu2 = MPI_WTIME()
-if (my_num == MPI_MASTER) &
-   write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
+!tcpu2 = MPI_WTIME()
+!if (my_num == MPI_MASTER) &
+!   write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*num_threads
 
 call sll_halt_collective()
 
-print*,'PASSED'
+print*,'#PASSED'
 
 
 
@@ -342,7 +381,7 @@ contains
   !EQUIL
   sll_int32       :: modethmin,modethmax,modezmin,modezmax
   logical         :: zonal_flow
-  sll_real64      :: rpeak,kappan,kappaTi,kappaTe,deltarn,deltarTi,deltarTe,epsilon
+  sll_real64      :: rpeak,kappan,kappaTi,kappaTe,deltarn,deltarTi,deltarTe,epsilon,tmp_tab(4)
   
   sll_int32  :: grad,carac,bc(2)     
   
@@ -438,7 +477,7 @@ contains
 
 
 
-  bc = (/1,1/)
+  bc = (/SLL_DIRICHLET,SLL_DIRICHLET/)
   grad = 2
   carac = 5
    
@@ -513,6 +552,57 @@ contains
   
   call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
   call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
+  call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
+
+  !redefinition of profile
+  
+  call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
+  call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
+  call compute_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak,deltarTe,kappaTe,R0)
+  call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
+  call normalize_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak)
+
+
+  SLL_ALLOCATE(dlog_density(geomx%nx),iflag)
+  SLL_ALLOCATE(inv_Te(geomx%nx),iflag)
+  
+  do i=1,geomx%nx
+    inv_Te(i) = 1._f64/profile(3,i)
+    x = geomx%x0+(i-1)*geomx%dx
+    dlog_density(i) = -kappan/R0*cosh((x-rpeak)/deltarn)**(-2)
+  enddo
+  
+  
+  if (my_num == MPI_MASTER) then
+    print *,'#the param are:',kappaTi,deltarTi,rpeak,geomx%x0,geomx%x1,geomx%x0+(geomx%nx*geomx%dx)
+    !stop
+   ky  = 2._f64*pi/(real(geomx%ny,f64)*geomx%dy)
+   
+    do i=1,geomx%nx
+      x = geomx%x0+(i-1)*geomx%dx
+      !print *,'x=',x,i
+              tmp_tab(1)=2._f64/(deltarn/deltarTi)
+              tmp_tab(2)=tmp_tab(1)-tmp_tab(1)**2*(x-rpeak)**2
+              tmp_tab(2)=tmp_tab(2)+(1._f64/x+0*dlog_density(i))*tmp_tab(1)*(x-rpeak)
+              tmp_tab(2)=tmp_tab(2)+(real(modethmin,f64)*ky/x)**2+inv_Te(i)
+              tmp_tab(2)=tmp_tab(2)*exp(-(x-rpeak)**2/(deltarn/deltarTi))
+      !print *,'tmp_tab(2)=',tmp_tab(2)
+      write(20,*),x,profile(1,i),profile(2,i),profile(3,i),&
+      exp(-kappaTi/R0*deltarTi*tanh((x-rpeak)/deltarTi)),&
+      exp(-kappaTe/R0*deltarTe*tanh((x-rpeak)/deltarTe)),&
+      exp(-kappan/R0*deltarn*tanh((x-rpeak)/deltarn)),&
+      -kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2)/dlog_density(i),&
+       tmp_tab(2)
+
+      !dlog_density(i),-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2),&
+      !&-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2)/dlog_density(i)
+    enddo
+    !stop
+
+  endif
+
+
+
   !warning redefining profile for initialization of distribution function  
   !profile(1,:)=1._f64
   !profile(2,:)=1._f64
@@ -538,16 +628,23 @@ contains
                tmp_mode=tmp_mode+cos(real(n,f64)*kvx*vx+real(m,f64)*ky*y)
              enddo
            enddo  
-           do i=1,geomx%nx
-    x=geomx%x0+(i-1)*geomx%dx
-    tmp_mode = exp(-(x-rpeak)**2/(deltarn/deltarTi))
-    profile(1,i)=profile(1,i)*tmp_mode
-  enddo
+!           do i=1,geomx%nx
+!    x=geomx%x0+(i-1)*geomx%dx
+!    tmp_mode = exp(-(x-rpeak)**2/(deltarn/deltarTi))
+!    profile(1,i)=profile(1,i)*tmp_mode
+!  enddo
            !tmp_mode=1._f64+tmp_mode*epsilon
            do i=1,geomx%nx
               x=geomx%x0+(i-1)*geomx%dx              
               !f(i,j,iv,jv)=tmp_mode*profile(1,i)*exp(v2*profile(2,i))
-              f(i,j,iv,jv)=(1._f64+tmp_mode*epsilon*exp(-(x-rpeak)**2/(deltarn/deltarTi)))*&
+              
+              tmp_tab(1)=2._f64/(deltarn/deltarTi)
+              tmp_tab(2)=tmp_tab(1)-tmp_tab(1)**2*(x-rpeak)**2
+              tmp_tab(2)=tmp_tab(2)+(1._f64/x+dlog_density(i))*tmp_tab(1)*(x-rpeak)
+              tmp_tab(2)=tmp_tab(2)+(real(modethmin,f64)*ky/x)**2+inv_Te(i)
+              tmp_tab(2)=tmp_tab(2)*exp(-(x-rpeak)**2/(deltarn/deltarTi))
+              !tmp_tab(2)=exp(-(x-rpeak)**2/(deltarn/deltarTi))
+              f(i,j,iv,jv)=(1._f64+tmp_mode*epsilon*tmp_tab(2))*&
                 &profile(1,i)*exp(v2*profile(2,i))
            end do
         end do
@@ -556,32 +653,17 @@ contains
   
   !,geomx%nx*geomx%ny*geomv%nx*geomv%ny,&
   !geomx%nx*geomx%ny*geomv%nx*geomv%ny-mass*num_threads!*geomx%dx*geomx%dy*geomv%dx*geomv%dy,2*pi*2*pi*12*0.6*32
-  
+
+
   !redefinition of profile
   
   call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
   call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
   call compute_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak,deltarTe,kappaTe,R0)
+  call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
+  call normalize_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak)
 
-  SLL_ALLOCATE(dlog_density(geomx%nx),iflag)
-  SLL_ALLOCATE(inv_Te(geomx%nx),iflag)
   
-  do i=1,geomx%nx
-    inv_Te(i) = 1._f64/profile(3,i)
-    x = geomx%x0+(i-1)*geomx%dx
-    dlog_density(i) = -kappan/R0*cosh((x-rpeak)/deltarn)**(-2)
-  enddo
-  
-  
-  if (my_num == MPI_MASTER) then
-    do i=1,geomx%nx
-      x = geomx%x0+(i-1)*geomx%dx
-      write(20,*),x,dlog_density(i),-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2),&
-      &-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2)/dlog_density(i)
-    enddo
-    !stop
-
-  endif
   
   
   plan_sl => new_SL(geomx%x0,geomx%x1,geomx%dx,geomx%dy,dt,geomx%nx-1,geomx%ny,grad,carac,bc)
@@ -589,8 +671,12 @@ contains
   
   
   
-  plan_poisson => new_plan_poisson_polar(geomx%dx,geomx%x0,geomx%nx,geomx%ny,bc,&
+  plan_poisson => new_plan_poisson_polar(geomx%dx,geomx%x0,geomx%nx-1,geomx%ny,bc,&
     &dlog_density,inv_Te)
+  
+  
+  
+  
   
   SLL_DEALLOCATE_ARRAY(dlog_density,iflag)
   SLL_DEALLOCATE_ARRAY(inv_Te,iflag)
@@ -666,7 +752,7 @@ contains
   SLL_ALLOCATE(e_y(geomx%nx,geomx%ny),iflag)
 
   xi  = 0.90_f64
-  eps = 0.05._f64
+  eps = 0.05_f64
   kx  = 2._f64*pi/((geomx%nx)*geomx%dx)
   ky  = 2._f64*pi/((geomx%ny)*geomx%dy)
   do jv=jstartv,jendv

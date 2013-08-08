@@ -1,4 +1,4 @@
-SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
 
 IF(SLL_CONFIGURE_OPTIONS_FILE)
 INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
