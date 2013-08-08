@@ -96,7 +96,7 @@ do iter=1,nbiter
 
    if (mod(iter,fdiag) == 0) then 
 
-       call advection_x(vlas2d,f4d,.5*dt)
+       call advection_x(vlas2d,f4d,.5_f64*dt)
 
 
        call diagnostiques(f4d,rho,e_x,e_y,geomx,geomv, &
@@ -105,7 +105,7 @@ do iter=1,nbiter
        call plot_df(f4d,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,VXVY_VIEW)
 
 
-       call advection_x(vlas2d,f4d,.5*dt)
+       call advection_x(vlas2d,f4d,.5_f64*dt)
 
    else 
 
@@ -255,9 +255,9 @@ contains
            y=geomx%y0+(real(j-1,f64))*geomx%dy
            do i=1,geomx%nx
               x=geomx%x0+(real(i-1,f64))*geomx%dx
-              f(i,j,iv,jv)=(1._f64+eps*cos(kx*x))/(2._f64*pi)*exp(-.5_f64*v2)
-              !f(i,j,iv,jv)=2/(49*pi)*(1+5*z(1)*z(1))*exp(-0.5*z(1)*z(1)) &
-              !*(1+alpha*(cos(k*x)+(cos(2*k*x)+cos(3*k*x))/1.2))
+              !f(i,j,iv,jv)=(1._f64+eps*cos(kx*x))/(2._f64*pi)*exp(-.5_f64*v2)
+              !f(i,j,iv,jv)=(1._f64+eps*(cos(kx*x)+cos(ky*y)))/(2._f64*pi)*exp(-.5_f64*v2)
+              f(i,j,iv,jv)=(1._f64+eps*cos(kx*x)*cos(ky*y))/(2._f64*pi)*exp(-.5_f64*v2)
            end do
         end do
      end do
