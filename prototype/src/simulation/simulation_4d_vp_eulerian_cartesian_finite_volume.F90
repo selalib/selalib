@@ -156,6 +156,16 @@ contains
    procedure(sll_scalar_initializer_4d)                  :: init_func
    sll_real64, dimension(:), target                      :: params
    sll_real64 :: tmax
+   sll_int32 :: ierr
+!!$   sll_real64,dimension(:),pointer :: vx_mil
+!!$   sll_real64,dimension(:),pointer :: vy_mil
+!!$   sll_real64,dimension(:),pointer :: x_mil
+!!$   sll_real64,dimension(:),pointer :: y_mil
+!!$   sll_int32 :: ix
+!!$   sll_int32 :: iy
+!!$   sll_int32 :: ivx
+!!$   sll_int32 :: ivy
+!!$   sll_int32 :: mm
    sim%mesh2dx  => mesh2dx
    sim%mesh2dv  => mesh2dv
    sim%tx => tx
@@ -164,6 +174,61 @@ contains
    sim%params    => params
 
    sim%tmax = tmax
+!!$    SLL_ALLOCATE(vx_mil(sim%np_v1),ierr)
+!!$    SLL_ALLOCATE(vy_mil(sim%np_v2),ierr)
+!!$    SLL_ALLOCATE(x_mil(sim%nc_x1),ierr)
+!!$    SLL_ALLOCATE(y_mil(sim%nc_x2),ierr)
+!!$    do ivx=1,sim%np_v1
+!!$       vx_mil(ivx)=sim%mesh2dv%eta1_min+(ivx-1)*sim%mesh2dv%delta_eta1/sim%degree
+!!$    enddo
+!!$    do ivy=1,sim%np_v2
+!!$       vy_mil(ivy)=sim%mesh2dv%eta2_min+(ivy-1)*sim%mesh2dv%delta_eta2/sim%degree
+!!$    enddo
+!!$    do ix=1,sim%nc_x1
+!!$       x_mil(ix)=sim%mesh2dx%eta1_min+ix*sim%mesh2dx%delta_eta1- &
+!!$            sim%mesh2dx%delta_eta1/2
+!!$    enddo
+!!$    do iy=1,sim%nc_x2
+!!$       y_mil(iy)=sim%mesh2dx%eta2_min+iY*sim%mesh2dx%delta_eta2- &
+!!$            sim%mesh2dx%delta_eta2/2
+!!$    enddo
+!!$    !initialize for fn_v1v2x1
+!!$
+!!$    write(*,*) 'sim%np_v1 =', sim%np_v1
+!!$    do ivx=1,sim%np_v1
+!!$       write(*,*) 'entrer dans le boucle'
+!!$       do ivy=1,sim%np_v2
+!!$          do ix=1,sim%nc_x1
+!!$             do iy=1,sim%nc_x2
+!!$          write(*,*) 'bizzare1'
+!!$                sim%fn_v1v2x1(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
+!!$                     vy_mil(ivy),x_mil(ix),y_mil(iy),params)
+!!$             end do
+!!$          end do
+!!$       end do
+!!$    end do
+!!$    write(*,*) 'bizzare!!!!!!!!'
+!!$    !sim%rho_x1=0.0_f64
+!!$    do ix=1,sim%nc_x1
+!!$       write(*,*) 'bizzare1'
+!!$       do iy=1,sim%nc_x2
+!!$          write(*,*) 'bizzare'
+!!$          do ivx=1,sim%np_v1
+!!$             do ivy=1,sim%np_v2
+!!$                write(*,*) 'bizzare'
+!!$                sim%fn_v1v2x1(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
+!!$                     vy_mil(ivy),x_mil(ix),y_mil(iy),params)
+!!$                mm=sim%np_v1*(ivy-1)+ivx
+!!$                sim%rho_x1(ix,iy)=sim%rho_x1(ix,iy)+ &
+!!$                     sim%fn_v1v2x1(ivx,ivy,ix,iy)*sim%p(mm
+!!$             enddo
+!!$          end do
+!!$          write(*,*) 'rho (',ix,',',iy,') = ', sim%rho_x1(ix,iy)
+!!$          write(*,*) 'rho_exact (',ix,',',iy,') = ', (1+0.05_f64*cos(0.5_f64*x_mil(ix)))*14.51831643_f64/sqrt(sll_pi)
+!!$       enddo
+!!$    enddo
+!!$       write(*,*) 'bizzareend'
+
  end subroutine initialize_vp4d
 
 
@@ -192,7 +257,14 @@ contains
     sll_real64,dimension(:),pointer :: node,xmil 
     sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
     sll_real64,dimension(:,:),allocatable :: f_x_exact,f_v_exact
-
+    sll_real64,dimension(:),pointer :: vx_mil
+    sll_real64,dimension(:),pointer :: vy_mil
+    sll_real64,dimension(:),pointer :: x_mil
+    sll_real64,dimension(:),pointer :: y_mil
+    sll_int32 :: ix
+    sll_int32 :: iy
+    sll_int32 :: ivx
+    sll_int32 :: ivy
     sll_int32 :: ii,jj,mm
     sll_real64 :: t
     sll_int32,dimension(4)  :: global_indices
@@ -376,8 +448,11 @@ contains
     SLL_ALLOCATE(sim%surfx1(loc_sz_x1+1,loc_sz_x2),ierr)
     ! horizontal edges 
     SLL_ALLOCATE(sim%surfx2(loc_sz_x1,loc_sz_x2+1),ierr)
-    
-
+!!$    write(*,*) 'sim%mesh2dx%eta1_min', sim%mesh2dx%eta1_min
+!!$    write(*,*) 'sim%mesh2dx%eta1_max', sim%mesh2dx%eta1_max
+!!$    write(*,*) 'sim%mesh2dx%num_cells1', sim%mesh2dx%num_cells1
+!!$    write(*,*) 'sim%mesh2dx%delta_eta1', sim%mesh2dx%delta_eta1
+!!$    stop
 !!$    ! simple computation
 !!$    ! to be generalized with generic transformation...
 !!$    volume=sim%mesh2dx%delta_eta1 * &
@@ -420,7 +495,51 @@ contains
 
     !write(*,*) 'vertical',sim%my_rank,sum(sim%surfx1(1,:))
     !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
-    
+    !verify the calcul of rho
+    !the initial electric field
+    SLL_ALLOCATE(vx_mil(sim%np_v1),ierr)
+    SLL_ALLOCATE(vy_mil(sim%np_v2),ierr)
+    SLL_ALLOCATE(x_mil(sim%nc_x1),ierr)
+    SLL_ALLOCATE(y_mil(sim%nc_x2),ierr)
+    do ivx=1,sim%np_v1
+       vx_mil(ivx)=sim%mesh2dv%eta1_min+(ivx-1)*sim%mesh2dv%delta_eta1/sim%degree
+    enddo
+    do ivy=1,sim%np_v2
+       vy_mil(ivy)=sim%mesh2dv%eta2_min+(ivy-1)*sim%mesh2dv%delta_eta2/sim%degree
+    enddo
+    do ix=1,sim%nc_x1
+       x_mil(ix)=sim%mesh2dx%eta1_min+ix*sim%mesh2dx%delta_eta1- &
+            sim%mesh2dx%delta_eta1/2
+    enddo
+    do iy=1,sim%nc_x2
+       y_mil(iy)=sim%mesh2dx%eta2_min+iY*sim%mesh2dx%delta_eta2- &
+            sim%mesh2dx%delta_eta2/2
+    enddo
+
+
+    write(*,*) 'sim%np_v1 =', sim%np_v1, loc_sz_v1
+    write(*,*) 'sim%np_v2 =', sim%np_v2,loc_sz_v2
+    write(*,*) 'sim%np_x1 =', sim%nc_x1,loc_sz_x1
+    write(*,*) 'sim%np_x2 =', sim%nc_x2,loc_sz_x2
+!!$    sim%rho_x1=0.0_f64
+!!$    do ix=1,sim%nc_x1
+!!$       do iy=1,sim%nc_x2
+!!$          do ivx=1,sim%np_v1
+!!$             do ivy=1,sim%np_v2
+!!$                !sim%fn_v1v2x1(ivx,ivy,ix,iy)=sim%init_func(vx_mil(ivx), &
+!!$                 !    vy_mil(ivy),x_mil(ix),y_mil(iy),sim%params)
+!!$                mm=sim%np_v1*(ivy-1)+ivx
+!!$                !write(*,*) 'sim%p(mm) = ', sim%p(mm)
+!!$                sim%rho_x1(ix,iy)=sim%rho_x1(ix,iy)+ &
+!!$                     sim%fn_v1v2x1(ivx,ivy,ix,iy)*sim%p(mm)
+!!$                !sim%rho_x1(ix,iy)=sim%rho_x1(ix,iy)+ &
+!!$                 !     sim%mesh2dx%delta_eta1* sim%mesh2dx%delta_eta2*sim%fn_v1v2x1(ivx,ivy,ix,iy)
+!!$             enddo
+!!$          end do
+!!$          write(*,*) 'rho (',ix,',',iy,') = ', sim%rho_x1(ix,iy)
+!!$          write(*,*) 'rho_exact (',ix,',',iy,') = ', (1.0_f64+sim%params(5)*cos(0.5_f64*x_mil(ix)))*21.28_f64/sqrt(sll_pi)
+!!$       enddo
+!!$    enddo  
     
     ! time loop
     t=0
@@ -428,7 +547,6 @@ contains
     !compute the time step
     sim%cfl=sim%params(7)
 !!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
-!!$    write(*,*) 'Vxmax = ', sim%mesh2dv%eta2_max
 !!$    write(*,*) 'deltav = ', sim%mesh2dx%delta_eta1
 !!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
@@ -439,28 +557,31 @@ contains
          abs(sim%mesh2dv%eta2_min))
 !!$    sim%dt=0.1
     write(*,*) 'dt = ', sim%dt
-    write (*,*) 'Vxmax = ', sim%mesh2dx%eta1_max
     !stop
-    itime=1
-
+    itime=0
     do while(t.lt.sim%tmax)
+       itime=itime+1
        sim%Enorm = 0.0_f64
        !compute the charge density
+       !recalculer dans maillage logical
        sim%rho_x1=0.0_f64
        do i=1,loc_sz_x1
           do j=1,loc_sz_x2
              do ii=1,loc_sz_v1
                 do jj=1,loc_sz_v2
                    mm=loc_sz_v1*(jj-1)+ii
+                  ! sim%rho_x1(i,j)=sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)*sim%mesh2dx%delta_eta1* sim%mesh2dx%delta_eta2
                    sim%rho_x1(i,j)=sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)* & 
                         sim%p(mm)
                 enddo
              end do
-             !write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+!!$            write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+!!$            write(*,*) 'rho_exact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
           enddo
        enddo
 
        ! solve the poisson equation
+       !maillage logical
        call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
             sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
        !write (*,*) 'phi = ', sim%phi_x1
@@ -468,11 +589,11 @@ contains
 
 
        t=t+sim%dt
-       itime=itime+1
        call RK2(sim)
        !write(*,*) 'here3'
        !call euler(sim)
        !n Try to plot the log of energy
+       write(*,*) 'loc_sz_x1 =', loc_sz_x1
        do ic=1,loc_sz_x1
           do jc=1,loc_sz_x2
              icL=ic-1
@@ -501,17 +622,19 @@ contains
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
                   sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
              det=sim%tx%jacobian(x1,x2)
-!!$             !write(*,*) 'verify the matrix: det = ',  det
-             !write(*,*) 'Ex = ', Ex
-             !write(*,*) 'Ey = ', Ey
+            write(*,*) 'verify the matrix: det = ',  det
              if(sim%test==2) then
                 Ex=1.0_f64
                 Ey=0.0_f64
              endif
+!!$             write(*,*) 'Ex = ', Ex
+!!$             write(*,*) 'Ey = ', Ey
              sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                   sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
-             !write(*,*) 'Enorm = ',sim%Enorm
           end do
+          !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
+!!$          sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1*sim%mesh2dx%delta_eta2*(Ex**2+Ey**2)
+          !write(*,*) 'Enorm = ',sim%Enorm
        end do
        !write(*,*) 'here4'
        !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
@@ -544,6 +667,7 @@ contains
           buffer_counter=buffer_counter+1
              !print*, 'coucou 3!!'
        end if
+
 
     end do
 
@@ -861,7 +985,7 @@ contains
 !!$                   dtau=dtau+node(i)*dlag(ii,l)
 !!$                enddo
 
-               write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
+               !write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
                 jacob=sim%tv%jacobian_matrix(xref,yref)
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
                 !write(*,*) 'determinal of matrix = ', sim%tv%jacobian(xref,yref)
@@ -917,8 +1041,11 @@ contains
                             !write(*,*) 'ib1,jb1,ib2,jb2',ib1,jb1,ib2,jb2,(jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2            
                          end do
                       end do
+                      !write(*,*) 'det =', det
                       ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
                            phi1*det*weight(iploc+1)*weight(jploc+1)
+!!$ ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
+!!$                           phi1*weight(iploc+1)*weight(jploc+1)
                    end do
                 end do
 !!$          do ii=1,(sim%degree+1)**2
@@ -987,9 +1114,9 @@ contains
 !!$    sim%Bv1_low=sim%Bv1_low/10
 !!$    sim%Bv1_diag=sim%Bv1_diag/10
 !!$    sim%Bv1_sup=sim%Bv1_sup/10
-    write(*,*) 'Bv1_diag', sim%Bv1_diag
-    write(*,*) 'Bv1_sup', sim%Bv1_sup
-    write(*,*) 'Bv1_low', sim%Bv1_low
+!!$    write(*,*) 'Bv1_diag', sim%Bv1_diag
+!!$    write(*,*) 'Bv1_sup', sim%Bv1_sup
+!!$    write(*,*) 'Bv1_low', sim%Bv1_low
     !stop
 !!$    write(*,*) 'max of M low', maxval(abs(sim%M_low))
 !!$    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
@@ -1556,18 +1683,18 @@ contains
     source1=0
     source2=0
     
-!!$    call MULKU(sim%Bv1_sup,Bv1_diag_corr,sim%Bv1_low, &
-!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
-!!$    call MULKU(sim%Bv2_sup,Bv2_diag_corr,sim%Bv2_low, &
-!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+    call MULKU(sim%Bv1_sup,Bv1_diag_corr,sim%Bv1_low, &
+         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+    call MULKU(sim%Bv2_sup,Bv2_diag_corr,sim%Bv2_low, &
+         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
 !!$    source=Ex*source1+Ey*source2
 !!$    sim%Bv1_diag=1_f64
 !!$    sim%Bv2_diag=0
 
-    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
-         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
-    call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
-         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+!!$    call MULKU(sim%Bv1_sup,sim%Bv1_diag,sim%Bv1_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+!!$    call MULKU(sim%Bv2_sup,sim%Bv2_diag,sim%Bv2_low, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
     source=Ex*source1+Ey*source2
 !    write(*,*) 'source = ',  source
 !    stop
@@ -1642,6 +1769,9 @@ contains
     sll_int32  :: ierr,ifac,isol,nsym,mp
     sll_real64 :: void,Ex,Ey,vn(2)
     sll_int32 :: ic,jc,icL,icR,jcL,jcR
+    sll_real64 :: x1,x2
+    sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
+    sll_int32,dimension(4)  :: global_indices
 
     sll_real64,dimension(:,:),allocatable  :: temp,flux,source
 
@@ -1716,10 +1846,24 @@ contains
           elseif(ic.ge.loc_sz_x1)then
              icR=1
           end if
-          !write(*,*) 'ici4'
-          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1
-          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2
-          !write(*,*) 'ici5'
+          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+               (/1,1,1,1/) )
+          x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+               sim%mesh2dx%delta_eta1
+          x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+               sim%mesh2dx%delta_eta2
+          jac_m=sim%tx%jacobian_matrix(x1,x2)
+          inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+!!$             !write(*,*) 'verify the matrix: (1,1)',  inv_jac(1,1)
+!!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
+!!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
+!!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
+          Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+               sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+               sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+          Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+               sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+               sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
                source)
           !write(*,*) 'ici6'
