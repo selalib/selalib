@@ -255,8 +255,11 @@ contains
     sll_int32  :: jc
     sll_real64 :: df
     sll_real64,dimension(:),pointer :: node,xmil 
-    sll_real64,dimension(:,:),allocatable :: plotf2d,plotphi2d
-    sll_real64,dimension(:,:),allocatable :: f_x_exact,f_v_exact
+    sll_real64,dimension(:,:),allocatable :: plotf2d_c1
+    sll_real64,dimension(:,:),allocatable :: plotf2d_c2
+    sll_real64,dimension(:,:),allocatable :: plotphi2d
+    sll_real64,dimension(:,:),allocatable :: f_x_exact,f_vx_exact
+    sll_real64,dimension(:,:),allocatable :: f_y_exact,f_vy_exact
     sll_real64,dimension(:),pointer :: vx_mil
     sll_real64,dimension(:),pointer :: vy_mil
     sll_real64,dimension(:),pointer :: x_mil
@@ -681,12 +684,21 @@ contains
 !!$       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2x1(i,1,:,1)))
 !!$    end do
 !!$    
-    allocate (plotf2d(loc_sz_x1,loc_sz_v1))
+    allocate (plotf2d_c1(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-          plotf2d(i,j) = sim%fn_v1v2x1(j,1,i,1)
+          plotf2d_c1(i,j) = sim%fn_v1v2x1(j,1,i,1)
        end do
     end do
+
+
+    allocate (plotf2d_c2(loc_sz_x2,loc_sz_v2))
+    do i = 1, loc_sz_x2
+       do j = 1, loc_sz_v2
+          plotf2d_c2(i,j) = sim%fn_v1v2x1(1,j,1,i)
+       end do
+    end do
+
  
     allocate (xmil(loc_sz_x1))
     allocate (node(loc_sz_v1))
@@ -729,8 +741,17 @@ contains
          sim%mesh2dx%delta_eta1, &
          sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
          sim%mesh2dv%delta_eta1/sim%degree, &
-         plotf2d, &
-         "plotf2d", &
+         plotf2d_c1, &
+         "plotf2d_c1", &
+         0, &
+         ierr)
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+         sim%mesh2dx%delta_eta2, &
+         sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
+         sim%mesh2dv%delta_eta2/sim%degree, &
+         plotf2d_c2, &
+         "plotf2d_c2", &
          0, &
          ierr)
     if(sim%test==0)then
@@ -753,14 +774,34 @@ contains
     end if
 
 
+    if(sim%test==4)then
+       allocate (f_y_exact(loc_sz_x2,loc_sz_v2))
+       do i = 1, loc_sz_x2
+          do j = 1, loc_sz_v2
+             f_y_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta2 &
+                  -(sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree)*t),sim%mesh2dx%eta2_max-sim%mesh2dx%eta2_min)+sim%mesh2dx%eta2_min)**2)
+          end do
+       end do
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+            sim%mesh2dx%delta_eta2, &
+            sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
+            sim%mesh2dv%delta_eta2/sim%degree, &
+            f_y_exact, &
+            "plotfytransport", &
+            0, &
+            ierr)
+    end if
+
+
 !!$    write(*,*) 'test = ', sim%test
 !!$    stop
 
     if(sim%test==2)then
-       allocate (f_v_exact(loc_sz_x1,loc_sz_v1))
+       allocate (f_vx_exact(loc_sz_x1,loc_sz_v1))
        do i = 1, loc_sz_x1
           do j = 1, loc_sz_v1
-             f_v_exact(i,j) = exp(-4*(-t &
+             f_vx_exact(i,j) = exp(-4*(-t &
                   +(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree))**2)
           end do
        end do
@@ -769,8 +810,27 @@ contains
             sim%mesh2dx%delta_eta1, &
             sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
             sim%mesh2dv%delta_eta1/sim%degree, &
-            f_v_exact, &
-            "plotfvtransport", &
+            f_vx_exact, &
+            "plotfvxtransport", &
+            0, &
+            ierr)
+    end if
+
+    if(sim%test==3)then
+       allocate (f_vy_exact(loc_sz_x2,loc_sz_v2))
+       do i = 1, loc_sz_x2
+          do j = 1, loc_sz_v2
+             f_vx_exact(i,j) = exp(-4*(-t &
+                  +(sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree))**2)
+          end do
+       end do
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+            sim%mesh2dx%delta_eta2, &
+            sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
+            sim%mesh2dv%delta_eta2/sim%degree, &
+            f_vy_exact, &
+            "plotfvytransport", &
             0, &
             ierr)
     end if
@@ -1652,11 +1712,15 @@ contains
 
     sim%test=sim%params(8)
     !write(*,*) 'test =', sim%test
-    !correction the matrices B
     if(sim%test==2) then
        Ex=1.0_f64
        Ey=0.0_f64
     endif
+    if(sim%test==3) then
+       Ex=0.0_f64
+       Ey=1.0_f64
+    endif
+    !correction the matrices B
     Bv1_diag_corr=sim%Bv1_diag
     Bv2_diag_corr=sim%Bv2_diag
     do i=1,sim%np_v1*sim%np_v2
@@ -1703,7 +1767,7 @@ contains
 !!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
 !!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
     !use this when we want to test the transport equation 
-    if(sim%test==0) then
+    if((sim%test==0).or.(sim%test==4)) then
        source=0.0_f64
     endif
 
@@ -1754,7 +1818,7 @@ contains
 !!$    write(*,*) 'vn(1)',vn(1)
 !!$    stop
 !!$     write(*,*) '0=', (wm-flux)*vn(1)
-    if(sim%test==2) then
+    if((sim%test==2).or.(sim%test==3)) then
        flux=0.0_f64
     end if
 

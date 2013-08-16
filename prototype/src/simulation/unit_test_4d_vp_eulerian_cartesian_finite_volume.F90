@@ -48,24 +48,25 @@ program vp_cartesian_4d
 #define NCELL2 4
 #define NCELL3 64
 #define NCELL4 16
-!!$#define ETA1MIN -1.0_f64
-!!$#define ETA1MAX 1.0_f64
-#define ETA1MIN -6.0_f64
-#define ETA1MAX 6.0_f64
+#define ETA1MIN -1.0_f64
+#define ETA1MAX 1.0_f64
+!!$#define ETA1MIN -6.0_f64
+!!$#define ETA1MAX 6.0_f64
 #define ETA2MIN -6.0_f64
 #define ETA2MAX 6.0_f64
 #define ETA3MIN 0.0_f64
 #define ETA3MAX 4.0_f64*sll_pi
 !!$#define ETA3MIN -1.0_f64
 !!$#define ETA3MAX 1.0_f64
-#define ETA4MIN 0.0_f64
+#define ETA4MIN -1.0_f64
 #define ETA4MAX 1.0_f64
 #define TMAX 1.e-3_f64
 !#define TMAX 0.0_f64
 #define CFL 0.4_f64
 #define EPSILON 0.05
-#define TEST 1
-! 0: x transport 1: landau damping 2: v-transport
+#define TEST 4
+! 0: x transport 1: landau damping 2: vx-transport
+! 3: vy transport 4: y transport
 
 #define DEG  2 ! polynomial degree
 
@@ -131,7 +132,21 @@ program vp_cartesian_4d
        call initialize_vp4d( &
             simulation, &
             mx,mv,tx,tv, &
-            sll_test_v_transport_initializer_v1v2x1x2, &
+            sll_test_vx_transport_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
+    else if (TEST==3) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_test_vy_transport_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
+    else if (TEST==4) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_test_y_transport_initializer_v1v2x1x2, &
             landau_params, &
             TMAX )
 
