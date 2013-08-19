@@ -154,7 +154,7 @@ program VP_DG
 
   !flux coefficients
   c12=0.0d0
-  c11=real(ng**2,8)/maxval(mesh%d_etat1)
+  c11=real((ng-1)**2,8)/maxval(mesh%d_etat1)
 
   call init_timesteping_4dg(dg_plan,sll_rk4,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
 
