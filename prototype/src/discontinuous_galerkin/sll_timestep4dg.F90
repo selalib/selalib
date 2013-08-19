@@ -12,7 +12,7 @@
 !!          be transfert to Poisson library, currently in file vlasov_poisson_DG.F90).\n
 !!          We chose to have a good readability of the code rather than high performance.\n
 !!
-!!          In this article, I refere to Blanca Ayuso and her article Discontinuous
+!!          In this module, I refere to Blanca Ayuso and her article Discontinuous
 !!          Galerkin methods for the one-dimensional Vlasov-Poisson system.\n
 !!
 !!          This module will first be limited to 1D and should extend as people will
