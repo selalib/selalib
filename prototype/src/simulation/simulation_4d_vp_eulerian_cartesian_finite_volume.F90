@@ -590,86 +590,87 @@ contains
        !write (*,*) 'phi = ', sim%phi_x1
        !stop
 
-
        t=t+sim%dt
        call RK2(sim)
+       write(*,*) 'iter = ',itime, ' t = ', t 
        !write(*,*) 'here3'
        !call euler(sim)
-       !n Try to plot the log of energy
-       write(*,*) 'loc_sz_x1 =', loc_sz_x1
-       do ic=1,loc_sz_x1
-          do jc=1,loc_sz_x2
-             icL=ic-1
-             icR=ic+1
-             if(ic.le.1) then
-                icL=loc_sz_x1
-             elseif(ic.ge.loc_sz_x1)then
-                icR=1
-             end if
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
-                  (/1,1,1,1/) )
-             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
-                  sim%mesh2dx%delta_eta1
-             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
-                  sim%mesh2dx%delta_eta2
-             jac_m=sim%tx%jacobian_matrix(x1,x2)
-             inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
-!!$             !write(*,*) 'verify the matrix: (1,1)',  inv_jac(1,1)
-!!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
-!!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
-!!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
-             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-             det=sim%tx%jacobian(x1,x2)
-            write(*,*) 'verify the matrix: det = ',  det
-             if(sim%test==2) then
-                Ex=1.0_f64
-                Ey=0.0_f64
-             endif
-!!$             write(*,*) 'Ex = ', Ex
-!!$             write(*,*) 'Ey = ', Ey
-             sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
-                  sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
-          end do
-          !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
-!!$          sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1*sim%mesh2dx%delta_eta2*(Ex**2+Ey**2)
-          !write(*,*) 'Enorm = ',sim%Enorm
-       end do
-       !write(*,*) 'here4'
-       !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
-       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
-       !write(*,*) 'iter = ',itime, ' t = ', t 
-       buffer(buffer_counter) = sqrt(sim%Enorm)
-       if(buffer_counter==BUFFER_SIZE) then
-          call sll_collective_reduce_real64(sll_world_collective, &
-               buffer, &
-               BUFFER_SIZE, &
-               MPI_SUM, &
-               0, &
-               buffer_result )
-
-          buffer_counter=1
-             !print*, 'coucou 1!!'
-          if (sim%my_rank==0) then
-             !print*, 'coucou 2!!'
-             open(399,file='log(energy)',position='append')
-             if(itime==BUFFER_SIZE) then 
-                rewind(399)
-             endif
-             buffer_result(:)=log(buffer_result(:))
-             do i=1,BUFFER_SIZE
-                write(399,*) t, buffer_result(i)
-             enddo
-             close(399)
-          end if
-       else
-          buffer_counter=buffer_counter+1
-             !print*, 'coucou 3!!'
-       end if
+!!$       !n Try to plot the log of energy
+!!$       write(*,*) 'loc_sz_x1 =', loc_sz_x1
+!!$       do ic=1,loc_sz_x1
+!!$          do jc=1,loc_sz_x2
+!!$             icL=ic-1
+!!$             icR=ic+1
+!!$             if(ic.le.1) then
+!!$                icL=loc_sz_x1
+!!$             elseif(ic.ge.loc_sz_x1)then
+!!$                icR=1
+!!$             end if
+!!$             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+!!$                  (/1,1,1,1/) )
+!!$             x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+!!$                  sim%mesh2dx%delta_eta1
+!!$             x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+!!$                  sim%mesh2dx%delta_eta2
+!!$             jac_m=sim%tx%jacobian_matrix(x1,x2)
+!!$             inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+             !write(*,*) 'verify the matrix: (1,1)',  inv_jac(1,1)
+             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
+             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
+             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
+!!$             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+!!$                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+!!$             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+!!$                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+!!$                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+!!$             det=sim%tx%jacobian(x1,x2)
+!!$            !write(*,*) 'verify the matrix: det = ',  det
+!!$             if(sim%test==2) then
+!!$                Ex=1.0_f64
+!!$                Ey=0.0_f64
+!!$             endif
+!!$             if(sim%test==3) then
+!!$                Ex=0.0_f64
+!!$                Ey=1.0_f64
+!!$             endif
+!!$             sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
+!!$                  sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
+!!$          end do
+!!$          !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
+!!$          !write(*,*) 'Enorm = ',sim%Enorm
+!!$       end do
+!!$       !write(*,*) 'here4'
+!!$       !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
+!!$       write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
+!!$       !write(*,*) 'iter = ',itime, ' t = ', t 
+!!$       buffer(buffer_counter) = sqrt(sim%Enorm)
+!!$       if(buffer_counter==BUFFER_SIZE) then
+!!$          call sll_collective_reduce_real64(sll_world_collective, &
+!!$               buffer, &
+!!$               BUFFER_SIZE, &
+!!$               MPI_SUM, &
+!!$               0, &
+!!$               buffer_result )
+!!$
+!!$          buffer_counter=1
+!!$             !print*, 'coucou 1!!'
+!!$          if (sim%my_rank==0) then
+!!$             !print*, 'coucou 2!!'
+!!$             open(399,file='log(energy)',position='append')
+!!$             if(itime==BUFFER_SIZE) then 
+!!$                rewind(399)
+!!$             endif
+!!$             buffer_result(:)=log(buffer_result(:))
+!!$             do i=1,BUFFER_SIZE
+!!$                write(399,*) t, buffer_result(i)
+!!$             enddo
+!!$             close(399)
+!!$          end if
+!!$       else
+!!$          buffer_counter=buffer_counter+1
+!!$             !print*, 'coucou 3!!'
+!!$       end if
 
 
     end do
@@ -679,7 +680,7 @@ contains
 
     call compute_local_sizes_4d( sim%sequential_v1v2x1, &
          loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
-    write (*,*) 'loc_sz_x1', loc_sz_x1
+    !write (*,*) 'loc_sz_x1', loc_sz_x1
 !!$    do i=1,loc_sz_v1
 !!$       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2x1(i,1,:,1)))
 !!$    end do
@@ -820,7 +821,7 @@ contains
        allocate (f_vy_exact(loc_sz_x2,loc_sz_v2))
        do i = 1, loc_sz_x2
           do j = 1, loc_sz_v2
-             f_vx_exact(i,j) = exp(-4*(-t &
+             f_vy_exact(i,j) = exp(-4*(-t &
                   +(sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree))**2)
           end do
        end do
@@ -852,7 +853,11 @@ contains
     else if (sim%test .eq. 0) then
        write(*,*) 'the x-transport test case'
     else if (sim%test .eq. 2) then
-       write(*,*) 'the v-transport test case'
+       write(*,*) 'the vx-transport test case'
+    else if (sim%test .eq. 3) then
+       write(*,*) 'the vy-transport test case'
+    else if (sim%test .eq. 4) then
+       write(*,*) 'the y-transport test case'
     endif
 
 
