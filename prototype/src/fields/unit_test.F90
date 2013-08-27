@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   use sll_constants
-  use geometry_functions
+  use sll_common_coordinate_transformations
   use sll_module_interpolators_1d_base
   use sll_cubic_spline_interpolator_1d
   use sll_scalar_field_2d
@@ -49,8 +49,8 @@ program unit_test
   pfinit => init_landau
 
   ! Set up the interpolators for the field
-  call interp_eta1%initialize( nc1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2%initialize( nc2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1%initialize( nc1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2%initialize( nc2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
