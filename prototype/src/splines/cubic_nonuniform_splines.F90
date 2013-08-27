@@ -10,7 +10,8 @@ module cubic_non_uniform_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_splines.h"
-  use sll_tridiagonal
+#include "sll_utilities.h"
+
   implicit none
 
   type cubic_nonunif_spline_1D
@@ -100,9 +101,9 @@ contains  ! ****************************************************************
       node_pos(0) = 0.0_f64
       node_pos(n_cells) = 1.0_f64        
       select case (bc_type)
-      case (PERIODIC_SPLINE)
+      case (SLL_PERIODIC)
         call setup_spline_nonunif_1D_periodic_aux(node_pos,n_cells,spline%buf,spline%ibuf)
-      case (HERMITE_SPLINE)
+      case (SLL_HERMITE)
         call setup_spline_nonunif_1D_hermite_aux(node_pos,n_cells,spline%buf,spline%ibuf)
       case default
         print *, 'ERROR: compute_spline_nonunif_1D(): not recognized boundary condition'
@@ -120,9 +121,9 @@ contains  ! ****************************************************************
     end if
 
     select case (bc_type)
-    case (PERIODIC_SPLINE)
+    case (SLL_PERIODIC)
       call compute_spline_nonunif_1D_periodic( f, spline )
-    case (HERMITE_SPLINE)
+    case (SLL_HERMITE)
       if( present(sl) ) then
         spline%slope_L = sl
       end if

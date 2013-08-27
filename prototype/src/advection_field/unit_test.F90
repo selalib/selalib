@@ -7,7 +7,7 @@ program unit_test
   use sll_module_mapped_meshes_2d
   use sll_module_mapped_meshes_1d
   use sll_cubic_spline_interpolator_1d
-  use geometry_functions
+  use sll_common_coordinate_transformations
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
@@ -47,8 +47,8 @@ program unit_test
   pm2d => mesh2d
 
   ! Set up the interpolators for the field
-  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
@@ -86,6 +86,7 @@ program unit_test
   end do
 
   call compute_hamiltonian(adv_field, phi_self)
+
   call write_scalar_field_2d(adv_field) 
 
     

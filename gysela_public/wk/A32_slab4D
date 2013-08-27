@@ -1,17 +1,17 @@
 &PARALLEL
   Nbproc_r     = 2
-  Nbproc_theta = 4
+  Nbproc_theta = 4 ! 2
   Nbproc_mu    = 1
-  bloc_phi     = 8
-  Nbthread     = 8
+  bloc_phi     = 8 ! 4
+  Nbthread     = 8 ! 4
   transpose4D  = .false.,
 /
 
 &MESH
   Nr           = 127
-  Ntheta       = 256
+  Ntheta       = 256 !128
   Nphi         = 32
-  Nvpar        = 63
+  Nvpar        = 63  !47
   Nmu            = 0
   a            = 32.
   rhomin       = 0.2

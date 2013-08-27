@@ -4,7 +4,7 @@ program unit_test
 #include "sll_field_2d.h"
   use sll_constants
   use distribution_function
-  use geometry_functions
+  use sll_common_coordinate_transformations
   use sll_module_mapped_meshes_2d
   use sll_landau_2d_initializer
   use sll_cubic_spline_interpolator_1d
@@ -60,11 +60,11 @@ program unit_test
   print *, 'initialization of the interpolators'
  ! Set up the interpolators for the field
 #ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(interp_eta1, nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call cubic_spline_1d_interpolator_initialize(interp_eta2, nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(interp_eta1, nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call cubic_spline_1d_interpolator_initialize(interp_eta2, nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
 #else
-  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
 #endif
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
