@@ -77,7 +77,7 @@ contains
 #ifdef STDF95
     vmin = x2_node_discrete(this%dist_func%extend_type%mesh, 1,1)
     vmax = x2_node_discrete(this%dist_func%extend_type%mesh, 1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%extend_type%mesh%nc_eta2
+    delta_v = (vmax - vmin) /  this%dist_func%extend_type%mesh%mesh%num_cells2
     do j = 1, this%Ncv+1
        displacement = (vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func%extend_type) (:,j)
@@ -86,7 +86,7 @@ contains
 #else    
     vmin = this%dist_func%mesh%x2_at_node(1,1)
     vmax = this%dist_func%mesh%x2_at_node(1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%mesh%nc_eta2
+    delta_v = (vmax - vmin) /  this%dist_func%mesh%mesh%num_cells2
     do j = 1, this%Ncv+1
        displacement = (vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
@@ -119,17 +119,17 @@ contains
 #ifdef STDF95
     xmin = x1_node_discrete(this%dist_func%extend_type%mesh, 1,1)
     xmax = x1_node_discrete(this%dist_func%extend_type%mesh, this%Ncx+1,1)
-    delta_x = (xmax - xmin) /  this%dist_func%extend_type%mesh%nc_eta1
+    delta_x = (xmax - xmin) /  this%dist_func%extend_type%mesh%mesh%num_cells1
     vmin = x2_node_discrete(this%dist_func%extend_type%mesh, 1,1)
     vmax = x2_node_discrete(this%dist_func%extend_type%mesh, 1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%extend_type%mesh%nc_eta2
+    delta_v = (vmax - vmin) /  this%dist_func%extend_type%mesh%mesh%num_cells2
 #else
     xmin = this%dist_func%mesh%x1_at_node(1,1)
     xmax = this%dist_func%mesh%x1_at_node(this%Ncx+1,1)
-    delta_x = (xmax - xmin) /  this%dist_func%mesh%nc_eta1
+    delta_x = (xmax - xmin) /  this%dist_func%mesh%mesh%num_cells1
     vmin = this%dist_func%mesh%x2_at_node(1,1)
     vmax = this%dist_func%mesh%x2_at_node(1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%mesh%nc_eta2
+    delta_v = (vmax - vmin) /  this%dist_func%mesh%mesh%num_cells2
 #endif
     
     ! compute electric field
