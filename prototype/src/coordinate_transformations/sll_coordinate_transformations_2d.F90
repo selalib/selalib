@@ -55,8 +55,9 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_cell
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_n
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !ES the two following need to be in the base class
+     !character(len=64) :: label
+     !logical           :: written! = .false.
      type(sll_logical_mesh_2d), pointer :: mesh
 #else
   type, extends(sll_coordinate_transformation_2d_base):: &
@@ -66,8 +67,8 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
 #ifdef STDF95
 #else
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !character(len=64) :: label
+     !logical           :: written! = .false.
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
@@ -114,8 +115,9 @@ module sll_module_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !ES those need to be in the base class
+     !character(len=64) :: label
+     !logical           :: written! = .false.
 
 #ifdef STDF95
      ! this is not good, since a choice is being made about a specific 
