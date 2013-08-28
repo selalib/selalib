@@ -793,11 +793,9 @@ contains
             0, &
             ierr)
     end if
-
-
-!!$    write(*,*) 'test = ', sim%test
-!!$    stop
-
+!!$
+!!$
+!!$
     if(sim%test==2)then
        allocate (f_vx_exact(loc_sz_x1,loc_sz_v1))
        do i = 1, loc_sz_x1
@@ -838,18 +836,18 @@ contains
 
 
 
-!!$    call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
-!!$         sim%mesh2dx%delta_eta1, &
-!!$         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
-!!$         sim%mesh2dx%delta_eta2, &
-!!$         plotphi2d, &
-!!$         "plotphi2d", &
-!!$         0, &
-!!$         ierr)
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+         sim%mesh2dx%delta_eta1, &
+         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+         sim%mesh2dx%delta_eta2, &
+         plotphi2d, &
+         "plotphi2d", &
+         0, &
+         ierr)
     write(*,*) 'coucou3'
     if (sim%test .eq. 1) then
-       write(*,*) 'we r using the Landau damping test case'
+       write(*,*) 'we r using the Landau damping 1d test case'
     else if (sim%test .eq. 0) then
        write(*,*) 'the x-transport test case'
     else if (sim%test .eq. 2) then
@@ -858,6 +856,8 @@ contains
        write(*,*) 'the vy-transport test case'
     else if (sim%test .eq. 4) then
        write(*,*) 'the y-transport test case'
+    else if (sim%test .eq. 4) then
+       write(*,*) 'landau damping 2d test case'
     endif
 
 
