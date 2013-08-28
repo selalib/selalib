@@ -15,6 +15,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/splines/sll_splines.h
     ${SLL_DIR}/file_io/sll_file_io.h
     ${SLL_DIR}/fft/sll_fft.h
+    ${SLL_DIR}/fft/sll_fftw.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
