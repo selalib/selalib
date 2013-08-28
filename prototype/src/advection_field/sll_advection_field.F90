@@ -74,7 +74,7 @@ contains
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-!    class(sll_mapped_mesh_2d_base), pointer             :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
     class(sll_coordinate_transformation_2d_base), pointer   :: mesh
 
     this%pmass = mass
