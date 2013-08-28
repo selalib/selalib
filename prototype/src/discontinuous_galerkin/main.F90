@@ -63,15 +63,15 @@ program VP_DG
                        ! false for linear computation (0->nv)
 
   !definition of geometry and data
-  k=0.5d0
+  !k=0.5d0
   !k=2.0d0/13.0d0
-  !k=0.3d0
+  k=0.3d0
   !k=1.0d0/k
 
-  x_min=0.0d0
-  x_max=2.0d0*sll_pi ! this is to test the Poisson sover
-  v_min=0
-  v_max=sll_pi
+!!$  x_min=0.0d0
+!!$  x_max=2.0d0*sll_pi ! this is to test the Poisson sover
+!!$  v_min=0
+!!$  v_max=sll_pi
 
 !!$  x_min=0.0d0
 !!$  x_max=4.0d0*sll_pi
@@ -95,15 +95,15 @@ program VP_DG
 !!$  v_min=-1.0d0
 !!$  v_max=1.0d0
 
-!!$  x_min=0.0d0
-!!$  !x_max=2.0d0*sll_pi/k
-!!$  x_max=20.0d0*sll_pi
-!!$  v_min=-8.0d0
-!!$  v_max=8.0d0
+  x_min=0.0d0
+  !x_max=2.0d0*sll_pi/k
+  x_max=20.0d0*sll_pi
+  v_min=-8.0d0
+  v_max=8.0d0
 
-  nx=4
-  nv=4
-  ng=4
+  nx=15
+  nv=15
+  ng=8
 
   print*,'discretization caracteristics :'
   print"(3(a5,i3))",'nx=',nx,', nv=',nv,', ng=',ng
@@ -114,8 +114,8 @@ program VP_DG
   allocate(dist(nx*ng,nv*ng),distp1(nx*ng,nv*ng))
 
   !definition or time step, delta_t and final time
-  dt=0.002d0
-  tf=500.0d0
+  dt=0.001d0
+  tf=1000.0d0
   nb_step=ceiling(tf/dt)
   th=min(20,int(0.1d0/dt))!20
   th_out=int(0.5d0/dt)
@@ -152,8 +152,18 @@ program VP_DG
   !mesh%d_etat2(9:32)=0.25d0
   call fill_node_nuc_mesh(x_min,v_min,mesh)
 
+!!$  open(12)
+!!$  do v1=1,nv
+!!$     do x1=1,nx
+!!$        write(12,*)mesh%etat2(v1),mesh%etat1(x1),1.0
+!!$     end do
+!!$     write(12,*)""
+!!$  end do
+!!$  close(12)
+!!$  stop
+
   !flux coefficients
-  c12=0.0d0
+  c12=0.5d0
   c11=real((ng-1)**2,8)/maxval(mesh%d_etat1)
 
   call init_timesteping_4dg(dg_plan,sll_rk4,gausslob,mesh,dt,xbound,c11,c12,alpha=0.0d0)
@@ -185,7 +195,7 @@ program VP_DG
               x=mesh%etat1(x1)+(1.0d0+gausslob%node(x2))/mesh%jac(x1,nv+1)
               !test case for RHS
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=sin(x)*sin(v)
-              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=0.5d0*(+1.0d0+sin(x))*sin(v)
+!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=0.5d0*(+1.0d0+sin(x))*sin(v)
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(exp(-200.0d0*(v-0.8d0)**2)+ &
 !!$                   & exp(-200.0d0*(v+0.8d0)**2))!*(cos(3.0d0*x)+cos(6.0d0*x)+cos(18.0d0*x))
@@ -219,9 +229,9 @@ program VP_DG
 
               !Bump on tail
               !from michel, eric and nicolas, inria
-!!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04*cos(k*x))/ &
-!!$                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
-!!$                   & (9.0d0*exp(-v**2/2)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
+              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=(1.0d0+0.04d0*cos(k*x))/ &
+                   & (10.0d0*sqrt(2.0d0*sll_pi))* &
+                   & (9.0d0*exp(-v**2/2.0d0)+2.0d0*exp(-(v-4.5d0)**2/(2.0d0*0.5d0**2)))
 
 !!$              dist((x1-1)*ng+x2,(v1-1)*ng+v2)=&!(1.0d0-0.05d0*cos(k*x))
 !!$                   & 1.0d0/sqrt(2.0d0*sll_pi)* &
