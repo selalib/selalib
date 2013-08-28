@@ -18,7 +18,8 @@ TARGET_LINK_LIBRARIES(test_vp_dg sll_working_precision
 	                          sll_utilities
 	                          sll_boundary_condition_descriptors
                                 ${SUITESPARSE_LIBRARIES}
-                                ${LAPACK_LIBRARIES})
+                                ${LAPACK_LIBRARIES}
+				${BLAS_LIBRARIES})
 
 if(UNIX AND NOT APPLE)
         target_link_libraries(test_vp_dg rt)
