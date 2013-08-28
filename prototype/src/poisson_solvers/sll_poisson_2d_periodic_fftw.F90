@@ -35,9 +35,15 @@ module sll_poisson_2d_periodic
 #include "sll_assert.h"
 #include "sll_constants.h"
 
+#ifdef FFTW_F2003
 use, intrinsic :: iso_c_binding
-implicit none
 include 'fftw3.f03'
+#else
+include 'fftw3.f'
+#endif
+
+implicit none
+
 
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
