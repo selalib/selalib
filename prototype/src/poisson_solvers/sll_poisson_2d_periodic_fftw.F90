@@ -34,6 +34,8 @@ module sll_poisson_2d_periodic
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
+#include "sll_fftw.h"
+
 use, intrinsic :: iso_c_binding
 
 implicit none
@@ -69,23 +71,15 @@ type, public :: poisson_2d_periodic
    sll_real64                          :: dx    !< x step size
    sll_real64                          :: dy    !< y step size
 
-#ifdef FFTW_F2003
-   type(C_PTR)                         :: fw       !< forward fftw plan
-   type(C_PTR)                         :: bw       !< backward fftw plan
-   complex(C_DOUBLE_COMPLEX), pointer  :: rht(:,:) !< fft(rho)
-   complex(C_DOUBLE_COMPLEX), pointer  :: ext(:,:) !< fft(ex)
-   complex(C_DOUBLE_COMPLEX), pointer  :: eyt(:,:) !< fft(ey)
-   integer(C_SIZE_T)                   :: sz_fft   !< fft size
-   type(C_PTR)                         :: p_rht    !< C array pointer
-   type(C_PTR)                         :: p_ext    !< C array pointer
-   type(C_PTR)                         :: p_eyt    !< C array pointer
-#else
-   sll_int64                           :: fw
-   sll_int64                           :: bw
-   sll_comp64, dimension(:,:), pointer :: rht
-   sll_comp64, dimension(:,:), pointer :: ext
-   sll_comp64, dimension(:,:), pointer :: eyt
-#endif
+   fftw_plan                           :: fw       !< forward fftw plan
+   fftw_plan                           :: bw       !< backward fftw plan
+   fftw_comp                , pointer  :: rht(:,:) !< fft(rho)
+   fftw_comp                , pointer  :: ext(:,:) !< fft(ex)
+   fftw_comp                , pointer  :: eyt(:,:) !< fft(ey)
+   fftw_int                            :: sz_fft   !< fft size
+   fftw_plan                           :: p_rht    !< C array pointer
+   fftw_plan                           :: p_ext    !< C array pointer
+   fftw_plan                           :: p_eyt    !< C array pointer
 
 end type poisson_2d_periodic
 
@@ -183,19 +177,11 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-#ifdef FFTW_F2003
    call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
-#else
-   call dfftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
-#endif
 
    self%rht = self%rht / self%k2
 
-#ifdef FFTW_F2003
    call fftw_execute_dft_c2r(self%bw, self%rht, phi(1:nc_x,1:nc_y))
-#else
-   call dfftw_execute_dft_c2r(self%bw, self%rht, phi(1:nc_x,1:nc_y))
-#endif
 
    nc_x = self%nc_x
    nc_y = self%nc_y
@@ -222,24 +208,15 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-#ifdef FFTW_F2003
    call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
-#else
-   call dfftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
-#endif
 
    self%ext(1,1) = 0.0_f64
    self%eyt(1,1) = 0.0_f64
    self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%rht
    self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%rht
 
-#ifdef FFTW_F2003
    call fftw_execute_dft_c2r(self%bw, self%ext, e_x(1:nc_x,1:nc_y))
    call fftw_execute_dft_c2r(self%bw, self%eyt, e_y(1:nc_x,1:nc_y))
-#else
-   call dfftw_execute_dft_c2r(self%bw, self%ext, e_x(1:nc_x,1:nc_y))
-   call dfftw_execute_dft_c2r(self%bw, self%eyt, e_y(1:nc_x,1:nc_y))
-#endif
 
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
@@ -266,20 +243,13 @@ subroutine free_poisson_2d_periodic_fftw(self)
 type(poisson_2d_periodic) :: self
 
 #ifdef FFTW_F2003
-
 call fftw_free(self%p_rht)
 if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
-call fftw_destroy_plan(self%fw)
-call fftw_destroy_plan(self%bw)
-
-#else
-
-call dfftw_destroy_plan(self%fw)
-call dfftw_destroy_plan(self%bw)
-
 #endif
 
+call fftw_destroy_plan(self%fw)
+call fftw_destroy_plan(self%bw)
 
 !if (nthreads > 1) then
    !call dfftw_cleanup_threads(error)
