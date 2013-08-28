@@ -8,8 +8,8 @@ ELSE()
    "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
-IF(SLL_CONFIGURE_OPTIONS_FILE)
-INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
+IF(OPTIONS_FILE)
+INCLUDE(${OPTIONS_FILE})
 ENDIF()
 
 PROJECT(selalib)

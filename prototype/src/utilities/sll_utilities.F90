@@ -55,8 +55,8 @@ module sll_utilities
   integer, parameter :: byte_size = selected_int_kind(0)
 
   interface display_matrix
-     module procedure :: display_matrix_2d_integer
-     module procedure :: display_matrix_2d_real
+     module procedure display_matrix_2d_integer
+     module procedure display_matrix_2d_real
   end interface display_matrix
   
 
