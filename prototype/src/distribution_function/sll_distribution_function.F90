@@ -142,7 +142,7 @@ contains
     eta2_interpolator, &
     initializer )
 
-!    class(sll_mapped_mesh_2d_base), pointer             :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
     class(sll_coordinate_transformation_2d_base), pointer :: mesh
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
