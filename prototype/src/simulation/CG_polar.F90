@@ -632,11 +632,11 @@ program cg_polar
   call delete_SL_polar(plan_sl)
 
 
+#ifndef NOHDF5
 !*********************
 contains
 !*********************
 
-#ifndef NOHDF5
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
