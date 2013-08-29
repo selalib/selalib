@@ -577,8 +577,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     var      = transf%x1_func(eta1,eta2)
   end function x1_cell_analytic
 
@@ -602,8 +602,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     var      = transf%x2_func(eta1,eta2)
   end function x2_cell_analytic
 
@@ -631,8 +631,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     j11 = (transf%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (transf%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (transf%j_matrix(2,1)%f( eta1, eta2 ))
@@ -675,8 +675,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + real(i,f64)*delta1 
-    eta2     = eta2_min + real(j,f64)*delta2
+    eta1     = eta1_min + real(i-1,f64)*delta1 
+    eta2     = eta2_min + real(j-1,f64)*delta2
     j11 = (transf%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (transf%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (transf%j_matrix(2,1)%f( eta1, eta2 ))
