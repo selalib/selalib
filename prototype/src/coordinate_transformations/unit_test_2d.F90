@@ -12,7 +12,7 @@ program unit_test_2d
   type(sll_logical_mesh_2d), pointer :: mesh
   type(sll_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
-  type(sll_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
+  class(sll_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
   ! for the discrete case...
   type(cubic_spline_2d_interpolator)   :: x1_interp
   type(cubic_spline_2d_interpolator)   :: x2_interp
