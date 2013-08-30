@@ -1166,9 +1166,6 @@ contains
              do jj=1,(sim%degree+1)**2
                 i=sim%connec(ii,jc*sim%nc_v1+ic+1)
                 j=sim%connec(jj,jc*sim%nc_v1+ic+1)
-!!$                if (ii == 2) then
-!!$                write(*,*) 'ii,jj,j,i', ii,jj,i,j
-!!$                end if
                 !if (cal.eq.1) then
                 if (i.eq.j) then
                    sim%M_diag(i)=sim%M_diag(i)+mloc(ii,jj)
@@ -1191,6 +1188,18 @@ contains
                    sim%Bv1_low(ll)=sim%Bv1_low(ll)+bv1loc(ii,jj)
                    sim%Bv2_low(ll)=sim%Bv2_low(ll)+bv2loc(ii,jj)
                 end if
+!!$                if (ll == 5) then
+!!$                write(*,*) 'll=5: i, j', i, j
+!!$                end if
+!!$                if (ll == 29) then
+!!$                write(*,*) 'll=29: i,j', i,j
+!!$                end if
+!!$                if (ll == 34) then
+!!$                write(*,*) 'll=34: i, j', i, j
+!!$                end if
+!!$                if (ll == 58) then
+!!$                write(*,*) 'll=58: i,j', i,j
+!!$                end if
              end do
           end do
 
@@ -1213,6 +1222,10 @@ write(*,*) 'Bv1_sup', sim%Bv1_sup
 do i=1,sim%nsky
 if(abs(sim%Bv1_low(i)+sim%Bv1_sup(i)).gt.0.1e-7) then
     write(*,*) 'i = ', i, sim%Bv1_low(i)+sim%Bv1_sup(i)
+!!$          do ii=1,(sim%degree+1)**2
+!!$             j=sim%connec(ii,jc*sim%nc_v1+ic+1)
+!!$             sim%p(i)=sim%p(i)+ploc(ii)
+!!$          end do
 endif
 end do
     stop
