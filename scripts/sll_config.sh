@@ -100,7 +100,7 @@ case "$OS" in
       PORT="/opt/local/bin/port" 
       if [ -s $PORT ] ; then 
          INFO "macports is installed - configure the library"
-         ${CMAKE} -D SLL_CONFIGURE_OPTIONS_FILE:FILEPATH=$SLL_DIR/cmake/macports_config.cmake \
+         ${CMAKE} -DOPTIONS_FILE:FILEPATH=$SLL_DIR/cmake/macports_config.cmake \
              $EXTRA_ARGS ${SLL_DIR}/prototype/src 
       else 
          ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/prototype/src 
