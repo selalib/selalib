@@ -129,66 +129,7 @@ contains
 !!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     sll_landau_initializer_4d = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-
   end function sll_landau_initializer_4d
-
-  function sll_landau_initializer_v1v2x1x2( vx, vy, x, y, params ) 
-    sll_real64 :: sll_landau_initializer_v1v2x1x2
-    sll_real64, intent(in) :: x
-    sll_real64, intent(in) :: y
-    sll_real64, intent(in) :: vx
-    sll_real64, intent(in) :: vy
-
-    sll_real64, dimension(:), intent(in), optional :: params
-    sll_real64 :: eta1_min
-    sll_real64 :: eta1_max
-    sll_real64 :: eta2_min
-    sll_real64 :: eta2_max
-
-    sll_real64 :: eps
-    sll_real64 :: kx
-    sll_real64 :: factor1
-
-    if( .not. present(params) ) then
-       print *, 'sll_landau_initializer_4d, error: the params array must ', &
-            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
-       stop
-    end if
-
-    eta1_min = params(1)
-    eta1_max = params(2)
-    eta2_min = params(3)
-    eta2_max = params(4)
-
-    eps = params(5)
-    kx  =  2. * sll_pi / (eta1_max - eta1_min)
-
-    !Normalization
-    !sagemath command
-    !sage : var('u v epsilon a b c d x y')
-    !sage : f(a,b,c,d,epsilon) =integral(integral(integral(integral((1+epsilon*cos(2*pi/(b-a)*x))*exp(-(u*u+v*v)/2),u,-oo,oo),v,-oo,oo),x,a,b),y,c,d)
-    
-!!$    factor1 =  1./( (eta2_min - eta2_max) &
-!!$               *(((eta1_min - eta1_max)* &
-!!$               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
-!!$                - (eta1_min - eta1_max)* &
-!!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
-!!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
-    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
-!!$    sll_landau_initializer_4d = factor1 * &
-!!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))**exp(-0.5_f64*(vx**2+vy**2))
-    !write(*,*) 'factor1=',factor1,eps,vx,vy,x
-! to be changed later (dependance in vy) !!!!!!!!!!!!!!!!!!!!!
-    !sll_landau_initializer_v1v2x1x2 = factor1 * &
-    !     (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
-    !write(*,*) 'vx=',vx,kx,x,factor1
-!!         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-    sll_landau_initializer_v1v2x1x2 = exp(-4*x**2)
-!!$    sll_landau_initializer_v1v2x1x2 = 1
-!!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
-
-  end function sll_landau_initializer_v1v2x1x2
-
 
   ! this function is a 1D landau initializer used for debugging
   ! 4D drift kinetic simulations in variables x1,x2,x3 ,v1
