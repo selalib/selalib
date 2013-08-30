@@ -44,12 +44,7 @@ contains
        func, &
        func_params, &
        transf_x1_x2, &
-       transf_x3_x4, &
-! in case of a mesh with cell subdivisions
-       subcells1, &
-       subcells2, &
-       subcells3, &
-       subcells4)
+       transf_x3_x4 )
 
     type(layout_4D), pointer                    :: layout
     type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
@@ -57,11 +52,6 @@ contains
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
-    sll_int32,optional   :: subcells1
-    sll_int32,optional   :: subcells2
-    sll_int32,optional   :: subcells3
-    sll_int32,optional   :: subcells4
-
 
     class(sll_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x1_x2
@@ -94,7 +84,6 @@ contains
     sll_real64 :: x3
     sll_real64 :: x4
     sll_int32  :: case_selector
-    sll_int32    :: sub1,sub2,sub3,sub4
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
@@ -159,32 +148,6 @@ contains
        end if
     end if
 
-
-   if(.not.present(subcells1  ) ) then
-     sub1=1
-  else
-     sub1=subcells1
-  end if
-
-   if(.not.present(subcells2  ) ) then
-     sub2=1
-  else
-     sub2=subcells2
-  end if
-
-   if(.not.present(subcells3  ) ) then
-     sub3=1
-  else
-     sub3=subcells3
-  end if
-    
-   if(.not.present(subcells3  ) ) then
-     sub4=1
-  else
-     sub4=subcells4
-  end if
-
-
     case_selector = 0
 
     if( present(transf_x1_x2) ) then
@@ -198,10 +161,10 @@ contains
     eta2_min = mesh2d_eta1_eta2%eta2_min
     eta3_min = mesh2d_eta3_eta4%eta1_min
     eta4_min = mesh2d_eta3_eta4%eta2_min
-    delta1   = mesh2d_eta1_eta2%delta_eta1/sub1
-    delta2   = mesh2d_eta1_eta2%delta_eta2/sub2
-    delta3   = mesh2d_eta3_eta4%delta_eta1/sub3
-    delta4   = mesh2d_eta3_eta4%delta_eta2/sub4
+    delta1   = mesh2d_eta1_eta2%delta_eta1
+    delta2   = mesh2d_eta1_eta2%delta_eta2
+    delta3   = mesh2d_eta3_eta4%delta_eta1
+    delta4   = mesh2d_eta3_eta4%delta_eta2
 
     ! This initializes a node-centered array. The loop should be repeated
     ! below if cell-centered or if arbitrary positions are specified.

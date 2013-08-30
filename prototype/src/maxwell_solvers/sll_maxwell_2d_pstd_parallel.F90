@@ -15,11 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
-sz_array = int((array_size/2+1),C_SIZE_T);                \
-p_array = fftw_alloc_complex(sz_array);                   \
-call c_f_pointer(p_array, array, [array_size/2+1])        \
+#include "sll_fftw.h"
 
 #define D_DX(field)                                                   \
 call fftw_execute_dft_r2c(plan%fwx, field, plan%fft_x_array);         \
@@ -58,18 +54,18 @@ implicit none
 type maxwell_2d_periodic_plan_cartesian_par
    sll_int32                           :: ncx         !< number of cells x
    sll_int32                           :: ncy         !< number of cells y
-   type(C_PTR)                         :: fwx         !< fftw plan forward x
-   type(C_PTR)                         :: fwy         !< fftw plan forward y
-   type(C_PTR)                         :: bwx         !< fftw plan backward x
-   type(C_PTR)                         :: bwy         !< fftw plan backward y
+   fftw_plan                           :: fwx         !< fftw plan forward x
+   fftw_plan                           :: fwy         !< fftw plan forward y
+   fftw_plan                           :: bwx         !< fftw plan backward x
+   fftw_plan                           :: bwy         !< fftw plan backward y
    sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
    sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
    sll_comp64, dimension(:), pointer   :: fft_x_array !< fft x transform
    sll_comp64, dimension(:), pointer   :: fft_y_array !< fft y transform
    sll_real64                          :: e_0         !< electric conductibility
    sll_real64                          :: mu_0        !< magnetic permeability
-   type(C_PTR)                         :: p_x_array   !< x pointer to memory
-   type(C_PTR)                         :: p_y_array   !< y pointer to memory
+   fftw_plan                           :: p_x_array   !< x pointer to memory
+   fftw_plan                           :: p_y_array   !< y pointer to memory
    type(layout_2D),  pointer           :: layout_x    !< layout sequential in x
    type(layout_2D),  pointer           :: layout_y    !< layout sequential in y
    type(remap_plan_2D_real64), pointer :: rmp_xy      !< remap x->y pointer
@@ -106,8 +102,8 @@ contains
     sll_int32                :: error    !< error code
     sll_int32                :: nx_loc   !< x local points
     sll_int32                :: ny_loc   !< y local points
-    integer(C_SIZE_T)        :: sz_x_array
-    integer(C_SIZE_T)        :: sz_y_array
+    fftw_int                 :: sz_x_array
+    fftw_int                 :: sz_y_array
     sll_real64               :: kx0
     sll_real64               :: ky0
 
@@ -132,14 +128,15 @@ contains
     FFTW_ALLOCATE(plan%fft_x_array,ncx,sz_x_array,plan%p_x_array)
     FFTW_ALLOCATE(plan%fft_y_array,ncy,sz_y_array,plan%p_y_array)
 
+   
+    NEW_FFTW_PLAN_R2C_1D(plan%fwx,ncx,plan%d_dx,plan%fft_x_array)
+    NEW_FFTW_PLAN_C2R_1D(plan%bwx,ncx,plan%fft_x_array,plan%d_dx)
+    NEW_FFTW_PLAN_R2C_1D(plan%fwy,ncy,plan%d_dy,plan%fft_y_array)
+    NEW_FFTW_PLAN_C2R_1D(plan%bwy,ncy,plan%fft_y_array,plan%d_dy)
+
    !call dfftw_init_threads(error)
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
-   
-    plan%fwx = fftw_plan_dft_r2c_1d(ncx,plan%d_dx,plan%fft_x_array,FFTW_ESTIMATE)
-    plan%bwx = fftw_plan_dft_c2r_1d(ncx,plan%fft_x_array,plan%d_dx,FFTW_ESTIMATE)
-    plan%fwy = fftw_plan_dft_r2c_1d(ncy,plan%d_dy,plan%fft_y_array,FFTW_ESTIMATE)
-    plan%bwy = fftw_plan_dft_c2r_1d(ncy,plan%fft_y_array,plan%d_dy,FFTW_ESTIMATE)
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => layout_x
@@ -381,8 +378,11 @@ contains
        STOP
     end if
 
+#ifdef FFTW_F2003
     if (c_associated(plan%p_x_array)) call fftw_free(plan%p_x_array)
     if (c_associated(plan%p_y_array)) call fftw_free(plan%p_y_array)
+#endif
+
     call fftw_destroy_plan(plan%fwx)
     call fftw_destroy_plan(plan%fwy)
     call fftw_destroy_plan(plan%bwx)

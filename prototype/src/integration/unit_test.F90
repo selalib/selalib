@@ -19,13 +19,6 @@ program integration_tester
           0.4674011002723395
   end do
 
-  do i=2,10
-     write (*,'(a, i8, a, f20.12)') 'case n = ', i, ': ', &
-          gauss_legendre_integrate_1D( one, 0.0_f64, 1.0_f64, i)
-  end do
-  print *, 'Exact value: '
-  write (*,'(f22.15)') 1.00000
-
   print *, 'Test gauss_points()'
   print *, gauss_points(5,-1.0_f64,1.0_f64)
 
@@ -44,8 +37,9 @@ program integration_tester
 ! sage: proots = L.roots()
 ! sage: xk = [-1]+[ proots[i][0] for i in range(n-2)]+[1]
 ! sage: wk =[2/(n*(n-1))]+[2/(n*(n-1)*(legendre_P(n-1,xk[i]))^2) for i in range(1,n-1)]+[2/(n*(n-1))]
+! sage: dk = [ L(xk[i]) for i in range(n)]
 ! sage: for i in range(10):
-! sage:    print " %28.15f %28.15f " % (xk[i], wk[i])
+! sage:    print " %28.15f %28.15f %28.15 " % (xk[i], wk[i], dk[i]) 
 
   print*, " ** exact values with sage"
 
@@ -60,7 +54,6 @@ program integration_tester
   write(*,*) "  0.919533908166459  0.133305990851070  "
   write(*,*) "  1.000000000000000  0.022222222222222  "
 
-  write(*,"(/,a,/)") "Matrix of derivatives"
   n = 4
   allocate(d(n,n))
   d = gauss_lobatto_derivative_matrix(n, -1._f64, 1._f64) 
@@ -88,7 +81,7 @@ program integration_tester
   dlag(4,3) = 0.8090169943749474241022934171828190588602D0
   dlag(4,4) = 0.3000000000000000000000000000000000000000D1
 
-  write(*,"(/,a,/)") " Exact values with maple "
+  print*, " ** exact values with maple"
 
   do i = 1, n
      write(*,string) ( dlag(i,j), j = 1, n)
