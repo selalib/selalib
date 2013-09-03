@@ -55,8 +55,9 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_cell
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_n
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !ES the two following need to be in the base class
+     !character(len=64) :: label
+     !logical           :: written! = .false.
      type(sll_logical_mesh_2d), pointer :: mesh
 #else
   type, extends(sll_coordinate_transformation_2d_base):: &
@@ -66,8 +67,8 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
 #ifdef STDF95
 #else
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !character(len=64) :: label
+     !logical           :: written! = .false.
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
@@ -114,8 +115,9 @@ module sll_module_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !ES those need to be in the base class
+     !character(len=64) :: label
+     !logical           :: written! = .false.
 
 #ifdef STDF95
      ! this is not good, since a choice is being made about a specific 
@@ -575,8 +577,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     var      = transf%x1_func(eta1,eta2)
   end function x1_cell_analytic
 
@@ -600,8 +602,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     var      = transf%x2_func(eta1,eta2)
   end function x2_cell_analytic
 
@@ -629,8 +631,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     j11 = (transf%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (transf%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (transf%j_matrix(2,1)%f( eta1, eta2 ))
@@ -673,8 +675,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + real(i,f64)*delta1 
-    eta2     = eta2_min + real(j,f64)*delta2
+    eta1     = eta1_min + real(i-1,f64)*delta1 
+    eta2     = eta2_min + real(j-1,f64)*delta2
     j11 = (transf%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (transf%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (transf%j_matrix(2,1)%f( eta1, eta2 ))
