@@ -31,6 +31,7 @@ module sll_xdmf_parallel
   use sll_hdf5_io_parallel
   use sll_ascii_io
   use sll_xml_io
+  use hdf5
   
   implicit none
   
@@ -58,7 +59,7 @@ contains
     sll_int32, intent(in)        :: rank      !< processor number id
     character(len=*), intent(in) :: file_name !< xmf file name 
     character(len=*), intent(in) :: mesh_name !< file name that contains mesh coordinates
-    integer(HID_T)               :: file_id   !< file unit number
+    sll_int32                    :: file_id   !< file unit number
     sll_int32                    :: error     !< error code
     sll_int32                    :: nnodes_x1 !< nodes number x
     sll_int32                    :: nnodes_x2 !< nodes number y
@@ -87,7 +88,7 @@ contains
     sll_int32                    :: nnodes_x1  !< nodes number x
     sll_int32                    :: nnodes_x2  !< nodes number y
     sll_int32                    :: nnodes_x3  !< nodes number z
-    integer(HID_T), intent(out)  :: file_id    !< file unit number
+    sll_int32, intent(out)       :: file_id    !< file unit number
     sll_int32, intent(out)       :: error      !< error code
     
     if (rank == 0) then
@@ -103,7 +104,6 @@ contains
                                array,array_name,error,&
                                xmffile_id,center)
 
-    use hdf5
     character(len=*), intent(in)     :: mesh_name      !< file with mesh coordinates
     sll_real64, intent(in)           :: array(:,:)     !< data array
     character(len=*), intent(in)     :: array_name     !< name of the field
@@ -151,7 +151,6 @@ contains
   subroutine sll_xdmf_array_3d_parallel(mesh_name,global_dims,offset, &
                                array,array_name,error,xmffile_id,center)
 
-    use hdf5
     character(len=*), intent(in)    :: mesh_name      !< file with mesh coordinates
     sll_real64, intent(in)          :: array(:,:,:)   !< data array
     character(len=*), intent(in)    :: array_name     !< name of the field

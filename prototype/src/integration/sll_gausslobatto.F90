@@ -102,6 +102,9 @@ contains
     call dlob(size-2,alpha,beta,-1.0d0,1.0d0,gl_obj%node,gl_obj%weigh,err,e,a,b)
     !call lob(size-2,alpha,beta,-1.0,1.0,gl_obj%node,gl_obj%weigh,err,e,a,b)
 
+    ! this compute the Gauss points and weigh on [-1,1] for "size" points
+    !call dgauss(size,alpha,beta,epsilon(1.0d0),gl_obj%node,gl_obj%weigh,err,e,a,b)
+
     call derivative_matrix_1d(gl_obj)
 
   end subroutine init_gausslobatto_1d
