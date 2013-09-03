@@ -243,7 +243,7 @@ contains
     j21_func,       &
     j22_func )
 
-    type(sll_coordinate_transformation_2d_analytic), pointer :: &
+    class(sll_coordinate_transformation_2d_analytic), pointer :: &
          new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
     type(sll_logical_mesh_2d), pointer :: mesh_2d
