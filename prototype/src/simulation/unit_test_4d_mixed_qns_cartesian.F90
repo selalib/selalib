@@ -48,16 +48,17 @@ program qns_4d_mixed
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 128
+#define NPTS1 32
 #define NPTS2 32
 #define NPTS3 32
 #define NPTS4 32
-#define SPL_DEG1 3
-#define SPL_DEG2 3
+#define SPL_DEG1 1
+#define SPL_DEG2 1
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=0.0_f64, eta1_max=4.0_f64*sll_pi)
+       eta1_min=0.0_f64, eta1_max=4.0_f64*sll_pi, &
+       eta2_min=0.0_f64, eta2_max=1.0_f64 )
 
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
