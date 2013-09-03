@@ -75,6 +75,7 @@ module sll_simulation_4d_qns_mixed_module
      sll_real64, dimension(:,:,:), allocatable   :: partial_reduction_q
      sll_real64, dimension(:,:), allocatable     :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
+     sll_real64, dimension(:,:), allocatable     :: rho_diff
      ! for cartesian solver...
      sll_real64, dimension(:,:), allocatable     :: rho_x1 
      sll_real64, dimension(:,:), allocatable     :: rho_split_c
@@ -83,6 +84,7 @@ module sll_simulation_4d_qns_mixed_module
      sll_real64, dimension(:,:), allocatable     :: phi_x2
      sll_real64, dimension(:,:), allocatable     :: phi_split
      sll_real64, dimension(:,:), allocatable     :: phi_diff
+     sll_real64, dimension(:,:), allocatable     :: phi_q
 
      ! for remap
      type(layout_4D), pointer :: sequential_x1x2
@@ -114,6 +116,8 @@ module sll_simulation_4d_qns_mixed_module
      ! Field accumulator
      sll_comp64, dimension(:,:), allocatable :: efield_x1
      sll_comp64, dimension(:,:), allocatable :: efield_x2
+     sll_comp64, dimension(:,:), allocatable :: efield_q
+     sll_real64, dimension(:,:), allocatable :: efield_exact
      sll_comp64, dimension(:,:), allocatable :: efield_split
      sll_real64, dimension(:,:), allocatable :: efield_x1_diff
      sll_real64, dimension(:,:), allocatable :: efield_x2_diff
@@ -326,12 +330,15 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total_q
     sll_real64 :: efield_energy_total_c
+    sll_real64 :: efield_energy_total_t
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE 50
     sll_real64, dimension(BUFFER_SIZE) :: buffer_c
     sll_real64, dimension(BUFFER_SIZE) :: buffer_q
+    sll_real64, dimension(BUFFER_SIZE) :: buffer_t
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result_c
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result_q
+    sll_real64, dimension(BUFFER_SIZE) :: buffer_result_t
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local_c
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local_q
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global_c
@@ -341,6 +348,7 @@ contains
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id_cart
     sll_int32 :: efield_energy_file_id_qns
+    sll_int32 :: efield_energy_file_id_teo
     sll_int32 :: num_particles_file_id_cart
     sll_int32 :: num_particles_file_id_qns
     sll_int32 :: global_indices(4)
@@ -470,6 +478,15 @@ contains
     end if
 
     if( sim%my_rank == 0 ) then
+       call sll_new_file_id( efield_energy_file_id_teo, ierr )
+       if( ierr == 1 ) then
+          print *, 'sll_new_file_id() failed to obtain a file identifier.', &
+               ' Exiting...'
+          stop
+       end if
+    end if
+
+    if( sim%my_rank == 0 ) then
        call sll_new_file_id( num_particles_file_id_cart, ierr )
        if( ierr == 1 ) then
           print *, 'sll_new_file_id() failed to obtain a file identifier.', &
@@ -556,7 +573,11 @@ contains
     SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_diff(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%rho_diff(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%phi_q(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_x1(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_q(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(sim%efield_exact(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_x1_ref(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_ref(loc_sz_x1,loc_sz_x2),ierr)
     ! end move this down
@@ -593,6 +614,7 @@ contains
     SLL_ALLOCATE(sim%rho_x2(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%phi_x2(loc_sz_x1,loc_sz_x2),ierr)
     SLL_ALLOCATE(sim%efield_x2(loc_sz_x1,loc_sz_x2),ierr)
+
     !end move down
 
     call initialize_layout_with_distributed_4D_array( &
@@ -817,6 +839,25 @@ contains
        call rho%write_to_file(0)
     end if
 
+
+       do j=1,nc_x2+1 ! pay attention to the +1 ...
+          do i=1,nc_x1+1
+             sim%rho_diff(i,j) = sim%rho_x1(i,j) -  rho%value_at_indices(i,j)!sim%rho_full(i,j)
+          end do
+       end do
+
+       call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%rho_diff, &
+         "rho_diff", &
+         0, &
+         ierr )
+
+
+
     ! It should not matter that these remap plans are defined in reference
     ! to the 'cartesian' case. We should be able to use them in the qns data
     ! as well.
@@ -986,6 +1027,24 @@ contains
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
+
+       ! compute exact electric field (theoretical)
+
+       do j=1,nc_x2
+          do i=1,nc_x1
+             eta1 = eta1_min + (i-1)*delta1
+             eta2 = eta2_min + (j-1)*delta2
+             tmp = efield_exact(sim%dt*(real(itime-1)+0.5_f64),&
+                  0.5_f64, &
+                  0.01_f64, &
+                  eta1, &
+                  eta2 )
+             sim%efield_exact(i,j)=tmp
+ !            print *, 'damned energy is: ', tmp
+          end do
+       end do
+
+
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2_c, sim%f_x3x4_c )
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2_q, sim%f_x3x4_q )
 
@@ -998,8 +1057,6 @@ contains
        
        sim%rho_split_c(:,:) = 0.0_f64
        sim%rho_split_q(:,:) = 0.0_f64
-
-       print *, 'the differnce between the rho splits is = ', sum(sim%rho_split_c-sim%rho_split_q)
 
        call compute_charge_density( &
             sim%mesh2d_x,           &
@@ -1021,7 +1078,7 @@ contains
        
        global_indices(1:2) =  &
             local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
-       
+#if PRINT_PLOTS       
        call sll_gnuplot_rect_2d_parallel( &
           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
           sim%mesh2d_x%delta_eta1, &
@@ -1041,7 +1098,7 @@ contains
           "rho_split_qns", &
           itime, &
           ierr )
-       
+#endif
        call load_buffer( sim%split_rho_layout, sim%rho_split_q, send_buf )
        
        recv_sz(:) = receive_counts_array( sim%split_rho_layout, sim%world_size )
@@ -1090,9 +1147,29 @@ contains
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
-       
+
+!ATTENTION TO CHANGES HERE
        ! print*, 'density', density_tot
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+
+       do j=1,nc_x2+1 ! pay attention to the +1 ...
+          do i=1,nc_x1+1
+             sim%rho_diff(i,j) = sim%rho_x1(i,j) - rho%value_at_indices(i,j)! sim%rho_full(i,j)
+          end do
+       end do
+
+       call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%rho_diff, &
+         "rho_diff", &
+         itime, &
+         ierr )
+
+       
+
        
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
@@ -1150,6 +1227,14 @@ contains
 
        do j=1,nc_x2+1
           do i=1,nc_x1+1
+             sim%phi_q(i,j) = phi%value_at_indices(i,j)
+          end do
+       end do
+
+
+#if PRINT_PLOTS
+       do j=1,nc_x2+1
+          do i=1,nc_x1+1
              sim%phi_diff(i,j) = sim%phi_ref(i,j) - phi%value_at_indices(i,j)
           end do
        end do
@@ -1163,18 +1248,20 @@ contains
          "phi_diff_qns", &
          itime, &
          ierr )
+#endif
 
        call solve_poisson_2d_periodic_cartesian_par( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
-       print *, 'What the heck is going on with phi?'
-       print *,'last column = '
-       print *, sim%phi_x1(:,32)
+!!$       print *, 'What the heck is going on with phi?'
+!!$       print *,'last column = '
+!!$       print *, sim%phi_x1(:,1) - sim%phi_x1(:,33)
 
        global_indices(1:2) =  &
             local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-       
+
+#if PRINT_PLOTS       
        call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%delta_eta1, &
@@ -1185,12 +1272,14 @@ contains
          itime, &
          ierr )
 
-       do j=1,nc_x2+1
-          do i=1,nc_x1+1
-             sim%phi_diff(i,j) = sim%phi_x1(i,j) - sim%phi_ref(i,j)
-          end do
-       end do
-       print *, 'the sum of phi_diff is = ', sum(sim%phi_diff)
+
+!!$       do j=1,nc_x2+1
+!!$          do i=1,nc_x1+1
+!!$             sim%phi_diff(i,j) = sim%phi_x1(i,j) - sim%phi_ref(i,j)
+!!$          end do
+!!$       end do
+!!$       print *, 'the sum of phi_diff is = ', sum(sim%phi_diff)
+
        call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%delta_eta1, &
@@ -1200,6 +1289,8 @@ contains
          "phi_diff_cart", &
          itime, &
          ierr )
+#endif
+
        ! compute the values of the electric field. rho is configured for 
        ! sequential operations in x1, thus we start by computing the E_x 
        ! component.
@@ -1216,6 +1307,14 @@ contains
             sim%mesh2d_x%delta_eta1, &
             sim%efield_x1 )
 
+       call compute_electric_field_eta1( &
+            sim%phi_q, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            sim%mesh2d_x%delta_eta1, &
+            sim%efield_q )
+
+
        ! note that we are 'recycling' the layouts used for the other arrays 
        ! because they represent an identical configuration.
        call apply_remap_2D( sim%efld_seqx1_to_seqx2, sim%efield_x1, sim%efield_x2 )
@@ -1229,6 +1328,19 @@ contains
             sim%mesh2d_x%delta_eta2, &
             sim%efield_x2 )
 
+       call compute_electric_field_eta2( &
+            sim%phi_q, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            sim%mesh2d_x%delta_eta2, &
+            sim%efield_q )
+
+!       do j=1,loc_sz_x1
+!          do i=1
+
+       print *, 'sum of efield poisson = ', sum(real(sim%efield_x1(1:loc_sz_x1-1,1:loc_sz_x2-1)))
+       print *, 'sum of efield QNS     = ', sum(real(sim%efield_q(1:loc_sz_x1-1,1:loc_sz_x2-1)))
+
        ! But now, to make the electric field data configuration compatible with
        ! the sequential operations in x2x3 we need still another remap 
        ! operation.
@@ -1236,7 +1348,8 @@ contains
             sim%efld_seqx2_to_split, &
             sim%efield_x2, &
             sim%efield_split )
- 
+
+#if PRINT_PLOTS 
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
 !             sim%efield_x1_diff(i,j) = sim%efield_x1_ref(i,j) - &
@@ -1265,15 +1378,12 @@ contains
          "electric_field_x2_cart", &
          itime, &
          ierr )
+#endif
 
        
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
-
-
-
-       print *, 'difference in electric field, qns case:'
 
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
@@ -1284,7 +1394,9 @@ contains
           end do
        end do
 
+       print *, 'sum of qns efield = ', sum(sim%efield_x2_qns(1:loc_sz_x1-1,1:loc_sz_x2-1))
 
+#if PRINT_PLOTS
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%delta_eta1, &
@@ -1315,29 +1427,36 @@ contains
          itime, &
          ierr )
 
-
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              sim%efield_x1_ref_diff_cart(i,j) = sim%efield_x1_ref(i,j) - &
-                                                sim%efield_x1_cart(i,j)
+                                                real(sim%efield_x1_cart(i,j))
              sim%efield_x1_qns(i,j)=-phi%first_deriv_eta1_value_at_indices(i,j)
              sim%efield_x2_qns(i,j)=-phi%first_deriv_eta2_value_at_indices(i,j)
           end do
        end do
+
+!!$       print *, 'What the heck is going on with electric field x1?'
+!!$       print *,'last column of reference = '
+!!$       print *, sim%efield_x1_ref(:,33)
+!!$       print *, 'last column of calculated efield x1 = '
+!!$       print *, sim%efield_x1_cart(:,33)
+
+
 
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
-         sim%efield_x1_ref_diff_cart, &
+         sim%efield_x1_ref_diff_cart(1:loc_sz_x1,1:loc_sz_x2), &
          "electric_field_difference_ref_cart", &
          itime, &
          ierr )
 
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             sim%efield_x1_diff(i,j) = sim%efield_x1_cart(i,j) - &
+             sim%efield_x1_diff(i,j) = real(sim%efield_x1_cart(i,j),f64) - &
                                        sim%efield_x1_qns(i,j)
 !             sim%efield_x2_diff(i,j) = aimag(sim%efield_split(i,j)) - &
 !                 ( - phi%first_deriv_eta2_value_at_indices(i,j))       
@@ -1355,8 +1474,9 @@ contains
 
        efield_energy_total_c = 0.0_f64
        efield_energy_total_q = 0.0_f64
+#endif
 
-#if 0
+#if 1
        ! cartesian case
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
@@ -1382,6 +1502,9 @@ contains
           end do
        end do
 
+       efield_energy_total_t = 0.0_f64
+       efield_energy_total_t = delta1*delta2*sum(abs(sim%efield_exact))
+!       print *, 'damned efield total = ', efield_energy_total_t
 
        ! Start with dt in vx...(x3)
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
@@ -1394,10 +1517,16 @@ contains
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-                ex     =  - phi%first_deriv_eta1_value_at_indices(&
-                     global_indices(1), global_indices(2))
-                ey     =  - phi%first_deriv_eta2_value_at_indices(&
-                     global_indices(1), global_indices(2))
+                ex     =  real( sim%efield_q(i,j),f64)
+                ey     =  aimag(sim%efield_q(i,j))
+
+
+!!$                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
+!!$                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+!!$                ex     =  - phi%first_deriv_eta1_value_at_indices(&
+!!$                     global_indices(1), global_indices(2))
+!!$                ey     =  - phi%first_deriv_eta2_value_at_indices(&
+!!$                     global_indices(1), global_indices(2))
                 !print*, 'values ex', -0.05/(0.5)*sin(0.5*eta1), phi%first_deriv_eta1_value_at_indices(i,j), phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 !print*, 'values ey', 0.0, ey
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
@@ -1433,10 +1562,15 @@ contains
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                ex     =  - phi%first_deriv_eta1_value_at_indices(&
-                     global_indices(1), global_indices(2))
-                ey     =  - phi%first_deriv_eta2_value_at_indices(&
-                     global_indices(1), global_indices(2))
+                ex     =  real( sim%efield_q(i,j),f64)
+                ey     =  aimag(sim%efield_q(i,j))
+
+!!$                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
+!!$                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+!!$                ex     =  - phi%first_deriv_eta1_value_at_indices(&
+!!$                     global_indices(1), global_indices(2))
+!!$                ey     =  - phi%first_deriv_eta2_value_at_indices(&
+!!$                     global_indices(1), global_indices(2))
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 sim%f_x3x4_q(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
@@ -1523,6 +1657,7 @@ contains
        
        buffer_c(buffer_counter) = efield_energy_total_c
        buffer_q(buffer_counter) = efield_energy_total_q
+       buffer_t(buffer_counter) = efield_energy_total_t
        ! This should be abstracted away...
        ! Each processor keeps a local buffer, when the buffer reaches a
        ! predetermined size, we reduce ther buffer with an addition on 
@@ -1578,11 +1713,26 @@ contains
              close(efield_energy_file_id_cart)
           end if
 
+          if(sim%my_rank == 0) then
+             open(efield_energy_file_id_teo,file="electric_field_energy_teo",&
+                  position="append")
+             if(itime == BUFFER_SIZE) then
+                rewind(efield_energy_file_id_teo)
+             end if
+             buffer_t(:) = log(buffer_t(:))
+             do i=1,BUFFER_SIZE
+                write(efield_energy_file_id_teo,*) buffer_t(i)
+             end do
+             close(efield_energy_file_id_teo)
+          end if
+
+
        else
           buffer_counter         = buffer_counter + 1
        end if
        efield_energy_total_c    = 0.0_f64
        efield_energy_total_q    = 0.0_f64
+       efield_energy_total_t    = 0.0_f64
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
        ! Reconfigure data. 
        
@@ -1595,7 +1745,16 @@ contains
     end do ! main loop
 #undef BUFFER_SIZE
   end subroutine run_4d_qns_mixed
-  
+
+  function efield_exact(t, k, eps, x, y) result(res)
+    sll_real64, intent(in) :: t
+    sll_real64, intent(in) :: k
+    sll_real64, intent(in) :: eps
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64 :: res
+    res = 4.0_f64*eps*0.3677_f64*exp(-0.1533*t)*sin(k*x)*cos(1.4156*t-0.536245)
+  end function efield_exact
 
   subroutine advection_x1x2_c(sim,deltat)
     class(sll_simulation_4d_qns_mixed) :: sim
@@ -1614,8 +1773,8 @@ contains
     do l=1,loc_sz_x4
        do k=1,loc_sz_x3
           call sim%interp_x1x2%compute_interpolants(sim%f_x1x2_c(:,:,k,l))
-          do j=1,loc_sz_x2
-             do i=1,loc_sz_x1
+          do j=1,loc_sz_x2-1 ! last point excluded
+             do i=1,loc_sz_x1-1 ! last point excluded
                 global_indices = &
                      local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
@@ -1652,6 +1811,23 @@ contains
           end do
        end do
     end do
+
+    do l=1,loc_sz_x4
+       do k=1,loc_sz_x3
+          do j=1,loc_sz_x2-1 ! last point excluded
+             sim%f_x1x2_c(loc_sz_x1,j,k,l) = sim%f_x1x2_c(1,j,k,l)
+          end do
+       end do
+    end do
+ 
+   do l=1,loc_sz_x4
+      do k=1,loc_sz_x3
+         sim%f_x1x2_c(:,loc_sz_x2,k,l) = sim%f_x1x2_c(:,1,k,l)
+      end do
+   end do
+ 
+
+
   end subroutine advection_x1x2_c
 
 
@@ -1672,8 +1848,8 @@ contains
     do l=1,loc_sz_x4
        do k=1,loc_sz_x3
           call sim%interp_x1x2%compute_interpolants(sim%f_x1x2_q(:,:,k,l))
-          do j=1,loc_sz_x2
-             do i=1,loc_sz_x1
+          do j=1,loc_sz_x2-1 ! last point excluded
+             do i=1,loc_sz_x1-1 ! last point excluded
                 global_indices = &
                      local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
@@ -1711,6 +1887,22 @@ contains
           end do
        end do
     end do
+
+    do l=1,loc_sz_x4
+       do k=1,loc_sz_x3
+          do j=1,loc_sz_x2-1 ! last point excluded
+             sim%f_x1x2_q(loc_sz_x1,j,k,l) = sim%f_x1x2_q(1,j,k,l)
+          end do
+       end do
+    end do
+ 
+   do l=1,loc_sz_x4
+      do k=1,loc_sz_x3
+         sim%f_x1x2_q(:,loc_sz_x2,k,l) = sim%f_x1x2_q(:,1,k,l)
+      end do
+   end do
+
+
 
   end subroutine advection_x1x2_q
 
@@ -1881,7 +2073,7 @@ contains
     sll_int32, intent(in)                   :: num_pts_x1
     sll_int32, intent(in)                   :: num_pts_x2
     sll_real64, intent(in)                  :: delta_x2
-    sll_comp64, dimension(:,:), intent(out) :: efield_x2
+    sll_comp64, dimension(:,:), intent(inout) :: efield_x2
     sll_int32                               :: i
     sll_int32                               :: j
     sll_real64                              :: r_delta
@@ -1901,7 +2093,7 @@ contains
                       0.5_f64*phi_x2(i,3))
        efield_x2(i,1) = cmplx(ex,ey,f64)
        ! top:
-       ex = real(efield_x2(i,num_pts_x1),f64)
+       ex = real(efield_x2(i,num_pts_x2),f64)
        ey = -r_delta*(0.5_f64*phi_x2(i,num_pts_x2-2) - &
                      2.0_f64*phi_x2(i,num_pts_x2-1)+&
                      1.5_f64*phi_x2(i,num_pts_x2))
