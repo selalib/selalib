@@ -54,6 +54,12 @@ module sll_utilities
 
   integer, parameter :: byte_size = selected_int_kind(0)
 
+  interface display_matrix
+     module procedure display_matrix_2d_integer
+     module procedure display_matrix_2d_real
+  end interface display_matrix
+  
+
 contains
 
   function is_power_of_two( n )
@@ -124,5 +130,51 @@ contains
     !SLL_ASSERT(error == 0)
    
   end subroutine sll_new_file_id
+
+  subroutine display_matrix_2d_real(array, real_format)
+
+   sll_real64, dimension(:,:) :: array
+   character(len=*)           :: real_format
+   character(len=20)          :: display_format
+   sll_int32                  :: n1
+   sll_int32                  :: n2
+   sll_int32                  :: i
+   sll_int32                  :: j
+
+   n1 = size(array,1)
+   n2 = size(array,2)
+
+   write(display_format, "('(''|''',i4,a,''' |'')')") n2, real_format
+
+   write(*,*)
+   do i = 1, n1
+      write(*,display_format) (array(i,j), j = 1, n2)
+   end do
+   write(*,*)
+
+  end subroutine display_matrix_2d_real
+
+  subroutine display_matrix_2d_integer(array, integer_format)
+
+   sll_int32, dimension(:,:) :: array
+   character(len=*)          :: integer_format
+   character(len=20)         :: display_format
+   sll_int32                 :: n1
+   sll_int32                 :: n2
+   sll_int32                 :: i
+   sll_int32                 :: j
+
+   n1 = size(array,1)
+   n2 = size(array,2)
+
+   write(display_format, "('(''|''',i4,a,''' |'')')") n2, integer_format
+
+   write(*,*)
+   do i = 1, n1
+      write(*,display_format) (array(i,j), j = 1, n2)
+   end do
+   write(*,*)
+
+  end subroutine display_matrix_2d_integer
 
 end module sll_utilities

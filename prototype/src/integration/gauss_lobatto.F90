@@ -4,6 +4,7 @@ module gauss_lobatto_integration
   
 implicit none
 
+#ifndef STDF95
 abstract interface
    function function_1D(x)
       use sll_working_precision ! can't pass a header file because the
@@ -13,6 +14,7 @@ abstract interface
       sll_real64, intent(in) :: x
    end function function_1D
 end interface
+#endif
 
 interface gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
@@ -42,7 +44,11 @@ contains
   !> @return The value of the integral
   function gauss_lobatto_integral_1D( f, a, b, n )
     sll_real64                :: gauss_lobatto_integral_1D
+#ifdef STDF95
+    sll_real64, external      :: f
+#else
     procedure(function_1D)    :: f
+#endif
     sll_real64, intent(in)    :: a
     sll_real64, intent(in)    :: b
     sll_int32,  intent(in)    :: n 
@@ -145,7 +151,6 @@ contains
 
   end function gauss_lobatto_weights
 
-
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
@@ -162,44 +167,24 @@ contains
     der = 0.0
     
     do j=1,n
-       do i=1,n
-          do l=1,j-1
-             prod=1.0d0
-             do m=1,l-1!min(j,l)-1
-                prod=prod*(x(i)-x(m))/(x(j)-x(m))
-             end do
-             do m=l+1,j-1!min(j,l)+1,max(j,l)-1
-                prod=prod*(x(i)-x(m))/(x(j)-x(m))
-             end do
-             do m=j+1,n!max(j,l)+1,n
-                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+    do i=1,n
+       do l=1,n
+          if ( j /= l ) then
+             prod= 1d0
+             do m=1,n 
+                if ( m /= l .and. m /= j ) prod=prod*(x(i)-x(m))/(x(j)-x(m))
              end do
              prod=prod/(x(j)-x(l))
              der(i,j)=der(i,j)+prod
-          end do
-          do l=j+1,n
-             prod=1.0d0
-             do m=1,j-1!min(j,l)-1
-                prod=prod*(x(i)-x(m))/(x(j)-x(m))
-             end do
-             do m=j+1,l-1!min(j,l)+1,max(j,l)-1
-                prod=prod*(x(i)-x(m))/(x(j)-x(m))
-             end do
-             do m=l+1,n!max(j,l)+1,n
-                prod=prod*(x(i)-x(m))/(x(j)-x(m))
-             end do
-             prod=prod/(x(j)-x(l))
-             der(i,j)=der(i,j)+prod
-          end do
-          der(i,j)=der(i,j)
+          end if
        end do
+    end do
     end do
     der = transpose(der)
 
   end function gauss_lobatto_derivative_matrix
 
 !> This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements
-
 !> To use those functions, READ the documentation beside and find more information 
 !> about coefficients in paper *Algorithm 726 - ORTHPOL: A package of routines for 
 !> generating orthogonal polynomials and Gauss-type quadrature rules* by _Walter 
