@@ -14,7 +14,7 @@ export FFTW_ROOT=/softs/fftw/intel/3.3
 cd /scratch/pnavaro
 mkdir selalib-intel
 cd selalib-intel; {
-cmake ${HOME}/selalib -DCMAKE_BUILD_TYPE=Release -DCMAKE_FORTRAN_COMPILER=ifort
+cmake ${HOME}/selalib -DCMAKE_BUILD_TYPE=Release -DCMAKE_Fortran_COMPILER=ifort
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
