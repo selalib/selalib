@@ -133,13 +133,19 @@ contains  ! ****************************************************************
   ! interface is the compute_odd_degree_interpolants routine which gets assigned to
   ! the qs1d at initialization time.  
 #ifdef STDF95
-  subroutine odd_degree_spline_compute_interpolants_nonuniform( interpolator, data_array )
+  subroutine odd_degree_spline_compute_interpolants_nonuniform( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(odd_degree_spline_1d_interpolator_nonuniform), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_qs1d_nonuniform( interpolator, data_array )
+  subroutine compute_interpolants_qs1d_nonuniform( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     class(odd_degree_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_odd_degree_coeffs_nonuniform( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine odd_degree_spline_compute_interpolants_nonuniform

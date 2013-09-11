@@ -673,7 +673,8 @@ contains ! *******************************************************************
              
 
           val_f   = rho%value_at_point(gpt1,gpt2)
-          !print*, 'val',val_f-( 0.05*cos(0.5*(gpt1)))
+         ! print*, 'val',gpt1,gpt2,val_f, -2*(2.0*sll_pi)**2*cos(2.0*sll_pi*gpt1)*cos(2.0*sll_pi*gpt2),&
+          !     abs(val_f+2*(2.0*sll_pi)**2*cos(2.0*sll_pi*gpt1)*cos(2.0*sll_pi*gpt2))!-( 0.05*cos(0.5*(gpt1)))
        
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
@@ -683,27 +684,38 @@ contains ! *******************************************************************
           val_a22 = a22_field_mat%base%value_at_point(gpt1,gpt2)
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
-          val_jac = abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
-
+          val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
+         ! print*, 'determinant', val_jac
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
                jac_mat(1,2)*jac_mat(1,2)*val_a22
-          
-          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
-               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
-               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
-               jac_mat(1,2)*jac_mat(2,1)*val_a12
-          
-          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+         ! print*, 'test11', B11
+!!$          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+!!$               jac_mat(1,2)*jac_mat(2,1)*val_a12
+
+          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a21
-          
+
+          !print*, 'test12', B12
+!!$          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+!!$               jac_mat(1,2)*jac_mat(2,1)*val_a21
+
+          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+               jac_mat(1,2)*jac_mat(2,1)*val_a12
+         !print*, 'test21', B21
           B22 = jac_mat(1,1)*jac_mat(1,1)*val_a22 - &
                jac_mat(1,1)*jac_mat(2,1)*(val_a21+val_a12) + &
                jac_mat(2,1)*jac_mat(2,1)*val_a11
-          
+          !print*, 'test22', B22
           ! loop over the splines supported in the cell that are different than
           ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
           ! each direction.
@@ -887,10 +899,10 @@ contains ! *******************************************************************
                 li_Aprime = qns%local_to_global_spline_indices(bprime, &
                                                                cell_index)
                 elt_mat_global = &
-                     M_c_loc(b, bprime) + &
-                     K_a11_loc(b, bprime) + &
-                     K_a12_loc(b, bprime) + &
-                     K_a21_loc(b, bprime) + &
+                     M_c_loc(b, bprime) - &
+                     K_a11_loc(b, bprime) - &
+                     K_a12_loc(b, bprime) - &
+                     K_a21_loc(b, bprime) - &
                      K_a22_loc(b, bprime)
 
 !!$                full_Matrix(x,y) = &
@@ -972,8 +984,8 @@ contains ! *******************************************************************
             qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)&
             -sum(qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2))&
             /(qns%total_num_splines_eta1*qns%total_num_splines_eta2)
-
-!       print*, 'moyenne de  rho-density(rho)', sum(qns%tmp_rho_vec)
+       
+       print*, 'moyenne de  rho-density(rho)', sum(qns%tmp_rho_vec)
 
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
@@ -988,6 +1000,7 @@ contains ! *******************************************************************
           end do
        end do
 
+
     end if
     
    ! print*, 'retr', qns%tmp_rho_vec
@@ -996,8 +1009,11 @@ contains ! *******************************************************************
     !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
     call solve_general_qn(qns,qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
   
-!    print*, '---------------'
-  
+!!$    do i = 1,qns%total_num_splines_eta2
+!!$       print*, '---------------',qns%phi_vec(qns%total_num_splines_eta1*(i-1)+1:qns%total_num_splines_eta1*i)
+!!$       print*, ' source term :', qns%tmp_rho_vec(qns%total_num_splines_eta1*(i-1)+1:qns%total_num_splines_eta1*i)
+!!$    end do
+    
   end subroutine solve_linear_system
 
   subroutine solve_general_qn(qns,csr_mat,apr_B,apr_U)

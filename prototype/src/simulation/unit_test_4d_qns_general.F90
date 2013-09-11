@@ -48,10 +48,10 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 64
-#define NPTS2 32
-#define NPTS3 64
-#define NPTS4 64
+#define NPTS1 32
+#define NPTS2 28
+#define NPTS3 32
+#define NPTS4 32
 #define SPL_DEG1 3
 #define SPL_DEG2 3
 
@@ -102,11 +102,11 @@ program qns_4d_general
 !!$  gaussian_params(5) = 1.0        !vxc
 !!$  gaussian_params(6) = 0.0        !vyc
 
-  landau_params(1) = mx%eta1_min      !eta1_min
-  landau_params(2) = mx%eta1_max
-  landau_params(3) = mx%eta2_min      !eta2_min
+  landau_params(1) = 0.0_f64!mx%eta1_min      !eta1_min
+  landau_params(2) = 4.0_f64*sll_pi!mx%eta1_max
+  landau_params(3) = 0.0_f64 !mx%eta2_min      !eta2_min
   landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.01     !eps
+  landau_params(5) = 0.05     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_4d_qns_general( &
